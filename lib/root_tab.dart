@@ -4,10 +4,10 @@ class RootTab {
   const RootTab({
     required this.title,
     required this.icon,
-    required this.content,
+    required this.builder,
   });
 
   final String title;
   final IconData icon;
-  final String content;
+  final WidgetBuilder builder;
 }
