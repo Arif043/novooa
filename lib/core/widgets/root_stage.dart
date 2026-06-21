@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../core/theme/syscat_theme.dart';
-import '../root_tab.dart';
+import '../theme/syscat_theme.dart';
+import '../../root_tab.dart';
 
 class RootStage extends StatelessWidget {
   const RootStage({super.key, required this.tab});

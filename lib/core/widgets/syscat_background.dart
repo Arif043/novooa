@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../core/theme/syscat_theme.dart';
+import '../theme/syscat_theme.dart';
 
 class SyscatBackground extends StatelessWidget {
   const SyscatBackground({super.key, required this.child});

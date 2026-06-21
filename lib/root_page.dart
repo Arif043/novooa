@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'root_tab.dart';
-import 'widgets/root_app_bar.dart';
-import 'widgets/root_drawer.dart';
-import 'widgets/root_stage.dart';
-import 'widgets/syscat_background.dart';
+import 'core/widgets/root_app_bar.dart';
+import 'core/widgets/root_drawer.dart';
+import 'core/widgets/root_stage.dart';
+import 'core/widgets/syscat_background.dart';
 
 class RootPage extends StatefulWidget {
   const RootPage({super.key});
@@ -18,22 +18,22 @@ class _RootPageState extends State<RootPage> {
 
   static const List<RootTab> _tabs = [
     RootTab(
-      title: 'Dashboard',
+      title: 'Aufgaben',
       icon: Icons.dashboard_outlined,
       content: 'Übersicht der wichtigsten Kennzahlen.',
     ),
     RootTab(
-      title: 'Projekte',
+      title: 'Arbeitspläne',
       icon: Icons.folder_outlined,
       content: 'Verwaltung und Status aller Projekte.',
     ),
     RootTab(
-      title: 'Berichte',
+      title: 'Zeitplan',
       icon: Icons.bar_chart_outlined,
       content: 'Analysen, Trends und Auswertungen.',
     ),
     RootTab(
-      title: 'Einstellungen',
+      title: 'Aktivitäten',
       icon: Icons.settings_outlined,
       content: 'Konfiguration von App und Konto.',
     ),

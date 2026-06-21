@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "7059834940",
+    "project_id": "syscat-90bff",
+    "storage_bucket": "syscat-90bff.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:7059834940:android:263bac760cf8aaaf24db39",
+        "android_client_info": {
+          "package_name": "com.example.syscat2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzlplM4E4KUDYMba7UgUmxk_lvmzq5Hqg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
