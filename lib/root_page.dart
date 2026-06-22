@@ -22,6 +22,7 @@ class _RootPageState extends State<RootPage> {
       title: 'Aufgaben',
       icon: Icons.dashboard_outlined,
       builder: (context) => const TaskBuilderPage(),
+      useCustomAppBar: true,
     ),
     RootTab(
       title: 'Arbeitspläne',
@@ -60,7 +61,9 @@ class _RootPageState extends State<RootPage> {
     return SyscatBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: RootAppBar(title: selectedTab.title),
+        appBar: selectedTab.useCustomAppBar
+            ? null
+            : RootAppBar(title: selectedTab.title),
         drawer: RootDrawer(
           tabs: _tabs,
           selectedIndex: _selectedTabIndex,

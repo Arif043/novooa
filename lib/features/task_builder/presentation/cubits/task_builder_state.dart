@@ -1,5 +1,10 @@
 import '../../domain/entities/task_definition.dart';
 
+/// Sealed State-Hierarchie für [TaskBuilderCubit].
+///
+/// UI muss jeden Subtyp in einem erschöpfenden `switch` behandeln — der
+/// Analyzer prüft das. `Failure` enthält eine deutsche, UI-fertige
+/// Fehlermeldung.
 sealed class TaskBuilderState {
   const TaskBuilderState();
 }
