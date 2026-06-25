@@ -3,17 +3,22 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
+import 'package:syscat2/core/di/service_locator.dart';
+import 'package:syscat2/core/domain/unique_id.dart';
 import 'package:syscat2/core/routing/app_router.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
-import 'package:syscat2/core/domain/unique_id.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_failure.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
+import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
+import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
+import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:syscat2/features/user/domain/entities/user_email.dart';
 import 'package:syscat2/features/user/domain/entities/user_failure.dart';
 import 'package:syscat2/features/user/domain/entities/user_profile.dart';
 import 'package:syscat2/features/user/domain/repositories/user_repository.dart';
+import 'package:syscat2/features/user/domain/usecases/ensure_user_profile.dart';
 
 class _RouterAuthRepository implements AuthRepository {
   _RouterAuthRepository(this._currentUser);
@@ -84,14 +89,15 @@ class _RouterUserRepository implements UserRepository {
 }
 
 void main() {
+  tearDown(() async => serviceLocator.reset());
+
   testWidgets('leitet unauthentifizierte Nutzer zur Auth-Route', (
     tester,
   ) async {
     final repository = _RouterAuthRepository(null);
-    final appRouter = AppRouter(
-      authRepository: repository,
-      userRepository: _RouterUserRepository(),
-    );
+    final userRepository = _RouterUserRepository();
+    _registerAuthCubit(repository, userRepository);
+    final appRouter = AppRouter(authRepository: repository);
     await tester.pumpWidget(_appWith(appRouter));
     await tester.pumpAndSettle();
     expect(find.text('Syscat starten'), findsOneWidget);
@@ -107,16 +113,28 @@ void main() {
         displayName: 'Ada',
       ),
     );
-    final appRouter = AppRouter(
-      authRepository: repository,
-      userRepository: _RouterUserRepository(),
-    );
+    final userRepository = _RouterUserRepository();
+    _registerAuthCubit(repository, userRepository);
+    final appRouter = AppRouter(authRepository: repository);
     await tester.pumpWidget(_appWith(appRouter));
     await tester.pumpAndSettle();
     expect(find.text('Aufgaben'), findsOneWidget);
     appRouter.dispose();
     await repository.close();
   });
+}
+
+void _registerAuthCubit(
+  AuthRepository authRepository,
+  UserRepository userRepository,
+) {
+  serviceLocator.registerFactory(
+    () => AuthCubit(
+      signUp: SignUpWithEmailAndPassword(authRepository),
+      signIn: SignInWithEmailAndPassword(authRepository),
+      ensureUserProfile: EnsureUserProfile(userRepository),
+    ),
+  );
 }
 
 Widget _appWith(AppRouter appRouter) {

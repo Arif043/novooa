@@ -1,35 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/widgets/syscat_background.dart';
 
-import '../../domain/usecases/sign_in_with_email_and_password.dart';
-import '../../domain/usecases/sign_up_with_email_and_password.dart';
-import '../../../user/domain/usecases/ensure_user_profile.dart';
 import '../cubits/auth_cubit.dart';
 import '../cubits/auth_state.dart';
 import '../widgets/auth_form.dart';
 
 class AuthPage extends StatelessWidget {
-  const AuthPage({
-    super.key,
-    required this.signUp,
-    required this.signIn,
-    required this.ensureUserProfile,
-  });
-
-  final SignUpWithEmailAndPassword signUp;
-  final SignInWithEmailAndPassword signIn;
-  final EnsureUserProfile ensureUserProfile;
+  const AuthPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => AuthCubit(
-        signUp: signUp,
-        signIn: signIn,
-        ensureUserProfile: ensureUserProfile,
-      ),
+      create: (_) => serviceLocator<AuthCubit>(),
       child: const _AuthView(),
     );
   }

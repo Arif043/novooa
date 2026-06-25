@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
+import 'package:syscat2/core/di/service_locator.dart';
+import 'package:syscat2/core/domain/unique_id.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_failure.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
@@ -10,8 +12,8 @@ import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
+import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
-import 'package:syscat2/core/domain/unique_id.dart';
 import 'package:syscat2/features/user/domain/entities/user_email.dart';
 import 'package:syscat2/features/user/domain/entities/user_failure.dart';
 import 'package:syscat2/features/user/domain/entities/user_profile.dart';
@@ -74,6 +76,8 @@ class _FakeUserRepository implements UserRepository {
 }
 
 void main() {
+  tearDown(() async => serviceLocator.reset());
+
   testWidgets('rendert Register/Login-Segmente', (tester) async {
     await tester.pumpWidget(_appWith(_AsyncAuthRepository()));
     expect(find.text('Registrieren'), findsOneWidget);
@@ -115,12 +119,12 @@ void main() {
 }
 
 Widget _appWith(_AsyncAuthRepository repository) {
-  return MaterialApp(
-    theme: SyscatTheme.lightTheme,
-    home: AuthPage(
+  serviceLocator.registerFactory(
+    () => AuthCubit(
       signUp: SignUpWithEmailAndPassword(repository),
       signIn: SignInWithEmailAndPassword(repository),
       ensureUserProfile: EnsureUserProfile(_FakeUserRepository()),
     ),
   );
+  return MaterialApp(theme: SyscatTheme.lightTheme, home: const AuthPage());
 }
