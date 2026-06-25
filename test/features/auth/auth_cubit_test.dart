@@ -3,12 +3,17 @@ import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_failure.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/entities/email_address.dart';
-import 'package:syscat2/features/auth/domain/entities/unique_id.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_state.dart';
+import 'package:syscat2/core/domain/unique_id.dart';
+import 'package:syscat2/features/user/domain/entities/user_email.dart';
+import 'package:syscat2/features/user/domain/entities/user_failure.dart';
+import 'package:syscat2/features/user/domain/entities/user_profile.dart';
+import 'package:syscat2/features/user/domain/repositories/user_repository.dart';
+import 'package:syscat2/features/user/domain/usecases/ensure_user_profile.dart';
 
 class _FakeAuthRepository implements AuthRepository {
   _FakeAuthRepository(this.authResult);
@@ -43,10 +48,41 @@ class _FakeAuthRepository implements AuthRepository {
   }
 }
 
-AuthCubit _cubitWith(_FakeAuthRepository repository) {
+class _FakeUserRepository implements UserRepository {
+  int ensureCalls = 0;
+
+  @override
+  Future<Result<UserProfile, UserFailure>> ensureProfile({
+    required UniqueId id,
+    required UserEmail email,
+    required String displayName,
+  }) async {
+    ensureCalls++;
+    return Result.success(
+      UserProfile(
+        id: id,
+        email: email,
+        displayName: displayName,
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      ),
+    );
+  }
+
+  @override
+  Future<Result<UserProfile, UserFailure>> getProfile(UniqueId id) async {
+    return const Result.error(UserFailure(UserFailureKind.notFound));
+  }
+}
+
+AuthCubit _cubitWith(
+  _FakeAuthRepository authRepository,
+  _FakeUserRepository userRepository,
+) {
   return AuthCubit(
-    signUp: SignUpWithEmailAndPassword(repository),
-    signIn: SignInWithEmailAndPassword(repository),
+    signUp: SignUpWithEmailAndPassword(authRepository),
+    signIn: SignInWithEmailAndPassword(authRepository),
+    ensureUserProfile: EnsureUserProfile(userRepository),
   );
 }
 
@@ -54,7 +90,8 @@ void main() {
   group('AuthCubit', () {
     test('blockiert ungueltige E-Mail lokal', () async {
       final repository = _FakeAuthRepository(_success());
-      final cubit = _cubitWith(repository);
+      final userRepository = _FakeUserRepository();
+      final cubit = _cubitWith(repository, userRepository);
       cubit.updateName('Ada');
       cubit.updateEmail('ada');
       cubit.updatePassword('sicheres-passwort');
@@ -66,7 +103,8 @@ void main() {
 
     test('emittiert submitting und success bei Registrierung', () async {
       final repository = _FakeAuthRepository(_success());
-      final cubit = _cubitWith(repository);
+      final userRepository = _FakeUserRepository();
+      final cubit = _cubitWith(repository, userRepository);
       final states = cubit.stream.take(2).toList();
       cubit.updateName('Ada');
       cubit.updateEmail('ada@example.com');
@@ -77,12 +115,14 @@ void main() {
         AuthStatus.success,
       ]);
       expect(repository.signUpCalls, 1);
+      expect(userRepository.ensureCalls, 1);
       await cubit.close();
     });
 
     test('nutzt Login-Use-Case im Login-Modus', () async {
       final repository = _FakeAuthRepository(_success());
-      final cubit = _cubitWith(repository);
+      final userRepository = _FakeUserRepository();
+      final cubit = _cubitWith(repository, userRepository);
       cubit.changeMode(AuthMode.signIn);
       cubit.updateEmail('ada@example.com');
       cubit.updatePassword('sicheres-passwort');
@@ -90,6 +130,7 @@ void main() {
       expect(cubit.state.status, AuthStatus.success);
       expect(repository.signInCalls, 1);
       expect(repository.signUpCalls, 0);
+      expect(userRepository.ensureCalls, 1);
       await cubit.close();
     });
   });

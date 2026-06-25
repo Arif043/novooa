@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:multiple_result/multiple_result.dart';
+import 'package:syscat2/core/domain/unique_id.dart';
 import '../../domain/entities/auth_failure.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/entities/email_address.dart';
-import '../../domain/entities/unique_id.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 class FirebaseAuthRepository implements AuthRepository {

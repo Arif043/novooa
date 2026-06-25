@@ -5,20 +5,31 @@ import 'package:syscat2/core/widgets/syscat_background.dart';
 
 import '../../domain/usecases/sign_in_with_email_and_password.dart';
 import '../../domain/usecases/sign_up_with_email_and_password.dart';
+import '../../../user/domain/usecases/ensure_user_profile.dart';
 import '../cubits/auth_cubit.dart';
 import '../cubits/auth_state.dart';
 import '../widgets/auth_form.dart';
 
 class AuthPage extends StatelessWidget {
-  const AuthPage({super.key, required this.signUp, required this.signIn});
+  const AuthPage({
+    super.key,
+    required this.signUp,
+    required this.signIn,
+    required this.ensureUserProfile,
+  });
 
   final SignUpWithEmailAndPassword signUp;
   final SignInWithEmailAndPassword signIn;
+  final EnsureUserProfile ensureUserProfile;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => AuthCubit(signUp: signUp, signIn: signIn),
+      create: (_) => AuthCubit(
+        signUp: signUp,
+        signIn: signIn,
+        ensureUserProfile: ensureUserProfile,
+      ),
       child: const _AuthView(),
     );
   }

@@ -1,21 +1,27 @@
 import 'package:bloc/bloc.dart';
 
 import '../../domain/entities/auth_failure.dart';
+import '../../domain/entities/auth_user.dart';
 import '../../domain/entities/email_address.dart';
 import '../../domain/usecases/sign_in_with_email_and_password.dart';
 import '../../domain/usecases/sign_up_with_email_and_password.dart';
+import '../../../user/domain/entities/user_email.dart';
+import '../../../user/domain/usecases/ensure_user_profile.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit({
     required SignUpWithEmailAndPassword signUp,
     required SignInWithEmailAndPassword signIn,
+    required EnsureUserProfile ensureUserProfile,
   }) : _signUp = signUp,
        _signIn = signIn,
+       _ensureUserProfile = ensureUserProfile,
        super(const AuthState());
 
   final SignUpWithEmailAndPassword _signUp;
   final SignInWithEmailAndPassword _signIn;
+  final EnsureUserProfile _ensureUserProfile;
   String _name = '';
   String _email = '';
   String _password = '';
@@ -35,9 +41,9 @@ class AuthCubit extends Cubit<AuthState> {
     final authUserOrFailure = state.mode == AuthMode.signUp
         ? await _signUp(_signUpParams())
         : await _signIn(_signInParams());
-    authUserOrFailure.when(
-      (_) => emit(state.copyWith(status: AuthStatus.success)),
-      (failure) => _emitFailure(failure.message),
+    await authUserOrFailure.when(
+      _ensureProfileAndEmitSuccess,
+      (failure) async => _emitFailure(failure.message),
     );
   }
 
@@ -71,5 +77,31 @@ class AuthCubit extends Cubit<AuthState> {
 
   void _emitFailure(String message) {
     emit(state.copyWith(status: AuthStatus.failure, message: message));
+  }
+
+  Future<void> _ensureProfileAndEmitSuccess(AuthUser authUser) async {
+    final email = UserEmail.tryCreate(authUser.email);
+    if (email == null) {
+      return _emitFailure(
+        const AuthFailure(AuthFailureKind.invalidEmail).message,
+      );
+    }
+    final userProfileOrFailure = await _ensureUserProfile(
+      EnsureUserProfileParams(
+        id: authUser.id,
+        email: email,
+        displayName: _profileDisplayName(authUser),
+      ),
+    );
+    userProfileOrFailure.when(
+      (_) => emit(state.copyWith(status: AuthStatus.success)),
+      (failure) => _emitFailure(failure.message),
+    );
+  }
+
+  String _profileDisplayName(AuthUser authUser) {
+    if (state.mode == AuthMode.signUp) return _name.trim();
+    final authName = authUser.displayName.trim();
+    return authName.isEmpty ? authUser.email : authName;
   }
 }

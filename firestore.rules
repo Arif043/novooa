@@ -1,0 +1,93 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users
+// Document ID: Firebase Auth UID
+// Fields:
+//   - uid: string (required, immutable) - must equal document ID/auth UID
+//   - email: string (required, max 254) - private PII, owner-only
+//   - displayName: string (required, 2-120) - private profile field
+//   - createdAt: timestamp (required, immutable) - creation time
+//   - updatedAt: timestamp (required) - last profile sync time
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasOnlyAllowedUserFields(data) {
+      return data.keys().hasOnly([
+        'uid',
+        'email',
+        'displayName',
+        'createdAt',
+        'updatedAt',
+      ]);
+    }
+
+    function hasRequiredUserFields(data) {
+      return data.keys().hasAll([
+        'uid',
+        'email',
+        'displayName',
+        'createdAt',
+        'updatedAt',
+      ]);
+    }
+
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() <= 254 &&
+        email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    function isValidDisplayName(displayName) {
+      return displayName is string &&
+        displayName.size() >= 2 &&
+        displayName.size() <= 120;
+    }
+
+    function isValidUser(data, userId) {
+      return hasOnlyAllowedUserFields(data) &&
+        hasRequiredUserFields(data) &&
+        data.uid is string &&
+        data.uid == userId &&
+        isValidEmail(data.email) &&
+        isValidDisplayName(data.displayName) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+
+      allow create: if isOwner(userId) &&
+        isValidUser(request.resource.data, userId) &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.updatedAt == request.time;
+
+      allow update: if isOwner(userId) &&
+        isValidUser(request.resource.data, userId) &&
+        request.resource.data.uid == resource.data.uid &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'core/routing/app_router.dart';
 import 'core/theme/syscat_theme.dart';
 import 'features/auth/infrastructure/repositories/firebase_auth_repository.dart';
+import 'features/user/infrastructure/repositories/firestore_user_repository.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -23,6 +25,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   late final AppRouter _appRouter = AppRouter(
     authRepository: FirebaseAuthRepository(FirebaseAuth.instance),
+    userRepository: FirestoreUserRepository(FirebaseFirestore.instance),
   );
 
   @override

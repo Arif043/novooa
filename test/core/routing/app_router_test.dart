@@ -5,11 +5,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/routing/app_router.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
+import 'package:syscat2/core/domain/unique_id.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_failure.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/entities/email_address.dart';
-import 'package:syscat2/features/auth/domain/entities/unique_id.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
+import 'package:syscat2/features/user/domain/entities/user_email.dart';
+import 'package:syscat2/features/user/domain/entities/user_failure.dart';
+import 'package:syscat2/features/user/domain/entities/user_profile.dart';
+import 'package:syscat2/features/user/domain/repositories/user_repository.dart';
 
 class _RouterAuthRepository implements AuthRepository {
   _RouterAuthRepository(this._currentUser);
@@ -55,12 +59,39 @@ class _RouterAuthRepository implements AuthRepository {
   Future<void> close() => _controller.close();
 }
 
+class _RouterUserRepository implements UserRepository {
+  @override
+  Future<Result<UserProfile, UserFailure>> ensureProfile({
+    required UniqueId id,
+    required UserEmail email,
+    required String displayName,
+  }) async {
+    return Result.success(
+      UserProfile(
+        id: id,
+        email: email,
+        displayName: displayName,
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      ),
+    );
+  }
+
+  @override
+  Future<Result<UserProfile, UserFailure>> getProfile(UniqueId id) async {
+    return const Result.error(UserFailure(UserFailureKind.notFound));
+  }
+}
+
 void main() {
   testWidgets('leitet unauthentifizierte Nutzer zur Auth-Route', (
     tester,
   ) async {
     final repository = _RouterAuthRepository(null);
-    final appRouter = AppRouter(authRepository: repository);
+    final appRouter = AppRouter(
+      authRepository: repository,
+      userRepository: _RouterUserRepository(),
+    );
     await tester.pumpWidget(_appWith(appRouter));
     await tester.pumpAndSettle();
     expect(find.text('Syscat starten'), findsOneWidget);
@@ -76,7 +107,10 @@ void main() {
         displayName: 'Ada',
       ),
     );
-    final appRouter = AppRouter(authRepository: repository);
+    final appRouter = AppRouter(
+      authRepository: repository,
+      userRepository: _RouterUserRepository(),
+    );
     await tester.pumpWidget(_appWith(appRouter));
     await tester.pumpAndSettle();
     expect(find.text('Aufgaben'), findsOneWidget);

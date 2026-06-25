@@ -6,20 +6,26 @@ import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
 import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
+import 'package:syscat2/features/user/domain/repositories/user_repository.dart';
+import 'package:syscat2/features/user/domain/usecases/ensure_user_profile.dart';
 import 'package:syscat2/root_page.dart';
 
 class AppRouter {
   static const String home = '/';
   static const String auth = '/auth';
 
-  AppRouter({required AuthRepository authRepository})
-    : _authRepository = authRepository,
-      _authRefresh = AuthRefreshNotifier(
-        initialUser: authRepository.currentUser(),
-        authStateChanges: authRepository.authStateChanges(),
-      );
+  AppRouter({
+    required AuthRepository authRepository,
+    required UserRepository userRepository,
+  }) : _authRepository = authRepository,
+       _userRepository = userRepository,
+       _authRefresh = AuthRefreshNotifier(
+         initialUser: authRepository.currentUser(),
+         authStateChanges: authRepository.authStateChanges(),
+       );
 
   final AuthRepository _authRepository;
+  final UserRepository _userRepository;
   final AuthRefreshNotifier _authRefresh;
 
   late final GoRouter router = GoRouter(
@@ -34,6 +40,7 @@ class AppRouter {
           return AuthPage(
             signUp: SignUpWithEmailAndPassword(_authRepository),
             signIn: SignInWithEmailAndPassword(_authRepository),
+            ensureUserProfile: EnsureUserProfile(_userRepository),
           );
         },
       ),

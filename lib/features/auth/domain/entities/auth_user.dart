@@ -1,4 +1,4 @@
-import 'unique_id.dart';
+import 'package:syscat2/core/domain/unique_id.dart';
 
 class AuthUser {
   const AuthUser({

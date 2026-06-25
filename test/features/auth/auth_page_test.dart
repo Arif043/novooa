@@ -11,6 +11,12 @@ import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
 import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
+import 'package:syscat2/core/domain/unique_id.dart';
+import 'package:syscat2/features/user/domain/entities/user_email.dart';
+import 'package:syscat2/features/user/domain/entities/user_failure.dart';
+import 'package:syscat2/features/user/domain/entities/user_profile.dart';
+import 'package:syscat2/features/user/domain/repositories/user_repository.dart';
+import 'package:syscat2/features/user/domain/usecases/ensure_user_profile.dart';
 
 class _AsyncAuthRepository implements AuthRepository {
   final completer = Completer<Result<AuthUser, AuthFailure>>();
@@ -40,6 +46,30 @@ class _AsyncAuthRepository implements AuthRepository {
   }) {
     signUpCalls++;
     return completer.future;
+  }
+}
+
+class _FakeUserRepository implements UserRepository {
+  @override
+  Future<Result<UserProfile, UserFailure>> ensureProfile({
+    required UniqueId id,
+    required UserEmail email,
+    required String displayName,
+  }) async {
+    return Result.success(
+      UserProfile(
+        id: id,
+        email: email,
+        displayName: displayName,
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      ),
+    );
+  }
+
+  @override
+  Future<Result<UserProfile, UserFailure>> getProfile(UniqueId id) async {
+    return const Result.error(UserFailure(UserFailureKind.notFound));
   }
 }
 
@@ -90,6 +120,7 @@ Widget _appWith(_AsyncAuthRepository repository) {
     home: AuthPage(
       signUp: SignUpWithEmailAndPassword(repository),
       signIn: SignInWithEmailAndPassword(repository),
+      ensureUserProfile: EnsureUserProfile(_FakeUserRepository()),
     ),
   );
 }
