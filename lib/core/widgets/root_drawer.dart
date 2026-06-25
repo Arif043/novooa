@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:syscat2/features/user/domain/repositories/user_repository.dart';
+import 'package:syscat2/features/user/domain/usecases/get_current_user_profile.dart';
 import '../theme/syscat_theme.dart';
 import '../../root_tab.dart';
 
@@ -55,15 +57,25 @@ class _DrawerHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.fromLTRB(8, 8, 8, 4),
       child: Row(
         children: [
           _BrandMark(),
           SizedBox(width: 12),
-          Text(
-            serviceLocator<UserRepository>().,
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+          FutureBuilder(
+            future: serviceLocator<GetCurrentUserProfile>().call(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                if (snapshot.data case Success(success: final user)) {
+                  return Text(
+                    'Hey ${user.displayName}',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                  );
+                }
+              }
+              return const SizedBox.shrink();
+            },
           ),
         ],
       ),

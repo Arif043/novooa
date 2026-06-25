@@ -1,4 +1,4 @@
-enum UserFailureKind { invalidEmail, invalidName, notFound, unknown }
+enum UserFailureKind { invalidEmail, invalidName, notFound, unknown, unauthenticated }
 
 class UserFailure {
   const UserFailure(this.kind);
@@ -14,6 +14,8 @@ class UserFailure {
       UserFailureKind.notFound => 'Nutzerprofil konnte nicht gefunden werden.',
       UserFailureKind.unknown =>
         'Nutzerprofil konnte nicht gespeichert werden.',
+      UserFailureKind.unauthenticated =>
+        'Du musst angemeldet sein, um ein Nutzerprofil zu haben.',
     };
   }
 }

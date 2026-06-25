@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
+import 'package:syscat2/features/user/domain/usecases/get_current_user_profile.dart';
 
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/sign_in_with_email_and_password.dart';
@@ -38,6 +39,12 @@ void configureDependencies() {
     )
     ..registerLazySingleton(
       () => GetUserProfile(serviceLocator<UserRepository>()),
+    )
+    ..registerLazySingleton(
+      () => GetCurrentUserProfile(
+        authRepository: serviceLocator<AuthRepository>(),
+        userRepository: serviceLocator<UserRepository>(),
+      ),
     )
     ..registerFactory(
       () => AuthCubit(
