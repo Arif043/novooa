@@ -30,6 +30,31 @@ class UserProfileModel {
     );
   }
 
+  factory UserProfileModel.fromDomain(UserProfile profile) {
+    return UserProfileModel(
+      id: profile.id.value,
+      email: profile.email.value,
+      displayName: profile.displayName,
+      createdAt: profile.createdAt,
+      updatedAt: profile.updatedAt,
+    );
+  }
+
+  Map<String, Object?> toDocument({
+    bool includeCreatedAt = true,
+    bool useServerTimestamps = false,
+  }) {
+    final document = <String, Object?>{
+      'email': email,
+      'displayName': displayName,
+      'updatedAt': _timestampFor(updatedAt, useServerTimestamps),
+    };
+    if (includeCreatedAt) {
+      document['createdAt'] = _timestampFor(createdAt, useServerTimestamps);
+    }
+    return document;
+  }
+
   UserProfile toDomain() {
     return UserProfile(
       id: UniqueId(id),
@@ -38,6 +63,11 @@ class UserProfileModel {
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
+  }
+
+  static Object _timestampFor(DateTime value, bool useServerTimestamp) {
+    if (useServerTimestamp) return FieldValue.serverTimestamp();
+    return Timestamp.fromDate(value);
   }
 
   static DateTime _dateFrom(Object? value) {

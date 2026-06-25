@@ -56,12 +56,8 @@ class FirestoreUserRepository implements UserRepository {
     UserEmail email,
     String displayName,
   ) {
-    return reference.set({
-      'email': email.value,
-      'displayName': displayName.trim(),
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    final model = _newModel(id, email, displayName);
+    return reference.set(model.toDocument(useServerTimestamps: true));
   }
 
   Future<void> _updateProfile(
@@ -69,11 +65,21 @@ class FirestoreUserRepository implements UserRepository {
     UserEmail email,
     String displayName,
   ) {
-    return reference.update({
-      'email': email.value,
-      'displayName': displayName.trim(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    final model = _newModel(UniqueId(reference.id), email, displayName);
+    return reference.update(
+      model.toDocument(includeCreatedAt: false, useServerTimestamps: true),
+    );
+  }
+
+  UserProfileModel _newModel(UniqueId id, UserEmail email, String displayName) {
+    final now = DateTime.now();
+    return UserProfileModel(
+      id: id.value,
+      email: email.value,
+      displayName: displayName.trim(),
+      createdAt: now,
+      updatedAt: now,
+    );
   }
 
   Result<UserProfile, UserFailure> _profileFrom(DocumentSnapshot snapshot) {
@@ -83,5 +89,4 @@ class FirestoreUserRepository implements UserRepository {
     }
     return Success(model.toDomain());
   }
-
 }

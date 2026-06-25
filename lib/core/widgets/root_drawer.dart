@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
+import 'package:syscat2/features/user/domain/repositories/user_repository.dart';
 import '../theme/syscat_theme.dart';
 import '../../root_tab.dart';
 
@@ -61,7 +62,7 @@ class _DrawerHeader extends StatelessWidget {
           _BrandMark(),
           SizedBox(width: 12),
           Text(
-            'Menü',
+            serviceLocator<UserRepository>().,
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
           ),
         ],

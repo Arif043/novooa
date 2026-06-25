@@ -47,6 +47,14 @@ class _RootPageState extends State<RootPage> {
         content: 'Runs, Traces und Freigaben erscheinen hier.',
       ),
     ),
+    RootTab(
+      title: 'Einstellungen',
+      icon: Icons.settings_outlined,
+      builder: (context) => const _PlaceholderPage(
+        title: 'Einstellungen',
+        content: 'Einstellungen und Profil erscheinen hier.',
+      ),
+    )
   ];
 
   void _selectTab(int index) {
