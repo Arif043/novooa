@@ -14,4 +14,9 @@ abstract interface class AuthRepository {
     required EmailAddress email,
     required String password,
   });
+
+  Future<Result<AuthUser, AuthFailure>> signIn({
+    required EmailAddress email,
+    required String password,
+  });
 }

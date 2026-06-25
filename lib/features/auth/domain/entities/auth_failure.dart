@@ -3,6 +3,7 @@ enum AuthFailureKind {
   invalidEmail,
   weakPassword,
   emailAlreadyInUse,
+  invalidCredentials,
   network,
   unknown,
 }
@@ -22,8 +23,10 @@ class AuthFailure {
         'Das Passwort ist zu schwach. Nutze mindestens 6 Zeichen.',
       AuthFailureKind.emailAlreadyInUse =>
         'Für diese E-Mail-Adresse gibt es bereits ein Konto.',
+      AuthFailureKind.invalidCredentials =>
+        'E-Mail oder Passwort ist nicht korrekt.',
       AuthFailureKind.network =>
-        'Registrierung aktuell nicht möglich. Prüfe deine Verbindung.',
+        'Anmeldung aktuell nicht möglich. Prüfe deine Verbindung.',
       AuthFailureKind.unknown =>
         'Registrierung fehlgeschlagen. Bitte versuche es erneut.',
     };

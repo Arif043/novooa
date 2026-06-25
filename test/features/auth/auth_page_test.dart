@@ -8,11 +8,14 @@ import 'package:syscat2/features/auth/domain/entities/auth_failure.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
+import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
-import 'package:syscat2/features/auth/presentation/pages/sign_up_page.dart';
+import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
 
 class _AsyncAuthRepository implements AuthRepository {
   final completer = Completer<Result<AuthUser, AuthFailure>>();
+  int signInCalls = 0;
+  int signUpCalls = 0;
 
   @override
   AuthUser? currentUser() => null;
@@ -21,29 +24,46 @@ class _AsyncAuthRepository implements AuthRepository {
   Stream<AuthUser?> authStateChanges() => const Stream.empty();
 
   @override
+  Future<Result<AuthUser, AuthFailure>> signIn({
+    required EmailAddress email,
+    required String password,
+  }) {
+    signInCalls++;
+    return completer.future;
+  }
+
+  @override
   Future<Result<AuthUser, AuthFailure>> signUp({
     required String name,
     required EmailAddress email,
     required String password,
   }) {
+    signUpCalls++;
     return completer.future;
   }
 }
 
 void main() {
-  testWidgets('rendert die SignUp-Page', (tester) async {
+  testWidgets('rendert Register/Login-Segmente', (tester) async {
     await tester.pumpWidget(_appWith(_AsyncAuthRepository()));
-    expect(find.text('Syscat starten'), findsOneWidget);
+    expect(find.text('Registrieren'), findsOneWidget);
+    expect(find.text('Login'), findsOneWidget);
     expect(find.text('Name'), findsOneWidget);
-    expect(find.text('E-Mail'), findsOneWidget);
-    expect(find.text('Passwort'), findsOneWidget);
     expect(find.text('Konto erstellen'), findsOneWidget);
   });
 
-  testWidgets('zeigt Loading und danach Fehler-SnackBar', (tester) async {
+  testWidgets('wechselt in den Login-Modus', (tester) async {
+    await tester.pumpWidget(_appWith(_AsyncAuthRepository()));
+    await tester.tap(find.text('Login'));
+    await tester.pumpAndSettle();
+    expect(find.text('Name'), findsNothing);
+    expect(find.text('Einloggen'), findsOneWidget);
+  });
+
+  testWidgets('zeigt Loading und danach Login-Fehler', (tester) async {
     final repository = _AsyncAuthRepository();
     await tester.pumpWidget(_appWith(repository));
-    await tester.enterText(find.widgetWithText(TextField, 'Name'), 'Ada');
+    await tester.tap(find.text('Login'));
     await tester.enterText(
       find.widgetWithText(TextField, 'E-Mail'),
       'ada@example.com',
@@ -52,20 +72,24 @@ void main() {
       find.widgetWithText(TextField, 'Passwort'),
       'sicheres-passwort',
     );
-    await tester.tap(find.text('Konto erstellen'));
+    await tester.tap(find.text('Einloggen'));
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     repository.completer.complete(
-      const Result.error(AuthFailure(AuthFailureKind.emailAlreadyInUse)),
+      const Result.error(AuthFailure(AuthFailureKind.invalidCredentials)),
     );
     await tester.pumpAndSettle();
-    expect(find.textContaining('bereits ein Konto'), findsOneWidget);
+    expect(find.textContaining('nicht korrekt'), findsOneWidget);
+    expect(repository.signInCalls, 1);
   });
 }
 
 Widget _appWith(_AsyncAuthRepository repository) {
   return MaterialApp(
     theme: SyscatTheme.lightTheme,
-    home: SignUpPage(signUp: SignUpWithEmailAndPassword(repository)),
+    home: AuthPage(
+      signUp: SignUpWithEmailAndPassword(repository),
+      signIn: SignInWithEmailAndPassword(repository),
+    ),
   );
 }

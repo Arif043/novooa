@@ -41,6 +41,26 @@ class FirebaseAuthRepository implements AuthRepository {
     }
   }
 
+  @override
+  Future<Result<AuthUser, AuthFailure>> signIn({
+    required EmailAddress email,
+    required String password,
+  }) async {
+    try {
+      final credential = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email.value,
+        password: password,
+      );
+      final user = credential.user ?? _firebaseAuth.currentUser;
+      if (user == null) return _unknownFailure();
+      return Result.success(_mapUser(user)!);
+    } on firebase.FirebaseAuthException catch (error) {
+      return Result.error(_mapFailure(error.code));
+    } catch (_) {
+      return _unknownFailure();
+    }
+  }
+
   AuthUser? _mapUser(firebase.User? user) {
     if (user == null) return null;
     return AuthUser(
@@ -57,6 +77,11 @@ class FirebaseAuthRepository implements AuthRepository {
       'email-already-in-use' => const AuthFailure(
         AuthFailureKind.emailAlreadyInUse,
       ),
+      'invalid-credential' => const AuthFailure(
+        AuthFailureKind.invalidCredentials,
+      ),
+      'user-not-found' => const AuthFailure(AuthFailureKind.invalidCredentials),
+      'wrong-password' => const AuthFailure(AuthFailureKind.invalidCredentials),
       'network-request-failed' => const AuthFailure(AuthFailureKind.network),
       _ => const AuthFailure(AuthFailureKind.unknown),
     };

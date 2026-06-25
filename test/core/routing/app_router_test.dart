@@ -8,8 +8,8 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_failure.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/entities/email_address.dart';
-import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/auth/domain/entities/unique_id.dart';
+import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 
 class _RouterAuthRepository implements AuthRepository {
   _RouterAuthRepository(this._currentUser);
@@ -24,25 +24,39 @@ class _RouterAuthRepository implements AuthRepository {
   Stream<AuthUser?> authStateChanges() => _controller.stream;
 
   @override
+  Future<Result<AuthUser, AuthFailure>> signIn({
+    required EmailAddress email,
+    required String password,
+  }) async {
+    _currentUser = _buildUser(email.value, '');
+    _controller.add(_currentUser);
+    return Result.success(_currentUser!);
+  }
+
+  @override
   Future<Result<AuthUser, AuthFailure>> signUp({
     required String name,
     required EmailAddress email,
     required String password,
   }) async {
-    _currentUser = AuthUser(
-      id: const UniqueId('user.1'),
-      email: email.value,
-      displayName: name,
-    );
+    _currentUser = _buildUser(email.value, name);
     _controller.add(_currentUser);
     return Result.success(_currentUser!);
+  }
+
+  AuthUser _buildUser(String email, String displayName) {
+    return AuthUser(
+      id: const UniqueId('user.1'),
+      email: email,
+      displayName: displayName,
+    );
   }
 
   Future<void> close() => _controller.close();
 }
 
 void main() {
-  testWidgets('leitet unauthentifizierte Nutzer zur SignUp-Route', (
+  testWidgets('leitet unauthentifizierte Nutzer zur Auth-Route', (
     tester,
   ) async {
     final repository = _RouterAuthRepository(null);

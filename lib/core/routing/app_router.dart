@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
+import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
-import 'package:syscat2/features/auth/presentation/pages/sign_up_page.dart';
+import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
 import 'package:syscat2/root_page.dart';
 
 class AppRouter {
   static const String home = '/';
-  static const String signUp = '/signup';
+  static const String auth = '/auth';
 
   AppRouter({required AuthRepository authRepository})
     : _authRepository = authRepository,
@@ -28,10 +29,11 @@ class AppRouter {
     routes: [
       GoRoute(path: home, builder: (context, state) => const RootPage()),
       GoRoute(
-        path: signUp,
+        path: auth,
         builder: (context, state) {
-          return SignUpPage(
+          return AuthPage(
             signUp: SignUpWithEmailAndPassword(_authRepository),
+            signIn: SignInWithEmailAndPassword(_authRepository),
           );
         },
       ),
@@ -42,9 +44,9 @@ class AppRouter {
 
   String? _redirect(BuildContext context, GoRouterState state) {
     final isSignedIn = _authRefresh.currentUser != null;
-    final isSigningUp = state.matchedLocation == signUp;
-    if (!isSignedIn) return isSigningUp ? null : signUp;
-    if (isSigningUp) return home;
+    final isAuthRoute = state.matchedLocation == auth;
+    if (!isSignedIn) return isAuthRoute ? null : auth;
+    if (isAuthRoute) return home;
     return null;
   }
 }
