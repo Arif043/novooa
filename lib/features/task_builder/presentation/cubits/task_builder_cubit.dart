@@ -81,6 +81,18 @@ class TaskBuilderCubit extends ChangeNotifier {
     await _saveAndEmit(task.copyWith(nodes: newNodes));
   }
 
+  Future<void> updateNodeTitle(NodeId nodeId, String title) async {
+    final task = _loadedTaskOrNull();
+    if (task == null) return;
+    final index = task.nodes.indexWhere((node) => node.id == nodeId);
+    if (index == -1) return;
+    final currentNode = task.nodes[index];
+    if (currentNode.title == title) return;
+    final updatedNode = currentNode.copyWith(title: title);
+    final newNodes = [...task.nodes]..[index] = updatedNode;
+    await _saveAndEmit(task.copyWith(nodes: newNodes));
+  }
+
   Future<void> removeNode(NodeId nodeId) async {
     final task = _loadedTaskOrNull();
     if (task == null) return;

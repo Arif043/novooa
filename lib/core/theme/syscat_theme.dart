@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:syscat2/core/theme/app_spacing.dart';
 
 class SyscatTheme {
+  static TextStyle taskBody = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: textMain,
+  );
+
+  static TextStyle taskBodySmall = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    color: textMain,
+  );
+
   static const Color primaryOrange = Colors.orange;
   static final Color primaryOrangeDark = Colors.orange.shade800;
   static final Color primaryOrangeLight = Colors.orange.shade300;
@@ -120,7 +133,28 @@ class SyscatTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         hintStyle: TextStyle(color: textHint, fontSize: 14),
-        border: InputBorder.none,
+        filled: true,
+        fillColor: glassSurface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.md),
+          borderSide: BorderSide(color: borderStrong),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.md),
+          borderSide: BorderSide(color: borderStrong),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.md),
+          borderSide: const BorderSide(color: primaryOrange, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.md),
+          borderSide: const BorderSide(color: error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.md),
+          borderSide: const BorderSide(color: error, width: 2),
+        ),
       ),
       listTileTheme: ListTileThemeData(
         iconColor: textHint,
@@ -139,6 +173,7 @@ class SyscatTheme {
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
+      brightness: .light,
     );
   }
 }

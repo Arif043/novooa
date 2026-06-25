@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:syscat2/features/task_builder/presentation/pages/task_builder_page.dart';
 
 import 'root_tab.dart';
 import 'core/widgets/root_app_bar.dart';
 import 'core/widgets/root_drawer.dart';
 import 'core/widgets/root_stage.dart';
 import 'core/widgets/syscat_background.dart';
-import 'features/task_builder/presentation/pages/task_builder_page.dart';
 
 class RootPage extends StatefulWidget {
   const RootPage({super.key});
@@ -22,7 +22,6 @@ class _RootPageState extends State<RootPage> {
       title: 'Aufgaben',
       icon: Icons.dashboard_outlined,
       builder: (context) => const TaskBuilderPage(),
-      useCustomAppBar: true,
     ),
     RootTab(
       title: 'Arbeitspläne',
@@ -61,9 +60,7 @@ class _RootPageState extends State<RootPage> {
     return SyscatBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: selectedTab.useCustomAppBar
-            ? null
-            : RootAppBar(title: selectedTab.title),
+        appBar: RootAppBar(title: selectedTab.title),
         drawer: RootDrawer(
           tabs: _tabs,
           selectedIndex: _selectedTabIndex,
