@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_failure.dart';
@@ -5,6 +7,7 @@ import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
+import 'package:syscat2/features/auth/domain/usecases/sign_out.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_state.dart';
@@ -46,6 +49,11 @@ class _FakeAuthRepository implements AuthRepository {
     signUpCalls++;
     return authResult;
   }
+
+  @override
+  Future<Result<Unit, AuthFailure>> signOut() async {
+    return const Result.success(unit);
+  }
 }
 
 class _FakeUserRepository implements UserRepository {
@@ -83,6 +91,7 @@ AuthCubit _cubitWith(
     signUp: SignUpWithEmailAndPassword(authRepository),
     signIn: SignInWithEmailAndPassword(authRepository),
     ensureUserProfile: EnsureUserProfile(userRepository),
+    signOut: SignOut(authRepository),
   );
 }
 
@@ -133,7 +142,49 @@ void main() {
       expect(userRepository.ensureCalls, 1);
       await cubit.close();
     });
+
+    test('ignoriert spaete Profil-Antwort nach close()', () async {
+      final repository = _FakeAuthRepository(_success());
+      final userRepository = _BlockingUserRepository();
+      final cubit = _cubitWith(repository, userRepository);
+      cubit.updateName('Ada');
+      cubit.updateEmail('ada@example.com');
+      cubit.updatePassword('sicheres-passwort');
+      final submitFuture = cubit.submit();
+      await cubit.close();
+      userRepository.complete();
+      await submitFuture;
+      expect(cubit.isClosed, isTrue);
+    });
   });
+}
+
+class _BlockingUserRepository extends _FakeUserRepository {
+  final _completer = Completer<Result<UserProfile, UserFailure>>();
+
+  void complete() => _completer.complete(_successProfile());
+
+  @override
+  Future<Result<UserProfile, UserFailure>> ensureProfile({
+    required UniqueId id,
+    required UserEmail email,
+    required String displayName,
+  }) {
+    ensureCalls++;
+    return _completer.future;
+  }
+}
+
+Result<UserProfile, UserFailure> _successProfile() {
+  return Result.success(
+    UserProfile(
+      id: const UniqueId('user.1'),
+      email: UserEmail.tryCreate('ada@example.com')!,
+      displayName: 'Ada',
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    ),
+  );
 }
 
 Result<AuthUser, AuthFailure> _success() {

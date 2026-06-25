@@ -12,6 +12,7 @@ import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
+import 'package:syscat2/features/auth/domain/usecases/sign_out.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:syscat2/features/user/domain/entities/user_email.dart';
@@ -51,6 +52,13 @@ class _RouterAuthRepository implements AuthRepository {
     _currentUser = _buildUser(email.value, name);
     _controller.add(_currentUser);
     return Result.success(_currentUser!);
+  }
+
+  @override
+  Future<Result<Unit, AuthFailure>> signOut() async {
+    _currentUser = null;
+    _controller.add(null);
+    return const Result.success(unit);
   }
 
   AuthUser _buildUser(String email, String displayName) {
@@ -132,6 +140,7 @@ void _registerAuthCubit(
     () => AuthCubit(
       signUp: SignUpWithEmailAndPassword(authRepository),
       signIn: SignInWithEmailAndPassword(authRepository),
+      signOut: SignOut(authRepository),
       ensureUserProfile: EnsureUserProfile(userRepository),
     ),
   );

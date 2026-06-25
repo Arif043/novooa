@@ -11,6 +11,7 @@ import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
+import 'package:syscat2/features/auth/domain/usecases/sign_out.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
@@ -48,6 +49,11 @@ class _AsyncAuthRepository implements AuthRepository {
   }) {
     signUpCalls++;
     return completer.future;
+  }
+
+  @override
+  Future<Result<Unit, AuthFailure>> signOut() async {
+    return const Result.success(unit);
   }
 }
 
@@ -123,6 +129,7 @@ Widget _appWith(_AsyncAuthRepository repository) {
     () => AuthCubit(
       signUp: SignUpWithEmailAndPassword(repository),
       signIn: SignInWithEmailAndPassword(repository),
+      signOut: SignOut(repository),
       ensureUserProfile: EnsureUserProfile(_FakeUserRepository()),
     ),
   );

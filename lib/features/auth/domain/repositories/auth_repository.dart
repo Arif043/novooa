@@ -19,4 +19,6 @@ abstract interface class AuthRepository {
     required EmailAddress email,
     required String password,
   });
+
+  Future<Result<Unit, AuthFailure>> signOut();
 }

@@ -61,6 +61,18 @@ class FirebaseAuthRepository implements AuthRepository {
     }
   }
 
+  @override
+  Future<Result<Unit, AuthFailure>> signOut() async {
+    try {
+      await _firebaseAuth.signOut();
+      return const Success(unit);
+    } on firebase.FirebaseAuthException catch (error) {
+      return Result.error(_mapFailure(error.code));
+    } catch (_) {
+      return _unknownFailure().mapSuccess((_) => unit);
+    }
+  }
+
   AuthUser? _mapUser(firebase.User? user) {
     if (user == null) return null;
     return AuthUser(

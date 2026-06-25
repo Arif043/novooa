@@ -57,7 +57,6 @@ class FirestoreUserRepository implements UserRepository {
     String displayName,
   ) {
     return reference.set({
-      'uid': id.value,
       'email': email.value,
       'displayName': displayName.trim(),
       'createdAt': FieldValue.serverTimestamp(),

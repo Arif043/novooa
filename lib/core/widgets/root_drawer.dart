@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:syscat2/core/di/service_locator.dart';
+import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
 import '../theme/syscat_theme.dart';
 import '../../root_tab.dart';
 
@@ -37,7 +39,7 @@ class RootDrawer extends StatelessWidget {
                 textColor: ColorScheme.of(context).error,
                 leading: const Icon(Icons.logout),
                 title: const Text('Abmelden'),
-                onTap: () {},
+                onTap: () => serviceLocator<AuthCubit>().signOut(),
               ),
             ],
           ),
