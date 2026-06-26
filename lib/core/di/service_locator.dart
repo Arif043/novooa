@@ -14,6 +14,11 @@ import '../../features/settings/domain/usecases/get_ai_model_settings.dart';
 import '../../features/settings/domain/usecases/save_ai_provider_settings.dart';
 import '../../features/settings/infrastructure/repositories/firestore_settings_repository.dart';
 import '../../features/settings/presentation/cubits/settings_cubit.dart';
+import '../../features/task_builder/domain/repositories/task_definition_repository.dart';
+import '../../features/task_builder/domain/usecases/get_draft_task_definition.dart';
+import '../../features/task_builder/domain/usecases/save_draft_task_definition.dart';
+import '../../features/task_builder/infrastructure/repositories/in_memory_task_definition_repository.dart';
+import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import '../../features/user/domain/repositories/user_repository.dart';
 import '../../features/user/domain/usecases/ensure_user_profile.dart';
 import '../../features/user/domain/usecases/get_user_profile.dart';
@@ -34,6 +39,9 @@ void configureDependencies() {
     )
     ..registerLazySingleton<SettingsRepository>(
       () => FirestoreSettingsRepository(serviceLocator<FirebaseFirestore>()),
+    )
+    ..registerLazySingleton<TaskDefinitionRepository>(
+      InMemoryTaskDefinitionRepository.new,
     )
     ..registerLazySingleton(() => SignOut(serviceLocator<AuthRepository>()))
     ..registerLazySingleton(
@@ -60,6 +68,12 @@ void configureDependencies() {
     ..registerLazySingleton(
       () => SaveAiProviderSettings(serviceLocator<SettingsRepository>()),
     )
+    ..registerLazySingleton(
+      () => GetDraftTaskDefinition(serviceLocator<TaskDefinitionRepository>()),
+    )
+    ..registerLazySingleton(
+      () => SaveDraftTaskDefinition(serviceLocator<TaskDefinitionRepository>()),
+    )
     ..registerFactory(
       () => AuthCubit(
         signUp: serviceLocator<SignUpWithEmailAndPassword>(),
@@ -74,6 +88,12 @@ void configureDependencies() {
         ensureUserProfile: serviceLocator<EnsureUserProfile>(),
         getAiModelSettings: serviceLocator<GetAiModelSettings>(),
         saveAiProviderSettings: serviceLocator<SaveAiProviderSettings>(),
+      ),
+    )
+    ..registerFactory(
+      () => TaskBuilderCubit(
+        getDraftTaskDefinition: serviceLocator<GetDraftTaskDefinition>(),
+        saveDraftTaskDefinition: serviceLocator<SaveDraftTaskDefinition>(),
       ),
     )
     ..registerLazySingleton(

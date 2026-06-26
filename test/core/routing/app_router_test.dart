@@ -15,6 +15,11 @@ import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_pas
 import 'package:syscat2/features/auth/domain/usecases/sign_out.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
+import 'package:syscat2/features/task_builder/domain/repositories/task_definition_repository.dart';
+import 'package:syscat2/features/task_builder/domain/usecases/get_draft_task_definition.dart';
+import 'package:syscat2/features/task_builder/domain/usecases/save_draft_task_definition.dart';
+import 'package:syscat2/features/task_builder/infrastructure/repositories/in_memory_task_definition_repository.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/user/domain/entities/user_email.dart';
 import 'package:syscat2/features/user/domain/entities/user_failure.dart';
 import 'package:syscat2/features/user/domain/entities/user_profile.dart';
@@ -105,6 +110,7 @@ void main() {
     final repository = _RouterAuthRepository(null);
     final userRepository = _RouterUserRepository();
     _registerAuthCubit(repository, userRepository);
+    _registerTaskBuilderCubit();
     final appRouter = AppRouter(authRepository: repository);
     await tester.pumpWidget(_appWith(appRouter));
     await tester.pumpAndSettle();
@@ -123,6 +129,7 @@ void main() {
     );
     final userRepository = _RouterUserRepository();
     _registerAuthCubit(repository, userRepository);
+    _registerTaskBuilderCubit();
     final appRouter = AppRouter(authRepository: repository);
     await tester.pumpWidget(_appWith(appRouter));
     await tester.pumpAndSettle();
@@ -130,6 +137,19 @@ void main() {
     appRouter.dispose();
     await repository.close();
   });
+}
+
+void _registerTaskBuilderCubit() {
+  final repository = InMemoryTaskDefinitionRepository();
+  serviceLocator.registerLazySingleton<TaskDefinitionRepository>(
+    () => repository,
+  );
+  serviceLocator.registerFactory(
+    () => TaskBuilderCubit(
+      getDraftTaskDefinition: GetDraftTaskDefinition(repository),
+      saveDraftTaskDefinition: SaveDraftTaskDefinition(repository),
+    ),
+  );
 }
 
 void _registerAuthCubit(

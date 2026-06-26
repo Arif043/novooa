@@ -87,17 +87,19 @@ class TaskDefinition {
     required String? conditionLabel,
   }) {
     var changed = false;
-    final newEdges = edges.map((edge) {
-      if (edge.from == from && edge.to == to) {
-        changed = true;
-        return WorkflowEdge(
-          from: edge.from,
-          to: edge.to,
-          conditionLabel: conditionLabel,
-        );
-      }
-      return edge;
-    }).toList(growable: false);
+    final newEdges = edges
+        .map((edge) {
+          if (edge.from == from && edge.to == to) {
+            changed = true;
+            return WorkflowEdge(
+              from: edge.from,
+              to: edge.to,
+              conditionLabel: conditionLabel,
+            );
+          }
+          return edge;
+        })
+        .toList(growable: false);
     if (!changed) return this;
     return copyWith(edges: newEdges);
   }
@@ -138,19 +140,21 @@ class TaskDefinition {
     final nodeExists = nodes.any((node) => node.id == nodeId);
     if (!nodeExists) return this;
 
-    final remainingNodes =
-        nodes.where((node) => node.id != nodeId).toList(growable: false);
+    final remainingNodes = nodes
+        .where((node) => node.id != nodeId)
+        .toList(growable: false);
     final remainingEdges = edges
         .where((edge) => edge.from != nodeId && edge.to != nodeId)
         .toList(growable: false);
 
-    final selectionStillValid =
-        remainingNodes.any((node) => node.id == selectedNodeId);
+    final selectionStillValid = remainingNodes.any(
+      (node) => node.id == selectedNodeId,
+    );
     final newSelection = selectionStillValid
         ? selectedNodeId
         : (remainingNodes.isNotEmpty
-            ? remainingNodes.last.id
-            : const NodeId(''));
+              ? remainingNodes.last.id
+              : const NodeId(''));
 
     return copyWith(
       nodes: remainingNodes,

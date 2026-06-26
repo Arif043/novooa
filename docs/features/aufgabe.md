@@ -71,7 +71,7 @@ features/task_builder/
 
 | Enum-Wert               | UI-Label (de)                | Beschreibung                                                 | Genkit-Mapping                                       |
 | ----------------------- | ---------------------------- | ------------------------------------------------------------- | ---------------------------------------------------- |
-| `prompt`                | **Prompt**                   | LLM-Aufruf mit Vorlage und Variablen                          | `ai.generate({prompt, model})`                        |
+| `prompt`                | **Prompt**                   | LLM-Aufruf mit Vorlage und Variablen                          | `promptTaskFlow`                                      |
 | `conditionalFlow`       | **Bedingter Ablauf**         | Verzweigt anhand eines Prädikats auf den vorherigen Output   | `conditionalTaskFlow`                                 |
 | `iterativeRefinement`   | **Iterative Verfeinerung**   | Draft → Critique → Improve, n Runden                          | `iterativeRefinementTaskFlow`                         |
 | `toolCall`              | **Werkzeug-Aufruf**          | Strukturierte Tool-Invocation (z. B. Suche, E-Mail, Kalender) | `ai.generate({tools: […]})`                           |
@@ -80,7 +80,7 @@ features/task_builder/
 
 Beim Erweitern der Enum müssen Label, Beschreibung und Genkit-Mapping
 synchron ergänzt werden — die `WorkflowPrimitiveLabels`-Extension in
-`task_builder_cubit.dart` liefert für jeden Wert einen `label` und
+`workflow_primitive_labels.dart` liefert für jeden Wert einen `label` und
 `description`-Zweig.
 
 ## UI-Layout
@@ -120,8 +120,20 @@ synchron ergänzt werden — die `WorkflowPrimitiveLabels`-Extension in
 
 ## Genkit-Flows (aufgabenspezifisch)
 
-Datei: `functions/src/task-workflows.ts`. Beide Flows werden in
+Datei: `functions/src/task-workflows.ts`. Die Flows werden in
 `functions/src/index.ts` re-exportiert.
+
+### `promptTaskFlow`
+
+Führt einen einzelnen Modell-Turn aus. Bei `outputType = decision` wird das
+Modell angewiesen, nur eine der konfigurierten Optionen zurückzugeben.
+
+```ts
+input:  { instruction: string; context?: string; outputType?: "text" | "decision"; choices?: string[] }
+output: { answer: string }
+```
+
+Temperatur: `0.3`. Streamt nicht.
 
 ### `conditionalTaskFlow`
 

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class Toolbar extends StatelessWidget {
-  const Toolbar({super.key});
+  const Toolbar({super.key, required this.onAddPrompt});
+
+  final VoidCallback onAddPrompt;
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +19,7 @@ class Toolbar extends StatelessWidget {
           mainAxisSize: .min,
           children: [
             IconButton(
-              onPressed: () => {},
+              onPressed: onAddPrompt,
               icon: const Icon(Icons.format_align_left),
               tooltip: "Prompt hinzufügen",
             ),
@@ -47,7 +49,6 @@ class Toolbar extends StatelessWidget {
             ),
           ],
         ),
-
       ),
     );
   }

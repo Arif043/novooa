@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 
 import '../../domain/entities/task_definition.dart';
+import '../../domain/entities/prompt_node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../../domain/usecases/get_draft_task_definition.dart';
 import '../../domain/usecases/save_draft_task_definition.dart';
 import 'task_builder_state.dart';
+import 'workflow_primitive_labels.dart';
 
 /// Zustandsverwaltung für den Aufgaben-Builder.
 ///
@@ -18,8 +20,8 @@ class TaskBuilderCubit extends ChangeNotifier {
   TaskBuilderCubit({
     required GetDraftTaskDefinition getDraftTaskDefinition,
     required SaveDraftTaskDefinition saveDraftTaskDefinition,
-  })  : _getDraftTaskDefinition = getDraftTaskDefinition,
-        _saveDraftTaskDefinition = saveDraftTaskDefinition;
+  }) : _getDraftTaskDefinition = getDraftTaskDefinition,
+       _saveDraftTaskDefinition = saveDraftTaskDefinition;
 
   final GetDraftTaskDefinition _getDraftTaskDefinition;
   final SaveDraftTaskDefinition _saveDraftTaskDefinition;
@@ -70,27 +72,17 @@ class TaskBuilderCubit extends ChangeNotifier {
   }
 
   Future<void> updateNodeDescription(NodeId nodeId, String description) async {
-    final task = _loadedTaskOrNull();
-    if (task == null) return;
-    final index = task.nodes.indexWhere((node) => node.id == nodeId);
-    if (index == -1) return;
-    final currentNode = task.nodes[index];
-    if (currentNode.description == description) return;
-    final updatedNode = currentNode.copyWith(description: description);
-    final newNodes = [...task.nodes]..[index] = updatedNode;
-    await _saveAndEmit(task.copyWith(nodes: newNodes));
+    return _updateNode(nodeId, (node) {
+      if (node.description == description) return node;
+      return node.copyWith(description: description);
+    });
   }
 
   Future<void> updateNodeTitle(NodeId nodeId, String title) async {
-    final task = _loadedTaskOrNull();
-    if (task == null) return;
-    final index = task.nodes.indexWhere((node) => node.id == nodeId);
-    if (index == -1) return;
-    final currentNode = task.nodes[index];
-    if (currentNode.title == title) return;
-    final updatedNode = currentNode.copyWith(title: title);
-    final newNodes = [...task.nodes]..[index] = updatedNode;
-    await _saveAndEmit(task.copyWith(nodes: newNodes));
+    return _updateNode(nodeId, (node) {
+      if (node.title == title) return node;
+      return node.copyWith(title: title);
+    });
   }
 
   Future<void> removeNode(NodeId nodeId) async {
@@ -101,15 +93,41 @@ class TaskBuilderCubit extends ChangeNotifier {
   }
 
   Future<void> updateNodeLogicMode(NodeId nodeId, LogicMode mode) async {
-    final task = _loadedTaskOrNull();
-    if (task == null) return;
-    final index = task.nodes.indexWhere((node) => node.id == nodeId);
-    if (index == -1) return;
-    final currentNode = task.nodes[index];
-    if (currentNode.logicMode == mode) return;
-    final updatedNode = currentNode.copyWith(logicMode: mode);
-    final newNodes = [...task.nodes]..[index] = updatedNode;
-    await _saveAndEmit(task.copyWith(nodes: newNodes));
+    return _updateNode(nodeId, (node) {
+      if (node.logicMode == mode) return node;
+      return node.copyWith(logicMode: mode);
+    });
+  }
+
+  Future<void> updatePromptInstruction(NodeId nodeId, String instruction) {
+    return _updateNode(nodeId, (node) {
+      final promptConfig = node.promptConfig.copyWith(instruction: instruction);
+      return node.copyWith(promptConfig: promptConfig);
+    });
+  }
+
+  Future<void> updatePromptOutputType(
+    NodeId nodeId,
+    PromptOutputType outputType,
+  ) {
+    return _updateNode(nodeId, (node) {
+      final promptConfig = node.promptConfig.copyWith(outputType: outputType);
+      return node.copyWith(promptConfig: promptConfig);
+    });
+  }
+
+  Future<void> updatePromptChoice({
+    required NodeId nodeId,
+    required int index,
+    required String value,
+  }) {
+    return _updateNode(nodeId, (node) {
+      if (index < 0 || index >= node.promptConfig.choices.length) return node;
+      if (node.promptConfig.choices[index] == value) return node;
+      return node.copyWith(
+        promptConfig: node.promptConfig.updateChoice(index, value),
+      );
+    });
   }
 
   Future<void> updateEdgeCondition({
@@ -147,6 +165,21 @@ class TaskBuilderCubit extends ChangeNotifier {
     _emit(TaskBuilderLoaded(updated));
   }
 
+  Future<void> _updateNode(
+    NodeId nodeId,
+    WorkflowNode Function(WorkflowNode node) update,
+  ) async {
+    final task = _loadedTaskOrNull();
+    if (task == null) return;
+    final index = task.nodes.indexWhere((node) => node.id == nodeId);
+    if (index == -1) return;
+    final currentNode = task.nodes[index];
+    final updatedNode = update(currentNode);
+    if (identical(updatedNode, currentNode)) return;
+    final newNodes = [...task.nodes]..[index] = updatedNode;
+    await _saveAndEmit(task.copyWith(nodes: newNodes));
+  }
+
   WorkflowNode _buildNode(WorkflowPrimitive primitive, int index) {
     final number = index + 1;
     return WorkflowNode(
@@ -160,36 +193,5 @@ class TaskBuilderCubit extends ChangeNotifier {
   void _emit(TaskBuilderState state) {
     _state = state;
     notifyListeners();
-  }
-}
-
-/// Deutsche UI-Labels und Beschreibungen für die sechs
-/// [WorkflowPrimitive]-Werte. Synchron zur Tabelle in
-/// `docs/features/aufgabe.md` § Primitives halten.
-extension WorkflowPrimitiveLabels on WorkflowPrimitive {
-  String get label {
-    return switch (this) {
-      WorkflowPrimitive.prompt => 'Prompt',
-      WorkflowPrimitive.conditionalFlow => 'Bedingter Ablauf',
-      WorkflowPrimitive.iterativeRefinement => 'Iterative Verfeinerung',
-      WorkflowPrimitive.toolCall => 'Werkzeug-Aufruf',
-      WorkflowPrimitive.humanApproval => 'Freigabe',
-      WorkflowPrimitive.validation => 'Validierung',
-    };
-  }
-
-  String get description {
-    return switch (this) {
-      WorkflowPrimitive.prompt => 'Formt Eingaben in einen Modellauftrag.',
-      WorkflowPrimitive.conditionalFlow =>
-        'Verzweigt den Ablauf anhand von Regeln.',
-      WorkflowPrimitive.iterativeRefinement =>
-        'Verbessert ein Ergebnis über mehrere Runden.',
-      WorkflowPrimitive.toolCall =>
-        'Bindet externe Aktionen oder Datenquellen ein.',
-      WorkflowPrimitive.humanApproval => 'Wartet auf menschliche Freigabe.',
-      WorkflowPrimitive.validation =>
-        'Prüft Ergebnis, Schema oder Qualitätskriterien.',
-    };
   }
 }

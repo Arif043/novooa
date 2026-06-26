@@ -1,4 +1,5 @@
 import '../../domain/entities/task_definition.dart';
+import '../../domain/entities/prompt_node_config.dart';
 import '../../domain/entities/workflow_edge.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../../domain/repositories/task_definition_repository.dart';
@@ -35,13 +36,20 @@ class InMemoryTaskDefinitionRepository implements TaskDefinitionRepository {
       title: 'Neue Aufgabe',
       objective:
           'Automatisierbare Arbeit als kontrollierten Genkit-Flow bauen.',
-      selectedNodeId: conditionId,
+      selectedNodeId: inputId,
       nodes: const [
         WorkflowNode(
           id: inputId,
           primitive: WorkflowPrimitive.prompt,
           title: 'Eingabe verstehen',
           description: 'Nutzerziel, Kontext und Erfolgskriterium erfassen.',
+          promptConfig: PromptNodeConfig(
+            instruction:
+                'Fasse das Nutzerziel, den Kontext und das Erfolgskriterium zusammen.',
+            outputType: PromptOutputType.text,
+            firstChoice: '',
+            secondChoice: '',
+          ),
         ),
         WorkflowNode(
           id: conditionId,
@@ -62,6 +70,12 @@ class InMemoryTaskDefinitionRepository implements TaskDefinitionRepository {
           primitive: WorkflowPrimitive.prompt,
           title: 'Modellauftrag',
           description: 'Formt Eingaben in einen Modellauftrag um.',
+          promptConfig: PromptNodeConfig(
+            instruction: 'Erzeuge eine klare Antwort auf Basis des Kontexts.',
+            outputType: PromptOutputType.text,
+            firstChoice: '',
+            secondChoice: '',
+          ),
         ),
         WorkflowNode(
           id: approveId,

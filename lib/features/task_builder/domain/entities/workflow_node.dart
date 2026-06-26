@@ -1,9 +1,10 @@
+import 'prompt_node_config.dart';
+
 /// Stabile Bausteintypen, aus denen ein Workflow zusammengesetzt wird.
 ///
 /// Synchron zur Tabelle in `docs/features/aufgabe.md` § Primitives halten:
 /// Jeder neue Enum-Wert braucht einen Eintrag dort, einen UI-Label in der
-/// `WorkflowPrimitiveLabels`-Extension im Cubit und ein Genkit-Mapping im
-/// `NodeInspector`.
+/// `WorkflowPrimitiveLabels`-Extension und ein Genkit-Mapping im Inspector.
 enum WorkflowPrimitive {
   prompt,
   conditionalFlow,
@@ -62,19 +63,29 @@ class WorkflowNode {
     required this.title,
     required this.description,
     this.logicMode = LogicMode.schemaBasiert,
-  });
+    PromptNodeConfig? promptConfig,
+  }) : promptConfig =
+           promptConfig ??
+           const PromptNodeConfig(
+             instruction: '',
+             outputType: PromptOutputType.text,
+             firstChoice: '',
+             secondChoice: '',
+           );
 
   final NodeId id;
   final WorkflowPrimitive primitive;
   final String title;
   final String description;
   final LogicMode logicMode;
+  final PromptNodeConfig promptConfig;
 
   WorkflowNode copyWith({
     WorkflowPrimitive? primitive,
     String? title,
     String? description,
     LogicMode? logicMode,
+    PromptNodeConfig? promptConfig,
   }) {
     return WorkflowNode(
       id: id,
@@ -82,6 +93,7 @@ class WorkflowNode {
       title: title ?? this.title,
       description: description ?? this.description,
       logicMode: logicMode ?? this.logicMode,
+      promptConfig: promptConfig ?? this.promptConfig,
     );
   }
 }
