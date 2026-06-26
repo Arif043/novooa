@@ -8,54 +8,50 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_s
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/toolbar.dart';
 
-class TaskBuilderPage extends StatefulWidget {
+class TaskBuilderPage extends StatelessWidget {
   const TaskBuilderPage({super.key});
 
   @override
-  State<TaskBuilderPage> createState() => _TaskBuilderPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => serviceLocator<TaskBuilderCubit>()..load(),
+      child: const _TaskBuilderView(),
+    );
+  }
 }
 
-class _TaskBuilderPageState extends State<TaskBuilderPage> {
-  late final TaskBuilderCubit _cubit;
-
-  @override
-  void initState() {
-    super.initState();
-    _cubit = serviceLocator<TaskBuilderCubit>()..load();
-  }
-
-  @override
-  void dispose() {
-    _cubit.dispose();
-    super.dispose();
-  }
+class _TaskBuilderView extends StatelessWidget {
+  const _TaskBuilderView();
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
-      builder: (context, state) {
-        return AnimatedBuilder(
-          animation: _cubit,
-          builder: (context, _) {
-            final promptNode = _promptNodeOrNull(_cubit.state);
-            return Column(
-              children: [
-                Toolbar(onAddPrompt: _addPrompt),
-                const SizedBox(height: AppSpacing.xxl),
-                if (promptNode != null)
-                  PromptWidget(node: promptNode, cubit: _cubit)
-                else
-                  const CircularProgressIndicator(),
-              ],
-            );
-          },
-        );
-      },
+      builder: (context, state) => _TaskBuilderBody(state: state),
     );
   }
+}
 
-  void _addPrompt() {
-    _cubit.addPrimitive(WorkflowPrimitive.prompt);
+class _TaskBuilderBody extends StatelessWidget {
+  const _TaskBuilderBody({required this.state});
+
+  final TaskBuilderState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<TaskBuilderCubit>();
+    final promptNode = _promptNodeOrNull(state);
+    return Column(
+      children: [
+        Toolbar(
+          onAddPrompt: () => cubit.addPrimitive(WorkflowPrimitive.prompt),
+        ),
+        const SizedBox(height: AppSpacing.xxl),
+        if (promptNode != null)
+          PromptWidget(node: promptNode, cubit: cubit)
+        else
+          const CircularProgressIndicator(),
+      ],
+    );
   }
 
   WorkflowNode? _promptNodeOrNull(TaskBuilderState state) {

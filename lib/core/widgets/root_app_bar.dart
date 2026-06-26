@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
 class RootAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const RootAppBar({super.key, required this.title});
+  const RootAppBar({
+    super.key,
+    required this.title,
+    this.actions,
+  });
 
   final String title;
+  final List<Widget>? actions;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -19,6 +24,7 @@ class RootAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       title: Text(title),
+      actions: actions,
     );
   }
 }

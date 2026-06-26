@@ -66,7 +66,7 @@ void main() {
       final loaded = cubit.state as TaskBuilderLoaded;
       expect(loaded.taskDefinition.title, 'Seed');
       expect(loaded.taskDefinition.nodes.length, 1);
-      cubit.dispose();
+      await cubit.close();
     });
 
     test(
@@ -83,7 +83,7 @@ void main() {
           loaded.taskDefinition.selectedNodeId,
           isNot(equals(const NodeId('node.1'))),
         );
-        cubit.dispose();
+        await cubit.close();
       },
     );
 
@@ -97,7 +97,7 @@ void main() {
         (n) => n.id == nodeId,
       );
       expect(updated.description, 'Neue Beschreibung');
-      cubit.dispose();
+      await cubit.close();
     });
 
     test('removeNode entfernt Knoten und repariert Selektion', () async {
@@ -108,7 +108,7 @@ void main() {
       final loaded = cubit.state as TaskBuilderLoaded;
       expect(loaded.taskDefinition.nodes, isEmpty);
       expect(loaded.taskDefinition.selectedNodeOrNull, isNull);
-      cubit.dispose();
+      await cubit.close();
     });
 
     test('updateTitle no-op bei identischem Wert', () async {
@@ -125,7 +125,7 @@ void main() {
         (stateBefore as TaskBuilderLoaded).taskDefinition.title,
         (stateAfter as TaskBuilderLoaded).taskDefinition.title,
       );
-      cubit.dispose();
+      await cubit.close();
     });
 
     test('updatePromptInstruction persistiert Prompt-Anweisung', () async {
@@ -138,7 +138,7 @@ void main() {
       final loaded = cubit.state as TaskBuilderLoaded;
       final node = loaded.taskDefinition.nodes.first;
       expect(node.promptConfig.instruction, 'Schreibe eine kurze Antwort.');
-      cubit.dispose();
+      await cubit.close();
     });
 
     test('updatePromptOutputType persistiert Entscheidungsmodus', () async {
@@ -151,7 +151,7 @@ void main() {
       final loaded = cubit.state as TaskBuilderLoaded;
       final node = loaded.taskDefinition.nodes.first;
       expect(node.promptConfig.outputType, PromptOutputType.decision);
-      cubit.dispose();
+      await cubit.close();
     });
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:core';
+
 import 'package:flutter/material.dart';
 import 'package:syscat2/features/settings/presentation/pages/settings_page.dart';
 import 'package:syscat2/features/task_builder/presentation/pages/task_builder_page.dart';
@@ -18,41 +20,41 @@ class RootPage extends StatefulWidget {
 class _RootPageState extends State<RootPage> {
   int _selectedTabIndex = 0;
 
-  static final List<RootTab> _tabs = [
-    RootTab(
+  static final List<({RootTab tab, List<Widget>? actions})> _configs = [
+    (tab: RootTab(
       title: 'Aufgaben',
       icon: Icons.dashboard_outlined,
       builder: (context) => const TaskBuilderPage(),
-    ),
-    RootTab(
+    ), actions: [FilledButton(onPressed: () {}, child: const Text('Run Task'))]),
+    (tab: RootTab(
       title: 'Arbeitspläne',
       icon: Icons.folder_outlined,
       builder: (context) => const _PlaceholderPage(
         title: 'Arbeitspläne',
         content: 'Gespeicherte Aufgaben und Vorlagen erscheinen hier.',
       ),
-    ),
-    RootTab(
+    ), actions: null),
+    (tab: RootTab(
       title: 'Zeitplan',
       icon: Icons.bar_chart_outlined,
       builder: (context) => const _PlaceholderPage(
         title: 'Zeitplan',
         content: 'Geplante und wiederkehrende Automationen erscheinen hier.',
       ),
-    ),
-    RootTab(
+    ), actions: null),
+    (tab: RootTab(
       title: 'Aktivitäten',
       icon: Icons.history_outlined,
       builder: (context) => const _PlaceholderPage(
         title: 'Aktivitäten',
         content: 'Runs, Traces und Freigaben erscheinen hier.',
       ),
-    ),
-    RootTab(
+    ), actions: null),
+    (tab: RootTab(
       title: 'Einstellungen',
       icon: Icons.settings_outlined,
       builder: (context) => const SettingsPage(),
-    ),
+    ), actions: null),
   ];
 
   void _selectTab(int index) {
@@ -62,13 +64,13 @@ class _RootPageState extends State<RootPage> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedTab = _tabs[_selectedTabIndex];
+    final selectedTab = _configs[_selectedTabIndex].tab;
     return SyscatBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: RootAppBar(title: selectedTab.title),
+        appBar: RootAppBar(title: selectedTab.title, actions: _configs[_selectedTabIndex].actions),
         drawer: RootDrawer(
-          tabs: _tabs,
+          tabs: _configs.map((c) => c.tab).toList(),
           selectedIndex: _selectedTabIndex,
           onSelected: _selectTab,
         ),
