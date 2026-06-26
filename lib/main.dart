@@ -20,6 +20,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Syscat',
+      debugShowCheckedModeBanner: false,
       theme: SyscatTheme.lightTheme,
       routerConfig: serviceLocator<AppRouter>().router,
     );

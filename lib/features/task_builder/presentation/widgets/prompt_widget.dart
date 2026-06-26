@@ -1,151 +1,155 @@
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/core/theme/syscat_theme.dart';
 
 import '../../domain/entities/prompt_node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 
-class PromptWidget extends StatelessWidget {
+class PromptWidget extends StatefulWidget {
   const PromptWidget({super.key, required this.node, required this.cubit});
 
   final WorkflowNode node;
   final TaskBuilderCubit cubit;
 
   @override
+  State<PromptWidget> createState() => _PromptWidgetState();
+}
+
+class _PromptWidgetState extends State<PromptWidget> {
+  late PromptOutputType selectedOutput;
+  late final TextEditingController _instructionController;
+  late final TextEditingController _firstChoiceController;
+  late final TextEditingController _secondChoiceController;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedOutput = widget.node.promptConfig.outputType;
+    _instructionController = _controller(widget.node.promptConfig.instruction);
+    _firstChoiceController = _controller(widget.node.promptConfig.firstChoice);
+    _secondChoiceController = _controller(
+      widget.node.promptConfig.secondChoice,
+    );
+  }
+
+  @override
+  void didUpdateWidget(PromptWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    selectedOutput = widget.node.promptConfig.outputType;
+    if (oldWidget.node.id != widget.node.id) {
+      _syncController(
+        _instructionController,
+        widget.node.promptConfig.instruction,
+      );
+      _syncController(
+        _firstChoiceController,
+        widget.node.promptConfig.firstChoice,
+      );
+      _syncController(
+        _secondChoiceController,
+        widget.node.promptConfig.secondChoice,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _instructionController.dispose();
+    _firstChoiceController.dispose();
+    _secondChoiceController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final config = node.promptConfig;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _PromptHeader(node: node),
-            const SizedBox(height: AppSpacing.lg),
-            _InstructionField(node: node, cubit: cubit),
-            const SizedBox(height: AppSpacing.md),
-            _OutputTypeSelector(node: node, cubit: cubit),
-            if (config.outputType == PromptOutputType.decision)
-              _ChoiceFields(node: node, cubit: cubit),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: SyscatTheme.primaryOrangeHover,
+        borderRadius: BorderRadius.circular(AppSpacing.xl),
       ),
-    );
-  }
-}
-
-class _PromptHeader extends StatelessWidget {
-  const _PromptHeader({required this.node});
-
-  final WorkflowNode node;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Icon(Icons.text_fields, color: colorScheme.primary),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(child: Text(node.title, style: textTheme.titleLarge)),
-      ],
-    );
-  }
-}
-
-class _InstructionField extends StatelessWidget {
-  const _InstructionField({required this.node, required this.cubit});
-
-  final WorkflowNode node;
-  final TaskBuilderCubit cubit;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      key: ValueKey('${node.id.value}.instruction'),
-      initialValue: node.promptConfig.instruction,
-      minLines: 4,
-      maxLines: 8,
-      decoration: const InputDecoration(
-        labelText: 'Anweisung',
-        hintText: 'Beschreibe, was das Sprachmodell tun soll.',
-      ),
-      onChanged: (value) => cubit.updatePromptInstruction(node.id, value),
-    );
-  }
-}
-
-class _OutputTypeSelector extends StatelessWidget {
-  const _OutputTypeSelector({required this.node, required this.cubit});
-
-  final WorkflowNode node;
-  final TaskBuilderCubit cubit;
-
-  @override
-  Widget build(BuildContext context) {
-    return SegmentedButton<PromptOutputType>(
-      showSelectedIcon: false,
-      segments: const [
-        ButtonSegment(
-          value: PromptOutputType.text,
-          label: Text('Freitext'),
-          icon: Icon(Icons.notes),
-        ),
-        ButtonSegment(
-          value: PromptOutputType.decision,
-          label: Text('Entscheidung'),
-          icon: Icon(Icons.checklist),
-        ),
-      ],
-      selected: {node.promptConfig.outputType},
-      onSelectionChanged: (selection) {
-        cubit.updatePromptOutputType(node.id, selection.first);
-      },
-    );
-  }
-}
-
-class _ChoiceFields extends StatelessWidget {
-  const _ChoiceFields({required this.node, required this.cubit});
-
-  final WorkflowNode node;
-  final TaskBuilderCubit cubit;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.md),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _ChoiceField(node: node, cubit: cubit, index: 0),
-          const SizedBox(height: AppSpacing.sm),
-          _ChoiceField(node: node, cubit: cubit, index: 1),
+          Text('Prompt', style: SyscatTheme.taskBody),
+          const SizedBox(height: AppSpacing.xs),
+          TextField(
+            controller: _instructionController,
+            decoration: const InputDecoration(
+              hintText: 'Hier kommt die Anweisung',
+            ),
+            onChanged: _updateInstruction,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text('Ausgabe', style: SyscatTheme.taskBody),
+          const SizedBox(height: AppSpacing.xs),
+          SegmentedButton<PromptOutputType>(
+            segments: const [
+              ButtonSegment(
+                value: PromptOutputType.text,
+                label: Text('Freitext'),
+                icon: Icon(Icons.text_fields),
+              ),
+              ButtonSegment(
+                value: PromptOutputType.decision,
+                label: Text('Entscheidung'),
+                icon: Icon(Icons.list),
+              ),
+            ],
+            selected: {selectedOutput},
+            onSelectionChanged: _updateOutputType,
+          ),
+          if (selectedOutput == PromptOutputType.decision) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text('Mögliche Antworten', style: SyscatTheme.taskBodySmall),
+            const SizedBox(height: AppSpacing.xs),
+            TextField(
+              controller: _firstChoiceController,
+              decoration: const InputDecoration(
+                hintText: 'Hier kommt die erste Antwort',
+              ),
+              onChanged: (value) => _updateChoice(0, value),
+            ),
+            TextField(
+              controller: _secondChoiceController,
+              decoration: const InputDecoration(
+                hintText: 'Hier kommt die zweite Antwort',
+              ),
+              onChanged: (value) => _updateChoice(1, value),
+            ),
+          ],
         ],
       ),
     );
   }
-}
 
-class _ChoiceField extends StatelessWidget {
-  const _ChoiceField({
-    required this.node,
-    required this.cubit,
-    required this.index,
-  });
+  TextEditingController _controller(String text) {
+    return TextEditingController(text: text);
+  }
 
-  final WorkflowNode node;
-  final TaskBuilderCubit cubit;
-  final int index;
+  void _syncController(TextEditingController controller, String text) {
+    controller.value = controller.value.copyWith(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      key: ValueKey('${node.id.value}.choice.$index'),
-      initialValue: node.promptConfig.choices[index],
-      decoration: InputDecoration(labelText: 'Antwort ${index + 1}'),
-      onChanged: (value) {
-        cubit.updatePromptChoice(nodeId: node.id, index: index, value: value);
-      },
+  void _updateInstruction(String value) {
+    widget.cubit.updatePromptInstruction(widget.node.id, value);
+  }
+
+  void _updateOutputType(Set<PromptOutputType> value) {
+    final outputType = value.first;
+    setState(() => selectedOutput = outputType);
+    widget.cubit.updatePromptOutputType(widget.node.id, outputType);
+  }
+
+  void _updateChoice(int index, String value) {
+    widget.cubit.updatePromptChoice(
+      nodeId: widget.node.id,
+      index: index,
+      value: value,
     );
   }
 }
