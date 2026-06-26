@@ -11,6 +11,12 @@
   - Created/updated from Flutter after successful Firebase Auth sign-up/sign-in.
   - Contains PII (`email`), so reads must be owner-only.
   - Document ID must match `request.auth.uid`.
+- `/users/{uid}/settings/aiModel`
+  - Readable owner-only metadata for the selected AI provider.
+  - Contains only non-secret display data, including a masked key hint.
+- `/users/{uid}/secrets/aiProvider`
+  - Write-only owner document for the provider API key.
+  - Client writes the key, but Firestore rules deny all client reads/lists.
 
 ## User Document Shape
 - `uid`: string, required, immutable, equals document ID and `request.auth.uid`
@@ -19,8 +25,26 @@
 - `createdAt`: timestamp, required, immutable
 - `updatedAt`: timestamp, required
 
+## AI Model Settings Shape
+- `provider`: string, required, one of `openai`, `google_ai`, `anthropic`
+- `hasApiKey`: bool, required, must be `true` for persisted settings
+- `maskedApiKey`: string, required, `**** 1234` format
+- `updatedAt`: timestamp, required
+
+## AI Provider Secret Shape
+- `provider`: string, required, one of `openai`, `google_ai`, `anthropic`
+- `apiKey`: string, required, 8-4096 chars
+- `updatedAt`: timestamp, required
+
 ## Access Patterns
 - App reads a single profile document by ID: `/users/{uid}`.
 - App creates a profile document when a Firebase Auth user signs up.
 - App updates `email`, `displayName`, and `updatedAt` when a user signs in/up.
 - No collection list/query access is required for `/users`.
+- App reads `/users/{uid}/settings/aiModel` to render provider and masked status.
+- App writes `/users/{uid}/settings/aiModel` and
+  `/users/{uid}/secrets/aiProvider` in one batch when saving the AI settings.
+- App never reads or lists `/users/{uid}/secrets/*`; backend code can use Admin
+  SDK access for actual model calls later.
+- Client deletes are denied for secret documents to avoid stale settings/secret
+  drift until a dedicated "Key entfernen" workflow exists.

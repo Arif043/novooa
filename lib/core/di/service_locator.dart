@@ -9,6 +9,11 @@ import '../../features/auth/domain/usecases/sign_out.dart';
 import '../../features/auth/domain/usecases/sign_up_with_email_and_password.dart';
 import '../../features/auth/infrastructure/repositories/firebase_auth_repository.dart';
 import '../../features/auth/presentation/cubits/auth_cubit.dart';
+import '../../features/settings/domain/repositories/settings_repository.dart';
+import '../../features/settings/domain/usecases/get_ai_model_settings.dart';
+import '../../features/settings/domain/usecases/save_ai_provider_settings.dart';
+import '../../features/settings/infrastructure/repositories/firestore_settings_repository.dart';
+import '../../features/settings/presentation/cubits/settings_cubit.dart';
 import '../../features/user/domain/repositories/user_repository.dart';
 import '../../features/user/domain/usecases/ensure_user_profile.dart';
 import '../../features/user/domain/usecases/get_user_profile.dart';
@@ -26,6 +31,9 @@ void configureDependencies() {
     )
     ..registerLazySingleton<UserRepository>(
       () => FirestoreUserRepository(serviceLocator<FirebaseFirestore>()),
+    )
+    ..registerLazySingleton<SettingsRepository>(
+      () => FirestoreSettingsRepository(serviceLocator<FirebaseFirestore>()),
     )
     ..registerLazySingleton(() => SignOut(serviceLocator<AuthRepository>()))
     ..registerLazySingleton(
@@ -46,12 +54,26 @@ void configureDependencies() {
         userRepository: serviceLocator<UserRepository>(),
       ),
     )
+    ..registerLazySingleton(
+      () => GetAiModelSettings(serviceLocator<SettingsRepository>()),
+    )
+    ..registerLazySingleton(
+      () => SaveAiProviderSettings(serviceLocator<SettingsRepository>()),
+    )
     ..registerFactory(
       () => AuthCubit(
         signUp: serviceLocator<SignUpWithEmailAndPassword>(),
         signIn: serviceLocator<SignInWithEmailAndPassword>(),
         signOut: serviceLocator<SignOut>(),
         ensureUserProfile: serviceLocator<EnsureUserProfile>(),
+      ),
+    )
+    ..registerFactory(
+      () => SettingsCubit(
+        getCurrentUserProfile: serviceLocator<GetCurrentUserProfile>(),
+        ensureUserProfile: serviceLocator<EnsureUserProfile>(),
+        getAiModelSettings: serviceLocator<GetAiModelSettings>(),
+        saveAiProviderSettings: serviceLocator<SaveAiProviderSettings>(),
       ),
     )
     ..registerLazySingleton(

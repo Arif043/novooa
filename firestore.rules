@@ -13,6 +13,21 @@ rules_version = '2';
 //   - createdAt: timestamp (required, immutable) - creation time
 //   - updatedAt: timestamp (required) - last profile sync time
 //
+// Subcollection: users/{uid}/settings
+// Document: aiModel
+// Fields:
+//   - provider: string (required) - openai | google_ai | anthropic
+//   - hasApiKey: bool (required) - whether a write-only key exists
+//   - maskedApiKey: string (required, max 32) - non-secret display hint
+//   - updatedAt: timestamp (required) - last settings sync time
+//
+// Subcollection: users/{uid}/secrets
+// Document: aiProvider
+// Fields:
+//   - provider: string (required) - openai | google_ai | anthropic
+//   - apiKey: string (required, 8-4096) - write-only client secret
+//   - updatedAt: timestamp (required) - last secret sync time
+//
 // ===============================================================
 
 service cloud.firestore {
@@ -68,6 +83,65 @@ service cloud.firestore {
         data.updatedAt is timestamp;
     }
 
+    function isValidAiProvider(provider) {
+      return provider in ['openai', 'google_ai', 'anthropic'];
+    }
+
+    function hasOnlyAllowedAiModelSettingsFields(data) {
+      return data.keys().hasOnly([
+        'provider',
+        'hasApiKey',
+        'maskedApiKey',
+        'updatedAt',
+      ]);
+    }
+
+    function hasRequiredAiModelSettingsFields(data) {
+      return data.keys().hasAll([
+        'provider',
+        'hasApiKey',
+        'maskedApiKey',
+        'updatedAt',
+      ]);
+    }
+
+    function isValidAiModelSettings(data) {
+      return hasOnlyAllowedAiModelSettingsFields(data) &&
+        hasRequiredAiModelSettingsFields(data) &&
+        isValidAiProvider(data.provider) &&
+        data.hasApiKey is bool &&
+        data.hasApiKey == true &&
+        data.maskedApiKey is string &&
+        data.maskedApiKey.matches('^\\*\\*\\*\\* .{4}$') &&
+        data.updatedAt is timestamp;
+    }
+
+    function hasOnlyAllowedAiProviderSecretFields(data) {
+      return data.keys().hasOnly([
+        'provider',
+        'apiKey',
+        'updatedAt',
+      ]);
+    }
+
+    function hasRequiredAiProviderSecretFields(data) {
+      return data.keys().hasAll([
+        'provider',
+        'apiKey',
+        'updatedAt',
+      ]);
+    }
+
+    function isValidAiProviderSecret(data) {
+      return hasOnlyAllowedAiProviderSecretFields(data) &&
+        hasRequiredAiProviderSecretFields(data) &&
+        isValidAiProvider(data.provider) &&
+        data.apiKey is string &&
+        data.apiKey.size() >= 8 &&
+        data.apiKey.size() <= 4096 &&
+        data.updatedAt is timestamp;
+    }
+
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
@@ -84,6 +158,29 @@ service cloud.firestore {
         request.resource.data.updatedAt == request.time;
 
       allow delete: if false;
+
+      match /settings/{settingsId} {
+        allow get: if isOwner(userId) && settingsId == 'aiModel';
+        allow list: if false;
+
+        allow create, update: if isOwner(userId) &&
+          settingsId == 'aiModel' &&
+          isValidAiModelSettings(request.resource.data) &&
+          request.resource.data.updatedAt == request.time;
+
+        allow delete: if false;
+      }
+
+      match /secrets/{secretId} {
+        allow get, list: if false;
+
+        allow create, update: if isOwner(userId) &&
+          secretId == 'aiProvider' &&
+          isValidAiProviderSecret(request.resource.data) &&
+          request.resource.data.updatedAt == request.time;
+
+        allow delete: if false;
+      }
     }
 
     match /{document=**} {

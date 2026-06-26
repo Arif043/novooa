@@ -45,6 +45,7 @@ class UserProfileModel {
     bool useServerTimestamps = false,
   }) {
     final document = <String, Object?>{
+      'uid': id,
       'email': email,
       'displayName': displayName,
       'updatedAt': _timestampFor(updatedAt, useServerTimestamps),

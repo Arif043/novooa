@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
-import 'package:syscat2/features/user/domain/repositories/user_repository.dart';
 import 'package:syscat2/features/user/domain/usecases/get_current_user_profile.dart';
 import '../theme/syscat_theme.dart';
 import '../../root_tab.dart';

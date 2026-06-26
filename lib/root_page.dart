@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:syscat2/features/settings/presentation/pages/settings_page.dart';
 import 'package:syscat2/features/task_builder/presentation/pages/task_builder_page.dart';
 
 import 'root_tab.dart';
@@ -41,7 +42,7 @@ class _RootPageState extends State<RootPage> {
     ),
     RootTab(
       title: 'Aktivitäten',
-      icon: Icons.settings_outlined,
+      icon: Icons.history_outlined,
       builder: (context) => const _PlaceholderPage(
         title: 'Aktivitäten',
         content: 'Runs, Traces und Freigaben erscheinen hier.',
@@ -50,11 +51,8 @@ class _RootPageState extends State<RootPage> {
     RootTab(
       title: 'Einstellungen',
       icon: Icons.settings_outlined,
-      builder: (context) => const _PlaceholderPage(
-        title: 'Einstellungen',
-        content: 'Einstellungen und Profil erscheinen hier.',
-      ),
-    )
+      builder: (context) => const SettingsPage(),
+    ),
   ];
 
   void _selectTab(int index) {
