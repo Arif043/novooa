@@ -1,6 +1,7 @@
 import 'package:multiple_result/multiple_result.dart';
 
 import '../../../../core/domain/unique_id.dart';
+import '../../../activity/domain/entities/task_activity.dart';
 import '../../../activity/domain/usecases/track_task_execution.dart';
 import '../entities/task_definition.dart';
 import '../entities/task_execution_failure.dart';
@@ -21,7 +22,7 @@ class ExecuteTaskDefinition {
   final TrackTaskExecution? _tracker;
 
   Future<Result<TaskExecutionResult, TaskExecutionFailure>> call(ExecuteTaskDefinitionParams params) async {
-    final runId = await _tracker?.started(params.taskDefinition, params.context);
+    final runId = await _tracker?.started(_trackStart(params));
     final taskExecutionOrFailure = await _repository.execute(
       taskDefinition: params.taskDefinition,
       context: params.context,
@@ -38,8 +39,46 @@ class ExecuteTaskDefinition {
     final tracker = _tracker;
     if (tracker == null || runId == null) return;
     await taskExecutionOrFailure.when(
-      (result) => tracker.succeeded(runId: runId, taskDefinition: params.taskDefinition, result: result),
-      (failure) => tracker.failed(runId: runId, taskDefinition: params.taskDefinition, failure: failure),
+      (result) => tracker.succeeded(runId: runId, success: _trackSuccess(params.taskDefinition, result)),
+      (failure) => tracker.failed(runId: runId, failure: _trackFailure(params.taskDefinition, failure)),
     );
+  }
+
+  TrackTaskStart _trackStart(ExecuteTaskDefinitionParams params) {
+    return TrackTaskStart(
+      taskId: params.taskDefinition.id,
+      taskTitle: params.taskDefinition.title,
+      input: params.context,
+    );
+  }
+
+  TrackTaskSuccess _trackSuccess(TaskDefinition taskDefinition, TaskExecutionResult result) {
+    return TrackTaskSuccess(
+      taskId: taskDefinition.id,
+      taskTitle: taskDefinition.title,
+      output: result.finalOutput,
+      nodes: result.nodeResults.map(_trackNode).toList(),
+    );
+  }
+
+  TrackTaskFailure _trackFailure(TaskDefinition taskDefinition, TaskExecutionFailure failure) {
+    return TrackTaskFailure(taskId: taskDefinition.id, taskTitle: taskDefinition.title, message: failure.message);
+  }
+
+  TrackNodeActivity _trackNode(NodeExecutionResult result) {
+    return TrackNodeActivity(
+      nodeId: result.nodeId.value,
+      primitive: result.primitive.name,
+      status: _nodeStatus(result),
+      output: result.output,
+      message: result.message,
+    );
+  }
+
+  TaskActivityStatus _nodeStatus(NodeExecutionResult result) {
+    return switch (result.status) {
+      NodeExecutionStatus.executed => TaskActivityStatus.succeeded,
+      NodeExecutionStatus.skipped => TaskActivityStatus.skipped,
+    };
   }
 }

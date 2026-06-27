@@ -1,12 +1,63 @@
 import '../../../../core/domain/unique_id.dart';
-import '../../../task_builder/domain/entities/task_definition.dart';
-import '../../../task_builder/domain/entities/task_execution_failure.dart';
-import '../../../task_builder/domain/entities/task_execution_result.dart';
 import '../entities/task_activity.dart';
 import '../repositories/task_activity_repository.dart';
 
 typedef TaskActivityClock = DateTime Function();
 typedef TaskActivityIdFactory = UniqueId Function();
+
+class TrackTaskStart {
+  const TrackTaskStart({
+    required this.taskId,
+    required this.taskTitle,
+    required this.input,
+  });
+
+  final String taskId;
+  final String taskTitle;
+  final String input;
+}
+
+class TrackTaskSuccess {
+  const TrackTaskSuccess({
+    required this.taskId,
+    required this.taskTitle,
+    required this.output,
+    required this.nodes,
+  });
+
+  final String taskId;
+  final String taskTitle;
+  final String output;
+  final List<TrackNodeActivity> nodes;
+}
+
+class TrackTaskFailure {
+  const TrackTaskFailure({
+    required this.taskId,
+    required this.taskTitle,
+    required this.message,
+  });
+
+  final String taskId;
+  final String taskTitle;
+  final String message;
+}
+
+class TrackNodeActivity {
+  const TrackNodeActivity({
+    required this.nodeId,
+    required this.primitive,
+    required this.status,
+    required this.output,
+    this.message,
+  });
+
+  final String nodeId;
+  final String primitive;
+  final TaskActivityStatus status;
+  final String output;
+  final String? message;
+}
 
 class TrackTaskExecution {
   TrackTaskExecution(
@@ -21,14 +72,15 @@ class TrackTaskExecution {
   final TaskActivityIdFactory? _idFactory;
   int _idSequence = 0;
 
-  Future<UniqueId> started(TaskDefinition taskDefinition, String input) async {
+  Future<UniqueId> started(TrackTaskStart start) async {
     final runId = _nextId();
     await _repository.add(
       _taskActivity(
         runId: runId,
-        taskDefinition: taskDefinition,
+        taskId: start.taskId,
+        taskTitle: start.taskTitle,
         status: TaskActivityStatus.started,
-        input: input,
+        input: start.input,
       ),
     );
     return runId;
@@ -36,31 +88,31 @@ class TrackTaskExecution {
 
   Future<void> succeeded({
     required UniqueId runId,
-    required TaskDefinition taskDefinition,
-    required TaskExecutionResult result,
+    required TrackTaskSuccess success,
   }) async {
-    for (final nodeResult in result.nodeResults) {
-      await _repository.add(_nodeActivity(runId, taskDefinition, nodeResult));
+    for (final node in success.nodes) {
+      await _repository.add(_nodeActivity(runId, success, node));
     }
     await _repository.add(
       _taskActivity(
         runId: runId,
-        taskDefinition: taskDefinition,
+        taskId: success.taskId,
+        taskTitle: success.taskTitle,
         status: TaskActivityStatus.succeeded,
-        output: result.finalOutput,
+        output: success.output,
       ),
     );
   }
 
   Future<void> failed({
     required UniqueId runId,
-    required TaskDefinition taskDefinition,
-    required TaskExecutionFailure failure,
+    required TrackTaskFailure failure,
   }) {
     return _repository.add(
       _taskActivity(
         runId: runId,
-        taskDefinition: taskDefinition,
+        taskId: failure.taskId,
+        taskTitle: failure.taskTitle,
         status: TaskActivityStatus.failed,
         message: failure.message,
       ),
@@ -69,7 +121,8 @@ class TrackTaskExecution {
 
   TaskActivity _taskActivity({
     required UniqueId runId,
-    required TaskDefinition taskDefinition,
+    required String taskId,
+    required String taskTitle,
     required TaskActivityStatus status,
     String? input,
     String? output,
@@ -78,8 +131,8 @@ class TrackTaskExecution {
     return TaskActivity(
       id: _nextId(),
       runId: runId,
-      taskId: taskDefinition.id,
-      taskTitle: taskDefinition.title,
+      taskId: taskId,
+      taskTitle: taskTitle,
       target: TaskActivityTarget.task,
       status: status,
       occurredAt: _clock(),
@@ -91,29 +144,22 @@ class TrackTaskExecution {
 
   TaskActivity _nodeActivity(
     UniqueId runId,
-    TaskDefinition taskDefinition,
-    NodeExecutionResult result,
+    TrackTaskSuccess success,
+    TrackNodeActivity node,
   ) {
     return TaskActivity(
       id: _nextId(),
       runId: runId,
-      taskId: taskDefinition.id,
-      taskTitle: taskDefinition.title,
+      taskId: success.taskId,
+      taskTitle: success.taskTitle,
       target: TaskActivityTarget.node,
-      status: _nodeStatus(result),
+      status: node.status,
       occurredAt: _clock(),
-      nodeId: result.nodeId,
-      primitive: result.primitive,
-      output: result.output,
-      message: result.message,
+      nodeId: node.nodeId,
+      primitive: node.primitive,
+      output: node.output,
+      message: node.message,
     );
-  }
-
-  TaskActivityStatus _nodeStatus(NodeExecutionResult result) {
-    return switch (result.status) {
-      NodeExecutionStatus.executed => TaskActivityStatus.succeeded,
-      NodeExecutionStatus.skipped => TaskActivityStatus.skipped,
-    };
   }
 
   UniqueId _nextId() {

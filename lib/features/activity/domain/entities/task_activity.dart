@@ -1,5 +1,4 @@
 import '../../../../core/domain/unique_id.dart';
-import '../../../task_builder/domain/entities/workflow_node.dart';
 
 enum TaskActivityTarget { task, node }
 
@@ -28,8 +27,8 @@ class TaskActivity {
   final TaskActivityTarget target;
   final TaskActivityStatus status;
   final DateTime occurredAt;
-  final NodeId? nodeId;
-  final WorkflowPrimitive? primitive;
+  final String? nodeId;
+  final String? primitive;
   final String? input;
   final String? output;
   final String? message;

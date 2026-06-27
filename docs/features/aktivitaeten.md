@@ -1,7 +1,7 @@
 # Feature: Aktivitäten
 
-> **Stub** — dieses Feature ist noch nicht implementiert. Es wird in
-> `lib/root_page.dart` als Tab „Aktivitäten" angekündigt.
+> Erste lokale Version: Aktivitäten werden beim Ausführen von Aufgaben
+> getrackt und im Root-Tab „Aktivitäten" angezeigt.
 
 Verwandt: [`../architecture.md`](../architecture.md) ·
 [`aufgabe.md`](./aufgabe.md) ·
@@ -33,6 +33,12 @@ Das Feature besitzt ein erstes Domain-Modell für `TaskActivity`.
 Die aktuelle Infrastruktur ist `InMemoryTaskActivityRepository`. Das ist der
 Adapterpunkt für Firestore oder Genkit-Telemetrie.
 
+## UI
+
+`ActivityPage` zeigt die zuletzt erfassten Aktivitäten im Root-Tab
+„Aktivitäten". Die Seite lädt über `ActivityCubit` und `ListTaskActivities`
+und behandelt Loading, Fehler, Empty State und die erfolgreiche Liste.
+
 ## Offene Fragen
 
 - **Quelle:** Genkit-Telemetrie (Cloud Trace / Cloud Logging) oder eigene
@@ -45,5 +51,5 @@ Adapterpunkt für Firestore oder Genkit-Telemetrie.
 
 ## Status
 
-Grundlegendes Activity-Tracking ist lokal implementiert. Persistenz,
-Aktivitäten-UI und Genkit-Telemetrie-Anbindung stehen noch aus.
+Grundlegendes Activity-Tracking und eine lokale Aktivitäten-Liste sind
+implementiert. Persistenz und Genkit-Telemetrie-Anbindung stehen noch aus.

@@ -15,8 +15,10 @@ import '../../features/settings/domain/usecases/save_ai_provider_settings.dart';
 import '../../features/settings/infrastructure/repositories/firestore_settings_repository.dart';
 import '../../features/settings/presentation/cubits/settings_cubit.dart';
 import '../../features/activity/domain/repositories/task_activity_repository.dart';
+import '../../features/activity/domain/usecases/list_task_activities.dart';
 import '../../features/activity/domain/usecases/track_task_execution.dart';
 import '../../features/activity/infrastructure/repositories/in_memory_task_activity_repository.dart';
+import '../../features/activity/presentation/cubits/activity_cubit.dart';
 import '../../features/task_builder/domain/repositories/task_definition_repository.dart';
 import '../../features/task_builder/domain/repositories/task_runner_repository.dart';
 import '../../features/task_builder/domain/usecases/execute_task_definition.dart';
@@ -97,6 +99,9 @@ void configureDependencies() {
       () => TrackTaskExecution(serviceLocator<TaskActivityRepository>()),
     )
     ..registerLazySingleton(
+      () => ListTaskActivities(serviceLocator<TaskActivityRepository>()),
+    )
+    ..registerLazySingleton(
       () => ExecuteTaskDefinition(
         serviceLocator<TaskRunnerRepository>(),
         tracker: serviceLocator<TrackTaskExecution>(),
@@ -122,6 +127,11 @@ void configureDependencies() {
       () => TaskBuilderCubit(
         getDraftTaskDefinition: serviceLocator<GetDraftTaskDefinition>(),
         saveDraftTaskDefinition: serviceLocator<SaveDraftTaskDefinition>(),
+      ),
+    )
+    ..registerFactory(
+      () => ActivityCubit(
+        listTaskActivities: serviceLocator<ListTaskActivities>(),
       ),
     )
     ..registerLazySingleton(
