@@ -1,4 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:syscat2/core/domain/unique_id.dart';
+import 'package:syscat2/features/activity/domain/entities/task_activity.dart';
+import 'package:syscat2/features/activity/domain/usecases/track_task_execution.dart';
+import 'package:syscat2/features/activity/infrastructure/repositories/in_memory_task_activity_repository.dart';
 import 'package:syscat2/features/task_builder/domain/entities/prompt_node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_definition.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_execution_result.dart';
@@ -30,6 +34,39 @@ void main() {
           NodeExecutionStatus.executed,
         );
       }, (failure) => fail(failure.message));
+    },
+  );
+
+  test(
+    'ExecuteTaskDefinition trackt Task- und Baustein-Aktivitaeten',
+    () async {
+      var nextId = 0;
+      final activityRepository = InMemoryTaskActivityRepository();
+      final tracker = TrackTaskExecution(
+        activityRepository,
+        clock: () => DateTime.utc(2026),
+        idFactory: () => UniqueId('activity.${nextId++}'),
+      );
+      final usecase = ExecuteTaskDefinition(
+        const LocalGenkitTaskRunnerRepository(MockLocalGenkitTaskClient()),
+        tracker: tracker,
+      );
+
+      await usecase(
+        ExecuteTaskDefinitionParams(
+          taskDefinition: _promptTask(),
+          context: 'Lokaler Testkontext',
+        ),
+      );
+
+      final activities = (await activityRepository.listRecent()).reversed
+          .toList();
+      expect(activities.length, 3);
+      expect(activities.first.status, TaskActivityStatus.started);
+      expect(activities[1].target, TaskActivityTarget.node);
+      expect(activities[1].status, TaskActivityStatus.succeeded);
+      expect(activities.last.output, contains('Schreibe eine Antwort'));
+      expect(activities.map((activity) => activity.runId).toSet().length, 1);
     },
   );
 }

@@ -21,6 +21,18 @@ warum, und können an den Stellen eingreifen, an denen das Workflow pausiert
 - Filter: nach Aufgabe, Status, Zeitraum, Trigger.
 - Re-Run eines Runs mit gleichem Input.
 
+## Aktueller Schnitt
+
+Das Feature besitzt ein erstes Domain-Modell für `TaskActivity`.
+`TrackTaskExecution` erzeugt pro ausgeführter Aufgabe:
+
+- eine Task-Aktivität `started` mit Run-ID und Eingabekontext,
+- pro Baustein eine Node-Aktivität mit Status `succeeded` oder `skipped`,
+- eine abschließende Task-Aktivität `succeeded` oder `failed`.
+
+Die aktuelle Infrastruktur ist `InMemoryTaskActivityRepository`. Das ist der
+Adapterpunkt für Firestore oder Genkit-Telemetrie.
+
 ## Offene Fragen
 
 - **Quelle:** Genkit-Telemetrie (Cloud Trace / Cloud Logging) oder eigene
@@ -33,6 +45,5 @@ warum, und können an den Stellen eingreifen, an denen das Workflow pausiert
 
 ## Status
 
-Noch nicht gestartet. Hängt von `enableFirebaseTelemetry()` und dem
-Trigger-System ab (siehe
-[`../architecture.md#telemetrie`](../architecture.md#telemetrie)).
+Grundlegendes Activity-Tracking ist lokal implementiert. Persistenz,
+Aktivitäten-UI und Genkit-Telemetrie-Anbindung stehen noch aus.

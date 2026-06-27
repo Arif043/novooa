@@ -33,10 +33,11 @@ features/task_builder/
 │   │   ├── workflow_node.dart     # Knoten (Primitive-Instanz)
 │   │   └── workflow_edge.dart     # Gerichtete Kante
 │   ├── repositories/
-│   │   └── task_definition_repository.dart   # Interface
+│   │   └── task_definition_repository.dart   # Entwurfs-Persistenz
 │   └── usecases/
 │       ├── get_draft_task_definition.dart     # aktuellen Entwurf laden
-│       └── save_draft_task_definition.dart    # Entwurf persistieren
+│       ├── save_draft_task_definition.dart    # Entwurf persistieren
+│       └── execute_task_definition.dart       # Task ausführen
 ├── infrastructure/
 │   └── repositories/
 │       └── in_memory_task_definition.dart     # Default-Implementierung
@@ -151,6 +152,20 @@ output: { taskId: string; finalOutput: string; nodeResults: NodeExecutionResult[
 
 `NodeExecutionResult` enthält `nodeId`, `primitive`, `status`, `output`,
 optional `selectedNodeId` und optional `message`.
+
+### Activity-Tracking
+
+`ExecuteTaskDefinition` kann optional den Usecase
+`features/activity/domain/usecases/TrackTaskExecution` verwenden. Die App-DI
+registriert diesen Tracker standardmäßig. Pro Ausführung entstehen:
+
+- eine Task-Aktivität `started` mit Run-ID und Eingabekontext,
+- pro Baustein eine Node-Aktivität mit Status `succeeded` oder `skipped`,
+- eine abschließende Task-Aktivität `succeeded` oder `failed`.
+
+Das Activity-Modell, Repository-Interface und die aktuelle
+`InMemoryTaskActivityRepository`-Implementierung gehören zum Feature
+„Aktivitäten". `task_builder` konsumiert nur den Tracking-Usecase.
 
 ### Lokale Ausführung aus Flutter Web
 
