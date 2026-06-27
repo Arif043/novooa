@@ -1,5 +1,9 @@
+import 'package:uuid/uuid.dart';
+
 class UniqueId {
   const UniqueId(this.value) : assert(value.length > 0);
+
+  UniqueId.random() : value = const Uuid().v4();
 
   final String value;
 

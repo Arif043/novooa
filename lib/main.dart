@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-
 import 'core/di/service_locator.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/syscat_theme.dart';

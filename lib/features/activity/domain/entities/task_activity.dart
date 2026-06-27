@@ -1,4 +1,4 @@
-import '../../../../core/domain/unique_id.dart';
+import '../../../../core/entities/unique_id.dart';
 
 enum TaskActivityTarget { task, node }
 

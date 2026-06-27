@@ -1,9 +1,9 @@
 import 'package:multiple_result/multiple_result.dart';
 
-import '../../../../core/domain/unique_id.dart';
+import '../../../../core/entities/unique_id.dart';
 import '../../../activity/domain/entities/task_activity.dart';
 import '../../../activity/domain/usecases/track_task_execution.dart';
-import '../entities/task_definition.dart';
+import '../entities/task.dart';
 import '../entities/task_execution_failure.dart';
 import '../entities/task_execution_result.dart';
 import '../repositories/task_runner_repository.dart';
@@ -11,7 +11,7 @@ import '../repositories/task_runner_repository.dart';
 class ExecuteTaskDefinitionParams {
   const ExecuteTaskDefinitionParams({required this.taskDefinition, this.context = ''});
 
-  final TaskDefinition taskDefinition;
+  final Task taskDefinition;
   final String context;
 }
 
@@ -52,7 +52,7 @@ class ExecuteTaskDefinition {
     );
   }
 
-  TrackTaskSuccess _trackSuccess(TaskDefinition taskDefinition, TaskExecutionResult result) {
+  TrackTaskSuccess _trackSuccess(Task taskDefinition, TaskExecutionResult result) {
     return TrackTaskSuccess(
       taskId: taskDefinition.id,
       taskTitle: taskDefinition.title,
@@ -61,7 +61,7 @@ class ExecuteTaskDefinition {
     );
   }
 
-  TrackTaskFailure _trackFailure(TaskDefinition taskDefinition, TaskExecutionFailure failure) {
+  TrackTaskFailure _trackFailure(Task taskDefinition, TaskExecutionFailure failure) {
     return TrackTaskFailure(taskId: taskDefinition.id, taskTitle: taskDefinition.title, message: failure.message);
   }
 

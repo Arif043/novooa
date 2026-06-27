@@ -1,4 +1,4 @@
-import '../../../../core/domain/unique_id.dart';
+import '../../../../core/entities/unique_id.dart';
 import '../entities/task_activity.dart';
 import '../repositories/task_activity_repository.dart';
 

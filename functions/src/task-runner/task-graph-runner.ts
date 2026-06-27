@@ -70,6 +70,13 @@ async function executeNode(
   context: string,
   taskDefinition: TaskDefinition,
 ): Promise<NodeExecutionResult> {
+
+  console.log("####################################")
+  console.log("Executing node: ", node)
+  console.log("Context: ", context)
+  console.log("Task Definition: ", taskDefinition)
+  console.log("####################################")
+
   switch (node.primitive) {
     case "prompt":
       return executePrompt(ai, node, context);

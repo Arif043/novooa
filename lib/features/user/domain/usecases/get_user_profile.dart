@@ -1,5 +1,5 @@
 import 'package:multiple_result/multiple_result.dart';
-import 'package:syscat2/core/domain/unique_id.dart';
+import 'package:syscat2/core/entities/unique_id.dart';
 
 import '../entities/user_failure.dart';
 import '../entities/user_profile.dart';

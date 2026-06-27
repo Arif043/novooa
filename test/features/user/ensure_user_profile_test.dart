@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-import 'package:syscat2/core/domain/unique_id.dart';
+import 'package:syscat2/core/entities/unique_id.dart';
 import 'package:syscat2/features/user/domain/entities/user_email.dart';
 import 'package:syscat2/features/user/domain/entities/user_failure.dart';
 import 'package:syscat2/features/user/domain/entities/user_profile.dart';

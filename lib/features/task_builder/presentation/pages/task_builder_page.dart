@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
@@ -9,12 +10,14 @@ import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget
 import 'package:syscat2/features/task_builder/presentation/widgets/toolbar.dart';
 
 class TaskBuilderPage extends StatelessWidget {
-  const TaskBuilderPage({super.key});
+  final Task? editingTaskOrNull;
+
+  const TaskBuilderPage({super.key, this.editingTaskOrNull});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => serviceLocator<TaskBuilderCubit>()..load(),
+      create: (_) => serviceLocator<TaskBuilderCubit>()..load(editingTaskOrNull),
       child: const _TaskBuilderView(),
     );
   }
@@ -55,12 +58,12 @@ class _TaskBuilderBody extends StatelessWidget {
   }
 
   WorkflowNode? _promptNodeOrNull(TaskBuilderState state) {
-    if (state case TaskBuilderLoaded(:final taskDefinition)) {
-      final selectedNode = taskDefinition.selectedNodeOrNull;
+    if (state case TaskBuilderLoaded(:final editingTask)) {
+      final selectedNode = editingTask.selectedNodeOrNull;
       if (selectedNode?.primitive == WorkflowPrimitive.prompt) {
         return selectedNode;
       }
-      for (final node in taskDefinition.nodes) {
+      for (final node in editingTask.nodes) {
         if (node.primitive == WorkflowPrimitive.prompt) return node;
       }
     }

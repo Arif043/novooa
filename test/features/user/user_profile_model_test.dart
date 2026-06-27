@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/domain/unique_id.dart';
+import 'package:syscat2/core/entities/unique_id.dart';
 import 'package:syscat2/features/user/domain/entities/user_email.dart';
 import 'package:syscat2/features/user/domain/entities/user_profile.dart';
 import 'package:syscat2/features/user/infrastructure/models/user_profile_model.dart';

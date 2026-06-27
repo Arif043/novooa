@@ -14,21 +14,6 @@ enum WorkflowPrimitive {
   validation,
 }
 
-/// Auswertungsstrategie für [WorkflowPrimitive.conditionalFlow].
-///
-/// Wird im Inspector als Dropdown angeboten und am Knoten persistiert.
-/// Andere Primitives ignorieren das Feld — es bleibt aus Kompatibilität
-/// gesetzt (Default [LogicMode.schemaBasiert]).
-enum LogicMode {
-  schemaBasiert('Schema-basiert'),
-  freeform('Freeform'),
-  kiGestuetzt('KI-gestützt');
-
-  const LogicMode(this.label);
-
-  final String label;
-}
-
 /// Value Object für Knoten-Identifier.
 ///
 /// Wrappt einen [String], damit Aufrufer `NodeId` nicht versehentlich mit
@@ -62,7 +47,6 @@ class WorkflowNode {
     required this.primitive,
     required this.title,
     required this.description,
-    this.logicMode = LogicMode.schemaBasiert,
     PromptNodeConfig? promptConfig,
   }) : promptConfig =
            promptConfig ??
@@ -77,14 +61,12 @@ class WorkflowNode {
   final WorkflowPrimitive primitive;
   final String title;
   final String description;
-  final LogicMode logicMode;
   final PromptNodeConfig promptConfig;
 
   WorkflowNode copyWith({
     WorkflowPrimitive? primitive,
     String? title,
     String? description,
-    LogicMode? logicMode,
     PromptNodeConfig? promptConfig,
   }) {
     return WorkflowNode(
@@ -92,7 +74,6 @@ class WorkflowNode {
       primitive: primitive ?? this.primitive,
       title: title ?? this.title,
       description: description ?? this.description,
-      logicMode: logicMode ?? this.logicMode,
       promptConfig: promptConfig ?? this.promptConfig,
     );
   }

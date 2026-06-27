@@ -1,10 +1,8 @@
 import 'package:bloc/bloc.dart';
-
+import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
 import '../../domain/entities/prompt_node_config.dart';
-import '../../domain/entities/task_definition.dart';
+import '../../domain/entities/task.dart';
 import '../../domain/entities/workflow_node.dart';
-import '../../domain/usecases/get_draft_task_definition.dart';
-import '../../domain/usecases/save_draft_task_definition.dart';
 import 'task_builder_state.dart';
 import 'workflow_primitive_labels.dart';
 
@@ -16,22 +14,19 @@ import 'workflow_primitive_labels.dart';
 /// 3. Sofort persistieren via [SaveDraftTaskDefinition].
 /// 4. Neuen State emittieren.
 class TaskBuilderCubit extends Cubit<TaskBuilderState> {
+
+  final TaskRepository _repository;
+
   TaskBuilderCubit({
-    required GetDraftTaskDefinition getDraftTaskDefinition,
-    required SaveDraftTaskDefinition saveDraftTaskDefinition,
-  }) : _getDraftTaskDefinition = getDraftTaskDefinition,
-       _saveDraftTaskDefinition = saveDraftTaskDefinition,
-       super(const TaskBuilderLoading());
+    required TaskRepository repository
+  }) : _repository = repository, super(const TaskBuilderLoading());
 
-  final GetDraftTaskDefinition _getDraftTaskDefinition;
-  final SaveDraftTaskDefinition _saveDraftTaskDefinition;
-
-  Future<void> load() async {
+  Future<void> load(Task? editingTask) async {
+    editingTask ??= Task.empty();
     emit(const TaskBuilderLoading());
     try {
-      final taskDefinition = await _getDraftTaskDefinition.execute();
       if (isClosed) return;
-      emit(TaskBuilderLoaded(taskDefinition));
+      emit(TaskBuilderLoaded(editingTask));
     } catch (_) {
       if (isClosed) return;
       emit(const TaskBuilderFailure('Aufgabe konnte nicht geladen werden.'));
@@ -83,13 +78,6 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     await _saveAndEmit(task.removeNode(nodeId));
   }
 
-  Future<void> updateNodeLogicMode(NodeId nodeId, LogicMode mode) {
-    return _updateNode(nodeId, (node) {
-      if (node.logicMode == mode) return node;
-      return node.copyWith(logicMode: mode);
-    });
-  }
-
   Future<void> updatePromptInstruction(NodeId nodeId, String instruction) {
     return _updateNode(nodeId, (node) {
       final promptConfig = node.promptConfig.copyWith(instruction: instruction);
@@ -97,62 +85,42 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     });
   }
 
-  Future<void> updatePromptOutputType(
-    NodeId nodeId,
-    PromptOutputType outputType,
-  ) {
+  Future<void> updatePromptOutputType(NodeId nodeId, PromptOutputType outputType) {
     return _updateNode(nodeId, (node) {
       final promptConfig = node.promptConfig.copyWith(outputType: outputType);
       return node.copyWith(promptConfig: promptConfig);
     });
   }
 
-  Future<void> updatePromptChoice({
-    required NodeId nodeId,
-    required int index,
-    required String value,
-  }) {
+  Future<void> updatePromptChoice({required NodeId nodeId, required int index, required String value}) {
     return _updateNode(nodeId, (node) {
       if (index < 0 || index >= node.promptConfig.choices.length) return node;
       if (node.promptConfig.choices[index] == value) return node;
-      return node.copyWith(
-        promptConfig: node.promptConfig.updateChoice(index, value),
-      );
+      return node.copyWith(promptConfig: node.promptConfig.updateChoice(index, value));
     });
   }
 
-  Future<void> updateEdgeCondition({
-    required NodeId from,
-    required NodeId to,
-    required String? conditionLabel,
-  }) async {
+  Future<void> updateEdgeCondition({required NodeId from, required NodeId to, required String? conditionLabel}) async {
     final task = _loadedTaskOrNull();
     if (task == null) return;
-    final updated = task.updateEdgeCondition(
-      from: from,
-      to: to,
-      conditionLabel: conditionLabel,
-    );
+    final updated = task.updateEdgeCondition(from: from, to: to, conditionLabel: conditionLabel);
     await _saveAndEmit(updated);
   }
 
   void confirmSave() {}
 
-  TaskDefinition? _loadedTaskOrNull() {
+  Task? _loadedTaskOrNull() {
     final current = state;
-    return current is TaskBuilderLoaded ? current.taskDefinition : null;
+    return current is TaskBuilderLoaded ? current.editingTask : null;
   }
 
-  Future<void> _saveAndEmit(TaskDefinition updated) async {
-    await _saveDraftTaskDefinition.execute(updated);
+  Future<void> _saveAndEmit(Task updated) async {
+    await _repository.saveTask(updated);
     if (isClosed) return;
     emit(TaskBuilderLoaded(updated));
   }
 
-  Future<void> _updateNode(
-    NodeId nodeId,
-    WorkflowNode Function(WorkflowNode node) update,
-  ) async {
+  Future<void> _updateNode(NodeId nodeId, WorkflowNode Function(WorkflowNode node) update) async {
     final task = _loadedTaskOrNull();
     if (task == null) return;
     final index = task.nodes.indexWhere((node) => node.id == nodeId);

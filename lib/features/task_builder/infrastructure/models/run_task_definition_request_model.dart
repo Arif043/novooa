@@ -1,22 +1,19 @@
 import '../../domain/entities/prompt_node_config.dart';
-import '../../domain/entities/task_definition.dart';
+import '../../domain/entities/task.dart';
 import '../../domain/entities/workflow_edge.dart';
 import '../../domain/entities/workflow_node.dart';
 
 class RunTaskDefinitionRequestModel {
-  const RunTaskDefinitionRequestModel({
-    required this.taskDefinition,
-    required this.context,
-  });
+  const RunTaskDefinitionRequestModel({required this.taskDefinition, required this.context});
 
-  final TaskDefinition taskDefinition;
+  final Task taskDefinition;
   final String context;
 
   Map<String, Object?> toJson() {
     return {'taskDefinition': _taskToJson(taskDefinition), 'context': context};
   }
 
-  Map<String, Object?> _taskToJson(TaskDefinition task) {
+  Map<String, Object?> _taskToJson(Task task) {
     return {
       'id': task.id,
       'title': task.title,

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/di/service_locator.dart';
-import 'package:syscat2/core/domain/unique_id.dart';
+import 'package:syscat2/core/entities/unique_id.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_failure.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';

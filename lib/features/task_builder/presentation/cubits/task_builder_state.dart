@@ -1,4 +1,4 @@
-import '../../domain/entities/task_definition.dart';
+import '../../domain/entities/task.dart';
 
 /// Sealed State-Hierarchie für [TaskBuilderCubit].
 ///
@@ -14,9 +14,9 @@ class TaskBuilderLoading extends TaskBuilderState {
 }
 
 class TaskBuilderLoaded extends TaskBuilderState {
-  const TaskBuilderLoaded(this.taskDefinition);
+  const TaskBuilderLoaded(this.editingTask);
 
-  final TaskDefinition taskDefinition;
+  final Task editingTask;
 }
 
 class TaskBuilderFailure extends TaskBuilderState {

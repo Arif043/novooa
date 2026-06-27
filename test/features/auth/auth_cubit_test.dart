@@ -11,7 +11,7 @@ import 'package:syscat2/features/auth/domain/usecases/sign_out.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_state.dart';
-import 'package:syscat2/core/domain/unique_id.dart';
+import 'package:syscat2/core/entities/unique_id.dart';
 import 'package:syscat2/features/user/domain/entities/user_email.dart';
 import 'package:syscat2/features/user/domain/entities/user_failure.dart';
 import 'package:syscat2/features/user/domain/entities/user_profile.dart';

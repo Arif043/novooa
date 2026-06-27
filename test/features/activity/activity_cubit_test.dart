@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/domain/unique_id.dart';
+import 'package:syscat2/core/entities/unique_id.dart';
 import 'package:syscat2/features/activity/domain/entities/task_activity.dart';
 import 'package:syscat2/features/activity/domain/repositories/task_activity_repository.dart';
 import 'package:syscat2/features/activity/domain/usecases/list_task_activities.dart';

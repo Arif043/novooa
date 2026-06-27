@@ -1,5 +1,5 @@
-import {type Genkit} from "genkit";
-import {googleAI} from "@genkit-ai/google-genai";
+import { type Genkit } from "genkit";
+import { googleAI } from "@genkit-ai/google-genai";
 
 export type PromptOutputType = "text" | "decision";
 
@@ -21,10 +21,9 @@ export async function executePromptNode(
   const response = await ai.generate({
     model: googleAI.model("gemini-2.5-flash-lite"),
     prompt: promptTurn(input),
-    config: {temperature: 0.3},
   });
 
-  return {answer: response.text};
+  return { answer: response.text };
 }
 
 function promptTurn(input: PromptNodeInput): string {

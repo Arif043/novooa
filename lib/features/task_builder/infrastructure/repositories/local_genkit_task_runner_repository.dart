@@ -1,6 +1,6 @@
 import 'package:multiple_result/multiple_result.dart';
 
-import '../../domain/entities/task_definition.dart';
+import '../../domain/entities/task.dart';
 import '../../domain/entities/task_execution_failure.dart';
 import '../../domain/entities/task_execution_result.dart';
 import '../../domain/repositories/task_runner_repository.dart';
@@ -15,33 +15,22 @@ class LocalGenkitTaskRunnerRepository implements TaskRunnerRepository {
 
   @override
   Future<Result<TaskExecutionResult, TaskExecutionFailure>> execute({
-    required TaskDefinition taskDefinition,
+    required Task taskDefinition,
     String context = '',
   }) async {
     try {
-      final request = RunTaskDefinitionRequestModel(
-        taskDefinition: taskDefinition,
-        context: context,
-      ).toJson();
+      final request = RunTaskDefinitionRequestModel(taskDefinition: taskDefinition, context: context).toJson();
       final response = await _client.runTaskDefinition(request);
       final result = TaskExecutionResultModel.fromJson(response).toDomain();
       return Success(result);
     } on LocalGenkitConnectionException {
-      return const Error(
-        TaskExecutionFailure(TaskExecutionFailureKind.localServerUnavailable),
-      );
+      return const Error(TaskExecutionFailure(TaskExecutionFailureKind.localServerUnavailable));
     } on LocalGenkitExecutionException {
-      return const Error(
-        TaskExecutionFailure(TaskExecutionFailureKind.executionFailed),
-      );
+      return const Error(TaskExecutionFailure(TaskExecutionFailureKind.executionFailed));
     } on TypeError {
-      return const Error(
-        TaskExecutionFailure(TaskExecutionFailureKind.invalidResponse),
-      );
+      return const Error(TaskExecutionFailure(TaskExecutionFailureKind.invalidResponse));
     } catch (_) {
-      return const Error(
-        TaskExecutionFailure(TaskExecutionFailureKind.executionFailed),
-      );
+      return const Error(TaskExecutionFailure(TaskExecutionFailureKind.executionFailed));
     }
   }
 }
