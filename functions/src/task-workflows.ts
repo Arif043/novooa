@@ -10,30 +10,6 @@ const conditionalBranchSchema = z.object({
   condition: z.string(),
 });
 
-export const promptTaskFlow = ai.defineFlow(
-  {
-    name: "promptTaskFlow",
-    inputSchema: z.object({
-      instruction: z.string().min(1),
-      context: z.string().default(""),
-      outputType: z.enum(["text", "decision"]).default("text"),
-      choices: z.array(z.string()).default([]),
-    }),
-    outputSchema: z.object({
-      answer: z.string(),
-    }),
-  },
-  async (input) => {
-    const response = await ai.generate({
-      model: googleAI.model("gemini-2.5-flash"),
-      prompt: promptTurn(input),
-      config: {temperature: 0.3},
-    });
-
-    return {answer: response.text};
-  },
-);
-
 export const conditionalTaskFlow = ai.defineFlow(
   {
     name: "conditionalTaskFlow",
@@ -93,20 +69,6 @@ export const iterativeRefinementTaskFlow = ai.defineFlow(
     };
   },
 );
-
-function promptTurn(input: {
-  instruction: string;
-  context: string;
-  outputType: "text" | "decision";
-  choices: string[];
-}): string {
-  const parts = [input.instruction];
-  if (input.context.trim().length > 0) parts.push(`Kontext:\n${input.context}`);
-  if (input.outputType === "decision") {
-    parts.push(`Antworte nur mit einer Option: ${input.choices.join(", ")}`);
-  }
-  return parts.join("\n\n");
-}
 
 function refinementPrompt(
   objective: string,

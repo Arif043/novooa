@@ -71,7 +71,7 @@ features/task_builder/
 
 | Enum-Wert               | UI-Label (de)                | Beschreibung                                                 | Genkit-Mapping                                       |
 | ----------------------- | ---------------------------- | ------------------------------------------------------------- | ---------------------------------------------------- |
-| `prompt`                | **Prompt**                   | LLM-Aufruf mit Vorlage und Variablen                          | `promptTaskFlow`                                      |
+| `prompt`                | **Prompt**                   | LLM-Aufruf mit Vorlage und Variablen                          | Interner `executePromptNode`                          |
 | `conditionalFlow`       | **Bedingter Ablauf**         | Verzweigt anhand eines Prädikats auf den vorherigen Output   | `conditionalTaskFlow`                                 |
 | `iterativeRefinement`   | **Iterative Verfeinerung**   | Draft → Critique → Improve, n Runden                          | `iterativeRefinementTaskFlow`                         |
 | `toolCall`              | **Werkzeug-Aufruf**          | Strukturierte Tool-Invocation (z. B. Suche, E-Mail, Kalender) | `ai.generate({tools: […]})`                           |
@@ -123,13 +123,14 @@ synchron ergänzt werden — die `WorkflowPrimitiveLabels`-Extension in
 Datei: `functions/src/task-workflows.ts`. Die Flows werden in
 `functions/src/index.ts` re-exportiert.
 
-### `promptTaskFlow`
+### Prompt-Executor
 
-Führt einen einzelnen Modell-Turn aus. Bei `outputType = decision` wird das
-Modell angewiesen, nur eine der konfigurierten Optionen zurückzugeben.
+Datei: `functions/src/task-executors/prompt-node-executor.ts`.
+`executePromptNode` ist bewusst kein exportierter Genkit-Flow, sondern ein
+interner Executor-Schritt für den späteren `runTaskDefinitionFlow`.
 
 ```ts
-input:  { instruction: string; context?: string; outputType?: "text" | "decision"; choices?: string[] }
+input:  { instruction: string; context: string; outputType: "text" | "decision"; choices: string[] }
 output: { answer: string }
 ```
 
