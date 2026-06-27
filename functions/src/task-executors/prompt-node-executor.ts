@@ -33,5 +33,7 @@ function promptTurn(input: PromptNodeInput): string {
   if (input.outputType === "decision") {
     parts.push(`Antworte nur mit einer Option: ${input.choices.join(", ")}`);
   }
-  return parts.join("\n\n");
+  const res = parts.join("\n\n");
+  console.log(`Prompt: ${res}`);
+  return res;
 }

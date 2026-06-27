@@ -1,7 +1,7 @@
-import {type Genkit} from "genkit";
-import {executeConditionalNode} from "../task-executors/conditional-node-executor.js";
-import {executeIterativeRefinementNode} from "../task-executors/iterative-refinement-node-executor.js";
-import {executePromptNode} from "../task-executors/prompt-node-executor.js";
+import { type Genkit } from "genkit";
+import { executeConditionalNode } from "../task-executors/conditional-node-executor.js";
+import { executeIterativeRefinementNode } from "../task-executors/iterative-refinement-node-executor.js";
+import { executePromptNode } from "../task-executors/prompt-node-executor.js";
 import {
   type NodeExecutionResult,
   type RunTaskDefinitionInput,
@@ -41,11 +41,20 @@ async function runNodes(
   const skippedNodeIds = new Set<string>();
 
   while (remaining.length > 0) {
-    const index = nextRunnableIndex(remaining, input.taskDefinition.edges, results);
+    const index = nextRunnableIndex(
+      remaining,
+      input.taskDefinition.edges,
+      results,
+    );
     if (index === -1) throw new Error("Task graph contains a cycle.");
     const node = remaining.splice(index, 1)[0];
     const context = contextFor(node, input, results);
-    const result = shouldSkipNode(node, input.taskDefinition, results, skippedNodeIds)
+    const result = shouldSkipNode(
+      node,
+      input.taskDefinition,
+      results,
+      skippedNodeIds,
+    )
       ? skippedNode(node, "")
       : await executeNode(ai, node, context, input.taskDefinition);
     results.set(node.id, result);
