@@ -152,6 +152,21 @@ output: { taskId: string; finalOutput: string; nodeResults: NodeExecutionResult[
 `NodeExecutionResult` enthält `nodeId`, `primitive`, `status`, `output`,
 optional `selectedNodeId` und optional `message`.
 
+### Lokale Ausführung aus Flutter Web
+
+Flutter Web ruft nicht direkt die Genkit Reflection API auf, weil
+`http://127.0.0.1:3100/api/runAction` keine CORS-Preflight-Antwort liefert.
+Für lokale Tests läuft deshalb ein kleiner Proxy:
+
+```bash
+GEMINI_API_KEY=... npm --prefix functions run genkit:start
+npm --prefix functions run genkit:proxy
+```
+
+Der Flutter-Client sendet an
+`http://127.0.0.1:3400/runTaskDefinitionFlow`; der Proxy leitet intern an die
+Reflection API weiter.
+
 ### Conditional-Executor
 
 Datei: `functions/src/task-executors/conditional-node-executor.ts`.

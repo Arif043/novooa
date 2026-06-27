@@ -8,7 +8,8 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "genkit:start": "genkit start -- tsx --watch src/genkit-sample.ts"
+    "genkit:start": "genkit start -- tsx --watch src/task-workflows.ts",
+    "genkit:proxy": "tsx src/local-dev/genkit-cors-proxy.ts"
   },
   "engines": {
     "node": "24"

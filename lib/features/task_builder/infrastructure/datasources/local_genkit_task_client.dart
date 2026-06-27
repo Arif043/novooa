@@ -5,3 +5,7 @@ abstract interface class LocalGenkitTaskClient {
 class LocalGenkitConnectionException implements Exception {
   const LocalGenkitConnectionException();
 }
+
+class LocalGenkitExecutionException implements Exception {
+  const LocalGenkitExecutionException();
+}

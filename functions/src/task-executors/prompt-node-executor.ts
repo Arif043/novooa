@@ -19,7 +19,7 @@ export async function executePromptNode(
   input: PromptNodeInput,
 ): Promise<PromptNodeOutput> {
   const response = await ai.generate({
-    model: googleAI.model("gemini-2.5-flash"),
+    model: googleAI.model("gemini-2.5-flash-lite"),
     prompt: promptTurn(input),
     config: {temperature: 0.3},
   });

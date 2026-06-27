@@ -19,8 +19,8 @@ import '../../features/task_builder/domain/repositories/task_runner_repository.d
 import '../../features/task_builder/domain/usecases/execute_task_definition.dart';
 import '../../features/task_builder/domain/usecases/get_draft_task_definition.dart';
 import '../../features/task_builder/domain/usecases/save_draft_task_definition.dart';
+import '../../features/task_builder/infrastructure/datasources/local_genkit_proxy_task_client.dart';
 import '../../features/task_builder/infrastructure/datasources/local_genkit_task_client.dart';
-import '../../features/task_builder/infrastructure/datasources/mock_local_genkit_task_client.dart';
 import '../../features/task_builder/infrastructure/repositories/in_memory_task_definition_repository.dart';
 import '../../features/task_builder/infrastructure/repositories/local_genkit_task_runner_repository.dart';
 import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart';
@@ -49,7 +49,7 @@ void configureDependencies() {
       InMemoryTaskDefinitionRepository.new,
     )
     ..registerLazySingleton<LocalGenkitTaskClient>(
-      MockLocalGenkitTaskClient.new,
+      LocalGenkitProxyTaskClient.new,
     )
     ..registerLazySingleton<TaskRunnerRepository>(
       () => LocalGenkitTaskRunnerRepository(

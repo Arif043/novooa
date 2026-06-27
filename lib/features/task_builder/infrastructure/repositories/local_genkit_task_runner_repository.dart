@@ -30,6 +30,10 @@ class LocalGenkitTaskRunnerRepository implements TaskRunnerRepository {
       return const Error(
         TaskExecutionFailure(TaskExecutionFailureKind.localServerUnavailable),
       );
+    } on LocalGenkitExecutionException {
+      return const Error(
+        TaskExecutionFailure(TaskExecutionFailureKind.executionFailed),
+      );
     } on TypeError {
       return const Error(
         TaskExecutionFailure(TaskExecutionFailureKind.invalidResponse),
