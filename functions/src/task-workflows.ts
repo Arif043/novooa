@@ -1,5 +1,10 @@
 import {genkit, z} from "genkit";
 import {googleAI} from "@genkit-ai/google-genai";
+import {executeTaskGraph} from "./task-runner/task-graph-runner.js";
+import {
+  runTaskDefinitionInputSchema,
+  runTaskDefinitionOutputSchema,
+} from "./task-runner/task-definition.js";
 
 const ai = genkit({
   plugins: [googleAI()],
@@ -9,6 +14,15 @@ const conditionalBranchSchema = z.object({
   nodeId: z.string(),
   condition: z.string(),
 });
+
+export const runTaskDefinitionFlow = ai.defineFlow(
+  {
+    name: "runTaskDefinitionFlow",
+    inputSchema: runTaskDefinitionInputSchema,
+    outputSchema: runTaskDefinitionOutputSchema,
+  },
+  async (input) => executeTaskGraph(ai, input),
+);
 
 export const conditionalTaskFlow = ai.defineFlow(
   {

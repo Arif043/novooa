@@ -136,6 +136,21 @@ output: { answer: string }
 
 Temperatur: `0.3`. Streamt nicht.
 
+### `runTaskDefinitionFlow`
+
+Führt eine komplette `TaskDefinition` aus. Der Flow interpretiert den Graph,
+ermittelt ausführbare Knoten topologisch und delegiert Prompt-Knoten an
+`executePromptNode`. Noch nicht implementierte Bausteine werden als `skipped`
+markiert und reichen den bisherigen Kontext weiter.
+
+```ts
+input:  { taskDefinition: TaskDefinition; context?: string }
+output: { taskId: string; finalOutput: string; nodeResults: NodeExecutionResult[] }
+```
+
+`NodeExecutionResult` enthält `nodeId`, `primitive`, `status`, `output` und
+optional `message`.
+
 ### `conditionalTaskFlow`
 
 Wählt aus einer Liste von `(nodeId, condition)`-Paaren den ersten Knoten, dessen

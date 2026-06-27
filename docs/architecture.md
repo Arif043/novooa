@@ -90,6 +90,7 @@ Feature startet.
 
 | Flow                          | Datei                            | Status                          |
 | ----------------------------- | -------------------------------- | ------------------------------- |
+| `runTaskDefinitionFlow`       | `functions/src/task-workflows.ts` | Produktiv (Feature Aufgabe)     |
 | `conditionalTaskFlow`         | `functions/src/task-workflows.ts` | Produktiv (Feature Aufgabe)     |
 | `iterativeRefinementTaskFlow` | `functions/src/task-workflows.ts` | Produktiv (Feature Aufgabe)     |
 | `menuSuggestionFlow`          | `functions/src/genkit-sample.ts` | Vorlage — nicht produktiv       |

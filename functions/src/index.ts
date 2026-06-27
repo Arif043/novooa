@@ -32,4 +32,5 @@ setGlobalOptions({ maxInstances: 10 });
 export {
   conditionalTaskFlow,
   iterativeRefinementTaskFlow,
+  runTaskDefinitionFlow,
 } from "./task-workflows.js";
