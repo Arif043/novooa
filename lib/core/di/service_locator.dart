@@ -15,9 +15,14 @@ import '../../features/settings/domain/usecases/save_ai_provider_settings.dart';
 import '../../features/settings/infrastructure/repositories/firestore_settings_repository.dart';
 import '../../features/settings/presentation/cubits/settings_cubit.dart';
 import '../../features/task_builder/domain/repositories/task_definition_repository.dart';
+import '../../features/task_builder/domain/repositories/task_runner_repository.dart';
+import '../../features/task_builder/domain/usecases/execute_task_definition.dart';
 import '../../features/task_builder/domain/usecases/get_draft_task_definition.dart';
 import '../../features/task_builder/domain/usecases/save_draft_task_definition.dart';
+import '../../features/task_builder/infrastructure/datasources/local_genkit_task_client.dart';
+import '../../features/task_builder/infrastructure/datasources/mock_local_genkit_task_client.dart';
 import '../../features/task_builder/infrastructure/repositories/in_memory_task_definition_repository.dart';
+import '../../features/task_builder/infrastructure/repositories/local_genkit_task_runner_repository.dart';
 import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import '../../features/user/domain/repositories/user_repository.dart';
 import '../../features/user/domain/usecases/ensure_user_profile.dart';
@@ -42,6 +47,14 @@ void configureDependencies() {
     )
     ..registerLazySingleton<TaskDefinitionRepository>(
       InMemoryTaskDefinitionRepository.new,
+    )
+    ..registerLazySingleton<LocalGenkitTaskClient>(
+      MockLocalGenkitTaskClient.new,
+    )
+    ..registerLazySingleton<TaskRunnerRepository>(
+      () => LocalGenkitTaskRunnerRepository(
+        serviceLocator<LocalGenkitTaskClient>(),
+      ),
     )
     ..registerLazySingleton(() => SignOut(serviceLocator<AuthRepository>()))
     ..registerLazySingleton(
@@ -73,6 +86,9 @@ void configureDependencies() {
     )
     ..registerLazySingleton(
       () => SaveDraftTaskDefinition(serviceLocator<TaskDefinitionRepository>()),
+    )
+    ..registerLazySingleton(
+      () => ExecuteTaskDefinition(serviceLocator<TaskRunnerRepository>()),
     )
     ..registerFactory(
       () => AuthCubit(

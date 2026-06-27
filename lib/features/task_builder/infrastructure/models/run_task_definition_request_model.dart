@@ -1,0 +1,55 @@
+import '../../domain/entities/prompt_node_config.dart';
+import '../../domain/entities/task_definition.dart';
+import '../../domain/entities/workflow_edge.dart';
+import '../../domain/entities/workflow_node.dart';
+
+class RunTaskDefinitionRequestModel {
+  const RunTaskDefinitionRequestModel({
+    required this.taskDefinition,
+    required this.context,
+  });
+
+  final TaskDefinition taskDefinition;
+  final String context;
+
+  Map<String, Object?> toJson() {
+    return {'taskDefinition': _taskToJson(taskDefinition), 'context': context};
+  }
+
+  Map<String, Object?> _taskToJson(TaskDefinition task) {
+    return {
+      'id': task.id,
+      'title': task.title,
+      'objective': task.objective,
+      'nodes': task.nodes.map(_nodeToJson).toList(growable: false),
+      'edges': task.edges.map(_edgeToJson).toList(growable: false),
+    };
+  }
+
+  Map<String, Object?> _nodeToJson(WorkflowNode node) {
+    return {
+      'id': node.id.value,
+      'primitive': node.primitive.name,
+      'title': node.title,
+      'description': node.description,
+      'promptConfig': _promptToJson(node.promptConfig),
+    };
+  }
+
+  Map<String, Object?> _promptToJson(PromptNodeConfig config) {
+    return {
+      'instruction': config.instruction,
+      'outputType': config.outputType.name,
+      'firstChoice': config.firstChoice,
+      'secondChoice': config.secondChoice,
+    };
+  }
+
+  Map<String, Object?> _edgeToJson(WorkflowEdge edge) {
+    return {
+      'from': edge.from.value,
+      'to': edge.to.value,
+      if (edge.conditionLabel != null) 'conditionLabel': edge.conditionLabel,
+    };
+  }
+}
