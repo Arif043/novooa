@@ -72,8 +72,8 @@ features/task_builder/
 | Enum-Wert               | UI-Label (de)                | Beschreibung                                                 | Genkit-Mapping                                       |
 | ----------------------- | ---------------------------- | ------------------------------------------------------------- | ---------------------------------------------------- |
 | `prompt`                | **Prompt**                   | LLM-Aufruf mit Vorlage und Variablen                          | Interner `executePromptNode`                          |
-| `conditionalFlow`       | **Bedingter Ablauf**         | Verzweigt anhand eines Prädikats auf den vorherigen Output   | `conditionalTaskFlow`                                 |
-| `iterativeRefinement`   | **Iterative Verfeinerung**   | Draft → Critique → Improve, n Runden                          | `iterativeRefinementTaskFlow`                         |
+| `conditionalFlow`       | **Bedingter Ablauf**         | Verzweigt anhand eines Prädikats auf den vorherigen Output   | Interner `executeConditionalNode`                     |
+| `iterativeRefinement`   | **Iterative Verfeinerung**   | Draft → Critique → Improve, n Runden                          | Interner `executeIterativeRefinementNode`             |
 | `toolCall`              | **Werkzeug-Aufruf**          | Strukturierte Tool-Invocation (z. B. Suche, E-Mail, Kalender) | `ai.generate({tools: […]})`                           |
 | `humanApproval`         | **Freigabe**                 | Hält den Flow an, bis ein Mensch bestätigt                    | Custom Genkit-Interrupt / Firebase-Task               |
 | `validation`            | **Validierung**              | Schema- / Wertebereichsprüfung auf Output eines Knotens       | `z.object(...).safeParse()`                           |
@@ -118,16 +118,17 @@ synchron ergänzt werden — die `WorkflowPrimitiveLabels`-Extension in
 6. **Glasklar.** `SyscatTheme.glassPanelDecoration` und `SyscatBackground`
    verwenden.
 
-## Genkit-Flows (aufgabenspezifisch)
+## Genkit-Ausführung (aufgabenspezifisch)
 
-Datei: `functions/src/task-workflows.ts`. Die Flows werden in
-`functions/src/index.ts` re-exportiert.
+Datei: `functions/src/task-workflows.ts`. Nur `runTaskDefinitionFlow` wird in
+`functions/src/index.ts` re-exportiert. Einzelne Bausteine werden über interne
+Executor unter `functions/src/task-executors/` ausgeführt.
 
 ### Prompt-Executor
 
 Datei: `functions/src/task-executors/prompt-node-executor.ts`.
 `executePromptNode` ist bewusst kein exportierter Genkit-Flow, sondern ein
-interner Executor-Schritt für den späteren `runTaskDefinitionFlow`.
+interner Executor-Schritt von `runTaskDefinitionFlow`.
 
 ```ts
 input:  { instruction: string; context: string; outputType: "text" | "decision"; choices: string[] }
@@ -139,34 +140,38 @@ Temperatur: `0.3`. Streamt nicht.
 ### `runTaskDefinitionFlow`
 
 Führt eine komplette `TaskDefinition` aus. Der Flow interpretiert den Graph,
-ermittelt ausführbare Knoten topologisch und delegiert Prompt-Knoten an
-`executePromptNode`. Noch nicht implementierte Bausteine werden als `skipped`
-markiert und reichen den bisherigen Kontext weiter.
+ermittelt ausführbare Knoten topologisch und delegiert an interne Executor.
+Noch nicht implementierte Bausteine werden als `skipped` markiert und reichen
+den bisherigen Kontext weiter.
 
 ```ts
 input:  { taskDefinition: TaskDefinition; context?: string }
 output: { taskId: string; finalOutput: string; nodeResults: NodeExecutionResult[] }
 ```
 
-`NodeExecutionResult` enthält `nodeId`, `primitive`, `status`, `output` und
-optional `message`.
+`NodeExecutionResult` enthält `nodeId`, `primitive`, `status`, `output`,
+optional `selectedNodeId` und optional `message`.
 
-### `conditionalTaskFlow`
+### Conditional-Executor
 
-Wählt aus einer Liste von `(nodeId, condition)`-Paaren den ersten Knoten, dessen
-Bedingung im Kontext-String vorkommt (Substring-Match). Fallback auf
-`fallbackNodeId`.
+Datei: `functions/src/task-executors/conditional-node-executor.ts`.
+`executeConditionalNode` wählt aus den ausgehenden Kanten die erste Kante,
+deren `conditionLabel` im Kontext vorkommt. Der Graph-Runner überspringt
+nicht gewählte Branches. Ohne Match fällt der Executor auf die erste
+ausgehende Kante zurück.
 
 ```ts
-input:  { context: string; branches: { nodeId: string; condition: string }[]; fallbackNodeId: string }
-output: { selectedNodeId: string; reason: string }
+input:  { node: WorkflowNode; context: string; outgoingEdges: WorkflowEdge[] }
+output: { selectedNodeId: string | null; reason: string }
 ```
 
-### `iterativeRefinementTaskFlow`
+### Iterative-Refinement-Executor
 
-Iteriert `maxIterations` Mal (1–5, default 2): ruft `gemini-2.5-flash` mit
-einem kombinierten Prompt aus Objective / Draft / Critique-Kriterien auf,
-schreibt den Draft mit der Modell-Antwort überschrieben weiter.
+Datei:
+`functions/src/task-executors/iterative-refinement-node-executor.ts`.
+`executeIterativeRefinementNode` iteriert `maxIterations` Mal (1-5) und ruft
+`gemini-2.5-flash` mit einem kombinierten Prompt aus Objective, Draft und
+Critique-Kriterien auf.
 
 ```ts
 input:  { objective: string; draft: string; critiquePrompt: string; maxIterations: 1..5 }

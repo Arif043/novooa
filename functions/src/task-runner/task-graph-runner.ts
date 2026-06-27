@@ -1,4 +1,6 @@
 import {type Genkit} from "genkit";
+import {executeConditionalNode} from "../task-executors/conditional-node-executor.js";
+import {executeIterativeRefinementNode} from "../task-executors/iterative-refinement-node-executor.js";
 import {executePromptNode} from "../task-executors/prompt-node-executor.js";
 import {
   type NodeExecutionResult,
@@ -8,6 +10,14 @@ import {
   type WorkflowEdge,
   type WorkflowNode,
 } from "./task-definition.js";
+import {
+  contextFor,
+  finalOutputOf,
+  nextRunnableIndex,
+  shouldSkipNode,
+  skipInactiveBranches,
+  validateGraph,
+} from "./task-graph-utils.js";
 
 export async function executeTaskGraph(
   ai: Genkit,
@@ -28,14 +38,18 @@ async function runNodes(
 ): Promise<NodeExecutionResult[]> {
   const remaining = [...input.taskDefinition.nodes];
   const results = new Map<string, NodeExecutionResult>();
+  const skippedNodeIds = new Set<string>();
 
   while (remaining.length > 0) {
     const index = nextRunnableIndex(remaining, input.taskDefinition.edges, results);
     if (index === -1) throw new Error("Task graph contains a cycle.");
     const node = remaining.splice(index, 1)[0];
     const context = contextFor(node, input, results);
-    const result = await executeNode(ai, node, context);
+    const result = shouldSkipNode(node, input.taskDefinition, results, skippedNodeIds)
+      ? skippedNode(node, "")
+      : await executeNode(ai, node, context, input.taskDefinition);
     results.set(node.id, result);
+    skipInactiveBranches(node, input.taskDefinition, result, skippedNodeIds);
   }
 
   return input.taskDefinition.nodes.map((node) => results.get(node.id)!);
@@ -45,67 +59,79 @@ async function executeNode(
   ai: Genkit,
   node: WorkflowNode,
   context: string,
+  taskDefinition: TaskDefinition,
 ): Promise<NodeExecutionResult> {
-  if (node.primitive !== "prompt") return skippedNode(node, context);
+  switch (node.primitive) {
+    case "prompt":
+      return executePrompt(ai, node, context);
+    case "conditionalFlow":
+      return executeConditional(node, context, taskDefinition.edges);
+    case "iterativeRefinement":
+      return executeRefinement(ai, node, context, taskDefinition.objective);
+    default:
+      return skippedNode(node, context);
+  }
+}
+
+async function executePrompt(
+  ai: Genkit,
+  node: WorkflowNode,
+  context: string,
+): Promise<NodeExecutionResult> {
+  const output = await executePromptNode(ai, promptInputFor(node, context));
+  return executedNode(node, output.answer);
+}
+
+function executeConditional(
+  node: WorkflowNode,
+  context: string,
+  edges: WorkflowEdge[],
+): NodeExecutionResult {
+  const output = executeConditionalNode({
+    node,
+    context,
+    outgoingEdges: edges.filter((edge) => edge.from === node.id),
+  });
+  return executedNode(node, output.reason, output.selectedNodeId);
+}
+
+async function executeRefinement(
+  ai: Genkit,
+  node: WorkflowNode,
+  context: string,
+  objective: string,
+): Promise<NodeExecutionResult> {
+  const output = await executeIterativeRefinementNode(ai, {
+    objective,
+    draft: context,
+    critiquePrompt: node.description || node.title,
+    maxIterations: 2,
+  });
+  return executedNode(node, output.answer);
+}
+
+function promptInputFor(node: WorkflowNode, context: string) {
   const config = node.promptConfig;
-  const output = await executePromptNode(ai, {
+  return {
     instruction: instructionFor(node),
     context,
     outputType: config?.outputType ?? "text",
     choices: choicesFor(node),
-  });
+  };
+}
+
+function executedNode(
+  node: WorkflowNode,
+  output: string,
+  selectedNodeId?: string | null,
+): NodeExecutionResult {
   return {
     nodeId: node.id,
     primitive: node.primitive,
     status: "executed",
-    output: output.answer,
+    output,
+    selectedNodeId,
   };
-}
-
-function nextRunnableIndex(
-  nodes: WorkflowNode[],
-  edges: WorkflowEdge[],
-  results: Map<string, NodeExecutionResult>,
-): number {
-  return nodes.findIndex((node) => {
-    const parents = edges.filter((edge) => edge.to === node.id);
-    return parents.every((edge) => results.has(edge.from));
-  });
-}
-
-function contextFor(
-  node: WorkflowNode,
-  input: RunTaskDefinitionInput,
-  results: Map<string, NodeExecutionResult>,
-): string {
-  const parentOutputs = input.taskDefinition.edges
-    .filter((edge) => edge.to === node.id)
-    .map((edge) => results.get(edge.from)?.output ?? "")
-    .filter((output) => output.trim().length > 0);
-  return [
-    `Aufgabe: ${input.taskDefinition.objective}`,
-    input.context,
-    ...parentOutputs,
-  ]
-    .filter((part) => part.trim().length > 0)
-    .join("\n\n");
-}
-
-function validateGraph(taskDefinition: TaskDefinition): void {
-  const nodeIds = new Set<string>();
-  for (const node of taskDefinition.nodes) {
-    if (nodeIds.has(node.id)) {
-      throw new Error(`Task graph contains a duplicate node: ${node.id}.`);
-    }
-    nodeIds.add(node.id);
-  }
-  for (const edge of taskDefinition.edges) {
-    if (!nodeIds.has(edge.from) || !nodeIds.has(edge.to)) {
-      throw new Error(
-        `Task graph edge references an unknown node: ${edge.from}->${edge.to}.`,
-      );
-    }
-  }
 }
 
 function skippedNode(node: WorkflowNode, context: string): NodeExecutionResult {
@@ -130,11 +156,4 @@ function choicesFor(node: WorkflowNode): string[] {
     node.promptConfig?.firstChoice ?? "",
     node.promptConfig?.secondChoice ?? "",
   ].filter((choice) => choice.trim().length > 0);
-}
-
-function finalOutputOf(results: NodeExecutionResult[]): string {
-  for (let index = results.length - 1; index >= 0; index -= 1) {
-    if (results[index].output.trim().length > 0) return results[index].output;
-  }
-  return "";
 }
