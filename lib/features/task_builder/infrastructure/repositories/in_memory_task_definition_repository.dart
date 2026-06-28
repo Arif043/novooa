@@ -1,7 +1,4 @@
 import '../../domain/entities/task.dart';
-import '../../domain/entities/prompt_node_config.dart';
-import '../../domain/entities/workflow_edge.dart';
-import '../../domain/entities/workflow_node.dart';
 import '../../domain/repositories/task_repository.dart';
 
 /// In-Memory-Implementierung des [TaskRepository].
@@ -10,7 +7,6 @@ import '../../domain/repositories/task_repository.dart';
 /// etwas Sichtbares hat. Überlebt keinen App-Restart — der Migrationspfad
 /// zu Firestore ist in `docs/architecture.md` § Persistenz dokumentiert.
 class InMemoryTaskDefinitionRepository implements TaskRepository {
-  
   final List<Task> _draft = [];
 
   @override

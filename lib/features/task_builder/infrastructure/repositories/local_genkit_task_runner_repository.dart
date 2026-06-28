@@ -1,5 +1,4 @@
 import 'package:multiple_result/multiple_result.dart';
-
 import '../../domain/entities/task.dart';
 import '../../domain/entities/task_execution_failure.dart';
 import '../../domain/entities/task_execution_result.dart';
@@ -14,12 +13,9 @@ class LocalGenkitTaskRunnerRepository implements TaskRunnerRepository {
   final LocalGenkitTaskClient _client;
 
   @override
-  Future<Result<TaskExecutionResult, TaskExecutionFailure>> execute({
-    required Task taskDefinition,
-    String context = '',
-  }) async {
+  Future<Result<TaskExecutionResult, TaskExecutionFailure>> execute({required Task task, String context = ''}) async {
     try {
-      final request = RunTaskDefinitionRequestModel(taskDefinition: taskDefinition, context: context).toJson();
+      final request = RunTaskDefinitionRequestModel(taskDefinition: task, context: context).toJson();
       final response = await _client.runTaskDefinition(request);
       final result = TaskExecutionResultModel.fromJson(response).toDomain();
       return Success(result);

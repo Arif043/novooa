@@ -5,14 +5,7 @@ import 'prompt_node_config.dart';
 /// Synchron zur Tabelle in `docs/features/aufgabe.md` § Primitives halten:
 /// Jeder neue Enum-Wert braucht einen Eintrag dort, einen UI-Label in der
 /// `WorkflowPrimitiveLabels`-Extension und ein Genkit-Mapping im Inspector.
-enum WorkflowPrimitive {
-  prompt,
-  conditionalFlow,
-  iterativeRefinement,
-  toolCall,
-  humanApproval,
-  validation,
-}
+enum WorkflowPrimitive { prompt, conditionalFlow, iterativeRefinement, toolCall, humanApproval, validation }
 
 /// Value Object für Knoten-Identifier.
 ///

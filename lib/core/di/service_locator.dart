@@ -20,7 +20,7 @@ import '../../features/activity/infrastructure/repositories/in_memory_task_activ
 import '../../features/activity/presentation/cubits/activity_cubit.dart';
 import '../../features/task_builder/domain/repositories/task_repository.dart';
 import '../../features/task_builder/domain/repositories/task_runner_repository.dart';
-import '../../features/task_builder/domain/usecases/execute_task_definition.dart';
+import '../../features/task_builder/domain/usecases/execute_task.dart';
 import '../../features/task_builder/infrastructure/datasources/local_genkit_proxy_task_client.dart';
 import '../../features/task_builder/infrastructure/datasources/local_genkit_task_client.dart';
 import '../../features/task_builder/infrastructure/repositories/in_memory_task_definition_repository.dart';
@@ -63,8 +63,7 @@ void configureDependencies() {
     ..registerLazySingleton(() => TrackTaskExecution(serviceLocator<TaskActivityRepository>()))
     ..registerLazySingleton(() => ListTaskActivities(serviceLocator<TaskActivityRepository>()))
     ..registerLazySingleton(
-      () =>
-          ExecuteTaskDefinition(serviceLocator<TaskRunnerRepository>(), tracker: serviceLocator<TrackTaskExecution>()),
+      () => ExecuteTask(serviceLocator<TaskRunnerRepository>(), tracker: serviceLocator<TrackTaskExecution>()),
     )
     ..registerFactory(
       () => AuthCubit(
@@ -82,9 +81,7 @@ void configureDependencies() {
         saveAiProviderSettings: serviceLocator<SaveAiProviderSettings>(),
       ),
     )
-    ..registerFactory(
-      () => TaskBuilderCubit(repository: serviceLocator<TaskRepository>()),
-    )
+    ..registerFactory(() => TaskBuilderCubit(repository: serviceLocator<TaskRepository>()))
     ..registerFactory(() => ActivityCubit(listTaskActivities: serviceLocator<ListTaskActivities>()))
     ..registerLazySingleton(
       () => AppRouter(authRepository: serviceLocator<AuthRepository>()),

@@ -34,26 +34,26 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   }
 
   Future<void> selectNode(NodeId nodeId) async {
-    final task = _loadedTaskOrNull();
+    final task = loadedTaskOrNull();
     if (task == null) return;
     await _saveAndEmit(task.selectNode(nodeId));
   }
 
   Future<void> addPrimitive(WorkflowPrimitive primitive) async {
-    final task = _loadedTaskOrNull();
+    final task = loadedTaskOrNull();
     if (task == null) return;
     final node = _buildNode(primitive, task.nodes.length);
     await _saveAndEmit(task.addNode(node));
   }
 
   Future<void> updateTitle(String title) async {
-    final task = _loadedTaskOrNull();
+    final task = loadedTaskOrNull();
     if (task == null || task.title == title) return;
     await _saveAndEmit(task.copyWith(title: title));
   }
 
   Future<void> updateObjective(String objective) async {
-    final task = _loadedTaskOrNull();
+    final task = loadedTaskOrNull();
     if (task == null || task.objective == objective) return;
     await _saveAndEmit(task.copyWith(objective: objective));
   }
@@ -73,7 +73,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   }
 
   Future<void> removeNode(NodeId nodeId) async {
-    final task = _loadedTaskOrNull();
+    final task = loadedTaskOrNull();
     if (task == null) return;
     await _saveAndEmit(task.removeNode(nodeId));
   }
@@ -101,7 +101,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   }
 
   Future<void> updateEdgeCondition({required NodeId from, required NodeId to, required String? conditionLabel}) async {
-    final task = _loadedTaskOrNull();
+    final task = loadedTaskOrNull();
     if (task == null) return;
     final updated = task.updateEdgeCondition(from: from, to: to, conditionLabel: conditionLabel);
     await _saveAndEmit(updated);
@@ -109,7 +109,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
 
   void confirmSave() {}
 
-  Task? _loadedTaskOrNull() {
+  Task? loadedTaskOrNull() {
     final current = state;
     return current is TaskBuilderLoaded ? current.editingTask : null;
   }
@@ -121,7 +121,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   }
 
   Future<void> _updateNode(NodeId nodeId, WorkflowNode Function(WorkflowNode node) update) async {
-    final task = _loadedTaskOrNull();
+    final task = loadedTaskOrNull();
     if (task == null) return;
     final index = task.nodes.indexWhere((node) => node.id == nodeId);
     if (index == -1) return;

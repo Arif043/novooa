@@ -1,5 +1,4 @@
 import 'package:multiple_result/multiple_result.dart';
-
 import '../../../../core/entities/unique_id.dart';
 import '../../../activity/domain/entities/task_activity.dart';
 import '../../../activity/domain/usecases/track_task_execution.dart';
@@ -8,46 +7,43 @@ import '../entities/task_execution_failure.dart';
 import '../entities/task_execution_result.dart';
 import '../repositories/task_runner_repository.dart';
 
-class ExecuteTaskDefinitionParams {
-  const ExecuteTaskDefinitionParams({required this.taskDefinition, this.context = ''});
+class ExecuteTaskParams {
+  const ExecuteTaskParams({required this.task, this.context = ''});
 
-  final Task taskDefinition;
+  final Task task;
   final String context;
 }
 
-class ExecuteTaskDefinition {
-  const ExecuteTaskDefinition(this._repository, {TrackTaskExecution? tracker}) : _tracker = tracker;
+class ExecuteTask {
+  const ExecuteTask(this._repository, {TrackTaskExecution? tracker}) : _tracker = tracker;
 
   final TaskRunnerRepository _repository;
   final TrackTaskExecution? _tracker;
 
-  Future<Result<TaskExecutionResult, TaskExecutionFailure>> call(ExecuteTaskDefinitionParams params) async {
+  Future<Result<TaskExecutionResult, TaskExecutionFailure>> call(ExecuteTaskParams params) async {
     final runId = await _tracker?.started(_trackStart(params));
-    final taskExecutionOrFailure = await _repository.execute(
-      taskDefinition: params.taskDefinition,
-      context: params.context,
-    );
+    final taskExecutionOrFailure = await _repository.execute(task: params.task, context: params.context);
     await _trackResult(params, taskExecutionOrFailure, runId);
     return taskExecutionOrFailure;
   }
 
   Future<void> _trackResult(
-    ExecuteTaskDefinitionParams params,
+    ExecuteTaskParams params,
     Result<TaskExecutionResult, TaskExecutionFailure> taskExecutionOrFailure,
     UniqueId? runId,
   ) async {
     final tracker = _tracker;
     if (tracker == null || runId == null) return;
     await taskExecutionOrFailure.when(
-      (result) => tracker.succeeded(runId: runId, success: _trackSuccess(params.taskDefinition, result)),
-      (failure) => tracker.failed(runId: runId, failure: _trackFailure(params.taskDefinition, failure)),
+      (result) => tracker.succeeded(runId: runId, success: _trackSuccess(params.task, result)),
+      (failure) => tracker.failed(runId: runId, failure: _trackFailure(params.task, failure)),
     );
   }
 
-  TrackTaskStart _trackStart(ExecuteTaskDefinitionParams params) {
+  TrackTaskStart _trackStart(ExecuteTaskParams params) {
     return TrackTaskStart(
-      taskId: params.taskDefinition.id,
-      taskTitle: params.taskDefinition.title,
+      taskId: params.task.id,
+      taskTitle: params.task.title,
       input: params.context,
     );
   }

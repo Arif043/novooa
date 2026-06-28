@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:syscat2/core/di/service_locator.dart';
-import 'package:syscat2/features/activity/presentation/pages/activity_page.dart';
-import 'package:syscat2/features/settings/presentation/pages/settings_page.dart';
-import 'package:syscat2/features/task_builder/domain/usecases/execute_task_definition.dart';
-import 'package:syscat2/features/task_builder/presentation/pages/task_builder_page.dart';
-import 'package:syscat2/features/task_builder/presentation/pages/task_homepage.dart';
+import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart';
+
 import 'root_tab.dart';
 import 'core/widgets/root_app_bar.dart';
 import 'core/widgets/root_drawer.dart';
@@ -12,65 +10,60 @@ import 'core/widgets/root_stage.dart';
 import 'core/widgets/syscat_background.dart';
 
 class RootPage extends StatefulWidget {
-  const RootPage({super.key});
+  const RootPage({super.key, required this.location, required this.child});
+
+  final String location;
+  final Widget child;
 
   @override
   State<RootPage> createState() => _RootPageState();
 }
 
 class _RootPageState extends State<RootPage> {
-  int _selectedTabIndex = 0;
-  bool _isRunningTask = false;
+  final bool _isRunningTask = false;
 
   static final List<RootTab> _tabs = [
-    RootTab(title: 'Aufgaben', icon: Icons.dashboard_outlined, builder: (context) => const TaskHomepage()),
-    RootTab(
-      title: 'Arbeitspläne',
-      icon: Icons.folder_outlined,
-      builder: (context) =>
-          const _PlaceholderPage(title: 'Arbeitspläne', content: 'Gespeicherte Aufgaben und Vorlagen erscheinen hier.'),
-    ),
+    RootTab(title: 'Aufgaben', icon: Icons.dashboard_outlined, path: '/tasks'),
+    RootTab(title: 'Arbeitspläne', icon: Icons.folder_outlined, path: '/plans'),
     RootTab(
       title: 'Zeitplan',
       icon: Icons.bar_chart_outlined,
-      builder: (context) => const _PlaceholderPage(
-        title: 'Zeitplan',
-        content: 'Geplante und wiederkehrende Automationen erscheinen hier.',
-      ),
+      path: '/schedule',
     ),
-    RootTab(title: 'Aktivitäten', icon: Icons.history_outlined, builder: (context) => const ActivityPage()),
-    RootTab(title: 'Einstellungen', icon: Icons.settings_outlined, builder: (context) => const SettingsPage()),
+    RootTab(
+      title: 'Aktivitäten',
+      icon: Icons.history_outlined,
+      path: '/activity',
+    ),
+    RootTab(
+      title: 'Einstellungen',
+      icon: Icons.settings_outlined,
+      path: '/settings',
+    ),
   ];
 
   void _selectTab(int index) {
-    setState(() => _selectedTabIndex = index);
+    context.go(_tabs[index].path);
     Navigator.of(context).pop();
   }
 
   Future<void> _runTask() async {
-    // if (_isRunningTask) return;
-    // setState(() => _isRunningTask = true);
-    // final taskDefinition = await serviceLocator<GetDraftTaskDefinition>().execute();
-    // final taskExecutionOrFailure = await serviceLocator<ExecuteTaskDefinition>()(
-    //   ExecuteTaskDefinitionParams(taskDefinition: taskDefinition),
-    // );
-    // if (!mounted) return;
-    // setState(() => _isRunningTask = false);
-    // taskExecutionOrFailure.when(
-    //   (taskExecution) => _showRunMessage(taskExecution.finalOutput),
-    //   (failure) => _showRunMessage(failure.message),
-    // );
   }
 
   @override
   Widget build(BuildContext context) {
-    final selectedTab = _tabs[_selectedTabIndex];
+    final selectedTabIndex = _selectedTabIndex;
+    final selectedTab = _tabs[selectedTabIndex];
     return SyscatBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: RootAppBar(title: selectedTab.title, actions: _actions),
-        drawer: RootDrawer(tabs: _tabs, selectedIndex: _selectedTabIndex, onSelected: _selectTab),
-        body: RootStage(tab: selectedTab),
+        drawer: RootDrawer(
+          tabs: _tabs,
+          selectedIndex: selectedTabIndex,
+          onSelected: _selectTab,
+        ),
+        body: RootStage(child: widget.child),
       ),
     );
   }
@@ -83,21 +76,30 @@ class _RootPageState extends State<RootPage> {
         child: FilledButton(
           onPressed: _isRunningTask ? null : _runTask,
           child: _isRunningTask
-              ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : const Text('Run Task'),
         ),
       ),
     ];
   }
 
-  void _showRunMessage(String message) {
-    final text = message.trim().isEmpty ? 'Aufgabe ausgeführt.' : message;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text), showCloseIcon: true));
+  int get _selectedTabIndex {
+    final index = _tabs.indexWhere(
+      (tab) => widget.location.startsWith(tab.path),
+    );
+    return index == -1 ? 0 : index;
   }
 }
 
-class _PlaceholderPage extends StatelessWidget {
-  const _PlaceholderPage({required this.title, required this.content});
+class RootPlaceholderPage extends StatelessWidget {
+  const RootPlaceholderPage({
+    super.key,
+    required this.title,
+    required this.content,
+  });
 
   final String title;
   final String content;

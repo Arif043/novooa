@@ -1,3 +1,5 @@
+import 'package:uuid/uuid.dart';
+
 import 'workflow_edge.dart';
 import 'workflow_node.dart';
 
@@ -28,12 +30,12 @@ class Task {
 
   static Task empty() {
     return Task(
-      id: '',
-      title: '',
+      id: const Uuid().v4(),
+      title: 'Empty Task',
       objective: '',
       nodes: [],
       edges: [],
-      selectedNodeId: NodeId(''),
+      selectedNodeId: const NodeId(''),
     );
   }
 

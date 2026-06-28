@@ -4,6 +4,7 @@ import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
+import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
@@ -28,9 +29,7 @@ class _TaskBuilderView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
-      builder: (context, state) => _TaskBuilderBody(state: state),
-    );
+    return BlocBuilder<TaskBuilderCubit, TaskBuilderState>(builder: (context, state) => _TaskBuilderBody(state: state));
   }
 }
 
@@ -42,31 +41,37 @@ class _TaskBuilderBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<TaskBuilderCubit>();
-    final promptNode = _promptNodeOrNull(state);
     return Column(
       children: [
-        Toolbar(
-          onAddPrompt: () => cubit.addPrimitive(WorkflowPrimitive.prompt),
+        FilledButton(
+          onPressed: () {
+            final task = cubit.loadedTaskOrNull();
+            if (task == null) return;
+            debugPrint(task.toString());
+            serviceLocator<ExecuteTask>()(ExecuteTaskParams(task: task));
+          },
+          child: Text('Run Task'),
         ),
+        Toolbar(onAddPrompt: () => cubit.addPrimitive(WorkflowPrimitive.prompt)),
         const SizedBox(height: AppSpacing.xxl),
-        if (promptNode != null)
-          PromptWidget(node: promptNode, cubit: cubit)
-        else
-          const CircularProgressIndicator(),
+        _nodeGraph(state),
       ],
     );
   }
 
-  WorkflowNode? _promptNodeOrNull(TaskBuilderState state) {
+  Widget _nodeGraph(TaskBuilderState state) {
     if (state case TaskBuilderLoaded(:final editingTask)) {
-      final selectedNode = editingTask.selectedNodeOrNull;
-      if (selectedNode?.primitive == WorkflowPrimitive.prompt) {
-        return selectedNode;
-      }
-      for (final node in editingTask.nodes) {
-        if (node.primitive == WorkflowPrimitive.prompt) return node;
-      }
+      return Column(children: editingTask.nodes.map(_nodeWidgetOrNull).toList());
     }
-    return null;
+    return const SizedBox.shrink();
+  }
+
+  Widget _nodeWidgetOrNull(WorkflowNode node) {
+    switch (node.primitive) {
+      case WorkflowPrimitive.prompt:
+        return PromptWidget(node: node);
+      default:
+        return SizedBox.shrink();
+    }
   }
 }

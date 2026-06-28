@@ -7,16 +7,16 @@ import 'package:syscat2/features/task_builder/domain/entities/prompt_node_config
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_execution_result.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
-import 'package:syscat2/features/task_builder/domain/usecases/execute_task_definition.dart';
+import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart';
 import 'package:syscat2/features/task_builder/infrastructure/datasources/mock_local_genkit_task_client.dart';
 import 'package:syscat2/features/task_builder/infrastructure/repositories/local_genkit_task_runner_repository.dart';
 
 void main() {
   test('ExecuteTaskDefinition fuehrt Draft ueber lokalen Genkit-Mock aus', () async {
-    const usecase = ExecuteTaskDefinition(LocalGenkitTaskRunnerRepository(MockLocalGenkitTaskClient()));
+    const usecase = ExecuteTask(LocalGenkitTaskRunnerRepository(MockLocalGenkitTaskClient()));
 
     final taskExecutionOrFailure = await usecase(
-      ExecuteTaskDefinitionParams(taskDefinition: _promptTask(), context: 'Lokaler Testkontext'),
+      ExecuteTaskParams(taskDefinition: _promptTask(), context: 'Lokaler Testkontext'),
     );
 
     taskExecutionOrFailure.when((taskExecution) {
@@ -34,12 +34,9 @@ void main() {
       clock: () => DateTime.utc(2026),
       idFactory: () => UniqueId('activity.${nextId++}'),
     );
-    final usecase = ExecuteTaskDefinition(
-      const LocalGenkitTaskRunnerRepository(MockLocalGenkitTaskClient()),
-      tracker: tracker,
-    );
+    final usecase = ExecuteTask(const LocalGenkitTaskRunnerRepository(MockLocalGenkitTaskClient()), tracker: tracker);
 
-    await usecase(ExecuteTaskDefinitionParams(taskDefinition: _promptTask(), context: 'Lokaler Testkontext'));
+    await usecase(ExecuteTaskParams(taskDefinition: _promptTask(), context: 'Lokaler Testkontext'));
 
     final activities = (await activityRepository.listRecent()).reversed.toList();
     expect(activities.length, 3);

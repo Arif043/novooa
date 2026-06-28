@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 
@@ -7,10 +9,9 @@ import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 
 class PromptWidget extends StatefulWidget {
-  const PromptWidget({super.key, required this.node, required this.cubit});
+  const PromptWidget({super.key, required this.node});
 
   final WorkflowNode node;
-  final TaskBuilderCubit cubit;
 
   @override
   State<PromptWidget> createState() => _PromptWidgetState();
@@ -100,6 +101,7 @@ class _PromptWidgetState extends State<PromptWidget> {
             selected: {selectedOutput},
             onSelectionChanged: _updateOutputType,
           ),
+          
           if (selectedOutput == PromptOutputType.decision) ...[
             const SizedBox(height: AppSpacing.sm),
             Text('Mögliche Antworten', style: SyscatTheme.taskBodySmall),
@@ -136,17 +138,17 @@ class _PromptWidgetState extends State<PromptWidget> {
   }
 
   void _updateInstruction(String value) {
-    widget.cubit.updatePromptInstruction(widget.node.id, value);
+    context.read<TaskBuilderCubit>().updatePromptInstruction(widget.node.id, value);
   }
 
   void _updateOutputType(Set<PromptOutputType> value) {
     final outputType = value.first;
     setState(() => selectedOutput = outputType);
-    widget.cubit.updatePromptOutputType(widget.node.id, outputType);
+    context.read<TaskBuilderCubit>().updatePromptOutputType(widget.node.id, outputType);
   }
 
   void _updateChoice(int index, String value) {
-    widget.cubit.updatePromptChoice(
+    context.read<TaskBuilderCubit>().updatePromptChoice(
       nodeId: widget.node.id,
       index: index,
       value: value,
