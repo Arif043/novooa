@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 
 part 'prompt_node_config.dart';
+part 'conditional_node_config.dart';
 
 sealed class NodeConfig extends Equatable {
   const NodeConfig();
@@ -11,6 +12,7 @@ sealed class NodeConfig extends Equatable {
   factory NodeConfig.initial(WorkflowPrimitive primitive) {
     return switch (primitive) {
       .prompt => PromptNodeConfig.initial(),
+      .conditional => ConditionalNodeConfig.initial(),
       _ => throw UnimplementedError(),
     };
   }

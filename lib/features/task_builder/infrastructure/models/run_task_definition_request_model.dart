@@ -39,6 +39,7 @@ class RunTaskDefinitionRequestModel {
   Map<String, Object?> _configToJson(NodeConfig config) {
     return switch (config) {
       PromptNodeConfig() => _promptToJson(config),
+      ConditionalNodeConfig() => throw UnimplementedError(),
     };
   }
 

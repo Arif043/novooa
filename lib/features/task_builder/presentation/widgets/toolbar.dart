@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
 class Toolbar extends StatelessWidget {
-  const Toolbar({super.key, required this.onAddPrompt});
-
-  final VoidCallback onAddPrompt;
+  const Toolbar({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,13 +19,13 @@ class Toolbar extends StatelessWidget {
           mainAxisSize: .min,
           children: [
             IconButton(
-              onPressed: onAddPrompt,
+              onPressed: () => context.read<TaskBuilderCubit>().addPrimitive(.prompt),
               icon: const Icon(Icons.format_align_left),
               tooltip: "Prompt hinzufügen",
             ),
             const SizedBox(width: 4),
             IconButton(
-              onPressed: () => {},
+              onPressed: () => context.read<TaskBuilderCubit>().addPrimitive(.conditional),
               icon: const Icon(Icons.call_split),
               tooltip: "Verzweigung hinzufügen",
             ),

@@ -4,7 +4,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
   String get label {
     return switch (this) {
       WorkflowPrimitive.prompt => 'Prompt',
-      WorkflowPrimitive.conditionalFlow => 'Bedingter Ablauf',
+      WorkflowPrimitive.conditional => 'Bedingter Ablauf',
       WorkflowPrimitive.iterativeRefinement => 'Iterative Verfeinerung',
       WorkflowPrimitive.toolCall => 'Werkzeug-Aufruf',
       WorkflowPrimitive.humanApproval => 'Freigabe',
@@ -15,15 +15,11 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
   String get description {
     return switch (this) {
       WorkflowPrimitive.prompt => 'Formt Eingaben in einen Modellauftrag.',
-      WorkflowPrimitive.conditionalFlow =>
-        'Verzweigt den Ablauf anhand von Regeln.',
-      WorkflowPrimitive.iterativeRefinement =>
-        'Verbessert ein Ergebnis über mehrere Runden.',
-      WorkflowPrimitive.toolCall =>
-        'Bindet externe Aktionen oder Datenquellen ein.',
+      WorkflowPrimitive.conditional => 'Verzweigt den Ablauf anhand von Regeln.',
+      WorkflowPrimitive.iterativeRefinement => 'Verbessert ein Ergebnis über mehrere Runden.',
+      WorkflowPrimitive.toolCall => 'Bindet externe Aktionen oder Datenquellen ein.',
       WorkflowPrimitive.humanApproval => 'Wartet auf menschliche Freigabe.',
-      WorkflowPrimitive.validation =>
-        'Prüft Ergebnis, Schema oder Qualitätskriterien.',
+      WorkflowPrimitive.validation => 'Prüft Ergebnis, Schema oder Qualitätskriterien.',
     };
   }
 }

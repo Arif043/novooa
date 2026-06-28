@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -14,9 +15,7 @@ class PromptWidget extends StatefulWidget {
   @override
   State<PromptWidget> createState() => _PromptWidgetState();
 }
-
 class _PromptWidgetState extends State<PromptWidget> {
-  late final PromptNodeConfig config;
   late PromptOutputType selectedOutput;
   late final TextEditingController _instructionController;
   late final TextEditingController _firstChoiceController;
@@ -25,7 +24,7 @@ class _PromptWidgetState extends State<PromptWidget> {
   @override
   void initState() {
     super.initState();
-    config = widget.node.config as PromptNodeConfig;
+    final config = widget.node.config as PromptNodeConfig;
     selectedOutput = config.outputType;
     _instructionController = _controller(config.instruction);
     _firstChoiceController = _controller(config.firstChoice);
@@ -74,22 +73,33 @@ class _PromptWidgetState extends State<PromptWidget> {
           const SizedBox(height: AppSpacing.md),
           Text('Ausgabe', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),
-          SegmentedButton<PromptOutputType>(
-            segments: const [
-              ButtonSegment(
-                value: .text,
-                label: Text('Freitext'),
-                icon: Icon(Icons.text_fields),
-              ),
-              ButtonSegment(
-                value: .decision,
-                label: Text('Entscheidung'),
-                icon: Icon(Icons.list),
-              ),
-            ],
-            selected: {selectedOutput},
-            onSelectionChanged: _updateOutputType,
+          CupertinoSlidingSegmentedControl<PromptOutputType>(
+            groupValue: selectedOutput,
+            backgroundColor: SyscatTheme.primaryOrangeLighter,
+            children: {
+              PromptOutputType.text: Text('Freitext'),
+              PromptOutputType.decision: Text('Entscheidung'),
+            },
+            onValueChanged: (value) {
+              _updateOutputType({value!});
+            },
           ),
+          // SegmentedButton<PromptOutputType>(
+          //   segments: const [
+          //     ButtonSegment(
+          //       value: .text,
+          //       label: Text('Freitext'),
+          //       icon: Icon(Icons.text_fields),
+          //     ),
+          //     ButtonSegment(
+          //       value: .decision,
+          //       label: Text('Entscheidung'),
+          //       icon: Icon(Icons.list),
+          //     ),
+          //   ],
+          //   selected: {selectedOutput},
+          //   onSelectionChanged: _updateOutputType,
+          // ),
 
           if (selectedOutput == PromptOutputType.decision) ...[
             const SizedBox(height: AppSpacing.sm),

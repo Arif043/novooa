@@ -7,6 +7,7 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart
 import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/branch_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/toolbar.dart';
 
@@ -52,7 +53,7 @@ class _TaskBuilderBody extends StatelessWidget {
           },
           child: Text('Run Task'),
         ),
-        Toolbar(onAddPrompt: () => cubit.addPrimitive(WorkflowPrimitive.prompt)),
+        Toolbar(),
         const SizedBox(height: AppSpacing.xxl),
         _nodeGraph(state),
       ],
@@ -67,11 +68,10 @@ class _TaskBuilderBody extends StatelessWidget {
   }
 
   Widget _nodeWidgetOrNull(WorkflowNode node) {
-    switch (node.config.primitive) {
-      case .prompt:
-        return PromptWidget(node: node);
-      default:
-        return SizedBox.shrink();
-    }
+    return switch (node.config.primitive) {
+      .prompt => PromptWidget(node: node),
+      .conditional => BranchWidget(),
+      _ => SizedBox.shrink()
+    };
   }
 }

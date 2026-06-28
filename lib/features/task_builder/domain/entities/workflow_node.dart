@@ -5,7 +5,7 @@ import 'node_config.dart';
 /// Synchron zur Tabelle in `docs/features/aufgabe.md` § Primitives halten:
 /// Jeder neue Enum-Wert braucht einen Eintrag dort, einen UI-Label in der
 /// `WorkflowPrimitiveLabels`-Extension und ein Genkit-Mapping im Inspector.
-enum WorkflowPrimitive { prompt, conditionalFlow, iterativeRefinement, toolCall, humanApproval, validation }
+enum WorkflowPrimitive { prompt, conditional, iterativeRefinement, toolCall, humanApproval, validation }
 
 /// Value Object für Knoten-Identifier.
 ///
@@ -35,23 +35,14 @@ class NodeId {
 /// `id` ist absichtlich nicht Teil von [copyWith] — die Identität eines
 /// Knotens bleibt über seine Lebensdauer hinweg stabil.
 class WorkflowNode {
-  const WorkflowNode({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.config,
-  });
+  const WorkflowNode({required this.id, required this.title, required this.description, required this.config});
 
   final NodeId id;
   final String title;
   final String description;
   final NodeConfig config;
 
-  WorkflowNode copyWith({
-    String? title,
-    String? description,
-    NodeConfig? config,
-  }) {
+  WorkflowNode copyWith({String? title, String? description, NodeConfig? config}) {
     return WorkflowNode(
       id: id,
       title: title ?? this.title,
