@@ -129,13 +129,6 @@ class _PromptWidgetState extends State<PromptWidget> {
     return TextEditingController(text: text);
   }
 
-  void _syncController(TextEditingController controller, String text) {
-    controller.value = controller.value.copyWith(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
-    );
-  }
-
   void _updateInstruction(String value) {
     context.read<TaskBuilderCubit>().updatePromptInstruction(
       widget.node.id,

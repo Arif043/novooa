@@ -1,10 +1,12 @@
 part of 'node_config.dart';
 
 class ConditionalNodeConfig extends NodeConfig {
-  const ConditionalNodeConfig();
+  const ConditionalNodeConfig({required this.choices});
 
-  factory ConditionalNodeConfig.initial() {
-    return const ConditionalNodeConfig();
+  final List<String> choices;
+
+  factory ConditionalNodeConfig.initial(List<String>? choices) {
+    return ConditionalNodeConfig(choices: choices ?? []);
   }
 
   @override

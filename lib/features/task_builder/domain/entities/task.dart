@@ -1,5 +1,4 @@
 import 'package:uuid/uuid.dart';
-
 import 'workflow_edge.dart';
 import 'workflow_node.dart';
 
@@ -78,6 +77,33 @@ class Task {
     final result = <WorkflowEdge>[];
     for (final edge in edges) {
       if (edge.from == nodeId) result.add(edge);
+    }
+    return result;
+  }
+
+  /// Liefert alle eingehenden Kanten eines Knotens in der Reihenfolge, in
+  /// der sie im [edges]-Feld stehen.
+  List<WorkflowEdge> incomingEdgesOf(NodeId nodeId) {
+    final result = <WorkflowEdge>[];
+    for (final edge in edges) {
+      if (edge.to == nodeId) result.add(edge);
+    }
+    return result;
+  }
+
+  /// Liefert alle Knoten, die eine Kante zu [nodeId] haben.
+  List<WorkflowNode> predecessorsOf(NodeId nodeId) {
+    final result = <WorkflowNode>[];
+    for (final edge in edges) {
+      if (edge.to == nodeId) result.add(nodes.firstWhere((node) => node.id == edge.from));
+    }
+    return result;
+  }
+ 
+  List<WorkflowNode> successorsOf(NodeId nodeId) {
+    final result = <WorkflowNode>[];
+    for (final edge in edges) {
+      if (edge.from == nodeId) result.add(nodes.firstWhere((node) => node.id == edge.to));
     }
     return result;
   }
