@@ -70,22 +70,33 @@ async function executeNode(
   context: string,
   task: Task,
 ): Promise<NodeExecutionResult> {
+  try {
+    console.log("####################################");
+    console.log("Executing node: ", node);
+    console.log("Context: ", context);
+    console.log("Task Definition: ", task);
+    console.log("####################################");
 
-  console.log("####################################")
-  console.log("Executing node: ", node)
-  console.log("Context: ", context)
-  console.log("Task Definition: ", task)
-  console.log("####################################")
-
-  switch (node.primitive) {
-    case "prompt":
-      return executePrompt(ai, node, context);
-    case "conditionalFlow":
-      return executeConditional(node, context, task.edges);
-    case "iterativeRefinement":
-      return executeRefinement(ai, node, context, task.objective);
-    default:
-      return skippedNode(node, context);
+    switch (node.primitive) {
+      case "prompt":
+        return executePrompt(ai, node, context);
+      case "conditionalFlow":
+        return executeConditional(node, context, task.edges);
+      case "iterativeRefinement":
+        return executeRefinement(ai, node, context, task.objective);
+      default:
+        return skippedNode(node, context);
+    }
+  } catch (error) {
+    console.error("Node execution failed.", {
+      nodeId: node.id,
+      primitive: node.primitive,
+      node,
+      context,
+      taskId: task.id,
+      error: errorDetails(error),
+    });
+    throw error;
   }
 }
 
@@ -178,4 +189,15 @@ function choicesFor(node: WorkflowNode): string[] {
 function promptConfigFor(node: WorkflowNode) {
   if (node.config?.primitive !== "prompt") return undefined;
   return node.config;
+}
+
+function errorDetails(error: unknown) {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+  return error;
 }

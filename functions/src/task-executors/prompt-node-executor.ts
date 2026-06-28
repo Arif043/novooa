@@ -1,12 +1,12 @@
 import { z, type Genkit } from "genkit";
 import { googleAI } from "@genkit-ai/google-genai";
 
-export type PromptOutputType = "text" | "decision";
+export type PromptNodeOutputType = "text" | "decision";
 
 export type PromptNodeInput = {
   instruction: string;
   context: string;
-  outputType: PromptOutputType;
+  outputType: PromptNodeOutputType;
   choices: string[];
 };
 
@@ -18,23 +18,8 @@ export async function executePromptNode(
   ai: Genkit,
   input: PromptNodeInput,
 ): Promise<PromptNodeOutput> {
-
   if (input.outputType === "decision") {
-    const decision = await ai.generate({
-      model: googleAI.model("gemini-2.5-flash-lite"),
-      prompt: promptTurn(input),
-      output: {
-        schema: z.object({
-          answer: z.enum(input.choices as [string, ...string[]]),
-        }),
-      }
-    });
-    console.log(`Decision: ${decision.text}`);
-
-    if (!input.choices.includes(decision.text)) {
-      throw new Error(`Invalid decision: ${decision.text}`);
-    }
-    return { answer: decision.text };
+    return executeDecisionPrompt(ai, input);
   }
 
   const response = await ai.generate({
@@ -43,6 +28,30 @@ export async function executePromptNode(
   });
 
   return { answer: response.text };
+}
+
+async function executeDecisionPrompt(
+  ai: Genkit,
+  input: PromptNodeInput,
+): Promise<PromptNodeOutput> {
+  if (input.choices.length === 0) {
+    throw new Error("Decision prompt requires at least one choice.");
+  }
+  const decision = await ai.generate({
+    model: googleAI.model("gemini-2.5-flash-lite"),
+    prompt: promptTurn(input),
+    output: {
+      schema: z.object({
+        answer: z.enum(input.choices as [string, ...string[]]),
+      }),
+    },
+  });
+  const answer = decision.output?.answer;
+  if (answer === undefined) {
+    throw new Error(`Decision prompt returned no structured answer: ${decision.text}`);
+  }
+  console.log(`Decision: ${answer}`);
+  return {answer};
 }
 
 function promptTurn(input: PromptNodeInput): string {
