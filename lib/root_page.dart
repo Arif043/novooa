@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:syscat2/core/di/service_locator.dart';
-import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart';
 
 import 'root_tab.dart';
 import 'core/widgets/root_app_bar.dart';
@@ -47,8 +45,7 @@ class _RootPageState extends State<RootPage> {
     Navigator.of(context).pop();
   }
 
-  Future<void> _runTask() async {
-  }
+  Future<void> _runTask() async {}
 
   @override
   Widget build(BuildContext context) {

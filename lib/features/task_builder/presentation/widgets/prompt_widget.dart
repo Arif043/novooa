@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:http/http.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
@@ -30,30 +29,19 @@ class _PromptWidgetState extends State<PromptWidget> {
     selectedOutput = config.outputType;
     _instructionController = _controller(config.instruction);
     _firstChoiceController = _controller(config.firstChoice);
-    _secondChoiceController = _controller(
-      config.secondChoice,
-    );
+    _secondChoiceController = _controller(config.secondChoice);
   }
 
-  @override
-  void didUpdateWidget(PromptWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    selectedOutput = config.outputType;
-    if (oldWidget.node.id != widget.node.id) {
-      _syncController(
-        _instructionController,
-        config.instruction,
-      );
-      _syncController(
-        _firstChoiceController,
-        config.firstChoice,
-      );
-      _syncController(
-        _secondChoiceController,
-        config.secondChoice,
-      );
-    }
-  }
+  // @override
+  // void didUpdateWidget(PromptWidget oldWidget) {
+  //   super.didUpdateWidget(oldWidget);
+  //   // selectedOutput = config.outputType;
+  //   if (oldWidget.node.id != widget.node.id) {
+  //     _syncController(_instructionController, config.instruction);
+  //     _syncController(_firstChoiceController, config.firstChoice);
+  //     _syncController(_secondChoiceController, config.secondChoice);
+  //   }
+  // }
 
   @override
   void dispose() {
@@ -89,12 +77,12 @@ class _PromptWidgetState extends State<PromptWidget> {
           SegmentedButton<PromptOutputType>(
             segments: const [
               ButtonSegment(
-                value: PromptOutputType.text,
+                value: .text,
                 label: Text('Freitext'),
                 icon: Icon(Icons.text_fields),
               ),
               ButtonSegment(
-                value: PromptOutputType.decision,
+                value: .decision,
                 label: Text('Entscheidung'),
                 icon: Icon(Icons.list),
               ),
@@ -139,13 +127,21 @@ class _PromptWidgetState extends State<PromptWidget> {
   }
 
   void _updateInstruction(String value) {
-    context.read<TaskBuilderCubit>().updatePromptInstruction(widget.node.id, value);
+    context.read<TaskBuilderCubit>().updatePromptInstruction(
+      widget.node.id,
+      value,
+    );
   }
 
   void _updateOutputType(Set<PromptOutputType> value) {
+    debugPrint('>>> ${value.toString()}');
     final outputType = value.first;
     setState(() => selectedOutput = outputType);
-    context.read<TaskBuilderCubit>().updatePromptOutputType(widget.node.id, outputType);
+    debugPrint('>>> ${selectedOutput.toString()}');
+    context.read<TaskBuilderCubit>().updatePromptOutputType(
+      widget.node.id,
+      outputType,
+    );
   }
 
   void _updateChoice(int index, String value) {

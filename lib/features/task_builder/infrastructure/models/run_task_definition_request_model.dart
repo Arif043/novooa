@@ -1,10 +1,13 @@
-import '../../domain/entities/prompt_node_config.dart';
+import '../../domain/entities/node_config.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/workflow_edge.dart';
 import '../../domain/entities/workflow_node.dart';
 
 class RunTaskDefinitionRequestModel {
-  const RunTaskDefinitionRequestModel({required this.taskDefinition, required this.context});
+  const RunTaskDefinitionRequestModel({
+    required this.taskDefinition,
+    required this.context,
+  });
 
   final Task taskDefinition;
   final String context;
@@ -26,15 +29,22 @@ class RunTaskDefinitionRequestModel {
   Map<String, Object?> _nodeToJson(WorkflowNode node) {
     return {
       'id': node.id.value,
-      'primitive': node.primitive.name,
+      'primitive': node.config.primitive.name,
       'title': node.title,
       'description': node.description,
-      'promptConfig': _promptToJson(node.promptConfig),
+      'config': _configToJson(node.config),
+    };
+  }
+
+  Map<String, Object?> _configToJson(NodeConfig config) {
+    return switch (config) {
+      PromptNodeConfig() => _promptToJson(config),
     };
   }
 
   Map<String, Object?> _promptToJson(PromptNodeConfig config) {
     return {
+      'primitive': config.primitive.name,
       'instruction': config.instruction,
       'outputType': config.outputType.name,
       'firstChoice': config.firstChoice,

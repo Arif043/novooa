@@ -6,7 +6,7 @@ import {
   type NodeExecutionResult,
   type RunTaskDefinitionInput,
   type RunTaskDefinitionOutput,
-  type TaskDefinition,
+  type TaskDefinition as Task,
   type WorkflowEdge,
   type WorkflowNode,
 } from "./task-definition.js";
@@ -68,22 +68,22 @@ async function executeNode(
   ai: Genkit,
   node: WorkflowNode,
   context: string,
-  taskDefinition: TaskDefinition,
+  task: Task,
 ): Promise<NodeExecutionResult> {
 
   console.log("####################################")
   console.log("Executing node: ", node)
   console.log("Context: ", context)
-  console.log("Task Definition: ", taskDefinition)
+  console.log("Task Definition: ", task)
   console.log("####################################")
 
   switch (node.primitive) {
     case "prompt":
       return executePrompt(ai, node, context);
     case "conditionalFlow":
-      return executeConditional(node, context, taskDefinition.edges);
+      return executeConditional(node, context, task.edges);
     case "iterativeRefinement":
-      return executeRefinement(ai, node, context, taskDefinition.objective);
+      return executeRefinement(ai, node, context, task.objective);
     default:
       return skippedNode(node, context);
   }
@@ -127,7 +127,7 @@ async function executeRefinement(
 }
 
 function promptInputFor(node: WorkflowNode, context: string) {
-  const config = node.promptConfig;
+  const config = promptConfigFor(node);
   return {
     instruction: instructionFor(node),
     context,
@@ -161,15 +161,21 @@ function skippedNode(node: WorkflowNode, context: string): NodeExecutionResult {
 }
 
 function instructionFor(node: WorkflowNode): string {
-  const instruction = node.promptConfig?.instruction.trim();
+  const instruction = promptConfigFor(node)?.instruction.trim();
   if (instruction && instruction.length > 0) return instruction;
   if (node.description.trim().length > 0) return node.description;
   return node.title;
 }
 
 function choicesFor(node: WorkflowNode): string[] {
+  const config = promptConfigFor(node);
   return [
-    node.promptConfig?.firstChoice ?? "",
-    node.promptConfig?.secondChoice ?? "",
+    config?.firstChoice ?? "",
+    config?.secondChoice ?? "",
   ].filter((choice) => choice.trim().length > 0);
+}
+
+function promptConfigFor(node: WorkflowNode) {
+  if (node.config?.primitive !== "prompt") return undefined;
+  return node.config;
 }

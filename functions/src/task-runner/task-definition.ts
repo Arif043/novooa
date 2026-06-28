@@ -12,18 +12,23 @@ export const workflowPrimitiveSchema = z.enum([
 export const promptOutputTypeSchema = z.enum(["text", "decision"]);
 
 export const promptNodeConfigSchema = z.object({
+  primitive: z.literal("prompt").default("prompt"),
   instruction: z.string().default(""),
   outputType: promptOutputTypeSchema.default("text"),
   firstChoice: z.string().default(""),
   secondChoice: z.string().default(""),
 });
 
+export const nodeConfigSchema = z.discriminatedUnion("primitive", [
+  promptNodeConfigSchema,
+]);
+
 export const workflowNodeSchema = z.object({
   id: z.string().min(1),
   primitive: workflowPrimitiveSchema,
   title: z.string().min(1),
   description: z.string().default(""),
-  promptConfig: promptNodeConfigSchema.optional(),
+  config: nodeConfigSchema,
 });
 
 export const workflowEdgeSchema = z.object({

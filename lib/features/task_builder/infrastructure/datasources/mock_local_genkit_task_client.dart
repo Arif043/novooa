@@ -37,7 +37,7 @@ class MockLocalGenkitTaskClient implements LocalGenkitTaskClient {
   }
 
   String _promptOutput(Map<String, Object?> node) {
-    final config = node['promptConfig'] as Map<String, Object?>?;
+    final config = node['config'] as Map<String, Object?>?;
     final instruction = config?['instruction'] as String? ?? '';
     if (instruction.trim().isNotEmpty) return 'Mock-Antwort: $instruction';
     return 'Mock-Antwort: ${node['title']}';

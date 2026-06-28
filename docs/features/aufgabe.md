@@ -153,6 +153,19 @@ output: { taskId: string; finalOutput: string; nodeResults: NodeExecutionResult[
 `NodeExecutionResult` enthält `nodeId`, `primitive`, `status`, `output`,
 optional `selectedNodeId` und optional `message`.
 
+`WorkflowNode` nutzt ein generisches `config`-Objekt. Die konkrete Struktur
+wird über `config.primitive` bestimmt. Für Prompt-Bausteine:
+
+```ts
+{
+  primitive: "prompt",
+  instruction: string,
+  outputType: "text" | "decision",
+  firstChoice: string,
+  secondChoice: string
+}
+```
+
 ### Activity-Tracking
 
 `ExecuteTaskDefinition` kann optional den Usecase

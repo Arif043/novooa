@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/features/task_builder/domain/entities/prompt_node_config.dart';
+import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_edge.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
@@ -7,17 +7,21 @@ import 'package:syscat2/features/task_builder/infrastructure/models/run_task_def
 
 void main() {
   test('serialisiert TaskDefinition fuer runTaskDefinitionFlow', () {
-    final json = RunTaskDefinitionRequestModel(taskDefinition: _task(), context: 'Kontext').toJson();
+    final json = RunTaskDefinitionRequestModel(
+      taskDefinition: _task(),
+      context: 'Kontext',
+    ).toJson();
 
     final task = json['taskDefinition'] as Map<String, Object?>;
     final nodes = task['nodes'] as List<Object?>;
     final firstNode = nodes.first as Map<String, Object?>;
-    final promptConfig = firstNode['promptConfig'] as Map<String, Object?>;
+    final config = firstNode['config'] as Map<String, Object?>;
 
     expect(json['context'], 'Kontext');
     expect(task['id'], 'task.1');
     expect(firstNode['primitive'], 'prompt');
-    expect(promptConfig['outputType'], 'decision');
+    expect(config['primitive'], 'prompt');
+    expect(config['outputType'], 'decision');
     expect(task['edges'], isA<List<Object?>>());
   });
 }
@@ -31,10 +35,9 @@ Task _task() {
     nodes: [
       WorkflowNode(
         id: NodeId('node.1'),
-        primitive: WorkflowPrimitive.prompt,
         title: 'Prompt',
         description: 'Beschreibung',
-        promptConfig: PromptNodeConfig(
+        config: PromptNodeConfig(
           instruction: 'Entscheide.',
           outputType: PromptOutputType.decision,
           firstChoice: 'Ja',
