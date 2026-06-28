@@ -1,6 +1,6 @@
 import 'package:bloc/bloc.dart';
+import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
-import '../../domain/entities/prompt_node_config.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/workflow_node.dart';
 import 'task_builder_state.dart';
@@ -80,23 +80,33 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
 
   Future<void> updatePromptInstruction(NodeId nodeId, String instruction) {
     return _updateNode(nodeId, (node) {
-      final promptConfig = node.promptConfig.copyWith(instruction: instruction);
-      return node.copyWith(promptConfig: promptConfig);
+      if (node.config case PromptNodeConfig config) {
+        final updated = config.copyWith(instruction: instruction);
+        return node.copyWith(config: updated);
+      }
+      return node;
     });
   }
 
   Future<void> updatePromptOutputType(NodeId nodeId, PromptOutputType outputType) {
     return _updateNode(nodeId, (node) {
-      final promptConfig = node.promptConfig.copyWith(outputType: outputType);
-      return node.copyWith(promptConfig: promptConfig);
+      if (node.config case PromptNodeConfig config) {
+        final promptConfig = config.copyWith(outputType: outputType);
+        return node.copyWith(config: promptConfig);
+      }
+      return node;
     });
   }
 
   Future<void> updatePromptChoice({required NodeId nodeId, required int index, required String value}) {
     return _updateNode(nodeId, (node) {
-      if (index < 0 || index >= node.promptConfig.choices.length) return node;
-      if (node.promptConfig.choices[index] == value) return node;
-      return node.copyWith(promptConfig: node.promptConfig.updateChoice(index, value));
+      if (node.config case PromptNodeConfig config) {
+        if (index < 0 || index >= config.choices.length) return node;
+        if (config.choices[index] == value) return node;
+        final updated = config.updateChoice(index, value);
+        return node.copyWith(config: updated);
+      }
+      return node;
     });
   }
 
@@ -136,7 +146,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     final number = index + 1;
     return WorkflowNode(
       id: NodeId('node.$number'),
-      primitive: primitive,
+      config: NodeConfig.initial(primitive),
       title: primitive.label,
       description: primitive.description,
     );

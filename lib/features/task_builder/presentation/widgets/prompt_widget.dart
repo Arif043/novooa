@@ -3,8 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
-
-import '../../domain/entities/prompt_node_config.dart';
+import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 
@@ -18,6 +17,7 @@ class PromptWidget extends StatefulWidget {
 }
 
 class _PromptWidgetState extends State<PromptWidget> {
+  late final PromptNodeConfig config;
   late PromptOutputType selectedOutput;
   late final TextEditingController _instructionController;
   late final TextEditingController _firstChoiceController;
@@ -26,30 +26,31 @@ class _PromptWidgetState extends State<PromptWidget> {
   @override
   void initState() {
     super.initState();
-    selectedOutput = widget.node.promptConfig.outputType;
-    _instructionController = _controller(widget.node.promptConfig.instruction);
-    _firstChoiceController = _controller(widget.node.promptConfig.firstChoice);
+    config = widget.node.config as PromptNodeConfig;
+    selectedOutput = config.outputType;
+    _instructionController = _controller(config.instruction);
+    _firstChoiceController = _controller(config.firstChoice);
     _secondChoiceController = _controller(
-      widget.node.promptConfig.secondChoice,
+      config.secondChoice,
     );
   }
 
   @override
   void didUpdateWidget(PromptWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    selectedOutput = widget.node.promptConfig.outputType;
+    selectedOutput = config.outputType;
     if (oldWidget.node.id != widget.node.id) {
       _syncController(
         _instructionController,
-        widget.node.promptConfig.instruction,
+        config.instruction,
       );
       _syncController(
         _firstChoiceController,
-        widget.node.promptConfig.firstChoice,
+        config.firstChoice,
       );
       _syncController(
         _secondChoiceController,
-        widget.node.promptConfig.secondChoice,
+        config.secondChoice,
       );
     }
   }
@@ -101,7 +102,7 @@ class _PromptWidgetState extends State<PromptWidget> {
             selected: {selectedOutput},
             onSelectionChanged: _updateOutputType,
           ),
-          
+
           if (selectedOutput == PromptOutputType.decision) ...[
             const SizedBox(height: AppSpacing.sm),
             Text('Mögliche Antworten', style: SyscatTheme.taskBodySmall),

@@ -1,4 +1,4 @@
-import 'prompt_node_config.dart';
+import 'node_config.dart';
 
 /// Stabile Bausteintypen, aus denen ein Workflow zusammengesetzt wird.
 ///
@@ -37,37 +37,26 @@ class NodeId {
 class WorkflowNode {
   const WorkflowNode({
     required this.id,
-    required this.primitive,
     required this.title,
     required this.description,
-    PromptNodeConfig? promptConfig,
-  }) : promptConfig =
-           promptConfig ??
-           const PromptNodeConfig(
-             instruction: '',
-             outputType: PromptOutputType.text,
-             firstChoice: '',
-             secondChoice: '',
-           );
+    required this.config,
+  });
 
   final NodeId id;
-  final WorkflowPrimitive primitive;
   final String title;
   final String description;
-  final PromptNodeConfig promptConfig;
+  final NodeConfig config;
 
   WorkflowNode copyWith({
-    WorkflowPrimitive? primitive,
     String? title,
     String? description,
-    PromptNodeConfig? promptConfig,
+    NodeConfig? config,
   }) {
     return WorkflowNode(
       id: id,
-      primitive: primitive ?? this.primitive,
       title: title ?? this.title,
       description: description ?? this.description,
-      promptConfig: promptConfig ?? this.promptConfig,
+      config: config ?? this.config,
     );
   }
 }

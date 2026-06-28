@@ -1,0 +1,17 @@
+import 'package:equatable/equatable.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
+
+part 'prompt_node_config.dart';
+
+sealed class NodeConfig extends Equatable {
+  const NodeConfig();
+
+  WorkflowPrimitive get primitive;
+
+  factory NodeConfig.initial(WorkflowPrimitive primitive) {
+    return switch (primitive) {
+      .prompt => PromptNodeConfig.initial(),
+      _ => throw UnimplementedError(),
+    };
+  }
+}

@@ -1,3 +1,5 @@
+part of 'node_config.dart';
+
 enum PromptOutputType {
   text('Freitext'),
   decision('Entscheidung');
@@ -7,7 +9,7 @@ enum PromptOutputType {
   final String label;
 }
 
-class PromptNodeConfig {
+class PromptNodeConfig extends NodeConfig {
   const PromptNodeConfig({
     required this.instruction,
     required this.outputType,
@@ -31,6 +33,9 @@ class PromptNodeConfig {
     );
   }
 
+  @override
+  List<Object?> get props => [instruction, outputType, firstChoice, secondChoice];
+
   PromptNodeConfig copyWith({
     String? instruction,
     PromptOutputType? outputType,
@@ -52,4 +57,7 @@ class PromptNodeConfig {
       _ => this,
     };
   }
+
+  @override
+  WorkflowPrimitive get primitive => .prompt;
 }

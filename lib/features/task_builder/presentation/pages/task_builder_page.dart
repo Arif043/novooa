@@ -67,8 +67,8 @@ class _TaskBuilderBody extends StatelessWidget {
   }
 
   Widget _nodeWidgetOrNull(WorkflowNode node) {
-    switch (node.primitive) {
-      case WorkflowPrimitive.prompt:
+    switch (node.config.primitive) {
+      case .prompt:
         return PromptWidget(node: node);
       default:
         return SizedBox.shrink();
