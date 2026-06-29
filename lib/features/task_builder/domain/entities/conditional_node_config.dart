@@ -6,7 +6,7 @@ class ConditionalNodeConfig extends NodeConfig {
   final List<String> choices;
 
   factory ConditionalNodeConfig.initial(List<String>? choices) {
-    return ConditionalNodeConfig(choices: choices ?? []);
+    return ConditionalNodeConfig(choices: choices ?? ['Ja', 'Nein']);
   }
 
   @override
@@ -14,4 +14,8 @@ class ConditionalNodeConfig extends NodeConfig {
 
   @override
   List<Object?> get props => [];
+
+  ConditionalNodeConfig copyWith({List<String>? choices}) {
+    return ConditionalNodeConfig(choices: choices ?? this.choices);
+  }
 }

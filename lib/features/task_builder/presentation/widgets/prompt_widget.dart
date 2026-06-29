@@ -15,6 +15,7 @@ class PromptWidget extends StatefulWidget {
   @override
   State<PromptWidget> createState() => _PromptWidgetState();
 }
+
 class _PromptWidgetState extends State<PromptWidget> {
   late PromptOutputType selectedOutput;
   late final TextEditingController _instructionController;
@@ -65,9 +66,7 @@ class _PromptWidgetState extends State<PromptWidget> {
           const SizedBox(height: AppSpacing.xs),
           TextField(
             controller: _instructionController,
-            decoration: const InputDecoration(
-              hintText: 'Hier kommt die Anweisung',
-            ),
+            decoration: const InputDecoration(hintText: 'Hier kommt die Anweisung'),
             onChanged: _updateInstruction,
           ),
           const SizedBox(height: AppSpacing.md),
@@ -76,14 +75,12 @@ class _PromptWidgetState extends State<PromptWidget> {
           CupertinoSlidingSegmentedControl<PromptOutputType>(
             groupValue: selectedOutput,
             backgroundColor: SyscatTheme.primaryOrangeLighter,
-            children: {
-              PromptOutputType.text: Text('Freitext'),
-              PromptOutputType.decision: Text('Entscheidung'),
-            },
+            children: {PromptOutputType.text: Text('Freitext'), PromptOutputType.decision: Text('Entscheidung')},
             onValueChanged: (value) {
               _updateOutputType({value!});
             },
           ),
+
           // SegmentedButton<PromptOutputType>(
           //   segments: const [
           //     ButtonSegment(
@@ -100,25 +97,26 @@ class _PromptWidgetState extends State<PromptWidget> {
           //   selected: {selectedOutput},
           //   onSelectionChanged: _updateOutputType,
           // ),
-
           if (selectedOutput == PromptOutputType.decision) ...[
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.lg),
             Text('Mögliche Antworten', style: SyscatTheme.taskBodySmall),
             const SizedBox(height: AppSpacing.xs),
             TextField(
               controller: _firstChoiceController,
-              decoration: const InputDecoration(
-                hintText: 'Hier kommt die erste Antwort',
-              ),
+              decoration: const InputDecoration(hintText: 'Hier kommt die erste Antwort'),
               onChanged: (value) => _updateChoice(0, value),
             ),
+            SizedBox(height: AppSpacing.sm),
             TextField(
               controller: _secondChoiceController,
-              decoration: const InputDecoration(
-                hintText: 'Hier kommt die zweite Antwort',
-              ),
+              decoration: const InputDecoration(hintText: 'Hier kommt die zweite Antwort', suffixIcon: Icon(CupertinoIcons.delete)),
               onChanged: (value) => _updateChoice(1, value),
             ),
+            const SizedBox(height: AppSpacing.xs),
+            // Row(children: [const Icon(CupertinoIcons.plus), const SizedBox(width: AppSpacing.xs), Text('Antwort hinzufügen')],),
+            // const SizedBox(height: AppSpacing.sm),
+            CupertinoButton(onPressed: () {}, child: Text('Antwort hinzufügen')),
+            // TextButton.icon(onPressed: (){}, label: Text('Antwort hinzufügen'), icon: Icon(Icons.add, color: SyscatTheme.primaryOrange,), style: TextButton.styleFrom(foregroundColor: SyscatTheme.primaryOrange),)
           ],
         ],
       ),
@@ -130,10 +128,7 @@ class _PromptWidgetState extends State<PromptWidget> {
   }
 
   void _updateInstruction(String value) {
-    context.read<TaskBuilderCubit>().updatePromptInstruction(
-      widget.node.id,
-      value,
-    );
+    context.read<TaskBuilderCubit>().updatePromptInstruction(widget.node.id, value);
   }
 
   void _updateOutputType(Set<PromptOutputType> value) {
@@ -141,17 +136,10 @@ class _PromptWidgetState extends State<PromptWidget> {
     final outputType = value.first;
     setState(() => selectedOutput = outputType);
     debugPrint('>>> ${selectedOutput.toString()}');
-    context.read<TaskBuilderCubit>().updatePromptOutputType(
-      widget.node.id,
-      outputType,
-    );
+    context.read<TaskBuilderCubit>().updatePromptOutputType(widget.node.id, outputType);
   }
 
   void _updateChoice(int index, String value) {
-    context.read<TaskBuilderCubit>().updatePromptChoice(
-      nodeId: widget.node.id,
-      index: index,
-      value: value,
-    );
+    context.read<TaskBuilderCubit>().updatePromptChoice(nodeId: widget.node.id, choiceIndex: index, value: value);
   }
 }

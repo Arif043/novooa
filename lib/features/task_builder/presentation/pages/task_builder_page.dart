@@ -10,6 +10,7 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_s
 import 'package:syscat2/features/task_builder/presentation/widgets/branch_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/toolbar.dart';
+import 'package:web_smooth_scroll/web_smooth_scroll.dart';
 
 class TaskBuilderPage extends StatelessWidget {
   final Task? editingTaskOrNull;
@@ -34,10 +35,23 @@ class _TaskBuilderView extends StatelessWidget {
   }
 }
 
-class _TaskBuilderBody extends StatelessWidget {
+class _TaskBuilderBody extends StatefulWidget {
   const _TaskBuilderBody({required this.state});
 
   final TaskBuilderState state;
+
+  @override
+  State<_TaskBuilderBody> createState() => _TaskBuilderBodyState();
+}
+
+class _TaskBuilderBodyState extends State<_TaskBuilderBody> {
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +69,19 @@ class _TaskBuilderBody extends StatelessWidget {
         ),
         Toolbar(),
         const SizedBox(height: AppSpacing.xxl),
-        _nodeGraph(state),
+        Expanded(
+          child: WebSmoothScroll(
+            controller: _scrollController,
+            scrollSpeed: 2.5,
+            scrollAnimationLength: 1400,
+            curve: Curves.easeInOutCubic,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: NeverScrollableScrollPhysics(),
+              child: _nodeGraph(widget.state),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -70,7 +96,7 @@ class _TaskBuilderBody extends StatelessWidget {
   Widget _nodeWidgetOrNull(WorkflowNode node) {
     return switch (node.config.primitive) {
       .prompt => PromptWidget(node: node),
-      .conditional => BranchWidget(),
+      .conditional => BranchWidget(node: node),
       _ => SizedBox.shrink()
     };
   }

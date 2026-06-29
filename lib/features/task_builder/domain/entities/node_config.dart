@@ -12,7 +12,7 @@ sealed class NodeConfig extends Equatable {
   factory NodeConfig.initial(WorkflowPrimitive primitive) {
     return switch (primitive) {
       .prompt => PromptNodeConfig.initial(),
-      .conditional => ConditionalNodeConfig.initial(),
+      .conditional => ConditionalNodeConfig.initial(null),
       _ => throw UnimplementedError(),
     };
   }
