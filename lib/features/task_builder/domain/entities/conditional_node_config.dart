@@ -5,7 +5,7 @@ class ConditionalNodeConfig extends NodeConfig {
 
   final List<String> choices;
 
-  factory ConditionalNodeConfig.initial(List<String>? choices) {
+  factory ConditionalNodeConfig.initial([List<String>? choices]) {
     return ConditionalNodeConfig(choices: choices ?? ['Ja', 'Nein']);
   }
 
@@ -13,7 +13,7 @@ class ConditionalNodeConfig extends NodeConfig {
   WorkflowPrimitive get primitive => .conditional;
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [choices];
 
   ConditionalNodeConfig copyWith({List<String>? choices}) {
     return ConditionalNodeConfig(choices: choices ?? this.choices);

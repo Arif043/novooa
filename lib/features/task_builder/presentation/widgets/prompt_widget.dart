@@ -6,6 +6,7 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
+import 'prompt_choice_field.dart';
 
 class PromptWidget extends StatefulWidget {
   const PromptWidget({super.key, required this.node});
@@ -19,8 +20,7 @@ class PromptWidget extends StatefulWidget {
 class _PromptWidgetState extends State<PromptWidget> {
   late PromptOutputType selectedOutput;
   late final TextEditingController _instructionController;
-  late final TextEditingController _firstChoiceController;
-  late final TextEditingController _secondChoiceController;
+  final List<TextEditingController> _choiceControllers = [];
 
   @override
   void initState() {
@@ -28,26 +28,23 @@ class _PromptWidgetState extends State<PromptWidget> {
     final config = widget.node.config as PromptNodeConfig;
     selectedOutput = config.outputType;
     _instructionController = _controller(config.instruction);
-    _firstChoiceController = _controller(config.firstChoice);
-    _secondChoiceController = _controller(config.secondChoice);
+    _syncChoiceControllers(config.choices);
   }
 
-  // @override
-  // void didUpdateWidget(PromptWidget oldWidget) {
-  //   super.didUpdateWidget(oldWidget);
-  //   // selectedOutput = config.outputType;
-  //   if (oldWidget.node.id != widget.node.id) {
-  //     _syncController(_instructionController, config.instruction);
-  //     _syncController(_firstChoiceController, config.firstChoice);
-  //     _syncController(_secondChoiceController, config.secondChoice);
-  //   }
-  // }
+  @override
+  void didUpdateWidget(PromptWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final config = widget.node.config as PromptNodeConfig;
+    selectedOutput = config.outputType;
+    _syncChoiceControllers(config.choices);
+  }
 
   @override
   void dispose() {
     _instructionController.dispose();
-    _firstChoiceController.dispose();
-    _secondChoiceController.dispose();
+    for (final controller in _choiceControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -80,44 +77,51 @@ class _PromptWidgetState extends State<PromptWidget> {
               _updateOutputType({value!});
             },
           ),
-
-          // SegmentedButton<PromptOutputType>(
-          //   segments: const [
-          //     ButtonSegment(
-          //       value: .text,
-          //       label: Text('Freitext'),
-          //       icon: Icon(Icons.text_fields),
-          //     ),
-          //     ButtonSegment(
-          //       value: .decision,
-          //       label: Text('Entscheidung'),
-          //       icon: Icon(Icons.list),
-          //     ),
-          //   ],
-          //   selected: {selectedOutput},
-          //   onSelectionChanged: _updateOutputType,
-          // ),
-          if (selectedOutput == PromptOutputType.decision) ...[
-            const SizedBox(height: AppSpacing.lg),
-            Text('Mögliche Antworten', style: SyscatTheme.taskBodySmall),
-            const SizedBox(height: AppSpacing.xs),
-            TextField(
-              controller: _firstChoiceController,
-              decoration: const InputDecoration(hintText: 'Hier kommt die erste Antwort'),
-              onChanged: (value) => _updateChoice(0, value),
+          Visibility(
+            visible: selectedOutput == .decision,
+            child: Column(
+              crossAxisAlignment: .start,
+              children: [
+                const SizedBox(height: AppSpacing.lg),
+                Text('Mögliche Antworten', style: SyscatTheme.taskBodySmall),
+                const SizedBox(height: AppSpacing.xs),
+                ListView.builder(
+                  itemCount: _choiceControllers.length,
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    return PromptChoiceField(
+                      controller: _choiceControllers[index],
+                      index: index,
+                      canRemove: _choiceControllers.length > 1,
+                      onChanged: _updateChoice,
+                      onRemove: _removeChoice,
+                    );
+                  },
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: _addChoice,
+                  child: const Text('Antwort hinzufügen'),
+                ),
+              ],
             ),
-            SizedBox(height: AppSpacing.sm),
-            TextField(
-              controller: _secondChoiceController,
-              decoration: const InputDecoration(hintText: 'Hier kommt die zweite Antwort', suffixIcon: Icon(CupertinoIcons.delete)),
-              onChanged: (value) => _updateChoice(1, value),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            // Row(children: [const Icon(CupertinoIcons.plus), const SizedBox(width: AppSpacing.xs), Text('Antwort hinzufügen')],),
-            // const SizedBox(height: AppSpacing.sm),
-            CupertinoButton(onPressed: () {}, child: Text('Antwort hinzufügen')),
-            // TextButton.icon(onPressed: (){}, label: Text('Antwort hinzufügen'), icon: Icon(Icons.add, color: SyscatTheme.primaryOrange,), style: TextButton.styleFrom(foregroundColor: SyscatTheme.primaryOrange),)
-          ],
+          ),
+          // if (selectedOutput == PromptOutputType.decision) ...[
+          //   const SizedBox(height: AppSpacing.lg),
+          //   Text('Mögliche Antworten', style: SyscatTheme.taskBodySmall),
+          //   const SizedBox(height: AppSpacing.xs),
+          //   for (var index = 0; index < _choiceControllers.length; index++)
+          //     PromptChoiceField(
+          //       controller: _choiceControllers[index],
+          //       index: index,
+          //       canRemove: _choiceControllers.length > 1,
+          //       onChanged: _updateChoice,
+          //       onRemove: _removeChoice,
+          //     ),
+          //   const SizedBox(height: AppSpacing.xs),
+          //   CupertinoButton(padding: EdgeInsets.zero, onPressed: _addChoice, child: const Text('Antwort hinzufügen')),
+          // ],
         ],
       ),
     );
@@ -127,19 +131,45 @@ class _PromptWidgetState extends State<PromptWidget> {
     return TextEditingController(text: text);
   }
 
+  void _syncChoiceControllers(List<String> choices) {
+    while (_choiceControllers.length < choices.length) {
+      _choiceControllers.add(_controller(''));
+    }
+    while (_choiceControllers.length > choices.length) {
+      _choiceControllers.removeLast().dispose();
+    }
+    for (var index = 0; index < choices.length; index++) {
+      _syncController(_choiceControllers[index], choices[index]);
+    }
+  }
+
+  void _syncController(TextEditingController controller, String text) {
+    if (controller.text == text) return;
+    controller.value = controller.value.copyWith(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+
   void _updateInstruction(String value) {
     context.read<TaskBuilderCubit>().updatePromptInstruction(widget.node.id, value);
   }
 
   void _updateOutputType(Set<PromptOutputType> value) {
-    debugPrint('>>> ${value.toString()}');
     final outputType = value.first;
-    setState(() => selectedOutput = outputType);
-    debugPrint('>>> ${selectedOutput.toString()}');
+    // setState(() => selectedOutput = outputType);
     context.read<TaskBuilderCubit>().updatePromptOutputType(widget.node.id, outputType);
   }
 
   void _updateChoice(int index, String value) {
     context.read<TaskBuilderCubit>().updatePromptChoice(nodeId: widget.node.id, choiceIndex: index, value: value);
+  }
+
+  void _addChoice() {
+    context.read<TaskBuilderCubit>().addPromptChoice(widget.node.id);
+  }
+
+  void _removeChoice(int index) {
+    context.read<TaskBuilderCubit>().removePromptChoice(nodeId: widget.node.id, choiceIndex: index);
   }
 }

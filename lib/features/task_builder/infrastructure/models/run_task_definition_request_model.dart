@@ -29,7 +29,7 @@ class RunTaskDefinitionRequestModel {
   Map<String, Object?> _nodeToJson(WorkflowNode node) {
     return {
       'id': node.id.value,
-      'primitive': node.config.primitive.name,
+      'primitive': _primitiveToJson(node.config.primitive),
       'title': node.title,
       'description': node.description,
       'config': _configToJson(node.config),
@@ -39,7 +39,7 @@ class RunTaskDefinitionRequestModel {
   Map<String, Object?> _configToJson(NodeConfig config) {
     return switch (config) {
       PromptNodeConfig() => _promptToJson(config),
-      ConditionalNodeConfig() => throw UnimplementedError(),
+      ConditionalNodeConfig() => _conditionalToJson(config),
     };
   }
 
@@ -48,8 +48,21 @@ class RunTaskDefinitionRequestModel {
       'primitive': config.primitive.name,
       'instruction': config.instruction,
       'outputType': config.outputType.name,
-      'firstChoice': config.firstChoice,
-      'secondChoice': config.secondChoice,
+      'choices': config.choices,
+    };
+  }
+
+  Map<String, Object?> _conditionalToJson(ConditionalNodeConfig config) {
+    return {
+      'primitive': _primitiveToJson(config.primitive),
+      'choices': config.choices,
+    };
+  }
+
+  String _primitiveToJson(WorkflowPrimitive primitive) {
+    return switch (primitive) {
+      WorkflowPrimitive.conditional => 'conditionalFlow',
+      _ => primitive.name,
     };
   }
 

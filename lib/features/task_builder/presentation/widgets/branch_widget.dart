@@ -20,8 +20,19 @@ class BranchWidget extends StatelessWidget {
       child: Column(
         children: [
           Text('Wenn', style: SyscatTheme.taskBody),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+
           for (int choiceIndex = 0; choiceIndex < (node.config as ConditionalNodeConfig).choices.length; choiceIndex++)
-            Text((node.config as ConditionalNodeConfig).choices[choiceIndex]),
+            ActionChip(label: Text((node.config as ConditionalNodeConfig).choices[choiceIndex]), shape: LinearBorder(), backgroundColor: SyscatTheme.primaryOrange, onPressed: () {
+              
+            },)
+
+          ])
+          
+            
         ],
       ));
   }

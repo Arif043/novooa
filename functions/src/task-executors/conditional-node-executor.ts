@@ -14,8 +14,9 @@ export type ConditionalNodeOutput = {
 export function executeConditionalNode(
   input: ConditionalNodeInput,
 ): ConditionalNodeOutput {
-  const matchingEdge = input.outgoingEdges.find((edge) => {
-    const condition = edge.conditionLabel?.trim();
+  const choices = conditionalChoices(input.node);
+  const matchingEdge = input.outgoingEdges.find((edge, index) => {
+    const condition = (edge.conditionLabel ?? choices[index])?.trim();
     if (!condition) return false;
     return input.context.toLowerCase().includes(condition.toLowerCase());
   });
@@ -26,4 +27,9 @@ export function executeConditionalNode(
       ? `Matched condition: ${matchingEdge.conditionLabel}`
       : "No condition matched. Used first outgoing branch.",
   };
+}
+
+function conditionalChoices(node: WorkflowNode): string[] {
+  if (node.config.primitive !== "conditionalFlow") return [];
+  return node.config.choices;
 }

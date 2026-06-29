@@ -180,10 +180,11 @@ function instructionFor(node: WorkflowNode): string {
 
 function choicesFor(node: WorkflowNode): string[] {
   const config = promptConfigFor(node);
-  return [
+  const choices = config?.choices.length ? config.choices : [
     config?.firstChoice ?? "",
     config?.secondChoice ?? "",
-  ].filter((choice) => choice.trim().length > 0);
+  ];
+  return choices.filter((choice) => choice.trim().length > 0);
 }
 
 function promptConfigFor(node: WorkflowNode) {

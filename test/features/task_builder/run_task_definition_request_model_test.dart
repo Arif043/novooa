@@ -22,7 +22,24 @@ void main() {
     expect(firstNode['primitive'], 'prompt');
     expect(config['primitive'], 'prompt');
     expect(config['outputType'], 'decision');
+    expect(config['choices'], ['Ja', 'Nein', 'Vielleicht']);
     expect(task['edges'], isA<List<Object?>>());
+  });
+
+  test('serialisiert Verzweigungsfaelle fuer runTaskDefinitionFlow', () {
+    final json = RunTaskDefinitionRequestModel(
+      taskDefinition: _conditionalTask(),
+      context: 'Ja',
+    ).toJson();
+
+    final task = json['taskDefinition'] as Map<String, Object?>;
+    final nodes = task['nodes'] as List<Object?>;
+    final branch = nodes.first as Map<String, Object?>;
+    final config = branch['config'] as Map<String, Object?>;
+
+    expect(branch['primitive'], 'conditionalFlow');
+    expect(config['primitive'], 'conditionalFlow');
+    expect(config['choices'], ['Ja', 'Nein', 'Vielleicht']);
   });
 }
 
@@ -40,11 +57,28 @@ Task _task() {
         config: PromptNodeConfig(
           instruction: 'Entscheide.',
           outputType: PromptOutputType.decision,
-          firstChoice: 'Ja',
-          secondChoice: 'Nein',
+          choices: ['Ja', 'Nein', 'Vielleicht'],
         ),
       ),
     ],
     edges: [WorkflowEdge(from: NodeId('node.1'), to: NodeId('node.1'))],
+  );
+}
+
+Task _conditionalTask() {
+  return const Task(
+    id: 'task.2',
+    title: 'Task',
+    objective: 'Ziel',
+    selectedNodeId: NodeId('node.2'),
+    nodes: [
+      WorkflowNode(
+        id: NodeId('node.2'),
+        title: 'Verzweigung',
+        description: 'Beschreibung',
+        config: ConditionalNodeConfig(choices: ['Ja', 'Nein', 'Vielleicht']),
+      ),
+    ],
+    edges: [WorkflowEdge(from: NodeId('node.2'), to: NodeId('node.2'))],
   );
 }

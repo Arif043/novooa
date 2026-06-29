@@ -13,49 +13,51 @@ class PromptNodeConfig extends NodeConfig {
   const PromptNodeConfig({
     required this.instruction,
     required this.outputType,
-    required this.firstChoice,
-    required this.secondChoice,
+    required this.choices,
   });
 
   final String instruction;
   final PromptOutputType outputType;
-  final String firstChoice;
-  final String secondChoice;
-
-  List<String> get choices => [firstChoice, secondChoice];
+  final List<String> choices;
 
   factory PromptNodeConfig.initial() {
     return const PromptNodeConfig(
       instruction: '',
       outputType: PromptOutputType.text,
-      firstChoice: '',
-      secondChoice: '',
+      choices: ['', ''],
     );
   }
 
   @override
-  List<Object?> get props => [instruction, outputType, firstChoice, secondChoice];
+  List<Object?> get props => [instruction, outputType, choices];
 
   PromptNodeConfig copyWith({
     String? instruction,
     PromptOutputType? outputType,
-    String? firstChoice,
-    String? secondChoice,
+    List<String>? choices,
   }) {
     return PromptNodeConfig(
       instruction: instruction ?? this.instruction,
       outputType: outputType ?? this.outputType,
-      firstChoice: firstChoice ?? this.firstChoice,
-      secondChoice: secondChoice ?? this.secondChoice,
+      choices: choices ?? this.choices,
     );
   }
 
   PromptNodeConfig updateChoice(int index, String value) {
-    return switch (index) {
-      0 => copyWith(firstChoice: value),
-      1 => copyWith(secondChoice: value),
-      _ => this,
-    };
+    if (index < 0 || index >= choices.length) return this;
+    final updatedChoices = [...choices]..[index] = value;
+    return copyWith(choices: updatedChoices);
+  }
+
+  PromptNodeConfig addChoice() {
+    return copyWith(choices: [...choices, '']);
+  }
+
+  PromptNodeConfig removeChoice(int index) {
+    if (index < 0 || index >= choices.length) return this;
+    if (choices.length <= 1) return this;
+    final updatedChoices = [...choices]..removeAt(index);
+    return copyWith(choices: updatedChoices);
   }
 
   @override

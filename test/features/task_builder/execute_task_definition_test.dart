@@ -79,8 +79,7 @@ Task _promptTask() {
         config: PromptNodeConfig(
           instruction: 'Schreibe eine Antwort.',
           outputType: PromptOutputType.text,
-          firstChoice: '',
-          secondChoice: '',
+          choices: [],
         ),
       ),
     ],

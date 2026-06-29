@@ -1,11 +1,12 @@
 import 'package:bloc/bloc.dart';
-import 'package:flutter/foundation.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/workflow_node.dart';
 import 'task_builder_state.dart';
 import 'workflow_primitive_labels.dart';
+
+part 'task_builder_prompt_mutations.dart';
 
 /// Zustandsverwaltung für den Aufgaben-Builder.
 ///
@@ -17,7 +18,9 @@ import 'workflow_primitive_labels.dart';
 class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   final TaskRepository _repository;
 
-  TaskBuilderCubit({required TaskRepository repository}) : _repository = repository, super(const TaskBuilderLoading());
+  TaskBuilderCubit({required TaskRepository repository})
+    : _repository = repository,
+      super(const TaskBuilderLoading());
 
   Future<void> load(Task? editingTask) async {
     editingTask ??= Task.empty();
@@ -76,55 +79,18 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     await _saveAndEmit(task.removeNode(nodeId));
   }
 
-  Future<void> updatePromptInstruction(NodeId nodeId, String instruction) {
-    return _updateNode(nodeId, (node) {
-      if (node.config case PromptNodeConfig config) {
-        final updated = config.copyWith(instruction: instruction);
-        return node.copyWith(config: updated);
-      }
-      return node;
-    });
-  }
-
-  Future<void> updatePromptOutputType(NodeId nodeId, PromptOutputType outputType) {
-    return _updateNode(nodeId, (node) {
-      if (node.config case PromptNodeConfig config) {
-        final promptConfig = config.copyWith(outputType: outputType);
-        return node.copyWith(config: promptConfig);
-      }
-      return node;
-    });
-  }
-
-  void updatePromptChoice({required NodeId nodeId, required int choiceIndex, required String value}) {
-    
-    _updateNode(nodeId, (node) {
-      if (node.config case PromptNodeConfig config) {
-        if (choiceIndex < 0 || choiceIndex >= config.choices.length) return node;
-        if (config.choices[choiceIndex] == value) return node;
-        final updated = config.updateChoice(choiceIndex, value);
-        return node.copyWith(config: updated);
-      }
-      return node;
-    });
+  Future<void> updateEdgeCondition({
+    required NodeId from,
+    required NodeId to,
+    required String? conditionLabel,
+  }) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
-    for (final node in task.successorsOf(nodeId)) {
-      if (node.config case ConditionalNodeConfig config) {
-        _updateNode(node.id, (node) {
-          debugPrint('UPDATE NODE CHOICES: ${config.choices.toString()}   $choiceIndex');
-          final updated = config.copyWith(choices: [...config.choices..[choiceIndex] = value]);
-          return node.copyWith(config: updated);
-        });
-      }
-    }  
-    
-  }
-
-  Future<void> updateEdgeCondition({required NodeId from, required NodeId to, required String? conditionLabel}) async {
-    final task = loadedTaskOrNull();
-    if (task == null) return;
-    final updated = task.updateEdgeCondition(from: from, to: to, conditionLabel: conditionLabel);
+    final updated = task.updateEdgeCondition(
+      from: from,
+      to: to,
+      conditionLabel: conditionLabel,
+    );
     await _saveAndEmit(updated);
   }
 
@@ -141,7 +107,10 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     emit(TaskBuilderLoaded(updated));
   }
 
-  Future<void> _updateNode(NodeId nodeId, WorkflowNode Function(WorkflowNode node) update) async {
+  Future<void> _updateNode(
+    NodeId nodeId,
+    WorkflowNode Function(WorkflowNode node) update,
+  ) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
     final index = task.nodes.indexWhere((node) => node.id == nodeId);

@@ -15,12 +15,19 @@ export const promptNodeConfigSchema = z.object({
   primitive: z.literal("prompt").default("prompt"),
   instruction: z.string().default(""),
   outputType: promptOutputTypeSchema.default("text"),
+  choices: z.array(z.string()).default([]),
   firstChoice: z.string().default(""),
   secondChoice: z.string().default(""),
 });
 
+export const conditionalNodeConfigSchema = z.object({
+  primitive: z.literal("conditionalFlow").default("conditionalFlow"),
+  choices: z.array(z.string()).default([]),
+});
+
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   promptNodeConfigSchema,
+  conditionalNodeConfigSchema,
 ]);
 
 export const workflowNodeSchema = z.object({
