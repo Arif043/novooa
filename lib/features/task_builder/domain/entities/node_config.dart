@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 
 part 'prompt_node_config.dart';

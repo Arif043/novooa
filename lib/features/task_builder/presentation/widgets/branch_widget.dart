@@ -1,6 +1,4 @@
-
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
@@ -21,22 +19,29 @@ class BranchWidget extends StatelessWidget {
         color: SyscatTheme.primaryOrangeHover,
         borderRadius: BorderRadius.circular(AppSpacing.xl),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(
-          mainAxisSize: .min,
-          children: [
-            CupertinoNavigationBarBackButton(onPressed: () {
-              context.read<ConditionalControllerCubit>().selectBranch(null);
-            },),
-            Text('Fall:  ', style: SyscatTheme.taskBody),
-            // const SizedBox(width: AppSpacing.md),
-            Text(branch.label, style: SyscatTheme.taskBody.copyWith(fontWeight: .w800))
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        NodePlaceholder()
-        
-      ]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: .min,
+            children: [
+              CupertinoNavigationBarBackButton(
+                onPressed: () {
+                  context.read<ConditionalControllerCubit>().selectBranch(null);
+                },
+              ),
+              Text('Fall:  ', style: SyscatTheme.taskBody),
+              // const SizedBox(width: AppSpacing.md),
+              Text(
+                branch.label,
+                style: SyscatTheme.taskBody.copyWith(fontWeight: .w800),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          NodePlaceholder(),
+        ],
+      ),
     );
   }
 }

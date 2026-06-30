@@ -1,10 +1,7 @@
 part of 'conditional_controller_cubit.dart';
 
 class ConditionalControllerState extends Equatable {
-  const ConditionalControllerState({
-    this.nodeConfig,
-    this.selectedBranch
-  });
+  const ConditionalControllerState({this.nodeConfig, this.selectedBranch});
 
   final ConditionalNodeConfig? nodeConfig;
   final ConditionalBranch? selectedBranch;
@@ -18,7 +15,9 @@ class ConditionalControllerState extends Equatable {
   }) {
     return ConditionalControllerState(
       nodeConfig: nodeConfig ?? this.nodeConfig,
-      selectedBranch: onSelectBranch != null ? onSelectBranch() : this.selectedBranch
+      selectedBranch: onSelectBranch != null
+          ? onSelectBranch()
+          : selectedBranch,
     );
   }
 }

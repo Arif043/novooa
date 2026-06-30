@@ -6,6 +6,7 @@ import 'package:syscat2/features/activity/infrastructure/repositories/in_memory_
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_execution_result.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart';
 import 'package:syscat2/features/task_builder/infrastructure/datasources/mock_local_genkit_task_client.dart';
@@ -71,18 +72,20 @@ Task _promptTask() {
     title: 'Lokaler Test',
     objective: 'Genkit lokal testen',
     selectedNodeId: NodeId('node.1'),
-    nodes: [
-      WorkflowNode(
-        id: NodeId('node.1'),
-        title: 'Prompt',
-        description: 'Beschreibung',
-        config: PromptNodeConfig(
-          instruction: 'Schreibe eine Antwort.',
-          outputType: PromptOutputType.text,
-          choices: [],
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.1'),
+          title: 'Prompt',
+          description: 'Beschreibung',
+          config: PromptNodeConfig(
+            instruction: 'Schreibe eine Antwort.',
+            outputType: PromptOutputType.text,
+            choices: [],
+          ),
         ),
-      ),
-    ],
-    edges: [],
+      ],
+      edges: [],
+    ),
   );
 }

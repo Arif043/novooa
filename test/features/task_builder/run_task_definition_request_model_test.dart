@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_edge.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/infrastructure/models/run_task_definition_request_model.dart';
 
@@ -54,19 +55,21 @@ Task _task() {
     title: 'Task',
     objective: 'Ziel',
     selectedNodeId: NodeId('node.1'),
-    nodes: [
-      WorkflowNode(
-        id: NodeId('node.1'),
-        title: 'Prompt',
-        description: 'Beschreibung',
-        config: PromptNodeConfig(
-          instruction: 'Entscheide.',
-          outputType: PromptOutputType.decision,
-          choices: ['Ja', 'Nein', 'Vielleicht'],
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.1'),
+          title: 'Prompt',
+          description: 'Beschreibung',
+          config: PromptNodeConfig(
+            instruction: 'Entscheide.',
+            outputType: PromptOutputType.decision,
+            choices: ['Ja', 'Nein', 'Vielleicht'],
+          ),
         ),
-      ),
-    ],
-    edges: [WorkflowEdge(from: NodeId('node.1'), to: NodeId('node.1'))],
+      ],
+      edges: [WorkflowEdge(from: NodeId('node.1'), to: NodeId('node.1'))],
+    ),
   );
 }
 
@@ -76,32 +79,34 @@ Task _conditionalTask() {
     title: 'Task',
     objective: 'Ziel',
     selectedNodeId: NodeId('node.2'),
-    nodes: [
-      WorkflowNode(
-        id: NodeId('node.2'),
-        title: 'Verzweigung',
-        description: 'Beschreibung',
-        config: ConditionalNodeConfig(
-          branches: [
-            ConditionalBranch(
-              id: 'branch.yes',
-              label: 'Ja',
-              nodeIds: [NodeId('node.3'), NodeId('node.4')],
-            ),
-            ConditionalBranch(
-              id: 'branch.no',
-              label: 'Nein',
-              nodeIds: [NodeId('node.5')],
-            ),
-            ConditionalBranch(
-              id: 'branch.maybe',
-              label: 'Vielleicht',
-              nodeIds: [],
-            ),
-          ],
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.2'),
+          title: 'Verzweigung',
+          description: 'Beschreibung',
+          config: ConditionalNodeConfig(
+            branches: [
+              ConditionalBranch(
+                id: 'branch.yes',
+                label: 'Ja',
+                nodeIds: [NodeId('node.3'), NodeId('node.4')],
+              ),
+              ConditionalBranch(
+                id: 'branch.no',
+                label: 'Nein',
+                nodeIds: [NodeId('node.5')],
+              ),
+              ConditionalBranch(
+                id: 'branch.maybe',
+                label: 'Vielleicht',
+                nodeIds: [],
+              ),
+            ],
+          ),
         ),
-      ),
-    ],
-    edges: [WorkflowEdge(from: NodeId('node.2'), to: NodeId('node.2'))],
+      ],
+      edges: [WorkflowEdge(from: NodeId('node.2'), to: NodeId('node.2'))],
+    ),
   );
 }

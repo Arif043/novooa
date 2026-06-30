@@ -1,5 +1,6 @@
 import 'package:uuid/uuid.dart';
 import 'workflow_edge.dart';
+import 'workflow_graph.dart';
 import 'workflow_node.dart';
 
 /// Aggregate Root eines Workflows.
@@ -15,25 +16,26 @@ class Task {
     required this.id,
     required this.title,
     required this.objective,
-    required this.nodes,
-    required this.edges,
+    required this.graph,
     required this.selectedNodeId,
   });
 
   final String id;
   final String title;
   final String objective;
-  final List<WorkflowNode> nodes;
-  final List<WorkflowEdge> edges;
+  final WorkflowGraph graph;
   final NodeId selectedNodeId;
+
+  List<WorkflowNode> get nodes => graph.nodes;
+
+  List<WorkflowEdge> get edges => graph.edges;
 
   static Task empty() {
     return Task(
       id: const Uuid().v4(),
       title: 'Empty Task',
       objective: '',
-      nodes: [],
-      edges: [],
+      graph: WorkflowGraph.empty(),
       selectedNodeId: const NodeId(''),
     );
   }
@@ -66,79 +68,65 @@ class Task {
   /// aktuellen Selection. Wenn die Liste leer ist, wird der Knoten ohne
   /// eingehende Kante eingefügt und sofort selektiert.
   Task addNode(WorkflowNode node) {
-    final newEdges = nodes.isEmpty ? edges : <WorkflowEdge>[...edges, WorkflowEdge(from: selectedNodeId, to: node.id)];
-    return copyWith(nodes: [...nodes, node], edges: newEdges, selectedNodeId: node.id);
+    return copyWith(
+      graph: graph.addNode(node, selectedNodeId),
+      selectedNodeId: node.id,
+    );
   }
 
   /// Liefert alle ausgehenden Kanten eines Knotens in der Reihenfolge, in
   /// der sie im [edges]-Feld stehen. Wird vom Inspector für die
   /// Bedingungen-Liste verwendet.
   List<WorkflowEdge> outgoingEdgesOf(NodeId nodeId) {
-    final result = <WorkflowEdge>[];
-    for (final edge in edges) {
-      if (edge.from == nodeId) result.add(edge);
-    }
-    return result;
+    return graph.outgoingEdgesOf(nodeId);
   }
 
   /// Liefert alle eingehenden Kanten eines Knotens in der Reihenfolge, in
   /// der sie im [edges]-Feld stehen.
   List<WorkflowEdge> incomingEdgesOf(NodeId nodeId) {
-    final result = <WorkflowEdge>[];
-    for (final edge in edges) {
-      if (edge.to == nodeId) result.add(edge);
-    }
-    return result;
+    return graph.incomingEdgesOf(nodeId);
   }
 
   /// Liefert alle Knoten, die eine Kante zu [nodeId] haben.
   List<WorkflowNode> predecessorsOf(NodeId nodeId) {
-    final result = <WorkflowNode>[];
-    for (final edge in edges) {
-      if (edge.to == nodeId) result.add(nodes.firstWhere((node) => node.id == edge.from));
-    }
-    return result;
+    return graph.predecessorsOf(nodeId);
   }
- 
+
   List<WorkflowNode> successorsOf(NodeId nodeId) {
-    final result = <WorkflowNode>[];
-    for (final edge in edges) {
-      if (edge.from == nodeId) result.add(nodes.firstWhere((node) => node.id == edge.to));
-    }
-    return result;
+    return graph.successorsOf(nodeId);
   }
 
   /// Aktualisiert das `conditionLabel` der Kante zwischen [from] und [to].
   /// No-op, wenn keine solche Kante existiert. Wird vom
   /// Bedingungen-Editor im Inspector verwendet.
-  Task updateEdgeCondition({required NodeId from, required NodeId to, required String? conditionLabel}) {
-    var changed = false;
-    final newEdges = edges
-        .map((edge) {
-          if (edge.from == from && edge.to == to) {
-            changed = true;
-            return WorkflowEdge(from: edge.from, to: edge.to, conditionLabel: conditionLabel);
-          }
-          return edge;
-        })
-        .toList(growable: false);
-    if (!changed) return this;
-    return copyWith(edges: newEdges);
+  Task updateEdgeCondition({
+    required NodeId from,
+    required NodeId to,
+    required String? conditionLabel,
+  }) {
+    return copyWith(
+      graph: graph.updateEdgeCondition(
+        from: from,
+        to: to,
+        conditionLabel: conditionLabel,
+      ),
+    );
   }
 
   /// Fügt eine neue ausgehende Bedingung von [from] nach [to] hinzu.
   /// Falls bereits eine Kante in dieser Richtung existiert, wird deren
   /// `conditionLabel` aktualisiert.
-  Task addOutgoingCondition({required NodeId from, required NodeId to, String? conditionLabel}) {
-    final exists = edges.any((e) => e.from == from && e.to == to);
-    if (exists) {
-      return updateEdgeCondition(from: from, to: to, conditionLabel: conditionLabel);
-    }
+  Task addOutgoingCondition({
+    required NodeId from,
+    required NodeId to,
+    String? conditionLabel,
+  }) {
     return copyWith(
-      edges: [
-        ...edges,
-        WorkflowEdge(from: from, to: to, conditionLabel: conditionLabel),
-      ],
+      graph: graph.addOutgoingCondition(
+        from: from,
+        to: to,
+        conditionLabel: conditionLabel,
+      ),
     );
   }
 
@@ -154,30 +142,35 @@ class Task {
     final nodeExists = nodes.any((node) => node.id == nodeId);
     if (!nodeExists) return this;
 
-    final remainingNodes = nodes.where((node) => node.id != nodeId).toList(growable: false);
-    final remainingEdges = edges.where((edge) => edge.from != nodeId && edge.to != nodeId).toList(growable: false);
+    final updatedGraph = graph.removeNode(nodeId);
 
-    final selectionStillValid = remainingNodes.any((node) => node.id == selectedNodeId);
+    final selectionStillValid = updatedGraph.nodes.any(
+      (node) => node.id == selectedNodeId,
+    );
     final newSelection = selectionStillValid
         ? selectedNodeId
-        : (remainingNodes.isNotEmpty ? remainingNodes.last.id : const NodeId(''));
+        : (updatedGraph.nodes.isNotEmpty
+              ? updatedGraph.nodes.last.id
+              : const NodeId(''));
 
-    return copyWith(nodes: remainingNodes, edges: remainingEdges, selectedNodeId: newSelection);
+    return copyWith(graph: updatedGraph, selectedNodeId: newSelection);
   }
 
   Task copyWith({
     String? title,
     String? objective,
+    WorkflowGraph? graph,
     List<WorkflowNode>? nodes,
     List<WorkflowEdge>? edges,
     NodeId? selectedNodeId,
   }) {
+    final updatedGraph =
+        graph ?? this.graph.copyWith(nodes: nodes, edges: edges);
     return Task(
       id: id,
       title: title ?? this.title,
       objective: objective ?? this.objective,
-      nodes: nodes ?? this.nodes,
-      edges: edges ?? this.edges,
+      graph: updatedGraph,
       selectedNodeId: selectedNodeId ?? this.selectedNodeId,
     );
   }

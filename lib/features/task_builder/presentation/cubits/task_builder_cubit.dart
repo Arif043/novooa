@@ -18,9 +18,7 @@ part 'task_builder_prompt_mutations.dart';
 class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   final TaskRepository _repository;
 
-  TaskBuilderCubit({required TaskRepository repository})
-    : _repository = repository,
-      super(const TaskBuilderLoading());
+  TaskBuilderCubit({required TaskRepository repository}) : _repository = repository, super(const TaskBuilderLoading());
 
   Future<void> load(Task? editingTask) async {
     editingTask ??= Task.empty();
@@ -40,7 +38,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     await _saveAndEmit(task.selectNode(nodeId));
   }
 
-  Future<void> addPrimitive(WorkflowPrimitive primitive) async {
+  Future<void> addNodeToMainGraph(WorkflowPrimitive primitive) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
     final node = _buildNode(primitive, task.nodes.length);
@@ -79,18 +77,10 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     await _saveAndEmit(task.removeNode(nodeId));
   }
 
-  Future<void> updateEdgeCondition({
-    required NodeId from,
-    required NodeId to,
-    required String? conditionLabel,
-  }) async {
+  Future<void> updateEdgeCondition({required NodeId from, required NodeId to, required String? conditionLabel}) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
-    final updated = task.updateEdgeCondition(
-      from: from,
-      to: to,
-      conditionLabel: conditionLabel,
-    );
+    final updated = task.updateEdgeCondition(from: from, to: to, conditionLabel: conditionLabel);
     await _saveAndEmit(updated);
   }
 
@@ -107,10 +97,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     emit(TaskBuilderLoaded(updated));
   }
 
-  Future<void> _updateNode(
-    NodeId nodeId,
-    WorkflowNode Function(WorkflowNode node) update,
-  ) async {
+  Future<void> _updateNode(NodeId nodeId, WorkflowNode Function(WorkflowNode node) update) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
     final index = task.nodes.indexWhere((node) => node.id == nodeId);
@@ -119,7 +106,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     final updatedNode = update(currentNode);
     if (identical(updatedNode, currentNode)) return;
     final newNodes = [...task.nodes]..[index] = updatedNode;
-    await _saveAndEmit(task.copyWith(nodes: newNodes));
+    await _saveAndEmit(task.copyWith(graph: task.graph.copyWith(nodes: newNodes)));
   }
 
   WorkflowNode _buildNode(WorkflowPrimitive primitive, int index) {

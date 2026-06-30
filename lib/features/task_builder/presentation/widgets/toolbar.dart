@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/conditional_widget.dart';
 
 class Toolbar extends StatelessWidget {
   const Toolbar({super.key});
@@ -21,7 +20,7 @@ class Toolbar extends StatelessWidget {
               data: WorkflowPrimitive.prompt,
               feedback: PromptNodeDraggingDummy(),
               child: IconButton(
-                onPressed: () => context.read<TaskBuilderCubit>().addPrimitive(.prompt),
+                onPressed: () => context.read<TaskBuilderCubit>().addNodeToMainGraph(.prompt),
                 icon: const Icon(Icons.format_align_left),
                 tooltip: "Prompt hinzufügen",
               ),
@@ -31,7 +30,7 @@ class Toolbar extends StatelessWidget {
               data: WorkflowPrimitive.conditional,
               feedback: ConditionalNodeDraggingDummy(),
               child: IconButton(
-                onPressed: () => context.read<TaskBuilderCubit>().addPrimitive(.conditional),
+                onPressed: () => context.read<TaskBuilderCubit>().addNodeToMainGraph(.conditional),
                 icon: const Icon(Icons.call_split),
                 tooltip: "Verzweigung hinzufügen",
               ),
@@ -61,7 +60,6 @@ class PromptNodeDraggingDummy extends StatelessWidget {
   }
 }
 
-
 class ConditionalNodeDraggingDummy extends StatelessWidget {
   const ConditionalNodeDraggingDummy({super.key});
 
@@ -73,4 +71,3 @@ class ConditionalNodeDraggingDummy extends StatelessWidget {
     );
   }
 }
-

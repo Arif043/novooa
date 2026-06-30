@@ -21,8 +21,8 @@ class RunTaskDefinitionRequestModel {
       'id': task.id,
       'title': task.title,
       'objective': task.objective,
-      'nodes': task.nodes.map(_nodeToJson).toList(growable: false),
-      'edges': task.edges.map(_edgeToJson).toList(growable: false),
+      'nodes': task.graph.nodes.map(_nodeToJson).toList(growable: false),
+      'edges': task.graph.edges.map(_edgeToJson).toList(growable: false),
     };
   }
 

@@ -11,15 +11,19 @@ class NodePlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return DragTarget<WorkflowPrimitive>(
       onAcceptWithDetails: (details) {
-        context.read<TaskBuilderCubit>().addPrimitive(details.data);
+        context.read<TaskBuilderCubit>().addNodeToMainGraph(details.data);
       },
       builder: (context, candidateData, rejectedData) {
         return Container(
           width: .infinity,
           padding: .all(32),
-          decoration: BoxDecoration(color: Colors.white, border: Border.all(color: SyscatTheme.primaryOrange, width: 2), borderRadius: .circular(8)),
-          child: Center(child: Icon(Icons.add),),
-        );  
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: SyscatTheme.primaryOrange, width: 2),
+            borderRadius: .circular(8),
+          ),
+          child: Center(child: Icon(Icons.add)),
+        );
       },
     );
   }

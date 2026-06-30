@@ -4,21 +4,21 @@ class ConditionalBranch extends Equatable {
   const ConditionalBranch({
     required this.id,
     required this.label,
-    required this.nodeIds,
+    required this.graph,
   });
 
   final String id;
   final String label;
-  final List<NodeId> nodeIds;
+  final WorkflowGraph graph;
 
   @override
-  List<Object?> get props => [id, label, nodeIds];
+  List<Object?> get props => [id, label, graph];
 
-  ConditionalBranch copyWith({String? label, List<NodeId>? nodeIds}) {
+  ConditionalBranch copyWith({String? label, WorkflowGraph? graph}) {
     return ConditionalBranch(
       id: id,
       label: label ?? this.label,
-      nodeIds: nodeIds ?? this.nodeIds,
+      graph: graph ?? this.graph,
     );
   }
 }
@@ -43,7 +43,7 @@ class ConditionalNodeConfig extends NodeConfig {
           ConditionalBranch(
             id: 'branch.${index + 1}',
             label: choices[index],
-            nodeIds: const [],
+            graph: WorkflowGraph(nodes: const [], edges: const []),
           ),
       ],
     );
@@ -77,7 +77,7 @@ class ConditionalNodeConfig extends NodeConfig {
       return ConditionalBranch(
         id: 'branch.${index + 1}',
         label: label,
-        nodeIds: const [],
+        graph: WorkflowGraph(nodes: const [], edges: const []),
       );
     }
     return branches[index].copyWith(label: label);
