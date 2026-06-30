@@ -11,6 +11,8 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_c
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/branch_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/toolbar.dart';
 import 'package:web_smooth_scroll/web_smooth_scroll.dart';
@@ -23,8 +25,7 @@ class TaskBuilderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          serviceLocator<TaskBuilderCubit>()..load(editingTaskOrNull),
+      create: (_) => serviceLocator<TaskBuilderCubit>()..load(editingTaskOrNull),
       child: const _TaskBuilderView(),
     );
   }
@@ -35,9 +36,7 @@ class _TaskBuilderView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
-      builder: (context, state) => _TaskBuilderBody(state: state),
-    );
+    return BlocBuilder<TaskBuilderCubit, TaskBuilderState>(builder: (context, state) => _TaskBuilderBody(state: state));
   }
 }
 
@@ -75,56 +74,23 @@ class _TaskBuilderBodyState extends State<_TaskBuilderBody> {
         ),
         Toolbar(),
         const SizedBox(height: AppSpacing.xxl),
-        Expanded(
-          child: WebSmoothScroll(
-            controller: _scrollController,
-            scrollSpeed: 2.5,
-            scrollAnimationLength: 1400,
-            curve: Curves.easeInOutCubic,
-            child: SingleChildScrollView(
+        if (widget.state case TaskBuilderLoaded(:final editingTask))
+          Expanded(
+            child: WebSmoothScroll(
               controller: _scrollController,
-              physics: NeverScrollableScrollPhysics(),
-              child: _nodeGraph(widget.state),
+              scrollSpeed: 2.5,
+              scrollAnimationLength: 1400,
+              curve: Curves.easeInOutCubic,
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                physics: NeverScrollableScrollPhysics(),
+                child: NodeGraph(nodes: editingTask.nodes),
+              ),
             ),
           ),
-        ),
       ],
     );
   }
 
-  Widget _nodeGraph(TaskBuilderState state) {
-    if (state case TaskBuilderLoaded(:final editingTask)) {
-      return Column(
-        children: editingTask.nodes.map(_nodeWidgetOrNull).toList(),
-      );
-    }
-    return const SizedBox.shrink();
-  }
-
-  Widget _nodeWidgetOrNull(WorkflowNode node) {
-    return switch (node.config.primitive) {
-      .prompt => PromptWidget(node: node),
-      .conditional => BlocProvider(
-        key: ValueKey(node.config),
-        create: (_) =>
-            serviceLocator<ConditionalControllerCubit>()
-              ..load(node.config as ConditionalNodeConfig),
-        child: LayoutBuilder(
-          builder: (_, constraints) =>
-              BlocBuilder<
-                ConditionalControllerCubit,
-                ConditionalControllerState
-              >(
-                builder: (context, state) {
-                  if (state.selectedBranch != null) {
-                    return BranchWidget(branch: state.selectedBranch!);
-                  }
-                  return ConditionalWidget(nodeConfig: state.nodeConfig!);
-                },
-              ),
-        ),
-      ),
-      _ => SizedBox.shrink(),
-    };
-  }
+  
 }

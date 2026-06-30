@@ -6,6 +6,7 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/conditional_controller_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
 
 class BranchWidget extends StatelessWidget {
   final ConditionalBranch branch;
@@ -22,15 +23,18 @@ class BranchWidget extends StatelessWidget {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(
+          mainAxisSize: .min,
           children: [
             CupertinoNavigationBarBackButton(onPressed: () {
               context.read<ConditionalControllerCubit>().selectBranch(null);
             },),
             Text('Fall:  ', style: SyscatTheme.taskBody),
             // const SizedBox(width: AppSpacing.md),
-            Text(branch.label, style: SyscatTheme.taskBody.copyWith(fontWeight: .w800)),
+            Text(branch.label, style: SyscatTheme.taskBody.copyWith(fontWeight: .w800))
           ],
         ),
+        const SizedBox(height: AppSpacing.md),
+        NodePlaceholder()
         
       ]),
     );
