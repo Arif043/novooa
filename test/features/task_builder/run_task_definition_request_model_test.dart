@@ -40,6 +40,11 @@ void main() {
     expect(branch['primitive'], 'conditionalFlow');
     expect(config['primitive'], 'conditionalFlow');
     expect(config['choices'], ['Ja', 'Nein', 'Vielleicht']);
+    final branches = config['branches'] as List<Object?>;
+    final firstBranch = branches.first as Map<String, Object?>;
+    expect(firstBranch['id'], 'branch.yes');
+    expect(firstBranch['label'], 'Ja');
+    expect(firstBranch['nodeIds'], ['node.3', 'node.4']);
   });
 }
 
@@ -76,7 +81,25 @@ Task _conditionalTask() {
         id: NodeId('node.2'),
         title: 'Verzweigung',
         description: 'Beschreibung',
-        config: ConditionalNodeConfig(choices: ['Ja', 'Nein', 'Vielleicht']),
+        config: ConditionalNodeConfig(
+          branches: [
+            ConditionalBranch(
+              id: 'branch.yes',
+              label: 'Ja',
+              nodeIds: [NodeId('node.3'), NodeId('node.4')],
+            ),
+            ConditionalBranch(
+              id: 'branch.no',
+              label: 'Nein',
+              nodeIds: [NodeId('node.5')],
+            ),
+            ConditionalBranch(
+              id: 'branch.maybe',
+              label: 'Vielleicht',
+              nodeIds: [],
+            ),
+          ],
+        ),
       ),
     ],
     edges: [WorkflowEdge(from: NodeId('node.2'), to: NodeId('node.2'))],

@@ -31,5 +31,8 @@ export function executeConditionalNode(
 
 function conditionalChoices(node: WorkflowNode): string[] {
   if (node.config.primitive !== "conditionalFlow") return [];
+  if (node.config.branches.length > 0) {
+    return node.config.branches.map((branch) => branch.label);
+  }
   return node.config.choices;
 }

@@ -23,6 +23,7 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
     required int choiceIndex,
     required String value,
   }) async {
+    debugPrint("updatePromptChoice ${choiceIndex} ${value}");
     await _updatePromptConfig(
       nodeId,
       (config) => config.updateChoice(choiceIndex, value),

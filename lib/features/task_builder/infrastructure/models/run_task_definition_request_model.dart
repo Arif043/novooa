@@ -56,6 +56,17 @@ class RunTaskDefinitionRequestModel {
     return {
       'primitive': _primitiveToJson(config.primitive),
       'choices': config.choices,
+      'branches': config.branches.map(_branchToJson).toList(growable: false),
+    };
+  }
+
+  Map<String, Object?> _branchToJson(ConditionalBranch branch) {
+    return {
+      'id': branch.id,
+      'label': branch.label,
+      'nodeIds': branch.nodeIds
+          .map((nodeId) => nodeId.value)
+          .toList(growable: false),
     };
   }
 

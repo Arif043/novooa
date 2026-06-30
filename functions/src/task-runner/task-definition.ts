@@ -20,9 +20,16 @@ export const promptNodeConfigSchema = z.object({
   secondChoice: z.string().default(""),
 });
 
+export const conditionalBranchSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().default(""),
+  nodeIds: z.array(z.string().min(1)).default([]),
+});
+
 export const conditionalNodeConfigSchema = z.object({
   primitive: z.literal("conditionalFlow").default("conditionalFlow"),
   choices: z.array(z.string()).default([]),
+  branches: z.array(conditionalBranchSchema).default([]),
 });
 
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
