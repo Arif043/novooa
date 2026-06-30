@@ -26,7 +26,7 @@ class BranchWidget extends StatelessWidget {
             children: [
 
           for (int choiceIndex = 0; choiceIndex < (node.config as ConditionalNodeConfig).choices.length; choiceIndex++)
-            ActionChip(label: Text((node.config as ConditionalNodeConfig).choices[choiceIndex]), shape: LinearBorder(), backgroundColor: SyscatTheme.primaryOrange, onPressed: () {
+            ActionChip(label: Text(_buildBranchLabel(choiceIndex)), shape: LinearBorder(), backgroundColor: SyscatTheme.primaryOrange, onPressed: () {
               
             },)
 
@@ -35,5 +35,13 @@ class BranchWidget extends StatelessWidget {
             
         ],
       ));
+  }
+
+  String _buildBranchLabel(int choiceIndex){
+    final choices = (node.config as ConditionalNodeConfig).choices;
+    if (choices[choiceIndex].isNotEmpty) {
+      return choices[choiceIndex];
+    }
+    return 'Antwort ${choiceIndex + 1}';
   }
 }
