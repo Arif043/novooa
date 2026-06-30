@@ -9,5 +9,5 @@ class ConditionalControllerCubit extends Cubit<ConditionalControllerState> {
 
   void load(ConditionalNodeConfig nodeConfig) => emit(state.copyWith(nodeConfig: nodeConfig));
 
-  void selectBranch(ConditionalBranch branch) => emit(state.copyWith(selectedBranch: branch));
+  void selectBranch(ConditionalBranch? branch) => emit(state.copyWith(onSelectBranch: () => branch));
 }

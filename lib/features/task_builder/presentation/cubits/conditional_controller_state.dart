@@ -14,11 +14,11 @@ class ConditionalControllerState extends Equatable {
 
   ConditionalControllerState copyWith({
     ConditionalNodeConfig? nodeConfig,
-    ConditionalBranch? selectedBranch,
+    ConditionalBranch? Function()? onSelectBranch,
   }) {
     return ConditionalControllerState(
       nodeConfig: nodeConfig ?? this.nodeConfig,
-      selectedBranch: selectedBranch ?? this.selectedBranch,
+      selectedBranch: onSelectBranch != null ? onSelectBranch() : this.selectedBranch
     );
   }
 }
