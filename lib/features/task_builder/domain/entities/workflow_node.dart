@@ -1,3 +1,5 @@
+import 'package:equatable/equatable.dart';
+
 import 'node_config.dart';
 
 /// Stabile Bausteintypen, aus denen ein Workflow zusammengesetzt wird.
@@ -34,7 +36,7 @@ class NodeId {
 ///
 /// `id` ist absichtlich nicht Teil von [copyWith] — die Identität eines
 /// Knotens bleibt über seine Lebensdauer hinweg stabil.
-class WorkflowNode {
+class WorkflowNode extends Equatable {
   const WorkflowNode({required this.id, required this.title, required this.description, required this.config});
 
   final NodeId id;
@@ -50,4 +52,10 @@ class WorkflowNode {
       config: config ?? this.config,
     );
   }
+
+  @override
+  List<Object?> get props => [id, config];
+
+  @override
+  bool? get stringify => true;
 }

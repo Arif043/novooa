@@ -23,7 +23,8 @@ class TaskBuilderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => serviceLocator<TaskBuilderCubit>()..load(editingTaskOrNull),
+      create: (_) =>
+          serviceLocator<TaskBuilderCubit>()..load(editingTaskOrNull),
       child: const _TaskBuilderView(),
     );
   }
@@ -34,7 +35,9 @@ class _TaskBuilderView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TaskBuilderCubit, TaskBuilderState>(builder: (context, state) => _TaskBuilderBody(state: state));
+    return BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
+      builder: (context, state) => _TaskBuilderBody(state: state),
+    );
   }
 }
 
@@ -91,7 +94,9 @@ class _TaskBuilderBodyState extends State<_TaskBuilderBody> {
 
   Widget _nodeGraph(TaskBuilderState state) {
     if (state case TaskBuilderLoaded(:final editingTask)) {
-      return Column(children: editingTask.nodes.map(_nodeWidgetOrNull).toList());
+      return Column(
+        children: editingTask.nodes.map(_nodeWidgetOrNull).toList(),
+      );
     }
     return const SizedBox.shrink();
   }
@@ -100,16 +105,23 @@ class _TaskBuilderBodyState extends State<_TaskBuilderBody> {
     return switch (node.config.primitive) {
       .prompt => PromptWidget(node: node),
       .conditional => BlocProvider(
-        create: (_) => serviceLocator<ConditionalControllerCubit>()..load(node.config as ConditionalNodeConfig),
+        key: ValueKey(node.config),
+        create: (_) =>
+            serviceLocator<ConditionalControllerCubit>()
+              ..load(node.config as ConditionalNodeConfig),
         child: LayoutBuilder(
-          builder: (_, constraints) => BlocBuilder<ConditionalControllerCubit, ConditionalControllerState>(
-            builder: (context, state) {
-              if (state.selectedBranch != null) {
-                return BranchWidget(branch: state.selectedBranch!);
-              }
-              return ConditionalWidget(nodeConfig: state.nodeConfig!);
-            },
-          ),
+          builder: (_, constraints) =>
+              BlocBuilder<
+                ConditionalControllerCubit,
+                ConditionalControllerState
+              >(
+                builder: (context, state) {
+                  if (state.selectedBranch != null) {
+                    return BranchWidget(branch: state.selectedBranch!);
+                  }
+                  return ConditionalWidget(nodeConfig: state.nodeConfig!);
+                },
+              ),
         ),
       ),
       _ => SizedBox.shrink(),
