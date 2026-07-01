@@ -91,7 +91,11 @@ class _ConditionalPagerState extends State<ConditionalPager> {
           branch: branch,
         ),
       );
-      if (branch == null || index + 1 >= oldPages.length) break;
+      if (branch == null) {
+        if (index + 1 >= oldPages.length) break;
+        continue;
+      }
+      if (index + 1 >= oldPages.length) break;
       final nextNode = _nodeOrNull(
         branch,
         oldPages[index + 1].conditionalNodeId,
