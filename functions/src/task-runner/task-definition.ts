@@ -20,10 +20,30 @@ export const promptNodeConfigSchema = z.object({
   secondChoice: z.string().default(""),
 });
 
+export const workflowEdgeSchema = z.object({
+  from: z.string().min(1),
+  to: z.string().min(1),
+  conditionLabel: z.string().optional(),
+});
+
+const branchWorkflowNodeSchema = z.object({
+  id: z.string().min(1),
+  primitive: workflowPrimitiveSchema,
+  title: z.string().min(1),
+  description: z.string().default(""),
+  config: z.unknown().optional(),
+});
+
+const branchWorkflowGraphSchema = z.object({
+  nodes: z.array(branchWorkflowNodeSchema).default([]),
+  edges: z.array(workflowEdgeSchema).default([]),
+});
+
 export const conditionalBranchSchema = z.object({
   id: z.string().min(1),
   label: z.string().default(""),
   nodeIds: z.array(z.string().min(1)).default([]),
+  graph: branchWorkflowGraphSchema.default({nodes: [], edges: []}),
 });
 
 export const conditionalNodeConfigSchema = z.object({
@@ -43,12 +63,6 @@ export const workflowNodeSchema = z.object({
   title: z.string().min(1),
   description: z.string().default(""),
   config: nodeConfigSchema,
-});
-
-export const workflowEdgeSchema = z.object({
-  from: z.string().min(1),
-  to: z.string().min(1),
-  conditionLabel: z.string().optional(),
 });
 
 export const taskDefinitionSchema = z.object({

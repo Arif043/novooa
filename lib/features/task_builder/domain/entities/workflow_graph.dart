@@ -1,11 +1,16 @@
+import 'package:equatable/equatable.dart';
+
 import 'workflow_edge.dart';
 import 'workflow_node.dart';
 
-class WorkflowGraph {
+class WorkflowGraph extends Equatable {
   const WorkflowGraph({required this.nodes, required this.edges});
 
   final List<WorkflowNode> nodes;
   final List<WorkflowEdge> edges;
+
+  @override
+  List<Object?> get props => [nodes, edges];
 
   factory WorkflowGraph.empty() {
     return const WorkflowGraph(nodes: [], edges: []);

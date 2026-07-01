@@ -43,9 +43,11 @@ void main() {
     expect(config['choices'], ['Ja', 'Nein', 'Vielleicht']);
     final branches = config['branches'] as List<Object?>;
     final firstBranch = branches.first as Map<String, Object?>;
+    final graph = firstBranch['graph'] as Map<String, Object?>;
+    final branchNodes = graph['nodes'] as List<Object?>;
     expect(firstBranch['id'], 'branch.yes');
     expect(firstBranch['label'], 'Ja');
-    expect(firstBranch['nodeIds'], ['node.3', 'node.4']);
+    expect(branchNodes, hasLength(2));
   });
 }
 
@@ -74,7 +76,7 @@ Task _task() {
 }
 
 Task _conditionalTask() {
-  return const Task(
+  return Task(
     id: 'task.2',
     title: 'Task',
     objective: 'Ziel',
@@ -90,17 +92,45 @@ Task _conditionalTask() {
               ConditionalBranch(
                 id: 'branch.yes',
                 label: 'Ja',
-                nodeIds: [NodeId('node.3'), NodeId('node.4')],
+                graph: WorkflowGraph(
+                  nodes: [
+                    WorkflowNode(
+                      id: NodeId('node.3'),
+                      title: 'Prompt',
+                      description: 'Beschreibung',
+                      config: PromptNodeConfig.initial(),
+                    ),
+                    WorkflowNode(
+                      id: NodeId('node.4'),
+                      title: 'Prompt',
+                      description: 'Beschreibung',
+                      config: PromptNodeConfig.initial(),
+                    ),
+                  ],
+                  edges: [
+                    WorkflowEdge(from: NodeId('node.3'), to: NodeId('node.4')),
+                  ],
+                ),
               ),
               ConditionalBranch(
                 id: 'branch.no',
                 label: 'Nein',
-                nodeIds: [NodeId('node.5')],
+                graph: WorkflowGraph(
+                  nodes: [
+                    WorkflowNode(
+                      id: NodeId('node.5'),
+                      title: 'Prompt',
+                      description: 'Beschreibung',
+                      config: PromptNodeConfig.initial(),
+                    ),
+                  ],
+                  edges: [],
+                ),
               ),
               ConditionalBranch(
                 id: 'branch.maybe',
                 label: 'Vielleicht',
-                nodeIds: [],
+                graph: WorkflowGraph(nodes: [], edges: []),
               ),
             ],
           ),

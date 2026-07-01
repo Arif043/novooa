@@ -64,9 +64,10 @@ class RunTaskDefinitionRequestModel {
     return {
       'id': branch.id,
       'label': branch.label,
-      'nodeIds': branch.nodeIds
-          .map((nodeId) => nodeId.value)
-          .toList(growable: false),
+      'graph': {
+        'nodes': branch.graph.nodes.map(_nodeToJson).toList(growable: false),
+        'edges': branch.graph.edges.map(_edgeToJson).toList(growable: false),
+      },
     };
   }
 

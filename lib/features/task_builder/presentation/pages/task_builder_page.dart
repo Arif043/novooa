@@ -7,6 +7,7 @@ import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart'
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/toolbar.dart';
 import 'package:web_smooth_scroll/web_smooth_scroll.dart';
 
@@ -18,8 +19,7 @@ class TaskBuilderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          serviceLocator<TaskBuilderCubit>()..load(editingTaskOrNull),
+      create: (_) => serviceLocator<TaskBuilderCubit>()..load(editingTaskOrNull),
       child: const _TaskBuilderView(),
     );
   }
@@ -30,9 +30,7 @@ class _TaskBuilderView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
-      builder: (context, state) => _TaskBuilderBody(state: state),
-    );
+    return BlocBuilder<TaskBuilderCubit, TaskBuilderState>(builder: (context, state) => _TaskBuilderBody(state: state));
   }
 }
 
@@ -83,6 +81,7 @@ class _TaskBuilderBodyState extends State<_TaskBuilderBody> {
               ),
             ),
           ),
+        NodePlaceholder(onAccept: (value) => context.read<TaskBuilderCubit>().addNodeToMainGraph(value)),
       ],
     );
   }

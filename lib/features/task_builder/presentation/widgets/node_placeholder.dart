@@ -5,13 +5,15 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
 class NodePlaceholder extends StatelessWidget {
-  const NodePlaceholder({super.key});
+  const NodePlaceholder({super.key, required this.onAccept});
+
+  final ValueChanged<WorkflowPrimitive> onAccept;
 
   @override
   Widget build(BuildContext context) {
     return DragTarget<WorkflowPrimitive>(
       onAcceptWithDetails: (details) {
-        context.read<TaskBuilderCubit>().addNodeToMainGraph(details.data);
+        onAccept(details.data);
       },
       builder: (context, candidateData, rejectedData) {
         return Container(

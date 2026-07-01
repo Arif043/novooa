@@ -3,13 +3,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/conditional_controller_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
 
 class BranchWidget extends StatelessWidget {
   final ConditionalBranch branch;
+  final NodeId conditionalNodeId;
 
-  const BranchWidget({super.key, required this.branch});
+  const BranchWidget({
+    super.key,
+    required this.branch,
+    required this.conditionalNodeId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +47,16 @@ class BranchWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          NodePlaceholder(),
+          NodeGraph(nodes: branch.graph.nodes),
+          NodePlaceholder(
+            onAccept: (primitive) {
+              context.read<TaskBuilderCubit>().addNodeToBranch(
+                conditionalNodeId: conditionalNodeId,
+                branchId: branch.id,
+                primitive: primitive,
+              );
+            },
+          ),
         ],
       ),
     );
