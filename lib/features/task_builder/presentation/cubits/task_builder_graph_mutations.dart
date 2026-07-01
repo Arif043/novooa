@@ -1,0 +1,149 @@
+part of 'task_builder_cubit.dart';
+
+extension TaskBuilderGraphMutations on TaskBuilderCubit {
+  Future<void> _updateNode(
+    NodeId nodeId,
+    WorkflowNode Function(WorkflowNode node) update,
+  ) async {
+    final task = loadedTaskOrNull();
+    if (task == null) return;
+    final result = _updateNodeInGraph(task.graph, nodeId, update);
+    if (!result.changed) return;
+    await _saveAndEmit(task.copyWith(graph: result.graph));
+  }
+
+  ({WorkflowGraph graph, bool changed}) _updateNodeInGraph(
+    WorkflowGraph graph,
+    NodeId nodeId,
+    WorkflowNode Function(WorkflowNode node) update,
+  ) {
+    for (var index = 0; index < graph.nodes.length; index++) {
+      final result = _updateNodeInNode(graph.nodes[index], nodeId, update);
+      if (!result.changed) continue;
+      final nodes = [...graph.nodes]..[index] = result.node;
+      return (graph: graph.copyWith(nodes: nodes), changed: true);
+    }
+    return (graph: graph, changed: false);
+  }
+
+  ({WorkflowNode node, bool changed}) _updateNodeInNode(
+    WorkflowNode node,
+    NodeId nodeId,
+    WorkflowNode Function(WorkflowNode node) update,
+  ) {
+    if (node.id == nodeId) {
+      final updatedNode = update(node);
+      return (node: updatedNode, changed: updatedNode != node);
+    }
+    if (node.config case final ConditionalNodeConfig config) {
+      return _updateNodeInBranches(node, config, nodeId, update);
+    }
+    return (node: node, changed: false);
+  }
+
+  ({WorkflowNode node, bool changed}) _updateNodeInBranches(
+    WorkflowNode node,
+    ConditionalNodeConfig config,
+    NodeId nodeId,
+    WorkflowNode Function(WorkflowNode node) update,
+  ) {
+    for (var index = 0; index < config.branches.length; index++) {
+      final branch = config.branches[index];
+      final result = _updateNodeInGraph(branch.graph, nodeId, update);
+      if (!result.changed) continue;
+      final branches = [...config.branches]
+        ..[index] = branch.copyWith(graph: result.graph);
+      return (node: _withBranches(node, config, branches), changed: true);
+    }
+    return (node: node, changed: false);
+  }
+
+  WorkflowNode _withBranches(
+    WorkflowNode node,
+    ConditionalNodeConfig config,
+    List<ConditionalBranch> branches,
+  ) {
+    return node.copyWith(config: config.copyWith(branches: branches));
+  }
+
+  WorkflowNode? _nodeOrNullInGraph(WorkflowGraph graph, NodeId nodeId) {
+    for (final node in graph.nodes) {
+      if (node.id == nodeId) return node;
+      if (node.config case final ConditionalNodeConfig config) {
+        final nestedNode = _nodeOrNullInBranches(config, nodeId);
+        if (nestedNode != null) return nestedNode;
+      }
+    }
+    return null;
+  }
+
+  WorkflowNode? _nodeOrNullInBranches(
+    ConditionalNodeConfig config,
+    NodeId nodeId,
+  ) {
+    for (final branch in config.branches) {
+      final node = _nodeOrNullInGraph(branch.graph, nodeId);
+      if (node != null) return node;
+    }
+    return null;
+  }
+
+  List<WorkflowNode> _successorsOf(Task task, NodeId nodeId) {
+    final graph = _owningGraphOrNull(task.graph, nodeId);
+    if (graph == null) return const [];
+    return graph.edges
+        .where((edge) => edge.from == nodeId)
+        .map((edge) => graph.nodeOrNull(edge.to))
+        .whereType<WorkflowNode>()
+        .toList(growable: false);
+  }
+
+  WorkflowGraph? _owningGraphOrNull(WorkflowGraph graph, NodeId nodeId) {
+    if (graph.nodes.any((node) => node.id == nodeId)) return graph;
+    for (final node in graph.nodes) {
+      if (node.config case final ConditionalNodeConfig config) {
+        final owner = _owningGraphInBranches(config, nodeId);
+        if (owner != null) return owner;
+      }
+    }
+    return null;
+  }
+
+  WorkflowGraph? _owningGraphInBranches(
+    ConditionalNodeConfig config,
+    NodeId nodeId,
+  ) {
+    for (final branch in config.branches) {
+      final graph = _owningGraphOrNull(branch.graph, nodeId);
+      if (graph != null) return graph;
+    }
+    return null;
+  }
+
+  List<String>? _promptChoices(Task? task, NodeId nodeId) {
+    final node = task == null ? null : _nodeOrNullInGraph(task.graph, nodeId);
+    if (node?.config case PromptNodeConfig config) return config.choices;
+    return null;
+  }
+
+  Future<void> _syncConditionalSuccessors(NodeId nodeId) async {
+    final task = loadedTaskOrNull();
+    final promptChoices = _promptChoices(task, nodeId);
+    if (task == null || promptChoices == null) return;
+    for (final successor in _successorsOf(task, nodeId)) {
+      await _syncConditionalChoices(successor.id, promptChoices);
+    }
+  }
+
+  Future<void> _syncConditionalChoices(NodeId nodeId, List<String> choices) {
+    return _updateNode(
+      nodeId,
+      (node) => switch (node.config) {
+        ConditionalNodeConfig config => node.copyWith(
+          config: config.copyWith(choices: choices),
+        ),
+        _ => node,
+      },
+    );
+  }
+}

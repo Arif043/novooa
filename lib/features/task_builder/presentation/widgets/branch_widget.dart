@@ -6,17 +6,23 @@ import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/conditional_controller_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/conditional_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 
 class BranchWidget extends StatelessWidget {
   final ConditionalBranch branch;
   final NodeId conditionalNodeId;
+  final VoidCallback? onBack;
+  final void Function(WorkflowNode node, ConditionalBranch branch)?
+  onBranchSelected;
 
   const BranchWidget({
     super.key,
     required this.branch,
     required this.conditionalNodeId,
+    this.onBack,
+    this.onBranchSelected,
   });
 
   @override
@@ -35,6 +41,11 @@ class BranchWidget extends StatelessWidget {
             children: [
               CupertinoNavigationBarBackButton(
                 onPressed: () {
+                  final back = onBack;
+                  if (back != null) {
+                    back();
+                    return;
+                  }
                   context.read<ConditionalControllerCubit>().selectBranch(null);
                 },
               ),
@@ -47,7 +58,7 @@ class BranchWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          NodeGraph(nodes: branch.graph.nodes),
+          for (final node in branch.graph.nodes) _branchNode(node),
           NodePlaceholder(
             onAccept: (primitive) {
               context.read<TaskBuilderCubit>().addNodeToBranch(
@@ -60,5 +71,16 @@ class BranchWidget extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _branchNode(WorkflowNode node) {
+    return switch (node.config.primitive) {
+      .prompt => PromptWidget(node: node),
+      .conditional => ConditionalWidget(
+        nodeConfig: node.config as ConditionalNodeConfig,
+        onBranchSelected: (branch) => onBranchSelected?.call(node, branch),
+      ),
+      _ => const SizedBox.shrink(),
+    };
   }
 }

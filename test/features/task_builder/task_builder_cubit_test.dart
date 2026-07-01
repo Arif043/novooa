@@ -44,26 +44,137 @@ void main() {
 
     await cubit.close();
   });
+
+  test('addNodeToBranch findet Conditional-Nodes in Branch-Graphs', () async {
+    final repository = _InMemoryTaskRepository(
+      _taskWithNestedConditionalNode(),
+    );
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.addNodeToBranch(
+      conditionalNodeId: const NodeId('node.2'),
+      branchId: 'branch.nested',
+      primitive: WorkflowPrimitive.prompt,
+    );
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final rootConfig =
+        state.editingTask.nodes.first.config as ConditionalNodeConfig;
+    final nestedNode = rootConfig.branches.first.graph.nodes.first;
+    final nestedConfig = nestedNode.config as ConditionalNodeConfig;
+    final nestedBranch = nestedConfig.branches.first;
+
+    expect(nestedBranch.graph.nodes, hasLength(1));
+    expect(nestedBranch.graph.nodes.first.config, isA<PromptNodeConfig>());
+
+    await cubit.close();
+  });
+
+  test(
+    'updatePromptOutputType aktualisiert Prompt-Nodes in Branch-Graphs',
+    () async {
+      final repository = _InMemoryTaskRepository(_taskWithBranchPrompt());
+      final cubit = TaskBuilderCubit(repository: repository);
+
+      await cubit.load(repository.savedTask);
+      await cubit.updatePromptOutputType(
+        const NodeId('node.2'),
+        PromptOutputType.decision,
+      );
+
+      final state = cubit.state as TaskBuilderLoaded;
+      final rootConfig =
+          state.editingTask.nodes.first.config as ConditionalNodeConfig;
+      final prompt = rootConfig.branches.first.graph.nodes.first;
+      final promptConfig = prompt.config as PromptNodeConfig;
+
+      expect(promptConfig.outputType, PromptOutputType.decision);
+      expect(promptConfig.choices, ['', '']);
+
+      await cubit.close();
+    },
+  );
 }
 
 Task _taskWithConditionalNode() {
-  return const Task(
+  return _taskWithRootBranch(
     id: 'task.1',
-    title: 'Aufgabe',
-    objective: 'Ziel',
-    selectedNodeId: NodeId('node.1'),
-    graph: WorkflowGraph(
+    branchId: 'branch.yes',
+    branchLabel: 'Ja',
+    branchGraph: const WorkflowGraph(nodes: [], edges: []),
+  );
+}
+
+Task _taskWithNestedConditionalNode() {
+  return _taskWithRootBranch(
+    id: 'task.2',
+    branchGraph: const WorkflowGraph(
       nodes: [
         WorkflowNode(
-          id: NodeId('node.1'),
+          id: NodeId('node.2'),
           title: 'Verzweigung',
           description: 'Beschreibung',
           config: ConditionalNodeConfig(
             branches: [
               ConditionalBranch(
-                id: 'branch.yes',
-                label: 'Ja',
+                id: 'branch.nested',
+                label: 'Nested',
                 graph: WorkflowGraph(nodes: [], edges: []),
+              ),
+            ],
+          ),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+Task _taskWithBranchPrompt() {
+  return _taskWithRootBranch(
+    id: 'task.3',
+    branchGraph: const WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.2'),
+          title: 'Prompt',
+          description: 'Beschreibung',
+          config: PromptNodeConfig(
+            instruction: '',
+            outputType: PromptOutputType.text,
+            choices: ['', ''],
+          ),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+Task _taskWithRootBranch({
+  required String id,
+  required WorkflowGraph branchGraph,
+  String branchId = 'branch.root',
+  String branchLabel = 'Root',
+}) {
+  return Task(
+    id: id,
+    title: 'Aufgabe',
+    objective: 'Ziel',
+    selectedNodeId: const NodeId('node.1'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: const NodeId('node.1'),
+          title: 'Verzweigung',
+          description: 'Beschreibung',
+          config: ConditionalNodeConfig(
+            branches: [
+              ConditionalBranch(
+                id: branchId,
+                label: branchLabel,
+                graph: branchGraph,
               ),
             ],
           ),

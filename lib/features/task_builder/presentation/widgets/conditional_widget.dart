@@ -6,9 +6,14 @@ import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/conditional_controller_cubit.dart';
 
 class ConditionalWidget extends StatelessWidget {
-  const ConditionalWidget({super.key, required this.nodeConfig});
+  const ConditionalWidget({
+    super.key,
+    required this.nodeConfig,
+    this.onBranchSelected,
+  });
 
   final ConditionalNodeConfig nodeConfig;
+  final ValueChanged<ConditionalBranch>? onBranchSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -35,8 +40,14 @@ class ConditionalWidget extends StatelessWidget {
                   shape: LinearBorder(),
                   backgroundColor: SyscatTheme.primaryOrange,
                   onPressed: () {
+                    final branch = nodeConfig.branches[choiceIndex];
+                    final select = onBranchSelected;
+                    if (select != null) {
+                      select(branch);
+                      return;
+                    }
                     context.read<ConditionalControllerCubit>().selectBranch(
-                      nodeConfig.branches[choiceIndex],
+                      branch,
                     );
                   },
                 ),

@@ -57,28 +57,4 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
       return node;
     });
   }
-
-  Future<void> _syncConditionalSuccessors(NodeId nodeId) async {
-    final task = loadedTaskOrNull();
-    final promptChoices = _promptChoices(task, nodeId);
-    if (task == null || promptChoices == null) return;
-    for (final successor in task.successorsOf(nodeId)) {
-      await _syncConditionalChoices(successor.id, promptChoices);
-    }
-  }
-
-  List<String>? _promptChoices(Task? task, NodeId nodeId) {
-    final node = task?.nodes.where((node) => node.id == nodeId).firstOrNull;
-    if (node?.config case PromptNodeConfig config) return config.choices;
-    return null;
-  }
-
-  Future<void> _syncConditionalChoices(NodeId nodeId, List<String> choices) {
-    return _updateNode(nodeId, (node) {
-      if (node.config case ConditionalNodeConfig config) {
-        return node.copyWith(config: config.copyWith(choices: choices));
-      }
-      return node;
-    });
-  }
 }

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
-import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
 class NodePlaceholder extends StatelessWidget {
   const NodePlaceholder({super.key, required this.onAccept});

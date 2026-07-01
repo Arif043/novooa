@@ -1,5 +1,4 @@
 import 'package:bloc/bloc.dart';
-import 'package:flutter/widgets.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
 import '../../domain/entities/task.dart';
@@ -9,6 +8,7 @@ import 'task_builder_state.dart';
 import 'workflow_primitive_labels.dart';
 
 part 'task_builder_branch_mutations.dart';
+part 'task_builder_graph_mutations.dart';
 part 'task_builder_prompt_mutations.dart';
 
 /// Zustandsverwaltung für den Aufgaben-Builder.
@@ -108,23 +108,6 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     await _repository.saveTask(updated);
     if (isClosed) return;
     emit(TaskBuilderLoaded(updated));
-  }
-
-  Future<void> _updateNode(
-    NodeId nodeId,
-    WorkflowNode Function(WorkflowNode node) update,
-  ) async {
-    final task = loadedTaskOrNull();
-    if (task == null) return;
-    final index = task.nodes.indexWhere((node) => node.id == nodeId);
-    if (index == -1) return;
-    final currentNode = task.nodes[index];
-    final updatedNode = update(currentNode);
-    if (identical(updatedNode, currentNode)) return;
-    final newNodes = [...task.nodes]..[index] = updatedNode;
-    await _saveAndEmit(
-      task.copyWith(graph: task.graph.copyWith(nodes: newNodes)),
-    );
   }
 
   WorkflowNode _buildNode(WorkflowPrimitive primitive, int index) {
