@@ -198,13 +198,15 @@ Reflection API weiter.
 ### Conditional-Executor
 
 Datei: `functions/src/task-executors/conditional-node-executor.ts`.
-`executeConditionalNode` wählt aus den ausgehenden Kanten die erste Kante,
-deren `conditionLabel` im Kontext vorkommt. Der Graph-Runner überspringt
-nicht gewählte Branches. Ohne Match fällt der Executor auf die erste
-ausgehende Kante zurück.
+`executeConditionalNode` erhält als Eingabe das Ziellabel aus dem direkten
+Vorgänger-Output, typischerweise von einem `prompt` mit `outputType:
+"decision"`. Der Executor wählt aus den ausgehenden Kanten die erste Kante,
+deren `conditionLabel` oder Branch-Label exakt dem Ziellabel entspricht.
+Der Graph-Runner überspringt nicht gewählte Branches. Ohne Match fällt der
+Executor auf die erste ausgehende Kante zurück.
 
 ```ts
-input:  { node: WorkflowNode; context: string; outgoingEdges: WorkflowEdge[] }
+input:  { node: WorkflowNode; targetLabel: string; outgoingEdges: WorkflowEdge[] }
 output: { selectedNodeId: string | null; reason: string }
 ```
 

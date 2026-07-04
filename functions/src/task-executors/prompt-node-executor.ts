@@ -27,6 +27,7 @@ export async function executePromptNode(
     prompt: promptTurn(input),
   });
 
+  console.log(`Prompt output: ${response.text}`);
   return { answer: response.text };
 }
 

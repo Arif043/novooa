@@ -56,7 +56,7 @@ async function runNodes(
       skippedNodeIds,
     )
       ? skippedNode(node, "")
-      : await executeNode(ai, node, context, input.taskDefinition);
+      : await executeNode(ai, node, context, input.taskDefinition, results);
     results.set(node.id, result);
     skipInactiveBranches(node, input.taskDefinition, result, skippedNodeIds);
   }
@@ -69,6 +69,7 @@ async function executeNode(
   node: WorkflowNode,
   context: string,
   task: Task,
+  results: Map<string, NodeExecutionResult>,
 ): Promise<NodeExecutionResult> {
   try {
     console.log("####################################");
@@ -81,7 +82,11 @@ async function executeNode(
       case "prompt":
         return executePrompt(ai, node, context);
       case "conditionalFlow":
-        return executeConditional(node, context, task.edges);
+        return executeConditional(
+          node,
+          parentOutputFor(node, task, results),
+          task.edges,
+        );
       case "iterativeRefinement":
         return executeRefinement(ai, node, context, task.objective);
       default:
@@ -111,15 +116,27 @@ async function executePrompt(
 
 function executeConditional(
   node: WorkflowNode,
-  context: string,
+  targetLabel: string,
   edges: WorkflowEdge[],
 ): NodeExecutionResult {
   const output = executeConditionalNode({
     node,
-    context,
+    targetLabel,
     outgoingEdges: edges.filter((edge) => edge.from === node.id),
   });
   return executedNode(node, output.reason, output.selectedNodeId);
+}
+
+function parentOutputFor(
+  node: WorkflowNode,
+  task: Task,
+  results: Map<string, NodeExecutionResult>,
+): string {
+  const parentOutputs = task.edges
+    .filter((edge) => edge.to === node.id)
+    .map((edge) => results.get(edge.from)?.output ?? "")
+    .filter((output) => output.trim().length > 0);
+  return parentOutputs[parentOutputs.length - 1] ?? "";
 }
 
 async function executeRefinement(

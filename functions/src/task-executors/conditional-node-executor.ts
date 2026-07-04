@@ -2,7 +2,7 @@ import {type WorkflowEdge, type WorkflowNode} from "../task-runner/task-definiti
 
 export type ConditionalNodeInput = {
   node: WorkflowNode;
-  context: string;
+  targetLabel: string;
   outgoingEdges: WorkflowEdge[];
 };
 
@@ -14,19 +14,31 @@ export type ConditionalNodeOutput = {
 export function executeConditionalNode(
   input: ConditionalNodeInput,
 ): ConditionalNodeOutput {
-  const choices = conditionalChoices(input.node);
-  const matchingEdge = input.outgoingEdges.find((edge, index) => {
-    const condition = (edge.conditionLabel ?? choices[index])?.trim();
-    if (!condition) return false;
-    return input.context.toLowerCase().includes(condition.toLowerCase());
-  });
+  const targetLabel = normalizeLabel(input.targetLabel);
+  const match = matchingEdgeFor(input, targetLabel);
 
   return {
-    selectedNodeId: matchingEdge?.to ?? input.outgoingEdges[0]?.to ?? null,
-    reason: matchingEdge
-      ? `Matched condition: ${matchingEdge.conditionLabel}`
-      : "No condition matched. Used first outgoing branch.",
+    selectedNodeId: match?.edge.to ?? input.outgoingEdges[0]?.to ?? null,
+    reason: match
+      ? `Matched target label: ${match.label}`
+      : `No target label matched: ${input.targetLabel}. Used first branch.`,
   };
+}
+
+function matchingEdgeFor(input: ConditionalNodeInput, targetLabel: string) {
+  for (const [index, edge] of input.outgoingEdges.entries()) {
+    const label = edgeLabel(input.node, edge, index);
+    if (normalizeLabel(label) === targetLabel) return {edge, label};
+  }
+  return undefined;
+}
+
+function edgeLabel(
+  node: WorkflowNode,
+  edge: WorkflowEdge,
+  index: number,
+): string {
+  return edge.conditionLabel ?? conditionalChoices(node)[index] ?? "";
 }
 
 function conditionalChoices(node: WorkflowNode): string[] {
@@ -35,4 +47,8 @@ function conditionalChoices(node: WorkflowNode): string[] {
     return node.config.branches.map((branch) => branch.label);
   }
   return node.config.choices;
+}
+
+function normalizeLabel(label: string): string {
+  return label.trim().toLowerCase();
 }
