@@ -10,7 +10,7 @@ import {isMinimaxProvider} from "./task-runner/ai-models.js";
 
 const ai = genkit({
   plugins: [
-    googleAI(),
+    // googleAI(),
     ...(isMinimaxProvider() ? [openAICompatible({
       name: "minimax",
       apiKey: requiredEnv("MINIMAX_API_KEY"),
