@@ -1,5 +1,4 @@
 import {genkit} from "genkit";
-import {googleAI} from "@genkit-ai/google-genai";
 import {openAICompatible} from "@genkit-ai/compat-oai";
 import {executeTaskGraph} from "./task-runner/task-graph-runner.js";
 import {
@@ -31,5 +30,27 @@ export const runTaskDefinitionFlow = ai.defineFlow(
     inputSchema: runTaskDefinitionInputSchema,
     outputSchema: runTaskDefinitionOutputSchema,
   },
-  async (input) => executeTaskGraph(ai, input),
+  async (input) => {
+    try {
+      return await executeTaskGraph(ai, input);
+    } catch (error) {
+      console.error("runTaskDefinitionFlow failed.", {
+        taskId: input.taskDefinition.id,
+        title: input.taskDefinition.title,
+        error: errorDetails(error),
+      });
+      throw error;
+    }
+  },
 );
+
+function errorDetails(error: unknown) {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+  return error;
+}
