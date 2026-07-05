@@ -23,13 +23,23 @@ export async function executeTaskGraph(
   ai: Genkit,
   input: RunTaskDefinitionInput,
 ): Promise<RunTaskDefinitionOutput> {
+  console.log("Task graph execution started.", {
+    taskId: input.taskDefinition.id,
+    title: input.taskDefinition.title,
+    objective: input.taskDefinition.objective,
+    context: input.context,
+    nodes: input.taskDefinition.nodes,
+    edges: input.taskDefinition.edges,
+  });
   validateGraph(input.taskDefinition);
   const results = await runNodes(ai, input);
-  return {
+  const output = {
     taskId: input.taskDefinition.id,
     finalOutput: finalOutputOf(results),
     nodeResults: results,
   };
+  console.log("Task graph execution finished.", output);
+  return output;
 }
 
 async function runNodes(
@@ -41,6 +51,11 @@ async function runNodes(
   const skippedNodeIds = new Set<string>();
 
   while (remaining.length > 0) {
+    console.log("Task graph scheduler state.", {
+      remainingNodeIds: remaining.map((node) => node.id),
+      completedResults: Array.from(results.values()),
+      skippedNodeIds: Array.from(skippedNodeIds),
+    });
     const index = nextRunnableIndex(
       remaining,
       input.taskDefinition.edges,
@@ -49,16 +64,31 @@ async function runNodes(
     if (index === -1) throw new Error("Task graph contains a cycle.");
     const node = remaining.splice(index, 1)[0];
     const context = contextFor(node, input, results);
-    const result = shouldSkipNode(
+    const skipNode = shouldSkipNode(
       node,
       input.taskDefinition,
       results,
       skippedNodeIds,
-    )
+    );
+    console.log("Task graph selected node.", {
+      node,
+      context,
+      skipNode,
+      parentResults: parentResultsFor(node, input.taskDefinition, results),
+    });
+    const result = skipNode
       ? skippedNode(node, "")
       : await executeNode(ai, node, context, input.taskDefinition, results);
     results.set(node.id, result);
+    console.log("Task graph node result.", {
+      result,
+      resultsSnapshot: Array.from(results.values()),
+    });
     skipInactiveBranches(node, input.taskDefinition, result, skippedNodeIds);
+    console.log("Task graph branch state.", {
+      selectedNodeId: result.selectedNodeId,
+      skippedNodeIds: Array.from(skippedNodeIds),
+    });
   }
 
   return input.taskDefinition.nodes.map((node) => results.get(node.id)!);
@@ -132,11 +162,24 @@ function parentOutputFor(
   task: Task,
   results: Map<string, NodeExecutionResult>,
 ): string {
-  const parentOutputs = task.edges
-    .filter((edge) => edge.to === node.id)
-    .map((edge) => results.get(edge.from)?.output ?? "")
+  const parentOutputs = parentResultsFor(node, task, results)
+    .map((parentResult) => parentResult.result.output)
     .filter((output) => output.trim().length > 0);
   return parentOutputs[parentOutputs.length - 1] ?? "";
+}
+
+function parentResultsFor(
+  node: WorkflowNode,
+  task: Task,
+  results: Map<string, NodeExecutionResult>,
+) {
+  return task.edges
+    .filter((edge) => edge.to === node.id)
+    .map((edge) => ({edge, result: results.get(edge.from)}))
+    .filter((parent) => parent.result !== undefined) as {
+      edge: WorkflowEdge;
+      result: NodeExecutionResult;
+    }[];
 }
 
 async function executeRefinement(

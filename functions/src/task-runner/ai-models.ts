@@ -19,6 +19,20 @@ export function isMinimaxProvider(): boolean {
   return process.env.AI_PROVIDER === minimaxProviderName;
 }
 
+export function modelLogContext() {
+  if (isMinimaxProvider()) {
+    return {
+      provider: minimaxProviderName,
+      model: process.env.MINIMAX_MODEL ?? "",
+    };
+  }
+  return {
+    provider: "google",
+    textModel: defaultGoogleTextModel,
+    reasoningModel: defaultGoogleReasoningModel,
+  };
+}
+
 function minimaxModel(): ModelArgument {
   const modelName = requiredEnv("MINIMAX_MODEL");
   return modelRef({name: `${minimaxProviderName}/${modelName}`});
