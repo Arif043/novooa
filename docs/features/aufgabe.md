@@ -219,14 +219,15 @@ Reflection API weiter.
 Datei: `functions/src/task-executors/conditional-node-executor.ts`.
 `executeConditionalNode` erhält als Eingabe das Ziellabel aus dem direkten
 Vorgänger-Output, typischerweise von einem `prompt` mit `outputType:
-"decision"`. Der Executor wählt aus den ausgehenden Kanten die erste Kante,
-deren `conditionLabel` oder Branch-Label exakt dem Ziellabel entspricht.
-Der Graph-Runner überspringt nicht gewählte Branches. Ohne Match fällt der
-Executor auf die erste ausgehende Kante zurück.
+"decision"`. Der Executor wählt primär den Branch, dessen Label exakt dem
+Ziellabel entspricht. Der Graph-Runner führt anschließend den `graph` dieses
+Branches als Subgraph aus und verwendet dessen finale Ausgabe als Output des
+Conditional-Knotens. Ohne Match fällt der Executor auf den ersten Branch
+zurück. Ausgehende Top-Level-Kanten bleiben nur als Legacy-Fallback erhalten.
 
 ```ts
 input:  { node: WorkflowNode; targetLabel: string; outgoingEdges: WorkflowEdge[] }
-output: { selectedNodeId: string | null; reason: string }
+output: { selectedBranchId?: string | null; selectedBranchLabel?: string | null; selectedNodeId: string | null; reason: string }
 ```
 
 ### Iterative-Refinement-Executor

@@ -8,6 +8,8 @@ export type ConditionalNodeInput = {
 
 export type ConditionalNodeOutput = {
   selectedNodeId: string | null;
+  selectedBranchId?: string | null;
+  selectedBranchLabel?: string | null;
   reason: string;
 };
 
@@ -16,8 +18,9 @@ export function executeConditionalNode(
 ): ConditionalNodeOutput {
   const targetLabel = normalizeLabel(input.targetLabel);
   logConditionalInput(input, targetLabel);
-  const match = matchingEdgeFor(input, targetLabel);
-  const output = conditionalOutputFor(input, match);
+  const branchMatch = matchingBranchFor(input.node, targetLabel);
+  const edgeMatch = branchMatch ? undefined : matchingEdgeFor(input, targetLabel);
+  const output = conditionalOutputFor(input, branchMatch, edgeMatch);
 
   console.log("Conditional node output.", output);
   return output;
@@ -25,14 +28,69 @@ export function executeConditionalNode(
 
 function conditionalOutputFor(
   input: ConditionalNodeInput,
-  match: {edge: WorkflowEdge; label: string} | undefined,
+  branchMatch: BranchMatch | undefined,
+  edgeMatch: EdgeMatch | undefined,
 ): ConditionalNodeOutput {
+  if (branchMatch) {
+    return {
+      selectedNodeId: null,
+      selectedBranchId: branchMatch.branch.id,
+      selectedBranchLabel: branchMatch.branch.label,
+      reason: branchMatch.matched
+        ? `Matched branch label: ${branchMatch.branch.label}`
+        : `No target label matched: ${input.targetLabel}. Used first branch.`,
+    };
+  }
   return {
-    selectedNodeId: match?.edge.to ?? input.outgoingEdges[0]?.to ?? null,
-    reason: match
-      ? `Matched target label: ${match.label}`
+    selectedNodeId: edgeMatch?.edge.to ?? input.outgoingEdges[0]?.to ?? null,
+    reason: edgeMatch
+      ? `Matched target label: ${edgeMatch.label}`
       : `No target label matched: ${input.targetLabel}. Used first branch.`,
   };
+}
+
+type BranchMatch = {
+  branch: {id: string; label: string};
+  matched: boolean;
+};
+
+type EdgeMatch = {
+  edge: WorkflowEdge;
+  label: string;
+};
+
+function matchingBranchFor(
+  node: WorkflowNode,
+  targetLabel: string,
+): BranchMatch | undefined {
+  if (node.config.primitive !== "conditionalFlow") return undefined;
+  for (const [index, branch] of node.config.branches.entries()) {
+    const normalizedLabel = normalizeLabel(branch.label);
+    const matches = normalizedLabel === targetLabel;
+    console.log("Conditional branch candidate.", {
+      index,
+      branchId: branch.id,
+      label: branch.label,
+      normalizedLabel,
+      targetLabel,
+      nodeCount: branch.graph.nodes.length,
+      edgeCount: branch.graph.edges.length,
+      matches,
+    });
+    if (matches) return {branch, matched: true};
+  }
+  return fallbackBranchFor(node);
+}
+
+function fallbackBranchFor(node: WorkflowNode): BranchMatch | undefined {
+  if (node.config.primitive !== "conditionalFlow") return undefined;
+  const branch = node.config.branches[0];
+  if (!branch) return undefined;
+  console.log("Conditional branch fallback selected.", {
+    branchId: branch.id,
+    label: branch.label,
+  });
+  return {branch, matched: false};
 }
 
 function matchingEdgeFor(input: ConditionalNodeInput, targetLabel: string) {

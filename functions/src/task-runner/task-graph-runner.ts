@@ -113,8 +113,11 @@ async function executeNode(
         return executePrompt(ai, node, context);
       case "conditionalFlow":
         return executeConditional(
+          ai,
           node,
           parentOutputFor(node, task, results),
+          context,
+          task,
           task.edges,
         );
       case "iterativeRefinement":
@@ -144,18 +147,85 @@ async function executePrompt(
   return executedNode(node, output.answer);
 }
 
-function executeConditional(
+async function executeConditional(
+  ai: Genkit,
   node: WorkflowNode,
   targetLabel: string,
+  context: string,
+  task: Task,
   edges: WorkflowEdge[],
-): NodeExecutionResult {
+): Promise<NodeExecutionResult> {
   const output = executeConditionalNode({
     node,
     targetLabel,
     outgoingEdges: edges.filter((edge) => edge.from === node.id),
   });
-  return executedNode(node, output.reason, output.selectedNodeId);
+  const branchOutput = await executeSelectedBranch(ai, node, output, context, task);
+  return executedNode(node, branchOutput, output.selectedNodeId, {
+    selectedBranchId: output.selectedBranchId,
+    selectedBranchLabel: output.selectedBranchLabel,
+  });
 }
+
+async function executeSelectedBranch(
+  ai: Genkit,
+  node: WorkflowNode,
+  output: {
+    selectedBranchId?: string | null;
+    selectedBranchLabel?: string | null;
+    reason: string;
+  },
+  context: string,
+  task: Task,
+): Promise<string> {
+  const branch = selectedBranchFor(node, output.selectedBranchId);
+  if (!branch) return output.reason;
+  if (branch.graph.nodes.length === 0) return emptyBranchOutput(output);
+  console.log("Executing conditional branch graph.", {
+    conditionalNodeId: node.id,
+    branchId: branch.id,
+    branchLabel: branch.label,
+    graph: branch.graph,
+  });
+  const branchTask = branchTaskFor(task, branch);
+  const branchResults = await runNodes(ai, {
+    taskDefinition: branchTask,
+    context,
+  });
+  const finalOutput = finalOutputOf(branchResults);
+  console.log("Conditional branch graph finished.", {
+    conditionalNodeId: node.id,
+    branchId: branch.id,
+    branchLabel: branch.label,
+    finalOutput,
+    nodeResults: branchResults,
+  });
+  return finalOutput || output.reason;
+}
+
+function selectedBranchFor(node: WorkflowNode, branchId?: string | null) {
+  if (node.config.primitive !== "conditionalFlow") return undefined;
+  return node.config.branches.find((branch) => branch.id === branchId);
+}
+
+function emptyBranchOutput(output: {selectedBranchLabel?: string | null}) {
+  return `Branch ${output.selectedBranchLabel ?? ""} has no nodes.`;
+}
+
+function branchTaskFor(task: Task, branch: Branch): Task {
+  return {
+    id: `${task.id}:${branch.id}`,
+    title: `${task.title}:${branch.label}`,
+    objective: task.objective,
+    nodes: branch.graph.nodes as WorkflowNode[],
+    edges: branch.graph.edges,
+  };
+}
+
+type Branch = Extract<
+  WorkflowNode["config"],
+  {primitive: "conditionalFlow"}
+>["branches"][number];
 
 function parentOutputFor(
   node: WorkflowNode,
@@ -211,6 +281,10 @@ function executedNode(
   node: WorkflowNode,
   output: string,
   selectedNodeId?: string | null,
+  selection?: {
+    selectedBranchId?: string | null;
+    selectedBranchLabel?: string | null;
+  },
 ): NodeExecutionResult {
   return {
     nodeId: node.id,
@@ -218,6 +292,8 @@ function executedNode(
     status: "executed",
     output,
     selectedNodeId,
+    selectedBranchId: selection?.selectedBranchId,
+    selectedBranchLabel: selection?.selectedBranchLabel,
   };
 }
 
