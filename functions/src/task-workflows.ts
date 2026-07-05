@@ -6,6 +6,7 @@ import {
   runTaskDefinitionOutputSchema,
 } from "./task-runner/task-definition.js";
 import {isMinimaxProvider} from "./task-runner/ai-models.js";
+import {errorDetails, logError} from "./task-runner/structured-logger.js";
 
 const ai = genkit({
   plugins: [
@@ -34,7 +35,7 @@ export const runTaskDefinitionFlow = ai.defineFlow(
     try {
       return await executeTaskGraph(ai, input);
     } catch (error) {
-      console.error("runTaskDefinitionFlow failed.", {
+      logError("run_task_definition_flow.failed", {
         taskId: input.taskDefinition.id,
         title: input.taskDefinition.title,
         error: errorDetails(error),
@@ -43,14 +44,3 @@ export const runTaskDefinitionFlow = ai.defineFlow(
     }
   },
 );
-
-function errorDetails(error: unknown) {
-  if (error instanceof Error) {
-    return {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-    };
-  }
-  return error;
-}

@@ -1,5 +1,5 @@
 import {z, type Genkit} from "genkit";
-import {modelLogContext, reasoningModel} from "../task-runner/ai-models.js";
+import {reasoningModel} from "../task-runner/ai-models.js";
 
 export type IterativeRefinementNodeInput = {
   objective: string;
@@ -33,10 +33,8 @@ export async function executeIterativeRefinementNode(
 
   for (; iterations < maxIterations; iterations += 1) {
     const evaluation = await evaluateDraft(ai, input, answer, iterations + 1);
-    console.log("Iterative refinement evaluation.", {iterations, evaluation});
     if (evaluation.satisfied) break;
     answer = await improveDraft(ai, input, answer, evaluation.critique);
-    console.log("Iterative refinement improved draft.", {iterations, answer});
   }
 
   return {answer, iterations};
@@ -51,10 +49,6 @@ async function initialDraft(
     model: reasoningModel(),
     prompt: initialDraftPrompt(input),
   });
-  console.log("Iterative refinement initial draft.", {
-    text: response.text,
-    model: modelLogContext(),
-  });
   return response.text;
 }
 
@@ -66,11 +60,7 @@ async function evaluateDraft(
 ): Promise<Evaluation> {
   try {
     return await structuredEvaluation(ai, input, draft, iteration);
-  } catch (error) {
-    console.error("Structured refinement evaluation failed.", {
-      iteration,
-      error: errorDetails(error),
-    });
+  } catch {
     return textEvaluationFallback(ai, input, draft, iteration);
   }
 }
@@ -172,11 +162,4 @@ function improvementPrompt(
 
 function boundedIterations(value: number): number {
   return Math.min(Math.max(value, 1), 5);
-}
-
-function errorDetails(error: unknown) {
-  if (error instanceof Error) {
-    return {name: error.name, message: error.message, stack: error.stack};
-  }
-  return error;
 }

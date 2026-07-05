@@ -17,12 +17,10 @@ export function executeConditionalNode(
   input: ConditionalNodeInput,
 ): ConditionalNodeOutput {
   const targetLabel = normalizeLabel(input.targetLabel);
-  logConditionalInput(input, targetLabel);
   const branchMatch = matchingBranchFor(input.node, targetLabel);
   const edgeMatch = branchMatch ? undefined : matchingEdgeFor(input, targetLabel);
   const output = conditionalOutputFor(input, branchMatch, edgeMatch);
 
-  console.log("Conditional node output.", output);
   return output;
 }
 
@@ -64,20 +62,9 @@ function matchingBranchFor(
   targetLabel: string,
 ): BranchMatch | undefined {
   if (node.config.primitive !== "conditionalFlow") return undefined;
-  for (const [index, branch] of node.config.branches.entries()) {
+  for (const branch of node.config.branches) {
     const normalizedLabel = normalizeLabel(branch.label);
-    const matches = normalizedLabel === targetLabel;
-    console.log("Conditional branch candidate.", {
-      index,
-      branchId: branch.id,
-      label: branch.label,
-      normalizedLabel,
-      targetLabel,
-      nodeCount: branch.graph.nodes.length,
-      edgeCount: branch.graph.edges.length,
-      matches,
-    });
-    if (matches) return {branch, matched: true};
+    if (normalizedLabel === targetLabel) return {branch, matched: true};
   }
   return fallbackBranchFor(node);
 }
@@ -86,10 +73,6 @@ function fallbackBranchFor(node: WorkflowNode): BranchMatch | undefined {
   if (node.config.primitive !== "conditionalFlow") return undefined;
   const branch = node.config.branches[0];
   if (!branch) return undefined;
-  console.log("Conditional branch fallback selected.", {
-    branchId: branch.id,
-    label: branch.label,
-  });
   return {branch, matched: false};
 }
 
@@ -97,16 +80,7 @@ function matchingEdgeFor(input: ConditionalNodeInput, targetLabel: string) {
   for (const [index, edge] of input.outgoingEdges.entries()) {
     const label = edgeLabel(input.node, edge, index);
     const normalizedLabel = normalizeLabel(label);
-    const matches = normalizedLabel === targetLabel;
-    console.log("Conditional edge candidate.", {
-      index,
-      edge,
-      label,
-      normalizedLabel,
-      targetLabel,
-      matches,
-    });
-    if (matches) return {edge, label};
+    if (normalizedLabel === targetLabel) return {edge, label};
   }
   return undefined;
 }
@@ -129,20 +103,4 @@ function conditionalChoices(node: WorkflowNode): string[] {
 
 function normalizeLabel(label: string): string {
   return label.trim().toLowerCase();
-}
-
-function logConditionalInput(
-  input: ConditionalNodeInput,
-  normalizedTargetLabel: string,
-): void {
-  console.log("Conditional node input.", {
-    nodeId: input.node.id,
-    primitive: input.node.primitive,
-    title: input.node.title,
-    config: input.node.config,
-    targetLabel: input.targetLabel,
-    normalizedTargetLabel,
-    outgoingEdges: input.outgoingEdges,
-    choices: conditionalChoices(input.node),
-  });
 }

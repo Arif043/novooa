@@ -18,19 +18,21 @@ import {
   skipInactiveBranches,
   validateGraph,
 } from "./task-graph-utils.js";
+import {
+  formatNodeFailed,
+  formatNodeHeader,
+  formatNodeTrail,
+  formatTaskFinished,
+  formatTaskStarted,
+  logReadableError,
+  logReadableInfo,
+} from "./structured-logger.js";
 
 export async function executeTaskGraph(
   ai: Genkit,
   input: RunTaskDefinitionInput,
 ): Promise<RunTaskDefinitionOutput> {
-  console.log("Task graph execution started.", {
-    taskId: input.taskDefinition.id,
-    title: input.taskDefinition.title,
-    objective: input.taskDefinition.objective,
-    context: input.context,
-    nodes: input.taskDefinition.nodes,
-    edges: input.taskDefinition.edges,
-  });
+  logReadableInfo(formatTaskStarted(input.taskDefinition, input.context));
   validateGraph(input.taskDefinition);
   const results = await runNodes(ai, input);
   const output = {
@@ -38,7 +40,12 @@ export async function executeTaskGraph(
     finalOutput: finalOutputOf(results),
     nodeResults: results,
   };
-  console.log("Task graph execution finished.", output);
+  logReadableInfo(formatTaskFinished(
+    output.taskId,
+    results.filter((result) => result.status === "executed").length,
+    results.filter((result) => result.status === "skipped").length,
+    output.finalOutput.length,
+  ));
   return output;
 }
 
@@ -51,11 +58,6 @@ async function runNodes(
   const skippedNodeIds = new Set<string>();
 
   while (remaining.length > 0) {
-    console.log("Task graph scheduler state.", {
-      remainingNodeIds: remaining.map((node) => node.id),
-      completedResults: Array.from(results.values()),
-      skippedNodeIds: Array.from(skippedNodeIds),
-    });
     const index = nextRunnableIndex(
       remaining,
       input.taskDefinition.edges,
@@ -70,28 +72,96 @@ async function runNodes(
       results,
       skippedNodeIds,
     );
-    console.log("Task graph selected node.", {
-      node,
-      context,
-      skipNode,
-      parentResults: parentResultsFor(node, input.taskDefinition, results),
-    });
-    const result = skipNode
-      ? skippedNode(node, "")
-      : await executeNode(ai, node, context, input.taskDefinition, results);
+    const startedAt = Date.now();
+    logNodeHeader(node, input.taskDefinition, context, skipNode, results);
+    const result = await runNodeWithTrail(
+      ai,
+      {node, context, task: input.taskDefinition, results, skipNode, startedAt},
+    );
     results.set(node.id, result);
-    console.log("Task graph node result.", {
-      result,
-      resultsSnapshot: Array.from(results.values()),
-    });
     skipInactiveBranches(node, input.taskDefinition, result, skippedNodeIds);
-    console.log("Task graph branch state.", {
-      selectedNodeId: result.selectedNodeId,
-      skippedNodeIds: Array.from(skippedNodeIds),
-    });
+    logSkippedBranches(node, input.taskDefinition.id, result, skippedNodeIds);
   }
 
   return input.taskDefinition.nodes.map((node) => results.get(node.id)!);
+}
+
+type NodeRunInput = {
+  node: WorkflowNode;
+  context: string;
+  task: Task;
+  results: Map<string, NodeExecutionResult>;
+  skipNode: boolean;
+  startedAt: number;
+};
+
+async function runNodeWithTrail(
+  ai: Genkit,
+  input: NodeRunInput,
+): Promise<NodeExecutionResult> {
+  try {
+    const result = input.skipNode
+      ? skippedNode(input.node, "")
+      : await executeNode(ai, input.node, input.context, input.task, input.results);
+    logNodeTrail(input.task.id, result, input.startedAt);
+    return result;
+  } catch (error) {
+    logNodeErrorTrail(input, error);
+    throw error;
+  }
+}
+
+function logNodeHeader(
+  node: WorkflowNode,
+  task: Task,
+  context: string,
+  skipNode: boolean,
+  results: Map<string, NodeExecutionResult>,
+): void {
+  logReadableInfo(formatNodeHeader({
+    taskId: task.id,
+    node,
+    context,
+    parentNodeIds: parentResultsFor(node, task, results).map(
+      (parent) => parent.result.nodeId,
+    ),
+    skipNode,
+  }));
+}
+
+function logNodeTrail(
+  taskId: string,
+  result: NodeExecutionResult,
+  startedAt: number,
+): void {
+  void taskId;
+  logReadableInfo(formatNodeTrail({
+    result,
+    durationMs: Date.now() - startedAt,
+  }));
+}
+
+function logNodeErrorTrail(input: NodeRunInput, error: unknown): void {
+  logReadableError(formatNodeFailed({
+    node: input.node,
+    durationMs: Date.now() - input.startedAt,
+    error,
+  }));
+}
+
+function logSkippedBranches(
+  node: WorkflowNode,
+  taskId: string,
+  result: NodeExecutionResult,
+  skippedNodeIds: Set<string>,
+): void {
+  if (result.selectedNodeId === undefined) return;
+  logReadableInfo([
+    `[Verzweigung] ${node.title}`,
+    `Aufgabe: ${taskId}`,
+    `Gewählt: ${result.selectedBranchLabel ?? result.selectedNodeId ?? "-"}`,
+    `Übersprungen: ${Array.from(skippedNodeIds).join(", ") || "-"}`,
+  ].join("\n"));
 }
 
 async function executeNode(
@@ -101,40 +171,22 @@ async function executeNode(
   task: Task,
   results: Map<string, NodeExecutionResult>,
 ): Promise<NodeExecutionResult> {
-  try {
-    console.log("####################################");
-    console.log("Executing node: ", node);
-    console.log("Context: ", context);
-    console.log("Task Definition: ", task);
-    console.log("####################################");
-
-    switch (node.primitive) {
-      case "prompt":
-        return executePrompt(ai, node, context);
-      case "conditionalFlow":
-        return executeConditional(
-          ai,
-          node,
-          parentOutputFor(node, task, results),
-          context,
-          task,
-          task.edges,
-        );
-      case "iterativeRefinement":
-        return executeRefinement(ai, node, context, task);
-      default:
-        return skippedNode(node, context);
-    }
-  } catch (error) {
-    console.error("Node execution failed.", {
-      nodeId: node.id,
-      primitive: node.primitive,
-      node,
-      context,
-      taskId: task.id,
-      error: errorDetails(error),
-    });
-    throw error;
+  switch (node.primitive) {
+    case "prompt":
+      return executePrompt(ai, node, context);
+    case "conditionalFlow":
+      return executeConditional(
+        ai,
+        node,
+        parentOutputFor(node, task, results),
+        context,
+        task,
+        task.edges,
+      );
+    case "iterativeRefinement":
+      return executeRefinement(ai, node, context, task);
+    default:
+      return skippedNode(node, context);
   }
 }
 
@@ -181,25 +233,22 @@ async function executeSelectedBranch(
   const branch = selectedBranchFor(node, output.selectedBranchId);
   if (!branch) return output.reason;
   if (branch.graph.nodes.length === 0) return emptyBranchOutput(output);
-  console.log("Executing conditional branch graph.", {
-    conditionalNodeId: node.id,
-    branchId: branch.id,
-    branchLabel: branch.label,
-    graph: branch.graph,
-  });
+  logReadableInfo([
+    `[Zweig startet] ${branch.label}`,
+    `Bedingung: ${node.title} (${node.id})`,
+    `Bausteine: ${branch.graph.nodes.length} | Kanten: ${branch.graph.edges.length}`,
+  ].join("\n"));
   const branchTask = branchTaskFor(task, branch);
   const branchResults = await runNodes(ai, {
     taskDefinition: branchTask,
     context,
   });
   const finalOutput = finalOutputOf(branchResults);
-  console.log("Conditional branch graph finished.", {
-    conditionalNodeId: node.id,
-    branchId: branch.id,
-    branchLabel: branch.label,
-    finalOutput,
-    nodeResults: branchResults,
-  });
+  logReadableInfo([
+    `[Zweig beendet] ${branch.label}`,
+    `Bausteine ausgeführt: ${branchResults.length}`,
+    `Ausgabe: ${finalOutput.length} Zeichen`,
+  ].join("\n"));
   return finalOutput || output.reason;
 }
 
@@ -277,20 +326,21 @@ async function refinementDraftFor(
   config?: RefinementConfig,
 ): Promise<string> {
   if (!config || config.graph.nodes.length === 0) return context;
-  console.log("Executing iterative refinement draft graph.", {
-    refinementNodeId: node.id,
-    graph: config.graph,
-  });
+  logReadableInfo([
+    `[Entwurf startet] ${node.title}`,
+    `Aufgabe: ${task.id}`,
+    `Bausteine: ${config.graph.nodes.length} | Kanten: ${config.graph.edges.length}`,
+  ].join("\n"));
   const draftResults = await runNodes(ai, {
     taskDefinition: refinementTaskFor(task, node, config),
     context,
   });
   const draft = finalOutputOf(draftResults);
-  console.log("Iterative refinement draft graph finished.", {
-    refinementNodeId: node.id,
-    draft,
-    nodeResults: draftResults,
-  });
+  logReadableInfo([
+    `[Entwurf beendet] ${node.title}`,
+    `Bausteine ausgeführt: ${draftResults.length}`,
+    `Entwurf: ${draft.length} Zeichen`,
+  ].join("\n"));
   return draft || context;
 }
 
@@ -378,14 +428,3 @@ type RefinementConfig = Extract<
   WorkflowNode["config"],
   {primitive: "iterativeRefinement"}
 >;
-
-function errorDetails(error: unknown) {
-  if (error instanceof Error) {
-    return {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-    };
-  }
-  return error;
-}
