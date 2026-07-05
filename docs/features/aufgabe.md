@@ -234,16 +234,23 @@ output: { selectedBranchId?: string | null; selectedBranchLabel?: string | null;
 
 Datei:
 `functions/src/task-executors/iterative-refinement-node-executor.ts`.
-`executeIterativeRefinementNode` iteriert `maxIterations` Mal (1-5) und ruft
-`gemini-2.5-flash` mit einem kombinierten Prompt aus Objective, Draft und
-Critique-Kriterien auf.
+`executeIterativeRefinementNode` folgt dem Genkit-Pattern „Hybrid: Iterative
+refinement": Ein Optimizer erzeugt oder übernimmt einen Entwurf, ein Evaluator
+bewertet pro Runde `{ critique, satisfied }`, und der Optimizer verbessert den
+Entwurf anhand des Feedbacks. Die Schleife endet, sobald `satisfied` wahr ist
+oder `maxIterations` erreicht wurde. Bei OpenAI-kompatiblen Providern wird ein
+Text-JSON-Fallback verwendet, falls strukturierte Evaluation nicht validiert.
+Im Builder umschließt der Node einen internen Prompt-Graph. Dieser Prompt
+erzeugt den Entwurf, der anschließend mit `critiquePrompt` und `maxIterations`
+verfeinert wird. Ist noch kein Prompt eingefügt, zeigt das Widget einen
+`NodePlaceholder`.
 
 ```ts
 input:  { objective: string; draft: string; critiquePrompt: string; maxIterations: 1..5 }
 output: { answer: string; iterations: number }
 ```
 
-Temperatur: `0.4`. Streamt nicht.
+Verbesserungstemperatur: `0.4`. Streamt nicht.
 
 ## Definition of Done
 

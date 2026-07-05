@@ -52,9 +52,17 @@ export const conditionalNodeConfigSchema = z.object({
   branches: z.array(conditionalBranchSchema).default([]),
 });
 
+export const iterativeRefinementNodeConfigSchema = z.object({
+  primitive: z.literal("iterativeRefinement").default("iterativeRefinement"),
+  critiquePrompt: z.string().default(""),
+  maxIterations: z.number().int().min(1).max(5).default(2),
+  graph: branchWorkflowGraphSchema.default({nodes: [], edges: []}),
+});
+
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   promptNodeConfigSchema,
   conditionalNodeConfigSchema,
+  iterativeRefinementNodeConfigSchema,
 ]);
 
 export const workflowNodeSchema = z.object({

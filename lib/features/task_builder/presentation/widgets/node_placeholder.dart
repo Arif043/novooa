@@ -3,13 +3,21 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 
 class NodePlaceholder extends StatelessWidget {
-  const NodePlaceholder({super.key, required this.onAccept});
+  const NodePlaceholder({
+    super.key,
+    required this.onAccept,
+    this.allowedPrimitives,
+  });
 
   final ValueChanged<WorkflowPrimitive> onAccept;
+  final Set<WorkflowPrimitive>? allowedPrimitives;
 
   @override
   Widget build(BuildContext context) {
     return DragTarget<WorkflowPrimitive>(
+      onWillAcceptWithDetails: (details) {
+        return allowedPrimitives?.contains(details.data) ?? true;
+      },
       onAcceptWithDetails: (details) {
         onAccept(details.data);
       },

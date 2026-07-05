@@ -49,6 +49,26 @@ void main() {
     expect(firstBranch['label'], 'Ja');
     expect(branchNodes, hasLength(2));
   });
+
+  test('serialisiert iterative Verfeinerung mit Prompt-Graph', () {
+    final json = RunTaskDefinitionRequestModel(
+      taskDefinition: _iterativeRefinementTask(),
+      context: 'Entwurf',
+    ).toJson();
+
+    final task = json['taskDefinition'] as Map<String, Object?>;
+    final nodes = task['nodes'] as List<Object?>;
+    final refinement = nodes.first as Map<String, Object?>;
+    final config = refinement['config'] as Map<String, Object?>;
+    final graph = config['graph'] as Map<String, Object?>;
+    final promptNodes = graph['nodes'] as List<Object?>;
+
+    expect(refinement['primitive'], 'iterativeRefinement');
+    expect(config['primitive'], 'iterativeRefinement');
+    expect(config['critiquePrompt'], 'Pruefe auf Klarheit.');
+    expect(config['maxIterations'], 3);
+    expect(promptNodes, hasLength(1));
+  });
 }
 
 Task _task() {
@@ -137,6 +157,40 @@ Task _conditionalTask() {
         ),
       ],
       edges: [WorkflowEdge(from: NodeId('node.2'), to: NodeId('node.2'))],
+    ),
+  );
+}
+
+Task _iterativeRefinementTask() {
+  return Task(
+    id: 'task.3',
+    title: 'Task',
+    objective: 'Ziel',
+    selectedNodeId: const NodeId('node.6'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: const NodeId('node.6'),
+          title: 'Iterative Verfeinerung',
+          description: 'Beschreibung',
+          config: IterativeRefinementNodeConfig(
+            critiquePrompt: 'Pruefe auf Klarheit.',
+            maxIterations: 3,
+            graph: WorkflowGraph(
+              nodes: [
+                WorkflowNode(
+                  id: const NodeId('node.7'),
+                  title: 'Prompt',
+                  description: 'Beschreibung',
+                  config: PromptNodeConfig.initial(),
+                ),
+              ],
+              edges: const [],
+            ),
+          ),
+        ),
+      ],
+      edges: const [],
     ),
   );
 }

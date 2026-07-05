@@ -36,7 +36,7 @@ class Toolbar extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            IconButton(onPressed: () => {}, icon: const Icon(Icons.auto_awesome), tooltip: "Verfeinerung hinzufügen"),
+            IconButton(onPressed: () => context.read<TaskBuilderCubit>().addNodeToMainGraph(.iterativeRefinement), icon: const Icon(Icons.auto_awesome), tooltip: "Verfeinerung hinzufügen"),
             const SizedBox(width: 4),
             IconButton(onPressed: () => {}, icon: const Icon(Icons.face), tooltip: "Menschliche Aktion hinzufügen"),
             const SizedBox(width: 4),

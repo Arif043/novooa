@@ -38,6 +38,9 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
     if (node.config case final ConditionalNodeConfig config) {
       return _updateNodeInBranches(node, config, nodeId, update);
     }
+    if (node.config case final IterativeRefinementNodeConfig config) {
+      return _updateNodeInIterativeGraph(node, config, nodeId, update);
+    }
     return (node: node, changed: false);
   }
 
@@ -58,6 +61,20 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
     return (node: node, changed: false);
   }
 
+  ({WorkflowNode node, bool changed}) _updateNodeInIterativeGraph(
+    WorkflowNode node,
+    IterativeRefinementNodeConfig config,
+    NodeId nodeId,
+    WorkflowNode Function(WorkflowNode node) update,
+  ) {
+    final result = _updateNodeInGraph(config.graph, nodeId, update);
+    if (!result.changed) return (node: node, changed: false);
+    return (
+      node: node.copyWith(config: config.copyWith(graph: result.graph)),
+      changed: true,
+    );
+  }
+
   WorkflowNode _withBranches(
     WorkflowNode node,
     ConditionalNodeConfig config,
@@ -71,6 +88,10 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
       if (node.id == nodeId) return node;
       if (node.config case final ConditionalNodeConfig config) {
         final nestedNode = _nodeOrNullInBranches(config, nodeId);
+        if (nestedNode != null) return nestedNode;
+      }
+      if (node.config case final IterativeRefinementNodeConfig config) {
+        final nestedNode = _nodeOrNullInGraph(config.graph, nodeId);
         if (nestedNode != null) return nestedNode;
       }
     }
@@ -103,6 +124,10 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
     for (final node in graph.nodes) {
       if (node.config case final ConditionalNodeConfig config) {
         final owner = _owningGraphInBranches(config, nodeId);
+        if (owner != null) return owner;
+      }
+      if (node.config case final IterativeRefinementNodeConfig config) {
+        final owner = _owningGraphOrNull(config.graph, nodeId);
         if (owner != null) return owner;
       }
     }

@@ -6,6 +6,7 @@ import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 
@@ -72,6 +73,7 @@ class BranchWidget extends StatelessWidget {
           onBranchSelected(node, branch);
         },
       ),
+      .iterativeRefinement => IterativeRefinementWidget(node: node),
       _ => const SizedBox.shrink(),
     };
   }

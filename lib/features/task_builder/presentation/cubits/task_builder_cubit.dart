@@ -9,6 +9,7 @@ import 'workflow_primitive_labels.dart';
 
 part 'task_builder_branch_mutations.dart';
 part 'task_builder_graph_mutations.dart';
+part 'task_builder_iterative_refinement_mutations.dart';
 part 'task_builder_prompt_mutations.dart';
 
 /// Zustandsverwaltung für den Aufgaben-Builder.

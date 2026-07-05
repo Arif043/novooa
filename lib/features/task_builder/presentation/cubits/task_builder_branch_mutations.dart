@@ -46,17 +46,28 @@ extension TaskBuilderBranchMutations on TaskBuilderCubit {
     required WorkflowNode node,
   }) {
     final config = owner.config;
-    if (config is! ConditionalNodeConfig) return (node: owner, changed: false);
-    if (owner.id == conditionalNodeId) {
-      return _addNodeToBranchConfig(owner, config, branchId, node);
+    if (config is ConditionalNodeConfig) {
+      if (owner.id == conditionalNodeId) {
+        return _addNodeToBranchConfig(owner, config, branchId, node);
+      }
+      return _addNodeToNestedBranch(
+        owner,
+        config,
+        conditionalNodeId,
+        branchId,
+        node,
+      );
     }
-    return _addNodeToNestedBranch(
-      owner,
-      config,
-      conditionalNodeId,
-      branchId,
-      node,
-    );
+    if (config is IterativeRefinementNodeConfig) {
+      return _addNodeToBranchInIterativeGraph(
+        owner,
+        config,
+        conditionalNodeId,
+        branchId,
+        node,
+      );
+    }
+    return (node: owner, changed: false);
   }
 
   ({WorkflowNode node, bool changed}) _addNodeToBranchConfig(
@@ -99,6 +110,26 @@ extension TaskBuilderBranchMutations on TaskBuilderCubit {
     return (node: owner, changed: false);
   }
 
+  ({WorkflowNode node, bool changed}) _addNodeToBranchInIterativeGraph(
+    WorkflowNode owner,
+    IterativeRefinementNodeConfig config,
+    NodeId conditionalNodeId,
+    String branchId,
+    WorkflowNode node,
+  ) {
+    final update = _addNodeToBranchInGraph(
+      graph: config.graph,
+      conditionalNodeId: conditionalNodeId,
+      branchId: branchId,
+      node: node,
+    );
+    if (!update.changed) return (node: owner, changed: false);
+    return (
+      node: owner.copyWith(config: config.copyWith(graph: update.graph)),
+      changed: true,
+    );
+  }
+
   WorkflowNode _withBranches(
     WorkflowNode owner,
     ConditionalNodeConfig config,
@@ -121,6 +152,9 @@ extension TaskBuilderBranchMutations on TaskBuilderCubit {
         for (final branch in config.branches) {
           count += _nodeCount(branch.graph);
         }
+      }
+      if (node.config case final IterativeRefinementNodeConfig config) {
+        count += _nodeCount(config.graph);
       }
     }
     return count;

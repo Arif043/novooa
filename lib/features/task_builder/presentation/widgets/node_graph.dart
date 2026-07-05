@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_pager.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 
 class NodeGraph extends StatefulWidget {
@@ -27,6 +28,7 @@ class _NodeGraphState extends State<NodeGraph> {
     return switch (node.config.primitive) {
       .prompt => PromptWidget(node: node),
       .conditional => ConditionalPager(key: ValueKey(node.id), node: node),
+      .iterativeRefinement => IterativeRefinementWidget(node: node),
       _ => SizedBox.shrink(),
     };
   }

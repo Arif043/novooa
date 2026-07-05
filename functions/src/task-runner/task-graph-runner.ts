@@ -121,7 +121,7 @@ async function executeNode(
           task.edges,
         );
       case "iterativeRefinement":
-        return executeRefinement(ai, node, context, task.objective);
+        return executeRefinement(ai, node, context, task);
       default:
         return skippedNode(node, context);
     }
@@ -256,15 +256,56 @@ async function executeRefinement(
   ai: Genkit,
   node: WorkflowNode,
   context: string,
-  objective: string,
+  task: Task,
 ): Promise<NodeExecutionResult> {
+  const config = refinementConfigFor(node);
+  const draft = await refinementDraftFor(ai, node, context, task, config);
   const output = await executeIterativeRefinementNode(ai, {
-    objective,
-    draft: context,
-    critiquePrompt: node.description || node.title,
-    maxIterations: 2,
+    objective: task.objective,
+    draft,
+    critiquePrompt: config?.critiquePrompt || node.description || node.title,
+    maxIterations: config?.maxIterations ?? 2,
   });
   return executedNode(node, output.answer);
+}
+
+async function refinementDraftFor(
+  ai: Genkit,
+  node: WorkflowNode,
+  context: string,
+  task: Task,
+  config?: RefinementConfig,
+): Promise<string> {
+  if (!config || config.graph.nodes.length === 0) return context;
+  console.log("Executing iterative refinement draft graph.", {
+    refinementNodeId: node.id,
+    graph: config.graph,
+  });
+  const draftResults = await runNodes(ai, {
+    taskDefinition: refinementTaskFor(task, node, config),
+    context,
+  });
+  const draft = finalOutputOf(draftResults);
+  console.log("Iterative refinement draft graph finished.", {
+    refinementNodeId: node.id,
+    draft,
+    nodeResults: draftResults,
+  });
+  return draft || context;
+}
+
+function refinementTaskFor(
+  task: Task,
+  node: WorkflowNode,
+  config: RefinementConfig,
+): Task {
+  return {
+    id: `${task.id}:${node.id}:refinement`,
+    title: `${task.title}:${node.title}`,
+    objective: task.objective,
+    nodes: config.graph.nodes as WorkflowNode[],
+    edges: config.graph.edges,
+  };
 }
 
 function promptInputFor(node: WorkflowNode, context: string) {
@@ -327,6 +368,16 @@ function promptConfigFor(node: WorkflowNode) {
   if (node.config?.primitive !== "prompt") return undefined;
   return node.config;
 }
+
+function refinementConfigFor(node: WorkflowNode): RefinementConfig | undefined {
+  if (node.config?.primitive !== "iterativeRefinement") return undefined;
+  return node.config;
+}
+
+type RefinementConfig = Extract<
+  WorkflowNode["config"],
+  {primitive: "iterativeRefinement"}
+>;
 
 function errorDetails(error: unknown) {
   if (error instanceof Error) {

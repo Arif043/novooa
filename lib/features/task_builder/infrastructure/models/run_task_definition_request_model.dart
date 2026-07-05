@@ -1,6 +1,7 @@
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/workflow_edge.dart';
+import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
 
 class RunTaskDefinitionRequestModel {
@@ -40,6 +41,7 @@ class RunTaskDefinitionRequestModel {
     return switch (config) {
       PromptNodeConfig() => _promptToJson(config),
       ConditionalNodeConfig() => _conditionalToJson(config),
+      IterativeRefinementNodeConfig() => _iterativeRefinementToJson(config),
     };
   }
 
@@ -60,14 +62,29 @@ class RunTaskDefinitionRequestModel {
     };
   }
 
+  Map<String, Object?> _iterativeRefinementToJson(
+    IterativeRefinementNodeConfig config,
+  ) {
+    return {
+      'primitive': config.primitive.name,
+      'critiquePrompt': config.critiquePrompt,
+      'maxIterations': config.maxIterations,
+      'graph': _graphToJson(config.graph),
+    };
+  }
+
   Map<String, Object?> _branchToJson(ConditionalBranch branch) {
     return {
       'id': branch.id,
       'label': branch.label,
-      'graph': {
-        'nodes': branch.graph.nodes.map(_nodeToJson).toList(growable: false),
-        'edges': branch.graph.edges.map(_edgeToJson).toList(growable: false),
-      },
+      'graph': {..._graphToJson(branch.graph)},
+    };
+  }
+
+  Map<String, Object?> _graphToJson(WorkflowGraph graph) {
+    return {
+      'nodes': graph.nodes.map(_nodeToJson).toList(growable: false),
+      'edges': graph.edges.map(_edgeToJson).toList(growable: false),
     };
   }
 
