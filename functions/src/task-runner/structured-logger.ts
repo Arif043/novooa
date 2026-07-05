@@ -144,6 +144,19 @@ export function formatNodeFailed(input: {
   ].join("\n");
 }
 
+export function formatException(input: {
+  title: string;
+  error: unknown;
+  context?: string[];
+}): string {
+  return [
+    `[Fehler] ${input.title}`,
+    ...input.context ?? [],
+    `Ursache: ${errorMessage(input.error)}`,
+    stackLine(input.error),
+  ].filter(Boolean).join("\n");
+}
+
 export function errorDetails(error: unknown): unknown {
   if (error instanceof Error) {
     return {name: error.name, message: error.message, stack: error.stack};
@@ -190,4 +203,9 @@ function selectedTargetFor(result: NodeExecutionResult): string {
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
+}
+
+function stackLine(error: unknown): string {
+  if (!(error instanceof Error) || !error.stack) return "";
+  return `Stack: ${error.stack}`;
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'core/logging/syscat_log.dart';
 import 'root_tab.dart';
 import 'core/widgets/root_app_bar.dart';
 import 'core/widgets/root_drawer.dart';
@@ -44,7 +45,12 @@ class _RootPageState extends State<RootPage> {
     Navigator.of(context).pop();
   }
 
-  Future<void> _runTask() async {}
+  Future<void> _runTask() async {
+    logSyscatInfo(
+      'App-Bar Run Task wurde gedrückt, ist aber noch nicht verdrahtet.',
+      name: 'syscat.task_builder',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

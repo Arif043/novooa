@@ -24,6 +24,8 @@ import {
   formatNodeTrail,
   formatTaskFinished,
   formatTaskStarted,
+  errorDetails,
+  logError,
   logReadableError,
   logReadableInfo,
 } from "./structured-logger.js";
@@ -147,6 +149,13 @@ function logNodeErrorTrail(input: NodeRunInput, error: unknown): void {
     durationMs: Date.now() - input.startedAt,
     error,
   }));
+  logError("task_node.exception", {
+    taskId: input.task.id,
+    nodeId: input.node.id,
+    primitive: input.node.primitive,
+    title: input.node.title,
+    error: errorDetails(error),
+  });
 }
 
 function logSkippedBranches(

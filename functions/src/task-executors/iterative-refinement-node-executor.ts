@@ -1,5 +1,11 @@
 import {z, type Genkit} from "genkit";
 import {reasoningModel} from "../task-runner/ai-models.js";
+import {
+  errorDetails,
+  formatException,
+  logError,
+  logReadableError,
+} from "../task-runner/structured-logger.js";
 
 export type IterativeRefinementNodeInput = {
   objective: string;
@@ -60,7 +66,19 @@ async function evaluateDraft(
 ): Promise<Evaluation> {
   try {
     return await structuredEvaluation(ai, input, draft, iteration);
-  } catch {
+  } catch (error) {
+    logReadableError(formatException({
+      title: "Iterative Verfeinerung: strukturierte Bewertung fehlgeschlagen",
+      error,
+      context: [
+        `Iteration: ${iteration}`,
+        "Fallback: Textbewertung wird versucht.",
+      ],
+    }));
+    logError("iterative_refinement.structured_evaluation_exception", {
+      iteration,
+      error: errorDetails(error),
+    });
     return textEvaluationFallback(ai, input, draft, iteration);
   }
 }
@@ -73,11 +91,9 @@ async function structuredEvaluation(
 ): Promise<Evaluation> {
   const response = await ai.generate({
     model: reasoningModel(),
-    prompt: evaluationPrompt(input, draft, iteration),
-    output: {schema: evaluationSchema},
+    prompt: `${evaluationPrompt(input, draft, iteration)}\n\nGib nur JSON zurück.`,
   });
-  if (!response.output) throw new Error("Evaluation returned no output.");
-  return response.output;
+  return parseEvaluation(response.text);
 }
 
 async function textEvaluationFallback(

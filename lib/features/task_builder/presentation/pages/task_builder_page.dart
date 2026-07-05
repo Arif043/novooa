@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
+import 'package:syscat2/core/logging/syscat_log.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart';
@@ -19,7 +20,8 @@ class TaskBuilderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => serviceLocator<TaskBuilderCubit>()..load(editingTaskOrNull),
+      create: (_) =>
+          serviceLocator<TaskBuilderCubit>()..load(editingTaskOrNull),
       child: const _TaskBuilderView(),
     );
   }
@@ -30,7 +32,9 @@ class _TaskBuilderView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TaskBuilderCubit, TaskBuilderState>(builder: (context, state) => _TaskBuilderBody(state: state));
+    return BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
+      builder: (context, state) => _TaskBuilderBody(state: state),
+    );
   }
 }
 
@@ -58,10 +62,26 @@ class _TaskBuilderBodyState extends State<_TaskBuilderBody> {
     return Column(
       children: [
         CupertinoButton.filled(
-          onPressed: () {
+          onPressed: () async {
             final task = cubit.loadedTaskOrNull();
             if (task == null) return;
-            serviceLocator<ExecuteTask>()(ExecuteTaskParams(task: task));
+            logSyscatInfo(
+              'Run-Button startet Aufgabe: ${task.id}',
+              name: 'syscat.task_builder',
+            );
+            final taskExecutionOrFailure = await serviceLocator<ExecuteTask>()(
+              ExecuteTaskParams(task: task),
+            );
+            taskExecutionOrFailure.when(
+              (_) => logSyscatInfo(
+                'Run-Button: Aufgabe erfolgreich ausgeführt.',
+                name: 'syscat.task_builder',
+              ),
+              (failure) => logSyscatInfo(
+                'Run-Button: Aufgabe fehlgeschlagen: ${failure.message}',
+                name: 'syscat.task_builder',
+              ),
+            );
           },
           child: Text('Run Task'),
         ),
@@ -81,7 +101,10 @@ class _TaskBuilderBodyState extends State<_TaskBuilderBody> {
               ),
             ),
           ),
-        NodePlaceholder(onAccept: (value) => context.read<TaskBuilderCubit>().addNodeToMainGraph(value)),
+        NodePlaceholder(
+          onAccept: (value) =>
+              context.read<TaskBuilderCubit>().addNodeToMainGraph(value),
+        ),
       ],
     );
   }

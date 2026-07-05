@@ -25,12 +25,17 @@ app.options("/runTaskDefinitionFlow", (_request, response) => {
 });
 
 app.post("/runTaskDefinitionFlow", async (request, response) => {
-  const executionResult = await runViaReflection(request.body);
-  if (executionResult.ok) {
-    response.status(200).json(executionResult.result);
-    return;
+  try {
+    const executionResult = await runViaReflection(request.body);
+    if (executionResult.ok) {
+      response.status(200).json(executionResult.result);
+      return;
+    }
+    response.status(executionResult.status).json({message: executionResult.message});
+  } catch (error) {
+    logException("Proxy request failed.", error);
+    response.status(500).json({message: "Genkit-Proxy ist fehlgeschlagen."});
   }
-  response.status(executionResult.status).json({message: executionResult.message});
 });
 
 app.listen(port, "127.0.0.1", () => {
@@ -73,9 +78,17 @@ async function tryRun(target: string, input: unknown): Promise<RunResult> {
       headers: {"content-type": "application/json"},
       body: JSON.stringify({key: actionKey, input}),
     });
-    if (!response.ok) return targetFailure(response.status);
+    if (!response.ok) {
+      logException("Genkit reflection returned non-OK status.", {
+        target,
+        status: response.status,
+        body: await response.text(),
+      });
+      return targetFailure(response.status);
+    }
     return parseReflectionResponse(await response.json());
-  } catch {
+  } catch (error) {
+    logException("Genkit reflection request failed.", {target, error});
     return {
       ok: false,
       status: 503,
@@ -90,6 +103,7 @@ function parseReflectionResponse(payload: unknown): RunResult {
   }
   const envelope = payload as ReflectionEnvelope;
   if (envelope.error !== undefined) {
+    logException("Genkit flow returned an error.", envelope.error);
     return {ok: false, status: 502, message: "Genkit-Ausfuehrung fehlgeschlagen."};
   }
   if (!isRecord(envelope.result)) {
@@ -112,6 +126,11 @@ function targetFailure(status: number): RunResult {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function logException(message: string, error: unknown): void {
+  console.error(`[Fehler] ${message}`);
+  console.error(error);
 }
 
 type RunResult =
