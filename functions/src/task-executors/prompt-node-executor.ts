@@ -1,5 +1,5 @@
 import { z, type Genkit } from "genkit";
-import { googleAI } from "@genkit-ai/google-genai";
+import {textModel} from "../task-runner/ai-models.js";
 
 export type PromptNodeOutputType = "text" | "decision";
 
@@ -23,7 +23,7 @@ export async function executePromptNode(
   }
 
   const response = await ai.generate({
-    model: googleAI.model("gemini-2.5-flash-lite"),
+    model: textModel(),
     prompt: promptTurn(input),
   });
 
@@ -39,7 +39,7 @@ async function executeDecisionPrompt(
     throw new Error("Decision prompt requires at least one choice.");
   }
   const decision = await ai.generate({
-    model: googleAI.model("gemini-2.5-flash-lite"),
+    model: textModel(),
     prompt: promptTurn(input),
     output: {
       schema: z.object({

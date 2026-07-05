@@ -16,6 +16,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@genkit-ai/compat-oai": "^1.39.0",
     "@genkit-ai/firebase": "^1.37.0",
     "@genkit-ai/google-genai": "^1.37.0",
     "express": "^5.2.1",

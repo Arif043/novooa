@@ -1,5 +1,5 @@
 import {type Genkit} from "genkit";
-import {googleAI} from "@genkit-ai/google-genai";
+import {reasoningModel} from "../task-runner/ai-models.js";
 
 export type IterativeRefinementNodeInput = {
   objective: string;
@@ -22,7 +22,7 @@ export async function executeIterativeRefinementNode(
 
   for (let iteration = 0; iteration < iterations; iteration += 1) {
     const response = await ai.generate({
-      model: googleAI.model("gemini-2.5-flash"),
+      model: reasoningModel(),
       prompt: refinementPrompt(input.objective, answer, input.critiquePrompt),
       config: {temperature: 0.4},
     });

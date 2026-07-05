@@ -125,6 +125,25 @@ Datei: `functions/src/task-workflows.ts`. Nur `runTaskDefinitionFlow` wird in
 `functions/src/index.ts` re-exportiert. Einzelne Bausteine werden über interne
 Executor unter `functions/src/task-executors/` ausgeführt.
 
+### Model-Provider
+
+Standardmäßig nutzt der Backend-Flow Gemini über `@genkit-ai/google-genai`.
+Alternativ kann MiniMax über den OpenAI-kompatiblen Genkit-Provider aktiviert
+werden. Dafür müssen beim Start der Functions diese Umgebungsvariablen gesetzt
+sein:
+
+```bash
+AI_PROVIDER=minimax
+MINIMAX_API_KEY=...
+MINIMAX_BASE_URL=...
+MINIMAX_MODEL=...
+```
+
+`MINIMAX_BASE_URL` ist absichtlich nicht hart codiert, weil MiniMax je nach
+Region und Produkt unterschiedliche OpenAI-kompatible Endpunkte verwenden kann.
+Die Executors beziehen ihre Modelle zentral aus
+`functions/src/task-runner/ai-models.ts`.
+
 ### Prompt-Executor
 
 Datei: `functions/src/task-executors/prompt-node-executor.ts`.
