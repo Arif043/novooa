@@ -35,7 +35,7 @@ export async function executeIterativeRefinementNode(
   input: IterativeRefinementNodeInput,
 ): Promise<IterativeRefinementNodeOutput> {
   const maxIterations = boundedIterations(input.maxIterations);
-  let answer = await initialDraft(ai, input);
+  let answer = input.draft;
   let iterations = 0;
 
   for (; iterations < maxIterations; iterations += 1) {
@@ -45,18 +45,6 @@ export async function executeIterativeRefinementNode(
   }
 
   return {answer, iterations};
-}
-
-async function initialDraft(
-  ai: Genkit,
-  input: IterativeRefinementNodeInput,
-): Promise<string> {
-  if (input.draft.trim().length > 0) return input.draft;
-  const response = await ai.generate({
-    model: reasoningModel(),
-    prompt: initialDraftPrompt(input),
-  });
-  return response.text;
 }
 
 async function evaluateDraft(
@@ -92,9 +80,11 @@ async function structuredEvaluation(
 ): Promise<Evaluation> {
   const response = await ai.generate({
     model: reasoningModel(),
-    prompt: `${evaluationPrompt(input, draft, iteration)}\n\nGib nur JSON zurück.`,
+    prompt: evaluationPrompt(input, draft),
+    output: {schema: evaluationSchema},
   });
-  return parseEvaluation(response.text);
+  if (!response.output) throw new Error("Evaluation returned no output.");
+  return response.output;
 }
 
 async function textEvaluationFallback(
@@ -105,7 +95,7 @@ async function textEvaluationFallback(
 ): Promise<Evaluation> {
   const response = await ai.generate({
     model: reasoningModel(),
-    prompt: `${evaluationPrompt(input, draft, iteration)}\n\nAntwort als JSON.`,
+    prompt: `${evaluationPrompt(input, draft)}\n\nAntwort als JSON.`,
   });
   return parseEvaluation(response.text);
 }
@@ -140,27 +130,15 @@ function jsonFrom(text: string) {
   }
 }
 
-function initialDraftPrompt(input: IterativeRefinementNodeInput): string {
-  return [
-    `Ziel: ${input.objective || "Verbessere den gegebenen Arbeitsstand."}`,
-    optimizerInstruction(input),
-    `Kriterien: ${input.critiquePrompt}`,
-    "Erstelle einen ersten präzisen Entwurf.",
-  ].join("\n\n");
-}
-
 function evaluationPrompt(
   input: IterativeRefinementNodeInput,
   draft: string,
-  iteration: number,
 ): string {
   return [
-    `Iteration: ${iteration}`,
     `Ziel: ${input.objective || "Qualität des Ergebnisses verbessern."}`,
     `Kriterien: ${input.critiquePrompt}`,
     `Entwurf:\n${draft}`,
     "Bewerte, ob der Entwurf die Kriterien erfüllt.",
-    'Gib JSON zurück: {"critique": "...", "satisfied": true|false}',
   ].join("\n\n");
 }
 
@@ -172,7 +150,6 @@ function improvementPrompt(
   return [
     `Ziel: ${input.objective || "Verbessere den Entwurf."}`,
     optimizerInstruction(input),
-    `Kriterien: ${input.critiquePrompt}`,
     `Aktueller Entwurf:\n${draft}`,
     `Feedback:\n${critique}`,
     "Überarbeite den Entwurf. Gib nur die verbesserte Fassung zurück.",

@@ -236,10 +236,10 @@ output: { selectedBranchId?: string | null; selectedBranchLabel?: string | null;
 Datei:
 `functions/src/task-executors/iterative-refinement-node-executor.ts`.
 `executeIterativeRefinementNode` folgt dem Genkit-Pattern „Hybrid: Iterative
-refinement": Ein Optimizer erzeugt oder übernimmt einen Entwurf, ein Evaluator
-bewertet pro Runde `{ critique, satisfied }`, und der Optimizer verbessert den
-Entwurf anhand des Feedbacks. Die Schleife endet, sobald `satisfied` wahr ist
-oder `maxIterations` erreicht wurde. Bei OpenAI-kompatiblen Providern wird ein
+refinement": Ein Evaluator bewertet pro Runde den vorhandenen `draft` mit
+`{ critique, satisfied }`, und der Optimizer verbessert den Entwurf anhand des
+Feedbacks. Die Schleife endet, sobald `satisfied` wahr ist oder
+`maxIterations` erreicht wurde. Bei OpenAI-kompatiblen Providern wird ein
 Text-JSON-Fallback verwendet, falls strukturierte Evaluation nicht validiert.
 Der Node besitzt keinen internen Prompt-Graph mehr. Der Runner verwendet die
 Ausgabe des vorherigen Nodes als `draft` und verfeinert diese mit
