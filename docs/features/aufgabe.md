@@ -243,10 +243,10 @@ oder `maxIterations` erreicht wurde. Bei OpenAI-kompatiblen Providern wird ein
 Text-JSON-Fallback verwendet, falls strukturierte Evaluation nicht validiert.
 Der Node besitzt keinen internen Prompt-Graph mehr. Der Runner verwendet die
 Ausgabe des vorherigen Nodes als `draft` und verfeinert diese mit
-`critiquePrompt` und `maxIterations`.
+`optimizerPrompt`, `critiquePrompt` und `maxIterations`.
 
 ```ts
-input:  { objective: string; draft: string; critiquePrompt: string; maxIterations: 1..5 }
+input:  { objective: string; draft: string; optimizerPrompt: string; critiquePrompt: string; maxIterations: 1..5 }
 output: { answer: string; iterations: number }
 ```
 

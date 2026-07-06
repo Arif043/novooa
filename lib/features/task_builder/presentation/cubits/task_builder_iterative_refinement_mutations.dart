@@ -1,6 +1,17 @@
 part of 'task_builder_cubit.dart';
 
 extension TaskBuilderIterativeRefinementMutations on TaskBuilderCubit {
+  Future<void> updateIterativeOptimizer(NodeId nodeId, String optimizerPrompt) {
+    return _updateNode(nodeId, (node) {
+      final config = node.config;
+      if (config is! IterativeRefinementNodeConfig) return node;
+      if (config.optimizerPrompt == optimizerPrompt) return node;
+      return node.copyWith(
+        config: config.copyWith(optimizerPrompt: optimizerPrompt),
+      );
+    });
+  }
+
   Future<void> updateIterativeCritique(NodeId nodeId, String critiquePrompt) {
     return _updateNode(nodeId, (node) {
       final config = node.config;

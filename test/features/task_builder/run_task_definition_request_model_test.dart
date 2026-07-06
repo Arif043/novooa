@@ -79,6 +79,7 @@ void main() {
 
     expect(refinement['primitive'], 'iterativeRefinement');
     expect(config['primitive'], 'iterativeRefinement');
+    expect(config['optimizerPrompt'], 'Verbessere den Entwurf.');
     expect(config['critiquePrompt'], 'Pruefe auf Klarheit.');
     expect(config['maxIterations'], 3);
     expect(config.containsKey('graph'), isFalse);
@@ -208,6 +209,7 @@ Task _iterativeRefinementTask() {
           title: 'Iterative Verfeinerung',
           description: 'Beschreibung',
           config: IterativeRefinementNodeConfig(
+            optimizerPrompt: 'Verbessere den Entwurf.',
             critiquePrompt: 'Pruefe auf Klarheit.',
             maxIterations: 3,
           ),

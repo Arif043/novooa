@@ -10,6 +10,7 @@ import {
 export type IterativeRefinementNodeInput = {
   objective: string;
   draft: string;
+  optimizerPrompt: string;
   critiquePrompt: string;
   maxIterations: number;
 };
@@ -142,6 +143,7 @@ function jsonFrom(text: string) {
 function initialDraftPrompt(input: IterativeRefinementNodeInput): string {
   return [
     `Ziel: ${input.objective || "Verbessere den gegebenen Arbeitsstand."}`,
+    optimizerInstruction(input),
     `Kriterien: ${input.critiquePrompt}`,
     "Erstelle einen ersten präzisen Entwurf.",
   ].join("\n\n");
@@ -169,11 +171,19 @@ function improvementPrompt(
 ): string {
   return [
     `Ziel: ${input.objective || "Verbessere den Entwurf."}`,
+    optimizerInstruction(input),
     `Kriterien: ${input.critiquePrompt}`,
     `Aktueller Entwurf:\n${draft}`,
     `Feedback:\n${critique}`,
     "Überarbeite den Entwurf. Gib nur die verbesserte Fassung zurück.",
   ].join("\n\n");
+}
+
+function optimizerInstruction(input: IterativeRefinementNodeInput): string {
+  const prompt = input.optimizerPrompt.trim();
+  return prompt.length > 0
+    ? `Optimierer-Prompt:\n${prompt}`
+    : "Optimierer-Prompt: Verbessere den Entwurf gezielt und präzise.";
 }
 
 function boundedIterations(value: number): number {

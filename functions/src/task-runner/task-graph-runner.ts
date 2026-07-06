@@ -331,6 +331,7 @@ async function executeRefinement(
   const output = await executeIterativeRefinementNode(ai, {
     objective: task.objective,
     draft,
+    optimizerPrompt: config?.optimizerPrompt || node.description || node.title,
     critiquePrompt: config?.critiquePrompt || node.description || node.title,
     maxIterations: config?.maxIterations ?? 2,
   });

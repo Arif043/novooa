@@ -18,6 +18,7 @@ class IterativeRefinementWidget extends StatefulWidget {
 }
 
 class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
+  late final TextEditingController _optimizerController;
   late final TextEditingController _critiqueController;
 
   IterativeRefinementNodeConfig get _config {
@@ -27,17 +28,20 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
   @override
   void initState() {
     super.initState();
+    _optimizerController = TextEditingController(text: _config.optimizerPrompt);
     _critiqueController = TextEditingController(text: _config.critiquePrompt);
   }
 
   @override
   void didUpdateWidget(IterativeRefinementWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _syncController(_optimizerController, _config.optimizerPrompt);
     _syncController(_critiqueController, _config.critiquePrompt);
   }
 
   @override
   void dispose() {
+    _optimizerController.dispose();
     _critiqueController.dispose();
     super.dispose();
   }
@@ -54,6 +58,14 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Iterative Verfeinerung', style: SyscatTheme.taskBody),
+          const SizedBox(height: AppSpacing.md),
+          TextField(
+            controller: _optimizerController,
+            minLines: 2,
+            maxLines: 4,
+            decoration: const InputDecoration(hintText: 'Optimierer-Prompt'),
+            onChanged: _updateOptimizer,
+          ),
           const SizedBox(height: AppSpacing.md),
           TextField(
             controller: _critiqueController,
@@ -93,6 +105,13 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
 
   void _updateCritique(String value) {
     context.read<TaskBuilderCubit>().updateIterativeCritique(
+      widget.node.id,
+      value,
+    );
+  }
+
+  void _updateOptimizer(String value) {
+    context.read<TaskBuilderCubit>().updateIterativeOptimizer(
       widget.node.id,
       value,
     );

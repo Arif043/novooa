@@ -72,6 +72,7 @@ class RunTaskDefinitionRequestModel {
   ) {
     return {
       'primitive': config.primitive.name,
+      'optimizerPrompt': config.optimizerPrompt,
       'critiquePrompt': config.critiquePrompt,
       'maxIterations': config.maxIterations,
     };

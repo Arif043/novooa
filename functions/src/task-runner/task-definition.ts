@@ -60,6 +60,7 @@ export const conditionalNodeConfigSchema = z.object({
 
 export const iterativeRefinementNodeConfigSchema = z.object({
   primitive: z.literal("iterativeRefinement").default("iterativeRefinement"),
+  optimizerPrompt: z.string().default(""),
   critiquePrompt: z.string().default(""),
   maxIterations: z.number().int().min(1).max(5).default(2),
 });
