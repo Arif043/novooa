@@ -3,6 +3,7 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_pager.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/string_input_widget.dart';
 
 class NodeGraph extends StatefulWidget {
   const NodeGraph({super.key, required this.nodes});
@@ -26,6 +27,7 @@ class _NodeGraphState extends State<NodeGraph> {
 
   Widget _nodeWidgetOrNull(WorkflowNode node) {
     return switch (node.config.primitive) {
+      .stringInput => StringInputWidget(node: node),
       .prompt => PromptWidget(node: node),
       .conditional => ConditionalPager(key: ValueKey(node.id), node: node),
       .iterativeRefinement => IterativeRefinementWidget(node: node),

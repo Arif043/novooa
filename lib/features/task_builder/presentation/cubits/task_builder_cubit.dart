@@ -11,6 +11,7 @@ part 'task_builder_branch_mutations.dart';
 part 'task_builder_graph_mutations.dart';
 part 'task_builder_iterative_refinement_mutations.dart';
 part 'task_builder_prompt_mutations.dart';
+part 'task_builder_string_input_mutations.dart';
 
 /// Zustandsverwaltung für den Aufgaben-Builder.
 ///

@@ -35,6 +35,25 @@ void main() {
     },
   );
 
+  test('ExecuteTaskDefinition gibt Texteingabe als Output weiter', () async {
+    const usecase = ExecuteTask(
+      LocalGenkitTaskRunnerRepository(MockLocalGenkitTaskClient()),
+    );
+
+    final taskExecutionOrFailure = await usecase(
+      ExecuteTaskParams(task: _stringInputTask()),
+    );
+
+    taskExecutionOrFailure.when((taskExecution) {
+      expect(taskExecution.finalOutput, 'Manueller Entwurf');
+      expect(
+        taskExecution.nodeResults.single.status,
+        NodeExecutionStatus.executed,
+      );
+      expect(taskExecution.nodeResults.single.output, 'Manueller Entwurf');
+    }, (failure) => fail(failure.message));
+  });
+
   test(
     'ExecuteTaskDefinition trackt Task- und Baustein-Aktivitaeten',
     () async {
@@ -83,6 +102,26 @@ Task _promptTask() {
             outputType: PromptOutputType.text,
             choices: [],
           ),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+Task _stringInputTask() {
+  return const Task(
+    id: 'task.input',
+    title: 'Lokaler Test',
+    objective: 'Genkit lokal testen',
+    selectedNodeId: NodeId('node.input'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.input'),
+          title: 'Texteingabe',
+          description: 'Beschreibung',
+          config: StringInputNodeConfig(value: 'Manueller Entwurf'),
         ),
       ],
       edges: [],

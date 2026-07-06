@@ -58,15 +58,6 @@ extension TaskBuilderBranchMutations on TaskBuilderCubit {
         node,
       );
     }
-    if (config is IterativeRefinementNodeConfig) {
-      return _addNodeToBranchInIterativeGraph(
-        owner,
-        config,
-        conditionalNodeId,
-        branchId,
-        node,
-      );
-    }
     return (node: owner, changed: false);
   }
 
@@ -110,26 +101,6 @@ extension TaskBuilderBranchMutations on TaskBuilderCubit {
     return (node: owner, changed: false);
   }
 
-  ({WorkflowNode node, bool changed}) _addNodeToBranchInIterativeGraph(
-    WorkflowNode owner,
-    IterativeRefinementNodeConfig config,
-    NodeId conditionalNodeId,
-    String branchId,
-    WorkflowNode node,
-  ) {
-    final update = _addNodeToBranchInGraph(
-      graph: config.graph,
-      conditionalNodeId: conditionalNodeId,
-      branchId: branchId,
-      node: node,
-    );
-    if (!update.changed) return (node: owner, changed: false);
-    return (
-      node: owner.copyWith(config: config.copyWith(graph: update.graph)),
-      changed: true,
-    );
-  }
-
   WorkflowNode _withBranches(
     WorkflowNode owner,
     ConditionalNodeConfig config,
@@ -152,9 +123,6 @@ extension TaskBuilderBranchMutations on TaskBuilderCubit {
         for (final branch in config.branches) {
           count += _nodeCount(branch.graph);
         }
-      }
-      if (node.config case final IterativeRefinementNodeConfig config) {
-        count += _nodeCount(config.graph);
       }
     }
     return count;

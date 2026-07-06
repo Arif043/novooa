@@ -86,6 +86,7 @@ class _ActivityText extends StatelessWidget {
 
   String _primitiveLabel(String? primitive) {
     return switch (primitive) {
+      'stringInput' => 'Texteingabe',
       'prompt' => 'Prompt',
       'conditionalFlow' => 'Bedingter Ablauf',
       'iterativeRefinement' => 'Iterative Verfeinerung',

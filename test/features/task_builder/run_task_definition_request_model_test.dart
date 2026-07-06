@@ -27,6 +27,22 @@ void main() {
     expect(task['edges'], isA<List<Object?>>());
   });
 
+  test('serialisiert Texteingabe fuer runTaskDefinitionFlow', () {
+    final json = RunTaskDefinitionRequestModel(
+      taskDefinition: _stringInputTask(),
+      context: '',
+    ).toJson();
+
+    final task = json['taskDefinition'] as Map<String, Object?>;
+    final nodes = task['nodes'] as List<Object?>;
+    final input = nodes.first as Map<String, Object?>;
+    final config = input['config'] as Map<String, Object?>;
+
+    expect(input['primitive'], 'stringInput');
+    expect(config['primitive'], 'stringInput');
+    expect(config['value'], 'Manueller Entwurf');
+  });
+
   test('serialisiert Verzweigungsfaelle fuer runTaskDefinitionFlow', () {
     final json = RunTaskDefinitionRequestModel(
       taskDefinition: _conditionalTask(),
@@ -50,7 +66,7 @@ void main() {
     expect(branchNodes, hasLength(2));
   });
 
-  test('serialisiert iterative Verfeinerung mit Prompt-Graph', () {
+  test('serialisiert iterative Verfeinerung ohne internen Graph', () {
     final json = RunTaskDefinitionRequestModel(
       taskDefinition: _iterativeRefinementTask(),
       context: 'Entwurf',
@@ -60,14 +76,12 @@ void main() {
     final nodes = task['nodes'] as List<Object?>;
     final refinement = nodes.first as Map<String, Object?>;
     final config = refinement['config'] as Map<String, Object?>;
-    final graph = config['graph'] as Map<String, Object?>;
-    final promptNodes = graph['nodes'] as List<Object?>;
 
     expect(refinement['primitive'], 'iterativeRefinement');
     expect(config['primitive'], 'iterativeRefinement');
     expect(config['critiquePrompt'], 'Pruefe auf Klarheit.');
     expect(config['maxIterations'], 3);
-    expect(promptNodes, hasLength(1));
+    expect(config.containsKey('graph'), isFalse);
   });
 }
 
@@ -91,6 +105,26 @@ Task _task() {
         ),
       ],
       edges: [WorkflowEdge(from: NodeId('node.1'), to: NodeId('node.1'))],
+    ),
+  );
+}
+
+Task _stringInputTask() {
+  return const Task(
+    id: 'task.input',
+    title: 'Task',
+    objective: 'Ziel',
+    selectedNodeId: NodeId('node.input'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.input'),
+          title: 'Texteingabe',
+          description: 'Beschreibung',
+          config: StringInputNodeConfig(value: 'Manueller Entwurf'),
+        ),
+      ],
+      edges: [],
     ),
   );
 }
@@ -176,17 +210,6 @@ Task _iterativeRefinementTask() {
           config: IterativeRefinementNodeConfig(
             critiquePrompt: 'Pruefe auf Klarheit.',
             maxIterations: 3,
-            graph: WorkflowGraph(
-              nodes: [
-                WorkflowNode(
-                  id: const NodeId('node.7'),
-                  title: 'Prompt',
-                  description: 'Beschreibung',
-                  config: PromptNodeConfig.initial(),
-                ),
-              ],
-              edges: const [],
-            ),
           ),
         ),
       ],

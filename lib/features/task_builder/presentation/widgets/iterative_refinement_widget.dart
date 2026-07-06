@@ -6,8 +6,6 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 
 class IterativeRefinementWidget extends StatefulWidget {
   const IterativeRefinementWidget({super.key, required this.node});
@@ -75,18 +73,14 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
             },
             onValueChanged: _updateMaxIterations,
           ),
-          const SizedBox(height: AppSpacing.lg),
-          _LoopBody(parentNodeId: widget.node.id, node: _innerPromptOrNull()),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Verfeinert die Ausgabe des vorherigen Bausteins.',
+            style: SyscatTheme.taskBodySmall,
+          ),
         ],
       ),
     );
-  }
-
-  WorkflowNode? _innerPromptOrNull() {
-    for (final node in _config.graph.nodes) {
-      if (node.config is PromptNodeConfig) return node;
-    }
-    return null;
   }
 
   void _syncController(TextEditingController controller, String text) {
@@ -109,27 +103,6 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
     context.read<TaskBuilderCubit>().updateIterativeMaxIterations(
       widget.node.id,
       value,
-    );
-  }
-}
-
-class _LoopBody extends StatelessWidget {
-  const _LoopBody({required this.parentNodeId, required this.node});
-
-  final NodeId parentNodeId;
-  final WorkflowNode? node;
-
-  @override
-  Widget build(BuildContext context) {
-    final promptNode = node;
-    if (promptNode != null) return PromptWidget(node: promptNode);
-    return NodePlaceholder(
-      allowedPrimitives: const {WorkflowPrimitive.prompt},
-      onAccept: (primitive) {
-        context.read<TaskBuilderCubit>().addPromptToIterativeRefinement(
-          parentNodeId,
-        );
-      },
     );
   }
 }

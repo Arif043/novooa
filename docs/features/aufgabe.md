@@ -72,6 +72,7 @@ features/task_builder/
 
 | Enum-Wert               | UI-Label (de)                | Beschreibung                                                 | Genkit-Mapping                                       |
 | ----------------------- | ---------------------------- | ------------------------------------------------------------- | ---------------------------------------------------- |
+| `stringInput`           | **Texteingabe**              | Gibt einen festen String als Output weiter                    | Direkter Runner-Output                               |
 | `prompt`                | **Prompt**                   | LLM-Aufruf mit Vorlage und Variablen                          | Interner `executePromptNode`                          |
 | `conditionalFlow`       | **Bedingter Ablauf**         | Verzweigt anhand eines Prädikats auf den vorherigen Output   | Interner `executeConditionalNode`                     |
 | `iterativeRefinement`   | **Iterative Verfeinerung**   | Draft → Critique → Improve, n Runden                          | Interner `executeIterativeRefinementNode`             |
@@ -240,10 +241,9 @@ bewertet pro Runde `{ critique, satisfied }`, und der Optimizer verbessert den
 Entwurf anhand des Feedbacks. Die Schleife endet, sobald `satisfied` wahr ist
 oder `maxIterations` erreicht wurde. Bei OpenAI-kompatiblen Providern wird ein
 Text-JSON-Fallback verwendet, falls strukturierte Evaluation nicht validiert.
-Im Builder umschließt der Node einen internen Prompt-Graph. Dieser Prompt
-erzeugt den Entwurf, der anschließend mit `critiquePrompt` und `maxIterations`
-verfeinert wird. Ist noch kein Prompt eingefügt, zeigt das Widget einen
-`NodePlaceholder`.
+Der Node besitzt keinen internen Prompt-Graph mehr. Der Runner verwendet die
+Ausgabe des vorherigen Nodes als `draft` und verfeinert diese mit
+`critiquePrompt` und `maxIterations`.
 
 ```ts
 input:  { objective: string; draft: string; critiquePrompt: string; maxIterations: 1..5 }

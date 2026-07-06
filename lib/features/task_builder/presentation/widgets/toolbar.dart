@@ -12,15 +12,32 @@ class Toolbar extends StatelessWidget {
       elevation: 5,
       borderRadius: .circular(999),
       child: Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: .circular(999)),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: .circular(999),
+        ),
         child: Row(
           mainAxisSize: .min,
           children: [
             Draggable<WorkflowPrimitive>(
+              data: WorkflowPrimitive.stringInput,
+              feedback: StringInputNodeDraggingDummy(),
+              child: IconButton(
+                onPressed: () => context
+                    .read<TaskBuilderCubit>()
+                    .addNodeToMainGraph(.stringInput),
+                icon: const Icon(Icons.text_fields),
+                tooltip: "Texteingabe hinzufügen",
+              ),
+            ),
+            const SizedBox(width: 4),
+            Draggable<WorkflowPrimitive>(
               data: WorkflowPrimitive.prompt,
               feedback: PromptNodeDraggingDummy(),
               child: IconButton(
-                onPressed: () => context.read<TaskBuilderCubit>().addNodeToMainGraph(.prompt),
+                onPressed: () => context
+                    .read<TaskBuilderCubit>()
+                    .addNodeToMainGraph(.prompt),
                 icon: const Icon(Icons.format_align_left),
                 tooltip: "Prompt hinzufügen",
               ),
@@ -30,20 +47,48 @@ class Toolbar extends StatelessWidget {
               data: WorkflowPrimitive.conditional,
               feedback: ConditionalNodeDraggingDummy(),
               child: IconButton(
-                onPressed: () => context.read<TaskBuilderCubit>().addNodeToMainGraph(.conditional),
+                onPressed: () => context
+                    .read<TaskBuilderCubit>()
+                    .addNodeToMainGraph(.conditional),
                 icon: const Icon(Icons.call_split),
                 tooltip: "Verzweigung hinzufügen",
               ),
             ),
             const SizedBox(width: 4),
-            IconButton(onPressed: () => context.read<TaskBuilderCubit>().addNodeToMainGraph(.iterativeRefinement), icon: const Icon(Icons.auto_awesome), tooltip: "Verfeinerung hinzufügen"),
+            IconButton(
+              onPressed: () => context
+                  .read<TaskBuilderCubit>()
+                  .addNodeToMainGraph(.iterativeRefinement),
+              icon: const Icon(Icons.auto_awesome),
+              tooltip: "Verfeinerung hinzufügen",
+            ),
             const SizedBox(width: 4),
-            IconButton(onPressed: () => {}, icon: const Icon(Icons.face), tooltip: "Menschliche Aktion hinzufügen"),
+            IconButton(
+              onPressed: () => {},
+              icon: const Icon(Icons.face),
+              tooltip: "Menschliche Aktion hinzufügen",
+            ),
             const SizedBox(width: 4),
-            IconButton(onPressed: () => {}, icon: const Icon(Icons.code), tooltip: "Menschliche Aktion hinzufügen"),
+            IconButton(
+              onPressed: () => {},
+              icon: const Icon(Icons.code),
+              tooltip: "Menschliche Aktion hinzufügen",
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class StringInputNodeDraggingDummy extends StatelessWidget {
+  const StringInputNodeDraggingDummy({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.green,
+      child: Center(child: Icon(Icons.text_fields)),
     );
   }
 }

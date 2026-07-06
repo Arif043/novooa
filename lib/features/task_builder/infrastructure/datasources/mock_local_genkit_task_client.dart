@@ -24,16 +24,24 @@ class MockLocalGenkitTaskClient implements LocalGenkitTaskClient {
   Map<String, Object?> _nodeResult(Object? rawNode) {
     final node = rawNode as Map<String, Object?>;
     final primitive = node['primitive'] as String;
-    final output = primitive == 'prompt'
-        ? _promptOutput(node)
-        : 'Mock: $primitive wurde übersprungen.';
+    final output = switch (primitive) {
+      'stringInput' => _stringInputOutput(node),
+      'prompt' => _promptOutput(node),
+      _ => 'Mock: $primitive wurde übersprungen.',
+    };
+    final executed = primitive == 'stringInput' || primitive == 'prompt';
     return {
       'nodeId': node['id'] as String,
       'primitive': primitive,
-      'status': primitive == 'prompt' ? 'executed' : 'skipped',
+      'status': executed ? 'executed' : 'skipped',
       'output': output,
-      'message': primitive == 'prompt' ? null : 'Lokaler Mock ohne Executor.',
+      'message': executed ? null : 'Lokaler Mock ohne Executor.',
     };
+  }
+
+  String _stringInputOutput(Map<String, Object?> node) {
+    final config = node['config'] as Map<String, Object?>?;
+    return config?['value'] as String? ?? '';
   }
 
   String _promptOutput(Map<String, Object?> node) {

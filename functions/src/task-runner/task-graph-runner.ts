@@ -181,6 +181,8 @@ async function executeNode(
   results: Map<string, NodeExecutionResult>,
 ): Promise<NodeExecutionResult> {
   switch (node.primitive) {
+    case "stringInput":
+      return executeStringInput(node);
     case "prompt":
       return executePrompt(ai, node, context);
     case "conditionalFlow":
@@ -193,10 +195,17 @@ async function executeNode(
         task.edges,
       );
     case "iterativeRefinement":
-      return executeRefinement(ai, node, context, task);
+      return executeRefinement(ai, node, context, task, results);
     default:
       return skippedNode(node, context);
   }
+}
+
+function executeStringInput(node: WorkflowNode): NodeExecutionResult {
+  const value = node.config.primitive === "stringInput"
+    ? node.config.value
+    : "";
+  return executedNode(node, value);
 }
 
 async function executePrompt(
@@ -315,9 +324,10 @@ async function executeRefinement(
   node: WorkflowNode,
   context: string,
   task: Task,
+  results: Map<string, NodeExecutionResult>,
 ): Promise<NodeExecutionResult> {
   const config = refinementConfigFor(node);
-  const draft = await refinementDraftFor(ai, node, context, task, config);
+  const draft = parentOutputFor(node, task, results) || context;
   const output = await executeIterativeRefinementNode(ai, {
     objective: task.objective,
     draft,
@@ -325,46 +335,6 @@ async function executeRefinement(
     maxIterations: config?.maxIterations ?? 2,
   });
   return executedNode(node, output.answer);
-}
-
-async function refinementDraftFor(
-  ai: Genkit,
-  node: WorkflowNode,
-  context: string,
-  task: Task,
-  config?: RefinementConfig,
-): Promise<string> {
-  if (!config || config.graph.nodes.length === 0) return context;
-  logReadableInfo([
-    `[Entwurf startet] ${node.title}`,
-    `Aufgabe: ${task.id}`,
-    `Bausteine: ${config.graph.nodes.length} | Kanten: ${config.graph.edges.length}`,
-  ].join("\n"));
-  const draftResults = await runNodes(ai, {
-    taskDefinition: refinementTaskFor(task, node, config),
-    context,
-  });
-  const draft = finalOutputOf(draftResults);
-  logReadableInfo([
-    `[Entwurf beendet] ${node.title}`,
-    `Bausteine ausgeführt: ${draftResults.length}`,
-    `Entwurf: ${draft.length} Zeichen`,
-  ].join("\n"));
-  return draft || context;
-}
-
-function refinementTaskFor(
-  task: Task,
-  node: WorkflowNode,
-  config: RefinementConfig,
-): Task {
-  return {
-    id: `${task.id}:${node.id}:refinement`,
-    title: `${task.title}:${node.title}`,
-    objective: task.objective,
-    nodes: config.graph.nodes as WorkflowNode[],
-    edges: config.graph.edges,
-  };
 }
 
 function promptInputFor(node: WorkflowNode, context: string) {

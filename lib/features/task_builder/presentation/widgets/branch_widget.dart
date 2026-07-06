@@ -9,6 +9,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/conditional_w
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/string_input_widget.dart';
 
 class BranchWidget extends StatelessWidget {
   final ConditionalBranch branch;
@@ -66,6 +67,7 @@ class BranchWidget extends StatelessWidget {
 
   Widget _branchNode(WorkflowNode node) {
     return switch (node.config.primitive) {
+      .stringInput => StringInputWidget(node: node),
       .prompt => PromptWidget(node: node),
       .conditional => ConditionalWidget(
         nodeConfig: node.config as ConditionalNodeConfig,
