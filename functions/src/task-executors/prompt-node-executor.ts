@@ -1,5 +1,10 @@
 import { z, type Genkit } from "genkit";
-import {textModel} from "../task-runner/ai-models.js";
+import {modelLogContext, textModel} from "../task-runner/ai-models.js";
+import {
+  formatModelCallFinished,
+  formatModelCallStarted,
+  logReadableInfo,
+} from "../task-runner/structured-logger.js";
 
 export type PromptNodeOutputType = "text" | "decision";
 
@@ -23,7 +28,18 @@ export async function executePromptNode(
   }
 
   const prompt = promptTurn(input);
+  const startedAt = Date.now();
+  logReadableInfo(formatModelCallStarted({
+    label: "Prompt / Text",
+    model: modelLogContext(),
+    prompt,
+  }));
   const response = await ai.generate({model: textModel(), prompt});
+  logReadableInfo(formatModelCallFinished({
+    label: "Prompt / Text",
+    durationMs: Date.now() - startedAt,
+    text: response.text,
+  }));
   return {answer: response.text};
 }
 
@@ -51,11 +67,25 @@ async function generateDecision(
   prompt: string,
   schema: z.ZodObject<{answer: z.ZodEnum<[string, ...string[]]>}>,
 ) {
-  return ai.generate({
+  const startedAt = Date.now();
+  logReadableInfo(formatModelCallStarted({
+    label: "Prompt / Entscheidung",
+    model: modelLogContext(),
+    prompt,
+    outputSchema: "answer: enum",
+  }));
+  const response = await ai.generate({
     model: textModel(),
     prompt,
     output: {schema},
   });
+  logReadableInfo(formatModelCallFinished({
+    label: "Prompt / Entscheidung",
+    durationMs: Date.now() - startedAt,
+    text: response.text,
+    output: response.output,
+  }));
+  return response;
 }
 
 function promptTurn(input: PromptNodeInput): string {

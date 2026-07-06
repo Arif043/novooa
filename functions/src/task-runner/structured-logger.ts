@@ -157,6 +157,36 @@ export function formatException(input: {
   ].filter(Boolean).join("\n");
 }
 
+export function formatModelCallStarted(input: {
+  label: string;
+  model: unknown;
+  prompt: string;
+  outputSchema?: string;
+}): string {
+  return [
+    `[Modelcall startet] ${input.label}`,
+    `Modell: ${formatInline(input.model)}`,
+    input.outputSchema ? `Schema: ${input.outputSchema}` : "",
+    "Eingabe:",
+    indent(input.prompt),
+  ].filter(Boolean).join("\n");
+}
+
+export function formatModelCallFinished(input: {
+  label: string;
+  durationMs: number;
+  text: string;
+  output?: unknown;
+}): string {
+  return [
+    `[Modelcall beendet] ${input.label}`,
+    `Dauer: ${formatDuration(input.durationMs)}`,
+    `Antwort: ${input.text.length} Zeichen`,
+    `Antwort-Vorschau: ${valueOrDash(preview(input.text))}`,
+    input.output === undefined ? "" : `Struktur: ${formatInline(input.output)}`,
+  ].filter(Boolean).join("\n");
+}
+
 export function errorDetails(error: unknown): unknown {
   if (error instanceof Error) {
     return {name: error.name, message: error.message, stack: error.stack};
@@ -173,6 +203,10 @@ function preview(text: string): string {
 
 function formatConfig(config: unknown): string {
   return JSON.stringify(config, null, 2);
+}
+
+function formatInline(value: unknown): string {
+  return JSON.stringify(value) ?? String(value);
 }
 
 function indent(text: string): string {

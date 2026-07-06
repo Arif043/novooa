@@ -1,10 +1,13 @@
 import {z, type Genkit} from "genkit";
-import {reasoningModel} from "../task-runner/ai-models.js";
+import {modelLogContext, reasoningModel} from "../task-runner/ai-models.js";
 import {
   errorDetails,
   formatException,
+  formatModelCallFinished,
+  formatModelCallStarted,
   logError,
   logReadableError,
+  logReadableInfo,
 } from "../task-runner/structured-logger.js";
 
 export type IterativeRefinementNodeInput = {
@@ -38,12 +41,17 @@ export async function executeIterativeRefinementNode(
   let answer = input.draft;
   let iterations = 0;
 
-  for (; iterations < maxIterations; iterations += 1) {
-    const evaluation = await evaluateDraft(ai, input, answer, iterations + 1);
+  logReadableInfo(formatRefinementStarted(input, maxIterations));
+  for (let nextIteration = 1; nextIteration <= maxIterations; nextIteration += 1) {
+    iterations = nextIteration;
+    const evaluation = await evaluateDraft(ai, input, answer, nextIteration);
+    logReadableInfo(formatEvaluation(nextIteration, evaluation));
     if (evaluation.satisfied) break;
     answer = await improveDraft(ai, input, answer, evaluation.critique);
+    logReadableInfo(formatImprovement(nextIteration, answer));
   }
 
+  logReadableInfo(formatRefinementFinished(iterations, answer));
   return {answer, iterations};
 }
 
@@ -78,11 +86,25 @@ async function structuredEvaluation(
   draft: string,
   iteration: number,
 ): Promise<Evaluation> {
+  const prompt = evaluationPrompt(input, draft);
+  const startedAt = Date.now();
+  logReadableInfo(formatModelCallStarted({
+    label: `Iterative Verfeinerung / Bewertung ${iteration}`,
+    model: modelLogContext(),
+    prompt,
+    outputSchema: "critique: string, satisfied: boolean",
+  }));
   const response = await ai.generate({
     model: reasoningModel(),
-    prompt: evaluationPrompt(input, draft),
+    prompt,
     output: {schema: evaluationSchema},
   });
+  logReadableInfo(formatModelCallFinished({
+    label: `Iterative Verfeinerung / Bewertung ${iteration}`,
+    durationMs: Date.now() - startedAt,
+    text: response.text,
+    output: response.output,
+  }));
   if (!response.output) throw new Error("Evaluation returned no output.");
   return response.output;
 }
@@ -93,10 +115,22 @@ async function textEvaluationFallback(
   draft: string,
   iteration: number,
 ): Promise<Evaluation> {
+  const prompt = `${evaluationPrompt(input, draft)}\n\nAntwort als JSON.`;
+  const startedAt = Date.now();
+  logReadableInfo(formatModelCallStarted({
+    label: `Iterative Verfeinerung / Bewertungs-Fallback ${iteration}`,
+    model: modelLogContext(),
+    prompt,
+  }));
   const response = await ai.generate({
     model: reasoningModel(),
-    prompt: `${evaluationPrompt(input, draft)}\n\nAntwort als JSON.`,
+    prompt,
   });
+  logReadableInfo(formatModelCallFinished({
+    label: `Iterative Verfeinerung / Bewertungs-Fallback ${iteration}`,
+    durationMs: Date.now() - startedAt,
+    text: response.text,
+  }));
   return parseEvaluation(response.text);
 }
 
@@ -106,11 +140,23 @@ async function improveDraft(
   draft: string,
   critique: string,
 ): Promise<string> {
+  const prompt = improvementPrompt(input, draft, critique);
+  const startedAt = Date.now();
+  logReadableInfo(formatModelCallStarted({
+    label: "Iterative Verfeinerung / Optimierung",
+    model: modelLogContext(),
+    prompt,
+  }));
   const response = await ai.generate({
     model: reasoningModel(),
-    prompt: improvementPrompt(input, draft, critique),
+    prompt,
     config: {temperature: 0.4},
   });
+  logReadableInfo(formatModelCallFinished({
+    label: "Iterative Verfeinerung / Optimierung",
+    durationMs: Date.now() - startedAt,
+    text: response.text,
+  }));
   return response.text;
 }
 
@@ -161,6 +207,50 @@ function optimizerInstruction(input: IterativeRefinementNodeInput): string {
   return prompt.length > 0
     ? `Optimierer-Prompt:\n${prompt}`
     : "Optimierer-Prompt: Verbessere den Entwurf gezielt und präzise.";
+}
+
+function formatRefinementStarted(
+  input: IterativeRefinementNodeInput,
+  maxIterations: number,
+): string {
+  return [
+    "[Iterative Verfeinerung startet]",
+    `Maximale Iterationen: ${maxIterations}`,
+    `Draft: ${input.draft.length} Zeichen`,
+    `Optimierer-Prompt: ${input.optimizerPrompt.length} Zeichen`,
+    `Kritik-Prompt: ${input.critiquePrompt.length} Zeichen`,
+  ].join("\n");
+}
+
+function formatEvaluation(iteration: number, evaluation: Evaluation): string {
+  return [
+    `[Iteration ${iteration}] Bewertung`,
+    `Erfüllt: ${evaluation.satisfied ? "ja" : "nein"}`,
+    `Kritik: ${preview(evaluation.critique)}`,
+  ].join("\n");
+}
+
+function formatImprovement(iteration: number, answer: string): string {
+  return [
+    `[Iteration ${iteration}] Optimierung`,
+    `Neuer Entwurf: ${answer.length} Zeichen`,
+    `Vorschau: ${preview(answer)}`,
+  ].join("\n");
+}
+
+function formatRefinementFinished(iterations: number, answer: string): string {
+  return [
+    "[Iterative Verfeinerung beendet]",
+    `Durchgeführte Iterationen: ${iterations}`,
+    `Finaler Entwurf: ${answer.length} Zeichen`,
+  ].join("\n");
+}
+
+function preview(text: string): string {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  return normalized.length > 160
+    ? `${normalized.slice(0, 157)}...`
+    : normalized;
 }
 
 function boundedIterations(value: number): number {
