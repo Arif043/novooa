@@ -1,6 +1,6 @@
 import '../../../../core/logging/syscat_log.dart';
 
-void logTaskClientException({
+void logTaskRunnerDatasourceException({
   required String message,
   required Object error,
   StackTrace? stackTrace,
@@ -13,8 +13,8 @@ void logTaskClientException({
   );
 }
 
-void logTaskClientInfo(String message) {
+void logTaskRunnerDatasourceInfo(String message) {
   logSyscatInfo(message, name: _loggerName);
 }
 
-const _loggerName = 'syscat.task_client';
+const _loggerName = 'syscat.task_runner_datasource';

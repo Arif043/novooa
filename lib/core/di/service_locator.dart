@@ -21,8 +21,8 @@ import '../../features/activity/presentation/cubits/activity_cubit.dart';
 import '../../features/task_builder/domain/repositories/task_repository.dart';
 import '../../features/task_builder/domain/repositories/task_runner_repository.dart';
 import '../../features/task_builder/domain/usecases/execute_task.dart';
-import '../../features/task_builder/infrastructure/datasources/firebase_functions_task_client.dart';
-import '../../features/task_builder/infrastructure/datasources/task_client.dart';
+import '../../features/task_builder/infrastructure/datasources/firebase_functions_task_runner_datasource.dart';
+import '../../features/task_builder/infrastructure/datasources/task_runner_datasource.dart';
 import '../../features/task_builder/infrastructure/repositories/in_memory_task_definition_repository.dart';
 import '../../features/task_builder/infrastructure/repositories/task_runner_repository_impl.dart';
 import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart';
@@ -53,9 +53,11 @@ void configureDependencies() {
     ..registerLazySingleton<TaskActivityRepository>(
       InMemoryTaskActivityRepository.new,
     )
-    ..registerLazySingleton<TaskClient>(FirebaseFunctionsTaskClient.new)
+    ..registerLazySingleton<TaskRunnerDatasource>(
+      FirebaseFunctionsTaskRunnerDatasource.new,
+    )
     ..registerLazySingleton<TaskRunnerRepository>(
-      () => TaskRunnerRepositoryImpl(serviceLocator<TaskClient>()),
+      () => TaskRunnerRepositoryImpl(serviceLocator<TaskRunnerDatasource>()),
     )
     ..registerLazySingleton(() => SignOut(serviceLocator<AuthRepository>()))
     ..registerLazySingleton(

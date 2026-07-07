@@ -1,24 +1,24 @@
-abstract interface class TaskClient {
+abstract interface class TaskRunnerDatasource {
   Future<Map<String, Object?>> runTaskDefinition(Map<String, Object?> request);
 }
 
-class TaskClientConnectionException implements Exception {
-  const TaskClientConnectionException({this.endpoint, this.cause});
+class TaskRunnerDatasourceConnectionException implements Exception {
+  const TaskRunnerDatasourceConnectionException({this.endpoint, this.cause});
 
   final String? endpoint;
   final Object? cause;
 
   @override
   String toString() {
-    return 'TaskClientConnectionException('
+    return 'TaskRunnerDatasourceConnectionException('
         'endpoint: $endpoint, '
         'cause: $cause'
         ')';
   }
 }
 
-class TaskClientTimeoutException implements Exception {
-  const TaskClientTimeoutException({
+class TaskRunnerDatasourceTimeoutException implements Exception {
+  const TaskRunnerDatasourceTimeoutException({
     required this.endpoint,
     required this.timeout,
     this.cause,
@@ -30,7 +30,7 @@ class TaskClientTimeoutException implements Exception {
 
   @override
   String toString() {
-    return 'TaskClientTimeoutException('
+    return 'TaskRunnerDatasourceTimeoutException('
         'endpoint: $endpoint, '
         'timeout: $timeout, '
         'cause: $cause'
@@ -38,8 +38,8 @@ class TaskClientTimeoutException implements Exception {
   }
 }
 
-class TaskClientExecutionException implements Exception {
-  const TaskClientExecutionException({
+class TaskRunnerDatasourceExecutionException implements Exception {
+  const TaskRunnerDatasourceExecutionException({
     this.endpoint,
     this.statusCode,
     this.responseBody,
@@ -53,7 +53,7 @@ class TaskClientExecutionException implements Exception {
 
   @override
   String toString() {
-    return 'TaskClientExecutionException('
+    return 'TaskRunnerDatasourceExecutionException('
         'endpoint: $endpoint, '
         'statusCode: $statusCode, '
         'responseBody: $responseBody, '

@@ -3,15 +3,15 @@ import '../../domain/entities/task.dart';
 import '../../domain/entities/task_execution_failure.dart';
 import '../../domain/entities/task_execution_result.dart';
 import '../../domain/repositories/task_runner_repository.dart';
-import '../datasources/task_client.dart';
-import '../datasources/task_client_log.dart';
+import '../datasources/task_runner_datasource.dart';
+import '../datasources/task_runner_datasource_log.dart';
 import '../models/run_task_definition_request_model.dart';
 import '../models/task_execution_result_model.dart';
 
 class TaskRunnerRepositoryImpl implements TaskRunnerRepository {
-  const TaskRunnerRepositoryImpl(this._client);
+  const TaskRunnerRepositoryImpl(this._datasource);
 
-  final TaskClient _client;
+  final TaskRunnerDatasource _datasource;
 
   @override
   Future<Result<TaskExecutionResult, TaskExecutionFailure>> execute({
@@ -21,13 +21,13 @@ class TaskRunnerRepositoryImpl implements TaskRunnerRepository {
     _logStart(task);
     try {
       return Success(await _executeTask(task: task, context: context));
-    } on TaskClientConnectionException catch (error, stackTrace) {
+    } on TaskRunnerDatasourceConnectionException catch (error, stackTrace) {
       _logException(error, stackTrace);
       return _failure(TaskExecutionFailureKind.localServerUnavailable);
-    } on TaskClientTimeoutException catch (error, stackTrace) {
+    } on TaskRunnerDatasourceTimeoutException catch (error, stackTrace) {
       _logException(error, stackTrace);
       return _failure(TaskExecutionFailureKind.localExecutionTimeout);
-    } on TaskClientExecutionException catch (error, stackTrace) {
+    } on TaskRunnerDatasourceExecutionException catch (error, stackTrace) {
       _logException(error, stackTrace);
       return _failure(TaskExecutionFailureKind.executionFailed);
     } on TypeError catch (error, stackTrace) {
@@ -43,13 +43,15 @@ class TaskRunnerRepositoryImpl implements TaskRunnerRepository {
     required Task task,
     required String context,
   }) async {
-    final response = await _client.runTaskDefinition(
+    final response = await _datasource.runTaskDefinition(
       RunTaskDefinitionRequestModel(
         taskDefinition: task,
         context: context,
       ).toJson(),
     );
-    logTaskClientInfo('Repository hat Task erfolgreich ausgeführt: ${task.id}');
+    logTaskRunnerDatasourceInfo(
+      'Repository hat Task erfolgreich ausgeführt: ${task.id}',
+    );
     return TaskExecutionResultModel.fromJson(response).toDomain();
   }
 
@@ -60,13 +62,13 @@ class TaskRunnerRepositoryImpl implements TaskRunnerRepository {
   }
 
   void _logStart(Task task) {
-    logTaskClientInfo(
+    logTaskRunnerDatasourceInfo(
       'Repository startet Task-Ausführung: ${task.title} (${task.id})',
     );
   }
 
   void _logException(Object error, StackTrace stackTrace) {
-    logTaskClientException(
+    logTaskRunnerDatasourceException(
       message: 'Task-Ausführung wurde als Fehler gemappt.',
       error: error,
       stackTrace: stackTrace,

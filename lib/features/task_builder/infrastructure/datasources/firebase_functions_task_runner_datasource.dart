@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-import 'task_client.dart';
-import 'task_client_log.dart';
+import 'task_runner_datasource.dart';
+import 'task_runner_datasource_log.dart';
 
-class FirebaseFunctionsTaskClient implements TaskClient {
-  FirebaseFunctionsTaskClient({
+class FirebaseFunctionsTaskRunnerDatasource implements TaskRunnerDatasource {
+  FirebaseFunctionsTaskRunnerDatasource({
     FirebaseFunctions? functions,
     this.timeout = const Duration(seconds: 180),
   }) : _functions =
@@ -22,7 +22,7 @@ class FirebaseFunctionsTaskClient implements TaskClient {
   Future<Map<String, Object?>> runTaskDefinition(
     Map<String, Object?> request,
   ) async {
-    logTaskClientInfo('Starte Callable Function: $_functionName');
+    logTaskRunnerDatasourceInfo('Starte Callable Function: $_functionName');
     try {
       final callable = _functions.httpsCallable(
         _functionName,
@@ -46,11 +46,11 @@ class FirebaseFunctionsTaskClient implements TaskClient {
   }
 
   Never _throwConnection(Object error, StackTrace stackTrace) {
-    final exception = TaskClientConnectionException(
+    final exception = TaskRunnerDatasourceConnectionException(
       endpoint: _functionName,
       cause: error,
     );
-    logTaskClientException(
+    logTaskRunnerDatasourceException(
       message: 'Firebase Function nicht erreichbar.',
       error: exception,
       stackTrace: stackTrace,
@@ -59,11 +59,11 @@ class FirebaseFunctionsTaskClient implements TaskClient {
   }
 
   Never _throwExecution(Object error, StackTrace stackTrace) {
-    final exception = TaskClientExecutionException(
+    final exception = TaskRunnerDatasourceExecutionException(
       endpoint: _functionName,
       cause: error,
     );
-    logTaskClientException(
+    logTaskRunnerDatasourceException(
       message: 'Firebase Function meldet einen Fehler.',
       error: exception,
       stackTrace: stackTrace,
@@ -72,12 +72,12 @@ class FirebaseFunctionsTaskClient implements TaskClient {
   }
 
   Never _throwTimeout(Object error, StackTrace stackTrace) {
-    final exception = TaskClientTimeoutException(
+    final exception = TaskRunnerDatasourceTimeoutException(
       endpoint: _functionName,
       timeout: timeout,
       cause: error,
     );
-    logTaskClientException(
+    logTaskRunnerDatasourceException(
       message: 'Firebase Function hat nicht rechtzeitig geantwortet.',
       error: exception,
       stackTrace: stackTrace,

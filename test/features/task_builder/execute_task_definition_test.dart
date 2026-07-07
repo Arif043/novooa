@@ -9,12 +9,14 @@ import 'package:syscat2/features/task_builder/domain/entities/task_execution_res
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart';
-import 'package:syscat2/features/task_builder/infrastructure/datasources/task_client.dart';
+import 'package:syscat2/features/task_builder/infrastructure/datasources/task_runner_datasource.dart';
 import 'package:syscat2/features/task_builder/infrastructure/repositories/task_runner_repository_impl.dart';
 
 void main() {
-  test('ExecuteTaskDefinition fuehrt Draft ueber Task-Client aus', () async {
-    const usecase = ExecuteTask(TaskRunnerRepositoryImpl(FakeTaskClient()));
+  test('ExecuteTaskDefinition fuehrt Draft ueber Datasource aus', () async {
+    const usecase = ExecuteTask(
+      TaskRunnerRepositoryImpl(FakeTaskRunnerDatasource()),
+    );
 
     final taskExecutionOrFailure = await usecase(
       ExecuteTaskParams(task: _promptTask(), context: 'Lokaler Testkontext'),
@@ -31,7 +33,9 @@ void main() {
   });
 
   test('ExecuteTaskDefinition gibt Texteingabe als Output weiter', () async {
-    const usecase = ExecuteTask(TaskRunnerRepositoryImpl(FakeTaskClient()));
+    const usecase = ExecuteTask(
+      TaskRunnerRepositoryImpl(FakeTaskRunnerDatasource()),
+    );
 
     final taskExecutionOrFailure = await usecase(
       ExecuteTaskParams(task: _stringInputTask()),
@@ -58,7 +62,7 @@ void main() {
         idFactory: () => UniqueId('activity.${nextId++}'),
       );
       final usecase = ExecuteTask(
-        const TaskRunnerRepositoryImpl(FakeTaskClient()),
+        const TaskRunnerRepositoryImpl(FakeTaskRunnerDatasource()),
         tracker: tracker,
       );
 
@@ -78,8 +82,8 @@ void main() {
   );
 }
 
-class FakeTaskClient implements TaskClient {
-  const FakeTaskClient();
+class FakeTaskRunnerDatasource implements TaskRunnerDatasource {
+  const FakeTaskRunnerDatasource();
 
   @override
   Future<Map<String, Object?>> runTaskDefinition(
