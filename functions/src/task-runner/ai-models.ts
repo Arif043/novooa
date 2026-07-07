@@ -1,9 +1,9 @@
-import {modelRef, type ModelArgument} from "genkit";
-import {googleAI} from "@genkit-ai/google-genai";
+import { modelRef, type ModelArgument } from "genkit";
+import { googleAI } from "@genkit-ai/google-genai";
 
 const minimaxProviderName = "minimax";
-const defaultGoogleTextModel = "gemini-2.5-flash-lite";
-const defaultGoogleReasoningModel = "gemini-2.5-flash";
+const defaultGoogleTextModel = "gemini-3.1-flash-lite";
+const defaultGoogleReasoningModel = "gemini-3.1-flash-lite";
 
 export function textModel(): ModelArgument {
   if (isMinimaxProvider()) return minimaxModel();
@@ -35,7 +35,7 @@ export function modelLogContext() {
 
 function minimaxModel(): ModelArgument {
   const modelName = requiredEnv("MINIMAX_MODEL");
-  return modelRef({name: `${minimaxProviderName}/${modelName}`});
+  return modelRef({ name: `${minimaxProviderName}/${modelName}` });
 }
 
 function requiredEnv(name: string): string {

@@ -1,5 +1,6 @@
 import {genkit} from "genkit";
 import {openAICompatible} from "@genkit-ai/compat-oai";
+import {onCallGenkit} from "firebase-functions/v2/https";
 import {executeTaskGraph} from "./task-runner/task-graph-runner.js";
 import {
   runTaskDefinitionInputSchema,
@@ -25,7 +26,7 @@ function requiredEnv(name: string): string {
   throw new Error(`${name} is required when AI_PROVIDER=minimax.`);
 }
 
-export const runTaskDefinitionFlow = ai.defineFlow(
+export const taskDefinitionFlow = ai.defineFlow(
   {
     name: "runTaskDefinitionFlow",
     inputSchema: runTaskDefinitionInputSchema,
@@ -44,3 +45,5 @@ export const runTaskDefinitionFlow = ai.defineFlow(
     }
   },
 );
+
+export const runTaskDefinitionFlow = onCallGenkit(taskDefinitionFlow);

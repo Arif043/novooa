@@ -21,7 +21,7 @@ import '../../features/activity/presentation/cubits/activity_cubit.dart';
 import '../../features/task_builder/domain/repositories/task_repository.dart';
 import '../../features/task_builder/domain/repositories/task_runner_repository.dart';
 import '../../features/task_builder/domain/usecases/execute_task.dart';
-import '../../features/task_builder/infrastructure/datasources/local_genkit_proxy_task_client.dart';
+import '../../features/task_builder/infrastructure/datasources/firebase_functions_task_client.dart';
 import '../../features/task_builder/infrastructure/datasources/local_genkit_task_client.dart';
 import '../../features/task_builder/infrastructure/repositories/in_memory_task_definition_repository.dart';
 import '../../features/task_builder/infrastructure/repositories/local_genkit_task_runner_repository.dart';
@@ -54,7 +54,7 @@ void configureDependencies() {
       InMemoryTaskActivityRepository.new,
     )
     ..registerLazySingleton<LocalGenkitTaskClient>(
-      LocalGenkitProxyTaskClient.new,
+      FirebaseFunctionsTaskClient.new,
     )
     ..registerLazySingleton<TaskRunnerRepository>(
       () => LocalGenkitTaskRunnerRepository(
