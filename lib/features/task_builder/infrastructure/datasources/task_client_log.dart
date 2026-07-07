@@ -1,6 +1,6 @@
 import '../../../../core/logging/syscat_log.dart';
 
-void logLocalGenkitException({
+void logTaskClientException({
   required String message,
   required Object error,
   StackTrace? stackTrace,
@@ -13,8 +13,8 @@ void logLocalGenkitException({
   );
 }
 
-void logLocalGenkitInfo(String message) {
+void logTaskClientInfo(String message) {
   logSyscatInfo(message, name: _loggerName);
 }
 
-const _loggerName = 'syscat.local_genkit';
+const _loggerName = 'syscat.task_client';

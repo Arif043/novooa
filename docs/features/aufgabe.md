@@ -200,20 +200,20 @@ Das Activity-Modell, Repository-Interface und die aktuelle
 `InMemoryTaskActivityRepository`-Implementierung gehören zum Feature
 „Aktivitäten". `task_builder` konsumiert nur den Tracking-Usecase.
 
-### Lokale Ausführung aus Flutter Web
+### Lokale Ausführung aus Flutter
 
-Flutter Web ruft nicht direkt die Genkit Reflection API auf, weil
-`http://127.0.0.1:3100/api/runAction` keine CORS-Preflight-Antwort liefert.
-Für lokale Tests läuft deshalb ein kleiner Proxy:
+Der Flutter-Client ruft `runTaskDefinitionFlow` als Firebase Callable Function
+auf. Für lokale Tests wird nur der Firebase Emulator gestartet; der Client wird
+per `USE_FIREBASE_EMULATORS` auf Auth, Firestore und Functions umgebogen:
 
 ```bash
-GEMINI_API_KEY=... npm --prefix functions run genkit:start
-npm --prefix functions run genkit:proxy
+npm --prefix functions run serve
+flutter run --dart-define=USE_FIREBASE_EMULATORS=true
 ```
 
-Der Flutter-Client sendet an
-`http://127.0.0.1:3400/runTaskDefinitionFlow`; der Proxy leitet intern an die
-Reflection API weiter.
+Die App verwendet damit dieselbe Callable-Function-Implementierung wie in
+Production. Es gibt keinen separaten lokalen Genkit-Reflection-Server oder
+CORS-Proxy mehr.
 
 ### Conditional-Executor
 

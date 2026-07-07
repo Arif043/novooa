@@ -2,20 +2,27 @@ abstract interface class TaskClient {
   Future<Map<String, Object?>> runTaskDefinition(Map<String, Object?> request);
 }
 
-class LocalGenkitConnectionException implements Exception {
-  const LocalGenkitConnectionException({this.endpoint, this.cause});
+class TaskClientConnectionException implements Exception {
+  const TaskClientConnectionException({this.endpoint, this.cause});
 
   final String? endpoint;
   final Object? cause;
 
   @override
   String toString() {
-    return 'LocalGenkitConnectionException(endpoint: $endpoint, cause: $cause)';
+    return 'TaskClientConnectionException('
+        'endpoint: $endpoint, '
+        'cause: $cause'
+        ')';
   }
 }
 
-class LocalGenkitTimeoutException implements Exception {
-  const LocalGenkitTimeoutException({required this.endpoint, required this.timeout, this.cause});
+class TaskClientTimeoutException implements Exception {
+  const TaskClientTimeoutException({
+    required this.endpoint,
+    required this.timeout,
+    this.cause,
+  });
 
   final String endpoint;
   final Duration timeout;
@@ -23,7 +30,7 @@ class LocalGenkitTimeoutException implements Exception {
 
   @override
   String toString() {
-    return 'LocalGenkitTimeoutException('
+    return 'TaskClientTimeoutException('
         'endpoint: $endpoint, '
         'timeout: $timeout, '
         'cause: $cause'
@@ -31,8 +38,13 @@ class LocalGenkitTimeoutException implements Exception {
   }
 }
 
-class LocalGenkitExecutionException implements Exception {
-  const LocalGenkitExecutionException({this.endpoint, this.statusCode, this.responseBody, this.cause});
+class TaskClientExecutionException implements Exception {
+  const TaskClientExecutionException({
+    this.endpoint,
+    this.statusCode,
+    this.responseBody,
+    this.cause,
+  });
 
   final String? endpoint;
   final int? statusCode;
@@ -41,7 +53,7 @@ class LocalGenkitExecutionException implements Exception {
 
   @override
   String toString() {
-    return 'LocalGenkitExecutionException('
+    return 'TaskClientExecutionException('
         'endpoint: $endpoint, '
         'statusCode: $statusCode, '
         'responseBody: $responseBody, '
