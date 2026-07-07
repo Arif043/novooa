@@ -1,4 +1,4 @@
-abstract interface class LocalGenkitTaskClient {
+abstract interface class TaskClient {
   Future<Map<String, Object?>> runTaskDefinition(Map<String, Object?> request);
 }
 
@@ -15,11 +15,7 @@ class LocalGenkitConnectionException implements Exception {
 }
 
 class LocalGenkitTimeoutException implements Exception {
-  const LocalGenkitTimeoutException({
-    required this.endpoint,
-    required this.timeout,
-    this.cause,
-  });
+  const LocalGenkitTimeoutException({required this.endpoint, required this.timeout, this.cause});
 
   final String endpoint;
   final Duration timeout;
@@ -36,12 +32,7 @@ class LocalGenkitTimeoutException implements Exception {
 }
 
 class LocalGenkitExecutionException implements Exception {
-  const LocalGenkitExecutionException({
-    this.endpoint,
-    this.statusCode,
-    this.responseBody,
-    this.cause,
-  });
+  const LocalGenkitExecutionException({this.endpoint, this.statusCode, this.responseBody, this.cause});
 
   final String? endpoint;
   final int? statusCode;

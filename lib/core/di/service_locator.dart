@@ -22,9 +22,9 @@ import '../../features/task_builder/domain/repositories/task_repository.dart';
 import '../../features/task_builder/domain/repositories/task_runner_repository.dart';
 import '../../features/task_builder/domain/usecases/execute_task.dart';
 import '../../features/task_builder/infrastructure/datasources/firebase_functions_task_client.dart';
-import '../../features/task_builder/infrastructure/datasources/local_genkit_task_client.dart';
+import '../../features/task_builder/infrastructure/datasources/task_client.dart';
 import '../../features/task_builder/infrastructure/repositories/in_memory_task_definition_repository.dart';
-import '../../features/task_builder/infrastructure/repositories/local_genkit_task_runner_repository.dart';
+import '../../features/task_builder/infrastructure/repositories/task_runner_repository_impl.dart';
 import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import '../../features/user/domain/repositories/user_repository.dart';
 import '../../features/user/domain/usecases/ensure_user_profile.dart';
@@ -38,65 +38,30 @@ void configureDependencies() {
   serviceLocator
     ..registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance)
     ..registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance)
-    ..registerLazySingleton<AuthRepository>(
-      () => FirebaseAuthRepository(serviceLocator<FirebaseAuth>()),
-    )
-    ..registerLazySingleton<UserRepository>(
-      () => FirestoreUserRepository(serviceLocator<FirebaseFirestore>()),
-    )
-    ..registerLazySingleton<SettingsRepository>(
-      () => FirestoreSettingsRepository(serviceLocator<FirebaseFirestore>()),
-    )
-    ..registerLazySingleton<TaskRepository>(
-      InMemoryTaskDefinitionRepository.new,
-    )
-    ..registerLazySingleton<TaskActivityRepository>(
-      InMemoryTaskActivityRepository.new,
-    )
-    ..registerLazySingleton<LocalGenkitTaskClient>(
-      FirebaseFunctionsTaskClient.new,
-    )
-    ..registerLazySingleton<TaskRunnerRepository>(
-      () => LocalGenkitTaskRunnerRepository(
-        serviceLocator<LocalGenkitTaskClient>(),
-      ),
-    )
+    ..registerLazySingleton<AuthRepository>(() => FirebaseAuthRepository(serviceLocator<FirebaseAuth>()))
+    ..registerLazySingleton<UserRepository>(() => FirestoreUserRepository(serviceLocator<FirebaseFirestore>()))
+    ..registerLazySingleton<SettingsRepository>(() => FirestoreSettingsRepository(serviceLocator<FirebaseFirestore>()))
+    ..registerLazySingleton<TaskRepository>(InMemoryTaskDefinitionRepository.new)
+    ..registerLazySingleton<TaskActivityRepository>(InMemoryTaskActivityRepository.new)
+    ..registerLazySingleton<TaskClient>(FirebaseFunctionsTaskClient.new)
+    ..registerLazySingleton<TaskRunnerRepository>(() => TaskRunnerRepository(serviceLocator<TaskClient>()))
     ..registerLazySingleton(() => SignOut(serviceLocator<AuthRepository>()))
-    ..registerLazySingleton(
-      () => SignUpWithEmailAndPassword(serviceLocator<AuthRepository>()),
-    )
-    ..registerLazySingleton(
-      () => SignInWithEmailAndPassword(serviceLocator<AuthRepository>()),
-    )
-    ..registerLazySingleton(
-      () => EnsureUserProfile(serviceLocator<UserRepository>()),
-    )
-    ..registerLazySingleton(
-      () => GetUserProfile(serviceLocator<UserRepository>()),
-    )
+    ..registerLazySingleton(() => SignUpWithEmailAndPassword(serviceLocator<AuthRepository>()))
+    ..registerLazySingleton(() => SignInWithEmailAndPassword(serviceLocator<AuthRepository>()))
+    ..registerLazySingleton(() => EnsureUserProfile(serviceLocator<UserRepository>()))
+    ..registerLazySingleton(() => GetUserProfile(serviceLocator<UserRepository>()))
     ..registerLazySingleton(
       () => GetCurrentUserProfile(
         authRepository: serviceLocator<AuthRepository>(),
         userRepository: serviceLocator<UserRepository>(),
       ),
     )
+    ..registerLazySingleton(() => GetAiModelSettings(serviceLocator<SettingsRepository>()))
+    ..registerLazySingleton(() => SaveAiProviderSettings(serviceLocator<SettingsRepository>()))
+    ..registerLazySingleton(() => TrackTaskExecution(serviceLocator<TaskActivityRepository>()))
+    ..registerLazySingleton(() => ListTaskActivities(serviceLocator<TaskActivityRepository>()))
     ..registerLazySingleton(
-      () => GetAiModelSettings(serviceLocator<SettingsRepository>()),
-    )
-    ..registerLazySingleton(
-      () => SaveAiProviderSettings(serviceLocator<SettingsRepository>()),
-    )
-    ..registerLazySingleton(
-      () => TrackTaskExecution(serviceLocator<TaskActivityRepository>()),
-    )
-    ..registerLazySingleton(
-      () => ListTaskActivities(serviceLocator<TaskActivityRepository>()),
-    )
-    ..registerLazySingleton(
-      () => ExecuteTask(
-        serviceLocator<TaskRunnerRepository>(),
-        tracker: serviceLocator<TrackTaskExecution>(),
-      ),
+      () => ExecuteTask(serviceLocator<TaskRunnerRepository>(), tracker: serviceLocator<TrackTaskExecution>()),
     )
     ..registerFactory(
       () => AuthCubit(
@@ -114,14 +79,8 @@ void configureDependencies() {
         saveAiProviderSettings: serviceLocator<SaveAiProviderSettings>(),
       ),
     )
-    ..registerFactory(
-      () => TaskBuilderCubit(repository: serviceLocator<TaskRepository>()),
-    )
-    ..registerFactory(
-      () => ActivityCubit(
-        listTaskActivities: serviceLocator<ListTaskActivities>(),
-      ),
-    )
+    ..registerFactory(() => TaskBuilderCubit(repository: serviceLocator<TaskRepository>()))
+    ..registerFactory(() => ActivityCubit(listTaskActivities: serviceLocator<ListTaskActivities>()))
     ..registerLazySingleton(
       () => AppRouter(authRepository: serviceLocator<AuthRepository>()),
       dispose: (router) => router.dispose(),

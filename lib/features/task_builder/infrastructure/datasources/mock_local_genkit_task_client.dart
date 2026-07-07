@@ -1,24 +1,16 @@
-import 'local_genkit_task_client.dart';
+import 'task_client.dart';
 
-class MockLocalGenkitTaskClient implements LocalGenkitTaskClient {
-  const MockLocalGenkitTaskClient({
-    this.endpoint = 'http://127.0.0.1:3400/runTaskDefinitionFlow',
-  });
+class MockLocalGenkitTaskClient implements TaskClient {
+  const MockLocalGenkitTaskClient({this.endpoint = 'http://127.0.0.1:3400/runTaskDefinitionFlow'});
 
   final String endpoint;
 
   @override
-  Future<Map<String, Object?>> runTaskDefinition(
-    Map<String, Object?> request,
-  ) async {
+  Future<Map<String, Object?>> runTaskDefinition(Map<String, Object?> request) async {
     final task = request['taskDefinition'] as Map<String, Object?>;
     final nodes = task['nodes'] as List<Object?>;
     final nodeResults = nodes.map(_nodeResult).toList(growable: false);
-    return {
-      'taskId': task['id'] as String,
-      'finalOutput': _finalOutput(nodeResults),
-      'nodeResults': nodeResults,
-    };
+    return {'taskId': task['id'] as String, 'finalOutput': _finalOutput(nodeResults), 'nodeResults': nodeResults};
   }
 
   Map<String, Object?> _nodeResult(Object? rawNode) {

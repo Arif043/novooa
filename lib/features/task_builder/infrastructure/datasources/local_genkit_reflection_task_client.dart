@@ -2,14 +2,11 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import 'local_genkit_task_client.dart';
+import 'task_client.dart';
 
-class LocalGenkitReflectionTaskClient implements LocalGenkitTaskClient {
+class LocalGenkitReflectionTaskClient implements TaskClient {
   const LocalGenkitReflectionTaskClient({
-    this.endpoints = const [
-      'http://127.0.0.1:3100/api/runAction',
-      'http://127.0.0.1:3101/api/runAction',
-    ],
+    this.endpoints = const ['http://127.0.0.1:3100/api/runAction', 'http://127.0.0.1:3101/api/runAction'],
     this.actionKey = '/flow/runTaskDefinitionFlow',
   });
 
@@ -17,9 +14,7 @@ class LocalGenkitReflectionTaskClient implements LocalGenkitTaskClient {
   final String actionKey;
 
   @override
-  Future<Map<String, Object?>> runTaskDefinition(
-    Map<String, Object?> request,
-  ) async {
+  Future<Map<String, Object?>> runTaskDefinition(Map<String, Object?> request) async {
     for (final endpoint in endpoints) {
       final response = await _tryRun(endpoint, request);
       if (response != null) return response;
@@ -27,10 +22,7 @@ class LocalGenkitReflectionTaskClient implements LocalGenkitTaskClient {
     throw const LocalGenkitConnectionException();
   }
 
-  Future<Map<String, Object?>?> _tryRun(
-    String endpoint,
-    Map<String, Object?> request,
-  ) async {
+  Future<Map<String, Object?>?> _tryRun(String endpoint, Map<String, Object?> request) async {
     try {
       final response = await http.post(
         Uri.parse(endpoint),
