@@ -1,11 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 
 class FirebaseEmulatorConfig {
   const FirebaseEmulatorConfig({
     this.authPort = 9099,
     this.firestorePort = 8080,
+    this.functionsPort = 5001,
   });
 
   static const enabled = bool.fromEnvironment('USE_FIREBASE_EMULATORS');
@@ -16,11 +18,15 @@ class FirebaseEmulatorConfig {
 
   final int authPort;
   final int firestorePort;
+  final int functionsPort;
 
   Future<void> connect() async {
     final host = configuredHost.isEmpty ? _defaultHost : configuredHost;
     await FirebaseAuth.instance.useAuthEmulator(host, authPort);
     FirebaseFirestore.instance.useFirestoreEmulator(host, firestorePort);
+    FirebaseFunctions.instanceFor(
+      region: 'us-central1',
+    ).useFunctionsEmulator(host, functionsPort);
   }
 
   String get _defaultHost {

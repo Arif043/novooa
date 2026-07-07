@@ -1,94 +1,57 @@
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'local_genkit_log.dart';
 import 'local_genkit_task_client.dart';
 
 class FirebaseFunctionsTaskClient implements LocalGenkitTaskClient {
   FirebaseFunctionsTaskClient({
-    String? endpoint,
+    FirebaseFunctions? functions,
     this.timeout = const Duration(seconds: 180),
-  }) : endpoint = endpoint ?? _defaultEndpoint;
+  }) : _functions =
+           functions ?? FirebaseFunctions.instanceFor(region: 'us-central1');
 
-  static const _projectId = 'syscat-90bff';
-  static const _region = 'us-central1';
   static const _functionName = 'runTaskDefinitionFlow';
-  static const _port = 5001;
-  static const _configuredHost = String.fromEnvironment(
-    'FIREBASE_EMULATOR_HOST',
-  );
 
-  final String endpoint;
+  final FirebaseFunctions _functions;
   final Duration timeout;
-
-  static String get _defaultEndpoint {
-    return 'http://$_host:$_port/$_projectId/$_region/$_functionName';
-  }
-
-  static String get _host {
-    if (_configuredHost.isNotEmpty) return _configuredHost;
-    if (kIsWeb) return '127.0.0.1';
-    return defaultTargetPlatform == TargetPlatform.android
-        ? '10.0.2.2'
-        : '127.0.0.1';
-  }
 
   @override
   Future<Map<String, Object?>> runTaskDefinition(
     Map<String, Object?> request,
   ) async {
-    logLocalGenkitInfo('Starte Firebase Functions Emulator: $endpoint');
+    logLocalGenkitInfo('Starte Callable Function: $_functionName');
     try {
-      final response = await http
-          .post(
-            Uri.parse(endpoint),
-            headers: {'content-type': 'application/json'},
-            body: jsonEncode({'data': request}),
-          )
+      final callable = _functions.httpsCallable(
+        _functionName,
+        options: HttpsCallableOptions(timeout: timeout),
+      );
+      final response = await callable
+          .call<Map<dynamic, dynamic>>(request)
           .timeout(timeout);
-      return _resultFrom(response);
+      return _resultFrom(response.data);
     } on TimeoutException catch (error, stackTrace) {
       _throwTimeout(error, stackTrace);
-    } on http.ClientException catch (error, stackTrace) {
-      _throwConnection(error, stackTrace);
-    } on FormatException catch (error, stackTrace) {
+    } on FirebaseFunctionsException catch (error, stackTrace) {
       _throwExecution(error, stackTrace);
+    } on FirebaseException catch (error, stackTrace) {
+      _throwConnection(error, stackTrace);
     }
   }
 
-  Map<String, Object?> _resultFrom(http.Response response) {
-    final json = jsonDecode(response.body);
-    if (json is! Map<String, dynamic>) {
-      throw const LocalGenkitExecutionException();
-    }
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw LocalGenkitExecutionException(
-        endpoint: endpoint,
-        statusCode: response.statusCode,
-        responseBody: response.body,
-      );
-    }
-    final result = json['result'];
-    if (result is! Map<String, dynamic>) {
-      throw LocalGenkitExecutionException(
-        endpoint: endpoint,
-        statusCode: response.statusCode,
-        responseBody: response.body,
-      );
-    }
-    return result.cast<String, Object?>();
+  Map<String, Object?> _resultFrom(Map<dynamic, dynamic> json) {
+    return json.cast<String, Object?>();
   }
 
   Never _throwConnection(Object error, StackTrace stackTrace) {
     final exception = LocalGenkitConnectionException(
-      endpoint: endpoint,
+      endpoint: _functionName,
       cause: error,
     );
     logLocalGenkitException(
-      message: 'Firebase Functions Emulator nicht erreichbar.',
+      message: 'Firebase Function nicht erreichbar.',
       error: exception,
       stackTrace: stackTrace,
     );
@@ -97,11 +60,11 @@ class FirebaseFunctionsTaskClient implements LocalGenkitTaskClient {
 
   Never _throwExecution(Object error, StackTrace stackTrace) {
     final exception = LocalGenkitExecutionException(
-      endpoint: endpoint,
+      endpoint: _functionName,
       cause: error,
     );
     logLocalGenkitException(
-      message: 'Firebase Functions Emulator meldet einen Fehler.',
+      message: 'Firebase Function meldet einen Fehler.',
       error: exception,
       stackTrace: stackTrace,
     );
@@ -110,12 +73,12 @@ class FirebaseFunctionsTaskClient implements LocalGenkitTaskClient {
 
   Never _throwTimeout(Object error, StackTrace stackTrace) {
     final exception = LocalGenkitTimeoutException(
-      endpoint: endpoint,
+      endpoint: _functionName,
       timeout: timeout,
       cause: error,
     );
     logLocalGenkitException(
-      message: 'Firebase Functions Emulator hat nicht rechtzeitig geantwortet.',
+      message: 'Firebase Function hat nicht rechtzeitig geantwortet.',
       error: exception,
       stackTrace: stackTrace,
     );
