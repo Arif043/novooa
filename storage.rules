@@ -1,0 +1,31 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isTeamMember(teamId) {
+      return isAuthenticated() &&
+        firestore.exists(
+          /databases/(default)/documents/teams/$(teamId)/members/$(request.auth.uid)
+        );
+    }
+
+    function isValidUpload() {
+      return request.resource != null &&
+        request.resource.size > 0 &&
+        request.resource.size <= 50 * 1024 * 1024;
+    }
+
+    match /teams/{teamId}/files/{fileId}/versions/{versionId}/{fileName} {
+      allow read: if isTeamMember(teamId);
+      allow create: if isTeamMember(teamId) && isValidUpload();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -28,6 +28,32 @@ rules_version = '2';
 //   - apiKey: string (required, 8-4096) - write-only client secret
 //   - updatedAt: timestamp (required) - last secret sync time
 //
+// Collection: teams
+// Document ID: team id, personal teams use personal_<uid>
+// Fields:
+//   - ownerUid: string (required) - creator/owner uid
+//   - name: string (required, 2-120)
+//   - updatedAt: timestamp (required)
+//
+// Subcollection: teams/{teamId}/members
+// Document ID: Firebase Auth UID
+// Fields:
+//   - uid: string (required) - must equal member document ID
+//   - role: string (required) - owner | admin | member
+//   - joinedAt: timestamp (required)
+//
+// Subcollection: teams/{teamId}/files
+// Document ID: generated file id
+// Fields:
+//   - teamId, ownerUid, displayName, storagePath, currentVersionId
+//   - contentType, sizeBytes, createdAt, updatedAt
+//
+// Subcollection: teams/{teamId}/files/{fileId}/versions
+// Document ID: generated version id
+// Fields:
+//   - id, fileId, createdByUid, displayName, storagePath
+//   - contentType, sizeBytes, createdAt
+//
 // ===============================================================
 
 service cloud.firestore {
@@ -38,6 +64,19 @@ service cloud.firestore {
 
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function personalTeamId() {
+      return 'personal_' + request.auth.uid;
+    }
+
+    function isPersonalTeam(teamId) {
+      return isAuthenticated() && teamId == personalTeamId();
+    }
+
+    function isTeamMember(teamId) {
+      return isPersonalTeam(teamId) ||
+        exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid));
     }
 
     function hasOnlyAllowedUserFields(data) {
@@ -142,6 +181,76 @@ service cloud.firestore {
         data.updatedAt is timestamp;
     }
 
+    function isValidTeam(data, teamId) {
+      return data.keys().hasOnly(['ownerUid', 'name', 'updatedAt']) &&
+        data.ownerUid == request.auth.uid &&
+        data.name is string &&
+        data.name.size() >= 2 &&
+        data.name.size() <= 120 &&
+        data.updatedAt == request.time &&
+        isPersonalTeam(teamId);
+    }
+
+    function isValidTeamMember(data, memberId) {
+      return data.keys().hasOnly(['uid', 'role', 'joinedAt']) &&
+        data.uid == memberId &&
+        data.uid == request.auth.uid &&
+        data.role in ['owner', 'admin', 'member'] &&
+        data.joinedAt == request.time;
+    }
+
+    function isValidFile(data, teamId) {
+      return data.keys().hasOnly([
+        'teamId',
+        'ownerUid',
+        'displayName',
+        'storagePath',
+        'currentVersionId',
+        'contentType',
+        'sizeBytes',
+        'createdAt',
+        'updatedAt',
+      ]) &&
+        data.teamId == teamId &&
+        data.ownerUid == request.auth.uid &&
+        hasValidUploadedFileFields(data) &&
+        data.currentVersionId is string &&
+        data.currentVersionId.size() > 0 &&
+        data.createdAt == request.time &&
+        data.updatedAt == request.time;
+    }
+
+    function hasValidUploadedFileFields(data) {
+      return data.displayName is string &&
+        data.displayName.size() >= 1 &&
+        data.displayName.size() <= 240 &&
+        data.storagePath is string &&
+        data.storagePath.matches('^teams/[^/]+/files/[^/]+/versions/[^/]+/.+$') &&
+        data.contentType is string &&
+        data.sizeBytes is int &&
+        data.sizeBytes > 0 &&
+        data.sizeBytes <= 52428800;
+    }
+
+    function isValidFileVersion(data, fileId) {
+      return data.keys().hasOnly([
+        'id',
+        'fileId',
+        'createdByUid',
+        'displayName',
+        'storagePath',
+        'contentType',
+        'sizeBytes',
+        'createdAt',
+      ]) &&
+        data.fileId == fileId &&
+        data.createdByUid == request.auth.uid &&
+        data.id is string &&
+        data.id.size() > 0 &&
+        hasValidUploadedFileFields(data) &&
+        data.createdAt == request.time;
+    }
+
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
@@ -180,6 +289,34 @@ service cloud.firestore {
           request.resource.data.updatedAt == request.time;
 
         allow delete: if false;
+      }
+    }
+
+    match /teams/{teamId} {
+      allow get, list: if isTeamMember(teamId);
+      allow create, update: if isValidTeam(request.resource.data, teamId);
+      allow delete: if false;
+
+      match /members/{memberId} {
+        allow get, list: if isTeamMember(teamId);
+        allow create, update: if isPersonalTeam(teamId) &&
+          isValidTeamMember(request.resource.data, memberId);
+        allow delete: if false;
+      }
+
+      match /files/{fileId} {
+        allow get, list: if isTeamMember(teamId);
+        allow create: if isTeamMember(teamId) &&
+          isValidFile(request.resource.data, teamId);
+        allow update, delete: if false;
+
+        match /versions/{versionId} {
+          allow get, list: if isTeamMember(teamId);
+          allow create: if isTeamMember(teamId) &&
+            request.resource.data.id == versionId &&
+            isValidFileVersion(request.resource.data, fileId);
+          allow update, delete: if false;
+        }
       }
     }
 

@@ -3,7 +3,7 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "serve": "npm run build && npx -y firebase-tools@latest emulators:start --only functions,firestore,auth",
+    "serve": "npm run build && npx -y firebase-tools@latest emulators:start",
     "shell": "npm run build && npx -y firebase-tools@latest functions:shell",
     "start": "npm run shell",
     "deploy": "npx -y firebase-tools@latest deploy --only functions",

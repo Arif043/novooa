@@ -1,6 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:syscat2/features/files/domain/repositories/team_file_repository.dart';
+import 'package:syscat2/features/files/domain/usecases/upload_team_file.dart';
+import 'package:syscat2/features/files/domain/usecases/watch_team_files.dart';
+import 'package:syscat2/features/files/infrastructure/repositories/firebase_team_file_repository.dart';
+import 'package:syscat2/features/files/presentation/cubits/files_cubit.dart';
 import 'package:syscat2/features/user/domain/usecases/get_current_user_profile.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/sign_in_with_email_and_password.dart';
@@ -38,6 +44,7 @@ void configureDependencies() {
   serviceLocator
     ..registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance)
     ..registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance)
+    ..registerLazySingleton<FirebaseStorage>(() => FirebaseStorage.instance)
     ..registerLazySingleton<AuthRepository>(
       () => FirebaseAuthRepository(serviceLocator<FirebaseAuth>()),
     )
@@ -46,6 +53,12 @@ void configureDependencies() {
     )
     ..registerLazySingleton<SettingsRepository>(
       () => FirestoreSettingsRepository(serviceLocator<FirebaseFirestore>()),
+    )
+    ..registerLazySingleton<TeamFileRepository>(
+      () => FirebaseTeamFileRepository(
+        serviceLocator<FirebaseFirestore>(),
+        serviceLocator<FirebaseStorage>(),
+      ),
     )
     ..registerLazySingleton<TaskRepository>(
       InMemoryTaskDefinitionRepository.new,
@@ -91,6 +104,12 @@ void configureDependencies() {
       () => ListTaskActivities(serviceLocator<TaskActivityRepository>()),
     )
     ..registerLazySingleton(
+      () => WatchTeamFiles(serviceLocator<TeamFileRepository>()),
+    )
+    ..registerLazySingleton(
+      () => UploadTeamFile(serviceLocator<TeamFileRepository>()),
+    )
+    ..registerLazySingleton(
       () => ExecuteTask(
         serviceLocator<TaskRunnerRepository>(),
         tracker: serviceLocator<TrackTaskExecution>(),
@@ -118,6 +137,13 @@ void configureDependencies() {
     ..registerFactory(
       () => ActivityCubit(
         listTaskActivities: serviceLocator<ListTaskActivities>(),
+      ),
+    )
+    ..registerFactory(
+      () => FilesCubit(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<WatchTeamFiles>(),
+        serviceLocator<UploadTeamFile>(),
       ),
     )
     ..registerLazySingleton(

@@ -5,6 +5,7 @@ import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
 import 'package:syscat2/features/activity/presentation/pages/activity_page.dart';
+import 'package:syscat2/features/files/presentation/pages/files_page.dart';
 import 'package:syscat2/features/settings/presentation/pages/settings_page.dart';
 import 'package:syscat2/features/task_builder/presentation/pages/task_builder_page.dart';
 import 'package:syscat2/features/task_builder/presentation/pages/task_homepage.dart';
@@ -16,6 +17,7 @@ class AppRouter {
   static const String plans = '/plans';
   static const String schedule = '/schedule';
   static const String activity = '/activity';
+  static const String files = '/files';
   static const String settings = '/settings';
 
   AppRouter({required AuthRepository authRepository})
@@ -67,6 +69,7 @@ class AppRouter {
             path: activity,
             builder: (context, state) => const ActivityPage(),
           ),
+          GoRoute(path: files, builder: (context, state) => const FilesPage()),
           GoRoute(
             path: settings,
             builder: (context, state) => const SettingsPage(),

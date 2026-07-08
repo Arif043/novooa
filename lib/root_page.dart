@@ -34,6 +34,11 @@ class _RootPageState extends State<RootPage> {
       path: '/activity',
     ),
     RootTab(
+      title: 'Dateien',
+      icon: Icons.cloud_upload_outlined,
+      path: '/files',
+    ),
+    RootTab(
       title: 'Einstellungen',
       icon: Icons.settings_outlined,
       path: '/settings',
