@@ -18,7 +18,6 @@ class RootPage extends StatefulWidget {
 }
 
 class _RootPageState extends State<RootPage> {
-  final bool _isRunningTask = false;
 
   static final List<RootTab> _tabs = [
     RootTab(title: 'Aufgaben', icon: Icons.dashboard_outlined, path: '/tasks'),
@@ -64,7 +63,7 @@ class _RootPageState extends State<RootPage> {
     return SyscatBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: RootAppBar(title: selectedTab.title, actions: _actions),
+        appBar: RootAppBar(title: selectedTab.title, ),
         drawer: RootDrawer(
           tabs: _tabs,
           selectedIndex: selectedTabIndex,
@@ -73,24 +72,6 @@ class _RootPageState extends State<RootPage> {
         body: RootStage(child: widget.child),
       ),
     );
-  }
-
-  List<Widget>? get _actions {
-    if (_selectedTabIndex != 0) return null;
-    return [
-      Padding(
-        padding: const EdgeInsets.only(right: 12),
-        child: FilledButton(
-          onPressed: _isRunningTask ? null : _runTask,
-          child: _isRunningTask
-              ? const SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Run Task'),
-        ),
-      ),
-    ];
   }
 
   int get _selectedTabIndex {

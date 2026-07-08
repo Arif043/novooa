@@ -10,7 +10,7 @@ class TaskHomepage extends StatelessWidget {
       children: [
         FilledButton(onPressed: () {
           context.go('/tasks/builder');
-        }, child: const Text('Neue Aufgabe'), style: FilledButton.styleFrom(elevation: 5)),
+        }, child: const Text('Neue Aufgabe')),
       ],
     );
   }
