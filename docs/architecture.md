@@ -93,8 +93,8 @@ Feature startet.
 | `runTaskDefinitionFlow`       | `functions/src/task-workflows.ts` | Produktiv (Feature Aufgabe)     |
 | `menuSuggestionFlow`          | `functions/src/genkit-sample.ts` | Vorlage — nicht produktiv       |
 
-Feature-spezifische Detailtiefe (Inputs, Outputs, Temperatur) in
-[`features/aufgabe.md`](./features/aufgabe.md#genkit-flows-aufgabenspezifisch).
+Feature-spezifische Detailtiefe (Inputs, Outputs, Executor-Registry) in
+[`features/aufgabe.md`](./features/aufgabe.md#genkit-ausführung-aufgabenspezifisch).
 
 ### Neue Genkit-Tools
 

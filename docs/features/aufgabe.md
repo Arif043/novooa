@@ -124,7 +124,10 @@ synchron ergänzt werden — die `WorkflowPrimitiveLabels`-Extension in
 
 Datei: `functions/src/task-workflows.ts`. Nur `runTaskDefinitionFlow` wird in
 `functions/src/index.ts` re-exportiert. Einzelne Bausteine werden über interne
-Executor unter `functions/src/task-executors/` ausgeführt.
+Executor unter `functions/src/task-executors/` ausgeführt. Der Graph-Runner
+kennt keine primitive-spezifische `switch`-Logik mehr, sondern delegiert über
+`functions/src/task-runner/node-executor-registry.ts` an `NodeExecutor`-
+Strategien.
 
 ### Model-Provider
 
@@ -161,9 +164,9 @@ Temperatur: `0.3`. Streamt nicht.
 ### `runTaskDefinitionFlow`
 
 Führt eine komplette `TaskDefinition` aus. Der Flow interpretiert den Graph,
-ermittelt ausführbare Knoten topologisch und delegiert an interne Executor.
-Noch nicht implementierte Bausteine werden als `skipped` markiert und reichen
-den bisherigen Kontext weiter.
+ermittelt ausführbare Knoten topologisch und delegiert an den registrierten
+`NodeExecutor` des jeweiligen Primitives. Noch nicht implementierte Bausteine
+werden als `skipped` markiert und reichen den bisherigen Kontext weiter.
 
 ```ts
 input:  { taskDefinition: TaskDefinition; context?: string }
@@ -185,6 +188,29 @@ wird über `config.primitive` bestimmt. Für Prompt-Bausteine:
   secondChoice: string
 }
 ```
+
+### Node-Executor-Registry
+
+Dateien:
+
+- `functions/src/task-runner/node-executor.ts`
+- `functions/src/task-runner/node-executor-registry.ts`
+- `functions/src/task-executors/*-node-executor.ts`
+
+Jeder ausführbare Baustein implementiert die `NodeExecutor`-Strategy:
+
+```ts
+type NodeExecutor = {
+  primitive: WorkflowNode["primitive"];
+  execute(input: NodeExecutorInput): Promise<NodeExecutionResult>;
+}
+```
+
+Der Graph-Runner bleibt für Topologie, Skip-Logik, Trail-/Fehler-Logging und
+Subgraph-Orchestrierung zuständig. Primitive-spezifische Logik lebt im
+jeweiligen Executor. Conditional-Branches erhalten einen injizierten
+`runSubgraph`-Callback, damit der Conditional-Executor keine direkte
+Abhängigkeit auf den Graph-Runner hat.
 
 ### Activity-Tracking
 

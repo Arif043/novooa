@@ -89,7 +89,6 @@ cd functions
 npm install
 npm run build          # tsc → functions/lib
 npm run serve          # lokal mit Emulator
-npm run genkit:start   # Genkit Dev UI
 npm run deploy         # firebase deploy --only functions
 ```
 
