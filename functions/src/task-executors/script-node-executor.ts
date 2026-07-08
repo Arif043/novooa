@@ -4,6 +4,7 @@ import {
   executedNode,
   parentOutputFor,
 } from "../task-runner/node-executor.js";
+import { logInfo } from "../task-runner/structured-logger.js";
 
 const timeoutMs = 5000;
 const maxOutputBytes = 10 * 1024;
@@ -13,6 +14,10 @@ import sys
 
 payload = json.loads(sys.stdin.read())
 input = payload["input"]
+printed = []
+
+def safe_print(*values, sep=" ", end="\\n"):
+    printed.append(sep.join(str(value) for value in values) + end)
 
 safe_builtins = {
     "bool": bool,
@@ -24,6 +29,7 @@ safe_builtins = {
     "list": list,
     "max": max,
     "min": min,
+    "print": safe_print,
     "range": range,
     "round": round,
     "set": set,
@@ -37,8 +43,11 @@ namespace = {"input": input}
 exec(payload["script"], {"__builtins__": safe_builtins}, namespace)
 output = namespace.get("output")
 
+if output is None:
+    output = "".join(printed)
+
 if not isinstance(output, str):
-    raise TypeError("Script muss eine String-Variable output setzen.")
+    raise TypeError("Script muss eine String-Variable output setzen oder Text printen.")
 
 sys.stdout.write(json.dumps({"output": output}))
 `;
@@ -50,6 +59,8 @@ export const scriptNodeExecutor: NodeExecutor = {
       input: parentOutputFor(input.node, input.task, input.results),
       script: scriptFor(input.node),
     });
+    logInfo("SDKLFj;JJKLSDfGJHNSdfKLGFJsdKLGSDfJSDFGKLFJSDKLFJSDKLFJSDKLJFSDjSDFKJ;SDLJkFHSDKJSDfHSJKSDFHnbj");
+    console.info("Script Output: ", output);
     return executedNode(input.node, output);
   },
 };
@@ -65,6 +76,7 @@ export async function executeScriptNode(input: ScriptNodeInput): Promise<string>
   if (typeof parsed.output !== "string") {
     throw new Error("Script hat keinen String-Output geliefert.");
   }
+  logInfo("Script Output: " + parsed.output);
   return parsed.output;
 }
 
