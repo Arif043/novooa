@@ -67,7 +67,7 @@ async function runNodes(
     );
     if (index === -1) throw new Error("Task graph contains a cycle.");
     const node = remaining.splice(index, 1)[0];
-    const context = contextFor(node, input, results);
+    const context = ''; // contextFor(node, input, results);
     const skipNode = shouldSkipNode(
       node,
       input.taskDefinition,

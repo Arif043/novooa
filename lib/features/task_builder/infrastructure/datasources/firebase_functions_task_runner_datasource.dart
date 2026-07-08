@@ -1,8 +1,6 @@
 import 'dart:async';
-
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
-
 import 'task_runner_datasource.dart';
 import 'task_runner_datasource_log.dart';
 
