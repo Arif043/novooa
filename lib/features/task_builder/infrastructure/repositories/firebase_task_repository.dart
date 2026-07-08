@@ -28,7 +28,7 @@ class FirebaseTaskRepository implements TaskRepository {
   Future<List<Task>> loadTasks() async {
     final user = auth.currentUser;
     if (user == null) return const [];
-    final snapshot = await _tasksReference(user.uid).get();
+    final snapshot = await _tasksReference(_personalTeamId(user.uid)).get();
     return snapshot.docs.map(_mapper.fromDocument).toList(growable: false);
   }
 
@@ -36,12 +36,14 @@ class FirebaseTaskRepository implements TaskRepository {
   Future<void> saveTask(Task task) async {
     final user = auth.currentUser;
     if (user == null) return;
-    final reference = _tasksReference(user.uid).doc(task.id);
+    final teamId = _personalTeamId(user.uid);
+    final reference = _tasksReference(teamId).doc(task.id);
     await firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(reference);
+      _ensurePersonalTeam(transaction, teamId, user.uid);
       transaction.set(
         reference,
-        _document(task, snapshot.exists),
+        _document(task, teamId, snapshot.exists),
         SetOptions(merge: true),
       );
     });
@@ -73,11 +75,40 @@ class FirebaseTaskRepository implements TaskRepository {
     }
   }
 
-  Map<String, Object?> _document(Task task, bool exists) {
+  Map<String, Object?> _document(Task task, String teamId, bool exists) {
     return {
       ..._mapper.toDocument(task),
+      'teamId': teamId,
       if (!exists) 'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
+    };
+  }
+
+  void _ensurePersonalTeam(
+    Transaction transaction,
+    String teamId,
+    String ownerUid,
+  ) {
+    transaction.set(_teamReference(teamId), _teamDocument(ownerUid));
+    transaction.set(
+      _memberReference(teamId, ownerUid),
+      _memberDocument(ownerUid),
+    );
+  }
+
+  Map<String, Object?> _teamDocument(String ownerUid) {
+    return {
+      'ownerUid': ownerUid,
+      'name': 'Persönlicher Arbeitsbereich',
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+  }
+
+  Map<String, Object?> _memberDocument(String ownerUid) {
+    return {
+      'uid': ownerUid,
+      'role': 'owner',
+      'joinedAt': FieldValue.serverTimestamp(),
     };
   }
 
@@ -95,8 +126,23 @@ class FirebaseTaskRepository implements TaskRepository {
     return TaskExecutionResultModel.fromJson(response).toDomain();
   }
 
-  CollectionReference<Map<String, dynamic>> _tasksReference(String uid) {
-    return firestore.collection('users').doc(uid).collection('tasks');
+  CollectionReference<Map<String, dynamic>> _tasksReference(String teamId) {
+    return _teamReference(teamId).collection('tasks');
+  }
+
+  DocumentReference<Map<String, dynamic>> _teamReference(String teamId) {
+    return firestore.collection('teams').doc(teamId);
+  }
+
+  DocumentReference<Map<String, dynamic>> _memberReference(
+    String teamId,
+    String uid,
+  ) {
+    return _teamReference(teamId).collection('members').doc(uid);
+  }
+
+  String _personalTeamId(String uid) {
+    return 'personal_$uid';
   }
 
   Result<TaskExecutionResult, TaskExecutionFailure> _failure(

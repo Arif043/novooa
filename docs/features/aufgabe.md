@@ -296,8 +296,8 @@ Verbesserungstemperatur: `0.4`. Streamt nicht.
 
 ## Offene Fragen
 
-- **Persistenz:** Firestore-Modell ist unter `users/{uid}/tasks/{taskId}`
-  angebunden; offen ist die spätere Team-Zuordnung von Aufgaben.
+- **Persistenz:** Firestore-Modell ist unter `teams/{teamId}/tasks/{taskId}`
+  angebunden; aktuell nutzt der Client `personal_<uid>` als Team-Kontext.
 - **Tool-Registry:** Wo leben konkrete Tools (siehe
   [`../architecture.md#neue-genkit-tools`](../architecture.md#neue-genkit-tools)).
 - **Visualisierung:** Canvas-Implementierung — Start mit `InteractiveViewer` +

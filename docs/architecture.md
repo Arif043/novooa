@@ -36,7 +36,7 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md#domäne
 
 ## Persistenz
 
-- Aufgaben werden in Firestore unter `users/{uid}/tasks/{taskId}` gespeichert.
+- Aufgaben werden in Firestore unter `teams/{teamId}/tasks/{taskId}` gespeichert.
 - Der Task Builder arbeitet mit Autosave: Beim Öffnen einer neuen Aufgabe und
   nach jeder Mutation ruft der Cubit `TaskRepository.saveTask()` auf.
 - Es gibt keinen expliziten Speichern-Button. Nutzer:innen müssen den
@@ -45,7 +45,7 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md#domäne
   Implementierung `FirebaseTaskRepository` speichert in Firestore und ruft für
   die Ausführung die Firebase Callable Function über `TaskRunnerDatasource` auf.
 - Firestore-Dokumente enthalten `id`, `title`, `objective`, `selectedNodeId`,
-  `graph`, `createdAt` und `updatedAt`.
+  `teamId`, `graph`, `createdAt` und `updatedAt`.
 
 ### Teams und Dateien
 
@@ -57,6 +57,7 @@ Firestore:
 ```text
 teams/{teamId}
 teams/{teamId}/members/{uid}
+teams/{teamId}/tasks/{taskId}
 teams/{teamId}/files/{fileId}
 teams/{teamId}/files/{fileId}/versions/{versionId}
 ```
@@ -75,8 +76,8 @@ teams/personal_<uid>/members/<uid>
 ```
 
 Das spätere Team-Feature ersetzt nur die Quelle für `teamId`: statt
-`personal_<uid>` wird der aktive Team-Kontext verwendet. Datei-Metadaten und
-Storage-Pfade bleiben unverändert.
+`personal_<uid>` wird der aktive Team-Kontext verwendet. Aufgaben,
+Datei-Metadaten und Storage-Pfade bleiben team-scoped.
 
 Copy-on-Write wird über `versions/{versionId}` vorbereitet. Eine neue
 Dateiversion schreibt ein neues Storage-Objekt und aktualisiert am

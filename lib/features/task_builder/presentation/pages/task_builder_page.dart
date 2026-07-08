@@ -55,7 +55,6 @@ class _TaskBuilderShellTitleState extends State<_TaskBuilderShellTitle> {
     super.didChangeDependencies();
     final controller = RootShellScope.of(context);
     if (_controller == controller) return;
-    // _clearTitleAfterFrame(_controller);
     _controller = controller;
     final cubit = context.read<TaskBuilderCubit>();
     _setTitleAfterFrame(
@@ -68,14 +67,6 @@ class _TaskBuilderShellTitleState extends State<_TaskBuilderShellTitle> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _controller != controller) return;
       controller.setTitle(title);
-    });
-  }
-
-  void _clearTitleAfterFrame(RootShellController? controller) {
-    if (controller == null) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_controller == controller && mounted) return;
-      controller.setTitle(null);
     });
   }
 
