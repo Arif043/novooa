@@ -4,11 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
-import '../../domain/entities/prompt_attachment.dart';
+import '../../domain/entities/node_attachment.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
-import 'demo_prompt_attachments.dart';
-import 'prompt_attachment_section.dart';
+import 'node_file_attachment_section.dart';
 import 'prompt_choice_field.dart';
 
 class PromptWidget extends StatefulWidget {
@@ -117,9 +116,8 @@ class _PromptWidgetState extends State<PromptWidget> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          PromptAttachmentSection(
+          NodeFileAttachmentSection(
             attachments: config.attachments,
-            availableFiles: demoPromptAttachments,
             onAttach: _attachFile,
             onDetach: _detachFile,
           ),
@@ -182,15 +180,15 @@ class _PromptWidgetState extends State<PromptWidget> {
     );
   }
 
-  void _attachFile(PromptAttachment attachment) {
-    context.read<TaskBuilderCubit>().attachPromptFile(
+  void _attachFile(NodeAttachment attachment) {
+    context.read<TaskBuilderCubit>().attachNodeFile(
       nodeId: widget.node.id,
       attachment: attachment,
     );
   }
 
   void _detachFile(String attachmentId) {
-    context.read<TaskBuilderCubit>().detachPromptFile(
+    context.read<TaskBuilderCubit>().detachNodeFile(
       nodeId: widget.node.id,
       attachmentId: attachmentId,
     );

@@ -1,6 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
-import 'package:syscat2/features/task_builder/domain/entities/prompt_attachment.dart';
+import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/workflow_graph.dart';
@@ -9,6 +9,7 @@ import 'task_builder_state.dart';
 import 'workflow_primitive_labels.dart';
 
 part 'task_builder_branch_mutations.dart';
+part 'task_builder_attachment_mutations.dart';
 part 'task_builder_graph_mutations.dart';
 part 'task_builder_iterative_refinement_mutations.dart';
 part 'task_builder_prompt_mutations.dart';

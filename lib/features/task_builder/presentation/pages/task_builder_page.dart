@@ -6,6 +6,7 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/widgets/root_shell_scope.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
@@ -21,9 +22,16 @@ class TaskBuilderPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) =>
-          serviceLocator<TaskBuilderCubit>()..load(editingTaskOrNull),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) =>
+              serviceLocator<TaskBuilderCubit>()..load(editingTaskOrNull),
+        ),
+        BlocProvider(
+          create: (_) => serviceLocator<NodeFileAttachmentsCubit>()..load(),
+        ),
+      ],
       child: const _TaskBuilderView(),
     );
   }

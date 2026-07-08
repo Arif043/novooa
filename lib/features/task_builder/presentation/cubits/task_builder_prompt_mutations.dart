@@ -46,26 +46,6 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
     await _syncConditionalSuccessors(nodeId);
   }
 
-  Future<void> attachPromptFile({
-    required NodeId nodeId,
-    required PromptAttachment attachment,
-  }) {
-    return _updatePromptConfig(
-      nodeId,
-      (config) => config.attachFile(attachment),
-    );
-  }
-
-  Future<void> detachPromptFile({
-    required NodeId nodeId,
-    required String attachmentId,
-  }) {
-    return _updatePromptConfig(
-      nodeId,
-      (config) => config.detachFile(attachmentId),
-    );
-  }
-
   Future<void> _updatePromptConfig(
     NodeId nodeId,
     PromptNodeConfig Function(PromptNodeConfig config) update,

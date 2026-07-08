@@ -21,6 +21,7 @@ export const stringInputNodeConfigSchema = z.object({
 export const scriptNodeConfigSchema = z.object({
   primitive: z.literal("script").default("script"),
   script: z.string().default("output = input"),
+  attachments: z.array(z.unknown()).default([]),
 });
 
 export const promptNodeConfigSchema = z.object({

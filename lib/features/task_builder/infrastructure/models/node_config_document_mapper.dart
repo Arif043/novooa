@@ -1,5 +1,5 @@
 import '../../domain/entities/node_config.dart';
-import '../../domain/entities/prompt_attachment.dart';
+import '../../domain/entities/node_attachment.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
 
@@ -43,7 +43,11 @@ class NodeConfigDocumentMapper {
   }
 
   Map<String, Object?> _scriptToDocument(ScriptNodeConfig config) {
-    return {'primitive': config.primitive.name, 'script': config.script};
+    return {
+      'primitive': config.primitive.name,
+      'script': config.script,
+      'attachments': config.attachments.map(_attachmentToDocument).toList(),
+    };
   }
 
   Map<String, Object?> _promptToDocument(PromptNodeConfig config) {
@@ -79,7 +83,10 @@ class NodeConfigDocumentMapper {
   }
 
   ScriptNodeConfig _scriptFrom(Map<String, Object?> data) {
-    return ScriptNodeConfig(script: data['script'] as String? ?? '');
+    return ScriptNodeConfig(
+      script: data['script'] as String? ?? '',
+      attachments: _attachmentsFrom(data['attachments']),
+    );
   }
 
   PromptNodeConfig _promptFrom(Map<String, Object?> data) {
@@ -126,7 +133,7 @@ class NodeConfigDocumentMapper {
     );
   }
 
-  Map<String, Object?> _attachmentToDocument(PromptAttachment attachment) {
+  Map<String, Object?> _attachmentToDocument(NodeAttachment attachment) {
     return {
       'id': attachment.id,
       'storagePath': attachment.storagePath,
@@ -137,12 +144,12 @@ class NodeConfigDocumentMapper {
     };
   }
 
-  List<PromptAttachment> _attachmentsFrom(Object? value) {
+  List<NodeAttachment> _attachmentsFrom(Object? value) {
     return _mapListFrom(value).map(_attachmentFrom).toList(growable: false);
   }
 
-  PromptAttachment _attachmentFrom(Map<String, Object?> data) {
-    return PromptAttachment(
+  NodeAttachment _attachmentFrom(Map<String, Object?> data) {
+    return NodeAttachment(
       id: data['id'] as String? ?? '',
       storagePath: data['storagePath'] as String? ?? '',
       generation: data['generation'] as String? ?? '',

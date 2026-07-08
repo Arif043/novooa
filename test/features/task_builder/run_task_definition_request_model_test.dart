@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
-import 'package:syscat2/features/task_builder/domain/entities/prompt_attachment.dart';
+import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_edge.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
@@ -62,6 +62,10 @@ void main() {
     expect(script['primitive'], 'script');
     expect(config['primitive'], 'script');
     expect(config['script'], 'output = input.upper()');
+    final attachments = config['attachments'] as List<Object?>;
+    final attachment = attachments.single as Map<String, Object?>;
+    expect(attachment['storagePath'], 'users/u1/uploads/script.py');
+    expect(attachment['generation'], '3');
   });
 
   test('serialisiert Verzweigungsfaelle fuer runTaskDefinitionFlow', () {
@@ -124,7 +128,7 @@ Task _task() {
             outputType: PromptOutputType.decision,
             choices: ['Ja', 'Nein', 'Vielleicht'],
             attachments: [
-              PromptAttachment(
+              NodeAttachment(
                 id: 'file.briefing.v7',
                 storagePath: 'users/u1/uploads/briefing.md',
                 generation: '7',
@@ -173,7 +177,19 @@ Task _scriptTask() {
           id: NodeId('node.script'),
           title: 'Script',
           description: 'Beschreibung',
-          config: ScriptNodeConfig(script: 'output = input.upper()'),
+          config: ScriptNodeConfig(
+            script: 'output = input.upper()',
+            attachments: [
+              NodeAttachment(
+                id: 'file.script.v3',
+                storagePath: 'users/u1/uploads/script.py',
+                generation: '3',
+                displayName: 'script.py',
+                contentType: 'text/x-python',
+                sizeBytes: 3200,
+              ),
+            ],
+          ),
         ),
       ],
       edges: [],

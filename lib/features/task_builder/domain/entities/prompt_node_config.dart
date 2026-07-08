@@ -22,7 +22,7 @@ class PromptNodeConfig extends NodeConfig
   final PromptOutputType outputType;
   final List<String> choices;
   @override
-  final List<PromptAttachment> attachments;
+  final List<NodeAttachment> attachments;
 
   factory PromptNodeConfig.initial() {
     return const PromptNodeConfig(
@@ -40,7 +40,7 @@ class PromptNodeConfig extends NodeConfig
     String? instruction,
     PromptOutputType? outputType,
     List<String>? choices,
-    List<PromptAttachment>? attachments,
+    List<NodeAttachment>? attachments,
   }) {
     return PromptNodeConfig(
       instruction: instruction ?? this.instruction,
@@ -68,7 +68,7 @@ class PromptNodeConfig extends NodeConfig
   }
 
   @override
-  PromptNodeConfig copyWithAttachments(List<PromptAttachment> attachments) {
+  PromptNodeConfig copyWithAttachments(List<NodeAttachment> attachments) {
     return copyWith(attachments: attachments);
   }
 

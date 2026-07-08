@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
-import 'package:syscat2/features/task_builder/domain/entities/prompt_attachment.dart';
+import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_execution_failure.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_execution_result.dart';
@@ -110,32 +110,57 @@ void main() {
     },
   );
 
-  test('attachPromptFile speichert Storage-Dateiversion am Prompt', () async {
-    final repository = _InMemoryTaskRepository(_taskWithBranchPrompt());
-    final cubit = TaskBuilderCubit(repository: repository);
+  test(
+    'attachNodeFile speichert Storage-Dateiversion am Prompt-Node',
+    () async {
+      final repository = _InMemoryTaskRepository(_taskWithBranchPrompt());
+      final cubit = TaskBuilderCubit(repository: repository);
 
-    await cubit.load(repository.savedTask);
-    await cubit.attachPromptFile(
-      nodeId: const NodeId('node.2'),
-      attachment: _attachment,
-    );
+      await cubit.load(repository.savedTask);
+      await cubit.attachNodeFile(
+        nodeId: const NodeId('node.2'),
+        attachment: _attachment,
+      );
 
-    var promptConfig = _branchPromptConfig(cubit);
-    expect(promptConfig.attachments, [_attachment]);
+      var promptConfig = _branchPromptConfig(cubit);
+      expect(promptConfig.attachments, [_attachment]);
 
-    await cubit.detachPromptFile(
-      nodeId: const NodeId('node.2'),
-      attachmentId: _attachment.id,
-    );
+      await cubit.detachNodeFile(
+        nodeId: const NodeId('node.2'),
+        attachmentId: _attachment.id,
+      );
 
-    final state = cubit.state as TaskBuilderLoaded;
-    promptConfig = _branchPromptConfig(cubit);
+      final state = cubit.state as TaskBuilderLoaded;
+      promptConfig = _branchPromptConfig(cubit);
 
-    expect(promptConfig.attachments, isEmpty);
-    expect(repository.savedTask, state.editingTask);
+      expect(promptConfig.attachments, isEmpty);
+      expect(repository.savedTask, state.editingTask);
 
-    await cubit.close();
-  });
+      await cubit.close();
+    },
+  );
+
+  test(
+    'attachNodeFile speichert Storage-Dateiversion am Script-Node',
+    () async {
+      final repository = _InMemoryTaskRepository(_taskWithScriptNode());
+      final cubit = TaskBuilderCubit(repository: repository);
+
+      await cubit.load(repository.savedTask);
+      await cubit.attachNodeFile(
+        nodeId: const NodeId('node.script'),
+        attachment: _attachment,
+      );
+
+      final state = cubit.state as TaskBuilderLoaded;
+      final config = state.editingTask.nodes.first.config as ScriptNodeConfig;
+
+      expect(config.attachments, [_attachment]);
+      expect(repository.savedTask, state.editingTask);
+
+      await cubit.close();
+    },
+  );
 
   test('updateScript speichert Script-Code am Script-Node', () async {
     final repository = _InMemoryTaskRepository(_taskWithScriptNode());
@@ -154,7 +179,7 @@ void main() {
   });
 }
 
-const _attachment = PromptAttachment(
+const _attachment = NodeAttachment(
   id: 'file.briefing.v1',
   storagePath: 'users/u1/uploads/briefing.md',
   generation: '1',

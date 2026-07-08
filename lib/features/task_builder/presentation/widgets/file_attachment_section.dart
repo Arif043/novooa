@@ -1,28 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
-import '../../domain/entities/prompt_attachment.dart';
+import '../../domain/entities/node_attachment.dart';
 
-class PromptAttachmentSection extends StatelessWidget {
-  const PromptAttachmentSection({
+class FileAttachmentSection extends StatelessWidget {
+  const FileAttachmentSection({
     super.key,
     required this.attachments,
     required this.availableFiles,
     required this.onAttach,
     required this.onDetach,
+    this.canAttach = true,
   });
 
-  final List<PromptAttachment> attachments;
-  final List<PromptAttachment> availableFiles;
-  final ValueChanged<PromptAttachment> onAttach;
+  final List<NodeAttachment> attachments;
+  final List<NodeAttachment> availableFiles;
+  final ValueChanged<NodeAttachment> onAttach;
   final ValueChanged<String> onDetach;
+  final bool canAttach;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _AttachmentHeader(onPressed: () => _showFilePicker(context)),
+        _AttachmentHeader(
+          onPressed: canAttach ? () => _showFilePicker(context) : null,
+        ),
         const SizedBox(height: AppSpacing.sm),
         if (attachments.isEmpty)
           const _AttachmentEmptyState()
@@ -50,7 +54,7 @@ class PromptAttachmentSection extends StatelessWidget {
 class _AttachmentHeader extends StatelessWidget {
   const _AttachmentHeader({required this.onPressed});
 
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +86,7 @@ class _AttachmentEmptyState extends StatelessWidget {
 class _AttachmentList extends StatelessWidget {
   const _AttachmentList({required this.attachments, required this.onDetach});
 
-  final List<PromptAttachment> attachments;
+  final List<NodeAttachment> attachments;
   final ValueChanged<String> onDetach;
 
   @override
@@ -108,7 +112,7 @@ class _AttachmentTile extends StatelessWidget {
     required this.onDetach,
   });
 
-  final PromptAttachment attachment;
+  final NodeAttachment attachment;
   final ValueChanged<String> onDetach;
 
   @override
@@ -135,9 +139,9 @@ class _AttachmentPickerSheet extends StatelessWidget {
     required this.onAttach,
   });
 
-  final List<PromptAttachment> files;
+  final List<NodeAttachment> files;
   final Set<String> selectedIds;
-  final ValueChanged<PromptAttachment> onAttach;
+  final ValueChanged<NodeAttachment> onAttach;
 
   @override
   Widget build(BuildContext context) {
@@ -163,13 +167,13 @@ class _AttachmentPickerSheet extends StatelessWidget {
     );
   }
 
-  void _select(BuildContext context, PromptAttachment file) {
+  void _select(BuildContext context, NodeAttachment file) {
     onAttach(file);
     Navigator.of(context).pop();
   }
 }
 
-String _metadataFor(PromptAttachment attachment) {
+String _metadataFor(NodeAttachment attachment) {
   return '${attachment.contentType} · ${_sizeLabel(attachment.sizeBytes)} · Version ${attachment.generation}';
 }
 

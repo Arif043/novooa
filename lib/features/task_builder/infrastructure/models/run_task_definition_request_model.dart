@@ -1,5 +1,5 @@
 import '../../domain/entities/node_config.dart';
-import '../../domain/entities/prompt_attachment.dart';
+import '../../domain/entities/node_attachment.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/workflow_edge.dart';
 import '../../domain/entities/workflow_graph.dart';
@@ -54,7 +54,11 @@ class RunTaskDefinitionRequestModel {
   }
 
   Map<String, Object?> _scriptToJson(ScriptNodeConfig config) {
-    return {'primitive': config.primitive.name, 'script': config.script};
+    return {
+      'primitive': config.primitive.name,
+      'script': config.script,
+      'attachments': _attachmentsToJson(config),
+    };
   }
 
   Map<String, Object?> _promptToJson(PromptNodeConfig config) {
@@ -74,7 +78,7 @@ class RunTaskDefinitionRequestModel {
     return const [];
   }
 
-  Map<String, Object?> _attachmentToJson(PromptAttachment attachment) {
+  Map<String, Object?> _attachmentToJson(NodeAttachment attachment) {
     return {
       'id': attachment.id,
       'storagePath': attachment.storagePath,

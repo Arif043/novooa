@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
-class PromptAttachment extends Equatable {
-  const PromptAttachment({
+class NodeAttachment extends Equatable {
+  const NodeAttachment({
     required this.id,
     required this.storagePath,
     required this.generation,
@@ -22,7 +22,7 @@ class PromptAttachment extends Equatable {
     return [id, storagePath, generation, displayName, contentType, sizeBytes];
   }
 
-  PromptAttachment copyWith({
+  NodeAttachment copyWith({
     String? id,
     String? storagePath,
     String? generation,
@@ -30,7 +30,7 @@ class PromptAttachment extends Equatable {
     String? contentType,
     int? sizeBytes,
   }) {
-    return PromptAttachment(
+    return NodeAttachment(
       id: id ?? this.id,
       storagePath: storagePath ?? this.storagePath,
       generation: generation ?? this.generation,

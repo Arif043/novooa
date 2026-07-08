@@ -1,11 +1,11 @@
 part of 'node_config.dart';
 
 mixin FileAttachmentSupport<T extends NodeConfig> on NodeConfig {
-  List<PromptAttachment> get attachments;
+  List<NodeAttachment> get attachments;
 
-  T copyWithAttachments(List<PromptAttachment> attachments);
+  T copyWithAttachments(List<NodeAttachment> attachments);
 
-  T attachFile(PromptAttachment attachment) {
+  T attachFile(NodeAttachment attachment) {
     if (attachments.any((current) => current.id == attachment.id)) {
       return copyWithAttachments(attachments);
     }

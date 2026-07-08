@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
+import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_file_attachment_section.dart';
 
 class ScriptWidget extends StatefulWidget {
   const ScriptWidget({super.key, required this.node});
@@ -63,6 +65,12 @@ class _ScriptWidgetState extends State<ScriptWidget> {
             style: Theme.of(context).textTheme.bodyMedium,
             onChanged: _updateScript,
           ),
+          const SizedBox(height: AppSpacing.md),
+          NodeFileAttachmentSection(
+            attachments: _config.attachments,
+            onAttach: _attachFile,
+            onDetach: _detachFile,
+          ),
         ],
       ),
     );
@@ -78,5 +86,19 @@ class _ScriptWidgetState extends State<ScriptWidget> {
 
   void _updateScript(String script) {
     context.read<TaskBuilderCubit>().updateScript(widget.node.id, script);
+  }
+
+  void _attachFile(NodeAttachment attachment) {
+    context.read<TaskBuilderCubit>().attachNodeFile(
+      nodeId: widget.node.id,
+      attachment: attachment,
+    );
+  }
+
+  void _detachFile(String attachmentId) {
+    context.read<TaskBuilderCubit>().detachNodeFile(
+      nodeId: widget.node.id,
+      attachmentId: attachmentId,
+    );
   }
 }
