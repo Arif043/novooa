@@ -5,6 +5,7 @@ import {
   type WorkflowEdge,
   type WorkflowNode,
 } from "./task-definition.js";
+import {type TaskVariables} from "./node-executor.js";
 
 export function nextRunnableIndex(
   nodes: WorkflowNode[],
@@ -21,18 +22,31 @@ export function contextFor(
   node: WorkflowNode,
   input: RunTaskDefinitionInput,
   results: Map<string, NodeExecutionResult>,
+  variables: TaskVariables,
 ): string {
   const parentOutputs = input.taskDefinition.edges
     .filter((edge) => edge.to === node.id)
     .map((edge) => results.get(edge.from)?.output ?? "")
     .filter((output) => output.trim().length > 0);
   return [
-    `Aufgabe: ${input.taskDefinition.objective}`,
-    input.context,
+    variablesContext(variables),
     ...parentOutputs,
   ]
     .filter((part) => part.trim().length > 0)
     .join("\n\n");
+}
+
+function variablesContext(variables: TaskVariables): string {
+  const entries = Object.entries(variables);
+  if (entries.length === 0) return "";
+  return [
+    "Variablen:",
+    ...entries.map(([key, value]) => `${key}: ${formatVariable(value)}`),
+  ].join("\n");
+}
+
+function formatVariable(value: unknown): string {
+  return typeof value === "string" ? value : JSON.stringify(value);
 }
 
 export function validateGraph(taskDefinition: TaskDefinition): void {

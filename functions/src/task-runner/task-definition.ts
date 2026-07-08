@@ -105,6 +105,7 @@ export const nodeExecutionResultSchema = z.object({
   primitive: workflowPrimitiveSchema,
   status: z.enum(["executed", "skipped"]),
   output: z.string(),
+  variables: z.record(z.string(), z.unknown()).optional(),
   selectedNodeId: z.string().nullable().optional(),
   selectedBranchId: z.string().nullable().optional(),
   selectedBranchLabel: z.string().nullable().optional(),

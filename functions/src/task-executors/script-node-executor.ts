@@ -1,10 +1,14 @@
 import {spawn} from "node:child_process";
 import {
   type NodeExecutor,
+  type TaskVariables,
   executedNode,
   parentOutputFor,
 } from "../task-runner/node-executor.js";
-import { logInfo } from "../task-runner/structured-logger.js";
+import {
+  logInfo,
+  logReadableInfo,
+} from "../task-runner/structured-logger.js";
 
 const timeoutMs = 5000;
 const maxOutputBytes = 10 * 1024;
@@ -14,6 +18,7 @@ import sys
 
 payload = json.loads(sys.stdin.read())
 input = payload["input"]
+variables = payload["variables"]
 printed = []
 
 def safe_print(*values, sep=" ", end="\\n"):
@@ -39,7 +44,7 @@ safe_builtins = {
     "tuple": tuple,
 }
 
-namespace = {"input": input}
+namespace = {"input": input, **variables}
 exec(payload["script"], {"__builtins__": safe_builtins}, namespace)
 output = namespace.get("output")
 
@@ -49,7 +54,21 @@ if output is None:
 if not isinstance(output, str):
     raise TypeError("Script muss eine String-Variable output setzen oder Text printen.")
 
-sys.stdout.write(json.dumps({"output": output}))
+next_variables = {}
+for key, value in namespace.items():
+    if key in ["input", "output"] or key.startswith("__"):
+        continue
+    try:
+        json.dumps(value)
+        next_variables[key] = value
+    except TypeError:
+        pass
+
+sys.stdout.write(json.dumps({
+    "output": output,
+    "printed": "".join(printed),
+    "variables": next_variables,
+}))
 `;
 
 export const scriptNodeExecutor: NodeExecutor = {
@@ -58,23 +77,40 @@ export const scriptNodeExecutor: NodeExecutor = {
     const output = await executeScriptNode({
       input: parentOutputFor(input.node, input.task, input.results),
       script: scriptFor(input.node),
+      variables: input.variables,
     });
-    return executedNode(input.node, output);
+    return executedNode(input.node, output.output, undefined, undefined, output.variables);
   },
 };
 
 type ScriptNodeInput = {
   input: string;
   script: string;
+  variables: TaskVariables;
 };
 
-export async function executeScriptNode(input: ScriptNodeInput): Promise<string> {
+type ScriptNodeOutput = {
+  output: string;
+  variables: TaskVariables;
+};
+
+export async function executeScriptNode(
+  input: ScriptNodeInput,
+): Promise<ScriptNodeOutput> {
   const result = await runPython(input);
-  const parsed = JSON.parse(result.stdout) as {output?: unknown};
+  const parsed = JSON.parse(result.stdout) as {
+    output?: unknown;
+    printed?: unknown;
+    variables?: unknown;
+  };
   if (typeof parsed.output !== "string") {
     throw new Error("Script hat keinen String-Output geliefert.");
   }
-  return parsed.output;
+  if (typeof parsed.printed === "string") logScriptPrints(parsed.printed);
+  return {
+    output: parsed.output,
+    variables: variablesFrom(parsed.variables),
+  };
 }
 
 function runPython(input: ScriptNodeInput): Promise<{stdout: string}> {
@@ -107,6 +143,22 @@ function runPython(input: ScriptNodeInput): Promise<{stdout: string}> {
 function finish(timer: NodeJS.Timeout, callback: () => void): void {
   clearTimeout(timer);
   callback();
+}
+
+function variablesFrom(value: unknown): TaskVariables {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+  return value as TaskVariables;
+}
+
+function logScriptPrints(printed: string): void {
+  if (printed.trim().length === 0) return;
+  logReadableInfo(["[Script-Log]", printed.trimEnd()].join("\n"));
+  logInfo("script_node.printed", {
+    length: printed.length,
+    preview: printed.slice(0, 1000),
+  });
 }
 
 function scriptFor(node: Parameters<NodeExecutor["execute"]>[0]["node"]): string {

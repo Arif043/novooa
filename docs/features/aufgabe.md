@@ -181,6 +181,23 @@ output: string
 Der MVP setzt ein Timeout von 5 Sekunden und begrenzt den Output auf 10 KB.
 Es gibt keinen zusätzlichen Run-Kontext für Script-Nodes.
 
+Variablen, die ein Script deklariert, bleiben für den weiteren Task-Run
+verfügbar. Spätere Script-Nodes erhalten diese Variablen wieder direkt im
+Python-Scope:
+
+```python
+name = "Ada"
+output = name
+```
+
+```python
+output = input + " " + name
+```
+
+Andere Node-Typen erhalten die aktuellen Variablen als Kontexttext. Der
+Variablen-Scope gilt pro Task-Ausführung und wird nicht als globaler Zustand
+zwischen verschiedenen Runs persistiert.
+
 ### `runTaskDefinitionFlow`
 
 Führt eine komplette `TaskDefinition` aus. Der Flow interpretiert den Graph,

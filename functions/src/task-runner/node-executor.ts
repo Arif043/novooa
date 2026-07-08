@@ -5,6 +5,8 @@ import {
   type WorkflowNode,
 } from "./task-definition.js";
 
+export type TaskVariables = Record<string, unknown>;
+
 export type SubgraphRunner = (
   task: Task,
   context: string,
@@ -14,6 +16,7 @@ export type NodeExecutorInput = {
   ai: Genkit;
   node: WorkflowNode;
   context: string;
+  variables: TaskVariables;
   task: Task;
   results: Map<string, NodeExecutionResult>;
   runSubgraph: SubgraphRunner;
@@ -32,12 +35,14 @@ export function executedNode(
     selectedBranchId?: string | null;
     selectedBranchLabel?: string | null;
   },
+  variables?: TaskVariables,
 ): NodeExecutionResult {
   return {
     nodeId: node.id,
     primitive: node.primitive,
     status: "executed",
     output,
+    variables,
     selectedNodeId,
     selectedBranchId: selection?.selectedBranchId,
     selectedBranchLabel: selection?.selectedBranchLabel,

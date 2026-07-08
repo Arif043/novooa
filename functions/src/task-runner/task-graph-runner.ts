@@ -12,12 +12,14 @@ import {
   type WorkflowNode,
 } from "./task-definition.js";
 import {
+  contextFor,
   finalOutputOf,
   nextRunnableIndex,
   shouldSkipNode,
   skipInactiveBranches,
   validateGraph,
 } from "./task-graph-utils.js";
+import {type TaskVariables} from "./node-executor.js";
 import {
   formatNodeFailed,
   formatNodeHeader,
@@ -54,6 +56,7 @@ export async function executeTaskGraph(
 async function runNodes(
   ai: Genkit,
   input: RunTaskDefinitionInput,
+  variables: TaskVariables = {},
 ): Promise<NodeExecutionResult[]> {
   const remaining = [...input.taskDefinition.nodes];
   const results = new Map<string, NodeExecutionResult>();
@@ -67,7 +70,7 @@ async function runNodes(
     );
     if (index === -1) throw new Error("Task graph contains a cycle.");
     const node = remaining.splice(index, 1)[0];
-    const context = ''; // contextFor(node, input, results);
+    const context = contextFor(node, input, results, variables);
     const skipNode = shouldSkipNode(
       node,
       input.taskDefinition,
@@ -78,8 +81,9 @@ async function runNodes(
     logNodeHeader(node, input.taskDefinition, context, skipNode, results);
     const result = await runNodeWithTrail(
       ai,
-      {node, context, task: input.taskDefinition, results, skipNode, startedAt},
+      {node, context, task: input.taskDefinition, results, variables, skipNode, startedAt},
     );
+    updateVariables(variables, result);
     results.set(node.id, result);
     skipInactiveBranches(node, input.taskDefinition, result, skippedNodeIds);
     logSkippedBranches(node, input.taskDefinition.id, result, skippedNodeIds);
@@ -93,6 +97,7 @@ type NodeRunInput = {
   context: string;
   task: Task;
   results: Map<string, NodeExecutionResult>;
+  variables: TaskVariables;
   skipNode: boolean;
   startedAt: number;
 };
@@ -173,11 +178,11 @@ function logSkippedBranches(
   ].join("\n"));
 }
 
-function runSubgraphFor(ai: Genkit) {
+function runSubgraphFor(ai: Genkit, variables: TaskVariables) {
   return (task: Task, context: string) => runNodes(ai, {
     taskDefinition: task,
     context,
-  });
+  }, variables);
 }
 
 async function executeNode(
@@ -190,8 +195,18 @@ async function executeNode(
     ai,
     node: input.node,
     context: input.context,
+    variables: input.variables,
     task: input.task,
     results: input.results,
-    runSubgraph: runSubgraphFor(ai),
+    runSubgraph: runSubgraphFor(ai, input.variables),
   });
+}
+
+function updateVariables(
+  variables: TaskVariables,
+  result: NodeExecutionResult,
+): void {
+  if (result.variables === undefined) return;
+  for (const key of Object.keys(variables)) delete variables[key];
+  Object.assign(variables, result.variables);
 }
