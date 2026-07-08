@@ -36,13 +36,16 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md#domäne
 
 ## Persistenz
 
-- **Aktuell:** `InMemoryTaskDefinitionRepository`. Überlebt keinen App-Restart.
-- **Ziel:** Firestore. Eine Sammlung `tasks` pro Nutzer:in, ein Dokument pro
-  `TaskDefinition`. Snapshot wird im Cubit zu Domain-Entität deserialisiert.
-- **Migrationspfad:** Repository-Interface in `domain/repositories/` bleibt
-  unverändert. In `infrastructure/repositories/` wird eine
-  `FirestoreTaskDefinitionRepository` ergänzt; Bindung in `main.dart` /
-  DI-Container.
+- Aufgaben werden in Firestore unter `users/{uid}/tasks/{taskId}` gespeichert.
+- Der Task Builder arbeitet mit Autosave: Beim Öffnen einer neuen Aufgabe und
+  nach jeder Mutation ruft der Cubit `TaskRepository.saveTask()` auf.
+- Es gibt keinen expliziten Speichern-Button. Nutzer:innen müssen den
+  Persistenzzeitpunkt nicht selbst verwalten.
+- `TaskRepository` bündelt Entwurfs-Persistenz und Ausführung. Die konkrete
+  Implementierung `FirebaseTaskRepository` speichert in Firestore und ruft für
+  die Ausführung die Firebase Callable Function über `TaskRunnerDatasource` auf.
+- Firestore-Dokumente enthalten `id`, `title`, `objective`, `selectedNodeId`,
+  `graph`, `createdAt` und `updatedAt`.
 
 ### Teams und Dateien
 

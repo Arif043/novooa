@@ -19,8 +19,8 @@ Mutation.
 - Bausteine aus der Palette per Drag-and-Drop auf die Leinwand ziehen.
 - Knoten selektieren, löschen, verschieben, verbinden.
 - Pro Primitive typsichere Felder im NodeInspector anbieten.
-- BuilderPanel: Titel + Objective editieren; Speichern / Ausführen.
-- Sofortige Persistenz via `SaveDraftTaskDefinition`.
+- Titel + Objective editieren und Aufgabe ausführen.
+- Sofortige Persistenz via `TaskRepository.saveTask()` ohne Speichern-Button.
 - Deutsche UI-Strings.
 
 ## Domänenmodell (Clean Architecture)
@@ -33,14 +33,14 @@ features/task_builder/
 │   │   ├── workflow_node.dart     # Knoten (Primitive-Instanz)
 │   │   └── workflow_edge.dart     # Gerichtete Kante
 │   ├── repositories/
-│   │   └── task_definition_repository.dart   # Entwurfs-Persistenz
+│   │   └── task_repository.dart              # Persistenz + Ausführung
 │   └── usecases/
-│       ├── get_draft_task_definition.dart     # aktuellen Entwurf laden
-│       ├── save_draft_task_definition.dart    # Entwurf persistieren
-│       └── execute_task_definition.dart       # Task ausführen
+│       └── execute_task.dart                 # Task ausführen + tracken
 ├── infrastructure/
+│   ├── models/
+│   │   └── task_document_mapper.dart          # Firestore-Serialisierung
 │   └── repositories/
-│       └── in_memory_task_definition.dart     # Default-Implementierung
+│       └── firebase_task_repository.dart      # Firestore + Callable Function
 └── presentation/
     ├── cubits/
     │   ├── task_builder_cubit.dart            # ChangeNotifier
@@ -65,8 +65,8 @@ features/task_builder/
 4. **Edges referenzieren existierende Knoten.** Beim Hinzufügen muss die
    Quell-Kante existieren oder `addNode` fügt eine implizite Kante aus der
    aktuellen Selection ein.
-5. **Persistenz nach jeder Mutation.** Der Cubit ruft nach jeder Aktion
-   `SaveDraftTaskDefinition` auf — kein „später speichern".
+5. **Persistenz nach jeder Mutation.** Der Cubit ruft beim Öffnen und nach
+   jeder Änderung `TaskRepository.saveTask()` auf — kein „später speichern".
 
 ## Primitives
 
@@ -100,14 +100,14 @@ synchron ergänzt werden — die `WorkflowPrimitiveLabels`-Extension in
 │              │   • Auto-Layout (später)               │              │
 │              │                                        │              │
 ├──────────────┴────────────────────────────────────────┴──────────────┤
-│ BuilderPanel — Titel, Objective, Speichern, Ausführen                │
+│ BuilderPanel — Titel, Objective, Ausführen                           │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
 ### UX-Prinzipien
 
-1. **Eine sichtbare Hauptaktion pro Bildschirm.** „Speichern" ist die einzige
-   primäre Aktion im BuilderPanel; alles andere ist sekundär.
+1. **Autosave statt Speichern-Dialog.** Änderungen werden unter der Haube
+   gespeichert; die UI bietet keinen Speichern-Button an.
 2. **Anlass statt Konfiguration.** Jeder Knoten beginnt mit einer natürlich
    klingenden Frage („Wann soll das passieren?" / „Was soll passieren?"),
    nicht mit einem Properties-Grid.
@@ -285,8 +285,8 @@ Verbesserungstemperatur: `0.4`. Streamt nicht.
 - [ ] Knoten können verbunden, selektiert, gelöscht und verschoben werden.
 - [ ] NodeInspector zeigt sinnvolle Felder pro Primitive und persistiert
       Änderungen sofort.
-- [ ] BuilderPanel erlaubt Titel + Objective zu editieren und zu speichern.
-- [ ] `SaveDraftTaskDefinition` wird nach jeder Mutation aufgerufen; der Cubit
+- [ ] BuilderPanel erlaubt Titel + Objective zu editieren.
+- [ ] `TaskRepository.saveTask()` wird nach jeder Mutation aufgerufen; der Cubit
       emittiert einen neuen `TaskBuilderLoaded`-State.
 - [ ] Leere Zustände und Fehlerzustände sind auf Deutsch formuliert.
 - [ ] `flutter analyze` ist sauber.
@@ -296,8 +296,8 @@ Verbesserungstemperatur: `0.4`. Streamt nicht.
 
 ## Offene Fragen
 
-- **Persistenz:** Firestore-Modell (siehe
-  [`../architecture.md#persistenz`](../architecture.md#persistenz)).
+- **Persistenz:** Firestore-Modell ist unter `users/{uid}/tasks/{taskId}`
+  angebunden; offen ist die spätere Team-Zuordnung von Aufgaben.
 - **Tool-Registry:** Wo leben konkrete Tools (siehe
   [`../architecture.md#neue-genkit-tools`](../architecture.md#neue-genkit-tools)).
 - **Visualisierung:** Canvas-Implementierung — Start mit `InteractiveViewer` +

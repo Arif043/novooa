@@ -1,22 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/entities/unique_id.dart';
 import 'package:syscat2/features/activity/domain/entities/task_activity.dart';
 import 'package:syscat2/features/activity/domain/usecases/track_task_execution.dart';
 import 'package:syscat2/features/activity/infrastructure/repositories/in_memory_task_activity_repository.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
+import 'package:syscat2/features/task_builder/domain/entities/task_execution_failure.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_execution_result.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
+import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
 import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart';
 import 'package:syscat2/features/task_builder/infrastructure/datasources/task_runner_datasource.dart';
-import 'package:syscat2/features/task_builder/infrastructure/repositories/task_runner_repository_impl.dart';
+import 'package:syscat2/features/task_builder/infrastructure/models/run_task_definition_request_model.dart';
+import 'package:syscat2/features/task_builder/infrastructure/models/task_execution_result_model.dart';
 
 void main() {
   test('ExecuteTaskDefinition fuehrt Draft ueber Datasource aus', () async {
-    const usecase = ExecuteTask(
-      TaskRunnerRepositoryImpl(FakeTaskRunnerDatasource()),
-    );
+    const usecase = ExecuteTask(FakeTaskRepository(FakeTaskRunnerDatasource()));
 
     final taskExecutionOrFailure = await usecase(
       ExecuteTaskParams(task: _promptTask(), context: 'Lokaler Testkontext'),
@@ -33,9 +35,7 @@ void main() {
   });
 
   test('ExecuteTaskDefinition gibt Texteingabe als Output weiter', () async {
-    const usecase = ExecuteTask(
-      TaskRunnerRepositoryImpl(FakeTaskRunnerDatasource()),
-    );
+    const usecase = ExecuteTask(FakeTaskRepository(FakeTaskRunnerDatasource()));
 
     final taskExecutionOrFailure = await usecase(
       ExecuteTaskParams(task: _stringInputTask()),
@@ -62,7 +62,7 @@ void main() {
         idFactory: () => UniqueId('activity.${nextId++}'),
       );
       final usecase = ExecuteTask(
-        const TaskRunnerRepositoryImpl(FakeTaskRunnerDatasource()),
+        const FakeTaskRepository(FakeTaskRunnerDatasource()),
         tracker: tracker,
       );
 
@@ -80,6 +80,32 @@ void main() {
       expect(activities.map((activity) => activity.runId).toSet().length, 1);
     },
   );
+}
+
+class FakeTaskRepository implements TaskRepository {
+  const FakeTaskRepository(this._datasource);
+
+  final TaskRunnerDatasource _datasource;
+
+  @override
+  Future<List<Task>> loadTasks() async => const [];
+
+  @override
+  Future<void> saveTask(Task task) async {}
+
+  @override
+  Future<Result<TaskExecutionResult, TaskExecutionFailure>> execute({
+    required Task task,
+    String context = '',
+  }) async {
+    final response = await _datasource.runTaskDefinition(
+      RunTaskDefinitionRequestModel(
+        taskDefinition: task,
+        context: context,
+      ).toJson(),
+    );
+    return Success(TaskExecutionResultModel.fromJson(response).toDomain());
+  }
 }
 
 class FakeTaskRunnerDatasource implements TaskRunnerDatasource {

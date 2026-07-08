@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'core/logging/syscat_log.dart';
 import 'root_tab.dart';
 import 'core/widgets/root_app_bar.dart';
 import 'core/widgets/root_drawer.dart';
@@ -18,7 +17,6 @@ class RootPage extends StatefulWidget {
 }
 
 class _RootPageState extends State<RootPage> {
-
   static final List<RootTab> _tabs = [
     RootTab(title: 'Aufgaben', icon: Icons.dashboard_outlined, path: '/tasks'),
     RootTab(title: 'Arbeitspläne', icon: Icons.folder_outlined, path: '/plans'),
@@ -49,13 +47,6 @@ class _RootPageState extends State<RootPage> {
     Navigator.of(context).pop();
   }
 
-  Future<void> _runTask() async {
-    logSyscatInfo(
-      'App-Bar Run Task wurde gedrückt, ist aber noch nicht verdrahtet.',
-      name: 'syscat.task_builder',
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final selectedTabIndex = _selectedTabIndex;
@@ -63,7 +54,7 @@ class _RootPageState extends State<RootPage> {
     return SyscatBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: RootAppBar(title: selectedTab.title, ),
+        appBar: RootAppBar(title: selectedTab.title),
         drawer: RootDrawer(
           tabs: _tabs,
           selectedIndex: selectedTabIndex,

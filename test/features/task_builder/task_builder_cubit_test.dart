@@ -1,7 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/prompt_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
+import 'package:syscat2/features/task_builder/domain/entities/task_execution_failure.dart';
+import 'package:syscat2/features/task_builder/domain/entities/task_execution_result.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
@@ -19,6 +22,16 @@ class _InMemoryTaskRepository implements TaskRepository {
   @override
   Future<void> saveTask(Task task) async {
     savedTask = task;
+  }
+
+  @override
+  Future<Result<TaskExecutionResult, TaskExecutionFailure>> execute({
+    required Task task,
+    String context = '',
+  }) async {
+    return const Error(
+      TaskExecutionFailure(TaskExecutionFailureKind.executionFailed),
+    );
   }
 }
 

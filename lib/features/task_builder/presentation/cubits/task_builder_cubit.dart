@@ -19,19 +19,19 @@ part 'task_builder_string_input_mutations.dart';
 /// Jede Mutation folgt dem gleichen Muster:
 /// 1. State-Guards (nur in [TaskBuilderLoaded] aktiv).
 /// 2. Domain-Operation aufrufen (liefert neue Immutable-Instanz).
-/// 3. Sofort persistieren via [SaveDraftTaskDefinition].
+/// 3. Sofort persistieren via [TaskRepository].
 /// 4. Neuen State emittieren.
 class TaskBuilderCubit extends Cubit<TaskBuilderState> {
-  final TaskRepository _repository;
+  final TaskRepository repository;
 
-  TaskBuilderCubit({required TaskRepository repository})
-    : _repository = repository,
-      super(const TaskBuilderLoading());
+  TaskBuilderCubit({required this.repository})
+    : super(const TaskBuilderLoading());
 
   Future<void> load(Task? editingTask) async {
     editingTask ??= Task.empty();
     emit(const TaskBuilderLoading());
     try {
+      await repository.saveTask(editingTask);
       if (isClosed) return;
       emit(TaskBuilderLoaded(editingTask));
     } catch (_) {
@@ -100,15 +100,13 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     await _saveAndEmit(updated);
   }
 
-  void confirmSave() {}
-
   Task? loadedTaskOrNull() {
     final current = state;
     return current is TaskBuilderLoaded ? current.editingTask : null;
   }
 
   Future<void> _saveAndEmit(Task updated) async {
-    await _repository.saveTask(updated);
+    await repository.saveTask(updated);
     if (isClosed) return;
     emit(TaskBuilderLoaded(updated));
   }

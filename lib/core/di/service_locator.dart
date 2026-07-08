@@ -25,12 +25,10 @@ import '../../features/activity/domain/usecases/track_task_execution.dart';
 import '../../features/activity/infrastructure/repositories/in_memory_task_activity_repository.dart';
 import '../../features/activity/presentation/cubits/activity_cubit.dart';
 import '../../features/task_builder/domain/repositories/task_repository.dart';
-import '../../features/task_builder/domain/repositories/task_runner_repository.dart';
 import '../../features/task_builder/domain/usecases/execute_task.dart';
 import '../../features/task_builder/infrastructure/datasources/firebase_functions_task_runner_datasource.dart';
 import '../../features/task_builder/infrastructure/datasources/task_runner_datasource.dart';
-import '../../features/task_builder/infrastructure/repositories/in_memory_task_definition_repository.dart';
-import '../../features/task_builder/infrastructure/repositories/task_runner_repository_impl.dart';
+import '../../features/task_builder/infrastructure/repositories/firebase_task_repository.dart';
 import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import '../../features/user/domain/repositories/user_repository.dart';
 import '../../features/user/domain/usecases/ensure_user_profile.dart';
@@ -61,16 +59,17 @@ void configureDependencies() {
       ),
     )
     ..registerLazySingleton<TaskRepository>(
-      InMemoryTaskDefinitionRepository.new,
+      () => FirebaseTaskRepository(
+        auth: serviceLocator<FirebaseAuth>(),
+        firestore: serviceLocator<FirebaseFirestore>(),
+        runnerDatasource: serviceLocator<TaskRunnerDatasource>(),
+      ),
     )
     ..registerLazySingleton<TaskActivityRepository>(
       InMemoryTaskActivityRepository.new,
     )
     ..registerLazySingleton<TaskRunnerDatasource>(
       FirebaseFunctionsTaskRunnerDatasource.new,
-    )
-    ..registerLazySingleton<TaskRunnerRepository>(
-      () => TaskRunnerRepositoryImpl(serviceLocator<TaskRunnerDatasource>()),
     )
     ..registerLazySingleton(() => SignOut(serviceLocator<AuthRepository>()))
     ..registerLazySingleton(
@@ -111,7 +110,7 @@ void configureDependencies() {
     )
     ..registerLazySingleton(
       () => ExecuteTask(
-        serviceLocator<TaskRunnerRepository>(),
+        serviceLocator<TaskRepository>(),
         tracker: serviceLocator<TrackTaskExecution>(),
       ),
     )

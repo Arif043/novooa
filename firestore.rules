@@ -28,6 +28,17 @@ rules_version = '2';
 //   - apiKey: string (required, 8-4096) - write-only client secret
 //   - updatedAt: timestamp (required) - last secret sync time
 //
+// Subcollection: users/{uid}/tasks
+// Document ID: generated task id
+// Fields:
+//   - id: string (required, immutable) - must equal document ID
+//   - title: string (required, 1-160)
+//   - objective: string (required, max 4096)
+//   - selectedNodeId: string (required)
+//   - graph: map (required) - nodes and edges payload
+//   - createdAt: timestamp (required, immutable)
+//   - updatedAt: timestamp (required)
+//
 // Collection: teams
 // Document ID: team id, personal teams use personal_<uid>
 // Fields:
@@ -181,6 +192,28 @@ service cloud.firestore {
         data.updatedAt is timestamp;
     }
 
+    function isValidTask(data, taskId) {
+      return data.keys().hasOnly([
+        'id',
+        'title',
+        'objective',
+        'selectedNodeId',
+        'graph',
+        'createdAt',
+        'updatedAt',
+      ]) &&
+        data.id == taskId &&
+        data.title is string &&
+        data.title.size() >= 1 &&
+        data.title.size() <= 160 &&
+        data.objective is string &&
+        data.objective.size() <= 4096 &&
+        data.selectedNodeId is string &&
+        data.graph is map &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
     function isValidTeam(data, teamId) {
       return data.keys().hasOnly(['ownerUid', 'name', 'updatedAt']) &&
         data.ownerUid == request.auth.uid &&
@@ -289,6 +322,22 @@ service cloud.firestore {
           request.resource.data.updatedAt == request.time;
 
         allow delete: if false;
+      }
+
+      match /tasks/{taskId} {
+        allow get, list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+          isValidTask(request.resource.data, taskId) &&
+          request.resource.data.createdAt == request.time &&
+          request.resource.data.updatedAt == request.time;
+
+        allow update: if isOwner(userId) &&
+          isValidTask(request.resource.data, taskId) &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          request.resource.data.updatedAt == request.time;
+
+        allow delete: if isOwner(userId);
       }
     }
 

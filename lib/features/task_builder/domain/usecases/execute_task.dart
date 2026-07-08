@@ -5,7 +5,7 @@ import '../../../activity/domain/usecases/track_task_execution.dart';
 import '../entities/task.dart';
 import '../entities/task_execution_failure.dart';
 import '../entities/task_execution_result.dart';
-import '../repositories/task_runner_repository.dart';
+import '../repositories/task_repository.dart';
 
 class ExecuteTaskParams {
   const ExecuteTaskParams({required this.task, this.context = ''});
@@ -15,14 +15,19 @@ class ExecuteTaskParams {
 }
 
 class ExecuteTask {
-  const ExecuteTask(this._repository, {TrackTaskExecution? tracker}) : _tracker = tracker;
+  const ExecuteTask(this._repository, {this.tracker});
 
-  final TaskRunnerRepository _repository;
-  final TrackTaskExecution? _tracker;
+  final TaskRepository _repository;
+  final TrackTaskExecution? tracker;
 
-  Future<Result<TaskExecutionResult, TaskExecutionFailure>> call(ExecuteTaskParams params) async {
-    final runId = await _tracker?.started(_trackStart(params));
-    final taskExecutionOrFailure = await _repository.execute(task: params.task, context: params.context);
+  Future<Result<TaskExecutionResult, TaskExecutionFailure>> call(
+    ExecuteTaskParams params,
+  ) async {
+    final runId = await tracker?.started(_trackStart(params));
+    final taskExecutionOrFailure = await _repository.execute(
+      task: params.task,
+      context: params.context,
+    );
     await _trackResult(params, taskExecutionOrFailure, runId);
     return taskExecutionOrFailure;
   }
@@ -32,11 +37,17 @@ class ExecuteTask {
     Result<TaskExecutionResult, TaskExecutionFailure> taskExecutionOrFailure,
     UniqueId? runId,
   ) async {
-    final tracker = _tracker;
-    if (tracker == null || runId == null) return;
+    final trackerOrNull = tracker;
+    if (trackerOrNull == null || runId == null) return;
     await taskExecutionOrFailure.when(
-      (result) => tracker.succeeded(runId: runId, success: _trackSuccess(params.task, result)),
-      (failure) => tracker.failed(runId: runId, failure: _trackFailure(params.task, failure)),
+      (result) => trackerOrNull.succeeded(
+        runId: runId,
+        success: _trackSuccess(params.task, result),
+      ),
+      (failure) => trackerOrNull.failed(
+        runId: runId,
+        failure: _trackFailure(params.task, failure),
+      ),
     );
   }
 
@@ -48,7 +59,10 @@ class ExecuteTask {
     );
   }
 
-  TrackTaskSuccess _trackSuccess(Task taskDefinition, TaskExecutionResult result) {
+  TrackTaskSuccess _trackSuccess(
+    Task taskDefinition,
+    TaskExecutionResult result,
+  ) {
     return TrackTaskSuccess(
       taskId: taskDefinition.id,
       taskTitle: taskDefinition.title,
@@ -57,8 +71,15 @@ class ExecuteTask {
     );
   }
 
-  TrackTaskFailure _trackFailure(Task taskDefinition, TaskExecutionFailure failure) {
-    return TrackTaskFailure(taskId: taskDefinition.id, taskTitle: taskDefinition.title, message: failure.message);
+  TrackTaskFailure _trackFailure(
+    Task taskDefinition,
+    TaskExecutionFailure failure,
+  ) {
+    return TrackTaskFailure(
+      taskId: taskDefinition.id,
+      taskTitle: taskDefinition.title,
+      message: failure.message,
+    );
   }
 
   TrackNodeActivity _trackNode(NodeExecutionResult result) {

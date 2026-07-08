@@ -121,13 +121,10 @@
 // }
 
 // void _registerTaskBuilderCubit() {
-//   final repository = InMemoryTaskDefinitionRepository();
+//   final repository = _RouterTaskRepository();
 //   serviceLocator.registerLazySingleton<TaskRepository>(() => repository);
 //   serviceLocator.registerFactory(
-//     () => TaskBuilderCubit(
-//       getDraftTaskDefinition: GetDraftTaskDefinition(repository),
-//       saveDraftTaskDefinition: SaveDraftTaskDefinition(repository),
-//     ),
+//     () => TaskBuilderCubit(repository: repository),
 //   );
 // }
 
