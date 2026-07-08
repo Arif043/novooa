@@ -32,6 +32,18 @@ class Toolbar extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Draggable<WorkflowPrimitive>(
+              data: WorkflowPrimitive.script,
+              feedback: ScriptNodeDraggingDummy(),
+              child: IconButton(
+                onPressed: () => context
+                    .read<TaskBuilderCubit>()
+                    .addNodeToMainGraph(.script),
+                icon: const Icon(Icons.terminal),
+                tooltip: "Script hinzufügen",
+              ),
+            ),
+            const SizedBox(width: 4),
+            Draggable<WorkflowPrimitive>(
               data: WorkflowPrimitive.prompt,
               feedback: PromptNodeDraggingDummy(),
               child: IconButton(
@@ -101,6 +113,18 @@ class PromptNodeDraggingDummy extends StatelessWidget {
     return Container(
       color: Colors.green,
       child: Center(child: Icon(Icons.format_align_left)),
+    );
+  }
+}
+
+class ScriptNodeDraggingDummy extends StatelessWidget {
+  const ScriptNodeDraggingDummy({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.green,
+      child: Center(child: Icon(Icons.terminal)),
     );
   }
 }

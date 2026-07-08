@@ -136,6 +136,22 @@ void main() {
 
     await cubit.close();
   });
+
+  test('updateScript speichert Script-Code am Script-Node', () async {
+    final repository = _InMemoryTaskRepository(_taskWithScriptNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.updateScript(const NodeId('node.script'), 'output = input');
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final config = state.editingTask.nodes.first.config as ScriptNodeConfig;
+
+    expect(config.script, 'output = input');
+    expect(repository.savedTask, state.editingTask);
+
+    await cubit.close();
+  });
 }
 
 const _attachment = PromptAttachment(
@@ -202,6 +218,26 @@ Task _taskWithBranchPrompt() {
             outputType: PromptOutputType.text,
             choices: ['', ''],
           ),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+Task _taskWithScriptNode() {
+  return const Task(
+    id: 'task.script',
+    title: 'Aufgabe',
+    objective: 'Ziel',
+    selectedNodeId: NodeId('node.script'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.script'),
+          title: 'Script',
+          description: 'Beschreibung',
+          config: ScriptNodeConfig(script: 'output = ""'),
         ),
       ],
       edges: [],

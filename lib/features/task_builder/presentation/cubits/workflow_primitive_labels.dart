@@ -4,6 +4,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
   String get label {
     return switch (this) {
       WorkflowPrimitive.stringInput => 'Texteingabe',
+      WorkflowPrimitive.script => 'Script',
       WorkflowPrimitive.prompt => 'Prompt',
       WorkflowPrimitive.conditional => 'Bedingter Ablauf',
       WorkflowPrimitive.iterativeRefinement => 'Iterative Verfeinerung',
@@ -17,6 +18,8 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
     return switch (this) {
       WorkflowPrimitive.stringInput =>
         'Gibt einen festen Text als Ausgabe weiter.',
+      WorkflowPrimitive.script =>
+        'Führt Python-Code mit der vorherigen Ausgabe als input aus.',
       WorkflowPrimitive.prompt => 'Formt Eingaben in einen Modellauftrag.',
       WorkflowPrimitive.conditional =>
         'Verzweigt den Ablauf anhand von Regeln.',

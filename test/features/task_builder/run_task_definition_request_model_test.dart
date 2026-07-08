@@ -48,6 +48,22 @@ void main() {
     expect(config['value'], 'Manueller Entwurf');
   });
 
+  test('serialisiert Script fuer runTaskDefinitionFlow', () {
+    final json = RunTaskDefinitionRequestModel(
+      taskDefinition: _scriptTask(),
+      context: '',
+    ).toJson();
+
+    final task = json['taskDefinition'] as Map<String, Object?>;
+    final nodes = task['nodes'] as List<Object?>;
+    final script = nodes.first as Map<String, Object?>;
+    final config = script['config'] as Map<String, Object?>;
+
+    expect(script['primitive'], 'script');
+    expect(config['primitive'], 'script');
+    expect(config['script'], 'output = input.upper()');
+  });
+
   test('serialisiert Verzweigungsfaelle fuer runTaskDefinitionFlow', () {
     final json = RunTaskDefinitionRequestModel(
       taskDefinition: _conditionalTask(),
@@ -138,6 +154,26 @@ Task _stringInputTask() {
           title: 'Texteingabe',
           description: 'Beschreibung',
           config: StringInputNodeConfig(value: 'Manueller Entwurf'),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+Task _scriptTask() {
+  return const Task(
+    id: 'task.script',
+    title: 'Task',
+    objective: 'Ziel',
+    selectedNodeId: NodeId('node.script'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.script'),
+          title: 'Script',
+          description: 'Beschreibung',
+          config: ScriptNodeConfig(script: 'output = input.upper()'),
         ),
       ],
       edges: [],

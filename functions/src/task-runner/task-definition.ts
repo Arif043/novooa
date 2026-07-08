@@ -2,6 +2,7 @@ import {z} from "genkit";
 
 export const workflowPrimitiveSchema = z.enum([
   "stringInput",
+  "script",
   "prompt",
   "conditionalFlow",
   "iterativeRefinement",
@@ -15,6 +16,11 @@ export const promptOutputTypeSchema = z.enum(["text", "decision"]);
 export const stringInputNodeConfigSchema = z.object({
   primitive: z.literal("stringInput").default("stringInput"),
   value: z.string().default(""),
+});
+
+export const scriptNodeConfigSchema = z.object({
+  primitive: z.literal("script").default("script"),
+  script: z.string().default("output = input"),
 });
 
 export const promptNodeConfigSchema = z.object({
@@ -67,6 +73,7 @@ export const iterativeRefinementNodeConfigSchema = z.object({
 
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   stringInputNodeConfigSchema,
+  scriptNodeConfigSchema,
   promptNodeConfigSchema,
   conditionalNodeConfigSchema,
   iterativeRefinementNodeConfigSchema,

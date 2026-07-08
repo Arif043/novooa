@@ -9,6 +9,7 @@ import 'node_config.dart';
 /// `WorkflowPrimitiveLabels`-Extension und ein Genkit-Mapping im Inspector.
 enum WorkflowPrimitive {
   stringInput,
+  script,
   prompt,
   conditional,
   iterativeRefinement,

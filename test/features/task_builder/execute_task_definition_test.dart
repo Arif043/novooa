@@ -130,10 +130,11 @@ class FakeTaskRunnerDatasource implements TaskRunnerDatasource {
     final primitive = node['primitive'] as String;
     final output = switch (primitive) {
       'stringInput' => _stringInputOutput(node),
+      'script' => _scriptOutput(node),
       'prompt' => _promptOutput(node),
       _ => 'Mock: $primitive wurde übersprungen.',
     };
-    final executed = primitive == 'stringInput' || primitive == 'prompt';
+    final executed = {'stringInput', 'script', 'prompt'}.contains(primitive);
     return {
       'nodeId': node['id'] as String,
       'primitive': primitive,
@@ -146,6 +147,11 @@ class FakeTaskRunnerDatasource implements TaskRunnerDatasource {
   String _stringInputOutput(Map<String, Object?> node) {
     final config = node['config'] as Map<String, Object?>?;
     return config?['value'] as String? ?? '';
+  }
+
+  String _scriptOutput(Map<String, Object?> node) {
+    final config = node['config'] as Map<String, Object?>?;
+    return config?['script'] as String? ?? '';
   }
 
   String _promptOutput(Map<String, Object?> node) {

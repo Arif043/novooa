@@ -41,6 +41,7 @@ class RunTaskDefinitionRequestModel {
   Map<String, Object?> _configToJson(NodeConfig config) {
     return switch (config) {
       StringInputNodeConfig() => _stringInputToJson(config),
+      ScriptNodeConfig() => _scriptToJson(config),
       PromptNodeConfig() => _promptToJson(config),
       ConditionalNodeConfig() => _conditionalToJson(config),
       IterativeRefinementNodeConfig() => _iterativeRefinementToJson(config),
@@ -50,6 +51,10 @@ class RunTaskDefinitionRequestModel {
 
   Map<String, Object?> _stringInputToJson(StringInputNodeConfig config) {
     return {'primitive': config.primitive.name, 'value': config.value};
+  }
+
+  Map<String, Object?> _scriptToJson(ScriptNodeConfig config) {
+    return {'primitive': config.primitive.name, 'script': config.script};
   }
 
   Map<String, Object?> _promptToJson(PromptNodeConfig config) {

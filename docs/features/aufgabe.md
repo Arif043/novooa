@@ -73,6 +73,7 @@ features/task_builder/
 | Enum-Wert               | UI-Label (de)                | Beschreibung                                                 | Genkit-Mapping                                       |
 | ----------------------- | ---------------------------- | ------------------------------------------------------------- | ---------------------------------------------------- |
 | `stringInput`           | **Texteingabe**              | Gibt einen festen String als Output weiter                    | Direkter Runner-Output                               |
+| `script`                | **Script**                   | Führt Python-Code mit Vorgänger-Output als `input` aus        | Interner `executeScriptNode`                         |
 | `prompt`                | **Prompt**                   | LLM-Aufruf mit Vorlage und Variablen                          | Interner `executePromptNode`                          |
 | `conditionalFlow`       | **Bedingter Ablauf**         | Verzweigt anhand eines Prädikats auf den vorherigen Output   | Interner `executeConditionalNode`                     |
 | `iterativeRefinement`   | **Iterative Verfeinerung**   | Draft → Critique → Improve, n Runden                          | Interner `executeIterativeRefinementNode`             |
@@ -161,6 +162,25 @@ output: { answer: string }
 
 Temperatur: `0.3`. Streamt nicht.
 
+### Script-Executor
+
+Datei: `functions/src/task-executors/script-node-executor.ts`.
+Der Script-Node führt Python-Code aus. Der Output des Vorgänger-Nodes wird im
+Script als Variable `input` bereitgestellt; das Script muss eine
+String-Variable `output` setzen.
+
+```python
+output = input.upper()
+```
+
+```ts
+input:  { input: string; script: string }
+output: string
+```
+
+Der MVP setzt ein Timeout von 5 Sekunden und begrenzt den Output auf 10 KB.
+Es gibt keinen zusätzlichen Run-Kontext für Script-Nodes.
+
 ### `runTaskDefinitionFlow`
 
 Führt eine komplette `TaskDefinition` aus. Der Flow interpretiert den Graph,
@@ -178,6 +198,15 @@ optional `selectedNodeId` und optional `message`.
 
 `WorkflowNode` nutzt ein generisches `config`-Objekt. Die konkrete Struktur
 wird über `config.primitive` bestimmt. Für Prompt-Bausteine:
+
+```ts
+{
+  primitive: "script",
+  script: string
+}
+```
+
+Für Prompt-Bausteine:
 
 ```ts
 {

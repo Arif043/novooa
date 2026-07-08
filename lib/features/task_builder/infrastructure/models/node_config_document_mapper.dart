@@ -18,6 +18,7 @@ class NodeConfigDocumentMapper {
   Map<String, Object?> toDocument(NodeConfig config) {
     return switch (config) {
       StringInputNodeConfig() => _stringInputToDocument(config),
+      ScriptNodeConfig() => _scriptToDocument(config),
       PromptNodeConfig() => _promptToDocument(config),
       ConditionalNodeConfig() => _conditionalToDocument(config),
       IterativeRefinementNodeConfig() => _refinementToDocument(config),
@@ -29,6 +30,7 @@ class NodeConfigDocumentMapper {
     final primitive = _primitiveFrom(data['primitive']);
     return switch (primitive) {
       WorkflowPrimitive.stringInput => _stringInputFrom(data),
+      WorkflowPrimitive.script => _scriptFrom(data),
       WorkflowPrimitive.prompt => _promptFrom(data),
       WorkflowPrimitive.conditional => _conditionalFrom(data),
       WorkflowPrimitive.iterativeRefinement => _refinementFrom(data),
@@ -38,6 +40,10 @@ class NodeConfigDocumentMapper {
 
   Map<String, Object?> _stringInputToDocument(StringInputNodeConfig config) {
     return {'primitive': config.primitive.name, 'value': config.value};
+  }
+
+  Map<String, Object?> _scriptToDocument(ScriptNodeConfig config) {
+    return {'primitive': config.primitive.name, 'script': config.script};
   }
 
   Map<String, Object?> _promptToDocument(PromptNodeConfig config) {
@@ -70,6 +76,10 @@ class NodeConfigDocumentMapper {
 
   StringInputNodeConfig _stringInputFrom(Map<String, Object?> data) {
     return StringInputNodeConfig(value: data['value'] as String? ?? '');
+  }
+
+  ScriptNodeConfig _scriptFrom(Map<String, Object?> data) {
+    return ScriptNodeConfig(script: data['script'] as String? ?? '');
   }
 
   PromptNodeConfig _promptFrom(Map<String, Object?> data) {
