@@ -14,32 +14,37 @@ class PromptNodeConfig extends NodeConfig {
     required this.instruction,
     required this.outputType,
     required this.choices,
+    this.attachments = const [],
   });
 
   final String instruction;
   final PromptOutputType outputType;
   final List<String> choices;
+  final List<PromptAttachment> attachments;
 
   factory PromptNodeConfig.initial() {
     return const PromptNodeConfig(
       instruction: '',
       outputType: PromptOutputType.text,
       choices: ['', ''],
+      attachments: [],
     );
   }
 
   @override
-  List<Object?> get props => [instruction, outputType, choices];
+  List<Object?> get props => [instruction, outputType, choices, attachments];
 
   PromptNodeConfig copyWith({
     String? instruction,
     PromptOutputType? outputType,
     List<String>? choices,
+    List<PromptAttachment>? attachments,
   }) {
     return PromptNodeConfig(
       instruction: instruction ?? this.instruction,
       outputType: outputType ?? this.outputType,
       choices: choices ?? this.choices,
+      attachments: attachments ?? this.attachments,
     );
   }
 
@@ -58,6 +63,19 @@ class PromptNodeConfig extends NodeConfig {
     if (choices.length <= 1) return this;
     final updatedChoices = [...choices]..removeAt(index);
     return copyWith(choices: updatedChoices);
+  }
+
+  PromptNodeConfig attachFile(PromptAttachment attachment) {
+    if (attachments.any((current) => current.id == attachment.id)) return this;
+    return copyWith(attachments: [...attachments, attachment]);
+  }
+
+  PromptNodeConfig detachFile(String attachmentId) {
+    return copyWith(
+      attachments: attachments
+          .where((attachment) => attachment.id != attachmentId)
+          .toList(growable: false),
+    );
   }
 
   @override

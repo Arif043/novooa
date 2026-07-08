@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
+import 'package:syscat2/features/task_builder/domain/entities/prompt_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_edge.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
@@ -24,6 +25,10 @@ void main() {
     expect(config['primitive'], 'prompt');
     expect(config['outputType'], 'decision');
     expect(config['choices'], ['Ja', 'Nein', 'Vielleicht']);
+    final attachments = config['attachments'] as List<Object?>;
+    final attachment = attachments.single as Map<String, Object?>;
+    expect(attachment['storagePath'], 'users/u1/uploads/briefing.md');
+    expect(attachment['generation'], '7');
     expect(task['edges'], isA<List<Object?>>());
   });
 
@@ -102,6 +107,16 @@ Task _task() {
             instruction: 'Entscheide.',
             outputType: PromptOutputType.decision,
             choices: ['Ja', 'Nein', 'Vielleicht'],
+            attachments: [
+              PromptAttachment(
+                id: 'file.briefing.v7',
+                storagePath: 'users/u1/uploads/briefing.md',
+                generation: '7',
+                displayName: 'briefing.md',
+                contentType: 'text/markdown',
+                sizeBytes: 12000,
+              ),
+            ],
           ),
         ),
       ],

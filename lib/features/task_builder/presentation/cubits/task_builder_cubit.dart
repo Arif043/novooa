@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
+import 'package:syscat2/features/task_builder/domain/entities/prompt_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/workflow_graph.dart';

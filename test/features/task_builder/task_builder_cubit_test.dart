@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
+import 'package:syscat2/features/task_builder/domain/entities/prompt_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
@@ -95,7 +96,43 @@ void main() {
       await cubit.close();
     },
   );
+
+  test('attachPromptFile speichert Storage-Dateiversion am Prompt', () async {
+    final repository = _InMemoryTaskRepository(_taskWithBranchPrompt());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.attachPromptFile(
+      nodeId: const NodeId('node.2'),
+      attachment: _attachment,
+    );
+
+    var promptConfig = _branchPromptConfig(cubit);
+    expect(promptConfig.attachments, [_attachment]);
+
+    await cubit.detachPromptFile(
+      nodeId: const NodeId('node.2'),
+      attachmentId: _attachment.id,
+    );
+
+    final state = cubit.state as TaskBuilderLoaded;
+    promptConfig = _branchPromptConfig(cubit);
+
+    expect(promptConfig.attachments, isEmpty);
+    expect(repository.savedTask, state.editingTask);
+
+    await cubit.close();
+  });
 }
+
+const _attachment = PromptAttachment(
+  id: 'file.briefing.v1',
+  storagePath: 'users/u1/uploads/briefing.md',
+  generation: '1',
+  displayName: 'briefing.md',
+  contentType: 'text/markdown',
+  sizeBytes: 12000,
+);
 
 Task _taskWithConditionalNode() {
   return _taskWithRootBranch(
@@ -104,6 +141,13 @@ Task _taskWithConditionalNode() {
     branchLabel: 'Ja',
     branchGraph: const WorkflowGraph(nodes: [], edges: []),
   );
+}
+
+PromptNodeConfig _branchPromptConfig(TaskBuilderCubit cubit) {
+  final state = cubit.state as TaskBuilderLoaded;
+  final rootConfig =
+      state.editingTask.nodes.first.config as ConditionalNodeConfig;
+  return rootConfig.branches.first.graph.nodes.first.config as PromptNodeConfig;
 }
 
 Task _taskWithNestedConditionalNode() {

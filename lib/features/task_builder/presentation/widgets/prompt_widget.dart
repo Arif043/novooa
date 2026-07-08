@@ -4,8 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
+import '../../domain/entities/prompt_attachment.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
+import 'demo_prompt_attachments.dart';
+import 'prompt_attachment_section.dart';
 import 'prompt_choice_field.dart';
 
 class PromptWidget extends StatefulWidget {
@@ -27,7 +30,7 @@ class _PromptWidgetState extends State<PromptWidget> {
     super.initState();
     final config = widget.node.config as PromptNodeConfig;
     selectedOutput = config.outputType;
-    _instructionController = _controller(config.instruction);
+    _instructionController = TextEditingController(text: config.instruction);
     _syncChoiceControllers(config.choices);
   }
 
@@ -50,6 +53,7 @@ class _PromptWidgetState extends State<PromptWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final config = widget.node.config as PromptNodeConfig;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -63,7 +67,9 @@ class _PromptWidgetState extends State<PromptWidget> {
           const SizedBox(height: AppSpacing.xs),
           TextField(
             controller: _instructionController,
-            decoration: const InputDecoration(hintText: 'Hier kommt die Anweisung'),
+            decoration: const InputDecoration(
+              hintText: 'Hier kommt die Anweisung',
+            ),
             onChanged: _updateInstruction,
           ),
           const SizedBox(height: AppSpacing.md),
@@ -72,7 +78,10 @@ class _PromptWidgetState extends State<PromptWidget> {
           CupertinoSlidingSegmentedControl<PromptOutputType>(
             groupValue: selectedOutput,
             backgroundColor: SyscatTheme.primaryOrangeLighter,
-            children: {PromptOutputType.text: Text('Freitext'), PromptOutputType.decision: Text('Entscheidung')},
+            children: const {
+              PromptOutputType.text: Text('Freitext'),
+              PromptOutputType.decision: Text('Entscheidung'),
+            },
             onValueChanged: (value) {
               _updateOutputType({value!});
             },
@@ -107,33 +116,21 @@ class _PromptWidgetState extends State<PromptWidget> {
               ],
             ),
           ),
-          // if (selectedOutput == PromptOutputType.decision) ...[
-          //   const SizedBox(height: AppSpacing.lg),
-          //   Text('Mögliche Antworten', style: SyscatTheme.taskBodySmall),
-          //   const SizedBox(height: AppSpacing.xs),
-          //   for (var index = 0; index < _choiceControllers.length; index++)
-          //     PromptChoiceField(
-          //       controller: _choiceControllers[index],
-          //       index: index,
-          //       canRemove: _choiceControllers.length > 1,
-          //       onChanged: _updateChoice,
-          //       onRemove: _removeChoice,
-          //     ),
-          //   const SizedBox(height: AppSpacing.xs),
-          //   CupertinoButton(padding: EdgeInsets.zero, onPressed: _addChoice, child: const Text('Antwort hinzufügen')),
-          // ],
+          const SizedBox(height: AppSpacing.md),
+          PromptAttachmentSection(
+            attachments: config.attachments,
+            availableFiles: demoPromptAttachments,
+            onAttach: _attachFile,
+            onDetach: _detachFile,
+          ),
         ],
       ),
     );
   }
 
-  TextEditingController _controller(String text) {
-    return TextEditingController(text: text);
-  }
-
   void _syncChoiceControllers(List<String> choices) {
     while (_choiceControllers.length < choices.length) {
-      _choiceControllers.add(_controller(''));
+      _choiceControllers.add(TextEditingController());
     }
     while (_choiceControllers.length > choices.length) {
       _choiceControllers.removeLast().dispose();
@@ -152,17 +149,26 @@ class _PromptWidgetState extends State<PromptWidget> {
   }
 
   void _updateInstruction(String value) {
-    context.read<TaskBuilderCubit>().updatePromptInstruction(widget.node.id, value);
+    context.read<TaskBuilderCubit>().updatePromptInstruction(
+      widget.node.id,
+      value,
+    );
   }
 
   void _updateOutputType(Set<PromptOutputType> value) {
     final outputType = value.first;
-    // setState(() => selectedOutput = outputType);
-    context.read<TaskBuilderCubit>().updatePromptOutputType(widget.node.id, outputType);
+    context.read<TaskBuilderCubit>().updatePromptOutputType(
+      widget.node.id,
+      outputType,
+    );
   }
 
   void _updateChoice(int index, String value) {
-    context.read<TaskBuilderCubit>().updatePromptChoice(nodeId: widget.node.id, choiceIndex: index, value: value);
+    context.read<TaskBuilderCubit>().updatePromptChoice(
+      nodeId: widget.node.id,
+      choiceIndex: index,
+      value: value,
+    );
   }
 
   void _addChoice() {
@@ -170,6 +176,23 @@ class _PromptWidgetState extends State<PromptWidget> {
   }
 
   void _removeChoice(int index) {
-    context.read<TaskBuilderCubit>().removePromptChoice(nodeId: widget.node.id, choiceIndex: index);
+    context.read<TaskBuilderCubit>().removePromptChoice(
+      nodeId: widget.node.id,
+      choiceIndex: index,
+    );
+  }
+
+  void _attachFile(PromptAttachment attachment) {
+    context.read<TaskBuilderCubit>().attachPromptFile(
+      nodeId: widget.node.id,
+      attachment: attachment,
+    );
+  }
+
+  void _detachFile(String attachmentId) {
+    context.read<TaskBuilderCubit>().detachPromptFile(
+      nodeId: widget.node.id,
+      attachmentId: attachmentId,
+    );
   }
 }

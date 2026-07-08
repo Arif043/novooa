@@ -1,4 +1,5 @@
 import '../../domain/entities/node_config.dart';
+import '../../domain/entities/prompt_attachment.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/workflow_edge.dart';
 import '../../domain/entities/workflow_graph.dart';
@@ -56,6 +57,18 @@ class RunTaskDefinitionRequestModel {
       'instruction': config.instruction,
       'outputType': config.outputType.name,
       'choices': config.choices,
+      'attachments': config.attachments.map(_attachmentToJson).toList(),
+    };
+  }
+
+  Map<String, Object?> _attachmentToJson(PromptAttachment attachment) {
+    return {
+      'id': attachment.id,
+      'storagePath': attachment.storagePath,
+      'generation': attachment.generation,
+      'displayName': attachment.displayName,
+      'contentType': attachment.contentType,
+      'sizeBytes': attachment.sizeBytes,
     };
   }
 
