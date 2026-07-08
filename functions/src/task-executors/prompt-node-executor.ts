@@ -1,6 +1,11 @@
 import { z, type Genkit } from "genkit";
 import {modelLogContext, textModel} from "../task-runner/ai-models.js";
 import {
+  type NodeExecutor,
+  executedNode,
+} from "../task-runner/node-executor.js";
+import {type WorkflowNode} from "../task-runner/task-definition.js";
+import {
   formatModelCallFinished,
   formatModelCallStarted,
   logReadableInfo,
@@ -17,6 +22,17 @@ export type PromptNodeInput = {
 
 export type PromptNodeOutput = {
   answer: string;
+};
+
+export const promptNodeExecutor: NodeExecutor = {
+  primitive: "prompt",
+  async execute(input) {
+    const output = await executePromptNode(
+      input.ai,
+      promptInputFor(input.node, input.context),
+    );
+    return executedNode(input.node, output.answer);
+  },
 };
 
 export async function executePromptNode(
@@ -95,4 +111,35 @@ function promptTurn(input: PromptNodeInput): string {
     parts.push(`Antworte nur mit einer Option: ${input.choices.join(", ")}`);
   }
   return parts.join("\n\n");
+}
+
+function promptInputFor(node: WorkflowNode, context: string): PromptNodeInput {
+  const config = promptConfigFor(node);
+  return {
+    instruction: instructionFor(node),
+    context,
+    outputType: config?.outputType ?? "text",
+    choices: choicesFor(node),
+  };
+}
+
+function instructionFor(node: WorkflowNode): string {
+  const instruction = promptConfigFor(node)?.instruction.trim();
+  if (instruction && instruction.length > 0) return instruction;
+  if (node.description.trim().length > 0) return node.description;
+  return node.title;
+}
+
+function choicesFor(node: WorkflowNode): string[] {
+  const config = promptConfigFor(node);
+  const choices = config?.choices.length ? config.choices : [
+    config?.firstChoice ?? "",
+    config?.secondChoice ?? "",
+  ];
+  return choices.filter((choice) => choice.trim().length > 0);
+}
+
+function promptConfigFor(node: WorkflowNode) {
+  if (node.config?.primitive !== "prompt") return undefined;
+  return node.config;
 }

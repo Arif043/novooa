@@ -1,5 +1,26 @@
-import {z, type Genkit} from "genkit";
+import {type Genkit} from "genkit";
 import {modelLogContext, reasoningModel} from "../task-runner/ai-models.js";
+import {
+  type NodeExecutor,
+  executedNode,
+  parentOutputFor,
+} from "../task-runner/node-executor.js";
+import {refinementConfigFor} from "./iterative-refinement-config.js";
+import {
+  type Evaluation,
+  evaluationSchema,
+  parseEvaluation,
+} from "./iterative-refinement-evaluation.js";
+import {
+  formatEvaluation,
+  formatImprovement,
+  formatRefinementFinished,
+  formatRefinementStarted,
+} from "./iterative-refinement-format.js";
+import {
+  evaluationPrompt,
+  improvementPrompt,
+} from "./iterative-refinement-prompts.js";
 import {
   errorDetails,
   formatException,
@@ -23,15 +44,26 @@ export type IterativeRefinementNodeOutput = {
   iterations: number;
 };
 
-type Evaluation = {
-  critique: string;
-  satisfied: boolean;
+export const iterativeRefinementNodeExecutor: NodeExecutor = {
+  primitive: "iterativeRefinement",
+  async execute(input) {
+    const config = refinementConfigFor(input.node);
+    const draft = parentOutputFor(input.node, input.task, input.results) ||
+      input.context;
+    const output = await executeIterativeRefinementNode(input.ai, {
+      objective: input.task.objective,
+      draft,
+      optimizerPrompt: config?.optimizerPrompt ||
+        input.node.description ||
+        input.node.title,
+      critiquePrompt: config?.critiquePrompt ||
+        input.node.description ||
+        input.node.title,
+      maxIterations: config?.maxIterations ?? 2,
+    });
+    return executedNode(input.node, output.answer);
+  },
 };
-
-const evaluationSchema = z.object({
-  critique: z.string(),
-  satisfied: z.boolean(),
-});
 
 export async function executeIterativeRefinementNode(
   ai: Genkit,
@@ -158,99 +190,6 @@ async function improveDraft(
     text: response.text,
   }));
   return response.text;
-}
-
-function parseEvaluation(text: string): Evaluation {
-  const parsed = evaluationSchema.safeParse(jsonFrom(text));
-  if (parsed.success) return parsed.data;
-  return {critique: text, satisfied: false};
-}
-
-function jsonFrom(text: string) {
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) return {};
-  try {
-    return JSON.parse(match[0]);
-  } catch {
-    return {};
-  }
-}
-
-function evaluationPrompt(
-  input: IterativeRefinementNodeInput,
-  draft: string,
-): string {
-  return [
-    `Ziel: ${input.objective || "Qualität des Ergebnisses verbessern."}`,
-    `Kriterien: ${input.critiquePrompt}`,
-    `Entwurf:\n${draft}`,
-    "Bewerte, ob der Entwurf die Kriterien erfüllt.",
-  ].join("\n\n");
-}
-
-function improvementPrompt(
-  input: IterativeRefinementNodeInput,
-  draft: string,
-  critique: string,
-): string {
-  return [
-    `Ziel: ${input.objective || "Verbessere den Entwurf."}`,
-    optimizerInstruction(input),
-    `Aktueller Entwurf:\n${draft}`,
-    `Feedback:\n${critique}`,
-    "Überarbeite den Entwurf. Gib nur die verbesserte Fassung zurück.",
-  ].join("\n\n");
-}
-
-function optimizerInstruction(input: IterativeRefinementNodeInput): string {
-  const prompt = input.optimizerPrompt.trim();
-  return prompt.length > 0
-    ? `Optimierer-Prompt:\n${prompt}`
-    : "Optimierer-Prompt: Verbessere den Entwurf gezielt und präzise.";
-}
-
-function formatRefinementStarted(
-  input: IterativeRefinementNodeInput,
-  maxIterations: number,
-): string {
-  return [
-    "[Iterative Verfeinerung startet]",
-    `Maximale Iterationen: ${maxIterations}`,
-    `Draft: ${input.draft.length} Zeichen`,
-    `Optimierer-Prompt: ${input.optimizerPrompt.length} Zeichen`,
-    `Kritik-Prompt: ${input.critiquePrompt.length} Zeichen`,
-  ].join("\n");
-}
-
-function formatEvaluation(iteration: number, evaluation: Evaluation): string {
-  return [
-    `[Iteration ${iteration}] Bewertung`,
-    `Erfüllt: ${evaluation.satisfied ? "ja" : "nein"}`,
-    `Kritik: ${preview(evaluation.critique)}`,
-  ].join("\n");
-}
-
-function formatImprovement(iteration: number, answer: string): string {
-  return [
-    `[Iteration ${iteration}] Optimierung`,
-    `Neuer Entwurf: ${answer.length} Zeichen`,
-    `Vorschau: ${preview(answer)}`,
-  ].join("\n");
-}
-
-function formatRefinementFinished(iterations: number, answer: string): string {
-  return [
-    "[Iterative Verfeinerung beendet]",
-    `Durchgeführte Iterationen: ${iterations}`,
-    `Finaler Entwurf: ${answer.length} Zeichen`,
-  ].join("\n");
-}
-
-function preview(text: string): string {
-  const normalized = text.replace(/\s+/g, " ").trim();
-  return normalized.length > 160
-    ? `${normalized.slice(0, 157)}...`
-    : normalized;
 }
 
 function boundedIterations(value: number): number {

@@ -1,17 +1,17 @@
 import { type Genkit } from "genkit";
-import { executeConditionalNode } from "../task-executors/conditional-node-executor.js";
-import { executeIterativeRefinementNode } from "../task-executors/iterative-refinement-node-executor.js";
-import { executePromptNode } from "../task-executors/prompt-node-executor.js";
+import {executorFor} from "./node-executor-registry.js";
+import {
+  parentResultsFor,
+  skippedNode,
+} from "./node-executor.js";
 import {
   type NodeExecutionResult,
   type RunTaskDefinitionInput,
   type RunTaskDefinitionOutput,
   type TaskDefinition as Task,
-  type WorkflowEdge,
   type WorkflowNode,
 } from "./task-definition.js";
 import {
-  contextFor,
   finalOutputOf,
   nextRunnableIndex,
   shouldSkipNode,
@@ -104,7 +104,7 @@ async function runNodeWithTrail(
   try {
     const result = input.skipNode
       ? skippedNode(input.node, "")
-      : await executeNode(ai, input.node, input.context, input.task, input.results);
+      : await executeNode(ai, input);
     logNodeTrail(input.task.id, result, input.startedAt);
     return result;
   } catch (error) {
@@ -173,238 +173,25 @@ function logSkippedBranches(
   ].join("\n"));
 }
 
+function runSubgraphFor(ai: Genkit) {
+  return (task: Task, context: string) => runNodes(ai, {
+    taskDefinition: task,
+    context,
+  });
+}
+
 async function executeNode(
   ai: Genkit,
-  node: WorkflowNode,
-  context: string,
-  task: Task,
-  results: Map<string, NodeExecutionResult>,
+  input: NodeRunInput,
 ): Promise<NodeExecutionResult> {
-  switch (node.primitive) {
-    case "stringInput":
-      return executeStringInput(node);
-    case "prompt":
-      return executePrompt(ai, node, context);
-    case "conditionalFlow":
-      return executeConditional(
-        ai,
-        node,
-        parentOutputFor(node, task, results),
-        context,
-        task,
-        task.edges,
-      );
-    case "iterativeRefinement":
-      return executeRefinement(ai, node, context, task, results);
-    default:
-      return skippedNode(node, context);
-  }
-}
-
-function executeStringInput(node: WorkflowNode): NodeExecutionResult {
-  const value = node.config.primitive === "stringInput"
-    ? node.config.value
-    : "";
-  return executedNode(node, value);
-}
-
-async function executePrompt(
-  ai: Genkit,
-  node: WorkflowNode,
-  context: string,
-): Promise<NodeExecutionResult> {
-  const output = await executePromptNode(ai, promptInputFor(node, context));
-  return executedNode(node, output.answer);
-}
-
-async function executeConditional(
-  ai: Genkit,
-  node: WorkflowNode,
-  targetLabel: string,
-  context: string,
-  task: Task,
-  edges: WorkflowEdge[],
-): Promise<NodeExecutionResult> {
-  const output = executeConditionalNode({
-    node,
-    targetLabel,
-    outgoingEdges: edges.filter((edge) => edge.from === node.id),
-  });
-  const branchOutput = await executeSelectedBranch(ai, node, output, context, task);
-  return executedNode(node, branchOutput, output.selectedNodeId, {
-    selectedBranchId: output.selectedBranchId,
-    selectedBranchLabel: output.selectedBranchLabel,
+  const executor = executorFor(input.node.primitive);
+  if (!executor) return skippedNode(input.node, input.context);
+  return executor.execute({
+    ai,
+    node: input.node,
+    context: input.context,
+    task: input.task,
+    results: input.results,
+    runSubgraph: runSubgraphFor(ai),
   });
 }
-
-async function executeSelectedBranch(
-  ai: Genkit,
-  node: WorkflowNode,
-  output: {
-    selectedBranchId?: string | null;
-    selectedBranchLabel?: string | null;
-    reason: string;
-  },
-  context: string,
-  task: Task,
-): Promise<string> {
-  const branch = selectedBranchFor(node, output.selectedBranchId);
-  if (!branch) return output.reason;
-  if (branch.graph.nodes.length === 0) return emptyBranchOutput(output);
-  logReadableInfo([
-    `[Zweig startet] ${branch.label}`,
-    `Bedingung: ${node.title} (${node.id})`,
-    `Bausteine: ${branch.graph.nodes.length} | Kanten: ${branch.graph.edges.length}`,
-  ].join("\n"));
-  const branchTask = branchTaskFor(task, branch);
-  const branchResults = await runNodes(ai, {
-    taskDefinition: branchTask,
-    context,
-  });
-  const finalOutput = finalOutputOf(branchResults);
-  logReadableInfo([
-    `[Zweig beendet] ${branch.label}`,
-    `Bausteine ausgeführt: ${branchResults.length}`,
-    `Ausgabe: ${finalOutput.length} Zeichen`,
-  ].join("\n"));
-  return finalOutput || output.reason;
-}
-
-function selectedBranchFor(node: WorkflowNode, branchId?: string | null) {
-  if (node.config.primitive !== "conditionalFlow") return undefined;
-  return node.config.branches.find((branch) => branch.id === branchId);
-}
-
-function emptyBranchOutput(output: {selectedBranchLabel?: string | null}) {
-  return `Branch ${output.selectedBranchLabel ?? ""} has no nodes.`;
-}
-
-function branchTaskFor(task: Task, branch: Branch): Task {
-  return {
-    id: `${task.id}:${branch.id}`,
-    title: `${task.title}:${branch.label}`,
-    objective: task.objective,
-    nodes: branch.graph.nodes as WorkflowNode[],
-    edges: branch.graph.edges,
-  };
-}
-
-type Branch = Extract<
-  WorkflowNode["config"],
-  {primitive: "conditionalFlow"}
->["branches"][number];
-
-function parentOutputFor(
-  node: WorkflowNode,
-  task: Task,
-  results: Map<string, NodeExecutionResult>,
-): string {
-  const parentOutputs = parentResultsFor(node, task, results)
-    .map((parentResult) => parentResult.result.output)
-    .filter((output) => output.trim().length > 0);
-  return parentOutputs[parentOutputs.length - 1] ?? "";
-}
-
-function parentResultsFor(
-  node: WorkflowNode,
-  task: Task,
-  results: Map<string, NodeExecutionResult>,
-) {
-  return task.edges
-    .filter((edge) => edge.to === node.id)
-    .map((edge) => ({edge, result: results.get(edge.from)}))
-    .filter((parent) => parent.result !== undefined) as {
-      edge: WorkflowEdge;
-      result: NodeExecutionResult;
-    }[];
-}
-
-async function executeRefinement(
-  ai: Genkit,
-  node: WorkflowNode,
-  context: string,
-  task: Task,
-  results: Map<string, NodeExecutionResult>,
-): Promise<NodeExecutionResult> {
-  const config = refinementConfigFor(node);
-  const draft = parentOutputFor(node, task, results) || context;
-  const output = await executeIterativeRefinementNode(ai, {
-    objective: task.objective,
-    draft,
-    optimizerPrompt: config?.optimizerPrompt || node.description || node.title,
-    critiquePrompt: config?.critiquePrompt || node.description || node.title,
-    maxIterations: config?.maxIterations ?? 2,
-  });
-  return executedNode(node, output.answer);
-}
-
-function promptInputFor(node: WorkflowNode, context: string) {
-  const config = promptConfigFor(node);
-  return {
-    instruction: instructionFor(node),
-    context,
-    outputType: config?.outputType ?? "text",
-    choices: choicesFor(node),
-  };
-}
-
-function executedNode(
-  node: WorkflowNode,
-  output: string,
-  selectedNodeId?: string | null,
-  selection?: {
-    selectedBranchId?: string | null;
-    selectedBranchLabel?: string | null;
-  },
-): NodeExecutionResult {
-  return {
-    nodeId: node.id,
-    primitive: node.primitive,
-    status: "executed",
-    output,
-    selectedNodeId,
-    selectedBranchId: selection?.selectedBranchId,
-    selectedBranchLabel: selection?.selectedBranchLabel,
-  };
-}
-
-function skippedNode(node: WorkflowNode, context: string): NodeExecutionResult {
-  return {
-    nodeId: node.id,
-    primitive: node.primitive,
-    status: "skipped",
-    output: context,
-    message: "Baustein-Executor ist noch nicht implementiert.",
-  };
-}
-
-function instructionFor(node: WorkflowNode): string {
-  const instruction = promptConfigFor(node)?.instruction.trim();
-  if (instruction && instruction.length > 0) return instruction;
-  if (node.description.trim().length > 0) return node.description;
-  return node.title;
-}
-
-function choicesFor(node: WorkflowNode): string[] {
-  const config = promptConfigFor(node);
-  const choices = config?.choices.length ? config.choices : [
-    config?.firstChoice ?? "",
-    config?.secondChoice ?? "",
-  ];
-  return choices.filter((choice) => choice.trim().length > 0);
-}
-
-function promptConfigFor(node: WorkflowNode) {
-  if (node.config?.primitive !== "prompt") return undefined;
-  return node.config;
-}
-
-function refinementConfigFor(node: WorkflowNode): RefinementConfig | undefined {
-  if (node.config?.primitive !== "iterativeRefinement") return undefined;
-  return node.config;
-}
-
-type RefinementConfig = Extract<
-  WorkflowNode["config"],
-  {primitive: "iterativeRefinement"}
->;

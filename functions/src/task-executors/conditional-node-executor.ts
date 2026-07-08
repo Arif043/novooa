@@ -1,4 +1,11 @@
 import {type WorkflowEdge, type WorkflowNode} from "../task-runner/task-definition.js";
+import {
+  type NodeExecutor,
+  executedNode,
+  parentOutputFor,
+} from "../task-runner/node-executor.js";
+import {finalOutputOf} from "../task-runner/task-graph-utils.js";
+import {logReadableInfo} from "../task-runner/structured-logger.js";
 
 export type ConditionalNodeInput = {
   node: WorkflowNode;
@@ -11,6 +18,24 @@ export type ConditionalNodeOutput = {
   selectedBranchId?: string | null;
   selectedBranchLabel?: string | null;
   reason: string;
+};
+
+export const conditionalFlowNodeExecutor: NodeExecutor = {
+  primitive: "conditionalFlow",
+  async execute(input) {
+    const output = executeConditionalNode({
+      node: input.node,
+      targetLabel: parentOutputFor(input.node, input.task, input.results),
+      outgoingEdges: input.task.edges.filter(
+        (edge) => edge.from === input.node.id,
+      ),
+    });
+    const branchOutput = await executeSelectedBranch(input, output);
+    return executedNode(input.node, branchOutput, output.selectedNodeId, {
+      selectedBranchId: output.selectedBranchId,
+      selectedBranchLabel: output.selectedBranchLabel,
+    });
+  },
 };
 
 export function executeConditionalNode(
@@ -104,3 +129,67 @@ function conditionalChoices(node: WorkflowNode): string[] {
 function normalizeLabel(label: string): string {
   return label.trim().toLowerCase();
 }
+
+async function executeSelectedBranch(
+  input: Parameters<NodeExecutor["execute"]>[0],
+  output: ConditionalNodeOutput,
+): Promise<string> {
+  const branch = selectedBranchFor(input.node, output.selectedBranchId);
+  if (!branch) return output.reason;
+  if (branch.graph.nodes.length === 0) return emptyBranchOutput(output);
+  logBranchStarted(input.node, branch);
+  const branchResults = await input.runSubgraph(
+    branchTaskFor(input.task, branch),
+    input.context,
+  );
+  const finalOutput = finalOutputOf(branchResults);
+  logBranchFinished(branch.label, branchResults.length, finalOutput.length);
+  return finalOutput || output.reason;
+}
+
+function selectedBranchFor(node: WorkflowNode, branchId?: string | null) {
+  if (node.config.primitive !== "conditionalFlow") return undefined;
+  return node.config.branches.find((branch) => branch.id === branchId);
+}
+
+function emptyBranchOutput(output: {selectedBranchLabel?: string | null}) {
+  return `Branch ${output.selectedBranchLabel ?? ""} has no nodes.`;
+}
+
+function branchTaskFor(
+  task: Parameters<NodeExecutor["execute"]>[0]["task"],
+  branch: Branch,
+) {
+  return {
+    id: `${task.id}:${branch.id}`,
+    title: `${task.title}:${branch.label}`,
+    objective: task.objective,
+    nodes: branch.graph.nodes as WorkflowNode[],
+    edges: branch.graph.edges,
+  };
+}
+
+function logBranchStarted(node: WorkflowNode, branch: Branch): void {
+  logReadableInfo([
+    `[Zweig startet] ${branch.label}`,
+    `Bedingung: ${node.title} (${node.id})`,
+    `Bausteine: ${branch.graph.nodes.length} | Kanten: ${branch.graph.edges.length}`,
+  ].join("\n"));
+}
+
+function logBranchFinished(
+  branchLabel: string,
+  resultCount: number,
+  outputLength: number,
+): void {
+  logReadableInfo([
+    `[Zweig beendet] ${branchLabel}`,
+    `Bausteine ausgeführt: ${resultCount}`,
+    `Ausgabe: ${outputLength} Zeichen`,
+  ].join("\n"));
+}
+
+type Branch = Extract<
+  WorkflowNode["config"],
+  {primitive: "conditionalFlow"}
+>["branches"][number];
