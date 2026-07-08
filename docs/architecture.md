@@ -44,6 +44,43 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md#domäne
   `FirestoreTaskDefinitionRepository` ergänzt; Bindung in `main.dart` /
   DI-Container.
 
+### Teams und Dateien
+
+Dateien sind von Beginn an team-scoped modelliert, auch wenn aktuell nur ein
+persönlicher Arbeitsbereich verwendet wird.
+
+Firestore:
+
+```text
+teams/{teamId}
+teams/{teamId}/members/{uid}
+teams/{teamId}/files/{fileId}
+teams/{teamId}/files/{fileId}/versions/{versionId}
+```
+
+Storage:
+
+```text
+teams/{teamId}/files/{fileId}/versions/{versionId}/{fileName}
+```
+
+Der aktuelle Client erzeugt für angemeldete Nutzer:innen automatisch:
+
+```text
+teams/personal_<uid>
+teams/personal_<uid>/members/<uid>
+```
+
+Das spätere Team-Feature ersetzt nur die Quelle für `teamId`: statt
+`personal_<uid>` wird der aktive Team-Kontext verwendet. Datei-Metadaten und
+Storage-Pfade bleiben unverändert.
+
+Copy-on-Write wird über `versions/{versionId}` vorbereitet. Eine neue
+Dateiversion schreibt ein neues Storage-Objekt und aktualisiert am
+Datei-Dokument `currentVersionId`.
+
+Detailtiefe in [`features/dateien.md`](./features/dateien.md).
+
 ## Auth & AppCheck
 
 - Auth-Source: Firebase Auth (anzubinden).

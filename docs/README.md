@@ -20,6 +20,7 @@ pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
 | Arbeitspläne    | [`features/arbeitsplaene.md`](./features/arbeitsplaene.md) | Stub           |
 | Zeitplan        | [`features/zeitplan.md`](./features/zeitplan.md)          | Stub           |
 | Aktivitäten     | [`features/aktivitaeten.md`](./features/aktivitaeten.md)  | Stub           |
+| Dateien         | [`features/dateien.md`](./features/dateien.md)            | In Entwicklung |
 
 ## Konvention: Neue Feature-Doc anlegen
 
