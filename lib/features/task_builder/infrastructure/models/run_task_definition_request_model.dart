@@ -44,6 +44,7 @@ class RunTaskDefinitionRequestModel {
       PromptNodeConfig() => _promptToJson(config),
       ConditionalNodeConfig() => _conditionalToJson(config),
       IterativeRefinementNodeConfig() => _iterativeRefinementToJson(config),
+      _ => throw UnimplementedError('NodeConfig wird nicht unterstützt.'),
     };
   }
 
@@ -57,8 +58,15 @@ class RunTaskDefinitionRequestModel {
       'instruction': config.instruction,
       'outputType': config.outputType.name,
       'choices': config.choices,
-      'attachments': config.attachments.map(_attachmentToJson).toList(),
+      'attachments': _attachmentsToJson(config),
     };
+  }
+
+  List<Map<String, Object?>> _attachmentsToJson(NodeConfig config) {
+    if (config case FileAttachmentSupport attachable) {
+      return attachable.attachments.map(_attachmentToJson).toList();
+    }
+    return const [];
   }
 
   Map<String, Object?> _attachmentToJson(PromptAttachment attachment) {

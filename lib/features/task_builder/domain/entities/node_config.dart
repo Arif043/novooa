@@ -4,6 +4,7 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dar
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 
 part 'prompt_node_config.dart';
+part 'file_attachment_support.dart';
 part 'string_input_node_config.dart';
 part 'conditional_node_config.dart';
 part 'iterative_refinement_node_config.dart';

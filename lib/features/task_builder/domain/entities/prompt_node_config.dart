@@ -9,7 +9,8 @@ enum PromptOutputType {
   final String label;
 }
 
-class PromptNodeConfig extends NodeConfig {
+class PromptNodeConfig extends NodeConfig
+    with FileAttachmentSupport<PromptNodeConfig> {
   const PromptNodeConfig({
     required this.instruction,
     required this.outputType,
@@ -20,6 +21,7 @@ class PromptNodeConfig extends NodeConfig {
   final String instruction;
   final PromptOutputType outputType;
   final List<String> choices;
+  @override
   final List<PromptAttachment> attachments;
 
   factory PromptNodeConfig.initial() {
@@ -65,17 +67,9 @@ class PromptNodeConfig extends NodeConfig {
     return copyWith(choices: updatedChoices);
   }
 
-  PromptNodeConfig attachFile(PromptAttachment attachment) {
-    if (attachments.any((current) => current.id == attachment.id)) return this;
-    return copyWith(attachments: [...attachments, attachment]);
-  }
-
-  PromptNodeConfig detachFile(String attachmentId) {
-    return copyWith(
-      attachments: attachments
-          .where((attachment) => attachment.id != attachmentId)
-          .toList(growable: false),
-    );
+  @override
+  PromptNodeConfig copyWithAttachments(List<PromptAttachment> attachments) {
+    return copyWith(attachments: attachments);
   }
 
   @override
