@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'root_tab.dart';
 import 'core/widgets/root_app_bar.dart';
 import 'core/widgets/root_drawer.dart';
+import 'core/widgets/root_shell_scope.dart';
 import 'core/widgets/root_stage.dart';
 import 'core/widgets/syscat_background.dart';
 
@@ -17,6 +18,8 @@ class RootPage extends StatefulWidget {
 }
 
 class _RootPageState extends State<RootPage> {
+  final RootShellController _shellController = RootShellController();
+
   static final List<RootTab> _tabs = [
     RootTab(title: 'Aufgaben', icon: Icons.dashboard_outlined, path: '/tasks'),
     RootTab(title: 'Arbeitspläne', icon: Icons.folder_outlined, path: '/plans'),
@@ -48,21 +51,37 @@ class _RootPageState extends State<RootPage> {
   }
 
   @override
+  void dispose() {
+    _shellController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final selectedTabIndex = _selectedTabIndex;
     final selectedTab = _tabs[selectedTabIndex];
-    return SyscatBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: RootAppBar(title: selectedTab.title),
-        drawer: RootDrawer(
-          tabs: _tabs,
-          selectedIndex: selectedTabIndex,
-          onSelected: _selectTab,
+    return RootShellScope(
+      controller: _shellController,
+      child: AnimatedBuilder(
+        animation: _shellController,
+        builder: (context, _) => SyscatBackground(
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: RootAppBar(title: _titleFor(selectedTab)),
+            drawer: RootDrawer(
+              tabs: _tabs,
+              selectedIndex: selectedTabIndex,
+              onSelected: _selectTab,
+            ),
+            body: RootStage(child: widget.child),
+          ),
         ),
-        body: RootStage(child: widget.child),
       ),
     );
+  }
+
+  Widget _titleFor(RootTab selectedTab) {
+    return _shellController.title ?? Text(selectedTab.title);
   }
 
   int get _selectedTabIndex {

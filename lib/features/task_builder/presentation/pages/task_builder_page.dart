@@ -3,12 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/logging/syscat_log.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/core/widgets/root_shell_scope.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/task_title_field.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/toolbar.dart';
 import 'package:web_smooth_scroll/web_smooth_scroll.dart';
 
@@ -29,6 +31,69 @@ class TaskBuilderPage extends StatelessWidget {
 
 class _TaskBuilderView extends StatelessWidget {
   const _TaskBuilderView();
+
+  @override
+  Widget build(BuildContext context) {
+    return const _TaskBuilderShellTitle(child: _TaskBuilderContent());
+  }
+}
+
+class _TaskBuilderShellTitle extends StatefulWidget {
+  const _TaskBuilderShellTitle({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_TaskBuilderShellTitle> createState() => _TaskBuilderShellTitleState();
+}
+
+class _TaskBuilderShellTitleState extends State<_TaskBuilderShellTitle> {
+  RootShellController? _controller;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final controller = RootShellScope.of(context);
+    if (_controller == controller) return;
+    // _clearTitleAfterFrame(_controller);
+    _controller = controller;
+    final cubit = context.read<TaskBuilderCubit>();
+    _setTitleAfterFrame(
+      controller,
+      BlocProvider.value(value: cubit, child: const TaskTitleField()),
+    );
+  }
+
+  void _setTitleAfterFrame(RootShellController controller, Widget title) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _controller != controller) return;
+      controller.setTitle(title);
+    });
+  }
+
+  void _clearTitleAfterFrame(RootShellController? controller) {
+    if (controller == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_controller == controller && mounted) return;
+      controller.setTitle(null);
+    });
+  }
+
+  @override
+  void dispose() {
+    final controller = _controller;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller?.setTitle(null);
+    });
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
+class _TaskBuilderContent extends StatelessWidget {
+  const _TaskBuilderContent();
 
   @override
   Widget build(BuildContext context) {

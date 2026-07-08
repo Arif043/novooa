@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 
 class RootAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const RootAppBar({
-    super.key,
-    required this.title,
-    this.actions,
-  });
+  const RootAppBar({super.key, required this.title, this.actions});
 
-  final String title;
+  final Widget title;
   final List<Widget>? actions;
 
   @override
@@ -23,7 +19,7 @@ class RootAppBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: () => Scaffold.of(context).openDrawer(),
         ),
       ),
-      title: Text(title),
+      title: title,
       actions: actions,
     );
   }
