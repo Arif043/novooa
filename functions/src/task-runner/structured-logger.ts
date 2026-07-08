@@ -168,7 +168,7 @@ export function formatModelCallStarted(input: {
     `Modell: ${formatInline(input.model)}`,
     input.outputSchema ? `Schema: ${input.outputSchema}` : "",
     "Eingabe:",
-    indent(input.prompt),
+    `:${indent(input.prompt)}:`,
   ].filter(Boolean).join("\n");
 }
 
