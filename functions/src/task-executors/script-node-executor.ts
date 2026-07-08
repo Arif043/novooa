@@ -59,8 +59,6 @@ export const scriptNodeExecutor: NodeExecutor = {
       input: parentOutputFor(input.node, input.task, input.results),
       script: scriptFor(input.node),
     });
-    logInfo("SDKLFj;JJKLSDfGJHNSdfKLGFJsdKLGSDfJSDFGKLFJSDKLFJSDKLFJSDKLJFSDjSDFKJ;SDLJkFHSDKJSDfHSJKSDFHnbj");
-    console.info("Script Output: ", output);
     return executedNode(input.node, output);
   },
 };
@@ -76,7 +74,6 @@ export async function executeScriptNode(input: ScriptNodeInput): Promise<string>
   if (typeof parsed.output !== "string") {
     throw new Error("Script hat keinen String-Output geliefert.");
   }
-  logInfo("Script Output: " + parsed.output);
   return parsed.output;
 }
 
