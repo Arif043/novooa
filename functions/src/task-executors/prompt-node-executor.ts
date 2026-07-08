@@ -1,3 +1,4 @@
+import {filesystem} from "@genkit-ai/middleware";
 import { z, type Genkit } from "genkit";
 import {modelLogContext, textModel} from "../task-runner/ai-models.js";
 import {
@@ -10,6 +11,7 @@ import {
   formatModelCallStarted,
   logReadableInfo,
 } from "../task-runner/structured-logger.js";
+import {type NodeAttachmentWorkspace} from "../task-runner/node-attachment-workspace.js";
 
 export type PromptNodeOutputType = "text" | "decision";
 
@@ -30,6 +32,7 @@ export const promptNodeExecutor: NodeExecutor = {
     const output = await executePromptNode(
       input.ai,
       promptInputFor(input.node, input.context),
+      input.attachmentWorkspace,
     );
     return executedNode(input.node, output.answer);
   },
@@ -38,19 +41,24 @@ export const promptNodeExecutor: NodeExecutor = {
 export async function executePromptNode(
   ai: Genkit,
   input: PromptNodeInput,
+  attachmentWorkspace?: NodeAttachmentWorkspace,
 ): Promise<PromptNodeOutput> {
   if (input.outputType === "decision") {
-    return executeDecisionPrompt(ai, input);
+    return executeDecisionPrompt(ai, input, attachmentWorkspace);
   }
 
-  const prompt = promptTurn(input);
+  const prompt = promptTurn(input, attachmentWorkspace);
   const startedAt = Date.now();
   logReadableInfo(formatModelCallStarted({
     label: "Prompt / Text",
     model: modelLogContext(),
     prompt,
   }));
-  const response = await ai.generate({model: textModel(), prompt});
+  const response = await ai.generate({
+    model: textModel(),
+    prompt,
+    use: attachmentMiddleware(attachmentWorkspace),
+  });
   logReadableInfo(formatModelCallFinished({
     label: "Prompt / Text",
     durationMs: Date.now() - startedAt,
@@ -62,15 +70,16 @@ export async function executePromptNode(
 async function executeDecisionPrompt(
   ai: Genkit,
   input: PromptNodeInput,
+  attachmentWorkspace?: NodeAttachmentWorkspace,
 ): Promise<PromptNodeOutput> {
   if (input.choices.length === 0) {
     throw new Error("Decision prompt requires at least one choice.");
   }
-  const prompt = promptTurn(input);
+  const prompt = promptTurn(input, attachmentWorkspace);
   const schema = z.object({
     answer: z.enum(input.choices as [string, ...string[]]),
   });
-  const decision = await generateDecision(ai, prompt, schema);
+  const decision = await generateDecision(ai, prompt, schema, attachmentWorkspace);
   const answer = decision.output?.answer;
   if (answer === undefined) {
     throw new Error(`Decision prompt returned no structured answer: ${decision.text}`);
@@ -82,6 +91,7 @@ async function generateDecision(
   ai: Genkit,
   prompt: string,
   schema: z.ZodObject<{answer: z.ZodEnum<[string, ...string[]]>}>,
+  attachmentWorkspace?: NodeAttachmentWorkspace,
 ) {
   const startedAt = Date.now();
   logReadableInfo(formatModelCallStarted({
@@ -94,6 +104,7 @@ async function generateDecision(
     model: textModel(),
     prompt,
     output: {schema},
+    use: attachmentMiddleware(attachmentWorkspace),
   });
   logReadableInfo(formatModelCallFinished({
     label: "Prompt / Entscheidung",
@@ -104,13 +115,35 @@ async function generateDecision(
   return response;
 }
 
-function promptTurn(input: PromptNodeInput): string {
+function promptTurn(
+  input: PromptNodeInput,
+  attachmentWorkspace?: NodeAttachmentWorkspace,
+): string {
   const parts = [input.instruction];
   if (input.context.trim().length > 0) parts.push(`Kontext:\n${input.context}`);
+  if (attachmentWorkspace) {
+    parts.push(attachmentInstructions(attachmentWorkspace));
+  }
   if (input.outputType === "decision") {
     parts.push(`Antworte nur mit einer Option: ${input.choices.join(", ")}`);
   }
   return parts.join("\n\n");
+}
+
+function attachmentMiddleware(attachmentWorkspace?: NodeAttachmentWorkspace) {
+  if (!attachmentWorkspace) return undefined;
+  return [filesystem({rootDirectory: attachmentWorkspace.rootDirectory})];
+}
+
+function attachmentInstructions(workspace: NodeAttachmentWorkspace): string {
+  const files = workspace.files
+    .map((file) => `- ${file.filename} (${file.displayName})`)
+    .join("\n");
+  return [
+    "Angehängte Dateien sind über die Dateisystem-Werkzeuge verfügbar.",
+    "Nutze bei Bedarf list_files und read_file, um Inhalte zu prüfen.",
+    `Verfügbare Dateien:\n${files}`,
+  ].join("\n");
 }
 
 function promptInputFor(node: WorkflowNode, context: string): PromptNodeInput {

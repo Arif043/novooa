@@ -1,5 +1,6 @@
 import { type Genkit } from "genkit";
 import {executorFor} from "./node-executor-registry.js";
+import {prepareNodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 import {
   parentResultsFor,
   skippedNode,
@@ -191,15 +192,21 @@ async function executeNode(
 ): Promise<NodeExecutionResult> {
   const executor = executorFor(input.node.primitive);
   if (!executor) return skippedNode(input.node, input.context);
-  return executor.execute({
-    ai,
-    node: input.node,
-    context: input.context,
-    variables: input.variables,
-    task: input.task,
-    results: input.results,
-    runSubgraph: runSubgraphFor(ai, input.variables),
-  });
+  const attachmentWorkspace = await prepareNodeAttachmentWorkspace(input.node);
+  try {
+    return await executor.execute({
+      ai,
+      node: input.node,
+      context: input.context,
+      variables: input.variables,
+      task: input.task,
+      results: input.results,
+      runSubgraph: runSubgraphFor(ai, input.variables),
+      attachmentWorkspace,
+    });
+  } finally {
+    await attachmentWorkspace?.cleanup();
+  }
 }
 
 function updateVariables(

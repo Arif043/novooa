@@ -4,6 +4,7 @@ import {
   type TaskDefinition as Task,
   type WorkflowNode,
 } from "./task-definition.js";
+import {type NodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 
 export type TaskVariables = Record<string, unknown>;
 
@@ -20,6 +21,7 @@ export type NodeExecutorInput = {
   task: Task;
   results: Map<string, NodeExecutionResult>;
   runSubgraph: SubgraphRunner;
+  attachmentWorkspace?: NodeAttachmentWorkspace;
 };
 
 export type NodeExecutor = {

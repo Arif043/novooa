@@ -13,6 +13,15 @@ export const workflowPrimitiveSchema = z.enum([
 
 export const promptOutputTypeSchema = z.enum(["text", "decision"]);
 
+export const nodeAttachmentSchema = z.object({
+  id: z.string().min(1),
+  storagePath: z.string().min(1),
+  generation: z.string().min(1),
+  displayName: z.string().min(1),
+  contentType: z.string().default("application/octet-stream"),
+  sizeBytes: z.number().int().nonnegative().default(0),
+});
+
 export const stringInputNodeConfigSchema = z.object({
   primitive: z.literal("stringInput").default("stringInput"),
   value: z.string().default(""),
@@ -21,7 +30,7 @@ export const stringInputNodeConfigSchema = z.object({
 export const scriptNodeConfigSchema = z.object({
   primitive: z.literal("script").default("script"),
   script: z.string().default("output = input"),
-  attachments: z.array(z.unknown()).default([]),
+  attachments: z.array(nodeAttachmentSchema).default([]),
 });
 
 export const promptNodeConfigSchema = z.object({
@@ -31,6 +40,7 @@ export const promptNodeConfigSchema = z.object({
   choices: z.array(z.string()).default([]),
   firstChoice: z.string().default(""),
   secondChoice: z.string().default(""),
+  attachments: z.array(nodeAttachmentSchema).default([]),
 });
 
 export const workflowEdgeSchema = z.object({
@@ -121,6 +131,7 @@ export const runTaskDefinitionOutputSchema = z.object({
 
 export type WorkflowNode = z.infer<typeof workflowNodeSchema>;
 export type WorkflowEdge = z.infer<typeof workflowEdgeSchema>;
+export type NodeAttachment = z.infer<typeof nodeAttachmentSchema>;
 export type TaskDefinition = z.infer<typeof taskDefinitionSchema>;
 export type RunTaskDefinitionInput = z.infer<
   typeof runTaskDefinitionInputSchema

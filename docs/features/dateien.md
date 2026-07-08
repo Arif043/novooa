@@ -18,6 +18,7 @@ gespeichert, Metadaten und Versionen in Firestore.
 - Dateien über die Subpage **Dateien** hochladen.
 - Datei-Metadaten live aus Firestore anzeigen.
 - Uploads in Firebase Storage unter einem team-scoped Pfad speichern.
+- Hochgeladene Dateien in unterstützten Aufgaben-Bausteinen auswählen.
 - Persönlichen Arbeitsbereich `personal_<uid>` automatisch bootstrappen.
 - Versionierung vorbereiten: jede Datei verweist auf `currentVersionId`.
 - Domain-Schicht frei von Firebase-, Flutter- und Picker-Abhängigkeiten halten.
@@ -62,6 +63,18 @@ teams/{teamId}/files/{fileId}/versions/{newVersionId}/{fileName}
 Das Datei-Dokument aktualisiert dann nur `currentVersionId`, `storagePath`,
 `sizeBytes`, `contentType` und `updatedAt`. Alte Versionen bleiben
 referenzierbar.
+
+## Nutzung in Aufgaben
+
+Unterstützende Node-Configs implementieren `FileAttachmentSupport` und speichern
+eine Liste von `NodeAttachment`s. Die UI lädt auswählbare Dateien über
+`WatchTeamFiles` aus dem aktuellen Team-Kontext und referenziert beim Anhängen
+die aktuelle Dateiversion.
+
+Bei der Ausführung lädt der Functions-Runner angehängte Storage-Dateien in ein
+temporäres Verzeichnis. Prompt-Nodes erhalten dieses Verzeichnis über die
+Genkit-Filesystem-Middleware (`@genkit-ai/middleware`) als read-only Workspace,
+damit das Sprachmodell Dateien per `list_files` und `read_file` lesen kann.
 
 ## Security
 

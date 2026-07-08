@@ -162,6 +162,20 @@ output: { answer: string }
 
 Temperatur: `0.3`. Streamt nicht.
 
+Wenn ein Prompt-Node Dateien anhängt, bereitet der Graph-Runner die Dateien
+vor dem Executor-Aufruf über
+`functions/src/task-runner/node-attachment-workspace.ts` vor:
+
+1. Storage-Objekte aus `attachments[].storagePath` herunterladen.
+2. In ein temporäres, node-spezifisches Verzeichnis unter `/tmp` schreiben.
+3. `executePromptNode` mit `filesystem({ rootDirectory })` aus
+   `@genkit-ai/middleware` aufrufen.
+4. Das temporäre Verzeichnis nach dem Node-Aufruf wieder entfernen.
+
+Die Middleware läuft read-only. Das Modell erhält im Prompt eine Liste der
+lokalen Dateinamen und kann über `list_files` / `read_file` auf die Inhalte
+zugreifen.
+
 ### Script-Executor
 
 Datei: `functions/src/task-executors/script-node-executor.ts`.
@@ -214,12 +228,13 @@ output: { taskId: string; finalOutput: string; nodeResults: NodeExecutionResult[
 optional `selectedNodeId` und optional `message`.
 
 `WorkflowNode` nutzt ein generisches `config`-Objekt. Die konkrete Struktur
-wird über `config.primitive` bestimmt. Für Prompt-Bausteine:
+wird über `config.primitive` bestimmt. Für Script-Bausteine:
 
 ```ts
 {
   primitive: "script",
-  script: string
+  script: string,
+  attachments: NodeAttachment[]
 }
 ```
 
@@ -231,7 +246,21 @@ Für Prompt-Bausteine:
   instruction: string,
   outputType: "text" | "decision",
   firstChoice: string,
-  secondChoice: string
+  secondChoice: string,
+  attachments: NodeAttachment[]
+}
+```
+
+Dateianhänge referenzieren eine konkrete Storage-Version:
+
+```ts
+{
+  id: string,
+  storagePath: string,
+  generation: string,
+  displayName: string,
+  contentType: string,
+  sizeBytes: number
 }
 ```
 
