@@ -84,9 +84,6 @@ class NodeConfigDocumentMapper {
     return {
       'primitive': config.primitive.name,
       'instruction': config.instruction,
-      'allowEdit': config.allowEdit,
-      'allowReject': config.allowReject,
-      'requireRejectReason': config.requireRejectReason,
       'reviewScope': config.reviewScope.name,
     };
   }
@@ -126,9 +123,6 @@ class NodeConfigDocumentMapper {
   HumanApprovalNodeConfig _approvalFrom(Map<String, Object?> data) {
     return HumanApprovalNodeConfig(
       instruction: data['instruction'] as String? ?? '',
-      allowEdit: data['allowEdit'] as bool? ?? true,
-      allowReject: data['allowReject'] as bool? ?? true,
-      requireRejectReason: data['requireRejectReason'] as bool? ?? true,
       reviewScope: _reviewScopeFrom(data['reviewScope']),
     );
   }

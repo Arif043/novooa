@@ -281,18 +281,16 @@ Für Freigabe-Bausteine:
 {
   primitive: "humanApproval",
   instruction: string,
-  allowEdit: boolean,
-  allowReject: boolean,
-  requireRejectReason: boolean,
   reviewScope: "currentInput" | "executionTrace"
 }
 ```
 
-Der MVP der Freigabe pausiert den Graph nicht über einen externen Resume-Kanal,
-sondern beendet die aktuelle Ausführung kontrolliert mit dem Status
-`waitingForApproval`. Noch nicht ausgeführte Nodes werden als `skipped`
-markiert. Die Review- und Resume-Persistenz wird später über Activities /
-Approvals ergänzt.
+Freigabe-Bausteine sind immer harte Kontrollpunkte: Review ist Pflicht,
+Bearbeitung des Outputs ist immer erlaubt, Ablehnung ist immer erlaubt und eine
+Ablehnung verwirft den gesamten TaskRun. Der aktuelle MVP beendet die laufende
+Ausführung kontrolliert mit dem Status `waitingForApproval`; noch nicht
+ausgeführte Nodes werden als `skipped` markiert. Der Persistenz- und
+Resume-Kanal für Approve/Reject wird über Activities / Approvals ergänzt.
 
 Dateianhänge referenzieren eine konkrete Storage-Version:
 

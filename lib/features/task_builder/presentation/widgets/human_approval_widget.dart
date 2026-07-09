@@ -40,31 +40,6 @@ class HumanApprovalWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          _SwitchOption(
-            label: 'Bearbeitung erlauben',
-            value: _config.allowEdit,
-            onChanged: (value) =>
-                _update(context, (config) => config.copyWith(allowEdit: value)),
-          ),
-          _SwitchOption(
-            label: 'Ablehnen erlauben',
-            value: _config.allowReject,
-            onChanged: (value) => _update(
-              context,
-              (config) => config.copyWith(allowReject: value),
-            ),
-          ),
-          _SwitchOption(
-            label: 'Ablehnungsgrund erforderlich',
-            value: _config.requireRejectReason,
-            onChanged: _config.allowReject
-                ? (value) => _update(
-                    context,
-                    (config) => config.copyWith(requireRejectReason: value),
-                  )
-                : null,
-          ),
-          const SizedBox(height: AppSpacing.sm),
           DropdownButtonFormField<HumanApprovalReviewScope>(
             initialValue: _config.reviewScope,
             decoration: const InputDecoration(labelText: 'Anzuzeigende Daten'),
@@ -93,27 +68,5 @@ class HumanApprovalWidget extends StatelessWidget {
     HumanApprovalNodeConfig Function(HumanApprovalNodeConfig config) update,
   ) {
     context.read<TaskBuilderCubit>().updateHumanApproval(node.id, update);
-  }
-}
-
-class _SwitchOption extends StatelessWidget {
-  const _SwitchOption({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String label;
-  final bool value;
-  final ValueChanged<bool>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(label),
-      value: value,
-      onChanged: onChanged,
-    );
   }
 }

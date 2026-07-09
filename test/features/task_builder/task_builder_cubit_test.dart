@@ -178,7 +178,7 @@ void main() {
     await cubit.close();
   });
 
-  test('updateHumanApproval speichert Freigabe-Optionen', () async {
+  test('updateHumanApproval speichert Freigabe-Pruefumfang', () async {
     final repository = _InMemoryTaskRepository(_taskWithApprovalNode());
     final cubit = TaskBuilderCubit(repository: repository);
 
@@ -187,7 +187,6 @@ void main() {
       const NodeId('node.approval'),
       (config) => config.copyWith(
         instruction: 'Bitte prüfen.',
-        allowEdit: false,
         reviewScope: HumanApprovalReviewScope.executionTrace,
       ),
     );
@@ -197,7 +196,6 @@ void main() {
         state.editingTask.nodes.first.config as HumanApprovalNodeConfig;
 
     expect(config.instruction, 'Bitte prüfen.');
-    expect(config.allowEdit, isFalse);
     expect(config.reviewScope, HumanApprovalReviewScope.executionTrace);
     expect(repository.savedTask, state.editingTask);
 
@@ -310,9 +308,6 @@ Task _taskWithApprovalNode() {
           description: 'Beschreibung',
           config: HumanApprovalNodeConfig(
             instruction: 'Prüfe das Ergebnis.',
-            allowEdit: true,
-            allowReject: true,
-            requireRejectReason: true,
             reviewScope: HumanApprovalReviewScope.currentInput,
           ),
         ),
