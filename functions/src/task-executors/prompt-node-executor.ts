@@ -1,4 +1,3 @@
-import {filesystem} from "@genkit-ai/middleware";
 import { z, type Genkit } from "genkit";
 import {modelLogContext, textModel} from "../task-runner/ai-models.js";
 import {
@@ -12,6 +11,10 @@ import {
   logReadableInfo,
 } from "../task-runner/structured-logger.js";
 import {type NodeAttachmentWorkspace} from "../task-runner/node-attachment-workspace.js";
+import {
+  attachmentInstructions,
+  attachmentMiddleware,
+} from "../task-runner/node-attachment-genkit.js";
 
 export type PromptNodeOutputType = "text" | "decision";
 
@@ -121,29 +124,12 @@ function promptTurn(
 ): string {
   const parts = [input.instruction];
   if (input.context.trim().length > 0) parts.push(`Kontext:\n${input.context}`);
-  if (attachmentWorkspace) {
-    parts.push(attachmentInstructions(attachmentWorkspace));
-  }
+  const instructions = attachmentInstructions(attachmentWorkspace);
+  if (instructions) parts.push(instructions);
   if (input.outputType === "decision") {
     parts.push(`Antworte nur mit einer Option: ${input.choices.join(", ")}`);
   }
   return parts.join("\n\n");
-}
-
-function attachmentMiddleware(attachmentWorkspace?: NodeAttachmentWorkspace) {
-  if (!attachmentWorkspace) return undefined;
-  return [filesystem({rootDirectory: attachmentWorkspace.rootDirectory})];
-}
-
-function attachmentInstructions(workspace: NodeAttachmentWorkspace): string {
-  const files = workspace.files
-    .map((file) => `- ${file.filename} (${file.displayName})`)
-    .join("\n");
-  return [
-    "Angehängte Dateien sind über die Dateisystem-Werkzeuge verfügbar.",
-    "Nutze bei Bedarf list_files und read_file, um Inhalte zu prüfen.",
-    `Verfügbare Dateien:\n${files}`,
-  ].join("\n");
 }
 
 function promptInputFor(node: WorkflowNode, context: string): PromptNodeInput {

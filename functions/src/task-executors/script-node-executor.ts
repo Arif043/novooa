@@ -1,4 +1,5 @@
 import {spawn} from "node:child_process";
+import path from "node:path";
 import {
   type NodeExecutor,
   type TaskVariables,
@@ -9,67 +10,14 @@ import {
   logInfo,
   logReadableInfo,
 } from "../task-runner/structured-logger.js";
+import {
+  type NodeAttachmentWorkspace,
+  type PreparedNodeAttachment,
+} from "../task-runner/node-attachment-workspace.js";
+import {scriptPythonSource} from "./script-python-runtime.js";
 
 const timeoutMs = 5000;
 const maxOutputBytes = 10 * 1024;
-const pythonSource = `
-import json
-import sys
-
-payload = json.loads(sys.stdin.read())
-input = payload["input"]
-variables = payload["variables"]
-printed = []
-
-def safe_print(*values, sep=" ", end="\\n"):
-    printed.append(sep.join(str(value) for value in values) + end)
-
-safe_builtins = {
-    "bool": bool,
-    "dict": dict,
-    "enumerate": enumerate,
-    "float": float,
-    "int": int,
-    "len": len,
-    "list": list,
-    "max": max,
-    "min": min,
-    "print": safe_print,
-    "range": range,
-    "round": round,
-    "set": set,
-    "sorted": sorted,
-    "str": str,
-    "sum": sum,
-    "tuple": tuple,
-}
-
-namespace = {"input": input, **variables}
-exec(payload["script"], {"__builtins__": safe_builtins}, namespace)
-output = namespace.get("output")
-
-if output is None:
-    output = "".join(printed)
-
-if not isinstance(output, str):
-    raise TypeError("Script muss eine String-Variable output setzen oder Text printen.")
-
-next_variables = {}
-for key, value in namespace.items():
-    if key in ["input", "output"] or key.startswith("__"):
-        continue
-    try:
-        json.dumps(value)
-        next_variables[key] = value
-    except TypeError:
-        pass
-
-sys.stdout.write(json.dumps({
-    "output": output,
-    "printed": "".join(printed),
-    "variables": next_variables,
-}))
-`;
 
 export const scriptNodeExecutor: NodeExecutor = {
   primitive: "script",
@@ -78,6 +26,7 @@ export const scriptNodeExecutor: NodeExecutor = {
       input: parentOutputFor(input.node, input.task, input.results),
       script: scriptFor(input.node),
       variables: input.variables,
+      attachmentWorkspace: input.attachmentWorkspace,
     });
     return executedNode(input.node, output.output, undefined, undefined, output.variables);
   },
@@ -87,6 +36,7 @@ type ScriptNodeInput = {
   input: string;
   script: string;
   variables: TaskVariables;
+  attachmentWorkspace?: NodeAttachmentWorkspace;
 };
 
 type ScriptNodeOutput = {
@@ -115,8 +65,10 @@ export async function executeScriptNode(
 
 function runPython(input: ScriptNodeInput): Promise<{stdout: string}> {
   return new Promise((resolve, reject) => {
-    const child = spawn("python3", ["-I", "-c", pythonSource], {
+    const payload = scriptPayload(input);
+    const child = spawn("python3", ["-I", "-c", scriptPythonSource], {
       stdio: ["pipe", "pipe", "pipe"],
+      cwd: input.attachmentWorkspace?.rootDirectory,
     });
     const timer = setTimeout(() => {
       child.kill("SIGKILL");
@@ -136,8 +88,34 @@ function runPython(input: ScriptNodeInput): Promise<{stdout: string}> {
       }
       return resolve({stdout});
     }));
-    child.stdin.end(JSON.stringify(input));
+    child.stdin.end(JSON.stringify(payload));
   });
+}
+
+function scriptPayload(input: ScriptNodeInput) {
+  return {
+    input: input.input,
+    script: input.script,
+    variables: input.variables,
+    filesDir: input.attachmentWorkspace?.rootDirectory,
+    files: scriptFiles(input.attachmentWorkspace),
+  };
+}
+
+function scriptFiles(workspace?: NodeAttachmentWorkspace) {
+  if (!workspace) return [];
+  return workspace.files.map((file) => scriptFile(workspace.rootDirectory, file));
+}
+
+function scriptFile(rootDirectory: string, file: PreparedNodeAttachment) {
+  return {
+    id: file.id,
+    filename: file.filename,
+    displayName: file.displayName,
+    contentType: file.contentType,
+    sizeBytes: file.sizeBytes,
+    path: path.join(rootDirectory, file.filename),
+  };
 }
 
 function finish(timer: NodeJS.Timeout, callback: () => void): void {

@@ -72,9 +72,10 @@ eine Liste von `NodeAttachment`s. Die UI lädt auswählbare Dateien über
 die aktuelle Dateiversion.
 
 Bei der Ausführung lädt der Functions-Runner angehängte Storage-Dateien in ein
-temporäres Verzeichnis. Prompt-Nodes erhalten dieses Verzeichnis über die
-Genkit-Filesystem-Middleware (`@genkit-ai/middleware`) als read-only Workspace,
-damit das Sprachmodell Dateien per `list_files` und `read_file` lesen kann.
+temporäres Verzeichnis und übergibt diesen Workspace an den jeweiligen
+Node-Executor. Prompt-Nodes erhalten ihn über die Genkit-Filesystem-Middleware
+(`@genkit-ai/middleware`) als read-only Workspace. Script-Nodes erhalten
+stattdessen Python-Hilfsfunktionen wie `list_files()` und `read_file(name)`.
 
 ## Security
 

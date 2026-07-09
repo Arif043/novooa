@@ -162,19 +162,20 @@ output: { answer: string }
 
 Temperatur: `0.3`. Streamt nicht.
 
-Wenn ein Prompt-Node Dateien anhängt, bereitet der Graph-Runner die Dateien
-vor dem Executor-Aufruf über
+Wenn ein Node Dateien anhängt, bereitet der Graph-Runner die Dateien vor dem
+Executor-Aufruf über
 `functions/src/task-runner/node-attachment-workspace.ts` vor:
 
 1. Storage-Objekte aus `attachments[].storagePath` herunterladen.
 2. In ein temporäres, node-spezifisches Verzeichnis unter `/tmp` schreiben.
-3. `executePromptNode` mit `filesystem({ rootDirectory })` aus
-   `@genkit-ai/middleware` aufrufen.
+3. Den vorbereiteten Workspace an den jeweiligen `NodeExecutor` übergeben.
 4. Das temporäre Verzeichnis nach dem Node-Aufruf wieder entfernen.
 
-Die Middleware läuft read-only. Das Modell erhält im Prompt eine Liste der
-lokalen Dateinamen und kann über `list_files` / `read_file` auf die Inhalte
-zugreifen.
+Prompt-Nodes verwenden den Workspace über
+`functions/src/task-runner/node-attachment-genkit.ts` mit
+`filesystem({ rootDirectory })` aus `@genkit-ai/middleware`. Die Middleware
+läuft read-only. Das Modell erhält im Prompt eine Liste der lokalen Dateinamen
+und kann über `list_files` / `read_file` auf die Inhalte zugreifen.
 
 ### Script-Executor
 
@@ -194,6 +195,23 @@ output: string
 
 Der MVP setzt ein Timeout von 5 Sekunden und begrenzt den Output auf 10 KB.
 Es gibt keinen zusätzlichen Run-Kontext für Script-Nodes.
+
+Wenn ein Script-Node Dateien anhängt, erhält der Python-Runtime-Scope diese
+zusätzlichen Werte:
+
+```python
+files        # Liste der angehängten Datei-Metadaten
+files_dir    # temporäres Arbeitsverzeichnis
+list_files() # gibt files zurück
+read_file(name) # liest eine angehängte Datei per filename/displayName/id
+```
+
+Beispiel:
+
+```python
+erste_datei = files[0]["filename"]
+output = read_file(erste_datei)
+```
 
 Variablen, die ein Script deklariert, bleiben für den weiteren Task-Run
 verfügbar. Spätere Script-Nodes erhalten diese Variablen wieder direkt im
