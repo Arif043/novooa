@@ -18,7 +18,7 @@ import 'package:syscat2/features/task_builder/infrastructure/models/task_executi
 
 void main() {
   test('ExecuteTaskDefinition fuehrt Draft ueber Datasource aus', () async {
-    const usecase = ExecuteTask(FakeTaskRepository(FakeTaskRunnerDatasource()));
+    final usecase = ExecuteTask(FakeTaskRepository(FakeTaskRunnerDatasource()));
 
     final taskExecutionOrFailure = await usecase(
       ExecuteTaskParams(task: _promptTask(), context: 'Lokaler Testkontext'),
@@ -35,7 +35,7 @@ void main() {
   });
 
   test('ExecuteTaskDefinition gibt Texteingabe als Output weiter', () async {
-    const usecase = ExecuteTask(FakeTaskRepository(FakeTaskRunnerDatasource()));
+    final usecase = ExecuteTask(FakeTaskRepository(FakeTaskRunnerDatasource()));
 
     final taskExecutionOrFailure = await usecase(
       ExecuteTaskParams(task: _stringInputTask()),
@@ -62,7 +62,7 @@ void main() {
         idFactory: () => UniqueId('activity.${nextId++}'),
       );
       final usecase = ExecuteTask(
-        const FakeTaskRepository(FakeTaskRunnerDatasource()),
+        FakeTaskRepository(FakeTaskRunnerDatasource()),
         tracker: tracker,
       );
 
@@ -83,51 +83,56 @@ void main() {
 }
 
 class FakeTaskRepository implements TaskRepository {
-  const FakeTaskRepository(this._datasource);
+  FakeTaskRepository(this._datasource);
 
-  final TaskRunnerDatasource _datasource;
+  final FakeTaskRunnerDatasource _datasource;
 
   @override
   Future<List<Task>> loadTasks() async => const [];
 
   @override
-  Future<void> saveTask(Task task) async {}
+  Future<void> saveTask(Task task) async {
+    _datasource.saveTask(task);
+  }
 
   @override
   Future<Result<TaskExecutionResult, TaskExecutionFailure>> execute({
     required Task task,
     String context = '',
   }) async {
+    await saveTask(task);
     final response = await _datasource.runTaskDefinition(
-      RunTaskDefinitionRequestModel(
-        taskDefinition: task,
-        context: context,
-      ).toJson(),
+      RunTaskDefinitionRequestModel(taskId: task.id, context: context).toJson(),
     );
     return Success(TaskExecutionResultModel.fromJson(response).toDomain());
   }
 }
 
 class FakeTaskRunnerDatasource implements TaskRunnerDatasource {
-  const FakeTaskRunnerDatasource();
+  final Map<String, Task> _tasks = {};
+
+  void saveTask(Task task) {
+    _tasks[task.id] = task;
+  }
 
   @override
   Future<Map<String, Object?>> runTaskDefinition(
     Map<String, Object?> request,
   ) async {
-    final task = request['taskDefinition'] as Map<String, Object?>;
-    final nodes = task['nodes'] as List<Object?>;
+    expect(request.containsKey('taskDefinition'), isFalse);
+    final taskId = request['taskId'] as String;
+    final task = _tasks[taskId]!;
+    final nodes = task.graph.nodes;
     final nodeResults = nodes.map(_nodeResult).toList(growable: false);
     return {
-      'taskId': task['id'] as String,
+      'taskId': task.id,
       'finalOutput': _finalOutput(nodeResults),
       'nodeResults': nodeResults,
     };
   }
 
-  Map<String, Object?> _nodeResult(Object? rawNode) {
-    final node = rawNode as Map<String, Object?>;
-    final primitive = node['primitive'] as String;
+  Map<String, Object?> _nodeResult(WorkflowNode node) {
+    final primitive = _primitiveName(node.config);
     final output = switch (primitive) {
       'stringInput' => _stringInputOutput(node),
       'script' => _scriptOutput(node),
@@ -136,7 +141,7 @@ class FakeTaskRunnerDatasource implements TaskRunnerDatasource {
     };
     final executed = {'stringInput', 'script', 'prompt'}.contains(primitive);
     return {
-      'nodeId': node['id'] as String,
+      'nodeId': node.id.value,
       'primitive': primitive,
       'status': executed ? 'executed' : 'skipped',
       'output': output,
@@ -144,21 +149,30 @@ class FakeTaskRunnerDatasource implements TaskRunnerDatasource {
     };
   }
 
-  String _stringInputOutput(Map<String, Object?> node) {
-    final config = node['config'] as Map<String, Object?>?;
-    return config?['value'] as String? ?? '';
+  String _primitiveName(NodeConfig config) {
+    return switch (config.primitive) {
+      WorkflowPrimitive.conditional => 'conditionalFlow',
+      _ => config.primitive.name,
+    };
   }
 
-  String _scriptOutput(Map<String, Object?> node) {
-    final config = node['config'] as Map<String, Object?>?;
-    return config?['script'] as String? ?? '';
+  String _stringInputOutput(WorkflowNode node) {
+    final config = node.config;
+    if (config is StringInputNodeConfig) return config.value;
+    return '';
   }
 
-  String _promptOutput(Map<String, Object?> node) {
-    final config = node['config'] as Map<String, Object?>?;
-    final instruction = config?['instruction'] as String? ?? '';
+  String _scriptOutput(WorkflowNode node) {
+    final config = node.config;
+    if (config is ScriptNodeConfig) return config.script;
+    return '';
+  }
+
+  String _promptOutput(WorkflowNode node) {
+    final config = node.config;
+    final instruction = config is PromptNodeConfig ? config.instruction : '';
     if (instruction.trim().isNotEmpty) return 'Mock-Antwort: $instruction';
-    return 'Mock-Antwort: ${node['title']}';
+    return 'Mock-Antwort: ${node.title}';
   }
 
   String _finalOutput(List<Map<String, Object?>> nodeResults) {

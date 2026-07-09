@@ -44,6 +44,9 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md#domäne
 - `TaskRepository` bündelt Entwurfs-Persistenz und Ausführung. Die konkrete
   Implementierung `FirebaseTaskRepository` speichert in Firestore und ruft für
   die Ausführung die Firebase Callable Function über `TaskRunnerDatasource` auf.
+- Bei der Ausführung sendet der Client nur `taskId` und optionalen Kontext.
+  Die Callable Function ist authentifiziert und lädt die Aufgabe serverseitig
+  aus `teams/personal_<uid>/tasks/{taskId}`.
 - Firestore-Dokumente enthalten `id`, `title`, `objective`, `selectedNodeId`,
   `teamId`, `graph`, `createdAt` und `updatedAt`.
 

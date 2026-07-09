@@ -56,6 +56,7 @@ class FirebaseTaskRepository implements TaskRepository {
   }) async {
     _logStart(task);
     try {
+      await saveTask(task);
       return Success(await _executeTask(task: task, context: context));
     } on TaskRunnerDatasourceConnectionException catch (error, stackTrace) {
       _logException(error, stackTrace);
@@ -117,10 +118,7 @@ class FirebaseTaskRepository implements TaskRepository {
     required String context,
   }) async {
     final response = await runnerDatasource.runTaskDefinition(
-      RunTaskDefinitionRequestModel(
-        taskDefinition: task,
-        context: context,
-      ).toJson(),
+      RunTaskDefinitionRequestModel(taskId: task.id, context: context).toJson(),
     );
     logTaskRunnerDatasourceInfo('Repository hat Task ausgeführt: ${task.id}');
     return TaskExecutionResultModel.fromJson(response).toDomain();

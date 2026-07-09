@@ -7,7 +7,7 @@ import {
 } from "./node-executor.js";
 import {
   type NodeExecutionResult,
-  type RunTaskDefinitionInput,
+  type TaskGraphInput,
   type RunTaskDefinitionOutput,
   type TaskDefinition as Task,
   type WorkflowNode,
@@ -35,7 +35,7 @@ import {
 
 export async function executeTaskGraph(
   ai: Genkit,
-  input: RunTaskDefinitionInput,
+  input: TaskGraphInput,
 ): Promise<RunTaskDefinitionOutput> {
   logReadableInfo(formatTaskStarted(input.taskDefinition, input.context));
   validateGraph(input.taskDefinition);
@@ -56,7 +56,7 @@ export async function executeTaskGraph(
 
 async function runNodes(
   ai: Genkit,
-  input: RunTaskDefinitionInput,
+  input: TaskGraphInput,
   variables: TaskVariables = {},
 ): Promise<NodeExecutionResult[]> {
   const remaining = [...input.taskDefinition.nodes];

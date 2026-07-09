@@ -232,13 +232,15 @@ zwischen verschiedenen Runs persistiert.
 
 ### `runTaskDefinitionFlow`
 
-Führt eine komplette `TaskDefinition` aus. Der Flow interpretiert den Graph,
+Führt eine gespeicherte Aufgabe aus. Der Client sendet nur die `taskId`; der
+Flow lädt die `TaskDefinition` über die Callable-Auth aus Firestore unter
+`teams/personal_<uid>/tasks/{taskId}`. Danach interpretiert der Flow den Graph,
 ermittelt ausführbare Knoten topologisch und delegiert an den registrierten
 `NodeExecutor` des jeweiligen Primitives. Noch nicht implementierte Bausteine
 werden als `skipped` markiert und reichen den bisherigen Kontext weiter.
 
 ```ts
-input:  { taskDefinition: TaskDefinition; context?: string }
+input:  { taskId: string; context?: string }
 output: { taskId: string; finalOutput: string; nodeResults: NodeExecutionResult[] }
 ```
 

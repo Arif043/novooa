@@ -117,7 +117,7 @@ export const taskDefinitionSchema = z.object({
 });
 
 export const runTaskDefinitionInputSchema = z.object({
-  taskDefinition: taskDefinitionSchema,
+  taskId: z.string().min(1),
   context: z.string().default(""),
 });
 
@@ -143,6 +143,10 @@ export type WorkflowNode = z.infer<typeof workflowNodeSchema>;
 export type WorkflowEdge = z.infer<typeof workflowEdgeSchema>;
 export type NodeAttachment = z.infer<typeof nodeAttachmentSchema>;
 export type TaskDefinition = z.infer<typeof taskDefinitionSchema>;
+export type TaskGraphInput = {
+  taskDefinition: TaskDefinition;
+  context: string;
+};
 export type RunTaskDefinitionInput = z.infer<
   typeof runTaskDefinitionInputSchema
 >;

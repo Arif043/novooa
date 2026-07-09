@@ -1,11 +1,12 @@
 import {genkit} from "genkit";
 import {openAICompatible} from "@genkit-ai/compat-oai";
-import {onCallGenkit} from "firebase-functions/v2/https";
+import {isSignedIn, onCallGenkit} from "firebase-functions/v2/https";
 import {executeTaskGraph} from "./task-runner/task-graph-runner.js";
 import {
   runTaskDefinitionInputSchema,
   runTaskDefinitionOutputSchema,
 } from "./task-runner/task-definition.js";
+import {loadTaskDefinition} from "./task-runner/task-definition-loader.js";
 import {isMinimaxProvider} from "./task-runner/ai-models.js";
 import {errorDetails, logError} from "./task-runner/structured-logger.js";
 
@@ -32,13 +33,22 @@ export const taskDefinitionFlow = ai.defineFlow(
     inputSchema: runTaskDefinitionInputSchema,
     outputSchema: runTaskDefinitionOutputSchema,
   },
-  async (input) => {
+  async (input, runtime) => {
+    let title = "";
     try {
-      return await executeTaskGraph(ai, input);
+      const taskDefinition = await loadTaskDefinition(
+        input.taskId,
+        runtime.context,
+      );
+      title = taskDefinition.title;
+      return await executeTaskGraph(ai, {
+        taskDefinition,
+        context: input.context,
+      });
     } catch (error) {
       logError("run_task_definition_flow.failed", {
-        taskId: input.taskDefinition.id,
-        title: input.taskDefinition.title,
+        taskId: input.taskId,
+        title,
         error: errorDetails(error),
       });
       throw error;
@@ -46,4 +56,7 @@ export const taskDefinitionFlow = ai.defineFlow(
   },
 );
 
-export const runTaskDefinitionFlow = onCallGenkit(taskDefinitionFlow);
+export const runTaskDefinitionFlow = onCallGenkit(
+  {authPolicy: isSignedIn()},
+  taskDefinitionFlow,
+);

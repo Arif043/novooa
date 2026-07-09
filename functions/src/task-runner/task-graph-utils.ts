@@ -1,6 +1,6 @@
 import {
   type NodeExecutionResult,
-  type RunTaskDefinitionInput,
+  type TaskGraphInput,
   type TaskDefinition,
   type WorkflowEdge,
   type WorkflowNode,
@@ -20,7 +20,7 @@ export function nextRunnableIndex(
 
 export function contextFor(
   node: WorkflowNode,
-  input: RunTaskDefinitionInput,
+  input: TaskGraphInput,
   results: Map<string, NodeExecutionResult>,
   variables: TaskVariables,
 ): string {
