@@ -232,16 +232,19 @@ zwischen verschiedenen Runs persistiert.
 
 ### `runTaskDefinitionFlow`
 
-Führt eine gespeicherte Aufgabe aus. Der Client sendet nur die `taskId`; der
-Flow lädt die `TaskDefinition` über die Callable-Auth aus Firestore unter
-`teams/personal_<uid>/tasks/{taskId}`. Danach interpretiert der Flow den Graph,
-ermittelt ausführbare Knoten topologisch und delegiert an den registrierten
-`NodeExecutor` des jeweiligen Primitives. Noch nicht implementierte Bausteine
-werden als `skipped` markiert und reichen den bisherigen Kontext weiter.
+Startet eine gespeicherte Aufgabe im Hintergrund. Der Client sendet nur die
+`taskId`; der Flow lädt die `TaskDefinition` über die Callable-Auth aus
+Firestore unter `teams/personal_<uid>/tasks/{taskId}`, erzeugt einen
+`taskRuns/{runId}`-Datensatz und gibt sofort die `runId` zurück. Ein
+Firestore-Trigger führt den Run anschließend asynchron aus. Dabei interpretiert
+der Worker den Graph, ermittelt ausführbare Knoten topologisch und delegiert an
+den registrierten `NodeExecutor` des jeweiligen Primitives. Noch nicht
+implementierte Bausteine werden als `skipped` markiert und reichen den
+bisherigen Kontext weiter.
 
 ```ts
 input:  { taskId: string; context?: string }
-output: { taskId: string; finalOutput: string; nodeResults: NodeExecutionResult[] }
+output: { runId: string; taskId: string; status: "queued" }
 ```
 
 `NodeExecutionResult` enthält `nodeId`, `primitive`, `status`, `output`,
@@ -329,18 +332,17 @@ Abhängigkeit auf den Graph-Runner hat.
 
 ### Activity-Tracking
 
-`ExecuteTaskDefinition` kann optional den Usecase
-`features/activity/domain/usecases/TrackTaskExecution` verwenden. Die App-DI
-registriert diesen Tracker standardmäßig. Pro Ausführung entstehen:
+Activity-Tracking passiert serverseitig während des Hintergrund-Runs. Pro
+Ausführung entstehen unter `teams/{teamId}/activities/{activityId}`:
 
 - eine Task-Aktivität `started` mit Run-ID und Eingabekontext,
 - pro Baustein eine Node-Aktivität mit Status `succeeded`, `skipped` oder
   `waiting`,
 - eine abschließende Task-Aktivität `succeeded` oder `failed`.
 
-Das Activity-Modell, Repository-Interface und die aktuelle
-`InMemoryTaskActivityRepository`-Implementierung gehören zum Feature
-„Aktivitäten". `task_builder` konsumiert nur den Tracking-Usecase.
+Der Flutter-Client startet nur den Run und wartet nicht auf Node-Ergebnisse.
+Die Aktivitäten-Seite liest die Firestore-Logs über das Feature
+„Aktivitäten".
 
 ### Lokale Ausführung aus Flutter
 

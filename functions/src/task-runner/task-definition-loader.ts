@@ -19,7 +19,13 @@ export async function loadTaskDefinition(
   context: unknown,
 ): Promise<TaskDefinition> {
   const uid = uidFromContext(context);
-  const teamId = `personal_${uid}`;
+  return loadTaskDefinitionForTeam(`personal_${uid}`, taskId);
+}
+
+export async function loadTaskDefinitionForTeam(
+  teamId: string,
+  taskId: string,
+): Promise<TaskDefinition> {
   initializeAdminApp();
   const snapshot = await getFirestore()
     .collection("teams")

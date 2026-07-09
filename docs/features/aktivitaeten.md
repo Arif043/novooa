@@ -1,7 +1,7 @@
 # Feature: Aktivitäten
 
-> Erste lokale Version: Aktivitäten werden beim Ausführen von Aufgaben
-> getrackt und im Root-Tab „Aktivitäten" angezeigt.
+> Aktivitäten werden beim Ausführen von Aufgaben im Backend geschrieben und im
+> Root-Tab „Aktivitäten" angezeigt.
 
 Verwandt: [`../architecture.md`](../architecture.md) ·
 [`aufgabe.md`](./aufgabe.md) ·
@@ -23,15 +23,23 @@ warum, und können an den Stellen eingreifen, an denen das Workflow pausiert
 
 ## Aktueller Schnitt
 
-Das Feature besitzt ein erstes Domain-Modell für `TaskActivity`.
-`TrackTaskExecution` erzeugt pro ausgeführter Aufgabe:
+Das Feature besitzt ein Domain-Modell für `TaskActivity`. Die Firebase
+Functions schreiben pro Hintergrund-Run:
 
 - eine Task-Aktivität `started` mit Run-ID und Eingabekontext,
-- pro Baustein eine Node-Aktivität mit Status `succeeded` oder `skipped`,
+- pro Baustein eine Node-Aktivität mit Status `succeeded`, `skipped` oder
+  `waiting`,
 - eine abschließende Task-Aktivität `succeeded` oder `failed`.
 
-Die aktuelle Infrastruktur ist `InMemoryTaskActivityRepository`. Das ist der
-Adapterpunkt für Firestore oder Genkit-Telemetrie.
+Persistenz:
+
+```text
+teams/{teamId}/taskRuns/{runId}
+teams/{teamId}/activities/{activityId}
+```
+
+Der Flutter-Client liest die letzten Aktivitäten über
+`FirestoreTaskActivityRepository` aus `teams/personal_<uid>/activities`.
 
 ## UI
 
@@ -51,5 +59,5 @@ und behandelt Loading, Fehler, Empty State und die erfolgreiche Liste.
 
 ## Status
 
-Grundlegendes Activity-Tracking und eine lokale Aktivitäten-Liste sind
-implementiert. Persistenz und Genkit-Telemetrie-Anbindung stehen noch aus.
+Grundlegendes Activity-Tracking mit Firestore-Persistenz ist implementiert.
+Live-Streaming, Filter und Genkit-Telemetrie-Anbindung stehen noch aus.

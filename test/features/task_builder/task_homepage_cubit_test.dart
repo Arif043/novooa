@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_execution_failure.dart';
-import 'package:syscat2/features/task_builder/domain/entities/task_execution_result.dart';
+import 'package:syscat2/features/task_builder/domain/entities/task_run_start.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
@@ -51,7 +51,7 @@ class _FakeTaskRepository implements TaskRepository {
   Future<void> saveTask(Task task) async {}
 
   @override
-  Future<Result<TaskExecutionResult, TaskExecutionFailure>> execute({
+  Future<Result<TaskRunStart, TaskExecutionFailure>> execute({
     required Task task,
     String context = '',
   }) async {

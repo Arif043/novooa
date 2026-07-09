@@ -21,8 +21,7 @@ import '../../features/settings/infrastructure/repositories/firestore_settings_r
 import '../../features/settings/presentation/cubits/settings_cubit.dart';
 import '../../features/activity/domain/repositories/task_activity_repository.dart';
 import '../../features/activity/domain/usecases/list_task_activities.dart';
-import '../../features/activity/domain/usecases/track_task_execution.dart';
-import '../../features/activity/infrastructure/repositories/in_memory_task_activity_repository.dart';
+import '../../features/activity/infrastructure/repositories/firestore_task_activity_repository.dart';
 import '../../features/activity/presentation/cubits/activity_cubit.dart';
 import '../../features/task_builder/domain/repositories/task_repository.dart';
 import '../../features/task_builder/domain/usecases/execute_task.dart';
@@ -68,7 +67,10 @@ void configureDependencies() {
       ),
     )
     ..registerLazySingleton<TaskActivityRepository>(
-      InMemoryTaskActivityRepository.new,
+      () => FirestoreTaskActivityRepository(
+        serviceLocator<FirebaseAuth>(),
+        serviceLocator<FirebaseFirestore>(),
+      ),
     )
     ..registerLazySingleton<TaskRunnerDatasource>(
       FirebaseFunctionsTaskRunnerDatasource.new,
@@ -99,9 +101,6 @@ void configureDependencies() {
       () => SaveAiProviderSettings(serviceLocator<SettingsRepository>()),
     )
     ..registerLazySingleton(
-      () => TrackTaskExecution(serviceLocator<TaskActivityRepository>()),
-    )
-    ..registerLazySingleton(
       () => ListTaskActivities(serviceLocator<TaskActivityRepository>()),
     )
     ..registerLazySingleton(
@@ -110,12 +109,7 @@ void configureDependencies() {
     ..registerLazySingleton(
       () => UploadTeamFile(serviceLocator<TeamFileRepository>()),
     )
-    ..registerLazySingleton(
-      () => ExecuteTask(
-        serviceLocator<TaskRepository>(),
-        tracker: serviceLocator<TrackTaskExecution>(),
-      ),
-    )
+    ..registerLazySingleton(() => ExecuteTask(serviceLocator<TaskRepository>()))
     ..registerFactory(
       () => AuthCubit(
         signUp: serviceLocator<SignUpWithEmailAndPassword>(),

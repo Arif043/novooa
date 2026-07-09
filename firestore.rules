@@ -54,6 +54,18 @@ rules_version = '2';
 //   - createdAt: timestamp (required, immutable)
 //   - updatedAt: timestamp (required)
 //
+// Subcollection: teams/{teamId}/taskRuns
+// Document ID: generated run id
+// Fields:
+//   - runId, taskId, taskTitle, context, status, createdAt, updatedAt
+//   - error: map (optional)
+//
+// Subcollection: teams/{teamId}/activities
+// Document ID: generated activity id
+// Fields:
+//   - id, runId, taskId, taskTitle, target, status, occurredAt
+//   - nodeId, primitive, input, output, message (optional)
+//
 // Subcollection: teams/{teamId}/files
 // Document ID: generated file id
 // Fields:
@@ -356,6 +368,16 @@ service cloud.firestore {
           request.resource.data.updatedAt == request.time;
 
         allow delete: if isTeamMember(teamId);
+      }
+
+      match /taskRuns/{runId} {
+        allow get, list: if isTeamMember(teamId);
+        allow create, update, delete: if false;
+      }
+
+      match /activities/{activityId} {
+        allow get, list: if isTeamMember(teamId);
+        allow create, update, delete: if false;
       }
 
       match /files/{fileId} {

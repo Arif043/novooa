@@ -133,10 +133,16 @@ export const nodeExecutionResultSchema = z.object({
   message: z.string().optional(),
 });
 
-export const runTaskDefinitionOutputSchema = z.object({
+export const taskGraphOutputSchema = z.object({
   taskId: z.string(),
   finalOutput: z.string(),
   nodeResults: z.array(nodeExecutionResultSchema),
+});
+
+export const runTaskDefinitionOutputSchema = z.object({
+  runId: z.string().min(1),
+  taskId: z.string().min(1),
+  status: z.literal("queued"),
 });
 
 export type WorkflowNode = z.infer<typeof workflowNodeSchema>;
@@ -149,6 +155,9 @@ export type TaskGraphInput = {
 };
 export type RunTaskDefinitionInput = z.infer<
   typeof runTaskDefinitionInputSchema
+>;
+export type TaskGraphOutput = z.infer<
+  typeof taskGraphOutputSchema
 >;
 export type RunTaskDefinitionOutput = z.infer<
   typeof runTaskDefinitionOutputSchema

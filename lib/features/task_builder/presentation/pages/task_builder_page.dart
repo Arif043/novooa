@@ -133,12 +133,13 @@ class _TaskBuilderBodyState extends State<_TaskBuilderBody> {
               'Run-Button startet Aufgabe: ${task.id}',
               name: 'syscat.task_builder',
             );
-            final taskExecutionOrFailure = await serviceLocator<ExecuteTask>()(
+            final taskRunOrFailure = await serviceLocator<ExecuteTask>()(
               ExecuteTaskParams(task: task),
             );
-            taskExecutionOrFailure.when(
-              (_) => logSyscatInfo(
-                'Run-Button: Aufgabe erfolgreich ausgeführt.',
+            taskRunOrFailure.when(
+              (run) => logSyscatInfo(
+                'Run-Button: Aufgabe im Hintergrund gestartet: '
+                '${run.runId.value}',
                 name: 'syscat.task_builder',
               ),
               (failure) => logSyscatInfo(

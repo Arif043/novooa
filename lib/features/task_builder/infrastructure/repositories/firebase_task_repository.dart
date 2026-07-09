@@ -4,13 +4,13 @@ import 'package:multiple_result/multiple_result.dart';
 
 import '../../domain/entities/task.dart';
 import '../../domain/entities/task_execution_failure.dart';
-import '../../domain/entities/task_execution_result.dart';
+import '../../domain/entities/task_run_start.dart';
 import '../../domain/repositories/task_repository.dart';
 import '../datasources/task_runner_datasource.dart';
 import '../datasources/task_runner_datasource_log.dart';
 import '../models/run_task_definition_request_model.dart';
 import '../models/task_document_mapper.dart';
-import '../models/task_execution_result_model.dart';
+import '../models/task_run_start_model.dart';
 
 class FirebaseTaskRepository implements TaskRepository {
   FirebaseTaskRepository({
@@ -50,7 +50,7 @@ class FirebaseTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Result<TaskExecutionResult, TaskExecutionFailure>> execute({
+  Future<Result<TaskRunStart, TaskExecutionFailure>> execute({
     required Task task,
     String context = '',
   }) async {
@@ -113,7 +113,7 @@ class FirebaseTaskRepository implements TaskRepository {
     };
   }
 
-  Future<TaskExecutionResult> _executeTask({
+  Future<TaskRunStart> _executeTask({
     required Task task,
     required String context,
   }) async {
@@ -121,7 +121,7 @@ class FirebaseTaskRepository implements TaskRepository {
       RunTaskDefinitionRequestModel(taskId: task.id, context: context).toJson(),
     );
     logTaskRunnerDatasourceInfo('Repository hat Task ausgeführt: ${task.id}');
-    return TaskExecutionResultModel.fromJson(response).toDomain();
+    return TaskRunStartModel.fromJson(response).toDomain();
   }
 
   CollectionReference<Map<String, dynamic>> _tasksReference(String teamId) {
@@ -143,7 +143,7 @@ class FirebaseTaskRepository implements TaskRepository {
     return 'personal_$uid';
   }
 
-  Result<TaskExecutionResult, TaskExecutionFailure> _failure(
+  Result<TaskRunStart, TaskExecutionFailure> _failure(
     TaskExecutionFailureKind kind,
   ) {
     return Error(TaskExecutionFailure(kind));

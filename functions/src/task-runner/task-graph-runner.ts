@@ -8,7 +8,7 @@ import {
 import {
   type NodeExecutionResult,
   type TaskGraphInput,
-  type RunTaskDefinitionOutput,
+  type TaskGraphOutput,
   type TaskDefinition as Task,
   type WorkflowNode,
 } from "./task-definition.js";
@@ -36,7 +36,7 @@ import {
 export async function executeTaskGraph(
   ai: Genkit,
   input: TaskGraphInput,
-): Promise<RunTaskDefinitionOutput> {
+): Promise<TaskGraphOutput> {
   logReadableInfo(formatTaskStarted(input.taskDefinition, input.context));
   validateGraph(input.taskDefinition);
   const results = await runNodes(ai, input);

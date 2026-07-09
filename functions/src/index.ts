@@ -30,5 +30,6 @@ setGlobalOptions({ maxInstances: 10 });
 // });
 
 export {
+  runTaskDefinitionWorker,
   runTaskDefinitionFlow,
 } from "./task-workflows.js";
