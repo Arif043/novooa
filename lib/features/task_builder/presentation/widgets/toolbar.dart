@@ -76,9 +76,11 @@ class Toolbar extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             IconButton(
-              onPressed: () => {},
+              onPressed: () => context
+                  .read<TaskBuilderCubit>()
+                  .addNodeToMainGraph(.humanApproval),
               icon: const Icon(Icons.face),
-              tooltip: "Menschliche Aktion hinzufügen",
+              tooltip: "Freigabe hinzufügen",
             ),
             const SizedBox(width: 4),
             IconButton(

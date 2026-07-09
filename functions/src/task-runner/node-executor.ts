@@ -64,6 +64,20 @@ export function skippedNode(
   };
 }
 
+export function waitingForApprovalNode(
+  node: WorkflowNode,
+  output: string,
+  message: string,
+): NodeExecutionResult {
+  return {
+    nodeId: node.id,
+    primitive: node.primitive,
+    status: "waitingForApproval",
+    output,
+    message,
+  };
+}
+
 export function parentOutputFor(
   node: WorkflowNode,
   task: Task,

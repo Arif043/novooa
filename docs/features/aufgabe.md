@@ -78,7 +78,7 @@ features/task_builder/
 | `conditionalFlow`       | **Bedingter Ablauf**         | Verzweigt anhand eines Prädikats auf den vorherigen Output   | Interner `executeConditionalNode`                     |
 | `iterativeRefinement`   | **Iterative Verfeinerung**   | Draft → Critique → Improve, n Runden                          | Interner `executeIterativeRefinementNode`             |
 | `toolCall`              | **Werkzeug-Aufruf**          | Strukturierte Tool-Invocation (z. B. Suche, E-Mail, Kalender) | `ai.generate({tools: […]})`                           |
-| `humanApproval`         | **Freigabe**                 | Hält den Flow an, bis ein Mensch bestätigt                    | Custom Genkit-Interrupt / Firebase-Task               |
+| `humanApproval`         | **Freigabe**                 | Hält den Flow an, bis ein Mensch bestätigt                    | Interner `executeHumanApprovalNode`                   |
 | `validation`            | **Validierung**              | Schema- / Wertebereichsprüfung auf Output eines Knotens       | `z.object(...).safeParse()`                           |
 
 Beim Erweitern der Enum müssen Label, Beschreibung und Genkit-Mapping
@@ -243,7 +243,8 @@ output: { taskId: string; finalOutput: string; nodeResults: NodeExecutionResult[
 ```
 
 `NodeExecutionResult` enthält `nodeId`, `primitive`, `status`, `output`,
-optional `selectedNodeId` und optional `message`.
+optional `selectedNodeId` und optional `message`. Mögliche Node-Status sind
+`executed`, `skipped` und `waitingForApproval`.
 
 `WorkflowNode` nutzt ein generisches `config`-Objekt. Die konkrete Struktur
 wird über `config.primitive` bestimmt. Für Script-Bausteine:
@@ -268,6 +269,25 @@ Für Prompt-Bausteine:
   attachments: NodeAttachment[]
 }
 ```
+
+Für Freigabe-Bausteine:
+
+```ts
+{
+  primitive: "humanApproval",
+  instruction: string,
+  allowEdit: boolean,
+  allowReject: boolean,
+  requireRejectReason: boolean,
+  reviewScope: "currentInput" | "executionTrace"
+}
+```
+
+Der MVP der Freigabe pausiert den Graph nicht über einen externen Resume-Kanal,
+sondern beendet die aktuelle Ausführung kontrolliert mit dem Status
+`waitingForApproval`. Noch nicht ausgeführte Nodes werden als `skipped`
+markiert. Die Review- und Resume-Persistenz wird später über Activities /
+Approvals ergänzt.
 
 Dateianhänge referenzieren eine konkrete Storage-Version:
 
@@ -312,7 +332,8 @@ Abhängigkeit auf den Graph-Runner hat.
 registriert diesen Tracker standardmäßig. Pro Ausführung entstehen:
 
 - eine Task-Aktivität `started` mit Run-ID und Eingabekontext,
-- pro Baustein eine Node-Aktivität mit Status `succeeded` oder `skipped`,
+- pro Baustein eine Node-Aktivität mit Status `succeeded`, `skipped` oder
+  `waiting`,
 - eine abschließende Task-Aktivität `succeeded` oder `failed`.
 
 Das Activity-Modell, Repository-Interface und die aktuelle
@@ -396,5 +417,3 @@ Verbesserungstemperatur: `0.4`. Streamt nicht.
 - **Visualisierung:** Canvas-Implementierung — Start mit `InteractiveViewer` +
   `CustomPaint`, Migration zu dedizierter Lib erst bei Undo/Redo +
   Multi-Select + Auto-Layout.
-- **Freigabe:** Wie genau pausiert `humanApproval`? Genkit-Interrupt vs.
-  externer Task-Rückkanal.

@@ -82,12 +82,22 @@ export const iterativeRefinementNodeConfigSchema = z.object({
   maxIterations: z.number().int().min(1).max(5).default(2),
 });
 
+export const humanApprovalNodeConfigSchema = z.object({
+  primitive: z.literal("humanApproval").default("humanApproval"),
+  instruction: z.string().default("Prüfe das Ergebnis und gib es frei."),
+  allowEdit: z.boolean().default(true),
+  allowReject: z.boolean().default(true),
+  requireRejectReason: z.boolean().default(true),
+  reviewScope: z.enum(["currentInput", "executionTrace"]).default("currentInput"),
+});
+
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   stringInputNodeConfigSchema,
   scriptNodeConfigSchema,
   promptNodeConfigSchema,
   conditionalNodeConfigSchema,
   iterativeRefinementNodeConfigSchema,
+  humanApprovalNodeConfigSchema,
 ]);
 
 export const workflowNodeSchema = z.object({
@@ -114,7 +124,7 @@ export const runTaskDefinitionInputSchema = z.object({
 export const nodeExecutionResultSchema = z.object({
   nodeId: z.string(),
   primitive: workflowPrimitiveSchema,
-  status: z.enum(["executed", "skipped"]),
+  status: z.enum(["executed", "skipped", "waitingForApproval"]),
   output: z.string(),
   variables: z.record(z.string(), z.unknown()).optional(),
   selectedNodeId: z.string().nullable().optional(),

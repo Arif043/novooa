@@ -45,6 +45,7 @@ class RunTaskDefinitionRequestModel {
       PromptNodeConfig() => _promptToJson(config),
       ConditionalNodeConfig() => _conditionalToJson(config),
       IterativeRefinementNodeConfig() => _iterativeRefinementToJson(config),
+      HumanApprovalNodeConfig() => _approvalToJson(config),
       _ => throw UnimplementedError('NodeConfig wird nicht unterstützt.'),
     };
   }
@@ -105,6 +106,17 @@ class RunTaskDefinitionRequestModel {
       'optimizerPrompt': config.optimizerPrompt,
       'critiquePrompt': config.critiquePrompt,
       'maxIterations': config.maxIterations,
+    };
+  }
+
+  Map<String, Object?> _approvalToJson(HumanApprovalNodeConfig config) {
+    return {
+      'primitive': config.primitive.name,
+      'instruction': config.instruction,
+      'allowEdit': config.allowEdit,
+      'allowReject': config.allowReject,
+      'requireRejectReason': config.requireRejectReason,
+      'reviewScope': config.reviewScope.name,
     };
   }
 

@@ -177,6 +177,32 @@ void main() {
 
     await cubit.close();
   });
+
+  test('updateHumanApproval speichert Freigabe-Optionen', () async {
+    final repository = _InMemoryTaskRepository(_taskWithApprovalNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.updateHumanApproval(
+      const NodeId('node.approval'),
+      (config) => config.copyWith(
+        instruction: 'Bitte prüfen.',
+        allowEdit: false,
+        reviewScope: HumanApprovalReviewScope.executionTrace,
+      ),
+    );
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final config =
+        state.editingTask.nodes.first.config as HumanApprovalNodeConfig;
+
+    expect(config.instruction, 'Bitte prüfen.');
+    expect(config.allowEdit, isFalse);
+    expect(config.reviewScope, HumanApprovalReviewScope.executionTrace);
+    expect(repository.savedTask, state.editingTask);
+
+    await cubit.close();
+  });
 }
 
 const _attachment = NodeAttachment(
@@ -263,6 +289,32 @@ Task _taskWithScriptNode() {
           title: 'Script',
           description: 'Beschreibung',
           config: ScriptNodeConfig(script: 'output = ""'),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+Task _taskWithApprovalNode() {
+  return const Task(
+    id: 'task.approval',
+    title: 'Aufgabe',
+    objective: 'Ziel',
+    selectedNodeId: NodeId('node.approval'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.approval'),
+          title: 'Freigabe',
+          description: 'Beschreibung',
+          config: HumanApprovalNodeConfig(
+            instruction: 'Prüfe das Ergebnis.',
+            allowEdit: true,
+            allowReject: true,
+            requireRejectReason: true,
+            reviewScope: HumanApprovalReviewScope.currentInput,
+          ),
         ),
       ],
       edges: [],

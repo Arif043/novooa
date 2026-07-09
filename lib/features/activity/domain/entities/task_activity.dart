@@ -2,7 +2,7 @@ import '../../../../core/entities/unique_id.dart';
 
 enum TaskActivityTarget { task, node }
 
-enum TaskActivityStatus { started, succeeded, failed, skipped }
+enum TaskActivityStatus { started, succeeded, failed, skipped, waiting }
 
 class TaskActivity {
   const TaskActivity({

@@ -81,6 +81,7 @@ class _ActivityText extends StatelessWidget {
       TaskActivityStatus.succeeded => 'Erfolgreich',
       TaskActivityStatus.failed => 'Fehlgeschlagen',
       TaskActivityStatus.skipped => 'Übersprungen',
+      TaskActivityStatus.waiting => 'Wartet',
     };
   }
 
@@ -120,6 +121,7 @@ class _StatusIcon extends StatelessWidget {
       TaskActivityStatus.succeeded => Icons.check_circle_outline,
       TaskActivityStatus.failed => Icons.error_outline,
       TaskActivityStatus.skipped => Icons.skip_next_outlined,
+      TaskActivityStatus.waiting => Icons.pending_actions_outlined,
     };
   }
 
@@ -129,6 +131,7 @@ class _StatusIcon extends StatelessWidget {
       TaskActivityStatus.succeeded => colorScheme.tertiary,
       TaskActivityStatus.failed => colorScheme.error,
       TaskActivityStatus.skipped => colorScheme.outline,
+      TaskActivityStatus.waiting => colorScheme.secondary,
     };
   }
 }

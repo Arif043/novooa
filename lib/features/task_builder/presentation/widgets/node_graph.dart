@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_pager.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_widget.dart';
@@ -33,6 +34,7 @@ class _NodeGraphState extends State<NodeGraph> {
       .prompt => PromptWidget(node: node),
       .conditional => ConditionalPager(key: ValueKey(node.id), node: node),
       .iterativeRefinement => IterativeRefinementWidget(node: node),
+      .humanApproval => HumanApprovalWidget(node: node),
       _ => SizedBox.shrink(),
     };
   }

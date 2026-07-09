@@ -109,6 +109,24 @@ void main() {
     expect(config['maxIterations'], 3);
     expect(config.containsKey('graph'), isFalse);
   });
+
+  test('serialisiert Freigabe fuer runTaskDefinitionFlow', () {
+    final json = RunTaskDefinitionRequestModel(
+      taskDefinition: _approvalTask(),
+      context: '',
+    ).toJson();
+
+    final task = json['taskDefinition'] as Map<String, Object?>;
+    final nodes = task['nodes'] as List<Object?>;
+    final approval = nodes.first as Map<String, Object?>;
+    final config = approval['config'] as Map<String, Object?>;
+
+    expect(approval['primitive'], 'humanApproval');
+    expect(config['primitive'], 'humanApproval');
+    expect(config['instruction'], 'Bitte prüfen.');
+    expect(config['allowEdit'], isFalse);
+    expect(config['reviewScope'], 'executionTrace');
+  });
 }
 
 Task _task() {
@@ -283,6 +301,32 @@ Task _iterativeRefinementTask() {
         ),
       ],
       edges: const [],
+    ),
+  );
+}
+
+Task _approvalTask() {
+  return const Task(
+    id: 'task.approval',
+    title: 'Task',
+    objective: 'Ziel',
+    selectedNodeId: NodeId('node.approval'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.approval'),
+          title: 'Freigabe',
+          description: 'Beschreibung',
+          config: HumanApprovalNodeConfig(
+            instruction: 'Bitte prüfen.',
+            allowEdit: false,
+            allowReject: true,
+            requireRejectReason: true,
+            reviewScope: HumanApprovalReviewScope.executionTrace,
+          ),
+        ),
+      ],
+      edges: [],
     ),
   );
 }

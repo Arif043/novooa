@@ -88,9 +88,24 @@ async function runNodes(
     results.set(node.id, result);
     skipInactiveBranches(node, input.taskDefinition, result, skippedNodeIds);
     logSkippedBranches(node, input.taskDefinition.id, result, skippedNodeIds);
+    if (result.status === "waitingForApproval") {
+      skipRemainingNodes(remaining, results, result.output);
+      break;
+    }
   }
 
   return input.taskDefinition.nodes.map((node) => results.get(node.id)!);
+}
+
+function skipRemainingNodes(
+  remaining: WorkflowNode[],
+  results: Map<string, NodeExecutionResult>,
+  context: string,
+): void {
+  for (const node of remaining) {
+    results.set(node.id, skippedNode(node, context));
+  }
+  remaining.length = 0;
 }
 
 type NodeRunInput = {

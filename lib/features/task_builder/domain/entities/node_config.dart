@@ -9,6 +9,7 @@ part 'string_input_node_config.dart';
 part 'script_node_config.dart';
 part 'conditional_node_config.dart';
 part 'iterative_refinement_node_config.dart';
+part 'human_approval_node_config.dart';
 
 sealed class NodeConfig extends Equatable {
   const NodeConfig();
@@ -22,6 +23,7 @@ sealed class NodeConfig extends Equatable {
       .prompt => PromptNodeConfig.initial(),
       .conditional => ConditionalNodeConfig.initial(null),
       .iterativeRefinement => IterativeRefinementNodeConfig.initial(),
+      .humanApproval => HumanApprovalNodeConfig.initial(),
       _ => throw UnimplementedError(),
     };
   }

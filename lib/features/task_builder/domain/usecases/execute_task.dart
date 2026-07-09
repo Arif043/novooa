@@ -96,6 +96,7 @@ class ExecuteTask {
     return switch (result.status) {
       NodeExecutionStatus.executed => TaskActivityStatus.succeeded,
       NodeExecutionStatus.skipped => TaskActivityStatus.skipped,
+      NodeExecutionStatus.waitingForApproval => TaskActivityStatus.waiting,
     };
   }
 }

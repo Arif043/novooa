@@ -2,12 +2,14 @@ import 'workflow_node.dart';
 
 enum NodeExecutionStatus {
   executed,
-  skipped;
+  skipped,
+  waitingForApproval;
 
   static NodeExecutionStatus fromName(String name) {
     return switch (name) {
       'executed' => NodeExecutionStatus.executed,
       'skipped' => NodeExecutionStatus.skipped,
+      'waitingForApproval' => NodeExecutionStatus.waitingForApproval,
       _ => NodeExecutionStatus.skipped,
     };
   }

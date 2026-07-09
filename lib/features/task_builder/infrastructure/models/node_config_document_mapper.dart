@@ -22,6 +22,7 @@ class NodeConfigDocumentMapper {
       PromptNodeConfig() => _promptToDocument(config),
       ConditionalNodeConfig() => _conditionalToDocument(config),
       IterativeRefinementNodeConfig() => _refinementToDocument(config),
+      HumanApprovalNodeConfig() => _approvalToDocument(config),
       _ => {'primitive': config.primitive.name},
     };
   }
@@ -34,6 +35,7 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.prompt => _promptFrom(data),
       WorkflowPrimitive.conditional => _conditionalFrom(data),
       WorkflowPrimitive.iterativeRefinement => _refinementFrom(data),
+      WorkflowPrimitive.humanApproval => _approvalFrom(data),
       _ => NodeConfig.initial(primitive),
     };
   }
@@ -78,6 +80,17 @@ class NodeConfigDocumentMapper {
     };
   }
 
+  Map<String, Object?> _approvalToDocument(HumanApprovalNodeConfig config) {
+    return {
+      'primitive': config.primitive.name,
+      'instruction': config.instruction,
+      'allowEdit': config.allowEdit,
+      'allowReject': config.allowReject,
+      'requireRejectReason': config.requireRejectReason,
+      'reviewScope': config.reviewScope.name,
+    };
+  }
+
   StringInputNodeConfig _stringInputFrom(Map<String, Object?> data) {
     return StringInputNodeConfig(value: data['value'] as String? ?? '');
   }
@@ -107,6 +120,16 @@ class NodeConfigDocumentMapper {
       optimizerPrompt: data['optimizerPrompt'] as String? ?? '',
       critiquePrompt: data['critiquePrompt'] as String? ?? '',
       maxIterations: data['maxIterations'] as int? ?? 2,
+    );
+  }
+
+  HumanApprovalNodeConfig _approvalFrom(Map<String, Object?> data) {
+    return HumanApprovalNodeConfig(
+      instruction: data['instruction'] as String? ?? '',
+      allowEdit: data['allowEdit'] as bool? ?? true,
+      allowReject: data['allowReject'] as bool? ?? true,
+      requireRejectReason: data['requireRejectReason'] as bool? ?? true,
+      reviewScope: _reviewScopeFrom(data['reviewScope']),
     );
   }
 
@@ -171,6 +194,13 @@ class NodeConfigDocumentMapper {
     return PromptOutputType.values.firstWhere(
       (type) => type.name == value,
       orElse: () => PromptOutputType.text,
+    );
+  }
+
+  HumanApprovalReviewScope _reviewScopeFrom(Object? value) {
+    return HumanApprovalReviewScope.values.firstWhere(
+      (scope) => scope.name == value,
+      orElse: () => HumanApprovalReviewScope.currentInput,
     );
   }
 

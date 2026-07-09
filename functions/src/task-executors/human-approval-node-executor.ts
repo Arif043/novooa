@@ -1,0 +1,24 @@
+import {
+  type NodeExecutor,
+  parentOutputFor,
+  waitingForApprovalNode,
+} from "../task-runner/node-executor.js";
+
+export const humanApprovalNodeExecutor: NodeExecutor = {
+  primitive: "humanApproval",
+  async execute(input) {
+    const output = parentOutputFor(input.node, input.task, input.results);
+    return waitingForApprovalNode(
+      input.node,
+      output,
+      messageFor(input.node.config),
+    );
+  },
+};
+
+function messageFor(config: Parameters<NodeExecutor["execute"]>[0]["node"]["config"]) {
+  if (config.primitive !== "humanApproval") {
+    return "Aufgabe wartet auf Freigabe.";
+  }
+  return config.instruction.trim() || "Aufgabe wartet auf Freigabe.";
+}

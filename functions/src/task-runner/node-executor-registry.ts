@@ -1,4 +1,5 @@
 import {conditionalFlowNodeExecutor} from "../task-executors/conditional-node-executor.js";
+import {humanApprovalNodeExecutor} from "../task-executors/human-approval-node-executor.js";
 import {iterativeRefinementNodeExecutor} from "../task-executors/iterative-refinement-node-executor.js";
 import {promptNodeExecutor} from "../task-executors/prompt-node-executor.js";
 import {scriptNodeExecutor} from "../task-executors/script-node-executor.js";
@@ -13,6 +14,7 @@ const executors = new Map<WorkflowNode["primitive"], NodeExecutor>(
     promptNodeExecutor,
     conditionalFlowNodeExecutor,
     iterativeRefinementNodeExecutor,
+    humanApprovalNodeExecutor,
   ].map((executor) => [executor.primitive, executor]),
 );
 
