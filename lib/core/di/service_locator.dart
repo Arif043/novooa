@@ -31,6 +31,7 @@ import '../../features/task_builder/infrastructure/datasources/task_runner_datas
 import '../../features/task_builder/infrastructure/repositories/firebase_task_repository.dart';
 import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
+import '../../features/task_builder/presentation/cubits/task_homepage_cubit.dart';
 import '../../features/user/domain/repositories/user_repository.dart';
 import '../../features/user/domain/usecases/ensure_user_profile.dart';
 import '../../features/user/domain/usecases/get_user_profile.dart';
@@ -134,6 +135,7 @@ void configureDependencies() {
     ..registerFactory(
       () => TaskBuilderCubit(repository: serviceLocator<TaskRepository>()),
     )
+    ..registerFactory(() => TaskHomepageCubit(serviceLocator<TaskRepository>()))
     ..registerFactory(
       () => NodeFileAttachmentsCubit(
         serviceLocator<AuthRepository>(),

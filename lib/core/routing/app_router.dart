@@ -7,6 +7,7 @@ import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
 import 'package:syscat2/features/activity/presentation/pages/activity_page.dart';
 import 'package:syscat2/features/files/presentation/pages/files_page.dart';
 import 'package:syscat2/features/settings/presentation/pages/settings_page.dart';
+import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/presentation/pages/task_builder_page.dart';
 import 'package:syscat2/features/task_builder/presentation/pages/task_homepage.dart';
 import 'package:syscat2/root_page.dart';
@@ -45,8 +46,11 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: 'builder',
-                builder: (context, state) =>
-                    const TaskBuilderPage(editingTaskOrNull: null),
+                builder: (context, state) => TaskBuilderPage(
+                  editingTaskOrNull: state.extra is Task
+                      ? state.extra as Task
+                      : null,
+                ),
               ),
             ],
           ),
