@@ -13,15 +13,19 @@ export type SubgraphRunner = (
   context: string,
 ) => Promise<NodeExecutionResult[]>;
 
-export type NodeExecutorInput = {
-  ai: Genkit;
-  node: WorkflowNode;
-  context: string;
+export type TaskRunContext = {
   variables: TaskVariables;
   task: Task;
   teamId: string;
   results: Map<string, NodeExecutionResult>;
   runSubgraph: SubgraphRunner;
+};
+
+export type NodeExecutorInput = {
+  ai: Genkit;
+  node: WorkflowNode;
+  context: string;
+  runContext: TaskRunContext;
   attachmentWorkspace?: NodeAttachmentWorkspace;
 };
 

@@ -48,10 +48,14 @@ export const iterativeRefinementNodeExecutor: NodeExecutor = {
   primitive: "iterativeRefinement",
   async execute(input) {
     const config = refinementConfigFor(input.node);
-    const draft = parentOutputFor(input.node, input.task, input.results) ||
+    const draft = parentOutputFor(
+      input.node,
+      input.runContext.task,
+      input.runContext.results,
+    ) ||
       input.context;
     const output = await executeIterativeRefinementNode(input.ai, {
-      objective: input.task.objective,
+      objective: input.runContext.task.objective,
       draft,
       optimizerPrompt: config?.optimizerPrompt ||
         input.node.description ||

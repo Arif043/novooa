@@ -12,9 +12,13 @@ import {type WorkflowNode} from "../task-runner/task-definition.js";
 export const writeFileNodeExecutor: NodeExecutor = {
   primitive: "writeFile",
   async execute(input) {
-    const content = parentOutputFor(input.node, input.task, input.results);
+    const content = parentOutputFor(
+      input.node,
+      input.runContext.task,
+      input.runContext.results,
+    );
     const file = await writeTeamFile({
-      teamId: input.teamId,
+      teamId: input.runContext.teamId,
       node: input.node,
       content,
     });

@@ -21,7 +21,10 @@ import {
   skipInactiveBranches,
   validateGraph,
 } from "./task-graph-utils.js";
-import {type TaskVariables} from "./node-executor.js";
+import {
+  type TaskRunContext,
+  type TaskVariables,
+} from "./node-executor.js";
 import {
   formatNodeFailed,
   formatNodeHeader,
@@ -102,19 +105,13 @@ async function runNodes(
     );
     const startedAt = Date.now();
     logNodeHeader(node, input.taskDefinition, context, skipNode, results);
-    const result = await runNodeWithTrail(
-      ai,
-      {
-        node,
-        context,
-        task: input.taskDefinition,
-        teamId: input.teamId,
-        results,
-        variables,
-        skipNode,
-        startedAt,
-      },
-    );
+    const result = await runNodeWithTrail(ai, {
+      node,
+      context,
+      runContext: runContextFor(ai, input, results, variables),
+      skipNode,
+      startedAt,
+    });
     updateVariables(variables, result);
     results.set(node.id, result);
     skipInactiveBranches(node, input.taskDefinition, result, skippedNodeIds);
@@ -229,10 +226,7 @@ function resultsMapFrom(results: NodeExecutionResult[]) {
 type NodeRunInput = {
   node: WorkflowNode;
   context: string;
-  task: Task;
-  teamId: string;
-  results: Map<string, NodeExecutionResult>;
-  variables: TaskVariables;
+  runContext: TaskRunContext;
   skipNode: boolean;
   startedAt: number;
 };
@@ -245,7 +239,7 @@ async function runNodeWithTrail(
     const result = input.skipNode
       ? skippedNode(input.node, "")
       : await executeNode(ai, input);
-    logNodeTrail(input.task.id, result, input.startedAt);
+    logNodeTrail(input.runContext.task.id, result, input.startedAt);
     return result;
   } catch (error) {
     logNodeErrorTrail(input, error);
@@ -290,7 +284,7 @@ function logNodeErrorTrail(input: NodeRunInput, error: unknown): void {
     error,
   }));
   logError("task_node.exception", {
-    taskId: input.task.id,
+    taskId: input.runContext.task.id,
     nodeId: input.node.id,
     primitive: input.node.primitive,
     title: input.node.title,
@@ -341,16 +335,27 @@ async function executeNode(
       ai,
       node: input.node,
       context: input.context,
-      variables: input.variables,
-      task: input.task,
-      teamId: input.teamId,
-      results: input.results,
-      runSubgraph: runSubgraphFor(ai, input.variables, input.teamId),
+      runContext: input.runContext,
       attachmentWorkspace,
     });
   } finally {
     await attachmentWorkspace?.cleanup();
   }
+}
+
+function runContextFor(
+  ai: Genkit,
+  input: TaskGraphInput,
+  results: Map<string, NodeExecutionResult>,
+  variables: TaskVariables,
+): TaskRunContext {
+  return {
+    task: input.taskDefinition,
+    teamId: input.teamId,
+    results,
+    variables,
+    runSubgraph: runSubgraphFor(ai, variables, input.teamId),
+  };
 }
 
 function updateVariables(

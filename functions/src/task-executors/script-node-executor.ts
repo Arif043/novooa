@@ -23,9 +23,13 @@ export const scriptNodeExecutor: NodeExecutor = {
   primitive: "script",
   async execute(input) {
     const output = await executeScriptNode({
-      input: parentOutputFor(input.node, input.task, input.results),
+      input: parentOutputFor(
+        input.node,
+        input.runContext.task,
+        input.runContext.results,
+      ),
       script: scriptFor(input.node),
-      variables: input.variables,
+      variables: input.runContext.variables,
       attachmentWorkspace: input.attachmentWorkspace,
     });
     return executedNode(input.node, output.output, undefined, undefined, output.variables);

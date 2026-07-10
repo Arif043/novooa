@@ -1,5 +1,6 @@
 import {type WorkflowEdge, type WorkflowNode} from "../task-runner/task-definition.js";
 import {
+  type TaskRunContext,
   type NodeExecutor,
   executedNode,
   parentOutputFor,
@@ -25,8 +26,12 @@ export const conditionalFlowNodeExecutor: NodeExecutor = {
   async execute(input) {
     const output = executeConditionalNode({
       node: input.node,
-      targetLabel: parentOutputFor(input.node, input.task, input.results),
-      outgoingEdges: input.task.edges.filter(
+      targetLabel: parentOutputFor(
+        input.node,
+        input.runContext.task,
+        input.runContext.results,
+      ),
+      outgoingEdges: input.runContext.task.edges.filter(
         (edge) => edge.from === input.node.id,
       ),
     });
@@ -138,8 +143,8 @@ async function executeSelectedBranch(
   if (!branch) return output.reason;
   if (branch.graph.nodes.length === 0) return emptyBranchOutput(output);
   logBranchStarted(input.node, branch);
-  const branchResults = await input.runSubgraph(
-    branchTaskFor(input.task, branch),
+  const branchResults = await input.runContext.runSubgraph(
+    branchTaskFor(input.runContext.task, branch),
     input.context,
   );
   const finalOutput = finalOutputOf(branchResults);
@@ -156,10 +161,7 @@ function emptyBranchOutput(output: {selectedBranchLabel?: string | null}) {
   return `Branch ${output.selectedBranchLabel ?? ""} has no nodes.`;
 }
 
-function branchTaskFor(
-  task: Parameters<NodeExecutor["execute"]>[0]["task"],
-  branch: Branch,
-) {
+function branchTaskFor(task: TaskRunContext["task"], branch: Branch) {
   return {
     id: `${task.id}:${branch.id}`,
     title: `${task.title}:${branch.label}`,
