@@ -16,6 +16,8 @@ enum TaskRunStatus {
   }
 }
 
+enum TaskRunReviewDecision { approve, reject }
+
 class TaskRun {
   const TaskRun({
     required this.id,
@@ -26,6 +28,8 @@ class TaskRun {
     this.createdAt,
     this.waitingNodeId,
     this.finalOutput,
+    this.reviewInstruction,
+    this.reviewOutput,
     this.message,
   });
 
@@ -37,5 +41,7 @@ class TaskRun {
   final DateTime? createdAt;
   final String? waitingNodeId;
   final String? finalOutput;
+  final String? reviewInstruction;
+  final String? reviewOutput;
   final String? message;
 }

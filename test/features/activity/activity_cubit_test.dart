@@ -6,6 +6,7 @@ import 'package:syscat2/features/activity/domain/repositories/task_activity_repo
 import 'package:syscat2/features/activity/domain/repositories/task_run_repository.dart';
 import 'package:syscat2/features/activity/domain/usecases/list_task_activities.dart';
 import 'package:syscat2/features/activity/domain/usecases/list_task_runs.dart';
+import 'package:syscat2/features/activity/domain/usecases/review_task_run.dart';
 import 'package:syscat2/features/activity/presentation/cubits/activity_cubit.dart';
 import 'package:syscat2/features/activity/presentation/cubits/activity_state.dart';
 
@@ -34,6 +35,13 @@ class _RunRepository implements TaskRunRepository {
   Future<List<TaskRun>> listRecent() async {
     return runs;
   }
+
+  @override
+  Future<void> review({
+    required TaskRun run,
+    required TaskRunReviewDecision decision,
+    required String output,
+  }) async {}
 }
 
 void main() {
@@ -43,6 +51,7 @@ void main() {
         _ActivityRepository([_activity()]),
       ),
       listTaskRuns: ListTaskRuns(_RunRepository([_run()])),
+      reviewTaskRun: ReviewTaskRun(_RunRepository([_run()])),
     );
 
     await cubit.load();

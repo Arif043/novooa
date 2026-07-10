@@ -51,6 +51,9 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md#domäne
 - Die eigentliche Ausführung läuft im Backend über einen Firestore-Trigger auf
   `taskRuns/{runId}`. Activity-Logs werden unter
   `teams/{teamId}/activities/{activityId}` gespeichert.
+- Freigaben laufen über `reviewTaskRunFlow`: Approve setzt einen pausierten Run
+  anhand von `resumeState` fort, Reject verwirft den Zwischenzustand und setzt
+  den Run auf `rejected`.
 - Firestore-Dokumente enthalten `id`, `title`, `objective`, `selectedNodeId`,
   `teamId`, `graph`, `createdAt` und `updatedAt`.
 
@@ -141,6 +144,7 @@ Feature startet.
 | Flow                          | Datei                            | Status                          |
 | ----------------------------- | -------------------------------- | ------------------------------- |
 | `runTaskDefinitionFlow`       | `functions/src/task-workflows.ts` | Produktiv (Feature Aufgabe)     |
+| `reviewTaskRunFlow`           | `functions/src/task-workflows.ts` | Produktiv (Feature Aktivitäten) |
 | `menuSuggestionFlow`          | `functions/src/genkit-sample.ts` | Vorlage — nicht produktiv       |
 
 Feature-spezifische Detailtiefe (Inputs, Outputs, Executor-Registry) in

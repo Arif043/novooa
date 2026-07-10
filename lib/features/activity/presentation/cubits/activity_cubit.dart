@@ -2,19 +2,26 @@ import 'package:bloc/bloc.dart';
 
 import '../../domain/usecases/list_task_activities.dart';
 import '../../domain/usecases/list_task_runs.dart';
+import '../../domain/usecases/review_task_run.dart';
+import '../../domain/entities/task_run.dart';
 import 'activity_state.dart';
 
 class ActivityCubit extends Cubit<ActivityState> {
   ActivityCubit({
     required ListTaskActivities listTaskActivities,
     required ListTaskRuns listTaskRuns,
-  }) : this._(listTaskActivities, listTaskRuns);
+    required ReviewTaskRun reviewTaskRun,
+  }) : this._(listTaskActivities, listTaskRuns, reviewTaskRun);
 
-  ActivityCubit._(this._listTaskActivities, this._listTaskRuns)
-    : super(const ActivityState());
+  ActivityCubit._(
+    this._listTaskActivities,
+    this._listTaskRuns,
+    this._reviewTaskRun,
+  ) : super(const ActivityState());
 
   final ListTaskActivities _listTaskActivities;
   final ListTaskRuns _listTaskRuns;
+  final ReviewTaskRun _reviewTaskRun;
 
   Future<void> load() async {
     emit(const ActivityState());
@@ -38,5 +45,23 @@ class ActivityCubit extends Cubit<ActivityState> {
         ),
       );
     }
+  }
+
+  Future<void> approveRun(TaskRun run, String output) async {
+    await _reviewTaskRun(
+      run: run,
+      decision: TaskRunReviewDecision.approve,
+      output: output,
+    );
+    await load();
+  }
+
+  Future<void> rejectRun(TaskRun run) async {
+    await _reviewTaskRun(
+      run: run,
+      decision: TaskRunReviewDecision.reject,
+      output: '',
+    );
+    await load();
   }
 }

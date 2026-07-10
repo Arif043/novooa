@@ -30,6 +30,8 @@ setGlobalOptions({ maxInstances: 10 });
 // });
 
 export {
+  resumeApprovedTaskRunWorker,
+  reviewTaskRun,
   runTaskDefinitionWorker,
   runTaskDefinitionFlow,
 } from "./task-workflows.js";

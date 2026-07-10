@@ -304,10 +304,18 @@ dem Run-Status `waitingForApproval`. Der Zwischenzustand wird im
 
 Noch nicht ausgeführte Nodes werden nicht als `skipped` markiert. Der spätere
 Approve/Reject-Kanal setzt bei `resumeState` an: Freigabe ersetzt den Output des
-wartenden Nodes und führt den Graph weiter; Ablehnung verwirft den TaskRun.
-Bei pausierten Runs werden `nodeResults` nur in `resumeState` gespeichert. Die
+wartenden Nodes und führt den Graph weiter; Ablehnung verwirft den ausführbaren
+Zwischenzustand und markiert den Run als `rejected`. Für die UI werden zusätzlich
+`reviewInstruction` und `reviewOutput` am Run-Dokument gespeichert. Bei
+pausierten Runs werden `nodeResults` nur in `resumeState` gespeichert. Die
 Top-Level-`nodeResults` werden erst bei vollständig abgeschlossenen Runs
 geschrieben.
+
+```ts
+reviewTaskRunFlow:
+input:  { runId: string; decision: "approve" | "reject"; output?: string }
+output: { runId: string; status: "queued" | "rejected" }
+```
 
 Dateianhänge referenzieren eine konkrete Storage-Version:
 

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../core/entities/unique_id.dart';
@@ -6,10 +7,16 @@ import '../../domain/entities/task_run.dart';
 import '../../domain/repositories/task_run_repository.dart';
 
 class FirestoreTaskRunRepository implements TaskRunRepository {
-  const FirestoreTaskRunRepository(this._auth, this._firestore);
+  FirestoreTaskRunRepository(
+    this._auth,
+    this._firestore, {
+    FirebaseFunctions? functions,
+  }) : _functions =
+           functions ?? FirebaseFunctions.instanceFor(region: 'us-central1');
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
 
   @override
   Future<List<TaskRun>> listRecent() async {
@@ -19,6 +26,23 @@ class FirestoreTaskRunRepository implements TaskRunRepository {
       user.uid,
     ).orderBy('updatedAt', descending: true).limit(100).get();
     return snapshot.docs.map(_fromDocument).toList(growable: false);
+  }
+
+  @override
+  Future<void> review({
+    required TaskRun run,
+    required TaskRunReviewDecision decision,
+    required String output,
+  }) async {
+    final callable = _functions.httpsCallable(
+      'reviewTaskRun',
+      options: HttpsCallableOptions(timeout: const Duration(seconds: 180)),
+    );
+    await callable.call<void>({
+      'runId': run.id.value,
+      'decision': decision.name,
+      'output': output,
+    });
   }
 
   CollectionReference<Map<String, dynamic>> _runsReference(String uid) {
@@ -39,6 +63,8 @@ class FirestoreTaskRunRepository implements TaskRunRepository {
       updatedAt: _dateFrom(data['updatedAt']),
       waitingNodeId: data['waitingNodeId'] as String?,
       finalOutput: data['finalOutput'] as String?,
+      reviewInstruction: data['reviewInstruction'] as String?,
+      reviewOutput: data['reviewOutput'] as String?,
       message: _messageFrom(data['error']),
     );
   }

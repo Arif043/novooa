@@ -14,7 +14,7 @@ import {
 } from "./task-definition.js";
 import {errorDetails} from "./structured-logger.js";
 
-type TaskRunDocument = {
+export type TaskRunDocument = {
   runId: string;
   taskId: string;
   taskTitle: string;
@@ -56,6 +56,12 @@ export async function markRunSucceeded(
     ...runStatus("succeeded"),
     finalOutput: output.finalOutput,
     nodeResults: serializable(output.nodeResults),
+    waitingNodeId: FieldValue.delete(),
+    resumeState: FieldValue.delete(),
+    reviewInstruction: FieldValue.delete(),
+    reviewOutput: FieldValue.delete(),
+    approvedOutput: FieldValue.delete(),
+    pausedAt: FieldValue.delete(),
   }, {
     merge: true,
   });
@@ -66,11 +72,14 @@ export async function markRunWaitingForApproval(
   run: TaskRunDocument,
   output: WaitingTaskGraphOutput,
 ) {
+  const review = reviewFieldsFrom(output);
   await writeNodeActivities(teamId, run, output.nodeResults);
   await runReference(teamId, run.runId).set({
     ...runStatus("waitingForApproval"),
     waitingNodeId: output.resumeState.waitingNodeId,
     finalOutput: output.finalOutput,
+    reviewInstruction: review.instruction,
+    reviewOutput: review.output,
     resumeState: serializable(output.resumeState),
     pausedAt: FieldValue.serverTimestamp(),
   }, {merge: true});
@@ -111,6 +120,16 @@ function runDocument(input: {
     taskId: input.task.id,
     taskTitle: input.task.title,
     context: input.context,
+  };
+}
+
+function reviewFieldsFrom(output: WaitingTaskGraphOutput) {
+  const result = output.resumeState.nodeResults.find(
+    (item) => item.nodeId === output.resumeState.waitingNodeId,
+  );
+  return {
+    instruction: result?.message ?? "Prüfe das Ergebnis und gib es frei.",
+    output: result?.output ?? output.finalOutput,
   };
 }
 

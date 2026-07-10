@@ -164,6 +164,17 @@ export const runTaskDefinitionOutputSchema = z.object({
   status: z.literal("queued"),
 });
 
+export const reviewTaskRunInputSchema = z.object({
+  runId: z.string().min(1),
+  decision: z.enum(["approve", "reject"]),
+  output: z.string().default(""),
+});
+
+export const reviewTaskRunOutputSchema = z.object({
+  runId: z.string().min(1),
+  status: z.enum(["queued", "rejected"]),
+});
+
 export type WorkflowNode = z.infer<typeof workflowNodeSchema>;
 export type WorkflowEdge = z.infer<typeof workflowEdgeSchema>;
 export type NodeAttachment = z.infer<typeof nodeAttachmentSchema>;
@@ -188,4 +199,6 @@ export type TaskResumeState = z.infer<typeof taskResumeStateSchema>;
 export type RunTaskDefinitionOutput = z.infer<
   typeof runTaskDefinitionOutputSchema
 >;
+export type ReviewTaskRunInput = z.infer<typeof reviewTaskRunInputSchema>;
+export type ReviewTaskRunOutput = z.infer<typeof reviewTaskRunOutputSchema>;
 export type NodeExecutionResult = z.infer<typeof nodeExecutionResultSchema>;

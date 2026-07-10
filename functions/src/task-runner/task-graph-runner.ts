@@ -58,14 +58,32 @@ export async function executeTaskGraph(
   return output;
 }
 
+export async function resumeTaskGraph(
+  ai: Genkit,
+  input: TaskGraphInput,
+  resumeState: TaskResumeState,
+  approvedOutput: string,
+): Promise<TaskGraphOutput> {
+  logReadableInfo(formatTaskStarted(input.taskDefinition, input.context));
+  validateGraph(input.taskDefinition);
+  const runState = await runNodes(
+    ai,
+    input,
+    resumedState(resumeState, approvedOutput),
+  );
+  if (runState.status === "waitingForApproval") return pausedOutput(input, runState);
+  return completedOutput(input, runState.nodeResults);
+}
+
 async function runNodes(
   ai: Genkit,
   input: TaskGraphInput,
-  variables: TaskVariables = {},
+  initialState?: InitialNodeRunState,
 ): Promise<NodeRunState> {
-  const remaining = [...input.taskDefinition.nodes];
-  const results = new Map<string, NodeExecutionResult>();
-  const skippedNodeIds = new Set<string>();
+  const remaining = remainingNodes(input.taskDefinition, initialState);
+  const results = resultsMapFrom(initialState?.nodeResults ?? []);
+  const skippedNodeIds = new Set(initialState?.skippedNodeIds ?? []);
+  const variables = {...initialState?.variables};
 
   while (remaining.length > 0) {
     const index = nextRunnableIndex(
@@ -110,6 +128,13 @@ async function runNodes(
   };
 }
 
+type InitialNodeRunState = {
+  nodeResults: NodeExecutionResult[];
+  variables: TaskVariables;
+  remainingNodeIds: string[];
+  skippedNodeIds: string[];
+};
+
 type NodeRunState = {
   status: "completed";
   nodeResults: NodeExecutionResult[];
@@ -139,6 +164,18 @@ function pausedOutput(
   };
 }
 
+function completedOutput(
+  input: TaskGraphInput,
+  results: NodeExecutionResult[],
+): TaskGraphOutput {
+  return {
+    status: "completed",
+    taskId: input.taskDefinition.id,
+    finalOutput: finalOutputOf(results),
+    nodeResults: results,
+  };
+}
+
 function resumeStateFrom(
   state: Extract<NodeRunState, {status: "waitingForApproval"}>,
 ): TaskResumeState {
@@ -149,6 +186,35 @@ function resumeStateFrom(
     skippedNodeIds: state.skippedNodeIds,
     waitingNodeId: state.waitingNodeId,
   };
+}
+
+function resumedState(
+  state: TaskResumeState,
+  approvedOutput: string,
+): InitialNodeRunState {
+  return {
+    nodeResults: state.nodeResults.map((result) =>
+      result.nodeId === state.waitingNodeId
+        ? {...result, status: "executed", output: approvedOutput}
+        : result,
+    ),
+    variables: state.variables,
+    remainingNodeIds: state.remainingNodeIds,
+    skippedNodeIds: state.skippedNodeIds,
+  };
+}
+
+function remainingNodes(
+  task: Task,
+  state?: InitialNodeRunState,
+): WorkflowNode[] {
+  if (!state) return [...task.nodes];
+  const remainingIds = new Set(state.remainingNodeIds);
+  return task.nodes.filter((node) => remainingIds.has(node.id));
+}
+
+function resultsMapFrom(results: NodeExecutionResult[]) {
+  return new Map(results.map((result) => [result.nodeId, result]));
 }
 
 type NodeRunInput = {
@@ -239,7 +305,15 @@ function logSkippedBranches(
 
 function runSubgraphFor(ai: Genkit, variables: TaskVariables) {
   return async (task: Task, context: string) => {
-    const state = await runNodes(ai, {taskDefinition: task, context}, variables);
+    const state = await runNodes(ai, {
+      taskDefinition: task,
+      context,
+    }, {
+      nodeResults: [],
+      variables,
+      remainingNodeIds: task.nodes.map((node) => node.id),
+      skippedNodeIds: [],
+    });
     return state.nodeResults;
   };
 }

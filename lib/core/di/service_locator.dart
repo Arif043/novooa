@@ -23,6 +23,7 @@ import '../../features/activity/domain/repositories/task_activity_repository.dar
 import '../../features/activity/domain/repositories/task_run_repository.dart';
 import '../../features/activity/domain/usecases/list_task_activities.dart';
 import '../../features/activity/domain/usecases/list_task_runs.dart';
+import '../../features/activity/domain/usecases/review_task_run.dart';
 import '../../features/activity/infrastructure/repositories/firestore_task_activity_repository.dart';
 import '../../features/activity/infrastructure/repositories/firestore_task_run_repository.dart';
 import '../../features/activity/presentation/cubits/activity_cubit.dart';
@@ -116,6 +117,9 @@ void configureDependencies() {
       () => ListTaskRuns(serviceLocator<TaskRunRepository>()),
     )
     ..registerLazySingleton(
+      () => ReviewTaskRun(serviceLocator<TaskRunRepository>()),
+    )
+    ..registerLazySingleton(
       () => WatchTeamFiles(serviceLocator<TeamFileRepository>()),
     )
     ..registerLazySingleton(
@@ -152,6 +156,7 @@ void configureDependencies() {
       () => ActivityCubit(
         listTaskActivities: serviceLocator<ListTaskActivities>(),
         listTaskRuns: serviceLocator<ListTaskRuns>(),
+        reviewTaskRun: serviceLocator<ReviewTaskRun>(),
       ),
     )
     ..registerFactory(

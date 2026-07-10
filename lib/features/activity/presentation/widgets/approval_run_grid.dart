@@ -5,6 +5,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/task_run.dart';
 import '../cubits/activity_cubit.dart';
 import 'activity_tab_content.dart';
+import 'approval_review_dialog.dart';
 
 class ApprovalRunGrid extends StatelessWidget {
   const ApprovalRunGrid({
@@ -59,7 +60,7 @@ class _ApprovalRunTile extends StatelessWidget {
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(AppSpacing.md),
-        onTap: () {},
+        onTap: () => ApprovalReviewDialog.show(context, run),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(

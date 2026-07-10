@@ -13,7 +13,7 @@ Beobachtbarkeit und Freigaben. Nutzer:innen sehen hier, was passiert ist,
 warum, und können an den Stellen eingreifen, an denen das Workflow pausiert
 (`humanApproval`).
 
-## Verantwortlichkeiten (geplant)
+## Verantwortlichkeiten
 
 - Run-Liste pro Aufgabe: Status, Start, Ende, Dauer, Tokens, Kosten.
 - Trace-Detailansicht: pro Knoten Input, Output, Modell-Aufruf.
@@ -41,12 +41,27 @@ teams/{teamId}/activities/{activityId}
 
 Der Flutter-Client liest die letzten Aktivitäten über
 `FirestoreTaskActivityRepository` aus `teams/personal_<uid>/activities`.
+Zusätzlich liest `FirestoreTaskRunRepository` die letzten TaskRuns aus
+`teams/personal_<uid>/taskRuns`, damit die Tabs „Laufend“, „Freigabe“ und
+„Abgelehnt“ ohne aktive Backend-Wartezeit gerendert werden.
+
+Runs mit Status `waitingForApproval` enthalten für die Freigabe-UI:
+
+```text
+reviewInstruction  # Anweisung des Freigabe-Bausteins
+reviewOutput       # editierbarer Output des vorherigen Bausteins
+resumeState        # serialisierter Zwischenzustand für die Fortsetzung
+```
 
 ## UI
 
-`ActivityPage` zeigt die zuletzt erfassten Aktivitäten im Root-Tab
-„Aktivitäten". Die Seite lädt über `ActivityCubit` und `ListTaskActivities`
-und behandelt Loading, Fehler, Empty State und die erfolgreiche Liste.
+`ActivityPage` zeigt Tabs für laufende Runs, Freigaben, abgelehnte Runs und
+Historie. Freigaben werden als Kacheln dargestellt. Ein Klick öffnet einen
+Dialog mit Instruction, editierbarem Output und Aktionen zum Ablehnen oder
+Bestätigen. Bestätigung ruft `reviewTaskRunFlow` mit `decision: "approve"` auf,
+setzt den Run auf `queued` und startet die Fortsetzung per Firestore-Trigger.
+Ablehnung ruft denselben Flow mit `decision: "reject"` auf und verwirft den
+Zwischenzustand.
 
 ## Offene Fragen
 
@@ -54,11 +69,11 @@ und behandelt Loading, Fehler, Empty State und die erfolgreiche Liste.
   Firestore-Sammlung `runs`? Hybrid voraussichtlich.
 - **Live-Streaming:** Trace-Aktualisierung während ein Run läuft (SSE?
   Firestore-Listener?).
-- **Freigabe-UX:** Inline im Run-Detail oder eigener Tab?
 - **PII:** Outputs können sensible Daten enthalten — Filterung / Maskierung
   vor Anzeige klären.
 
 ## Status
 
-Grundlegendes Activity-Tracking mit Firestore-Persistenz ist implementiert.
-Live-Streaming, Filter und Genkit-Telemetrie-Anbindung stehen noch aus.
+Grundlegendes Activity-Tracking, Run-Tabs und Freigabe-Dialog sind
+implementiert. Live-Streaming, Filter und Genkit-Telemetrie-Anbindung stehen
+noch aus.
