@@ -77,6 +77,7 @@ features/task_builder/
 | `prompt`                | **Prompt**                   | LLM-Aufruf mit Vorlage und Variablen                          | Interner `executePromptNode`                          |
 | `conditionalFlow`       | **Bedingter Ablauf**         | Verzweigt anhand eines Prädikats auf den vorherigen Output   | Interner `executeConditionalNode`                     |
 | `iterativeRefinement`   | **Iterative Verfeinerung**   | Draft → Critique → Improve, n Runden                          | Interner `executeIterativeRefinementNode`             |
+| `writeFile`             | **Datei schreiben**          | Schreibt den Vorgänger-Output als Datei                       | Interner `executeWriteFileNode`                       |
 | `toolCall`              | **Werkzeug-Aufruf**          | Strukturierte Tool-Invocation (z. B. Suche, E-Mail, Kalender) | `ai.generate({tools: […]})`                           |
 | `humanApproval`         | **Freigabe**                 | Hält den Flow an, bis ein Mensch bestätigt                    | Interner `executeHumanApprovalNode`                   |
 | `validation`            | **Validierung**              | Schema- / Wertebereichsprüfung auf Output eines Knotens       | `z.object(...).safeParse()`                           |
@@ -284,6 +285,22 @@ Für Freigabe-Bausteine:
   reviewScope: "currentInput" | "executionTrace"
 }
 ```
+
+Für Datei-schreiben-Bausteine:
+
+```ts
+{
+  primitive: "writeFile",
+  fileName: string,
+  contentType: string
+}
+```
+
+Der Baustein nimmt den Output des Vorgänger-Nodes als String, schreibt ihn als
+UTF-8-Datei nach Firebase Storage und erzeugt die Datei-Metadaten unter
+`teams/{teamId}/files/{fileId}`. Der Node-Output ist ein JSON-String mit
+`fileId`, `versionId`, `storagePath`, `displayName`, `contentType` und
+`sizeBytes`.
 
 Freigabe-Bausteine sind immer harte Kontrollpunkte: Review ist Pflicht,
 Bearbeitung des Outputs ist immer erlaubt, Ablehnung ist immer erlaubt und eine

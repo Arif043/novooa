@@ -13,6 +13,7 @@ enum WorkflowPrimitive {
   prompt,
   conditional,
   iterativeRefinement,
+  writeFile,
   toolCall,
   humanApproval,
   validation,

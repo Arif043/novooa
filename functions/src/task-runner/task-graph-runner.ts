@@ -104,7 +104,16 @@ async function runNodes(
     logNodeHeader(node, input.taskDefinition, context, skipNode, results);
     const result = await runNodeWithTrail(
       ai,
-      {node, context, task: input.taskDefinition, results, variables, skipNode, startedAt},
+      {
+        node,
+        context,
+        task: input.taskDefinition,
+        teamId: input.teamId,
+        results,
+        variables,
+        skipNode,
+        startedAt,
+      },
     );
     updateVariables(variables, result);
     results.set(node.id, result);
@@ -221,6 +230,7 @@ type NodeRunInput = {
   node: WorkflowNode;
   context: string;
   task: Task;
+  teamId: string;
   results: Map<string, NodeExecutionResult>;
   variables: TaskVariables;
   skipNode: boolean;
@@ -303,11 +313,12 @@ function logSkippedBranches(
   ].join("\n"));
 }
 
-function runSubgraphFor(ai: Genkit, variables: TaskVariables) {
+function runSubgraphFor(ai: Genkit, variables: TaskVariables, teamId: string) {
   return async (task: Task, context: string) => {
     const state = await runNodes(ai, {
       taskDefinition: task,
       context,
+      teamId,
     }, {
       nodeResults: [],
       variables,
@@ -332,8 +343,9 @@ async function executeNode(
       context: input.context,
       variables: input.variables,
       task: input.task,
+      teamId: input.teamId,
       results: input.results,
-      runSubgraph: runSubgraphFor(ai, input.variables),
+      runSubgraph: runSubgraphFor(ai, input.variables, input.teamId),
       attachmentWorkspace,
     });
   } finally {

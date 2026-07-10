@@ -19,6 +19,7 @@ export type NodeExecutorInput = {
   context: string;
   variables: TaskVariables;
   task: Task;
+  teamId: string;
   results: Map<string, NodeExecutionResult>;
   runSubgraph: SubgraphRunner;
   attachmentWorkspace?: NodeAttachmentWorkspace;

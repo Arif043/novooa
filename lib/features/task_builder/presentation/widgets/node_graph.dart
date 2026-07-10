@@ -6,6 +6,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/iterative_ref
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/string_input_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/write_file_widget.dart';
 
 class NodeGraph extends StatefulWidget {
   const NodeGraph({super.key, required this.nodes});
@@ -34,6 +35,7 @@ class _NodeGraphState extends State<NodeGraph> {
       .prompt => PromptWidget(node: node),
       .conditional => ConditionalPager(key: ValueKey(node.id), node: node),
       .iterativeRefinement => IterativeRefinementWidget(node: node),
+      .writeFile => WriteFileWidget(node: node),
       .humanApproval => HumanApprovalWidget(node: node),
       _ => SizedBox.shrink(),
     };

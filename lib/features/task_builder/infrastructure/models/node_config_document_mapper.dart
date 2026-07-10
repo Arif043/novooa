@@ -23,6 +23,7 @@ class NodeConfigDocumentMapper {
       ConditionalNodeConfig() => _conditionalToDocument(config),
       IterativeRefinementNodeConfig() => _refinementToDocument(config),
       HumanApprovalNodeConfig() => _approvalToDocument(config),
+      WriteFileNodeConfig() => _writeFileToDocument(config),
       _ => {'primitive': config.primitive.name},
     };
   }
@@ -36,6 +37,7 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.conditional => _conditionalFrom(data),
       WorkflowPrimitive.iterativeRefinement => _refinementFrom(data),
       WorkflowPrimitive.humanApproval => _approvalFrom(data),
+      WorkflowPrimitive.writeFile => _writeFileFrom(data),
       _ => NodeConfig.initial(primitive),
     };
   }
@@ -88,6 +90,14 @@ class NodeConfigDocumentMapper {
     };
   }
 
+  Map<String, Object?> _writeFileToDocument(WriteFileNodeConfig config) {
+    return {
+      'primitive': config.primitive.name,
+      'fileName': config.fileName,
+      'contentType': config.contentType,
+    };
+  }
+
   StringInputNodeConfig _stringInputFrom(Map<String, Object?> data) {
     return StringInputNodeConfig(value: data['value'] as String? ?? '');
   }
@@ -124,6 +134,13 @@ class NodeConfigDocumentMapper {
     return HumanApprovalNodeConfig(
       instruction: data['instruction'] as String? ?? '',
       reviewScope: _reviewScopeFrom(data['reviewScope']),
+    );
+  }
+
+  WriteFileNodeConfig _writeFileFrom(Map<String, Object?> data) {
+    return WriteFileNodeConfig(
+      fileName: data['fileName'] as String? ?? 'ausgabe.txt',
+      contentType: data['contentType'] as String? ?? 'text/plain',
     );
   }
 

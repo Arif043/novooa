@@ -12,6 +12,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/node_placehol
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/string_input_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/write_file_widget.dart';
 
 class BranchWidget extends StatelessWidget {
   final ConditionalBranch branch;
@@ -79,6 +80,7 @@ class BranchWidget extends StatelessWidget {
         },
       ),
       .iterativeRefinement => IterativeRefinementWidget(node: node),
+      .writeFile => WriteFileWidget(node: node),
       .humanApproval => HumanApprovalWidget(node: node),
       _ => const SizedBox.shrink(),
     };

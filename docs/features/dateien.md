@@ -20,6 +20,7 @@ gespeichert, Metadaten und Versionen in Firestore.
 - Datei-Metadaten live aus Firestore anzeigen.
 - Uploads in Firebase Storage unter einem team-scoped Pfad speichern.
 - Hochgeladene Dateien in unterstützten Aufgaben-Bausteinen auswählen.
+- Aufgaben können über den Baustein **Datei schreiben** neue Dateien erzeugen.
 - Persönlichen Arbeitsbereich `personal_<uid>` automatisch bootstrappen.
 - Versionierung vorbereiten: jede Datei verweist auf `currentVersionId`.
 - Domain-Schicht frei von Firebase-, Flutter- und Picker-Abhängigkeiten halten.
@@ -97,6 +98,11 @@ temporäres Verzeichnis und übergibt diesen Workspace an den jeweiligen
 Node-Executor. Prompt-Nodes erhalten ihn über die Genkit-Filesystem-Middleware
 (`@genkit-ai/middleware`) als read-only Workspace. Script-Nodes erhalten
 stattdessen Python-Hilfsfunktionen wie `list_files()` und `read_file(name)`.
+
+Der Baustein **Datei schreiben** ist kein Attachment-Input, sondern ein
+Persistenz-Output. Er schreibt den String-Output des Vorgänger-Nodes als neue
+Datei ins Root-Verzeichnis des Team-Dateibereichs und legt dieselbe
+Copy-on-Write-Metadatenstruktur an wie ein Upload.
 
 ## Security
 

@@ -78,6 +78,14 @@ class Toolbar extends StatelessWidget {
             IconButton(
               onPressed: () => context
                   .read<TaskBuilderCubit>()
+                  .addNodeToMainGraph(.writeFile),
+              icon: const Icon(Icons.note_add_outlined),
+              tooltip: "Datei schreiben hinzufügen",
+            ),
+            const SizedBox(width: 4),
+            IconButton(
+              onPressed: () => context
+                  .read<TaskBuilderCubit>()
                   .addNodeToMainGraph(.humanApproval),
               icon: const Icon(Icons.face),
               tooltip: "Freigabe hinzufügen",

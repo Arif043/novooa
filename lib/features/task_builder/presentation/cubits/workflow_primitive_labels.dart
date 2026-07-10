@@ -8,6 +8,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.prompt => 'Prompt',
       WorkflowPrimitive.conditional => 'Bedingter Ablauf',
       WorkflowPrimitive.iterativeRefinement => 'Iterative Verfeinerung',
+      WorkflowPrimitive.writeFile => 'Datei schreiben',
       WorkflowPrimitive.toolCall => 'Werkzeug-Aufruf',
       WorkflowPrimitive.humanApproval => 'Freigabe',
       WorkflowPrimitive.validation => 'Validierung',
@@ -25,6 +26,8 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         'Verzweigt den Ablauf anhand von Regeln.',
       WorkflowPrimitive.iterativeRefinement =>
         'Verbessert ein Ergebnis über mehrere Runden.',
+      WorkflowPrimitive.writeFile =>
+        'Schreibt die vorherige Ausgabe als Datei.',
       WorkflowPrimitive.toolCall =>
         'Bindet externe Aktionen oder Datenquellen ein.',
       WorkflowPrimitive.humanApproval => 'Wartet auf menschliche Freigabe.',

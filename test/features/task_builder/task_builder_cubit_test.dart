@@ -201,6 +201,27 @@ void main() {
 
     await cubit.close();
   });
+
+  test('updateWriteFile speichert Dateiname und Inhaltstyp', () async {
+    final repository = _InMemoryTaskRepository(_taskWithWriteFileNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.updateWriteFileName(const NodeId('node.file'), 'bericht.md');
+    await cubit.updateWriteFileContentType(
+      const NodeId('node.file'),
+      'text/markdown',
+    );
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final config = state.editingTask.nodes.first.config as WriteFileNodeConfig;
+
+    expect(config.fileName, 'bericht.md');
+    expect(config.contentType, 'text/markdown');
+    expect(repository.savedTask, state.editingTask);
+
+    await cubit.close();
+  });
 }
 
 const _attachment = NodeAttachment(
@@ -309,6 +330,29 @@ Task _taskWithApprovalNode() {
           config: HumanApprovalNodeConfig(
             instruction: 'Prüfe das Ergebnis.',
             reviewScope: HumanApprovalReviewScope.currentInput,
+          ),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+Task _taskWithWriteFileNode() {
+  return const Task(
+    id: 'task.file',
+    title: 'Aufgabe',
+    objective: 'Ziel',
+    selectedNodeId: NodeId('node.file'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.file'),
+          title: 'Datei schreiben',
+          description: 'Beschreibung',
+          config: WriteFileNodeConfig(
+            fileName: 'ausgabe.txt',
+            contentType: 'text/plain',
           ),
         ),
       ],

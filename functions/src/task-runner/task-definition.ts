@@ -6,6 +6,7 @@ export const workflowPrimitiveSchema = z.enum([
   "prompt",
   "conditionalFlow",
   "iterativeRefinement",
+  "writeFile",
   "toolCall",
   "humanApproval",
   "validation",
@@ -88,6 +89,12 @@ export const humanApprovalNodeConfigSchema = z.object({
   reviewScope: z.enum(["currentInput", "executionTrace"]).default("currentInput"),
 });
 
+export const writeFileNodeConfigSchema = z.object({
+  primitive: z.literal("writeFile").default("writeFile"),
+  fileName: z.string().min(1).max(240).default("ausgabe.txt"),
+  contentType: z.string().min(1).max(120).default("text/plain"),
+});
+
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   stringInputNodeConfigSchema,
   scriptNodeConfigSchema,
@@ -95,6 +102,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   conditionalNodeConfigSchema,
   iterativeRefinementNodeConfigSchema,
   humanApprovalNodeConfigSchema,
+  writeFileNodeConfigSchema,
 ]);
 
 export const workflowNodeSchema = z.object({
@@ -182,6 +190,7 @@ export type TaskDefinition = z.infer<typeof taskDefinitionSchema>;
 export type TaskGraphInput = {
   taskDefinition: TaskDefinition;
   context: string;
+  teamId: string;
 };
 export type RunTaskDefinitionInput = z.infer<
   typeof runTaskDefinitionInputSchema
