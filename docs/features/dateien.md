@@ -106,6 +106,12 @@ bestehenden Datei. Bei neuen Versionen bleibt `fileId` stabil; nur
 `currentVersionId`, `storagePath`, `sizeBytes`, `contentType` und `updatedAt`
 werden am Datei-Dokument aktualisiert.
 
+Der Baustein **Datei lesen** ist das Gegenstück dazu. Er verwendet dieselbe
+Dateiauswahl wie Attachments, speichert aber genau eine konkrete Version als
+`NodeAttachment` in der Node-Config. Bei der Ausführung lädt der Backend-Runner
+den referenzierten Storage-Pfad und gibt den UTF-8-Inhalt als String-Output des
+Bausteins weiter.
+
 ## Security
 
 - Firestore-Zugriff basiert auf `teams/{teamId}/members/{uid}`.

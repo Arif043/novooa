@@ -223,6 +223,27 @@ void main() {
 
     await cubit.close();
   });
+
+  test('selectReadFile speichert ausgewaehlte Datei-Version', () async {
+    final repository = _InMemoryTaskRepository(_taskWithReadFileNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.selectReadFile(const NodeId('node.read'), _attachment);
+
+    var state = cubit.state as TaskBuilderLoaded;
+    var config = state.editingTask.nodes.first.config as ReadFileNodeConfig;
+    expect(config.file, _attachment);
+
+    await cubit.clearReadFile(const NodeId('node.read'));
+
+    state = cubit.state as TaskBuilderLoaded;
+    config = state.editingTask.nodes.first.config as ReadFileNodeConfig;
+    expect(config.file, isNull);
+    expect(repository.savedTask, state.editingTask);
+
+    await cubit.close();
+  });
 }
 
 const _attachment = NodeAttachment(
@@ -355,6 +376,26 @@ Task _taskWithWriteFileNode() {
             fileName: 'ausgabe.txt',
             contentType: 'text/plain',
           ),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+Task _taskWithReadFileNode() {
+  return const Task(
+    id: 'task.read',
+    title: 'Aufgabe',
+    objective: 'Ziel',
+    selectedNodeId: NodeId('node.read'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.read'),
+          title: 'Datei lesen',
+          description: 'Beschreibung',
+          config: ReadFileNodeConfig(),
         ),
       ],
       edges: [],

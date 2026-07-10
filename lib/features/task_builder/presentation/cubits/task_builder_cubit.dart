@@ -17,6 +17,7 @@ part 'task_builder_prompt_mutations.dart';
 part 'task_builder_script_mutations.dart';
 part 'task_builder_string_input_mutations.dart';
 part 'task_builder_write_file_mutations.dart';
+part 'task_builder_read_file_mutations.dart';
 
 /// Zustandsverwaltung für den Aufgaben-Builder.
 ///

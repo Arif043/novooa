@@ -7,6 +7,7 @@ export const workflowPrimitiveSchema = z.enum([
   "conditionalFlow",
   "iterativeRefinement",
   "writeFile",
+  "readFile",
   "toolCall",
   "humanApproval",
   "validation",
@@ -96,6 +97,11 @@ export const writeFileNodeConfigSchema = z.object({
   fileId: z.string().optional(),
 });
 
+export const readFileNodeConfigSchema = z.object({
+  primitive: z.literal("readFile").default("readFile"),
+  file: nodeAttachmentSchema.optional(),
+});
+
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   stringInputNodeConfigSchema,
   scriptNodeConfigSchema,
@@ -104,6 +110,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   iterativeRefinementNodeConfigSchema,
   humanApprovalNodeConfigSchema,
   writeFileNodeConfigSchema,
+  readFileNodeConfigSchema,
 ]);
 
 export const workflowNodeSchema = z.object({

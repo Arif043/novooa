@@ -9,6 +9,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.conditional => 'Bedingter Ablauf',
       WorkflowPrimitive.iterativeRefinement => 'Iterative Verfeinerung',
       WorkflowPrimitive.writeFile => 'Datei schreiben',
+      WorkflowPrimitive.readFile => 'Datei lesen',
       WorkflowPrimitive.toolCall => 'Werkzeug-Aufruf',
       WorkflowPrimitive.humanApproval => 'Freigabe',
       WorkflowPrimitive.validation => 'Validierung',
@@ -28,6 +29,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         'Verbessert ein Ergebnis über mehrere Runden.',
       WorkflowPrimitive.writeFile =>
         'Schreibt die vorherige Ausgabe als Datei.',
+      WorkflowPrimitive.readFile => 'Liest eine Datei als Text.',
       WorkflowPrimitive.toolCall =>
         'Bindet externe Aktionen oder Datenquellen ein.',
       WorkflowPrimitive.humanApproval => 'Wartet auf menschliche Freigabe.',

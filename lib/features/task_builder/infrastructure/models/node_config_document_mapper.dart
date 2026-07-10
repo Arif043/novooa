@@ -24,6 +24,7 @@ class NodeConfigDocumentMapper {
       IterativeRefinementNodeConfig() => _refinementToDocument(config),
       HumanApprovalNodeConfig() => _approvalToDocument(config),
       WriteFileNodeConfig() => _writeFileToDocument(config),
+      ReadFileNodeConfig() => _readFileToDocument(config),
       _ => {'primitive': config.primitive.name},
     };
   }
@@ -38,6 +39,7 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.iterativeRefinement => _refinementFrom(data),
       WorkflowPrimitive.humanApproval => _approvalFrom(data),
       WorkflowPrimitive.writeFile => _writeFileFrom(data),
+      WorkflowPrimitive.readFile => _readFileFrom(data),
       _ => NodeConfig.initial(primitive),
     };
   }
@@ -99,6 +101,13 @@ class NodeConfigDocumentMapper {
     };
   }
 
+  Map<String, Object?> _readFileToDocument(ReadFileNodeConfig config) {
+    return {
+      'primitive': config.primitive.name,
+      if (config.file != null) 'file': _attachmentToDocument(config.file!),
+    };
+  }
+
   StringInputNodeConfig _stringInputFrom(Map<String, Object?> data) {
     return StringInputNodeConfig(value: data['value'] as String? ?? '');
   }
@@ -143,6 +152,13 @@ class NodeConfigDocumentMapper {
       fileName: data['fileName'] as String? ?? 'ausgabe.txt',
       contentType: data['contentType'] as String? ?? 'text/plain',
       fileId: data['fileId'] as String?,
+    );
+  }
+
+  ReadFileNodeConfig _readFileFrom(Map<String, Object?> data) {
+    final file = data['file'];
+    return ReadFileNodeConfig(
+      file: file is Map ? _attachmentFrom(_objectMapFrom(file)) : null,
     );
   }
 

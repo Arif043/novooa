@@ -78,6 +78,7 @@ features/task_builder/
 | `conditionalFlow`       | **Bedingter Ablauf**         | Verzweigt anhand eines Prädikats auf den vorherigen Output   | Interner `executeConditionalNode`                     |
 | `iterativeRefinement`   | **Iterative Verfeinerung**   | Draft → Critique → Improve, n Runden                          | Interner `executeIterativeRefinementNode`             |
 | `writeFile`             | **Datei schreiben**          | Schreibt den Vorgänger-Output als Datei                       | Interner `executeWriteFileNode`                       |
+| `readFile`              | **Datei lesen**              | Liest eine ausgewählte Datei-Version als String                | Interner `executeReadFileNode`                        |
 | `toolCall`              | **Werkzeug-Aufruf**          | Strukturierte Tool-Invocation (z. B. Suche, E-Mail, Kalender) | `ai.generate({tools: […]})`                           |
 | `humanApproval`         | **Freigabe**                 | Hält den Flow an, bis ein Mensch bestätigt                    | Interner `executeHumanApprovalNode`                   |
 | `validation`            | **Validierung**              | Schema- / Wertebereichsprüfung auf Output eines Knotens       | `z.object(...).safeParse()`                           |
@@ -305,6 +306,20 @@ Datei-Dokument. Ohne intern gesetzte `fileId` erzeugt er eine neue Datei mit
 erster Version; die UI zeigt dafür kein manuelles Datei-ID-Feld. Der Node-Output
 ist ein JSON-String mit `fileId`, `versionId`, `storagePath`, `displayName`,
 `contentType` und `sizeBytes`.
+
+Für Datei-lesen-Bausteine:
+
+```ts
+{
+  primitive: "readFile",
+  file?: NodeAttachment
+}
+```
+
+Der Baustein referenziert eine konkrete Datei-Version über `NodeAttachment`,
+lädt den zugehörigen Storage-Pfad und gibt den UTF-8-Inhalt als String aus.
+Wenn keine Datei ausgewählt ist, schlägt der Baustein mit einer fachlichen
+Fehlermeldung fehl.
 
 Freigabe-Bausteine sind immer harte Kontrollpunkte: Review ist Pflicht,
 Bearbeitung des Outputs ist immer erlaubt, Ablehnung ist immer erlaubt und eine

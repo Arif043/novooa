@@ -10,6 +10,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/human_approva
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/read_file_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/string_input_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/write_file_widget.dart';
@@ -81,6 +82,7 @@ class BranchWidget extends StatelessWidget {
       ),
       .iterativeRefinement => IterativeRefinementWidget(node: node),
       .writeFile => WriteFileWidget(node: node),
+      .readFile => ReadFileWidget(node: node),
       .humanApproval => HumanApprovalWidget(node: node),
       _ => const SizedBox.shrink(),
     };
