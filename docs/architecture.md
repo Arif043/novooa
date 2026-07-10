@@ -70,6 +70,7 @@ teams/{teamId}/members/{uid}
 teams/{teamId}/tasks/{taskId}
 teams/{teamId}/taskRuns/{runId}
 teams/{teamId}/activities/{activityId}
+teams/{teamId}/folders/{folderId}
 teams/{teamId}/files/{fileId}
 teams/{teamId}/files/{fileId}/versions/{versionId}
 ```

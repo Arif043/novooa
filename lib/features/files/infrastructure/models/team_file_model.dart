@@ -15,6 +15,7 @@ class TeamFileModel {
     required this.sizeBytes,
     required this.createdAt,
     required this.updatedAt,
+    this.folderId,
   });
 
   final String id;
@@ -27,6 +28,7 @@ class TeamFileModel {
   final int sizeBytes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? folderId;
 
   factory TeamFileModel.fromDocument(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
@@ -43,6 +45,7 @@ class TeamFileModel {
       sizeBytes: data['sizeBytes'] as int? ?? 0,
       createdAt: _timestampToDate(data['createdAt']),
       updatedAt: _timestampToDate(data['updatedAt']),
+      folderId: data['folderId'] as String?,
     );
   }
 
@@ -58,6 +61,7 @@ class TeamFileModel {
       sizeBytes: sizeBytes,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      folderId: folderId,
     );
   }
 

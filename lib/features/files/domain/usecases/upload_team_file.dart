@@ -15,11 +15,13 @@ class UploadTeamFile {
     required TeamId teamId,
     required String ownerUid,
     required UploadFileInput input,
+    required String? folderId,
   }) {
     return _repository.uploadFile(
       teamId: teamId,
       ownerUid: ownerUid,
       input: input,
+      folderId: folderId,
     );
   }
 }

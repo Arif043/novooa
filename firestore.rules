@@ -69,8 +69,13 @@ rules_version = '2';
 // Subcollection: teams/{teamId}/files
 // Document ID: generated file id
 // Fields:
-//   - teamId, ownerUid, displayName, storagePath, currentVersionId
-//   - contentType, sizeBytes, createdAt, updatedAt
+//   - teamId, ownerUid, displayName, folderId, storagePath
+//   - currentVersionId, contentType, sizeBytes, createdAt, updatedAt
+//
+// Subcollection: teams/{teamId}/folders
+// Document ID: generated folder id
+// Fields:
+//   - id, teamId, ownerUid, name, parentFolderId, createdAt, updatedAt
 //
 // Subcollection: teams/{teamId}/files/{fileId}/versions
 // Document ID: generated version id
@@ -252,6 +257,7 @@ service cloud.firestore {
         'teamId',
         'ownerUid',
         'displayName',
+        'folderId',
         'storagePath',
         'currentVersionId',
         'contentType',
@@ -261,6 +267,7 @@ service cloud.firestore {
       ]) &&
         data.teamId == teamId &&
         data.ownerUid == request.auth.uid &&
+        isValidOptionalFolderId(teamId, data.folderId) &&
         hasValidUploadedFileFields(data) &&
         data.currentVersionId is string &&
         data.currentVersionId.size() > 0 &&
@@ -297,6 +304,36 @@ service cloud.firestore {
         data.id.size() > 0 &&
         hasValidUploadedFileFields(data) &&
         data.createdAt == request.time;
+    }
+
+    function isValidFolder(data, teamId, folderId) {
+      return data.keys().hasOnly([
+        'id',
+        'teamId',
+        'ownerUid',
+        'name',
+        'parentFolderId',
+        'createdAt',
+        'updatedAt',
+      ]) &&
+        data.id == folderId &&
+        data.teamId == teamId &&
+        data.ownerUid == request.auth.uid &&
+        data.name is string &&
+        data.name.size() >= 1 &&
+        data.name.size() <= 120 &&
+        data.parentFolderId != folderId &&
+        isValidOptionalFolderId(teamId, data.parentFolderId) &&
+        data.createdAt == request.time &&
+        data.updatedAt == request.time;
+    }
+
+    function isValidOptionalFolderId(teamId, folderId) {
+      return folderId == null ||
+        (folderId is string &&
+          folderId.size() > 0 &&
+          folderId.size() <= 120 &&
+          exists(/databases/$(database)/documents/teams/$(teamId)/folders/$(folderId)));
     }
 
     match /users/{userId} {
@@ -378,6 +415,13 @@ service cloud.firestore {
       match /activities/{activityId} {
         allow get, list: if isTeamMember(teamId);
         allow create, update, delete: if false;
+      }
+
+      match /folders/{folderId} {
+        allow get, list: if isTeamMember(teamId);
+        allow create: if isTeamMember(teamId) &&
+          isValidFolder(request.resource.data, teamId, folderId);
+        allow update, delete: if false;
       }
 
       match /files/{fileId} {

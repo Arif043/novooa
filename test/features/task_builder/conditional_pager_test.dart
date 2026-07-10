@@ -9,6 +9,7 @@ import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/files/domain/entities/file_failure.dart';
 import 'package:syscat2/features/files/domain/entities/team_file.dart';
+import 'package:syscat2/features/files/domain/entities/team_folder.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/files/domain/entities/upload_file_input.dart';
 import 'package:syscat2/features/files/domain/repositories/team_file_repository.dart';
@@ -74,12 +75,27 @@ class _FakeTeamFileRepository implements TeamFileRepository {
   Stream<List<TeamFile>> watchFiles(TeamId teamId) => Stream.value(const []);
 
   @override
+  Stream<List<TeamFolder>> watchFolders(TeamId teamId) =>
+      Stream.value(const []);
+
+  @override
   Future<Result<TeamFile, FileFailure>> uploadFile({
     required TeamId teamId,
     required String ownerUid,
     required UploadFileInput input,
+    required String? folderId,
   }) async {
     return const Result.error(FileFailure(FileFailureKind.uploadFailed));
+  }
+
+  @override
+  Future<Result<TeamFolder, FileFailure>> createFolder({
+    required TeamId teamId,
+    required String ownerUid,
+    required String name,
+    required String? parentFolderId,
+  }) async {
+    return const Result.error(FileFailure(FileFailureKind.createFolderFailed));
   }
 }
 

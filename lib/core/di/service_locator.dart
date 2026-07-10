@@ -3,8 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:syscat2/features/files/domain/repositories/team_file_repository.dart';
+import 'package:syscat2/features/files/domain/usecases/create_team_folder.dart';
 import 'package:syscat2/features/files/domain/usecases/upload_team_file.dart';
 import 'package:syscat2/features/files/domain/usecases/watch_team_files.dart';
+import 'package:syscat2/features/files/domain/usecases/watch_team_folders.dart';
 import 'package:syscat2/features/files/infrastructure/repositories/firebase_team_file_repository.dart';
 import 'package:syscat2/features/files/presentation/cubits/files_cubit.dart';
 import 'package:syscat2/features/user/domain/usecases/get_current_user_profile.dart';
@@ -123,7 +125,13 @@ void configureDependencies() {
       () => WatchTeamFiles(serviceLocator<TeamFileRepository>()),
     )
     ..registerLazySingleton(
+      () => WatchTeamFolders(serviceLocator<TeamFileRepository>()),
+    )
+    ..registerLazySingleton(
       () => UploadTeamFile(serviceLocator<TeamFileRepository>()),
+    )
+    ..registerLazySingleton(
+      () => CreateTeamFolder(serviceLocator<TeamFileRepository>()),
     )
     ..registerLazySingleton(() => ExecuteTask(serviceLocator<TaskRepository>()))
     ..registerFactory(
@@ -163,7 +171,9 @@ void configureDependencies() {
       () => FilesCubit(
         serviceLocator<AuthRepository>(),
         serviceLocator<WatchTeamFiles>(),
+        serviceLocator<WatchTeamFolders>(),
         serviceLocator<UploadTeamFile>(),
+        serviceLocator<CreateTeamFolder>(),
       ),
     )
     ..registerLazySingleton(
