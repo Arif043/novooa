@@ -9,6 +9,7 @@ void main() {
     const config = WriteFileNodeConfig(
       fileName: 'bericht.md',
       contentType: 'text/markdown',
+      fileId: 'file.1',
     );
 
     final document = mapper.toDocument(config);
@@ -16,6 +17,7 @@ void main() {
     expect(document['primitive'], 'writeFile');
     expect(document['fileName'], 'bericht.md');
     expect(document['contentType'], 'text/markdown');
+    expect(document['fileId'], 'file.1');
   });
 
   test('deserialisiert WriteFileNodeConfig', () {
@@ -23,12 +25,14 @@ void main() {
       'primitive': 'writeFile',
       'fileName': 'bericht.md',
       'contentType': 'text/markdown',
+      'fileId': 'file.1',
     });
 
     expect(config, isA<WriteFileNodeConfig>());
     final writeFileConfig = config as WriteFileNodeConfig;
     expect(writeFileConfig.fileName, 'bericht.md');
     expect(writeFileConfig.contentType, 'text/markdown');
+    expect(writeFileConfig.fileId, 'file.1');
   });
 }
 

@@ -292,15 +292,18 @@ Für Datei-schreiben-Bausteine:
 {
   primitive: "writeFile",
   fileName: string,
-  contentType: string
+  contentType: string,
+  fileId?: string
 }
 ```
 
 Der Baustein nimmt den Output des Vorgänger-Nodes als String, schreibt ihn als
 UTF-8-Datei nach Firebase Storage und erzeugt die Datei-Metadaten unter
-`teams/{teamId}/files/{fileId}`. Der Node-Output ist ein JSON-String mit
-`fileId`, `versionId`, `storagePath`, `displayName`, `contentType` und
-`sizeBytes`.
+`teams/{teamId}/files/{fileId}`. Ist `fileId` gesetzt, schreibt der Baustein
+eine neue Version dieser Datei und aktualisiert `currentVersionId` am
+Datei-Dokument. Ohne `fileId` erzeugt er eine neue Datei mit erster Version. Der
+Node-Output ist ein JSON-String mit `fileId`, `versionId`, `storagePath`,
+`displayName`, `contentType` und `sizeBytes`.
 
 Freigabe-Bausteine sind immer harte Kontrollpunkte: Review ist Pflicht,
 Bearbeitung des Outputs ist immer erlaubt, Ablehnung ist immer erlaubt und eine

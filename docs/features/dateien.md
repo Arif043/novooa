@@ -101,8 +101,10 @@ stattdessen Python-Hilfsfunktionen wie `list_files()` und `read_file(name)`.
 
 Der Baustein **Datei schreiben** ist kein Attachment-Input, sondern ein
 Persistenz-Output. Er schreibt den String-Output des Vorgänger-Nodes als neue
-Datei ins Root-Verzeichnis des Team-Dateibereichs und legt dieselbe
-Copy-on-Write-Metadatenstruktur an wie ein Upload.
+Datei ins Root-Verzeichnis des Team-Dateibereichs oder als neue Version einer
+bestehenden Datei. Bei neuen Versionen bleibt `fileId` stabil; nur
+`currentVersionId`, `storagePath`, `sizeBytes`, `contentType` und `updatedAt`
+werden am Datei-Dokument aktualisiert.
 
 ## Security
 

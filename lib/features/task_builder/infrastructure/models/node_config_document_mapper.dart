@@ -95,6 +95,7 @@ class NodeConfigDocumentMapper {
       'primitive': config.primitive.name,
       'fileName': config.fileName,
       'contentType': config.contentType,
+      if (config.fileId != null) 'fileId': config.fileId,
     };
   }
 
@@ -141,6 +142,7 @@ class NodeConfigDocumentMapper {
     return WriteFileNodeConfig(
       fileName: data['fileName'] as String? ?? 'ausgabe.txt',
       contentType: data['contentType'] as String? ?? 'text/plain',
+      fileId: data['fileId'] as String?,
     );
   }
 

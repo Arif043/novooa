@@ -8,6 +8,12 @@ import {
   parentOutputFor,
 } from "../task-runner/node-executor.js";
 import {type WorkflowNode} from "../task-runner/task-definition.js";
+import {
+  contentTypeFor,
+  fileNameFor,
+  storagePathFor,
+  targetFileIdFor,
+} from "./write-file-node-config.js";
 
 export const writeFileNodeExecutor: NodeExecutor = {
   primitive: "writeFile",
@@ -39,11 +45,14 @@ type WrittenFile = {
   displayName: string;
   contentType: string;
   sizeBytes: number;
+  folderId: string | null;
+  ownerUid: string;
+  isNewFile: boolean;
 };
 
 async function writeTeamFile(input: WriteFileInput): Promise<WrittenFile> {
   initializeAdminApp();
-  const file = writtenFileFrom(input);
+  const file = await writtenFileFrom(input);
   await getStorage().bucket().file(file.storagePath).save(input.content, {
     contentType: file.contentType,
   });
@@ -51,9 +60,14 @@ async function writeTeamFile(input: WriteFileInput): Promise<WrittenFile> {
   return file;
 }
 
-function writtenFileFrom(input: WriteFileInput): WrittenFile {
-  const fileId = randomUUID();
+async function writtenFileFrom(input: WriteFileInput): Promise<WrittenFile> {
+  if (targetFileIdFor(input.node) !== null) return versionedFileFrom(input);
+  return newFileFrom(input);
+}
+
+function newFileFrom(input: WriteFileInput): WrittenFile {
   const versionId = randomUUID();
+  const fileId = randomUUID();
   const displayName = fileNameFor(input.node);
   const contentType = contentTypeFor(input.node);
   return {
@@ -62,7 +76,28 @@ function writtenFileFrom(input: WriteFileInput): WrittenFile {
     displayName,
     contentType,
     sizeBytes: Buffer.byteLength(input.content, "utf8"),
+    folderId: null,
+    ownerUid: "system",
+    isNewFile: true,
     storagePath: storagePathFor(input.teamId, fileId, versionId, displayName),
+  };
+}
+
+async function versionedFileFrom(input: WriteFileInput): Promise<WrittenFile> {
+  const existingFile = await existingFileFor(input);
+  const versionId = randomUUID();
+  const displayName = fileNameFor(input.node);
+  const contentType = contentTypeFor(input.node);
+  return {
+    fileId: existingFile.fileId,
+    versionId,
+    displayName,
+    contentType,
+    sizeBytes: Buffer.byteLength(input.content, "utf8"),
+    folderId: existingFile.folderId,
+    ownerUid: existingFile.ownerUid,
+    isNewFile: false,
+    storagePath: storagePathFor(input.teamId, existingFile.fileId, versionId, displayName),
   };
 }
 
@@ -74,7 +109,7 @@ async function writeMetadata(teamId: string, file: WrittenFile): Promise<void> {
     .collection("files")
     .doc(file.fileId);
   const batch = database.batch();
-  batch.set(fileReference, fileDocument(teamId, file));
+  batch.set(fileReference, fileDocument(teamId, file), {merge: true});
   batch.set(
     fileReference.collection("versions").doc(file.versionId),
     versionDocument(file),
@@ -85,14 +120,14 @@ async function writeMetadata(teamId: string, file: WrittenFile): Promise<void> {
 function fileDocument(teamId: string, file: WrittenFile) {
   return {
     teamId,
-    ownerUid: "system",
+    ownerUid: file.ownerUid,
     displayName: file.displayName,
-    folderId: null,
+    folderId: file.folderId,
     storagePath: file.storagePath,
     currentVersionId: file.versionId,
     contentType: file.contentType,
     sizeBytes: file.sizeBytes,
-    createdAt: FieldValue.serverTimestamp(),
+    ...(file.isNewFile ? {createdAt: FieldValue.serverTimestamp()} : {}),
     updatedAt: FieldValue.serverTimestamp(),
   };
 }
@@ -110,27 +145,36 @@ function versionDocument(file: WrittenFile) {
   };
 }
 
-function fileNameFor(node: WorkflowNode): string {
-  const value = node.config.primitive === "writeFile" ? node.config.fileName : "";
-  return sanitizedName(value || "ausgabe.txt");
+type ExistingFile = {
+  fileId: string;
+  ownerUid: string;
+  folderId: string | null;
+};
+
+async function existingFileFor(input: WriteFileInput): Promise<ExistingFile> {
+  const fileId = targetFileIdFor(input.node);
+  if (fileId === null) throw new Error("Datei-ID fehlt.");
+  const snapshot = await getFirestore()
+    .collection("teams")
+    .doc(input.teamId)
+    .collection("files")
+    .doc(fileId)
+    .get();
+  if (!snapshot.exists) throw new Error(`Datei nicht gefunden: ${fileId}`);
+  const data = snapshot.data() ?? {};
+  return {
+    fileId,
+    ownerUid: stringFrom(data.ownerUid, "system"),
+    folderId: nullableStringFrom(data.folderId),
+  };
 }
 
-function contentTypeFor(node: WorkflowNode): string {
-  if (node.config.primitive !== "writeFile") return "text/plain";
-  return node.config.contentType.trim() || "text/plain";
+function stringFrom(value: unknown, fallback: string): string {
+  return typeof value === "string" && value.trim().length > 0 ? value : fallback;
 }
 
-function storagePathFor(
-  teamId: string,
-  fileId: string,
-  versionId: string,
-  fileName: string,
-): string {
-  return `teams/${teamId}/files/${fileId}/versions/${versionId}/${fileName}`;
-}
-
-function sanitizedName(value: string): string {
-  return value.trim().replace(/[\\/]/g, "_");
+function nullableStringFrom(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
 
 function initializeAdminApp(): void {

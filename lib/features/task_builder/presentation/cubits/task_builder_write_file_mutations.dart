@@ -15,6 +15,16 @@ extension TaskBuilderWriteFileMutations on TaskBuilderCubit {
     });
   }
 
+  Future<void> updateWriteFileId(NodeId nodeId, String fileId) {
+    return _updateWriteFileConfig(nodeId, (config) {
+      final trimmedFileId = fileId.trim();
+      final nextFileId = trimmedFileId.isEmpty ? null : trimmedFileId;
+      if (config.fileId == nextFileId) return config;
+      if (nextFileId == null) return config.copyWith(clearFileId: true);
+      return config.copyWith(fileId: nextFileId);
+    });
+  }
+
   Future<void> _updateWriteFileConfig(
     NodeId nodeId,
     WriteFileNodeConfig Function(WriteFileNodeConfig config) update,

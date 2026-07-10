@@ -93,6 +93,7 @@ export const writeFileNodeConfigSchema = z.object({
   primitive: z.literal("writeFile").default("writeFile"),
   fileName: z.string().min(1).max(240).default("ausgabe.txt"),
   contentType: z.string().min(1).max(120).default("text/plain"),
+  fileId: z.string().optional(),
 });
 
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
