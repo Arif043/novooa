@@ -19,12 +19,19 @@ export type TaskRunDocument = {
   taskId: string;
   taskTitle: string;
   context: string;
+  source?: string;
+  triggerId?: string;
+  triggerType?: string;
 };
 
 export async function enqueueTaskRun(input: {
   teamId: string;
   task: TaskDefinition;
   context: string;
+  trigger?: {
+    id: string;
+    type: string;
+  };
 }): Promise<TaskRunDocument> {
   const run = runDocument(input);
   await runReference(input.teamId, run.runId).set({
@@ -114,12 +121,21 @@ export function runFromDocument(data: DocumentData) {
 function runDocument(input: {
   task: TaskDefinition;
   context: string;
+  trigger?: {
+    id: string;
+    type: string;
+  };
 }): TaskRunDocument {
   return {
     runId: randomUUID(),
     taskId: input.task.id,
     taskTitle: input.task.title,
     context: input.context,
+    ...(input.trigger ? {
+      source: "trigger",
+      triggerId: input.trigger.id,
+      triggerType: input.trigger.type,
+    } : {}),
   };
 }
 

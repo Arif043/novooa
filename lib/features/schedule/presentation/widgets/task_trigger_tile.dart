@@ -1,0 +1,64 @@
+import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_spacing.dart';
+import '../../domain/entities/task_trigger.dart';
+import '../cubits/schedule_cubit.dart';
+import 'schedule_formatters.dart';
+
+class TaskTriggerTile extends StatelessWidget {
+  const TaskTriggerTile({
+    super.key,
+    required this.trigger,
+    required this.cubit,
+  });
+
+  final TaskTrigger trigger;
+  final ScheduleCubit cubit;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.schedule_outlined, color: colorScheme.primary),
+                const Spacer(),
+                Switch(
+                  value: trigger.enabled,
+                  onChanged: (value) => cubit.setEnabled(trigger, value),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              trigger.taskTitle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(scheduleLabel(trigger.schedule)),
+            const Spacer(),
+            Text(
+              triggerStatusLabel(trigger),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                tooltip: 'Trigger löschen',
+                onPressed: () => cubit.deleteTrigger(trigger),
+                icon: const Icon(Icons.delete_outline),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

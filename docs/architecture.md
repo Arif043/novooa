@@ -68,6 +68,7 @@ Firestore:
 teams/{teamId}
 teams/{teamId}/members/{uid}
 teams/{teamId}/tasks/{taskId}
+teams/{teamId}/taskTriggers/{triggerId}
 teams/{teamId}/taskRuns/{runId}
 teams/{teamId}/activities/{activityId}
 teams/{teamId}/folders/{folderId}
@@ -111,7 +112,7 @@ Detailtiefe in [`features/dateien.md`](./features/dateien.md).
 | Trigger-Typ     | Quelle                    | Umsetzung                                  |
 | --------------- | ------------------------- | ------------------------------------------ |
 | Manuell         | UI-Button „Jetzt starten" | Direkter `onCallGenkit`                    |
-| Zeitgesteuert   | Cloud Scheduler           | Pub/Sub → Genkit-Flow                      |
+| Zeitgesteuert   | `taskTriggers`            | Scheduled Function → `taskRuns`            |
 | Event           | Geräte- / Webhook-Event   | Firestore-Trigger oder HTTPS-Webhook       |
 | Freigabe        | Mensch bestätigt          | Genkit-Interrupt + Task-Rückkanal          |
 

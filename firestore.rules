@@ -54,6 +54,14 @@ rules_version = '2';
 //   - createdAt: timestamp (required, immutable)
 //   - updatedAt: timestamp (required)
 //
+// Subcollection: teams/{teamId}/taskTriggers
+// Document ID: generated trigger id
+// Fields:
+//   - id, teamId, createdByUid, taskId, taskTitle, type, enabled
+//   - config: map (schedule config)
+//   - policy: map (ifRunning)
+//   - nextRunAt, lastRunAt, createdAt, updatedAt
+//
 // Subcollection: teams/{teamId}/taskRuns
 // Document ID: generated run id
 // Fields:
@@ -299,7 +307,8 @@ service cloud.firestore {
         'createdAt',
       ]) &&
         data.fileId == fileId &&
-        data.createdByUid == request.auth.uid &&
+        data.createdByUid is string &&
+        data.createdByUid.size() > 0 &&
         data.id is string &&
         data.id.size() > 0 &&
         hasValidUploadedFileFields(data) &&
@@ -334,6 +343,103 @@ service cloud.firestore {
           folderId.size() > 0 &&
           folderId.size() <= 120 &&
           exists(/databases/$(database)/documents/teams/$(teamId)/folders/$(folderId)));
+    }
+
+    function isValidTaskTrigger(data, teamId, triggerId) {
+      return data.keys().hasOnly([
+        'id',
+        'teamId',
+        'createdByUid',
+        'taskId',
+        'taskTitle',
+        'type',
+        'enabled',
+        'config',
+        'policy',
+        'nextRunAt',
+        'lastRunAt',
+        'lastRunId',
+        'createdAt',
+        'updatedAt',
+      ]) &&
+        data.keys().hasAll([
+          'id',
+          'teamId',
+          'createdByUid',
+          'taskId',
+          'taskTitle',
+          'type',
+          'enabled',
+          'config',
+          'policy',
+          'nextRunAt',
+          'createdAt',
+          'updatedAt',
+        ]) &&
+        data.id == triggerId &&
+        data.teamId == teamId &&
+        data.createdByUid is string &&
+        data.createdByUid.size() > 0 &&
+        data.taskId is string &&
+        data.taskId.size() > 0 &&
+        data.taskTitle is string &&
+        data.taskTitle.size() >= 1 &&
+        data.taskTitle.size() <= 160 &&
+        data.type == 'schedule' &&
+        data.enabled is bool &&
+        isValidScheduleConfig(data.config) &&
+        isValidTriggerPolicy(data.policy) &&
+        isValidOptionalTimestamp(data.get('nextRunAt', null)) &&
+        isValidOptionalTimestamp(data.get('lastRunAt', null)) &&
+        isValidOptionalString(data.get('lastRunId', null), 1, 120) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp &&
+        exists(/databases/$(database)/documents/teams/$(teamId)/tasks/$(data.taskId));
+    }
+
+    function isValidScheduleConfig(data) {
+      return data is map &&
+        data.keys().hasOnly([
+          'kind',
+          'timezone',
+          'runAt',
+          'timeOfDay',
+          'weekdays',
+        ]) &&
+        data.kind in ['once', 'daily', 'weekly'] &&
+        data.timezone is string &&
+        data.timezone.size() >= 1 &&
+        data.timezone.size() <= 80 &&
+        scheduleConfigMatchesKind(data);
+    }
+
+    function scheduleConfigMatchesKind(data) {
+      return (data.kind == 'once' && data.get('runAt', null) is timestamp) ||
+        (data.kind == 'daily' && isValidTimeOfDay(data.get('timeOfDay', null))) ||
+        (data.kind == 'weekly' &&
+          isValidTimeOfDay(data.get('timeOfDay', null)) &&
+          data.get('weekdays', []) is list &&
+          data.get('weekdays', []).size() >= 1 &&
+          data.get('weekdays', []).size() <= 7);
+    }
+
+    function isValidTriggerPolicy(data) {
+      return data is map &&
+        data.keys().hasOnly(['ifRunning']) &&
+        data.ifRunning in ['skipIfRunning', 'startParallel'];
+    }
+
+    function isValidTimeOfDay(value) {
+      return value is string && value.matches('^\\d{2}:\\d{2}$');
+    }
+
+    function isValidOptionalTimestamp(value) {
+      return value == null || value is timestamp;
+    }
+
+    function isValidOptionalString(value, min, max) {
+      return value == null ||
+        (value is string && value.size() >= min && value.size() <= max);
     }
 
     match /users/{userId} {
@@ -401,6 +507,26 @@ service cloud.firestore {
         allow update: if isTeamMember(teamId) &&
           isValidTask(request.resource.data, teamId, taskId) &&
           request.resource.data.teamId == resource.data.teamId &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          request.resource.data.updatedAt == request.time;
+
+        allow delete: if isTeamMember(teamId);
+      }
+
+      match /taskTriggers/{triggerId} {
+        allow get, list: if isTeamMember(teamId);
+
+        allow create: if isTeamMember(teamId) &&
+          isValidTaskTrigger(request.resource.data, teamId, triggerId) &&
+          request.resource.data.createdByUid == request.auth.uid &&
+          request.resource.data.createdAt == request.time &&
+          request.resource.data.updatedAt == request.time;
+
+        allow update: if isTeamMember(teamId) &&
+          isValidTaskTrigger(request.resource.data, teamId, triggerId) &&
+          request.resource.data.teamId == resource.data.teamId &&
+          request.resource.data.createdByUid == resource.data.createdByUid &&
+          request.resource.data.taskId == resource.data.taskId &&
           request.resource.data.createdAt == resource.data.createdAt &&
           request.resource.data.updatedAt == request.time;
 

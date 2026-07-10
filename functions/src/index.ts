@@ -35,3 +35,5 @@ export {
   runTaskDefinitionWorker,
   runTaskDefinitionFlow,
 } from "./task-workflows.js";
+
+export {runDueTaskTriggersWorker} from "./schedule-workflows.js";

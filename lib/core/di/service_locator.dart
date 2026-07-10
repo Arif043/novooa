@@ -9,6 +9,13 @@ import 'package:syscat2/features/files/domain/usecases/watch_team_files.dart';
 import 'package:syscat2/features/files/domain/usecases/watch_team_folders.dart';
 import 'package:syscat2/features/files/infrastructure/repositories/firebase_team_file_repository.dart';
 import 'package:syscat2/features/files/presentation/cubits/files_cubit.dart';
+import 'package:syscat2/features/schedule/domain/repositories/task_trigger_repository.dart';
+import 'package:syscat2/features/schedule/domain/usecases/create_task_trigger.dart';
+import 'package:syscat2/features/schedule/domain/usecases/delete_task_trigger.dart';
+import 'package:syscat2/features/schedule/domain/usecases/set_task_trigger_enabled.dart';
+import 'package:syscat2/features/schedule/domain/usecases/watch_task_triggers.dart';
+import 'package:syscat2/features/schedule/infrastructure/repositories/firestore_task_trigger_repository.dart';
+import 'package:syscat2/features/schedule/presentation/cubits/schedule_cubit.dart';
 import 'package:syscat2/features/user/domain/usecases/get_current_user_profile.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/sign_in_with_email_and_password.dart';
@@ -84,6 +91,12 @@ void configureDependencies() {
         serviceLocator<FirebaseFirestore>(),
       ),
     )
+    ..registerLazySingleton<TaskTriggerRepository>(
+      () => FirestoreTaskTriggerRepository(
+        serviceLocator<FirebaseAuth>(),
+        serviceLocator<FirebaseFirestore>(),
+      ),
+    )
     ..registerLazySingleton<TaskRunnerDatasource>(
       FirebaseFunctionsTaskRunnerDatasource.new,
     )
@@ -133,6 +146,18 @@ void configureDependencies() {
     ..registerLazySingleton(
       () => CreateTeamFolder(serviceLocator<TeamFileRepository>()),
     )
+    ..registerLazySingleton(
+      () => WatchTaskTriggers(serviceLocator<TaskTriggerRepository>()),
+    )
+    ..registerLazySingleton(
+      () => CreateTaskTrigger(serviceLocator<TaskTriggerRepository>()),
+    )
+    ..registerLazySingleton(
+      () => SetTaskTriggerEnabled(serviceLocator<TaskTriggerRepository>()),
+    )
+    ..registerLazySingleton(
+      () => DeleteTaskTrigger(serviceLocator<TaskTriggerRepository>()),
+    )
     ..registerLazySingleton(() => ExecuteTask(serviceLocator<TaskRepository>()))
     ..registerFactory(
       () => AuthCubit(
@@ -174,6 +199,15 @@ void configureDependencies() {
         serviceLocator<WatchTeamFolders>(),
         serviceLocator<UploadTeamFile>(),
         serviceLocator<CreateTeamFolder>(),
+      ),
+    )
+    ..registerFactory(
+      () => ScheduleCubit(
+        watchTaskTriggers: serviceLocator<WatchTaskTriggers>(),
+        createTaskTrigger: serviceLocator<CreateTaskTrigger>(),
+        setTaskTriggerEnabled: serviceLocator<SetTaskTriggerEnabled>(),
+        deleteTaskTrigger: serviceLocator<DeleteTaskTrigger>(),
+        taskRepository: serviceLocator<TaskRepository>(),
       ),
     )
     ..registerLazySingleton(

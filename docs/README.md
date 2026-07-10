@@ -18,7 +18,7 @@ pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
 | --------------- | --------------------------------------------------------- | -------------- |
 | Aufgabe         | [`features/aufgabe.md`](./features/aufgabe.md)            | In Entwicklung |
 | Arbeitspläne    | [`features/arbeitsplaene.md`](./features/arbeitsplaene.md) | Stub           |
-| Zeitplan        | [`features/zeitplan.md`](./features/zeitplan.md)          | Stub           |
+| Zeitplan        | [`features/zeitplan.md`](./features/zeitplan.md)          | Zeitbasierte Trigger |
 | Aktivitäten     | [`features/aktivitaeten.md`](./features/aktivitaeten.md)  | Stub           |
 | Dateien         | [`features/dateien.md`](./features/dateien.md)            | In Entwicklung |
 
