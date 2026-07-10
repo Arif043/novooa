@@ -71,7 +71,6 @@ export async function markRunWaitingForApproval(
     ...runStatus("waitingForApproval"),
     waitingNodeId: output.resumeState.waitingNodeId,
     finalOutput: output.finalOutput,
-    nodeResults: serializable(output.nodeResults),
     resumeState: serializable(output.resumeState),
     pausedAt: FieldValue.serverTimestamp(),
   }, {merge: true});

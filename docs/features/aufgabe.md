@@ -305,6 +305,9 @@ dem Run-Status `waitingForApproval`. Der Zwischenzustand wird im
 Noch nicht ausgeführte Nodes werden nicht als `skipped` markiert. Der spätere
 Approve/Reject-Kanal setzt bei `resumeState` an: Freigabe ersetzt den Output des
 wartenden Nodes und führt den Graph weiter; Ablehnung verwirft den TaskRun.
+Bei pausierten Runs werden `nodeResults` nur in `resumeState` gespeichert. Die
+Top-Level-`nodeResults` werden erst bei vollständig abgeschlossenen Runs
+geschrieben.
 
 Dateianhänge referenzieren eine konkrete Storage-Version:
 
