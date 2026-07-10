@@ -1,6 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/task_activity.dart';
@@ -13,40 +13,56 @@ class ActivityPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => serviceLocator<ActivityCubit>()..load(),
-      child: const _ActivityView(),
-    );
+    return BlocProvider(create: (_) => serviceLocator<ActivityCubit>()..load(), child: const _ActivityView());
   }
 }
 
-class _ActivityView extends StatelessWidget {
+enum TaskActivityFilter { approvalRequired, denied, running, history }
+
+class _ActivityView extends StatefulWidget {
   const _ActivityView();
+
+  @override
+  State<_ActivityView> createState() => _ActivityViewState();
+}
+
+class _ActivityViewState extends State<_ActivityView> {
+  var filter = TaskActivityFilter.approvalRequired;
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ActivityCubit, ActivityState>(
-      builder: (context, state) => _ActivityBody(state: state),
+      builder: (context, state) {
+        return Column(
+          children: [
+            CupertinoSlidingSegmentedControl<TaskActivityFilter>(
+              groupValue: filter,
+              onValueChanged: (TaskActivityFilter? value) {
+                if (value != null) {
+                  setState(() {
+                    filter = value;
+                  });
+                }
+              },
+              children: <TaskActivityFilter, Widget>{
+                TaskActivityFilter.approvalRequired: const Text('Freigabe erforderlich'),
+                TaskActivityFilter.denied: const Text('Abgelehnt'),
+                TaskActivityFilter.running: const Text('Wird ausgeführt'),
+                TaskActivityFilter.history: const Text('Verlauf'),
+              },
+            ),
+            Expanded(
+              child: switch (state.status) {
+                ActivityLoadStatus.loading => const Center(child: CircularProgressIndicator()),
+                ActivityLoadStatus.failure => _FailureState(message: state.message),
+                ActivityLoadStatus.ready when state.activities.isEmpty => const _EmptyState(),
+                ActivityLoadStatus.ready => _ActivityList(activities: state.activities),
+              },
+            ),
+          ],
+        );
+      },
     );
-  }
-}
-
-class _ActivityBody extends StatelessWidget {
-  const _ActivityBody({required this.state});
-
-  final ActivityState state;
-
-  @override
-  Widget build(BuildContext context) {
-    return switch (state.status) {
-      ActivityLoadStatus.loading => const Center(
-        child: CircularProgressIndicator(),
-      ),
-      ActivityLoadStatus.failure => _FailureState(message: state.message),
-      ActivityLoadStatus.ready when state.activities.isEmpty =>
-        const _EmptyState(),
-      ActivityLoadStatus.ready => _ActivityList(activities: state.activities),
-    };
   }
 }
 
