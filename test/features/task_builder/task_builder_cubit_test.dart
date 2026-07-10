@@ -202,32 +202,27 @@ void main() {
     await cubit.close();
   });
 
-  test(
-    'updateWriteFile speichert Datei-ID, Dateiname und Inhaltstyp',
-    () async {
-      final repository = _InMemoryTaskRepository(_taskWithWriteFileNode());
-      final cubit = TaskBuilderCubit(repository: repository);
+  test('updateWriteFile speichert Dateiname und Inhaltstyp', () async {
+    final repository = _InMemoryTaskRepository(_taskWithWriteFileNode());
+    final cubit = TaskBuilderCubit(repository: repository);
 
-      await cubit.load(repository.savedTask);
-      await cubit.updateWriteFileName(const NodeId('node.file'), 'bericht.md');
-      await cubit.updateWriteFileContentType(
-        const NodeId('node.file'),
-        'text/markdown',
-      );
-      await cubit.updateWriteFileId(const NodeId('node.file'), 'file.1');
+    await cubit.load(repository.savedTask);
+    await cubit.updateWriteFileName(const NodeId('node.file'), 'bericht.md');
+    await cubit.updateWriteFileContentType(
+      const NodeId('node.file'),
+      'text/markdown',
+    );
 
-      final state = cubit.state as TaskBuilderLoaded;
-      final config =
-          state.editingTask.nodes.first.config as WriteFileNodeConfig;
+    final state = cubit.state as TaskBuilderLoaded;
+    final config = state.editingTask.nodes.first.config as WriteFileNodeConfig;
 
-      expect(config.fileName, 'bericht.md');
-      expect(config.contentType, 'text/markdown');
-      expect(config.fileId, 'file.1');
-      expect(repository.savedTask, state.editingTask);
+    expect(config.fileName, 'bericht.md');
+    expect(config.contentType, 'text/markdown');
+    expect(config.fileId, isNull);
+    expect(repository.savedTask, state.editingTask);
 
-      await cubit.close();
-    },
-  );
+    await cubit.close();
+  });
 }
 
 const _attachment = NodeAttachment(

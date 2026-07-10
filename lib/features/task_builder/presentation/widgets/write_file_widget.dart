@@ -18,7 +18,6 @@ class WriteFileWidget extends StatefulWidget {
 class _WriteFileWidgetState extends State<WriteFileWidget> {
   late final TextEditingController _fileNameController;
   late final TextEditingController _contentTypeController;
-  late final TextEditingController _fileIdController;
 
   WriteFileNodeConfig get _config {
     return widget.node.config as WriteFileNodeConfig;
@@ -29,7 +28,6 @@ class _WriteFileWidgetState extends State<WriteFileWidget> {
     super.initState();
     _fileNameController = TextEditingController(text: _config.fileName);
     _contentTypeController = TextEditingController(text: _config.contentType);
-    _fileIdController = TextEditingController(text: _config.fileId ?? '');
   }
 
   @override
@@ -37,14 +35,12 @@ class _WriteFileWidgetState extends State<WriteFileWidget> {
     super.didUpdateWidget(oldWidget);
     _sync(_fileNameController, _config.fileName);
     _sync(_contentTypeController, _config.contentType);
-    _sync(_fileIdController, _config.fileId ?? '');
   }
 
   @override
   void dispose() {
     _fileNameController.dispose();
     _contentTypeController.dispose();
-    _fileIdController.dispose();
     super.dispose();
   }
 
@@ -72,15 +68,6 @@ class _WriteFileWidgetState extends State<WriteFileWidget> {
             decoration: const InputDecoration(labelText: 'Inhaltstyp'),
             onChanged: _updateContentType,
           ),
-          const SizedBox(height: AppSpacing.sm),
-          TextField(
-            controller: _fileIdController,
-            decoration: const InputDecoration(
-              labelText: 'Bestehende Datei-ID',
-              helperText: 'Leer lassen, um eine neue Datei zu erstellen.',
-            ),
-            onChanged: _updateFileId,
-          ),
         ],
       ),
     );
@@ -106,9 +93,5 @@ class _WriteFileWidgetState extends State<WriteFileWidget> {
       widget.node.id,
       contentType,
     );
-  }
-
-  void _updateFileId(String fileId) {
-    context.read<TaskBuilderCubit>().updateWriteFileId(widget.node.id, fileId);
   }
 }
