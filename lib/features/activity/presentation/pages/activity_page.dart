@@ -6,6 +6,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/task_run.dart';
 import '../cubits/activity_cubit.dart';
 import '../cubits/activity_state.dart';
+import '../widgets/approval_run_grid.dart';
 import '../widgets/activity_tab_content.dart';
 
 class ActivityPage extends StatelessWidget {
@@ -99,7 +100,7 @@ class _TabBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (filter) {
-      TaskActivityFilter.approvalRequired => TaskRunList(
+      TaskActivityFilter.approvalRequired => ApprovalRunGrid(
         runs: _approvalRequiredRuns,
         emptyText: 'Keine Aufgaben warten auf Freigabe.',
       ),
