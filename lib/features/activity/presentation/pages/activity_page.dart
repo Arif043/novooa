@@ -3,17 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../domain/entities/task_activity.dart';
+import '../../domain/entities/task_run.dart';
 import '../cubits/activity_cubit.dart';
 import '../cubits/activity_state.dart';
-import '../widgets/activity_tile.dart';
+import '../widgets/activity_tab_content.dart';
 
 class ActivityPage extends StatelessWidget {
   const ActivityPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (_) => serviceLocator<ActivityCubit>()..load(), child: const _ActivityView());
+    return BlocProvider(
+      create: (_) => serviceLocator<ActivityCubit>()..load(),
+      child: const _ActivityView(),
+    );
   }
 }
 
@@ -35,28 +38,22 @@ class _ActivityViewState extends State<_ActivityView> {
       builder: (context, state) {
         return Column(
           children: [
-            CupertinoSlidingSegmentedControl<TaskActivityFilter>(
-              groupValue: filter,
-              onValueChanged: (TaskActivityFilter? value) {
-                if (value != null) {
-                  setState(() {
-                    filter = value;
-                  });
-                }
-              },
-              children: <TaskActivityFilter, Widget>{
-                TaskActivityFilter.approvalRequired: const Text('Freigabe erforderlich'),
-                TaskActivityFilter.denied: const Text('Abgelehnt'),
-                TaskActivityFilter.running: const Text('Wird ausgeführt'),
-                TaskActivityFilter.history: const Text('Verlauf'),
-              },
+            _FilterTabs(
+              filter: filter,
+              onChanged: (value) => setState(() => filter = value),
             ),
             Expanded(
               child: switch (state.status) {
-                ActivityLoadStatus.loading => const Center(child: CircularProgressIndicator()),
-                ActivityLoadStatus.failure => _FailureState(message: state.message),
-                ActivityLoadStatus.ready when state.activities.isEmpty => const _EmptyState(),
-                ActivityLoadStatus.ready => _ActivityList(activities: state.activities),
+                ActivityLoadStatus.loading => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+                ActivityLoadStatus.failure => ActivityFailureState(
+                  message: state.message,
+                ),
+                ActivityLoadStatus.ready => _TabBody(
+                  filter: filter,
+                  state: state,
+                ),
               },
             ),
           ],
@@ -66,65 +63,79 @@ class _ActivityViewState extends State<_ActivityView> {
   }
 }
 
-class _ActivityList extends StatelessWidget {
-  const _ActivityList({required this.activities});
+class _FilterTabs extends StatelessWidget {
+  const _FilterTabs({required this.filter, required this.onChanged});
 
-  final List<TaskActivity> activities;
+  final TaskActivityFilter filter;
+  final ValueChanged<TaskActivityFilter> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: context.read<ActivityCubit>().load,
-      child: ListView.separated(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        itemCount: activities.length,
-        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-        itemBuilder: (context, index) {
-          return ActivityTile(activity: activities[index]);
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: CupertinoSlidingSegmentedControl<TaskActivityFilter>(
+        groupValue: filter,
+        onValueChanged: (value) {
+          if (value != null) onChanged(value);
+        },
+        children: const {
+          TaskActivityFilter.approvalRequired: Text('Freigabe'),
+          TaskActivityFilter.denied: Text('Abgelehnt'),
+          TaskActivityFilter.running: Text('Laufend'),
+          TaskActivityFilter.history: Text('Verlauf'),
         },
       ),
     );
   }
 }
 
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+class _TabBody extends StatelessWidget {
+  const _TabBody({required this.filter, required this.state});
+
+  final TaskActivityFilter filter;
+  final ActivityState state;
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(AppSpacing.lg),
-        child: Text('Noch keine Aktivitäten. Führe eine Aufgabe aus.'),
+    return switch (filter) {
+      TaskActivityFilter.approvalRequired => TaskRunList(
+        runs: _approvalRequiredRuns,
+        emptyText: 'Keine Aufgaben warten auf Freigabe.',
       ),
-    );
+      TaskActivityFilter.denied => TaskRunList(
+        runs: _deniedRuns,
+        emptyText: 'Keine abgelehnten Aufgaben.',
+      ),
+      TaskActivityFilter.running => TaskRunList(
+        runs: _runningRuns,
+        emptyText: 'Keine Aufgaben werden gerade ausgeführt.',
+      ),
+      TaskActivityFilter.history =>
+        state.activities.isEmpty
+            ? const ActivityEmptyState(text: 'Noch keine Aktivitäten.')
+            : ActivityList(activities: state.activities),
+    };
   }
-}
 
-class _FailureState extends StatelessWidget {
-  const _FailureState({required this.message});
+  List<TaskRun> get _approvalRequiredRuns {
+    return state.runs
+        .where((run) => run.status == TaskRunStatus.waitingForApproval)
+        .toList(growable: false);
+  }
 
-  final String? message;
+  List<TaskRun> get _deniedRuns {
+    return state.runs
+        .where((run) => run.status == TaskRunStatus.rejected)
+        .toList(growable: false);
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(message ?? 'Aktivitäten konnten nicht geladen werden.'),
-            const SizedBox(height: AppSpacing.md),
-            FilledButton.icon(
-              onPressed: context.read<ActivityCubit>().load,
-              icon: const Icon(Icons.refresh),
-              label: Text('Erneut versuchen', style: textTheme.labelLarge),
-            ),
-          ],
-        ),
-      ),
-    );
+  List<TaskRun> get _runningRuns {
+    return state.runs
+        .where((run) {
+          return run.status == TaskRunStatus.queued ||
+              run.status == TaskRunStatus.running;
+        })
+        .toList(growable: false);
   }
 }
