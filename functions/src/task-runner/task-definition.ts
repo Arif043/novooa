@@ -130,11 +130,33 @@ export const nodeExecutionResultSchema = z.object({
   message: z.string().optional(),
 });
 
-export const taskGraphOutputSchema = z.object({
+export const taskResumeStateSchema = z.object({
+  nodeResults: z.array(nodeExecutionResultSchema),
+  variables: z.record(z.string(), z.unknown()).default({}),
+  remainingNodeIds: z.array(z.string()),
+  skippedNodeIds: z.array(z.string()),
+  waitingNodeId: z.string().optional(),
+});
+
+const completedTaskGraphOutputSchema = z.object({
+  status: z.literal("completed"),
   taskId: z.string(),
   finalOutput: z.string(),
   nodeResults: z.array(nodeExecutionResultSchema),
 });
+
+const waitingTaskGraphOutputSchema = z.object({
+  status: z.literal("waitingForApproval"),
+  taskId: z.string(),
+  finalOutput: z.string(),
+  nodeResults: z.array(nodeExecutionResultSchema),
+  resumeState: taskResumeStateSchema,
+});
+
+export const taskGraphOutputSchema = z.discriminatedUnion("status", [
+  completedTaskGraphOutputSchema,
+  waitingTaskGraphOutputSchema,
+]);
 
 export const runTaskDefinitionOutputSchema = z.object({
   runId: z.string().min(1),
@@ -156,6 +178,13 @@ export type RunTaskDefinitionInput = z.infer<
 export type TaskGraphOutput = z.infer<
   typeof taskGraphOutputSchema
 >;
+export type CompletedTaskGraphOutput = z.infer<
+  typeof completedTaskGraphOutputSchema
+>;
+export type WaitingTaskGraphOutput = z.infer<
+  typeof waitingTaskGraphOutputSchema
+>;
+export type TaskResumeState = z.infer<typeof taskResumeStateSchema>;
 export type RunTaskDefinitionOutput = z.infer<
   typeof runTaskDefinitionOutputSchema
 >;

@@ -7,9 +7,10 @@ import {
   getFirestore,
 } from "firebase-admin/firestore";
 import {
+  type CompletedTaskGraphOutput,
   type NodeExecutionResult,
   type TaskDefinition,
-  type TaskGraphOutput,
+  type WaitingTaskGraphOutput,
 } from "./task-definition.js";
 import {errorDetails} from "./structured-logger.js";
 
@@ -47,13 +48,33 @@ export async function markRunStarted(teamId: string, runId: string) {
 export async function markRunSucceeded(
   teamId: string,
   run: TaskRunDocument,
-  output: TaskGraphOutput,
+  output: CompletedTaskGraphOutput,
 ) {
   await writeNodeActivities(teamId, run, output.nodeResults);
   await writeTaskActivity(teamId, {run, status: "succeeded", output});
-  await runReference(teamId, run.runId).set(runStatus("succeeded"), {
+  await runReference(teamId, run.runId).set({
+    ...runStatus("succeeded"),
+    finalOutput: output.finalOutput,
+    nodeResults: serializable(output.nodeResults),
+  }, {
     merge: true,
   });
+}
+
+export async function markRunWaitingForApproval(
+  teamId: string,
+  run: TaskRunDocument,
+  output: WaitingTaskGraphOutput,
+) {
+  await writeNodeActivities(teamId, run, output.nodeResults);
+  await runReference(teamId, run.runId).set({
+    ...runStatus("waitingForApproval"),
+    waitingNodeId: output.resumeState.waitingNodeId,
+    finalOutput: output.finalOutput,
+    nodeResults: serializable(output.nodeResults),
+    resumeState: serializable(output.resumeState),
+    pausedAt: FieldValue.serverTimestamp(),
+  }, {merge: true});
 }
 
 export async function markRunFailed(
@@ -125,7 +146,7 @@ async function writeTaskActivity(
     run: TaskRunDocument;
     status: "started" | "succeeded" | "failed";
     input?: string;
-    output?: TaskGraphOutput;
+    output?: CompletedTaskGraphOutput;
     message?: string;
   },
 ) {
@@ -170,6 +191,10 @@ function errorMessage(details: unknown): string {
 
 function runStatus(status: string) {
   return {status, updatedAt: FieldValue.serverTimestamp()};
+}
+
+function serializable(value: unknown): unknown {
+  return JSON.parse(JSON.stringify(value));
 }
 
 function activitiesReference(teamId: string) {

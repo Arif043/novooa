@@ -16,6 +16,7 @@ import {
   markRunFailed,
   markRunStarted,
   markRunSucceeded,
+  markRunWaitingForApproval,
   runFromDocument,
 } from "./task-runner/task-activity-logger.js";
 import {isMinimaxProvider} from "./task-runner/ai-models.js";
@@ -90,6 +91,10 @@ export const runTaskDefinitionWorker = onDocumentCreated(
         taskDefinition,
         context: run.context,
       });
+      if (output.status === "waitingForApproval") {
+        await markRunWaitingForApproval(teamId, run, output);
+        return;
+      }
       await markRunSucceeded(teamId, run, output);
     } catch (error) {
       logError("run_task_definition_worker.failed", {

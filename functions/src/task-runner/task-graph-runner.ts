@@ -10,6 +10,7 @@ import {
   type TaskGraphInput,
   type TaskGraphOutput,
   type TaskDefinition as Task,
+  type TaskResumeState,
   type WorkflowNode,
 } from "./task-definition.js";
 import {
@@ -39,8 +40,11 @@ export async function executeTaskGraph(
 ): Promise<TaskGraphOutput> {
   logReadableInfo(formatTaskStarted(input.taskDefinition, input.context));
   validateGraph(input.taskDefinition);
-  const results = await runNodes(ai, input);
+  const runState = await runNodes(ai, input);
+  if (runState.status === "waitingForApproval") return pausedOutput(input, runState);
+  const results = runState.nodeResults;
   const output = {
+    status: "completed" as const,
     taskId: input.taskDefinition.id,
     finalOutput: finalOutputOf(results),
     nodeResults: results,
@@ -58,7 +62,7 @@ async function runNodes(
   ai: Genkit,
   input: TaskGraphInput,
   variables: TaskVariables = {},
-): Promise<NodeExecutionResult[]> {
+): Promise<NodeRunState> {
   const remaining = [...input.taskDefinition.nodes];
   const results = new Map<string, NodeExecutionResult>();
   const skippedNodeIds = new Set<string>();
@@ -89,23 +93,62 @@ async function runNodes(
     skipInactiveBranches(node, input.taskDefinition, result, skippedNodeIds);
     logSkippedBranches(node, input.taskDefinition.id, result, skippedNodeIds);
     if (result.status === "waitingForApproval") {
-      skipRemainingNodes(remaining, results, result.output);
-      break;
+      return {
+        status: "waitingForApproval",
+        nodeResults: orderedResults(input.taskDefinition, results),
+        variables: {...variables},
+        remainingNodeIds: remaining.map((item) => item.id),
+        skippedNodeIds: Array.from(skippedNodeIds),
+        waitingNodeId: node.id,
+      };
     }
   }
 
-  return input.taskDefinition.nodes.map((node) => results.get(node.id)!);
+  return {
+    status: "completed",
+    nodeResults: orderedResults(input.taskDefinition, results),
+  };
 }
 
-function skipRemainingNodes(
-  remaining: WorkflowNode[],
+type NodeRunState = {
+  status: "completed";
+  nodeResults: NodeExecutionResult[];
+} | ({
+  status: "waitingForApproval";
+} & TaskResumeState);
+
+function orderedResults(
+  task: Task,
   results: Map<string, NodeExecutionResult>,
-  context: string,
-): void {
-  for (const node of remaining) {
-    results.set(node.id, skippedNode(node, context));
-  }
-  remaining.length = 0;
+): NodeExecutionResult[] {
+  return task.nodes
+    .map((node) => results.get(node.id))
+    .filter((result): result is NodeExecutionResult => result !== undefined);
+}
+
+function pausedOutput(
+  input: TaskGraphInput,
+  state: Extract<NodeRunState, {status: "waitingForApproval"}>,
+): TaskGraphOutput {
+  return {
+    status: "waitingForApproval",
+    taskId: input.taskDefinition.id,
+    finalOutput: finalOutputOf(state.nodeResults),
+    nodeResults: state.nodeResults,
+    resumeState: resumeStateFrom(state),
+  };
+}
+
+function resumeStateFrom(
+  state: Extract<NodeRunState, {status: "waitingForApproval"}>,
+): TaskResumeState {
+  return {
+    nodeResults: state.nodeResults,
+    variables: state.variables,
+    remainingNodeIds: state.remainingNodeIds,
+    skippedNodeIds: state.skippedNodeIds,
+    waitingNodeId: state.waitingNodeId,
+  };
 }
 
 type NodeRunInput = {
@@ -195,10 +238,10 @@ function logSkippedBranches(
 }
 
 function runSubgraphFor(ai: Genkit, variables: TaskVariables) {
-  return (task: Task, context: string) => runNodes(ai, {
-    taskDefinition: task,
-    context,
-  }, variables);
+  return async (task: Task, context: string) => {
+    const state = await runNodes(ai, {taskDefinition: task, context}, variables);
+    return state.nodeResults;
+  };
 }
 
 async function executeNode(

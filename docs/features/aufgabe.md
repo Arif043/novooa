@@ -287,10 +287,24 @@ Für Freigabe-Bausteine:
 
 Freigabe-Bausteine sind immer harte Kontrollpunkte: Review ist Pflicht,
 Bearbeitung des Outputs ist immer erlaubt, Ablehnung ist immer erlaubt und eine
-Ablehnung verwirft den gesamten TaskRun. Der aktuelle MVP beendet die laufende
-Ausführung kontrolliert mit dem Status `waitingForApproval`; noch nicht
-ausgeführte Nodes werden als `skipped` markiert. Der Persistenz- und
-Resume-Kanal für Approve/Reject wird über Activities / Approvals ergänzt.
+Ablehnung verwirft den gesamten TaskRun. Wenn ein Run einen Freigabe-Baustein
+erreicht, beendet die Cloud Function die aktuelle Invocation kontrolliert mit
+dem Run-Status `waitingForApproval`. Der Zwischenzustand wird im
+`taskRuns/{runId}`-Dokument unter `resumeState` gespeichert:
+
+```ts
+{
+  nodeResults: NodeExecutionResult[],
+  variables: Record<string, unknown>,
+  remainingNodeIds: string[],
+  skippedNodeIds: string[],
+  waitingNodeId: string
+}
+```
+
+Noch nicht ausgeführte Nodes werden nicht als `skipped` markiert. Der spätere
+Approve/Reject-Kanal setzt bei `resumeState` an: Freigabe ersetzt den Output des
+wartenden Nodes und führt den Graph weiter; Ablehnung verwirft den TaskRun.
 
 Dateianhänge referenzieren eine konkrete Storage-Version:
 
@@ -336,7 +350,8 @@ Ausführung entstehen unter `teams/{teamId}/activities/{activityId}`:
 - eine Task-Aktivität `started` mit Run-ID und Eingabekontext,
 - pro Baustein eine Node-Aktivität mit Status `succeeded`, `skipped` oder
   `waiting`,
-- eine abschließende Task-Aktivität `succeeded` oder `failed`.
+- eine abschließende Task-Aktivität `succeeded` oder `failed`, sofern der Run
+  nicht auf Freigabe wartet.
 
 Der Flutter-Client startet nur den Run und wartet nicht auf Node-Ergebnisse.
 Die Aktivitäten-Seite liest die Firestore-Logs über das Feature

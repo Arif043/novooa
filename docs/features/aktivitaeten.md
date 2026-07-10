@@ -29,7 +29,8 @@ Functions schreiben pro Hintergrund-Run:
 - eine Task-Aktivität `started` mit Run-ID und Eingabekontext,
 - pro Baustein eine Node-Aktivität mit Status `succeeded`, `skipped` oder
   `waiting`,
-- eine abschließende Task-Aktivität `succeeded` oder `failed`.
+- eine abschließende Task-Aktivität `succeeded` oder `failed`, sofern der Run
+  nicht auf Freigabe wartet.
 
 Persistenz:
 
