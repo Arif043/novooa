@@ -8,7 +8,8 @@
     "start": "npm run shell",
     "deploy": "npx -y firebase-tools@latest deploy --only functions",
     "logs": "npx -y firebase-tools@latest functions:log",
-    "schedule:run:local": "curl -i -X POST -H \"X-CloudScheduler: true\" http://127.0.0.1:5001/syscat-90bff/us-central1/runDueTaskTriggersWorker-0"
+    "schedule:run:local": "curl -i -X POST -H \"X-CloudScheduler: true\" http://127.0.0.1:5001/syscat-90bff/us-central1/runDueTaskTriggersWorker-0",
+    "schedule:watch:local": "while true; do npm run schedule:run:local; sleep 60; done"
   },
   "engines": {
     "node": "24"
