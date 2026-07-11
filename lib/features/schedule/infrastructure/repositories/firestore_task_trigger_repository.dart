@@ -91,7 +91,13 @@ class FirestoreTaskTriggerRepository implements TaskTriggerRepository {
       if (config.runAt != null) 'runAt': Timestamp.fromDate(config.runAt!),
       if (config.timeOfDay != null) 'timeOfDay': config.timeOfDay,
       if (config.weekdays.isNotEmpty) 'weekdays': config.weekdays,
+      if (config.slots.isNotEmpty)
+        'slots': config.slots.map(_slotDocument).toList(growable: false),
     };
+  }
+
+  Map<String, Object?> _slotDocument(WeeklyTimeSlot slot) {
+    return {'weekday': slot.weekday, 'timeOfDay': slot.timeOfDay};
   }
 
   List<TaskTrigger> _toTriggers(QuerySnapshot<Map<String, dynamic>> snapshot) {

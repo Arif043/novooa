@@ -67,10 +67,14 @@ class _ScheduleHeader extends StatelessWidget {
 
   void _showDialog(BuildContext context) {
     final cubit = context.read<ScheduleCubit>();
-    CreateScheduleTriggerDialog.show(
-      context,
-      tasks: cubit.state.tasks,
-      cubit: cubit,
+    showDialog<void>(
+      context: context,
+      builder: (_) {
+        return CreateScheduleTriggerDialog(
+          tasks: cubit.state.tasks,
+          cubit: cubit,
+        );
+      },
     );
   }
 }

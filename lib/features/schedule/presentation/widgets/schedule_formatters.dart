@@ -5,8 +5,7 @@ String scheduleLabel(ScheduleConfig config) {
   return switch (config.kind) {
     ScheduleKind.once => 'Einmalig am ${dateTimeLabel(config.runAt)}',
     ScheduleKind.daily => 'Täglich um ${config.timeOfDay}',
-    ScheduleKind.weekly =>
-      'Wöchentlich ${weekdayLabels(config.weekdays)} um ${config.timeOfDay}',
+    ScheduleKind.weekly => 'Wöchentlich ${slotLabels(config.slots)}',
   };
 }
 
@@ -29,6 +28,12 @@ String dateTimeLabel(DateTime? value) {
 
 String weekdayLabels(List<int> weekdays) {
   return weekdays.map(_weekdayLabel).join(', ');
+}
+
+String slotLabels(List<WeeklyTimeSlot> slots) {
+  return slots
+      .map((slot) => '${_weekdayLabel(slot.weekday)} ${slot.timeOfDay}')
+      .join(', ');
 }
 
 String _weekdayLabel(int weekday) {

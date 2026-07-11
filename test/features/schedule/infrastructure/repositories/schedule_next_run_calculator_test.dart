@@ -45,6 +45,22 @@ void main() {
     expect(nextRun, DateTime(2026, 7, 13, 7, 15));
   });
 
+  test('berechnet naechsten frei gewaehlten Wochenzeitpunkt', () {
+    final nextRun = calculator(
+      const ScheduleConfig(
+        kind: ScheduleKind.weekly,
+        timezone: 'Europe/Berlin',
+        slots: [
+          WeeklyTimeSlot(weekday: DateTime.friday, timeOfDay: '14:30'),
+          WeeklyTimeSlot(weekday: DateTime.monday, timeOfDay: '08:00'),
+        ],
+      ),
+      DateTime(2026, 7, 10, 10),
+    );
+
+    expect(nextRun, DateTime(2026, 7, 10, 14, 30));
+  });
+
   test('einmaliger Trigger in der Vergangenheit ist nicht mehr faellig', () {
     final nextRun = calculator(
       ScheduleConfig(

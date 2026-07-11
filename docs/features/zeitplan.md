@@ -37,7 +37,11 @@ Dokument:
     timezone: "Europe/Berlin",
     runAt?: Timestamp,
     timeOfDay?: "09:00",
-    weekdays?: number[]
+    weekdays?: number[],
+    slots?: Array<{
+      weekday: number,
+      timeOfDay: "09:00"
+    }>
   },
   policy: {
     ifRunning: "skipIfRunning" | "startParallel"
@@ -67,7 +71,8 @@ Der Dialog „Trigger hinzufügen“ bietet aktuell:
 
 - einmalig
 - täglich
-- wöchentlich
+- wöchentlich mit frei wählbaren Wochenzeitpunkten wie „Mo 09:00“,
+  „Mi 14:30“ oder „Fr 08:15“
 
 Cron-Ausdrücke werden nicht direkt im UI eingegeben. Die UI erzeugt einfache
 strukturierte Konfigurationen, aus denen Backend und Client `nextRunAt`

@@ -6,6 +6,12 @@ export type ScheduleConfig = {
   runAt?: Timestamp;
   timeOfDay?: string;
   weekdays?: number[];
+  slots?: ScheduleSlot[];
+};
+
+export type ScheduleSlot = {
+  weekday: number;
+  timeOfDay: string;
 };
 
 export function nextRunAfter(config: ScheduleConfig, now: Date): Date | null {
@@ -30,16 +36,37 @@ function nextDaily(config: ScheduleConfig, now: Date): Date | null {
 }
 
 function nextWeekly(config: ScheduleConfig, now: Date): Date | null {
-  const time = timeParts(config.timeOfDay);
-  if (!time || !config.weekdays?.length) return null;
-  const parts = zonedParts(now, config.timezone);
+  const candidates = weeklySlots(config)
+    .map((slot) => nextWeeklySlot(slot, config.timezone, now))
+    .filter((value): value is Date => value !== null)
+    .sort((left, right) => left.getTime() - right.getTime());
+  return candidates[0] ?? null;
+}
+
+function nextWeeklySlot(
+  slot: ScheduleSlot,
+  timezone: string,
+  now: Date,
+): Date | null {
+  const time = timeParts(slot.timeOfDay);
+  if (!time) return null;
+  const parts = zonedParts(now, timezone);
   for (let offset = 0; offset < 8; offset++) {
-    const candidate = addZoneDays(parts, offset, time, config.timezone);
-    if (candidate > now && config.weekdays.includes(isoWeekday(candidate, config.timezone))) {
+    const candidate = addZoneDays(parts, offset, time, timezone);
+    if (candidate > now && isoWeekday(candidate, timezone) === slot.weekday) {
       return candidate;
     }
   }
   return null;
+}
+
+function weeklySlots(config: ScheduleConfig): ScheduleSlot[] {
+  if (config.slots?.length) return config.slots;
+  if (!config.timeOfDay || !config.weekdays?.length) return [];
+  return config.weekdays.map((weekday) => ({
+    weekday,
+    timeOfDay: config.timeOfDay ?? "",
+  }));
 }
 
 function addZoneDays(

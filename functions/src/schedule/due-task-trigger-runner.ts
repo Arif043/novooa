@@ -106,6 +106,15 @@ function scheduleConfigFrom(value: unknown): ScheduleConfig {
     runAt: data.runAt instanceof Timestamp ? data.runAt : undefined,
     timeOfDay: typeof data.timeOfDay === "string" ? data.timeOfDay : undefined,
     weekdays: Array.isArray(data.weekdays) ? data.weekdays.map(Number) : [],
+    slots: Array.isArray(data.slots) ? data.slots.map(slotFrom) : [],
+  };
+}
+
+function slotFrom(value: unknown) {
+  const data = isRecord(value) ? value : {};
+  return {
+    weekday: Number(data.weekday ?? 0),
+    timeOfDay: String(data.timeOfDay ?? ""),
   };
 }
 

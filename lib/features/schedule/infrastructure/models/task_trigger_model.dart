@@ -70,6 +70,7 @@ class TaskTriggerModel {
       runAt: _dateFrom(data['runAt']),
       timeOfDay: data['timeOfDay'] as String?,
       weekdays: _weekdaysFrom(data['weekdays']),
+      slots: _slotsFrom(data),
     );
   }
 
@@ -91,6 +92,35 @@ class TaskTriggerModel {
   static List<int> _weekdaysFrom(Object? value) {
     if (value is! List) return const [];
     return value.whereType<int>().toList(growable: false);
+  }
+
+  static List<WeeklyTimeSlot> _slotsFrom(Map<String, Object?> data) {
+    final slots = _slotListFrom(data['slots']);
+    if (slots.isNotEmpty) return slots;
+    final timeOfDay = data['timeOfDay'] as String?;
+    if (timeOfDay == null) return const [];
+    return _weekdaysFrom(data['weekdays'])
+        .map(
+          (weekday) => WeeklyTimeSlot(weekday: weekday, timeOfDay: timeOfDay),
+        )
+        .toList(growable: false);
+  }
+
+  static List<WeeklyTimeSlot> _slotListFrom(Object? value) {
+    if (value is! List) return const [];
+    return value
+        .whereType<Map>()
+        .map(_objectMapFrom)
+        .map(_slotFrom)
+        .where((slot) => slot.isValid)
+        .toList(growable: false);
+  }
+
+  static WeeklyTimeSlot _slotFrom(Map<String, Object?> data) {
+    return WeeklyTimeSlot(
+      weekday: data['weekday'] as int? ?? 0,
+      timeOfDay: data['timeOfDay'] as String? ?? '',
+    );
   }
 
   static DateTime? _dateFrom(Object? value) {

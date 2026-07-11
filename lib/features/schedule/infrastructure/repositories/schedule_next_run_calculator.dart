@@ -25,11 +25,32 @@ class ScheduleNextRunCalculator {
   }
 
   DateTime? _weekly(ScheduleConfig config, DateTime now) {
-    final time = _timeParts(config.timeOfDay);
-    if (time == null || config.weekdays.isEmpty) return null;
+    final candidates =
+        _weeklySlots(config)
+            .map((slot) => _nextWeeklySlot(slot, now))
+            .whereType<DateTime>()
+            .toList(growable: false)
+          ..sort();
+    return candidates.firstOrNull;
+  }
+
+  List<WeeklyTimeSlot> _weeklySlots(ScheduleConfig config) {
+    if (config.slots.isNotEmpty) return config.slots;
+    final timeOfDay = config.timeOfDay;
+    if (timeOfDay == null) return const [];
+    return config.weekdays
+        .map(
+          (weekday) => WeeklyTimeSlot(weekday: weekday, timeOfDay: timeOfDay),
+        )
+        .toList(growable: false);
+  }
+
+  DateTime? _nextWeeklySlot(WeeklyTimeSlot slot, DateTime now) {
+    final time = _timeParts(slot.timeOfDay);
+    if (time == null) return null;
     for (var offset = 0; offset < 8; offset++) {
       final date = now.add(Duration(days: offset));
-      if (!config.weekdays.contains(date.weekday)) continue;
+      if (date.weekday != slot.weekday) continue;
       final candidate = _atTime(date, time);
       if (candidate.isAfter(now)) return candidate;
     }

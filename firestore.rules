@@ -405,6 +405,7 @@ service cloud.firestore {
           'runAt',
           'timeOfDay',
           'weekdays',
+          'slots',
         ]) &&
         data.kind in ['once', 'daily', 'weekly'] &&
         data.timezone is string &&
@@ -417,10 +418,15 @@ service cloud.firestore {
       return (data.kind == 'once' && data.get('runAt', null) is timestamp) ||
         (data.kind == 'daily' && isValidTimeOfDay(data.get('timeOfDay', null))) ||
         (data.kind == 'weekly' &&
-          isValidTimeOfDay(data.get('timeOfDay', null)) &&
-          data.get('weekdays', []) is list &&
-          data.get('weekdays', []).size() >= 1 &&
-          data.get('weekdays', []).size() <= 7);
+          (isValidWeeklySlots(data.get('slots', [])) ||
+            (isValidTimeOfDay(data.get('timeOfDay', null)) &&
+              data.get('weekdays', []) is list &&
+              data.get('weekdays', []).size() >= 1 &&
+              data.get('weekdays', []).size() <= 7)));
+    }
+
+    function isValidWeeklySlots(slots) {
+      return slots is list && slots.size() >= 1 && slots.size() <= 28;
     }
 
     function isValidTriggerPolicy(data) {
