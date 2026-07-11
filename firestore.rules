@@ -91,6 +91,17 @@ rules_version = '2';
 //   - id, fileId, createdByUid, displayName, storagePath
 //   - contentType, sizeBytes, createdAt
 //
+// Subcollection: teams/{teamId}/knowledgeBases/{knowledgeBaseId}/notes
+// Document ID: generated/imported note id
+// Fields:
+//   - knowledgeBaseId: string (required) - must equal parent ID
+//   - title: string (required, 1-160)
+//   - path: string (required, 1-512) - original/imported markdown path
+//   - type: string (required) - atomic | moc | unknown
+//   - content: string (required, max 256 KiB) - markdown body
+//   - outgoingLinks: list<string> (required, max 100) - linked note IDs
+//   - createdAt, updatedAt: timestamp
+//
 // ===============================================================
 
 service cloud.firestore {
@@ -568,6 +579,16 @@ service cloud.firestore {
             request.resource.data.id == versionId &&
             isValidFileVersion(request.resource.data, fileId);
           allow update, delete: if false;
+        }
+      }
+
+      match /knowledgeBases/{knowledgeBaseId} {
+        allow get, list: if isTeamMember(teamId);
+        allow create, update, delete: if false;
+
+        match /notes/{noteId} {
+          allow get, list: if isTeamMember(teamId);
+          allow create, update, delete: if false;
         }
       }
     }

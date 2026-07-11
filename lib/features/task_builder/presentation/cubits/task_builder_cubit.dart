@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:syscat2/features/task_builder/domain/entities/knowledge_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';

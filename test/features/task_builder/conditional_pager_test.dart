@@ -14,10 +14,14 @@ import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/files/domain/entities/upload_file_input.dart';
 import 'package:syscat2/features/files/domain/repositories/team_file_repository.dart';
 import 'package:syscat2/features/files/domain/usecases/watch_team_files.dart';
+import 'package:syscat2/features/knowledge_base/domain/entities/knowledge_note.dart';
+import 'package:syscat2/features/knowledge_base/domain/repositories/knowledge_base_repository.dart';
+import 'package:syscat2/features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_pager.dart';
 
 void main() {
@@ -43,11 +47,21 @@ void main() {
 
 Widget _app(WorkflowNode node) {
   return MaterialApp(
-    home: BlocProvider(
-      create: (_) => NodeFileAttachmentsCubit(
-        _FakeAuthRepository(),
-        WatchTeamFiles(_FakeTeamFileRepository()),
-      )..load(),
+    home: MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => NodeFileAttachmentsCubit(
+            _FakeAuthRepository(),
+            WatchTeamFiles(_FakeTeamFileRepository()),
+          )..load(),
+        ),
+        BlocProvider(
+          create: (_) => NodeKnowledgeAttachmentsCubit(
+            _FakeAuthRepository(),
+            WatchKnowledgeNotes(_FakeKnowledgeBaseRepository()),
+          )..load(),
+        ),
+      ],
       child: Scaffold(body: ConditionalPager(node: node)),
     ),
   );
@@ -96,6 +110,13 @@ class _FakeTeamFileRepository implements TeamFileRepository {
     required String? parentFolderId,
   }) async {
     return const Result.error(FileFailure(FileFailureKind.createFolderFailed));
+  }
+}
+
+class _FakeKnowledgeBaseRepository implements KnowledgeBaseRepository {
+  @override
+  Stream<List<KnowledgeNote>> watchNotes(TeamId teamId) {
+    return Stream.value(const []);
   }
 }
 

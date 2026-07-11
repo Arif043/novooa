@@ -39,33 +39,34 @@ class BranchWidget extends StatelessWidget {
         color: SyscatTheme.primaryOrangeHover,
         borderRadius: BorderRadius.circular(AppSpacing.xl),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisSize: .min,
-            children: [
-              CupertinoNavigationBarBackButton(onPressed: onBack),
-              Text('Fall:  ', style: SyscatTheme.taskBody),
-              // const SizedBox(width: AppSpacing.md),
-              Text(
-                branch.label,
-                style: SyscatTheme.taskBody.copyWith(fontWeight: .w800),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          for (final node in branch.graph.nodes) _branchNode(node),
-          NodePlaceholder(
-            onAccept: (primitive) {
-              context.read<TaskBuilderCubit>().addNodeToBranch(
-                conditionalNodeId: conditionalNodeId,
-                branchId: branch.id,
-                primitive: primitive,
-              );
-            },
-          ),
-        ],
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisSize: .min,
+              children: [
+                CupertinoNavigationBarBackButton(onPressed: onBack),
+                Text('Fall:  ', style: SyscatTheme.taskBody),
+                Text(
+                  branch.label,
+                  style: SyscatTheme.taskBody.copyWith(fontWeight: .w800),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            for (final node in branch.graph.nodes) _branchNode(node),
+            NodePlaceholder(
+              onAccept: (primitive) {
+                context.read<TaskBuilderCubit>().addNodeToBranch(
+                  conditionalNodeId: conditionalNodeId,
+                  branchId: branch.id,
+                  primitive: primitive,
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

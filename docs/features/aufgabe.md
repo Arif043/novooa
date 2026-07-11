@@ -164,20 +164,29 @@ output: { answer: string }
 
 Temperatur: `0.3`. Streamt nicht.
 
-Wenn ein Node Dateien anhängt, bereitet der Graph-Runner die Dateien vor dem
-Executor-Aufruf über
+Wenn ein Node Dateien oder Wissensnotizen anhängt, bereitet der Graph-Runner
+den Workspace vor dem Executor-Aufruf über
 `functions/src/task-runner/node-attachment-workspace.ts` vor:
 
 1. Storage-Objekte aus `attachments[].storagePath` herunterladen.
-2. In ein temporäres, node-spezifisches Verzeichnis unter `/tmp` schreiben.
-3. Den vorbereiteten Workspace an den jeweiligen `NodeExecutor` übergeben.
-4. Das temporäre Verzeichnis nach dem Node-Aufruf wieder entfernen.
+2. Wissensnotizen aus Firestore unter
+   `teams/{teamId}/knowledgeBases/{knowledgeBaseId}/notes/{noteId}` laden.
+3. MOC-Notizen rekursiv über `outgoingLinks` auflösen.
+4. Alles in ein temporäres, node-spezifisches Verzeichnis unter `/tmp`
+   schreiben.
+5. Den vorbereiteten Workspace an den jeweiligen `NodeExecutor` übergeben.
+6. Das temporäre Verzeichnis nach dem Node-Aufruf wieder entfernen.
 
 Prompt-Nodes verwenden den Workspace über
 `functions/src/task-runner/node-attachment-genkit.ts` mit
 `filesystem({ rootDirectory })` aus `@genkit-ai/middleware`. Die Middleware
 läuft read-only. Das Modell erhält im Prompt eine Liste der lokalen Dateinamen
-und kann über `list_files` / `read_file` auf die Inhalte zugreifen.
+und Wissensnotizen und kann über `list_files` / `read_file` auf die Inhalte
+zugreifen. Wissensnotizen liegen unter `knowledge/`; eine Übersicht liegt in
+`knowledge/manifest.json`.
+
+Aktuell sind Wissensbasis-Anhänge nur für Prompt-Bausteine aktiv. Script-
+Bausteine verwenden weiterhin ausschließlich Dateianhänge.
 
 ### Script-Executor
 

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
+import 'package:syscat2/features/task_builder/domain/entities/knowledge_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
@@ -181,6 +182,32 @@ void main() {
     },
   );
 
+  test('attachNodeKnowledge speichert Wissensnotiz am Prompt-Node', () async {
+    final repository = _InMemoryTaskRepository(_taskWithBranchPrompt());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.attachNodeKnowledge(
+      nodeId: const NodeId('node.2'),
+      attachment: _knowledgeAttachment,
+    );
+
+    var promptConfig = _branchPromptConfig(cubit);
+    expect(promptConfig.knowledgeAttachments, [_knowledgeAttachment]);
+
+    await cubit.detachNodeKnowledge(
+      nodeId: const NodeId('node.2'),
+      attachmentId: _knowledgeAttachment.id,
+    );
+
+    final state = cubit.state as TaskBuilderLoaded;
+    promptConfig = _branchPromptConfig(cubit);
+    expect(promptConfig.knowledgeAttachments, isEmpty);
+    expect(repository.savedTask, state.editingTask);
+
+    await cubit.close();
+  });
+
   test('updateScript speichert Script-Code am Script-Node', () async {
     final repository = _InMemoryTaskRepository(_taskWithScriptNode());
     final cubit = TaskBuilderCubit(repository: repository);
@@ -311,6 +338,14 @@ const _attachment = NodeAttachment(
   displayName: 'briefing.md',
   contentType: 'text/markdown',
   sizeBytes: 12000,
+);
+
+const _knowledgeAttachment = KnowledgeAttachment(
+  knowledgeBaseId: 'default',
+  noteId: 'note.1',
+  title: 'Index',
+  path: 'index.md',
+  type: KnowledgeAttachmentType.moc,
 );
 
 Task _taskWithConditionalNode() {

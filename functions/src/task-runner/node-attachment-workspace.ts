@@ -4,9 +4,14 @@ import path from "node:path";
 import {getApps, initializeApp} from "firebase-admin/app";
 import {getStorage} from "firebase-admin/storage";
 import {
+  type KnowledgeAttachment,
   type NodeAttachment,
   type WorkflowNode,
 } from "./task-definition.js";
+import {
+  prepareKnowledgeFiles,
+  type PreparedKnowledgeAttachment,
+} from "./knowledge-note-workspace.js";
 
 if (getApps().length === 0) initializeApp();
 
@@ -17,22 +22,33 @@ export type PreparedNodeAttachment = NodeAttachment & {
 export type NodeAttachmentWorkspace = {
   rootDirectory: string;
   files: PreparedNodeAttachment[];
+  knowledgeFiles: PreparedKnowledgeAttachment[];
   cleanup(): Promise<void>;
 };
 
 export async function prepareNodeAttachmentWorkspace(
   node: WorkflowNode,
+  teamId: string,
 ): Promise<NodeAttachmentWorkspace | undefined> {
   const attachments = attachmentsFor(node);
-  if (attachments.length === 0) return undefined;
+  const knowledgeAttachments = knowledgeAttachmentsFor(node);
+  if (attachments.length === 0 && knowledgeAttachments.length === 0) {
+    return undefined;
+  }
   const rootDirectory = await mkdtemp(
     path.join(os.tmpdir(), "syscat-node-files-"),
   );
   await mkdir(rootDirectory, {recursive: true});
   const files = await downloadAttachments(rootDirectory, attachments);
+  const knowledgeFiles = await prepareKnowledgeFiles(
+    rootDirectory,
+    teamId,
+    knowledgeAttachments,
+  );
   return {
     rootDirectory,
     files,
+    knowledgeFiles,
     cleanup: () => rm(rootDirectory, {recursive: true, force: true}),
   };
 }
@@ -40,6 +56,13 @@ export async function prepareNodeAttachmentWorkspace(
 function attachmentsFor(node: WorkflowNode): NodeAttachment[] {
   if (node.config.primitive === "prompt") return node.config.attachments;
   if (node.config.primitive === "script") return node.config.attachments;
+  return [];
+}
+
+function knowledgeAttachmentsFor(node: WorkflowNode): KnowledgeAttachment[] {
+  if (node.config.primitive === "prompt") {
+    return node.config.knowledgeAttachments;
+  }
   return [];
 }
 

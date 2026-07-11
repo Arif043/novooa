@@ -17,6 +17,10 @@
 - `/users/{uid}/secrets/aiProvider`
   - Write-only owner document for the provider API key.
   - Client writes the key, but Firestore rules deny all client reads/lists.
+- `/teams/{teamId}/knowledgeBases/{knowledgeBaseId}/notes/{noteId}`
+  - Team-scoped Markdown notes for the node attachment RAG.
+  - Client can read/list notes as a team member.
+  - Client writes are denied until import/editor validation is implemented.
 
 ## User Document Shape
 - `uid`: string, required, immutable, equals document ID and `request.auth.uid`
@@ -48,3 +52,9 @@
   SDK access for actual model calls later.
 - Client deletes are denied for secret documents to avoid stale settings/secret
   drift until a dedicated "Key entfernen" workflow exists.
+- Task Builder reads knowledge notes from
+  `/teams/personal_<uid>/knowledgeBases/default/notes` ordered by `title`.
+- Prompt nodes persist selected note references inside task graph config as
+  `knowledgeAttachments`.
+- Backend Functions use Admin SDK to resolve selected notes, recursively expand
+  MOC links, and expose Markdown files through Genkit filesystem middleware.

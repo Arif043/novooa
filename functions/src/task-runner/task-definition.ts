@@ -24,6 +24,14 @@ export const nodeAttachmentSchema = z.object({
   sizeBytes: z.number().int().nonnegative().default(0),
 });
 
+export const knowledgeAttachmentSchema = z.object({
+  knowledgeBaseId: z.string().min(1).default("default"),
+  noteId: z.string().min(1),
+  title: z.string().min(1),
+  path: z.string().default(""),
+  type: z.enum(["atomic", "moc", "unknown"]).default("unknown"),
+});
+
 export const stringInputNodeConfigSchema = z.object({
   primitive: z.literal("stringInput").default("stringInput"),
   value: z.string().default(""),
@@ -43,6 +51,7 @@ export const promptNodeConfigSchema = z.object({
   firstChoice: z.string().default(""),
   secondChoice: z.string().default(""),
   attachments: z.array(nodeAttachmentSchema).default([]),
+  knowledgeAttachments: z.array(knowledgeAttachmentSchema).default([]),
 });
 
 export const workflowEdgeSchema = z.object({
@@ -194,6 +203,7 @@ export const reviewTaskRunOutputSchema = z.object({
 export type WorkflowNode = z.infer<typeof workflowNodeSchema>;
 export type WorkflowEdge = z.infer<typeof workflowEdgeSchema>;
 export type NodeAttachment = z.infer<typeof nodeAttachmentSchema>;
+export type KnowledgeAttachment = z.infer<typeof knowledgeAttachmentSchema>;
 export type TaskDefinition = z.infer<typeof taskDefinitionSchema>;
 export type TaskGraphInput = {
   taskDefinition: TaskDefinition;

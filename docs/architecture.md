@@ -74,6 +74,8 @@ teams/{teamId}/activities/{activityId}
 teams/{teamId}/folders/{folderId}
 teams/{teamId}/files/{fileId}
 teams/{teamId}/files/{fileId}/versions/{versionId}
+teams/{teamId}/knowledgeBases/{knowledgeBaseId}
+teams/{teamId}/knowledgeBases/{knowledgeBaseId}/notes/{noteId}
 ```
 
 Storage:
@@ -98,6 +100,23 @@ Dateiversion schreibt ein neues Storage-Objekt und aktualisiert am
 Datei-Dokument `currentVersionId`.
 
 Detailtiefe in [`features/dateien.md`](./features/dateien.md).
+
+### Teams und Wissensbasis
+
+Die Wissensbasis ist team-scoped, aber nicht wie Dateien versioniert. Der
+aktuelle Startpunkt ist eine `default`-Knowledge-Base pro Team:
+
+```text
+teams/{teamId}/knowledgeBases/default/notes/{noteId}
+```
+
+Eine Notiz enthält Markdown-Content, Metadaten (`title`, `path`, `type`) und
+`outgoingLinks` als Liste verlinkter Notiz-IDs. `type = atomic` stellt nur die
+einzelne Notiz bereit. `type = moc` stellt die MOC-Notiz plus rekursiv verlinkte
+Notizen bereit. Anhänge werden an unterstützten Bausteinen gespeichert; aktuell
+ist nur der Prompt-Baustein angebunden.
+
+Detailtiefe in [`features/wissensbasis.md`](./features/wissensbasis.md).
 
 ## Auth & AppCheck
 

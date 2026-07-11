@@ -1,4 +1,5 @@
 import '../../domain/entities/node_config.dart';
+import '../../domain/entities/knowledge_attachment.dart';
 import '../../domain/entities/node_attachment.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
@@ -63,6 +64,9 @@ class NodeConfigDocumentMapper {
       'outputType': config.outputType.name,
       'choices': config.choices,
       'attachments': config.attachments.map(_attachmentToDocument).toList(),
+      'knowledgeAttachments': config.knowledgeAttachments
+          .map(_knowledgeAttachmentToDocument)
+          .toList(),
     };
   }
 
@@ -125,6 +129,9 @@ class NodeConfigDocumentMapper {
       outputType: _promptOutputTypeFrom(data['outputType']),
       choices: _stringListFrom(data['choices'], fallback: const ['', '']),
       attachments: _attachmentsFrom(data['attachments']),
+      knowledgeAttachments: _knowledgeAttachmentsFrom(
+        data['knowledgeAttachments'],
+      ),
     );
   }
 
@@ -211,6 +218,34 @@ class NodeConfigDocumentMapper {
     );
   }
 
+  Map<String, Object?> _knowledgeAttachmentToDocument(
+    KnowledgeAttachment attachment,
+  ) {
+    return {
+      'knowledgeBaseId': attachment.knowledgeBaseId,
+      'noteId': attachment.noteId,
+      'title': attachment.title,
+      'path': attachment.path,
+      'type': attachment.type.name,
+    };
+  }
+
+  List<KnowledgeAttachment> _knowledgeAttachmentsFrom(Object? value) {
+    return _mapListFrom(
+      value,
+    ).map(_knowledgeAttachmentFrom).toList(growable: false);
+  }
+
+  KnowledgeAttachment _knowledgeAttachmentFrom(Map<String, Object?> data) {
+    return KnowledgeAttachment(
+      knowledgeBaseId: data['knowledgeBaseId'] as String? ?? 'default',
+      noteId: data['noteId'] as String? ?? '',
+      title: data['title'] as String? ?? '',
+      path: data['path'] as String? ?? '',
+      type: _knowledgeAttachmentTypeFrom(data['type']),
+    );
+  }
+
   WorkflowPrimitive _primitiveFrom(Object? value) {
     final name = value == 'conditionalFlow' ? 'conditional' : value;
     return WorkflowPrimitive.values.firstWhere(
@@ -230,6 +265,13 @@ class NodeConfigDocumentMapper {
     return HumanApprovalReviewScope.values.firstWhere(
       (scope) => scope.name == value,
       orElse: () => HumanApprovalReviewScope.currentInput,
+    );
+  }
+
+  KnowledgeAttachmentType _knowledgeAttachmentTypeFrom(Object? value) {
+    return KnowledgeAttachmentType.values.firstWhere(
+      (type) => type.name == value,
+      orElse: () => KnowledgeAttachmentType.unknown,
     );
   }
 

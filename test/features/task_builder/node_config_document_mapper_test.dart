@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:syscat2/features/task_builder/domain/entities/knowledge_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
@@ -61,6 +62,43 @@ void main() {
     expect(config, isA<ReadFileNodeConfig>());
     expect((config as ReadFileNodeConfig).file, _attachment);
   });
+
+  test('serialisiert PromptNodeConfig mit Wissensanhang', () {
+    final document = _mapper().toDocument(
+      const PromptNodeConfig(
+        instruction: 'Fasse zusammen',
+        outputType: PromptOutputType.text,
+        choices: [],
+        knowledgeAttachments: [_knowledgeAttachment],
+      ),
+    );
+
+    final notes = document['knowledgeAttachments'] as List<Object?>;
+    expect(notes.single, isA<Map<String, Object?>>());
+    expect((notes.single! as Map<String, Object?>)['noteId'], 'note.1');
+  });
+
+  test('deserialisiert PromptNodeConfig mit Wissensanhang', () {
+    final config = _mapper().fromDocument({
+      'primitive': 'prompt',
+      'instruction': 'Fasse zusammen',
+      'outputType': 'text',
+      'choices': <String>[],
+      'knowledgeAttachments': [
+        {
+          'knowledgeBaseId': 'default',
+          'noteId': 'note.1',
+          'title': 'Index',
+          'path': 'index.md',
+          'type': 'moc',
+        },
+      ],
+    });
+
+    expect(config, isA<PromptNodeConfig>());
+    final promptConfig = config as PromptNodeConfig;
+    expect(promptConfig.knowledgeAttachments, [_knowledgeAttachment]);
+  });
 }
 
 const _attachment = NodeAttachment(
@@ -70,6 +108,14 @@ const _attachment = NodeAttachment(
   displayName: 'file.txt',
   contentType: 'text/plain',
   sizeBytes: 42,
+);
+
+const _knowledgeAttachment = KnowledgeAttachment(
+  knowledgeBaseId: 'default',
+  noteId: 'note.1',
+  title: 'Index',
+  path: 'index.md',
+  type: KnowledgeAttachmentType.moc,
 );
 
 NodeConfigDocumentMapper _mapper() {

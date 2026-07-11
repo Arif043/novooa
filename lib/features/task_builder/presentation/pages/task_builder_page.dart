@@ -7,6 +7,7 @@ import 'package:syscat2/core/widgets/root_shell_scope.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
@@ -30,6 +31,10 @@ class TaskBuilderPage extends StatelessWidget {
         ),
         BlocProvider(
           create: (_) => serviceLocator<NodeFileAttachmentsCubit>()..load(),
+        ),
+        BlocProvider(
+          create: (_) =>
+              serviceLocator<NodeKnowledgeAttachmentsCubit>()..load(),
         ),
       ],
       child: const _TaskBuilderView(),

@@ -127,6 +127,7 @@ npm run deploy         # firebase deploy --only functions
 | Feature „Zeitplan"    | [`docs/features/zeitplan.md`](./docs/features/zeitplan.md)         | Stub: Trigger und Scheduler                             |
 | Feature „Aktivitäten" | [`docs/features/aktivitaeten.md`](./docs/features/aktivitaeten.md) | Stub: Runs, Traces, Freigaben                           |
 | Feature „Dateien"     | [`docs/features/dateien.md`](./docs/features/dateien.md)           | Dateiablage, Storage, Versionierung                     |
+| Feature „Wissensbasis" | [`docs/features/wissensbasis.md`](./docs/features/wissensbasis.md) | Markdown-Zettelkasten für Node-Anhänge                  |
 
 Wie du eine neue Feature-Doc anlegst → [`docs/README.md`](./docs/README.md).
 

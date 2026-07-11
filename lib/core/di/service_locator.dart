@@ -9,6 +9,9 @@ import 'package:syscat2/features/files/domain/usecases/watch_team_files.dart';
 import 'package:syscat2/features/files/domain/usecases/watch_team_folders.dart';
 import 'package:syscat2/features/files/infrastructure/repositories/firebase_team_file_repository.dart';
 import 'package:syscat2/features/files/presentation/cubits/files_cubit.dart';
+import 'package:syscat2/features/knowledge_base/domain/repositories/knowledge_base_repository.dart';
+import 'package:syscat2/features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
+import 'package:syscat2/features/knowledge_base/infrastructure/repositories/firestore_knowledge_base_repository.dart';
 import 'package:syscat2/features/schedule/domain/repositories/task_trigger_repository.dart';
 import 'package:syscat2/features/schedule/domain/usecases/create_task_trigger.dart';
 import 'package:syscat2/features/schedule/domain/usecases/delete_task_trigger.dart';
@@ -43,6 +46,7 @@ import '../../features/task_builder/infrastructure/datasources/task_runner_datas
 import '../../features/task_builder/infrastructure/repositories/firebase_task_repository.dart';
 import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
+import '../../features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/task_homepage_cubit.dart';
 import '../../features/user/domain/repositories/user_repository.dart';
 import '../../features/user/domain/usecases/ensure_user_profile.dart';
@@ -71,6 +75,10 @@ void configureDependencies() {
         serviceLocator<FirebaseFirestore>(),
         serviceLocator<FirebaseStorage>(),
       ),
+    )
+    ..registerLazySingleton<KnowledgeBaseRepository>(
+      () =>
+          FirestoreKnowledgeBaseRepository(serviceLocator<FirebaseFirestore>()),
     )
     ..registerLazySingleton<TaskRepository>(
       () => FirebaseTaskRepository(
@@ -141,6 +149,9 @@ void configureDependencies() {
       () => WatchTeamFolders(serviceLocator<TeamFileRepository>()),
     )
     ..registerLazySingleton(
+      () => WatchKnowledgeNotes(serviceLocator<KnowledgeBaseRepository>()),
+    )
+    ..registerLazySingleton(
       () => UploadTeamFile(serviceLocator<TeamFileRepository>()),
     )
     ..registerLazySingleton(
@@ -183,6 +194,12 @@ void configureDependencies() {
       () => NodeFileAttachmentsCubit(
         serviceLocator<AuthRepository>(),
         serviceLocator<WatchTeamFiles>(),
+      ),
+    )
+    ..registerFactory(
+      () => NodeKnowledgeAttachmentsCubit(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<WatchKnowledgeNotes>(),
       ),
     )
     ..registerFactory(

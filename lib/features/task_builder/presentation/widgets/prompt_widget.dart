@@ -5,9 +5,11 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import '../../domain/entities/node_attachment.dart';
+import '../../domain/entities/knowledge_attachment.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 import 'node_file_attachment_section.dart';
+import 'node_knowledge_attachment_section.dart';
 import 'prompt_choice_field.dart';
 
 class PromptWidget extends StatefulWidget {
@@ -121,6 +123,12 @@ class _PromptWidgetState extends State<PromptWidget> {
             onAttach: _attachFile,
             onDetach: _detachFile,
           ),
+          const SizedBox(height: AppSpacing.md),
+          NodeKnowledgeAttachmentSection(
+            attachments: config.knowledgeAttachments,
+            onAttach: _attachKnowledge,
+            onDetach: _detachKnowledge,
+          ),
         ],
       ),
     );
@@ -189,6 +197,20 @@ class _PromptWidgetState extends State<PromptWidget> {
 
   void _detachFile(String attachmentId) {
     context.read<TaskBuilderCubit>().detachNodeFile(
+      nodeId: widget.node.id,
+      attachmentId: attachmentId,
+    );
+  }
+
+  void _attachKnowledge(KnowledgeAttachment attachment) {
+    context.read<TaskBuilderCubit>().attachNodeKnowledge(
+      nodeId: widget.node.id,
+      attachment: attachment,
+    );
+  }
+
+  void _detachKnowledge(String attachmentId) {
+    context.read<TaskBuilderCubit>().detachNodeKnowledge(
       nodeId: widget.node.id,
       attachmentId: attachmentId,
     );

@@ -329,7 +329,10 @@ async function executeNode(
 ): Promise<NodeExecutionResult> {
   const executor = executorFor(input.node.primitive);
   if (!executor) return skippedNode(input.node, input.context);
-  const attachmentWorkspace = await prepareNodeAttachmentWorkspace(input.node);
+  const attachmentWorkspace = await prepareNodeAttachmentWorkspace(
+    input.node,
+    input.runContext.teamId,
+  );
   try {
     return await executor.execute({
       ai,

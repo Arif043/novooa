@@ -10,12 +10,15 @@ enum PromptOutputType {
 }
 
 class PromptNodeConfig extends NodeConfig
-    with FileAttachmentSupport<PromptNodeConfig> {
+    with
+        FileAttachmentSupport<PromptNodeConfig>,
+        KnowledgeAttachmentSupport<PromptNodeConfig> {
   const PromptNodeConfig({
     required this.instruction,
     required this.outputType,
     required this.choices,
     this.attachments = const [],
+    this.knowledgeAttachments = const [],
   });
 
   final String instruction;
@@ -23,6 +26,8 @@ class PromptNodeConfig extends NodeConfig
   final List<String> choices;
   @override
   final List<NodeAttachment> attachments;
+  @override
+  final List<KnowledgeAttachment> knowledgeAttachments;
 
   factory PromptNodeConfig.initial() {
     return const PromptNodeConfig(
@@ -30,23 +35,34 @@ class PromptNodeConfig extends NodeConfig
       outputType: PromptOutputType.text,
       choices: ['', ''],
       attachments: [],
+      knowledgeAttachments: [],
     );
   }
 
   @override
-  List<Object?> get props => [instruction, outputType, choices, attachments];
+  List<Object?> get props {
+    return [
+      instruction,
+      outputType,
+      choices,
+      attachments,
+      knowledgeAttachments,
+    ];
+  }
 
   PromptNodeConfig copyWith({
     String? instruction,
     PromptOutputType? outputType,
     List<String>? choices,
     List<NodeAttachment>? attachments,
+    List<KnowledgeAttachment>? knowledgeAttachments,
   }) {
     return PromptNodeConfig(
       instruction: instruction ?? this.instruction,
       outputType: outputType ?? this.outputType,
       choices: choices ?? this.choices,
       attachments: attachments ?? this.attachments,
+      knowledgeAttachments: knowledgeAttachments ?? this.knowledgeAttachments,
     );
   }
 
@@ -70,6 +86,13 @@ class PromptNodeConfig extends NodeConfig
   @override
   PromptNodeConfig copyWithAttachments(List<NodeAttachment> attachments) {
     return copyWith(attachments: attachments);
+  }
+
+  @override
+  PromptNodeConfig copyWithKnowledgeAttachments(
+    List<KnowledgeAttachment> attachments,
+  ) {
+    return copyWith(knowledgeAttachments: attachments);
   }
 
   @override
