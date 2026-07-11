@@ -6,6 +6,7 @@ import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/deletable_node_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
@@ -70,7 +71,7 @@ class BranchWidget extends StatelessWidget {
   }
 
   Widget _branchNode(WorkflowNode node) {
-    return switch (node.config.primitive) {
+    final child = switch (node.config.primitive) {
       .stringInput => StringInputWidget(node: node),
       .prompt => PromptWidget(node: node),
       .script => ScriptWidget(node: node),
@@ -86,5 +87,6 @@ class BranchWidget extends StatelessWidget {
       .humanApproval => HumanApprovalWidget(node: node),
       _ => const SizedBox.shrink(),
     };
+    return DeletableNodeWidget(node: node, child: child);
   }
 }

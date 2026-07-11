@@ -87,7 +87,70 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   Future<void> removeNode(NodeId nodeId) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
-    await _saveAndEmit(task.removeNode(nodeId));
+    final result = _removeNodeFromGraph(task.graph, nodeId);
+    if (!result.changed) return;
+    await _saveAndEmit(
+      task.copyWith(
+        graph: result.graph,
+        selectedNodeId: _selectionAfterRemove(task, result.graph),
+      ),
+    );
+  }
+
+  ({WorkflowGraph graph, bool changed}) _removeNodeFromGraph(
+    WorkflowGraph graph,
+    NodeId nodeId,
+  ) {
+    if (graph.nodes.any((node) => node.id == nodeId)) {
+      return (graph: graph.removeNode(nodeId), changed: true);
+    }
+    for (var index = 0; index < graph.nodes.length; index++) {
+      final result = _removeNodeFromBranches(graph.nodes[index], nodeId);
+      if (!result.changed) continue;
+      final nodes = [...graph.nodes]..[index] = result.node;
+      return (graph: graph.copyWith(nodes: nodes), changed: true);
+    }
+    return (graph: graph, changed: false);
+  }
+
+  ({WorkflowNode node, bool changed}) _removeNodeFromBranches(
+    WorkflowNode node,
+    NodeId nodeId,
+  ) {
+    if (node.config case final ConditionalNodeConfig config) {
+      for (var index = 0; index < config.branches.length; index++) {
+        final branch = config.branches[index];
+        final result = _removeNodeFromGraph(branch.graph, nodeId);
+        if (!result.changed) continue;
+        final branches = [...config.branches]
+          ..[index] = branch.copyWith(graph: result.graph);
+        return (
+          node: node.copyWith(config: config.copyWith(branches: branches)),
+          changed: true,
+        );
+      }
+    }
+    return (node: node, changed: false);
+  }
+
+  NodeId _selectionAfterRemove(Task task, WorkflowGraph graph) {
+    if (_containsNode(graph, task.selectedNodeId)) return task.selectedNodeId;
+    if (graph.nodes.isEmpty) return const NodeId('');
+    return graph.nodes.last.id;
+  }
+
+  bool _containsNode(WorkflowGraph graph, NodeId nodeId) {
+    for (final node in graph.nodes) {
+      if (node.id == nodeId) return true;
+      if (node.config case final ConditionalNodeConfig config) {
+        if (config.branches.any(
+          (branch) => _containsNode(branch.graph, nodeId),
+        )) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   Future<void> updateEdgeCondition({

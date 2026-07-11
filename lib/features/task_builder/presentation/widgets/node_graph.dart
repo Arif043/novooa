@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_pager.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/deletable_node_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
@@ -30,7 +31,7 @@ class _NodeGraphState extends State<NodeGraph> {
   }
 
   Widget _nodeWidgetOrNull(WorkflowNode node) {
-    return switch (node.config.primitive) {
+    final child = switch (node.config.primitive) {
       .stringInput => StringInputWidget(node: node),
       .script => ScriptWidget(node: node),
       .prompt => PromptWidget(node: node),
@@ -41,5 +42,6 @@ class _NodeGraphState extends State<NodeGraph> {
       .humanApproval => HumanApprovalWidget(node: node),
       _ => SizedBox.shrink(),
     };
+    return DeletableNodeWidget(node: node, child: child);
   }
 }

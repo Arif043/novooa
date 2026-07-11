@@ -110,6 +110,25 @@ void main() {
     },
   );
 
+  test('removeNode entfernt Nodes aus Branch-Graphs', () async {
+    final repository = _InMemoryTaskRepository(_taskWithBranchPrompt());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.removeNode(const NodeId('node.2'));
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final rootConfig =
+        state.editingTask.nodes.first.config as ConditionalNodeConfig;
+    final branch = rootConfig.branches.first;
+
+    expect(branch.graph.nodes, isEmpty);
+    expect(branch.graph.edges, isEmpty);
+    expect(repository.savedTask, state.editingTask);
+
+    await cubit.close();
+  });
+
   test(
     'attachNodeFile speichert Storage-Dateiversion am Prompt-Node',
     () async {
