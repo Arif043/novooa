@@ -9,10 +9,10 @@ Verwandt: [`../architecture.md`](../architecture.md) ·
 Zeit- und event-gesteuerte Auslöser für Aufgaben. Nutzer:innen konfigurieren
 hier, **wann** eine Aufgabe läuft, ohne den Workflow selbst zu bearbeiten.
 
-Umgesetzt sind zeitbasierte Trigger und die UI-/Persistenz-Grundlage für
-Event-Trigger wie „E-Mail empfangen“, „WhatsApp-Nachricht“, „Datei erstellt“
-und „Webhook empfangen“. Die externen Provider-Webhooks sind noch nicht
-angebunden.
+Umgesetzt sind zeitbasierte Trigger, die UI-/Persistenz-Grundlage für
+Event-Trigger sowie der Twilio-Eingang für „WhatsApp-Nachricht“. Weitere
+Provider wie E-Mail, Datei-Events und generische Webhooks nutzen später
+dieselbe Event-Trigger-Struktur.
 
 ## Datenmodell
 
@@ -63,6 +63,29 @@ Dokument:
 Backend-Worker fällige Trigger effizient per Query finden kann. Event-Trigger
 haben `nextRunAt = null` und warten auf externe Ereignisse.
 
+Twilio-Integrationen liegen team-scoped unter:
+
+```text
+teams/{teamId}/integrations/{integrationId}
+```
+
+Minimal erwartetes Dokument:
+
+```ts
+{
+  provider: "twilio",
+  status: "active",
+  accountSid: string,
+  externalAddress: "whatsapp:+491234567890"
+}
+```
+
+Eingehende Nachrichten werden unter dem Team-Inbox-Pfad gespeichert:
+
+```text
+teams/{teamId}/inboxes/{integrationId}/conversations/{conversationId}/messages/{messageSid}
+```
+
 ## UI
 
 Die Seite `Zeitplan` zeigt Trigger als Kacheln. Jede Kachel enthält:
@@ -111,9 +134,30 @@ Der erzeugte `taskRun` enthält zusätzlich:
 {
   source: "trigger",
   triggerId: string,
-  triggerType: "schedule"
+  triggerType: "schedule" | "event"
 }
 ```
+
+### Twilio WhatsApp
+
+Die Function `twilioWebhook` nimmt Twilio Messaging-Webhooks entgegen. Die
+Webhook-URL enthält die Zuordnung zu Team und Integration:
+
+```text
+https://<region>-<project>.cloudfunctions.net/twilioWebhook?teamId=<teamId>&integrationId=<integrationId>
+```
+
+Die Function:
+
+1. akzeptiert `POST` mit `application/x-www-form-urlencoded`,
+2. prüft `X-Twilio-Signature` gegen `TWILIO_AUTH_TOKEN`,
+3. validiert das Integrationsdokument,
+4. speichert die Nachricht idempotent per Twilio-`MessageSid`,
+5. startet passende aktive Event-Trigger mit
+   `eventConfig.source == "whatsappMessageReceived"`.
+
+Im Functions Emulator wird eine fehlende `TWILIO_AUTH_TOKEN`-Secret für lokale
+Tests toleriert. In Production ist `TWILIO_AUTH_TOKEN` erforderlich.
 
 Lokal kann der Worker gegen den Functions Emulator manuell ausgelöst werden:
 
@@ -143,5 +187,6 @@ enabled ASC, nextRunAt ASC
 
 - Bearbeiten-Dialog für bestehende Trigger ergänzen.
 - Event-Trigger `fileCreated` auf Storage-/Firestore-Dateiversionen ausführen.
-- E-Mail-/WhatsApp-Trigger per Provider-Webhook an `taskRuns` anbinden.
+- Verbindungs-UI für Twilio-Accounts und Telefonnummern ergänzen.
+- E-Mail-Trigger per Provider-Webhook an `taskRuns` anbinden.
 - Team-Rollen später auf Trigger-Verwaltung anwenden.
