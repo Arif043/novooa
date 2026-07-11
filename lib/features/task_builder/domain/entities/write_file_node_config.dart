@@ -12,10 +12,7 @@ class WriteFileNodeConfig extends NodeConfig {
   final String? fileId;
 
   factory WriteFileNodeConfig.initial() {
-    return const WriteFileNodeConfig(
-      fileName: 'ausgabe.txt',
-      contentType: 'text/plain',
-    );
+    return const WriteFileNodeConfig(fileName: '', contentType: '');
   }
 
   @override

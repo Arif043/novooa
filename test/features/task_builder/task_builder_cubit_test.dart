@@ -243,6 +243,45 @@ void main() {
     await cubit.close();
   });
 
+  test('selectExistingWriteFile speichert bestehende Datei als Ziel', () async {
+    final repository = _InMemoryTaskRepository(_taskWithWriteFileNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+    final attachment = _attachment.copyWith(id: 'file.1:version.2');
+
+    await cubit.load(repository.savedTask);
+    await cubit.selectExistingWriteFile(const NodeId('node.file'), attachment);
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final config = state.editingTask.nodes.first.config as WriteFileNodeConfig;
+
+    expect(config.fileName, attachment.displayName);
+    expect(config.contentType, attachment.contentType);
+    expect(config.fileId, 'file.1');
+
+    await cubit.close();
+  });
+
+  test('selectNewWriteFile speichert neue Datei ohne Datei-ID', () async {
+    final repository = _InMemoryTaskRepository(_taskWithWriteFileNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.selectNewWriteFile(
+      nodeId: const NodeId('node.file'),
+      fileName: 'report.md',
+      contentType: '',
+    );
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final config = state.editingTask.nodes.first.config as WriteFileNodeConfig;
+
+    expect(config.fileName, 'report.md');
+    expect(config.contentType, 'text/plain');
+    expect(config.fileId, isNull);
+
+    await cubit.close();
+  });
+
   test('selectReadFile speichert ausgewaehlte Datei-Version', () async {
     final repository = _InMemoryTaskRepository(_taskWithReadFileNode());
     final cubit = TaskBuilderCubit(repository: repository);

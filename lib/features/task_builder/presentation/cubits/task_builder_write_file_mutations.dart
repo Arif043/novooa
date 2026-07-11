@@ -15,6 +15,33 @@ extension TaskBuilderWriteFileMutations on TaskBuilderCubit {
     });
   }
 
+  Future<void> selectExistingWriteFile(
+    NodeId nodeId,
+    NodeAttachment attachment,
+  ) {
+    return _updateWriteFileConfig(nodeId, (config) {
+      return config.copyWith(
+        fileName: attachment.displayName,
+        contentType: attachment.contentType,
+        fileId: _fileIdFromAttachment(attachment),
+      );
+    });
+  }
+
+  Future<void> selectNewWriteFile({
+    required NodeId nodeId,
+    required String fileName,
+    required String contentType,
+  }) {
+    return _updateWriteFileConfig(nodeId, (config) {
+      return config.copyWith(
+        fileName: fileName,
+        contentType: contentType.trim().isEmpty ? 'text/plain' : contentType,
+        clearFileId: true,
+      );
+    });
+  }
+
   Future<void> _updateWriteFileConfig(
     NodeId nodeId,
     WriteFileNodeConfig Function(WriteFileNodeConfig config) update,
@@ -25,5 +52,9 @@ extension TaskBuilderWriteFileMutations on TaskBuilderCubit {
       }
       return node;
     });
+  }
+
+  String _fileIdFromAttachment(NodeAttachment attachment) {
+    return attachment.id.split(':').first;
   }
 }

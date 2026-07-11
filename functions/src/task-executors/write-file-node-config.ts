@@ -2,7 +2,7 @@ import {type WorkflowNode} from "../task-runner/task-definition.js";
 
 export function fileNameFor(node: WorkflowNode): string {
   const value = node.config.primitive === "writeFile" ? node.config.fileName : "";
-  return sanitizedName(value || "ausgabe.txt");
+  return sanitizedName(value);
 }
 
 export function contentTypeFor(node: WorkflowNode): string {

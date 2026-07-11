@@ -52,6 +52,7 @@ type WrittenFile = {
 
 async function writeTeamFile(input: WriteFileInput): Promise<WrittenFile> {
   initializeAdminApp();
+  ensureConfigured(input.node);
   const file = await writtenFileFrom(input);
   await getStorage().bucket().file(file.storagePath).save(input.content, {
     contentType: file.contentType,
@@ -60,8 +61,15 @@ async function writeTeamFile(input: WriteFileInput): Promise<WrittenFile> {
   return file;
 }
 
+function ensureConfigured(node: WorkflowNode): void {
+  if (fileNameFor(node).trim().length > 0) return;
+  throw new Error("Datei schreiben: Es wurde keine Ausgabedatei ausgewählt.");
+}
+
 async function writtenFileFrom(input: WriteFileInput): Promise<WrittenFile> {
   if (targetFileIdFor(input.node) !== null) return versionedFileFrom(input);
+  const existingFile = await existingFileByNameFor(input);
+  if (existingFile !== null) return versionFromExisting(input, existingFile);
   return newFileFrom(input);
 }
 
@@ -85,6 +93,13 @@ function newFileFrom(input: WriteFileInput): WrittenFile {
 
 async function versionedFileFrom(input: WriteFileInput): Promise<WrittenFile> {
   const existingFile = await existingFileFor(input);
+  return versionFromExisting(input, existingFile);
+}
+
+function versionFromExisting(
+  input: WriteFileInput,
+  existingFile: ExistingFile,
+): WrittenFile {
   const versionId = randomUUID();
   const displayName = fileNameFor(input.node);
   const contentType = contentTypeFor(input.node);
@@ -97,7 +112,12 @@ async function versionedFileFrom(input: WriteFileInput): Promise<WrittenFile> {
     folderId: existingFile.folderId,
     ownerUid: existingFile.ownerUid,
     isNewFile: false,
-    storagePath: storagePathFor(input.teamId, existingFile.fileId, versionId, displayName),
+    storagePath: storagePathFor(
+      input.teamId,
+      existingFile.fileId,
+      versionId,
+      displayName,
+    ),
   };
 }
 
@@ -164,6 +184,28 @@ async function existingFileFor(input: WriteFileInput): Promise<ExistingFile> {
   const data = snapshot.data() ?? {};
   return {
     fileId,
+    ownerUid: stringFrom(data.ownerUid, "system"),
+    folderId: nullableStringFrom(data.folderId),
+  };
+}
+
+async function existingFileByNameFor(
+  input: WriteFileInput,
+): Promise<ExistingFile | null> {
+  const displayName = fileNameFor(input.node);
+  const snapshot = await getFirestore()
+    .collection("teams")
+    .doc(input.teamId)
+    .collection("files")
+    .where("displayName", "==", displayName)
+    .where("folderId", "==", null)
+    .limit(1)
+    .get();
+  const document = snapshot.docs[0];
+  if (!document) return null;
+  const data = document.data();
+  return {
+    fileId: document.id,
     ownerUid: stringFrom(data.ownerUid, "system"),
     folderId: nullableStringFrom(data.folderId),
   };

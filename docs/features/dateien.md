@@ -102,9 +102,16 @@ stattdessen Python-Hilfsfunktionen wie `list_files()` und `read_file(name)`.
 Der Baustein **Datei schreiben** ist kein Attachment-Input, sondern ein
 Persistenz-Output. Er schreibt den String-Output des Vorgänger-Nodes als neue
 Datei ins Root-Verzeichnis des Team-Dateibereichs oder als neue Version einer
-bestehenden Datei. Bei neuen Versionen bleibt `fileId` stabil; nur
-`currentVersionId`, `storagePath`, `sizeBytes`, `contentType` und `updatedAt`
-werden am Datei-Dokument aktualisiert.
+bestehenden Datei. Wenn im Root-Dateibereich bereits eine Datei mit demselben
+Namen existiert, wird keine zweite Datei mit identischem Namen erzeugt, sondern
+eine neue Version unter der bestehenden `fileId` geschrieben. Bei neuen
+Versionen bleibt `fileId` stabil; nur `currentVersionId`, `storagePath`,
+`sizeBytes`, `contentType` und `updatedAt` werden am Datei-Dokument
+aktualisiert.
+
+In der Task-Builder-UI wird dafür kein technisches Datei-ID-Feld angezeigt.
+Nutzer:innen wählen im Dialog entweder eine bestehende Datei oder definieren
+eine neue Datei über Dateiname und optionalen Content-Type.
 
 Der Baustein **Datei lesen** ist das Gegenstück dazu. Er verwendet dieselbe
 Dateiauswahl wie Attachments, speichert aber genau eine konkrete Version als

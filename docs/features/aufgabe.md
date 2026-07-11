@@ -303,9 +303,17 @@ UTF-8-Datei nach Firebase Storage und erzeugt die Datei-Metadaten unter
 `teams/{teamId}/files/{fileId}`. Ist `fileId` gesetzt, schreibt der Baustein
 eine neue Version dieser Datei und aktualisiert `currentVersionId` am
 Datei-Dokument. Ohne intern gesetzte `fileId` erzeugt er eine neue Datei mit
-erster Version; die UI zeigt dafür kein manuelles Datei-ID-Feld. Der Node-Output
-ist ein JSON-String mit `fileId`, `versionId`, `storagePath`, `displayName`,
+erster Version, falls im Root-Dateibereich des Teams noch keine Datei mit
+demselben Namen existiert. Existiert dort bereits eine Datei mit demselben
+`displayName`, schreibt der Baustein implizit eine neue Version dieser Datei.
+Die UI zeigt dafür kein manuelles Datei-ID-Feld. Der Node-Output ist ein
+JSON-String mit `fileId`, `versionId`, `storagePath`, `displayName`,
 `contentType` und `sizeBytes`.
+
+Die UI startet ohne ausgewählte Ausgabedatei. Der Baustein zeigt ein
+Klickfeld, das einen Dialog öffnet. Dort kann eine bestehende Team-Datei als
+Ziel gewählt oder eine neue Datei mit Dateiname und optionalem Content-Type
+definiert werden. Datei-IDs bleiben ein internes Detail.
 
 Für Datei-lesen-Bausteine:
 

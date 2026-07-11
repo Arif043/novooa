@@ -149,8 +149,8 @@ class NodeConfigDocumentMapper {
 
   WriteFileNodeConfig _writeFileFrom(Map<String, Object?> data) {
     return WriteFileNodeConfig(
-      fileName: data['fileName'] as String? ?? 'ausgabe.txt',
-      contentType: data['contentType'] as String? ?? 'text/plain',
+      fileName: data['fileName'] as String? ?? '',
+      contentType: data['contentType'] as String? ?? '',
       fileId: data['fileId'] as String?,
     );
   }
