@@ -102,6 +102,15 @@ Der erzeugte `taskRun` enthält zusätzlich:
 }
 ```
 
+Lokal kann der Worker gegen den Functions Emulator manuell ausgelöst werden:
+
+```bash
+npm --prefix functions run schedule:run:local
+```
+
+Der Emulator exportiert scheduled/background Functions lokal mit `-0`-Suffix,
+daher ruft der Script `runDueTaskTriggersWorker-0` auf.
+
 ## Firestore
 
 Security Rules erlauben Team-Mitgliedern Lesen, Erstellen, Aktualisieren und

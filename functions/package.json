@@ -7,7 +7,8 @@
     "shell": "npm run build && npx -y firebase-tools@latest functions:shell",
     "start": "npm run shell",
     "deploy": "npx -y firebase-tools@latest deploy --only functions",
-    "logs": "npx -y firebase-tools@latest functions:log"
+    "logs": "npx -y firebase-tools@latest functions:log",
+    "schedule:run:local": "curl -i -X POST -H \"X-CloudScheduler: true\" http://127.0.0.1:5001/syscat-90bff/us-central1/runDueTaskTriggersWorker-0"
   },
   "engines": {
     "node": "24"
