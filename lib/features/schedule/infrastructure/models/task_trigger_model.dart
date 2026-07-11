@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../../domain/entities/task_trigger.dart';
 
@@ -9,9 +10,11 @@ class TaskTriggerModel {
     required this.teamId,
     required this.taskId,
     required this.taskTitle,
+    required this.type,
     required this.enabled,
-    required this.schedule,
     required this.policy,
+    this.schedule,
+    this.event,
     this.nextRunAt,
     this.lastRunAt,
     this.lastRunId,
@@ -21,8 +24,10 @@ class TaskTriggerModel {
   final String teamId;
   final String taskId;
   final String taskTitle;
+  final TriggerType type;
   final bool enabled;
-  final ScheduleConfig schedule;
+  final ScheduleConfig? schedule;
+  final EventTriggerConfig? event;
   final TriggerRunPolicy policy;
   final DateTime? nextRunAt;
   final DateTime? lastRunAt;
@@ -31,18 +36,27 @@ class TaskTriggerModel {
   factory TaskTriggerModel.fromDocument(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
   ) {
-    final data = snapshot.data() ?? {};
+    return TaskTriggerModel.fromData(id: snapshot.id, data: snapshot.data());
+  }
+
+  factory TaskTriggerModel.fromData({
+    required String id,
+    required Map<String, dynamic>? data,
+  }) {
+    final fields = data ?? {};
     return TaskTriggerModel(
-      id: data['id'] as String? ?? snapshot.id,
-      teamId: data['teamId'] as String? ?? '',
-      taskId: data['taskId'] as String? ?? '',
-      taskTitle: data['taskTitle'] as String? ?? 'Unbenannte Aufgabe',
-      enabled: data['enabled'] as bool? ?? false,
-      schedule: _scheduleFrom(data['config']),
-      policy: _policyFrom(data['policy']),
-      nextRunAt: _dateFrom(data['nextRunAt']),
-      lastRunAt: _dateFrom(data['lastRunAt']),
-      lastRunId: data['lastRunId'] as String?,
+      id: fields['id'] as String? ?? id,
+      teamId: fields['teamId'] as String? ?? '',
+      taskId: fields['taskId'] as String? ?? '',
+      taskTitle: fields['taskTitle'] as String? ?? 'Unbenannte Aufgabe',
+      type: _typeFrom(fields['type']),
+      enabled: fields['enabled'] as bool? ?? false,
+      schedule: _scheduleFrom(fields['config']),
+      event: _eventFrom(fields['eventConfig']),
+      policy: _policyFrom(fields['policy']),
+      nextRunAt: _dateFrom(fields['nextRunAt']),
+      lastRunAt: _dateFrom(fields['lastRunAt']),
+      lastRunId: fields['lastRunId'] as String?,
     );
   }
 
@@ -52,9 +66,10 @@ class TaskTriggerModel {
       teamId: teamId,
       taskId: taskId,
       taskTitle: taskTitle,
-      type: TriggerType.schedule,
+      type: type,
       enabled: enabled,
       schedule: schedule,
+      event: event,
       policy: policy,
       nextRunAt: nextRunAt,
       lastRunAt: lastRunAt,
@@ -62,8 +77,32 @@ class TaskTriggerModel {
     );
   }
 
-  static ScheduleConfig _scheduleFrom(Object? value) {
-    final data = value is Map ? _objectMapFrom(value) : <String, Object?>{};
+  static TriggerType _typeFrom(Object? value) {
+    return TriggerType.values.firstWhere(
+      (type) => type.name == value,
+      orElse: () => TriggerType.schedule,
+    );
+  }
+
+  static EventTriggerConfig? _eventFrom(Object? value) {
+    if (value is! Map) return null;
+    final data = _objectMapFrom(value);
+    return EventTriggerConfig(
+      source: _eventSourceFrom(data['source']),
+      filter: data['filter'] as String? ?? '',
+    );
+  }
+
+  static EventTriggerSource _eventSourceFrom(Object? value) {
+    return EventTriggerSource.values.firstWhere(
+      (source) => source.name == value,
+      orElse: () => EventTriggerSource.webhookReceived,
+    );
+  }
+
+  static ScheduleConfig? _scheduleFrom(Object? value) {
+    if (value is! Map) return null;
+    final data = _objectMapFrom(value);
     return ScheduleConfig(
       kind: _kindFrom(data['kind']),
       timezone: data['timezone'] as String? ?? 'Europe/Berlin',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/task_trigger.dart';
 import '../cubits/schedule_cubit.dart';
 import 'schedule_formatters.dart';
@@ -26,7 +27,7 @@ class TaskTriggerTile extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.schedule_outlined, color: colorScheme.primary),
+                Icon(_iconFor(trigger), color: colorScheme.primary),
                 const Spacer(),
                 Switch(
                   value: trigger.enabled,
@@ -42,7 +43,7 @@ class TaskTriggerTile extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text(scheduleLabel(trigger.schedule)),
+            Text(triggerLabel(trigger)),
             const Spacer(),
             Text(
               triggerStatusLabel(trigger),
@@ -61,4 +62,15 @@ class TaskTriggerTile extends StatelessWidget {
       ),
     );
   }
+}
+
+IconData _iconFor(TaskTrigger trigger) {
+  if (trigger.type == TriggerType.schedule) return Icons.schedule_outlined;
+  return switch (trigger.event?.source) {
+    EventTriggerSource.emailReceived => Icons.alternate_email,
+    EventTriggerSource.whatsappMessageReceived => Icons.chat_outlined,
+    EventTriggerSource.fileCreated => Icons.note_add_outlined,
+    EventTriggerSource.webhookReceived => Icons.webhook_outlined,
+    null => Icons.bolt_outlined,
+  };
 }

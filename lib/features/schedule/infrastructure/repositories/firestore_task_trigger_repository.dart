@@ -5,6 +5,7 @@ import '../../../../core/entities/unique_id.dart';
 import '../../../files/domain/entities/team_id.dart';
 import '../../../files/infrastructure/repositories/team_workspace_bootstrapper.dart';
 import '../../domain/entities/create_task_trigger_input.dart';
+import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../../domain/repositories/task_trigger_repository.dart';
 import '../../domain/entities/task_trigger.dart';
@@ -33,11 +34,11 @@ class FirestoreTaskTriggerRepository implements TaskTriggerRepository {
   @override
   Future<void> createTrigger(CreateTaskTriggerInput input) async {
     final user = _auth.currentUser;
-    if (user == null || !input.schedule.isValid) return;
+    if (user == null || !input.isValid) return;
     final teamId = _teamId(user.uid);
     final triggerId = UniqueId.random().value;
-    final nextRunAt = _nextRunCalculator(input.schedule, DateTime.now());
-    if (nextRunAt == null) return;
+    final nextRunAt = _nextRunAtFor(input);
+    if (input.type == TriggerType.schedule && nextRunAt == null) return;
     await _bootstrapper.ensurePersonalTeam(teamId: teamId, ownerUid: user.uid);
     await _triggersReference(teamId)
         .doc(triggerId)
@@ -66,7 +67,7 @@ class FirestoreTaskTriggerRepository implements TaskTriggerRepository {
     TeamId teamId,
     String ownerUid,
     CreateTaskTriggerInput input,
-    DateTime nextRunAt,
+    DateTime? nextRunAt,
   ) {
     return {
       'id': triggerId,
@@ -74,14 +75,21 @@ class FirestoreTaskTriggerRepository implements TaskTriggerRepository {
       'createdByUid': ownerUid,
       'taskId': input.taskId,
       'taskTitle': input.taskTitle,
-      'type': 'schedule',
+      'type': input.type.name,
       'enabled': input.enabled,
-      'config': _scheduleDocument(input.schedule),
+      if (input.schedule != null) 'config': _scheduleDocument(input.schedule!),
+      if (input.event != null) 'eventConfig': _eventDocument(input.event!),
       'policy': {'ifRunning': input.policy.name},
-      'nextRunAt': Timestamp.fromDate(nextRunAt),
+      'nextRunAt': nextRunAt == null ? null : Timestamp.fromDate(nextRunAt),
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
+  }
+
+  DateTime? _nextRunAtFor(CreateTaskTriggerInput input) {
+    final schedule = input.schedule;
+    if (schedule == null) return null;
+    return _nextRunCalculator(schedule, DateTime.now());
   }
 
   Map<String, Object?> _scheduleDocument(ScheduleConfig config) {
@@ -98,6 +106,10 @@ class FirestoreTaskTriggerRepository implements TaskTriggerRepository {
 
   Map<String, Object?> _slotDocument(WeeklyTimeSlot slot) {
     return {'weekday': slot.weekday, 'timeOfDay': slot.timeOfDay};
+  }
+
+  Map<String, Object?> _eventDocument(EventTriggerConfig config) {
+    return {'source': config.source.name, 'filter': config.filter.trim()};
   }
 
   List<TaskTrigger> _toTriggers(QuerySnapshot<Map<String, dynamic>> snapshot) {

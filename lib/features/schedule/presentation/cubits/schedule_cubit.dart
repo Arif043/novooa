@@ -5,6 +5,7 @@ import 'package:bloc/bloc.dart';
 import '../../../task_builder/domain/entities/task.dart';
 import '../../../task_builder/domain/repositories/task_repository.dart';
 import '../../domain/entities/create_task_trigger_input.dart';
+import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../../domain/entities/task_trigger.dart';
 import '../../domain/usecases/create_task_trigger.dart';
@@ -62,7 +63,19 @@ class ScheduleCubit extends Cubit<ScheduleState> {
       CreateTaskTriggerInput(
         taskId: task.id,
         taskTitle: task.title,
+        type: TriggerType.schedule,
         schedule: schedule,
+      ),
+    );
+  }
+
+  Future<void> createEventTrigger(Task task, EventTriggerConfig event) async {
+    await _createTaskTrigger(
+      CreateTaskTriggerInput(
+        taskId: task.id,
+        taskTitle: task.title,
+        type: TriggerType.event,
+        event: event,
       ),
     );
   }

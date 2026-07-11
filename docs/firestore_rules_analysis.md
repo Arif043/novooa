@@ -60,3 +60,7 @@
   `knowledgeAttachments`.
 - Backend Functions use Admin SDK to resolve selected notes, recursively expand
   MOC links, and expose Markdown files through Genkit filesystem middleware.
+- Zeitplan page reads and writes
+  `/teams/personal_<uid>/taskTriggers`. `type=schedule` requires `config`;
+  `type=event` requires `eventConfig.source` in the allowed event source list
+  and an optional `filter` up to 240 characters.

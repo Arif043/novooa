@@ -1,7 +1,16 @@
+import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../../domain/entities/task_trigger.dart';
 
-String scheduleLabel(ScheduleConfig config) {
+String triggerLabel(TaskTrigger trigger) {
+  return switch (trigger.type) {
+    TriggerType.schedule => scheduleLabel(trigger.schedule),
+    TriggerType.event => eventLabel(trigger.event),
+  };
+}
+
+String scheduleLabel(ScheduleConfig? config) {
+  if (config == null) return 'Zeitplan nicht konfiguriert';
   return switch (config.kind) {
     ScheduleKind.once => 'Einmalig am ${dateTimeLabel(config.runAt)}',
     ScheduleKind.daily => 'Täglich um ${config.timeOfDay}',
@@ -9,8 +18,15 @@ String scheduleLabel(ScheduleConfig config) {
   };
 }
 
+String eventLabel(EventTriggerConfig? config) {
+  if (config == null) return 'Ereignis nicht konfiguriert';
+  if (config.filter.trim().isEmpty) return config.source.label;
+  return '${config.source.label} · ${config.filter}';
+}
+
 String triggerStatusLabel(TaskTrigger trigger) {
   if (!trigger.enabled) return 'Pausiert';
+  if (trigger.type == TriggerType.event) return 'Wartet auf Ereignis';
   if (trigger.nextRunAt == null) return 'Ohne nächste Ausführung';
   return 'Nächste Ausführung: ${dateTimeLabel(trigger.nextRunAt)}';
 }

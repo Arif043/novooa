@@ -58,7 +58,8 @@ rules_version = '2';
 // Document ID: generated trigger id
 // Fields:
 //   - id, teamId, createdByUid, taskId, taskTitle, type, enabled
-//   - config: map (schedule config)
+//   - config: map (schedule config, only for type=schedule)
+//   - eventConfig: map (event source/filter, only for type=event)
 //   - policy: map (ifRunning)
 //   - nextRunAt, lastRunAt, createdAt, updatedAt
 //
@@ -366,6 +367,7 @@ service cloud.firestore {
         'type',
         'enabled',
         'config',
+        'eventConfig',
         'policy',
         'nextRunAt',
         'lastRunAt',
@@ -381,7 +383,6 @@ service cloud.firestore {
           'taskTitle',
           'type',
           'enabled',
-          'config',
           'policy',
           'nextRunAt',
           'createdAt',
@@ -396,9 +397,9 @@ service cloud.firestore {
         data.taskTitle is string &&
         data.taskTitle.size() >= 1 &&
         data.taskTitle.size() <= 160 &&
-        data.type == 'schedule' &&
+        data.type in ['schedule', 'event'] &&
         data.enabled is bool &&
-        isValidScheduleConfig(data.config) &&
+        triggerConfigMatchesType(data) &&
         isValidTriggerPolicy(data.policy) &&
         isValidOptionalTimestamp(data.get('nextRunAt', null)) &&
         isValidOptionalTimestamp(data.get('lastRunAt', null)) &&
@@ -406,6 +407,30 @@ service cloud.firestore {
         data.createdAt is timestamp &&
         data.updatedAt is timestamp &&
         exists(/databases/$(database)/documents/teams/$(teamId)/tasks/$(data.taskId));
+    }
+
+    function triggerConfigMatchesType(data) {
+      return (data.type == 'schedule' &&
+          isValidScheduleConfig(data.get('config', null)) &&
+          !('eventConfig' in data)) ||
+        (data.type == 'event' &&
+          data.get('config', null) == null &&
+          data.get('nextRunAt', null) == null &&
+          isValidEventConfig(data.get('eventConfig', null)));
+    }
+
+    function isValidEventConfig(data) {
+      return data is map &&
+        data.keys().hasOnly(['source', 'filter']) &&
+        data.keys().hasAll(['source', 'filter']) &&
+        data.source in [
+          'emailReceived',
+          'whatsappMessageReceived',
+          'fileCreated',
+          'webhookReceived',
+        ] &&
+        data.filter is string &&
+        data.filter.size() <= 240;
     }
 
     function isValidScheduleConfig(data) {

@@ -9,9 +9,10 @@ Verwandt: [`../architecture.md`](../architecture.md) ·
 Zeit- und event-gesteuerte Auslöser für Aufgaben. Nutzer:innen konfigurieren
 hier, **wann** eine Aufgabe läuft, ohne den Workflow selbst zu bearbeiten.
 
-Der erste umgesetzte Scope sind zeitbasierte Trigger. Event-Trigger wie
-„E-Mail empfangen“ oder „Datei erstellt“ bleiben im Modell vorgesehen, werden
-aber noch nicht in der UI angeboten.
+Umgesetzt sind zeitbasierte Trigger und die UI-/Persistenz-Grundlage für
+Event-Trigger wie „E-Mail empfangen“, „WhatsApp-Nachricht“, „Datei erstellt“
+und „Webhook empfangen“. Die externen Provider-Webhooks sind noch nicht
+angebunden.
 
 ## Datenmodell
 
@@ -30,9 +31,9 @@ Dokument:
   createdByUid: string,
   taskId: string,
   taskTitle: string,
-  type: "schedule",
+  type: "schedule" | "event",
   enabled: boolean,
-  config: {
+  config?: {
     kind: "once" | "daily" | "weekly",
     timezone: "Europe/Berlin",
     runAt?: Timestamp,
@@ -42,6 +43,10 @@ Dokument:
       weekday: number,
       timeOfDay: "09:00"
     }>
+  },
+  eventConfig?: {
+    source: "emailReceived" | "whatsappMessageReceived" | "fileCreated" | "webhookReceived",
+    filter: string
   },
   policy: {
     ifRunning: "skipIfRunning" | "startParallel"
@@ -54,8 +59,9 @@ Dokument:
 }
 ```
 
-`nextRunAt` ist bewusst materialisiert, damit der Backend-Worker fällige
-Trigger effizient per Query finden kann.
+`nextRunAt` ist für Zeitplan-Trigger bewusst materialisiert, damit der
+Backend-Worker fällige Trigger effizient per Query finden kann. Event-Trigger
+haben `nextRunAt = null` und warten auf externe Ereignisse.
 
 ## UI
 
@@ -67,8 +73,9 @@ Die Seite `Zeitplan` zeigt Trigger als Kacheln. Jede Kachel enthält:
 - nächste Ausführung
 - Löschen-Aktion
 
-Der Dialog „Trigger hinzufügen“ bietet aktuell:
+Der Dialog „Trigger hinzufügen“ bietet:
 
+- Ereignis: E-Mail, WhatsApp, Datei erstellt, Webhook
 - einmalig
 - täglich
 - wöchentlich mit frei wählbaren Wochenzeitpunkten wie „Mo 09:00“,
@@ -80,7 +87,8 @@ berechnen.
 
 ## Backend
 
-`runDueTaskTriggersWorker` läuft jede Minute und liest fällige Trigger über:
+`runDueTaskTriggersWorker` läuft jede Minute und verarbeitet nur fällige
+Zeitplan-Trigger über:
 
 ```text
 collectionGroup("taskTriggers")
@@ -88,7 +96,7 @@ collectionGroup("taskTriggers")
   where nextRunAt <= now
 ```
 
-Für jeden fälligen Trigger:
+Für jeden fälligen Zeitplan-Trigger:
 
 1. Aufgabe aus `teams/{teamId}/tasks/{taskId}` laden.
 2. Bei `policy.ifRunning == "skipIfRunning"` aktive Runs derselben Aufgabe
@@ -119,8 +127,9 @@ daher ruft der Script `runDueTaskTriggersWorker-0` auf.
 ## Firestore
 
 Security Rules erlauben Team-Mitgliedern Lesen, Erstellen, Aktualisieren und
-Löschen von `taskTriggers`. Die Rules validieren den Zeitplan-Trigger als
-Prototyp inklusive `config`, `policy`, Team-Scope und existierender Aufgabe.
+Löschen von `taskTriggers`. Die Rules validieren Zeitplan-Trigger über
+`config` und Event-Trigger über `eventConfig`, jeweils inklusive `policy`,
+Team-Scope und existierender Aufgabe.
 
 Für die Worker-Query ist ein Composite Index in `firestore.indexes.json`
 definiert:
@@ -133,6 +142,6 @@ enabled ASC, nextRunAt ASC
 ## Nächste Schritte
 
 - Bearbeiten-Dialog für bestehende Trigger ergänzen.
-- Event-Trigger `fileCreated` auf Storage-/Firestore-Dateiversionen abbilden.
-- E-Mail-Trigger erst nach echter Mail-Provider-Integration modellieren.
+- Event-Trigger `fileCreated` auf Storage-/Firestore-Dateiversionen ausführen.
+- E-Mail-/WhatsApp-Trigger per Provider-Webhook an `taskRuns` anbinden.
 - Team-Rollen später auf Trigger-Verwaltung anwenden.

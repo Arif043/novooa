@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../task_builder/domain/entities/task.dart';
+import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../cubits/schedule_cubit.dart';
+import 'event_trigger_form_controls.dart';
+import 'schedule_form_values.dart';
 import 'schedule_trigger_form_controls.dart';
-import 'weekly_time_slot_selector.dart';
+import 'time_trigger_controls.dart';
 
 class CreateScheduleTriggerDialog extends StatefulWidget {
   const CreateScheduleTriggerDialog({
@@ -25,11 +28,15 @@ class CreateScheduleTriggerDialog extends StatefulWidget {
 class _CreateScheduleTriggerDialogState
     extends State<CreateScheduleTriggerDialog> {
   Task? _task;
+  TriggerFormMode _mode = TriggerFormMode.schedule;
+  EventTriggerSource _eventSource = EventTriggerSource.emailReceived;
+  final TextEditingController _eventFilterController = TextEditingController();
   ScheduleKind _kind = ScheduleKind.daily;
   TimeOfDay _time = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _slotTime = const TimeOfDay(hour: 9, minute: 0);
   DateTime _date = DateTime.now().add(const Duration(days: 1));
   int _slotWeekday = DateTime.monday;
+  final ScheduleFormValues _values = const ScheduleFormValues();
   final List<WeeklyTimeSlot> _slots = [
     const WeeklyTimeSlot(weekday: DateTime.monday, timeOfDay: '09:00'),
   ];
@@ -38,6 +45,12 @@ class _CreateScheduleTriggerDialogState
   void initState() {
     super.initState();
     _task = widget.tasks.isEmpty ? null : widget.tasks.first;
+  }
+
+  @override
+  void dispose() {
+    _eventFilterController.dispose();
+    super.dispose();
   }
 
   @override
@@ -55,23 +68,10 @@ class _CreateScheduleTriggerDialogState
               onChanged: _setTask,
             ),
             const SizedBox(height: AppSpacing.md),
-            ScheduleKindSelector(value: _kind, onChanged: _setKind),
+            TriggerModeSelector(value: _mode, onChanged: _setMode),
             const SizedBox(height: AppSpacing.md),
-            if (_kind == ScheduleKind.once)
-              ScheduleDateButton(date: _date, onPick: _pickDate),
-            if (_kind == ScheduleKind.weekly)
-              WeeklyTimeSlotSelector(
-                slots: _slots,
-                weekday: _slotWeekday,
-                time: _slotTime,
-                onWeekdayChanged: _setSlotWeekday,
-                onPickTime: _pickSlotTime,
-                onAdd: _addSlot,
-                onRemove: _removeSlot,
-              ),
-            const SizedBox(height: AppSpacing.md),
-            if (_kind != ScheduleKind.weekly)
-              ScheduleTimeButton(time: _time, onPick: _pickTime),
+            if (_mode == TriggerFormMode.schedule) _scheduleControls(),
+            if (_mode == TriggerFormMode.event) _eventControls(),
           ],
         ),
       ),
@@ -89,12 +89,45 @@ class _CreateScheduleTriggerDialogState
   }
 
   bool get _canSubmit {
-    return _task != null && (_kind != ScheduleKind.weekly || _slots.isNotEmpty);
+    return _task != null &&
+        (_mode == TriggerFormMode.event ||
+            _kind != ScheduleKind.weekly ||
+            _slots.isNotEmpty);
   }
 
   void _setTask(Task? task) => setState(() => _task = task);
 
+  void _setMode(Set<TriggerFormMode> value) {
+    setState(() => _mode = value.first);
+  }
+
   void _setKind(Set<ScheduleKind> value) => setState(() => _kind = value.first);
+
+  Widget _scheduleControls() {
+    return TimeTriggerControls(
+      kind: _kind,
+      date: _date,
+      time: _time,
+      slotTime: _slotTime,
+      slotWeekday: _slotWeekday,
+      slots: _slots,
+      onKindChanged: _setKind,
+      onPickDate: _pickDate,
+      onPickTime: _pickTime,
+      onSlotWeekdayChanged: _setSlotWeekday,
+      onPickSlotTime: _pickSlotTime,
+      onAddSlot: _addSlot,
+      onRemoveSlot: _removeSlot,
+    );
+  }
+
+  Widget _eventControls() {
+    return EventTriggerControls(
+      source: _eventSource,
+      filterController: _eventFilterController,
+      onSourceChanged: (source) => setState(() => _eventSource = source),
+    );
+  }
 
   Future<void> _pickDate() async {
     final selected = await showDatePicker(
@@ -127,7 +160,7 @@ class _CreateScheduleTriggerDialogState
   void _addSlot() {
     final slot = WeeklyTimeSlot(
       weekday: _slotWeekday,
-      timeOfDay: _slotTimeLabel,
+      timeOfDay: _values.timeLabel(_slotTime),
     );
     if (_slots.any(_sameSlot(slot))) return;
     setState(() => _slots.add(slot));
@@ -148,47 +181,19 @@ class _CreateScheduleTriggerDialogState
   Future<void> _submit() async {
     final task = _task;
     if (task == null) return;
-    await widget.cubit.createTrigger(task, _config());
+    if (_mode == TriggerFormMode.schedule) {
+      await widget.cubit.createTrigger(task, _config());
+    } else {
+      await widget.cubit.createEventTrigger(task, _eventConfig());
+    }
     if (mounted) Navigator.of(context).pop();
   }
 
-  ScheduleConfig _config() {
-    return switch (_kind) {
-      ScheduleKind.once => ScheduleConfig(
-        kind: _kind,
-        timezone: 'Europe/Berlin',
-        runAt: _runAt,
-      ),
-      ScheduleKind.daily => ScheduleConfig(
-        kind: _kind,
-        timezone: 'Europe/Berlin',
-        timeOfDay: _timeLabel,
-      ),
-      ScheduleKind.weekly => ScheduleConfig(
-        kind: _kind,
-        timezone: 'Europe/Berlin',
-        slots: _slots,
-      ),
-    };
-  }
+  EventTriggerConfig _eventConfig() => EventTriggerConfig(
+    source: _eventSource,
+    filter: _eventFilterController.text.trim(),
+  );
 
-  String get _timeLabel {
-    return '${_time.hour.toString().padLeft(2, '0')}:'
-        '${_time.minute.toString().padLeft(2, '0')}';
-  }
-
-  DateTime get _runAt {
-    return DateTime(
-      _date.year,
-      _date.month,
-      _date.day,
-      _time.hour,
-      _time.minute,
-    );
-  }
-
-  String get _slotTimeLabel {
-    return '${_slotTime.hour.toString().padLeft(2, '0')}:'
-        '${_slotTime.minute.toString().padLeft(2, '0')}';
-  }
+  ScheduleConfig _config() =>
+      _values.config(kind: _kind, date: _date, time: _time, slots: _slots);
 }

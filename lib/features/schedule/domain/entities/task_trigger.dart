@@ -1,6 +1,7 @@
 import 'schedule_config.dart';
+import 'event_trigger_config.dart';
 
-enum TriggerType { schedule }
+enum TriggerType { schedule, event }
 
 enum TriggerRunPolicy { skipIfRunning, startParallel }
 
@@ -12,8 +13,9 @@ class TaskTrigger {
     required this.taskTitle,
     required this.type,
     required this.enabled,
-    required this.schedule,
     required this.policy,
+    this.schedule,
+    this.event,
     this.nextRunAt,
     this.lastRunAt,
     this.lastRunId,
@@ -25,7 +27,8 @@ class TaskTrigger {
   final String taskTitle;
   final TriggerType type;
   final bool enabled;
-  final ScheduleConfig schedule;
+  final ScheduleConfig? schedule;
+  final EventTriggerConfig? event;
   final TriggerRunPolicy policy;
   final DateTime? nextRunAt;
   final DateTime? lastRunAt;
@@ -45,6 +48,7 @@ class TaskTrigger {
       type: type,
       enabled: enabled ?? this.enabled,
       schedule: schedule,
+      event: event,
       policy: policy,
       nextRunAt: nextRunAt ?? this.nextRunAt,
       lastRunAt: lastRunAt ?? this.lastRunAt,
