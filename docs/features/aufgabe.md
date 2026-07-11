@@ -179,11 +179,16 @@ den Workspace vor dem Executor-Aufruf über
 
 Prompt-Nodes verwenden den Workspace über
 `functions/src/task-runner/node-attachment-genkit.ts` mit
-`filesystem({ rootDirectory })` aus `@genkit-ai/middleware`. Die Middleware
-läuft read-only. Das Modell erhält im Prompt eine Liste der lokalen Dateinamen
-und Wissensnotizen und kann über `list_files` / `read_file` auf die Inhalte
-zugreifen. Wissensnotizen liegen unter `knowledge/`; eine Übersicht liegt in
-`knowledge/manifest.json`.
+`filesystem({ rootDirectory })` aus `@genkit-ai/middleware`. Dieselbe Datei
+stellt außerdem die gemeinsame `retry`-Middleware für alle Genkit-Model-Turns
+bereit. Transiente Fehler wie `UNAVAILABLE`, `DEADLINE_EXCEEDED`,
+`RESOURCE_EXHAUSTED`, `ABORTED` und `INTERNAL` werden mit exponentiellem
+Backoff wiederholt.
+
+Die Filesystem-Middleware läuft read-only. Das Modell erhält im Prompt eine
+Liste der lokalen Dateinamen und Wissensnotizen und kann über `list_files` /
+`read_file` auf die Inhalte zugreifen. Wissensnotizen liegen unter
+`knowledge/`; eine Übersicht liegt in `knowledge/manifest.json`.
 
 Aktuell sind Wissensbasis-Anhänge nur für Prompt-Bausteine aktiv. Script-
 Bausteine verwenden weiterhin ausschließlich Dateianhänge.

@@ -1,9 +1,18 @@
-import {filesystem} from "@genkit-ai/middleware";
+import {filesystem, retry} from "@genkit-ai/middleware";
 import {type NodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 
-export function attachmentMiddleware(workspace?: NodeAttachmentWorkspace) {
-  if (!workspace) return undefined;
-  return [filesystem({rootDirectory: workspace.rootDirectory})];
+export function aiTurnMiddleware(workspace?: NodeAttachmentWorkspace) {
+  const middleware = [
+    retry({
+      maxRetries: 3,
+      initialDelayMs: 1000,
+      backoffFactor: 2,
+    }),
+  ];
+  if (workspace) {
+    middleware.push(filesystem({rootDirectory: workspace.rootDirectory}));
+  }
+  return middleware;
 }
 
 export function attachmentInstructions(

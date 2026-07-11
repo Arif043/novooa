@@ -30,6 +30,7 @@ import {
   logReadableError,
   logReadableInfo,
 } from "../task-runner/structured-logger.js";
+import {aiTurnMiddleware} from "../task-runner/node-attachment-genkit.js";
 
 export type IterativeRefinementNodeInput = {
   objective: string;
@@ -134,6 +135,7 @@ async function structuredEvaluation(
     model: reasoningModel(),
     prompt,
     output: {schema: evaluationSchema},
+    use: aiTurnMiddleware(),
   });
   logReadableInfo(formatModelCallFinished({
     label: `Iterative Verfeinerung / Bewertung ${iteration}`,
@@ -161,6 +163,7 @@ async function textEvaluationFallback(
   const response = await ai.generate({
     model: reasoningModel(),
     prompt,
+    use: aiTurnMiddleware(),
   });
   logReadableInfo(formatModelCallFinished({
     label: `Iterative Verfeinerung / Bewertungs-Fallback ${iteration}`,
@@ -187,6 +190,7 @@ async function improveDraft(
     model: reasoningModel(),
     prompt,
     config: {temperature: 0.4},
+    use: aiTurnMiddleware(),
   });
   logReadableInfo(formatModelCallFinished({
     label: "Iterative Verfeinerung / Optimierung",

@@ -13,7 +13,7 @@ import {
 import {type NodeAttachmentWorkspace} from "../task-runner/node-attachment-workspace.js";
 import {
   attachmentInstructions,
-  attachmentMiddleware,
+  aiTurnMiddleware,
 } from "../task-runner/node-attachment-genkit.js";
 
 export type PromptNodeOutputType = "text" | "decision";
@@ -60,7 +60,7 @@ export async function executePromptNode(
   const response = await ai.generate({
     model: textModel(),
     prompt,
-    use: attachmentMiddleware(attachmentWorkspace),
+    use: aiTurnMiddleware(attachmentWorkspace),
   });
   logReadableInfo(formatModelCallFinished({
     label: "Prompt / Text",
@@ -107,7 +107,7 @@ async function generateDecision(
     model: textModel(),
     prompt,
     output: {schema},
-    use: attachmentMiddleware(attachmentWorkspace),
+    use: aiTurnMiddleware(attachmentWorkspace),
   });
   logReadableInfo(formatModelCallFinished({
     label: "Prompt / Entscheidung",
