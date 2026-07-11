@@ -10,8 +10,12 @@ import 'package:syscat2/features/files/domain/usecases/watch_team_folders.dart';
 import 'package:syscat2/features/files/infrastructure/repositories/firebase_team_file_repository.dart';
 import 'package:syscat2/features/files/presentation/cubits/files_cubit.dart';
 import 'package:syscat2/features/knowledge_base/domain/repositories/knowledge_base_repository.dart';
+import 'package:syscat2/features/knowledge_base/domain/usecases/create_knowledge_note.dart';
+import 'package:syscat2/features/knowledge_base/domain/usecases/delete_knowledge_note.dart';
+import 'package:syscat2/features/knowledge_base/domain/usecases/update_knowledge_note.dart';
 import 'package:syscat2/features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import 'package:syscat2/features/knowledge_base/infrastructure/repositories/firestore_knowledge_base_repository.dart';
+import 'package:syscat2/features/knowledge_base/presentation/cubits/knowledge_base_cubit.dart';
 import 'package:syscat2/features/schedule/domain/repositories/task_trigger_repository.dart';
 import 'package:syscat2/features/schedule/domain/usecases/create_task_trigger.dart';
 import 'package:syscat2/features/schedule/domain/usecases/delete_task_trigger.dart';
@@ -152,6 +156,15 @@ void configureDependencies() {
       () => WatchKnowledgeNotes(serviceLocator<KnowledgeBaseRepository>()),
     )
     ..registerLazySingleton(
+      () => CreateKnowledgeNote(serviceLocator<KnowledgeBaseRepository>()),
+    )
+    ..registerLazySingleton(
+      () => UpdateKnowledgeNote(serviceLocator<KnowledgeBaseRepository>()),
+    )
+    ..registerLazySingleton(
+      () => DeleteKnowledgeNote(serviceLocator<KnowledgeBaseRepository>()),
+    )
+    ..registerLazySingleton(
       () => UploadTeamFile(serviceLocator<TeamFileRepository>()),
     )
     ..registerLazySingleton(
@@ -200,6 +213,15 @@ void configureDependencies() {
       () => NodeKnowledgeAttachmentsCubit(
         serviceLocator<AuthRepository>(),
         serviceLocator<WatchKnowledgeNotes>(),
+      ),
+    )
+    ..registerFactory(
+      () => KnowledgeBaseCubit(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<WatchKnowledgeNotes>(),
+        serviceLocator<CreateKnowledgeNote>(),
+        serviceLocator<UpdateKnowledgeNote>(),
+        serviceLocator<DeleteKnowledgeNote>(),
       ),
     )
     ..registerFactory(

@@ -14,6 +14,8 @@ ein fachlicher Anhang an unterstützte Bausteine gehängt.
 - Rekursive MOC-Auflösung serverseitig beim TaskRun durchführen.
 - Genkit die aufgelösten Notizen über die Filesystem-Middleware bereitstellen.
 - Normale Dateien und Wissensbasis getrennt halten.
+- Eine Obsidian-ähnliche Arbeitsfläche für Lesen, Schreiben und Verlinken
+  anbieten.
 
 ## Datenmodell
 
@@ -40,6 +42,19 @@ Notizfelder:
 Die Wissensbasis wird bewusst nicht versioniert. Normale Dateien behalten ihre
 Copy-on-Write-Versionierung unter `teams/{teamId}/files/{fileId}/versions`.
 
+## UI
+
+Route: `/knowledge-base`, Drawer-Label: **Wissensbasis**.
+
+Die Seite ist an Obsidian angelehnt:
+
+- Links: Vault/Explorer mit Suche und „Notiz erstellen".
+- Mitte: Markdown-Editor mit Titel, Typ-Umschaltung und Live-Vorschau.
+- Rechts: Eigenschaften, Speicherstatus, verlinkte Notizen und Backlinks.
+
+Änderungen werden per Debounce automatisch gespeichert. Nutzer:innen müssen
+keinen Speichern-Button bedienen.
+
 ## Node-Anhänge
 
 Unterstützte NodeConfigs speichern `knowledgeAttachments` zusätzlich zu
@@ -61,10 +76,12 @@ rekursiv aufgelöst und unter `knowledge/` in den Genkit-Workspace geschrieben.
 
 ## Aktueller Scope
 
+- Notizen können erstellt, bearbeitet und gelöscht werden.
+- `outgoingLinks` werden clientseitig aus `[[Wiki Links]]` und
+  Markdown-Links auf bekannte Notizen abgeleitet.
 - Prompt-Bausteine können Wissensnotizen anhängen.
 - Script-Bausteine sind bewusst noch nicht angebunden.
-- Import, Editor und Link-Erkennung für Legacy-Markdown folgen später.
-- Clientseitige Schreibrechte für Notizen sind in den Rules noch gesperrt.
+- Import und robuste Legacy-Markdown-Migration folgen später.
 
 ## Offene Fragen
 

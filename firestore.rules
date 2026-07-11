@@ -459,6 +459,43 @@ service cloud.firestore {
         (value is string && value.size() >= min && value.size() <= max);
     }
 
+    function isValidKnowledgeNote(data, knowledgeBaseId) {
+      return data.keys().hasOnly([
+        'knowledgeBaseId',
+        'title',
+        'path',
+        'type',
+        'content',
+        'outgoingLinks',
+        'createdAt',
+        'updatedAt',
+      ]) &&
+        data.keys().hasAll([
+          'knowledgeBaseId',
+          'title',
+          'path',
+          'type',
+          'content',
+          'outgoingLinks',
+          'createdAt',
+          'updatedAt',
+        ]) &&
+        data.knowledgeBaseId == knowledgeBaseId &&
+        data.title is string &&
+        data.title.size() >= 1 &&
+        data.title.size() <= 160 &&
+        data.path is string &&
+        data.path.size() >= 1 &&
+        data.path.size() <= 512 &&
+        data.type in ['atomic', 'moc', 'unknown'] &&
+        data.content is string &&
+        data.content.size() <= 262144 &&
+        data.outgoingLinks is list &&
+        data.outgoingLinks.size() <= 100 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
@@ -588,7 +625,17 @@ service cloud.firestore {
 
         match /notes/{noteId} {
           allow get, list: if isTeamMember(teamId);
-          allow create, update, delete: if false;
+          allow create: if isTeamMember(teamId) &&
+            isValidKnowledgeNote(request.resource.data, knowledgeBaseId) &&
+            request.resource.data.createdAt == request.time &&
+            request.resource.data.updatedAt == request.time;
+
+          allow update: if isTeamMember(teamId) &&
+            isValidKnowledgeNote(request.resource.data, knowledgeBaseId) &&
+            request.resource.data.createdAt == resource.data.createdAt &&
+            request.resource.data.updatedAt == request.time;
+
+          allow delete: if isTeamMember(teamId);
         }
       }
     }

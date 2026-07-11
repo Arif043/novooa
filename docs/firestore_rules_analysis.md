@@ -19,8 +19,9 @@
   - Client writes the key, but Firestore rules deny all client reads/lists.
 - `/teams/{teamId}/knowledgeBases/{knowledgeBaseId}/notes/{noteId}`
   - Team-scoped Markdown notes for the node attachment RAG.
-  - Client can read/list notes as a team member.
-  - Client writes are denied until import/editor validation is implemented.
+  - Client can read/list/create/update/delete notes as a team member.
+  - Creates/updates validate title, path, type, content size, link list size,
+    and timestamps.
 
 ## User Document Shape
 - `uid`: string, required, immutable, equals document ID and `request.auth.uid`
@@ -54,6 +55,7 @@
   drift until a dedicated "Key entfernen" workflow exists.
 - Task Builder reads knowledge notes from
   `/teams/personal_<uid>/knowledgeBases/default/notes` ordered by `title`.
+- Wissensbasis page reads and writes the same collection, ordered by `title`.
 - Prompt nodes persist selected note references inside task graph config as
   `knowledgeAttachments`.
 - Backend Functions use Admin SDK to resolve selected notes, recursively expand

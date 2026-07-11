@@ -39,6 +39,11 @@ class _RootPageState extends State<RootPage> {
       path: '/files',
     ),
     RootTab(
+      title: 'Wissensbasis',
+      icon: Icons.library_books_outlined,
+      path: '/knowledge-base',
+    ),
+    RootTab(
       title: 'Einstellungen',
       icon: Icons.settings_outlined,
       path: '/settings',

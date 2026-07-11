@@ -14,7 +14,9 @@ import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/files/domain/entities/upload_file_input.dart';
 import 'package:syscat2/features/files/domain/repositories/team_file_repository.dart';
 import 'package:syscat2/features/files/domain/usecases/watch_team_files.dart';
+import 'package:syscat2/features/knowledge_base/domain/entities/knowledge_failure.dart';
 import 'package:syscat2/features/knowledge_base/domain/entities/knowledge_note.dart';
+import 'package:syscat2/features/knowledge_base/domain/entities/knowledge_note_draft.dart';
 import 'package:syscat2/features/knowledge_base/domain/repositories/knowledge_base_repository.dart';
 import 'package:syscat2/features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
@@ -117,6 +119,36 @@ class _FakeKnowledgeBaseRepository implements KnowledgeBaseRepository {
   @override
   Stream<List<KnowledgeNote>> watchNotes(TeamId teamId) {
     return Stream.value(const []);
+  }
+
+  @override
+  Future<Result<KnowledgeNote, KnowledgeFailure>> createNote({
+    required TeamId teamId,
+    required String ownerUid,
+    required KnowledgeNoteDraft draft,
+  }) async {
+    return const Result.error(
+      KnowledgeFailure(KnowledgeFailureKind.saveFailed),
+    );
+  }
+
+  @override
+  Future<Result<KnowledgeNote, KnowledgeFailure>> updateNote({
+    required TeamId teamId,
+    required String noteId,
+    required KnowledgeNoteDraft draft,
+  }) async {
+    return const Result.error(
+      KnowledgeFailure(KnowledgeFailureKind.saveFailed),
+    );
+  }
+
+  @override
+  Future<Result<Unit, KnowledgeFailure>> deleteNote({
+    required TeamId teamId,
+    required String noteId,
+  }) async {
+    return const Result.success(unit);
   }
 }
 
