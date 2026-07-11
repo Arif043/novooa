@@ -105,7 +105,7 @@ void configureDependencies() {
     )
     ..registerLazySingleton<TaskTriggerRepository>(
       () => FirestoreTaskTriggerRepository(
-        serviceLocator<FirebaseAuth>(),
+        serviceLocator<AuthRepository>(),
         serviceLocator<FirebaseFirestore>(),
       ),
     )

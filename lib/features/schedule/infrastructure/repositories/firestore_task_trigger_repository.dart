@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
 import '../../../../core/entities/unique_id.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../files/domain/entities/team_id.dart';
 import '../../../files/infrastructure/repositories/team_workspace_bootstrapper.dart';
 import '../../domain/entities/create_task_trigger_input.dart';
@@ -13,10 +12,10 @@ import '../models/task_trigger_model.dart';
 import 'schedule_next_run_calculator.dart';
 
 class FirestoreTaskTriggerRepository implements TaskTriggerRepository {
-  FirestoreTaskTriggerRepository(this._auth, this._firestore)
+  FirestoreTaskTriggerRepository(this._authRepository, this._firestore)
     : _bootstrapper = TeamWorkspaceBootstrapper(_firestore);
 
-  final FirebaseAuth _auth;
+  final AuthRepository _authRepository;
   final FirebaseFirestore _firestore;
   final TeamWorkspaceBootstrapper _bootstrapper;
   final ScheduleNextRunCalculator _nextRunCalculator =
@@ -24,32 +23,33 @@ class FirestoreTaskTriggerRepository implements TaskTriggerRepository {
 
   @override
   Stream<List<TaskTrigger>> watchTriggers() {
-    final user = _auth.currentUser;
+    final user = _authRepository.currentUser();
     if (user == null) return Stream.value(const []);
     return _triggersReference(
-      _teamId(user.uid),
+      _teamId(user.id.value),
     ).orderBy('nextRunAt').snapshots().map(_toTriggers);
   }
 
   @override
   Future<void> createTrigger(CreateTaskTriggerInput input) async {
-    final user = _auth.currentUser;
+    final user = _authRepository.currentUser();
     if (user == null || !input.isValid) return;
-    final teamId = _teamId(user.uid);
+    final ownerUid = user.id.value;
+    final teamId = _teamId(ownerUid);
     final triggerId = UniqueId.random().value;
     final nextRunAt = _nextRunAtFor(input);
     if (input.type == TriggerType.schedule && nextRunAt == null) return;
-    await _bootstrapper.ensurePersonalTeam(teamId: teamId, ownerUid: user.uid);
+    await _bootstrapper.ensurePersonalTeam(teamId: teamId, ownerUid: ownerUid);
     await _triggersReference(teamId)
         .doc(triggerId)
-        .set(_triggerDocument(triggerId, teamId, user.uid, input, nextRunAt));
+        .set(_triggerDocument(triggerId, teamId, ownerUid, input, nextRunAt));
   }
 
   @override
   Future<void> setTriggerEnabled(String triggerId, bool enabled) async {
-    final user = _auth.currentUser;
+    final user = _authRepository.currentUser();
     if (user == null) return;
-    await _triggersReference(_teamId(user.uid)).doc(triggerId).update({
+    await _triggersReference(_teamId(user.id.value)).doc(triggerId).update({
       'enabled': enabled,
       'updatedAt': FieldValue.serverTimestamp(),
     });
@@ -57,9 +57,9 @@ class FirestoreTaskTriggerRepository implements TaskTriggerRepository {
 
   @override
   Future<void> deleteTrigger(String triggerId) async {
-    final user = _auth.currentUser;
+    final user = _authRepository.currentUser();
     if (user == null) return;
-    await _triggersReference(_teamId(user.uid)).doc(triggerId).delete();
+    await _triggersReference(_teamId(user.id.value)).doc(triggerId).delete();
   }
 
   Map<String, Object?> _triggerDocument(
