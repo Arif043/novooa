@@ -190,6 +190,12 @@ Liste der lokalen Dateinamen und Wissensnotizen und kann über `list_files` /
 `read_file` auf die Inhalte zugreifen. Wissensnotizen liegen unter
 `knowledge/`; eine Übersicht liegt in `knowledge/manifest.json`.
 
+Variablen aus vorherigen Script-Bausteinen können in Prompt-Anweisungen und
+Entscheidungsoptionen über `{{name}}` referenziert werden. Für Objekte und
+Listen werden Dot-Pfade unterstützt, z.B. `{{kunde.name}}` oder
+`{{rechnungen.0.betrag}}`. Nicht gefundene Variablen bleiben unverändert im
+Prompt sichtbar.
+
 Aktuell sind Wissensbasis-Anhänge nur für Prompt-Bausteine aktiv. Script-
 Bausteine verwenden weiterhin ausschließlich Dateianhänge.
 

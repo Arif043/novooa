@@ -15,6 +15,8 @@ import {
   attachmentInstructions,
   aiTurnMiddleware,
 } from "../task-runner/node-attachment-genkit.js";
+import {resolveVariableTemplates} from "../task-runner/variable-template.js";
+import {type TaskVariables} from "../task-runner/node-executor.js";
 
 export type PromptNodeOutputType = "text" | "decision";
 
@@ -34,7 +36,7 @@ export const promptNodeExecutor: NodeExecutor = {
   async execute(input) {
     const output = await executePromptNode(
       input.ai,
-      promptInputFor(input.node, input.context),
+      promptInputFor(input.node, input.context, input.runContext.variables),
       input.attachmentWorkspace,
     );
     return executedNode(input.node, output.answer);
@@ -132,13 +134,19 @@ function promptTurn(
   return parts.join("\n\n");
 }
 
-function promptInputFor(node: WorkflowNode, context: string): PromptNodeInput {
+function promptInputFor(
+  node: WorkflowNode,
+  context: string,
+  variables: TaskVariables,
+): PromptNodeInput {
   const config = promptConfigFor(node);
   return {
-    instruction: instructionFor(node),
-    context,
+    instruction: resolveVariableTemplates(instructionFor(node), variables),
+    context: resolveVariableTemplates(context, variables),
     outputType: config?.outputType ?? "text",
-    choices: choicesFor(node),
+    choices: choicesFor(node).map((choice) =>
+      resolveVariableTemplates(choice, variables),
+    ),
   };
 }
 
