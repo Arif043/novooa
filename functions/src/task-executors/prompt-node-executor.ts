@@ -33,10 +33,10 @@ export type PromptNodeOutput = {
 
 export const promptNodeExecutor: NodeExecutor = {
   primitive: "prompt",
-  async execute(input) {
+  async execute(input, runContext) {
     const output = await executePromptNode(
       input.ai,
-      promptInputFor(input.node, input.context, input.runContext.variables),
+      promptInputFor(input.node, input.context, runContext.variables),
       input.attachmentWorkspace,
     );
     return executedNode(input.node, output.answer);

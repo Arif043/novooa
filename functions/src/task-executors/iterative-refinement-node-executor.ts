@@ -47,16 +47,16 @@ export type IterativeRefinementNodeOutput = {
 
 export const iterativeRefinementNodeExecutor: NodeExecutor = {
   primitive: "iterativeRefinement",
-  async execute(input) {
+  async execute(input, runContext) {
     const config = refinementConfigFor(input.node);
     const draft = parentOutputFor(
       input.node,
-      input.runContext.task,
-      input.runContext.results,
+      runContext.task,
+      runContext.results,
     ) ||
       input.context;
     const output = await executeIterativeRefinementNode(input.ai, {
-      objective: input.runContext.task.objective,
+      objective: runContext.task.objective,
       draft,
       optimizerPrompt: config?.optimizerPrompt ||
         input.node.description ||

@@ -11,9 +11,9 @@ import {
 
 export const readFileNodeExecutor: NodeExecutor = {
   primitive: "readFile",
-  async execute(input) {
+  async execute(input, runContext) {
     const file = selectedFileFor(input.node);
-    ensureTeamFile(file, input.runContext.teamId);
+    ensureTeamFile(file, runContext.teamId);
     const output = await readStorageFile(file);
     return executedNode(input.node, output);
   },

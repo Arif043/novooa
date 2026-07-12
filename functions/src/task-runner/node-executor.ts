@@ -25,13 +25,15 @@ export type NodeExecutorInput = {
   ai: Genkit;
   node: WorkflowNode;
   context: string;
-  runContext: TaskRunContext;
   attachmentWorkspace?: NodeAttachmentWorkspace;
 };
 
 export type NodeExecutor = {
   primitive: WorkflowNode["primitive"];
-  execute(input: NodeExecutorInput): Promise<NodeExecutionResult>;
+  execute(
+    input: NodeExecutorInput,
+    runContext: TaskRunContext,
+  ): Promise<NodeExecutionResult>;
 };
 
 export function executedNode(

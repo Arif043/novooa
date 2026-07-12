@@ -23,19 +23,19 @@ export type ConditionalNodeOutput = {
 
 export const conditionalFlowNodeExecutor: NodeExecutor = {
   primitive: "conditionalFlow",
-  async execute(input) {
+  async execute(input, runContext) {
     const output = executeConditionalNode({
       node: input.node,
       targetLabel: parentOutputFor(
         input.node,
-        input.runContext.task,
-        input.runContext.results,
+        runContext.task,
+        runContext.results,
       ),
-      outgoingEdges: input.runContext.task.edges.filter(
+      outgoingEdges: runContext.task.edges.filter(
         (edge) => edge.from === input.node.id,
       ),
     });
-    const branchOutput = await executeSelectedBranch(input, output);
+    const branchOutput = await executeSelectedBranch(input, runContext, output);
     return executedNode(input.node, branchOutput, output.selectedNodeId, {
       selectedBranchId: output.selectedBranchId,
       selectedBranchLabel: output.selectedBranchLabel,
@@ -137,14 +137,15 @@ function normalizeLabel(label: string): string {
 
 async function executeSelectedBranch(
   input: Parameters<NodeExecutor["execute"]>[0],
+  runContext: TaskRunContext,
   output: ConditionalNodeOutput,
 ): Promise<string> {
   const branch = selectedBranchFor(input.node, output.selectedBranchId);
   if (!branch) return output.reason;
   if (branch.graph.nodes.length === 0) return emptyBranchOutput(output);
   logBranchStarted(input.node, branch);
-  const branchResults = await input.runContext.runSubgraph(
-    branchTaskFor(input.runContext.task, branch),
+  const branchResults = await runContext.runSubgraph(
+    branchTaskFor(runContext.task, branch),
     input.context,
   );
   const finalOutput = finalOutputOf(branchResults);

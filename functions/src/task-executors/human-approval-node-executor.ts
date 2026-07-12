@@ -6,11 +6,11 @@ import {
 
 export const humanApprovalNodeExecutor: NodeExecutor = {
   primitive: "humanApproval",
-  async execute(input) {
+  async execute(input, runContext) {
     const output = parentOutputFor(
       input.node,
-      input.runContext.task,
-      input.runContext.results,
+      runContext.task,
+      runContext.results,
     );
     return waitingForApprovalNode(
       input.node,

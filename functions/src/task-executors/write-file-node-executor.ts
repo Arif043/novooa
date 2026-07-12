@@ -17,14 +17,14 @@ import {
 
 export const writeFileNodeExecutor: NodeExecutor = {
   primitive: "writeFile",
-  async execute(input) {
+  async execute(input, runContext) {
     const content = parentOutputFor(
       input.node,
-      input.runContext.task,
-      input.runContext.results,
+      runContext.task,
+      runContext.results,
     );
     const file = await writeTeamFile({
-      teamId: input.runContext.teamId,
+      teamId: runContext.teamId,
       node: input.node,
       content,
     });

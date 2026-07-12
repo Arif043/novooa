@@ -338,9 +338,8 @@ async function executeNode(
       ai,
       node: input.node,
       context: input.context,
-      runContext: input.runContext,
       attachmentWorkspace,
-    });
+    }, input.runContext);
   } finally {
     await attachmentWorkspace?.cleanup();
   }
