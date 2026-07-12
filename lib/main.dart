@@ -25,6 +25,8 @@ class MyApp extends StatelessWidget {
       title: 'Syscat',
       debugShowCheckedModeBanner: false,
       theme: SyscatTheme.lightTheme,
+      darkTheme: SyscatTheme.darkTheme,
+      themeMode: ThemeMode.system,
       routerConfig: serviceLocator<AppRouter>().router,
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
 part 'syscat_theme_data.dart';
+part 'syscat_theme_tokens.dart';
 
 class SyscatTheme {
   static TextStyle taskBody = const TextStyle(
@@ -33,15 +34,23 @@ class SyscatTheme {
   static const Color info = Color(0xFF3B82F6);
 
   static const Color backgroundLight = Color(0xFFFCF8FB);
+  static const Color backgroundDark = Color(0xFF141315);
+  static const Color surfaceDark = Color(0xFF1D1B1F);
+  static const Color surfaceDarkLow = Color(0xFF242227);
+  static const Color surfaceDarkHigh = Color(0xFF302E33);
   static const Color surfaceDim = Color(0xFFDCD9DC);
   static const Color surfaceContainer = Color(0xFFF0EDEF);
   static const Color surfaceContainerLow = Color(0xFFF6F3F5);
   static const Color surfaceContainerHigh = Color(0xFFEAE7EA);
   static const Color glassSurface = Color(0xFFFFFFFF);
+  static const Color glassSurfaceDark = Color(0xFF1D1B1F);
   static const Color glassSurfaceSoft = Color(0xFFFFFFFF);
   static final Color glassSurfaceSofter = glassSurface.withValues(alpha: 0.78);
 
   static const Color textMain = Color(0xFF1B1B1D);
+  static const Color textMainDark = Color(0xFFF4F0F3);
+  static const Color textSecondaryDark = Color(0xFFD9C8BA);
+  static const Color textMutedDark = Color(0xFFC9C3C8);
   static const Color textSecondary = Color(0xFF554334);
   static const Color textTertiary = Color(0xFF5D5F5F);
   static const Color textMuted = Color(0xFF86868B);
@@ -49,6 +58,7 @@ class SyscatTheme {
   static const Color textMainLight = Color(0xFFFFFFFF);
 
   static const Color borderLight = Color(0xFFE5E5E7);
+  static const Color borderDark = Color(0xFF3D3940);
   static const Color borderStrong = Color(0xFFDBC2AD);
   static final Color shadowLight = Colors.black.withValues(alpha: 0.04);
   static final Color shadowMedium = Colors.black.withValues(alpha: 0.12);
@@ -66,21 +76,45 @@ class SyscatTheme {
     ];
   }
 
+  static List<BoxShadow> get darkShadows {
+    return [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: 0.28),
+        blurRadius: 18,
+        offset: const Offset(0, 6),
+      ),
+    ];
+  }
+
   static BoxDecoration get glassPanelDecoration {
-    return BoxDecoration(
-      color: glassSurfaceSoft,
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: borderLight),
-      boxShadow: glassShadows,
+    return _adaptivePanelDecoration(
+      lightColor: glassSurfaceSoft,
+      darkColor: glassSurfaceDark,
+      radius: 20,
     );
   }
 
   static BoxDecoration get nodePanelDecoration {
+    return _adaptivePanelDecoration(
+      lightColor: glassSurface,
+      darkColor: surfaceDark,
+      radius: 16,
+    );
+  }
+
+  static BoxDecoration _adaptivePanelDecoration({
+    required Color lightColor,
+    required Color darkColor,
+    required double radius,
+  }) {
+    final platformBrightness =
+        WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    final isDark = platformBrightness == Brightness.dark;
     return BoxDecoration(
-      color: glassSurface,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: borderLight),
-      boxShadow: glassShadows,
+      color: isDark ? darkColor : lightColor,
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(color: isDark ? borderDark : borderLight),
+      boxShadow: isDark ? darkShadows : glassShadows,
     );
   }
 
@@ -93,4 +127,6 @@ class SyscatTheme {
   }
 
   static ThemeData get lightTheme => buildSyscatLightTheme();
+
+  static ThemeData get darkTheme => buildSyscatDarkTheme();
 }
