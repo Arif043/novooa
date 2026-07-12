@@ -11,21 +11,22 @@ class SyscatBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _BackgroundPalette.forTheme(context);
     return ColoredBox(
-      color: SyscatTheme.backgroundLight,
+      color: palette.base,
       child: Stack(
         children: [
-          const _BackgroundBlob(
+          _BackgroundBlob(
             top: -180,
             left: -120,
             size: 520,
-            opacity: 0.45,
+            color: palette.firstBlob,
           ),
-          const _BackgroundBlob(
+          _BackgroundBlob(
             bottom: -220,
             right: -180,
             size: 620,
-            opacity: 0.35,
+            color: palette.secondBlob,
           ),
           Positioned.fill(
             child: BackdropFilter(
@@ -40,6 +41,33 @@ class SyscatBackground extends StatelessWidget {
   }
 }
 
+class _BackgroundPalette {
+  const _BackgroundPalette({
+    required this.base,
+    required this.firstBlob,
+    required this.secondBlob,
+  });
+
+  factory _BackgroundPalette.forTheme(BuildContext context) {
+    if (Theme.of(context).brightness == Brightness.dark) {
+      return _BackgroundPalette(
+        base: SyscatTheme.backgroundDark,
+        firstBlob: Colors.white.withValues(alpha: 0.22),
+        secondBlob: Colors.black.withValues(alpha: 0.62),
+      );
+    }
+    return _BackgroundPalette(
+      base: SyscatTheme.backgroundLight,
+      firstBlob: SyscatTheme.primaryOrangeLight.withValues(alpha: 0.45),
+      secondBlob: SyscatTheme.primaryOrangeLight.withValues(alpha: 0.35),
+    );
+  }
+
+  final Color base;
+  final Color firstBlob;
+  final Color secondBlob;
+}
+
 class _BackgroundBlob extends StatelessWidget {
   const _BackgroundBlob({
     this.top,
@@ -47,7 +75,7 @@ class _BackgroundBlob extends StatelessWidget {
     this.right,
     this.bottom,
     required this.size,
-    required this.opacity,
+    required this.color,
   });
 
   final double? top;
@@ -55,7 +83,7 @@ class _BackgroundBlob extends StatelessWidget {
   final double? right;
   final double? bottom;
   final double size;
-  final double opacity;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -67,10 +95,7 @@ class _BackgroundBlob extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: SyscatTheme.primaryOrangeLight.withValues(alpha: opacity),
-        ),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: color),
       ),
     );
   }
