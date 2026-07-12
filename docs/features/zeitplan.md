@@ -70,6 +70,9 @@ Kommunikationskanäle liegen team-scoped unter:
 teams/{teamId}/communicationChannels/{channelId}
 ```
 
+Die Verwaltung der Kanäle liegt in der UI unter
+`Einstellungen > Kommunikation`. Trigger referenzieren diese Kanäle nur.
+
 Minimal erwartetes WhatsApp-Dokument:
 
 ```ts

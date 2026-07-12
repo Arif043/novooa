@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/features/communication/presentation/widgets/communication_settings_tab.dart';
 
 import '../cubits/settings_cubit.dart';
 import '../cubits/settings_state.dart';
@@ -64,7 +65,7 @@ class _ReadySettings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -77,6 +78,7 @@ class _ReadySettings extends StatelessWidget {
                 children: [
                   ProfileSettingsTab(state: state),
                   AiModelSettingsTab(state: state),
+                  const CommunicationSettingsTab(),
                 ],
               ),
             ),
@@ -102,6 +104,7 @@ class _SettingsTabs extends StatelessWidget {
         tabs: [
           Tab(icon: Icon(Icons.person_outline), text: 'Profil'),
           Tab(icon: Icon(Icons.auto_awesome), text: 'Sprachmodell'),
+          Tab(icon: Icon(Icons.forum_outlined), text: 'Kommunikation'),
         ],
       ),
     );

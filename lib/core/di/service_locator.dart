@@ -2,6 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:syscat2/features/communication/domain/repositories/communication_channel_repository.dart';
+import 'package:syscat2/features/communication/domain/usecases/create_communication_channel.dart';
+import 'package:syscat2/features/communication/domain/usecases/delete_communication_channel.dart';
+import 'package:syscat2/features/communication/domain/usecases/watch_communication_channels.dart';
+import 'package:syscat2/features/communication/infrastructure/repositories/firestore_communication_channel_repository.dart';
+import 'package:syscat2/features/communication/presentation/cubits/communication_cubit.dart';
 import 'package:syscat2/features/files/domain/repositories/team_file_repository.dart';
 import 'package:syscat2/features/files/domain/usecases/create_team_folder.dart';
 import 'package:syscat2/features/files/domain/usecases/upload_team_file.dart';
@@ -109,6 +115,12 @@ void configureDependencies() {
         serviceLocator<FirebaseFirestore>(),
       ),
     )
+    ..registerLazySingleton<CommunicationChannelRepository>(
+      () => FirestoreCommunicationChannelRepository(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<FirebaseFirestore>(),
+      ),
+    )
     ..registerLazySingleton<TaskRunnerDatasource>(
       FirebaseFunctionsTaskRunnerDatasource.new,
     )
@@ -182,6 +194,21 @@ void configureDependencies() {
     ..registerLazySingleton(
       () => DeleteTaskTrigger(serviceLocator<TaskTriggerRepository>()),
     )
+    ..registerLazySingleton(
+      () => WatchCommunicationChannels(
+        serviceLocator<CommunicationChannelRepository>(),
+      ),
+    )
+    ..registerLazySingleton(
+      () => CreateCommunicationChannel(
+        serviceLocator<CommunicationChannelRepository>(),
+      ),
+    )
+    ..registerLazySingleton(
+      () => DeleteCommunicationChannel(
+        serviceLocator<CommunicationChannelRepository>(),
+      ),
+    )
     ..registerLazySingleton(() => ExecuteTask(serviceLocator<TaskRepository>()))
     ..registerFactory(
       () => AuthCubit(
@@ -247,6 +274,13 @@ void configureDependencies() {
         setTaskTriggerEnabled: serviceLocator<SetTaskTriggerEnabled>(),
         deleteTaskTrigger: serviceLocator<DeleteTaskTrigger>(),
         taskRepository: serviceLocator<TaskRepository>(),
+      ),
+    )
+    ..registerFactory(
+      () => CommunicationCubit(
+        serviceLocator<WatchCommunicationChannels>(),
+        serviceLocator<CreateCommunicationChannel>(),
+        serviceLocator<DeleteCommunicationChannel>(),
       ),
     )
     ..registerLazySingleton(

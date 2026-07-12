@@ -81,6 +81,9 @@ teams/{teamId}/knowledgeBases/{knowledgeBaseId}
 teams/{teamId}/knowledgeBases/{knowledgeBaseId}/notes/{noteId}
 ```
 
+Kommunikationskanäle werden im Client unter
+`Einstellungen > Kommunikation` gepflegt und bleiben bewusst team-scoped.
+
 Storage:
 
 ```text

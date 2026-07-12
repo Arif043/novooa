@@ -1,0 +1,96 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../../../../core/entities/unique_id.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
+import '../../../files/domain/entities/team_id.dart';
+import '../../../files/infrastructure/repositories/team_workspace_bootstrapper.dart';
+import '../../domain/entities/communication_channel.dart';
+import '../../domain/entities/create_communication_channel_input.dart';
+import '../../domain/repositories/communication_channel_repository.dart';
+import '../models/communication_channel_model.dart';
+
+class FirestoreCommunicationChannelRepository
+    implements CommunicationChannelRepository {
+  FirestoreCommunicationChannelRepository(this._authRepository, this._firestore)
+    : _bootstrapper = TeamWorkspaceBootstrapper(_firestore);
+
+  final AuthRepository _authRepository;
+  final FirebaseFirestore _firestore;
+  final TeamWorkspaceBootstrapper _bootstrapper;
+
+  @override
+  Stream<List<CommunicationChannel>> watchChannels() {
+    final user = _authRepository.currentUser();
+    if (user == null) return Stream.value(const []);
+    return _channelsReference(
+      _teamId(user.id.value),
+    ).orderBy('createdAt', descending: true).snapshots().map(_toChannels);
+  }
+
+  @override
+  Future<void> createChannel(CreateCommunicationChannelInput input) async {
+    final user = _authRepository.currentUser();
+    if (user == null || !input.isValid) return;
+    final ownerUid = user.id.value;
+    final teamId = _teamId(ownerUid);
+    final channelId = UniqueId.random().value;
+    await _bootstrapper.ensurePersonalTeam(teamId: teamId, ownerUid: ownerUid);
+    await _channelsReference(
+      teamId,
+    ).doc(channelId).set(_channelDocument(channelId, teamId, ownerUid, input));
+  }
+
+  @override
+  Future<void> deleteChannel(String channelId) async {
+    final user = _authRepository.currentUser();
+    if (user == null) return;
+    await _channelsReference(_teamId(user.id.value)).doc(channelId).delete();
+  }
+
+  Map<String, Object?> _channelDocument(
+    String channelId,
+    TeamId teamId,
+    String ownerUid,
+    CreateCommunicationChannelInput input,
+  ) {
+    final accountSid = input.accountSid?.trim();
+    return {
+      'id': channelId,
+      'teamId': teamId.value,
+      'createdByUid': ownerUid,
+      'provider': input.provider.name,
+      'kind': input.kind.name,
+      'label': input.label.trim(),
+      'address': input.address.trim(),
+      'status': CommunicationChannelStatus.active.name,
+      'capabilities': _capabilities(input.capabilities),
+      if (accountSid != null && accountSid.isNotEmpty) 'accountSid': accountSid,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+  }
+
+  Map<String, Object?> _capabilities(ChannelCapabilities capabilities) {
+    return {'inbound': capabilities.inbound, 'outbound': capabilities.outbound};
+  }
+
+  List<CommunicationChannel> _toChannels(
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) {
+    return snapshot.docs
+        .map(CommunicationChannelModel.fromDocument)
+        .map((model) => model.toDomain())
+        .toList(growable: false);
+  }
+
+  CollectionReference<Map<String, dynamic>> _channelsReference(TeamId teamId) {
+    return _firestore
+        .collection('teams')
+        .doc(teamId.value)
+        .collection('communicationChannels');
+  }
+
+  TeamId _teamId(String uid) {
+    return TeamId.personal(uid);
+  }
+}
