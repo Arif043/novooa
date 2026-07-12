@@ -35,10 +35,7 @@ class BranchWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: SyscatTheme.primaryOrangeHover,
-        borderRadius: BorderRadius.circular(AppSpacing.xl),
-      ),
+      decoration: SyscatTheme.nodePanelDecoration,
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

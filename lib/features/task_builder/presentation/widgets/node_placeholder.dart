@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 
@@ -24,13 +25,22 @@ class NodePlaceholder extends StatelessWidget {
       builder: (context, candidateData, rejectedData) {
         return Container(
           width: .infinity,
-          padding: .all(32),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: SyscatTheme.primaryOrange, width: 2),
-            borderRadius: .circular(8),
+            color: candidateData.isEmpty
+                ? SyscatTheme.glassSurface
+                : SyscatTheme.primaryOrangeHover,
+            border: Border.all(
+              color: candidateData.isEmpty
+                  ? SyscatTheme.borderLight
+                  : SyscatTheme.primaryOrange,
+              width: candidateData.isEmpty ? 1 : 2,
+            ),
+            borderRadius: .circular(16),
           ),
-          child: Center(child: Icon(Icons.add)),
+          child: const Center(
+            child: Icon(Icons.add, color: SyscatTheme.primaryOrange),
+          ),
         );
       },
     );

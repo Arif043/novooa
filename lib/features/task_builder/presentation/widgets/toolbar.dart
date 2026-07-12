@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
@@ -9,12 +11,18 @@ class Toolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      elevation: 5,
+      elevation: 0,
       borderRadius: .circular(999),
       child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: SyscatTheme.glassSurface,
           borderRadius: .circular(999),
+          border: Border.all(color: SyscatTheme.borderLight),
+          boxShadow: SyscatTheme.glassShadows,
         ),
         child: Row(
           mainAxisSize: .min,
@@ -30,7 +38,7 @@ class Toolbar extends StatelessWidget {
                 tooltip: "Texteingabe hinzufügen",
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             Draggable<WorkflowPrimitive>(
               data: WorkflowPrimitive.script,
               feedback: ScriptNodeDraggingDummy(),
@@ -42,7 +50,7 @@ class Toolbar extends StatelessWidget {
                 tooltip: "Script hinzufügen",
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             Draggable<WorkflowPrimitive>(
               data: WorkflowPrimitive.prompt,
               feedback: PromptNodeDraggingDummy(),
@@ -54,7 +62,7 @@ class Toolbar extends StatelessWidget {
                 tooltip: "Prompt hinzufügen",
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             Draggable<WorkflowPrimitive>(
               data: WorkflowPrimitive.conditional,
               feedback: ConditionalNodeDraggingDummy(),
@@ -66,7 +74,7 @@ class Toolbar extends StatelessWidget {
                 tooltip: "Verzweigung hinzufügen",
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             IconButton(
               onPressed: () => context
                   .read<TaskBuilderCubit>()
@@ -74,7 +82,7 @@ class Toolbar extends StatelessWidget {
               icon: const Icon(Icons.auto_awesome),
               tooltip: "Verfeinerung hinzufügen",
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             IconButton(
               onPressed: () => context
                   .read<TaskBuilderCubit>()
@@ -82,7 +90,7 @@ class Toolbar extends StatelessWidget {
               icon: const Icon(Icons.note_add_outlined),
               tooltip: "Datei schreiben hinzufügen",
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             IconButton(
               onPressed: () => context
                   .read<TaskBuilderCubit>()
@@ -90,7 +98,7 @@ class Toolbar extends StatelessWidget {
               icon: const Icon(Icons.file_open_outlined),
               tooltip: "Datei lesen hinzufügen",
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             IconButton(
               onPressed: () => context
                   .read<TaskBuilderCubit>()
@@ -98,7 +106,7 @@ class Toolbar extends StatelessWidget {
               icon: const Icon(Icons.face),
               tooltip: "Freigabe hinzufügen",
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: AppSpacing.xs),
             IconButton(
               onPressed: () => {},
               icon: const Icon(Icons.code),
@@ -116,10 +124,7 @@ class StringInputNodeDraggingDummy extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.green,
-      child: Center(child: Icon(Icons.text_fields)),
-    );
+    return const _DraggingDummy(icon: Icons.text_fields);
   }
 }
 
@@ -128,10 +133,7 @@ class PromptNodeDraggingDummy extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.green,
-      child: Center(child: Icon(Icons.format_align_left)),
-    );
+    return const _DraggingDummy(icon: Icons.format_align_left);
   }
 }
 
@@ -140,10 +142,7 @@ class ScriptNodeDraggingDummy extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.green,
-      child: Center(child: Icon(Icons.terminal)),
-    );
+    return const _DraggingDummy(icon: Icons.terminal);
   }
 }
 
@@ -152,9 +151,25 @@ class ConditionalNodeDraggingDummy extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.green,
-      child: Center(child: Icon(Icons.call_split)),
+    return const _DraggingDummy(icon: Icons.call_split);
+  }
+}
+
+class _DraggingDummy extends StatelessWidget {
+  const _DraggingDummy({required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        width: 96,
+        height: 64,
+        decoration: SyscatTheme.nodePanelDecoration,
+        child: Icon(icon, color: SyscatTheme.primaryOrange),
+      ),
     );
   }
 }

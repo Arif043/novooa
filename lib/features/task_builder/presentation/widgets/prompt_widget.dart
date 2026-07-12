@@ -57,10 +57,7 @@ class _PromptWidgetState extends State<PromptWidget> {
     final config = widget.node.config as PromptNodeConfig;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: SyscatTheme.primaryOrangeHover,
-        borderRadius: BorderRadius.circular(AppSpacing.xl),
-      ),
+      decoration: SyscatTheme.nodePanelDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -78,7 +75,8 @@ class _PromptWidgetState extends State<PromptWidget> {
           const SizedBox(height: AppSpacing.xs),
           CupertinoSlidingSegmentedControl<PromptOutputType>(
             groupValue: selectedOutput,
-            backgroundColor: SyscatTheme.primaryOrangeLighter,
+            backgroundColor: SyscatTheme.surfaceContainer,
+            thumbColor: SyscatTheme.glassSurface,
             children: const {
               PromptOutputType.text: Text('Freitext'),
               PromptOutputType.decision: Text('Entscheidung'),

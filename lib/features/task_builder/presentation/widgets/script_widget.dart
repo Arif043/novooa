@@ -46,10 +46,7 @@ class _ScriptWidgetState extends State<ScriptWidget> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: SyscatTheme.primaryOrangeHover,
-        borderRadius: BorderRadius.circular(AppSpacing.xl),
-      ),
+      decoration: SyscatTheme.nodePanelDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

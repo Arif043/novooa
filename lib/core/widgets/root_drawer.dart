@@ -3,6 +3,7 @@ import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:syscat2/features/user/domain/usecases/get_current_user_profile.dart';
+import '../theme/app_spacing.dart';
 import '../theme/syscat_theme.dart';
 import '../../root_tab.dart';
 
@@ -23,12 +24,17 @@ class RootDrawer extends StatelessWidget {
     return Drawer(
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.gutter,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _DrawerHeader(),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               _TabList(
                 tabs: tabs,
                 selectedIndex: selectedIndex,
@@ -57,11 +63,16 @@ class _DrawerHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(8, 8, 8, 4),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm,
+        AppSpacing.sm,
+        AppSpacing.sm,
+        AppSpacing.xs,
+      ),
       child: Row(
         children: [
-          _BrandMark(),
-          SizedBox(width: 12),
+          const _BrandMark(),
+          const SizedBox(width: AppSpacing.md),
           FutureBuilder(
             future: serviceLocator<GetCurrentUserProfile>().call(),
             builder: (context, snapshot) {
@@ -69,7 +80,7 @@ class _DrawerHeader extends StatelessWidget {
                 if (snapshot.data case Success(success: final user)) {
                   return Text(
                     'Hey ${user.displayName}',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleLarge,
                   );
                 }
               }
@@ -94,8 +105,8 @@ class _BrandMark extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: SyscatTheme.primaryOrange.withValues(alpha: 0.35),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -124,7 +135,8 @@ class _TabList extends StatelessWidget {
     return Expanded(
       child: ListView.separated(
         itemCount: tabs.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 6),
+        separatorBuilder: (context, index) =>
+            const SizedBox(height: AppSpacing.sm),
         itemBuilder: (context, index) => _DrawerTile(
           tab: tabs[index],
           isSelected: index == selectedIndex,

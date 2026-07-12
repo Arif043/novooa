@@ -50,10 +50,7 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: SyscatTheme.primaryOrangeHover,
-        borderRadius: BorderRadius.circular(AppSpacing.xl),
-      ),
+      decoration: SyscatTheme.nodePanelDecoration,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -79,7 +76,8 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
           const SizedBox(height: AppSpacing.xs),
           CupertinoSlidingSegmentedControl<int>(
             groupValue: _config.maxIterations,
-            backgroundColor: SyscatTheme.primaryOrangeLighter,
+            backgroundColor: SyscatTheme.surfaceContainer,
+            thumbColor: SyscatTheme.glassSurface,
             children: {
               for (var value = 1; value <= 5; value++) value: Text('$value'),
             },

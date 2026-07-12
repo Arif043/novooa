@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/logging/syscat_log.dart';
@@ -130,7 +130,7 @@ class _TaskBuilderBodyState extends State<_TaskBuilderBody> {
     final cubit = context.read<TaskBuilderCubit>();
     return Column(
       children: [
-        CupertinoButton.filled(
+        FilledButton.icon(
           onPressed: () async {
             final task = cubit.loadedTaskOrNull();
             if (task == null) return;
@@ -153,10 +153,12 @@ class _TaskBuilderBodyState extends State<_TaskBuilderBody> {
               ),
             );
           },
-          child: Text('Run Task'),
+          icon: const Icon(Icons.play_arrow_rounded),
+          label: const Text('Aufgabe starten'),
         ),
-        Toolbar(),
-        const SizedBox(height: AppSpacing.xxl),
+        const SizedBox(height: AppSpacing.md),
+        const Toolbar(),
+        const SizedBox(height: AppSpacing.xl),
         if (widget.state case TaskBuilderLoaded(:final editingTask))
           Expanded(
             child: WebSmoothScroll(
