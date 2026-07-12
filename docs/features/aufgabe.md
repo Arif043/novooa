@@ -407,7 +407,10 @@ Jeder ausführbare Baustein implementiert die `NodeExecutor`-Strategy:
 ```ts
 type NodeExecutor = {
   primitive: WorkflowNode["primitive"];
-  execute(input: NodeExecutorInput): Promise<NodeExecutionResult>;
+  execute(
+    input: NodeExecutorInput,
+    runContext: TaskRunContext
+  ): Promise<NodeExecutionResult>;
 }
 ```
 
@@ -416,6 +419,24 @@ Subgraph-Orchestrierung zuständig. Primitive-spezifische Logik lebt im
 jeweiligen Executor. Conditional-Branches erhalten einen injizierten
 `runSubgraph`-Callback, damit der Conditional-Executor keine direkte
 Abhängigkeit auf den Graph-Runner hat.
+
+Architektur-Notiz: `context` soll nicht dauerhaft als Sammelbegriff für
+Run-Input, Parent-Outputs und Node-Input dienen. Der nächste sinnvolle Schritt
+ist ein expliziteres `NodeExecutionInput`:
+
+```ts
+type NodeExecutionInput = {
+  node: WorkflowNode,
+  input: string,
+  parentResults: NodeExecutionResult[],
+  attachmentWorkspace?: NodeAttachmentWorkspace
+}
+```
+
+Der `TaskRunContext` bleibt separat und enthält übergreifenden Run-Zustand wie
+`task`, `teamId`, `variables`, `results` und `runSubgraph`. Ziel: Jeder Node
+bekommt einen klaren fachlichen Input, kennt bei Bedarf seine direkten
+Vorgängerergebnisse und greift getrennt auf Run-weite Variablen zu.
 
 ### Activity-Tracking
 
