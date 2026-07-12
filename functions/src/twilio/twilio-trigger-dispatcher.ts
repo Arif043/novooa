@@ -12,6 +12,7 @@ import type {TwilioMessageEvent} from "./twilio-message-event.js";
 
 export async function dispatchTwilioMessageTriggers(input: {
   teamId: string;
+  channelId: string;
   event: TwilioMessageEvent;
 }): Promise<void> {
   if (input.event.channel !== "whatsapp") return;
@@ -22,7 +23,7 @@ export async function dispatchTwilioMessageTriggers(input: {
     .where("enabled", "==", true)
     .get();
   for (const trigger of triggers.docs) {
-    if (isWhatsappEventTrigger(trigger) && matchesFilter(trigger, input.event)) {
+    if (isMatchingWhatsappTrigger(trigger, input)) {
       await enqueueTriggerRun(input.teamId, trigger, input.event);
     }
   }
@@ -56,11 +57,26 @@ async function enqueueTriggerRun(
   }
 }
 
-function isWhatsappEventTrigger(
+function isMatchingWhatsappTrigger(
   trigger: QueryDocumentSnapshot<DocumentData>,
+  input: {
+    channelId: string;
+    event: TwilioMessageEvent;
+  },
 ): boolean {
   return trigger.get("type") === "event" &&
-    trigger.get("eventConfig.source") === "whatsappMessageReceived";
+    trigger.get("eventConfig.source") === "whatsappMessageReceived" &&
+    matchesChannel(trigger, input.channelId) &&
+    matchesFilter(trigger, input.event);
+}
+
+function matchesChannel(
+  trigger: QueryDocumentSnapshot<DocumentData>,
+  channelId: string,
+): boolean {
+  const configuredChannelId = String(trigger.get("eventConfig.channelId") ?? "");
+  return configuredChannelId.trim().length === 0 ||
+    configuredChannelId === channelId;
 }
 
 function matchesFilter(

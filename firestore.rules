@@ -75,6 +75,22 @@ rules_version = '2';
 //   - id, runId, taskId, taskTitle, target, status, occurredAt
 //   - nodeId, primitive, input, output, message (optional)
 //
+// Subcollection: teams/{teamId}/communicationChannels
+// Document ID: generated channel id
+// Fields:
+//   - id, teamId, createdByUid, provider, kind, label, address, status
+//   - capabilities: map (inbound/outbound booleans)
+//   - accountSid: string (optional, Twilio account identifier)
+//   - createdAt, updatedAt
+//
+// Subcollection: teams/{teamId}/inboxes/{channelId}/conversations
+// Document ID: generated conversation id
+// Fields are written by backend Functions and read by team members.
+//
+// Subcollection: teams/{teamId}/inboxes/{channelId}/conversations/{conversationId}/messages
+// Document ID: provider message id
+// Fields are written by backend Functions and read by team members.
+//
 // Subcollection: teams/{teamId}/files
 // Document ID: generated file id
 // Fields:
@@ -416,12 +432,12 @@ service cloud.firestore {
         (data.type == 'event' &&
           data.get('config', null) == null &&
           data.get('nextRunAt', null) == null &&
-          isValidEventConfig(data.get('eventConfig', null)));
+          isValidEventConfig(data.get('eventConfig', null), data.teamId));
     }
 
-    function isValidEventConfig(data) {
+    function isValidEventConfig(data, teamId) {
       return data is map &&
-        data.keys().hasOnly(['source', 'filter']) &&
+        data.keys().hasOnly(['source', 'filter', 'channelId']) &&
         data.keys().hasAll(['source', 'filter']) &&
         data.source in [
           'emailReceived',
@@ -430,7 +446,16 @@ service cloud.firestore {
           'webhookReceived',
         ] &&
         data.filter is string &&
-        data.filter.size() <= 240;
+        data.filter.size() <= 240 &&
+        isValidOptionalChannelId(teamId, data.get('channelId', null));
+    }
+
+    function isValidOptionalChannelId(teamId, channelId) {
+      return channelId == null ||
+        (channelId is string &&
+          channelId.size() > 0 &&
+          channelId.size() <= 120 &&
+          exists(/databases/$(database)/documents/teams/$(teamId)/communicationChannels/$(channelId)));
     }
 
     function isValidScheduleConfig(data) {
@@ -482,6 +507,66 @@ service cloud.firestore {
     function isValidOptionalString(value, min, max) {
       return value == null ||
         (value is string && value.size() >= min && value.size() <= max);
+    }
+
+    function isValidCommunicationChannel(data, teamId, channelId) {
+      return data.keys().hasOnly([
+        'id',
+        'teamId',
+        'createdByUid',
+        'provider',
+        'kind',
+        'label',
+        'address',
+        'status',
+        'capabilities',
+        'accountSid',
+        'createdAt',
+        'updatedAt',
+      ]) &&
+        data.keys().hasAll([
+          'id',
+          'teamId',
+          'createdByUid',
+          'provider',
+          'kind',
+          'label',
+          'address',
+          'status',
+          'capabilities',
+          'createdAt',
+          'updatedAt',
+        ]) &&
+        data.id == channelId &&
+        data.teamId == teamId &&
+        data.createdByUid is string &&
+        data.createdByUid.size() > 0 &&
+        data.provider in ['twilio', 'sendgrid'] &&
+        data.kind in ['whatsapp', 'sms', 'email'] &&
+        data.label is string &&
+        data.label.size() >= 1 &&
+        data.label.size() <= 120 &&
+        isValidChannelAddress(data.kind, data.address) &&
+        data.status in ['setupRequired', 'pendingVerification', 'active', 'disabled'] &&
+        isValidChannelCapabilities(data.capabilities) &&
+        isValidOptionalString(data.get('accountSid', null), 2, 80) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidChannelAddress(kind, address) {
+      return (kind == 'email' && isValidEmail(address)) ||
+        ((kind == 'whatsapp' || kind == 'sms') &&
+          address is string &&
+          address.matches('^(whatsapp:)?\\+[1-9][0-9]{6,14}$'));
+    }
+
+    function isValidChannelCapabilities(data) {
+      return data is map &&
+        data.keys().hasOnly(['inbound', 'outbound']) &&
+        data.keys().hasAll(['inbound', 'outbound']) &&
+        data.inbound is bool &&
+        data.outbound is bool;
     }
 
     function isValidKnowledgeNote(data, knowledgeBaseId) {
@@ -622,9 +707,23 @@ service cloud.firestore {
         allow create, update, delete: if false;
       }
 
-      match /integrations/{integrationId} {
+      match /communicationChannels/{channelId} {
         allow get, list: if isTeamMember(teamId);
-        allow create, update, delete: if false;
+
+        allow create: if isTeamMember(teamId) &&
+          isValidCommunicationChannel(request.resource.data, teamId, channelId) &&
+          request.resource.data.createdByUid == request.auth.uid &&
+          request.resource.data.createdAt == request.time &&
+          request.resource.data.updatedAt == request.time;
+
+        allow update: if isTeamMember(teamId) &&
+          isValidCommunicationChannel(request.resource.data, teamId, channelId) &&
+          request.resource.data.teamId == resource.data.teamId &&
+          request.resource.data.createdByUid == resource.data.createdByUid &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          request.resource.data.updatedAt == request.time;
+
+        allow delete: if isTeamMember(teamId);
       }
 
       match /inboxes/{inboxId} {

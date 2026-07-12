@@ -90,6 +90,7 @@ class TaskTriggerModel {
     return EventTriggerConfig(
       source: _eventSourceFrom(data['source']),
       filter: data['filter'] as String? ?? '',
+      channelId: data['channelId'] as String?,
     );
   }
 

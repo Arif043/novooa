@@ -46,7 +46,8 @@ Dokument:
   },
   eventConfig?: {
     source: "emailReceived" | "whatsappMessageReceived" | "fileCreated" | "webhookReceived",
-    filter: string
+    filter: string,
+    channelId?: string
   },
   policy: {
     ifRunning: "skipIfRunning" | "startParallel"
@@ -63,27 +64,42 @@ Dokument:
 Backend-Worker fällige Trigger effizient per Query finden kann. Event-Trigger
 haben `nextRunAt = null` und warten auf externe Ereignisse.
 
-Twilio-Integrationen liegen team-scoped unter:
+Kommunikationskanäle liegen team-scoped unter:
 
 ```text
-teams/{teamId}/integrations/{integrationId}
+teams/{teamId}/communicationChannels/{channelId}
 ```
 
-Minimal erwartetes Dokument:
+Minimal erwartetes WhatsApp-Dokument:
 
 ```ts
 {
+  id: string,
+  teamId: string,
+  createdByUid: string,
   provider: "twilio",
+  kind: "whatsapp",
+  label: "Support WhatsApp",
+  address: "whatsapp:+491234567890",
   status: "active",
+  capabilities: {
+    inbound: true,
+    outbound: true
+  },
   accountSid: string,
-  externalAddress: "whatsapp:+491234567890"
+  createdAt: Timestamp,
+  updatedAt: Timestamp
 }
 ```
+
+Ein Team kann mehrere Kanäle besitzen. Kanäle gehören bewusst nicht zu
+einzelnen Projekten; Aufgaben und Trigger referenzieren bei Bedarf einen
+Team-Kanal.
 
 Eingehende Nachrichten werden unter dem Team-Inbox-Pfad gespeichert:
 
 ```text
-teams/{teamId}/inboxes/{integrationId}/conversations/{conversationId}/messages/{messageSid}
+teams/{teamId}/inboxes/{channelId}/conversations/{conversationId}/messages/{messageSid}
 ```
 
 ## UI
@@ -141,20 +157,21 @@ Der erzeugte `taskRun` enthält zusätzlich:
 ### Twilio WhatsApp
 
 Die Function `twilioWebhook` nimmt Twilio Messaging-Webhooks entgegen. Die
-Webhook-URL enthält die Zuordnung zu Team und Integration:
+Webhook-URL enthält die Zuordnung zu Team und Kommunikationskanal:
 
 ```text
-https://<region>-<project>.cloudfunctions.net/twilioWebhook?teamId=<teamId>&integrationId=<integrationId>
+https://<region>-<project>.cloudfunctions.net/twilioWebhook?teamId=<teamId>&channelId=<channelId>
 ```
 
 Die Function:
 
 1. akzeptiert `POST` mit `application/x-www-form-urlencoded`,
 2. prüft `X-Twilio-Signature` gegen `TWILIO_AUTH_TOKEN`,
-3. validiert das Integrationsdokument,
+3. validiert den Kommunikationskanal,
 4. speichert die Nachricht idempotent per Twilio-`MessageSid`,
 5. startet passende aktive Event-Trigger mit
-   `eventConfig.source == "whatsappMessageReceived"`.
+   `eventConfig.source == "whatsappMessageReceived"`. Wenn ein Trigger
+   `eventConfig.channelId` setzt, wird nur dieser Team-Kanal berücksichtigt.
 
 Im Functions Emulator wird eine fehlende `TWILIO_AUTH_TOKEN`-Secret für lokale
 Tests toleriert. In Production ist `TWILIO_AUTH_TOKEN` erforderlich.

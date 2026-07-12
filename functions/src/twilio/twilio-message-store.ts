@@ -7,31 +7,31 @@ import {
 } from "firebase-admin/firestore";
 import type {TwilioMessageEvent} from "./twilio-message-event.js";
 
-export type TwilioIntegration = {
+export type TwilioCommunicationChannel = {
   id: string;
   teamId: string;
 };
 
-export async function loadTwilioIntegration(input: {
+export async function loadTwilioCommunicationChannel(input: {
   teamId: string;
-  integrationId: string;
+  channelId: string;
   event: TwilioMessageEvent;
-}): Promise<TwilioIntegration> {
+}): Promise<TwilioCommunicationChannel> {
   const snapshot = await database()
     .collection("teams")
     .doc(input.teamId)
-    .collection("integrations")
-    .doc(input.integrationId)
+    .collection("communicationChannels")
+    .doc(input.channelId)
     .get();
   const data = snapshot.data() ?? {};
-  if (!snapshot.exists || !isActiveTwilioIntegration(data, input.event)) {
-    throw new Error("Twilio integration was not found or is inactive.");
+  if (!snapshot.exists || !isActiveTwilioChannel(data, input.event)) {
+    throw new Error("Twilio communication channel was not found or is inactive.");
   }
   return {id: snapshot.id, teamId: input.teamId};
 }
 
 export async function storeInboundTwilioMessage(input: {
-  integration: TwilioIntegration;
+  channel: TwilioCommunicationChannel;
   event: TwilioMessageEvent;
 }): Promise<boolean> {
   const db = database();
@@ -48,29 +48,30 @@ export async function storeInboundTwilioMessage(input: {
   });
 }
 
-function isActiveTwilioIntegration(
+function isActiveTwilioChannel(
   data: Record<string, unknown>,
   event: TwilioMessageEvent,
 ): boolean {
   return data.provider === "twilio" &&
     data.status === "active" &&
+    data.kind === event.channel &&
     data.accountSid === event.accountSid &&
-    data.externalAddress === event.to;
+    data.address === event.to;
 }
 
 function messageReferences(
   db: Firestore,
   input: {
-    integration: TwilioIntegration;
+    channel: TwilioCommunicationChannel;
     event: TwilioMessageEvent;
   },
   conversationId: string,
 ) {
   const conversation = db
     .collection("teams")
-    .doc(input.integration.teamId)
+    .doc(input.channel.teamId)
     .collection("inboxes")
-    .doc(input.integration.id)
+    .doc(input.channel.id)
     .collection("conversations")
     .doc(conversationId);
   return {
@@ -80,12 +81,12 @@ function messageReferences(
 }
 
 function conversationDocument(input: {
-  integration: TwilioIntegration;
+  channel: TwilioCommunicationChannel;
   event: TwilioMessageEvent;
 }) {
   return {
     id: conversationIdFrom(input.event.from),
-    integrationId: input.integration.id,
+    channelId: input.channel.id,
     channel: input.event.channel,
     externalContactId: input.event.from,
     lastMessageAt: FieldValue.serverTimestamp(),
@@ -95,7 +96,7 @@ function conversationDocument(input: {
 }
 
 function messageDocument(input: {
-  integration: TwilioIntegration;
+  channel: TwilioCommunicationChannel;
   event: TwilioMessageEvent;
 }) {
   return {

@@ -4,13 +4,13 @@ import {logError, logInfo} from "../task-runner/structured-logger.js";
 import {twilioMessageEventFrom} from "./twilio-message-event.js";
 import {
   formFieldsFromRequest,
-  integrationIdFromRequest,
+  channelIdFromRequest,
   publicRequestUrl,
   teamIdFromRequest,
 } from "./twilio-request.js";
 import {isValidTwilioSignature} from "./twilio-signature.js";
 import {
-  loadTwilioIntegration,
+  loadTwilioCommunicationChannel,
   storeInboundTwilioMessage,
 } from "./twilio-message-store.js";
 import {dispatchTwilioMessageTriggers} from "./twilio-trigger-dispatcher.js";
@@ -29,15 +29,17 @@ export const twilioWebhook = onRequest(
       verifyRequest(request.get("x-twilio-signature"), request, fields);
       const event = twilioMessageEventFrom(fields);
       const teamId = teamIdFromRequest(request);
-      const integrationId = integrationIdFromRequest(request);
-      const integration = await loadTwilioIntegration({
+      const channelId = channelIdFromRequest(request);
+      const channel = await loadTwilioCommunicationChannel({
         teamId,
-        integrationId,
+        channelId,
         event,
       });
-      const created = await storeInboundTwilioMessage({integration, event});
-      if (created) await dispatchTwilioMessageTriggers({teamId, event});
-      logInfo("twilio_message.received", {teamId, integrationId, created});
+      const created = await storeInboundTwilioMessage({channel, event});
+      if (created) {
+        await dispatchTwilioMessageTriggers({teamId, channelId, event});
+      }
+      logInfo("twilio_message.received", {teamId, channelId, created});
       response.type("text/xml").status(200).send("<Response></Response>");
     } catch (error) {
       logError("twilio_message.failed", {message: errorMessage(error)});

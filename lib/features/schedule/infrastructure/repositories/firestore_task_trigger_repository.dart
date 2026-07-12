@@ -109,7 +109,11 @@ class FirestoreTaskTriggerRepository implements TaskTriggerRepository {
   }
 
   Map<String, Object?> _eventDocument(EventTriggerConfig config) {
-    return {'source': config.source.name, 'filter': config.filter.trim()};
+    return {
+      'source': config.source.name,
+      'filter': config.filter.trim(),
+      if (config.channelId != null) 'channelId': config.channelId,
+    };
   }
 
   List<TaskTrigger> _toTriggers(QuerySnapshot<Map<String, dynamic>> snapshot) {

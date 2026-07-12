@@ -63,4 +63,11 @@
 - Zeitplan page reads and writes
   `/teams/personal_<uid>/taskTriggers`. `type=schedule` requires `config`;
   `type=event` requires `eventConfig.source` in the allowed event source list
-  and an optional `filter` up to 240 characters.
+  and an optional `filter` up to 240 characters. Event triggers may optionally
+  reference `eventConfig.channelId`; when present, rules require the referenced
+  communication channel to exist in the same team.
+- Kommunikation channels live under
+  `/teams/{teamId}/communicationChannels/{channelId}`. Team members may read,
+  create, update, and delete validated channel documents. Channels are
+  team-scoped resources, not project-scoped resources. Provider secrets are not
+  stored in these documents.

@@ -14,8 +14,8 @@ export function teamIdFromRequest(request: Request): string {
   return queryValue(request.query.teamId, "teamId");
 }
 
-export function integrationIdFromRequest(request: Request): string {
-  return queryValue(request.query.integrationId, "integrationId");
+export function channelIdFromRequest(request: Request): string {
+  return queryValue(request.query.channelId, "channelId");
 }
 
 export function publicRequestUrl(request: Request): string {
@@ -43,11 +43,17 @@ function stringFieldsFrom(input: Record<string, unknown>): Record<string, string
 }
 
 function queryValue(value: unknown, name: string): string {
+  const normalized = optionalQueryValue(value);
+  if (normalized) return normalized;
+  throw new Error(`${name} query parameter is required.`);
+}
+
+function optionalQueryValue(value: unknown): string | undefined {
   const normalized = Array.isArray(value) ? value[0] : value;
   if (typeof normalized === "string" && normalized.trim().length > 0) {
     return normalized.trim();
   }
-  throw new Error(`${name} query parameter is required.`);
+  return undefined;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

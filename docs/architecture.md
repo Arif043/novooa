@@ -71,6 +71,9 @@ teams/{teamId}/tasks/{taskId}
 teams/{teamId}/taskTriggers/{triggerId}
 teams/{teamId}/taskRuns/{runId}
 teams/{teamId}/activities/{activityId}
+teams/{teamId}/communicationChannels/{channelId}
+teams/{teamId}/inboxes/{channelId}/conversations/{conversationId}
+teams/{teamId}/inboxes/{channelId}/conversations/{conversationId}/messages/{messageId}
 teams/{teamId}/folders/{folderId}
 teams/{teamId}/files/{fileId}
 teams/{teamId}/files/{fileId}/versions/{versionId}

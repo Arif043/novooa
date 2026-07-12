@@ -10,10 +10,15 @@ enum EventTriggerSource {
 }
 
 class EventTriggerConfig {
-  const EventTriggerConfig({required this.source, this.filter = ''});
+  const EventTriggerConfig({
+    required this.source,
+    this.filter = '',
+    this.channelId,
+  });
 
   final EventTriggerSource source;
   final String filter;
+  final String? channelId;
 
   bool get isValid => true;
 }
