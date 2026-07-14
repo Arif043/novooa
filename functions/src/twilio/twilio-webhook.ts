@@ -9,11 +9,10 @@ import {
   teamIdFromRequest,
 } from "./twilio-request.js";
 import {isValidTwilioSignature} from "./twilio-signature.js";
-import {
-  loadTwilioCommunicationChannel,
-  storeInboundTwilioMessage,
-} from "./twilio-message-store.js";
-import {dispatchTwilioMessageTriggers} from "./twilio-trigger-dispatcher.js";
+import {loadTwilioCommunicationChannel} from "./twilio-message-store.js";
+import {channelMessageEventFromTwilio} from "../channels/channel-message-event.js";
+import {storeInboundChannelMessage} from "../channels/channel-message-store.js";
+import {dispatchChannelMessageTriggers} from "../channels/channel-trigger-dispatcher.js";
 
 const twilioAuthToken = defineSecret("TWILIO_AUTH_TOKEN");
 
@@ -35,9 +34,17 @@ export const twilioWebhook = onRequest(
         channelId,
         event,
       });
-      const created = await storeInboundTwilioMessage({channel, event});
+      const channelEvent = channelMessageEventFromTwilio(event);
+      const created = await storeInboundChannelMessage({
+        channel,
+        event: channelEvent,
+      });
       if (created) {
-        await dispatchTwilioMessageTriggers({teamId, channelId, event});
+        await dispatchChannelMessageTriggers({
+          teamId,
+          channelId,
+          event: channelEvent,
+        });
       }
       logInfo("twilio_message.received", {teamId, channelId, created});
       response.type("text/xml").status(200).send("<Response></Response>");

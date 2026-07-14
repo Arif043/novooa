@@ -1,5 +1,6 @@
 enum EventTriggerSource {
   emailReceived('E-Mail empfangen'),
+  smsMessageReceived('SMS empfangen'),
   whatsappMessageReceived('WhatsApp-Nachricht'),
   fileCreated('Datei erstellt'),
   webhookReceived('Webhook empfangen');

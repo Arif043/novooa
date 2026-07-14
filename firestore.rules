@@ -441,6 +441,7 @@ service cloud.firestore {
         data.keys().hasAll(['source', 'filter']) &&
         data.source in [
           'emailReceived',
+          'smsMessageReceived',
           'whatsappMessageReceived',
           'fileCreated',
           'webhookReceived',

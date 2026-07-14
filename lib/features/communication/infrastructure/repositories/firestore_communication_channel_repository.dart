@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 import '../../../../core/entities/unique_id.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
@@ -11,11 +12,17 @@ import '../models/communication_channel_model.dart';
 
 class FirestoreCommunicationChannelRepository
     implements CommunicationChannelRepository {
-  FirestoreCommunicationChannelRepository(this._authRepository, this._firestore)
-    : _bootstrapper = TeamWorkspaceBootstrapper(_firestore);
+  FirestoreCommunicationChannelRepository(
+    this._authRepository,
+    this._firestore, {
+    FirebaseFunctions? functions,
+  }) : _functions =
+           functions ?? FirebaseFunctions.instanceFor(region: 'us-central1'),
+       _bootstrapper = TeamWorkspaceBootstrapper(_firestore);
 
   final AuthRepository _authRepository;
   final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
   final TeamWorkspaceBootstrapper _bootstrapper;
 
   @override
@@ -45,6 +52,18 @@ class FirestoreCommunicationChannelRepository
     final user = _authRepository.currentUser();
     if (user == null) return;
     await _channelsReference(_teamId(user.id.value)).doc(channelId).delete();
+  }
+
+  @override
+  Future<void> dispatchFakeMessage(String channelId) async {
+    final callable = _functions.httpsCallable(
+      'dispatchFakeChannelMessage',
+      options: HttpsCallableOptions(timeout: const Duration(seconds: 30)),
+    );
+    await callable.call<void>({
+      'channelId': channelId,
+      'body': 'Testnachricht aus Syscat',
+    });
   }
 
   Map<String, Object?> _channelDocument(

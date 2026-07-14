@@ -68,6 +68,7 @@ IconData _iconFor(TaskTrigger trigger) {
   if (trigger.type == TriggerType.schedule) return Icons.schedule_outlined;
   return switch (trigger.event?.source) {
     EventTriggerSource.emailReceived => Icons.alternate_email,
+    EventTriggerSource.smsMessageReceived => Icons.sms_outlined,
     EventTriggerSource.whatsappMessageReceived => Icons.chat_outlined,
     EventTriggerSource.fileCreated => Icons.note_add_outlined,
     EventTriggerSource.webhookReceived => Icons.webhook_outlined,

@@ -8,14 +8,18 @@ import {
 import {enqueueTaskRun} from "../task-runner/task-activity-logger.js";
 import {loadTaskDefinitionForTeam} from "../task-runner/task-definition-loader.js";
 import {errorDetails, logError, logInfo} from "../task-runner/structured-logger.js";
-import type {TwilioMessageEvent} from "./twilio-message-event.js";
+import {
+  type ChannelMessageEvent,
+  messageFromEvent,
+  recipientFromEvent,
+  senderFromEvent,
+} from "./channel-message-event.js";
 
-export async function dispatchTwilioMessageTriggers(input: {
+export async function dispatchChannelMessageTriggers(input: {
   teamId: string;
   channelId: string;
-  event: TwilioMessageEvent;
+  event: ChannelMessageEvent;
 }): Promise<void> {
-  if (input.event.channel !== "whatsapp") return;
   const triggers = await getFirestore()
     .collection("teams")
     .doc(input.teamId)
@@ -23,8 +27,8 @@ export async function dispatchTwilioMessageTriggers(input: {
     .where("enabled", "==", true)
     .get();
   for (const trigger of triggers.docs) {
-    if (isMatchingWhatsappTrigger(trigger, input)) {
-      await enqueueTriggerRun(input.teamId, trigger, input.event);
+    if (isMatchingMessageTrigger(trigger, input)) {
+      await enqueueTriggerRun(input.teamId, trigger, input);
     }
   }
 }
@@ -32,14 +36,17 @@ export async function dispatchTwilioMessageTriggers(input: {
 async function enqueueTriggerRun(
   teamId: string,
   trigger: QueryDocumentSnapshot<DocumentData>,
-  event: TwilioMessageEvent,
+  input: {
+    channelId: string;
+    event: ChannelMessageEvent;
+  },
 ): Promise<void> {
   try {
     const task = await loadTaskDefinitionForTeam(teamId, String(trigger.get("taskId")));
     const run = await enqueueTaskRun({
       teamId,
       task,
-      context: contextFrom(event),
+      context: contextFrom(input.event),
       trigger: {id: trigger.id, type: "event"},
     });
     await trigger.ref.set({
@@ -47,9 +54,9 @@ async function enqueueTriggerRun(
       lastRunId: run.runId,
       updatedAt: FieldValue.serverTimestamp(),
     }, {merge: true});
-    logInfo("twilio_message.trigger_enqueued", {teamId, triggerId: trigger.id});
+    logInfo("channel_message.trigger_enqueued", {teamId, triggerId: trigger.id});
   } catch (error) {
-    logError("twilio_message.trigger_failed", {
+    logError("channel_message.trigger_failed", {
       teamId,
       triggerId: trigger.id,
       error: errorDetails(error),
@@ -57,15 +64,15 @@ async function enqueueTriggerRun(
   }
 }
 
-function isMatchingWhatsappTrigger(
+function isMatchingMessageTrigger(
   trigger: QueryDocumentSnapshot<DocumentData>,
   input: {
     channelId: string;
-    event: TwilioMessageEvent;
+    event: ChannelMessageEvent;
   },
 ): boolean {
   return trigger.get("type") === "event" &&
-    trigger.get("eventConfig.source") === "whatsappMessageReceived" &&
+    trigger.get("eventConfig.source") === input.event.type &&
     matchesChannel(trigger, input.channelId) &&
     matchesFilter(trigger, input.event);
 }
@@ -81,22 +88,51 @@ function matchesChannel(
 
 function matchesFilter(
   trigger: QueryDocumentSnapshot<DocumentData>,
-  event: TwilioMessageEvent,
+  event: ChannelMessageEvent,
 ): boolean {
   const filter = String(trigger.get("eventConfig.filter") ?? "").trim();
   if (filter.length === 0) return true;
-  const haystack = `${event.from} ${event.to} ${event.body}`.toLowerCase();
+  const haystack = searchableTextFrom(event).toLowerCase();
   return haystack.includes(filter.toLowerCase());
 }
 
-function contextFrom(event: TwilioMessageEvent): string {
+function contextFrom(event: ChannelMessageEvent): string {
+  if (event.type === "emailReceived") {
+    return [
+      "E-Mail empfangen",
+      `Von: ${event.senderEmail}`,
+      `Betreff: ${event.subject}`,
+      "",
+      event.message,
+    ].join("\n");
+  }
   return [
-    "WhatsApp-Nachricht empfangen",
-    `Von: ${event.from}`,
-    `An: ${event.to}`,
+    `${eventLabel(event)} empfangen`,
+    `Von: ${event.senderPhoneNumber}`,
     "",
-    event.body,
+    event.message,
   ].join("\n");
+}
+
+function searchableTextFrom(event: ChannelMessageEvent): string {
+  if (event.type === "emailReceived") {
+    return [
+      event.senderEmail,
+      event.recipientEmail,
+      event.subject,
+      event.message,
+    ].join(" ");
+  }
+  return [
+    senderFromEvent(event),
+    recipientFromEvent(event),
+    messageFromEvent(event),
+  ].join(" ");
+}
+
+function eventLabel(event: ChannelMessageEvent): string {
+  if (event.type === "smsMessageReceived") return "SMS";
+  return "WhatsApp-Nachricht";
 }
 
 if (getApps().length === 0) initializeApp();

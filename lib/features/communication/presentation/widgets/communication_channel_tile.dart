@@ -7,10 +7,12 @@ class CommunicationChannelTile extends StatelessWidget {
   const CommunicationChannelTile({
     super.key,
     required this.channel,
+    required this.onFakeMessage,
     required this.onDelete,
   });
 
   final CommunicationChannel channel;
+  final VoidCallback onFakeMessage;
   final VoidCallback onDelete;
 
   @override
@@ -32,6 +34,11 @@ class CommunicationChannelTile extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                     overflow: TextOverflow.ellipsis,
                   ),
+                ),
+                IconButton(
+                  tooltip: 'Testnachricht auslösen',
+                  onPressed: onFakeMessage,
+                  icon: const Icon(Icons.bolt_outlined),
                 ),
                 IconButton(
                   tooltip: 'Kanal entfernen',

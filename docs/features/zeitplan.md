@@ -45,7 +45,7 @@ Dokument:
     }>
   },
   eventConfig?: {
-    source: "emailReceived" | "whatsappMessageReceived" | "fileCreated" | "webhookReceived",
+    source: "emailReceived" | "smsMessageReceived" | "whatsappMessageReceived" | "fileCreated" | "webhookReceived",
     filter: string,
     channelId?: string
   },
@@ -117,7 +117,7 @@ Die Seite `Zeitplan` zeigt Trigger als Kacheln. Jede Kachel enthält:
 
 Der Dialog „Trigger hinzufügen“ bietet:
 
-- Ereignis: E-Mail, WhatsApp, Datei erstellt, Webhook
+- Ereignis: E-Mail, SMS, WhatsApp, Datei erstellt, Webhook
 - einmalig
 - täglich
 - wöchentlich mit frei wählbaren Wochenzeitpunkten wie „Mo 09:00“,
@@ -157,7 +157,7 @@ Der erzeugte `taskRun` enthält zusätzlich:
 }
 ```
 
-### Twilio WhatsApp
+### Channel-Nachrichten
 
 Die Function `twilioWebhook` nimmt Twilio Messaging-Webhooks entgegen. Die
 Webhook-URL enthält die Zuordnung zu Team und Kommunikationskanal:
@@ -172,9 +172,43 @@ Die Function:
 2. prüft `X-Twilio-Signature` gegen `TWILIO_AUTH_TOKEN`,
 3. validiert den Kommunikationskanal,
 4. speichert die Nachricht idempotent per Twilio-`MessageSid`,
-5. startet passende aktive Event-Trigger mit
-   `eventConfig.source == "whatsappMessageReceived"`. Wenn ein Trigger
+5. startet passende aktive Event-Trigger. SMS verwendet
+   `eventConfig.source == "smsMessageReceived"`, WhatsApp verwendet
+   `eventConfig.source == "whatsappMessageReceived"` und E-Mail verwendet
+   `eventConfig.source == "emailReceived"`. Wenn ein Trigger
    `eventConfig.channelId` setzt, wird nur dieser Team-Kanal berücksichtigt.
+
+Provider-Adapter normalisieren Rohdaten vor dem Dispatch in konkrete
+Syscat-Eventtypen:
+
+```ts
+type EmailReceivedEvent = {
+  type: "emailReceived",
+  senderEmail: string,
+  subject: string,
+  message: string
+}
+
+type WhatsappMessageReceivedEvent = {
+  type: "whatsappMessageReceived",
+  senderPhoneNumber: string,
+  message: string
+}
+
+type SmsMessageReceivedEvent = {
+  type: "smsMessageReceived",
+  senderPhoneNumber: string,
+  message: string
+}
+```
+
+Für lokale Tests ohne Provider-Guthaben gibt es die Callable Function
+`dispatchFakeChannelMessage`. Sie ist authentifiziert, nutzt den persönlichen
+Team-Kontext des angemeldeten Nutzers, lädt den angegebenen
+`communicationChannels/{channelId}`-Datensatz, schreibt eine Fake-Inbound-
+Nachricht in die Inbox und dispatcht danach dieselben Channel-Trigger wie ein
+echter Webhook. In der UI ist sie über `Einstellungen > Kommunikation` pro
+Kanal als Testnachricht erreichbar.
 
 Im Functions Emulator wird eine fehlende `TWILIO_AUTH_TOKEN`-Secret für lokale
 Tests toleriert. In Production ist `TWILIO_AUTH_TOKEN` erforderlich.

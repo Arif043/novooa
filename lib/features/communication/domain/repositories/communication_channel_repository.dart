@@ -7,4 +7,6 @@ abstract interface class CommunicationChannelRepository {
   Future<void> createChannel(CreateCommunicationChannelInput input);
 
   Future<void> deleteChannel(String channelId);
+
+  Future<void> dispatchFakeMessage(String channelId);
 }

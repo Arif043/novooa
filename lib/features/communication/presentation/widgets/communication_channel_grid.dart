@@ -26,6 +26,9 @@ class CommunicationChannelGrid extends StatelessWidget {
           itemBuilder: (context, index) {
             return CommunicationChannelTile(
               channel: channels[index],
+              onFakeMessage: () => context
+                  .read<CommunicationCubit>()
+                  .dispatchFake(channels[index]),
               onDelete: () =>
                   context.read<CommunicationCubit>().delete(channels[index]),
             );

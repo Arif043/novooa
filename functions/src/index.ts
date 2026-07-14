@@ -38,3 +38,4 @@ export {
 
 export {runDueTaskTriggersWorker} from "./schedule-workflows.js";
 export {twilioWebhook} from "./twilio/twilio-webhook.js";
+export {dispatchFakeChannelMessage} from "./channels/fake-channel-message.js";

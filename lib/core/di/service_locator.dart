@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:syscat2/features/communication/domain/repositories/communication_channel_repository.dart';
 import 'package:syscat2/features/communication/domain/usecases/create_communication_channel.dart';
 import 'package:syscat2/features/communication/domain/usecases/delete_communication_channel.dart';
+import 'package:syscat2/features/communication/domain/usecases/dispatch_fake_channel_message.dart';
 import 'package:syscat2/features/communication/domain/usecases/watch_communication_channels.dart';
 import 'package:syscat2/features/communication/infrastructure/repositories/firestore_communication_channel_repository.dart';
 import 'package:syscat2/features/communication/presentation/cubits/communication_cubit.dart';
@@ -209,6 +210,11 @@ void configureDependencies() {
         serviceLocator<CommunicationChannelRepository>(),
       ),
     )
+    ..registerLazySingleton(
+      () => DispatchFakeChannelMessage(
+        serviceLocator<CommunicationChannelRepository>(),
+      ),
+    )
     ..registerLazySingleton(() => ExecuteTask(serviceLocator<TaskRepository>()))
     ..registerFactory(
       () => AuthCubit(
@@ -281,6 +287,7 @@ void configureDependencies() {
         serviceLocator<WatchCommunicationChannels>(),
         serviceLocator<CreateCommunicationChannel>(),
         serviceLocator<DeleteCommunicationChannel>(),
+        serviceLocator<DispatchFakeChannelMessage>(),
       ),
     )
     ..registerLazySingleton(
