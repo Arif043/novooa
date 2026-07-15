@@ -262,8 +262,8 @@ Firestore unter `teams/personal_<uid>/tasks/{taskId}`, erzeugt einen
 Firestore-Trigger führt den Run anschließend asynchron aus. Dabei interpretiert
 der Worker den Graph, ermittelt ausführbare Knoten topologisch und delegiert an
 den registrierten `NodeExecutor` des jeweiligen Primitives. Noch nicht
-implementierte Bausteine werden als `skipped` markiert und reichen den
-bisherigen Kontext weiter.
+implementierte Bausteine werden als `skipped` markiert und liefern keine
+Outputs.
 
 ```ts
 input:  { taskId: string; context?: string }
@@ -293,7 +293,22 @@ outputs: {
 Mögliche Node-Status sind `executed`, `skipped` und `waitingForApproval`.
 
 `WorkflowNode` nutzt ein generisches `config`-Objekt. Die konkrete Struktur
-wird über `config.primitive` bestimmt. Für Script-Bausteine:
+wird über `config.primitive` bestimmt. Jeder Node besitzt zusätzlich einen
+eindeutigen `referenceName`, über den spätere Template-Felder auf Outputs dieses
+Nodes zugreifen können:
+
+```text
+{{email1.sender}}
+{{email1.subject}}
+```
+
+Globale Task-Variablen bleiben ohne Prefix:
+
+```text
+{{kunde}}
+```
+
+Für Script-Bausteine:
 
 ```ts
 {

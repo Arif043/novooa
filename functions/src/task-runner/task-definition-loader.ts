@@ -78,6 +78,7 @@ function nodeFromDocument(data: TaskDocument): TaskDocument {
     primitive: stringFrom(config["primitive"], "stringInput"),
     title: stringFrom(data["title"], "Baustein"),
     description: stringFrom(data["description"], ""),
+    referenceName: stringFrom(data["referenceName"], ""),
     config,
   };
 }

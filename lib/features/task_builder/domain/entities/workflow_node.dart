@@ -54,28 +54,32 @@ class WorkflowNode extends Equatable {
     required this.title,
     required this.description,
     required this.config,
+    this.referenceName = '',
   });
 
   final NodeId id;
   final String title;
   final String description;
+  final String referenceName;
   final NodeConfig config;
 
   WorkflowNode copyWith({
     String? title,
     String? description,
+    String? referenceName,
     NodeConfig? config,
   }) {
     return WorkflowNode(
       id: id,
       title: title ?? this.title,
       description: description ?? this.description,
+      referenceName: referenceName ?? this.referenceName,
       config: config ?? this.config,
     );
   }
 
   @override
-  List<Object?> get props => [id, config];
+  List<Object?> get props => [id, title, description, referenceName, config];
 
   @override
   bool? get stringify => true;

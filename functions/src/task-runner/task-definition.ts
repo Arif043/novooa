@@ -66,6 +66,7 @@ const branchWorkflowNodeSchema = z.object({
   primitive: workflowPrimitiveSchema,
   title: z.string().min(1),
   description: z.string().default(""),
+  referenceName: z.string().default(""),
   config: z.unknown().optional(),
 });
 
@@ -133,6 +134,7 @@ export const workflowNodeSchema = z.object({
   primitive: workflowPrimitiveSchema,
   title: z.string().min(1),
   description: z.string().default(""),
+  referenceName: z.string().default(""),
   config: nodeConfigSchema,
 });
 

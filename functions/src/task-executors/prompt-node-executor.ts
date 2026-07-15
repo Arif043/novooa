@@ -2,6 +2,7 @@ import { z, type Genkit } from "genkit";
 import {modelLogContext, textModel} from "../task-runner/ai-models.js";
 import {
   type NodeExecutor,
+  type TaskRunContext,
   executedNode,
   textOutputs,
 } from "../task-runner/node-executor.js";
@@ -16,8 +17,11 @@ import {
   attachmentInstructions,
   aiTurnMiddleware,
 } from "../task-runner/node-attachment-genkit.js";
-import {resolveVariableTemplates} from "../task-runner/variable-template.js";
-import {type TaskVariables} from "../task-runner/node-executor.js";
+import {
+  resolveVariableTemplates,
+  variableTemplateContextFor,
+  type VariableTemplateContext,
+} from "../task-runner/variable-template.js";
 
 export type PromptNodeOutputType = "text" | "decision";
 
@@ -37,7 +41,7 @@ export const promptNodeExecutor: NodeExecutor = {
   async execute(input, runContext) {
     const output = await executePromptNode(
       input.ai,
-      promptInputFor(input.node, input.context, runContext.variables),
+      promptInputFor(input.node, input.context, templateContextFor(runContext)),
       input.attachmentWorkspace,
     );
     return executedNode(input.node, textOutputs(output.answer));
@@ -138,17 +142,25 @@ function promptTurn(
 function promptInputFor(
   node: WorkflowNode,
   context: string,
-  variables: TaskVariables,
+  templateContext: VariableTemplateContext,
 ): PromptNodeInput {
   const config = promptConfigFor(node);
   return {
-    instruction: resolveVariableTemplates(instructionFor(node), variables),
-    context: resolveVariableTemplates(context, variables),
+    instruction: resolveVariableTemplates(instructionFor(node), templateContext),
+    context: resolveVariableTemplates(context, templateContext),
     outputType: config?.outputType ?? "text",
     choices: choicesFor(node).map((choice) =>
-      resolveVariableTemplates(choice, variables),
+      resolveVariableTemplates(choice, templateContext),
     ),
   };
+}
+
+function templateContextFor(runContext: TaskRunContext) {
+  return variableTemplateContextFor(
+    runContext.task,
+    runContext.results,
+    runContext.variables,
+  );
 }
 
 function instructionFor(node: WorkflowNode): string {

@@ -187,6 +187,27 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       config: NodeConfig.initial(primitive),
       title: primitive.label,
       description: primitive.description,
+      referenceName: _referenceNameFor(primitive, number),
     );
+  }
+
+  String _referenceNameFor(WorkflowPrimitive primitive, int number) {
+    return '${_referenceBaseFor(primitive)}$number';
+  }
+
+  String _referenceBaseFor(WorkflowPrimitive primitive) {
+    return switch (primitive) {
+      WorkflowPrimitive.stringInput => 'input',
+      WorkflowPrimitive.script => 'script',
+      WorkflowPrimitive.prompt => 'prompt',
+      WorkflowPrimitive.conditional => 'condition',
+      WorkflowPrimitive.iterativeRefinement => 'refine',
+      WorkflowPrimitive.writeFile => 'writeFile',
+      WorkflowPrimitive.readFile => 'readFile',
+      WorkflowPrimitive.readEmail => 'email',
+      WorkflowPrimitive.toolCall => 'tool',
+      WorkflowPrimitive.humanApproval => 'approval',
+      WorkflowPrimitive.validation => 'validation',
+    };
   }
 }
