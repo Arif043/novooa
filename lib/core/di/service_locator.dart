@@ -66,6 +66,12 @@ import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart'
 import '../../features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/task_homepage_cubit.dart';
+import '../../features/teams/domain/repositories/team_repository.dart';
+import '../../features/teams/domain/usecases/update_current_team_name.dart';
+import '../../features/teams/domain/usecases/watch_current_team.dart';
+import '../../features/teams/domain/usecases/watch_current_team_members.dart';
+import '../../features/teams/infrastructure/repositories/firestore_team_repository.dart';
+import '../../features/teams/presentation/cubits/team_settings_cubit.dart';
 import '../../features/user/domain/repositories/user_repository.dart';
 import '../../features/user/domain/usecases/ensure_user_profile.dart';
 import '../../features/user/domain/usecases/get_user_profile.dart';
@@ -132,6 +138,12 @@ void configureDependencies() {
     )
     ..registerLazySingleton<NotificationDeviceRepository>(
       () => FirestoreNotificationDeviceRepository(
+        serviceLocator<FirebaseFirestore>(),
+      ),
+    )
+    ..registerLazySingleton<TeamRepository>(
+      () => FirestoreTeamRepository(
+        serviceLocator<AuthRepository>(),
         serviceLocator<FirebaseFirestore>(),
       ),
     )
@@ -242,6 +254,15 @@ void configureDependencies() {
       ),
     )
     ..registerLazySingleton(
+      () => WatchCurrentTeam(serviceLocator<TeamRepository>()),
+    )
+    ..registerLazySingleton(
+      () => WatchCurrentTeamMembers(serviceLocator<TeamRepository>()),
+    )
+    ..registerLazySingleton(
+      () => UpdateCurrentTeamName(serviceLocator<TeamRepository>()),
+    )
+    ..registerLazySingleton(
       () => FcmBootstrapper(
         serviceLocator<AuthRepository>(),
         serviceLocator<FirebaseMessagingTokenProvider>(),
@@ -323,6 +344,13 @@ void configureDependencies() {
         serviceLocator<CreateCommunicationChannel>(),
         serviceLocator<DeleteCommunicationChannel>(),
         serviceLocator<DispatchFakeChannelMessage>(),
+      ),
+    )
+    ..registerFactory(
+      () => TeamSettingsCubit(
+        serviceLocator<WatchCurrentTeam>(),
+        serviceLocator<WatchCurrentTeamMembers>(),
+        serviceLocator<UpdateCurrentTeamName>(),
       ),
     )
     ..registerLazySingleton(
