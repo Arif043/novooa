@@ -11,16 +11,13 @@ import '../../domain/entities/upload_file_input.dart';
 import '../../domain/repositories/team_file_repository.dart';
 import '../models/team_file_model.dart';
 import '../models/team_folder_model.dart';
-import 'team_workspace_bootstrapper.dart';
 import 'versioned_file_ids.dart';
 
 class FirebaseTeamFileRepository implements TeamFileRepository {
-  FirebaseTeamFileRepository(this._firestore, this._storage)
-    : _bootstrapper = TeamWorkspaceBootstrapper(_firestore);
+  const FirebaseTeamFileRepository(this._firestore, this._storage);
 
   final FirebaseFirestore _firestore;
   final FirebaseStorage _storage;
-  final TeamWorkspaceBootstrapper _bootstrapper;
 
   @override
   Stream<List<TeamFile>> watchFiles(TeamId teamId) {
@@ -45,10 +42,6 @@ class FirebaseTeamFileRepository implements TeamFileRepository {
   }) async {
     try {
       final ids = VersionedFileIds();
-      await _bootstrapper.ensurePersonalTeam(
-        teamId: teamId,
-        ownerUid: ownerUid,
-      );
       final storagePath = _storagePath(teamId, ids, input);
       final reference = _storage.ref().child(storagePath);
       await reference.putData(input.bytes, _metadata(input));
@@ -72,10 +65,6 @@ class FirebaseTeamFileRepository implements TeamFileRepository {
       return const Error(FileFailure(FileFailureKind.invalidFolderName));
     }
     try {
-      await _bootstrapper.ensurePersonalTeam(
-        teamId: teamId,
-        ownerUid: ownerUid,
-      );
       final folderId = UniqueId.random().value;
       await _foldersReference(teamId).doc(folderId).set({
         'id': folderId,

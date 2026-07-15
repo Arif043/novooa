@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/entities/unique_id.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
-import 'package:syscat2/features/files/infrastructure/repositories/team_workspace_bootstrapper.dart';
 
 import '../../domain/entities/knowledge_failure.dart';
 import '../../domain/entities/knowledge_note.dart';
@@ -11,11 +10,9 @@ import '../../domain/repositories/knowledge_base_repository.dart';
 import '../models/knowledge_note_model.dart';
 
 class FirestoreKnowledgeBaseRepository implements KnowledgeBaseRepository {
-  FirestoreKnowledgeBaseRepository(this._firestore)
-    : _bootstrapper = TeamWorkspaceBootstrapper(_firestore);
+  const FirestoreKnowledgeBaseRepository(this._firestore);
 
   final FirebaseFirestore _firestore;
-  final TeamWorkspaceBootstrapper _bootstrapper;
 
   @override
   Stream<List<KnowledgeNote>> watchNotes(TeamId teamId) {
@@ -30,10 +27,6 @@ class FirestoreKnowledgeBaseRepository implements KnowledgeBaseRepository {
   }) async {
     if (draft.title.trim().isEmpty) return _invalidTitle();
     try {
-      await _bootstrapper.ensurePersonalTeam(
-        teamId: teamId,
-        ownerUid: ownerUid,
-      );
       final noteId = UniqueId.random().value;
       await _notesReference(teamId).doc(noteId).set(_createDocument(draft));
       return _loadNote(teamId, noteId);
