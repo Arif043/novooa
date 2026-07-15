@@ -14,7 +14,7 @@ export const workflowPrimitiveSchema = z.enum([
   "validation",
 ]);
 
-export const promptOutputTypeSchema = z.enum(["text", "decision"]);
+export const promptOutputTypeSchema = z.enum(["text", "decision", "structured"]);
 
 export const nodeAttachmentSchema = z.object({
   id: z.string().min(1),
@@ -49,6 +49,10 @@ export const promptNodeConfigSchema = z.object({
   instruction: z.string().default(""),
   outputType: promptOutputTypeSchema.default("text"),
   choices: z.array(z.string()).default([]),
+  structuredFields: z.array(z.object({
+    name: z.string().default(""),
+    description: z.string().default(""),
+  })).default([]),
   firstChoice: z.string().default(""),
   secondChoice: z.string().default(""),
   attachments: z.array(nodeAttachmentSchema).default([]),

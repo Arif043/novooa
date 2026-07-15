@@ -159,8 +159,8 @@ Datei: `functions/src/task-executors/prompt-node-executor.ts`.
 interner Executor-Schritt von `runTaskDefinitionFlow`.
 
 ```ts
-input:  { instruction: string; context: string; outputType: "text" | "decision"; choices: string[] }
-output: { answer: string }
+input:  { instruction: string; context: string; outputType: "text" | "decision" | "structured"; choices: string[]; structuredFields: StructuredOutputField[] }
+output: { answer: string; outputs: Record<string, NodeOutputValue> }
 ```
 
 Temperatur: `0.3`. Streamt nicht.
@@ -324,12 +324,18 @@ Für Prompt-Bausteine:
 {
   primitive: "prompt",
   instruction: string,
-  outputType: "text" | "decision",
+  outputType: "text" | "decision" | "structured",
   firstChoice: string,
   secondChoice: string,
+  structuredFields: { name: string; description: string }[],
   attachments: NodeAttachment[]
 }
 ```
+
+Bei `outputType: "structured"` erzeugt der Executor ein required Zod-Object.
+Alle definierten Felder müssen vom Modell gefüllt werden. Jedes Feld wird als
+benannter Node-Output gespeichert; zusätzlich wird die komplette Struktur als
+JSON in `outputs.text` abgelegt.
 
 Für Freigabe-Bausteine:
 

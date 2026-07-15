@@ -46,6 +46,31 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
     await _syncConditionalSuccessors(nodeId);
   }
 
+  Future<void> updatePromptStructuredField({
+    required NodeId nodeId,
+    required int fieldIndex,
+    required StructuredOutputField field,
+  }) {
+    return _updatePromptConfig(
+      nodeId,
+      (config) => config.updateStructuredField(fieldIndex, field),
+    );
+  }
+
+  Future<void> addPromptStructuredField(NodeId nodeId) {
+    return _updatePromptConfig(nodeId, (config) => config.addStructuredField());
+  }
+
+  Future<void> removePromptStructuredField({
+    required NodeId nodeId,
+    required int fieldIndex,
+  }) {
+    return _updatePromptConfig(
+      nodeId,
+      (config) => config.removeStructuredField(fieldIndex),
+    );
+  }
+
   Future<void> _updatePromptConfig(
     NodeId nodeId,
     PromptNodeConfig Function(PromptNodeConfig config) update,

@@ -65,6 +65,9 @@ class NodeConfigDocumentMapper {
       'instruction': config.instruction,
       'outputType': config.outputType.name,
       'choices': config.choices,
+      'structuredFields': config.structuredFields
+          .map(_structuredFieldToDocument)
+          .toList(),
       'attachments': config.attachments.map(_attachmentToDocument).toList(),
       'knowledgeAttachments': config.knowledgeAttachments
           .map(_knowledgeAttachmentToDocument)
@@ -130,6 +133,7 @@ class NodeConfigDocumentMapper {
       instruction: data['instruction'] as String? ?? '',
       outputType: _promptOutputTypeFrom(data['outputType']),
       choices: _stringListFrom(data['choices'], fallback: const ['', '']),
+      structuredFields: _structuredFieldsFrom(data['structuredFields']),
       attachments: _attachmentsFrom(data['attachments']),
       knowledgeAttachments: _knowledgeAttachmentsFrom(
         data['knowledgeAttachments'],
@@ -177,6 +181,24 @@ class NodeConfigDocumentMapper {
       'label': branch.label,
       'graph': graphToDocument(branch.graph),
     };
+  }
+
+  Map<String, Object?> _structuredFieldToDocument(StructuredOutputField field) {
+    return {'name': field.name, 'description': field.description};
+  }
+
+  List<StructuredOutputField> _structuredFieldsFrom(Object? value) {
+    final fields = _mapListFrom(value).map(_structuredFieldFrom).toList();
+    return fields.isEmpty
+        ? const [StructuredOutputField(name: '', description: '')]
+        : fields;
+  }
+
+  StructuredOutputField _structuredFieldFrom(Map<String, Object?> data) {
+    return StructuredOutputField(
+      name: data['name'] as String? ?? '',
+      description: data['description'] as String? ?? '',
+    );
   }
 
   List<ConditionalBranch> _branchesFrom(Object? value) {

@@ -4,9 +4,13 @@ import {
   type NodeExecutor,
   type TaskRunContext,
   executedNode,
+  stringOutput,
   textOutputs,
 } from "../task-runner/node-executor.js";
-import {type WorkflowNode} from "../task-runner/task-definition.js";
+import {
+  type NodeOutputValue,
+  type WorkflowNode,
+} from "../task-runner/task-definition.js";
 import {
   formatModelCallFinished,
   formatModelCallStarted,
@@ -23,17 +27,24 @@ import {
   type VariableTemplateContext,
 } from "../task-runner/variable-template.js";
 
-export type PromptNodeOutputType = "text" | "decision";
+export type PromptNodeOutputType = "text" | "decision" | "structured";
+
+type StructuredOutputField = {
+  name: string;
+  description: string;
+};
 
 export type PromptNodeInput = {
   instruction: string;
   context: string;
   outputType: PromptNodeOutputType;
   choices: string[];
+  structuredFields: StructuredOutputField[];
 };
 
 export type PromptNodeOutput = {
   answer: string;
+  outputs: Record<string, NodeOutputValue>;
 };
 
 export const promptNodeExecutor: NodeExecutor = {
@@ -44,7 +55,7 @@ export const promptNodeExecutor: NodeExecutor = {
       promptInputFor(input.node, input.context, templateContextFor(runContext)),
       input.attachmentWorkspace,
     );
-    return executedNode(input.node, textOutputs(output.answer));
+    return executedNode(input.node, output.outputs);
   },
 };
 
@@ -55,6 +66,9 @@ export async function executePromptNode(
 ): Promise<PromptNodeOutput> {
   if (input.outputType === "decision") {
     return executeDecisionPrompt(ai, input, attachmentWorkspace);
+  }
+  if (input.outputType === "structured") {
+    return executeStructuredPrompt(ai, input, attachmentWorkspace);
   }
 
   const prompt = promptTurn(input, attachmentWorkspace);
@@ -74,7 +88,7 @@ export async function executePromptNode(
     durationMs: Date.now() - startedAt,
     text: response.text,
   }));
-  return {answer: response.text};
+  return {answer: response.text, outputs: textOutputs(response.text)};
 }
 
 async function executeDecisionPrompt(
@@ -94,7 +108,26 @@ async function executeDecisionPrompt(
   if (answer === undefined) {
     throw new Error(`Decision prompt returned no structured answer: ${decision.text}`);
   }
-  return {answer};
+  return {answer, outputs: textOutputs(answer)};
+}
+
+async function executeStructuredPrompt(
+  ai: Genkit,
+  input: PromptNodeInput,
+  attachmentWorkspace?: NodeAttachmentWorkspace,
+): Promise<PromptNodeOutput> {
+  const fields = validStructuredFields(input.structuredFields);
+  if (fields.length === 0) {
+    throw new Error("Strukturierte Ausgabe benötigt mindestens ein Feld.");
+  }
+  const prompt = promptTurn(input, attachmentWorkspace);
+  const schema = structuredSchemaFor(fields);
+  const response = await generateStructured(ai, prompt, schema, fields, attachmentWorkspace);
+  if (response.output === undefined || response.output === null) {
+    throw new Error(`Prompt lieferte keine strukturierte Ausgabe: ${response.text}`);
+  }
+  const answer = JSON.stringify(response.output);
+  return {answer, outputs: {...textOutputs(answer), ...outputsFor(response.output)}};
 }
 
 async function generateDecision(
@@ -125,6 +158,35 @@ async function generateDecision(
   return response;
 }
 
+async function generateStructured(
+  ai: Genkit,
+  prompt: string,
+  schema: z.ZodObject<Record<string, z.ZodString>>,
+  fields: StructuredOutputField[],
+  attachmentWorkspace?: NodeAttachmentWorkspace,
+) {
+  const startedAt = Date.now();
+  logReadableInfo(formatModelCallStarted({
+    label: "Prompt / Strukturierte Ausgabe",
+    model: modelLogContext(),
+    prompt,
+    outputSchema: fields.map((field) => field.name).join(", "),
+  }));
+  const response = await ai.generate({
+    model: textModel(),
+    prompt,
+    output: {schema},
+    use: aiTurnMiddleware(attachmentWorkspace),
+  });
+  logReadableInfo(formatModelCallFinished({
+    label: "Prompt / Strukturierte Ausgabe",
+    durationMs: Date.now() - startedAt,
+    text: response.text,
+    output: response.output,
+  }));
+  return response;
+}
+
 function promptTurn(
   input: PromptNodeInput,
   attachmentWorkspace?: NodeAttachmentWorkspace,
@@ -135,6 +197,9 @@ function promptTurn(
   if (instructions) parts.push(instructions);
   if (input.outputType === "decision") {
     parts.push(`Antworte nur mit einer Option: ${input.choices.join(", ")}`);
+  }
+  if (input.outputType === "structured") {
+    parts.push("Fülle alle Felder der strukturierten Ausgabe aus.");
   }
   return parts.join("\n\n");
 }
@@ -152,7 +217,32 @@ function promptInputFor(
     choices: choicesFor(node).map((choice) =>
       resolveVariableTemplates(choice, templateContext),
     ),
+    structuredFields: structuredFieldsFor(node),
   };
+}
+
+function validStructuredFields(fields: StructuredOutputField[]) {
+  return fields.filter((field) => field.name.trim().length > 0);
+}
+
+function structuredSchemaFor(fields: StructuredOutputField[]) {
+  const shape = fields.reduce<Record<string, z.ZodString>>((schema, field) => {
+    schema[field.name.trim()] = field.description.trim().length === 0
+      ? z.string().min(1)
+      : z.string().min(1).describe(field.description.trim());
+    return schema;
+  }, {});
+  return z.object(shape);
+}
+
+function outputsFor(output: Record<string, string>) {
+  return Object.entries(output).reduce<Record<string, NodeOutputValue>>(
+    (outputs, [key, value]) => {
+      outputs[key] = stringOutput(value);
+      return outputs;
+    },
+    {},
+  );
 }
 
 function templateContextFor(runContext: TaskRunContext) {
@@ -177,6 +267,11 @@ function choicesFor(node: WorkflowNode): string[] {
     config?.secondChoice ?? "",
   ];
   return choices.filter((choice) => choice.trim().length > 0);
+}
+
+function structuredFieldsFor(node: WorkflowNode): StructuredOutputField[] {
+  const config = promptConfigFor(node);
+  return config?.structuredFields ?? [];
 }
 
 function promptConfigFor(node: WorkflowNode) {

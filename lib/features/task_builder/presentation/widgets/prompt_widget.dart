@@ -11,6 +11,7 @@ import '../cubits/task_builder_cubit.dart';
 import 'node_file_attachment_section.dart';
 import 'node_knowledge_attachment_section.dart';
 import 'prompt_choice_field.dart';
+import 'prompt_structured_output_section.dart';
 
 class PromptWidget extends StatefulWidget {
   const PromptWidget({super.key, required this.node});
@@ -80,6 +81,7 @@ class _PromptWidgetState extends State<PromptWidget> {
             children: const {
               PromptOutputType.text: Text('Freitext'),
               PromptOutputType.decision: Text('Entscheidung'),
+              PromptOutputType.structured: Text('Strukturierte Ausgabe'),
             },
             onValueChanged: (value) {
               _updateOutputType({value!});
@@ -113,6 +115,15 @@ class _PromptWidgetState extends State<PromptWidget> {
                   child: const Text('Antwort hinzufügen'),
                 ),
               ],
+            ),
+          ),
+          Visibility(
+            visible: selectedOutput == .structured,
+            child: PromptStructuredOutputSection(
+              fields: config.structuredFields,
+              onChanged: _updateStructuredField,
+              onAdd: _addStructuredField,
+              onRemove: _removeStructuredField,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -183,6 +194,25 @@ class _PromptWidgetState extends State<PromptWidget> {
     context.read<TaskBuilderCubit>().removePromptChoice(
       nodeId: widget.node.id,
       choiceIndex: index,
+    );
+  }
+
+  void _updateStructuredField(int index, StructuredOutputField field) {
+    context.read<TaskBuilderCubit>().updatePromptStructuredField(
+      nodeId: widget.node.id,
+      fieldIndex: index,
+      field: field,
+    );
+  }
+
+  void _addStructuredField() {
+    context.read<TaskBuilderCubit>().addPromptStructuredField(widget.node.id);
+  }
+
+  void _removeStructuredField(int index) {
+    context.read<TaskBuilderCubit>().removePromptStructuredField(
+      nodeId: widget.node.id,
+      fieldIndex: index,
     );
   }
 
