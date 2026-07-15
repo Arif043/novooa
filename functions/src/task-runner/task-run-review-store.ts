@@ -13,6 +13,9 @@ import {
   runFromDocument,
   type TaskRunDocument,
 } from "./task-activity-logger.js";
+import {
+  markTaskRunApprovalNotifications,
+} from "./task-run-approval-notifier.js";
 
 export type ReviewableTaskRun = {
   run: TaskRunDocument;
@@ -51,6 +54,7 @@ export async function rejectTaskRun(
     reviewOutput: FieldValue.delete(),
     pausedAt: FieldValue.delete(),
   }, {merge: true});
+  await markTaskRunApprovalNotifications({teamId, runId, status: "rejected"});
 }
 
 export async function approveTaskRun(
@@ -67,6 +71,7 @@ export async function approveTaskRun(
     reviewOutput: FieldValue.delete(),
     pausedAt: FieldValue.delete(),
   }, {merge: true});
+  await markTaskRunApprovalNotifications({teamId, runId, status: "accepted"});
 }
 
 function assertWaitingRun(data: DocumentData): void {

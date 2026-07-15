@@ -14,6 +14,7 @@ import {
 } from "./task-definition.js";
 import {textOutputFromResult} from "./node-executor.js";
 import {errorDetails} from "./structured-logger.js";
+import {notifyTaskRunApprovalRequired} from "./task-run-approval-notifier.js";
 
 export type TaskRunDocument = {
   runId: string;
@@ -94,6 +95,7 @@ export async function markRunWaitingForApproval(
     resumeState: serializable(output.resumeState),
     pausedAt: FieldValue.serverTimestamp(),
   }, {merge: true});
+  await notifyTaskRunApprovalRequired({teamId, run, output, review});
 }
 
 export async function markRunFailed(

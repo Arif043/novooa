@@ -16,7 +16,11 @@ class AppNotificationsState {
   final String? message;
 
   int get pendingCount {
-    return notifications.where((item) => item.isPendingTeamInvitation).length;
+    return notifications.where(_isPending).length;
+  }
+
+  bool _isPending(AppNotification item) {
+    return item.isPendingTeamInvitation || item.isPendingTaskRunApproval;
   }
 
   AppNotificationsState copyWith({

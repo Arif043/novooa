@@ -94,6 +94,8 @@ Team-Einladungen werden als Notification unter
 `users/{uid}/notifications/{notificationId}` geschrieben. Die Annahme der
 Einladung setzt `users/{uid}.teamId` und erstellt
 `teams/{teamId}/members/{uid}`.
+HITL-Freigaben werden ebenfalls als Notification (`taskRunApproval`) unter den
+Team-Mitgliedern verteilt und öffnen im Client den Freigabe-Dialog.
 
 Kommunikationskanäle werden im Client unter
 `Einstellungen > Kommunikation` gepflegt und bleiben bewusst team-scoped.

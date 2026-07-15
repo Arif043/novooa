@@ -40,6 +40,9 @@ rules_version = '2';
 // Subcollection: users/{uid}/notifications
 // Document ID: generated notification id
 // Fields are written by backend Functions and read by the owning user.
+// Types:
+//   - teamInvitation: Einladung in ein Team
+//   - taskRunApproval: HITL-Freigabe für einen pausierten TaskRun
 //
 // Collection: teams
 // Document ID: generated team id

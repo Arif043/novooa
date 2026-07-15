@@ -60,14 +60,23 @@ class FirestoreAppNotificationRepository implements AppNotificationRepository {
       message: data['message'] as String? ?? '',
       teamId: data['teamId'] as String?,
       teamName: data['teamName'] as String?,
+      runId: data['runId'] as String?,
+      taskId: data['taskId'] as String?,
+      taskTitle: data['taskTitle'] as String?,
+      waitingNodeId: data['waitingNodeId'] as String?,
+      finalOutput: data['finalOutput'] as String?,
+      reviewInstruction: data['reviewInstruction'] as String?,
+      reviewOutput: data['reviewOutput'] as String?,
       createdAt: _dateFrom(data['createdAt']),
     );
   }
 
   AppNotificationType _typeFrom(Object? value) {
-    return value == 'teamInvitation'
-        ? AppNotificationType.teamInvitation
-        : AppNotificationType.unknown;
+    return switch (value) {
+      'teamInvitation' => AppNotificationType.teamInvitation,
+      'taskRunApproval' => AppNotificationType.taskRunApproval,
+      _ => AppNotificationType.unknown,
+    };
   }
 
   AppNotificationStatus _statusFrom(Object? value) {
