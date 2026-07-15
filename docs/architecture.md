@@ -73,6 +73,7 @@ persönlicher Arbeitsbereich verwendet wird.
 Firestore:
 
 ```text
+users/{uid}/notifications/{notificationId}
 teams/{teamId}
 teams/{teamId}/members/{uid}
 teams/{teamId}/tasks/{taskId}
@@ -88,6 +89,11 @@ teams/{teamId}/files/{fileId}/versions/{versionId}
 teams/{teamId}/knowledgeBases/{knowledgeBaseId}
 teams/{teamId}/knowledgeBases/{knowledgeBaseId}/notes/{noteId}
 ```
+
+Team-Einladungen werden als Notification unter
+`users/{uid}/notifications/{notificationId}` geschrieben. Die Annahme der
+Einladung setzt `users/{uid}.teamId` und erstellt
+`teams/{teamId}/members/{uid}`.
 
 Kommunikationskanäle werden im Client unter
 `Einstellungen > Kommunikation` gepflegt und bleiben bewusst team-scoped.

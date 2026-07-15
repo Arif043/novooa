@@ -39,4 +39,9 @@ export {
 export {runDueTaskTriggersWorker} from "./schedule-workflows.js";
 export {twilioWebhook} from "./twilio/twilio-webhook.js";
 export {dispatchFakeChannelMessage} from "./channels/fake-channel-message.js";
-export {addTeamMemberFlow, removeTeamMemberFlow} from "./team-workflows.js";
+export {
+  acceptTeamInvitationFlow,
+  addTeamMemberFlow,
+  rejectTeamInvitationFlow,
+  removeTeamMemberFlow,
+} from "./team-workflows.js";

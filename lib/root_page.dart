@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'core/di/service_locator.dart';
 import 'root_tab.dart';
 import 'core/widgets/root_app_bar.dart';
 import 'core/widgets/root_drawer.dart';
 import 'core/widgets/root_shell_scope.dart';
 import 'core/widgets/root_stage.dart';
 import 'core/widgets/syscat_background.dart';
+import 'features/notifications/presentation/cubits/app_notifications_cubit.dart';
+import 'features/notifications/presentation/widgets/notification_bell_button.dart';
 
 class RootPage extends StatefulWidget {
   const RootPage({super.key, required this.location, required this.child});
@@ -67,18 +71,24 @@ class _RootPageState extends State<RootPage> {
     final selectedTab = _tabs[selectedTabIndex];
     return RootShellScope(
       controller: _shellController,
-      child: AnimatedBuilder(
-        animation: _shellController,
-        builder: (context, _) => SyscatBackground(
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            appBar: RootAppBar(title: _titleFor(selectedTab)),
-            drawer: RootDrawer(
-              tabs: _tabs,
-              selectedIndex: selectedTabIndex,
-              onSelected: _selectTab,
+      child: BlocProvider(
+        create: (_) => serviceLocator<AppNotificationsCubit>(),
+        child: AnimatedBuilder(
+          animation: _shellController,
+          builder: (context, _) => SyscatBackground(
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: RootAppBar(
+                title: _titleFor(selectedTab),
+                actions: const [NotificationBellButton()],
+              ),
+              drawer: RootDrawer(
+                tabs: _tabs,
+                selectedIndex: selectedTabIndex,
+                onSelected: _selectTab,
+              ),
+              body: RootStage(child: widget.child),
             ),
-            body: RootStage(child: widget.child),
           ),
         ),
       ),

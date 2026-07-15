@@ -37,6 +37,10 @@ rules_version = '2';
 //   - createdAt: timestamp (required, immutable)
 //   - updatedAt: timestamp (required)
 //
+// Subcollection: users/{uid}/notifications
+// Document ID: generated notification id
+// Fields are written by backend Functions and read by the owning user.
+//
 // Collection: teams
 // Document ID: generated team id
 // Fields:
@@ -711,6 +715,11 @@ service cloud.firestore {
           request.resource.data.updatedAt == request.time;
 
         allow delete: if isOwner(userId);
+      }
+
+      match /notifications/{notificationId} {
+        allow get, list: if isOwner(userId);
+        allow create, update, delete: if false;
       }
 
     }

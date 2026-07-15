@@ -70,9 +70,9 @@ class TeamSettingsCubit extends Cubit<TeamSettingsState> {
     emit(state.copyWith(isAddingMember: true));
     try {
       await _addCurrentTeamMember(identifier);
-      _emitMessage('Mitglied hinzugefügt.', memberInput: '');
+      _emitMessage('Einladung versendet.', memberInput: '');
     } catch (_) {
-      _emitMessage('Mitglied konnte nicht hinzugefügt werden.');
+      _emitMessage('Einladung konnte nicht versendet werden.');
     }
   }
 
