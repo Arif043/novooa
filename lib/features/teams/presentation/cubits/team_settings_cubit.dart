@@ -4,6 +4,8 @@ import 'package:bloc/bloc.dart';
 
 import '../../domain/entities/team_member.dart';
 import '../../domain/entities/team_workspace.dart';
+import '../../domain/usecases/add_current_team_member.dart';
+import '../../domain/usecases/remove_current_team_member.dart';
 import '../../domain/usecases/update_current_team_name.dart';
 import '../../domain/usecases/watch_current_team.dart';
 import '../../domain/usecases/watch_current_team_members.dart';
@@ -14,11 +16,15 @@ class TeamSettingsCubit extends Cubit<TeamSettingsState> {
     this._watchCurrentTeam,
     this._watchCurrentTeamMembers,
     this._updateCurrentTeamName,
+    this._addCurrentTeamMember,
+    this._removeCurrentTeamMember,
   ) : super(const TeamSettingsState());
 
   final WatchCurrentTeam _watchCurrentTeam;
   final WatchCurrentTeamMembers _watchCurrentTeamMembers;
   final UpdateCurrentTeamName _updateCurrentTeamName;
+  final AddCurrentTeamMember _addCurrentTeamMember;
+  final RemoveCurrentTeamMember _removeCurrentTeamMember;
   StreamSubscription<TeamWorkspace>? _teamSubscription;
   StreamSubscription<List<TeamMember>>? _membersSubscription;
 
@@ -39,6 +45,10 @@ class TeamSettingsCubit extends Cubit<TeamSettingsState> {
     emit(state.copyWith(nameInput: value));
   }
 
+  void updateMemberInput(String value) {
+    emit(state.copyWith(memberInput: value));
+  }
+
   Future<void> saveName() async {
     if (state.nameInput.trim().length < 2) {
       return _emitMessage('Der Teamname muss mindestens 2 Zeichen haben.');
@@ -49,6 +59,30 @@ class TeamSettingsCubit extends Cubit<TeamSettingsState> {
       _emitMessage('Team gespeichert.');
     } catch (_) {
       _emitMessage('Team konnte nicht gespeichert werden.');
+    }
+  }
+
+  Future<void> addMember() async {
+    final identifier = state.memberInput.trim();
+    if (identifier.isEmpty) {
+      return _emitMessage('Bitte gib eine Nutzer-ID oder E-Mail ein.');
+    }
+    emit(state.copyWith(isAddingMember: true));
+    try {
+      await _addCurrentTeamMember(identifier);
+      _emitMessage('Mitglied hinzugefügt.', memberInput: '');
+    } catch (_) {
+      _emitMessage('Mitglied konnte nicht hinzugefügt werden.');
+    }
+  }
+
+  Future<void> removeMember(String uid) async {
+    emit(state.copyWith(removingMemberUid: uid));
+    try {
+      await _removeCurrentTeamMember(uid);
+      _emitMessage('Mitglied entfernt.');
+    } catch (_) {
+      _emitMessage('Mitglied konnte nicht entfernt werden.');
     }
   }
 
@@ -82,8 +116,16 @@ class TeamSettingsCubit extends Cubit<TeamSettingsState> {
     );
   }
 
-  void _emitMessage(String message) {
+  void _emitMessage(String message, {String? memberInput}) {
     if (isClosed) return;
-    emit(state.copyWith(isSaving: false, message: message));
+    emit(
+      state.copyWith(
+        isSaving: false,
+        isAddingMember: false,
+        removingMemberUid: null,
+        memberInput: memberInput,
+        message: message,
+      ),
+    );
   }
 }

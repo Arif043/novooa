@@ -67,9 +67,13 @@ import '../../features/task_builder/presentation/cubits/node_file_attachments_cu
 import '../../features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/task_homepage_cubit.dart';
 import '../../features/teams/domain/repositories/team_repository.dart';
+import '../../features/teams/domain/usecases/add_current_team_member.dart';
+import '../../features/teams/domain/usecases/remove_current_team_member.dart';
 import '../../features/teams/domain/usecases/update_current_team_name.dart';
 import '../../features/teams/domain/usecases/watch_current_team.dart';
 import '../../features/teams/domain/usecases/watch_current_team_members.dart';
+import '../../features/teams/infrastructure/datasources/firebase_functions_team_member_actions_datasource.dart';
+import '../../features/teams/infrastructure/datasources/team_member_actions_datasource.dart';
 import '../../features/teams/infrastructure/repositories/firestore_team_repository.dart';
 import '../../features/teams/presentation/cubits/team_settings_cubit.dart';
 import '../../features/user/domain/repositories/user_repository.dart';
@@ -145,7 +149,11 @@ void configureDependencies() {
       () => FirestoreTeamRepository(
         serviceLocator<AuthRepository>(),
         serviceLocator<FirebaseFirestore>(),
+        serviceLocator<TeamMemberActionsDatasource>(),
       ),
+    )
+    ..registerLazySingleton<TeamMemberActionsDatasource>(
+      FirebaseFunctionsTeamMemberActionsDatasource.new,
     )
     ..registerLazySingleton(
       () => FirebaseMessagingTokenProvider(serviceLocator<FirebaseMessaging>()),
@@ -263,6 +271,12 @@ void configureDependencies() {
       () => UpdateCurrentTeamName(serviceLocator<TeamRepository>()),
     )
     ..registerLazySingleton(
+      () => AddCurrentTeamMember(serviceLocator<TeamRepository>()),
+    )
+    ..registerLazySingleton(
+      () => RemoveCurrentTeamMember(serviceLocator<TeamRepository>()),
+    )
+    ..registerLazySingleton(
       () => FcmBootstrapper(
         serviceLocator<AuthRepository>(),
         serviceLocator<FirebaseMessagingTokenProvider>(),
@@ -351,6 +365,8 @@ void configureDependencies() {
         serviceLocator<WatchCurrentTeam>(),
         serviceLocator<WatchCurrentTeamMembers>(),
         serviceLocator<UpdateCurrentTeamName>(),
+        serviceLocator<AddCurrentTeamMember>(),
+        serviceLocator<RemoveCurrentTeamMember>(),
       ),
     )
     ..registerLazySingleton(

@@ -6,12 +6,18 @@ import '../../../files/domain/entities/team_id.dart';
 import '../../domain/entities/team_member.dart';
 import '../../domain/entities/team_workspace.dart';
 import '../../domain/repositories/team_repository.dart';
+import '../datasources/team_member_actions_datasource.dart';
 
 class FirestoreTeamRepository implements TeamRepository {
-  const FirestoreTeamRepository(this._authRepository, this._firestore);
+  const FirestoreTeamRepository(
+    this._authRepository,
+    this._firestore,
+    this._memberActions,
+  );
 
   final AuthRepository _authRepository;
   final FirebaseFirestore _firestore;
+  final TeamMemberActionsDatasource _memberActions;
 
   @override
   Stream<TeamWorkspace> watchCurrentTeam() async* {
@@ -39,6 +45,16 @@ class FirestoreTeamRepository implements TeamRepository {
       'name': name.trim(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  @override
+  Future<void> addCurrentTeamMember(String identifier) {
+    return _memberActions.addMember(identifier.trim());
+  }
+
+  @override
+  Future<void> removeCurrentTeamMember(String uid) {
+    return _memberActions.removeMember(uid);
   }
 
   AuthUser _currentUserOrThrow() {

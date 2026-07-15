@@ -5,6 +5,9 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../settings/presentation/widgets/settings_section.dart';
 import '../cubits/team_settings_cubit.dart';
 import '../cubits/team_settings_state.dart';
+import 'add_team_member_form.dart';
+import 'team_id_display.dart';
+import 'team_member_list.dart';
 
 class TeamSettingsTab extends StatelessWidget {
   const TeamSettingsTab({super.key});
@@ -61,13 +64,11 @@ class _ReadyTeamSettings extends StatelessWidget {
               onChanged: context.read<TeamSettingsCubit>().updateName,
             ),
             const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              initialValue: state.team!.id,
-              readOnly: true,
-              decoration: const InputDecoration(labelText: 'Team-ID'),
-            ),
+            TeamIdDisplay(teamId: state.team!.id),
             const SizedBox(height: AppSpacing.lg),
-            _MemberList(state: state),
+            AddTeamMemberForm(state: state),
+            const SizedBox(height: AppSpacing.lg),
+            TeamMemberList(state: state),
             const SizedBox(height: AppSpacing.lg),
             Align(
               alignment: Alignment.centerRight,
@@ -88,40 +89,6 @@ class _ReadyTeamSettings extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _MemberList extends StatelessWidget {
-  const _MemberList({required this.state});
-
-  final TeamSettingsState state;
-
-  @override
-  Widget build(BuildContext context) {
-    if (state.members.isEmpty) return const _EmptyMembers();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Mitglieder', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: AppSpacing.sm),
-        for (final member in state.members)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.person_outline),
-            title: Text(member.uid),
-            subtitle: Text(member.role.label),
-          ),
-      ],
-    );
-  }
-}
-
-class _EmptyMembers extends StatelessWidget {
-  const _EmptyMembers();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text('Noch keine Mitglieder vorhanden.');
   }
 }
 

@@ -7,4 +7,8 @@ abstract interface class TeamRepository {
   Stream<List<TeamMember>> watchCurrentTeamMembers();
 
   Future<void> updateCurrentTeamName(String name);
+
+  Future<void> addCurrentTeamMember(String identifier);
+
+  Future<void> removeCurrentTeamMember(String uid);
 }
