@@ -85,6 +85,22 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     });
   }
 
+  Future<void> updateNodeReferenceName(NodeId nodeId, String value) {
+    final task = loadedTaskOrNull();
+    if (task == null) return Future.value();
+    final normalizedName = _normalizedReferenceName(value);
+    if (normalizedName.isEmpty) return Future.value();
+    final referenceName = _uniqueReferenceName(
+      task.graph,
+      nodeId,
+      normalizedName,
+    );
+    return _updateNode(nodeId, (node) {
+      if (node.referenceName == referenceName) return node;
+      return node.copyWith(referenceName: referenceName);
+    });
+  }
+
   Future<void> removeNode(NodeId nodeId) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
@@ -189,6 +205,56 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       description: primitive.description,
       referenceName: _referenceNameFor(primitive, number),
     );
+  }
+
+  String _normalizedReferenceName(String value) {
+    final sanitized = value.trim().replaceAll(RegExp(r'[^\w]'), '');
+    if (sanitized.isEmpty) return '';
+    if (RegExp(r'^\d').hasMatch(sanitized)) return 'n$sanitized';
+    return sanitized;
+  }
+
+  bool _referenceNameExists(
+    WorkflowGraph graph,
+    NodeId currentNodeId,
+    String referenceName,
+  ) {
+    for (final node in graph.nodes) {
+      if (node.id != currentNodeId && node.referenceName == referenceName) {
+        return true;
+      }
+      if (node.config case final ConditionalNodeConfig config) {
+        for (final branch in config.branches) {
+          if (_referenceNameExists(
+            branch.graph,
+            currentNodeId,
+            referenceName,
+          )) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  String _uniqueReferenceName(
+    WorkflowGraph graph,
+    NodeId currentNodeId,
+    String referenceName,
+  ) {
+    if (!_referenceNameExists(graph, currentNodeId, referenceName)) {
+      return referenceName;
+    }
+    var suffix = 2;
+    while (_referenceNameExists(
+      graph,
+      currentNodeId,
+      '${referenceName}_$suffix',
+    )) {
+      suffix += 1;
+    }
+    return '${referenceName}_$suffix';
   }
 
   String _referenceNameFor(WorkflowPrimitive primitive, int number) {

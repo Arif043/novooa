@@ -130,6 +130,33 @@ void main() {
     await cubit.close();
   });
 
+  test('updateNodeReferenceName normalisiert Referenznamen', () async {
+    final repository = _InMemoryTaskRepository(_taskWithTwoPromptNodes());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.updateNodeReferenceName(const NodeId('node.1'), '1 email!');
+
+    final state = cubit.state as TaskBuilderLoaded;
+    expect(state.editingTask.nodes.first.referenceName, 'n1email');
+    expect(repository.savedTask, state.editingTask);
+
+    await cubit.close();
+  });
+
+  test('updateNodeReferenceName macht doppelte Referenzen eindeutig', () async {
+    final repository = _InMemoryTaskRepository(_taskWithTwoPromptNodes());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.updateNodeReferenceName(const NodeId('node.2'), 'prompt1');
+
+    final state = cubit.state as TaskBuilderLoaded;
+    expect(state.editingTask.nodes.last.referenceName, 'prompt1_2');
+
+    await cubit.close();
+  });
+
   test(
     'attachNodeFile speichert Storage-Dateiversion am Prompt-Node',
     () async {
@@ -423,6 +450,42 @@ Task _taskWithScriptNode() {
           title: 'Script',
           description: 'Beschreibung',
           config: ScriptNodeConfig(script: 'output = ""'),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+Task _taskWithTwoPromptNodes() {
+  return const Task(
+    id: 'task.references',
+    title: 'Aufgabe',
+    objective: 'Ziel',
+    selectedNodeId: NodeId('node.1'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.1'),
+          title: 'Prompt',
+          description: 'Beschreibung',
+          referenceName: 'prompt1',
+          config: PromptNodeConfig(
+            instruction: '',
+            outputType: PromptOutputType.text,
+            choices: ['', ''],
+          ),
+        ),
+        WorkflowNode(
+          id: NodeId('node.2'),
+          title: 'Prompt',
+          description: 'Beschreibung',
+          referenceName: 'prompt2',
+          config: PromptNodeConfig(
+            instruction: '',
+            outputType: PromptOutputType.text,
+            choices: ['', ''],
+          ),
         ),
       ],
       edges: [],

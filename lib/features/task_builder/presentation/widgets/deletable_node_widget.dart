@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../cubits/task_builder_cubit.dart';
 import '../../domain/entities/workflow_node.dart';
+import 'node_reference_name_field.dart';
 
 class DeletableNodeWidget extends StatelessWidget {
   const DeletableNodeWidget({
@@ -20,6 +21,11 @@ class DeletableNodeWidget extends StatelessWidget {
     return Stack(
       children: [
         child,
+        Positioned(
+          top: AppSpacing.sm,
+          right: AppSpacing.xxl + AppSpacing.sm,
+          child: NodeReferenceNameField(node: node),
+        ),
         Positioned(
           top: AppSpacing.xs,
           right: AppSpacing.xs,
