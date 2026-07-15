@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:syscat2/features/communication/domain/repositories/communication_channel_repository.dart';
@@ -23,6 +24,12 @@ import 'package:syscat2/features/knowledge_base/domain/usecases/update_knowledge
 import 'package:syscat2/features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import 'package:syscat2/features/knowledge_base/infrastructure/repositories/firestore_knowledge_base_repository.dart';
 import 'package:syscat2/features/knowledge_base/presentation/cubits/knowledge_base_cubit.dart';
+import 'package:syscat2/features/notifications/domain/repositories/notification_device_repository.dart';
+import 'package:syscat2/features/notifications/domain/usecases/register_notification_device.dart';
+import 'package:syscat2/features/notifications/domain/usecases/unregister_notification_device.dart';
+import 'package:syscat2/features/notifications/infrastructure/datasources/firebase_messaging_token_provider.dart';
+import 'package:syscat2/features/notifications/infrastructure/repositories/firestore_notification_device_repository.dart';
+import 'package:syscat2/features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import 'package:syscat2/features/schedule/domain/repositories/task_trigger_repository.dart';
 import 'package:syscat2/features/schedule/domain/usecases/create_task_trigger.dart';
 import 'package:syscat2/features/schedule/domain/usecases/delete_task_trigger.dart';
@@ -71,6 +78,7 @@ void configureDependencies() {
   serviceLocator
     ..registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance)
     ..registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance)
+    ..registerLazySingleton<FirebaseMessaging>(() => FirebaseMessaging.instance)
     ..registerLazySingleton<FirebaseStorage>(() => FirebaseStorage.instance)
     ..registerLazySingleton<AuthRepository>(
       () => FirebaseAuthRepository(serviceLocator<FirebaseAuth>()),
@@ -121,6 +129,14 @@ void configureDependencies() {
         serviceLocator<AuthRepository>(),
         serviceLocator<FirebaseFirestore>(),
       ),
+    )
+    ..registerLazySingleton<NotificationDeviceRepository>(
+      () => FirestoreNotificationDeviceRepository(
+        serviceLocator<FirebaseFirestore>(),
+      ),
+    )
+    ..registerLazySingleton(
+      () => FirebaseMessagingTokenProvider(serviceLocator<FirebaseMessaging>()),
     )
     ..registerLazySingleton<TaskRunnerDatasource>(
       FirebaseFunctionsTaskRunnerDatasource.new,
@@ -214,6 +230,25 @@ void configureDependencies() {
       () => DispatchFakeChannelMessage(
         serviceLocator<CommunicationChannelRepository>(),
       ),
+    )
+    ..registerLazySingleton(
+      () => RegisterNotificationDevice(
+        serviceLocator<NotificationDeviceRepository>(),
+      ),
+    )
+    ..registerLazySingleton(
+      () => UnregisterNotificationDevice(
+        serviceLocator<NotificationDeviceRepository>(),
+      ),
+    )
+    ..registerLazySingleton(
+      () => FcmBootstrapper(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<FirebaseMessagingTokenProvider>(),
+        serviceLocator<RegisterNotificationDevice>(),
+        serviceLocator<UnregisterNotificationDevice>(),
+      ),
+      dispose: (bootstrapper) => bootstrapper.dispose(),
     )
     ..registerLazySingleton(() => ExecuteTask(serviceLocator<TaskRepository>()))
     ..registerFactory(

@@ -28,6 +28,14 @@ rules_version = '2';
 //   - apiKey: string (required, 8-4096) - write-only client secret
 //   - updatedAt: timestamp (required) - last secret sync time
 //
+// Subcollection: users/{uid}/fcmTokens
+// Document ID: base64url encoded FCM token
+// Fields:
+//   - token: string (required, max 4096)
+//   - platform: string (required) - android | iOS | web | etc.
+//   - createdAt: timestamp (required, immutable)
+//   - updatedAt: timestamp (required)
+//
 // Collection: teams
 // Document ID: team id, personal teams use personal_<uid>
 // Fields:
@@ -243,6 +251,37 @@ service cloud.firestore {
         data.apiKey is string &&
         data.apiKey.size() >= 8 &&
         data.apiKey.size() <= 4096 &&
+        data.updatedAt is timestamp;
+    }
+
+    function hasOnlyAllowedFcmTokenFields(data) {
+      return data.keys().hasOnly([
+        'token',
+        'platform',
+        'createdAt',
+        'updatedAt',
+      ]);
+    }
+
+    function hasRequiredFcmTokenFields(data) {
+      return data.keys().hasAll([
+        'token',
+        'platform',
+        'createdAt',
+        'updatedAt',
+      ]);
+    }
+
+    function isValidFcmToken(data) {
+      return hasOnlyAllowedFcmTokenFields(data) &&
+        hasRequiredFcmTokenFields(data) &&
+        data.token is string &&
+        data.token.size() > 0 &&
+        data.token.size() <= 4096 &&
+        data.platform is string &&
+        data.platform.size() > 0 &&
+        data.platform.size() <= 32 &&
+        data.createdAt is timestamp &&
         data.updatedAt is timestamp;
     }
 
@@ -645,6 +684,22 @@ service cloud.firestore {
           request.resource.data.updatedAt == request.time;
 
         allow delete: if false;
+      }
+
+      match /fcmTokens/{tokenId} {
+        allow get, list: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+          isValidFcmToken(request.resource.data) &&
+          request.resource.data.createdAt == request.time &&
+          request.resource.data.updatedAt == request.time;
+
+        allow update: if isOwner(userId) &&
+          isValidFcmToken(request.resource.data) &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          request.resource.data.updatedAt == request.time;
+
+        allow delete: if isOwner(userId);
       }
 
     }

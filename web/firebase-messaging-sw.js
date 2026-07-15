@@ -1,0 +1,14 @@
+importScripts('https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey: 'AIzaSyCqT815piSitiqbdyIt_r5V57p0_95tGaI',
+  appId: '1:7059834940:web:cff5f7365b77064424db39',
+  messagingSenderId: '7059834940',
+  projectId: 'syscat-90bff',
+  authDomain: 'syscat-90bff.firebaseapp.com',
+  storageBucket: 'syscat-90bff.firebasestorage.app',
+  measurementId: 'G-DF770ES1H5',
+});
+
+firebase.messaging();
