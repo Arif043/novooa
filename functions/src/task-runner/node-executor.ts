@@ -21,6 +21,7 @@ export type TaskRunContext = {
   input: Record<string, unknown>;
   results: Map<string, NodeExecutionResult>;
   runSubgraph: SubgraphRunner;
+  resolveTemplates: (text: string) => string;
 };
 
 export type NodeExecutorInput = {

@@ -308,6 +308,10 @@ Globale Task-Variablen bleiben ohne Prefix:
 {{kunde}}
 ```
 
+Die Template-Ersetzung erfolgt zentral im `TaskRunContext` und wird von
+textbasierten Executor-Feldern genutzt, darunter String-Eingabe, Prompt,
+Script, Datei schreiben, Freigabe, Verzweigung und iterative Verfeinerung.
+
 Für Script-Bausteine:
 
 ```ts

@@ -36,6 +36,10 @@ import {
   logReadableError,
   logReadableInfo,
 } from "./structured-logger.js";
+import {
+  resolveVariableTemplates,
+  variableTemplateContextFor,
+} from "./variable-template.js";
 
 export async function executeTaskGraph(
   ai: Genkit,
@@ -363,6 +367,10 @@ function runContextFor(
     results,
     variables,
     runSubgraph: runSubgraphFor(ai, variables, input.teamId),
+    resolveTemplates: (text: string) => resolveVariableTemplates(
+      text,
+      variableTemplateContextFor(input.taskDefinition, results, variables),
+    ),
   };
 }
 

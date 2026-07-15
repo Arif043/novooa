@@ -23,13 +23,14 @@ const maxOutputBytes = 10 * 1024;
 export const scriptNodeExecutor: NodeExecutor = {
   primitive: "script",
   async execute(input, runContext) {
+    const parentOutput = parentOutputFor(
+      input.node,
+      runContext.task,
+      runContext.results,
+    );
     const output = await executeScriptNode({
-      input: parentOutputFor(
-        input.node,
-        runContext.task,
-        runContext.results,
-      ),
-      script: scriptFor(input.node),
+      input: runContext.resolveTemplates(parentOutput),
+      script: runContext.resolveTemplates(scriptFor(input.node)),
       variables: runContext.variables,
       attachmentWorkspace: input.attachmentWorkspace,
     });

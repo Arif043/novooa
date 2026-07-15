@@ -27,7 +27,9 @@ export const writeFileNodeExecutor: NodeExecutor = {
     const file = await writeTeamFile({
       teamId: runContext.teamId,
       node: input.node,
-      content,
+      content: runContext.resolveTemplates(content),
+      fileName: runContext.resolveTemplates(fileNameFor(input.node)),
+      contentType: runContext.resolveTemplates(contentTypeFor(input.node)),
     });
     return executedNode(input.node, textOutputs(JSON.stringify(file)));
   },
@@ -37,6 +39,8 @@ type WriteFileInput = {
   teamId: string;
   node: WorkflowNode;
   content: string;
+  fileName: string;
+  contentType: string;
 };
 
 type WrittenFile = {
@@ -77,8 +81,8 @@ async function writtenFileFrom(input: WriteFileInput): Promise<WrittenFile> {
 function newFileFrom(input: WriteFileInput): WrittenFile {
   const versionId = randomUUID();
   const fileId = randomUUID();
-  const displayName = fileNameFor(input.node);
-  const contentType = contentTypeFor(input.node);
+  const displayName = input.fileName;
+  const contentType = input.contentType;
   return {
     fileId,
     versionId,
@@ -102,8 +106,8 @@ function versionFromExisting(
   existingFile: ExistingFile,
 ): WrittenFile {
   const versionId = randomUUID();
-  const displayName = fileNameFor(input.node);
-  const contentType = contentTypeFor(input.node);
+  const displayName = input.fileName;
+  const contentType = input.contentType;
   return {
     fileId: existingFile.fileId,
     versionId,
@@ -193,7 +197,7 @@ async function existingFileFor(input: WriteFileInput): Promise<ExistingFile> {
 async function existingFileByNameFor(
   input: WriteFileInput,
 ): Promise<ExistingFile | null> {
-  const displayName = fileNameFor(input.node);
+  const displayName = input.fileName;
   const snapshot = await getFirestore()
     .collection("teams")
     .doc(input.teamId)

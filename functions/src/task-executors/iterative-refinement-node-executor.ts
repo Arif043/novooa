@@ -50,21 +50,21 @@ export const iterativeRefinementNodeExecutor: NodeExecutor = {
   primitive: "iterativeRefinement",
   async execute(input, runContext) {
     const config = refinementConfigFor(input.node);
-    const draft = parentOutputFor(
+    const parentOutput = parentOutputFor(
       input.node,
       runContext.task,
       runContext.results,
-    ) ||
-      input.context;
+    );
+    const draft = parentOutput || input.context;
     const output = await executeIterativeRefinementNode(input.ai, {
-      objective: runContext.task.objective,
-      draft,
-      optimizerPrompt: config?.optimizerPrompt ||
+      objective: runContext.resolveTemplates(runContext.task.objective),
+      draft: runContext.resolveTemplates(draft),
+      optimizerPrompt: runContext.resolveTemplates(config?.optimizerPrompt ||
         input.node.description ||
-        input.node.title,
-      critiquePrompt: config?.critiquePrompt ||
+        input.node.title),
+      critiquePrompt: runContext.resolveTemplates(config?.critiquePrompt ||
         input.node.description ||
-        input.node.title,
+        input.node.title),
       maxIterations: config?.maxIterations ?? 2,
     });
     return executedNode(input.node, textOutputs(output.answer));

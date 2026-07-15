@@ -25,13 +25,14 @@ export type ConditionalNodeOutput = {
 export const conditionalFlowNodeExecutor: NodeExecutor = {
   primitive: "conditionalFlow",
   async execute(input, runContext) {
+    const targetLabel = parentOutputFor(
+      input.node,
+      runContext.task,
+      runContext.results,
+    );
     const output = executeConditionalNode({
       node: input.node,
-      targetLabel: parentOutputFor(
-        input.node,
-        runContext.task,
-        runContext.results,
-      ),
+      targetLabel: runContext.resolveTemplates(targetLabel),
       outgoingEdges: runContext.task.edges.filter(
         (edge) => edge.from === input.node.id,
       ),

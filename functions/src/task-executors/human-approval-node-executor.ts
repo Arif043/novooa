@@ -13,10 +13,11 @@ export const humanApprovalNodeExecutor: NodeExecutor = {
       runContext.task,
       runContext.results,
     );
+    const reviewOutput = runContext.resolveTemplates(output);
     return waitingForApprovalNode(
       input.node,
-      textOutputs(output),
-      messageFor(input.node.config),
+      textOutputs(reviewOutput),
+      runContext.resolveTemplates(messageFor(input.node.config)),
     );
   },
 };

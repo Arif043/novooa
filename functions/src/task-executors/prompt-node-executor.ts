@@ -21,12 +21,6 @@ import {
   attachmentInstructions,
   aiTurnMiddleware,
 } from "../task-runner/node-attachment-genkit.js";
-import {
-  resolveVariableTemplates,
-  variableTemplateContextFor,
-  type VariableTemplateContext,
-} from "../task-runner/variable-template.js";
-
 export type PromptNodeOutputType = "text" | "decision" | "structured";
 
 type StructuredOutputField = {
@@ -52,7 +46,7 @@ export const promptNodeExecutor: NodeExecutor = {
   async execute(input, runContext) {
     const output = await executePromptNode(
       input.ai,
-      promptInputFor(input.node, input.context, templateContextFor(runContext)),
+      promptInputFor(input.node, input.context, runContext.resolveTemplates),
       input.attachmentWorkspace,
     );
     return executedNode(input.node, output.outputs);
@@ -207,16 +201,14 @@ function promptTurn(
 function promptInputFor(
   node: WorkflowNode,
   context: string,
-  templateContext: VariableTemplateContext,
+  resolveTemplates: TaskRunContext["resolveTemplates"],
 ): PromptNodeInput {
   const config = promptConfigFor(node);
   return {
-    instruction: resolveVariableTemplates(instructionFor(node), templateContext),
-    context: resolveVariableTemplates(context, templateContext),
+    instruction: resolveTemplates(instructionFor(node)),
+    context: resolveTemplates(context),
     outputType: config?.outputType ?? "text",
-    choices: choicesFor(node).map((choice) =>
-      resolveVariableTemplates(choice, templateContext),
-    ),
+    choices: choicesFor(node).map(resolveTemplates),
     structuredFields: structuredFieldsFor(node),
   };
 }
@@ -242,14 +234,6 @@ function outputsFor(output: Record<string, string>) {
       return outputs;
     },
     {},
-  );
-}
-
-function templateContextFor(runContext: TaskRunContext) {
-  return variableTemplateContextFor(
-    runContext.task,
-    runContext.results,
-    runContext.variables,
   );
 }
 
