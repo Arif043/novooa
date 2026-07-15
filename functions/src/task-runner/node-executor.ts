@@ -1,6 +1,7 @@
 import {type Genkit} from "genkit";
 import {
   type NodeExecutionResult,
+  type NodeOutputValue,
   type TaskDefinition as Task,
   type WorkflowNode,
 } from "./task-definition.js";
@@ -17,6 +18,7 @@ export type TaskRunContext = {
   variables: TaskVariables;
   task: Task;
   teamId: string;
+  input: Record<string, unknown>;
   results: Map<string, NodeExecutionResult>;
   runSubgraph: SubgraphRunner;
 };
@@ -45,12 +47,14 @@ export function executedNode(
     selectedBranchLabel?: string | null;
   },
   variables?: TaskVariables,
+  outputs?: Record<string, NodeOutputValue>,
 ): NodeExecutionResult {
   return {
     nodeId: node.id,
     primitive: node.primitive,
     status: "executed",
     output,
+    outputs: outputs ?? textOutputs(output),
     variables,
     selectedNodeId,
     selectedBranchId: selection?.selectedBranchId,
@@ -67,6 +71,7 @@ export function skippedNode(
     primitive: node.primitive,
     status: "skipped",
     output: context,
+    outputs: textOutputs(context),
     message: "Baustein-Executor ist noch nicht implementiert.",
   };
 }
@@ -81,6 +86,7 @@ export function waitingForApprovalNode(
     primitive: node.primitive,
     status: "waitingForApproval",
     output,
+    outputs: textOutputs(output),
     message,
   };
 }
@@ -94,6 +100,18 @@ export function parentOutputFor(
     .map((parentResult) => parentResult.result.output)
     .filter((output) => output.trim().length > 0);
   return parentOutputs[parentOutputs.length - 1] ?? "";
+}
+
+export function stringOutput(value: string): NodeOutputValue {
+  return {type: "string", value};
+}
+
+export function datetimeOutput(value: string): NodeOutputValue {
+  return {type: "datetime", value};
+}
+
+function textOutputs(output: string): Record<string, NodeOutputValue> {
+  return output.trim().length === 0 ? {} : {text: stringOutput(output)};
 }
 
 export function parentResultsFor(

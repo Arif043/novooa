@@ -26,6 +26,7 @@ class NodeConfigDocumentMapper {
       HumanApprovalNodeConfig() => _approvalToDocument(config),
       WriteFileNodeConfig() => _writeFileToDocument(config),
       ReadFileNodeConfig() => _readFileToDocument(config),
+      ReadEmailNodeConfig() => {'primitive': config.primitive.name},
       _ => {'primitive': config.primitive.name},
     };
   }
@@ -41,6 +42,7 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.humanApproval => _approvalFrom(data),
       WorkflowPrimitive.writeFile => _writeFileFrom(data),
       WorkflowPrimitive.readFile => _readFileFrom(data),
+      WorkflowPrimitive.readEmail => const ReadEmailNodeConfig(),
       _ => NodeConfig.initial(primitive),
     };
   }

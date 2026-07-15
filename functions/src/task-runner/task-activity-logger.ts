@@ -19,6 +19,7 @@ export type TaskRunDocument = {
   taskId: string;
   taskTitle: string;
   context: string;
+  input?: Record<string, unknown>;
   source?: string;
   triggerId?: string;
   triggerType?: string;
@@ -28,6 +29,7 @@ export async function enqueueTaskRun(input: {
   teamId: string;
   task: TaskDefinition;
   context: string;
+  input?: Record<string, unknown>;
   trigger?: {
     id: string;
     type: string;
@@ -37,6 +39,7 @@ export async function enqueueTaskRun(input: {
   await runReference(input.teamId, run.runId).set({
     ...run,
     status: "queued",
+    input: serializable(input.input ?? {}),
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
   });
@@ -115,12 +118,14 @@ export function runFromDocument(data: DocumentData) {
     taskId: String(data.taskId ?? ""),
     taskTitle: String(data.taskTitle ?? "Unbenannte Aufgabe"),
     context: String(data.context ?? ""),
+    input: inputFromDocument(data.input),
   };
 }
 
 function runDocument(input: {
   task: TaskDefinition;
   context: string;
+  input?: Record<string, unknown>;
   trigger?: {
     id: string;
     type: string;
@@ -131,12 +136,17 @@ function runDocument(input: {
     taskId: input.task.id,
     taskTitle: input.task.title,
     context: input.context,
+    input: input.input,
     ...(input.trigger ? {
       source: "trigger",
       triggerId: input.trigger.id,
       triggerType: input.trigger.type,
     } : {}),
   };
+}
+
+function inputFromDocument(value: unknown): Record<string, unknown> {
+  return isRecord(value) ? value as Record<string, unknown> : {};
 }
 
 function reviewFieldsFrom(output: WaitingTaskGraphOutput) {
@@ -170,6 +180,7 @@ async function writeNodeActivity(
     nodeId: result.nodeId,
     primitive: result.primitive,
     output: result.output,
+    outputs: serializable(result.outputs),
     ...(result.message ? {message: result.message} : {}),
   });
 }
@@ -246,5 +257,9 @@ function getDatabase() {
 }
 
 function isObject(value: unknown): value is {message?: unknown} {
+  return typeof value === "object" && value !== null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }

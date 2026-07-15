@@ -8,6 +8,7 @@ export const workflowPrimitiveSchema = z.enum([
   "iterativeRefinement",
   "writeFile",
   "readFile",
+  "readEmail",
   "toolCall",
   "humanApproval",
   "validation",
@@ -111,6 +112,10 @@ export const readFileNodeConfigSchema = z.object({
   file: nodeAttachmentSchema.optional(),
 });
 
+export const readEmailNodeConfigSchema = z.object({
+  primitive: z.literal("readEmail").default("readEmail"),
+});
+
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   stringInputNodeConfigSchema,
   scriptNodeConfigSchema,
@@ -120,6 +125,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   humanApprovalNodeConfigSchema,
   writeFileNodeConfigSchema,
   readFileNodeConfigSchema,
+  readEmailNodeConfigSchema,
 ]);
 
 export const workflowNodeSchema = z.object({
@@ -143,11 +149,17 @@ export const runTaskDefinitionInputSchema = z.object({
   context: z.string().default(""),
 });
 
+export const nodeOutputValueSchema = z.object({
+  type: z.enum(["string", "datetime", "number", "boolean", "json"]),
+  value: z.unknown(),
+});
+
 export const nodeExecutionResultSchema = z.object({
   nodeId: z.string(),
   primitive: workflowPrimitiveSchema,
   status: z.enum(["executed", "skipped", "waitingForApproval"]),
   output: z.string(),
+  outputs: z.record(z.string(), nodeOutputValueSchema).default({}),
   variables: z.record(z.string(), z.unknown()).optional(),
   selectedNodeId: z.string().nullable().optional(),
   selectedBranchId: z.string().nullable().optional(),
@@ -209,6 +221,7 @@ export type TaskGraphInput = {
   taskDefinition: TaskDefinition;
   context: string;
   teamId: string;
+  input?: Record<string, unknown>;
 };
 export type RunTaskDefinitionInput = z.infer<
   typeof runTaskDefinitionInputSchema
@@ -229,3 +242,4 @@ export type RunTaskDefinitionOutput = z.infer<
 export type ReviewTaskRunInput = z.infer<typeof reviewTaskRunInputSchema>;
 export type ReviewTaskRunOutput = z.infer<typeof reviewTaskRunOutputSchema>;
 export type NodeExecutionResult = z.infer<typeof nodeExecutionResultSchema>;
+export type NodeOutputValue = z.infer<typeof nodeOutputValueSchema>;

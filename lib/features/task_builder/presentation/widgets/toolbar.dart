@@ -102,6 +102,14 @@ class Toolbar extends StatelessWidget {
             IconButton(
               onPressed: () => context
                   .read<TaskBuilderCubit>()
+                  .addNodeToMainGraph(.readEmail),
+              icon: const Icon(Icons.mark_email_read_outlined),
+              tooltip: "E-Mail lesen hinzufügen",
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            IconButton(
+              onPressed: () => context
+                  .read<TaskBuilderCubit>()
                   .addNodeToMainGraph(.humanApproval),
               icon: const Icon(Icons.face),
               tooltip: "Freigabe hinzufügen",

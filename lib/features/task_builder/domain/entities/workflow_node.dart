@@ -15,6 +15,7 @@ enum WorkflowPrimitive {
   iterativeRefinement,
   writeFile,
   readFile,
+  readEmail,
   toolCall,
   humanApproval,
   validation,

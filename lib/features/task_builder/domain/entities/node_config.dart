@@ -14,6 +14,7 @@ part 'iterative_refinement_node_config.dart';
 part 'human_approval_node_config.dart';
 part 'write_file_node_config.dart';
 part 'read_file_node_config.dart';
+part 'read_email_node_config.dart';
 
 sealed class NodeConfig extends Equatable {
   const NodeConfig();
@@ -30,6 +31,7 @@ sealed class NodeConfig extends Equatable {
       .humanApproval => HumanApprovalNodeConfig.initial(),
       .writeFile => WriteFileNodeConfig.initial(),
       .readFile => ReadFileNodeConfig.initial(),
+      .readEmail => ReadEmailNodeConfig.initial(),
       _ => throw UnimplementedError(),
     };
   }

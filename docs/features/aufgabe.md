@@ -79,6 +79,7 @@ features/task_builder/
 | `iterativeRefinement`   | **Iterative Verfeinerung**   | Draft → Critique → Improve, n Runden                          | Interner `executeIterativeRefinementNode`             |
 | `writeFile`             | **Datei schreiben**          | Schreibt den Vorgänger-Output als Datei                       | Interner `executeWriteFileNode`                       |
 | `readFile`              | **Datei lesen**              | Liest eine ausgewählte Datei-Version als String                | Interner `executeReadFileNode`                        |
+| `readEmail`             | **E-Mail lesen**             | Liest Absender, Betreff, Nachricht und Ankunftszeit aus dem Run-Event | Interner `executeReadEmailNode`                |
 | `toolCall`              | **Werkzeug-Aufruf**          | Strukturierte Tool-Invocation (z. B. Suche, E-Mail, Kalender) | `ai.generate({tools: […]})`                           |
 | `humanApproval`         | **Freigabe**                 | Hält den Flow an, bis ein Mensch bestätigt                    | Interner `executeHumanApprovalNode`                   |
 | `validation`            | **Validierung**              | Schema- / Wertebereichsprüfung auf Output eines Knotens       | `z.object(...).safeParse()`                           |
@@ -270,8 +271,26 @@ output: { runId: string; taskId: string; status: "queued" }
 ```
 
 `NodeExecutionResult` enthält `nodeId`, `primitive`, `status`, `output`,
-optional `selectedNodeId` und optional `message`. Mögliche Node-Status sind
-`executed`, `skipped` und `waitingForApproval`.
+`outputs`, optional `selectedNodeId` und optional `message`. `output` bleibt
+vorerst das Text-Kompatibilitätsfeld für lineare Alt-Nodes. Neue Nodes liefern
+benannte Werte in `outputs`:
+
+```ts
+outputs: Record<string, { type: "string" | "datetime" | "number" | "boolean" | "json", value: unknown }>
+```
+
+Beispiel `readEmail`:
+
+```ts
+outputs: {
+  sender: { type: "string", value: "kunde@example.com" },
+  subject: { type: "string", value: "Anfrage" },
+  message: { type: "string", value: "..." },
+  receivedAt: { type: "datetime", value: "2026-07-14T10:15:00.000Z" }
+}
+```
+
+Mögliche Node-Status sind `executed`, `skipped` und `waitingForApproval`.
 
 `WorkflowNode` nutzt ein generisches `config`-Objekt. Die konkrete Struktur
 wird über `config.primitive` bestimmt. Für Script-Bausteine:
@@ -434,9 +453,12 @@ type NodeExecutionInput = {
 ```
 
 Der `TaskRunContext` bleibt separat und enthält übergreifenden Run-Zustand wie
-`task`, `teamId`, `variables`, `results` und `runSubgraph`. Ziel: Jeder Node
-bekommt einen klaren fachlichen Input, kennt bei Bedarf seine direkten
-Vorgängerergebnisse und greift getrennt auf Run-weite Variablen zu.
+`task`, `teamId`, `input`, `variables`, `results` und `runSubgraph`.
+`input` enthält strukturierte Startdaten des Runs, z. B. ein
+`emailReceived`-Event, das der Baustein `readEmail` in benannte Outputs
+übersetzt. Ziel: Jeder Node bekommt einen klaren fachlichen Input, kennt bei
+Bedarf seine direkten Vorgängerergebnisse und greift getrennt auf Run-weite
+Variablen zu.
 
 ### Activity-Tracking
 

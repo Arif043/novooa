@@ -47,6 +47,9 @@ async function enqueueTriggerRun(
       teamId,
       task,
       context: contextFrom(input.event),
+      input: {
+        event: input.event,
+      },
       trigger: {id: trigger.id, type: "event"},
     });
     await trigger.ref.set({

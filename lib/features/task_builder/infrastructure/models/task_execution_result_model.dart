@@ -38,6 +38,7 @@ class NodeExecutionResultModel {
     required this.primitive,
     required this.status,
     required this.output,
+    this.outputs = const {},
     this.selectedNodeId,
     this.message,
   });
@@ -46,6 +47,7 @@ class NodeExecutionResultModel {
   final String primitive;
   final String status;
   final String output;
+  final Map<String, NodeOutputValueModel> outputs;
   final String? selectedNodeId;
   final String? message;
 
@@ -55,6 +57,7 @@ class NodeExecutionResultModel {
       primitive: json['primitive'] as String? ?? 'prompt',
       status: json['status'] as String? ?? 'skipped',
       output: json['output'] as String? ?? '',
+      outputs: _outputsFrom(json['outputs']),
       selectedNodeId: json['selectedNodeId'] as String?,
       message: json['message'] as String?,
     );
@@ -66,9 +69,20 @@ class NodeExecutionResultModel {
       primitive: _primitiveFromName(primitive),
       status: NodeExecutionStatus.fromName(status),
       output: output,
+      outputs: outputs.map((key, value) => MapEntry(key, value.toDomain())),
       selectedNodeId: selectedNodeId == null ? null : NodeId(selectedNodeId!),
       message: message,
     );
+  }
+
+  static Map<String, NodeOutputValueModel> _outputsFrom(Object? value) {
+    if (value is! Map) return const {};
+    return value.map((key, item) {
+      final model = item is Map
+          ? NodeOutputValueModel.fromJson(item)
+          : NodeOutputValueModel(type: 'json', value: item);
+      return MapEntry(key.toString(), model);
+    });
   }
 
   WorkflowPrimitive _primitiveFromName(String name) {
@@ -76,5 +90,23 @@ class NodeExecutionResultModel {
       (primitive) => primitive.name == name,
       orElse: () => WorkflowPrimitive.prompt,
     );
+  }
+}
+
+class NodeOutputValueModel {
+  const NodeOutputValueModel({required this.type, required this.value});
+
+  final String type;
+  final Object? value;
+
+  factory NodeOutputValueModel.fromJson(Map<dynamic, dynamic> json) {
+    return NodeOutputValueModel(
+      type: json['type'] as String? ?? 'json',
+      value: json['value'],
+    );
+  }
+
+  NodeOutputValue toDomain() {
+    return NodeOutputValue(type: type, value: value);
   }
 }

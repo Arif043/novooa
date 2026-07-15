@@ -201,7 +201,12 @@ function resumedState(
   return {
     nodeResults: state.nodeResults.map((result) =>
       result.nodeId === state.waitingNodeId
-        ? {...result, status: "executed", output: approvedOutput}
+        ? {
+          ...result,
+          status: "executed",
+          output: approvedOutput,
+          outputs: {text: {type: "string", value: approvedOutput}},
+        }
         : result,
     ),
     variables: state.variables,
@@ -313,6 +318,7 @@ function runSubgraphFor(ai: Genkit, variables: TaskVariables, teamId: string) {
       taskDefinition: task,
       context,
       teamId,
+      input: {},
     }, {
       nodeResults: [],
       variables,
@@ -354,6 +360,7 @@ function runContextFor(
   return {
     task: input.taskDefinition,
     teamId: input.teamId,
+    input: input.input ?? {},
     results,
     variables,
     runSubgraph: runSubgraphFor(ai, variables, input.teamId),

@@ -129,6 +129,7 @@ export const runTaskDefinitionWorker = onDocumentCreated(
         taskDefinition,
         context: run.context,
         teamId,
+        input: run.input,
       });
       if (output.status === "waitingForApproval") {
         await markRunWaitingForApproval(teamId, run, output);
@@ -175,7 +176,7 @@ async function continueApprovedRun(
     const taskDefinition = await loadTaskDefinitionForTeam(teamId, run.taskId);
     const output = await resumeTaskGraph(
       ai,
-      {taskDefinition, context: run.context, teamId},
+      {taskDefinition, context: run.context, teamId, input: run.input},
       resumeState,
       approvedOutput,
     );
