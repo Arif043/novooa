@@ -15,27 +15,25 @@ class NotificationBellButton extends StatelessWidget {
       listenWhen: (previous, current) => previous.message != current.message,
       listener: _showMessage,
       builder: (context, state) {
-        return PopupMenuButton<void>(
+        return IconButton(
           tooltip: 'Benachrichtigungen',
           icon: Badge.count(
             count: state.pendingCount,
             isLabelVisible: state.pendingCount > 0,
             child: const Icon(Icons.notifications_outlined),
           ),
-          itemBuilder: (_) => [_contentItem(context, state)],
+          onPressed: () => _showNotifications(context),
         );
       },
     );
   }
 
-  PopupMenuItem<void> _contentItem(
-    BuildContext context,
-    AppNotificationsState state,
-  ) {
-    return PopupMenuItem<void>(
-      enabled: false,
-      padding: EdgeInsets.zero,
-      child: SizedBox(width: 360, child: _NotificationPanel(state: state)),
+  Future<void> _showNotifications(BuildContext context) {
+    final cubit = context.read<AppNotificationsCubit>();
+    return showDialog<void>(
+      context: context,
+      builder: (_) =>
+          BlocProvider.value(value: cubit, child: const _NotificationDialog()),
     );
   }
 
@@ -45,6 +43,28 @@ class NotificationBellButton extends StatelessWidget {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+}
+
+class _NotificationDialog extends StatelessWidget {
+  const _NotificationDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      alignment: Alignment.topRight,
+      insetPadding: const EdgeInsets.only(
+        top: kToolbarHeight + AppSpacing.sm,
+        right: AppSpacing.md,
+        left: AppSpacing.md,
+      ),
+      child: SizedBox(
+        width: 360,
+        child: BlocBuilder<AppNotificationsCubit, AppNotificationsState>(
+          builder: (context, state) => _NotificationPanel(state: state),
+        ),
+      ),
+    );
   }
 }
 
