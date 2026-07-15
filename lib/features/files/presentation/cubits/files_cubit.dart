@@ -12,6 +12,7 @@ import '../../domain/usecases/create_team_folder.dart';
 import '../../domain/usecases/upload_team_file.dart';
 import '../../domain/usecases/watch_team_files.dart';
 import '../../domain/usecases/watch_team_folders.dart';
+import '../../../teams/domain/usecases/get_current_team_id.dart';
 import 'files_state.dart';
 
 class FilesCubit extends Cubit<FilesState> {
@@ -21,6 +22,7 @@ class FilesCubit extends Cubit<FilesState> {
     this._watchTeamFolders,
     this._uploadTeamFile,
     this._createTeamFolder,
+    this._getCurrentTeamId,
   ) : super(const FilesState());
 
   final AuthRepository _authRepository;
@@ -28,17 +30,19 @@ class FilesCubit extends Cubit<FilesState> {
   final WatchTeamFolders _watchTeamFolders;
   final UploadTeamFile _uploadTeamFile;
   final CreateTeamFolder _createTeamFolder;
+  final GetCurrentTeamId _getCurrentTeamId;
   StreamSubscription<List<TeamFile>>? _filesSubscription;
   StreamSubscription<List<TeamFolder>>? _foldersSubscription;
   var _filesLoaded = false;
   var _foldersLoaded = false;
 
-  void load() {
+  Future<void> load() async {
     final user = _authRepository.currentUser();
     if (user == null) return _emitFailure(FileFailureKind.unauthenticated);
     emit(const FilesState());
     _resetSubscriptions();
-    final teamId = TeamId.personal(user.id.value);
+    final teamId = await _teamIdOrFailure();
+    if (teamId == null) return;
     _filesSubscription = _watchTeamFiles(teamId).listen(
       _emitFiles,
       onError: (_) => _emitFailure(FileFailureKind.loadFailed),
@@ -53,8 +57,10 @@ class FilesCubit extends Cubit<FilesState> {
     final user = _authRepository.currentUser();
     if (user == null) return _emitFailure(FileFailureKind.unauthenticated);
     emit(state.copyWith(isUploading: true, message: null));
+    final teamId = await _teamIdOrFailure();
+    if (teamId == null) return;
     final fileOrFailure = await _uploadTeamFile(
-      teamId: TeamId.personal(user.id.value),
+      teamId: teamId,
       ownerUid: user.id.value,
       input: input,
       folderId: state.currentFolderId,
@@ -73,8 +79,10 @@ class FilesCubit extends Cubit<FilesState> {
     final user = _authRepository.currentUser();
     if (user == null) return _emitFailure(FileFailureKind.unauthenticated);
     emit(state.copyWith(isCreatingFolder: true, message: null));
+    final teamId = await _teamIdOrFailure();
+    if (teamId == null) return;
     final folderOrFailure = await _createTeamFolder(
-      teamId: TeamId.personal(user.id.value),
+      teamId: teamId,
       ownerUid: user.id.value,
       name: name,
       parentFolderId: state.currentFolderId,
@@ -134,6 +142,15 @@ class FilesCubit extends Cubit<FilesState> {
     _foldersLoaded = false;
     _filesSubscription?.cancel();
     _foldersSubscription?.cancel();
+  }
+
+  Future<TeamId?> _teamIdOrFailure() async {
+    try {
+      return await _getCurrentTeamId();
+    } catch (_) {
+      _emitFailure(FileFailureKind.loadFailed);
+      return null;
+    }
   }
 
   @override

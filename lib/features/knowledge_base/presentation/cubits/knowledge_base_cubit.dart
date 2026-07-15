@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
+import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
 
 import '../../domain/entities/knowledge_failure.dart';
 import '../../domain/entities/knowledge_note.dart';
@@ -20,7 +21,8 @@ class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
     this._watchKnowledgeNotes,
     this._createKnowledgeNote,
     this._updateKnowledgeNote,
-    this._deleteKnowledgeNote, [
+    this._deleteKnowledgeNote,
+    this._getCurrentTeamId, [
     this._linkExtractor = const MarkdownLinkExtractor(),
     this._draftFactory = const KnowledgeNoteDraftFactory(),
   ]) : super(const KnowledgeBaseState());
@@ -30,13 +32,14 @@ class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
   final CreateKnowledgeNote _createKnowledgeNote;
   final UpdateKnowledgeNote _updateKnowledgeNote;
   final DeleteKnowledgeNote _deleteKnowledgeNote;
+  final GetCurrentTeamId _getCurrentTeamId;
   final MarkdownLinkExtractor _linkExtractor;
   final KnowledgeNoteDraftFactory _draftFactory;
   StreamSubscription<List<KnowledgeNote>>? _subscription;
   Timer? _saveDebounce;
 
-  void load() {
-    final teamId = _teamIdOrNull();
+  Future<void> load() async {
+    final teamId = await _teamIdOrNull();
     if (teamId == null) {
       return _emitFailure(KnowledgeFailureKind.unauthenticated);
     }
@@ -51,9 +54,11 @@ class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
   Future<void> createNote() async {
     final user = _authRepository.currentUser();
     if (user == null) return _emitFailure(KnowledgeFailureKind.unauthenticated);
+    final teamId = await _teamIdOrNull();
+    if (teamId == null) return;
     final title = _draftFactory.newTitle(state.notes.length);
     final noteOrFailure = await _createKnowledgeNote(
-      teamId: TeamId.personal(user.id.value),
+      teamId: teamId,
       ownerUid: user.id.value,
       draft: _draftFactory.create(title: title, content: '# $title\n'),
     );
@@ -94,7 +99,7 @@ class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
 
   Future<void> deleteSelected() async {
     final note = state.selectedNote;
-    final teamId = _teamIdOrNull();
+    final teamId = await _teamIdOrNull();
     if (note == null || teamId == null) return;
     final noteOrFailure = await _deleteKnowledgeNote(
       teamId: teamId,
@@ -133,7 +138,7 @@ class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
   }
 
   Future<void> _save(KnowledgeNote note) async {
-    final teamId = _teamIdOrNull();
+    final teamId = await _teamIdOrNull();
     if (teamId == null) {
       return _emitFailure(KnowledgeFailureKind.unauthenticated);
     }
@@ -157,10 +162,14 @@ class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
     return notes.isEmpty ? null : notes.first.id;
   }
 
-  TeamId? _teamIdOrNull() {
+  Future<TeamId?> _teamIdOrNull() async {
     final user = _authRepository.currentUser();
     if (user == null) return null;
-    return TeamId.personal(user.id.value);
+    try {
+      return await _getCurrentTeamId();
+    } catch (_) {
+      return null;
+    }
   }
 
   void _emitFailure(KnowledgeFailureKind kind) {

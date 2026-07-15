@@ -40,10 +40,11 @@ teams/{teamId}/activities/{activityId}
 ```
 
 Der Flutter-Client liest die letzten Aktivitäten über
-`FirestoreTaskActivityRepository` aus `teams/personal_<uid>/activities`.
+`FirestoreTaskActivityRepository` aus `teams/{teamId}/activities`.
 Zusätzlich liest `FirestoreTaskRunRepository` die letzten TaskRuns aus
-`teams/personal_<uid>/taskRuns`, damit die Tabs „Laufend“, „Freigabe“ und
-„Abgelehnt“ ohne aktive Backend-Wartezeit gerendert werden.
+`teams/{teamId}/taskRuns`. `teamId` wird über `users/{uid}.teamId` aufgelöst,
+damit die Tabs „Laufend“, „Freigabe“ und „Abgelehnt“ ohne aktive
+Backend-Wartezeit gerendert werden.
 
 Runs mit Status `waitingForApproval` enthalten für die Freigabe-UI:
 

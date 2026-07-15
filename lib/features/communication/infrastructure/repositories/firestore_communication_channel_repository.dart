@@ -4,7 +4,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import '../../../../core/entities/unique_id.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../files/domain/entities/team_id.dart';
-import '../../../files/infrastructure/repositories/team_workspace_bootstrapper.dart';
+import '../../../teams/domain/repositories/team_repository.dart';
 import '../../domain/entities/communication_channel.dart';
 import '../../domain/entities/create_communication_channel_input.dart';
 import '../../domain/repositories/communication_channel_repository.dart';
@@ -14,24 +14,26 @@ class FirestoreCommunicationChannelRepository
     implements CommunicationChannelRepository {
   FirestoreCommunicationChannelRepository(
     this._authRepository,
-    this._firestore, {
+    this._firestore,
+    this._teamRepository, {
     FirebaseFunctions? functions,
   }) : _functions =
-           functions ?? FirebaseFunctions.instanceFor(region: 'us-central1'),
-       _bootstrapper = TeamWorkspaceBootstrapper(_firestore);
+           functions ?? FirebaseFunctions.instanceFor(region: 'us-central1');
 
   final AuthRepository _authRepository;
   final FirebaseFirestore _firestore;
+  final TeamRepository _teamRepository;
   final FirebaseFunctions _functions;
-  final TeamWorkspaceBootstrapper _bootstrapper;
 
   @override
   Stream<List<CommunicationChannel>> watchChannels() {
     final user = _authRepository.currentUser();
     if (user == null) return Stream.value(const []);
-    return _channelsReference(
-      _teamId(user.id.value),
-    ).orderBy('createdAt', descending: true).snapshots().map(_toChannels);
+    return Stream.fromFuture(_teamRepository.currentTeamId()).asyncExpand(
+      (teamId) => _channelsReference(
+        teamId,
+      ).orderBy('createdAt', descending: true).snapshots().map(_toChannels),
+    );
   }
 
   @override
@@ -39,9 +41,8 @@ class FirestoreCommunicationChannelRepository
     final user = _authRepository.currentUser();
     if (user == null || !input.isValid) return;
     final ownerUid = user.id.value;
-    final teamId = _teamId(ownerUid);
+    final teamId = await _teamRepository.currentTeamId();
     final channelId = UniqueId.random().value;
-    await _bootstrapper.ensurePersonalTeam(teamId: teamId, ownerUid: ownerUid);
     await _channelsReference(
       teamId,
     ).doc(channelId).set(_channelDocument(channelId, teamId, ownerUid, input));
@@ -51,7 +52,8 @@ class FirestoreCommunicationChannelRepository
   Future<void> deleteChannel(String channelId) async {
     final user = _authRepository.currentUser();
     if (user == null) return;
-    await _channelsReference(_teamId(user.id.value)).doc(channelId).delete();
+    final teamId = await _teamRepository.currentTeamId();
+    await _channelsReference(teamId).doc(channelId).delete();
   }
 
   @override
@@ -107,9 +109,5 @@ class FirestoreCommunicationChannelRepository
         .collection('teams')
         .doc(teamId.value)
         .collection('communicationChannels');
-  }
-
-  TeamId _teamId(String uid) {
-    return TeamId.personal(uid);
   }
 }

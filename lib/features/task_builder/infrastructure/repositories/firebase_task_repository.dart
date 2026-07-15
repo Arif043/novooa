@@ -6,6 +6,7 @@ import '../../domain/entities/task.dart';
 import '../../domain/entities/task_execution_failure.dart';
 import '../../domain/entities/task_run_start.dart';
 import '../../domain/repositories/task_repository.dart';
+import '../../../teams/domain/repositories/team_repository.dart';
 import '../datasources/task_runner_datasource.dart';
 import '../datasources/task_runner_datasource_log.dart';
 import '../models/run_task_definition_request_model.dart';
@@ -17,18 +18,21 @@ class FirebaseTaskRepository implements TaskRepository {
     required this.auth,
     required this.firestore,
     required this.runnerDatasource,
+    required this.teamRepository,
   });
 
   final FirebaseAuth auth;
   final FirebaseFirestore firestore;
   final TaskRunnerDatasource runnerDatasource;
+  final TeamRepository teamRepository;
   final TaskDocumentMapper _mapper = TaskDocumentMapper();
 
   @override
   Future<List<Task>> loadTasks() async {
     final user = auth.currentUser;
     if (user == null) return const [];
-    final snapshot = await _tasksReference(_personalTeamId(user.uid)).get();
+    final teamId = await teamRepository.currentTeamId();
+    final snapshot = await _tasksReference(teamId.value).get();
     return snapshot.docs.map(_mapper.fromDocument).toList(growable: false);
   }
 
@@ -36,17 +40,13 @@ class FirebaseTaskRepository implements TaskRepository {
   Future<void> saveTask(Task task) async {
     final user = auth.currentUser;
     if (user == null) return;
-    final teamId = _personalTeamId(user.uid);
-    final reference = _tasksReference(teamId).doc(task.id);
-    await firestore.runTransaction((transaction) async {
-      final snapshot = await transaction.get(reference);
-      _ensurePersonalTeam(transaction, teamId, user.uid);
-      transaction.set(
-        reference,
-        _document(task, teamId, snapshot.exists),
-        SetOptions(merge: true),
-      );
-    });
+    final teamId = await teamRepository.currentTeamId();
+    final reference = _tasksReference(teamId.value).doc(task.id);
+    final snapshot = await reference.get();
+    await reference.set(
+      _document(task, teamId.value, snapshot.exists),
+      SetOptions(merge: true),
+    );
   }
 
   @override
@@ -85,34 +85,6 @@ class FirebaseTaskRepository implements TaskRepository {
     };
   }
 
-  void _ensurePersonalTeam(
-    Transaction transaction,
-    String teamId,
-    String ownerUid,
-  ) {
-    transaction.set(_teamReference(teamId), _teamDocument(ownerUid));
-    transaction.set(
-      _memberReference(teamId, ownerUid),
-      _memberDocument(ownerUid),
-    );
-  }
-
-  Map<String, Object?> _teamDocument(String ownerUid) {
-    return {
-      'ownerUid': ownerUid,
-      'name': 'Persönlicher Arbeitsbereich',
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-  }
-
-  Map<String, Object?> _memberDocument(String ownerUid) {
-    return {
-      'uid': ownerUid,
-      'role': 'owner',
-      'joinedAt': FieldValue.serverTimestamp(),
-    };
-  }
-
   Future<TaskRunStart> _executeTask({
     required Task task,
     required String context,
@@ -130,17 +102,6 @@ class FirebaseTaskRepository implements TaskRepository {
 
   DocumentReference<Map<String, dynamic>> _teamReference(String teamId) {
     return firestore.collection('teams').doc(teamId);
-  }
-
-  DocumentReference<Map<String, dynamic>> _memberReference(
-    String teamId,
-    String uid,
-  ) {
-    return _teamReference(teamId).collection('members').doc(uid);
-  }
-
-  String _personalTeamId(String uid) {
-    return 'personal_$uid';
   }
 
   Result<TaskRunStart, TaskExecutionFailure> _failure(

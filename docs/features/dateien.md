@@ -21,7 +21,7 @@ gespeichert, Metadaten und Versionen in Firestore.
 - Uploads in Firebase Storage unter einem team-scoped Pfad speichern.
 - Hochgeladene Dateien in unterstützten Aufgaben-Bausteinen auswählen.
 - Aufgaben können über den Baustein **Datei schreiben** neue Dateien erzeugen.
-- Persönlichen Arbeitsbereich `personal_<uid>` automatisch bootstrappen.
+- Arbeitsbereich mit generierter Team-ID automatisch bootstrappen.
 - Versionierung vorbereiten: jede Datei verweist auf `currentVersionId`.
 - Domain-Schicht frei von Firebase-, Flutter- und Picker-Abhängigkeiten halten.
 
@@ -46,12 +46,12 @@ teams/{teamId}/files/{fileId}/versions/{versionId}/{fileName}
 Aktueller Team-Kontext:
 
 ```text
-teamId = personal_<uid>
+users/{uid}.teamId = "{teamId}"
 ```
 
-Die persönliche Team-ID ist ein Übergangsmodell. Sobald das Team-Feature
-eingeführt wird, soll die UI statt `TeamId.personal(uid)` den aktuell
-ausgewählten Team-Kontext an das Dateien-Feature übergeben.
+Die Team-ID ist eine generierte Dokument-ID und wird nicht aus der UID
+abgeleitet. Die UI übergibt dem Dateien-Feature den aktuellen Team-Kontext aus
+dem Team-Repository.
 
 ### Verzeichnisse
 

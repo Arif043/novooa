@@ -20,26 +20,29 @@ class FirestoreTeamRepository implements TeamRepository {
   final TeamMemberActionsDatasource _memberActions;
 
   @override
+  Future<TeamId> currentTeamId() async {
+    final user = _currentUserOrThrow();
+    return _ensureCurrentTeam(user.id.value);
+  }
+
+  @override
   Stream<TeamWorkspace> watchCurrentTeam() async* {
     final user = _currentUserOrThrow();
-    final teamId = TeamId.personal(user.id.value);
-    await _ensurePersonalTeam(teamId, user.id.value);
+    final teamId = await _ensureCurrentTeam(user.id.value);
     yield* _teamReference(teamId).snapshots().map(_teamFrom);
   }
 
   @override
   Stream<List<TeamMember>> watchCurrentTeamMembers() async* {
     final user = _currentUserOrThrow();
-    final teamId = TeamId.personal(user.id.value);
-    await _ensurePersonalTeam(teamId, user.id.value);
+    final teamId = await _ensureCurrentTeam(user.id.value);
     yield* _memberReference(teamId).snapshots().map(_membersFrom);
   }
 
   @override
   Future<void> updateCurrentTeamName(String name) async {
     final user = _currentUserOrThrow();
-    final teamId = TeamId.personal(user.id.value);
-    await _ensurePersonalTeam(teamId, user.id.value);
+    final teamId = await _ensureCurrentTeam(user.id.value);
     await _teamReference(teamId).update({
       'ownerUid': user.id.value,
       'name': name.trim(),
@@ -63,19 +66,25 @@ class FirestoreTeamRepository implements TeamRepository {
     return user;
   }
 
-  Future<void> _ensurePersonalTeam(TeamId teamId, String ownerUid) async {
-    final batch = _firestore.batch();
-    batch.set(
-      _teamReference(teamId),
-      _teamDocument(ownerUid),
-      SetOptions(merge: true),
-    );
-    batch.set(
-      _teamReference(teamId).collection('members').doc(ownerUid),
-      _memberDocument(ownerUid),
-      SetOptions(merge: true),
-    );
-    await batch.commit();
+  Future<TeamId> _ensureCurrentTeam(String ownerUid) async {
+    return _firestore.runTransaction((transaction) async {
+      final userReference = _userReference(ownerUid);
+      final userSnapshot = await transaction.get(userReference);
+      final existingTeamId = _teamIdFrom(userSnapshot.data());
+      if (existingTeamId != null) return existingTeamId;
+      final teamReference = _firestore.collection('teams').doc();
+      final teamId = TeamId(teamReference.id);
+      transaction.set(teamReference, _teamDocument(ownerUid));
+      transaction.set(
+        _memberReference(teamId).doc(ownerUid),
+        _memberDocument(ownerUid),
+      );
+      transaction.set(userReference, {
+        'teamId': teamReference.id,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      return teamId;
+    });
   }
 
   Map<String, Object?> _teamDocument(String ownerUid) {
@@ -100,6 +109,16 @@ class FirestoreTeamRepository implements TeamRepository {
 
   CollectionReference<Map<String, dynamic>> _memberReference(TeamId teamId) {
     return _teamReference(teamId).collection('members');
+  }
+
+  DocumentReference<Map<String, dynamic>> _userReference(String uid) {
+    return _firestore.collection('users').doc(uid);
+  }
+
+  TeamId? _teamIdFrom(Map<String, dynamic>? data) {
+    final teamId = data?['teamId'];
+    if (teamId is String && teamId.isNotEmpty) return TeamId(teamId);
+    return null;
   }
 
   TeamWorkspace _teamFrom(DocumentSnapshot<Map<String, dynamic>> snapshot) {

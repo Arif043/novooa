@@ -257,7 +257,7 @@ zwischen verschiedenen Runs persistiert.
 
 Startet eine gespeicherte Aufgabe im Hintergrund. Der Client sendet nur die
 `taskId`; der Flow lädt die `TaskDefinition` über die Callable-Auth aus
-Firestore unter `teams/personal_<uid>/tasks/{taskId}`, erzeugt einen
+Firestore unter `teams/{teamId}/tasks/{taskId}`, erzeugt einen
 `taskRuns/{runId}`-Datensatz und gibt sofort die `runId` zurück. Ein
 Firestore-Trigger führt den Run anschließend asynchron aus. Dabei interpretiert
 der Worker den Graph, ermittelt ausführbare Knoten topologisch und delegiert an
@@ -571,7 +571,7 @@ Verbesserungstemperatur: `0.4`. Streamt nicht.
 ## Offene Fragen
 
 - **Persistenz:** Firestore-Modell ist unter `teams/{teamId}/tasks/{taskId}`
-  angebunden; aktuell nutzt der Client `personal_<uid>` als Team-Kontext.
+  angebunden; der aktive Team-Kontext kommt aus `users/{uid}.teamId`.
 - **Tool-Registry:** Wo leben konkrete Tools (siehe
   [`../architecture.md#neue-genkit-tools`](../architecture.md#neue-genkit-tools)).
 - **Visualisierung:** Canvas-Implementierung — Start mit `InteractiveViewer` +

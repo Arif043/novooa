@@ -25,6 +25,10 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart
 import 'package:syscat2/features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_pager.dart';
+import 'package:syscat2/features/teams/domain/entities/team_member.dart';
+import 'package:syscat2/features/teams/domain/entities/team_workspace.dart';
+import 'package:syscat2/features/teams/domain/repositories/team_repository.dart';
+import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
 
 void main() {
   testWidgets('bleibt nach Branch-Mutation auf der Branch-Seite', (
@@ -55,18 +59,40 @@ Widget _app(WorkflowNode node) {
           create: (_) => NodeFileAttachmentsCubit(
             _FakeAuthRepository(),
             WatchTeamFiles(_FakeTeamFileRepository()),
+            GetCurrentTeamId(_FakeTeamRepository()),
           )..load(),
         ),
         BlocProvider(
           create: (_) => NodeKnowledgeAttachmentsCubit(
             _FakeAuthRepository(),
             WatchKnowledgeNotes(_FakeKnowledgeBaseRepository()),
+            GetCurrentTeamId(_FakeTeamRepository()),
           )..load(),
         ),
       ],
       child: Scaffold(body: ConditionalPager(node: node)),
     ),
   );
+}
+
+class _FakeTeamRepository implements TeamRepository {
+  @override
+  Future<TeamId> currentTeamId() async => const TeamId('team.1');
+
+  @override
+  Stream<TeamWorkspace> watchCurrentTeam() => const Stream.empty();
+
+  @override
+  Stream<List<TeamMember>> watchCurrentTeamMembers() => const Stream.empty();
+
+  @override
+  Future<void> updateCurrentTeamName(String name) async {}
+
+  @override
+  Future<void> addCurrentTeamMember(String identifier) async {}
+
+  @override
+  Future<void> removeCurrentTeamMember(String uid) async {}
 }
 
 WorkflowNode _conditionalNode({WorkflowGraph? branchGraph}) {

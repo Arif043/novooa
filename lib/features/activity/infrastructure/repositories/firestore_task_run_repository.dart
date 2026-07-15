@@ -3,6 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../core/entities/unique_id.dart';
+import '../../../teams/domain/repositories/team_repository.dart';
 import '../../domain/entities/task_run.dart';
 import '../../domain/repositories/task_run_repository.dart';
 
@@ -10,20 +11,23 @@ class FirestoreTaskRunRepository implements TaskRunRepository {
   FirestoreTaskRunRepository(
     this._auth,
     this._firestore, {
+    required this._teamRepository,
     FirebaseFunctions? functions,
   }) : _functions =
            functions ?? FirebaseFunctions.instanceFor(region: 'us-central1');
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final TeamRepository _teamRepository;
   final FirebaseFunctions _functions;
 
   @override
   Future<List<TaskRun>> listRecent() async {
     final user = _auth.currentUser;
     if (user == null) return const [];
+    final teamId = await _teamRepository.currentTeamId();
     final snapshot = await _runsReference(
-      user.uid,
+      teamId.value,
     ).orderBy('updatedAt', descending: true).limit(100).get();
     return snapshot.docs.map(_fromDocument).toList(growable: false);
   }
@@ -45,11 +49,8 @@ class FirestoreTaskRunRepository implements TaskRunRepository {
     });
   }
 
-  CollectionReference<Map<String, dynamic>> _runsReference(String uid) {
-    return _firestore
-        .collection('teams')
-        .doc('personal_$uid')
-        .collection('taskRuns');
+  CollectionReference<Map<String, dynamic>> _runsReference(String teamId) {
+    return _firestore.collection('teams').doc(teamId).collection('taskRuns');
   }
 
   TaskRun _fromDocument(DocumentSnapshot<Map<String, dynamic>> snapshot) {

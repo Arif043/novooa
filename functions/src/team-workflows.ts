@@ -1,12 +1,8 @@
-import {getApps, initializeApp} from "firebase-admin/app";
 import {getAuth, UserRecord} from "firebase-admin/auth";
 import {FieldValue, getFirestore} from "firebase-admin/firestore";
 import {HttpsError, onCall} from "firebase-functions/v2/https";
 import {z} from "genkit";
-
-if (getApps().length === 0) {
-  initializeApp();
-}
+import {currentTeamIdForUid, memberDocument} from "./team-context.js";
 
 const addTeamMemberInputSchema = z.object({
   identifier: z.string().min(1).max(254),
@@ -26,14 +22,21 @@ export const addTeamMemberFlow = onCall(async (request) => {
   if (targetUser.uid === ownerUid) {
     throw new HttpsError("invalid-argument", "Owner is already a member.");
   }
-  const teamId = personalTeamId(ownerUid);
-  await ensurePersonalTeam(teamId, ownerUid);
-  await getFirestore()
-    .collection("teams")
-    .doc(teamId)
-    .collection("members")
-    .doc(targetUser.uid)
-    .set(memberDocument(targetUser.uid, "member"), {merge: true});
+  const teamId = await currentTeamIdForUid(ownerUid);
+  const firestore = getFirestore();
+  const teamReference = firestore.collection("teams").doc(teamId);
+  const batch = firestore.batch();
+  batch.set(
+    teamReference.collection("members").doc(targetUser.uid),
+    memberDocument(targetUser.uid, "member"),
+    {merge: true},
+  );
+  batch.set(
+    firestore.collection("users").doc(targetUser.uid),
+    {teamId, updatedAt: FieldValue.serverTimestamp()},
+    {merge: true},
+  );
+  await batch.commit();
   return {uid: targetUser.uid};
 });
 
@@ -43,14 +46,18 @@ export const removeTeamMemberFlow = onCall(async (request) => {
   if (input.uid === ownerUid) {
     throw new HttpsError("invalid-argument", "Owner cannot be removed.");
   }
-  const teamId = personalTeamId(ownerUid);
-  await ensurePersonalTeam(teamId, ownerUid);
-  await getFirestore()
-    .collection("teams")
-    .doc(teamId)
-    .collection("members")
-    .doc(input.uid)
-    .delete();
+  const teamId = await currentTeamIdForUid(ownerUid);
+  const firestore = getFirestore();
+  const batch = firestore.batch();
+  batch.delete(
+    firestore.collection("teams").doc(teamId).collection("members").doc(input.uid),
+  );
+  batch.set(
+    firestore.collection("users").doc(input.uid),
+    {teamId: FieldValue.delete(), updatedAt: FieldValue.serverTimestamp()},
+    {merge: true},
+  );
+  await batch.commit();
   return {uid: input.uid};
 });
 
@@ -84,33 +91,4 @@ async function userFor(identifier: string): Promise<UserRecord> {
   } catch {
     throw new HttpsError("not-found", "User was not found.");
   }
-}
-
-async function ensurePersonalTeam(teamId: string, ownerUid: string): Promise<void> {
-  const firestore = getFirestore();
-  const batch = firestore.batch();
-  const teamReference = firestore.collection("teams").doc(teamId);
-  batch.set(
-    teamReference,
-    {
-      ownerUid,
-      name: "Persönlicher Arbeitsbereich",
-      updatedAt: FieldValue.serverTimestamp(),
-    },
-    {merge: true},
-  );
-  batch.set(
-    teamReference.collection("members").doc(ownerUid),
-    memberDocument(ownerUid, "owner"),
-    {merge: true},
-  );
-  await batch.commit();
-}
-
-function memberDocument(uid: string, role: "owner" | "member") {
-  return {uid, role, joinedAt: FieldValue.serverTimestamp()};
-}
-
-function personalTeamId(uid: string): string {
-  return `personal_${uid}`;
 }

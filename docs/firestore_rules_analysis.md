@@ -54,14 +54,14 @@
 - Client deletes are denied for secret documents to avoid stale settings/secret
   drift until a dedicated "Key entfernen" workflow exists.
 - Task Builder reads knowledge notes from
-  `/teams/personal_<uid>/knowledgeBases/default/notes` ordered by `title`.
+  `/teams/{teamId}/knowledgeBases/default/notes` ordered by `title`.
 - Wissensbasis page reads and writes the same collection, ordered by `title`.
 - Prompt nodes persist selected note references inside task graph config as
   `knowledgeAttachments`.
 - Backend Functions use Admin SDK to resolve selected notes, recursively expand
   MOC links, and expose Markdown files through Genkit filesystem middleware.
 - Zeitplan page reads and writes
-  `/teams/personal_<uid>/taskTriggers`. `type=schedule` requires `config`;
+  `/teams/{teamId}/taskTriggers`. `type=schedule` requires `config`;
   `type=event` requires `eventConfig.source` in the allowed event source list
   and an optional `filter` up to 240 characters. Event triggers may optionally
   reference `eventConfig.channelId`; when present, rules require the referenced

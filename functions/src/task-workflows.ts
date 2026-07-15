@@ -36,6 +36,7 @@ import {
 } from "./task-runner/task-run-review-store.js";
 import {isMinimaxProvider} from "./task-runner/ai-models.js";
 import {errorDetails, logError} from "./task-runner/structured-logger.js";
+import {currentTeamIdForUid} from "./team-context.js";
 
 const ai = genkit({
   plugins: [
@@ -68,7 +69,7 @@ export const taskDefinitionFlow = ai.defineFlow(
         runtime.context,
       );
       title = taskDefinition.title;
-      const teamId = teamIdFromContext(runtime.context);
+      const teamId = await teamIdFromContext(runtime.context);
       const run = await enqueueTaskRun({
         teamId,
         task: taskDefinition,
@@ -98,7 +99,7 @@ export const reviewTaskRunFlow = ai.defineFlow(
     outputSchema: reviewTaskRunOutputSchema,
   },
   async (input, runtime) => {
-    const teamId = teamIdFromContext(runtime.context);
+    const teamId = await teamIdFromContext(runtime.context);
     const reviewableRun = await loadReviewableRun(teamId, input.runId);
     if (input.decision === "reject") {
       await rejectTaskRun(teamId, reviewableRun.run.runId);
@@ -195,8 +196,8 @@ function shouldResumeApprovedRun(beforeStatus: unknown, afterStatus: unknown) {
   return beforeStatus === "waitingForApproval" && afterStatus === "queued";
 }
 
-function teamIdFromContext(context: unknown): string {
+async function teamIdFromContext(context: unknown): Promise<string> {
   const auth = (context as {auth?: {uid?: string}} | undefined)?.auth;
   if (!auth?.uid) throw new Error("Auth context is missing.");
-  return `personal_${auth.uid}`;
+  return currentTeamIdForUid(auth.uid);
 }

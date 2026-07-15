@@ -12,6 +12,7 @@ rules_version = '2';
 //   - displayName: string (required, 2-120) - private profile field
 //   - createdAt: timestamp (required, immutable) - creation time
 //   - updatedAt: timestamp (required) - last profile sync time
+//   - teamId: string (optional) - current team document id
 //
 // Subcollection: users/{uid}/settings
 // Document: aiModel
@@ -37,7 +38,7 @@ rules_version = '2';
 //   - updatedAt: timestamp (required)
 //
 // Collection: teams
-// Document ID: team id, personal teams use personal_<uid>
+// Document ID: generated team id
 // Fields:
 //   - ownerUid: string (required) - creator/owner uid
 //   - name: string (required, 2-120)
@@ -139,17 +140,14 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    function personalTeamId() {
-      return 'personal_' + request.auth.uid;
-    }
-
-    function isPersonalTeam(teamId) {
-      return isAuthenticated() && teamId == personalTeamId();
-    }
-
     function isTeamMember(teamId) {
-      return isPersonalTeam(teamId) ||
+      return isAuthenticated() &&
         exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid));
+    }
+
+    function isTeamOwner(teamId) {
+      return isAuthenticated() &&
+        resource.data.ownerUid == request.auth.uid;
     }
 
     function hasOnlyAllowedUserFields(data) {
@@ -159,6 +157,7 @@ service cloud.firestore {
         'displayName',
         'createdAt',
         'updatedAt',
+        'teamId',
       ]);
     }
 
@@ -191,8 +190,14 @@ service cloud.firestore {
         data.uid == userId &&
         isValidEmail(data.email) &&
         isValidDisplayName(data.displayName) &&
+        isValidOptionalTeamId(data.get('teamId', null)) &&
         data.createdAt is timestamp &&
         data.updatedAt is timestamp;
+    }
+
+    function isValidOptionalTeamId(teamId) {
+      return teamId == null ||
+        (teamId is string && teamId.size() >= 1 && teamId.size() <= 128);
     }
 
     function isValidAiProvider(provider) {
@@ -315,16 +320,22 @@ service cloud.firestore {
         data.name is string &&
         data.name.size() >= 2 &&
         data.name.size() <= 120 &&
-        data.updatedAt == request.time &&
-        isPersonalTeam(teamId);
+        data.updatedAt == request.time;
     }
 
     function isValidTeamMember(data, memberId) {
       return data.keys().hasOnly(['uid', 'role', 'joinedAt']) &&
         data.uid == memberId &&
-        data.uid == request.auth.uid &&
         data.role in ['owner', 'admin', 'member'] &&
         data.joinedAt == request.time;
+    }
+
+    function isValidOwnerMemberForCreatedTeam(data, teamId, memberId) {
+      return isValidTeamMember(data, memberId) &&
+        memberId == request.auth.uid &&
+        data.uid == request.auth.uid &&
+        data.role == 'owner' &&
+        getAfter(/databases/$(database)/documents/teams/$(teamId)).data.ownerUid == request.auth.uid;
     }
 
     function isValidFile(data, teamId) {
@@ -706,13 +717,20 @@ service cloud.firestore {
 
     match /teams/{teamId} {
       allow get, list: if isTeamMember(teamId);
-      allow create, update: if isValidTeam(request.resource.data, teamId);
+      allow create: if isValidTeam(request.resource.data, teamId);
+      allow update: if isTeamOwner(teamId) &&
+        isValidTeam(request.resource.data, teamId) &&
+        request.resource.data.ownerUid == resource.data.ownerUid;
       allow delete: if false;
 
       match /members/{memberId} {
         allow get, list: if isTeamMember(teamId);
-        allow create, update: if isPersonalTeam(teamId) &&
-          isValidTeamMember(request.resource.data, memberId);
+        allow create: if isValidOwnerMemberForCreatedTeam(
+          request.resource.data,
+          teamId,
+          memberId,
+        );
+        allow update: if false;
         allow delete: if false;
       }
 

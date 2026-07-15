@@ -16,6 +16,10 @@ import 'package:syscat2/features/files/domain/repositories/team_file_repository.
 import 'package:syscat2/features/files/domain/usecases/watch_team_files.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_file_attachments_state.dart';
+import 'package:syscat2/features/teams/domain/entities/team_member.dart';
+import 'package:syscat2/features/teams/domain/entities/team_workspace.dart';
+import 'package:syscat2/features/teams/domain/repositories/team_repository.dart';
+import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
 
 void main() {
   test('load stellt echte Team-Dateien als NodeAttachments bereit', () async {
@@ -23,13 +27,14 @@ void main() {
     final cubit = NodeFileAttachmentsCubit(
       _FakeAuthRepository(),
       WatchTeamFiles(repository),
+      GetCurrentTeamId(_FakeTeamRepository()),
     );
 
-    cubit.load();
+    await cubit.load();
     repository.emit([_teamFile]);
     await Future<void>.delayed(Duration.zero);
 
-    expect(repository.watchedTeamId, const TeamId('personal_user.1'));
+    expect(repository.watchedTeamId, const TeamId('team.1'));
     expect(cubit.state.status, NodeFileAttachmentsStatus.ready);
     expect(cubit.state.files.single.id, 'file.1:version.7');
     expect(cubit.state.files.single.storagePath, _teamFile.storagePath);
@@ -41,10 +46,10 @@ void main() {
 
 final _teamFile = TeamFile(
   id: 'file.1',
-  teamId: const TeamId('personal_user.1'),
+  teamId: const TeamId('team.1'),
   ownerUid: 'user.1',
   displayName: 'briefing.md',
-  storagePath: 'teams/personal_user.1/files/file.1/versions/version.7/file.md',
+  storagePath: 'teams/team.1/files/file.1/versions/version.7/file.md',
   currentVersionId: 'version.7',
   contentType: 'text/markdown',
   sizeBytes: 12000,
@@ -94,6 +99,26 @@ class _FakeTeamFileRepository implements TeamFileRepository {
   }) async {
     return const Result.error(FileFailure(FileFailureKind.createFolderFailed));
   }
+}
+
+class _FakeTeamRepository implements TeamRepository {
+  @override
+  Future<TeamId> currentTeamId() async => const TeamId('team.1');
+
+  @override
+  Stream<TeamWorkspace> watchCurrentTeam() => const Stream.empty();
+
+  @override
+  Stream<List<TeamMember>> watchCurrentTeamMembers() => const Stream.empty();
+
+  @override
+  Future<void> updateCurrentTeamName(String name) async {}
+
+  @override
+  Future<void> addCurrentTeamMember(String identifier) async {}
+
+  @override
+  Future<void> removeCurrentTeamMember(String uid) async {}
 }
 
 class _FakeAuthRepository implements AuthRepository {

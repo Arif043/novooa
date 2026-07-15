@@ -2,20 +2,27 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../core/entities/unique_id.dart';
+import '../../../teams/domain/repositories/team_repository.dart';
 import '../../domain/entities/task_activity.dart';
 import '../../domain/repositories/task_activity_repository.dart';
 
 class FirestoreTaskActivityRepository implements TaskActivityRepository {
-  const FirestoreTaskActivityRepository(this._auth, this._firestore);
+  const FirestoreTaskActivityRepository(
+    this._auth,
+    this._firestore,
+    this._teamRepository,
+  );
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final TeamRepository _teamRepository;
 
   @override
   Future<void> add(TaskActivity activity) async {
     final user = _auth.currentUser;
     if (user == null) return;
-    await _activitiesReference(user.uid)
+    final teamId = await _teamRepository.currentTeamId();
+    await _activitiesReference(teamId.value)
         .doc(activity.id.value)
         .set(_toDocument(activity), SetOptions(merge: true));
   }
@@ -24,17 +31,17 @@ class FirestoreTaskActivityRepository implements TaskActivityRepository {
   Future<List<TaskActivity>> listRecent() async {
     final user = _auth.currentUser;
     if (user == null) return const [];
+    final teamId = await _teamRepository.currentTeamId();
     final snapshot = await _activitiesReference(
-      user.uid,
+      teamId.value,
     ).orderBy('occurredAt', descending: true).limit(100).get();
     return snapshot.docs.map(_fromDocument).toList(growable: false);
   }
 
-  CollectionReference<Map<String, dynamic>> _activitiesReference(String uid) {
-    return _firestore
-        .collection('teams')
-        .doc('personal_$uid')
-        .collection('activities');
+  CollectionReference<Map<String, dynamic>> _activitiesReference(
+    String teamId,
+  ) {
+    return _firestore.collection('teams').doc(teamId).collection('activities');
   }
 
   Map<String, Object?> _toDocument(TaskActivity activity) {

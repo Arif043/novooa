@@ -10,6 +10,7 @@ import {
   storeInboundChannelMessage,
 } from "./channel-message-store.js";
 import {dispatchChannelMessageTriggers} from "./channel-trigger-dispatcher.js";
+import {currentTeamIdForUid} from "../team-context.js";
 
 const fakeChannelMessageInputSchema = z.object({
   channelId: z.string().min(1),
@@ -22,7 +23,7 @@ export const dispatchFakeChannelMessage = onCall(async (request) => {
   const uid = request.auth?.uid;
   if (!uid) throw new HttpsError("unauthenticated", "Auth is required.");
   const input = fakeChannelMessageInputSchema.parse(request.data);
-  const teamId = `personal_${uid}`;
+  const teamId = await currentTeamIdForUid(uid);
   const channel = await loadCommunicationChannel({teamId, channelId: input.channelId});
   const event = fakeEventFor(channel.kind, channel.address, input);
   const created = await storeInboundChannelMessage({channel, event});

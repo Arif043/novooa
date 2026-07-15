@@ -68,6 +68,7 @@ import '../../features/task_builder/presentation/cubits/node_knowledge_attachmen
 import '../../features/task_builder/presentation/cubits/task_homepage_cubit.dart';
 import '../../features/teams/domain/repositories/team_repository.dart';
 import '../../features/teams/domain/usecases/add_current_team_member.dart';
+import '../../features/teams/domain/usecases/get_current_team_id.dart';
 import '../../features/teams/domain/usecases/remove_current_team_member.dart';
 import '../../features/teams/domain/usecases/update_current_team_name.dart';
 import '../../features/teams/domain/usecases/watch_current_team.dart';
@@ -114,30 +115,35 @@ void configureDependencies() {
         auth: serviceLocator<FirebaseAuth>(),
         firestore: serviceLocator<FirebaseFirestore>(),
         runnerDatasource: serviceLocator<TaskRunnerDatasource>(),
+        teamRepository: serviceLocator<TeamRepository>(),
       ),
     )
     ..registerLazySingleton<TaskActivityRepository>(
       () => FirestoreTaskActivityRepository(
         serviceLocator<FirebaseAuth>(),
         serviceLocator<FirebaseFirestore>(),
+        serviceLocator<TeamRepository>(),
       ),
     )
     ..registerLazySingleton<TaskRunRepository>(
       () => FirestoreTaskRunRepository(
         serviceLocator<FirebaseAuth>(),
         serviceLocator<FirebaseFirestore>(),
+        teamRepository: serviceLocator<TeamRepository>(),
       ),
     )
     ..registerLazySingleton<TaskTriggerRepository>(
       () => FirestoreTaskTriggerRepository(
         serviceLocator<AuthRepository>(),
         serviceLocator<FirebaseFirestore>(),
+        serviceLocator<TeamRepository>(),
       ),
     )
     ..registerLazySingleton<CommunicationChannelRepository>(
       () => FirestoreCommunicationChannelRepository(
         serviceLocator<AuthRepository>(),
         serviceLocator<FirebaseFirestore>(),
+        serviceLocator<TeamRepository>(),
       ),
     )
     ..registerLazySingleton<NotificationDeviceRepository>(
@@ -265,6 +271,9 @@ void configureDependencies() {
       () => WatchCurrentTeam(serviceLocator<TeamRepository>()),
     )
     ..registerLazySingleton(
+      () => GetCurrentTeamId(serviceLocator<TeamRepository>()),
+    )
+    ..registerLazySingleton(
       () => WatchCurrentTeamMembers(serviceLocator<TeamRepository>()),
     )
     ..registerLazySingleton(
@@ -310,12 +319,14 @@ void configureDependencies() {
       () => NodeFileAttachmentsCubit(
         serviceLocator<AuthRepository>(),
         serviceLocator<WatchTeamFiles>(),
+        serviceLocator<GetCurrentTeamId>(),
       ),
     )
     ..registerFactory(
       () => NodeKnowledgeAttachmentsCubit(
         serviceLocator<AuthRepository>(),
         serviceLocator<WatchKnowledgeNotes>(),
+        serviceLocator<GetCurrentTeamId>(),
       ),
     )
     ..registerFactory(
@@ -325,6 +336,7 @@ void configureDependencies() {
         serviceLocator<CreateKnowledgeNote>(),
         serviceLocator<UpdateKnowledgeNote>(),
         serviceLocator<DeleteKnowledgeNote>(),
+        serviceLocator<GetCurrentTeamId>(),
       ),
     )
     ..registerFactory(
@@ -341,6 +353,7 @@ void configureDependencies() {
         serviceLocator<WatchTeamFolders>(),
         serviceLocator<UploadTeamFile>(),
         serviceLocator<CreateTeamFolder>(),
+        serviceLocator<GetCurrentTeamId>(),
       ),
     )
     ..registerFactory(

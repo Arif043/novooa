@@ -1,10 +1,6 @@
 class TeamId {
   const TeamId(this.value) : assert(value.length > 0);
 
-  factory TeamId.personal(String userId) {
-    return TeamId('personal_$userId');
-  }
-
   final String value;
 
   @override

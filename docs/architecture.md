@@ -46,7 +46,7 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md#domäne
   die Ausführung die Firebase Callable Function über `TaskRunnerDatasource` auf.
 - Bei der Ausführung sendet der Client nur `taskId` und optionalen Kontext.
   Die Callable Function ist authentifiziert, lädt die Aufgabe serverseitig aus
-  `teams/personal_<uid>/tasks/{taskId}`, erstellt
+  `teams/{teamId}/tasks/{taskId}`, erstellt
   `teams/{teamId}/taskRuns/{runId}` und gibt sofort die `runId` zurück.
 - Die eigentliche Ausführung läuft im Backend über einen Firestore-Trigger auf
   `taskRuns/{runId}`. Activity-Logs werden unter
@@ -98,16 +98,18 @@ Storage:
 teams/{teamId}/files/{fileId}/versions/{versionId}/{fileName}
 ```
 
-Der aktuelle Client erzeugt für angemeldete Nutzer:innen automatisch:
+Der aktuelle Client erzeugt für angemeldete Nutzer:innen automatisch ein
+Team-Dokument mit generierter ID und speichert die Referenz im User-Dokument:
 
 ```text
-teams/personal_<uid>
-teams/personal_<uid>/members/<uid>
+users/{uid}.teamId = "{teamId}"
+teams/{teamId}
+teams/{teamId}/members/{uid}
 ```
 
-Das spätere Team-Feature ersetzt nur die Quelle für `teamId`: statt
-`personal_<uid>` wird der aktive Team-Kontext verwendet. Aufgaben,
-Datei-Metadaten und Storage-Pfade bleiben team-scoped.
+Die Team-ID wird nicht aus der UID abgeleitet. Client und Functions lösen den
+aktuellen Team-Kontext über `users/{uid}.teamId` auf. Aufgaben,
+Datei-Metadaten, Aktivitäten und Storage-Pfade bleiben team-scoped.
 
 Copy-on-Write wird über `versions/{versionId}` vorbereitet. Eine neue
 Dateiversion schreibt ein neues Storage-Objekt und aktualisiert am

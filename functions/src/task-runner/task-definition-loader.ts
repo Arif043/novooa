@@ -1,6 +1,7 @@
 import {getApps, initializeApp} from "firebase-admin/app";
 import {getFirestore} from "firebase-admin/firestore";
 import {UserFacingError} from "genkit";
+import {currentTeamIdForUid} from "../team-context.js";
 import {
   taskDefinitionSchema,
   type TaskDefinition,
@@ -19,7 +20,8 @@ export async function loadTaskDefinition(
   context: unknown,
 ): Promise<TaskDefinition> {
   const uid = uidFromContext(context);
-  return loadTaskDefinitionForTeam(`personal_${uid}`, taskId);
+  const teamId = await currentTeamIdForUid(uid);
+  return loadTaskDefinitionForTeam(teamId, taskId);
 }
 
 export async function loadTaskDefinitionForTeam(
