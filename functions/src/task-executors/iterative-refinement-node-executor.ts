@@ -4,6 +4,7 @@ import {
   type NodeExecutor,
   executedNode,
   parentOutputFor,
+  textOutputs,
 } from "../task-runner/node-executor.js";
 import {refinementConfigFor} from "./iterative-refinement-config.js";
 import {
@@ -66,7 +67,7 @@ export const iterativeRefinementNodeExecutor: NodeExecutor = {
         input.node.title,
       maxIterations: config?.maxIterations ?? 2,
     });
-    return executedNode(input.node, output.answer);
+    return executedNode(input.node, textOutputs(output.answer));
   },
 };
 

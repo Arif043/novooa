@@ -4,6 +4,7 @@ import {
   type TaskDefinition,
   type WorkflowNode,
 } from "./task-definition.js";
+import {textOutputFromResult} from "./node-executor.js";
 
 export type LogData = Record<string, unknown>;
 
@@ -51,11 +52,12 @@ export function nodeAttributes(node: WorkflowNode): LogData {
 }
 
 export function resultSummary(result: NodeExecutionResult): LogData {
+  const output = textOutputFromResult(result);
   return {
     nodeId: result.nodeId,
     primitive: result.primitive,
     status: result.status,
-    outputLength: result.output.length,
+    outputLength: output.length,
     selectedNodeId: result.selectedNodeId,
     selectedBranchId: result.selectedBranchId,
     selectedBranchLabel: result.selectedBranchLabel,
@@ -119,11 +121,12 @@ export function formatNodeTrail(input: {
   result: NodeExecutionResult;
   durationMs: number;
 }): string {
+  const output = textOutputFromResult(input.result);
   return [
     `Baustein beendet: ${input.result.nodeId}`,
     `Status: ${statusLabel(input.result.status)}`,
     `Dauer: ${formatDuration(input.durationMs)}`,
-    `Ausgabe: ${input.result.output.length} Zeichen`,
+    `Ausgabe: ${output.length} Zeichen`,
     selectedTargetFor(input.result),
     "------------------------------------------------------------",
   ].filter(Boolean).join("\n");

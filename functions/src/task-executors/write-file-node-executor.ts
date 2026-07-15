@@ -6,6 +6,7 @@ import {
   type NodeExecutor,
   executedNode,
   parentOutputFor,
+  textOutputs,
 } from "../task-runner/node-executor.js";
 import {type WorkflowNode} from "../task-runner/task-definition.js";
 import {
@@ -28,7 +29,7 @@ export const writeFileNodeExecutor: NodeExecutor = {
       node: input.node,
       content,
     });
-    return executedNode(input.node, JSON.stringify(file));
+    return executedNode(input.node, textOutputs(JSON.stringify(file)));
   },
 };
 

@@ -12,6 +12,7 @@ import {
   type TaskDefinition,
   type WaitingTaskGraphOutput,
 } from "./task-definition.js";
+import {textOutputFromResult} from "./node-executor.js";
 import {errorDetails} from "./structured-logger.js";
 
 export type TaskRunDocument = {
@@ -155,7 +156,7 @@ function reviewFieldsFrom(output: WaitingTaskGraphOutput) {
   );
   return {
     instruction: result?.message ?? "Prüfe das Ergebnis und gib es frei.",
-    output: result?.output ?? output.finalOutput,
+    output: result === undefined ? output.finalOutput : textOutputFromResult(result),
   };
 }
 
@@ -179,7 +180,6 @@ async function writeNodeActivity(
     ...baseActivity(reference.id, run, "node", nodeStatus(result.status)),
     nodeId: result.nodeId,
     primitive: result.primitive,
-    output: result.output,
     outputs: serializable(result.outputs),
     ...(result.message ? {message: result.message} : {}),
   });

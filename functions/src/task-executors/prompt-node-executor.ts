@@ -3,6 +3,7 @@ import {modelLogContext, textModel} from "../task-runner/ai-models.js";
 import {
   type NodeExecutor,
   executedNode,
+  textOutputs,
 } from "../task-runner/node-executor.js";
 import {type WorkflowNode} from "../task-runner/task-definition.js";
 import {
@@ -39,7 +40,7 @@ export const promptNodeExecutor: NodeExecutor = {
       promptInputFor(input.node, input.context, runContext.variables),
       input.attachmentWorkspace,
     );
-    return executedNode(input.node, output.answer);
+    return executedNode(input.node, textOutputs(output.answer));
   },
 };
 

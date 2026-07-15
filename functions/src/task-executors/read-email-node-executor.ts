@@ -2,6 +2,7 @@ import {
   datetimeOutput,
   executedNode,
   stringOutput,
+  textOutputs,
   type NodeExecutor,
 } from "../task-runner/node-executor.js";
 
@@ -9,7 +10,8 @@ export const readEmailNodeExecutor: NodeExecutor = {
   primitive: "readEmail",
   async execute(input, runContext) {
     const event = emailEventFrom(runContext.input);
-    return executedNode(input.node, event.message, undefined, undefined, undefined, {
+    return executedNode(input.node, {
+      ...textOutputs(event.message),
       sender: stringOutput(event.senderEmail),
       subject: stringOutput(event.subject),
       message: stringOutput(event.message),

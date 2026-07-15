@@ -20,7 +20,6 @@ class NodeExecutionResult {
     required this.nodeId,
     required this.primitive,
     required this.status,
-    required this.output,
     this.outputs = const {},
     this.selectedNodeId,
     this.message,
@@ -29,7 +28,6 @@ class NodeExecutionResult {
   final NodeId nodeId;
   final WorkflowPrimitive primitive;
   final NodeExecutionStatus status;
-  final String output;
   final Map<String, NodeOutputValue> outputs;
   final NodeId? selectedNodeId;
   final String? message;

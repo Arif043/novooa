@@ -204,7 +204,6 @@ function resumedState(
         ? {
           ...result,
           status: "executed",
-          output: approvedOutput,
           outputs: {text: {type: "string", value: approvedOutput}},
         }
         : result,
@@ -242,7 +241,7 @@ async function runNodeWithTrail(
 ): Promise<NodeExecutionResult> {
   try {
     const result = input.skipNode
-      ? skippedNode(input.node, "")
+      ? skippedNode(input.node)
       : await executeNode(ai, input);
     logNodeTrail(input.runContext.task.id, result, input.startedAt);
     return result;
@@ -334,7 +333,7 @@ async function executeNode(
   input: NodeRunInput,
 ): Promise<NodeExecutionResult> {
   const executor = executorFor(input.node.primitive);
-  if (!executor) return skippedNode(input.node, input.context);
+  if (!executor) return skippedNode(input.node);
   const attachmentWorkspace = await prepareNodeAttachmentWorkspace(
     input.node,
     input.runContext.teamId,

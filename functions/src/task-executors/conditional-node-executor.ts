@@ -4,6 +4,7 @@ import {
   type NodeExecutor,
   executedNode,
   parentOutputFor,
+  textOutputs,
 } from "../task-runner/node-executor.js";
 import {finalOutputOf} from "../task-runner/task-graph-utils.js";
 import {logReadableInfo} from "../task-runner/structured-logger.js";
@@ -36,9 +37,12 @@ export const conditionalFlowNodeExecutor: NodeExecutor = {
       ),
     });
     const branchOutput = await executeSelectedBranch(input, runContext, output);
-    return executedNode(input.node, branchOutput, output.selectedNodeId, {
-      selectedBranchId: output.selectedBranchId,
-      selectedBranchLabel: output.selectedBranchLabel,
+    return executedNode(input.node, textOutputs(branchOutput), {
+      selectedNodeId: output.selectedNodeId,
+      selection: {
+        selectedBranchId: output.selectedBranchId,
+        selectedBranchLabel: output.selectedBranchLabel,
+      },
     });
   },
 };

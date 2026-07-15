@@ -6,6 +6,7 @@ import {
   type WorkflowNode,
 } from "./task-definition.js";
 import {type TaskVariables} from "./node-executor.js";
+import {textOutputFromResult} from "./node-executor.js";
 
 export function nextRunnableIndex(
   nodes: WorkflowNode[],
@@ -26,7 +27,10 @@ export function contextFor(
 ): string {
   const parentOutputs = input.taskDefinition.edges
     .filter((edge) => edge.to === node.id)
-    .map((edge) => results.get(edge.from)?.output ?? "")
+    .map((edge) => {
+      const result = results.get(edge.from);
+      return result === undefined ? "" : textOutputFromResult(result);
+    })
     .filter((output) => output.trim().length > 0);
   return [
     variablesContext(variables),
@@ -95,7 +99,8 @@ export function skipInactiveBranches(
 
 export function finalOutputOf(results: NodeExecutionResult[]): string {
   for (let index = results.length - 1; index >= 0; index -= 1) {
-    if (results[index].output.trim().length > 0) return results[index].output;
+    const text = textOutputFromResult(results[index]);
+    if (text.trim().length > 0) return text;
   }
   return "";
 }

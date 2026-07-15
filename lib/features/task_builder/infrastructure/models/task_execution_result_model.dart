@@ -37,7 +37,6 @@ class NodeExecutionResultModel {
     required this.nodeId,
     required this.primitive,
     required this.status,
-    required this.output,
     this.outputs = const {},
     this.selectedNodeId,
     this.message,
@@ -46,7 +45,6 @@ class NodeExecutionResultModel {
   final String nodeId;
   final String primitive;
   final String status;
-  final String output;
   final Map<String, NodeOutputValueModel> outputs;
   final String? selectedNodeId;
   final String? message;
@@ -56,7 +54,6 @@ class NodeExecutionResultModel {
       nodeId: json['nodeId'] as String? ?? '',
       primitive: json['primitive'] as String? ?? 'prompt',
       status: json['status'] as String? ?? 'skipped',
-      output: json['output'] as String? ?? '',
       outputs: _outputsFrom(json['outputs']),
       selectedNodeId: json['selectedNodeId'] as String?,
       message: json['message'] as String?,
@@ -68,7 +65,6 @@ class NodeExecutionResultModel {
       nodeId: NodeId(nodeId),
       primitive: _primitiveFromName(primitive),
       status: NodeExecutionStatus.fromName(status),
-      output: output,
       outputs: outputs.map((key, value) => MapEntry(key, value.toDomain())),
       selectedNodeId: selectedNodeId == null ? null : NodeId(selectedNodeId!),
       message: message,

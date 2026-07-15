@@ -270,10 +270,9 @@ input:  { taskId: string; context?: string }
 output: { runId: string; taskId: string; status: "queued" }
 ```
 
-`NodeExecutionResult` enthält `nodeId`, `primitive`, `status`, `output`,
-`outputs`, optional `selectedNodeId` und optional `message`. `output` bleibt
-vorerst das Text-Kompatibilitätsfeld für lineare Alt-Nodes. Neue Nodes liefern
-benannte Werte in `outputs`:
+`NodeExecutionResult` enthält `nodeId`, `primitive`, `status`, `outputs`,
+optional `selectedNodeId` und optional `message`. Nodes liefern ihre Ergebnisse
+ausschließlich als benannte Werte in `outputs`:
 
 ```ts
 outputs: Record<string, { type: "string" | "datetime" | "number" | "boolean" | "json", value: unknown }>
@@ -283,6 +282,7 @@ Beispiel `readEmail`:
 
 ```ts
 outputs: {
+  text: { type: "string", value: "..." },
   sender: { type: "string", value: "kunde@example.com" },
   subject: { type: "string", value: "Anfrage" },
   message: { type: "string", value: "..." },

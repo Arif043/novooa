@@ -1,6 +1,7 @@
 import {
   type NodeExecutor,
   parentOutputFor,
+  textOutputs,
   waitingForApprovalNode,
 } from "../task-runner/node-executor.js";
 
@@ -14,7 +15,7 @@ export const humanApprovalNodeExecutor: NodeExecutor = {
     );
     return waitingForApprovalNode(
       input.node,
-      output,
+      textOutputs(output),
       messageFor(input.node.config),
     );
   },

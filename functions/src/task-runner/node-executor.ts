@@ -40,53 +40,48 @@ export type NodeExecutor = {
 
 export function executedNode(
   node: WorkflowNode,
-  output: string,
-  selectedNodeId?: string | null,
-  selection?: {
-    selectedBranchId?: string | null;
-    selectedBranchLabel?: string | null;
-  },
-  variables?: TaskVariables,
-  outputs?: Record<string, NodeOutputValue>,
+  outputs: Record<string, NodeOutputValue>,
+  options: {
+    selectedNodeId?: string | null;
+    selection?: {
+      selectedBranchId?: string | null;
+      selectedBranchLabel?: string | null;
+    };
+    variables?: TaskVariables;
+  } = {},
 ): NodeExecutionResult {
   return {
     nodeId: node.id,
     primitive: node.primitive,
     status: "executed",
-    output,
-    outputs: outputs ?? textOutputs(output),
-    variables,
-    selectedNodeId,
-    selectedBranchId: selection?.selectedBranchId,
-    selectedBranchLabel: selection?.selectedBranchLabel,
+    outputs,
+    variables: options.variables,
+    selectedNodeId: options.selectedNodeId,
+    selectedBranchId: options.selection?.selectedBranchId,
+    selectedBranchLabel: options.selection?.selectedBranchLabel,
   };
 }
 
-export function skippedNode(
-  node: WorkflowNode,
-  context: string,
-): NodeExecutionResult {
+export function skippedNode(node: WorkflowNode): NodeExecutionResult {
   return {
     nodeId: node.id,
     primitive: node.primitive,
     status: "skipped",
-    output: context,
-    outputs: textOutputs(context),
+    outputs: {},
     message: "Baustein-Executor ist noch nicht implementiert.",
   };
 }
 
 export function waitingForApprovalNode(
   node: WorkflowNode,
-  output: string,
+  outputs: Record<string, NodeOutputValue>,
   message: string,
 ): NodeExecutionResult {
   return {
     nodeId: node.id,
     primitive: node.primitive,
     status: "waitingForApproval",
-    output,
-    outputs: textOutputs(output),
+    outputs,
     message,
   };
 }
@@ -97,7 +92,7 @@ export function parentOutputFor(
   results: Map<string, NodeExecutionResult>,
 ): string {
   const parentOutputs = parentResultsFor(node, task, results)
-    .map((parentResult) => parentResult.result.output)
+    .map((parentResult) => textOutputFromResult(parentResult.result))
     .filter((output) => output.trim().length > 0);
   return parentOutputs[parentOutputs.length - 1] ?? "";
 }
@@ -110,8 +105,13 @@ export function datetimeOutput(value: string): NodeOutputValue {
   return {type: "datetime", value};
 }
 
-function textOutputs(output: string): Record<string, NodeOutputValue> {
-  return output.trim().length === 0 ? {} : {text: stringOutput(output)};
+export function textOutputs(text: string): Record<string, NodeOutputValue> {
+  return text.trim().length === 0 ? {} : {text: stringOutput(text)};
+}
+
+export function textOutputFromResult(result: NodeExecutionResult): string {
+  const text = result.outputs.text?.value;
+  return typeof text === "string" ? text : "";
 }
 
 export function parentResultsFor(

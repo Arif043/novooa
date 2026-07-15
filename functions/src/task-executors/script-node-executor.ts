@@ -5,6 +5,7 @@ import {
   type TaskVariables,
   executedNode,
   parentOutputFor,
+  textOutputs,
 } from "../task-runner/node-executor.js";
 import {
   logInfo,
@@ -32,7 +33,9 @@ export const scriptNodeExecutor: NodeExecutor = {
       variables: runContext.variables,
       attachmentWorkspace: input.attachmentWorkspace,
     });
-    return executedNode(input.node, output.output, undefined, undefined, output.variables);
+    return executedNode(input.node, textOutputs(output.output), {
+      variables: output.variables,
+    });
   },
 };
 

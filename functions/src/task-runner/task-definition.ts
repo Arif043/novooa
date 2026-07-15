@@ -158,7 +158,6 @@ export const nodeExecutionResultSchema = z.object({
   nodeId: z.string(),
   primitive: workflowPrimitiveSchema,
   status: z.enum(["executed", "skipped", "waitingForApproval"]),
-  output: z.string(),
   outputs: z.record(z.string(), nodeOutputValueSchema).default({}),
   variables: z.record(z.string(), z.unknown()).optional(),
   selectedNodeId: z.string().nullable().optional(),

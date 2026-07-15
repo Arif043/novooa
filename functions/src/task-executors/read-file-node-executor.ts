@@ -3,6 +3,7 @@ import {getStorage} from "firebase-admin/storage";
 import {
   type NodeExecutor,
   executedNode,
+  textOutputs,
 } from "../task-runner/node-executor.js";
 import {
   type NodeAttachment,
@@ -15,7 +16,7 @@ export const readFileNodeExecutor: NodeExecutor = {
     const file = selectedFileFor(input.node);
     ensureTeamFile(file, runContext.teamId);
     const output = await readStorageFile(file);
-    return executedNode(input.node, output);
+    return executedNode(input.node, textOutputs(output));
   },
 };
 

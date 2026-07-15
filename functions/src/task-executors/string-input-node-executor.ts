@@ -1,6 +1,7 @@
 import {
   type NodeExecutor,
   executedNode,
+  textOutputs,
 } from "../task-runner/node-executor.js";
 
 export const stringInputNodeExecutor: NodeExecutor = {
@@ -9,6 +10,6 @@ export const stringInputNodeExecutor: NodeExecutor = {
     const value = input.node.config.primitive === "stringInput"
       ? input.node.config.value
       : "";
-    return executedNode(input.node, value);
+    return executedNode(input.node, textOutputs(value));
   },
 };
