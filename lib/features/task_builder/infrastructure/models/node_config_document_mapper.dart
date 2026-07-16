@@ -97,7 +97,6 @@ class NodeConfigDocumentMapper {
     return {
       'primitive': config.primitive.name,
       'instruction': config.instruction,
-      'reviewScope': config.reviewScope.name,
     };
   }
 
@@ -156,7 +155,6 @@ class NodeConfigDocumentMapper {
   HumanApprovalNodeConfig _approvalFrom(Map<String, Object?> data) {
     return HumanApprovalNodeConfig(
       instruction: data['instruction'] as String? ?? '',
-      reviewScope: _reviewScopeFrom(data['reviewScope']),
     );
   }
 
@@ -282,13 +280,6 @@ class NodeConfigDocumentMapper {
     return PromptOutputType.values.firstWhere(
       (type) => type.name == value,
       orElse: () => PromptOutputType.text,
-    );
-  }
-
-  HumanApprovalReviewScope _reviewScopeFrom(Object? value) {
-    return HumanApprovalReviewScope.values.firstWhere(
-      (scope) => scope.name == value,
-      orElse: () => HumanApprovalReviewScope.currentInput,
     );
   }
 

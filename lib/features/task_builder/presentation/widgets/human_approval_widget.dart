@@ -36,25 +36,6 @@ class HumanApprovalWidget extends StatelessWidget {
               (config) => config.copyWith(instruction: value),
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          DropdownButtonFormField<HumanApprovalReviewScope>(
-            initialValue: _config.reviewScope,
-            decoration: const InputDecoration(labelText: 'Anzuzeigende Daten'),
-            items: const [
-              DropdownMenuItem(
-                value: HumanApprovalReviewScope.currentInput,
-                child: Text('Aktueller Input'),
-              ),
-              DropdownMenuItem(
-                value: HumanApprovalReviewScope.executionTrace,
-                child: Text('Bisherige Ergebnisse'),
-              ),
-            ],
-            onChanged: (value) {
-              if (value == null) return;
-              _update(context, (config) => config.copyWith(reviewScope: value));
-            },
-          ),
         ],
       ),
     );

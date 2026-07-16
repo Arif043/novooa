@@ -346,10 +346,12 @@ Für Freigabe-Bausteine:
 ```ts
 {
   primitive: "humanApproval",
-  instruction: string,
-  reviewScope: "currentInput" | "executionTrace"
+  instruction: string
 }
 ```
+
+Freigabe-Bausteine zeigen immer das Ergebnis des direkten Vorgänger-Bausteins.
+Ein separater Prüfumfang wird nicht konfiguriert.
 
 Für Datei-schreiben-Bausteine:
 

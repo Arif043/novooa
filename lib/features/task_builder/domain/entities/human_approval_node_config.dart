@@ -1,20 +1,13 @@
 part of 'node_config.dart';
 
-enum HumanApprovalReviewScope { currentInput, executionTrace }
-
 class HumanApprovalNodeConfig extends NodeConfig {
-  const HumanApprovalNodeConfig({
-    required this.instruction,
-    required this.reviewScope,
-  });
+  const HumanApprovalNodeConfig({required this.instruction});
 
   final String instruction;
-  final HumanApprovalReviewScope reviewScope;
 
   factory HumanApprovalNodeConfig.initial() {
     return const HumanApprovalNodeConfig(
       instruction: 'Prüfe das Ergebnis und gib es frei.',
-      reviewScope: HumanApprovalReviewScope.currentInput,
     );
   }
 
@@ -23,16 +16,12 @@ class HumanApprovalNodeConfig extends NodeConfig {
 
   @override
   List<Object?> get props {
-    return [instruction, reviewScope];
+    return [instruction];
   }
 
-  HumanApprovalNodeConfig copyWith({
-    String? instruction,
-    HumanApprovalReviewScope? reviewScope,
-  }) {
+  HumanApprovalNodeConfig copyWith({String? instruction}) {
     return HumanApprovalNodeConfig(
       instruction: instruction ?? this.instruction,
-      reviewScope: reviewScope ?? this.reviewScope,
     );
   }
 }

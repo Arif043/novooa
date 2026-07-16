@@ -102,7 +102,6 @@ export const iterativeRefinementNodeConfigSchema = z.object({
 export const humanApprovalNodeConfigSchema = z.object({
   primitive: z.literal("humanApproval").default("humanApproval"),
   instruction: z.string().default("Prüfe das Ergebnis und gib es frei."),
-  reviewScope: z.enum(["currentInput", "executionTrace"]).default("currentInput"),
 });
 
 export const writeFileNodeConfigSchema = z.object({
