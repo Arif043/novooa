@@ -55,8 +55,10 @@ Die Seite ist an Obsidian angelehnt:
 Die Graph-Ansicht orientiert sich am Obsidian-Look-and-Feel: dunkle Canvas,
 organisch verteilte verschiebbare Punkt-Knoten, feine gedämpfte
 Verbindungslinien, dezente Labels, Pan/Zoom und eine kleine Overlay-Leiste zum
-Zurücksetzen der Ansicht. Kanten entstehen aus `outgoingLinks`. Ein Klick auf
-einen Knoten selektiert die zugehörige Notiz im Editor.
+Zurücksetzen der Ansicht. Verbundene Knoten werden beim Ziehen federnd
+mitbewegt und springen beim Loslassen zurück. Kanten entstehen aus
+`outgoingLinks`. Ein Klick auf einen Knoten selektiert die zugehörige Notiz im
+Editor.
 
 Änderungen werden per Debounce automatisch gespeichert. Nutzer:innen müssen
 keinen Speichern-Button bedienen.

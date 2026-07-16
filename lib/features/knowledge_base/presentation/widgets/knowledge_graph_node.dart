@@ -11,7 +11,9 @@ class KnowledgeGraphNode extends StatelessWidget {
     required this.note,
     required this.selected,
     required this.position,
+    required this.onDragStart,
     required this.onDragUpdate,
+    required this.onDragEnd,
   });
 
   static const double hitSize = 112;
@@ -19,7 +21,9 @@ class KnowledgeGraphNode extends StatelessWidget {
   final KnowledgeNote note;
   final bool selected;
   final Offset position;
+  final VoidCallback onDragStart;
   final ValueChanged<Offset> onDragUpdate;
+  final VoidCallback onDragEnd;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +37,10 @@ class KnowledgeGraphNode extends StatelessWidget {
         label: 'Notiz ${note.title}',
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
+          onPanStart: (_) => onDragStart(),
           onPanUpdate: (details) => onDragUpdate(details.delta),
+          onPanEnd: (_) => onDragEnd(),
+          onPanCancel: onDragEnd,
           child: InkWell(
             borderRadius: BorderRadius.circular(AppSpacing.md),
             onTap: () => context.read<KnowledgeBaseCubit>().selectNote(note.id),

@@ -109,7 +109,11 @@ class KnowledgeGraphPainter extends CustomPainter {
       for (final linkId in note.outgoingLinks.where(noteIds.contains)) {
         final target = positions[linkId];
         if (target == null) continue;
-        canvas.drawLine(source + Offset(0, -10), target + Offset(0, -10), _paintFor(note.id, linkId));
+        canvas.drawLine(
+          source + Offset(0, -10),
+          target + Offset(0, -10),
+          _paintFor(note.id, linkId),
+        );
       }
     }
   }
