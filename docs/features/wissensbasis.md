@@ -49,8 +49,14 @@ Route: `/knowledge-base`, Drawer-Label: **Wissensbasis**.
 Die Seite ist an Obsidian angelehnt:
 
 - Links: Vault/Explorer mit Suche und „Notiz erstellen".
-- Mitte: Markdown-Editor mit Titel, Typ-Umschaltung und Live-Vorschau.
+- Mitte: Umschaltbares Hauptpanel mit Markdown-Editor oder Graph-View.
 - Rechts: Eigenschaften, Speicherstatus, verlinkte Notizen und Backlinks.
+
+Die Graph-Ansicht orientiert sich am Obsidian-Look-and-Feel: dunkle Canvas,
+organisch verteilte verschiebbare Punkt-Knoten, feine gedämpfte
+Verbindungslinien, dezente Labels, Pan/Zoom und eine kleine Overlay-Leiste zum
+Zurücksetzen der Ansicht. Kanten entstehen aus `outgoingLinks`. Ein Klick auf
+einen Knoten selektiert die zugehörige Notiz im Editor.
 
 Änderungen werden per Debounce automatisch gespeichert. Nutzer:innen müssen
 keinen Speichern-Button bedienen.
@@ -79,6 +85,7 @@ rekursiv aufgelöst und unter `knowledge/` in den Genkit-Workspace geschrieben.
 - Notizen können erstellt, bearbeitet und gelöscht werden.
 - `outgoingLinks` werden clientseitig aus `[[Wiki Links]]` und
   Markdown-Links auf bekannte Notizen abgeleitet.
+- Graph-View zeigt die aus `outgoingLinks` abgeleiteten Beziehungen.
 - Prompt-Bausteine können Wissensnotizen anhängen.
 - Script-Bausteine sind bewusst noch nicht angebunden.
 - Import und robuste Legacy-Markdown-Migration folgen später.

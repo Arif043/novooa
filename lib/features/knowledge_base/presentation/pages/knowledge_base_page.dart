@@ -4,9 +4,9 @@ import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import '../cubits/knowledge_base_cubit.dart';
 import '../cubits/knowledge_base_state.dart';
-import '../widgets/knowledge_base_editor.dart';
 import '../widgets/knowledge_base_empty_state.dart';
 import '../widgets/knowledge_base_graph_panel.dart';
+import '../widgets/knowledge_base_main_panel.dart';
 import '../widgets/knowledge_base_sidebar.dart';
 
 class KnowledgeBasePage extends StatelessWidget {
@@ -92,7 +92,7 @@ class _DesktopWorkspace extends StatelessWidget {
       children: [
         SizedBox(width: 280, child: KnowledgeBaseSidebar(state: state)),
         const SizedBox(width: AppSpacing.md),
-        Expanded(child: KnowledgeBaseEditor(note: state.selectedNote!)),
+        Expanded(child: KnowledgeBaseMainPanel(state: state)),
         const SizedBox(width: AppSpacing.md),
         SizedBox(width: 260, child: KnowledgeBaseGraphPanel(state: state)),
       ],
@@ -111,10 +111,7 @@ class _MobileWorkspace extends StatelessWidget {
       children: [
         SizedBox(height: 340, child: KnowledgeBaseSidebar(state: state)),
         const SizedBox(height: AppSpacing.md),
-        SizedBox(
-          height: 520,
-          child: KnowledgeBaseEditor(note: state.selectedNote!),
-        ),
+        SizedBox(height: 560, child: KnowledgeBaseMainPanel(state: state)),
         const SizedBox(height: AppSpacing.md),
         SizedBox(height: 320, child: KnowledgeBaseGraphPanel(state: state)),
       ],

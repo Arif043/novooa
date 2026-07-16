@@ -25,17 +25,7 @@ class KnowledgeBaseGraphPanel extends StatelessWidget {
           children: [
             _SaveIndicator(isSaving: state.isSaving),
             const SizedBox(height: AppSpacing.md),
-            _Metadata(note: state.selectedNote!),
-            const Divider(height: AppSpacing.xl),
-            Expanded(
-              child: ListView(
-                children: [
-                  _LinkSection(title: 'Verlinkt', notes: state.linkedNotes),
-                  const SizedBox(height: AppSpacing.lg),
-                  _LinkSection(title: 'Backlinks', notes: state.backlinks),
-                ],
-              ),
-            ),
+            Expanded(child: _DetailsPanel(state: state)),
           ],
         ),
       ),
@@ -56,7 +46,35 @@ class _SaveIndicator extends StatelessWidget {
       children: [
         Icon(icon, size: 18),
         const SizedBox(width: AppSpacing.sm),
-        Text(text, style: Theme.of(context).textTheme.labelSmall),
+        Expanded(
+          child: Text(text, style: Theme.of(context).textTheme.labelSmall),
+        ),
+      ],
+    );
+  }
+}
+
+class _DetailsPanel extends StatelessWidget {
+  const _DetailsPanel({required this.state});
+
+  final KnowledgeBaseState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Metadata(note: state.selectedNote!),
+        const Divider(height: AppSpacing.xl),
+        Expanded(
+          child: ListView(
+            children: [
+              _LinkSection(title: 'Verlinkt', notes: state.linkedNotes),
+              const SizedBox(height: AppSpacing.lg),
+              _LinkSection(title: 'Backlinks', notes: state.backlinks),
+            ],
+          ),
+        ),
       ],
     );
   }
