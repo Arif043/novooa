@@ -15,6 +15,8 @@ class KnowledgeGraphPhysics {
   final List<KnowledgeNote> notes;
   final Size canvasSize;
   final String? pinnedNoteId;
+  static const double _maxForce = 6;
+  static const double _maxVelocity = 18;
 
   bool step(Map<String, Offset> positions, Map<String, Offset> velocities) {
     final forces = {for (final note in notes) note.id: Offset.zero};
@@ -33,7 +35,8 @@ class KnowledgeGraphPhysics {
         if (a.id == b.id) continue;
         final vector = positions[a.id]! - positions[b.id]!;
         final distance = math.max(vector.distance, 24.0);
-        forces[a.id] = forces[a.id]! + vector / distance * (720 / distance);
+        final force = vector / distance * (420 / distance);
+        forces[a.id] = forces[a.id]! + _limit(force, _maxForce);
       }
     }
   }
@@ -44,9 +47,10 @@ class KnowledgeGraphPhysics {
       for (final targetId in note.outgoingLinks.where(noteIds.contains)) {
         final vector = positions[targetId]! - positions[note.id]!;
         final distance = math.max(vector.distance, 1.0);
-        final force = vector / distance * ((distance - 150) * 0.018);
-        forces[note.id] = forces[note.id]! + force;
-        forces[targetId] = forces[targetId]! - force;
+        final force = vector / distance * ((distance - 170) * 0.009);
+        final limitedForce = _limit(force, _maxForce);
+        forces[note.id] = forces[note.id]! + limitedForce;
+        forces[targetId] = forces[targetId]! - limitedForce;
       }
     }
   }
@@ -57,8 +61,8 @@ class KnowledgeGraphPhysics {
   ) {
     final center = Offset(canvasSize.width / 2, canvasSize.height / 2);
     for (final note in notes) {
-      forces[note.id] =
-          forces[note.id]! + (center - positions[note.id]!) * 0.002;
+      final force = (center - positions[note.id]!) * 0.0008;
+      forces[note.id] = forces[note.id]! + _limit(force, _maxForce);
     }
   }
 
@@ -73,11 +77,13 @@ class KnowledgeGraphPhysics {
         velocities[note.id] = Offset.zero;
         continue;
       }
-      final velocity =
-          ((velocities[note.id] ?? Offset.zero) + forces[note.id]!) * 0.82;
+      final velocity = _limit(
+        ((velocities[note.id] ?? Offset.zero) + forces[note.id]!) * 0.74,
+        _maxVelocity,
+      );
       velocities[note.id] = velocity;
       positions[note.id] = _clamp(positions[note.id]! + velocity);
-      moving = moving || velocity.distance > 0.08;
+      moving = moving || velocity.distance > 0.04;
     }
     return moving;
   }
@@ -90,5 +96,11 @@ class KnowledgeGraphPhysics {
         canvasSize.height - AppSpacing.section,
       ),
     );
+  }
+
+  Offset _limit(Offset vector, double maxLength) {
+    final distance = vector.distance;
+    if (distance == 0 || distance <= maxLength) return vector;
+    return vector / distance * maxLength;
   }
 }

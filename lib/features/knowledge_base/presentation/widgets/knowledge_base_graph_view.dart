@@ -131,12 +131,17 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
     final canvasDelta = screenDelta / scale;
     setState(() {
       _positions[noteId] = _clamp(currentPosition + canvasDelta, canvasSize);
-      _velocities[noteId] = Offset.zero;
+      _velocities[noteId] =
+          (_velocities[noteId] ?? Offset.zero) * 0.35 + canvasDelta * 0.65;
     });
   }
 
   void _endNodeDrag() {
+    final noteId = _draggingNoteId;
     setState(() => _draggingNoteId = null);
+    if (noteId != null) {
+      _velocities[noteId] = (_velocities[noteId] ?? Offset.zero) * 0.18;
+    }
     _startPhysics();
   }
 
