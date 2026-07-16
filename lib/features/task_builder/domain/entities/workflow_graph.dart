@@ -107,6 +107,38 @@ class WorkflowGraph extends Equatable {
     return copyWith(nodes: remainingNodes, edges: remainingEdges);
   }
 
+  WorkflowGraph swapNodes(NodeId sourceId, NodeId targetId) {
+    if (sourceId == targetId) return this;
+    final sourceIndex = nodes.indexWhere((node) => node.id == sourceId);
+    final targetIndex = nodes.indexWhere((node) => node.id == targetId);
+    if (sourceIndex < 0 || targetIndex < 0) return this;
+    final swappedNodes = [...nodes];
+    swappedNodes[sourceIndex] = nodes[targetIndex];
+    swappedNodes[targetIndex] = nodes[sourceIndex];
+    return copyWith(
+      nodes: swappedNodes,
+      edges: _swapEdgeEndpoints(sourceId, targetId),
+    );
+  }
+
+  List<WorkflowEdge> _swapEdgeEndpoints(NodeId sourceId, NodeId targetId) {
+    return edges
+        .map((edge) {
+          return WorkflowEdge(
+            from: _swappedNodeId(edge.from, sourceId, targetId),
+            to: _swappedNodeId(edge.to, sourceId, targetId),
+            conditionLabel: edge.conditionLabel,
+          );
+        })
+        .toList(growable: false);
+  }
+
+  NodeId _swappedNodeId(NodeId nodeId, NodeId sourceId, NodeId targetId) {
+    if (nodeId == sourceId) return targetId;
+    if (nodeId == targetId) return sourceId;
+    return nodeId;
+  }
+
   WorkflowGraph copyWith({
     List<WorkflowNode>? nodes,
     List<WorkflowEdge>? edges,

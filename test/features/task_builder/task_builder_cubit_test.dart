@@ -6,6 +6,7 @@ import 'package:syscat2/features/task_builder/domain/entities/node_attachment.da
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_execution_failure.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_run_start.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_edge.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
@@ -153,6 +154,25 @@ void main() {
 
     final state = cubit.state as TaskBuilderLoaded;
     expect(state.editingTask.nodes.last.referenceName, 'prompt1_2');
+
+    await cubit.close();
+  });
+
+  test('swapNodes tauscht zwei Bausteine in der Reihenfolge', () async {
+    final repository = _InMemoryTaskRepository(_taskWithTwoPromptNodes());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.swapNodes(const NodeId('node.1'), const NodeId('node.2'));
+
+    final state = cubit.state as TaskBuilderLoaded;
+    expect(state.editingTask.nodes.map((node) => node.id.value), [
+      'node.2',
+      'node.1',
+    ]);
+    expect(state.editingTask.edges.single.from, const NodeId('node.2'));
+    expect(state.editingTask.edges.single.to, const NodeId('node.1'));
+    expect(repository.savedTask, state.editingTask);
 
     await cubit.close();
   });
@@ -488,7 +508,7 @@ Task _taskWithTwoPromptNodes() {
           ),
         ),
       ],
-      edges: [],
+      edges: [WorkflowEdge(from: NodeId('node.1'), to: NodeId('node.2'))],
     ),
   );
 }
