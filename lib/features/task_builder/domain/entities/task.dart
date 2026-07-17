@@ -40,6 +40,16 @@ class Task {
     );
   }
 
+  Task duplicate({required String title}) {
+    return Task(
+      id: const Uuid().v4(),
+      title: title,
+      objective: objective,
+      graph: graph,
+      selectedNodeId: selectedNodeId,
+    );
+  }
+
   /// Selektierter Knoten. Wirft [StateError], wenn die Selection auf einen
   /// nicht (mehr) existierenden Knoten zeigt — die Cubit-Schicht hält diese
   /// Invariante ein. Für UI-Code, der defensiv sein muss, siehe

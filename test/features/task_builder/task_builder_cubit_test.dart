@@ -27,6 +27,9 @@ class _InMemoryTaskRepository implements TaskRepository {
   }
 
   @override
+  Future<void> deleteTask(String taskId) async {}
+
+  @override
   Future<Result<TaskRunStart, TaskExecutionFailure>> execute({
     required Task task,
     String context = '',

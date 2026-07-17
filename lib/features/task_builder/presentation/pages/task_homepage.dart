@@ -6,6 +6,7 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 
 import '../../domain/entities/task.dart';
 import '../cubits/task_homepage_cubit.dart';
+import '../widgets/task_tile.dart';
 
 class TaskHomepage extends StatelessWidget {
   const TaskHomepage({super.key});
@@ -56,10 +57,13 @@ class _TaskHomepageHeader extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.md),
         FilledButton(
-          style: FilledButton.styleFrom(foregroundColor: ColorScheme.of(context).onSecondary, backgroundColor: ColorScheme.of(context).secondary),
+          style: FilledButton.styleFrom(
+            foregroundColor: ColorScheme.of(context).onSecondary,
+            backgroundColor: ColorScheme.of(context).secondary,
+          ),
           onPressed: () => context.go('/tasks/builder'),
           child: const Text('Aus Vorlage'),
-        )
+        ),
       ],
     );
   }
@@ -101,7 +105,7 @@ class _TaskGrid extends StatelessWidget {
             mainAxisSpacing: AppSpacing.md,
             childAspectRatio: 1.6,
           ),
-          itemBuilder: (context, index) => _TaskTile(task: tasks[index]),
+          itemBuilder: (context, index) => TaskTile(task: tasks[index]),
         );
       },
     );
@@ -112,44 +116,6 @@ class _TaskGrid extends StatelessWidget {
     if (width >= 760) return 3;
     if (width >= 520) return 2;
     return 1;
-  }
-}
-
-class _TaskTile extends StatelessWidget {
-  const _TaskTile({required this.task});
-
-  final Task task;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppSpacing.md),
-        onTap: () => context.go('/tasks/builder', extra: task),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.account_tree_outlined, color: colorScheme.primary),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                task.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const Spacer(),
-              Text(
-                '${task.nodes.length} Bausteine',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
 

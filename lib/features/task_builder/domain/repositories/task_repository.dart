@@ -12,6 +12,7 @@ import '../entities/task_run_start.dart';
 abstract interface class TaskRepository {
   Future<List<Task>> loadTasks();
   Future<void> saveTask(Task task);
+  Future<void> deleteTask(String taskId);
 
   Future<Result<TaskRunStart, TaskExecutionFailure>> execute({
     required Task task,

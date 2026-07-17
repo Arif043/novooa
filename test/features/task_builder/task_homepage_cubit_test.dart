@@ -29,6 +29,50 @@ void main() {
 
     await cubit.close();
   });
+
+  test('duplicateTask erstellt eine Kopie mit neuer ID', () async {
+    final repository = _FakeTaskRepository([_task]);
+    final cubit = TaskHomepageCubit(repository);
+
+    await cubit.load();
+    await cubit.duplicateTask(_task);
+
+    final state = cubit.state as TaskHomepageReady;
+    expect(state.tasks, hasLength(2));
+    expect(state.tasks.last.id, isNot(_task.id));
+    expect(state.tasks.last.title, 'Kopie von Angebot prüfen');
+    expect(repository.tasks, state.tasks);
+
+    await cubit.close();
+  });
+
+  test('renameTask aktualisiert den Aufgabennamen', () async {
+    final repository = _FakeTaskRepository([_task]);
+    final cubit = TaskHomepageCubit(repository);
+
+    await cubit.load();
+    await cubit.renameTask(_task, 'Neuer Name');
+
+    final state = cubit.state as TaskHomepageReady;
+    expect(state.tasks.single.title, 'Neuer Name');
+    expect(repository.tasks.single.title, 'Neuer Name');
+
+    await cubit.close();
+  });
+
+  test('deleteTask entfernt die Aufgabe', () async {
+    final repository = _FakeTaskRepository([_task]);
+    final cubit = TaskHomepageCubit(repository);
+
+    await cubit.load();
+    await cubit.deleteTask(_task);
+
+    final state = cubit.state as TaskHomepageReady;
+    expect(state.tasks, isEmpty);
+    expect(repository.tasks, isEmpty);
+
+    await cubit.close();
+  });
 }
 
 const _task = Task(
@@ -40,7 +84,7 @@ const _task = Task(
 );
 
 class _FakeTaskRepository implements TaskRepository {
-  const _FakeTaskRepository(this.tasks);
+  _FakeTaskRepository(this.tasks);
 
   final List<Task> tasks;
 
@@ -48,7 +92,19 @@ class _FakeTaskRepository implements TaskRepository {
   Future<List<Task>> loadTasks() async => tasks;
 
   @override
-  Future<void> saveTask(Task task) async {}
+  Future<void> saveTask(Task task) async {
+    final index = tasks.indexWhere((item) => item.id == task.id);
+    if (index == -1) {
+      tasks.add(task);
+      return;
+    }
+    tasks[index] = task;
+  }
+
+  @override
+  Future<void> deleteTask(String taskId) async {
+    tasks.removeWhere((task) => task.id == taskId);
+  }
 
   @override
   Future<Result<TaskRunStart, TaskExecutionFailure>> execute({
@@ -62,7 +118,7 @@ class _FakeTaskRepository implements TaskRepository {
 }
 
 class _FailingTaskRepository extends _FakeTaskRepository {
-  _FailingTaskRepository() : super(const []);
+  _FailingTaskRepository() : super([]);
 
   @override
   Future<List<Task>> loadTasks() {

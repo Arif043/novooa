@@ -50,6 +50,14 @@ class FirebaseTaskRepository implements TaskRepository {
   }
 
   @override
+  Future<void> deleteTask(String taskId) async {
+    final user = auth.currentUser;
+    if (user == null) return;
+    final teamId = await teamRepository.currentTeamId();
+    await _tasksReference(teamId.value).doc(taskId).delete();
+  }
+
+  @override
   Future<Result<TaskRunStart, TaskExecutionFailure>> execute({
     required Task task,
     String context = '',
