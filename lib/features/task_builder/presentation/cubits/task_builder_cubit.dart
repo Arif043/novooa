@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:developer' as developer;
+
 import 'package:bloc/bloc.dart';
 import 'package:syscat2/features/task_builder/domain/entities/knowledge_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
@@ -25,10 +28,15 @@ part 'task_builder_read_file_mutations.dart';
 /// Jede Mutation folgt dem gleichen Muster:
 /// 1. State-Guards (nur in [TaskBuilderLoaded] aktiv).
 /// 2. Domain-Operation aufrufen (liefert neue Immutable-Instanz).
-/// 3. Sofort persistieren via [TaskRepository].
-/// 4. Neuen State emittieren.
+/// 3. Neuen State emittieren.
+/// 4. Persistenz gebündelt via [TaskRepository] auslösen.
 class TaskBuilderCubit extends Cubit<TaskBuilderState> {
+  static const _saveDebounceDuration = Duration(milliseconds: 800);
+
   final TaskRepository repository;
+  Timer? _saveTimer;
+  Task? _pendingSaveTask;
+  Future<void> _saveQueue = Future.value();
 
   TaskBuilderCubit({required this.repository})
     : super(const TaskBuilderLoading());
@@ -44,6 +52,13 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       if (isClosed) return;
       emit(const TaskBuilderFailure('Aufgabe konnte nicht geladen werden.'));
     }
+  }
+
+  @override
+  Future<void> close() async {
+    _saveTimer?.cancel();
+    await _flushPendingSave();
+    return super.close();
   }
 
   Future<void> selectNode(NodeId nodeId) async {
@@ -206,10 +221,40 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     return current is TaskBuilderLoaded ? current.editingTask : null;
   }
 
-  Future<void> _saveAndEmit(Task updated) async {
-    await repository.saveTask(updated);
-    if (isClosed) return;
+  Future<void> _saveAndEmit(Task updated) {
+    if (isClosed) return Future.value();
     emit(TaskBuilderLoaded(updated));
+    _scheduleSave(updated);
+    return Future.value();
+  }
+
+  void _scheduleSave(Task task) {
+    _pendingSaveTask = task;
+    _saveTimer?.cancel();
+    _saveTimer = Timer(_saveDebounceDuration, () {
+      unawaited(_flushPendingSave());
+    });
+  }
+
+  Future<void> _flushPendingSave() {
+    final task = _pendingSaveTask;
+    if (task == null) return _saveQueue;
+    _pendingSaveTask = null;
+    _saveQueue = _saveQueue.then((_) => _persistTask(task));
+    return _saveQueue;
+  }
+
+  Future<void> _persistTask(Task task) async {
+    try {
+      await repository.saveTask(task);
+    } catch (error, stackTrace) {
+      developer.log(
+        'Aufgabe konnte nicht gespeichert werden.',
+        name: 'TaskBuilderCubit',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   WorkflowNode _buildNode(WorkflowPrimitive primitive, int index) {

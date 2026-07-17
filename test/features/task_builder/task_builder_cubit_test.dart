@@ -37,6 +37,15 @@ class _InMemoryTaskRepository implements TaskRepository {
   }
 }
 
+Future<void> _closeAndExpectSaved(
+  TaskBuilderCubit cubit,
+  _InMemoryTaskRepository repository,
+  Task task,
+) async {
+  await cubit.close();
+  expect(repository.savedTask, task);
+}
+
 void main() {
   test('addNodeToBranch fuegt einen Node in den Branch-Graph ein', () async {
     final repository = _InMemoryTaskRepository(_taskWithConditionalNode());
@@ -56,9 +65,7 @@ void main() {
 
     expect(branch.graph.nodes, hasLength(1));
     expect(branch.graph.nodes.first.config, isA<PromptNodeConfig>());
-    expect(repository.savedTask, state.editingTask);
-
-    await cubit.close();
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
   test('addNodeToBranch findet Conditional-Nodes in Branch-Graphs', () async {
@@ -126,9 +133,7 @@ void main() {
 
     expect(branch.graph.nodes, isEmpty);
     expect(branch.graph.edges, isEmpty);
-    expect(repository.savedTask, state.editingTask);
-
-    await cubit.close();
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
   test('updateNodeReferenceName normalisiert Referenznamen', () async {
@@ -140,9 +145,7 @@ void main() {
 
     final state = cubit.state as TaskBuilderLoaded;
     expect(state.editingTask.nodes.first.referenceName, 'n1email');
-    expect(repository.savedTask, state.editingTask);
-
-    await cubit.close();
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
   test('updateNodeReferenceName macht doppelte Referenzen eindeutig', () async {
@@ -172,9 +175,7 @@ void main() {
     ]);
     expect(state.editingTask.edges.single.from, const NodeId('node.2'));
     expect(state.editingTask.edges.single.to, const NodeId('node.1'));
-    expect(repository.savedTask, state.editingTask);
-
-    await cubit.close();
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
   test(
@@ -201,9 +202,7 @@ void main() {
       promptConfig = _branchPromptConfig(cubit);
 
       expect(promptConfig.attachments, isEmpty);
-      expect(repository.savedTask, state.editingTask);
-
-      await cubit.close();
+      await _closeAndExpectSaved(cubit, repository, state.editingTask);
     },
   );
 
@@ -223,9 +222,7 @@ void main() {
       final config = state.editingTask.nodes.first.config as ScriptNodeConfig;
 
       expect(config.attachments, [_attachment]);
-      expect(repository.savedTask, state.editingTask);
-
-      await cubit.close();
+      await _closeAndExpectSaved(cubit, repository, state.editingTask);
     },
   );
 
@@ -250,9 +247,7 @@ void main() {
     final state = cubit.state as TaskBuilderLoaded;
     promptConfig = _branchPromptConfig(cubit);
     expect(promptConfig.knowledgeAttachments, isEmpty);
-    expect(repository.savedTask, state.editingTask);
-
-    await cubit.close();
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
   test('updateScript speichert Script-Code am Script-Node', () async {
@@ -266,9 +261,7 @@ void main() {
     final config = state.editingTask.nodes.first.config as ScriptNodeConfig;
 
     expect(config.script, 'output = input');
-    expect(repository.savedTask, state.editingTask);
-
-    await cubit.close();
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
   test('updateHumanApproval speichert Freigabe-Anweisung', () async {
@@ -286,9 +279,7 @@ void main() {
         state.editingTask.nodes.first.config as HumanApprovalNodeConfig;
 
     expect(config.instruction, 'Bitte prüfen.');
-    expect(repository.savedTask, state.editingTask);
-
-    await cubit.close();
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
   test('updateWriteFile speichert Dateiname und Inhaltstyp', () async {
@@ -308,9 +299,7 @@ void main() {
     expect(config.fileName, 'bericht.md');
     expect(config.contentType, 'text/markdown');
     expect(config.fileId, isNull);
-    expect(repository.savedTask, state.editingTask);
-
-    await cubit.close();
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
   test('selectExistingWriteFile speichert bestehende Datei als Ziel', () async {
@@ -368,9 +357,7 @@ void main() {
     state = cubit.state as TaskBuilderLoaded;
     config = state.editingTask.nodes.first.config as ReadFileNodeConfig;
     expect(config.file, isNull);
-    expect(repository.savedTask, state.editingTask);
-
-    await cubit.close();
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 }
 
