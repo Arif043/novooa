@@ -12,6 +12,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget
 import 'package:syscat2/features/task_builder/presentation/widgets/read_email_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_file_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/send_message_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/string_input_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/write_file_widget.dart';
 
@@ -54,6 +55,7 @@ class _NodeGraphState extends State<NodeGraph> {
       .writeFile => WriteFileWidget(node: node),
       .readFile => ReadFileWidget(node: node),
       .readEmail || .readChannelEvent => ReadEventWidget(node: node),
+      .sendChannelMessage => SendMessageWidget(node: node),
       .humanApproval => HumanApprovalWidget(node: node),
       _ => const SizedBox.shrink(),
     };

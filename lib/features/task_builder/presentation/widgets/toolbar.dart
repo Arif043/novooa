@@ -30,7 +30,7 @@ class Toolbar extends StatelessWidget {
           children: [
             Draggable<WorkflowPrimitive>(
               data: WorkflowPrimitive.stringInput,
-              feedback: StringInputNodeDraggingDummy(),
+              feedback: const _DraggingDummy(icon: Icons.text_fields),
               child: IconButton(
                 onPressed: () => context
                     .read<TaskBuilderCubit>()
@@ -42,7 +42,7 @@ class Toolbar extends StatelessWidget {
             const SizedBox(width: AppSpacing.xs),
             Draggable<WorkflowPrimitive>(
               data: WorkflowPrimitive.script,
-              feedback: ScriptNodeDraggingDummy(),
+              feedback: const _DraggingDummy(icon: Icons.terminal),
               child: IconButton(
                 onPressed: () => context
                     .read<TaskBuilderCubit>()
@@ -54,7 +54,7 @@ class Toolbar extends StatelessWidget {
             const SizedBox(width: AppSpacing.xs),
             Draggable<WorkflowPrimitive>(
               data: WorkflowPrimitive.prompt,
-              feedback: PromptNodeDraggingDummy(),
+              feedback: const _DraggingDummy(icon: Icons.format_align_left),
               child: IconButton(
                 onPressed: () => context
                     .read<TaskBuilderCubit>()
@@ -66,7 +66,7 @@ class Toolbar extends StatelessWidget {
             const SizedBox(width: AppSpacing.xs),
             Draggable<WorkflowPrimitive>(
               data: WorkflowPrimitive.conditional,
-              feedback: ConditionalNodeDraggingDummy(),
+              feedback: const _DraggingDummy(icon: Icons.call_split),
               child: IconButton(
                 onPressed: () => context
                     .read<TaskBuilderCubit>()
@@ -124,6 +124,28 @@ class Toolbar extends StatelessWidget {
               tooltip: "SMS lesen hinzufügen",
             ),
             const SizedBox(width: AppSpacing.xs),
+            PopupMenuButton<ChannelEventKind>(
+              tooltip: 'Nachricht senden hinzufügen',
+              icon: const Icon(Icons.send_outlined),
+              onSelected: (kind) => context
+                  .read<TaskBuilderCubit>()
+                  .addSendMessageNodeToMainGraph(kind),
+              itemBuilder: (_) => const [
+                PopupMenuItem(
+                  value: ChannelEventKind.whatsapp,
+                  child: Text('WhatsApp senden'),
+                ),
+                PopupMenuItem(
+                  value: ChannelEventKind.sms,
+                  child: Text('SMS senden'),
+                ),
+                PopupMenuItem(
+                  value: ChannelEventKind.email,
+                  child: Text('E-Mail senden'),
+                ),
+              ],
+            ),
+            const SizedBox(width: AppSpacing.xs),
             IconButton(
               onPressed: () => context
                   .read<TaskBuilderCubit>()
@@ -135,42 +157,6 @@ class Toolbar extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class StringInputNodeDraggingDummy extends StatelessWidget {
-  const StringInputNodeDraggingDummy({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const _DraggingDummy(icon: Icons.text_fields);
-  }
-}
-
-class PromptNodeDraggingDummy extends StatelessWidget {
-  const PromptNodeDraggingDummy({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const _DraggingDummy(icon: Icons.format_align_left);
-  }
-}
-
-class ScriptNodeDraggingDummy extends StatelessWidget {
-  const ScriptNodeDraggingDummy({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const _DraggingDummy(icon: Icons.terminal);
-  }
-}
-
-class ConditionalNodeDraggingDummy extends StatelessWidget {
-  const ConditionalNodeDraggingDummy({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const _DraggingDummy(icon: Icons.call_split);
   }
 }
 

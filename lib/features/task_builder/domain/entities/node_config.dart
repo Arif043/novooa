@@ -15,6 +15,7 @@ part 'human_approval_node_config.dart';
 part 'write_file_node_config.dart';
 part 'read_file_node_config.dart';
 part 'read_email_node_config.dart';
+part 'send_channel_message_node_config.dart';
 
 sealed class NodeConfig extends Equatable {
   const NodeConfig();
@@ -33,6 +34,7 @@ sealed class NodeConfig extends Equatable {
       .readFile => ReadFileNodeConfig.initial(),
       .readEmail => ReadEmailNodeConfig.initial(),
       .readChannelEvent => ReadChannelEventNodeConfig.initial(),
+      .sendChannelMessage => SendChannelMessageNodeConfig.initial(),
       _ => throw UnimplementedError(),
     };
   }

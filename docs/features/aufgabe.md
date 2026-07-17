@@ -81,6 +81,7 @@ features/task_builder/
 | `readFile`              | **Datei lesen**              | Liest eine ausgewählte Datei-Version als String                | Interner `executeReadFileNode`                        |
 | `readEmail`             | **E-Mail lesen**             | Liest Absender, Betreff, Nachricht und Ankunftszeit aus dem Run-Event | Interner `executeReadEmailNode`                |
 | `readChannelEvent`      | **Nachricht lesen**          | Liest E-Mail-, WhatsApp- oder SMS-Events abhängig von `kind`  | Interner Channel-Event-Executor                       |
+| `sendChannelMessage`    | **Nachricht senden**         | Sendet WhatsApp, SMS oder E-Mail über einen verbundenen novooa-Kanal | Interner Channel-Send-Executor                         |
 | `toolCall`              | **Werkzeug-Aufruf**          | Strukturierte Tool-Invocation (z. B. Suche, E-Mail, Kalender) | `ai.generate({tools: […]})`                           |
 | `humanApproval`         | **Freigabe**                 | Hält den Flow an, bis ein Mensch bestätigt                    | Interner `executeHumanApprovalNode`                   |
 | `validation`            | **Validierung**              | Schema- / Wertebereichsprüfung auf Output eines Knotens       | `z.object(...).safeParse()`                           |

@@ -63,6 +63,36 @@ void main() {
     expect((config as ReadFileNodeConfig).file, _attachment);
   });
 
+  test('serialisiert SendChannelMessageNodeConfig', () {
+    final document = _mapper().toDocument(
+      const SendChannelMessageNodeConfig(
+        kind: ChannelEventKind.whatsapp,
+        recipient: '+491234567890',
+        message: '{{input}}',
+      ),
+    );
+
+    expect(document['primitive'], 'sendChannelMessage');
+    expect(document['kind'], 'whatsapp');
+    expect(document['recipient'], '+491234567890');
+    expect(document['message'], '{{input}}');
+  });
+
+  test('deserialisiert SendChannelMessageNodeConfig', () {
+    final config = _mapper().fromDocument({
+      'primitive': 'sendChannelMessage',
+      'kind': 'sms',
+      'recipient': '+491234567890',
+      'message': 'Hallo {{name}}',
+    });
+
+    expect(config, isA<SendChannelMessageNodeConfig>());
+    final sendConfig = config as SendChannelMessageNodeConfig;
+    expect(sendConfig.kind, ChannelEventKind.sms);
+    expect(sendConfig.recipient, '+491234567890');
+    expect(sendConfig.message, 'Hallo {{name}}');
+  });
+
   test('serialisiert PromptNodeConfig mit Wissensanhang', () {
     final document = _mapper().toDocument(
       const PromptNodeConfig(

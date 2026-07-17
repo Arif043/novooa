@@ -22,6 +22,7 @@ part 'task_builder_script_mutations.dart';
 part 'task_builder_string_input_mutations.dart';
 part 'task_builder_write_file_mutations.dart';
 part 'task_builder_read_file_mutations.dart';
+part 'task_builder_send_message_mutations.dart';
 
 /// Zustandsverwaltung für den Aufgaben-Builder.
 ///
@@ -86,6 +87,22 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       description: _channelEventDescription(kind),
       referenceName: _referenceNameForKind(kind, task.nodes.length + 1),
       config: ReadChannelEventNodeConfig(kind: kind),
+    );
+    await _saveAndEmit(task.addNode(configuredNode));
+  }
+
+  Future<void> addSendMessageNodeToMainGraph(ChannelEventKind kind) async {
+    final task = loadedTaskOrNull();
+    if (task == null) return;
+    final node = _buildNode(
+      WorkflowPrimitive.sendChannelMessage,
+      task.nodes.length,
+    );
+    final configuredNode = node.copyWith(
+      title: _sendMessageTitle(kind),
+      description: _sendMessageDescription(kind),
+      referenceName: _referenceNameForSendKind(kind, task.nodes.length + 1),
+      config: SendChannelMessageNodeConfig.initial().copyWith(kind: kind),
     );
     await _saveAndEmit(task.addNode(configuredNode));
   }
@@ -333,6 +350,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       WorkflowPrimitive.readFile => 'readFile',
       WorkflowPrimitive.readEmail => 'email',
       WorkflowPrimitive.readChannelEvent => 'message',
+      WorkflowPrimitive.sendChannelMessage => 'send',
       WorkflowPrimitive.toolCall => 'tool',
       WorkflowPrimitive.humanApproval => 'approval',
       WorkflowPrimitive.validation => 'validation',
@@ -341,6 +359,10 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
 
   String _referenceNameForKind(ChannelEventKind kind, int number) {
     return '${kind.name}$number';
+  }
+
+  String _referenceNameForSendKind(ChannelEventKind kind, int number) {
+    return 'send${kind.name}$number';
   }
 
   String _channelEventTitle(ChannelEventKind kind) {
@@ -359,6 +381,23 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
         'Liest Absender, Nachricht und Ankunftszeit aus einem WhatsApp-Trigger.',
       ChannelEventKind.sms =>
         'Liest Absender, Nachricht und Ankunftszeit aus einem SMS-Trigger.',
+    };
+  }
+
+  String _sendMessageTitle(ChannelEventKind kind) {
+    return switch (kind) {
+      ChannelEventKind.email => 'E-Mail senden',
+      ChannelEventKind.whatsapp => 'WhatsApp senden',
+      ChannelEventKind.sms => 'SMS senden',
+    };
+  }
+
+  String _sendMessageDescription(ChannelEventKind kind) {
+    return switch (kind) {
+      ChannelEventKind.email => 'Sendet eine E-Mail über novooa.',
+      ChannelEventKind.whatsapp =>
+        'Sendet eine WhatsApp-Nachricht über novooa.',
+      ChannelEventKind.sms => 'Sendet eine SMS über novooa.',
     };
   }
 }

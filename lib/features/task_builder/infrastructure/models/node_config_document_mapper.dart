@@ -31,6 +31,7 @@ class NodeConfigDocumentMapper {
         'primitive': config.primitive.name,
         'kind': config.kind.name,
       },
+      SendChannelMessageNodeConfig() => _sendMessageToDocument(config),
       _ => {'primitive': config.primitive.name},
     };
   }
@@ -50,6 +51,7 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.readChannelEvent => ReadChannelEventNodeConfig(
         kind: _channelEventKindFrom(data['kind']),
       ),
+      WorkflowPrimitive.sendChannelMessage => _sendMessageFrom(data),
       _ => NodeConfig.initial(primitive),
     };
   }
@@ -123,6 +125,17 @@ class NodeConfigDocumentMapper {
     };
   }
 
+  Map<String, Object?> _sendMessageToDocument(
+    SendChannelMessageNodeConfig config,
+  ) {
+    return {
+      'primitive': config.primitive.name,
+      'kind': config.kind.name,
+      'recipient': config.recipient,
+      'message': config.message,
+    };
+  }
+
   StringInputNodeConfig _stringInputFrom(Map<String, Object?> data) {
     return StringInputNodeConfig(value: data['value'] as String? ?? '');
   }
@@ -177,6 +190,14 @@ class NodeConfigDocumentMapper {
     final file = data['file'];
     return ReadFileNodeConfig(
       file: file is Map ? _attachmentFrom(_objectMapFrom(file)) : null,
+    );
+  }
+
+  SendChannelMessageNodeConfig _sendMessageFrom(Map<String, Object?> data) {
+    return SendChannelMessageNodeConfig(
+      kind: _channelEventKindFrom(data['kind']),
+      recipient: data['recipient'] as String? ?? '',
+      message: data['message'] as String? ?? '',
     );
   }
 
