@@ -1,0 +1,22 @@
+:root {
+  /* Spacing scale — 4px base unit */
+  --space-unit: 4px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 48px;
+  --space-section: 80px;
+  --space-gutter: 20px;
+  --space-margin-mobile: 20px;
+  --space-margin-desktop: 40px;
+
+  /* Border radii — Squircular shape language */
+  --radius-sm: 0.25rem;    /* 4px */
+  --radius-default: 0.5rem; /* 8px */
+  --radius-md: 0.75rem;    /* 12px — buttons, inputs */
+  --radius-lg: 1rem;       /* 16px — cards */
+  --radius-xl: 1.5rem;     /* 24px — page-level wrappers, hero elements */
+  --radius-full: 9999px;   /* Pills, circular avatars */
+}

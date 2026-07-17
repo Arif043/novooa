@@ -1,0 +1,14 @@
+:root {
+  /* Level 0 — Base surface, flat */
+  --shadow-0: none;
+
+  /* Level 1 — Cards: subtle ambient shadow or 1px border */
+  --shadow-1: 0px 4px 12px rgba(0, 0, 0, 0.05);
+  --border-card: 1px solid #e5e5e7;
+
+  /* Level 2 — Dropdowns, popovers */
+  --shadow-2: 0px 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* Level 3 — Modals (pair with backdrop-filter: blur(20px)) */
+  --shadow-3: 0px 16px 48px rgba(0, 0, 0, 0.16);
+}

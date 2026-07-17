@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+:root {
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Display Large — Hero headings */
+  --type-display-lg-size: 48px;
+  --type-display-lg-weight: 700;
+  --type-display-lg-line-height: 52px;
+  --type-display-lg-letter-spacing: -0.02em;
+
+  /* Headline Large — Section headers (desktop) */
+  --type-headline-lg-size: 32px;
+  --type-headline-lg-weight: 600;
+  --type-headline-lg-line-height: 38px;
+  --type-headline-lg-letter-spacing: -0.01em;
+
+  /* Headline Large Mobile — Section headers (mobile) */
+  --type-headline-lg-mobile-size: 28px;
+  --type-headline-lg-mobile-weight: 600;
+  --type-headline-lg-mobile-line-height: 34px;
+  --type-headline-lg-mobile-letter-spacing: -0.01em;
+
+  /* Title Medium — Card titles, dialog headings */
+  --type-title-md-size: 22px;
+  --type-title-md-weight: 600;
+  --type-title-md-line-height: 28px;
+  --type-title-md-letter-spacing: 0em;
+
+  /* Body Large — Primary readable text */
+  --type-body-lg-size: 17px;
+  --type-body-lg-weight: 400;
+  --type-body-lg-line-height: 24px;
+  --type-body-lg-letter-spacing: -0.01em;
+
+  /* Body Small — Secondary text, captions */
+  --type-body-sm-size: 14px;
+  --type-body-sm-weight: 400;
+  --type-body-sm-line-height: 20px;
+  --type-body-sm-letter-spacing: 0em;
+
+  /* Label Caps — Overlines, metadata labels (uppercase) */
+  --type-label-caps-size: 12px;
+  --type-label-caps-weight: 600;
+  --type-label-caps-line-height: 16px;
+  --type-label-caps-letter-spacing: 0.05em;
+}
+
+/* Utility classes */
+.type-display-lg {
+  font-family: var(--font-family);
+  font-size: var(--type-display-lg-size);
+  font-weight: var(--type-display-lg-weight);
+  line-height: var(--type-display-lg-line-height);
+  letter-spacing: var(--type-display-lg-letter-spacing);
+}
+.type-headline-lg {
+  font-family: var(--font-family);
+  font-size: var(--type-headline-lg-size);
+  font-weight: var(--type-headline-lg-weight);
+  line-height: var(--type-headline-lg-line-height);
+  letter-spacing: var(--type-headline-lg-letter-spacing);
+}
+.type-title-md {
+  font-family: var(--font-family);
+  font-size: var(--type-title-md-size);
+  font-weight: var(--type-title-md-weight);
+  line-height: var(--type-title-md-line-height);
+  letter-spacing: var(--type-title-md-letter-spacing);
+}
+.type-body-lg {
+  font-family: var(--font-family);
+  font-size: var(--type-body-lg-size);
+  font-weight: var(--type-body-lg-weight);
+  line-height: var(--type-body-lg-line-height);
+  letter-spacing: var(--type-body-lg-letter-spacing);
+}
+.type-body-sm {
+  font-family: var(--font-family);
+  font-size: var(--type-body-sm-size);
+  font-weight: var(--type-body-sm-weight);
+  line-height: var(--type-body-sm-line-height);
+  letter-spacing: var(--type-body-sm-letter-spacing);
+}
+.type-label-caps {
+  font-family: var(--font-family);
+  font-size: var(--type-label-caps-size);
+  font-weight: var(--type-label-caps-weight);
+  line-height: var(--type-label-caps-line-height);
+  letter-spacing: var(--type-label-caps-letter-spacing);
+  text-transform: uppercase;
+}

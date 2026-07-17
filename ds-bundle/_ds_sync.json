@@ -1,0 +1,5 @@
+{
+  "shape": "tokens-only",
+  "pkg": "syscat2",
+  "note": "Token-only sync — no compiled JS components (Flutter project). Contains CSS custom properties, typography, spacing, elevation, and component guidelines derived from docs/DESIGN.md."
+}
