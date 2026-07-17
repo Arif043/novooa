@@ -17,7 +17,7 @@ import {dispatchChannelMessageTriggers} from "../channels/channel-trigger-dispat
 const twilioAuthToken = defineSecret("TWILIO_AUTH_TOKEN");
 
 export const twilioWebhook = onRequest(
-  {secrets: [twilioAuthToken]},
+  {invoker: "public", secrets: [twilioAuthToken]},
   async (request, response) => {
     if (request.method !== "POST") {
       response.status(405).send("Method Not Allowed");
@@ -49,8 +49,12 @@ export const twilioWebhook = onRequest(
       logInfo("twilio_message.received", {teamId, channelId, created});
       response.type("text/xml").status(200).send("<Response></Response>");
     } catch (error) {
-      logError("twilio_message.failed", {message: errorMessage(error)});
-      response.status(400).send(errorMessage(error));
+      const reason = errorMessage(error);
+      logError("twilio_message.failed", {
+        errorMessage: reason,
+        requestUrl: publicRequestUrl(request),
+      });
+      response.status(400).send(reason);
     }
   },
 );

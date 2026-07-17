@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
+import '../../../../core/firebase/firebase_region.dart';
 import 'task_runner_datasource.dart';
 import 'task_runner_datasource_log.dart';
 
@@ -9,7 +10,8 @@ class FirebaseFunctionsTaskRunnerDatasource implements TaskRunnerDatasource {
     FirebaseFunctions? functions,
     this.timeout = const Duration(seconds: 180),
   }) : _functions =
-           functions ?? FirebaseFunctions.instanceFor(region: 'us-central1');
+           functions ??
+           FirebaseFunctions.instanceFor(region: firebaseFunctionsRegion);
 
   static const _functionName = 'runTaskDefinitionFlow';
 

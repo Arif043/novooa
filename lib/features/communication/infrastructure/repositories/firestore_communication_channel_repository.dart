@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
 import '../../../../core/entities/unique_id.dart';
+import '../../../../core/firebase/firebase_region.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../files/domain/entities/team_id.dart';
 import '../../../teams/domain/repositories/team_repository.dart';
@@ -18,7 +19,8 @@ class FirestoreCommunicationChannelRepository
     this._teamRepository, {
     FirebaseFunctions? functions,
   }) : _functions =
-           functions ?? FirebaseFunctions.instanceFor(region: 'us-central1');
+           functions ??
+           FirebaseFunctions.instanceFor(region: firebaseFunctionsRegion);
 
   final AuthRepository _authRepository;
   final FirebaseFirestore _firestore;

@@ -3,6 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../core/entities/unique_id.dart';
+import '../../../../core/firebase/firebase_region.dart';
 import '../../../teams/domain/repositories/team_repository.dart';
 import '../../domain/entities/task_run.dart';
 import '../../domain/repositories/task_run_repository.dart';
@@ -14,7 +15,8 @@ class FirestoreTaskRunRepository implements TaskRunRepository {
     required this._teamRepository,
     FirebaseFunctions? functions,
   }) : _functions =
-           functions ?? FirebaseFunctions.instanceFor(region: 'us-central1');
+           functions ??
+           FirebaseFunctions.instanceFor(region: firebaseFunctionsRegion);
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;

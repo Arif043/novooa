@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../../core/firebase/firebase_region.dart';
 import '../../domain/entities/app_notification.dart';
 import '../../domain/repositories/app_notification_repository.dart';
 
@@ -11,7 +12,8 @@ class FirestoreAppNotificationRepository implements AppNotificationRepository {
     this._firestore, {
     FirebaseFunctions? functions,
   }) : _functions =
-           functions ?? FirebaseFunctions.instanceFor(region: 'us-central1');
+           functions ??
+           FirebaseFunctions.instanceFor(region: firebaseFunctionsRegion);
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;

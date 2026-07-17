@@ -4,6 +4,8 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 
+import 'firebase_region.dart';
+
 class FirebaseEmulatorConfig {
   const FirebaseEmulatorConfig({
     this.authPort = 9099,
@@ -28,7 +30,7 @@ class FirebaseEmulatorConfig {
     await FirebaseAuth.instance.useAuthEmulator(host, authPort);
     FirebaseFirestore.instance.useFirestoreEmulator(host, firestorePort);
     FirebaseFunctions.instanceFor(
-      region: 'us-central1',
+      region: firebaseFunctionsRegion,
     ).useFunctionsEmulator(host, functionsPort);
     await FirebaseStorage.instance.useStorageEmulator(host, storagePort);
   }

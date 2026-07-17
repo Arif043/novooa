@@ -163,8 +163,12 @@ Die Function `twilioWebhook` nimmt Twilio Messaging-Webhooks entgegen. Die
 Webhook-URL enthält die Zuordnung zu Team und Kommunikationskanal:
 
 ```text
-https://<region>-<project>.cloudfunctions.net/twilioWebhook?teamId=<teamId>&channelId=<channelId>
+https://twiliowebhook-ilhamoy3ua-ey.a.run.app?teamId=<teamId>&channelId=<channelId>
 ```
+
+Alle Cloud Functions werden in Frankfurt (`europe-west3`) deployed. Für Twilio
+muss exakt die deployte HTTPS-URL inklusive Query-Parametern in der Konsole als
+`HTTP POST`-Webhook hinterlegt werden.
 
 Die Function:
 

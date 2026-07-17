@@ -1,12 +1,14 @@
 import 'package:cloud_functions/cloud_functions.dart';
 
+import '../../../../core/firebase/firebase_region.dart';
 import 'team_member_actions_datasource.dart';
 
 class FirebaseFunctionsTeamMemberActionsDatasource
     implements TeamMemberActionsDatasource {
   FirebaseFunctionsTeamMemberActionsDatasource({FirebaseFunctions? functions})
     : _functions =
-          functions ?? FirebaseFunctions.instanceFor(region: 'us-central1');
+          functions ??
+          FirebaseFunctions.instanceFor(region: firebaseFunctionsRegion);
 
   final FirebaseFunctions _functions;
 
