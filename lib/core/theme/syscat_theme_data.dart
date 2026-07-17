@@ -21,7 +21,7 @@ ThemeData _buildTheme(_ThemeTokens tokens) {
   );
   return ThemeData(
     useMaterial3: true,
-    fontFamily: 'Inter',
+    fontFamily: SyscatTheme.bodyFontFamily,
     colorScheme: scheme,
     scaffoldBackgroundColor: tokens.background,
     textTheme: _textTheme(tokens),
@@ -40,9 +40,9 @@ ThemeData _buildTheme(_ThemeTokens tokens) {
 
 TextTheme _textTheme(_ThemeTokens tokens) {
   return TextTheme(
-    displayLarge: _text(48, FontWeight.w700, 52 / 48, tokens.text),
-    headlineLarge: _text(32, FontWeight.w600, 38 / 32, tokens.text),
-    titleLarge: _text(22, FontWeight.w600, 28 / 22, tokens.text),
+    displayLarge: _titleText(48, FontWeight.w700, 52 / 48, tokens.text),
+    headlineLarge: _titleText(32, FontWeight.w600, 38 / 32, tokens.text),
+    titleLarge: _titleText(22, FontWeight.w600, 28 / 22, tokens.text),
     bodyLarge: _text(17, FontWeight.w400, 24 / 17, tokens.text),
     bodyMedium: _text(14, FontWeight.w400, 20 / 14, tokens.textMuted),
     labelSmall: _text(
@@ -54,9 +54,23 @@ TextTheme _textTheme(_ThemeTokens tokens) {
   );
 }
 
+TextStyle _titleText(
+  double size,
+  FontWeight weight,
+  double height,
+  Color color,
+) {
+  return _text(
+    size,
+    weight,
+    height,
+    color,
+  ).copyWith(fontFamily: SyscatTheme.titleFontFamily);
+}
+
 TextStyle _text(double size, FontWeight weight, double height, Color color) {
   return TextStyle(
-    fontFamily: 'Inter',
+    fontFamily: SyscatTheme.bodyFontFamily,
     fontSize: size,
     fontWeight: weight,
     height: height,
@@ -71,7 +85,7 @@ AppBarTheme _appBarTheme(_ThemeTokens tokens) {
     scrolledUnderElevation: 0,
     backgroundColor: tokens.background,
     foregroundColor: tokens.text,
-    titleTextStyle: _text(22, FontWeight.w600, 28 / 22, tokens.text),
+    titleTextStyle: _titleText(22, FontWeight.w600, 28 / 22, tokens.text),
   );
 }
 

@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Syscat',
+      title: 'novooa',
       debugShowCheckedModeBanner: false,
       theme: SyscatTheme.lightTheme,
       darkTheme: SyscatTheme.darkTheme,

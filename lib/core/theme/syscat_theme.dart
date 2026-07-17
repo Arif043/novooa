@@ -5,8 +5,11 @@ part 'syscat_theme_data.dart';
 part 'syscat_theme_tokens.dart';
 
 class SyscatTheme {
+  static const String titleFontFamily = 'Space Grotesk';
+  static const String bodyFontFamily = 'Inter';
+
   static TextStyle taskBody = const TextStyle(
-    fontFamily: 'Inter',
+    fontFamily: bodyFontFamily,
     fontSize: 17,
     fontWeight: FontWeight.w600,
     height: 24 / 17,
@@ -14,7 +17,7 @@ class SyscatTheme {
   );
 
   static TextStyle taskBodySmall = const TextStyle(
-    fontFamily: 'Inter',
+    fontFamily: bodyFontFamily,
     fontSize: 14,
     fontWeight: FontWeight.w500,
     height: 20 / 14,

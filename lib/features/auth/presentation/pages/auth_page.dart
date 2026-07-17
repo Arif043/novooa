@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/core/widgets/syscat_background.dart';
 
 import '../cubits/auth_cubit.dart';
@@ -31,7 +32,7 @@ class _AuthView extends StatelessWidget {
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.pageMobile),
               child: const _AuthPanel(),
             ),
           ),
@@ -46,11 +47,23 @@ class _AuthPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 440),
-      child: Card(
+      constraints: const BoxConstraints(maxWidth: 416),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: SyscatTheme.shadowMedium,
+              blurRadius: 32,
+              offset: const Offset(0, 18),
+            ),
+          ],
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: BlocListener<AuthCubit, AuthState>(
             listener: _showFailure,
             child: const _AuthPanelContent(),
@@ -78,7 +91,7 @@ class _AuthPanelContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _AuthHeader(),
-        SizedBox(height: AppSpacing.lg),
+        SizedBox(height: AppSpacing.xl),
         AuthForm(),
       ],
     );
@@ -94,8 +107,8 @@ class _AuthHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Syscat starten', style: textTheme.displayLarge),
-        const SizedBox(height: AppSpacing.sm),
+        Text('novooa', style: textTheme.headlineLarge),
+        const SizedBox(height: AppSpacing.md),
         Text(
           'Erstelle dein Konto oder logge dich ein.',
           style: textTheme.bodyMedium,

@@ -104,6 +104,7 @@ void main() {
     final repository = _AsyncAuthRepository();
     await tester.pumpWidget(_appWith(repository));
     await tester.tap(find.text('Login'));
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.widgetWithText(TextField, 'E-Mail'),
       'ada@example.com',
@@ -112,7 +113,7 @@ void main() {
       find.widgetWithText(TextField, 'Passwort'),
       'sicheres-passwort',
     );
-    await tester.tap(find.text('Einloggen'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Einloggen'));
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     repository.completer.complete(
