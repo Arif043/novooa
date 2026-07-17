@@ -36,7 +36,7 @@ class Toolbar extends StatelessWidget {
                     .read<TaskBuilderCubit>()
                     .addNodeToMainGraph(.stringInput),
                 icon: const Icon(Icons.text_fields),
-                tooltip: "Texteingabe hinzufügen",
+                tooltip: "Text bauen",
               ),
             ),
             const SizedBox(width: AppSpacing.xs),
@@ -47,7 +47,7 @@ class Toolbar extends StatelessWidget {
                 onPressed: () => context
                     .read<TaskBuilderCubit>()
                     .addNodeToMainGraph(.script),
-                icon: const Icon(Icons.terminal),
+                icon: const Icon(Icons.code),
                 tooltip: "Script hinzufügen",
               ),
             ),
@@ -130,12 +130,6 @@ class Toolbar extends StatelessWidget {
                   .addNodeToMainGraph(.humanApproval),
               icon: const Icon(Icons.face),
               tooltip: "Freigabe hinzufügen",
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            IconButton(
-              onPressed: () => {},
-              icon: const Icon(Icons.code),
-              tooltip: "Menschliche Aktion hinzufügen",
             ),
           ],
         ),
