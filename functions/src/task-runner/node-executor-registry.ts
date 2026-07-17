@@ -8,6 +8,7 @@ import {
   readEmailNodeExecutor,
 } from "../task-executors/read-email-node-executor.js";
 import {scriptNodeExecutor} from "../task-executors/script-node-executor.js";
+import {sendChannelMessageNodeExecutor} from "../task-executors/send-channel-message-node-executor.js";
 import {stringInputNodeExecutor} from "../task-executors/string-input-node-executor.js";
 import {writeFileNodeExecutor} from "../task-executors/write-file-node-executor.js";
 import {type WorkflowNode} from "./task-definition.js";
@@ -24,6 +25,7 @@ const executors = new Map<WorkflowNode["primitive"], NodeExecutor>(
     readFileNodeExecutor,
     readEmailNodeExecutor,
     readChannelEventNodeExecutor,
+    sendChannelMessageNodeExecutor,
     humanApprovalNodeExecutor,
   ].map((executor) => [executor.primitive, executor]),
 );

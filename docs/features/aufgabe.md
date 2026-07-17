@@ -91,6 +91,10 @@ synchron ergänzt werden — die `WorkflowPrimitiveLabels`-Extension in
 `workflow_primitive_labels.dart` liefert für jeden Wert einen `label` und
 `description`-Zweig.
 
+`sendChannelMessage` nutzt für WhatsApp/SMS Twilio über den Team-Subaccount und
+für E-Mail SendGrid. Dafür müssen die Function-Secrets
+`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` und `SENDGRID_API_KEY` gesetzt sein.
+
 ## UI-Layout
 
 ```

@@ -19,7 +19,7 @@ export type SendChannelMessageInput = {
 export type SendableChannel = {
   id: string;
   teamId: string;
-  kind: "whatsapp" | "sms";
+  kind: "whatsapp" | "sms" | "email";
   address: string;
 };
 
@@ -46,6 +46,57 @@ export async function loadSendableChannel(
   };
 }
 
+export async function loadSendableChannelByKind(
+  teamId: string,
+  kind: "whatsapp" | "sms",
+): Promise<SendableChannel> {
+  initializeAdminApp();
+  const snapshot = await getFirestore()
+    .collection("teams")
+    .doc(teamId)
+    .collection("communicationChannels")
+    .get();
+  const channel = snapshot.docs.find((document) => {
+    const data = document.data();
+    return data.kind === kind && isSendableTwilioChannel(data);
+  });
+  if (!channel) {
+    throw new HttpsError("failed-precondition", "No sendable channel found.");
+  }
+  const data = channel.data();
+  return {
+    id: channel.id,
+    teamId,
+    kind: channelKindFrom(data.kind),
+    address: stringFrom(data.address),
+  };
+}
+
+export async function loadSendableEmailChannel(
+  teamId: string,
+): Promise<SendableChannel> {
+  initializeAdminApp();
+  const snapshot = await getFirestore()
+    .collection("teams")
+    .doc(teamId)
+    .collection("communicationChannels")
+    .get();
+  const channel = snapshot.docs.find((document) => {
+    const data = document.data();
+    return data.kind === "email" && isSendableEmailChannel(data);
+  });
+  if (!channel) {
+    throw new HttpsError("failed-precondition", "No sendable email channel found.");
+  }
+  const data = channel.data();
+  return {
+    id: channel.id,
+    teamId,
+    kind: "email",
+    address: stringFrom(data.address),
+  };
+}
+
 export async function createOutboundMessage(input: {
   channel: SendableChannel;
   recipient: string;
@@ -66,7 +117,7 @@ export async function markOutboundSent(input: {
   const batch = getFirestore().batch();
   batch.set(
     outboundMessages(input.channel).doc(input.outboundId),
-    sentDocument(input.sid),
+    sentDocument(input.sid, providerFor(input.channel.kind)),
     {merge: true},
   );
   addConversationWrites(batch, input);
@@ -94,9 +145,23 @@ function isSendableTwilioChannel(data: Record<string, unknown>): boolean {
   );
 }
 
-function channelKindFrom(value: unknown): "whatsapp" | "sms" {
-  if (value === "whatsapp" || value === "sms") return value;
+function channelKindFrom(value: unknown): "whatsapp" | "sms" | "email" {
+  if (value === "whatsapp" || value === "sms" || value === "email") return value;
   throw new HttpsError("failed-precondition", "Unsupported channel kind.");
+}
+
+function isSendableEmailChannel(data: Record<string, unknown>): boolean {
+  const capabilities = data.capabilities;
+  return (
+    data.provider === "sendgrid" &&
+    data.status === "active" &&
+    isRecord(capabilities) &&
+    capabilities.outbound === true
+  );
+}
+
+function providerFor(kind: SendableChannel["kind"]): string {
+  return kind === "email" ? "sendgrid" : "twilio";
 }
 
 function stringFrom(value: unknown): string {

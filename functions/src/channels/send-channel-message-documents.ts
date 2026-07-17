@@ -35,10 +35,10 @@ export function outboundDocument(input: {
   };
 }
 
-export function sentDocument(providerMessageId: string) {
+export function sentDocument(providerMessageId: string, provider: string) {
   return {
     status: "sent",
-    provider: "twilio",
+    provider,
     providerMessageId,
     sentAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
@@ -104,7 +104,7 @@ function messageDocument(input: {
 }) {
   return {
     id: input.sid,
-    provider: "twilio",
+    provider: providerFor(input.channel.kind),
     providerMessageId: input.sid,
     direction: "outbound",
     channel: input.channel.kind,
@@ -117,6 +117,10 @@ function messageDocument(input: {
 
 function conversationIdFrom(address: string): string {
   return createHash("sha256").update(address).digest("hex").slice(0, 32);
+}
+
+function providerFor(kind: SendableChannel["kind"]): string {
+  return kind === "email" ? "sendgrid" : "twilio";
 }
 
 function errorMessage(error: unknown): string {

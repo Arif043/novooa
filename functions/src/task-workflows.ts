@@ -37,6 +37,10 @@ import {
 import {isMinimaxProvider} from "./task-runner/ai-models.js";
 import {errorDetails, logError} from "./task-runner/structured-logger.js";
 import {currentTeamIdForUid} from "./team-context.js";
+import {twilioAccountSid, twilioAuthToken} from "./channels/twilio-secrets.js";
+import {sendgridApiKey} from "./channels/sendgrid-secrets.js";
+
+const communicationSecrets = [twilioAccountSid, twilioAuthToken, sendgridApiKey];
 
 const ai = genkit({
   plugins: [
@@ -64,10 +68,7 @@ export const taskDefinitionFlow = ai.defineFlow(
   async (input, runtime) => {
     let title = "";
     try {
-      const taskDefinition = await loadTaskDefinition(
-        input.taskId,
-        runtime.context,
-      );
+      const taskDefinition = await loadTaskDefinition(input.taskId, runtime.context);
       title = taskDefinition.title;
       const teamId = await teamIdFromContext(runtime.context);
       const run = await enqueueTaskRun({
@@ -87,10 +88,7 @@ export const taskDefinitionFlow = ai.defineFlow(
   },
 );
 
-export const runTaskDefinitionFlow = onCallGenkit(
-  {authPolicy: isSignedIn()},
-  taskDefinitionFlow,
-);
+export const runTaskDefinitionFlow = onCallGenkit({authPolicy: isSignedIn()}, taskDefinitionFlow);
 
 export const reviewTaskRunFlow = ai.defineFlow(
   {
@@ -110,22 +108,19 @@ export const reviewTaskRunFlow = ai.defineFlow(
   },
 );
 
-export const reviewTaskRun = onCallGenkit(
-  {authPolicy: isSignedIn()},
-  reviewTaskRunFlow,
-);
+export const reviewTaskRun = onCallGenkit({authPolicy: isSignedIn()}, reviewTaskRunFlow);
 
 export const runTaskDefinitionWorker = onDocumentCreated(
-  "teams/{teamId}/taskRuns/{runId}",
+  {
+    document: "teams/{teamId}/taskRuns/{runId}",
+    secrets: communicationSecrets,
+  },
   async (event) => {
     const teamId = event.params.teamId;
     const run = runFromDocument(event.data?.data() ?? {});
     try {
       await markRunStarted(teamId, run.runId);
-      const taskDefinition = await loadTaskDefinitionForTeam(
-        teamId,
-        run.taskId,
-      );
+      const taskDefinition = await loadTaskDefinitionForTeam(teamId, run.taskId);
       const output = await executeTaskGraph(ai, {
         taskDefinition,
         context: run.context,
@@ -149,7 +144,10 @@ export const runTaskDefinitionWorker = onDocumentCreated(
 );
 
 export const resumeApprovedTaskRunWorker = onDocumentUpdated(
-  "teams/{teamId}/taskRuns/{runId}",
+  {
+    document: "teams/{teamId}/taskRuns/{runId}",
+    secrets: communicationSecrets,
+  },
   async (event) => {
     const before = event.data?.before.data() ?? {};
     const after = event.data?.after.data() ?? {};
@@ -157,12 +155,7 @@ export const resumeApprovedTaskRunWorker = onDocumentUpdated(
     const run = runFromDocument(after);
     const resumeState = taskResumeStateSchema.parse(after.resumeState);
     const approvedOutput = String(after.approvedOutput ?? "");
-    await continueApprovedRun(
-      event.params.teamId,
-      run,
-      resumeState,
-      approvedOutput,
-    );
+    await continueApprovedRun(event.params.teamId, run, resumeState, approvedOutput);
   },
 );
 
