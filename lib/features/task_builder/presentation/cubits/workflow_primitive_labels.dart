@@ -11,6 +11,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.writeFile => 'Datei schreiben',
       WorkflowPrimitive.readFile => 'Datei lesen',
       WorkflowPrimitive.readEmail => 'E-Mail lesen',
+      WorkflowPrimitive.readChannelEvent => 'Nachricht lesen',
       WorkflowPrimitive.toolCall => 'Werkzeug-Aufruf',
       WorkflowPrimitive.humanApproval => 'Freigabe',
       WorkflowPrimitive.validation => 'Validierung',
@@ -33,6 +34,8 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.readFile => 'Liest eine Datei als Text.',
       WorkflowPrimitive.readEmail =>
         'Liest Absender, Betreff, Nachricht und Ankunftszeit aus einem E-Mail-Trigger.',
+      WorkflowPrimitive.readChannelEvent =>
+        'Liest ein eingehendes E-Mail-, WhatsApp- oder SMS-Event.',
       WorkflowPrimitive.toolCall =>
         'Bindet externe Aktionen oder Datenquellen ein.',
       WorkflowPrimitive.humanApproval => 'Wartet auf menschliche Freigabe.',

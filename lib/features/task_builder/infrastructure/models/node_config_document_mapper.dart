@@ -27,6 +27,10 @@ class NodeConfigDocumentMapper {
       WriteFileNodeConfig() => _writeFileToDocument(config),
       ReadFileNodeConfig() => _readFileToDocument(config),
       ReadEmailNodeConfig() => {'primitive': config.primitive.name},
+      ReadChannelEventNodeConfig() => {
+        'primitive': config.primitive.name,
+        'kind': config.kind.name,
+      },
       _ => {'primitive': config.primitive.name},
     };
   }
@@ -43,6 +47,9 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.writeFile => _writeFileFrom(data),
       WorkflowPrimitive.readFile => _readFileFrom(data),
       WorkflowPrimitive.readEmail => const ReadEmailNodeConfig(),
+      WorkflowPrimitive.readChannelEvent => ReadChannelEventNodeConfig(
+        kind: _channelEventKindFrom(data['kind']),
+      ),
       _ => NodeConfig.initial(primitive),
     };
   }
@@ -305,5 +312,13 @@ class NodeConfigDocumentMapper {
 
   Map<String, Object?> _objectMapFrom(Map<dynamic, dynamic> data) {
     return data.map((key, value) => MapEntry(key.toString(), value));
+  }
+
+  ChannelEventKind _channelEventKindFrom(Object? value) {
+    final name = value as String? ?? '';
+    return ChannelEventKind.values.firstWhere(
+      (kind) => kind.name == name,
+      orElse: () => ChannelEventKind.whatsapp,
+    );
   }
 }

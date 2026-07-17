@@ -9,6 +9,7 @@ export const workflowPrimitiveSchema = z.enum([
   "writeFile",
   "readFile",
   "readEmail",
+  "readChannelEvent",
   "toolCall",
   "humanApproval",
   "validation",
@@ -120,6 +121,11 @@ export const readEmailNodeConfigSchema = z.object({
   primitive: z.literal("readEmail").default("readEmail"),
 });
 
+export const readChannelEventNodeConfigSchema = z.object({
+  primitive: z.literal("readChannelEvent").default("readChannelEvent"),
+  kind: z.enum(["email", "whatsapp", "sms"]).default("whatsapp"),
+});
+
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   stringInputNodeConfigSchema,
   scriptNodeConfigSchema,
@@ -130,6 +136,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   writeFileNodeConfigSchema,
   readFileNodeConfigSchema,
   readEmailNodeConfigSchema,
+  readChannelEventNodeConfigSchema,
 ]);
 
 export const workflowNodeSchema = z.object({

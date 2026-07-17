@@ -13,3 +13,25 @@ class ReadEmailNodeConfig extends NodeConfig {
   @override
   List<Object?> get props => const [];
 }
+
+enum ChannelEventKind { email, whatsapp, sms }
+
+class ReadChannelEventNodeConfig extends NodeConfig {
+  const ReadChannelEventNodeConfig({required this.kind});
+
+  factory ReadChannelEventNodeConfig.initial() {
+    return const ReadChannelEventNodeConfig(kind: ChannelEventKind.whatsapp);
+  }
+
+  final ChannelEventKind kind;
+
+  @override
+  WorkflowPrimitive get primitive => .readChannelEvent;
+
+  @override
+  List<Object?> get props => [kind];
+
+  ReadChannelEventNodeConfig copyWith({ChannelEventKind? kind}) {
+    return ReadChannelEventNodeConfig(kind: kind ?? this.kind);
+  }
+}

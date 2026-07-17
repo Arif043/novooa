@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
+import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
@@ -102,9 +103,25 @@ class Toolbar extends StatelessWidget {
             IconButton(
               onPressed: () => context
                   .read<TaskBuilderCubit>()
-                  .addNodeToMainGraph(.readEmail),
+                  .addChannelEventNodeToMainGraph(ChannelEventKind.email),
               icon: const Icon(Icons.mark_email_read_outlined),
               tooltip: "E-Mail lesen hinzufügen",
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            IconButton(
+              onPressed: () => context
+                  .read<TaskBuilderCubit>()
+                  .addChannelEventNodeToMainGraph(ChannelEventKind.whatsapp),
+              icon: const Icon(Icons.chat_outlined),
+              tooltip: "WhatsApp lesen hinzufügen",
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            IconButton(
+              onPressed: () => context
+                  .read<TaskBuilderCubit>()
+                  .addChannelEventNodeToMainGraph(ChannelEventKind.sms),
+              icon: const Icon(Icons.sms_outlined),
+              tooltip: "SMS lesen hinzufügen",
             ),
             const SizedBox(width: AppSpacing.xs),
             IconButton(

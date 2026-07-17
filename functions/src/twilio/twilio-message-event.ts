@@ -22,8 +22,8 @@ export function twilioMessageEventFrom(
   return {
     accountSid: requiredField(fields, "AccountSid"),
     messageSid: messageSidFrom(fields),
-    from,
-    to,
+    from: phoneAddressFrom(from),
+    to: phoneAddressFrom(to),
     body: fields.Body ?? "",
     channel: channelFrom(from, to),
     media: mediaFrom(fields),
@@ -40,6 +40,10 @@ function channelFrom(from: string, to: string): "whatsapp" | "sms" {
     return "whatsapp";
   }
   return "sms";
+}
+
+function phoneAddressFrom(value: string): string {
+  return value.startsWith("whatsapp:") ? value.slice("whatsapp:".length) : value;
 }
 
 function mediaFrom(fields: Record<string, string>): TwilioMedia[] {

@@ -59,6 +59,22 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     await _saveAndEmit(task.addNode(node));
   }
 
+  Future<void> addChannelEventNodeToMainGraph(ChannelEventKind kind) async {
+    final task = loadedTaskOrNull();
+    if (task == null) return;
+    final node = _buildNode(
+      WorkflowPrimitive.readChannelEvent,
+      task.nodes.length,
+    );
+    final configuredNode = node.copyWith(
+      title: _channelEventTitle(kind),
+      description: _channelEventDescription(kind),
+      referenceName: _referenceNameForKind(kind, task.nodes.length + 1),
+      config: ReadChannelEventNodeConfig(kind: kind),
+    );
+    await _saveAndEmit(task.addNode(configuredNode));
+  }
+
   Future<void> updateTitle(String title) async {
     final task = loadedTaskOrNull();
     if (task == null || task.title == title) return;
@@ -271,9 +287,33 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       WorkflowPrimitive.writeFile => 'writeFile',
       WorkflowPrimitive.readFile => 'readFile',
       WorkflowPrimitive.readEmail => 'email',
+      WorkflowPrimitive.readChannelEvent => 'message',
       WorkflowPrimitive.toolCall => 'tool',
       WorkflowPrimitive.humanApproval => 'approval',
       WorkflowPrimitive.validation => 'validation',
+    };
+  }
+
+  String _referenceNameForKind(ChannelEventKind kind, int number) {
+    return '${kind.name}$number';
+  }
+
+  String _channelEventTitle(ChannelEventKind kind) {
+    return switch (kind) {
+      ChannelEventKind.email => 'E-Mail lesen',
+      ChannelEventKind.whatsapp => 'WhatsApp lesen',
+      ChannelEventKind.sms => 'SMS lesen',
+    };
+  }
+
+  String _channelEventDescription(ChannelEventKind kind) {
+    return switch (kind) {
+      ChannelEventKind.email =>
+        'Liest Absender, Betreff, Nachricht und Ankunftszeit aus einem E-Mail-Trigger.',
+      ChannelEventKind.whatsapp =>
+        'Liest Absender, Nachricht und Ankunftszeit aus einem WhatsApp-Trigger.',
+      ChannelEventKind.sms =>
+        'Liest Absender, Nachricht und Ankunftszeit aus einem SMS-Trigger.',
     };
   }
 }

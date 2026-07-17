@@ -53,7 +53,7 @@ class _NodeGraphState extends State<NodeGraph> {
       .iterativeRefinement => IterativeRefinementWidget(node: node),
       .writeFile => WriteFileWidget(node: node),
       .readFile => ReadFileWidget(node: node),
-      .readEmail => ReadEmailWidget(node: node),
+      .readEmail || .readChannelEvent => ReadEventWidget(node: node),
       .humanApproval => HumanApprovalWidget(node: node),
       _ => const SizedBox.shrink(),
     };

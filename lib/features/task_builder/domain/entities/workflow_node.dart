@@ -16,6 +16,7 @@ enum WorkflowPrimitive {
   writeFile,
   readFile,
   readEmail,
+  readChannelEvent,
   toolCall,
   humanApproval,
   validation,

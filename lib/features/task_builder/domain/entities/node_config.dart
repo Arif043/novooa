@@ -32,6 +32,7 @@ sealed class NodeConfig extends Equatable {
       .writeFile => WriteFileNodeConfig.initial(),
       .readFile => ReadFileNodeConfig.initial(),
       .readEmail => ReadEmailNodeConfig.initial(),
+      .readChannelEvent => ReadChannelEventNodeConfig.initial(),
       _ => throw UnimplementedError(),
     };
   }
