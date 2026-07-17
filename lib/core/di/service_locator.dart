@@ -7,6 +7,7 @@ import 'package:syscat2/features/communication/domain/repositories/communication
 import 'package:syscat2/features/communication/domain/usecases/create_communication_channel.dart';
 import 'package:syscat2/features/communication/domain/usecases/delete_communication_channel.dart';
 import 'package:syscat2/features/communication/domain/usecases/dispatch_fake_channel_message.dart';
+import 'package:syscat2/features/communication/domain/usecases/send_channel_message.dart';
 import 'package:syscat2/features/communication/domain/usecases/watch_communication_channels.dart';
 import 'package:syscat2/features/communication/infrastructure/repositories/firestore_communication_channel_repository.dart';
 import 'package:syscat2/features/communication/presentation/cubits/communication_cubit.dart';
@@ -270,6 +271,10 @@ void configureDependencies() {
       ),
     )
     ..registerLazySingleton(
+      () =>
+          SendChannelMessage(serviceLocator<CommunicationChannelRepository>()),
+    )
+    ..registerLazySingleton(
       () => RegisterNotificationDevice(
         serviceLocator<NotificationDeviceRepository>(),
       ),
@@ -392,6 +397,7 @@ void configureDependencies() {
         serviceLocator<CreateCommunicationChannel>(),
         serviceLocator<DeleteCommunicationChannel>(),
         serviceLocator<DispatchFakeChannelMessage>(),
+        serviceLocator<SendChannelMessage>(),
       ),
     )
     ..registerFactory(

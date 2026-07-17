@@ -5,6 +5,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/communication_channel.dart';
 import '../cubits/communication_cubit.dart';
 import 'communication_channel_tile.dart';
+import 'send_channel_message_dialog.dart';
 
 class CommunicationChannelGrid extends StatelessWidget {
   const CommunicationChannelGrid({super.key, required this.channels});
@@ -29,6 +30,7 @@ class CommunicationChannelGrid extends StatelessWidget {
               onFakeMessage: () => context
                   .read<CommunicationCubit>()
                   .dispatchFake(channels[index]),
+              onSendMessage: () => _sendMessage(context, channels[index]),
               onDelete: () =>
                   context.read<CommunicationCubit>().delete(channels[index]),
             );
@@ -43,5 +45,21 @@ class CommunicationChannelGrid extends StatelessWidget {
     if (width >= 760) return 3;
     if (width >= 520) return 2;
     return 1;
+  }
+
+  Future<void> _sendMessage(
+    BuildContext context,
+    CommunicationChannel channel,
+  ) async {
+    final message = await showDialog<({String to, String body})>(
+      context: context,
+      builder: (_) => SendChannelMessageDialog(channel: channel),
+    );
+    if (message == null || !context.mounted) return;
+    await context.read<CommunicationCubit>().send(
+      channel: channel,
+      to: message.to,
+      body: message.body,
+    );
   }
 }

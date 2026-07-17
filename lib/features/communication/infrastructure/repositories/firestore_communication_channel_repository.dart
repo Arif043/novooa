@@ -8,6 +8,7 @@ import '../../../files/domain/entities/team_id.dart';
 import '../../../teams/domain/repositories/team_repository.dart';
 import '../../domain/entities/communication_channel.dart';
 import '../../domain/entities/create_communication_channel_input.dart';
+import '../../domain/entities/send_channel_message_input.dart';
 import '../../domain/repositories/communication_channel_repository.dart';
 import '../models/communication_channel_model.dart';
 
@@ -70,13 +71,26 @@ class FirestoreCommunicationChannelRepository
     });
   }
 
+  @override
+  Future<void> sendMessage(SendChannelMessageInput input) async {
+    if (!input.isValid) return;
+    final callable = _functions.httpsCallable(
+      'sendChannelMessage',
+      options: HttpsCallableOptions(timeout: const Duration(seconds: 30)),
+    );
+    await callable.call<void>({
+      'channelId': input.channelId,
+      'to': input.to.trim(),
+      'body': input.body.trim(),
+    });
+  }
+
   Map<String, Object?> _channelDocument(
     String channelId,
     TeamId teamId,
     String ownerUid,
     CreateCommunicationChannelInput input,
   ) {
-    final accountSid = input.accountSid?.trim();
     return {
       'id': channelId,
       'teamId': teamId.value,
@@ -87,7 +101,6 @@ class FirestoreCommunicationChannelRepository
       'address': input.address.trim(),
       'status': CommunicationChannelStatus.active.name,
       'capabilities': _capabilities(input.capabilities),
-      if (accountSid != null && accountSid.isNotEmpty) 'accountSid': accountSid,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };

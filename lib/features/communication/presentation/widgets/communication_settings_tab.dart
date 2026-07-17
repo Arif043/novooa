@@ -76,7 +76,7 @@ class _CommunicationHeader extends StatelessWidget {
         FilledButton.icon(
           onPressed: isCreating ? null : () => _openDialog(context),
           icon: const Icon(Icons.add_comment_outlined),
-          label: const Text('Kanal hinzufügen'),
+          label: const Text('Kanal verbinden'),
         ),
       ],
     );
@@ -153,11 +153,11 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Noch keine Kanäle',
+            'Noch keine Verbindungen',
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: AppSpacing.sm),
-          const Text('Lege einen WhatsApp-, SMS- oder E-Mail-Kanal an.'),
+          const Text('Verbinde WhatsApp, SMS oder E-Mail mit novooa.'),
         ],
       ),
     );

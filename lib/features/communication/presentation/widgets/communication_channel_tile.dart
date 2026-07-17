@@ -8,11 +8,13 @@ class CommunicationChannelTile extends StatelessWidget {
     super.key,
     required this.channel,
     required this.onFakeMessage,
+    required this.onSendMessage,
     required this.onDelete,
   });
 
   final CommunicationChannel channel;
   final VoidCallback onFakeMessage;
+  final VoidCallback onSendMessage;
   final VoidCallback onDelete;
 
   @override
@@ -40,6 +42,12 @@ class CommunicationChannelTile extends StatelessWidget {
                   onPressed: onFakeMessage,
                   icon: const Icon(Icons.bolt_outlined),
                 ),
+                if (channel.capabilities.outbound)
+                  IconButton(
+                    tooltip: 'Nachricht senden',
+                    onPressed: onSendMessage,
+                    icon: const Icon(Icons.send_outlined),
+                  ),
                 IconButton(
                   tooltip: 'Kanal entfernen',
                   onPressed: onDelete,
@@ -55,7 +63,6 @@ class CommunicationChannelTile extends StatelessWidget {
               runSpacing: AppSpacing.sm,
               children: [
                 _InfoChip(label: _kindLabel),
-                _InfoChip(label: _providerLabel),
                 if (channel.capabilities.inbound)
                   const _InfoChip(label: 'Eingang'),
                 if (channel.capabilities.outbound)
@@ -81,13 +88,6 @@ class CommunicationChannelTile extends StatelessWidget {
       CommunicationChannelKind.whatsapp => 'WhatsApp',
       CommunicationChannelKind.sms => 'SMS',
       CommunicationChannelKind.email => 'E-Mail',
-    };
-  }
-
-  String get _providerLabel {
-    return switch (channel.provider) {
-      CommunicationProvider.twilio => 'Twilio',
-      CommunicationProvider.sendgrid => 'SendGrid',
     };
   }
 }

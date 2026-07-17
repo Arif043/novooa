@@ -99,6 +99,11 @@ Team-Mitgliedern verteilt und öffnen im Client den Freigabe-Dialog.
 
 Kommunikationskanäle werden im Client unter
 `Einstellungen > Kommunikation` gepflegt und bleiben bewusst team-scoped.
+Provider-Credentials werden nicht im Client erfasst. Für Twilio provisioniert
+novooa intern einen Subaccount pro Team und speichert dessen SID am
+Team-Dokument (`twilioSubaccountSid`). Die Nutzeroberfläche spricht von
+„WhatsApp/SMS/E-Mail verbinden“ und zeigt keine Provider-Begriffe wie Twilio,
+Subaccount oder Account SID.
 
 Storage:
 

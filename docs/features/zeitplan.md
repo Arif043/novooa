@@ -72,6 +72,15 @@ teams/{teamId}/communicationChannels/{channelId}
 
 Die Verwaltung der Kanäle liegt in der UI unter
 `Einstellungen > Kommunikation`. Trigger referenzieren diese Kanäle nur.
+Nutzer verwalten keine Twilio-Credentials. novooa provisioniert intern einen
+Twilio-Subaccount pro Team und speichert dessen SID am Team-Dokument:
+
+```ts
+teams/{teamId} {
+  twilioSubaccountSid: string,
+  twilioStatus: "active" | "suspended"
+}
+```
 
 Minimal erwartetes WhatsApp-Dokument:
 
@@ -89,7 +98,6 @@ Minimal erwartetes WhatsApp-Dokument:
     inbound: true,
     outbound: true
   },
-  accountSid: string,
   createdAt: Timestamp,
   updatedAt: Timestamp
 }
@@ -97,7 +105,8 @@ Minimal erwartetes WhatsApp-Dokument:
 
 Ein Team kann mehrere Kanäle besitzen. Kanäle gehören bewusst nicht zu
 einzelnen Projekten; Aufgaben und Trigger referenzieren bei Bedarf einen
-Team-Kanal.
+Team-Kanal. Die UI folgt dem Superchat-Modell: Nutzer verbinden WhatsApp, SMS
+oder E-Mail mit novooa; Provider-Details bleiben Infrastruktur.
 
 Eingehende Nachrichten werden unter dem Team-Inbox-Pfad gespeichert:
 
@@ -247,6 +256,6 @@ enabled ASC, nextRunAt ASC
 
 - Bearbeiten-Dialog für bestehende Trigger ergänzen.
 - Event-Trigger `fileCreated` auf Storage-/Firestore-Dateiversionen ausführen.
-- Verbindungs-UI für Twilio-Accounts und Telefonnummern ergänzen.
+- Nummern-/WhatsApp-Provisionierung innerhalb des Team-Subaccounts ergänzen.
 - E-Mail-Trigger per Provider-Webhook an `taskRuns` anbinden.
 - Team-Rollen später auf Trigger-Verwaltung anwenden.

@@ -29,7 +29,6 @@ class CommunicationChannel {
     required this.address,
     required this.status,
     required this.capabilities,
-    this.accountSid,
     this.createdAt,
     this.updatedAt,
   });
@@ -43,7 +42,6 @@ class CommunicationChannel {
   final String address;
   final CommunicationChannelStatus status;
   final ChannelCapabilities capabilities;
-  final String? accountSid;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 }

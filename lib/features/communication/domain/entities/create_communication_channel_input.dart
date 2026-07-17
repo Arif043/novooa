@@ -7,7 +7,6 @@ class CreateCommunicationChannelInput {
     required this.label,
     required this.address,
     required this.capabilities,
-    this.accountSid,
   });
 
   final CommunicationProvider provider;
@@ -15,7 +14,6 @@ class CreateCommunicationChannelInput {
   final String label;
   final String address;
   final ChannelCapabilities capabilities;
-  final String? accountSid;
 
   bool get isValid {
     return label.trim().isNotEmpty &&

@@ -14,7 +14,6 @@ class CommunicationChannelModel {
     required this.address,
     required this.status,
     required this.capabilities,
-    this.accountSid,
     this.createdAt,
     this.updatedAt,
   });
@@ -28,7 +27,6 @@ class CommunicationChannelModel {
   final String address;
   final CommunicationChannelStatus status;
   final ChannelCapabilities capabilities;
-  final String? accountSid;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -46,7 +44,6 @@ class CommunicationChannelModel {
       address: data['address'] as String? ?? '',
       status: _status(data['status']),
       capabilities: _capabilities(data['capabilities']),
-      accountSid: data['accountSid'] as String?,
       createdAt: _date(data['createdAt']),
       updatedAt: _date(data['updatedAt']),
     );
@@ -63,7 +60,6 @@ class CommunicationChannelModel {
       address: address,
       status: status,
       capabilities: capabilities,
-      accountSid: accountSid,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
