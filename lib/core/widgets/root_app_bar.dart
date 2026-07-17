@@ -1,9 +1,16 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class RootAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const RootAppBar({super.key, required this.title, this.actions});
+  const RootAppBar({
+    super.key,
+    required this.title,
+    required this.onMenuPressed,
+    this.actions,
+  });
 
   final Widget title;
+  final VoidCallback onMenuPressed;
   final List<Widget>? actions;
 
   @override
@@ -12,12 +19,10 @@ class RootAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      leading: Builder(
-        builder: (context) => IconButton(
-          tooltip: 'Menü öffnen',
-          icon: const Icon(Icons.menu),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
+      leading: IconButton(
+        tooltip: 'Menü öffnen',
+        icon: const Icon(CupertinoIcons.sidebar_left),
+        onPressed: onMenuPressed,
       ),
       title: title,
       actions: actions,

@@ -3,12 +3,12 @@ import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:syscat2/features/user/domain/usecases/get_current_user_profile.dart';
+import '../../root_tab.dart';
 import '../theme/app_spacing.dart';
 import '../theme/syscat_theme.dart';
-import '../../root_tab.dart';
 
-class RootDrawer extends StatelessWidget {
-  const RootDrawer({
+class RootSideMenu extends StatelessWidget {
+  const RootSideMenu({
     super.key,
     required this.tabs,
     required this.selectedIndex,
@@ -21,7 +21,9 @@ class RootDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Drawer(
+    final colorScheme = Theme.of(context).colorScheme;
+    return Material(
+      color: colorScheme.surface,
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -33,7 +35,7 @@ class RootDrawer extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _DrawerHeader(),
+              const _SideMenuHeader(),
               const SizedBox(height: AppSpacing.md),
               _TabList(
                 tabs: tabs,
@@ -43,8 +45,8 @@ class RootDrawer extends StatelessWidget {
               const Spacer(),
               ListTile(
                 selected: false,
-                iconColor: ColorScheme.of(context).error,
-                textColor: ColorScheme.of(context).error,
+                iconColor: colorScheme.error,
+                textColor: colorScheme.error,
                 leading: const Icon(Icons.logout),
                 title: const Text('Abmelden'),
                 onTap: () => serviceLocator<AuthCubit>().signOut(),
@@ -57,8 +59,8 @@ class RootDrawer extends StatelessWidget {
   }
 }
 
-class _DrawerHeader extends StatelessWidget {
-  const _DrawerHeader();
+class _SideMenuHeader extends StatelessWidget {
+  const _SideMenuHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +139,7 @@ class _TabList extends StatelessWidget {
         itemCount: tabs.length,
         separatorBuilder: (context, index) =>
             const SizedBox(height: AppSpacing.sm),
-        itemBuilder: (context, index) => _DrawerTile(
+        itemBuilder: (context, index) => _SideMenuTile(
           tab: tabs[index],
           isSelected: index == selectedIndex,
           onTap: () => onSelected(index),
@@ -147,8 +149,8 @@ class _TabList extends StatelessWidget {
   }
 }
 
-class _DrawerTile extends StatelessWidget {
-  const _DrawerTile({
+class _SideMenuTile extends StatelessWidget {
+  const _SideMenuTile({
     required this.tab,
     required this.isSelected,
     required this.onTap,

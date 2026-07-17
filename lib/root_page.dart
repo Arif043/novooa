@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cupertino_sidemenu/cupertino_sidemenu.dart';
 import 'package:go_router/go_router.dart';
 import 'core/di/service_locator.dart';
 import 'root_tab.dart';
 import 'core/widgets/root_app_bar.dart';
-import 'core/widgets/root_drawer.dart';
 import 'core/widgets/root_shell_scope.dart';
+import 'core/widgets/root_side_menu.dart';
 import 'core/widgets/root_stage.dart';
 import 'core/widgets/syscat_background.dart';
 import 'features/notifications/presentation/cubits/app_notifications_cubit.dart';
@@ -23,6 +24,8 @@ class RootPage extends StatefulWidget {
 
 class _RootPageState extends State<RootPage> {
   final RootShellController _shellController = RootShellController();
+  final CupertinoSidemenuController _sideMenuController =
+      CupertinoSidemenuController();
 
   static final List<RootTab> _tabs = [
     RootTab(title: 'Aufgaben', icon: Icons.dashboard_outlined, path: '/tasks'),
@@ -55,12 +58,13 @@ class _RootPageState extends State<RootPage> {
   ];
 
   void _selectTab(int index) {
+    _sideMenuController.closeMenu();
     context.go(_tabs[index].path);
-    Navigator.of(context).pop();
   }
 
   @override
   void dispose() {
+    _sideMenuController.dispose();
     _shellController.dispose();
     super.dispose();
   }
@@ -76,18 +80,25 @@ class _RootPageState extends State<RootPage> {
         child: AnimatedBuilder(
           animation: _shellController,
           builder: (context, _) => SyscatBackground(
-            child: Scaffold(
-              backgroundColor: Colors.transparent,
-              appBar: RootAppBar(
-                title: _titleFor(selectedTab),
-                actions: const [NotificationBellButton()],
-              ),
-              drawer: RootDrawer(
+            child: CupertinoSidemenu(
+              controller: _sideMenuController,
+              menuWidthOfScreen: _menuWidthOfScreen(context),
+              hapticFeedback: false,
+              centerBackgroundOpacity: 0.18,
+              leftMenu: RootSideMenu(
                 tabs: _tabs,
                 selectedIndex: selectedTabIndex,
                 onSelected: _selectTab,
               ),
-              body: RootStage(child: widget.child),
+              centerPage: Scaffold(
+                backgroundColor: Colors.transparent,
+                appBar: RootAppBar(
+                  title: _titleFor(selectedTab),
+                  onMenuPressed: _sideMenuController.openLeftMenu,
+                  actions: const [NotificationBellButton()],
+                ),
+                body: RootStage(child: widget.child),
+              ),
             ),
           ),
         ),
@@ -97,6 +108,13 @@ class _RootPageState extends State<RootPage> {
 
   Widget _titleFor(RootTab selectedTab) {
     return _shellController.title ?? Text(selectedTab.title);
+  }
+
+  double _menuWidthOfScreen(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    if (width >= 1200) return 0.28;
+    if (width >= 800) return 0.42;
+    return 0.82;
   }
 
   int get _selectedTabIndex {

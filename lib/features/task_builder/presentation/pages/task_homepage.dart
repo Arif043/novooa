@@ -49,17 +49,17 @@ class _TaskHomepageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          child: Text(
-            'Aufgaben',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-        ),
         FilledButton.icon(
           onPressed: () => context.go('/tasks/builder'),
           icon: const Icon(Icons.add),
           label: const Text('Neue Aufgabe'),
         ),
+        const SizedBox(width: AppSpacing.md),
+        FilledButton(
+          style: FilledButton.styleFrom(foregroundColor: ColorScheme.of(context).onSecondary, backgroundColor: ColorScheme.of(context).secondary),
+          onPressed: () => context.go('/tasks/builder'),
+          child: const Text('Aus Vorlage'),
+        )
       ],
     );
   }
