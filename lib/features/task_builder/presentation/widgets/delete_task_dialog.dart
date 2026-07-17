@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 class DeleteTaskDialog extends StatelessWidget {
   const DeleteTaskDialog({super.key, required this.taskTitle});
@@ -7,17 +7,18 @@ class DeleteTaskDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return CupertinoAlertDialog(
       title: const Text('Aufgabe löschen?'),
       content: Text(
         '„$taskTitle“ wird dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.',
       ),
       actions: [
-        TextButton(
+        CupertinoDialogAction(
           onPressed: () => Navigator.of(context).pop(false),
           child: const Text('Abbrechen'),
         ),
-        FilledButton(
+        CupertinoDialogAction(
+          isDestructiveAction: true,
           onPressed: () => Navigator.of(context).pop(true),
           child: const Text('Löschen'),
         ),

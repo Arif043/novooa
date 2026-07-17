@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 class RenameTaskDialog extends StatefulWidget {
   const RenameTaskDialog({super.key, required this.initialTitle});
@@ -26,20 +26,25 @@ class _RenameTaskDialogState extends State<RenameTaskDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return CupertinoAlertDialog(
       title: const Text('Aufgabe umbenennen'),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        decoration: const InputDecoration(hintText: 'Name der Aufgabe'),
-        onSubmitted: (_) => _submit(context),
+      content: Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: CupertinoTextField(
+          controller: _controller,
+          autofocus: true,
+          placeholder: 'Name der Aufgabe',
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _submit(context),
+        ),
       ),
       actions: [
-        TextButton(
+        CupertinoDialogAction(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Abbrechen'),
         ),
-        FilledButton(
+        CupertinoDialogAction(
+          isDefaultAction: true,
           onPressed: () => _submit(context),
           child: const Text('Umbenennen'),
         ),
