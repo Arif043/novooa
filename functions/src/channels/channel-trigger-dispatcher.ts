@@ -26,8 +26,25 @@ export async function dispatchChannelMessageTriggers(input: {
     .collection("taskTriggers")
     .where("enabled", "==", true)
     .get();
+  logInfo("channel_message.dispatch_started", {
+    teamId: input.teamId,
+    channelId: input.channelId,
+    eventType: input.event.type,
+    triggerCount: triggers.size,
+  });
   for (const trigger of triggers.docs) {
-    if (isMatchingMessageTrigger(trigger, input)) {
+    const decision = matchDecision(trigger, input);
+    logInfo("channel_message.trigger_checked", {
+      teamId: input.teamId,
+      triggerId: trigger.id,
+      matched: decision.matched,
+      reason: decision.reason,
+      triggerType: trigger.get("type"),
+      source: trigger.get("eventConfig.source"),
+      channelId: trigger.get("eventConfig.channelId") ?? null,
+      filterLength: String(trigger.get("eventConfig.filter") ?? "").trim().length,
+    });
+    if (decision.matched) {
       await enqueueTriggerRun(input.teamId, trigger, input);
     }
   }
@@ -67,17 +84,20 @@ async function enqueueTriggerRun(
   }
 }
 
-function isMatchingMessageTrigger(
+function matchDecision(
   trigger: QueryDocumentSnapshot<DocumentData>,
   input: {
     channelId: string;
     event: ChannelMessageEvent;
   },
-): boolean {
-  return trigger.get("type") === "event" &&
-    trigger.get("eventConfig.source") === input.event.type &&
-    matchesChannel(trigger, input.channelId) &&
-    matchesFilter(trigger, input.event);
+): {matched: boolean; reason: string} {
+  if (trigger.get("type") !== "event") return noMatch("not_event_trigger");
+  if (trigger.get("eventConfig.source") !== input.event.type) {
+    return noMatch("event_type_mismatch");
+  }
+  if (!matchesChannel(trigger, input.channelId)) return noMatch("channel_mismatch");
+  if (!matchesFilter(trigger, input.event)) return noMatch("filter_mismatch");
+  return {matched: true, reason: "matched"};
 }
 
 function matchesChannel(
@@ -136,6 +156,10 @@ function searchableTextFrom(event: ChannelMessageEvent): string {
 function eventLabel(event: ChannelMessageEvent): string {
   if (event.type === "smsMessageReceived") return "SMS";
   return "WhatsApp-Nachricht";
+}
+
+function noMatch(reason: string): {matched: false; reason: string} {
+  return {matched: false, reason};
 }
 
 if (getApps().length === 0) initializeApp();

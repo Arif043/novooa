@@ -3,6 +3,13 @@ import {
   stringOutput,
   type NodeExecutor,
 } from "../task-runner/node-executor.js";
+import {
+  errorDetails,
+  logError,
+  logInfo,
+  nodeSummary,
+  textSummary,
+} from "../task-runner/structured-logger.js";
 import {sendTeamChannelMessage} from "../channels/team-channel-message-sender.js";
 import {sendTeamEmailMessage} from "../channels/team-email-message-sender.js";
 import {
@@ -25,9 +32,16 @@ export const sendChannelMessageNodeExecutor: NodeExecutor = {
     const body = runContext.resolveTemplates(config.message).trim();
     if (!recipient) throw new Error(`${labelFor(config.kind)} senden: Empfänger fehlt.`);
     if (!body) throw new Error(`${labelFor(config.kind)} senden: Nachricht fehlt.`);
-    const sent = config.kind === "email"
-      ? await sendEmail(runContext.teamId, recipient, body)
-      : await sendMessage(runContext.teamId, config.kind, recipient, body);
+    logSendStarted(runContext.teamId, input.node, config.kind, recipient, body);
+    const sent = await sendForKind(runContext.teamId, config.kind, recipient, body);
+    logInfo("send_channel_node.sent", {
+      teamId: runContext.teamId,
+      ...nodeSummary(input.node),
+      kind: config.kind,
+      channelId: sent.channelId,
+      outboundId: sent.outboundId,
+      providerMessageId: sent.providerMessageId,
+    });
     return executedNode(input.node, {
       text: stringOutput(body),
       recipient: stringOutput(recipient),
@@ -60,6 +74,26 @@ async function sendEmail(teamId: string, recipient: string, body: string) {
   });
 }
 
+async function sendForKind(
+  teamId: string,
+  kind: SendKind,
+  recipient: string,
+  body: string,
+) {
+  try {
+    return kind === "email"
+      ? await sendEmail(teamId, recipient, body)
+      : await sendMessage(teamId, kind, recipient, body);
+  } catch (error) {
+    logError("send_channel_node.failed", {
+      teamId,
+      kind,
+      error: errorDetails(error),
+    });
+    throw error;
+  }
+}
+
 async function sendMessage(
   teamId: string,
   kind: Exclude<SendKind, "email">,
@@ -73,6 +107,22 @@ async function sendMessage(
     body,
     parentAccountSid: requiredSecret(twilioAccountSid),
     authToken: requiredSecret(twilioAuthToken),
+  });
+}
+
+function logSendStarted(
+  teamId: string,
+  node: Parameters<typeof nodeSummary>[0],
+  kind: SendKind,
+  recipient: string,
+  body: string,
+): void {
+  logInfo("send_channel_node.started", {
+    teamId,
+    ...nodeSummary(node),
+    kind,
+    recipientLength: recipient.length,
+    ...textSummary(body, "message"),
   });
 }
 

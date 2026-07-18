@@ -1,6 +1,7 @@
 import {getFirestore} from "firebase-admin/firestore";
 import {HttpsError} from "firebase-functions/v2/https";
 import {initializeAdminApp} from "../team-context.js";
+import {logError, logInfo} from "../task-runner/structured-logger.js";
 import {
   addConversationWrites,
   failedDocument,
@@ -56,11 +57,21 @@ export async function loadSendableChannelByKind(
     .doc(teamId)
     .collection("communicationChannels")
     .get();
+  logInfo("send_channel_store.channels_loaded", {
+    teamId,
+    requestedKind: kind,
+    channelCount: snapshot.size,
+  });
   const channel = snapshot.docs.find((document) => {
     const data = document.data();
     return data.kind === kind && isSendableTwilioChannel(data);
   });
   if (!channel) {
+    logError("send_channel_store.no_sendable_channel", {
+      teamId,
+      requestedKind: kind,
+      candidates: snapshot.docs.map(channelCandidate),
+    });
     throw new HttpsError("failed-precondition", "No sendable channel found.");
   }
   const data = channel.data();
@@ -143,6 +154,21 @@ function isSendableTwilioChannel(data: Record<string, unknown>): boolean {
     capabilities.outbound === true &&
     (data.kind === "sms" || data.kind === "whatsapp")
   );
+}
+
+function channelCandidate(document: {
+  id: string;
+  data(): Record<string, unknown>;
+}) {
+  const data = document.data();
+  const capabilities = isRecord(data.capabilities) ? data.capabilities : {};
+  return {
+    id: document.id,
+    kind: data.kind,
+    provider: data.provider,
+    status: data.status,
+    outbound: capabilities.outbound,
+  };
 }
 
 function channelKindFrom(value: unknown): "whatsapp" | "sms" | "email" {

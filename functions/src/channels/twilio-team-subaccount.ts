@@ -2,6 +2,7 @@ import {FieldValue, getFirestore} from "firebase-admin/firestore";
 import {HttpsError} from "firebase-functions/v2/https";
 import twilio from "twilio";
 import {initializeAdminApp} from "../team-context.js";
+import {logInfo} from "../task-runner/structured-logger.js";
 
 export async function ensureTeamTwilioSubaccount(input: {
   teamId: string;
@@ -11,10 +12,21 @@ export async function ensureTeamTwilioSubaccount(input: {
   initializeAdminApp();
   const team = await teamReference(input.teamId).get();
   const existingSid = subaccountSidFrom(team.data());
-  if (existingSid) return existingSid;
+  if (existingSid) {
+    logInfo("twilio_subaccount.reused", {
+      teamId: input.teamId,
+      subaccountSid: existingSid,
+    });
+    return existingSid;
+  }
+  logInfo("twilio_subaccount.create_started", {teamId: input.teamId});
   const createdSid = await createSubaccount(input);
   await teamReference(input.teamId).set(subaccountDocument(createdSid), {
     merge: true,
+  });
+  logInfo("twilio_subaccount.created", {
+    teamId: input.teamId,
+    subaccountSid: createdSid,
   });
   return createdSid;
 }
