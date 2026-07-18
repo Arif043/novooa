@@ -26,10 +26,10 @@ export async function prepareKnowledgeFiles(
   await mkdir(directory, {recursive: true});
   const resolver = new KnowledgeNoteResolver(teamId);
   const notes = await resolver.resolveAll(attachments);
-  await writeKnowledgeManifest(directory, notes);
-  return Promise.all(
-    notes.map((note, index) => writeNote(directory, note, index)),
-  );
+  const preparedNotes = notes.map(preparedNote);
+  await writeKnowledgeManifest(directory, preparedNotes);
+  await Promise.all(preparedNotes.map((note) => writeNote(directory, note)));
+  return preparedNotes;
 }
 
 class KnowledgeNoteResolver {
@@ -103,28 +103,37 @@ function noteFromData(
 
 async function writeNote(
   directory: string,
-  note: KnowledgeNoteDocument,
-  index: number,
+  note: PreparedKnowledgeAttachment & {content: string},
 ): Promise<PreparedKnowledgeAttachment> {
-  const filename = `knowledge/${safeFilename(note.path || note.title, index)}`;
-  await writeFile(path.join(directory, path.basename(filename)), note.content);
-  return {...note, filename};
+  await writeFile(path.join(directory, path.basename(note.filename)), note.content);
+  return note;
 }
 
 async function writeKnowledgeManifest(
   directory: string,
-  notes: KnowledgeNoteDocument[],
+  notes: PreparedKnowledgeAttachment[],
 ): Promise<void> {
   const manifest = notes.map((note) => ({
     noteId: note.noteId,
     title: note.title,
     type: note.type,
-    path: note.path,
+    path: note.filename,
+    originalPath: note.path,
   }));
   await writeFile(
     path.join(directory, "manifest.json"),
     JSON.stringify(manifest, null, 2),
   );
+}
+
+function preparedNote(
+  note: KnowledgeNoteDocument,
+  index: number,
+): PreparedKnowledgeAttachment & {content: string} {
+  return {
+    ...note,
+    filename: `knowledge/${safeFilename(note.path || note.title, index)}`,
+  };
 }
 
 function safeFilename(displayName: string, index: number): string {

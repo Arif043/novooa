@@ -34,6 +34,7 @@ export function attachmentInstructions(
     parts.push([
       "Verfügbare Wissensnotizen:",
       notes,
+      "Nutze exakt diese Dateipfade beim Lesen von Wissensnotizen.",
       "MOC-Notizen wurden inklusive verlinkter Notizen bereitgestellt.",
       "Eine Übersicht liegt unter knowledge/manifest.json.",
     ].join("\n"));
