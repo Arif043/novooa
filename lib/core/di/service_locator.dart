@@ -3,6 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:syscat2/features/assistant/domain/entities/assistant_context.dart';
+import 'package:syscat2/features/assistant/domain/repositories/assistant_repository.dart';
+import 'package:syscat2/features/assistant/domain/usecases/ask_assistant.dart';
+import 'package:syscat2/features/assistant/infrastructure/datasources/firebase_ai_assistant_datasource.dart';
+import 'package:syscat2/features/assistant/infrastructure/repositories/firebase_ai_assistant_repository.dart';
+import 'package:syscat2/features/assistant/presentation/cubits/assistant_cubit.dart';
 import 'package:syscat2/features/communication/domain/repositories/communication_channel_repository.dart';
 import 'package:syscat2/features/communication/domain/usecases/create_communication_channel.dart';
 import 'package:syscat2/features/communication/domain/usecases/delete_communication_channel.dart';
@@ -116,6 +122,12 @@ void configureDependencies() {
     ..registerLazySingleton<KnowledgeBaseRepository>(
       () =>
           FirestoreKnowledgeBaseRepository(serviceLocator<FirebaseFirestore>()),
+    )
+    ..registerLazySingleton(FirebaseAiAssistantDatasource.new)
+    ..registerLazySingleton<AssistantRepository>(
+      () => FirebaseAiAssistantRepository(
+        serviceLocator<FirebaseAiAssistantDatasource>(),
+      ),
     )
     ..registerLazySingleton<TaskRepository>(
       () => FirebaseTaskRepository(
@@ -321,6 +333,9 @@ void configureDependencies() {
       dispose: (bootstrapper) => bootstrapper.dispose(),
     )
     ..registerLazySingleton(() => ExecuteTask(serviceLocator<TaskRepository>()))
+    ..registerLazySingleton(
+      () => AskAssistant(serviceLocator<AssistantRepository>()),
+    )
     ..registerFactory(
       () => AuthCubit(
         signUp: serviceLocator<SignUpWithEmailAndPassword>(),
@@ -335,6 +350,15 @@ void configureDependencies() {
         ensureUserProfile: serviceLocator<EnsureUserProfile>(),
         getAiModelSettings: serviceLocator<GetAiModelSettings>(),
         saveAiProviderSettings: serviceLocator<SaveAiProviderSettings>(),
+      ),
+    )
+    ..registerFactory(
+      () => AssistantCubit(
+        askAssistant: serviceLocator<AskAssistant>(),
+        context: const AssistantContext(
+          area: AssistantArea.general,
+          route: '/',
+        ),
       ),
     )
     ..registerFactory(

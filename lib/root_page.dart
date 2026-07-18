@@ -9,6 +9,8 @@ import 'core/widgets/root_shell_scope.dart';
 import 'core/widgets/root_side_menu.dart';
 import 'core/widgets/root_stage.dart';
 import 'core/widgets/syscat_background.dart';
+import 'features/assistant/domain/entities/assistant_context.dart';
+import 'features/assistant/presentation/widgets/assistant_bell_button.dart';
 import 'features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import 'features/notifications/presentation/widgets/notification_bell_button.dart';
 
@@ -95,7 +97,12 @@ class _RootPageState extends State<RootPage> {
                 appBar: RootAppBar(
                   title: _titleFor(selectedTab),
                   onMenuPressed: _sideMenuController.openLeftMenu,
-                  actions: const [NotificationBellButton()],
+                  actions: [
+                    AssistantBellButton(
+                      contextInfo: _assistantContextFor(selectedTab),
+                    ),
+                    const NotificationBellButton(),
+                  ],
                 ),
                 body: RootStage(child: widget.child),
               ),
@@ -108,6 +115,15 @@ class _RootPageState extends State<RootPage> {
 
   Widget _titleFor(RootTab selectedTab) {
     return _shellController.title ?? Text(selectedTab.title);
+  }
+
+  AssistantContext _assistantContextFor(RootTab selectedTab) {
+    final area = switch (selectedTab.path) {
+      '/tasks' => AssistantArea.taskBuilder,
+      '/knowledge-base' => AssistantArea.knowledgeBase,
+      _ => AssistantArea.general,
+    };
+    return AssistantContext(area: area, route: widget.location);
   }
 
   double _menuWidthOfScreen(BuildContext context) {

@@ -51,6 +51,7 @@ dependencies:
   firebase_messaging:
   file_picker: ^11.0.2
   cupertino_sidemenu: ^0.0.3
+  firebase_ai: ^3.14.1
 
 dev_dependencies:
   flutter_test:

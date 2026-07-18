@@ -128,6 +128,7 @@ npm run deploy         # firebase deploy --only functions
 | Feature „Aktivitäten" | [`docs/features/aktivitaeten.md`](./docs/features/aktivitaeten.md) | Stub: Runs, Traces, Freigaben                           |
 | Feature „Dateien"     | [`docs/features/dateien.md`](./docs/features/dateien.md)           | Dateiablage, Storage, Versionierung                     |
 | Feature „Wissensbasis" | [`docs/features/wissensbasis.md`](./docs/features/wissensbasis.md) | Markdown-Zettelkasten für Node-Anhänge                  |
+| Feature „KI-Agent"    | [`docs/features/ki-agent.md`](./docs/features/ki-agent.md)         | In-App Assistenz für Aufgabenbau und Wissensbasis       |
 
 Wie du eine neue Feature-Doc anlegst → [`docs/README.md`](./docs/README.md).
 
