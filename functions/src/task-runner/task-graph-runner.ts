@@ -1,4 +1,4 @@
-import { type Genkit } from "genkit";
+import { type GenkitBeta } from "genkit/beta";
 import {executorFor} from "./node-executor-registry.js";
 import {prepareNodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 import {
@@ -42,7 +42,7 @@ import {
 } from "./variable-template.js";
 
 export async function executeTaskGraph(
-  ai: Genkit,
+  ai: GenkitBeta,
   input: TaskGraphInput,
 ): Promise<TaskGraphOutput> {
   logReadableInfo(formatTaskStarted(input.taskDefinition, input.context));
@@ -66,7 +66,7 @@ export async function executeTaskGraph(
 }
 
 export async function resumeTaskGraph(
-  ai: Genkit,
+  ai: GenkitBeta,
   input: TaskGraphInput,
   resumeState: TaskResumeState,
   approvedOutput: string,
@@ -83,7 +83,7 @@ export async function resumeTaskGraph(
 }
 
 async function runNodes(
-  ai: Genkit,
+  ai: GenkitBeta,
   input: TaskGraphInput,
   initialState?: InitialNodeRunState,
 ): Promise<NodeRunState> {
@@ -240,7 +240,7 @@ type NodeRunInput = {
 };
 
 async function runNodeWithTrail(
-  ai: Genkit,
+  ai: GenkitBeta,
   input: NodeRunInput,
 ): Promise<NodeExecutionResult> {
   try {
@@ -315,7 +315,7 @@ function logSkippedBranches(
   ].join("\n"));
 }
 
-function runSubgraphFor(ai: Genkit, variables: TaskVariables, teamId: string) {
+function runSubgraphFor(ai: GenkitBeta, variables: TaskVariables, teamId: string) {
   return async (task: Task, context: string) => {
     const state = await runNodes(ai, {
       taskDefinition: task,
@@ -333,7 +333,7 @@ function runSubgraphFor(ai: Genkit, variables: TaskVariables, teamId: string) {
 }
 
 async function executeNode(
-  ai: Genkit,
+  ai: GenkitBeta,
   input: NodeRunInput,
 ): Promise<NodeExecutionResult> {
   const executor = executorFor(input.node.primitive);
@@ -355,7 +355,7 @@ async function executeNode(
 }
 
 function runContextFor(
-  ai: Genkit,
+  ai: GenkitBeta,
   input: TaskGraphInput,
   results: Map<string, NodeExecutionResult>,
   variables: TaskVariables,

@@ -1,4 +1,5 @@
-import { z, type Genkit } from "genkit";
+import { z } from "genkit";
+import { type GenkitBeta } from "genkit/beta";
 import {modelLogContext, textModel} from "../task-runner/ai-models.js";
 import {
   type NodeExecutor,
@@ -8,6 +9,7 @@ import {
   textOutputs,
 } from "../task-runner/node-executor.js";
 import {
+  type EmployeeAttachment,
   type NodeOutputValue,
   type WorkflowNode,
 } from "../task-runner/task-definition.js";
@@ -25,6 +27,7 @@ import {
   employeeFor,
   renderEmployeePrompt,
 } from "../task-runner/employee-context.js";
+import {runEmployeeAgentTurn} from "../task-runner/employee-agent.js";
 export type PromptNodeOutputType = "text" | "decision" | "structured";
 
 type StructuredOutputField = {
@@ -38,7 +41,7 @@ export type PromptNodeInput = {
   outputType: PromptNodeOutputType;
   choices: string[];
   structuredFields: StructuredOutputField[];
-  employeeRole?: string;
+  employee?: EmployeeAttachment;
 };
 
 export type PromptNodeOutput = {
@@ -59,7 +62,7 @@ export const promptNodeExecutor: NodeExecutor = {
 };
 
 export async function executePromptNode(
-  ai: Genkit,
+  ai: GenkitBeta,
   input: PromptNodeInput,
   attachmentWorkspace?: NodeAttachmentWorkspace,
 ): Promise<PromptNodeOutput> {
@@ -69,30 +72,48 @@ export async function executePromptNode(
   if (input.outputType === "structured") {
     return executeStructuredPrompt(ai, input, attachmentWorkspace);
   }
+  return executeTextPrompt(ai, input, attachmentWorkspace);
+}
 
+async function executeTextPrompt(
+  ai: GenkitBeta,
+  input: PromptNodeInput,
+  attachmentWorkspace?: NodeAttachmentWorkspace,
+): Promise<PromptNodeOutput> {
   const prompt = promptTurn(input, attachmentWorkspace);
   const startedAt = Date.now();
+  const label = input.employee
+    ? `Prompt / Text (Mitarbeiter: ${input.employee.name})`
+    : "Prompt / Text";
   logReadableInfo(formatModelCallStarted({
-    label: "Prompt / Text",
+    label,
     model: modelLogContext(),
     prompt,
   }));
-  const response = await ai.generate({
-    model: textModel(),
-    prompt,
-    system: input.employeeRole,
-    use: aiTurnMiddleware(attachmentWorkspace),
-  });
+
+  const text = input.employee
+    ? (await runEmployeeAgentTurn(ai, {
+      employee: input.employee,
+      model: textModel(),
+      prompt,
+      use: aiTurnMiddleware(attachmentWorkspace),
+    })).text
+    : (await ai.generate({
+      model: textModel(),
+      prompt,
+      use: aiTurnMiddleware(attachmentWorkspace),
+    })).text;
+
   logReadableInfo(formatModelCallFinished({
-    label: "Prompt / Text",
+    label,
     durationMs: Date.now() - startedAt,
-    text: response.text,
+    text,
   }));
-  return {answer: response.text, outputs: textOutputs(response.text)};
+  return {answer: text, outputs: textOutputs(text)};
 }
 
 async function executeDecisionPrompt(
-  ai: Genkit,
+  ai: GenkitBeta,
   input: PromptNodeInput,
   attachmentWorkspace?: NodeAttachmentWorkspace,
 ): Promise<PromptNodeOutput> {
@@ -103,22 +124,56 @@ async function executeDecisionPrompt(
   const schema = z.object({
     answer: z.enum(input.choices as [string, ...string[]]),
   });
-  const decision = await generateDecision(
-    ai,
+  const label = input.employee
+    ? `Prompt / Entscheidung (Mitarbeiter: ${input.employee.name})`
+    : "Prompt / Entscheidung";
+  const startedAt = Date.now();
+  logReadableInfo(formatModelCallStarted({
+    label,
+    model: modelLogContext(),
     prompt,
-    schema,
-    attachmentWorkspace,
-    input.employeeRole,
-  );
-  const answer = decision.output?.answer;
+    outputSchema: "answer: enum",
+  }));
+
+  let answer: string | undefined;
+  let logText = "";
+  let logOutput: unknown;
+  if (input.employee) {
+    const response = await runEmployeeAgentTurn(ai, {
+      employee: input.employee,
+      model: textModel(),
+      prompt,
+      use: aiTurnMiddleware(attachmentWorkspace),
+      output: {schema},
+    });
+    answer = response.data?.answer;
+    logText = response.text;
+    logOutput = response.data;
+  } else {
+    const response = await ai.generate({
+      model: textModel(),
+      prompt,
+      output: {schema},
+      use: aiTurnMiddleware(attachmentWorkspace),
+    });
+    answer = response.output?.answer;
+    logText = response.text;
+    logOutput = response.output;
+  }
+  logReadableInfo(formatModelCallFinished({
+    label,
+    durationMs: Date.now() - startedAt,
+    text: logText,
+    output: logOutput,
+  }));
   if (answer === undefined) {
-    throw new Error(`Decision prompt returned no structured answer: ${decision.text}`);
+    throw new Error(`Decision prompt returned no structured answer: ${logText}`);
   }
   return {answer, outputs: textOutputs(answer)};
 }
 
 async function executeStructuredPrompt(
-  ai: Genkit,
+  ai: GenkitBeta,
   input: PromptNodeInput,
   attachmentWorkspace?: NodeAttachmentWorkspace,
 ): Promise<PromptNodeOutput> {
@@ -128,80 +183,50 @@ async function executeStructuredPrompt(
   }
   const prompt = promptTurn(input, attachmentWorkspace);
   const schema = structuredSchemaFor(fields);
-  const response = await generateStructured(
-    ai,
-    prompt,
-    schema,
-    fields,
-    attachmentWorkspace,
-    input.employeeRole,
-  );
-  if (response.output === undefined || response.output === null) {
-    throw new Error(`Prompt lieferte keine strukturierte Ausgabe: ${response.text}`);
-  }
-  const answer = JSON.stringify(response.output);
-  return {answer, outputs: {...textOutputs(answer), ...outputsFor(response.output)}};
-}
-
-async function generateDecision(
-  ai: Genkit,
-  prompt: string,
-  schema: z.ZodObject<{answer: z.ZodEnum<[string, ...string[]]>}>,
-  attachmentWorkspace?: NodeAttachmentWorkspace,
-  employeeRole?: string,
-) {
+  const label = input.employee
+    ? `Prompt / Strukturierte Ausgabe (Mitarbeiter: ${input.employee.name})`
+    : "Prompt / Strukturierte Ausgabe";
   const startedAt = Date.now();
   logReadableInfo(formatModelCallStarted({
-    label: "Prompt / Entscheidung",
-    model: modelLogContext(),
-    prompt,
-    outputSchema: "answer: enum",
-  }));
-  const response = await ai.generate({
-    model: textModel(),
-    prompt,
-    system: employeeRole,
-    output: {schema},
-    use: aiTurnMiddleware(attachmentWorkspace),
-  });
-  logReadableInfo(formatModelCallFinished({
-    label: "Prompt / Entscheidung",
-    durationMs: Date.now() - startedAt,
-    text: response.text,
-    output: response.output,
-  }));
-  return response;
-}
-
-async function generateStructured(
-  ai: Genkit,
-  prompt: string,
-  schema: z.ZodObject<Record<string, z.ZodString>>,
-  fields: StructuredOutputField[],
-  attachmentWorkspace?: NodeAttachmentWorkspace,
-  employeeRole?: string,
-) {
-  const startedAt = Date.now();
-  logReadableInfo(formatModelCallStarted({
-    label: "Prompt / Strukturierte Ausgabe",
+    label,
     model: modelLogContext(),
     prompt,
     outputSchema: fields.map((field) => field.name).join(", "),
   }));
-  const response = await ai.generate({
-    model: textModel(),
-    prompt,
-    system: employeeRole,
-    output: {schema},
-    use: aiTurnMiddleware(attachmentWorkspace),
-  });
+
+  let output: Record<string, string> | undefined | null;
+  let logText = "";
+  if (input.employee) {
+    const response = await runEmployeeAgentTurn(ai, {
+      employee: input.employee,
+      model: textModel(),
+      prompt,
+      use: aiTurnMiddleware(attachmentWorkspace),
+      output: {schema},
+    });
+    output = response.data ?? undefined;
+    logText = response.text;
+  } else {
+    const response = await ai.generate({
+      model: textModel(),
+      prompt,
+      output: {schema},
+      use: aiTurnMiddleware(attachmentWorkspace),
+    });
+    output = response.output ?? undefined;
+    logText = response.text;
+  }
   logReadableInfo(formatModelCallFinished({
-    label: "Prompt / Strukturierte Ausgabe",
+    label,
     durationMs: Date.now() - startedAt,
-    text: response.text,
-    output: response.output,
+    text: logText,
+    output,
   }));
-  return response;
+  if (output === undefined || output === null) {
+    throw new Error(`Prompt lieferte keine strukturierte Ausgabe: ${logText}`);
+  }
+  const answer = JSON.stringify(output);
+  return {answer, outputs: {...textOutputs(answer), ...outputsFor(output)}};
 }
 
 function promptTurn(
@@ -238,7 +263,7 @@ function promptInputFor(
     outputType: config?.outputType ?? "text",
     choices: choicesFor(node).map(resolveTemplates),
     structuredFields: structuredFieldsFor(node),
-    employeeRole: employee?.role?.trim() ? employee.role : undefined,
+    employee,
   };
 }
 

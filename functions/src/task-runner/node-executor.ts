@@ -1,4 +1,4 @@
-import {type Genkit} from "genkit";
+import {type GenkitBeta} from "genkit/beta";
 import {
   type NodeExecutionResult,
   type NodeOutputValue,
@@ -25,7 +25,7 @@ export type TaskRunContext = {
 };
 
 export type NodeExecutorInput = {
-  ai: Genkit;
+  ai: GenkitBeta;
   node: WorkflowNode;
   context: string;
   attachmentWorkspace?: NodeAttachmentWorkspace;

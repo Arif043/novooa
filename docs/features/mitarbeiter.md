@@ -81,15 +81,33 @@ node-spezifische Skills gewinnen. Der gemergte Satz wandert durch den
 bestehenden Skill-Workspace nach `<workspace>/skills/…/SKILL.md` und wird
 automatisch von der `skills`-Middleware angeboten.
 
-Zusätzlich setzt der Executor `system = employee.role` beim
-`ai.generate(…)`-Aufruf und rendert die Prompt-Vorlage: enthält sie
-`{{instruction}}`, wird die Baustein-Anweisung dort eingesetzt; sonst wird
-sie an die Vorlage angehängt.
+Wenn ein Mitarbeiter am Baustein hängt, verwendet der Executor die
+Genkit-Agent-API (Beta) statt `ai.generate(…)`:
 
-Konzeptionell entspricht das dem Muster
-`ai.definePrompt({ name, system, prompt, use }).execute(...)`. Wir bleiben
-bei `ai.generate(…)`, um Registry-Kollisionen bei parallelen Runs zu
-vermeiden — die Semantik ist identisch.
+1. [`employee-agent.ts`](../../functions/src/task-runner/employee-agent.ts)
+   ruft `ai.defineAgent({ name, description, system, model, output?, use })`
+   auf. `system` ist die Mitarbeiter-Rolle, `use` reicht die Retry-,
+   Filesystem- und Skill-Middleware durch, `output` trägt bei Decision-
+   und Structured-Prompts das passende Zod-Schema.
+2. Der Agent-Registry-Name wird pro Aufruf mit einer UUID eindeutig
+   gemacht (`employee-<slug>-<uuid>`), damit dieselbe Function-Instanz
+   parallele Turns ohne Namenskonflikt verarbeiten kann.
+3. Der Turn läuft über `agent.chat().send(prompt)`. Für Text nutzt der
+   Executor `response.text`; bei Decision und Structured wird das
+   strukturierte Ergebnis über `response.data` gelesen.
+
+Die Prompt-Vorlage wird davor gerendert: enthält sie `{{instruction}}`,
+wird die Baustein-Anweisung dort eingesetzt; sonst wird sie an die Vorlage
+angehängt.
+
+Ohne zugewiesenen Mitarbeiter bleibt der Executor beim bewährten
+`ai.generate(…)`-Pfad. So ist die Agent-API nur dort im Spiel, wo der
+User eine Delegation an einen Subagent tatsächlich beabsichtigt hat.
+
+Da die Agent-API als Beta ausgewiesen ist, wird `ai` in
+[`task-workflows.ts`](../../functions/src/task-workflows.ts) über
+`genkit/beta` initialisiert und in den Task-Runner als `GenkitBeta`
+weitergereicht.
 
 ## UI
 
@@ -120,8 +138,8 @@ erzwungen.
       gespeichert.
 - [ ] Zugewiesener Mitarbeiter erscheint im NodeInspector des Prompt- und
       Iterative-Verfeinerungs-Bausteins.
-- [ ] Backend setzt die Rolle als `system`-Prompt und rendert die
-      Vorlage mit `{{instruction}}`.
+- [ ] Backend nutzt `ai.defineAgent` + `chat().send`, wenn ein Mitarbeiter
+      am Baustein hängt; sonst weiterhin `ai.generate`.
 - [ ] Backend merget Node- und Default-Skills und rollt sie über die
       Genkit-Skill-Middleware aus.
 - [ ] `flutter analyze` und `npm --prefix functions run build` sind sauber.

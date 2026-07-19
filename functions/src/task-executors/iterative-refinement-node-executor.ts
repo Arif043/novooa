@@ -1,4 +1,4 @@
-import {type Genkit} from "genkit";
+import {type GenkitBeta} from "genkit/beta";
 import {modelLogContext, reasoningModel} from "../task-runner/ai-models.js";
 import {
   type NodeExecutor,
@@ -6,6 +6,7 @@ import {
   parentOutputFor,
   textOutputs,
 } from "../task-runner/node-executor.js";
+import {type EmployeeAttachment} from "../task-runner/task-definition.js";
 import {refinementConfigFor} from "./iterative-refinement-config.js";
 import {
   type Evaluation,
@@ -34,6 +35,7 @@ import {
 import {aiTurnMiddleware} from "../task-runner/node-attachment-genkit.js";
 import {type NodeAttachmentWorkspace} from "../task-runner/node-attachment-workspace.js";
 import {employeeFor} from "../task-runner/employee-context.js";
+import {runEmployeeAgentTurn} from "../task-runner/employee-agent.js";
 
 export type IterativeRefinementNodeInput = {
   objective: string;
@@ -41,7 +43,7 @@ export type IterativeRefinementNodeInput = {
   optimizerPrompt: string;
   critiquePrompt: string;
   maxIterations: number;
-  employeeRole?: string;
+  employee?: EmployeeAttachment;
 };
 
 export type IterativeRefinementNodeOutput = {
@@ -72,7 +74,7 @@ export const iterativeRefinementNodeExecutor: NodeExecutor = {
           input.node.description ||
           input.node.title),
         maxIterations: config?.maxIterations ?? 2,
-        employeeRole: employee?.role?.trim() ? employee.role : undefined,
+        employee,
       },
       input.attachmentWorkspace,
     );
@@ -81,7 +83,7 @@ export const iterativeRefinementNodeExecutor: NodeExecutor = {
 };
 
 export async function executeIterativeRefinementNode(
-  ai: Genkit,
+  ai: GenkitBeta,
   input: IterativeRefinementNodeInput,
   attachmentWorkspace?: NodeAttachmentWorkspace,
 ): Promise<IterativeRefinementNodeOutput> {
@@ -116,7 +118,7 @@ export async function executeIterativeRefinementNode(
 }
 
 async function evaluateDraft(
-  ai: Genkit,
+  ai: GenkitBeta,
   input: IterativeRefinementNodeInput,
   draft: string,
   iteration: number,
@@ -154,7 +156,7 @@ async function evaluateDraft(
 }
 
 async function structuredEvaluation(
-  ai: Genkit,
+  ai: GenkitBeta,
   input: IterativeRefinementNodeInput,
   draft: string,
   iteration: number,
@@ -162,31 +164,50 @@ async function structuredEvaluation(
 ): Promise<Evaluation> {
   const prompt = evaluationPrompt(input, draft);
   const startedAt = Date.now();
+  const label = input.employee
+    ? `Iterative Verfeinerung / Bewertung ${iteration} (Mitarbeiter: ${input.employee.name})`
+    : `Iterative Verfeinerung / Bewertung ${iteration}`;
   logReadableInfo(formatModelCallStarted({
-    label: `Iterative Verfeinerung / Bewertung ${iteration}`,
+    label,
     model: modelLogContext(),
     prompt,
     outputSchema: "critique: string, satisfied: boolean",
   }));
-  const response = await ai.generate({
-    model: reasoningModel(),
-    prompt,
-    output: {schema: evaluationSchema},
-    system: input.employeeRole,
-    use: aiTurnMiddleware(attachmentWorkspace),
-  });
+
+  let output: Evaluation | undefined | null;
+  let logText = "";
+  if (input.employee) {
+    const response = await runEmployeeAgentTurn(ai, {
+      employee: input.employee,
+      model: reasoningModel(),
+      prompt,
+      output: {schema: evaluationSchema},
+      use: aiTurnMiddleware(attachmentWorkspace),
+    });
+    output = response.data ?? undefined;
+    logText = response.text;
+  } else {
+    const response = await ai.generate({
+      model: reasoningModel(),
+      prompt,
+      output: {schema: evaluationSchema},
+      use: aiTurnMiddleware(attachmentWorkspace),
+    });
+    output = response.output ?? undefined;
+    logText = response.text;
+  }
   logReadableInfo(formatModelCallFinished({
-    label: `Iterative Verfeinerung / Bewertung ${iteration}`,
+    label,
     durationMs: Date.now() - startedAt,
-    text: response.text,
-    output: response.output,
+    text: logText,
+    output,
   }));
-  if (!response.output) throw new Error("Evaluation returned no output.");
-  return response.output;
+  if (!output) throw new Error("Evaluation returned no output.");
+  return output;
 }
 
 async function textEvaluationFallback(
-  ai: Genkit,
+  ai: GenkitBeta,
   input: IterativeRefinementNodeInput,
   draft: string,
   iteration: number,
@@ -194,27 +215,38 @@ async function textEvaluationFallback(
 ): Promise<Evaluation> {
   const prompt = `${evaluationPrompt(input, draft)}\n\nAntwort als JSON.`;
   const startedAt = Date.now();
+  const label = input.employee
+    ? `Iterative Verfeinerung / Bewertungs-Fallback ${iteration} (Mitarbeiter: ${input.employee.name})`
+    : `Iterative Verfeinerung / Bewertungs-Fallback ${iteration}`;
   logReadableInfo(formatModelCallStarted({
-    label: `Iterative Verfeinerung / Bewertungs-Fallback ${iteration}`,
+    label,
     model: modelLogContext(),
     prompt,
   }));
-  const response = await ai.generate({
-    model: reasoningModel(),
-    prompt,
-    system: input.employeeRole,
-    use: aiTurnMiddleware(attachmentWorkspace),
-  });
+
+  const text = input.employee
+    ? (await runEmployeeAgentTurn(ai, {
+      employee: input.employee,
+      model: reasoningModel(),
+      prompt,
+      use: aiTurnMiddleware(attachmentWorkspace),
+    })).text
+    : (await ai.generate({
+      model: reasoningModel(),
+      prompt,
+      use: aiTurnMiddleware(attachmentWorkspace),
+    })).text;
+
   logReadableInfo(formatModelCallFinished({
-    label: `Iterative Verfeinerung / Bewertungs-Fallback ${iteration}`,
+    label,
     durationMs: Date.now() - startedAt,
-    text: response.text,
+    text,
   }));
-  return parseEvaluation(response.text);
+  return parseEvaluation(text);
 }
 
 async function improveDraft(
-  ai: Genkit,
+  ai: GenkitBeta,
   input: IterativeRefinementNodeInput,
   draft: string,
   critique: string,
@@ -222,24 +254,36 @@ async function improveDraft(
 ): Promise<string> {
   const prompt = improvementPrompt(input, draft, critique);
   const startedAt = Date.now();
+  const label = input.employee
+    ? `Iterative Verfeinerung / Optimierung (Mitarbeiter: ${input.employee.name})`
+    : "Iterative Verfeinerung / Optimierung";
   logReadableInfo(formatModelCallStarted({
-    label: "Iterative Verfeinerung / Optimierung",
+    label,
     model: modelLogContext(),
     prompt,
   }));
-  const response = await ai.generate({
-    model: reasoningModel(),
-    prompt,
-    config: {temperature: 0.4},
-    system: input.employeeRole,
-    use: aiTurnMiddleware(attachmentWorkspace),
-  });
+
+  const text = input.employee
+    ? (await runEmployeeAgentTurn(ai, {
+      employee: input.employee,
+      model: reasoningModel(),
+      prompt,
+      config: {temperature: 0.4},
+      use: aiTurnMiddleware(attachmentWorkspace),
+    })).text
+    : (await ai.generate({
+      model: reasoningModel(),
+      prompt,
+      config: {temperature: 0.4},
+      use: aiTurnMiddleware(attachmentWorkspace),
+    })).text;
+
   logReadableInfo(formatModelCallFinished({
-    label: "Iterative Verfeinerung / Optimierung",
+    label,
     durationMs: Date.now() - startedAt,
-    text: response.text,
+    text,
   }));
-  return response.text;
+  return text;
 }
 
 function boundedIterations(value: number): number {

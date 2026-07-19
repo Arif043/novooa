@@ -1,4 +1,4 @@
-import {genkit} from "genkit";
+import {genkit} from "genkit/beta";
 import {openAICompatible} from "@genkit-ai/compat-oai";
 import {isSignedIn, onCallGenkit} from "firebase-functions/v2/https";
 import {
