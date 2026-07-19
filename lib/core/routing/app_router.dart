@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_session_cubit.dart';
+import 'package:syscat2/features/auth/presentation/cubits/auth_session_state.dart';
 import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
 import 'package:syscat2/features/activity/presentation/pages/activity_page.dart';
 import 'package:syscat2/features/files/presentation/pages/files_page.dart';
@@ -101,8 +102,14 @@ class AppRouter {
   void dispose() => router.dispose();
 
   String? _redirect(BuildContext context, GoRouterState state) {
-    final isSignedIn = sessionCubit.state.isSignedIn;
+    final sessionState = sessionCubit.state;
     final isAuthRoute = state.matchedLocation == auth;
+    // Während der Firestore-Profil-Verify läuft, ist `currentUser` bewusst
+    // noch nicht sichtbar. Wir halten den Nutzer auf der aktuellen Route
+    // fest — wechselt der Verify auf Erfolg, feuert der Listener und wir
+    // routen dann zu `home`.
+    if (sessionState.status == AuthSessionStatus.verifying) return null;
+    final isSignedIn = sessionState.isSignedIn;
     if (!isSignedIn) return isAuthRoute ? null : auth;
     if (isAuthRoute) return home;
     return null;

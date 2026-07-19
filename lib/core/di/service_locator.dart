@@ -400,6 +400,7 @@ void configureDependencies() {
       () => AuthSessionCubit(
         authRepository: serviceLocator<AuthRepository>(),
         signOutUseCase: serviceLocator<SignOut>(),
+        getUserProfileUseCase: serviceLocator<GetUserProfile>(),
       ),
       dispose: (cubit) => cubit.close(),
     )
