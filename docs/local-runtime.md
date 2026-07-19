@@ -22,7 +22,7 @@ Ports
   TeamContextStore
   TeamFileStore
   KnowledgeBaseStore
-  TriggerStore
+  TaskTriggerStore
   ChannelProvider
 
 Cloud Adapter
@@ -30,12 +30,16 @@ Cloud Adapter
   FirestoreTaskRunStore
   FirestoreActivityStore
   FirestoreTeamFileStore
+  FirestoreKnowledgeBaseStore
+  FirestoreTaskTriggerStore
 
 Local Adapter
   SQLiteTaskStore
   SQLiteTaskRunStore
   SQLiteActivityStore
   LocalTeamFileStore
+  SQLiteKnowledgeBaseStore
+  SQLiteTaskTriggerStore
 ```
 
 ## Lokale Datenhaltung
@@ -44,7 +48,9 @@ SQLite ist der Default für strukturierte lokale Daten. Es braucht keinen Server
 ist transaktional und eignet sich für Aufgaben, Runs, Aktivitäten, Trigger,
 Teams, Kanäle und Wissensbasis-Metadaten.
 
-Geplante Tabellen:
+Die erste Migration liegt in
+[`local-runtime/migrations/001_initial.sql`](../local-runtime/migrations/001_initial.sql).
+Sie legt diese Tabellen an:
 
 ```text
 teams
@@ -108,14 +114,21 @@ zustellen.
 - `functions/src/task-runner/stores/task-run-store.ts` definiert `TaskRunStore`.
 - `functions/src/task-runner/stores/activity-store.ts` definiert `ActivityStore`.
 - `functions/src/task-runner/stores/team-file-store.ts` definiert `TeamFileStore`.
+- `functions/src/task-runner/stores/knowledge-base-store.ts` definiert `KnowledgeBaseStore`.
+- `functions/src/triggers/task-trigger-store.ts` definiert `TaskTriggerStore`.
 - `functions/src/team-context-store.ts` definiert `TeamContextStore`.
 - `functions/src/task-runner/task-run-worker.ts` führt Runs über Store-Ports aus.
+- Scheduler und Channel-Dispatcher arbeiten über `TaskTriggerStore`.
 - Firestore-Adapter implementieren aktuell die Cloud-Version.
+- Lokale SQL-Adapter sind für `TaskStore`, `TaskRunStore`, `ActivityStore`,
+  `TaskTriggerStore` und `KnowledgeBaseStore` vorbereitet. Sie hängen nur an
+  `LocalSqlDatabase`, noch nicht an einer konkreten SQLite-Library.
+- `LocalTeamFileStore` schreibt Dateien in ein lokales Root-Verzeichnis und
+  persistiert Datei-/Versions-Metadaten über `LocalSqlDatabase`.
 
 ## Nächste Schritte
 
-1. `KnowledgeBaseStore` und `TriggerStore` als Ports ergänzen.
-2. SQLite-Schema und Migrationen anlegen.
-3. Lokalen Worker-Prozess mit `TaskRunWorkerStores` starten.
-4. Lokalen HTTP-Endpunkt für Relay-Events implementieren.
-5. Cloud Relay für Twilio Webhooks und ausgehende Nachrichten trennen.
+1. Konkreten SQLite-Treiber und Migration-Runner für `LocalSqlDatabase` anbinden.
+2. Lokalen Worker-Prozess mit `TaskRunWorkerStores` starten.
+3. Lokalen HTTP-Endpunkt für Relay-Events implementieren.
+4. Cloud Relay für Twilio Webhooks und ausgehende Nachrichten trennen.

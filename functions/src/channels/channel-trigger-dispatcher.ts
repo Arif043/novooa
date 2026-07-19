@@ -1,13 +1,13 @@
-import {getApps, initializeApp} from "firebase-admin/app";
-import {
-  FieldValue,
-  type DocumentData,
-  type QueryDocumentSnapshot,
-  getFirestore,
-} from "firebase-admin/firestore";
-import {enqueueTaskRun} from "../task-runner/task-activity-logger.js";
-import {loadTaskDefinitionForTeam} from "../task-runner/task-definition-loader.js";
+import {FirestoreTaskRunStore} from "../task-runner/stores/firestore-task-run-store.js";
+import {FirestoreTaskStore} from "../task-runner/stores/firestore-task-store.js";
+import {type TaskRunStore} from "../task-runner/stores/task-run-store.js";
+import {type TaskStore} from "../task-runner/stores/task-store.js";
 import {errorDetails, logError, logInfo} from "../task-runner/structured-logger.js";
+import {FirestoreTaskTriggerStore} from "../triggers/firestore-task-trigger-store.js";
+import {
+  type EventTaskTrigger,
+  type TaskTriggerStore,
+} from "../triggers/task-trigger-store.js";
 import {
   type ChannelMessageEvent,
   messageFromEvent,
@@ -15,53 +15,60 @@ import {
   senderFromEvent,
 } from "./channel-message-event.js";
 
+type ChannelTriggerDispatcherStores = {
+  triggerStore: TaskTriggerStore;
+  taskStore: TaskStore;
+  taskRunStore: TaskRunStore;
+};
+
+const defaultStores: ChannelTriggerDispatcherStores = {
+  triggerStore: new FirestoreTaskTriggerStore(),
+  taskStore: new FirestoreTaskStore(),
+  taskRunStore: new FirestoreTaskRunStore(),
+};
+
 export async function dispatchChannelMessageTriggers(input: {
   teamId: string;
   channelId: string;
   event: ChannelMessageEvent;
-}): Promise<void> {
-  const triggers = await getFirestore()
-    .collection("teams")
-    .doc(input.teamId)
-    .collection("taskTriggers")
-    .where("enabled", "==", true)
-    .get();
+}, stores: ChannelTriggerDispatcherStores = defaultStores): Promise<void> {
+  const triggers = await stores.triggerStore.listEnabledEventTriggers(input.teamId);
   logInfo("channel_message.dispatch_started", {
     teamId: input.teamId,
     channelId: input.channelId,
     eventType: input.event.type,
-    triggerCount: triggers.size,
+    triggerCount: triggers.length,
   });
-  for (const trigger of triggers.docs) {
+  for (const trigger of triggers) {
     const decision = matchDecision(trigger, input);
     logInfo("channel_message.trigger_checked", {
       teamId: input.teamId,
       triggerId: trigger.id,
       matched: decision.matched,
       reason: decision.reason,
-      triggerType: trigger.get("type"),
-      source: trigger.get("eventConfig.source"),
-      channelId: trigger.get("eventConfig.channelId") ?? null,
-      filterLength: String(trigger.get("eventConfig.filter") ?? "").trim().length,
+      triggerType: trigger.type,
+      source: trigger.eventConfig.source,
+      channelId: trigger.eventConfig.channelId,
+      filterLength: trigger.eventConfig.filter.trim().length,
     });
     if (decision.matched) {
-      await enqueueTriggerRun(input.teamId, trigger, input);
+      await enqueueTriggerRun(trigger, input, stores);
     }
   }
 }
 
 async function enqueueTriggerRun(
-  teamId: string,
-  trigger: QueryDocumentSnapshot<DocumentData>,
+  trigger: EventTaskTrigger,
   input: {
     channelId: string;
     event: ChannelMessageEvent;
   },
+  stores: ChannelTriggerDispatcherStores,
 ): Promise<void> {
   try {
-    const task = await loadTaskDefinitionForTeam(teamId, String(trigger.get("taskId")));
-    const run = await enqueueTaskRun({
-      teamId,
+    const task = await stores.taskStore.loadTask(trigger.teamId, trigger.taskId);
+    const run = await stores.taskRunStore.enqueueTaskRun({
+      teamId: trigger.teamId,
       task,
       context: contextFrom(input.event),
       input: {
@@ -69,15 +76,14 @@ async function enqueueTriggerRun(
       },
       trigger: {id: trigger.id, type: "event"},
     });
-    await trigger.ref.set({
-      lastRunAt: FieldValue.serverTimestamp(),
-      lastRunId: run.runId,
-      updatedAt: FieldValue.serverTimestamp(),
-    }, {merge: true});
-    logInfo("channel_message.trigger_enqueued", {teamId, triggerId: trigger.id});
+    await stores.triggerStore.markEventTriggerRan(trigger, run.runId);
+    logInfo("channel_message.trigger_enqueued", {
+      teamId: trigger.teamId,
+      triggerId: trigger.id,
+    });
   } catch (error) {
     logError("channel_message.trigger_failed", {
-      teamId,
+      teamId: trigger.teamId,
       triggerId: trigger.id,
       error: errorDetails(error),
     });
@@ -85,14 +91,14 @@ async function enqueueTriggerRun(
 }
 
 function matchDecision(
-  trigger: QueryDocumentSnapshot<DocumentData>,
+  trigger: EventTaskTrigger,
   input: {
     channelId: string;
     event: ChannelMessageEvent;
   },
 ): {matched: boolean; reason: string} {
-  if (trigger.get("type") !== "event") return noMatch("not_event_trigger");
-  if (trigger.get("eventConfig.source") !== input.event.type) {
+  if (trigger.type !== "event") return noMatch("not_event_trigger");
+  if (trigger.eventConfig.source !== input.event.type) {
     return noMatch("event_type_mismatch");
   }
   if (!matchesChannel(trigger, input.channelId)) return noMatch("channel_mismatch");
@@ -101,19 +107,19 @@ function matchDecision(
 }
 
 function matchesChannel(
-  trigger: QueryDocumentSnapshot<DocumentData>,
+  trigger: EventTaskTrigger,
   channelId: string,
 ): boolean {
-  const configuredChannelId = String(trigger.get("eventConfig.channelId") ?? "");
+  const configuredChannelId = trigger.eventConfig.channelId;
   return configuredChannelId.trim().length === 0 ||
     configuredChannelId === channelId;
 }
 
 function matchesFilter(
-  trigger: QueryDocumentSnapshot<DocumentData>,
+  trigger: EventTaskTrigger,
   event: ChannelMessageEvent,
 ): boolean {
-  const filter = String(trigger.get("eventConfig.filter") ?? "").trim();
+  const filter = trigger.eventConfig.filter.trim();
   if (filter.length === 0) return true;
   const haystack = searchableTextFrom(event).toLowerCase();
   return haystack.includes(filter.toLowerCase());
@@ -161,5 +167,3 @@ function eventLabel(event: ChannelMessageEvent): string {
 function noMatch(reason: string): {matched: false; reason: string} {
   return {matched: false, reason};
 }
-
-if (getApps().length === 0) initializeApp();

@@ -1,0 +1,196 @@
+import {randomUUID} from "node:crypto";
+import {mkdir, readFile, writeFile} from "node:fs/promises";
+import path from "node:path";
+import {storagePathFor} from "../task-executors/write-file-node-config.js";
+import {type NodeAttachment} from "../task-runner/task-definition.js";
+import {
+  type TeamFileStore,
+  type WriteTeamFileInput,
+  type WrittenFile,
+} from "../task-runner/stores/team-file-store.js";
+import {type LocalSqlDatabase, type SqlRow} from "./local-sql-database.js";
+
+type ExistingFile = {
+  fileId: string;
+  ownerUid: string;
+  folderId: string | null;
+};
+
+type FileRow = SqlRow & {
+  id: string;
+  owner_uid: string;
+  folder_id: string | null;
+};
+
+export class LocalTeamFileStore implements TeamFileStore {
+  constructor(
+    private readonly database: LocalSqlDatabase,
+    private readonly rootDirectory: string,
+  ) {}
+
+  async writeTeamFile(input: WriteTeamFileInput): Promise<WrittenFile> {
+    const file = await this.writtenFileFrom(input);
+    await writeLocalFile(this.rootDirectory, file.storagePath, input.content);
+    await this.writeMetadata(input.teamId, file);
+    return file;
+  }
+
+  async readTextFile(teamId: string, file: NodeAttachment): Promise<string> {
+    ensureTeamFile(file, teamId);
+    return readFile(localPath(this.rootDirectory, file.storagePath), "utf8");
+  }
+
+  private async writtenFileFrom(input: WriteTeamFileInput): Promise<WrittenFile> {
+    if (input.targetFileId !== null) return this.versionedFileFrom(input);
+    const existingFile = await this.existingFileByNameFor(input);
+    if (existingFile !== null) return versionFromExisting(input, existingFile);
+    return newFileFrom(input);
+  }
+
+  private async versionedFileFrom(input: WriteTeamFileInput): Promise<WrittenFile> {
+    const existingFile = await this.existingFileFor(input);
+    return versionFromExisting(input, existingFile);
+  }
+
+  private async existingFileFor(input: WriteTeamFileInput): Promise<ExistingFile> {
+    if (input.targetFileId === null) throw new Error("Datei-ID fehlt.");
+    const row = await this.database.get<FileRow>(
+      "SELECT id, owner_uid, folder_id FROM files WHERE team_id = ? AND id = ?",
+      [input.teamId, input.targetFileId],
+    );
+    if (row === null) throw new Error(`Datei nicht gefunden: ${input.targetFileId}`);
+    return existingFileFrom(row);
+  }
+
+  private async existingFileByNameFor(
+    input: WriteTeamFileInput,
+  ): Promise<ExistingFile | null> {
+    const row = await this.database.get<FileRow>(findFileByNameSql(), [
+      input.teamId,
+      input.fileName,
+    ]);
+    return row === null ? null : existingFileFrom(row);
+  }
+
+  private async writeMetadata(teamId: string, file: WrittenFile) {
+    await this.database.transaction(async () => {
+      await upsertFile(this.database, teamId, file);
+      await insertVersion(this.database, teamId, file);
+    });
+  }
+}
+
+function newFileFrom(input: WriteTeamFileInput): WrittenFile {
+  const fileId = randomUUID();
+  const versionId = randomUUID();
+  return writtenFile(input, fileId, versionId, null, "system", true);
+}
+
+function versionFromExisting(
+  input: WriteTeamFileInput,
+  existingFile: ExistingFile,
+): WrittenFile {
+  return writtenFile(
+    input,
+    existingFile.fileId,
+    randomUUID(),
+    existingFile.folderId,
+    existingFile.ownerUid,
+    false,
+  );
+}
+
+function writtenFile(
+  input: WriteTeamFileInput,
+  fileId: string,
+  versionId: string,
+  folderId: string | null,
+  ownerUid: string,
+  isNewFile: boolean,
+): WrittenFile {
+  return {
+    fileId,
+    versionId,
+    displayName: input.fileName,
+    contentType: input.contentType,
+    sizeBytes: Buffer.byteLength(input.content, "utf8"),
+    folderId,
+    ownerUid,
+    isNewFile,
+    storagePath: storagePathFor(input.teamId, fileId, versionId, input.fileName),
+  };
+}
+
+async function upsertFile(
+  database: LocalSqlDatabase,
+  teamId: string,
+  file: WrittenFile,
+) {
+  await database.run(upsertFileSql(), [
+    file.fileId,
+    teamId,
+    file.ownerUid,
+    file.displayName,
+    file.folderId,
+    file.versionId,
+    file.contentType,
+    file.sizeBytes,
+    file.storagePath,
+  ]);
+}
+
+async function insertVersion(
+  database: LocalSqlDatabase,
+  teamId: string,
+  file: WrittenFile,
+) {
+  await database.run(insertVersionSql(), [
+    file.versionId,
+    teamId,
+    file.fileId,
+    "system",
+    file.displayName,
+    file.storagePath,
+    file.contentType,
+    file.sizeBytes,
+  ]);
+}
+
+async function writeLocalFile(rootDirectory: string, storagePath: string, content: string) {
+  const destination = localPath(rootDirectory, storagePath);
+  await mkdir(path.dirname(destination), {recursive: true});
+  await writeFile(destination, content);
+}
+
+function localPath(rootDirectory: string, storagePath: string): string {
+  return path.join(rootDirectory, storagePath);
+}
+
+function ensureTeamFile(file: NodeAttachment, teamId: string): void {
+  if (file.storagePath.startsWith(`teams/${teamId}/files/`)) return;
+  throw new Error("Datei lesen: Die Datei gehört nicht zum aktuellen Team.");
+}
+
+function existingFileFrom(row: FileRow): ExistingFile {
+  return {fileId: row.id, ownerUid: row.owner_uid, folderId: row.folder_id};
+}
+
+function findFileByNameSql() {
+  return `SELECT id, owner_uid, folder_id FROM files
+    WHERE team_id = ? AND display_name = ? AND folder_id IS NULL LIMIT 1`;
+}
+
+function upsertFileSql() {
+  return `INSERT INTO files(id, team_id, owner_uid, display_name, folder_id,
+    current_version_id, content_type, size_bytes, storage_path)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET current_version_id = excluded.current_version_id,
+    content_type = excluded.content_type, size_bytes = excluded.size_bytes,
+    storage_path = excluded.storage_path, updated_at = CURRENT_TIMESTAMP`;
+}
+
+function insertVersionSql() {
+  return `INSERT INTO file_versions(id, team_id, file_id, created_by_uid,
+    display_name, storage_path, content_type, size_bytes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+}

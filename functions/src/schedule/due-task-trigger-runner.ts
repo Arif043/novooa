@@ -1,133 +1,91 @@
-import {getApps, initializeApp} from "firebase-admin/app";
-import {
-  FieldValue,
-  Timestamp,
-  type DocumentData,
-  type DocumentReference,
-  getFirestore,
-} from "firebase-admin/firestore";
-import {loadTaskDefinitionForTeam} from "../task-runner/task-definition-loader.js";
-import {enqueueTaskRun} from "../task-runner/task-activity-logger.js";
+import {FirestoreTaskRunStore} from "../task-runner/stores/firestore-task-run-store.js";
+import {FirestoreTaskStore} from "../task-runner/stores/firestore-task-store.js";
+import {type TaskRunStore} from "../task-runner/stores/task-run-store.js";
+import {type TaskStore} from "../task-runner/stores/task-store.js";
 import {errorDetails, logError, logInfo} from "../task-runner/structured-logger.js";
+import {FirestoreTaskTriggerStore} from "../triggers/firestore-task-trigger-store.js";
+import {
+  type DueScheduleTrigger,
+  type TaskTriggerStore,
+} from "../triggers/task-trigger-store.js";
 import {nextRunAfter, type ScheduleConfig} from "./schedule-next-run.js";
 
-export async function runDueTaskTriggers(now = new Date()): Promise<void> {
-  logInfo("task_trigger.started", {now: now.toISOString()});
-  const dueTriggers = await getDatabase()
-    .collectionGroup("taskTriggers")
-    .where("enabled", "==", true)
-    .where("nextRunAt", "<=", Timestamp.fromDate(now))
-    .limit(50)
-    .get();
+type DueTriggerRunnerStores = {
+  triggerStore: TaskTriggerStore;
+  taskStore: TaskStore;
+  taskRunStore: TaskRunStore;
+};
 
-  for (const trigger of dueTriggers.docs) {
-    await runTrigger(trigger.ref, trigger.data(), now);
+const defaultStores: DueTriggerRunnerStores = {
+  triggerStore: new FirestoreTaskTriggerStore(),
+  taskStore: new FirestoreTaskStore(),
+  taskRunStore: new FirestoreTaskRunStore(),
+};
+
+export async function runDueTaskTriggers(
+  now = new Date(),
+  stores: DueTriggerRunnerStores = defaultStores,
+): Promise<void> {
+  logInfo("task_trigger.started", {now: now.toISOString()});
+  const dueTriggers = await stores.triggerStore.listDueScheduleTriggers(now, 50);
+  for (const trigger of dueTriggers) {
+    await runTrigger(trigger, now, stores);
   }
 }
 
 async function runTrigger(
-  reference: DocumentReference<DocumentData>,
-  data: DocumentData,
+  trigger: DueScheduleTrigger,
   now: Date,
+  stores: DueTriggerRunnerStores,
 ): Promise<void> {
-  const teamId = reference.parent.parent?.id;
-  if (!teamId) return;
   try {
-    const config = scheduleConfigFrom(data.config);
-    if (await shouldSkip(teamId, data)) {
-      await advanceTrigger(reference, config, now);
+    if (await shouldSkip(trigger, stores.triggerStore)) {
+      await advanceTrigger(trigger, now, stores.triggerStore);
       return;
     }
-    const task = await loadTaskDefinitionForTeam(teamId, String(data.taskId));
-    const run = await enqueueTaskRun({
-      teamId,
+    const task = await stores.taskStore.loadTask(trigger.teamId, trigger.taskId);
+    const run = await stores.taskRunStore.enqueueTaskRun({
+      teamId: trigger.teamId,
       task,
       context: "",
-      trigger: {id: reference.id, type: "schedule"},
+      trigger: {id: trigger.id, type: "schedule"},
     });
-    await markTriggerRan(reference, config, now, run.runId);
+    await markTriggerRan(trigger, now, run.runId, stores.triggerStore);
   } catch (error) {
     logError("task_trigger.failed", {
-      triggerId: reference.id,
-      teamId,
+      triggerId: trigger.id,
+      teamId: trigger.teamId,
       error: errorDetails(error),
     });
   }
 }
 
-async function shouldSkip(teamId: string, data: DocumentData): Promise<boolean> {
-  const policy = String(data.policy?.ifRunning ?? "skipIfRunning");
-  if (policy !== "skipIfRunning") return false;
-  const active = await getDatabase()
-    .collection("teams")
-    .doc(teamId)
-    .collection("taskRuns")
-    .where("taskId", "==", String(data.taskId))
-    .where("status", "in", ["queued", "running", "waitingForApproval"])
-    .limit(1)
-    .get();
-  return !active.empty;
+async function shouldSkip(
+  trigger: DueScheduleTrigger,
+  store: TaskTriggerStore,
+): Promise<boolean> {
+  if (trigger.policy.ifRunning !== "skipIfRunning") return false;
+  return store.hasActiveRun(trigger.teamId, trigger.taskId);
 }
 
 async function markTriggerRan(
-  reference: DocumentReference<DocumentData>,
-  config: ScheduleConfig,
+  trigger: DueScheduleTrigger,
   now: Date,
   runId: string,
+  store: TaskTriggerStore,
 ) {
-  const nextRunAt = nextRunAfter(config, new Date(now.getTime() + 1000));
-  await reference.set({
-    enabled: nextRunAt !== null,
-    lastRunAt: Timestamp.fromDate(now),
-    lastRunId: runId,
-    nextRunAt: nextRunAt ? Timestamp.fromDate(nextRunAt) : null,
-    updatedAt: FieldValue.serverTimestamp(),
-  }, {merge: true});
+  const nextRunAt = nextRunAfterRun(trigger.config, now);
+  await store.markScheduleTriggerRan(trigger, now, nextRunAt, runId);
 }
 
 async function advanceTrigger(
-  reference: DocumentReference<DocumentData>,
-  config: ScheduleConfig,
+  trigger: DueScheduleTrigger,
   now: Date,
+  store: TaskTriggerStore,
 ) {
-  const nextRunAt = nextRunAfter(config, new Date(now.getTime() + 1000));
-  await reference.set({
-    enabled: nextRunAt !== null,
-    nextRunAt: nextRunAt ? Timestamp.fromDate(nextRunAt) : null,
-    updatedAt: FieldValue.serverTimestamp(),
-  }, {merge: true});
+  await store.advanceScheduleTrigger(trigger, nextRunAfterRun(trigger.config, now));
 }
 
-function scheduleConfigFrom(value: unknown): ScheduleConfig {
-  const data = isRecord(value) ? value : {};
-  return {
-    kind: scheduleKindFrom(data.kind),
-    timezone: String(data.timezone ?? "Europe/Berlin"),
-    runAt: data.runAt instanceof Timestamp ? data.runAt : undefined,
-    timeOfDay: typeof data.timeOfDay === "string" ? data.timeOfDay : undefined,
-    weekdays: Array.isArray(data.weekdays) ? data.weekdays.map(Number) : [],
-    slots: Array.isArray(data.slots) ? data.slots.map(slotFrom) : [],
-  };
-}
-
-function slotFrom(value: unknown) {
-  const data = isRecord(value) ? value : {};
-  return {
-    weekday: Number(data.weekday ?? 0),
-    timeOfDay: String(data.timeOfDay ?? ""),
-  };
-}
-
-function scheduleKindFrom(value: unknown): ScheduleConfig["kind"] {
-  if (value === "once" || value === "daily" || value === "weekly") return value;
-  return "daily";
-}
-
-function getDatabase() {
-  if (getApps().length === 0) initializeApp();
-  return getFirestore();
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+function nextRunAfterRun(config: ScheduleConfig, now: Date): Date | null {
+  return nextRunAfter(config, new Date(now.getTime() + 1000));
 }

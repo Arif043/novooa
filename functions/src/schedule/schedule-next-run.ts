@@ -1,9 +1,7 @@
-import {Timestamp} from "firebase-admin/firestore";
-
 export type ScheduleConfig = {
   kind: "once" | "daily" | "weekly";
   timezone: string;
-  runAt?: Timestamp;
+  runAt?: Date;
   timeOfDay?: string;
   weekdays?: number[];
   slots?: ScheduleSlot[];
@@ -21,7 +19,7 @@ export function nextRunAfter(config: ScheduleConfig, now: Date): Date | null {
 }
 
 function nextOnce(config: ScheduleConfig, now: Date): Date | null {
-  const runAt = config.runAt?.toDate();
+  const runAt = config.runAt;
   if (!runAt || runAt <= now) return null;
   return runAt;
 }
