@@ -29,6 +29,8 @@ Ports
   TaskTriggerStore
   ObjectStore
   TaskRunApprovalNotificationStore
+  TeamMembershipStore
+  TeamMemberDirectory
   ChannelProvider
 
 Cloud Adapter
@@ -40,6 +42,8 @@ Cloud Adapter
   FirestoreTaskTriggerStore
   FirebaseObjectStore
   FirestoreTaskRunApprovalNotificationStore
+  FirestoreTeamMembershipStore
+  FirebaseTeamMemberDirectory
 
 Local Adapter
   SQLiteTaskStore
@@ -131,9 +135,15 @@ zustellen.
 - `functions/src/domain/repositories/object-store.ts` definiert `ObjectStore`.
 - `functions/src/domain/repositories/task-run-approval-notification-store.ts`
   definiert den Port für HITL-Benachrichtigungen.
+- `functions/src/domain/repositories/team-membership-store.ts` und
+  `team-member-directory.ts` definieren Ports für Teamverwaltung.
+- Team-Mitgliedschaftsaktionen liegen als Use-Cases unter
+  `functions/src/domain/usecases/`.
 - `functions/src/task-runner/task-run-worker.ts` führt Runs über Store-Ports aus.
 - Scheduler und Channel-Dispatcher arbeiten über `TaskTriggerStore`.
 - Node- und Skill-Attachments werden über `ObjectStore` geladen.
+- Wissensbasis-Attachments werden über `KnowledgeBaseStore` aufgelöst und in
+  den lokalen Node-Workspace geschrieben.
 - HITL-Benachrichtigungen werden in Firebase über
   `FirestoreTaskRunApprovalNotificationStore` geschrieben.
 - Firestore-Adapter unter `functions/src/infrastructure/firebase/`

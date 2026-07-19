@@ -1,6 +1,8 @@
 import {mkdir, mkdtemp, rm} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import {type KnowledgeBaseStore} from
+  "../domain/repositories/knowledge-base-store.js";
 import {type ObjectStore} from "../domain/repositories/object-store.js";
 import {
   type KnowledgeAttachment,
@@ -32,6 +34,7 @@ export async function prepareNodeAttachmentWorkspace(
   node: WorkflowNode,
   teamId: string,
   objectStore: ObjectStore,
+  knowledgeBaseStore: KnowledgeBaseStore,
 ): Promise<NodeAttachmentWorkspace | undefined> {
   const attachments = attachmentsFor(node);
   const knowledgeAttachments = knowledgeAttachmentsFor(node);
@@ -56,6 +59,7 @@ export async function prepareNodeAttachmentWorkspace(
     rootDirectory,
     teamId,
     knowledgeAttachments,
+    knowledgeBaseStore,
   );
   const skillsDirectory = await prepareSkillDirectory(
     rootDirectory,

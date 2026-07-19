@@ -1,8 +1,7 @@
 import {UserFacingError} from "genkit";
-import {currentTeamIdForUid} from "../team-context.js";
 import {type TaskDefinition} from "./task-definition.js";
 import {type TaskStore} from "../domain/repositories/task-store.js";
-import {FirestoreTaskStore} from "../infrastructure/firebase/firestore-task-store.js";
+import {type TeamContextStore} from "../domain/repositories/team-context-store.js";
 
 type FirebaseAuthContext = {
   auth?: {
@@ -10,22 +9,25 @@ type FirebaseAuthContext = {
   };
 };
 
-const defaultTaskStore = new FirestoreTaskStore();
+type TaskDefinitionLoaderStores = {
+  taskStore: TaskStore;
+  teamContextStore: TeamContextStore;
+};
 
 export async function loadTaskDefinition(
   taskId: string,
   context: unknown,
-  taskStore: TaskStore = defaultTaskStore,
+  stores: TaskDefinitionLoaderStores,
 ): Promise<TaskDefinition> {
   const uid = uidFromContext(context);
-  const teamId = await currentTeamIdForUid(uid);
-  return taskStore.loadTask(teamId, taskId);
+  const teamId = await stores.teamContextStore.currentTeamIdForUid(uid);
+  return stores.taskStore.loadTask(teamId, taskId);
 }
 
 export async function loadTaskDefinitionForTeam(
   teamId: string,
   taskId: string,
-  taskStore: TaskStore = defaultTaskStore,
+  taskStore: TaskStore,
 ): Promise<TaskDefinition> {
   return taskStore.loadTask(teamId, taskId);
 }

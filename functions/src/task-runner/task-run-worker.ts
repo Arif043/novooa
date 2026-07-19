@@ -1,4 +1,6 @@
 import {type GenkitBeta} from "genkit/beta";
+import {type KnowledgeBaseStore} from
+  "../domain/repositories/knowledge-base-store.js";
 import {
   executeTaskGraph,
   resumeTaskGraph,
@@ -17,6 +19,7 @@ export type TaskRunWorkerStores = {
   taskStore: TaskStore;
   taskRunStore: TaskRunStore;
   objectStore: ObjectStore;
+  knowledgeBaseStore: KnowledgeBaseStore;
 };
 
 export async function executeQueuedTaskRun(
@@ -37,6 +40,7 @@ export async function executeQueuedTaskRun(
     input: run.input,
   }, {
     objectStore: stores.objectStore,
+    knowledgeBaseStore: stores.knowledgeBaseStore,
   });
   if (output.status === "waitingForApproval") {
     await stores.taskRunStore.markRunWaitingForApproval(teamId, run, output);
@@ -63,7 +67,10 @@ export async function continueApprovedTaskRun(
     {taskDefinition, context: run.context, teamId, input: run.input},
     input.resumeState,
     input.approvedOutput,
-    {objectStore: stores.objectStore},
+    {
+      objectStore: stores.objectStore,
+      knowledgeBaseStore: stores.knowledgeBaseStore,
+    },
   );
   if (output.status === "waitingForApproval") {
     await stores.taskRunStore.markRunWaitingForApproval(teamId, run, output);

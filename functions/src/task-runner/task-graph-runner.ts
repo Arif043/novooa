@@ -1,5 +1,4 @@
 import { type GenkitBeta } from "genkit/beta";
-import {type ObjectStore} from "../domain/repositories/object-store.js";
 import {
   type SubgraphRunner,
   type TaskRunContext,
@@ -43,6 +42,7 @@ import {
   resolveVariableTemplates,
   variableTemplateContextFor,
 } from "./variable-template.js";
+import {type TaskGraphRuntime} from "./task-graph-runtime.js";
 
 export async function executeTaskGraph(
   ai: GenkitBeta,
@@ -52,7 +52,9 @@ export async function executeTaskGraph(
   logReadableInfo(formatTaskStarted(input.taskDefinition, input.context));
   validateGraph(input.taskDefinition);
   const runState = await runNodes(ai, input, runtime);
-  if (runState.status === "waitingForApproval") return pausedOutput(input, runState);
+  if (runState.status === "waitingForApproval") {
+    return pausedOutput(input, runState);
+  }
   const results = runState.nodeResults;
   const output = completedOutput(input, results);
   logReadableInfo(formatTaskFinished(
@@ -79,7 +81,9 @@ export async function resumeTaskGraph(
     runtime,
     resumedState(resumeState, approvedOutput),
   );
-  if (runState.status === "waitingForApproval") return pausedOutput(input, runState);
+  if (runState.status === "waitingForApproval") {
+    return pausedOutput(input, runState);
+  }
   return completedOutput(input, runState.nodeResults);
 }
 
@@ -118,6 +122,7 @@ async function runNodes(
       skipNode,
       startedAt,
       objectStore: runtime.objectStore,
+      knowledgeBaseStore: runtime.knowledgeBaseStore,
     });
     updateVariables(variables, result);
     results.set(node.id, result);
@@ -140,10 +145,6 @@ async function runNodes(
     nodeResults: orderedResults(input.taskDefinition, results),
   };
 }
-
-export type TaskGraphRuntime = {
-  objectStore: ObjectStore;
-};
 
 function runSubgraphFor(
   ai: GenkitBeta,

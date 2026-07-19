@@ -16,13 +16,16 @@ import {
 } from "./task-runner/task-definition-loader.js";
 import {
   runFromDocument,
-} from "./task-runner/task-activity-logger.js";
+} from "./domain/repositories/task-run-store.js";
 import {aiProviderPlugins} from "./task-runner/ai-models.js";
 import {errorDetails, logError} from "./task-runner/structured-logger.js";
-import {currentTeamIdForUid} from "./team-context.js";
 import {twilioAccountSid, twilioAuthToken} from "./channels/twilio-secrets.js";
 import {sendgridApiKey} from "./channels/sendgrid-secrets.js";
 import {FirebaseObjectStore} from "./infrastructure/firebase/firebase-object-store.js";
+import {FirestoreKnowledgeBaseStore} from
+  "./infrastructure/firebase/firestore-knowledge-base-store.js";
+import {FirestoreTeamContextStore} from
+  "./infrastructure/firebase/firestore-team-context-store.js";
 import {FirestoreTaskStore} from "./infrastructure/firebase/firestore-task-store.js";
 import {FirestoreTaskRunStore} from "./infrastructure/firebase/firestore-task-run-store.js";
 import {
@@ -39,7 +42,9 @@ const ai = genkit({
 const taskStore = new FirestoreTaskStore();
 const taskRunStore = new FirestoreTaskRunStore();
 const objectStore = new FirebaseObjectStore();
-const workerStores = {taskStore, taskRunStore, objectStore};
+const knowledgeBaseStore = new FirestoreKnowledgeBaseStore();
+const teamContextStore = new FirestoreTeamContextStore();
+const workerStores = {taskStore, taskRunStore, objectStore, knowledgeBaseStore};
 
 export const taskDefinitionFlow = ai.defineFlow(
   {
@@ -50,7 +55,11 @@ export const taskDefinitionFlow = ai.defineFlow(
   async (input, runtime) => {
     let title = "";
     try {
-      const taskDefinition = await loadTaskDefinition(input.taskId, runtime.context);
+      const taskDefinition = await loadTaskDefinition(
+        input.taskId,
+        runtime.context,
+        {taskStore, teamContextStore},
+      );
       title = taskDefinition.title;
       const teamId = await teamIdFromContext(runtime.context);
       const run = await taskRunStore.enqueueTaskRun({
@@ -154,5 +163,5 @@ function shouldResumeApprovedRun(beforeStatus: unknown, afterStatus: unknown) {
 async function teamIdFromContext(context: unknown): Promise<string> {
   const auth = (context as {auth?: {uid?: string}} | undefined)?.auth;
   if (!auth?.uid) throw new Error("Auth context is missing.");
-  return currentTeamIdForUid(auth.uid);
+  return teamContextStore.currentTeamIdForUid(auth.uid);
 }

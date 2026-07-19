@@ -1,4 +1,6 @@
 import {type GenkitBeta} from "genkit/beta";
+import {type KnowledgeBaseStore} from
+  "../domain/repositories/knowledge-base-store.js";
 import {type ObjectStore} from "../domain/repositories/object-store.js";
 import {executorFor} from "./node-executor-registry.js";
 import {
@@ -29,6 +31,7 @@ type NodeRunInput = {
   skipNode: boolean;
   startedAt: number;
   objectStore: ObjectStore;
+  knowledgeBaseStore: KnowledgeBaseStore;
 };
 
 export async function runNodeWithTrail(
@@ -90,6 +93,7 @@ async function executeNode(
     input.node,
     input.runContext.teamId,
     input.objectStore,
+    input.knowledgeBaseStore,
   );
   try {
     return await executor.execute({
