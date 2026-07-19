@@ -7,6 +7,7 @@ import 'package:syscat2/features/assistant/domain/entities/assistant_context.dar
 import 'package:syscat2/features/assistant/domain/repositories/assistant_repository.dart';
 import 'package:syscat2/features/assistant/domain/usecases/ask_assistant.dart';
 import 'package:syscat2/features/assistant/infrastructure/datasources/firebase_ai_assistant_datasource.dart';
+import 'package:syscat2/features/assistant/infrastructure/datasources/internal_assistant_knowledge.dart';
 import 'package:syscat2/features/assistant/infrastructure/repositories/firebase_ai_assistant_repository.dart';
 import 'package:syscat2/features/assistant/presentation/cubits/assistant_cubit.dart';
 import 'package:syscat2/features/communication/domain/repositories/communication_channel_repository.dart';
@@ -123,7 +124,12 @@ void configureDependencies() {
       () =>
           FirestoreKnowledgeBaseRepository(serviceLocator<FirebaseFirestore>()),
     )
-    ..registerLazySingleton(FirebaseAiAssistantDatasource.new)
+    ..registerLazySingleton(InternalAssistantKnowledge.new)
+    ..registerLazySingleton(
+      () => FirebaseAiAssistantDatasource(
+        knowledge: serviceLocator<InternalAssistantKnowledge>(),
+      ),
+    )
     ..registerLazySingleton<AssistantRepository>(
       () => FirebaseAiAssistantRepository(
         serviceLocator<FirebaseAiAssistantDatasource>(),

@@ -75,6 +75,7 @@ class _RootPageState extends State<RootPage> {
   Widget build(BuildContext context) {
     final selectedTabIndex = _selectedTabIndex;
     final selectedTab = _tabs[selectedTabIndex];
+    final assistantContext = _assistantContextFor(selectedTab);
     return RootShellScope(
       controller: _shellController,
       child: BlocProvider(
@@ -98,9 +99,8 @@ class _RootPageState extends State<RootPage> {
                   title: _titleFor(selectedTab),
                   onMenuPressed: _sideMenuController.openLeftMenu,
                   actions: [
-                    AssistantBellButton(
-                      contextInfo: _assistantContextFor(selectedTab),
-                    ),
+                    if (assistantContext != null)
+                      AssistantBellButton(contextInfo: assistantContext),
                     const NotificationBellButton(),
                   ],
                 ),
@@ -117,12 +117,13 @@ class _RootPageState extends State<RootPage> {
     return _shellController.title ?? Text(selectedTab.title);
   }
 
-  AssistantContext _assistantContextFor(RootTab selectedTab) {
+  AssistantContext? _assistantContextFor(RootTab selectedTab) {
     final area = switch (selectedTab.path) {
       '/tasks' => AssistantArea.taskBuilder,
       '/knowledge-base' => AssistantArea.knowledgeBase,
-      _ => AssistantArea.general,
+      _ => null,
     };
+    if (area == null) return null;
     return AssistantContext(area: area, route: widget.location);
   }
 

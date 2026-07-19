@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../domain/entities/assistant_context.dart';
 import '../../domain/entities/assistant_message.dart';
@@ -43,13 +44,33 @@ class AssistantCubit extends Cubit<AssistantState> {
           clearError: true,
         ),
       );
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint('Assistant request failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
       emit(
         state.copyWith(
           status: AssistantStatus.failure,
-          errorMessage: 'Der KI-Agent konnte gerade nicht antworten.',
+          errorMessage: _errorMessageFor(error),
         ),
       );
     }
+  }
+
+  String _errorMessageFor(Object error) {
+    if (kReleaseMode) return 'Der KI-Agent konnte gerade nicht antworten.';
+    final details = error.toString();
+    if (details.contains('firebasevertexai.googleapis.com')) {
+      return 'Firebase AI Logic ist für dieses Projekt noch nicht aktiviert.';
+    }
+    if (details.toLowerCase().contains('api key')) {
+      return 'Der Firebase Web API-Key wurde von Firebase AI Logic abgelehnt.';
+    }
+    if (details.toLowerCase().contains('quota')) {
+      return 'Das Firebase-AI-Kontingent ist ausgeschöpft.';
+    }
+    if (details.toLowerCase().contains('location')) {
+      return 'Firebase AI Logic ist an diesem Standort nicht verfügbar.';
+    }
+    return 'Der KI-Agent konnte nicht antworten: $details';
   }
 }

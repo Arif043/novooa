@@ -2,13 +2,17 @@ import 'package:firebase_ai/firebase_ai.dart';
 
 import '../../domain/entities/assistant_context.dart';
 import '../../domain/entities/assistant_message.dart';
+import 'internal_assistant_knowledge.dart';
 
 class FirebaseAiAssistantDatasource {
-  FirebaseAiAssistantDatasource({FirebaseAI? firebaseAI})
-    : _firebaseAI = firebaseAI ?? FirebaseAI.googleAI();
+  FirebaseAiAssistantDatasource({
+    FirebaseAI? firebaseAI,
+    this._knowledge = const InternalAssistantKnowledge(),
+  }) : _firebaseAI = firebaseAI ?? FirebaseAI.googleAI();
 
   static const _modelName = 'gemini-3.5-flash';
   final FirebaseAI _firebaseAI;
+  final InternalAssistantKnowledge _knowledge;
 
   Future<String> ask({
     required AssistantContext context,
@@ -42,6 +46,7 @@ class FirebaseAiAssistantDatasource {
   }
 
   String _systemPromptFor(AssistantContext context) {
+    final knowledge = _knowledge.forContext(context);
     return [
       'Du bist der In-App KI-Agent von novooa.',
       'Antworte kurz, konkret und auf Deutsch.',
@@ -50,6 +55,8 @@ class FirebaseAiAssistantDatasource {
       'Aktueller Bereich: ${context.label}.',
       'Route: ${context.route}.',
       'Erfinde keine Funktionen, die novooa noch nicht besitzt.',
+      'Nutze diese interne Wissensbasis als verbindliche Produktinformation:',
+      knowledge,
     ].join('\n');
   }
 }

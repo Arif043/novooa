@@ -1,7 +1,5 @@
 import 'dart:async';
-
 import 'package:firebase_messaging/firebase_messaging.dart';
-
 import '../../../../core/logging/syscat_log.dart';
 import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
