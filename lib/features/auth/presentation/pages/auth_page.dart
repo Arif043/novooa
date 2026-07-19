@@ -4,6 +4,7 @@ import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/core/widgets/syscat_background.dart';
+import 'package:syscat2/generated/assets.dart';
 
 import '../cubits/auth_cubit.dart';
 import '../cubits/auth_state.dart';
@@ -107,7 +108,8 @@ class _AuthHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('novooa', style: textTheme.headlineLarge),
+        // Text('novooa', style: textTheme.headlineLarge),
+        Image.asset(Assets.iconsFullv2Transparent),
         const SizedBox(height: AppSpacing.md),
         Text(
           'Erstelle dein Konto oder logge dich ein.',

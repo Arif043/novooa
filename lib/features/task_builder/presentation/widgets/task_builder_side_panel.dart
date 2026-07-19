@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
-import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/assistant/domain/entities/assistant_context.dart';
 import 'package:syscat2/features/assistant/presentation/cubits/assistant_cubit.dart';
 import 'package:syscat2/features/assistant/presentation/widgets/assistant_panel_dialog.dart';
@@ -26,38 +25,28 @@ class TaskBuilderSideRail extends StatelessWidget {
     return BlocConsumer<AppNotificationsCubit, AppNotificationsState>(
       listenWhen: (previous, current) => previous.message != current.message,
       listener: _showMessage,
-      builder: (context, state) => DecoratedBox(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(AppSpacing.lg),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _RailIconButton(
-                tooltip: 'KI-Agent',
-                icon: Icons.auto_awesome_outlined,
-                selected: selectedPanel == TaskBuilderSidePanelKind.assistant,
-                onPressed: () =>
-                    onPanelSelected(TaskBuilderSidePanelKind.assistant),
-              ),
-              _RailIconButton(
-                tooltip: 'Benachrichtigungen',
-                selected:
-                    selectedPanel == TaskBuilderSidePanelKind.notifications,
-                onPressed: () =>
-                    onPanelSelected(TaskBuilderSidePanelKind.notifications),
-                child: Badge.count(
-                  count: state.pendingCount,
-                  isLabelVisible: state.pendingCount > 0,
-                  child: const Icon(Icons.notifications_outlined),
-                ),
-              ),
-            ],
+      builder: (context, state) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _RailIconButton(
+            tooltip: 'KI-Agent',
+            icon: Icons.auto_awesome_outlined,
+            selected: selectedPanel == TaskBuilderSidePanelKind.assistant,
+            onPressed: () =>
+                onPanelSelected(TaskBuilderSidePanelKind.assistant),
           ),
-        ),
+          _RailIconButton(
+            tooltip: 'Benachrichtigungen',
+            selected: selectedPanel == TaskBuilderSidePanelKind.notifications,
+            onPressed: () =>
+                onPanelSelected(TaskBuilderSidePanelKind.notifications),
+            child: Badge.count(
+              count: state.pendingCount,
+              isLabelVisible: state.pendingCount > 0,
+              child: const Icon(Icons.notifications_outlined),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -125,16 +114,13 @@ class _RailIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return IconButton(
       tooltip: tooltip,
       isSelected: selected,
       style: IconButton.styleFrom(
         minimumSize: const Size.square(48),
-        foregroundColor: selected
-            ? theme.colorScheme.onPrimaryContainer
-            : theme.colorScheme.onSurfaceVariant,
-        backgroundColor: selected ? theme.colorScheme.primaryContainer : null,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        backgroundColor: Colors.transparent,
       ),
       onPressed: onPressed,
       icon: child ?? Icon(icon),
