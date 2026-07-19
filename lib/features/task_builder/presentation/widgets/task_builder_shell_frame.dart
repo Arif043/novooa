@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:cupertino_sidemenu/cupertino_sidemenu.dart';
 import 'package:syscat2/core/widgets/root_app_bar.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/task_builder_side_panel.dart';
 
@@ -20,77 +20,82 @@ class TaskBuilderShellFrame extends StatefulWidget {
 }
 
 class _TaskBuilderShellFrameState extends State<TaskBuilderShellFrame> {
+  final _controller = CupertinoSidemenuController();
   TaskBuilderSidePanelKind? _sidePanel;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Column(
-                children: [
-                  RootAppBar(
-                    title: widget.title,
-                    onMenuPressed: widget.onMenuPressed,
-                    actions: const [],
-                  ),
-                  Expanded(child: widget.child),
-                ],
-              ),
-            ),
-            _TaskBuilderShellDrawer(panel: _sidePanel, onClose: _closePanel),
-            Positioned(
-              top: 0,
-              right: 0,
-              child: TaskBuilderSideRail(
-                selectedPanel: _sidePanel,
-                onPanelSelected: _togglePanel,
-              ),
-            ),
-          ],
-        ),
-      ),
+      body: SafeArea(child: _sidemenu()),
     );
   }
 
-  void _togglePanel(TaskBuilderSidePanelKind panel) {
-    setState(() => _sidePanel = _sidePanel == panel ? null : panel);
+  Widget _sidemenu() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return CupertinoSidemenu(
+          controller: _controller,
+          hapticFeedback: false,
+          centerBackgroundOpacity: 0.16,
+          menuWidthOfScreen: _rightMenuWidthOfScreen(constraints.maxWidth),
+          rightMenu: _sidePanel == null ? null : _rightMenu(),
+          centerPage: Stack(
+            children: [
+              Positioned.fill(
+                child: Column(
+                  children: [
+                    RootAppBar(
+                      title: widget.title,
+                      onMenuPressed: widget.onMenuPressed,
+                      actions: const [],
+                    ),
+                    Expanded(child: widget.child),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: TaskBuilderSideRail(
+                  selectedPanel: _sidePanel,
+                  onPanelSelected: _openPanel,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _rightMenu() {
+    final panel = _sidePanel;
+    if (panel == null) return const SizedBox.shrink();
+    return TaskBuilderSideDrawer(panel: panel, onClose: _closePanel);
+  }
+
+  double _rightMenuWidthOfScreen(double width) {
+    if (width <= 0) return 0.8;
+    return (390 / width).clamp(0.24, 0.86);
+  }
+
+  void _openPanel(TaskBuilderSidePanelKind panel) {
+    setState(() => _sidePanel = panel);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _controller.openRightMenu();
+    });
   }
 
   void _closePanel() {
+    _controller.closeMenu();
     setState(() => _sidePanel = null);
-  }
-}
-
-class _TaskBuilderShellDrawer extends StatelessWidget {
-  const _TaskBuilderShellDrawer({required this.panel, required this.onClose});
-
-  final TaskBuilderSidePanelKind? panel;
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedPositioned(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-      top: 0,
-      right: panel == null ? -430 : 56,
-      bottom: 0,
-      child: IgnorePointer(
-        ignoring: panel == null,
-        child: panel == null
-            ? const SizedBox(width: 390)
-            : Padding(
-                padding: const EdgeInsets.only(
-                  top: AppSpacing.xs,
-                  bottom: AppSpacing.xs,
-                ),
-                child: TaskBuilderSideDrawer(panel: panel!, onClose: onClose),
-              ),
-      ),
-    );
   }
 }
