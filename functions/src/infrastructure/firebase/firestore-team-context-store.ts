@@ -1,6 +1,6 @@
 import {FieldValue} from "firebase-admin/firestore";
-import {getDatabase} from "./task-runner/stores/firestore-db.js";
-import {type TeamContextStore} from "./team-context-store.js";
+import {getDatabase} from "./firestore-db.js";
+import {type TeamContextStore} from "../../domain/repositories/team-context-store.js";
 
 export class FirestoreTeamContextStore implements TeamContextStore {
   async currentTeamIdForUid(uid: string): Promise<string> {

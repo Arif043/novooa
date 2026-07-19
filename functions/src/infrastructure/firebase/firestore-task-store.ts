@@ -1,10 +1,8 @@
 import {UserFacingError} from "genkit";
-import {
-  taskDefinitionSchema,
-  type TaskDefinition,
-} from "../task-definition.js";
+import {type TaskDefinition} from "../../domain/entities/task.js";
+import {taskDefinitionSchema} from "../../task-runner/task-definition.js";
 import {getDatabase} from "./firestore-db.js";
-import {type TaskStore} from "./task-store.js";
+import {type TaskStore} from "../../domain/repositories/task-store.js";
 
 type TaskDocument = Record<string, unknown>;
 

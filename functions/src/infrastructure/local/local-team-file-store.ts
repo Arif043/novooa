@@ -1,13 +1,13 @@
 import {randomUUID} from "node:crypto";
 import {mkdir, readFile, writeFile} from "node:fs/promises";
 import path from "node:path";
-import {storagePathFor} from "../task-executors/write-file-node-config.js";
-import {type NodeAttachment} from "../task-runner/task-definition.js";
+import {storagePathFor} from "../../task-executors/write-file-node-config.js";
+import {type NodeAttachment} from "../../domain/entities/attachments.js";
 import {
   type TeamFileStore,
   type WriteTeamFileInput,
   type WrittenFile,
-} from "../task-runner/stores/team-file-store.js";
+} from "../../domain/repositories/team-file-store.js";
 import {type LocalSqlDatabase, type SqlRow} from "./local-sql-database.js";
 
 type ExistingFile = {

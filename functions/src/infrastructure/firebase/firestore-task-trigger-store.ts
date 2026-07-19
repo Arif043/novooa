@@ -4,13 +4,13 @@ import {
   type DocumentData,
   type QueryDocumentSnapshot,
 } from "firebase-admin/firestore";
-import {type ScheduleConfig} from "../schedule/schedule-next-run.js";
-import {getDatabase} from "../task-runner/stores/firestore-db.js";
+import {type ScheduleConfig} from "../../schedule/schedule-next-run.js";
+import {getDatabase} from "./firestore-db.js";
 import {
   type DueScheduleTrigger,
   type EventTaskTrigger,
   type TaskTriggerStore,
-} from "./task-trigger-store.js";
+} from "../../domain/repositories/task-trigger-store.js";
 
 export class FirestoreTaskTriggerStore implements TaskTriggerStore {
   async listDueScheduleTriggers(now: Date, limit: number) {

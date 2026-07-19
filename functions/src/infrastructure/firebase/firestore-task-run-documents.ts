@@ -1,5 +1,11 @@
 import {FieldValue} from "firebase-admin/firestore";
-import {type CompletedTaskGraphOutput} from "../task-definition.js";
+import {
+  taskResumeStateSchema,
+} from "../../task-runner/task-definition.js";
+import {
+  type CompletedTaskGraphOutput,
+  type TaskResumeState,
+} from "../../domain/entities/task.js";
 
 export function runStatus(status: string) {
   return {status, updatedAt: FieldValue.serverTimestamp()};
@@ -50,4 +56,10 @@ export function approvedDocument(output: string) {
 
 export function serializable(value: unknown): unknown {
   return JSON.parse(JSON.stringify(value));
+}
+
+export function resumeStateFromDocument(
+  data: Record<string, unknown>,
+): TaskResumeState {
+  return taskResumeStateSchema.parse(data.resumeState);
 }

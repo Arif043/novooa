@@ -2,8 +2,8 @@ import {
   FirestoreTeamContextStore,
   memberDocument,
   teamDocument,
-} from "./firestore-team-context-store.js";
-import {initializeAdminApp} from "./task-runner/stores/firestore-db.js";
+} from "./infrastructure/firebase/firestore-team-context-store.js";
+import {initializeAdminApp} from "./infrastructure/firebase/firestore-db.js";
 
 const defaultTeamContextStore = new FirestoreTeamContextStore();
 

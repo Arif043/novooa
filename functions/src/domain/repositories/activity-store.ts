@@ -1,7 +1,7 @@
 import {
   type CompletedTaskGraphOutput,
   type NodeExecutionResult,
-} from "../task-definition.js";
+} from "../entities/task.js";
 import {type TaskRunDocument} from "./task-run-store.js";
 
 export type TaskActivityInput = {

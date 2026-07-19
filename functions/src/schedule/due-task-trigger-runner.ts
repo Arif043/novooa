@@ -1,13 +1,13 @@
-import {FirestoreTaskRunStore} from "../task-runner/stores/firestore-task-run-store.js";
-import {FirestoreTaskStore} from "../task-runner/stores/firestore-task-store.js";
-import {type TaskRunStore} from "../task-runner/stores/task-run-store.js";
-import {type TaskStore} from "../task-runner/stores/task-store.js";
+import {type TaskRunStore} from "../domain/repositories/task-run-store.js";
+import {type TaskStore} from "../domain/repositories/task-store.js";
+import {FirestoreTaskRunStore} from "../infrastructure/firebase/firestore-task-run-store.js";
+import {FirestoreTaskStore} from "../infrastructure/firebase/firestore-task-store.js";
 import {errorDetails, logError, logInfo} from "../task-runner/structured-logger.js";
-import {FirestoreTaskTriggerStore} from "../triggers/firestore-task-trigger-store.js";
+import {FirestoreTaskTriggerStore} from "../infrastructure/firebase/firestore-task-trigger-store.js";
 import {
   type DueScheduleTrigger,
   type TaskTriggerStore,
-} from "../triggers/task-trigger-store.js";
+} from "../domain/repositories/task-trigger-store.js";
 import {nextRunAfter, type ScheduleConfig} from "./schedule-next-run.js";
 
 type DueTriggerRunnerStores = {

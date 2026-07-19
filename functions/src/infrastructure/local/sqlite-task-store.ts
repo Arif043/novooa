@@ -1,9 +1,7 @@
 import {UserFacingError} from "genkit";
-import {
-  taskDefinitionSchema,
-  type TaskDefinition,
-} from "../task-runner/task-definition.js";
-import {type TaskStore} from "../task-runner/stores/task-store.js";
+import {type TaskDefinition} from "../../domain/entities/task.js";
+import {taskDefinitionSchema} from "../../task-runner/task-definition.js";
+import {type TaskStore} from "../../domain/repositories/task-store.js";
 import {type LocalSqlDatabase, type SqlRow} from "./local-sql-database.js";
 
 type TaskRow = SqlRow & {

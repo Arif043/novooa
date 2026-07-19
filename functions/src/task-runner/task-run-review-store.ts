@@ -1,5 +1,5 @@
-import {FirestoreTaskRunStore} from "./stores/firestore-task-run-store.js";
-import {type ReviewableTaskRun} from "./stores/task-run-store.js";
+import {type ReviewableTaskRun} from "../domain/repositories/task-run-store.js";
+import {FirestoreTaskRunStore} from "../infrastructure/firebase/firestore-task-run-store.js";
 
 export type {ReviewableTaskRun};
 

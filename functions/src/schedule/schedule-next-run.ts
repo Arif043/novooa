@@ -1,16 +1,5 @@
-export type ScheduleConfig = {
-  kind: "once" | "daily" | "weekly";
-  timezone: string;
-  runAt?: Date;
-  timeOfDay?: string;
-  weekdays?: number[];
-  slots?: ScheduleSlot[];
-};
-
-export type ScheduleSlot = {
-  weekday: number;
-  timeOfDay: string;
-};
+import {type ScheduleConfig, type ScheduleSlot} from "../domain/entities/schedule.js";
+export type {ScheduleConfig, ScheduleSlot};
 
 export function nextRunAfter(config: ScheduleConfig, now: Date): Date | null {
   if (config.kind === "once") return nextOnce(config, now);

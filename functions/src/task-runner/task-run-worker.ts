@@ -6,11 +6,11 @@ import {
 import {
   type TaskResumeState,
 } from "./task-definition.js";
-import {type TaskStore} from "./stores/task-store.js";
+import {type TaskStore} from "../domain/repositories/task-store.js";
 import {
   type TaskRunDocument,
   type TaskRunStore,
-} from "./stores/task-run-store.js";
+} from "../domain/repositories/task-run-store.js";
 
 export type TaskRunWorkerStores = {
   taskStore: TaskStore;

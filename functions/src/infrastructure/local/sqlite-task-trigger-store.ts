@@ -1,9 +1,9 @@
-import {type ScheduleConfig} from "../schedule/schedule-next-run.js";
+import {type ScheduleConfig} from "../../schedule/schedule-next-run.js";
 import {
   type DueScheduleTrigger,
   type EventTaskTrigger,
   type TaskTriggerStore,
-} from "../triggers/task-trigger-store.js";
+} from "../../domain/repositories/task-trigger-store.js";
 import {type LocalSqlDatabase, type SqlRow} from "./local-sql-database.js";
 
 type ScheduleTriggerRow = SqlRow & {

@@ -251,36 +251,28 @@ export const reviewTaskRunOutputSchema = z.object({
   status: z.enum(["queued", "rejected"]),
 });
 
-export type WorkflowNode = z.infer<typeof workflowNodeSchema>;
-export type WorkflowEdge = z.infer<typeof workflowEdgeSchema>;
-export type NodeAttachment = z.infer<typeof nodeAttachmentSchema>;
-export type KnowledgeAttachment = z.infer<typeof knowledgeAttachmentSchema>;
-export type SkillAttachment = z.infer<typeof skillAttachmentSchema>;
-export type EmployeeAttachment = z.infer<typeof employeeAttachmentSchema>;
-export type TaskDefinition = z.infer<typeof taskDefinitionSchema>;
-export type TaskGraphInput = {
-  taskDefinition: TaskDefinition;
-  context: string;
-  teamId: string;
-  input?: Record<string, unknown>;
-};
+export type {
+  CompletedTaskGraphOutput,
+  EmployeeAttachment,
+  KnowledgeAttachment,
+  NodeAttachment,
+  NodeExecutionResult,
+  NodeOutputValue,
+  SkillAttachment,
+  TaskDefinition,
+  TaskGraphInput,
+  TaskGraphOutput,
+  TaskResumeState,
+  WaitingTaskGraphOutput,
+  WorkflowEdge,
+  WorkflowNode,
+} from "../domain/entities/task.js";
+
 export type RunTaskDefinitionInput = z.infer<
   typeof runTaskDefinitionInputSchema
 >;
-export type TaskGraphOutput = z.infer<
-  typeof taskGraphOutputSchema
->;
-export type CompletedTaskGraphOutput = z.infer<
-  typeof completedTaskGraphOutputSchema
->;
-export type WaitingTaskGraphOutput = z.infer<
-  typeof waitingTaskGraphOutputSchema
->;
-export type TaskResumeState = z.infer<typeof taskResumeStateSchema>;
 export type RunTaskDefinitionOutput = z.infer<
   typeof runTaskDefinitionOutputSchema
 >;
 export type ReviewTaskRunInput = z.infer<typeof reviewTaskRunInputSchema>;
 export type ReviewTaskRunOutput = z.infer<typeof reviewTaskRunOutputSchema>;
-export type NodeExecutionResult = z.infer<typeof nodeExecutionResultSchema>;
-export type NodeOutputValue = z.infer<typeof nodeOutputValueSchema>;

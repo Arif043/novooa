@@ -1,4 +1,4 @@
-import {type ScheduleConfig} from "../schedule/schedule-next-run.js";
+import {type ScheduleConfig} from "../entities/schedule.js";
 
 export type TriggerPolicy = {
   ifRunning: string;

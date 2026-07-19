@@ -1,10 +1,10 @@
 import {type DocumentData} from "firebase-admin/firestore";
-import {type KnowledgeAttachment} from "../task-definition.js";
+import {type KnowledgeAttachment} from "../../domain/entities/attachments.js";
 import {getDatabase} from "./firestore-db.js";
 import {
   type KnowledgeBaseStore,
   type KnowledgeNoteDocument,
-} from "./knowledge-base-store.js";
+} from "../../domain/repositories/knowledge-base-store.js";
 
 export class FirestoreKnowledgeBaseStore implements KnowledgeBaseStore {
   async loadNote(

@@ -1,19 +1,21 @@
 import {UserFacingError} from "genkit";
-import {textOutputFromResult} from "../task-runner/node-executor.js";
+import {textOutputFromResult} from "../../task-runner/node-executor.js";
 import {
-  taskResumeStateSchema,
   type CompletedTaskGraphOutput,
   type WaitingTaskGraphOutput,
-} from "../task-runner/task-definition.js";
-import {errorDetails} from "../task-runner/structured-logger.js";
-import {type ActivityStore} from "../task-runner/stores/activity-store.js";
+} from "../../domain/entities/task.js";
+import {
+  taskResumeStateSchema,
+} from "../../task-runner/task-definition.js";
+import {errorDetails} from "../../task-runner/structured-logger.js";
+import {type ActivityStore} from "../../domain/repositories/activity-store.js";
 import {
   type EnqueueTaskRunInput,
   newTaskRunDocument,
   type ReviewableTaskRun,
   type TaskRunDocument,
   type TaskRunStore,
-} from "../task-runner/stores/task-run-store.js";
+} from "../../domain/repositories/task-run-store.js";
 import {type LocalSqlDatabase, type SqlRow} from "./local-sql-database.js";
 import {
   approveSql,

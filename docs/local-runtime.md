@@ -9,6 +9,10 @@ Provider wie Twilio bleiben optional über einen dünnen novooa-Relay nutzbar.
 ## Runtime-Schichten
 
 ```text
+Domain
+  Task-, Attachment- und Schedule-Typen
+  Repository-Ports
+
 Task Runner Core
   NodeExecutors
   TaskGraphRunner
@@ -109,17 +113,20 @@ zustellen.
 
 ## Aktueller Implementierungsstand
 
+- `functions/src/domain/entities/` enthält reine Domain-Typen ohne Firebase
+  oder Genkit.
 - `functions/src/task-runner/ai-models.ts` kapselt AI Provider.
-- `functions/src/task-runner/stores/task-store.ts` definiert `TaskStore`.
-- `functions/src/task-runner/stores/task-run-store.ts` definiert `TaskRunStore`.
-- `functions/src/task-runner/stores/activity-store.ts` definiert `ActivityStore`.
-- `functions/src/task-runner/stores/team-file-store.ts` definiert `TeamFileStore`.
-- `functions/src/task-runner/stores/knowledge-base-store.ts` definiert `KnowledgeBaseStore`.
-- `functions/src/triggers/task-trigger-store.ts` definiert `TaskTriggerStore`.
-- `functions/src/team-context-store.ts` definiert `TeamContextStore`.
+- `functions/src/domain/repositories/task-store.ts` definiert `TaskStore`.
+- `functions/src/domain/repositories/task-run-store.ts` definiert `TaskRunStore`.
+- `functions/src/domain/repositories/activity-store.ts` definiert `ActivityStore`.
+- `functions/src/domain/repositories/team-file-store.ts` definiert `TeamFileStore`.
+- `functions/src/domain/repositories/knowledge-base-store.ts` definiert `KnowledgeBaseStore`.
+- `functions/src/domain/repositories/task-trigger-store.ts` definiert `TaskTriggerStore`.
+- `functions/src/domain/repositories/team-context-store.ts` definiert `TeamContextStore`.
 - `functions/src/task-runner/task-run-worker.ts` führt Runs über Store-Ports aus.
 - Scheduler und Channel-Dispatcher arbeiten über `TaskTriggerStore`.
-- Firestore-Adapter implementieren aktuell die Cloud-Version.
+- Firestore-Adapter unter `functions/src/infrastructure/firebase/`
+  implementieren aktuell die Cloud-Version.
 - Lokale SQL-Adapter sind für `TaskStore`, `TaskRunStore`, `ActivityStore`,
   `TaskTriggerStore` und `KnowledgeBaseStore` vorbereitet. Sie hängen nur an
   `LocalSqlDatabase`, noch nicht an einer konkreten SQLite-Library.

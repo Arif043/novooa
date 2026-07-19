@@ -1,13 +1,13 @@
 import {Timestamp} from "firebase-admin/firestore";
 import {
   type NodeExecutionResult,
-} from "../task-definition.js";
+} from "../../domain/entities/task.js";
 import {
   type ActivityStore,
   type TaskActivityInput,
-} from "./activity-store.js";
+} from "../../domain/repositories/activity-store.js";
 import {getDatabase} from "./firestore-db.js";
-import {type TaskRunDocument} from "./task-run-store.js";
+import {type TaskRunDocument} from "../../domain/repositories/task-run-store.js";
 
 export class FirestoreActivityStore implements ActivityStore {
   async writeNodeActivities(

@@ -3,8 +3,8 @@ import {
   executedNode,
   textOutputs,
 } from "../task-runner/node-executor.js";
-import {FirestoreTeamFileStore} from "../task-runner/stores/firestore-team-file-store.js";
-import {type TeamFileStore} from "../task-runner/stores/team-file-store.js";
+import {type TeamFileStore} from "../domain/repositories/team-file-store.js";
+import {FirestoreTeamFileStore} from "../infrastructure/firebase/firestore-team-file-store.js";
 import {
   type NodeAttachment,
   type WorkflowNode,

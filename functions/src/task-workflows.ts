@@ -22,8 +22,8 @@ import {errorDetails, logError} from "./task-runner/structured-logger.js";
 import {currentTeamIdForUid} from "./team-context.js";
 import {twilioAccountSid, twilioAuthToken} from "./channels/twilio-secrets.js";
 import {sendgridApiKey} from "./channels/sendgrid-secrets.js";
-import {FirestoreTaskStore} from "./task-runner/stores/firestore-task-store.js";
-import {FirestoreTaskRunStore} from "./task-runner/stores/firestore-task-run-store.js";
+import {FirestoreTaskStore} from "./infrastructure/firebase/firestore-task-store.js";
+import {FirestoreTaskRunStore} from "./infrastructure/firebase/firestore-task-run-store.js";
 import {
   continueApprovedTaskRun,
   executeQueuedTaskRun,

@@ -11,13 +11,15 @@ functions/src/
   task-workflows.ts        Callable Flows und Firestore Worker
   schedule-workflows.ts    Cloud Scheduler Entry Point
   team-workflows.ts        Team-Callables
-  task-runner/             Task-Runner-Core und Cloud-Adapter
+  domain/entities/         reine Task-, Attachment- und Schedule-Typen
+  domain/repositories/     Ports für Runner und Adapter
+  infrastructure/firebase/ Firestore-/Storage-/Firebase-Adapter
+  infrastructure/local/    SQLite-/Dateisystem-Adapter
+  task-runner/             Task-Runner-Core und Facades
   task-executors/          Baustein-Executoren
   channels/                Kommunikation, Trigger-Dispatch, Sender
   twilio/                  Twilio Webhook und Mapping
   schedule/                Zeitplan-Runner und Zeitberechnung
-  triggers/                Trigger-Ports und Firestore-Adapter
-  local-runtime/           lokale SQL-/Dateisystem-Adapter
 ```
 
 ## Zielstruktur
@@ -31,37 +33,25 @@ Core
   task-executors/
   schedule/schedule-next-run.ts
 
-Ports
-  TaskStore
-  TaskRunStore
-  ActivityStore
-  TaskTriggerStore
-  KnowledgeBaseStore
-  TeamFileStore
-  TeamContextStore
+Domain
+  domain/entities/
+  domain/repositories/
 
 Cloud Adapter
-  FirestoreTaskStore
-  FirestoreTaskRunStore
-  FirestoreActivityStore
-  FirestoreTaskTriggerStore
-  FirestoreKnowledgeBaseStore
-  FirestoreTeamFileStore
+  infrastructure/firebase/
 
 Local Adapter
-  SQLiteTaskStore
-  SQLiteTaskRunStore
-  SQLiteActivityStore
-  SQLiteTaskTriggerStore
-  SQLiteKnowledgeBaseStore
-  LocalTeamFileStore
+  infrastructure/local/
 ```
 
 ## Leitplanken
 
 - Entry Points importieren Cloud-SDKs.
 - Store-Adapter importieren Persistenz-SDKs.
+- `domain/` importiert keine Firebase-, Genkit- oder Runner-Module.
 - Runner, Executor-Registry und Graph-Logik importieren keine Firebase-SDKs.
+- `task-runner/task-definition.ts` bleibt vorerst die Schema- und
+  Validierungsschicht für Genkit/Zod und re-exportiert Domain-Typen.
 - Lokale Adapter hängen an `LocalSqlDatabase`, nicht an einer konkreten
   SQLite-Library.
 - Migrationen werden über `SqlMigrationRunner` angewendet, nicht aus

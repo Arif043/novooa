@@ -2,11 +2,11 @@ import {mkdir, writeFile} from "node:fs/promises";
 import path from "node:path";
 
 import {type KnowledgeAttachment} from "./task-definition.js";
-import {FirestoreKnowledgeBaseStore} from "./stores/firestore-knowledge-base-store.js";
+import {FirestoreKnowledgeBaseStore} from "../infrastructure/firebase/firestore-knowledge-base-store.js";
 import {
   type KnowledgeBaseStore,
   type KnowledgeNoteDocument,
-} from "./stores/knowledge-base-store.js";
+} from "../domain/repositories/knowledge-base-store.js";
 
 const maxNotes = 50;
 const maxDepth = 5;

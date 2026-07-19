@@ -1,4 +1,4 @@
-import {type NodeAttachment} from "../task-definition.js";
+import {type NodeAttachment} from "../entities/attachments.js";
 
 export type WriteTeamFileInput = {
   teamId: string;

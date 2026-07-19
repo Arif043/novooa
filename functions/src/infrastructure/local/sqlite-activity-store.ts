@@ -1,12 +1,12 @@
 import {randomUUID} from "node:crypto";
 import {
   type NodeExecutionResult,
-} from "../task-runner/task-definition.js";
+} from "../../domain/entities/task.js";
 import {
   type ActivityStore,
   type TaskActivityInput,
-} from "../task-runner/stores/activity-store.js";
-import {type TaskRunDocument} from "../task-runner/stores/task-run-store.js";
+} from "../../domain/repositories/activity-store.js";
+import {type TaskRunDocument} from "../../domain/repositories/task-run-store.js";
 import {type LocalSqlDatabase} from "./local-sql-database.js";
 
 export class SQLiteActivityStore implements ActivityStore {

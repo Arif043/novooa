@@ -2,12 +2,12 @@ import {
   type CompletedTaskGraphOutput,
   type WaitingTaskGraphOutput,
 } from "./task-definition.js";
-import {FirestoreTaskRunStore} from "./stores/firestore-task-run-store.js";
+import {FirestoreTaskRunStore} from "../infrastructure/firebase/firestore-task-run-store.js";
 import {
   type EnqueueTaskRunInput,
   runFromDocument,
   type TaskRunDocument,
-} from "./stores/task-run-store.js";
+} from "../domain/repositories/task-run-store.js";
 
 export {runFromDocument, type TaskRunDocument};
 

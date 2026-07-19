@@ -1,4 +1,4 @@
-import {type KnowledgeAttachment} from "../task-definition.js";
+import {type KnowledgeAttachment} from "../entities/attachments.js";
 
 export type KnowledgeNoteDocument = KnowledgeAttachment & {
   content: string;

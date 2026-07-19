@@ -1,8 +1,8 @@
 import {UserFacingError} from "genkit";
 import {currentTeamIdForUid} from "../team-context.js";
 import {type TaskDefinition} from "./task-definition.js";
-import {FirestoreTaskStore} from "./stores/firestore-task-store.js";
-import {type TaskStore} from "./stores/task-store.js";
+import {type TaskStore} from "../domain/repositories/task-store.js";
+import {FirestoreTaskStore} from "../infrastructure/firebase/firestore-task-store.js";
 
 type FirebaseAuthContext = {
   auth?: {

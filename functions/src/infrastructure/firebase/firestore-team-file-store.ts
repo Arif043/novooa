@@ -2,13 +2,13 @@ import {randomUUID} from "node:crypto";
 import {FieldValue} from "firebase-admin/firestore";
 import {getStorage} from "firebase-admin/storage";
 import {storagePathFor} from "../../task-executors/write-file-node-config.js";
-import {type NodeAttachment} from "../task-definition.js";
+import {type NodeAttachment} from "../../domain/entities/attachments.js";
 import {getDatabase} from "./firestore-db.js";
 import {
   type TeamFileStore,
   type WriteTeamFileInput,
   type WrittenFile,
-} from "./team-file-store.js";
+} from "../../domain/repositories/team-file-store.js";
 
 type ExistingFile = {
   fileId: string;

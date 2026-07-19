@@ -2,10 +2,9 @@ import {randomUUID} from "crypto";
 import {
   type CompletedTaskGraphOutput,
   type TaskDefinition,
-  taskResumeStateSchema,
   type TaskResumeState,
   type WaitingTaskGraphOutput,
-} from "../task-definition.js";
+} from "../entities/task.js";
 
 export type TaskRunDocument = {
   runId: string;
@@ -82,10 +81,6 @@ export function runFromDocument(data: Record<string, unknown>) {
     context: String(data.context ?? ""),
     input: inputFromDocument(data.input),
   };
-}
-
-export function resumeStateFromDocument(data: Record<string, unknown>) {
-  return taskResumeStateSchema.parse(data.resumeState);
 }
 
 function inputFromDocument(value: unknown): Record<string, unknown> {

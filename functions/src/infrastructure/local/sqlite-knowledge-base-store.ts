@@ -1,8 +1,8 @@
-import {type KnowledgeAttachment} from "../task-runner/task-definition.js";
+import {type KnowledgeAttachment} from "../../domain/entities/attachments.js";
 import {
   type KnowledgeBaseStore,
   type KnowledgeNoteDocument,
-} from "../task-runner/stores/knowledge-base-store.js";
+} from "../../domain/repositories/knowledge-base-store.js";
 import {type LocalSqlDatabase, type SqlRow} from "./local-sql-database.js";
 
 type KnowledgeNoteRow = SqlRow & {
