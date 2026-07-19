@@ -82,7 +82,6 @@ class _SideMenuContent extends StatelessWidget {
           selectedIndex: selectedIndex,
           onSelected: onSelected,
         ),
-        const Spacer(),
         ListTile(
           selected: false,
           iconColor: colorScheme.error,
