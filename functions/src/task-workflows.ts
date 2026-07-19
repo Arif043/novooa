@@ -45,6 +45,10 @@ const objectStore = new FirebaseObjectStore();
 const knowledgeBaseStore = new FirestoreKnowledgeBaseStore();
 const teamContextStore = new FirestoreTeamContextStore();
 const workerStores = {taskStore, taskRunStore, objectStore, knowledgeBaseStore};
+const callableOptions = {
+  authPolicy: isSignedIn(),
+  invoker: "public" as const,
+};
 
 export const taskDefinitionFlow = ai.defineFlow(
   {
@@ -79,7 +83,10 @@ export const taskDefinitionFlow = ai.defineFlow(
   },
 );
 
-export const runTaskDefinitionFlow = onCallGenkit({authPolicy: isSignedIn()}, taskDefinitionFlow);
+export const runTaskDefinitionFlow = onCallGenkit(
+  callableOptions,
+  taskDefinitionFlow,
+);
 
 export const reviewTaskRunFlow = ai.defineFlow(
   {
@@ -106,7 +113,7 @@ export const reviewTaskRunFlow = ai.defineFlow(
   },
 );
 
-export const reviewTaskRun = onCallGenkit({authPolicy: isSignedIn()}, reviewTaskRunFlow);
+export const reviewTaskRun = onCallGenkit(callableOptions, reviewTaskRunFlow);
 
 export const runTaskDefinitionWorker = onDocumentCreated(
   {
