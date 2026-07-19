@@ -83,19 +83,9 @@ class TaskBuilderSideDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Material(
-      elevation: 10,
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(AppSpacing.lg),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(AppSpacing.lg),
-          border: Border.all(color: theme.colorScheme.outlineVariant),
-        ),
-        child: SizedBox(width: 390, child: _content()),
-      ),
+      color: Theme.of(context).colorScheme.surface,
+      child: SafeArea(left: false, child: _content()),
     );
   }
 

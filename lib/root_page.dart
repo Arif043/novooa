@@ -126,6 +126,7 @@ class _RootPageState extends State<RootPage> {
     return TaskBuilderShellFrame(
       title: title,
       onMenuPressed: _sideMenuController.openLeftMenu,
+      menuWidthOfScreen: _menuWidthOfScreen(context),
       child: widget.child,
     );
   }
