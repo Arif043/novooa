@@ -6,9 +6,11 @@ import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
 import 'package:syscat2/features/activity/presentation/pages/activity_page.dart';
 import 'package:syscat2/features/files/presentation/pages/files_page.dart';
+import 'package:syscat2/features/employees/presentation/pages/employees_page.dart';
 import 'package:syscat2/features/knowledge_base/presentation/pages/knowledge_base_page.dart';
 import 'package:syscat2/features/schedule/presentation/pages/schedule_page.dart';
 import 'package:syscat2/features/settings/presentation/pages/settings_page.dart';
+import 'package:syscat2/features/skills/presentation/pages/skills_page.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/presentation/pages/task_builder_page.dart';
 import 'package:syscat2/features/task_builder/presentation/pages/task_homepage.dart';
@@ -22,6 +24,8 @@ class AppRouter {
   static const String activity = '/activity';
   static const String files = '/files';
   static const String knowledgeBase = '/knowledge-base';
+  static const String skills = '/skills';
+  static const String employees = '/employees';
   static const String settings = '/settings';
 
   AppRouter({required AuthRepository authRepository})
@@ -76,6 +80,14 @@ class AppRouter {
           GoRoute(
             path: knowledgeBase,
             builder: (context, state) => const KnowledgeBasePage(),
+          ),
+          GoRoute(
+            path: skills,
+            builder: (context, state) => const SkillsPage(),
+          ),
+          GoRoute(
+            path: employees,
+            builder: (context, state) => const EmployeesPage(),
           ),
           GoRoute(
             path: settings,

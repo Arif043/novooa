@@ -6,12 +6,15 @@ import {getStorage} from "firebase-admin/storage";
 import {
   type KnowledgeAttachment,
   type NodeAttachment,
+  type SkillAttachment,
   type WorkflowNode,
 } from "./task-definition.js";
 import {
   prepareKnowledgeFiles,
   type PreparedKnowledgeAttachment,
 } from "./knowledge-note-workspace.js";
+import {prepareSkillDirectory} from "./skill-workspace.js";
+import {employeeFor, mergeNodeAndEmployeeSkills} from "./employee-context.js";
 
 if (getApps().length === 0) initializeApp();
 
@@ -23,6 +26,8 @@ export type NodeAttachmentWorkspace = {
   rootDirectory: string;
   files: PreparedNodeAttachment[];
   knowledgeFiles: PreparedKnowledgeAttachment[];
+  skillsDirectory?: string;
+  skillCount: number;
   cleanup(): Promise<void>;
 };
 
@@ -32,7 +37,16 @@ export async function prepareNodeAttachmentWorkspace(
 ): Promise<NodeAttachmentWorkspace | undefined> {
   const attachments = attachmentsFor(node);
   const knowledgeAttachments = knowledgeAttachmentsFor(node);
-  if (attachments.length === 0 && knowledgeAttachments.length === 0) {
+  const nodeSkills = skillAttachmentsFor(node);
+  const skillAttachments = mergeNodeAndEmployeeSkills(
+    nodeSkills,
+    employeeFor(node),
+  );
+  if (
+    attachments.length === 0 &&
+    knowledgeAttachments.length === 0 &&
+    skillAttachments.length === 0
+  ) {
     return undefined;
   }
   const rootDirectory = await mkdtemp(
@@ -45,10 +59,16 @@ export async function prepareNodeAttachmentWorkspace(
     teamId,
     knowledgeAttachments,
   );
+  const skillsDirectory = await prepareSkillDirectory(
+    rootDirectory,
+    skillAttachments,
+  );
   return {
     rootDirectory,
     files,
     knowledgeFiles,
+    skillsDirectory,
+    skillCount: skillAttachments.length,
     cleanup: () => rm(rootDirectory, {recursive: true, force: true}),
   };
 }
@@ -62,6 +82,16 @@ function attachmentsFor(node: WorkflowNode): NodeAttachment[] {
 function knowledgeAttachmentsFor(node: WorkflowNode): KnowledgeAttachment[] {
   if (node.config.primitive === "prompt") {
     return node.config.knowledgeAttachments;
+  }
+  return [];
+}
+
+function skillAttachmentsFor(node: WorkflowNode): SkillAttachment[] {
+  if (node.config.primitive === "prompt") {
+    return node.config.skillAttachments;
+  }
+  if (node.config.primitive === "iterativeRefinement") {
+    return node.config.skillAttachments;
   }
   return [];
 }

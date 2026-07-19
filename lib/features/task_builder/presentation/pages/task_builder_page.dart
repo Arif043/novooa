@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/widgets/root_shell_scope.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/node_employee_assignments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/node_skill_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/task_builder_body.dart';
@@ -29,6 +31,13 @@ class TaskBuilderPage extends StatelessWidget {
         BlocProvider(
           create: (_) =>
               serviceLocator<NodeKnowledgeAttachmentsCubit>()..load(),
+        ),
+        BlocProvider(
+          create: (_) => serviceLocator<NodeSkillAttachmentsCubit>()..load(),
+        ),
+        BlocProvider(
+          create: (_) =>
+              serviceLocator<NodeEmployeeAssignmentsCubit>()..load(),
         ),
       ],
       child: const _TaskBuilderView(),

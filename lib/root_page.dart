@@ -53,6 +53,16 @@ class _RootPageState extends State<RootPage> {
       path: '/knowledge-base',
     ),
     RootTab(
+      title: 'Fähigkeiten',
+      icon: Icons.auto_awesome_outlined,
+      path: '/skills',
+    ),
+    RootTab(
+      title: 'Mitarbeiter',
+      icon: Icons.people_outline,
+      path: '/employees',
+    ),
+    RootTab(
       title: 'Einstellungen',
       icon: Icons.settings_outlined,
       path: '/settings',

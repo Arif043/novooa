@@ -1,0 +1,86 @@
+import 'dart:async';
+
+import 'package:bloc/bloc.dart';
+import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
+import 'package:syscat2/features/employees/domain/entities/employee.dart';
+import 'package:syscat2/features/employees/domain/usecases/watch_employees.dart';
+import 'package:syscat2/features/files/domain/entities/team_id.dart';
+import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
+
+import '../../domain/entities/employee_attachment.dart';
+import 'node_employee_assignments_state.dart';
+
+/// Beobachtet die Team-Mitarbeiter und stellt sie dem NodeInspector als
+/// Auswahl-Slot bereit — analog zu [NodeSkillAttachmentsCubit], nur dass
+/// eine Zuweisung 0..1 statt 0..n ist.
+class NodeEmployeeAssignmentsCubit
+    extends Cubit<NodeEmployeeAssignmentsState> {
+  NodeEmployeeAssignmentsCubit(
+    this._authRepository,
+    this._watchEmployees,
+    this._getCurrentTeamId,
+  ) : super(const NodeEmployeeAssignmentsState());
+
+  final AuthRepository _authRepository;
+  final WatchEmployees _watchEmployees;
+  final GetCurrentTeamId _getCurrentTeamId;
+  StreamSubscription<List<Employee>>? _subscription;
+
+  Future<void> load() async {
+    final user = _authRepository.currentUser();
+    if (user == null) return _emitFailure('Du musst angemeldet sein.');
+    emit(const NodeEmployeeAssignmentsState());
+    _subscription?.cancel();
+    final teamId = await _teamIdOrNull();
+    if (teamId == null) return;
+    _subscription = _watchEmployees(teamId).listen(
+      _emitEmployees,
+      onError: (_) => _emitFailure('Mitarbeiter konnten nicht geladen werden.'),
+    );
+  }
+
+  Future<TeamId?> _teamIdOrNull() async {
+    try {
+      return await _getCurrentTeamId();
+    } catch (_) {
+      _emitFailure('Team konnte nicht geladen werden.');
+      return null;
+    }
+  }
+
+  void _emitEmployees(List<Employee> employees) {
+    if (isClosed) return;
+    emit(
+      NodeEmployeeAssignmentsState(
+        status: NodeEmployeeAssignmentsStatus.ready,
+        employees: employees.map(_toAttachment).toList(growable: false),
+      ),
+    );
+  }
+
+  EmployeeAttachment _toAttachment(Employee employee) {
+    return EmployeeAttachment(
+      employeeId: employee.id,
+      name: employee.name,
+      role: employee.role,
+      promptTemplate: employee.promptTemplate,
+      defaultSkills: employee.defaultSkills,
+    );
+  }
+
+  void _emitFailure(String message) {
+    if (isClosed) return;
+    emit(
+      NodeEmployeeAssignmentsState(
+        status: NodeEmployeeAssignmentsStatus.failure,
+        message: message,
+      ),
+    );
+  }
+
+  @override
+  Future<void> close() {
+    _subscription?.cancel();
+    return super.close();
+  }
+}

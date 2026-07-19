@@ -51,6 +51,21 @@ import 'package:syscat2/features/schedule/domain/usecases/set_task_trigger_enabl
 import 'package:syscat2/features/schedule/domain/usecases/watch_task_triggers.dart';
 import 'package:syscat2/features/schedule/infrastructure/repositories/firestore_task_trigger_repository.dart';
 import 'package:syscat2/features/schedule/presentation/cubits/schedule_cubit.dart';
+import 'package:syscat2/features/employees/domain/repositories/employee_repository.dart';
+import 'package:syscat2/features/employees/domain/usecases/create_employee.dart';
+import 'package:syscat2/features/employees/domain/usecases/delete_employee.dart';
+import 'package:syscat2/features/employees/domain/usecases/update_employee.dart';
+import 'package:syscat2/features/employees/domain/usecases/watch_employees.dart';
+import 'package:syscat2/features/employees/infrastructure/repositories/firestore_employee_repository.dart';
+import 'package:syscat2/features/employees/presentation/cubits/employees_cubit.dart';
+import 'package:syscat2/features/skills/domain/repositories/skill_repository.dart';
+import 'package:syscat2/features/skills/domain/usecases/create_skill.dart';
+import 'package:syscat2/features/skills/domain/usecases/delete_skill.dart';
+import 'package:syscat2/features/skills/domain/usecases/load_skill_content.dart';
+import 'package:syscat2/features/skills/domain/usecases/update_skill.dart';
+import 'package:syscat2/features/skills/domain/usecases/watch_skills.dart';
+import 'package:syscat2/features/skills/infrastructure/repositories/firebase_skill_repository.dart';
+import 'package:syscat2/features/skills/presentation/cubits/skills_cubit.dart';
 import 'package:syscat2/features/user/domain/usecases/get_current_user_profile.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/sign_in_with_email_and_password.dart';
@@ -77,8 +92,10 @@ import '../../features/task_builder/infrastructure/datasources/firebase_function
 import '../../features/task_builder/infrastructure/datasources/task_runner_datasource.dart';
 import '../../features/task_builder/infrastructure/repositories/firebase_task_repository.dart';
 import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart';
+import '../../features/task_builder/presentation/cubits/node_employee_assignments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
+import '../../features/task_builder/presentation/cubits/node_skill_attachments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/task_homepage_cubit.dart';
 import '../../features/teams/domain/repositories/team_repository.dart';
 import '../../features/teams/domain/usecases/add_current_team_member.dart';
@@ -123,6 +140,15 @@ void configureDependencies() {
     ..registerLazySingleton<KnowledgeBaseRepository>(
       () =>
           FirestoreKnowledgeBaseRepository(serviceLocator<FirebaseFirestore>()),
+    )
+    ..registerLazySingleton<SkillRepository>(
+      () => FirebaseSkillRepository(
+        serviceLocator<FirebaseFirestore>(),
+        serviceLocator<FirebaseStorage>(),
+      ),
+    )
+    ..registerLazySingleton<EmployeeRepository>(
+      () => FirestoreEmployeeRepository(serviceLocator<FirebaseFirestore>()),
     )
     ..registerLazySingleton(InternalAssistantKnowledge.new)
     ..registerLazySingleton(
@@ -249,6 +275,33 @@ void configureDependencies() {
     )
     ..registerLazySingleton(
       () => DeleteKnowledgeNote(serviceLocator<KnowledgeBaseRepository>()),
+    )
+    ..registerLazySingleton(
+      () => WatchSkills(serviceLocator<SkillRepository>()),
+    )
+    ..registerLazySingleton(
+      () => LoadSkillContent(serviceLocator<SkillRepository>()),
+    )
+    ..registerLazySingleton(
+      () => CreateSkill(serviceLocator<SkillRepository>()),
+    )
+    ..registerLazySingleton(
+      () => UpdateSkill(serviceLocator<SkillRepository>()),
+    )
+    ..registerLazySingleton(
+      () => DeleteSkill(serviceLocator<SkillRepository>()),
+    )
+    ..registerLazySingleton(
+      () => WatchEmployees(serviceLocator<EmployeeRepository>()),
+    )
+    ..registerLazySingleton(
+      () => CreateEmployee(serviceLocator<EmployeeRepository>()),
+    )
+    ..registerLazySingleton(
+      () => UpdateEmployee(serviceLocator<EmployeeRepository>()),
+    )
+    ..registerLazySingleton(
+      () => DeleteEmployee(serviceLocator<EmployeeRepository>()),
     )
     ..registerLazySingleton(
       () => UploadTeamFile(serviceLocator<TeamFileRepository>()),
@@ -382,6 +435,41 @@ void configureDependencies() {
       () => NodeKnowledgeAttachmentsCubit(
         serviceLocator<AuthRepository>(),
         serviceLocator<WatchKnowledgeNotes>(),
+        serviceLocator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerFactory(
+      () => NodeSkillAttachmentsCubit(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<WatchSkills>(),
+        serviceLocator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerFactory(
+      () => SkillsCubit(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<WatchSkills>(),
+        serviceLocator<LoadSkillContent>(),
+        serviceLocator<CreateSkill>(),
+        serviceLocator<UpdateSkill>(),
+        serviceLocator<DeleteSkill>(),
+        serviceLocator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerFactory(
+      () => NodeEmployeeAssignmentsCubit(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<WatchEmployees>(),
+        serviceLocator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerFactory(
+      () => EmployeesCubit(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<WatchEmployees>(),
+        serviceLocator<CreateEmployee>(),
+        serviceLocator<UpdateEmployee>(),
+        serviceLocator<DeleteEmployee>(),
         serviceLocator<GetCurrentTeamId>(),
       ),
     )

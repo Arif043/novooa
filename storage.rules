@@ -24,6 +24,12 @@ service firebase.storage {
       allow create: if isTeamMember(teamId) && isValidUpload();
     }
 
+    match /teams/{teamId}/skills/{skillId}/{fileName=**} {
+      allow read: if isTeamMember(teamId);
+      allow write: if isTeamMember(teamId) && isValidUpload();
+      allow delete: if isTeamMember(teamId);
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

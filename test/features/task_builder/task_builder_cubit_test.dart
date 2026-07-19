@@ -1,8 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
+import 'package:syscat2/features/task_builder/domain/entities/employee_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/knowledge_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
+import 'package:syscat2/features/task_builder/domain/entities/skill_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_execution_failure.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_run_start.dart';
@@ -253,6 +255,60 @@ void main() {
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
+  test('attachNodeSkill haengt und loest Fähigkeit am Prompt-Node', () async {
+    final repository = _InMemoryTaskRepository(_taskWithBranchPrompt());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.attachNodeSkill(
+      nodeId: const NodeId('node.2'),
+      attachment: _skillAttachment,
+    );
+
+    var promptConfig = _branchPromptConfig(cubit);
+    expect(promptConfig.skillAttachments, [_skillAttachment]);
+
+    await cubit.attachNodeSkill(
+      nodeId: const NodeId('node.2'),
+      attachment: _skillAttachment,
+    );
+    promptConfig = _branchPromptConfig(cubit);
+    expect(promptConfig.skillAttachments, hasLength(1),
+        reason: 'gleicher Skill darf nicht doppelt angehängt werden');
+
+    await cubit.detachNodeSkill(
+      nodeId: const NodeId('node.2'),
+      attachmentId: _skillAttachment.id,
+    );
+
+    final state = cubit.state as TaskBuilderLoaded;
+    promptConfig = _branchPromptConfig(cubit);
+    expect(promptConfig.skillAttachments, isEmpty);
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
+  });
+
+  test('assignNodeEmployee weist einen Mitarbeiter zu und wieder ab',
+      () async {
+    final repository = _InMemoryTaskRepository(_taskWithBranchPrompt());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.assignNodeEmployee(
+      nodeId: const NodeId('node.2'),
+      attachment: _employeeAttachment,
+    );
+
+    var promptConfig = _branchPromptConfig(cubit);
+    expect(promptConfig.employee, _employeeAttachment);
+
+    await cubit.unassignNodeEmployee(nodeId: const NodeId('node.2'));
+
+    final state = cubit.state as TaskBuilderLoaded;
+    promptConfig = _branchPromptConfig(cubit);
+    expect(promptConfig.employee, isNull);
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
+  });
+
   test('updateScript speichert Script-Code am Script-Node', () async {
     final repository = _InMemoryTaskRepository(_taskWithScriptNode());
     final cubit = TaskBuilderCubit(repository: repository);
@@ -379,6 +435,21 @@ const _knowledgeAttachment = KnowledgeAttachment(
   title: 'Index',
   path: 'index.md',
   type: KnowledgeAttachmentType.moc,
+);
+
+const _skillAttachment = SkillAttachment(
+  skillId: 'skill.1',
+  title: 'E-Mails freundlich beantworten',
+  description: 'Nutze diese Fähigkeit für Kundenmails.',
+  storagePath: 'teams/team.1/skills/skill.1/SKILL.md',
+);
+
+const _employeeAttachment = EmployeeAttachment(
+  employeeId: 'employee.1',
+  name: 'Rezeption',
+  role: 'Du bist die Rezeption von novooa.',
+  promptTemplate: '{{instruction}}',
+  defaultSkills: [_skillAttachment],
 );
 
 Task _taskWithConditionalNode() {

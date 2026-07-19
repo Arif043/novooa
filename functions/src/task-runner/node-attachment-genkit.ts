@@ -1,4 +1,4 @@
-import {filesystem, retry} from "@genkit-ai/middleware";
+import {filesystem, retry, skills} from "@genkit-ai/middleware";
 import {type NodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 
 export function aiTurnMiddleware(workspace?: NodeAttachmentWorkspace) {
@@ -11,6 +11,9 @@ export function aiTurnMiddleware(workspace?: NodeAttachmentWorkspace) {
   ];
   if (workspace) {
     middleware.push(filesystem({rootDirectory: workspace.rootDirectory}));
+    if (workspace.skillsDirectory) {
+      middleware.push(skills({skillPaths: [workspace.skillsDirectory]}));
+    }
   }
   return middleware;
 }
@@ -37,6 +40,12 @@ export function attachmentInstructions(
       "Nutze exakt diese Dateipfade beim Lesen von Wissensnotizen.",
       "MOC-Notizen wurden inklusive verlinkter Notizen bereitgestellt.",
       "Eine Übersicht liegt unter knowledge/manifest.json.",
+    ].join("\n"));
+  }
+  if (workspace.skillCount > 0) {
+    parts.push([
+      "Zusätzlich stehen Fähigkeiten (Skills) über das Werkzeug use_skill bereit.",
+      "Nutze eine passende Fähigkeit, bevor du eine Antwort formulierst.",
     ].join("\n"));
   }
   return parts.join("\n");

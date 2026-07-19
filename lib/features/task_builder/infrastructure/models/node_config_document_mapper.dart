@@ -1,6 +1,8 @@
+import '../../domain/entities/employee_attachment.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/knowledge_attachment.dart';
 import '../../domain/entities/node_attachment.dart';
+import '../../domain/entities/skill_attachment.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
 
@@ -81,6 +83,11 @@ class NodeConfigDocumentMapper {
       'knowledgeAttachments': config.knowledgeAttachments
           .map(_knowledgeAttachmentToDocument)
           .toList(),
+      'skillAttachments': config.skillAttachments
+          .map(_skillAttachmentToDocument)
+          .toList(),
+      if (config.employee != null)
+        'employee': _employeeAttachmentToDocument(config.employee!),
     };
   }
 
@@ -99,6 +106,11 @@ class NodeConfigDocumentMapper {
       'optimizerPrompt': config.optimizerPrompt,
       'critiquePrompt': config.critiquePrompt,
       'maxIterations': config.maxIterations,
+      'skillAttachments': config.skillAttachments
+          .map(_skillAttachmentToDocument)
+          .toList(),
+      if (config.employee != null)
+        'employee': _employeeAttachmentToDocument(config.employee!),
     };
   }
 
@@ -157,6 +169,8 @@ class NodeConfigDocumentMapper {
       knowledgeAttachments: _knowledgeAttachmentsFrom(
         data['knowledgeAttachments'],
       ),
+      skillAttachments: _skillAttachmentsFrom(data['skillAttachments']),
+      employee: _employeeAttachmentFromOrNull(data['employee']),
     );
   }
 
@@ -169,6 +183,8 @@ class NodeConfigDocumentMapper {
       optimizerPrompt: data['optimizerPrompt'] as String? ?? '',
       critiquePrompt: data['critiquePrompt'] as String? ?? '',
       maxIterations: data['maxIterations'] as int? ?? 2,
+      skillAttachments: _skillAttachmentsFrom(data['skillAttachments']),
+      employee: _employeeAttachmentFromOrNull(data['employee']),
     );
   }
 
@@ -293,6 +309,58 @@ class NodeConfigDocumentMapper {
       title: data['title'] as String? ?? '',
       path: data['path'] as String? ?? '',
       type: _knowledgeAttachmentTypeFrom(data['type']),
+    );
+  }
+
+  Map<String, Object?> _skillAttachmentToDocument(SkillAttachment attachment) {
+    return {
+      'skillId': attachment.skillId,
+      'title': attachment.title,
+      'description': attachment.description,
+      'storagePath': attachment.storagePath,
+    };
+  }
+
+  List<SkillAttachment> _skillAttachmentsFrom(Object? value) {
+    return _mapListFrom(value)
+        .map(_skillAttachmentFrom)
+        .toList(growable: false);
+  }
+
+  SkillAttachment _skillAttachmentFrom(Map<String, Object?> data) {
+    return SkillAttachment(
+      skillId: data['skillId'] as String? ?? '',
+      title: data['title'] as String? ?? '',
+      description: data['description'] as String? ?? '',
+      storagePath: data['storagePath'] as String? ?? '',
+    );
+  }
+
+  Map<String, Object?> _employeeAttachmentToDocument(
+    EmployeeAttachment employee,
+  ) {
+    return {
+      'employeeId': employee.employeeId,
+      'name': employee.name,
+      'role': employee.role,
+      'promptTemplate': employee.promptTemplate,
+      'defaultSkills': employee.defaultSkills
+          .map(_skillAttachmentToDocument)
+          .toList(),
+    };
+  }
+
+  EmployeeAttachment? _employeeAttachmentFromOrNull(Object? value) {
+    if (value is! Map) return null;
+    final data = _objectMapFrom(value);
+    final employeeId = data['employeeId'] as String? ?? '';
+    if (employeeId.isEmpty) return null;
+    return EmployeeAttachment(
+      employeeId: employeeId,
+      name: data['name'] as String? ?? '',
+      role: data['role'] as String? ?? '',
+      promptTemplate: data['promptTemplate'] as String? ?? '',
+      defaultSkills: _skillAttachmentsFrom(data['defaultSkills']),
     );
   }
 

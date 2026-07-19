@@ -35,6 +35,21 @@ export const knowledgeAttachmentSchema = z.object({
   type: z.enum(["atomic", "moc", "unknown"]).default("unknown"),
 });
 
+export const skillAttachmentSchema = z.object({
+  skillId: z.string().min(1),
+  title: z.string().default(""),
+  description: z.string().default(""),
+  storagePath: z.string().min(1),
+});
+
+export const employeeAttachmentSchema = z.object({
+  employeeId: z.string().min(1),
+  name: z.string().default(""),
+  role: z.string().default(""),
+  promptTemplate: z.string().default(""),
+  defaultSkills: z.array(skillAttachmentSchema).default([]),
+});
+
 export const stringInputNodeConfigSchema = z.object({
   primitive: z.literal("stringInput").default("stringInput"),
   value: z.string().default(""),
@@ -59,6 +74,8 @@ export const promptNodeConfigSchema = z.object({
   secondChoice: z.string().default(""),
   attachments: z.array(nodeAttachmentSchema).default([]),
   knowledgeAttachments: z.array(knowledgeAttachmentSchema).default([]),
+  skillAttachments: z.array(skillAttachmentSchema).default([]),
+  employee: employeeAttachmentSchema.optional(),
 });
 
 export const workflowEdgeSchema = z.object({
@@ -99,6 +116,8 @@ export const iterativeRefinementNodeConfigSchema = z.object({
   optimizerPrompt: z.string().default(""),
   critiquePrompt: z.string().default(""),
   maxIterations: z.number().int().min(1).max(5).default(2),
+  skillAttachments: z.array(skillAttachmentSchema).default([]),
+  employee: employeeAttachmentSchema.optional(),
 });
 
 export const humanApprovalNodeConfigSchema = z.object({
@@ -236,6 +255,8 @@ export type WorkflowNode = z.infer<typeof workflowNodeSchema>;
 export type WorkflowEdge = z.infer<typeof workflowEdgeSchema>;
 export type NodeAttachment = z.infer<typeof nodeAttachmentSchema>;
 export type KnowledgeAttachment = z.infer<typeof knowledgeAttachmentSchema>;
+export type SkillAttachment = z.infer<typeof skillAttachmentSchema>;
+export type EmployeeAttachment = z.infer<typeof employeeAttachmentSchema>;
 export type TaskDefinition = z.infer<typeof taskDefinitionSchema>;
 export type TaskGraphInput = {
   taskDefinition: TaskDefinition;

@@ -133,6 +133,23 @@ rules_version = '2';
 //   - type: string (required) - atomic | moc | unknown
 //   - content: string (required, max 256 KiB) - markdown body
 //   - outgoingLinks: list<string> (required, max 100) - linked note IDs
+//
+// Subcollection: teams/{teamId}/skills
+// Document ID: generated skill id
+// Fields (metadata only, SKILL.md liegt in Firebase Storage):
+//   - title: string
+//   - description: string
+//   - storagePath: string - Pfad zur SKILL.md in Storage
+//   - createdAt / updatedAt: timestamp
+//
+// Subcollection: teams/{teamId}/employees
+// Document ID: generated employee id
+// Fields:
+//   - name: string
+//   - role: string - System-Prompt-Text
+//   - promptTemplate: string - Prompt-Vorlage mit {{instruction}}
+//   - defaultSkills: list<map> - eingebettete SkillAttachments
+//   - createdAt / updatedAt: timestamp
 //   - createdAt, updatedAt: timestamp
 //
 // ===============================================================
@@ -867,6 +884,24 @@ service cloud.firestore {
 
           allow delete: if isTeamMember(teamId);
         }
+      }
+
+      match /skills/{skillId} {
+        allow get, list: if isTeamMember(teamId);
+        allow create: if isTeamMember(teamId) &&
+          request.resource.data.updatedAt == request.time;
+        allow update: if isTeamMember(teamId) &&
+          request.resource.data.updatedAt == request.time;
+        allow delete: if isTeamMember(teamId);
+      }
+
+      match /employees/{employeeId} {
+        allow get, list: if isTeamMember(teamId);
+        allow create: if isTeamMember(teamId) &&
+          request.resource.data.updatedAt == request.time;
+        allow update: if isTeamMember(teamId) &&
+          request.resource.data.updatedAt == request.time;
+        allow delete: if isTeamMember(teamId);
       }
     }
 

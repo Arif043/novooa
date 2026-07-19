@@ -21,6 +21,10 @@ import {
   attachmentInstructions,
   aiTurnMiddleware,
 } from "../task-runner/node-attachment-genkit.js";
+import {
+  employeeFor,
+  renderEmployeePrompt,
+} from "../task-runner/employee-context.js";
 export type PromptNodeOutputType = "text" | "decision" | "structured";
 
 type StructuredOutputField = {
@@ -34,6 +38,7 @@ export type PromptNodeInput = {
   outputType: PromptNodeOutputType;
   choices: string[];
   structuredFields: StructuredOutputField[];
+  employeeRole?: string;
 };
 
 export type PromptNodeOutput = {
@@ -75,6 +80,7 @@ export async function executePromptNode(
   const response = await ai.generate({
     model: textModel(),
     prompt,
+    system: input.employeeRole,
     use: aiTurnMiddleware(attachmentWorkspace),
   });
   logReadableInfo(formatModelCallFinished({
@@ -97,7 +103,13 @@ async function executeDecisionPrompt(
   const schema = z.object({
     answer: z.enum(input.choices as [string, ...string[]]),
   });
-  const decision = await generateDecision(ai, prompt, schema, attachmentWorkspace);
+  const decision = await generateDecision(
+    ai,
+    prompt,
+    schema,
+    attachmentWorkspace,
+    input.employeeRole,
+  );
   const answer = decision.output?.answer;
   if (answer === undefined) {
     throw new Error(`Decision prompt returned no structured answer: ${decision.text}`);
@@ -116,7 +128,14 @@ async function executeStructuredPrompt(
   }
   const prompt = promptTurn(input, attachmentWorkspace);
   const schema = structuredSchemaFor(fields);
-  const response = await generateStructured(ai, prompt, schema, fields, attachmentWorkspace);
+  const response = await generateStructured(
+    ai,
+    prompt,
+    schema,
+    fields,
+    attachmentWorkspace,
+    input.employeeRole,
+  );
   if (response.output === undefined || response.output === null) {
     throw new Error(`Prompt lieferte keine strukturierte Ausgabe: ${response.text}`);
   }
@@ -129,6 +148,7 @@ async function generateDecision(
   prompt: string,
   schema: z.ZodObject<{answer: z.ZodEnum<[string, ...string[]]>}>,
   attachmentWorkspace?: NodeAttachmentWorkspace,
+  employeeRole?: string,
 ) {
   const startedAt = Date.now();
   logReadableInfo(formatModelCallStarted({
@@ -140,6 +160,7 @@ async function generateDecision(
   const response = await ai.generate({
     model: textModel(),
     prompt,
+    system: employeeRole,
     output: {schema},
     use: aiTurnMiddleware(attachmentWorkspace),
   });
@@ -158,6 +179,7 @@ async function generateStructured(
   schema: z.ZodObject<Record<string, z.ZodString>>,
   fields: StructuredOutputField[],
   attachmentWorkspace?: NodeAttachmentWorkspace,
+  employeeRole?: string,
 ) {
   const startedAt = Date.now();
   logReadableInfo(formatModelCallStarted({
@@ -169,6 +191,7 @@ async function generateStructured(
   const response = await ai.generate({
     model: textModel(),
     prompt,
+    system: employeeRole,
     output: {schema},
     use: aiTurnMiddleware(attachmentWorkspace),
   });
@@ -204,12 +227,18 @@ function promptInputFor(
   resolveTemplates: TaskRunContext["resolveTemplates"],
 ): PromptNodeInput {
   const config = promptConfigFor(node);
+  const employee = employeeFor(node);
+  const rawInstruction = instructionFor(node);
+  const rendered = employee
+    ? renderEmployeePrompt(employee.promptTemplate, rawInstruction)
+    : rawInstruction;
   return {
-    instruction: resolveTemplates(instructionFor(node)),
+    instruction: resolveTemplates(rendered),
     context: resolveTemplates(context),
     outputType: config?.outputType ?? "text",
     choices: choicesFor(node).map(resolveTemplates),
     structuredFields: structuredFieldsFor(node),
+    employeeRole: employee?.role?.trim() ? employee.role : undefined,
   };
 }
 

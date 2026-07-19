@@ -30,7 +30,9 @@ class StructuredOutputField extends Equatable {
 class PromptNodeConfig extends NodeConfig
     with
         FileAttachmentSupport<PromptNodeConfig>,
-        KnowledgeAttachmentSupport<PromptNodeConfig> {
+        KnowledgeAttachmentSupport<PromptNodeConfig>,
+        SkillAttachmentSupport<PromptNodeConfig>,
+        EmployeeAssignmentSupport<PromptNodeConfig> {
   const PromptNodeConfig({
     required this.instruction,
     required this.outputType,
@@ -40,6 +42,8 @@ class PromptNodeConfig extends NodeConfig
     ],
     this.attachments = const [],
     this.knowledgeAttachments = const [],
+    this.skillAttachments = const [],
+    this.employee,
   });
 
   final String instruction;
@@ -50,6 +54,10 @@ class PromptNodeConfig extends NodeConfig
   final List<NodeAttachment> attachments;
   @override
   final List<KnowledgeAttachment> knowledgeAttachments;
+  @override
+  final List<SkillAttachment> skillAttachments;
+  @override
+  final EmployeeAttachment? employee;
 
   factory PromptNodeConfig.initial() {
     return const PromptNodeConfig(
@@ -59,6 +67,8 @@ class PromptNodeConfig extends NodeConfig
       structuredFields: [StructuredOutputField(name: '', description: '')],
       attachments: [],
       knowledgeAttachments: [],
+      skillAttachments: [],
+      employee: null,
     );
   }
 
@@ -71,6 +81,8 @@ class PromptNodeConfig extends NodeConfig
       structuredFields,
       attachments,
       knowledgeAttachments,
+      skillAttachments,
+      employee,
     ];
   }
 
@@ -81,6 +93,9 @@ class PromptNodeConfig extends NodeConfig
     List<StructuredOutputField>? structuredFields,
     List<NodeAttachment>? attachments,
     List<KnowledgeAttachment>? knowledgeAttachments,
+    List<SkillAttachment>? skillAttachments,
+    EmployeeAttachment? employee,
+    bool clearEmployee = false,
   }) {
     return PromptNodeConfig(
       instruction: instruction ?? this.instruction,
@@ -89,6 +104,8 @@ class PromptNodeConfig extends NodeConfig
       structuredFields: structuredFields ?? this.structuredFields,
       attachments: attachments ?? this.attachments,
       knowledgeAttachments: knowledgeAttachments ?? this.knowledgeAttachments,
+      skillAttachments: skillAttachments ?? this.skillAttachments,
+      employee: clearEmployee ? null : employee ?? this.employee,
     );
   }
 
@@ -144,6 +161,16 @@ class PromptNodeConfig extends NodeConfig
     List<KnowledgeAttachment> attachments,
   ) {
     return copyWith(knowledgeAttachments: attachments);
+  }
+
+  @override
+  PromptNodeConfig copyWithSkillAttachments(List<SkillAttachment> attachments) {
+    return copyWith(skillAttachments: attachments);
+  }
+
+  @override
+  PromptNodeConfig copyWithEmployee(EmployeeAttachment? employee) {
+    return copyWith(employee: employee, clearEmployee: employee == null);
   }
 
   @override

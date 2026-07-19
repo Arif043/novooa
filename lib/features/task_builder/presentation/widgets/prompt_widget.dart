@@ -4,12 +4,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
+import '../../domain/entities/employee_attachment.dart';
 import '../../domain/entities/node_attachment.dart';
 import '../../domain/entities/knowledge_attachment.dart';
+import '../../domain/entities/skill_attachment.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
+import 'node_employee_section.dart';
 import 'node_file_attachment_section.dart';
 import 'node_knowledge_attachment_section.dart';
+import 'node_skill_attachment_section.dart';
 import 'prompt_choice_field.dart';
 import 'prompt_structured_output_section.dart';
 
@@ -138,6 +142,18 @@ class _PromptWidgetState extends State<PromptWidget> {
             onAttach: _attachKnowledge,
             onDetach: _detachKnowledge,
           ),
+          const SizedBox(height: AppSpacing.md),
+          NodeSkillAttachmentSection(
+            attachments: config.skillAttachments,
+            onAttach: _attachSkill,
+            onDetach: _detachSkill,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          NodeEmployeeSection(
+            assigned: config.employee,
+            onAssign: _assignEmployee,
+            onUnassign: _unassignEmployee,
+          ),
         ],
       ),
     );
@@ -241,6 +257,33 @@ class _PromptWidgetState extends State<PromptWidget> {
     context.read<TaskBuilderCubit>().detachNodeKnowledge(
       nodeId: widget.node.id,
       attachmentId: attachmentId,
+    );
+  }
+
+  void _attachSkill(SkillAttachment attachment) {
+    context.read<TaskBuilderCubit>().attachNodeSkill(
+      nodeId: widget.node.id,
+      attachment: attachment,
+    );
+  }
+
+  void _detachSkill(String attachmentId) {
+    context.read<TaskBuilderCubit>().detachNodeSkill(
+      nodeId: widget.node.id,
+      attachmentId: attachmentId,
+    );
+  }
+
+  void _assignEmployee(EmployeeAttachment attachment) {
+    context.read<TaskBuilderCubit>().assignNodeEmployee(
+      nodeId: widget.node.id,
+      attachment: attachment,
+    );
+  }
+
+  void _unassignEmployee() {
+    context.read<TaskBuilderCubit>().unassignNodeEmployee(
+      nodeId: widget.node.id,
     );
   }
 }

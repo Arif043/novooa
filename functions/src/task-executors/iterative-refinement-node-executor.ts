@@ -32,6 +32,8 @@ import {
   logReadableInfo,
 } from "../task-runner/structured-logger.js";
 import {aiTurnMiddleware} from "../task-runner/node-attachment-genkit.js";
+import {type NodeAttachmentWorkspace} from "../task-runner/node-attachment-workspace.js";
+import {employeeFor} from "../task-runner/employee-context.js";
 
 export type IterativeRefinementNodeInput = {
   objective: string;
@@ -39,6 +41,7 @@ export type IterativeRefinementNodeInput = {
   optimizerPrompt: string;
   critiquePrompt: string;
   maxIterations: number;
+  employeeRole?: string;
 };
 
 export type IterativeRefinementNodeOutput = {
@@ -56,17 +59,23 @@ export const iterativeRefinementNodeExecutor: NodeExecutor = {
       runContext.results,
     );
     const draft = parentOutput || input.context;
-    const output = await executeIterativeRefinementNode(input.ai, {
-      objective: runContext.resolveTemplates(runContext.task.objective),
-      draft: runContext.resolveTemplates(draft),
-      optimizerPrompt: runContext.resolveTemplates(config?.optimizerPrompt ||
-        input.node.description ||
-        input.node.title),
-      critiquePrompt: runContext.resolveTemplates(config?.critiquePrompt ||
-        input.node.description ||
-        input.node.title),
-      maxIterations: config?.maxIterations ?? 2,
-    });
+    const employee = employeeFor(input.node);
+    const output = await executeIterativeRefinementNode(
+      input.ai,
+      {
+        objective: runContext.resolveTemplates(runContext.task.objective),
+        draft: runContext.resolveTemplates(draft),
+        optimizerPrompt: runContext.resolveTemplates(config?.optimizerPrompt ||
+          input.node.description ||
+          input.node.title),
+        critiquePrompt: runContext.resolveTemplates(config?.critiquePrompt ||
+          input.node.description ||
+          input.node.title),
+        maxIterations: config?.maxIterations ?? 2,
+        employeeRole: employee?.role?.trim() ? employee.role : undefined,
+      },
+      input.attachmentWorkspace,
+    );
     return executedNode(input.node, textOutputs(output.answer));
   },
 };
@@ -74,6 +83,7 @@ export const iterativeRefinementNodeExecutor: NodeExecutor = {
 export async function executeIterativeRefinementNode(
   ai: Genkit,
   input: IterativeRefinementNodeInput,
+  attachmentWorkspace?: NodeAttachmentWorkspace,
 ): Promise<IterativeRefinementNodeOutput> {
   const maxIterations = boundedIterations(input.maxIterations);
   let answer = input.draft;
@@ -82,10 +92,22 @@ export async function executeIterativeRefinementNode(
   logReadableInfo(formatRefinementStarted(input, maxIterations));
   for (let nextIteration = 1; nextIteration <= maxIterations; nextIteration += 1) {
     iterations = nextIteration;
-    const evaluation = await evaluateDraft(ai, input, answer, nextIteration);
+    const evaluation = await evaluateDraft(
+      ai,
+      input,
+      answer,
+      nextIteration,
+      attachmentWorkspace,
+    );
     logReadableInfo(formatEvaluation(nextIteration, evaluation));
     if (evaluation.satisfied) break;
-    answer = await improveDraft(ai, input, answer, evaluation.critique);
+    answer = await improveDraft(
+      ai,
+      input,
+      answer,
+      evaluation.critique,
+      attachmentWorkspace,
+    );
     logReadableInfo(formatImprovement(nextIteration, answer));
   }
 
@@ -98,9 +120,16 @@ async function evaluateDraft(
   input: IterativeRefinementNodeInput,
   draft: string,
   iteration: number,
+  attachmentWorkspace?: NodeAttachmentWorkspace,
 ): Promise<Evaluation> {
   try {
-    return await structuredEvaluation(ai, input, draft, iteration);
+    return await structuredEvaluation(
+      ai,
+      input,
+      draft,
+      iteration,
+      attachmentWorkspace,
+    );
   } catch (error) {
     logReadableError(formatException({
       title: "Iterative Verfeinerung: strukturierte Bewertung fehlgeschlagen",
@@ -114,7 +143,13 @@ async function evaluateDraft(
       iteration,
       error: errorDetails(error),
     });
-    return textEvaluationFallback(ai, input, draft, iteration);
+    return textEvaluationFallback(
+      ai,
+      input,
+      draft,
+      iteration,
+      attachmentWorkspace,
+    );
   }
 }
 
@@ -123,6 +158,7 @@ async function structuredEvaluation(
   input: IterativeRefinementNodeInput,
   draft: string,
   iteration: number,
+  attachmentWorkspace?: NodeAttachmentWorkspace,
 ): Promise<Evaluation> {
   const prompt = evaluationPrompt(input, draft);
   const startedAt = Date.now();
@@ -136,7 +172,8 @@ async function structuredEvaluation(
     model: reasoningModel(),
     prompt,
     output: {schema: evaluationSchema},
-    use: aiTurnMiddleware(),
+    system: input.employeeRole,
+    use: aiTurnMiddleware(attachmentWorkspace),
   });
   logReadableInfo(formatModelCallFinished({
     label: `Iterative Verfeinerung / Bewertung ${iteration}`,
@@ -153,6 +190,7 @@ async function textEvaluationFallback(
   input: IterativeRefinementNodeInput,
   draft: string,
   iteration: number,
+  attachmentWorkspace?: NodeAttachmentWorkspace,
 ): Promise<Evaluation> {
   const prompt = `${evaluationPrompt(input, draft)}\n\nAntwort als JSON.`;
   const startedAt = Date.now();
@@ -164,7 +202,8 @@ async function textEvaluationFallback(
   const response = await ai.generate({
     model: reasoningModel(),
     prompt,
-    use: aiTurnMiddleware(),
+    system: input.employeeRole,
+    use: aiTurnMiddleware(attachmentWorkspace),
   });
   logReadableInfo(formatModelCallFinished({
     label: `Iterative Verfeinerung / Bewertungs-Fallback ${iteration}`,
@@ -179,6 +218,7 @@ async function improveDraft(
   input: IterativeRefinementNodeInput,
   draft: string,
   critique: string,
+  attachmentWorkspace?: NodeAttachmentWorkspace,
 ): Promise<string> {
   const prompt = improvementPrompt(input, draft, critique);
   const startedAt = Date.now();
@@ -191,7 +231,8 @@ async function improveDraft(
     model: reasoningModel(),
     prompt,
     config: {temperature: 0.4},
-    use: aiTurnMiddleware(),
+    system: input.employeeRole,
+    use: aiTurnMiddleware(attachmentWorkspace),
   });
   logReadableInfo(formatModelCallFinished({
     label: "Iterative Verfeinerung / Optimierung",
