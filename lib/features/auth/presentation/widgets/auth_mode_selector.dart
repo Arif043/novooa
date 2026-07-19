@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../cubits/auth_cubit.dart';
-import '../cubits/auth_state.dart';
+import '../cubits/auth_form_cubit.dart';
+import '../cubits/auth_form_state.dart';
 
 class AuthModeSelector extends StatelessWidget {
   const AuthModeSelector({
@@ -39,7 +39,7 @@ class AuthModeSelector extends StatelessWidget {
         ],
         selected: {mode},
         onSelectionChanged: isEnabled
-            ? (value) => context.read<AuthCubit>().changeMode(value.first)
+            ? (value) => context.read<AuthFormCubit>().changeMode(value.first)
             : null,
       ),
     );

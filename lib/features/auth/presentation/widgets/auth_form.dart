@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
-import '../cubits/auth_cubit.dart';
-import '../cubits/auth_state.dart';
+import '../cubits/auth_form_cubit.dart';
+import '../cubits/auth_form_state.dart';
 import 'auth_form_footer.dart';
 import 'auth_mode_selector.dart';
 import 'auth_submit_button.dart';
@@ -14,7 +14,7 @@ class AuthForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
+    return BlocBuilder<AuthFormCubit, AuthFormState>(
       builder: (context, state) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -35,11 +35,11 @@ class AuthForm extends StatelessWidget {
 class _AuthFields extends StatelessWidget {
   const _AuthFields({required this.state});
 
-  final AuthState state;
+  final AuthFormState state;
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<AuthCubit>();
+    final cubit = context.read<AuthFormCubit>();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

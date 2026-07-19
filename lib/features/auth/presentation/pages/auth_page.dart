@@ -6,8 +6,8 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/core/widgets/syscat_background.dart';
 import 'package:syscat2/generated/assets.dart';
 
-import '../cubits/auth_cubit.dart';
-import '../cubits/auth_state.dart';
+import '../cubits/auth_form_cubit.dart';
+import '../cubits/auth_form_state.dart';
 import '../widgets/auth_form.dart';
 
 class AuthPage extends StatelessWidget {
@@ -16,7 +16,7 @@ class AuthPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => serviceLocator<AuthCubit>(),
+      create: (_) => serviceLocator<AuthFormCubit>(),
       child: const _AuthView(),
     );
   }
@@ -65,7 +65,7 @@ class _AuthPanel extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
-          child: BlocListener<AuthCubit, AuthState>(
+          child: BlocListener<AuthFormCubit, AuthFormState>(
             listener: _showFailure,
             child: const _AuthPanelContent(),
           ),
@@ -74,8 +74,10 @@ class _AuthPanel extends StatelessWidget {
     );
   }
 
-  void _showFailure(BuildContext context, AuthState state) {
-    if (state.status != AuthStatus.failure || state.message == null) return;
+  void _showFailure(BuildContext context, AuthFormState state) {
+    if (state.status != AuthFormStatus.failure || state.message == null) {
+      return;
+    }
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(state.message!)));

@@ -72,7 +72,8 @@ import '../../features/auth/domain/usecases/sign_in_with_email_and_password.dart
 import '../../features/auth/domain/usecases/sign_out.dart';
 import '../../features/auth/domain/usecases/sign_up_with_email_and_password.dart';
 import '../../features/auth/infrastructure/repositories/firebase_auth_repository.dart';
-import '../../features/auth/presentation/cubits/auth_cubit.dart';
+import '../../features/auth/presentation/cubits/auth_form_cubit.dart';
+import '../../features/auth/presentation/cubits/auth_session_cubit.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/domain/usecases/get_ai_model_settings.dart';
 import '../../features/settings/domain/usecases/save_ai_provider_settings.dart';
@@ -395,12 +396,18 @@ void configureDependencies() {
     ..registerLazySingleton(
       () => AskAssistant(serviceLocator<AssistantRepository>()),
     )
+    ..registerLazySingleton(
+      () => AuthSessionCubit(
+        authRepository: serviceLocator<AuthRepository>(),
+        signOutUseCase: serviceLocator<SignOut>(),
+      ),
+      dispose: (cubit) => cubit.close(),
+    )
     ..registerFactory(
-      () => AuthCubit(
-        signUp: serviceLocator<SignUpWithEmailAndPassword>(),
-        signIn: serviceLocator<SignInWithEmailAndPassword>(),
-        signOut: serviceLocator<SignOut>(),
-        ensureUserProfile: serviceLocator<EnsureUserProfile>(),
+      () => AuthFormCubit(
+        signUpUseCase: serviceLocator<SignUpWithEmailAndPassword>(),
+        signInUseCase: serviceLocator<SignInWithEmailAndPassword>(),
+        ensureUserProfileUseCase: serviceLocator<EnsureUserProfile>(),
       ),
     )
     ..registerFactory(
@@ -535,7 +542,7 @@ void configureDependencies() {
       )..load(),
     )
     ..registerLazySingleton(
-      () => AppRouter(authRepository: serviceLocator<AuthRepository>()),
+      () => AppRouter(sessionCubit: serviceLocator<AuthSessionCubit>()),
       dispose: (router) => router.dispose(),
     );
 }

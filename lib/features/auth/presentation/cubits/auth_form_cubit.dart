@@ -1,36 +1,29 @@
 import 'package:bloc/bloc.dart';
 
+import '../../../user/domain/entities/user_email.dart';
+import '../../../user/domain/usecases/ensure_user_profile.dart';
 import '../../domain/entities/auth_failure.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/entities/email_address.dart';
 import '../../domain/usecases/sign_in_with_email_and_password.dart';
-import '../../domain/usecases/sign_out.dart';
 import '../../domain/usecases/sign_up_with_email_and_password.dart';
-import '../../../user/domain/entities/user_email.dart';
-import '../../../user/domain/usecases/ensure_user_profile.dart';
-import 'auth_state.dart';
+import 'auth_form_state.dart';
 
-class AuthCubit extends Cubit<AuthState> {
-  AuthCubit({
-    required SignUpWithEmailAndPassword signUp,
-    required SignInWithEmailAndPassword signIn,
-    required SignOut signOut,
-    required EnsureUserProfile ensureUserProfile,
-  }) : _signUp = signUp,
-       _signIn = signIn,
-       _signOut = signOut,
-       _ensureUserProfile = ensureUserProfile,
-       super(const AuthState());
+class AuthFormCubit extends Cubit<AuthFormState> {
+  AuthFormCubit({
+    required this.signUpUseCase,
+    required this.signInUseCase,
+    required this.ensureUserProfileUseCase,
+  }) : super(const AuthFormState());
 
-  final SignUpWithEmailAndPassword _signUp;
-  final SignInWithEmailAndPassword _signIn;
-  final EnsureUserProfile _ensureUserProfile;
-  final SignOut _signOut;
+  final SignUpWithEmailAndPassword signUpUseCase;
+  final SignInWithEmailAndPassword signInUseCase;
+  final EnsureUserProfile ensureUserProfileUseCase;
   String _name = '';
   String _email = '';
   String _password = '';
 
-  void changeMode(AuthMode mode) => _emitState(AuthState(mode: mode));
+  void changeMode(AuthMode mode) => _emitState(AuthFormState(mode: mode));
 
   void updateName(String name) => _name = name;
 
@@ -41,24 +34,14 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> submit() async {
     final failure = _validateInputs();
     if (failure != null) return _emitFailure(failure.message);
-    _emitState(state.copyWith(status: AuthStatus.submitting));
+    _emitState(state.copyWith(status: AuthFormStatus.submitting));
     final authUserOrFailure = state.mode == AuthMode.signUp
-        ? await _signUp(_signUpParams())
-        : await _signIn(_signInParams());
+        ? await signUpUseCase(_signUpParams())
+        : await signInUseCase(_signInParams());
     if (isClosed) return;
     await authUserOrFailure.when(
       _ensureProfileAndEmitSuccess,
       (failure) async => _emitFailure(failure.message),
-    );
-  }
-
-  Future<void> signOut() async {
-    _emitState(state.copyWith(status: AuthStatus.submitting));
-    final result = await _signOut();
-    if (isClosed) return;
-    result.when(
-      (_) => _emitState(const AuthState()),
-      (failure) => _emitFailure(failure.message),
     );
   }
 
@@ -91,21 +74,19 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   void _emitFailure(String message) {
-    _emitState(state.copyWith(status: AuthStatus.failure, message: message));
+    _emitState(
+      state.copyWith(status: AuthFormStatus.failure, message: message),
+    );
   }
 
-  void _emitState(AuthState nextState) {
+  void _emitState(AuthFormState nextState) {
     if (!isClosed) emit(nextState);
   }
 
   Future<void> _ensureProfileAndEmitSuccess(AuthUser authUser) async {
     final email = UserEmail.tryCreate(authUser.email);
-    if (email == null) {
-      return _emitFailure(
-        const AuthFailure(AuthFailureKind.invalidEmail).message,
-      );
-    }
-    final userProfileOrFailure = await _ensureUserProfile(
+    if (email == null) return _emitInvalidEmail();
+    final userProfileOrFailure = await ensureUserProfileUseCase(
       EnsureUserProfileParams(
         id: authUser.id,
         email: email,
@@ -114,9 +95,13 @@ class AuthCubit extends Cubit<AuthState> {
     );
     if (isClosed) return;
     userProfileOrFailure.when(
-      (_) => _emitState(state.copyWith(status: AuthStatus.success)),
+      (_) => _emitState(state.copyWith(status: AuthFormStatus.success)),
       (failure) => _emitFailure(failure.message),
     );
+  }
+
+  void _emitInvalidEmail() {
+    _emitFailure(const AuthFailure(AuthFailureKind.invalidEmail).message);
   }
 
   String _profileDisplayName(AuthUser authUser) {

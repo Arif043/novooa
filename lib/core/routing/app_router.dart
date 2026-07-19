@@ -1,8 +1,6 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
-import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
+import 'package:syscat2/features/auth/presentation/cubits/auth_session_cubit.dart';
 import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
 import 'package:syscat2/features/activity/presentation/pages/activity_page.dart';
 import 'package:syscat2/features/files/presentation/pages/files_page.dart';
@@ -28,17 +26,13 @@ class AppRouter {
   static const String employees = '/employees';
   static const String settings = '/settings';
 
-  AppRouter({required AuthRepository authRepository})
-    : _authRefresh = AuthRefreshNotifier(
-        initialUser: authRepository.currentUser(),
-        authStateChanges: authRepository.authStateChanges(),
-      );
+  AppRouter({required this.sessionCubit});
 
-  final AuthRefreshNotifier _authRefresh;
+  final AuthSessionCubit sessionCubit;
 
   late final GoRouter router = GoRouter(
     initialLocation: home,
-    refreshListenable: _authRefresh,
+    refreshListenable: sessionCubit,
     redirect: _redirect,
     routes: [
       GoRoute(path: '/', redirect: (_, _) => home),
@@ -104,38 +98,13 @@ class AppRouter {
     ],
   );
 
-  void dispose() => _authRefresh.dispose();
+  void dispose() => router.dispose();
 
   String? _redirect(BuildContext context, GoRouterState state) {
-    final isSignedIn = _authRefresh.currentUser != null;
+    final isSignedIn = sessionCubit.state.isSignedIn;
     final isAuthRoute = state.matchedLocation == auth;
     if (!isSignedIn) return isAuthRoute ? null : auth;
     if (isAuthRoute) return home;
     return null;
-  }
-}
-
-class AuthRefreshNotifier extends ChangeNotifier {
-  AuthRefreshNotifier({
-    required AuthUser? initialUser,
-    required Stream<AuthUser?> authStateChanges,
-  }) : _currentUser = initialUser {
-    _subscription = authStateChanges.listen(_setUser, onError: (_) {});
-  }
-
-  AuthUser? _currentUser;
-  late final StreamSubscription<AuthUser?> _subscription;
-
-  AuthUser? get currentUser => _currentUser;
-
-  void _setUser(AuthUser? user) {
-    _currentUser = user;
-    notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
   }
 }

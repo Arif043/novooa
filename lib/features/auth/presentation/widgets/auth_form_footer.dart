@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
-import '../cubits/auth_cubit.dart';
-import '../cubits/auth_state.dart';
+import '../cubits/auth_form_cubit.dart';
+import '../cubits/auth_form_state.dart';
 
 class AuthFormFooter extends StatelessWidget {
   const AuthFormFooter({super.key, required this.state});
 
-  final AuthState state;
+  final AuthFormState state;
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +120,6 @@ class _ModeHint extends StatelessWidget {
     final nextMode = mode == AuthMode.signUp
         ? AuthMode.signIn
         : AuthMode.signUp;
-    context.read<AuthCubit>().changeMode(nextMode);
+    context.read<AuthFormCubit>().changeMode(nextMode);
   }
 }

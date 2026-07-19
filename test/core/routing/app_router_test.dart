@@ -14,7 +14,7 @@
 // import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
 // import 'package:syscat2/features/auth/domain/usecases/sign_out.dart';
 // import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
-// import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
+// import 'package:syscat2/features/auth/presentation/cubits/auth_session_cubit.dart';
 // import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
 // import 'package:syscat2/features/task_builder/domain/usecases/get_draft_task_definition.dart';
 // import 'package:syscat2/features/task_builder/domain/usecases/save_draft_task_definition.dart';
@@ -94,7 +94,7 @@
 //   testWidgets('leitet unauthentifizierte Nutzer zur Auth-Route', (tester) async {
 //     final repository = _RouterAuthRepository(null);
 //     final userRepository = _RouterUserRepository();
-//     _registerAuthCubit(repository, userRepository);
+//     _registerAuthSessionCubit(repository);
 //     _registerTaskBuilderCubit();
 //     final appRouter = AppRouter(authRepository: repository);
 //     await tester.pumpWidget(_appWith(appRouter));
@@ -109,7 +109,7 @@
 //       const AuthUser(id: UniqueId('user.1'), email: 'ada@example.com', displayName: 'Ada'),
 //     );
 //     final userRepository = _RouterUserRepository();
-//     _registerAuthCubit(repository, userRepository);
+//     _registerAuthSessionCubit(repository);
 //     _registerTaskBuilderCubit();
 //     final appRouter = AppRouter(authRepository: repository);
 //     await tester.pumpWidget(_appWith(appRouter));
@@ -128,13 +128,11 @@
 //   );
 // }
 
-// void _registerAuthCubit(AuthRepository authRepository, UserRepository userRepository) {
-//   serviceLocator.registerFactory(
-//     () => AuthCubit(
-//       signUp: SignUpWithEmailAndPassword(authRepository),
-//       signIn: SignInWithEmailAndPassword(authRepository),
-//       signOut: SignOut(authRepository),
-//       ensureUserProfile: EnsureUserProfile(userRepository),
+// void _registerAuthSessionCubit(AuthRepository authRepository) {
+//   serviceLocator.registerLazySingleton(
+//     () => AuthSessionCubit(
+//       authRepository: authRepository,
+//       signOutUseCase: SignOut(authRepository),
 //     ),
 //   );
 // }

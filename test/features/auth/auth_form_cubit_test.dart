@@ -7,10 +7,9 @@ import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
-import 'package:syscat2/features/auth/domain/usecases/sign_out.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
-import 'package:syscat2/features/auth/presentation/cubits/auth_cubit.dart';
-import 'package:syscat2/features/auth/presentation/cubits/auth_state.dart';
+import 'package:syscat2/features/auth/presentation/cubits/auth_form_cubit.dart';
+import 'package:syscat2/features/auth/presentation/cubits/auth_form_state.dart';
 import 'package:syscat2/core/entities/unique_id.dart';
 import 'package:syscat2/features/user/domain/entities/user_email.dart';
 import 'package:syscat2/features/user/domain/entities/user_failure.dart';
@@ -83,20 +82,19 @@ class _FakeUserRepository implements UserRepository {
   }
 }
 
-AuthCubit _cubitWith(
+AuthFormCubit _cubitWith(
   _FakeAuthRepository authRepository,
   _FakeUserRepository userRepository,
 ) {
-  return AuthCubit(
-    signUp: SignUpWithEmailAndPassword(authRepository),
-    signIn: SignInWithEmailAndPassword(authRepository),
-    ensureUserProfile: EnsureUserProfile(userRepository),
-    signOut: SignOut(authRepository),
+  return AuthFormCubit(
+    signUpUseCase: SignUpWithEmailAndPassword(authRepository),
+    signInUseCase: SignInWithEmailAndPassword(authRepository),
+    ensureUserProfileUseCase: EnsureUserProfile(userRepository),
   );
 }
 
 void main() {
-  group('AuthCubit', () {
+  group('AuthFormCubit', () {
     test('blockiert ungueltige E-Mail lokal', () async {
       final repository = _FakeAuthRepository(_success());
       final userRepository = _FakeUserRepository();
@@ -105,7 +103,7 @@ void main() {
       cubit.updateEmail('ada');
       cubit.updatePassword('sicheres-passwort');
       await cubit.submit();
-      expect(cubit.state.status, AuthStatus.failure);
+      expect(cubit.state.status, AuthFormStatus.failure);
       expect(repository.signUpCalls, 0);
       await cubit.close();
     });
@@ -120,8 +118,8 @@ void main() {
       cubit.updatePassword('sicheres-passwort');
       await cubit.submit();
       expect((await states).map((state) => state.status), [
-        AuthStatus.submitting,
-        AuthStatus.success,
+        AuthFormStatus.submitting,
+        AuthFormStatus.success,
       ]);
       expect(repository.signUpCalls, 1);
       expect(userRepository.ensureCalls, 1);
@@ -136,7 +134,7 @@ void main() {
       cubit.updateEmail('ada@example.com');
       cubit.updatePassword('sicheres-passwort');
       await cubit.submit();
-      expect(cubit.state.status, AuthStatus.success);
+      expect(cubit.state.status, AuthFormStatus.success);
       expect(repository.signInCalls, 1);
       expect(repository.signUpCalls, 0);
       expect(userRepository.ensureCalls, 1);
