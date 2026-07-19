@@ -22,6 +22,11 @@ Regel: Abhängigkeiten zeigen **nach innen**. Presentation darf Domain
 referenzieren, Domain kennt weder Presentation noch Infrastructure, und
 Infrastructure implementiert ausschließlich Domain-Interfaces.
 
+Die lokale Runtime folgt demselben Prinzip auf Backend-Seite: Task Runner,
+NodeExecutors und Worker hängen an Store-Ports; Firestore und spätere SQLite-
+Adapter sind austauschbare Implementierungen. Details stehen in
+[`local-runtime.md`](./local-runtime.md).
+
 ## Datenmodell (Überblick)
 
 | Entität             | Datei                                                                  | Rolle                            |

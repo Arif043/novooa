@@ -1,30 +1,35 @@
-import {getApps, initializeApp} from "firebase-admin/app";
-import {getStorage} from "firebase-admin/storage";
 import {
   type NodeExecutor,
   executedNode,
   textOutputs,
 } from "../task-runner/node-executor.js";
+import {FirestoreTeamFileStore} from "../task-runner/stores/firestore-team-file-store.js";
+import {type TeamFileStore} from "../task-runner/stores/team-file-store.js";
 import {
   type NodeAttachment,
   type WorkflowNode,
 } from "../task-runner/task-definition.js";
 
+const defaultFileStore = new FirestoreTeamFileStore();
+
 export const readFileNodeExecutor: NodeExecutor = {
   primitive: "readFile",
   async execute(input, runContext) {
-    const file = selectedFileFor(input.node);
-    ensureTeamFile(file, runContext.teamId);
-    const output = await readStorageFile(file);
+    const output = await readNodeFile(
+      defaultFileStore,
+      runContext.teamId,
+      input.node,
+    );
     return executedNode(input.node, textOutputs(output));
   },
 };
 
-async function readStorageFile(file: NodeAttachment): Promise<string> {
-  initializeAdminApp();
-  const storageFile = getStorage().bucket().file(file.storagePath);
-  const [content] = await storageFile.download();
-  return content.toString("utf8");
+async function readNodeFile(
+  fileStore: TeamFileStore,
+  teamId: string,
+  node: WorkflowNode,
+): Promise<string> {
+  return fileStore.readTextFile(teamId, selectedFileFor(node));
 }
 
 function selectedFileFor(node: WorkflowNode): NodeAttachment {
@@ -32,17 +37,4 @@ function selectedFileFor(node: WorkflowNode): NodeAttachment {
     throw new Error("Datei lesen: Es wurde keine Datei ausgewählt.");
   }
   return node.config.file;
-}
-
-function ensureTeamFile(file: NodeAttachment, teamId: string): void {
-  if (file.storagePath.startsWith(teamFilePrefix(teamId))) return;
-  throw new Error("Datei lesen: Die Datei gehört nicht zum aktuellen Team.");
-}
-
-function teamFilePrefix(teamId: string): string {
-  return `teams/${teamId}/files/`;
-}
-
-function initializeAdminApp(): void {
-  if (getApps().length === 0) initializeApp();
 }

@@ -5,45 +5,39 @@ import {
   onDocumentUpdated,
 } from "firebase-functions/v2/firestore";
 import {
-  executeTaskGraph,
-  resumeTaskGraph,
-} from "./task-runner/task-graph-runner.js";
-import {
   reviewTaskRunInputSchema,
   reviewTaskRunOutputSchema,
   runTaskDefinitionInputSchema,
   runTaskDefinitionOutputSchema,
   taskResumeStateSchema,
-  type TaskResumeState,
 } from "./task-runner/task-definition.js";
 import {
   loadTaskDefinition,
-  loadTaskDefinitionForTeam,
 } from "./task-runner/task-definition-loader.js";
 import {
-  enqueueTaskRun,
-  markRunFailed,
-  markRunStarted,
-  markRunSucceeded,
-  markRunWaitingForApproval,
   runFromDocument,
 } from "./task-runner/task-activity-logger.js";
-import {
-  approveTaskRun,
-  loadReviewableRun,
-  rejectTaskRun,
-} from "./task-runner/task-run-review-store.js";
 import {aiProviderPlugins} from "./task-runner/ai-models.js";
 import {errorDetails, logError} from "./task-runner/structured-logger.js";
 import {currentTeamIdForUid} from "./team-context.js";
 import {twilioAccountSid, twilioAuthToken} from "./channels/twilio-secrets.js";
 import {sendgridApiKey} from "./channels/sendgrid-secrets.js";
+import {FirestoreTaskStore} from "./task-runner/stores/firestore-task-store.js";
+import {FirestoreTaskRunStore} from "./task-runner/stores/firestore-task-run-store.js";
+import {
+  continueApprovedTaskRun,
+  executeQueuedTaskRun,
+} from "./task-runner/task-run-worker.js";
 
 const communicationSecrets = [twilioAccountSid, twilioAuthToken, sendgridApiKey];
 
 const ai = genkit({
   plugins: aiProviderPlugins(),
 });
+
+const taskStore = new FirestoreTaskStore();
+const taskRunStore = new FirestoreTaskRunStore();
+const workerStores = {taskStore, taskRunStore};
 
 export const taskDefinitionFlow = ai.defineFlow(
   {
@@ -57,7 +51,7 @@ export const taskDefinitionFlow = ai.defineFlow(
       const taskDefinition = await loadTaskDefinition(input.taskId, runtime.context);
       title = taskDefinition.title;
       const teamId = await teamIdFromContext(runtime.context);
-      const run = await enqueueTaskRun({
+      const run = await taskRunStore.enqueueTaskRun({
         teamId,
         task: taskDefinition,
         context: input.context,
@@ -84,12 +78,19 @@ export const reviewTaskRunFlow = ai.defineFlow(
   },
   async (input, runtime) => {
     const teamId = await teamIdFromContext(runtime.context);
-    const reviewableRun = await loadReviewableRun(teamId, input.runId);
+    const reviewableRun = await taskRunStore.loadReviewableRun(
+      teamId,
+      input.runId,
+    );
     if (input.decision === "reject") {
-      await rejectTaskRun(teamId, reviewableRun.run.runId);
+      await taskRunStore.rejectTaskRun(teamId, reviewableRun.run.runId);
       return {runId: input.runId, status: "rejected" as const};
     }
-    await approveTaskRun(teamId, reviewableRun.run.runId, input.output);
+    await taskRunStore.approveTaskRun(
+      teamId,
+      reviewableRun.run.runId,
+      input.output,
+    );
     return {runId: input.runId, status: "queued" as const};
   },
 );
@@ -105,26 +106,14 @@ export const runTaskDefinitionWorker = onDocumentCreated(
     const teamId = event.params.teamId;
     const run = runFromDocument(event.data?.data() ?? {});
     try {
-      await markRunStarted(teamId, run.runId);
-      const taskDefinition = await loadTaskDefinitionForTeam(teamId, run.taskId);
-      const output = await executeTaskGraph(ai, {
-        taskDefinition,
-        context: run.context,
-        teamId,
-        input: run.input,
-      });
-      if (output.status === "waitingForApproval") {
-        await markRunWaitingForApproval(teamId, run, output);
-        return;
-      }
-      await markRunSucceeded(teamId, run, output);
+      await executeQueuedTaskRun(ai, {teamId, run, stores: workerStores});
     } catch (error) {
       logError("run_task_definition_worker.failed", {
         taskId: run.taskId,
         runId: run.runId,
         error: errorDetails(error),
       });
-      await markRunFailed(teamId, run, error);
+      await taskRunStore.markRunFailed(teamId, run, error);
     }
   },
 );
@@ -141,35 +130,20 @@ export const resumeApprovedTaskRunWorker = onDocumentUpdated(
     const run = runFromDocument(after);
     const resumeState = taskResumeStateSchema.parse(after.resumeState);
     const approvedOutput = String(after.approvedOutput ?? "");
-    await continueApprovedRun(event.params.teamId, run, resumeState, approvedOutput);
+    try {
+      await continueApprovedTaskRun(ai, {
+        teamId: event.params.teamId,
+        run,
+        resumeState,
+        approvedOutput,
+        stores: workerStores,
+      });
+    } catch (error) {
+      await taskRunStore.markRunFailed(event.params.teamId, run, error);
+      throw error;
+    }
   },
 );
-
-async function continueApprovedRun(
-  teamId: string,
-  run: ReturnType<typeof runFromDocument>,
-  resumeState: TaskResumeState,
-  approvedOutput: string,
-) {
-  try {
-    await markRunStarted(teamId, run.runId);
-    const taskDefinition = await loadTaskDefinitionForTeam(teamId, run.taskId);
-    const output = await resumeTaskGraph(
-      ai,
-      {taskDefinition, context: run.context, teamId, input: run.input},
-      resumeState,
-      approvedOutput,
-    );
-    if (output.status === "waitingForApproval") {
-      await markRunWaitingForApproval(teamId, run, output);
-      return;
-    }
-    await markRunSucceeded(teamId, run, output);
-  } catch (error) {
-    await markRunFailed(teamId, run, error);
-    throw error;
-  }
-}
 
 function shouldResumeApprovedRun(beforeStatus: unknown, afterStatus: unknown) {
   return beforeStatus === "waitingForApproval" && afterStatus === "queued";

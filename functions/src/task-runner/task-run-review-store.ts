@@ -1,96 +1,25 @@
-import {getApps, initializeApp} from "firebase-admin/app";
-import {
-  FieldValue,
-  getFirestore,
-  type DocumentData,
-} from "firebase-admin/firestore";
-import {UserFacingError} from "genkit";
-import {
-  taskResumeStateSchema,
-  type TaskResumeState,
-} from "./task-definition.js";
-import {
-  runFromDocument,
-  type TaskRunDocument,
-} from "./task-activity-logger.js";
-import {
-  markTaskRunApprovalNotifications,
-} from "./task-run-approval-notifier.js";
+import {FirestoreTaskRunStore} from "./stores/firestore-task-run-store.js";
+import {type ReviewableTaskRun} from "./stores/task-run-store.js";
 
-export type ReviewableTaskRun = {
-  run: TaskRunDocument;
-  resumeState: TaskResumeState;
-};
+export type {ReviewableTaskRun};
 
-export async function loadReviewableRun(
+const defaultTaskRunStore = new FirestoreTaskRunStore();
+
+export function loadReviewableRun(
   teamId: string,
   runId: string,
 ): Promise<ReviewableTaskRun> {
-  const snapshot = await runReference(teamId, runId).get();
-  if (!snapshot.exists) {
-    throw new UserFacingError("NOT_FOUND", "Ausführung wurde nicht gefunden.");
-  }
-  const data = snapshot.data() ?? {};
-  assertWaitingRun(data);
-  return {
-    run: runFromDocument(data),
-    resumeState: taskResumeStateSchema.parse(data.resumeState),
-  };
+  return defaultTaskRunStore.loadReviewableRun(teamId, runId);
 }
 
-export async function rejectTaskRun(
-  teamId: string,
-  runId: string,
-): Promise<void> {
-  await runReference(teamId, runId).set({
-    status: "rejected",
-    updatedAt: FieldValue.serverTimestamp(),
-    rejectedAt: FieldValue.serverTimestamp(),
-    waitingNodeId: FieldValue.delete(),
-    finalOutput: FieldValue.delete(),
-    nodeResults: FieldValue.delete(),
-    resumeState: FieldValue.delete(),
-    reviewInstruction: FieldValue.delete(),
-    reviewOutput: FieldValue.delete(),
-    pausedAt: FieldValue.delete(),
-  }, {merge: true});
-  await markTaskRunApprovalNotifications({teamId, runId, status: "rejected"});
+export function rejectTaskRun(teamId: string, runId: string): Promise<void> {
+  return defaultTaskRunStore.rejectTaskRun(teamId, runId);
 }
 
-export async function approveTaskRun(
+export function approveTaskRun(
   teamId: string,
   runId: string,
   output: string,
 ): Promise<void> {
-  await runReference(teamId, runId).set({
-    status: "queued",
-    approvedOutput: output,
-    updatedAt: FieldValue.serverTimestamp(),
-    waitingNodeId: FieldValue.delete(),
-    reviewInstruction: FieldValue.delete(),
-    reviewOutput: FieldValue.delete(),
-    pausedAt: FieldValue.delete(),
-  }, {merge: true});
-  await markTaskRunApprovalNotifications({teamId, runId, status: "accepted"});
-}
-
-function assertWaitingRun(data: DocumentData): void {
-  if (data.status === "waitingForApproval") return;
-  throw new UserFacingError(
-    "FAILED_PRECONDITION",
-    "Diese Ausführung wartet nicht auf eine Freigabe.",
-  );
-}
-
-function runReference(teamId: string, runId: string) {
-  return getDatabase()
-    .collection("teams")
-    .doc(teamId)
-    .collection("taskRuns")
-    .doc(runId);
-}
-
-function getDatabase() {
-  if (getApps().length === 0) initializeApp();
-  return getFirestore();
+  return defaultTaskRunStore.approveTaskRun(teamId, runId, output);
 }

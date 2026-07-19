@@ -1,267 +1,46 @@
-import {randomUUID} from "crypto";
-import {getApps, initializeApp} from "firebase-admin/app";
-import {
-  FieldValue,
-  type DocumentData,
-  Timestamp,
-  getFirestore,
-} from "firebase-admin/firestore";
 import {
   type CompletedTaskGraphOutput,
-  type NodeExecutionResult,
-  type TaskDefinition,
   type WaitingTaskGraphOutput,
 } from "./task-definition.js";
-import {textOutputFromResult} from "./node-executor.js";
-import {errorDetails} from "./structured-logger.js";
-import {notifyTaskRunApprovalRequired} from "./task-run-approval-notifier.js";
+import {FirestoreTaskRunStore} from "./stores/firestore-task-run-store.js";
+import {
+  type EnqueueTaskRunInput,
+  runFromDocument,
+  type TaskRunDocument,
+} from "./stores/task-run-store.js";
 
-export type TaskRunDocument = {
-  runId: string;
-  taskId: string;
-  taskTitle: string;
-  context: string;
-  input?: Record<string, unknown>;
-  source?: string;
-  triggerId?: string;
-  triggerType?: string;
-};
+export {runFromDocument, type TaskRunDocument};
 
-export async function enqueueTaskRun(input: {
-  teamId: string;
-  task: TaskDefinition;
-  context: string;
-  input?: Record<string, unknown>;
-  trigger?: {
-    id: string;
-    type: string;
-  };
-}): Promise<TaskRunDocument> {
-  const run = runDocument(input);
-  await runReference(input.teamId, run.runId).set({
-    ...run,
-    status: "queued",
-    input: serializable(input.input ?? {}),
-    createdAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
-  });
-  await writeTaskActivity(input.teamId, {
-    run,
-    status: "started",
-    input: input.context,
-  });
-  return run;
+const defaultTaskRunStore = new FirestoreTaskRunStore();
+
+export function enqueueTaskRun(input: EnqueueTaskRunInput) {
+  return defaultTaskRunStore.enqueueTaskRun(input);
 }
 
-export async function markRunStarted(teamId: string, runId: string) {
-  await runReference(teamId, runId).set(runStatus("running"), {merge: true});
+export function markRunStarted(teamId: string, runId: string) {
+  return defaultTaskRunStore.markRunStarted(teamId, runId);
 }
 
-export async function markRunSucceeded(
+export function markRunSucceeded(
   teamId: string,
   run: TaskRunDocument,
   output: CompletedTaskGraphOutput,
 ) {
-  await writeNodeActivities(teamId, run, output.nodeResults);
-  await writeTaskActivity(teamId, {run, status: "succeeded", output});
-  await runReference(teamId, run.runId).set({
-    ...runStatus("succeeded"),
-    finalOutput: output.finalOutput,
-    nodeResults: serializable(output.nodeResults),
-    waitingNodeId: FieldValue.delete(),
-    resumeState: FieldValue.delete(),
-    reviewInstruction: FieldValue.delete(),
-    reviewOutput: FieldValue.delete(),
-    approvedOutput: FieldValue.delete(),
-    pausedAt: FieldValue.delete(),
-  }, {
-    merge: true,
-  });
+  return defaultTaskRunStore.markRunSucceeded(teamId, run, output);
 }
 
-export async function markRunWaitingForApproval(
+export function markRunWaitingForApproval(
   teamId: string,
   run: TaskRunDocument,
   output: WaitingTaskGraphOutput,
 ) {
-  const review = reviewFieldsFrom(output);
-  await writeNodeActivities(teamId, run, output.nodeResults);
-  await runReference(teamId, run.runId).set({
-    ...runStatus("waitingForApproval"),
-    waitingNodeId: output.resumeState.waitingNodeId,
-    finalOutput: output.finalOutput,
-    reviewInstruction: review.instruction,
-    reviewOutput: review.output,
-    resumeState: serializable(output.resumeState),
-    pausedAt: FieldValue.serverTimestamp(),
-  }, {merge: true});
-  await notifyTaskRunApprovalRequired({teamId, run, output, review});
+  return defaultTaskRunStore.markRunWaitingForApproval(teamId, run, output);
 }
 
-export async function markRunFailed(
+export function markRunFailed(
   teamId: string,
   run: TaskRunDocument,
   error: unknown,
 ) {
-  const details = errorDetails(error);
-  await writeTaskActivity(teamId, {
-    run,
-    status: "failed",
-    message: errorMessage(details),
-  });
-  await runReference(teamId, run.runId).set({
-    ...runStatus("failed"),
-    error: details,
-  }, {merge: true});
-}
-
-export function runFromDocument(data: DocumentData) {
-  return {
-    runId: String(data.runId ?? ""),
-    taskId: String(data.taskId ?? ""),
-    taskTitle: String(data.taskTitle ?? "Unbenannte Aufgabe"),
-    context: String(data.context ?? ""),
-    input: inputFromDocument(data.input),
-  };
-}
-
-function runDocument(input: {
-  task: TaskDefinition;
-  context: string;
-  input?: Record<string, unknown>;
-  trigger?: {
-    id: string;
-    type: string;
-  };
-}): TaskRunDocument {
-  return {
-    runId: randomUUID(),
-    taskId: input.task.id,
-    taskTitle: input.task.title,
-    context: input.context,
-    input: input.input,
-    ...(input.trigger ? {
-      source: "trigger",
-      triggerId: input.trigger.id,
-      triggerType: input.trigger.type,
-    } : {}),
-  };
-}
-
-function inputFromDocument(value: unknown): Record<string, unknown> {
-  return isRecord(value) ? value as Record<string, unknown> : {};
-}
-
-function reviewFieldsFrom(output: WaitingTaskGraphOutput) {
-  const result = output.resumeState.nodeResults.find(
-    (item) => item.nodeId === output.resumeState.waitingNodeId,
-  );
-  return {
-    instruction: result?.message ?? "Prüfe das Ergebnis und gib es frei.",
-    output: result === undefined ? output.finalOutput : textOutputFromResult(result),
-  };
-}
-
-async function writeNodeActivities(
-  teamId: string,
-  run: TaskRunDocument,
-  results: NodeExecutionResult[],
-) {
-  for (const result of results) {
-    await writeNodeActivity(teamId, run, result);
-  }
-}
-
-async function writeNodeActivity(
-  teamId: string,
-  run: TaskRunDocument,
-  result: NodeExecutionResult,
-) {
-  const reference = activitiesReference(teamId).doc();
-  await reference.set({
-    ...baseActivity(reference.id, run, "node", nodeStatus(result.status)),
-    nodeId: result.nodeId,
-    primitive: result.primitive,
-    outputs: serializable(result.outputs),
-    ...(result.message ? {message: result.message} : {}),
-  });
-}
-
-async function writeTaskActivity(
-  teamId: string,
-  input: {
-    run: TaskRunDocument;
-    status: "started" | "succeeded" | "failed";
-    input?: string;
-    output?: CompletedTaskGraphOutput;
-    message?: string;
-  },
-) {
-  const reference = activitiesReference(teamId).doc();
-  await reference.set({
-    ...baseActivity(reference.id, input.run, "task", input.status),
-    ...(input.input ? {input: input.input} : {}),
-    ...(input.output ? {output: input.output.finalOutput} : {}),
-    ...(input.message ? {message: input.message} : {}),
-  });
-}
-
-function baseActivity(
-  id: string,
-  run: TaskRunDocument,
-  target: "task" | "node",
-  status: string,
-) {
-  return {
-    id,
-    runId: run.runId,
-    taskId: run.taskId,
-    taskTitle: run.taskTitle,
-    target,
-    status,
-    occurredAt: Timestamp.now(),
-  };
-}
-
-function nodeStatus(status: NodeExecutionResult["status"]): string {
-  if (status === "executed") return "succeeded";
-  if (status === "waitingForApproval") return "waiting";
-  return "skipped";
-}
-
-function errorMessage(details: unknown): string {
-  if (isObject(details) && typeof details.message === "string") {
-    return details.message;
-  }
-  return String(details);
-}
-
-function runStatus(status: string) {
-  return {status, updatedAt: FieldValue.serverTimestamp()};
-}
-
-function serializable(value: unknown): unknown {
-  return JSON.parse(JSON.stringify(value));
-}
-
-function activitiesReference(teamId: string) {
-  return getDatabase().collection("teams").doc(teamId).collection("activities");
-}
-
-function runReference(teamId: string, runId: string) {
-  return getDatabase().collection("teams").doc(teamId).collection("taskRuns")
-    .doc(runId);
-}
-
-function getDatabase() {
-  if (getApps().length === 0) initializeApp();
-  return getFirestore();
-}
-
-function isObject(value: unknown): value is {message?: unknown} {
-  return typeof value === "object" && value !== null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+  return defaultTaskRunStore.markRunFailed(teamId, run, error);
 }

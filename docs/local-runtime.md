@@ -1,0 +1,121 @@
+# Lokale Runtime
+
+## Ziel
+
+novooa soll später vollständig lokal laufen können: Aufgaben, Ausführungen,
+Aktivitäten, Dateien, Wissensbasis und Trigger-Zustand liegen lokal. Cloud-
+Provider wie Twilio bleiben optional über einen dünnen novooa-Relay nutzbar.
+
+## Runtime-Schichten
+
+```text
+Task Runner Core
+  NodeExecutors
+  TaskGraphRunner
+  Template-Auflösung
+  AI-Provider-Auswahl
+
+Ports
+  TaskStore
+  TaskRunStore
+  ActivityStore
+  TeamContextStore
+  TeamFileStore
+  KnowledgeBaseStore
+  TriggerStore
+  ChannelProvider
+
+Cloud Adapter
+  FirestoreTaskStore
+  FirestoreTaskRunStore
+  FirestoreActivityStore
+  FirestoreTeamFileStore
+
+Local Adapter
+  SQLiteTaskStore
+  SQLiteTaskRunStore
+  SQLiteActivityStore
+  LocalTeamFileStore
+```
+
+## Lokale Datenhaltung
+
+SQLite ist der Default für strukturierte lokale Daten. Es braucht keinen Server,
+ist transaktional und eignet sich für Aufgaben, Runs, Aktivitäten, Trigger,
+Teams, Kanäle und Wissensbasis-Metadaten.
+
+Geplante Tabellen:
+
+```text
+teams
+team_members
+tasks
+task_runs
+activities
+task_triggers
+communication_channels
+knowledge_notes
+files
+file_versions
+```
+
+Dateien liegen im lokalen Dateisystem:
+
+```text
+.novooa/
+  files/{teamId}/{fileId}/versions/{versionId}/{fileName}
+  knowledge/{teamId}/...
+```
+
+## Lokale Identität und Teams
+
+Firebase Auth ist für eine rein lokale Runtime nicht erforderlich. Beim ersten
+Start wird ein lokaler Nutzer und ein lokales Team erzeugt. Das Team-Feature
+bleibt erhalten, wird lokal aber über `teams` und `team_members` abgebildet.
+Ein späterer Cloud-Login kann zusätzlich für Sync, Migration oder Relay-Zugriff
+verwendet werden.
+
+## Twilio und externe Trigger
+
+Twilio wird nicht direkt auf jede lokale Installation zeigen. Stattdessen nutzt
+die lokale Runtime einen novooa Cloud Relay:
+
+```text
+Twilio
+→ novooa Cloud Relay
+→ lokale novooa Runtime
+→ SQLite task_runs
+→ lokaler Worker
+```
+
+Ausgehende Nachrichten laufen umgekehrt:
+
+```text
+lokale novooa Runtime
+→ novooa Cloud Relay
+→ Twilio
+```
+
+Der Relay verwaltet Twilio-Credentials und Subaccounts zentral. Die lokale
+Runtime authentifiziert sich beim Relay über ein Geräte-/Workspace-Token. Wenn
+die lokale Runtime offline ist, kann der Relay Events puffern und später
+zustellen.
+
+## Aktueller Implementierungsstand
+
+- `functions/src/task-runner/ai-models.ts` kapselt AI Provider.
+- `functions/src/task-runner/stores/task-store.ts` definiert `TaskStore`.
+- `functions/src/task-runner/stores/task-run-store.ts` definiert `TaskRunStore`.
+- `functions/src/task-runner/stores/activity-store.ts` definiert `ActivityStore`.
+- `functions/src/task-runner/stores/team-file-store.ts` definiert `TeamFileStore`.
+- `functions/src/team-context-store.ts` definiert `TeamContextStore`.
+- `functions/src/task-runner/task-run-worker.ts` führt Runs über Store-Ports aus.
+- Firestore-Adapter implementieren aktuell die Cloud-Version.
+
+## Nächste Schritte
+
+1. `KnowledgeBaseStore` und `TriggerStore` als Ports ergänzen.
+2. SQLite-Schema und Migrationen anlegen.
+3. Lokalen Worker-Prozess mit `TaskRunWorkerStores` starten.
+4. Lokalen HTTP-Endpunkt für Relay-Events implementieren.
+5. Cloud Relay für Twilio Webhooks und ausgehende Nachrichten trennen.

@@ -10,6 +10,7 @@ pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
 | -------------- | ---------------------------------- | ------------------------------------------------------- |
 | Überblick      | [`../AGENTS.md`](../AGENTS.md)     | Projekt-Definition, Stack, Conventions, Agent-Regeln    |
 | Cross-cutting  | [`architecture.md`](./architecture.md) | Datenmodell, Auth, Persistenz, Trigger, Telemetrie   |
+| Lokale Runtime | [`local-runtime.md`](./local-runtime.md) | Lokale Datenhaltung, Ports, Relay-Strategie       |
 | Features       | [`features/`](./features/)         | Ein Deep-Dive pro Feature                               |
 
 ## Aktuelle Features
