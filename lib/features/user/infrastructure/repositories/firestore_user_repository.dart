@@ -23,17 +23,32 @@ class FirestoreUserRepository implements UserRepository {
     required UserEmail email,
     required String displayName,
   }) async {
-    if (displayName.trim().length < 2) {
+    final trimmedName = displayName.trim();
+    if (trimmedName.length < 2) {
       return Error(UserFailure(UserFailureKind.invalidName));
     }
     try {
       final reference = _users.doc(id.value);
       final current = await reference.get();
-      current.exists
-          ? await _updateProfile(reference, email, displayName)
-          : await _createProfile(reference, id, email, displayName);
-      final snapshot = await reference.get();
-      return _profileFrom(snapshot);
+      final now = DateTime.now();
+      final createdAt = current.exists
+          ? _createdAtFrom(current.data())
+          : now;
+      final model = UserProfileModel(
+        id: id.value,
+        email: email.value,
+        displayName: trimmedName,
+        createdAt: createdAt,
+        updatedAt: now,
+      );
+      if (current.exists) {
+        await reference.update(
+          model.toDocument(includeCreatedAt: false, useServerTimestamps: true),
+        );
+      } else {
+        await reference.set(model.toDocument(useServerTimestamps: true));
+      }
+      return Success(model.toDomain());
     } catch (_) {
       return Error(UserFailure(UserFailureKind.unknown));
     }
@@ -50,43 +65,17 @@ class FirestoreUserRepository implements UserRepository {
     }
   }
 
-  Future<void> _createProfile(
-    DocumentReference<Map<String, dynamic>> reference,
-    UniqueId id,
-    UserEmail email,
-    String displayName,
-  ) {
-    final model = _newModel(id, email, displayName);
-    return reference.set(model.toDocument(useServerTimestamps: true));
-  }
-
-  Future<void> _updateProfile(
-    DocumentReference<Map<String, dynamic>> reference,
-    UserEmail email,
-    String displayName,
-  ) {
-    final model = _newModel(UniqueId(reference.id), email, displayName);
-    return reference.update(
-      model.toDocument(includeCreatedAt: false, useServerTimestamps: true),
-    );
-  }
-
-  UserProfileModel _newModel(UniqueId id, UserEmail email, String displayName) {
-    final now = DateTime.now();
-    return UserProfileModel(
-      id: id.value,
-      email: email.value,
-      displayName: displayName.trim(),
-      createdAt: now,
-      updatedAt: now,
-    );
-  }
-
   Result<UserProfile, UserFailure> _profileFrom(DocumentSnapshot snapshot) {
     final model = UserProfileModel.fromDocument(snapshot);
     if (UserEmail.tryCreate(model.email) == null) {
       return Error(UserFailure(UserFailureKind.invalidEmail));
     }
     return Success(model.toDomain());
+  }
+
+  DateTime _createdAtFrom(Map<String, Object?>? data) {
+    final value = data?['createdAt'];
+    if (value is Timestamp) return value.toDate();
+    return DateTime.fromMillisecondsSinceEpoch(0);
   }
 }

@@ -685,14 +685,25 @@ service cloud.firestore {
       allow get: if isOwner(userId);
       allow list: if false;
 
+      // Beim initialen Anlegen darf der Client keine teamId setzen — die wird
+      // vom Backend beim ersten Task-Run über den Admin-SDK-Provisioning-Pfad
+      // (currentTeamIdForUid) geschrieben. Damit ist der Vektor „User setzt
+      // sich fremde teamId und stört Team-Runs" ausgeschlossen; die Team-
+      // Membership-Guards bleiben zusätzlich als zweite Verteidigungslinie.
       allow create: if isOwner(userId) &&
         isValidUser(request.resource.data, userId) &&
+        request.resource.data.get('teamId', null) == null &&
         request.resource.data.createdAt == request.time &&
         request.resource.data.updatedAt == request.time;
 
+      // Beim Client-Update darf teamId nicht mutiert werden — hinzufügen und
+      // ändern läuft ausschließlich über Admin-SDK-Pfade (initiales
+      // Provisioning, Team-Invite-Accept via Callable Function).
       allow update: if isOwner(userId) &&
         isValidUser(request.resource.data, userId) &&
         request.resource.data.uid == resource.data.uid &&
+        request.resource.data.get('teamId', null) ==
+          resource.data.get('teamId', null) &&
         request.resource.data.createdAt == resource.data.createdAt &&
         request.resource.data.updatedAt == request.time;
 

@@ -66,6 +66,7 @@ class _AuthPanel extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: BlocListener<AuthFormCubit, AuthFormState>(
+            listenWhen: _isNewFailure,
             listener: _showFailure,
             child: const _AuthPanelContent(),
           ),
@@ -74,13 +75,17 @@ class _AuthPanel extends StatelessWidget {
     );
   }
 
+  bool _isNewFailure(AuthFormState previous, AuthFormState current) {
+    if (current.status != AuthFormStatus.failure) return false;
+    if (current.message == null) return false;
+    return previous.message != current.message ||
+        previous.status != AuthFormStatus.failure;
+  }
+
   void _showFailure(BuildContext context, AuthFormState state) {
-    if (state.status != AuthFormStatus.failure || state.message == null) {
-      return;
-    }
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(state.message!)));
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(state.message!)));
   }
 }
 

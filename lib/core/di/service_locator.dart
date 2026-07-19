@@ -408,6 +408,7 @@ void configureDependencies() {
         signUpUseCase: serviceLocator<SignUpWithEmailAndPassword>(),
         signInUseCase: serviceLocator<SignInWithEmailAndPassword>(),
         ensureUserProfileUseCase: serviceLocator<EnsureUserProfile>(),
+        signOutUseCase: serviceLocator<SignOut>(),
       ),
     )
     ..registerFactory(

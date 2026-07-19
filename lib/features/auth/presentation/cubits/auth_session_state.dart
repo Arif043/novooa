@@ -15,11 +15,15 @@ class AuthSessionState {
 
   bool get isSignedIn => currentUser != null;
 
-  AuthSessionState copyWith({AuthSessionStatus? status, String? message}) {
+  AuthSessionState copyWith({
+    AuthSessionStatus? status,
+    String? message,
+    bool clearMessage = false,
+  }) {
     return AuthSessionState(
       currentUser: currentUser,
       status: status ?? this.status,
-      message: message,
+      message: clearMessage ? null : message ?? this.message,
     );
   }
 }

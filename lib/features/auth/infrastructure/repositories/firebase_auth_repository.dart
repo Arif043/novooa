@@ -69,7 +69,7 @@ class FirebaseAuthRepository implements AuthRepository {
     } on firebase.FirebaseAuthException catch (error) {
       return Result.error(_mapFailure(error.code));
     } catch (_) {
-      return _unknownFailure().mapSuccess((_) => unit);
+      return const Error(AuthFailure(AuthFailureKind.unknown));
     }
   }
 
@@ -94,6 +94,11 @@ class FirebaseAuthRepository implements AuthRepository {
       ),
       'user-not-found' => const AuthFailure(AuthFailureKind.invalidCredentials),
       'wrong-password' => const AuthFailure(AuthFailureKind.invalidCredentials),
+      'user-disabled' => const AuthFailure(AuthFailureKind.accountDisabled),
+      'too-many-requests' => const AuthFailure(AuthFailureKind.rateLimited),
+      'operation-not-allowed' => const AuthFailure(
+        AuthFailureKind.operationNotAllowed,
+      ),
       'network-request-failed' => const AuthFailure(AuthFailureKind.network),
       _ => const AuthFailure(AuthFailureKind.unknown),
     };

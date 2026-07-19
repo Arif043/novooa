@@ -7,6 +7,7 @@ import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
+import 'package:syscat2/features/auth/domain/usecases/sign_out.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_form_cubit.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_form_state.dart';
@@ -23,6 +24,7 @@ class _FakeAuthRepository implements AuthRepository {
   final Result<AuthUser, AuthFailure> authResult;
   int signInCalls = 0;
   int signUpCalls = 0;
+  int signOutCalls = 0;
 
   @override
   AuthUser? currentUser() => null;
@@ -51,12 +53,14 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Future<Result<Unit, AuthFailure>> signOut() async {
+    signOutCalls++;
     return const Result.success(unit);
   }
 }
 
 class _FakeUserRepository implements UserRepository {
   int ensureCalls = 0;
+  bool failEnsure = false;
 
   @override
   Future<Result<UserProfile, UserFailure>> ensureProfile({
@@ -65,6 +69,9 @@ class _FakeUserRepository implements UserRepository {
     required String displayName,
   }) async {
     ensureCalls++;
+    if (failEnsure) {
+      return const Result.error(UserFailure(UserFailureKind.unknown));
+    }
     return Result.success(
       UserProfile(
         id: id,
@@ -90,6 +97,7 @@ AuthFormCubit _cubitWith(
     signUpUseCase: SignUpWithEmailAndPassword(authRepository),
     signInUseCase: SignInWithEmailAndPassword(authRepository),
     ensureUserProfileUseCase: EnsureUserProfile(userRepository),
+    signOutUseCase: SignOut(authRepository),
   );
 }
 
@@ -112,12 +120,12 @@ void main() {
       final repository = _FakeAuthRepository(_success());
       final userRepository = _FakeUserRepository();
       final cubit = _cubitWith(repository, userRepository);
-      final states = cubit.stream.take(2).toList();
+      final statuses = _collectSubmitStatuses(cubit);
       cubit.updateName('Ada');
       cubit.updateEmail('ada@example.com');
       cubit.updatePassword('sicheres-passwort');
       await cubit.submit();
-      expect((await states).map((state) => state.status), [
+      expect(await statuses, [
         AuthFormStatus.submitting,
         AuthFormStatus.success,
       ]);
@@ -141,6 +149,57 @@ void main() {
       await cubit.close();
     });
 
+    test('setzt Eingaben bei changeMode zurueck', () async {
+      final repository = _FakeAuthRepository(_success());
+      final userRepository = _FakeUserRepository();
+      final cubit = _cubitWith(repository, userRepository);
+      cubit.updateName('Ada');
+      cubit.updateEmail('ada@example.com');
+      cubit.updatePassword('sicheres-passwort');
+      cubit.changeMode(AuthMode.signIn);
+      expect(cubit.state.name, isEmpty);
+      expect(cubit.state.email, isEmpty);
+      expect(cubit.state.password, isEmpty);
+      await cubit.close();
+    });
+
+    test('ignoriert doppelten submit() waehrend submitting', () async {
+      final repository = _FakeAuthRepository(_success());
+      final userRepository = _BlockingUserRepository();
+      final cubit = _cubitWith(repository, userRepository);
+      cubit.updateName('Ada');
+      cubit.updateEmail('ada@example.com');
+      cubit.updatePassword('sicheres-passwort');
+      final firstSubmit = cubit.submit();
+      final secondSubmit = cubit.submit();
+      userRepository.complete();
+      await Future.wait([firstSubmit, secondSubmit]);
+      expect(repository.signUpCalls, 1);
+      expect(userRepository.ensureCalls, 1);
+      await cubit.close();
+    });
+
+    test(
+      'loggt bei Profil-Sync-Fehler wieder aus und meldet Failure',
+      () async {
+        final repository = _FakeAuthRepository(_success());
+        final userRepository = _FakeUserRepository()..failEnsure = true;
+        final cubit = _cubitWith(repository, userRepository);
+        cubit.updateName('Ada');
+        cubit.updateEmail('ada@example.com');
+        cubit.updatePassword('sicheres-passwort');
+        await cubit.submit();
+        expect(cubit.state.status, AuthFormStatus.failure);
+        expect(
+          cubit.state.message,
+          const AuthFailure(AuthFailureKind.profileSyncFailed).message,
+        );
+        expect(cubit.state.password, isEmpty);
+        expect(repository.signOutCalls, 1);
+        await cubit.close();
+      },
+    );
+
     test('ignoriert spaete Profil-Antwort nach close()', () async {
       final repository = _FakeAuthRepository(_success());
       final userRepository = _BlockingUserRepository();
@@ -155,6 +214,19 @@ void main() {
       expect(cubit.isClosed, isTrue);
     });
   });
+}
+
+Future<List<AuthFormStatus>> _collectSubmitStatuses(AuthFormCubit cubit) {
+  return cubit.stream
+      .map((state) => state.status)
+      .where(
+        (status) =>
+            status == AuthFormStatus.submitting ||
+            status == AuthFormStatus.success ||
+            status == AuthFormStatus.failure,
+      )
+      .take(2)
+      .toList();
 }
 
 class _BlockingUserRepository extends _FakeUserRepository {

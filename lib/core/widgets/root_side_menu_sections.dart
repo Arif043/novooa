@@ -7,8 +7,17 @@ import '../../root_tab.dart';
 import '../theme/app_spacing.dart';
 import '../theme/syscat_theme.dart';
 
-class SideMenuHeader extends StatelessWidget {
+class SideMenuHeader extends StatefulWidget {
   const SideMenuHeader({super.key});
+
+  @override
+  State<SideMenuHeader> createState() => _SideMenuHeaderState();
+}
+
+class _SideMenuHeaderState extends State<SideMenuHeader> {
+  /// Cached, damit der Drawer bei jedem Rebuild nicht erneut Firestore anpingt.
+  late final Future _profileFuture = serviceLocator<GetCurrentUserProfile>()
+      .call();
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +33,7 @@ class SideMenuHeader extends StatelessWidget {
           const _BrandMark(),
           const SizedBox(width: AppSpacing.md),
           FutureBuilder(
-            future: serviceLocator<GetCurrentUserProfile>().call(),
+            future: _profileFuture,
             builder: (context, snapshot) {
               if (snapshot.data case Success(success: final user)) {
                 return Text(

@@ -11,6 +11,7 @@ import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
+import 'package:syscat2/features/auth/domain/usecases/sign_out.dart';
 import 'package:syscat2/features/auth/domain/usecases/sign_up_with_email_and_password.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_form_cubit.dart';
 import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
@@ -130,6 +131,7 @@ Widget _appWith(_AsyncAuthRepository repository) {
       signUpUseCase: SignUpWithEmailAndPassword(repository),
       signInUseCase: SignInWithEmailAndPassword(repository),
       ensureUserProfileUseCase: EnsureUserProfile(_FakeUserRepository()),
+      signOutUseCase: SignOut(repository),
     ),
   );
   return MaterialApp(theme: SyscatTheme.lightTheme, home: const AuthPage());

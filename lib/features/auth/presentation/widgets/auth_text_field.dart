@@ -7,6 +7,7 @@ class AuthTextField extends StatelessWidget {
     required this.enabled,
     required this.hintText,
     required this.onChanged,
+    required this.controller,
     this.keyboardType,
     this.textInputAction,
     this.obscureText = false,
@@ -16,6 +17,7 @@ class AuthTextField extends StatelessWidget {
   final bool enabled;
   final String hintText;
   final ValueChanged<String> onChanged;
+  final TextEditingController controller;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final bool obscureText;
@@ -25,6 +27,7 @@ class AuthTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return TextField(
+      controller: controller,
       enabled: enabled,
       keyboardType: keyboardType,
       obscureText: obscureText,
