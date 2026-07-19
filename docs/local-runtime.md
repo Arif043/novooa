@@ -125,10 +125,12 @@ zustellen.
   `LocalSqlDatabase`, noch nicht an einer konkreten SQLite-Library.
 - `LocalTeamFileStore` schreibt Dateien in ein lokales Root-Verzeichnis und
   persistiert Datei-/Versions-Metadaten über `LocalSqlDatabase`.
+- `SqlMigrationRunner` wendet Migrationen treiberneutral über
+  `LocalSqlDatabase` an.
 
 ## Nächste Schritte
 
-1. Konkreten SQLite-Treiber und Migration-Runner für `LocalSqlDatabase` anbinden.
+1. Konkreten SQLite-Treiber für `LocalSqlDatabase` anbinden.
 2. Lokalen Worker-Prozess mit `TaskRunWorkerStores` starten.
 3. Lokalen HTTP-Endpunkt für Relay-Events implementieren.
 4. Cloud Relay für Twilio Webhooks und ausgehende Nachrichten trennen.

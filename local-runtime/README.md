@@ -29,3 +29,7 @@ Vertrag für die späteren SQLite-Adapter:
 Der konkrete SQLite-Treiber ist bewusst noch nicht festgelegt. Die Adapter
 nutzen vorerst `LocalSqlDatabase`, damit wir den Treiber später austauschen
 können, ohne die Runtime-Ports erneut anzufassen.
+
+Migrationen werden über `SqlMigrationRunner` angewendet. Der Runner erwartet
+bereits aufbereitete Statements; ein lokaler CLI kann die Dateien aus
+`migrations/` lesen und mit `migrationFromSqlFile` in Migrationen umwandeln.
