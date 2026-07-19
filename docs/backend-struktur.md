@@ -12,7 +12,7 @@ functions/src/
   schedule-workflows.ts    Cloud Scheduler Entry Point
   team-workflows.ts        Team-Callables
   domain/entities/         reine Task-, Attachment- und Schedule-Typen
-  domain/repositories/     Ports für Runner und Adapter
+  domain/repositories/     Ports für Runner, Storage und Adapter
   infrastructure/firebase/ Firestore-/Storage-/Firebase-Adapter
   infrastructure/local/    SQLite-/Dateisystem-Adapter
   task-runner/             Task-Runner-Core und Facades
@@ -50,6 +50,8 @@ Local Adapter
 - Store-Adapter importieren Persistenz-SDKs.
 - `domain/` importiert keine Firebase-, Genkit- oder Runner-Module.
 - Runner, Executor-Registry und Graph-Logik importieren keine Firebase-SDKs.
+- Datei-Downloads laufen über `ObjectStore`, nicht direkt über Firebase Storage.
+- Freigabe-Notifications laufen über `TaskRunApprovalNotificationStore`.
 - `task-runner/task-definition.ts` bleibt vorerst die Schema- und
   Validierungsschicht für Genkit/Zod und re-exportiert Domain-Typen.
 - Lokale Adapter hängen an `LocalSqlDatabase`, nicht an einer konkreten
@@ -59,8 +61,6 @@ Local Adapter
 
 ## Offene Entkopplungen
 
-- `node-attachment-workspace.ts` lädt Dateien noch direkt aus Firebase Storage.
-- `skill-workspace.ts` lädt Skills noch direkt aus Firebase Storage.
-- `task-run-approval-notifier.ts` schreibt Notifications noch direkt nach
-  Firestore.
 - Channel-Sender und Team-Workflows sind noch Cloud-spezifisch.
+- `task-runner/task-definition.ts` enthält weiterhin Genkit/Zod-Schemas und ist
+  damit bewusst noch Adapter-nah.

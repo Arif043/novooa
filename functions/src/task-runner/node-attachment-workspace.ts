@@ -1,8 +1,7 @@
 import {mkdir, mkdtemp, rm} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import {getApps, initializeApp} from "firebase-admin/app";
-import {getStorage} from "firebase-admin/storage";
+import {type ObjectStore} from "../domain/repositories/object-store.js";
 import {
   type KnowledgeAttachment,
   type NodeAttachment,
@@ -15,8 +14,6 @@ import {
 } from "./knowledge-note-workspace.js";
 import {prepareSkillDirectory} from "./skill-workspace.js";
 import {employeeFor, mergeNodeAndEmployeeSkills} from "./employee-context.js";
-
-if (getApps().length === 0) initializeApp();
 
 export type PreparedNodeAttachment = NodeAttachment & {
   filename: string;
@@ -34,6 +31,7 @@ export type NodeAttachmentWorkspace = {
 export async function prepareNodeAttachmentWorkspace(
   node: WorkflowNode,
   teamId: string,
+  objectStore: ObjectStore,
 ): Promise<NodeAttachmentWorkspace | undefined> {
   const attachments = attachmentsFor(node);
   const knowledgeAttachments = knowledgeAttachmentsFor(node);
@@ -53,7 +51,7 @@ export async function prepareNodeAttachmentWorkspace(
     path.join(os.tmpdir(), "syscat-node-files-"),
   );
   await mkdir(rootDirectory, {recursive: true});
-  const files = await downloadAttachments(rootDirectory, attachments);
+  const files = await downloadAttachments(rootDirectory, attachments, objectStore);
   const knowledgeFiles = await prepareKnowledgeFiles(
     rootDirectory,
     teamId,
@@ -62,6 +60,7 @@ export async function prepareNodeAttachmentWorkspace(
   const skillsDirectory = await prepareSkillDirectory(
     rootDirectory,
     skillAttachments,
+    objectStore,
   );
   return {
     rootDirectory,
@@ -99,10 +98,11 @@ function skillAttachmentsFor(node: WorkflowNode): SkillAttachment[] {
 async function downloadAttachments(
   rootDirectory: string,
   attachments: NodeAttachment[],
+  objectStore: ObjectStore,
 ): Promise<PreparedNodeAttachment[]> {
   return Promise.all(
     attachments.map((attachment, index) =>
-      downloadAttachment(rootDirectory, attachment, index),
+      downloadAttachment(rootDirectory, attachment, index, objectStore),
     ),
   );
 }
@@ -111,12 +111,11 @@ async function downloadAttachment(
   rootDirectory: string,
   attachment: NodeAttachment,
   index: number,
+  objectStore: ObjectStore,
 ): Promise<PreparedNodeAttachment> {
   const filename = safeFilename(attachment.displayName, index);
   const destination = path.join(rootDirectory, filename);
-  await getStorage().bucket().file(attachment.storagePath).download({
-    destination,
-  });
+  await objectStore.downloadToFile(attachment.storagePath, destination);
   return {...attachment, filename};
 }
 

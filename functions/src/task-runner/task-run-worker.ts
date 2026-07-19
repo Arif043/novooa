@@ -7,6 +7,7 @@ import {
   type TaskResumeState,
 } from "./task-definition.js";
 import {type TaskStore} from "../domain/repositories/task-store.js";
+import {type ObjectStore} from "../domain/repositories/object-store.js";
 import {
   type TaskRunDocument,
   type TaskRunStore,
@@ -15,6 +16,7 @@ import {
 export type TaskRunWorkerStores = {
   taskStore: TaskStore;
   taskRunStore: TaskRunStore;
+  objectStore: ObjectStore;
 };
 
 export async function executeQueuedTaskRun(
@@ -33,6 +35,8 @@ export async function executeQueuedTaskRun(
     context: run.context,
     teamId,
     input: run.input,
+  }, {
+    objectStore: stores.objectStore,
   });
   if (output.status === "waitingForApproval") {
     await stores.taskRunStore.markRunWaitingForApproval(teamId, run, output);
@@ -59,6 +63,7 @@ export async function continueApprovedTaskRun(
     {taskDefinition, context: run.context, teamId, input: run.input},
     input.resumeState,
     input.approvedOutput,
+    {objectStore: stores.objectStore},
   );
   if (output.status === "waitingForApproval") {
     await stores.taskRunStore.markRunWaitingForApproval(teamId, run, output);

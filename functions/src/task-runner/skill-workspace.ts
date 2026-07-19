@@ -1,7 +1,7 @@
 import {mkdir} from "node:fs/promises";
 import path from "node:path";
-import {getStorage} from "firebase-admin/storage";
 
+import {type ObjectStore} from "../domain/repositories/object-store.js";
 import {type SkillAttachment} from "./task-definition.js";
 
 /**
@@ -16,13 +16,14 @@ import {type SkillAttachment} from "./task-definition.js";
 export async function prepareSkillDirectory(
   rootDirectory: string,
   attachments: SkillAttachment[],
+  objectStore: ObjectStore,
 ): Promise<string | undefined> {
   if (attachments.length === 0) return undefined;
   const skillsRoot = path.join(rootDirectory, "skills");
   await mkdir(skillsRoot, {recursive: true});
   await Promise.all(
     attachments.map((attachment, index) =>
-      downloadSkill(skillsRoot, attachment, index),
+      downloadSkill(skillsRoot, attachment, index, objectStore),
     ),
   );
   return skillsRoot;
@@ -32,15 +33,13 @@ async function downloadSkill(
   skillsRoot: string,
   attachment: SkillAttachment,
   index: number,
+  objectStore: ObjectStore,
 ): Promise<void> {
   const slug = safeSlug(attachment.title, attachment.skillId, index);
   const skillDir = path.join(skillsRoot, slug);
   await mkdir(skillDir, {recursive: true});
   const destination = path.join(skillDir, "SKILL.md");
-  await getStorage()
-    .bucket()
-    .file(attachment.storagePath)
-    .download({destination});
+  await objectStore.downloadToFile(attachment.storagePath, destination);
 }
 
 function safeSlug(title: string, fallbackId: string, index: number): string {

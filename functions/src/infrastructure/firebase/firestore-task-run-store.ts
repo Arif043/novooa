@@ -6,12 +6,14 @@ import {
 } from "../../domain/entities/task.js";
 import {textOutputFromResult} from "../../task-runner/node-executor.js";
 import {errorDetails} from "../../task-runner/structured-logger.js";
-import {
-  markTaskRunApprovalNotifications,
-  notifyTaskRunApprovalRequired,
-} from "../../task-runner/task-run-approval-notifier.js";
 import {type ActivityStore} from "../../domain/repositories/activity-store.js";
+import {
+  type TaskRunApprovalNotificationStore,
+} from "../../domain/repositories/task-run-approval-notification-store.js";
 import {FirestoreActivityStore} from "./firestore-activity-store.js";
+import {
+  FirestoreTaskRunApprovalNotificationStore,
+} from "./firestore-task-run-approval-notification-store.js";
 import {getDatabase} from "./firestore-db.js";
 import {
   approvedDocument,
@@ -32,7 +34,9 @@ import {
 
 export class FirestoreTaskRunStore implements TaskRunStore {
   constructor(private readonly activityStore: ActivityStore =
-    new FirestoreActivityStore()) {}
+    new FirestoreActivityStore(),
+    private readonly approvalNotifications: TaskRunApprovalNotificationStore =
+    new FirestoreTaskRunApprovalNotificationStore()) {}
 
   async enqueueTaskRun(input: EnqueueTaskRunInput): Promise<TaskRunDocument> {
     const run = newTaskRunDocument(input);
@@ -87,7 +91,12 @@ export class FirestoreTaskRunStore implements TaskRunStore {
       resumeState: serializable(output.resumeState),
       pausedAt: FieldValue.serverTimestamp(),
     }, {merge: true});
-    await notifyTaskRunApprovalRequired({teamId, run, output, review});
+    await this.approvalNotifications.notifyApprovalRequired({
+      teamId,
+      run,
+      output,
+      review,
+    });
   }
 
   async markRunFailed(teamId: string, run: TaskRunDocument, error: unknown) {
@@ -119,12 +128,20 @@ export class FirestoreTaskRunStore implements TaskRunStore {
 
   async rejectTaskRun(teamId: string, runId: string) {
     await runReference(teamId, runId).set(rejectedDocument(), {merge: true});
-    await markTaskRunApprovalNotifications({teamId, runId, status: "rejected"});
+    await this.approvalNotifications.markApprovalNotifications({
+      teamId,
+      runId,
+      status: "rejected",
+    });
   }
 
   async approveTaskRun(teamId: string, runId: string, output: string) {
     await runReference(teamId, runId).set(approvedDocument(output), {merge: true});
-    await markTaskRunApprovalNotifications({teamId, runId, status: "accepted"});
+    await this.approvalNotifications.markApprovalNotifications({
+      teamId,
+      runId,
+      status: "accepted",
+    });
   }
 }
 

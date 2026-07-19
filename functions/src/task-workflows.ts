@@ -22,6 +22,7 @@ import {errorDetails, logError} from "./task-runner/structured-logger.js";
 import {currentTeamIdForUid} from "./team-context.js";
 import {twilioAccountSid, twilioAuthToken} from "./channels/twilio-secrets.js";
 import {sendgridApiKey} from "./channels/sendgrid-secrets.js";
+import {FirebaseObjectStore} from "./infrastructure/firebase/firebase-object-store.js";
 import {FirestoreTaskStore} from "./infrastructure/firebase/firestore-task-store.js";
 import {FirestoreTaskRunStore} from "./infrastructure/firebase/firestore-task-run-store.js";
 import {
@@ -37,7 +38,8 @@ const ai = genkit({
 
 const taskStore = new FirestoreTaskStore();
 const taskRunStore = new FirestoreTaskRunStore();
-const workerStores = {taskStore, taskRunStore};
+const objectStore = new FirebaseObjectStore();
+const workerStores = {taskStore, taskRunStore, objectStore};
 
 export const taskDefinitionFlow = ai.defineFlow(
   {
