@@ -183,10 +183,14 @@ Feature startet.
   gleichnamige Datei.
 - **Schemas:** `inputSchema` / `outputSchema` mit **Zod** (`z.object(...)`).
   Keine `any`-Typen in der Schnittstelle.
-- **Modell:** Standard `googleAI.model('gemini-2.5-flash')`. Andere Modelle
-  begründen.
+- **Modell:** Flows verwenden keine Provider direkt. Modell-Plugins und
+  ModelRefs werden zentral über `functions/src/task-runner/ai-models.ts`
+  bereitgestellt. Unterstützte Profile sind `google`, `minimax`,
+  `openai-compatible` und `local`.
 - **Export:** Jeder Flow wird in `functions/src/index.ts` re-exportiert.
-- **Secrets:** Modell-API-Keys via `defineSecret` (`GOOGLE_GENAI_API_KEY`).
+- **Secrets:** Cloud-Provider-API-Keys via Secret Manager / Runtime-Env. Lokale
+  Runtimes verwenden eigene lokale `.env`-Werte und dürfen keine produktiven
+  Cloud-Secrets voraussetzen.
 - **Streaming:** `streamSchema` setzen, wenn der Flow gestreamt werden soll.
 
 ### Vorhandene Flows

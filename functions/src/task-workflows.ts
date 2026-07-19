@@ -1,5 +1,4 @@
 import {genkit} from "genkit/beta";
-import {openAICompatible} from "@genkit-ai/compat-oai";
 import {isSignedIn, onCallGenkit} from "firebase-functions/v2/https";
 import {
   onDocumentCreated,
@@ -34,7 +33,7 @@ import {
   loadReviewableRun,
   rejectTaskRun,
 } from "./task-runner/task-run-review-store.js";
-import {isMinimaxProvider} from "./task-runner/ai-models.js";
+import {aiProviderPlugins} from "./task-runner/ai-models.js";
 import {errorDetails, logError} from "./task-runner/structured-logger.js";
 import {currentTeamIdForUid} from "./team-context.js";
 import {twilioAccountSid, twilioAuthToken} from "./channels/twilio-secrets.js";
@@ -43,21 +42,8 @@ import {sendgridApiKey} from "./channels/sendgrid-secrets.js";
 const communicationSecrets = [twilioAccountSid, twilioAuthToken, sendgridApiKey];
 
 const ai = genkit({
-  plugins: [
-    // googleAI(),
-    ...(isMinimaxProvider() ? [openAICompatible({
-      name: "minimax",
-      apiKey: requiredEnv("MINIMAX_API_KEY"),
-      baseURL: requiredEnv("MINIMAX_BASE_URL"),
-    })] : []),
-  ],
+  plugins: aiProviderPlugins(),
 });
-
-function requiredEnv(name: string): string {
-  const value = process.env[name]?.trim();
-  if (value) return value;
-  throw new Error(`${name} is required when AI_PROVIDER=minimax.`);
-}
 
 export const taskDefinitionFlow = ai.defineFlow(
   {

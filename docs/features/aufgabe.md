@@ -141,10 +141,29 @@ Strategien.
 
 ### Model-Provider
 
-Standardmäßig nutzt der Backend-Flow Gemini über `@genkit-ai/google-genai`.
-Alternativ kann MiniMax über den OpenAI-kompatiblen Genkit-Provider aktiviert
-werden. Dafür müssen beim Start der Functions diese Umgebungsvariablen gesetzt
-sein:
+Die Executors wählen Modelle nicht direkt aus. Prompt-, Refinement- und
+Employee-Agent-Executor verwenden ausschließlich
+`functions/src/task-runner/ai-models.ts`. Diese Datei ist die zentrale
+Provider-Abstraktion für Cloud- und spätere lokale Runtimes.
+
+Unterstützte Provider-Konfigurationen:
+
+| `AI_PROVIDER`           | Zweck                                                        |
+| ----------------------- | ------------------------------------------------------------ |
+| `google`                | Gemini über `@genkit-ai/google-genai`                        |
+| `minimax`               | MiniMax über den OpenAI-kompatiblen Genkit-Provider          |
+| `openai-compatible`     | Beliebiger OpenAI-kompatibler Cloud-Endpunkt                 |
+| `local`                 | Lokaler OpenAI-kompatibler Server, z. B. Ollama oder LM Studio |
+
+Google ist der Default:
+
+```bash
+AI_PROVIDER=google
+GOOGLE_TEXT_MODEL=gemini-3.1-flash-lite
+GOOGLE_REASONING_MODEL=gemini-3.1-flash-lite
+```
+
+MiniMax:
 
 ```bash
 AI_PROVIDER=minimax
@@ -153,10 +172,19 @@ MINIMAX_BASE_URL=...
 MINIMAX_MODEL=...
 ```
 
-`MINIMAX_BASE_URL` ist absichtlich nicht hart codiert, weil MiniMax je nach
-Region und Produkt unterschiedliche OpenAI-kompatible Endpunkte verwenden kann.
-Die Executors beziehen ihre Modelle zentral aus
-`functions/src/task-runner/ai-models.ts`.
+Lokale Entwicklung über einen OpenAI-kompatiblen Server:
+
+```bash
+AI_PROVIDER=local
+LOCAL_AI_BASE_URL=http://127.0.0.1:11434/v1
+LOCAL_AI_TEXT_MODEL=llama3.2
+LOCAL_AI_API_KEY=local
+```
+
+In Firebase Functions verweist `127.0.0.1` auf die Function-Instanz, nicht auf
+den Rechner der Nutzer:innen. Für eine vollständig lokale novooa-Version muss
+die gleiche Provider-Schicht in einem lokalen Node-Prozess oder einer lokalen
+App-Runtime laufen.
 
 ### Prompt-Executor
 
