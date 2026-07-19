@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
-import 'package:syscat2/core/logging/syscat_log.dart';
-import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/widgets/root_shell_scope.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
-import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/task_builder_body.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/task_title_field.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/toolbar.dart';
-import 'package:web_smooth_scroll/web_smooth_scroll.dart';
 
 class TaskBuilderPage extends StatelessWidget {
   final Task? editingTaskOrNull;
@@ -102,82 +96,7 @@ class _TaskBuilderContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
-      builder: (context, state) => _TaskBuilderBody(state: state),
-    );
-  }
-}
-
-class _TaskBuilderBody extends StatefulWidget {
-  const _TaskBuilderBody({required this.state});
-
-  final TaskBuilderState state;
-
-  @override
-  State<_TaskBuilderBody> createState() => _TaskBuilderBodyState();
-}
-
-class _TaskBuilderBodyState extends State<_TaskBuilderBody> {
-  final _scrollController = ScrollController();
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cubit = context.read<TaskBuilderCubit>();
-    return Column(
-      children: [
-        FilledButton.icon(
-          onPressed: () async {
-            final task = cubit.loadedTaskOrNull();
-            if (task == null) return;
-            logSyscatInfo(
-              'Run-Button startet Aufgabe: ${task.id}',
-              name: 'syscat.task_builder',
-            );
-            final taskRunOrFailure = await serviceLocator<ExecuteTask>()(
-              ExecuteTaskParams(task: task),
-            );
-            taskRunOrFailure.when(
-              (run) => logSyscatInfo(
-                'Run-Button: Aufgabe im Hintergrund gestartet: '
-                '${run.runId.value}',
-                name: 'syscat.task_builder',
-              ),
-              (failure) => logSyscatInfo(
-                'Run-Button: Aufgabe fehlgeschlagen: ${failure.message}',
-                name: 'syscat.task_builder',
-              ),
-            );
-          },
-          icon: const Icon(Icons.play_arrow_rounded),
-          label: const Text('Aufgabe starten'),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        const Toolbar(),
-        const SizedBox(height: AppSpacing.xl),
-        if (widget.state case TaskBuilderLoaded(:final editingTask))
-          Expanded(
-            child: WebSmoothScroll(
-              controller: _scrollController,
-              scrollSpeed: 2.5,
-              scrollAnimationLength: 1400,
-              curve: Curves.easeInOutCubic,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                physics: NeverScrollableScrollPhysics(),
-                child: NodeGraph(nodes: editingTask.nodes),
-              ),
-            ),
-          ),
-        NodePlaceholder(
-          onAccept: (value) =>
-              context.read<TaskBuilderCubit>().addNodeToMainGraph(value),
-        ),
-      ],
+      builder: (context, state) => TaskBuilderBody(state: state),
     );
   }
 }

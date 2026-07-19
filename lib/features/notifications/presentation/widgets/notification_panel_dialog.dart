@@ -9,6 +9,8 @@ import '../../domain/entities/app_notification.dart';
 import '../cubits/app_notifications_cubit.dart';
 import '../cubits/app_notifications_state.dart';
 
+part 'notification_panel_dialog_parts.dart';
+
 class NotificationDialog extends StatelessWidget {
   const NotificationDialog({super.key});
 
@@ -23,36 +25,80 @@ class NotificationDialog extends StatelessWidget {
       ),
       child: SizedBox(
         width: 360,
-        child: BlocBuilder<AppNotificationsCubit, AppNotificationsState>(
-          builder: (context, state) => _NotificationPanel(state: state),
+        height: 520,
+        child: const NotificationPanel(),
+      ),
+    );
+  }
+}
+
+class NotificationPanel extends StatelessWidget {
+  const NotificationPanel({super.key, this.onClose});
+
+  final VoidCallback? onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AppNotificationsCubit, AppNotificationsState>(
+      builder: (context, state) => Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          children: [
+            _NotificationHeader(onClose: onClose),
+            const SizedBox(height: AppSpacing.md),
+            Expanded(child: _NotificationContent(state: state)),
+          ],
         ),
       ),
     );
   }
 }
 
-class _NotificationPanel extends StatelessWidget {
-  const _NotificationPanel({required this.state});
+class _NotificationHeader extends StatelessWidget {
+  const _NotificationHeader({required this.onClose});
+
+  final VoidCallback? onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Icon(Icons.notifications_outlined, color: theme.colorScheme.primary),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text('Benachrichtigungen', style: theme.textTheme.titleLarge),
+        ),
+        if (onClose != null)
+          IconButton(
+            tooltip: 'Schließen',
+            onPressed: onClose,
+            icon: const Icon(Icons.close),
+          ),
+      ],
+    );
+  }
+}
+
+class _NotificationContent extends StatelessWidget {
+  const _NotificationContent({required this.state});
 
   final AppNotificationsState state;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: switch (state.status) {
-        AppNotificationsStatus.loading => const Center(
-          child: Padding(
-            padding: EdgeInsets.all(AppSpacing.lg),
-            child: CircularProgressIndicator(),
-          ),
+    return switch (state.status) {
+      AppNotificationsStatus.loading => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(AppSpacing.lg),
+          child: CircularProgressIndicator(),
         ),
-        AppNotificationsStatus.failure => const Text(
-          'Benachrichtigungen konnten nicht geladen werden.',
-        ),
-        AppNotificationsStatus.ready => _NotificationList(state: state),
-      },
-    );
+      ),
+      AppNotificationsStatus.failure => const Text(
+        'Benachrichtigungen konnten nicht geladen werden.',
+      ),
+      AppNotificationsStatus.ready => _NotificationList(state: state),
+    };
   }
 }
 
@@ -64,10 +110,12 @@ class _NotificationList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state.notifications.isEmpty) {
-      return const Text('Keine Benachrichtigungen.');
+      return const Align(
+        alignment: Alignment.topLeft,
+        child: Text('Keine Benachrichtigungen.'),
+      );
     }
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return ListView(
       children: state.notifications
           .map((item) => _NotificationTile(item: item, state: state))
           .toList(growable: false),
@@ -97,79 +145,5 @@ class _NotificationTile extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class _ApprovalAction extends StatelessWidget {
-  const _ApprovalAction({required this.item});
-
-  final AppNotification item;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.sm),
-      child: FilledButton(
-        onPressed: () => _openReview(context),
-        child: const Text('Prüfen'),
-      ),
-    );
-  }
-
-  Future<void> _openReview(BuildContext context) async {
-    final run = item.taskRun;
-    if (run == null) return;
-    final rootContext = Navigator.of(context, rootNavigator: true).context;
-    Navigator.of(context).pop();
-    await Future<void>.delayed(Duration.zero);
-    if (!rootContext.mounted) return;
-    await showDialog<void>(
-      context: rootContext,
-      builder: (_) => BlocProvider(
-        create: (_) => serviceLocator<ActivityCubit>(),
-        child: ApprovalReviewDialog(run: run),
-      ),
-    );
-  }
-}
-
-class _InvitationActions extends StatelessWidget {
-  const _InvitationActions({required this.item, required this.state});
-
-  final AppNotification item;
-  final AppNotificationsState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final isProcessing = state.processingId == item.id;
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.sm),
-      child: Row(
-        children: [
-          TextButton(
-            onPressed: isProcessing ? null : () => _reject(context),
-            child: const Text('Ablehnen'),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          FilledButton(
-            onPressed: isProcessing ? null : () => _accept(context),
-            child: isProcessing
-                ? const SizedBox.square(
-                    dimension: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Annehmen'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _accept(BuildContext context) {
-    context.read<AppNotificationsCubit>().accept(item.id);
-  }
-
-  void _reject(BuildContext context) {
-    context.read<AppNotificationsCubit>().reject(item.id);
   }
 }

@@ -7,12 +7,12 @@ import 'root_tab.dart';
 import 'core/widgets/root_app_bar.dart';
 import 'core/widgets/root_shell_scope.dart';
 import 'core/widgets/root_side_menu.dart';
-import 'core/widgets/root_stage.dart';
 import 'core/widgets/syscat_background.dart';
 import 'features/assistant/domain/entities/assistant_context.dart';
 import 'features/assistant/presentation/widgets/assistant_bell_button.dart';
 import 'features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import 'features/notifications/presentation/widgets/notification_bell_button.dart';
+import 'features/task_builder/presentation/widgets/task_builder_shell_frame.dart';
 
 class RootPage extends StatefulWidget {
   const RootPage({super.key, required this.location, required this.child});
@@ -76,6 +76,9 @@ class _RootPageState extends State<RootPage> {
     final selectedTabIndex = _selectedTabIndex;
     final selectedTab = _tabs[selectedTabIndex];
     final assistantContext = _assistantContextFor(selectedTab);
+    final usesTaskBuilderSideRail = widget.location.startsWith(
+      '/tasks/builder',
+    );
     return RootShellScope(
       controller: _shellController,
       child: BlocProvider(
@@ -93,18 +96,10 @@ class _RootPageState extends State<RootPage> {
                 selectedIndex: selectedTabIndex,
                 onSelected: _selectTab,
               ),
-              centerPage: Scaffold(
-                backgroundColor: Colors.transparent,
-                appBar: RootAppBar(
-                  title: _titleFor(selectedTab),
-                  onMenuPressed: _sideMenuController.openLeftMenu,
-                  actions: [
-                    if (assistantContext != null)
-                      AssistantBellButton(contextInfo: assistantContext),
-                    const NotificationBellButton(),
-                  ],
-                ),
-                body: RootStage(child: widget.child),
+              centerPage: _centerPage(
+                selectedTab: selectedTab,
+                assistantContext: assistantContext,
+                usesTaskBuilderSideRail: usesTaskBuilderSideRail,
               ),
             ),
           ),
@@ -115,6 +110,40 @@ class _RootPageState extends State<RootPage> {
 
   Widget _titleFor(RootTab selectedTab) {
     return _shellController.title ?? Text(selectedTab.title);
+  }
+
+  Widget _centerPage({
+    required RootTab selectedTab,
+    required AssistantContext? assistantContext,
+    required bool usesTaskBuilderSideRail,
+  }) {
+    final title = _titleFor(selectedTab);
+    if (usesTaskBuilderSideRail) return _taskBuilderCenterPage(title);
+    return _defaultCenterPage(title, assistantContext);
+  }
+
+  Widget _taskBuilderCenterPage(Widget title) {
+    return TaskBuilderShellFrame(
+      title: title,
+      onMenuPressed: _sideMenuController.openLeftMenu,
+      child: widget.child,
+    );
+  }
+
+  Widget _defaultCenterPage(Widget title, AssistantContext? assistantContext) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: RootAppBar(
+        title: title,
+        onMenuPressed: _sideMenuController.openLeftMenu,
+        actions: [
+          if (assistantContext != null)
+            AssistantBellButton(contextInfo: assistantContext),
+          const NotificationBellButton(),
+        ],
+      ),
+      body: SafeArea(child: widget.child),
+    );
   }
 
   AssistantContext? _assistantContextFor(RootTab selectedTab) {

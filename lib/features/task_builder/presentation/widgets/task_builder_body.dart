@@ -1,0 +1,111 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/di/service_locator.dart';
+import 'package:syscat2/core/logging/syscat_log.dart';
+import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/toolbar.dart';
+import 'package:web_smooth_scroll/web_smooth_scroll.dart';
+
+class TaskBuilderBody extends StatefulWidget {
+  const TaskBuilderBody({super.key, required this.state});
+
+  final TaskBuilderState state;
+
+  @override
+  State<TaskBuilderBody> createState() => _TaskBuilderBodyState();
+}
+
+class _TaskBuilderBodyState extends State<TaskBuilderBody> {
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _TaskBuilderWorkspace(
+      state: widget.state,
+      scrollController: _scrollController,
+    );
+  }
+}
+
+class _TaskBuilderWorkspace extends StatelessWidget {
+  const _TaskBuilderWorkspace({
+    required this.state,
+    required this.scrollController,
+  });
+
+  final TaskBuilderState state;
+  final ScrollController scrollController;
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<TaskBuilderCubit>();
+    return Column(
+      children: [
+        FilledButton.icon(
+          onPressed: () => _executeTask(cubit),
+          icon: const Icon(Icons.play_arrow_rounded),
+          label: const Text('Aufgabe starten'),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        const Toolbar(),
+        const SizedBox(height: AppSpacing.xl),
+        if (state case TaskBuilderLoaded(:final editingTask))
+          Expanded(
+            child: WebSmoothScroll(
+              controller: scrollController,
+              scrollSpeed: 2.5,
+              scrollAnimationLength: 1400,
+              curve: Curves.easeInOutCubic,
+              child: SingleChildScrollView(
+                controller: scrollController,
+                physics: const NeverScrollableScrollPhysics(),
+                child: NodeGraph(nodes: editingTask.nodes),
+              ),
+            ),
+          ),
+        NodePlaceholder(onAccept: cubit.addNodeToMainGraph),
+      ],
+    );
+  }
+
+  Future<void> _executeTask(TaskBuilderCubit cubit) async {
+    final task = cubit.loadedTaskOrNull();
+    if (task == null) return;
+    logSyscatInfo(
+      'Run-Button startet Aufgabe: ${task.id}',
+      name: 'syscat.task_builder',
+    );
+    final taskRunOrFailure = await serviceLocator<ExecuteTask>()(
+      ExecuteTaskParams(task: task),
+    );
+    taskRunOrFailure.when(
+      (run) => _logRunStarted(run.runId.value),
+      (failure) => _logRunFailed(failure.message),
+    );
+  }
+
+  void _logRunStarted(String runId) {
+    logSyscatInfo(
+      'Run-Button: Aufgabe im Hintergrund gestartet: $runId',
+      name: 'syscat.task_builder',
+    );
+  }
+
+  void _logRunFailed(String message) {
+    logSyscatInfo(
+      'Run-Button: Aufgabe fehlgeschlagen: $message',
+      name: 'syscat.task_builder',
+    );
+  }
+}

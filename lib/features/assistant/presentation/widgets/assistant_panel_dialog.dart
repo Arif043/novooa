@@ -8,14 +8,31 @@ import '../cubits/assistant_state.dart';
 
 part 'assistant_panel_dialog_parts.dart';
 
-class AssistantPanelDialog extends StatefulWidget {
+class AssistantPanelDialog extends StatelessWidget {
   const AssistantPanelDialog({super.key});
 
   @override
-  State<AssistantPanelDialog> createState() => _AssistantPanelDialogState();
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.all(AppSpacing.md),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460, maxHeight: 640),
+        child: AssistantPanel(onClose: () => Navigator.of(context).pop()),
+      ),
+    );
+  }
 }
 
-class _AssistantPanelDialogState extends State<AssistantPanelDialog> {
+class AssistantPanel extends StatefulWidget {
+  const AssistantPanel({super.key, required this.onClose});
+
+  final VoidCallback onClose;
+
+  @override
+  State<AssistantPanel> createState() => _AssistantPanelState();
+}
+
+class _AssistantPanelState extends State<AssistantPanel> {
   final TextEditingController _controller = TextEditingController();
 
   @override
@@ -27,22 +44,16 @@ class _AssistantPanelDialogState extends State<AssistantPanelDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Dialog(
-      insetPadding: const EdgeInsets.all(AppSpacing.md),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460, maxHeight: 640),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            children: [
-              _AssistantHeader(onClose: () => Navigator.of(context).pop()),
-              const SizedBox(height: AppSpacing.md),
-              Expanded(child: _AssistantMessages(theme: theme)),
-              const SizedBox(height: AppSpacing.md),
-              _AssistantInput(controller: _controller),
-            ],
-          ),
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        children: [
+          _AssistantHeader(onClose: widget.onClose),
+          const SizedBox(height: AppSpacing.md),
+          Expanded(child: _AssistantMessages(theme: theme)),
+          const SizedBox(height: AppSpacing.md),
+          _AssistantInput(controller: _controller),
+        ],
       ),
     );
   }
