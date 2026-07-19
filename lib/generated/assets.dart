@@ -8,6 +8,7 @@
 // dart format off
 
 class Assets {
+  static const String iconsFavicon = 'assets/icons/favicon.ico';
   static const String iconsFull = 'assets/icons/full.png';
   static const String iconsFullv2 = 'assets/icons/fullv2.png';
   static const String iconsFullv2Transparent = 'assets/icons/fullv2_transparent.png';
