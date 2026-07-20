@@ -22,6 +22,11 @@ class FirebaseAiAssistantDatasource {
     final model = _firebaseAI.generativeModel(
       model: _modelName,
       systemInstruction: Content.text(_systemPromptFor(context)),
+      generationConfig: GenerationConfig(
+        temperature: 0.2,
+        responseMimeType: 'application/json',
+        responseJsonSchema: _assistantResponseSchema,
+      ),
     );
     final response = await model.generateContent([
       Content.text(_promptFor(history, question)),
@@ -56,6 +61,7 @@ class FirebaseAiAssistantDatasource {
       'Route: ${context.route}.',
       'Erfinde keine Funktionen, die novooa noch nicht besitzt.',
       if (context.area == AssistantArea.taskBuilder) _taskBuilderCommandRules,
+      if (context.area != AssistantArea.taskBuilder) _emptyCommandRules,
       'Nutze diese interne Wissensbasis als verbindliche Produktinformation:',
       knowledge,
     ].join('\n');
@@ -64,38 +70,62 @@ class FirebaseAiAssistantDatasource {
 
 const _taskBuilderCommandRules = '''
 Wenn der Nutzer einen Geschäftsprozess automatisieren oder eine Aufgabe bauen will,
-gib zusätzlich am Ende einen maschinenlesbaren Plan in exakt diesem Format aus:
-
-```novooa_task_plan
-{
-  "commands": [
-    {
-      "type": "renameTask",
-      "label": "Aufgabe benennen",
-      "title": "Kurzer Aufgabenname"
-    },
-    {
-      "type": "addNode",
-      "label": "E-Mail lesen",
-      "primitive": "readChannelEvent",
-      "kind": "email",
-      "title": "E-Mail lesen"
-    },
-    {
-      "type": "addNode",
-      "label": "Anfrage analysieren",
-      "primitive": "prompt",
-      "title": "Anfrage analysieren",
-      "referenceName": "analyse",
-      "instruction": "Analysiere {{email.message}} ..."
-    }
-  ]
-}
-```
+fülle commands mit einem konkreten Plan.
 
 Erlaubte command types: renameTask, addNode.
 Erlaubte primitives: stringInput, prompt, readChannelEvent, sendChannelMessage,
 humanApproval, script.
 Erlaubte kind-Werte: email, whatsapp, sms.
-Keine Markdown-Kommentare innerhalb des JSON. Der sichtbare Antworttext bleibt kurz.
+Der sichtbare Antworttext steht ausschließlich in answer.
 ''';
+
+const _emptyCommandRules = '''
+Setze commands auf eine leere Liste.
+Der sichtbare Antworttext steht ausschließlich in answer.
+''';
+
+const _assistantResponseSchema = <String, Object?>{
+  'type': 'object',
+  'additionalProperties': false,
+  'required': ['answer', 'commands'],
+  'properties': {
+    'answer': {'type': 'string'},
+    'commands': {
+      'type': 'array',
+      'items': {
+        'type': 'object',
+        'additionalProperties': false,
+        'required': ['type', 'label'],
+        'properties': {
+          'type': {
+            'type': 'string',
+            'enum': ['renameTask', 'addNode'],
+          },
+          'label': {'type': 'string'},
+          'primitive': {
+            'type': 'string',
+            'enum': [
+              'stringInput',
+              'prompt',
+              'readChannelEvent',
+              'sendChannelMessage',
+              'humanApproval',
+              'script',
+            ],
+          },
+          'kind': {
+            'type': 'string',
+            'enum': ['email', 'whatsapp', 'sms'],
+          },
+          'title': {'type': 'string'},
+          'referenceName': {'type': 'string'},
+          'description': {'type': 'string'},
+          'value': {'type': 'string'},
+          'instruction': {'type': 'string'},
+          'recipient': {'type': 'string'},
+          'message': {'type': 'string'},
+        },
+      },
+    },
+  },
+};
