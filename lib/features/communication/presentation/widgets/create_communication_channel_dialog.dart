@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/communication_channel.dart';
 import '../../domain/entities/create_communication_channel_input.dart';
+import 'whatsapp_business_onboarding_notice.dart';
 
 class CreateCommunicationChannelDialog extends StatefulWidget {
   const CreateCommunicationChannelDialog({super.key});
@@ -18,6 +19,7 @@ class _CreateCommunicationChannelDialogState
   final TextEditingController _labelController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   CommunicationChannelKind _kind = CommunicationChannelKind.whatsapp;
+  bool _acceptedWhatsappOnboarding = false;
 
   @override
   void dispose() {
@@ -48,6 +50,13 @@ class _CreateCommunicationChannelDialogState
                 hintText: _addressHint,
               ),
             ),
+            if (_kind == CommunicationChannelKind.whatsapp) ...[
+              const SizedBox(height: AppSpacing.md),
+              WhatsappBusinessOnboardingNotice(
+                accepted: _acceptedWhatsappOnboarding,
+                onChanged: _setWhatsappOnboardingAccepted,
+              ),
+            ],
           ],
         ),
       ),
@@ -56,13 +65,17 @@ class _CreateCommunicationChannelDialogState
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Abbrechen'),
         ),
-        FilledButton(onPressed: _submit, child: const Text('Verbinden')),
+        FilledButton(onPressed: _canSubmit ? _submit : null, child: _button),
       ],
     );
   }
 
   void _setKind(CommunicationChannelKind kind) {
     setState(() => _kind = kind);
+  }
+
+  void _setWhatsappOnboardingAccepted(bool accepted) {
+    setState(() => _acceptedWhatsappOnboarding = accepted);
   }
 
   void _submit() {
@@ -73,7 +86,21 @@ class _CreateCommunicationChannelDialogState
         label: _labelController.text,
         address: _addressController.text,
         capabilities: const ChannelCapabilities(inbound: true, outbound: true),
+        status: _statusForKind,
       ),
+    );
+  }
+
+  bool get _canSubmit {
+    if (_kind != CommunicationChannelKind.whatsapp) return true;
+    return _acceptedWhatsappOnboarding;
+  }
+
+  Widget get _button {
+    return Text(
+      _kind == CommunicationChannelKind.whatsapp
+          ? 'Onboarding starten'
+          : 'Verbinden',
     );
   }
 
@@ -98,6 +125,15 @@ class _CreateCommunicationChannelDialogState
       CommunicationChannelKind.whatsapp ||
       CommunicationChannelKind.sms => CommunicationProvider.twilio,
       CommunicationChannelKind.email => CommunicationProvider.sendgrid,
+    };
+  }
+
+  CommunicationChannelStatus get _statusForKind {
+    return switch (_kind) {
+      CommunicationChannelKind.whatsapp =>
+        CommunicationChannelStatus.pendingVerification,
+      CommunicationChannelKind.sms ||
+      CommunicationChannelKind.email => CommunicationChannelStatus.active,
     };
   }
 

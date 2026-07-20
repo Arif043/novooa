@@ -107,6 +107,10 @@ Ein Team kann mehrere Kanäle besitzen. Kanäle gehören bewusst nicht zu
 einzelnen Projekten; Aufgaben und Trigger referenzieren bei Bedarf einen
 Team-Kanal. Die UI folgt dem Superchat-Modell: Nutzer verbinden WhatsApp, SMS
 oder E-Mail mit novooa; Provider-Details bleiben Infrastruktur.
+WhatsApp-Verbindungen beziehen sich auf WhatsApp-Business-Nummern. Eine
+bestehende WhatsApp-Business-App-Nummer wird über das offizielle
+Business-Platform-Onboarding verbunden und bleibt bis zum Abschluss als
+`pendingVerification` gespeichert.
 
 Eingehende Nachrichten werden unter dem Team-Inbox-Pfad gespeichert:
 

@@ -37,12 +37,13 @@ class CommunicationChannelTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                IconButton(
-                  tooltip: 'Testnachricht auslösen',
-                  onPressed: onFakeMessage,
-                  icon: const Icon(Icons.bolt_outlined),
-                ),
-                if (channel.capabilities.outbound)
+                if (_isActive)
+                  IconButton(
+                    tooltip: 'Testnachricht auslösen',
+                    onPressed: onFakeMessage,
+                    icon: const Icon(Icons.bolt_outlined),
+                  ),
+                if (_isActive && channel.capabilities.outbound)
                   IconButton(
                     tooltip: 'Nachricht senden',
                     onPressed: onSendMessage,
@@ -63,6 +64,7 @@ class CommunicationChannelTile extends StatelessWidget {
               runSpacing: AppSpacing.sm,
               children: [
                 _InfoChip(label: _kindLabel),
+                _InfoChip(label: _statusLabel),
                 if (channel.capabilities.inbound)
                   const _InfoChip(label: 'Eingang'),
                 if (channel.capabilities.outbound)
@@ -73,6 +75,10 @@ class CommunicationChannelTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  bool get _isActive {
+    return channel.status == CommunicationChannelStatus.active;
   }
 
   IconData get _icon {
@@ -88,6 +94,15 @@ class CommunicationChannelTile extends StatelessWidget {
       CommunicationChannelKind.whatsapp => 'WhatsApp',
       CommunicationChannelKind.sms => 'SMS',
       CommunicationChannelKind.email => 'E-Mail',
+    };
+  }
+
+  String get _statusLabel {
+    return switch (channel.status) {
+      CommunicationChannelStatus.setupRequired => 'Einrichtung nötig',
+      CommunicationChannelStatus.pendingVerification => 'Verifizierung läuft',
+      CommunicationChannelStatus.active => 'Aktiv',
+      CommunicationChannelStatus.disabled => 'Deaktiviert',
     };
   }
 }

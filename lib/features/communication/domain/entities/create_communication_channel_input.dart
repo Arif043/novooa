@@ -7,6 +7,7 @@ class CreateCommunicationChannelInput {
     required this.label,
     required this.address,
     required this.capabilities,
+    this.status = CommunicationChannelStatus.active,
   });
 
   final CommunicationProvider provider;
@@ -14,6 +15,7 @@ class CreateCommunicationChannelInput {
   final String label;
   final String address;
   final ChannelCapabilities capabilities;
+  final CommunicationChannelStatus status;
 
   bool get isValid {
     return label.trim().isNotEmpty &&

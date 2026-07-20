@@ -99,7 +99,7 @@ class FirestoreCommunicationChannelRepository
       'kind': input.kind.name,
       'label': input.label.trim(),
       'address': input.address.trim(),
-      'status': CommunicationChannelStatus.active.name,
+      'status': input.status.name,
       'capabilities': _capabilities(input.capabilities),
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),

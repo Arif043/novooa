@@ -108,6 +108,12 @@ Team-Dokument (`twilioSubaccountSid`). Die Nutzeroberfläche spricht von
 „WhatsApp/SMS/E-Mail verbinden“ und zeigt keine Provider-Begriffe wie Twilio,
 Subaccount oder Account SID.
 
+WhatsApp meint eine WhatsApp-Business-Nummer auf der WhatsApp Business
+Platform. Bestehende WhatsApp-Business-App-Nummern werden nicht parallel
+gesynct, sondern über das offizielle Onboarding migriert bzw. verbunden. Neu
+angelegte WhatsApp-Kanäle starten daher mit `status: "pendingVerification"`
+und werden erst nach erfolgreicher Verifizierung/Migration aktiv.
+
 Storage:
 
 ```text
