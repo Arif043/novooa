@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
@@ -33,7 +34,7 @@ class SyscatTheme {
 
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
-  static const Color error = Color(0xFFBA1A1A);
+  static const Color error = CupertinoColors.destructiveRed;
   static const Color info = Color(0xFF3B82F6);
 
   static const Color backgroundLight = Color(0xFFFCF8FB);
