@@ -8,6 +8,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/deletable_nod
 import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_drag_handle.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_email_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_file_widget.dart';
@@ -31,17 +32,18 @@ class _NodeGraphState extends State<NodeGraph> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: widget.nodes
-          .map(
-            (node) => _SwappableNode(
-              node: node,
-              isSource: _draggingNodeId == node.id,
-              onDragStarted: () => _setDraggingNode(node.id),
-              onDragEnded: _clearDraggingNode,
-              child: _nodeWidget(node),
-            ),
-          )
-          .toList(growable: false),
+      children: [
+        ...widget.nodes.map(
+          (node) => _SwappableNode(
+            node: node,
+            isSource: _draggingNodeId == node.id,
+            onDragStarted: () => _setDraggingNode(node.id),
+            onDragEnded: _clearDraggingNode,
+            child: _nodeWidget(node),
+          ),
+        ),
+        NodePlaceholder(onAccept: (value) {}),
+      ],
     );
   }
 
@@ -109,11 +111,7 @@ class _SwappableNode extends StatelessWidget {
                 Positioned(
                   top: AppSpacing.xs,
                   left: AppSpacing.xs,
-                  child: NodeDragHandle(
-                    node: node,
-                    onDragStarted: onDragStarted,
-                    onDragEnded: onDragEnded,
-                  ),
+                  child: NodeDragHandle(node: node, onDragStarted: onDragStarted, onDragEnded: onDragEnded),
                 ),
               ],
             ),
@@ -134,11 +132,7 @@ class _SwappableNode extends StatelessWidget {
 }
 
 class _AnimatedNodeSlot extends StatelessWidget {
-  const _AnimatedNodeSlot({
-    required this.node,
-    required this.child,
-    required this.isSource,
-  });
+  const _AnimatedNodeSlot({required this.node, required this.child, required this.isSource});
 
   final WorkflowNode node;
   final Widget child;
@@ -165,21 +159,12 @@ class _AnimatedNodeSlot extends StatelessWidget {
     final color = Theme.of(context).colorScheme.primary;
     return BoxDecoration(
       borderRadius: BorderRadius.circular(8),
-      boxShadow: [
-        BoxShadow(
-          color: color.withValues(alpha: 0.22),
-          blurRadius: 22,
-          spreadRadius: 2,
-        ),
-      ],
+      boxShadow: [BoxShadow(color: color.withValues(alpha: 0.22), blurRadius: 22, spreadRadius: 2)],
     );
   }
 
   Widget _transition(Widget child, Animation<double> animation) {
-    final offset = Tween<Offset>(
-      begin: const Offset(0, 0.04),
-      end: Offset.zero,
-    ).animate(animation);
+    final offset = Tween<Offset>(begin: const Offset(0, 0.04), end: Offset.zero).animate(animation);
     return FadeTransition(
       opacity: animation,
       child: SlideTransition(position: offset, child: child),

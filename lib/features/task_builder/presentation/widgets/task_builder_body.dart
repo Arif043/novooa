@@ -74,7 +74,6 @@ class _TaskBuilderWorkspace extends StatelessWidget {
               ),
             ),
           ),
-        NodePlaceholder(onAccept: cubit.addNodeToMainGraph),
       ],
     );
   }
