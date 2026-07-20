@@ -1,8 +1,8 @@
 import {randomUUID} from "node:crypto";
 import {FieldValue} from "firebase-admin/firestore";
-import {getStorage} from "firebase-admin/storage";
 import {storagePathFor} from "../../task-executors/write-file-node-config.js";
 import {type NodeAttachment} from "../../domain/entities/attachments.js";
+import {getDefaultStorageBucket} from "./firebase-storage.js";
 import {getDatabase} from "./firestore-db.js";
 import {
   type TeamFileStore,
@@ -19,7 +19,7 @@ type ExistingFile = {
 export class FirestoreTeamFileStore implements TeamFileStore {
   async writeTeamFile(input: WriteTeamFileInput): Promise<WrittenFile> {
     const file = await this.writtenFileFrom(input);
-    await getStorage().bucket().file(file.storagePath).save(input.content, {
+    await getDefaultStorageBucket().file(file.storagePath).save(input.content, {
       contentType: file.contentType,
     });
     await writeMetadata(input.teamId, file);
@@ -28,7 +28,7 @@ export class FirestoreTeamFileStore implements TeamFileStore {
 
   async readTextFile(teamId: string, file: NodeAttachment): Promise<string> {
     ensureTeamFile(file, teamId);
-    const storageFile = getStorage().bucket().file(file.storagePath);
+    const storageFile = getDefaultStorageBucket().file(file.storagePath);
     const [content] = await storageFile.download();
     return content.toString("utf8");
   }

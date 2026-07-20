@@ -1,4 +1,4 @@
-import {getApps, initializeApp} from "firebase-admin/app";
+import {getApp, initializeApp} from "firebase-admin/app";
 import {getFirestore} from "firebase-admin/firestore";
 
 export function getDatabase() {
@@ -7,5 +7,9 @@ export function getDatabase() {
 }
 
 export function initializeAdminApp(): void {
-  if (getApps().length === 0) initializeApp();
+  try {
+    getApp();
+  } catch {
+    initializeApp();
+  }
 }
