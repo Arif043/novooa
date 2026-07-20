@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
+import 'package:syscat2/core/widgets/root_shell_scope.dart';
 import 'package:syscat2/features/assistant/domain/entities/assistant_context.dart';
 import 'package:syscat2/features/assistant/presentation/cubits/assistant_cubit.dart';
 import 'package:syscat2/features/assistant/presentation/widgets/assistant_panel_dialog.dart';
 import 'package:syscat2/features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import 'package:syscat2/features/notifications/presentation/cubits/app_notifications_state.dart';
 import 'package:syscat2/features/notifications/presentation/widgets/notification_panel_dialog.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
 enum TaskBuilderSidePanelKind { assistant, notifications }
 
@@ -74,11 +76,11 @@ class TaskBuilderSideDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Theme.of(context).colorScheme.surface,
-      child: SafeArea(left: false, child: _content()),
+      child: SafeArea(left: false, child: _content(context)),
     );
   }
 
-  Widget _content() {
+  Widget _content(BuildContext context) {
     return switch (panel) {
       TaskBuilderSidePanelKind.assistant => BlocProvider(
         create: (_) => serviceLocator<AssistantCubit>()
@@ -88,12 +90,22 @@ class TaskBuilderSideDrawer extends StatelessWidget {
               route: '/tasks/builder',
             ),
           ),
-        child: AssistantPanel(onClose: onClose),
+        child: AssistantPanel(
+          onClose: onClose,
+          taskBuilderCubit: _taskBuilderCubitOrNull(context),
+        ),
       ),
       TaskBuilderSidePanelKind.notifications => NotificationPanel(
         onClose: onClose,
       ),
     };
+  }
+
+  TaskBuilderCubit? _taskBuilderCubitOrNull(BuildContext context) {
+    final controller = RootShellScope.of(context);
+    return controller.taskBuilderController is TaskBuilderCubit
+        ? controller.taskBuilderController as TaskBuilderCubit
+        : null;
   }
 }
 

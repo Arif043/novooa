@@ -55,8 +55,47 @@ class FirebaseAiAssistantDatasource {
       'Aktueller Bereich: ${context.label}.',
       'Route: ${context.route}.',
       'Erfinde keine Funktionen, die novooa noch nicht besitzt.',
+      if (context.area == AssistantArea.taskBuilder) _taskBuilderCommandRules,
       'Nutze diese interne Wissensbasis als verbindliche Produktinformation:',
       knowledge,
     ].join('\n');
   }
 }
+
+const _taskBuilderCommandRules = '''
+Wenn der Nutzer einen Geschäftsprozess automatisieren oder eine Aufgabe bauen will,
+gib zusätzlich am Ende einen maschinenlesbaren Plan in exakt diesem Format aus:
+
+```novooa_task_plan
+{
+  "commands": [
+    {
+      "type": "renameTask",
+      "label": "Aufgabe benennen",
+      "title": "Kurzer Aufgabenname"
+    },
+    {
+      "type": "addNode",
+      "label": "E-Mail lesen",
+      "primitive": "readChannelEvent",
+      "kind": "email",
+      "title": "E-Mail lesen"
+    },
+    {
+      "type": "addNode",
+      "label": "Anfrage analysieren",
+      "primitive": "prompt",
+      "title": "Anfrage analysieren",
+      "referenceName": "analyse",
+      "instruction": "Analysiere {{email.message}} ..."
+    }
+  ]
+}
+```
+
+Erlaubte command types: renameTask, addNode.
+Erlaubte primitives: stringInput, prompt, readChannelEvent, sendChannelMessage,
+humanApproval, script.
+Erlaubte kind-Werte: email, whatsapp, sms.
+Keine Markdown-Kommentare innerhalb des JSON. Der sichtbare Antworttext bleibt kurz.
+''';

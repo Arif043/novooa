@@ -115,6 +115,10 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     await _saveAndEmit(task.copyWith(title: title));
   }
 
+  Future<void> restoreTask(Task task) {
+    return _saveAndEmit(task);
+  }
+
   Future<void> updateObjective(String objective) async {
     final task = loadedTaskOrNull();
     if (task == null || task.objective == objective) return;

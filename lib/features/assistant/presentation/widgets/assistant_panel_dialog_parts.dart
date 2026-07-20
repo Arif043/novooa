@@ -1,9 +1,13 @@
 part of 'assistant_panel_dialog.dart';
 
 class _AssistantMessageBubble extends StatelessWidget {
-  const _AssistantMessageBubble({required this.message});
+  const _AssistantMessageBubble({
+    required this.message,
+    required this.taskBuilderCubit,
+  });
 
   final AssistantMessage message;
+  final TaskBuilderCubit? taskBuilderCubit;
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +24,41 @@ class _AssistantMessageBubble extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
-          child: Text(message.text, style: theme.textTheme.bodyMedium),
+          child: _MessageContent(
+            message: message,
+            taskBuilderCubit: taskBuilderCubit,
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _MessageContent extends StatelessWidget {
+  const _MessageContent({
+    required this.message,
+    required this.taskBuilderCubit,
+  });
+
+  final AssistantMessage message;
+  final TaskBuilderCubit? taskBuilderCubit;
+
+  @override
+  Widget build(BuildContext context) {
+    final commands = message.taskCommands;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (message.text.isNotEmpty)
+          Text(message.text, style: Theme.of(context).textTheme.bodyMedium),
+        if (commands.isNotEmpty && taskBuilderCubit != null) ...[
+          const SizedBox(height: AppSpacing.md),
+          AssistantTaskCommandPlan(
+            commands: commands,
+            taskBuilderCubit: taskBuilderCubit!,
+          ),
+        ],
+      ],
     );
   }
 }

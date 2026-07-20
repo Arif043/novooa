@@ -36,8 +36,7 @@ class TaskBuilderPage extends StatelessWidget {
           create: (_) => serviceLocator<NodeSkillAttachmentsCubit>()..load(),
         ),
         BlocProvider(
-          create: (_) =>
-              serviceLocator<NodeEmployeeAssignmentsCubit>()..load(),
+          create: (_) => serviceLocator<NodeEmployeeAssignmentsCubit>()..load(),
         ),
       ],
       child: const _TaskBuilderView(),
@@ -82,6 +81,7 @@ class _TaskBuilderShellTitleState extends State<_TaskBuilderShellTitle> {
   void _setTitleAfterFrame(RootShellController controller, Widget title) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _controller != controller) return;
+      controller.setTaskBuilderController(context.read<TaskBuilderCubit>());
       controller.setTitle(title);
     });
   }
@@ -91,6 +91,7 @@ class _TaskBuilderShellTitleState extends State<_TaskBuilderShellTitle> {
     final controller = _controller;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller?.setTitle(null);
+      controller?.setTaskBuilderController(null);
     });
     super.dispose();
   }

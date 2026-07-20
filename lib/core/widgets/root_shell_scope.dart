@@ -2,13 +2,21 @@ import 'package:flutter/material.dart';
 
 class RootShellController extends ChangeNotifier {
   Widget? _title;
+  Object? _taskBuilderController;
   bool _isDisposed = false;
 
   Widget? get title => _title;
+  Object? get taskBuilderController => _taskBuilderController;
 
   void setTitle(Widget? title) {
     if (_isDisposed) return;
     _title = title;
+    notifyListeners();
+  }
+
+  void setTaskBuilderController(Object? controller) {
+    if (_isDisposed) return;
+    _taskBuilderController = controller;
     notifyListeners();
   }
 

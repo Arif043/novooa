@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
 import '../../domain/entities/assistant_message.dart';
 import '../cubits/assistant_cubit.dart';
 import '../cubits/assistant_state.dart';
+import 'assistant_task_command_plan.dart';
 
 part 'assistant_panel_dialog_parts.dart';
 
@@ -24,9 +26,14 @@ class AssistantPanelDialog extends StatelessWidget {
 }
 
 class AssistantPanel extends StatefulWidget {
-  const AssistantPanel({super.key, required this.onClose});
+  const AssistantPanel({
+    super.key,
+    required this.onClose,
+    this.taskBuilderCubit,
+  });
 
   final VoidCallback onClose;
+  final TaskBuilderCubit? taskBuilderCubit;
 
   @override
   State<AssistantPanel> createState() => _AssistantPanelState();
@@ -50,7 +57,12 @@ class _AssistantPanelState extends State<AssistantPanel> {
         children: [
           _AssistantHeader(onClose: widget.onClose),
           const SizedBox(height: AppSpacing.md),
-          Expanded(child: _AssistantMessages(theme: theme)),
+          Expanded(
+            child: _AssistantMessages(
+              theme: theme,
+              taskBuilderCubit: widget.taskBuilderCubit,
+            ),
+          ),
           const SizedBox(height: AppSpacing.md),
           _AssistantInput(controller: _controller),
         ],
@@ -83,9 +95,13 @@ class _AssistantHeader extends StatelessWidget {
 }
 
 class _AssistantMessages extends StatelessWidget {
-  const _AssistantMessages({required this.theme});
+  const _AssistantMessages({
+    required this.theme,
+    required this.taskBuilderCubit,
+  });
 
   final ThemeData theme;
+  final TaskBuilderCubit? taskBuilderCubit;
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +121,10 @@ class _AssistantMessages extends StatelessWidget {
 
   Widget _itemFor(AssistantState state, int index) {
     if (index == state.messages.length) return const _AssistantLoadingBubble();
-    return _AssistantMessageBubble(message: state.messages[index]);
+    return _AssistantMessageBubble(
+      message: state.messages[index],
+      taskBuilderCubit: taskBuilderCubit,
+    );
   }
 }
 
