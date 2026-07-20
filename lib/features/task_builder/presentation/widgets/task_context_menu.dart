@@ -4,9 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/task.dart';
 import '../cubits/task_homepage_cubit.dart';
 import 'delete_task_dialog.dart';
+import 'edit_task_objective_dialog.dart';
 import 'rename_task_dialog.dart';
 
-enum TaskMenuAction { duplicate, rename, delete }
+enum TaskMenuAction { duplicate, rename, editObjective, delete }
 
 class TaskContextMenu extends StatelessWidget {
   const TaskContextMenu({super.key, required this.task});
@@ -44,6 +45,14 @@ class TaskContextMenu extends StatelessWidget {
           value: TaskMenuAction.duplicate,
           height: 36,
           child: _TaskMenuRow(icon: Icons.copy_outlined, label: 'Duplizieren'),
+        ),
+        PopupMenuItem(
+          value: TaskMenuAction.editObjective,
+          height: 36,
+          child: _TaskMenuRow(
+            icon: Icons.note_alt_outlined,
+            label: 'Notiz bearbeiten',
+          ),
         ),
         PopupMenuDivider(height: 8),
         PopupMenuItem(
@@ -91,6 +100,8 @@ class TaskContextMenu extends StatelessWidget {
         await cubit.duplicateTask(task);
       case TaskMenuAction.rename:
         await _renameTask(context, cubit);
+      case TaskMenuAction.editObjective:
+        await _editObjective(context, cubit);
       case TaskMenuAction.delete:
         await _deleteTask(context, cubit);
     }
@@ -106,6 +117,18 @@ class TaskContextMenu extends StatelessWidget {
     );
     if (title == null) return;
     await cubit.renameTask(task, title);
+  }
+
+  Future<void> _editObjective(
+    BuildContext context,
+    TaskHomepageCubit cubit,
+  ) async {
+    final objective = await showDialog<String>(
+      context: context,
+      builder: (_) => EditTaskObjectiveDialog(initialObjective: task.objective),
+    );
+    if (objective == null) return;
+    await cubit.updateObjective(task, objective);
   }
 
   Future<void> _deleteTask(

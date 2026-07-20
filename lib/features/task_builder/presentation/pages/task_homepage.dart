@@ -103,7 +103,7 @@ class _TaskGrid extends StatelessWidget {
             crossAxisCount: _columnCountFor(constraints.maxWidth),
             crossAxisSpacing: AppSpacing.md,
             mainAxisSpacing: AppSpacing.md,
-            childAspectRatio: 1.6,
+            // childAspectRatio: 2.5,
           ),
           itemBuilder: (context, index) => TaskTile(task: tasks[index]),
         );

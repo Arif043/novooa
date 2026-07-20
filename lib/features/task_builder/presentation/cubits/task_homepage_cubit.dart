@@ -44,6 +44,17 @@ class TaskHomepageCubit extends Cubit<TaskHomepageState> {
     );
   }
 
+  Future<void> updateObjective(Task task, String objective) async {
+    final tasks = _readyTasksOrNull();
+    final normalizedObjective = objective.trim();
+    if (tasks == null || task.objective == normalizedObjective) return;
+    final updatedTask = task.copyWith(objective: normalizedObjective);
+    await _persistTaskListUpdate(
+      () => _repository.saveTask(updatedTask),
+      tasks.map((item) => item.id == task.id ? updatedTask : item).toList(),
+    );
+  }
+
   Future<void> deleteTask(Task task) async {
     final tasks = _readyTasksOrNull();
     if (tasks == null) return;

@@ -60,6 +60,35 @@ void main() {
     await cubit.close();
   });
 
+  test('updateObjective speichert die Aufgabennotiz', () async {
+    final repository = _FakeTaskRepository([_task]);
+    final cubit = TaskHomepageCubit(repository);
+
+    await cubit.load();
+    await cubit.updateObjective(_task, '  Quartalsbericht vorbereiten  ');
+
+    final state = cubit.state as TaskHomepageReady;
+    expect(state.tasks.single.objective, 'Quartalsbericht vorbereiten');
+    expect(repository.tasks.single.objective, 'Quartalsbericht vorbereiten');
+
+    await cubit.close();
+  });
+
+  test('updateObjective erlaubt leere Notizen', () async {
+    final task = _task.copyWith(objective: 'Alte Notiz');
+    final repository = _FakeTaskRepository([task]);
+    final cubit = TaskHomepageCubit(repository);
+
+    await cubit.load();
+    await cubit.updateObjective(task, '   ');
+
+    final state = cubit.state as TaskHomepageReady;
+    expect(state.tasks.single.objective, '');
+    expect(repository.tasks.single.objective, '');
+
+    await cubit.close();
+  });
+
   test('deleteTask entfernt die Aufgabe', () async {
     final repository = _FakeTaskRepository([_task]);
     final cubit = TaskHomepageCubit(repository);
