@@ -30,10 +30,9 @@ setGlobalOptions({region: "europe-west3", maxInstances: 10});
 // });
 
 export {
-  resumeApprovedTaskRunWorker,
   reviewTaskRun,
-  runTaskDefinitionWorker,
   runTaskDefinitionFlow,
+  runTaskRunTask,
 } from "./task-workflows.js";
 
 export {runDueTaskTriggersWorker} from "./schedule-workflows.js";

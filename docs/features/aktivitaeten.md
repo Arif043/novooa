@@ -60,7 +60,7 @@ resumeState        # serialisierter Zwischenzustand für die Fortsetzung
 Historie. Freigaben werden als Kacheln dargestellt. Ein Klick öffnet einen
 Dialog mit Instruction, editierbarem Output und Aktionen zum Ablehnen oder
 Bestätigen. Bestätigung ruft `reviewTaskRunFlow` mit `decision: "approve"` auf,
-setzt den Run auf `queued` und startet die Fortsetzung per Firestore-Trigger.
+setzt den Run auf `queued` und startet die Fortsetzung per Cloud Task.
 Ablehnung ruft denselben Flow mit `decision: "reject"` auf und verwirft den
 Zwischenzustand.
 

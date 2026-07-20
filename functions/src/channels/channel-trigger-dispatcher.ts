@@ -1,5 +1,9 @@
 import {type TaskRunStore} from "../domain/repositories/task-run-store.js";
+import {type TaskRunDispatcher} from
+  "../domain/repositories/task-run-dispatcher.js";
 import {type TaskStore} from "../domain/repositories/task-store.js";
+import {FirebaseTaskRunDispatcher} from
+  "../infrastructure/firebase/firebase-task-run-dispatcher.js";
 import {FirestoreTaskRunStore} from "../infrastructure/firebase/firestore-task-run-store.js";
 import {FirestoreTaskStore} from "../infrastructure/firebase/firestore-task-store.js";
 import {errorDetails, logError, logInfo} from "../task-runner/structured-logger.js";
@@ -19,12 +23,14 @@ type ChannelTriggerDispatcherStores = {
   triggerStore: TaskTriggerStore;
   taskStore: TaskStore;
   taskRunStore: TaskRunStore;
+  taskRunDispatcher: TaskRunDispatcher;
 };
 
 const defaultStores: ChannelTriggerDispatcherStores = {
   triggerStore: new FirestoreTaskTriggerStore(),
   taskStore: new FirestoreTaskStore(),
   taskRunStore: new FirestoreTaskRunStore(),
+  taskRunDispatcher: new FirebaseTaskRunDispatcher(),
 };
 
 export async function dispatchChannelMessageTriggers(input: {
@@ -75,6 +81,11 @@ async function enqueueTriggerRun(
         event: input.event,
       },
       trigger: {id: trigger.id, type: "event"},
+    });
+    await stores.taskRunDispatcher.dispatchTaskRun({
+      teamId: trigger.teamId,
+      runId: run.runId,
+      mode: "start",
     });
     await stores.triggerStore.markEventTriggerRan(trigger, run.runId);
     logInfo("channel_message.trigger_enqueued", {

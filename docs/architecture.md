@@ -53,17 +53,15 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md#domäne
   Die Callable Function ist authentifiziert, lädt die Aufgabe serverseitig aus
   `teams/{teamId}/tasks/{taskId}`, erstellt
   `teams/{teamId}/taskRuns/{runId}` und gibt sofort die `runId` zurück.
-- Die eigentliche Ausführung läuft im Backend über einen Firestore-Trigger auf
-  `taskRuns/{runId}`. Activity-Logs werden unter
+- Die eigentliche Ausführung läuft über Cloud Tasks. Nach dem Erstellen des
+  `taskRuns/{runId}`-Dokuments enqueue't das Backend einen Task mit
+  `{teamId, runId, mode}`. Der Task-Queue-Worker lädt den Run aus Firestore und
+  führt ihn aus. Activity-Logs werden unter
   `teams/{teamId}/activities/{activityId}` gespeichert.
 - Architekturentscheidung: `TaskRunDocument` bleibt die Quelle der Wahrheit für
-  Status, UI, Freigaben und Wiederaufnahme. Aktuell dient Firestore zusätzlich
-  als einfache Queue (`status = queued`). Für produktionsreifes Dispatching wird
-  später auf Cloud Tasks gewechselt: Der Webhook oder Scheduler legt weiterhin
-  zuerst den `taskRuns/{runId}`-Datensatz an und erstellt danach einen Cloud
-  Task mit `{teamId, runId}`. Der Worker lädt den Run aus Firestore und führt
-  ihn aus. Cloud Tasks ersetzt damit nur den Ausführungsauftrag, nicht den
-  persistierten Run-Zustand.
+  Status, UI, Freigaben und Wiederaufnahme. Cloud Tasks ersetzt nur den
+  Ausführungsauftrag, Retry und Concurrency-Steuerung, nicht den persistierten
+  Run-Zustand.
 - Freigaben laufen über `reviewTaskRunFlow`: Approve setzt einen pausierten Run
   anhand von `resumeState` fort, Reject verwirft den Zwischenzustand und setzt
   den Run auf `rejected`.

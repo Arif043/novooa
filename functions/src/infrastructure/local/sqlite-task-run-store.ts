@@ -1,5 +1,3 @@
-import {UserFacingError} from "genkit";
-import {textOutputFromResult} from "../../task-runner/node-executor.js";
 import {
   type CompletedTaskGraphOutput,
   type WaitingTaskGraphOutput,
@@ -8,10 +6,17 @@ import {
   taskResumeStateSchema,
 } from "../../task-runner/task-definition.js";
 import {errorDetails} from "../../task-runner/structured-logger.js";
+import {reviewFieldsFrom} from "../../task-runner/task-run-review-fields.js";
+import {
+  invalidReviewState,
+  invalidResumeState,
+  runNotFound,
+} from "../../task-runner/task-run-store-errors.js";
 import {type ActivityStore} from "../../domain/repositories/activity-store.js";
 import {
   type EnqueueTaskRunInput,
   newTaskRunDocument,
+  type ResumableTaskRun,
   type ReviewableTaskRun,
   type TaskRunDocument,
   type TaskRunStore,
@@ -35,6 +40,7 @@ type TaskRunRow = SqlRow & {
   context: string;
   input_json: string;
   resume_state_json: string | null;
+  approved_output: string | null;
   status: string;
 };
 
@@ -57,6 +63,23 @@ export class SQLiteTaskRunStore implements TaskRunStore {
 
   async markRunStarted(teamId: string, runId: string) {
     await this.updateStatus(teamId, runId, "running", "started_at");
+  }
+
+  async loadTaskRun(teamId: string, runId: string): Promise<TaskRunDocument> {
+    return runFromRow(await this.loadRunRow(teamId, runId));
+  }
+
+  async loadResumableRun(
+    teamId: string,
+    runId: string,
+  ): Promise<ResumableTaskRun> {
+    const row = await this.loadRunRow(teamId, runId);
+    if (row.status !== "queued") throw invalidResumeState();
+    return {
+      run: runFromRow(row),
+      resumeState: resumeStateFromRow(row),
+      approvedOutput: row.approved_output ?? "",
+    };
   }
 
   async markRunSucceeded(
@@ -139,16 +162,6 @@ export class SQLiteTaskRunStore implements TaskRunStore {
   }
 }
 
-function reviewFieldsFrom(output: WaitingTaskGraphOutput) {
-  const result = output.resumeState.nodeResults.find(
-    (item) => item.nodeId === output.resumeState.waitingNodeId,
-  );
-  return {
-    instruction: result?.message ?? "Prüfe das Ergebnis und gib es frei.",
-    output: result === undefined ? output.finalOutput : textOutputFromResult(result),
-  };
-}
-
 function runFromRow(row: TaskRunRow): TaskRunDocument {
   return {
     runId: row.id,
@@ -161,17 +174,6 @@ function runFromRow(row: TaskRunRow): TaskRunDocument {
 
 function resumeStateFromRow(row: TaskRunRow) {
   return taskResumeStateSchema.parse(jsonRecord(row.resume_state_json ?? "{}"));
-}
-
-function invalidReviewState() {
-  return new UserFacingError(
-    "FAILED_PRECONDITION",
-    "Diese Ausführung wartet nicht auf eine Freigabe.",
-  );
-}
-
-function runNotFound() {
-  return new UserFacingError("NOT_FOUND", "Ausführung wurde nicht gefunden.");
 }
 
 function errorMessage(error: unknown): string {

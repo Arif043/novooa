@@ -5,7 +5,7 @@ export function insertRunSql() {
 
 export function loadRunSql() {
   return `SELECT id, task_id, task_title, context, input_json, resume_state_json,
-    status FROM task_runs WHERE team_id = ? AND id = ?`;
+    approved_output, status FROM task_runs WHERE team_id = ? AND id = ?`;
 }
 
 export function statusSql(field: string) {

@@ -292,9 +292,9 @@ zwischen verschiedenen Runs persistiert.
 Startet eine gespeicherte Aufgabe im Hintergrund. Der Client sendet nur die
 `taskId`; der Flow lädt die `TaskDefinition` über die Callable-Auth aus
 Firestore unter `teams/{teamId}/tasks/{taskId}`, erzeugt einen
-`taskRuns/{runId}`-Datensatz und gibt sofort die `runId` zurück. Ein
-Firestore-Trigger führt den Run anschließend asynchron aus. Dabei interpretiert
-der Worker den Graph, ermittelt ausführbare Knoten topologisch und delegiert an
+`taskRuns/{runId}`-Datensatz, enqueue't einen Cloud Task und gibt sofort die
+`runId` zurück. Der Task-Queue-Worker führt den Run anschließend asynchron aus.
+Dabei interpretiert der Worker den Graph, ermittelt ausführbare Knoten topologisch und delegiert an
 den registrierten `NodeExecutor` des jeweiligen Primitives. Noch nicht
 implementierte Bausteine werden als `skipped` markiert und liefern keine
 Outputs.

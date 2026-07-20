@@ -1,5 +1,9 @@
 import {type TaskRunStore} from "../domain/repositories/task-run-store.js";
+import {type TaskRunDispatcher} from
+  "../domain/repositories/task-run-dispatcher.js";
 import {type TaskStore} from "../domain/repositories/task-store.js";
+import {FirebaseTaskRunDispatcher} from
+  "../infrastructure/firebase/firebase-task-run-dispatcher.js";
 import {FirestoreTaskRunStore} from "../infrastructure/firebase/firestore-task-run-store.js";
 import {FirestoreTaskStore} from "../infrastructure/firebase/firestore-task-store.js";
 import {errorDetails, logError, logInfo} from "../task-runner/structured-logger.js";
@@ -14,12 +18,14 @@ type DueTriggerRunnerStores = {
   triggerStore: TaskTriggerStore;
   taskStore: TaskStore;
   taskRunStore: TaskRunStore;
+  taskRunDispatcher: TaskRunDispatcher;
 };
 
 const defaultStores: DueTriggerRunnerStores = {
   triggerStore: new FirestoreTaskTriggerStore(),
   taskStore: new FirestoreTaskStore(),
   taskRunStore: new FirestoreTaskRunStore(),
+  taskRunDispatcher: new FirebaseTaskRunDispatcher(),
 };
 
 export async function runDueTaskTriggers(
@@ -49,6 +55,11 @@ async function runTrigger(
       task,
       context: "",
       trigger: {id: trigger.id, type: "schedule"},
+    });
+    await stores.taskRunDispatcher.dispatchTaskRun({
+      teamId: trigger.teamId,
+      runId: run.runId,
+      mode: "start",
     });
     await markTriggerRan(trigger, now, run.runId, stores.triggerStore);
   } catch (error) {

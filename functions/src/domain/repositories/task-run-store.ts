@@ -22,6 +22,10 @@ export type ReviewableTaskRun = {
   resumeState: TaskResumeState;
 };
 
+export type ResumableTaskRun = ReviewableTaskRun & {
+  approvedOutput: string;
+};
+
 export type EnqueueTaskRunInput = {
   teamId: string;
   task: TaskDefinition;
@@ -35,6 +39,8 @@ export type EnqueueTaskRunInput = {
 
 export interface TaskRunStore {
   enqueueTaskRun(input: EnqueueTaskRunInput): Promise<TaskRunDocument>;
+  loadTaskRun(teamId: string, runId: string): Promise<TaskRunDocument>;
+  loadResumableRun(teamId: string, runId: string): Promise<ResumableTaskRun>;
   markRunStarted(teamId: string, runId: string): Promise<void>;
   markRunSucceeded(
     teamId: string,

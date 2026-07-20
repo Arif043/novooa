@@ -1,11 +1,15 @@
 import {FieldValue} from "firebase-admin/firestore";
-import {UserFacingError} from "genkit";
 import {
   type CompletedTaskGraphOutput,
   type WaitingTaskGraphOutput,
 } from "../../domain/entities/task.js";
-import {textOutputFromResult} from "../../task-runner/node-executor.js";
 import {errorDetails} from "../../task-runner/structured-logger.js";
+import {reviewFieldsFrom} from "../../task-runner/task-run-review-fields.js";
+import {
+  invalidReviewState,
+  invalidResumeState,
+  runNotFound,
+} from "../../task-runner/task-run-store-errors.js";
 import {type ActivityStore} from "../../domain/repositories/activity-store.js";
 import {
   type TaskRunApprovalNotificationStore,
@@ -26,6 +30,7 @@ import {
 import {
   type EnqueueTaskRunInput,
   newTaskRunDocument,
+  type ResumableTaskRun,
   type ReviewableTaskRun,
   runFromDocument,
   type TaskRunDocument,
@@ -57,6 +62,27 @@ export class FirestoreTaskRunStore implements TaskRunStore {
 
   async markRunStarted(teamId: string, runId: string) {
     await runReference(teamId, runId).set(runStatus("running"), {merge: true});
+  }
+
+  async loadTaskRun(teamId: string, runId: string): Promise<TaskRunDocument> {
+    const snapshot = await runReference(teamId, runId).get();
+    if (!snapshot.exists) throw runNotFound();
+    return runFromDocument(snapshot.data() ?? {});
+  }
+
+  async loadResumableRun(
+    teamId: string,
+    runId: string,
+  ): Promise<ResumableTaskRun> {
+    const snapshot = await runReference(teamId, runId).get();
+    if (!snapshot.exists) throw runNotFound();
+    const data = snapshot.data() ?? {};
+    assertQueuedRun(data);
+    return {
+      run: runFromDocument(data),
+      resumeState: resumeStateFromDocument(data),
+      approvedOutput: String(data.approvedOutput ?? ""),
+    };
   }
 
   async markRunSucceeded(
@@ -145,26 +171,14 @@ export class FirestoreTaskRunStore implements TaskRunStore {
   }
 }
 
-function reviewFieldsFrom(output: WaitingTaskGraphOutput) {
-  const result = output.resumeState.nodeResults.find(
-    (item) => item.nodeId === output.resumeState.waitingNodeId,
-  );
-  return {
-    instruction: result?.message ?? "Prüfe das Ergebnis und gib es frei.",
-    output: result === undefined ? output.finalOutput : textOutputFromResult(result),
-  };
-}
-
 function assertWaitingRun(data: Record<string, unknown>): void {
   if (data.status === "waitingForApproval") return;
-  throw new UserFacingError(
-    "FAILED_PRECONDITION",
-    "Diese Ausführung wartet nicht auf eine Freigabe.",
-  );
+  throw invalidReviewState();
 }
 
-function runNotFound(): UserFacingError {
-  return new UserFacingError("NOT_FOUND", "Ausführung wurde nicht gefunden.");
+function assertQueuedRun(data: Record<string, unknown>): void {
+  if (data.status === "queued") return;
+  throw invalidResumeState();
 }
 
 function errorMessage(details: unknown): string {

@@ -1,22 +1,15 @@
 import {genkit} from "genkit/beta";
 import {isSignedIn, onCallGenkit} from "firebase-functions/v2/https";
-import {
-  onDocumentCreated,
-  onDocumentUpdated,
-} from "firebase-functions/v2/firestore";
+import {onTaskDispatched} from "firebase-functions/v2/tasks";
 import {
   reviewTaskRunInputSchema,
   reviewTaskRunOutputSchema,
   runTaskDefinitionInputSchema,
   runTaskDefinitionOutputSchema,
-  taskResumeStateSchema,
 } from "./task-runner/task-definition.js";
 import {
   loadTaskDefinition,
 } from "./task-runner/task-definition-loader.js";
-import {
-  runFromDocument,
-} from "./domain/repositories/task-run-store.js";
 import {aiProviderPlugins} from "./task-runner/ai-models.js";
 import {errorDetails, logError} from "./task-runner/structured-logger.js";
 import {twilioAccountSid, twilioAuthToken} from "./channels/twilio-secrets.js";
@@ -29,9 +22,13 @@ import {FirestoreTeamContextStore} from
 import {FirestoreTaskStore} from "./infrastructure/firebase/firestore-task-store.js";
 import {FirestoreTaskRunStore} from "./infrastructure/firebase/firestore-task-run-store.js";
 import {
-  continueApprovedTaskRun,
-  executeQueuedTaskRun,
-} from "./task-runner/task-run-worker.js";
+  FirebaseTaskRunDispatcher,
+} from "./infrastructure/firebase/firebase-task-run-dispatcher.js";
+import {
+  handleTaskRunDispatch,
+  taskRunDispatchPayloadSchema,
+  type TaskRunDispatchPayload,
+} from "./task-runner/task-run-task.js";
 
 const communicationSecrets = [twilioAccountSid, twilioAuthToken, sendgridApiKey];
 
@@ -45,6 +42,7 @@ const objectStore = new FirebaseObjectStore();
 const knowledgeBaseStore = new FirestoreKnowledgeBaseStore();
 const teamContextStore = new FirestoreTeamContextStore();
 const workerStores = {taskStore, taskRunStore, objectStore, knowledgeBaseStore};
+const taskRunDispatcher = new FirebaseTaskRunDispatcher();
 const callableOptions = {
   authPolicy: isSignedIn(),
   invoker: "public" as const,
@@ -70,6 +68,11 @@ export const taskDefinitionFlow = ai.defineFlow(
         teamId,
         task: taskDefinition,
         context: input.context,
+      });
+      await taskRunDispatcher.dispatchTaskRun({
+        teamId,
+        runId: run.runId,
+        mode: "start",
       });
       return {runId: run.runId, taskId: run.taskId, status: "queued" as const};
     } catch (error) {
@@ -109,63 +112,36 @@ export const reviewTaskRunFlow = ai.defineFlow(
       reviewableRun.run.runId,
       input.output,
     );
+    await taskRunDispatcher.dispatchTaskRun({
+      teamId,
+      runId: reviewableRun.run.runId,
+      mode: "resume",
+    });
     return {runId: input.runId, status: "queued" as const};
   },
 );
 
 export const reviewTaskRun = onCallGenkit(callableOptions, reviewTaskRunFlow);
 
-export const runTaskDefinitionWorker = onDocumentCreated(
+export const runTaskRunTask = onTaskDispatched<TaskRunDispatchPayload>(
   {
-    document: "teams/{teamId}/taskRuns/{runId}",
+    region: "europe-west3",
     secrets: communicationSecrets,
+    retryConfig: {
+      maxAttempts: 3,
+      minBackoffSeconds: 30,
+      maxBackoffSeconds: 300,
+    },
+    rateLimits: {
+      maxConcurrentDispatches: 10,
+      maxDispatchesPerSecond: 5,
+    },
   },
-  async (event) => {
-    const teamId = event.params.teamId;
-    const run = runFromDocument(event.data?.data() ?? {});
-    try {
-      await executeQueuedTaskRun(ai, {teamId, run, stores: workerStores});
-    } catch (error) {
-      logError("run_task_definition_worker.failed", {
-        taskId: run.taskId,
-        runId: run.runId,
-        error: errorDetails(error),
-      });
-      await taskRunStore.markRunFailed(teamId, run, error);
-    }
+  async (request) => {
+    const payload = taskRunDispatchPayloadSchema.parse(request.data);
+    await handleTaskRunDispatch(ai, payload, workerStores);
   },
 );
-
-export const resumeApprovedTaskRunWorker = onDocumentUpdated(
-  {
-    document: "teams/{teamId}/taskRuns/{runId}",
-    secrets: communicationSecrets,
-  },
-  async (event) => {
-    const before = event.data?.before.data() ?? {};
-    const after = event.data?.after.data() ?? {};
-    if (!shouldResumeApprovedRun(before.status, after.status)) return;
-    const run = runFromDocument(after);
-    const resumeState = taskResumeStateSchema.parse(after.resumeState);
-    const approvedOutput = String(after.approvedOutput ?? "");
-    try {
-      await continueApprovedTaskRun(ai, {
-        teamId: event.params.teamId,
-        run,
-        resumeState,
-        approvedOutput,
-        stores: workerStores,
-      });
-    } catch (error) {
-      await taskRunStore.markRunFailed(event.params.teamId, run, error);
-      throw error;
-    }
-  },
-);
-
-function shouldResumeApprovedRun(beforeStatus: unknown, afterStatus: unknown) {
-  return beforeStatus === "waitingForApproval" && afterStatus === "queued";
-}
 
 async function teamIdFromContext(context: unknown): Promise<string> {
   const auth = (context as {auth?: {uid?: string}} | undefined)?.auth;
