@@ -21,6 +21,7 @@ class TaskTile extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [
@@ -36,8 +37,11 @@ class TaskTile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              SizedBox(height: AppSpacing.sm),
-              Text(task.objective),
+              if (task.objective.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(task.objective),
+              ],
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 '${task.nodes.length} Bausteine',
                 style: Theme.of(context).textTheme.bodySmall,

@@ -97,15 +97,24 @@ class _TaskGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return GridView.builder(
-          itemCount: tasks.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: _columnCountFor(constraints.maxWidth),
-            crossAxisSpacing: AppSpacing.md,
-            mainAxisSpacing: AppSpacing.md,
-            // childAspectRatio: 2.5,
+        final columnCount = _columnCountFor(constraints.maxWidth);
+        final tileWidth = _tileWidthFor(constraints.maxWidth, columnCount);
+        return SingleChildScrollView(
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.md,
+              children: [
+                for (final task in tasks)
+                  SizedBox(
+                    key: ValueKey(task.id),
+                    width: tileWidth,
+                    child: TaskTile(task: task),
+                  ),
+              ],
+            ),
           ),
-          itemBuilder: (context, index) => TaskTile(task: tasks[index]),
         );
       },
     );
@@ -116,6 +125,11 @@ class _TaskGrid extends StatelessWidget {
     if (width >= 760) return 3;
     if (width >= 520) return 2;
     return 1;
+  }
+
+  double _tileWidthFor(double width, int columnCount) {
+    final spacing = AppSpacing.md * (columnCount - 1);
+    return (width - spacing) / columnCount;
   }
 }
 
