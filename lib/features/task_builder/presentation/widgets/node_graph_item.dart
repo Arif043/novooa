@@ -121,6 +121,8 @@ class NodeGraphItem extends StatelessWidget {
           onDragStarted();
         },
         onDragEnd: (_) => onDragEnded(),
+        onDragCompleted: onDragEnded,
+        onDraggableCanceled: (_, _) => onDragEnded(),
         child: _strip(colors),
       ),
     );
