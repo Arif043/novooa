@@ -44,17 +44,26 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   TaskBuilderCubit({required this.repository})
     : super(const TaskBuilderLoading());
 
-  Future<void> load(Task? editingTask) async {
-    editingTask ??= Task.empty();
+  Future<void> load(Task? taskFromNavigation) async {
     emit(const TaskBuilderLoading());
     try {
-      await repository.saveTask(editingTask);
+      final editingTask = await _taskForLoad(taskFromNavigation);
+      if (taskFromNavigation == null) await repository.saveTask(editingTask);
       if (isClosed) return;
       emit(TaskBuilderLoaded(editingTask));
     } catch (_) {
       if (isClosed) return;
       emit(const TaskBuilderFailure('Aufgabe konnte nicht geladen werden.'));
     }
+  }
+
+  Future<Task> _taskForLoad(Task? taskFromNavigation) async {
+    if (taskFromNavigation == null) return Task.empty();
+    final tasks = await repository.loadTasks();
+    for (final task in tasks) {
+      if (task.id == taskFromNavigation.id) return task;
+    }
+    return taskFromNavigation;
   }
 
   @override

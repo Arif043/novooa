@@ -231,6 +231,30 @@ void main() {
     },
   );
 
+  test(
+    'load überschreibt keine entfernten Anhaenge mit Navigation-Kopien',
+    () async {
+      final staleTask = _taskWithScriptNodeWithAttachment();
+      final repository = _InMemoryTaskRepository(staleTask);
+      final firstCubit = TaskBuilderCubit(repository: repository);
+
+      await firstCubit.load(staleTask);
+      await firstCubit.detachNodeFile(
+        nodeId: const NodeId('node.script'),
+        attachmentId: _attachment.id,
+      );
+      await firstCubit.close();
+
+      final reopenedCubit = TaskBuilderCubit(repository: repository);
+      await reopenedCubit.load(staleTask);
+
+      final state = reopenedCubit.state as TaskBuilderLoaded;
+      final config = state.editingTask.nodes.first.config as ScriptNodeConfig;
+      expect(config.attachments, isEmpty);
+      await reopenedCubit.close();
+    },
+  );
+
   test('attachNodeKnowledge speichert Wissensnotiz am Prompt-Node', () async {
     final repository = _InMemoryTaskRepository(_taskWithBranchPrompt());
     final cubit = TaskBuilderCubit(repository: repository);
@@ -273,8 +297,11 @@ void main() {
       attachment: _skillAttachment,
     );
     promptConfig = _branchPromptConfig(cubit);
-    expect(promptConfig.skillAttachments, hasLength(1),
-        reason: 'gleicher Skill darf nicht doppelt angehängt werden');
+    expect(
+      promptConfig.skillAttachments,
+      hasLength(1),
+      reason: 'gleicher Skill darf nicht doppelt angehängt werden',
+    );
 
     await cubit.detachNodeSkill(
       nodeId: const NodeId('node.2'),
@@ -287,8 +314,7 @@ void main() {
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
-  test('assignNodeEmployee weist einen Mitarbeiter zu und wieder ab',
-      () async {
+  test('assignNodeEmployee weist einen Mitarbeiter zu und wieder ab', () async {
     final repository = _InMemoryTaskRepository(_taskWithBranchPrompt());
     final cubit = TaskBuilderCubit(repository: repository);
 
@@ -530,6 +556,23 @@ Task _taskWithScriptNode() {
         ),
       ],
       edges: [],
+    ),
+  );
+}
+
+Task _taskWithScriptNodeWithAttachment() {
+  final task = _taskWithScriptNode();
+  final node = task.nodes.single;
+  return task.copyWith(
+    graph: task.graph.copyWith(
+      nodes: [
+        node.copyWith(
+          config: ScriptNodeConfig(
+            script: (node.config as ScriptNodeConfig).script,
+            attachments: const [_attachment],
+          ),
+        ),
+      ],
     ),
   );
 }
