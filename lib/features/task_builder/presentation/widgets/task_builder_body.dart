@@ -43,14 +43,12 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
         const SizedBox(height: AppSpacing.xl),
         if (widget.state case TaskBuilderLoaded(:final editingTask))
           Expanded(
-            child: WebSmoothScroll(
-              controller: _scrollController,
-              scrollSpeed: 2.5,
-              scrollAnimationLength: 1400,
-              curve: Curves.easeInOutCubic,
+            child: AnimatedPadding(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.only(left: AppSpacing.xxl, right: AppSpacing.xxl, bottom: AppSpacing.xxl),
               child: SingleChildScrollView(
                 controller: _scrollController,
-                physics: const NeverScrollableScrollPhysics(),
+                // physics: const NeverScrollableScrollPhysics(),
                 child: NodeGraph(nodes: editingTask.nodes),
               ),
             ),
