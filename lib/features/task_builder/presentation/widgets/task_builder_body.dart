@@ -8,7 +8,6 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_c
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/toolbar.dart';
-import 'package:web_smooth_scroll/web_smooth_scroll.dart';
 
 class TaskBuilderBody extends StatefulWidget {
   const TaskBuilderBody({super.key, required this.state});
@@ -45,7 +44,11 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
           Expanded(
             child: AnimatedPadding(
               duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.only(left: AppSpacing.xxl, right: AppSpacing.xxl, bottom: AppSpacing.xxl),
+              padding: const EdgeInsets.only(
+                left: AppSpacing.xxl,
+                right: AppSpacing.xxl,
+                bottom: AppSpacing.xxl,
+              ),
               child: SingleChildScrollView(
                 controller: _scrollController,
                 // physics: const NeverScrollableScrollPhysics(),

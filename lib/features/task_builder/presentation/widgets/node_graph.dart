@@ -1,21 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
-import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/conditional_pager.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/deletable_node_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/node_drag_handle.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_graph_item.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/read_email_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/read_file_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/script_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/send_message_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/string_input_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/write_file_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_position_transition.dart';
 
 class NodeGraph extends StatefulWidget {
   const NodeGraph({super.key, required this.nodes});
@@ -27,41 +14,96 @@ class NodeGraph extends StatefulWidget {
 }
 
 class _NodeGraphState extends State<NodeGraph> {
+  final Map<NodeId, GlobalKey> _itemKeys = {};
+  Map<NodeId, double> _motionOffsets = {};
   NodeId? _draggingNodeId;
 
   @override
+  void didUpdateWidget(NodeGraph oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _motionOffsets = _swapOffsets(oldWidget.nodes, widget.nodes);
+    if (_motionOffsets.isEmpty) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _clearOffsets());
+  }
+
+  @override
   Widget build(BuildContext context) {
+    _removeObsoleteKeys();
     return Column(
       children: [
-        ...widget.nodes.map(
-          (node) => _SwappableNode(
-            node: node,
-            isSource: _draggingNodeId == node.id,
-            onDragStarted: () => _setDraggingNode(node.id),
-            onDragEnded: _clearDraggingNode,
-            child: _nodeWidget(node),
-          ),
-        ),
+        ...widget.nodes.map(_buildNode),
         NodePlaceholder(onAccept: (value) {}),
       ],
     );
   }
 
-  Widget _nodeWidget(WorkflowNode node) {
-    final child = switch (node.config.primitive) {
-      .stringInput => StringInputWidget(node: node),
-      .script => ScriptWidget(node: node),
-      .prompt => PromptWidget(node: node),
-      .conditional => ConditionalPager(key: ValueKey(node.id), node: node),
-      .iterativeRefinement => IterativeRefinementWidget(node: node),
-      .writeFile => WriteFileWidget(node: node),
-      .readFile => ReadFileWidget(node: node),
-      .readEmail || .readChannelEvent => ReadEventWidget(node: node),
-      .sendChannelMessage => SendMessageWidget(node: node),
-      .humanApproval => HumanApprovalWidget(node: node),
-      _ => const SizedBox.shrink(),
+  Widget _buildNode(WorkflowNode node) {
+    return NodePositionTransition(
+      key: ValueKey(node.id),
+      offsetY: _motionOffsets[node.id] ?? 0,
+      child: KeyedSubtree(
+        key: _itemKeys.putIfAbsent(node.id, GlobalKey.new),
+        child: NodeGraphItem(
+          key: ValueKey('node-content-${node.id.value}'),
+          node: node,
+          isSource: _draggingNodeId == node.id,
+          onDragStarted: () => _setDraggingNode(node.id),
+          onDragEnded: _clearDraggingNode,
+        ),
+      ),
+    );
+  }
+
+  Map<NodeId, double> _swapOffsets(
+    List<WorkflowNode> oldNodes,
+    List<WorkflowNode> newNodes,
+  ) {
+    if (!_isSwap(oldNodes, newNodes)) return {};
+    final oldTops = _topOffsets(oldNodes);
+    final newTops = _topOffsets(newNodes);
+    return {
+      for (final node in newNodes)
+        node.id: (oldTops[node.id] ?? 0) - (newTops[node.id] ?? 0),
     };
-    return DeletableNodeWidget(node: node, child: child);
+  }
+
+  bool _isSwap(List<WorkflowNode> oldNodes, List<WorkflowNode> newNodes) {
+    if (oldNodes.length != newNodes.length) return false;
+    final changed = <int>[];
+    for (var index = 0; index < newNodes.length; index++) {
+      if (oldNodes[index].id != newNodes[index].id) changed.add(index);
+    }
+    if (changed.length != 2) return false;
+    final first = changed.first;
+    final second = changed.last;
+    return oldNodes[first].id == newNodes[second].id &&
+        oldNodes[second].id == newNodes[first].id;
+  }
+
+  Map<NodeId, double> _topOffsets(List<WorkflowNode> nodes) {
+    final offsets = <NodeId, double>{};
+    var top = 0.0;
+    for (final node in nodes) {
+      offsets[node.id] = top;
+      top += _itemHeight(node.id);
+    }
+    return offsets;
+  }
+
+  double _itemHeight(NodeId nodeId) {
+    final context = _itemKeys[nodeId]?.currentContext;
+    final renderBox = context?.findRenderObject();
+    return renderBox is RenderBox ? renderBox.size.height : 0;
+  }
+
+  void _removeObsoleteKeys() {
+    final nodeIds = widget.nodes.map((node) => node.id).toSet();
+    _itemKeys.removeWhere((nodeId, _) => !nodeIds.contains(nodeId));
+  }
+
+  void _clearOffsets() {
+    if (!mounted || _motionOffsets.isEmpty) return;
+    setState(() => _motionOffsets = {});
   }
 
   void _setDraggingNode(NodeId nodeId) {
@@ -71,103 +113,5 @@ class _NodeGraphState extends State<NodeGraph> {
   void _clearDraggingNode() {
     if (_draggingNodeId == null) return;
     setState(() => _draggingNodeId = null);
-  }
-}
-
-class _SwappableNode extends StatelessWidget {
-  const _SwappableNode({
-    required this.node,
-    required this.child,
-    required this.isSource,
-    required this.onDragStarted,
-    required this.onDragEnded,
-  });
-
-  static const animationDuration = Duration(milliseconds: 220);
-
-  final WorkflowNode node;
-  final Widget child;
-  final bool isSource;
-  final VoidCallback onDragStarted;
-  final VoidCallback onDragEnded;
-
-  @override
-  Widget build(BuildContext context) {
-    return DragTarget<NodeId>(
-      onWillAcceptWithDetails: (details) => details.data != node.id,
-      onAcceptWithDetails: (details) {
-        context.read<TaskBuilderCubit>().swapNodes(details.data, node.id);
-      },
-      builder: (context, candidates, _) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.md),
-          child: AnimatedContainer(
-            duration: animationDuration,
-            curve: Curves.easeOutCubic,
-            decoration: _dropDecoration(context, candidates.isNotEmpty),
-            child: Stack(
-              children: [
-                _AnimatedNodeSlot(node: node, isSource: isSource, child: child),
-                Positioned(
-                  top: AppSpacing.xs,
-                  left: AppSpacing.xs,
-                  child: NodeDragHandle(node: node, onDragStarted: onDragStarted, onDragEnded: onDragEnded),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Decoration _dropDecoration(BuildContext context, bool isTargeted) {
-    if (!isTargeted) return const BoxDecoration();
-    final color = Theme.of(context).colorScheme.primary;
-    return BoxDecoration(
-      border: Border.all(color: color.withValues(alpha: 0.65), width: 2),
-      borderRadius: BorderRadius.circular(8),
-    );
-  }
-}
-
-class _AnimatedNodeSlot extends StatelessWidget {
-  const _AnimatedNodeSlot({required this.node, required this.child, required this.isSource});
-
-  final WorkflowNode node;
-  final Widget child;
-  final bool isSource;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: _SwappableNode.animationDuration,
-      curve: Curves.easeOutCubic,
-      decoration: _sourceDecoration(context),
-      child: AnimatedSwitcher(
-        duration: _SwappableNode.animationDuration,
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        transitionBuilder: _transition,
-        child: KeyedSubtree(key: ValueKey(node.id), child: child),
-      ),
-    );
-  }
-
-  Decoration _sourceDecoration(BuildContext context) {
-    if (!isSource) return const BoxDecoration();
-    final color = Theme.of(context).colorScheme.primary;
-    return BoxDecoration(
-      borderRadius: BorderRadius.circular(8),
-      boxShadow: [BoxShadow(color: color.withValues(alpha: 0.22), blurRadius: 22, spreadRadius: 2)],
-    );
-  }
-
-  Widget _transition(Widget child, Animation<double> animation) {
-    final offset = Tween<Offset>(begin: const Offset(0, 0.04), end: Offset.zero).animate(animation);
-    return FadeTransition(
-      opacity: animation,
-      child: SlideTransition(position: offset, child: child),
-    );
   }
 }
