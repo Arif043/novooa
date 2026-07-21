@@ -53,6 +53,7 @@ class NodeGraphItem extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: AnimatedContainer(
         duration: animationDuration,
+        clipBehavior: .hardEdge,
         curve: Curves.easeOutCubic,
         decoration: _dropDecoration(context, candidates.isNotEmpty),
         child: _content(),
