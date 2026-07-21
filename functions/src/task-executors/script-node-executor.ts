@@ -105,7 +105,6 @@ function scriptPayload(input: ScriptNodeInput) {
     input: input.input,
     script: input.script,
     variables: input.variables,
-    filesDir: input.attachmentWorkspace?.rootDirectory,
     files: scriptFiles(input.attachmentWorkspace),
   };
 }
@@ -117,8 +116,6 @@ function scriptFiles(workspace?: NodeAttachmentWorkspace) {
 
 function scriptFile(rootDirectory: string, file: PreparedNodeAttachment) {
   return {
-    id: file.id,
-    filename: file.filename,
     displayName: file.displayName,
     contentType: file.contentType,
     sizeBytes: file.sizeBytes,

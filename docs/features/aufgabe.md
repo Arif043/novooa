@@ -258,15 +258,14 @@ zusätzlichen Werte:
 
 ```python
 files        # Liste der angehängten Datei-Metadaten
-files_dir    # temporäres Arbeitsverzeichnis
 list_files() # gibt files zurück
-read_file(name) # liest eine angehängte Datei per filename/displayName/id
+read_file(display_name) # liest eine angehängte Datei per sichtbarem Namen
 ```
 
 Beispiel:
 
 ```python
-erste_datei = files[0]["filename"]
+erste_datei = files[0]["displayName"]
 output = read_file(erste_datei)
 ```
 
