@@ -3,26 +3,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_drag_highlight.dart';
 
 void main() {
-  testWidgets('hebt den gezogenen Baustein animiert hervor', (tester) async {
+  testWidgets('blendet den Shadow des gezogenen Bausteins animiert ein', (
+    tester,
+  ) async {
     final hostKey = GlobalKey<_HighlightHostState>();
     await tester.pumpWidget(_HighlightHost(key: hostKey));
-    final initialWidth = _contentWidth(tester);
 
     hostKey.currentState!.showHighlight();
     await tester.pump();
-    expect(_contentWidth(tester), closeTo(initialWidth, 0.1));
     _expectActiveDecoration(tester);
+    expect(find.byType(AnimatedScale), findsNothing);
 
     await tester.pump(const Duration(milliseconds: 110));
-    expect(_contentWidth(tester), greaterThan(initialWidth));
-
-    await tester.pump(const Duration(milliseconds: 110));
-    expect(_contentWidth(tester), closeTo(initialWidth * 1.015, 0.1));
+    hostKey.currentState!.hideHighlight();
+    await tester.pump();
+    expect(_shadowOpacity(tester), 0);
   });
-}
-
-double _contentWidth(WidgetTester tester) {
-  return tester.getRect(find.byKey(const ValueKey('node-content'))).width;
 }
 
 void _expectActiveDecoration(WidgetTester tester) {
@@ -33,8 +29,19 @@ void _expectActiveDecoration(WidgetTester tester) {
     ),
   );
   final decoration = container.decoration! as BoxDecoration;
-  expect(decoration.border, isNotNull);
+  expect(decoration.border, isNull);
   expect(decoration.boxShadow!.single.color.a, greaterThan(0));
+}
+
+double _shadowOpacity(WidgetTester tester) {
+  final container = tester.widget<AnimatedContainer>(
+    find.descendant(
+      of: find.byType(NodeDragHighlight),
+      matching: find.byType(AnimatedContainer),
+    ),
+  );
+  final decoration = container.decoration! as BoxDecoration;
+  return decoration.boxShadow!.single.color.a;
 }
 
 class _HighlightHost extends StatefulWidget {
@@ -48,6 +55,8 @@ class _HighlightHostState extends State<_HighlightHost> {
   bool _active = false;
 
   void showHighlight() => setState(() => _active = true);
+
+  void hideHighlight() => setState(() => _active = false);
 
   @override
   Widget build(BuildContext context) {

@@ -9,9 +9,6 @@ class NodeDragHighlight extends StatelessWidget {
   });
 
   static const animationDuration = Duration(milliseconds: 220);
-  static const _activeScale = 1.015;
-  static const _borderWidth = 2.0;
-  static const _borderOpacity = 0.55;
   static const _shadowOpacity = 0.24;
 
   final bool active;
@@ -19,16 +16,11 @@ class NodeDragHighlight extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedScale(
-      scale: active ? _activeScale : 1,
+    return AnimatedContainer(
       duration: animationDuration,
       curve: Curves.easeOutCubic,
-      child: AnimatedContainer(
-        duration: animationDuration,
-        curve: Curves.easeOutCubic,
-        decoration: _decoration(context),
-        child: child,
-      ),
+      decoration: _decoration(context),
+      child: child,
     );
   }
 
@@ -36,10 +28,6 @@ class NodeDragHighlight extends StatelessWidget {
     final primary = Theme.of(context).colorScheme.primary;
     return BoxDecoration(
       borderRadius: BorderRadius.circular(AppSpacing.sm),
-      border: Border.all(
-        color: primary.withValues(alpha: active ? _borderOpacity : 0),
-        width: _borderWidth,
-      ),
       boxShadow: [
         BoxShadow(
           color: primary.withValues(alpha: active ? _shadowOpacity : 0),
