@@ -25,6 +25,7 @@ export const nodeAttachmentSchema = z.object({
   displayName: z.string().min(1),
   contentType: z.string().default("application/octet-stream"),
   sizeBytes: z.number().int().nonnegative().default(0),
+  versionCreatedAt: z.number().int().nonnegative().optional(),
 });
 
 export const knowledgeAttachmentSchema = z.object({

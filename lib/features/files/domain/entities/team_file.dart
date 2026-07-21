@@ -12,6 +12,7 @@ class TeamFile {
     required this.sizeBytes,
     required this.createdAt,
     required this.updatedAt,
+    required this.currentVersionCreatedAt,
     this.folderId,
   });
 
@@ -25,5 +26,6 @@ class TeamFile {
   final int sizeBytes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime currentVersionCreatedAt;
   final String? folderId;
 }

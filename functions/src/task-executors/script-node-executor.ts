@@ -119,6 +119,7 @@ function scriptFile(rootDirectory: string, file: PreparedNodeAttachment) {
     displayName: file.displayName,
     contentType: file.contentType,
     sizeBytes: file.sizeBytes,
+    versionCreatedAt: file.versionCreatedAt,
     path: path.join(rootDirectory, file.filename),
   };
 }

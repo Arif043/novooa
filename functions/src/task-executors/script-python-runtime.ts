@@ -11,6 +11,7 @@ files = [
         "displayName": file.get("displayName"),
         "contentType": file.get("contentType"),
         "sizeBytes": file.get("sizeBytes"),
+        "versionCreatedAt": file.get("versionCreatedAt"),
     }
     for file in attachment_files
 ]

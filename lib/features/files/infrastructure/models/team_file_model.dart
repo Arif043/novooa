@@ -15,6 +15,7 @@ class TeamFileModel {
     required this.sizeBytes,
     required this.createdAt,
     required this.updatedAt,
+    required this.currentVersionCreatedAt,
     this.folderId,
   });
 
@@ -28,6 +29,7 @@ class TeamFileModel {
   final int sizeBytes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime currentVersionCreatedAt;
   final String? folderId;
 
   factory TeamFileModel.fromDocument(
@@ -45,6 +47,9 @@ class TeamFileModel {
       sizeBytes: data['sizeBytes'] as int? ?? 0,
       createdAt: _timestampToDate(data['createdAt']),
       updatedAt: _timestampToDate(data['updatedAt']),
+      currentVersionCreatedAt: _timestampToDate(
+        data['currentVersionCreatedAt'],
+      ),
       folderId: data['folderId'] as String?,
     );
   }
@@ -61,6 +66,7 @@ class TeamFileModel {
       sizeBytes: sizeBytes,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      currentVersionCreatedAt: currentVersionCreatedAt,
       folderId: folderId,
     );
   }

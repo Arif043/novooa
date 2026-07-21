@@ -135,6 +135,7 @@ function fileDocument(teamId: string, file: WrittenFile) {
     currentVersionId: file.versionId,
     contentType: file.contentType,
     sizeBytes: file.sizeBytes,
+    currentVersionCreatedAt: FieldValue.serverTimestamp(),
     ...(file.isNewFile ? {createdAt: FieldValue.serverTimestamp()} : {}),
     updatedAt: FieldValue.serverTimestamp(),
   };

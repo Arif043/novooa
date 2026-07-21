@@ -8,6 +8,7 @@ class NodeAttachment extends Equatable {
     required this.displayName,
     required this.contentType,
     required this.sizeBytes,
+    this.versionCreatedAt,
   });
 
   final String id;
@@ -16,10 +17,19 @@ class NodeAttachment extends Equatable {
   final String displayName;
   final String contentType;
   final int sizeBytes;
+  final DateTime? versionCreatedAt;
 
   @override
   List<Object?> get props {
-    return [id, storagePath, generation, displayName, contentType, sizeBytes];
+    return [
+      id,
+      storagePath,
+      generation,
+      displayName,
+      contentType,
+      sizeBytes,
+      versionCreatedAt,
+    ];
   }
 
   NodeAttachment copyWith({
@@ -29,6 +39,7 @@ class NodeAttachment extends Equatable {
     String? displayName,
     String? contentType,
     int? sizeBytes,
+    DateTime? versionCreatedAt,
   }) {
     return NodeAttachment(
       id: id ?? this.id,
@@ -37,6 +48,7 @@ class NodeAttachment extends Equatable {
       displayName: displayName ?? this.displayName,
       contentType: contentType ?? this.contentType,
       sizeBytes: sizeBytes ?? this.sizeBytes,
+      versionCreatedAt: versionCreatedAt ?? this.versionCreatedAt,
     );
   }
 }

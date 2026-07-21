@@ -7,6 +7,7 @@ export type NodeAttachment = {
   displayName: string;
   contentType: string;
   sizeBytes: number;
+  versionCreatedAt?: number;
 };
 
 export type KnowledgeAttachment = {

@@ -133,6 +133,7 @@ class FirebaseTeamFileRepository implements TeamFileRepository {
       'currentVersionId': ids.versionId,
       'contentType': input.contentType ?? 'application/octet-stream',
       'sizeBytes': input.sizeBytes,
+      'currentVersionCreatedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }

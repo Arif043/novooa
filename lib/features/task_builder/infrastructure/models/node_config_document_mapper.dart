@@ -266,6 +266,8 @@ class NodeConfigDocumentMapper {
       'displayName': attachment.displayName,
       'contentType': attachment.contentType,
       'sizeBytes': attachment.sizeBytes,
+      if (attachment.versionCreatedAt != null)
+        'versionCreatedAt': attachment.versionCreatedAt!.millisecondsSinceEpoch,
     };
   }
 
@@ -281,7 +283,13 @@ class NodeConfigDocumentMapper {
       displayName: data['displayName'] as String? ?? '',
       contentType: data['contentType'] as String? ?? '',
       sizeBytes: data['sizeBytes'] as int? ?? 0,
+      versionCreatedAt: _versionCreatedAtFrom(data['versionCreatedAt']),
     );
+  }
+
+  DateTime? _versionCreatedAtFrom(Object? value) {
+    if (value is! int) return null;
+    return DateTime.fromMillisecondsSinceEpoch(value);
   }
 
   Map<String, Object?> _knowledgeAttachmentToDocument(
@@ -322,9 +330,9 @@ class NodeConfigDocumentMapper {
   }
 
   List<SkillAttachment> _skillAttachmentsFrom(Object? value) {
-    return _mapListFrom(value)
-        .map(_skillAttachmentFrom)
-        .toList(growable: false);
+    return _mapListFrom(
+      value,
+    ).map(_skillAttachmentFrom).toList(growable: false);
   }
 
   SkillAttachment _skillAttachmentFrom(Map<String, Object?> data) {

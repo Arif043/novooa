@@ -62,6 +62,7 @@ class NodeFileAttachmentsCubit extends Cubit<NodeFileAttachmentsState> {
       displayName: file.displayName,
       contentType: file.contentType,
       sizeBytes: file.sizeBytes,
+      versionCreatedAt: file.currentVersionCreatedAt,
     );
   }
 

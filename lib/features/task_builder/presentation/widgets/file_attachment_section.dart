@@ -122,7 +122,7 @@ class _AttachmentTile extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       leading: const Icon(Icons.description_outlined),
       title: Text(attachment.displayName, overflow: TextOverflow.ellipsis),
-      subtitle: Text(_metadataFor(attachment)),
+      subtitle: Text(_metadataFor(context, attachment)),
       trailing: IconButton(
         tooltip: 'Datei entfernen',
         onPressed: () => onDetach(attachment.id),
@@ -159,7 +159,7 @@ class _AttachmentPickerSheet extends StatelessWidget {
               selected ? Icons.check_circle : Icons.insert_drive_file,
             ),
             title: Text(file.displayName),
-            subtitle: Text(_metadataFor(file)),
+            subtitle: Text(_metadataFor(context, file)),
             onTap: selected ? null : () => _select(context, file),
           );
         },
@@ -173,8 +173,19 @@ class _AttachmentPickerSheet extends StatelessWidget {
   }
 }
 
-String _metadataFor(NodeAttachment attachment) {
-  return '${attachment.contentType} · ${_sizeLabel(attachment.sizeBytes)} · Version ${attachment.generation}';
+String _metadataFor(BuildContext context, NodeAttachment attachment) {
+  final timestamp = attachment.versionCreatedAt;
+  final versionTime = timestamp == null
+      ? ''
+      : ' · ${_formatVersionTime(context, timestamp)}';
+  return '${attachment.contentType} · ${_sizeLabel(attachment.sizeBytes)} · Version ${attachment.generation}$versionTime';
+}
+
+String _formatVersionTime(BuildContext context, DateTime timestamp) {
+  final localizations = MaterialLocalizations.of(context);
+  final date = localizations.formatMediumDate(timestamp);
+  final time = localizations.formatTimeOfDay(TimeOfDay.fromDateTime(timestamp));
+  return '$date, $time';
 }
 
 String _sizeLabel(int sizeBytes) {

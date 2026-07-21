@@ -38,6 +38,10 @@ void main() {
     expect(cubit.state.status, NodeFileAttachmentsStatus.ready);
     expect(cubit.state.files.single.id, 'file.1:version.7');
     expect(cubit.state.files.single.storagePath, _teamFile.storagePath);
+    expect(
+      cubit.state.files.single.versionCreatedAt,
+      _teamFile.currentVersionCreatedAt,
+    );
 
     await cubit.close();
     await repository.close();
@@ -55,6 +59,7 @@ final _teamFile = TeamFile(
   sizeBytes: 12000,
   createdAt: DateTime(2026),
   updatedAt: DateTime(2026),
+  currentVersionCreatedAt: DateTime(2026, 1, 2, 3, 4),
 );
 
 class _FakeTeamFileRepository implements TeamFileRepository {

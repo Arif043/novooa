@@ -86,6 +86,10 @@ Das Datei-Dokument aktualisiert dann nur `currentVersionId`, `storagePath`,
 `sizeBytes`, `contentType` und `updatedAt`. Alte Versionen bleiben
 referenzierbar.
 
+Jedes Version-Dokument trägt zusätzlich `createdAt`. Beim Anhängen wird dieser
+Zeitpunkt als `versionCreatedAt` in der Node-Config gespeichert, damit die UI
+die konkret referenzierte Version samt Erstellungszeit anzeigen kann.
+
 ## Nutzung in Aufgaben
 
 Unterstützende Node-Configs implementieren `FileAttachmentSupport` und speichern
