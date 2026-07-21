@@ -64,6 +64,7 @@ void main() {
         home: Scaffold(
           body: NodeGraphItem(
             node: _node('node.1'),
+            dragSourceNodeIds: {const NodeId('node.1')},
             isSource: true,
             isDragActive: true,
             onDragStarted: () {},
@@ -82,6 +83,33 @@ void main() {
     expect(inputBlocker.ignoring, isTrue);
     expect(focusBlocker.descendantsAreFocusable, isFalse);
   });
+
+  testWidgets('akzeptiert nur Drags aus dem eigenen Graphen', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: NodeGraphItem(
+            node: _node('node.1'),
+            dragSourceNodeIds: {const NodeId('node.1'), const NodeId('node.2')},
+            isSource: false,
+            isDragActive: false,
+            onDragStarted: () {},
+            onDragEnded: () {},
+          ),
+        ),
+      ),
+    );
+
+    final target = tester.widget<DragTarget<NodeId>>(
+      find.byKey(const ValueKey('node-target-node.1')),
+    );
+    expect(target.onWillAcceptWithDetails!(_details('node.2')), isTrue);
+    expect(target.onWillAcceptWithDetails!(_details('node.nested')), isFalse);
+  });
+}
+
+DragTargetDetails<NodeId> _details(String nodeId) {
+  return DragTargetDetails(data: NodeId(nodeId), offset: Offset.zero);
 }
 
 double _verticalPosition(WidgetTester tester) {

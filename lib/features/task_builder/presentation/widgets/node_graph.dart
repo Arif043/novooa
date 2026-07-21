@@ -30,20 +30,21 @@ class _NodeGraphState extends State<NodeGraph> {
   @override
   Widget build(BuildContext context) {
     _removeObsoleteKeys();
+    final graphNodeIds = widget.nodes.map((node) => node.id).toSet();
     return MouseRegion(
       cursor: _draggingNodeId == null
           ? MouseCursor.defer
           : SystemMouseCursors.grabbing,
       child: Column(
         children: [
-          ...widget.nodes.map(_buildNode),
+          ...widget.nodes.map((node) => _buildNode(node, graphNodeIds)),
           NodePlaceholder(onAccept: widget.onPrimitiveAccepted ?? _ignore),
         ],
       ),
     );
   }
 
-  Widget _buildNode(WorkflowNode node) {
+  Widget _buildNode(WorkflowNode node, Set<NodeId> graphNodeIds) {
     return NodePositionTransition(
       key: ValueKey(node.id),
       offsetY: _motionOffsets[node.id] ?? 0,
@@ -52,6 +53,7 @@ class _NodeGraphState extends State<NodeGraph> {
         child: NodeGraphItem(
           key: ValueKey('node-content-${node.id.value}'),
           node: node,
+          dragSourceNodeIds: graphNodeIds,
           isSource: _draggingNodeId == node.id,
           isDragActive: _draggingNodeId != null,
           onDragStarted: () => _setDraggingNode(node.id),

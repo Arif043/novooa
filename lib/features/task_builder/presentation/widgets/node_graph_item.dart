@@ -20,6 +20,7 @@ class NodeGraphItem extends StatelessWidget {
   const NodeGraphItem({
     super.key,
     required this.node,
+    required this.dragSourceNodeIds,
     required this.isSource,
     required this.isDragActive,
     required this.onDragStarted,
@@ -29,6 +30,7 @@ class NodeGraphItem extends StatelessWidget {
   static const animationDuration = Duration(milliseconds: 500);
 
   final WorkflowNode node;
+  final Set<NodeId> dragSourceNodeIds;
   final bool isSource;
   final bool isDragActive;
   final VoidCallback onDragStarted;
@@ -37,12 +39,17 @@ class NodeGraphItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DragTarget<NodeId>(
-      onWillAcceptWithDetails: (details) => details.data != node.id,
+      key: ValueKey('node-target-${node.id.value}'),
+      onWillAcceptWithDetails: _accepts,
       onAcceptWithDetails: (details) {
         context.read<TaskBuilderCubit>().swapNodes(details.data, node.id);
       },
       builder: _buildTarget,
     );
+  }
+
+  bool _accepts(DragTargetDetails<NodeId> details) {
+    return details.data != node.id && dragSourceNodeIds.contains(details.data);
   }
 
   Widget _buildTarget(
