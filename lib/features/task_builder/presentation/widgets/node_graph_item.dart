@@ -21,6 +21,7 @@ class NodeGraphItem extends StatelessWidget {
     super.key,
     required this.node,
     required this.isSource,
+    required this.isDragActive,
     required this.onDragStarted,
     required this.onDragEnded,
   });
@@ -29,6 +30,7 @@ class NodeGraphItem extends StatelessWidget {
 
   final WorkflowNode node;
   final bool isSource;
+  final bool isDragActive;
   final VoidCallback onDragStarted;
   final VoidCallback onDragEnded;
 
@@ -69,6 +71,7 @@ class NodeGraphItem extends StatelessWidget {
           left: AppSpacing.xs,
           child: NodeDragHandle(
             node: node,
+            isDragging: isDragActive,
             onDragStarted: onDragStarted,
             onDragEnded: onDragEnded,
           ),
@@ -106,6 +109,15 @@ class NodeGraphItem extends StatelessWidget {
       .humanApproval => HumanApprovalWidget(node: node),
       _ => const SizedBox.shrink(),
     };
-    return DeletableNodeWidget(node: node, child: child);
+    return FocusScope(
+      key: ValueKey('node-focus-${node.id.value}'),
+      canRequestFocus: !isDragActive,
+      descendantsAreFocusable: !isDragActive,
+      child: IgnorePointer(
+        key: ValueKey('node-input-${node.id.value}'),
+        ignoring: isDragActive,
+        child: DeletableNodeWidget(node: node, child: child),
+      ),
+    );
   }
 }

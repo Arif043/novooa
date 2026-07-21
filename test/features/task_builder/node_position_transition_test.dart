@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_graph_item.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_position_transition.dart';
 
 void main() {
@@ -53,6 +54,33 @@ void main() {
     await tester.pump(const Duration(milliseconds: 110));
     expect(_nodeTop(tester, 'node.1'), closeTo(secondStart, 0.1));
     expect(_nodeTop(tester, 'node.2'), closeTo(firstStart, 0.1));
+  });
+
+  testWidgets('sperrt Eingaben und Fokus fuer den gezogenen Baustein', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: NodeGraphItem(
+            node: _node('node.1'),
+            isSource: true,
+            isDragActive: true,
+            onDragStarted: () {},
+            onDragEnded: () {},
+          ),
+        ),
+      ),
+    );
+
+    final inputBlocker = tester.widget<IgnorePointer>(
+      find.byKey(const ValueKey('node-input-node.1')),
+    );
+    final focusBlocker = tester.widget<FocusScope>(
+      find.byKey(const ValueKey('node-focus-node.1')),
+    );
+    expect(inputBlocker.ignoring, isTrue);
+    expect(focusBlocker.descendantsAreFocusable, isFalse);
   });
 }
 

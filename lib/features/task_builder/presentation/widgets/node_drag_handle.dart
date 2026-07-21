@@ -8,26 +8,33 @@ class NodeDragHandle extends StatelessWidget {
   const NodeDragHandle({
     super.key,
     required this.node,
+    required this.isDragging,
     required this.onDragStarted,
     required this.onDragEnded,
   });
 
   final WorkflowNode node;
+  final bool isDragging;
   final VoidCallback onDragStarted;
   final VoidCallback onDragEnded;
 
   @override
   Widget build(BuildContext context) {
-    return Draggable<NodeId>(
-      data: node.id,
-      feedback: const SizedBox.shrink(),
-      childWhenDragging: _handle(context),
-      onDragStarted: () {
-        context.read<TaskBuilderCubit>().selectNode(node.id);
-        onDragStarted();
-      },
-      onDragEnd: (_) => onDragEnded(),
-      child: _handle(context),
+    return MouseRegion(
+      cursor: isDragging
+          ? SystemMouseCursors.grabbing
+          : SystemMouseCursors.grab,
+      child: Draggable<NodeId>(
+        data: node.id,
+        feedback: const SizedBox.shrink(),
+        childWhenDragging: _handle(context),
+        onDragStarted: () {
+          context.read<TaskBuilderCubit>().selectNode(node.id);
+          onDragStarted();
+        },
+        onDragEnd: (_) => onDragEnded(),
+        child: _handle(context),
+      ),
     );
   }
 

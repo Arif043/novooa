@@ -29,11 +29,16 @@ class _NodeGraphState extends State<NodeGraph> {
   @override
   Widget build(BuildContext context) {
     _removeObsoleteKeys();
-    return Column(
-      children: [
-        ...widget.nodes.map(_buildNode),
-        NodePlaceholder(onAccept: (value) {}),
-      ],
+    return MouseRegion(
+      cursor: _draggingNodeId == null
+          ? MouseCursor.defer
+          : SystemMouseCursors.grabbing,
+      child: Column(
+        children: [
+          ...widget.nodes.map(_buildNode),
+          NodePlaceholder(onAccept: (value) {}),
+        ],
+      ),
     );
   }
 
@@ -47,6 +52,7 @@ class _NodeGraphState extends State<NodeGraph> {
           key: ValueKey('node-content-${node.id.value}'),
           node: node,
           isSource: _draggingNodeId == node.id,
+          isDragActive: _draggingNodeId != null,
           onDragStarted: () => _setDraggingNode(node.id),
           onDragEnded: _clearDraggingNode,
         ),
@@ -107,6 +113,7 @@ class _NodeGraphState extends State<NodeGraph> {
   }
 
   void _setDraggingNode(NodeId nodeId) {
+    FocusScope.of(context).unfocus();
     setState(() => _draggingNodeId = nodeId);
   }
 
