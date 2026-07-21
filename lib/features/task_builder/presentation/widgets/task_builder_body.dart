@@ -42,17 +42,15 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
         const SizedBox(height: AppSpacing.xl),
         if (widget.state case TaskBuilderLoaded(:final editingTask))
           Expanded(
-            child: AnimatedPadding(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.only(
-                left: AppSpacing.xxl,
-                right: AppSpacing.xxl,
-                bottom: AppSpacing.xxl,
-              ),
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                clipBehavior: Clip.none,
-                // physics: const NeverScrollableScrollPhysics(),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: AnimatedPadding(
+                duration: const Duration(milliseconds: 300),
+                padding: const EdgeInsets.only(
+                  left: AppSpacing.xxl,
+                  right: AppSpacing.xxl,
+                  bottom: AppSpacing.xxl,
+                ),
                 child: NodeGraph(nodes: editingTask.nodes),
               ),
             ),
