@@ -5,9 +5,10 @@ import 'package:syscat2/features/task_builder/presentation/widgets/node_placehol
 import 'package:syscat2/features/task_builder/presentation/widgets/node_position_transition.dart';
 
 class NodeGraph extends StatefulWidget {
-  const NodeGraph({super.key, required this.nodes});
+  const NodeGraph({super.key, required this.nodes, this.onPrimitiveAccepted});
 
   final List<WorkflowNode> nodes;
+  final ValueChanged<WorkflowPrimitive>? onPrimitiveAccepted;
 
   @override
   State<NodeGraph> createState() => _NodeGraphState();
@@ -36,7 +37,7 @@ class _NodeGraphState extends State<NodeGraph> {
       child: Column(
         children: [
           ...widget.nodes.map(_buildNode),
-          NodePlaceholder(onAccept: (value) {}),
+          NodePlaceholder(onAccept: widget.onPrimitiveAccepted ?? _ignore),
         ],
       ),
     );
@@ -121,4 +122,6 @@ class _NodeGraphState extends State<NodeGraph> {
     if (_draggingNodeId == null) return;
     setState(() => _draggingNodeId = null);
   }
+
+  static void _ignore(WorkflowPrimitive primitive) {}
 }

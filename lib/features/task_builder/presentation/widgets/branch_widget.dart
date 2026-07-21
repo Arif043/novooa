@@ -5,31 +5,18 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/conditional_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/deletable_node_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/read_email_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/read_file_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/script_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/string_input_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/write_file_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
 
 class BranchWidget extends StatelessWidget {
   final ConditionalBranch branch;
   final NodeId conditionalNodeId;
   final VoidCallback onBack;
-  final void Function(WorkflowNode node, ConditionalBranch branch)
-  onBranchSelected;
 
   const BranchWidget({
     super.key,
     required this.branch,
     required this.conditionalNodeId,
     required this.onBack,
-    required this.onBranchSelected,
   });
 
   @override
@@ -53,40 +40,18 @@ class BranchWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            for (final node in branch.graph.nodes) _branchNode(node),
-            NodePlaceholder(
-              onAccept: (primitive) {
-                context.read<TaskBuilderCubit>().addNodeToBranch(
-                  conditionalNodeId: conditionalNodeId,
-                  branchId: branch.id,
-                  primitive: primitive,
-                );
-              },
+            NodeGraph(
+              nodes: branch.graph.nodes,
+              onPrimitiveAccepted: (primitive) =>
+                  context.read<TaskBuilderCubit>().addNodeToBranch(
+                    conditionalNodeId: conditionalNodeId,
+                    branchId: branch.id,
+                    primitive: primitive,
+                  ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  Widget _branchNode(WorkflowNode node) {
-    final child = switch (node.config.primitive) {
-      .stringInput => StringInputWidget(node: node),
-      .prompt => PromptWidget(node: node),
-      .script => ScriptWidget(node: node),
-      .conditional => ConditionalWidget(
-        nodeConfig: node.config as ConditionalNodeConfig,
-        onBranchSelected: (branch) {
-          onBranchSelected(node, branch);
-        },
-      ),
-      .iterativeRefinement => IterativeRefinementWidget(node: node),
-      .writeFile => WriteFileWidget(node: node),
-      .readFile => ReadFileWidget(node: node),
-      .readEmail || .readChannelEvent => ReadEventWidget(node: node),
-      .humanApproval => HumanApprovalWidget(node: node),
-      _ => const SizedBox.shrink(),
-    };
-    return DeletableNodeWidget(node: node, child: child);
   }
 }

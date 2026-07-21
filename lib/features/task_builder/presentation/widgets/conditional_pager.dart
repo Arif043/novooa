@@ -41,7 +41,6 @@ class _ConditionalPagerState extends State<ConditionalPager> {
       branch: branch,
       conditionalNodeId: page.conditionalNodeId,
       onBack: _popPage,
-      onBranchSelected: _pushBranchPage,
     );
   }
 
@@ -52,18 +51,6 @@ class _ConditionalPagerState extends State<ConditionalPager> {
         setState(() => _pages.add(page.withBranch(branch)));
       },
     );
-  }
-
-  void _pushBranchPage(WorkflowNode conditionalNode, ConditionalBranch branch) {
-    setState(() {
-      _pages.add(
-        _ConditionalPage(
-          conditionalNodeId: conditionalNode.id,
-          config: conditionalNode.config as ConditionalNodeConfig,
-          branch: branch,
-        ),
-      );
-    });
   }
 
   void _popPage() {
