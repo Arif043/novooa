@@ -29,6 +29,7 @@ void _expectActiveDecoration(WidgetTester tester) {
     ),
   );
   final decoration = container.decoration! as BoxDecoration;
+  expect(container.clipBehavior, Clip.none);
   expect(decoration.border, isNull);
   expect(decoration.boxShadow!.single.color.a, greaterThan(0));
 }

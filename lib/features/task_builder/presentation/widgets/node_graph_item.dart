@@ -53,7 +53,7 @@ class NodeGraphItem extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: AnimatedContainer(
         duration: animationDuration,
-        clipBehavior: .hardEdge,
+        clipBehavior: Clip.none,
         curve: Curves.easeOutCubic,
         decoration: _dropDecoration(context, candidates.isNotEmpty),
         child: _content(),
@@ -79,15 +79,15 @@ class NodeGraphItem extends StatelessWidget {
   }
 
   Decoration _dropDecoration(BuildContext context, bool isTargeted) {
-    if (!isTargeted && !isSource) return const BoxDecoration();
     final color = Theme.of(context).colorScheme.primary;
+    final highlighted = isTargeted || isSource;
     return BoxDecoration(
       borderRadius: BorderRadius.circular(AppSpacing.sm),
       boxShadow: [
         BoxShadow(
-          color: color.withValues(alpha: 0.24),
-          blurRadius: AppSpacing.lg,
-          spreadRadius: AppSpacing.xs,
+          color: color.withValues(alpha: highlighted ? 0.24 : 0),
+          blurRadius: highlighted ? AppSpacing.lg : 0,
+          spreadRadius: highlighted ? AppSpacing.xs : 0,
         ),
       ],
     );

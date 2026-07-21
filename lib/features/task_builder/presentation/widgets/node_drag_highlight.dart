@@ -19,8 +19,7 @@ class NodeDragHighlight extends StatelessWidget {
     return AnimatedContainer(
       duration: animationDuration,
       curve: Curves.easeOutCubic,
-      clipBehavior: .hardEdge,
-      
+      clipBehavior: Clip.none,
       decoration: _decoration(context),
       child: child,
     );
