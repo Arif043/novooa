@@ -10,11 +10,10 @@ import '../../domain/entities/knowledge_attachment.dart';
 import '../../domain/entities/skill_attachment.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
-import 'node_employee_section.dart';
 import 'node_file_attachment_section.dart';
 import 'node_knowledge_attachment_section.dart';
-import 'node_skill_attachment_section.dart';
 import 'prompt_choice_field.dart';
+import 'prompt_resource_selection.dart';
 import 'prompt_structured_output_section.dart';
 
 class PromptWidget extends StatefulWidget {
@@ -143,16 +142,12 @@ class _PromptWidgetState extends State<PromptWidget> {
             onDetach: _detachKnowledge,
           ),
           const SizedBox(height: AppSpacing.md),
-          NodeSkillAttachmentSection(
-            attachments: config.skillAttachments,
-            onAttach: _attachSkill,
-            onDetach: _detachSkill,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          NodeEmployeeSection(
-            assigned: config.employee,
-            onAssign: _assignEmployee,
-            onUnassign: _unassignEmployee,
+          PromptResourceSelection(
+            config: config,
+            onAttachSkill: _attachSkill,
+            onDetachSkill: _detachSkill,
+            onAssignEmployee: _assignEmployee,
+            onUnassignEmployee: _unassignEmployee,
           ),
         ],
       ),
