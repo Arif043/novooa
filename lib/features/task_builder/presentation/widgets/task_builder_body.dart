@@ -7,6 +7,7 @@ import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart'
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/scroll_boundary_fade.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/toolbar.dart';
 
 class TaskBuilderBody extends StatefulWidget {
@@ -42,19 +43,24 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
         const SizedBox(height: AppSpacing.xl),
         if (widget.state case TaskBuilderLoaded(:final editingTask))
           Expanded(
-            child: SingleChildScrollView(
+            child: ScrollBoundaryFade(
               controller: _scrollController,
-              child: AnimatedPadding(
-                duration: const Duration(milliseconds: 300),
-                padding: const EdgeInsets.only(
-                  left: AppSpacing.xxl,
-                  right: AppSpacing.xxl,
-                  bottom: AppSpacing.xxl,
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+                child: AnimatedPadding(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.only(
+                    left: AppSpacing.xxl,
+                    right: AppSpacing.xxl,
+                    bottom: AppSpacing.xxl,
+                  ),
+                  child: NodeGraph(nodes: editingTask.nodes),
                 ),
-                child: NodeGraph(nodes: editingTask.nodes),
               ),
             ),
           ),
+          // SizedBox(height: AppSpacing.xxl)
       ],
     );
   }
