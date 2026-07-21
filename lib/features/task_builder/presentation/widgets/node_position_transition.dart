@@ -5,7 +5,7 @@ class NodePositionTransition extends StatefulWidget {
     super.key,
     required this.offsetY,
     required this.child,
-    this.duration = const Duration(milliseconds: 220),
+    this.duration = const Duration(milliseconds: 650),
   });
 
   final double offsetY;
