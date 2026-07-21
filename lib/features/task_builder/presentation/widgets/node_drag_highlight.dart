@@ -8,7 +8,7 @@ class NodeDragHighlight extends StatelessWidget {
     required this.child,
   });
 
-  static const animationDuration = Duration(milliseconds: 220);
+  static const animationDuration = Duration(milliseconds: 500);
   static const _shadowOpacity = 0.24;
 
   final bool active;
@@ -19,6 +19,8 @@ class NodeDragHighlight extends StatelessWidget {
     return AnimatedContainer(
       duration: animationDuration,
       curve: Curves.easeOutCubic,
+      clipBehavior: .hardEdge,
+      
       decoration: _decoration(context),
       child: child,
     );

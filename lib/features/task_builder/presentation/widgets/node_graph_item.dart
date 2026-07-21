@@ -63,7 +63,7 @@ class NodeGraphItem extends StatelessWidget {
   Widget _content() {
     return Stack(
       children: [
-        NodeDragHighlight(active: isSource, child: _nodeWidget()),
+        _nodeWidget(),
         Positioned(
           top: AppSpacing.xs,
           left: AppSpacing.xs,
@@ -78,11 +78,17 @@ class NodeGraphItem extends StatelessWidget {
   }
 
   Decoration _dropDecoration(BuildContext context, bool isTargeted) {
-    if (!isTargeted) return const BoxDecoration();
+    if (!isTargeted && !isSource) return const BoxDecoration();
     final color = Theme.of(context).colorScheme.primary;
     return BoxDecoration(
-      border: Border.all(color: color.withValues(alpha: 0.65), width: 2),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppSpacing.sm),
+      boxShadow: [
+        BoxShadow(
+          color: color.withValues(alpha: 0.24),
+          blurRadius: AppSpacing.lg,
+          spreadRadius: AppSpacing.xs,
+        ),
+      ],
     );
   }
 
