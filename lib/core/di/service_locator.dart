@@ -19,12 +19,17 @@ import 'package:syscat2/features/communication/domain/usecases/watch_communicati
 import 'package:syscat2/features/communication/infrastructure/repositories/firestore_communication_channel_repository.dart';
 import 'package:syscat2/features/communication/presentation/cubits/communication_cubit.dart';
 import 'package:syscat2/features/files/domain/repositories/team_file_repository.dart';
+import 'package:syscat2/features/files/domain/repositories/file_version_repository.dart';
+import 'package:syscat2/features/files/domain/usecases/create_file_version.dart';
 import 'package:syscat2/features/files/domain/usecases/create_team_folder.dart';
+import 'package:syscat2/features/files/domain/usecases/download_file_version.dart';
 import 'package:syscat2/features/files/domain/usecases/upload_team_file.dart';
+import 'package:syscat2/features/files/domain/usecases/watch_file_versions.dart';
 import 'package:syscat2/features/files/domain/usecases/watch_team_files.dart';
 import 'package:syscat2/features/files/domain/usecases/watch_team_folders.dart';
 import 'package:syscat2/features/files/infrastructure/repositories/firebase_team_file_repository.dart';
 import 'package:syscat2/features/files/presentation/cubits/files_cubit.dart';
+import 'package:syscat2/features/files/presentation/cubits/file_detail_cubit.dart';
 import 'package:syscat2/features/knowledge_base/domain/repositories/knowledge_base_repository.dart';
 import 'package:syscat2/features/knowledge_base/domain/usecases/create_knowledge_note.dart';
 import 'package:syscat2/features/knowledge_base/domain/usecases/delete_knowledge_note.dart';
@@ -137,6 +142,9 @@ void configureDependencies() {
         serviceLocator<FirebaseFirestore>(),
         serviceLocator<FirebaseStorage>(),
       ),
+    )
+    ..registerLazySingleton<FileVersionRepository>(
+      () => serviceLocator<TeamFileRepository>() as FileVersionRepository,
     )
     ..registerLazySingleton<KnowledgeBaseRepository>(
       () =>
@@ -306,6 +314,15 @@ void configureDependencies() {
     )
     ..registerLazySingleton(
       () => UploadTeamFile(serviceLocator<TeamFileRepository>()),
+    )
+    ..registerLazySingleton(
+      () => WatchFileVersions(serviceLocator<FileVersionRepository>()),
+    )
+    ..registerLazySingleton(
+      () => DownloadFileVersion(serviceLocator<FileVersionRepository>()),
+    )
+    ..registerLazySingleton(
+      () => CreateFileVersion(serviceLocator<FileVersionRepository>()),
     )
     ..registerLazySingleton(
       () => CreateTeamFolder(serviceLocator<TeamFileRepository>()),
@@ -507,6 +524,14 @@ void configureDependencies() {
         serviceLocator<UploadTeamFile>(),
         serviceLocator<CreateTeamFolder>(),
         serviceLocator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerFactory(
+      () => FileDetailCubit(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<WatchFileVersions>(),
+        serviceLocator<DownloadFileVersion>(),
+        serviceLocator<CreateFileVersion>(),
       ),
     )
     ..registerFactory(

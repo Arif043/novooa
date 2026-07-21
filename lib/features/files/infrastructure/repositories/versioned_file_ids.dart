@@ -5,6 +5,8 @@ class VersionedFileIds {
     : fileId = UniqueId.random().value,
       versionId = UniqueId.random().value;
 
+  VersionedFileIds.existing(this.fileId) : versionId = UniqueId.random().value;
+
   final String fileId;
   final String versionId;
 }

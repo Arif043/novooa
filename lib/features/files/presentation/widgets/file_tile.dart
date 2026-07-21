@@ -4,14 +4,16 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/team_file.dart';
 
 class FileTile extends StatelessWidget {
-  const FileTile({super.key, required this.file});
+  const FileTile({super.key, required this.file, required this.onTap});
 
   final TeamFile file;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return ListTile(
+      onTap: onTap,
       leading: const Icon(Icons.insert_drive_file_outlined),
       title: Text(
         file.displayName,

@@ -372,6 +372,7 @@ service cloud.firestore {
         'currentVersionId',
         'contentType',
         'sizeBytes',
+        'currentVersionCreatedAt',
         'createdAt',
         'updatedAt',
       ]) &&
@@ -381,7 +382,35 @@ service cloud.firestore {
         hasValidUploadedFileFields(data) &&
         data.currentVersionId is string &&
         data.currentVersionId.size() > 0 &&
+        data.currentVersionCreatedAt == request.time &&
         data.createdAt == request.time &&
+        data.updatedAt == request.time;
+    }
+
+    function isValidUpdatedFile(data, teamId) {
+      return data.keys().hasOnly([
+        'teamId',
+        'ownerUid',
+        'displayName',
+        'folderId',
+        'storagePath',
+        'currentVersionId',
+        'contentType',
+        'sizeBytes',
+        'currentVersionCreatedAt',
+        'createdAt',
+        'updatedAt',
+      ]) &&
+        data.teamId == teamId &&
+        data.teamId == resource.data.teamId &&
+        data.ownerUid == resource.data.ownerUid &&
+        data.displayName == resource.data.displayName &&
+        data.folderId == resource.data.folderId &&
+        hasValidUploadedFileFields(data) &&
+        data.currentVersionId is string &&
+        data.currentVersionId.size() > 0 &&
+        data.createdAt == resource.data.createdAt &&
+        data.currentVersionCreatedAt == request.time &&
         data.updatedAt == request.time;
     }
 
@@ -866,7 +895,9 @@ service cloud.firestore {
         allow get, list: if isTeamMember(teamId);
         allow create: if isTeamMember(teamId) &&
           isValidFile(request.resource.data, teamId);
-        allow update, delete: if false;
+        allow update: if isTeamMember(teamId) &&
+          isValidUpdatedFile(request.resource.data, teamId);
+        allow delete: if false;
 
         match /versions/{versionId} {
           allow get, list: if isTeamMember(teamId);

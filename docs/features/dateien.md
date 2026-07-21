@@ -90,6 +90,14 @@ Jedes Version-Dokument trägt zusätzlich `createdAt`. Beim Anhängen wird diese
 Zeitpunkt als `versionCreatedAt` in der Node-Config gespeichert, damit die UI
 die konkret referenzierte Version samt Erstellungszeit anzeigen kann.
 
+### Inhalte und Versionsverlauf
+
+Die Detailansicht einer Datei zeigt den Inhalt der gewählten Version und einen
+chronologischen Verlauf. Textdateien und JSON können dort bearbeitet werden.
+Das Sichern erzeugt immer eine neue Version; vorhandene Versionen werden weder
+überschrieben noch verändert. Die aktuelle Version ist im Verlauf hervorgehoben,
+während ältere Stände jederzeit zur Ansicht ausgewählt werden können.
+
 ## Nutzung in Aufgaben
 
 Unterstützende Node-Configs implementieren `FileAttachmentSupport` und speichern

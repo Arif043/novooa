@@ -5,6 +5,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../cubits/files_cubit.dart';
 import '../cubits/files_state.dart';
 import 'file_tile.dart';
+import '../pages/file_detail_page.dart';
 import 'files_breadcrumbs.dart';
 import 'folder_tile.dart';
 
@@ -75,7 +76,13 @@ class _FileList extends StatelessWidget {
         onTap: () => context.read<FilesCubit>().openFolder(folder.id),
       );
     }
-    return FileTile(file: state.visibleFiles[index - folders.length]);
+    final file = state.visibleFiles[index - folders.length];
+    return FileTile(
+      file: file,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => FileDetailPage(file: file)),
+      ),
+    );
   }
 }
 

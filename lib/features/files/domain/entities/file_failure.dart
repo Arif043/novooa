@@ -3,6 +3,7 @@ enum FileFailureKind {
   noFileSelected,
   loadFailed,
   uploadFailed,
+  downloadFailed,
   createFolderFailed,
   invalidFolderName,
 }
@@ -19,6 +20,8 @@ class FileFailure {
       FileFailureKind.noFileSelected => 'Es wurde keine Datei ausgewählt.',
       FileFailureKind.loadFailed => 'Dateien konnten nicht geladen werden.',
       FileFailureKind.uploadFailed => 'Datei konnte nicht hochgeladen werden.',
+      FileFailureKind.downloadFailed =>
+        'Dateiinhalt konnte nicht geladen werden.',
       FileFailureKind.createFolderFailed =>
         'Verzeichnis konnte nicht erstellt werden.',
       FileFailureKind.invalidFolderName =>
