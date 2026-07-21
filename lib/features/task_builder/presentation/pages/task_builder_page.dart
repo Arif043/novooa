@@ -39,7 +39,11 @@ class TaskBuilderPage extends StatelessWidget {
           create: (_) => serviceLocator<NodeEmployeeAssignmentsCubit>()..load(),
         ),
       ],
-      child: const _TaskBuilderShellTitle(child: _TaskBuilderContent()),
+      child: _TaskBuilderShellTitle(
+        child: BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
+          builder: (context, state) => TaskBuilderBody(state: state),
+        ),
+      ),
     );
   }
 }
@@ -89,15 +93,4 @@ class _TaskBuilderShellTitleState extends State<_TaskBuilderShellTitle> {
 
   @override
   Widget build(BuildContext context) => widget.child;
-}
-
-class _TaskBuilderContent extends StatelessWidget {
-  const _TaskBuilderContent();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
-      builder: (context, state) => TaskBuilderBody(state: state),
-    );
-  }
 }
