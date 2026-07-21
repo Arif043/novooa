@@ -4,10 +4,9 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_pager.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/deletable_node_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/node_drag_handle.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_reference_name_field.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_email_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_file_widget.dart';
@@ -64,26 +63,84 @@ class NodeGraphItem extends StatelessWidget {
         clipBehavior: Clip.none,
         curve: Curves.easeOutCubic,
         decoration: _dropDecoration(context, candidates.isNotEmpty),
-        child: _content(),
+        child: _content(context),
       ),
     );
   }
 
-  Widget _content() {
+  Widget _content(BuildContext context) {
     return Stack(
       children: [
-        _nodeWidget(),
+        Padding(
+          padding: const EdgeInsets.only(left: AppSpacing.xxl),
+          child: _nodeWidget(),
+        ),
+        if (!isDragActive) ..._nodeActions(context),
         Positioned(
-          top: AppSpacing.xs,
-          left: AppSpacing.xs,
-          child: NodeDragHandle(
-            node: node,
-            isDragging: isDragActive,
-            onDragStarted: onDragStarted,
-            onDragEnded: onDragEnded,
-          ),
+          top: 0,
+          bottom: 0,
+          left: 0,
+          width: AppSpacing.xxl,
+          child: _dragStrip(context),
         ),
       ],
+    );
+  }
+
+  List<Widget> _nodeActions(BuildContext context) {
+    return [
+      Positioned(
+        top: AppSpacing.sm,
+        right: AppSpacing.xxl + AppSpacing.sm,
+        child: NodeReferenceNameField(node: node),
+      ),
+      Positioned(
+        top: AppSpacing.xs,
+        right: AppSpacing.xs,
+        child: IconButton(
+          tooltip: 'Baustein löschen',
+          onPressed: () => context.read<TaskBuilderCubit>().removeNode(node.id),
+          icon: const Icon(Icons.delete_outline),
+        ),
+      ),
+    ];
+  }
+
+  Widget _dragStrip(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return MouseRegion(
+      cursor: isDragActive
+          ? SystemMouseCursors.grabbing
+          : SystemMouseCursors.grab,
+      child: Draggable<NodeId>(
+        data: node.id,
+        feedback: const SizedBox.shrink(),
+        childWhenDragging: _strip(colors),
+        onDragStarted: () {
+          context.read<TaskBuilderCubit>().selectNode(node.id);
+          onDragStarted();
+        },
+        onDragEnd: (_) => onDragEnded(),
+        child: _strip(colors),
+      ),
+    );
+  }
+
+  Widget _strip(ColorScheme colors) {
+    return Semantics(
+      label: 'Baustein tauschen',
+      button: true,
+      child: DecoratedBox(
+        key: ValueKey('node-drag-strip-${node.id.value}'),
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerLow,
+          border: Border(right: BorderSide(color: colors.outlineVariant)),
+          borderRadius: const BorderRadius.horizontal(
+            left: Radius.circular(AppSpacing.md),
+          ),
+        ),
+        child: const Center(child: Icon(Icons.drag_indicator)),
+      ),
     );
   }
 
@@ -123,7 +180,7 @@ class NodeGraphItem extends StatelessWidget {
       child: IgnorePointer(
         key: ValueKey('node-input-${node.id.value}'),
         ignoring: isDragActive,
-        child: DeletableNodeWidget(node: node, child: child),
+        child: child,
       ),
     );
   }

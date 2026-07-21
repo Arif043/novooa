@@ -4,11 +4,10 @@ import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/branch_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/node_drag_handle.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
 
 void main() {
-  testWidgets('rendert Branch-Nodes mit Drag-Handles', (tester) async {
+  testWidgets('rendert Branch-Nodes mit linken Drag-Streifen', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -22,7 +21,14 @@ void main() {
     );
 
     expect(find.byType(NodeGraph), findsOneWidget);
-    expect(find.byType(NodeDragHandle), findsNWidgets(2));
+    expect(
+      find.byKey(const ValueKey('node-drag-strip-node.1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('node-drag-strip-node.2')),
+      findsOneWidget,
+    );
   });
 }
 
