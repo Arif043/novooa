@@ -7,7 +7,6 @@ import 'package:syscat2/features/task_builder/domain/usecases/execute_task.dart'
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_graph.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/toolbar.dart';
 import 'package:web_smooth_scroll/web_smooth_scroll.dart';
 
@@ -31,24 +30,6 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
 
   @override
   Widget build(BuildContext context) {
-    return _TaskBuilderWorkspace(
-      state: widget.state,
-      scrollController: _scrollController,
-    );
-  }
-}
-
-class _TaskBuilderWorkspace extends StatelessWidget {
-  const _TaskBuilderWorkspace({
-    required this.state,
-    required this.scrollController,
-  });
-
-  final TaskBuilderState state;
-  final ScrollController scrollController;
-
-  @override
-  Widget build(BuildContext context) {
     final cubit = context.read<TaskBuilderCubit>();
     return Column(
       children: [
@@ -60,15 +41,15 @@ class _TaskBuilderWorkspace extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         const Toolbar(),
         const SizedBox(height: AppSpacing.xl),
-        if (state case TaskBuilderLoaded(:final editingTask))
+        if (widget.state case TaskBuilderLoaded(:final editingTask))
           Expanded(
             child: WebSmoothScroll(
-              controller: scrollController,
+              controller: _scrollController,
               scrollSpeed: 2.5,
               scrollAnimationLength: 1400,
               curve: Curves.easeInOutCubic,
               child: SingleChildScrollView(
-                controller: scrollController,
+                controller: _scrollController,
                 physics: const NeverScrollableScrollPhysics(),
                 child: NodeGraph(nodes: editingTask.nodes),
               ),
