@@ -7,6 +7,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/conditional_p
 import 'package:syscat2/features/task_builder/presentation/widgets/deletable_node_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_drag_highlight.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_drag_handle.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_email_widget.dart';
@@ -25,7 +26,7 @@ class NodeGraphItem extends StatelessWidget {
     required this.onDragEnded,
   });
 
-  static const animationDuration = Duration(milliseconds: 220);
+  static const animationDuration = NodeDragHighlight.animationDuration;
 
   final WorkflowNode node;
   final bool isSource;
@@ -62,7 +63,7 @@ class NodeGraphItem extends StatelessWidget {
   Widget _content() {
     return Stack(
       children: [
-        _AnimatedNodeSlot(node: node, isSource: isSource, child: _nodeWidget()),
+        NodeDragHighlight(active: isSource, child: _nodeWidget()),
         Positioned(
           top: AppSpacing.xs,
           left: AppSpacing.xs,
@@ -100,42 +101,5 @@ class NodeGraphItem extends StatelessWidget {
       _ => const SizedBox.shrink(),
     };
     return DeletableNodeWidget(node: node, child: child);
-  }
-}
-
-class _AnimatedNodeSlot extends StatelessWidget {
-  const _AnimatedNodeSlot({
-    required this.node,
-    required this.child,
-    required this.isSource,
-  });
-
-  final WorkflowNode node;
-  final Widget child;
-  final bool isSource;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: NodeGraphItem.animationDuration,
-      curve: Curves.easeOutCubic,
-      decoration: _sourceDecoration(context),
-      child: child,
-    );
-  }
-
-  Decoration _sourceDecoration(BuildContext context) {
-    if (!isSource) return const BoxDecoration();
-    final color = Theme.of(context).colorScheme.primary;
-    return BoxDecoration(
-      borderRadius: BorderRadius.circular(8),
-      boxShadow: [
-        BoxShadow(
-          color: color.withValues(alpha: 0.22),
-          blurRadius: 22,
-          spreadRadius: 2,
-        ),
-      ],
-    );
   }
 }
