@@ -51,6 +51,7 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
               ),
               child: SingleChildScrollView(
                 controller: _scrollController,
+                clipBehavior: Clip.none,
                 // physics: const NeverScrollableScrollPhysics(),
                 child: NodeGraph(nodes: editingTask.nodes),
               ),
