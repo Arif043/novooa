@@ -7,7 +7,6 @@ import 'package:syscat2/features/task_builder/presentation/widgets/conditional_p
 import 'package:syscat2/features/task_builder/presentation/widgets/deletable_node_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/node_drag_highlight.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_drag_handle.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_email_widget.dart';
@@ -26,7 +25,7 @@ class NodeGraphItem extends StatelessWidget {
     required this.onDragEnded,
   });
 
-  static const animationDuration = NodeDragHighlight.animationDuration;
+  static const animationDuration = Duration(milliseconds: 500);
 
   final WorkflowNode node;
   final bool isSource;
