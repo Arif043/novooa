@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
-import 'package:flutter_highlight/themes/agate.dart';
 import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import 'package:flutter_highlight/themes/atom-one-light.dart';
-import 'package:flutter_highlight/themes/darcula.dart';
-import 'package:flutter_highlight/themes/github.dart';
-import 'package:flutter_highlight/themes/obsidian.dart';
 import 'package:highlight/languages/python.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
@@ -15,6 +11,7 @@ import 'package:syscat2/features/task_builder/domain/entities/node_attachment.da
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_file_attachment_section.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/python_analyzer.dart';
 
 class ScriptWidget extends StatefulWidget {
   const ScriptWidget({super.key, required this.node});
@@ -35,7 +32,11 @@ class _ScriptWidgetState extends State<ScriptWidget> {
   @override
   void initState() {
     super.initState();
-    _controller = CodeController(text: _config.script, language: python, );  
+    _controller = CodeController(
+      text: _config.script,
+      language: python,
+      analyzer: const PythonAnalyzer(),
+    );
   }
 
   @override
@@ -71,16 +72,12 @@ class _ScriptWidgetState extends State<ScriptWidget> {
               minLines: 6,
               maxLines: 12,
               wrap: false,
-
-              gutterStyle: .new(
+              gutterStyle: GutterStyle(
                 showErrors: true,
                 showLineNumbers: true,
                 showFoldingHandles: true,
-                background: Colors.red
+                background: Theme.of(context).colorScheme.surfaceContainerLow,
               ),
-              // textStyle: Theme.of(
-              //   context,
-              // ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
               onChanged: _updateScript,
             ),
           ),
