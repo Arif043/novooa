@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_code_editor/flutter_code_editor.dart';
+import 'package:flutter_highlight/themes/agate.dart';
+import 'package:flutter_highlight/themes/atom-one-dark.dart';
+import 'package:flutter_highlight/themes/atom-one-light.dart';
+import 'package:flutter_highlight/themes/darcula.dart';
+import 'package:flutter_highlight/themes/github.dart';
+import 'package:flutter_highlight/themes/obsidian.dart';
+import 'package:highlight/languages/python.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
@@ -18,7 +26,7 @@ class ScriptWidget extends StatefulWidget {
 }
 
 class _ScriptWidgetState extends State<ScriptWidget> {
-  late final TextEditingController _controller;
+  late final CodeController _controller;
 
   ScriptNodeConfig get _config {
     return widget.node.config as ScriptNodeConfig;
@@ -27,7 +35,7 @@ class _ScriptWidgetState extends State<ScriptWidget> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: _config.script);
+    _controller = CodeController(text: _config.script, language: python, );  
   }
 
   @override
@@ -52,15 +60,29 @@ class _ScriptWidgetState extends State<ScriptWidget> {
         children: [
           Text('Script', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),
-          TextField(
-            controller: _controller,
-            minLines: 6,
-            maxLines: 12,
-            decoration: const InputDecoration(
-              hintText: 'output = input.upper()',
+          CodeTheme(
+            data: CodeThemeData(
+              styles: Theme.of(context).brightness == Brightness.dark
+                  ? atomOneDarkTheme
+                  : atomOneLightTheme,
             ),
-            style: Theme.of(context).textTheme.bodyMedium,
-            onChanged: _updateScript,
+            child: CodeField(
+              controller: _controller,
+              minLines: 6,
+              maxLines: 12,
+              wrap: false,
+
+              gutterStyle: .new(
+                showErrors: true,
+                showLineNumbers: true,
+                showFoldingHandles: true,
+                background: Colors.red
+              ),
+              // textStyle: Theme.of(
+              //   context,
+              // ).textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
+              onChanged: _updateScript,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           NodeFileAttachmentSection(
