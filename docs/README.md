@@ -11,6 +11,7 @@ pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
 | Überblick      | [`../AGENTS.md`](../AGENTS.md)     | Projekt-Definition, Stack, Conventions, Agent-Regeln    |
 | Cross-cutting  | [`architecture.md`](./architecture.md) | Datenmodell, Auth, Persistenz, Trigger, Telemetrie   |
 | Backend        | [`backend-struktur.md`](./backend-struktur.md) | Functions-Struktur, Ports, Cloud-/Local-Trennung |
+| Executor-Outputs | [`node-executor-outputs.md`](./node-executor-outputs.md) | Output-Vertraege der Workflow-Executoren |
 | Lokale Runtime | [`local-runtime.md`](./local-runtime.md) | Lokale Datenhaltung, Ports, Relay-Strategie       |
 | Features       | [`features/`](./features/)         | Ein Deep-Dive pro Feature                               |
 
