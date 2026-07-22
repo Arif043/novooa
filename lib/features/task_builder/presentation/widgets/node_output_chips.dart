@@ -52,8 +52,11 @@ class NodeOutputChips extends StatelessWidget {
   }
 
   List<String> _promptOutputs(PromptNodeConfig config) {
-    if (config.outputType != PromptOutputType.structured) return const ['text'];
-    return ['text', ..._structuredNames(config.structuredFields)];
+    return switch (config.outputType) {
+      PromptOutputType.text => const ['text'],
+      PromptOutputType.decision => const ['Entscheidung'],
+      PromptOutputType.structured => _structuredNames(config.structuredFields),
+    };
   }
 
   List<String> _eventOutputs(ReadChannelEventNodeConfig config) {

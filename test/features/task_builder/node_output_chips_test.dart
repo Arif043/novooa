@@ -10,9 +10,9 @@ void main() {
   ) async {
     await tester.pumpWidget(_host(_structuredPromptNode()));
 
-    expect(find.text('text'), findsOneWidget);
     expect(find.text('titel'), findsOneWidget);
     expect(find.text('zusammenfassung'), findsOneWidget);
+    expect(find.text('text'), findsNothing);
     expect(find.text(''), findsNothing);
   });
 
@@ -23,6 +23,15 @@ void main() {
     expect(find.text('versionId'), findsOneWidget);
     expect(find.text('storagePath'), findsOneWidget);
     expect(find.text('isNewFile'), findsOneWidget);
+  });
+
+  testWidgets('zeigt Entscheidungen als fachlich benannten Chip', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_host(_decisionPromptNode()));
+
+    expect(find.text('Entscheidung'), findsOneWidget);
+    expect(find.text('text'), findsNothing);
   });
 }
 
@@ -56,5 +65,18 @@ WorkflowNode _writeFileNode() {
     title: 'Datei schreiben',
     description: '',
     config: const WriteFileNodeConfig(fileName: '', contentType: ''),
+  );
+}
+
+WorkflowNode _decisionPromptNode() {
+  return WorkflowNode(
+    id: const NodeId('decision'),
+    title: 'Prompt',
+    description: '',
+    config: const PromptNodeConfig(
+      instruction: '',
+      outputType: PromptOutputType.decision,
+      choices: ['Ja', 'Nein'],
+    ),
   );
 }
