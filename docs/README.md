@@ -20,6 +20,8 @@ pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
 | Feature         | Doc                                                       | Status         |
 | --------------- | --------------------------------------------------------- | -------------- |
 | Aufgabe         | [`features/aufgabe.md`](./features/aufgabe.md)            | In Entwicklung |
+| Aufgabe: Ausfuehrung | [`features/aufgabe-ausfuehrung.md`](./features/aufgabe-ausfuehrung.md) | Runner, Freigaben, lokale Ausfuehrung |
+| Aufgabe: Executor | [`features/aufgabe-executoren.md`](./features/aufgabe-executoren.md) | Modellprovider und Executor-Verhalten |
 | Arbeitspläne    | [`features/arbeitsplaene.md`](./features/arbeitsplaene.md) | Stub           |
 | Zeitplan        | [`features/zeitplan.md`](./features/zeitplan.md)          | Zeitbasierte Trigger |
 | Aktivitäten     | [`features/aktivitaeten.md`](./features/aktivitaeten.md)  | Stub           |

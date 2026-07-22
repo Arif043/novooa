@@ -123,6 +123,8 @@ npm run deploy         # firebase deploy --only functions
 | --------------------- | ------------------------------------------------------------------ | ------------------------------------------------------- |
 | Cross-cutting         | [`docs/architecture.md`](./docs/architecture.md)                   | Datenmodell, Auth, Persistenz, Trigger, Telemetrie      |
 | Feature „Aufgabe"     | [`docs/features/aufgabe.md`](./docs/features/aufgabe.md)           | Task Builder — Domain, UI, Genkit-Flows, DoD            |
+| Aufgabe-Ausfuehrung    | [`docs/features/aufgabe-ausfuehrung.md`](./docs/features/aufgabe-ausfuehrung.md) | Runner, Freigaben, lokale Ausfuehrung |
+| Aufgabe-Executoren     | [`docs/features/aufgabe-executoren.md`](./docs/features/aufgabe-executoren.md) | Modellprovider und Executor-Verhalten |
 | Feature „Arbeitspläne" | [`docs/features/arbeitsplaene.md`](./docs/features/arbeitsplaene.md) | Stub: gespeicherte Aufgaben                          |
 | Feature „Zeitplan"    | [`docs/features/zeitplan.md`](./docs/features/zeitplan.md)         | Stub: Trigger und Scheduler                             |
 | Feature „Aktivitäten" | [`docs/features/aktivitaeten.md`](./docs/features/aktivitaeten.md) | Stub: Runs, Traces, Freigaben                           |

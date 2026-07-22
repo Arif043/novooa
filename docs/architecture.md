@@ -37,7 +37,7 @@ Adapter sind austauschbare Implementierungen. Details stehen in
 | `NodeId`            | `lib/features/task_builder/domain/entities/workflow_node.dart`         | Value Object (`==` + `hashCode`) |
 | `WorkflowPrimitive` | `lib/features/task_builder/domain/entities/workflow_node.dart`         | Enum der Bausteintypen           |
 
-Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md#domänenmodell).
+Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md).
 
 ## Persistenz
 
@@ -211,7 +211,7 @@ Feature startet.
 | `menuSuggestionFlow`          | `functions/src/genkit-sample.ts` | Vorlage — nicht produktiv       |
 
 Feature-spezifische Detailtiefe (Inputs, Outputs, Executor-Registry) in
-[`features/aufgabe.md`](./features/aufgabe.md#genkit-ausführung-aufgabenspezifisch).
+[`features/aufgabe-ausfuehrung.md`](./features/aufgabe-ausfuehrung.md).
 
 ### Neue Genkit-Tools
 
