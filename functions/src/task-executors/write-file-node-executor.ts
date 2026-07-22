@@ -5,6 +5,7 @@ import {
   textOutputs,
 } from "../task-runner/node-executor.js";
 import {type TeamFileStore} from "../domain/repositories/team-file-store.js";
+import {type WrittenFile} from "../domain/repositories/team-file-store.js";
 import {FirestoreTeamFileStore} from "../infrastructure/firebase/firestore-team-file-store.js";
 import {
   contentTypeFor,
@@ -29,7 +30,7 @@ export const writeFileNodeExecutor: NodeExecutor = {
       contentType: runContext.resolveTemplates(contentTypeFor(input.node)),
       targetFileId: targetFileIdFor(input.node),
     });
-    return executedNode(input.node, textOutputs(JSON.stringify(file)));
+    return executedNode(input.node, fileOutputs(file));
   },
 };
 
@@ -52,4 +53,18 @@ async function writeNodeFile(
 function ensureConfigured(fileName: string): void {
   if (fileName.trim().length > 0) return;
   throw new Error("Datei schreiben: Es wurde keine Ausgabedatei ausgewählt.");
+}
+
+function fileOutputs(file: WrittenFile) {
+  return {
+    ...textOutputs(JSON.stringify(file)),
+    fileId: {type: "string" as const, value: file.fileId},
+    versionId: {type: "string" as const, value: file.versionId},
+    storagePath: {type: "string" as const, value: file.storagePath},
+    displayName: {type: "string" as const, value: file.displayName},
+    contentType: {type: "string" as const, value: file.contentType},
+    sizeBytes: {type: "number" as const, value: file.sizeBytes},
+    folderId: {type: "json" as const, value: file.folderId},
+    isNewFile: {type: "boolean" as const, value: file.isNewFile},
+  };
 }

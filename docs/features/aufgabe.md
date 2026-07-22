@@ -82,9 +82,18 @@ features/task_builder/
 | `readEmail`             | **E-Mail lesen**             | Liest Absender, Betreff, Nachricht und Ankunftszeit aus dem Run-Event | Interner `executeReadEmailNode`                |
 | `readChannelEvent`      | **Nachricht lesen**          | Liest E-Mail-, WhatsApp- oder SMS-Events abhängig von `kind`  | Interner Channel-Event-Executor                       |
 | `sendChannelMessage`    | **Nachricht senden**         | Sendet WhatsApp, SMS oder E-Mail über einen verbundenen novooa-Kanal | Interner Channel-Send-Executor                         |
-| `toolCall`              | **Werkzeug-Aufruf**          | Strukturierte Tool-Invocation (z. B. Suche, E-Mail, Kalender) | `ai.generate({tools: […]})`                           |
+| `toolCall`              | **Werkzeug-Aufruf**          | Strukturierte Tool-Invocation (z. B. Suche, E-Mail, Kalender) | Geplant; noch kein Backend-Executor                   |
 | `humanApproval`         | **Freigabe**                 | Hält den Flow an, bis ein Mensch bestätigt                    | Interner `executeHumanApprovalNode`                   |
-| `validation`            | **Validierung**              | Schema- / Wertebereichsprüfung auf Output eines Knotens       | `z.object(...).safeParse()`                           |
+| `validation`            | **Validierung**              | Schema- / Wertebereichsprüfung auf Output eines Knotens       | Geplant; noch kein Backend-Executor                   |
+
+### Outputs von „Datei schreiben“
+
+Der Baustein bewahrt den bisherigen JSON-Textoutput in `text` für kompatible
+Folgeknoten. Zusätzlich stellt er die Datei-Metadaten als strukturierte Outputs
+bereit: `fileId`, `versionId`, `storagePath`, `displayName`, `contentType`,
+`sizeBytes`, `folderId` und `isNewFile`. Bei einem Referenznamen `bericht`
+können Folgeknoten etwa `{{bericht.fileId}}` oder `{{bericht.storagePath}}`
+verwenden.
 
 Beim Erweitern der Enum müssen Label, Beschreibung und Genkit-Mapping
 synchron ergänzt werden — die `WorkflowPrimitiveLabels`-Extension in
