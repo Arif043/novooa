@@ -1,15 +1,29 @@
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 
+import 'python_syntax_parser.dart';
+import 'python_syntax_parser_contract.dart';
+
 class PythonAnalyzer extends AbstractAnalyzer {
-  const PythonAnalyzer();
+  PythonAnalyzer({PythonSyntaxParser? syntaxParser})
+    : _syntaxParser = syntaxParser ?? createPythonSyntaxParser();
+
+  final PythonSyntaxParser _syntaxParser;
 
   @override
   Future<AnalysisResult> analyze(Code code) async {
     final defaultResult = await const DefaultLocalAnalyzer().analyze(code);
-    final issues = [...defaultResult.issues, ..._indentationIssues(code.text)]
-      ..sort(issueLineComparator);
+    final syntaxIssues = await _syntaxParser.analyze(code.text);
+    final issues = [
+      ...defaultResult.issues,
+      ..._indentationIssues(code.text),
+      ...syntaxIssues.map(_issueFor),
+    ]..sort(issueLineComparator);
     return AnalysisResult(issues: issues);
   }
+}
+
+Issue _issueFor(PythonSyntaxIssue issue) {
+  return Issue(line: issue.line, message: issue.message, type: IssueType.error);
 }
 
 List<Issue> _indentationIssues(String source) {

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import 'package:flutter_highlight/themes/atom-one-light.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:highlight/languages/python.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
@@ -32,11 +33,7 @@ class _ScriptWidgetState extends State<ScriptWidget> {
   @override
   void initState() {
     super.initState();
-    _controller = CodeController(
-      text: _config.script,
-      language: python,
-      analyzer: const PythonAnalyzer(),
-    );
+    _controller = CodeController(text: _config.script, language: python, analyzer: PythonAnalyzer());
   }
 
   @override
@@ -63,16 +60,16 @@ class _ScriptWidgetState extends State<ScriptWidget> {
           const SizedBox(height: AppSpacing.xs),
           CodeTheme(
             data: CodeThemeData(
-              styles: Theme.of(context).brightness == Brightness.dark
-                  ? atomOneDarkTheme
-                  : atomOneLightTheme,
+              styles: Theme.of(context).brightness == Brightness.dark ? atomOneDarkTheme : atomOneLightTheme,
             ),
             child: CodeField(
               controller: _controller,
               minLines: 6,
               maxLines: 12,
               wrap: false,
+              textStyle: GoogleFonts.jetBrainsMono(),
               gutterStyle: GutterStyle(
+                textStyle: GoogleFonts.jetBrainsMono(color: ColorScheme.of(context).tertiary),
                 showErrors: true,
                 showLineNumbers: true,
                 showFoldingHandles: true,
@@ -82,11 +79,7 @@ class _ScriptWidgetState extends State<ScriptWidget> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          NodeFileAttachmentSection(
-            attachments: _config.attachments,
-            onAttach: _attachFile,
-            onDetach: _detachFile,
-          ),
+          NodeFileAttachmentSection(attachments: _config.attachments, onAttach: _attachFile, onDetach: _detachFile),
         ],
       ),
     );
@@ -105,16 +98,10 @@ class _ScriptWidgetState extends State<ScriptWidget> {
   }
 
   void _attachFile(NodeAttachment attachment) {
-    context.read<TaskBuilderCubit>().attachNodeFile(
-      nodeId: widget.node.id,
-      attachment: attachment,
-    );
+    context.read<TaskBuilderCubit>().attachNodeFile(nodeId: widget.node.id, attachment: attachment);
   }
 
   void _detachFile(String attachmentId) {
-    context.read<TaskBuilderCubit>().detachNodeFile(
-      nodeId: widget.node.id,
-      attachmentId: attachmentId,
-    );
+    context.read<TaskBuilderCubit>().detachNodeFile(nodeId: widget.node.id, attachmentId: attachmentId);
   }
 }

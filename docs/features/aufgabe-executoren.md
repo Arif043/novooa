@@ -43,6 +43,11 @@ Das Limit betraegt fuenf Sekunden und 10 KB Output. Script-Variablen bleiben
 innerhalb desselben Runs erhalten und stehen spaeteren Scripts wieder zur
 Verfuegung.
 
+Im Web-Editor prüft Tree-sitter mit einer lokal ausgelieferten Python-Wasm-
+Grammatik die Syntax und zeigt Fehler im Gutter. Diese Prüfung läuft vollständig
+im Browser, führt keinen Code aus und ersetzt keine Laufzeitprüfung des
+Script-Executors.
+
 ```python
 files
 list_files()
