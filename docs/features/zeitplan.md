@@ -198,7 +198,7 @@ Die Function:
    `eventConfig.channelId` setzt, wird nur dieser Team-Kanal berücksichtigt.
 
 Provider-Adapter normalisieren Rohdaten vor dem Dispatch in konkrete
-Syscat-Eventtypen:
+novooa-Eventtypen:
 
 ```ts
 type EmailReceivedEvent = {

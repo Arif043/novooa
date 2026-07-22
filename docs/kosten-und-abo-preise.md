@@ -2,7 +2,7 @@
 
 ## Erste Kostenabschaetzung
 
-Grob: Syscat ist bei kleiner Nutzung fast kostenlos auf Firebase-Seite; die
+Grob: novooa ist bei kleiner Nutzung fast kostenlos auf Firebase-Seite; die
 echten Kostentreiber werden KI-Tokens und spaeter Twilio-Nachrichten.
 Firestore-Writes durch Auto-Save sind preislich nicht riesig, aber ohne
 Debounce unnoetig ineffizient und koennen schnell Free-Quota/Realtimereads
@@ -107,7 +107,7 @@ Quellen:
 
 ## Moegliche Abo-Preise
 
-Syscat sollte nicht rein per Seat bepreist werden, sondern als Hybrid:
+novooa sollte nicht rein per Seat bepreist werden, sondern als Hybrid:
 
 **Abo + inkludierte Ausfuehrungen/KI-Credits + harte Limits fuer Twilio/Storage.**
 
@@ -122,7 +122,7 @@ vielen Prompt-Nodes, Dateien und WhatsApp-Nachrichten kann schnell teuer werden.
 - Zapier Agents: Pro ca. 33,33 USD/Monat jaehrlich.
 - Reclaim: Free + teamorientierte Plaene.
 
-### Vorschlag fuer Syscat MVP
+### Vorschlag fuer novooa MVP
 
 | Plan | Preis | Zielgruppe | Enthalten |
 | --- | ---: | --- | --- |
@@ -180,6 +180,6 @@ Jaehrlich: 2 Monate Rabatt, also ca. 190 EUR, 390 EUR, 790 EUR, 1.990 EUR.
 
 ### Warum nicht niedriger?
 
-Syscat ist kein simples Notiztool. Es kombiniert Automation, KI, Dateien,
+novooa ist kein simples Notiztool. Es kombiniert Automation, KI, Dateien,
 Trigger, Team-Freigaben und spaeter Kommunikation. Unter 19 EUR/Monat wird es
 schwer, KI-Nutzung, Support und Produktkomplexitaet sinnvoll abzubilden.

@@ -46,7 +46,7 @@ class _SidebarHeader extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            'Syscat Vault',
+            'novooa Vault',
             style: Theme.of(context).textTheme.titleLarge,
           ),
         ),

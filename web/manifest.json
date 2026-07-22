@@ -1,11 +1,11 @@
 {
-    "name": "syscat2",
-    "short_name": "syscat2",
+    "name": "novooa",
+    "short_name": "novooa",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "novooa automatisiert wiederkehrende Wissensarbeit.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

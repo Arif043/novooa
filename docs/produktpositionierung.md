@@ -2,7 +2,7 @@
 
 ## USP
 
-Syscat ist ein KI-Automation-Builder fuer Nicht-Techniker, der Aufgaben wie
+novooa ist ein KI-Automation-Builder fuer Nicht-Techniker, der Aufgaben wie
 verstaendliche Routinen aussehen laesst, aber im Hintergrund echte Workflow-,
 Datei-, Wissens- und Kommunikationsautomatisierung ausfuehrt.
 
@@ -10,7 +10,7 @@ Kurz gesagt:
 
 **Zapier/n8n fuer KI-Arbeit, aber so einfach wie Samsung Routines.**
 
-## Was Syscat besonders macht
+## Was novooa besonders macht
 
 ### Routine statt Engineering-Workflow
 
@@ -21,7 +21,7 @@ Nutzer bauen keine technischen Automations-Flows, sondern Aufgaben:
 
 ### KI-first statt API-first
 
-n8n/Zapier starten oft bei Integrationen. Syscat startet bei Denk- und
+n8n/Zapier starten oft bei Integrationen. novooa startet bei Denk- und
 Arbeitsprozessen:
 
 - lesen
@@ -45,7 +45,7 @@ Entscheidungen.
 ### Kommunikation als Trigger und Aktion
 
 E-Mail, WhatsApp, SMS usw. koennen spaeter nicht nur Ausloeser sein, sondern
-auch Teil eines Arbeitsprozesses werden. Dadurch wird Syscat eher ein
+auch Teil eines Arbeitsprozesses werden. Dadurch wird novooa eher ein
 AI-Operations-Assistant als nur ein Automations-Tool.
 
 ### Team-orientiert von Anfang an
@@ -55,5 +55,5 @@ passt besser zu echter Arbeit als rein persoenliche Automationen.
 
 ## Praegnante Positionierung
 
-**Syscat automatisiert wiederkehrende Wissensarbeit mit KI, Dateien, Freigaben
+**novooa automatisiert wiederkehrende Wissensarbeit mit KI, Dateien, Freigaben
 und Kommunikation in einer Oberflaeche, die auch Nicht-Entwickler verstehen.**

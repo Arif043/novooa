@@ -70,7 +70,7 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
     if (task == null) return;
     logSyscatInfo(
       'Run-Button startet Aufgabe: ${task.id}',
-      name: 'syscat.task_builder',
+      name: 'novooa.task_builder',
     );
     final taskRunOrFailure = await serviceLocator<ExecuteTask>()(
       ExecuteTaskParams(task: task),
@@ -84,14 +84,14 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
   void _logRunStarted(String runId) {
     logSyscatInfo(
       'Run-Button: Aufgabe im Hintergrund gestartet: $runId',
-      name: 'syscat.task_builder',
+      name: 'novooa.task_builder',
     );
   }
 
   void _logRunFailed(String message) {
     logSyscatInfo(
       'Run-Button: Aufgabe fehlgeschlagen: $message',
-      name: 'syscat.task_builder',
+      name: 'novooa.task_builder',
     );
   }
 }

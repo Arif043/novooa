@@ -1,6 +1,6 @@
 # Architecture
 
-Cross-cutting Themen für Syscat. Feature-spezifische Inhalte liegen in
+Cross-cutting Themen für novooa. Feature-spezifische Inhalte liegen in
 [`features/`](./features/).
 
 ## Schichten

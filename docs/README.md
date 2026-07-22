@@ -1,6 +1,6 @@
 # Docs
 
-Projektdokumentation für Syscat. Diese Docs sind **feature-first** organisiert:
+Projektdokumentation für novooa. Diese Docs sind **feature-first** organisiert:
 pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
 [`architecture.md`](./architecture.md).
 

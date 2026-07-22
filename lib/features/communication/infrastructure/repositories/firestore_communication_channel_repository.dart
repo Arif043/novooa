@@ -67,7 +67,7 @@ class FirestoreCommunicationChannelRepository
     );
     await callable.call<void>({
       'channelId': channelId,
-      'body': 'Testnachricht aus Syscat',
+      'body': 'Testnachricht aus novooa',
     });
   }
 

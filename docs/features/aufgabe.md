@@ -1,6 +1,6 @@
 # Feature: Aufgabe
 
-> Der Task Builder ist das Herzstueck von Syscat. Nutzer:innen bauen
+> Der Task Builder ist das Herzstueck von novooa. Nutzer:innen bauen
 > Automatisierungen aus Bausteinen zusammen.
 
 Verwandt: [`../architecture.md`](../architecture.md) ·

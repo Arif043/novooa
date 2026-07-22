@@ -5,9 +5,9 @@
 
 ---
 
-## 1. Was ist Syscat?
+## 1. Was ist novooa?
 
-**Syscat** ist ein AI-Automation-System. Nutzer:innen kombinieren Bausteine
+**novooa** ist ein AI-Automation-System. Nutzer:innen kombinieren Bausteine
 (Prompts, Bedingungen, Tool-Aufrufe, Validierungen, Freigaben) zu **Aufgaben**
 (Workflows), die über **Genkit**-Flows in der Cloud ausgeführt werden.
 

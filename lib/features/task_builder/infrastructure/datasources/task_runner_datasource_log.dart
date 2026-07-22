@@ -17,4 +17,4 @@ void logTaskRunnerDatasourceInfo(String message) {
   logSyscatInfo(message, name: _loggerName);
 }
 
-const _loggerName = 'syscat.task_runner_datasource';
+const _loggerName = 'novooa.task_runner_datasource';

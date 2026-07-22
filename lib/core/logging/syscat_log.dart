@@ -1,6 +1,6 @@
 import 'dart:developer' as developer;
 
-void logSyscatInfo(String message, {String name = 'syscat'}) {
+void logSyscatInfo(String message, {String name = 'novooa'}) {
   // Keep local diagnostics visible across Flutter run targets.
   // ignore: avoid_print
   print('[$name] $message');
@@ -11,7 +11,7 @@ void logSyscatException({
   required String message,
   required Object error,
   StackTrace? stackTrace,
-  String name = 'syscat',
+  String name = 'novooa',
 }) {
   final text = '[$name] $message\n$error';
   // ignore: avoid_print

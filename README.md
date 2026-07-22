@@ -1,6 +1,6 @@
-# syscat2
+# novooa
 
-A new Flutter project.
+novooa automatisiert wiederkehrende Wissensarbeit mit KI.
 
 ## Getting Started
 
