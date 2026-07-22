@@ -1,0 +1,17 @@
+[
+  {
+    "origin": [
+      "https://app.novooa.de",
+      "https://syscat-90bff.web.app",
+      "http://localhost:55913"
+    ],
+    "method": ["GET", "HEAD"],
+    "responseHeader": [
+      "Content-Type",
+      "Content-Length",
+      "Content-Range",
+      "X-Firebase-Storage-Token"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]
