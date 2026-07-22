@@ -6,72 +6,68 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 
-class NodeReferenceNameField extends StatefulWidget {
+class NodeReferenceNameField extends StatelessWidget {
   const NodeReferenceNameField({super.key, required this.node});
 
   final WorkflowNode node;
 
   @override
-  State<NodeReferenceNameField> createState() => _NodeReferenceNameFieldState();
-}
-
-class _NodeReferenceNameFieldState extends State<NodeReferenceNameField> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.node.referenceName);
-  }
-
-  @override
-  void didUpdateWidget(NodeReferenceNameField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _syncController(widget.node.referenceName);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: AppSpacing.section * 2,
-      child: TextField(
-        controller: _controller,
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
-        ],
-        decoration: const InputDecoration(
-          isDense: true,
-          prefixText: '{{',
-          suffixText: '.*}}',
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.xs,
-          ),
-        ),
-        style: Theme.of(context).textTheme.labelMedium,
-        onChanged: _updateReferenceName,
+    final referenceName = node.referenceName.trim();
+    if (referenceName.isEmpty) return const SizedBox.shrink();
+    return Tooltip(
+      message: 'Referenzname bearbeiten',
+      child: InputChip(
+        avatar: const Icon(Icons.data_object_outlined, size: AppSpacing.md),
+        label: Text('{{${node.referenceName}.*}}'),
+        onPressed: () => _showEditor(context),
       ),
     );
   }
 
-  void _updateReferenceName(String value) {
+  Future<void> _showEditor(BuildContext context) async {
+    final controller = TextEditingController(text: node.referenceName);
+    final referenceName = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => _ReferenceNameDialog(controller: controller),
+    );
+    controller.dispose();
+    if (!context.mounted || referenceName == null) return;
     context.read<TaskBuilderCubit>().updateNodeReferenceName(
-      widget.node.id,
-      value,
+      node.id,
+      referenceName,
     );
   }
+}
 
-  void _syncController(String referenceName) {
-    if (_controller.text == referenceName) return;
-    _controller.value = _controller.value.copyWith(
-      text: referenceName,
-      selection: TextSelection.collapsed(offset: referenceName.length),
+class _ReferenceNameDialog extends StatelessWidget {
+  const _ReferenceNameDialog({required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Referenzname'),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
+        ],
+        decoration: const InputDecoration(hintText: 'zum_beispiel_bericht'),
+        onSubmitted: (value) => Navigator.pop(context, value),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Abbrechen'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, controller.text),
+          child: const Text('Speichern'),
+        ),
+      ],
     );
   }
 }

@@ -7,6 +7,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/conditional_p
 import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_reference_name_field.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_output_chips.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_email_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_file_widget.dart';
@@ -69,19 +70,28 @@ class NodeGraphItem extends StatelessWidget {
   }
 
   Widget _content(BuildContext context) {
-    return Stack(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: AppSpacing.xxl),
+              child: _nodeWidget(),
+            ),
+            if (!isDragActive) ..._nodeActions(context),
+            Positioned(
+              top: 0,
+              bottom: 0,
+              left: 0,
+              width: AppSpacing.xxl,
+              child: _dragStrip(context),
+            ),
+          ],
+        ),
         Padding(
           padding: const EdgeInsets.only(left: AppSpacing.xxl),
-          child: _nodeWidget(),
-        ),
-        if (!isDragActive) ..._nodeActions(context),
-        Positioned(
-          top: 0,
-          bottom: 0,
-          left: 0,
-          width: AppSpacing.xxl,
-          child: _dragStrip(context),
+          child: NodeOutputChips(node: node),
         ),
       ],
     );
