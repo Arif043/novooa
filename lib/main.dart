@@ -13,6 +13,7 @@ import 'core/routing/app_router.dart';
 import 'core/theme/syscat_theme.dart';
 import 'features/auth/presentation/cubits/auth_session_cubit.dart';
 import 'features/notifications/infrastructure/services/fcm_bootstrapper.dart';
+import 'features/notifications/presentation/widgets/fcm_foreground_notification_listener.dart';
 import 'firebase_options.dart';
 
 @pragma('vm:entry-point')
@@ -56,7 +57,20 @@ class MyApp extends StatelessWidget {
         darkTheme: SyscatTheme.darkTheme,
         themeMode: ThemeMode.system,
         routerConfig: serviceLocator<AppRouter>().router,
+        builder: (context, child) => FcmForegroundNotificationListener(
+          onNotificationOpened: _openNotification,
+          child: child ?? const SizedBox.shrink(),
+        ),
       ),
     );
   }
+}
+
+void _openNotification(RemoteMessage message) {
+  final runId = message.data['runId'];
+  final location = Uri(
+    path: AppRouter.activity,
+    queryParameters: runId == null ? null : {'runId': runId},
+  );
+  serviceLocator<AppRouter>().router.go(location.toString());
 }

@@ -37,6 +37,14 @@
     if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
       self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('firebase-messaging-sw.js', {
+          scope: '/firebase-cloud-messaging-push-scope',
+        });
+      });
+    }
   </script>
   <script type="module" src="python_parser/python_parser_bridge.js"></script>
   <!--

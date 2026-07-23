@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../../../core/logging/syscat_log.dart';
 import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
@@ -22,7 +21,6 @@ class FcmBootstrapper {
   final UnregisterNotificationDevice _unregisterDevice;
   StreamSubscription<AuthUser?>? _authSubscription;
   StreamSubscription<String>? _tokenSubscription;
-  StreamSubscription<RemoteMessage>? _messageSubscription;
   AuthUser? _currentUser;
   String? _currentToken;
 
@@ -32,13 +30,11 @@ class FcmBootstrapper {
     _tokenSubscription = _tokenProvider.tokenRefreshes.listen(
       _saveRefreshedToken,
     );
-    _messageSubscription = FirebaseMessaging.onMessage.listen(_logMessage);
   }
 
   Future<void> dispose() async {
     await _authSubscription?.cancel();
     await _tokenSubscription?.cancel();
-    await _messageSubscription?.cancel();
   }
 
   Future<void> _registerFor(AuthUser? user) async {
@@ -106,12 +102,5 @@ class FcmBootstrapper {
         name: 'fcm',
       );
     }
-  }
-
-  void _logMessage(RemoteMessage message) {
-    logSyscatInfo(
-      'Foreground-Nachricht: ${message.messageId ?? message.data}',
-      name: 'fcm',
-    );
   }
 }

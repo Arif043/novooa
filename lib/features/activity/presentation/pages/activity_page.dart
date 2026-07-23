@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,16 +9,19 @@ import '../../domain/entities/task_run.dart';
 import '../cubits/activity_cubit.dart';
 import '../cubits/activity_state.dart';
 import '../widgets/approval_run_grid.dart';
+import '../widgets/approval_review_dialog.dart';
 import '../widgets/activity_tab_content.dart';
 
 class ActivityPage extends StatelessWidget {
-  const ActivityPage({super.key});
+  const ActivityPage({super.key, this.initialRunId});
+
+  final String? initialRunId;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => serviceLocator<ActivityCubit>()..load(),
-      child: const _ActivityView(),
+      child: _ActivityView(initialRunId: initialRunId),
     );
   }
 }
@@ -24,7 +29,9 @@ class ActivityPage extends StatelessWidget {
 enum TaskActivityFilter { approvalRequired, denied, running, history }
 
 class _ActivityView extends StatefulWidget {
-  const _ActivityView();
+  const _ActivityView({this.initialRunId});
+
+  final String? initialRunId;
 
   @override
   State<_ActivityView> createState() => _ActivityViewState();
@@ -32,10 +39,12 @@ class _ActivityView extends StatefulWidget {
 
 class _ActivityViewState extends State<_ActivityView> {
   var filter = TaskActivityFilter.approvalRequired;
+  var _openedInitialRun = false;
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ActivityCubit, ActivityState>(
+    return BlocConsumer<ActivityCubit, ActivityState>(
+      listener: _openInitialApproval,
       builder: (context, state) {
         return Column(
           children: [
@@ -61,6 +70,27 @@ class _ActivityViewState extends State<_ActivityView> {
         );
       },
     );
+  }
+
+  void _openInitialApproval(BuildContext context, ActivityState state) {
+    if (_openedInitialRun || state.status != ActivityLoadStatus.ready) return;
+    final run = _waitingRun(state.runs, widget.initialRunId);
+    if (run == null) return;
+    _openedInitialRun = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(ApprovalReviewDialog.show(context, run));
+    });
+  }
+
+  TaskRun? _waitingRun(List<TaskRun> runs, String? runId) {
+    if (runId == null) return null;
+    for (final run in runs) {
+      if (run.id.value == runId &&
+          run.status == TaskRunStatus.waitingForApproval) {
+        return run;
+      }
+    }
+    return null;
   }
 }
 

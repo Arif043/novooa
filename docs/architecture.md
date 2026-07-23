@@ -101,6 +101,9 @@ HITL-Freigaben werden ebenfalls als Notification (`taskRunApproval`) unter den
 Team-Mitgliedern verteilt, lösen zusätzlich einen FCM-Push aus und öffnen im
 Client den Freigabe-Dialog. Nicht mehr registrierte Geräte-Tokens entfernt das
 Backend nach einer fehlgeschlagenen Zustellung.
+Im Flutter-Web-Client verarbeitet `firebase-messaging-sw.js` Hintergrund-Pushes
+und öffnet beim Klick die Aktivitätenansicht. Im Vordergrund erscheint dieselbe
+Benachrichtigung als Snackbar.
 
 Kommunikationskanäle werden im Client unter
 `Einstellungen > Kommunikation` gepflegt und bleiben bewusst team-scoped.

@@ -70,7 +70,8 @@ class AppRouter {
           ),
           GoRoute(
             path: activity,
-            builder: (context, state) => const ActivityPage(),
+            builder: (context, state) =>
+                ActivityPage(initialRunId: state.uri.queryParameters['runId']),
           ),
           GoRoute(path: files, builder: (context, state) => const FilesPage()),
           GoRoute(
