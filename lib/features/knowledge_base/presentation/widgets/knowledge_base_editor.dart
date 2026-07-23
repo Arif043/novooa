@@ -53,7 +53,7 @@ class _KnowledgeBaseEditorState extends State<KnowledgeBaseEditor> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _EditorToolbar(note: widget.note),
+            const _EditorToolbar(),
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: _titleController,
@@ -86,36 +86,12 @@ class _KnowledgeBaseEditorState extends State<KnowledgeBaseEditor> {
 }
 
 class _EditorToolbar extends StatelessWidget {
-  const _EditorToolbar({required this.note});
-
-  final KnowledgeNote note;
+  const _EditorToolbar();
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        SegmentedButton<KnowledgeNoteType>(
-          segments: const [
-            ButtonSegment(
-              value: KnowledgeNoteType.atomic,
-              icon: Icon(Icons.notes_outlined),
-              label: Text('Atomar'),
-            ),
-            ButtonSegment(
-              value: KnowledgeNoteType.moc,
-              icon: Icon(Icons.account_tree_outlined),
-              label: Text('MOC'),
-            ),
-          ],
-          selected: {
-            note.type == KnowledgeNoteType.moc
-                ? note.type
-                : KnowledgeNoteType.atomic,
-          },
-          onSelectionChanged: (value) {
-            context.read<KnowledgeBaseCubit>().updateType(value.first);
-          },
-        ),
         const Spacer(),
         IconButton(
           tooltip: 'Notiz löschen',

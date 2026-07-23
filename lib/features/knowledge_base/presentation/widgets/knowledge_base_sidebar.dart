@@ -110,18 +110,10 @@ class _NoteTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       selected: selected,
-      leading: Icon(_iconFor(note.type)),
+      leading: const Icon(Icons.note_outlined),
       title: Text(note.title, overflow: TextOverflow.ellipsis),
       subtitle: Text(note.path, overflow: TextOverflow.ellipsis),
       onTap: () => context.read<KnowledgeBaseCubit>().selectNote(note.id),
     );
   }
-}
-
-IconData _iconFor(KnowledgeNoteType type) {
-  return switch (type) {
-    KnowledgeNoteType.atomic => Icons.notes_outlined,
-    KnowledgeNoteType.moc => Icons.account_tree_outlined,
-    KnowledgeNoteType.unknown => Icons.article_outlined,
-  };
 }

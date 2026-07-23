@@ -68,13 +68,11 @@ class _NodeDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final size = selected
-        ? 18.0
-        : (note.type == KnowledgeNoteType.moc ? 15.0 : 12.0);
+    const size = 14.0;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 160),
-      width: size,
-      height: size,
+      width: selected ? 18.0 : size,
+      height: selected ? 18.0 : size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: selected

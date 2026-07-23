@@ -12,6 +12,11 @@ const maxDepth = 5;
 
 export type PreparedKnowledgeAttachment = KnowledgeAttachment & {
   filename: string;
+  isDirectAttachment: boolean;
+};
+
+type ResolvedKnowledgeNote = KnowledgeNoteDocument & {
+  isDirectAttachment: boolean;
 };
 
 export async function prepareKnowledgeFiles(
@@ -39,31 +44,51 @@ class KnowledgeNoteResolver {
 
   async resolveAll(
     attachments: KnowledgeAttachment[],
-  ): Promise<KnowledgeNoteDocument[]> {
-    const notes: KnowledgeNoteDocument[] = [];
+  ): Promise<ResolvedKnowledgeNote[]> {
+    const notes: ResolvedKnowledgeNote[] = [];
     const visited = new Set<string>();
     for (const attachment of attachments) {
-      await this.resolveAttachment(attachment, notes, visited, 0);
+      await this.resolveAttachment(attachment, notes, visited, 0, true);
     }
     return notes.slice(0, maxNotes);
   }
 
   private async resolveAttachment(
     attachment: KnowledgeAttachment,
-    notes: KnowledgeNoteDocument[],
+    notes: ResolvedKnowledgeNote[],
     visited: Set<string>,
     depth: number,
+    isDirectAttachment: boolean,
   ): Promise<void> {
-    if (depth > maxDepth || notes.length >= maxNotes) return;
     const key = `${attachment.knowledgeBaseId}/${attachment.noteId}`;
-    if (visited.has(key)) return;
+    if (visited.has(key)) {
+      return this.markDirectAttachment(notes, key, isDirectAttachment);
+    }
+    if (depth > maxDepth || notes.length >= maxNotes) return;
     visited.add(key);
     const note = await this.store.loadNote(this.teamId, attachment);
-    notes.push(note);
-    if (note.type !== "moc") return;
+    notes.push({...note, isDirectAttachment});
     for (const noteId of note.outgoingLinks) {
-      await this.resolveAttachment({...note, noteId}, notes, visited, depth + 1);
+      await this.resolveAttachment(
+        {...note, noteId},
+        notes,
+        visited,
+        depth + 1,
+        false,
+      );
     }
+  }
+
+  private markDirectAttachment(
+    notes: ResolvedKnowledgeNote[],
+    key: string,
+    isDirectAttachment: boolean,
+  ): void {
+    if (!isDirectAttachment) return;
+    const note = notes.find(
+      (item) => `${item.knowledgeBaseId}/${item.noteId}` === key,
+    );
+    if (note) note.isDirectAttachment = true;
   }
 }
 
@@ -82,7 +107,7 @@ async function writeKnowledgeManifest(
   const manifest = notes.map((note) => ({
     noteId: note.noteId,
     title: note.title,
-    type: note.type,
+    isDirectAttachment: note.isDirectAttachment,
     path: note.filename,
     originalPath: note.path,
   }));
@@ -93,7 +118,7 @@ async function writeKnowledgeManifest(
 }
 
 function preparedNote(
-  note: KnowledgeNoteDocument,
+  note: ResolvedKnowledgeNote,
   index: number,
 ): PreparedKnowledgeAttachment & {content: string} {
   return {

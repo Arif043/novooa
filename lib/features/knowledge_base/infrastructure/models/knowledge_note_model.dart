@@ -9,7 +9,6 @@ class KnowledgeNoteModel {
     required this.title,
     required this.path,
     required this.content,
-    required this.type,
     required this.outgoingLinks,
     required this.updatedAt,
   });
@@ -19,7 +18,6 @@ class KnowledgeNoteModel {
   final String title;
   final String path;
   final String content;
-  final KnowledgeNoteType type;
   final List<String> outgoingLinks;
   final DateTime updatedAt;
 
@@ -33,7 +31,6 @@ class KnowledgeNoteModel {
       title: data['title'] as String? ?? snapshot.id,
       path: data['path'] as String? ?? '${snapshot.id}.md',
       content: data['content'] as String? ?? '',
-      type: _typeFrom(data['type']),
       outgoingLinks: _stringListFrom(data['outgoingLinks']),
       updatedAt: _dateFrom(data['updatedAt']),
     );
@@ -46,16 +43,8 @@ class KnowledgeNoteModel {
       title: title,
       path: path,
       content: content,
-      type: type,
       outgoingLinks: outgoingLinks,
       updatedAt: updatedAt,
-    );
-  }
-
-  static KnowledgeNoteType _typeFrom(Object? value) {
-    return KnowledgeNoteType.values.firstWhere(
-      (type) => type.name == value,
-      orElse: () => KnowledgeNoteType.unknown,
     );
   }
 

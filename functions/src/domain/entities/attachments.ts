@@ -1,5 +1,3 @@
-export type KnowledgeNoteType = "atomic" | "moc" | "unknown";
-
 export type NodeAttachment = {
   id: string;
   storagePath: string;
@@ -15,7 +13,6 @@ export type KnowledgeAttachment = {
   noteId: string;
   title: string;
   path: string;
-  type: KnowledgeNoteType;
 };
 
 export type SkillAttachment = {

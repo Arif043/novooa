@@ -477,7 +477,6 @@ const _knowledgeAttachment = KnowledgeAttachment(
   noteId: 'note.1',
   title: 'Index',
   path: 'index.md',
-  type: KnowledgeAttachmentType.moc,
 );
 
 const _skillAttachment = SkillAttachment(

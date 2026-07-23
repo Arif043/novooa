@@ -1,15 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-enum KnowledgeNoteType {
-  atomic('Atomare Notiz'),
-  moc('MOC'),
-  unknown('Notiz');
-
-  const KnowledgeNoteType(this.label);
-
-  final String label;
-}
-
 class KnowledgeNote extends Equatable {
   const KnowledgeNote({
     required this.id,
@@ -17,7 +7,6 @@ class KnowledgeNote extends Equatable {
     required this.title,
     required this.path,
     required this.content,
-    required this.type,
     required this.outgoingLinks,
     required this.updatedAt,
   });
@@ -27,7 +16,6 @@ class KnowledgeNote extends Equatable {
   final String title;
   final String path;
   final String content;
-  final KnowledgeNoteType type;
   final List<String> outgoingLinks;
   final DateTime updatedAt;
 
@@ -39,7 +27,6 @@ class KnowledgeNote extends Equatable {
       title,
       path,
       content,
-      type,
       outgoingLinks,
       updatedAt,
     ];
@@ -49,7 +36,6 @@ class KnowledgeNote extends Equatable {
     String? title,
     String? path,
     String? content,
-    KnowledgeNoteType? type,
     List<String>? outgoingLinks,
     DateTime? updatedAt,
   }) {
@@ -59,7 +45,6 @@ class KnowledgeNote extends Equatable {
       title: title ?? this.title,
       path: path ?? this.path,
       content: content ?? this.content,
-      type: type ?? this.type,
       outgoingLinks: outgoingLinks ?? this.outgoingLinks,
       updatedAt: updatedAt ?? this.updatedAt,
     );

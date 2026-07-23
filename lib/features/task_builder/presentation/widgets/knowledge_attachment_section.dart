@@ -119,7 +119,7 @@ class _AttachmentTile extends StatelessWidget {
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
-      leading: Icon(_iconFor(attachment.type)),
+      leading: const Icon(Icons.note_outlined),
       title: Text(attachment.title, overflow: TextOverflow.ellipsis),
       subtitle: Text(_metadataFor(attachment)),
       trailing: IconButton(
@@ -154,7 +154,7 @@ class _PickerSheet extends StatelessWidget {
           final selected = selectedIds.contains(note.id);
           return ListTile(
             enabled: !selected,
-            leading: Icon(selected ? Icons.check_circle : _iconFor(note.type)),
+            leading: Icon(selected ? Icons.check_circle : Icons.note_outlined),
             title: Text(note.title),
             subtitle: Text(_metadataFor(note)),
             onTap: selected ? null : () => _select(context, note),
@@ -170,22 +170,6 @@ class _PickerSheet extends StatelessWidget {
   }
 }
 
-IconData _iconFor(KnowledgeAttachmentType type) {
-  return switch (type) {
-    KnowledgeAttachmentType.moc => Icons.account_tree_outlined,
-    KnowledgeAttachmentType.atomic => Icons.notes_outlined,
-    KnowledgeAttachmentType.unknown => Icons.article_outlined,
-  };
-}
-
 String _metadataFor(KnowledgeAttachment attachment) {
-  return '${_typeLabelFor(attachment.type)} · ${attachment.path}';
-}
-
-String _typeLabelFor(KnowledgeAttachmentType type) {
-  return switch (type) {
-    KnowledgeAttachmentType.atomic => 'Atomare Notiz',
-    KnowledgeAttachmentType.moc => 'MOC',
-    KnowledgeAttachmentType.unknown => 'Notiz',
-  };
+  return attachment.path;
 }

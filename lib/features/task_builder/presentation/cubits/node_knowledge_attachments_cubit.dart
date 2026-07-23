@@ -61,16 +61,7 @@ class NodeKnowledgeAttachmentsCubit
       noteId: note.id,
       title: note.title,
       path: note.path,
-      type: _attachmentTypeFor(note.type),
     );
-  }
-
-  KnowledgeAttachmentType _attachmentTypeFor(KnowledgeNoteType type) {
-    return switch (type) {
-      KnowledgeNoteType.atomic => KnowledgeAttachmentType.atomic,
-      KnowledgeNoteType.moc => KnowledgeAttachmentType.moc,
-      KnowledgeNoteType.unknown => KnowledgeAttachmentType.unknown,
-    };
   }
 
   void _emitFailure(String message) {

@@ -93,7 +93,6 @@ class _Metadata extends StatelessWidget {
         Text('Eigenschaften', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: AppSpacing.sm),
         _MetaRow(label: 'Pfad', value: note.path),
-        _MetaRow(label: 'Typ', value: note.type.label),
         _MetaRow(label: 'Links', value: '${note.outgoingLinks.length}'),
       ],
     );

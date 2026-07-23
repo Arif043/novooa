@@ -104,7 +104,6 @@ class FirestoreKnowledgeBaseRepository implements KnowledgeBaseRepository {
       'title': draft.title.trim(),
       'path': draft.path.trim(),
       'content': draft.content,
-      'type': draft.type.name,
       'outgoingLinks': draft.outgoingLinks,
       'updatedAt': FieldValue.serverTimestamp(),
     };

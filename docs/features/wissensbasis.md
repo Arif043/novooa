@@ -9,9 +9,8 @@ ein fachlicher Anhang an unterstützte Bausteine gehängt.
 ## Verantwortlichkeiten
 
 - Markdown-Notizen team-scoped in Firestore modellieren.
-- Atomare Notizen als einzelne Informationsbausteine bereitstellen.
-- MOC-Notizen als Einstiegspunkt in verlinkte Notizen behandeln.
-- Rekursive MOC-Auflösung serverseitig beim TaskRun durchführen.
+- Einheitliche Markdown-Notizen als Informationsbausteine bereitstellen.
+- Rekursive Link-Auflösung serverseitig beim TaskRun durchführen.
 - Genkit die aufgelösten Notizen über die Filesystem-Middleware bereitstellen.
 - Normale Dateien und Wissensbasis getrennt halten.
 - Eine Obsidian-ähnliche Arbeitsfläche für Lesen, Schreiben und Verlinken
@@ -33,7 +32,6 @@ Notizfelder:
 | `knowledgeBaseId` | `string`         | Aktuell `default`                              |
 | `title`           | `string`         | Anzeigename                                    |
 | `path`            | `string`         | Importierter Markdown-Pfad                     |
-| `type`            | `atomic\|moc`    | Einzelnotiz oder Map-of-Content                |
 | `content`         | `string`         | Markdown-Inhalt                                |
 | `outgoingLinks`   | `list<string>`   | Verlinkte Notiz-IDs                            |
 | `createdAt`       | `timestamp`      | Anlagezeitpunkt                                |
@@ -73,14 +71,15 @@ Unterstützte NodeConfigs speichern `knowledgeAttachments` zusätzlich zu
   "knowledgeBaseId": "default",
   "noteId": "note.1",
   "title": "Index",
-  "path": "index.md",
-  "type": "moc"
+  "path": "index.md"
 }
 ```
 
-Beim TaskRun lädt das Backend die referenzierten Notizen. Atomare Notizen werden
-nur einzeln bereitgestellt. MOC-Notizen werden inklusive indirekter Links
-rekursiv aufgelöst und unter `knowledge/` in den Genkit-Workspace geschrieben.
+Beim TaskRun lädt das Backend jede angehängte Notiz sowie ihre direkten und
+indirekten Links rekursiv unter `knowledge/` in den Genkit-Workspace. Der Prompt
+nennt ausschließlich die direkt angehängte Notiz. Verlinkte Notizen werden nicht
+als Prompt-Anhang aufgezählt; die KI entdeckt sie über die Links im Markdown und
+bei Bedarf über `knowledge/manifest.json`.
 
 ## Aktueller Scope
 

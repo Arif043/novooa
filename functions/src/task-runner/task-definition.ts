@@ -33,7 +33,6 @@ export const knowledgeAttachmentSchema = z.object({
   noteId: z.string().min(1),
   title: z.string().min(1),
   path: z.string().default(""),
-  type: z.enum(["atomic", "moc", "unknown"]).default("unknown"),
 });
 
 export const skillAttachmentSchema = z.object({

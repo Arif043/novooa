@@ -9,7 +9,6 @@ type KnowledgeNoteRow = SqlRow & {
   id: string;
   title: string;
   path: string;
-  type: string;
   content: string;
   outgoing_links_json: string;
 };
@@ -22,7 +21,7 @@ export class SQLiteKnowledgeBaseStore implements KnowledgeBaseStore {
     attachment: KnowledgeAttachment,
   ): Promise<KnowledgeNoteDocument> {
     const noteOrNull = await this.database.get<KnowledgeNoteRow>(
-      `SELECT id, title, path, type, content, outgoing_links_json
+      `SELECT id, title, path, content, outgoing_links_json
        FROM knowledge_notes
        WHERE team_id = ? AND knowledge_base_id = ? AND id = ?`,
       [teamId, attachment.knowledgeBaseId, attachment.noteId],
@@ -41,15 +40,9 @@ function noteFromRow(
     noteId: row.id,
     title: row.title || attachment.title,
     path: row.path || attachment.path,
-    type: noteTypeFrom(row.type, attachment.type),
     content: row.content,
     outgoingLinks: stringListFrom(row.outgoing_links_json),
   };
-}
-
-function noteTypeFrom(value: string, fallback: KnowledgeAttachment["type"]) {
-  if (value === "atomic" || value === "moc" || value === "unknown") return value;
-  return fallback;
 }
 
 function stringListFrom(value: string): string[] {

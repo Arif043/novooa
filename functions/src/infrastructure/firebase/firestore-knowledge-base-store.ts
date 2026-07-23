@@ -38,7 +38,6 @@ function noteFromData(
     noteId: attachment.noteId,
     title: stringValue(data.title, attachment.title),
     path: stringValue(data.path, attachment.path),
-    type: noteTypeValue(data.type, attachment.type),
     content: stringValue(data.content, ""),
     outgoingLinks: stringListValue(data.outgoingLinks),
   };
@@ -51,11 +50,4 @@ function stringValue(value: unknown, fallback: string): string {
 function stringListValue(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is string => typeof item === "string");
-}
-
-function noteTypeValue(value: unknown, fallback: KnowledgeAttachment["type"]) {
-  if (value === "atomic" || value === "moc" || value === "unknown") {
-    return value;
-  }
-  return fallback;
 }

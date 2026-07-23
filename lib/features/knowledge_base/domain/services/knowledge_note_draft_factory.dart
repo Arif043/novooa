@@ -1,5 +1,5 @@
-import '../entities/knowledge_note.dart';
 import '../entities/knowledge_note_draft.dart';
+import '../entities/knowledge_note.dart';
 
 class KnowledgeNoteDraftFactory {
   const KnowledgeNoteDraftFactory();
@@ -12,14 +12,12 @@ class KnowledgeNoteDraftFactory {
     required String title,
     String? path,
     String content = '',
-    KnowledgeNoteType type = KnowledgeNoteType.atomic,
     List<String> outgoingLinks = const [],
   }) {
     return KnowledgeNoteDraft(
       title: title,
       path: path ?? pathFor(title),
       content: content,
-      type: type,
       outgoingLinks: outgoingLinks,
     );
   }
@@ -29,7 +27,6 @@ class KnowledgeNoteDraftFactory {
       title: note.title,
       path: note.path,
       content: note.content,
-      type: note.type,
       outgoingLinks: note.outgoingLinks,
     );
   }

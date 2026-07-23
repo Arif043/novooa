@@ -91,12 +91,6 @@ class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
     _updateSelected(note.copyWith(content: value, outgoingLinks: links));
   }
 
-  void updateType(KnowledgeNoteType type) {
-    final note = state.selectedNote;
-    if (note == null) return;
-    _updateSelected(note.copyWith(type: type));
-  }
-
   Future<void> deleteSelected() async {
     final note = state.selectedNote;
     final teamId = await _teamIdOrNull();

@@ -120,7 +120,6 @@ void main() {
           'noteId': 'note.1',
           'title': 'Index',
           'path': 'index.md',
-          'type': 'moc',
         },
       ],
     });
@@ -145,7 +144,6 @@ const _knowledgeAttachment = KnowledgeAttachment(
   noteId: 'note.1',
   title: 'Index',
   path: 'index.md',
-  type: KnowledgeAttachmentType.moc,
 );
 
 NodeConfigDocumentMapper _mapper() {

@@ -300,7 +300,6 @@ class NodeConfigDocumentMapper {
       'noteId': attachment.noteId,
       'title': attachment.title,
       'path': attachment.path,
-      'type': attachment.type.name,
     };
   }
 
@@ -316,7 +315,6 @@ class NodeConfigDocumentMapper {
       noteId: data['noteId'] as String? ?? '',
       title: data['title'] as String? ?? '',
       path: data['path'] as String? ?? '',
-      type: _knowledgeAttachmentTypeFrom(data['type']),
     );
   }
 
@@ -384,13 +382,6 @@ class NodeConfigDocumentMapper {
     return PromptOutputType.values.firstWhere(
       (type) => type.name == value,
       orElse: () => PromptOutputType.text,
-    );
-  }
-
-  KnowledgeAttachmentType _knowledgeAttachmentTypeFrom(Object? value) {
-    return KnowledgeAttachmentType.values.firstWhere(
-      (type) => type.name == value,
-      orElse: () => KnowledgeAttachmentType.unknown,
     );
   }
 

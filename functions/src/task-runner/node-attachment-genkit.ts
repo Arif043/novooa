@@ -26,7 +26,8 @@ export function attachmentInstructions(
     .map((file) => `- ${file.filename} (${file.displayName})`)
     .join("\n");
   const notes = workspace.knowledgeFiles
-    .map((note) => `- ${note.filename} (${note.title}, ${note.type})`)
+    .filter((note) => note.isDirectAttachment)
+    .map((note) => `- ${note.filename} (${note.title})`)
     .join("\n");
   const parts = [
     "Angehängte Dateien und Wissensnotizen sind über die Dateisystem-Werkzeuge verfügbar.",
@@ -35,11 +36,10 @@ export function attachmentInstructions(
   if (files) parts.push(`Verfügbare Dateien:\n${files}`);
   if (notes) {
     parts.push([
-      "Verfügbare Wissensnotizen:",
+      "Direkt angehängte Wissensnotizen:",
       notes,
       "Nutze exakt diese Dateipfade beim Lesen von Wissensnotizen.",
-      "MOC-Notizen wurden inklusive verlinkter Notizen bereitgestellt.",
-      "Eine Übersicht liegt unter knowledge/manifest.json.",
+      "Verlinkte Notizen liegen ebenfalls im Workspace. Folge ihren Links aus der angehängten Notiz; eine Übersicht liegt unter knowledge/manifest.json.",
     ].join("\n"));
   }
   if (workspace.skillCount > 0) {
