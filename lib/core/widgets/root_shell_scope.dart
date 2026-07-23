@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 class RootShellController extends ChangeNotifier {
   Widget? _title;
   Object? _taskBuilderController;
+  Object? _knowledgeBaseController;
   bool _isDisposed = false;
 
   Widget? get title => _title;
   Object? get taskBuilderController => _taskBuilderController;
+  Object? get knowledgeBaseController => _knowledgeBaseController;
 
   void setTitle(Widget? title) {
     if (_isDisposed) return;
@@ -17,6 +19,12 @@ class RootShellController extends ChangeNotifier {
   void setTaskBuilderController(Object? controller) {
     if (_isDisposed) return;
     _taskBuilderController = controller;
+    notifyListeners();
+  }
+
+  void setKnowledgeBaseController(Object? controller) {
+    if (_isDisposed) return;
+    _knowledgeBaseController = controller;
     notifyListeners();
   }
 

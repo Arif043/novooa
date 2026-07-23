@@ -14,6 +14,7 @@ class KnowledgeBaseGraphPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final selectedNote = state.selectedNote;
     return DecoratedBox(
       decoration: SyscatTheme.glassPanelDecoration.copyWith(
         borderRadius: BorderRadius.circular(AppSpacing.md),
@@ -25,7 +26,11 @@ class KnowledgeBaseGraphPanel extends StatelessWidget {
           children: [
             _SaveIndicator(isSaving: state.isSaving),
             const SizedBox(height: AppSpacing.md),
-            Expanded(child: _DetailsPanel(state: state)),
+            Expanded(
+              child: selectedNote == null
+                  ? const Center(child: Text('Keine Notiz ausgewählt.'))
+                  : _DetailsPanel(state: state),
+            ),
           ],
         ),
       ),

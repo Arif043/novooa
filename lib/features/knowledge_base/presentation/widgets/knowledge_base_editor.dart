@@ -52,11 +52,9 @@ class _KnowledgeBaseEditorState extends State<KnowledgeBaseEditor> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const _EditorToolbar(),
-            const SizedBox(height: AppSpacing.md),
             TextField(
               controller: _titleController,
-              style: Theme.of(context).textTheme.displayLarge,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: .bold),
               decoration: const InputDecoration(hintText: 'Titel'),
               onChanged: context.read<KnowledgeBaseCubit>().updateTitle,
             ),
@@ -73,24 +71,6 @@ class _KnowledgeBaseEditorState extends State<KnowledgeBaseEditor> {
     controller.value = controller.value.copyWith(
       text: text,
       selection: TextSelection.collapsed(offset: text.length),
-    );
-  }
-}
-
-class _EditorToolbar extends StatelessWidget {
-  const _EditorToolbar();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Spacer(),
-        IconButton(
-          tooltip: 'Notiz löschen',
-          onPressed: context.read<KnowledgeBaseCubit>().deleteSelected,
-          icon: const Icon(Icons.delete_outline),
-        ),
-      ],
     );
   }
 }

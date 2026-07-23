@@ -5,8 +5,8 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import '../cubits/knowledge_base_cubit.dart';
 import '../cubits/knowledge_base_state.dart';
 import '../widgets/knowledge_base_empty_state.dart';
-import '../widgets/knowledge_base_graph_panel.dart';
 import '../widgets/knowledge_base_main_panel.dart';
+import '../widgets/knowledge_base_shell_controller.dart';
 import '../widgets/knowledge_base_sidebar.dart';
 
 class KnowledgeBasePage extends StatelessWidget {
@@ -16,7 +16,7 @@ class KnowledgeBasePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => serviceLocator<KnowledgeBaseCubit>()..load(),
-      child: const _KnowledgeBaseView(),
+      child: const KnowledgeBaseShellController(child: _KnowledgeBaseView()),
     );
   }
 }
@@ -50,7 +50,7 @@ class _KnowledgeBaseBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.only(left: AppSpacing.xxl, right: AppSpacing.xxl, bottom: AppSpacing.xxl, top: AppSpacing.md),
       child: switch (state.status) {
         KnowledgeBaseStatus.loading => const Center(
           child: CircularProgressIndicator(),
@@ -93,8 +93,6 @@ class _DesktopWorkspace extends StatelessWidget {
         SizedBox(width: 280, child: KnowledgeBaseSidebar(state: state)),
         const SizedBox(width: AppSpacing.md),
         Expanded(child: KnowledgeBaseMainPanel(state: state)),
-        const SizedBox(width: AppSpacing.md),
-        SizedBox(width: 260, child: KnowledgeBaseGraphPanel(state: state)),
       ],
     );
   }
@@ -112,8 +110,6 @@ class _MobileWorkspace extends StatelessWidget {
         SizedBox(height: 340, child: KnowledgeBaseSidebar(state: state)),
         const SizedBox(height: AppSpacing.md),
         SizedBox(height: 560, child: KnowledgeBaseMainPanel(state: state)),
-        const SizedBox(height: AppSpacing.md),
-        SizedBox(height: 320, child: KnowledgeBaseGraphPanel(state: state)),
       ],
     );
   }

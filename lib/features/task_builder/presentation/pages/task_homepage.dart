@@ -26,7 +26,7 @@ class _TaskHomepageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.only(left: AppSpacing.xxl, right: AppSpacing.xxl, bottom: AppSpacing.xxl, top: AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

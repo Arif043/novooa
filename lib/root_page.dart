@@ -13,6 +13,7 @@ import 'features/assistant/presentation/widgets/assistant_bell_button.dart';
 import 'features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import 'features/notifications/presentation/widgets/notification_bell_button.dart';
 import 'features/task_builder/presentation/widgets/task_builder_shell_frame.dart';
+import 'features/knowledge_base/presentation/widgets/knowledge_base_shell_frame.dart';
 
 class RootPage extends StatefulWidget {
   const RootPage({super.key, required this.location, required this.child});
@@ -89,6 +90,9 @@ class _RootPageState extends State<RootPage> {
     final usesTaskBuilderSideRail = widget.location.startsWith(
       '/tasks/builder',
     );
+    final usesKnowledgeBaseSideRail = widget.location.startsWith(
+      '/knowledge-base',
+    );
     return RootShellScope(
       controller: _shellController,
       child: BlocProvider(
@@ -110,6 +114,7 @@ class _RootPageState extends State<RootPage> {
                 selectedTab: selectedTab,
                 assistantContext: assistantContext,
                 usesTaskBuilderSideRail: usesTaskBuilderSideRail,
+                usesKnowledgeBaseSideRail: usesKnowledgeBaseSideRail,
               ),
             ),
           ),
@@ -126,14 +131,25 @@ class _RootPageState extends State<RootPage> {
     required RootTab selectedTab,
     required AssistantContext? assistantContext,
     required bool usesTaskBuilderSideRail,
+    required bool usesKnowledgeBaseSideRail,
   }) {
     final title = _titleFor(selectedTab);
     if (usesTaskBuilderSideRail) return _taskBuilderCenterPage(title);
+    if (usesKnowledgeBaseSideRail) return _knowledgeBaseCenterPage(title);
     return _defaultCenterPage(title, assistantContext);
   }
 
   Widget _taskBuilderCenterPage(Widget title) {
     return TaskBuilderShellFrame(
+      title: title,
+      onMenuPressed: _sideMenuController.openLeftMenu,
+      menuWidthOfScreen: _menuWidthOfScreen(context),
+      child: widget.child,
+    );
+  }
+
+  Widget _knowledgeBaseCenterPage(Widget title) {
+    return KnowledgeBaseShellFrame(
       title: title,
       onMenuPressed: _sideMenuController.openLeftMenu,
       menuWidthOfScreen: _menuWidthOfScreen(context),
