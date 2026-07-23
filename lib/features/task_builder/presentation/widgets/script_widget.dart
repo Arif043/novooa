@@ -64,12 +64,17 @@ class _ScriptWidgetState extends State<ScriptWidget> {
             ),
             child: CodeField(
               controller: _controller,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Theme.of(context).colorScheme.secondary,
+              ),
               minLines: 6,
-              maxLines: 12,
+              expands: false,
               wrap: false,
               textStyle: GoogleFonts.jetBrainsMono(),
               gutterStyle: GutterStyle(
-                textStyle: GoogleFonts.jetBrainsMono(color: ColorScheme.of(context).tertiary),
+                margin: 0,
+                textStyle: GoogleFonts.jetBrainsMono(color: ColorScheme.of(context).onSecondary),
                 showErrors: true,
                 showLineNumbers: true,
                 showFoldingHandles: true,

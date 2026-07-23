@@ -99,6 +99,7 @@ class NodeGraphItem extends StatelessWidget {
 
   List<Widget> _nodeActions(BuildContext context) {
     return [
+      if (node.config.primitive != .conditional)
       Positioned(
         top: AppSpacing.sm,
         right: AppSpacing.xxl + AppSpacing.sm,
