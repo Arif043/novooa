@@ -8,7 +8,7 @@ extension TaskBuilderBranchMutations on TaskBuilderCubit {
   }) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
-    final node = _buildNode(primitive, _nodeCount(task.graph));
+    final node = _buildNode(primitive, _nextNodeNumber(task.graph));
     final update = _addNodeToBranchInGraph(
       graph: task.graph,
       conditionalNodeId: conditionalNodeId,
@@ -114,17 +114,5 @@ extension TaskBuilderBranchMutations on TaskBuilderCubit {
         ? const NodeId('')
         : graph.nodes.last.id;
     return graph.addNode(node, selectedNodeId);
-  }
-
-  int _nodeCount(WorkflowGraph graph) {
-    var count = graph.nodes.length;
-    for (final node in graph.nodes) {
-      if (node.config case final ConditionalNodeConfig config) {
-        for (final branch in config.branches) {
-          count += _nodeCount(branch.graph);
-        }
-      }
-    }
-    return count;
   }
 }

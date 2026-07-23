@@ -184,6 +184,23 @@ void main() {
   });
 
   test(
+    'addNode verwendet nach einem Löschen keine bereits belegte ID',
+    () async {
+      final repository = _InMemoryTaskRepository(_taskWithThreePromptNodes());
+      final cubit = TaskBuilderCubit(repository: repository);
+
+      await cubit.load(repository.savedTask);
+      await cubit.removeNode(const NodeId('node.1'));
+      await cubit.addNodeToMainGraph(WorkflowPrimitive.script);
+
+      final state = cubit.state as TaskBuilderLoaded;
+      final nodeIds = state.editingTask.nodes.map((node) => node.id.value);
+      expect(nodeIds.toSet(), hasLength(nodeIds.length));
+      await _closeAndExpectSaved(cubit, repository, state.editingTask);
+    },
+  );
+
+  test(
     'attachNodeFile speichert Storage-Dateiversion am Prompt-Node',
     () async {
       final repository = _InMemoryTaskRepository(_taskWithBranchPrompt());
@@ -609,6 +626,32 @@ Task _taskWithTwoPromptNodes() {
         ),
       ],
       edges: [WorkflowEdge(from: NodeId('node.1'), to: NodeId('node.2'))],
+    ),
+  );
+}
+
+Task _taskWithThreePromptNodes() {
+  final task = _taskWithTwoPromptNodes();
+  return task.copyWith(
+    graph: task.graph.copyWith(
+      nodes: [
+        ...task.nodes,
+        const WorkflowNode(
+          id: NodeId('node.3'),
+          title: 'Prompt',
+          description: 'Beschreibung',
+          referenceName: 'prompt3',
+          config: PromptNodeConfig(
+            instruction: '',
+            outputType: PromptOutputType.text,
+            choices: ['', ''],
+          ),
+        ),
+      ],
+      edges: [
+        ...task.edges,
+        const WorkflowEdge(from: NodeId('node.2'), to: NodeId('node.3')),
+      ],
     ),
   );
 }

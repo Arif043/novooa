@@ -47,10 +47,24 @@ class TaskDocumentMapper {
   WorkflowGraph _graphFromDocument(Object? data) {
     if (data is! Map) return WorkflowGraph.empty();
     final map = _objectMapFrom(data);
-    return WorkflowGraph(
-      nodes: _mapListFrom(map['nodes']).map(_nodeFromDocument).toList(),
-      edges: _mapListFrom(map['edges']).map(_edgeFromDocument).toList(),
+    final nodes = _uniqueNodes(
+      _mapListFrom(map['nodes']).map(_nodeFromDocument).toList(),
     );
+    final nodeIds = nodes.map((node) => node.id).toSet();
+    return WorkflowGraph(
+      nodes: nodes,
+      edges: _mapListFrom(map['edges'])
+          .map(_edgeFromDocument)
+          .where(
+            (edge) => nodeIds.contains(edge.from) && nodeIds.contains(edge.to),
+          )
+          .toList(),
+    );
+  }
+
+  List<WorkflowNode> _uniqueNodes(List<WorkflowNode> nodes) {
+    final nodeIds = <NodeId>{};
+    return nodes.where((node) => nodeIds.add(node.id)).toList();
   }
 
   Map<String, Object?> _nodeToDocument(WorkflowNode node) {

@@ -24,6 +24,13 @@ class WorkflowGraph extends Equatable {
   }
 
   WorkflowGraph addNode(WorkflowNode node, NodeId selectedNodeId) {
+    if (nodeOrNull(node.id) != null) {
+      throw ArgumentError.value(
+        node.id,
+        'node.id',
+        'Knoten-ID ist bereits belegt.',
+      );
+    }
     final newEdges = nodes.isEmpty
         ? edges
         : <WorkflowEdge>[

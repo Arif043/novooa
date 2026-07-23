@@ -82,21 +82,19 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   Future<void> addNodeToMainGraph(WorkflowPrimitive primitive) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
-    final node = _buildNode(primitive, task.nodes.length);
+    final node = _buildNode(primitive, _nextNodeNumber(task.graph));
     await _saveAndEmit(task.addNode(node));
   }
 
   Future<void> addChannelEventNodeToMainGraph(ChannelEventKind kind) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
-    final node = _buildNode(
-      WorkflowPrimitive.readChannelEvent,
-      task.nodes.length,
-    );
+    final nodeNumber = _nextNodeNumber(task.graph);
+    final node = _buildNode(WorkflowPrimitive.readChannelEvent, nodeNumber);
     final configuredNode = node.copyWith(
       title: _channelEventTitle(kind),
       description: _channelEventDescription(kind),
-      referenceName: _referenceNameForKind(kind, task.nodes.length + 1),
+      referenceName: _referenceNameForKind(kind, nodeNumber),
       config: ReadChannelEventNodeConfig(kind: kind),
     );
     await _saveAndEmit(task.addNode(configuredNode));
@@ -105,14 +103,12 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   Future<void> addSendMessageNodeToMainGraph(ChannelEventKind kind) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
-    final node = _buildNode(
-      WorkflowPrimitive.sendChannelMessage,
-      task.nodes.length,
-    );
+    final nodeNumber = _nextNodeNumber(task.graph);
+    final node = _buildNode(WorkflowPrimitive.sendChannelMessage, nodeNumber);
     final configuredNode = node.copyWith(
       title: _sendMessageTitle(kind),
       description: _sendMessageDescription(kind),
-      referenceName: _referenceNameForSendKind(kind, task.nodes.length + 1),
+      referenceName: _referenceNameForSendKind(kind, nodeNumber),
       config: SendChannelMessageNodeConfig.initial().copyWith(kind: kind),
     );
     await _saveAndEmit(task.addNode(configuredNode));
@@ -289,8 +285,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     }
   }
 
-  WorkflowNode _buildNode(WorkflowPrimitive primitive, int index) {
-    final number = index + 1;
+  WorkflowNode _buildNode(WorkflowPrimitive primitive, int number) {
     return WorkflowNode(
       id: NodeId('node.$number'),
       config: NodeConfig.initial(primitive),
@@ -298,6 +293,32 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       description: primitive.description,
       referenceName: _referenceNameFor(primitive, number),
     );
+  }
+
+  int _nextNodeNumber(WorkflowGraph graph) {
+    final ids = _nodeIdsIn(graph);
+    var number = 1;
+    while (ids.contains('node.$number')) {
+      number += 1;
+    }
+    return number;
+  }
+
+  Set<String> _nodeIdsIn(WorkflowGraph graph) {
+    final ids = <String>{};
+    _collectNodeIds(graph, ids);
+    return ids;
+  }
+
+  void _collectNodeIds(WorkflowGraph graph, Set<String> ids) {
+    for (final node in graph.nodes) {
+      ids.add(node.id.value);
+      if (node.config case final ConditionalNodeConfig config) {
+        for (final branch in config.branches) {
+          _collectNodeIds(branch.graph, ids);
+        }
+      }
+    }
   }
 
   String _normalizedReferenceName(String value) {
