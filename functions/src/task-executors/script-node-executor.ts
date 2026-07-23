@@ -57,18 +57,25 @@ export async function executeScriptNode(
 ): Promise<ScriptNodeOutput> {
   const result = await runPython(input);
   const parsed = JSON.parse(result.stdout) as {
+    outputDefined?: unknown;
     output?: unknown;
     printed?: unknown;
     variables?: unknown;
   };
-  if (typeof parsed.output !== "string") {
-    throw new Error("Script hat keinen String-Output geliefert.");
-  }
   if (typeof parsed.printed === "string") logScriptPrints(parsed.printed);
   return {
-    output: parsed.output,
+    output: outputFrom(parsed, input.input),
     variables: variablesFrom(parsed.variables),
   };
+}
+
+function outputFrom(
+  parsed: {outputDefined?: unknown; output?: unknown},
+  fallback: string,
+): string {
+  if (parsed.outputDefined === false) return fallback;
+  if (typeof parsed.output === "string") return parsed.output;
+  throw new Error("Script hat keinen String-Output geliefert.");
 }
 
 function runPython(input: ScriptNodeInput): Promise<{stdout: string}> {

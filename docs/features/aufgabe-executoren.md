@@ -33,7 +33,9 @@ exponentiellem Backoff wiederholt.
 ## Script
 
 Der Script-Executor fuehrt isoliertes Python aus. Der direkte Vorgaengeroutput
-liegt als `input` vor; das Script muss eine String-Variable `output` setzen.
+liegt als `input` vor. Setzt das Script eine String-Variable `output`, wird sie
+als Baustein-Ausgabe verwendet. Ohne `output` reicht der Baustein den
+Vorgaengeroutput unveraendert weiter.
 
 ```python
 output = input.upper()

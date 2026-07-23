@@ -66,13 +66,11 @@ namespace = {
     **variables,
 }
 exec(payload["script"], {"__builtins__": safe_builtins}, namespace)
+output_defined = "output" in namespace
 output = namespace.get("output")
 
-if output is None:
-    output = "".join(printed)
-
-if not isinstance(output, str):
-    raise TypeError("Script muss eine String-Variable output setzen oder Text printen.")
+if output_defined and not isinstance(output, str):
+    raise TypeError("Script muss eine String-Variable output setzen.")
 
 next_variables = {}
 for key, value in namespace.items():
@@ -87,6 +85,7 @@ for key, value in namespace.items():
         pass
 
 sys.stdout.write(json.dumps({
+    "outputDefined": output_defined,
     "output": output,
     "printed": "".join(printed),
     "variables": next_variables,
