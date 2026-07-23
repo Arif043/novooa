@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:syscat2/core/config/mvp_feature_flags.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 
@@ -43,34 +44,61 @@ class _PromptResourceSelectionState extends State<PromptResourceSelection> {
   @override
   void didUpdateWidget(PromptResourceSelection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.config.employee != null) _selectedType = .employee;
+    if (_isEnabled(.employee) && widget.config.employee != null) {
+      _selectedType = .employee;
+    }
+    if (!_isEnabled(_selectedType)) _selectedType = _typeForConfig();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_enabledTypes.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Zuweisung', style: SyscatTheme.taskBody),
         const SizedBox(height: AppSpacing.xs),
-        CupertinoSlidingSegmentedControl<_PromptResourceType>(
-          groupValue: _selectedType,
-          backgroundColor: SyscatTheme.surfaceContainer,
-          thumbColor: SyscatTheme.glassSurface,
-          children: const {
-            _PromptResourceType.skills: Text('Fähigkeiten'),
-            _PromptResourceType.employee: Text('Mitarbeiter'),
-          },
-          onValueChanged: _selectType,
-        ),
-        const SizedBox(height: AppSpacing.md),
+        if (_enabledTypes.length > 1) ...[
+          CupertinoSlidingSegmentedControl<_PromptResourceType>(
+            groupValue: _selectedType,
+            backgroundColor: SyscatTheme.surfaceContainer,
+            thumbColor: SyscatTheme.glassSurface,
+            children: {
+              if (MvpFeatureFlags.skillsEnabled)
+                _PromptResourceType.skills: const Text('Fähigkeiten'),
+              if (MvpFeatureFlags.employeesEnabled)
+                _PromptResourceType.employee: const Text('Mitarbeiter'),
+            },
+            onValueChanged: _selectType,
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         _selection(),
       ],
     );
   }
 
   _PromptResourceType _typeForConfig() {
-    return widget.config.employee == null ? .skills : .employee;
+    if (_isEnabled(.employee) && widget.config.employee != null) {
+      return .employee;
+    }
+    final enabledTypes = _enabledTypes;
+    if (enabledTypes.isEmpty) return .skills;
+    return enabledTypes.first;
+  }
+
+  List<_PromptResourceType> get _enabledTypes {
+    return [
+      if (MvpFeatureFlags.skillsEnabled) .skills,
+      if (MvpFeatureFlags.employeesEnabled) .employee,
+    ];
+  }
+
+  bool _isEnabled(_PromptResourceType type) {
+    return switch (type) {
+      .skills => MvpFeatureFlags.skillsEnabled,
+      .employee => MvpFeatureFlags.employeesEnabled,
+    };
   }
 
   Widget _selection() {

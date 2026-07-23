@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/config/mvp_feature_flags.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
@@ -141,14 +142,16 @@ class _PromptWidgetState extends State<PromptWidget> {
             onAttach: _attachKnowledge,
             onDetach: _detachKnowledge,
           ),
-          const SizedBox(height: AppSpacing.md),
-          PromptResourceSelection(
-            config: config,
-            onAttachSkill: _attachSkill,
-            onDetachSkill: _detachSkill,
-            onAssignEmployee: _assignEmployee,
-            onUnassignEmployee: _unassignEmployee,
-          ),
+          if (MvpFeatureFlags.promptDelegationEnabled) ...[
+            const SizedBox(height: AppSpacing.md),
+            PromptResourceSelection(
+              config: config,
+              onAttachSkill: _attachSkill,
+              onDetachSkill: _detachSkill,
+              onAssignEmployee: _assignEmployee,
+              onUnassignEmployee: _unassignEmployee,
+            ),
+          ],
         ],
       ),
     );

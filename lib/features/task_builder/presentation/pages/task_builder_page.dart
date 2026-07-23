@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/config/mvp_feature_flags.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/widgets/root_shell_scope.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
@@ -32,12 +33,15 @@ class TaskBuilderPage extends StatelessWidget {
           create: (_) =>
               serviceLocator<NodeKnowledgeAttachmentsCubit>()..load(),
         ),
-        BlocProvider(
-          create: (_) => serviceLocator<NodeSkillAttachmentsCubit>()..load(),
-        ),
-        BlocProvider(
-          create: (_) => serviceLocator<NodeEmployeeAssignmentsCubit>()..load(),
-        ),
+        if (MvpFeatureFlags.skillsEnabled)
+          BlocProvider(
+            create: (_) => serviceLocator<NodeSkillAttachmentsCubit>()..load(),
+          ),
+        if (MvpFeatureFlags.employeesEnabled)
+          BlocProvider(
+            create: (_) =>
+                serviceLocator<NodeEmployeeAssignmentsCubit>()..load(),
+          ),
       ],
       child: _TaskBuilderShellTitle(
         child: BlocBuilder<TaskBuilderCubit, TaskBuilderState>(

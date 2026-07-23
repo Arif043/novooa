@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cupertino_sidemenu/cupertino_sidemenu.dart';
 import 'package:go_router/go_router.dart';
+import 'core/config/mvp_feature_flags.dart';
 import 'core/di/service_locator.dart';
 import 'root_tab.dart';
 import 'core/widgets/root_app_bar.dart';
@@ -53,16 +54,18 @@ class _RootPageState extends State<RootPage> {
       icon: Icons.library_books_outlined,
       path: '/knowledge-base',
     ),
-    RootTab(
-      title: 'Fähigkeiten',
-      icon: Icons.auto_awesome_outlined,
-      path: '/skills',
-    ),
-    RootTab(
-      title: 'Mitarbeiter',
-      icon: Icons.people_outline,
-      path: '/employees',
-    ),
+    if (MvpFeatureFlags.skillsEnabled)
+      RootTab(
+        title: 'Fähigkeiten',
+        icon: Icons.auto_awesome_outlined,
+        path: '/skills',
+      ),
+    if (MvpFeatureFlags.employeesEnabled)
+      RootTab(
+        title: 'Mitarbeiter',
+        icon: Icons.people_outline,
+        path: '/employees',
+      ),
     RootTab(
       title: 'Einstellungen',
       icon: Icons.settings_outlined,

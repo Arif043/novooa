@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:syscat2/core/config/mvp_feature_flags.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_session_cubit.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_session_state.dart';
 import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
@@ -78,10 +79,14 @@ class AppRouter {
           ),
           GoRoute(
             path: skills,
+            redirect: (context, state) =>
+                MvpFeatureFlags.skillsEnabled ? null : home,
             builder: (context, state) => const SkillsPage(),
           ),
           GoRoute(
             path: employees,
+            redirect: (context, state) =>
+                MvpFeatureFlags.employeesEnabled ? null : home,
             builder: (context, state) => const EmployeesPage(),
           ),
           GoRoute(

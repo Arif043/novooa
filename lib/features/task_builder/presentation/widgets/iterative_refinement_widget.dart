@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/config/mvp_feature_flags.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/employee_attachment.dart';
@@ -92,18 +93,22 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
             'Verfeinert die Ausgabe des vorherigen Bausteins.',
             style: SyscatTheme.taskBodySmall,
           ),
-          const SizedBox(height: AppSpacing.md),
-          NodeSkillAttachmentSection(
-            attachments: _config.skillAttachments,
-            onAttach: _attachSkill,
-            onDetach: _detachSkill,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          NodeEmployeeSection(
-            assigned: _config.employee,
-            onAssign: _assignEmployee,
-            onUnassign: _unassignEmployee,
-          ),
+          if (MvpFeatureFlags.skillsEnabled) ...[
+            const SizedBox(height: AppSpacing.md),
+            NodeSkillAttachmentSection(
+              attachments: _config.skillAttachments,
+              onAttach: _attachSkill,
+              onDetach: _detachSkill,
+            ),
+          ],
+          if (MvpFeatureFlags.employeesEnabled) ...[
+            const SizedBox(height: AppSpacing.md),
+            NodeEmployeeSection(
+              assigned: _config.employee,
+              onAssign: _assignEmployee,
+              onUnassign: _unassignEmployee,
+            ),
+          ],
         ],
       ),
     );
