@@ -130,7 +130,6 @@ rules_version = '2';
 //   - knowledgeBaseId: string (required) - must equal parent ID
 //   - title: string (required, 1-160)
 //   - path: string (required, 1-512) - original/imported markdown path
-//   - type: string (required) - atomic | moc | unknown
 //   - content: string (required, max 256 KiB) - markdown body
 //   - outgoingLinks: list<string> (required, max 100) - linked note IDs
 //
@@ -678,18 +677,16 @@ service cloud.firestore {
         'knowledgeBaseId',
         'title',
         'path',
-        'type',
         'content',
         'outgoingLinks',
         'createdAt',
         'updatedAt',
       ]) &&
         data.keys().hasAll([
-          'knowledgeBaseId',
-          'title',
-          'path',
-          'type',
-          'content',
+        'knowledgeBaseId',
+        'title',
+        'path',
+        'content',
           'outgoingLinks',
           'createdAt',
           'updatedAt',
@@ -701,7 +698,6 @@ service cloud.firestore {
         data.path is string &&
         data.path.size() >= 1 &&
         data.path.size() <= 512 &&
-        data.type in ['atomic', 'moc', 'unknown'] &&
         data.content is string &&
         data.content.size() <= 262144 &&
         data.outgoingLinks is list &&
