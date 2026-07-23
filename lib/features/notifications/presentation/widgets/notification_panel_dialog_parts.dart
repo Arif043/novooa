@@ -16,20 +16,10 @@ class _ApprovalAction extends StatelessWidget {
     );
   }
 
-  Future<void> _openReview(BuildContext context) async {
+  void _openReview(BuildContext context) {
     final run = item.taskRun;
     if (run == null) return;
-    final rootContext = Navigator.of(context, rootNavigator: true).context;
-    Navigator.of(context).pop();
-    await Future<void>.delayed(Duration.zero);
-    if (!rootContext.mounted) return;
-    await showDialog<void>(
-      context: rootContext,
-      builder: (_) => BlocProvider(
-        create: (_) => serviceLocator<ActivityCubit>(),
-        child: ApprovalReviewDialog(run: run),
-      ),
-    );
+    Navigator.of(context).pop(run);
   }
 }
 

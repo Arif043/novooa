@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../activity/presentation/cubits/activity_cubit.dart';
-import '../../../activity/presentation/widgets/approval_review_dialog.dart';
 import '../../domain/entities/app_notification.dart';
 import '../cubits/app_notifications_cubit.dart';
 import '../cubits/app_notifications_state.dart';
