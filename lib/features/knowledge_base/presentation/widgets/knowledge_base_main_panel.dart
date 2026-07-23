@@ -4,8 +4,9 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import '../cubits/knowledge_base_state.dart';
 import 'knowledge_base_editor.dart';
 import 'knowledge_base_graph_view.dart';
+import 'knowledge_markdown_preview.dart';
 
-enum KnowledgeBaseMainMode { editor, graph }
+enum KnowledgeBaseMainMode { editor, preview, graph }
 
 class KnowledgeBaseMainPanel extends StatefulWidget {
   const KnowledgeBaseMainPanel({super.key, required this.state});
@@ -35,6 +36,11 @@ class _KnowledgeBaseMainPanelState extends State<KnowledgeBaseMainPanel> {
                 label: Text('Editor'),
               ),
               ButtonSegment(
+                value: KnowledgeBaseMainMode.preview,
+                icon: Icon(Icons.visibility_outlined),
+                label: Text('Ansicht'),
+              ),
+              ButtonSegment(
                 value: KnowledgeBaseMainMode.graph,
                 icon: Icon(Icons.hub_outlined),
                 label: Text('Graph'),
@@ -54,6 +60,9 @@ class _KnowledgeBaseMainPanelState extends State<KnowledgeBaseMainPanel> {
     return switch (_mode) {
       KnowledgeBaseMainMode.editor => KnowledgeBaseEditor(
         note: widget.state.selectedNote!,
+      ),
+      KnowledgeBaseMainMode.preview => KnowledgeMarkdownPreview(
+        content: widget.state.selectedNote!.content,
       ),
       KnowledgeBaseMainMode.graph => KnowledgeBaseGraphView(
         notes: widget.state.notes,

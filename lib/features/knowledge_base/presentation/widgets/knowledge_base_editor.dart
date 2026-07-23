@@ -5,7 +5,6 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 
 import '../../domain/entities/knowledge_note.dart';
 import '../cubits/knowledge_base_cubit.dart';
-import 'knowledge_markdown_preview.dart';
 
 class KnowledgeBaseEditor extends StatefulWidget {
   const KnowledgeBaseEditor({super.key, required this.note});
@@ -62,14 +61,7 @@ class _KnowledgeBaseEditorState extends State<KnowledgeBaseEditor> {
               onChanged: context.read<KnowledgeBaseCubit>().updateTitle,
             ),
             const SizedBox(height: AppSpacing.md),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  if (constraints.maxWidth < 620) return _EditorOnly(this);
-                  return _SplitEditor(state: this);
-                },
-              ),
-            ),
+            Expanded(child: _MarkdownEditor(this)),
           ],
         ),
       ),
@@ -101,35 +93,6 @@ class _EditorToolbar extends StatelessWidget {
       ],
     );
   }
-}
-
-class _SplitEditor extends StatelessWidget {
-  const _SplitEditor({required this.state});
-
-  final _KnowledgeBaseEditorState state;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(child: _MarkdownEditor(state)),
-        const VerticalDivider(width: AppSpacing.lg),
-        Expanded(
-          child: KnowledgeMarkdownPreview(content: state.widget.note.content),
-        ),
-      ],
-    );
-  }
-}
-
-class _EditorOnly extends StatelessWidget {
-  const _EditorOnly(this.state);
-
-  final _KnowledgeBaseEditorState state;
-
-  @override
-  Widget build(BuildContext context) => _MarkdownEditor(state);
 }
 
 class _MarkdownEditor extends StatelessWidget {
