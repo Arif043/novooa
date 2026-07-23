@@ -4,7 +4,9 @@ import {type TaskRunDispatcher} from
 import {type TaskStore} from "../domain/repositories/task-store.js";
 import {FirebaseTaskRunDispatcher} from
   "../infrastructure/firebase/firebase-task-run-dispatcher.js";
-import {FirestoreTaskRunStore} from "../infrastructure/firebase/firestore-task-run-store.js";
+import {
+  createFirebaseTaskRunStore,
+} from "../infrastructure/firebase/firebase-task-run-store-factory.js";
 import {FirestoreTaskStore} from "../infrastructure/firebase/firestore-task-store.js";
 import {errorDetails, logError, logInfo} from "../task-runner/structured-logger.js";
 import {FirestoreTaskTriggerStore} from "../infrastructure/firebase/firestore-task-trigger-store.js";
@@ -24,7 +26,7 @@ type DueTriggerRunnerStores = {
 const defaultStores: DueTriggerRunnerStores = {
   triggerStore: new FirestoreTaskTriggerStore(),
   taskStore: new FirestoreTaskStore(),
-  taskRunStore: new FirestoreTaskRunStore(),
+  taskRunStore: createFirebaseTaskRunStore(),
   taskRunDispatcher: new FirebaseTaskRunDispatcher(),
 };
 

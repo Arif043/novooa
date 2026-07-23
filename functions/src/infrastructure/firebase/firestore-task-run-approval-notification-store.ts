@@ -5,10 +5,18 @@ import {
   type MarkApprovalNotificationInput,
   type TaskRunApprovalNotificationStore,
 } from "../../domain/repositories/task-run-approval-notification-store.js";
+import {
+  type PushNotification,
+  FirebasePushNotificationSender,
+} from "./firebase-push-notification-sender.js";
 import {getDatabase} from "./firestore-db.js";
 
 export class FirestoreTaskRunApprovalNotificationStore
 implements TaskRunApprovalNotificationStore {
+  constructor(
+    private readonly pushNotifications: FirebasePushNotificationSender,
+  ) {}
+
   async notifyApprovalRequired(input: ApprovalNotificationInput) {
     const members = await membersFor(input.teamId);
     const batch = getDatabase().batch();
@@ -19,6 +27,9 @@ implements TaskRunApprovalNotificationStore {
       );
     }
     await batch.commit();
+    await Promise.all(members.docs.map((member) =>
+      this.pushNotifications.sendToUser(member.id, approvalPushNotification(input)),
+    ));
   }
 
   async markApprovalNotifications(input: MarkApprovalNotificationInput) {
@@ -33,6 +44,21 @@ implements TaskRunApprovalNotificationStore {
     }
     await batch.commit();
   }
+}
+
+function approvalPushNotification(
+  input: ApprovalNotificationInput,
+): PushNotification {
+  return {
+    title: "Freigabe erforderlich",
+    body: `"${input.run.taskTitle}" wartet auf deine Prüfung.`,
+    data: {
+      type: "taskRunApproval",
+      teamId: input.teamId,
+      runId: input.run.runId,
+      taskId: input.run.taskId,
+    },
+  };
 }
 
 function approvalNotificationDocument(input: ApprovalNotificationInput) {

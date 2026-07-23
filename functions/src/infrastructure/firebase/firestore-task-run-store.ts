@@ -14,10 +14,6 @@ import {type ActivityStore} from "../../domain/repositories/activity-store.js";
 import {
   type TaskRunApprovalNotificationStore,
 } from "../../domain/repositories/task-run-approval-notification-store.js";
-import {FirestoreActivityStore} from "./firestore-activity-store.js";
-import {
-  FirestoreTaskRunApprovalNotificationStore,
-} from "./firestore-task-run-approval-notification-store.js";
 import {getDatabase} from "./firestore-db.js";
 import {
   approvedDocument,
@@ -38,10 +34,10 @@ import {
 } from "../../domain/repositories/task-run-store.js";
 
 export class FirestoreTaskRunStore implements TaskRunStore {
-  constructor(private readonly activityStore: ActivityStore =
-    new FirestoreActivityStore(),
-    private readonly approvalNotifications: TaskRunApprovalNotificationStore =
-    new FirestoreTaskRunApprovalNotificationStore()) {}
+  constructor(
+    private readonly activityStore: ActivityStore,
+    private readonly approvalNotifications: TaskRunApprovalNotificationStore,
+  ) {}
 
   async enqueueTaskRun(input: EnqueueTaskRunInput): Promise<TaskRunDocument> {
     const run = newTaskRunDocument(input);

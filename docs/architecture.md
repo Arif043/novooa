@@ -98,7 +98,9 @@ Team-Einladungen werden als Notification unter
 Einladung setzt `users/{uid}.teamId` und erstellt
 `teams/{teamId}/members/{uid}`.
 HITL-Freigaben werden ebenfalls als Notification (`taskRunApproval`) unter den
-Team-Mitgliedern verteilt und öffnen im Client den Freigabe-Dialog.
+Team-Mitgliedern verteilt, lösen zusätzlich einen FCM-Push aus und öffnen im
+Client den Freigabe-Dialog. Nicht mehr registrierte Geräte-Tokens entfernt das
+Backend nach einer fehlgeschlagenen Zustellung.
 
 Kommunikationskanäle werden im Client unter
 `Einstellungen > Kommunikation` gepflegt und bleiben bewusst team-scoped.

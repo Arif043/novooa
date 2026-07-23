@@ -20,7 +20,9 @@ import {FirestoreKnowledgeBaseStore} from
 import {FirestoreTeamContextStore} from
   "./infrastructure/firebase/firestore-team-context-store.js";
 import {FirestoreTaskStore} from "./infrastructure/firebase/firestore-task-store.js";
-import {FirestoreTaskRunStore} from "./infrastructure/firebase/firestore-task-run-store.js";
+import {
+  createFirebaseTaskRunStore,
+} from "./infrastructure/firebase/firebase-task-run-store-factory.js";
 import {
   FirebaseTaskRunDispatcher,
 } from "./infrastructure/firebase/firebase-task-run-dispatcher.js";
@@ -37,7 +39,7 @@ const ai = genkit({
 });
 
 const taskStore = new FirestoreTaskStore();
-const taskRunStore = new FirestoreTaskRunStore();
+const taskRunStore = createFirebaseTaskRunStore();
 const objectStore = new FirebaseObjectStore();
 const knowledgeBaseStore = new FirestoreKnowledgeBaseStore();
 const teamContextStore = new FirestoreTeamContextStore();
