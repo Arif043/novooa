@@ -1,5 +1,5 @@
-import {type DocumentReference} from "firebase-admin/firestore";
 import {
+  type BatchResponse,
   getMessaging,
   type MulticastMessage,
   type SendResponse,
@@ -15,15 +15,28 @@ export type PushNotification = {
   data: Record<string, string>;
 };
 
-type FcmTokenDocument = {
+export type FcmTokenDocument = {
   token: string;
-  reference: DocumentReference;
+  delete(): Promise<void>;
 };
 
+export interface FcmTokenStore {
+  tokensForUser(uid: string): Promise<FcmTokenDocument[]>;
+}
+
+export interface FcmMessagingClient {
+  send(message: MulticastMessage): Promise<BatchResponse>;
+}
+
 export class FirebasePushNotificationSender {
+  constructor(
+    private readonly tokenStore: FcmTokenStore = new FirestoreFcmTokenStore(),
+    private readonly messagingClient: FcmMessagingClient = new FirebaseMessagingClient(),
+  ) {}
+
   async sendToUser(uid: string, notification: PushNotification): Promise<void> {
     try {
-      const tokenDocuments = await fcmTokenDocuments(uid);
+      const tokenDocuments = await this.tokenStore.tokensForUser(uid);
       for (const tokenBatch of tokenBatches(tokenDocuments)) {
         await this.sendTokenBatch(uid, tokenBatch, notification);
       }
@@ -38,8 +51,7 @@ export class FirebasePushNotificationSender {
     notification: PushNotification,
   ): Promise<void> {
     try {
-      initializeAdminApp();
-      const response = await getMessaging().sendEachForMulticast(
+      const response = await this.messagingClient.send(
         multicastMessage(tokenDocuments, notification),
       );
       await removeInvalidTokens(tokenDocuments, response.responses);
@@ -52,13 +64,27 @@ export class FirebasePushNotificationSender {
   }
 }
 
-async function fcmTokenDocuments(uid: string): Promise<FcmTokenDocument[]> {
-  const snapshots = await getDatabase().collection("users").doc(uid)
-    .collection("fcmTokens").get();
-  return snapshots.docs.flatMap((snapshot) => {
-    const token = snapshot.data().token;
-    return typeof token === "string" && token ? [{token, reference: snapshot.ref}] : [];
-  });
+class FirestoreFcmTokenStore implements FcmTokenStore {
+  async tokensForUser(uid: string): Promise<FcmTokenDocument[]> {
+    const snapshots = await getDatabase().collection("users").doc(uid)
+      .collection("fcmTokens").get();
+    return snapshots.docs.flatMap((snapshot) => {
+      const token = snapshot.data().token;
+      return typeof token === "string" && token ? [{
+        token,
+        delete: async () => {
+          await snapshot.ref.delete();
+        },
+      }] : [];
+    });
+  }
+}
+
+class FirebaseMessagingClient implements FcmMessagingClient {
+  async send(message: MulticastMessage): Promise<BatchResponse> {
+    initializeAdminApp();
+    return getMessaging().sendEachForMulticast(message);
+  }
 }
 
 function tokenBatches(tokens: FcmTokenDocument[]): FcmTokenDocument[][] {
@@ -73,7 +99,11 @@ function multicastMessage(
   tokens: FcmTokenDocument[],
   notification: PushNotification,
 ): MulticastMessage {
-  return {tokens: tokens.map((document) => document.token), notification, data: notification.data};
+  return {
+    tokens: tokens.map((document) => document.token),
+    notification: {title: notification.title, body: notification.body},
+    data: notification.data,
+  };
 }
 
 async function removeInvalidTokens(
@@ -81,7 +111,7 @@ async function removeInvalidTokens(
   responses: SendResponse[],
 ): Promise<void> {
   const invalidTokens = tokens.filter((_, index) => isInvalidToken(responses[index]));
-  await Promise.all(invalidTokens.map((document) => document.reference.delete()));
+  await Promise.all(invalidTokens.map((document) => document.delete()));
 }
 
 function isInvalidToken(response: SendResponse | undefined): boolean {

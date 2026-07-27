@@ -16,7 +16,7 @@ class FcmBootstrapper {
   );
 
   final AuthRepository _authRepository;
-  final FirebaseMessagingTokenProvider _tokenProvider;
+  final FcmTokenProvider _tokenProvider;
   final RegisterNotificationDevice _registerDevice;
   final UnregisterNotificationDevice _unregisterDevice;
   StreamSubscription<AuthUser?>? _authSubscription;
@@ -40,6 +40,7 @@ class FcmBootstrapper {
   Future<void> _registerFor(AuthUser? user) async {
     try {
       if (user == null) return _clearCurrentRegistration();
+      await _unregisterPreviousUser(user);
       _currentUser = user;
       final token = await _tokenProvider.currentToken();
       if (token == null) {
@@ -55,6 +56,18 @@ class FcmBootstrapper {
         name: 'fcm',
       );
     }
+  }
+
+  Future<void> _unregisterPreviousUser(AuthUser user) async {
+    final previousUser = _currentUser;
+    final currentToken = _currentToken;
+    if (previousUser == null ||
+        previousUser.id == user.id ||
+        currentToken == null) {
+      return;
+    }
+    await _unregisterDevice(userId: previousUser.id.value, token: currentToken);
+    _currentToken = null;
   }
 
   Future<void> _saveRefreshedToken(String token) async {
