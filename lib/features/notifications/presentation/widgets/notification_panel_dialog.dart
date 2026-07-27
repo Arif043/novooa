@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../infrastructure/services/fcm_bootstrapper.dart';
 import '../../domain/entities/app_notification.dart';
 import '../cubits/app_notifications_cubit.dart';
 import '../cubits/app_notifications_state.dart';
@@ -66,6 +68,11 @@ class _NotificationHeader extends StatelessWidget {
         Expanded(
           child: Text('Benachrichtigungen', style: theme.textTheme.titleLarge),
         ),
+        IconButton(
+          tooltip: 'Push-Benachrichtigungen aktivieren',
+          onPressed: () => _requestPushNotifications(context),
+          icon: const Icon(Icons.notifications_active_outlined),
+        ),
         if (onClose != null)
           IconButton(
             tooltip: 'Schließen',
@@ -73,6 +80,16 @@ class _NotificationHeader extends StatelessWidget {
             icon: const Icon(Icons.close),
           ),
       ],
+    );
+  }
+
+  Future<void> _requestPushNotifications(BuildContext context) async {
+    await serviceLocator<FcmBootstrapper>().requestPermissionAndRegister();
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Push-Benachrichtigungen wurden angefragt.'),
+      ),
     );
   }
 }

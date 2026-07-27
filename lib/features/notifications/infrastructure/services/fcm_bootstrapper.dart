@@ -25,8 +25,10 @@ class FcmBootstrapper {
   String? _currentToken;
 
   Future<void> start() async {
-    await _registerFor(_authRepository.currentUser());
-    _authSubscription = _authRepository.authStateChanges().listen(_registerFor);
+    await _registerFor(_authRepository.currentUser(), requestPermission: false);
+    _authSubscription = _authRepository.authStateChanges().listen(
+      (user) => _registerFor(user, requestPermission: false),
+    );
     _tokenSubscription = _tokenProvider.tokenRefreshes.listen(
       _saveRefreshedToken,
     );
@@ -37,12 +39,21 @@ class FcmBootstrapper {
     await _tokenSubscription?.cancel();
   }
 
-  Future<void> _registerFor(AuthUser? user) async {
+  Future<void> requestPermissionAndRegister() {
+    return _registerFor(_authRepository.currentUser(), requestPermission: true);
+  }
+
+  Future<void> _registerFor(
+    AuthUser? user, {
+    required bool requestPermission,
+  }) async {
     try {
       if (user == null) return _clearCurrentRegistration();
       await _unregisterPreviousUser(user);
       _currentUser = user;
-      final token = await _tokenProvider.currentToken();
+      final token = await _tokenProvider.currentToken(
+        requestPermission: requestPermission,
+      );
       if (token == null) {
         logSyscatInfo('FCM-Token ist nicht verfügbar.', name: 'fcm');
         return;

@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 abstract interface class FcmTokenProvider {
   Stream<String> get tokenRefreshes;
 
-  Future<String?> currentToken();
+  Future<String?> currentToken({required bool requestPermission});
 
   Future<void> deleteToken();
 
@@ -23,11 +23,13 @@ class FirebaseMessagingTokenProvider implements FcmTokenProvider {
   Stream<String> get tokenRefreshes => _messaging.onTokenRefresh;
 
   @override
-  Future<String?> currentToken() async {
-    final settings = await _messaging.requestPermission(provisional: true);
+  Future<String?> currentToken({required bool requestPermission}) async {
+    final settings = requestPermission
+        ? await _messaging.requestPermission(provisional: true)
+        : await _messaging.getNotificationSettings();
     if (!_isAllowed(settings.authorizationStatus)) return null;
     if (kIsWeb && webVapidKey.isEmpty) return null;
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       final apnsToken = await _messaging.getAPNSToken();
       if (apnsToken == null) return null;
     }
