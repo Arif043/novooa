@@ -29,6 +29,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await FirebaseAppCheck.instance.activate(providerWeb: _webAppCheckProvider());
+  _configureErrorLogging();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   if (FirebaseEmulatorConfig.enabled) {
     await const FirebaseEmulatorConfig().connect();
@@ -36,6 +37,26 @@ Future<void> main() async {
   configureDependencies();
   unawaited(serviceLocator<FcmBootstrapper>().start());
   runApp(const MyApp());
+}
+
+void _configureErrorLogging() {
+  FlutterError.onError = (details) {
+    logSyscatException(
+      message: 'Unbehandelter Flutter-Fehler.',
+      error: details.exception,
+      stackTrace: details.stack,
+      name: 'flutter',
+    );
+  };
+  PlatformDispatcher.instance.onError = (error, stackTrace) {
+    logSyscatException(
+      message: 'Unbehandelter Dart-Fehler.',
+      error: error,
+      stackTrace: stackTrace,
+      name: 'flutter',
+    );
+    return true;
+  };
 }
 
 WebProvider _webAppCheckProvider() {
