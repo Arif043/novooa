@@ -14,15 +14,12 @@ import 'auth_session_state.dart';
 
 class AuthSessionCubit extends Cubit<AuthSessionState> implements Listenable {
   AuthSessionCubit({
-    required AuthRepository authRepository,
+    required this._authRepository,
     required this.signOutUseCase,
     required GetUserProfile getUserProfileUseCase,
-    Duration retryBaseDelay = const Duration(milliseconds: 200),
-    int maxProfileRetries = 4,
-  }) : _authRepository = authRepository,
-       _getUserProfile = getUserProfileUseCase,
-       _retryBaseDelay = retryBaseDelay,
-       _maxProfileRetries = maxProfileRetries,
+    this._retryBaseDelay = const Duration(milliseconds: 200),
+    this._maxProfileRetries = 4,
+  }) : _getUserProfile = getUserProfileUseCase,
        super(const AuthSessionState(currentUser: null)) {
     _subscription = _authRepository.authStateChanges().listen(
       _onAuthChanged,

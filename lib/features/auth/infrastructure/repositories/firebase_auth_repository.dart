@@ -67,7 +67,7 @@ class FirebaseAuthRepository implements AuthRepository {
       await _firebaseAuth.signOut();
       return const Success(unit);
     } on firebase.FirebaseAuthException catch (error) {
-      return Result.error(_mapFailure(error.code));
+      return Error(_mapFailure(error.code));
     } catch (_) {
       return const Error(AuthFailure(AuthFailureKind.unknown));
     }

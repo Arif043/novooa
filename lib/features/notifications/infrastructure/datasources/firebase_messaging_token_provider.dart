@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 class FirebaseMessagingTokenProvider {
   const FirebaseMessagingTokenProvider(this._messaging);
 
-  static const webVapidKey = String.fromEnvironment('FCM_WEB_VAPID_KEY');
+  static const webVapidKey = "BE4RdSC6jI9sQaW4qQCpXcco55YdbLEyPjf3WTyLe2R7aUU0vr4SMC7JaZ-nespbAuoZbCqWQov_5yLXfaw4X8M";
 
   final FirebaseMessaging _messaging;
 
@@ -18,7 +18,9 @@ class FirebaseMessagingTokenProvider {
       final apnsToken = await _messaging.getAPNSToken();
       if (apnsToken == null) return null;
     }
-    return _messaging.getToken(vapidKey: kIsWeb ? webVapidKey : null);
+    final current = await _messaging.getToken(vapidKey: kIsWeb ? webVapidKey : null);
+    debugPrint("FCM Token: $current");
+    return current;
   }
 
   Future<void> deleteToken() {
