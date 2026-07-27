@@ -1,0 +1,6 @@
+projectKey=novooa
+serverUrl=http://localhost:9000
+serverVersion=26.7.0.124771
+dashboardUrl=http://localhost:9000/dashboard?id=novooa
+ceTaskId=1abc75ad-3b6c-4d72-8807-488901c1f912
+ceTaskUrl=http://localhost:9000/api/ce/task?id=1abc75ad-3b6c-4d72-8807-488901c1f912
