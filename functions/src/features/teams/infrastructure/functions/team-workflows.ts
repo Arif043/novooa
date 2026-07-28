@@ -17,6 +17,7 @@ import {FirestoreTeamContextStore} from
   "../firebase/firestore-team-context-store.js";
 import {FirestoreTeamMembershipStore} from
   "../firebase/firestore-team-membership-store.js";
+import {logException} from "../../../../shared/logging/logger.js";
 
 const addTeamMemberInputSchema = z.object({
   identifier: z.string().min(1).max(254),
@@ -31,28 +32,28 @@ const invitationActionInputSchema = z.object({
 });
 
 export const addTeamMemberFlow = onCall(async (request) =>
-  runTeamAction(async () => {
+  runTeamAction("team_member.add_failed", async () => {
     const uid = authenticatedUid(request.auth?.uid);
     const input = addInputFrom(request.data);
     return teamUseCases().add.execute({ownerUid: uid, ...input});
   }));
 
 export const removeTeamMemberFlow = onCall(async (request) =>
-  runTeamAction(async () => {
+  runTeamAction("team_member.remove_failed", async () => {
     const ownerUid = authenticatedUid(request.auth?.uid);
     const input = removeInputFrom(request.data);
     return teamUseCases().remove.execute({ownerUid, uid: input.uid});
   }));
 
 export const acceptTeamInvitationFlow = onCall(async (request) =>
-  runTeamAction(async () => {
+  runTeamAction("team_invitation.accept_failed", async () => {
     const uid = authenticatedUid(request.auth?.uid);
     const input = invitationActionInputFrom(request.data);
     return teamUseCases().accept.execute({uid, ...input});
   }));
 
 export const rejectTeamInvitationFlow = onCall(async (request) =>
-  runTeamAction(async () => {
+  runTeamAction("team_invitation.reject_failed", async () => {
     const uid = authenticatedUid(request.auth?.uid);
     const input = invitationActionInputFrom(request.data);
     return teamUseCases().reject.execute({uid, ...input});
@@ -80,10 +81,14 @@ function authenticatedUid(uid: string | undefined): string {
   return uid;
 }
 
-async function runTeamAction<T>(action: () => Promise<T>): Promise<T> {
+async function runTeamAction<T>(
+  event: string,
+  action: () => Promise<T>,
+): Promise<T> {
   try {
     return await action();
   } catch (error) {
+    logException(event, error);
     throw httpsErrorFrom(error);
   }
 }

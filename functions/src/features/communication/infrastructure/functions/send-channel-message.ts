@@ -1,7 +1,11 @@
 import {HttpsError, onCall} from "firebase-functions/v2/https";
 import {z} from "genkit";
 import {currentTeamIdForUid} from "../../../teams/infrastructure/firebase/firebase-team-context.js";
-import {logError, logInfo} from "../../../../shared/logging/logger.js";
+import {
+  logException,
+  logInfo,
+  withExceptionLogging,
+} from "../../../../shared/logging/logger.js";
 import {
   type SendChannelMessageInput,
 } from "../firebase/send-channel-message-store.js";
@@ -20,7 +24,9 @@ const sendChannelMessageInputSchema = z.object({
 
 export const sendChannelMessage = onCall(
   {secrets: [twilioAccountSid, twilioAuthToken]},
-  async (request) => {
+  async (request) => withExceptionLogging(
+    "channel_message.handler_failed",
+    async () => {
     const uid = authenticatedUid(request.auth?.uid);
     const input = inputFrom(request.data);
     const teamId = await currentTeamIdForUid(uid);
@@ -50,7 +56,8 @@ export const sendChannelMessage = onCall(
       logSendFailure({teamId, channelId: input.channelId, error});
       throw new HttpsError("internal", "Nachricht konnte nicht gesendet werden.");
     }
-  },
+    },
+  ),
 );
 
 function authenticatedUid(uid: string | undefined): string {
@@ -71,13 +78,8 @@ function logSendFailure(input: {
   channelId: string;
   error: unknown;
 }): void {
-  logError("channel_message.send_failed", {
+  logException("channel_message.send_failed", input.error, {
     teamId: input.teamId,
     channelId: input.channelId,
-    errorMessage: errorMessage(input.error),
   });
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Unknown send error.";
 }

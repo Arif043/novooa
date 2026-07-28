@@ -81,6 +81,9 @@ nur öffentliche Trigger und enthält keine Logik.
 - Callable-, Scheduler- und Webhook-Handler gehören in
   `infrastructure/functions/`. Sie validieren Eingaben, rufen Use Cases auf und
   übersetzen Fehler, enthalten aber keine Geschäftsregeln.
+- Jeder öffentliche Handler protokolliert Fehler über `withExceptionLogging`
+  bzw. `logException` aus `shared/logging`, bevor er sie weiterwirft oder in
+  einen transport-spezifischen Fehler übersetzt.
 - Abhängigkeiten zeigen nach innen: Infrastructure darf Domain importieren,
   Domain kennt Infrastructure nicht.
 - Nur ein Function-Handler darf als Composition Root Adapter anderer Features

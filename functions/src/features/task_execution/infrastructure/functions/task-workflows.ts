@@ -11,7 +11,7 @@ import {
   loadTaskDefinition,
 } from "../genkit/runner/task-definition-loader.js";
 import {aiProviderPlugins} from "../genkit/runner/ai-models.js";
-import {errorDetails, logError} from "../genkit/runner/structured-logger.js";
+import {logException, withExceptionLogging} from "../../../../shared/logging/logger.js";
 import {twilioAccountSid, twilioAuthToken} from "../../../communication/infrastructure/twilio/twilio-secrets.js";
 import {sendgridApiKey} from "../../../communication/infrastructure/sendgrid/sendgrid-secrets.js";
 import {FirebaseObjectStore} from "../../../files/infrastructure/firebase/firebase-object-store.js";
@@ -94,10 +94,9 @@ export const taskDefinitionFlow = ai.defineFlow(
       });
       return {runId: run.runId, taskId: run.taskId, status: "queued" as const};
     } catch (error) {
-      logError("run_task_definition_flow.failed", {
+      logException("run_task_definition_flow.failed", error, {
         taskId: input.taskId,
         title,
-        error: errorDetails(error),
       });
       throw error;
     }
@@ -115,7 +114,9 @@ export const reviewTaskRunFlow = ai.defineFlow(
     inputSchema: reviewTaskRunInputSchema,
     outputSchema: reviewTaskRunOutputSchema,
   },
-  async (input, runtime) => {
+  async (input, runtime) => withExceptionLogging(
+    "review_task_run.failed",
+    async () => {
     const teamId = await teamIdFromContext(runtime.context);
     const reviewableRun = await taskRunStore.loadReviewableRun(
       teamId,
@@ -136,7 +137,9 @@ export const reviewTaskRunFlow = ai.defineFlow(
       mode: "resume",
     });
     return {runId: input.runId, status: "queued" as const};
-  },
+    },
+    {runId: input.runId},
+  ),
 );
 
 export const reviewTaskRun = onCallGenkit(callableOptions, reviewTaskRunFlow);
@@ -155,10 +158,13 @@ export const runTaskRunTask = onTaskDispatched<TaskRunDispatchPayload>(
       maxDispatchesPerSecond: 5,
     },
   },
-  async (request) => {
+  async (request) => withExceptionLogging(
+    "task_run_task.handler_failed",
+    async () => {
     const payload = taskRunDispatchPayloadSchema.parse(request.data);
     await handleTaskRunDispatch(ai, payload, workerStores);
-  },
+    },
+  ),
 );
 
 async function teamIdFromContext(context: unknown): Promise<string> {

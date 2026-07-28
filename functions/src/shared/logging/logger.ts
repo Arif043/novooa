@@ -10,6 +10,27 @@ export function logError(event: string, data: LogData = {}): void {
   logger.error(event, {event, ...data});
 }
 
+export function logException(
+  event: string,
+  error: unknown,
+  data: LogData = {},
+): void {
+  logger.error(event, error, {event, ...data});
+}
+
+export async function withExceptionLogging<T>(
+  event: string,
+  action: () => Promise<T>,
+  data: LogData = {},
+): Promise<T> {
+  try {
+    return await action();
+  } catch (error) {
+    logException(event, error, data);
+    throw error;
+  }
+}
+
 export function logReadableInfo(message: string): void {
   logger.info(message);
 }

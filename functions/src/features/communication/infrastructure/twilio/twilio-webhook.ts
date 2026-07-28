@@ -1,6 +1,6 @@
 import {defineSecret} from "firebase-functions/params";
 import {onRequest} from "firebase-functions/v2/https";
-import {logError, logInfo} from "../../../../shared/logging/logger.js";
+import {logException, logInfo} from "../../../../shared/logging/logger.js";
 import {twilioMessageEventFrom} from "./twilio-message-event.js";
 import {
   formFieldsFromRequest,
@@ -49,12 +49,10 @@ export const twilioWebhook = onRequest(
       logInfo("twilio_message.received", {teamId, channelId, created});
       response.type("text/xml").status(200).send("<Response></Response>");
     } catch (error) {
-      const reason = errorMessage(error);
-      logError("twilio_message.failed", {
-        errorMessage: reason,
+      logException("twilio_message.failed", error, {
         requestUrl: publicRequestUrl(request),
       });
-      response.status(400).send(reason);
+      response.status(400).send(errorMessage(error));
     }
   },
 );

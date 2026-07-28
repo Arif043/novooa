@@ -11,6 +11,7 @@ import {
 } from "../firebase/channel-message-store.js";
 import {dispatchChannelMessageTriggers} from "./channel-trigger-dispatcher.js";
 import {currentTeamIdForUid} from "../../../teams/infrastructure/firebase/firebase-team-context.js";
+import {withExceptionLogging} from "../../../../shared/logging/logger.js";
 
 const fakeChannelMessageInputSchema = z.object({
   channelId: z.string().min(1),
@@ -19,7 +20,8 @@ const fakeChannelMessageInputSchema = z.object({
   subject: z.string().max(240).optional(),
 });
 
-export const dispatchFakeChannelMessage = onCall(async (request) => {
+export const dispatchFakeChannelMessage = onCall(async (request) =>
+  withExceptionLogging("fake_channel_message.failed", async () => {
   const uid = request.auth?.uid;
   if (!uid) throw new HttpsError("unauthenticated", "Auth is required.");
   const input = fakeChannelMessageInputSchema.parse(request.data);
@@ -31,7 +33,8 @@ export const dispatchFakeChannelMessage = onCall(async (request) => {
     await dispatchChannelMessageTriggers({teamId, channelId: channel.id, event});
   }
   return {channelId: channel.id, messageId: event.providerMessageId, created};
-});
+  }),
+);
 
 function fakeEventFor(
   channel: ChannelKind,
