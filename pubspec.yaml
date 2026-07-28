@@ -38,6 +38,7 @@ dependencies:
   http:
   multiple_result: 
   uuid:
+  web: ^1.1.1
   web_smooth_scroll:
 
   # The following adds the Cupertino Icons font to your application.

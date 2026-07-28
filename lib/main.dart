@@ -11,6 +11,7 @@ import 'core/logging/syscat_log.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/syscat_theme.dart';
 import 'features/auth/presentation/cubits/auth_session_cubit.dart';
+import 'features/notifications/infrastructure/datasources/fcm_push_click_bridge.dart';
 import 'features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import 'features/notifications/presentation/widgets/fcm_foreground_notification_listener.dart';
 import 'firebase_options.dart';
@@ -34,6 +35,7 @@ Future<void> main() async {
     await const FirebaseEmulatorConfig().connect();
   }
   configureDependencies();
+  const FcmPushClickBridge().start(_openNotificationData);
   unawaited(serviceLocator<FcmBootstrapper>().start());
   runApp(const MyApp());
 }
@@ -87,7 +89,11 @@ class MyApp extends StatelessWidget {
 }
 
 void _openNotification(RemoteMessage message) {
-  final runId = message.data['runId'];
+  _openNotificationData(message.data);
+}
+
+void _openNotificationData(Map<String, dynamic> data) {
+  final runId = data['runId'] as String?;
   final location = Uri(
     path: AppRouter.activity,
     queryParameters: runId == null ? null : {'runId': runId},
