@@ -45,7 +45,7 @@ test("sendToUser sends a notification to every registered device", async () => {
     notification: {title: "Freigabe erforderlich", body: "Bitte pruefen."},
     data: {runId: "run-1"},
     webpush: {
-      fcmOptions: {link: "https://syscat-90bff.web.app/activity?runId=run-1"},
+      fcmOptions: {link: "/activity?runId=run-1"},
     },
   }]);
 });

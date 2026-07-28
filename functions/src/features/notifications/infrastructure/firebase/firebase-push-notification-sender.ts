@@ -11,7 +11,6 @@ import {
 } from "../../../../shared/firebase/firestore-db.js";
 
 const maximumTokensPerRequest = 500;
-const webAppUrl = "https://syscat-90bff.web.app";
 
 export type PushNotification = {
   title: string;
@@ -125,10 +124,9 @@ function uniqueTokenDocuments(
 }
 
 function notificationUrl(data: Record<string, string>): string {
-  const url = new URL("/activity", webAppUrl);
   const runId = data.runId;
-  if (runId) url.searchParams.set("runId", runId);
-  return url.toString();
+  if (!runId) return "/activity";
+  return `/activity?${new URLSearchParams({runId})}`;
 }
 
 async function removeInvalidTokens(
