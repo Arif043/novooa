@@ -12,35 +12,3 @@ firebase.initializeApp({
 });
 
 const messaging = firebase.messaging();
-
-messaging.onBackgroundMessage((message) => {
-  const notification = message.notification || {};
-  return self.registration.showNotification(
-    notification.title || 'Neue Benachrichtigung',
-    {
-      body: notification.body || '',
-      icon: '/icons/Icon-192.png',
-      badge: '/icons/Icon-192.png',
-      data: {url: notificationUrl(message.data)},
-    },
-  );
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  event.waitUntil(openNotification(event.notification.data.url));
-});
-
-function notificationUrl(data) {
-  const url = new URL('/activity', self.location.origin);
-  if (data && data.runId) url.searchParams.set('runId', data.runId);
-  return url.toString();
-}
-
-async function openNotification(url) {
-  const windows = await clients.matchAll({type: 'window', includeUncontrolled: true});
-  const existing = windows.find((window) => window.url.startsWith(self.location.origin));
-  if (!existing) return clients.openWindow(url);
-  await existing.navigate(url);
-  return existing.focus();
-}

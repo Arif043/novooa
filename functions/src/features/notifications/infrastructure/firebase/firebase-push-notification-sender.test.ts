@@ -44,7 +44,22 @@ test("sendToUser sends a notification to every registered device", async () => {
     tokens: ["phone", "tablet"],
     notification: {title: "Freigabe erforderlich", body: "Bitte pruefen."},
     data: {runId: "run-1"},
+    webpush: {
+      fcmOptions: {link: "https://syscat-90bff.web.app/activity?runId=run-1"},
+    },
   }]);
+});
+
+test("sendToUser sends an identical token only once", async () => {
+  const messagingClient = new FakeMessagingClient(successfulBatch(1));
+  const sender = new FirebasePushNotificationSender(
+    new FakeTokenStore([token("phone").document, token("phone").document]),
+    messagingClient,
+  );
+
+  await sender.sendToUser("customer-1", notification());
+
+  assert.deepEqual(messagingClient.messages[0]?.tokens, ["phone"]);
 });
 
 test("sendToUser removes only invalid device tokens", async () => {

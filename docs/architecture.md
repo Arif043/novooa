@@ -100,9 +100,10 @@ Einladung setzt `users/{uid}.teamId` und erstellt
 HITL-Freigaben werden ebenfalls als Notification (`taskRunApproval`) unter den
 Team-Mitgliedern verteilt, lösen zusätzlich einen FCM-Push aus und öffnen im
 Client den Freigabe-Dialog. Nicht mehr registrierte Geräte-Tokens entfernt das
-Backend nach einer fehlgeschlagenen Zustellung.
-Im Flutter-Web-Client verarbeitet `firebase-messaging-sw.js` Hintergrund-Pushes
-und öffnet beim Klick die Aktivitätenansicht. Im Vordergrund erscheint dieselbe
+Backend nach einer fehlgeschlagenen Zustellung. Identische Tokens werden vor
+dem Versand dedupliziert.
+Im Flutter-Web-Client zeigt FCM Hintergrund-Pushes selbst an; der Versand setzt
+den Klick-Link auf die Aktivitätenansicht. Im Vordergrund erscheint dieselbe
 Benachrichtigung als Snackbar.
 
 Kommunikationskanäle werden im Client unter
