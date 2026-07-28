@@ -45,54 +45,72 @@ class AppRouter {
         routes: [
           GoRoute(
             path: home,
-            builder: (context, state) => const TaskHomepage(),
+            pageBuilder: (context, state) =>
+                _shellPage(state, const TaskHomepage()),
             routes: [
               GoRoute(
                 path: 'builder',
-                builder: (context, state) => TaskBuilderPage(
-                  editingTaskOrNull: state.extra is Task
-                      ? state.extra as Task
-                      : null,
+                pageBuilder: (context, state) => _shellPage(
+                  state,
+                  TaskBuilderPage(
+                    editingTaskOrNull: state.extra is Task
+                        ? state.extra as Task
+                        : null,
+                  ),
                 ),
               ),
             ],
           ),
           GoRoute(
             path: plans,
-            builder: (context, state) => const RootPlaceholderPage(
-              title: 'Arbeitspläne',
-              content: 'Gespeicherte Aufgaben und Vorlagen erscheinen hier.',
+            pageBuilder: (context, state) => _shellPage(
+              state,
+              const RootPlaceholderPage(
+                title: 'Arbeitspläne',
+                content: 'Gespeicherte Aufgaben und Vorlagen erscheinen hier.',
+              ),
             ),
           ),
           GoRoute(
             path: schedule,
-            builder: (context, state) => const SchedulePage(),
+            pageBuilder: (context, state) =>
+                _shellPage(state, const SchedulePage()),
           ),
           GoRoute(
             path: activity,
-            builder: (context, state) =>
-                ActivityPage(initialRunId: state.uri.queryParameters['runId']),
+            pageBuilder: (context, state) => _shellPage(
+              state,
+              ActivityPage(initialRunId: state.uri.queryParameters['runId']),
+            ),
           ),
-          GoRoute(path: files, builder: (context, state) => const FilesPage()),
+          GoRoute(
+            path: files,
+            pageBuilder: (context, state) =>
+                _shellPage(state, const FilesPage()),
+          ),
           GoRoute(
             path: knowledgeBase,
-            builder: (context, state) => const KnowledgeBasePage(),
+            pageBuilder: (context, state) =>
+                _shellPage(state, const KnowledgeBasePage()),
           ),
           GoRoute(
             path: skills,
             redirect: (context, state) =>
                 MvpFeatureFlags.skillsEnabled ? null : home,
-            builder: (context, state) => const SkillsPage(),
+            pageBuilder: (context, state) =>
+                _shellPage(state, const SkillsPage()),
           ),
           GoRoute(
             path: employees,
             redirect: (context, state) =>
                 MvpFeatureFlags.employeesEnabled ? null : home,
-            builder: (context, state) => const EmployeesPage(),
+            pageBuilder: (context, state) =>
+                _shellPage(state, const EmployeesPage()),
           ),
           GoRoute(
             path: settings,
-            builder: (context, state) => const SettingsPage(),
+            pageBuilder: (context, state) =>
+                _shellPage(state, const SettingsPage()),
           ),
         ],
       ),
@@ -106,6 +124,10 @@ class AppRouter {
   );
 
   void dispose() => router.dispose();
+
+  NoTransitionPage<void> _shellPage(GoRouterState state, Widget child) {
+    return NoTransitionPage<void>(key: state.pageKey, child: child);
+  }
 
   String? _redirect(BuildContext context, GoRouterState state) {
     final sessionState = sessionCubit.state;
