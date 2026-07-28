@@ -9,50 +9,14 @@ Provider wie Twilio bleiben optional über einen dünnen novooa-Relay nutzbar.
 ## Runtime-Schichten
 
 ```text
-Domain
-  Task-, Attachment- und Schedule-Typen
-  Repository-Ports
+Feature Domain
+  Entities, Repository-Ports und Use Cases
 
-Task Runner Core
-  NodeExecutors
-  TaskGraphRunner
-  Template-Auflösung
-  AI-Provider-Auswahl
-
-Ports
-  TaskStore
-  TaskRunStore
-  ActivityStore
-  TeamContextStore
-  TeamFileStore
-  KnowledgeBaseStore
-  TaskTriggerStore
-  ObjectStore
-  TaskRunApprovalNotificationStore
-  TeamMembershipStore
-  TeamMemberDirectory
-  ChannelProvider
-
-Cloud Adapter
-  FirestoreTaskStore
-  FirestoreTaskRunStore
-  FirestoreActivityStore
-  FirestoreTeamFileStore
-  FirestoreKnowledgeBaseStore
-  FirestoreTaskTriggerStore
-  FirebaseObjectStore
-  FirestoreTaskRunApprovalNotificationStore
-  FirestoreTeamMembershipStore
-  FirebaseTeamMemberDirectory
-
-Local Adapter
-  SQLiteTaskStore
-  SQLiteTaskRunStore
-  SQLiteActivityStore
-  LocalTeamFileStore
-  SQLiteKnowledgeBaseStore
-  SQLiteTaskTriggerStore
-  LocalObjectStore
+Feature Infrastructure
+  Task Runner und Node Executors
+  Firebase-, Genkit- und Twilio-Adapter
+  Lokale SQLite- und Dateisystem-Adapter
+  Callable-, Scheduler- und Webhook-Handler
 ```
 
 ## Lokale Datenhaltung
@@ -122,35 +86,19 @@ zustellen.
 
 ## Aktueller Implementierungsstand
 
-- `functions/src/domain/entities/` enthält reine Domain-Typen ohne Firebase
-  oder Genkit.
-- `functions/src/task-runner/ai-models.ts` kapselt AI Provider.
-- `functions/src/domain/repositories/task-store.ts` definiert `TaskStore`.
-- `functions/src/domain/repositories/task-run-store.ts` definiert `TaskRunStore`.
-- `functions/src/domain/repositories/activity-store.ts` definiert `ActivityStore`.
-- `functions/src/domain/repositories/team-file-store.ts` definiert `TeamFileStore`.
-- `functions/src/domain/repositories/knowledge-base-store.ts` definiert `KnowledgeBaseStore`.
-- `functions/src/domain/repositories/task-trigger-store.ts` definiert `TaskTriggerStore`.
-- `functions/src/domain/repositories/team-context-store.ts` definiert `TeamContextStore`.
-- `functions/src/domain/repositories/object-store.ts` definiert `ObjectStore`.
-- `functions/src/domain/repositories/task-run-approval-notification-store.ts`
-  definiert den Port für HITL-Benachrichtigungen.
-- `functions/src/domain/repositories/team-membership-store.ts` und
-  `team-member-directory.ts` definieren Ports für Teamverwaltung.
-- Team-Mitgliedschaftsaktionen liegen als Use-Cases unter
-  `functions/src/domain/usecases/`.
-- `functions/src/task-runner/task-run-worker.ts` führt Runs über Store-Ports aus.
-- Scheduler und Channel-Dispatcher arbeiten über `TaskTriggerStore`.
-- Node- und Skill-Attachments werden über `ObjectStore` geladen.
-- Wissensbasis-Attachments werden über `KnowledgeBaseStore` aufgelöst und in
-  den lokalen Node-Workspace geschrieben.
-- HITL-Benachrichtigungen werden in Firebase über
-  `FirestoreTaskRunApprovalNotificationStore` geschrieben.
-- Firestore-Adapter unter `functions/src/infrastructure/firebase/`
-  implementieren aktuell die Cloud-Version.
-- Lokale SQL-Adapter sind für `TaskStore`, `TaskRunStore`, `ActivityStore`,
-  `TaskTriggerStore` und `KnowledgeBaseStore` vorbereitet. Sie hängen nur an
-  `LocalSqlDatabase`, noch nicht an einer konkreten SQLite-Library.
+Die Runtime folgt vollständig der Feature-First-Struktur aus
+[`backend-struktur.md`](./backend-struktur.md). Ports und Use Cases liegen im
+Domain-Bereich ihres Features; Cloud- und Local-Adapter bleiben austauschbar in
+dessen Infrastructure-Bereich.
+
+- `task_execution` enthält Task Runner, Node Executors und Ports für
+  Definitionen, Runs, Aktivitäten und ausgehende Nachrichten.
+- `teams`, `scheduling`, `communication`, `files`, `knowledge_base` und
+  `notifications` kapseln jeweils ihre eigenen Domain-Verträge und Adapter.
+- Task-Ausführung erhält Dateien, Wissensbasis und Nachrichten ausschließlich
+  über injizierte Ports; Function-Handler verdrahten die konkreten Adapter.
+- Lokale SQL-Adapter für Tasks, Runs, Aktivitäten, Trigger und Wissensbasis
+  hängen nur an `LocalSqlDatabase`.
 - `LocalTeamFileStore` schreibt Dateien in ein lokales Root-Verzeichnis und
   persistiert Datei-/Versions-Metadaten über `LocalSqlDatabase`.
 - `SqlMigrationRunner` wendet Migrationen treiberneutral über

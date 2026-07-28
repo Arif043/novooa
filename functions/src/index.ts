@@ -33,15 +33,15 @@ export {
   reviewTaskRun,
   runTaskDefinitionFlow,
   runTaskRunTask,
-} from "./task-workflows.js";
+} from "./features/task_execution/infrastructure/functions/task-workflows.js";
 
-export {runDueTaskTriggersWorker} from "./schedule-workflows.js";
-export {twilioWebhook} from "./twilio/twilio-webhook.js";
-export {dispatchFakeChannelMessage} from "./channels/fake-channel-message.js";
-export {sendChannelMessage} from "./channels/send-channel-message.js";
+export {runDueTaskTriggersWorker} from "./features/scheduling/infrastructure/functions/schedule-workflows.js";
+export {twilioWebhook} from "./features/communication/infrastructure/twilio/twilio-webhook.js";
+export {dispatchFakeChannelMessage} from "./features/communication/infrastructure/functions/fake-channel-message.js";
+export {sendChannelMessage} from "./features/communication/infrastructure/functions/send-channel-message.js";
 export {
   acceptTeamInvitationFlow,
   addTeamMemberFlow,
   rejectTeamInvitationFlow,
   removeTeamMemberFlow,
-} from "./team-workflows.js";
+} from "./features/teams/infrastructure/functions/team-workflows.js";

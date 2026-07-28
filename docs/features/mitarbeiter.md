@@ -74,7 +74,7 @@ Executor braucht, ohne zur Laufzeit noch einmal Firestore anzufragen:
 ## Ausführung im TaskRun
 
 Vor dem Modell-Turn ermittelt
-[`employee-context.ts`](../../functions/src/task-runner/employee-context.ts)
+[`employee-context.ts`](../../functions/src/features/task_execution/infrastructure/genkit/runner/employee-context.ts)
 den zugewiesenen Mitarbeiter und mergt seine Default-Skills mit den
 node-lokalen Skills. Duplikate (gleiche `skillId`) werden entfernt;
 node-spezifische Skills gewinnen. Der gemergte Satz wandert durch den
@@ -84,7 +84,7 @@ automatisch von der `skills`-Middleware angeboten.
 Wenn ein Mitarbeiter am Baustein hängt, verwendet der Executor die
 Genkit-Agent-API (Beta) statt `ai.generate(…)`:
 
-1. [`employee-agent.ts`](../../functions/src/task-runner/employee-agent.ts)
+1. [`employee-agent.ts`](../../functions/src/features/task_execution/infrastructure/genkit/runner/employee-agent.ts)
    ruft `ai.defineAgent({ name, description, system, model, output?, use })`
    auf. `system` ist die Mitarbeiter-Rolle, `use` reicht die Retry-,
    Filesystem- und Skill-Middleware durch, `output` trägt bei Decision-

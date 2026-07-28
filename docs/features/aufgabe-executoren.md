@@ -6,7 +6,7 @@
 ## Modellprovider
 
 Prompt-, Refinement- und Employee-Agent-Executor waehlen Modelle ausschliesslich
-ueber `functions/src/task-runner/ai-models.ts`.
+ueber `functions/src/features/task_execution/infrastructure/genkit/runner/ai-models.ts`.
 
 | `AI_PROVIDER` | Zweck |
 | --- | --- |

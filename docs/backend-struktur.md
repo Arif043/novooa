@@ -1,73 +1,120 @@
 # Backend-Struktur
 
-## Ist-Zustand
+## Ziel
 
-Das Backend liegt aktuell in einem einzigen TypeScript-Paket unter
-`functions/src`.
+Das TypeScript-Backend unter `functions/src` ist **Feature First** organisiert.
+Jedes Feature besitzt zwei Schichten: `domain` für reine Geschäftslogik und
+`infrastructure` für technische Adapter. Eine `application`-Schicht gibt es
+nicht; Use Cases liegen unter `domain/usecases`.
 
 ```text
 functions/src/
-  index.ts                 Firebase Export-Root
-  task-workflows.ts        Callable Flows und Firestore Worker
-  schedule-workflows.ts    Cloud Scheduler Entry Point
-  team-workflows.ts        Team-Callables
-  domain/entities/         reine Task-, Attachment- und Schedule-Typen
-  domain/repositories/     Ports für Runner, Storage und Adapter
-  domain/usecases/         reine Business-Aktionen, z. B. Team-Mitgliedschaft
-  infrastructure/firebase/ Firestore-/Storage-/Firebase-Adapter
-  infrastructure/local/    SQLite-/Dateisystem-Adapter
-  task-runner/             Task-Runner-Core und Facades
-  task-executors/          Baustein-Executoren
-  channels/                Kommunikation, Trigger-Dispatch, Sender
-  twilio/                  Twilio Webhook und Mapping
-  schedule/                Zeitplan-Runner und Zeitberechnung
+  index.ts
+  features/
+    task_execution/
+      domain/
+        entities/
+        repositories/
+        usecases/
+      infrastructure/
+        firebase/
+        genkit/
+        local/
+        functions/
+    teams/
+      domain/
+        entities/
+        repositories/
+        usecases/
+      infrastructure/
+        firebase/
+        functions/
+    scheduling/
+      domain/
+      infrastructure/
+        firebase/
+        local/
+        functions/
+    communication/
+      domain/
+      infrastructure/
+        firebase/
+        sendgrid/
+        twilio/
+        functions/
+    files/
+      domain/
+      infrastructure/
+        firebase/
+        local/
+    knowledge_base/
+      domain/
+      infrastructure/
+        firebase/
+        local/
+    notifications/
+      domain/
+      infrastructure/
+        firebase/
+  shared/
+    firebase/
+    genkit/
+    local/
+    logging/
 ```
 
-## Zielstruktur
+`shared/` enthält ausschließlich echte Querschnittsthemen ohne fachliche
+Zuständigkeit, beispielsweise strukturiertes Logging. Der Firebase-Export-Root
+`index.ts` re-exportiert nur öffentliche Trigger und enthält keine Logik.
 
-Der Task Runner soll unabhängig von Firebase ausführbar sein. Cloud Functions
-und lokale Runtime sollen nur unterschiedliche Adapter bereitstellen.
+## Schichtregeln
 
-```text
-Core
-  task-runner/
-  task-executors/
-  schedule/schedule-next-run.ts
+- `domain/` importiert weder Firebase, Genkit, Twilio noch Node-/HTTP-SDKs.
+- `domain/entities/` enthält reine Typen, Value Objects und Regeln.
+- `domain/repositories/` definiert Ports; Implementierungen gehören nie in
+  diese Schicht.
+- `domain/usecases/` enthält Geschäftsabläufe und hängt nur von Domain-Typen
+  und Ports ab.
+- `infrastructure/` implementiert Ports und kapselt Firestore, Storage, Cloud
+  Tasks, Firebase Functions, Genkit, lokale SQLite-Datenbanken und Provider.
+- Callable-, Scheduler- und Webhook-Handler gehören in
+  `infrastructure/functions/`. Sie validieren Eingaben, rufen Use Cases auf und
+  übersetzen Fehler, enthalten aber keine Geschäftsregeln.
+- Abhängigkeiten zeigen nach innen: Infrastructure darf Domain importieren,
+  Domain kennt Infrastructure nicht.
+- Nur ein Function-Handler darf als Composition Root Adapter anderer Features
+  erzeugen und über deren Ports verdrahten. Laufzeitlogik außerhalb eines
+  solchen Handlers importiert keine fremde Infrastructure.
 
-Domain
-  domain/entities/
-  domain/repositories/
+## Feature-Grenzen
 
-Cloud Adapter
-  infrastructure/firebase/
+| Feature | Verantwortung |
+| --- | --- |
+| `task_execution` | Task-Definitionen, Runs, Graph Runner, Node Executors und Cloud Tasks |
+| `teams` | Arbeitsbereich, Mitgliedschaft und Einladungen |
+| `scheduling` | Zeit- und Event-Trigger sowie Fälligkeiten |
+| `communication` | Kanäle, eingehende Events und Provider-Sender |
+| `files` | Datei-Metadaten, Versionen und Objektzugriff |
+| `knowledge_base` | Notizen, Links und Workspace-Auflösung |
+| `notifications` | In-App-Freigaben und Push-Versand |
 
-Local Adapter
-  infrastructure/local/
-```
+Ein Feature darf einen Port eines anderen Features verwenden, nicht dessen
+Firebase- oder lokalen Adapter. Gemeinsame technische Hilfen werden erst dann
+in `shared/` verschoben, wenn sie mindestens zwei Features ohne fachliche
+Kopplung benötigen.
 
-## Leitplanken
+## Migrationsregeln
 
-- Entry Points importieren Cloud-SDKs.
-- Store-Adapter importieren Persistenz-SDKs.
-- `domain/` importiert keine Firebase-, Genkit- oder Runner-Module.
-- Runner, Executor-Registry und Graph-Logik importieren keine Firebase-SDKs.
-- Datei-Downloads laufen über `ObjectStore`, nicht direkt über Firebase Storage.
-- Wissensbasis-Notizen laufen über `KnowledgeBaseStore`, nicht direkt über
-  Firestore.
-- Freigabe-Notifications laufen über `TaskRunApprovalNotificationStore`.
-- Team-Mitgliedschaft läuft über Use-Cases und `TeamMembershipStore`; Firebase
-  Auth und Firestore bleiben Adapter.
-- `task-runner/task-definition.ts` bleibt vorerst die Schema- und
-  Validierungsschicht für Genkit/Zod und re-exportiert Domain-Typen.
-- Lokale Adapter hängen an `LocalSqlDatabase`, nicht an einer konkreten
-  SQLite-Library.
-- Migrationen werden über `SqlMigrationRunner` angewendet, nicht aus
-  Cloud Functions heraus gestartet.
+- Öffentliche Function-Namen und ihre Eingabe-/Ausgabe-Verträge bleiben bei
+  einer Strukturmigration unverändert.
+- Eine Migration verschiebt immer ein vollständiges Feature: Domain-Modelle,
+  Ports, Use Cases und die zugehörigen Adapter.
+- Jeder Schritt muss mit `npm --prefix functions run build` und den vorhandenen
+  Functions-Tests geprüft werden.
+- Dokumente mit Quellpfaden werden im selben Schritt angepasst.
 
-## Offene Entkopplungen
+## Migration
 
-- Channel-Sender und Team-Workflows sind noch Cloud-spezifisch.
-- `team-workflows.ts` ist noch ein Firebase Callable Entry Point, enthält aber
-  keine direkte Firestore- oder Firebase-Auth-Logik mehr.
-- `task-runner/task-definition.ts` enthält weiterhin Genkit/Zod-Schemas und ist
-  damit bewusst noch Adapter-nah.
+Alle bestehenden Backend-Module sind in die Feature-First-Struktur überführt.
+Unter `functions/src` verbleiben ausschließlich der Export-Root `index.ts`,
+`features/` und technische Querschnittsmodule in `shared/`.

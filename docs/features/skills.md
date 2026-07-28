@@ -72,14 +72,14 @@ können den Mixin bei Bedarf einbinden.
 
 Bevor ein `PromptNode` oder `IterativeRefinementNode` das Modell ruft,
 bereitet
-[`node-attachment-workspace.ts`](../../functions/src/task-runner/node-attachment-workspace.ts)
+[`node-attachment-workspace.ts`](../../functions/src/features/task_execution/infrastructure/genkit/runner/node-attachment-workspace.ts)
 einen node-lokalen Ordner unter `/tmp/…/` vor. Für Skills legt
-[`skill-workspace.ts`](../../functions/src/task-runner/skill-workspace.ts)
+[`skill-workspace.ts`](../../functions/src/features/task_execution/infrastructure/genkit/runner/skill-workspace.ts)
 darin ein `skills/`-Verzeichnis an und lädt pro Anhang die SKILL.md nach
 `skills/<slug>/SKILL.md`.
 
 Die Middleware-Kette in
-[`node-attachment-genkit.ts`](../../functions/src/task-runner/node-attachment-genkit.ts)
+[`node-attachment-genkit.ts`](../../functions/src/features/task_execution/infrastructure/genkit/runner/node-attachment-genkit.ts)
 hängt anschließend `skills({skillPaths: [<skillsDir>]})` an. Genkit spielt
 dann automatisch:
 

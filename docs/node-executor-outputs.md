@@ -1,7 +1,7 @@
 # Node-Executor-Outputs
 
 > Referenz fuer die Resultate der Backend-Executoren unter
-> `functions/src/task-executors/`.
+> `functions/src/features/task_execution/infrastructure/genkit/executors/`.
 
 ## Ergebnisvertrag
 

@@ -198,7 +198,8 @@ Feature startet.
 - **Schemas:** `inputSchema` / `outputSchema` mit **Zod** (`z.object(...)`).
   Keine `any`-Typen in der Schnittstelle.
 - **Modell:** Flows verwenden keine Provider direkt. Modell-Plugins und
-  ModelRefs werden zentral über `functions/src/task-runner/ai-models.ts`
+  ModelRefs werden zentral über
+  `functions/src/features/task_execution/infrastructure/genkit/runner/ai-models.ts`
   bereitgestellt. Unterstützte Profile sind `google`, `minimax`,
   `openai-compatible` und `local`.
 - **Export:** Jeder Flow wird in `functions/src/index.ts` re-exportiert.
