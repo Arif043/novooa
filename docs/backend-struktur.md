@@ -64,8 +64,9 @@ functions/src/
 ```
 
 `shared/` enthält ausschließlich echte Querschnittsthemen ohne fachliche
-Zuständigkeit, beispielsweise strukturiertes Logging. Der Firebase-Export-Root
-`index.ts` re-exportiert nur öffentliche Trigger und enthält keine Logik.
+Zuständigkeit, beispielsweise strukturiertes Logging über
+`firebase-functions/logger`. Der Firebase-Export-Root `index.ts` re-exportiert
+nur öffentliche Trigger und enthält keine Logik.
 
 ## Schichtregeln
 

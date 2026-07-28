@@ -1,24 +1,21 @@
+import * as logger from "firebase-functions/logger";
+
 export type LogData = Record<string, unknown>;
 
 export function logInfo(event: string, data: LogData = {}): void {
-  console.info(JSON.stringify({severity: "INFO", message: event, event, ...data}));
+  logger.info(event, {event, ...data});
 }
 
 export function logError(event: string, data: LogData = {}): void {
-  console.error(JSON.stringify({
-    severity: "ERROR",
-    message: `Error: ${event}`,
-    event,
-    ...data,
-  }));
+  logger.error(event, {event, ...data});
 }
 
 export function logReadableInfo(message: string): void {
-  console.info(message);
+  logger.info(message);
 }
 
 export function logReadableError(message: string): void {
-  console.error(message);
+  logger.error(message);
 }
 
 export function textSummary(text: string, field = "text"): LogData {
