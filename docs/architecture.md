@@ -103,9 +103,8 @@ Client den Freigabe-Dialog. Nicht mehr registrierte Geräte-Tokens entfernt das
 Backend nach einer fehlgeschlagenen Zustellung. Identische Tokens werden vor
 dem Versand dedupliziert.
 Im Flutter-Web-Client zeigt FCM Hintergrund-Pushes selbst an; der Versand setzt
-den Klick-Link auf die Aktivitätenansicht, die der Service Worker in der
-vorhandenen PWA öffnet. Im Vordergrund erscheint dieselbe Benachrichtigung als
-Snackbar.
+den Klick-Link auf die Aktivitätenansicht. Im Vordergrund erscheint dieselbe
+Benachrichtigung als Snackbar.
 
 Kommunikationskanäle werden im Client unter
 `Einstellungen > Kommunikation` gepflegt und bleiben bewusst team-scoped.
