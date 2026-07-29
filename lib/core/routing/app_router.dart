@@ -5,6 +5,7 @@ import 'package:syscat2/features/auth/presentation/cubits/auth_session_cubit.dar
 import 'package:syscat2/features/auth/presentation/cubits/auth_session_state.dart';
 import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
 import 'package:syscat2/features/activity/presentation/pages/activity_page.dart';
+import 'package:syscat2/features/notifications/infrastructure/datasources/push_click_navigation_policy.dart';
 import 'package:syscat2/features/files/presentation/pages/files_page.dart';
 import 'package:syscat2/features/employees/presentation/pages/employees_page.dart';
 import 'package:syscat2/features/knowledge_base/presentation/pages/knowledge_base_page.dart';
@@ -143,6 +144,14 @@ class AppRouter {
     final isSignedIn = sessionState.isSignedIn;
     if (!isSignedIn) return isAuthRoute ? null : auth;
     if (isAuthRoute) return home;
+    if (_isLegacyDesktopPushLink(state)) return home;
     return null;
+  }
+
+  bool _isLegacyDesktopPushLink(GoRouterState state) {
+    return !shouldNavigateFromPushClick() &&
+        state.matchedLocation == activity &&
+        state.uri.queryParameters.containsKey('runId') &&
+        !state.uri.queryParameters.containsKey('open');
   }
 }

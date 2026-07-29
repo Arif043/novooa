@@ -8,10 +8,12 @@ class FcmForegroundNotificationListener extends StatefulWidget {
     super.key,
     required this.child,
     required this.onNotificationOpened,
+    required this.onForegroundNotificationAction,
   });
 
   final Widget child;
   final ValueChanged<RemoteMessage> onNotificationOpened;
+  final ValueChanged<RemoteMessage> onForegroundNotificationAction;
 
   @override
   State<FcmForegroundNotificationListener> createState() =>
@@ -57,7 +59,7 @@ class _FcmForegroundNotificationListenerState
           ),
           action: SnackBarAction(
             label: 'Öffnen',
-            onPressed: () => widget.onNotificationOpened(message),
+            onPressed: () => widget.onForegroundNotificationAction(message),
           ),
         ),
       );

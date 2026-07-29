@@ -109,7 +109,7 @@ function multicastMessage(
     tokens: tokens.map((document) => document.token),
     notification: {title: notification.title, body: notification.body},
     data: notification.data,
-    webpush: {fcmOptions: {link: notificationUrl(notification.data)}},
+    webpush: {fcmOptions: {link: webAppUrl}},
   };
 }
 
@@ -122,13 +122,6 @@ function uniqueTokenDocuments(
     knownTokens.add(document.token);
     return true;
   });
-}
-
-function notificationUrl(data: Record<string, string>): string {
-  const url = new URL("/activity", webAppUrl);
-  const runId = data.runId;
-  if (runId) url.searchParams.set("runId", runId);
-  return url.toString();
 }
 
 async function removeInvalidTokens(

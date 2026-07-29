@@ -12,6 +12,7 @@ import 'core/routing/app_router.dart';
 import 'core/theme/syscat_theme.dart';
 import 'features/auth/presentation/cubits/auth_session_cubit.dart';
 import 'features/notifications/infrastructure/datasources/fcm_push_click_bridge.dart';
+import 'features/notifications/infrastructure/datasources/push_click_navigation_policy.dart';
 import 'features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import 'features/notifications/presentation/widgets/fcm_foreground_notification_listener.dart';
 import 'firebase_options.dart';
@@ -35,7 +36,9 @@ Future<void> main() async {
     await const FirebaseEmulatorConfig().connect();
   }
   configureDependencies();
-  const FcmPushClickBridge().start(_openNotificationData);
+  if (shouldNavigateFromPushClick()) {
+    const FcmPushClickBridge().start(_openNotificationData);
+  }
   unawaited(serviceLocator<FcmBootstrapper>().start());
   runApp(const MyApp());
 }
@@ -80,7 +83,8 @@ class MyApp extends StatelessWidget {
         themeMode: ThemeMode.system,
         routerConfig: serviceLocator<AppRouter>().router,
         builder: (context, child) => FcmForegroundNotificationListener(
-          onNotificationOpened: _openNotification,
+          onNotificationOpened: _openNotificationFromPushClick,
+          onForegroundNotificationAction: _openNotification,
           child: child ?? const SizedBox.shrink(),
         ),
       ),
@@ -90,6 +94,10 @@ class MyApp extends StatelessWidget {
 
 void _openNotification(RemoteMessage message) {
   _openNotificationData(message.data);
+}
+
+void _openNotificationFromPushClick(RemoteMessage message) {
+  if (shouldNavigateFromPushClick()) _openNotification(message);
 }
 
 void _openNotificationData(Map<String, dynamic> data) {

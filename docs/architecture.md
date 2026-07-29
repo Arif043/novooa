@@ -107,8 +107,10 @@ Team-Mitgliedern verteilt, lösen zusätzlich einen FCM-Push aus und öffnen im
 Client den Freigabe-Dialog. Nicht mehr registrierte Geräte-Tokens entfernt das
 Backend nach einer fehlgeschlagenen Zustellung. Identische Tokens werden vor
 dem Versand dedupliziert.
-Im Flutter-Web-Client zeigt FCM Hintergrund-Pushes selbst an; der Versand setzt
-den Klick-Link auf die Aktivitätenansicht. Im Vordergrund erscheint dieselbe
+Im Flutter-Web-Client zeigt FCM Hintergrund-Pushes selbst an. Der FCM-Klick
+öffnet auf Desktop die App-Startseite, ohne die aktuelle Arbeit automatisch
+zur Aktivitätenansicht umzuleiten. Mobile PWAs lesen den Klick-Payload aus und
+öffnen die zugehörige Freigabe. Im Vordergrund erscheint dieselbe
 Benachrichtigung als Snackbar.
 
 Kommunikationskanäle werden im Client unter
