@@ -10,8 +10,8 @@ import 'package:syscat2/features/settings/domain/entities/ai_provider.dart';
 import 'package:syscat2/features/settings/domain/entities/api_key.dart';
 import 'package:syscat2/features/settings/domain/entities/settings_failure.dart';
 import 'package:syscat2/features/settings/domain/repositories/settings_repository.dart';
-import 'package:syscat2/features/settings/domain/usecases/get_ai_model_settings.dart';
 import 'package:syscat2/features/settings/domain/usecases/save_ai_provider_settings.dart';
+import 'package:syscat2/features/settings/domain/usecases/watch_ai_model_settings.dart';
 import 'package:syscat2/features/settings/presentation/cubits/settings_cubit.dart';
 import 'package:syscat2/features/settings/presentation/cubits/settings_state.dart';
 import 'package:syscat2/features/user/domain/entities/user_email.dart';
@@ -75,7 +75,7 @@ SettingsCubit _cubitWith(
       userRepository: userRepository,
     ),
     ensureUserProfile: EnsureUserProfile(userRepository),
-    getAiModelSettings: GetAiModelSettings(settingsRepository),
+    watchAiModelSettings: WatchAiModelSettings(settingsRepository),
     saveAiProviderSettings: SaveAiProviderSettings(settingsRepository),
   );
 }
@@ -148,10 +148,10 @@ class _FakeSettingsRepository implements SettingsRepository {
   String? savedApiKey;
 
   @override
-  Future<Result<AiModelSettings, SettingsFailure>> getAiModelSettings(
+  Stream<Result<AiModelSettings, SettingsFailure>> watchAiModelSettings(
     UniqueId userId,
-  ) async {
-    return Result.success(AiModelSettings.defaults());
+  ) {
+    return Stream.value(Result.success(AiModelSettings.defaults()));
   }
 
   @override

@@ -41,6 +41,11 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md).
 
 ## Persistenz
 
+- Sichtbarer, veränderlicher Firestore-Zustand wird im Client über
+  Repository-Streams (`watch*`) bezogen. Cubits halten ihre Subscription nur
+  für ihre Lebensdauer und kündigen sie in `close()`. Einmalige `get()`-Reads
+  bleiben auf technische Schreibabläufe, Transaktionen und direkte
+  Mutationsrückgaben beschränkt.
 - Aufgaben werden in Firestore unter `teams/{teamId}/tasks/{taskId}` gespeichert.
 - Der Task Builder arbeitet mit Autosave: Beim Öffnen einer neuen Aufgabe und
   nach jeder Mutation ruft der Cubit `TaskRepository.saveTask()` auf.

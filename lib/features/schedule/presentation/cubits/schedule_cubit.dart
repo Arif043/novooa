@@ -42,20 +42,23 @@ class ScheduleCubit extends Cubit<ScheduleState> {
   final SetTaskTriggerEnabled _setTaskTriggerEnabled;
   final DeleteTaskTrigger _deleteTaskTrigger;
   final TaskRepository _taskRepository;
-  StreamSubscription<List<TaskTrigger>>? _subscription;
+  StreamSubscription<List<TaskTrigger>>? _triggersSubscription;
+  StreamSubscription<List<Task>>? _tasksSubscription;
+  List<Task> _tasks = const [];
+  List<TaskTrigger> _triggers = const [];
 
   Future<void> load() async {
     emit(const ScheduleState());
-    try {
-      final tasks = await _taskRepository.loadTasks();
-      _subscription?.cancel();
-      _subscription = _watchTaskTriggers().listen(
-        (triggers) => _emitReady(tasks, triggers),
-        onError: (_) => _emitFailure(),
-      );
-    } catch (_) {
-      _emitFailure();
-    }
+    _triggersSubscription?.cancel();
+    _tasksSubscription?.cancel();
+    _triggersSubscription = _watchTaskTriggers().listen(
+      _onTriggers,
+      onError: (_) => _emitFailure(),
+    );
+    _tasksSubscription = _taskRepository.watchTasks().listen(
+      _onTasks,
+      onError: (_) => _emitFailure(),
+    );
   }
 
   Future<void> createTrigger(Task task, ScheduleConfig schedule) async {
@@ -88,13 +91,23 @@ class ScheduleCubit extends Cubit<ScheduleState> {
     return _deleteTaskTrigger(trigger.id);
   }
 
-  void _emitReady(List<Task> tasks, List<TaskTrigger> triggers) {
+  void _onTasks(List<Task> tasks) {
+    _tasks = tasks;
+    _emitReady();
+  }
+
+  void _onTriggers(List<TaskTrigger> triggers) {
+    _triggers = triggers;
+    _emitReady();
+  }
+
+  void _emitReady() {
     if (isClosed) return;
     emit(
       ScheduleState(
         status: ScheduleStatus.ready,
-        tasks: tasks,
-        triggers: triggers,
+        tasks: _tasks,
+        triggers: _triggers,
       ),
     );
   }
@@ -110,8 +123,9 @@ class ScheduleCubit extends Cubit<ScheduleState> {
   }
 
   @override
-  Future<void> close() {
-    _subscription?.cancel();
+  Future<void> close() async {
+    await _triggersSubscription?.cancel();
+    await _tasksSubscription?.cancel();
     return super.close();
   }
 }

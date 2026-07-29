@@ -59,7 +59,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
 
   Future<Task> _taskForLoad(Task? taskFromNavigation) async {
     if (taskFromNavigation == null) return Task.empty();
-    final tasks = await repository.loadTasks();
+    final tasks = await repository.watchTasks().first;
     for (final task in tasks) {
       if (task.id == taskFromNavigation.id) return task;
     }

@@ -66,7 +66,7 @@ class _TestTaskRepository implements TaskRepository {
   }) async => throw UnimplementedError();
 
   @override
-  Future<List<Task>> loadTasks() async => const [_task];
+  Stream<List<Task>> watchTasks() => Stream.value(const [_task]);
 
   @override
   Future<void> saveTask(Task task) async {}

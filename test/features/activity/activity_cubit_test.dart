@@ -4,9 +4,9 @@ import 'package:syscat2/features/activity/domain/entities/task_activity.dart';
 import 'package:syscat2/features/activity/domain/entities/task_run.dart';
 import 'package:syscat2/features/activity/domain/repositories/task_activity_repository.dart';
 import 'package:syscat2/features/activity/domain/repositories/task_run_repository.dart';
-import 'package:syscat2/features/activity/domain/usecases/list_task_activities.dart';
-import 'package:syscat2/features/activity/domain/usecases/list_task_runs.dart';
 import 'package:syscat2/features/activity/domain/usecases/review_task_run.dart';
+import 'package:syscat2/features/activity/domain/usecases/watch_task_activities.dart';
+import 'package:syscat2/features/activity/domain/usecases/watch_task_runs.dart';
 import 'package:syscat2/features/activity/presentation/cubits/activity_cubit.dart';
 import 'package:syscat2/features/activity/presentation/cubits/activity_state.dart';
 
@@ -21,8 +21,8 @@ class _ActivityRepository implements TaskActivityRepository {
   }
 
   @override
-  Future<List<TaskActivity>> listRecent() async {
-    return activities;
+  Stream<List<TaskActivity>> watchRecent() {
+    return Stream.value(activities);
   }
 }
 
@@ -32,8 +32,8 @@ class _RunRepository implements TaskRunRepository {
   final List<TaskRun> runs;
 
   @override
-  Future<List<TaskRun>> listRecent() async {
-    return runs;
+  Stream<List<TaskRun>> watchRecent() {
+    return Stream.value(runs);
   }
 
   @override
@@ -47,14 +47,15 @@ class _RunRepository implements TaskRunRepository {
 void main() {
   test('ActivityCubit laedt Aktivitaeten', () async {
     final cubit = ActivityCubit(
-      listTaskActivities: ListTaskActivities(
+      watchTaskActivities: WatchTaskActivities(
         _ActivityRepository([_activity()]),
       ),
-      listTaskRuns: ListTaskRuns(_RunRepository([_run()])),
+      watchTaskRuns: WatchTaskRuns(_RunRepository([_run()])),
       reviewTaskRun: ReviewTaskRun(_RunRepository([_run()])),
     );
 
-    await cubit.load();
+    cubit.load();
+    await Future<void>.delayed(Duration.zero);
 
     expect(cubit.state.status, ActivityLoadStatus.ready);
     expect(cubit.state.activities.single.taskTitle, 'Testaufgabe');

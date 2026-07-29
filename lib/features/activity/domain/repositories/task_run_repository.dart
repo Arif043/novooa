@@ -1,7 +1,7 @@
 import '../entities/task_run.dart';
 
 abstract interface class TaskRunRepository {
-  Future<List<TaskRun>> listRecent();
+  Stream<List<TaskRun>> watchRecent();
 
   Future<void> review({
     required TaskRun run,

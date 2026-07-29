@@ -1,37 +1,43 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
+import 'package:multiple_result/multiple_result.dart';
 
 import '../../../user/domain/entities/user_profile.dart';
 import '../../../user/domain/usecases/ensure_user_profile.dart';
 import '../../../user/domain/usecases/get_current_user_profile.dart';
+import '../../domain/entities/ai_model_settings.dart';
 import '../../domain/entities/ai_provider.dart';
 import '../../domain/entities/api_key.dart';
 import '../../domain/entities/settings_failure.dart';
-import '../../domain/usecases/get_ai_model_settings.dart';
 import '../../domain/usecases/save_ai_provider_settings.dart';
+import '../../domain/usecases/watch_ai_model_settings.dart';
 import 'settings_state.dart';
 
 class SettingsCubit extends Cubit<SettingsState> {
   SettingsCubit({
     required GetCurrentUserProfile getCurrentUserProfile,
     required EnsureUserProfile ensureUserProfile,
-    required GetAiModelSettings getAiModelSettings,
+    required WatchAiModelSettings watchAiModelSettings,
     required SaveAiProviderSettings saveAiProviderSettings,
   }) : _getCurrentUserProfile = getCurrentUserProfile,
        _ensureUserProfile = ensureUserProfile,
-       _getAiModelSettings = getAiModelSettings,
+       _watchAiModelSettings = watchAiModelSettings,
        _saveAiProviderSettings = saveAiProviderSettings,
        super(const SettingsState());
 
   final GetCurrentUserProfile _getCurrentUserProfile;
   final EnsureUserProfile _ensureUserProfile;
-  final GetAiModelSettings _getAiModelSettings;
+  final WatchAiModelSettings _watchAiModelSettings;
   final SaveAiProviderSettings _saveAiProviderSettings;
+  StreamSubscription<Result<AiModelSettings, SettingsFailure>>?
+  _settingsSubscription;
 
   Future<void> load() async {
     emit(const SettingsState());
     final userProfileOrFailure = await _getCurrentUserProfile();
     if (isClosed) return;
-    await userProfileOrFailure.when(_loadAiSettings, (failure) async {
+    await userProfileOrFailure.when(_watchAiSettings, (failure) async {
       _emitFailure(failure.message);
     });
   }
@@ -105,8 +111,18 @@ class SettingsCubit extends Cubit<SettingsState> {
     );
   }
 
-  Future<void> _loadAiSettings(UserProfile profile) async {
-    final settingsOrFailure = await _getAiModelSettings(profile.id);
+  Future<void> _watchAiSettings(UserProfile profile) async {
+    _settingsSubscription?.cancel();
+    _settingsSubscription = _watchAiModelSettings(profile.id).listen(
+      (settingsOrFailure) => _emitSettings(profile, settingsOrFailure),
+      onError: (_) => _emitFailure(SettingsFailureKind.loadFailed.message),
+    );
+  }
+
+  void _emitSettings(
+    UserProfile profile,
+    Result<AiModelSettings, SettingsFailure> settingsOrFailure,
+  ) {
     if (isClosed) return;
     settingsOrFailure.when(
       (settings) => emit(
@@ -138,6 +154,12 @@ class SettingsCubit extends Cubit<SettingsState> {
         message: message,
       ),
     );
+  }
+
+  @override
+  Future<void> close() async {
+    await _settingsSubscription?.cancel();
+    return super.close();
   }
 }
 

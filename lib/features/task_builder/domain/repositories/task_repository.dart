@@ -10,7 +10,7 @@ import '../entities/task_run_start.dart';
 /// konkrete Implementierungen (aktuell `InMemory`, später Firestore)
 /// erfüllt. Die Cubit-Schicht hängt ausschließlich von diesem Interface.
 abstract interface class TaskRepository {
-  Future<List<Task>> loadTasks();
+  Stream<List<Task>> watchTasks();
   Future<void> saveTask(Task task);
   Future<void> deleteTask(String taskId);
 

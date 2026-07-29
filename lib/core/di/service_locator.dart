@@ -80,15 +80,15 @@ import '../../features/auth/infrastructure/repositories/firebase_auth_repository
 import '../../features/auth/presentation/cubits/auth_form_cubit.dart';
 import '../../features/auth/presentation/cubits/auth_session_cubit.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
-import '../../features/settings/domain/usecases/get_ai_model_settings.dart';
 import '../../features/settings/domain/usecases/save_ai_provider_settings.dart';
+import '../../features/settings/domain/usecases/watch_ai_model_settings.dart';
 import '../../features/settings/infrastructure/repositories/firestore_settings_repository.dart';
 import '../../features/settings/presentation/cubits/settings_cubit.dart';
 import '../../features/activity/domain/repositories/task_activity_repository.dart';
 import '../../features/activity/domain/repositories/task_run_repository.dart';
-import '../../features/activity/domain/usecases/list_task_activities.dart';
-import '../../features/activity/domain/usecases/list_task_runs.dart';
 import '../../features/activity/domain/usecases/review_task_run.dart';
+import '../../features/activity/domain/usecases/watch_task_activities.dart';
+import '../../features/activity/domain/usecases/watch_task_runs.dart';
 import '../../features/activity/infrastructure/repositories/firestore_task_activity_repository.dart';
 import '../../features/activity/infrastructure/repositories/firestore_task_run_repository.dart';
 import '../../features/activity/presentation/cubits/activity_cubit.dart';
@@ -253,16 +253,16 @@ void configureDependencies() {
       ),
     )
     ..registerLazySingleton(
-      () => GetAiModelSettings(serviceLocator<SettingsRepository>()),
+      () => WatchAiModelSettings(serviceLocator<SettingsRepository>()),
     )
     ..registerLazySingleton(
       () => SaveAiProviderSettings(serviceLocator<SettingsRepository>()),
     )
     ..registerLazySingleton(
-      () => ListTaskActivities(serviceLocator<TaskActivityRepository>()),
+      () => WatchTaskActivities(serviceLocator<TaskActivityRepository>()),
     )
     ..registerLazySingleton(
-      () => ListTaskRuns(serviceLocator<TaskRunRepository>()),
+      () => WatchTaskRuns(serviceLocator<TaskRunRepository>()),
     )
     ..registerLazySingleton(
       () => ReviewTaskRun(serviceLocator<TaskRunRepository>()),
@@ -433,7 +433,7 @@ void configureDependencies() {
       () => SettingsCubit(
         getCurrentUserProfile: serviceLocator<GetCurrentUserProfile>(),
         ensureUserProfile: serviceLocator<EnsureUserProfile>(),
-        getAiModelSettings: serviceLocator<GetAiModelSettings>(),
+        watchAiModelSettings: serviceLocator<WatchAiModelSettings>(),
         saveAiProviderSettings: serviceLocator<SaveAiProviderSettings>(),
       ),
     )
@@ -511,8 +511,8 @@ void configureDependencies() {
     )
     ..registerFactory(
       () => ActivityCubit(
-        listTaskActivities: serviceLocator<ListTaskActivities>(),
-        listTaskRuns: serviceLocator<ListTaskRuns>(),
+        watchTaskActivities: serviceLocator<WatchTaskActivities>(),
+        watchTaskRuns: serviceLocator<WatchTaskRuns>(),
         reviewTaskRun: serviceLocator<ReviewTaskRun>(),
       ),
     )

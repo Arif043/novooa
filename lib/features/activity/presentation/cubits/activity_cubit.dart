@@ -1,43 +1,89 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 
-import '../../domain/usecases/list_task_activities.dart';
-import '../../domain/usecases/list_task_runs.dart';
-import '../../domain/usecases/review_task_run.dart';
+import '../../domain/entities/task_activity.dart';
 import '../../domain/entities/task_run.dart';
+import '../../domain/usecases/review_task_run.dart';
+import '../../domain/usecases/watch_task_activities.dart';
+import '../../domain/usecases/watch_task_runs.dart';
 import 'activity_state.dart';
 
 class ActivityCubit extends Cubit<ActivityState> {
   ActivityCubit({
-    required ListTaskActivities listTaskActivities,
-    required ListTaskRuns listTaskRuns,
+    required WatchTaskActivities watchTaskActivities,
+    required WatchTaskRuns watchTaskRuns,
     required ReviewTaskRun reviewTaskRun,
-  }) : this._(listTaskActivities, listTaskRuns, reviewTaskRun);
+  }) : this._(watchTaskActivities, watchTaskRuns, reviewTaskRun);
 
   ActivityCubit._(
-    this._listTaskActivities,
-    this._listTaskRuns,
+    this._watchTaskActivities,
+    this._watchTaskRuns,
     this._reviewTaskRun,
   ) : super(const ActivityState());
 
-  final ListTaskActivities _listTaskActivities;
-  final ListTaskRuns _listTaskRuns;
+  final WatchTaskActivities _watchTaskActivities;
+  final WatchTaskRuns _watchTaskRuns;
   final ReviewTaskRun _reviewTaskRun;
+  StreamSubscription<List<TaskActivity>>? _activitiesSubscription;
+  StreamSubscription<List<TaskRun>>? _runsSubscription;
+  List<TaskActivity> _activities = const [];
+  List<TaskRun> _runs = const [];
 
   Future<void> load() async {
     emit(const ActivityState());
-    try {
-      final activities = await _listTaskActivities();
-      final runs = await _listTaskRuns();
-      if (isClosed) return;
+    _activitiesSubscription?.cancel();
+    _runsSubscription?.cancel();
+    _activitiesSubscription = _watchTaskActivities().listen(
+      _onActivities,
+      onError: (_) => _emitFailure(),
+    );
+    _runsSubscription = _watchTaskRuns().listen(
+      _onRuns,
+      onError: (_) => _emitFailure(),
+    );
+  }
+
+  Future<void> approveRun(TaskRun run, String output) async {
+    await _reviewTaskRun(
+      run: run,
+      decision: TaskRunReviewDecision.approve,
+      output: output,
+    );
+  }
+
+  Future<void> rejectRun(TaskRun run) async {
+    await _reviewTaskRun(
+      run: run,
+      decision: TaskRunReviewDecision.reject,
+      output: '',
+    );
+  }
+
+  void _onActivities(List<TaskActivity> activities) {
+    _activities = activities;
+    _emitReady();
+  }
+
+  void _onRuns(List<TaskRun> runs) {
+    _runs = runs;
+    _emitReady();
+  }
+
+  void _emitReady() {
+    if (!isClosed) {
       emit(
         ActivityState(
           status: ActivityLoadStatus.ready,
-          activities: activities,
-          runs: runs,
+          activities: _activities,
+          runs: _runs,
         ),
       );
-    } catch (_) {
-      if (isClosed) return;
+    }
+  }
+
+  void _emitFailure() {
+    if (!isClosed) {
       emit(
         const ActivityState(
           status: ActivityLoadStatus.failure,
@@ -47,21 +93,10 @@ class ActivityCubit extends Cubit<ActivityState> {
     }
   }
 
-  Future<void> approveRun(TaskRun run, String output) async {
-    await _reviewTaskRun(
-      run: run,
-      decision: TaskRunReviewDecision.approve,
-      output: output,
-    );
-    await load();
-  }
-
-  Future<void> rejectRun(TaskRun run) async {
-    await _reviewTaskRun(
-      run: run,
-      decision: TaskRunReviewDecision.reject,
-      output: '',
-    );
-    await load();
+  @override
+  Future<void> close() async {
+    await _activitiesSubscription?.cancel();
+    await _runsSubscription?.cancel();
+    return super.close();
   }
 }

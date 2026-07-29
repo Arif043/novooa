@@ -33,7 +33,7 @@ class FakeTaskRepository implements TaskRepository {
   final FakeTaskRunnerDatasource _datasource;
 
   @override
-  Future<List<Task>> loadTasks() async => const [];
+  Stream<List<Task>> watchTasks() => Stream.value(const []);
 
   @override
   Future<void> saveTask(Task task) async {

@@ -10,7 +10,7 @@ class InMemoryTaskActivityRepository implements TaskActivityRepository {
   }
 
   @override
-  Future<List<TaskActivity>> listRecent() async {
-    return List.unmodifiable(_activities.reversed);
+  Stream<List<TaskActivity>> watchRecent() {
+    return Stream.value(List.unmodifiable(_activities.reversed));
   }
 }

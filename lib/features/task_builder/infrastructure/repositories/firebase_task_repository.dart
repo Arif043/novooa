@@ -28,12 +28,15 @@ class FirebaseTaskRepository implements TaskRepository {
   final TaskDocumentMapper _mapper = TaskDocumentMapper();
 
   @override
-  Future<List<Task>> loadTasks() async {
-    final user = auth.currentUser;
-    if (user == null) return const [];
+  Stream<List<Task>> watchTasks() async* {
+    if (auth.currentUser == null) {
+      yield const [];
+      return;
+    }
     final teamId = await teamRepository.currentTeamId();
-    final snapshot = await _tasksReference(teamId.value).get();
-    return snapshot.docs.map(_mapper.fromDocument).toList(growable: false);
+    yield* _tasksReference(teamId.value).snapshots().map(
+      (snapshot) => snapshot.docs.map(_mapper.fromDocument).toList(),
+    );
   }
 
   @override

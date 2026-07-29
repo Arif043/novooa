@@ -15,16 +15,10 @@ class FirestoreSettingsRepository implements SettingsRepository {
   final FirebaseFirestore _firestore;
 
   @override
-  Future<Result<AiModelSettings, SettingsFailure>> getAiModelSettings(
+  Stream<Result<AiModelSettings, SettingsFailure>> watchAiModelSettings(
     UniqueId userId,
-  ) async {
-    try {
-      final snapshot = await _settingsReference(userId).get();
-      if (!snapshot.exists) return Success(AiModelSettings.defaults());
-      return Success(AiModelSettingsModel.fromDocument(snapshot).toDomain());
-    } catch (_) {
-      return const Error(SettingsFailure(SettingsFailureKind.loadFailed));
-    }
+  ) {
+    return _settingsReference(userId).snapshots().map(_settingsFromSnapshot);
   }
 
   @override
@@ -81,6 +75,13 @@ class FirestoreSettingsRepository implements SettingsRepository {
       maskedApiKey: _mask(apiKey.value),
       updatedAt: DateTime.now(),
     );
+  }
+
+  Result<AiModelSettings, SettingsFailure> _settingsFromSnapshot(
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+  ) {
+    if (!snapshot.exists) return Success(AiModelSettings.defaults());
+    return Success(AiModelSettingsModel.fromDocument(snapshot).toDomain());
   }
 
   String _mask(String value) {

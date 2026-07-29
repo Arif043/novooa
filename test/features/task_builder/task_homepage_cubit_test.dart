@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
@@ -12,7 +14,8 @@ void main() {
   test('load stellt gespeicherte Aufgaben bereit', () async {
     final cubit = TaskHomepageCubit(_FakeTaskRepository([_task]));
 
-    await cubit.load();
+    cubit.load();
+    await Future<void>.delayed(Duration.zero);
 
     final state = cubit.state as TaskHomepageReady;
     expect(state.tasks, [_task]);
@@ -23,18 +26,41 @@ void main() {
   test('load meldet Fehler bei Ladefehler', () async {
     final cubit = TaskHomepageCubit(_FailingTaskRepository());
 
-    await cubit.load();
+    cubit.load();
+    await Future<void>.delayed(Duration.zero);
 
     expect(cubit.state, isA<TaskHomepageFailure>());
 
     await cubit.close();
   });
 
+  test(
+    'uebernimmt nachtraegliche Aenderungen aus dem Aufgabenstream',
+    () async {
+      final updates = StreamController<List<Task>>();
+      final cubit = TaskHomepageCubit(_StreamingTaskRepository(updates.stream));
+
+      await cubit.load();
+      updates.add([_task]);
+      await Future<void>.delayed(Duration.zero);
+      updates.add([_task.copyWith(title: 'Aktualisiert')]);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        (cubit.state as TaskHomepageReady).tasks.single.title,
+        'Aktualisiert',
+      );
+      await cubit.close();
+      await updates.close();
+    },
+  );
+
   test('duplicateTask erstellt eine Kopie mit neuer ID', () async {
     final repository = _FakeTaskRepository([_task]);
     final cubit = TaskHomepageCubit(repository);
 
-    await cubit.load();
+    cubit.load();
+    await Future<void>.delayed(Duration.zero);
     await cubit.duplicateTask(_task);
 
     final state = cubit.state as TaskHomepageReady;
@@ -50,7 +76,8 @@ void main() {
     final repository = _FakeTaskRepository([_task]);
     final cubit = TaskHomepageCubit(repository);
 
-    await cubit.load();
+    cubit.load();
+    await Future<void>.delayed(Duration.zero);
     await cubit.renameTask(_task, 'Neuer Name');
 
     final state = cubit.state as TaskHomepageReady;
@@ -64,7 +91,8 @@ void main() {
     final repository = _FakeTaskRepository([_task]);
     final cubit = TaskHomepageCubit(repository);
 
-    await cubit.load();
+    cubit.load();
+    await Future<void>.delayed(Duration.zero);
     await cubit.updateObjective(_task, '  Quartalsbericht vorbereiten  ');
 
     final state = cubit.state as TaskHomepageReady;
@@ -79,7 +107,8 @@ void main() {
     final repository = _FakeTaskRepository([task]);
     final cubit = TaskHomepageCubit(repository);
 
-    await cubit.load();
+    cubit.load();
+    await Future<void>.delayed(Duration.zero);
     await cubit.updateObjective(task, '   ');
 
     final state = cubit.state as TaskHomepageReady;
@@ -118,7 +147,7 @@ class _FakeTaskRepository implements TaskRepository {
   final List<Task> tasks;
 
   @override
-  Future<List<Task>> loadTasks() async => tasks;
+  Stream<List<Task>> watchTasks() => Stream.value(tasks);
 
   @override
   Future<void> saveTask(Task task) async {
@@ -150,7 +179,30 @@ class _FailingTaskRepository extends _FakeTaskRepository {
   _FailingTaskRepository() : super([]);
 
   @override
-  Future<List<Task>> loadTasks() {
-    throw StateError('failed');
+  Stream<List<Task>> watchTasks() {
+    return Stream.error(StateError('failed'));
   }
+}
+
+class _StreamingTaskRepository implements TaskRepository {
+  const _StreamingTaskRepository(this._tasks);
+
+  final Stream<List<Task>> _tasks;
+
+  @override
+  Stream<List<Task>> watchTasks() => _tasks;
+
+  @override
+  Future<void> deleteTask(String taskId) async {}
+
+  @override
+  Future<Result<TaskRunStart, TaskExecutionFailure>> execute({
+    required Task task,
+    String context = '',
+  }) async => const Error(
+    TaskExecutionFailure(TaskExecutionFailureKind.executionFailed),
+  );
+
+  @override
+  Future<void> saveTask(Task task) async {}
 }

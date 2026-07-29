@@ -7,7 +7,7 @@ import '../entities/api_key.dart';
 import '../entities/settings_failure.dart';
 
 abstract interface class SettingsRepository {
-  Future<Result<AiModelSettings, SettingsFailure>> getAiModelSettings(
+  Stream<Result<AiModelSettings, SettingsFailure>> watchAiModelSettings(
     UniqueId userId,
   );
 

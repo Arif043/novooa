@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
@@ -10,17 +12,15 @@ class TaskHomepageCubit extends Cubit<TaskHomepageState> {
   TaskHomepageCubit(this._repository) : super(const TaskHomepageLoading());
 
   final TaskRepository _repository;
+  StreamSubscription<List<Task>>? _subscription;
 
   Future<void> load() async {
     emit(const TaskHomepageLoading());
-    try {
-      final tasks = await _repository.loadTasks();
-      if (isClosed) return;
-      emit(TaskHomepageReady(tasks));
-    } catch (_) {
-      if (isClosed) return;
-      emit(const TaskHomepageFailure('Aufgaben konnten nicht geladen werden.'));
-    }
+    _subscription?.cancel();
+    _subscription = _repository.watchTasks().listen(
+      _emitTasks,
+      onError: (_) => _emitLoadFailure(),
+    );
   }
 
   Future<void> duplicateTask(Task task) async {
@@ -89,5 +89,21 @@ class TaskHomepageCubit extends Cubit<TaskHomepageState> {
     final normalizedTitle = title.trim();
     if (normalizedTitle.isEmpty) return 'Kopie';
     return 'Kopie von $normalizedTitle';
+  }
+
+  void _emitTasks(List<Task> tasks) {
+    if (!isClosed) emit(TaskHomepageReady(tasks));
+  }
+
+  void _emitLoadFailure() {
+    if (!isClosed) {
+      emit(const TaskHomepageFailure('Aufgaben konnten nicht geladen werden.'));
+    }
+  }
+
+  @override
+  Future<void> close() async {
+    await _subscription?.cancel();
+    return super.close();
   }
 }

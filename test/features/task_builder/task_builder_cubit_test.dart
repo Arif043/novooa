@@ -21,7 +21,7 @@ class _InMemoryTaskRepository implements TaskRepository {
   Task savedTask;
 
   @override
-  Future<List<Task>> loadTasks() async => [savedTask];
+  Stream<List<Task>> watchTasks() => Stream.value([savedTask]);
 
   @override
   Future<void> saveTask(Task task) async {
