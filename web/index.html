@@ -39,6 +39,18 @@
     }
 
     if ('serviceWorker' in navigator) {
+      window.__novooaFcmClickQueue = [];
+      window.__novooaTakeFcmPushClicks = function () {
+        const clicks = window.__novooaFcmClickQueue;
+        window.__novooaFcmClickQueue = [];
+        return clicks;
+      };
+      navigator.serviceWorker.addEventListener('message', function (event) {
+        const payload = event.data;
+        if (payload && payload.data && payload.data.runId) {
+          window.__novooaFcmClickQueue.push(payload);
+        }
+      });
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('firebase-messaging-sw.js', {
           scope: '/firebase-cloud-messaging-push-scope',

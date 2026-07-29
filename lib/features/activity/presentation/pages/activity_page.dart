@@ -13,15 +13,19 @@ import '../widgets/approval_review_dialog.dart';
 import '../widgets/activity_tab_content.dart';
 
 class ActivityPage extends StatelessWidget {
-  const ActivityPage({super.key, this.initialRunId});
+  const ActivityPage({super.key, this.initialRunId, this.notificationOpenId});
 
   final String? initialRunId;
+  final String? notificationOpenId;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => serviceLocator<ActivityCubit>()..load(),
-      child: _ActivityView(initialRunId: initialRunId),
+      child: _ActivityView(
+        initialRunId: initialRunId,
+        notificationOpenId: notificationOpenId,
+      ),
     );
   }
 }
@@ -29,9 +33,10 @@ class ActivityPage extends StatelessWidget {
 enum TaskActivityFilter { approvalRequired, denied, running, history }
 
 class _ActivityView extends StatefulWidget {
-  const _ActivityView({this.initialRunId});
+  const _ActivityView({this.initialRunId, this.notificationOpenId});
 
   final String? initialRunId;
+  final String? notificationOpenId;
 
   @override
   State<_ActivityView> createState() => _ActivityViewState();
@@ -40,6 +45,14 @@ class _ActivityView extends StatefulWidget {
 class _ActivityViewState extends State<_ActivityView> {
   var filter = TaskActivityFilter.approvalRequired;
   var _openedInitialRun = false;
+
+  @override
+  void didUpdateWidget(covariant _ActivityView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.notificationOpenId == widget.notificationOpenId) return;
+    _openedInitialRun = false;
+    _openInitialApproval(context, context.read<ActivityCubit>().state);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,9 +89,10 @@ class _ActivityViewState extends State<_ActivityView> {
     if (_openedInitialRun || state.status != ActivityLoadStatus.ready) return;
     final run = _waitingRun(state.runs, widget.initialRunId);
     if (run == null) return;
-    _openedInitialRun = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) unawaited(ApprovalReviewDialog.show(context, run));
+      if (!mounted || _openedInitialRun) return;
+      _openedInitialRun = true;
+      unawaited(ApprovalReviewDialog.show(context, run));
     });
   }
 

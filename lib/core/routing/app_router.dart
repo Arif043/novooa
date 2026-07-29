@@ -80,7 +80,10 @@ class AppRouter {
             path: activity,
             pageBuilder: (context, state) => _shellPage(
               state,
-              ActivityPage(initialRunId: state.uri.queryParameters['runId']),
+              ActivityPage(
+                initialRunId: state.uri.queryParameters['runId'],
+                notificationOpenId: state.uri.queryParameters['open'],
+              ),
             ),
           ),
           GoRoute(

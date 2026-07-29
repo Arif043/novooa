@@ -96,7 +96,12 @@ void _openNotificationData(Map<String, dynamic> data) {
   final runId = data['runId'] as String?;
   final location = Uri(
     path: AppRouter.activity,
-    queryParameters: runId == null ? null : {'runId': runId},
+    queryParameters: runId == null
+        ? null
+        : {
+            'runId': runId,
+            'open': DateTime.now().microsecondsSinceEpoch.toString(),
+          },
   );
   serviceLocator<AppRouter>().router.go(location.toString());
 }
