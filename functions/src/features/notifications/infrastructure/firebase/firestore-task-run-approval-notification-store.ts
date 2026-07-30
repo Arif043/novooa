@@ -36,11 +36,12 @@ implements TaskRunApprovalNotificationStore {
     const members = await membersFor(input.teamId);
     const batch = getDatabase().batch();
     for (const member of members.docs) {
-      batch.set(
-        notificationReference(member.id, input.runId),
-        actionedDocument(input.status),
-        {merge: true},
-      );
+      const reference = notificationReference(member.id, input.runId);
+      if (input.status === "accepted") {
+        batch.delete(reference);
+      } else {
+        batch.set(reference, actionedDocument(input.status), {merge: true});
+      }
     }
     await batch.commit();
   }
