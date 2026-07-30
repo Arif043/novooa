@@ -52,8 +52,9 @@ class _OfflineStatusSnackbarState extends State<OfflineStatusSnackbar> {
 
   SnackBar _offlineSnackBar() {
     return const SnackBar(
+
       content: Text(
-        'Keine Internetverbindung. Offline-Daten werden angezeigt.',
+        'Keine Internetverbindung',
       ),
       duration: Duration(days: 365),
     );

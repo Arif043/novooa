@@ -34,6 +34,7 @@ ThemeData _buildTheme(_ThemeTokens tokens) {
     cardTheme: _cardTheme(tokens),
     filledButtonTheme: _filledButtonTheme(),
     switchTheme: _switchTheme(tokens),
+    snackBarTheme: _snackBarTheme(tokens),
     brightness: tokens.brightness,
   );
 }
@@ -183,5 +184,16 @@ SwitchThemeData _switchTheme(_ThemeTokens tokens) {
       }
       return tokens.surfaceLow;
     }),
+  );
+}
+
+SnackBarThemeData _snackBarTheme(_ThemeTokens tokens) {
+  return SnackBarThemeData(
+    contentTextStyle: .new(color: Colors.white),
+    backgroundColor: Colors.black,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    behavior: SnackBarBehavior.floating,
+    
+    //actionTextColor: tokens.primaryOrange,
   );
 }
