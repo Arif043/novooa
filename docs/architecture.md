@@ -46,6 +46,10 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md).
   für ihre Lebensdauer und kündigen sie in `close()`. Einmalige `get()`-Reads
   bleiben auf technische Schreibabläufe, Transaktionen und direkte
   Mutationsrückgaben beschränkt.
+- Im Web verwendet Firestore einen persistenten IndexedDB-Cache mit
+  Multi-Tab-Synchronisierung. Dadurch bleiben bereits geladene Daten bei einer
+  temporären Offlinephase verfügbar; der Cache darf daher nur auf
+  vertrauenswürdigen Geräten verwendet werden.
 - Aufgaben werden in Firestore unter `teams/{teamId}/tasks/{taskId}` gespeichert.
 - Der Task Builder arbeitet mit Autosave: Beim Öffnen einer neuen Aufgabe und
   nach jeder Mutation ruft der Cubit `TaskRepository.saveTask()` auf.

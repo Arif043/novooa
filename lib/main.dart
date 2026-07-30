@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/di/service_locator.dart';
 import 'core/firebase/firebase_emulator_config.dart';
+import 'core/firebase/firestore_web_cache.dart';
 import 'core/logging/syscat_log.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/syscat_theme.dart';
@@ -32,6 +34,7 @@ Future<void> main() async {
   await FirebaseAppCheck.instance.activate(providerWeb: _webAppCheckProvider());
   _configureErrorLogging();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  configureFirestoreWebCache(FirebaseFirestore.instance);
   if (FirebaseEmulatorConfig.enabled) {
     await const FirebaseEmulatorConfig().connect();
   }
