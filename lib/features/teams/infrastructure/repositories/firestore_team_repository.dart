@@ -67,6 +67,17 @@ class FirestoreTeamRepository implements TeamRepository {
   }
 
   Future<TeamId> _ensureCurrentTeam(String ownerUid) async {
+    final existingTeamId = await _currentTeamId(ownerUid);
+    if (existingTeamId != null) return existingTeamId;
+    return _createCurrentTeam(ownerUid);
+  }
+
+  Future<TeamId?> _currentTeamId(String ownerUid) async {
+    final userSnapshot = await _userReference(ownerUid).get();
+    return _teamIdFrom(userSnapshot.data());
+  }
+
+  Future<TeamId> _createCurrentTeam(String ownerUid) async {
     return _firestore.runTransaction((transaction) async {
       final userReference = _userReference(ownerUid);
       final userSnapshot = await transaction.get(userReference);

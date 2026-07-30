@@ -50,6 +50,13 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md).
   Multi-Tab-Synchronisierung. Dadurch bleiben bereits geladene Daten bei einer
   temporären Offlinephase verfügbar; der Cache darf daher nur auf
   vertrauenswürdigen Geräten verwendet werden.
+- Ein globaler Browser-Netzstatus zeigt bei fehlender Verbindung dauerhaft eine
+  Snackbar. Die Firestore-Repositories behalten dabei unverändert ihre
+  Stream-Schnittstellen und liefern gecachte Snapshots.
+- Die Team-ID wird vor jeder team-scoped Abfrage über einen normalen
+  Firestore-Read mit Cache-Fallback aufgelöst. Eine Transaktion wird nur für
+  die erstmalige Anlage eines Arbeitsbereichs verwendet, da Transaktionen
+  offline nicht ausgeführt werden können.
 - Aufgaben werden in Firestore unter `teams/{teamId}/tasks/{taskId}` gespeichert.
 - Der Task Builder arbeitet mit Autosave: Beim Öffnen einer neuen Aufgabe und
   nach jeder Mutation ruft der Cubit `TaskRepository.saveTask()` auf.

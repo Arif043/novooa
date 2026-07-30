@@ -10,8 +10,10 @@ import 'core/di/service_locator.dart';
 import 'core/firebase/firebase_emulator_config.dart';
 import 'core/firebase/firestore_web_cache.dart';
 import 'core/logging/syscat_log.dart';
+import 'core/network/network_status.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/syscat_theme.dart';
+import 'core/widgets/offline_status_snackbar.dart';
 import 'features/auth/presentation/cubits/auth_session_cubit.dart';
 import 'features/notifications/infrastructure/datasources/fcm_push_click_bridge.dart';
 import 'features/notifications/infrastructure/datasources/push_click_navigation_policy.dart';
@@ -71,8 +73,16 @@ WebProvider _webAppCheckProvider() {
   return ReCaptchaV3Provider('6LeIpVotAAAAAJKgujQhyiUZNrNkDxChOSKqXcCz');
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+  final _networkStatus = NetworkStatus();
 
   @override
   Widget build(BuildContext context) {
@@ -81,14 +91,19 @@ class MyApp extends StatelessWidget {
       child: MaterialApp.router(
         title: 'novooa',
         debugShowCheckedModeBanner: false,
+        scaffoldMessengerKey: _scaffoldMessengerKey,
         theme: SyscatTheme.lightTheme,
         darkTheme: SyscatTheme.darkTheme,
         themeMode: ThemeMode.system,
         routerConfig: serviceLocator<AppRouter>().router,
-        builder: (context, child) => FcmForegroundNotificationListener(
-          onNotificationOpened: _openNotificationFromPushClick,
-          onForegroundNotificationAction: _openNotification,
-          child: child ?? const SizedBox.shrink(),
+        builder: (context, child) => OfflineStatusSnackbar(
+          isOnline: _networkStatus.watch(),
+          scaffoldMessengerKey: _scaffoldMessengerKey,
+          child: FcmForegroundNotificationListener(
+            onNotificationOpened: _openNotificationFromPushClick,
+            onForegroundNotificationAction: _openNotification,
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       ),
     );
