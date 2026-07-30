@@ -28,17 +28,17 @@ class FirestoreTaskActivityRepository implements TaskActivityRepository {
   }
 
   @override
-  Stream<List<TaskActivity>> watchRecent() async* {
+  Stream<List<TaskActivity>> watchRecent() {
     if (_auth.currentUser == null) {
-      yield const [];
-      return;
+      return Stream.value(const []);
     }
-    final teamId = await _teamRepository.currentTeamId();
-    yield* _activitiesReference(teamId.value)
-        .orderBy('occurredAt', descending: true)
-        .limit(100)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map(_fromDocument).toList());
+    return _teamRepository.watchCurrentTeamId().asyncExpand(
+      (teamId) => _activitiesReference(teamId.value)
+          .orderBy('occurredAt', descending: true)
+          .limit(100)
+          .snapshots()
+          .map((snapshot) => snapshot.docs.map(_fromDocument).toList()),
+    );
   }
 
   CollectionReference<Map<String, dynamic>> _activitiesReference(

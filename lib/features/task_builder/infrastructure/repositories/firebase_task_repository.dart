@@ -33,9 +33,10 @@ class FirebaseTaskRepository implements TaskRepository {
       yield const [];
       return;
     }
-    final teamId = await teamRepository.currentTeamId();
-    yield* _tasksReference(teamId.value).snapshots().map(
-      (snapshot) => snapshot.docs.map(_mapper.fromDocument).toList(),
+    yield* teamRepository.watchCurrentTeamId().asyncExpand(
+      (teamId) => _tasksReference(teamId.value).snapshots().map(
+        (snapshot) => snapshot.docs.map(_mapper.fromDocument).toList(),
+      ),
     );
   }
 

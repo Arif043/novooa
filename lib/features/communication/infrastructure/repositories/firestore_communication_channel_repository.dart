@@ -32,7 +32,7 @@ class FirestoreCommunicationChannelRepository
   Stream<List<CommunicationChannel>> watchChannels() {
     final user = _authRepository.currentUser();
     if (user == null) return Stream.value(const []);
-    return Stream.fromFuture(_teamRepository.currentTeamId()).asyncExpand(
+    return _teamRepository.watchCurrentTeamId().asyncExpand(
       (teamId) => _channelsReference(
         teamId,
       ).orderBy('createdAt', descending: true).snapshots().map(_toChannels),

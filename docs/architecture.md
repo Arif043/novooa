@@ -57,6 +57,9 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md).
   Firestore-Read mit Cache-Fallback aufgelöst. Eine Transaktion wird nur für
   die erstmalige Anlage eines Arbeitsbereichs verwendet, da Transaktionen
   offline nicht ausgeführt werden können.
+- Team-scoped Live-Abfragen basieren auf `watchCurrentTeamId()`. Ändert sich
+  die `teamId` im Nutzerprofil, wird die vorherige Sammlung abgemeldet und die
+  entsprechende Sammlung des neuen Teams live abonniert.
 - Aufgaben werden in Firestore unter `teams/{teamId}/tasks/{taskId}` gespeichert.
 - Der Task Builder arbeitet mit Autosave: Beim Öffnen einer neuen Aufgabe und
   nach jeder Mutation ruft der Cubit `TaskRepository.saveTask()` auf.

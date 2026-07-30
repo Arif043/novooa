@@ -111,6 +111,9 @@ class _FakeTeamRepository implements TeamRepository {
   Future<TeamId> currentTeamId() async => const TeamId('team.1');
 
   @override
+  Stream<TeamId> watchCurrentTeamId() => Stream.value(const TeamId('team.1'));
+
+  @override
   Stream<TeamWorkspace> watchCurrentTeam() => const Stream.empty();
 
   @override

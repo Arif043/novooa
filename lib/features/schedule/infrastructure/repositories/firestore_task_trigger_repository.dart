@@ -28,7 +28,7 @@ class FirestoreTaskTriggerRepository implements TaskTriggerRepository {
   Stream<List<TaskTrigger>> watchTriggers() {
     final user = _authRepository.currentUser();
     if (user == null) return Stream.value(const []);
-    return Stream.fromFuture(_teamRepository.currentTeamId()).asyncExpand(
+    return _teamRepository.watchCurrentTeamId().asyncExpand(
       (teamId) => _triggersReference(
         teamId,
       ).orderBy('nextRunAt').snapshots().map(_toTriggers),

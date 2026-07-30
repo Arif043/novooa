@@ -26,17 +26,27 @@ class FirestoreTeamRepository implements TeamRepository {
   }
 
   @override
-  Stream<TeamWorkspace> watchCurrentTeam() async* {
+  Stream<TeamId> watchCurrentTeamId() async* {
     final user = _currentUserOrThrow();
-    final teamId = await _ensureCurrentTeam(user.id.value);
-    yield* _teamReference(teamId).snapshots().map(_teamFrom);
+    final initialTeamId = await _ensureCurrentTeam(user.id.value);
+    yield* _userReference(user.id.value)
+        .snapshots()
+        .map((snapshot) => _teamIdFrom(snapshot.data()) ?? initialTeamId)
+        .distinct();
   }
 
   @override
-  Stream<List<TeamMember>> watchCurrentTeamMembers() async* {
-    final user = _currentUserOrThrow();
-    final teamId = await _ensureCurrentTeam(user.id.value);
-    yield* _memberReference(teamId).snapshots().map(_membersFrom);
+  Stream<TeamWorkspace> watchCurrentTeam() {
+    return watchCurrentTeamId().asyncExpand(
+      (teamId) => _teamReference(teamId).snapshots().map(_teamFrom),
+    );
+  }
+
+  @override
+  Stream<List<TeamMember>> watchCurrentTeamMembers() {
+    return watchCurrentTeamId().asyncExpand(
+      (teamId) => _memberReference(teamId).snapshots().map(_membersFrom),
+    );
   }
 
   @override

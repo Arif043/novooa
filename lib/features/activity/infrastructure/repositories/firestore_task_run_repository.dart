@@ -24,17 +24,17 @@ class FirestoreTaskRunRepository implements TaskRunRepository {
   final FirebaseFunctions _functions;
 
   @override
-  Stream<List<TaskRun>> watchRecent() async* {
+  Stream<List<TaskRun>> watchRecent() {
     if (_auth.currentUser == null) {
-      yield const [];
-      return;
+      return Stream.value(const []);
     }
-    final teamId = await _teamRepository.currentTeamId();
-    yield* _runsReference(teamId.value)
-        .orderBy('updatedAt', descending: true)
-        .limit(100)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map(_fromDocument).toList());
+    return _teamRepository.watchCurrentTeamId().asyncExpand(
+      (teamId) => _runsReference(teamId.value)
+          .orderBy('updatedAt', descending: true)
+          .limit(100)
+          .snapshots()
+          .map((snapshot) => snapshot.docs.map(_fromDocument).toList()),
+    );
   }
 
   @override
