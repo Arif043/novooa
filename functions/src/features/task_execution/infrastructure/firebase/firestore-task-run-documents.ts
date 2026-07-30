@@ -3,28 +3,11 @@ import {
   taskResumeStateSchema,
 } from "../genkit/runner/task-definition.js";
 import {
-  type CompletedTaskGraphOutput,
   type TaskResumeState,
 } from "../../domain/entities/task.js";
 
 export function runStatus(status: string) {
   return {status, updatedAt: FieldValue.serverTimestamp()};
-}
-
-export function successDocument(
-  output: CompletedTaskGraphOutput,
-) {
-  return {
-    ...runStatus("succeeded"),
-    finalOutput: output.finalOutput,
-    nodeResults: serializable(output.nodeResults),
-    waitingNodeId: FieldValue.delete(),
-    resumeState: FieldValue.delete(),
-    reviewInstruction: FieldValue.delete(),
-    reviewOutput: FieldValue.delete(),
-    approvedOutput: FieldValue.delete(),
-    pausedAt: FieldValue.delete(),
-  };
 }
 
 export function rejectedDocument() {

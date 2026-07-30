@@ -21,7 +21,6 @@ import {
   resumeStateFromDocument,
   runStatus,
   serializable,
-  successDocument,
 } from "./firestore-task-run-documents.js";
 import {
   type EnqueueTaskRunInput,
@@ -92,9 +91,7 @@ export class FirestoreTaskRunStore implements TaskRunStore {
       status: "succeeded",
       output,
     });
-    await runReference(teamId, run.runId).set(successDocument(output), {
-      merge: true,
-    });
+    await runReference(teamId, run.runId).delete();
   }
 
   async markRunWaitingForApproval(
