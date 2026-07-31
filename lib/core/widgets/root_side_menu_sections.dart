@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/di/service_locator.dart';
@@ -99,7 +100,11 @@ class _BrandMark extends StatelessWidget {
       child: const SizedBox(
         width: 42,
         height: 42,
-        child: Icon(Icons.arrow_left, color: SyscatTheme.iconActive, size: 30),
+        child: Icon(
+          CupertinoIcons.arrow_left,
+          color: SyscatTheme.iconActive,
+          size: 30,
+        ),
       ),
     );
   }
@@ -120,10 +125,51 @@ class _SideMenuTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       selected: isSelected,
-      leading: Icon(tab.icon),
+      leading: SideMenuIcon(
+        icon: tab.icon,
+        backgroundColor: _iconColor,
+        foregroundColor: SyscatTheme.iconActive,
+      ),
       title: Text(tab.title),
-      trailing: isSelected ? const Icon(Icons.check, size: 18) : null,
+      trailing: isSelected
+          ? const Icon(CupertinoIcons.check_mark, size: 18)
+          : null,
       onTap: onTap,
+    );
+  }
+
+  Color get _iconColor {
+    return switch (tab.path) {
+      '/files' || '/knowledge-base' => SyscatTheme.backgroundDark,
+      '/schedule' || '/tasks' => SyscatTheme.primaryOrange,
+      '/activity' || '/settings' => SyscatTheme.info,
+      _ => SyscatTheme.primaryOrange,
+    };
+  }
+}
+
+class SideMenuIcon extends StatelessWidget {
+  const SideMenuIcon({
+    super.key,
+    required this.icon,
+    required this.backgroundColor,
+    required this.foregroundColor,
+  });
+
+  final IconData icon;
+  final Color backgroundColor;
+  final Color foregroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(AppSpacing.sm),
+      ),
+      child: Icon(icon, color: foregroundColor, size: 20),
     );
   }
 }

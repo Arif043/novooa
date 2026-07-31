@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_session_cubit.dart';
@@ -86,7 +87,11 @@ class _SideMenuContent extends StatelessWidget {
           selected: false,
           iconColor: colorScheme.error,
           textColor: colorScheme.error,
-          leading: const Icon(Icons.logout),
+          leading: SideMenuIcon(
+            icon: CupertinoIcons.square_arrow_left,
+            backgroundColor: colorScheme.error,
+            foregroundColor: colorScheme.onError,
+          ),
           title: const Text('Abmelden'),
           onTap: () => context.read<AuthSessionCubit>().signOut(),
         ),

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cupertino_sidemenu/cupertino_sidemenu.dart';
@@ -32,43 +33,42 @@ class _RootPageState extends State<RootPage> {
       CupertinoSidemenuController();
 
   static final List<RootTab> _tabs = [
-    RootTab(title: 'Aufgaben', icon: Icons.dashboard_outlined, path: '/tasks'),
-    RootTab(title: 'Arbeitspläne', icon: Icons.folder_outlined, path: '/plans'),
+    RootTab(
+      title: 'Aufgaben',
+      icon: CupertinoIcons.rectangle_3_offgrid,
+      path: '/tasks',
+    ),
     RootTab(
       title: 'Zeitplan',
-      icon: Icons.bar_chart_outlined,
+      icon: CupertinoIcons.calendar,
       path: '/schedule',
     ),
-    RootTab(
-      title: 'Aktivitäten',
-      icon: Icons.history_outlined,
-      path: '/activity',
-    ),
-    RootTab(
-      title: 'Dateien',
-      icon: Icons.cloud_upload_outlined,
-      path: '/files',
-    ),
+    RootTab(title: 'Dateien', icon: CupertinoIcons.folder, path: '/files'),
     RootTab(
       title: 'Wissensbasis',
-      icon: Icons.library_books_outlined,
+      icon: CupertinoIcons.book,
       path: '/knowledge-base',
     ),
     if (MvpFeatureFlags.skillsEnabled)
       RootTab(
         title: 'Fähigkeiten',
-        icon: Icons.auto_awesome_outlined,
+        icon: CupertinoIcons.sparkles,
         path: '/skills',
       ),
     if (MvpFeatureFlags.employeesEnabled)
       RootTab(
         title: 'Mitarbeiter',
-        icon: Icons.people_outline,
+        icon: CupertinoIcons.person_2_square_stack,
         path: '/employees',
       ),
+      RootTab(
+      title: 'Aktivitäten',
+      icon: CupertinoIcons.rectangle_grid_1x2,
+      path: '/activity',
+    ),
     RootTab(
       title: 'Einstellungen',
-      icon: Icons.settings_outlined,
+      icon: CupertinoIcons.gear,
       path: '/settings',
     ),
   ];
