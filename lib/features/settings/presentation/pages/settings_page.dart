@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/communication/presentation/widgets/communication_settings_tab.dart';
-import 'package:syscat2/features/teams/presentation/cubits/team_settings_cubit.dart';
 import 'package:syscat2/features/teams/presentation/widgets/team_settings_tab.dart';
 
 import '../cubits/settings_cubit.dart';
@@ -79,10 +78,7 @@ class _ReadySettings extends StatelessWidget {
               child: TabBarView(
                 children: [
                   ProfileSettingsTab(state: state),
-                  BlocProvider(
-                    create: (_) => serviceLocator<TeamSettingsCubit>()..load(),
-                    child: const TeamSettingsTab(),
-                  ),
+                  const TeamSettingsTab(),
                   AiModelSettingsTab(state: state),
                   const CommunicationSettingsTab(),
                 ],

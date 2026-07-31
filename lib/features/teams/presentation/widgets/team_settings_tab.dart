@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../settings/presentation/widgets/settings_section.dart';
 import '../cubits/team_settings_cubit.dart';
@@ -9,8 +10,41 @@ import 'add_team_member_form.dart';
 import 'team_id_display.dart';
 import 'team_member_list.dart';
 
-class TeamSettingsTab extends StatelessWidget {
+class TeamSettingsTab extends StatefulWidget {
   const TeamSettingsTab({super.key});
+
+  @override
+  State<TeamSettingsTab> createState() => _TeamSettingsTabState();
+}
+
+class _TeamSettingsTabState extends State<TeamSettingsTab>
+    with AutomaticKeepAliveClientMixin {
+  late final TeamSettingsCubit _cubit;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _cubit = serviceLocator<TeamSettingsCubit>()..load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return BlocProvider.value(value: _cubit, child: const _TeamSettingsView());
+  }
+
+  @override
+  void dispose() {
+    _cubit.close();
+    super.dispose();
+  }
+}
+
+class _TeamSettingsView extends StatelessWidget {
+  const _TeamSettingsView();
 
   @override
   Widget build(BuildContext context) {
