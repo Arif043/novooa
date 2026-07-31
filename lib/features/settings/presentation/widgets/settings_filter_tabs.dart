@@ -50,10 +50,10 @@ class _SettingsTabLabel extends StatelessWidget {
 }
 
 enum SettingsDestination {
-  profile('Profil', Icons.person_outline),
-  team('Team', Icons.groups_outlined),
-  aiModel('Sprachmodell', Icons.auto_awesome_outlined),
-  communication('Kommunikation', Icons.forum_outlined);
+  profile('Profil', CupertinoIcons.person_crop_circle),
+  team('Team', CupertinoIcons.person_2),
+  aiModel('Sprachmodell', CupertinoIcons.sparkles),
+  communication('Kommunikation', CupertinoIcons.chat_bubble_2);
 
   const SettingsDestination(this.label, this.icon);
 
