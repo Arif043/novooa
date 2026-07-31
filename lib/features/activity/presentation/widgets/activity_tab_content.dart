@@ -2,32 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_spacing.dart';
-import '../../domain/entities/task_activity.dart';
 import '../../domain/entities/task_run.dart';
 import '../cubits/activity_cubit.dart';
-import 'activity_tile.dart';
 import 'task_run_tile.dart';
-
-class ActivityList extends StatelessWidget {
-  const ActivityList({super.key, required this.activities});
-
-  final List<TaskActivity> activities;
-
-  @override
-  Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: context.read<ActivityCubit>().load,
-      child: ListView.separated(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        itemCount: activities.length,
-        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-        itemBuilder: (context, index) {
-          return ActivityTile(activity: activities[index]);
-        },
-      ),
-    );
-  }
-}
 
 class TaskRunList extends StatelessWidget {
   const TaskRunList({super.key, required this.runs, required this.emptyText});

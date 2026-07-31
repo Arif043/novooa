@@ -4,25 +4,30 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/task_activity.dart';
 
 class ActivityTile extends StatelessWidget {
-  const ActivityTile({super.key, required this.activity});
+  const ActivityTile({super.key, required this.activity, this.onTap});
 
   final TaskActivity activity;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _StatusIcon(activity: activity),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(child: _ActivityText(activity: activity)),
-            const SizedBox(width: AppSpacing.md),
-            Text(_time(activity.occurredAt), style: textTheme.labelSmall),
-          ],
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.md),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _StatusIcon(activity: activity),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: _ActivityText(activity: activity)),
+              const SizedBox(width: AppSpacing.md),
+              Text(_time(activity.occurredAt), style: textTheme.labelSmall),
+            ],
+          ),
         ),
       ),
     );

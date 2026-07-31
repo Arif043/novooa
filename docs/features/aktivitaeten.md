@@ -57,12 +57,13 @@ resumeState        # serialisierter Zwischenzustand für die Fortsetzung
 ## UI
 
 `ActivityPage` zeigt Tabs für laufende Runs, Freigaben, abgelehnte Runs und
-Historie. Freigaben werden als Kacheln dargestellt. Ein Klick öffnet einen
-Dialog mit Instruction, editierbarem Output und Aktionen zum Ablehnen oder
-Bestätigen. Bestätigung ruft `reviewTaskRunFlow` mit `decision: "approve"` auf,
-setzt den Run auf `queued` und startet die Fortsetzung per Cloud Task.
-Ablehnung ruft denselben Flow mit `decision: "reject"` auf und verwirft den
-Zwischenzustand.
+Historie. Die Historie listet nur Task-Aktivitäten. Ein Klick öffnet den
+jeweiligen Durchlauf und zeigt dessen Node-Aktivitäten chronologisch.
+Freigaben werden als Kacheln dargestellt. Ein Klick öffnet einen Dialog mit
+Instruction, editierbarem Output und Aktionen zum Ablehnen oder Bestätigen.
+Bestätigung ruft `reviewTaskRunFlow` mit `decision: "approve"` auf, setzt den
+Run auf `queued` und startet die Fortsetzung per Cloud Task. Ablehnung ruft
+denselben Flow mit `decision: "reject"` auf und verwirft den Zwischenzustand.
 
 ## Offene Fragen
 

@@ -11,6 +11,7 @@ import '../cubits/activity_state.dart';
 import '../widgets/approval_run_grid.dart';
 import '../widgets/approval_review_dialog.dart';
 import '../widgets/activity_tab_content.dart';
+import '../widgets/task_activity_history.dart';
 
 class ActivityPage extends StatelessWidget {
   const ActivityPage({super.key, this.initialRunId, this.notificationOpenId});
@@ -156,10 +157,10 @@ class _TabBody extends StatelessWidget {
         runs: _runningRuns,
         emptyText: 'Keine Aufgaben werden gerade ausgeführt.',
       ),
-      TaskActivityFilter.history =>
-        state.activities.isEmpty
-            ? const ActivityEmptyState(text: 'Noch keine Aktivitäten.')
-            : ActivityList(activities: state.activities),
+      TaskActivityFilter.history => TaskActivityHistory(
+        activities: state.activities,
+        onRefresh: context.read<ActivityCubit>().load,
+      ),
     };
   }
 
