@@ -47,7 +47,8 @@ Dokument:
   eventConfig?: {
     source: "emailReceived" | "smsMessageReceived" | "whatsappMessageReceived" | "fileCreated" | "webhookReceived",
     filter: string,
-    channelId?: string
+    channelId?: string,
+    connectorId?: string
   },
   policy: {
     ifRunning: "skipIfRunning" | "startParallel"
@@ -103,10 +104,17 @@ Minimal erwartetes WhatsApp-Dokument:
 }
 ```
 
-Ein Team kann mehrere Kanäle besitzen. Kanäle gehören bewusst nicht zu
+Ein Team kann mehrere Kanaele besitzen. Kanaele gehoeren bewusst nicht zu
 einzelnen Projekten; Aufgaben und Trigger referenzieren bei Bedarf einen
-Team-Kanal. Die UI folgt dem Superchat-Modell: Nutzer verbinden WhatsApp, SMS
-oder E-Mail mit novooa; Provider-Details bleiben Infrastruktur.
+Team-Kanal. Die UI folgt dem Superchat-Modell fuer WhatsApp und SMS; Provider-
+Details bleiben Infrastruktur.
+
+E-Mail-Trigger referenzieren kuenftig einen separaten Mail-Connector statt
+eines SendGrid-Kanals. SendGrid bleibt auf novooa-eigene ausgehende System-
+E-Mails beschraenkt und erzeugt keine Kundenpostfach-Ereignisse. Gmail und
+Microsoft 365 liefern neue E-Mails ueber ihre jeweiligen Connectoren; die
+Anbindung ist noch geplant. Bei `eventConfig.source == "emailReceived"` wird
+`connectorId` statt `channelId` verwendet.
 WhatsApp-Verbindungen beziehen sich auf WhatsApp-Business-Nummern. Eine
 bestehende WhatsApp-Business-App-Nummer wird über das offizielle
 Business-Platform-Onboarding verbunden und bleibt bis zum Abschluss als
@@ -193,9 +201,10 @@ Die Function:
 4. speichert die Nachricht idempotent per Twilio-`MessageSid`,
 5. startet passende aktive Event-Trigger. SMS verwendet
    `eventConfig.source == "smsMessageReceived"`, WhatsApp verwendet
-   `eventConfig.source == "whatsappMessageReceived"` und E-Mail verwendet
-   `eventConfig.source == "emailReceived"`. Wenn ein Trigger
+   `eventConfig.source == "whatsappMessageReceived"`. Wenn ein Trigger
    `eventConfig.channelId` setzt, wird nur dieser Team-Kanal berücksichtigt.
+   Mail-Connectoren erhalten einen eigenen Provider-Adapter und filtern
+   E-Mail-Trigger ueber `eventConfig.connectorId`.
 
 Provider-Adapter normalisieren Rohdaten vor dem Dispatch in konkrete
 novooa-Eventtypen:
@@ -203,6 +212,7 @@ novooa-Eventtypen:
 ```ts
 type EmailReceivedEvent = {
   type: "emailReceived",
+  connectorId: string,
   senderEmail: string,
   subject: string,
   message: string
@@ -226,8 +236,9 @@ Für lokale Tests ohne Provider-Guthaben gibt es die Callable Function
 Team-Kontext des angemeldeten Nutzers, lädt den angegebenen
 `communicationChannels/{channelId}`-Datensatz, schreibt eine Fake-Inbound-
 Nachricht in die Inbox und dispatcht danach dieselben Channel-Trigger wie ein
-echter Webhook. In der UI ist sie über `Einstellungen > Kommunikation` pro
-Kanal als Testnachricht erreichbar.
+echter Twilio-Webhook. In der UI ist sie über `Einstellungen > Kommunikation`
+pro Kanal als Testnachricht erreichbar. Ein entsprechender Connector-Test für
+E-Mail wird mit den Mail-Connectoren ergänzt.
 
 Im Functions Emulator wird eine fehlende `TWILIO_AUTH_TOKEN`-Secret für lokale
 Tests toleriert. In Production ist `TWILIO_AUTH_TOKEN` erforderlich.
@@ -261,5 +272,5 @@ enabled ASC, nextRunAt ASC
 - Bearbeiten-Dialog für bestehende Trigger ergänzen.
 - Event-Trigger `fileCreated` auf Storage-/Firestore-Dateiversionen ausführen.
 - Nummern-/WhatsApp-Provisionierung innerhalb des Team-Subaccounts ergänzen.
-- E-Mail-Trigger per Provider-Webhook an `taskRuns` anbinden.
+- E-Mail-Connectoren und ihre Provider-Ereignisse an `taskRuns` anbinden.
 - Team-Rollen später auf Trigger-Verwaltung anwenden.

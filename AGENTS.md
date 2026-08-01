@@ -127,6 +127,7 @@ npm run deploy         # firebase deploy --only functions
 | Aufgabe-Executoren     | [`docs/features/aufgabe-executoren.md`](./docs/features/aufgabe-executoren.md) | Modellprovider und Executor-Verhalten |
 | Feature „Arbeitspläne" | [`docs/features/arbeitsplaene.md`](./docs/features/arbeitsplaene.md) | Stub: gespeicherte Aufgaben                          |
 | Feature „Zeitplan"    | [`docs/features/zeitplan.md`](./docs/features/zeitplan.md)         | Stub: Trigger und Scheduler                             |
+| Feature „Kommunikation" | [`docs/features/kommunikation.md`](./docs/features/kommunikation.md) | System-E-Mail und Kundenpostfach-Connectoren          |
 | Feature „Aktivitäten" | [`docs/features/aktivitaeten.md`](./docs/features/aktivitaeten.md) | Stub: Runs, Traces, Freigaben                           |
 | Feature „Dateien"     | [`docs/features/dateien.md`](./docs/features/dateien.md)           | Dateiablage, Storage, Versionierung                     |
 | Feature „Wissensbasis" | [`docs/features/wissensbasis.md`](./docs/features/wissensbasis.md) | Markdown-Zettelkasten für Node-Anhänge                  |

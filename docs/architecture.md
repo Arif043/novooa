@@ -105,6 +105,7 @@ teams/{teamId}/taskTriggers/{triggerId}
 teams/{teamId}/taskRuns/{runId}
 teams/{teamId}/activities/{activityId}
 teams/{teamId}/communicationChannels/{channelId}
+teams/{teamId}/mailConnectors/{connectorId} # geplant
 teams/{teamId}/inboxes/{channelId}/conversations/{conversationId}
 teams/{teamId}/inboxes/{channelId}/conversations/{conversationId}/messages/{messageId}
 teams/{teamId}/folders/{folderId}
@@ -129,13 +130,26 @@ zur Aktivitätenansicht umzuleiten. Mobile PWAs lesen den Klick-Payload aus und
 öffnen die zugehörige Freigabe. Im Vordergrund erscheint dieselbe
 Benachrichtigung als Snackbar.
 
-Kommunikationskanäle werden im Client unter
+Kommunikation trennt novooa-eigene System-E-Mails von Kundenpostfächern.
+System-E-Mails wie Benachrichtigungen, Einladungen und Marketing versendet
+novooa global über SendGrid. Die Absenderdomain `novooa.de` ist per Domain
+Authentication verifiziert; der Function-Secret `SENDGRID_API_KEY` erhält nur
+die Berechtigung `mail.send`. Dieser Versanddienst ist kein Kundenpostfach und
+kann keine vorhandenen E-Mails lesen.
+
+Kommunikationskanäle wie WhatsApp und SMS werden im Client unter
 `Einstellungen > Kommunikation` gepflegt und bleiben bewusst team-scoped.
 Provider-Credentials werden nicht im Client erfasst. Für Twilio provisioniert
 novooa intern einen Subaccount pro Team und speichert dessen SID am
-Team-Dokument (`twilioSubaccountSid`). Die Nutzeroberfläche spricht von
-„WhatsApp/SMS/E-Mail verbinden“ und zeigt keine Provider-Begriffe wie Twilio,
-Subaccount oder Account SID.
+Team-Dokument (`twilioSubaccountSid`). Die Nutzeroberfläche zeigt keine
+Provider-Begriffe wie Twilio, Subaccount oder Account SID.
+
+Kundenpostfächer werden als eigenständige Mail-Connectoren angebunden: Gmail
+und Google Workspace über OAuth und die Gmail API, Microsoft 365 und Outlook
+über OAuth und Microsoft Graph, später weitere Anbieter über IMAP/SMTP. Ein
+Connector gehört zu einem Team, speichert Zugangsdaten verschlüsselt und
+versendet Antworten über dasselbe verbundene Postfach. Die Connectoren sind
+kein `communicationChannel` und werden separat modelliert.
 
 WhatsApp meint eine WhatsApp-Business-Nummer auf der WhatsApp Business
 Platform. Bestehende WhatsApp-Business-App-Nummern werden nicht parallel

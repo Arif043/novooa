@@ -82,10 +82,16 @@ Version. Die strukturierten Datei-Outputs sind in
 dokumentiert.
 
 `readEmail` und `readChannelEvent` uebersetzen Run-Events in benannte Outputs.
-`sendChannelMessage` sendet E-Mail, WhatsApp oder SMS und liefert unter anderem
-Empfaenger-, Channel- und Provider-Nachrichten-ID. WhatsApp/SMS verwenden
-Twilio, E-Mail SendGrid; die benoetigten Function-Secrets sind
-`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` und `SENDGRID_API_KEY`.
+E-Mail-Events entstehen kuenftig durch angebundene Kundenpostfaecher; Gmail-
+und Microsoft-Connectoren sind noch nicht implementiert.
+
+`sendChannelMessage` liefert Empfaenger-, Channel- und
+Provider-Nachrichten-ID. WhatsApp und SMS verwenden Twilio. E-Mails von
+novooa verwendet SendGrid ausschliesslich als globalen System-E-Mail-Dienst;
+der benoetigte Function-Secret ist `SENDGRID_API_KEY` mit `mail.send`.
+Antworten aus einem Kundenpostfach werden spaeter ueber dessen Mail-Connector
+und nicht ueber SendGrid versendet. Die aktuelle team-scoped SendGrid-
+Kanalanbindung ist ein Migrationsschritt.
 
 ## Verwandt
 
