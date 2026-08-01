@@ -61,6 +61,7 @@ class FirestoreTaskActivityRepository implements TaskActivityRepository {
       'input': ?activity.input,
       'output': ?activity.output,
       'message': ?activity.message,
+      if (activity.outputs.isNotEmpty) 'outputs': activity.outputs,
     };
   }
 
@@ -79,6 +80,7 @@ class FirestoreTaskActivityRepository implements TaskActivityRepository {
       input: data['input'] as String?,
       output: data['output'] as String?,
       message: data['message'] as String?,
+      outputs: _outputsFrom(data['outputs']),
     );
   }
 
@@ -94,6 +96,13 @@ class FirestoreTaskActivityRepository implements TaskActivityRepository {
       (status) => status.name == value,
       orElse: () => TaskActivityStatus.started,
     );
+  }
+
+  Map<String, Object?> _outputsFrom(Object? value) {
+    if (value is! Map) return const {};
+    return Map.unmodifiable(<String, Object?>{
+      for (final entry in value.entries) entry.key.toString(): entry.value,
+    });
   }
 
   DateTime _dateFrom(Object? value) {

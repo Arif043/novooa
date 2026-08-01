@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/task_activity.dart';
+import 'node_activity_values.dart';
 
 class ActivityTile extends StatelessWidget {
   const ActivityTile({super.key, required this.activity, this.onTap});
@@ -55,7 +56,9 @@ class _ActivityText extends StatelessWidget {
         Text(_title, style: textTheme.titleLarge),
         const SizedBox(height: AppSpacing.xs),
         Text(_subtitle, style: textTheme.bodyMedium),
-        if (_detail != null) ...[
+        if (activity.target == TaskActivityTarget.node)
+          NodeActivityValues(activity: activity)
+        else if (_detail != null) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(_detail!, style: textTheme.bodySmall),
         ],

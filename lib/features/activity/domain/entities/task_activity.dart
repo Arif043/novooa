@@ -18,6 +18,7 @@ class TaskActivity {
     this.input,
     this.output,
     this.message,
+    this.outputs = const {},
   });
 
   final UniqueId id;
@@ -32,4 +33,5 @@ class TaskActivity {
   final String? input;
   final String? output;
   final String? message;
+  final Map<String, Object?> outputs;
 }

@@ -58,7 +58,9 @@ resumeState        # serialisierter Zwischenzustand für die Fortsetzung
 
 `ActivityPage` zeigt Tabs für laufende Runs, Freigaben, abgelehnte Runs und
 Historie. Die Historie listet nur Task-Aktivitäten. Ein Klick öffnet den
-jeweiligen Durchlauf und zeigt dessen Node-Aktivitäten chronologisch.
+jeweiligen Durchlauf und zeigt dessen Node-Aktivitäten chronologisch mitsamt
+den benannten Ausgabewerten. Werte werden entsprechend ihres Output-Typs
+lesbar formatiert.
 Freigaben werden als Kacheln dargestellt. Ein Klick öffnet einen Dialog mit
 Instruction, editierbarem Output und Aktionen zum Ablehnen oder Bestätigen.
 Bestätigung ruft `reviewTaskRunFlow` mit `decision: "approve"` auf, setzt den

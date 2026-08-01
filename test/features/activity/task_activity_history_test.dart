@@ -30,6 +30,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Prompt ausgeführt'), findsOneWidget);
+    expect(find.text('Zusammenfassung'), findsOneWidget);
+    expect(find.text('Wetter: sonnig'), findsOneWidget);
     expect(find.text('Validierung ausgeführt'), findsNothing);
   });
 }
@@ -57,6 +59,7 @@ TaskActivity _nodeActivity() {
     occurredAt: DateTime.utc(2026, 1, 1, 12),
     nodeId: 'prompt-1',
     primitive: 'prompt',
+    outputs: const {'Zusammenfassung': 'Wetter: sonnig'},
   );
 }
 
