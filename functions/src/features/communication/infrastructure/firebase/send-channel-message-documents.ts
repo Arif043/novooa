@@ -104,7 +104,7 @@ function messageDocument(input: {
 }) {
   return {
     id: input.sid,
-    provider: providerFor(input.channel.kind),
+    provider: providerFor(input.channel),
     providerMessageId: input.sid,
     direction: "outbound",
     channel: input.channel.kind,
@@ -119,8 +119,8 @@ function conversationIdFrom(address: string): string {
   return createHash("sha256").update(address).digest("hex").slice(0, 32);
 }
 
-function providerFor(kind: SendableChannel["kind"]): string {
-  return kind === "email" ? "sendgrid" : "twilio";
+function providerFor(channel: SendableChannel): string {
+  return channel.provider;
 }
 
 function errorMessage(error: unknown): string {

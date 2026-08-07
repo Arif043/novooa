@@ -149,7 +149,9 @@ export const readChannelEventNodeConfigSchema = z.object({
 export const sendChannelMessageNodeConfigSchema = z.object({
   primitive: z.literal("sendChannelMessage").default("sendChannelMessage"),
   kind: z.enum(["email", "whatsapp", "sms"]).default("whatsapp"),
+  connectorId: z.string().optional(),
   recipient: z.string().default(""),
+  subject: z.string().default(""),
   message: z.string().default(""),
 });
 

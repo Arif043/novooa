@@ -105,7 +105,7 @@ teams/{teamId}/taskTriggers/{triggerId}
 teams/{teamId}/taskRuns/{runId}
 teams/{teamId}/activities/{activityId}
 teams/{teamId}/communicationChannels/{channelId}
-teams/{teamId}/mailConnectors/{connectorId} # geplant
+teams/{teamId}/mailConnectors/{connectorId}
 teams/{teamId}/inboxes/{channelId}/conversations/{conversationId}
 teams/{teamId}/inboxes/{channelId}/conversations/{conversationId}/messages/{messageId}
 teams/{teamId}/folders/{folderId}
@@ -144,12 +144,15 @@ novooa intern einen Subaccount pro Team und speichert dessen SID am
 Team-Dokument (`twilioSubaccountSid`). Die Nutzeroberfläche zeigt keine
 Provider-Begriffe wie Twilio, Subaccount oder Account SID.
 
-Kundenpostfächer werden als eigenständige Mail-Connectoren angebunden: Gmail
-und Google Workspace über OAuth und die Gmail API, Microsoft 365 und Outlook
-über OAuth und Microsoft Graph, später weitere Anbieter über IMAP/SMTP. Ein
-Connector gehört zu einem Team, speichert Zugangsdaten verschlüsselt und
-versendet Antworten über dasselbe verbundene Postfach. Die Connectoren sind
-kein `communicationChannel` und werden separat modelliert.
+Kundenpostfächer werden innerhalb des Features Kommunikation über
+Mail-Connectoren angebunden:
+Microsoft 365 und Outlook.com über OAuth und Microsoft Graph, später Gmail und
+Google Workspace über OAuth und die Gmail API sowie weitere Anbieter über
+IMAP/SMTP. Ein Connector gehört zu einem Team, speichert Zugangsdaten
+verschlüsselt und versendet Antworten über dasselbe verbundene Postfach. Jeder
+E-Mail-Baustein verwendet einen aktiven Connector; SendGrid ist dafür nicht
+verfügbar. Die Connectoren sind kein `communicationChannel`, sondern ein
+eigenes Domain-Modell innerhalb von Kommunikation.
 
 WhatsApp meint eine WhatsApp-Business-Nummer auf der WhatsApp Business
 Platform. Bestehende WhatsApp-Business-App-Nummern werden nicht parallel

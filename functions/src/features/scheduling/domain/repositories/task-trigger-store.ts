@@ -15,6 +15,7 @@ export type DueScheduleTrigger = {
 export type EventTriggerConfig = {
   source: string;
   channelId: string;
+  connectorId: string;
   filter: string;
 };
 

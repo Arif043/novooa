@@ -1,8 +1,8 @@
 import '../../../files/domain/entities/team_id.dart';
 
-enum CommunicationProvider { twilio, sendgrid }
+enum CommunicationProvider { twilio }
 
-enum CommunicationChannelKind { whatsapp, sms, email }
+enum CommunicationChannelKind { whatsapp, sms }
 
 enum CommunicationChannelStatus {
   setupRequired,

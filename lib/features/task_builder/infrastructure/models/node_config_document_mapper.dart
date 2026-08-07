@@ -143,7 +143,9 @@ class NodeConfigDocumentMapper {
     return {
       'primitive': config.primitive.name,
       'kind': config.kind.name,
+      if (config.connectorId != null) 'connectorId': config.connectorId,
       'recipient': config.recipient,
+      'subject': config.subject,
       'message': config.message,
     };
   }
@@ -212,7 +214,9 @@ class NodeConfigDocumentMapper {
   SendChannelMessageNodeConfig _sendMessageFrom(Map<String, Object?> data) {
     return SendChannelMessageNodeConfig(
       kind: _channelEventKindFrom(data['kind']),
+      connectorId: data['connectorId'] as String?,
       recipient: data['recipient'] as String? ?? '',
+      subject: data['subject'] as String? ?? '',
       message: data['message'] as String? ?? '',
     );
   }

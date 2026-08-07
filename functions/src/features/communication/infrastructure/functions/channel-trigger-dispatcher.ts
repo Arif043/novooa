@@ -62,6 +62,7 @@ export async function dispatchChannelMessageTriggers(input: {
       triggerType: trigger.type,
       source: trigger.eventConfig.source,
       channelId: trigger.eventConfig.channelId,
+      connectorId: trigger.eventConfig.connectorId,
       filterLength: trigger.eventConfig.filter.trim().length,
     });
     if (decision.matched) {
@@ -119,9 +120,19 @@ function matchDecision(
   if (trigger.eventConfig.source !== input.event.type) {
     return noMatch("event_type_mismatch");
   }
-  if (!matchesChannel(trigger, input.channelId)) return noMatch("channel_mismatch");
+  if (!matchesSource(trigger, input)) return noMatch("source_mismatch");
   if (!matchesFilter(trigger, input.event)) return noMatch("filter_mismatch");
   return {matched: true, reason: "matched"};
+}
+
+function matchesSource(
+  trigger: EventTaskTrigger,
+  input: {channelId: string; event: ChannelMessageEvent},
+): boolean {
+  const connectorId = input.event.type === "emailReceived" ? input.event.connectorId : undefined;
+  if (!connectorId) return matchesChannel(trigger, input.channelId);
+  const configuredConnectorId = trigger.eventConfig.connectorId;
+  return configuredConnectorId.trim().length === 0 || configuredConnectorId === connectorId;
 }
 
 function matchesChannel(

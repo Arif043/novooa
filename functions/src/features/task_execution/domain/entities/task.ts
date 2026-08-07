@@ -112,7 +112,9 @@ export type ReadChannelEventNodeConfig = {
 export type SendChannelMessageNodeConfig = {
   primitive: "sendChannelMessage";
   kind: ChannelMessageKind;
+  connectorId?: string;
   recipient: string;
+  subject?: string;
   message: string;
 };
 export type NodeConfig =

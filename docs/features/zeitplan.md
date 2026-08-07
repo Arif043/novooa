@@ -109,12 +109,12 @@ einzelnen Projekten; Aufgaben und Trigger referenzieren bei Bedarf einen
 Team-Kanal. Die UI folgt dem Superchat-Modell fuer WhatsApp und SMS; Provider-
 Details bleiben Infrastruktur.
 
-E-Mail-Trigger referenzieren kuenftig einen separaten Mail-Connector statt
+E-Mail-Trigger referenzieren einen separaten Mail-Connector statt
 eines SendGrid-Kanals. SendGrid bleibt auf novooa-eigene ausgehende System-
-E-Mails beschraenkt und erzeugt keine Kundenpostfach-Ereignisse. Gmail und
-Microsoft 365 liefern neue E-Mails ueber ihre jeweiligen Connectoren; die
-Anbindung ist noch geplant. Bei `eventConfig.source == "emailReceived"` wird
-`connectorId` statt `channelId` verwendet.
+E-Mails beschraenkt und erzeugt keine Kundenpostfach-Ereignisse. Microsoft
+Graph liefert neue E-Mails bereits über seinen Connector; Gmail folgt später.
+Bei `eventConfig.source == "emailReceived"` wird `connectorId` statt
+`channelId` verwendet.
 WhatsApp-Verbindungen beziehen sich auf WhatsApp-Business-Nummern. Eine
 bestehende WhatsApp-Business-App-Nummer wird über das offizielle
 Business-Platform-Onboarding verbunden und bleibt bis zum Abschluss als

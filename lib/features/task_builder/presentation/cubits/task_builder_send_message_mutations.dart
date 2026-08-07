@@ -13,6 +13,12 @@ extension TaskBuilderSendMessageMutations on TaskBuilderCubit {
     });
   }
 
+  Future<void> updateSendMessageSubject(NodeId nodeId, String subject) {
+    return _updateSendMessage(nodeId, (config) {
+      return config.copyWith(subject: subject);
+    });
+  }
+
   Future<void> _updateSendMessage(
     NodeId nodeId,
     SendChannelMessageNodeConfig Function(SendChannelMessageNodeConfig config)

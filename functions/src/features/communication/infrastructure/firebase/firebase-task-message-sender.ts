@@ -1,13 +1,17 @@
 import {
+  type SendTaskEmailInput,
   type SentTaskMessage,
+  type SendTaskPhoneMessageInput,
   type SendTaskMessageInput,
   type TaskMessageSender,
 } from "../../../task_execution/domain/repositories/task-message-sender.js";
+import {FirestoreMailConnectorRepository} from
+  "./firestore-mail-connector-repository.js";
 import {
-  requiredSendgridApiKey,
-  sendgridApiKey,
-} from "../sendgrid/sendgrid-secrets.js";
-import {sendTeamEmailMessage} from "../sendgrid/team-email-message-sender.js";
+  mailConnectorCipher,
+} from "../microsoft_graph/microsoft-graph-config.js";
+import {sendTeamMicrosoftGraphEmail} from
+  "../microsoft_graph/team-microsoft-graph-email-sender.js";
 import {
   requiredSecret,
   twilioAccountSid,
@@ -17,22 +21,25 @@ import {sendTeamChannelMessage} from "../twilio/team-channel-message-sender.js";
 
 export class FirebaseTaskMessageSender implements TaskMessageSender {
   async send(input: SendTaskMessageInput): Promise<SentTaskMessage> {
-    if (input.kind === "email") return this.sendEmail(input);
-    return this.sendPhoneMessage({...input, kind: input.kind});
+    if (input.kind === "email") return this.sendConnectorEmail(input);
+    return this.sendPhoneMessage(input);
   }
 
-  private async sendEmail(input: SendTaskMessageInput): Promise<SentTaskMessage> {
-    return sendTeamEmailMessage({
+  private sendConnectorEmail(
+    input: SendTaskEmailInput,
+  ): Promise<SentTaskMessage> {
+    return sendTeamMicrosoftGraphEmail({
       teamId: input.teamId,
+      connectorId: input.connectorId,
       recipient: input.recipient,
-      subject: "Nachricht von novooa",
+      subject: input.subject || "Nachricht von novooa",
       body: input.body,
-      apiKey: requiredSendgridApiKey(sendgridApiKey),
+      repository: new FirestoreMailConnectorRepository(mailConnectorCipher()),
     });
   }
 
   private async sendPhoneMessage(
-    input: SendTaskMessageInput & {kind: "whatsapp" | "sms"},
+    input: SendTaskPhoneMessageInput,
   ): Promise<SentTaskMessage> {
     return sendTeamChannelMessage({
       teamId: input.teamId,

@@ -37,8 +37,13 @@ functions/src/
         functions/
     communication/
       domain/
+        entities/
+        repositories/
+        usecases/
       infrastructure/
         firebase/
+        microsoft_graph/
+        security/
         sendgrid/
         twilio/
         functions/
@@ -97,7 +102,7 @@ nur öffentliche Trigger und enthält keine Logik.
 | `task_execution` | Task-Definitionen, Runs, Graph Runner, Node Executors und Cloud Tasks |
 | `teams` | Arbeitsbereich, Mitgliedschaft und Einladungen |
 | `scheduling` | Zeit- und Event-Trigger sowie Fälligkeiten |
-| `communication` | Kanäle, eingehende Events und Provider-Sender |
+| `communication` | Nachrichten, Kanäle, Inbox, Trigger sowie Mail-Connectoren und Provider-Sender |
 | `files` | Datei-Metadaten, Versionen und Objektzugriff |
 | `knowledge_base` | Notizen, Links und Workspace-Auflösung |
 | `notifications` | In-App-Freigaben und Push-Versand |

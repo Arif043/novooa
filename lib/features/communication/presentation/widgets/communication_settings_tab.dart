@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -5,6 +6,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../cubits/communication_cubit.dart';
 import '../cubits/communication_state.dart';
+import 'mail_connector_section.dart';
 import 'communication_channel_grid.dart';
 import 'create_communication_channel_dialog.dart';
 
@@ -53,7 +55,11 @@ class _CommunicationBody extends StatelessWidget {
       children: [
         _CommunicationHeader(isCreating: state.isCreating),
         const SizedBox(height: AppSpacing.lg),
-        Expanded(child: _CommunicationContent(state: state)),
+        const MailConnectorSection(),
+        const SizedBox(height: AppSpacing.lg),
+        Expanded(
+          child: ListView(children: [_CommunicationContent(state: state)]),
+        ),
       ],
     );
   }
@@ -75,7 +81,7 @@ class _CommunicationHeader extends StatelessWidget {
         Text('Kommunikation', style: Theme.of(context).textTheme.displayMedium),
         FilledButton.icon(
           onPressed: isCreating ? null : () => _openDialog(context),
-          icon: const Icon(Icons.add_comment_outlined),
+          icon: const Icon(CupertinoIcons.add_circled),
           label: const Text('Kanal verbinden'),
         ),
       ],
@@ -128,7 +134,7 @@ class _FailureState extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           OutlinedButton.icon(
             onPressed: context.read<CommunicationCubit>().load,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(CupertinoIcons.arrow_clockwise),
             label: const Text('Erneut versuchen'),
           ),
         ],
@@ -147,8 +153,8 @@ class _EmptyState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.forum_outlined,
-            size: 48,
+            CupertinoIcons.bubble_left_bubble_right,
+            size: AppSpacing.xxl,
             color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(height: AppSpacing.md),

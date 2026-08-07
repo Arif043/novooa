@@ -16,7 +16,7 @@ export type ChannelEventType =
 
 type BaseChannelEvent = {
   type: ChannelEventType;
-  provider: "twilio" | "sendgrid" | "fake";
+  provider: "twilio" | "microsoftGraph" | "fake";
   providerMessageId: string;
   receivedAt: string;
   raw: Record<string, string>;
@@ -24,6 +24,7 @@ type BaseChannelEvent = {
 
 export type EmailReceivedEvent = BaseChannelEvent & {
   type: "emailReceived";
+  connectorId?: string;
   senderEmail: string;
   recipientEmail: string;
   subject: string;

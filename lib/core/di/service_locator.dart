@@ -18,6 +18,11 @@ import 'package:syscat2/features/communication/domain/usecases/send_channel_mess
 import 'package:syscat2/features/communication/domain/usecases/watch_communication_channels.dart';
 import 'package:syscat2/features/communication/infrastructure/repositories/firestore_communication_channel_repository.dart';
 import 'package:syscat2/features/communication/presentation/cubits/communication_cubit.dart';
+import 'package:syscat2/features/communication/domain/repositories/mail_connector_repository.dart';
+import 'package:syscat2/features/communication/domain/usecases/begin_microsoft_connection.dart';
+import 'package:syscat2/features/communication/domain/usecases/watch_mail_connectors.dart';
+import 'package:syscat2/features/communication/infrastructure/repositories/firestore_mail_connector_repository.dart';
+import 'package:syscat2/features/communication/presentation/cubits/mail_connectors_cubit.dart';
 import 'package:syscat2/features/files/domain/repositories/team_file_repository.dart';
 import 'package:syscat2/features/files/domain/repositories/file_version_repository.dart';
 import 'package:syscat2/features/files/domain/usecases/create_file_version.dart';
@@ -206,6 +211,13 @@ void configureDependencies() {
         serviceLocator<TeamRepository>(),
       ),
     )
+    ..registerLazySingleton<MailConnectorRepository>(
+      () => FirestoreMailConnectorRepository(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<FirebaseFirestore>(),
+        serviceLocator<TeamRepository>(),
+      ),
+    )
     ..registerLazySingleton<NotificationDeviceRepository>(
       () => FirestoreNotificationDeviceRepository(
         serviceLocator<FirebaseFirestore>(),
@@ -362,6 +374,12 @@ void configureDependencies() {
     ..registerLazySingleton(
       () =>
           SendChannelMessage(serviceLocator<CommunicationChannelRepository>()),
+    )
+    ..registerLazySingleton(
+      () => WatchMailConnectors(serviceLocator<MailConnectorRepository>()),
+    )
+    ..registerLazySingleton(
+      () => BeginMicrosoftConnection(serviceLocator<MailConnectorRepository>()),
     )
     ..registerLazySingleton(
       () => RegisterNotificationDevice(
@@ -550,6 +568,12 @@ void configureDependencies() {
         serviceLocator<DeleteCommunicationChannel>(),
         serviceLocator<DispatchFakeChannelMessage>(),
         serviceLocator<SendChannelMessage>(),
+      ),
+    )
+    ..registerFactory(
+      () => MailConnectorsCubit(
+        serviceLocator<WatchMailConnectors>(),
+        serviceLocator<BeginMicrosoftConnection>(),
       ),
     )
     ..registerFactory(

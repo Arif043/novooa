@@ -13,7 +13,10 @@ import {
 import {aiProviderPlugins} from "../genkit/runner/ai-models.js";
 import {logException, withExceptionLogging} from "../../../../shared/logging/logger.js";
 import {twilioAccountSid, twilioAuthToken} from "../../../communication/infrastructure/twilio/twilio-secrets.js";
-import {sendgridApiKey} from "../../../communication/infrastructure/sendgrid/sendgrid-secrets.js";
+import {
+  mailConnectorEncryptionKey,
+  microsoftGraphClientSecret,
+} from "../../../communication/infrastructure/microsoft_graph/microsoft-graph-config.js";
 import {FirebaseObjectStore} from "../../../files/infrastructure/firebase/firebase-object-store.js";
 import {FirestoreTeamFileStore} from "../../../files/infrastructure/firebase/firestore-team-file-store.js";
 import {FirebaseTaskMessageSender} from "../../../communication/infrastructure/firebase/firebase-task-message-sender.js";
@@ -37,7 +40,12 @@ import {
   type TaskRunDispatchPayload,
 } from "../genkit/runner/task-run-task.js";
 
-const communicationSecrets = [twilioAccountSid, twilioAuthToken, sendgridApiKey];
+const communicationSecrets = [
+  twilioAccountSid,
+  twilioAuthToken,
+  microsoftGraphClientSecret,
+  mailConnectorEncryptionKey,
+];
 
 const ai = genkit({
   plugins: aiProviderPlugins(),

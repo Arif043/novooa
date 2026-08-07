@@ -82,16 +82,17 @@ Version. Die strukturierten Datei-Outputs sind in
 dokumentiert.
 
 `readEmail` und `readChannelEvent` uebersetzen Run-Events in benannte Outputs.
-E-Mail-Events entstehen kuenftig durch angebundene Kundenpostfaecher; Gmail-
-und Microsoft-Connectoren sind noch nicht implementiert.
+Microsoft-Graph-Connectoren liefern neue E-Mails per Webhook als Run-Event.
+Gmail ist noch nicht implementiert.
 
 `sendChannelMessage` liefert Empfaenger-, Channel- und
-Provider-Nachrichten-ID. WhatsApp und SMS verwenden Twilio. E-Mails von
-novooa verwendet SendGrid ausschliesslich als globalen System-E-Mail-Dienst;
-der benoetigte Function-Secret ist `SENDGRID_API_KEY` mit `mail.send`.
-Antworten aus einem Kundenpostfach werden spaeter ueber dessen Mail-Connector
-und nicht ueber SendGrid versendet. Die aktuelle team-scoped SendGrid-
-Kanalanbindung ist ein Migrationsschritt.
+Provider-Nachrichten-ID. WhatsApp und SMS verwenden Twilio. Novooa verwendet
+SendGrid ausschliesslich als globalen System-E-Mail-Dienst;
+Arbeitspläne können SendGrid nicht verwenden.
+Bei einem Microsoft-Graph-E-Mail-Event nutzt der Sende-Baustein ohne explizite
+`connectorId` automatisch das auslösende Postfach und setzt den Betreff auf
+`Re: <eingehender Betreff>`. Ein unabhängig gestarteter E-Mail-Baustein
+benötigt eine `connectorId` eines aktiven Mail-Connectors.
 
 ## Verwandt
 

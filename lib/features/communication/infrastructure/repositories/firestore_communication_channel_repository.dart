@@ -114,9 +114,18 @@ class FirestoreCommunicationChannelRepository
     QuerySnapshot<Map<String, dynamic>> snapshot,
   ) {
     return snapshot.docs
+        .where(_isSupportedChannel)
         .map(CommunicationChannelModel.fromDocument)
         .map((model) => model.toDomain())
         .toList(growable: false);
+  }
+
+  bool _isSupportedChannel(
+    QueryDocumentSnapshot<Map<String, dynamic>> document,
+  ) {
+    final data = document.data();
+    return data['provider'] == 'twilio' &&
+        (data['kind'] == 'whatsapp' || data['kind'] == 'sms');
   }
 
   CollectionReference<Map<String, dynamic>> _channelsReference(TeamId teamId) {

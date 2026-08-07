@@ -67,7 +67,6 @@ class _SendChannelMessageDialogState extends State<SendChannelMessageDialog> {
     return switch (widget.channel.kind) {
       CommunicationChannelKind.whatsapp => '+491234567890',
       CommunicationChannelKind.sms => '+491234567890',
-      CommunicationChannelKind.email => 'name@example.com',
     };
   }
 

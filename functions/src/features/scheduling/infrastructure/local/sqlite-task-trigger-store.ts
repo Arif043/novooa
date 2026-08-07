@@ -90,6 +90,7 @@ function eventTriggerFromRow(row: EventTriggerRow): EventTaskTrigger {
     eventConfig: {
       source: stringFrom(eventConfig.source, ""),
       channelId: stringFrom(eventConfig.channelId, ""),
+      connectorId: stringFrom(eventConfig.connectorId, ""),
       filter: stringFrom(eventConfig.filter, ""),
     },
   };

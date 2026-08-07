@@ -22,6 +22,7 @@ export type SendableChannel = {
   teamId: string;
   kind: "whatsapp" | "sms" | "email";
   address: string;
+  provider: "twilio" | "microsoftGraph";
 };
 
 export async function loadSendableChannel(
@@ -44,6 +45,7 @@ export async function loadSendableChannel(
     teamId,
     kind: channelKindFrom(data.kind),
     address: stringFrom(data.address),
+    provider: "twilio",
   };
 }
 
@@ -80,31 +82,7 @@ export async function loadSendableChannelByKind(
     teamId,
     kind: channelKindFrom(data.kind),
     address: stringFrom(data.address),
-  };
-}
-
-export async function loadSendableEmailChannel(
-  teamId: string,
-): Promise<SendableChannel> {
-  initializeAdminApp();
-  const snapshot = await getFirestore()
-    .collection("teams")
-    .doc(teamId)
-    .collection("communicationChannels")
-    .get();
-  const channel = snapshot.docs.find((document) => {
-    const data = document.data();
-    return data.kind === "email" && isSendableEmailChannel(data);
-  });
-  if (!channel) {
-    throw new HttpsError("failed-precondition", "No sendable email channel found.");
-  }
-  const data = channel.data();
-  return {
-    id: channel.id,
-    teamId,
-    kind: "email",
-    address: stringFrom(data.address),
+    provider: "twilio",
   };
 }
 
@@ -128,7 +106,7 @@ export async function markOutboundSent(input: {
   const batch = getFirestore().batch();
   batch.set(
     outboundMessages(input.channel).doc(input.outboundId),
-    sentDocument(input.sid, providerFor(input.channel.kind)),
+    sentDocument(input.sid, providerFor(input.channel)),
     {merge: true},
   );
   addConversationWrites(batch, input);
@@ -176,18 +154,8 @@ function channelKindFrom(value: unknown): "whatsapp" | "sms" | "email" {
   throw new HttpsError("failed-precondition", "Unsupported channel kind.");
 }
 
-function isSendableEmailChannel(data: Record<string, unknown>): boolean {
-  const capabilities = data.capabilities;
-  return (
-    data.provider === "sendgrid" &&
-    data.status === "active" &&
-    isRecord(capabilities) &&
-    capabilities.outbound === true
-  );
-}
-
-function providerFor(kind: SendableChannel["kind"]): string {
-  return kind === "email" ? "sendgrid" : "twilio";
+function providerFor(channel: SendableChannel): string {
+  return channel.provider;
 }
 
 function stringFrom(value: unknown): string {

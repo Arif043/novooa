@@ -100,6 +100,7 @@ function eventTriggerFrom(
     eventConfig: {
       source: String(document.get("eventConfig.source") ?? ""),
       channelId: String(document.get("eventConfig.channelId") ?? ""),
+      connectorId: String(document.get("eventConfig.connectorId") ?? ""),
       filter: String(document.get("eventConfig.filter") ?? ""),
     },
   };

@@ -30,28 +30,34 @@ System-E-Mails laufen nie ueber ein verbundenes Kundenpostfach. Dadurch kann
 ein kompromittierter Versand-Key weder ein Postfach lesen noch Zugang zu
 Provider-Einstellungen erlangen.
 
-Die bestehende Implementierung verwendet SendGrid noch ueber einen aktiven
-team-scoped E-Mail-Kanal. Sie wird auf einen globalen `SystemEmailSender`
-migriert; Nutzer:innen konfigurieren dafuer weder eine SendGrid-Adresse noch
-einen SendGrid-Key.
+Nutzer:innen können SendGrid weder konfigurieren noch über Arbeitspläne
+verwenden. Ein künftiger `SystemEmailSender` bleibt ein globaler,
+backend-interner Dienst.
 
 ## Mail-Connectoren
 
-Ein Mail-Connector repraesentiert ein konkretes Kundenpostfach. Er wird
-team-scoped verwaltet, ist aber kein `communicationChannel`, weil seine
-Berechtigungen und sein Lebenszyklus wesentlich weiter reichen als bei einer
-Telefonnummer.
+Ein Mail-Connector repraesentiert ein konkretes Kundenpostfach. Er ist ein
+Teilmodul von Kommunikation und kapselt Autorisierung, Berechtigungen,
+Credentials sowie den Provider-Lebenszyklus. Er wird nicht als einfacher,
+frei konfigurierbarer `communicationChannel` gespeichert.
 
 | Provider | Zugriffsweg | Status |
 | --- | --- | --- |
 | Gmail / Google Workspace | OAuth und Gmail API | Geplant |
-| Microsoft 365 / Outlook | OAuth und Microsoft Graph | Geplant |
+| Microsoft 365 / Outlook.com | OAuth und Microsoft Graph | Implementiert |
 | Klassische Mailanbieter | IMAP/SMTP | Geplant |
 
-Connectoren speichern nur verschluesselte, widerrufbare Zugangsdaten. Die UI
-zeigt die genaue Adresse, die gewaehrten Faehigkeiten und eine Aktion zum
-Trennen des Postfachs. Das Senden einer Antwort erfolgt stets ueber denselben
-Connector, aus dem die Nachricht stammt.
+Connectoren speichern nur verschluesselte, widerrufbare Zugangsdaten. Microsoft
+Graph nutzt PKCE, einen serverseitigen OAuth-Callback und die delegierten
+Berechtigungen `Mail.Read`, `Mail.Send`, `User.Read` und `offline_access`.
+Neue E-Mails treffen per Graph-Webhook ein; ein Scheduler erneuert die
+kurzlebigen Subscriptions rechtzeitig.
+
+Ein E-Mail-Task verwendet bei einem eingehenden Graph-Event automatisch dessen
+Connector, wenn keine `connectorId` am Sende-Baustein gesetzt ist. Unabhängig
+gestartete E-Mail-Tasks benötigen eine explizite `connectorId`. So geht jede
+Arbeitsplan-E-Mail aus einem verbundenen Kundenpostfach heraus. Der manuelle
+Versand verwendet die Callable Function `sendMicrosoftMailConnectorMessage`.
 
 ## Ereignisse
 
@@ -78,15 +84,16 @@ es kann kein bestehendes Gmail-, Outlook- oder Hetzner-Postfach durchsuchen.
 
 - OAuth-Berechtigungen folgen dem Least-Privilege-Prinzip.
 - Refresh-Tokens liegen verschluesselt und niemals im Flutter-Client.
+- Die Credentials und temporären OAuth-States sind ausschliesslich für
+  Cloud Functions lesbar.
 - Connectoren sind pro Team isoliert; ein Team kann keine Nachrichten anderer
   Teams lesen oder versenden.
 - Ein Trennen widerruft oder loescht die gespeicherten Provider-Zugangsdaten.
 
 ## Naechste Schritte
 
-1. `SystemEmailSender` aus dem team-scoped SendGrid-Kanal herausloesen.
-2. Mail-Connector-Aggregat mit Lifecycle und verschluesselter Credential-Store
-   definieren.
-3. Gmail- und Microsoft-Adapter mit OAuth, Empfang und Antwortversand
-   implementieren.
+1. Den Flutter-Connector-Dialog und die Connector-Auswahl im Sende-Baustein
+   ergänzen.
+2. `SystemEmailSender` als separaten backend-internen Dienst bereitstellen.
+3. Gmail-Adapter mit OAuth, Empfang und Antwortversand implementieren.
 4. IMAP/SMTP als generischen Connector evaluieren.

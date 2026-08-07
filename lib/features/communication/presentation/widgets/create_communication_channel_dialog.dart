@@ -108,7 +108,6 @@ class _CreateCommunicationChannelDialogState
     return switch (_kind) {
       CommunicationChannelKind.whatsapp ||
       CommunicationChannelKind.sms => 'Telefonnummer',
-      CommunicationChannelKind.email => 'E-Mail-Adresse',
     };
   }
 
@@ -116,7 +115,6 @@ class _CreateCommunicationChannelDialogState
     return switch (_kind) {
       CommunicationChannelKind.whatsapp => '+491234567890',
       CommunicationChannelKind.sms => '+491234567890',
-      CommunicationChannelKind.email => 'eingang@example.com',
     };
   }
 
@@ -124,7 +122,6 @@ class _CreateCommunicationChannelDialogState
     return switch (_kind) {
       CommunicationChannelKind.whatsapp ||
       CommunicationChannelKind.sms => CommunicationProvider.twilio,
-      CommunicationChannelKind.email => CommunicationProvider.sendgrid,
     };
   }
 
@@ -132,8 +129,7 @@ class _CreateCommunicationChannelDialogState
     return switch (_kind) {
       CommunicationChannelKind.whatsapp =>
         CommunicationChannelStatus.pendingVerification,
-      CommunicationChannelKind.sms ||
-      CommunicationChannelKind.email => CommunicationChannelStatus.active,
+      CommunicationChannelKind.sms => CommunicationChannelStatus.active,
     };
   }
 
@@ -141,7 +137,6 @@ class _CreateCommunicationChannelDialogState
     return switch (_kind) {
       CommunicationChannelKind.whatsapp => 'WhatsApp',
       CommunicationChannelKind.sms => 'SMS',
-      CommunicationChannelKind.email => 'E-Mail',
     };
   }
 }
@@ -174,7 +169,6 @@ class _KindField extends StatelessWidget {
     return switch (kind) {
       CommunicationChannelKind.whatsapp => 'WhatsApp',
       CommunicationChannelKind.sms => 'SMS',
-      CommunicationChannelKind.email => 'E-Mail',
     };
   }
 }

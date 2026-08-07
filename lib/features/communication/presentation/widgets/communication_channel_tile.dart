@@ -85,7 +85,6 @@ class CommunicationChannelTile extends StatelessWidget {
     return switch (channel.kind) {
       CommunicationChannelKind.whatsapp => Icons.chat_outlined,
       CommunicationChannelKind.sms => Icons.sms_outlined,
-      CommunicationChannelKind.email => Icons.mail_outline,
     };
   }
 
@@ -93,7 +92,6 @@ class CommunicationChannelTile extends StatelessWidget {
     return switch (channel.kind) {
       CommunicationChannelKind.whatsapp => 'WhatsApp',
       CommunicationChannelKind.sms => 'SMS',
-      CommunicationChannelKind.email => 'E-Mail',
     };
   }
 

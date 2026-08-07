@@ -17,6 +17,7 @@ class SendMessageWidget extends StatefulWidget {
 
 class _SendMessageWidgetState extends State<SendMessageWidget> {
   late final TextEditingController _recipientController;
+  late final TextEditingController _subjectController;
   late final TextEditingController _messageController;
 
   SendChannelMessageNodeConfig get _config {
@@ -27,6 +28,7 @@ class _SendMessageWidgetState extends State<SendMessageWidget> {
   void initState() {
     super.initState();
     _recipientController = TextEditingController(text: _config.recipient);
+    _subjectController = TextEditingController(text: _config.subject);
     _messageController = TextEditingController(text: _config.message);
   }
 
@@ -34,12 +36,14 @@ class _SendMessageWidgetState extends State<SendMessageWidget> {
   void didUpdateWidget(SendMessageWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     _sync(_recipientController, _config.recipient);
+    _sync(_subjectController, _config.subject);
     _sync(_messageController, _config.message);
   }
 
   @override
   void dispose() {
     _recipientController.dispose();
+    _subjectController.dispose();
     _messageController.dispose();
     super.dispose();
   }
@@ -59,6 +63,14 @@ class _SendMessageWidgetState extends State<SendMessageWidget> {
             decoration: InputDecoration(labelText: _recipientLabel),
             onChanged: _updateRecipient,
           ),
+          if (_config.kind == ChannelEventKind.email) ...[
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: _subjectController,
+              decoration: const InputDecoration(labelText: 'Betreff'),
+              onChanged: _updateSubject,
+            ),
+          ],
           const SizedBox(height: AppSpacing.sm),
           TextField(
             controller: _messageController,
@@ -95,6 +107,13 @@ class _SendMessageWidgetState extends State<SendMessageWidget> {
 
   void _updateMessage(String value) {
     context.read<TaskBuilderCubit>().updateSendMessageBody(
+      widget.node.id,
+      value,
+    );
+  }
+
+  void _updateSubject(String value) {
+    context.read<TaskBuilderCubit>().updateSendMessageSubject(
       widget.node.id,
       value,
     );

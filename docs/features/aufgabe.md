@@ -48,9 +48,9 @@ referenzieren.
 | `iterativeRefinement` | Iterative Verfeinerung | Bewertet und verbessert einen Entwurf | Implementiert |
 | `writeFile` | Datei schreiben | Schreibt den Vorgaengeroutput als Datei | Implementiert |
 | `readFile` | Datei lesen | Liest eine konkrete Datei-Version | Implementiert |
-| `readEmail` | E-Mail lesen | Liest Absender, Betreff und Inhalt eines Events | Event-Lesen implementiert; Connectoren geplant |
+| `readEmail` | E-Mail lesen | Liest Absender, Betreff und Inhalt eines Events | Microsoft Graph implementiert |
 | `readChannelEvent` | Nachricht lesen | Liest E-Mail-, WhatsApp- oder SMS-Events | Implementiert |
-| `sendChannelMessage` | Nachricht senden | Sendet E-Mail, WhatsApp oder SMS | Implementiert; Kundenpostfach-Antworten geplant |
+| `sendChannelMessage` | Nachricht senden | Sendet E-Mail, WhatsApp oder SMS | Microsoft-Graph-Antworten implementiert |
 | `humanApproval` | Freigabe | Haltet den Run bis zur menschlichen Entscheidung an | Implementiert |
 | `toolCall` | Werkzeug-Aufruf | Strukturierter Aufruf eines Werkzeugs | Geplant |
 | `validation` | Validierung | Prueft Output gegen Schema oder Regeln | Geplant |

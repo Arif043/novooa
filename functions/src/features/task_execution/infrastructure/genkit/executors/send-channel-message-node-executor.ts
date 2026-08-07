@@ -10,7 +10,10 @@ import {
   nodeSummary,
   textSummary,
 } from "../runner/structured-logger.js";
-import {type TaskMessageKind} from "../../../domain/repositories/task-message-sender.js";
+import {
+  type SendTaskMessageInput,
+  type TaskMessageKind,
+} from "../../../domain/repositories/task-message-sender.js";
 
 export const sendChannelMessageNodeExecutor: NodeExecutor = {
   primitive: "sendChannelMessage",
@@ -18,10 +21,18 @@ export const sendChannelMessageNodeExecutor: NodeExecutor = {
     const config = sendConfigFrom(input.node.config);
     const recipient = runContext.resolveTemplates(config.recipient).trim();
     const body = runContext.resolveTemplates(config.message).trim();
+    const subject = subjectFrom(config.subject, runContext);
+    const connectorId = connectorIdFrom(config.connectorId, runContext.input);
     if (!recipient) throw new Error(`${labelFor(config.kind)} senden: Empfänger fehlt.`);
     if (!body) throw new Error(`${labelFor(config.kind)} senden: Nachricht fehlt.`);
     logSendStarted(runContext.teamId, input.node, config.kind, recipient, body);
-    const sent = await sendMessage(runContext, config.kind, recipient, body);
+    const sent = await sendMessage(runContext, {
+      kind: config.kind,
+      connectorId,
+      recipient,
+      subject,
+      body,
+    });
     logInfo("send_channel_node.sent", {
       teamId: runContext.teamId,
       ...nodeSummary(input.node),
@@ -41,38 +52,82 @@ export const sendChannelMessageNodeExecutor: NodeExecutor = {
 
 function sendConfigFrom(config: unknown): {
   kind: TaskMessageKind;
+  connectorId: string;
   recipient: string;
+  subject: string;
   message: string;
 } {
-  if (!isRecord(config)) return {kind: "whatsapp", recipient: "", message: ""};
+  if (!isRecord(config)) return emptyConfig();
   return {
     kind: kindFrom(config.kind),
+    connectorId: stringFrom(config.connectorId),
     recipient: stringFrom(config.recipient),
+    subject: stringFrom(config.subject),
     message: stringFrom(config.message),
   };
 }
 
 async function sendMessage(
   runContext: Parameters<NodeExecutor["execute"]>[1],
-  kind: TaskMessageKind,
-  recipient: string,
-  body: string,
+  input: {
+    kind: TaskMessageKind;
+    connectorId: string;
+    recipient: string;
+    subject: string;
+    body: string;
+  },
 ) {
   try {
-    return await runContext.messageSender.send({
-      teamId: runContext.teamId,
-      kind,
-      recipient,
-      body,
-    });
+    return await runContext.messageSender.send(messageInputFor(runContext.teamId, input));
   } catch (error) {
     logError("send_channel_node.failed", {
       teamId: runContext.teamId,
-      kind,
+      kind: input.kind,
       error: errorDetails(error),
     });
     throw error;
   }
+}
+
+function messageInputFor(
+  teamId: string,
+  input: {
+    kind: TaskMessageKind;
+    connectorId: string;
+    recipient: string;
+    subject: string;
+    body: string;
+  },
+): SendTaskMessageInput {
+  if (input.kind !== "email") return {teamId, ...input};
+  if (!input.connectorId) throw new Error("E-Mail senden: Verbundenes Postfach fehlt.");
+  return {teamId, ...input};
+}
+
+function emptyConfig() {
+  return {kind: "whatsapp" as const, connectorId: "", recipient: "", subject: "", message: ""};
+}
+
+function subjectFrom(
+  configuredSubject: string,
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+): string {
+  const subject = runContext.resolveTemplates(configuredSubject).trim();
+  if (subject) return subject;
+  return replySubjectFrom(runContext.input) || "Nachricht von novooa";
+}
+
+function replySubjectFrom(input: Record<string, unknown>): string {
+  const event = input.event;
+  if (!isRecord(event) || event.type !== "emailReceived") return "";
+  const subject = stringFrom(event.subject).trim();
+  return subject ? `Re: ${subject}` : "";
+}
+
+function connectorIdFrom(configuredId: string, input: Record<string, unknown>): string {
+  if (configuredId) return configuredId;
+  const event = input.event;
+  return isRecord(event) && event.type === "emailReceived" ? stringFrom(event.connectorId) : "";
 }
 
 function logSendStarted(
