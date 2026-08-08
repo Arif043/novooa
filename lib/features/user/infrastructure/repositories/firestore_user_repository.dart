@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/entities/unique_id.dart';
+import 'package:syscat2/core/logging/syscat_log.dart';
 
 import '../../domain/entities/user_email.dart';
 import '../../domain/entities/user_failure.dart';
@@ -49,7 +50,8 @@ class FirestoreUserRepository implements UserRepository {
         await reference.set(model.toDocument(useServerTimestamps: true));
       }
       return Success(model.toDomain());
-    } catch (_) {
+    } catch (error, stackTrace) {
+      _logProfileFailure('Nutzerprofil konnte nicht synchronisiert werden.', error, stackTrace);
       return Error(UserFailure(UserFailureKind.unknown));
     }
   }
@@ -60,9 +62,23 @@ class FirestoreUserRepository implements UserRepository {
       final snapshot = await _users.doc(id.value).get();
       if (!snapshot.exists) return Error(UserFailure(UserFailureKind.notFound));
       return _profileFrom(snapshot);
-    } catch (_) {
+    } catch (error, stackTrace) {
+      _logProfileFailure('Nutzerprofil konnte nicht geladen werden.', error, stackTrace);
       return Error(UserFailure(UserFailureKind.unknown));
     }
+  }
+
+  void _logProfileFailure(
+    String message,
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    logSyscatException(
+      message: message,
+      error: error,
+      stackTrace: stackTrace,
+      name: 'user_profile',
+    );
   }
 
   Result<UserProfile, UserFailure> _profileFrom(DocumentSnapshot snapshot) {
