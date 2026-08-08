@@ -1,9 +1,14 @@
-part of 'notification_panel_dialog.dart';
+part of 'notification_panel.dart';
 
 class _ApprovalAction extends StatelessWidget {
-  const _ApprovalAction({required this.item});
+  const _ApprovalAction({
+    required this.item,
+    required this.onApprovalRequested,
+  });
 
   final AppNotification item;
+  final Future<void> Function(BuildContext context, TaskRun run)
+  onApprovalRequested;
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +24,7 @@ class _ApprovalAction extends StatelessWidget {
   void _openReview(BuildContext context) {
     final run = item.taskRun;
     if (run == null) return;
-    Navigator.of(context).pop(run);
+    onApprovalRequested(context, run);
   }
 }
 

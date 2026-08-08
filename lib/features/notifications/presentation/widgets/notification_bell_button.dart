@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/di/service_locator.dart';
-import '../../../activity/domain/entities/task_run.dart';
-import '../../../activity/presentation/cubits/activity_cubit.dart';
-import '../../../activity/presentation/widgets/approval_review_dialog.dart';
 import '../cubits/app_notifications_cubit.dart';
 import '../cubits/app_notifications_state.dart';
-import 'notification_panel_dialog.dart';
 
 class NotificationBellButton extends StatelessWidget {
-  const NotificationBellButton({super.key});
+  const NotificationBellButton({super.key, required this.onPressed});
+
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -25,26 +22,9 @@ class NotificationBellButton extends StatelessWidget {
             isLabelVisible: state.pendingCount > 0,
             child: const Icon(Icons.notifications_outlined),
           ),
-          onPressed: () => _showNotifications(context),
+          onPressed: onPressed,
         );
       },
-    );
-  }
-
-  Future<void> _showNotifications(BuildContext context) async {
-    final cubit = context.read<AppNotificationsCubit>();
-    final run = await showDialog<TaskRun>(
-      context: context,
-      builder: (_) =>
-          BlocProvider.value(value: cubit, child: const NotificationDialog()),
-    );
-    if (!context.mounted || run == null) return;
-    await showDialog<void>(
-      context: context,
-      builder: (_) => BlocProvider(
-        create: (_) => serviceLocator<ActivityCubit>(),
-        child: ApprovalReviewDialog(run: run),
-      ),
     );
   }
 

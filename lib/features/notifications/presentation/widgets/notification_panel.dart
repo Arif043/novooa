@@ -3,33 +3,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../activity/domain/entities/task_run.dart';
+import '../../../activity/presentation/cubits/activity_cubit.dart';
+import '../../../activity/presentation/widgets/approval_review_dialog.dart';
 import '../../infrastructure/services/fcm_bootstrapper.dart';
 import '../../domain/entities/app_notification.dart';
 import '../cubits/app_notifications_cubit.dart';
 import '../cubits/app_notifications_state.dart';
 
-part 'notification_panel_dialog_parts.dart';
-
-class NotificationDialog extends StatelessWidget {
-  const NotificationDialog({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      alignment: Alignment.topRight,
-      insetPadding: const EdgeInsets.only(
-        top: kToolbarHeight + AppSpacing.sm,
-        right: AppSpacing.md,
-        left: AppSpacing.md,
-      ),
-      child: SizedBox(
-        width: 360,
-        height: 520,
-        child: const NotificationPanel(),
-      ),
-    );
-  }
-}
+part 'notification_panel_parts.dart';
 
 class NotificationPanel extends StatelessWidget {
   const NotificationPanel({super.key, this.onClose});
@@ -45,9 +27,24 @@ class NotificationPanel extends StatelessWidget {
           children: [
             _NotificationHeader(onClose: onClose),
             const SizedBox(height: AppSpacing.md),
-            Expanded(child: _NotificationContent(state: state)),
+            Expanded(
+              child: _NotificationContent(
+                state: state,
+                onApprovalRequested: _openApproval,
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _openApproval(BuildContext context, TaskRun run) {
+    return showDialog<void>(
+      context: context,
+      builder: (_) => BlocProvider(
+        create: (_) => serviceLocator<ActivityCubit>(),
+        child: ApprovalReviewDialog(run: run),
       ),
     );
   }
@@ -95,9 +92,14 @@ class _NotificationHeader extends StatelessWidget {
 }
 
 class _NotificationContent extends StatelessWidget {
-  const _NotificationContent({required this.state});
+  const _NotificationContent({
+    required this.state,
+    required this.onApprovalRequested,
+  });
 
   final AppNotificationsState state;
+  final Future<void> Function(BuildContext context, TaskRun run)
+  onApprovalRequested;
 
   @override
   Widget build(BuildContext context) {
@@ -111,15 +113,23 @@ class _NotificationContent extends StatelessWidget {
       AppNotificationsStatus.failure => const Text(
         'Benachrichtigungen konnten nicht geladen werden.',
       ),
-      AppNotificationsStatus.ready => _NotificationList(state: state),
+      AppNotificationsStatus.ready => _NotificationList(
+        state: state,
+        onApprovalRequested: onApprovalRequested,
+      ),
     };
   }
 }
 
 class _NotificationList extends StatelessWidget {
-  const _NotificationList({required this.state});
+  const _NotificationList({
+    required this.state,
+    required this.onApprovalRequested,
+  });
 
   final AppNotificationsState state;
+  final Future<void> Function(BuildContext context, TaskRun run)
+  onApprovalRequested;
 
   @override
   Widget build(BuildContext context) {
@@ -131,17 +141,29 @@ class _NotificationList extends StatelessWidget {
     }
     return ListView(
       children: state.notifications
-          .map((item) => _NotificationTile(item: item, state: state))
+          .map(
+            (item) => _NotificationTile(
+              item: item,
+              state: state,
+              onApprovalRequested: onApprovalRequested,
+            ),
+          )
           .toList(growable: false),
     );
   }
 }
 
 class _NotificationTile extends StatelessWidget {
-  const _NotificationTile({required this.item, required this.state});
+  const _NotificationTile({
+    required this.item,
+    required this.state,
+    required this.onApprovalRequested,
+  });
 
   final AppNotification item;
   final AppNotificationsState state;
+  final Future<void> Function(BuildContext context, TaskRun run)
+  onApprovalRequested;
 
   @override
   Widget build(BuildContext context) {
@@ -153,7 +175,11 @@ class _NotificationTile extends StatelessWidget {
           Text(item.title, style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: AppSpacing.xs),
           Text(item.message),
-          if (item.isPendingTaskRunApproval) _ApprovalAction(item: item),
+          if (item.isPendingTaskRunApproval)
+            _ApprovalAction(
+              item: item,
+              onApprovalRequested: onApprovalRequested,
+            ),
           if (item.isPendingTeamInvitation)
             _InvitationActions(item: item, state: state),
         ],

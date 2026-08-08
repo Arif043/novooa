@@ -14,6 +14,7 @@ import 'features/assistant/domain/entities/assistant_context.dart';
 import 'features/assistant/presentation/widgets/assistant_bell_button.dart';
 import 'features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import 'features/notifications/presentation/widgets/notification_bell_button.dart';
+import 'features/notifications/presentation/widgets/notification_side_drawer.dart';
 import 'features/task_builder/presentation/widgets/task_builder_shell_frame.dart';
 import 'features/knowledge_base/presentation/widgets/knowledge_base_shell_frame.dart';
 
@@ -31,6 +32,7 @@ class _RootPageState extends State<RootPage> {
   final RootShellController _shellController = RootShellController();
   final CupertinoSidemenuController _sideMenuController =
       CupertinoSidemenuController();
+  bool _isNotificationDrawerOpen = false;
 
   static final List<RootTab> _tabs = [
     RootTab(
@@ -61,7 +63,7 @@ class _RootPageState extends State<RootPage> {
         icon: CupertinoIcons.person_2_square_stack,
         path: '/employees',
       ),
-      RootTab(
+    RootTab(
       title: 'Aktivitäten',
       icon: CupertinoIcons.rectangle_grid_1x2,
       path: '/activity',
@@ -113,6 +115,9 @@ class _RootPageState extends State<RootPage> {
                 selectedIndex: selectedTabIndex,
                 onSelected: _selectTab,
               ),
+              rightMenu: _isNotificationDrawerOpen
+                  ? NotificationSideDrawer(onClose: _closeNotificationDrawer)
+                  : null,
               centerPage: _centerPage(
                 selectedTab: selectedTab,
                 assistantContext: assistantContext,
@@ -169,7 +174,7 @@ class _RootPageState extends State<RootPage> {
         actions: [
           if (assistantContext != null)
             AssistantBellButton(contextInfo: assistantContext),
-          const NotificationBellButton(),
+          NotificationBellButton(onPressed: _openNotificationDrawer),
         ],
       ),
       body: SafeArea(child: widget.child),
@@ -191,6 +196,18 @@ class _RootPageState extends State<RootPage> {
     if (width >= 1200) return 0.28;
     if (width >= 800) return 0.42;
     return 0.82;
+  }
+
+  void _openNotificationDrawer() {
+    setState(() => _isNotificationDrawerOpen = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _sideMenuController.openRightMenu();
+    });
+  }
+
+  void _closeNotificationDrawer() {
+    _sideMenuController.closeMenu();
+    setState(() => _isNotificationDrawerOpen = false);
   }
 
   int get _selectedTabIndex {

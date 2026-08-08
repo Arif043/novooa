@@ -7,7 +7,7 @@ import 'package:syscat2/features/assistant/presentation/cubits/assistant_cubit.d
 import 'package:syscat2/features/assistant/presentation/widgets/assistant_panel_dialog.dart';
 import 'package:syscat2/features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import 'package:syscat2/features/notifications/presentation/cubits/app_notifications_state.dart';
-import 'package:syscat2/features/notifications/presentation/widgets/notification_panel_dialog.dart';
+import 'package:syscat2/features/notifications/presentation/widgets/notification_panel.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
 enum TaskBuilderSidePanelKind { assistant, notifications }
