@@ -6,15 +6,15 @@ Verwandt: [`../architecture.md`](../architecture.md) ·
 ## Zweck
 
 Kommunikation trennt novooa-eigene E-Mails klar von den Postfaechern der
-Nutzer:innen. System-E-Mails gehen ueber SendGrid. Mail-Connectoren verbinden
-ein konkretes Kundenpostfach und stellen dessen Nachrichten fuer Aufgaben und
-Trigger bereit.
+Nutzer:innen. Ein `CommunicationChannel` ist die fachliche Abstraktion für
+E-Mail, WhatsApp, SMS und künftige Kanäle. System-E-Mails gehen über SendGrid;
+Kundenpostfächer werden über technische Mail-Connectoren angebunden.
 
 ## Verantwortlichkeiten
 
 - System-E-Mails von novooa versenden, etwa Benachrichtigungen, Einladungen
   und Marketing-E-Mails.
-- Teambezogene Nachrichtenkanaele wie WhatsApp und SMS verwalten.
+- Teambezogene Kommunikationskanaele wie E-Mail, WhatsApp und SMS verwalten.
 - Kundenpostfaecher mit minimalen, widerrufbaren Berechtigungen verbinden.
 - Eingehende Connector-Nachrichten normalisieren und an die Inbox sowie
   Event-Trigger uebergeben.
@@ -36,10 +36,11 @@ backend-interner Dienst.
 
 ## Mail-Connectoren
 
-Ein Mail-Connector repraesentiert ein konkretes Kundenpostfach. Er ist ein
-Teilmodul von Kommunikation und kapselt Autorisierung, Berechtigungen,
-Credentials sowie den Provider-Lebenszyklus. Er wird nicht als einfacher,
-frei konfigurierbarer `communicationChannel` gespeichert.
+Ein Mail-Connector repräsentiert die technische Anbindung eines konkreten
+Kundenpostfachs. Er kapselt Autorisierung, Berechtigungen, Credentials sowie
+den Provider-Lebenszyklus und speist daraus einen E-Mail-
+`CommunicationChannel`. WhatsApp und SMS haben andere technische
+Voraussetzungen, erscheinen fachlich aber als dieselbe Kanalabstraktion.
 
 | Provider | Zugriffsweg | Status |
 | --- | --- | --- |
@@ -52,6 +53,12 @@ Graph nutzt PKCE, einen serverseitigen OAuth-Callback und die delegierten
 Berechtigungen `Mail.Read`, `Mail.Send`, `User.Read` und `offline_access`.
 Neue E-Mails treffen per Graph-Webhook ein; ein Scheduler erneuert die
 kurzlebigen Subscriptions rechtzeitig.
+
+In der Oberfläche erscheinen verbundene E-Mail-Adressen gemeinsam mit
+WhatsApp- und SMS-Verbindungen als Kommunikationskanäle. Der technische
+Mail-Connector bleibt dabei bewusst im Backend: Er kapselt OAuth,
+verschlüsselte Tokens und den Provider-Lebenszyklus, statt diese Details als
+Kanal-Konfiguration offenzulegen.
 
 Ein E-Mail-Task verwendet bei einem eingehenden Graph-Event automatisch dessen
 Connector, wenn keine `connectorId` am Sende-Baustein gesetzt ist. Unabhängig

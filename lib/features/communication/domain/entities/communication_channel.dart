@@ -1,13 +1,14 @@
 import '../../../files/domain/entities/team_id.dart';
 
-enum CommunicationProvider { twilio }
+enum CommunicationProvider { twilio, microsoftGraph }
 
-enum CommunicationChannelKind { whatsapp, sms }
+enum CommunicationChannelKind { email, whatsapp, sms }
 
 enum CommunicationChannelStatus {
   setupRequired,
   pendingVerification,
   active,
+  reauthorizationRequired,
   disabled,
 }
 
@@ -29,6 +30,7 @@ class CommunicationChannel {
     required this.address,
     required this.status,
     required this.capabilities,
+    this.connectorId,
     this.createdAt,
     this.updatedAt,
   });
@@ -42,6 +44,11 @@ class CommunicationChannel {
   final String address;
   final CommunicationChannelStatus status;
   final ChannelCapabilities capabilities;
+  final String? connectorId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+
+  bool get isActive => status == CommunicationChannelStatus.active;
+
+  bool get isConnectorBacked => connectorId != null;
 }

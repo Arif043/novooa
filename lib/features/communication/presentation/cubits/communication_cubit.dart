@@ -6,6 +6,7 @@ import '../../domain/entities/communication_channel.dart';
 import '../../domain/entities/create_communication_channel_input.dart';
 import '../../domain/entities/send_channel_message_input.dart';
 import '../../domain/usecases/create_communication_channel.dart';
+import '../../domain/usecases/begin_microsoft_connection.dart';
 import '../../domain/usecases/delete_communication_channel.dart';
 import '../../domain/usecases/dispatch_fake_channel_message.dart';
 import '../../domain/usecases/send_channel_message.dart';
@@ -19,6 +20,7 @@ class CommunicationCubit extends Cubit<CommunicationState> {
     this._deleteChannel,
     this._dispatchFakeMessage,
     this._sendMessage,
+    this._beginMicrosoftConnection,
   ) : super(const CommunicationState());
 
   final WatchCommunicationChannels _watchChannels;
@@ -26,6 +28,7 @@ class CommunicationCubit extends Cubit<CommunicationState> {
   final DeleteCommunicationChannel _deleteChannel;
   final DispatchFakeChannelMessage _dispatchFakeMessage;
   final SendChannelMessage _sendMessage;
+  final BeginMicrosoftConnection _beginMicrosoftConnection;
   StreamSubscription<List<CommunicationChannel>>? _subscription;
 
   void load() {
@@ -47,6 +50,18 @@ class CommunicationCubit extends Cubit<CommunicationState> {
       }
     } catch (_) {
       _emitFailure('Kanal konnte nicht erstellt werden.');
+    }
+  }
+
+  Future<String?> beginMicrosoftConnection() async {
+    emit(state.copyWith(isConnecting: true, message: null));
+    try {
+      final authorizationUrl = await _beginMicrosoftConnection();
+      if (!isClosed) emit(state.copyWith(isConnecting: false));
+      return authorizationUrl;
+    } catch (_) {
+      _emitFailure('Microsoft-Anmeldung konnte nicht gestartet werden.');
+      return null;
     }
   }
 
@@ -107,7 +122,14 @@ class CommunicationCubit extends Cubit<CommunicationState> {
     final status = state.channels.isEmpty
         ? CommunicationLoadStatus.failure
         : state.status;
-    emit(state.copyWith(status: status, isCreating: false, message: message));
+    emit(
+      state.copyWith(
+        status: status,
+        isCreating: false,
+        isConnecting: false,
+        message: message,
+      ),
+    );
   }
 
   @override

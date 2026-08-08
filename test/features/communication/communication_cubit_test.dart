@@ -4,6 +4,7 @@ import 'package:syscat2/features/communication/domain/entities/create_communicat
 import 'package:syscat2/features/communication/domain/entities/send_channel_message_input.dart';
 import 'package:syscat2/features/communication/domain/repositories/communication_channel_repository.dart';
 import 'package:syscat2/features/communication/domain/usecases/create_communication_channel.dart';
+import 'package:syscat2/features/communication/domain/usecases/begin_microsoft_connection.dart';
 import 'package:syscat2/features/communication/domain/usecases/delete_communication_channel.dart';
 import 'package:syscat2/features/communication/domain/usecases/dispatch_fake_channel_message.dart';
 import 'package:syscat2/features/communication/domain/usecases/send_channel_message.dart';
@@ -36,6 +37,17 @@ void main() {
 
     await cubit.close();
   });
+
+  test('startet die Microsoft-Anmeldung über den Kanal-Use-Case', () async {
+    final repository = _FakeCommunicationRepository();
+    final cubit = _cubit(repository);
+
+    final authorizationUrl = await cubit.beginMicrosoftConnection();
+
+    expect(authorizationUrl, 'https://login.microsoftonline.com');
+    expect(cubit.state.isConnecting, isFalse);
+    await cubit.close();
+  });
 }
 
 CommunicationCubit _cubit(_FakeCommunicationRepository repository) {
@@ -45,6 +57,7 @@ CommunicationCubit _cubit(_FakeCommunicationRepository repository) {
     DeleteCommunicationChannel(repository),
     DispatchFakeChannelMessage(repository),
     SendChannelMessage(repository),
+    BeginMicrosoftConnection(repository),
   );
 }
 
@@ -69,6 +82,11 @@ class _FakeCommunicationRepository implements CommunicationChannelRepository {
   @override
   Stream<List<CommunicationChannel>> watchChannels() {
     return Stream.value(const [_channel]);
+  }
+
+  @override
+  Future<String> beginMicrosoftConnection() async {
+    return 'https://login.microsoftonline.com';
   }
 
   @override

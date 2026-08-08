@@ -6,7 +6,12 @@ import '../../domain/entities/create_communication_channel_input.dart';
 import 'whatsapp_business_onboarding_notice.dart';
 
 class CreateCommunicationChannelDialog extends StatefulWidget {
-  const CreateCommunicationChannelDialog({super.key});
+  const CreateCommunicationChannelDialog({
+    super.key,
+    required this.initialKind,
+  });
+
+  final CommunicationChannelKind initialKind;
 
   @override
   State<CreateCommunicationChannelDialog> createState() {
@@ -18,8 +23,14 @@ class _CreateCommunicationChannelDialogState
     extends State<CreateCommunicationChannelDialog> {
   final TextEditingController _labelController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
-  CommunicationChannelKind _kind = CommunicationChannelKind.whatsapp;
+  late CommunicationChannelKind _kind;
   bool _acceptedWhatsappOnboarding = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _kind = widget.initialKind;
+  }
 
   @override
   void dispose() {
@@ -106,6 +117,7 @@ class _CreateCommunicationChannelDialogState
 
   String get _addressLabel {
     return switch (_kind) {
+      CommunicationChannelKind.email => 'E-Mail-Adresse',
       CommunicationChannelKind.whatsapp ||
       CommunicationChannelKind.sms => 'Telefonnummer',
     };
@@ -113,6 +125,7 @@ class _CreateCommunicationChannelDialogState
 
   String get _addressHint {
     return switch (_kind) {
+      CommunicationChannelKind.email => 'name@beispiel.de',
       CommunicationChannelKind.whatsapp => '+491234567890',
       CommunicationChannelKind.sms => '+491234567890',
     };
@@ -120,6 +133,7 @@ class _CreateCommunicationChannelDialogState
 
   CommunicationProvider get _providerForKind {
     return switch (_kind) {
+      CommunicationChannelKind.email => CommunicationProvider.microsoftGraph,
       CommunicationChannelKind.whatsapp ||
       CommunicationChannelKind.sms => CommunicationProvider.twilio,
     };
@@ -127,6 +141,8 @@ class _CreateCommunicationChannelDialogState
 
   CommunicationChannelStatus get _statusForKind {
     return switch (_kind) {
+      CommunicationChannelKind.email =>
+        CommunicationChannelStatus.setupRequired,
       CommunicationChannelKind.whatsapp =>
         CommunicationChannelStatus.pendingVerification,
       CommunicationChannelKind.sms => CommunicationChannelStatus.active,
@@ -135,6 +151,7 @@ class _CreateCommunicationChannelDialogState
 
   String get _kindLabel {
     return switch (_kind) {
+      CommunicationChannelKind.email => 'E-Mail',
       CommunicationChannelKind.whatsapp => 'WhatsApp',
       CommunicationChannelKind.sms => 'SMS',
     };
@@ -152,7 +169,10 @@ class _KindField extends StatelessWidget {
     return DropdownButtonFormField<CommunicationChannelKind>(
       initialValue: value,
       decoration: const InputDecoration(labelText: 'Art'),
-      items: CommunicationChannelKind.values.map(_item).toList(growable: false),
+      items: const [
+        CommunicationChannelKind.whatsapp,
+        CommunicationChannelKind.sms,
+      ].map(_item).toList(growable: false),
       onChanged: (value) {
         if (value != null) onChanged(value);
       },
@@ -167,6 +187,7 @@ class _KindField extends StatelessWidget {
 
   String _kindLabel(CommunicationChannelKind kind) {
     return switch (kind) {
+      CommunicationChannelKind.email => 'E-Mail',
       CommunicationChannelKind.whatsapp => 'WhatsApp',
       CommunicationChannelKind.sms => 'SMS',
     };

@@ -10,7 +10,9 @@ import '../../domain/entities/communication_channel.dart';
 import '../../domain/entities/create_communication_channel_input.dart';
 import '../../domain/entities/send_channel_message_input.dart';
 import '../../domain/repositories/communication_channel_repository.dart';
+import '../datasources/combined_communication_channel_stream.dart';
 import '../models/communication_channel_model.dart';
+import '../models/mail_connector_model.dart';
 
 class FirestoreCommunicationChannelRepository
     implements CommunicationChannelRepository {
@@ -32,11 +34,22 @@ class FirestoreCommunicationChannelRepository
   Stream<List<CommunicationChannel>> watchChannels() {
     final user = _authRepository.currentUser();
     if (user == null) return Stream.value(const []);
-    return _teamRepository.watchCurrentTeamId().asyncExpand(
-      (teamId) => _channelsReference(
-        teamId,
-      ).orderBy('createdAt', descending: true).snapshots().map(_toChannels),
+    return _teamRepository.watchCurrentTeamId().asyncExpand(_watchTeamChannels);
+  }
+
+  @override
+  Future<String> beginMicrosoftConnection() async {
+    final callable = _functions.httpsCallable(
+      'beginMicrosoftMailConnector',
+      options: HttpsCallableOptions(timeout: const Duration(seconds: 30)),
     );
+    final response = await callable.call<Object?>(null);
+    final data = response.data;
+    final url = data is Map ? data['authorizationUrl'] : null;
+    if (url is! String || url.isEmpty) {
+      throw StateError('Microsoft-Anmeldung fehlt.');
+    }
+    return url;
   }
 
   @override
@@ -120,6 +133,27 @@ class FirestoreCommunicationChannelRepository
         .toList(growable: false);
   }
 
+  Stream<List<CommunicationChannel>> _watchTeamChannels(TeamId teamId) {
+    return combineCommunicationChannelStreams(
+      directChannels: _channelsReference(
+        teamId,
+      ).orderBy('createdAt', descending: true).snapshots().map(_toChannels),
+      connectorChannels: _connectorsReference(teamId)
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .map(_toConnectorChannels),
+    );
+  }
+
+  List<CommunicationChannel> _toConnectorChannels(
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) {
+    return snapshot.docs
+        .map(MailConnectorModel.fromDocument)
+        .map((model) => model.toChannel())
+        .toList(growable: false);
+  }
+
   bool _isSupportedChannel(
     QueryDocumentSnapshot<Map<String, dynamic>> document,
   ) {
@@ -133,5 +167,14 @@ class FirestoreCommunicationChannelRepository
         .collection('teams')
         .doc(teamId.value)
         .collection('communicationChannels');
+  }
+
+  CollectionReference<Map<String, dynamic>> _connectorsReference(
+    TeamId teamId,
+  ) {
+    return _firestore
+        .collection('teams')
+        .doc(teamId.value)
+        .collection('mailConnectors');
   }
 }

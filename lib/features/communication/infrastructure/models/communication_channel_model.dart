@@ -14,6 +14,7 @@ class CommunicationChannelModel {
     required this.address,
     required this.status,
     required this.capabilities,
+    this.connectorId,
     this.createdAt,
     this.updatedAt,
   });
@@ -27,6 +28,7 @@ class CommunicationChannelModel {
   final String address;
   final CommunicationChannelStatus status;
   final ChannelCapabilities capabilities;
+  final String? connectorId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -44,6 +46,7 @@ class CommunicationChannelModel {
       address: data['address'] as String? ?? '',
       status: _status(data['status']),
       capabilities: _capabilities(data['capabilities']),
+      connectorId: _connectorId(data['connectorId']),
       createdAt: _date(data['createdAt']),
       updatedAt: _date(data['updatedAt']),
     );
@@ -60,6 +63,7 @@ class CommunicationChannelModel {
       address: address,
       status: status,
       capabilities: capabilities,
+      connectorId: connectorId,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -84,6 +88,10 @@ class CommunicationChannelModel {
       (status) => status.name == value,
       orElse: () => CommunicationChannelStatus.disabled,
     );
+  }
+
+  static String? _connectorId(Object? value) {
+    return value is String && value.isNotEmpty ? value : null;
   }
 
   static ChannelCapabilities _capabilities(Object? value) {

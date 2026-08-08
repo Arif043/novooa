@@ -1,13 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../domain/entities/communication_channel.dart';
 import '../cubits/communication_cubit.dart';
 import '../cubits/communication_state.dart';
-import 'mail_connector_section.dart';
-import 'communication_channel_grid.dart';
+import 'communication_channel_content.dart';
 import 'create_communication_channel_dialog.dart';
 
 class CommunicationSettingsTab extends StatelessWidget {
@@ -15,8 +16,12 @@ class CommunicationSettingsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => serviceLocator<CommunicationCubit>()..load(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => serviceLocator<CommunicationCubit>()..load(),
+        ),
+      ],
       child: const _CommunicationView(),
     );
   }
@@ -27,15 +32,26 @@ class _CommunicationView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<CommunicationCubit, CommunicationState>(
-      listenWhen: (previous, current) => previous.message != current.message,
-      listener: _showMessage,
-      builder: (_, state) => _CommunicationBody(state: state),
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<CommunicationCubit, CommunicationState>(
+          listenWhen: (previous, current) =>
+              previous.message != current.message,
+          listener: _showChannelMessage,
+        ),
+      ],
+      child: BlocBuilder<CommunicationCubit, CommunicationState>(
+        builder: (context, channelState) =>
+            _CommunicationBody(channelState: channelState),
+      ),
     );
   }
 
-  void _showMessage(BuildContext context, CommunicationState state) {
-    final message = state.message;
+  void _showChannelMessage(BuildContext context, CommunicationState state) {
+    _showMessage(context, state.message);
+  }
+
+  void _showMessage(BuildContext context, String? message) {
     if (message == null) return;
     ScaffoldMessenger.of(
       context,
@@ -44,21 +60,23 @@ class _CommunicationView extends StatelessWidget {
 }
 
 class _CommunicationBody extends StatelessWidget {
-  const _CommunicationBody({required this.state});
+  const _CommunicationBody({required this.channelState});
 
-  final CommunicationState state;
+  final CommunicationState channelState;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _CommunicationHeader(isCreating: state.isCreating),
-        const SizedBox(height: AppSpacing.lg),
-        const MailConnectorSection(),
+        _CommunicationHeader(
+          isBusy: channelState.isCreating || channelState.isConnecting,
+        ),
         const SizedBox(height: AppSpacing.lg),
         Expanded(
-          child: ListView(children: [_CommunicationContent(state: state)]),
+          child: ListView(
+            children: [CommunicationChannelContent(channelState: channelState)],
+          ),
         ),
       ],
     );
@@ -66,9 +84,9 @@ class _CommunicationBody extends StatelessWidget {
 }
 
 class _CommunicationHeader extends StatelessWidget {
-  const _CommunicationHeader({required this.isCreating});
+  const _CommunicationHeader({required this.isBusy});
 
-  final bool isCreating;
+  final bool isBusy;
 
   @override
   Widget build(BuildContext context) {
@@ -79,93 +97,63 @@ class _CommunicationHeader extends StatelessWidget {
       runSpacing: AppSpacing.sm,
       children: [
         Text('Kommunikation', style: Theme.of(context).textTheme.displayMedium),
-        FilledButton.icon(
-          onPressed: isCreating ? null : () => _openDialog(context),
-          icon: const Icon(CupertinoIcons.add_circled),
-          label: const Text('Kanal verbinden'),
+        MenuAnchor(
+          builder: (context, controller, _) => FilledButton.icon(
+            onPressed: isBusy ? null : controller.open,
+            icon: const Icon(CupertinoIcons.add_circled),
+            label: const Text('Kanal verbinden'),
+          ),
+          menuChildren: [
+            MenuItemButton(
+              leadingIcon: const Icon(Icons.mail_outline),
+              onPressed: () => _connectMicrosoft(context),
+              child: const Text('E-Mail mit Microsoft Outlook'),
+            ),
+            MenuItemButton(
+              leadingIcon: const Icon(Icons.chat_outlined),
+              onPressed: () =>
+                  _createChannel(context, CommunicationChannelKind.whatsapp),
+              child: const Text('WhatsApp'),
+            ),
+            MenuItemButton(
+              leadingIcon: const Icon(Icons.sms_outlined),
+              onPressed: () =>
+                  _createChannel(context, CommunicationChannelKind.sms),
+              child: const Text('SMS'),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Future<void> _openDialog(BuildContext context) async {
+  Future<void> _connectMicrosoft(BuildContext context) async {
+    final authorizationUrl = await context
+        .read<CommunicationCubit>()
+        .beginMicrosoftConnection();
+    if (authorizationUrl == null || !context.mounted) return;
+    final opened = await launchUrl(
+      Uri.parse(authorizationUrl),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Microsoft-Anmeldung konnte nicht geöffnet werden.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _createChannel(
+    BuildContext context,
+    CommunicationChannelKind kind,
+  ) async {
     final input = await showDialog(
       context: context,
-      builder: (_) => const CreateCommunicationChannelDialog(),
+      builder: (_) => CreateCommunicationChannelDialog(initialKind: kind),
     );
     if (input == null || !context.mounted) return;
     await context.read<CommunicationCubit>().create(input);
-  }
-}
-
-class _CommunicationContent extends StatelessWidget {
-  const _CommunicationContent({required this.state});
-
-  final CommunicationState state;
-
-  @override
-  Widget build(BuildContext context) {
-    return switch (state.status) {
-      CommunicationLoadStatus.loading => const Center(
-        child: CircularProgressIndicator(),
-      ),
-      CommunicationLoadStatus.failure => _FailureState(message: state.message),
-      CommunicationLoadStatus.ready when state.channels.isEmpty =>
-        const _EmptyState(),
-      CommunicationLoadStatus.ready => CommunicationChannelGrid(
-        channels: state.channels,
-      ),
-    };
-  }
-}
-
-class _FailureState extends StatelessWidget {
-  const _FailureState({required this.message});
-
-  final String? message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(message ?? 'Kanäle konnten nicht geladen werden.'),
-          const SizedBox(height: AppSpacing.md),
-          OutlinedButton.icon(
-            onPressed: context.read<CommunicationCubit>().load,
-            icon: const Icon(CupertinoIcons.arrow_clockwise),
-            label: const Text('Erneut versuchen'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            CupertinoIcons.bubble_left_bubble_right,
-            size: AppSpacing.xxl,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Noch keine Verbindungen',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          const Text('Verbinde WhatsApp, SMS oder E-Mail mit novooa.'),
-        ],
-      ),
-    );
   }
 }

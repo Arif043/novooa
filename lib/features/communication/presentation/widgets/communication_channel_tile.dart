@@ -7,15 +7,15 @@ class CommunicationChannelTile extends StatelessWidget {
   const CommunicationChannelTile({
     super.key,
     required this.channel,
-    required this.onFakeMessage,
-    required this.onSendMessage,
-    required this.onDelete,
+    this.onFakeMessage,
+    this.onSendMessage,
+    this.onDelete,
   });
 
   final CommunicationChannel channel;
-  final VoidCallback onFakeMessage;
-  final VoidCallback onSendMessage;
-  final VoidCallback onDelete;
+  final VoidCallback? onFakeMessage;
+  final VoidCallback? onSendMessage;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -37,23 +37,24 @@ class CommunicationChannelTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (_isActive)
+                if (onFakeMessage != null)
                   IconButton(
                     tooltip: 'Testnachricht auslösen',
                     onPressed: onFakeMessage,
                     icon: const Icon(Icons.bolt_outlined),
                   ),
-                if (_isActive && channel.capabilities.outbound)
+                if (onSendMessage != null)
                   IconButton(
                     tooltip: 'Nachricht senden',
                     onPressed: onSendMessage,
                     icon: const Icon(Icons.send_outlined),
                   ),
-                IconButton(
-                  tooltip: 'Kanal entfernen',
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline),
-                ),
+                if (onDelete != null)
+                  IconButton(
+                    tooltip: 'Kanal entfernen',
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline),
+                  ),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -77,32 +78,26 @@ class CommunicationChannelTile extends StatelessWidget {
     );
   }
 
-  bool get _isActive {
-    return channel.status == CommunicationChannelStatus.active;
-  }
+  IconData get _icon => switch (channel.kind) {
+    CommunicationChannelKind.email => Icons.mail_outline,
+    CommunicationChannelKind.whatsapp => Icons.chat_outlined,
+    CommunicationChannelKind.sms => Icons.sms_outlined,
+  };
 
-  IconData get _icon {
-    return switch (channel.kind) {
-      CommunicationChannelKind.whatsapp => Icons.chat_outlined,
-      CommunicationChannelKind.sms => Icons.sms_outlined,
-    };
-  }
+  String get _kindLabel => switch (channel.kind) {
+    CommunicationChannelKind.email => 'E-Mail',
+    CommunicationChannelKind.whatsapp => 'WhatsApp',
+    CommunicationChannelKind.sms => 'SMS',
+  };
 
-  String get _kindLabel {
-    return switch (channel.kind) {
-      CommunicationChannelKind.whatsapp => 'WhatsApp',
-      CommunicationChannelKind.sms => 'SMS',
-    };
-  }
-
-  String get _statusLabel {
-    return switch (channel.status) {
-      CommunicationChannelStatus.setupRequired => 'Einrichtung nötig',
-      CommunicationChannelStatus.pendingVerification => 'Verifizierung läuft',
-      CommunicationChannelStatus.active => 'Aktiv',
-      CommunicationChannelStatus.disabled => 'Deaktiviert',
-    };
-  }
+  String get _statusLabel => switch (channel.status) {
+    CommunicationChannelStatus.setupRequired => 'Einrichtung nötig',
+    CommunicationChannelStatus.pendingVerification => 'Verifizierung läuft',
+    CommunicationChannelStatus.active => 'Aktiv',
+    CommunicationChannelStatus.reauthorizationRequired =>
+      'Erneute Anmeldung erforderlich',
+    CommunicationChannelStatus.disabled => 'Deaktiviert',
+  };
 }
 
 class _InfoChip extends StatelessWidget {

@@ -5,6 +5,8 @@ import '../entities/send_channel_message_input.dart';
 abstract interface class CommunicationChannelRepository {
   Stream<List<CommunicationChannel>> watchChannels();
 
+  Future<String> beginMicrosoftConnection();
+
   Future<void> createChannel(CreateCommunicationChannelInput input);
 
   Future<void> deleteChannel(String channelId);

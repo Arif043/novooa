@@ -137,7 +137,7 @@ Authentication verifiziert; der Function-Secret `SENDGRID_API_KEY` erhält nur
 die Berechtigung `mail.send`. Dieser Versanddienst ist kein Kundenpostfach und
 kann keine vorhandenen E-Mails lesen.
 
-Kommunikationskanäle wie WhatsApp und SMS werden im Client unter
+Kommunikationskanäle wie E-Mail, WhatsApp und SMS werden im Client unter
 `Einstellungen > Kommunikation` gepflegt und bleiben bewusst team-scoped.
 Provider-Credentials werden nicht im Client erfasst. Für Twilio provisioniert
 novooa intern einen Subaccount pro Team und speichert dessen SID am
@@ -151,8 +151,10 @@ Google Workspace über OAuth und die Gmail API sowie weitere Anbieter über
 IMAP/SMTP. Ein Connector gehört zu einem Team, speichert Zugangsdaten
 verschlüsselt und versendet Antworten über dasselbe verbundene Postfach. Jeder
 E-Mail-Baustein verwendet einen aktiven Connector; SendGrid ist dafür nicht
-verfügbar. Die Connectoren sind kein `communicationChannel`, sondern ein
-eigenes Domain-Modell innerhalb von Kommunikation.
+verfügbar. Der Connector ist die technische Implementierung eines E-Mail-
+`CommunicationChannel`: Er verwaltet OAuth und Tokens, während Aufgaben,
+Trigger und die Oberfläche ausschließlich mit der gemeinsamen
+Kanalabstraktion arbeiten.
 
 WhatsApp meint eine WhatsApp-Business-Nummer auf der WhatsApp Business
 Platform. Bestehende WhatsApp-Business-App-Nummern werden nicht parallel
