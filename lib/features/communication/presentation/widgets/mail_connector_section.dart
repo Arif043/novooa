@@ -62,6 +62,7 @@ class _MailConnectorContent extends StatelessWidget {
       ),
       MailConnectorsLoadStatus.failure => _FailureState(
         isConnecting: state.isConnecting,
+        onConnect: () => _beginConnection(context),
       ),
       MailConnectorsLoadStatus.ready => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -109,7 +110,30 @@ class _MailConnectorContent extends StatelessWidget {
 }
 
 class _FailureState extends StatelessWidget {
-  const _FailureState({required this.isConnecting});
+  const _FailureState({required this.isConnecting, required this.onConnect});
+
+  final bool isConnecting;
+  final VoidCallback onConnect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _FailureMessage(isConnecting: isConnecting),
+        const SizedBox(height: AppSpacing.md),
+        FilledButton.icon(
+          onPressed: isConnecting ? null : onConnect,
+          icon: const Icon(CupertinoIcons.link),
+          label: const Text('Microsoft verbinden'),
+        ),
+      ],
+    );
+  }
+}
+
+class _FailureMessage extends StatelessWidget {
+  const _FailureMessage({required this.isConnecting});
 
   final bool isConnecting;
 
@@ -119,7 +143,7 @@ class _FailureState extends StatelessWidget {
       children: [
         const Icon(CupertinoIcons.exclamationmark_triangle),
         const SizedBox(width: AppSpacing.sm),
-        Expanded(child: Text('Postfächer konnten nicht geladen werden.')),
+        const Expanded(child: Text('Postfächer konnten nicht geladen werden.')),
         IconButton(
           tooltip: 'Erneut versuchen',
           onPressed: isConnecting
