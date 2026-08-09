@@ -24,11 +24,11 @@ Der Prompt-Executor bietet die Output-Arten `text`, `decision`, `structured`
 und `image`. Entscheidungen liefern die gewaehlte Option als `text`.
 Strukturierte Prompts validieren ein required Zod-Object, legen jedes Feld als
 benannten Output ab und schreiben die Gesamtstruktur als JSON in `text`.
-Bild-Prompts verwenden Vertex AI mit `gemini-2.5-flash-image` (optional ueber
-`VERTEX_IMAGE_MODEL` und `VERTEX_LOCATION` konfigurierbar) und liefern
-ausschliesslich `dataUrl`, keine Textausgabe. Das Bildmodell ist unabhängig vom
-eingestellten Textprovider und nutzt in Cloud Functions die Service-Account-
-Anmeldung von Google Cloud.
+Bild-Prompts verwenden Google GenAI mit `gemini-2.5-flash-image` (optional
+ueber `GOOGLE_IMAGE_MODEL` konfigurierbar) und liefern ausschliesslich
+`dataUrl`, keine Textausgabe. Die Cloud Function erhaelt den benoetigten
+`GEMINI_API_KEY` als gebundenes Secret. Daten-URLs bleiben innerhalb des
+laufenden Workflows; Aktivitaeten speichern nur Medientyp und Bytegroesse.
 
 Prompt-Anweisungen und Entscheidungen koennen Variablen per `{{name}}` und
 Dot-Pfade wie `{{kunde.name}}` verwenden. Dateianhaenge und Wissensnotizen

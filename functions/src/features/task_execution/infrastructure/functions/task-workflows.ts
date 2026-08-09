@@ -11,6 +11,7 @@ import {
   loadTaskDefinition,
 } from "../genkit/runner/task-definition-loader.js";
 import {aiProviderPlugins} from "../genkit/runner/ai-models.js";
+import {geminiApiKey} from "../genkit/runner/gemini-secret.js";
 import {logException, withExceptionLogging} from "../../../../shared/logging/logger.js";
 import {twilioAccountSid, twilioAuthToken} from "../../../communication/infrastructure/twilio/twilio-secrets.js";
 import {
@@ -40,11 +41,12 @@ import {
   type TaskRunDispatchPayload,
 } from "../genkit/runner/task-run-task.js";
 
-const communicationSecrets = [
+const workerSecrets = [
   twilioAccountSid,
   twilioAuthToken,
   microsoftGraphClientSecret,
   mailConnectorEncryptionKey,
+  geminiApiKey,
 ];
 
 const ai = genkit({
@@ -72,6 +74,7 @@ const taskRunDispatcher = new FirebaseTaskRunDispatcher();
 const callableOptions = {
   authPolicy: isSignedIn(),
   invoker: "public" as const,
+  secrets: [geminiApiKey],
 };
 
 export const taskDefinitionFlow = ai.defineFlow(
@@ -155,7 +158,7 @@ export const reviewTaskRun = onCallGenkit(callableOptions, reviewTaskRunFlow);
 export const runTaskRunTask = onTaskDispatched<TaskRunDispatchPayload>(
   {
     region: "europe-west3",
-    secrets: communicationSecrets,
+    secrets: workerSecrets,
     retryConfig: {
       maxAttempts: 3,
       minBackoffSeconds: 30,
