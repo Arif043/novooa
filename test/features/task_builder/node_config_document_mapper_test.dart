@@ -128,6 +128,21 @@ void main() {
     final promptConfig = config as PromptNodeConfig;
     expect(promptConfig.knowledgeAttachments, [_knowledgeAttachment]);
   });
+
+  test('serialisiert und deserialisiert die Bildausgabe eines Prompts', () {
+    final document = _mapper().toDocument(
+      const PromptNodeConfig(
+        instruction: 'Erstelle ein Bild.',
+        outputType: PromptOutputType.image,
+        choices: [],
+      ),
+    );
+
+    final config = _mapper().fromDocument(document) as PromptNodeConfig;
+
+    expect(document['outputType'], 'image');
+    expect(config.outputType, PromptOutputType.image);
+  });
 }
 
 const _attachment = NodeAttachment(

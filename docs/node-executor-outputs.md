@@ -7,9 +7,10 @@
 
 Jeder Executor liefert ein `NodeExecutionResult` mit einem `outputs`-Objekt.
 Ein Output hat einen der Typen `string`, `datetime`, `number`, `boolean` oder
-`json`. Der regulaere Datenfluss zwischen verbundenen Knoten verwendet nur den
-Output `text`. Benannte Outputs sind ueber den Referenznamen eines Knotens in
-Templates verfuegbar, etwa `{{eingang.sender}}`.
+`json`. Der regulaere Datenfluss zwischen verbundenen Knoten verwendet den
+Output `text`; bei einem Bild-Prompt wird stattdessen `dataUrl` als primaere
+Ausgabe weitergereicht. Benannte Outputs sind ueber den Referenznamen eines
+Knotens in Templates verfuegbar, etwa `{{eingang.sender}}`.
 
 Ein leerer Text erzeugt keinen `text`-Output. `humanApproval` liefert den
 Status `waitingForApproval`; nicht registrierte Primitives erhalten den Status
@@ -24,6 +25,7 @@ Status `waitingForApproval`; nicht registrierte Primitives erhalten den Status
 | `prompt` mit Text | ausgefuehrt | `text` (`string`) |
 | `prompt` mit Entscheidung | ausgefuehrt | `text` (`string`, gewaehlte Option) |
 | `prompt` strukturiert | ausgefuehrt | `text` (`string`, JSON) und ein `string`-Output fuer jedes konfigurierte Feld |
+| `prompt` mit Bild | ausgefuehrt | `dataUrl` (`string`, Bild als Data-URL); kein `text`-Output |
 | `conditionalFlow` | ausgefuehrt | `text` (`string`, Ergebnis des gewaehlten Zweigs oder Begruendung); Resultat-Metadaten: `selectedNodeId`, `selectedBranchId`, `selectedBranchLabel` |
 | `iterativeRefinement` | ausgefuehrt | `text` (`string`) |
 | `readFile` | ausgefuehrt | `text` (`string`, UTF-8-Dateiinhalt) |

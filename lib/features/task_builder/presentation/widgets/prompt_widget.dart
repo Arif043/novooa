@@ -78,18 +78,22 @@ class _PromptWidgetState extends State<PromptWidget> {
           const SizedBox(height: AppSpacing.md),
           Text('Ausgabe', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),
-          CupertinoSlidingSegmentedControl<PromptOutputType>(
-            groupValue: selectedOutput,
-            backgroundColor: SyscatTheme.surfaceContainer,
-            thumbColor: SyscatTheme.glassSurface,
-            children: const {
-              PromptOutputType.text: Text('Freitext'),
-              PromptOutputType.decision: Text('Entscheidung'),
-              PromptOutputType.structured: Text('Strukturierte Ausgabe'),
-            },
-            onValueChanged: (value) {
-              _updateOutputType({value!});
-            },
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: CupertinoSlidingSegmentedControl<PromptOutputType>(
+              groupValue: selectedOutput,
+              backgroundColor: SyscatTheme.surfaceContainer,
+              thumbColor: SyscatTheme.glassSurface,
+              children: const {
+                PromptOutputType.text: Text('Freitext'),
+                PromptOutputType.decision: Text('Entscheidung'),
+                PromptOutputType.structured: Text('Strukturierte Ausgabe'),
+                PromptOutputType.image: Text('Bild'),
+              },
+              onValueChanged: (value) {
+                _updateOutputType({value!});
+              },
+            ),
           ),
           Visibility(
             visible: selectedOutput == .decision,

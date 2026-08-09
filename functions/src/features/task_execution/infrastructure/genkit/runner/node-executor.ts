@@ -116,7 +116,9 @@ export function textOutputs(text: string): Record<string, NodeOutputValue> {
 
 export function textOutputFromResult(result: NodeExecutionResult): string {
   const text = result.outputs.text?.value;
-  return typeof text === "string" ? text : "";
+  if (typeof text === "string") return text;
+  const dataUrl = result.outputs.dataUrl?.value;
+  return typeof dataUrl === "string" ? dataUrl : "";
 }
 
 export function parentResultsFor(

@@ -1,6 +1,6 @@
 import { z } from "genkit";
 import { type GenkitBeta } from "genkit/beta";
-import {modelLogContext, textModel} from "../runner/ai-models.js";
+import {imageModel, modelLogContext, textModel} from "../runner/ai-models.js";
 import {
   type NodeExecutor,
   type TaskRunContext,
@@ -28,7 +28,7 @@ import {
   renderEmployeePrompt,
 } from "../runner/employee-context.js";
 import {runEmployeeAgentTurn} from "../runner/employee-agent.js";
-export type PromptNodeOutputType = "text" | "decision" | "structured";
+export type PromptNodeOutputType = "text" | "decision" | "structured" | "image";
 
 type StructuredOutputField = {
   name: string;
@@ -72,7 +72,44 @@ export async function executePromptNode(
   if (input.outputType === "structured") {
     return executeStructuredPrompt(ai, input, attachmentWorkspace);
   }
+  if (input.outputType === "image") {
+    return executeImagePrompt(ai, input, attachmentWorkspace);
+  }
   return executeTextPrompt(ai, input, attachmentWorkspace);
+}
+
+async function executeImagePrompt(
+  ai: GenkitBeta,
+  input: PromptNodeInput,
+  attachmentWorkspace?: NodeAttachmentWorkspace,
+): Promise<PromptNodeOutput> {
+  const prompt = promptTurn(input, attachmentWorkspace);
+  const label = input.employee
+    ? `Prompt / Bild (Mitarbeiter: ${input.employee.name})`
+    : "Prompt / Bild";
+  const startedAt = Date.now();
+  logReadableInfo(formatModelCallStarted({
+    label,
+    model: modelLogContext(),
+    prompt,
+    outputSchema: "dataUrl: Bild-Data-URL",
+  }));
+  const response = await ai.generate({
+    model: imageModel(),
+    prompt,
+    config: {responseModalities: ["IMAGE"]},
+    use: aiTurnMiddleware(attachmentWorkspace),
+  });
+  const dataUrl = response.media?.url;
+  if (!isImageDataUrl(dataUrl)) {
+    throw new Error("Der Bild-Prompt lieferte keine Bild-Data-URL.");
+  }
+  logReadableInfo(formatModelCallFinished({
+    label,
+    durationMs: Date.now() - startedAt,
+    text: `Bild generiert (${dataUrl.length} Zeichen)`,
+  }));
+  return {answer: dataUrl, outputs: {dataUrl: stringOutput(dataUrl)}};
 }
 
 async function executeTextPrompt(
@@ -244,6 +281,10 @@ function promptTurn(
     parts.push("Fülle alle Felder der strukturierten Ausgabe aus.");
   }
   return parts.join("\n\n");
+}
+
+function isImageDataUrl(value: string | undefined): value is string {
+  return value?.startsWith("data:image/") ?? false;
 }
 
 function promptInputFor(

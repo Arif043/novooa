@@ -24,7 +24,7 @@ export type WorkflowPrimitive =
   | "toolCall"
   | "humanApproval"
   | "validation";
-export type PromptOutputType = "text" | "decision" | "structured";
+export type PromptOutputType = "text" | "decision" | "structured" | "image";
 export type ChannelMessageKind = "email" | "whatsapp" | "sms";
 export type StructuredOutputField = {
   name: string;

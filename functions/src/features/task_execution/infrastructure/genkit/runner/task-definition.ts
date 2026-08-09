@@ -16,7 +16,12 @@ export const workflowPrimitiveSchema = z.enum([
   "validation",
 ]);
 
-export const promptOutputTypeSchema = z.enum(["text", "decision", "structured"]);
+export const promptOutputTypeSchema = z.enum([
+  "text",
+  "decision",
+  "structured",
+  "image",
+]);
 
 export const nodeAttachmentSchema = z.object({
   id: z.string().min(1),

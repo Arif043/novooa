@@ -20,10 +20,13 @@ die Function-Instanz, nicht auf den Rechner der Nutzer:innen.
 
 ## Prompt
 
-Der Prompt-Executor bietet die Output-Arten `text`, `decision` und
-`structured`. Entscheidungen liefern die gewaehlte Option als `text`.
+Der Prompt-Executor bietet die Output-Arten `text`, `decision`, `structured`
+und `image`. Entscheidungen liefern die gewaehlte Option als `text`.
 Strukturierte Prompts validieren ein required Zod-Object, legen jedes Feld als
 benannten Output ab und schreiben die Gesamtstruktur als JSON in `text`.
+Bild-Prompts verwenden das Google-Modell `gemini-2.5-flash-image` (optional
+ueber `GOOGLE_IMAGE_MODEL` konfigurierbar) und liefern ausschliesslich
+`dataUrl`, keine Textausgabe. Bildgenerierung benötigt `AI_PROVIDER=google`.
 
 Prompt-Anweisungen und Entscheidungen koennen Variablen per `{{name}}` und
 Dot-Pfade wie `{{kunde.name}}` verwenden. Dateianhaenge und Wissensnotizen

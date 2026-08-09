@@ -24,6 +24,7 @@ type AiProviderConfig =
 
 const defaultGoogleTextModel = "gemini-3.1-flash-lite";
 const defaultGoogleReasoningModel = "gemini-3.1-flash-lite";
+const defaultGoogleImageModel = "gemini-2.5-flash-image";
 const defaultLocalProviderName = "local";
 const defaultLocalBaseUrl = "http://127.0.0.1:11434/v1";
 
@@ -45,6 +46,14 @@ export function textModel(): ModelArgument {
 
 export function reasoningModel(): ModelArgument {
   return modelFor(aiProviderConfig(), "reasoningModel");
+}
+
+export function imageModel(): ModelArgument {
+  const config = aiProviderConfig();
+  if (config.kind !== "google") {
+    throw new Error("Bildgenerierung benötigt den Google-KI-Provider.");
+  }
+  return googleAI.model(optionalEnv("GOOGLE_IMAGE_MODEL") ?? defaultGoogleImageModel);
 }
 
 export function modelLogContext() {

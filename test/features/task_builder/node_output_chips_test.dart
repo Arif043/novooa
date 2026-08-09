@@ -33,6 +33,15 @@ void main() {
     expect(find.text('Entscheidung'), findsOneWidget);
     expect(find.text('text'), findsNothing);
   });
+
+  testWidgets('zeigt für Bild-Prompts ausschließlich den Data-URL-Output', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_host(_imagePromptNode()));
+
+    expect(find.text('dataUrl'), findsOneWidget);
+    expect(find.text('text'), findsNothing);
+  });
 }
 
 Widget _host(WorkflowNode node) {
@@ -77,6 +86,19 @@ WorkflowNode _decisionPromptNode() {
       instruction: '',
       outputType: PromptOutputType.decision,
       choices: ['Ja', 'Nein'],
+    ),
+  );
+}
+
+WorkflowNode _imagePromptNode() {
+  return WorkflowNode(
+    id: const NodeId('image'),
+    title: 'Bild erstellen',
+    description: '',
+    config: const PromptNodeConfig(
+      instruction: 'Erstelle ein Bild.',
+      outputType: PromptOutputType.image,
+      choices: [],
     ),
   );
 }

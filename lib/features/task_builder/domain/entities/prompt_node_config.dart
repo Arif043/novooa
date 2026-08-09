@@ -3,7 +3,8 @@ part of 'node_config.dart';
 enum PromptOutputType {
   text('Freitext'),
   decision('Entscheidung'),
-  structured('Strukturierte Ausgabe');
+  structured('Strukturierte Ausgabe'),
+  image('Bild');
 
   const PromptOutputType(this.label);
 

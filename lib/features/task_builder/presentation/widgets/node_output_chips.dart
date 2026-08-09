@@ -56,6 +56,7 @@ class NodeOutputChips extends StatelessWidget {
       PromptOutputType.text => const ['text'],
       PromptOutputType.decision => const ['Entscheidung'],
       PromptOutputType.structured => _structuredNames(config.structuredFields),
+      PromptOutputType.image => const ['dataUrl'],
     };
   }
 

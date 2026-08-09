@@ -100,7 +100,7 @@ void main() {
   });
 
   test(
-    'updatePromptOutputType aktualisiert Prompt-Nodes in Branch-Graphs',
+    'updatePromptOutputType aktualisiert Bild-Prompts in Branch-Graphs',
     () async {
       final repository = _InMemoryTaskRepository(_taskWithBranchPrompt());
       final cubit = TaskBuilderCubit(repository: repository);
@@ -108,7 +108,7 @@ void main() {
       await cubit.load(repository.savedTask);
       await cubit.updatePromptOutputType(
         const NodeId('node.2'),
-        PromptOutputType.decision,
+        PromptOutputType.image,
       );
 
       final state = cubit.state as TaskBuilderLoaded;
@@ -117,7 +117,7 @@ void main() {
       final prompt = rootConfig.branches.first.graph.nodes.first;
       final promptConfig = prompt.config as PromptNodeConfig;
 
-      expect(promptConfig.outputType, PromptOutputType.decision);
+      expect(promptConfig.outputType, PromptOutputType.image);
       expect(promptConfig.choices, ['', '']);
 
       await cubit.close();
