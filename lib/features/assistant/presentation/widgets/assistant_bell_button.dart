@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
+import 'package:syscat2/core/widgets/ios_overlays.dart';
 
 import '../../domain/entities/assistant_context.dart';
 import '../cubits/assistant_cubit.dart';
@@ -21,7 +22,7 @@ class AssistantBellButton extends StatelessWidget {
   }
 
   Future<void> _openAssistant(BuildContext context) {
-    return showDialog<void>(
+    return showIosDialog<void>(
       context: context,
       builder: (_) => BlocProvider(
         create: (_) =>

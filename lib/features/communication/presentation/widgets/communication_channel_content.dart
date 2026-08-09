@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/ios_overlays.dart';
 import '../cubits/communication_cubit.dart';
 import '../cubits/communication_state.dart';
 import '../../domain/entities/communication_channel.dart';
@@ -66,7 +67,7 @@ class CommunicationChannelContent extends StatelessWidget {
     BuildContext context,
     CommunicationChannel channel,
   ) async {
-    final message = await showDialog<({String to, String body})>(
+    final message = await showIosDialog<({String to, String body})>(
       context: context,
       builder: (_) => SendChannelMessageDialog(channel: channel),
     );

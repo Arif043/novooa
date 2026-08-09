@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/ios_overlays.dart';
 import '../../domain/entities/communication_channel.dart';
 import '../cubits/communication_cubit.dart';
 import '../cubits/communication_state.dart';
@@ -97,34 +98,31 @@ class _CommunicationHeader extends StatelessWidget {
       runSpacing: AppSpacing.sm,
       children: [
         Text('Kommunikation', style: Theme.of(context).textTheme.displayMedium),
-        MenuAnchor(
-          builder: (context, controller, _) => FilledButton.icon(
-            onPressed: isBusy ? null : controller.open,
-            icon: const Icon(CupertinoIcons.add_circled),
-            label: const Text('Kanal verbinden'),
-          ),
-          menuChildren: [
-            MenuItemButton(
-              leadingIcon: const Icon(Icons.mail_outline),
-              onPressed: () => _connectMicrosoft(context),
-              child: const Text('E-Mail mit Microsoft Outlook'),
-            ),
-            MenuItemButton(
-              leadingIcon: const Icon(Icons.chat_outlined),
-              onPressed: () =>
-                  _createChannel(context, CommunicationChannelKind.whatsapp),
-              child: const Text('WhatsApp'),
-            ),
-            MenuItemButton(
-              leadingIcon: const Icon(Icons.sms_outlined),
-              onPressed: () =>
-                  _createChannel(context, CommunicationChannelKind.sms),
-              child: const Text('SMS'),
-            ),
-          ],
+        FilledButton.icon(
+          onPressed: isBusy ? null : () => _showConnectionActions(context),
+          icon: const Icon(CupertinoIcons.add_circled),
+          label: const Text('Kanal verbinden'),
         ),
       ],
     );
+  }
+
+  Future<void> _showConnectionActions(BuildContext context) async {
+    final channelKind = await showIosActionSheet<CommunicationChannelKind>(
+      context: context,
+      title: 'Kanal verbinden',
+      actions: const [
+        IosAction(label: 'E-Mail mit Microsoft Outlook', value: .email),
+        IosAction(label: 'WhatsApp', value: .whatsapp),
+        IosAction(label: 'SMS', value: .sms),
+      ],
+    );
+    if (channelKind == null || !context.mounted) return;
+    if (channelKind == CommunicationChannelKind.email) {
+      await _connectMicrosoft(context);
+      return;
+    }
+    await _createChannel(context, channelKind);
   }
 
   Future<void> _connectMicrosoft(BuildContext context) async {
@@ -149,7 +147,7 @@ class _CommunicationHeader extends StatelessWidget {
     BuildContext context,
     CommunicationChannelKind kind,
   ) async {
-    final input = await showDialog(
+    final input = await showIosDialog(
       context: context,
       builder: (_) => CreateCommunicationChannelDialog(initialKind: kind),
     );

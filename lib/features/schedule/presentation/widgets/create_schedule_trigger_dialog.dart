@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/ios_overlays.dart';
 import '../../../task_builder/domain/entities/task.dart';
 import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/schedule_config.dart';
@@ -55,7 +57,7 @@ class _CreateScheduleTriggerDialogState
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return CupertinoAlertDialog(
       title: const Text('Trigger hinzufügen'),
       content: SingleChildScrollView(
         child: Column(
@@ -76,11 +78,12 @@ class _CreateScheduleTriggerDialogState
         ),
       ),
       actions: [
-        TextButton(
+        CupertinoDialogAction(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Abbrechen'),
         ),
-        FilledButton(
+        CupertinoDialogAction(
+          isDefaultAction: true,
           onPressed: _canSubmit ? _submit : null,
           child: const Text('Erstellen'),
         ),
@@ -130,18 +133,21 @@ class _CreateScheduleTriggerDialogState
   }
 
   Future<void> _pickDate() async {
-    final selected = await showDatePicker(
+    final selected = await showIosDatePicker(
       context: context,
       initialDate: _date,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      minimumDate: DateTime.now(),
+      maximumDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (selected == null) return;
     setState(() => _date = selected);
   }
 
   Future<void> _pickTime() async {
-    final selected = await showTimePicker(context: context, initialTime: _time);
+    final selected = await showIosTimePicker(
+      context: context,
+      initialTime: _time,
+    );
     if (selected == null) return;
     setState(() => _time = selected);
   }
@@ -149,7 +155,7 @@ class _CreateScheduleTriggerDialogState
   void _setSlotWeekday(int weekday) => setState(() => _slotWeekday = weekday);
 
   Future<void> _pickSlotTime() async {
-    final selected = await showTimePicker(
+    final selected = await showIosTimePicker(
       context: context,
       initialTime: _slotTime,
     );

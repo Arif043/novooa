@@ -1,10 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:syscat2/core/widgets/ios_overlays.dart';
 
 class CreateFolderDialog extends StatefulWidget {
   const CreateFolderDialog({super.key});
 
   static Future<String?> show(BuildContext context) {
-    return showDialog<String>(
+    return showIosDialog<String>(
       context: context,
       builder: (_) => const CreateFolderDialog(),
     );
@@ -25,7 +27,7 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return CupertinoAlertDialog(
       title: const Text('Verzeichnis erstellen'),
       content: TextField(
         controller: _controller,
@@ -37,11 +39,12 @@ class _CreateFolderDialogState extends State<CreateFolderDialog> {
         onSubmitted: (_) => _submit(context),
       ),
       actions: [
-        TextButton(
+        CupertinoDialogAction(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Abbrechen'),
         ),
-        FilledButton(
+        CupertinoDialogAction(
+          isDefaultAction: true,
           onPressed: () => _submit(context),
           child: const Text('Erstellen'),
         ),

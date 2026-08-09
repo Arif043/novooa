@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/core/widgets/ios_overlays.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 
 import '../../domain/entities/skill.dart';
@@ -56,7 +58,7 @@ class _SkillsView extends StatelessWidget {
 
   Future<void> _createSkill(BuildContext context) async {
     final cubit = context.read<SkillsCubit>();
-    final draft = await showDialog<SkillDraft>(
+    final draft = await showIosDialog<SkillDraft>(
       context: context,
       builder: (_) => const SkillEditorDialog(),
     );
@@ -74,9 +76,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          child: Text('Fähigkeiten', style: SyscatTheme.taskBody),
-        ),
+        Expanded(child: Text('Fähigkeiten', style: SyscatTheme.taskBody)),
         FilledButton.icon(
           onPressed: onCreate,
           icon: const Icon(Icons.add),
@@ -171,7 +171,7 @@ class _SkillTile extends StatelessWidget {
     final cubit = context.read<SkillsCubit>();
     final loaded = await cubit.loadContent(skill.id);
     if (!context.mounted || loaded == null) return;
-    final draft = await showDialog<SkillDraft>(
+    final draft = await showIosDialog<SkillDraft>(
       context: context,
       builder: (_) => SkillEditorDialog(initial: loaded),
     );
@@ -181,17 +181,18 @@ class _SkillTile extends StatelessWidget {
 
   Future<void> _delete(BuildContext context) async {
     final cubit = context.read<SkillsCubit>();
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showIosDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (_) => CupertinoAlertDialog(
         title: const Text('Fähigkeit löschen?'),
         content: Text('„${skill.title}" wird endgültig entfernt.'),
         actions: [
-          TextButton(
+          CupertinoDialogAction(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Abbrechen'),
           ),
-          FilledButton(
+          CupertinoDialogAction(
+            isDestructiveAction: true,
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Löschen'),
           ),

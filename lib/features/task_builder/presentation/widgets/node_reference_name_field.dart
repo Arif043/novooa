@@ -1,8 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/ios_overlays.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 
@@ -27,7 +29,7 @@ class NodeReferenceNameField extends StatelessWidget {
 
   Future<void> _showEditor(BuildContext context) async {
     final controller = TextEditingController(text: node.referenceName);
-    final referenceName = await showDialog<String>(
+    final referenceName = await showIosDialog<String>(
       context: context,
       builder: (dialogContext) => _ReferenceNameDialog(controller: controller),
     );
@@ -47,7 +49,7 @@ class _ReferenceNameDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return CupertinoAlertDialog(
       title: const Text('Referenzname'),
       content: TextField(
         controller: controller,
@@ -59,11 +61,12 @@ class _ReferenceNameDialog extends StatelessWidget {
         onSubmitted: (value) => Navigator.pop(context, value),
       ),
       actions: [
-        TextButton(
+        CupertinoDialogAction(
           onPressed: () => Navigator.pop(context),
           child: const Text('Abbrechen'),
         ),
-        FilledButton(
+        CupertinoDialogAction(
+          isDefaultAction: true,
           onPressed: () => Navigator.pop(context, controller.text),
           child: const Text('Speichern'),
         ),

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
@@ -43,7 +44,7 @@ class _SkillEditorDialogState extends State<SkillEditorDialog> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.initial != null;
-    return AlertDialog(
+    return CupertinoAlertDialog(
       title: Text(isEdit ? 'Fähigkeit bearbeiten' : 'Fähigkeit anlegen'),
       content: SizedBox(
         width: 640,
@@ -89,11 +90,12 @@ class _SkillEditorDialogState extends State<SkillEditorDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        CupertinoDialogAction(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Abbrechen'),
         ),
-        FilledButton(
+        CupertinoDialogAction(
+          isDefaultAction: true,
           onPressed: _submit,
           child: Text(isEdit ? 'Speichern' : 'Anlegen'),
         ),

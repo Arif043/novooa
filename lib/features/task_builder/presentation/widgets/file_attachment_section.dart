@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
+import 'package:syscat2/core/widgets/ios_overlays.dart';
 import '../../domain/entities/node_attachment.dart';
 
 class FileAttachmentSection extends StatelessWidget {
@@ -37,9 +38,8 @@ class FileAttachmentSection extends StatelessWidget {
   }
 
   void _showFilePicker(BuildContext context) {
-    showModalBottomSheet<void>(
+    showIosSheet<void>(
       context: context,
-      showDragHandle: true,
       builder: (context) {
         return _AttachmentPickerSheet(
           files: availableFiles,

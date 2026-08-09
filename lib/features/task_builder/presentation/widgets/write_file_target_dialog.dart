@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/write_file_target_dialog_controls.dart';
+import 'package:syscat2/core/widgets/ios_overlays.dart';
 
 class WriteFileTargetDialog extends StatefulWidget {
   const WriteFileTargetDialog({super.key, required this.node});
@@ -12,7 +13,7 @@ class WriteFileTargetDialog extends StatefulWidget {
   final WorkflowNode node;
 
   static Future<void> show(BuildContext context, WorkflowNode node) {
-    return showDialog<void>(
+    return showIosDialog<void>(
       context: context,
       builder: (_) => MultiBlocProvider(
         providers: [
@@ -49,7 +50,7 @@ class _WriteFileTargetDialogState extends State<WriteFileTargetDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return CupertinoAlertDialog(
       title: const Text('Ausgabedatei wählen'),
       content: SizedBox(
         width: 520,
@@ -71,12 +72,13 @@ class _WriteFileTargetDialogState extends State<WriteFileTargetDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        CupertinoDialogAction(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Abbrechen'),
         ),
         if (_mode == WriteTargetMode.fresh)
-          FilledButton(
+          CupertinoDialogAction(
+            isDefaultAction: true,
             onPressed: _canSubmit ? _submitNew : null,
             child: const Text('Übernehmen'),
           ),

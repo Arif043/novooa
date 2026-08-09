@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
@@ -27,7 +28,7 @@ class _SendChannelMessageDialogState extends State<SendChannelMessageDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return CupertinoAlertDialog(
       title: const Text('Nachricht senden'),
       content: SingleChildScrollView(
         child: Column(
@@ -51,11 +52,12 @@ class _SendChannelMessageDialogState extends State<SendChannelMessageDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        CupertinoDialogAction(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Abbrechen'),
         ),
-        FilledButton(
+        CupertinoDialogAction(
+          isDefaultAction: true,
           onPressed: () => _submit(context),
           child: const Text('Senden'),
         ),

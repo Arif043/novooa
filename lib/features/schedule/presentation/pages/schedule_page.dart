@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/ios_overlays.dart';
 import '../cubits/schedule_cubit.dart';
 import '../cubits/schedule_state.dart';
 import '../widgets/create_schedule_trigger_dialog.dart';
@@ -67,7 +68,7 @@ class _ScheduleHeader extends StatelessWidget {
 
   void _showDialog(BuildContext context) {
     final cubit = context.read<ScheduleCubit>();
-    showDialog<void>(
+    showIosDialog<void>(
       context: context,
       builder: (_) {
         return CreateScheduleTriggerDialog(

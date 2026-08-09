@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/ios_overlays.dart';
 import '../../../activity/domain/entities/task_run.dart';
 import '../../../activity/presentation/cubits/activity_cubit.dart';
 import '../../../activity/presentation/widgets/approval_review_dialog.dart';
@@ -40,7 +41,7 @@ class NotificationPanel extends StatelessWidget {
   }
 
   Future<void> _openApproval(BuildContext context, TaskRun run) {
-    return showDialog<void>(
+    return showIosDialog<void>(
       context: context,
       builder: (_) => BlocProvider(
         create: (_) => serviceLocator<ActivityCubit>(),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
+import 'package:syscat2/core/widgets/ios_overlays.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
@@ -124,26 +125,10 @@ class Toolbar extends StatelessWidget {
               tooltip: "SMS lesen hinzufügen",
             ),
             const SizedBox(width: AppSpacing.xs),
-            PopupMenuButton<ChannelEventKind>(
+            IconButton(
               tooltip: 'Nachricht senden hinzufügen',
               icon: const Icon(Icons.send_outlined),
-              onSelected: (kind) => context
-                  .read<TaskBuilderCubit>()
-                  .addSendMessageNodeToMainGraph(kind),
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: ChannelEventKind.whatsapp,
-                  child: Text('WhatsApp senden'),
-                ),
-                PopupMenuItem(
-                  value: ChannelEventKind.sms,
-                  child: Text('SMS senden'),
-                ),
-                PopupMenuItem(
-                  value: ChannelEventKind.email,
-                  child: Text('E-Mail senden'),
-                ),
-              ],
+              onPressed: () => _showSendMessageActions(context),
             ),
             const SizedBox(width: AppSpacing.xs),
             IconButton(
@@ -157,6 +142,20 @@ class Toolbar extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _showSendMessageActions(BuildContext context) async {
+    final kind = await showIosActionSheet<ChannelEventKind>(
+      context: context,
+      title: 'Nachricht senden',
+      actions: const [
+        IosAction(label: 'WhatsApp senden', value: ChannelEventKind.whatsapp),
+        IosAction(label: 'SMS senden', value: ChannelEventKind.sms),
+        IosAction(label: 'E-Mail senden', value: ChannelEventKind.email),
+      ],
+    );
+    if (kind == null || !context.mounted) return;
+    context.read<TaskBuilderCubit>().addSendMessageNodeToMainGraph(kind);
   }
 }
 

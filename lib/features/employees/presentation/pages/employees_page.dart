@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/core/widgets/ios_overlays.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_skill_attachments_cubit.dart';
 
@@ -65,7 +67,7 @@ class _EmployeesView extends StatelessWidget {
   Future<void> _createEmployee(BuildContext context) async {
     final cubit = context.read<EmployeesCubit>();
     final skillCubit = context.read<NodeSkillAttachmentsCubit>();
-    final draft = await showDialog<EmployeeDraft>(
+    final draft = await showIosDialog<EmployeeDraft>(
       context: context,
       builder: (dialogContext) => MultiBlocProvider(
         providers: [BlocProvider.value(value: skillCubit)],
@@ -192,7 +194,7 @@ class _EmployeeTile extends StatelessWidget {
   Future<void> _edit(BuildContext context) async {
     final cubit = context.read<EmployeesCubit>();
     final skillCubit = context.read<NodeSkillAttachmentsCubit>();
-    final draft = await showDialog<EmployeeDraft>(
+    final draft = await showIosDialog<EmployeeDraft>(
       context: context,
       builder: (_) => MultiBlocProvider(
         providers: [BlocProvider.value(value: skillCubit)],
@@ -205,17 +207,18 @@ class _EmployeeTile extends StatelessWidget {
 
   Future<void> _delete(BuildContext context) async {
     final cubit = context.read<EmployeesCubit>();
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showIosDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (_) => CupertinoAlertDialog(
         title: const Text('Mitarbeiter löschen?'),
         content: Text('„${employee.name}" wird endgültig entfernt.'),
         actions: [
-          TextButton(
+          CupertinoDialogAction(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Abbrechen'),
           ),
-          FilledButton(
+          CupertinoDialogAction(
+            isDestructiveAction: true,
             onPressed: () => Navigator.of(context).pop(true),
             child: const Text('Löschen'),
           ),

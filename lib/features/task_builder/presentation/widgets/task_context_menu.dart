@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/widgets/ios_overlays.dart';
 
 import '../../domain/entities/task.dart';
 import '../cubits/task_homepage_cubit.dart';
@@ -111,7 +112,7 @@ class TaskContextMenu extends StatelessWidget {
     BuildContext context,
     TaskHomepageCubit cubit,
   ) async {
-    final title = await showDialog<String>(
+    final title = await showIosDialog<String>(
       context: context,
       builder: (_) => RenameTaskDialog(initialTitle: task.title),
     );
@@ -123,7 +124,7 @@ class TaskContextMenu extends StatelessWidget {
     BuildContext context,
     TaskHomepageCubit cubit,
   ) async {
-    final objective = await showDialog<String>(
+    final objective = await showIosDialog<String>(
       context: context,
       builder: (_) => EditTaskObjectiveDialog(initialObjective: task.objective),
     );
@@ -135,7 +136,7 @@ class TaskContextMenu extends StatelessWidget {
     BuildContext context,
     TaskHomepageCubit cubit,
   ) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showIosDialog<bool>(
       context: context,
       builder: (_) => DeleteTaskDialog(taskTitle: task.title),
     );

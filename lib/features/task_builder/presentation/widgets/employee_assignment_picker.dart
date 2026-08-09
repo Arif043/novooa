@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
+import 'package:syscat2/core/widgets/ios_overlays.dart';
 
 import '../../domain/entities/employee_attachment.dart';
 
@@ -40,9 +41,8 @@ class EmployeeAssignmentPicker extends StatelessWidget {
   }
 
   void _showPicker(BuildContext context) {
-    showModalBottomSheet<void>(
+    showIosSheet<void>(
       context: context,
-      showDragHandle: true,
       builder: (_) => _PickerSheet(
         employees: employees,
         selectedId: assigned?.id,

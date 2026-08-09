@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/ios_overlays.dart';
 import '../../domain/entities/task_run.dart';
 import '../cubits/activity_cubit.dart';
 
@@ -11,7 +13,7 @@ class ApprovalReviewDialog extends StatefulWidget {
   final TaskRun run;
 
   static Future<void> show(BuildContext context, TaskRun run) {
-    return showDialog<void>(
+    return showIosDialog<void>(
       context: context,
       builder: (_) => BlocProvider.value(
         value: context.read<ActivityCubit>(),
@@ -42,7 +44,7 @@ class _ApprovalReviewDialogState extends State<ApprovalReviewDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return CupertinoAlertDialog(
       title: Text(widget.run.taskTitle),
       content: SizedBox(
         width: _dialogWidth(context),
@@ -59,11 +61,13 @@ class _ApprovalReviewDialogState extends State<ApprovalReviewDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        CupertinoDialogAction(
+          isDestructiveAction: true,
           onPressed: _isSubmitting ? null : () => _reject(context),
           child: const Text('Ablehnen'),
         ),
-        FilledButton(
+        CupertinoDialogAction(
+          isDefaultAction: true,
           onPressed: _isSubmitting ? null : () => _approve(context),
           child: _isSubmitting
               ? const _SubmittingIndicator()

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -50,7 +51,7 @@ class _EmployeeEditorDialogState extends State<EmployeeEditorDialog> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.initial != null;
-    return AlertDialog(
+    return CupertinoAlertDialog(
       title: Text(isEdit ? 'Mitarbeiter bearbeiten' : 'Mitarbeiter anlegen'),
       content: SizedBox(
         width: 640,
@@ -103,11 +104,12 @@ class _EmployeeEditorDialogState extends State<EmployeeEditorDialog> {
         ),
       ),
       actions: [
-        TextButton(
+        CupertinoDialogAction(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Abbrechen'),
         ),
-        FilledButton(
+        CupertinoDialogAction(
+          isDefaultAction: true,
           onPressed: _submit,
           child: Text(isEdit ? 'Speichern' : 'Anlegen'),
         ),
@@ -149,12 +151,11 @@ class _DefaultSkillsSection extends StatelessWidget {
           canAttach:
               state.status == NodeSkillAttachmentsStatus.ready &&
               state.skills.isNotEmpty,
-          onAttach: (attachment) =>
-              onChanged([...selectedSkills, attachment]),
+          onAttach: (attachment) => onChanged([...selectedSkills, attachment]),
           onDetach: (id) => onChanged(
-            selectedSkills.where((skill) => skill.id != id).toList(
-              growable: false,
-            ),
+            selectedSkills
+                .where((skill) => skill.id != id)
+                .toList(growable: false),
           ),
         );
       },

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -15,11 +16,18 @@ class AssistantPanelDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.all(AppSpacing.md),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460, maxHeight: 640),
-        child: AssistantPanel(onClose: () => Navigator.of(context).pop()),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 460, maxHeight: 640),
+          child: CupertinoPopupSurface(
+            child: Material(
+              color: Theme.of(context).colorScheme.surface,
+              child: AssistantPanel(onClose: () => Navigator.of(context).pop()),
+            ),
+          ),
+        ),
       ),
     );
   }

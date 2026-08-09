@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
@@ -41,7 +42,7 @@ class _CreateCommunicationChannelDialogState
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return CupertinoAlertDialog(
       title: Text('$_kindLabel verbinden'),
       content: SingleChildScrollView(
         child: Column(
@@ -72,11 +73,15 @@ class _CreateCommunicationChannelDialogState
         ),
       ),
       actions: [
-        TextButton(
+        CupertinoDialogAction(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Abbrechen'),
         ),
-        FilledButton(onPressed: _canSubmit ? _submit : null, child: _button),
+        CupertinoDialogAction(
+          isDefaultAction: true,
+          onPressed: _canSubmit ? _submit : null,
+          child: _button,
+        ),
       ],
     );
   }
