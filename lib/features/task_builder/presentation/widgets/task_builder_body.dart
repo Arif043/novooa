@@ -33,11 +33,11 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
     final cubit = context.read<TaskBuilderCubit>();
     return Column(
       children: [
-        FilledButton.icon(
-          onPressed: () => _executeTask(cubit),
-          icon: const Icon(Icons.play_arrow_rounded),
-          label: const Text('Aufgabe starten'),
-        ),
+        // FilledButton.icon(
+        //   onPressed: () => _executeTask(cubit),
+        //   icon: const Icon(Icons.play_arrow_rounded),
+        //   label: const Text('Aufgabe starten'),
+        // ),
         const SizedBox(height: AppSpacing.md),
         const Toolbar(),
         const SizedBox(height: AppSpacing.xl),
