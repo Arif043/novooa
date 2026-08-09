@@ -455,7 +455,12 @@ void configureDependencies() {
     ..registerFactory(
       () => TaskBuilderCubit(repository: serviceLocator<TaskRepository>()),
     )
-    ..registerFactory(() => TaskHomepageCubit(serviceLocator<TaskRepository>()))
+    ..registerFactory(
+      () => TaskHomepageCubit(
+        serviceLocator<TaskRepository>(),
+        serviceLocator<ExecuteTask>(),
+      ),
+    )
     ..registerFactory(
       () => NodeFileAttachmentsCubit(
         serviceLocator<AuthRepository>(),

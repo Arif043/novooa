@@ -131,6 +131,17 @@ void main() {
 
     await cubit.close();
   });
+
+  test('executeTask delegiert die angeklickte Aufgabe', () async {
+    final repository = _FakeTaskRepository([_task]);
+    final cubit = TaskHomepageCubit(repository);
+
+    final failureMessage = await cubit.executeTask(_task);
+
+    expect(repository.executedTask, _task);
+    expect(failureMessage, 'Aufgabe konnte nicht ausgeführt werden.');
+    await cubit.close();
+  });
 }
 
 const _task = Task(
@@ -145,6 +156,7 @@ class _FakeTaskRepository implements TaskRepository {
   _FakeTaskRepository(this.tasks);
 
   final List<Task> tasks;
+  Task? executedTask;
 
   @override
   Stream<List<Task>> watchTasks() => Stream.value(tasks);
@@ -169,6 +181,7 @@ class _FakeTaskRepository implements TaskRepository {
     required Task task,
     String context = '',
   }) async {
+    executedTask = task;
     return const Error(
       TaskExecutionFailure(TaskExecutionFailureKind.executionFailed),
     );

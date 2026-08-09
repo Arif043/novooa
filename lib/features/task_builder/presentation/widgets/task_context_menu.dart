@@ -8,7 +8,7 @@ import 'delete_task_dialog.dart';
 import 'edit_task_objective_dialog.dart';
 import 'rename_task_dialog.dart';
 
-enum TaskMenuAction { duplicate, rename, editObjective, delete }
+enum TaskMenuAction { execute, duplicate, rename, editObjective, delete }
 
 class TaskContextMenu extends StatelessWidget {
   const TaskContextMenu({super.key, required this.task});
@@ -37,6 +37,14 @@ class TaskContextMenu extends StatelessWidget {
         side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       items: const [
+        PopupMenuItem(
+          value: TaskMenuAction.execute,
+          height: 36,
+          child: _TaskMenuRow(
+            icon: Icons.play_arrow_rounded,
+            label: 'Ausführen',
+          ),
+        ),
         PopupMenuItem(
           value: TaskMenuAction.rename,
           height: 36,
@@ -97,6 +105,8 @@ class TaskContextMenu extends StatelessWidget {
   ) async {
     final cubit = context.read<TaskHomepageCubit>();
     switch (action) {
+      case TaskMenuAction.execute:
+        await _executeTask(context, cubit);
       case TaskMenuAction.duplicate:
         await cubit.duplicateTask(task);
       case TaskMenuAction.rename:
@@ -106,6 +116,18 @@ class TaskContextMenu extends StatelessWidget {
       case TaskMenuAction.delete:
         await _deleteTask(context, cubit);
     }
+  }
+
+  Future<void> _executeTask(
+    BuildContext context,
+    TaskHomepageCubit cubit,
+  ) async {
+    final failureMessage = await cubit.executeTask(task);
+    if (!context.mounted) return;
+    final message = failureMessage ?? 'Aufgabe wurde gestartet.';
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _renameTask(

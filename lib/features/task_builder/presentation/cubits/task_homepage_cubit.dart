@@ -5,13 +5,18 @@ import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/task.dart';
 import '../../domain/repositories/task_repository.dart';
+import '../../domain/usecases/execute_task.dart';
 
 part 'task_homepage_state.dart';
 
 class TaskHomepageCubit extends Cubit<TaskHomepageState> {
-  TaskHomepageCubit(this._repository) : super(const TaskHomepageLoading());
+  TaskHomepageCubit(TaskRepository repository, [ExecuteTask? executeTask])
+    : _repository = repository,
+      _executeTask = executeTask ?? ExecuteTask(repository),
+      super(const TaskHomepageLoading());
 
   final TaskRepository _repository;
+  final ExecuteTask _executeTask;
   StreamSubscription<List<Task>>? _subscription;
 
   Future<void> load() async {
@@ -62,6 +67,11 @@ class TaskHomepageCubit extends Cubit<TaskHomepageState> {
       () => _repository.deleteTask(task.id),
       tasks.where((item) => item.id != task.id).toList(),
     );
+  }
+
+  Future<String?> executeTask(Task task) async {
+    final taskRunOrFailure = await _executeTask(ExecuteTaskParams(task: task));
+    return taskRunOrFailure.when((_) => null, (failure) => failure.message);
   }
 
   List<Task>? _readyTasksOrNull() {
