@@ -26,45 +26,7 @@ class _KnowledgeBaseMainPanelState extends State<KnowledgeBaseMainPanel> {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            SegmentedButton<KnowledgeBaseMainMode>(
-              showSelectedIcon: false,
-              segments: const [
-                ButtonSegment(
-                  value: KnowledgeBaseMainMode.editor,
-                  icon: Icon(Icons.edit_note),
-                  label: Text('Editor'),
-                ),
-                ButtonSegment(
-                  value: KnowledgeBaseMainMode.preview,
-                  icon: Icon(Icons.visibility_outlined),
-                  label: Text('Ansicht'),
-                ),
-                ButtonSegment(
-                  value: KnowledgeBaseMainMode.graph,
-                  icon: Icon(Icons.hub_outlined),
-                  label: Text('Graph'),
-                ),
-              ],
-              selected: {_mode},
-              onSelectionChanged: (value) => setState(() => _mode = value.first),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: AppSpacing.md),
-              child: IconButton(
-                tooltip: 'Notiz löschen',
-                onPressed: () => context.read<KnowledgeBaseCubit>().deleteSelected(),
-                icon: const Icon(Icons.delete_outline),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Expanded(child: _content()),
-      ],
+      children: [Expanded(child: _content())],
     );
   }
 
@@ -72,14 +34,91 @@ class _KnowledgeBaseMainPanelState extends State<KnowledgeBaseMainPanel> {
     return switch (_mode) {
       KnowledgeBaseMainMode.editor => KnowledgeBaseEditor(
         note: widget.state.selectedNote!,
+        titleActions: _NoteActions(mode: _mode, onModeChanged: _setMode),
       ),
-      KnowledgeBaseMainMode.preview => KnowledgeMarkdownPreview(
-        content: widget.state.selectedNote!.content,
+      KnowledgeBaseMainMode.preview => _NonEditorPanel(
+        actions: _NoteActions(mode: _mode, onModeChanged: _setMode),
+        child: KnowledgeMarkdownPreview(
+          content: widget.state.selectedNote!.content,
+        ),
       ),
-      KnowledgeBaseMainMode.graph => KnowledgeBaseGraphView(
-        notes: widget.state.notes,
-        selectedNoteId: widget.state.selectedNote?.id,
+      KnowledgeBaseMainMode.graph => _NonEditorPanel(
+        actions: _NoteActions(mode: _mode, onModeChanged: _setMode),
+        child: KnowledgeBaseGraphView(
+          notes: widget.state.notes,
+          selectedNoteId: widget.state.selectedNote?.id,
+        ),
       ),
     };
+  }
+
+  void _setMode(KnowledgeBaseMainMode mode) {
+    setState(() => _mode = mode);
+  }
+}
+
+class _NonEditorPanel extends StatelessWidget {
+  const _NonEditorPanel({required this.actions, required this.child});
+
+  final Widget actions;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: AppSpacing.md),
+          child: actions,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Expanded(child: child),
+      ],
+    );
+  }
+}
+
+class _NoteActions extends StatelessWidget {
+  const _NoteActions({required this.mode, required this.onModeChanged});
+
+  final KnowledgeBaseMainMode mode;
+  final ValueChanged<KnowledgeBaseMainMode> onModeChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SegmentedButton<KnowledgeBaseMainMode>(
+          showSelectedIcon: false,
+          segments: const [
+            ButtonSegment(
+              value: KnowledgeBaseMainMode.editor,
+              icon: Icon(Icons.edit_note),
+              label: Text('Editor'),
+            ),
+            ButtonSegment(
+              value: KnowledgeBaseMainMode.preview,
+              icon: Icon(Icons.visibility_outlined),
+              label: Text('Ansicht'),
+            ),
+            ButtonSegment(
+              value: KnowledgeBaseMainMode.graph,
+              icon: Icon(Icons.hub_outlined),
+              label: Text('Graph'),
+            ),
+          ],
+          selected: {mode},
+          onSelectionChanged: (value) => onModeChanged(value.first),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        IconButton(
+          tooltip: 'Notiz löschen',
+          onPressed: context.read<KnowledgeBaseCubit>().deleteSelected,
+          icon: const Icon(Icons.delete_outline),
+        ),
+      ],
+    );
   }
 }

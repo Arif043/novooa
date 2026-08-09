@@ -7,9 +7,14 @@ import '../../domain/entities/knowledge_note.dart';
 import '../cubits/knowledge_base_cubit.dart';
 
 class KnowledgeBaseEditor extends StatefulWidget {
-  const KnowledgeBaseEditor({super.key, required this.note});
+  const KnowledgeBaseEditor({
+    super.key,
+    required this.note,
+    required this.titleActions,
+  });
 
   final KnowledgeNote note;
+  final Widget titleActions;
 
   @override
   State<KnowledgeBaseEditor> createState() => _KnowledgeBaseEditorState();
@@ -52,11 +57,21 @@ class _KnowledgeBaseEditorState extends State<KnowledgeBaseEditor> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: _titleController,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: .bold),
-              decoration: const InputDecoration(hintText: 'Titel'),
-              onChanged: context.read<KnowledgeBaseCubit>().updateTitle,
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _titleController,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.headlineMedium?.copyWith(fontWeight: .bold),
+                    decoration: const InputDecoration(hintText: 'Titel'),
+                    onChanged: context.read<KnowledgeBaseCubit>().updateTitle,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                widget.titleActions,
+              ],
             ),
             const SizedBox(height: AppSpacing.md),
             Expanded(child: _MarkdownEditor(this)),
