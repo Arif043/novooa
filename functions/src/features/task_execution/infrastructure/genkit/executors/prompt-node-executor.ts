@@ -1,6 +1,11 @@
 import { z } from "genkit";
 import { type GenkitBeta } from "genkit/beta";
-import {imageModel, modelLogContext, textModel} from "../runner/ai-models.js";
+import {
+  imageModel,
+  imageModelLogContext,
+  modelLogContext,
+  textModel,
+} from "../runner/ai-models.js";
 import {
   type NodeExecutor,
   type TaskRunContext,
@@ -90,7 +95,7 @@ async function executeImagePrompt(
   const startedAt = Date.now();
   logReadableInfo(formatModelCallStarted({
     label,
-    model: modelLogContext(),
+    model: imageModelLogContext(),
     prompt,
     outputSchema: "dataUrl: Bild-Data-URL",
   }));

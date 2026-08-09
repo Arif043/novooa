@@ -1,5 +1,5 @@
 import {openAICompatible} from "@genkit-ai/compat-oai";
-import {googleAI} from "@genkit-ai/google-genai";
+import {googleAI, vertexAI} from "@genkit-ai/google-genai";
 import {modelRef, type ModelArgument} from "genkit";
 import {type GenkitPluginV2} from "genkit/plugin";
 
@@ -24,19 +24,22 @@ type AiProviderConfig =
 
 const defaultGoogleTextModel = "gemini-3.1-flash-lite";
 const defaultGoogleReasoningModel = "gemini-3.1-flash-lite";
-const defaultGoogleImageModel = "gemini-2.5-flash-image";
+const defaultVertexImageModel = "gemini-2.5-flash-image";
+const defaultVertexLocation = "us-central1";
 const defaultLocalProviderName = "local";
 const defaultLocalBaseUrl = "http://127.0.0.1:11434/v1";
 
 export function aiProviderPlugins(): GenkitPluginV2[] {
   const config = aiProviderConfig();
-  if (config.kind === "google") return [googleAI()];
+  const plugins: GenkitPluginV2[] = [vertexAI({location: vertexLocation()})];
+  if (config.kind === "google") return [googleAI(), ...plugins];
   return [
     openAICompatible({
       name: config.name,
       apiKey: config.apiKey,
       baseURL: config.baseUrl,
     }),
+    ...plugins,
   ];
 }
 
@@ -49,11 +52,17 @@ export function reasoningModel(): ModelArgument {
 }
 
 export function imageModel(): ModelArgument {
-  const config = aiProviderConfig();
-  if (config.kind !== "google") {
-    throw new Error("Bildgenerierung benötigt den Google-KI-Provider.");
-  }
-  return googleAI.model(optionalEnv("GOOGLE_IMAGE_MODEL") ?? defaultGoogleImageModel);
+  return vertexAI.model(
+    optionalEnv("VERTEX_IMAGE_MODEL") ?? defaultVertexImageModel,
+  );
+}
+
+export function imageModelLogContext() {
+  return {
+    provider: "vertexai",
+    imageModel: optionalEnv("VERTEX_IMAGE_MODEL") ?? defaultVertexImageModel,
+    location: vertexLocation(),
+  };
 }
 
 export function modelLogContext() {
@@ -111,6 +120,10 @@ function googleConfig(): AiProviderConfig {
     reasoningModel:
       optionalEnv("GOOGLE_REASONING_MODEL") ?? defaultGoogleReasoningModel,
   };
+}
+
+function vertexLocation(): string {
+  return optionalEnv("VERTEX_LOCATION") ?? defaultVertexLocation;
 }
 
 function minimaxConfig(): OpenAiCompatibleProvider {

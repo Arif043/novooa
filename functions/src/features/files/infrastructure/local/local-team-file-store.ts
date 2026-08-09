@@ -4,6 +4,8 @@ import path from "node:path";
 import {storagePathFor} from "../../domain/entities/file-storage-path.js";
 import {type NodeAttachment} from "../../../task_execution/domain/entities/attachments.js";
 import {
+  contentSizeBytes,
+  type FileContent,
   type TeamFileStore,
   type WriteTeamFileInput,
   type WrittenFile,
@@ -113,7 +115,7 @@ function writtenFile(
     versionId,
     displayName: input.fileName,
     contentType: input.contentType,
-    sizeBytes: Buffer.byteLength(input.content, "utf8"),
+    sizeBytes: contentSizeBytes(input.content),
     folderId,
     ownerUid,
     isNewFile,
@@ -156,7 +158,11 @@ async function insertVersion(
   ]);
 }
 
-async function writeLocalFile(rootDirectory: string, storagePath: string, content: string) {
+async function writeLocalFile(
+  rootDirectory: string,
+  storagePath: string,
+  content: FileContent,
+) {
   const destination = localPath(rootDirectory, storagePath);
   await mkdir(path.dirname(destination), {recursive: true});
   await writeFile(destination, content);

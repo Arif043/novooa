@@ -121,6 +121,10 @@ Versionen bleibt `fileId` stabil; nur `currentVersionId`, `storagePath`,
 `sizeBytes`, `contentType` und `updatedAt` werden am Datei-Dokument
 aktualisiert.
 
+Erkennt der Baustein einen Bild-Prompt-Output als Base64-Data-URL, dekodiert er
+die Bilddaten und speichert sie binär. MIME-Type und Dateiendung werden dabei
+aus der Data-URL abgeleitet; eine zuvor konfigurierte Text-Endung wird ersetzt.
+
 In der Task-Builder-UI wird dafür kein technisches Datei-ID-Feld angezeigt.
 Nutzer:innen wählen im Dialog entweder eine bestehende Datei oder definieren
 eine neue Datei über Dateiname und optionalen Content-Type.

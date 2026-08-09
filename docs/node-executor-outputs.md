@@ -39,7 +39,9 @@ Status `waitingForApproval`; nicht registrierte Primitives erhalten den Status
 ## Datei schreiben
 
 `writeFile` erhaelt den Text des Vorgaenger-Knotens und schreibt ihn als neue
-Datei oder neue Version. Der JSON-String in `text` bleibt fuer den regulaeren
+Datei oder neue Version. Erhaelt der Baustein stattdessen die `dataUrl` eines
+Bild-Prompts, dekodiert er diese als Bilddatei und setzt MIME-Type sowie
+Dateiendung passend. Der JSON-String in `text` bleibt fuer den regulaeren
 Datenfluss erhalten. Zusaetzlich liefert der Executor:
 
 | Output | Typ | Bedeutung |

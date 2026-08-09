@@ -5,6 +5,7 @@ import {type NodeAttachment} from "../../../task_execution/domain/entities/attac
 import {getDefaultStorageBucket} from "./firebase-storage.js";
 import {getDatabase} from "../../../../shared/firebase/firestore-db.js";
 import {
+  contentSizeBytes,
   type TeamFileStore,
   type WriteTeamFileInput,
   type WrittenFile,
@@ -83,7 +84,7 @@ function newFileFrom(input: WriteTeamFileInput): WrittenFile {
     versionId,
     displayName: input.fileName,
     contentType: input.contentType,
-    sizeBytes: Buffer.byteLength(input.content, "utf8"),
+    sizeBytes: contentSizeBytes(input.content),
     folderId: null,
     ownerUid: "system",
     isNewFile: true,
@@ -101,7 +102,7 @@ function versionFromExisting(
     versionId,
     displayName: input.fileName,
     contentType: input.contentType,
-    sizeBytes: Buffer.byteLength(input.content, "utf8"),
+    sizeBytes: contentSizeBytes(input.content),
     folderId: existingFile.folderId,
     ownerUid: existingFile.ownerUid,
     isNewFile: false,

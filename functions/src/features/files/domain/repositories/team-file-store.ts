@@ -1,8 +1,10 @@
 import {type NodeAttachment} from "../../../task_execution/domain/entities/attachments.js";
 
+export type FileContent = string | Uint8Array;
+
 export type WriteTeamFileInput = {
   teamId: string;
-  content: string;
+  content: FileContent;
   fileName: string;
   contentType: string;
   targetFileId: string | null;
@@ -23,4 +25,9 @@ export type WrittenFile = {
 export interface TeamFileStore {
   writeTeamFile(input: WriteTeamFileInput): Promise<WrittenFile>;
   readTextFile(teamId: string, file: NodeAttachment): Promise<string>;
+}
+
+export function contentSizeBytes(content: FileContent): number {
+  if (typeof content === "string") return new TextEncoder().encode(content).byteLength;
+  return content.byteLength;
 }
