@@ -3,11 +3,11 @@ part of 'assistant_panel_dialog.dart';
 class _AssistantMessageBubble extends StatelessWidget {
   const _AssistantMessageBubble({
     required this.message,
-    required this.taskBuilderCubit,
+    required this.planActionResolver,
   });
 
   final AssistantMessage message;
-  final TaskBuilderCubit? taskBuilderCubit;
+  final AssistantPlanActionResolver? planActionResolver;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,7 @@ class _AssistantMessageBubble extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpacing.md),
           child: _MessageContent(
             message: message,
-            taskBuilderCubit: taskBuilderCubit,
+            planActionResolver: planActionResolver,
           ),
         ),
       ),
@@ -37,27 +37,24 @@ class _AssistantMessageBubble extends StatelessWidget {
 class _MessageContent extends StatelessWidget {
   const _MessageContent({
     required this.message,
-    required this.taskBuilderCubit,
+    required this.planActionResolver,
   });
 
   final AssistantMessage message;
-  final TaskBuilderCubit? taskBuilderCubit;
+  final AssistantPlanActionResolver? planActionResolver;
 
   @override
   Widget build(BuildContext context) {
-    final commands = message.taskCommands;
+    final actions = planActionResolver?.actionsFor(message) ?? const [];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (message.text.isNotEmpty)
           Text(message.text, style: Theme.of(context).textTheme.bodyMedium),
         AssistantMessageSources(sources: message.urlSources),
-        if (commands.isNotEmpty && taskBuilderCubit != null) ...[
+        if (actions.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.md),
-          AssistantTaskCommandPlan(
-            commands: commands,
-            taskBuilderCubit: taskBuilderCubit!,
-          ),
+          AssistantActionPlan(actions: actions),
         ],
       ],
     );

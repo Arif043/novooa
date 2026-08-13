@@ -2,13 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
-import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
 import '../../domain/entities/assistant_message.dart';
+import '../agent/assistant_plan_action_resolver.dart';
 import '../cubits/assistant_cubit.dart';
 import '../cubits/assistant_state.dart';
+import 'assistant_action_plan.dart';
 import 'assistant_message_sources.dart';
-import 'assistant_task_command_plan.dart';
 
 part 'assistant_panel_dialog_parts.dart';
 
@@ -38,11 +38,11 @@ class AssistantPanel extends StatefulWidget {
   const AssistantPanel({
     super.key,
     required this.onClose,
-    this.taskBuilderCubit,
+    this.planActionResolver,
   });
 
   final VoidCallback onClose;
-  final TaskBuilderCubit? taskBuilderCubit;
+  final AssistantPlanActionResolver? planActionResolver;
 
   @override
   State<AssistantPanel> createState() => _AssistantPanelState();
@@ -69,7 +69,7 @@ class _AssistantPanelState extends State<AssistantPanel> {
           Expanded(
             child: _AssistantMessages(
               theme: theme,
-              taskBuilderCubit: widget.taskBuilderCubit,
+              planActionResolver: widget.planActionResolver,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -106,11 +106,11 @@ class _AssistantHeader extends StatelessWidget {
 class _AssistantMessages extends StatelessWidget {
   const _AssistantMessages({
     required this.theme,
-    required this.taskBuilderCubit,
+    required this.planActionResolver,
   });
 
   final ThemeData theme;
-  final TaskBuilderCubit? taskBuilderCubit;
+  final AssistantPlanActionResolver? planActionResolver;
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +132,7 @@ class _AssistantMessages extends StatelessWidget {
     if (index == state.messages.length) return const _AssistantLoadingBubble();
     return _AssistantMessageBubble(
       message: state.messages[index],
-      taskBuilderCubit: taskBuilderCubit,
+      planActionResolver: planActionResolver,
     );
   }
 }

@@ -25,6 +25,24 @@ nutzt Firebase AI Logic als API-Schicht für Modellaufrufe.
 - Einstieg: Die Root-AppBar öffnet den Agenten und übergibt den aktuellen
   Bereich als Kontext.
 
+## Änderungspläne
+
+Für Änderungen schlägt der Agent einen Plan vor, statt eine Mutation direkt
+auszuführen. Die gemeinsame Assistant-UI zeigt die Schritte und wendet sie erst
+nach einem Klick auf **Ausführen** an.
+
+- `AssistantPlanAction` kapselt einen auszuführenden Schritt.
+- `AssistantPlanExecutor` führt Schritte sequenziell aus.
+- `AssistantPlanExecution` nimmt alle erfolgreich ausgeführten Schritte in
+  umgekehrter Reihenfolge zurück.
+- Schlägt ein Schritt fehl, führt der Executor denselben Rollback automatisch
+  aus, bevor die UI den Fehler anzeigt.
+
+Fachliche Command-Factories bleiben im jeweiligen Ziel-Feature. Der
+Aufgaben-Builder adaptiert seine typisierten Commands auf
+`AssistantPlanAction`; die Wissensbasis wird eigene typisierte Commands
+bereitstellen.
+
 ## Interne Wissensbasis
 
 Der MVP nutzt kein separates RAG. Aktuell unterstützt der interne Agent nur
@@ -49,8 +67,6 @@ kann die Systemanweisungen des Agenten nicht ändern.
 
 ## Offene Fragen
 
-- Ob der Agent später Task-Entwürfe direkt erzeugen darf oder vorerst nur
-  erklärt.
 - Ob die interne Wissensbasis später aus Markdown-Assets oder vom Backend
   geladen wird.
 - Ob Antworten und Verläufe pro Team persistiert werden sollen.

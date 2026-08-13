@@ -8,6 +8,7 @@ import 'package:syscat2/features/assistant/presentation/widgets/assistant_panel_
 import 'package:syscat2/features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import 'package:syscat2/features/notifications/presentation/cubits/app_notifications_state.dart';
 import 'package:syscat2/features/notifications/presentation/widgets/notification_panel.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/task_builder_assistant_plan_action_resolver.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
 enum TaskBuilderSidePanelKind { assistant, notifications }
@@ -90,15 +91,22 @@ class TaskBuilderSideDrawer extends StatelessWidget {
               route: '/tasks/builder',
             ),
           ),
-        child: AssistantPanel(
-          onClose: onClose,
-          taskBuilderCubit: _taskBuilderCubitOrNull(context),
-        ),
+        child: _assistantPanel(context),
       ),
       TaskBuilderSidePanelKind.notifications => NotificationPanel(
         onClose: onClose,
       ),
     };
+  }
+
+  Widget _assistantPanel(BuildContext context) {
+    final cubit = _taskBuilderCubitOrNull(context);
+    return AssistantPanel(
+      onClose: onClose,
+      planActionResolver: cubit == null
+          ? null
+          : TaskBuilderAssistantPlanActionResolver(cubit),
+    );
   }
 
   TaskBuilderCubit? _taskBuilderCubitOrNull(BuildContext context) {

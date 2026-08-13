@@ -1,4 +1,5 @@
 import 'package:syscat2/features/assistant/domain/entities/assistant_task_command.dart';
+import 'package:syscat2/features/assistant/presentation/agent/assistant_plan_action.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_agent_command.dart';
@@ -7,8 +8,15 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_c
 class TaskBuilderAgentCommandFactory {
   const TaskBuilderAgentCommandFactory();
 
-  List<TaskBuilderAgentCommand> fromDtos(List<AssistantTaskCommand> dtos) {
-    return dtos.map(_fromDto).nonNulls.toList(growable: false);
+  List<AssistantPlanAction> fromDtos(
+    List<AssistantTaskCommand> dtos,
+    TaskBuilderCubit cubit,
+  ) {
+    return dtos
+        .map(_fromDto)
+        .nonNulls
+        .map((command) => TaskBuilderPlanAction(cubit: cubit, command: command))
+        .toList(growable: false);
   }
 
   TaskBuilderAgentCommand? _fromDto(AssistantTaskCommand dto) {
@@ -20,7 +28,7 @@ class TaskBuilderAgentCommandFactory {
   }
 }
 
-final class RenameTaskAgentCommand extends SnapshotTaskBuilderAgentCommand {
+final class RenameTaskAgentCommand extends TaskBuilderAgentCommand {
   const RenameTaskAgentCommand(super.source);
 
   @override
@@ -31,7 +39,7 @@ final class RenameTaskAgentCommand extends SnapshotTaskBuilderAgentCommand {
   }
 }
 
-final class AddNodeAgentCommand extends SnapshotTaskBuilderAgentCommand {
+final class AddNodeAgentCommand extends TaskBuilderAgentCommand {
   const AddNodeAgentCommand(super.source);
 
   @override
