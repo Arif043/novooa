@@ -46,8 +46,15 @@ nach einem Klick auf **Ausführen** an.
 
 Fachliche Command-Factories bleiben im jeweiligen Ziel-Feature. Der
 Aufgaben-Builder adaptiert seine typisierten Commands auf
-`AssistantPlanAction`; die Wissensbasis adaptiert
-`AssistantKnowledgeCommand` auf denselben Vertrag.
+`AssistantPlanAction`; die Wissensbasis tut dies ebenfalls. Das Assistant-
+Feature transportiert nur neutrale `AssistantActionSuggestion`-Daten aus dem
+Modellprotokoll, niemals fachliche Command-Klassen.
+
+Konkrete Commands sind je Aktion getrennt gekapselt:
+
+- Aufgaben: `RenameTaskAgentCommand`, `AddNodeAgentCommand`
+- Wissensbasis: `CreateKnowledgeNoteAgentCommand`,
+  `UpdateKnowledgeNoteAgentCommand`, `DeleteKnowledgeNoteAgentCommand`
 
 ## Wissensbasis-Agent
 

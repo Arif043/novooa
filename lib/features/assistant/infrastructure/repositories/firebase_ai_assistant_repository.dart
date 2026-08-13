@@ -2,16 +2,16 @@ import '../../domain/entities/assistant_context.dart';
 import '../../domain/entities/assistant_message.dart';
 import '../../domain/repositories/assistant_repository.dart';
 import '../datasources/firebase_ai_assistant_datasource.dart';
-import '../models/assistant_task_command_parser.dart';
+import '../models/assistant_action_suggestion_parser.dart';
 
 class FirebaseAiAssistantRepository implements AssistantRepository {
   const FirebaseAiAssistantRepository(
     this._datasource, {
-    this.parser = const AssistantTaskCommandParser(),
+    this.parser = const AssistantActionSuggestionParser(),
   });
 
   final FirebaseAiAssistantDatasource _datasource;
-  final AssistantTaskCommandParser parser;
+  final AssistantActionSuggestionParser parser;
 
   @override
   Future<AssistantMessage> ask({
@@ -27,8 +27,7 @@ class FirebaseAiAssistantRepository implements AssistantRepository {
     final parsedAnswer = parser.parse(generatedAnswer.text);
     return AssistantMessage.agent(
       parsedAnswer.text,
-      taskCommands: parsedAnswer.commands,
-      knowledgeCommands: parsedAnswer.knowledgeCommands,
+      actionSuggestions: parsedAnswer.actionSuggestions,
       urlSources: generatedAnswer.urlSources,
     );
   }

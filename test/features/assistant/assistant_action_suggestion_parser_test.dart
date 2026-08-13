@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/features/assistant/infrastructure/models/assistant_task_command_parser.dart';
+import 'package:syscat2/features/assistant/infrastructure/models/assistant_action_suggestion_parser.dart';
 
 void main() {
-  group('AssistantTaskCommandParser', () {
-    const parser = AssistantTaskCommandParser();
+  group('AssistantActionSuggestionParser', () {
+    const parser = AssistantActionSuggestionParser();
 
     test('liest strukturierte JSON-Antwort', () {
       final answer = parser.parse('''
@@ -20,9 +20,12 @@ void main() {
 ''');
 
       expect(answer.text, 'Ich entwerfe dir eine Aufgabe.');
-      expect(answer.commands, hasLength(1));
-      expect(answer.commands.single.type, 'renameTask');
-      expect(answer.commands.single.title, 'Support');
+      expect(answer.actionSuggestions, hasLength(1));
+      expect(answer.actionSuggestions.single.type, 'renameTask');
+      expect(
+        answer.actionSuggestions.single.stringArgument('title'),
+        'Support',
+      );
     });
 
     test('liest strukturierte JSON-Antwort ohne Commands', () {
@@ -31,10 +34,10 @@ void main() {
 ''');
 
       expect(answer.text, 'Ich kann dir helfen.');
-      expect(answer.commands, isEmpty);
+      expect(answer.actionSuggestions, isEmpty);
     });
 
-    test('liest Wissensbasis-Commands aus strukturierter JSON-Antwort', () {
+    test('liest Wissensbasis-Vorschlaege aus strukturierter JSON-Antwort', () {
       final answer = parser.parse('''
 {
   "answer": "Ich lege die Notiz an.",
@@ -50,9 +53,12 @@ void main() {
 }
 ''');
 
-      expect(answer.knowledgeCommands, hasLength(1));
-      expect(answer.knowledgeCommands.single.type, 'createKnowledgeNote');
-      expect(answer.knowledgeCommands.single.title, 'Projektstart');
+      expect(answer.actionSuggestions, hasLength(1));
+      expect(answer.actionSuggestions.single.type, 'createKnowledgeNote');
+      expect(
+        answer.actionSuggestions.single.stringArgument('title'),
+        'Projektstart',
+      );
     });
 
     test('entfernt Command-Block aus sichtbarem Text', () {
@@ -65,9 +71,12 @@ Ich entwerfe dir eine Aufgabe.
 ''');
 
       expect(answer.text, 'Ich entwerfe dir eine Aufgabe.');
-      expect(answer.commands, hasLength(1));
-      expect(answer.commands.single.type, 'renameTask');
-      expect(answer.commands.single.title, 'Support');
+      expect(answer.actionSuggestions, hasLength(1));
+      expect(answer.actionSuggestions.single.type, 'renameTask');
+      expect(
+        answer.actionSuggestions.single.stringArgument('title'),
+        'Support',
+      );
     });
 
     test('ignoriert ungültiges Command-JSON', () {
@@ -80,7 +89,7 @@ Ich kann helfen.
 ''');
 
       expect(answer.text, 'Ich kann helfen.');
-      expect(answer.commands, isEmpty);
+      expect(answer.actionSuggestions, isEmpty);
     });
   });
 }

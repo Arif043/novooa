@@ -1,14 +1,11 @@
-import 'package:syscat2/features/assistant/domain/entities/assistant_task_command.dart';
 import 'package:syscat2/features/assistant/presentation/agent/assistant_plan_action.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
 abstract class TaskBuilderAgentCommand {
-  const TaskBuilderAgentCommand(this.source);
+  const TaskBuilderAgentCommand(this.label);
 
-  final AssistantTaskCommand source;
-
-  String get label => source.label;
+  final String label;
 
   Future<void> perform(TaskBuilderCubit cubit);
 }

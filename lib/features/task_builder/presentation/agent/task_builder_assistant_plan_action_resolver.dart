@@ -16,6 +16,6 @@ class TaskBuilderAssistantPlanActionResolver
 
   @override
   List<AssistantPlanAction> actionsFor(AssistantMessage message) {
-    return factory.fromDtos(message.taskCommands, _cubit);
+    return factory.fromSuggestions(message.actionSuggestions, _cubit);
   }
 }
