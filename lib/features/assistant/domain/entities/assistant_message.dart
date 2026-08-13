@@ -1,3 +1,4 @@
+import 'assistant_knowledge_command.dart';
 import 'assistant_task_command.dart';
 import 'assistant_url_source.dart';
 
@@ -8,6 +9,7 @@ class AssistantMessage {
     required this.text,
     required this.createdAt,
     this.taskCommands = const [],
+    this.knowledgeCommands = const [],
     this.urlSources = const [],
   });
 
@@ -23,6 +25,7 @@ class AssistantMessage {
   factory AssistantMessage.agent(
     String text, {
     List<AssistantTaskCommand> taskCommands = const [],
+    List<AssistantKnowledgeCommand> knowledgeCommands = const [],
     List<AssistantUrlSource> urlSources = const [],
   }) {
     return AssistantMessage(
@@ -31,6 +34,7 @@ class AssistantMessage {
       text: text,
       createdAt: DateTime.now(),
       taskCommands: taskCommands,
+      knowledgeCommands: knowledgeCommands,
       urlSources: urlSources,
     );
   }
@@ -40,6 +44,7 @@ class AssistantMessage {
   final String text;
   final DateTime createdAt;
   final List<AssistantTaskCommand> taskCommands;
+  final List<AssistantKnowledgeCommand> knowledgeCommands;
   final List<AssistantUrlSource> urlSources;
 }
 

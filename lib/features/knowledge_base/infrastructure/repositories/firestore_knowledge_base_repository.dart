@@ -51,6 +51,30 @@ class FirestoreKnowledgeBaseRepository implements KnowledgeBaseRepository {
   }
 
   @override
+  Future<Result<KnowledgeNote, KnowledgeFailure>> restoreNote({
+    required TeamId teamId,
+    required KnowledgeNote note,
+  }) async {
+    try {
+      await _notesReference(teamId)
+          .doc(note.id)
+          .set(
+            _createDocument(
+              KnowledgeNoteDraft(
+                title: note.title,
+                path: note.path,
+                content: note.content,
+                outgoingLinks: note.outgoingLinks,
+              ),
+            ),
+          );
+      return _loadNote(teamId, note.id);
+    } catch (_) {
+      return const Error(KnowledgeFailure(KnowledgeFailureKind.saveFailed));
+    }
+  }
+
+  @override
   Future<Result<Unit, KnowledgeFailure>> deleteNote({
     required TeamId teamId,
     required String noteId,

@@ -28,6 +28,7 @@ class FirebaseAiAssistantRepository implements AssistantRepository {
     return AssistantMessage.agent(
       parsedAnswer.text,
       taskCommands: parsedAnswer.commands,
+      knowledgeCommands: parsedAnswer.knowledgeCommands,
       urlSources: generatedAnswer.urlSources,
     );
   }

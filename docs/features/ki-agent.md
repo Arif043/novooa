@@ -9,6 +9,8 @@ nutzt Firebase AI Logic als API-Schicht für Modellaufrufe.
 - Kontextbezogene Hilfe für Aufgabenbau, Nodes, Trigger und Wissensbasis geben.
 - Antworten kurz, konkret und auf Deutsch formulieren.
 - Öffentliche URLs in Nutzerfragen mit Firebase AI Logic URL Context auswerten.
+- Wissensbasis-Notizen des aktuellen Teams über Firebase-AI-Lese-Tools
+  recherchieren.
 - Den Domain-Layer von Firebase AI Logic entkoppeln.
 - UI-Zustände für leer, ladend, Fehler und erfolgreiche Antworten abbilden.
 
@@ -21,6 +23,10 @@ nutzt Firebase AI Logic als API-Schicht für Modellaufrufe.
   Abrufmetadaten werden als Quellen an der Agentenantwort dargestellt.
 - `InternalAssistantKnowledge` liefert pro unterstütztem Bereich ein kurzes
   internes Wissensstück, das direkt in den Systemprompt geschrieben wird.
+- `FirebaseAiKnowledgeBaseReadTools` stellt im Wissensbasis-Kontext
+  `searchKnowledgeNotes` und `readKnowledgeNote` als
+  `AutoFunctionDeclaration` bereit. `ChatSession.sendMessage` führt diese
+  Leseaufrufe automatisch aus.
 - Presentation: `AssistantCubit` steuert Verlauf, Ladezustand und Fehler.
 - Einstieg: Die Root-AppBar öffnet den Agenten und übergibt den aktuellen
   Bereich als Kontext.
@@ -40,8 +46,27 @@ nach einem Klick auf **Ausführen** an.
 
 Fachliche Command-Factories bleiben im jeweiligen Ziel-Feature. Der
 Aufgaben-Builder adaptiert seine typisierten Commands auf
-`AssistantPlanAction`; die Wissensbasis wird eigene typisierte Commands
-bereitstellen.
+`AssistantPlanAction`; die Wissensbasis adaptiert
+`AssistantKnowledgeCommand` auf denselben Vertrag.
+
+## Wissensbasis-Agent
+
+Im Bereich **Wissensbasis** kann der Agent zunächst nach Notizen suchen und
+dann den vollständigen Markdown einer Notiz lesen. Beide Tools sind
+team-begrenzt: Sie verwenden den aktuell angemeldeten Nutzer und
+`GetCurrentTeamId`; teamübergreifende IDs werden nicht angenommen.
+
+Notizinhalte gelten als untrusted Kontext. Sie dürfen die Systemanweisungen
+nicht überschreiben. Der Agent kann deshalb über die Tools keine Daten ändern.
+
+Für Erstellen, Bearbeiten und Löschen liefert Gemini stattdessen einen
+strukturierten `knowledgeCommands`-Vorschlag. Die Assistant-UI zeigt ihn als
+Plan und führt ihn erst nach **Ausführen** aus. Jede erfolgreiche Änderung
+liefert eine Rückgängig-Aktion:
+
+- Erstellen → die neue Notiz löschen
+- Bearbeiten → den gespeicherten vorherigen Zustand wiederherstellen
+- Löschen → die Notiz mit derselben ID wiederherstellen
 
 ## Interne Wissensbasis
 

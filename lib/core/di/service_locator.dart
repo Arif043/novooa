@@ -7,6 +7,7 @@ import 'package:syscat2/features/assistant/domain/entities/assistant_context.dar
 import 'package:syscat2/features/assistant/domain/repositories/assistant_repository.dart';
 import 'package:syscat2/features/assistant/domain/usecases/ask_assistant.dart';
 import 'package:syscat2/features/assistant/infrastructure/datasources/firebase_ai_assistant_datasource.dart';
+import 'package:syscat2/features/assistant/infrastructure/datasources/firebase_ai_knowledge_base_read_tools.dart';
 import 'package:syscat2/features/assistant/infrastructure/datasources/internal_assistant_knowledge.dart';
 import 'package:syscat2/features/assistant/infrastructure/repositories/firebase_ai_assistant_repository.dart';
 import 'package:syscat2/features/assistant/presentation/cubits/assistant_cubit.dart';
@@ -34,6 +35,7 @@ import 'package:syscat2/features/files/presentation/cubits/file_detail_cubit.dar
 import 'package:syscat2/features/knowledge_base/domain/repositories/knowledge_base_repository.dart';
 import 'package:syscat2/features/knowledge_base/domain/usecases/create_knowledge_note.dart';
 import 'package:syscat2/features/knowledge_base/domain/usecases/delete_knowledge_note.dart';
+import 'package:syscat2/features/knowledge_base/domain/usecases/restore_knowledge_note.dart';
 import 'package:syscat2/features/knowledge_base/domain/usecases/update_knowledge_note.dart';
 import 'package:syscat2/features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import 'package:syscat2/features/knowledge_base/infrastructure/repositories/firestore_knowledge_base_repository.dart';
@@ -162,8 +164,17 @@ void configureDependencies() {
     )
     ..registerLazySingleton(InternalAssistantKnowledge.new)
     ..registerLazySingleton(
+      () => FirebaseAiKnowledgeBaseReadTools(
+        authRepository: serviceLocator<AuthRepository>(),
+        watchKnowledgeNotes: serviceLocator<WatchKnowledgeNotes>(),
+        getCurrentTeamId: serviceLocator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerLazySingleton(
       () => FirebaseAiAssistantDatasource(
         knowledge: serviceLocator<InternalAssistantKnowledge>(),
+        knowledgeBaseReadTools:
+            serviceLocator<FirebaseAiKnowledgeBaseReadTools>(),
       ),
     )
     ..registerLazySingleton<AssistantRepository>(
@@ -285,6 +296,9 @@ void configureDependencies() {
     )
     ..registerLazySingleton(
       () => DeleteKnowledgeNote(serviceLocator<KnowledgeBaseRepository>()),
+    )
+    ..registerLazySingleton(
+      () => RestoreKnowledgeNote(serviceLocator<KnowledgeBaseRepository>()),
     )
     ..registerLazySingleton(
       () => WatchSkills(serviceLocator<SkillRepository>()),
@@ -517,6 +531,7 @@ void configureDependencies() {
         serviceLocator<CreateKnowledgeNote>(),
         serviceLocator<UpdateKnowledgeNote>(),
         serviceLocator<DeleteKnowledgeNote>(),
+        serviceLocator<RestoreKnowledgeNote>(),
         serviceLocator<GetCurrentTeamId>(),
       ),
     )

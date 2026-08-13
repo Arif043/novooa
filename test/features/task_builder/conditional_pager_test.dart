@@ -173,6 +173,14 @@ class _FakeKnowledgeBaseRepository implements KnowledgeBaseRepository {
   }
 
   @override
+  Future<Result<KnowledgeNote, KnowledgeFailure>> restoreNote({
+    required TeamId teamId,
+    required KnowledgeNote note,
+  }) async {
+    return Result.success(note);
+  }
+
+  @override
   Future<Result<Unit, KnowledgeFailure>> deleteNote({
     required TeamId teamId,
     required String noteId,

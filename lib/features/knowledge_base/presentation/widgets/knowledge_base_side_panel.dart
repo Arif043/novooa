@@ -10,6 +10,7 @@ import 'package:syscat2/features/notifications/presentation/widgets/notification
 
 import '../cubits/knowledge_base_cubit.dart';
 import '../cubits/knowledge_base_state.dart';
+import '../agent/knowledge_base_assistant_plan_action_resolver.dart';
 import 'knowledge_base_graph_panel.dart';
 
 enum KnowledgeBaseSidePanelKind { assistant, notifications, properties }
@@ -101,7 +102,12 @@ class KnowledgeBaseSideDrawer extends StatelessWidget {
               route: '/knowledge-base',
             ),
           ),
-        child: AssistantPanel(onClose: onClose),
+        child: AssistantPanel(
+          onClose: onClose,
+          planActionResolver: KnowledgeBaseAssistantPlanActionResolver(
+            knowledgeBaseCubit,
+          ),
+        ),
       ),
       KnowledgeBaseSidePanelKind.notifications => NotificationPanel(
         onClose: onClose,

@@ -20,6 +20,11 @@ abstract class KnowledgeBaseRepository {
     required KnowledgeNoteDraft draft,
   });
 
+  Future<Result<KnowledgeNote, KnowledgeFailure>> restoreNote({
+    required TeamId teamId,
+    required KnowledgeNote note,
+  });
+
   Future<Result<Unit, KnowledgeFailure>> deleteNote({
     required TeamId teamId,
     required String noteId,

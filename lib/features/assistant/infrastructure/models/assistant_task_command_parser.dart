@@ -1,12 +1,18 @@
 import 'dart:convert';
 
+import '../../domain/entities/assistant_knowledge_command.dart';
 import '../../domain/entities/assistant_task_command.dart';
 
 class ParsedAssistantAnswer {
-  const ParsedAssistantAnswer({required this.text, required this.commands});
+  const ParsedAssistantAnswer({
+    required this.text,
+    required this.commands,
+    this.knowledgeCommands = const [],
+  });
 
   final String text;
   final List<AssistantTaskCommand> commands;
+  final List<AssistantKnowledgeCommand> knowledgeCommands;
 }
 
 class AssistantTaskCommandParser {
@@ -34,6 +40,7 @@ class AssistantTaskCommandParser {
       return ParsedAssistantAnswer(
         text: answer.isEmpty ? source : answer,
         commands: _commandsFromMap(decoded),
+        knowledgeCommands: _knowledgeCommandsFromMap(decoded),
       );
     } catch (_) {
       return null;
@@ -66,10 +73,24 @@ class AssistantTaskCommandParser {
         .where((command) => command.type.isNotEmpty)
         .toList(growable: false);
   }
+
+  List<AssistantKnowledgeCommand> _knowledgeCommandsFromMap(Map decoded) {
+    final commands = decoded['knowledgeCommands'];
+    if (commands is! List) return const [];
+    return commands
+        .whereType<Map>()
+        .map(_knowledgeCommandFrom)
+        .where((command) => command.type.isNotEmpty)
+        .toList(growable: false);
+  }
 }
 
 AssistantTaskCommand _commandFrom(Map value) {
   return AssistantTaskCommand.fromJson(Map<String, Object?>.from(value));
+}
+
+AssistantKnowledgeCommand _knowledgeCommandFrom(Map value) {
+  return AssistantKnowledgeCommand.fromJson(Map<String, Object?>.from(value));
 }
 
 final _commandBlock = RegExp(

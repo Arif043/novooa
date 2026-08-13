@@ -34,6 +34,27 @@ void main() {
       expect(answer.commands, isEmpty);
     });
 
+    test('liest Wissensbasis-Commands aus strukturierter JSON-Antwort', () {
+      final answer = parser.parse('''
+{
+  "answer": "Ich lege die Notiz an.",
+  "commands": [],
+  "knowledgeCommands": [
+    {
+      "type": "createKnowledgeNote",
+      "label": "Notiz erstellen",
+      "title": "Projektstart",
+      "content": "# Projektstart"
+    }
+  ]
+}
+''');
+
+      expect(answer.knowledgeCommands, hasLength(1));
+      expect(answer.knowledgeCommands.single.type, 'createKnowledgeNote');
+      expect(answer.knowledgeCommands.single.title, 'Projektstart');
+    });
+
     test('entfernt Command-Block aus sichtbarem Text', () {
       final answer = parser.parse('''
 Ich entwerfe dir eine Aufgabe.

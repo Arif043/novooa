@@ -7,13 +7,17 @@ import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart'
 
 import '../../domain/entities/knowledge_failure.dart';
 import '../../domain/entities/knowledge_note.dart';
+import '../../domain/entities/knowledge_note_draft.dart';
 import '../../domain/services/markdown_link_extractor.dart';
 import '../../domain/services/knowledge_note_draft_factory.dart';
 import '../../domain/usecases/create_knowledge_note.dart';
 import '../../domain/usecases/delete_knowledge_note.dart';
+import '../../domain/usecases/restore_knowledge_note.dart';
 import '../../domain/usecases/update_knowledge_note.dart';
 import '../../domain/usecases/watch_knowledge_notes.dart';
 import 'knowledge_base_state.dart';
+
+part 'knowledge_base_assistant_mutations.dart';
 
 class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
   KnowledgeBaseCubit(
@@ -22,6 +26,7 @@ class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
     this._createKnowledgeNote,
     this._updateKnowledgeNote,
     this._deleteKnowledgeNote,
+    this._restoreKnowledgeNote,
     this._getCurrentTeamId, [
     this._linkExtractor = const MarkdownLinkExtractor(),
     this._draftFactory = const KnowledgeNoteDraftFactory(),
@@ -32,6 +37,7 @@ class KnowledgeBaseCubit extends Cubit<KnowledgeBaseState> {
   final CreateKnowledgeNote _createKnowledgeNote;
   final UpdateKnowledgeNote _updateKnowledgeNote;
   final DeleteKnowledgeNote _deleteKnowledgeNote;
+  final RestoreKnowledgeNote _restoreKnowledgeNote;
   final GetCurrentTeamId _getCurrentTeamId;
   final MarkdownLinkExtractor _linkExtractor;
   final KnowledgeNoteDraftFactory _draftFactory;

@@ -61,6 +61,17 @@ Editor.
 Änderungen werden per Debounce automatisch gespeichert. Nutzer:innen müssen
 keinen Speichern-Button bedienen.
 
+## KI-Agent
+
+Der KI-Agent im rechten Drawer kann die Notizen des aktuellen Teams lesen:
+Er sucht zunächst in Titel, Pfad und Markdown und lädt danach gezielt einzelne
+Notizen. Das geschieht über Firebase AI Logic Function Calling im Client und
+beachtet die bestehenden Firestore-Teamgrenzen.
+
+Erstellen, Bearbeiten und Löschen sind keine automatischen Tool-Aufrufe. Der
+Agent erzeugt dafür einen sichtbaren, bestätigungspflichtigen Plan. Nach dessen
+Ausführung kann die gesamte Änderung über **Rückgängig** zurückgenommen werden.
+
 ## Node-Anhänge
 
 Unterstützte NodeConfigs speichern `knowledgeAttachments` zusätzlich zu
