@@ -19,15 +19,16 @@ class FirebaseAiAssistantRepository implements AssistantRepository {
     required List<AssistantMessage> history,
     required String question,
   }) async {
-    final rawAnswer = await _datasource.ask(
+    final generatedAnswer = await _datasource.ask(
       context: context,
       history: history,
       question: question,
     );
-    final parsedAnswer = parser.parse(rawAnswer);
+    final parsedAnswer = parser.parse(generatedAnswer.text);
     return AssistantMessage.agent(
       parsedAnswer.text,
       taskCommands: parsedAnswer.commands,
+      urlSources: generatedAnswer.urlSources,
     );
   }
 }

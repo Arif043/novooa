@@ -8,6 +8,7 @@ nutzt Firebase AI Logic als API-Schicht für Modellaufrufe.
 
 - Kontextbezogene Hilfe für Aufgabenbau, Nodes, Trigger und Wissensbasis geben.
 - Antworten kurz, konkret und auf Deutsch formulieren.
+- Öffentliche URLs in Nutzerfragen mit Firebase AI Logic URL Context auswerten.
 - Den Domain-Layer von Firebase AI Logic entkoppeln.
 - UI-Zustände für leer, ladend, Fehler und erfolgreiche Antworten abbilden.
 
@@ -16,6 +17,8 @@ nutzt Firebase AI Logic als API-Schicht für Modellaufrufe.
 - Domain: `AssistantRepository`, `AskAssistant`, `AssistantMessage`,
   `AssistantContext`.
 - Infrastructure: `FirebaseAiAssistantDatasource` kapselt Firebase AI Logic.
+- URL Context liest konkrete öffentliche URLs aus einer Agentenanfrage. Die
+  Abrufmetadaten werden als Quellen an der Agentenantwort dargestellt.
 - `InternalAssistantKnowledge` liefert pro unterstütztem Bereich ein kurzes
   internes Wissensstück, das direkt in den Systemprompt geschrieben wird.
 - Presentation: `AssistantCubit` steuert Verlauf, Ladezustand und Fehler.
@@ -33,6 +36,16 @@ zwei Bereiche:
 Die Wissensbasis wird als verbindliche Produktinformation in die
 `systemInstruction` von Firebase AI Logic eingefügt. Dadurch bleibt der Agent
 einfach, schnell änderbar und ohne zusätzliche Persistenz.
+
+## URL Context
+
+Der Agent aktiviert `Tool.urlContext()` für `gemini-3.5-flash`. Er kann damit
+konkrete öffentliche URLs aus einer Frage zusammenfassen oder vergleichen.
+Nackte Domains wie `laraevent.de` werden als `https://laraevent.de`
+normalisiert.
+URL Context ist kein Website-Crawler: Login-Bereiche, Paywalls und mehrseitige
+Crawls werden nicht unterstützt. Webseiteninhalt gilt als untrusted Kontext und
+kann die Systemanweisungen des Agenten nicht ändern.
 
 ## Offene Fragen
 

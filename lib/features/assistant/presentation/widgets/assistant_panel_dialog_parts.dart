@@ -51,6 +51,7 @@ class _MessageContent extends StatelessWidget {
       children: [
         if (message.text.isNotEmpty)
           Text(message.text, style: Theme.of(context).textTheme.bodyMedium),
+        AssistantMessageSources(sources: message.urlSources),
         if (commands.isNotEmpty && taskBuilderCubit != null) ...[
           const SizedBox(height: AppSpacing.md),
           AssistantTaskCommandPlan(

@@ -1,4 +1,5 @@
 import 'assistant_task_command.dart';
+import 'assistant_url_source.dart';
 
 class AssistantMessage {
   const AssistantMessage({
@@ -7,6 +8,7 @@ class AssistantMessage {
     required this.text,
     required this.createdAt,
     this.taskCommands = const [],
+    this.urlSources = const [],
   });
 
   factory AssistantMessage.user(String text) {
@@ -21,6 +23,7 @@ class AssistantMessage {
   factory AssistantMessage.agent(
     String text, {
     List<AssistantTaskCommand> taskCommands = const [],
+    List<AssistantUrlSource> urlSources = const [],
   }) {
     return AssistantMessage(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
@@ -28,6 +31,7 @@ class AssistantMessage {
       text: text,
       createdAt: DateTime.now(),
       taskCommands: taskCommands,
+      urlSources: urlSources,
     );
   }
 
@@ -36,6 +40,7 @@ class AssistantMessage {
   final String text;
   final DateTime createdAt;
   final List<AssistantTaskCommand> taskCommands;
+  final List<AssistantUrlSource> urlSources;
 }
 
 enum AssistantMessageRole { user, agent }

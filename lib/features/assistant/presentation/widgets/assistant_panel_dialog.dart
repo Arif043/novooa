@@ -7,6 +7,7 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_c
 import '../../domain/entities/assistant_message.dart';
 import '../cubits/assistant_cubit.dart';
 import '../cubits/assistant_state.dart';
+import 'assistant_message_sources.dart';
 import 'assistant_task_command_plan.dart';
 
 part 'assistant_panel_dialog_parts.dart';
