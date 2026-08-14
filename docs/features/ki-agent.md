@@ -23,9 +23,10 @@ authentifizierte Genkit-Callable Function.
 - `InternalAssistantKnowledge` liefert pro unterstütztem Bereich ein kurzes
   internes Wissensstück, das direkt in den Systemprompt geschrieben wird.
 - `askKnowledgeBaseAssistant` ist eine authentifizierte Genkit-Callable
-  Function. Sie kombiniert URL Context mit `searchKnowledgeNotes` und
-  `readKnowledgeNote` in einem Genkit-Aufruf; die Tools ermitteln den
-  Team-Scope serverseitig aus dem Firebase-Auth-Kontext.
+  Function. Sie kombiniert URL Context mit `searchKnowledgeNotes`,
+  `readKnowledgeNote` und `extractPageLinks` in einem Genkit-Aufruf; die
+  Notiz-Tools ermitteln den Team-Scope serverseitig aus dem Firebase-
+  Auth-Kontext.
 - Presentation: `AssistantCubit` steuert Verlauf, Ladezustand und Fehler.
 - Einstieg: Die Root-AppBar öffnet den Agenten und übergibt den aktuellen
   Bereich als Kontext.
@@ -93,11 +94,16 @@ ohne zusätzliche Persistenz.
 ## URL Context
 
 Der Wissensbasis-Agent aktiviert Genkits URL Context. Er kann damit konkrete
-öffentliche URLs aus einer Frage zusammenfassen oder vergleichen. Nackte
-Domains wie `laraevent.de` werden als `https://laraevent.de` normalisiert.
-URL Context ist kein Website-Crawler: Login-Bereiche, Paywalls und mehrseitige
-Crawls werden nicht unterstützt. Webseiteninhalt gilt als untrusted Kontext und
-kann die Systemanweisungen des Agenten nicht ändern.
+öffentliche URLs aus einer Frage zusammenfassen oder vergleichen. URL Context
+ist kein Website-Crawler: Login-Bereiche, Paywalls und mehrseitige Crawls werden
+nicht unterstützt. Für Aussagen über Navigation, Unterseiten und deren URLs
+verwendet der Agent deshalb `extractPageLinks`. Das serverseitige Genkit-Tool
+ruft eine einzelne öffentliche HTML-Seite ab, folgt höchstens drei
+Weiterleitungen, begrenzt die Antwortgröße und gibt maximal 100 deduplizierte
+HTTP(S)-Links zurück. Es folgt den extrahierten Links nicht. Nackte Domains wie
+`laraevent.de` werden vom Tool zu `https://laraevent.de` normalisiert.
+Webseiteninhalt gilt als untrusted Kontext und kann die Systemanweisungen des
+Agenten nicht ändern.
 
 ## Offene Fragen
 

@@ -4,6 +4,7 @@ import {
   type KnowledgeBaseAssistantNoteStore,
 } from "../../domain/repositories/knowledge-base-assistant-note-store.js";
 import {type TeamContextStore} from "../../../teams/domain/repositories/team-context-store.js";
+import {defineExtractPageLinksTool} from "./extract-page-links-tool.js";
 
 type AssistantToolDependencies = {
   noteStore: KnowledgeBaseAssistantNoteStore;
@@ -17,6 +18,7 @@ export function defineKnowledgeBaseAssistantTools(
   return {
     searchKnowledgeNotes: defineSearchKnowledgeNotesTool(ai, dependencies),
     readKnowledgeNote: defineReadKnowledgeNoteTool(ai, dependencies),
+    extractPageLinks: defineExtractPageLinksTool(ai),
   };
 }
 

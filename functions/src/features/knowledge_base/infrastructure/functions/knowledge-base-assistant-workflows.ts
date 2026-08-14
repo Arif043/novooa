@@ -53,7 +53,11 @@ async function generateAssistantAnswer(
     system: systemPrompt,
     messages: input.history.map(messageForModel),
     prompt: input.question,
-    tools: [tools.searchKnowledgeNotes, tools.readKnowledgeNote],
+    tools: [
+      tools.searchKnowledgeNotes,
+      tools.readKnowledgeNote,
+      tools.extractPageLinks,
+    ],
     context,
     maxTurns: 20,
     config: assistantConfig,
@@ -113,5 +117,7 @@ knowledgeCommands. Der sichtbare Antworttext steht ausschließlich in answer.
 Verwende Tools gezielt: Rufe denselben Tool niemals mit derselben Eingabe erneut
 auf. Suche nur, wenn Notizen für die Antwort relevant sind; lies anschließend
 höchstens die passendste Notiz. Nutze URL Context nur für in der Nutzerfrage
-genannte URLs. Gib nach den nötigen Tool-Aufrufen unmittelbar die finale
-strukturierte Antwort zurück.`;
+genannte URLs. Bei Fragen zu Links, Navigation, Unterseiten oder deren URLs
+nutze extractPageLinks für die konkrete Webseite. Behaupte nur anhand dieses
+Tool-Ergebnisses, dass Links oder Unterseiten existieren oder fehlen. Gib nach
+den nötigen Tool-Aufrufen unmittelbar die finale strukturierte Antwort zurück.`;
