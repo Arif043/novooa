@@ -4,27 +4,31 @@ import {
   type KnowledgeBaseAssistantNoteStore,
 } from "../../domain/repositories/knowledge-base-assistant-note-store.js";
 import {type TeamContextStore} from "../../../teams/domain/repositories/team-context-store.js";
-import {defineExtractPageLinksTool} from "./extract-page-links-tool.js";
+import {
+  defineExtractPageLinksTool,
+  type ExtractPageLinksToolDependencies,
+} from "./extract-page-links-tool.js";
 
-type AssistantToolDependencies = {
+export type KnowledgeBaseAssistantToolDependencies =
+  ExtractPageLinksToolDependencies & {
   noteStore: KnowledgeBaseAssistantNoteStore;
   teamContextStore: TeamContextStore;
 };
 
 export function defineKnowledgeBaseAssistantTools(
   ai: Genkit,
-  dependencies: AssistantToolDependencies,
+  dependencies: KnowledgeBaseAssistantToolDependencies,
 ) {
   return {
     searchKnowledgeNotes: defineSearchKnowledgeNotesTool(ai, dependencies),
     readKnowledgeNote: defineReadKnowledgeNoteTool(ai, dependencies),
-    extractPageLinks: defineExtractPageLinksTool(ai),
+    extractPageLinks: defineExtractPageLinksTool(ai, dependencies),
   };
 }
 
 function defineSearchKnowledgeNotesTool(
   ai: Genkit,
-  dependencies: AssistantToolDependencies,
+  dependencies: KnowledgeBaseAssistantToolDependencies,
 ) {
   return ai.defineTool(
     {
@@ -51,7 +55,7 @@ function defineSearchKnowledgeNotesTool(
 
 function defineReadKnowledgeNoteTool(
   ai: Genkit,
-  dependencies: AssistantToolDependencies,
+  dependencies: KnowledgeBaseAssistantToolDependencies,
 ) {
   return ai.defineTool(
     {

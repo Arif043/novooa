@@ -22,11 +22,14 @@ authentifizierte Genkit-Callable Function.
   TaskBuilder und eine callable Genkit-Function für die Wissensbasis.
 - `InternalAssistantKnowledge` liefert pro unterstütztem Bereich ein kurzes
   internes Wissensstück, das direkt in den Systemprompt geschrieben wird.
-- `askKnowledgeBaseAssistant` ist eine authentifizierte Genkit-Callable
+- `askKnowledgeBaseAssistant` ist aktuell eine authentifizierte Genkit-Callable
   Function. Sie kombiniert URL Context mit `searchKnowledgeNotes`,
   `readKnowledgeNote` und `extractPageLinks` in einem Genkit-Aufruf; die
-  Notiz-Tools ermitteln den Team-Scope serverseitig aus dem Firebase-
-  Auth-Kontext.
+  Notiz-Tools ermitteln den Team-Scope serverseitig aus dem Laufzeitkontext.
+- Die Tool-Definitionen und der öffentliche HTTP/HTML-Adapter liegen unter
+  `knowledge_base/infrastructure/genkit`. Firebase verdrahtet sie mit
+  Firestore und Firebase Auth; eine lokale Runtime kann dieselben Definitionen
+  mit SQLite- und lokaler Identitätsadaptern registrieren.
 - Presentation: `AssistantCubit` steuert Verlauf, Ladezustand und Fehler.
 - Einstieg: Die Root-AppBar öffnet den Agenten und übergibt den aktuellen
   Bereich als Kontext.

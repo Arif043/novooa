@@ -1,15 +1,20 @@
 import {z, type Genkit} from "genkit";
 import {extractPageLinks} from "./html-page-link-extractor.js";
 import {PublicPageHtmlFetcher} from "./public-page-html-fetcher.js";
-import {PublicPageHttpClient} from "./public-page-http-client.js";
 
 const extractedPageLinkSchema = z.object({
   url: z.string().url(),
   text: z.string(),
 });
 
-export function defineExtractPageLinksTool(ai: Genkit) {
-  const dependencies = {pageFetcher: new PublicPageHtmlFetcher(new PublicPageHttpClient())};
+export type ExtractPageLinksToolDependencies = {
+  pageFetcher: PublicPageHtmlFetcher;
+};
+
+export function defineExtractPageLinksTool(
+  ai: Genkit,
+  dependencies: ExtractPageLinksToolDependencies,
+) {
   return ai.defineTool(
     {
       name: "extractPageLinks",
@@ -24,7 +29,8 @@ export function defineExtractPageLinksTool(ai: Genkit) {
         truncated: z.boolean(),
       }),
     },
-    async ({url, includeExternal}) => pageLinksFor(url, includeExternal, dependencies.pageFetcher),
+    async ({url, includeExternal}) =>
+      pageLinksFor(url, includeExternal, dependencies.pageFetcher),
   );
 }
 

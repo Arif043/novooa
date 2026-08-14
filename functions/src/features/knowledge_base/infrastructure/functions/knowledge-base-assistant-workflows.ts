@@ -7,14 +7,21 @@ import {FirestoreKnowledgeBaseAssistantNoteStore} from "../firebase/firestore-kn
 import {
   assistantOutputFromText,
   knowledgeBaseAssistantOutputSchema,
-} from "./knowledge-base-assistant-output.js";
+} from "../genkit/knowledge-base-assistant-output.js";
 import {logKnowledgeBaseAssistantProposal} from "./knowledge-base-assistant-audit-event.js";
-import {defineKnowledgeBaseAssistantTools} from "./knowledge-base-assistant-tools.js";
+import {defineKnowledgeBaseAssistantTools} from "../genkit/knowledge-base-assistant-tools.js";
+import {PublicPageHtmlFetcher} from "../genkit/public-page-html-fetcher.js";
+import {PublicPageHttpClient} from "../genkit/public-page-http-client.js";
 
 const ai = genkit({plugins: [googleAI()]});
 const noteStore = new FirestoreKnowledgeBaseAssistantNoteStore();
 const teamContextStore = new FirestoreTeamContextStore();
-const tools = defineKnowledgeBaseAssistantTools(ai, {noteStore, teamContextStore});
+const pageFetcher = new PublicPageHtmlFetcher(new PublicPageHttpClient());
+const tools = defineKnowledgeBaseAssistantTools(ai, {
+  noteStore,
+  teamContextStore,
+  pageFetcher,
+});
 
 const assistantMessageSchema = z.object({
   role: z.enum(["user", "agent"]),

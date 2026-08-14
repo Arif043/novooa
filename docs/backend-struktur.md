@@ -21,6 +21,7 @@ functions/src/
         genkit/
         local/
         functions/
+        functions/
     teams/
       domain/
         entities/
@@ -56,6 +57,7 @@ functions/src/
       domain/
       infrastructure/
         firebase/
+        genkit/
         local/
     notifications/
       domain/
