@@ -1,7 +1,7 @@
 import '../../domain/entities/assistant_url_source.dart';
 
-class FirebaseAiAssistantResponse {
-  const FirebaseAiAssistantResponse({
+class AssistantGeneratedResponse {
+  const AssistantGeneratedResponse({
     required this.text,
     this.urlSources = const [],
   });

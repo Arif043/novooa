@@ -1,32 +1,31 @@
 ## Zweck
 
 Der In-App KI-Agent hilft Nutzer:innen beim Erstellen von Aufgaben und beim
-Pflegen der Wissensbasis. Er ist als Assistenzoberfläche im Client umgesetzt und
-nutzt Firebase AI Logic als API-Schicht für Modellaufrufe.
+Pflegen der Wissensbasis. Die gemeinsame Assistenzoberfläche läuft im Client.
+Der TaskBuilder nutzt Firebase AI Logic, der Wissensbasis-Agent eine
+authentifizierte Genkit-Callable Function.
 
 ## Verantwortlichkeiten
 
 - Kontextbezogene Hilfe für Aufgabenbau, Nodes, Trigger und Wissensbasis geben.
 - Antworten kurz, konkret und auf Deutsch formulieren.
-- Öffentliche URLs in Nutzerfragen mit Firebase AI Logic URL Context auswerten.
-- Wissensbasis-Notizen des aktuellen Teams über Firebase-AI-Lese-Tools
-  recherchieren.
-- Den Domain-Layer von Firebase AI Logic entkoppeln.
+- Öffentliche URLs in Nutzerfragen für den Wissensbasis-Agenten auswerten.
+- Wissensbasis-Notizen des aktuellen Teams sicher recherchieren.
+- Den Domain-Layer von Modell-SDKs und Cloud Functions entkoppeln.
 - UI-Zustände für leer, ladend, Fehler und erfolgreiche Antworten abbilden.
 
 ## Architektur
 
 - Domain: `AssistantRepository`, `AskAssistant`, `AssistantMessage`,
   `AssistantContext`.
-- Infrastructure: `FirebaseAiAssistantDatasource` kapselt Firebase AI Logic.
-- URL Context liest konkrete öffentliche URLs aus einer Agentenanfrage. Die
-  Abrufmetadaten werden als Quellen an der Agentenantwort dargestellt.
+- Infrastructure: `RoutedAssistantRepository` nutzt Firebase AI Logic für den
+  TaskBuilder und eine callable Genkit-Function für die Wissensbasis.
 - `InternalAssistantKnowledge` liefert pro unterstütztem Bereich ein kurzes
   internes Wissensstück, das direkt in den Systemprompt geschrieben wird.
-- `FirebaseAiKnowledgeBaseReadTools` stellt im Wissensbasis-Kontext
-  `searchKnowledgeNotes` und `readKnowledgeNote` als
-  `AutoFunctionDeclaration` bereit. `ChatSession.sendMessage` führt diese
-  Leseaufrufe automatisch aus.
+- `askKnowledgeBaseAssistant` ist eine authentifizierte Genkit-Callable
+  Function. Sie kombiniert URL Context mit `searchKnowledgeNotes` und
+  `readKnowledgeNote` in einem Genkit-Aufruf; die Tools ermitteln den
+  Team-Scope serverseitig aus dem Firebase-Auth-Kontext.
 - Presentation: `AssistantCubit` steuert Verlauf, Ladezustand und Fehler.
 - Einstieg: Die Root-AppBar öffnet den Agenten und übergibt den aktuellen
   Bereich als Kontext.
@@ -83,16 +82,15 @@ zwei Bereiche:
 - Aufgaben
 - Wissensbasis
 
-Die Wissensbasis wird als verbindliche Produktinformation in die
-`systemInstruction` von Firebase AI Logic eingefügt. Dadurch bleibt der Agent
-einfach, schnell änderbar und ohne zusätzliche Persistenz.
+Die Wissensbasis wird als verbindliche Produktinformation in den jeweiligen
+Systemprompt eingefügt. Dadurch bleibt der Agent einfach, schnell änderbar und
+ohne zusätzliche Persistenz.
 
 ## URL Context
 
-Der Agent aktiviert `Tool.urlContext()` für `gemini-3.5-flash`. Er kann damit
-konkrete öffentliche URLs aus einer Frage zusammenfassen oder vergleichen.
-Nackte Domains wie `laraevent.de` werden als `https://laraevent.de`
-normalisiert.
+Der Wissensbasis-Agent aktiviert Genkits URL Context. Er kann damit konkrete
+öffentliche URLs aus einer Frage zusammenfassen oder vergleichen. Nackte
+Domains wie `laraevent.de` werden als `https://laraevent.de` normalisiert.
 URL Context ist kein Website-Crawler: Login-Bereiche, Paywalls und mehrseitige
 Crawls werden nicht unterstützt. Webseiteninhalt gilt als untrusted Kontext und
 kann die Systemanweisungen des Agenten nicht ändern.
