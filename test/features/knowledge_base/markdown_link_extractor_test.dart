@@ -6,7 +6,9 @@ void main() {
   test('findet Wiki-Links und Markdown-Links zu bekannten Notizen', () {
     final extractor = MarkdownLinkExtractor();
     final links = extractor(
-      content: 'Siehe [[Index]] und [Details](details.md).',
+      content:
+          'Siehe [[index|Übersicht]] und [[Details#Kontakt]] sowie '
+          '[[details]] und [Details](details.md).',
       notes: [
         KnowledgeNote(
           id: 'note.index',

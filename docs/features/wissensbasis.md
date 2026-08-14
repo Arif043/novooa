@@ -95,8 +95,12 @@ bei Bedarf über `knowledge/manifest.json`.
 ## Aktueller Scope
 
 - Notizen können erstellt, bearbeitet und gelöscht werden.
-- `outgoingLinks` werden clientseitig aus `[[Wiki Links]]` und
-  Markdown-Links auf bekannte Notizen abgeleitet.
+- `outgoingLinks` werden clientseitig aus `[[Wiki Links]]`,
+  `[[Ziel|Anzeigetext]]` und Markdown-Links auf bekannte Notizen abgeleitet.
+- `[[Ziel#Abschnitt]]` löst wie in Obsidian die Notiz `Ziel` auf; der
+  Abschnitt ist für die aktuelle Einzelnotiz-Ansicht noch ohne Wirkung.
+- Notizen können über Titel, ID, Pfad oder den Pfad ohne `.md` verlinkt werden.
+- Wiki Links sind in der Ansicht klickbar und öffnen die verknüpfte Notiz.
 - Graph-View zeigt die aus `outgoingLinks` abgeleiteten Beziehungen.
 - Prompt-Bausteine können Wissensnotizen anhängen.
 - Script-Bausteine sind bewusst noch nicht angebunden.

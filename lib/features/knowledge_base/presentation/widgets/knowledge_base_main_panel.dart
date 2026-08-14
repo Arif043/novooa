@@ -40,6 +40,8 @@ class _KnowledgeBaseMainPanelState extends State<KnowledgeBaseMainPanel> {
         actions: _NoteActions(mode: _mode, onModeChanged: _setMode),
         child: KnowledgeMarkdownPreview(
           content: widget.state.selectedNote!.content,
+          notes: widget.state.notes,
+          onNoteSelected: context.read<KnowledgeBaseCubit>().selectNote,
         ),
       ),
       KnowledgeBaseMainMode.graph => _NonEditorPanel(
