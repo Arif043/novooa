@@ -74,6 +74,10 @@ liefert eine Rückgängig-Aktion:
 - Bearbeiten → den gespeicherten vorherigen Zustand wiederherstellen
 - Löschen → die Notiz mit derselben ID wiederherstellen
 
+Cloud Logging protokolliert vom Modell vorgeschlagene Wissensbasis-Commands.
+Ein Ereignis enthält UID, Aktionstyp, Label, Titel und gegebenenfalls Notiz-ID.
+Chattext und Notizinhalte werden nicht protokolliert.
+
 ## Interne Wissensbasis
 
 Der MVP nutzt kein separates RAG. Aktuell unterstützt der interne Agent nur

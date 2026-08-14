@@ -8,6 +8,7 @@ import {
   assistantOutputFromText,
   knowledgeBaseAssistantOutputSchema,
 } from "./knowledge-base-assistant-output.js";
+import {logKnowledgeBaseAssistantProposal} from "./knowledge-base-assistant-audit-event.js";
 import {defineKnowledgeBaseAssistantTools} from "./knowledge-base-assistant-tools.js";
 
 const ai = genkit({plugins: [googleAI()]});
@@ -57,7 +58,19 @@ async function generateAssistantAnswer(
     maxTurns: 20,
     config: assistantConfig,
   });
-  return assistantOutputFromText(response.text);
+  const output = assistantOutputFromText(response.text);
+  logKnowledgeBaseAssistantProposal({
+    uid: uidFromContext(context),
+    historyLength: input.history.length,
+    commands: output.knowledgeCommands,
+  });
+  return output;
+}
+
+function uidFromContext(context: ActionContext | undefined): string {
+  const auth = (context as {auth?: {uid?: string}} | undefined)?.auth;
+  if (!auth?.uid) throw new Error("Auth context is missing.");
+  return auth.uid;
 }
 
 function messageForModel(
