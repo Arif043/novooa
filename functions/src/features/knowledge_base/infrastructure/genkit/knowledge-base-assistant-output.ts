@@ -1,4 +1,8 @@
 import {z} from "genkit";
+import {
+  type KnowledgeBaseAssistantCommand,
+  type KnowledgeBaseAssistantResponse,
+} from "../../domain/entities/knowledge-base-assistant-response.js";
 
 const commandTypeSchema = z.enum([
   "createKnowledgeNote",
@@ -30,10 +34,12 @@ export const knowledgeBaseAssistantOutputSchema = z.object({
   knowledgeCommands: z.array(knowledgeCommandSchema),
 });
 
-type KnowledgeCommand = z.infer<typeof knowledgeCommandSchema>;
+type KnowledgeCommand = KnowledgeBaseAssistantCommand;
 type RawKnowledgeCommand = z.infer<typeof rawKnowledgeCommandSchema>;
 
-export function assistantOutputFromText(text: string) {
+export function assistantOutputFromText(
+  text: string,
+): KnowledgeBaseAssistantResponse {
   const rawOutput = rawOutputFrom(text);
   if (!rawOutput) return emptyOutput(text);
   return {
@@ -53,7 +59,7 @@ function rawOutputFrom(text: string) {
   }
 }
 
-function emptyOutput(text: string) {
+function emptyOutput(text: string): KnowledgeBaseAssistantResponse {
   return {answer: text, commands: [], knowledgeCommands: []};
 }
 

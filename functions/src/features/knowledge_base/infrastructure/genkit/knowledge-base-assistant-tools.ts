@@ -8,6 +8,7 @@ import {
   defineExtractPageLinksTool,
   type ExtractPageLinksToolDependencies,
 } from "./extract-page-links-tool.js";
+import {assistantActorIdFromContext} from "./knowledge-base-assistant-runtime-context.js";
 
 export type KnowledgeBaseAssistantToolDependencies =
   ExtractPageLinksToolDependencies & {
@@ -122,7 +123,7 @@ async function teamIdForContext(
   context: unknown,
   teamContextStore: TeamContextStore,
 ): Promise<string> {
-  const auth = (context as {auth?: {uid?: string}} | undefined)?.auth;
-  if (!auth?.uid) throw new Error("Auth context is missing.");
-  return teamContextStore.currentTeamIdForUid(auth.uid);
+  return teamContextStore.currentTeamIdForUid(
+    assistantActorIdFromContext(context),
+  );
 }

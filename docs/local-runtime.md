@@ -102,8 +102,9 @@ dessen Infrastructure-Bereich.
 - Der Wissensbasis-Agent verwendet dieselben Genkit-Tools für Cloud und lokal.
   Ein lokaler Composition Root kann sie mit
   `SQLiteKnowledgeBaseAssistantNoteStore`, `SQLiteTeamContextStore` und dem
-  öffentlichen HTTP/HTML-Adapter verdrahten; Firebase verwendet dafür die
-  Firestore- und Auth-Adapter.
+  öffentlichen HTTP/HTML-Adapter sowie dem
+  `KnowledgeBaseAssistantGenkitResponder` verdrahten; Firebase verwendet dafür
+  die Firestore- und Auth-Adapter.
 - `LocalTeamFileStore` schreibt Dateien in ein lokales Root-Verzeichnis und
   persistiert Datei-/Versions-Metadaten über `LocalSqlDatabase`.
 - `SqlMigrationRunner` wendet Migrationen treiberneutral über

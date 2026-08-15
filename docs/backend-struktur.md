@@ -11,6 +11,11 @@ nicht; Use Cases liegen unter `domain/usecases`.
 functions/src/
   index.ts
   features/
+    assistant/
+      domain/
+        entities/
+        repositories/
+        usecases/
     task_execution/
       domain/
         entities/
@@ -101,6 +106,7 @@ nur öffentliche Trigger und enthält keine Logik.
 
 | Feature | Verantwortung |
 | --- | --- |
+| `assistant` | Agentenanfrage, Ausführungskontext und neutrale Responder-Ports |
 | `task_execution` | Task-Definitionen, Runs, Graph Runner, Node Executors und Cloud Tasks |
 | `teams` | Arbeitsbereich, Mitgliedschaft und Einladungen |
 | `scheduling` | Zeit- und Event-Trigger sowie Fälligkeiten |

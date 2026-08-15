@@ -16,10 +16,17 @@ authentifizierte Genkit-Callable Function.
 
 ## Architektur
 
-- Domain: `AssistantRepository`, `AskAssistant`, `AssistantMessage`,
+- Client-Domain: `AssistantRepository`, `AskAssistant`, `AssistantMessage`,
   `AssistantContext`.
-- Infrastructure: `RoutedAssistantRepository` nutzt Firebase AI Logic für den
-  TaskBuilder und eine callable Genkit-Function für die Wissensbasis.
+- Backend-Domain: `AssistantActor`, `AssistantMessage`, `AssistantRequest`,
+  `AssistantExecutionContext`, der Port `AssistantResponder` und der Use Case
+  `AskAssistant`. Diese Typen kennen weder Firebase noch Genkit.
+- Client-Infrastructure: `RoutedAssistantRepository` nutzt Firebase AI Logic
+  für den TaskBuilder und eine callable Genkit-Function für die Wissensbasis.
+- Backend-Infrastructure: `KnowledgeBaseAssistantGenkitResponder` implementiert
+  den Backend-Port. Er enthält Modell, Prompt und Genkit-Tools; die Callable
+  Function übersetzt ausschließlich Firebase Auth, verdrahtet Adapter und
+  protokolliert Änderungsvorschläge.
 - `InternalAssistantKnowledge` liefert pro unterstütztem Bereich ein kurzes
   internes Wissensstück, das direkt in den Systemprompt geschrieben wird.
 - `askKnowledgeBaseAssistant` ist aktuell eine authentifizierte Genkit-Callable
