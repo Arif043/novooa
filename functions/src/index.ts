@@ -37,6 +37,7 @@ export {
 
 export {runDueTaskTriggersWorker} from "./features/scheduling/infrastructure/functions/schedule-workflows.js";
 export {askKnowledgeBaseAssistant} from "./features/knowledge_base/infrastructure/functions/knowledge-base-assistant-workflows.js";
+export {askTaskBuilderAssistant} from "./features/task_execution/infrastructure/functions/task-builder-assistant-workflows.js";
 export {twilioWebhook} from "./features/communication/infrastructure/twilio/twilio-webhook.js";
 export {dispatchFakeChannelMessage} from "./features/communication/infrastructure/functions/fake-channel-message.js";
 export {sendChannelMessage} from "./features/communication/infrastructure/functions/send-channel-message.js";

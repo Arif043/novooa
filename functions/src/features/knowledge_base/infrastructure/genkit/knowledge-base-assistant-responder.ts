@@ -1,8 +1,9 @@
 import {type Genkit, type ModelArgument} from "genkit";
-import {type AssistantExecutionContext} from "../../../assistant/domain/entities/assistant-execution-context.js";
-import {type AssistantMessage} from "../../../assistant/domain/entities/assistant-message.js";
-import {type AssistantRequest} from "../../../assistant/domain/entities/assistant-request.js";
 import {type AssistantResponder} from "../../../assistant/domain/repositories/assistant-responder.js";
+import {
+  GenkitAssistantResponder,
+} from "../../../assistant/infrastructure/genkit/genkit-assistant-responder.js";
+import {promptWithUrlContext} from "../../../assistant/infrastructure/genkit/assistant-url-context-prompt.js";
 import {type KnowledgeBaseAssistantResponse} from "../../domain/entities/knowledge-base-assistant-response.js";
 import {
   assistantOutputFromText,
@@ -11,7 +12,6 @@ import {
   defineKnowledgeBaseAssistantTools,
   type KnowledgeBaseAssistantToolDependencies,
 } from "./knowledge-base-assistant-tools.js";
-import {genkitContextFrom} from "./knowledge-base-assistant-runtime-context.js";
 
 export type KnowledgeBaseAssistantResponderDependencies = {
   ai: Genkit;
@@ -20,42 +20,22 @@ export type KnowledgeBaseAssistantResponderDependencies = {
   modelConfig: Record<string, unknown>;
 };
 
-export class KnowledgeBaseAssistantGenkitResponder
-  implements AssistantResponder<KnowledgeBaseAssistantResponse> {
-  private readonly tools;
-
-  constructor(
-    private readonly dependencies: KnowledgeBaseAssistantResponderDependencies,
-  ) {
-    this.tools = defineKnowledgeBaseAssistantTools(
-      dependencies.ai,
-      dependencies.toolDependencies,
-    );
-  }
-
-  async respond(
-    request: AssistantRequest,
-    context: AssistantExecutionContext,
-  ): Promise<KnowledgeBaseAssistantResponse> {
-    const response = await this.dependencies.ai.generate({
-      model: this.dependencies.model,
-      system: systemPrompt,
-      messages: request.history.map(messageForModel),
-      prompt: request.question,
-      tools: Object.values(this.tools),
-      context: genkitContextFrom(context),
-      maxTurns: 20,
-      config: this.dependencies.modelConfig,
-    });
-    return assistantOutputFromText(response.text);
-  }
-}
-
-function messageForModel(message: AssistantMessage) {
-  return {
-    role: message.role === "agent" ? "model" as const : "user" as const,
-    content: [{text: message.text}],
-  };
+export function createKnowledgeBaseAssistantResponder(
+  dependencies: KnowledgeBaseAssistantResponderDependencies,
+): AssistantResponder<KnowledgeBaseAssistantResponse> {
+  const tools = defineKnowledgeBaseAssistantTools(
+    dependencies.ai,
+    dependencies.toolDependencies,
+  );
+  return new GenkitAssistantResponder({
+    ai: dependencies.ai,
+    model: dependencies.model,
+    systemPrompt,
+    tools: Object.values(tools),
+    modelConfig: dependencies.modelConfig,
+    promptFromRequest: (request) => promptWithUrlContext(request.question),
+    responseFromText: assistantOutputFromText,
+  });
 }
 
 const systemPrompt = `Du bist der Wissensbasis-Agent von novooa.

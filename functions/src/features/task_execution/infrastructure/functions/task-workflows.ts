@@ -11,7 +11,7 @@ import {
   loadTaskDefinition,
 } from "../genkit/runner/task-definition-loader.js";
 import {aiProviderPlugins} from "../genkit/runner/ai-models.js";
-import {geminiApiKey} from "../genkit/runner/gemini-secret.js";
+import {geminiApiKey} from "../../../../shared/genkit/gemini-secret.js";
 import {logException, withExceptionLogging} from "../../../../shared/logging/logger.js";
 import {twilioAccountSid, twilioAuthToken} from "../../../communication/infrastructure/twilio/twilio-secrets.js";
 import {

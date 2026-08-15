@@ -1,7 +1,4 @@
-export type AssistantCommand = {
-  type: string;
-  label: string;
-};
+import {type AssistantCommand} from "../../../assistant/domain/entities/assistant-command.js";
 
 export type KnowledgeBaseAssistantCommandType =
   | "createKnowledgeNote"

@@ -1,19 +1,19 @@
 import '../../domain/entities/assistant_context.dart';
 import '../../domain/entities/assistant_message.dart';
 import '../../domain/repositories/assistant_repository.dart';
-import '../datasources/firebase_ai_assistant_datasource.dart';
 import '../datasources/firebase_functions_knowledge_base_assistant_datasource.dart';
+import '../datasources/firebase_functions_task_builder_assistant_datasource.dart';
 import '../models/assistant_action_suggestion_parser.dart';
 import '../models/assistant_generated_response.dart';
 
 class RoutedAssistantRepository implements AssistantRepository {
   const RoutedAssistantRepository(
-    this._firebaseAiDatasource,
+    this._taskBuilderDatasource,
     this._knowledgeBaseDatasource, {
     this.parser = const AssistantActionSuggestionParser(),
   });
 
-  final FirebaseAiAssistantDatasource _firebaseAiDatasource;
+  final FirebaseFunctionsTaskBuilderAssistantDatasource _taskBuilderDatasource;
   final FirebaseFunctionsKnowledgeBaseAssistantDatasource
   _knowledgeBaseDatasource;
   final AssistantActionSuggestionParser parser;
@@ -41,10 +41,6 @@ class RoutedAssistantRepository implements AssistantRepository {
     if (context.area == AssistantArea.knowledgeBase) {
       return _knowledgeBaseDatasource.ask(history: history, question: question);
     }
-    return _firebaseAiDatasource.ask(
-      context: context,
-      history: history,
-      question: question,
-    );
+    return _taskBuilderDatasource.ask(history: history, question: question);
   }
 }

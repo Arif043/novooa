@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {AssistantActor} from "../../../assistant/domain/entities/assistant-actor.js";
-import {AssistantExecutionContext} from "../../../assistant/domain/entities/assistant-execution-context.js";
+import {AssistantActor} from "../../domain/entities/assistant-actor.js";
+import {AssistantExecutionContext} from "../../domain/entities/assistant-execution-context.js";
 import {
   assistantActorIdFromContext,
   genkitContextFrom,
-} from "./knowledge-base-assistant-runtime-context.js";
+} from "./assistant-genkit-context.js";
 
 test("passes the domain actor to Genkit tools without Firebase auth", () => {
   const context = new AssistantExecutionContext(new AssistantActor("user-1"));

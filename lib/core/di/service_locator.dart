@@ -6,9 +6,8 @@ import 'package:get_it/get_it.dart';
 import 'package:syscat2/features/assistant/domain/entities/assistant_context.dart';
 import 'package:syscat2/features/assistant/domain/repositories/assistant_repository.dart';
 import 'package:syscat2/features/assistant/domain/usecases/ask_assistant.dart';
-import 'package:syscat2/features/assistant/infrastructure/datasources/firebase_ai_assistant_datasource.dart';
 import 'package:syscat2/features/assistant/infrastructure/datasources/firebase_functions_knowledge_base_assistant_datasource.dart';
-import 'package:syscat2/features/assistant/infrastructure/datasources/internal_assistant_knowledge.dart';
+import 'package:syscat2/features/assistant/infrastructure/datasources/firebase_functions_task_builder_assistant_datasource.dart';
 import 'package:syscat2/features/assistant/infrastructure/repositories/routed_assistant_repository.dart';
 import 'package:syscat2/features/assistant/presentation/cubits/assistant_cubit.dart';
 import 'package:syscat2/features/communication/domain/repositories/communication_channel_repository.dart';
@@ -162,18 +161,13 @@ void configureDependencies() {
     ..registerLazySingleton<EmployeeRepository>(
       () => FirestoreEmployeeRepository(serviceLocator<FirebaseFirestore>()),
     )
-    ..registerLazySingleton(InternalAssistantKnowledge.new)
-    ..registerLazySingleton(
-      () => FirebaseAiAssistantDatasource(
-        knowledge: serviceLocator<InternalAssistantKnowledge>(),
-      ),
-    )
+    ..registerLazySingleton(FirebaseFunctionsTaskBuilderAssistantDatasource.new)
     ..registerLazySingleton(
       FirebaseFunctionsKnowledgeBaseAssistantDatasource.new,
     )
     ..registerLazySingleton<AssistantRepository>(
       () => RoutedAssistantRepository(
-        serviceLocator<FirebaseAiAssistantDatasource>(),
+        serviceLocator<FirebaseFunctionsTaskBuilderAssistantDatasource>(),
         serviceLocator<FirebaseFunctionsKnowledgeBaseAssistantDatasource>(),
       ),
     )

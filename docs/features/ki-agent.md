@@ -2,8 +2,8 @@
 
 Der In-App KI-Agent hilft Nutzer:innen beim Erstellen von Aufgaben und beim
 Pflegen der Wissensbasis. Die gemeinsame Assistenzoberfläche läuft im Client.
-Der TaskBuilder nutzt Firebase AI Logic, der Wissensbasis-Agent eine
-authentifizierte Genkit-Callable Function.
+TaskBuilder und Wissensbasis-Agent nutzen jeweils eine authentifizierte
+Genkit-Callable Function.
 
 ## Verantwortlichkeiten
 
@@ -21,18 +21,20 @@ authentifizierte Genkit-Callable Function.
 - Backend-Domain: `AssistantActor`, `AssistantMessage`, `AssistantRequest`,
   `AssistantExecutionContext`, der Port `AssistantResponder` und der Use Case
   `AskAssistant`. Diese Typen kennen weder Firebase noch Genkit.
-- Client-Infrastructure: `RoutedAssistantRepository` nutzt Firebase AI Logic
-  für den TaskBuilder und eine callable Genkit-Function für die Wissensbasis.
-- Backend-Infrastructure: `KnowledgeBaseAssistantGenkitResponder` implementiert
-  den Backend-Port. Er enthält Modell, Prompt und Genkit-Tools; die Callable
-  Function übersetzt ausschließlich Firebase Auth, verdrahtet Adapter und
-  protokolliert Änderungsvorschläge.
-- `InternalAssistantKnowledge` liefert pro unterstütztem Bereich ein kurzes
-  internes Wissensstück, das direkt in den Systemprompt geschrieben wird.
-- `askKnowledgeBaseAssistant` ist aktuell eine authentifizierte Genkit-Callable
-  Function. Sie kombiniert URL Context mit `searchKnowledgeNotes`,
-  `readKnowledgeNote` und `extractPageLinks` in einem Genkit-Aufruf; die
-  Notiz-Tools ermitteln den Team-Scope serverseitig aus dem Laufzeitkontext.
+- Client-Infrastructure: `RoutedAssistantRepository` wählt nur noch zwischen
+  den zwei typisierten Callable-Datasources. `FirebaseFunctionsAssistantDatasource`
+  kapselt Auth, Timeout, Verlauf und die Response-Validierung einmal zentral.
+- Backend-Infrastructure: `GenkitAssistantResponder` implementiert den
+  Backend-Port einmalig. Die bereichsspezifischen Factory-Funktionen liefern
+  nur Modell, Prompt, Tools und den Response-Parser.
+- `askTaskBuilderAssistant` und `askKnowledgeBaseAssistant` sind
+  authentifizierte Genkit-Callable Functions. Beide verwenden `GEMINI_API_KEY`,
+  dieselbe Modellkonfiguration und denselben serverseitigen Laufzeitkontext.
+- Der TaskBuilder-Agent generiert nur Vorschläge für `renameTask` und
+  `addNode`; die bestehende interaktive Ausführung im Client bleibt unverändert.
+- Die Wissensbasis kombiniert URL Context mit `searchKnowledgeNotes`,
+  `readKnowledgeNote` und `extractPageLinks`; die Notiz-Tools ermitteln den
+  Team-Scope serverseitig aus dem Laufzeitkontext.
 - Die Tool-Definitionen und der öffentliche HTTP/HTML-Adapter liegen unter
   `knowledge_base/infrastructure/genkit`. Firebase verdrahtet sie mit
   Firestore und Firebase Auth; eine lokale Runtime kann dieselben Definitionen
@@ -91,8 +93,8 @@ Chattext und Notizinhalte werden nicht protokolliert.
 
 ## Interne Wissensbasis
 
-Der MVP nutzt kein separates RAG. Aktuell unterstützt der interne Agent nur
-zwei Bereiche:
+Der MVP nutzt kein separates RAG. Die bereichsspezifischen Prompts enthalten
+das relevante Produktwissen direkt und unterstützen aktuell zwei Bereiche:
 
 - Aufgaben
 - Wissensbasis

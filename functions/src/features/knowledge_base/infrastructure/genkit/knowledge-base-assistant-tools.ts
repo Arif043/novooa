@@ -8,7 +8,7 @@ import {
   defineExtractPageLinksTool,
   type ExtractPageLinksToolDependencies,
 } from "./extract-page-links-tool.js";
-import {assistantActorIdFromContext} from "./knowledge-base-assistant-runtime-context.js";
+import {assistantActorIdFromContext} from "../../../assistant/infrastructure/genkit/assistant-genkit-context.js";
 
 export type KnowledgeBaseAssistantToolDependencies =
   ExtractPageLinksToolDependencies & {

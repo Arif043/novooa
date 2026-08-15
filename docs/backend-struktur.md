@@ -16,6 +16,9 @@ functions/src/
         entities/
         repositories/
         usecases/
+      infrastructure/
+        functions/
+        genkit/
     task_execution/
       domain/
         entities/
@@ -106,7 +109,7 @@ nur öffentliche Trigger und enthält keine Logik.
 
 | Feature | Verantwortung |
 | --- | --- |
-| `assistant` | Agentenanfrage, Ausführungskontext und neutrale Responder-Ports |
+| `assistant` | Agentenanfrage, Ausführungskontext, neutrale Responder-Ports und gemeinsame Genkit-/Callable-Adapter |
 | `task_execution` | Task-Definitionen, Runs, Graph Runner, Node Executors und Cloud Tasks |
 | `teams` | Arbeitsbereich, Mitgliedschaft und Einladungen |
 | `scheduling` | Zeit- und Event-Trigger sowie Fälligkeiten |

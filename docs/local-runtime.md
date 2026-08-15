@@ -99,12 +99,12 @@ dessen Infrastructure-Bereich.
   über injizierte Ports; Function-Handler verdrahten die konkreten Adapter.
 - Lokale SQL-Adapter für Tasks, Runs, Aktivitäten, Trigger und Wissensbasis
   hängen nur an `LocalSqlDatabase`.
-- Der Wissensbasis-Agent verwendet dieselben Genkit-Tools für Cloud und lokal.
-  Ein lokaler Composition Root kann sie mit
-  `SQLiteKnowledgeBaseAssistantNoteStore`, `SQLiteTeamContextStore` und dem
-  öffentlichen HTTP/HTML-Adapter sowie dem
-  `KnowledgeBaseAssistantGenkitResponder` verdrahten; Firebase verwendet dafür
-  die Firestore- und Auth-Adapter.
+- Alle Backend-Assistenten verwenden denselben `GenkitAssistantResponder` und
+  denselben Laufzeitkontext für Cloud und lokal. Ein lokaler Composition Root
+  kann den Wissensbasis-Agenten mit `SQLiteKnowledgeBaseAssistantNoteStore`,
+  `SQLiteTeamContextStore` und dem öffentlichen HTTP/HTML-Adapter verdrahten;
+  der TaskBuilder-Agent benötigt außer Modell und Prompt keinen Fachadapter.
+  Firebase verwendet für den Wissensbasis-Adapter Firestore und Firebase Auth.
 - `LocalTeamFileStore` schreibt Dateien in ein lokales Root-Verzeichnis und
   persistiert Datei-/Versions-Metadaten über `LocalSqlDatabase`.
 - `SqlMigrationRunner` wendet Migrationen treiberneutral über

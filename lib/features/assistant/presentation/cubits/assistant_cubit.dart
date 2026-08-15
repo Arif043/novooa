@@ -44,9 +44,7 @@ class AssistantCubit extends Cubit<AssistantState> {
           clearError: true,
         ),
       );
-    } catch (error, stackTrace) {
-      debugPrint('Assistant request failed: $error');
-      debugPrintStack(stackTrace: stackTrace);
+    } catch (error) {
       emit(
         state.copyWith(
           status: AssistantStatus.failure,
@@ -59,17 +57,14 @@ class AssistantCubit extends Cubit<AssistantState> {
   String _errorMessageFor(Object error) {
     if (kReleaseMode) return 'Der KI-Agent konnte gerade nicht antworten.';
     final details = error.toString();
-    if (details.contains('firebasevertexai.googleapis.com')) {
-      return 'Firebase AI Logic ist für dieses Projekt noch nicht aktiviert.';
-    }
-    if (details.toLowerCase().contains('api key')) {
-      return 'Der Firebase Web API-Key wurde von Firebase AI Logic abgelehnt.';
-    }
     if (details.toLowerCase().contains('quota')) {
-      return 'Das Firebase-AI-Kontingent ist ausgeschöpft.';
+      return 'Das Gemini-Kontingent ist ausgeschöpft.';
     }
-    if (details.toLowerCase().contains('location')) {
-      return 'Firebase AI Logic ist an diesem Standort nicht verfügbar.';
+    if (details.toLowerCase().contains('deadline')) {
+      return 'Die Anfrage an den KI-Agenten hat zu lange gedauert.';
+    }
+    if (details.toLowerCase().contains('unauthenticated')) {
+      return 'Bitte melde dich erneut an.';
     }
     return 'Der KI-Agent konnte nicht antworten: $details';
   }

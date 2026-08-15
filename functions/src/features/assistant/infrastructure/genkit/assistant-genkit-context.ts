@@ -1,5 +1,5 @@
 import {type ActionContext} from "genkit";
-import {type AssistantExecutionContext} from "../../../assistant/domain/entities/assistant-execution-context.js";
+import {type AssistantExecutionContext} from "../../domain/entities/assistant-execution-context.js";
 
 export function genkitContextFrom(
   context: AssistantExecutionContext,
