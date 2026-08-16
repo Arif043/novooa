@@ -4,6 +4,7 @@ import {
 } from "../genkit/runner/task-definition.js";
 import {
   type TaskResumeState,
+  type NodeOutputValue,
 } from "../../domain/entities/task.js";
 
 export function runStatus(status: string) {
@@ -21,18 +22,21 @@ export function rejectedDocument() {
     resumeState: FieldValue.delete(),
     reviewInstruction: FieldValue.delete(),
     reviewOutput: FieldValue.delete(),
+    dialogInput: FieldValue.delete(),
     pausedAt: FieldValue.delete(),
   };
 }
 
-export function approvedDocument(output: string) {
+export function approvedDocument(outputs: Record<string, NodeOutputValue>) {
   return {
     status: "queued",
-    approvedOutput: output,
+    responseOutputs: serializable(outputs),
+    approvedOutput: FieldValue.delete(),
     updatedAt: FieldValue.serverTimestamp(),
     waitingNodeId: FieldValue.delete(),
     reviewInstruction: FieldValue.delete(),
     reviewOutput: FieldValue.delete(),
+    dialogInput: FieldValue.delete(),
     pausedAt: FieldValue.delete(),
   };
 }

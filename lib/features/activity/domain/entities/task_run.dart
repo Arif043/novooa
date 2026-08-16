@@ -1,5 +1,7 @@
 import '../../../../core/entities/unique_id.dart';
 
+import 'task_run_dialog_input_field.dart';
+
 enum TaskRunStatus {
   queued,
   running,
@@ -30,6 +32,7 @@ class TaskRun {
     this.finalOutput,
     this.reviewInstruction,
     this.reviewOutput,
+    this.dialogInputFields = const [],
     this.message,
   });
 
@@ -43,5 +46,8 @@ class TaskRun {
   final String? finalOutput;
   final String? reviewInstruction;
   final String? reviewOutput;
+  final List<TaskRunDialogInputField> dialogInputFields;
   final String? message;
+
+  bool get requiresDialogInput => dialogInputFields.isNotEmpty;
 }

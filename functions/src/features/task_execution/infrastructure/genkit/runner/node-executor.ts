@@ -5,6 +5,8 @@ import {
   type TaskDefinition as Task,
   type WorkflowNode,
 } from "./task-definition.js";
+import {type DialogInputDefinition} from
+  "../../../domain/entities/dialog-input.js";
 import {type NodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 import {type TeamFileStore} from "../../../../files/domain/repositories/team-file-store.js";
 import {type TaskMessageSender} from "../../../domain/repositories/task-message-sender.js";
@@ -81,6 +83,7 @@ export function waitingForApprovalNode(
   node: WorkflowNode,
   outputs: Record<string, NodeOutputValue>,
   message: string,
+  dialogInput?: DialogInputDefinition,
 ): NodeExecutionResult {
   return {
     nodeId: node.id,
@@ -88,6 +91,7 @@ export function waitingForApprovalNode(
     status: "waitingForApproval",
     outputs,
     message,
+    dialogInput,
   };
 }
 

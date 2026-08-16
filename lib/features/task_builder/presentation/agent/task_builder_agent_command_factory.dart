@@ -66,6 +66,7 @@ WorkflowPrimitive? _primitiveFrom(String? value) {
     'readChannelEvent' => WorkflowPrimitive.readChannelEvent,
     'sendChannelMessage' => WorkflowPrimitive.sendChannelMessage,
     'humanApproval' => WorkflowPrimitive.humanApproval,
+    'dialogInput' => WorkflowPrimitive.dialogInput,
     'script' => WorkflowPrimitive.script,
     _ => null,
   };

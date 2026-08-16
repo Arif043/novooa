@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../core/firebase/firebase_region.dart';
 import '../../domain/entities/app_notification.dart';
+import '../../../activity/domain/entities/task_run_dialog_input_field.dart';
 import '../../domain/repositories/app_notification_repository.dart';
 
 class FirestoreAppNotificationRepository implements AppNotificationRepository {
@@ -69,6 +70,7 @@ class FirestoreAppNotificationRepository implements AppNotificationRepository {
       finalOutput: data['finalOutput'] as String?,
       reviewInstruction: data['reviewInstruction'] as String?,
       reviewOutput: data['reviewOutput'] as String?,
+      dialogInputFields: _dialogInputFieldsFrom(data['dialogInput']),
       createdAt: _dateFrom(data['createdAt']),
     );
   }
@@ -79,6 +81,24 @@ class FirestoreAppNotificationRepository implements AppNotificationRepository {
       'taskRunApproval' => AppNotificationType.taskRunApproval,
       _ => AppNotificationType.unknown,
     };
+  }
+
+  List<TaskRunDialogInputField> _dialogInputFieldsFrom(Object? value) {
+    if (value is! Map || value['fields'] is! List) return const [];
+    return (value['fields'] as List)
+        .whereType<Map>()
+        .map(_dialogInputFieldFrom)
+        .toList(growable: false);
+  }
+
+  TaskRunDialogInputField _dialogInputFieldFrom(Map<Object?, Object?> data) {
+    return TaskRunDialogInputField(
+      name: data['name'] as String? ?? '',
+      type: TaskRunDialogInputFieldType.fromName(data['type'] as String? ?? ''),
+      options: (data['options'] as List? ?? const [])
+          .whereType<String>()
+          .toList(growable: false),
+    );
   }
 
   AppNotificationStatus _statusFrom(Object? value) {

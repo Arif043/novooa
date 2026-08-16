@@ -13,6 +13,7 @@ export const workflowPrimitiveSchema = z.enum([
   "sendChannelMessage",
   "toolCall",
   "humanApproval",
+  "dialogInput",
   "validation",
 ]);
 
@@ -130,6 +131,31 @@ export const humanApprovalNodeConfigSchema = z.object({
   instruction: z.string().default("Prüfe das Ergebnis und gib es frei."),
 });
 
+export const dialogInputFieldTypeSchema = z.enum([
+  "string",
+  "number",
+  "integer",
+  "decimal",
+  "selection",
+  "boolean",
+  "radio",
+]);
+
+export const dialogInputFieldSchema = z.object({
+  name: z.string().default(""),
+  type: dialogInputFieldTypeSchema.default("string"),
+  options: z.array(z.string()).default([]),
+});
+
+export const dialogInputDefinitionSchema = z.object({
+  instruction: z.string().default("Bitte fülle das Formular aus."),
+  fields: z.array(dialogInputFieldSchema).default([]),
+});
+
+export const dialogInputNodeConfigSchema = dialogInputDefinitionSchema.extend({
+  primitive: z.literal("dialogInput").default("dialogInput"),
+});
+
 export const writeFileNodeConfigSchema = z.object({
   primitive: z.literal("writeFile").default("writeFile"),
   fileName: z.string().max(240).default(""),
@@ -167,6 +193,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   conditionalNodeConfigSchema,
   iterativeRefinementNodeConfigSchema,
   humanApprovalNodeConfigSchema,
+  dialogInputNodeConfigSchema,
   writeFileNodeConfigSchema,
   readFileNodeConfigSchema,
   readEmailNodeConfigSchema,
@@ -211,6 +238,7 @@ export const nodeExecutionResultSchema = z.object({
   selectedBranchId: z.string().nullable().optional(),
   selectedBranchLabel: z.string().nullable().optional(),
   message: z.string().optional(),
+  dialogInput: dialogInputDefinitionSchema.optional(),
 });
 
 export const taskResumeStateSchema = z.object({
@@ -251,6 +279,7 @@ export const reviewTaskRunInputSchema = z.object({
   runId: z.string().min(1),
   decision: z.enum(["approve", "reject"]),
   output: z.string().default(""),
+  formValues: z.record(z.string(), z.unknown()).default({}),
 });
 
 export const reviewTaskRunOutputSchema = z.object({

@@ -20,6 +20,7 @@ enum WorkflowPrimitive {
   sendChannelMessage,
   toolCall,
   humanApproval,
+  dialogInput,
   validation,
 }
 

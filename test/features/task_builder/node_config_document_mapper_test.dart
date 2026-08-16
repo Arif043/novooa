@@ -93,6 +93,26 @@ void main() {
     expect(sendConfig.message, 'Hallo {{name}}');
   });
 
+  test('serialisiert und deserialisiert DialogInputNodeConfig', () {
+    const config = DialogInputNodeConfig(
+      instruction: 'Bitte ergänze die Daten.',
+      fields: [
+        DialogInputField(name: 'alter', type: DialogInputFieldType.integer),
+        DialogInputField(
+          name: 'kanal',
+          type: DialogInputFieldType.selection,
+          options: ['E-Mail', 'SMS'],
+        ),
+      ],
+    );
+
+    final document = _mapper().toDocument(config);
+    final restored = _mapper().fromDocument(document) as DialogInputNodeConfig;
+
+    expect(document['primitive'], 'dialogInput');
+    expect(restored, config);
+  });
+
   test('serialisiert PromptNodeConfig mit Wissensanhang', () {
     final document = _mapper().toDocument(
       const PromptNodeConfig(

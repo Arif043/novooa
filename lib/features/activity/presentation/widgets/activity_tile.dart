@@ -101,6 +101,7 @@ class _ActivityText extends StatelessWidget {
       'iterativeRefinement' => 'Iterative Verfeinerung',
       'toolCall' => 'Werkzeug-Aufruf',
       'humanApproval' => 'Freigabe',
+      'dialogInput' => 'Formulareingabe',
       'validation' => 'Validierung',
       _ => 'Baustein',
     };

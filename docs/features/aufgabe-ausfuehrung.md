@@ -55,9 +55,17 @@ den Graphen fort; eine Ablehnung markiert den Run als `rejected`.
 
 ```ts
 reviewTaskRunFlow:
-input:  { runId: string; decision: "approve" | "reject"; output?: string }
+input:  { runId: string; decision: "approve" | "reject"; output?: string; formValues?: Record<string, unknown> }
 output: { runId: string; status: "queued" | "rejected" }
 ```
+
+`dialogInput` nutzt dieselbe Pause- und Wiederaufnahme-Logik. Der Executor
+speichert Feldname, Datentyp und Optionen in `resumeState`, sendet eine
+Benachrichtigung und erwartet beim Bestätigen `formValues`. Das Backend prüft
+alle Werte gegen die gespeicherte Definition. Danach erhält der wartende Knoten
+einen JSON-`text`-Output sowie einen typisierten Output pro Feld. Feldnamen
+müssen eindeutige Template-Identifier sein, zum Beispiel `kundennummer`; der
+Wert ist dann über `{{formular1.kundennummer}}` verfügbar.
 
 ## Aktivitaeten
 

@@ -16,6 +16,7 @@ part 'script_node_config.dart';
 part 'conditional_node_config.dart';
 part 'iterative_refinement_node_config.dart';
 part 'human_approval_node_config.dart';
+part 'dialog_input_node_config.dart';
 part 'write_file_node_config.dart';
 part 'read_file_node_config.dart';
 part 'read_email_node_config.dart';
@@ -34,6 +35,7 @@ sealed class NodeConfig extends Equatable {
       .conditional => ConditionalNodeConfig.initial(null),
       .iterativeRefinement => IterativeRefinementNodeConfig.initial(),
       .humanApproval => HumanApprovalNodeConfig.initial(),
+      .dialogInput => DialogInputNodeConfig.initial(),
       .writeFile => WriteFileNodeConfig.initial(),
       .readFile => ReadFileNodeConfig.initial(),
       .readEmail => ReadEmailNodeConfig.initial(),

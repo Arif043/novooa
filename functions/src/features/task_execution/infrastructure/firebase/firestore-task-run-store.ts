@@ -22,6 +22,7 @@ import {
   runStatus,
   serializable,
 } from "./firestore-task-run-documents.js";
+import {type NodeOutputValue} from "../../domain/entities/task.js";
 import {
   type EnqueueTaskRunInput,
   newTaskRunDocument,
@@ -76,7 +77,7 @@ export class FirestoreTaskRunStore implements TaskRunStore {
     return {
       run: runFromDocument(data),
       resumeState: resumeStateFromDocument(data),
-      approvedOutput: String(data.approvedOutput ?? ""),
+      responseOutputs: responseOutputsFromDocument(data),
     };
   }
 
@@ -107,6 +108,7 @@ export class FirestoreTaskRunStore implements TaskRunStore {
       finalOutput: output.finalOutput,
       reviewInstruction: review.instruction,
       reviewOutput: review.output,
+      dialogInput: review.dialogInput,
       resumeState: serializable(output.resumeState),
       pausedAt: FieldValue.serverTimestamp(),
     }, {merge: true});
@@ -154,8 +156,12 @@ export class FirestoreTaskRunStore implements TaskRunStore {
     });
   }
 
-  async approveTaskRun(teamId: string, runId: string, output: string) {
-    await runReference(teamId, runId).set(approvedDocument(output), {merge: true});
+  async approveTaskRun(
+    teamId: string,
+    runId: string,
+    outputs: Record<string, NodeOutputValue>,
+  ) {
+    await runReference(teamId, runId).set(approvedDocument(outputs), {merge: true});
     await this.approvalNotifications.markApprovalNotifications({
       teamId,
       runId,
@@ -188,4 +194,13 @@ function runReference(teamId: string, runId: string) {
 
 function isObject(value: unknown): value is {message?: unknown} {
   return typeof value === "object" && value !== null;
+}
+
+function responseOutputsFromDocument(
+  data: Record<string, unknown>,
+): Record<string, NodeOutputValue> {
+  if (isObject(data.responseOutputs)) {
+    return data.responseOutputs as Record<string, NodeOutputValue>;
+  }
+  return {text: {type: "string", value: String(data.approvedOutput ?? "")}};
 }

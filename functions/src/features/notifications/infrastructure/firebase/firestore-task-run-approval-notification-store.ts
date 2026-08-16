@@ -51,8 +51,8 @@ function approvalPushNotification(
   input: ApprovalNotificationInput,
 ): PushNotification {
   return {
-    title: "Freigabe erforderlich",
-    body: `"${input.run.taskTitle}" wartet auf deine Prüfung.`,
+    title: notificationTitle(input),
+    body: notificationMessage(input),
     data: {
       type: "taskRunApproval",
       teamId: input.teamId,
@@ -66,8 +66,8 @@ function approvalNotificationDocument(input: ApprovalNotificationInput) {
   return {
     type: "taskRunApproval",
     status: "pending",
-    title: "Freigabe erforderlich",
-    message: `"${input.run.taskTitle}" wartet auf deine Prüfung.`,
+    title: notificationTitle(input),
+    message: notificationMessage(input),
     teamId: input.teamId,
     runId: input.run.runId,
     taskId: input.run.taskId,
@@ -76,9 +76,21 @@ function approvalNotificationDocument(input: ApprovalNotificationInput) {
     finalOutput: input.output.finalOutput,
     reviewInstruction: input.review.instruction,
     reviewOutput: input.review.output,
+    dialogInput: input.review.dialogInput,
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
   };
+}
+
+function notificationTitle(input: ApprovalNotificationInput): string {
+  return input.review.dialogInput === undefined
+    ? "Freigabe erforderlich"
+    : "Eingabe erforderlich";
+}
+
+function notificationMessage(input: ApprovalNotificationInput): string {
+  const action = input.review.dialogInput === undefined ? "Prüfung" : "Eingabe";
+  return `"${input.run.taskTitle}" wartet auf deine ${action}.`;
 }
 
 function actionedDocument(status: ApprovalNotificationStatus) {

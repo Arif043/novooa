@@ -8,5 +8,6 @@ export function reviewFieldsFrom(output: WaitingTaskGraphOutput) {
   return {
     instruction: result?.message ?? "Prüfe das Ergebnis und gib es frei.",
     output: result === undefined ? output.finalOutput : textOutputFromResult(result),
+    dialogInput: result?.dialogInput,
   };
 }

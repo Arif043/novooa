@@ -52,6 +52,7 @@ referenzieren.
 | `readChannelEvent` | Nachricht lesen | Liest E-Mail-, WhatsApp- oder SMS-Events | Implementiert |
 | `sendChannelMessage` | Nachricht senden | Sendet E-Mail, WhatsApp oder SMS | Microsoft-Graph-Antworten implementiert |
 | `humanApproval` | Freigabe | Haltet den Run bis zur menschlichen Entscheidung an | Implementiert |
+| `dialogInput` | Formulareingabe | Pausiert den Run und fragt typisierte Eingaben per Formular ab | Implementiert |
 | `toolCall` | Werkzeug-Aufruf | Strukturierter Aufruf eines Werkzeugs | Geplant |
 | `validation` | Validierung | Prueft Output gegen Schema oder Regeln | Geplant |
 

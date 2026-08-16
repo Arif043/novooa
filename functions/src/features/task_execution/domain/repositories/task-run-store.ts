@@ -1,6 +1,7 @@
 import {randomUUID} from "crypto";
 import {
   type CompletedTaskGraphOutput,
+  type NodeOutputValue,
   type TaskDefinition,
   type TaskResumeState,
   type WaitingTaskGraphOutput,
@@ -23,7 +24,7 @@ export type ReviewableTaskRun = {
 };
 
 export type ResumableTaskRun = ReviewableTaskRun & {
-  approvedOutput: string;
+  responseOutputs: Record<string, NodeOutputValue>;
 };
 
 export type EnqueueTaskRunInput = {
@@ -59,7 +60,11 @@ export interface TaskRunStore {
   ): Promise<void>;
   loadReviewableRun(teamId: string, runId: string): Promise<ReviewableTaskRun>;
   rejectTaskRun(teamId: string, runId: string): Promise<void>;
-  approveTaskRun(teamId: string, runId: string, output: string): Promise<void>;
+  approveTaskRun(
+    teamId: string,
+    runId: string,
+    outputs: Record<string, NodeOutputValue>,
+  ): Promise<void>;
 }
 
 export function newTaskRunDocument(

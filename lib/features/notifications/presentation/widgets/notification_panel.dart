@@ -6,7 +6,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/ios_overlays.dart';
 import '../../../activity/domain/entities/task_run.dart';
 import '../../../activity/presentation/cubits/activity_cubit.dart';
-import '../../../activity/presentation/widgets/approval_review_dialog.dart';
+import '../../../activity/presentation/widgets/task_run_interaction_dialog.dart';
 import '../../infrastructure/services/fcm_bootstrapper.dart';
 import '../../domain/entities/app_notification.dart';
 import '../cubits/app_notifications_cubit.dart';
@@ -45,7 +45,7 @@ class NotificationPanel extends StatelessWidget {
       context: context,
       builder: (_) => BlocProvider(
         create: (_) => serviceLocator<ActivityCubit>(),
-        child: ApprovalReviewDialog(run: run),
+        child: TaskRunInteractionDialog(run: run),
       ),
     );
   }

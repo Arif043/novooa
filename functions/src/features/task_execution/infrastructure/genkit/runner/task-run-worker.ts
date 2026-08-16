@@ -7,6 +7,7 @@ import {
 } from "./task-graph-runner.js";
 import {
   type TaskResumeState,
+  type NodeOutputValue,
 } from "./task-definition.js";
 import {type TaskStore} from "../../../domain/repositories/task-store.js";
 import {type ObjectStore} from "../../../../files/domain/repositories/object-store.js";
@@ -61,7 +62,7 @@ export async function continueApprovedTaskRun(
     teamId: string;
     run: TaskRunDocument;
     resumeState: TaskResumeState;
-    approvedOutput: string;
+    responseOutputs: Record<string, NodeOutputValue>;
     stores: TaskRunWorkerStores;
   },
 ) {
@@ -72,7 +73,7 @@ export async function continueApprovedTaskRun(
     ai,
     {taskDefinition, context: run.context, teamId, input: run.input},
     input.resumeState,
-    input.approvedOutput,
+    input.responseOutputs,
     {
       objectStore: stores.objectStore,
       knowledgeBaseStore: stores.knowledgeBaseStore,

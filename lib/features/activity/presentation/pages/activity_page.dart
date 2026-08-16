@@ -9,7 +9,7 @@ import '../../domain/entities/task_run.dart';
 import '../cubits/activity_cubit.dart';
 import '../cubits/activity_state.dart';
 import '../widgets/approval_run_grid.dart';
-import '../widgets/approval_review_dialog.dart';
+import '../widgets/task_run_interaction_dialog.dart';
 import '../widgets/activity_tab_content.dart';
 import '../widgets/task_activity_history.dart';
 
@@ -93,7 +93,7 @@ class _ActivityViewState extends State<_ActivityView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _openedInitialRun) return;
       _openedInitialRun = true;
-      unawaited(ApprovalReviewDialog.show(context, run));
+      unawaited(TaskRunInteractionDialog.show(context, run));
     });
   }
 
@@ -126,7 +126,7 @@ class _FilterTabs extends StatelessWidget {
           if (value != null) onChanged(value);
         },
         children: const {
-          TaskActivityFilter.approvalRequired: Text('Freigabe'),
+          TaskActivityFilter.approvalRequired: Text('Interaktionen'),
           TaskActivityFilter.denied: Text('Abgelehnt'),
           TaskActivityFilter.running: Text('Laufend'),
           TaskActivityFilter.history: Text('Verlauf'),
@@ -147,7 +147,7 @@ class _TabBody extends StatelessWidget {
     return switch (filter) {
       TaskActivityFilter.approvalRequired => ApprovalRunGrid(
         runs: _approvalRequiredRuns,
-        emptyText: 'Keine Aufgaben warten auf Freigabe.',
+        emptyText: 'Keine Aufgaben warten auf eine Eingabe oder Freigabe.',
       ),
       TaskActivityFilter.denied => TaskRunList(
         runs: _deniedRuns,

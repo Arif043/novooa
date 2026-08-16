@@ -1,5 +1,6 @@
 import {
   type CompletedTaskGraphOutput,
+  type NodeOutputValue,
   type WaitingTaskGraphOutput,
 } from "../../domain/entities/task.js";
 import {
@@ -41,6 +42,7 @@ type TaskRunRow = SqlRow & {
   input_json: string;
   resume_state_json: string | null;
   approved_output: string | null;
+  response_outputs_json: string | null;
   status: string;
 };
 
@@ -78,7 +80,7 @@ export class SQLiteTaskRunStore implements TaskRunStore {
     return {
       run: runFromRow(row),
       resumeState: resumeStateFromRow(row),
-      approvedOutput: row.approved_output ?? "",
+      responseOutputs: responseOutputsFromRow(row),
     };
   }
 
@@ -132,8 +134,12 @@ export class SQLiteTaskRunStore implements TaskRunStore {
     await this.database.run(rejectSql(), [teamId, runId]);
   }
 
-  async approveTaskRun(teamId: string, runId: string, output: string) {
-    await this.database.run(approveSql(), [output, teamId, runId]);
+  async approveTaskRun(
+    teamId: string,
+    runId: string,
+    outputs: Record<string, NodeOutputValue>,
+  ) {
+    await this.database.run(approveSql(), [json(outputs), teamId, runId]);
   }
 
   private async insertRun(teamId: string, run: TaskRunDocument) {
@@ -193,4 +199,13 @@ function jsonRecord(value: string): Record<string, unknown> {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function responseOutputsFromRow(
+  row: TaskRunRow,
+): Record<string, NodeOutputValue> {
+  if (row.response_outputs_json !== null) {
+    return jsonRecord(row.response_outputs_json) as Record<string, NodeOutputValue>;
+  }
+  return {text: {type: "string", value: row.approved_output ?? ""}};
 }

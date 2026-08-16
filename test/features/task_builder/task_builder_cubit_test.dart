@@ -384,6 +384,31 @@ void main() {
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
+  test('updateDialogInput speichert Formularfelder', () async {
+    final repository = _InMemoryTaskRepository(_taskWithDialogInputNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.updateDialogInput(
+      const NodeId('node.dialog'),
+      (config) => config.updateField(
+        0,
+        const DialogInputField(
+          name: 'alter',
+          type: DialogInputFieldType.integer,
+        ),
+      ),
+    );
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final config =
+        state.editingTask.nodes.first.config as DialogInputNodeConfig;
+
+    expect(config.fields.single.name, 'alter');
+    expect(config.fields.single.type, DialogInputFieldType.integer);
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
+  });
+
   test('updateWriteFile speichert Dateiname und Inhaltstyp', () async {
     final repository = _InMemoryTaskRepository(_taskWithWriteFileNode());
     final cubit = TaskBuilderCubit(repository: repository);
@@ -668,6 +693,34 @@ Task _taskWithApprovalNode() {
           title: 'Freigabe',
           description: 'Beschreibung',
           config: HumanApprovalNodeConfig(instruction: 'Prüfe das Ergebnis.'),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+Task _taskWithDialogInputNode() {
+  return const Task(
+    id: 'task.dialog',
+    title: 'Aufgabe',
+    objective: 'Ziel',
+    selectedNodeId: NodeId('node.dialog'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.dialog'),
+          title: 'Formulareingabe',
+          description: 'Beschreibung',
+          config: DialogInputNodeConfig(
+            instruction: 'Bitte fülle das Formular aus.',
+            fields: [
+              DialogInputField(
+                name: 'antwort',
+                type: DialogInputFieldType.string,
+              ),
+            ],
+          ),
         ),
       ],
       edges: [],

@@ -11,13 +11,14 @@ Verwandt: [`../architecture.md`](../architecture.md) ·
 
 Beobachtbarkeit und Freigaben. Nutzer:innen sehen hier, was passiert ist,
 warum, und können an den Stellen eingreifen, an denen das Workflow pausiert
-(`humanApproval`).
+(`humanApproval`, `dialogInput`).
 
 ## Verantwortlichkeiten
 
 - Run-Liste pro Aufgabe: Status, Start, Ende, Dauer, Tokens, Kosten.
 - Trace-Detailansicht: pro Knoten Input, Output, Modell-Aufruf.
-- Freigabe-Warteschlange: alle Aufgaben, die auf `humanApproval` warten.
+- Interaktions-Warteschlange: alle Aufgaben, die auf menschliche Freigabe oder
+  Formulareingabe warten.
 - Filter: nach Aufgabe, Status, Zeitraum, Trigger.
 - Re-Run eines Runs mit gleichem Input.
 
@@ -51,6 +52,7 @@ Runs mit Status `waitingForApproval` enthalten für die Freigabe-UI:
 ```text
 reviewInstruction  # Anweisung des Freigabe-Bausteins
 reviewOutput       # editierbarer Output des vorherigen Bausteins
+dialogInput        # optionale Felddefinition des Formular-Bausteins
 resumeState        # serialisierter Zwischenzustand für die Fortsetzung
 ```
 
@@ -61,11 +63,11 @@ Historie. Die Historie listet nur Task-Aktivitäten. Ein Klick öffnet den
 jeweiligen Durchlauf und zeigt dessen Node-Aktivitäten chronologisch mitsamt
 den benannten Ausgabewerten. Werte werden entsprechend ihres Output-Typs
 lesbar formatiert.
-Freigaben werden als Kacheln dargestellt. Ein Klick öffnet einen Dialog mit
-Instruction, editierbarem Output und Aktionen zum Ablehnen oder Bestätigen.
-Bestätigung ruft `reviewTaskRunFlow` mit `decision: "approve"` auf, setzt den
-Run auf `queued` und startet die Fortsetzung per Cloud Task. Ablehnung ruft
-denselben Flow mit `decision: "reject"` auf und verwirft den Zwischenzustand.
+Interaktionen werden als Kacheln dargestellt. Ein Klick öffnet einen iOS-Dialog:
+bei Freigaben mit editierbarem Output, bei `dialogInput` mit den definierten
+Feldtypen. Bestätigung ruft `reviewTaskRunFlow` mit `decision: "approve"` auf,
+setzt den Run auf `queued` und startet die Fortsetzung per Cloud Task. Ablehnung
+ruft denselben Flow mit `decision: "reject"` auf und verwirft den Zwischenzustand.
 
 ## Offene Fragen
 

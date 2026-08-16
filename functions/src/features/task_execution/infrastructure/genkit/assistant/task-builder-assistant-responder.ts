@@ -39,7 +39,7 @@ Wenn der Nutzer einen Geschäftsprozess automatisieren oder eine Aufgabe bauen
 will, fülle commands mit einem konkreten Plan. Erlaubte command types sind
 renameTask und addNode. renameTask benötigt title. addNode benötigt primitive.
 Erlaubte primitives: stringInput, prompt, readChannelEvent,
-sendChannelMessage, humanApproval und script. Erlaubte kind-Werte: email,
+sendChannelMessage, humanApproval, dialogInput und script. Erlaubte kind-Werte: email,
 whatsapp und sms. Setze knowledgeCommands auf eine leere Liste. Die Änderung
 wird erst nach Bestätigung in der Oberfläche ausgeführt.
 

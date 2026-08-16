@@ -1,5 +1,6 @@
 import {
   type NodeExecutionResult,
+  type NodeOutputValue,
   type TaskDefinition as Task,
   type TaskGraphInput,
   type TaskGraphOutput,
@@ -59,7 +60,7 @@ export function completedOutput(
 
 export function resumedState(
   state: TaskResumeState,
-  approvedOutput: string,
+  responseOutputs: Record<string, NodeOutputValue>,
 ): InitialNodeRunState {
   return {
     nodeResults: state.nodeResults.map((result) =>
@@ -67,7 +68,8 @@ export function resumedState(
         ? {
           ...result,
           status: "executed",
-          outputs: {text: {type: "string", value: approvedOutput}},
+          outputs: responseOutputs,
+          dialogInput: undefined,
         }
         : result,
     ),

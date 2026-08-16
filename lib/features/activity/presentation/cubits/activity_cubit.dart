@@ -60,6 +60,15 @@ class ActivityCubit extends Cubit<ActivityState> {
     );
   }
 
+  Future<void> submitDialogInput(TaskRun run, Map<String, Object?> values) {
+    return _reviewTaskRun(
+      run: run,
+      decision: TaskRunReviewDecision.approve,
+      output: '',
+      formValues: values,
+    );
+  }
+
   void _onActivities(List<TaskActivity> activities) {
     _activities = activities;
     _emitReady();

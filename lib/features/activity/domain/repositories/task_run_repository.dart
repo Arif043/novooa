@@ -7,5 +7,6 @@ abstract interface class TaskRunRepository {
     required TaskRun run,
     required TaskRunReviewDecision decision,
     required String output,
+    Map<String, Object?> formValues = const {},
   });
 }

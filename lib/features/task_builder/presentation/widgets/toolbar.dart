@@ -138,6 +138,14 @@ class Toolbar extends StatelessWidget {
               icon: const Icon(Icons.face),
               tooltip: "Freigabe hinzufügen",
             ),
+            const SizedBox(width: AppSpacing.xs),
+            IconButton(
+              onPressed: () => context
+                  .read<TaskBuilderCubit>()
+                  .addNodeToMainGraph(.dialogInput),
+              icon: const Icon(Icons.dynamic_form_outlined),
+              tooltip: 'Formulareingabe hinzufügen',
+            ),
           ],
         ),
       ),

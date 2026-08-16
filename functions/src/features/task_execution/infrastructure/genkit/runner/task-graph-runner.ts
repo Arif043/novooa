@@ -6,6 +6,7 @@ import {
 } from "./node-executor.js";
 import {
   type NodeExecutionResult,
+  type NodeOutputValue,
   type TaskGraphInput,
   type TaskGraphOutput,
   type TaskDefinition as Task,
@@ -70,7 +71,7 @@ export async function resumeTaskGraph(
   ai: GenkitBeta,
   input: TaskGraphInput,
   resumeState: TaskResumeState,
-  approvedOutput: string,
+  responseOutputs: Record<string, NodeOutputValue>,
   runtime: TaskGraphRuntime,
 ): Promise<TaskGraphOutput> {
   logReadableInfo(formatTaskStarted(input.taskDefinition, input.context));
@@ -79,7 +80,7 @@ export async function resumeTaskGraph(
     ai,
     input,
     runtime,
-    resumedState(resumeState, approvedOutput),
+    resumedState(resumeState, responseOutputs),
   );
   if (runState.status === "waitingForApproval") {
     return pausedOutput(input, runState);

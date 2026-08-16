@@ -5,7 +5,7 @@ export function insertRunSql() {
 
 export function loadRunSql() {
   return `SELECT id, task_id, task_title, context, input_json, resume_state_json,
-    approved_output, status FROM task_runs WHERE team_id = ? AND id = ?`;
+    approved_output, response_outputs_json, status FROM task_runs WHERE team_id = ? AND id = ?`;
 }
 
 export function statusSql(field: string) {
@@ -39,7 +39,8 @@ export function rejectSql() {
 }
 
 export function approveSql() {
-  return `UPDATE task_runs SET status = 'queued', approved_output = ?,
+  return `UPDATE task_runs SET status = 'queued', response_outputs_json = ?,
+    approved_output = NULL,
     reviewed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
     WHERE team_id = ? AND id = ?`;
 }

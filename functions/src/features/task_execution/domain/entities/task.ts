@@ -4,6 +4,15 @@ import {
   type NodeAttachment,
   type SkillAttachment,
 } from "./attachments.js";
+import {
+  type DialogInputDefinition,
+} from "./dialog-input.js";
+export type {
+  DialogInputDefinition,
+  DialogInputField,
+  DialogInputFieldType,
+  DialogInputValue,
+} from "./dialog-input.js";
 export type {
   EmployeeAttachment,
   KnowledgeAttachment,
@@ -23,6 +32,7 @@ export type WorkflowPrimitive =
   | "sendChannelMessage"
   | "toolCall"
   | "humanApproval"
+  | "dialogInput"
   | "validation";
 export type PromptOutputType = "text" | "decision" | "structured" | "image";
 export type ChannelMessageKind = "email" | "whatsapp" | "sms";
@@ -92,6 +102,9 @@ export type HumanApprovalNodeConfig = {
   primitive: "humanApproval";
   instruction: string;
 };
+export type DialogInputNodeConfig = DialogInputDefinition & {
+  primitive: "dialogInput";
+};
 export type WriteFileNodeConfig = {
   primitive: "writeFile";
   fileName: string;
@@ -124,6 +137,7 @@ export type NodeConfig =
   | ConditionalNodeConfig
   | IterativeRefinementNodeConfig
   | HumanApprovalNodeConfig
+  | DialogInputNodeConfig
   | WriteFileNodeConfig
   | ReadFileNodeConfig
   | ReadEmailNodeConfig
@@ -158,6 +172,7 @@ export type NodeExecutionResult = {
   selectedBranchId?: string | null;
   selectedBranchLabel?: string | null;
   message?: string;
+  dialogInput?: DialogInputDefinition;
 };
 export type TaskResumeState = {
   nodeResults: NodeExecutionResult[];

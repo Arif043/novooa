@@ -26,6 +26,7 @@ class NodeConfigDocumentMapper {
       ConditionalNodeConfig() => _conditionalToDocument(config),
       IterativeRefinementNodeConfig() => _refinementToDocument(config),
       HumanApprovalNodeConfig() => _approvalToDocument(config),
+      DialogInputNodeConfig() => _dialogInputToDocument(config),
       WriteFileNodeConfig() => _writeFileToDocument(config),
       ReadFileNodeConfig() => _readFileToDocument(config),
       ReadEmailNodeConfig() => {'primitive': config.primitive.name},
@@ -47,6 +48,7 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.conditional => _conditionalFrom(data),
       WorkflowPrimitive.iterativeRefinement => _refinementFrom(data),
       WorkflowPrimitive.humanApproval => _approvalFrom(data),
+      WorkflowPrimitive.dialogInput => _dialogInputFrom(data),
       WorkflowPrimitive.writeFile => _writeFileFrom(data),
       WorkflowPrimitive.readFile => _readFileFrom(data),
       WorkflowPrimitive.readEmail => const ReadEmailNodeConfig(),
@@ -118,6 +120,22 @@ class NodeConfigDocumentMapper {
     return {
       'primitive': config.primitive.name,
       'instruction': config.instruction,
+    };
+  }
+
+  Map<String, Object?> _dialogInputToDocument(DialogInputNodeConfig config) {
+    return {
+      'primitive': config.primitive.name,
+      'instruction': config.instruction,
+      'fields': config.fields.map(_dialogInputFieldToDocument).toList(),
+    };
+  }
+
+  Map<String, Object?> _dialogInputFieldToDocument(DialogInputField field) {
+    return {
+      'name': field.name,
+      'type': field.type.name,
+      'options': field.options,
     };
   }
 
@@ -193,6 +211,29 @@ class NodeConfigDocumentMapper {
   HumanApprovalNodeConfig _approvalFrom(Map<String, Object?> data) {
     return HumanApprovalNodeConfig(
       instruction: data['instruction'] as String? ?? '',
+    );
+  }
+
+  DialogInputNodeConfig _dialogInputFrom(Map<String, Object?> data) {
+    final fields = _mapListFrom(
+      data['fields'],
+    ).map(_dialogInputFieldFrom).toList(growable: false);
+    return DialogInputNodeConfig(
+      instruction: data['instruction'] as String? ?? '',
+      fields: fields.isEmpty ? DialogInputNodeConfig.initial().fields : fields,
+    );
+  }
+
+  DialogInputField _dialogInputFieldFrom(Map<String, Object?> data) {
+    final typeName = data['type'] as String? ?? '';
+    final type = DialogInputFieldType.values.firstWhere(
+      (candidate) => candidate.name == typeName,
+      orElse: () => DialogInputFieldType.string,
+    );
+    return DialogInputField(
+      name: data['name'] as String? ?? '',
+      type: type,
+      options: _stringListFrom(data['options'], fallback: const []),
     );
   }
 

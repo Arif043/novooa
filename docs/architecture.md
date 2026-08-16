@@ -83,8 +83,9 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md).
   die zugehörigen Activity-Logs erhalten. Cloud Tasks ersetzt nur den
   Ausführungsauftrag, Retry und Concurrency-Steuerung, nicht den persistierten
   Zustand eines laufenden Runs.
-- Freigaben laufen über `reviewTaskRunFlow`: Approve setzt einen pausierten Run
-  anhand von `resumeState` fort, Reject verwirft den Zwischenzustand und setzt
+- Freigaben und Formulareingaben laufen über `reviewTaskRunFlow`: Eine
+  Bestätigung oder validierte Formulardaten setzen einen pausierten Run anhand
+  von `resumeState` fort. Eine Ablehnung verwirft den Zwischenzustand und setzt
   den Run auf `rejected`.
 - Firestore-Dokumente enthalten `id`, `title`, `objective`, `selectedNodeId`,
   `teamId`, `graph`, `createdAt` und `updatedAt`.

@@ -4,6 +4,7 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_pager.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/dialog_input_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_reference_name_field.dart';
@@ -100,11 +101,11 @@ class NodeGraphItem extends StatelessWidget {
   List<Widget> _nodeActions(BuildContext context) {
     return [
       if (node.config.primitive != .conditional)
-      Positioned(
-        top: AppSpacing.sm,
-        right: AppSpacing.xxl + AppSpacing.sm,
-        child: NodeReferenceNameField(node: node),
-      ),
+        Positioned(
+          top: AppSpacing.sm,
+          right: AppSpacing.xxl + AppSpacing.sm,
+          child: NodeReferenceNameField(node: node),
+        ),
       Positioned(
         top: AppSpacing.xs,
         right: AppSpacing.xs,
@@ -184,6 +185,7 @@ class NodeGraphItem extends StatelessWidget {
       .readEmail || .readChannelEvent => ReadEventWidget(node: node),
       .sendChannelMessage => SendMessageWidget(node: node),
       .humanApproval => HumanApprovalWidget(node: node),
+      .dialogInput => DialogInputWidget(node: node),
       _ => const SizedBox.shrink(),
     };
     return FocusScope(

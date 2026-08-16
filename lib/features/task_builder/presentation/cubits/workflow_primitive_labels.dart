@@ -15,6 +15,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.sendChannelMessage => 'Nachricht senden',
       WorkflowPrimitive.toolCall => 'Werkzeug-Aufruf',
       WorkflowPrimitive.humanApproval => 'Freigabe',
+      WorkflowPrimitive.dialogInput => 'Formulareingabe',
       WorkflowPrimitive.validation => 'Validierung',
     };
   }
@@ -42,6 +43,8 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.toolCall =>
         'Bindet externe Aktionen oder Datenquellen ein.',
       WorkflowPrimitive.humanApproval => 'Wartet auf menschliche Freigabe.',
+      WorkflowPrimitive.dialogInput =>
+        'Pausiert die Aufgabe, bis ein Formular ausgefüllt wurde.',
       WorkflowPrimitive.validation =>
         'Prüft Ergebnis, Schema oder Qualitätskriterien.',
     };

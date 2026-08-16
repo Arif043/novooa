@@ -47,6 +47,7 @@ class NodeOutputChips extends StatelessWidget {
       IterativeRefinementNodeConfig() ||
       ReadFileNodeConfig() ||
       HumanApprovalNodeConfig() => const ['text'],
+      DialogInputNodeConfig() => _dialogInputOutputNames(config),
       _ => const [],
     };
   }
@@ -68,6 +69,13 @@ class NodeOutputChips extends StatelessWidget {
   List<String> _structuredNames(List<StructuredOutputField> fields) {
     return [
       for (final field in fields)
+        if (field.name.trim().isNotEmpty) field.name.trim(),
+    ];
+  }
+
+  List<String> _dialogInputOutputNames(DialogInputNodeConfig config) {
+    return [
+      for (final field in config.fields)
         if (field.name.trim().isNotEmpty) field.name.trim(),
     ];
   }

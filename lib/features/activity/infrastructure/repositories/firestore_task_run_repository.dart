@@ -6,6 +6,7 @@ import '../../../../core/entities/unique_id.dart';
 import '../../../../core/firebase/firebase_region.dart';
 import '../../../teams/domain/repositories/team_repository.dart';
 import '../../domain/entities/task_run.dart';
+import '../../domain/entities/task_run_dialog_input_field.dart';
 import '../../domain/repositories/task_run_repository.dart';
 
 class FirestoreTaskRunRepository implements TaskRunRepository {
@@ -42,6 +43,7 @@ class FirestoreTaskRunRepository implements TaskRunRepository {
     required TaskRun run,
     required TaskRunReviewDecision decision,
     required String output,
+    Map<String, Object?> formValues = const {},
   }) async {
     final callable = _functions.httpsCallable(
       'reviewTaskRun',
@@ -51,6 +53,7 @@ class FirestoreTaskRunRepository implements TaskRunRepository {
       'runId': run.id.value,
       'decision': decision.name,
       'output': output,
+      'formValues': formValues,
     });
   }
 
@@ -71,6 +74,7 @@ class FirestoreTaskRunRepository implements TaskRunRepository {
       finalOutput: data['finalOutput'] as String?,
       reviewInstruction: data['reviewInstruction'] as String?,
       reviewOutput: data['reviewOutput'] as String?,
+      dialogInputFields: _dialogInputFieldsFrom(data['dialogInput']),
       message: _messageFrom(data['error']),
     );
   }
@@ -80,6 +84,24 @@ class FirestoreTaskRunRepository implements TaskRunRepository {
       return value['message'] as String;
     }
     return null;
+  }
+
+  List<TaskRunDialogInputField> _dialogInputFieldsFrom(Object? value) {
+    if (value is! Map || value['fields'] is! List) return const [];
+    return (value['fields'] as List)
+        .whereType<Map>()
+        .map(_dialogInputFieldFrom)
+        .toList(growable: false);
+  }
+
+  TaskRunDialogInputField _dialogInputFieldFrom(Map<Object?, Object?> data) {
+    return TaskRunDialogInputField(
+      name: data['name'] as String? ?? '',
+      type: TaskRunDialogInputFieldType.fromName(data['type'] as String? ?? ''),
+      options: (data['options'] as List? ?? const [])
+          .whereType<String>()
+          .toList(growable: false),
+    );
   }
 
   DateTime? _optionalDateFrom(Object? value) {

@@ -5,7 +5,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/task_run.dart';
 import '../cubits/activity_cubit.dart';
 import 'activity_tab_content.dart';
-import 'approval_review_dialog.dart';
+import 'task_run_interaction_dialog.dart';
 
 class ApprovalRunGrid extends StatelessWidget {
   const ApprovalRunGrid({
@@ -60,7 +60,7 @@ class _ApprovalRunTile extends StatelessWidget {
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(AppSpacing.md),
-        onTap: () => ApprovalReviewDialog.show(context, run),
+        onTap: () => TaskRunInteractionDialog.show(context, run),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
@@ -85,7 +85,11 @@ class _ApprovalRunTile extends StatelessWidget {
 
   String get _subtitle {
     final nodeId = run.waitingNodeId;
-    if (nodeId == null || nodeId.trim().isEmpty) return 'Wartet auf Freigabe';
+    if (nodeId == null || nodeId.trim().isEmpty) {
+      return run.requiresDialogInput
+          ? 'Wartet auf Eingabe'
+          : 'Wartet auf Freigabe';
+    }
     return 'Baustein: $nodeId';
   }
 }

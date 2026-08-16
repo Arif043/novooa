@@ -10,7 +10,13 @@ class ReviewTaskRun {
     required TaskRun run,
     required TaskRunReviewDecision decision,
     required String output,
+    Map<String, Object?> formValues = const {},
   }) {
-    return _repository.review(run: run, decision: decision, output: output);
+    return _repository.review(
+      run: run,
+      decision: decision,
+      output: output,
+      formValues: formValues,
+    );
   }
 }

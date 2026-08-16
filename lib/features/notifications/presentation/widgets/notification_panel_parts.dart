@@ -16,7 +16,7 @@ class _ApprovalAction extends StatelessWidget {
       padding: const EdgeInsets.only(top: AppSpacing.sm),
       child: FilledButton(
         onPressed: () => _openReview(context),
-        child: const Text('Prüfen'),
+        child: Text(_label),
       ),
     );
   }
@@ -26,6 +26,9 @@ class _ApprovalAction extends StatelessWidget {
     if (run == null) return;
     onApprovalRequested(context, run);
   }
+
+  String get _label =>
+      item.taskRun?.requiresDialogInput == true ? 'Formular öffnen' : 'Prüfen';
 }
 
 class _InvitationActions extends StatelessWidget {

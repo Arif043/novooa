@@ -40,6 +40,8 @@ import {
   taskRunDispatchPayloadSchema,
   type TaskRunDispatchPayload,
 } from "../genkit/runner/task-run-task.js";
+import {responseOutputsForTaskRun} from
+  "../../domain/usecases/task-run-response-outputs.js";
 
 const workerSecrets = [
   twilioAccountSid,
@@ -137,10 +139,15 @@ export const reviewTaskRunFlow = ai.defineFlow(
       await taskRunStore.rejectTaskRun(teamId, reviewableRun.run.runId);
       return {runId: input.runId, status: "rejected" as const};
     }
+    const responseOutputs = responseOutputsForTaskRun(
+      reviewableRun.resumeState,
+      input.output,
+      input.formValues,
+    );
     await taskRunStore.approveTaskRun(
       teamId,
       reviewableRun.run.runId,
-      input.output,
+      responseOutputs,
     );
     await taskRunDispatcher.dispatchTaskRun({
       teamId,
