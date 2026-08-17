@@ -1,22 +1,7 @@
 import {z} from "genkit";
+import {workflowPrimitives} from "../../../domain/entities/task.js";
 
-export const workflowPrimitiveSchema = z.enum([
-  "stringInput",
-  "script",
-  "prompt",
-  "conditionalFlow",
-  "iterativeRefinement",
-  "writeFile",
-  "readFile",
-  "readEmail",
-  "readChannelEvent",
-  "sendChannelMessage",
-  "toolCall",
-  "humanApproval",
-  "dialogInput",
-  "mediaInput",
-  "validation",
-]);
+export const workflowPrimitiveSchema = z.enum(workflowPrimitives);
 
 export const promptOutputTypeSchema = z.enum([
   "text",

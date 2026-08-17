@@ -31,22 +31,25 @@ export type {
   NodeAttachment,
   SkillAttachment,
 } from "./attachments.js";
-export type WorkflowPrimitive =
-  | "stringInput"
-  | "script"
-  | "prompt"
-  | "conditionalFlow"
-  | "iterativeRefinement"
-  | "writeFile"
-  | "readFile"
-  | "readEmail"
-  | "readChannelEvent"
-  | "sendChannelMessage"
-  | "toolCall"
-  | "humanApproval"
-  | "dialogInput"
-  | "mediaInput"
-  | "validation";
+export const workflowPrimitives = [
+  "stringInput",
+  "script",
+  "prompt",
+  "conditionalFlow",
+  "iterativeRefinement",
+  "writeFile",
+  "readFile",
+  "readEmail",
+  "readChannelEvent",
+  "sendChannelMessage",
+  "toolCall",
+  "humanApproval",
+  "dialogInput",
+  "mediaInput",
+  "validation",
+] as const;
+
+export type WorkflowPrimitive = (typeof workflowPrimitives)[number];
 export type PromptOutputType = "text" | "decision" | "structured" | "image";
 export type ChannelMessageKind = "email" | "whatsapp" | "sms";
 export type StructuredOutputField = {
