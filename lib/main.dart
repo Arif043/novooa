@@ -19,6 +19,7 @@ import 'features/notifications/infrastructure/datasources/fcm_push_click_bridge.
 import 'features/notifications/infrastructure/datasources/push_click_navigation_policy.dart';
 import 'features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import 'features/notifications/presentation/widgets/fcm_foreground_notification_listener.dart';
+import 'features/activity/infrastructure/datasources/media_input_picker_platform_registration.dart';
 import 'firebase_options.dart';
 
 @pragma('vm:entry-point')
@@ -40,6 +41,7 @@ Future<void> main() async {
   if (FirebaseEmulatorConfig.enabled) {
     await const FirebaseEmulatorConfig().connect();
   }
+  registerMediaInputPickerPlatform();
   configureDependencies();
   if (shouldNavigateFromPushClick()) {
     const FcmPushClickBridge().start(_openNotificationData);
