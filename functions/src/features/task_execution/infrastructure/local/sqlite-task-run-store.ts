@@ -106,6 +106,7 @@ export class SQLiteTaskRunStore implements TaskRunStore {
       output.resumeState.waitingNodeId ?? "",
       review.instruction,
       review.output,
+      json(review.interaction),
       json(output.resumeState),
       teamId,
       run.runId,

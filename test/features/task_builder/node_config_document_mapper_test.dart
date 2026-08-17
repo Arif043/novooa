@@ -113,6 +113,19 @@ void main() {
     expect(restored, config);
   });
 
+  test('serialisiert und deserialisiert MediaInputNodeConfig', () {
+    const config = MediaInputNodeConfig(
+      instruction: 'Fotografiere den Beleg.',
+      source: MediaInputSource.camera,
+    );
+
+    final document = _mapper().toDocument(config);
+    final restored = _mapper().fromDocument(document) as MediaInputNodeConfig;
+
+    expect(document['primitive'], 'mediaInput');
+    expect(restored, config);
+  });
+
   test('serialisiert PromptNodeConfig mit Wissensanhang', () {
     final document = _mapper().toDocument(
       const PromptNodeConfig(

@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 
 import '../../domain/entities/task_activity.dart';
+import '../../domain/entities/media_input_submission.dart';
 import '../../domain/entities/task_run.dart';
+import '../../domain/repositories/media_input_picker.dart';
 import '../../domain/usecases/review_task_run.dart';
+import '../../domain/usecases/upload_task_run_media_input.dart';
 import '../../domain/usecases/watch_task_activities.dart';
 import '../../domain/usecases/watch_task_runs.dart';
 import 'activity_state.dart';
@@ -14,17 +17,29 @@ class ActivityCubit extends Cubit<ActivityState> {
     required WatchTaskActivities watchTaskActivities,
     required WatchTaskRuns watchTaskRuns,
     required ReviewTaskRun reviewTaskRun,
-  }) : this._(watchTaskActivities, watchTaskRuns, reviewTaskRun);
+    required MediaInputPicker mediaInputPicker,
+    required UploadTaskRunMediaInput uploadTaskRunMediaInput,
+  }) : this._(
+         watchTaskActivities,
+         watchTaskRuns,
+         reviewTaskRun,
+         mediaInputPicker,
+         uploadTaskRunMediaInput,
+       );
 
   ActivityCubit._(
     this._watchTaskActivities,
     this._watchTaskRuns,
     this._reviewTaskRun,
+    this._mediaInputPicker,
+    this._uploadTaskRunMediaInput,
   ) : super(const ActivityState());
 
   final WatchTaskActivities _watchTaskActivities;
   final WatchTaskRuns _watchTaskRuns;
   final ReviewTaskRun _reviewTaskRun;
+  final MediaInputPicker _mediaInputPicker;
+  final UploadTaskRunMediaInput _uploadTaskRunMediaInput;
   StreamSubscription<List<TaskActivity>>? _activitiesSubscription;
   StreamSubscription<List<TaskRun>>? _runsSubscription;
   List<TaskActivity> _activities = const [];
@@ -66,6 +81,25 @@ class ActivityCubit extends Cubit<ActivityState> {
       decision: TaskRunReviewDecision.approve,
       output: '',
       formValues: values,
+    );
+  }
+
+  Future<MediaInputSubmission?> pickMediaInput(TaskRun run) {
+    final mediaInput = run.mediaInput;
+    if (mediaInput == null) return Future.value(null);
+    return _mediaInputPicker.pick(mediaInput.source);
+  }
+
+  Future<void> submitMediaInput(
+    TaskRun run,
+    MediaInputSubmission submission,
+  ) async {
+    final fileId = await _uploadTaskRunMediaInput(submission);
+    return _reviewTaskRun(
+      run: run,
+      decision: TaskRunReviewDecision.approve,
+      output: '',
+      formValues: {'fileId': fileId},
     );
   }
 

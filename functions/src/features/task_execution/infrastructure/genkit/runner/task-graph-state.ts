@@ -69,6 +69,7 @@ export function resumedState(
           ...result,
           status: "executed",
           outputs: responseOutputs,
+          interaction: undefined,
           dialogInput: undefined,
         }
         : result,

@@ -3,19 +3,23 @@ import {
 } from "../../../domain/entities/dialog-input.js";
 import {
   type NodeExecutor,
-  waitingForApprovalNode,
+  waitingForInteractionNode,
 } from "../runner/node-executor.js";
+import {dialogInputInteraction} from
+  "../../../domain/entities/task-run-interaction.js";
 
 export const dialogInputNodeExecutor: NodeExecutor = {
   primitive: "dialogInput",
   async execute(input, runContext) {
     const definition = dialogInputDefinitionFor(input.node.config);
     validateDialogInputDefinition(definition);
-    return waitingForApprovalNode(
+    return waitingForInteractionNode(
       input.node,
       {},
-      runContext.resolveTemplates(definition.instruction),
-      definition,
+      dialogInputInteraction({
+        ...definition,
+        instruction: runContext.resolveTemplates(definition.instruction),
+      }),
     );
   },
 };

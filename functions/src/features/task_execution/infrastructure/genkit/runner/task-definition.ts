@@ -14,6 +14,7 @@ export const workflowPrimitiveSchema = z.enum([
   "toolCall",
   "humanApproval",
   "dialogInput",
+  "mediaInput",
   "validation",
 ]);
 
@@ -156,6 +157,15 @@ export const dialogInputNodeConfigSchema = dialogInputDefinitionSchema.extend({
   primitive: z.literal("dialogInput").default("dialogInput"),
 });
 
+export const mediaInputDefinitionSchema = z.object({
+  instruction: z.string().default("Bitte füge ein Bild hinzu."),
+  source: z.enum(["gallery", "camera"]).default("gallery"),
+});
+
+export const mediaInputNodeConfigSchema = mediaInputDefinitionSchema.extend({
+  primitive: z.literal("mediaInput").default("mediaInput"),
+});
+
 export const writeFileNodeConfigSchema = z.object({
   primitive: z.literal("writeFile").default("writeFile"),
   fileName: z.string().max(240).default(""),
@@ -194,6 +204,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   iterativeRefinementNodeConfigSchema,
   humanApprovalNodeConfigSchema,
   dialogInputNodeConfigSchema,
+  mediaInputNodeConfigSchema,
   writeFileNodeConfigSchema,
   readFileNodeConfigSchema,
   readEmailNodeConfigSchema,
@@ -238,6 +249,14 @@ export const nodeExecutionResultSchema = z.object({
   selectedBranchId: z.string().nullable().optional(),
   selectedBranchLabel: z.string().nullable().optional(),
   message: z.string().optional(),
+  interaction: z.discriminatedUnion("kind", [
+    z.object({
+      kind: z.literal("approval"),
+      instruction: z.string(),
+    }),
+    dialogInputDefinitionSchema.extend({kind: z.literal("dialogInput")}),
+    mediaInputDefinitionSchema.extend({kind: z.literal("mediaInput")}),
+  ]).optional(),
   dialogInput: dialogInputDefinitionSchema.optional(),
 });
 

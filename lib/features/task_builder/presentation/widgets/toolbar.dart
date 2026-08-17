@@ -146,6 +146,14 @@ class Toolbar extends StatelessWidget {
               icon: const Icon(Icons.dynamic_form_outlined),
               tooltip: 'Formulareingabe hinzufügen',
             ),
+            const SizedBox(width: AppSpacing.xs),
+            IconButton(
+              onPressed: () => context
+                  .read<TaskBuilderCubit>()
+                  .addNodeToMainGraph(.mediaInput),
+              icon: const Icon(Icons.add_a_photo_outlined),
+              tooltip: 'Bildaufnahme hinzufügen',
+            ),
           ],
         ),
       ),

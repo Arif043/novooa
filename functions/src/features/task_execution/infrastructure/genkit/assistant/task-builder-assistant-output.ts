@@ -7,7 +7,7 @@ import {
 const commandTypeSchema = z.enum(["renameTask", "addNode"]);
 const primitiveSchema = z.enum([
   "stringInput", "prompt", "readChannelEvent", "sendChannelMessage",
-  "humanApproval", "dialogInput", "script",
+  "humanApproval", "dialogInput", "mediaInput", "script",
 ]);
 const rawCommandSchema = z.object({
   type: commandTypeSchema,

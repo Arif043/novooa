@@ -76,20 +76,20 @@ function approvalNotificationDocument(input: ApprovalNotificationInput) {
     finalOutput: input.output.finalOutput,
     reviewInstruction: input.review.instruction,
     reviewOutput: input.review.output,
-    dialogInput: input.review.dialogInput,
+    interaction: input.review.interaction,
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
   };
 }
 
 function notificationTitle(input: ApprovalNotificationInput): string {
-  return input.review.dialogInput === undefined
+  return input.review.interaction.kind === "approval"
     ? "Freigabe erforderlich"
     : "Eingabe erforderlich";
 }
 
 function notificationMessage(input: ApprovalNotificationInput): string {
-  const action = input.review.dialogInput === undefined ? "Prüfung" : "Eingabe";
+  const action = input.review.interaction.kind === "approval" ? "Prüfung" : "Eingabe";
   return `"${input.run.taskTitle}" wartet auf deine ${action}.`;
 }
 

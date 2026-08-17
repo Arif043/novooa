@@ -6,6 +6,7 @@ import {getDefaultStorageBucket} from "./firebase-storage.js";
 import {getDatabase} from "../../../../shared/firebase/firestore-db.js";
 import {
   contentSizeBytes,
+  type StoredTeamFile,
   type TeamFileStore,
   type WriteTeamFileInput,
   type WrittenFile,
@@ -32,6 +33,15 @@ export class FirestoreTeamFileStore implements TeamFileStore {
     const storageFile = getDefaultStorageBucket().file(file.storagePath);
     const [content] = await storageFile.download();
     return content.toString("utf8");
+  }
+
+  async loadTeamFile(
+    teamId: string,
+    fileId: string,
+  ): Promise<StoredTeamFile> {
+    const snapshot = await filesReference(teamId).doc(fileId).get();
+    if (!snapshot.exists) throw new Error(`Datei nicht gefunden: ${fileId}`);
+    return storedTeamFileFrom(snapshot.id, snapshot.data() ?? {});
   }
 
   private async writtenFileFrom(
@@ -166,6 +176,20 @@ function existingFileFrom(
   };
 }
 
+function storedTeamFileFrom(
+  fileId: string,
+  data: Record<string, unknown>,
+): StoredTeamFile {
+  return {
+    fileId,
+    versionId: stringFrom(data.currentVersionId, ""),
+    storagePath: stringFrom(data.storagePath, ""),
+    displayName: stringFrom(data.displayName, "Unbenannte Datei"),
+    contentType: stringFrom(data.contentType, "application/octet-stream"),
+    sizeBytes: numberFrom(data.sizeBytes),
+  };
+}
+
 function ensureTeamFile(file: NodeAttachment, teamId: string): void {
   if (file.storagePath.startsWith(`teams/${teamId}/files/`)) return;
   throw new Error("Datei lesen: Die Datei gehört nicht zum aktuellen Team.");
@@ -181,4 +205,8 @@ function stringFrom(value: unknown, fallback: string): string {
 
 function nullableStringFrom(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function numberFrom(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }

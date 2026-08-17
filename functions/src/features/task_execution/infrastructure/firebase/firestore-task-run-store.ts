@@ -108,7 +108,8 @@ export class FirestoreTaskRunStore implements TaskRunStore {
       finalOutput: output.finalOutput,
       reviewInstruction: review.instruction,
       reviewOutput: review.output,
-      dialogInput: review.dialogInput,
+      interaction: review.interaction,
+      dialogInput: FieldValue.delete(),
       resumeState: serializable(output.resumeState),
       pausedAt: FieldValue.serverTimestamp(),
     }, {merge: true});

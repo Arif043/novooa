@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>novooa benötigt die Kamera, um Bilder für eine Aufgabe aufzunehmen.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>novooa benötigt Zugriff auf deine Fotos, um ein Bild für eine Aufgabe auszuwählen.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -139,10 +139,12 @@ export const reviewTaskRunFlow = ai.defineFlow(
       await taskRunStore.rejectTaskRun(teamId, reviewableRun.run.runId);
       return {runId: input.runId, status: "rejected" as const};
     }
-    const responseOutputs = responseOutputsForTaskRun(
+    const responseOutputs = await responseOutputsForTaskRun(
       reviewableRun.resumeState,
       input.output,
       input.formValues,
+      teamId,
+      teamFileStore,
     );
     await taskRunStore.approveTaskRun(
       teamId,

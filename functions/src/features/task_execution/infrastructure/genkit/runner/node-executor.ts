@@ -5,8 +5,8 @@ import {
   type TaskDefinition as Task,
   type WorkflowNode,
 } from "./task-definition.js";
-import {type DialogInputDefinition} from
-  "../../../domain/entities/dialog-input.js";
+import {type TaskRunInteraction} from
+  "../../../domain/entities/task-run-interaction.js";
 import {type NodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 import {type TeamFileStore} from "../../../../files/domain/repositories/team-file-store.js";
 import {type TaskMessageSender} from "../../../domain/repositories/task-message-sender.js";
@@ -79,19 +79,18 @@ export function skippedNode(node: WorkflowNode): NodeExecutionResult {
   };
 }
 
-export function waitingForApprovalNode(
+export function waitingForInteractionNode(
   node: WorkflowNode,
   outputs: Record<string, NodeOutputValue>,
-  message: string,
-  dialogInput?: DialogInputDefinition,
+  interaction: TaskRunInteraction,
 ): NodeExecutionResult {
   return {
     nodeId: node.id,
     primitive: node.primitive,
     status: "waitingForApproval",
     outputs,
-    message,
-    dialogInput,
+    message: interaction.instruction,
+    interaction,
   };
 }
 

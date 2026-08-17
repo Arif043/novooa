@@ -17,7 +17,11 @@ test("pauses a run and preserves the dialog definition", async () => {
 
   assert.equal(result.status, "waitingForApproval");
   assert.equal(result.message, "Hallo Mila");
-  assert.deepEqual(result.dialogInput?.fields, [
+  assert.deepEqual(result.interaction, {
+    kind: "dialogInput",
+    instruction: "Hallo Mila",
+    fields: [
     {name: "age", type: "integer", options: []},
-  ]);
+    ],
+  });
 });

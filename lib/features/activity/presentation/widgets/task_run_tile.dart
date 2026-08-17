@@ -49,7 +49,9 @@ class TaskRunTile extends StatelessWidget {
       TaskRunStatus.queued => 'Wartet',
       TaskRunStatus.running => 'Läuft',
       TaskRunStatus.waitingForApproval =>
-        run.requiresDialogInput ? 'Eingabe' : 'Freigabe',
+        run.requiresDialogInput || run.requiresMediaInput
+            ? 'Eingabe'
+            : 'Freigabe',
       TaskRunStatus.rejected => 'Abgelehnt',
       TaskRunStatus.succeeded => 'Fertig',
       TaskRunStatus.failed => 'Fehler',

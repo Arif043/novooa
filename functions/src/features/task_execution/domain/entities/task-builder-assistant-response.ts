@@ -7,6 +7,7 @@ export type TaskBuilderAssistantPrimitive =
   | "sendChannelMessage"
   | "humanApproval"
   | "dialogInput"
+  | "mediaInput"
   | "script";
 
 export type TaskBuilderAssistantCommand = AssistantCommand & {

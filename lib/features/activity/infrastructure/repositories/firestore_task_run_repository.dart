@@ -7,6 +7,8 @@ import '../../../../core/firebase/firebase_region.dart';
 import '../../../teams/domain/repositories/team_repository.dart';
 import '../../domain/entities/task_run.dart';
 import '../../domain/entities/task_run_dialog_input_field.dart';
+import '../../domain/entities/task_run_interaction.dart';
+import '../../domain/entities/task_run_media_input.dart';
 import '../../domain/repositories/task_run_repository.dart';
 
 class FirestoreTaskRunRepository implements TaskRunRepository {
@@ -72,9 +74,9 @@ class FirestoreTaskRunRepository implements TaskRunRepository {
       updatedAt: _dateFrom(data['updatedAt']),
       waitingNodeId: data['waitingNodeId'] as String?,
       finalOutput: data['finalOutput'] as String?,
-      reviewInstruction: data['reviewInstruction'] as String?,
       reviewOutput: data['reviewOutput'] as String?,
-      dialogInputFields: _dialogInputFieldsFrom(data['dialogInput']),
+      interaction:
+          _interactionFrom(data['interaction']) ?? _legacyInteractionFrom(data),
       message: _messageFrom(data['error']),
     );
   }
@@ -92,6 +94,50 @@ class FirestoreTaskRunRepository implements TaskRunRepository {
         .whereType<Map>()
         .map(_dialogInputFieldFrom)
         .toList(growable: false);
+  }
+
+  TaskRunInteraction? _interactionFrom(Object? value) {
+    if (value is! Map) return null;
+    final data = Map<Object?, Object?>.from(value);
+    final type = TaskRunInteractionType.fromName(data['kind'] as String? ?? '');
+    final instruction = data['instruction'] as String? ?? '';
+    return switch (type) {
+      TaskRunInteractionType.approval => TaskRunInteraction(
+        type: type,
+        instruction: instruction,
+      ),
+      TaskRunInteractionType.dialogInput => TaskRunInteraction(
+        type: type,
+        instruction: instruction,
+        dialogInputFields: _dialogInputFieldsFrom(data),
+      ),
+      TaskRunInteractionType.mediaInput => TaskRunInteraction(
+        type: type,
+        instruction: instruction,
+        mediaInput: TaskRunMediaInput(
+          source: TaskRunMediaInputSource.fromName(
+            data['source'] as String? ?? '',
+          ),
+        ),
+      ),
+    };
+  }
+
+  TaskRunInteraction? _legacyInteractionFrom(Map<String, dynamic> data) {
+    final fields = _dialogInputFieldsFrom(data['dialogInput']);
+    final instruction = data['reviewInstruction'] as String?;
+    if (fields.isNotEmpty) {
+      return TaskRunInteraction(
+        type: TaskRunInteractionType.dialogInput,
+        instruction: instruction ?? '',
+        dialogInputFields: fields,
+      );
+    }
+    if (instruction == null) return null;
+    return TaskRunInteraction(
+      type: TaskRunInteractionType.approval,
+      instruction: instruction,
+    );
   }
 
   TaskRunDialogInputField _dialogInputFieldFrom(Map<Object?, Object?> data) {

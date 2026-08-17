@@ -48,6 +48,7 @@ class NodeOutputChips extends StatelessWidget {
       ReadFileNodeConfig() ||
       HumanApprovalNodeConfig() => const ['text'],
       DialogInputNodeConfig() => _dialogInputOutputNames(config),
+      MediaInputNodeConfig() => _mediaInputOutputs,
       _ => const [],
     };
   }
@@ -98,4 +99,13 @@ const _writeFileOutputs = [
   'sizeBytes',
   'folderId',
   'isNewFile',
+];
+const _mediaInputOutputs = [
+  'text',
+  'fileId',
+  'versionId',
+  'storagePath',
+  'displayName',
+  'contentType',
+  'sizeBytes',
 ];

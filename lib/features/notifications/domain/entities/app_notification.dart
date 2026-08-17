@@ -1,6 +1,6 @@
 import '../../../../core/entities/unique_id.dart';
 import '../../../activity/domain/entities/task_run.dart';
-import '../../../activity/domain/entities/task_run_dialog_input_field.dart';
+import '../../../activity/domain/entities/task_run_interaction.dart';
 
 enum AppNotificationType { teamInvitation, taskRunApproval, unknown }
 
@@ -21,9 +21,8 @@ class AppNotification {
     this.taskTitle,
     this.waitingNodeId,
     this.finalOutput,
-    this.reviewInstruction,
     this.reviewOutput,
-    this.dialogInputFields = const [],
+    this.interaction,
   });
 
   final String id;
@@ -39,9 +38,8 @@ class AppNotification {
   final String? taskTitle;
   final String? waitingNodeId;
   final String? finalOutput;
-  final String? reviewInstruction;
   final String? reviewOutput;
-  final List<TaskRunDialogInputField> dialogInputFields;
+  final TaskRunInteraction? interaction;
 
   bool get isPendingTeamInvitation {
     return type == AppNotificationType.teamInvitation &&
@@ -63,9 +61,8 @@ class AppNotification {
       updatedAt: createdAt,
       waitingNodeId: waitingNodeId,
       finalOutput: finalOutput,
-      reviewInstruction: reviewInstruction,
       reviewOutput: reviewOutput,
-      dialogInputFields: dialogInputFields,
+      interaction: interaction,
     );
   }
 }

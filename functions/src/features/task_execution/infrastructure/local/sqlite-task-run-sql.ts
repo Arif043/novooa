@@ -22,7 +22,8 @@ export function successSql() {
 export function waitingSql() {
   return `UPDATE task_runs SET status = 'waitingForApproval', final_output = ?,
     waiting_node_id = ?, review_instruction = ?, review_output = ?,
-    resume_state_json = ?, paused_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+    interaction_json = ?, resume_state_json = ?, paused_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
     WHERE team_id = ? AND id = ?`;
 }
 

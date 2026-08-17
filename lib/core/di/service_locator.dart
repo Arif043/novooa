@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:syscat2/features/assistant/domain/entities/assistant_context.dart';
 import 'package:syscat2/features/assistant/domain/repositories/assistant_repository.dart';
 import 'package:syscat2/features/assistant/domain/usecases/ask_assistant.dart';
@@ -88,11 +89,16 @@ import '../../features/settings/infrastructure/repositories/firestore_settings_r
 import '../../features/settings/presentation/cubits/settings_cubit.dart';
 import '../../features/activity/domain/repositories/task_activity_repository.dart';
 import '../../features/activity/domain/repositories/task_run_repository.dart';
+import '../../features/activity/domain/repositories/media_input_picker.dart';
+import '../../features/activity/domain/repositories/task_run_media_input_repository.dart';
 import '../../features/activity/domain/usecases/review_task_run.dart';
+import '../../features/activity/domain/usecases/upload_task_run_media_input.dart';
 import '../../features/activity/domain/usecases/watch_task_activities.dart';
 import '../../features/activity/domain/usecases/watch_task_runs.dart';
 import '../../features/activity/infrastructure/repositories/firestore_task_activity_repository.dart';
 import '../../features/activity/infrastructure/repositories/firestore_task_run_repository.dart';
+import '../../features/activity/infrastructure/repositories/firebase_task_run_media_input_repository.dart';
+import '../../features/activity/infrastructure/datasources/image_picker_media_input_picker.dart';
 import '../../features/activity/presentation/cubits/activity_cubit.dart';
 import '../../features/task_builder/domain/repositories/task_repository.dart';
 import '../../features/task_builder/domain/usecases/execute_task.dart';
@@ -147,6 +153,16 @@ void configureDependencies() {
     )
     ..registerLazySingleton<FileVersionRepository>(
       () => serviceLocator<TeamFileRepository>() as FileVersionRepository,
+    )
+    ..registerLazySingleton<MediaInputPicker>(
+      () => ImagePickerMediaInputPicker(ImagePicker()),
+    )
+    ..registerLazySingleton<TaskRunMediaInputRepository>(
+      () => FirebaseTaskRunMediaInputRepository(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<GetCurrentTeamId>(),
+        serviceLocator<UploadTeamFile>(),
+      ),
     )
     ..registerLazySingleton<KnowledgeBaseRepository>(
       () =>
@@ -318,6 +334,11 @@ void configureDependencies() {
     )
     ..registerLazySingleton(
       () => UploadTeamFile(serviceLocator<TeamFileRepository>()),
+    )
+    ..registerLazySingleton(
+      () => UploadTaskRunMediaInput(
+        serviceLocator<TaskRunMediaInputRepository>(),
+      ),
     )
     ..registerLazySingleton(
       () => WatchFileVersions(serviceLocator<FileVersionRepository>()),
@@ -529,6 +550,8 @@ void configureDependencies() {
         watchTaskActivities: serviceLocator<WatchTaskActivities>(),
         watchTaskRuns: serviceLocator<WatchTaskRuns>(),
         reviewTaskRun: serviceLocator<ReviewTaskRun>(),
+        mediaInputPicker: serviceLocator<MediaInputPicker>(),
+        uploadTaskRunMediaInput: serviceLocator<UploadTaskRunMediaInput>(),
       ),
     )
     ..registerFactory(

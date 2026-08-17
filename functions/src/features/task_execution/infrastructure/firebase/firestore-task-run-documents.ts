@@ -22,6 +22,7 @@ export function rejectedDocument() {
     resumeState: FieldValue.delete(),
     reviewInstruction: FieldValue.delete(),
     reviewOutput: FieldValue.delete(),
+    interaction: FieldValue.delete(),
     dialogInput: FieldValue.delete(),
     pausedAt: FieldValue.delete(),
   };
@@ -36,6 +37,7 @@ export function approvedDocument(outputs: Record<string, NodeOutputValue>) {
     waitingNodeId: FieldValue.delete(),
     reviewInstruction: FieldValue.delete(),
     reviewOutput: FieldValue.delete(),
+    interaction: FieldValue.delete(),
     dialogInput: FieldValue.delete(),
     pausedAt: FieldValue.delete(),
   };

@@ -27,6 +27,7 @@ class NodeConfigDocumentMapper {
       IterativeRefinementNodeConfig() => _refinementToDocument(config),
       HumanApprovalNodeConfig() => _approvalToDocument(config),
       DialogInputNodeConfig() => _dialogInputToDocument(config),
+      MediaInputNodeConfig() => _mediaInputToDocument(config),
       WriteFileNodeConfig() => _writeFileToDocument(config),
       ReadFileNodeConfig() => _readFileToDocument(config),
       ReadEmailNodeConfig() => {'primitive': config.primitive.name},
@@ -49,6 +50,7 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.iterativeRefinement => _refinementFrom(data),
       WorkflowPrimitive.humanApproval => _approvalFrom(data),
       WorkflowPrimitive.dialogInput => _dialogInputFrom(data),
+      WorkflowPrimitive.mediaInput => _mediaInputFrom(data),
       WorkflowPrimitive.writeFile => _writeFileFrom(data),
       WorkflowPrimitive.readFile => _readFileFrom(data),
       WorkflowPrimitive.readEmail => const ReadEmailNodeConfig(),
@@ -136,6 +138,14 @@ class NodeConfigDocumentMapper {
       'name': field.name,
       'type': field.type.name,
       'options': field.options,
+    };
+  }
+
+  Map<String, Object?> _mediaInputToDocument(MediaInputNodeConfig config) {
+    return {
+      'primitive': config.primitive.name,
+      'instruction': config.instruction,
+      'source': config.source.name,
     };
   }
 
@@ -234,6 +244,17 @@ class NodeConfigDocumentMapper {
       name: data['name'] as String? ?? '',
       type: type,
       options: _stringListFrom(data['options'], fallback: const []),
+    );
+  }
+
+  MediaInputNodeConfig _mediaInputFrom(Map<String, Object?> data) {
+    final source = MediaInputSource.values.firstWhere(
+      (candidate) => candidate.name == data['source'],
+      orElse: () => MediaInputSource.gallery,
+    );
+    return MediaInputNodeConfig(
+      instruction: data['instruction'] as String? ?? '',
+      source: source,
     );
   }
 

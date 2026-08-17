@@ -7,12 +7,24 @@ import {
 import {
   type DialogInputDefinition,
 } from "./dialog-input.js";
+import {
+  type MediaInputDefinition,
+} from "./media-input.js";
+import {
+  type TaskRunInteraction,
+} from "./task-run-interaction.js";
 export type {
   DialogInputDefinition,
   DialogInputField,
   DialogInputFieldType,
   DialogInputValue,
 } from "./dialog-input.js";
+export type {
+  MediaInputDefinition,
+  MediaInputFileReference,
+  MediaInputSource,
+} from "./media-input.js";
+export type {TaskRunInteraction} from "./task-run-interaction.js";
 export type {
   EmployeeAttachment,
   KnowledgeAttachment,
@@ -33,6 +45,7 @@ export type WorkflowPrimitive =
   | "toolCall"
   | "humanApproval"
   | "dialogInput"
+  | "mediaInput"
   | "validation";
 export type PromptOutputType = "text" | "decision" | "structured" | "image";
 export type ChannelMessageKind = "email" | "whatsapp" | "sms";
@@ -105,6 +118,9 @@ export type HumanApprovalNodeConfig = {
 export type DialogInputNodeConfig = DialogInputDefinition & {
   primitive: "dialogInput";
 };
+export type MediaInputNodeConfig = MediaInputDefinition & {
+  primitive: "mediaInput";
+};
 export type WriteFileNodeConfig = {
   primitive: "writeFile";
   fileName: string;
@@ -138,6 +154,7 @@ export type NodeConfig =
   | IterativeRefinementNodeConfig
   | HumanApprovalNodeConfig
   | DialogInputNodeConfig
+  | MediaInputNodeConfig
   | WriteFileNodeConfig
   | ReadFileNodeConfig
   | ReadEmailNodeConfig
@@ -172,6 +189,7 @@ export type NodeExecutionResult = {
   selectedBranchId?: string | null;
   selectedBranchLabel?: string | null;
   message?: string;
+  interaction?: TaskRunInteraction;
   dialogInput?: DialogInputDefinition;
 };
 export type TaskResumeState = {

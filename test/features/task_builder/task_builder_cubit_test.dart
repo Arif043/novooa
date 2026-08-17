@@ -409,6 +409,27 @@ void main() {
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
+  test('updateMediaInput speichert Anweisung und Quelle', () async {
+    final repository = _InMemoryTaskRepository(_taskWithMediaInputNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.updateMediaInput(
+      const NodeId('node.media'),
+      (config) => config.copyWith(
+        instruction: 'Fotografiere das Dokument.',
+        source: MediaInputSource.camera,
+      ),
+    );
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final config = state.editingTask.nodes.first.config as MediaInputNodeConfig;
+
+    expect(config.instruction, 'Fotografiere das Dokument.');
+    expect(config.source, MediaInputSource.camera);
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
+  });
+
   test('updateWriteFile speichert Dateiname und Inhaltstyp', () async {
     final repository = _InMemoryTaskRepository(_taskWithWriteFileNode());
     final cubit = TaskBuilderCubit(repository: repository);
@@ -720,6 +741,29 @@ Task _taskWithDialogInputNode() {
                 type: DialogInputFieldType.string,
               ),
             ],
+          ),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+Task _taskWithMediaInputNode() {
+  return const Task(
+    id: 'task.media',
+    title: 'Aufgabe',
+    objective: 'Ziel',
+    selectedNodeId: NodeId('node.media'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.media'),
+          title: 'Bild hinzufügen',
+          description: 'Beschreibung',
+          config: MediaInputNodeConfig(
+            instruction: 'Bitte füge ein Bild hinzu.',
+            source: MediaInputSource.gallery,
           ),
         ),
       ],

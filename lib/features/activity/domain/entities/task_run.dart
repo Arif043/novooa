@@ -1,6 +1,8 @@
 import '../../../../core/entities/unique_id.dart';
 
 import 'task_run_dialog_input_field.dart';
+import 'task_run_interaction.dart';
+import 'task_run_media_input.dart';
 
 enum TaskRunStatus {
   queued,
@@ -30,9 +32,8 @@ class TaskRun {
     this.createdAt,
     this.waitingNodeId,
     this.finalOutput,
-    this.reviewInstruction,
     this.reviewOutput,
-    this.dialogInputFields = const [],
+    this.interaction,
     this.message,
   });
 
@@ -44,10 +45,23 @@ class TaskRun {
   final DateTime? createdAt;
   final String? waitingNodeId;
   final String? finalOutput;
-  final String? reviewInstruction;
   final String? reviewOutput;
-  final List<TaskRunDialogInputField> dialogInputFields;
+  final TaskRunInteraction? interaction;
   final String? message;
 
-  bool get requiresDialogInput => dialogInputFields.isNotEmpty;
+  String? get reviewInstruction => interaction?.instruction;
+
+  List<TaskRunDialogInputField> get dialogInputFields {
+    return interaction?.dialogInputFields ?? const [];
+  }
+
+  TaskRunMediaInput? get mediaInput => interaction?.mediaInput;
+
+  bool get requiresDialogInput {
+    return interaction?.type == TaskRunInteractionType.dialogInput;
+  }
+
+  bool get requiresMediaInput {
+    return interaction?.type == TaskRunInteractionType.mediaInput;
+  }
 }

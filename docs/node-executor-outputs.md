@@ -12,9 +12,9 @@ Output `text`; bei einem Bild-Prompt wird stattdessen `dataUrl` als primaere
 Ausgabe weitergereicht. Benannte Outputs sind ueber den Referenznamen eines
 Knotens in Templates verfuegbar, etwa `{{eingang.sender}}`.
 
-Ein leerer Text erzeugt keinen `text`-Output. `humanApproval` und `dialogInput`
-liefern den Status `waitingForApproval`; nicht registrierte Primitives erhalten
-den Status `skipped` und keine Outputs.
+Ein leerer Text erzeugt keinen `text`-Output. `humanApproval`, `dialogInput`
+und `mediaInput` liefern den Status `waitingForApproval`; nicht registrierte
+Primitives erhalten den Status `skipped` und keine Outputs.
 
 ## Registrierte Executor
 
@@ -35,6 +35,7 @@ den Status `skipped` und keine Outputs.
 | `sendChannelMessage` | ausgefuehrt | `text`, `recipient`, `channelId`, `providerMessageId` (je `string`) |
 | `humanApproval` | wartet auf Freigabe | `text` (`string`) |
 | `dialogInput` | wartet auf Formulareingabe | nach dem Absenden: `text` (`string`, JSON) und ein typisierter Output pro Feld |
+| `mediaInput` | wartet auf Bild aus Galerie oder Kamera | nach dem Absenden: `text` (`string`, JSON), `fileId`, `versionId`, `storagePath`, `displayName`, `contentType` und `sizeBytes` |
 | `writeFile` | ausgefuehrt | siehe nächster Abschnitt |
 
 ## Datei schreiben

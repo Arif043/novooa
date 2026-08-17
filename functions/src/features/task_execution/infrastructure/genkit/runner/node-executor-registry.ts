@@ -1,6 +1,7 @@
 import {conditionalFlowNodeExecutor} from "../executors/conditional-node-executor.js";
 import {humanApprovalNodeExecutor} from "../executors/human-approval-node-executor.js";
 import {dialogInputNodeExecutor} from "../executors/dialog-input-node-executor.js";
+import {mediaInputNodeExecutor} from "../executors/media-input-node-executor.js";
 import {iterativeRefinementNodeExecutor} from "../executors/iterative-refinement-node-executor.js";
 import {promptNodeExecutor} from "../executors/prompt-node-executor.js";
 import {readFileNodeExecutor} from "../executors/read-file-node-executor.js";
@@ -29,6 +30,7 @@ const executors = new Map<WorkflowNode["primitive"], NodeExecutor>(
     sendChannelMessageNodeExecutor,
     humanApprovalNodeExecutor,
     dialogInputNodeExecutor,
+    mediaInputNodeExecutor,
   ].map((executor) => [executor.primitive, executor]),
 );
 

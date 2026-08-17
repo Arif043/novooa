@@ -21,6 +21,7 @@ enum WorkflowPrimitive {
   toolCall,
   humanApproval,
   dialogInput,
+  mediaInput,
   validation,
 }
 

@@ -22,8 +22,19 @@ export type WrittenFile = {
   isNewFile: boolean;
 };
 
+export type StoredTeamFile = Pick<
+  WrittenFile,
+  | "fileId"
+  | "versionId"
+  | "storagePath"
+  | "displayName"
+  | "contentType"
+  | "sizeBytes"
+>;
+
 export interface TeamFileStore {
   writeTeamFile(input: WriteTeamFileInput): Promise<WrittenFile>;
+  loadTeamFile(teamId: string, fileId: string): Promise<StoredTeamFile>;
   readTextFile(teamId: string, file: NodeAttachment): Promise<string>;
 }
 

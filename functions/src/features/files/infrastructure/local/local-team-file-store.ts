@@ -6,6 +6,7 @@ import {type NodeAttachment} from "../../../task_execution/domain/entities/attac
 import {
   contentSizeBytes,
   type FileContent,
+  type StoredTeamFile,
   type TeamFileStore,
   type WriteTeamFileInput,
   type WrittenFile,
@@ -24,6 +25,14 @@ type FileRow = SqlRow & {
   folder_id: string | null;
 };
 
+type StoredFileRow = FileRow & {
+  current_version_id: string;
+  display_name: string;
+  content_type: string;
+  size_bytes: number;
+  storage_path: string;
+};
+
 export class LocalTeamFileStore implements TeamFileStore {
   constructor(
     private readonly database: LocalSqlDatabase,
@@ -40,6 +49,25 @@ export class LocalTeamFileStore implements TeamFileStore {
   async readTextFile(teamId: string, file: NodeAttachment): Promise<string> {
     ensureTeamFile(file, teamId);
     return readFile(localPath(this.rootDirectory, file.storagePath), "utf8");
+  }
+
+  async loadTeamFile(
+    teamId: string,
+    fileId: string,
+  ): Promise<StoredTeamFile> {
+    const row = await this.database.get<StoredFileRow>(loadFileSql(), [
+      teamId,
+      fileId,
+    ]);
+    if (row === null) throw new Error(`Datei nicht gefunden: ${fileId}`);
+    return {
+      fileId: row.id,
+      versionId: row.current_version_id,
+      storagePath: row.storage_path,
+      displayName: row.display_name,
+      contentType: row.content_type,
+      sizeBytes: row.size_bytes,
+    };
   }
 
   private async writtenFileFrom(input: WriteTeamFileInput): Promise<WrittenFile> {
@@ -184,6 +212,12 @@ function existingFileFrom(row: FileRow): ExistingFile {
 function findFileByNameSql() {
   return `SELECT id, owner_uid, folder_id FROM files
     WHERE team_id = ? AND display_name = ? AND folder_id IS NULL LIMIT 1`;
+}
+
+function loadFileSql() {
+  return `SELECT id, owner_uid, folder_id, current_version_id, display_name,
+    content_type, size_bytes, storage_path FROM files
+    WHERE team_id = ? AND id = ?`;
 }
 
 function upsertFileSql() {

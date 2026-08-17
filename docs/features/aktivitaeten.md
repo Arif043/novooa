@@ -9,16 +9,16 @@ Verwandt: [`../architecture.md`](../architecture.md) ·
 
 ## Zweck
 
-Beobachtbarkeit und Freigaben. Nutzer:innen sehen hier, was passiert ist,
+Beobachtbarkeit und Freigaben. Nutzer sehen hier, was passiert ist,
 warum, und können an den Stellen eingreifen, an denen das Workflow pausiert
-(`humanApproval`, `dialogInput`).
+(`humanApproval`, `dialogInput`, `mediaInput`).
 
 ## Verantwortlichkeiten
 
 - Run-Liste pro Aufgabe: Status, Start, Ende, Dauer, Tokens, Kosten.
 - Trace-Detailansicht: pro Knoten Input, Output, Modell-Aufruf.
-- Interaktions-Warteschlange: alle Aufgaben, die auf menschliche Freigabe oder
-  Formulareingabe warten.
+- Interaktions-Warteschlange: alle Aufgaben, die auf menschliche Freigabe,
+  Formulareingabe oder Bildaufnahme warten.
 - Filter: nach Aufgabe, Status, Zeitraum, Trigger.
 - Re-Run eines Runs mit gleichem Input.
 
@@ -47,12 +47,11 @@ Zusätzlich liest `FirestoreTaskRunRepository` die letzten TaskRuns aus
 damit die Tabs „Laufend“, „Freigabe“ und „Abgelehnt“ ohne aktive
 Backend-Wartezeit gerendert werden.
 
-Runs mit Status `waitingForApproval` enthalten für die Freigabe-UI:
+Runs mit Status `waitingForApproval` enthalten für die Interaktions-UI:
 
 ```text
-reviewInstruction  # Anweisung des Freigabe-Bausteins
+interaction        # Art und Definition: Freigabe, Formular oder Medienaufnahme
 reviewOutput       # editierbarer Output des vorherigen Bausteins
-dialogInput        # optionale Felddefinition des Formular-Bausteins
 resumeState        # serialisierter Zwischenzustand für die Fortsetzung
 ```
 
@@ -65,7 +64,7 @@ den benannten Ausgabewerten. Werte werden entsprechend ihres Output-Typs
 lesbar formatiert.
 Interaktionen werden als Kacheln dargestellt. Ein Klick öffnet einen iOS-Dialog:
 bei Freigaben mit editierbarem Output, bei `dialogInput` mit den definierten
-Feldtypen. Bestätigung ruft `reviewTaskRunFlow` mit `decision: "approve"` auf,
+Feldtypen und bei `mediaInput` mit Galerie- oder Kameraauswahl. Bestätigung ruft `reviewTaskRunFlow` mit `decision: "approve"` auf,
 setzt den Run auf `queued` und startet die Fortsetzung per Cloud Task. Ablehnung
 ruft denselben Flow mit `decision: "reject"` auf und verwirft den Zwischenzustand.
 

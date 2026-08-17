@@ -2,8 +2,10 @@ import {
   type NodeExecutor,
   parentOutputFor,
   textOutputs,
-  waitingForApprovalNode,
+  waitingForInteractionNode,
 } from "../runner/node-executor.js";
+import {approvalInteraction} from
+  "../../../domain/entities/task-run-interaction.js";
 
 export const humanApprovalNodeExecutor: NodeExecutor = {
   primitive: "humanApproval",
@@ -14,10 +16,10 @@ export const humanApprovalNodeExecutor: NodeExecutor = {
       runContext.results,
     );
     const reviewOutput = runContext.resolveTemplates(output);
-    return waitingForApprovalNode(
+    return waitingForInteractionNode(
       input.node,
       textOutputs(reviewOutput),
-      runContext.resolveTemplates(messageFor(input.node.config)),
+      approvalInteraction(runContext.resolveTemplates(messageFor(input.node.config))),
     );
   },
 };
