@@ -22,7 +22,6 @@ export type {
 export type {
   MediaInputDefinition,
   MediaInputFileReference,
-  MediaInputSource,
 } from "./media-input.js";
 export type {TaskRunInteraction} from "./task-run-interaction.js";
 export type {

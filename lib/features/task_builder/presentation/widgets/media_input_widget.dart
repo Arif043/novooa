@@ -22,30 +22,17 @@ class MediaInputWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Bild aufnehmen', style: SyscatTheme.taskBody),
+          Text('Bild anfordern', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
           TextFormField(
             initialValue: _config.instruction,
             decoration: const InputDecoration(
-              hintText: 'Hinweis für die Aufnahme',
+              hintText: 'Hinweis für die Bildeingabe',
             ),
             onChanged: (value) => _update(
               context,
               (config) => config.copyWith(instruction: value),
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          DropdownButtonFormField<MediaInputSource>(
-            initialValue: _config.source,
-            decoration: const InputDecoration(labelText: 'Quelle'),
-            items: [
-              for (final source in MediaInputSource.values)
-                DropdownMenuItem(value: source, child: Text(source.label)),
-            ],
-            onChanged: (source) {
-              if (source == null) return;
-              _update(context, (config) => config.copyWith(source: source));
-            },
           ),
         ],
       ),

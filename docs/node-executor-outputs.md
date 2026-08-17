@@ -35,7 +35,7 @@ Primitives erhalten den Status `skipped` und keine Outputs.
 | `sendChannelMessage` | ausgefuehrt | `text`, `recipient`, `channelId`, `providerMessageId` (je `string`) |
 | `humanApproval` | wartet auf Freigabe | `text` (`string`) |
 | `dialogInput` | wartet auf Formulareingabe | nach dem Absenden: `text` (`string`, JSON) und ein typisierter Output pro Feld |
-| `mediaInput` | wartet auf Bild aus Galerie oder Kamera | nach dem Absenden: `text` (`string`, JSON), `fileId`, `versionId`, `storagePath`, `displayName`, `contentType` und `sizeBytes` |
+| `mediaInput` | wartet auf ein Bild; Nutzer wählt Kamera oder Galerie | nach dem Absenden: `text` (`string`, JSON), `fileId`, `versionId`, `storagePath`, `displayName`, `contentType` und `sizeBytes` |
 | `writeFile` | ausgefuehrt | siehe nächster Abschnitt |
 
 ## Datei schreiben

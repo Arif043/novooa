@@ -16,7 +16,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.toolCall => 'Werkzeug-Aufruf',
       WorkflowPrimitive.humanApproval => 'Freigabe',
       WorkflowPrimitive.dialogInput => 'Formulareingabe',
-      WorkflowPrimitive.mediaInput => 'Bild aufnehmen',
+      WorkflowPrimitive.mediaInput => 'Bild anfordern',
       WorkflowPrimitive.validation => 'Validierung',
     };
   }

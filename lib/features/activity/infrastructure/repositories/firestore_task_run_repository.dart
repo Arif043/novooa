@@ -114,11 +114,7 @@ class FirestoreTaskRunRepository implements TaskRunRepository {
       TaskRunInteractionType.mediaInput => TaskRunInteraction(
         type: type,
         instruction: instruction,
-        mediaInput: TaskRunMediaInput(
-          source: TaskRunMediaInputSource.fromName(
-            data['source'] as String? ?? '',
-          ),
-        ),
+        mediaInput: const TaskRunMediaInput(),
       ),
     };
   }

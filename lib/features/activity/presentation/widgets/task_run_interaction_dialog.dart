@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/widgets/ios_overlays.dart';
 import '../../domain/entities/task_run.dart';
 import '../../domain/entities/media_input_submission.dart';
+import '../../domain/entities/task_run_media_input.dart';
 import '../cubits/activity_cubit.dart';
 import 'task_run_dialog_input_submission.dart';
 import 'task_run_interaction_content.dart';
@@ -141,11 +142,12 @@ class _TaskRunInteractionDialogState extends State<TaskRunInteractionDialog> {
     );
   }
 
-  Future<void> _pickMedia() async {
+  Future<void> _pickMedia(TaskRunMediaInputSource source) async {
     setState(() => _isPicking = true);
     try {
       final submission = await context.read<ActivityCubit>().pickMediaInput(
         widget.run,
+        source,
       );
       if (mounted && submission != null) {
         setState(() => _mediaSubmission = submission);

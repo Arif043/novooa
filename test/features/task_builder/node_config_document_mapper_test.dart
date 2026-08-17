@@ -114,15 +114,13 @@ void main() {
   });
 
   test('serialisiert und deserialisiert MediaInputNodeConfig', () {
-    const config = MediaInputNodeConfig(
-      instruction: 'Fotografiere den Beleg.',
-      source: MediaInputSource.camera,
-    );
+    const config = MediaInputNodeConfig(instruction: 'Fotografiere den Beleg.');
 
     final document = _mapper().toDocument(config);
     final restored = _mapper().fromDocument(document) as MediaInputNodeConfig;
 
     expect(document['primitive'], 'mediaInput');
+    expect(document.containsKey('source'), isFalse);
     expect(restored, config);
   });
 

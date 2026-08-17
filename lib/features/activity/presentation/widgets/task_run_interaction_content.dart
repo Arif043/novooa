@@ -4,6 +4,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/media_input_submission.dart';
 import '../../domain/entities/task_run.dart';
 import '../../domain/entities/task_run_interaction.dart';
+import '../../domain/entities/task_run_media_input.dart';
 import 'task_run_dialog_input_form.dart';
 import 'task_run_media_input_form.dart';
 
@@ -30,7 +31,7 @@ class TaskRunInteractionContent extends StatelessWidget {
   final MediaInputSubmission? mediaSubmission;
   final bool isPicking;
   final void Function(String name, Object? value) onFormValueChanged;
-  final VoidCallback onPickMedia;
+  final void Function(TaskRunMediaInputSource source) onPickMedia;
   final VoidCallback onClearMedia;
 
   @override
@@ -53,13 +54,12 @@ class TaskRunInteractionContent extends StatelessWidget {
   }
 
   Widget _mediaInputForm() {
-    final input = run.mediaInput;
-    if (input == null) return const SizedBox.shrink();
+    if (run.mediaInput == null) return const SizedBox.shrink();
     return TaskRunMediaInputForm(
-      input: input,
       submission: mediaSubmission,
       isPicking: isPicking,
-      onPick: onPickMedia,
+      onPickFromCamera: () => onPickMedia(TaskRunMediaInputSource.camera),
+      onPickFromGallery: () => onPickMedia(TaskRunMediaInputSource.gallery),
       onClear: onClearMedia,
     );
   }

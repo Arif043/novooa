@@ -128,7 +128,10 @@ void main() {
       uploadTaskRunMediaInput: UploadTaskRunMediaInput(_MediaInputRepository()),
     );
 
-    final picked = await cubit.pickMediaInput(_mediaRun());
+    final picked = await cubit.pickMediaInput(
+      _mediaRun(),
+      TaskRunMediaInputSource.camera,
+    );
     await cubit.submitMediaInput(_mediaRun(), picked!);
 
     expect(runRepository.submittedFormValues, {'fileId': 'file.1'});
@@ -168,7 +171,7 @@ TaskRun _mediaRun() {
     interaction: const TaskRunInteraction(
       type: TaskRunInteractionType.mediaInput,
       instruction: 'Fotografiere den Beleg.',
-      mediaInput: TaskRunMediaInput(source: TaskRunMediaInputSource.camera),
+      mediaInput: TaskRunMediaInput(),
     ),
   );
 }

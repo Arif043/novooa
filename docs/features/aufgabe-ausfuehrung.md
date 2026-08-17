@@ -67,8 +67,8 @@ einen JSON-`text`-Output sowie einen typisierten Output pro Feld. Feldnamen
 müssen eindeutige Template-Identifier sein, zum Beispiel `kundennummer`; der
 Wert ist dann über `{{formular1.kundennummer}}` verfügbar.
 
-`mediaInput` verwendet denselben Interaktionsvertrag. Je nach Konfiguration
-öffnet der Client die Bildergalerie oder die Kamera, speichert das Bild zuerst
+`mediaInput` verwendet denselben Interaktionsvertrag. Während der Ausführung
+entscheidet der Nutzer zwischen Bildergalerie und Kamera. Der Client speichert das Bild zuerst
 im team-scoped Dateispeicher und übergibt nur dessen `fileId`. Beim Fortsetzen
 lädt das Backend die Metadaten selbst, akzeptiert ausschließlich `image/*` und
 liefert `fileId`, `versionId`, `storagePath`, `displayName`, `contentType` und

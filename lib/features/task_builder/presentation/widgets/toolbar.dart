@@ -152,7 +152,7 @@ class Toolbar extends StatelessWidget {
                   .read<TaskBuilderCubit>()
                   .addNodeToMainGraph(.mediaInput),
               icon: const Icon(Icons.add_a_photo_outlined),
-              tooltip: 'Bildaufnahme hinzufügen',
+              tooltip: 'Bild-Eingabe hinzufügen',
             ),
           ],
         ),

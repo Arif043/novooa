@@ -1,8 +1,5 @@
-export type MediaInputSource = "gallery" | "camera";
-
 export type MediaInputDefinition = {
   instruction: string;
-  source: MediaInputSource;
 };
 
 export type MediaInputFileReference = {
@@ -20,6 +17,4 @@ export function validateMediaInputDefinition(
   if (definition.instruction.trim().length === 0) {
     throw new Error("Die Medienaufnahme benötigt eine Anweisung.");
   }
-  if (definition.source === "gallery" || definition.source === "camera") return;
-  throw new Error("Die Quelle der Medienaufnahme ist ungültig.");
 }

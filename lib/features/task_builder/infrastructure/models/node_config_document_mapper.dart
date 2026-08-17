@@ -145,7 +145,6 @@ class NodeConfigDocumentMapper {
     return {
       'primitive': config.primitive.name,
       'instruction': config.instruction,
-      'source': config.source.name,
     };
   }
 
@@ -248,13 +247,8 @@ class NodeConfigDocumentMapper {
   }
 
   MediaInputNodeConfig _mediaInputFrom(Map<String, Object?> data) {
-    final source = MediaInputSource.values.firstWhere(
-      (candidate) => candidate.name == data['source'],
-      orElse: () => MediaInputSource.gallery,
-    );
     return MediaInputNodeConfig(
       instruction: data['instruction'] as String? ?? '',
-      source: source,
     );
   }
 

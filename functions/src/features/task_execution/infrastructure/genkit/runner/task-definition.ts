@@ -144,7 +144,6 @@ export const dialogInputNodeConfigSchema = dialogInputDefinitionSchema.extend({
 
 export const mediaInputDefinitionSchema = z.object({
   instruction: z.string().default("Bitte füge ein Bild hinzu."),
-  source: z.enum(["gallery", "camera"]).default("gallery"),
 });
 
 export const mediaInputNodeConfigSchema = mediaInputDefinitionSchema.extend({

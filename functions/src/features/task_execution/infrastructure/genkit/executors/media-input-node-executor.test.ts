@@ -10,7 +10,6 @@ test("pauses a run and preserves the media interaction", async () => {
       config: {
         primitive: "mediaInput",
         instruction: "Foto von {{object}} aufnehmen.",
-        source: "camera",
       },
     },
   } as never, {
@@ -21,6 +20,5 @@ test("pauses a run and preserves the media interaction", async () => {
   assert.deepEqual(result.interaction, {
     kind: "mediaInput",
     instruction: "Foto von Beleg aufnehmen.",
-    source: "camera",
   });
 });

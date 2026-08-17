@@ -53,7 +53,7 @@ referenzieren.
 | `sendChannelMessage` | Nachricht senden | Sendet E-Mail, WhatsApp oder SMS | Microsoft-Graph-Antworten implementiert |
 | `humanApproval` | Freigabe | Haltet den Run bis zur menschlichen Entscheidung an | Implementiert |
 | `dialogInput` | Formulareingabe | Pausiert den Run und fragt typisierte Eingaben per Formular ab | Implementiert |
-| `mediaInput` | Bild hinzufügen | Pausiert den Run und fordert ein Bild aus Galerie oder Kamera an | Implementiert |
+| `mediaInput` | Bild anfordern | Pausiert den Run und fordert ein Bild an; Quelle wird während der Ausführung gewählt | Implementiert |
 | `toolCall` | Werkzeug-Aufruf | Strukturierter Aufruf eines Werkzeugs | Geplant |
 | `validation` | Validierung | Prueft Output gegen Schema oder Regeln | Geplant |
 

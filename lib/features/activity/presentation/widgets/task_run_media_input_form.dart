@@ -2,28 +2,27 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/media_input_submission.dart';
-import '../../domain/entities/task_run_media_input.dart';
 
 class TaskRunMediaInputForm extends StatelessWidget {
   const TaskRunMediaInputForm({
     super.key,
-    required this.input,
     required this.submission,
     required this.isPicking,
-    required this.onPick,
+    required this.onPickFromCamera,
+    required this.onPickFromGallery,
     required this.onClear,
   });
 
-  final TaskRunMediaInput input;
   final MediaInputSubmission? submission;
   final bool isPicking;
-  final VoidCallback onPick;
+  final VoidCallback onPickFromCamera;
+  final VoidCallback onPickFromGallery;
   final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
     final selected = submission;
-    if (selected == null) return _captureButton();
+    if (selected == null) return _sourceButtons();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -52,22 +51,30 @@ class TaskRunMediaInputForm extends StatelessWidget {
     );
   }
 
-  Widget _captureButton() {
-    return OutlinedButton.icon(
-      onPressed: isPicking ? null : onPick,
-      icon: isPicking
-          ? const SizedBox.square(
-              dimension: AppSpacing.md,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Icon(_iconFor(input.source)),
-      label: Text(input.source.actionLabel),
+  Widget _sourceButtons() {
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        OutlinedButton.icon(
+          onPressed: isPicking ? null : onPickFromCamera,
+          icon: _icon(Icons.photo_camera_outlined),
+          label: const Text('Kamera öffnen'),
+        ),
+        OutlinedButton.icon(
+          onPressed: isPicking ? null : onPickFromGallery,
+          icon: _icon(Icons.add_photo_alternate_outlined),
+          label: const Text('Bild auswählen'),
+        ),
+      ],
     );
   }
 
-  IconData _iconFor(TaskRunMediaInputSource source) {
-    return source == TaskRunMediaInputSource.camera
-        ? Icons.photo_camera_outlined
-        : Icons.add_photo_alternate_outlined;
+  Widget _icon(IconData icon) {
+    if (!isPicking) return Icon(icon);
+    return const SizedBox.square(
+      dimension: AppSpacing.md,
+      child: CircularProgressIndicator(strokeWidth: 2),
+    );
   }
 }

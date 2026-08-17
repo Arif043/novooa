@@ -409,24 +409,20 @@ void main() {
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
-  test('updateMediaInput speichert Anweisung und Quelle', () async {
+  test('updateMediaInput speichert Anweisung', () async {
     final repository = _InMemoryTaskRepository(_taskWithMediaInputNode());
     final cubit = TaskBuilderCubit(repository: repository);
 
     await cubit.load(repository.savedTask);
     await cubit.updateMediaInput(
       const NodeId('node.media'),
-      (config) => config.copyWith(
-        instruction: 'Fotografiere das Dokument.',
-        source: MediaInputSource.camera,
-      ),
+      (config) => config.copyWith(instruction: 'Fotografiere das Dokument.'),
     );
 
     final state = cubit.state as TaskBuilderLoaded;
     final config = state.editingTask.nodes.first.config as MediaInputNodeConfig;
 
     expect(config.instruction, 'Fotografiere das Dokument.');
-    expect(config.source, MediaInputSource.camera);
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
@@ -763,7 +759,6 @@ Task _taskWithMediaInputNode() {
           description: 'Beschreibung',
           config: MediaInputNodeConfig(
             instruction: 'Bitte füge ein Bild hinzu.',
-            source: MediaInputSource.gallery,
           ),
         ),
       ],

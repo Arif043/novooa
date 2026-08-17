@@ -5,6 +5,7 @@ import 'package:bloc/bloc.dart';
 import '../../domain/entities/task_activity.dart';
 import '../../domain/entities/media_input_submission.dart';
 import '../../domain/entities/task_run.dart';
+import '../../domain/entities/task_run_media_input.dart';
 import '../../domain/repositories/media_input_picker.dart';
 import '../../domain/usecases/review_task_run.dart';
 import '../../domain/usecases/upload_task_run_media_input.dart';
@@ -84,10 +85,12 @@ class ActivityCubit extends Cubit<ActivityState> {
     );
   }
 
-  Future<MediaInputSubmission?> pickMediaInput(TaskRun run) {
-    final mediaInput = run.mediaInput;
-    if (mediaInput == null) return Future.value(null);
-    return _mediaInputPicker.pick(mediaInput.source);
+  Future<MediaInputSubmission?> pickMediaInput(
+    TaskRun run,
+    TaskRunMediaInputSource source,
+  ) {
+    if (!run.requiresMediaInput) return Future.value(null);
+    return _mediaInputPicker.pick(source);
   }
 
   Future<void> submitMediaInput(

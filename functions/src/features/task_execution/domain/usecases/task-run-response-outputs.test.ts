@@ -77,7 +77,6 @@ function mediaResumeState(): TaskResumeState {
       interaction: {
         kind: "mediaInput",
         instruction: "Bitte Bild hinzufügen.",
-        source: "gallery",
       },
     }],
     variables: {}, remainingNodeIds: [], skippedNodeIds: [], waitingNodeId: "media",
