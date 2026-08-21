@@ -6,11 +6,17 @@
 ## Ergebnisvertrag
 
 Jeder Executor liefert ein `NodeExecutionResult` mit einem `outputs`-Objekt.
-Ein Output hat einen der Typen `string`, `datetime`, `number`, `boolean` oder
-`json`. Der regulaere Datenfluss zwischen verbundenen Knoten verwendet den
-Output `text`; bei einem Bild-Prompt wird stattdessen `dataUrl` als primaere
-Ausgabe weitergereicht. Benannte Outputs sind ueber den Referenznamen eines
-Knotens in Templates verfuegbar, etwa `{{eingang.sender}}`.
+Ein Output hat einen der Typen `string`, `datetime`, `number`, `boolean`,
+`json`, `file` oder `media`. Jeder ausgefuehrte Baustein stellt seinen
+primaeren, typisierten Wert unter `value` bereit. Kanten bestimmen weiterhin
+nur Reihenfolge und Verzweigung; ein Executor erhaelt die `value`-Outputs
+seiner direkten Vorgaenger, nicht mehr den letzten Textwert eines Runs.
+
+`media` und `file` enthalten eine fachliche Referenz mit `fileId`, `versionId`,
+`displayName`, `contentType` und `sizeBytes`. Der konkrete Speicherort bleibt
+innerhalb der Dateiinfrastruktur; erst der konsumierende Executor liest die
+referenzierte Version. Benannte Nebenoutputs bleiben fuer Templates erreichbar,
+etwa `{{eingang.sender}}` oder `{{bericht.fileId}}`.
 
 Ein leerer Text erzeugt keinen `text`-Output. `humanApproval`, `dialogInput`
 und `mediaInput` liefern den Status `waitingForApproval`; nicht registrierte
@@ -20,37 +26,35 @@ Primitives erhalten den Status `skipped` und keine Outputs.
 
 | Primitive | Status | Outputs |
 | --- | --- | --- |
-| `stringInput` | ausgefuehrt | `text` (`string`) |
-| `script` | ausgefuehrt | `text` (`string`); interne Laufzeitvariablen stehen nachfolgenden Templates zur Verfuegung |
-| `prompt` mit Text | ausgefuehrt | `text` (`string`) |
-| `prompt` mit Entscheidung | ausgefuehrt | `text` (`string`, gewaehlte Option) |
-| `prompt` strukturiert | ausgefuehrt | `text` (`string`, JSON) und ein `string`-Output fuer jedes konfigurierte Feld |
-| `prompt` mit Bild | ausgefuehrt | `dataUrl` (`string`, Bild als Data-URL); kein `text`-Output |
-| `conditionalFlow` | ausgefuehrt | `text` (`string`, Ergebnis des gewaehlten Zweigs oder Begruendung); Resultat-Metadaten: `selectedNodeId`, `selectedBranchId`, `selectedBranchLabel` |
-| `iterativeRefinement` | ausgefuehrt | `text` (`string`) |
-| `readFile` | ausgefuehrt | `text` (`string`, UTF-8-Dateiinhalt) |
-| `readEmail` | ausgefuehrt | `text`, `sender`, `subject`, `message` (je `string`), `receivedAt` (`datetime`) |
-| `readChannelEvent` mit E-Mail | ausgefuehrt | `text`, `sender`, `subject`, `message` (je `string`), `receivedAt` (`datetime`) |
-| `readChannelEvent` mit WhatsApp/SMS | ausgefuehrt | `text`, `sender`, `message` (je `string`), `receivedAt` (`datetime`) |
-| `sendChannelMessage` | ausgefuehrt | `text`, `recipient`, `channelId`, `providerMessageId` (je `string`) |
-| `humanApproval` | wartet auf Freigabe | `text` (`string`) |
-| `dialogInput` | wartet auf Formulareingabe | nach dem Absenden: `text` (`string`, JSON) und ein typisierter Output pro Feld |
-| `mediaInput` | wartet auf ein Bild; Nutzer wählt Kamera oder Galerie | nach dem Absenden: `text` (`string`, JSON), `fileId`, `versionId`, `storagePath`, `displayName`, `contentType` und `sizeBytes` |
+| `stringInput` | ausgefuehrt | `value` (`string`) |
+| `script` | ausgefuehrt | `value` (`string`); interne Laufzeitvariablen stehen nachfolgenden Templates zur Verfuegung |
+| `prompt` mit Text oder Entscheidung | ausgefuehrt | `value` (`string`) |
+| `prompt` strukturiert | ausgefuehrt | `value` (`json`) und ein `string`-Output fuer jedes konfigurierte Feld |
+| `prompt` mit Bild | ausgefuehrt | `value` (`media`); das generierte Bild wird als Team-Datei referenziert |
+| `conditionalFlow` | ausgefuehrt | `value` (`string`, Ergebnis des gewaehlten Zweigs oder Begruendung); Resultat-Metadaten: `selectedNodeId`, `selectedBranchId`, `selectedBranchLabel` |
+| `iterativeRefinement` | ausgefuehrt | `value` (`string`) |
+| `readFile` | ausgefuehrt | `value` (`string`, UTF-8-Dateiinhalt) |
+| `readEmail` | ausgefuehrt | `value`, `sender`, `subject`, `message` (je `string`), `receivedAt` (`datetime`) |
+| `readChannelEvent` mit E-Mail | ausgefuehrt | `value`, `sender`, `subject`, `message` (je `string`), `receivedAt` (`datetime`) |
+| `readChannelEvent` mit WhatsApp/SMS | ausgefuehrt | `value`, `sender`, `message` (je `string`), `receivedAt` (`datetime`) |
+| `sendChannelMessage` | ausgefuehrt | `value`, `recipient`, `channelId`, `providerMessageId` (je `string`) |
+| `humanApproval` | wartet auf Freigabe | `value` (`string`) |
+| `dialogInput` | wartet auf Formulareingabe | nach dem Absenden: `value` (`json`) und ein typisierter Output pro Feld |
+| `mediaInput` | wartet auf ein Bild; Nutzer wählt Kamera oder Galerie | nach dem Absenden: `value` (`media`) |
 | `writeFile` | ausgefuehrt | siehe nächster Abschnitt |
 
 ## Datei schreiben
 
-`writeFile` erhaelt den Text des Vorgaenger-Knotens und schreibt ihn als neue
-Datei oder neue Version. Erhaelt der Baustein stattdessen die `dataUrl` eines
-Bild-Prompts, dekodiert er diese als Bilddatei und setzt MIME-Type sowie
-Dateiendung passend. Der JSON-String in `text` bleibt fuer den regulaeren
-Datenfluss erhalten. Zusaetzlich liefert der Executor:
+`writeFile` akzeptiert genau einen primaeren Vorgaengerwert. Textwerte werden
+als UTF-8 geschrieben; `file`- und `media`-Referenzen werden über den
+`TeamFileContentReader` als Bytes geladen. Bei Bildern übernimmt der Executor MIME-Type
+und Endung der gespeicherten Version. Sein primaerer Output ist ein `file`- bzw.
+`media`-Wert; zusaetzlich liefert der Executor:
 
 | Output | Typ | Bedeutung |
 | --- | --- | --- |
 | `fileId` | `string` | Stabile ID der Datei |
 | `versionId` | `string` | ID der gerade geschriebenen Version |
-| `storagePath` | `string` | Team-scoped Firebase-Storage-Pfad |
 | `displayName` | `string` | Dateiname |
 | `contentType` | `string` | MIME-Type |
 | `sizeBytes` | `number` | UTF-8-Groesse des Inhalts |
@@ -59,7 +63,7 @@ Datenfluss erhalten. Zusaetzlich liefert der Executor:
 
 Hat der Knoten den Referenznamen `bericht`, koennen Templates beispielsweise
 `{{bericht.fileId}}`, `{{bericht.versionId}}` oder
-`{{bericht.storagePath}}` verwenden.
+`{{bericht.displayName}}` verwenden.
 
 ## Nicht implementierte Primitives
 

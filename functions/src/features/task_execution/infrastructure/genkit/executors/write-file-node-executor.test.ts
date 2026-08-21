@@ -2,13 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {writeFileNodeExecutor} from "./write-file-node-executor.js";
 
-test("writes an image data URL as binary data with its image metadata", async () => {
+test("writes a media reference as binary data with its image metadata", async () => {
   const writtenFiles: Array<Record<string, unknown>> = [];
-  const imageDataUrl = "data:image/png;base64,iVBORw0KGgo=";
 
   await writeFileNodeExecutor.execute({
     node: writeFileNode(),
-  } as never, runContextFor(imageDataUrl, writtenFiles) as never);
+    parentOutputs: [mediaOutput()],
+  } as never, runContextFor(writtenFiles) as never);
 
   const input = writtenFiles[0];
   assert.equal(input.contentType, "image/png");
@@ -31,15 +31,37 @@ function writeFileNode() {
   };
 }
 
-function runContextFor(dataUrl: string, writtenFiles: Array<Record<string, unknown>>) {
+function mediaOutput() {
+  return {
+    nodeId: "image",
+    outputName: "value",
+    value: {
+      type: "media",
+      value: {
+        fileId: "image-1",
+        versionId: "version-1",
+        displayName: "eingabe.png",
+        contentType: "image/png",
+        sizeBytes: 8,
+      },
+    },
+  };
+}
+
+function runContextFor(writtenFiles: Array<Record<string, unknown>>) {
   return {
     teamId: "team-1",
-    task: {edges: [{from: "image", to: "write"}]},
-    results: new Map([[
-      "image",
-      {outputs: {dataUrl: {type: "string", value: dataUrl}}},
-    ]]),
     resolveTemplates: (value: string) => value,
+    fileContentReader: {
+      async readTeamFileContent() {
+        return {
+          content: Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+          displayName: "eingabe.png",
+          contentType: "image/png",
+          sizeBytes: 8,
+        };
+      },
+    },
     teamFileStore: {
       async writeTeamFile(input: Record<string, unknown>) {
         writtenFiles.push(input);

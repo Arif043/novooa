@@ -12,6 +12,7 @@ import {
 import {type TaskStore} from "../../../domain/repositories/task-store.js";
 import {type ObjectStore} from "../../../../files/domain/repositories/object-store.js";
 import {type TeamFileStore} from "../../../../files/domain/repositories/team-file-store.js";
+import {type TeamFileContentReader} from "../../../../files/domain/repositories/team-file-content-reader.js";
 import {type TaskMessageSender} from "../../../domain/repositories/task-message-sender.js";
 import {
   type TaskRunDocument,
@@ -24,6 +25,7 @@ export type TaskRunWorkerStores = {
   objectStore: ObjectStore;
   knowledgeBaseStore: KnowledgeBaseStore;
   teamFileStore: TeamFileStore;
+  fileContentReader: TeamFileContentReader;
   messageSender: TaskMessageSender;
 };
 
@@ -47,6 +49,7 @@ export async function executeQueuedTaskRun(
     objectStore: stores.objectStore,
     knowledgeBaseStore: stores.knowledgeBaseStore,
     teamFileStore: stores.teamFileStore,
+    fileContentReader: stores.fileContentReader,
     messageSender: stores.messageSender,
   });
   if (output.status === "waitingForApproval") {
@@ -78,6 +81,7 @@ export async function continueApprovedTaskRun(
       objectStore: stores.objectStore,
       knowledgeBaseStore: stores.knowledgeBaseStore,
       teamFileStore: stores.teamFileStore,
+      fileContentReader: stores.fileContentReader,
       messageSender: stores.messageSender,
     },
   );

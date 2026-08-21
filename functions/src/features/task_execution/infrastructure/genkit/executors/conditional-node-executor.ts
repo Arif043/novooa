@@ -3,7 +3,7 @@ import {
   type TaskRunContext,
   type NodeExecutor,
   executedNode,
-  parentOutputFor,
+  textForParentOutputs,
   textOutputs,
 } from "../runner/node-executor.js";
 import {finalOutputOf} from "../runner/task-graph-utils.js";
@@ -25,11 +25,7 @@ export type ConditionalNodeOutput = {
 export const conditionalFlowNodeExecutor: NodeExecutor = {
   primitive: "conditionalFlow",
   async execute(input, runContext) {
-    const targetLabel = parentOutputFor(
-      input.node,
-      runContext.task,
-      runContext.results,
-    );
+    const targetLabel = textForParentOutputs(input.parentOutputs);
     const output = executeConditionalNode({
       node: input.node,
       targetLabel: runContext.resolveTemplates(targetLabel),

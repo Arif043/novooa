@@ -3,7 +3,7 @@ import {modelLogContext, reasoningModel} from "../runner/ai-models.js";
 import {
   type NodeExecutor,
   executedNode,
-  parentOutputFor,
+  textForParentOutputs,
   textOutputs,
 } from "../runner/node-executor.js";
 import {type EmployeeAttachment} from "../runner/task-definition.js";
@@ -55,11 +55,7 @@ export const iterativeRefinementNodeExecutor: NodeExecutor = {
   primitive: "iterativeRefinement",
   async execute(input, runContext) {
     const config = refinementConfigFor(input.node);
-    const parentOutput = parentOutputFor(
-      input.node,
-      runContext.task,
-      runContext.results,
-    );
+    const parentOutput = textForParentOutputs(input.parentOutputs);
     const draft = parentOutput || input.context;
     const employee = employeeFor(input.node);
     const output = await executeIterativeRefinementNode(

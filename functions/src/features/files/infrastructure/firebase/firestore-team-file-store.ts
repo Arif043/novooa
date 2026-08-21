@@ -5,6 +5,10 @@ import {type NodeAttachment} from "../../../task_execution/domain/entities/attac
 import {getDefaultStorageBucket} from "./firebase-storage.js";
 import {getDatabase} from "../../../../shared/firebase/firestore-db.js";
 import {
+  type TeamFileContent,
+  type TeamFileContentReader,
+} from "../../domain/repositories/team-file-content-reader.js";
+import {
   contentSizeBytes,
   type StoredTeamFile,
   type TeamFileStore,
@@ -18,7 +22,7 @@ type ExistingFile = {
   folderId: string | null;
 };
 
-export class FirestoreTeamFileStore implements TeamFileStore {
+export class FirestoreTeamFileStore implements TeamFileStore, TeamFileContentReader {
   async writeTeamFile(input: WriteTeamFileInput): Promise<WrittenFile> {
     const file = await this.writtenFileFrom(input);
     await getDefaultStorageBucket().file(file.storagePath).save(input.content, {
@@ -42,6 +46,22 @@ export class FirestoreTeamFileStore implements TeamFileStore {
     const snapshot = await filesReference(teamId).doc(fileId).get();
     if (!snapshot.exists) throw new Error(`Datei nicht gefunden: ${fileId}`);
     return storedTeamFileFrom(snapshot.id, snapshot.data() ?? {});
+  }
+
+  async readTeamFileContent(
+    teamId: string,
+    fileId: string,
+    versionId: string,
+  ): Promise<TeamFileContent> {
+    const file = await storedTeamFileVersionFor(teamId, fileId, versionId);
+    const [content] = await getDefaultStorageBucket().file(file.storagePath)
+      .download();
+    return {
+      content,
+      displayName: file.displayName,
+      contentType: file.contentType,
+      sizeBytes: file.sizeBytes,
+    };
   }
 
   private async writtenFileFrom(
@@ -183,6 +203,32 @@ function storedTeamFileFrom(
   return {
     fileId,
     versionId: stringFrom(data.currentVersionId, ""),
+    storagePath: stringFrom(data.storagePath, ""),
+    displayName: stringFrom(data.displayName, "Unbenannte Datei"),
+    contentType: stringFrom(data.contentType, "application/octet-stream"),
+    sizeBytes: numberFrom(data.sizeBytes),
+  };
+}
+
+async function storedTeamFileVersionFor(
+  teamId: string,
+  fileId: string,
+  versionId: string,
+): Promise<StoredTeamFile> {
+  const snapshot = await filesReference(teamId).doc(fileId)
+    .collection("versions").doc(versionId).get();
+  if (!snapshot.exists) throw new Error(`Dateiversion nicht gefunden: ${versionId}`);
+  return storedTeamFileVersionFrom(fileId, versionId, snapshot.data() ?? {});
+}
+
+function storedTeamFileVersionFrom(
+  fileId: string,
+  versionId: string,
+  data: Record<string, unknown>,
+): StoredTeamFile {
+  return {
+    fileId,
+    versionId,
     storagePath: stringFrom(data.storagePath, ""),
     displayName: stringFrom(data.displayName, "Unbenannte Datei"),
     contentType: stringFrom(data.contentType, "application/octet-stream"),

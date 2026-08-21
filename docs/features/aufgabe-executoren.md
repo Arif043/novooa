@@ -21,14 +21,15 @@ die Function-Instanz, nicht auf den Rechner der Nutzer:innen.
 ## Prompt
 
 Der Prompt-Executor bietet die Output-Arten `text`, `decision`, `structured`
-und `image`. Entscheidungen liefern die gewaehlte Option als `text`.
+und `image`. Entscheidungen liefern die gewählte Option als `value`.
 Strukturierte Prompts validieren ein required Zod-Object, legen jedes Feld als
 benannten Output ab und schreiben die Gesamtstruktur als JSON in `text`.
 Bild-Prompts verwenden Google GenAI mit `gemini-2.5-flash-image` (optional
-ueber `GOOGLE_IMAGE_MODEL` konfigurierbar) und liefern ausschliesslich
-`dataUrl`, keine Textausgabe. Die Cloud Function erhaelt den benoetigten
-`GEMINI_API_KEY` als gebundenes Secret. Daten-URLs bleiben innerhalb des
-laufenden Workflows; Aktivitaeten speichern nur Medientyp und Bytegroesse.
+ueber `GOOGLE_IMAGE_MODEL` konfigurierbar). Ein vorangehender `media`-Wert
+wird aus Object Storage geladen und als Genkit-Medienteil an Gemini übergeben.
+Das generierte Bild wird als Team-Datei gespeichert und als `media`-`value`
+weitergereicht; Data-URLs verlassen den Executor nicht. Die Cloud Function
+erhält den benötigten `GEMINI_API_KEY` als gebundenes Secret.
 
 Prompt-Anweisungen und Entscheidungen koennen Variablen per `{{name}}` und
 Dot-Pfade wie `{{kunde.name}}` verwenden. Dateianhaenge und Wissensnotizen
@@ -63,7 +64,8 @@ read_file(display_name)
 
 ## Bedingter Ablauf
 
-Der Conditional-Executor nutzt den direkten Vorgaengeroutput als Ziellabel.
+Der Conditional-Executor nutzt die lesbaren primären Werte seiner direkten
+Vorgänger als Ziellabel.
 Er waehlt den Branch mit dem exakt passenden Label, ansonsten den ersten
 Branch. Der Branch-Graph wird als Subgraph ausgefuehrt; dessen finale Ausgabe
 wird `text` des Conditional-Knotens. Ausgehende Top-Level-Kanten sind nur ein
@@ -81,7 +83,7 @@ strukturierte Bewertung.
 ## Dateien und Kanaele
 
 `readFile` gibt den UTF-8-Inhalt einer konkret referenzierten Version als
-`text` aus. `writeFile` schreibt den Vorgaengeroutput als neue Datei oder
+`value` aus. `writeFile` schreibt einen Textwert oder eine Datei-/Medienreferenz als neue Datei oder
 Version. Die strukturierten Datei-Outputs sind in
 [`../node-executor-outputs.md`](../node-executor-outputs.md#datei-schreiben)
 dokumentiert.

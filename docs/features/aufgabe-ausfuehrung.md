@@ -22,17 +22,18 @@ Nicht registrierte Primitives werden mit `status: "skipped"` gespeichert.
 ## Node-Ergebnisse und Templates
 
 Ein `NodeExecutionResult` enthaelt `nodeId`, `primitive`, `status` und
-benannte `outputs`. Der regulaere Kantenfluss verwendet ausschliesslich den
-String-Output `text`. Benannte Werte sind ueber den Referenznamen eines Knotens
+benannte `outputs`. Der primäre Output heisst `value` und ist typisiert.
+Kanten bestimmen ausschliesslich Reihenfolge und Verzweigungen. Ein Knoten
+erhält die typisierten `value`-Outputs seiner direkten Vorgänger. Benannte Werte sind ueber den Referenznamen eines Knotens
 in Templates erreichbar, zum Beispiel:
 
 ```text
 {{email.sender}}
-{{bericht.storagePath}}
+{{bericht.displayName}}
 {{kunde}}
 ```
 
-Der letzte nichtleere `text`-Output ist das `finalOutput` des Runs. Die vollstaendige
+Die letzte lesbare `value`-Ausgabe ist das `finalOutput` des Runs. Die vollständige
 Referenz aller Executor-Outputs liegt in
 [`../node-executor-outputs.md`](../node-executor-outputs.md).
 
@@ -63,7 +64,7 @@ output: { runId: string; status: "queued" | "rejected" }
 speichert Feldname, Datentyp und Optionen in `resumeState`, sendet eine
 Benachrichtigung und erwartet beim Bestätigen `formValues`. Das Backend prüft
 alle Werte gegen die gespeicherte Definition. Danach erhält der wartende Knoten
-einen JSON-`text`-Output sowie einen typisierten Output pro Feld. Feldnamen
+einen primären JSON-`value`-Output sowie einen typisierten Output pro Feld. Feldnamen
 müssen eindeutige Template-Identifier sein, zum Beispiel `kundennummer`; der
 Wert ist dann über `{{formular1.kundennummer}}` verfügbar.
 
@@ -71,8 +72,9 @@ Wert ist dann über `{{formular1.kundennummer}}` verfügbar.
 entscheidet der Nutzer zwischen Bildergalerie und Kamera. Der Client speichert das Bild zuerst
 im team-scoped Dateispeicher und übergibt nur dessen `fileId`. Beim Fortsetzen
 lädt das Backend die Metadaten selbst, akzeptiert ausschließlich `image/*` und
-liefert `fileId`, `versionId`, `storagePath`, `displayName`, `contentType` und
-`sizeBytes` als benannte Outputs. Das spätere Dokument-Scannen ist ein eigener
+liefert einen `media`-`value` mit `fileId`, `versionId`, `displayName`,
+`contentType` und `sizeBytes`. Der physische Speicherort bleibt in der
+Dateiinfrastruktur. Das spätere Dokument-Scannen ist ein eigener
 Medienquelltyp; die aktuelle Kamera nimmt unveränderte Bilder auf.
 
 ## Aktivitaeten

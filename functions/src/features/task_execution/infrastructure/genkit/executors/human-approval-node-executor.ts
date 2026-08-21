@@ -1,6 +1,6 @@
 import {
   type NodeExecutor,
-  parentOutputFor,
+  textForParentOutputs,
   textOutputs,
   waitingForInteractionNode,
 } from "../runner/node-executor.js";
@@ -10,11 +10,7 @@ import {approvalInteraction} from
 export const humanApprovalNodeExecutor: NodeExecutor = {
   primitive: "humanApproval",
   async execute(input, runContext) {
-    const output = parentOutputFor(
-      input.node,
-      runContext.task,
-      runContext.results,
-    );
+    const output = textForParentOutputs(input.parentOutputs);
     const reviewOutput = runContext.resolveTemplates(output);
     return waitingForInteractionNode(
       input.node,

@@ -1,5 +1,8 @@
 import {z} from "genkit";
-import {workflowPrimitives} from "../../../domain/entities/task.js";
+import {
+  type NodeOutputValue,
+  workflowPrimitives,
+} from "../../../domain/entities/task.js";
 
 export const workflowPrimitiveSchema = z.enum(workflowPrimitives);
 
@@ -218,10 +221,33 @@ export const runTaskDefinitionInputSchema = z.object({
   context: z.string().default(""),
 });
 
-export const nodeOutputValueSchema = z.object({
-  type: z.enum(["string", "datetime", "number", "boolean", "json"]),
-  value: z.unknown(),
+const fileReferenceSchema = z.object({
+  fileId: z.string().min(1),
+  versionId: z.string().min(1),
+  displayName: z.string().min(1),
+  contentType: z.string().min(1),
+  sizeBytes: z.number().nonnegative(),
 });
+
+const jsonValueSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.null(),
+  z.array(z.unknown()),
+  z.record(z.string(), z.unknown()),
+]);
+
+export const nodeOutputValueSchema: z.ZodType<NodeOutputValue> =
+  z.discriminatedUnion("type", [
+    z.object({type: z.literal("string"), value: z.string()}),
+    z.object({type: z.literal("datetime"), value: z.string()}),
+    z.object({type: z.literal("number"), value: z.number()}),
+    z.object({type: z.literal("boolean"), value: z.boolean()}),
+    z.object({type: z.literal("json"), value: jsonValueSchema}),
+    z.object({type: z.literal("file"), value: fileReferenceSchema}),
+    z.object({type: z.literal("media"), value: fileReferenceSchema}),
+  ]);
 
 export const nodeExecutionResultSchema = z.object({
   nodeId: z.string(),

@@ -1,6 +1,7 @@
 import {
   type CompletedTaskGraphOutput,
   type NodeOutputValue,
+  type TaskResumeState,
   type WaitingTaskGraphOutput,
 } from "../../domain/entities/task.js";
 import {
@@ -180,7 +181,9 @@ function runFromRow(row: TaskRunRow): TaskRunDocument {
 }
 
 function resumeStateFromRow(row: TaskRunRow) {
-  return taskResumeStateSchema.parse(jsonRecord(row.resume_state_json ?? "{}"));
+  return taskResumeStateSchema.parse(
+    jsonRecord(row.resume_state_json ?? "{}"),
+  ) as TaskResumeState;
 }
 
 function errorMessage(error: unknown): string {

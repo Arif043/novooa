@@ -33,10 +33,27 @@ class NodeExecutionResult {
   final String? message;
 }
 
+enum NodeOutputType {
+  string,
+  datetime,
+  number,
+  boolean,
+  json,
+  file,
+  media;
+
+  static NodeOutputType fromName(String name) {
+    return NodeOutputType.values.firstWhere(
+      (type) => type.name == name,
+      orElse: () => NodeOutputType.json,
+    );
+  }
+}
+
 class NodeOutputValue {
   const NodeOutputValue({required this.type, required this.value});
 
-  final String type;
+  final NodeOutputType type;
   final Object? value;
 }
 

@@ -12,6 +12,7 @@ test("maps a dialog submission to typed node outputs", async () => {
   }, "team-1", {} as never);
 
   assert.deepEqual(outputs, {
+    value: {type: "json", value: {name: "Mila", age: 27, active: true, channel: "E-Mail"}},
     text: {type: "string", value: '{"name":"Mila","age":27,"active":true,"channel":"E-Mail"}'},
     name: {type: "string", value: "Mila"},
     age: {type: "number", value: 27},
@@ -43,9 +44,16 @@ test("maps a media submission to trusted file outputs", async () => {
     }),
   } as never);
 
-  assert.deepEqual(outputs.fileId, {type: "string", value: "image-1"});
-  assert.deepEqual(outputs.contentType, {type: "string", value: "image/jpeg"});
-  assert.deepEqual(outputs.sizeBytes, {type: "number", value: 42});
+  assert.deepEqual(outputs.value, {
+    type: "media",
+    value: {
+      fileId: "image-1",
+      versionId: "version-1",
+      displayName: "beleg.jpg",
+      contentType: "image/jpeg",
+      sizeBytes: 42,
+    },
+  });
 });
 
 function dialogResumeState(): TaskResumeState {

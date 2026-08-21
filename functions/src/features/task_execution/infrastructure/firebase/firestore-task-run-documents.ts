@@ -50,5 +50,5 @@ export function serializable(value: unknown): unknown {
 export function resumeStateFromDocument(
   data: Record<string, unknown>,
 ): TaskResumeState {
-  return taskResumeStateSchema.parse(data.resumeState);
+  return taskResumeStateSchema.parse(data.resumeState) as TaskResumeState;
 }

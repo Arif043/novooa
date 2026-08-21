@@ -4,7 +4,7 @@ import {
   type NodeExecutor,
   type TaskVariables,
   executedNode,
-  parentOutputFor,
+  textForParentOutputs,
   textOutputs,
 } from "../runner/node-executor.js";
 import {
@@ -23,11 +23,7 @@ const maxOutputBytes = 10 * 1024;
 export const scriptNodeExecutor: NodeExecutor = {
   primitive: "script",
   async execute(input, runContext) {
-    const parentOutput = parentOutputFor(
-      input.node,
-      runContext.task,
-      runContext.results,
-    );
+    const parentOutput = textForParentOutputs(input.parentOutputs);
     const output = await executeScriptNode({
       input: runContext.resolveTemplates(parentOutput),
       script: runContext.resolveTemplates(scriptFor(input.node)),

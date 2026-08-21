@@ -9,6 +9,7 @@ import {type TaskRunInteraction} from
   "../../../domain/entities/task-run-interaction.js";
 import {type NodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 import {type TeamFileStore} from "../../../../files/domain/repositories/team-file-store.js";
+import {type TeamFileContentReader} from "../../../../files/domain/repositories/team-file-content-reader.js";
 import {type TaskMessageSender} from "../../../domain/repositories/task-message-sender.js";
 
 export type TaskVariables = Record<string, unknown>;
@@ -27,13 +28,21 @@ export type TaskRunContext = {
   runSubgraph: SubgraphRunner;
   resolveTemplates: (text: string) => string;
   teamFileStore: TeamFileStore;
+  fileContentReader: TeamFileContentReader;
   messageSender: TaskMessageSender;
+};
+
+export type ParentNodeOutput = {
+  nodeId: string;
+  outputName: string;
+  value: NodeOutputValue;
 };
 
 export type NodeExecutorInput = {
   ai: GenkitBeta;
   node: WorkflowNode;
   context: string;
+  parentOutputs: ParentNodeOutput[];
   attachmentWorkspace?: NodeAttachmentWorkspace;
 };
 
@@ -94,15 +103,16 @@ export function waitingForInteractionNode(
   };
 }
 
-export function parentOutputFor(
+export function parentOutputsFor(
   node: WorkflowNode,
   task: Task,
   results: Map<string, NodeExecutionResult>,
-): string {
-  const parentOutputs = parentResultsFor(node, task, results)
-    .map((parentResult) => textOutputFromResult(parentResult.result))
-    .filter((output) => output.trim().length > 0);
-  return parentOutputs[parentOutputs.length - 1] ?? "";
+): ParentNodeOutput[] {
+  return parentResultsFor(node, task, results).flatMap((parent) => {
+    const value = primaryOutputFromResult(parent.result);
+    if (value === undefined) return [];
+    return [{nodeId: parent.result.nodeId, outputName: "value", value}];
+  });
 }
 
 export function stringOutput(value: string): NodeOutputValue {
@@ -114,14 +124,42 @@ export function datetimeOutput(value: string): NodeOutputValue {
 }
 
 export function textOutputs(text: string): Record<string, NodeOutputValue> {
-  return text.trim().length === 0 ? {} : {text: stringOutput(text)};
+  if (text.trim().length === 0) return {};
+  const value = stringOutput(text);
+  return {value, text: value};
 }
 
 export function textOutputFromResult(result: NodeExecutionResult): string {
-  const text = result.outputs.text?.value;
-  if (typeof text === "string") return text;
-  const dataUrl = result.outputs.dataUrl?.value;
-  return typeof dataUrl === "string" ? dataUrl : "";
+  const value = primaryOutputFromResult(result);
+  return value === undefined ? "" : textForOutputValue(value);
+}
+
+export function textForParentOutputs(outputs: ParentNodeOutput[]): string {
+  return outputs
+    .map((output) => textForOutputValue(output.value))
+    .filter((value) => value.trim().length > 0)
+    .join("\n\n");
+}
+
+export function singleParentOutput(
+  outputs: ParentNodeOutput[],
+): NodeOutputValue | undefined {
+  if (outputs.length <= 1) return outputs[0]?.value;
+  throw new Error("Dieser Baustein erwartet genau eine Eingabe.");
+}
+
+function primaryOutputFromResult(
+  result: NodeExecutionResult,
+): NodeOutputValue | undefined {
+  return result.outputs.value;
+}
+
+function textForOutputValue(value: NodeOutputValue): string {
+  if (value.type === "string" || value.type === "datetime") return value.value;
+  if (value.type === "number" || value.type === "boolean") return String(value.value);
+  if (value.type === "json") return JSON.stringify(value.value);
+  if (value.type === "media") return `Bild: ${value.value.displayName}`;
+  return `Datei: ${value.value.displayName}`;
 }
 
 export function parentResultsFor(

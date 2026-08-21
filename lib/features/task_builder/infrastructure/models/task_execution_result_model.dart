@@ -103,6 +103,6 @@ class NodeOutputValueModel {
   }
 
   NodeOutputValue toDomain() {
-    return NodeOutputValue(type: type, value: value);
+    return NodeOutputValue(type: NodeOutputType.fromName(type), value: value);
   }
 }

@@ -46,7 +46,7 @@ class NodeOutputChips extends StatelessWidget {
       ConditionalNodeConfig() ||
       IterativeRefinementNodeConfig() ||
       ReadFileNodeConfig() ||
-      HumanApprovalNodeConfig() => const ['text'],
+      HumanApprovalNodeConfig() => const ['value'],
       DialogInputNodeConfig() => _dialogInputOutputNames(config),
       MediaInputNodeConfig() => _mediaInputOutputs,
       _ => const [],
@@ -55,16 +55,19 @@ class NodeOutputChips extends StatelessWidget {
 
   List<String> _promptOutputs(PromptNodeConfig config) {
     return switch (config.outputType) {
-      PromptOutputType.text => const ['text'],
-      PromptOutputType.decision => const ['Entscheidung'],
-      PromptOutputType.structured => _structuredNames(config.structuredFields),
-      PromptOutputType.image => const ['dataUrl'],
+      PromptOutputType.text => const ['value'],
+      PromptOutputType.decision => const ['value'],
+      PromptOutputType.structured => [
+        'value',
+        ..._structuredNames(config.structuredFields),
+      ],
+      PromptOutputType.image => const ['value'],
     };
   }
 
   List<String> _eventOutputs(ReadChannelEventNodeConfig config) {
     if (config.kind == ChannelEventKind.email) return _emailOutputs;
-    return const ['text', 'sender', 'message', 'receivedAt'];
+    return const ['value', 'sender', 'message', 'receivedAt'];
   }
 
   List<String> _structuredNames(List<StructuredOutputField> fields) {
@@ -76,36 +79,28 @@ class NodeOutputChips extends StatelessWidget {
 
   List<String> _dialogInputOutputNames(DialogInputNodeConfig config) {
     return [
+      'value',
       for (final field in config.fields)
         if (field.name.trim().isNotEmpty) field.name.trim(),
     ];
   }
 }
 
-const _emailOutputs = ['text', 'sender', 'subject', 'message', 'receivedAt'];
+const _emailOutputs = ['value', 'sender', 'subject', 'message', 'receivedAt'];
 const _sendMessageOutputs = [
-  'text',
+  'value',
   'recipient',
   'channelId',
   'providerMessageId',
 ];
 const _writeFileOutputs = [
-  'text',
+  'value',
   'fileId',
   'versionId',
-  'storagePath',
   'displayName',
   'contentType',
   'sizeBytes',
   'folderId',
   'isNewFile',
 ];
-const _mediaInputOutputs = [
-  'text',
-  'fileId',
-  'versionId',
-  'storagePath',
-  'displayName',
-  'contentType',
-  'sizeBytes',
-];
+const _mediaInputOutputs = ['value'];

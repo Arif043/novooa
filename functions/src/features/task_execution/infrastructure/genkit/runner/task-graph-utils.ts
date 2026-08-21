@@ -1,6 +1,5 @@
 import {
   type NodeExecutionResult,
-  type TaskGraphInput,
   type TaskDefinition,
   type WorkflowEdge,
   type WorkflowNode,
@@ -20,24 +19,9 @@ export function nextRunnableIndex(
 }
 
 export function contextFor(
-  node: WorkflowNode,
-  input: TaskGraphInput,
-  results: Map<string, NodeExecutionResult>,
   variables: TaskVariables,
 ): string {
-  const parentOutputs = input.taskDefinition.edges
-    .filter((edge) => edge.to === node.id)
-    .map((edge) => {
-      const result = results.get(edge.from);
-      return result === undefined ? "" : textOutputFromResult(result);
-    })
-    .filter((output) => output.trim().length > 0);
-  return [
-    variablesContext(variables),
-    ...parentOutputs,
-  ]
-    .filter((part) => part.trim().length > 0)
-    .join("\n\n");
+  return variablesContext(variables);
 }
 
 function variablesContext(variables: TaskVariables): string {

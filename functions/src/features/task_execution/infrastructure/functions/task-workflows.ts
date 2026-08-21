@@ -69,6 +69,7 @@ const workerStores = {
   taskRunStore,
   objectStore,
   teamFileStore,
+  fileContentReader: teamFileStore,
   messageSender,
   knowledgeBaseStore,
 };

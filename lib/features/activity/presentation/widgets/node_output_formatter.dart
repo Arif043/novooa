@@ -32,6 +32,10 @@ class NodeOutput {
   final Object? value;
 
   Object? get displayValue {
+    if ((type == 'file' || type == 'media') && value is Map) {
+      final reference = value as Map;
+      return reference['displayName'] ?? value;
+    }
     if (type != 'json' || value is! String) return value;
     try {
       return jsonDecode(value as String);
@@ -43,6 +47,7 @@ class NodeOutput {
 
 class NodeOutputFormatter {
   static const _labels = <String, String>{
+    'value': 'Ergebnis',
     'text': 'Ergebnis',
     'sender': 'Absender',
     'subject': 'Betreff',
@@ -53,7 +58,6 @@ class NodeOutputFormatter {
     'providerMessageId': 'Nachrichten-ID',
     'fileId': 'Datei-ID',
     'versionId': 'Version',
-    'storagePath': 'Speicherort',
     'displayName': 'Dateiname',
     'contentType': 'Dateityp',
     'sizeBytes': 'Größe',

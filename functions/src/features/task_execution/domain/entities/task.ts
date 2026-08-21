@@ -13,6 +13,7 @@ import {
 import {
   type TaskRunInteraction,
 } from "./task-run-interaction.js";
+import {type NodeOutputValue} from "./workflow-value.js";
 export type {
   DialogInputDefinition,
   DialogInputField,
@@ -30,6 +31,11 @@ export type {
   NodeAttachment,
   SkillAttachment,
 } from "./attachments.js";
+export type {
+  FileReference,
+  MediaReference,
+  NodeOutputValue,
+} from "./workflow-value.js";
 export const workflowPrimitives = [
   "stringInput",
   "script",
@@ -176,10 +182,6 @@ export type TaskDefinition = {
   objective: string;
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
-};
-export type NodeOutputValue = {
-  type: "string" | "datetime" | "number" | "boolean" | "json";
-  value?: unknown;
 };
 export type NodeExecutionResult = {
   nodeId: string;

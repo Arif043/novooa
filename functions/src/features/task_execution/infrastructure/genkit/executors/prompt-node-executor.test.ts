@@ -32,6 +32,7 @@ function imageInput(): PromptNodeInput {
     outputType: "image",
     choices: [],
     structuredFields: [],
+    mediaUrls: [],
   };
 }
 

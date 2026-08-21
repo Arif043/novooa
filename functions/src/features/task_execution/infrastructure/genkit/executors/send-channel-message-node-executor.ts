@@ -42,6 +42,7 @@ export const sendChannelMessageNodeExecutor: NodeExecutor = {
       providerMessageId: sent.providerMessageId,
     });
     return executedNode(input.node, {
+      value: stringOutput(body),
       text: stringOutput(body),
       recipient: stringOutput(recipient),
       channelId: stringOutput(sent.channelId),

@@ -41,17 +41,19 @@ function templateValueAt(
 ): unknown {
   const segments = path.split(".");
   const outputValue = nodeOutputAt(context.nodeOutputs, segments);
-  if (outputValue !== undefined) return outputValue.value;
+  if (outputValue !== undefined) return outputValue;
   return valueAtPath(context.variables, segments);
 }
 
 function nodeOutputAt(
   scopes: VariableTemplateContext["nodeOutputs"],
   path: string[],
-): NodeOutputValue | undefined {
+): unknown {
   if (path.length < 2) return undefined;
-  const [referenceName, ...outputPath] = path;
-  return valueAtPath(scopes[referenceName], outputPath) as NodeOutputValue;
+  const [referenceName, outputName, ...valuePath] = path;
+  const output = scopes[referenceName]?.[outputName];
+  if (output === undefined) return undefined;
+  return valueAtPath(output.value, valuePath);
 }
 
 function nodeOutputScopesFor(

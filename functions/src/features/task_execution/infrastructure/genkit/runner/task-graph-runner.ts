@@ -29,6 +29,7 @@ import {
   skipInactiveBranches,
   validateGraph,
 } from "./task-graph-utils.js";
+import {parentOutputsFor} from "./node-executor.js";
 import {
   formatTaskFinished,
   formatTaskStarted,
@@ -44,7 +45,7 @@ import {
   variableTemplateContextFor,
 } from "./variable-template.js";
 import {type TaskGraphRuntime} from "./task-graph-runtime.js";
-
+import {updateTaskVariables} from "./task-run-variables.js";
 export async function executeTaskGraph(
   ai: GenkitBeta,
   input: TaskGraphInput,
@@ -107,7 +108,12 @@ async function runNodes(
     );
     if (index === -1) throw new Error("Task graph contains a cycle.");
     const node = remaining.splice(index, 1)[0];
-    const context = contextFor(node, input, results, variables);
+    const context = contextFor(variables);
+    const parentOutputs = parentOutputsFor(
+      node,
+      input.taskDefinition,
+      results,
+    );
     const skipNode = shouldSkipNode(
       node,
       input.taskDefinition,
@@ -119,13 +125,14 @@ async function runNodes(
     const result = await runNodeWithTrail(ai, {
       node,
       context,
+      parentOutputs,
       runContext: runContextFor(ai, input, runtime, results, variables),
       skipNode,
       startedAt,
       objectStore: runtime.objectStore,
       knowledgeBaseStore: runtime.knowledgeBaseStore,
     });
-    updateVariables(variables, result);
+    updateTaskVariables(variables, result);
     results.set(node.id, result);
     skipInactiveBranches(node, input.taskDefinition, result, skippedNodeIds);
     logSkippedBranches(node, input.taskDefinition.id, result, skippedNodeIds);
@@ -146,7 +153,6 @@ async function runNodes(
     nodeResults: orderedResults(input.taskDefinition, results),
   };
 }
-
 function runSubgraphFor(
   ai: GenkitBeta,
   variables: TaskVariables,
@@ -183,6 +189,7 @@ function runContextFor(
     results,
     variables,
     teamFileStore: runtime.teamFileStore,
+    fileContentReader: runtime.fileContentReader,
     messageSender: runtime.messageSender,
     runSubgraph: runSubgraphFor(ai, variables, input.teamId, runtime),
     resolveTemplates: (text: string) => resolveVariableTemplates(
@@ -190,13 +197,4 @@ function runContextFor(
       variableTemplateContextFor(input.taskDefinition, results, variables),
     ),
   };
-}
-
-function updateVariables(
-  variables: TaskVariables,
-  result: NodeExecutionResult,
-): void {
-  if (result.variables === undefined) return;
-  for (const key of Object.keys(variables)) delete variables[key];
-  Object.assign(variables, result.variables);
 }

@@ -4,6 +4,10 @@ import path from "node:path";
 import {storagePathFor} from "../../domain/entities/file-storage-path.js";
 import {type NodeAttachment} from "../../../task_execution/domain/entities/attachments.js";
 import {
+  type TeamFileContent,
+  type TeamFileContentReader,
+} from "../../domain/repositories/team-file-content-reader.js";
+import {
   contentSizeBytes,
   type FileContent,
   type StoredTeamFile,
@@ -33,7 +37,14 @@ type StoredFileRow = FileRow & {
   storage_path: string;
 };
 
-export class LocalTeamFileStore implements TeamFileStore {
+type StoredFileVersionRow = SqlRow & {
+  display_name: string;
+  content_type: string;
+  size_bytes: number;
+  storage_path: string;
+};
+
+export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader {
   constructor(
     private readonly database: LocalSqlDatabase,
     private readonly rootDirectory: string,
@@ -67,6 +78,24 @@ export class LocalTeamFileStore implements TeamFileStore {
       displayName: row.display_name,
       contentType: row.content_type,
       sizeBytes: row.size_bytes,
+    };
+  }
+
+  async readTeamFileContent(
+    teamId: string,
+    fileId: string,
+    versionId: string,
+  ): Promise<TeamFileContent> {
+    const file = await this.database.get<StoredFileVersionRow>(
+      loadFileVersionSql(),
+      [teamId, fileId, versionId],
+    );
+    if (file === null) throw new Error(`Dateiversion nicht gefunden: ${versionId}`);
+    return {
+      content: await readFile(localPath(this.rootDirectory, file.storage_path)),
+      displayName: file.display_name,
+      contentType: file.content_type,
+      sizeBytes: file.size_bytes,
     };
   }
 
@@ -218,6 +247,11 @@ function loadFileSql() {
   return `SELECT id, owner_uid, folder_id, current_version_id, display_name,
     content_type, size_bytes, storage_path FROM files
     WHERE team_id = ? AND id = ?`;
+}
+
+function loadFileVersionSql() {
+  return `SELECT display_name, content_type, size_bytes, storage_path
+    FROM file_versions WHERE team_id = ? AND file_id = ? AND id = ?`;
 }
 
 function upsertFileSql() {

@@ -8,6 +8,7 @@ import {
 } from "../entities/task.js";
 import {type TaskRunInteraction} from "../entities/task-run-interaction.js";
 import {type TeamFileStore} from "../../../files/domain/repositories/team-file-store.js";
+import {mediaReferenceFor} from "../entities/workflow-value.js";
 
 export async function responseOutputsForTaskRun(
   resumeState: TaskResumeState,
@@ -32,7 +33,8 @@ function waitingResultFor(resumeState: TaskResumeState) {
 }
 
 function textOutput(output: string): Record<string, NodeOutputValue> {
-  return {text: {type: "string", value: output}};
+  const value = {type: "string" as const, value: output};
+  return {value, text: value};
 }
 
 function interactionFor(
@@ -57,7 +59,11 @@ function dialogInputOutputs(
     },
     {},
   );
-  return {...textOutput(JSON.stringify(values)), ...outputs};
+  return {
+    value: {type: "json", value: values},
+    text: {type: "string", value: JSON.stringify(values)},
+    ...outputs,
+  };
 }
 
 async function mediaInputOutputs(
@@ -83,19 +89,12 @@ function mediaFileOutputs(
   const value = {
     fileId: file.fileId,
     versionId: file.versionId,
-    storagePath: file.storagePath,
     displayName: file.displayName,
     contentType: file.contentType,
     sizeBytes: file.sizeBytes,
   };
   return {
-    text: {type: "string", value: JSON.stringify(value)},
-    fileId: {type: "string", value: file.fileId},
-    versionId: {type: "string", value: file.versionId},
-    storagePath: {type: "string", value: file.storagePath},
-    displayName: {type: "string", value: file.displayName},
-    contentType: {type: "string", value: file.contentType},
-    sizeBytes: {type: "number", value: file.sizeBytes},
+    value: {type: "media", value: mediaReferenceFor(value)},
   };
 }
 

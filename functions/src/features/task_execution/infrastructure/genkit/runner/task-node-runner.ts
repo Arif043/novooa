@@ -6,6 +6,7 @@ import {executorFor} from "./node-executor-registry.js";
 import {
   parentResultsFor,
   skippedNode,
+  type ParentNodeOutput,
   type TaskRunContext,
 } from "./node-executor.js";
 import {prepareNodeAttachmentWorkspace} from "./node-attachment-workspace.js";
@@ -27,6 +28,7 @@ import {
 type NodeRunInput = {
   node: WorkflowNode;
   context: string;
+  parentOutputs: ParentNodeOutput[];
   runContext: TaskRunContext;
   skipNode: boolean;
   startedAt: number;
@@ -100,6 +102,7 @@ async function executeNode(
       ai,
       node: input.node,
       context: input.context,
+      parentOutputs: input.parentOutputs,
       attachmentWorkspace,
     }, input.runContext);
   } finally {
