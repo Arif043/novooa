@@ -134,6 +134,7 @@ npm run deploy         # firebase deploy --only functions
 | Feature „Fähigkeiten" | [`docs/features/skills.md`](./docs/features/skills.md)             | SKILL.md-Fähigkeiten mit Progressive Disclosure         |
 | Feature „Mitarbeiter" | [`docs/features/mitarbeiter.md`](./docs/features/mitarbeiter.md)   | Subagents mit Rolle, Prompt-Vorlage und Default-Skills  |
 | Feature „KI-Agent"    | [`docs/features/ki-agent.md`](./docs/features/ki-agent.md)         | In-App Assistenz für Aufgabenbau und Wissensbasis       |
+| Feature „ML-Modelle"  | [`docs/features/ml-modelle.md`](./docs/features/ml-modelle.md)     | ONNX-Modellkatalog und Modellverträge                   |
 
 Wie du eine neue Feature-Doc anlegst → [`docs/README.md`](./docs/README.md).
 

@@ -113,6 +113,7 @@ teams/{teamId}/inboxes/{channelId}/conversations/{conversationId}/messages/{mess
 teams/{teamId}/folders/{folderId}
 teams/{teamId}/files/{fileId}
 teams/{teamId}/files/{fileId}/versions/{versionId}
+modelCatalog/{modelId}
 teams/{teamId}/knowledgeBases/{knowledgeBaseId}
 teams/{teamId}/knowledgeBases/{knowledgeBaseId}/notes/{noteId}
 ```

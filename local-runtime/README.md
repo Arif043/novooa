@@ -6,7 +6,7 @@ vollständig lokal ausführbare novooa-Version.
 ## Migrationen
 
 Migrationen liegen unter `migrations/` und werden in aufsteigender Reihenfolge
-ausgeführt. Die erste Migration bildet die bestehenden Cloud-Konzepte lokal ab:
+ausgeführt. Die Migrationen bilden die bestehenden Cloud-Konzepte lokal ab:
 
 - Teams und Mitglieder
 - Aufgaben und TaskRuns
@@ -15,6 +15,8 @@ ausgeführt. Die erste Migration bildet die bestehenden Cloud-Konzepte lokal ab:
 - Kommunikationskanäle
 - Wissensbasis
 - Dateien und Dateiversionen
+
+`004_model_catalog.sql` ergänzt den ML-Modellkatalog und ONNX-Modellverträge.
 
 Die Cloud Functions nutzen diese Dateien noch nicht direkt. Sie dienen als
 Vertrag für die späteren SQLite-Adapter:
@@ -25,6 +27,7 @@ Vertrag für die späteren SQLite-Adapter:
 - `SQLiteTaskTriggerStore`
 - `LocalTeamFileStore`
 - `SQLiteKnowledgeBaseStore`
+- `SQLiteModelCatalog`
 
 Der konkrete SQLite-Treiber ist bewusst noch nicht festgelegt. Die Adapter
 nutzen vorerst `LocalSqlDatabase`, damit wir den Treiber später austauschen

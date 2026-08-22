@@ -23,7 +23,7 @@ Feature Infrastructure
 
 SQLite ist der Default für strukturierte lokale Daten. Es braucht keinen Server,
 ist transaktional und eignet sich für Aufgaben, Runs, Aktivitäten, Trigger,
-Teams, Kanäle und Wissensbasis-Metadaten.
+Teams, Kanäle, Wissensbasis-Metadaten und Modellkataloge.
 
 Die erste Migration liegt in
 [`local-runtime/migrations/001_initial.sql`](../local-runtime/migrations/001_initial.sql).
@@ -41,6 +41,10 @@ knowledge_notes
 files
 file_versions
 ```
+
+Die Migration
+[`004_model_catalog.sql`](../local-runtime/migrations/004_model_catalog.sql)
+ergänzt den ONNX-Modellkatalog in der Tabelle `model_catalog`.
 
 Dateien liegen im lokalen Dateisystem:
 

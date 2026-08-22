@@ -67,6 +67,11 @@ functions/src/
         firebase/
         genkit/
         local/
+    machine_learning/
+      domain/
+      infrastructure/
+        firebase/
+        local/
     notifications/
       domain/
       infrastructure/
@@ -116,6 +121,7 @@ nur öffentliche Trigger und enthält keine Logik.
 | `communication` | Nachrichten, Kanäle, Inbox, Trigger sowie Mail-Connectoren und Provider-Sender |
 | `files` | Datei-Metadaten, Versionen und Objektzugriff |
 | `knowledge_base` | Notizen, Links und Workspace-Auflösung |
+| `machine_learning` | Modellkatalog, ONNX-Verträge und spätere Inferenzports |
 | `notifications` | In-App-Freigaben und Push-Versand |
 
 Ein Feature darf einen Port eines anderen Features verwenden, nicht dessen

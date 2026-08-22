@@ -30,6 +30,7 @@ pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
 | Dateien         | [`features/dateien.md`](./features/dateien.md)            | In Entwicklung |
 | Wissensbasis    | [`features/wissensbasis.md`](./features/wissensbasis.md)  | In Entwicklung |
 | KI-Agent        | [`features/ki-agent.md`](./features/ki-agent.md)          | In Entwicklung |
+| ML-Modelle      | [`features/ml-modelle.md`](./features/ml-modelle.md)      | Katalog und Vertrag |
 
 ## Konvention: Neue Feature-Doc anlegen
 
