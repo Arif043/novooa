@@ -31,6 +31,7 @@ Vertrag für die späteren SQLite-Adapter:
 - `LocalModelArtifactReader`
 - `LocalOnnxInferenceRuntime`
 - `LocalPythonOnnxWorker`
+- `LocalPythonModelInputTransformer`
 
 Der konkrete SQLite-Treiber ist bewusst noch nicht festgelegt. Die Adapter
 nutzen vorerst `LocalSqlDatabase`, damit wir den Treiber später austauschen
@@ -42,9 +43,9 @@ bereits aufbereitete Statements; ein lokaler CLI kann die Dateien aus
 
 ## Python-ONNX-Runtime
 
-Die lokale ONNX-Ausführung nutzt einen separaten Python-Worker unter
-`python/onnx_worker.py`. Die Runtime wird bewusst in einer lokalen virtuellen
-Umgebung installiert:
+Die lokale ONNX-Ausführung und Bildvorverarbeitung nutzen getrennte Python-
+Worker unter `python/onnx_worker.py` und `python/input_transform_worker.py`.
+Die Runtime wird bewusst in einer lokalen virtuellen Umgebung installiert:
 
 ```bash
 python3 -m venv .novooa/python

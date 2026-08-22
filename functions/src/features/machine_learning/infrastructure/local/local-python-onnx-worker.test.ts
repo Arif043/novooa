@@ -3,16 +3,18 @@ import {mkdtemp, rm, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import path from "node:path";
 import test from "node:test";
+import {LocalPythonProcess} from "./local-python-process.js";
 import {LocalPythonOnnxWorker} from "./local-python-onnx-worker.js";
 
 test("exchanges binary tensors with an injected local Python worker", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "novooa-onnx-worker-"));
   try {
     const scriptPath = await workerScriptIn(directory);
-    const worker = new LocalPythonOnnxWorker({
+    const process = new LocalPythonProcess({
       pythonExecutable: "python3",
       workerScriptPath: scriptPath,
     });
+    const worker = new LocalPythonOnnxWorker(process);
     const outputs = await worker.execute({
       artifact: Uint8Array.from([1]),
       inputs: [{name: "input", dataType: "uint8", shape: [1], bytes: Uint8Array.from([12])}],

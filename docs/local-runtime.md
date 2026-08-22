@@ -62,6 +62,12 @@ standardisierte Worker-Protokoll. Die Abhängigkeiten liegen in
 der spätere lokale Composition Root konfiguriert den Python-Interpreter und
 den Workerpfad explizit.
 
+Bildquellen werden über denselben lokalen Python-Prozess gemäß ihrem
+Modellvertrag in Tensoren transformiert. `input_transform_worker.py` verwendet
+eine erweiterbare Registry für Dekodierung, Skalierung, Layout und
+Normalisierung. Damit ist die Bildaufbereitung nicht an Firebase Storage oder
+an einen konkreten Modell-Baustein gekoppelt.
+
 ## Lokale Identität und Teams
 
 Firebase Auth ist für eine rein lokale Runtime nicht erforderlich. Beim ersten
@@ -123,6 +129,9 @@ dessen Infrastructure-Bereich.
   über `local-runtime/python/onnx_worker.py` aus. Der gemeinsame
   `ModelInferenceRuntime`-Port hält diese lokale Ausführung von einer späteren
   Cloud-Runtime entkoppelt.
+- `PrepareModelInputs` und `LocalPythonModelInputTransformer` bereiten
+  Bildquellen vertragsbasiert als Tensoren auf. Die Cloud erhält später einen
+  alternativen Adapter für denselben `ModelInputTransformer`-Port.
 - `SqlMigrationRunner` wendet Migrationen treiberneutral über
   `LocalSqlDatabase` an.
 

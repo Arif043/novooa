@@ -132,6 +132,47 @@ Der lokale Composition Root injiziert den Interpreterpfad sowie den Pfad zum
 Worker. Dadurch ist die Python-Abhängigkeit weder Teil der Cloud Functions noch
 eine implizite globale Voraussetzung.
 
+## Eingabetransformationen
+
+`PrepareModelInputs` ordnet fachliche Quellen den Eingangsdefinitionen des
+Modellvertrags zu. Eine Quelle ist entweder ein bereits vorbereiteter Tensor
+oder Bildbytes mit Content-Type. `ModelInputTransformer` ist der Port für die
+technische Umwandlung. Erst danach nimmt `RunModelInference` ausschließlich
+Tensoren entgegen.
+
+```text
+MediaReference → TeamFileContentReader → Bildquelle
+                                        ↓
+                              PrepareModelInputs
+                                        ↓
+                               ModelInputTransformer
+                                        ↓
+                                    ModelTensor
+```
+
+Die spätere Modell-Inferenz-Node lädt ihre Bildquelle über den bestehenden
+`TeamFileContentReader`; eine Firebase-Storage-Referenz wird nicht in den
+Modellvertrag oder an die Runtime weitergereicht.
+
+Lokal erfüllt `LocalPythonModelInputTransformer` den Port. Sein Worker baut
+eine `TransformationRegistry` aus eigenständigen `InputTransformStrategy`-
+Klassen zusammen. Neue Transformationen erfordern damit nur eine zusätzliche
+Strategieklasse und deren Registrierung im lokalen Composition Root, nicht aber
+eine Änderung der Pipeline oder des Modellvertrags.
+
+| Transformation | Parameter | Wirkung |
+| --- | --- | --- |
+| `image.decode` | `colorSpace`: `rgb`, `rgba`, `grayscale` | Dekodiert und setzt den Farbraum. |
+| `image.resize` | `width`, `height`, optional `colorSpace` | Skaliert mit LANCZOS. |
+| `tensor.layout` | `order`: `channelsFirst`, `channelsLast` | Ordnet HWC und CHW um. |
+| `tensor.normalize` | `mean`, `std` | Normalisiert jeden Farbkanal. |
+
+Der Worker fügt bei einem Vertrag wie `["dynamic", 3, 224, 224]` den Batch-
+Index hinzu, wenn das Bild zunächst als `[3, 224, 224]` vorliegt. Vor der
+Rückgabe prüft er Form, Datentyp und Byte-Länge. Tensorquellen werden zunächst
+nur ohne Vorverarbeitung durchgereicht; weitere Tensorstrategien ergänzen wir
+über denselben Port.
+
 ### Cloud-Runtime
 
 Firebase Functions führt keine Python-/ONNX-Runtime mit sich. Die Cloud-Variante
@@ -142,9 +183,8 @@ unverändert.
 
 ## Nächste Schritte
 
-1. Die Transformations-Registry für Bild- und Tensorquellen implementieren.
-2. Einen allgemeinen Modell-Inferenz-Baustein konfigurieren und ausführen.
-3. Die Cloud-Inferenzruntime sowie die novooa-interne Upload-/Prüfpipeline für
+1. Einen allgemeinen Modell-Inferenz-Baustein konfigurieren und ausführen.
+2. Die Cloud-Inferenzruntime sowie die novooa-interne Upload-/Prüfpipeline für
    Systemmodelle ergänzen.
 
 ## Verwandt
