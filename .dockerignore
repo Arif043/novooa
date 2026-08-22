@@ -1,0 +1,17 @@
+.git
+.dart_tool
+.firebase
+.idea
+.vscode
+build
+coverage
+node_modules
+functions/lib
+functions/node_modules
+functions/.env
+functions/.env.*
+functions/.secret.local
+functions/firestore-debug.log
+.env
+.env.*
+*.log

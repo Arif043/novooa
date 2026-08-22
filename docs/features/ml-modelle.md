@@ -188,11 +188,35 @@ nur ohne Vorverarbeitung durchgereicht; weitere Tensorstrategien ergänzen wir
 
 ### Cloud-Runtime
 
-Firebase Functions führt keine Python-/ONNX-Runtime mit sich. Die Cloud-Variante
-implementiert deshalb künftig denselben `ModelInferenceRuntime`-Port als
-authentifizierten Aufruf eines separaten Inferenzdienstes, etwa auf Cloud Run.
-Katalog, Vertrag, Artefakt-Reader und der spätere Modell-Baustein bleiben dabei
-unverändert.
+Die Cloud-Inferenz läuft in einem privaten Cloud-Run-Container. Der Container
+verwendet denselben Domain-Use-Case `RunModelInferenceWithSources` wie die
+lokale Variante, jedoch mit Firestore als `ModelCatalog` und Cloud Storage als
+`ModelArtifactReader`. ONNX Runtime und die Transformationsstrategien laufen
+im Container in Python. Dadurch bleiben Katalog, Vertrag und Ausführungspfad
+identisch; nur die technische Composition unterscheidet sich.
+
+Der HTTP-Adapter nimmt ausschließlich transportierbare Werte entgegen:
+
+```text
+POST /v1/inferences
+{ teamId, modelId, inputs: [{type, ...}] }
+```
+
+Bild- und Dateiquellen enthalten Base64-Bytes, Tensoren enthalten `name`,
+`dataType`, `shape` und `dataBase64`. Der Service gibt die vertraglich
+validierten Ausgabe-Tensoren im selben portablen Format zurück. Weder die
+Anfrage noch der Modellvertrag enthalten Firebase-Pfade.
+
+Das Image entsteht mit:
+
+```bash
+docker build -f functions/Dockerfile.model-inference -t novooa-model-inference .
+docker run --rm -p 8080:8080 novooa-model-inference
+```
+
+Für Cloud Run wird es aus dem Repository-Root gebaut. Der Container hört auf
+`0.0.0.0:$PORT`; der Dienst bleibt privat. Die spätere Firebase-Function ruft
+ihn mit einem Google-ID-Token und der IAM-Rolle `roles/run.invoker` auf.
 
 Bis dieser Adapter bereitsteht, injiziert der Firebase-Worker einen expliziten
 `UnavailableModelInference`-Adapter. Ein Cloud-Run mit
@@ -204,7 +228,8 @@ verdrahten.
 
 ## Nächste Schritte
 
-1. Die Cloud-Inferenzruntime als Remote-Adapter ergänzen.
+1. Den authentifizierten Cloud-Run-Client als `ModelInference`-Adapter in der
+   Firebase-Function ergänzen.
 2. Die novooa-interne Upload-/Prüfpipeline für
    Systemmodelle ergänzen.
 
