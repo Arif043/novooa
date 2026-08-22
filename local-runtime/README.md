@@ -28,6 +28,7 @@ Vertrag für die späteren SQLite-Adapter:
 - `LocalTeamFileStore`
 - `SQLiteKnowledgeBaseStore`
 - `SQLiteModelCatalog`
+- `LocalModelArtifactReader`
 
 Der konkrete SQLite-Treiber ist bewusst noch nicht festgelegt. Die Adapter
 nutzen vorerst `LocalSqlDatabase`, damit wir den Treiber später austauschen

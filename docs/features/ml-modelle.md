@@ -11,7 +11,8 @@ Provider-spezifische Download-URLs.
 ## Verantwortlichkeiten
 
 - System- und künftig teamweite Modelle über `ModelCatalog` auffindbar machen.
-- ONNX-Artefakte über `artifactId` und `versionId` logisch referenzieren.
+- ONNX-Artefakte über `artifactId` und `versionId` logisch referenzieren und
+  vor der Inferenz auf Größe sowie SHA-256 prüfen.
 - Erwartete Tensoren, Vorverarbeitung und Ergebnissemantik verbindlich
   dokumentieren und validieren.
 - Den Vertrag in Firestore und SQLite identisch persistieren.
@@ -24,8 +25,10 @@ Provider-spezifische Download-URLs.
 - `team`: später ein teamweit bereitgestelltes Modell. Hochladen durch Nutzer
   ist in der ersten Ausbaustufe noch nicht vorgesehen.
 
-`artifactReference` ist eine logische Referenz. Erst die spätere Runtime löst sie über
-einen Artefakt-Reader auf Cloud Storage oder das lokale Dateisystem auf.
+`artifactReference` ist eine logische Referenz. `ModelArtifactReader` löst sie
+in verifizierte Modellbytes auf. Sein Firebase-Adapter liest Cloud Storage, der
+lokale Adapter das lokale Dateisystem. Beide prüfen Größe und SHA-256 vor der
+Rückgabe; die ONNX-Runtime kennt deshalb keinen Speichertyp.
 
 ```ts
 {
@@ -89,12 +92,15 @@ Cloud: `modelCatalog/{modelId}` in Firestore. Lokal: SQLite-Tabelle
 `model_catalog` aus Migration `004_model_catalog.sql`. Beide Adapter
 implementieren den Domain-Port `ModelCatalog`.
 
+Artefakte liegen ausschließlich in der Infrastructure unter dem technischen
+Pfad `model-artifacts/{artifactId}/versions/{versionId}/model.onnx`. Dieser
+Pfad ist kein Bestandteil eines Katalogeintrags oder Workflow-Werts.
+
 ## Nächste Schritte
 
-1. Einen Artefakt-Reader für Cloud Storage und das lokale Dateisystem ergänzen.
-2. Eine Python-/ONNX-Runtime hinter einem einheitlichen Inferenzport anbinden.
-3. Einen allgemeinen Modell-Inferenz-Baustein konfigurieren und ausführen.
-4. Die novooa-interne Upload-/Prüfpipeline für Systemmodelle ergänzen.
+1. Eine Python-/ONNX-Runtime hinter einem einheitlichen Inferenzport anbinden.
+2. Einen allgemeinen Modell-Inferenz-Baustein konfigurieren und ausführen.
+3. Die novooa-interne Upload-/Prüfpipeline für Systemmodelle ergänzen.
 
 ## Verwandt
 

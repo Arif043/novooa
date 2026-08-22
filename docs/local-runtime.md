@@ -51,6 +51,7 @@ Dateien liegen im lokalen Dateisystem:
 ```text
 .novooa/
   files/{teamId}/{fileId}/versions/{versionId}/{fileName}
+  model-artifacts/{artifactId}/versions/{versionId}/model.onnx
   knowledge/{teamId}/...
 ```
 

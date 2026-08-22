@@ -169,6 +169,7 @@ Storage:
 
 ```text
 teams/{teamId}/files/{fileId}/versions/{versionId}/{fileName}
+model-artifacts/{artifactId}/versions/{versionId}/model.onnx
 ```
 
 Der aktuelle Client erzeugt für angemeldete Nutzer:innen automatisch ein
