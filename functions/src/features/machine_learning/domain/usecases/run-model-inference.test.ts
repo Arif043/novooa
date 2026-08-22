@@ -3,20 +3,18 @@ import test from "node:test";
 import {type ModelCatalogEntry} from "../entities/model-catalog-entry.js";
 import {type ModelTensor} from "../entities/model-tensor.js";
 import {type ModelArtifactReader} from "../repositories/model-artifact-reader.js";
-import {type ModelCatalog} from "../repositories/model-catalog.js";
 import {
   type ModelInferenceRuntime,
   type ModelRuntimeRequest,
 } from "../repositories/model-inference-runtime.js";
 import {RunModelInference} from "./run-model-inference.js";
 
-test("loads an available model and returns validated outputs", async () => {
+test("executes a loaded model and returns validated outputs", async () => {
   const runtime = new RecordingRuntime();
-  const useCase = new RunModelInference(new Catalog(), new ArtifactReader(), runtime);
+  const useCase = new RunModelInference(new ArtifactReader(), runtime);
 
   const outputs = await useCase.execute({
-    teamId: "team-1",
-    modelId: "identity",
+    model: entry(),
     inputs: [tensor("input", [1], [12])],
   });
 
@@ -27,10 +25,10 @@ test("loads an available model and returns validated outputs", async () => {
 
 test("rejects a tensor that violates the model contract before execution", async () => {
   const runtime = new RecordingRuntime();
-  const useCase = new RunModelInference(new Catalog(), new ArtifactReader(), runtime);
+  const useCase = new RunModelInference(new ArtifactReader(), runtime);
 
   await assert.rejects(
-    () => useCase.execute({teamId: "team-1", modelId: "identity", inputs: [tensor("input", [2], [1, 2])]}),
+    () => useCase.execute({model: entry(), inputs: [tensor("input", [2], [1, 2])]}),
     /Eingabe-Tensor input/,
   );
   assert.equal(runtime.request, undefined);
@@ -38,25 +36,13 @@ test("rejects a tensor that violates the model contract before execution", async
 
 test("rejects runtime outputs that violate the model contract", async () => {
   const runtime = new RecordingRuntime(tensor("unexpected", [1], [12]));
-  const useCase = new RunModelInference(new Catalog(), new ArtifactReader(), runtime);
+  const useCase = new RunModelInference(new ArtifactReader(), runtime);
 
   await assert.rejects(
-    () => useCase.execute({teamId: "team-1", modelId: "identity", inputs: [tensor("input", [1], [12])]}),
+    () => useCase.execute({model: entry(), inputs: [tensor("input", [1], [12])]}),
     /Ausgabe-Tensoren/,
   );
 });
-
-class Catalog implements ModelCatalog {
-  async save(): Promise<void> {}
-
-  async listAvailableFor(): Promise<readonly ModelCatalogEntry[]> {
-    return [entry()];
-  }
-
-  async findAvailableFor(): Promise<ModelCatalogEntry | null> {
-    return entry();
-  }
-}
 
 class ArtifactReader implements ModelArtifactReader {
   async read(): Promise<Uint8Array> {

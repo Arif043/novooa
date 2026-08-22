@@ -17,6 +17,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.humanApproval => 'Freigabe',
       WorkflowPrimitive.dialogInput => 'Formulareingabe',
       WorkflowPrimitive.mediaInput => 'Bild anfordern',
+      WorkflowPrimitive.modelInference => 'Modell ausführen',
       WorkflowPrimitive.validation => 'Validierung',
     };
   }
@@ -48,6 +49,8 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         'Pausiert die Aufgabe, bis ein Formular ausgefüllt wurde.',
       WorkflowPrimitive.mediaInput =>
         'Pausiert die Aufgabe, bis ein Bild aufgenommen oder ausgewählt wurde.',
+      WorkflowPrimitive.modelInference =>
+        'Bereitet ein Bild nach Modellvertrag vor und führt ein Modell aus.',
       WorkflowPrimitive.validation =>
         'Prüft Ergebnis, Schema oder Qualitätskriterien.',
     };

@@ -154,6 +154,14 @@ class Toolbar extends StatelessWidget {
               icon: const Icon(Icons.add_a_photo_outlined),
               tooltip: 'Bild-Eingabe hinzufügen',
             ),
+            const SizedBox(width: AppSpacing.xs),
+            IconButton(
+              onPressed: () => context
+                  .read<TaskBuilderCubit>()
+                  .addNodeToMainGraph(.modelInference),
+              icon: const Icon(Icons.model_training_outlined),
+              tooltip: 'Modell-Inferenz hinzufügen',
+            ),
           ],
         ),
       ),

@@ -11,6 +11,17 @@ export const modelTensorDataTypes = [
 
 export type ModelTensorDataType = (typeof modelTensorDataTypes)[number];
 export type TensorDimension = number | "dynamic";
+export const modelInputSourceTypes = [
+  "image",
+  "file",
+  "text",
+  "datetime",
+  "number",
+  "boolean",
+  "json",
+  "tensor",
+] as const;
+export type ModelInputSourceType = (typeof modelInputSourceTypes)[number];
 export type TransformationParameter =
   | string
   | number
@@ -29,7 +40,7 @@ export type Tensor = {
 };
 
 export type ModelInput = Tensor & {
-  source: "image" | "tensor";
+  source: ModelInputSourceType;
   preprocessing: readonly Transformation[];
 };
 

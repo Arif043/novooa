@@ -6,6 +6,7 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_c
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_pager.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/dialog_input_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/media_input_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/model_inference_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_reference_name_field.dart';
@@ -188,6 +189,7 @@ class NodeGraphItem extends StatelessWidget {
       .humanApproval => HumanApprovalWidget(node: node),
       .dialogInput => DialogInputWidget(node: node),
       .mediaInput => MediaInputWidget(node: node),
+      .modelInference => ModelInferenceWidget(node: node),
       _ => const SizedBox.shrink(),
     };
     return FocusScope(

@@ -53,6 +53,7 @@ class TaskBuilderAgentCommandFactory {
       referenceName: suggestion.stringArgument('referenceName'),
       value: suggestion.stringArgument('value'),
       instruction: suggestion.stringArgument('instruction'),
+      modelId: suggestion.stringArgument('modelId'),
       recipient: suggestion.stringArgument('recipient'),
       message: suggestion.stringArgument('message'),
     );
@@ -68,6 +69,7 @@ WorkflowPrimitive? _primitiveFrom(String? value) {
     'humanApproval' => WorkflowPrimitive.humanApproval,
     'dialogInput' => WorkflowPrimitive.dialogInput,
     'mediaInput' => WorkflowPrimitive.mediaInput,
+    'modelInference' => WorkflowPrimitive.modelInference,
     'script' => WorkflowPrimitive.script,
     _ => null,
   };

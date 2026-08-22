@@ -41,6 +41,7 @@ Primitives erhalten den Status `skipped` und keine Outputs.
 | `humanApproval` | wartet auf Freigabe | `value` (`string`) |
 | `dialogInput` | wartet auf Formulareingabe | nach dem Absenden: `value` (`json`) und ein typisierter Output pro Feld |
 | `mediaInput` | wartet auf ein Bild; Nutzer wählt Kamera oder Galerie | nach dem Absenden: `value` (`media`) |
+| `modelInference` | ausgefuehrt | `value` (`json`: Modell-ID und Tensoren mit Semantik, Form, Typ und Base64-Daten), `modelId` (`string`) |
 | `writeFile` | ausgefuehrt | siehe nächster Abschnitt |
 
 ## Datei schreiben

@@ -21,26 +21,33 @@ void main() {
 
     expect(find.text('fileId'), findsOneWidget);
     expect(find.text('versionId'), findsOneWidget);
-    expect(find.text('storagePath'), findsOneWidget);
+    expect(find.text('folderId'), findsOneWidget);
     expect(find.text('isNewFile'), findsOneWidget);
   });
 
-  testWidgets('zeigt Entscheidungen als fachlich benannten Chip', (
+  testWidgets('zeigt für Entscheidungen den primären Output', (
     tester,
   ) async {
     await tester.pumpWidget(_host(_decisionPromptNode()));
 
-    expect(find.text('Entscheidung'), findsOneWidget);
+    expect(find.text('value'), findsOneWidget);
     expect(find.text('text'), findsNothing);
   });
 
-  testWidgets('zeigt für Bild-Prompts ausschließlich den Data-URL-Output', (
+  testWidgets('zeigt für Bild-Prompts ausschließlich den primären Output', (
     tester,
   ) async {
     await tester.pumpWidget(_host(_imagePromptNode()));
 
-    expect(find.text('dataUrl'), findsOneWidget);
+    expect(find.text('value'), findsOneWidget);
     expect(find.text('text'), findsNothing);
+  });
+
+  testWidgets('zeigt die Modell-Inferenz-Ausgaben', (tester) async {
+    await tester.pumpWidget(_host(_modelInferenceNode()));
+
+    expect(find.text('value'), findsOneWidget);
+    expect(find.text('modelId'), findsOneWidget);
   });
 }
 
@@ -100,5 +107,14 @@ WorkflowNode _imagePromptNode() {
       outputType: PromptOutputType.image,
       choices: [],
     ),
+  );
+}
+
+WorkflowNode _modelInferenceNode() {
+  return WorkflowNode(
+    id: const NodeId('model'),
+    title: 'Modell ausführen',
+    description: '',
+    config: const ModelInferenceNodeConfig(modelId: 'mobilenet-v3'),
   );
 }

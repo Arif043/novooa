@@ -11,6 +11,7 @@ import {type NodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 import {type TeamFileStore} from "../../../../files/domain/repositories/team-file-store.js";
 import {type TeamFileContentReader} from "../../../../files/domain/repositories/team-file-content-reader.js";
 import {type TaskMessageSender} from "../../../domain/repositories/task-message-sender.js";
+import {type ModelInference} from "../../../../machine_learning/domain/repositories/model-inference.js";
 
 export type TaskVariables = Record<string, unknown>;
 
@@ -30,6 +31,7 @@ export type TaskRunContext = {
   teamFileStore: TeamFileStore;
   fileContentReader: TeamFileContentReader;
   messageSender: TaskMessageSender;
+  modelInference: ModelInference;
 };
 
 export type ParentNodeOutput = {

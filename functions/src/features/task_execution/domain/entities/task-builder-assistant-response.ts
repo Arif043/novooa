@@ -8,6 +8,7 @@ export type TaskBuilderAssistantPrimitive =
   | "humanApproval"
   | "dialogInput"
   | "mediaInput"
+  | "modelInference"
   | "script";
 
 export type TaskBuilderAssistantCommand = AssistantCommand & {
@@ -19,6 +20,7 @@ export type TaskBuilderAssistantCommand = AssistantCommand & {
   description?: string;
   value?: string;
   instruction?: string;
+  modelId?: string;
   recipient?: string;
   message?: string;
 };

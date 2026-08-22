@@ -16,6 +16,13 @@ export class LocalPythonModelInputTransformer implements ModelInputTransformer {
   async transform(request: ModelInputTransformationRequest): Promise<ModelTensor> {
     validateModelInputSource(request.source, request.input);
     if (request.source.type === "tensor") return tensorFrom(request);
+    if (request.source.type === "image") return this.transformImage(request);
+    throw new Error(`Der lokale Transformer unterstützt ${request.source.type}-Quellen noch nicht.`);
+  }
+
+  private async transformImage(
+    request: ModelInputTransformationRequest,
+  ): Promise<ModelTensor> {
     const payload = pythonImageTransformationInputJson(request);
     return transformedImageTensorFromJson(await this.process.execute(payload));
   }

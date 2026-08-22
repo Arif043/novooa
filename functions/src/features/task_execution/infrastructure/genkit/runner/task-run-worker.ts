@@ -14,6 +14,7 @@ import {type ObjectStore} from "../../../../files/domain/repositories/object-sto
 import {type TeamFileStore} from "../../../../files/domain/repositories/team-file-store.js";
 import {type TeamFileContentReader} from "../../../../files/domain/repositories/team-file-content-reader.js";
 import {type TaskMessageSender} from "../../../domain/repositories/task-message-sender.js";
+import {type ModelInference} from "../../../../machine_learning/domain/repositories/model-inference.js";
 import {
   type TaskRunDocument,
   type TaskRunStore,
@@ -27,6 +28,7 @@ export type TaskRunWorkerStores = {
   teamFileStore: TeamFileStore;
   fileContentReader: TeamFileContentReader;
   messageSender: TaskMessageSender;
+  modelInference: ModelInference;
 };
 
 export async function executeQueuedTaskRun(
@@ -51,6 +53,7 @@ export async function executeQueuedTaskRun(
     teamFileStore: stores.teamFileStore,
     fileContentReader: stores.fileContentReader,
     messageSender: stores.messageSender,
+    modelInference: stores.modelInference,
   });
   if (output.status === "waitingForApproval") {
     await stores.taskRunStore.markRunWaitingForApproval(teamId, run, output);
@@ -83,6 +86,7 @@ export async function continueApprovedTaskRun(
       teamFileStore: stores.teamFileStore,
       fileContentReader: stores.fileContentReader,
       messageSender: stores.messageSender,
+      modelInference: stores.modelInference,
     },
   );
   if (output.status === "waitingForApproval") {

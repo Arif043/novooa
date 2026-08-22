@@ -1,12 +1,14 @@
 import {
   type ModelContract,
   type ModelInput,
+  type ModelInputSourceType,
   type ModelOutput,
   type ModelTensorDataType,
   type TensorDimension,
   type Transformation,
   type TransformationParameter,
   modelTensorDataTypes,
+  modelInputSourceTypes,
   validateModelContract,
 } from "../domain/entities/model-contract.js";
 
@@ -90,8 +92,10 @@ function dimensionFrom(value: unknown): TensorDimension {
   throw new Error("Eine Tensor-Dimension ist ungültig.");
 }
 
-function inputSourceFrom(value: unknown): "image" | "tensor" {
-  if (value === "image" || value === "tensor") return value;
+function inputSourceFrom(value: unknown): ModelInputSourceType {
+  if (typeof value === "string" && modelInputSourceTypes.includes(value as ModelInputSourceType)) {
+    return value as ModelInputSourceType;
+  }
   throw new Error("Die Eingabequelle ist ungültig.");
 }
 

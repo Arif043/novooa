@@ -53,8 +53,9 @@ Rückgabe; die ONNX-Runtime kennt deshalb keinen Speichertyp.
 ## Modellvertrag
 
 Alle Modelle arbeiten an der Runtime-Grenze mit Tensoren. Ein Eingang beschreibt
-zusätzlich seine Quelle (`image` oder `tensor`) und eine Vorverarbeitung. Ein
-Ausgang beschreibt seine fachliche Semantik sowie optionale Nachverarbeitung.
+zusätzlich seine Quelle (`image`, `file`, `text`, `datetime`, `number`,
+`boolean`, `json` oder `tensor`) und eine Vorverarbeitung. Ein Ausgang beschreibt
+seine fachliche Semantik sowie optionale Nachverarbeitung.
 
 ```ts
 {
@@ -98,17 +99,21 @@ Pfad ist kein Bestandteil eines Katalogeintrags oder Workflow-Werts.
 
 ## Inferenz
 
-`RunModelInference` ist der gemeinsame Anwendungsfall für Cloud und lokal. Er
-lädt ein für das Team verfügbares Modell, prüft vorbereitete Eingabe-Tensoren
-gegen den Modellvertrag, liest das Artefakt genau einmal und validiert auch die
-Tensoren der Runtime-Ausgabe gegen den Ausgangsvertrag.
+`RunModelInference` führt ein bereits aufgelöstes Modell aus: Es prüft die
+vorbereiteten Eingabe-Tensoren gegen den Modellvertrag, liest das Artefakt genau
+einmal und validiert auch die Tensoren der Runtime-Ausgabe gegen den
+Ausgangsvertrag. `RunModelInferenceWithSources` löst davor die Verfügbarkeit
+für ein Team auf, ordnet alle Workflow-Quellen dem Vertrag zu, bereitet sie vor
+und delegiert anschließend an `RunModelInference`.
 
 ```text
-ModelCatalog + ModelArtifactReader
-            ↓
-     RunModelInference
-            ↓
-    ModelInferenceRuntime
+ModelCatalog → RunModelInferenceWithSources
+                     ↓
+             PrepareModelInputs
+                     ↓
+             RunModelInference
+                     ↓
+   ModelArtifactReader + ModelInferenceRuntime
 ```
 
 Die Runtime erhält ausschließlich verifizierte Modellbytes und typisierte
@@ -135,30 +140,38 @@ eine implizite globale Voraussetzung.
 ## Eingabetransformationen
 
 `PrepareModelInputs` ordnet fachliche Quellen den Eingangsdefinitionen des
-Modellvertrags zu. Eine Quelle ist entweder ein bereits vorbereiteter Tensor
-oder Bildbytes mit Content-Type. `ModelInputTransformer` ist der Port für die
-technische Umwandlung. Erst danach nimmt `RunModelInference` ausschließlich
-Tensoren entgegen.
+Modellvertrags zu. Eine Quelle kann Text, Datum/Uhrzeit, Zahl, Boolean, JSON,
+Datei- oder Bildbytes oder ein bereits vorbereiteter Tensor sein.
+`ModelInputTransformer` ist der Port für die technische Umwandlung. Erst danach
+nimmt `RunModelInference` ausschließlich Tensoren entgegen.
 
 ```text
-MediaReference → TeamFileContentReader → Bildquelle
-                                        ↓
-                              PrepareModelInputs
-                                        ↓
-                               ModelInputTransformer
-                                        ↓
-                                    ModelTensor
+Workflow-Wert → Adapter → Modellquelle → PrepareModelInputs
+                                          ↓
+                                   ModelInputTransformer
+                                          ↓
+                                      ModelTensor
 ```
 
-Die spätere Modell-Inferenz-Node lädt ihre Bildquelle über den bestehenden
-`TeamFileContentReader`; eine Firebase-Storage-Referenz wird nicht in den
-Modellvertrag oder an die Runtime weitergereicht.
+Der `modelInference`-Baustein adaptiert alle Vorgängerwerte in der Reihenfolge
+der eingehenden Kanten auf Modellquellen. Erst der Modellvertrag prüft Anzahl
+und Typ dieser Quellen. Datei- und Bildwerte lädt der Adapter über den
+bestehenden `TeamFileContentReader`; eine Firebase-Storage-Referenz wird nicht
+in den Modellvertrag oder an die Runtime weitergereicht. Seine primäre Ausgabe
+ist JSON mit Modell-ID und Tensoren (`name`, `semantic`, `dataType`, `shape`,
+`dataBase64`); beispielsweise ist der erste Tensor über
+`{{modell1.value.outputs.0.dataBase64}}` referenzierbar.
 
 Lokal erfüllt `LocalPythonModelInputTransformer` den Port. Sein Worker baut
 eine `TransformationRegistry` aus eigenständigen `InputTransformStrategy`-
 Klassen zusammen. Neue Transformationen erfordern damit nur eine zusätzliche
 Strategieklasse und deren Registrierung im lokalen Composition Root, nicht aber
 eine Änderung der Pipeline oder des Modellvertrags.
+
+Aktuell enthält die lokale Runtime konkrete Strategien für Bildquellen und
+unveränderte Tensoren. Verträge mit Text-, Zahlen-, Boolean-, JSON- oder
+Dateiquellen werden bereits korrekt gebunden und validiert; ihre technische
+Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert.
 
 | Transformation | Parameter | Wirkung |
 | --- | --- | --- |
@@ -181,10 +194,18 @@ authentifizierten Aufruf eines separaten Inferenzdienstes, etwa auf Cloud Run.
 Katalog, Vertrag, Artefakt-Reader und der spätere Modell-Baustein bleiben dabei
 unverändert.
 
+Bis dieser Adapter bereitsteht, injiziert der Firebase-Worker einen expliziten
+`UnavailableModelInference`-Adapter. Ein Cloud-Run mit
+`modelInference` endet deshalb nachvollziehbar mit „Die ONNX-Inferenz ist in
+der Cloud noch nicht eingerichtet.“ statt die Bilddaten stillschweigend zu
+verwerfen. Der lokale Composition Root wird `RunModelInferenceWithSources` mit den
+SQLite-/Dateisystem-Adaptern, dem Python-Transformer und der ONNX-Runtime
+verdrahten.
+
 ## Nächste Schritte
 
-1. Einen allgemeinen Modell-Inferenz-Baustein konfigurieren und ausführen.
-2. Die Cloud-Inferenzruntime sowie die novooa-interne Upload-/Prüfpipeline für
+1. Die Cloud-Inferenzruntime als Remote-Adapter ergänzen.
+2. Die novooa-interne Upload-/Prüfpipeline für
    Systemmodelle ergänzen.
 
 ## Verwandt

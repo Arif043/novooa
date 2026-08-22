@@ -153,6 +153,11 @@ export const mediaInputNodeConfigSchema = mediaInputDefinitionSchema.extend({
   primitive: z.literal("mediaInput").default("mediaInput"),
 });
 
+export const modelInferenceNodeConfigSchema = z.object({
+  primitive: z.literal("modelInference").default("modelInference"),
+  modelId: z.string().default(""),
+});
+
 export const writeFileNodeConfigSchema = z.object({
   primitive: z.literal("writeFile").default("writeFile"),
   fileName: z.string().max(240).default(""),
@@ -192,6 +197,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   humanApprovalNodeConfigSchema,
   dialogInputNodeConfigSchema,
   mediaInputNodeConfigSchema,
+  modelInferenceNodeConfigSchema,
   writeFileNodeConfigSchema,
   readFileNodeConfigSchema,
   readEmailNodeConfigSchema,

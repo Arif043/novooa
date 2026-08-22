@@ -28,6 +28,7 @@ class NodeConfigDocumentMapper {
       HumanApprovalNodeConfig() => _approvalToDocument(config),
       DialogInputNodeConfig() => _dialogInputToDocument(config),
       MediaInputNodeConfig() => _mediaInputToDocument(config),
+      ModelInferenceNodeConfig() => _modelInferenceToDocument(config),
       WriteFileNodeConfig() => _writeFileToDocument(config),
       ReadFileNodeConfig() => _readFileToDocument(config),
       ReadEmailNodeConfig() => {'primitive': config.primitive.name},
@@ -51,6 +52,7 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.humanApproval => _approvalFrom(data),
       WorkflowPrimitive.dialogInput => _dialogInputFrom(data),
       WorkflowPrimitive.mediaInput => _mediaInputFrom(data),
+      WorkflowPrimitive.modelInference => _modelInferenceFrom(data),
       WorkflowPrimitive.writeFile => _writeFileFrom(data),
       WorkflowPrimitive.readFile => _readFileFrom(data),
       WorkflowPrimitive.readEmail => const ReadEmailNodeConfig(),
@@ -146,6 +148,12 @@ class NodeConfigDocumentMapper {
       'primitive': config.primitive.name,
       'instruction': config.instruction,
     };
+  }
+
+  Map<String, Object?> _modelInferenceToDocument(
+    ModelInferenceNodeConfig config,
+  ) {
+    return {'primitive': config.primitive.name, 'modelId': config.modelId};
   }
 
   Map<String, Object?> _writeFileToDocument(WriteFileNodeConfig config) {
@@ -250,6 +258,10 @@ class NodeConfigDocumentMapper {
     return MediaInputNodeConfig(
       instruction: data['instruction'] as String? ?? '',
     );
+  }
+
+  ModelInferenceNodeConfig _modelInferenceFrom(Map<String, Object?> data) {
+    return ModelInferenceNodeConfig(modelId: data['modelId'] as String? ?? '');
   }
 
   WriteFileNodeConfig _writeFileFrom(Map<String, Object?> data) {

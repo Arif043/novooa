@@ -1,9 +1,17 @@
 import {type ModelInput} from "./model-contract.js";
 import {type ModelTensor, validateModelTensor} from "./model-tensor.js";
 
-export type ModelInputSource =
-  | {name: string; type: "image"; contentType: string; bytes: Uint8Array}
-  | {name: string; type: "tensor"; tensor: ModelTensor};
+export type ModelInputValue =
+  | {type: "image"; contentType: string; bytes: Uint8Array}
+  | {type: "file"; contentType: string; bytes: Uint8Array}
+  | {type: "text"; value: string}
+  | {type: "datetime"; value: string}
+  | {type: "number"; value: number}
+  | {type: "boolean"; value: boolean}
+  | {type: "json"; value: unknown}
+  | {type: "tensor"; tensor: ModelTensor};
+
+export type ModelInputSource = ModelInputValue & {name: string};
 
 export function validateModelInputSource(
   source: ModelInputSource,
@@ -13,8 +21,35 @@ export function validateModelInputSource(
   if (source.type !== input.source) {
     throw new Error(`Die Quelle für ${input.name} hat den falschen Typ.`);
   }
-  if (source.type === "image") validateImageSource(source);
-  if (source.type === "tensor") validateTensorSource(source);
+  validateSourceValue(source);
+}
+
+function validateSourceValue(source: ModelInputSource): void {
+  switch (source.type) {
+    case "image":
+      validateImageSource(source);
+      return;
+    case "file":
+      validateFileSource(source);
+      return;
+    case "text":
+    case "datetime":
+      return;
+    case "number":
+      validateNumberSource(source);
+      return;
+    case "boolean":
+    case "json":
+      return;
+    case "tensor":
+      validateTensorSource(source);
+  }
+}
+
+function validateNumberSource(source: Extract<ModelInputSource, {type: "number"}>): void {
+  if (!Number.isFinite(source.value)) {
+    throw new Error(`Die Zahlquelle für ${source.name} ist ungültig.`);
+  }
 }
 
 function validateImageSource(source: Extract<ModelInputSource, {type: "image"}>): void {
@@ -23,6 +58,15 @@ function validateImageSource(source: Extract<ModelInputSource, {type: "image"}>)
   }
   if (source.bytes.byteLength === 0) {
     throw new Error(`Die Bildquelle für ${source.name} ist leer.`);
+  }
+}
+
+function validateFileSource(source: Extract<ModelInputSource, {type: "file"}>): void {
+  if (source.contentType.trim().length === 0) {
+    throw new Error(`Der Content-Type für ${source.name} fehlt.`);
+  }
+  if (source.bytes.byteLength === 0) {
+    throw new Error(`Die Dateiquelle für ${source.name} ist leer.`);
   }
 }
 

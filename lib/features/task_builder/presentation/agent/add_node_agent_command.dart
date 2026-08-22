@@ -13,6 +13,7 @@ final class AddNodeAgentCommand extends TaskBuilderAgentCommand {
     this.referenceName,
     this.value,
     this.instruction,
+    this.modelId,
     this.recipient,
     this.message,
   }) : super(label);
@@ -24,6 +25,7 @@ final class AddNodeAgentCommand extends TaskBuilderAgentCommand {
   final String? referenceName;
   final String? value;
   final String? instruction;
+  final String? modelId;
   final String? recipient;
   final String? message;
 
@@ -71,6 +73,9 @@ final class AddNodeAgentCommand extends TaskBuilderAgentCommand {
     }
     if (instruction case final text?) {
       await cubit.updatePromptInstruction(nodeId, text);
+    }
+    if (modelId case final id?) {
+      await cubit.updateModelInference(nodeId, id);
     }
     if (recipient case final text?) {
       await cubit.updateSendMessageRecipient(nodeId, text);

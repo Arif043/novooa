@@ -426,6 +426,24 @@ void main() {
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
+  test('updateModelInference speichert die Modell-ID', () async {
+    final repository = _InMemoryTaskRepository(_taskWithModelInferenceNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.updateModelInference(
+      const NodeId('node.model'),
+      'mobilenet-v3',
+    );
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final config =
+        state.editingTask.nodes.first.config as ModelInferenceNodeConfig;
+
+    expect(config.modelId, 'mobilenet-v3');
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
+  });
+
   test('updateWriteFile speichert Dateiname und Inhaltstyp', () async {
     final repository = _InMemoryTaskRepository(_taskWithWriteFileNode());
     final cubit = TaskBuilderCubit(repository: repository);
@@ -760,6 +778,26 @@ Task _taskWithMediaInputNode() {
           config: MediaInputNodeConfig(
             instruction: 'Bitte füge ein Bild hinzu.',
           ),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+Task _taskWithModelInferenceNode() {
+  return const Task(
+    id: 'task.model',
+    title: 'Aufgabe',
+    objective: 'Ziel',
+    selectedNodeId: NodeId('node.model'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.model'),
+          title: 'Modell ausführen',
+          description: 'Beschreibung',
+          config: ModelInferenceNodeConfig(modelId: ''),
         ),
       ],
       edges: [],

@@ -124,6 +124,20 @@ void main() {
     expect(restored, config);
   });
 
+  test('serialisiert und deserialisiert ModelInferenceNodeConfig', () {
+    const config = ModelInferenceNodeConfig(modelId: 'mobilenet-v3');
+
+    final document = _mapper().toDocument(config);
+    final restored =
+        _mapper().fromDocument(document) as ModelInferenceNodeConfig;
+
+    expect(document, {
+      'primitive': 'modelInference',
+      'modelId': 'mobilenet-v3',
+    });
+    expect(restored, config);
+  });
+
   test('serialisiert PromptNodeConfig mit Wissensanhang', () {
     final document = _mapper().toDocument(
       const PromptNodeConfig(

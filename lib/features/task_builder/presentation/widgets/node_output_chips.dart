@@ -49,6 +49,7 @@ class NodeOutputChips extends StatelessWidget {
       HumanApprovalNodeConfig() => const ['value'],
       DialogInputNodeConfig() => _dialogInputOutputNames(config),
       MediaInputNodeConfig() => _mediaInputOutputs,
+      ModelInferenceNodeConfig() => const ['value', 'modelId'],
       _ => const [],
     };
   }

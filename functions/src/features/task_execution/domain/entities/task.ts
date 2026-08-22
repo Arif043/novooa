@@ -51,6 +51,7 @@ export const workflowPrimitives = [
   "humanApproval",
   "dialogInput",
   "mediaInput",
+  "modelInference",
   "validation",
 ] as const;
 
@@ -129,6 +130,10 @@ export type DialogInputNodeConfig = DialogInputDefinition & {
 export type MediaInputNodeConfig = MediaInputDefinition & {
   primitive: "mediaInput";
 };
+export type ModelInferenceNodeConfig = {
+  primitive: "modelInference";
+  modelId: string;
+};
 export type WriteFileNodeConfig = {
   primitive: "writeFile";
   fileName: string;
@@ -163,6 +168,7 @@ export type NodeConfig =
   | HumanApprovalNodeConfig
   | DialogInputNodeConfig
   | MediaInputNodeConfig
+  | ModelInferenceNodeConfig
   | WriteFileNodeConfig
   | ReadFileNodeConfig
   | ReadEmailNodeConfig

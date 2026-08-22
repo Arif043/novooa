@@ -42,6 +42,8 @@ import {
 } from "../genkit/runner/task-run-task.js";
 import {responseOutputsForTaskRun} from
   "../../domain/usecases/task-run-response-outputs.js";
+import {UnavailableModelInference} from
+  "../../../machine_learning/infrastructure/unavailable-model-inference.js";
 
 const workerSecrets = [
   twilioAccountSid,
@@ -64,6 +66,7 @@ const teamFileStore = new FirestoreTeamFileStore();
 const messageSender = new FirebaseTaskMessageSender();
 const knowledgeBaseStore = new FirestoreKnowledgeBaseStore();
 const teamContextStore = new FirestoreTeamContextStore();
+const modelInference = new UnavailableModelInference();
 const workerStores = {
   taskStore,
   taskRunStore,
@@ -72,6 +75,7 @@ const workerStores = {
   fileContentReader: teamFileStore,
   messageSender,
   knowledgeBaseStore,
+  modelInference,
 };
 const taskRunDispatcher = new FirebaseTaskRunDispatcher();
 const callableOptions = {
