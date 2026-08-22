@@ -96,11 +96,56 @@ Artefakte liegen ausschließlich in der Infrastructure unter dem technischen
 Pfad `model-artifacts/{artifactId}/versions/{versionId}/model.onnx`. Dieser
 Pfad ist kein Bestandteil eines Katalogeintrags oder Workflow-Werts.
 
+## Inferenz
+
+`RunModelInference` ist der gemeinsame Anwendungsfall für Cloud und lokal. Er
+lädt ein für das Team verfügbares Modell, prüft vorbereitete Eingabe-Tensoren
+gegen den Modellvertrag, liest das Artefakt genau einmal und validiert auch die
+Tensoren der Runtime-Ausgabe gegen den Ausgangsvertrag.
+
+```text
+ModelCatalog + ModelArtifactReader
+            ↓
+     RunModelInference
+            ↓
+    ModelInferenceRuntime
+```
+
+Die Runtime erhält ausschließlich verifizierte Modellbytes und typisierte
+Tensoren. Sie kennt weder Firestore noch Firebase Storage, Dateipfade oder
+Workflow-Werte.
+
+### Lokale ONNX-Runtime
+
+`LocalOnnxInferenceRuntime` delegiert an `LocalPythonOnnxWorker`. Der Worker
+startet `local-runtime/python/onnx_worker.py` mit einem konfigurierten lokalen
+Python-Interpreter. Modell und Tensoren werden als Base64 über `stdin`
+übertragen; der Worker erstellt daraus eine ONNX-Runtime-Session mit dem CPU
+Execution Provider und liefert Tensoren über `stdout` zurück.
+
+```bash
+python3 -m venv .novooa/python
+.novooa/python/bin/python -m pip install -r local-runtime/python/requirements.txt
+```
+
+Der lokale Composition Root injiziert den Interpreterpfad sowie den Pfad zum
+Worker. Dadurch ist die Python-Abhängigkeit weder Teil der Cloud Functions noch
+eine implizite globale Voraussetzung.
+
+### Cloud-Runtime
+
+Firebase Functions führt keine Python-/ONNX-Runtime mit sich. Die Cloud-Variante
+implementiert deshalb künftig denselben `ModelInferenceRuntime`-Port als
+authentifizierten Aufruf eines separaten Inferenzdienstes, etwa auf Cloud Run.
+Katalog, Vertrag, Artefakt-Reader und der spätere Modell-Baustein bleiben dabei
+unverändert.
+
 ## Nächste Schritte
 
-1. Eine Python-/ONNX-Runtime hinter einem einheitlichen Inferenzport anbinden.
+1. Die Transformations-Registry für Bild- und Tensorquellen implementieren.
 2. Einen allgemeinen Modell-Inferenz-Baustein konfigurieren und ausführen.
-3. Die novooa-interne Upload-/Prüfpipeline für Systemmodelle ergänzen.
+3. Die Cloud-Inferenzruntime sowie die novooa-interne Upload-/Prüfpipeline für
+   Systemmodelle ergänzen.
 
 ## Verwandt
 

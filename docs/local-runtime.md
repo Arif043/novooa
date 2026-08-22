@@ -55,6 +55,13 @@ Dateien liegen im lokalen Dateisystem:
   knowledge/{teamId}/...
 ```
 
+ONNX-Inferenz läuft lokal in einem dedizierten Python-Prozess. Dieser erhält
+keine Speicherpfade, sondern verifizierte Modellbytes und Tensoren über das
+standardisierte Worker-Protokoll. Die Abhängigkeiten liegen in
+[`local-runtime/python/requirements.txt`](../local-runtime/python/requirements.txt);
+der spätere lokale Composition Root konfiguriert den Python-Interpreter und
+den Workerpfad explizit.
+
 ## Lokale Identität und Teams
 
 Firebase Auth ist für eine rein lokale Runtime nicht erforderlich. Beim ersten
@@ -112,6 +119,10 @@ dessen Infrastructure-Bereich.
   Firebase verwendet für den Wissensbasis-Adapter Firestore und Firebase Auth.
 - `LocalTeamFileStore` schreibt Dateien in ein lokales Root-Verzeichnis und
   persistiert Datei-/Versions-Metadaten über `LocalSqlDatabase`.
+- `LocalOnnxInferenceRuntime` und `LocalPythonOnnxWorker` führen ONNX-Modelle
+  über `local-runtime/python/onnx_worker.py` aus. Der gemeinsame
+  `ModelInferenceRuntime`-Port hält diese lokale Ausführung von einer späteren
+  Cloud-Runtime entkoppelt.
 - `SqlMigrationRunner` wendet Migrationen treiberneutral über
   `LocalSqlDatabase` an.
 
