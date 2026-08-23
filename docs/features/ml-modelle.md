@@ -214,24 +214,35 @@ docker build -f functions/Dockerfile.model-inference -t novooa-model-inference .
 docker run --rm -p 8080:8080 novooa-model-inference
 ```
 
-Für Cloud Run wird es aus dem Repository-Root gebaut. Der Container hört auf
-`0.0.0.0:$PORT`; der Dienst bleibt privat. Die spätere Firebase-Function ruft
-ihn mit einem Google-ID-Token und der IAM-Rolle `roles/run.invoker` auf.
+Das produktive Linux-Image erstellt Cloud Build aus dem Repository-Root und
+legt es in Artifact Registry ab:
 
-Bis dieser Adapter bereitsteht, injiziert der Firebase-Worker einen expliziten
-`UnavailableModelInference`-Adapter. Ein Cloud-Run mit
-`modelInference` endet deshalb nachvollziehbar mit „Die ONNX-Inferenz ist in
-der Cloud noch nicht eingerichtet.“ statt die Bilddaten stillschweigend zu
-verwerfen. Der lokale Composition Root wird `RunModelInferenceWithSources` mit den
-SQLite-/Dateisystem-Adaptern, dem Python-Transformer und der ONNX-Runtime
-verdrahten.
+```bash
+gcloud builds submit --project=syscat-90bff --region=europe-west3 \
+  --config=cloudbuild.model-inference.yaml \
+  --substitutions=_IMAGE=europe-west3-docker.pkg.dev/syscat-90bff/novooa/model-inference:<version>
+```
+
+Der Container hört auf `0.0.0.0:$PORT`; der Dienst bleibt privat. Die
+`runTaskRunTask`-Function verwendet `CloudRunModelInference` und ruft ihn mit
+einem Google-ID-Token auf. Die Service-URL ist der Functions-Parameter
+`MODEL_INFERENCE_SERVICE_URL`; die Function-Runtime benötigt die IAM-Rolle
+`roles/run.invoker` auf genau diesem Cloud-Run-Service.
+Vor dem Deploy der Function muss der Parameter in
+`functions/.env.<projectId>` auf die HTTPS-Service-URL gesetzt sein.
+
+Der Container hat einen eigenen Runtime-Service-Account. Er erhält nur
+`roles/datastore.user` sowie Lesezugriff auf den Artefakt-Bucket; die
+Task-Worker-Function ist der einzige heutige Aufrufer, weil nur sie
+`modelInference`-Bausteine innerhalb eines Task-Runs ausführt. Künftige
+Backend-Executoren benötigen dieselbe gezielte `roles/run.invoker`-Bindung.
+
+Der lokale Composition Root verdrahtet denselben Use Case mit SQLite-/
+Dateisystem-Adaptern, dem Python-Transformer und der ONNX-Runtime.
 
 ## Nächste Schritte
 
-1. Den authentifizierten Cloud-Run-Client als `ModelInference`-Adapter in der
-   Firebase-Function ergänzen.
-2. Die novooa-interne Upload-/Prüfpipeline für
-   Systemmodelle ergänzen.
+1. Die novooa-interne Upload-/Prüfpipeline für Systemmodelle ergänzen.
 
 ## Verwandt
 

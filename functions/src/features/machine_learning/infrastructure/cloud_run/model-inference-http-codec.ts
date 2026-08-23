@@ -1,10 +1,19 @@
 import {type ModelInputValue} from "../../domain/entities/model-input-source.js";
 import {type ModelTensor} from "../../domain/entities/model-tensor.js";
 import {
+  type ModelInferenceOutput,
   type ModelInferenceRequest,
   type ModelInferenceResult,
 } from "../../domain/repositories/model-inference.js";
 import {modelTensorFromJson, modelTensorToJson} from "../local/model-tensor-json-codec.js";
+
+export function modelInferenceRequestJson(request: ModelInferenceRequest) {
+  return {
+    teamId: request.teamId,
+    modelId: request.modelId,
+    inputs: request.inputs.map(inputJson),
+  };
+}
 
 export function modelInferenceRequestFromJson(value: unknown): ModelInferenceRequest {
   const data = objectFrom(value, "Die Inferenzanfrage ist ungültig.");
@@ -23,6 +32,38 @@ export function modelInferenceResultJson(result: ModelInferenceResult) {
       semantic: output.semantic,
     })),
   };
+}
+
+export function modelInferenceResultFromJson(value: unknown): ModelInferenceResult {
+  const data = objectFrom(value, "Die Inferenzantwort ist ungültig.");
+  if (!Array.isArray(data.outputs)) throw new Error("Die Inferenzantwort enthält keine Ausgaben.");
+  return {
+    modelId: requiredString(data.modelId, "Die Modell-ID der Inferenzantwort fehlt."),
+    outputs: data.outputs.map(outputFrom),
+  };
+}
+
+function inputJson(input: ModelInputValue) {
+  switch (input.type) {
+    case "image":
+    case "file":
+      return binaryInputJson(input);
+    case "tensor":
+      return {type: input.type, tensor: modelTensorToJson(input.tensor)};
+    default:
+      return input;
+  }
+}
+
+function binaryInputJson(input: Extract<ModelInputValue, {bytes: Uint8Array}>) {
+  const {bytes, ...metadata} = input;
+  return {...metadata, dataBase64: Buffer.from(bytes).toString("base64")};
+}
+
+function outputFrom(value: unknown): ModelInferenceOutput {
+  const data = objectFrom(value, "Eine Inferenz-Ausgabe ist ungültig.");
+  const tensor = modelTensorFromJson(data);
+  return {...tensor, semantic: requiredString(data.semantic, "Die Ausgabe-Semantik fehlt.")};
 }
 
 function inputsFrom(value: unknown): readonly ModelInputValue[] {
