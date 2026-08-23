@@ -28,7 +28,7 @@ class TransformRegistryTest(unittest.TestCase):
     def test_rejects_an_unregistered_transformation(self):
         registry = TransformationRegistry([])
 
-        with self.assertRaisesRegex(ValueError, "Nicht unterstützte Bildtransformation"):
+        with self.assertRaisesRegex(ValueError, "Nicht unterstützte Transformation"):
             registry.apply({}, [{"type": "unknown", "parameters": {}}])
 
 

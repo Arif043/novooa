@@ -11,7 +11,7 @@ export class ModelContractCapabilityValidator {
   validate(contract: ModelContract): void {
     for (const input of contract.inputs) this.capabilityFor(input).validate(input);
     if (contract.outputs.some((output) => output.postprocessing.length > 0)) {
-      throw new Error("Nachverarbeitung von Modellausgängen wird noch nicht unterstützt.");
+      throw new Error("Ausgangstransformationen werden noch nicht unterstützt.");
     }
   }
 

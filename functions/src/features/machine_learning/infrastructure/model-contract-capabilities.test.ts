@@ -11,13 +11,13 @@ test("rejects an unsupported input source before publication", () => {
   assert.throws(() => cloudModelContractCapabilityValidator().validate(contract("text", [])), /text-Eingänge/);
 });
 
-test("rejects output postprocessing before publication", () => {
+test("rejects output transformations before publication", () => {
   const value = contract("tensor", []);
   const changed: ModelContract = {
     ...value,
     outputs: [{...value.outputs[0]!, postprocessing: [{type: "scores.topK", parameters: {count: 3}}]}],
   };
-  assert.throws(() => cloudModelContractCapabilityValidator().validate(changed), /Nachverarbeitung/);
+  assert.throws(() => cloudModelContractCapabilityValidator().validate(changed), /Ausgangstransformationen/);
 });
 
 function contract(

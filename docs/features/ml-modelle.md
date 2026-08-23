@@ -83,9 +83,13 @@ seine fachliche Semantik sowie optionale Nachverarbeitung.
 }
 ```
 
-Transformationen verwenden einen offenen Typnamen plus Parameter. Die spätere
-Transformations-Registry ordnet jedem Typ eine Strategie zu. Neue Strategien
-erfordern daher keine Änderung am Modellvertrag.
+Transformationen verwenden einen offenen Typnamen plus Parameter. Dieselbe
+`TransformationPipeline` wird vor der ONNX-Inferenz als `preprocessing` und
+danach als `postprocessing` verwendet. Der Transformationskatalog enthält
+damit Bild-, Tensor-, Geometrie-, Sequenz- und JSON-Transformationen; eine
+separate Operationsabstraktion gibt es nicht. Die Transformations-Registry
+ordnet jedem Typ eine Strategie zu. Neue Strategien erfordern daher keine
+Änderung am Modellvertrag.
 
 ## Persistenz
 
@@ -137,7 +141,7 @@ Der lokale Composition Root injiziert den Interpreterpfad sowie den Pfad zum
 Worker. Dadurch ist die Python-Abhängigkeit weder Teil der Cloud Functions noch
 eine implizite globale Voraussetzung.
 
-## Eingabetransformationen
+## Transformationen
 
 `PrepareModelInputs` ordnet fachliche Quellen den Eingangsdefinitionen des
 Modellvertrags zu. Eine Quelle kann Text, Datum/Uhrzeit, Zahl, Boolean, JSON,
@@ -163,10 +167,11 @@ ist JSON mit Modell-ID und Tensoren (`name`, `semantic`, `dataType`, `shape`,
 `{{modell1.value.outputs.0.dataBase64}}` referenzierbar.
 
 Lokal erfüllt `LocalPythonModelInputTransformer` den Port. Sein Worker baut
-eine `TransformationRegistry` aus eigenständigen `InputTransformStrategy`-
-Klassen zusammen. Neue Transformationen erfordern damit nur eine zusätzliche
-Strategieklasse und deren Registrierung im lokalen Composition Root, nicht aber
-eine Änderung der Pipeline oder des Modellvertrags.
+eine `TransformationRegistry` aus eigenständigen Strategien zusammen. Dieselbe
+Registry ist die Erweiterungsstelle für Ein- und Ausgangstransformationen.
+Neue Transformationen erfordern damit nur eine zusätzliche Strategieklasse und
+deren Registrierung im lokalen Composition Root, nicht aber eine Änderung der
+Pipeline oder des Modellvertrags.
 
 Aktuell enthält die lokale Runtime konkrete Strategien für Bildquellen und
 unveränderte Tensoren. Verträge mit Text-, Zahlen-, Boolean-, JSON- oder

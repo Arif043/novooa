@@ -33,6 +33,8 @@ export type Transformation = {
   parameters: Readonly<Record<string, TransformationParameter>>;
 };
 
+export type TransformationPipeline = readonly Transformation[];
+
 export type Tensor = {
   name: string;
   dataType: ModelTensorDataType;
@@ -41,12 +43,12 @@ export type Tensor = {
 
 export type ModelInput = Tensor & {
   source: ModelInputSourceType;
-  preprocessing: readonly Transformation[];
+  preprocessing: TransformationPipeline;
 };
 
 export type ModelOutput = Tensor & {
   semantic: string;
-  postprocessing: readonly Transformation[];
+  postprocessing: TransformationPipeline;
 };
 
 export type ModelContract = {

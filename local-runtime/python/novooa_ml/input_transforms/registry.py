@@ -14,7 +14,7 @@ class TransformationRegistry:
         strategy = self._strategies.get(transformation_type)
         if strategy is None:
             raise ValueError(
-                f"Nicht unterstützte Bildtransformation: {transformation_type}"
+                f"Nicht unterstützte Transformation: {transformation_type}"
             )
         return strategy
 
