@@ -3,6 +3,7 @@ import {humanApprovalNodeExecutor} from "../executors/human-approval-node-execut
 import {dialogInputNodeExecutor} from "../executors/dialog-input-node-executor.js";
 import {mediaInputNodeExecutor} from "../executors/media-input-node-executor.js";
 import {modelInferenceNodeExecutor} from "../executors/model-inference-node-executor.js";
+import {forEachNodeExecutor} from "../executors/for-each-node-executor.js";
 import {iterativeRefinementNodeExecutor} from "../executors/iterative-refinement-node-executor.js";
 import {promptNodeExecutor} from "../executors/prompt-node-executor.js";
 import {readFileNodeExecutor} from "../executors/read-file-node-executor.js";
@@ -33,6 +34,7 @@ const executors = new Map<WorkflowNode["primitive"], NodeExecutor>(
     dialogInputNodeExecutor,
     mediaInputNodeExecutor,
     modelInferenceNodeExecutor,
+    forEachNodeExecutor,
   ].map((executor) => [executor.primitive, executor]),
 );
 

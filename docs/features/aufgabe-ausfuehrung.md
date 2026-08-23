@@ -33,6 +33,12 @@ in Templates erreichbar, zum Beispiel:
 {{kunde}}
 ```
 
+Kanten regeln ausschließlich Reihenfolge und Abhängigkeiten. Der Baustein
+`forEach` löst seinen `itemsPointer` gegen den JSON-`value` auf, führt seinen
+Unterplan seriell aus und gibt die primären Unterplanergebnisse als JSON-Array
+zurück. Unterpläne dürfen in Version 1 weder pausierende Bausteine noch ein
+weiteres `forEach` enthalten.
+
 Die letzte lesbare `value`-Ausgabe ist das `finalOutput` des Runs. Die vollständige
 Referenz aller Executor-Outputs liegt in
 [`../node-executor-outputs.md`](../node-executor-outputs.md).

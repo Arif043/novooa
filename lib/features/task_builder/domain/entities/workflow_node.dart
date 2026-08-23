@@ -23,6 +23,7 @@ enum WorkflowPrimitive {
   dialogInput,
   mediaInput,
   modelInference,
+  forEach,
   validation,
 }
 

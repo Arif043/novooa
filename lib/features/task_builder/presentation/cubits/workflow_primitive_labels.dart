@@ -18,6 +18,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.dialogInput => 'Formulareingabe',
       WorkflowPrimitive.mediaInput => 'Bild anfordern',
       WorkflowPrimitive.modelInference => 'Modell ausführen',
+      WorkflowPrimitive.forEach => 'Für jedes Element',
       WorkflowPrimitive.validation => 'Validierung',
     };
   }
@@ -51,6 +52,8 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         'Pausiert die Aufgabe, bis ein Bild aufgenommen oder ausgewählt wurde.',
       WorkflowPrimitive.modelInference =>
         'Bereitet ein Bild nach Modellvertrag vor und führt ein Modell aus.',
+      WorkflowPrimitive.forEach =>
+        'Führt einen Unterplan für jedes Element eines JSON-Arrays aus.',
       WorkflowPrimitive.validation =>
         'Prüft Ergebnis, Schema oder Qualitätskriterien.',
     };

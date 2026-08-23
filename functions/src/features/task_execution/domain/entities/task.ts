@@ -52,6 +52,7 @@ export const workflowPrimitives = [
   "dialogInput",
   "mediaInput",
   "modelInference",
+  "forEach",
   "validation",
 ] as const;
 
@@ -134,6 +135,11 @@ export type ModelInferenceNodeConfig = {
   primitive: "modelInference";
   modelId: string;
 };
+export type ForEachNodeConfig = {
+  primitive: "forEach";
+  itemsPointer: string;
+  graph: BranchWorkflowGraph;
+};
 export type WriteFileNodeConfig = {
   primitive: "writeFile";
   fileName: string;
@@ -169,6 +175,7 @@ export type NodeConfig =
   | DialogInputNodeConfig
   | MediaInputNodeConfig
   | ModelInferenceNodeConfig
+  | ForEachNodeConfig
   | WriteFileNodeConfig
   | ReadFileNodeConfig
   | ReadEmailNodeConfig

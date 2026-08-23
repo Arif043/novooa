@@ -18,6 +18,7 @@ export type TaskVariables = Record<string, unknown>;
 export type SubgraphRunner = (
   task: Task,
   context: string,
+  initialValue?: NodeOutputValue,
 ) => Promise<NodeExecutionResult[]>;
 
 export type TaskRunContext = {

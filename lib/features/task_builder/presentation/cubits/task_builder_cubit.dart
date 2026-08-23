@@ -22,6 +22,7 @@ part 'task_builder_human_approval_mutations.dart';
 part 'task_builder_dialog_input_mutations.dart';
 part 'task_builder_media_input_mutations.dart';
 part 'task_builder_model_inference_mutations.dart';
+part 'task_builder_for_each_mutations.dart';
 part 'task_builder_prompt_mutations.dart';
 part 'task_builder_script_mutations.dart';
 part 'task_builder_string_input_mutations.dart';
@@ -395,6 +396,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       WorkflowPrimitive.dialogInput => 'dialog',
       WorkflowPrimitive.mediaInput => 'media',
       WorkflowPrimitive.modelInference => 'model',
+      WorkflowPrimitive.forEach => 'element',
       WorkflowPrimitive.validation => 'validation',
     };
   }

@@ -50,6 +50,7 @@ class NodeOutputChips extends StatelessWidget {
       DialogInputNodeConfig() => _dialogInputOutputNames(config),
       MediaInputNodeConfig() => _mediaInputOutputs,
       ModelInferenceNodeConfig() => const ['value', 'modelId'],
+      ForEachNodeConfig() => const ['value'],
       _ => const [],
     };
   }

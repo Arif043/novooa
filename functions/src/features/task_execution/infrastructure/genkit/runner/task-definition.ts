@@ -158,6 +158,12 @@ export const modelInferenceNodeConfigSchema = z.object({
   modelId: z.string().default(""),
 });
 
+export const forEachNodeConfigSchema = z.object({
+  primitive: z.literal("forEach").default("forEach"),
+  itemsPointer: z.string().default("/"),
+  graph: branchWorkflowGraphSchema.default({nodes: [], edges: []}),
+});
+
 export const writeFileNodeConfigSchema = z.object({
   primitive: z.literal("writeFile").default("writeFile"),
   fileName: z.string().max(240).default(""),
@@ -198,6 +204,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   dialogInputNodeConfigSchema,
   mediaInputNodeConfigSchema,
   modelInferenceNodeConfigSchema,
+  forEachNodeConfigSchema,
   writeFileNodeConfigSchema,
   readFileNodeConfigSchema,
   readEmailNodeConfigSchema,

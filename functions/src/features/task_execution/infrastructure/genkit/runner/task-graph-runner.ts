@@ -1,6 +1,7 @@
 import { type GenkitBeta } from "genkit/beta";
 import {
   type SubgraphRunner,
+  type ParentNodeOutput,
   type TaskRunContext,
   type TaskVariables,
 } from "./node-executor.js";
@@ -94,6 +95,7 @@ async function runNodes(
   input: TaskGraphInput,
   runtime: TaskGraphRuntime,
   initialState?: InitialNodeRunState,
+  initialParentOutputs: readonly ParentNodeOutput[] = [],
 ): Promise<NodeRunState> {
   const remaining = remainingNodes(input.taskDefinition, initialState);
   const results = resultsMapFrom(initialState?.nodeResults ?? []);
@@ -114,6 +116,10 @@ async function runNodes(
       input.taskDefinition,
       results,
     );
+    const effectiveParentOutputs = parentOutputs.length === 0
+      && input.taskDefinition.edges.every((edge) => edge.to !== node.id)
+      ? [...initialParentOutputs]
+      : parentOutputs;
     const skipNode = shouldSkipNode(
       node,
       input.taskDefinition,
@@ -125,7 +131,7 @@ async function runNodes(
     const result = await runNodeWithTrail(ai, {
       node,
       context,
-      parentOutputs,
+      parentOutputs: effectiveParentOutputs,
       runContext: runContextFor(ai, input, runtime, results, variables),
       skipNode,
       startedAt,
@@ -159,7 +165,7 @@ function runSubgraphFor(
   teamId: string,
   runtime: TaskGraphRuntime,
 ): SubgraphRunner {
-  return async (task: Task, context: string) => {
+  return async (task: Task, context: string, initialValue?: NodeOutputValue) => {
     const state = await runNodes(ai, {
       taskDefinition: task,
       context,
@@ -170,7 +176,11 @@ function runSubgraphFor(
       variables,
       remainingNodeIds: task.nodes.map((node) => node.id),
       skippedNodeIds: [],
-    });
+    }, initialValue === undefined ? [] : [{
+      nodeId: "$iteration",
+      outputName: "value",
+      value: initialValue,
+    }]);
     return state.nodeResults;
   };
 }

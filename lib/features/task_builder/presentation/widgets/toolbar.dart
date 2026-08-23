@@ -162,6 +162,14 @@ class Toolbar extends StatelessWidget {
               icon: const Icon(Icons.model_training_outlined),
               tooltip: 'Modell-Inferenz hinzufügen',
             ),
+            const SizedBox(width: AppSpacing.xs),
+            IconButton(
+              onPressed: () => context
+                  .read<TaskBuilderCubit>()
+                  .addNodeToMainGraph(.forEach),
+              icon: const Icon(Icons.repeat_outlined),
+              tooltip: 'Für jedes Element hinzufügen',
+            ),
           ],
         ),
       ),

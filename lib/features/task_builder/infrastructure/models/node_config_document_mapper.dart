@@ -29,6 +29,7 @@ class NodeConfigDocumentMapper {
       DialogInputNodeConfig() => _dialogInputToDocument(config),
       MediaInputNodeConfig() => _mediaInputToDocument(config),
       ModelInferenceNodeConfig() => _modelInferenceToDocument(config),
+      ForEachNodeConfig() => _forEachToDocument(config),
       WriteFileNodeConfig() => _writeFileToDocument(config),
       ReadFileNodeConfig() => _readFileToDocument(config),
       ReadEmailNodeConfig() => {'primitive': config.primitive.name},
@@ -53,6 +54,7 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.dialogInput => _dialogInputFrom(data),
       WorkflowPrimitive.mediaInput => _mediaInputFrom(data),
       WorkflowPrimitive.modelInference => _modelInferenceFrom(data),
+      WorkflowPrimitive.forEach => _forEachFrom(data),
       WorkflowPrimitive.writeFile => _writeFileFrom(data),
       WorkflowPrimitive.readFile => _readFileFrom(data),
       WorkflowPrimitive.readEmail => const ReadEmailNodeConfig(),
@@ -156,6 +158,14 @@ class NodeConfigDocumentMapper {
     return {'primitive': config.primitive.name, 'modelId': config.modelId};
   }
 
+  Map<String, Object?> _forEachToDocument(ForEachNodeConfig config) {
+    return {
+      'primitive': config.primitive.name,
+      'itemsPointer': config.itemsPointer,
+      'graph': graphToDocument(config.graph),
+    };
+  }
+
   Map<String, Object?> _writeFileToDocument(WriteFileNodeConfig config) {
     return {
       'primitive': config.primitive.name,
@@ -257,6 +267,13 @@ class NodeConfigDocumentMapper {
   MediaInputNodeConfig _mediaInputFrom(Map<String, Object?> data) {
     return MediaInputNodeConfig(
       instruction: data['instruction'] as String? ?? '',
+    );
+  }
+
+  ForEachNodeConfig _forEachFrom(Map<String, Object?> data) {
+    return ForEachNodeConfig(
+      itemsPointer: data['itemsPointer'] as String? ?? '/',
+      graph: graphFromDocument(data['graph']),
     );
   }
 
