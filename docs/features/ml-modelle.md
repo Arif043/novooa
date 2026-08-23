@@ -240,9 +240,95 @@ Backend-Executoren benötigen dieselbe gezielte `roles/run.invoker`-Bindung.
 Der lokale Composition Root verdrahtet denselben Use Case mit SQLite-/
 Dateisystem-Adaptern, dem Python-Transformer und der ONNX-Runtime.
 
+## Betreiber-Publishing
+
+In der ersten Ausbaustufe veröffentlicht ausschließlich novooa
+Systemmodelle. Dazu gibt es keine öffentliche Function und keine
+App-Oberfläche. Der Betreiber startet eine nicht-interaktive TypeScript-CLI,
+die ausschließlich Firestore und Cloud Storage des angegebenen GCP-Projekts
+verwendet.
+
+```bash
+gcloud auth application-default login
+npm --prefix functions run models:publish -- \
+  --project syscat-90bff \
+  --manifest models/mobilenet-v3/model.json \
+  --artifact models/mobilenet-v3/model.onnx \
+  --dry-run
+```
+
+Ohne `--dry-run` lädt die CLI das Artefakt hoch und registriert den
+Katalogeintrag. Optional überschreibt `--bucket <bucket>` den aus der
+Projekt-ID abgeleiteten Firebase-Bucket. `--python <pfad>` wählt den
+Interpreter für die ONNX-Prüfung; ohne Angabe wird `PYTHON_EXECUTABLE` oder
+`python3` verwendet. Die Betreiberidentität benötigt Schreibzugriff auf
+`modelCatalog` sowie `storage.objects.create` auf dem Artefakt-Bucket.
+
+Jedes Modell besteht mindestens aus einer ONNX-Datei und einem versionierten
+Manifest:
+
+```text
+models/mobilenet-v3/
+├── model.onnx
+└── model.json
+```
+
+```json
+{
+  "id": "mobilenet-v3",
+  "title": "MobileNet V3",
+  "description": "Klassifiziert Bilder.",
+  "tags": ["bild", "klassifikation"],
+  "artifact": {
+    "artifactId": "mobilenet-v3",
+    "versionId": "2026-08"
+  },
+  "contract": {
+    "inputs": [{
+      "name": "input",
+      "source": "image",
+      "dataType": "float32",
+      "shape": ["dynamic", 3, 224, 224],
+      "preprocessing": [
+        {"type": "image.decode", "parameters": {"colorSpace": "rgb"}},
+        {"type": "image.resize", "parameters": {"width": 224, "height": 224}},
+        {"type": "tensor.layout", "parameters": {"order": "channelsFirst"}},
+        {"type": "tensor.normalize", "parameters": {
+          "mean": [0.485, 0.456, 0.406],
+          "std": [0.229, 0.224, 0.225]
+        }}
+      ]
+    }],
+    "outputs": [{
+      "name": "scores",
+      "semantic": "classification.scores",
+      "dataType": "float32",
+      "shape": ["dynamic", 1000],
+      "postprocessing": []
+    }]
+  }
+}
+```
+
+Die CLI validiert Manifest und Vertrag, prüft das Modell durch das Öffnen einer
+ONNX-Runtime-Session und vergleicht Namen, Datentypen sowie statische
+Tensorformen mit dem Vertrag. Gegenwärtig akzeptiert sie Bild- und
+Tensoreingänge, die registrierten Bildtransformationen sowie keine
+Ausgangsnachverarbeitung. Anschließend berechnet sie Größe und SHA-256,
+schreibt das Artefakt unveränderlich nach
+`model-artifacts/<artifactId>/versions/<versionId>/model.onnx` und speichert
+erst danach den Firestore-Katalogeintrag. `ifGenerationMatch: 0` verhindert,
+dass eine bestehende Modellversion überschrieben wird.
+
+Ein fehlgeschlagener Katalogeintrag kann ein bereits hochgeladenes, aber nicht
+referenziertes Artefakt hinterlassen. Solche Artefakte werden später von einem
+separaten Betreiber-Cleanup entfernt; eine Dateiablage und Firestore bieten
+keine gemeinsame Transaktion.
+
 ## Nächste Schritte
 
-1. Die novooa-interne Upload-/Prüfpipeline für Systemmodelle ergänzen.
+1. Einen Betreiber-Cleanup für nicht referenzierte Modellartefakte ergänzen.
+2. Weitere Eingabe- und Ausgangstransformationen als Strategien ergänzen.
 
 ## Verwandt
 
