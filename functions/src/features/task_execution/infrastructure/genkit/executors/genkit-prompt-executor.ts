@@ -1,4 +1,4 @@
-import {type PromptExecutor} from "../../../domain/repositories/prompt-executor.js";
+import {type PromptExecutor} from "../../../domain/executors/prompt-executor.js";
 import {type GenkitBeta} from "genkit/beta";
 import {type NodeExecutor, executedNode} from "../runner/node-executor.js";
 import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";

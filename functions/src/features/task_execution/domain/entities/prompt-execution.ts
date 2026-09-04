@@ -3,7 +3,7 @@ import {
   type NodeOutputValue,
   type PromptOutputType,
   type StructuredOutputField,
-} from "../entities/task.js";
+} from "./task.js";
 
 export type PromptExecutionRequest = {
   instruction: string;
@@ -19,7 +19,3 @@ export type PromptExecutionResult = {
   answer: string;
   outputs: Record<string, NodeOutputValue>;
 };
-
-export interface PromptExecutor {
-  execute(request: PromptExecutionRequest): Promise<PromptExecutionResult>;
-}

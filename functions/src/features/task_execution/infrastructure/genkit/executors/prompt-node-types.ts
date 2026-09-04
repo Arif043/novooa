@@ -1,7 +1,7 @@
 import {
   type PromptExecutionRequest,
   type PromptExecutionResult,
-} from "../../../domain/repositories/prompt-executor.js";
+} from "../../../domain/entities/prompt-execution.js";
 
 export type PromptNodeInput = PromptExecutionRequest;
 export type PromptNodeOutput = PromptExecutionResult;
