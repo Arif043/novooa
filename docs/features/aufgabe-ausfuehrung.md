@@ -19,6 +19,19 @@ Der Worker fuehrt anschliessend den Graphen topologisch aus. Der
 `NodeExecutorRegistry` ordnet jedem implementierten Primitive eine Strategy zu.
 Nicht registrierte Primitives werden mit `status: "skipped"` gespeichert.
 
+## Laufzeitgrenzen
+
+`task-workflows.ts` ist ausschließlich der Firebase- und Genkit-Entrypoint.
+Er definiert Callable Flows und Task-Queue-Handler, enthält aber keine
+Erzeugung konkreter Stores mehr. `CloudTaskRuntimeFactory` verdrahtet hierfür
+Firestore, Storage, Benachrichtigungen und die Cloud-Modellinferenz.
+
+Der Prompt-Baustein hängt an dem Domain-Port `PromptExecutor`.
+`GenkitPromptExecutor` ist dessen aktuelle Infrastrukturimplementierung und
+enthält die Genkit-Aufrufe. Der Workflow-Vertrag kennt nur Request und Resultat
+des Prompts, keine Genkit-Typen. Weitere Genkit-gebundene Executor werden nach
+demselben Muster herausgelöst, sobald ihre lokale Implementierung entsteht.
+
 ## Node-Ergebnisse und Templates
 
 Ein `NodeExecutionResult` enthaelt `nodeId`, `primitive`, `status` und

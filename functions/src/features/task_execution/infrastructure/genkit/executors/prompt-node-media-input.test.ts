@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {promptNodeExecutor} from "./prompt-node-executor.js";
+import {genkitPromptNodeExecutor} from "./genkit-prompt-executor.js";
 
 test("provides a direct media value as a Genkit media part", async () => {
   const prompts: unknown[] = [];
-  await promptNodeExecutor.execute(executorInput(prompts), runContext() as never);
+  await genkitPromptNodeExecutor.execute(executorInput(prompts), runContext() as never);
   assert.deepEqual(prompts, [[
     {text: "Kannst du das Bild sehen?"},
     {media: {url: "data:image/png;base64,iVBORw0KGgo="}},
@@ -12,7 +12,7 @@ test("provides a direct media value as a Genkit media part", async () => {
 });
 
 test("persists a generated image as a media value", async () => {
-  const output = await promptNodeExecutor.execute(imageExecutorInput(), imageRunContext() as never);
+  const output = await genkitPromptNodeExecutor.execute(imageExecutorInput(), imageRunContext() as never);
   assert.deepEqual(output.outputs.value, {
     type: "media",
     value: {

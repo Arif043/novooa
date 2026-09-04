@@ -1,26 +1,12 @@
-import {type EmployeeAttachment, type NodeOutputValue} from "../runner/task-definition.js";
+import {
+  type PromptExecutionRequest,
+  type PromptExecutionResult,
+} from "../../../domain/repositories/prompt-executor.js";
 
-export type PromptNodeOutputType = "text" | "decision" | "structured" | "image";
-
-export type StructuredOutputField = {
-  name: string;
-  description: string;
-};
-
-export type PromptNodeInput = {
-  instruction: string;
-  context: string;
-  outputType: PromptNodeOutputType;
-  choices: string[];
-  structuredFields: StructuredOutputField[];
-  mediaUrls: string[];
-  employee?: EmployeeAttachment;
-};
-
-export type PromptNodeOutput = {
-  answer: string;
-  outputs: Record<string, NodeOutputValue>;
-};
+export type PromptNodeInput = PromptExecutionRequest;
+export type PromptNodeOutput = PromptExecutionResult;
+export type PromptNodeOutputType = PromptNodeInput["outputType"];
+export type StructuredOutputField = PromptNodeInput["structuredFields"][number];
 
 export type PromptContent = {
   text: string;

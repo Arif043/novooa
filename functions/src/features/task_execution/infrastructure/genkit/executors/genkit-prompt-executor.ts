@@ -1,14 +1,22 @@
+import {type PromptExecutor} from "../../../domain/repositories/prompt-executor.js";
 import {type GenkitBeta} from "genkit/beta";
 import {type NodeExecutor, executedNode} from "../runner/node-executor.js";
 import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
 import {executeImagePrompt, persistedImageOutputsFor} from "./prompt-image-executor.js";
 import {promptInputFor} from "./prompt-node-input.js";
-import {executeDecisionPrompt, executeStructuredPrompt, executeTextPrompt} from "./prompt-text-executor.js";
 import {type PromptNodeInput, type PromptNodeOutput} from "./prompt-node-types.js";
+import {executeDecisionPrompt, executeStructuredPrompt, executeTextPrompt} from "./prompt-text-executor.js";
 
 export type {PromptNodeInput, PromptNodeOutput, PromptNodeOutputType} from "./prompt-node-types.js";
 
-export const promptNodeExecutor: NodeExecutor = {
+export function createGenkitPromptExecutor(
+  ai: GenkitBeta,
+  workspace?: NodeAttachmentWorkspace,
+): PromptExecutor {
+  return {execute: (request) => executePromptNode(ai, request, workspace)};
+}
+
+export const genkitPromptNodeExecutor: NodeExecutor = {
   primitive: "prompt",
   async execute(input, runContext) {
     const promptInput = await promptInputFor(input, runContext);
@@ -20,7 +28,7 @@ export const promptNodeExecutor: NodeExecutor = {
   },
 };
 
-export async function executePromptNode(
+export function executePromptNode(
   ai: GenkitBeta,
   input: PromptNodeInput,
   workspace?: NodeAttachmentWorkspace,

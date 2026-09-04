@@ -18,23 +18,7 @@ import {
   mailConnectorEncryptionKey,
   microsoftGraphClientSecret,
 } from "../../../communication/infrastructure/microsoft_graph/microsoft-graph-config.js";
-import {FirebaseObjectStore} from "../../../files/infrastructure/firebase/firebase-object-store.js";
-import {FirestoreTeamFileStore} from "../../../files/infrastructure/firebase/firestore-team-file-store.js";
-import {FirebaseTaskMessageSender} from "../../../communication/infrastructure/firebase/firebase-task-message-sender.js";
-import {FirestoreKnowledgeBaseStore} from
-  "../../../knowledge_base/infrastructure/firebase/firestore-knowledge-base-store.js";
-import {FirestoreTeamContextStore} from
-  "../../../teams/infrastructure/firebase/firestore-team-context-store.js";
-import {FirestoreTaskStore} from "../firebase/firestore-task-store.js";
-import {
-  createFirebaseTaskRunStore,
-} from "../firebase/firebase-task-run-store-factory.js";
-import {
-  createFirebaseTaskRunApprovalNotificationStore,
-} from "../../../notifications/infrastructure/firebase/firebase-task-run-approval-notification-store-factory.js";
-import {
-  FirebaseTaskRunDispatcher,
-} from "../firebase/firebase-task-run-dispatcher.js";
+import {createCloudTaskRuntime} from "../firebase/cloud-task-runtime-factory.js";
 import {
   handleTaskRunDispatch,
   taskRunDispatchPayloadSchema,
@@ -42,8 +26,6 @@ import {
 } from "../genkit/runner/task-run-task.js";
 import {responseOutputsForTaskRun} from
   "../../domain/usecases/task-run-response-outputs.js";
-import {modelInference} from
-  "../../../machine_learning/infrastructure/cloud_run/model-inference-service-config.js";
 
 const workerSecrets = [
   twilioAccountSid,
@@ -57,27 +39,7 @@ const ai = genkit({
   plugins: aiProviderPlugins(),
 });
 
-const taskStore = new FirestoreTaskStore();
-const taskRunStore = createFirebaseTaskRunStore(
-  createFirebaseTaskRunApprovalNotificationStore(),
-);
-const objectStore = new FirebaseObjectStore();
-const teamFileStore = new FirestoreTeamFileStore();
-const messageSender = new FirebaseTaskMessageSender();
-const knowledgeBaseStore = new FirestoreKnowledgeBaseStore();
-const teamContextStore = new FirestoreTeamContextStore();
-const configuredModelInference = modelInference();
-const workerStores = {
-  taskStore,
-  taskRunStore,
-  objectStore,
-  teamFileStore,
-  fileContentReader: teamFileStore,
-  messageSender,
-  knowledgeBaseStore,
-  modelInference: configuredModelInference,
-};
-const taskRunDispatcher = new FirebaseTaskRunDispatcher();
+const taskRuntime = createCloudTaskRuntime();
 const callableOptions = {
   authPolicy: isSignedIn(),
   invoker: "public" as const,
@@ -96,16 +58,16 @@ export const taskDefinitionFlow = ai.defineFlow(
       const taskDefinition = await loadTaskDefinition(
         input.taskId,
         runtime.context,
-        {taskStore, teamContextStore},
+        {taskStore: taskRuntime.taskStore, teamContextStore: taskRuntime.teamContextStore},
       );
       title = taskDefinition.title;
       const teamId = await teamIdFromContext(runtime.context);
-      const run = await taskRunStore.enqueueTaskRun({
+      const run = await taskRuntime.taskRunStore.enqueueTaskRun({
         teamId,
         task: taskDefinition,
         context: input.context,
       });
-      await taskRunDispatcher.dispatchTaskRun({
+      await taskRuntime.taskRunDispatcher.dispatchTaskRun({
         teamId,
         runId: run.runId,
         mode: "start",
@@ -136,12 +98,12 @@ export const reviewTaskRunFlow = ai.defineFlow(
     "review_task_run.failed",
     async () => {
     const teamId = await teamIdFromContext(runtime.context);
-    const reviewableRun = await taskRunStore.loadReviewableRun(
+    const reviewableRun = await taskRuntime.taskRunStore.loadReviewableRun(
       teamId,
       input.runId,
     );
     if (input.decision === "reject") {
-      await taskRunStore.rejectTaskRun(teamId, reviewableRun.run.runId);
+      await taskRuntime.taskRunStore.rejectTaskRun(teamId, reviewableRun.run.runId);
       return {runId: input.runId, status: "rejected" as const};
     }
     const responseOutputs = await responseOutputsForTaskRun(
@@ -149,14 +111,14 @@ export const reviewTaskRunFlow = ai.defineFlow(
       input.output,
       input.formValues,
       teamId,
-      teamFileStore,
+      taskRuntime.teamFileStore,
     );
-    await taskRunStore.approveTaskRun(
+    await taskRuntime.taskRunStore.approveTaskRun(
       teamId,
       reviewableRun.run.runId,
       responseOutputs,
     );
-    await taskRunDispatcher.dispatchTaskRun({
+    await taskRuntime.taskRunDispatcher.dispatchTaskRun({
       teamId,
       runId: reviewableRun.run.runId,
       mode: "resume",
@@ -187,7 +149,7 @@ export const runTaskRunTask = onTaskDispatched<TaskRunDispatchPayload>(
     "task_run_task.handler_failed",
     async () => {
     const payload = taskRunDispatchPayloadSchema.parse(request.data);
-    await handleTaskRunDispatch(ai, payload, workerStores);
+    await handleTaskRunDispatch(ai, payload, taskRuntime.workerStores);
     },
   ),
 );
@@ -195,5 +157,5 @@ export const runTaskRunTask = onTaskDispatched<TaskRunDispatchPayload>(
 async function teamIdFromContext(context: unknown): Promise<string> {
   const auth = (context as {auth?: {uid?: string}} | undefined)?.auth;
   if (!auth?.uid) throw new Error("Auth context is missing.");
-  return teamContextStore.currentTeamIdForUid(auth.uid);
+  return taskRuntime.teamContextStore.currentTeamIdForUid(auth.uid);
 }

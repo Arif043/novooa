@@ -3,7 +3,7 @@ import test from "node:test";
 import {
   executePromptNode,
   type PromptNodeInput,
-} from "./prompt-node-executor.js";
+} from "./genkit-prompt-executor.js";
 
 test("returns only a data URL for an image prompt", async () => {
   const generatedImage = "data:image/png;base64,aW1hZ2U=";
