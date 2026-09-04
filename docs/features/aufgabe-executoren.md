@@ -31,6 +31,11 @@ Das generierte Bild wird als Team-Datei gespeichert und als `media`-`value`
 weitergereicht; Data-URLs verlassen den Executor nicht. Die Cloud Function
 erhält den benötigten `GEMINI_API_KEY` als gebundenes Secret.
 
+`PromptExecutor` ist der Domain-Port mit `PromptExecutionRequest` und
+`PromptExecutionResult`. `createGenkitPromptExecutor` bindet Genkit und den
+temporären Anhangs-Workspace als Infrastrukturadapter. Der Node-Executor
+bereitet ausschließlich Workflow-Werte auf und persistiert Bildausgaben.
+
 Prompt-Anweisungen und Entscheidungen koennen Variablen per `{{name}}` und
 Dot-Pfade wie `{{kunde.name}}` verwenden. Dateianhaenge und Wissensnotizen
 stehen im read-only Workspace bereit. Transiente Modellfehler werden mit
@@ -79,6 +84,23 @@ oder `maxIterations` erreicht wird. Der Draft stammt aus dem Vorgaengeroutput;
 `optimizerPrompt`, `critiquePrompt` und `maxIterations` steuern die Schleife.
 Bei OpenAI-kompatiblen Providern existiert ein Text-JSON-Fallback fuer die
 strukturierte Bewertung.
+
+`IterativeRefinementExecutor` kapselt dafür die fachlichen Ein- und
+Ausgabewerte. `createGenkitIterativeRefinementExecutor` implementiert den Port
+mit Genkit, inklusive strukturierter Bewertung und Text-Fallback.
+
+## Script
+
+`ScriptExecutor` beschreibt die Eingabe, Variablen und Ausgabe eines Scripts.
+`createPythonScriptExecutor` führt die isolierte Python-Subprocess-Runtime aus.
+Der Node-Executor übergibt nur aufgelöste Workflow-Werte und protokolliert die
+Script-Ausgabe.
+
+`modelInference`, Dateioperationen und das Senden von Nachrichten verwenden
+bereits `ModelInference`, `TeamFileStore` beziehungsweise `TaskMessageSender`
+als Domain-Ports. Deterministische Bausteine wie Eingabe, Bedingung und
+Freigabe enthalten keine externe Technik und benötigen deshalb keinen eigenen
+Executor-Port.
 
 ## Dateien und Kanaele
 

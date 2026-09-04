@@ -1,4 +1,9 @@
 import {type GenkitBeta} from "genkit/beta";
+import {type IterativeRefinementExecutor} from "../../../domain/executors/iterative-refinement-executor.js";
+import {
+  type IterativeRefinementRequest,
+  type IterativeRefinementResult,
+} from "../../../domain/entities/iterative-refinement-execution.js";
 import {modelLogContext, reasoningModel} from "../runner/ai-models.js";
 import {
   type NodeExecutor,
@@ -6,7 +11,6 @@ import {
   textForParentOutputs,
   textOutputs,
 } from "../runner/node-executor.js";
-import {type EmployeeAttachment} from "../runner/task-definition.js";
 import {refinementConfigFor} from "./iterative-refinement-config.js";
 import {
   type Evaluation,
@@ -37,30 +41,20 @@ import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.
 import {employeeFor} from "../runner/employee-context.js";
 import {runEmployeeAgentTurn} from "../runner/employee-agent.js";
 
-export type IterativeRefinementNodeInput = {
-  objective: string;
-  draft: string;
-  optimizerPrompt: string;
-  critiquePrompt: string;
-  maxIterations: number;
-  employee?: EmployeeAttachment;
-};
+export type IterativeRefinementNodeInput = IterativeRefinementRequest;
+export type IterativeRefinementNodeOutput = IterativeRefinementResult;
 
-export type IterativeRefinementNodeOutput = {
-  answer: string;
-  iterations: number;
-};
-
-export const iterativeRefinementNodeExecutor: NodeExecutor = {
+export const genkitIterativeRefinementNodeExecutor: NodeExecutor = {
   primitive: "iterativeRefinement",
   async execute(input, runContext) {
     const config = refinementConfigFor(input.node);
     const parentOutput = textForParentOutputs(input.parentOutputs);
     const draft = parentOutput || input.context;
     const employee = employeeFor(input.node);
-    const output = await executeIterativeRefinementNode(
+    const output = await createGenkitIterativeRefinementExecutor(
       input.ai,
-      {
+      input.attachmentWorkspace,
+    ).execute({
         objective: runContext.resolveTemplates(runContext.task.objective),
         draft: runContext.resolveTemplates(draft),
         optimizerPrompt: runContext.resolveTemplates(config?.optimizerPrompt ||
@@ -71,9 +65,7 @@ export const iterativeRefinementNodeExecutor: NodeExecutor = {
           input.node.title),
         maxIterations: config?.maxIterations ?? 2,
         employee,
-      },
-      input.attachmentWorkspace,
-    );
+      });
     return executedNode(input.node, textOutputs(output.answer));
   },
 };
@@ -111,6 +103,13 @@ export async function executeIterativeRefinementNode(
 
   logReadableInfo(formatRefinementFinished(iterations, answer));
   return {answer, iterations};
+}
+
+export function createGenkitIterativeRefinementExecutor(
+  ai: GenkitBeta,
+  attachmentWorkspace?: NodeAttachmentWorkspace,
+): IterativeRefinementExecutor {
+  return {execute: (input) => executeIterativeRefinementNode(ai, input, attachmentWorkspace)};
 }
 
 async function evaluateDraft(

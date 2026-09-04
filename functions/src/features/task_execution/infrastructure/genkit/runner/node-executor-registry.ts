@@ -4,7 +4,7 @@ import {dialogInputNodeExecutor} from "../executors/dialog-input-node-executor.j
 import {mediaInputNodeExecutor} from "../executors/media-input-node-executor.js";
 import {modelInferenceNodeExecutor} from "../executors/model-inference-node-executor.js";
 import {forEachNodeExecutor} from "../executors/for-each-node-executor.js";
-import {iterativeRefinementNodeExecutor} from "../executors/iterative-refinement-node-executor.js";
+import {genkitIterativeRefinementNodeExecutor} from "../executors/genkit-iterative-refinement-executor.js";
 import {genkitPromptNodeExecutor} from "../executors/genkit-prompt-executor.js";
 import {readFileNodeExecutor} from "../executors/read-file-node-executor.js";
 import {
@@ -24,7 +24,7 @@ const executors = new Map<WorkflowNode["primitive"], NodeExecutor>(
     scriptNodeExecutor,
     genkitPromptNodeExecutor,
     conditionalFlowNodeExecutor,
-    iterativeRefinementNodeExecutor,
+    genkitIterativeRefinementNodeExecutor,
     writeFileNodeExecutor,
     readFileNodeExecutor,
     readEmailNodeExecutor,

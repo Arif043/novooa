@@ -1,7 +1,7 @@
-import {type IterativeRefinementNodeInput} from "./iterative-refinement-node-executor.js";
+import {type IterativeRefinementRequest} from "../../../domain/entities/iterative-refinement-execution.js";
 
 export function evaluationPrompt(
-  input: IterativeRefinementNodeInput,
+  input: IterativeRefinementRequest,
   draft: string,
 ): string {
   return [
@@ -13,7 +13,7 @@ export function evaluationPrompt(
 }
 
 export function improvementPrompt(
-  input: IterativeRefinementNodeInput,
+  input: IterativeRefinementRequest,
   draft: string,
   critique: string,
 ): string {
@@ -26,7 +26,7 @@ export function improvementPrompt(
   ].join("\n\n");
 }
 
-function optimizerInstruction(input: IterativeRefinementNodeInput): string {
+function optimizerInstruction(input: IterativeRefinementRequest): string {
   const prompt = input.optimizerPrompt.trim();
   return prompt.length > 0
     ? `Optimierer-Prompt:\n${prompt}`

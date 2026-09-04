@@ -1,4 +1,4 @@
-import {type IterativeRefinementNodeInput} from "./iterative-refinement-node-executor.js";
+import {type IterativeRefinementRequest} from "../../../domain/entities/iterative-refinement-execution.js";
 
 type EvaluationView = {
   critique: string;
@@ -6,7 +6,7 @@ type EvaluationView = {
 };
 
 export function formatRefinementStarted(
-  input: IterativeRefinementNodeInput,
+  input: IterativeRefinementRequest,
   maxIterations: number,
 ): string {
   return [
