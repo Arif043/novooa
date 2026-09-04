@@ -212,7 +212,7 @@ Bild- und Dateiquellen enthalten Base64-Bytes, Tensoren enthalten `name`,
 validierten Ausgabe-Tensoren im selben portablen Format zurück. Weder die
 Anfrage noch der Modellvertrag enthalten Firebase-Pfade.
 
-Das Image entsteht mit:
+Das Gateway-Image entsteht mit:
 
 ```bash
 docker build -f functions/Dockerfile.model-inference -t novooa-model-inference .
@@ -242,8 +242,87 @@ Task-Worker-Function ist der einzige heutige Aufrufer, weil nur sie
 `modelInference`-Bausteine innerhalb eines Task-Runs ausführt. Künftige
 Backend-Executoren benötigen dieselbe gezielte `roles/run.invoker`-Bindung.
 
-Der lokale Composition Root verdrahtet denselben Use Case mit SQLite-/
-Dateisystem-Adaptern, dem Python-Transformer und der ONNX-Runtime.
+Der lokale Composition Root verdrahtet denselben Use Case mit einem
+Dateisystemkatalog, lokalen Modellartefakten, dem Python-Transformer und der
+ONNX-Runtime.
+
+### Lokaler Docker-Stack
+
+Für die lokale Entwicklung läuft der Inferenzdienst in derselben Struktur wie
+in Cloud Run: ein Node-Gateway und ein Python-Sidecar. Docker Compose ersetzt
+nur den Cloud-Run-Orchestrator. Im lokalen Modus verwendet das Gateway
+ausschließlich den eingebundenen Runtime-Ordner, keinen Firebase-Adapter und
+keine Google-Anmeldedaten.
+
+```bash
+docker compose -f docker-compose.model-inference.yaml up --build
+```
+
+Der Dienst ist ausschließlich als `http://127.0.0.1:8080` erreichbar. Für den
+Functions-Emulator setzt `functions/.env.local`:
+
+```text
+MODEL_INFERENCE_SERVICE_URL=http://127.0.0.1:8080
+```
+
+Im Emulator wählt `modelInference()` hierfür den lokalen HTTP-Adapter ohne
+Google-ID-Token. Außerhalb des Emulators bleiben ausschließlich HTTPS und die
+Cloud-Run-ID-Token-Authentifizierung zulässig.
+
+Modelle werden vor dem Start lokal installiert. Der Installer prüft ONNX-Datei
+und Modellvertrag und schreibt Artefakt sowie Katalogeintrag in `.novooa`:
+
+```bash
+npm --prefix functions run models:install-local -- \
+  --runtime-root .novooa \
+  --manifest models/mobilenet-v3/model.json \
+  --artifact models/mobilenet-v3/model.onnx
+```
+
+Der Runtime-Ordner hat die Struktur:
+
+```text
+.novooa/
+  model-catalog/<base64url-modell-id>.json
+  model-artifacts/<artifact-id>/versions/<version-id>/model.onnx
+```
+
+Docker Compose bindet diesen Ordner nur lesend ein. Der Installer wird daher
+auf dem Host ausgeführt; der Gateway kann installierte Modellversionen niemals
+verändern.
+
+Das Compose-Netzwerk ist intern und die Container besitzen keinen ausgehenden
+Netzwerkzugang. Der ML-Stack greift damit nicht auf Cloud-Dienste zu. Der
+heutige Firebase-Functions-Emulator kann ihn für Entwicklungstests aufrufen,
+ist aber selbst noch kein vollständig lokaler Aufgaben-Runner: Aufgaben,
+Dateien und Runs stammen dort weiterhin aus Firebase. Die vollständig lokale
+Ausführung benötigt als nächsten Schritt den geplanten SQLite-Task-Runner.
+
+#### Session-Cache
+
+Eine Cloud-Run-Instanz besteht aus einem Node-Gateway und einem Python-
+Sidecar. Das Gateway prüft Vertrag und Modellverfügbarkeit, löst Artefakte aus
+Cloud Storage auf und hält die zuletzt verwendeten Artefakte im lokalen LRU-
+Cache. Der Sidecar hält ONNX-Sessions mit dem Schlüssel
+`artifactId:versionId:sha256` in einem getrennten LRU-Cache. Dadurch wird eine
+Modellversion nur beim ersten Zugriff einer warmen Instanz aus Storage geladen
+und als ONNX-Session initialisiert.
+
+Die bestehende Bildvorverarbeitung verwendet in dieser ersten Stufe weiter den
+lokalen Python-Worker. Sie wird in einem folgenden Schritt auf den Sidecar
+umgestellt, damit auch ihre Prozesse zwischen Anfragen wiederverwendet werden.
+
+Der Sidecar meldet einen verworfenen Session-Cache-Eintrag explizit zurück.
+Das Gateway lädt dann dieselbe unveränderliche Artefaktversion erneut und
+wiederholt nur diese Inferenz. Cache-Inhalte sind flüchtig; Cloud Storage bleibt
+die geprüfte Quelle der Wahrheit.
+
+Die Vorlage `functions/cloudrun/model-inference-service.yaml.template`
+konfiguriert zunächst eine Concurrency von `1`, höchstens zehn Instanzen und
+eine warme Instanz. Vor dem Deployment müssen `NODE_IMAGE` und `SIDECAR_IMAGE`
+durch die beiden Artifact-Registry-Images ersetzt werden. Die Cache-Größen
+werden über `MODEL_ARTIFACT_CACHE_ENTRIES` und
+`MODEL_SESSION_CACHE_ENTRIES` gesteuert.
 
 ## Betreiber-Publishing
 

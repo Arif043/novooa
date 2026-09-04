@@ -42,7 +42,7 @@ import {
 } from "../genkit/runner/task-run-task.js";
 import {responseOutputsForTaskRun} from
   "../../domain/usecases/task-run-response-outputs.js";
-import {cloudRunModelInference} from
+import {modelInference} from
   "../../../machine_learning/infrastructure/cloud_run/model-inference-service-config.js";
 
 const workerSecrets = [
@@ -66,7 +66,7 @@ const teamFileStore = new FirestoreTeamFileStore();
 const messageSender = new FirebaseTaskMessageSender();
 const knowledgeBaseStore = new FirestoreKnowledgeBaseStore();
 const teamContextStore = new FirestoreTeamContextStore();
-const modelInference = cloudRunModelInference();
+const configuredModelInference = modelInference();
 const workerStores = {
   taskStore,
   taskRunStore,
@@ -75,7 +75,7 @@ const workerStores = {
   fileContentReader: teamFileStore,
   messageSender,
   knowledgeBaseStore,
-  modelInference,
+  modelInference: configuredModelInference,
 };
 const taskRunDispatcher = new FirebaseTaskRunDispatcher();
 const callableOptions = {

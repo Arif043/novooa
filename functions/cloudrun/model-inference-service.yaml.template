@@ -1,0 +1,36 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: novooa-model-inference
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: "10"
+        autoscaling.knative.dev/minScale: "1"
+        run.googleapis.com/container-dependencies: '{"gateway":["inference-sidecar"]}'
+    spec:
+      containerConcurrency: 1
+      containers:
+        - name: gateway
+          image: NODE_IMAGE
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PYTHON_INFERENCE_SIDECAR_URL
+              value: http://127.0.0.1:8081
+            - name: MODEL_ARTIFACT_CACHE_ENTRIES
+              value: "4"
+          resources:
+            limits:
+              cpu: "1"
+              memory: 1Gi
+        - name: inference-sidecar
+          image: SIDECAR_IMAGE
+          env:
+            - name: MODEL_SESSION_CACHE_ENTRIES
+              value: "4"
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2Gi

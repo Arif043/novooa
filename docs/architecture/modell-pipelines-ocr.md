@@ -16,3 +16,21 @@ Topologieausführung unverändert.
 
 Kanten enthalten keine Datenauswahl. Nachfolger binden benötigte Werte über
 ihren eigenen Vertrag, damit der Datenfluss an einer Stelle konfiguriert bleibt.
+
+## Inferenzdienst
+
+Der private Cloud-Run-Inferenzdienst skaliert als vollständige Instanzpaare:
+
+```text
+Cloud-Run-Instanz = Node-Gateway + Python-ONNX-Sidecar
+```
+
+Der Node-Container ist der HTTP-Eingang und prüft Modellvertrag, Teamzugriff
+und Artefaktintegrität. Der Python-Sidecar führt ONNX-Inference in einem
+langlebigen Prozess aus. Die Vorverarbeitung bleibt in der ersten Stufe beim
+vorhandenen Worker. Beide Container kommunizieren innerhalb derselben Instanz
+über `127.0.0.1`.
+
+Artefakt- und Session-Caches sind lokal und LRU-begrenzt. Cloud Run kann keine
+Instanz nach vorhandenem Modellcache auswählen; ein Cache-Hit ist deshalb eine
+Optimierung, keine Routing-Garantie.

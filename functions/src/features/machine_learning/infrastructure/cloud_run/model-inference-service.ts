@@ -1,8 +1,8 @@
 import {createModelInferenceHttpServer} from "./model-inference-http-server.js";
-import {createCloudRunModelInference} from "./model-inference-service-composition.js";
+import {createModelInferenceService} from "./model-inference-service-composition.js";
 
 const port = portFromEnvironment();
-const server = createModelInferenceHttpServer(createCloudRunModelInference());
+const server = createModelInferenceHttpServer(createModelInferenceService());
 
 server.listen(port, "0.0.0.0", () => {
   console.info(JSON.stringify({event: "model_inference_service_started", port}));

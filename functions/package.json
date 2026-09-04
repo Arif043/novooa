@@ -11,7 +11,8 @@
     "logs": "npx -y firebase-tools@latest functions:log",
     "schedule:run:local": "curl -i -X POST -H \"X-CloudScheduler: true\" http://127.0.0.1:5001/syscat-90bff/europe-west3/runDueTaskTriggersWorker-0",
     "schedule:watch:local": "while true; do npm run schedule:run:local; sleep 60; done",
-    "models:publish": "npm run build && node lib/features/machine_learning/infrastructure/cli/model-publish-cli.js"
+    "models:publish": "npm run build && node lib/features/machine_learning/infrastructure/cli/model-publish-cli.js",
+    "models:install-local": "npm run build && node lib/features/machine_learning/infrastructure/cli/local-model-install-cli.js"
   },
   "engines": {
     "node": "24"
