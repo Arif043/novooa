@@ -6,7 +6,7 @@ import {
 import {
   modelInferenceRequestJson,
   modelInferenceResultFromJson,
-} from "../cloud_run/model-inference-http-codec.js";
+} from "../model-inference-http-codec.js";
 
 type LocalJsonRequest = {url: string; body: object};
 

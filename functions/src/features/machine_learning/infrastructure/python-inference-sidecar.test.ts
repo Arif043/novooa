@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
-import {type ModelTensor} from "../../domain/entities/model-tensor.js";
+import {type ModelCatalogEntry} from "../domain/entities/model-catalog-entry.js";
+import {type ModelTensor} from "../domain/entities/model-tensor.js";
 import {ModelNotLoadedError, type PythonInferenceSidecar, SidecarOnnxInferenceRuntime} from "./python-inference-sidecar.js";
 
 test("loads an artifact once before reusing the sidecar session", async () => {

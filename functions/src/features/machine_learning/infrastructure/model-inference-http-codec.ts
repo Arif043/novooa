@@ -1,11 +1,11 @@
-import {type ModelInputValue} from "../../domain/entities/model-input-source.js";
-import {type ModelTensor} from "../../domain/entities/model-tensor.js";
+import {type ModelInputValue} from "../domain/entities/model-input-source.js";
+import {type ModelTensor} from "../domain/entities/model-tensor.js";
 import {
   type ModelInferenceOutput,
   type ModelInferenceRequest,
   type ModelInferenceResult,
-} from "../../domain/repositories/model-inference.js";
-import {modelTensorFromJson, modelTensorToJson} from "../local/model-tensor-json-codec.js";
+} from "../domain/repositories/model-inference.js";
+import {modelTensorFromJson, modelTensorToJson} from "./local/model-tensor-json-codec.js";
 
 export function modelInferenceRequestJson(request: ModelInferenceRequest) {
   return {

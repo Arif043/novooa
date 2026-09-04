@@ -1,5 +1,5 @@
 import {createServer, type IncomingMessage, type Server, type ServerResponse} from "node:http";
-import {type ModelInference} from "../../domain/repositories/model-inference.js";
+import {type ModelInference} from "../domain/repositories/model-inference.js";
 import {modelInferenceRequestFromJson, modelInferenceResultJson} from "./model-inference-http-codec.js";
 
 const maxRequestBytes = 16 * 1024 * 1024;

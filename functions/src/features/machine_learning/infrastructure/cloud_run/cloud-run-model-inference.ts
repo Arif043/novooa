@@ -6,7 +6,7 @@ import {
 import {
   modelInferenceRequestJson,
   modelInferenceResultFromJson,
-} from "./model-inference-http-codec.js";
+} from "../model-inference-http-codec.js";
 import {type AuthenticatedJsonHttpClient} from "./authenticated-json-http-client.js";
 
 export class CloudRunModelInference implements ModelInference {

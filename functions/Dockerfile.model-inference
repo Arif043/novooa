@@ -31,4 +31,4 @@ ENV NODE_ENV=production \
 
 USER node
 
-CMD ["node", "lib/features/machine_learning/infrastructure/cloud_run/model-inference-service.js"]
+CMD ["node", "lib/features/machine_learning/infrastructure/model-inference-service.js"]

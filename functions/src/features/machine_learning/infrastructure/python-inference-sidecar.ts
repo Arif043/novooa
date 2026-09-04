@@ -1,7 +1,7 @@
-import {type ModelArtifactReference} from "../../domain/entities/model-artifact-reference.js";
-import {type ModelTensor} from "../../domain/entities/model-tensor.js";
-import {type ModelInferenceRuntime, type ModelRuntimeRequest} from "../../domain/repositories/model-inference-runtime.js";
-import {modelTensorFromJson, modelTensorToJson} from "../local/model-tensor-json-codec.js";
+import {type ModelArtifactReference} from "../domain/entities/model-artifact-reference.js";
+import {type ModelTensor} from "../domain/entities/model-tensor.js";
+import {type ModelInferenceRuntime, type ModelRuntimeRequest} from "../domain/repositories/model-inference-runtime.js";
+import {modelTensorFromJson, modelTensorToJson} from "./local/model-tensor-json-codec.js";
 
 export interface PythonInferenceSidecar {
   load(reference: ModelArtifactReference, artifact: Uint8Array): Promise<void>;
