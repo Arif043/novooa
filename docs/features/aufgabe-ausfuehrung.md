@@ -28,6 +28,11 @@ validiert Callable-Payloads, überträgt Firebase-Auth in den Workflow-Kontext
 und adaptiert Cloud-Tasks. `CloudTaskRuntimeFactory` verdrahtet hierfür
 Firestore, Storage, Benachrichtigungen und die Cloud-Modellinferenz.
 
+Der Builder-Assistent folgt derselben Grenze: `TaskBuilderAssistant` ist der
+frameworkfreie Vertrag, `createGenkitTaskBuilderAssistant` erstellt den
+Genkit-Responder und `task-builder-assistant-functions.ts` adaptiert die
+Firebase-Callable-Function inklusive Auth, Payload-Pruefung und Secret.
+
 `NodeExecutor`, dessen Eingabe und der gemeinsame Laufzeitkontext liegen in
 der Domain. Der Vertrag kennt weder Genkit noch einen Anhangs-Workspace.
 `NodeExecutorRegistry` bindet Genkit nur fuer `prompt` und
