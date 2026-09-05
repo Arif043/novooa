@@ -1,9 +1,9 @@
-import {type WrittenFile} from "../../../../files/domain/repositories/team-file-store.js";
+import {type WrittenFile} from "../../../files/domain/repositories/team-file-store.js";
 import {
   mediaReferenceFor,
   type FileReference,
   type NodeOutputValue,
-} from "../../../domain/entities/workflow-value.js";
+} from "../entities/workflow-value.js";
 
 export function fileReferenceFor(file: WrittenFile): FileReference {
   return {

@@ -3,7 +3,7 @@ import {imageModel, imageModelLogContext} from "../runner/ai-models.js";
 import {type TaskRunContext} from "../../../domain/executors/node-executor.js";
 import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
 import {aiTurnMiddleware} from "../runner/node-attachment-genkit.js";
-import {fileOutputFor} from "../runner/file-output-values.js";
+import {fileOutputFor} from "../../../domain/services/file-output-values.js";
 import {type NodeOutputValue, type WorkflowNode} from "../runner/task-definition.js";
 import {formatModelCallFinished, formatModelCallStarted, logReadableInfo} from "../runner/structured-logger.js";
 import {imageDataFromDataUrl, imageExtensionFor} from "./image-data-url.js";

@@ -1,4 +1,4 @@
-import {type WorkflowNode} from "../runner/task-definition.js";
+import {type WorkflowNode} from "../entities/task.js";
 
 export function fileNameFor(node: WorkflowNode): string {
   const value = node.config.primitive === "writeFile" ? node.config.fileName : "";

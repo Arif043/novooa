@@ -2,23 +2,22 @@ import {
   type NodeExecutor,
   executedNode,
   singleParentOutput,
-} from "../../../domain/executors/node-executor.js";
+} from "./node-executor.js";
 import {
   type FileContent,
   type TeamFileStore,
   type WrittenFile,
-} from "../../../../files/domain/repositories/team-file-store.js";
+} from "../../../files/domain/repositories/team-file-store.js";
 import {
   contentTypeFor,
   fileNameFor,
   targetFileIdFor,
-} from "./write-file-node-config.js";
-import {fileContentFor} from "../runner/media-value-loader.js";
+} from "../services/write-file-node-config.js";
 import {
   fileMetadataOutputs,
   fileOutputFor,
-} from "../runner/file-output-values.js";
-import {imageExtensionFor} from "./image-data-url.js";
+} from "../services/file-output-values.js";
+import {imageExtensionFor} from "../services/image-content-type.js";
 
 export const writeFileNodeExecutor: NodeExecutor = {
   primitive: "writeFile",
@@ -46,10 +45,10 @@ async function sourceContentFor(
 ): Promise<SourceContent> {
   if (output === undefined) return {content: ""};
   if (output.type === "media" || output.type === "file") {
-    const file = await fileContentFor(
-      output.value,
+    const file = await runContext.fileContentReader.readTeamFileContent(
       runContext.teamId,
-      runContext.fileContentReader,
+      output.value.fileId,
+      output.value.versionId,
     );
     return {content: file.content, sourceContentType: file.contentType};
   }

@@ -1,4 +1,4 @@
-import {conditionalFlowNodeExecutor} from "../executors/conditional-node-executor.js";
+import {createConditionalFlowNodeExecutor} from "../../../domain/executors/conditional-node-executor.js";
 import {humanApprovalNodeExecutor} from "../../../domain/executors/human-approval-node-executor.js";
 import {dialogInputNodeExecutor} from "../../../domain/executors/dialog-input-node-executor.js";
 import {mediaInputNodeExecutor} from "../../../domain/executors/media-input-node-executor.js";
@@ -12,25 +12,27 @@ import {
   readEmailNodeExecutor,
 } from "../../../domain/executors/read-email-node-executor.js";
 import {createScriptNodeExecutor} from "../../../domain/executors/script-node-executor.js";
-import {sendChannelMessageNodeExecutor} from "../executors/send-channel-message-node-executor.js";
+import {createSendChannelMessageNodeExecutor} from "../../../domain/executors/send-channel-message-node-executor.js";
 import {stringInputNodeExecutor} from "../../../domain/executors/string-input-node-executor.js";
-import {writeFileNodeExecutor} from "../executors/write-file-node-executor.js";
+import {writeFileNodeExecutor} from "../../../domain/executors/write-file-node-executor.js";
 import {type WorkflowNode} from "./task-definition.js";
 import {type NodeExecutor} from "../../../domain/executors/node-executor.js";
 import {type GenkitBeta} from "genkit/beta";
 import {type NodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 import {createPythonScriptExecutor} from "../../local/python-script-executor.js";
 import {logScriptOutput} from "./script-output-logger.js";
+import {conditionalBranchLogger} from "./conditional-branch-logger.js";
+import {taskMessageLogger} from "./task-message-logger.js";
 
 const executors = new Map<WorkflowNode["primitive"], NodeExecutor>(
   [
     stringInputNodeExecutor,
-    conditionalFlowNodeExecutor,
+    createConditionalFlowNodeExecutor(conditionalBranchLogger),
     writeFileNodeExecutor,
     readFileNodeExecutor,
     readEmailNodeExecutor,
     readChannelEventNodeExecutor,
-    sendChannelMessageNodeExecutor,
+    createSendChannelMessageNodeExecutor(taskMessageLogger),
     humanApprovalNodeExecutor,
     dialogInputNodeExecutor,
     mediaInputNodeExecutor,

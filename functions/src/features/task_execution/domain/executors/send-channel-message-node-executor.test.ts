@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {type SendTaskMessageInput} from "../../../domain/repositories/task-message-sender.js";
-import {sendChannelMessageNodeExecutor} from "./send-channel-message-node-executor.js";
+import {type SendTaskMessageInput} from "../repositories/task-message-sender.js";
+import {createSendChannelMessageNodeExecutor} from "./send-channel-message-node-executor.js";
 
 test("sends an email reply through the connector from its input event", async () => {
   const sentMessages: SendTaskMessageInput[] = [];
@@ -38,7 +38,7 @@ async function execute(input: {
   input: Record<string, unknown>;
   sentMessages: SendTaskMessageInput[];
 }) {
-  return sendChannelMessageNodeExecutor.execute(
+  return createSendChannelMessageNodeExecutor().execute(
     {node: {id: "node-1", primitive: "sendChannelMessage", config: input.config}} as never,
     {
       teamId: "team-1",
