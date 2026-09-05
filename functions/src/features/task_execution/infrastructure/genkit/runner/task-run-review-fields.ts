@@ -1,6 +1,6 @@
 import {type WaitingTaskGraphOutput} from "../../../domain/entities/task.js";
 import {type TaskRunInteraction} from "../../../domain/entities/task-run-interaction.js";
-import {textOutputFromResult} from "./node-executor.js";
+import {textOutputFromResult} from "../../../domain/executors/node-executor.js";
 
 export function reviewFieldsFrom(output: WaitingTaskGraphOutput) {
   const result = output.resumeState.nodeResults.find(

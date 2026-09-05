@@ -3,7 +3,7 @@ import {
   type TaskDefinition,
   type WorkflowNode,
 } from "./task-definition.js";
-import {textOutputFromResult} from "./node-executor.js";
+import {textOutputFromResult} from "../../../domain/executors/node-executor.js";
 import {
   errorMessage,
   formatConfig,

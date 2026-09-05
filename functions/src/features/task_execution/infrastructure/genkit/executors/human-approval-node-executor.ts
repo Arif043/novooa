@@ -3,7 +3,7 @@ import {
   textForParentOutputs,
   textOutputs,
   waitingForInteractionNode,
-} from "../runner/node-executor.js";
+} from "../../../domain/executors/node-executor.js";
 import {approvalInteraction} from
   "../../../domain/entities/task-run-interaction.js";
 

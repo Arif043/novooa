@@ -1,29 +1,26 @@
-import {type GenkitBeta} from "genkit/beta";
 import {
   type NodeExecutionResult,
   type NodeOutputValue,
-  type TaskDefinition as Task,
+  type TaskDefinition,
   type WorkflowNode,
-} from "./task-definition.js";
-import {type TaskRunInteraction} from
-  "../../../domain/entities/task-run-interaction.js";
-import {type NodeAttachmentWorkspace} from "./node-attachment-workspace.js";
-import {type TeamFileStore} from "../../../../files/domain/repositories/team-file-store.js";
-import {type TeamFileContentReader} from "../../../../files/domain/repositories/team-file-content-reader.js";
-import {type TaskMessageSender} from "../../../domain/repositories/task-message-sender.js";
-import {type ModelInference} from "../../../../machine_learning/domain/repositories/model-inference.js";
+} from "../entities/task.js";
+import {type TaskRunInteraction} from "../entities/task-run-interaction.js";
+import {type TeamFileContentReader} from "../../../files/domain/repositories/team-file-content-reader.js";
+import {type TeamFileStore} from "../../../files/domain/repositories/team-file-store.js";
+import {type ModelInference} from "../../../machine_learning/domain/repositories/model-inference.js";
+import {type TaskMessageSender} from "../repositories/task-message-sender.js";
 
 export type TaskVariables = Record<string, unknown>;
 
 export type SubgraphRunner = (
-  task: Task,
+  task: TaskDefinition,
   context: string,
   initialValue?: NodeOutputValue,
 ) => Promise<NodeExecutionResult[]>;
 
 export type TaskRunContext = {
   variables: TaskVariables;
-  task: Task;
+  task: TaskDefinition;
   teamId: string;
   input: Record<string, unknown>;
   results: Map<string, NodeExecutionResult>;
@@ -42,11 +39,9 @@ export type ParentNodeOutput = {
 };
 
 export type NodeExecutorInput = {
-  ai: GenkitBeta;
   node: WorkflowNode;
   context: string;
   parentOutputs: ParentNodeOutput[];
-  attachmentWorkspace?: NodeAttachmentWorkspace;
 };
 
 export type NodeExecutor = {
@@ -108,7 +103,7 @@ export function waitingForInteractionNode(
 
 export function parentOutputsFor(
   node: WorkflowNode,
-  task: Task,
+  task: TaskDefinition,
   results: Map<string, NodeExecutionResult>,
 ): ParentNodeOutput[] {
   return parentResultsFor(node, task, results).flatMap((parent) => {
@@ -167,14 +162,14 @@ function textForOutputValue(value: NodeOutputValue): string {
 
 export function parentResultsFor(
   node: WorkflowNode,
-  task: Task,
+  task: TaskDefinition,
   results: Map<string, NodeExecutionResult>,
 ) {
   return task.edges
     .filter((edge) => edge.to === node.id)
     .map((edge) => ({edge, result: results.get(edge.from)}))
     .filter((parent) => parent.result !== undefined) as {
-      edge: Task["edges"][number];
+      edge: TaskDefinition["edges"][number];
       result: NodeExecutionResult;
     }[];
 }

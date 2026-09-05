@@ -8,7 +8,7 @@ import {
   skippedNode,
   type ParentNodeOutput,
   type TaskRunContext,
-} from "./node-executor.js";
+} from "../../../domain/executors/node-executor.js";
 import {prepareNodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 import {
   type NodeExecutionResult,
@@ -89,8 +89,6 @@ async function executeNode(
   ai: GenkitBeta,
   input: NodeRunInput,
 ): Promise<NodeExecutionResult> {
-  const executor = executorFor(input.node.primitive);
-  if (!executor) return skippedNode(input.node);
   const attachmentWorkspace = await prepareNodeAttachmentWorkspace(
     input.node,
     input.runContext.teamId,
@@ -98,12 +96,12 @@ async function executeNode(
     input.knowledgeBaseStore,
   );
   try {
+    const executor = executorFor(input.node.primitive, ai, attachmentWorkspace);
+    if (!executor) return skippedNode(input.node);
     return await executor.execute({
-      ai,
       node: input.node,
       context: input.context,
       parentOutputs: input.parentOutputs,
-      attachmentWorkspace,
     }, input.runContext);
   } finally {
     await attachmentWorkspace?.cleanup();

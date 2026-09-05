@@ -6,7 +6,7 @@ import {mediaInputInteraction} from
 import {
   type NodeExecutor,
   waitingForInteractionNode,
-} from "../runner/node-executor.js";
+} from "../../../domain/executors/node-executor.js";
 
 export const mediaInputNodeExecutor: NodeExecutor = {
   primitive: "mediaInput",

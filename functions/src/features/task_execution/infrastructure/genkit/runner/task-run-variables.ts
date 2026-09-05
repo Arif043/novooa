@@ -1,5 +1,5 @@
 import {type NodeExecutionResult} from "./task-definition.js";
-import {type TaskVariables} from "./node-executor.js";
+import {type TaskVariables} from "../../../domain/executors/node-executor.js";
 
 export function updateTaskVariables(
   variables: TaskVariables,

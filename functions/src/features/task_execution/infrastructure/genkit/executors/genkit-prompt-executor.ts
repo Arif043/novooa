@@ -1,6 +1,6 @@
 import {type PromptExecutor} from "../../../domain/executors/prompt-executor.js";
 import {type GenkitBeta} from "genkit/beta";
-import {type NodeExecutor, executedNode} from "../runner/node-executor.js";
+import {type NodeExecutor, executedNode} from "../../../domain/executors/node-executor.js";
 import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
 import {executeImagePrompt, persistedImageOutputsFor} from "./prompt-image-executor.js";
 import {promptInputFor} from "./prompt-node-input.js";
@@ -16,17 +16,22 @@ export function createGenkitPromptExecutor(
   return {execute: (request) => executePromptNode(ai, request, workspace)};
 }
 
-export const genkitPromptNodeExecutor: NodeExecutor = {
-  primitive: "prompt",
-  async execute(input, runContext) {
-    const promptInput = await promptInputFor(input, runContext);
-    const output = await executePromptNode(input.ai, promptInput, input.attachmentWorkspace);
-    const outputs = promptInput.outputType === "image"
-      ? await persistedImageOutputsFor(output, input.node, runContext)
-      : output.outputs;
-    return executedNode(input.node, outputs);
-  },
-};
+export function createGenkitPromptNodeExecutor(
+  ai: GenkitBeta,
+  workspace?: NodeAttachmentWorkspace,
+): NodeExecutor {
+  return {
+    primitive: "prompt",
+    async execute(input, runContext) {
+      const promptInput = await promptInputFor(input, runContext);
+      const output = await createGenkitPromptExecutor(ai, workspace).execute(promptInput);
+      const outputs = promptInput.outputType === "image"
+        ? await persistedImageOutputsFor(output, input.node, runContext)
+        : output.outputs;
+      return executedNode(input.node, outputs);
+    },
+  };
+}
 
 export function executePromptNode(
   ai: GenkitBeta,

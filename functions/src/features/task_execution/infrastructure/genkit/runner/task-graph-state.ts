@@ -8,7 +8,7 @@ import {
   type WorkflowNode,
 } from "./task-definition.js";
 import {finalOutputOf} from "./task-graph-utils.js";
-import {type TaskVariables} from "./node-executor.js";
+import {type TaskVariables} from "../../../domain/executors/node-executor.js";
 
 export type InitialNodeRunState = {
   nodeResults: NodeExecutionResult[];

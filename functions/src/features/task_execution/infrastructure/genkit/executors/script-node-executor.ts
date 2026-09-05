@@ -1,20 +1,25 @@
 import {createPythonScriptExecutor} from "../../local/python-script-executor.js";
-import {type NodeExecutor, executedNode, textForParentOutputs, textOutputs} from "../runner/node-executor.js";
+import {type NodeExecutor, executedNode, textForParentOutputs, textOutputs} from "../../../domain/executors/node-executor.js";
+import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
 import {logInfo, logReadableInfo} from "../runner/structured-logger.js";
 
-export const scriptNodeExecutor: NodeExecutor = {
-  primitive: "script",
-  async execute(input, runContext) {
-    const parentOutput = textForParentOutputs(input.parentOutputs);
-    const output = await createPythonScriptExecutor(input.attachmentWorkspace).execute({
+export function createScriptNodeExecutor(
+  workspace?: NodeAttachmentWorkspace,
+): NodeExecutor {
+  return {
+    primitive: "script",
+    async execute(input, runContext) {
+      const parentOutput = textForParentOutputs(input.parentOutputs);
+      const output = await createPythonScriptExecutor(workspace).execute({
       input: runContext.resolveTemplates(parentOutput),
       script: runContext.resolveTemplates(scriptFor(input.node)),
       variables: runContext.variables,
-    });
-    logScriptPrints(output.printed);
-    return executedNode(input.node, textOutputs(output.output), {variables: output.variables});
-  },
-};
+      });
+      logScriptPrints(output.printed);
+      return executedNode(input.node, textOutputs(output.output), {variables: output.variables});
+    },
+  };
+}
 
 function logScriptPrints(printed: string): void {
   if (printed.trim().length === 0) return;

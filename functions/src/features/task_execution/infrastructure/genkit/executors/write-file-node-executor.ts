@@ -2,7 +2,7 @@ import {
   type NodeExecutor,
   executedNode,
   singleParentOutput,
-} from "../runner/node-executor.js";
+} from "../../../domain/executors/node-executor.js";
 import {
   type FileContent,
   type TeamFileStore,

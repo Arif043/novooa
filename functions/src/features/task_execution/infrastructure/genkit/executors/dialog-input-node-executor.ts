@@ -4,7 +4,7 @@ import {
 import {
   type NodeExecutor,
   waitingForInteractionNode,
-} from "../runner/node-executor.js";
+} from "../../../domain/executors/node-executor.js";
 import {dialogInputInteraction} from
   "../../../domain/entities/task-run-interaction.js";
 

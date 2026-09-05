@@ -2,7 +2,7 @@ import {
   executedNode,
   stringOutput,
   type NodeExecutor,
-} from "../runner/node-executor.js";
+} from "../../../domain/executors/node-executor.js";
 import {
   errorDetails,
   logError,

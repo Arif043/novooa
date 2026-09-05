@@ -76,6 +76,10 @@ Branch. Der Branch-Graph wird als Subgraph ausgefuehrt; dessen finale Ausgabe
 wird `text` des Conditional-Knotens. Ausgehende Top-Level-Kanten sind nur ein
 Legacy-Fallback.
 
+`executeConditionalFlow` enthaelt die Auswahlregel als Domain-Funktion. Der
+Genkit-Executor loest Templates auf, startet gegebenenfalls den ausgewaehlten
+Subgraph und protokolliert dessen Lauf.
+
 ## Iterative Verfeinerung
 
 Der Refinement-Executor bewertet einen Entwurf in mehreren Runden mit
@@ -95,6 +99,10 @@ mit Genkit, inklusive strukturierter Bewertung und Text-Fallback.
 `createPythonScriptExecutor` führt die isolierte Python-Subprocess-Runtime aus.
 Der Node-Executor übergibt nur aufgelöste Workflow-Werte und protokolliert die
 Script-Ausgabe.
+
+`forEach` verwendet `executeForEach` aus der Domain. Die Funktion validiert den
+Unterplan, fuehrt die Elemente seriell und fail-fast aus und aggregiert dessen
+primaere Ausgaben. Der JSON-Pointer ist ebenfalls eine Domain-Operation.
 
 `modelInference`, Dateioperationen und das Senden von Nachrichten verwenden
 bereits `ModelInference`, `TeamFileStore` beziehungsweise `TaskMessageSender`

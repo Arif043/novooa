@@ -4,7 +4,7 @@ import {
   type ParentNodeOutput,
   type TaskRunContext,
   type TaskVariables,
-} from "./node-executor.js";
+} from "../../../domain/executors/node-executor.js";
 import {
   type NodeExecutionResult,
   type NodeOutputValue,
@@ -30,7 +30,7 @@ import {
   skipInactiveBranches,
   validateGraph,
 } from "./task-graph-utils.js";
-import {parentOutputsFor} from "./node-executor.js";
+import {parentOutputsFor} from "../../../domain/executors/node-executor.js";
 import {
   formatTaskFinished,
   formatTaskStarted,

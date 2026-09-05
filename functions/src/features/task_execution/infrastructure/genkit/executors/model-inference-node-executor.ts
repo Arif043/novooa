@@ -1,7 +1,7 @@
 import {
   executedNode,
   type NodeExecutor,
-} from "../runner/node-executor.js";
+} from "../../../domain/executors/node-executor.js";
 import {type ModelInferenceResult} from
   "../../../../machine_learning/domain/repositories/model-inference.js";
 import {modelInputForWorkflowValue} from "./workflow-model-input-adapter.js";

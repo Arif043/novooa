@@ -4,7 +4,7 @@ import {
   stringOutput,
   textOutputs,
   type NodeExecutor,
-} from "../runner/node-executor.js";
+} from "../../../domain/executors/node-executor.js";
 
 export const readEmailNodeExecutor: NodeExecutor = {
   primitive: "readEmail",

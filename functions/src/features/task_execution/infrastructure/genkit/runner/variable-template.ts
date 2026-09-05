@@ -1,4 +1,4 @@
-import {type TaskVariables} from "./node-executor.js";
+import {type TaskVariables} from "../../../domain/executors/node-executor.js";
 import {
   type NodeExecutionResult,
   type NodeOutputValue,

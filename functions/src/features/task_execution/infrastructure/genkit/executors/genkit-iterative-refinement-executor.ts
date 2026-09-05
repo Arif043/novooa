@@ -10,7 +10,7 @@ import {
   executedNode,
   textForParentOutputs,
   textOutputs,
-} from "../runner/node-executor.js";
+} from "../../../domain/executors/node-executor.js";
 import {refinementConfigFor} from "./iterative-refinement-config.js";
 import {
   type Evaluation,
@@ -44,17 +44,21 @@ import {runEmployeeAgentTurn} from "../runner/employee-agent.js";
 export type IterativeRefinementNodeInput = IterativeRefinementRequest;
 export type IterativeRefinementNodeOutput = IterativeRefinementResult;
 
-export const genkitIterativeRefinementNodeExecutor: NodeExecutor = {
-  primitive: "iterativeRefinement",
-  async execute(input, runContext) {
-    const config = refinementConfigFor(input.node);
-    const parentOutput = textForParentOutputs(input.parentOutputs);
-    const draft = parentOutput || input.context;
-    const employee = employeeFor(input.node);
-    const output = await createGenkitIterativeRefinementExecutor(
-      input.ai,
-      input.attachmentWorkspace,
-    ).execute({
+export function createGenkitIterativeRefinementNodeExecutor(
+  ai: GenkitBeta,
+  workspace?: NodeAttachmentWorkspace,
+): NodeExecutor {
+  return {
+    primitive: "iterativeRefinement",
+    async execute(input, runContext) {
+      const config = refinementConfigFor(input.node);
+      const parentOutput = textForParentOutputs(input.parentOutputs);
+      const draft = parentOutput || input.context;
+      const employee = employeeFor(input.node);
+      const output = await createGenkitIterativeRefinementExecutor(
+        ai,
+        workspace,
+      ).execute({
         objective: runContext.resolveTemplates(runContext.task.objective),
         draft: runContext.resolveTemplates(draft),
         optimizerPrompt: runContext.resolveTemplates(config?.optimizerPrompt ||
@@ -66,9 +70,10 @@ export const genkitIterativeRefinementNodeExecutor: NodeExecutor = {
         maxIterations: config?.maxIterations ?? 2,
         employee,
       });
-    return executedNode(input.node, textOutputs(output.answer));
-  },
-};
+      return executedNode(input.node, textOutputs(output.answer));
+    },
+  };
+}
 
 export async function executeIterativeRefinementNode(
   ai: GenkitBeta,

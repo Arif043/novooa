@@ -1,6 +1,6 @@
 import {type GenkitBeta} from "genkit/beta";
 import {imageModel, imageModelLogContext} from "../runner/ai-models.js";
-import {type TaskRunContext} from "../runner/node-executor.js";
+import {type TaskRunContext} from "../../../domain/executors/node-executor.js";
 import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
 import {aiTurnMiddleware} from "../runner/node-attachment-genkit.js";
 import {fileOutputFor} from "../runner/file-output-values.js";

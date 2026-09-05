@@ -2,7 +2,7 @@ import {
   type NodeExecutorInput,
   type ParentNodeOutput,
   type TaskRunContext,
-} from "../runner/node-executor.js";
+} from "../../../domain/executors/node-executor.js";
 import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
 import {attachmentInstructions} from "../runner/node-attachment-genkit.js";
 import {employeeFor, renderEmployeePrompt} from "../runner/employee-context.js";

@@ -26,11 +26,12 @@ Er definiert Callable Flows und Task-Queue-Handler, enthält aber keine
 Erzeugung konkreter Stores mehr. `CloudTaskRuntimeFactory` verdrahtet hierfür
 Firestore, Storage, Benachrichtigungen und die Cloud-Modellinferenz.
 
-Der Prompt-Baustein hängt an dem Domain-Port `PromptExecutor`.
-`GenkitPromptExecutor` ist dessen aktuelle Infrastrukturimplementierung und
-enthält die Genkit-Aufrufe. Der Workflow-Vertrag kennt nur Request und Resultat
-des Prompts, keine Genkit-Typen. Weitere Genkit-gebundene Executor werden nach
-demselben Muster herausgelöst, sobald ihre lokale Implementierung entsteht.
+`NodeExecutor`, dessen Eingabe und der gemeinsame Laufzeitkontext liegen in
+der Domain. Der Vertrag kennt weder Genkit noch einen Anhangs-Workspace.
+`NodeExecutorRegistry` bindet Genkit nur fuer `prompt` und
+`iterativeRefinement`; auch der Python-Executor fuer `script` erhaelt seinen
+temporaeren Workspace erst dort. Der Workflow-Vertrag kennt nur Request,
+Resultat und Domain-Ports.
 
 ## Node-Ergebnisse und Templates
 
@@ -50,7 +51,9 @@ Kanten regeln ausschließlich Reihenfolge und Abhängigkeiten. Der Baustein
 `forEach` löst seinen `itemsPointer` gegen den JSON-`value` auf, führt seinen
 Unterplan seriell aus und gibt die primären Unterplanergebnisse als JSON-Array
 zurück. Unterpläne dürfen in Version 1 weder pausierende Bausteine noch ein
-weiteres `forEach` enthalten.
+weiteres `forEach` enthalten. Diese Regeln und die RFC-6901-JSON-Pointer-
+Auswertung liegen in der Domain; der Genkit-Executor startet nur den Unterplan
+im Runner.
 
 Die letzte lesbare `value`-Ausgabe ist das `finalOutput` des Runs. Die vollständige
 Referenz aller Executor-Outputs liegt in

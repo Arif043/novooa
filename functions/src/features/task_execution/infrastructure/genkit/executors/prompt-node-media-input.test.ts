@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {genkitPromptNodeExecutor} from "./genkit-prompt-executor.js";
+import {createGenkitPromptNodeExecutor} from "./genkit-prompt-executor.js";
 
 test("provides a direct media value as a Genkit media part", async () => {
   const prompts: unknown[] = [];
-  await genkitPromptNodeExecutor.execute(executorInput(prompts), runContext() as never);
+  await createGenkitPromptNodeExecutor(fakeAi(prompts)).execute(
+    executorInput(),
+    runContext() as never,
+  );
   assert.deepEqual(prompts, [[
     {text: "Kannst du das Bild sehen?"},
     {media: {url: "data:image/png;base64,iVBORw0KGgo="}},
@@ -12,7 +15,10 @@ test("provides a direct media value as a Genkit media part", async () => {
 });
 
 test("persists a generated image as a media value", async () => {
-  const output = await genkitPromptNodeExecutor.execute(imageExecutorInput(), imageRunContext() as never);
+  const output = await createGenkitPromptNodeExecutor(imageAi()).execute(
+    imageExecutorInput(),
+    imageRunContext() as never,
+  );
   assert.deepEqual(output.outputs.value, {
     type: "media",
     value: {
@@ -25,9 +31,8 @@ test("persists a generated image as a media value", async () => {
   });
 });
 
-function executorInput(prompts: unknown[]) {
+function executorInput() {
   return {
-    ai: fakeAi(prompts),
     context: "",
     node: {
       id: "prompt-1",
@@ -58,9 +63,8 @@ function promptConfig() {
 
 function imageExecutorInput() {
   return {
-    ai: {async generate() { return {media: {url: "data:image/png;base64,iVBORw0KGgo="}}; }} as never,
     context: "",
-    node: {...executorInput([]).node, id: "prompt-2", config: {...promptConfig(), outputType: "image" as const}},
+    node: {...executorInput().node, id: "prompt-2", config: {...promptConfig(), outputType: "image" as const}},
     parentOutputs: [],
   };
 }
@@ -121,6 +125,14 @@ function fakeAi(prompts: unknown[]) {
     async generate(input: {prompt: unknown}) {
       prompts.push(input.prompt);
       return {text: "Ja."};
+    },
+  } as never;
+}
+
+function imageAi() {
+  return {
+    async generate() {
+      return {media: {url: "data:image/png;base64,iVBORw0KGgo="}};
     },
   } as never;
 }
