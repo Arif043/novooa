@@ -9,7 +9,7 @@ import {
   textOutputs,
 } from "../../../domain/executors/node-executor.js";
 import {type WorkflowNode} from "../../../domain/entities/task.js";
-import {finalOutputOf} from "../runner/task-graph-utils.js";
+import {finalOutputOf} from "../../../domain/services/task-graph-utils.js";
 import {logReadableInfo} from "../runner/structured-logger.js";
 
 export const conditionalFlowNodeExecutor: NodeExecutor = {

@@ -29,7 +29,7 @@ import {
   shouldSkipNode,
   skipInactiveBranches,
   validateGraph,
-} from "./task-graph-utils.js";
+} from "../../../domain/services/task-graph-utils.js";
 import {parentOutputsFor} from "../../../domain/executors/node-executor.js";
 import {
   formatTaskFinished,

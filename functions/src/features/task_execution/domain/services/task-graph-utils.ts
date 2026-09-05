@@ -3,9 +3,8 @@ import {
   type TaskDefinition,
   type WorkflowEdge,
   type WorkflowNode,
-} from "./task-definition.js";
-import {type TaskVariables} from "../../../domain/executors/node-executor.js";
-import {textOutputFromResult} from "../../../domain/executors/node-executor.js";
+} from "../entities/task.js";
+import {type TaskVariables, textOutputFromResult} from "../executors/node-executor.js";
 
 export function nextRunnableIndex(
   nodes: WorkflowNode[],

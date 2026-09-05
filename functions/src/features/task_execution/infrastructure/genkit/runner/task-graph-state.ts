@@ -7,7 +7,7 @@ import {
   type TaskResumeState,
   type WorkflowNode,
 } from "./task-definition.js";
-import {finalOutputOf} from "./task-graph-utils.js";
+import {finalOutputOf} from "../../../domain/services/task-graph-utils.js";
 import {type TaskVariables} from "../../../domain/executors/node-executor.js";
 
 export type InitialNodeRunState = {

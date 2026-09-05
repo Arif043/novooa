@@ -2,7 +2,7 @@ import {
   type NodeExecutor,
   executedNode,
   textOutputs,
-} from "../../../domain/executors/node-executor.js";
+} from "./node-executor.js";
 
 export const stringInputNodeExecutor: NodeExecutor = {
   primitive: "stringInput",

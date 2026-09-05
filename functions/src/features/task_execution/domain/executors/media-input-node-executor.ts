@@ -1,12 +1,12 @@
 import {
   validateMediaInputDefinition,
-} from "../../../domain/entities/media-input.js";
+} from "../entities/media-input.js";
 import {mediaInputInteraction} from
-  "../../../domain/entities/task-run-interaction.js";
+  "../entities/task-run-interaction.js";
 import {
   type NodeExecutor,
   waitingForInteractionNode,
-} from "../../../domain/executors/node-executor.js";
+} from "./node-executor.js";
 
 export const mediaInputNodeExecutor: NodeExecutor = {
   primitive: "mediaInput",

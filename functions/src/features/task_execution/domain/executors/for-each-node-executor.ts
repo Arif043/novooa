@@ -1,9 +1,9 @@
-import {executeForEach} from "../../../domain/executors/for-each-executor.js";
+import {executeForEach} from "./for-each-executor.js";
 import {
   type NodeExecutor,
   executedNode,
   singleParentOutput,
-} from "../../../domain/executors/node-executor.js";
+} from "./node-executor.js";
 
 export const forEachNodeExecutor: NodeExecutor = {
   primitive: "forEach",

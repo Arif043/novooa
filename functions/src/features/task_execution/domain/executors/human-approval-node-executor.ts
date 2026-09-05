@@ -3,9 +3,9 @@ import {
   textForParentOutputs,
   textOutputs,
   waitingForInteractionNode,
-} from "../../../domain/executors/node-executor.js";
+} from "./node-executor.js";
 import {approvalInteraction} from
-  "../../../domain/entities/task-run-interaction.js";
+  "../entities/task-run-interaction.js";
 
 export const humanApprovalNodeExecutor: NodeExecutor = {
   primitive: "humanApproval",

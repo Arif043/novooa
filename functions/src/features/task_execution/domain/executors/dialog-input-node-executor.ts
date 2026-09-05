@@ -1,12 +1,12 @@
 import {
   validateDialogInputDefinition,
-} from "../../../domain/entities/dialog-input.js";
+} from "../entities/dialog-input.js";
 import {
   type NodeExecutor,
   waitingForInteractionNode,
-} from "../../../domain/executors/node-executor.js";
+} from "./node-executor.js";
 import {dialogInputInteraction} from
-  "../../../domain/entities/task-run-interaction.js";
+  "../entities/task-run-interaction.js";
 
 export const dialogInputNodeExecutor: NodeExecutor = {
   primitive: "dialogInput",

@@ -1,9 +1,8 @@
 import {type ModelInputValue} from
-  "../../../../machine_learning/domain/entities/model-input-source.js";
+  "../../../machine_learning/domain/entities/model-input-source.js";
 import {type TeamFileContentReader} from
-  "../../../../files/domain/repositories/team-file-content-reader.js";
-import {type NodeOutputValue} from "../runner/task-definition.js";
-import {fileContentFor} from "../runner/media-value-loader.js";
+  "../../../files/domain/repositories/team-file-content-reader.js";
+import {type NodeOutputValue} from "../entities/task.js";
 
 export async function modelInputForWorkflowValue(
   value: NodeOutputValue,
@@ -32,7 +31,11 @@ async function modelInputForFile(
   teamId: string,
   fileContentReader: TeamFileContentReader,
 ): Promise<ModelInputValue> {
-  const content = await fileContentFor(file, teamId, fileContentReader);
+  const content = await fileContentReader.readTeamFileContent(
+    teamId,
+    file.fileId,
+    file.versionId,
+  );
   if (content.contentType.startsWith("image/")) {
     return {type: "image", contentType: content.contentType, bytes: content.content};
   }

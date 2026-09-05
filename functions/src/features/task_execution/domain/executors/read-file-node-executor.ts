@@ -2,12 +2,9 @@ import {
   type NodeExecutor,
   executedNode,
   textOutputs,
-} from "../../../domain/executors/node-executor.js";
-import {type TeamFileStore} from "../../../../files/domain/repositories/team-file-store.js";
-import {
-  type NodeAttachment,
-  type WorkflowNode,
-} from "../runner/task-definition.js";
+} from "./node-executor.js";
+import {type TeamFileStore} from "../../../files/domain/repositories/team-file-store.js";
+import {type NodeAttachment, type WorkflowNode} from "../entities/task.js";
 
 export const readFileNodeExecutor: NodeExecutor = {
   primitive: "readFile",

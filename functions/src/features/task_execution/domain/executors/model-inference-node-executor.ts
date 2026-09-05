@@ -1,10 +1,10 @@
 import {
   executedNode,
   type NodeExecutor,
-} from "../../../domain/executors/node-executor.js";
+} from "./node-executor.js";
 import {type ModelInferenceResult} from
-  "../../../../machine_learning/domain/repositories/model-inference.js";
-import {modelInputForWorkflowValue} from "./workflow-model-input-adapter.js";
+  "../../../machine_learning/domain/repositories/model-inference.js";
+import {modelInputForWorkflowValue} from "../services/workflow-model-input-adapter.js";
 
 export const modelInferenceNodeExecutor: NodeExecutor = {
   primitive: "modelInference",

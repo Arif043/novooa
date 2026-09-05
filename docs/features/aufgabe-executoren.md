@@ -97,8 +97,10 @@ mit Genkit, inklusive strukturierter Bewertung und Text-Fallback.
 
 `ScriptExecutor` beschreibt die Eingabe, Variablen und Ausgabe eines Scripts.
 `createPythonScriptExecutor` führt die isolierte Python-Subprocess-Runtime aus.
-Der Node-Executor übergibt nur aufgelöste Workflow-Werte und protokolliert die
-Script-Ausgabe.
+`createScriptNodeExecutor` liegt in der Domain, übergibt nur aufgelöste
+Workflow-Werte an diesen Port und liefert dessen Ausgabe zurück. Die
+Genkit-Registry bindet die Python-Runtime, den temporären Workspace und das
+Protokollieren der Script-Ausgabe.
 
 `forEach` verwendet `executeForEach` aus der Domain. Die Funktion validiert den
 Unterplan, fuehrt die Elemente seriell und fail-fast aus und aggregiert dessen
@@ -106,9 +108,10 @@ primaere Ausgaben. Der JSON-Pointer ist ebenfalls eine Domain-Operation.
 
 `modelInference`, Dateioperationen und das Senden von Nachrichten verwenden
 bereits `ModelInference`, `TeamFileStore` beziehungsweise `TaskMessageSender`
-als Domain-Ports. Deterministische Bausteine wie Eingabe, Bedingung und
-Freigabe enthalten keine externe Technik und benötigen deshalb keinen eigenen
-Executor-Port.
+als Domain-Ports. `modelInference`, `readFile`, `forEach`, Eingaben,
+Ereignislesen und Pausen sind deshalb Domain-Executor. Deterministische
+Bausteine wie Eingabe, Bedingung und Freigabe benötigen keinen eigenen
+externen Executor-Port.
 
 ## Dateien und Kanaele
 

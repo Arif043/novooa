@@ -2,7 +2,7 @@ import {spawn} from "node:child_process";
 import path from "node:path";
 import {type ScriptExecutor} from "../../domain/executors/script-executor.js";
 import {type ScriptExecutionRequest, type ScriptExecutionResult} from "../../domain/entities/script-execution.js";
-import {scriptPythonSource} from "../genkit/executors/script-python-runtime.js";
+import {scriptPythonSource} from "./script-python-runtime.js";
 
 const timeoutMs = 5000;
 const maxOutputBytes = 10 * 1024;
