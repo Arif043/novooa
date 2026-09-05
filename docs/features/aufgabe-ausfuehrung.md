@@ -21,9 +21,11 @@ Nicht registrierte Primitives werden mit `status: "skipped"` gespeichert.
 
 ## Laufzeitgrenzen
 
-`task-workflows.ts` ist ausschließlich der Firebase- und Genkit-Entrypoint.
-Er definiert Callable Flows und Task-Queue-Handler, enthält aber keine
-Erzeugung konkreter Stores mehr. `CloudTaskRuntimeFactory` verdrahtet hierfür
+`TaskWorkflow` definiert den frameworkfreien Vertrag fuer Start, Review und
+Queue-Ausfuehrung eines Runs. `createGenkitTaskWorkflow` implementiert ihn mit
+dem Genkit-Runner. `task-workflow-functions.ts` ist der Firebase-Host: Er
+validiert Callable-Payloads, überträgt Firebase-Auth in den Workflow-Kontext
+und adaptiert Cloud-Tasks. `CloudTaskRuntimeFactory` verdrahtet hierfür
 Firestore, Storage, Benachrichtigungen und die Cloud-Modellinferenz.
 
 `NodeExecutor`, dessen Eingabe und der gemeinsame Laufzeitkontext liegen in

@@ -33,7 +33,7 @@ export {
   reviewTaskRun,
   runTaskDefinitionFlow,
   runTaskRunTask,
-} from "./features/task_execution/infrastructure/functions/task-workflows.js";
+} from "./features/task_execution/infrastructure/firebase/task-workflow-functions.js";
 
 export {runDueTaskTriggersWorker} from "./features/scheduling/infrastructure/functions/schedule-workflows.js";
 export {askKnowledgeBaseAssistant} from "./features/knowledge_base/infrastructure/functions/knowledge-base-assistant-workflows.js";
