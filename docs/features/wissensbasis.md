@@ -69,6 +69,11 @@ Notizen. Die Genkit-Tools sind laufzeitneutral; die Cloud verdrahtet sie mit
 Firestore und Firebase Auth, die lokale Runtime mit SQLite und lokaler
 Identität. Beide Varianten beachten dieselbe Teamgrenze.
 
+Der fachliche Vertrag `KnowledgeBaseAssistant` ist ebenfalls laufzeitneutral.
+Die Genkit-Implementierung erstellt Modell und Tools, während der Firebase-
+Callable ausschließlich Authentifizierung, Eingabeprüfung, Fehlerprotokollierung
+und die Firestore-Abhängigkeiten verdrahtet.
+
 Erstellen, Bearbeiten und Löschen sind keine automatischen Tool-Aufrufe. Der
 Agent erzeugt dafür einen sichtbaren, bestätigungspflichtigen Plan. Nach dessen
 Ausführung kann die gesamte Änderung über **Rückgängig** zurückgenommen werden.

@@ -12,7 +12,7 @@ import {isValidTwilioSignature} from "./twilio-signature.js";
 import {loadTwilioCommunicationChannel} from "./twilio-message-store.js";
 import {channelMessageEventFromTwilio} from "../../domain/entities/channel-message-event.js";
 import {storeInboundChannelMessage} from "../firebase/channel-message-store.js";
-import {dispatchChannelMessageTriggers} from "../functions/channel-trigger-dispatcher.js";
+import {dispatchChannelMessageTriggers} from "../firebase/channel-trigger-dispatcher.js";
 
 const twilioAuthToken = defineSecret("TWILIO_AUTH_TOKEN");
 

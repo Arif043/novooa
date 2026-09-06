@@ -35,21 +35,21 @@ export {
   runTaskRunTask,
 } from "./features/task_execution/infrastructure/firebase/task-workflow-functions.js";
 
-export {runDueTaskTriggersWorker} from "./features/scheduling/infrastructure/functions/schedule-workflows.js";
-export {askKnowledgeBaseAssistant} from "./features/knowledge_base/infrastructure/functions/knowledge-base-assistant-workflows.js";
+export {runDueTaskTriggersWorker} from "./features/scheduling/infrastructure/firebase/schedule-functions.js";
+export {askKnowledgeBaseAssistant} from "./features/knowledge_base/infrastructure/firebase/knowledge-base-assistant-functions.js";
 export {askTaskBuilderAssistant} from "./features/task_execution/infrastructure/firebase/task-builder-assistant-functions.js";
 export {twilioWebhook} from "./features/communication/infrastructure/twilio/twilio-webhook.js";
-export {dispatchFakeChannelMessage} from "./features/communication/infrastructure/functions/fake-channel-message.js";
-export {sendChannelMessage} from "./features/communication/infrastructure/functions/send-channel-message.js";
-export {beginMicrosoftMailConnector} from "./features/communication/infrastructure/functions/begin-microsoft-mail-connector.js";
-export {completeMicrosoftMailConnector} from "./features/communication/infrastructure/functions/complete-microsoft-mail-connector.js";
-export {microsoftGraphWebhook} from "./features/communication/infrastructure/functions/microsoft-graph-webhook.js";
-export {processMicrosoftGraphNotification} from "./features/communication/infrastructure/functions/process-microsoft-graph-notification.js";
-export {renewMicrosoftMailSubscriptions} from "./features/communication/infrastructure/functions/renew-microsoft-mail-subscriptions.js";
-export {sendMicrosoftMailConnectorMessage} from "./features/communication/infrastructure/functions/send-microsoft-mail-connector-message.js";
+export {dispatchFakeChannelMessage} from "./features/communication/infrastructure/firebase/fake-channel-message.js";
+export {sendChannelMessage} from "./features/communication/infrastructure/firebase/send-channel-message.js";
+export {beginMicrosoftMailConnector} from "./features/communication/infrastructure/firebase/begin-microsoft-mail-connector.js";
+export {completeMicrosoftMailConnector} from "./features/communication/infrastructure/firebase/complete-microsoft-mail-connector.js";
+export {microsoftGraphWebhook} from "./features/communication/infrastructure/firebase/microsoft-graph-webhook.js";
+export {processMicrosoftGraphNotification} from "./features/communication/infrastructure/firebase/process-microsoft-graph-notification.js";
+export {renewMicrosoftMailSubscriptions} from "./features/communication/infrastructure/firebase/renew-microsoft-mail-subscriptions.js";
+export {sendMicrosoftMailConnectorMessage} from "./features/communication/infrastructure/firebase/send-microsoft-mail-connector-message.js";
 export {
   acceptTeamInvitationFlow,
   addTeamMemberFlow,
   rejectTeamInvitationFlow,
   removeTeamMemberFlow,
-} from "./features/teams/infrastructure/functions/team-workflows.js";
+} from "./features/teams/infrastructure/firebase/team-functions.js";

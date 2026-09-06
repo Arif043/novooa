@@ -1,4 +1,4 @@
-import {z} from "genkit";
+import {z} from "zod";
 import {AssistantMessage} from "../../domain/entities/assistant-message.js";
 import {AssistantRequest} from "../../domain/entities/assistant-request.js";
 
