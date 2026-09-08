@@ -2,11 +2,12 @@ import base64
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from novooa_ml.inference_server import ModelNotLoadedError, SessionCache
+from novooa_ml.inference_server import ModelNotLoadedError, SessionCache, transform
 
 
 class SessionCacheTest(unittest.TestCase):
@@ -27,6 +28,16 @@ class SessionCacheTest(unittest.TestCase):
 
         with self.assertRaises(ModelNotLoadedError):
             cache.session_for("model:1", None)
+
+    def test_delegates_image_transforms_to_the_worker(self):
+        with patch(
+            "novooa_ml.inference_server.transform_payload",
+            return_value={"tensor": {"name": "image"}},
+        ) as transform_payload:
+            response = transform({"input": {"name": "image"}})
+
+        self.assertEqual(response, {"tensor": {"name": "image"}})
+        transform_payload.assert_called_once_with({"input": {"name": "image"}})
 
 
 class RecordingFactory:

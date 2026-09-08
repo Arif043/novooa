@@ -52,12 +52,13 @@ Der Python-Dienst erhält keine Datenbank und kein schreibbares Daten-Volume;
 er verarbeitet ausschließlich geprüfte Modellbytes und Tensoren über sein
 Protokoll. Container erhalten weder den Docker-Socket noch Docker-Credentials.
 
-Die Images werden immer auf eine konkrete novooa-Version gepinnt, niemals auf
-`latest`. Vor einem Update legt `novooa-runtime` ein SQLite-Backup an. Nach
-`docker compose pull` und `docker compose up -d` führt ausschließlich die
-Runtime ihre idempotenten Migrationen aus und meldet ihren Health-Status. Für
-Runtime und ML-Dienst gilt `restart: unless-stopped`, damit Zeitpläne und
-gepufferte Relay-Ereignisse auch ohne geöffnete Desktop-App verarbeitet werden.
+Das aktuelle Entwicklungs-Compose baut die Images aus dem Checkout. Die
+auslieferbare Desktop-App wird stattdessen Images auf konkrete novooa-Versionen
+referenzieren, niemals auf `latest`. Vor einem Update muss `novooa-runtime`
+ein SQLite-Backup anlegen. Ausschließlich die Runtime führt idempotente
+Migrationen aus und meldet ihren Health-Status. Für Runtime und ML-Dienst gilt
+`restart: unless-stopped`, damit Zeitpläne und gepufferte Relay-Ereignisse auch
+ohne geöffnete Desktop-App verarbeitet werden.
 
 Lokale Secrets bleiben außerhalb des Daten-Volumes. Die Desktop-App löst sie
 über den lokalen Secret Store auf und stellt der Runtime nur die benötigten
@@ -106,14 +107,12 @@ Dateien liegen im lokalen Dateisystem:
   knowledge/{teamId}/...
 ```
 
-ONNX-Inferenz läuft lokal in einem dedizierten Python-Prozess. Dieser erhält
-keine Speicherpfade, sondern verifizierte Modellbytes und Tensoren über das
-standardisierte Worker-Protokoll. Die Abhängigkeiten liegen in
+ONNX-Inferenz läuft lokal im dedizierten Python-Sidecar. Dieser erhält keine
+Speicherpfade, sondern verifizierte Modellbytes und Tensoren über das
+standardisierte HTTP-Protokoll. Die Abhängigkeiten liegen in
 [`local-runtime/python/requirements.txt`](../local-runtime/python/requirements.txt);
-der spätere lokale Composition Root konfiguriert den Python-Interpreter und
-den Workerpfad explizit. Für das lokale Deployment läuft dieser Python-Anteil
-als `novooa-ml`-Container; die Compose-Definition konfiguriert dessen Image
-und internes Protokoll statt eines global installierten Python-Interpreters.
+die Compose-Definition startet daraus den `novooa-ml`-Container. Der
+Node-Container enthält keinen Python-Interpreter und keine ML-Abhängigkeiten.
 
 Workflow-Werte werden vor der lokalen Inferenz gemäß Modellvertrag in Tensoren
 transformiert. `input_transform_worker.py` verwendet für Bildquellen eine
@@ -195,13 +194,37 @@ dessen Infrastructure-Bereich.
   Records für die lokalen Adapter.
 - `openLocalRuntimeDatabase` lädt alle versionierten SQL-Migrationen beim
   Start und schließt die Datenbank wieder, falls eine Migration fehlschlägt.
+- `docker-compose.local.yaml` startet `runtime` und `novooa-ml`. Nur
+  `runtime` bindet `127.0.0.1:${LOCAL_RUNTIME_PORT:-8090}`; `novooa-ml` hat
+  keinen Host-Port und hängt ausschließlich in `novooa-private`.
+- Beim Start legt die Runtime idempotent `local-user` und `local-team` an.
+  `POST /v1/task-runs` legt einen Run für diesen lokalen Arbeitsbereich an;
+  `POST /v1/task-runs/review` setzt Freigaben und Eingaben fort.
+- `006_task_run_jobs.sql` ergänzt eine haltbare SQLite-Jobqueue. Der
+  `PollingTaskRunWorker` least Jobs, bestätigt erfolgreiche Ausführungen und
+  versucht fehlgeschlagene Jobs mit 30 bis 300 Sekunden Backoff höchstens
+  dreimal erneut.
+- `HttpPythonModelInputTransformer` und `SidecarOnnxInferenceRuntime` leiten
+  Bildvorverarbeitung und ONNX-Inferenz an `novooa-ml` weiter. Ohne Sidecar
+  meldet die Runtime eine klare lokale ML-Fehlermeldung statt Cloud-Fallback.
+
+## Lokaler Start
+
+```bash
+docker compose -f docker-compose.local.yaml up --build --detach
+curl http://127.0.0.1:8090/healthz
+docker compose -f docker-compose.local.yaml ps
+```
+
+Der Stack legt das benannte Volume `novooa-local_novooa-data` an. Ein
+`docker compose down` entfernt weder dieses Volume noch SQLite, Dateien oder
+Modellartefakte.
 
 ## Nächste Schritte
 
-1. `novooa-runtime` als lokalen Composition Root mit `TaskRunWorkerStores`
-   und einem persistierten Job-Dispatcher starten.
-2. Compose-Images und Health Checks für `novooa-runtime` und `novooa-ml`
-   erstellen; der bestehende Modell-Inferenz-Stack bleibt die technische
-   Vorlage.
-3. Lokalen HTTP-Endpunkt für Relay-Events implementieren.
-4. Cloud Relay für Twilio Webhooks und ausgehende Nachrichten trennen.
+1. Lokales Client-Profil im Flutter-DI verdrahten und den Docker-Engine- sowie
+   Stack-Status in der Desktop-App anzeigen.
+2. Geräteauthentifizierung für lokale HTTP-Endpunkte und Relay-Events ergänzen;
+   ausgehende Nachrichten bleiben bis dahin bewusst deaktiviert.
+3. Secret-Mount, Workspace-Geräteidentität, SQLite-Backups und versionierte
+   Images für die auslieferbare Desktop-App umsetzen.

@@ -1,0 +1,32 @@
+FROM node:24-bookworm-slim AS build
+
+WORKDIR /app/functions
+
+COPY functions/package.json functions/package-lock.json ./
+RUN npm ci
+
+COPY functions/tsconfig.json ./
+COPY functions/src ./src
+RUN npm run build
+
+FROM node:24-bookworm-slim AS runtime
+
+WORKDIR /app/functions
+
+COPY functions/package.json functions/package-lock.json ./
+RUN npm ci --omit=dev
+
+COPY --from=build /app/functions/lib ./lib
+COPY local-runtime/migrations /app/local-runtime/migrations
+
+RUN mkdir -p /var/lib/novooa && chown -R node:node /var/lib/novooa
+
+ENV LOCAL_RUNTIME_ROOT=/var/lib/novooa \
+    LOCAL_RUNTIME_MIGRATIONS_DIRECTORY=/app/local-runtime/migrations \
+    PORT=8080
+
+USER node
+
+EXPOSE 8080
+
+CMD ["node", "lib/shared/local/local-runtime-entrypoint.js"]

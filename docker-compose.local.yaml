@@ -1,0 +1,52 @@
+name: novooa-local
+
+services:
+  runtime:
+    build:
+      context: .
+      dockerfile: functions/Dockerfile.local-runtime
+    environment:
+      PORT: "8080"
+      PYTHON_INFERENCE_SIDECAR_URL: http://novooa-ml:8081
+    depends_on:
+      novooa-ml:
+        condition: service_healthy
+    ports:
+      - 127.0.0.1:${LOCAL_RUNTIME_PORT:-8090}:8080
+    volumes:
+      - novooa-data:/var/lib/novooa
+    networks:
+      - novooa-public
+      - novooa-private
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "--input-type=module", "-e", "const response = await fetch('http://127.0.0.1:8080/healthz'); process.exit(response.ok ? 0 : 1)"]
+      interval: 5s
+      timeout: 2s
+      retries: 12
+  novooa-ml:
+    build:
+      context: .
+      dockerfile: functions/Dockerfile.model-inference-sidecar
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8081"
+      MODEL_SESSION_CACHE_ENTRIES: "4"
+    expose:
+      - "8081"
+    networks:
+      - novooa-private
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/healthz')"]
+      interval: 5s
+      timeout: 2s
+      retries: 12
+
+networks:
+  novooa-public:
+  novooa-private:
+    internal: true
+
+volumes:
+  novooa-data:

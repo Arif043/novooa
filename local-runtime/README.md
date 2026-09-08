@@ -1,7 +1,7 @@
 # Lokale Runtime
 
-Dieser Ordner enthält die lokale Persistenz-Struktur für eine spätere
-vollständig lokal ausführbare novooa-Version.
+Dieser Ordner enthält Migrationen und Python-Code für die Docker-basierte
+lokale novooa-Runtime.
 
 ## Migrationen
 
@@ -17,6 +17,7 @@ ausgeführt. Die Migrationen bilden die bestehenden Cloud-Konzepte lokal ab:
 - Dateien und Dateiversionen
 
 `004_model_catalog.sql` ergänzt den ML-Modellkatalog und ONNX-Modellverträge.
+`006_task_run_jobs.sql` ergänzt die persistente Jobqueue für lokale Runs.
 
 Die Cloud Functions nutzen diese Dateien noch nicht direkt. Sie dienen als
 Vertrag für die späteren SQLite-Adapter:
@@ -29,13 +30,13 @@ Vertrag für die späteren SQLite-Adapter:
 - `SQLiteKnowledgeBaseStore`
 - `SQLiteModelCatalog`
 - `LocalModelArtifactReader`
-- `LocalOnnxInferenceRuntime`
-- `LocalPythonOnnxWorker`
-- `LocalPythonModelInputTransformer`
+- `SQLiteTaskRunJobStore`
+- `HttpPythonModelInputTransformer`
+- `SidecarOnnxInferenceRuntime`
 
-Der konkrete SQLite-Treiber ist bewusst noch nicht festgelegt. Die Adapter
-nutzen vorerst `LocalSqlDatabase`, damit wir den Treiber später austauschen
-können, ohne die Runtime-Ports erneut anzufassen.
+`SqliteLocalSqlDatabase` verwendet Node 24 `node:sqlite`. Die Feature-Adapter
+bleiben über `LocalSqlDatabase` an die Datenbank gebunden und nicht an diesen
+konkreten Treiber.
 
 Migrationen werden über `SqlMigrationRunner` angewendet. Der Runner erwartet
 bereits aufbereitete Statements; ein lokaler CLI kann die Dateien aus
@@ -43,14 +44,27 @@ bereits aufbereitete Statements; ein lokaler CLI kann die Dateien aus
 
 ## Python-ONNX-Runtime
 
-Die lokale ONNX-Ausführung und Bildvorverarbeitung nutzen getrennte Python-
-Worker unter `python/onnx_worker.py` und `python/input_transform_worker.py`.
-Die Runtime wird bewusst in einer lokalen virtuellen Umgebung installiert:
+Die lokale ONNX-Ausführung und Bildvorverarbeitung laufen im `novooa-ml`
+Python-Sidecar. Der Dienst exponiert nur im privaten Compose-Netz die
+Endpunkte `/v1/models`, `/v1/inferences` und `/v1/input-transforms`.
+
+Für Python-Tests außerhalb von Docker kann eine virtuelle Umgebung verwendet
+werden:
 
 ```bash
 python3 -m venv .novooa/python
 .novooa/python/bin/python -m pip install -r local-runtime/python/requirements.txt
 ```
 
-Der spätere lokale Composition Root übergibt diesem Worker den Interpreterpfad.
-Cloud Functions benötigen und enthalten diese Python-Abhängigkeiten nicht.
+Die Node-Runtime verbindet sich mit diesem Sidecar über `novooa-private`; sie
+enthält weder einen Python-Interpreter noch Python-Abhängigkeiten.
+
+## Lokaler Stack
+
+```bash
+docker compose -f docker-compose.local.yaml up --build --detach
+curl http://127.0.0.1:8090/healthz
+```
+
+Das Volume `novooa-data` enthält SQLite und lokale Dateien. `novooa-ml` erhält
+weder dieses Volume noch einen veröffentlichten Host-Port.

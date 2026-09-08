@@ -5,6 +5,7 @@ from collections import OrderedDict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from onnx_worker import input_arrays, runtime_dependencies, tensor_for_output
+from novooa_ml.input_transforms.worker import transform_payload
 
 
 class ModelNotLoadedError(Exception):
@@ -52,6 +53,10 @@ def load(payload, cache):
     return {"status": "loaded"}
 
 
+def transform(payload):
+    return transform_payload(payload)
+
+
 def output_tensors(output_names, outputs, numpy):
     return [
         tensor_for_output(name, value, numpy)
@@ -91,6 +96,8 @@ def handler_for(cache, numpy):
                 return load(payload, cache)
             if self.path == "/v1/inferences":
                 return execute(payload, cache, numpy)
+            if self.path == "/v1/input-transforms":
+                return transform(payload)
             raise ValueError("Endpunkt nicht gefunden.")
 
         def _payload(self):
