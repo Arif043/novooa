@@ -1,12 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cupertino_sidemenu/cupertino_sidemenu.dart';
 import 'package:go_router/go_router.dart';
-import 'core/config/mvp_feature_flags.dart';
 import 'core/di/service_locator.dart';
 import 'root_tab.dart';
 import 'core/widgets/root_app_bar.dart';
+import 'core/widgets/root_navigation.dart';
 import 'core/widgets/root_shell_scope.dart';
 import 'core/widgets/root_side_menu.dart';
 import 'core/widgets/syscat_background.dart';
@@ -19,10 +18,16 @@ import 'features/task_builder/presentation/widgets/task_builder_shell_frame.dart
 import 'features/knowledge_base/presentation/widgets/knowledge_base_shell_frame.dart';
 
 class RootPage extends StatefulWidget {
-  const RootPage({super.key, required this.location, required this.child});
+  const RootPage({
+    super.key,
+    required this.location,
+    required this.child,
+    this.isLocal = false,
+  });
 
   final String location;
   final Widget child;
+  final bool isLocal;
 
   @override
   State<RootPage> createState() => _RootPageState();
@@ -34,50 +39,9 @@ class _RootPageState extends State<RootPage> {
       CupertinoSidemenuController();
   bool _isNotificationDrawerOpen = false;
 
-  static final List<RootTab> _tabs = [
-    RootTab(
-      title: 'Aufgaben',
-      icon: CupertinoIcons.rectangle_3_offgrid,
-      path: '/tasks',
-    ),
-    RootTab(
-      title: 'Zeitplan',
-      icon: CupertinoIcons.calendar,
-      path: '/schedule',
-    ),
-    RootTab(title: 'Dateien', icon: CupertinoIcons.folder, path: '/files'),
-    RootTab(
-      title: 'Wissensbasis',
-      icon: CupertinoIcons.book,
-      path: '/knowledge-base',
-    ),
-    if (MvpFeatureFlags.skillsEnabled)
-      RootTab(
-        title: 'Fähigkeiten',
-        icon: CupertinoIcons.sparkles,
-        path: '/skills',
-      ),
-    if (MvpFeatureFlags.employeesEnabled)
-      RootTab(
-        title: 'Mitarbeiter',
-        icon: CupertinoIcons.person_2_square_stack,
-        path: '/employees',
-      ),
-    RootTab(
-      title: 'Aktivitäten',
-      icon: CupertinoIcons.rectangle_grid_1x2,
-      path: '/activity',
-    ),
-    RootTab(
-      title: 'Einstellungen',
-      icon: CupertinoIcons.gear,
-      path: '/settings',
-    ),
-  ];
-
-  void _selectTab(int index) {
+  void _selectTab(List<RootTab> tabs, int index) {
     _sideMenuController.closeMenu();
-    context.go(_tabs[index].path);
+    context.go(tabs[index].path);
   }
 
   @override
@@ -89,45 +53,54 @@ class _RootPageState extends State<RootPage> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedTabIndex = _selectedTabIndex;
-    final selectedTab = _tabs[selectedTabIndex];
-    final assistantContext = _assistantContextFor(selectedTab);
+    final tabs = rootTabs(isLocal: widget.isLocal);
+    final selectedTabIndex = _selectedTabIndex(tabs);
+    final selectedTab = tabs[selectedTabIndex];
+    final assistantContext = assistantContextForRootTab(
+      selectedTab: selectedTab,
+      location: widget.location,
+      isLocal: widget.isLocal,
+    );
     final usesTaskBuilderSideRail = widget.location.startsWith(
       '/tasks/builder',
     );
     final usesKnowledgeBaseSideRail = widget.location.startsWith(
       '/knowledge-base',
     );
-    return RootShellScope(
-      controller: _shellController,
-      child: BlocProvider(
-        create: (_) => serviceLocator<AppNotificationsCubit>(),
-        child: AnimatedBuilder(
-          animation: _shellController,
-          builder: (context, _) => SyscatBackground(
-            child: CupertinoSidemenu(
-              controller: _sideMenuController,
-              menuWidthOfScreen: _menuWidthOfScreen(context),
-              hapticFeedback: false,
-              centerBackgroundOpacity: 0.18,
-              leftMenu: RootSideMenu(
-                tabs: _tabs,
-                selectedIndex: selectedTabIndex,
-                onSelected: _selectTab,
-              ),
-              rightMenu: _isNotificationDrawerOpen
-                  ? NotificationSideDrawer(onClose: _closeNotificationDrawer)
-                  : null,
-              centerPage: _centerPage(
-                selectedTab: selectedTab,
-                assistantContext: assistantContext,
-                usesTaskBuilderSideRail: usesTaskBuilderSideRail,
-                usesKnowledgeBaseSideRail: usesKnowledgeBaseSideRail,
-              ),
-            ),
+    final shell = AnimatedBuilder(
+      animation: _shellController,
+      builder: (context, _) => SyscatBackground(
+        child: CupertinoSidemenu(
+          controller: _sideMenuController,
+          menuWidthOfScreen: _menuWidthOfScreen(context),
+          hapticFeedback: false,
+          centerBackgroundOpacity: 0.18,
+          leftMenu: RootSideMenu(
+            tabs: tabs,
+            selectedIndex: selectedTabIndex,
+            onSelected: (index) => _selectTab(tabs, index),
+            showSessionActions: !widget.isLocal,
+          ),
+          rightMenu: _isNotificationDrawerOpen
+              ? NotificationSideDrawer(onClose: _closeNotificationDrawer)
+              : null,
+          centerPage: _centerPage(
+            selectedTab: selectedTab,
+            assistantContext: assistantContext,
+            usesTaskBuilderSideRail: usesTaskBuilderSideRail,
+            usesKnowledgeBaseSideRail: usesKnowledgeBaseSideRail,
           ),
         ),
       ),
+    );
+    return RootShellScope(
+      controller: _shellController,
+      child: widget.isLocal
+          ? shell
+          : BlocProvider(
+              create: (_) => serviceLocator<AppNotificationsCubit>(),
+              child: shell,
+            ),
     );
   }
 
@@ -174,21 +147,12 @@ class _RootPageState extends State<RootPage> {
         actions: [
           if (assistantContext != null)
             AssistantBellButton(contextInfo: assistantContext),
-          NotificationBellButton(onPressed: _openNotificationDrawer),
+          if (!widget.isLocal)
+            NotificationBellButton(onPressed: _openNotificationDrawer),
         ],
       ),
       body: SafeArea(child: widget.child),
     );
-  }
-
-  AssistantContext? _assistantContextFor(RootTab selectedTab) {
-    final area = switch (selectedTab.path) {
-      '/tasks' => AssistantArea.taskBuilder,
-      '/knowledge-base' => AssistantArea.knowledgeBase,
-      _ => null,
-    };
-    if (area == null) return null;
-    return AssistantContext(area: area, route: widget.location);
   }
 
   double _menuWidthOfScreen(BuildContext context) {
@@ -210,8 +174,8 @@ class _RootPageState extends State<RootPage> {
     setState(() => _isNotificationDrawerOpen = false);
   }
 
-  int get _selectedTabIndex {
-    final index = _tabs.indexWhere(
+  int _selectedTabIndex(List<RootTab> tabs) {
+    final index = tabs.indexWhere(
       (tab) => widget.location.startsWith(tab.path),
     );
     return index == -1 ? 0 : index;

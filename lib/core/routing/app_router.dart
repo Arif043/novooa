@@ -31,7 +31,11 @@ class AppRouter {
 
   AppRouter({required this.sessionCubit});
 
-  final AuthSessionCubit sessionCubit;
+  AppRouter.local() : sessionCubit = null;
+
+  final AuthSessionCubit? sessionCubit;
+
+  bool get isLocal => sessionCubit == null;
 
   late final GoRouter router = GoRouter(
     initialLocation: home,
@@ -41,7 +45,11 @@ class AppRouter {
       GoRoute(path: '/', redirect: (_, _) => home),
       ShellRoute(
         builder: (context, state, child) {
-          return RootPage(location: state.uri.path, child: child);
+          return RootPage(
+            location: state.uri.path,
+            isLocal: isLocal,
+            child: child,
+          );
         },
         routes: [
           GoRoute(
@@ -113,6 +121,7 @@ class AppRouter {
           ),
           GoRoute(
             path: settings,
+            redirect: (context, state) => isLocal ? home : null,
             pageBuilder: (context, state) =>
                 _shellPage(state, const SettingsPage()),
           ),
@@ -134,7 +143,8 @@ class AppRouter {
   }
 
   String? _redirect(BuildContext context, GoRouterState state) {
-    final sessionState = sessionCubit.state;
+    if (isLocal) return state.matchedLocation == auth ? home : null;
+    final sessionState = sessionCubit!.state;
     final isAuthRoute = state.matchedLocation == auth;
     // Während der Firestore-Profil-Verify läuft, ist `currentUser` bewusst
     // noch nicht sichtbar. Wir halten den Nutzer auf der aktuellen Route

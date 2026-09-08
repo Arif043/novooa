@@ -65,17 +65,17 @@ class SideMenuTabList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: ListView.separated(
-        itemCount: tabs.length,
-        separatorBuilder: (context, index) =>
-            const SizedBox(height: AppSpacing.sm),
-        itemBuilder: (context, index) => _SideMenuTile(
-          tab: tabs[index],
-          isSelected: index == selectedIndex,
-          onTap: () => onSelected(index),
-        ),
-      ),
+    return Column(
+      children: [
+        for (var index = 0; index < tabs.length; index++) ...[
+          if (index > 0) const SizedBox(height: AppSpacing.sm),
+          _SideMenuTile(
+            tab: tabs[index],
+            isSelected: index == selectedIndex,
+            onTap: () => onSelected(index),
+          ),
+        ],
+      ],
     );
   }
 }

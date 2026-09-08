@@ -13,36 +13,41 @@ class RootSideMenu extends StatelessWidget {
     required this.tabs,
     required this.selectedIndex,
     required this.onSelected,
+    this.showSessionActions = true,
   });
 
   final List<RootTab> tabs;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
+  final bool showSessionActions;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return BlocListener<AuthSessionCubit, AuthSessionState>(
-      listenWhen: _isNewFailure,
-      listener: _showFailure,
-      child: Material(
-        color: colorScheme.surface,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.md,
-              AppSpacing.md,
-              AppSpacing.gutter,
-            ),
-            child: _SideMenuContent(
-              tabs: tabs,
-              selectedIndex: selectedIndex,
-              onSelected: onSelected,
-            ),
+    final menu = Material(
+      color: colorScheme.surface,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.gutter,
+          ),
+          child: _SideMenuContent(
+            tabs: tabs,
+            selectedIndex: selectedIndex,
+            onSelected: onSelected,
+            showSessionActions: showSessionActions,
           ),
         ),
       ),
+    );
+    if (!showSessionActions) return menu;
+    return BlocListener<AuthSessionCubit, AuthSessionState>(
+      listenWhen: _isNewFailure,
+      listener: _showFailure,
+      child: menu,
     );
   }
 
@@ -64,17 +69,18 @@ class _SideMenuContent extends StatelessWidget {
     required this.tabs,
     required this.selectedIndex,
     required this.onSelected,
+    required this.showSessionActions,
   });
 
   final List<RootTab> tabs;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
+  final bool showSessionActions;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ListView(
       children: [
         const SideMenuHeader(),
         const SizedBox(height: AppSpacing.md),
@@ -83,18 +89,19 @@ class _SideMenuContent extends StatelessWidget {
           selectedIndex: selectedIndex,
           onSelected: onSelected,
         ),
-        ListTile(
-          selected: false,
-          iconColor: colorScheme.error,
-          textColor: colorScheme.error,
-          leading: SideMenuIcon(
-            icon: CupertinoIcons.square_arrow_left,
-            backgroundColor: colorScheme.error,
-            foregroundColor: colorScheme.onError,
+        if (showSessionActions)
+          ListTile(
+            selected: false,
+            iconColor: colorScheme.error,
+            textColor: colorScheme.error,
+            leading: SideMenuIcon(
+              icon: CupertinoIcons.square_arrow_left,
+              backgroundColor: colorScheme.error,
+              foregroundColor: colorScheme.onError,
+            ),
+            title: const Text('Abmelden'),
+            onTap: () => context.read<AuthSessionCubit>().signOut(),
           ),
-          title: const Text('Abmelden'),
-          onTap: () => context.read<AuthSessionCubit>().signOut(),
-        ),
       ],
     );
   }

@@ -22,7 +22,6 @@ import 'features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import 'features/notifications/presentation/widgets/fcm_foreground_notification_listener.dart';
 import 'features/activity/infrastructure/datasources/media_input_picker_platform_registration.dart';
 import 'firebase_options.dart';
-import 'local_runtime_app.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -40,7 +39,7 @@ Future<void> main() async {
     _configureErrorLogging();
     registerMediaInputPickerPlatform();
     configureDependencies(runtimeProfile: runtimeProfile);
-    runApp(const LocalRuntimeApp());
+    runApp(MyApp(runtimeProfile: runtimeProfile));
     return;
   }
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -57,7 +56,7 @@ Future<void> main() async {
     const FcmPushClickBridge().start(_openNotificationData);
   }
   unawaited(serviceLocator<FcmBootstrapper>().start());
-  runApp(const MyApp());
+  runApp(MyApp(runtimeProfile: runtimeProfile));
 }
 
 void _configureErrorLogging() {
@@ -86,7 +85,9 @@ WebProvider _webAppCheckProvider() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.runtimeProfile});
+
+  final RuntimeProfile runtimeProfile;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -98,25 +99,33 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final app = MaterialApp.router(
+      title: 'novooa',
+      debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: _scaffoldMessengerKey,
+      theme: SyscatTheme.lightTheme,
+      darkTheme: SyscatTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      routerConfig: serviceLocator<AppRouter>().router,
+      builder: _wrapApplication,
+    );
+    if (widget.runtimeProfile.isLocal) return app;
     return BlocProvider.value(
       value: serviceLocator<AuthSessionCubit>(),
-      child: MaterialApp.router(
-        title: 'novooa',
-        debugShowCheckedModeBanner: false,
-        scaffoldMessengerKey: _scaffoldMessengerKey,
-        theme: SyscatTheme.lightTheme,
-        darkTheme: SyscatTheme.darkTheme,
-        themeMode: ThemeMode.system,
-        routerConfig: serviceLocator<AppRouter>().router,
-        builder: (context, child) => OfflineStatusSnackbar(
-          isOnline: _networkStatus.watch(),
-          scaffoldMessengerKey: _scaffoldMessengerKey,
-          child: FcmForegroundNotificationListener(
-            onNotificationOpened: _openNotificationFromPushClick,
-            onForegroundNotificationAction: _openNotification,
-            child: child ?? const SizedBox.shrink(),
-          ),
-        ),
+      child: app,
+    );
+  }
+
+  Widget _wrapApplication(BuildContext context, Widget? child) {
+    final content = child ?? const SizedBox.shrink();
+    if (widget.runtimeProfile.isLocal) return content;
+    return OfflineStatusSnackbar(
+      isOnline: _networkStatus.watch(),
+      scaffoldMessengerKey: _scaffoldMessengerKey,
+      child: FcmForegroundNotificationListener(
+        onNotificationOpened: _openNotificationFromPushClick,
+        onForegroundNotificationAction: _openNotification,
+        child: content,
       ),
     );
   }
