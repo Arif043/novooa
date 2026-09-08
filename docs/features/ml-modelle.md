@@ -291,9 +291,11 @@ Docker Compose bindet diesen Ordner nur lesend ein. Der Installer wird daher
 auf dem Host ausgeführt; der Gateway kann installierte Modellversionen niemals
 verändern.
 
-Das Compose-Netzwerk ist intern und die Container besitzen keinen ausgehenden
-Netzwerkzugang. Der ML-Stack greift damit nicht auf Cloud-Dienste zu. Der
-heutige Firebase-Functions-Emulator kann ihn für Entwicklungstests aufrufen,
+Der Python-Sidecar liegt ausschließlich im internen `novooa-private`-Netzwerk und
+besitzt keinen ausgehenden Netzwerkzugang. Das Gateway ist zusätzlich am
+`novooa-public`-Netzwerk, damit seine auf `127.0.0.1` beschränkte Portfreigabe
+auf Docker Desktop zuverlässig erreichbar ist. Der heutige
+Firebase-Functions-Emulator kann den Stack für Entwicklungstests aufrufen,
 ist aber selbst noch kein vollständig lokaler Aufgaben-Runner: Aufgaben,
 Dateien und Runs stammen dort weiterhin aus Firebase. Die vollständig lokale
 Ausführung benötigt als nächsten Schritt den geplanten SQLite-Task-Runner.
