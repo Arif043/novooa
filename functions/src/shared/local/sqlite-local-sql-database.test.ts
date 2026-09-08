@@ -79,6 +79,7 @@ const expectedMigrationVersions = [
   "004_model_catalog",
   "005_language_models",
   "006_task_run_jobs",
+  "007_task_selection",
 ];
 
 const migrationDirectory = resolve(__dirname, "../../../../local-runtime/migrations");

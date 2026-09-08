@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/di/service_locator.dart';
+import 'core/config/runtime_profile.dart';
 import 'core/firebase/firebase_emulator_config.dart';
 import 'core/firebase/firestore_web_cache.dart';
 import 'core/logging/syscat_log.dart';
@@ -21,6 +22,7 @@ import 'features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import 'features/notifications/presentation/widgets/fcm_foreground_notification_listener.dart';
 import 'features/activity/infrastructure/datasources/media_input_picker_platform_registration.dart';
 import 'firebase_options.dart';
+import 'local_runtime_app.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -33,6 +35,14 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final runtimeProfile = RuntimeProfile.fromEnvironment();
+  if (runtimeProfile.isLocal) {
+    _configureErrorLogging();
+    registerMediaInputPickerPlatform();
+    configureDependencies(runtimeProfile: runtimeProfile);
+    runApp(const LocalRuntimeApp());
+    return;
+  }
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await FirebaseAppCheck.instance.activate(providerWeb: _webAppCheckProvider());
   _configureErrorLogging();
@@ -42,7 +52,7 @@ Future<void> main() async {
     await const FirebaseEmulatorConfig().connect();
   }
   registerMediaInputPickerPlatform();
-  configureDependencies();
+  configureDependencies(runtimeProfile: runtimeProfile);
   if (shouldNavigateFromPushClick()) {
     const FcmPushClickBridge().start(_openNotificationData);
   }

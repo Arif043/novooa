@@ -26,10 +26,11 @@ auf macOS und Windows eine explizite Voraussetzung; auf Linux wird eine
 kompatible Docker Engine benötigt. novooa bündelt Docker nicht und startet
 keine Container Engine selbst.
 
-Die Flutter-Desktop-App ist der lokale Client und Orchestrator. Sie prüft die
-laufende Engine, startet den versionierten Compose-Stack, beobachtet dessen
-Health-Status und verbindet sich nur mit dem lokalen Runtime-Endpunkt. Sie
-verwaltet keine SQLite-Dateien oder Docker-Volumes direkt.
+Die Flutter-Desktop-App ist der lokale Client und verbindet sich nur mit dem
+lokalen Runtime-Endpunkt. Sie verwaltet keine SQLite-Dateien oder Docker-Volumes
+direkt. Das automatische Prüfen, Starten und Überwachen des versionierten
+Compose-Stacks gehört zur auslieferbaren Desktop-App und ist noch nicht
+implementiert.
 
 ```text
 Flutter-Desktop-App
@@ -200,6 +201,10 @@ dessen Infrastructure-Bereich.
 - Beim Start legt die Runtime idempotent `local-user` und `local-team` an.
   `POST /v1/task-runs` legt einen Run für diesen lokalen Arbeitsbereich an;
   `POST /v1/task-runs/review` setzt Freigaben und Eingaben fort.
+- Der native Client verwaltet Aufgaben über `GET`, `PUT` und `DELETE
+  /v1/tasks` sowie Runs und Aktivitäten über `GET /v1/task-runs` und
+  `GET /v1/activities`. Diese Endpunkte sind ausschließlich Loopback-APIs der
+  lokalen Runtime und kein Cloud-HTTP-Vertrag.
 - `006_task_run_jobs.sql` ergänzt eine haltbare SQLite-Jobqueue. Der
   `PollingTaskRunWorker` least Jobs, bestätigt erfolgreiche Ausführungen und
   versucht fehlgeschlagene Jobs mit 30 bis 300 Sekunden Backoff höchstens
@@ -214,6 +219,7 @@ dessen Infrastructure-Bereich.
 docker compose -f docker-compose.local.yaml up --build --detach
 curl http://127.0.0.1:8090/healthz
 docker compose -f docker-compose.local.yaml ps
+flutter run -d macos --dart-define=NOVOOA_RUNTIME=local
 ```
 
 Der Stack legt das benannte Volume `novooa-local_novooa-data` an. Ein
@@ -222,8 +228,8 @@ Modellartefakte.
 
 ## Nächste Schritte
 
-1. Lokales Client-Profil im Flutter-DI verdrahten und den Docker-Engine- sowie
-   Stack-Status in der Desktop-App anzeigen.
+1. Docker-Engine- und Stack-Status in der Desktop-App anzeigen sowie den Stack
+   kontrolliert starten und stoppen.
 2. Geräteauthentifizierung für lokale HTTP-Endpunkte und Relay-Events ergänzen;
    ausgehende Nachrichten bleiben bis dahin bewusst deaktiviert.
 3. Secret-Mount, Workspace-Geräteidentität, SQLite-Backups und versionierte

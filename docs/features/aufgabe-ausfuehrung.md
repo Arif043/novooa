@@ -114,15 +114,18 @@ nur den Run; die Aktivitaeten-Seite liest diese Firestore-Logs live.
 
 ## Lokale Ausfuehrung
 
-Die Flutter-App verwendet auch lokal dieselbe Callable Function wie in der
-Produktion:
+Die Web-App verwendet ausschließlich Firebase Functions und Cloud-Dienste. Die
+lokale Runtime ist ausschließlich über die native Flutter-App erreichbar. Das
+Profil startet ohne Firebase und spricht nur den Loopback-Endpunkt der
+Docker-Runtime an:
 
 ```bash
-npm --prefix functions run serve
-flutter run --dart-define=USE_FIREBASE_EMULATORS=true
+flutter run -d macos --dart-define=NOVOOA_RUNTIME=local
 ```
 
-Es gibt keinen separaten lokalen Genkit-Server oder CORS-Proxy.
+Das lokale Startprofil bietet Aufgaben mit Texteingabe und Freigabe sowie die
+Aktivitätenansicht. Aufgaben, Runs und Aktivitäten werden per lokalem Polling
+gelesen. Weitere Cloud-Features werden in diesem Profil nicht eingebunden.
 
 ## Verwandt
 

@@ -28,8 +28,12 @@ class TaskDocumentMapper {
 
   Task fromDocument(DocumentSnapshot<Map<String, dynamic>> snapshot) {
     final data = snapshot.data() ?? {};
+    return fromMap(data, fallbackId: snapshot.id);
+  }
+
+  Task fromMap(Map<String, Object?> data, {required String fallbackId}) {
     return Task(
-      id: data['id'] as String? ?? snapshot.id,
+      id: data['id'] as String? ?? fallbackId,
       title: data['title'] as String? ?? 'Unbenannte Aufgabe',
       objective: data['objective'] as String? ?? '',
       graph: _graphFromDocument(data['graph']),

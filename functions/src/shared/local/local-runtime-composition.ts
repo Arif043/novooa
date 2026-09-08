@@ -5,6 +5,8 @@ import {createLocalSidecarModelInference} from "../../features/machine_learning/
 import {UnavailableLocalModelInference} from "../../features/machine_learning/infrastructure/local/unavailable-local-model-inference.js";
 import {SQLiteTeamContextStore} from "../../features/teams/infrastructure/local/sqlite-team-context-store.js";
 import {LocalTaskMessageSender} from "../../features/task_execution/infrastructure/local/local-task-message-sender.js";
+import {LocalTaskActivityHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-activity-http-handler.js";
+import {LocalTaskDefinitionHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-definition-http-handler.js";
 import {LocalTaskRunHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-run-http-handler.js";
 import {PollingTaskRunWorker} from "../../features/task_execution/infrastructure/local/polling-task-run-worker.js";
 import {SQLiteActivityStore} from "../../features/task_execution/infrastructure/local/sqlite-activity-store.js";
@@ -14,6 +16,7 @@ import {SQLiteTaskRunStore} from "../../features/task_execution/infrastructure/l
 import {SQLiteTaskStore} from "../../features/task_execution/infrastructure/local/sqlite-task-store.js";
 import {createGenkitTaskWorkflow} from "../../features/task_execution/infrastructure/genkit/task-workflow.js";
 import {type LocalRuntimeRequestHandler} from "./local-runtime-http-server.js";
+import {LocalRuntimeRequestRouter} from "./local-runtime-request-router.js";
 import {type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
 
@@ -37,7 +40,15 @@ export function createLocalRuntimeComposition(
   const jobStore = new SQLiteTaskRunJobStore(options.database);
   const taskWorkflow = createTaskWorkflow(options, taskRunStore, teamFileStore, jobStore);
   return {
-    requestHandler: new LocalTaskRunHttpHandler(taskWorkflow, options.workspace.userId),
+    requestHandler: new LocalRuntimeRequestRouter([
+      new LocalTaskRunHttpHandler(taskWorkflow, options.workspace.userId),
+      new LocalTaskDefinitionHttpHandler(
+        options.database,
+        options.workspace.teamId,
+        options.workspace.userId,
+      ),
+      new LocalTaskActivityHttpHandler(options.database, options.workspace.teamId),
+    ]),
     taskRunWorker: new PollingTaskRunWorker(jobStore, (input) => taskWorkflow.dispatch(input)),
   };
 }
