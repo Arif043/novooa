@@ -14,20 +14,9 @@ rules_version = '2';
 //   - updatedAt: timestamp (required) - last profile sync time
 //   - teamId: string (optional) - current team document id
 //
-// Subcollection: users/{uid}/settings
-// Document: aiModel
-// Fields:
-//   - provider: string (required) - openai | google_ai | anthropic
-//   - hasApiKey: bool (required) - whether a write-only key exists
-//   - maskedApiKey: string (required, max 32) - non-secret display hint
-//   - updatedAt: timestamp (required) - last settings sync time
-//
-// Subcollection: users/{uid}/secrets
-// Document: aiProvider
-// Fields:
-//   - provider: string (required) - openai | google_ai | anthropic
-//   - apiKey: string (required, 8-4096) - write-only client secret
-//   - updatedAt: timestamp (required) - last secret sync time
+// Subcollections: teams/{teamId}/languageModelConnections and languageModels
+// contain non-secret provider metadata and model profiles. API keys live only
+// in backend-only languageModelSecrets documents.
 //
 // Subcollection: users/{uid}/fcmTokens
 // Document ID: base64url encoded FCM token
@@ -763,14 +752,7 @@ service cloud.firestore {
       }
 
       match /secrets/{secretId} {
-        allow get, list: if false;
-
-        allow create, update: if isOwner(userId) &&
-          secretId == 'aiProvider' &&
-          isValidAiProviderSecret(request.resource.data) &&
-          request.resource.data.updatedAt == request.time;
-
-        allow delete: if false;
+        allow read, write: if false;
       }
 
       match /fcmTokens/{tokenId} {
@@ -891,6 +873,20 @@ service cloud.firestore {
       }
 
       match /mailConnectorAuthorizations/{authorizationId} {
+        allow read, write: if false;
+      }
+
+      match /languageModels/{modelId} {
+        allow get, list: if isTeamMember(teamId);
+        allow create, update, delete: if false;
+      }
+
+      match /languageModelConnections/{connectionId} {
+        allow get, list: if isTeamMember(teamId);
+        allow create, update, delete: if false;
+      }
+
+      match /languageModelSecrets/{connectionId} {
         allow read, write: if false;
       }
 

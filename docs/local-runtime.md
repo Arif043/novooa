@@ -46,6 +46,11 @@ Die Migration
 [`004_model_catalog.sql`](../local-runtime/migrations/004_model_catalog.sql)
 ergänzt den ONNX-Modellkatalog in der Tabelle `model_catalog`.
 
+[`005_language_models.sql`](../local-runtime/migrations/005_language_models.sql)
+ergänzt Provider-Verbindungen und Sprachmodellprofile. Lokale API-Keys liegen
+nicht in SQLite, sondern in einem lokalen Secret Store; `secret_ref` verweist
+auf den jeweiligen Eintrag.
+
 Dateien liegen im lokalen Dateisystem:
 
 ```text

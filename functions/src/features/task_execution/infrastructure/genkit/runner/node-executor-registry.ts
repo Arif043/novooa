@@ -23,6 +23,7 @@ import {createPythonScriptExecutor} from "../../local/python-script-executor.js"
 import {logScriptOutput} from "./script-output-logger.js";
 import {conditionalBranchLogger} from "./conditional-branch-logger.js";
 import {taskMessageLogger} from "./task-message-logger.js";
+import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 
 const executors = new Map<WorkflowNode["primitive"], NodeExecutor>(
   [
@@ -45,6 +46,7 @@ export function executorFor(
   primitive: WorkflowNode["primitive"],
   ai: GenkitBeta,
   workspace?: NodeAttachmentWorkspace,
+  languageModelResolver?: GenkitLanguageModelResolver,
 ): NodeExecutor | undefined {
   if (primitive === "script") {
     return createScriptNodeExecutor(
@@ -52,7 +54,9 @@ export function executorFor(
       logScriptOutput,
     );
   }
-  if (primitive === "prompt") return createGenkitPromptNodeExecutor(ai, workspace);
+  if (primitive === "prompt") {
+    return createGenkitPromptNodeExecutor(ai, workspace, languageModelResolver);
+  }
   if (primitive === "iterativeRefinement") {
     return createGenkitIterativeRefinementNodeExecutor(ai, workspace);
   }

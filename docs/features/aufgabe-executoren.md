@@ -8,6 +8,11 @@
 Prompt-, Refinement- und Employee-Agent-Executor waehlen Modelle ausschliesslich
 ueber `functions/src/features/task_execution/infrastructure/genkit/runner/ai-models.ts`.
 
+Prompt-Bausteine können zusätzlich ein teamweites Sprachmodellprofil über
+`languageModelId` auswählen. Das Profil wird zur Run-Zeit aufgelöst und
+verwendet seine eigene Provider-Verbindung; ohne Auswahl bleibt das bisherige
+Standardmodell als Legacy-Fallback aktiv.
+
 | `AI_PROVIDER` | Zweck |
 | --- | --- |
 | `google` | Gemini ueber `@genkit-ai/google-genai` |

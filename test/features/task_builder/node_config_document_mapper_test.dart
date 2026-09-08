@@ -153,6 +153,21 @@ void main() {
     expect((notes.single! as Map<String, Object?>)['noteId'], 'note.1');
   });
 
+  test('serialisiert und deserialisiert die Sprachmodell-Auswahl eines Prompts', () {
+    const config = PromptNodeConfig(
+      instruction: 'Fasse zusammen',
+      languageModelId: 'language-model.1',
+      outputType: PromptOutputType.text,
+      choices: [],
+    );
+
+    final document = _mapper().toDocument(config);
+    final restored = _mapper().fromDocument(document) as PromptNodeConfig;
+
+    expect(document['languageModelId'], 'language-model.1');
+    expect(restored.languageModelId, 'language-model.1');
+  });
+
   test('deserialisiert PromptNodeConfig mit Wissensanhang', () {
     final config = _mapper().fromDocument({
       'primitive': 'prompt',

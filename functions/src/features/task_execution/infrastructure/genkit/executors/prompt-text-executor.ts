@@ -7,17 +7,21 @@ import {runEmployeeAgentTurn} from "../runner/employee-agent.js";
 import {formatModelCallFinished, formatModelCallStarted, logReadableInfo} from "../runner/structured-logger.js";
 import {promptContentFor, validStructuredFields} from "./prompt-node-input.js";
 import {type PromptNodeInput, type PromptNodeOutput, type StructuredOutputField} from "./prompt-node-types.js";
+import {type ResolvedGenkitLanguageModel} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 
 export async function executeTextPrompt(
   ai: GenkitBeta,
   input: PromptNodeInput,
   workspace?: NodeAttachmentWorkspace,
+  languageModel?: ResolvedGenkitLanguageModel,
 ): Promise<PromptNodeOutput> {
   const prompt = promptContentFor(input, workspace);
   const label = input.employee ? `Prompt / Text (Mitarbeiter: ${input.employee.name})` : "Prompt / Text";
   const startedAt = Date.now();
-  logReadableInfo(formatModelCallStarted({label, model: modelLogContext(), prompt: prompt.text}));
-  const text = await textResponseFor(ai, input, prompt, workspace);
+  logReadableInfo(formatModelCallStarted({
+    label, model: logContextFor(languageModel), prompt: prompt.text,
+  }));
+  const text = await textResponseFor(ai, input, prompt, workspace, languageModel);
   logReadableInfo(formatModelCallFinished({
     label, durationMs: Date.now() - startedAt, text,
   }));
@@ -28,6 +32,7 @@ export async function executeDecisionPrompt(
   ai: GenkitBeta,
   input: PromptNodeInput,
   workspace?: NodeAttachmentWorkspace,
+  languageModel?: ResolvedGenkitLanguageModel,
 ): Promise<PromptNodeOutput> {
   if (input.choices.length === 0) throw new Error("Decision prompt requires at least one choice.");
   const prompt = promptContentFor(input, workspace);
@@ -35,9 +40,11 @@ export async function executeDecisionPrompt(
   const label = input.employee ? `Prompt / Entscheidung (Mitarbeiter: ${input.employee.name})` : "Prompt / Entscheidung";
   const startedAt = Date.now();
   logReadableInfo(formatModelCallStarted({
-    label, model: modelLogContext(), prompt: prompt.text, outputSchema: "answer: enum",
+    label, model: logContextFor(languageModel), prompt: prompt.text, outputSchema: "answer: enum",
   }));
-  const response = await decisionResponseFor(ai, input, prompt, schema, workspace);
+  const response = await decisionResponseFor(
+    ai, input, prompt, schema, workspace, languageModel,
+  );
   logReadableInfo(formatModelCallFinished({
     label, durationMs: Date.now() - startedAt, text: response.text, output: response.answer,
   }));
@@ -51,6 +58,7 @@ export async function executeStructuredPrompt(
   ai: GenkitBeta,
   input: PromptNodeInput,
   workspace?: NodeAttachmentWorkspace,
+  languageModel?: ResolvedGenkitLanguageModel,
 ): Promise<PromptNodeOutput> {
   const fields = validStructuredFields(input.structuredFields);
   if (fields.length === 0) throw new Error("Strukturierte Ausgabe benötigt mindestens ein Feld.");
@@ -59,10 +67,12 @@ export async function executeStructuredPrompt(
   const label = input.employee ? `Prompt / Strukturierte Ausgabe (Mitarbeiter: ${input.employee.name})` : "Prompt / Strukturierte Ausgabe";
   const startedAt = Date.now();
   logReadableInfo(formatModelCallStarted({
-    label, model: modelLogContext(), prompt: prompt.text,
+    label, model: logContextFor(languageModel), prompt: prompt.text,
     outputSchema: fields.map((field) => field.name).join(", "),
   }));
-  const response = await structuredResponseFor(ai, input, prompt, schema, workspace);
+  const response = await structuredResponseFor(
+    ai, input, prompt, schema, workspace, languageModel,
+  );
   logReadableInfo(formatModelCallFinished({
     label, durationMs: Date.now() - startedAt, text: response.text, output: response.output,
   }));
@@ -79,47 +89,57 @@ export async function executeStructuredPrompt(
 
 async function textResponseFor(
   ai: GenkitBeta, input: PromptNodeInput, prompt: ReturnType<typeof promptContentFor>, workspace?: NodeAttachmentWorkspace,
+  languageModel?: ResolvedGenkitLanguageModel,
 ): Promise<string> {
+  const model = languageModel?.model ?? textModel();
   if (input.employee && input.mediaUrls.length === 0) {
     return (await runEmployeeAgentTurn(ai, {
-      employee: input.employee, model: textModel(), prompt: prompt.text, use: aiTurnMiddleware(workspace),
+      employee: input.employee, model, prompt: prompt.text, use: aiTurnMiddleware(workspace),
     })).text;
   }
   return (await ai.generate({
-    model: textModel(), prompt: prompt.content, use: aiTurnMiddleware(workspace),
+    model, prompt: prompt.content, use: aiTurnMiddleware(workspace),
   })).text;
 }
 
 async function decisionResponseFor(
   ai: GenkitBeta, input: PromptNodeInput, prompt: ReturnType<typeof promptContentFor>, schema: z.ZodType<{answer: string}>, workspace?: NodeAttachmentWorkspace,
+  languageModel?: ResolvedGenkitLanguageModel,
 ): Promise<{answer: string | undefined; text: string}> {
+  const model = languageModel?.model ?? textModel();
   if (input.employee && input.mediaUrls.length === 0) {
     const response = await runEmployeeAgentTurn(ai, {
-      employee: input.employee, model: textModel(), prompt: prompt.text,
+      employee: input.employee, model, prompt: prompt.text,
       use: aiTurnMiddleware(workspace), output: {schema},
     });
     return {answer: response.data?.answer, text: response.text};
   }
   const response = await ai.generate({
-    model: textModel(), prompt: prompt.content, output: {schema}, use: aiTurnMiddleware(workspace),
+    model, prompt: prompt.content, output: {schema}, use: aiTurnMiddleware(workspace),
   });
   return {answer: response.output?.answer, text: response.text};
 }
 
 async function structuredResponseFor(
   ai: GenkitBeta, input: PromptNodeInput, prompt: ReturnType<typeof promptContentFor>, schema: z.ZodType<Record<string, string>>, workspace?: NodeAttachmentWorkspace,
+  languageModel?: ResolvedGenkitLanguageModel,
 ): Promise<{output: Record<string, string> | undefined; text: string}> {
+  const model = languageModel?.model ?? textModel();
   if (input.employee && input.mediaUrls.length === 0) {
     const response = await runEmployeeAgentTurn(ai, {
-      employee: input.employee, model: textModel(), prompt: prompt.text,
+      employee: input.employee, model, prompt: prompt.text,
       use: aiTurnMiddleware(workspace), output: {schema},
     });
     return {output: response.data ?? undefined, text: response.text};
   }
   const response = await ai.generate({
-    model: textModel(), prompt: prompt.content, output: {schema}, use: aiTurnMiddleware(workspace),
+    model, prompt: prompt.content, output: {schema}, use: aiTurnMiddleware(workspace),
   });
   return {output: response.output ?? undefined, text: response.text};
+}
+
+function logContextFor(languageModel: ResolvedGenkitLanguageModel | undefined) {
+  return languageModel?.logContext ?? modelLogContext();
 }
 
 function structuredSchemaFor(fields: StructuredOutputField[]) {

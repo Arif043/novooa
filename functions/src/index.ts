@@ -38,6 +38,7 @@ export {
 export {runDueTaskTriggersWorker} from "./features/scheduling/infrastructure/firebase/schedule-functions.js";
 export {askKnowledgeBaseAssistant} from "./features/knowledge_base/infrastructure/firebase/knowledge-base-assistant-functions.js";
 export {askTaskBuilderAssistant} from "./features/task_execution/infrastructure/firebase/task-builder-assistant-functions.js";
+export {saveLanguageModel} from "./features/language_models/infrastructure/firebase/language-model-functions.js";
 export {twilioWebhook} from "./features/communication/infrastructure/twilio/twilio-webhook.js";
 export {dispatchFakeChannelMessage} from "./features/communication/infrastructure/firebase/fake-channel-message.js";
 export {sendChannelMessage} from "./features/communication/infrastructure/firebase/send-channel-message.js";

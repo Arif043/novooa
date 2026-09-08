@@ -36,6 +36,7 @@ class PromptNodeConfig extends NodeConfig
         EmployeeAssignmentSupport<PromptNodeConfig> {
   const PromptNodeConfig({
     required this.instruction,
+    this.languageModelId = '',
     required this.outputType,
     required this.choices,
     this.structuredFields = const [
@@ -48,6 +49,7 @@ class PromptNodeConfig extends NodeConfig
   });
 
   final String instruction;
+  final String languageModelId;
   final PromptOutputType outputType;
   final List<String> choices;
   final List<StructuredOutputField> structuredFields;
@@ -63,6 +65,7 @@ class PromptNodeConfig extends NodeConfig
   factory PromptNodeConfig.initial() {
     return const PromptNodeConfig(
       instruction: '',
+      languageModelId: '',
       outputType: PromptOutputType.text,
       choices: ['', ''],
       structuredFields: [StructuredOutputField(name: '', description: '')],
@@ -77,6 +80,7 @@ class PromptNodeConfig extends NodeConfig
   List<Object?> get props {
     return [
       instruction,
+      languageModelId,
       outputType,
       choices,
       structuredFields,
@@ -89,6 +93,7 @@ class PromptNodeConfig extends NodeConfig
 
   PromptNodeConfig copyWith({
     String? instruction,
+    String? languageModelId,
     PromptOutputType? outputType,
     List<String>? choices,
     List<StructuredOutputField>? structuredFields,
@@ -100,6 +105,7 @@ class PromptNodeConfig extends NodeConfig
   }) {
     return PromptNodeConfig(
       instruction: instruction ?? this.instruction,
+      languageModelId: languageModelId ?? this.languageModelId,
       outputType: outputType ?? this.outputType,
       choices: choices ?? this.choices,
       structuredFields: structuredFields ?? this.structuredFields,

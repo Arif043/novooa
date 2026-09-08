@@ -137,6 +137,7 @@ async function runNodes(
       startedAt,
       objectStore: runtime.objectStore,
       knowledgeBaseStore: runtime.knowledgeBaseStore,
+      languageModelResolver: runtime.languageModelResolver,
     });
     updateTaskVariables(variables, result);
     results.set(node.id, result);

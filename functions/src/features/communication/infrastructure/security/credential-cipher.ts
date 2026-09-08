@@ -5,8 +5,8 @@ import {
 } from "crypto";
 
 export class CredentialCipher {
-  constructor(key: string) {
-    this.#key = keyFrom(key);
+  constructor(key: string, keyName = "MAIL_CONNECTOR_ENCRYPTION_KEY") {
+    this.#key = keyFrom(key, keyName);
   }
 
   readonly #key: Buffer;
@@ -31,8 +31,8 @@ export class CredentialCipher {
   }
 }
 
-function keyFrom(value: string): Buffer {
+function keyFrom(value: string, keyName: string): Buffer {
   const key = Buffer.from(value.trim(), "base64");
-  if (key.length !== 32) throw new Error("MAIL_CONNECTOR_ENCRYPTION_KEY must be 32 bytes.");
+  if (key.length !== 32) throw new Error(`${keyName} must be 32 bytes.`);
   return key;
 }

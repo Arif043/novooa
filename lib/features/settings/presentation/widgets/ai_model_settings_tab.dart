@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
+import 'package:syscat2/features/language_models/presentation/cubits/language_models_settings_cubit.dart';
+import 'package:syscat2/features/language_models/presentation/cubits/language_models_settings_state.dart';
 
-import '../../domain/entities/ai_provider.dart';
-import '../cubits/settings_cubit.dart';
 import '../cubits/settings_state.dart';
 import 'settings_section.dart';
 
@@ -14,19 +16,100 @@ class AiModelSettingsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settings = state.aiModelSettings!;
+    return const _LanguageModelsSettingsContent();
+  }
+}
+
+class _LanguageModelsSettingsContent extends StatefulWidget {
+  const _LanguageModelsSettingsContent();
+
+  @override
+  State<_LanguageModelsSettingsContent> createState() =>
+      _LanguageModelsSettingsContentState();
+}
+
+class _LanguageModelsSettingsContentState
+    extends State<_LanguageModelsSettingsContent> {
+  late final LanguageModelsSettingsCubit _cubit;
+  final _connectionName = TextEditingController();
+  final _baseUrl = TextEditingController();
+  final _name = TextEditingController();
+  final _modelId = TextEditingController();
+  final _apiKey = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _cubit = serviceLocator<LanguageModelsSettingsCubit>()..load();
+  }
+
+  @override
+  void dispose() {
+    _connectionName.dispose();
+    _baseUrl.dispose();
+    _name.dispose();
+    _modelId.dispose();
+    _apiKey.dispose();
+    _cubit.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider.value(
+      value: _cubit,
+      child:
+          BlocConsumer<
+            LanguageModelsSettingsCubit,
+            LanguageModelsSettingsState
+          >(
+            listenWhen: (previous, current) =>
+                previous.message != current.message && current.message != null,
+            listener: (context, state) {
+              if (state.message == 'Sprachmodell verbunden.') _clearInputs();
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message!)));
+            },
+            builder: (context, state) => _content(context, state),
+          ),
+    );
+  }
+
+  Widget _content(BuildContext context, LanguageModelsSettingsState state) {
     return SingleChildScrollView(
       child: SettingsSection(
         icon: Icons.auto_awesome,
-        title: 'Sprachmodell',
-        description: 'Wähle den AI-Provider und speichere deinen API-Key.',
+        title: 'Sprachmodelle',
+        description:
+            'Verbinde Modelle, die Bausteine in diesem Team verwenden können.',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            DropdownButtonFormField<AiProvider>(
-              initialValue: state.selectedProvider,
-              decoration: const InputDecoration(labelText: 'AI-Provider'),
-              items: AiProvider.values
+            if (state.models.isEmpty &&
+                state.status == LanguageModelsSettingsStatus.ready)
+              Text(
+                'Noch kein Sprachmodell verbunden.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ...state.models.map(
+              (model) => ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.memory_outlined),
+                title: Text(model.name),
+                subtitle: Text(model.modelId),
+              ),
+            ),
+            const Divider(height: AppSpacing.xl),
+            Text(
+              'Sprachmodell verbinden',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            DropdownButtonFormField<LanguageModelProvider>(
+              initialValue: state.provider,
+              decoration: const InputDecoration(labelText: 'Anbieter'),
+              items: LanguageModelProvider.values
                   .map(
                     (provider) => DropdownMenuItem(
                       value: provider,
@@ -34,36 +117,67 @@ class AiModelSettingsTab extends StatelessWidget {
                     ),
                   )
                   .toList(),
-              onChanged: state.isSavingAiModel
+              onChanged: state.isSaving
                   ? null
-                  : (provider) => _updateProvider(context, provider),
+                  : (provider) {
+                      if (provider != null) _cubit.updateProvider(provider);
+                    },
             ),
             const SizedBox(height: AppSpacing.md),
             TextFormField(
-              obscureText: true,
-              enabled: !state.isSavingAiModel,
-              decoration: InputDecoration(
-                labelText: 'API-Key',
-                helperText: settings.hasApiKey
-                    ? 'Gespeichert: ${settings.maskedApiKey}'
-                    : 'Der Key wird gespeichert, aber nicht wieder angezeigt.',
+              controller: _connectionName,
+              enabled: !state.isSaving,
+              decoration: const InputDecoration(
+                labelText: 'Name der Verbindung',
               ),
-              onChanged: context.read<SettingsCubit>().updateApiKey,
+              onChanged: _cubit.updateConnectionName,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            if (state.provider == LanguageModelProvider.openAiCompatible) ...[
+              TextFormField(
+                controller: _baseUrl,
+                enabled: !state.isSaving,
+                keyboardType: TextInputType.url,
+                decoration: const InputDecoration(labelText: 'Base-URL'),
+                onChanged: _cubit.updateBaseUrl,
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+            TextFormField(
+              controller: _name,
+              enabled: !state.isSaving,
+              decoration: const InputDecoration(
+                labelText: 'Anzeigename des Modells',
+              ),
+              onChanged: _cubit.updateName,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextFormField(
+              controller: _modelId,
+              enabled: !state.isSaving,
+              decoration: const InputDecoration(labelText: 'Modell-ID'),
+              onChanged: _cubit.updateModelId,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextFormField(
+              controller: _apiKey,
+              enabled: !state.isSaving,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'API-Key'),
+              onChanged: _cubit.updateApiKey,
             ),
             const SizedBox(height: AppSpacing.lg),
             Align(
               alignment: Alignment.centerRight,
               child: FilledButton.icon(
-                onPressed: state.isSavingAiModel
-                    ? null
-                    : context.read<SettingsCubit>().saveAiModelSettings,
-                icon: state.isSavingAiModel
+                onPressed: state.isSaving ? null : _cubit.save,
+                icon: state.isSaving
                     ? const SizedBox.square(
                         dimension: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.key_outlined),
-                label: const Text('Sprachmodell speichern'),
+                    : const Icon(Icons.add_link),
+                label: const Text('Sprachmodell verbinden'),
               ),
             ),
           ],
@@ -72,8 +186,11 @@ class AiModelSettingsTab extends StatelessWidget {
     );
   }
 
-  void _updateProvider(BuildContext context, AiProvider? provider) {
-    if (provider == null) return;
-    context.read<SettingsCubit>().updateProvider(provider);
+  void _clearInputs() {
+    _connectionName.clear();
+    _baseUrl.clear();
+    _name.clear();
+    _modelId.clear();
+    _apiKey.clear();
   }
 }

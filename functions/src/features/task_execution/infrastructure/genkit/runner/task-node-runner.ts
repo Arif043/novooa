@@ -2,6 +2,7 @@ import {type GenkitBeta} from "genkit/beta";
 import {type KnowledgeBaseStore} from
   "../../../../knowledge_base/domain/repositories/knowledge-base-store.js";
 import {type ObjectStore} from "../../../../files/domain/repositories/object-store.js";
+import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {executorFor} from "./node-executor-registry.js";
 import {
   parentResultsFor,
@@ -34,6 +35,7 @@ type NodeRunInput = {
   startedAt: number;
   objectStore: ObjectStore;
   knowledgeBaseStore: KnowledgeBaseStore;
+  languageModelResolver?: GenkitLanguageModelResolver;
 };
 
 export async function runNodeWithTrail(
@@ -96,7 +98,12 @@ async function executeNode(
     input.knowledgeBaseStore,
   );
   try {
-    const executor = executorFor(input.node.primitive, ai, attachmentWorkspace);
+    const executor = executorFor(
+      input.node.primitive,
+      ai,
+      attachmentWorkspace,
+      input.languageModelResolver,
+    );
     if (!executor) return skippedNode(input.node);
     return await executor.execute({
       node: input.node,

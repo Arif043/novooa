@@ -19,6 +19,7 @@ export async function promptInputFor(
   return {
     instruction: instructionFor(input.node, employee, runContext),
     context: contextFor(input.parentOutputs, input.context),
+    languageModelId: config.languageModelId,
     outputType: config.outputType,
     choices: config.choices.map(runContext.resolveTemplates),
     structuredFields: config.structuredFields,

@@ -2,7 +2,7 @@
 
 ## Zielbild
 
-novooa verwendet getrennte Firebase-Projekte fuer Staging und Produktion. Eine
+novooa verwendet getrennte Firebase-Projekte für Staging und Produktion. Eine
 Hosting-Preview im Produktionsprojekt gilt nicht als Staging, weil sie sonst
 weiterhin dieselben Functions, Auth-Nutzer:innen, Firestore-Daten und Push-Tokens
 verwendet.

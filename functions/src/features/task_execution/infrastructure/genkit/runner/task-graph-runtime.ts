@@ -4,6 +4,7 @@ import {type TeamFileStore} from "../../../../files/domain/repositories/team-fil
 import {type TeamFileContentReader} from "../../../../files/domain/repositories/team-file-content-reader.js";
 import {type TaskMessageSender} from "../../../domain/repositories/task-message-sender.js";
 import {type ModelInference} from "../../../../machine_learning/domain/repositories/model-inference.js";
+import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 
 export type TaskGraphRuntime = {
   objectStore: ObjectStore;
@@ -12,4 +13,5 @@ export type TaskGraphRuntime = {
   fileContentReader: TeamFileContentReader;
   messageSender: TaskMessageSender;
   modelInference: ModelInference;
+  languageModelResolver?: GenkitLanguageModelResolver;
 };

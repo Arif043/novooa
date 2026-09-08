@@ -9,21 +9,23 @@ import {formatModelCallFinished, formatModelCallStarted, logReadableInfo} from "
 import {imageDataFromDataUrl, imageExtensionFor} from "./image-data-url.js";
 import {promptContentFor} from "./prompt-node-input.js";
 import {type PromptNodeInput, type PromptNodeOutput} from "./prompt-node-types.js";
+import {type ResolvedGenkitLanguageModel} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 
 export async function executeImagePrompt(
   ai: GenkitBeta,
   input: PromptNodeInput,
   workspace?: NodeAttachmentWorkspace,
+  languageModel?: ResolvedGenkitLanguageModel,
 ): Promise<PromptNodeOutput> {
   const prompt = promptContentFor(input, workspace);
   const label = input.employee ? `Prompt / Bild (Mitarbeiter: ${input.employee.name})` : "Prompt / Bild";
   const startedAt = Date.now();
   logReadableInfo(formatModelCallStarted({
-    label, model: imageModelLogContext(), prompt: prompt.text,
+    label, model: languageModel?.logContext ?? imageModelLogContext(), prompt: prompt.text,
     outputSchema: "dataUrl: Bild-Data-URL",
   }));
   const response = await ai.generate({
-    model: imageModel(), prompt: prompt.content,
+    model: languageModel?.model ?? imageModel(), prompt: prompt.content,
     config: {responseModalities: ["IMAGE"]}, use: aiTurnMiddleware(workspace),
   });
   const dataUrl = response.media?.url;

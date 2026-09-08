@@ -90,6 +90,13 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md).
   `rejected`.
 - Firestore-Dokumente enthalten `id`, `title`, `objective`, `selectedNodeId`,
   `teamId`, `graph`, `createdAt` und `updatedAt`.
+- Sprachmodelle sind team-scoped. `languageModelConnections` enthalten
+  Anbieter-Metadaten und optionale OpenAI-kompatible Endpunkte;
+  `languageModels` referenzieren eine Verbindung und eine konkrete Modell-ID.
+  API-Keys werden ausschließlich durch Callable Functions verschlüsselt unter
+  `languageModelSecrets` gespeichert. Diese Collection ist weder im Client
+  lesbar noch beschreibbar. In der lokalen Runtime werden dieselben Metadaten
+  in SQLite und die Secrets im lokalen Secret Store abgelegt.
 
 ### Teams und Dateien
 

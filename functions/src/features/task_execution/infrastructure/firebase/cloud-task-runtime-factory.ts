@@ -10,6 +10,9 @@ import {FirebaseTaskRunDispatcher} from "./firebase-task-run-dispatcher.js";
 import {createFirebaseTaskRunStore} from "./firebase-task-run-store-factory.js";
 import {FirestoreTaskStore} from "./firestore-task-store.js";
 import {type TaskRunWorkerStores} from "../genkit/runner/task-run-worker.js";
+import {FirestoreLanguageModelCatalog} from "../../../language_models/infrastructure/firebase/firestore-language-model-catalog.js";
+import {languageModelCipher} from "../../../language_models/infrastructure/firebase/language-model-encryption.js";
+import {CatalogGenkitLanguageModelResolver} from "../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 
 export type CloudTaskRuntime = {
   taskStore: FirestoreTaskStore;
@@ -50,5 +53,8 @@ function workerStoresFor(
     messageSender: new FirebaseTaskMessageSender(),
     knowledgeBaseStore: new FirestoreKnowledgeBaseStore(),
     modelInference: modelInference(),
+    languageModelResolver: new CatalogGenkitLanguageModelResolver(
+      new FirestoreLanguageModelCatalog(languageModelCipher),
+    ),
   };
 }

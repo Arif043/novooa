@@ -75,6 +75,7 @@ export type ScriptNodeConfig = {
 export type PromptNodeConfig = {
   primitive: "prompt";
   instruction: string;
+  languageModelId?: string;
   outputType: PromptOutputType;
   choices: string[];
   structuredFields: StructuredOutputField[];

@@ -31,6 +31,61 @@ test("persists a generated image as a media value", async () => {
   });
 });
 
+test("uses the selected team language model for a text prompt", async () => {
+  const models: unknown[] = [];
+  const output = await createGenkitPromptNodeExecutor(
+    fakeAi([]),
+    undefined,
+    {
+      async resolve() {
+        return {
+          ai: {
+            async generate(input: {model: unknown}) {
+              models.push(input.model);
+              return {text: "Aus dem Teammodell."};
+            },
+          },
+          model: "team-model" as never,
+          capabilities: capabilities(),
+          logContext: {provider: "test", model: "team-model"},
+        } as never;
+      },
+    },
+  ).execute({
+    ...executorInput(),
+    node: {
+      ...executorInput().node,
+      config: {...promptConfig(), languageModelId: "model-1"},
+    },
+  }, runContext() as never);
+
+  assert.equal(output.outputs.value?.value, "Aus dem Teammodell.");
+  assert.deepEqual(models, ["team-model"]);
+});
+
+test("rejects a selected model that cannot receive the supplied image", async () => {
+  await assert.rejects(
+    createGenkitPromptNodeExecutor(
+      fakeAi([]),
+      undefined,
+      {async resolve() {
+        return {
+          ai: fakeAi([]), model: "team-model" as never,
+          capabilities: {...capabilities(), imageInput: false},
+          logContext: {provider: "test", model: "team-model"},
+        } as never;
+      }},
+    ).execute({
+      ...executorInput(),
+      node: {
+        ...executorInput().node,
+        config: {...promptConfig(), languageModelId: "model-1"},
+      },
+    }, runContext() as never),
+    /keine Bildeingaben/,
+  );
+});
+
 function executorInput() {
   return {
     context: "",
@@ -135,4 +190,14 @@ function imageAi() {
       return {media: {url: "data:image/png;base64,iVBORw0KGgo="}};
     },
   } as never;
+}
+
+function capabilities() {
+  return {
+    textGeneration: true,
+    imageInput: true,
+    structuredOutput: true,
+    toolCalling: false,
+    imageGeneration: false,
+  };
 }

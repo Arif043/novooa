@@ -82,6 +82,7 @@ class NodeConfigDocumentMapper {
     return {
       'primitive': config.primitive.name,
       'instruction': config.instruction,
+      'languageModelId': config.languageModelId,
       'outputType': config.outputType.name,
       'choices': config.choices,
       'structuredFields': config.structuredFields
@@ -209,6 +210,7 @@ class NodeConfigDocumentMapper {
   PromptNodeConfig _promptFrom(Map<String, Object?> data) {
     return PromptNodeConfig(
       instruction: data['instruction'] as String? ?? '',
+      languageModelId: data['languageModelId'] as String? ?? '',
       outputType: _promptOutputTypeFrom(data['outputType']),
       choices: _stringListFrom(data['choices'], fallback: const ['', '']),
       structuredFields: _structuredFieldsFrom(data['structuredFields']),

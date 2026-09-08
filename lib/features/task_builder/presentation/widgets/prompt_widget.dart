@@ -10,6 +10,8 @@ import '../../domain/entities/node_attachment.dart';
 import '../../domain/entities/knowledge_attachment.dart';
 import '../../domain/entities/skill_attachment.dart';
 import '../../domain/entities/workflow_node.dart';
+import '../cubits/node_language_models_cubit.dart';
+import '../cubits/node_language_models_state.dart';
 import '../cubits/task_builder_cubit.dart';
 import 'node_file_attachment_section.dart';
 import 'node_knowledge_attachment_section.dart';
@@ -75,6 +77,8 @@ class _PromptWidgetState extends State<PromptWidget> {
             ),
             onChanged: _updateInstruction,
           ),
+          const SizedBox(height: AppSpacing.md),
+          _languageModelField(context, config),
           const SizedBox(height: AppSpacing.md),
           Text('Ausgabe', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),
@@ -170,6 +174,55 @@ class _PromptWidgetState extends State<PromptWidget> {
     }
     for (var index = 0; index < choices.length; index++) {
       _syncController(_choiceControllers[index], choices[index]);
+    }
+  }
+
+  Widget _languageModelField(BuildContext context, PromptNodeConfig config) {
+    final available = _hasLanguageModelsProvider(context);
+    if (!available) {
+      return DropdownButtonFormField<String>(
+        initialValue: '',
+        decoration: InputDecoration(labelText: 'Sprachmodell'),
+        items: [
+          DropdownMenuItem(value: '', child: Text('Standardmodell verwenden')),
+        ],
+        onChanged: null,
+      );
+    }
+    return BlocBuilder<NodeLanguageModelsCubit, NodeLanguageModelsState>(
+      builder: (context, state) => DropdownButtonFormField<String>(
+        initialValue:
+            state.models.any((model) => model.id == config.languageModelId)
+            ? config.languageModelId
+            : '',
+        decoration: const InputDecoration(labelText: 'Sprachmodell'),
+        items: [
+          const DropdownMenuItem(
+            value: '',
+            child: Text('Standardmodell verwenden'),
+          ),
+          ...state.models.map(
+            (model) => DropdownMenuItem(
+              value: model.id,
+              child: Text('${model.name} (${model.modelId})'),
+            ),
+          ),
+        ],
+        onChanged: state.status == NodeLanguageModelsStatus.ready
+            ? (modelId) => context
+                  .read<TaskBuilderCubit>()
+                  .updatePromptLanguageModel(widget.node.id, modelId ?? '')
+            : null,
+      ),
+    );
+  }
+
+  bool _hasLanguageModelsProvider(BuildContext context) {
+    try {
+      BlocProvider.of<NodeLanguageModelsCubit>(context, listen: false);
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 

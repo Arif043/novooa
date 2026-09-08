@@ -40,6 +40,11 @@ import 'package:syscat2/features/knowledge_base/domain/usecases/update_knowledge
 import 'package:syscat2/features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import 'package:syscat2/features/knowledge_base/infrastructure/repositories/firestore_knowledge_base_repository.dart';
 import 'package:syscat2/features/knowledge_base/presentation/cubits/knowledge_base_cubit.dart';
+import 'package:syscat2/features/language_models/domain/repositories/language_model_repository.dart';
+import 'package:syscat2/features/language_models/domain/usecases/watch_language_models.dart';
+import 'package:syscat2/features/language_models/domain/usecases/save_language_model.dart';
+import 'package:syscat2/features/language_models/infrastructure/repositories/firestore_language_model_repository.dart';
+import 'package:syscat2/features/language_models/presentation/cubits/language_models_settings_cubit.dart';
 import 'package:syscat2/features/notifications/domain/repositories/app_notification_repository.dart';
 import 'package:syscat2/features/notifications/domain/usecases/accept_team_invitation.dart';
 import 'package:syscat2/features/notifications/domain/repositories/notification_device_repository.dart';
@@ -109,6 +114,7 @@ import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart'
 import '../../features/task_builder/presentation/cubits/node_employee_assignments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
+import '../../features/task_builder/presentation/cubits/node_language_models_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_skill_attachments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/task_homepage_cubit.dart';
 import '../../features/teams/domain/repositories/team_repository.dart';
@@ -144,6 +150,10 @@ void configureDependencies() {
     )
     ..registerLazySingleton<SettingsRepository>(
       () => FirestoreSettingsRepository(serviceLocator<FirebaseFirestore>()),
+    )
+    ..registerLazySingleton<LanguageModelRepository>(
+      () =>
+          FirestoreLanguageModelRepository(serviceLocator<FirebaseFirestore>()),
     )
     ..registerLazySingleton<TeamFileRepository>(
       () => FirebaseTeamFileRepository(
@@ -274,6 +284,12 @@ void configureDependencies() {
     )
     ..registerLazySingleton(
       () => SaveAiProviderSettings(serviceLocator<SettingsRepository>()),
+    )
+    ..registerLazySingleton(
+      () => WatchLanguageModels(serviceLocator<LanguageModelRepository>()),
+    )
+    ..registerLazySingleton(
+      () => SaveLanguageModel(serviceLocator<LanguageModelRepository>()),
     )
     ..registerLazySingleton(
       () => WatchTaskActivities(serviceLocator<TaskActivityRepository>()),
@@ -468,6 +484,14 @@ void configureDependencies() {
       ),
     )
     ..registerFactory(
+      () => LanguageModelsSettingsCubit(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<WatchLanguageModels>(),
+        serviceLocator<SaveLanguageModel>(),
+        serviceLocator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerFactory(
       () => AssistantCubit(
         askAssistant: serviceLocator<AskAssistant>(),
         context: const AssistantContext(
@@ -496,6 +520,13 @@ void configureDependencies() {
       () => NodeKnowledgeAttachmentsCubit(
         serviceLocator<AuthRepository>(),
         serviceLocator<WatchKnowledgeNotes>(),
+        serviceLocator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerFactory(
+      () => NodeLanguageModelsCubit(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<WatchLanguageModels>(),
         serviceLocator<GetCurrentTeamId>(),
       ),
     )

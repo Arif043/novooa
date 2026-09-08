@@ -22,6 +22,7 @@ import {
   microsoftGraphClientSecret,
 } from "../../../communication/infrastructure/microsoft_graph/microsoft-graph-config.js";
 import {createCloudTaskRuntime} from "./cloud-task-runtime-factory.js";
+import {languageModelEncryptionKey} from "../../../language_models/infrastructure/firebase/language-model-encryption.js";
 
 const workerSecrets = [
   twilioAccountSid,
@@ -29,6 +30,7 @@ const workerSecrets = [
   microsoftGraphClientSecret,
   mailConnectorEncryptionKey,
   geminiApiKey,
+  languageModelEncryptionKey,
 ];
 
 const taskRuntime = createCloudTaskRuntime();

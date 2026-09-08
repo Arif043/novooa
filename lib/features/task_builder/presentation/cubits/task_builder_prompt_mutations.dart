@@ -8,6 +8,16 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
     );
   }
 
+  Future<void> updatePromptLanguageModel(
+    NodeId nodeId,
+    String languageModelId,
+  ) {
+    return _updatePromptConfig(
+      nodeId,
+      (config) => config.copyWith(languageModelId: languageModelId),
+    );
+  }
+
   Future<void> updatePromptOutputType(
     NodeId nodeId,
     PromptOutputType outputType,

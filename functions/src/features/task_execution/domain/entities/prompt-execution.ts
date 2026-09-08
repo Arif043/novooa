@@ -8,6 +8,7 @@ import {
 export type PromptExecutionRequest = {
   instruction: string;
   context: string;
+  languageModelId?: string;
   outputType: PromptOutputType;
   choices: string[];
   structuredFields: StructuredOutputField[];

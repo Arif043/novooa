@@ -59,6 +59,7 @@ export const scriptNodeConfigSchema = z.object({
 export const promptNodeConfigSchema = z.object({
   primitive: z.literal("prompt").default("prompt"),
   instruction: z.string().default(""),
+  languageModelId: z.string().optional(),
   outputType: promptOutputTypeSchema.default("text"),
   choices: z.array(z.string()).default([]),
   structuredFields: z.array(z.object({
