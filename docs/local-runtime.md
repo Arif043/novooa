@@ -19,6 +19,52 @@ Feature Infrastructure
   Callable-, Scheduler- und Webhook-Handler
 ```
 
+## Deployment
+
+Die lokale Variante wird über Docker Compose betrieben. Docker Desktop ist
+auf macOS und Windows eine explizite Voraussetzung; auf Linux wird eine
+kompatible Docker Engine benötigt. novooa bündelt Docker nicht und startet
+keine Container Engine selbst.
+
+Die Flutter-Desktop-App ist der lokale Client und Orchestrator. Sie prüft die
+laufende Engine, startet den versionierten Compose-Stack, beobachtet dessen
+Health-Status und verbindet sich nur mit dem lokalen Runtime-Endpunkt. Sie
+verwaltet keine SQLite-Dateien oder Docker-Volumes direkt.
+
+```text
+Flutter-Desktop-App
+  -> Docker Desktop / Docker Engine
+      -> novooa-runtime (Node)
+          lokale API, Scheduler, Task-Worker, SQLite-Adapter, Relay-Client
+      -> novooa-ml (Python)
+          Tensor-Transformationen und ONNX-Inferenz
+```
+
+`novooa-runtime` ist der einzige Dienst mit einem veröffentlichten Host-Port.
+Compose bindet ihn ausschließlich an `127.0.0.1`; die konkrete Portzuordnung
+konfiguriert die Desktop-App für die jeweilige Installation. `novooa-ml` ist
+nicht vom Host erreichbar und kommuniziert nur über das interne
+Compose-Netzwerk mit `novooa-runtime`.
+
+Das benannte Volume `novooa-data` enthält SQLite, Dateien, Wissensbasis und
+lokale Modellartefakte. Es ist nur in `novooa-runtime` schreibbar eingehängt.
+Der Python-Dienst erhält keine Datenbank und kein schreibbares Daten-Volume;
+er verarbeitet ausschließlich geprüfte Modellbytes und Tensoren über sein
+Protokoll. Container erhalten weder den Docker-Socket noch Docker-Credentials.
+
+Die Images werden immer auf eine konkrete novooa-Version gepinnt, niemals auf
+`latest`. Vor einem Update legt `novooa-runtime` ein SQLite-Backup an. Nach
+`docker compose pull` und `docker compose up -d` führt ausschließlich die
+Runtime ihre idempotenten Migrationen aus und meldet ihren Health-Status. Für
+Runtime und ML-Dienst gilt `restart: unless-stopped`, damit Zeitpläne und
+gepufferte Relay-Ereignisse auch ohne geöffnete Desktop-App verarbeitet werden.
+
+Lokale Secrets bleiben außerhalb des Daten-Volumes. Die Desktop-App löst sie
+über den lokalen Secret Store auf und stellt der Runtime nur die benötigten
+Werte über einen schreibgeschützten, installationsspezifischen Mount bereit.
+Die Runtime darf ausgehend den novooa-Relay und konfigurierte Modellprovider
+erreichen; der ML-Dienst erhält keinen direkten Internetzugang.
+
 ## Lokale Datenhaltung
 
 SQLite ist der Default für strukturierte lokale Daten. Es braucht keinen Server,
@@ -65,7 +111,9 @@ keine Speicherpfade, sondern verifizierte Modellbytes und Tensoren über das
 standardisierte Worker-Protokoll. Die Abhängigkeiten liegen in
 [`local-runtime/python/requirements.txt`](../local-runtime/python/requirements.txt);
 der spätere lokale Composition Root konfiguriert den Python-Interpreter und
-den Workerpfad explizit.
+den Workerpfad explizit. Für das lokale Deployment läuft dieser Python-Anteil
+als `novooa-ml`-Container; die Compose-Definition konfiguriert dessen Image
+und internes Protokoll statt eines global installierten Python-Interpreters.
 
 Workflow-Werte werden vor der lokalen Inferenz gemäß Modellvertrag in Tensoren
 transformiert. `input_transform_worker.py` verwendet für Bildquellen eine
@@ -145,6 +193,10 @@ dessen Infrastructure-Bereich.
 ## Nächste Schritte
 
 1. Konkreten SQLite-Treiber für `LocalSqlDatabase` anbinden.
-2. Lokalen Worker-Prozess mit `TaskRunWorkerStores` starten.
-3. Lokalen HTTP-Endpunkt für Relay-Events implementieren.
-4. Cloud Relay für Twilio Webhooks und ausgehende Nachrichten trennen.
+2. `novooa-runtime` als lokalen Composition Root mit `TaskRunWorkerStores`
+   und einem persistierten Job-Dispatcher starten.
+3. Compose-Images und Health Checks für `novooa-runtime` und `novooa-ml`
+   erstellen; der bestehende Modell-Inferenz-Stack bleibt die technische
+   Vorlage.
+4. Lokalen HTTP-Endpunkt für Relay-Events implementieren.
+5. Cloud Relay für Twilio Webhooks und ausgehende Nachrichten trennen.

@@ -13,7 +13,7 @@ pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
 | Deployment | [`deployment.md`](./deployment.md) | Staging/Produktion, Firebase-Projekte und CI/CD |
 | Backend        | [`backend-struktur.md`](./backend-struktur.md) | Functions-Struktur, Ports, Cloud-/Local-Trennung |
 | Executor-Outputs | [`node-executor-outputs.md`](./node-executor-outputs.md) | Output-Vertraege der Workflow-Executoren |
-| Lokale Runtime | [`local-runtime.md`](./local-runtime.md) | Lokale Datenhaltung, Ports, Relay-Strategie       |
+| Lokale Runtime | [`local-runtime.md`](./local-runtime.md) | Docker-Deployment, Datenhaltung, Ports und Relay |
 | Features       | [`features/`](./features/)         | Ein Deep-Dive pro Feature                               |
 
 ## Aktuelle Features
