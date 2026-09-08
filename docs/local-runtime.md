@@ -189,14 +189,19 @@ dessen Infrastructure-Bereich.
   `ModelInputTransformer`-Port.
 - `SqlMigrationRunner` wendet Migrationen treiberneutral über
   `LocalSqlDatabase` an.
+- `SqliteLocalSqlDatabase` verwendet die Node-24-Standardbibliothek
+  `node:sqlite`, aktiviert Fremdschlüssel, WAL und einen Busy-Timeout. Es
+  serialisiert lokale Datenbankzugriffe und normalisiert Zeilen in gewöhnliche
+  Records für die lokalen Adapter.
+- `openLocalRuntimeDatabase` lädt alle versionierten SQL-Migrationen beim
+  Start und schließt die Datenbank wieder, falls eine Migration fehlschlägt.
 
 ## Nächste Schritte
 
-1. Konkreten SQLite-Treiber für `LocalSqlDatabase` anbinden.
-2. `novooa-runtime` als lokalen Composition Root mit `TaskRunWorkerStores`
+1. `novooa-runtime` als lokalen Composition Root mit `TaskRunWorkerStores`
    und einem persistierten Job-Dispatcher starten.
-3. Compose-Images und Health Checks für `novooa-runtime` und `novooa-ml`
+2. Compose-Images und Health Checks für `novooa-runtime` und `novooa-ml`
    erstellen; der bestehende Modell-Inferenz-Stack bleibt die technische
    Vorlage.
-4. Lokalen HTTP-Endpunkt für Relay-Events implementieren.
-5. Cloud Relay für Twilio Webhooks und ausgehende Nachrichten trennen.
+3. Lokalen HTTP-Endpunkt für Relay-Events implementieren.
+4. Cloud Relay für Twilio Webhooks und ausgehende Nachrichten trennen.
