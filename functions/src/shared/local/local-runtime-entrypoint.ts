@@ -26,7 +26,8 @@ async function startLocalRuntime(): Promise<void> {
     const port = configuredPort();
     await listen(server, port);
     runtime.taskRunWorker.start();
-    registerShutdown(server, database, runtime.taskRunWorker);
+    runtime.taskTriggerWorker.start();
+    registerShutdown(server, database, runtime.taskRunWorker, runtime.taskTriggerWorker);
     console.info(JSON.stringify({event: "local_runtime.started", port}));
   } catch (error) {
     database.close();
@@ -74,13 +75,14 @@ function listen(server: Server, port: number): Promise<void> {
 function registerShutdown(
   server: Server,
   database: SqliteLocalSqlDatabase,
-  taskRunWorker: PollingTaskRunWorker,
+  taskRunWorker: StoppableWorker,
+  taskTriggerWorker: StoppableWorker,
 ): void {
   let closing = false;
   const shutdown = () => {
     if (closing) return;
     closing = true;
-    server.close(() => void closeRuntime(database, taskRunWorker));
+    server.close(() => void closeRuntime(database, taskRunWorker, taskTriggerWorker));
   };
   process.once("SIGINT", shutdown);
   process.once("SIGTERM", shutdown);
@@ -88,12 +90,16 @@ function registerShutdown(
 
 async function closeRuntime(
   database: SqliteLocalSqlDatabase,
-  taskRunWorker: PollingTaskRunWorker,
+  taskRunWorker: StoppableWorker,
+  taskTriggerWorker: StoppableWorker,
 ): Promise<void> {
+  await taskTriggerWorker.stop();
   await taskRunWorker.stop();
   database.close();
   process.exit(0);
 }
+
+type StoppableWorker = Pick<PollingTaskRunWorker, "start" | "stop">;
 
 function reportStartupFailure(error: unknown): void {
   const message = error instanceof Error ? error.message : String(error);

@@ -3,6 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import 'core/theme/syscat_theme.dart';
 import 'features/activity/presentation/pages/activity_page.dart';
+import 'features/files/presentation/pages/files_page.dart';
+import 'features/knowledge_base/presentation/pages/local_knowledge_base_page.dart';
+import 'features/schedule/presentation/pages/schedule_page.dart';
 import 'features/task_builder/domain/entities/task.dart';
 import 'features/task_builder/presentation/pages/local_task_builder_page.dart';
 import 'features/task_builder/presentation/pages/task_homepage.dart';
@@ -43,6 +46,12 @@ final _router = GoRouter(
           ],
         ),
         GoRoute(path: '/activity', builder: (_, _) => const ActivityPage()),
+        GoRoute(path: '/schedule', builder: (_, _) => const SchedulePage()),
+        GoRoute(path: '/files', builder: (_, _) => const FilesPage()),
+        GoRoute(
+          path: '/knowledge-base',
+          builder: (_, _) => const LocalKnowledgeBasePage(),
+        ),
       ],
     ),
   ],
@@ -56,34 +65,60 @@ class _LocalRuntimeShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final taskRoute = location.startsWith('/tasks');
+    final section = _LocalSection.fromLocation(location);
     final isBuilder = location == '/tasks/builder';
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          isBuilder
-              ? 'Aufgabe'
-              : taskRoute
-              ? 'Aufgaben'
-              : 'Aktivitäten',
-        ),
-      ),
+      appBar: AppBar(title: Text(isBuilder ? 'Aufgabe' : section.label)),
       body: SafeArea(child: child),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: taskRoute ? 0 : 1,
+        selectedIndex: section.navigationIndex,
         onDestinationSelected: (index) =>
-            context.go(index == 0 ? '/tasks' : '/activity'),
+            context.go(_LocalSection.values[index].route),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.account_tree_outlined),
             label: 'Aufgaben',
           ),
           NavigationDestination(
+            icon: Icon(Icons.schedule_outlined),
+            label: 'Zeitplan',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.view_timeline_outlined),
             label: 'Aktivitäten',
           ),
+          NavigationDestination(
+            icon: Icon(Icons.folder_outlined),
+            label: 'Dateien',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.menu_book_outlined),
+            label: 'Wissensbasis',
+          ),
         ],
       ),
+    );
+  }
+}
+
+enum _LocalSection {
+  tasks('/tasks', 'Aufgaben'),
+  schedule('/schedule', 'Zeitplan'),
+  activity('/activity', 'Aktivitäten'),
+  files('/files', 'Dateien'),
+  knowledgeBase('/knowledge-base', 'Wissensbasis');
+
+  const _LocalSection(this.route, this.label);
+
+  final String route;
+  final String label;
+
+  int get navigationIndex => _LocalSection.values.indexOf(this);
+
+  static _LocalSection fromLocation(String location) {
+    return _LocalSection.values.firstWhere(
+      (section) => location.startsWith(section.route),
+      orElse: () => _LocalSection.tasks,
     );
   }
 }

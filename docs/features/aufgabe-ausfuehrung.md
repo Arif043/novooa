@@ -123,9 +123,13 @@ Docker-Runtime an:
 flutter run -d macos --dart-define=NOVOOA_RUNTIME=local
 ```
 
-Das lokale Startprofil bietet Aufgaben mit Texteingabe und Freigabe sowie die
-Aktivitätenansicht. Aufgaben, Runs und Aktivitäten werden per lokalem Polling
-gelesen. Weitere Cloud-Features werden in diesem Profil nicht eingebunden.
+Das lokale Startprofil bietet Aufgaben mit Texteingabe und Freigabe,
+Aktivitäten, Zeitpläne, Dateien sowie Wissensbasis. Aufgaben, Runs,
+Aktivitäten, Zeitpläne, Dateien und Notizen werden per lokalem Polling
+gelesen. Zeitpläne erzeugen ihre Runs unabhängig von einer geöffneten
+Desktop-App im Runtime-Container. Cloud-gebundene Features wie externe
+Kommunikationskanäle, Assistenz und Modellprovider werden in diesem Profil
+nicht eingebunden.
 
 ## Verwandt
 

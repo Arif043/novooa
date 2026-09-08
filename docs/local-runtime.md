@@ -88,6 +88,7 @@ communication_channels
 knowledge_notes
 files
 file_versions
+file_folders
 ```
 
 Die Migration
@@ -168,8 +169,8 @@ dessen Infrastructure-Bereich.
   `notifications` kapseln jeweils ihre eigenen Domain-Verträge und Adapter.
 - Task-Ausführung erhält Dateien, Wissensbasis und Nachrichten ausschließlich
   über injizierte Ports; Function-Handler verdrahten die konkreten Adapter.
-- Lokale SQL-Adapter für Tasks, Runs, Aktivitäten, Trigger und Wissensbasis
-  hängen nur an `LocalSqlDatabase`.
+- Lokale SQL-Adapter für Tasks, Runs, Aktivitäten, Trigger, Wissensbasis und
+  Dateiordner hängen nur an `LocalSqlDatabase`.
 - Alle Backend-Assistenten verwenden denselben `GenkitAssistantResponder` und
   denselben Laufzeitkontext für Cloud und lokal. Ein lokaler Composition Root
   kann den Wissensbasis-Agenten mit `SQLiteKnowledgeBaseAssistantNoteStore`,
@@ -202,13 +203,19 @@ dessen Infrastructure-Bereich.
   `POST /v1/task-runs` legt einen Run für diesen lokalen Arbeitsbereich an;
   `POST /v1/task-runs/review` setzt Freigaben und Eingaben fort.
 - Der native Client verwaltet Aufgaben über `GET`, `PUT` und `DELETE
-  /v1/tasks` sowie Runs und Aktivitäten über `GET /v1/task-runs` und
-  `GET /v1/activities`. Diese Endpunkte sind ausschließlich Loopback-APIs der
-  lokalen Runtime und kein Cloud-HTTP-Vertrag.
+  /v1/tasks`, Runs und Aktivitäten über `GET /v1/task-runs` und
+  `GET /v1/activities`, Wissensnotizen über `/v1/knowledge-notes`, Zeitpläne
+  über `/v1/task-triggers` sowie Dateien und Ordner über `/v1/files` und
+  `/v1/folders`. Dateien werden als Base64-kodierte JSON-Payloads bis zur
+  lokalen Runtime übertragen und dort im Volume abgelegt. Diese Endpunkte sind
+  ausschließlich Loopback-APIs der lokalen Runtime und kein Cloud-HTTP-Vertrag.
 - `006_task_run_jobs.sql` ergänzt eine haltbare SQLite-Jobqueue. Der
   `PollingTaskRunWorker` least Jobs, bestätigt erfolgreiche Ausführungen und
   versucht fehlgeschlagene Jobs mit 30 bis 300 Sekunden Backoff höchstens
   dreimal erneut.
+- Der `PollingTaskTriggerWorker` wertet fällige Zeitpläne alle 30 Sekunden
+  aus, erzeugt Runs über den gemeinsamen Scheduling-Use-Case und schreibt den
+  nächsten Ausführungszeitpunkt atomar in SQLite fort.
 - `HttpPythonModelInputTransformer` und `SidecarOnnxInferenceRuntime` leiten
   Bildvorverarbeitung und ONNX-Inferenz an `novooa-ml` weiter. Ohne Sidecar
   meldet die Runtime eine klare lokale ML-Fehlermeldung statt Cloud-Fallback.

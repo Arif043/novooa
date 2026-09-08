@@ -66,7 +66,7 @@ async function requestBody(request: IncomingMessage): Promise<unknown> {
   for await (const chunk of request) {
     const buffer = Buffer.from(chunk);
     size += buffer.length;
-    if (size > 1024 * 1024) throw new InvalidLocalRuntimeRequestError();
+    if (size > 75 * 1024 * 1024) throw new InvalidLocalRuntimeRequestError();
     chunks.push(buffer);
   }
   const value = Buffer.concat(chunks).toString("utf8").trim();

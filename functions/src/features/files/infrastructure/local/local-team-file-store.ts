@@ -142,7 +142,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
 function newFileFrom(input: WriteTeamFileInput): WrittenFile {
   const fileId = randomUUID();
   const versionId = randomUUID();
-  return writtenFile(input, fileId, versionId, null, "system", true);
+  return writtenFile(input, fileId, versionId, input.folderId ?? null, "system", true);
 }
 
 function versionFromExisting(

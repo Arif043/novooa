@@ -7,6 +7,7 @@ export type WriteTeamFileInput = {
   content: FileContent;
   fileName: string;
   contentType: string;
+  folderId?: string | null;
   targetFileId: string | null;
 };
 

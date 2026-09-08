@@ -23,12 +23,14 @@ import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart'
 import '../../features/task_builder/presentation/cubits/task_homepage_cubit.dart';
 import '../config/runtime_profile.dart';
 import '../network/local_runtime_api_client.dart';
+import 'local_workspace_dependency_configuration.dart';
 
 void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
+  locator.registerLazySingleton<LocalRuntimeApiClient>(
+    () => HttpLocalRuntimeApiClient(baseUri: profile.localRuntimeUri),
+  );
+  configureLocalWorkspaceDependencies(locator, profile);
   locator
-    ..registerLazySingleton<LocalRuntimeApiClient>(
-      () => HttpLocalRuntimeApiClient(baseUri: profile.localRuntimeUri),
-    )
     ..registerLazySingleton<TaskRunnerDatasource>(
       () => LocalHttpTaskRunnerDatasource(locator<LocalRuntimeApiClient>()),
     )
