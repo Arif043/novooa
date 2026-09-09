@@ -121,9 +121,8 @@ class AppRouter {
           ),
           GoRoute(
             path: settings,
-            redirect: (context, state) => isLocal ? home : null,
             pageBuilder: (context, state) =>
-                _shellPage(state, const SettingsPage()),
+                _shellPage(state, SettingsPage(isLocal: isLocal)),
           ),
         ],
       ),

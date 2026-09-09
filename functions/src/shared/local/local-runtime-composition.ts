@@ -16,6 +16,7 @@ import {SQLiteTaskRunDispatcher} from "../../features/task_execution/infrastruct
 import {SQLiteTaskRunJobStore} from "../../features/task_execution/infrastructure/local/sqlite-task-run-job-store.js";
 import {SQLiteTaskRunStore} from "../../features/task_execution/infrastructure/local/sqlite-task-run-store.js";
 import {SQLiteTaskStore} from "../../features/task_execution/infrastructure/local/sqlite-task-store.js";
+import {SQLiteTaskDefinitionStore} from "../../features/task_execution/infrastructure/local/sqlite-task-definition-store.js";
 import {runDueTaskTriggers} from "../../features/scheduling/domain/usecases/run-due-task-triggers.js";
 import {LocalTaskTriggerHttpHandler} from "../../features/scheduling/infrastructure/local/local-task-trigger-http-handler.js";
 import {PollingTaskTriggerWorker} from "../../features/scheduling/infrastructure/local/polling-task-trigger-worker.js";
@@ -51,6 +52,7 @@ export function createLocalRuntimeComposition(
   const teamFileStore = new LocalTeamFileStore(options.database, options.runtimeRoot);
   const jobStore = new SQLiteTaskRunJobStore(options.database);
   const taskStore = new SQLiteTaskStore(options.database);
+  const taskDefinitionStore = new SQLiteTaskDefinitionStore(options.database);
   const applicationLogStore = new SQLiteLocalApplicationLogStore(options.database);
   const applicationLogger = new LocalApplicationLogger(
     applicationLogStore,
@@ -70,7 +72,7 @@ export function createLocalRuntimeComposition(
     requestHandler: new LocalRuntimeRequestRouter([
       new LocalTaskRunHttpHandler(taskWorkflow, options.workspace.userId),
       new LocalTaskDefinitionHttpHandler(
-        options.database,
+        taskDefinitionStore,
         options.workspace.teamId,
         options.workspace.userId,
       ),

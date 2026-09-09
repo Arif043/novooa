@@ -3,19 +3,12 @@ import {
   type LocalRuntimeRequestHandler,
   type LocalRuntimeResponse,
 } from "../../../../shared/local/local-runtime-http-server.js";
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
-
-type TaskRow = SqlRow & {
-  graph_json: string;
-  id: string;
-  objective: string;
-  selected_node_id: string;
-  title: string;
-};
+import {type TaskDefinition} from "../../domain/entities/task.js";
+import {type TaskDefinitionStore} from "../../domain/repositories/task-definition-store.js";
 
 export class LocalTaskDefinitionHttpHandler implements LocalRuntimeRequestHandler {
   constructor(
-    private readonly database: LocalSqlDatabase,
+    private readonly store: TaskDefinitionStore,
     private readonly teamId: string,
     private readonly userId: string,
   ) {}
@@ -31,26 +24,16 @@ export class LocalTaskDefinitionHttpHandler implements LocalRuntimeRequestHandle
   }
 
   private async list(): Promise<LocalRuntimeResponse> {
-    const rows = await this.database.all<TaskRow>(
-      "SELECT id, title, objective, graph_json, selected_node_id FROM tasks WHERE team_id = ? ORDER BY updated_at DESC",
-      [this.teamId],
-    );
-    return {body: {items: rows.map(taskFromRow)}, statusCode: 200};
+    const definitions = await this.store.list(this.teamId);
+    const items = await Promise.all(definitions.map((definition) => this.documentFrom(definition)));
+    return {body: {items}, statusCode: 200};
   }
 
   private async save(taskId: string, body: unknown): Promise<LocalRuntimeResponse> {
     try {
       const task = taskFromRequest(taskId, body);
-      await this.database.run(upsertTaskSql(), [
-        task.id,
-        this.teamId,
-        task.title,
-        task.objective,
-        JSON.stringify(task.graph),
-        task.selectedNodeId,
-        this.userId,
-      ]);
-      return {body: task, statusCode: 200};
+      await this.store.save(this.teamId, this.userId, task.definition, task.selectedNodeId);
+      return {body: await this.documentFrom(task.definition), statusCode: 200};
     } catch (error) {
       if (error instanceof LocalTaskRequestError) return inputError(error.message);
       throw error;
@@ -58,54 +41,48 @@ export class LocalTaskDefinitionHttpHandler implements LocalRuntimeRequestHandle
   }
 
   private async delete(taskId: string): Promise<LocalRuntimeResponse> {
-    await this.database.run("DELETE FROM tasks WHERE team_id = ? AND id = ?", [this.teamId, taskId]);
+    await this.store.delete(this.teamId, taskId);
     return {body: {}, statusCode: 204};
+  }
+
+  private async documentFrom(definition: TaskDefinition): Promise<Record<string, unknown>> {
+    return documentFrom(definition, await this.store.selectedNodeId(this.teamId, definition.id));
   }
 }
 
-function taskFromRequest(taskId: string, body: unknown): LocalTaskDocument {
+function taskFromRequest(taskId: string, body: unknown): {definition: TaskDefinition; selectedNodeId: string} {
   const input = recordFrom(body, "Die lokale Aufgabe erwartet ein Objekt.");
   if (input.id !== taskId) throw new LocalTaskRequestError("taskId stimmt nicht mit dem Pfad überein.");
   const graph = recordFrom(input.graph, "graph muss ein Objekt sein.");
   try {
-    const task = {
+    const definition: TaskDefinition = {
       id: taskId,
       title: requiredString(input.title, "title"),
       objective: optionalString(input.objective),
-      graph: graphFrom(graph),
-      selectedNodeId: optionalString(input.selectedNodeId),
+      ...graphFrom(graph),
     };
-    return {
-      ...task,
-    };
+    return {definition, selectedNodeId: optionalString(input.selectedNodeId)};
   } catch {
     throw new LocalTaskRequestError("Die Aufgabe enthält einen ungültigen Workflow-Graphen.");
   }
 }
 
-function graphFrom(value: Record<string, unknown>): Record<string, unknown> {
+function graphFrom(value: Record<string, unknown>): Pick<TaskDefinition, "nodes" | "edges"> {
   if (!Array.isArray(value.nodes) || !Array.isArray(value.edges)) {
     throw new LocalTaskRequestError("graph benötigt Listen für nodes und edges.");
   }
-  return {nodes: value.nodes, edges: value.edges};
-}
-
-function taskFromRow(row: TaskRow): LocalTaskDocument {
   return {
-    id: row.id,
-    title: row.title,
-    objective: row.objective,
-    graph: jsonRecord(row.graph_json),
-    selectedNodeId: row.selected_node_id,
+    nodes: value.nodes as TaskDefinition["nodes"],
+    edges: value.edges as TaskDefinition["edges"],
   };
 }
 
-function upsertTaskSql(): string {
-  return `INSERT INTO tasks(id, team_id, title, objective, graph_json, selected_node_id, created_by_uid)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET title = excluded.title, objective = excluded.objective,
-      graph_json = excluded.graph_json, selected_node_id = excluded.selected_node_id,
-      updated_at = CURRENT_TIMESTAMP WHERE tasks.team_id = excluded.team_id`;
+function documentFrom(definition: TaskDefinition, selectedNodeId: string): Record<string, unknown> {
+  return {
+    id: definition.id, title: definition.title, objective: definition.objective,
+    selectedNodeId,
+    graph: {nodes: definition.nodes, edges: definition.edges},
+  };
 }
 
 function pathFrom(url: string | undefined): string {
@@ -133,24 +110,8 @@ function optionalString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
-function jsonRecord(value: string): Record<string, unknown> {
-  try {
-    return recordFrom(JSON.parse(value), "graph muss ein Objekt sein.");
-  } catch {
-    return {nodes: [], edges: []};
-  }
-}
-
 function inputError(message: string): LocalRuntimeResponse {
   return {body: {error: message}, statusCode: 400};
 }
 
 class LocalTaskRequestError extends Error {}
-
-type LocalTaskDocument = {
-  graph: Record<string, unknown>;
-  id: string;
-  objective: string;
-  selectedNodeId: string;
-  title: string;
-};

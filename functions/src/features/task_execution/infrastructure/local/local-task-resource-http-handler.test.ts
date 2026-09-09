@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import {type TaskDefinition} from "../../domain/entities/task.js";
+import {type TaskDefinitionStore} from "../../domain/repositories/task-definition-store.js";
 import {SqliteLocalSqlDatabase} from "../../../../shared/local/sqlite-local-sql-database.js";
 import {LocalTaskActivityHttpHandler} from "./local-task-activity-http-handler.js";
 import {LocalTaskDefinitionHttpHandler} from "./local-task-definition-http-handler.js";
+import {SQLiteTaskDefinitionStore} from "./sqlite-task-definition-store.js";
 
 test("stores and lists a local task definition", async () => {
   const database = await databaseWithTaskTables();
-  const handler = new LocalTaskDefinitionHttpHandler(database, "team-1", "user-1");
+  const handler = new LocalTaskDefinitionHttpHandler(new SQLiteTaskDefinitionStore(database), "team-1", "user-1");
 
   const saved = await handler.handle({body: taskBody(), method: "PUT", url: "/v1/tasks/task-1"});
   const listed = await handler.handle({body: {}, method: "GET", url: "/v1/tasks"});
@@ -16,9 +19,9 @@ test("stores and lists a local task definition", async () => {
   database.close();
 });
 
-test("stores an empty local task draft", async () => {
+test("stores an empty local task definition", async () => {
   const database = await databaseWithTaskTables();
-  const handler = new LocalTaskDefinitionHttpHandler(database, "team-1", "user-1");
+  const handler = new LocalTaskDefinitionHttpHandler(new SQLiteTaskDefinitionStore(database), "team-1", "user-1");
   const draft = {
     id: "draft-1",
     title: "Neue Aufgabe",
@@ -31,6 +34,17 @@ test("stores an empty local task draft", async () => {
 
   assert.deepEqual(response, {body: draft, statusCode: 200});
   database.close();
+});
+
+test("uses the task definition store without a SQL dependency", async () => {
+  const store = new MemoryTaskDefinitionStore();
+  const handler = new LocalTaskDefinitionHttpHandler(store, "team-1", "user-1");
+
+  const saved = await handler.handle({body: taskBody(), method: "PUT", url: "/v1/tasks/task-1"});
+  const listed = await handler.handle({body: {}, method: "GET", url: "/v1/tasks"});
+
+  assert.equal(saved?.statusCode, 200);
+  assert.deepEqual(listed, {body: {items: [taskBody()]}, statusCode: 200});
 });
 
 test("lists local task runs and activities", async () => {
@@ -93,4 +107,26 @@ function taskBody() {
       edges: [],
     },
   };
+}
+
+class MemoryTaskDefinitionStore implements TaskDefinitionStore {
+  readonly items = new Map<string, TaskDefinition>();
+  readonly selectedNodeIds = new Map<string, string>();
+
+  async delete(_teamId: string, taskId: string): Promise<void> {
+    this.items.delete(taskId);
+  }
+
+  async list(_teamId: string): Promise<TaskDefinition[]> {
+    return [...this.items.values()];
+  }
+
+  async save(_teamId: string, _userId: string, definition: TaskDefinition, selectedNodeId: string): Promise<void> {
+    this.items.set(definition.id, definition);
+    this.selectedNodeIds.set(definition.id, selectedNodeId);
+  }
+
+  async selectedNodeId(_teamId: string, taskId: string): Promise<string> {
+    return this.selectedNodeIds.get(taskId) ?? "";
+  }
 }

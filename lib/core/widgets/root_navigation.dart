@@ -34,12 +34,7 @@ List<RootTab> rootTabs({required bool isLocal}) => [
     icon: CupertinoIcons.rectangle_grid_1x2,
     path: '/activity',
   ),
-  if (!isLocal)
-    RootTab(
-      title: 'Einstellungen',
-      icon: CupertinoIcons.gear,
-      path: '/settings',
-    ),
+  RootTab(title: 'Einstellungen', icon: CupertinoIcons.gear, path: '/settings'),
 ];
 
 AssistantContext? assistantContextForRootTab({
