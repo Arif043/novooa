@@ -74,6 +74,9 @@ class LocalRuntimeConnectionException implements Exception {
   const LocalRuntimeConnectionException(this.cause);
 
   final Object cause;
+
+  @override
+  String toString() => 'Lokale Runtime nicht erreichbar: $cause';
 }
 
 class LocalRuntimeHttpException implements Exception {
@@ -81,6 +84,9 @@ class LocalRuntimeHttpException implements Exception {
 
   final int statusCode;
   final String message;
+
+  @override
+  String toString() => 'Lokale Runtime antwortete mit $statusCode: $message';
 }
 
 Stream<T> pollLocalRuntime<T>(

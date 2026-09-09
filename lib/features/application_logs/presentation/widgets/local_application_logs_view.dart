@@ -86,14 +86,14 @@ class _LogItem extends StatelessWidget {
           log.message ?? log.event,
           style: theme.textTheme.titleSmall,
         ),
-        subtitle: _LogDetails(log: log),
+        subtitle: _LogSummary(log: log),
       ),
     );
   }
 }
 
-class _LogDetails extends StatelessWidget {
-  const _LogDetails({required this.log});
+class _LogSummary extends StatelessWidget {
+  const _LogSummary({required this.log});
 
   final ApplicationLog log;
 
@@ -104,12 +104,16 @@ class _LogDetails extends StatelessWidget {
       if (log.message != null) log.event,
       log.source == ApplicationLogSource.client ? 'Client' : 'Lokale Runtime',
       _timestamp(log.occurredAt),
-      if (log.data.isNotEmpty)
-        const JsonEncoder.withIndent('  ').convert(log.data),
     ];
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.xs),
-      child: SelectableText(details.join('\n'), style: style),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.xs),
+          child: Text(details.join('\n'), style: style),
+        ),
+        if (log.data.isNotEmpty) _LogData(log: log),
+      ],
     );
   }
 
@@ -117,6 +121,37 @@ class _LogDetails extends StatelessWidget {
     String part(int number) => number.toString().padLeft(2, '0');
     return '${part(value.day)}.${part(value.month)}.${value.year} '
         '${part(value.hour)}:${part(value.minute)}:${part(value.second)}';
+  }
+}
+
+class _LogData extends StatelessWidget {
+  const _LogData({required this.log});
+
+  final ApplicationLog log;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.bodySmall;
+    final error = log.data['error'];
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      childrenPadding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      title: Text(
+        error is String ? error : 'Technische Details',
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: style,
+      ),
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: SelectableText(
+            const JsonEncoder.withIndent('  ').convert(log.data),
+            style: style,
+          ),
+        ),
+      ],
+    );
   }
 }
 
