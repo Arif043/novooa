@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as developer;
-
 import 'package:bloc/bloc.dart';
+import 'package:flutter/widgets.dart';
 import 'package:syscat2/features/task_builder/domain/entities/employee_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/knowledge_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
@@ -13,7 +13,6 @@ import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
 import 'task_builder_state.dart';
 import 'workflow_primitive_labels.dart';
-
 part 'task_builder_branch_mutations.dart';
 part 'task_builder_attachment_mutations.dart';
 part 'task_builder_graph_mutations.dart';
@@ -443,5 +442,12 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
         'Sendet eine WhatsApp-Nachricht über novooa.',
       ChannelEventKind.sms => 'Sendet eine SMS über novooa.',
     };
+  }
+
+  @override
+  void onChange(Change<TaskBuilderState> change) {
+    super.onChange(change);
+    debugPrint("TaskBuilderState: ${change.currentState}");
+    debugPrint("TaskBuilderState: ${change.nextState}");
   }
 }

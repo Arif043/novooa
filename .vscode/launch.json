@@ -15,10 +15,10 @@
             ]
         },
         {
-            "name": "syscat2 (profile mode)",
+            "name": "novooa cloud",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "profile"
+            "deviceId": "chrome"
         },
         {
             "name": "syscat2 (release mode)",
