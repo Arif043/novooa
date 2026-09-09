@@ -72,10 +72,7 @@ extension TaskBuilderAttachmentMutations on TaskBuilderCubit {
   }
 
   Future<void> unassignNodeEmployee({required NodeId nodeId}) {
-    return _updateEmployeeConfig(
-      nodeId,
-      (config) => config.unassignEmployee(),
-    );
+    return _updateEmployeeConfig(nodeId, (config) => config.unassignEmployee());
   }
 
   Future<void> _updateAttachableConfig(

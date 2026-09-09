@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:syscat2/core/logging/logger.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model.dart';
@@ -31,16 +32,25 @@ class NodeLanguageModelsCubit extends Cubit<NodeLanguageModelsState> {
     if (teamId == null) return;
     _subscription = _watchLanguageModels(teamId).listen(
       _emitModels,
-      onError: (_) =>
-          _emitFailure('Sprachmodelle konnten nicht geladen werden.'),
+      onError: (Object error, StackTrace stackTrace) {
+        _logAndEmitFailure(
+          'Sprachmodelle konnten nicht geladen werden.',
+          error,
+          stackTrace,
+        );
+      },
     );
   }
 
   Future<TeamId?> _teamIdOrNull() async {
     try {
       return await _getCurrentTeamId();
-    } catch (_) {
-      _emitFailure('Team konnte nicht geladen werden.');
+    } catch (error, stackTrace) {
+      _logAndEmitFailure(
+        'Team konnte nicht geladen werden.',
+        error,
+        stackTrace,
+      );
       return null;
     }
   }
@@ -63,6 +73,16 @@ class NodeLanguageModelsCubit extends Cubit<NodeLanguageModelsState> {
         message: message,
       ),
     );
+  }
+
+  void _logAndEmitFailure(String message, Object error, StackTrace stackTrace) {
+    logException(
+      message: message,
+      error: error,
+      stackTrace: stackTrace,
+      name: 'node_language_models',
+    );
+    _emitFailure(message);
   }
 
   @override

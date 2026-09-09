@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:syscat2/core/logging/logger.dart';
 
 import '../../domain/entities/task.dart';
 import '../../domain/repositories/task_repository.dart';
@@ -24,7 +25,15 @@ class TaskHomepageCubit extends Cubit<TaskHomepageState> {
     _subscription?.cancel();
     _subscription = _repository.watchTasks().listen(
       _emitTasks,
-      onError: (_) => _emitLoadFailure(),
+      onError: (Object error, StackTrace stackTrace) {
+        logException(
+          message: 'Aufgaben konnten nicht geladen werden.',
+          error: error,
+          stackTrace: stackTrace,
+          name: 'task_homepage',
+        );
+        _emitLoadFailure();
+      },
     );
   }
 
@@ -86,7 +95,13 @@ class TaskHomepageCubit extends Cubit<TaskHomepageState> {
     try {
       await persist();
       if (!isClosed) emit(TaskHomepageReady(nextTasks));
-    } catch (_) {
+    } catch (error, stackTrace) {
+      logException(
+        message: 'Aufgabe konnte nicht geändert werden.',
+        error: error,
+        stackTrace: stackTrace,
+        name: 'task_homepage',
+      );
       if (!isClosed) {
         emit(
           const TaskHomepageFailure('Aufgabe konnte nicht geändert werden.'),

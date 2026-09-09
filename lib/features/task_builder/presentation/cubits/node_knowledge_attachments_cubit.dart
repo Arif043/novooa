@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:syscat2/core/logging/logger.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/knowledge_base/domain/entities/knowledge_note.dart';
@@ -32,15 +33,25 @@ class NodeKnowledgeAttachmentsCubit
     if (teamId == null) return;
     _subscription = _watchKnowledgeNotes(teamId).listen(
       _emitNotes,
-      onError: (_) => _emitFailure('Notizen konnten nicht geladen werden.'),
+      onError: (Object error, StackTrace stackTrace) {
+        _logAndEmitFailure(
+          'Notizen konnten nicht geladen werden.',
+          error,
+          stackTrace,
+        );
+      },
     );
   }
 
   Future<TeamId?> _teamIdOrNull() async {
     try {
       return await _getCurrentTeamId();
-    } catch (_) {
-      _emitFailure('Team konnte nicht geladen werden.');
+    } catch (error, stackTrace) {
+      _logAndEmitFailure(
+        'Team konnte nicht geladen werden.',
+        error,
+        stackTrace,
+      );
       return null;
     }
   }
@@ -72,6 +83,16 @@ class NodeKnowledgeAttachmentsCubit
         message: message,
       ),
     );
+  }
+
+  void _logAndEmitFailure(String message, Object error, StackTrace stackTrace) {
+    logException(
+      message: message,
+      error: error,
+      stackTrace: stackTrace,
+      name: 'node_knowledge_attachments',
+    );
+    _emitFailure(message);
   }
 
   @override

@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 import 'package:bloc/bloc.dart';
 import 'package:flutter/widgets.dart';
+import 'package:syscat2/core/logging/logger.dart';
 import 'package:syscat2/features/task_builder/domain/entities/employee_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/knowledge_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
@@ -54,7 +54,13 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       if (taskFromNavigation == null) await repository.saveTask(editingTask);
       if (isClosed) return;
       emit(TaskBuilderLoaded(editingTask));
-    } catch (_) {
+    } catch (error, stackTrace) {
+      logException(
+        message: 'Aufgabe konnte nicht geladen werden.',
+        error: error,
+        stackTrace: stackTrace,
+        name: 'task_builder',
+      );
       if (isClosed) return;
       emit(const TaskBuilderFailure('Aufgabe konnte nicht geladen werden.'));
     }
@@ -279,8 +285,8 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     try {
       await repository.saveTask(task);
     } catch (error, stackTrace) {
-      developer.log(
-        'Aufgabe konnte nicht gespeichert werden.',
+      logException(
+        message: 'Aufgabe konnte nicht gespeichert werden.',
         name: 'TaskBuilderCubit',
         error: error,
         stackTrace: stackTrace,

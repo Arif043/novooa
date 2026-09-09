@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:syscat2/core/logging/logger.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/employees/domain/entities/employee.dart';
 import 'package:syscat2/features/employees/domain/usecases/watch_employees.dart';
@@ -13,8 +14,7 @@ import 'node_employee_assignments_state.dart';
 /// Beobachtet die Team-Mitarbeiter und stellt sie dem NodeInspector als
 /// Auswahl-Slot bereit — analog zu [NodeSkillAttachmentsCubit], nur dass
 /// eine Zuweisung 0..1 statt 0..n ist.
-class NodeEmployeeAssignmentsCubit
-    extends Cubit<NodeEmployeeAssignmentsState> {
+class NodeEmployeeAssignmentsCubit extends Cubit<NodeEmployeeAssignmentsState> {
   NodeEmployeeAssignmentsCubit(
     this._authRepository,
     this._watchEmployees,
@@ -35,15 +35,25 @@ class NodeEmployeeAssignmentsCubit
     if (teamId == null) return;
     _subscription = _watchEmployees(teamId).listen(
       _emitEmployees,
-      onError: (_) => _emitFailure('Mitarbeiter konnten nicht geladen werden.'),
+      onError: (Object error, StackTrace stackTrace) {
+        _logAndEmitFailure(
+          'Mitarbeiter konnten nicht geladen werden.',
+          error,
+          stackTrace,
+        );
+      },
     );
   }
 
   Future<TeamId?> _teamIdOrNull() async {
     try {
       return await _getCurrentTeamId();
-    } catch (_) {
-      _emitFailure('Team konnte nicht geladen werden.');
+    } catch (error, stackTrace) {
+      _logAndEmitFailure(
+        'Team konnte nicht geladen werden.',
+        error,
+        stackTrace,
+      );
       return null;
     }
   }
@@ -76,6 +86,16 @@ class NodeEmployeeAssignmentsCubit
         message: message,
       ),
     );
+  }
+
+  void _logAndEmitFailure(String message, Object error, StackTrace stackTrace) {
+    logException(
+      message: message,
+      error: error,
+      stackTrace: stackTrace,
+      name: 'node_employee_assignments',
+    );
+    _emitFailure(message);
   }
 
   @override

@@ -11,6 +11,7 @@ import 'core/config/runtime_profile.dart';
 import 'core/firebase/firebase_emulator_config.dart';
 import 'core/firebase/firestore_web_cache.dart';
 import 'core/logging/logger.dart';
+import 'core/logging/application_bloc_observer.dart';
 import 'core/logging/developer_client_logger.dart';
 import 'core/logging/local_runtime_client_logger.dart';
 import 'core/network/local_runtime_api_client.dart';
@@ -36,7 +37,10 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   );
 }
 
-Future<void> main() async {
+Future<void> main() =>
+    runZonedGuarded(_startApplication, _logUncaughtZoneError) ?? Future.value();
+
+Future<void> _startApplication() async {
   WidgetsFlutterBinding.ensureInitialized();
   final runtimeProfile = RuntimeProfile.fromEnvironment();
   if (runtimeProfile.isCloud) {
@@ -59,6 +63,7 @@ Future<void> main() async {
         ? LocalRuntimeClientLogger(serviceLocator<LocalRuntimeApiClient>())
         : const DeveloperClientLogger(),
   );
+  Bloc.observer = ApplicationBlocObserver();
   _configureErrorLogging();
   if (!runtimeProfile.isLocal && shouldNavigateFromPushClick()) {
     const FcmPushClickBridge().start(_openNotificationData);
@@ -67,6 +72,15 @@ Future<void> main() async {
     unawaited(serviceLocator<FcmBootstrapper>().start());
   }
   runApp(MyApp(runtimeProfile: runtimeProfile));
+}
+
+void _logUncaughtZoneError(Object error, StackTrace stackTrace) {
+  logException(
+    message: 'Unbehandelter asynchroner Fehler.',
+    error: error,
+    stackTrace: stackTrace,
+    name: 'zone',
+  );
 }
 
 void _configureErrorLogging() {
