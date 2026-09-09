@@ -6,6 +6,7 @@ import '../../domain/entities/task_execution_failure.dart';
 import '../../domain/entities/task_run_start.dart';
 import '../../domain/repositories/task_repository.dart';
 import '../datasources/task_runner_datasource.dart';
+import '../datasources/task_runner_datasource_log.dart';
 import '../models/run_task_definition_request_model.dart';
 import '../models/task_document_mapper.dart';
 import '../models/task_run_start_model.dart';
@@ -38,6 +39,7 @@ class LocalTaskRepository implements TaskRepository {
     required Task task,
     String context = '',
   }) async {
+    logTaskRunnerDatasourceInfo('Lokale Runtime startet Aufgabe: ${task.id}');
     try {
       await saveTask(task);
       final response = await _runnerDatasource.runTaskDefinition(
@@ -46,24 +48,33 @@ class LocalTaskRepository implements TaskRepository {
           context: context,
         ).toJson(),
       );
-      return Success(TaskRunStartModel.fromJson(response).toDomain());
-    } on TaskRunnerDatasourceConnectionException {
+      final taskRun = TaskRunStartModel.fromJson(response).toDomain();
+      logTaskRunnerDatasourceInfo(
+        'Lokale Runtime hat Aufgabe gestartet: ${task.id}, Run: ${taskRun.runId.value}',
+      );
+      return Success(taskRun);
+    } on TaskRunnerDatasourceConnectionException catch (error, stackTrace) {
+      _logExecutionFailure(error, stackTrace);
       return const Error(
         TaskExecutionFailure(TaskExecutionFailureKind.localServerUnavailable),
       );
-    } on TaskRunnerDatasourceTimeoutException {
+    } on TaskRunnerDatasourceTimeoutException catch (error, stackTrace) {
+      _logExecutionFailure(error, stackTrace);
       return const Error(
         TaskExecutionFailure(TaskExecutionFailureKind.localExecutionTimeout),
       );
-    } on TaskRunnerDatasourceExecutionException {
+    } on TaskRunnerDatasourceExecutionException catch (error, stackTrace) {
+      _logExecutionFailure(error, stackTrace);
       return const Error(
         TaskExecutionFailure(TaskExecutionFailureKind.executionFailed),
       );
-    } on TypeError {
+    } on TypeError catch (error, stackTrace) {
+      _logExecutionFailure(error, stackTrace);
       return const Error(
         TaskExecutionFailure(TaskExecutionFailureKind.invalidResponse),
       );
-    } catch (_) {
+    } catch (error, stackTrace) {
+      _logExecutionFailure(error, stackTrace);
       return const Error(
         TaskExecutionFailure(TaskExecutionFailureKind.executionFailed),
       );
@@ -84,5 +95,13 @@ class LocalTaskRepository implements TaskRepository {
       for (final entry in value.entries) entry.key.toString(): entry.value,
     };
     return _mapper.fromMap(data, fallbackId: data['id'] as String? ?? '');
+  }
+
+  void _logExecutionFailure(Object error, StackTrace stackTrace) {
+    logTaskRunnerDatasourceException(
+      message: 'Lokale Aufgabenausführung ist fehlgeschlagen.',
+      error: error,
+      stackTrace: stackTrace,
+    );
   }
 }
