@@ -20,6 +20,7 @@ import {
   type TaskRunStore,
 } from "../../../domain/repositories/task-run-store.js";
 import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 
 export type TaskRunWorkerStores = {
   taskStore: TaskStore;
@@ -40,6 +41,7 @@ export async function executeQueuedTaskRun(
     run: TaskRunDocument;
     stores: TaskRunWorkerStores;
   },
+  logger: ApplicationLogger,
 ) {
   const {teamId, run, stores} = input;
   await stores.taskRunStore.markRunStarted(teamId, run.runId);
@@ -56,6 +58,7 @@ export async function executeQueuedTaskRun(
     fileContentReader: stores.fileContentReader,
     messageSender: stores.messageSender,
     modelInference: stores.modelInference,
+    logger,
     languageModelResolver: stores.languageModelResolver,
   });
   if (output.status === "waitingForApproval") {
@@ -74,6 +77,7 @@ export async function continueApprovedTaskRun(
     responseOutputs: Record<string, NodeOutputValue>;
     stores: TaskRunWorkerStores;
   },
+  logger: ApplicationLogger,
 ) {
   const {teamId, run, stores} = input;
   await stores.taskRunStore.markRunStarted(teamId, run.runId);
@@ -90,6 +94,7 @@ export async function continueApprovedTaskRun(
       fileContentReader: stores.fileContentReader,
       messageSender: stores.messageSender,
       modelInference: stores.modelInference,
+      logger,
       languageModelResolver: stores.languageModelResolver,
     },
   );

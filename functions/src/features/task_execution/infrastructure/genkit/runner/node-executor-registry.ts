@@ -20,45 +20,47 @@ import {type NodeExecutor} from "../../../domain/executors/node-executor.js";
 import {type GenkitBeta} from "genkit/beta";
 import {type NodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 import {createPythonScriptExecutor} from "../../local/python-script-executor.js";
-import {logScriptOutput} from "./script-output-logger.js";
+import {scriptOutputLogger} from "./script-output-logger.js";
 import {conditionalBranchLogger} from "./conditional-branch-logger.js";
 import {taskMessageLogger} from "./task-message-logger.js";
 import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 
-const executors = new Map<WorkflowNode["primitive"], NodeExecutor>(
-  [
+function executorsFor(logger: ApplicationLogger) {
+  return new Map<WorkflowNode["primitive"], NodeExecutor>([
     stringInputNodeExecutor,
-    createConditionalFlowNodeExecutor(conditionalBranchLogger),
+    createConditionalFlowNodeExecutor(conditionalBranchLogger(logger)),
     writeFileNodeExecutor,
     readFileNodeExecutor,
     readEmailNodeExecutor,
     readChannelEventNodeExecutor,
-    createSendChannelMessageNodeExecutor(taskMessageLogger),
+    createSendChannelMessageNodeExecutor(taskMessageLogger(logger)),
     humanApprovalNodeExecutor,
     dialogInputNodeExecutor,
     mediaInputNodeExecutor,
     modelInferenceNodeExecutor,
     forEachNodeExecutor,
-  ].map((executor) => [executor.primitive, executor]),
-);
+  ].map((executor) => [executor.primitive, executor]));
+}
 
 export function executorFor(
   primitive: WorkflowNode["primitive"],
   ai: GenkitBeta,
+  logger: ApplicationLogger,
   workspace?: NodeAttachmentWorkspace,
   languageModelResolver?: GenkitLanguageModelResolver,
 ): NodeExecutor | undefined {
   if (primitive === "script") {
     return createScriptNodeExecutor(
       createPythonScriptExecutor(workspace),
-      logScriptOutput,
+      scriptOutputLogger(logger),
     );
   }
   if (primitive === "prompt") {
-    return createGenkitPromptNodeExecutor(ai, workspace, languageModelResolver);
+    return createGenkitPromptNodeExecutor(ai, workspace, languageModelResolver, logger);
   }
   if (primitive === "iterativeRefinement") {
-    return createGenkitIterativeRefinementNodeExecutor(ai, workspace);
+    return createGenkitIterativeRefinementNodeExecutor(ai, workspace, logger);
   }
-  return executors.get(primitive);
+  return executorsFor(logger).get(primitive);
 }

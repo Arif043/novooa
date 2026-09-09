@@ -1,13 +1,19 @@
-import * as logger from "firebase-functions/logger";
+import {
+  errorDetails,
+  textSummary,
+  type LogData,
+  withExceptionLogging as withLoggerExceptionLogging,
+} from "./application-logger.js";
+import {FirebaseApplicationLogger} from "./firebase-application-logger.js";
 
-export type LogData = Record<string, unknown>;
+export {errorDetails, textSummary, type LogData};
 
 export function logInfo(event: string, data: LogData = {}): void {
-  logger.info(event, {event, ...data});
+  firebaseLogger().info(event, data);
 }
 
 export function logError(event: string, data: LogData = {}): void {
-  logger.error(event, {event, ...data});
+  firebaseLogger().error(event, data);
 }
 
 export function logException(
@@ -15,7 +21,7 @@ export function logException(
   error: unknown,
   data: LogData = {},
 ): void {
-  logger.error(event, error, {event, ...data});
+  firebaseLogger().exception(event, error, data);
 }
 
 export async function withExceptionLogging<T>(
@@ -23,34 +29,17 @@ export async function withExceptionLogging<T>(
   action: () => Promise<T>,
   data: LogData = {},
 ): Promise<T> {
-  try {
-    return await action();
-  } catch (error) {
-    logException(event, error, data);
-    throw error;
-  }
+  return withLoggerExceptionLogging(firebaseLogger(), event, action, data);
 }
 
 export function logReadableInfo(message: string): void {
-  logger.info(message);
+  firebaseLogger().readableInfo(message);
 }
 
 export function logReadableError(message: string): void {
-  logger.error(message);
+  firebaseLogger().readableError(message);
 }
 
-export function textSummary(text: string, field = "text"): LogData {
-  return {[`${field}Length`]: text.length, [`${field}Preview`]: preview(text)};
-}
-
-export function errorDetails(error: unknown): unknown {
-  if (error instanceof Error) {
-    return {name: error.name, message: error.message, stack: error.stack};
-  }
-  return error;
-}
-
-function preview(text: string): string {
-  const normalized = text.replace(/\s+/g, " ").trim();
-  return normalized.length > 160 ? `${normalized.slice(0, 157)}...` : normalized;
+function firebaseLogger(): FirebaseApplicationLogger {
+  return new FirebaseApplicationLogger();
 }

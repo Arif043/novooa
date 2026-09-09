@@ -58,7 +58,9 @@ resumeState        # serialisierter Zwischenzustand für die Fortsetzung
 ## UI
 
 `ActivityPage` zeigt Tabs für laufende Runs, Freigaben, abgelehnte Runs und
-Historie. Die Historie listet nur Task-Aktivitäten. Ein Klick öffnet den
+Historie. Die Historie listet nur Task-Aktivitäten. Die lokale Variante ergänzt
+den Tab **Protokoll**. Er zeigt die letzten strukturierten Runtime-Ereignisse
+aus SQLite; Laufaktivitäten und Anwendungsprotokoll bleiben getrennt. Ein Klick öffnet den
 jeweiligen Durchlauf und zeigt dessen Node-Aktivitäten chronologisch mitsamt
 den benannten Ausgabewerten. Werte werden entsprechend ihres Output-Typs
 lesbar formatiert.

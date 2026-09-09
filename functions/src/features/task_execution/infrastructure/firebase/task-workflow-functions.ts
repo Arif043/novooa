@@ -13,6 +13,7 @@ import {
 } from "../../domain/usecases/task-workflow.js";
 import {geminiApiKey} from "../../../../shared/genkit/gemini-secret.js";
 import {withExceptionLogging} from "../../../../shared/logging/logger.js";
+import {FirebaseApplicationLogger} from "../../../../shared/logging/firebase-application-logger.js";
 import {
   twilioAccountSid,
   twilioAuthToken,
@@ -34,7 +35,10 @@ const workerSecrets = [
 ];
 
 const taskRuntime = createCloudTaskRuntime();
-const taskWorkflow = createGenkitTaskWorkflow(taskRuntime);
+const taskWorkflow = createGenkitTaskWorkflow({
+  ...taskRuntime,
+  logger: new FirebaseApplicationLogger(),
+});
 
 const callableOptions = {
   authPolicy: isSignedIn(),

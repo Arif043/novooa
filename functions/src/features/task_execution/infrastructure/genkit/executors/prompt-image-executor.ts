@@ -5,22 +5,25 @@ import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.
 import {aiTurnMiddleware} from "../runner/node-attachment-genkit.js";
 import {fileOutputFor} from "../../../domain/services/file-output-values.js";
 import {type NodeOutputValue, type WorkflowNode} from "../runner/task-definition.js";
-import {formatModelCallFinished, formatModelCallStarted, logReadableInfo} from "../runner/structured-logger.js";
+import {formatModelCallFinished, formatModelCallStarted} from "../runner/structured-logger.js";
 import {imageDataFromDataUrl, imageExtensionFor} from "./image-data-url.js";
 import {promptContentFor} from "./prompt-node-input.js";
 import {type PromptNodeInput, type PromptNodeOutput} from "./prompt-node-types.js";
 import {type ResolvedGenkitLanguageModel} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
+import {FirebaseApplicationLogger} from "../../../../../shared/logging/firebase-application-logger.js";
 
 export async function executeImagePrompt(
   ai: GenkitBeta,
   input: PromptNodeInput,
   workspace?: NodeAttachmentWorkspace,
   languageModel?: ResolvedGenkitLanguageModel,
+  logger: ApplicationLogger = new FirebaseApplicationLogger(),
 ): Promise<PromptNodeOutput> {
   const prompt = promptContentFor(input, workspace);
   const label = input.employee ? `Prompt / Bild (Mitarbeiter: ${input.employee.name})` : "Prompt / Bild";
   const startedAt = Date.now();
-  logReadableInfo(formatModelCallStarted({
+  logger.readableInfo(formatModelCallStarted({
     label, model: languageModel?.logContext ?? imageModelLogContext(), prompt: prompt.text,
     outputSchema: "dataUrl: Bild-Data-URL",
   }));
@@ -30,7 +33,7 @@ export async function executeImagePrompt(
   });
   const dataUrl = response.media?.url;
   if (!isImageDataUrl(dataUrl)) throw new Error("Der Bild-Prompt lieferte keine Bild-Data-URL.");
-  logReadableInfo(formatModelCallFinished({
+  logger.readableInfo(formatModelCallFinished({
     label, durationMs: Date.now() - startedAt,
     text: `Bild generiert (${dataUrl.length} Zeichen)`,
   }));

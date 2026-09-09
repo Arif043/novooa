@@ -81,6 +81,7 @@ const expectedMigrationVersions = [
   "006_task_run_jobs",
   "007_task_selection",
   "008_file_folders",
+  "009_application_logs",
 ];
 
 const migrationDirectory = resolve(__dirname, "../../../../local-runtime/migrations");

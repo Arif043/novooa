@@ -1,9 +1,13 @@
-import {logInfo, logReadableInfo} from "./structured-logger.js";
+import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 
-export function logScriptOutput(printed: string): void {
+export function scriptOutputLogger(logger: ApplicationLogger): (printed: string) => void {
+  return (printed) => logScriptOutput(logger, printed);
+}
+
+function logScriptOutput(logger: ApplicationLogger, printed: string): void {
   if (printed.trim().length === 0) return;
-  logReadableInfo(["[Script-Log]", printed.trimEnd()].join("\n"));
-  logInfo("script_node.printed", {
+  logger.readableInfo(["[Script-Log]", printed.trimEnd()].join("\n"));
+  logger.info("script_node.printed", {
     length: printed.length,
     preview: printed.slice(0, 1000),
   });

@@ -25,11 +25,15 @@ import {type LocalRuntimeRequestHandler} from "./local-runtime-http-server.js";
 import {LocalRuntimeRequestRouter} from "./local-runtime-request-router.js";
 import {type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
+import {LocalApplicationLogHttpHandler} from "../logging/local-application-log-http-handler.js";
+import {LocalApplicationLogger} from "../logging/local-application-logger.js";
+import {SQLiteLocalApplicationLogStore} from "../logging/sqlite-local-application-log-store.js";
 
 export type LocalRuntimeComposition = {
   requestHandler: LocalRuntimeRequestHandler;
   taskRunWorker: PollingTaskRunWorker;
   taskTriggerWorker: PollingTaskTriggerWorker;
+  applicationLogger: LocalApplicationLogger;
 };
 
 export type LocalRuntimeCompositionOptions = {
@@ -47,7 +51,21 @@ export function createLocalRuntimeComposition(
   const teamFileStore = new LocalTeamFileStore(options.database, options.runtimeRoot);
   const jobStore = new SQLiteTaskRunJobStore(options.database);
   const taskStore = new SQLiteTaskStore(options.database);
-  const taskWorkflow = createTaskWorkflow(options, taskRunStore, teamFileStore, jobStore);
+  const applicationLogStore = new SQLiteLocalApplicationLogStore(options.database);
+  const applicationLogger = new LocalApplicationLogger(
+    applicationLogStore,
+    options.workspace.teamId,
+  );
+  const taskWorkflow = createTaskWorkflow(
+    options,
+    taskRunStore,
+    teamFileStore,
+    jobStore,
+    applicationLogger,
+  );
+  applicationLogger.info("local_runtime.workspace_activated", {
+    teamId: options.workspace.teamId,
+  });
   return {
     requestHandler: new LocalRuntimeRequestRouter([
       new LocalTaskRunHttpHandler(taskWorkflow, options.workspace.userId),
@@ -57,6 +75,7 @@ export function createLocalRuntimeComposition(
         options.workspace.userId,
       ),
       new LocalTaskActivityHttpHandler(options.database, options.workspace.teamId),
+      new LocalApplicationLogHttpHandler(applicationLogStore, options.workspace.teamId),
       new LocalKnowledgeNoteHttpHandler(options.database, options.workspace.teamId),
       new LocalTaskTriggerHttpHandler(options.database, options.workspace.teamId, options.workspace.userId),
       new LocalFileResourceHttpHandler(options.database, teamFileStore, options.workspace.teamId, options.workspace.userId),
@@ -64,7 +83,14 @@ export function createLocalRuntimeComposition(
     taskRunWorker: new PollingTaskRunWorker(
       jobStore,
       (input) => taskWorkflow.dispatch(input),
-      {canProcess: options.isLicenseActive},
+      {
+        canProcess: options.isLicenseActive,
+        onFailure: (job, error) => applicationLogger.exception(
+          "task_run_worker.job_failed",
+          error,
+          {jobId: job.jobId, runId: job.runId, teamId: job.teamId},
+        ),
+      },
     ),
     taskTriggerWorker: new PollingTaskTriggerWorker(
       () => runDueTaskTriggers(new Date(), {
@@ -73,8 +99,16 @@ export function createLocalRuntimeComposition(
         taskRunStore,
         taskRunDispatcher: new SQLiteTaskRunDispatcher(jobStore),
       }),
-      {canProcess: options.isLicenseActive},
+      {
+        canProcess: options.isLicenseActive,
+        onFailure: (error) => applicationLogger.exception(
+          "task_trigger_worker.failed",
+          error,
+          {teamId: options.workspace.teamId},
+        ),
+      },
     ),
+    applicationLogger,
   };
 }
 
@@ -83,6 +117,7 @@ function createTaskWorkflow(
   taskRunStore: SQLiteTaskRunStore,
   teamFileStore: LocalTeamFileStore,
   jobStore: SQLiteTaskRunJobStore,
+  logger: LocalApplicationLogger,
 ) {
   return createGenkitTaskWorkflow({
     taskStore: new SQLiteTaskStore(options.database),
@@ -90,6 +125,7 @@ function createTaskWorkflow(
     taskRunDispatcher: new SQLiteTaskRunDispatcher(jobStore),
     teamContextStore: new SQLiteTeamContextStore(options.database),
     teamFileStore,
+    logger,
     workerStores: {
       taskStore: new SQLiteTaskStore(options.database),
       taskRunStore,

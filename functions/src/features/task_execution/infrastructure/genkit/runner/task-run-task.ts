@@ -1,6 +1,9 @@
 import {type GenkitBeta} from "genkit/beta";
 import {z} from "zod";
-import {errorDetails, logError, logInfo} from "./structured-logger.js";
+import {
+  errorDetails,
+  type ApplicationLogger,
+} from "../../../../../shared/logging/application-logger.js";
 import {
   continueApprovedTaskRun,
   executeQueuedTaskRun,
@@ -20,13 +23,14 @@ export async function handleTaskRunDispatch(
   ai: GenkitBeta,
   payload: TaskRunDispatchPayload,
   stores: TaskRunWorkerStores,
+  logger: ApplicationLogger,
 ) {
-  logInfo("task_run_task.started", payload);
+  logger.info("task_run_task.started", payload);
   if (payload.mode === "resume") {
-    await resumeTaskRun(ai, payload.teamId, payload.runId, stores);
+    await resumeTaskRun(ai, payload.teamId, payload.runId, stores, logger);
     return;
   }
-  await startTaskRun(ai, payload.teamId, payload.runId, stores);
+  await startTaskRun(ai, payload.teamId, payload.runId, stores, logger);
 }
 
 async function startTaskRun(
@@ -34,12 +38,13 @@ async function startTaskRun(
   teamId: string,
   runId: string,
   stores: TaskRunWorkerStores,
+  logger: ApplicationLogger,
 ) {
   const run = await stores.taskRunStore.loadTaskRun(teamId, runId);
   try {
-    await executeQueuedTaskRun(ai, {teamId, run, stores});
+    await executeQueuedTaskRun(ai, {teamId, run, stores}, logger);
   } catch (error) {
-    logRunError("task_run_task.failed", teamId, run.runId, run.taskId, error);
+    logRunError(logger, "task_run_task.failed", teamId, run.runId, run.taskId, error);
     await stores.taskRunStore.markRunFailed(teamId, run, error);
     throw error;
   }
@@ -50,24 +55,26 @@ async function resumeTaskRun(
   teamId: string,
   runId: string,
   stores: TaskRunWorkerStores,
+  logger: ApplicationLogger,
 ) {
   const resumableRun = await stores.taskRunStore.loadResumableRun(teamId, runId);
   try {
-    await continueApprovedTaskRun(ai, {...resumableRun, teamId, stores});
+    await continueApprovedTaskRun(ai, {...resumableRun, teamId, stores}, logger);
   } catch (error) {
     const run = resumableRun.run;
-    logRunError("task_run_task.failed", teamId, run.runId, run.taskId, error);
+    logRunError(logger, "task_run_task.failed", teamId, run.runId, run.taskId, error);
     await stores.taskRunStore.markRunFailed(teamId, run, error);
     throw error;
   }
 }
 
 function logRunError(
+  logger: ApplicationLogger,
   event: string,
   teamId: string,
   runId: string,
   taskId: string,
   error: unknown,
 ) {
-  logError(event, {teamId, taskId, runId, error: errorDetails(error)});
+  logger.error(event, {teamId, taskId, runId, error: errorDetails(error)});
 }

@@ -31,11 +31,7 @@ import {
   validateGraph,
 } from "../../../domain/services/task-graph-utils.js";
 import {parentOutputsFor} from "../../../domain/executors/node-executor.js";
-import {
-  formatTaskFinished,
-  formatTaskStarted,
-  logReadableInfo,
-} from "./structured-logger.js";
+import {formatTaskFinished, formatTaskStarted} from "./structured-logger.js";
 import {
   logNodeHeaderLine,
   logSkippedBranches,
@@ -52,7 +48,7 @@ export async function executeTaskGraph(
   input: TaskGraphInput,
   runtime: TaskGraphRuntime,
 ): Promise<TaskGraphOutput> {
-  logReadableInfo(formatTaskStarted(input.taskDefinition, input.context));
+  runtime.logger.readableInfo(formatTaskStarted(input.taskDefinition, input.context));
   validateGraph(input.taskDefinition);
   const runState = await runNodes(ai, input, runtime);
   if (runState.status === "waitingForApproval") {
@@ -60,7 +56,7 @@ export async function executeTaskGraph(
   }
   const results = runState.nodeResults;
   const output = completedOutput(input, results);
-  logReadableInfo(formatTaskFinished(
+  runtime.logger.readableInfo(formatTaskFinished(
     output.taskId,
     results.filter((result) => result.status === "executed").length,
     results.filter((result) => result.status === "skipped").length,
@@ -76,7 +72,7 @@ export async function resumeTaskGraph(
   responseOutputs: Record<string, NodeOutputValue>,
   runtime: TaskGraphRuntime,
 ): Promise<TaskGraphOutput> {
-  logReadableInfo(formatTaskStarted(input.taskDefinition, input.context));
+  runtime.logger.readableInfo(formatTaskStarted(input.taskDefinition, input.context));
   validateGraph(input.taskDefinition);
   const runState = await runNodes(
     ai,
@@ -127,7 +123,7 @@ async function runNodes(
       skippedNodeIds,
     );
     const startedAt = Date.now();
-    logNodeHeaderLine(node, input.taskDefinition, context, skipNode, results);
+    logNodeHeaderLine(runtime.logger, node, input.taskDefinition, context, skipNode, results);
     const result = await runNodeWithTrail(ai, {
       node,
       context,
@@ -138,11 +134,12 @@ async function runNodes(
       objectStore: runtime.objectStore,
       knowledgeBaseStore: runtime.knowledgeBaseStore,
       languageModelResolver: runtime.languageModelResolver,
+      logger: runtime.logger,
     });
     updateTaskVariables(variables, result);
     results.set(node.id, result);
     skipInactiveBranches(node, input.taskDefinition, result, skippedNodeIds);
-    logSkippedBranches(node, input.taskDefinition.id, result, skippedNodeIds);
+    logSkippedBranches(runtime.logger, node, input.taskDefinition.id, result, skippedNodeIds);
     if (result.status === "waitingForApproval") {
       return {
         status: "waitingForApproval",

@@ -13,7 +13,10 @@ import {type TaskRunDispatcher} from "../../domain/repositories/task-run-dispatc
 import {type TeamFileStore} from "../../../files/domain/repositories/team-file-store.js";
 import {type TeamContextStore} from "../../../teams/domain/repositories/team-context-store.js";
 import {responseOutputsForTaskRun} from "../../domain/usecases/task-run-response-outputs.js";
-import {logException, withExceptionLogging} from "../../../../shared/logging/logger.js";
+import {
+  type ApplicationLogger,
+  withExceptionLogging,
+} from "../../../../shared/logging/application-logger.js";
 import {handleTaskRunDispatch} from "./runner/task-run-task.js";
 import {type TaskRunWorkerStores} from "./runner/task-run-worker.js";
 import {aiProviderPlugins} from "./runner/ai-models.js";
@@ -25,6 +28,7 @@ export type GenkitTaskWorkflowDependencies = {
   teamContextStore: TeamContextStore;
   teamFileStore: TeamFileStore;
   workerStores: TaskRunWorkerStores;
+  logger: ApplicationLogger;
 };
 
 export function createGenkitTaskWorkflow(
@@ -43,7 +47,12 @@ export function createGenkitTaskWorkflowWithAi(
   return {
     start: (input, context) => startTaskWorkflow(input, context, dependencies),
     review: (input, context) => reviewTaskWorkflow(input, context, dependencies),
-    dispatch: (input) => handleTaskRunDispatch(ai, input, dependencies.workerStores),
+    dispatch: (input) => handleTaskRunDispatch(
+      ai,
+      input,
+      dependencies.workerStores,
+      dependencies.logger,
+    ),
   };
 }
 
@@ -69,7 +78,7 @@ async function startTaskWorkflow(
     });
     return {runId: run.runId, taskId: run.taskId, status: "queued"};
   } catch (error) {
-    logException("run_task_definition_flow.failed", error, {
+    dependencies.logger.exception("run_task_definition_flow.failed", error, {
       taskId: input.taskId,
       title,
     });
@@ -82,7 +91,7 @@ async function reviewTaskWorkflow(
   context: TaskWorkflowContext,
   dependencies: GenkitTaskWorkflowDependencies,
 ): Promise<ReviewTaskWorkflowOutput> {
-  return withExceptionLogging("review_task_run.failed", async () => {
+  return withExceptionLogging(dependencies.logger, "review_task_run.failed", async () => {
     const teamId = await dependencies.teamContextStore.currentTeamIdForUid(context.uid);
     const reviewableRun = await dependencies.taskRunStore.loadReviewableRun(
       teamId,

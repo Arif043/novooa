@@ -78,6 +78,14 @@ SQLite ist der Default für strukturierte lokale Daten. Es braucht keinen Server
 ist transaktional und eignet sich für Aufgaben, Runs, Aktivitäten, Trigger,
 Teams, Kanäle, Wissensbasis-Metadaten und Modellkataloge.
 
+Anwendungsprotokolle liegen getrennt von Workflow-Aktivitäten in
+`application_logs`. Der lokale `ApplicationLogger` speichert strukturierte
+Info- und Fehlerereignisse dort und gibt sie zusätzlich als JSON nach Docker-
+Stdout aus. `GET /v1/application-logs` liefert die jüngsten Einträge an den
+nativ ausgeführten Flutter-Client; dieser zeigt sie im Tab **Aktivitäten →
+Protokoll**. Der gleiche Port wird in der Cloud durch den
+`FirebaseApplicationLogger` auf Firebase/Cloud Logging abgebildet.
+
 Die erste Migration liegt in
 [`local-runtime/migrations/001_initial.sql`](../local-runtime/migrations/001_initial.sql).
 Sie legt diese Tabellen an:
@@ -88,6 +96,7 @@ team_members
 tasks
 task_runs
 activities
+application_logs
 task_triggers
 communication_channels
 knowledge_notes

@@ -91,6 +91,7 @@ class AppRouter {
               ActivityPage(
                 initialRunId: state.uri.queryParameters['runId'],
                 notificationOpenId: state.uri.queryParameters['open'],
+                isLocal: isLocal,
               ),
             ),
           ),

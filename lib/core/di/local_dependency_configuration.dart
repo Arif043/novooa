@@ -13,6 +13,10 @@ import '../../features/activity/infrastructure/repositories/local_task_activity_
 import '../../features/activity/infrastructure/repositories/local_task_run_repository.dart';
 import '../../features/activity/infrastructure/repositories/unavailable_local_task_run_media_input_repository.dart';
 import '../../features/activity/presentation/cubits/activity_cubit.dart';
+import '../../features/application_logs/domain/repositories/application_log_repository.dart';
+import '../../features/application_logs/domain/usecases/watch_application_logs.dart';
+import '../../features/application_logs/infrastructure/repositories/local_application_log_repository.dart';
+import '../../features/application_logs/presentation/cubits/application_logs_cubit.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/infrastructure/repositories/local_workspace_auth_repository.dart';
 import '../../features/files/domain/usecases/watch_team_files.dart';
@@ -87,6 +91,9 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
     ..registerLazySingleton<TaskActivityRepository>(
       () => LocalTaskActivityRepository(locator<LocalRuntimeApiClient>()),
     )
+    ..registerLazySingleton<ApplicationLogRepository>(
+      () => LocalApplicationLogRepository(locator<LocalRuntimeApiClient>()),
+    )
     ..registerLazySingleton<LanguageModelRepository>(
       () => const LocalLanguageModelRepository(),
     )
@@ -100,6 +107,9 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
     ..registerLazySingleton(() => WatchTaskRuns(locator<TaskRunRepository>()))
     ..registerLazySingleton(
       () => WatchTaskActivities(locator<TaskActivityRepository>()),
+    )
+    ..registerLazySingleton(
+      () => WatchApplicationLogs(locator<ApplicationLogRepository>()),
     )
     ..registerLazySingleton(() => ReviewTaskRun(locator<TaskRunRepository>()))
     ..registerLazySingleton(
@@ -167,6 +177,9 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
         mediaInputPicker: locator<MediaInputPicker>(),
         uploadTaskRunMediaInput: locator<UploadTaskRunMediaInput>(),
       ),
+    )
+    ..registerFactory(
+      () => ApplicationLogsCubit(locator<WatchApplicationLogs>()),
     )
     ..registerLazySingleton<AppRouter>(
       AppRouter.local,

@@ -10,20 +10,24 @@ import {
   type GenkitLanguageModelResolver,
   type ResolvedGenkitLanguageModel,
 } from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
+import {FirebaseApplicationLogger} from "../../../../../shared/logging/firebase-application-logger.js";
 
 export type {PromptNodeInput, PromptNodeOutput, PromptNodeOutputType} from "./prompt-node-types.js";
 
 export function createGenkitPromptExecutor(
   ai: GenkitBeta,
   workspace?: NodeAttachmentWorkspace,
+  logger: ApplicationLogger = new FirebaseApplicationLogger(),
 ): PromptExecutor {
-  return {execute: (request) => executePromptNode(ai, request, workspace)};
+  return {execute: (request) => executePromptNode(ai, request, workspace, undefined, logger)};
 }
 
 export function createGenkitPromptNodeExecutor(
   ai: GenkitBeta,
   workspace?: NodeAttachmentWorkspace,
   languageModelResolver?: GenkitLanguageModelResolver,
+  logger: ApplicationLogger = new FirebaseApplicationLogger(),
 ): NodeExecutor {
   return {
     primitive: "prompt",
@@ -40,6 +44,7 @@ export function createGenkitPromptNodeExecutor(
         promptInput,
         workspace,
         languageModel,
+        logger,
       );
       const outputs = promptInput.outputType === "image"
         ? await persistedImageOutputsFor(output, input.node, runContext)
@@ -54,17 +59,18 @@ export function executePromptNode(
   input: PromptNodeInput,
   workspace?: NodeAttachmentWorkspace,
   languageModel?: ResolvedGenkitLanguageModel,
+  logger: ApplicationLogger = new FirebaseApplicationLogger(),
 ): Promise<PromptNodeOutput> {
   if (input.outputType === "image") {
-    return executeImagePrompt(ai, input, workspace, languageModel);
+    return executeImagePrompt(ai, input, workspace, languageModel, logger);
   }
   if (input.outputType === "decision") {
-    return executeDecisionPrompt(ai, input, workspace, languageModel);
+    return executeDecisionPrompt(ai, input, workspace, languageModel, logger);
   }
   if (input.outputType === "structured") {
-    return executeStructuredPrompt(ai, input, workspace, languageModel);
+    return executeStructuredPrompt(ai, input, workspace, languageModel, logger);
   }
-  return executeTextPrompt(ai, input, workspace, languageModel);
+  return executeTextPrompt(ai, input, workspace, languageModel, logger);
 }
 
 async function languageModelFor(

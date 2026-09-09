@@ -21,10 +21,8 @@ import {
   formatNodeFailed,
   formatNodeHeader,
   formatNodeTrail,
-  logError,
-  logReadableError,
-  logReadableInfo,
 } from "./structured-logger.js";
+import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 
 type NodeRunInput = {
   node: WorkflowNode;
@@ -36,6 +34,7 @@ type NodeRunInput = {
   objectStore: ObjectStore;
   knowledgeBaseStore: KnowledgeBaseStore;
   languageModelResolver?: GenkitLanguageModelResolver;
+  logger: ApplicationLogger;
 };
 
 export async function runNodeWithTrail(
@@ -46,7 +45,7 @@ export async function runNodeWithTrail(
     const result = input.skipNode
       ? skippedNode(input.node)
       : await executeNode(ai, input);
-    logNodeTrail(result, input.startedAt);
+    logNodeTrail(input.logger, result, input.startedAt);
     return result;
   } catch (error) {
     logNodeErrorTrail(input, error);
@@ -55,13 +54,14 @@ export async function runNodeWithTrail(
 }
 
 export function logNodeHeaderLine(
+  logger: ApplicationLogger,
   node: WorkflowNode,
   task: Task,
   context: string,
   skipNode: boolean,
   results: Map<string, NodeExecutionResult>,
 ): void {
-  logReadableInfo(formatNodeHeader({
+  logger.readableInfo(formatNodeHeader({
     taskId: task.id,
     node,
     context,
@@ -73,13 +73,14 @@ export function logNodeHeaderLine(
 }
 
 export function logSkippedBranches(
+  logger: ApplicationLogger,
   node: WorkflowNode,
   taskId: string,
   result: NodeExecutionResult,
   skippedNodeIds: Set<string>,
 ): void {
   if (result.selectedNodeId === undefined) return;
-  logReadableInfo([
+  logger.readableInfo([
     `[Verzweigung] ${node.title}`,
     `Aufgabe: ${taskId}`,
     `Gewählt: ${result.selectedBranchLabel ?? result.selectedNodeId ?? "-"}`,
@@ -101,6 +102,7 @@ async function executeNode(
     const executor = executorFor(
       input.node.primitive,
       ai,
+      input.logger,
       attachmentWorkspace,
       input.languageModelResolver,
     );
@@ -116,22 +118,23 @@ async function executeNode(
 }
 
 function logNodeTrail(
+  logger: ApplicationLogger,
   result: NodeExecutionResult,
   startedAt: number,
 ): void {
-  logReadableInfo(formatNodeTrail({
+  logger.readableInfo(formatNodeTrail({
     result,
     durationMs: Date.now() - startedAt,
   }));
 }
 
 function logNodeErrorTrail(input: NodeRunInput, error: unknown): void {
-  logReadableError(formatNodeFailed({
+  input.logger.readableError(formatNodeFailed({
     node: input.node,
     durationMs: Date.now() - input.startedAt,
     error,
   }));
-  logError("task_node.exception", {
+  input.logger.error("task_node.exception", {
     taskId: input.runContext.task.id,
     nodeId: input.node.id,
     primitive: input.node.primitive,

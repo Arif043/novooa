@@ -4,25 +4,28 @@ import {modelLogContext, textModel} from "../runner/ai-models.js";
 import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
 import {aiTurnMiddleware} from "../runner/node-attachment-genkit.js";
 import {runEmployeeAgentTurn} from "../runner/employee-agent.js";
-import {formatModelCallFinished, formatModelCallStarted, logReadableInfo} from "../runner/structured-logger.js";
+import {formatModelCallFinished, formatModelCallStarted} from "../runner/structured-logger.js";
 import {promptContentFor, validStructuredFields} from "./prompt-node-input.js";
 import {type PromptNodeInput, type PromptNodeOutput, type StructuredOutputField} from "./prompt-node-types.js";
 import {type ResolvedGenkitLanguageModel} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
+import {FirebaseApplicationLogger} from "../../../../../shared/logging/firebase-application-logger.js";
 
 export async function executeTextPrompt(
   ai: GenkitBeta,
   input: PromptNodeInput,
   workspace?: NodeAttachmentWorkspace,
   languageModel?: ResolvedGenkitLanguageModel,
+  logger: ApplicationLogger = new FirebaseApplicationLogger(),
 ): Promise<PromptNodeOutput> {
   const prompt = promptContentFor(input, workspace);
   const label = input.employee ? `Prompt / Text (Mitarbeiter: ${input.employee.name})` : "Prompt / Text";
   const startedAt = Date.now();
-  logReadableInfo(formatModelCallStarted({
+  logger.readableInfo(formatModelCallStarted({
     label, model: logContextFor(languageModel), prompt: prompt.text,
   }));
   const text = await textResponseFor(ai, input, prompt, workspace, languageModel);
-  logReadableInfo(formatModelCallFinished({
+  logger.readableInfo(formatModelCallFinished({
     label, durationMs: Date.now() - startedAt, text,
   }));
   return {answer: text, outputs: textOutputs(text)};
@@ -33,19 +36,20 @@ export async function executeDecisionPrompt(
   input: PromptNodeInput,
   workspace?: NodeAttachmentWorkspace,
   languageModel?: ResolvedGenkitLanguageModel,
+  logger: ApplicationLogger = new FirebaseApplicationLogger(),
 ): Promise<PromptNodeOutput> {
   if (input.choices.length === 0) throw new Error("Decision prompt requires at least one choice.");
   const prompt = promptContentFor(input, workspace);
   const schema = z.object({answer: z.enum(input.choices as [string, ...string[]])});
   const label = input.employee ? `Prompt / Entscheidung (Mitarbeiter: ${input.employee.name})` : "Prompt / Entscheidung";
   const startedAt = Date.now();
-  logReadableInfo(formatModelCallStarted({
+  logger.readableInfo(formatModelCallStarted({
     label, model: logContextFor(languageModel), prompt: prompt.text, outputSchema: "answer: enum",
   }));
   const response = await decisionResponseFor(
     ai, input, prompt, schema, workspace, languageModel,
   );
-  logReadableInfo(formatModelCallFinished({
+  logger.readableInfo(formatModelCallFinished({
     label, durationMs: Date.now() - startedAt, text: response.text, output: response.answer,
   }));
   if (response.answer === undefined) {
@@ -59,6 +63,7 @@ export async function executeStructuredPrompt(
   input: PromptNodeInput,
   workspace?: NodeAttachmentWorkspace,
   languageModel?: ResolvedGenkitLanguageModel,
+  logger: ApplicationLogger = new FirebaseApplicationLogger(),
 ): Promise<PromptNodeOutput> {
   const fields = validStructuredFields(input.structuredFields);
   if (fields.length === 0) throw new Error("Strukturierte Ausgabe benötigt mindestens ein Feld.");
@@ -66,14 +71,14 @@ export async function executeStructuredPrompt(
   const schema = structuredSchemaFor(fields);
   const label = input.employee ? `Prompt / Strukturierte Ausgabe (Mitarbeiter: ${input.employee.name})` : "Prompt / Strukturierte Ausgabe";
   const startedAt = Date.now();
-  logReadableInfo(formatModelCallStarted({
+  logger.readableInfo(formatModelCallStarted({
     label, model: logContextFor(languageModel), prompt: prompt.text,
     outputSchema: fields.map((field) => field.name).join(", "),
   }));
   const response = await structuredResponseFor(
     ai, input, prompt, schema, workspace, languageModel,
   );
-  logReadableInfo(formatModelCallFinished({
+  logger.readableInfo(formatModelCallFinished({
     label, durationMs: Date.now() - startedAt, text: response.text, output: response.output,
   }));
   if (response.output === undefined) {

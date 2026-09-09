@@ -6,20 +6,21 @@ import {
 } from "../../../domain/executors/send-channel-message-node-executor.js";
 import {
   errorDetails,
-  logError,
-  logInfo,
   nodeSummary,
   textSummary,
 } from "./structured-logger.js";
+import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 
-export const taskMessageLogger: TaskMessageObserver = {
-  started: logMessageStarted,
-  sent: logMessageSent,
-  failed: logMessageFailed,
-};
+export function taskMessageLogger(logger: ApplicationLogger): TaskMessageObserver {
+  return {
+    started: (event) => logMessageStarted(logger, event),
+    sent: (event) => logMessageSent(logger, event),
+    failed: (event) => logMessageFailed(logger, event),
+  };
+}
 
-function logMessageStarted(event: TaskMessageStarted): void {
-  logInfo("send_channel_node.started", {
+function logMessageStarted(logger: ApplicationLogger, event: TaskMessageStarted): void {
+  logger.info("send_channel_node.started", {
     teamId: event.teamId,
     ...nodeSummary(event.node),
     kind: event.kind,
@@ -28,8 +29,8 @@ function logMessageStarted(event: TaskMessageStarted): void {
   });
 }
 
-function logMessageSent(event: TaskMessageSent): void {
-  logInfo("send_channel_node.sent", {
+function logMessageSent(logger: ApplicationLogger, event: TaskMessageSent): void {
+  logger.info("send_channel_node.sent", {
     teamId: event.teamId,
     ...nodeSummary(event.node),
     kind: event.kind,
@@ -39,8 +40,8 @@ function logMessageSent(event: TaskMessageSent): void {
   });
 }
 
-function logMessageFailed(event: TaskMessageFailed): void {
-  logError("send_channel_node.failed", {
+function logMessageFailed(logger: ApplicationLogger, event: TaskMessageFailed): void {
+  logger.error("send_channel_node.failed", {
     teamId: event.teamId,
     kind: event.kind,
     error: errorDetails(event.error),

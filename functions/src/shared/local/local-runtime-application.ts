@@ -43,6 +43,7 @@ export class LocalRuntimeApplication implements LocalRuntimeRequestHandler {
     if (this.runtime === undefined) return;
     await this.runtime.taskTriggerWorker.stop();
     await this.runtime.taskRunWorker.stop();
+    await this.runtime.applicationLogger.flush();
     this.runtime = undefined;
   }
 }
