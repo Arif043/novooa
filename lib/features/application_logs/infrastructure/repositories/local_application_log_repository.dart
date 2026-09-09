@@ -29,6 +29,7 @@ class LocalApplicationLogRepository implements ApplicationLogRepository {
     return ApplicationLog(
       id: UniqueId(_string(data['id'])),
       level: _levelFrom(data['level']),
+      source: _sourceFrom(data['source']),
       event: _string(data['event']),
       message: _nullableString(data['message']),
       data: _dataFrom(data['data']),
@@ -40,6 +41,12 @@ class LocalApplicationLogRepository implements ApplicationLogRepository {
       ApplicationLogLevel.values.firstWhere(
         (level) => level.name == value,
         orElse: () => ApplicationLogLevel.info,
+      );
+
+  ApplicationLogSource _sourceFrom(Object? value) =>
+      ApplicationLogSource.values.firstWhere(
+        (source) => source.name == value,
+        orElse: () => ApplicationLogSource.runtime,
       );
 
   Map<String, Object?> _dataFrom(Object? value) => value is Map

@@ -102,6 +102,7 @@ class _LogDetails extends StatelessWidget {
     final style = Theme.of(context).textTheme.bodySmall;
     final details = <String>[
       if (log.message != null) log.event,
+      log.source == ApplicationLogSource.client ? 'Client' : 'Lokale Runtime',
       _timestamp(log.occurredAt),
       if (log.data.isNotEmpty)
         const JsonEncoder.withIndent('  ').convert(log.data),

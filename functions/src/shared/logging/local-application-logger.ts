@@ -77,6 +77,7 @@ export class LocalApplicationLogger implements ApplicationLogger {
       id: randomUUID(),
       teamId: this.teamId,
       level,
+      source: "runtime",
       event,
       message,
       data,

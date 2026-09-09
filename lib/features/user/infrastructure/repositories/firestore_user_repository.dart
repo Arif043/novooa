@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/entities/unique_id.dart';
-import 'package:syscat2/core/logging/syscat_log.dart';
+import 'package:syscat2/core/logging/logger.dart';
 
 import '../../domain/entities/user_email.dart';
 import '../../domain/entities/user_failure.dart';
@@ -32,9 +32,7 @@ class FirestoreUserRepository implements UserRepository {
       final reference = _users.doc(id.value);
       final current = await reference.get();
       final now = DateTime.now();
-      final createdAt = current.exists
-          ? _createdAtFrom(current.data())
-          : now;
+      final createdAt = current.exists ? _createdAtFrom(current.data()) : now;
       final model = UserProfileModel(
         id: id.value,
         email: email.value,
@@ -43,9 +41,7 @@ class FirestoreUserRepository implements UserRepository {
         updatedAt: now,
       );
       if (current.exists) {
-        await reference.update(
-          model.toDocument(includeCreatedAt: false, useServerTimestamps: true),
-        );
+        await reference.update(model.toDocument(includeCreatedAt: false, useServerTimestamps: true));
       } else {
         await reference.set(model.toDocument(useServerTimestamps: true));
       }
@@ -68,17 +64,8 @@ class FirestoreUserRepository implements UserRepository {
     }
   }
 
-  void _logProfileFailure(
-    String message,
-    Object error,
-    StackTrace stackTrace,
-  ) {
-    logSyscatException(
-      message: message,
-      error: error,
-      stackTrace: stackTrace,
-      name: 'user_profile',
-    );
+  void _logProfileFailure(String message, Object error, StackTrace stackTrace) {
+    logException(message: message, error: error, stackTrace: stackTrace, name: 'user_profile');
   }
 
   Result<UserProfile, UserFailure> _profileFrom(DocumentSnapshot snapshot) {

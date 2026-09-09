@@ -10,6 +10,7 @@ type ApplicationLogRow = SqlRow & {
   event: string;
   id: string;
   level: "info" | "error";
+  source: "client" | "runtime";
   message: string | null;
 };
 
@@ -18,7 +19,7 @@ export class SQLiteLocalApplicationLogStore implements LocalApplicationLogStore 
 
   async append(log: LocalApplicationLog): Promise<void> {
     await this.database.run(insertSql, [
-      log.id, log.teamId, log.level, log.event, log.message,
+      log.id, log.teamId, log.source, log.level, log.event, log.message,
       JSON.stringify(log.data), log.occurredAt,
     ]);
   }
@@ -30,16 +31,17 @@ export class SQLiteLocalApplicationLogStore implements LocalApplicationLogStore 
 }
 
 const insertSql = `INSERT INTO application_logs(
-  id, team_id, level, event, message, data_json, created_at
-) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+  id, team_id, source, level, event, message, data_json, created_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
-const recentSql = `SELECT id, level, event, message, data_json, created_at
+const recentSql = `SELECT id, source, level, event, message, data_json, created_at
   FROM application_logs WHERE team_id = ? ORDER BY created_at DESC, id DESC LIMIT ?`;
 
 function logFrom(row: ApplicationLogRow, teamId: string): LocalApplicationLog {
   return {
     id: row.id,
     teamId,
+    source: row.source,
     level: row.level,
     event: row.event,
     message: row.message,

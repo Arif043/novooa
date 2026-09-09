@@ -40,6 +40,7 @@ void main() {
 final _log = ApplicationLog(
   id: UniqueId('log-1'),
   level: ApplicationLogLevel.info,
+  source: ApplicationLogSource.runtime,
   event: 'task_run.started',
   data: {'runId': 'run-1'},
   occurredAt: DateTime(2026, 9, 9),

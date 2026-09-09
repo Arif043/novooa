@@ -10,7 +10,10 @@ import 'core/di/service_locator.dart';
 import 'core/config/runtime_profile.dart';
 import 'core/firebase/firebase_emulator_config.dart';
 import 'core/firebase/firestore_web_cache.dart';
-import 'core/logging/syscat_log.dart';
+import 'core/logging/logger.dart';
+import 'core/logging/developer_client_logger.dart';
+import 'core/logging/local_runtime_client_logger.dart';
+import 'core/network/local_runtime_api_client.dart';
 import 'core/network/network_status.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/syscat_theme.dart';
@@ -27,7 +30,7 @@ import 'firebase_options.dart';
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  logSyscatInfo(
+  logInfo(
     'Background-Nachricht: ${message.messageId ?? message.data}',
     name: 'fcm',
   );
@@ -49,9 +52,14 @@ Future<void> main() async {
       await const FirebaseEmulatorConfig().connect();
     }
   }
-  _configureErrorLogging();
   registerMediaInputPickerPlatform();
   configureDependencies(runtimeProfile: runtimeProfile);
+  configureClientLogger(
+    runtimeProfile.isLocal
+        ? LocalRuntimeClientLogger(serviceLocator<LocalRuntimeApiClient>())
+        : const DeveloperClientLogger(),
+  );
+  _configureErrorLogging();
   if (!runtimeProfile.isLocal && shouldNavigateFromPushClick()) {
     const FcmPushClickBridge().start(_openNotificationData);
   }
@@ -63,7 +71,7 @@ Future<void> main() async {
 
 void _configureErrorLogging() {
   FlutterError.onError = (details) {
-    logSyscatException(
+    logException(
       message: 'Unbehandelter Flutter-Fehler.',
       error: details.exception,
       stackTrace: details.stack,
@@ -71,7 +79,7 @@ void _configureErrorLogging() {
     );
   };
   PlatformDispatcher.instance.onError = (error, stackTrace) {
-    logSyscatException(
+    logException(
       message: 'Unbehandelter Dart-Fehler.',
       error: error,
       stackTrace: stackTrace,

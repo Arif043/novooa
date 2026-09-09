@@ -2,10 +2,13 @@ import '../../../../core/entities/unique_id.dart';
 
 enum ApplicationLogLevel { info, error }
 
+enum ApplicationLogSource { client, runtime }
+
 class ApplicationLog {
   const ApplicationLog({
     required this.id,
     required this.level,
+    required this.source,
     required this.event,
     required this.data,
     required this.occurredAt,
@@ -14,6 +17,7 @@ class ApplicationLog {
 
   final UniqueId id;
   final ApplicationLogLevel level;
+  final ApplicationLogSource source;
   final String event;
   final String? message;
   final Map<String, Object?> data;

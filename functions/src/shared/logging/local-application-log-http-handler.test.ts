@@ -13,6 +13,7 @@ test("lists recent local application logs through the loopback API", async () =>
   assert.deepEqual(response, {
     body: {items: [{
       id: "log-1",
+      source: "runtime",
       level: "error",
       event: "task_run.failed",
       message: null,
@@ -23,13 +24,47 @@ test("lists recent local application logs through the loopback API", async () =>
   });
 });
 
+test("accepts client logs and assigns trusted fields in the runtime", async () => {
+  const store = new StubLogStore();
+  const handler = new LocalApplicationLogHttpHandler(store, "team-1");
+
+  const response = await handler.handle({
+    body: {
+      level: "error",
+      event: "client.flutter",
+      message: "Unbehandelter Flutter-Fehler.",
+      data: {error: "StateError"},
+    },
+    method: "POST",
+    url: "/v1/application-logs",
+  });
+
+  assert.deepEqual(response, {body: {}, statusCode: 202});
+  assert.equal(store.appended.length, 1);
+  assert.deepEqual(store.appended[0], {
+    ...store.appended[0],
+    teamId: "team-1",
+    source: "client",
+    level: "error",
+    event: "client.flutter",
+    message: "Unbehandelter Flutter-Fehler.",
+    data: {error: "StateError"},
+  });
+  assert.match(store.appended[0]?.id ?? "", /^[a-f0-9-]{36}$/);
+});
+
 class StubLogStore implements LocalApplicationLogStore {
-  async append(): Promise<void> {}
+  readonly appended: LocalApplicationLog[] = [];
+
+  async append(log: LocalApplicationLog): Promise<void> {
+    this.appended.push(log);
+  }
 
   async recent(): Promise<LocalApplicationLog[]> {
     return [{
       id: "log-1",
       teamId: "team-1",
+      source: "runtime",
       level: "error",
       event: "task_run.failed",
       message: null,

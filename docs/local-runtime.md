@@ -81,9 +81,11 @@ Teams, Kanäle, Wissensbasis-Metadaten und Modellkataloge.
 Anwendungsprotokolle liegen getrennt von Workflow-Aktivitäten in
 `application_logs`. Der lokale `ApplicationLogger` speichert strukturierte
 Info- und Fehlerereignisse dort und gibt sie zusätzlich als JSON nach Docker-
-Stdout aus. `GET /v1/application-logs` liefert die jüngsten Einträge an den
-nativ ausgeführten Flutter-Client; dieser zeigt sie im Tab **Aktivitäten →
-Protokoll**. Der gleiche Port wird in der Cloud durch den
+Stdout aus. Der native Flutter-Client sendet seine eigenen Ereignisse per
+`POST /v1/application-logs` an die Loopback-Runtime; diese vergibt ID und
+Zeitstempel und markiert die Quelle als `client`. `GET /v1/application-logs`
+liefert die jüngsten Einträge an den Client; dieser zeigt sie im Tab
+**Aktivitäten → Protokoll**. Der gleiche Port wird in der Cloud durch den
 `FirebaseApplicationLogger` auf Firebase/Cloud Logging abgebildet.
 
 Die erste Migration liegt in

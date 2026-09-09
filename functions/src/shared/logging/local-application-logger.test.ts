@@ -21,6 +21,7 @@ test("persists structured local application logs", async () => {
   ]);
   assert.equal(store.items[1]?.data.error instanceof Object, true);
   assert.equal(store.items[2]?.message, "[Aufgabe] Startet");
+  assert.deepEqual(store.items.map((log) => log.source), ["runtime", "runtime", "runtime"]);
 });
 
 class MemoryApplicationLogStore implements LocalApplicationLogStore {

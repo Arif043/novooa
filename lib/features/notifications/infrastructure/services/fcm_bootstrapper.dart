@@ -1,5 +1,5 @@
 import 'dart:async';
-import '../../../../core/logging/syscat_log.dart';
+import '../../../../core/logging/logger.dart';
 import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../domain/entities/notification_device_token.dart';
@@ -8,12 +8,7 @@ import '../../domain/usecases/unregister_notification_device.dart';
 import '../datasources/firebase_messaging_token_provider.dart';
 
 class FcmBootstrapper {
-  FcmBootstrapper(
-    this._authRepository,
-    this._tokenProvider,
-    this._registerDevice,
-    this._unregisterDevice,
-  );
+  FcmBootstrapper(this._authRepository, this._tokenProvider, this._registerDevice, this._unregisterDevice);
 
   final AuthRepository _authRepository;
   final FcmTokenProvider _tokenProvider;
@@ -29,9 +24,7 @@ class FcmBootstrapper {
     _authSubscription = _authRepository.authStateChanges().listen(
       (user) => _registerFor(user, requestPermission: false),
     );
-    _tokenSubscription = _tokenProvider.tokenRefreshes.listen(
-      _saveRefreshedToken,
-    );
+    _tokenSubscription = _tokenProvider.tokenRefreshes.listen(_saveRefreshedToken);
   }
 
   Future<void> dispose() async {
@@ -43,38 +36,26 @@ class FcmBootstrapper {
     return _registerFor(_authRepository.currentUser(), requestPermission: true);
   }
 
-  Future<void> _registerFor(
-    AuthUser? user, {
-    required bool requestPermission,
-  }) async {
+  Future<void> _registerFor(AuthUser? user, {required bool requestPermission}) async {
     try {
       if (user == null) return _clearCurrentRegistration();
       await _unregisterPreviousUser(user);
       _currentUser = user;
-      final token = await _tokenProvider.currentToken(
-        requestPermission: requestPermission,
-      );
+      final token = await _tokenProvider.currentToken(requestPermission: requestPermission);
       if (token == null) {
-        logSyscatInfo('FCM-Token ist nicht verfügbar.', name: 'fcm');
+        logInfo('FCM-Token ist nicht verfügbar.', name: 'fcm');
         return;
       }
       await _saveToken(user, token);
     } catch (error, stackTrace) {
-      logSyscatException(
-        message: 'FCM-Registrierung fehlgeschlagen.',
-        error: error,
-        stackTrace: stackTrace,
-        name: 'fcm',
-      );
+      logException(message: 'FCM-Registrierung fehlgeschlagen.', error: error, stackTrace: stackTrace, name: 'fcm');
     }
   }
 
   Future<void> _unregisterPreviousUser(AuthUser user) async {
     final previousUser = _currentUser;
     final currentToken = _currentToken;
-    if (previousUser == null ||
-        previousUser.id == user.id ||
-        currentToken == null) {
+    if (previousUser == null || previousUser.id == user.id || currentToken == null) {
       return;
     }
     await _unregisterDevice(userId: previousUser.id.value, token: currentToken);
@@ -87,7 +68,7 @@ class FcmBootstrapper {
       if (user == null) return;
       await _saveToken(user, token);
     } catch (error, stackTrace) {
-      logSyscatException(
+      logException(
         message: 'FCM-Token-Refresh konnte nicht gespeichert werden.',
         error: error,
         stackTrace: stackTrace,
@@ -99,13 +80,9 @@ class FcmBootstrapper {
   Future<void> _saveToken(AuthUser user, String token) async {
     _currentToken = token;
     await _registerDevice(
-      NotificationDeviceToken(
-        userId: user.id.value,
-        token: token,
-        platform: _tokenProvider.platform,
-      ),
+      NotificationDeviceToken(userId: user.id.value, token: token, platform: _tokenProvider.platform),
     );
-    logSyscatInfo('FCM-Token registriert.', name: 'fcm');
+    logInfo('FCM-Token registriert.', name: 'fcm');
   }
 
   Future<void> _clearCurrentRegistration() async {
@@ -119,7 +96,7 @@ class FcmBootstrapper {
       }
       await _tokenProvider.deleteToken();
     } catch (error, stackTrace) {
-      logSyscatException(
+      logException(
         message: 'FCM-Token konnte nicht entfernt werden.',
         error: error,
         stackTrace: stackTrace,
