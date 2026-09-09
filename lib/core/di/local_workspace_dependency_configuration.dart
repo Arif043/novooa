@@ -1,7 +1,6 @@
 import 'package:get_it/get_it.dart';
 
 import '../../features/auth/domain/repositories/auth_repository.dart';
-import '../../features/auth/infrastructure/repositories/local_workspace_auth_repository.dart';
 import '../../features/files/domain/repositories/file_version_repository.dart';
 import '../../features/files/domain/repositories/team_file_repository.dart';
 import '../../features/files/domain/usecases/create_file_version.dart';
@@ -33,21 +32,14 @@ import '../../features/task_builder/domain/repositories/task_repository.dart';
 import '../../features/teams/domain/repositories/team_repository.dart';
 import '../../features/teams/domain/usecases/get_current_team_id.dart';
 import '../../features/teams/infrastructure/repositories/local_workspace_team_repository.dart';
-import '../config/runtime_profile.dart';
 import '../network/local_runtime_api_client.dart';
 
-void configureLocalWorkspaceDependencies(
-  GetIt locator,
-  RuntimeProfile profile,
-) {
+void configureLocalWorkspaceDependencies(GetIt locator) {
   locator
-    ..registerLazySingleton<AuthRepository>(
-      () => LocalWorkspaceAuthRepository(profile.localUserId),
-    )
     ..registerLazySingleton<TeamRepository>(
-      () => LocalWorkspaceTeamRepository(
-        teamId: profile.localTeamId,
-        userId: profile.localUserId,
+      () => const LocalWorkspaceTeamRepository(
+        teamId: 'local-team',
+        userId: 'local-user',
       ),
     )
     ..registerLazySingleton<TeamFileRepository>(

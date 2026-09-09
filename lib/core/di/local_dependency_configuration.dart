@@ -14,6 +14,7 @@ import '../../features/activity/infrastructure/repositories/local_task_run_repos
 import '../../features/activity/infrastructure/repositories/unavailable_local_task_run_media_input_repository.dart';
 import '../../features/activity/presentation/cubits/activity_cubit.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/infrastructure/repositories/local_workspace_auth_repository.dart';
 import '../../features/files/domain/usecases/watch_team_files.dart';
 import '../../features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import '../../features/language_models/domain/repositories/language_model_repository.dart';
@@ -30,9 +31,17 @@ import '../../features/task_builder/presentation/cubits/node_file_attachments_cu
 import '../../features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_language_models_cubit.dart';
 import '../../features/teams/domain/usecases/get_current_team_id.dart';
-import '../../features/user/domain/repositories/user_repository.dart';
-import '../../features/user/domain/usecases/get_current_user_profile.dart';
-import '../../features/user/infrastructure/repositories/local_workspace_user_repository.dart';
+import '../../features/licensing/domain/repositories/local_runtime_license_repository.dart';
+import '../../features/licensing/domain/usecases/activate_local_runtime_license.dart';
+import '../../features/licensing/domain/usecases/load_local_runtime_license_status.dart';
+import '../../features/licensing/infrastructure/repositories/http_local_runtime_license_repository.dart';
+import '../../features/licensing/presentation/cubits/local_runtime_license_cubit.dart';
+import '../../features/notifications/domain/repositories/app_notification_repository.dart';
+import '../../features/notifications/domain/usecases/accept_team_invitation.dart';
+import '../../features/notifications/domain/usecases/reject_team_invitation.dart';
+import '../../features/notifications/domain/usecases/watch_app_notifications.dart';
+import '../../features/notifications/infrastructure/repositories/local_app_notification_repository.dart';
+import '../../features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import '../config/runtime_profile.dart';
 import '../network/local_runtime_api_client.dart';
 import '../routing/app_router.dart';
@@ -42,10 +51,26 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
   locator.registerLazySingleton<LocalRuntimeApiClient>(
     () => HttpLocalRuntimeApiClient(baseUri: profile.localRuntimeUri),
   );
-  configureLocalWorkspaceDependencies(locator, profile);
   locator
-    ..registerLazySingleton<UserRepository>(
-      () => LocalWorkspaceUserRepository(userId: profile.localUserId),
+    ..registerLazySingleton<AuthRepository>(
+      () => const LocalWorkspaceAuthRepository('local-user'),
+    )
+    ..registerLazySingleton<AppNotificationRepository>(
+      LocalAppNotificationRepository.new,
+    )
+    ..registerLazySingleton(
+      () => WatchAppNotifications(locator<AppNotificationRepository>()),
+    )
+    ..registerLazySingleton(
+      () => AcceptTeamInvitation(locator<AppNotificationRepository>()),
+    )
+    ..registerLazySingleton(
+      () => RejectTeamInvitation(locator<AppNotificationRepository>()),
+    );
+  configureLocalWorkspaceDependencies(locator);
+  locator
+    ..registerLazySingleton<LocalRuntimeLicenseRepository>(
+      () => HttpLocalRuntimeLicenseRepository(locator<LocalRuntimeApiClient>()),
     )
     ..registerLazySingleton<TaskRunnerDatasource>(
       () => LocalHttpTaskRunnerDatasource(locator<LocalRuntimeApiClient>()),
@@ -81,10 +106,27 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
       () => WatchLanguageModels(locator<LanguageModelRepository>()),
     )
     ..registerLazySingleton(
-      () => GetCurrentUserProfile(
-        authRepository: locator<AuthRepository>(),
-        userRepository: locator<UserRepository>(),
+      () => LoadLocalRuntimeLicenseStatus(
+        locator<LocalRuntimeLicenseRepository>(),
       ),
+    )
+    ..registerLazySingleton(
+      () =>
+          ActivateLocalRuntimeLicense(locator<LocalRuntimeLicenseRepository>()),
+    )
+    ..registerLazySingleton(
+      () => LocalRuntimeLicenseCubit(
+        loadStatus: locator<LoadLocalRuntimeLicenseStatus>(),
+        activateLicense: locator<ActivateLocalRuntimeLicense>(),
+      )..load(),
+      dispose: (cubit) => cubit.close(),
+    )
+    ..registerFactory(
+      () => AppNotificationsCubit(
+        locator<WatchAppNotifications>(),
+        locator<AcceptTeamInvitation>(),
+        locator<RejectTeamInvitation>(),
+      )..load(),
     )
     ..registerLazySingleton(
       () => UploadTaskRunMediaInput(locator<TaskRunMediaInputRepository>()),
@@ -127,7 +169,7 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
       ),
     )
     ..registerLazySingleton<AppRouter>(
-      () => AppRouter.local(),
+      AppRouter.local,
       dispose: (router) => router.dispose(),
     );
 }

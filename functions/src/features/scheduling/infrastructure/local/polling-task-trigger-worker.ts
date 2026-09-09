@@ -1,7 +1,11 @@
-export type PollingTaskTriggerWorkerOptions = {pollIntervalMs?: number};
+export type PollingTaskTriggerWorkerOptions = {
+  pollIntervalMs?: number;
+  canProcess?: () => boolean;
+};
 
 export class PollingTaskTriggerWorker {
   private readonly pollIntervalMs: number;
+  private readonly canProcess: () => boolean;
   private processing: Promise<void> | undefined;
   private timer: NodeJS.Timeout | undefined;
 
@@ -10,6 +14,7 @@ export class PollingTaskTriggerWorker {
     options: PollingTaskTriggerWorkerOptions = {},
   ) {
     this.pollIntervalMs = options.pollIntervalMs ?? 30_000;
+    this.canProcess = options.canProcess ?? (() => true);
   }
 
   start(): void {
@@ -33,6 +38,7 @@ export class PollingTaskTriggerWorker {
   }
 
   private requestProcessing(): void {
+    if (!this.canProcess()) return;
     void this.processOnce();
   }
 }

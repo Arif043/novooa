@@ -13,12 +13,14 @@ class RootSideMenu extends StatelessWidget {
     required this.tabs,
     required this.selectedIndex,
     required this.onSelected,
+    this.showCurrentUserProfile = true,
     this.showSessionActions = true,
   });
 
   final List<RootTab> tabs;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
+  final bool showCurrentUserProfile;
   final bool showSessionActions;
 
   @override
@@ -38,6 +40,7 @@ class RootSideMenu extends StatelessWidget {
             tabs: tabs,
             selectedIndex: selectedIndex,
             onSelected: onSelected,
+            showCurrentUserProfile: showCurrentUserProfile,
             showSessionActions: showSessionActions,
           ),
         ),
@@ -69,12 +72,14 @@ class _SideMenuContent extends StatelessWidget {
     required this.tabs,
     required this.selectedIndex,
     required this.onSelected,
+    required this.showCurrentUserProfile,
     required this.showSessionActions,
   });
 
   final List<RootTab> tabs;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
+  final bool showCurrentUserProfile;
   final bool showSessionActions;
 
   @override
@@ -82,7 +87,7 @@ class _SideMenuContent extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return ListView(
       children: [
-        const SideMenuHeader(),
+        SideMenuHeader(showCurrentUserProfile: showCurrentUserProfile),
         const SizedBox(height: AppSpacing.md),
         SideMenuTabList(
           tabs: tabs,

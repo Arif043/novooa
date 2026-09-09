@@ -20,6 +20,7 @@ import 'features/notifications/infrastructure/datasources/fcm_push_click_bridge.
 import 'features/notifications/infrastructure/datasources/push_click_navigation_policy.dart';
 import 'features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import 'features/notifications/presentation/widgets/fcm_foreground_notification_listener.dart';
+import 'features/licensing/presentation/cubits/local_runtime_license_cubit.dart';
 import 'features/activity/infrastructure/datasources/media_input_picker_platform_registration.dart';
 import 'firebase_options.dart';
 
@@ -35,27 +36,28 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final runtimeProfile = RuntimeProfile.fromEnvironment();
-  if (runtimeProfile.isLocal) {
-    _configureErrorLogging();
-    registerMediaInputPickerPlatform();
-    configureDependencies(runtimeProfile: runtimeProfile);
-    runApp(MyApp(runtimeProfile: runtimeProfile));
-    return;
+  if (runtimeProfile.isCloud) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    await FirebaseAppCheck.instance.activate(
+      providerWeb: _webAppCheckProvider(),
+    );
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    configureFirestoreWebCache(FirebaseFirestore.instance);
+    if (FirebaseEmulatorConfig.enabled) {
+      await const FirebaseEmulatorConfig().connect();
+    }
   }
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await FirebaseAppCheck.instance.activate(providerWeb: _webAppCheckProvider());
   _configureErrorLogging();
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-  configureFirestoreWebCache(FirebaseFirestore.instance);
-  if (FirebaseEmulatorConfig.enabled) {
-    await const FirebaseEmulatorConfig().connect();
-  }
   registerMediaInputPickerPlatform();
   configureDependencies(runtimeProfile: runtimeProfile);
-  if (shouldNavigateFromPushClick()) {
+  if (!runtimeProfile.isLocal && shouldNavigateFromPushClick()) {
     const FcmPushClickBridge().start(_openNotificationData);
   }
-  unawaited(serviceLocator<FcmBootstrapper>().start());
+  if (runtimeProfile.isCloud) {
+    unawaited(serviceLocator<FcmBootstrapper>().start());
+  }
   runApp(MyApp(runtimeProfile: runtimeProfile));
 }
 
@@ -109,24 +111,30 @@ class _MyAppState extends State<MyApp> {
       routerConfig: serviceLocator<AppRouter>().router,
       builder: _wrapApplication,
     );
-    if (widget.runtimeProfile.isLocal) return app;
-    return BlocProvider.value(
-      value: serviceLocator<AuthSessionCubit>(),
+    return MultiBlocProvider(
+      providers: [
+        if (widget.runtimeProfile.isCloud)
+          BlocProvider.value(value: serviceLocator<AuthSessionCubit>()),
+        if (widget.runtimeProfile.isLocal)
+          BlocProvider.value(value: serviceLocator<LocalRuntimeLicenseCubit>()),
+      ],
       child: app,
     );
   }
 
   Widget _wrapApplication(BuildContext context, Widget? child) {
     final content = child ?? const SizedBox.shrink();
-    if (widget.runtimeProfile.isLocal) return content;
+    final app = widget.runtimeProfile.isCloud
+        ? FcmForegroundNotificationListener(
+            onNotificationOpened: _openNotificationFromPushClick,
+            onForegroundNotificationAction: _openNotification,
+            child: content,
+          )
+        : content;
     return OfflineStatusSnackbar(
       isOnline: _networkStatus.watch(),
       scaffoldMessengerKey: _scaffoldMessengerKey,
-      child: FcmForegroundNotificationListener(
-        onNotificationOpened: _openNotificationFromPushClick,
-        onForegroundNotificationAction: _openNotification,
-        child: content,
-      ),
+      child: app,
     );
   }
 }

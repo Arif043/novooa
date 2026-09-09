@@ -26,11 +26,15 @@ auf macOS und Windows eine explizite Voraussetzung; auf Linux wird eine
 kompatible Docker Engine benötigt. novooa bündelt Docker nicht und startet
 keine Container Engine selbst.
 
-Die Flutter-Desktop-App ist der lokale Client und verbindet sich nur mit dem
-lokalen Runtime-Endpunkt. Sie verwaltet keine SQLite-Dateien oder Docker-Volumes
-direkt. Das automatische Prüfen, Starten und Überwachen des versionierten
-Compose-Stacks gehört zur auslieferbaren Desktop-App und ist noch nicht
-implementiert.
+Die Flutter-Desktop-App verwendet für Fach- und Nutzdaten ausschließlich den
+lokalen Runtime-Endpunkt. Sie benötigt weder ein Firebase-Konto noch eine
+Internetverbindung im laufenden Betrieb. Für die einmalige Aktivierung benötigt
+die Runtime eine HTTPS-Verbindung zum novooa-Lizenz-Gateway.
+Benachrichtigungen und externe Trigger werden später über einen novooa-Relay
+vermittelt, nicht über den Client. Die App verwaltet weder SQLite-Dateien noch
+Docker-Volumes direkt. Das automatische
+Prüfen, Starten und Überwachen des versionierten Compose-Stacks gehört zur
+auslieferbaren Desktop-App und ist noch nicht implementiert.
 
 ```text
 Flutter-Desktop-App
@@ -61,11 +65,12 @@ Migrationen aus und meldet ihren Health-Status. Für Runtime und ML-Dienst gilt
 `restart: unless-stopped`, damit Zeitpläne und gepufferte Relay-Ereignisse auch
 ohne geöffnete Desktop-App verarbeitet werden.
 
-Lokale Secrets bleiben außerhalb des Daten-Volumes. Die Desktop-App löst sie
-über den lokalen Secret Store auf und stellt der Runtime nur die benötigten
-Werte über einen schreibgeschützten, installationsspezifischen Mount bereit.
-Die Runtime darf ausgehend den novooa-Relay und konfigurierte Modellprovider
-erreichen; der ML-Dienst erhält keinen direkten Internetzugang.
+Der private Signaturschlüssel bleibt außerhalb des Daten-Volumes. Die Runtime
+speichert unter `credentials/license-state.json` nur die bereits verifizierte,
+signierte Lizenz mit restriktiven Dateirechten. Sie enthält weder einen privaten
+Signaturschlüssel noch Firebase-Credentials. Die Runtime darf ausgehend den
+novooa-Relay und konfigurierte Modellprovider erreichen; der ML-Dienst erhält
+keinen direkten Internetzugang.
 
 ## Lokale Datenhaltung
 
@@ -122,13 +127,55 @@ erweiterbare Registry für Dekodierung, Skalierung, Layout und Normalisierung.
 Weitere Quelltypen erhalten eigene Strategien; weder die Pipeline noch der
 Modell-Baustein sind an Firebase Storage oder Bilder gekoppelt.
 
-## Lokale Identität und Teams
+## Lizenz und lokale Identität
 
-Firebase Auth ist für eine rein lokale Runtime nicht erforderlich. Beim ersten
-Start wird ein lokaler Nutzer und ein lokales Team erzeugt. Das Team-Feature
-bleibt erhalten, wird lokal aber über `teams` und `team_members` abgebildet.
-Ein späterer Cloud-Login kann zusätzlich für Sync, Migration oder Relay-Zugriff
-verwendet werden.
+Die lokale Runtime ist ohne gültigen Lizenzschlüssel nicht nutzbar. Beim Kauf
+stellt novooa einen zwölfstelligen Aktivierungstoken aus dem Alphabet
+`A-H`, `J-N`, `P-Z` und `2-9` aus. Der Kunde gibt diesen Token in der nativen
+Aktivierungsseite ein. Der Client sendet ihn ausschließlich über Loopback an
+`POST /v1/license/activate`; die Runtime löst ihn einmalig per HTTPS am
+novooa-Lizenz-Gateway ein.
+
+Firestore speichert nur den SHA-256-Hash des Tokens sowie Lizenz-ID,
+Arbeitsbereich-ID, Status und optionales Ablaufdatum. Das Gateway liefert eine
+Ed25519-signierte Lizenz; die Runtime prüft deren Signatur mit ihrem
+öffentlichen Schlüssel und speichert nur die signierte Lizenz lokal. Alle
+fachlichen Loopback-Endpunkte geben ohne gültige Lizenz `423` zurück. Die
+Task- und Trigger-Worker prüfen denselben Zustand vor jedem Poll und führen bei
+abgelaufener Lizenz keine Jobs aus. Eine unbefristete Lizenz benötigt nach der
+Aktivierung keine Online-Verbindung und kann auf mehreren Installationen
+verwendet werden; die vertragliche Nutzung wird durch das Lizenzmodell geregelt,
+nicht durch eine technische Gerätebindung.
+
+Der Produktiv-Container benötigt diese Variablen:
+
+```text
+LOCAL_RUNTIME_LICENSE_PUBLIC_KEY=<Ed25519-Public-Key im PEM-Format>
+LOCAL_RUNTIME_LICENSE_GATEWAY_URL=https://<region>-<projekt>.cloudfunctions.net/issueLocalRuntimeLicense
+```
+
+Der zugehörige private Ed25519-Schlüssel ist als Firebase-Secret
+`LOCAL_RUNTIME_LICENSE_SIGNING_KEY` ausschließlich im Lizenz-Gateway
+verfügbar. Er gehört weder in ein Image, Compose-File noch in die Desktop-App.
+Das Checkout-Compose setzt absichtlich `NOVOOA_LOCAL_DEVELOPMENT=true`; diese
+Entwicklungsausnahme erzeugt nur den lokalen Beispielarbeitsbereich und darf
+nicht in ein ausgeliefertes Compose übernommen werden.
+
+Der geschützte Vertriebsprozess erstellt einen Token und dessen gehashten
+Firestore-Eintrag mit
+`npm --prefix functions run licenses:issue-local -- --license-id <id>`
+aus. Die Ausgabe ist der zwölfstellige Kundentoken. Der Prozess benötigt
+Firebase-Admin-Zugang, aber keinen Signaturschlüssel.
+
+Der lokale SQLite-Arbeitsbereich wird deterministisch aus der signierten
+Arbeitsbereich-ID erzeugt. Die lokale Desktop-App verwendet für UI-seitige
+Metadaten einen nicht sicherheitsrelevanten lokalen Benutzer; die Runtime bleibt
+für die tatsächliche Arbeitsbereichsgrenze maßgeblich.
+
+Für die signierte macOS-Auslieferung muss der Runner zusätzlich die Capability
+**Keychain Sharing** erhalten. Sie setzt ein Apple-Entwicklungs- oder
+Distributionszertifikat voraus und bleibt daher bewusst außerhalb des
+unsignierten lokalen Debug-Bundles.
 
 ## Twilio und externe Trigger
 
@@ -199,9 +246,11 @@ dessen Infrastructure-Bereich.
 - `docker-compose.local.yaml` startet `runtime` und `novooa-ml`. Nur
   `runtime` bindet `127.0.0.1:${LOCAL_RUNTIME_PORT:-8090}`; `novooa-ml` hat
   keinen Host-Port und hängt ausschließlich in `novooa-private`.
-- Beim Start legt die Runtime idempotent `local-user` und `local-team` an.
-  `POST /v1/task-runs` legt einen Run für diesen lokalen Arbeitsbereich an;
-  `POST /v1/task-runs/review` setzt Freigaben und Eingaben fort.
+- Beim Start stellt die Runtime ohne Lizenz nur `/healthz`, `GET /v1/license`
+  und `POST /v1/license/activate` bereit. Nach erfolgreicher Aktivierung legt
+  sie den durch die signierte Lizenz bestimmten Teamarbeitsbereich idempotent
+  an. Erst dann sind Ausführung, Review, Dateien, Wissensbasis und Zeitpläne
+  erreichbar.
 - Der native Client verwaltet Aufgaben über `GET`, `PUT` und `DELETE
   /v1/tasks`, Runs und Aktivitäten über `GET /v1/task-runs` und
   `GET /v1/activities`, Wissensnotizen über `/v1/knowledge-notes`, Zeitpläne
@@ -237,7 +286,7 @@ Modellartefakte.
 
 1. Docker-Engine- und Stack-Status in der Desktop-App anzeigen sowie den Stack
    kontrolliert starten und stoppen.
-2. Geräteauthentifizierung für lokale HTTP-Endpunkte und Relay-Events ergänzen;
-   ausgehende Nachrichten bleiben bis dahin bewusst deaktiviert.
-3. Secret-Mount, Workspace-Geräteidentität, SQLite-Backups und versionierte
-   Images für die auslieferbare Desktop-App umsetzen.
+2. Das Lizenz-Gateway mit Firebase-Secret und Produktions-Compose ausrollen.
+3. Freigabe-Ereignisse über den Cloud-Gateway in Firestore/FCM spiegeln.
+4. Secret-Mount, SQLite-Backups und versionierte Images für die auslieferbare
+   Desktop-App umsetzen.

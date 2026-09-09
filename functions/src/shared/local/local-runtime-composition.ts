@@ -36,6 +36,7 @@ export type LocalRuntimeCompositionOptions = {
   database: SqliteLocalSqlDatabase;
   runtimeRoot: string;
   workspace: LocalRuntimeWorkspace;
+  isLicenseActive?: () => boolean;
 };
 
 export function createLocalRuntimeComposition(
@@ -60,13 +61,20 @@ export function createLocalRuntimeComposition(
       new LocalTaskTriggerHttpHandler(options.database, options.workspace.teamId, options.workspace.userId),
       new LocalFileResourceHttpHandler(options.database, teamFileStore, options.workspace.teamId, options.workspace.userId),
     ]),
-    taskRunWorker: new PollingTaskRunWorker(jobStore, (input) => taskWorkflow.dispatch(input)),
-    taskTriggerWorker: new PollingTaskTriggerWorker(() => runDueTaskTriggers(new Date(), {
-      triggerStore: new SQLiteTaskTriggerStore(options.database),
-      taskStore,
-      taskRunStore,
-      taskRunDispatcher: new SQLiteTaskRunDispatcher(jobStore),
-    })),
+    taskRunWorker: new PollingTaskRunWorker(
+      jobStore,
+      (input) => taskWorkflow.dispatch(input),
+      {canProcess: options.isLicenseActive},
+    ),
+    taskTriggerWorker: new PollingTaskTriggerWorker(
+      () => runDueTaskTriggers(new Date(), {
+        triggerStore: new SQLiteTaskTriggerStore(options.database),
+        taskStore,
+        taskRunStore,
+        taskRunDispatcher: new SQLiteTaskRunDispatcher(jobStore),
+      }),
+      {canProcess: options.isLicenseActive},
+    ),
   };
 }
 

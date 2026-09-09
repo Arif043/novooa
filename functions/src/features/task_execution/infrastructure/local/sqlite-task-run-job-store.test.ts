@@ -71,6 +71,24 @@ test("worker completes a queued task run", async () => {
   });
 });
 
+test("worker leaves queued runs untouched without an active license", async () => {
+  await withJobStore(async ({jobStore, database}) => {
+    const dispatcher = new SQLiteTaskRunDispatcher(jobStore);
+    await dispatcher.dispatchTaskRun(dispatch("start"));
+    const worker = new PollingTaskRunWorker(
+      jobStore,
+      async () => assert.fail("Die Ausführung darf nicht gestartet werden."),
+      {canProcess: () => false},
+    );
+
+    await worker.processOne();
+
+    assert.deepEqual(await database.get<{status: string}>(
+      "SELECT status FROM task_run_jobs",
+    ), {status: "queued"});
+  });
+});
+
 function dispatch(mode: "start" | "resume") {
   return {teamId: "team-1", runId: "run-1", mode};
 }

@@ -1,14 +1,17 @@
 import {type Server} from "node:http";
 import {join, resolve} from "node:path";
-import {createLocalRuntimeComposition} from "./local-runtime-composition.js";
+import {
+  DevelopmentLocalRuntimeLicenseService,
+  GatewayLocalRuntimeLicenseService,
+  type LocalRuntimeLicenseService,
+} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
+import {FileLocalRuntimeLicenseStore} from "../../features/licensing/infrastructure/local/file-local-runtime-license-store.js";
+import {HttpLocalRuntimeLicenseGatewayClient} from "../../features/licensing/infrastructure/local/local-runtime-license-gateway-client.js";
+import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {openLocalRuntimeDatabase} from "./local-runtime-database.js";
 import {createLocalRuntimeHttpServer} from "./local-runtime-http-server.js";
-import {
-  ensureLocalRuntimeWorkspace,
-  type LocalRuntimeWorkspace,
-} from "./local-runtime-workspace.js";
+import {LocalRuntimeLicenseHttpHandler} from "./local-runtime-license-http-handler.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
-import {type PollingTaskRunWorker} from "../../features/task_execution/infrastructure/local/polling-task-run-worker.js";
 
 void startLocalRuntime().catch(reportStartupFailure);
 
@@ -19,15 +22,20 @@ async function startLocalRuntime(): Promise<void> {
     migrationsDirectory: migrationsDirectory(),
   });
   try {
-    const workspace = workspaceFromEnvironment();
-    await ensureLocalRuntimeWorkspace(database, workspace);
-    const runtime = createLocalRuntimeComposition({database, runtimeRoot, workspace});
-    const server = createLocalRuntimeHttpServer(runtime.requestHandler);
+    const licenses = licenseServiceFor(runtimeRoot);
+    const application = new LocalRuntimeApplication({
+      database,
+      runtimeRoot,
+      isLicenseActive: () => licenses.activeContext() !== null,
+    });
+    const restored = await licenses.restore();
+    if (restored !== null) await application.activate(restored);
+    const server = createLocalRuntimeHttpServer(
+      new LocalRuntimeLicenseHttpHandler(licenses, application),
+    );
     const port = configuredPort();
     await listen(server, port);
-    runtime.taskRunWorker.start();
-    runtime.taskTriggerWorker.start();
-    registerShutdown(server, database, runtime.taskRunWorker, runtime.taskTriggerWorker);
+    registerShutdown(server, database, application);
     console.info(JSON.stringify({event: "local_runtime.started", port}));
   } catch (error) {
     database.close();
@@ -52,12 +60,21 @@ function requiredEnvironment(name: string): string {
   throw new Error(`${name} fehlt.`);
 }
 
-function workspaceFromEnvironment(): LocalRuntimeWorkspace {
-  return {
-    userId: optionalEnvironment("LOCAL_RUNTIME_USER_ID") ?? "local-user",
-    teamId: optionalEnvironment("LOCAL_RUNTIME_TEAM_ID") ?? "local-team",
-    teamName: optionalEnvironment("LOCAL_RUNTIME_TEAM_NAME") ?? "Lokaler Arbeitsbereich",
-  };
+function licenseServiceFor(runtimeRoot: string): LocalRuntimeLicenseService {
+  if (process.env.NOVOOA_LOCAL_DEVELOPMENT === "true") {
+    return new DevelopmentLocalRuntimeLicenseService({
+      licenseId: "development-license",
+      workspaceId: optionalEnvironment("LOCAL_RUNTIME_TEAM_ID") ?? "local-team",
+      expiresAt: "2099-01-01T00:00:00.000Z",
+    });
+  }
+  return new GatewayLocalRuntimeLicenseService(
+    new FileLocalRuntimeLicenseStore(runtimeRoot),
+    new HttpLocalRuntimeLicenseGatewayClient(
+      requiredEnvironment("LOCAL_RUNTIME_LICENSE_GATEWAY_URL"),
+    ),
+    requiredEnvironment("LOCAL_RUNTIME_LICENSE_PUBLIC_KEY"),
+  );
 }
 
 function optionalEnvironment(name: string): string | undefined {
@@ -75,14 +92,13 @@ function listen(server: Server, port: number): Promise<void> {
 function registerShutdown(
   server: Server,
   database: SqliteLocalSqlDatabase,
-  taskRunWorker: StoppableWorker,
-  taskTriggerWorker: StoppableWorker,
+  application: LocalRuntimeApplication,
 ): void {
   let closing = false;
   const shutdown = () => {
     if (closing) return;
     closing = true;
-    server.close(() => void closeRuntime(database, taskRunWorker, taskTriggerWorker));
+    server.close(() => void closeRuntime(database, application));
   };
   process.once("SIGINT", shutdown);
   process.once("SIGTERM", shutdown);
@@ -90,19 +106,19 @@ function registerShutdown(
 
 async function closeRuntime(
   database: SqliteLocalSqlDatabase,
-  taskRunWorker: StoppableWorker,
-  taskTriggerWorker: StoppableWorker,
+  application: LocalRuntimeApplication,
 ): Promise<void> {
-  await taskTriggerWorker.stop();
-  await taskRunWorker.stop();
+  await application.stop();
   database.close();
   process.exit(0);
 }
 
-type StoppableWorker = Pick<PollingTaskRunWorker, "start" | "stop">;
-
 function reportStartupFailure(error: unknown): void {
-  const message = error instanceof Error ? error.message : String(error);
+  const message = errorMessage(error);
   console.error(JSON.stringify({event: "local_runtime.start_failed", message}));
   process.exitCode = 1;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

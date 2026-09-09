@@ -8,17 +8,10 @@ import '../../root_tab.dart';
 import '../theme/app_spacing.dart';
 import '../theme/syscat_theme.dart';
 
-class SideMenuHeader extends StatefulWidget {
-  const SideMenuHeader({super.key});
+class SideMenuHeader extends StatelessWidget {
+  const SideMenuHeader({super.key, this.showCurrentUserProfile = true});
 
-  @override
-  State<SideMenuHeader> createState() => _SideMenuHeaderState();
-}
-
-class _SideMenuHeaderState extends State<SideMenuHeader> {
-  /// Cached, damit der Drawer bei jedem Rebuild nicht erneut Firestore anpingt.
-  late final Future _profileFuture = serviceLocator<GetCurrentUserProfile>()
-      .call();
+  final bool showCurrentUserProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -33,20 +26,37 @@ class _SideMenuHeaderState extends State<SideMenuHeader> {
         children: [
           const _BrandMark(),
           const SizedBox(width: AppSpacing.md),
-          FutureBuilder(
-            future: _profileFuture,
-            builder: (context, snapshot) {
-              if (snapshot.data case Success(success: final user)) {
-                return Text(
-                  'Hey ${user.displayName}',
-                  style: Theme.of(context).textTheme.titleLarge,
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
+          if (showCurrentUserProfile) const _CurrentUserGreeting(),
         ],
       ),
+    );
+  }
+}
+
+class _CurrentUserGreeting extends StatefulWidget {
+  const _CurrentUserGreeting();
+
+  @override
+  State<_CurrentUserGreeting> createState() => _CurrentUserGreetingState();
+}
+
+class _CurrentUserGreetingState extends State<_CurrentUserGreeting> {
+  late final Future _profileFuture = serviceLocator<GetCurrentUserProfile>()
+      .call();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _profileFuture,
+      builder: (context, snapshot) {
+        if (snapshot.data case Success(success: final user)) {
+          return Text(
+            'Hey ${user.displayName}',
+            style: Theme.of(context).textTheme.titleLarge,
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 }

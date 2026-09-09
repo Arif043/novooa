@@ -4,18 +4,16 @@ import 'package:cupertino_sidemenu/cupertino_sidemenu.dart';
 import 'package:go_router/go_router.dart';
 import 'core/di/service_locator.dart';
 import 'root_tab.dart';
-import 'core/widgets/root_app_bar.dart';
+import 'core/widgets/root_center_page.dart';
 import 'core/widgets/root_navigation.dart';
 import 'core/widgets/root_shell_scope.dart';
 import 'core/widgets/root_side_menu.dart';
 import 'core/widgets/syscat_background.dart';
-import 'features/assistant/domain/entities/assistant_context.dart';
-import 'features/assistant/presentation/widgets/assistant_bell_button.dart';
 import 'features/notifications/presentation/cubits/app_notifications_cubit.dart';
-import 'features/notifications/presentation/widgets/notification_bell_button.dart';
 import 'features/notifications/presentation/widgets/notification_side_drawer.dart';
-import 'features/task_builder/presentation/widgets/task_builder_shell_frame.dart';
-import 'features/knowledge_base/presentation/widgets/knowledge_base_shell_frame.dart';
+import 'features/licensing/presentation/cubits/local_runtime_license_cubit.dart';
+import 'features/licensing/presentation/cubits/local_runtime_license_state.dart';
+import 'features/licensing/presentation/pages/local_runtime_license_page.dart';
 
 class RootPage extends StatefulWidget {
   const RootPage({
@@ -53,6 +51,20 @@ class _RootPageState extends State<RootPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isLocal) return _localContent();
+    return _shell(widget.child);
+  }
+
+  Widget _localContent() {
+    return BlocBuilder<LocalRuntimeLicenseCubit, LocalRuntimeLicenseCubitState>(
+      builder: (context, state) {
+        if (state is LocalRuntimeLicenseActive) return _shell(widget.child);
+        return const Scaffold(body: SafeArea(child: LocalRuntimeLicensePage()));
+      },
+    );
+  }
+
+  Widget _shell(Widget content) {
     final tabs = rootTabs(isLocal: widget.isLocal);
     final selectedTabIndex = _selectedTabIndex(tabs);
     final selectedTab = tabs[selectedTabIndex];
@@ -79,79 +91,31 @@ class _RootPageState extends State<RootPage> {
             tabs: tabs,
             selectedIndex: selectedTabIndex,
             onSelected: (index) => _selectTab(tabs, index),
+            showCurrentUserProfile: !widget.isLocal,
             showSessionActions: !widget.isLocal,
           ),
           rightMenu: _isNotificationDrawerOpen
               ? NotificationSideDrawer(onClose: _closeNotificationDrawer)
               : null,
-          centerPage: _centerPage(
-            selectedTab: selectedTab,
+          centerPage: RootCenterPage(
             assistantContext: assistantContext,
             usesTaskBuilderSideRail: usesTaskBuilderSideRail,
             usesKnowledgeBaseSideRail: usesKnowledgeBaseSideRail,
+            content: content,
+            title: _shellController.title ?? Text(selectedTab.title),
+            onMenuPressed: _sideMenuController.openLeftMenu,
+            menuWidthOfScreen: _menuWidthOfScreen(context),
+            onNotificationPressed: _openNotificationDrawer,
           ),
         ),
       ),
     );
     return RootShellScope(
       controller: _shellController,
-      child: widget.isLocal
-          ? shell
-          : BlocProvider(
-              create: (_) => serviceLocator<AppNotificationsCubit>(),
-              child: shell,
-            ),
-    );
-  }
-
-  Widget _titleFor(RootTab selectedTab) {
-    return _shellController.title ?? Text(selectedTab.title);
-  }
-
-  Widget _centerPage({
-    required RootTab selectedTab,
-    required AssistantContext? assistantContext,
-    required bool usesTaskBuilderSideRail,
-    required bool usesKnowledgeBaseSideRail,
-  }) {
-    final title = _titleFor(selectedTab);
-    if (usesTaskBuilderSideRail) return _taskBuilderCenterPage(title);
-    if (usesKnowledgeBaseSideRail) return _knowledgeBaseCenterPage(title);
-    return _defaultCenterPage(title, assistantContext);
-  }
-
-  Widget _taskBuilderCenterPage(Widget title) {
-    return TaskBuilderShellFrame(
-      title: title,
-      onMenuPressed: _sideMenuController.openLeftMenu,
-      menuWidthOfScreen: _menuWidthOfScreen(context),
-      child: widget.child,
-    );
-  }
-
-  Widget _knowledgeBaseCenterPage(Widget title) {
-    return KnowledgeBaseShellFrame(
-      title: title,
-      onMenuPressed: _sideMenuController.openLeftMenu,
-      menuWidthOfScreen: _menuWidthOfScreen(context),
-      child: widget.child,
-    );
-  }
-
-  Widget _defaultCenterPage(Widget title, AssistantContext? assistantContext) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: RootAppBar(
-        title: title,
-        onMenuPressed: _sideMenuController.openLeftMenu,
-        actions: [
-          if (assistantContext != null)
-            AssistantBellButton(contextInfo: assistantContext),
-          if (!widget.isLocal)
-            NotificationBellButton(onPressed: _openNotificationDrawer),
-        ],
+      child: BlocProvider(
+        create: (_) => serviceLocator<AppNotificationsCubit>(),
+        child: shell,
       ),
-      body: SafeArea(child: widget.child),
     );
   }
 

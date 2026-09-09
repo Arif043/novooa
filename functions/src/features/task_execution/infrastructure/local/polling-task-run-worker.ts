@@ -9,12 +9,14 @@ import {
 export type PollingTaskRunWorkerOptions = {
   pollIntervalMs?: number;
   maximumAttempts?: number;
+  canProcess?: () => boolean;
   onFailure?: (job: LeasedTaskRunJob, error: unknown) => void;
 };
 
 export class PollingTaskRunWorker {
   private readonly pollIntervalMs: number;
   private readonly maximumAttempts: number;
+  private readonly canProcess: () => boolean;
   private readonly onFailure: (job: LeasedTaskRunJob, error: unknown) => void;
   private timer: NodeJS.Timeout | undefined;
   private processing: Promise<void> | undefined;
@@ -26,6 +28,7 @@ export class PollingTaskRunWorker {
   ) {
     this.pollIntervalMs = options.pollIntervalMs ?? 1000;
     this.maximumAttempts = options.maximumAttempts ?? 3;
+    this.canProcess = options.canProcess ?? (() => true);
     this.onFailure = options.onFailure ?? (() => undefined);
   }
 
@@ -54,6 +57,7 @@ export class PollingTaskRunWorker {
   }
 
   private async processNext(): Promise<void> {
+    if (!this.canProcess()) return;
     const job = await this.jobStore.claimNext();
     if (job === null) return;
     try {

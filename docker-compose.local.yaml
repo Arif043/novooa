@@ -7,6 +7,7 @@ services:
       dockerfile: functions/Dockerfile.local-runtime
     environment:
       PORT: "8080"
+      NOVOOA_LOCAL_DEVELOPMENT: "true"
       PYTHON_INFERENCE_SIDECAR_URL: http://novooa-ml:8081
     depends_on:
       novooa-ml:

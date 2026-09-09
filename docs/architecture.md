@@ -121,6 +121,7 @@ teams/{teamId}/folders/{folderId}
 teams/{teamId}/files/{fileId}
 teams/{teamId}/files/{fileId}/versions/{versionId}
 modelCatalog/{modelId}
+licenses/{tokenHash}
 teams/{teamId}/knowledgeBases/{knowledgeBaseId}
 teams/{teamId}/knowledgeBases/{knowledgeBaseId}/notes/{noteId}
 ```
@@ -134,6 +135,14 @@ Team-Mitgliedern verteilt, lösen zusätzlich einen FCM-Push aus und öffnen im
 Client den Freigabe-Dialog. Nicht mehr registrierte Geräte-Tokens entfernt das
 Backend nach einer fehlgeschlagenen Zustellung. Identische Tokens werden vor
 dem Versand dedupliziert.
+
+Lokale Lizenzen liegen als backend-only Dokumente unter `licenses/{tokenHash}`
+in Firestore. Der Hash ist SHA-256 eines zwölfstelligen Aktivierungstokens;
+der Roh-Token wird nie gespeichert. Die öffentliche Cloud-Funktion löst den
+Token bei jeder Aktivierung zu einer Ed25519-signierten Lizenz auf. Die lokale
+Runtime prüft diese Lizenz anschließend mit ihrem eingebetteten öffentlichen Schlüssel,
+ohne Firebase-Auth- oder Gerätebindung, bevor sie fachliche API-Endpunkte oder
+Worker freigibt.
 Im Flutter-Web-Client zeigt FCM Hintergrund-Pushes selbst an. Der FCM-Klick
 öffnet auf Desktop die App-Startseite, ohne die aktuelle Arbeit automatisch
 zur Aktivitätenansicht umzuleiten. Mobile PWAs lesen den Klick-Payload aus und

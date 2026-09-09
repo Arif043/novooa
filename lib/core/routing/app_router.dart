@@ -29,13 +29,12 @@ class AppRouter {
   static const String employees = '/employees';
   static const String settings = '/settings';
 
-  AppRouter({required this.sessionCubit});
+  AppRouter({required this.sessionCubit, this.isLocal = false});
 
-  AppRouter.local() : sessionCubit = null;
+  AppRouter.local() : sessionCubit = null, isLocal = true;
 
   final AuthSessionCubit? sessionCubit;
-
-  bool get isLocal => sessionCubit == null;
+  final bool isLocal;
 
   late final GoRouter router = GoRouter(
     initialLocation: home,
@@ -143,7 +142,9 @@ class AppRouter {
   }
 
   String? _redirect(BuildContext context, GoRouterState state) {
-    if (isLocal) return state.matchedLocation == auth ? home : null;
+    if (sessionCubit == null) {
+      return state.matchedLocation == auth ? home : null;
+    }
     final sessionState = sessionCubit!.state;
     final isAuthRoute = state.matchedLocation == auth;
     // Während der Firestore-Profil-Verify läuft, ist `currentUser` bewusst

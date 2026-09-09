@@ -968,6 +968,10 @@ service cloud.firestore {
       }
     }
 
+    match /licenses/{tokenHash} {
+      allow read, write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
