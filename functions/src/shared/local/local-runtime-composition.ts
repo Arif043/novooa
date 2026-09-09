@@ -29,18 +29,23 @@ import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
 import {LocalApplicationLogHttpHandler} from "../logging/local-application-log-http-handler.js";
 import {LocalApplicationLogger} from "../logging/local-application-logger.js";
 import {SQLiteLocalApplicationLogStore} from "../logging/sqlite-local-application-log-store.js";
+import {CredentialCipher} from "../../features/communication/infrastructure/security/credential-cipher.js";
+import {EncryptedSQLiteLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
+import {type LocalLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/local-language-model-secret-store.js";
 
 export type LocalRuntimeComposition = {
   requestHandler: LocalRuntimeRequestHandler;
   taskRunWorker: PollingTaskRunWorker;
   taskTriggerWorker: PollingTaskTriggerWorker;
   applicationLogger: LocalApplicationLogger;
+  languageModelSecretStore: LocalLanguageModelSecretStore;
 };
 
 export type LocalRuntimeCompositionOptions = {
   database: SqliteLocalSqlDatabase;
   runtimeRoot: string;
   workspace: LocalRuntimeWorkspace;
+  localMasterKey: string;
   isLicenseActive?: () => boolean;
 };
 
@@ -53,6 +58,10 @@ export function createLocalRuntimeComposition(
   const jobStore = new SQLiteTaskRunJobStore(options.database);
   const taskStore = new SQLiteTaskStore(options.database);
   const taskDefinitionStore = new SQLiteTaskDefinitionStore(options.database);
+  const languageModelSecretStore = new EncryptedSQLiteLanguageModelSecretStore(
+    options.database,
+    new CredentialCipher(options.localMasterKey, "LOCAL_RUNTIME_MASTER_KEY"),
+  );
   const applicationLogStore = new SQLiteLocalApplicationLogStore(options.database);
   const applicationLogger = new LocalApplicationLogger(
     applicationLogStore,
@@ -111,6 +120,7 @@ export function createLocalRuntimeComposition(
       },
     ),
     applicationLogger,
+    languageModelSecretStore,
   };
 }
 

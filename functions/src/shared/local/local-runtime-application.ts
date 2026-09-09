@@ -7,6 +7,7 @@ import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
 export type LocalRuntimeApplicationOptions = {
   database: SqliteLocalSqlDatabase;
   runtimeRoot: string;
+  localMasterKey: string;
   isLicenseActive: () => boolean;
 };
 

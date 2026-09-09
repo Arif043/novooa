@@ -27,10 +27,14 @@ test("loads a local model profile and its API key from the local secret store", 
         secret_ref: "language-model/connection-1",
       },
     ]),
-    {async read(secretRef) {
-      assert.equal(secretRef, "language-model/connection-1");
-      return "local-key";
-    }},
+    {
+      async read(secretRef) {
+        assert.equal(secretRef, "language-model/connection-1");
+        return "local-key";
+      },
+      async write() {},
+      async delete() {},
+    },
   );
 
   const model = await catalog.loadModel("team-1", "model-1");

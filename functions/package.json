@@ -10,6 +10,7 @@
     "deploy": "npx -y firebase-tools@latest deploy --only functions",
     "logs": "npx -y firebase-tools@latest functions:log",
     "local-runtime:serve": "npm run build && node lib/shared/local/local-runtime-entrypoint.js",
+    "local-runtime:prepare": "npm run build && node lib/shared/local/local-runtime-master-key-setup-cli.js",
     "schedule:run:local": "curl -i -X POST -H \"X-CloudScheduler: true\" http://127.0.0.1:5001/syscat-90bff/europe-west3/runDueTaskTriggersWorker-0",
     "schedule:watch:local": "while true; do npm run schedule:run:local; sleep 60; done",
     "models:publish": "npm run build && node lib/features/machine_learning/infrastructure/cli/model-publish-cli.js",

@@ -9,6 +9,7 @@ services:
       PORT: "8080"
       NOVOOA_LOCAL_DEVELOPMENT: "true"
       PYTHON_INFERENCE_SIDECAR_URL: http://novooa-ml:8081
+      LOCAL_RUNTIME_MASTER_KEY_FILE: /run/secrets/novooa_runtime_master_key
     depends_on:
       novooa-ml:
         condition: service_healthy
@@ -16,6 +17,8 @@ services:
       - 127.0.0.1:${LOCAL_RUNTIME_PORT:-8090}:8080
     volumes:
       - novooa-data:/var/lib/novooa
+    secrets:
+      - novooa_runtime_master_key
     networks:
       - novooa-public
       - novooa-private
@@ -51,3 +54,7 @@ networks:
 
 volumes:
   novooa-data:
+
+secrets:
+  novooa_runtime_master_key:
+    file: ${NOVOOA_LOCAL_SECRETS_DIRECTORY:-.novooa}/runtime-master-key

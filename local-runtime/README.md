@@ -62,9 +62,17 @@ enthält weder einen Python-Interpreter noch Python-Abhängigkeiten.
 ## Lokaler Stack
 
 ```bash
+npm --prefix functions run local-runtime:prepare -- \
+  --secret-file ../.novooa/runtime-master-key
 docker compose -f docker-compose.local.yaml up --build --detach
 curl http://127.0.0.1:8090/healthz
 ```
 
 Das Volume `novooa-data` enthält SQLite und lokale Dateien. `novooa-ml` erhält
 weder dieses Volume noch einen veröffentlichten Host-Port.
+
+Der erste Befehl erzeugt einmalig einen zufälligen 32-Byte-Master-Key. Compose
+mountet ihn ausschließlich für `runtime` als Datei unter `/run/secrets`. Der
+Key ist absichtlich nicht Teil des Daten-Volumes und darf weder eingecheckt noch
+gelöscht werden, solange verschlüsselte Provider-Zugänge wiederherstellbar sein
+sollen.

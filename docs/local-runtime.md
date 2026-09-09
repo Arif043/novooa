@@ -113,8 +113,10 @@ ergänzt den ONNX-Modellkatalog in der Tabelle `model_catalog`.
 
 [`005_language_models.sql`](../local-runtime/migrations/005_language_models.sql)
 ergänzt Provider-Verbindungen und Sprachmodellprofile. Lokale API-Keys liegen
-nicht in SQLite, sondern in einem lokalen Secret Store; `secret_ref` verweist
-auf den jeweiligen Eintrag.
+nicht im Klartext in SQLite. Die Migration
+[`011_language_model_secrets.sql`](../local-runtime/migrations/011_language_model_secrets.sql)
+speichert sie AES-256-GCM-verschlüsselt; `secret_ref` verweist auf den
+jeweiligen Eintrag. Der Master-Key liegt separat außerhalb des Daten-Volumes.
 
 Dateien liegen im lokalen Dateisystem:
 
@@ -182,11 +184,6 @@ Der lokale SQLite-Arbeitsbereich wird deterministisch aus der signierten
 Arbeitsbereich-ID erzeugt. Die lokale Desktop-App verwendet für UI-seitige
 Metadaten einen nicht sicherheitsrelevanten lokalen Benutzer; die Runtime bleibt
 für die tatsächliche Arbeitsbereichsgrenze maßgeblich.
-
-Für die signierte macOS-Auslieferung muss der Runner zusätzlich die Capability
-**Keychain Sharing** erhalten. Sie setzt ein Apple-Entwicklungs- oder
-Distributionszertifikat voraus und bleibt daher bewusst außerhalb des
-unsignierten lokalen Debug-Bundles.
 
 ## Twilio und externe Trigger
 
@@ -283,6 +280,8 @@ dessen Infrastructure-Bereich.
 ## Lokaler Start
 
 ```bash
+npm --prefix functions run local-runtime:prepare -- \
+  --secret-file ../.novooa/runtime-master-key
 docker compose -f docker-compose.local.yaml up --build --detach
 curl http://127.0.0.1:8090/healthz
 docker compose -f docker-compose.local.yaml ps
@@ -291,7 +290,14 @@ flutter run -d macos --dart-define=NOVOOA_RUNTIME=local
 
 Der Stack legt das benannte Volume `novooa-local_novooa-data` an. Ein
 `docker compose down` entfernt weder dieses Volume noch SQLite, Dateien oder
-Modellartefakte.
+Modellartefakte. Beim ersten Befehl entsteht ein zufälliger 32-Byte-Master-Key
+in `.novooa/runtime-master-key`; das Verzeichnis ist ignoriert. Compose bindet
+ihn nur für den Node-Dienst als `/run/secrets/novooa_runtime_master_key` ein.
+Eine auslieferbare Desktop-App erzeugt dieselbe Datei bei der Installation im
+betriebssystemspezifischen Novooa-Datenverzeichnis und setzt
+`NOVOOA_LOCAL_SECRETS_DIRECTORY` darauf. Der Master-Key darf weder im Docker-
+Image noch im SQLite-Volume liegen. Bei dessen Verlust müssen gespeicherte
+Provider-Keys erneut hinterlegt werden.
 
 ## Nächste Schritte
 
@@ -299,5 +305,5 @@ Modellartefakte.
    kontrolliert starten und stoppen.
 2. Das Lizenz-Gateway mit Firebase-Secret und Produktions-Compose ausrollen.
 3. Freigabe-Ereignisse über den Cloud-Gateway in Firestore/FCM spiegeln.
-4. Secret-Mount, SQLite-Backups und versionierte Images für die auslieferbare
-   Desktop-App umsetzen.
+4. SQLite-Backups und versionierte Images für die auslieferbare Desktop-App
+   umsetzen.

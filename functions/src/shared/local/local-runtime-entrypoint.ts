@@ -11,12 +11,16 @@ import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {openLocalRuntimeDatabase} from "./local-runtime-database.js";
 import {createLocalRuntimeHttpServer} from "./local-runtime-http-server.js";
 import {LocalRuntimeLicenseHttpHandler} from "./local-runtime-license-http-handler.js";
+import {localRuntimeMasterKeyFrom} from "./local-runtime-master-key.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
 
 void startLocalRuntime().catch(reportStartupFailure);
 
 async function startLocalRuntime(): Promise<void> {
   const runtimeRoot = requiredEnvironment("LOCAL_RUNTIME_ROOT");
+  const localMasterKey = await localRuntimeMasterKeyFrom(
+    requiredEnvironment("LOCAL_RUNTIME_MASTER_KEY_FILE"),
+  );
   const database = await openLocalRuntimeDatabase({
     databasePath: join(runtimeRoot, "novooa.sqlite"),
     migrationsDirectory: migrationsDirectory(),
@@ -26,6 +30,7 @@ async function startLocalRuntime(): Promise<void> {
     const application = new LocalRuntimeApplication({
       database,
       runtimeRoot,
+      localMasterKey,
       isLicenseActive: () => licenses.activeContext() !== null,
     });
     const restored = await licenses.restore();
