@@ -16,6 +16,23 @@ test("stores and lists a local task definition", async () => {
   database.close();
 });
 
+test("stores an empty local task draft", async () => {
+  const database = await databaseWithTaskTables();
+  const handler = new LocalTaskDefinitionHttpHandler(database, "team-1", "user-1");
+  const draft = {
+    id: "draft-1",
+    title: "Neue Aufgabe",
+    objective: "",
+    selectedNodeId: "",
+    graph: {nodes: [], edges: []},
+  };
+
+  const response = await handler.handle({body: draft, method: "PUT", url: "/v1/tasks/draft-1"});
+
+  assert.deepEqual(response, {body: draft, statusCode: 200});
+  database.close();
+});
+
 test("lists local task runs and activities", async () => {
   const database = await databaseWithTaskTables();
   await database.run(

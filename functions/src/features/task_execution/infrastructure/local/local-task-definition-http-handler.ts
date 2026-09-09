@@ -1,4 +1,3 @@
-import {taskDefinitionSchema} from "../genkit/runner/task-definition.js";
 import {
   type LocalRuntimeRequest,
   type LocalRuntimeRequestHandler,
@@ -69,23 +68,26 @@ function taskFromRequest(taskId: string, body: unknown): LocalTaskDocument {
   if (input.id !== taskId) throw new LocalTaskRequestError("taskId stimmt nicht mit dem Pfad überein.");
   const graph = recordFrom(input.graph, "graph muss ein Objekt sein.");
   try {
-    const definition = taskDefinitionSchema.parse({
+    const task = {
       id: taskId,
       title: requiredString(input.title, "title"),
       objective: optionalString(input.objective),
-      nodes: graph.nodes ?? [],
-      edges: graph.edges ?? [],
-    });
-    return {
-      id: definition.id,
-      title: definition.title,
-      objective: definition.objective,
-      graph: {nodes: definition.nodes, edges: definition.edges},
+      graph: graphFrom(graph),
       selectedNodeId: optionalString(input.selectedNodeId),
+    };
+    return {
+      ...task,
     };
   } catch {
     throw new LocalTaskRequestError("Die Aufgabe enthält einen ungültigen Workflow-Graphen.");
   }
+}
+
+function graphFrom(value: Record<string, unknown>): Record<string, unknown> {
+  if (!Array.isArray(value.nodes) || !Array.isArray(value.edges)) {
+    throw new LocalTaskRequestError("graph benötigt Listen für nodes und edges.");
+  }
+  return {nodes: value.nodes, edges: value.edges};
 }
 
 function taskFromRow(row: TaskRow): LocalTaskDocument {
