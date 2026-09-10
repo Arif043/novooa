@@ -22,8 +22,12 @@ import '../../features/auth/infrastructure/repositories/local_workspace_auth_rep
 import '../../features/files/domain/usecases/watch_team_files.dart';
 import '../../features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import '../../features/language_models/domain/repositories/language_model_repository.dart';
+import '../../features/language_models/domain/repositories/language_model_connection_repository.dart';
+import '../../features/language_models/domain/usecases/connect_language_models.dart';
 import '../../features/language_models/domain/usecases/watch_language_models.dart';
+import '../../features/language_models/domain/usecases/save_language_model.dart';
 import '../../features/language_models/infrastructure/repositories/local_language_model_repository.dart';
+import '../../features/language_models/presentation/cubits/language_models_settings_cubit.dart';
 import '../../features/task_builder/domain/repositories/task_repository.dart';
 import '../../features/task_builder/domain/usecases/execute_task.dart';
 import '../../features/task_builder/infrastructure/datasources/local_http_task_runner_datasource.dart';
@@ -95,7 +99,12 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
       () => LocalApplicationLogRepository(locator<LocalRuntimeApiClient>()),
     )
     ..registerLazySingleton<LanguageModelRepository>(
-      () => const LocalLanguageModelRepository(),
+      () => LocalLanguageModelRepository(locator<LocalRuntimeApiClient>()),
+    )
+    ..registerLazySingleton<LanguageModelConnectionRepository>(
+      () =>
+          locator<LanguageModelRepository>()
+              as LanguageModelConnectionRepository,
     )
     ..registerLazySingleton<TaskRunMediaInputRepository>(
       UnavailableLocalTaskRunMediaInputRepository.new,
@@ -114,6 +123,12 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
     ..registerLazySingleton(() => ReviewTaskRun(locator<TaskRunRepository>()))
     ..registerLazySingleton(
       () => WatchLanguageModels(locator<LanguageModelRepository>()),
+    )
+    ..registerLazySingleton(
+      () => SaveLanguageModel(locator<LanguageModelRepository>()),
+    )
+    ..registerLazySingleton(
+      () => ConnectLanguageModels(locator<LanguageModelConnectionRepository>()),
     )
     ..registerLazySingleton(
       () => LoadLocalRuntimeLicenseStatus(
@@ -167,6 +182,16 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
         locator<AuthRepository>(),
         locator<WatchLanguageModels>(),
         locator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerFactory(
+      () => LanguageModelsSettingsCubit(
+        locator<AuthRepository>(),
+        locator<WatchLanguageModels>(),
+        locator<SaveLanguageModel>(),
+        locator<GetCurrentTeamId>(),
+        allowsKeylessLocalEndpoint: true,
+        connectLanguageModels: locator<ConnectLanguageModels>(),
       ),
     )
     ..registerFactory(

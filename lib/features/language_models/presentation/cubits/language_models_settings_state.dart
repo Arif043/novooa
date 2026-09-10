@@ -14,6 +14,7 @@ class LanguageModelsSettingsState {
     this.modelId = '',
     this.apiKey = '',
     this.isSaving = false,
+    this.isConnecting = false,
     this.message,
   });
 
@@ -26,6 +27,7 @@ class LanguageModelsSettingsState {
   final String modelId;
   final String apiKey;
   final bool isSaving;
+  final bool isConnecting;
   final String? message;
 
   LanguageModelsSettingsState copyWith({
@@ -38,6 +40,7 @@ class LanguageModelsSettingsState {
     String? modelId,
     String? apiKey,
     bool? isSaving,
+    bool? isConnecting,
     String? message,
   }) {
     return LanguageModelsSettingsState(
@@ -50,6 +53,7 @@ class LanguageModelsSettingsState {
       modelId: modelId ?? this.modelId,
       apiKey: apiKey ?? this.apiKey,
       isSaving: isSaving ?? this.isSaving,
+      isConnecting: isConnecting ?? this.isConnecting,
       message: message,
     );
   }

@@ -117,6 +117,18 @@ nicht im Klartext in SQLite. Die Migration
 [`011_language_model_secrets.sql`](../local-runtime/migrations/011_language_model_secrets.sql)
 speichert sie AES-256-GCM-verschlüsselt; `secret_ref` verweist auf den
 jeweiligen Eintrag. Der Master-Key liegt separat außerhalb des Daten-Volumes.
+Die Flutter-Einstellungen bieten **Google AI**, **Ollama (lokal)** und
+OpenAI-kompatible Anbieter an und verbinden sie über `POST
+/v1/language-model-connections`. Die Runtime lädt dessen Modellkatalog und
+speichert alle verfügbaren Textmodelle unter einer gemeinsamen Verbindung. Die
+Modellauswahl findet anschließend im TaskBuilder statt; dort liest der Client
+den Katalog über `GET /v1/language-models`. API-Keys werden in keiner Antwort
+ausgegeben. Ollama verwendet ohne weitere Eingabe
+`http://host.docker.internal:11434/v1` und Genkits OpenAI-kompatiblen Adapter.
+Für einen abweichenden OpenAI-kompatiblen Dienst wird als Base-URL
+`http://host.docker.internal:<port>/v1` verwendet. Externe Anbieter benötigen
+eine HTTPS-URL und einen API-Key. Für Ollama verwendet die Runtime intern einen
+nicht geheimen Platzhalter.
 
 Dateien liegen im lokalen Dateisystem:
 

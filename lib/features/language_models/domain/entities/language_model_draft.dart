@@ -1,5 +1,6 @@
 enum LanguageModelProvider {
   googleAi('googleAi', 'Google AI'),
+  ollama('ollama', 'Ollama (lokal)'),
   openAiCompatible('openAiCompatible', 'OpenAI-kompatibel');
 
   const LanguageModelProvider(this.id, this.label);

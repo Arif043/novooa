@@ -1,5 +1,6 @@
 export const languageModelProviders = [
   "googleAi",
+  "ollama",
   "openAiCompatible",
 ] as const;
 

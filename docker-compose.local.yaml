@@ -22,6 +22,8 @@ services:
     networks:
       - novooa-public
       - novooa-private
+    extra_hosts:
+      - host.docker.internal:host-gateway
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "--input-type=module", "-e", "const response = await fetch('http://127.0.0.1:8080/healthz'); process.exit(response.ok ? 0 : 1)"]

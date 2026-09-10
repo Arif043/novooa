@@ -17,7 +17,7 @@ class SettingsContent extends StatelessWidget {
       children: [
         ProfileSettingsTab(state: state),
         const TeamSettingsTab(),
-        AiModelSettingsTab(state: state),
+        const AiModelSettingsTab(),
         const CommunicationSettingsTab(),
       ],
     );

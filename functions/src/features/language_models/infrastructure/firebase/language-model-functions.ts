@@ -61,6 +61,7 @@ function inputFrom(data: unknown): {
 }
 
 function providerFrom(value: unknown): LanguageModelProvider {
+  if (value === "ollama") throw invalidInput("Ollama ist nur für die lokale Runtime verfügbar.");
   if (typeof value === "string" && languageModelProviders.includes(
     value as LanguageModelProvider,
   )) return value as LanguageModelProvider;

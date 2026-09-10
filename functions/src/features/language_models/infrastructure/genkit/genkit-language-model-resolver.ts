@@ -53,7 +53,7 @@ export class CatalogGenkitLanguageModelResolver
       model: modelRef({name: `${providerName}/${model.modelId}`}),
       capabilities: model.capabilities,
       logContext: {
-        provider: "openAiCompatible",
+        provider: connection.provider,
         endpoint: connection.name,
         model: model.modelId,
       },

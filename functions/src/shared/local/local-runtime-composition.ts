@@ -32,6 +32,10 @@ import {SQLiteLocalApplicationLogStore} from "../logging/sqlite-local-applicatio
 import {CredentialCipher} from "../../features/communication/infrastructure/security/credential-cipher.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
 import {type LocalLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/local-language-model-secret-store.js";
+import {LocalLanguageModelHttpHandler} from "../../features/language_models/infrastructure/local/local-language-model-http-handler.js";
+import {SQLiteLanguageModelConfigurationStore} from "../../features/language_models/infrastructure/local/sqlite-language-model-configuration-store.js";
+import {SQLiteLanguageModelCatalog} from "../../features/language_models/infrastructure/local/sqlite-language-model-catalog.js";
+import {CatalogGenkitLanguageModelResolver} from "../../features/language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 
 export type LocalRuntimeComposition = {
   requestHandler: LocalRuntimeRequestHandler;
@@ -62,6 +66,10 @@ export function createLocalRuntimeComposition(
     options.database,
     new CredentialCipher(options.localMasterKey, "LOCAL_RUNTIME_MASTER_KEY"),
   );
+  const languageModelStore = new SQLiteLanguageModelConfigurationStore(
+    options.database,
+    languageModelSecretStore,
+  );
   const applicationLogStore = new SQLiteLocalApplicationLogStore(options.database);
   const applicationLogger = new LocalApplicationLogger(
     applicationLogStore,
@@ -73,6 +81,7 @@ export function createLocalRuntimeComposition(
     teamFileStore,
     jobStore,
     applicationLogger,
+    new SQLiteLanguageModelCatalog(options.database, languageModelSecretStore),
   );
   applicationLogger.info("local_runtime.workspace_activated", {
     teamId: options.workspace.teamId,
@@ -85,6 +94,7 @@ export function createLocalRuntimeComposition(
         options.workspace.teamId,
         options.workspace.userId,
       ),
+      new LocalLanguageModelHttpHandler(languageModelStore, options.workspace.teamId),
       new LocalTaskActivityHttpHandler(options.database, options.workspace.teamId),
       new LocalApplicationLogHttpHandler(applicationLogStore, options.workspace.teamId),
       new LocalKnowledgeNoteHttpHandler(options.database, options.workspace.teamId),
@@ -130,6 +140,7 @@ function createTaskWorkflow(
   teamFileStore: LocalTeamFileStore,
   jobStore: SQLiteTaskRunJobStore,
   logger: LocalApplicationLogger,
+  languageModelCatalog: SQLiteLanguageModelCatalog,
 ) {
   return createGenkitTaskWorkflow({
     taskStore: new SQLiteTaskStore(options.database),
@@ -147,6 +158,9 @@ function createTaskWorkflow(
       fileContentReader: teamFileStore,
       messageSender: new LocalTaskMessageSender(),
       modelInference: modelInferenceFor(options),
+      languageModelResolver: new CatalogGenkitLanguageModelResolver(
+        languageModelCatalog,
+      ),
     },
   });
 }

@@ -5,6 +5,7 @@ import 'package:syscat2/features/licensing/presentation/cubits/local_runtime_lic
 import 'package:syscat2/features/licensing/presentation/cubits/local_runtime_license_state.dart';
 
 import 'settings_section.dart';
+import 'ai_model_settings_tab.dart';
 
 class LocalSettingsContent extends StatelessWidget {
   const LocalSettingsContent({super.key});
@@ -15,6 +16,8 @@ class LocalSettingsContent extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: const [
         _LocalRuntimeSection(),
+        SizedBox(height: AppSpacing.lg),
+        AiModelSettingsTab(scrollable: false, localRuntime: true),
         SizedBox(height: AppSpacing.lg),
         _LocalDataSection(),
       ],
