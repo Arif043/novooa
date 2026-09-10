@@ -2,7 +2,7 @@ import 'package:multiple_result/multiple_result.dart';
 
 import '../../../../core/network/local_runtime_api_client.dart';
 import '../../domain/entities/task.dart';
-import '../../domain/entities/task_execution_failure.dart';
+import '../../domain/entities/task_run_failure.dart';
 import '../../domain/entities/task_run_start.dart';
 import '../../domain/repositories/task_repository.dart';
 import '../datasources/task_runner_datasource.dart';
@@ -36,7 +36,7 @@ class LocalTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Result<TaskRunStart, TaskExecutionFailure>> execute({
+  Future<Result<TaskRunStart, TaskRunFailure>> execute({
     required Task task,
     String context = '',
   }) async {
@@ -56,27 +56,22 @@ class LocalTaskRepository implements TaskRepository {
       return Success(taskRun);
     } on TaskRunnerDatasourceConnectionException catch (error, stackTrace) {
       _logExecutionFailure(error, stackTrace);
-      return const Error(
-        TaskExecutionFailure(TaskExecutionFailureKind.localServerUnavailable),
-      );
+      return const Error(TaskRunFailure(TaskRunFailureKind.runtimeUnavailable));
     } on TaskRunnerDatasourceTimeoutException catch (error, stackTrace) {
       _logExecutionFailure(error, stackTrace);
-      return const Error(
-        TaskExecutionFailure(TaskExecutionFailureKind.localExecutionTimeout),
-      );
+      return const Error(TaskRunFailure(TaskRunFailureKind.executionTimeout));
     } on TaskRunnerDatasourceExecutionException catch (error, stackTrace) {
       _logExecutionFailure(error, stackTrace);
-      return Error(TaskExecutionFailure.fromTaskRunFailure(error.failure));
+      return Error(
+        error.failure ??
+            const TaskRunFailure(TaskRunFailureKind.executionFailed),
+      );
     } on TypeError catch (error, stackTrace) {
       _logExecutionFailure(error, stackTrace);
-      return const Error(
-        TaskExecutionFailure(TaskExecutionFailureKind.invalidResponse),
-      );
+      return const Error(TaskRunFailure(TaskRunFailureKind.invalidResponse));
     } catch (error, stackTrace) {
       _logExecutionFailure(error, stackTrace);
-      return const Error(
-        TaskExecutionFailure(TaskExecutionFailureKind.executionFailed),
-      );
+      return const Error(TaskRunFailure(TaskRunFailureKind.executionFailed));
     }
   }
 

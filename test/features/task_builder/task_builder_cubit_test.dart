@@ -6,7 +6,7 @@ import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/skill_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
-import 'package:syscat2/features/task_builder/domain/entities/task_execution_failure.dart';
+import 'package:syscat2/features/task_builder/domain/entities/task_run_failure.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_run_start.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_edge.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
@@ -32,13 +32,11 @@ class _InMemoryTaskRepository implements TaskRepository {
   Future<void> deleteTask(String taskId) async {}
 
   @override
-  Future<Result<TaskRunStart, TaskExecutionFailure>> execute({
+  Future<Result<TaskRunStart, TaskRunFailure>> execute({
     required Task task,
     String context = '',
   }) async {
-    return const Error(
-      TaskExecutionFailure(TaskExecutionFailureKind.executionFailed),
-    );
+    return const Error(TaskRunFailure(TaskRunFailureKind.executionFailed));
   }
 }
 

@@ -1,7 +1,7 @@
 import 'package:multiple_result/multiple_result.dart';
 
 import '../entities/task.dart';
-import '../entities/task_execution_failure.dart';
+import '../entities/task_run_failure.dart';
 import '../entities/task_run_start.dart';
 
 /// Vertrag für die Persistenz von [Task]-Entwürfen.
@@ -14,7 +14,7 @@ abstract interface class TaskRepository {
   Future<void> saveTask(Task task);
   Future<void> deleteTask(String taskId);
 
-  Future<Result<TaskRunStart, TaskExecutionFailure>> execute({
+  Future<Result<TaskRunStart, TaskRunFailure>> execute({
     required Task task,
     String context,
   });

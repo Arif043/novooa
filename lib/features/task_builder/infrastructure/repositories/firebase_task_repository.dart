@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:multiple_result/multiple_result.dart';
 
 import '../../domain/entities/task.dart';
-import '../../domain/entities/task_execution_failure.dart';
+import '../../domain/entities/task_run_failure.dart';
 import '../../domain/entities/task_run_start.dart';
 import '../../domain/repositories/task_repository.dart';
 import '../../../teams/domain/repositories/team_repository.dart';
@@ -63,7 +63,7 @@ class FirebaseTaskRepository implements TaskRepository {
   }
 
   @override
-  Future<Result<TaskRunStart, TaskExecutionFailure>> execute({
+  Future<Result<TaskRunStart, TaskRunFailure>> execute({
     required Task task,
     String context = '',
   }) async {
@@ -73,19 +73,19 @@ class FirebaseTaskRepository implements TaskRepository {
       return Success(await _executeTask(task: task, context: context));
     } on TaskRunnerDatasourceConnectionException catch (error, stackTrace) {
       _logException(error, stackTrace);
-      return _failure(TaskExecutionFailureKind.localServerUnavailable);
+      return _failure(TaskRunFailureKind.runtimeUnavailable);
     } on TaskRunnerDatasourceTimeoutException catch (error, stackTrace) {
       _logException(error, stackTrace);
-      return _failure(TaskExecutionFailureKind.localExecutionTimeout);
+      return _failure(TaskRunFailureKind.executionTimeout);
     } on TaskRunnerDatasourceExecutionException catch (error, stackTrace) {
       _logException(error, stackTrace);
-      return _failure(TaskExecutionFailureKind.executionFailed);
+      return _failure(TaskRunFailureKind.executionFailed);
     } on TypeError catch (error, stackTrace) {
       _logException(error, stackTrace);
-      return _failure(TaskExecutionFailureKind.invalidResponse);
+      return _failure(TaskRunFailureKind.invalidResponse);
     } catch (error, stackTrace) {
       _logException(error, stackTrace);
-      return _failure(TaskExecutionFailureKind.executionFailed);
+      return _failure(TaskRunFailureKind.executionFailed);
     }
   }
 
@@ -117,10 +117,8 @@ class FirebaseTaskRepository implements TaskRepository {
     return firestore.collection('teams').doc(teamId);
   }
 
-  Result<TaskRunStart, TaskExecutionFailure> _failure(
-    TaskExecutionFailureKind kind,
-  ) {
-    return Error(TaskExecutionFailure(kind));
+  Result<TaskRunStart, TaskRunFailure> _failure(TaskRunFailureKind kind) {
+    return Error(TaskRunFailure(kind));
   }
 
   void _logStart(Task task) {

@@ -1,6 +1,6 @@
 import 'package:multiple_result/multiple_result.dart';
 import '../entities/task.dart';
-import '../entities/task_execution_failure.dart';
+import '../entities/task_run_failure.dart';
 import '../entities/task_run_start.dart';
 import '../repositories/task_repository.dart';
 
@@ -16,7 +16,7 @@ class ExecuteTask {
 
   final TaskRepository _repository;
 
-  Future<Result<TaskRunStart, TaskExecutionFailure>> call(
+  Future<Result<TaskRunStart, TaskRunFailure>> call(
     ExecuteTaskParams params,
   ) async {
     return _repository.execute(task: params.task, context: params.context);

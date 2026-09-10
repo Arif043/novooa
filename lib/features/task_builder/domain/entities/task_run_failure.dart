@@ -1,4 +1,8 @@
 enum TaskRunFailureKind {
+  runtimeUnavailable,
+  executionTimeout,
+  invalidResponse,
+  executionFailed,
   invalidRequest,
   invalidTaskId,
   invalidReviewDecision,
@@ -6,10 +10,10 @@ enum TaskRunFailureKind {
 }
 
 class TaskRunFailure {
-  const TaskRunFailure({required this.kind, required this.message});
+  const TaskRunFailure(this.kind, {this.detail});
 
   final TaskRunFailureKind kind;
-  final String message;
+  final String? detail;
 
   static TaskRunFailure? fromCode(String? code, String message) {
     final kind = switch (code) {
@@ -19,6 +23,24 @@ class TaskRunFailure {
       'invalidFormValues' => TaskRunFailureKind.invalidFormValues,
       _ => null,
     };
-    return kind == null ? null : TaskRunFailure(kind: kind, message: message);
+    return kind == null ? null : TaskRunFailure(kind, detail: message);
+  }
+
+  String get message {
+    return switch (kind) {
+      TaskRunFailureKind.runtimeUnavailable =>
+        'Aufgaben-Ausführung ist nicht erreichbar.',
+      TaskRunFailureKind.executionTimeout =>
+        'Aufgabe dauert länger als erwartet. Bitte prüfe die Backend-Logs.',
+      TaskRunFailureKind.invalidResponse =>
+        'Backend hat eine ungültige Antwort geliefert.',
+      TaskRunFailureKind.executionFailed =>
+        'Aufgabe konnte nicht ausgeführt werden.',
+      TaskRunFailureKind.invalidRequest ||
+      TaskRunFailureKind.invalidTaskId ||
+      TaskRunFailureKind.invalidReviewDecision ||
+      TaskRunFailureKind.invalidFormValues =>
+        detail ?? 'Aufgabe konnte nicht gestartet werden.',
+    };
   }
 }
