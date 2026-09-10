@@ -68,19 +68,19 @@ class _FileList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      shrinkWrap: true,
-      itemCount: files.length,
-      separatorBuilder: (_, _) => const Divider(height: AppSpacing.sm),
-      itemBuilder: (context, index) {
-        final file = files[index];
-        return ListTile(
-          leading: const Icon(Icons.description_outlined),
-          title: Text(file.displayName),
-          subtitle: Text(file.contentType),
-          onTap: () => _select(context, file),
-        );
-      },
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var index = 0; index < files.length; index++) ...[
+          if (index > 0) const Divider(height: AppSpacing.sm),
+          ListTile(
+            leading: const Icon(Icons.description_outlined),
+            title: Text(files[index].displayName),
+            subtitle: Text(files[index].contentType),
+            onTap: () => _select(context, files[index]),
+          ),
+        ],
+      ],
     );
   }
 
