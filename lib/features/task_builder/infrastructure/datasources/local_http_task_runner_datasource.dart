@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import '../../../../core/network/local_runtime_api_client.dart';
+import '../../domain/entities/task_run_failure.dart';
+import '../errors/task_runner_datasource_exception.dart';
 import 'task_runner_datasource.dart';
 
 class LocalHttpTaskRunnerDatasource implements TaskRunnerDatasource {
@@ -30,6 +32,7 @@ class LocalHttpTaskRunnerDatasource implements TaskRunnerDatasource {
         endpoint: '/v1/task-runs',
         statusCode: error.statusCode,
         responseBody: error.message,
+        failure: TaskRunFailure.fromCode(error.errorCode, error.message),
       );
     }
   }

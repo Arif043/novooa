@@ -88,7 +88,7 @@ export function createLocalRuntimeComposition(
   });
   return {
     requestHandler: new LocalRuntimeRequestRouter([
-      new LocalTaskRunHttpHandler(taskWorkflow, options.workspace.userId),
+      new LocalTaskRunHttpHandler(taskWorkflow, options.workspace.userId, applicationLogger),
       new LocalTaskDefinitionHttpHandler(
         taskDefinitionStore,
         options.workspace.teamId,

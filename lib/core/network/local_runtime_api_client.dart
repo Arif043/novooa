@@ -53,10 +53,7 @@ class HttpLocalRuntimeApiClient implements LocalRuntimeApiClient {
       final response = await _client.send(request).timeout(timeout);
       final text = await response.stream.bytesToString();
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw LocalRuntimeHttpException(
-          response.statusCode,
-          _messageFrom(text),
-        );
+        throw LocalRuntimeHttpException(response.statusCode, _errorFrom(text));
       }
       if (text.trim().isEmpty) return const {};
       return _objectFrom(jsonDecode(text));
@@ -80,10 +77,13 @@ class LocalRuntimeConnectionException implements Exception {
 }
 
 class LocalRuntimeHttpException implements Exception {
-  const LocalRuntimeHttpException(this.statusCode, this.message);
+  LocalRuntimeHttpException(this.statusCode, LocalRuntimeError error)
+    : message = error.message,
+      errorCode = error.code;
 
   final int statusCode;
   final String message;
+  final String? errorCode;
 
   @override
   String toString() => 'Lokale Runtime antwortete mit $statusCode: $message';
@@ -122,12 +122,33 @@ Map<String, Object?> _objectFrom(Object? value) {
   return {for (final entry in value.entries) entry.key.toString(): entry.value};
 }
 
-String _messageFrom(String response) {
+class LocalRuntimeError {
+  const LocalRuntimeError({required this.message, this.code});
+
+  final String message;
+  final String? code;
+}
+
+LocalRuntimeError _errorFrom(String response) {
   try {
     final json = _objectFrom(jsonDecode(response));
-    return json['error'] as String? ??
-        'Die lokale Runtime konnte die Anfrage nicht verarbeiten.';
+    final failure = json['failure'];
+    if (failure is Map) {
+      final message = failure['message'];
+      final code = failure['code'];
+      if (message is String) {
+        return LocalRuntimeError(
+          message: message,
+          code: code is String ? code : null,
+        );
+      }
+    }
+    final message = json['error'];
+    if (message is String) return LocalRuntimeError(message: message);
   } catch (_) {
-    return 'Die lokale Runtime konnte die Anfrage nicht verarbeiten.';
+    // The HTTP status remains available to callers.
   }
+  return const LocalRuntimeError(
+    message: 'Die lokale Runtime konnte die Anfrage nicht verarbeiten.',
+  );
 }

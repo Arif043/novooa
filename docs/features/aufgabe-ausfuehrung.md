@@ -123,6 +123,18 @@ Docker-Runtime an:
 flutter run -d macos --dart-define=NOVOOA_RUNTIME=local
 ```
 
+`POST /v1/task-runs` und `POST /v1/task-runs/review` liefern bei einer
+fachlich ungueltigen Anfrage `400` mit einem stabilen Failure-Vertrag:
+
+```ts
+{ failure: { code: "invalidTaskId", message: "taskId muss ein nicht leerer String sein." } }
+```
+
+Die Failure-Codes (`invalidRequest`, `invalidTaskId`,
+`invalidReviewDecision`, `invalidFormValues`) liegen in der Domain. HTTP- und
+Datasource-Exceptions bleiben Infrastrukturdetails und werden im Client in
+eine fachliche Failure uebersetzt.
+
 Das lokale Startprofil bietet Aufgaben mit Texteingabe und Freigabe,
 Aktivitäten, Zeitpläne, Dateien sowie Wissensbasis. Aufgaben, Runs,
 Aktivitäten, Zeitpläne, Dateien und Notizen werden per lokalem Polling

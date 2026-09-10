@@ -7,6 +7,7 @@ import '../../domain/entities/task_run_start.dart';
 import '../../domain/repositories/task_repository.dart';
 import '../datasources/task_runner_datasource.dart';
 import '../datasources/task_runner_datasource_log.dart';
+import '../errors/task_runner_datasource_exception.dart';
 import '../models/run_task_definition_request_model.dart';
 import '../models/task_document_mapper.dart';
 import '../models/task_run_start_model.dart';
@@ -65,9 +66,7 @@ class LocalTaskRepository implements TaskRepository {
       );
     } on TaskRunnerDatasourceExecutionException catch (error, stackTrace) {
       _logExecutionFailure(error, stackTrace);
-      return const Error(
-        TaskExecutionFailure(TaskExecutionFailureKind.executionFailed),
-      );
+      return Error(TaskExecutionFailure.fromTaskRunFailure(error.failure));
     } on TypeError catch (error, stackTrace) {
       _logExecutionFailure(error, stackTrace);
       return const Error(
