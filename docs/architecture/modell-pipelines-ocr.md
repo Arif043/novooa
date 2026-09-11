@@ -25,7 +25,7 @@ Der private Cloud-Run-Inferenzdienst skaliert als vollständige Instanzpaare:
 Cloud-Run-Instanz = Node-Gateway + Python-ONNX-Sidecar
 ```
 
-Der Node-Container ist der HTTP-Eingang und prüft Modellvertrag, Teamzugriff
+Der Node-Container ist der HTTP-Eingang und prüft das Manifest, Teamzugriff
 und Artefaktintegrität. Der Python-Sidecar führt ONNX-Inference in einem
 langlebigen Prozess aus. Die Vorverarbeitung bleibt in der ersten Stufe beim
 vorhandenen Worker. Beide Container kommunizieren innerhalb derselben Instanz

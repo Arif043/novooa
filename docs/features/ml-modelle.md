@@ -5,7 +5,7 @@
 Das Feature verwaltet einen plattformunabhängigen Katalog klassischer
 Machine-Learning-Modelle. In der ersten Ausbaustufe unterstützt novooa ONNX.
 Ein Katalogeintrag beschreibt das Modell, seinen logischen Artefaktverweis und
-den vollständigen Ein-/Ausgabevertrag; er enthält weder Firebase-Pfade noch
+das vollständige Manifest für Ein- und Ausgaben; es enthält weder Firebase-Pfade noch
 Provider-spezifische Download-URLs.
 
 ## Verantwortlichkeiten
@@ -15,7 +15,7 @@ Provider-spezifische Download-URLs.
   vor der Inferenz auf Größe sowie SHA-256 prüfen.
 - Erwartete Tensoren, Vorverarbeitung und Ergebnissemantik verbindlich
   dokumentieren und validieren.
-- Den Vertrag in Firestore und SQLite identisch persistieren.
+- Das Manifest in Firestore und SQLite identisch persistieren.
 
 ## Katalogeintrag
 
@@ -50,7 +50,7 @@ Rückgabe; die ONNX-Runtime kennt deshalb keinen Speichertyp.
 }
 ```
 
-## Modellvertrag
+## Manifest
 
 Alle Modelle arbeiten an der Runtime-Grenze mit Tensoren. Ein Eingang beschreibt
 zusätzlich seine Quelle (`image`, `file`, `text`, `datetime`, `number`,
@@ -89,7 +89,7 @@ danach als `postprocessing` verwendet. Der Transformationskatalog enthält
 damit Bild-, Tensor-, Geometrie-, Sequenz- und JSON-Transformationen; eine
 separate Operationsabstraktion gibt es nicht. Die Transformations-Registry
 ordnet jedem Typ eine Strategie zu. Neue Strategien erfordern daher keine
-Änderung am Modellvertrag.
+Änderung am Manifest.
 
 ## Persistenz
 
@@ -104,10 +104,10 @@ Pfad ist kein Bestandteil eines Katalogeintrags oder Workflow-Werts.
 ## Inferenz
 
 `RunModelInference` führt ein bereits aufgelöstes Modell aus: Es prüft die
-vorbereiteten Eingabe-Tensoren gegen den Modellvertrag, liest das Artefakt genau
-einmal und validiert auch die Tensoren der Runtime-Ausgabe gegen den
-Ausgangsvertrag. `RunModelInferenceWithSources` löst davor die Verfügbarkeit
-für ein Team auf, ordnet alle Workflow-Quellen dem Vertrag zu, bereitet sie vor
+vorbereiteten Eingabe-Tensoren gegen das Manifest, liest das Artefakt genau
+einmal und validiert auch die Tensoren der Runtime-Ausgabe gegen die
+Ausgangsdefinition im Manifest. `RunModelInferenceWithSources` löst davor die Verfügbarkeit
+für ein Team auf, ordnet alle Workflow-Quellen dem Manifest zu, bereitet sie vor
 und delegiert anschließend an `RunModelInference`.
 
 ```text
@@ -144,7 +144,7 @@ eine implizite globale Voraussetzung.
 ## Transformationen
 
 `PrepareModelInputs` ordnet fachliche Quellen den Eingangsdefinitionen des
-Modellvertrags zu. Eine Quelle kann Text, Datum/Uhrzeit, Zahl, Boolean, JSON,
+Manifests zu. Eine Quelle kann Text, Datum/Uhrzeit, Zahl, Boolean, JSON,
 Datei- oder Bildbytes oder ein bereits vorbereiteter Tensor sein.
 `ModelInputTransformer` ist der Port für die technische Umwandlung. Erst danach
 nimmt `RunModelInference` ausschließlich Tensoren entgegen.
@@ -158,10 +158,10 @@ Workflow-Wert → Adapter → Modellquelle → PrepareModelInputs
 ```
 
 Der `modelInference`-Baustein adaptiert alle Vorgängerwerte in der Reihenfolge
-der eingehenden Kanten auf Modellquellen. Erst der Modellvertrag prüft Anzahl
+der eingehenden Kanten auf Modellquellen. Erst das Manifest prüft Anzahl
 und Typ dieser Quellen. Datei- und Bildwerte lädt der Adapter über den
 bestehenden `TeamFileContentReader`; eine Firebase-Storage-Referenz wird nicht
-in den Modellvertrag oder an die Runtime weitergereicht. Seine primäre Ausgabe
+in das Manifest oder an die Runtime weitergereicht. Seine primäre Ausgabe
 ist JSON mit Modell-ID und Tensoren (`name`, `semantic`, `dataType`, `shape`,
 `dataBase64`); beispielsweise ist der erste Tensor über
 `{{modell1.value.outputs.0.dataBase64}}` referenzierbar.
@@ -171,7 +171,7 @@ eine `TransformationRegistry` aus eigenständigen Strategien zusammen. Dieselbe
 Registry ist die Erweiterungsstelle für Ein- und Ausgangstransformationen.
 Neue Transformationen erfordern damit nur eine zusätzliche Strategieklasse und
 deren Registrierung im lokalen Composition Root, nicht aber eine Änderung der
-Pipeline oder des Modellvertrags.
+Pipeline oder des Manifests.
 
 Aktuell enthält die lokale Runtime konkrete Strategien für Bildquellen und
 unveränderte Tensoren. Verträge mit Text-, Zahlen-, Boolean-, JSON- oder
@@ -185,7 +185,7 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `tensor.layout` | `order`: `channelsFirst`, `channelsLast` | Ordnet HWC und CHW um. |
 | `tensor.normalize` | `mean`, `std` | Normalisiert jeden Farbkanal. |
 
-Der Worker fügt bei einem Vertrag wie `["dynamic", 3, 224, 224]` den Batch-
+Der Worker fügt bei einem Manifest mit einer Eingabeform wie `["dynamic", 3, 224, 224]` den Batch-
 Index hinzu, wenn das Bild zunächst als `[3, 224, 224]` vorliegt. Vor der
 Rückgabe prüft er Form, Datentyp und Byte-Länge. Tensorquellen werden zunächst
 nur ohne Vorverarbeitung durchgereicht; weitere Tensorstrategien ergänzen wir
@@ -197,7 +197,7 @@ Die Cloud-Inferenz läuft in einem privaten Cloud-Run-Container. Der Container
 verwendet denselben Domain-Use-Case `RunModelInferenceWithSources` wie die
 lokale Variante, jedoch mit Firestore als `ModelCatalog` und Cloud Storage als
 `ModelArtifactReader`. ONNX Runtime und die Transformationsstrategien laufen
-im Container in Python. Dadurch bleiben Katalog, Vertrag und Ausführungspfad
+im Container in Python. Dadurch bleiben Katalog, Manifest und Ausführungspfad
 identisch; nur die technische Composition unterscheidet sich.
 
 Der HTTP-Adapter nimmt ausschließlich transportierbare Werte entgegen:
@@ -208,9 +208,9 @@ POST /v1/inferences
 ```
 
 Bild- und Dateiquellen enthalten Base64-Bytes, Tensoren enthalten `name`,
-`dataType`, `shape` und `dataBase64`. Der Service gibt die vertraglich
+`dataType`, `shape` und `dataBase64`. Der Service gibt die gemäß Manifest
 validierten Ausgabe-Tensoren im selben portablen Format zurück. Weder die
-Anfrage noch der Modellvertrag enthalten Firebase-Pfade.
+Anfrage noch das Manifest enthalten Firebase-Pfade.
 
 Das Gateway-Image entsteht mit:
 
@@ -270,7 +270,7 @@ Google-ID-Token. Außerhalb des Emulators bleiben ausschließlich HTTPS und die
 Cloud-Run-ID-Token-Authentifizierung zulässig.
 
 Modelle werden vor dem Start lokal installiert. Der Installer prüft ONNX-Datei
-und Modellvertrag und schreibt Artefakt sowie Katalogeintrag in `.novooa`:
+und Manifest und schreibt Artefakt sowie Katalogeintrag in `.novooa`:
 
 ```bash
 npm --prefix functions run models:install-local -- \
@@ -303,7 +303,7 @@ Ausführung benötigt als nächsten Schritt den geplanten SQLite-Task-Runner.
 #### Session-Cache
 
 Eine Cloud-Run-Instanz besteht aus einem Node-Gateway und einem Python-
-Sidecar. Das Gateway prüft Vertrag und Modellverfügbarkeit, löst Artefakte aus
+Sidecar. Das Gateway prüft Manifest und Modellverfügbarkeit, löst Artefakte aus
 Cloud Storage auf und hält die zuletzt verwendeten Artefakte im lokalen LRU-
 Cache. Der Sidecar hält ONNX-Sessions mit dem Schlüssel
 `artifactId:versionId:sha256` in einem getrennten LRU-Cache. Dadurch wird eine
@@ -396,9 +396,9 @@ models/mobilenet-v3/
 }
 ```
 
-Die CLI validiert Manifest und Vertrag, prüft das Modell durch das Öffnen einer
+Die CLI validiert Manifest und Modell, prüft das Modell durch das Öffnen einer
 ONNX-Runtime-Session und vergleicht Namen, Datentypen sowie statische
-Tensorformen mit dem Vertrag. Gegenwärtig akzeptiert sie Bild- und
+Tensorformen mit dem Manifest. Gegenwärtig akzeptiert sie Bild- und
 Tensoreingänge, die registrierten Bildtransformationen sowie keine
 Ausgangsnachverarbeitung. Anschließend berechnet sie Größe und SHA-256,
 schreibt das Artefakt unveränderlich nach

@@ -146,7 +146,7 @@ standardisierte HTTP-Protokoll. Die Abhängigkeiten liegen in
 die Compose-Definition startet daraus den `novooa-ml`-Container. Der
 Node-Container enthält keinen Python-Interpreter und keine ML-Abhängigkeiten.
 
-Workflow-Werte werden vor der lokalen Inferenz gemäß Modellvertrag in Tensoren
+Workflow-Werte werden vor der lokalen Inferenz gemäß Manifest in Tensoren
 transformiert. `input_transform_worker.py` verwendet für Bildquellen eine
 erweiterbare Registry für Dekodierung, Skalierung, Layout und Normalisierung.
 Weitere Quelltypen erhalten eigene Strategien; weder die Pipeline noch der
@@ -251,7 +251,7 @@ dessen Infrastructure-Bereich.
   `ModelInferenceRuntime`-Port hält diese lokale Ausführung von einer späteren
   Cloud-Runtime entkoppelt.
 - `PrepareModelInputs` und `LocalPythonModelInputTransformer` bereiten
-  vertragsbasierte Quellen als Tensoren auf. Bild- und unveränderte
+  manifestbasierte Quellen als Tensoren auf. Bild- und unveränderte
   Tensorquellen sind bereits implementiert; weitere Quelltypen folgen als
   Strategien. Die Cloud erhält später einen alternativen Adapter für denselben
   `ModelInputTransformer`-Port.
