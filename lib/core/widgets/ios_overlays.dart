@@ -9,7 +9,10 @@ Future<T?> showIosDialog<T>({
   return showCupertinoDialog<T>(
     context: context,
     barrierDismissible: barrierDismissible,
-    builder: builder,
+    builder: (dialogContext) => Material(
+      type: MaterialType.transparency,
+      child: builder(dialogContext),
+    ),
   );
 }
 

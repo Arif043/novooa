@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show Material, MaterialType;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
@@ -53,25 +52,22 @@ class _WriteFileTargetDialogState extends State<WriteFileTargetDialog> {
   Widget build(BuildContext context) {
     return CupertinoAlertDialog(
       title: const Text('Ausgabedatei wählen'),
-      content: Material(
-        type: MaterialType.transparency,
-        child: SizedBox(
-          width: 520,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                WriteFileModeSelector(value: _mode, onChanged: _setMode),
-                const SizedBox(height: AppSpacing.md),
-                if (_mode == WriteTargetMode.existing)
-                  ExistingWriteFileList(node: widget.node)
-                else
-                  NewWriteFileForm(
-                    nameController: _nameController,
-                    contentTypeController: _contentTypeController,
-                  ),
-              ],
-            ),
+      content: SizedBox(
+        width: 520,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              WriteFileModeSelector(value: _mode, onChanged: _setMode),
+              const SizedBox(height: AppSpacing.md),
+              if (_mode == WriteTargetMode.existing)
+                ExistingWriteFileList(node: widget.node)
+              else
+                NewWriteFileForm(
+                  nameController: _nameController,
+                  contentTypeController: _contentTypeController,
+                ),
+            ],
           ),
         ),
       ),
