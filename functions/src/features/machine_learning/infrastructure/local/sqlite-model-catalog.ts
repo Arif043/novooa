@@ -1,6 +1,6 @@
 import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
 import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
-import {type ModelCatalog} from "../../domain/repositories/model-catalog.js";
+import {type TeamModelCatalog} from "../../domain/repositories/model-catalog.js";
 import {
   modelCatalogEntryData,
   modelCatalogEntryFromData,
@@ -18,7 +18,7 @@ type ModelCatalogRow = SqlRow & {
   contract_json: string;
 };
 
-export class SQLiteModelCatalog implements ModelCatalog {
+export class SQLiteModelCatalog implements TeamModelCatalog {
   constructor(private readonly database: LocalSqlDatabase) {}
 
   async save(entry: ModelCatalogEntry): Promise<void> {
@@ -37,6 +37,13 @@ export class SQLiteModelCatalog implements ModelCatalog {
   ): Promise<ModelCatalogEntry | null> {
     const row = await this.database.get<ModelCatalogRow>(findAvailableSql, [modelId, teamId]);
     return row === null ? null : entryFromRow(row);
+  }
+
+  async removeTeamEntry(teamId: string, modelId: string): Promise<boolean> {
+    const entry = await this.database.get<SqlRow>(teamEntrySql, [modelId, teamId]);
+    if (entry === null) return false;
+    await this.database.run(removeTeamEntrySql, [modelId, teamId]);
+    return true;
   }
 }
 
@@ -62,6 +69,9 @@ const listAvailableSql = `SELECT id, title, description, tags_json, scope, team_
 const findAvailableSql = `SELECT id, title, description, tags_json, scope, team_id,
   runtime, artifact_reference_json, contract_json FROM model_catalog
   WHERE id = ? AND (scope = 'system' OR (scope = 'team' AND team_id = ?))`;
+
+const teamEntrySql = "SELECT id FROM model_catalog WHERE id = ? AND scope = 'team' AND team_id = ?";
+const removeTeamEntrySql = "DELETE FROM model_catalog WHERE id = ? AND scope = 'team' AND team_id = ?";
 
 function saveParameters(data: ReturnType<typeof modelCatalogEntryData>) {
   return [

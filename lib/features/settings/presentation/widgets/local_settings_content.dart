@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -6,20 +7,96 @@ import 'package:syscat2/features/licensing/presentation/cubits/local_runtime_lic
 
 import 'settings_section.dart';
 import 'ai_model_settings_tab.dart';
+import '../../../machine_learning/presentation/widgets/machine_learning_settings_tab.dart';
 
 class LocalSettingsContent extends StatelessWidget {
   const LocalSettingsContent({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: const [
-        _LocalRuntimeSection(),
-        SizedBox(height: AppSpacing.lg),
-        AiModelSettingsTab(scrollable: false, localRuntime: true),
-        SizedBox(height: AppSpacing.lg),
-        _LocalDataSection(),
+    return DefaultTabController(
+      length: 3,
+      child: Column(
+        children: [
+          const _LocalSettingsTabs(),
+          Expanded(
+            child: TabBarView(
+              children: [
+                ListView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  children: const [
+                    _LocalRuntimeSection(),
+                    SizedBox(height: AppSpacing.lg),
+                    _LocalDataSection(),
+                  ],
+                ),
+                const SingleChildScrollView(
+                  padding: EdgeInsets.all(AppSpacing.lg),
+                  child: AiModelSettingsTab(
+                    scrollable: false,
+                    localRuntime: true,
+                  ),
+                ),
+                const MachineLearningSettingsTab(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LocalSettingsTabs extends StatelessWidget {
+  const _LocalSettingsTabs();
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = DefaultTabController.of(context);
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) => SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: CupertinoSlidingSegmentedControl<int>(
+          groupValue: controller.index,
+          onValueChanged: (selection) {
+            if (selection != null) controller.animateTo(selection);
+          },
+          children: const {
+            0: _LocalSettingsTabLabel(
+              icon: Icons.settings_outlined,
+              label: 'Allgemein',
+            ),
+            1: _LocalSettingsTabLabel(
+              icon: Icons.auto_awesome,
+              label: 'Sprachmodelle',
+            ),
+            2: _LocalSettingsTabLabel(
+              icon: Icons.memory_outlined,
+              label: 'Machine Learning',
+            ),
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _LocalSettingsTabLabel extends StatelessWidget {
+  const _LocalSettingsTabLabel({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon),
+        const SizedBox(width: AppSpacing.sm),
+        Text(label),
       ],
     );
   }

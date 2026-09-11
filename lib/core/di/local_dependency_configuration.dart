@@ -28,6 +28,12 @@ import '../../features/language_models/domain/usecases/watch_language_models.dar
 import '../../features/language_models/domain/usecases/save_language_model.dart';
 import '../../features/language_models/infrastructure/repositories/local_language_model_repository.dart';
 import '../../features/language_models/presentation/cubits/language_models_settings_cubit.dart';
+import '../../features/machine_learning/domain/repositories/model_catalog_repository.dart';
+import '../../features/machine_learning/domain/usecases/import_model_catalog_entry.dart';
+import '../../features/machine_learning/domain/usecases/remove_model_catalog_entry.dart';
+import '../../features/machine_learning/domain/usecases/watch_model_catalog_entries.dart';
+import '../../features/machine_learning/infrastructure/repositories/local_model_catalog_repository.dart';
+import '../../features/machine_learning/presentation/cubits/model_catalog_cubit.dart';
 import '../../features/task_builder/domain/repositories/task_repository.dart';
 import '../../features/task_builder/domain/usecases/execute_task.dart';
 import '../../features/task_builder/infrastructure/datasources/local_http_task_runner_datasource.dart';
@@ -101,6 +107,9 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
     ..registerLazySingleton<LanguageModelRepository>(
       () => LocalLanguageModelRepository(locator<LocalRuntimeApiClient>()),
     )
+    ..registerLazySingleton<ModelCatalogRepository>(
+      () => LocalModelCatalogRepository(locator<LocalRuntimeApiClient>()),
+    )
     ..registerLazySingleton<LanguageModelConnectionRepository>(
       () =>
           locator<LanguageModelRepository>()
@@ -129,6 +138,15 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
     )
     ..registerLazySingleton(
       () => ConnectLanguageModels(locator<LanguageModelConnectionRepository>()),
+    )
+    ..registerLazySingleton(
+      () => WatchModelCatalogEntries(locator<ModelCatalogRepository>()),
+    )
+    ..registerLazySingleton(
+      () => ImportModelCatalogEntry(locator<ModelCatalogRepository>()),
+    )
+    ..registerLazySingleton(
+      () => RemoveModelCatalogEntry(locator<ModelCatalogRepository>()),
     )
     ..registerLazySingleton(
       () => LoadLocalRuntimeLicenseStatus(
@@ -192,6 +210,13 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
         locator<GetCurrentTeamId>(),
         allowsKeylessLocalEndpoint: true,
         connectLanguageModels: locator<ConnectLanguageModels>(),
+      ),
+    )
+    ..registerFactory(
+      () => ModelCatalogCubit(
+        locator<WatchModelCatalogEntries>(),
+        locator<ImportModelCatalogEntry>(),
+        locator<RemoveModelCatalogEntry>(),
       ),
     )
     ..registerFactory(

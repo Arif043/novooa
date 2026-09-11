@@ -8,3 +8,8 @@ export interface ModelCatalog {
     modelId: string,
   ): Promise<ModelCatalogEntry | null>;
 }
+
+/** Administrative operations that are only available for locally owned models. */
+export interface TeamModelCatalog extends ModelCatalog {
+  removeTeamEntry(teamId: string, modelId: string): Promise<boolean>;
+}

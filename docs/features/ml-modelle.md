@@ -97,6 +97,27 @@ Cloud: `modelCatalog/{modelId}` in Firestore. Lokal: SQLite-Tabelle
 `model_catalog` aus Migration `004_model_catalog.sql`. Beide Adapter
 implementieren den Domain-Port `ModelCatalog`.
 
+### Lokale Verwaltung
+
+In den lokalen Einstellungen ist der Tab **Machine Learning** verfügbar. Er
+zeigt alle für den lokalen Workspace verfügbaren ONNX-Katalogeinträge. Ein
+Import besteht genau aus zwei Dateien: einer Manifest-JSON und der dazugehörigen
+ONNX-Datei. Die Runtime erzeugt daraus die Artefakt-Prüfsumme, legt das Artefakt
+unter ihrem lokalen Runtime-Root ab und speichert einen teamgebundenen
+Katalogeintrag in SQLite. Der Tab und die Endpunkte existieren nicht in der
+Cloud-Variante.
+
+```text
+GET    /v1/ml-models
+POST   /v1/ml-models       { manifest, artifactBase64 }
+DELETE /v1/ml-models/:id
+```
+
+Lokale Importe gehören immer dem aktiven Team. Sie lassen sich aus dem Katalog
+entfernen; das unveränderliche Artefakt bleibt bis zu einer späteren Bereinigung
+im lokalen Runtime-Speicher erhalten. Systemmodelle sind in der Ansicht
+erkennbar, aber dort nicht löschbar.
+
 Artefakte liegen ausschließlich in der Infrastructure unter dem technischen
 Pfad `model-artifacts/{artifactId}/versions/{versionId}/model.onnx`. Dieser
 Pfad ist kein Bestandteil eines Katalogeintrags oder Workflow-Werts.

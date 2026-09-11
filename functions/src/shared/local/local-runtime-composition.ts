@@ -4,6 +4,9 @@ import {LocalTeamFileStore} from "../../features/files/infrastructure/local/loca
 import {LocalKnowledgeNoteHttpHandler} from "../../features/knowledge_base/infrastructure/local/local-knowledge-note-http-handler.js";
 import {SQLiteKnowledgeBaseStore} from "../../features/knowledge_base/infrastructure/local/sqlite-knowledge-base-store.js";
 import {createLocalSidecarModelInference} from "../../features/machine_learning/infrastructure/local/local-sidecar-model-inference.js";
+import {LocalModelArtifactPublisher} from "../../features/machine_learning/infrastructure/local/local-model-artifact-publisher.js";
+import {LocalModelCatalogHttpHandler} from "../../features/machine_learning/infrastructure/local/local-model-catalog-http-handler.js";
+import {SQLiteModelCatalog} from "../../features/machine_learning/infrastructure/local/sqlite-model-catalog.js";
 import {UnavailableLocalModelInference} from "../../features/machine_learning/infrastructure/local/unavailable-local-model-inference.js";
 import {SQLiteTeamContextStore} from "../../features/teams/infrastructure/local/sqlite-team-context-store.js";
 import {LocalTaskMessageSender} from "../../features/task_execution/infrastructure/local/local-task-message-sender.js";
@@ -95,6 +98,12 @@ export function createLocalRuntimeComposition(
         options.workspace.userId,
       ),
       new LocalLanguageModelHttpHandler(languageModelStore, options.workspace.teamId),
+      new LocalModelCatalogHttpHandler(
+        new SQLiteModelCatalog(options.database),
+        new LocalModelArtifactPublisher(options.runtimeRoot),
+        options.workspace.teamId,
+        applicationLogger,
+      ),
       new LocalTaskActivityHttpHandler(options.database, options.workspace.teamId),
       new LocalApplicationLogHttpHandler(applicationLogStore, options.workspace.teamId),
       new LocalKnowledgeNoteHttpHandler(options.database, options.workspace.teamId),
