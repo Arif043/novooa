@@ -74,7 +74,7 @@ class ModelInferenceInputMappingField extends StatelessWidget {
   );
 
   Widget _dataTypeField() => TextFormField(
-    initialValue: input.dataTypeLabel,
+    initialValue: input.source.label,
     readOnly: true,
     decoration: const InputDecoration(labelText: 'Datentyp'),
   );
