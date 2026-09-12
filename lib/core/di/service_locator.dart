@@ -104,7 +104,7 @@ import '../../features/activity/domain/usecases/watch_task_activities.dart';
 import '../../features/activity/domain/usecases/watch_task_runs.dart';
 import '../../features/activity/infrastructure/repositories/firestore_task_activity_repository.dart';
 import '../../features/activity/infrastructure/repositories/firestore_task_run_repository.dart';
-import '../../features/activity/infrastructure/repositories/firebase_task_run_media_input_repository.dart';
+import '../../features/activity/infrastructure/repositories/team_file_task_run_media_input_repository.dart';
 import '../../features/activity/infrastructure/datasources/image_picker_media_input_picker.dart';
 import '../../features/activity/presentation/cubits/activity_cubit.dart';
 import '../../features/task_builder/domain/repositories/task_repository.dart';
@@ -179,7 +179,7 @@ void _configureCloudDependencies() {
       () => ImagePickerMediaInputPicker(ImagePicker()),
     )
     ..registerLazySingleton<TaskRunMediaInputRepository>(
-      () => FirebaseTaskRunMediaInputRepository(
+      () => TeamFileTaskRunMediaInputRepository(
         serviceLocator<AuthRepository>(),
         serviceLocator<GetCurrentTeamId>(),
         serviceLocator<UploadTeamFile>(),

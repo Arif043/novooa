@@ -5,9 +5,9 @@ import '../../../teams/domain/usecases/get_current_team_id.dart';
 import '../../domain/entities/media_input_submission.dart';
 import '../../domain/repositories/task_run_media_input_repository.dart';
 
-class FirebaseTaskRunMediaInputRepository
+class TeamFileTaskRunMediaInputRepository
     implements TaskRunMediaInputRepository {
-  const FirebaseTaskRunMediaInputRepository(
+  const TeamFileTaskRunMediaInputRepository(
     this._authRepository,
     this._getCurrentTeamId,
     this._uploadTeamFile,

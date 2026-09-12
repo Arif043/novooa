@@ -26,6 +26,7 @@ export type TaskRunContext = {
   results: Map<string, NodeExecutionResult>;
   runSubgraph: SubgraphRunner;
   resolveTemplates: (text: string) => string;
+  resolveTemplateValue: (text: string) => unknown;
   teamFileStore: TeamFileStore;
   fileContentReader: TeamFileContentReader;
   messageSender: TaskMessageSender;

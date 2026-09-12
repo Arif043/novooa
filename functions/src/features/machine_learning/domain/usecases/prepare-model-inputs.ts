@@ -29,7 +29,7 @@ function sourceMapFor(
 ): ReadonlyMap<string, ModelInputSource> {
   const sourcesByName = new Map(sources.map((source) => [source.name, source]));
   if (sourcesByName.size !== sources.length || sourcesByName.size !== inputs.length) {
-    throw new Error("Die Modelleingaben stimmen nicht mit dem Modellvertrag überein.");
+    throw new Error("Die Eingabezuordnungen stimmen nicht mit dem Manifest überein.");
   }
   inputs.forEach((input) => validateSourceFor(input, sourcesByName));
   return sourcesByName;

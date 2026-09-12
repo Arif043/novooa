@@ -19,6 +19,7 @@ void main() {
     );
 
     expect(entries.single.title, 'Beispielmodell');
+    expect(entries.single.inputs.single.name, 'image');
     expect(entries.single.isManagedLocally, isTrue);
     expect(client.postPath, '/v1/ml-models');
     expect(client.postBody?['artifactBase64'], base64Encode([1, 2, 3]));
@@ -43,7 +44,14 @@ class _Client implements LocalRuntimeApiClient {
         'scope': {'type': 'team', 'teamId': 'local-team'},
         'artifactReference': {'sizeBytes': 1024},
         'contract': {
-          'inputs': [{}],
+          'inputs': [
+            {
+              'name': 'image',
+              'source': 'image',
+              'dataType': 'float32',
+              'shape': [1, 3, 224, 224],
+            },
+          ],
           'outputs': [{}],
         },
       },

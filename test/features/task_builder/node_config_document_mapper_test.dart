@@ -125,7 +125,18 @@ void main() {
   });
 
   test('serialisiert und deserialisiert ModelInferenceNodeConfig', () {
-    const config = ModelInferenceNodeConfig(modelId: 'mobilenet-v3');
+    const config = ModelInferenceNodeConfig(
+      modelId: 'mobilenet-v3',
+      inputMappings: [
+        ModelInferenceInputMapping(
+          modelInputName: 'pixel_values',
+          workflowMapping: '{{eingabe.value}}',
+          sourceType: 'tensor',
+          dataType: 'float32',
+          shape: [1, 3, 224, 224],
+        ),
+      ],
+    );
 
     final document = _mapper().toDocument(config);
     final restored =
@@ -134,6 +145,15 @@ void main() {
     expect(document, {
       'primitive': 'modelInference',
       'modelId': 'mobilenet-v3',
+      'inputMappings': [
+        {
+          'modelInputName': 'pixel_values',
+          'workflowMapping': '{{eingabe.value}}',
+          'sourceType': 'tensor',
+          'dataType': 'float32',
+          'shape': [1, 3, 224, 224],
+        },
+      ],
     });
     expect(restored, config);
   });
@@ -153,20 +173,23 @@ void main() {
     expect((notes.single! as Map<String, Object?>)['noteId'], 'note.1');
   });
 
-  test('serialisiert und deserialisiert die Sprachmodell-Auswahl eines Prompts', () {
-    const config = PromptNodeConfig(
-      instruction: 'Fasse zusammen',
-      languageModelId: 'language-model.1',
-      outputType: PromptOutputType.text,
-      choices: [],
-    );
+  test(
+    'serialisiert und deserialisiert die Sprachmodell-Auswahl eines Prompts',
+    () {
+      const config = PromptNodeConfig(
+        instruction: 'Fasse zusammen',
+        languageModelId: 'language-model.1',
+        outputType: PromptOutputType.text,
+        choices: [],
+      );
 
-    final document = _mapper().toDocument(config);
-    final restored = _mapper().fromDocument(document) as PromptNodeConfig;
+      final document = _mapper().toDocument(config);
+      final restored = _mapper().fromDocument(document) as PromptNodeConfig;
 
-    expect(document['languageModelId'], 'language-model.1');
-    expect(restored.languageModelId, 'language-model.1');
-  });
+      expect(document['languageModelId'], 'language-model.1');
+      expect(restored.languageModelId, 'language-model.1');
+    },
+  );
 
   test('deserialisiert PromptNodeConfig mit Wissensanhang', () {
     final config = _mapper().fromDocument({

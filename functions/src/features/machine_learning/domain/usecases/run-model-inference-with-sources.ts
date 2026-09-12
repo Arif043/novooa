@@ -1,9 +1,4 @@
 import {type ModelCatalogEntry} from "../entities/model-catalog-entry.js";
-import {type ModelInput} from "../entities/model-contract.js";
-import {
-  type ModelInputSource,
-  type ModelInputValue,
-} from "../entities/model-input-source.js";
 import {type ModelCatalog} from "../repositories/model-catalog.js";
 import {
   type ModelInference,
@@ -22,8 +17,7 @@ export class RunModelInferenceWithSources implements ModelInference {
 
   async execute(request: ModelInferenceRequest): Promise<ModelInferenceResult> {
     const model = await this.modelFor(request.teamId, request.modelId);
-    const sources = sourcesFor(model.contract.inputs, request.inputs);
-    const inputs = await this.prepareModelInputs.execute(model.contract, sources);
+    const inputs = await this.prepareModelInputs.execute(model.contract, request.inputs);
     const outputs = await this.runModelInference.execute({model, inputs});
     return resultFor(model, outputs);
   }
@@ -35,16 +29,6 @@ export class RunModelInferenceWithSources implements ModelInference {
     if (model === null) throw new Error("Das Modell ist nicht verfügbar.");
     return model;
   }
-}
-
-function sourcesFor(
-  inputs: readonly ModelInput[],
-  values: readonly ModelInputValue[],
-): readonly ModelInputSource[] {
-  if (values.length !== inputs.length) {
-    throw new Error("Die Anzahl der Modelleingaben stimmt nicht mit dem Modellvertrag überein.");
-  }
-  return inputs.map((input, index) => ({name: input.name, ...values[index]}));
 }
 
 function resultFor(

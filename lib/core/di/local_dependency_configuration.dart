@@ -11,7 +11,7 @@ import '../../features/activity/domain/usecases/watch_task_runs.dart';
 import '../../features/activity/infrastructure/datasources/image_picker_media_input_picker.dart';
 import '../../features/activity/infrastructure/repositories/local_task_activity_repository.dart';
 import '../../features/activity/infrastructure/repositories/local_task_run_repository.dart';
-import '../../features/activity/infrastructure/repositories/unavailable_local_task_run_media_input_repository.dart';
+import '../../features/activity/infrastructure/repositories/team_file_task_run_media_input_repository.dart';
 import '../../features/activity/presentation/cubits/activity_cubit.dart';
 import '../../features/application_logs/domain/repositories/application_log_repository.dart';
 import '../../features/application_logs/domain/usecases/watch_application_logs.dart';
@@ -19,6 +19,7 @@ import '../../features/application_logs/infrastructure/repositories/local_applic
 import '../../features/application_logs/presentation/cubits/application_logs_cubit.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/infrastructure/repositories/local_workspace_auth_repository.dart';
+import '../../features/files/domain/usecases/upload_team_file.dart';
 import '../../features/files/domain/usecases/watch_team_files.dart';
 import '../../features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import '../../features/language_models/domain/repositories/language_model_repository.dart';
@@ -116,7 +117,11 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
               as LanguageModelConnectionRepository,
     )
     ..registerLazySingleton<TaskRunMediaInputRepository>(
-      UnavailableLocalTaskRunMediaInputRepository.new,
+      () => TeamFileTaskRunMediaInputRepository(
+        locator<AuthRepository>(),
+        locator<GetCurrentTeamId>(),
+        locator<UploadTeamFile>(),
+      ),
     )
     ..registerLazySingleton<MediaInputPicker>(
       () => ImagePickerMediaInputPicker(ImagePicker()),

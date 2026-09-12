@@ -10,17 +10,17 @@ import {PrepareModelInputs} from "./prepare-model-inputs.js";
 import {RunModelInference} from "./run-model-inference.js";
 import {RunModelInferenceWithSources} from "./run-model-inference-with-sources.js";
 
-test("binds sources in the order defined by the model contract", async () => {
+test("binds named sources according to the model manifest", async () => {
   const transformer = new Transformer();
   const useCase = useCaseFor(contractEntry(), transformer);
   const result = await useCase.execute({
     teamId: "team-1",
     modelId: "classifier",
     inputs: [
-      {type: "text", value: "Hallo"},
-      {type: "number", value: 4},
-      {type: "boolean", value: true},
-      {type: "json", value: {priority: "high"}},
+      {name: "input-2", type: "boolean", value: true},
+      {name: "input-0", type: "text", value: "Hallo"},
+      {name: "input-3", type: "json", value: {priority: "high"}},
+      {name: "input-1", type: "number", value: 4},
     ],
   });
 
@@ -35,7 +35,7 @@ test("rejects a workflow value that conflicts with the model contract", async ()
     () => useCase.execute({
       teamId: "team-1",
       modelId: "classifier",
-      inputs: [{type: "number", value: 4}],
+      inputs: [{name: "text", type: "number", value: 4}],
     }),
     /falschen Typ/,
   );

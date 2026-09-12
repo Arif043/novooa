@@ -156,7 +156,25 @@ class NodeConfigDocumentMapper {
   Map<String, Object?> _modelInferenceToDocument(
     ModelInferenceNodeConfig config,
   ) {
-    return {'primitive': config.primitive.name, 'modelId': config.modelId};
+    return {
+      'primitive': config.primitive.name,
+      'modelId': config.modelId,
+      'inputMappings': config.inputMappings
+          .map(_modelInferenceInputMappingToDocument)
+          .toList(),
+    };
+  }
+
+  Map<String, Object?> _modelInferenceInputMappingToDocument(
+    ModelInferenceInputMapping mapping,
+  ) {
+    return {
+      'modelInputName': mapping.modelInputName,
+      'workflowMapping': mapping.workflowMapping,
+      'sourceType': mapping.sourceType,
+      'dataType': mapping.dataType,
+      'shape': mapping.shape,
+    };
   }
 
   Map<String, Object?> _forEachToDocument(ForEachNodeConfig config) {
@@ -280,7 +298,34 @@ class NodeConfigDocumentMapper {
   }
 
   ModelInferenceNodeConfig _modelInferenceFrom(Map<String, Object?> data) {
-    return ModelInferenceNodeConfig(modelId: data['modelId'] as String? ?? '');
+    return ModelInferenceNodeConfig(
+      modelId: data['modelId'] as String? ?? '',
+      inputMappings: _modelInferenceInputMappingsFrom(data['inputMappings']),
+    );
+  }
+
+  List<ModelInferenceInputMapping> _modelInferenceInputMappingsFrom(
+    Object? value,
+  ) {
+    if (value is! List) return const [];
+    return value
+        .whereType<Map>()
+        .map((entry) {
+          final data = _objectMapFrom(entry);
+          return ModelInferenceInputMapping(
+            modelInputName: data['modelInputName'] as String? ?? '',
+            workflowMapping: data['workflowMapping'] as String? ?? '',
+            sourceType: data['sourceType'] as String? ?? '',
+            dataType: data['dataType'] as String? ?? '',
+            shape: _objectListFrom(data['shape']),
+          );
+        })
+        .toList(growable: false);
+  }
+
+  List<Object> _objectListFrom(Object? value) {
+    if (value is! List) return const [];
+    return value.whereType<Object>().toList(growable: false);
   }
 
   WriteFileNodeConfig _writeFileFrom(Map<String, Object?> data) {

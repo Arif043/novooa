@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {mkdtemp, rm} from "node:fs/promises";
+import {mkdtemp, readFile, rm} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -52,6 +52,59 @@ test("does not remove a model owned by another team", async () => {
   assert.equal(response?.statusCode, 404);
 });
 
+test("removes the ONNX artifact with the local catalog entry", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-model-import-"));
+  const catalog = new Catalog();
+  const handler = new LocalModelCatalogHttpHandler(
+    catalog,
+    new LocalModelArtifactPublisher(directory),
+    "team-1",
+    new Logger(),
+  );
+
+  try {
+    await handler.handle({
+      method: "POST",
+      url: "/v1/ml-models",
+      body: {manifest: manifest(), artifactBase64: Buffer.from("onnx").toString("base64")},
+    });
+    const removed = await handler.handle({method: "DELETE", url: "/v1/ml-models/example-model", body: {}});
+
+    assert.equal(removed?.statusCode, 204);
+    await assert.rejects(readFile(path.join(directory, "model-artifacts/example-model/versions/1/model.onnx")));
+  } finally {
+    await rm(directory, {recursive: true, force: true});
+  }
+});
+
+test("recovers an interrupted import with an existing local artifact", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-model-import-"));
+  const catalog = new Catalog();
+  const handler = new LocalModelCatalogHttpHandler(
+    catalog,
+    new LocalModelArtifactPublisher(directory),
+    "team-1",
+    new Logger(),
+  );
+  const request = {
+    method: "POST" as const,
+    url: "/v1/ml-models",
+    body: {manifest: manifest(), artifactBase64: Buffer.from("onnx").toString("base64")},
+  };
+
+  try {
+    await handler.handle(request);
+    await catalog.removeTeamEntry("team-1", "example-model");
+
+    const recovered = await handler.handle(request);
+
+    assert.equal(recovered?.statusCode, 201);
+    assert.equal(catalog.entries.length, 1);
+  } finally {
+    await rm(directory, {recursive: true, force: true});
+  }
+});
+
 class Catalog implements TeamModelCatalog {
   entries: ModelCatalogEntry[] = [];
 
@@ -63,12 +116,14 @@ class Catalog implements TeamModelCatalog {
     return this.entries;
   }
 
-  async findAvailableFor(): Promise<ModelCatalogEntry | null> {
-    return null;
+  async findAvailableFor(_teamId: string, modelId: string): Promise<ModelCatalogEntry | null> {
+    return this.entries.find((entry) => entry.id === modelId) ?? null;
   }
 
-  async removeTeamEntry(): Promise<boolean> {
-    return false;
+  async removeTeamEntry(_teamId: string, modelId: string): Promise<boolean> {
+    const exists = this.entries.some((entry) => entry.id === modelId);
+    this.entries = this.entries.filter((entry) => entry.id !== modelId);
+    return exists;
   }
 }
 

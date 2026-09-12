@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:syscat2/core/network/local_runtime_api_client.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_entry.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_import.dart';
 import 'package:syscat2/features/machine_learning/domain/repositories/model_catalog_repository.dart';
@@ -24,13 +25,43 @@ void main() {
     expect(cubit.state.message, 'Modell wurde importiert.');
     await cubit.close();
   });
+
+  test(
+    'shows the local runtime validation message for an invalid import',
+    () async {
+      final repository = _Repository()
+        ..importError = LocalRuntimeHttpException(
+          400,
+          const LocalRuntimeError(
+            message: 'Diese lokale Modellversion ist bereits installiert.',
+          ),
+        );
+      final cubit = ModelCatalogCubit(
+        WatchModelCatalogEntries(repository),
+        ImportModelCatalogEntry(repository),
+        RemoveModelCatalogEntry(repository),
+      );
+
+      await cubit.importModel(
+        const ModelCatalogImport(manifestJson: '{}', artifactBytes: [1]),
+      );
+
+      expect(
+        cubit.state.message,
+        'Diese lokale Modellversion ist bereits installiert.',
+      );
+      await cubit.close();
+    },
+  );
 }
 
 class _Repository implements ModelCatalogRepository {
   ModelCatalogImport? imported;
+  Object? importError;
 
   @override
   Future<void> importEntry(ModelCatalogImport value) async {
+    if (importError case final Object error) throw error;
     imported = value;
   }
 

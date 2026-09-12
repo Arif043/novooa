@@ -13,7 +13,7 @@ test("calls the private service with its URL as ID-token audience", async () => 
   const result = await inference.execute({
     teamId: "team-1",
     modelId: "classifier",
-    inputs: [{type: "text", value: "Hallo"}],
+    inputs: [{name: "prompt", type: "text", value: "Hallo"}],
   });
 
   assert.equal(httpClient.request?.audience, "https://model-inference-123.europe-west3.run.app");
@@ -21,7 +21,7 @@ test("calls the private service with its URL as ID-token audience", async () => 
   assert.deepEqual(httpClient.request?.body, {
     teamId: "team-1",
     modelId: "classifier",
-    inputs: [{type: "text", value: "Hallo"}],
+    inputs: [{name: "prompt", type: "text", value: "Hallo"}],
   });
   assert.equal(result.outputs[0].semantic, "classification.scores");
 });

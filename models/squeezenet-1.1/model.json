@@ -1,0 +1,50 @@
+{
+  "id": "squeezenet-1-1",
+  "title": "SqueezeNet 1.1",
+  "description": "Klassifiziert ein Bild in eine von 1.000 ImageNet-Kategorien.",
+  "tags": ["bild", "klassifikation", "imagenet", "leichtgewichtig"],
+  "artifact": {
+    "artifactId": "squeezenet-1-1",
+    "versionId": "1.1-7"
+  },
+  "contract": {
+    "inputs": [
+      {
+        "name": "data",
+        "source": "image",
+        "dataType": "float32",
+        "shape": [1, 3, 224, 224],
+        "preprocessing": [
+          {
+            "type": "image.decode",
+            "parameters": {"colorSpace": "rgb"}
+          },
+          {
+            "type": "image.resize",
+            "parameters": {"width": 224, "height": 224}
+          },
+          {
+            "type": "tensor.layout",
+            "parameters": {"order": "channelsFirst"}
+          },
+          {
+            "type": "tensor.normalize",
+            "parameters": {
+              "mean": [123.675, 116.28, 103.53],
+              "std": [58.395, 57.12, 57.375]
+            }
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "squeezenet0_flatten0_reshape0",
+        "semantic": "classification.scores",
+        "dataType": "float32",
+        "shape": [1, 1000],
+        "postprocessing": []
+      }
+    ]
+  }
+}

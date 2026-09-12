@@ -9,4 +9,52 @@ extension TaskBuilderModelInferenceMutations on TaskBuilderCubit {
       return node;
     });
   }
+
+  Future<void> selectModelInference(
+    NodeId nodeId,
+    String modelId,
+    List<ModelInferenceInputMapping> inputMappings,
+  ) {
+    return _updateNode(nodeId, (node) {
+      if (node.config case ModelInferenceNodeConfig config) {
+        return node.copyWith(
+          config: config.copyWith(
+            modelId: modelId,
+            inputMappings: inputMappings,
+          ),
+        );
+      }
+      return node;
+    });
+  }
+
+  Future<void> updateModelInferenceWorkflowMapping(
+    NodeId nodeId,
+    ModelInferenceInputMapping mapping,
+  ) {
+    return _updateInputMappings(nodeId, (mappings) {
+      final index = mappings.indexWhere(
+        (candidate) => candidate.modelInputName == mapping.modelInputName,
+      );
+      if (index < 0) return [...mappings, mapping];
+      return [...mappings]..[index] = mapping;
+    });
+  }
+
+  Future<void> _updateInputMappings(
+    NodeId nodeId,
+    List<ModelInferenceInputMapping> Function(
+      List<ModelInferenceInputMapping> mappings,
+    )
+    update,
+  ) {
+    return _updateNode(nodeId, (node) {
+      if (node.config case ModelInferenceNodeConfig config) {
+        return node.copyWith(
+          config: config.copyWith(inputMappings: update(config.inputMappings)),
+        );
+      }
+      return node;
+    });
+  }
 }

@@ -13,7 +13,7 @@ import {systemModelEntry, systemModelManifestFromUnknown} from "../cli/system-mo
 export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler {
   constructor(
     private readonly catalog: TeamModelCatalog,
-    artifactPublisher: LocalModelArtifactPublisher,
+    private readonly artifactPublisher: LocalModelArtifactPublisher,
     private readonly teamId: string,
     private readonly logger: ApplicationLogger,
   ) {
@@ -49,6 +49,11 @@ export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler 
 
   private async remove(modelId: string): Promise<LocalRuntimeResponse> {
     try {
+      const entry = await this.catalog.findAvailableFor(this.teamId, modelId);
+      if (entry === null || entry.scope.type !== "team" || entry.scope.teamId !== this.teamId) {
+        return {body: {error: "Der lokale Katalogeintrag wurde nicht gefunden."}, statusCode: 404};
+      }
+      await this.artifactPublisher.remove(entry.artifactReference);
       const removed = await this.catalog.removeTeamEntry(this.teamId, modelId);
       if (!removed) return {body: {error: "Der lokale Katalogeintrag wurde nicht gefunden."}, statusCode: 404};
       this.logger.info("local_model_catalog.removed", {modelId, teamId: this.teamId});

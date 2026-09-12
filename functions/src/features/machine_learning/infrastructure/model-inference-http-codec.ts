@@ -1,4 +1,4 @@
-import {type ModelInputValue} from "../domain/entities/model-input-source.js";
+import {type ModelInputSource} from "../domain/entities/model-input-source.js";
 import {type ModelTensor} from "../domain/entities/model-tensor.js";
 import {
   type ModelInferenceOutput,
@@ -43,7 +43,7 @@ export function modelInferenceResultFromJson(value: unknown): ModelInferenceResu
   };
 }
 
-function inputJson(input: ModelInputValue) {
+function inputJson(input: ModelInputSource) {
   switch (input.type) {
     case "image":
     case "file":
@@ -55,7 +55,7 @@ function inputJson(input: ModelInputValue) {
   }
 }
 
-function binaryInputJson(input: Extract<ModelInputValue, {bytes: Uint8Array}>) {
+function binaryInputJson(input: Extract<ModelInputSource, {bytes: Uint8Array}>) {
   const {bytes, ...metadata} = input;
   return {...metadata, dataBase64: Buffer.from(bytes).toString("base64")};
 }
@@ -66,18 +66,19 @@ function outputFrom(value: unknown): ModelInferenceOutput {
   return {...tensor, semantic: requiredString(data.semantic, "Die Ausgabe-Semantik fehlt.")};
 }
 
-function inputsFrom(value: unknown): readonly ModelInputValue[] {
+function inputsFrom(value: unknown): readonly ModelInputSource[] {
   if (!Array.isArray(value)) throw new Error("Die Modelleingaben fehlen.");
   return value.map(inputFrom);
 }
 
-function inputFrom(value: unknown): ModelInputValue {
+function inputFrom(value: unknown): ModelInputSource {
   const data = objectFrom(value, "Eine Modelleingabe ist ungültig.");
+  const name = requiredString(data.name, "Der Name der Modelleingabe fehlt.");
   const type = requiredString(data.type, "Der Typ der Modelleingabe fehlt.");
-  return inputForType(type, data);
+  return {name, ...inputForType(type, data)};
 }
 
-function inputForType(type: string, data: Record<string, unknown>): ModelInputValue {
+function inputForType(type: string, data: Record<string, unknown>) {
   switch (type) {
     case "image":
     case "file":

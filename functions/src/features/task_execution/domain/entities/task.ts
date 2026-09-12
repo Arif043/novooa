@@ -13,6 +13,11 @@ import {
 import {
   type TaskRunInteraction,
 } from "./task-run-interaction.js";
+import {
+  type ModelInputSourceType,
+  type ModelTensorDataType,
+  type TensorDimension,
+} from "../../../machine_learning/domain/entities/model-contract.js";
 import {type NodeOutputValue} from "./workflow-value.js";
 export type {
   DialogInputDefinition,
@@ -135,6 +140,14 @@ export type MediaInputNodeConfig = MediaInputDefinition & {
 export type ModelInferenceNodeConfig = {
   primitive: "modelInference";
   modelId: string;
+  inputMappings: ModelInferenceInputMapping[];
+};
+export type ModelInferenceInputMapping = {
+  modelInputName: string;
+  workflowMapping: string;
+  sourceType: ModelInputSourceType;
+  dataType: ModelTensorDataType;
+  shape: readonly TensorDimension[];
 };
 export type ForEachNodeConfig = {
   primitive: "forEach";

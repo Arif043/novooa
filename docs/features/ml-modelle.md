@@ -128,7 +128,7 @@ Pfad ist kein Bestandteil eines Katalogeintrags oder Workflow-Werts.
 vorbereiteten Eingabe-Tensoren gegen das Manifest, liest das Artefakt genau
 einmal und validiert auch die Tensoren der Runtime-Ausgabe gegen die
 Ausgangsdefinition im Manifest. `RunModelInferenceWithSources` löst davor die Verfügbarkeit
-für ein Team auf, ordnet alle Workflow-Quellen dem Manifest zu, bereitet sie vor
+für ein Team auf, validiert die benannten Workflow-Quellen gegen das Manifest, bereitet sie vor
 und delegiert anschließend an `RunModelInference`.
 
 ```text
@@ -178,14 +178,23 @@ Workflow-Wert → Adapter → Modellquelle → PrepareModelInputs
                                       ModelTensor
 ```
 
-Der `modelInference`-Baustein adaptiert alle Vorgängerwerte in der Reihenfolge
-der eingehenden Kanten auf Modellquellen. Erst das Manifest prüft Anzahl
-und Typ dieser Quellen. Datei- und Bildwerte lädt der Adapter über den
+Der `modelInference`-Baustein speichert für jede Modelleingabe den
+Manifestnamen, ein `workflowMapping` sowie Quelltyp, Tensor-Datentyp und Form.
+Im Task Builder wird das Manifest des ausgewählten Katalogmodells geparst: Jeder
+Manifest-Eingang erscheint als eigene Reihe mit Name, frei editierbarem
+Workflow-Mapping und Datentyp. Das Mapping akzeptiert feste Werte und
+Variablen wie `{{eingabe.value}}`. Bei einer alleinstehenden Variable übernimmt
+die Runtime deren ursprünglichen Wert statt einer Textdarstellung. Kanten
+bestimmen weiterhin ausschließlich die Ausführungsreihenfolge. Das Manifest
+prüft anschließend Vollständigkeit, Eindeutigkeit und Typ jeder Quelle.
+Datei- und Bildwerte lädt der Adapter über den
 bestehenden `TeamFileContentReader`; eine Firebase-Storage-Referenz wird nicht
-in das Manifest oder an die Runtime weitergereicht. Seine primäre Ausgabe
-ist JSON mit Modell-ID und Tensoren (`name`, `semantic`, `dataType`, `shape`,
-`dataBase64`); beispielsweise ist der erste Tensor über
-`{{modell1.value.outputs.0.dataBase64}}` referenzierbar.
+in das Manifest oder an die Runtime weitergereicht. Tensor-Ausgänge werden vor
+dem Übergang in den Workflow in verschachtelte JSON-Arrays ihrer Tensorform
+dekodiert. Sie stehen gesammelt unter `value` und zusätzlich als benannte
+Outputs bereit; der Ausgang `y` ist beispielsweise über `{{modell1.y}}` oder
+`{{modell1.value.y}}` referenzierbar. Base64 bleibt auf die technische
+HTTP-Grenze der Inferenz beschränkt.
 
 Lokal erfüllt `LocalPythonModelInputTransformer` den Port. Sein Worker baut
 eine `TransformationRegistry` aus eigenständigen Strategien zusammen. Dieselbe

@@ -10,8 +10,8 @@ test("decodes portable binary and tensor inference inputs", () => {
     teamId: "team-1",
     modelId: "classifier",
     inputs: [
-      {type: "image", contentType: "image/png", dataBase64: "AQI="},
-      {type: "tensor", tensor: tensorJson("input", "AwQ=")},
+      {name: "image", type: "image", contentType: "image/png", dataBase64: "AQI="},
+      {name: "input", type: "tensor", tensor: tensorJson("input", "AwQ=")},
     ],
   });
 
@@ -29,7 +29,7 @@ test("rejects malformed binary input before model inference", () => {
     () => modelInferenceRequestFromJson({
       teamId: "team-1",
       modelId: "classifier",
-      inputs: [{type: "image", contentType: "image/png", dataBase64: "not base64"}],
+      inputs: [{name: "image", type: "image", contentType: "image/png", dataBase64: "not base64"}],
     }),
     /Binärdaten/,
   );

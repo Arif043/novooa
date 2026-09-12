@@ -39,6 +39,7 @@ import {
 } from "./task-node-runner.js";
 import {
   resolveVariableTemplates,
+  resolveVariableTemplateValue,
   variableTemplateContextFor,
 } from "./variable-template.js";
 import {type TaskGraphRuntime} from "./task-graph-runtime.js";
@@ -202,6 +203,10 @@ function runContextFor(
     modelInference: runtime.modelInference,
     runSubgraph: runSubgraphFor(ai, variables, input.teamId, runtime),
     resolveTemplates: (text: string) => resolveVariableTemplates(
+      text,
+      variableTemplateContextFor(input.taskDefinition, results, variables),
+    ),
+    resolveTemplateValue: (text: string) => resolveVariableTemplateValue(
       text,
       variableTemplateContextFor(input.taskDefinition, results, variables),
     ),

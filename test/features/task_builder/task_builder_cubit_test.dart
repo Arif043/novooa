@@ -442,6 +442,44 @@ void main() {
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
+  test('aktualisiert das Workflow-Mapping einer Modelleingabe', () async {
+    final repository = _InMemoryTaskRepository(_taskWithModelInferenceNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.selectModelInference(
+      const NodeId('node.model'),
+      'mobilenet-v3',
+      const [
+        ModelInferenceInputMapping(
+          modelInputName: 'pixel_values',
+          workflowMapping: '',
+          sourceType: 'tensor',
+          dataType: 'float32',
+          shape: [1],
+        ),
+      ],
+    );
+    await cubit.updateModelInferenceWorkflowMapping(
+      const NodeId('node.model'),
+      const ModelInferenceInputMapping(
+        modelInputName: 'pixel_values',
+        workflowMapping: '{{eingabe.value}}',
+        sourceType: 'tensor',
+        dataType: 'float32',
+        shape: [1],
+      ),
+    );
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final config =
+        state.editingTask.nodes.first.config as ModelInferenceNodeConfig;
+
+    expect(config.inputMappings.single.modelInputName, 'pixel_values');
+    expect(config.inputMappings.single.workflowMapping, '{{eingabe.value}}');
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
+  });
+
   test('updateWriteFile speichert Dateiname und Inhaltstyp', () async {
     final repository = _InMemoryTaskRepository(_taskWithWriteFileNode());
     final cubit = TaskBuilderCubit(repository: repository);

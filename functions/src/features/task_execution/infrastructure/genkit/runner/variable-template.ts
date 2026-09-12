@@ -24,6 +24,15 @@ export function resolveVariableTemplates(
   });
 }
 
+export function resolveVariableTemplateValue(
+  text: string,
+  context: VariableTemplateContext,
+): unknown {
+  const match = text.match(/^\{\{\s*([a-zA-Z_][\w]*(?:\.[a-zA-Z_][\w]*|\.\d+)*)\s*\}\}$/);
+  if (match === null) return resolveVariableTemplates(text, context);
+  return templateValueAt(context, match[1]);
+}
+
 export function variableTemplateContextFor(
   task: TaskDefinition,
   results: Map<string, NodeExecutionResult>,

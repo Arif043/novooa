@@ -3,6 +3,10 @@ import {
   type NodeOutputValue,
   workflowPrimitives,
 } from "../../../domain/entities/task.js";
+import {
+  modelInputSourceTypes,
+  modelTensorDataTypes,
+} from "../../../../machine_learning/domain/entities/model-contract.js";
 
 export const workflowPrimitiveSchema = z.enum(workflowPrimitives);
 
@@ -157,6 +161,13 @@ export const mediaInputNodeConfigSchema = mediaInputDefinitionSchema.extend({
 export const modelInferenceNodeConfigSchema = z.object({
   primitive: z.literal("modelInference").default("modelInference"),
   modelId: z.string().default(""),
+  inputMappings: z.array(z.object({
+    modelInputName: z.string(),
+    workflowMapping: z.string().default(""),
+    sourceType: z.enum(modelInputSourceTypes).default("text"),
+    dataType: z.enum(modelTensorDataTypes).default("float32"),
+    shape: z.array(z.union([z.number().int().positive(), z.literal("dynamic")])).default([1]),
+  })).default([]),
 });
 
 export const forEachNodeConfigSchema = z.object({

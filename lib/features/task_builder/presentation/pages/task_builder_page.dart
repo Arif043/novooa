@@ -11,6 +11,7 @@ import 'package:syscat2/features/task_builder/presentation/cubits/node_language_
 import 'package:syscat2/features/task_builder/presentation/cubits/node_skill_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
+import 'package:syscat2/features/machine_learning/presentation/cubits/model_catalog_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/task_builder_body.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/task_title_field.dart';
 
@@ -37,6 +38,10 @@ class TaskBuilderPage extends StatelessWidget {
         BlocProvider(
           create: (_) => serviceLocator<NodeLanguageModelsCubit>()..load(),
         ),
+        if (serviceLocator.isRegistered<ModelCatalogCubit>())
+          BlocProvider(
+            create: (_) => serviceLocator<ModelCatalogCubit>()..load(),
+          ),
         if (MvpFeatureFlags.skillsEnabled)
           BlocProvider(
             create: (_) => serviceLocator<NodeSkillAttachmentsCubit>()..load(),

@@ -1,12 +1,12 @@
 import {
-  type ModelInputValue,
+  type ModelInputSource,
 } from "../entities/model-input-source.js";
 import {type ModelTensorDataType} from "../entities/model-contract.js";
 
 export type ModelInferenceRequest = {
   teamId: string;
   modelId: string;
-  inputs: readonly ModelInputValue[];
+  inputs: readonly ModelInputSource[];
 };
 
 export type ModelInferenceOutput = {

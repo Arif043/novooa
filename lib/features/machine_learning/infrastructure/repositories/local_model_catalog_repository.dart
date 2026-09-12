@@ -58,15 +58,44 @@ class LocalModelCatalogRepository implements ModelCatalogRepository {
     };
     final contract = _object(entry['contract']);
     final artifact = _object(entry['artifactReference']);
+    final inputs = _items(
+      contract['inputs'],
+    ).map(_manifestInputFrom).toList(growable: false);
     return ModelCatalogEntry(
       id: _text(entry, 'id'),
       title: _text(entry, 'title'),
       description: _text(entry, 'description'),
       tags: _strings(entry['tags']),
-      inputCount: _items(contract['inputs']).length,
+      inputs: inputs,
       outputCount: _items(contract['outputs']).length,
       sizeBytes: _positiveInt(artifact['sizeBytes']),
       isManagedLocally: _object(entry['scope'])['type'] == 'team',
+    );
+  }
+
+  ModelManifestInput _manifestInputFrom(Object? value) {
+    final input = _object(value);
+    return ModelManifestInput(
+      name: _text(input, 'name'),
+      source: _sourceFrom(_text(input, 'source')),
+      dataType: _text(input, 'dataType'),
+      shape: _shapeFrom(input['shape']),
+    );
+  }
+
+  List<Object> _shapeFrom(Object? value) {
+    if (value is! List ||
+        !value.every((dimension) => dimension is int || dimension is String)) {
+      throw const FormatException('Der Modelleingang ist ungültig.');
+    }
+    return value.cast<Object>();
+  }
+
+  ModelInputSource _sourceFrom(String value) {
+    return ModelInputSource.values.firstWhere(
+      (source) => source.name == value,
+      orElse: () =>
+          throw const FormatException('Der Modelleingang ist ungültig.'),
     );
   }
 
