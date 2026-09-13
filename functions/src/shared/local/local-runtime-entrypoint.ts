@@ -1,4 +1,5 @@
 import {type Server} from "node:http";
+import {readFileSync} from "node:fs";
 import {join, resolve} from "node:path";
 import {
   DevelopmentLocalRuntimeLicenseService,
@@ -32,6 +33,7 @@ async function startLocalRuntime(): Promise<void> {
       runtimeRoot,
       localMasterKey,
       isLicenseActive: () => licenses.activeContext() !== null,
+      signedLicense: () => licenses.signedActiveLicense(),
     });
     const restored = await licenses.restore();
     if (restored !== null) await application.activate(restored);
@@ -78,8 +80,14 @@ function licenseServiceFor(runtimeRoot: string): LocalRuntimeLicenseService {
     new HttpLocalRuntimeLicenseGatewayClient(
       requiredEnvironment("LOCAL_RUNTIME_LICENSE_GATEWAY_URL"),
     ),
-    requiredEnvironment("LOCAL_RUNTIME_LICENSE_PUBLIC_KEY"),
+    licensePublicKey(),
   );
+}
+
+function licensePublicKey(): string {
+  const file = optionalEnvironment("LOCAL_RUNTIME_LICENSE_PUBLIC_KEY_FILE");
+  if (file) return readFileSync(file, "utf8").trim();
+  return requiredEnvironment("LOCAL_RUNTIME_LICENSE_PUBLIC_KEY");
 }
 
 function optionalEnvironment(name: string): string | undefined {

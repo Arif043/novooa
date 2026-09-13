@@ -1,0 +1,52 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import {type SignedLocalRuntimeLicense} from
+  "../../../licensing/domain/entities/local-runtime-license-lease.js";
+import {LocalPushDeviceHttpHandler} from "./local-push-device-http-handler.js";
+import {type LocalRuntimePushRelayClient} from "./local-runtime-push-relay-client.js";
+
+test("forwards a local FCM token with the signed license to the relay", async () => {
+  const relay = new RelayFake();
+  const handler = new LocalPushDeviceHttpHandler(() => license, relay);
+
+  const response = await handler.handle({
+    method: "POST",
+    url: "/v1/push-devices",
+    body: {token: "a".repeat(32), platform: "macos"},
+  });
+
+  assert.deepEqual(response, {body: {status: "registered"}, statusCode: 200});
+  assert.deepEqual(relay.devices, [{license, token: "a".repeat(32), platform: "macos"}]);
+});
+
+test("rejects push registration without a signed local license", async () => {
+  const handler = new LocalPushDeviceHttpHandler(() => null, new RelayFake());
+
+  const response = await handler.handle({
+    method: "POST",
+    url: "/v1/push-devices",
+    body: {token: "a".repeat(32), platform: "macos"},
+  });
+
+  assert.equal(response?.statusCode, 400);
+});
+
+const license: SignedLocalRuntimeLicense = {
+  payload: {
+    licenseId: "license-1",
+    workspaceId: "workspace-1",
+    issuedAt: "2026-09-13T10:00:00.000Z",
+  },
+  signature: "signature",
+};
+
+class RelayFake implements LocalRuntimePushRelayClient {
+  readonly devices: {license: SignedLocalRuntimeLicense; token: string; platform: string}[] = [];
+
+  async register(nextLicense: SignedLocalRuntimeLicense, device: {token: string; platform: string}) {
+    this.devices.push({license: nextLicense, ...device});
+  }
+
+  async remove(): Promise<void> {}
+  async send(): Promise<void> {}
+}

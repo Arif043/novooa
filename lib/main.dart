@@ -43,18 +43,18 @@ Future<void> main() =>
 Future<void> _startApplication() async {
   WidgetsFlutterBinding.ensureInitialized();
   final runtimeProfile = RuntimeProfile.fromEnvironment();
+  final pushFirebaseEnabled = await _initializeFirebase(runtimeProfile);
   if (runtimeProfile.isCloud) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
     await FirebaseAppCheck.instance.activate(
       providerWeb: _webAppCheckProvider(),
     );
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     configureFirestoreWebCache(FirebaseFirestore.instance);
     if (FirebaseEmulatorConfig.enabled) {
       await const FirebaseEmulatorConfig().connect();
     }
+  }
+  if (pushFirebaseEnabled) {
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   }
   registerMediaInputPickerPlatform();
   configureDependencies(runtimeProfile: runtimeProfile);
@@ -68,10 +68,33 @@ Future<void> _startApplication() async {
   if (!runtimeProfile.isLocal && shouldNavigateFromPushClick()) {
     const FcmPushClickBridge().start(_openNotificationData);
   }
-  if (runtimeProfile.isCloud) {
+  if (pushFirebaseEnabled) {
     unawaited(serviceLocator<FcmBootstrapper>().start());
   }
-  runApp(MyApp(runtimeProfile: runtimeProfile));
+  runApp(
+    MyApp(
+      runtimeProfile: runtimeProfile,
+      pushFirebaseEnabled: pushFirebaseEnabled,
+    ),
+  );
+}
+
+Future<bool> _initializeFirebase(RuntimeProfile profile) async {
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    return true;
+  } on UnsupportedError catch (error, stackTrace) {
+    if (profile.isCloud) rethrow;
+    logException(
+      message: 'Lokale Push-Benachrichtigungen sind nicht konfiguriert.',
+      error: error,
+      stackTrace: stackTrace,
+      name: 'fcm',
+    );
+    return false;
+  }
 }
 
 void _logUncaughtZoneError(Object error, StackTrace stackTrace) {
@@ -109,9 +132,14 @@ WebProvider _webAppCheckProvider() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key, required this.runtimeProfile});
+  const MyApp({
+    super.key,
+    required this.runtimeProfile,
+    required this.pushFirebaseEnabled,
+  });
 
   final RuntimeProfile runtimeProfile;
+  final bool pushFirebaseEnabled;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -146,7 +174,7 @@ class _MyAppState extends State<MyApp> {
 
   Widget _wrapApplication(BuildContext context, Widget? child) {
     final content = child ?? const SizedBox.shrink();
-    final app = widget.runtimeProfile.isCloud
+    final app = widget.pushFirebaseEnabled
         ? FcmForegroundNotificationListener(
             onNotificationOpened: _openNotificationFromPushClick,
             onForegroundNotificationAction: _openNotification,

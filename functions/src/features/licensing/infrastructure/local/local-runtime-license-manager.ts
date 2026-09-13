@@ -1,6 +1,7 @@
 import {
   isActiveLocalRuntimeLicense,
   type LocalRuntimeLicense,
+  type SignedLocalRuntimeLicense,
 } from "../../domain/entities/local-runtime-license-lease.js";
 import {localRuntimeActivationTokenFrom} from "../../domain/entities/local-runtime-activation-token.js";
 import {verifiesLocalRuntimeLicense} from "../license-lease-crypto.js";
@@ -28,6 +29,7 @@ export interface LocalRuntimeLicenseService {
   restore(): Promise<LocalRuntimeLicenseContext | null>;
   activate(input: LocalRuntimeLicenseActivation): Promise<LocalRuntimeLicenseContext>;
   activeContext(): LocalRuntimeLicenseContext | null;
+  signedActiveLicense(): SignedLocalRuntimeLicense | null;
   status(): LocalRuntimeLicenseStatus;
 }
 
@@ -55,6 +57,12 @@ export class GatewayLocalRuntimeLicenseService implements LocalRuntimeLicenseSer
     if (this.state === undefined || !this.isValid(this.state)) return null;
     const {licenseId, workspaceId, expiresAt} = this.state.license.payload;
     return {licenseId, workspaceId, expiresAt};
+  }
+
+  signedActiveLicense(): SignedLocalRuntimeLicense | null {
+    return this.state !== undefined && this.isValid(this.state)
+      ? this.state.license
+      : null;
   }
 
   status(): LocalRuntimeLicenseStatus {
@@ -94,6 +102,10 @@ export class DevelopmentLocalRuntimeLicenseService implements LocalRuntimeLicens
 
   activeContext(): LocalRuntimeLicenseContext {
     return this.context;
+  }
+
+  signedActiveLicense(): SignedLocalRuntimeLicense | null {
+    return null;
   }
 
   status(): LocalRuntimeLicenseStatus {

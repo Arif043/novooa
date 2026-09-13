@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -82,6 +83,16 @@ class _NotificationHeader extends StatelessWidget {
   }
 
   Future<void> _requestPushNotifications(BuildContext context) async {
+    if (Firebase.apps.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Push-Benachrichtigungen sind auf diesem Gerät noch nicht eingerichtet.',
+          ),
+        ),
+      );
+      return;
+    }
     await serviceLocator<FcmBootstrapper>().requestPermissionAndRegister();
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(

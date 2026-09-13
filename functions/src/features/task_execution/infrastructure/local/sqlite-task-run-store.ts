@@ -15,6 +15,8 @@ import {
   runNotFound,
 } from "../genkit/runner/task-run-store-errors.js";
 import {type ActivityStore} from "../../domain/repositories/activity-store.js";
+import {type TaskRunApprovalNotificationStore} from
+  "../../../notifications/domain/repositories/task-run-approval-notification-store.js";
 import {
   type EnqueueTaskRunInput,
   newTaskRunDocument,
@@ -51,6 +53,7 @@ export class SQLiteTaskRunStore implements TaskRunStore {
   constructor(
     private readonly database: LocalSqlDatabase,
     private readonly activityStore: ActivityStore,
+    private readonly approvalNotifications: TaskRunApprovalNotificationStore,
   ) {}
 
   async enqueueTaskRun(input: EnqueueTaskRunInput): Promise<TaskRunDocument> {
@@ -112,6 +115,7 @@ export class SQLiteTaskRunStore implements TaskRunStore {
       teamId,
       run.runId,
     ]);
+    await this.approvalNotifications.notifyApprovalRequired({teamId, run, output, review});
   }
 
   async markRunFailed(teamId: string, run: TaskRunDocument, error: unknown) {
@@ -134,6 +138,7 @@ export class SQLiteTaskRunStore implements TaskRunStore {
 
   async rejectTaskRun(teamId: string, runId: string) {
     await this.database.run(rejectSql(), [teamId, runId]);
+    await this.approvalNotifications.markApprovalNotifications({teamId, runId, status: "rejected"});
   }
 
   async approveTaskRun(
@@ -142,6 +147,7 @@ export class SQLiteTaskRunStore implements TaskRunStore {
     outputs: Record<string, NodeOutputValue>,
   ) {
     await this.database.run(approveSql(), [json(outputs), teamId, runId]);
+    await this.approvalNotifications.markApprovalNotifications({teamId, runId, status: "accepted"});
   }
 
   private async insertRun(teamId: string, run: TaskRunDocument) {

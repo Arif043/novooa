@@ -67,6 +67,10 @@ class FakeLicenseService implements LocalRuntimeLicenseService {
     return this.active ? context : null;
   }
 
+  signedActiveLicense() {
+    return null;
+  }
+
   status(): LocalRuntimeLicenseStatus {
     return this.active ? {state: "active", expiresAt: context.expiresAt} : {state: "notActivated"};
   }

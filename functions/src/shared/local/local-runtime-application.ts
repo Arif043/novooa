@@ -1,4 +1,5 @@
 import {type LocalRuntimeLicenseContext} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
+import {type SignedLocalRuntimeLicense} from "../../features/licensing/domain/entities/local-runtime-license-lease.js";
 import {createLocalRuntimeComposition, type LocalRuntimeComposition} from "./local-runtime-composition.js";
 import {type LocalRuntimeRequest, type LocalRuntimeRequestHandler, type LocalRuntimeResponse} from "./local-runtime-http-server.js";
 import {ensureLocalRuntimeWorkspace, type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
@@ -9,6 +10,7 @@ export type LocalRuntimeApplicationOptions = {
   runtimeRoot: string;
   localMasterKey: string;
   isLicenseActive: () => boolean;
+  signedLicense: () => SignedLocalRuntimeLicense | null;
 };
 
 export class LocalRuntimeApplication implements LocalRuntimeRequestHandler {
@@ -27,6 +29,7 @@ export class LocalRuntimeApplication implements LocalRuntimeRequestHandler {
       ...this.options,
       workspace,
       isLicenseActive: this.options.isLicenseActive,
+      signedLicense: this.options.signedLicense,
     });
     this.runtime.taskRunWorker.start();
     this.runtime.taskTriggerWorker.start();

@@ -1,14 +1,10 @@
-import {defineSecret} from "firebase-functions/params";
 import {onRequest} from "firebase-functions/v2/https";
 import {localRuntimeActivationTokenFrom} from "../../domain/entities/local-runtime-activation-token.js";
 import {signLocalRuntimeLicense} from "../license-lease-crypto.js";
 import {
   FirestoreLocalRuntimeLicenseRegistry,
 } from "./firestore-local-runtime-license-registry.js";
-
-export const localRuntimeLicenseSigningKey = defineSecret(
-  "LOCAL_RUNTIME_LICENSE_SIGNING_KEY",
-);
+import {localRuntimeLicenseSigningKey} from "./local-runtime-license-signing-key.js";
 
 const licenseRegistry = new FirestoreLocalRuntimeLicenseRegistry();
 

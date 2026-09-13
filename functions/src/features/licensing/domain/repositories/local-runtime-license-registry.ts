@@ -2,4 +2,5 @@ import {type LocalRuntimeLicense} from "../entities/local-runtime-license-lease.
 
 export interface LocalRuntimeLicenseRegistry {
   licenseForActivationToken(token: string, now: Date): Promise<LocalRuntimeLicense>;
+  licenseForId(licenseId: string, now: Date): Promise<LocalRuntimeLicense>;
 }

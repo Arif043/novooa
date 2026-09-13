@@ -5,16 +5,15 @@ import {
   type MarkApprovalNotificationInput,
   type TaskRunApprovalNotificationStore,
 } from "../../domain/repositories/task-run-approval-notification-store.js";
-import {
-  type PushNotification,
-  FirebasePushNotificationSender,
-} from "./firebase-push-notification-sender.js";
+import {type PushNotification} from "../../domain/entities/push-notification.js";
+import {type PushNotificationSender} from
+  "../../domain/repositories/push-notification-sender.js";
 import {getDatabase} from "../../../../shared/firebase/firestore-db.js";
 
 export class FirestoreTaskRunApprovalNotificationStore
 implements TaskRunApprovalNotificationStore {
   constructor(
-    private readonly pushNotifications: FirebasePushNotificationSender,
+    private readonly pushNotifications: PushNotificationSender,
   ) {}
 
   async notifyApprovalRequired(input: ApprovalNotificationInput) {
@@ -28,7 +27,7 @@ implements TaskRunApprovalNotificationStore {
     }
     await batch.commit();
     await Promise.all(members.docs.map((member) =>
-      this.pushNotifications.sendToUser(member.id, approvalPushNotification(input)),
+      this.pushNotifications.sendToRecipient(member.id, approvalPushNotification(input)),
     ));
   }
 

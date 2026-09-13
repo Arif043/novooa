@@ -7,9 +7,12 @@ services:
       dockerfile: functions/Dockerfile.local-runtime
     environment:
       PORT: "8080"
-      NOVOOA_LOCAL_DEVELOPMENT: "true"
+      NOVOOA_LOCAL_DEVELOPMENT: ${NOVOOA_LOCAL_DEVELOPMENT:-false}
       PYTHON_INFERENCE_SIDECAR_URL: http://novooa-ml:8081
       LOCAL_RUNTIME_MASTER_KEY_FILE: /run/secrets/novooa_runtime_master_key
+      LOCAL_RUNTIME_LICENSE_PUBLIC_KEY_FILE: /run/secrets/novooa_runtime_license_public_key
+      LOCAL_RUNTIME_LICENSE_GATEWAY_URL: ${LOCAL_RUNTIME_LICENSE_GATEWAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/issueLocalRuntimeLicense}
+      LOCAL_RUNTIME_PUSH_RELAY_URL: ${LOCAL_RUNTIME_PUSH_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimePushRelay}
     depends_on:
       novooa-ml:
         condition: service_healthy
@@ -19,6 +22,7 @@ services:
       - novooa-data:/var/lib/novooa
     secrets:
       - novooa_runtime_master_key
+      - novooa_runtime_license_public_key
     networks:
       - novooa-public
       - novooa-private
@@ -60,3 +64,5 @@ volumes:
 secrets:
   novooa_runtime_master_key:
     file: ${NOVOOA_LOCAL_SECRETS_DIRECTORY:-.novooa}/runtime-master-key
+  novooa_runtime_license_public_key:
+    file: ${NOVOOA_LOCAL_SECRETS_DIRECTORY:-.novooa}/runtime-license-public-key

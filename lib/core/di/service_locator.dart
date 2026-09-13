@@ -49,14 +49,14 @@ import 'package:syscat2/features/language_models/infrastructure/repositories/fir
 import 'package:syscat2/features/language_models/presentation/cubits/language_models_settings_cubit.dart';
 import 'package:syscat2/features/notifications/domain/repositories/app_notification_repository.dart';
 import 'package:syscat2/features/notifications/domain/usecases/accept_team_invitation.dart';
-import 'package:syscat2/features/notifications/domain/repositories/notification_device_repository.dart';
+import 'package:syscat2/features/notifications/domain/repositories/push_device_repository.dart';
 import 'package:syscat2/features/notifications/domain/usecases/reject_team_invitation.dart';
-import 'package:syscat2/features/notifications/domain/usecases/register_notification_device.dart';
-import 'package:syscat2/features/notifications/domain/usecases/unregister_notification_device.dart';
+import 'package:syscat2/features/notifications/domain/usecases/register_push_device.dart';
+import 'package:syscat2/features/notifications/domain/usecases/unregister_push_device.dart';
 import 'package:syscat2/features/notifications/domain/usecases/watch_app_notifications.dart';
 import 'package:syscat2/features/notifications/infrastructure/datasources/firebase_messaging_token_provider.dart';
 import 'package:syscat2/features/notifications/infrastructure/repositories/firestore_app_notification_repository.dart';
-import 'package:syscat2/features/notifications/infrastructure/repositories/firestore_notification_device_repository.dart';
+import 'package:syscat2/features/notifications/infrastructure/repositories/firestore_push_device_repository.dart';
 import 'package:syscat2/features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import 'package:syscat2/features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import 'package:syscat2/features/schedule/domain/repositories/task_trigger_repository.dart';
@@ -244,10 +244,8 @@ void _configureCloudDependencies() {
         serviceLocator<TeamRepository>(),
       ),
     )
-    ..registerLazySingleton<NotificationDeviceRepository>(
-      () => FirestoreNotificationDeviceRepository(
-        serviceLocator<FirebaseFirestore>(),
-      ),
+    ..registerLazySingleton<PushDeviceRepository>(
+      () => FirestorePushDeviceRepository(serviceLocator<FirebaseFirestore>()),
     )
     ..registerLazySingleton<AppNotificationRepository>(
       () => FirestoreAppNotificationRepository(
@@ -421,9 +419,7 @@ void _configureCloudDependencies() {
       ),
     )
     ..registerLazySingleton(
-      () => RegisterNotificationDevice(
-        serviceLocator<NotificationDeviceRepository>(),
-      ),
+      () => RegisterPushDevice(serviceLocator<PushDeviceRepository>()),
     )
     ..registerLazySingleton(
       () => WatchAppNotifications(serviceLocator<AppNotificationRepository>()),
@@ -435,9 +431,7 @@ void _configureCloudDependencies() {
       () => RejectTeamInvitation(serviceLocator<AppNotificationRepository>()),
     )
     ..registerLazySingleton(
-      () => UnregisterNotificationDevice(
-        serviceLocator<NotificationDeviceRepository>(),
-      ),
+      () => UnregisterPushDevice(serviceLocator<PushDeviceRepository>()),
     )
     ..registerLazySingleton(
       () => WatchCurrentTeam(serviceLocator<TeamRepository>()),
@@ -461,8 +455,8 @@ void _configureCloudDependencies() {
       () => FcmBootstrapper(
         serviceLocator<AuthRepository>(),
         serviceLocator<FirebaseMessagingTokenProvider>(),
-        serviceLocator<RegisterNotificationDevice>(),
-        serviceLocator<UnregisterNotificationDevice>(),
+        serviceLocator<RegisterPushDevice>(),
+        serviceLocator<UnregisterPushDevice>(),
       ),
       dispose: (bootstrapper) => bootstrapper.dispose(),
     )

@@ -18,6 +18,15 @@ implements LocalRuntimeLicenseRegistry {
       .get();
     return licenseFromSnapshot(snapshot, now);
   }
+
+  async licenseForId(licenseId: string, now: Date): Promise<LocalRuntimeLicense> {
+    const snapshot = await getDatabase().collection("licenses")
+      .where("licenseId", "==", licenseId).limit(2).get();
+    if (snapshot.size !== 1) {
+      throw new LocalRuntimeLicenseError("Die Lizenz ist ungültig.");
+    }
+    return licenseFromSnapshot(snapshot.docs[0], now);
+  }
 }
 
 function licenseFromSnapshot(

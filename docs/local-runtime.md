@@ -177,7 +177,15 @@ Der Produktiv-Container benötigt diese Variablen:
 ```text
 LOCAL_RUNTIME_LICENSE_PUBLIC_KEY=<Ed25519-Public-Key im PEM-Format>
 LOCAL_RUNTIME_LICENSE_GATEWAY_URL=https://<region>-<projekt>.cloudfunctions.net/issueLocalRuntimeLicense
+LOCAL_RUNTIME_PUSH_RELAY_URL=https://<region>-<projekt>.cloudfunctions.net/localRuntimePushRelay
 ```
+
+Im Compose-Betrieb wird der öffentliche Lizenzschlüssel bevorzugt über
+`LOCAL_RUNTIME_LICENSE_PUBLIC_KEY_FILE` aus dem Docker-Secret
+`novooa_runtime_license_public_key` gelesen. Die Entwicklungsumgebung kann
+explizit mit `NOVOOA_LOCAL_DEVELOPMENT=true` gestartet werden; sie umgeht die
+Lizenzprüfung, kann jedoch keine produktiven Push-Geräte beim Cloud-Relay
+registrieren.
 
 Der zugehörige private Ed25519-Schlüssel ist als Firebase-Secret
 `LOCAL_RUNTIME_LICENSE_SIGNING_KEY` ausschließlich im Lizenz-Gateway
@@ -196,6 +204,26 @@ Der lokale SQLite-Arbeitsbereich wird deterministisch aus der signierten
 Arbeitsbereich-ID erzeugt. Die lokale Desktop-App verwendet für UI-seitige
 Metadaten einen nicht sicherheitsrelevanten lokalen Benutzer; die Runtime bleibt
 für die tatsächliche Arbeitsbereichsgrenze maßgeblich.
+
+## Push-Benachrichtigungen
+
+Die Desktop-App registriert ihren FCM-Token über `POST /v1/push-devices` bei
+der lokalen Runtime. Diese leitet die Registrierung zusammen mit der
+signierten, aktiven Lizenz an `localRuntimePushRelay` weiter. Der Cloud-Relay
+prüft Lizenzsignatur, Status und Arbeitsbereich erneut und speichert Tokens
+unter der Lizenz-ID. Wartet eine lokale Aufgabe auf eine Freigabe, sendet die
+Runtime den Push über denselben Relay. Fehler beim Relay werden protokolliert,
+blockieren die lokale Aufgabe aber nicht.
+
+Der Relay verarbeitet transportneutrale Push-Nachrichten mit `title`, `body`
+und einem String-zu-String-Datenfeld. `registerDevice` und `removeDevice`
+verwalten die Geräte einer Lizenz; `send` stellt jede fachliche
+Push-Benachrichtigung an deren registrierte Geräte zu. Freigaben sind damit
+ein Anwendungsfall des allgemeinen Push-Vertrags, nicht Teil der Relay-API.
+
+Für die Desktop-Auslieferung muss Firebase für die jeweilige Plattform
+konfiguriert sein. Bei macOS sind zusätzlich APNs-Credentials und die
+Push-Berechtigung des signierten App-Bundles erforderlich.
 
 ## Twilio und externe Trigger
 

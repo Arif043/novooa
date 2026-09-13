@@ -26,13 +26,13 @@ void main() {
         await firstBootstrapper.start();
         await secondBootstrapper.start();
 
-        expect(deviceRepository.savedTokens, hasLength(2));
+        expect(deviceRepository.savedDevices, hasLength(2));
         expect(
-          deviceRepository.savedTokens.map((token) => token.userId),
+          deviceRepository.savedDevices.map((device) => device.ownerId),
           everyElement(user.id.value),
         );
         expect(
-          deviceRepository.savedTokens.map((token) => token.token),
+          deviceRepository.savedDevices.map((device) => device.token),
           containsAll(['token-telefon', 'token-tablet']),
         );
 
@@ -59,10 +59,10 @@ void main() {
       authRepository.emit(testUser('kunde-2'));
       await Future<void>.delayed(Duration.zero);
 
-      expect(deviceRepository.deletedTokens, [
-        (userId: firstUser.id.value, token: 'token-telefon'),
+      expect(deviceRepository.removedDevices, [
+        (ownerId: firstUser.id.value, token: 'token-telefon'),
       ]);
-      expect(deviceRepository.savedTokens.last.userId, 'kunde-2');
+      expect(deviceRepository.savedDevices.last.ownerId, 'kunde-2');
       expect(tokenProvider.tokenDeleted, isFalse);
 
       await disposeTestResources([bootstrapper], [authRepository], [
@@ -84,11 +84,11 @@ void main() {
       );
 
       await bootstrapper.start();
-      expect(deviceRepository.savedTokens, isEmpty);
+      expect(deviceRepository.savedDevices, isEmpty);
       expect(tokenProvider.permissionRequested, isFalse);
 
       await bootstrapper.requestPermissionAndRegister();
-      expect(deviceRepository.savedTokens.single.token, 'token-telefon');
+      expect(deviceRepository.savedDevices.single.token, 'token-telefon');
       expect(tokenProvider.permissionRequested, isTrue);
 
       await disposeTestResources([bootstrapper], [authRepository], [

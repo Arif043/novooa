@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../features/activity/domain/repositories/media_input_picker.dart';
 import '../../features/activity/domain/repositories/task_activity_repository.dart';
@@ -52,10 +53,16 @@ import '../../features/licensing/domain/usecases/load_local_runtime_license_stat
 import '../../features/licensing/infrastructure/repositories/http_local_runtime_license_repository.dart';
 import '../../features/licensing/presentation/cubits/local_runtime_license_cubit.dart';
 import '../../features/notifications/domain/repositories/app_notification_repository.dart';
+import '../../features/notifications/domain/repositories/push_device_repository.dart';
 import '../../features/notifications/domain/usecases/accept_team_invitation.dart';
+import '../../features/notifications/domain/usecases/register_push_device.dart';
 import '../../features/notifications/domain/usecases/reject_team_invitation.dart';
+import '../../features/notifications/domain/usecases/unregister_push_device.dart';
 import '../../features/notifications/domain/usecases/watch_app_notifications.dart';
+import '../../features/notifications/infrastructure/datasources/firebase_messaging_token_provider.dart';
 import '../../features/notifications/infrastructure/repositories/local_app_notification_repository.dart';
+import '../../features/notifications/infrastructure/repositories/local_relay_push_device_repository.dart';
+import '../../features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import '../../features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import '../config/runtime_profile.dart';
 import '../network/local_runtime_api_client.dart';
@@ -73,6 +80,12 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
     ..registerLazySingleton<AppNotificationRepository>(
       LocalAppNotificationRepository.new,
     )
+    ..registerLazySingleton<PushDeviceRepository>(
+      () => LocalRelayPushDeviceRepository(locator<LocalRuntimeApiClient>()),
+    )
+    ..registerLazySingleton(
+      () => FirebaseMessagingTokenProvider(FirebaseMessaging.instance),
+    )
     ..registerLazySingleton(
       () => WatchAppNotifications(locator<AppNotificationRepository>()),
     )
@@ -81,6 +94,21 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
     )
     ..registerLazySingleton(
       () => RejectTeamInvitation(locator<AppNotificationRepository>()),
+    )
+    ..registerLazySingleton(
+      () => RegisterPushDevice(locator<PushDeviceRepository>()),
+    )
+    ..registerLazySingleton(
+      () => UnregisterPushDevice(locator<PushDeviceRepository>()),
+    )
+    ..registerLazySingleton(
+      () => FcmBootstrapper(
+        locator<AuthRepository>(),
+        locator<FirebaseMessagingTokenProvider>(),
+        locator<RegisterPushDevice>(),
+        locator<UnregisterPushDevice>(),
+      ),
+      dispose: (bootstrapper) => bootstrapper.dispose(),
     );
   configureLocalWorkspaceDependencies(locator);
   locator

@@ -2,30 +2,29 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../domain/entities/notification_device_token.dart';
-import '../../domain/repositories/notification_device_repository.dart';
+import '../../domain/entities/push_device.dart';
+import '../../domain/repositories/push_device_repository.dart';
 
-class FirestoreNotificationDeviceRepository
-    implements NotificationDeviceRepository {
-  const FirestoreNotificationDeviceRepository(this._firestore);
+class FirestorePushDeviceRepository implements PushDeviceRepository {
+  const FirestorePushDeviceRepository(this._firestore);
 
   final FirebaseFirestore _firestore;
 
   @override
-  Future<void> saveToken(NotificationDeviceToken token) async {
-    final reference = _tokenReference(token.userId, token.token);
+  Future<void> save(PushDevice device) async {
+    final reference = _tokenReference(device.ownerId, device.token);
     final exists = (await reference.get()).exists;
     await reference.set({
-      'token': token.token,
-      'platform': token.platform,
+      'token': device.token,
+      'platform': device.platform,
       if (!exists) 'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 
   @override
-  Future<void> deleteToken({required String userId, required String token}) {
-    return _tokenReference(userId, token).delete();
+  Future<void> remove({required String ownerId, required String token}) {
+    return _tokenReference(ownerId, token).delete();
   }
 
   DocumentReference<Map<String, dynamic>> _tokenReference(

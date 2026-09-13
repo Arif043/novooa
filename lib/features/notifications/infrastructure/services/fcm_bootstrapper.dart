@@ -2,18 +2,23 @@ import 'dart:async';
 import '../../../../core/logging/logger.dart';
 import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
-import '../../domain/entities/notification_device_token.dart';
-import '../../domain/usecases/register_notification_device.dart';
-import '../../domain/usecases/unregister_notification_device.dart';
+import '../../domain/entities/push_device.dart';
+import '../../domain/usecases/register_push_device.dart';
+import '../../domain/usecases/unregister_push_device.dart';
 import '../datasources/firebase_messaging_token_provider.dart';
 
 class FcmBootstrapper {
-  FcmBootstrapper(this._authRepository, this._tokenProvider, this._registerDevice, this._unregisterDevice);
+  FcmBootstrapper(
+    this._authRepository,
+    this._tokenProvider,
+    this._registerDevice,
+    this._unregisterDevice,
+  );
 
   final AuthRepository _authRepository;
   final FcmTokenProvider _tokenProvider;
-  final RegisterNotificationDevice _registerDevice;
-  final UnregisterNotificationDevice _unregisterDevice;
+  final RegisterPushDevice _registerDevice;
+  final UnregisterPushDevice _unregisterDevice;
   StreamSubscription<AuthUser?>? _authSubscription;
   StreamSubscription<String>? _tokenSubscription;
   AuthUser? _currentUser;
@@ -24,7 +29,9 @@ class FcmBootstrapper {
     _authSubscription = _authRepository.authStateChanges().listen(
       (user) => _registerFor(user, requestPermission: false),
     );
-    _tokenSubscription = _tokenProvider.tokenRefreshes.listen(_saveRefreshedToken);
+    _tokenSubscription = _tokenProvider.tokenRefreshes.listen(
+      _saveRefreshedToken,
+    );
   }
 
   Future<void> dispose() async {
@@ -36,29 +43,44 @@ class FcmBootstrapper {
     return _registerFor(_authRepository.currentUser(), requestPermission: true);
   }
 
-  Future<void> _registerFor(AuthUser? user, {required bool requestPermission}) async {
+  Future<void> _registerFor(
+    AuthUser? user, {
+    required bool requestPermission,
+  }) async {
     try {
       if (user == null) return _clearCurrentRegistration();
       await _unregisterPreviousUser(user);
       _currentUser = user;
-      final token = await _tokenProvider.currentToken(requestPermission: requestPermission);
+      final token = await _tokenProvider.currentToken(
+        requestPermission: requestPermission,
+      );
       if (token == null) {
         logInfo('FCM-Token ist nicht verfügbar.', name: 'fcm');
         return;
       }
       await _saveToken(user, token);
     } catch (error, stackTrace) {
-      logException(message: 'FCM-Registrierung fehlgeschlagen.', error: error, stackTrace: stackTrace, name: 'fcm');
+      logException(
+        message: 'FCM-Registrierung fehlgeschlagen.',
+        error: error,
+        stackTrace: stackTrace,
+        name: 'fcm',
+      );
     }
   }
 
   Future<void> _unregisterPreviousUser(AuthUser user) async {
     final previousUser = _currentUser;
     final currentToken = _currentToken;
-    if (previousUser == null || previousUser.id == user.id || currentToken == null) {
+    if (previousUser == null ||
+        previousUser.id == user.id ||
+        currentToken == null) {
       return;
     }
-    await _unregisterDevice(userId: previousUser.id.value, token: currentToken);
+    await _unregisterDevice(
+      ownerId: previousUser.id.value,
+      token: currentToken,
+    );
     _currentToken = null;
   }
 
@@ -80,7 +102,11 @@ class FcmBootstrapper {
   Future<void> _saveToken(AuthUser user, String token) async {
     _currentToken = token;
     await _registerDevice(
-      NotificationDeviceToken(userId: user.id.value, token: token, platform: _tokenProvider.platform),
+      PushDevice(
+        ownerId: user.id.value,
+        token: token,
+        platform: _tokenProvider.platform,
+      ),
     );
     logInfo('FCM-Token registriert.', name: 'fcm');
   }
@@ -92,7 +118,7 @@ class FcmBootstrapper {
     _currentToken = null;
     try {
       if (user != null && token != null) {
-        await _unregisterDevice(userId: user.id.value, token: token);
+        await _unregisterDevice(ownerId: user.id.value, token: token);
       }
       await _tokenProvider.deleteToken();
     } catch (error, stackTrace) {

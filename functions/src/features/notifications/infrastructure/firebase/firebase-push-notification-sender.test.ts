@@ -15,7 +15,7 @@ import {
 class FakeTokenStore implements FcmTokenStore {
   constructor(private readonly tokens: FcmTokenDocument[]) {}
 
-  async tokensForUser(): Promise<FcmTokenDocument[]> {
+  async tokensForRecipient(): Promise<FcmTokenDocument[]> {
     return this.tokens;
   }
 }
@@ -31,14 +31,14 @@ class FakeMessagingClient implements FcmMessagingClient {
   }
 }
 
-test("sendToUser sends a notification to every registered device", async () => {
+test("sendToRecipient sends a notification to every registered device", async () => {
   const messagingClient = new FakeMessagingClient(successfulBatch(2));
   const sender = new FirebasePushNotificationSender(
     new FakeTokenStore([token("phone").document, token("tablet").document]),
     messagingClient,
   );
 
-  await sender.sendToUser("customer-1", notification());
+  await sender.sendToRecipient("customer-1", notification());
 
   assert.deepEqual(messagingClient.messages, [{
     tokens: ["phone", "tablet"],
@@ -50,19 +50,19 @@ test("sendToUser sends a notification to every registered device", async () => {
   }]);
 });
 
-test("sendToUser sends an identical token only once", async () => {
+test("sendToRecipient sends an identical token only once", async () => {
   const messagingClient = new FakeMessagingClient(successfulBatch(1));
   const sender = new FirebasePushNotificationSender(
     new FakeTokenStore([token("phone").document, token("phone").document]),
     messagingClient,
   );
 
-  await sender.sendToUser("customer-1", notification());
+  await sender.sendToRecipient("customer-1", notification());
 
   assert.deepEqual(messagingClient.messages[0]?.tokens, ["phone"]);
 });
 
-test("sendToUser removes only invalid device tokens", async () => {
+test("sendToRecipient removes only invalid device tokens", async () => {
   const staleToken = token("stale");
   const validToken = token("valid");
   const messagingClient = new FakeMessagingClient({
@@ -75,7 +75,7 @@ test("sendToUser removes only invalid device tokens", async () => {
     messagingClient,
   );
 
-  await sender.sendToUser("customer-1", notification());
+  await sender.sendToRecipient("customer-1", notification());
 
   assert.equal(staleToken.deleted, true);
   assert.equal(validToken.deleted, false);

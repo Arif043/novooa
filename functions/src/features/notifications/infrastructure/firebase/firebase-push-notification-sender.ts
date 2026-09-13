@@ -9,15 +9,13 @@ import {
   getDatabase,
   initializeAdminApp,
 } from "../../../../shared/firebase/firestore-db.js";
+import {type PushNotification} from
+  "../../domain/entities/push-notification.js";
+import {type PushNotificationSender} from
+  "../../domain/repositories/push-notification-sender.js";
 
 const maximumTokensPerRequest = 500;
 const webAppUrl = "https://app.novooa.de";
-
-export type PushNotification = {
-  title: string;
-  body: string;
-  data: Record<string, string>;
-};
 
 export type FcmTokenDocument = {
   token: string;
@@ -25,34 +23,37 @@ export type FcmTokenDocument = {
 };
 
 export interface FcmTokenStore {
-  tokensForUser(uid: string): Promise<FcmTokenDocument[]>;
+  tokensForRecipient(recipientId: string): Promise<FcmTokenDocument[]>;
 }
 
 export interface FcmMessagingClient {
   send(message: MulticastMessage): Promise<BatchResponse>;
 }
 
-export class FirebasePushNotificationSender {
+export class FirebasePushNotificationSender implements PushNotificationSender {
   constructor(
     private readonly tokenStore: FcmTokenStore = new FirestoreFcmTokenStore(),
     private readonly messagingClient: FcmMessagingClient = new FirebaseMessagingClient(),
   ) {}
 
-  async sendToUser(uid: string, notification: PushNotification): Promise<void> {
+  async sendToRecipient(
+    recipientId: string,
+    notification: PushNotification,
+  ): Promise<void> {
     try {
       const tokenDocuments = uniqueTokenDocuments(
-        await this.tokenStore.tokensForUser(uid),
+        await this.tokenStore.tokensForRecipient(recipientId),
       );
       for (const tokenBatch of tokenBatches(tokenDocuments)) {
-        await this.sendTokenBatch(uid, tokenBatch, notification);
+        await this.sendTokenBatch(recipientId, tokenBatch, notification);
       }
     } catch (error) {
-      logError("push_notification.failed", {uid, error: errorDetails(error)});
+      logError("push_notification.failed", {recipientId, error: errorDetails(error)});
     }
   }
 
   private async sendTokenBatch(
-    uid: string,
+    recipientId: string,
     tokenDocuments: FcmTokenDocument[],
     notification: PushNotification,
   ): Promise<void> {
@@ -62,17 +63,17 @@ export class FirebasePushNotificationSender {
       );
       await removeInvalidTokens(tokenDocuments, response.responses);
       logInfo("push_notification.sent", {
-        uid, successCount: response.successCount, failureCount: response.failureCount,
+        recipientId, successCount: response.successCount, failureCount: response.failureCount,
       });
     } catch (error) {
-      logError("push_notification.failed", {uid, error: errorDetails(error)});
+      logError("push_notification.failed", {recipientId, error: errorDetails(error)});
     }
   }
 }
 
 class FirestoreFcmTokenStore implements FcmTokenStore {
-  async tokensForUser(uid: string): Promise<FcmTokenDocument[]> {
-    const snapshots = await getDatabase().collection("users").doc(uid)
+  async tokensForRecipient(recipientId: string): Promise<FcmTokenDocument[]> {
+    const snapshots = await getDatabase().collection("users").doc(recipientId)
       .collection("fcmTokens").get();
     return snapshots.docs.flatMap((snapshot) => {
       const token = snapshot.data().token;

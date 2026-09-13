@@ -149,6 +149,12 @@ zur Aktivitätenansicht umzuleiten. Mobile PWAs lesen den Klick-Payload aus und
 öffnen die zugehörige Freigabe. Im Vordergrund erscheint dieselbe
 Benachrichtigung als Snackbar.
 
+In der lokalen Desktop-Variante registriert der Client seinen FCM-Token nur
+über die Loopback-Runtime. Ein Cloud-Relay validiert die signierte Lizenz gegen
+den aktuellen Firestore-Status, speichert die Token lizenzgebunden und versendet
+Freigabe-Pushes. Dadurch besitzen weder die Desktop-App noch der lokale
+Container Firebase-Admin-Zugang oder Cloud-Messaging-Credentials.
+
 Kommunikation trennt novooa-eigene System-E-Mails von Kundenpostfächern.
 System-E-Mails wie Benachrichtigungen, Einladungen und Marketing versendet
 novooa global über SendGrid. Die Absenderdomain `novooa.de` ist per Domain

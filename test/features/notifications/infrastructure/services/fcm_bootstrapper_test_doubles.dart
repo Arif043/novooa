@@ -6,10 +6,10 @@ import 'package:syscat2/features/auth/domain/entities/auth_failure.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
-import 'package:syscat2/features/notifications/domain/entities/notification_device_token.dart';
-import 'package:syscat2/features/notifications/domain/repositories/notification_device_repository.dart';
-import 'package:syscat2/features/notifications/domain/usecases/register_notification_device.dart';
-import 'package:syscat2/features/notifications/domain/usecases/unregister_notification_device.dart';
+import 'package:syscat2/features/notifications/domain/entities/push_device.dart';
+import 'package:syscat2/features/notifications/domain/repositories/push_device_repository.dart';
+import 'package:syscat2/features/notifications/domain/usecases/register_push_device.dart';
+import 'package:syscat2/features/notifications/domain/usecases/unregister_push_device.dart';
 import 'package:syscat2/features/notifications/infrastructure/datasources/firebase_messaging_token_provider.dart';
 import 'package:syscat2/features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 
@@ -74,21 +74,18 @@ class TestTokenProvider implements FcmTokenProvider {
   Future<void> close() => refreshes.close();
 }
 
-class TestDeviceRepository implements NotificationDeviceRepository {
-  final savedTokens = <NotificationDeviceToken>[];
-  final deletedTokens = <({String userId, String token})>[];
+class TestDeviceRepository implements PushDeviceRepository {
+  final savedDevices = <PushDevice>[];
+  final removedDevices = <({String ownerId, String token})>[];
 
   @override
-  Future<void> deleteToken({
-    required String userId,
-    required String token,
-  }) async {
-    deletedTokens.add((userId: userId, token: token));
+  Future<void> remove({required String ownerId, required String token}) async {
+    removedDevices.add((ownerId: ownerId, token: token));
   }
 
   @override
-  Future<void> saveToken(NotificationDeviceToken token) async {
-    savedTokens.add(token);
+  Future<void> save(PushDevice device) async {
+    savedDevices.add(device);
   }
 }
 
@@ -100,8 +97,8 @@ FcmBootstrapper testBootstrapper(
   return FcmBootstrapper(
     authRepository,
     tokenProvider,
-    RegisterNotificationDevice(deviceRepository),
-    UnregisterNotificationDevice(deviceRepository),
+    RegisterPushDevice(deviceRepository),
+    UnregisterPushDevice(deviceRepository),
   );
 }
 
