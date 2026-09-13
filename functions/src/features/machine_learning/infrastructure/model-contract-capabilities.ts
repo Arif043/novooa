@@ -1,4 +1,5 @@
 import {type ModelContract, type ModelInput} from "../domain/entities/model-contract.js";
+import {validateModelOutputPostprocessing} from "../domain/services/model-output-postprocessor.js";
 
 export interface ModelInputContractCapability {
   supports(input: ModelInput): boolean;
@@ -10,9 +11,7 @@ export class ModelContractCapabilityValidator {
 
   validate(contract: ModelContract): void {
     for (const input of contract.inputs) this.capabilityFor(input).validate(input);
-    if (contract.outputs.some((output) => output.postprocessing.length > 0)) {
-      throw new Error("Ausgangstransformationen werden noch nicht unterstützt.");
-    }
+    contract.outputs.forEach(validateModelOutputPostprocessing);
   }
 
   private capabilityFor(input: ModelInput): ModelInputContractCapability {

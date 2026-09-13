@@ -7,6 +7,7 @@ class ModelCatalogEntry extends Equatable {
     required this.description,
     required this.tags,
     required this.inputs,
+    required this.outputs,
     required this.outputCount,
     required this.sizeBytes,
     required this.isManagedLocally,
@@ -17,6 +18,7 @@ class ModelCatalogEntry extends Equatable {
   final String description;
   final List<String> tags;
   final List<ModelManifestInput> inputs;
+  final List<ModelManifestOutput> outputs;
   final int outputCount;
   final int sizeBytes;
   final bool isManagedLocally;
@@ -28,12 +30,61 @@ class ModelCatalogEntry extends Equatable {
     description,
     tags,
     inputs,
+    outputs,
     outputCount,
     sizeBytes,
     isManagedLocally,
   ];
 
   int get inputCount => inputs.length;
+}
+
+class ModelManifestOutput extends Equatable {
+  const ModelManifestOutput({
+    required this.tensorName,
+    required this.workflowName,
+    required this.workflowType,
+    required this.parameters,
+  });
+
+  final String tensorName;
+  final String workflowName;
+  final String workflowType;
+  final List<ModelManifestOutputParameter> parameters;
+
+  @override
+  List<Object?> get props => [
+    tensorName,
+    workflowName,
+    workflowType,
+    parameters,
+  ];
+
+  String get workflowTypeLabel => switch (workflowType) {
+    'string' => 'Text',
+    'number' => 'Zahl',
+    'boolean' => 'Ja oder Nein',
+    _ => 'Strukturierte Daten',
+  };
+}
+
+class ModelManifestOutputParameter extends Equatable {
+  const ModelManifestOutputParameter({
+    required this.name,
+    required this.label,
+    required this.defaultValue,
+    required this.minimum,
+    required this.maximum,
+  });
+
+  final String name;
+  final String label;
+  final int defaultValue;
+  final int minimum;
+  final int maximum;
+
+  @override
+  List<Object?> get props => [name, label, defaultValue, minimum, maximum];
 }
 
 class ModelManifestInput extends Equatable {

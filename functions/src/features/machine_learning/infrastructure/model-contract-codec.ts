@@ -37,7 +37,24 @@ function outputFrom(value: unknown): ModelOutput {
     ...tensorFrom(data),
     semantic: stringFrom(data.semantic, "Die Ausgangssemantik fehlt."),
     postprocessing: listFrom(data.postprocessing, transformationFrom),
+    workflowOutput: workflowOutputFrom(data),
   };
+}
+
+function workflowOutputFrom(data: Record<string, unknown>): ModelOutput["workflowOutput"] {
+  const output = recordFrom(data.workflowOutput, "Die Workflow-Ausgabe fehlt.");
+  return {
+    name: stringFrom(output.name, "Der Name der Workflow-Ausgabe fehlt."),
+    type: workflowTypeFrom(output.type),
+    mapping: parameterFrom(output.mapping),
+  };
+}
+
+function workflowTypeFrom(value: unknown): ModelOutput["workflowOutput"]["type"] {
+  if (value === "string" || value === "number" || value === "boolean" || value === "json") {
+    return value;
+  }
+  throw new Error("Der Typ der Workflow-Ausgabe ist ungültig.");
 }
 
 function tensorFrom(data: Record<string, unknown>) {
@@ -53,6 +70,7 @@ function transformationFrom(value: unknown): Transformation {
   return {
     type: stringFrom(data.type, "Der Transformationstyp fehlt."),
     parameters: parametersFrom(data.parameters),
+    ...(data.result === undefined ? {} : {result: stringFrom(data.result, "Der Name des Transformations-Ergebnisses fehlt.")}),
   };
 }
 
@@ -72,6 +90,11 @@ function parameterFrom(value: unknown): TransformationParameter {
   if (typeof value === "string" || typeof value === "boolean") return value;
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (Array.isArray(value)) return value.map(parameterFrom);
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, parameterFrom(item)]),
+    );
+  }
   throw new Error("Ein Transformationsparameter ist ungültig.");
 }
 

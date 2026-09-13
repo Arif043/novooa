@@ -41,9 +41,14 @@ test("encodes output tensors without exposing runtime details", () => {
     outputs: [{
       name: "scores",
       semantic: "classification.scores",
+      workflowOutput: {name: "classifications", type: "json" as const, mapping: "$tensor"},
       dataType: "uint8",
       shape: [2],
       bytes: Uint8Array.from([4, 5]),
+      value: [
+        {index: 1, label: "Klasse zwei", score: 0.7},
+        {index: 0, label: "Klasse eins", score: 0.3},
+      ],
     }],
   });
 
@@ -52,6 +57,11 @@ test("encodes output tensors without exposing runtime details", () => {
     outputs: [{
       ...tensorJson("scores", "BAU="),
       semantic: "classification.scores",
+      workflowOutput: {name: "classifications", type: "json" as const, mapping: "$tensor"},
+      value: [
+        {index: 1, label: "Klasse zwei", score: 0.7},
+        {index: 0, label: "Klasse eins", score: 0.3},
+      ],
     }],
   });
 });

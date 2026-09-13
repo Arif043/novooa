@@ -150,7 +150,9 @@ export function singleParentOutput(
 function primaryOutputFromResult(
   result: NodeExecutionResult,
 ): NodeOutputValue | undefined {
-  return result.outputs.value;
+  if (result.outputs.value !== undefined) return result.outputs.value;
+  const outputs = Object.values(result.outputs);
+  return outputs.length === 1 ? outputs[0] : undefined;
 }
 
 function textForOutputValue(value: NodeOutputValue): string {

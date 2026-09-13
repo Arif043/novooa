@@ -22,7 +22,7 @@ function manifestData(): Record<string, unknown> {
     artifact: {artifactId: "model", versionId: "1"},
     contract: {
       inputs: [{name: "input", source: "tensor", dataType: "uint8", shape: [1], preprocessing: []}],
-      outputs: [{name: "output", semantic: "test", dataType: "uint8", shape: [1], postprocessing: []}],
+      outputs: [{name: "output", semantic: "test", dataType: "uint8", shape: [1], postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}}],
     },
   };
 }

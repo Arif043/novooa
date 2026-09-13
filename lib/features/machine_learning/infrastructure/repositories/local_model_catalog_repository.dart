@@ -61,15 +61,77 @@ class LocalModelCatalogRepository implements ModelCatalogRepository {
     final inputs = _items(
       contract['inputs'],
     ).map(_manifestInputFrom).toList(growable: false);
+    final outputs = _items(
+      contract['outputs'],
+    ).map(_manifestOutputFrom).toList(growable: false);
     return ModelCatalogEntry(
       id: _text(entry, 'id'),
       title: _text(entry, 'title'),
       description: _text(entry, 'description'),
       tags: _strings(entry['tags']),
       inputs: inputs,
+      outputs: outputs,
       outputCount: _items(contract['outputs']).length,
       sizeBytes: _positiveInt(artifact['sizeBytes']),
       isManagedLocally: _object(entry['scope'])['type'] == 'team',
+    );
+  }
+
+  ModelManifestOutput _manifestOutputFrom(Object? value) {
+    final output = _object(value);
+    final workflowOutput = _workflowOutputFrom(_object(output['workflowOutput']));
+    return ModelManifestOutput(
+      tensorName: _text(output, 'name'),
+      workflowName: workflowOutput['name'] as String,
+      workflowType: workflowOutput['type'] as String,
+      parameters: _outputParametersFrom(output['postprocessing']),
+    );
+  }
+
+  Map<String, Object?> _workflowOutputFrom(Map<String, Object?> output) {
+    final name = output['name'];
+    final type = output['type'];
+    if (name is! String ||
+        name.isEmpty ||
+        type is! String ||
+        !const {'string', 'number', 'boolean', 'json'}.contains(type)) {
+      throw const FormatException('Die Workflow-Ausgabe ist ungültig.');
+    }
+    return {'name': name, 'type': type};
+  }
+
+  List<ModelManifestOutputParameter> _outputParametersFrom(Object? value) {
+    return _items(value)
+        .map(_object)
+        .map((item) => _parameterFrom(item['parameters']))
+        .whereType<ModelManifestOutputParameter>()
+        .toList(growable: false);
+  }
+
+  ModelManifestOutputParameter? _parameterFrom(Object? value) {
+    if (value is! Map) return null;
+    final parameters = _object(value);
+    final descriptor = parameters['parameter'];
+    if (descriptor is! Map) return null;
+    final parameter = _object(descriptor);
+    final name = parameter['name'];
+    final defaultValue = parameter['default'];
+    final minimum = parameter['minimum'];
+    final maximum = parameter['maximum'];
+    if (name is! String ||
+        defaultValue is! int ||
+        minimum is! int ||
+        maximum is! int ||
+        minimum > defaultValue ||
+        defaultValue > maximum) {
+      throw const FormatException('Der Ausgangsparameter ist ungültig.');
+    }
+    return ModelManifestOutputParameter(
+      name: name,
+      label: parameter['label'] as String? ?? name,
+      defaultValue: defaultValue,
+      minimum: minimum,
+      maximum: maximum,
     );
   }
 
@@ -100,18 +162,14 @@ class LocalModelCatalogRepository implements ModelCatalogRepository {
   }
 
   Map<String, Object?> _object(Object? value) {
-    if (value is! Map) {
-      throw const FormatException('Ein Modellkatalogeintrag ist ungültig.');
-    }
+    if (value is! Map) throw const FormatException('Ein Modellkatalogeintrag ist ungültig.');
     return {
       for (final entry in value.entries) entry.key.toString(): entry.value,
     };
   }
 
   List<Object?> _items(Object? value) {
-    if (value is! List) {
-      throw const FormatException('Ein Modellkatalogeintrag ist ungültig.');
-    }
+    if (value is! List) throw const FormatException('Ein Modellkatalogeintrag ist ungültig.');
     return value;
   }
 
@@ -123,17 +181,13 @@ class LocalModelCatalogRepository implements ModelCatalogRepository {
   }
 
   int _positiveInt(Object? value) {
-    if (value is int && value > 0) {
-      return value;
-    }
+    if (value is int && value > 0) return value;
     throw const FormatException('Ein Modellkatalogeintrag ist ungültig.');
   }
 
   String _text(Map<String, Object?> value, String field) {
     final text = value[field];
-    if (text is String && text.isNotEmpty) {
-      return text;
-    }
+    if (text is String && text.isNotEmpty) return text;
     throw const FormatException('Ein Modellkatalogeintrag ist ungültig.');
   }
 }

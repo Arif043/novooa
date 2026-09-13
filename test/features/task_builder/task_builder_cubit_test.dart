@@ -480,6 +480,28 @@ void main() {
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
+  test('aktualisiert den Ausgangsparameter einer Modellinferenz', () async {
+    final repository = _InMemoryTaskRepository(_taskWithModelInferenceNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.updateModelInferenceOutputParameter(
+      const NodeId('node.model'),
+      const ModelInferenceOutputParameter(
+        outputName: 'scores',
+        name: 'k',
+        value: 5,
+      ),
+    );
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final config =
+        state.editingTask.nodes.first.config as ModelInferenceNodeConfig;
+
+    expect(config.outputParameters.single.value, 5);
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
+  });
+
   test('updateWriteFile speichert Dateiname und Inhaltstyp', () async {
     final repository = _InMemoryTaskRepository(_taskWithWriteFileNode());
     final cubit = TaskBuilderCubit(repository: repository);

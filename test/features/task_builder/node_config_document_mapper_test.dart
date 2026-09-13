@@ -136,6 +136,13 @@ void main() {
           shape: [1, 3, 224, 224],
         ),
       ],
+      outputParameters: [
+        ModelInferenceOutputParameter(
+          outputName: 'scores',
+          name: 'k',
+          value: 3,
+        ),
+      ],
     );
 
     final document = _mapper().toDocument(config);
@@ -153,6 +160,9 @@ void main() {
           'dataType': 'float32',
           'shape': [1, 3, 224, 224],
         },
+      ],
+      'outputParameters': [
+        {'outputName': 'scores', 'name': 'k', 'value': 3},
       ],
     });
     expect(restored, config);

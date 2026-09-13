@@ -20,6 +20,9 @@ void main() {
 
     expect(entries.single.title, 'Beispielmodell');
     expect(entries.single.inputs.single.name, 'image');
+    expect(entries.single.outputs.single.workflowName, 'classifications');
+    expect(entries.single.outputs.single.workflowType, 'json');
+    expect(entries.single.outputs.single.parameters.single.defaultValue, 3);
     expect(entries.single.isManagedLocally, isTrue);
     expect(client.postPath, '/v1/ml-models');
     expect(client.postBody?['artifactBase64'], base64Encode([1, 2, 3]));
@@ -52,7 +55,32 @@ class _Client implements LocalRuntimeApiClient {
               'shape': [1, 3, 224, 224],
             },
           ],
-          'outputs': [{}],
+          'outputs': [
+            {
+              'name': 'scores',
+              'semantic': 'classification.scores',
+              'workflowOutput': {
+                'name': 'classifications',
+                'type': 'json',
+                'mapping': {'classes': {}},
+              },
+              'postprocessing': [
+                {
+                  'type': 'tensor.topK',
+                  'result': 'topClasses',
+                  'parameters': {
+                    'parameter': {
+                      'name': 'k',
+                      'label': 'Anzahl der Ergebnisse',
+                      'default': 3,
+                      'minimum': 1,
+                      'maximum': 20,
+                    },
+                  },
+                },
+              ],
+            },
+          ],
         },
       },
     ],

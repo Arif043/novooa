@@ -168,6 +168,11 @@ export const modelInferenceNodeConfigSchema = z.object({
     dataType: z.enum(modelTensorDataTypes).default("float32"),
     shape: z.array(z.union([z.number().int().positive(), z.literal("dynamic")])).default([1]),
   })).default([]),
+  outputParameters: z.array(z.object({
+    outputName: z.string().min(1),
+    name: z.string().min(1),
+    value: z.number().int(),
+  })).default([]),
 });
 
 export const forEachNodeConfigSchema = z.object({

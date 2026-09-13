@@ -14,6 +14,7 @@ test("calls the private service with its URL as ID-token audience", async () => 
     teamId: "team-1",
     modelId: "classifier",
     inputs: [{name: "prompt", type: "text", value: "Hallo"}],
+    outputParameters: [],
   });
 
   assert.equal(httpClient.request?.audience, "https://model-inference-123.europe-west3.run.app");
@@ -22,6 +23,7 @@ test("calls the private service with its URL as ID-token audience", async () => 
     teamId: "team-1",
     modelId: "classifier",
     inputs: [{name: "prompt", type: "text", value: "Hallo"}],
+    outputParameters: [],
   });
   assert.equal(result.outputs[0].semantic, "classification.scores");
 });
@@ -43,8 +45,9 @@ class RecordingClient implements AuthenticatedJsonHttpClient {
     return {
       modelId: "classifier",
       outputs: [{
-        name: "scores", semantic: "classification.scores", dataType: "uint8",
+        name: "scores", semantic: "classification.scores", workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}, dataType: "uint8",
         shape: [1], dataBase64: "AQ==",
+        value: {type: "tensor", dataType: "uint8", shape: [1], values: [1]},
       }],
     };
   }

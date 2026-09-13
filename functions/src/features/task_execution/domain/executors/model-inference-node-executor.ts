@@ -4,8 +4,9 @@ import {
 } from "./node-executor.js";
 import {type ModelInferenceResult} from
   "../../../machine_learning/domain/repositories/model-inference.js";
+import {type NodeOutputValue} from "../entities/workflow-value.js";
 import {modelInputFromWorkflowMapping} from "../services/model-input-from-workflow-mapping.js";
-import {workflowValueForTensor} from "../services/tensor-workflow-value.js";
+import {workflowValueForModelOutput} from "../services/tensor-workflow-value.js";
 
 export const modelInferenceNodeExecutor: NodeExecutor = {
   primitive: "modelInference",
@@ -15,6 +16,7 @@ export const modelInferenceNodeExecutor: NodeExecutor = {
       teamId: runContext.teamId,
       modelId: modelIdFor(input.node),
       inputs,
+      outputParameters: outputParametersFor(input.node),
     });
     return executedNode(input.node, outputsFor(result));
   },
@@ -63,18 +65,34 @@ function mappingsFor(node: Parameters<NodeExecutor["execute"]>[0]["node"]) {
   return node.config.inputMappings;
 }
 
+function outputParametersFor(node: Parameters<NodeExecutor["execute"]>[0]["node"]) {
+  if (node.config.primitive !== "modelInference") {
+    throw new Error("Modell-Inferenz-Konfiguration fehlt.");
+  }
+  const identities = new Set<string>();
+  for (const parameter of node.config.outputParameters ?? []) {
+    if (!parameter.outputName.trim() || !parameter.name.trim() || !Number.isSafeInteger(parameter.value)) {
+      throw new Error("Ein Ausgangsparameter der Modell-Inferenz ist ungültig.");
+    }
+    const identity = `${parameter.outputName}:${parameter.name}`;
+    if (identities.has(identity)) throw new Error(`Der Ausgangsparameter ${parameter.name} ist mehrfach gesetzt.`);
+    identities.add(identity);
+  }
+  return node.config.outputParameters ?? [];
+}
+
 function outputsFor(result: ModelInferenceResult) {
-  const values = Object.fromEntries(
-    result.outputs.map((output) => [output.name, workflowValueForTensor(output)]),
-  );
-  return {
-    value: {type: "json" as const, value: values},
-    modelId: {type: "string" as const, value: result.modelId},
-    ...Object.fromEntries(
-      result.outputs.map((output) => [
-        output.name,
-        {type: "json" as const, value: workflowValueForTensor(output)},
-      ]),
-    ),
-  };
+  return Object.fromEntries(result.outputs.map((output) => [
+    output.workflowOutput.name,
+    workflowOutputValueFor(output),
+  ]));
+}
+
+function workflowOutputValueFor(
+  output: ModelInferenceResult["outputs"][number],
+): NodeOutputValue {
+  if (output.workflowOutput.type !== "json") {
+    throw new Error(`Der Workflow-Typ ${output.workflowOutput.type} wird noch nicht unterstützt.`);
+  }
+  return {type: "json", value: workflowValueForModelOutput(output.value)};
 }

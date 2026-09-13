@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {modelInferenceNodeExecutor} from "./model-inference-node-executor.js";
 
-test("maps workflow values and exposes converted tensor outputs", async () => {
+test("maps the manifest-defined workflow output", async () => {
   const result = await modelInferenceNodeExecutor.execute({
     node: {
       id: "infer", primitive: "modelInference",
@@ -24,10 +24,6 @@ test("maps workflow values and exposes converted tensor outputs", async () => {
     parentOutputs: [],
   } as never, runContext() as never);
 
-  assert.equal(result.outputs.modelId.value, "classifier");
-  assert.deepEqual(result.outputs.value.value, {
-    scores: [1, 2],
-  });
   assert.deepEqual(result.outputs.scores, {type: "json", value: [1, 2]});
 });
 
@@ -46,8 +42,9 @@ function runContext() {
         return {
           modelId: "classifier",
           outputs: [{
-            name: "scores", semantic: "classification.scores", dataType: "uint8" as const,
+            name: "scores", semantic: "classification.scores", workflowOutput: {name: "scores", type: "json" as const, mapping: "$tensor"}, dataType: "uint8" as const,
             shape: [2], bytes: Uint8Array.from([1, 2]),
+            value: [1, 2],
           }],
         };
       },

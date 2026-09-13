@@ -162,6 +162,19 @@ class NodeConfigDocumentMapper {
       'inputMappings': config.inputMappings
           .map(_modelInferenceInputMappingToDocument)
           .toList(),
+      'outputParameters': config.outputParameters
+          .map(_modelInferenceOutputParameterToDocument)
+          .toList(),
+    };
+  }
+
+  Map<String, Object?> _modelInferenceOutputParameterToDocument(
+    ModelInferenceOutputParameter parameter,
+  ) {
+    return {
+      'outputName': parameter.outputName,
+      'name': parameter.name,
+      'value': parameter.value,
     };
   }
 
@@ -301,7 +314,27 @@ class NodeConfigDocumentMapper {
     return ModelInferenceNodeConfig(
       modelId: data['modelId'] as String? ?? '',
       inputMappings: _modelInferenceInputMappingsFrom(data['inputMappings']),
+      outputParameters: _modelInferenceOutputParametersFrom(
+        data['outputParameters'],
+      ),
     );
+  }
+
+  List<ModelInferenceOutputParameter> _modelInferenceOutputParametersFrom(
+    Object? value,
+  ) {
+    if (value is! List) return const [];
+    return value
+        .whereType<Map>()
+        .map((entry) {
+          final data = _objectMapFrom(entry);
+          return ModelInferenceOutputParameter(
+            outputName: data['outputName'] as String? ?? '',
+            name: data['name'] as String? ?? '',
+            value: data['value'] as int? ?? 0,
+          );
+        })
+        .toList(growable: false);
   }
 
   List<ModelInferenceInputMapping> _modelInferenceInputMappingsFrom(

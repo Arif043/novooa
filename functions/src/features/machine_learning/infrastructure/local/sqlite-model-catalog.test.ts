@@ -110,7 +110,7 @@ function contract() {
       dataType: "float32" as const,
       shape: ["dynamic" as const, 2],
       semantic: "classification.scores",
-      postprocessing: [],
+      postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
     }],
   };
 }

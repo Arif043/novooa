@@ -141,6 +141,7 @@ export type ModelInferenceNodeConfig = {
   primitive: "modelInference";
   modelId: string;
   inputMappings: ModelInferenceInputMapping[];
+  outputParameters: ModelInferenceOutputParameter[];
 };
 export type ModelInferenceInputMapping = {
   modelInputName: string;
@@ -148,6 +149,11 @@ export type ModelInferenceInputMapping = {
   sourceType: ModelInputSourceType;
   dataType: ModelTensorDataType;
   shape: readonly TensorDimension[];
+};
+export type ModelInferenceOutputParameter = {
+  outputName: string;
+  name: string;
+  value: number;
 };
 export type ForEachNodeConfig = {
   primitive: "forEach";

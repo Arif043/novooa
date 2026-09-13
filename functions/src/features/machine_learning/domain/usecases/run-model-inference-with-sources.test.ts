@@ -26,6 +26,11 @@ test("binds named sources according to the model manifest", async () => {
 
   assert.deepEqual(transformer.sourceTypes, ["text", "number", "boolean", "json"]);
   assert.equal(result.outputs[0].semantic, "classification.scores");
+  assert.deepEqual(result.outputs[0].workflowOutput, {
+    name: "value",
+    type: "json",
+    mapping: "$tensor",
+  });
 });
 
 test("rejects a workflow value that conflicts with the model contract", async () => {
@@ -92,7 +97,7 @@ function contractEntry(): ModelCatalogEntry {
     id: "classifier", title: "Klassifikation", description: "Testmodell", tags: ["test"],
     scope: {type: "system"}, runtime: "onnx",
     artifactReference: {artifactId: "artifact", versionId: "1", format: "onnx", contentType: "application/onnx", sizeBytes: 1, sha256: "0000000000000000000000000000000000000000000000000000000000000000"},
-    contract: {inputs, outputs: [{name: "scores", dataType: "uint8", shape: [1], semantic: "classification.scores", postprocessing: []}]},
+    contract: {inputs, outputs: [{name: "scores", dataType: "uint8", shape: [1], semantic: "classification.scores", postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}}]},
   };
 }
 

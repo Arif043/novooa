@@ -7,19 +7,21 @@ import {
 } from "../repositories/model-inference.js";
 import {PrepareModelInputs} from "./prepare-model-inputs.js";
 import {RunModelInference} from "./run-model-inference.js";
+import {ModelOutputPostprocessor} from "../services/model-output-postprocessor.js";
 
 export class RunModelInferenceWithSources implements ModelInference {
   constructor(
     private readonly catalog: ModelCatalog,
     private readonly prepareModelInputs: PrepareModelInputs,
     private readonly runModelInference: RunModelInference,
+    private readonly outputPostprocessor = new ModelOutputPostprocessor(),
   ) {}
 
   async execute(request: ModelInferenceRequest): Promise<ModelInferenceResult> {
     const model = await this.modelFor(request.teamId, request.modelId);
     const inputs = await this.prepareModelInputs.execute(model.contract, request.inputs);
     const outputs = await this.runModelInference.execute({model, inputs});
-    return resultFor(model, outputs);
+    return resultFor(model, outputs, request.outputParameters ?? [], this.outputPostprocessor);
   }
 
   private async modelFor(teamId: string, modelId: string) {
@@ -34,14 +36,26 @@ export class RunModelInferenceWithSources implements ModelInference {
 function resultFor(
   model: ModelCatalogEntry,
   tensors: Awaited<ReturnType<RunModelInference["execute"]>>,
+  parameterValues: NonNullable<ModelInferenceRequest["outputParameters"]>,
+  postprocessor: ModelOutputPostprocessor,
 ): ModelInferenceResult {
   const semantics = new Map(model.contract.outputs.map((output) => [
     output.name,
     output.semantic,
   ]));
+  const definitions = new Map(model.contract.outputs.map((output) => [output.name, output]));
   return {
     modelId: model.id,
-    outputs: tensors.map((tensor) => ({...tensor, semantic: semantics.get(tensor.name)!})),
+    outputs: tensors.map((tensor) => {
+      const definition = definitions.get(tensor.name)!;
+      const processed = postprocessor.process(definition, tensor, parameterValues);
+      return {
+        ...tensor,
+        semantic: semantics.get(tensor.name)!,
+        workflowOutput: processed.workflowOutput,
+        value: processed.value,
+      };
+    }),
   };
 }
 

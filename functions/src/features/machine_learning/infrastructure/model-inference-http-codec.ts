@@ -1,4 +1,5 @@
 import {type ModelInputSource} from "../domain/entities/model-input-source.js";
+import {type ModelOutputValue} from "../domain/entities/model-output-value.js";
 import {type ModelTensor} from "../domain/entities/model-tensor.js";
 import {
   type ModelInferenceOutput,
@@ -12,6 +13,7 @@ export function modelInferenceRequestJson(request: ModelInferenceRequest) {
     teamId: request.teamId,
     modelId: request.modelId,
     inputs: request.inputs.map(inputJson),
+    outputParameters: request.outputParameters ?? [],
   };
 }
 
@@ -21,7 +23,21 @@ export function modelInferenceRequestFromJson(value: unknown): ModelInferenceReq
     teamId: requiredString(data.teamId, "Die Team-ID fehlt."),
     modelId: requiredString(data.modelId, "Die Modell-ID fehlt."),
     inputs: inputsFrom(data.inputs),
+    outputParameters: outputParametersFrom(data.outputParameters),
   };
+}
+
+function outputParametersFrom(value: unknown) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) throw new Error("Die Ausgangsparameter sind ungültig.");
+  return value.map((item) => {
+    const data = objectFrom(item, "Ein Ausgangsparameter ist ungültig.");
+    return {
+      outputName: requiredString(data.outputName, "Der Modellausgang fehlt."),
+      name: requiredString(data.name, "Der Name des Ausgangsparameters fehlt."),
+      value: integer(data.value, "Der Ausgangsparameter ist ungültig."),
+    };
+  });
 }
 
 export function modelInferenceResultJson(result: ModelInferenceResult) {
@@ -30,6 +46,8 @@ export function modelInferenceResultJson(result: ModelInferenceResult) {
     outputs: result.outputs.map((output) => ({
       ...modelTensorToJson(output),
       semantic: output.semantic,
+      workflowOutput: output.workflowOutput,
+      value: output.value,
     })),
   };
 }
@@ -63,7 +81,33 @@ function binaryInputJson(input: Extract<ModelInputSource, {bytes: Uint8Array}>) 
 function outputFrom(value: unknown): ModelInferenceOutput {
   const data = objectFrom(value, "Eine Inferenz-Ausgabe ist ungültig.");
   const tensor = modelTensorFromJson(data);
-  return {...tensor, semantic: requiredString(data.semantic, "Die Ausgabe-Semantik fehlt.")};
+  return {
+    ...tensor,
+    semantic: requiredString(data.semantic, "Die Ausgabe-Semantik fehlt."),
+    workflowOutput: workflowOutputFrom(data.workflowOutput),
+    value: outputValueFrom(data.value),
+  };
+}
+
+function workflowOutputFrom(value: unknown): ModelInferenceOutput["workflowOutput"] {
+  const data = objectFrom(value, "Die Workflow-Ausgabe ist ungültig.");
+  const name = requiredString(data.name, "Der Name der Workflow-Ausgabe fehlt.");
+  if (data.type !== "string" && data.type !== "number" && data.type !== "boolean" && data.type !== "json") {
+    throw new Error("Der Typ der Workflow-Ausgabe ist ungültig.");
+  }
+  return {
+    name,
+    type: data.type,
+    mapping: outputValueFrom(data.mapping),
+  };
+}
+
+function outputValueFrom(value: unknown): ModelOutputValue {
+  if (typeof value === "string" || typeof value === "boolean") return value;
+  if (typeof value === "number") return finiteNumber(value);
+  if (Array.isArray(value)) return value.map(outputValueFrom);
+  const data = objectFrom(value, "Der verarbeitete Modellausgang ist ungültig.");
+  return Object.fromEntries(Object.entries(data).map(([key, item]) => [key, outputValueFrom(item)]));
 }
 
 function inputsFrom(value: unknown): readonly ModelInputSource[] {
@@ -126,6 +170,11 @@ function finiteNumber(value: unknown): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     throw new Error("Die Zahl der Modelleingabe ist ungültig.");
   }
+  return value;
+}
+
+function integer(value: unknown, message: string): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value)) throw new Error(message);
   return value;
 }
 

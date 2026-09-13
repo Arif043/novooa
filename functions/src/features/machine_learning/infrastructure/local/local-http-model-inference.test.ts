@@ -12,7 +12,9 @@ test("calls the local inference service without an ID token", async () => {
   const result = await inference.execute({teamId: "team-1", modelId: "classifier", inputs: []});
 
   assert.equal(httpClient.request?.url, "http://127.0.0.1:8080/v1/inferences");
-  assert.deepEqual(httpClient.request?.body, {teamId: "team-1", modelId: "classifier", inputs: []});
+  assert.deepEqual(httpClient.request?.body, {
+    teamId: "team-1", modelId: "classifier", inputs: [], outputParameters: [],
+  });
   assert.equal(result.modelId, "classifier");
 });
 
@@ -36,8 +38,9 @@ class RecordingClient implements LocalJsonHttpClient {
     return {
       modelId: "classifier",
       outputs: [{
-        name: "scores", semantic: "classification.scores", dataType: "uint8",
+        name: "scores", semantic: "classification.scores", workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}, dataType: "uint8",
         shape: [1], dataBase64: "AQ==",
+        value: {type: "tensor", dataType: "uint8", shape: [1], values: [1]},
       }],
     };
   }

@@ -70,7 +70,7 @@ function validEntry(): ModelCatalogEntry {
         dataType: "float32",
         shape: ["dynamic", 1000],
         semantic: "classification.scores",
-        postprocessing: [],
+        postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
       }],
     },
   };

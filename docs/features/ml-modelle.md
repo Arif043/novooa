@@ -78,18 +78,55 @@ seine fachliche Semantik sowie optionale Nachverarbeitung.
     dataType: "float32",
     shape: ["dynamic", 1000],
     semantic: "classification.scores",
-    postprocessing: [],
+    postprocessing: [
+      {type: "tensor.softmax", parameters: {axis: -1}},
+      {
+        type: "tensor.topK",
+        result: "topClasses",
+        parameters: {
+          parameter: {
+            name: "k", label: "Anzahl der Ergebnisse",
+            default: 3, minimum: 1, maximum: 20,
+          },
+        },
+      },
+    ],
+    workflowOutput: {
+      name: "classifications",
+      type: "json",
+      mapping: {"$map": {
+        from: "topClasses",
+        item: {
+          index: "$item.index",
+          label: {"$lookup": {
+            values: ["Klasse A", "Klasse B"], key: "$item.index",
+          }},
+          score: "$item.value",
+        },
+      }},
+    },
   }],
 }
 ```
 
-Transformationen verwenden einen offenen Typnamen plus Parameter. Dieselbe
-`TransformationPipeline` wird vor der ONNX-Inferenz als `preprocessing` und
-danach als `postprocessing` verwendet. Der Transformationskatalog enthält
-damit Bild-, Tensor-, Geometrie-, Sequenz- und JSON-Transformationen; eine
-separate Operationsabstraktion gibt es nicht. Die Transformations-Registry
-ordnet jedem Typ eine Strategie zu. Neue Strategien erfordern daher keine
-Änderung am Manifest.
+`preprocessing` und `postprocessing` sind beide deklarative Pipelines, haben
+aber getrennte Strategieregistries: Eingabestrategien erzeugen Tensoren,
+Ausgabestrategien erzeugen allgemeine Zwischenwerte. `result` benennt einen
+solchen Zwischenwert für das `workflowOutput.mapping`. Die erste Registry für
+Ausgaben enthält `tensor.softmax` und `tensor.topK`.
+
+`tensor.topK` besitzt keinen fest kodierten Wert. Die Beschreibung
+unter `parameter` definiert Name, sichtbares Label, Standardwert und erlaubten
+Bereich. Der Arbeitsplan speichert ausschließlich den gewählten Wert, etwa
+`{outputName: "scores", name: "k", value: 5}`. Damit bleibt ein Plan beim
+Update eines Modells validierbar, während der Modellautor die zulässigen Grenzen
+kontrolliert.
+
+`workflowOutput` ist kein weiterer Transformationsschritt. Es beschreibt den
+fachlichen Workflow-Wert nach der Pipeline. Das Mapping akzeptiert Literale,
+Referenzen wie `$topClasses` und `$item.value`, `$map` für Listen sowie
+`$lookup` für indizierte Tabellen. Damit bleibt die Ergebnisstruktur im
+Manifest statt im Code einer Transformationsstrategie.
 
 ## Persistenz
 
@@ -190,18 +227,18 @@ prüft anschließend Vollständigkeit, Eindeutigkeit und Typ jeder Quelle.
 Datei- und Bildwerte lädt der Adapter über den
 bestehenden `TeamFileContentReader`; eine Firebase-Storage-Referenz wird nicht
 in das Manifest oder an die Runtime weitergereicht. Tensor-Ausgänge werden vor
-dem Übergang in den Workflow in verschachtelte JSON-Arrays ihrer Tensorform
-dekodiert. Sie stehen gesammelt unter `value` und zusätzlich als benannte
-Outputs bereit; der Ausgang `y` ist beispielsweise über `{{modell1.y}}` oder
-`{{modell1.value.y}}` referenzierbar. Base64 bleibt auf die technische
+dem Übergang in den Workflow durch das deklarative `workflowOutput.mapping` in
+semantische Modellwerte konvertiert. Technische ONNX-Ausgangsnamen werden nicht
+in den Workflow übernommen. Eine SqueezeNet-Ausgabe steht damit
+unter `{{modell1.classifications}}` und lautet beispielsweise
+`[{index, label, score}]`. Der höchste Treffer ist damit unter
+`{{modell1.classifications.0.score}}` erreichbar. Base64 bleibt auf die technische
 HTTP-Grenze der Inferenz beschränkt.
 
-Lokal erfüllt `LocalPythonModelInputTransformer` den Port. Sein Worker baut
-eine `TransformationRegistry` aus eigenständigen Strategien zusammen. Dieselbe
-Registry ist die Erweiterungsstelle für Ein- und Ausgangstransformationen.
-Neue Transformationen erfordern damit nur eine zusätzliche Strategieklasse und
-deren Registrierung im lokalen Composition Root, nicht aber eine Änderung der
-Pipeline oder des Manifests.
+Lokal erfüllt `LocalPythonModelInputTransformer` den Port für Eingaben. Die
+plattformneutrale Ausgabepipeline läuft danach in TypeScript und ist damit in
+Cloud und lokaler Runtime identisch. Neue Ausgabestrategien ergänzen den
+`ModelOutputPostprocessor`; neue Eingabestrategien ergänzen den Python-Worker.
 
 Aktuell enthält die lokale Runtime konkrete Strategien für Bildquellen und
 unveränderte Tensoren. Verträge mit Text-, Zahlen-, Boolean-, JSON- oder
@@ -214,6 +251,10 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `image.resize` | `width`, `height`, optional `colorSpace` | Skaliert mit LANCZOS. |
 | `tensor.layout` | `order`: `channelsFirst`, `channelsLast` | Ordnet HWC und CHW um. |
 | `tensor.normalize` | `mean`, `std` | Normalisiert jeden Farbkanal. |
+| `tensor.softmax` | optional `axis: -1` | Normalisiert Klassifikationslogits. |
+| `tensor.topK` | Parameterbeschreibung für `k`, optional `result` | Liefert allgemeine Paare aus Index und Wert. |
+| `workflowOutput.mapping.$map` | `from`, `item` | Formt ein Transformations-Ergebnis zu einer Liste. |
+| `workflowOutput.mapping.$lookup` | `values`, `key` | Liest einen Wert aus einer indizierten Tabelle. |
 
 Der Worker fügt bei einem Manifest mit einer Eingabeform wie `["dynamic", 3, 224, 224]` den Batch-
 Index hinzu, wenn das Bild zunächst als `[3, 224, 224]` vorliegt. Vor der

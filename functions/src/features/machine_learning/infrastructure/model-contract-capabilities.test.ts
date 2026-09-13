@@ -11,13 +11,42 @@ test("rejects an unsupported input source before publication", () => {
   assert.throws(() => cloudModelContractCapabilityValidator().validate(contract("text", [])), /text-Eingänge/);
 });
 
-test("rejects output transformations before publication", () => {
+test("rejects an unsupported output transformation before publication", () => {
   const value = contract("tensor", []);
   const changed: ModelContract = {
     ...value,
-    outputs: [{...value.outputs[0]!, postprocessing: [{type: "scores.topK", parameters: {count: 3}}]}],
+    outputs: [{
+      ...value.outputs[0]!,
+      postprocessing: [
+        {type: "scores.topK", parameters: {count: 3}},
+      ],
+    }],
   };
-  assert.throws(() => cloudModelContractCapabilityValidator().validate(changed), /Ausgangstransformationen/);
+  assert.throws(() => cloudModelContractCapabilityValidator().validate(changed), /scores.topK/);
+});
+
+test("accepts a configured generic top-k output transformation", () => {
+  const value = contract("tensor", []);
+  const changed: ModelContract = {
+    ...value,
+    outputs: [{
+      ...value.outputs[0]!,
+      shape: [3],
+      postprocessing: [{
+        type: "tensor.topK",
+        result: "topValues",
+        parameters: {
+          parameter: {name: "k", default: 3, minimum: 1, maximum: 3},
+        },
+      }],
+      workflowOutput: {
+        name: "topValues",
+        type: "json",
+        mapping: "$topValues",
+      },
+    }],
+  };
+  cloudModelContractCapabilityValidator().validate(changed);
 });
 
 function contract(
@@ -30,7 +59,7 @@ function contract(
       preprocessing: transformations.map((type) => ({type, parameters: {}})),
     }],
     outputs: [{
-      name: "output", semantic: "test", dataType: "float32" as const, shape: [1], postprocessing: [],
+      name: "output", semantic: "test", dataType: "float32" as const, shape: [1], postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
     }],
   };
 }

@@ -147,7 +147,7 @@ function manifest() {
         name: "input", source: "tensor", dataType: "uint8", shape: [1], preprocessing: [],
       }],
       outputs: [{
-        name: "output", dataType: "uint8", shape: [1], semantic: "classification.scores", postprocessing: [],
+        name: "output", dataType: "uint8", shape: [1], semantic: "classification.scores", postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
       }],
     },
   };

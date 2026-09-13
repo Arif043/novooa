@@ -10,6 +10,7 @@ import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 import 'model_inference_input_mapping_field.dart';
+import 'model_inference_output_configuration.dart';
 
 class ModelInferenceWidget extends StatelessWidget {
   const ModelInferenceWidget({super.key, required this.node});
@@ -82,6 +83,11 @@ class _ModelInferenceContent extends StatelessWidget {
                 input: input,
                 mapping: _mappingFor(input),
               ),
+            ModelInferenceOutputConfiguration(
+              nodeId: node.id,
+              outputs: model.outputs,
+              parameters: _config.outputParameters,
+            ),
           ],
         ],
       ),
@@ -168,10 +174,22 @@ class _ModelSelection extends StatelessWidget {
           ),
         )
         .toList(growable: false);
+    final outputParameters = model.outputs
+        .expand(
+          (output) => output.parameters.map(
+            (parameter) => ModelInferenceOutputParameter(
+              outputName: output.tensorName,
+              name: parameter.name,
+              value: parameter.defaultValue,
+            ),
+          ),
+        )
+        .toList(growable: false);
     context.read<TaskBuilderCubit>().selectModelInference(
       node.id,
       model.id,
       mappings,
+      outputParameters,
     );
   }
 }

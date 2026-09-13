@@ -3,6 +3,7 @@ import {type ModelCatalogEntry, validateModelCatalogEntry} from "../../domain/en
 import {type ModelArtifactReference} from "../../domain/entities/model-artifact-reference.js";
 import {type ModelContract} from "../../domain/entities/model-contract.js";
 import {modelContractFromUnknown} from "../model-contract-codec.js";
+import {validateModelOutputPostprocessing} from "../../domain/services/model-output-postprocessor.js";
 
 export type SystemModelManifest = {
   id: string;
@@ -20,12 +21,14 @@ export async function systemModelManifestFromFile(path: string): Promise<SystemM
 
 export function systemModelManifestFromUnknown(value: unknown): SystemModelManifest {
   const data = record(value, "Die Modellmanifest-Datei ist ungültig.");
-  return {
+  const manifest = {
     id: text(data.id, "Die Modell-ID fehlt."),
     title: text(data.title, "Der Modellname fehlt."),
     description: text(data.description, "Die Modellbeschreibung fehlt."),
     tags: tags(data.tags), artifact: artifact(data.artifact), contract: modelContractFromUnknown(data.contract),
   };
+  manifest.contract.outputs.forEach(validateModelOutputPostprocessing);
+  return manifest;
 }
 
 export function systemModelEntry(
