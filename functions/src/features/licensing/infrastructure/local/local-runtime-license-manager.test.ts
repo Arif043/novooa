@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import {generateKeyPairSync} from "node:crypto";
 import test from "node:test";
-import {type SignedLocalRuntimeLicense} from "../../domain/entities/local-runtime-license-lease.js";
-import {signLocalRuntimeLicense} from "../license-lease-crypto.js";
+import {type SignedRuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
+import {signRuntimeLicense} from "../license-lease-crypto.js";
 import {
-  type LocalRuntimeLicenseStore,
-  type StoredLocalRuntimeLicenseState,
+  type RuntimeLicenseStore,
+  type StoredRuntimeLicenseState,
 } from "./file-local-runtime-license-store.js";
-import {type LocalRuntimeLicenseGatewayClient} from "./local-runtime-license-gateway-client.js";
-import {GatewayLocalRuntimeLicenseService} from "./local-runtime-license-manager.js";
+import {type RuntimeLicenseGatewayClient} from "./local-runtime-license-gateway-client.js";
+import {GatewayRuntimeLicenseService} from "./local-runtime-license-manager.js";
 
 const activationToken = "A3K9N7P2Q4R6";
 
@@ -66,19 +66,19 @@ test("rejects a signed license whose payload was changed", async () => {
 });
 
 function service(
-  store: LocalRuntimeLicenseStore,
-  gateway: LocalRuntimeLicenseGatewayClient,
+  store: RuntimeLicenseStore,
+  gateway: RuntimeLicenseGatewayClient,
   publicKey: string,
   clock: () => Date = now,
-): GatewayLocalRuntimeLicenseService {
-  return new GatewayLocalRuntimeLicenseService(store, gateway, publicKey, clock);
+): GatewayRuntimeLicenseService {
+  return new GatewayRuntimeLicenseService(store, gateway, publicKey, clock);
 }
 
 function signedLicense(
   privateKey: string,
   expiresAt: string,
-): SignedLocalRuntimeLicense {
-  return signLocalRuntimeLicense({
+): SignedRuntimeLicense {
+  return signRuntimeLicense({
     licenseId: "license-1",
     workspaceId: "workspace-1",
     issuedAt: "2026-09-09T09:00:00.000Z",
@@ -102,25 +102,25 @@ function ed25519Keys(): {privateKey: string; publicKey: string} {
   };
 }
 
-class GatewayFake implements LocalRuntimeLicenseGatewayClient {
+class GatewayFake implements RuntimeLicenseGatewayClient {
   readonly tokens: string[] = [];
 
-  constructor(private readonly license: SignedLocalRuntimeLicense) {}
+  constructor(private readonly license: SignedRuntimeLicense) {}
 
-  async requestLicense(token: string): Promise<SignedLocalRuntimeLicense> {
+  async requestLicense(token: string): Promise<SignedRuntimeLicense> {
     this.tokens.push(token);
     return this.license;
   }
 }
 
-class MemoryStore implements LocalRuntimeLicenseStore {
-  state: StoredLocalRuntimeLicenseState | undefined;
+class MemoryStore implements RuntimeLicenseStore {
+  state: StoredRuntimeLicenseState | undefined;
 
-  async load(): Promise<StoredLocalRuntimeLicenseState | null> {
+  async load(): Promise<StoredRuntimeLicenseState | null> {
     return this.state ?? null;
   }
 
-  async save(state: StoredLocalRuntimeLicenseState): Promise<void> {
+  async save(state: StoredRuntimeLicenseState): Promise<void> {
     this.state = state;
   }
 }

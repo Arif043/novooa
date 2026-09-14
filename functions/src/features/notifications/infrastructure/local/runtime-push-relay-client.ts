@@ -1,17 +1,17 @@
-import {type SignedLocalRuntimeLicense} from
-  "../../../licensing/domain/entities/local-runtime-license-lease.js";
-import {type LocalRuntimePushDevice} from
-  "../../domain/entities/local-runtime-push.js";
+import {type SignedRuntimeLicense} from
+  "../../../licensing/domain/entities/runtime-license-lease.js";
+import {type RuntimePushDevice} from
+  "../../domain/entities/runtime-push.js";
 import {type PushNotification} from "../../domain/entities/push-notification.js";
 
-export interface LocalRuntimePushRelayClient {
-  register(license: SignedLocalRuntimeLicense, device: LocalRuntimePushDevice): Promise<void>;
-  remove(license: SignedLocalRuntimeLicense, token: string): Promise<void>;
-  send(license: SignedLocalRuntimeLicense, notification: PushNotification): Promise<void>;
+export interface RuntimePushRelayClient {
+  register(license: SignedRuntimeLicense, device: RuntimePushDevice): Promise<void>;
+  remove(license: SignedRuntimeLicense, token: string): Promise<void>;
+  send(license: SignedRuntimeLicense, notification: PushNotification): Promise<void>;
 }
 
-export class HttpLocalRuntimePushRelayClient
-implements LocalRuntimePushRelayClient {
+export class HttpRuntimePushRelayClient
+implements RuntimePushRelayClient {
   private readonly endpoint: URL;
 
   constructor(endpoint: string) {
@@ -21,16 +21,16 @@ implements LocalRuntimePushRelayClient {
     }
   }
 
-  async register(license: SignedLocalRuntimeLicense, device: LocalRuntimePushDevice): Promise<void> {
+  async register(license: SignedRuntimeLicense, device: RuntimePushDevice): Promise<void> {
     await this.request({type: "registerDevice", license, ...device});
   }
 
-  async remove(license: SignedLocalRuntimeLicense, token: string): Promise<void> {
+  async remove(license: SignedRuntimeLicense, token: string): Promise<void> {
     await this.request({type: "removeDevice", license, token});
   }
 
   async send(
-    license: SignedLocalRuntimeLicense,
+    license: SignedRuntimeLicense,
     notification: PushNotification,
   ): Promise<void> {
     await this.request({type: "send", license, ...notification});
@@ -47,8 +47,8 @@ implements LocalRuntimePushRelayClient {
   }
 }
 
-export class UnavailableLocalRuntimePushRelayClient
-implements LocalRuntimePushRelayClient {
+export class UnavailableRuntimePushRelayClient
+implements RuntimePushRelayClient {
   async register(): Promise<void> {
     throw unavailable();
   }

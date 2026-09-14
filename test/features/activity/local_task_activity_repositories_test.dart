@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/network/local_runtime_api_client.dart';
+import 'package:syscat2/core/network/workspace_api_client.dart';
 import 'package:syscat2/features/activity/domain/entities/task_run.dart';
 import 'package:syscat2/features/activity/infrastructure/repositories/local_task_activity_repository.dart';
 import 'package:syscat2/features/activity/infrastructure/repositories/local_task_run_repository.dart';
 
 void main() {
   test('maps local runs, activities and a review command', () async {
-    final client = RecordingLocalRuntimeApiClient();
+    final client = RecordingWorkspaceApiClient();
     final runs = LocalTaskRunRepository(client);
     final activities = LocalTaskActivityRepository(client);
 
@@ -24,7 +24,7 @@ void main() {
   });
 }
 
-class RecordingLocalRuntimeApiClient implements LocalRuntimeApiClient {
+class RecordingWorkspaceApiClient implements WorkspaceApiClient {
   String? reviewedRunId;
 
   @override

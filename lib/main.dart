@@ -13,8 +13,8 @@ import 'core/firebase/firestore_web_cache.dart';
 import 'core/logging/logger.dart';
 import 'core/logging/application_bloc_observer.dart';
 import 'core/logging/developer_client_logger.dart';
-import 'core/logging/local_runtime_client_logger.dart';
-import 'core/network/local_runtime_api_client.dart';
+import 'core/logging/workspace_client_logger.dart';
+import 'core/network/workspace_api_client.dart';
 import 'core/network/network_status.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/syscat_theme.dart';
@@ -24,7 +24,7 @@ import 'features/notifications/infrastructure/datasources/fcm_push_click_bridge.
 import 'features/notifications/infrastructure/datasources/push_click_navigation_policy.dart';
 import 'features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import 'features/notifications/presentation/widgets/fcm_foreground_notification_listener.dart';
-import 'features/licensing/presentation/cubits/local_runtime_license_cubit.dart';
+import 'features/licensing/presentation/cubits/runtime_license_cubit.dart';
 import 'features/activity/infrastructure/datasources/media_input_picker_platform_registration.dart';
 import 'firebase_options.dart';
 
@@ -59,13 +59,13 @@ Future<void> _startApplication() async {
   registerMediaInputPickerPlatform();
   configureDependencies(runtimeProfile: runtimeProfile);
   configureClientLogger(
-    runtimeProfile.isLocal
-        ? LocalRuntimeClientLogger(serviceLocator<LocalRuntimeApiClient>())
+    runtimeProfile.isStandalone
+        ? WorkspaceClientLogger(serviceLocator<WorkspaceApiClient>())
         : const DeveloperClientLogger(),
   );
   Bloc.observer = ApplicationBlocObserver();
   _configureErrorLogging();
-  if (!runtimeProfile.isLocal && shouldNavigateFromPushClick()) {
+  if (!runtimeProfile.isStandalone && shouldNavigateFromPushClick()) {
     const FcmPushClickBridge().start(_openNotificationData);
   }
   if (pushFirebaseEnabled) {
@@ -165,8 +165,8 @@ class _MyAppState extends State<MyApp> {
       providers: [
         if (widget.runtimeProfile.isCloud)
           BlocProvider.value(value: serviceLocator<AuthSessionCubit>()),
-        if (widget.runtimeProfile.isLocal)
-          BlocProvider.value(value: serviceLocator<LocalRuntimeLicenseCubit>()),
+        if (widget.runtimeProfile.isStandalone)
+          BlocProvider.value(value: serviceLocator<RuntimeLicenseCubit>()),
       ],
       child: app,
     );

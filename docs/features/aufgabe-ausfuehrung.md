@@ -120,7 +120,7 @@ Profil startet ohne Firebase und spricht nur den Loopback-Endpunkt der
 Docker-Runtime an:
 
 ```bash
-flutter run -d macos --dart-define=NOVOOA_RUNTIME=local
+flutter run -d macos --dart-define=NOVOOA_RUNTIME=standalone
 ```
 
 `POST /v1/task-runs` und `POST /v1/task-runs/review` liefern bei einer

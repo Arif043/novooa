@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 
-enum RuntimeKind { cloud, local }
+enum RuntimeKind { cloud, standalone }
 
 class RuntimeProfile {
-  const RuntimeProfile._(this.kind, this.localRuntimeUri);
+  const RuntimeProfile._(this.kind, this.workspaceApiUri);
 
   factory RuntimeProfile.fromEnvironment() {
     const configuredKind = String.fromEnvironment(
@@ -12,28 +12,26 @@ class RuntimeProfile {
     );
     final kind = switch (configuredKind) {
       'cloud' => RuntimeKind.cloud,
-      'local' => RuntimeKind.local,
+      'standalone' => RuntimeKind.standalone,
       _ => throw ArgumentError.value(
         configuredKind,
         'NOVOOA_RUNTIME',
-        'Erlaubt sind cloud oder local.',
+        'Erlaubt sind cloud oder standalone.',
       ),
     };
-    if (kind == RuntimeKind.local && kIsWeb) {
-      throw StateError(
-        'Die lokale novooa-Runtime ist nur für native Apps verfügbar.',
-      );
+    if (kind == RuntimeKind.standalone && kIsWeb) {
+      throw StateError('Die novooa-Runtime ist nur für native Apps verfügbar.');
     }
     const configuredUrl = String.fromEnvironment(
-      'LOCAL_RUNTIME_URL',
+      'WORKSPACE_API_URL',
       defaultValue: 'http://127.0.0.1:8090',
     );
     return RuntimeProfile._(kind, Uri.parse(configuredUrl));
   }
 
   final RuntimeKind kind;
-  final Uri localRuntimeUri;
+  final Uri workspaceApiUri;
 
   bool get isCloud => kind == RuntimeKind.cloud;
-  bool get isLocal => kind == RuntimeKind.local;
+  bool get isStandalone => kind == RuntimeKind.standalone;
 }

@@ -29,12 +29,12 @@ class AppRouter {
   static const String employees = '/employees';
   static const String settings = '/settings';
 
-  AppRouter({required this.sessionCubit, this.isLocal = false});
+  AppRouter({required this.sessionCubit, this.isStandalone = false});
 
-  AppRouter.local() : sessionCubit = null, isLocal = true;
+  AppRouter.standalone() : sessionCubit = null, isStandalone = true;
 
   final AuthSessionCubit? sessionCubit;
-  final bool isLocal;
+  final bool isStandalone;
 
   late final GoRouter router = GoRouter(
     initialLocation: home,
@@ -46,7 +46,7 @@ class AppRouter {
         builder: (context, state, child) {
           return RootPage(
             location: state.uri.path,
-            isLocal: isLocal,
+            isStandalone: isStandalone,
             child: child,
           );
         },
@@ -91,7 +91,7 @@ class AppRouter {
               ActivityPage(
                 initialRunId: state.uri.queryParameters['runId'],
                 notificationOpenId: state.uri.queryParameters['open'],
-                isLocal: isLocal,
+                isStandalone: isStandalone,
               ),
             ),
           ),
@@ -122,7 +122,7 @@ class AppRouter {
           GoRoute(
             path: settings,
             pageBuilder: (context, state) =>
-                _shellPage(state, SettingsPage(isLocal: isLocal)),
+                _shellPage(state, SettingsPage(isStandalone: isStandalone)),
           ),
         ],
       ),

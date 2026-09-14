@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/network/local_runtime_api_client.dart';
+import 'package:syscat2/core/network/workspace_api_client.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_entry.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_import.dart';
 import 'package:syscat2/features/machine_learning/domain/repositories/model_catalog_repository.dart';
@@ -30,9 +30,9 @@ void main() {
     'shows the local runtime validation message for an invalid import',
     () async {
       final repository = _Repository()
-        ..importError = LocalRuntimeHttpException(
+        ..importError = WorkspaceHttpException(
           400,
-          const LocalRuntimeError(
+          const WorkspaceApiError(
             message: 'Diese lokale Modellversion ist bereits installiert.',
           ),
         );

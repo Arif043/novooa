@@ -7,16 +7,16 @@ import '../cubits/settings_cubit.dart';
 import '../cubits/settings_state.dart';
 import '../widgets/settings_content.dart';
 import '../widgets/settings_filter_tabs.dart';
-import '../widgets/local_settings_content.dart';
+import '../widgets/runtime_settings_content.dart';
 
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key, this.isLocal = false});
+  const SettingsPage({super.key, this.isStandalone = false});
 
-  final bool isLocal;
+  final bool isStandalone;
 
   @override
   Widget build(BuildContext context) {
-    if (isLocal) return const LocalSettingsContent();
+    if (isStandalone) return const RuntimeSettingsContent();
     return BlocProvider(
       create: (_) => serviceLocator<SettingsCubit>()..load(),
       child: const _SettingsView(),

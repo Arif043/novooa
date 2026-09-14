@@ -1,24 +1,24 @@
 import {mkdir, readFile, rename, writeFile} from "node:fs/promises";
 import {dirname, join} from "node:path";
-import {type SignedLocalRuntimeLicense} from "../../domain/entities/local-runtime-license-lease.js";
+import {type SignedRuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
 
-export type StoredLocalRuntimeLicenseState = {
-  license: SignedLocalRuntimeLicense;
+export type StoredRuntimeLicenseState = {
+  license: SignedRuntimeLicense;
 };
 
-export interface LocalRuntimeLicenseStore {
-  load(): Promise<StoredLocalRuntimeLicenseState | null>;
-  save(state: StoredLocalRuntimeLicenseState): Promise<void>;
+export interface RuntimeLicenseStore {
+  load(): Promise<StoredRuntimeLicenseState | null>;
+  save(state: StoredRuntimeLicenseState): Promise<void>;
 }
 
-export class FileLocalRuntimeLicenseStore implements LocalRuntimeLicenseStore {
+export class FileRuntimeLicenseStore implements RuntimeLicenseStore {
   private readonly path: string;
 
   constructor(runtimeRoot: string) {
     this.path = join(runtimeRoot, "credentials", "license-state.json");
   }
 
-  async load(): Promise<StoredLocalRuntimeLicenseState | null> {
+  async load(): Promise<StoredRuntimeLicenseState | null> {
     try {
       return stateFromJson(await readFile(this.path, "utf8"));
     } catch (error) {
@@ -27,7 +27,7 @@ export class FileLocalRuntimeLicenseStore implements LocalRuntimeLicenseStore {
     }
   }
 
-  async save(state: StoredLocalRuntimeLicenseState): Promise<void> {
+  async save(state: StoredRuntimeLicenseState): Promise<void> {
     await mkdir(dirname(this.path), {recursive: true, mode: 0o700});
     const temporaryPath = `${this.path}.new`;
     await writeFile(temporaryPath, JSON.stringify(state), {encoding: "utf8", mode: 0o600});
@@ -35,7 +35,7 @@ export class FileLocalRuntimeLicenseStore implements LocalRuntimeLicenseStore {
   }
 }
 
-function stateFromJson(value: string): StoredLocalRuntimeLicenseState {
+function stateFromJson(value: string): StoredRuntimeLicenseState {
   const parsed = record(JSON.parse(value));
   const license = record(parsed.license);
   const payload = record(license.payload);

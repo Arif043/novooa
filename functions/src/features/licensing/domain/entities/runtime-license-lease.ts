@@ -1,17 +1,17 @@
-export type LocalRuntimeLicense = {
+export type RuntimeLicense = {
   licenseId: string;
   workspaceId: string;
   issuedAt: string;
   expiresAt?: string;
 };
 
-export type SignedLocalRuntimeLicense = {
-  payload: LocalRuntimeLicense;
+export type SignedRuntimeLicense = {
+  payload: RuntimeLicense;
   signature: string;
 };
 
-export function localRuntimeLicensePayloadJson(
-  license: LocalRuntimeLicense,
+export function runtimeLicensePayloadJson(
+  license: RuntimeLicense,
 ): string {
   return JSON.stringify({
     licenseId: license.licenseId,
@@ -21,8 +21,8 @@ export function localRuntimeLicensePayloadJson(
   });
 }
 
-export function isActiveLocalRuntimeLicense(
-  license: LocalRuntimeLicense,
+export function isActiveRuntimeLicense(
+  license: RuntimeLicense,
   now: Date,
 ): boolean {
   const issuedAt = Date.parse(license.issuedAt);
@@ -35,7 +35,7 @@ export function isActiveLocalRuntimeLicense(
     (expiresAt === undefined || (Number.isFinite(expiresAt) && expiresAt > now.getTime()));
 }
 
-function hasRequiredValues(license: LocalRuntimeLicense): boolean {
+function hasRequiredValues(license: RuntimeLicense): boolean {
   return [license.licenseId, license.workspaceId]
     .every((value) => value.trim().length > 0 && value.length <= 200);
 }

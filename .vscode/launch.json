@@ -6,12 +6,12 @@
     "configurations": [
 
         {
-            "name": "novooa local",
+            "name": "novooa standalone",
             "request": "launch",
             "type": "dart",
             "deviceId": "macos",
             "toolArgs": [
-                "--dart-define=NOVOOA_RUNTIME=local"
+                "--dart-define=NOVOOA_RUNTIME=standalone"
             ]
         },
         {

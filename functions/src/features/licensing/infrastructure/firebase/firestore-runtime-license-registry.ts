@@ -1,17 +1,17 @@
 import {Timestamp} from "firebase-admin/firestore";
-import {type LocalRuntimeLicense} from "../../domain/entities/local-runtime-license-lease.js";
-import {type LocalRuntimeLicenseRegistry} from "../../domain/repositories/local-runtime-license-registry.js";
+import {type RuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
+import {type RuntimeLicenseRegistry} from "../../domain/repositories/runtime-license-registry.js";
 import {localRuntimeActivationTokenHash} from "../license-activation-token-hash.js";
 import {getDatabase} from "../../../../shared/firebase/firestore-db.js";
 
-export class LocalRuntimeLicenseError extends Error {}
+export class RuntimeLicenseError extends Error {}
 
-export class FirestoreLocalRuntimeLicenseRegistry
-implements LocalRuntimeLicenseRegistry {
+export class FirestoreRuntimeLicenseRegistry
+implements RuntimeLicenseRegistry {
   async licenseForActivationToken(
     token: string,
     now: Date,
-  ): Promise<LocalRuntimeLicense> {
+  ): Promise<RuntimeLicense> {
     const snapshot = await getDatabase()
       .collection("licenses")
       .doc(localRuntimeActivationTokenHash(token))
@@ -19,11 +19,11 @@ implements LocalRuntimeLicenseRegistry {
     return licenseFromSnapshot(snapshot, now);
   }
 
-  async licenseForId(licenseId: string, now: Date): Promise<LocalRuntimeLicense> {
+  async licenseForId(licenseId: string, now: Date): Promise<RuntimeLicense> {
     const snapshot = await getDatabase().collection("licenses")
       .where("licenseId", "==", licenseId).limit(2).get();
     if (snapshot.size !== 1) {
-      throw new LocalRuntimeLicenseError("Die Lizenz ist ungültig.");
+      throw new RuntimeLicenseError("Die Lizenz ist ungültig.");
     }
     return licenseFromSnapshot(snapshot.docs[0], now);
   }
@@ -32,12 +32,12 @@ implements LocalRuntimeLicenseRegistry {
 function licenseFromSnapshot(
   snapshot: FirebaseFirestore.DocumentSnapshot,
   now: Date,
-): LocalRuntimeLicense {
-  if (!snapshot.exists) throw new LocalRuntimeLicenseError("Der Lizenzschlüssel ist ungültig.");
+): RuntimeLicense {
+  if (!snapshot.exists) throw new RuntimeLicenseError("Der Lizenzschlüssel ist ungültig.");
   const data = snapshot.data();
   const expiresAt = expiresAtFrom(data?.expiresAt);
   if (data?.status !== "active" || (expiresAt && Date.parse(expiresAt) <= now.getTime())) {
-    throw new LocalRuntimeLicenseError("Die Lizenz ist nicht aktiv.");
+    throw new RuntimeLicenseError("Die Lizenz ist nicht aktiv.");
   }
   return {
     licenseId: requiredString(data?.licenseId),
@@ -50,10 +50,10 @@ function licenseFromSnapshot(
 function expiresAtFrom(value: unknown): string | undefined {
   if (value === undefined || value === null) return undefined;
   if (value instanceof Timestamp) return value.toDate().toISOString();
-  throw new LocalRuntimeLicenseError("Die Lizenz ist ungültig.");
+  throw new RuntimeLicenseError("Die Lizenz ist ungültig.");
 }
 
 function requiredString(value: unknown): string {
   if (typeof value === "string" && value.trim().length > 0 && value.length <= 200) return value;
-  throw new LocalRuntimeLicenseError("Die Lizenz ist ungültig.");
+  throw new RuntimeLicenseError("Die Lizenz ist ungültig.");
 }

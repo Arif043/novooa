@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/logging/local_runtime_client_logger.dart';
-import 'package:syscat2/core/network/local_runtime_api_client.dart';
+import 'package:syscat2/core/logging/workspace_client_logger.dart';
+import 'package:syscat2/core/network/workspace_api_client.dart';
 
 void main() {
-  test('sends structured client information to the local runtime', () async {
-    final client = _RecordingLocalRuntimeApiClient();
-    final logger = LocalRuntimeClientLogger(client);
+  test('sends structured client information to the runtime', () async {
+    final client = _RecordingWorkspaceApiClient();
+    final logger = WorkspaceClientLogger(client);
 
     logger.info('Lokale Anwendung gestartet.', name: 'flutter');
     await logger.flush();
@@ -22,8 +22,8 @@ void main() {
   test(
     'records exception details without propagating transport failures',
     () async {
-      final client = _RecordingLocalRuntimeApiClient(throwsOnPost: true);
-      final logger = LocalRuntimeClientLogger(client);
+      final client = _RecordingWorkspaceApiClient(throwsOnPost: true);
+      final logger = WorkspaceClientLogger(client);
 
       logger.exception(
         message: 'Unbehandelter Flutter-Fehler.',
@@ -42,8 +42,8 @@ void main() {
   );
 }
 
-class _RecordingLocalRuntimeApiClient implements LocalRuntimeApiClient {
-  _RecordingLocalRuntimeApiClient({this.throwsOnPost = false});
+class _RecordingWorkspaceApiClient implements WorkspaceApiClient {
+  _RecordingWorkspaceApiClient({this.throwsOnPost = false});
 
   final bool throwsOnPost;
   String? path;
@@ -63,7 +63,7 @@ class _RecordingLocalRuntimeApiClient implements LocalRuntimeApiClient {
     this.path = path;
     this.body = body;
     if (throwsOnPost) {
-      throw const LocalRuntimeConnectionException('nicht erreichbar');
+      throw const WorkspaceConnectionException('nicht erreichbar');
     }
     return const {};
   }

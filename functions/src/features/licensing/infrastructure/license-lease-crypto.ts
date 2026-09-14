@@ -5,31 +5,31 @@ import {
   verify,
 } from "node:crypto";
 import {
-  localRuntimeLicensePayloadJson,
-  type LocalRuntimeLicense,
-  type SignedLocalRuntimeLicense,
-} from "../domain/entities/local-runtime-license-lease.js";
+  runtimeLicensePayloadJson,
+  type RuntimeLicense,
+  type SignedRuntimeLicense,
+} from "../domain/entities/runtime-license-lease.js";
 
-export function signLocalRuntimeLicense(
-  payload: LocalRuntimeLicense,
+export function signRuntimeLicense(
+  payload: RuntimeLicense,
   privateKeyPem: string,
-): SignedLocalRuntimeLicense {
+): SignedRuntimeLicense {
   const signature = sign(
     null,
-    Buffer.from(localRuntimeLicensePayloadJson(payload)),
+    Buffer.from(runtimeLicensePayloadJson(payload)),
     createPrivateKey(privateKeyPem),
   );
   return {payload, signature: signature.toString("base64url")};
 }
 
-export function verifiesLocalRuntimeLicense(
-  license: SignedLocalRuntimeLicense,
+export function verifiesRuntimeLicense(
+  license: SignedRuntimeLicense,
   publicKeyPem: string,
 ): boolean {
   try {
     return verify(
       null,
-      Buffer.from(localRuntimeLicensePayloadJson(license.payload)),
+      Buffer.from(runtimeLicensePayloadJson(license.payload)),
       createPublicKey(publicKeyPem),
       Buffer.from(license.signature, "base64url"),
     );

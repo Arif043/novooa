@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/network/local_runtime_api_client.dart';
+import 'package:syscat2/core/network/workspace_api_client.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_import.dart';
 import 'package:syscat2/features/machine_learning/infrastructure/repositories/local_model_catalog_repository.dart';
 
@@ -29,7 +29,7 @@ void main() {
   });
 }
 
-class _Client implements LocalRuntimeApiClient {
+class _Client implements WorkspaceApiClient {
   String? postPath;
   Map<String, Object?>? postBody;
 

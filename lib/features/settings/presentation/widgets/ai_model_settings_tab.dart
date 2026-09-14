@@ -12,17 +12,17 @@ class AiModelSettingsTab extends StatelessWidget {
   const AiModelSettingsTab({
     super.key,
     this.scrollable = true,
-    this.localRuntime = false,
+    this.isStandalone = false,
   });
 
   final bool scrollable;
-  final bool localRuntime;
+  final bool isStandalone;
 
   @override
   Widget build(BuildContext context) {
     return _LanguageModelsSettingsContent(
       scrollable: scrollable,
-      localRuntime: localRuntime,
+      isStandalone: isStandalone,
     );
   }
 }
@@ -30,11 +30,11 @@ class AiModelSettingsTab extends StatelessWidget {
 class _LanguageModelsSettingsContent extends StatefulWidget {
   const _LanguageModelsSettingsContent({
     required this.scrollable,
-    required this.localRuntime,
+    required this.isStandalone,
   });
 
   final bool scrollable;
-  final bool localRuntime;
+  final bool isStandalone;
 
   @override
   State<_LanguageModelsSettingsContent> createState() =>
@@ -117,7 +117,7 @@ class _LanguageModelsSettingsContentState
           ),
           const Divider(height: AppSpacing.xl),
           Text(
-            widget.localRuntime
+            widget.isStandalone
                 ? 'Anbieter verbinden'
                 : 'Sprachmodell verbinden',
             style: Theme.of(context).textTheme.titleSmall,
@@ -129,7 +129,7 @@ class _LanguageModelsSettingsContentState
             items: LanguageModelProvider.values
                 .where(
                   (provider) =>
-                      widget.localRuntime ||
+                      widget.isStandalone ||
                       provider != LanguageModelProvider.ollama,
                 )
                 .map(
@@ -157,7 +157,7 @@ class _LanguageModelsSettingsContentState
               keyboardType: TextInputType.url,
               decoration: InputDecoration(
                 labelText: 'API-Adresse',
-                hintText: widget.localRuntime
+                hintText: widget.isStandalone
                     ? 'z. B. http://host.docker.internal:11434/v1'
                     : null,
               ),
@@ -165,7 +165,7 @@ class _LanguageModelsSettingsContentState
             ),
             const SizedBox(height: AppSpacing.md),
           ],
-          if (!widget.localRuntime) ...[
+          if (!widget.isStandalone) ...[
             TextFormField(
               controller: _connectionName,
               enabled: !state.isSaving,
@@ -199,7 +199,7 @@ class _LanguageModelsSettingsContentState
               obscureText: true,
               decoration: InputDecoration(
                 labelText:
-                    widget.localRuntime &&
+                    widget.isStandalone &&
                         state.provider == LanguageModelProvider.openAiCompatible
                     ? 'API-Key (bei Ollama leer lassen)'
                     : 'API-Key',
@@ -212,7 +212,7 @@ class _LanguageModelsSettingsContentState
             child: FilledButton.icon(
               onPressed: state.isSaving || state.isConnecting
                   ? null
-                  : (widget.localRuntime ? _cubit.connect : _cubit.save),
+                  : (widget.isStandalone ? _cubit.connect : _cubit.save),
               icon: state.isSaving || state.isConnecting
                   ? const SizedBox.square(
                       dimension: 18,
@@ -220,7 +220,7 @@ class _LanguageModelsSettingsContentState
                     )
                   : const Icon(Icons.add_link),
               label: Text(
-                widget.localRuntime
+                widget.isStandalone
                     ? 'Anbieter verbinden'
                     : 'Sprachmodell verbinden',
               ),

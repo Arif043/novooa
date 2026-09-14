@@ -12,9 +12,9 @@ import {SQLiteTeamContextStore} from "../../features/teams/infrastructure/local/
 import {LocalTaskMessageSender} from "../../features/task_execution/infrastructure/local/local-task-message-sender.js";
 import {LocalPushDeviceHttpHandler} from "../../features/notifications/infrastructure/local/local-push-device-http-handler.js";
 import {
-  HttpLocalRuntimePushRelayClient,
-  UnavailableLocalRuntimePushRelayClient,
-} from "../../features/notifications/infrastructure/local/local-runtime-push-relay-client.js";
+  HttpRuntimePushRelayClient,
+  UnavailableRuntimePushRelayClient,
+} from "../../features/notifications/infrastructure/local/runtime-push-relay-client.js";
 import {LocalTaskRunApprovalPushNotifier} from "../../features/notifications/infrastructure/local/local-task-run-approval-push-notifier.js";
 import {LocalTaskActivityHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-activity-http-handler.js";
 import {LocalTaskDefinitionHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-definition-http-handler.js";
@@ -35,7 +35,7 @@ import {type LocalRuntimeRequestHandler} from "./local-runtime-http-server.js";
 import {LocalRuntimeRequestRouter} from "./local-runtime-request-router.js";
 import {type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
-import {type SignedLocalRuntimeLicense} from "../../features/licensing/domain/entities/local-runtime-license-lease.js";
+import {type SignedRuntimeLicense} from "../../features/licensing/domain/entities/runtime-license-lease.js";
 import {LocalApplicationLogHttpHandler} from "../logging/local-application-log-http-handler.js";
 import {LocalApplicationLogger} from "../logging/local-application-logger.js";
 import {SQLiteLocalApplicationLogStore} from "../logging/sqlite-local-application-log-store.js";
@@ -61,7 +61,7 @@ export type LocalRuntimeCompositionOptions = {
   workspace: LocalRuntimeWorkspace;
   localMasterKey: string;
   isLicenseActive?: () => boolean;
-  signedLicense: () => SignedLocalRuntimeLicense | null;
+  signedLicense: () => SignedRuntimeLicense | null;
 };
 
 export function createLocalRuntimeComposition(
@@ -160,8 +160,8 @@ export function createLocalRuntimeComposition(
 function pushRelayFor() {
   const endpoint = process.env.LOCAL_RUNTIME_PUSH_RELAY_URL?.trim();
   return endpoint
-    ? new HttpLocalRuntimePushRelayClient(endpoint)
-    : new UnavailableLocalRuntimePushRelayClient();
+    ? new HttpRuntimePushRelayClient(endpoint)
+    : new UnavailableRuntimePushRelayClient();
 }
 
 function createTaskWorkflow(

@@ -4,7 +4,7 @@ import '../../features/assistant/domain/entities/assistant_context.dart';
 import '../../root_tab.dart';
 import '../config/mvp_feature_flags.dart';
 
-List<RootTab> rootTabs({required bool isLocal}) => [
+List<RootTab> rootTabs({required bool isStandalone}) => [
   RootTab(
     title: 'Aufgaben',
     icon: CupertinoIcons.rectangle_3_offgrid,
@@ -40,9 +40,9 @@ List<RootTab> rootTabs({required bool isLocal}) => [
 AssistantContext? assistantContextForRootTab({
   required RootTab selectedTab,
   required String location,
-  required bool isLocal,
+  required bool isStandalone,
 }) {
-  if (isLocal) return null;
+  if (isStandalone) return null;
   final area = switch (selectedTab.path) {
     '/tasks' => AssistantArea.taskBuilder,
     '/knowledge-base' => AssistantArea.knowledgeBase,

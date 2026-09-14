@@ -2,16 +2,16 @@ import {type Server} from "node:http";
 import {readFileSync} from "node:fs";
 import {join, resolve} from "node:path";
 import {
-  DevelopmentLocalRuntimeLicenseService,
-  GatewayLocalRuntimeLicenseService,
-  type LocalRuntimeLicenseService,
+  DevelopmentRuntimeLicenseService,
+  GatewayRuntimeLicenseService,
+  type RuntimeLicenseService,
 } from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
-import {FileLocalRuntimeLicenseStore} from "../../features/licensing/infrastructure/local/file-local-runtime-license-store.js";
-import {HttpLocalRuntimeLicenseGatewayClient} from "../../features/licensing/infrastructure/local/local-runtime-license-gateway-client.js";
+import {FileRuntimeLicenseStore} from "../../features/licensing/infrastructure/local/file-local-runtime-license-store.js";
+import {HttpRuntimeLicenseGatewayClient} from "../../features/licensing/infrastructure/local/local-runtime-license-gateway-client.js";
 import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {openLocalRuntimeDatabase} from "./local-runtime-database.js";
 import {createLocalRuntimeHttpServer} from "./local-runtime-http-server.js";
-import {LocalRuntimeLicenseHttpHandler} from "./local-runtime-license-http-handler.js";
+import {RuntimeLicenseHttpHandler} from "./local-runtime-license-http-handler.js";
 import {localRuntimeMasterKeyFrom} from "./local-runtime-master-key.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
 
@@ -38,7 +38,7 @@ async function startLocalRuntime(): Promise<void> {
     const restored = await licenses.restore();
     if (restored !== null) await application.activate(restored);
     const server = createLocalRuntimeHttpServer(
-      new LocalRuntimeLicenseHttpHandler(licenses, application),
+      new RuntimeLicenseHttpHandler(licenses, application),
     );
     const port = configuredPort();
     await listen(server, port);
@@ -67,17 +67,17 @@ function requiredEnvironment(name: string): string {
   throw new Error(`${name} fehlt.`);
 }
 
-function licenseServiceFor(runtimeRoot: string): LocalRuntimeLicenseService {
+function licenseServiceFor(runtimeRoot: string): RuntimeLicenseService {
   if (process.env.NOVOOA_LOCAL_DEVELOPMENT === "true") {
-    return new DevelopmentLocalRuntimeLicenseService({
+    return new DevelopmentRuntimeLicenseService({
       licenseId: "development-license",
       workspaceId: optionalEnvironment("LOCAL_RUNTIME_TEAM_ID") ?? "local-team",
       expiresAt: "2099-01-01T00:00:00.000Z",
     });
   }
-  return new GatewayLocalRuntimeLicenseService(
-    new FileLocalRuntimeLicenseStore(runtimeRoot),
-    new HttpLocalRuntimeLicenseGatewayClient(
+  return new GatewayRuntimeLicenseService(
+    new FileRuntimeLicenseStore(runtimeRoot),
+    new HttpRuntimeLicenseGatewayClient(
       requiredEnvironment("LOCAL_RUNTIME_LICENSE_GATEWAY_URL"),
     ),
     licensePublicKey(),

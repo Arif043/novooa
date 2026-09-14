@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/network/local_runtime_api_client.dart';
+import 'package:syscat2/core/network/workspace_api_client.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_connection_draft.dart';
@@ -50,7 +50,7 @@ void main() {
   });
 }
 
-class _RecordingClient implements LocalRuntimeApiClient {
+class _RecordingClient implements WorkspaceApiClient {
   String? postPath;
   Map<String, Object?>? postBody;
 

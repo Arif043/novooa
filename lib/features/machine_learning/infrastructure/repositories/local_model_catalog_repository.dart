@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:syscat2/core/network/local_runtime_api_client.dart';
+import 'package:syscat2/core/network/workspace_api_client.dart';
 
 import '../../domain/entities/model_catalog_entry.dart';
 import '../../domain/entities/model_catalog_import.dart';
@@ -9,7 +9,7 @@ import '../../domain/repositories/model_catalog_repository.dart';
 class LocalModelCatalogRepository implements ModelCatalogRepository {
   const LocalModelCatalogRepository(this._client);
 
-  final LocalRuntimeApiClient _client;
+  final WorkspaceApiClient _client;
 
   @override
   Future<void> importEntry(ModelCatalogImport value) async {
@@ -27,7 +27,7 @@ class LocalModelCatalogRepository implements ModelCatalogRepository {
 
   @override
   Stream<List<ModelCatalogEntry>> watchEntries() {
-    return pollLocalRuntime(_load);
+    return pollWorkspace(_load);
   }
 
   Future<List<ModelCatalogEntry>> _load() async {
@@ -79,7 +79,9 @@ class LocalModelCatalogRepository implements ModelCatalogRepository {
 
   ModelManifestOutput _manifestOutputFrom(Object? value) {
     final output = _object(value);
-    final workflowOutput = _workflowOutputFrom(_object(output['workflowOutput']));
+    final workflowOutput = _workflowOutputFrom(
+      _object(output['workflowOutput']),
+    );
     return ModelManifestOutput(
       tensorName: _text(output, 'name'),
       workflowName: workflowOutput['name'] as String,
@@ -162,14 +164,16 @@ class LocalModelCatalogRepository implements ModelCatalogRepository {
   }
 
   Map<String, Object?> _object(Object? value) {
-    if (value is! Map) throw const FormatException('Ein Modellkatalogeintrag ist ungültig.');
+    if (value is! Map)
+      throw const FormatException('Ein Modellkatalogeintrag ist ungültig.');
     return {
       for (final entry in value.entries) entry.key.toString(): entry.value,
     };
   }
 
   List<Object?> _items(Object? value) {
-    if (value is! List) throw const FormatException('Ein Modellkatalogeintrag ist ungültig.');
+    if (value is! List)
+      throw const FormatException('Ein Modellkatalogeintrag ist ungültig.');
     return value;
   }
 

@@ -1,71 +1,71 @@
 import {
-  isActiveLocalRuntimeLicense,
-  type LocalRuntimeLicense,
-  type SignedLocalRuntimeLicense,
-} from "../../domain/entities/local-runtime-license-lease.js";
-import {localRuntimeActivationTokenFrom} from "../../domain/entities/local-runtime-activation-token.js";
-import {verifiesLocalRuntimeLicense} from "../license-lease-crypto.js";
+  isActiveRuntimeLicense,
+  type RuntimeLicense,
+  type SignedRuntimeLicense,
+} from "../../domain/entities/runtime-license-lease.js";
+import {runtimeActivationTokenFrom} from "../../domain/entities/activation-token.js";
+import {verifiesRuntimeLicense} from "../license-lease-crypto.js";
 import {
-  type LocalRuntimeLicenseStore,
-  type StoredLocalRuntimeLicenseState,
+  type RuntimeLicenseStore,
+  type StoredRuntimeLicenseState,
 } from "./file-local-runtime-license-store.js";
-import {type LocalRuntimeLicenseGatewayClient} from "./local-runtime-license-gateway-client.js";
+import {type RuntimeLicenseGatewayClient} from "./local-runtime-license-gateway-client.js";
 
-export type LocalRuntimeLicenseContext = Pick<
-  LocalRuntimeLicense,
+export type RuntimeLicenseContext = Pick<
+  RuntimeLicense,
   "licenseId" | "workspaceId" | "expiresAt"
 >;
 
-export type LocalRuntimeLicenseStatus = {
+export type RuntimeLicenseStatus = {
   state: "active" | "expired" | "notActivated";
   expiresAt?: string;
 };
 
-export type LocalRuntimeLicenseActivation = {
+export type RuntimeLicenseActivation = {
   activationToken: string;
 };
 
-export interface LocalRuntimeLicenseService {
-  restore(): Promise<LocalRuntimeLicenseContext | null>;
-  activate(input: LocalRuntimeLicenseActivation): Promise<LocalRuntimeLicenseContext>;
-  activeContext(): LocalRuntimeLicenseContext | null;
-  signedActiveLicense(): SignedLocalRuntimeLicense | null;
-  status(): LocalRuntimeLicenseStatus;
+export interface RuntimeLicenseService {
+  restore(): Promise<RuntimeLicenseContext | null>;
+  activate(input: RuntimeLicenseActivation): Promise<RuntimeLicenseContext>;
+  activeContext(): RuntimeLicenseContext | null;
+  signedActiveLicense(): SignedRuntimeLicense | null;
+  status(): RuntimeLicenseStatus;
 }
 
-export class GatewayLocalRuntimeLicenseService implements LocalRuntimeLicenseService {
-  private state: StoredLocalRuntimeLicenseState | undefined;
+export class GatewayRuntimeLicenseService implements RuntimeLicenseService {
+  private state: StoredRuntimeLicenseState | undefined;
 
   constructor(
-    private readonly store: LocalRuntimeLicenseStore,
-    private readonly gateway: LocalRuntimeLicenseGatewayClient,
+    private readonly store: RuntimeLicenseStore,
+    private readonly gateway: RuntimeLicenseGatewayClient,
     private readonly publicKeyPem: string,
     private readonly now: () => Date = () => new Date(),
   ) {}
 
-  async restore(): Promise<LocalRuntimeLicenseContext | null> {
+  async restore(): Promise<RuntimeLicenseContext | null> {
     this.state = (await this.store.load()) ?? undefined;
     return this.activeContext();
   }
 
-  async activate(input: LocalRuntimeLicenseActivation): Promise<LocalRuntimeLicenseContext> {
-    const token = localRuntimeActivationTokenFrom(input.activationToken);
+  async activate(input: RuntimeLicenseActivation): Promise<RuntimeLicenseContext> {
+    const token = runtimeActivationTokenFrom(input.activationToken);
     return this.saveAndActivate({license: await this.gateway.requestLicense(token)});
   }
 
-  activeContext(): LocalRuntimeLicenseContext | null {
+  activeContext(): RuntimeLicenseContext | null {
     if (this.state === undefined || !this.isValid(this.state)) return null;
     const {licenseId, workspaceId, expiresAt} = this.state.license.payload;
     return {licenseId, workspaceId, expiresAt};
   }
 
-  signedActiveLicense(): SignedLocalRuntimeLicense | null {
+  signedActiveLicense(): SignedRuntimeLicense | null {
     return this.state !== undefined && this.isValid(this.state)
       ? this.state.license
       : null;
   }
 
-  status(): LocalRuntimeLicenseStatus {
+  status(): RuntimeLicenseStatus {
     const active = this.activeContext();
     if (active !== null) return {state: "active", expiresAt: active.expiresAt};
     if (this.state !== undefined) {
@@ -75,40 +75,40 @@ export class GatewayLocalRuntimeLicenseService implements LocalRuntimeLicenseSer
   }
 
   private async saveAndActivate(
-    state: StoredLocalRuntimeLicenseState,
-  ): Promise<LocalRuntimeLicenseContext> {
+    state: StoredRuntimeLicenseState,
+  ): Promise<RuntimeLicenseContext> {
     if (!this.isValid(state)) throw new Error("Der Lizenzschlüssel ist ungültig.");
     this.state = state;
     await this.store.save(state);
     return this.activeContext()!;
   }
 
-  private isValid(state: StoredLocalRuntimeLicenseState): boolean {
-    return verifiesLocalRuntimeLicense(state.license, this.publicKeyPem) &&
-      isActiveLocalRuntimeLicense(state.license.payload, this.now());
+  private isValid(state: StoredRuntimeLicenseState): boolean {
+    return verifiesRuntimeLicense(state.license, this.publicKeyPem) &&
+      isActiveRuntimeLicense(state.license.payload, this.now());
   }
 }
 
-export class DevelopmentLocalRuntimeLicenseService implements LocalRuntimeLicenseService {
-  constructor(private readonly context: LocalRuntimeLicenseContext) {}
+export class DevelopmentRuntimeLicenseService implements RuntimeLicenseService {
+  constructor(private readonly context: RuntimeLicenseContext) {}
 
-  async restore(): Promise<LocalRuntimeLicenseContext> {
+  async restore(): Promise<RuntimeLicenseContext> {
     return this.context;
   }
 
-  async activate(): Promise<LocalRuntimeLicenseContext> {
+  async activate(): Promise<RuntimeLicenseContext> {
     return this.context;
   }
 
-  activeContext(): LocalRuntimeLicenseContext {
+  activeContext(): RuntimeLicenseContext {
     return this.context;
   }
 
-  signedActiveLicense(): SignedLocalRuntimeLicense | null {
+  signedActiveLicense(): SignedRuntimeLicense | null {
     return null;
   }
 
-  status(): LocalRuntimeLicenseStatus {
+  status(): RuntimeLicenseStatus {
     return {state: "active", expiresAt: this.context.expiresAt};
   }
 }

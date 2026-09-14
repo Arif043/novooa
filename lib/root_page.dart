@@ -11,21 +11,21 @@ import 'core/widgets/root_side_menu.dart';
 import 'core/widgets/syscat_background.dart';
 import 'features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import 'features/notifications/presentation/widgets/notification_side_drawer.dart';
-import 'features/licensing/presentation/cubits/local_runtime_license_cubit.dart';
-import 'features/licensing/presentation/cubits/local_runtime_license_state.dart';
-import 'features/licensing/presentation/pages/local_runtime_license_page.dart';
+import 'features/licensing/presentation/cubits/runtime_license_cubit.dart';
+import 'features/licensing/presentation/cubits/runtime_license_state.dart';
+import 'features/licensing/presentation/pages/runtime_activation_page.dart';
 
 class RootPage extends StatefulWidget {
   const RootPage({
     super.key,
     required this.location,
     required this.child,
-    this.isLocal = false,
+    this.isStandalone = false,
   });
 
   final String location;
   final Widget child;
-  final bool isLocal;
+  final bool isStandalone;
 
   @override
   State<RootPage> createState() => _RootPageState();
@@ -51,27 +51,27 @@ class _RootPageState extends State<RootPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isLocal) return _localContent();
+    if (widget.isStandalone) return _activationGatedContent();
     return _shell(widget.child);
   }
 
-  Widget _localContent() {
-    return BlocBuilder<LocalRuntimeLicenseCubit, LocalRuntimeLicenseCubitState>(
+  Widget _activationGatedContent() {
+    return BlocBuilder<RuntimeLicenseCubit, RuntimeLicenseCubitState>(
       builder: (context, state) {
-        if (state is LocalRuntimeLicenseActive) return _shell(widget.child);
-        return const Scaffold(body: SafeArea(child: LocalRuntimeLicensePage()));
+        if (state is RuntimeLicenseActive) return _shell(widget.child);
+        return const Scaffold(body: SafeArea(child: RuntimeActivationPage()));
       },
     );
   }
 
   Widget _shell(Widget content) {
-    final tabs = rootTabs(isLocal: widget.isLocal);
+    final tabs = rootTabs(isStandalone: widget.isStandalone);
     final selectedTabIndex = _selectedTabIndex(tabs);
     final selectedTab = tabs[selectedTabIndex];
     final assistantContext = assistantContextForRootTab(
       selectedTab: selectedTab,
       location: widget.location,
-      isLocal: widget.isLocal,
+      isStandalone: widget.isStandalone,
     );
     final usesTaskBuilderSideRail = widget.location.startsWith(
       '/tasks/builder',
@@ -91,8 +91,8 @@ class _RootPageState extends State<RootPage> {
             tabs: tabs,
             selectedIndex: selectedTabIndex,
             onSelected: (index) => _selectTab(tabs, index),
-            showCurrentUserProfile: !widget.isLocal,
-            showSessionActions: !widget.isLocal,
+            showCurrentUserProfile: !widget.isStandalone,
+            showSessionActions: !widget.isStandalone,
           ),
           rightMenu: _isNotificationDrawerOpen
               ? NotificationSideDrawer(onClose: _closeNotificationDrawer)

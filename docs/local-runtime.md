@@ -325,7 +325,7 @@ npm --prefix functions run local-runtime:prepare -- \
 docker compose -f docker-compose.local.yaml up --build --detach
 curl http://127.0.0.1:8090/healthz
 docker compose -f docker-compose.local.yaml ps
-flutter run -d macos --dart-define=NOVOOA_RUNTIME=local
+flutter run -d macos --dart-define=NOVOOA_RUNTIME=standalone
 ```
 
 Der Stack legt das benannte Volume `novooa-local_novooa-data` an. Ein

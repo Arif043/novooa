@@ -1,16 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  type LocalRuntimeLicenseContext,
-  type LocalRuntimeLicenseService,
-  type LocalRuntimeLicenseStatus,
+  type RuntimeLicenseContext,
+  type RuntimeLicenseService,
+  type RuntimeLicenseStatus,
 } from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
-import {LocalRuntimeLicenseHttpHandler} from "./local-runtime-license-http-handler.js";
+import {RuntimeLicenseHttpHandler} from "./local-runtime-license-http-handler.js";
 import {type LocalRuntimeRequest, type LocalRuntimeResponse} from "./local-runtime-http-server.js";
 
 test("blocks local business endpoints until the runtime is activated", async () => {
   const application = new FakeApplication();
-  const handler = new LocalRuntimeLicenseHttpHandler(new FakeLicenseService(), application);
+  const handler = new RuntimeLicenseHttpHandler(new FakeLicenseService(), application);
 
   const response = await handler.handle({body: {}, method: "GET", url: "/v1/tasks"});
 
@@ -28,7 +28,7 @@ test("blocks local business endpoints until the runtime is activated", async () 
 test("activates the workspace with a customer activation token", async () => {
   const service = new FakeLicenseService();
   const application = new FakeApplication();
-  const handler = new LocalRuntimeLicenseHttpHandler(service, application);
+  const handler = new RuntimeLicenseHttpHandler(service, application);
 
   const activation = await handler.handle({
     body: {activationToken: "A3K9N7P2Q4R6"},
@@ -45,25 +45,25 @@ test("activates the workspace with a customer activation token", async () => {
   assert.deepEqual(taskResponse, {body: {status: "delegated"}, statusCode: 200});
 });
 
-const context: LocalRuntimeLicenseContext = {
+const context: RuntimeLicenseContext = {
   licenseId: "license-1",
   workspaceId: "workspace-1",
   expiresAt: "2026-09-10T12:00:00.000Z",
 };
 
-class FakeLicenseService implements LocalRuntimeLicenseService {
+class FakeLicenseService implements RuntimeLicenseService {
   private active = false;
 
-  async restore(): Promise<LocalRuntimeLicenseContext | null> {
+  async restore(): Promise<RuntimeLicenseContext | null> {
     return null;
   }
 
-  async activate(): Promise<LocalRuntimeLicenseContext> {
+  async activate(): Promise<RuntimeLicenseContext> {
     this.active = true;
     return context;
   }
 
-  activeContext(): LocalRuntimeLicenseContext | null {
+  activeContext(): RuntimeLicenseContext | null {
     return this.active ? context : null;
   }
 
@@ -71,16 +71,16 @@ class FakeLicenseService implements LocalRuntimeLicenseService {
     return null;
   }
 
-  status(): LocalRuntimeLicenseStatus {
+  status(): RuntimeLicenseStatus {
     return this.active ? {state: "active", expiresAt: context.expiresAt} : {state: "notActivated"};
   }
 }
 
 class FakeApplication {
   readonly requests: LocalRuntimeRequest[] = [];
-  readonly activated: LocalRuntimeLicenseContext[] = [];
+  readonly activated: RuntimeLicenseContext[] = [];
 
-  async activate(nextContext: LocalRuntimeLicenseContext): Promise<void> {
+  async activate(nextContext: RuntimeLicenseContext): Promise<void> {
     this.activated.push(nextContext);
   }
 

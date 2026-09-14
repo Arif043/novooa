@@ -1,11 +1,11 @@
-import '../../../../core/network/local_runtime_api_client.dart';
+import '../../../../core/network/workspace_api_client.dart';
 import '../../domain/entities/push_device.dart';
 import '../../domain/repositories/push_device_repository.dart';
 
 class LocalRelayPushDeviceRepository implements PushDeviceRepository {
   const LocalRelayPushDeviceRepository(this._client);
 
-  final LocalRuntimeApiClient _client;
+  final WorkspaceApiClient _client;
 
   @override
   Future<void> save(PushDevice device) {

@@ -1,18 +1,18 @@
-import {type SignedLocalRuntimeLicense} from
-  "../../../licensing/domain/entities/local-runtime-license-lease.js";
+import {type SignedRuntimeLicense} from
+  "../../../licensing/domain/entities/runtime-license-lease.js";
 import {type ApplicationLogger} from "../../../../shared/logging/application-logger.js";
 import {
   type ApprovalNotificationInput,
   type MarkApprovalNotificationInput,
   type TaskRunApprovalNotificationStore,
 } from "../../domain/repositories/task-run-approval-notification-store.js";
-import {type LocalRuntimePushRelayClient} from "./local-runtime-push-relay-client.js";
+import {type RuntimePushRelayClient} from "./runtime-push-relay-client.js";
 
 export class LocalTaskRunApprovalPushNotifier
 implements TaskRunApprovalNotificationStore {
   constructor(
-    private readonly signedLicense: () => SignedLocalRuntimeLicense | null,
-    private readonly relay: LocalRuntimePushRelayClient,
+    private readonly signedLicense: () => SignedRuntimeLicense | null,
+    private readonly relay: RuntimePushRelayClient,
     private readonly logger: ApplicationLogger,
   ) {}
 

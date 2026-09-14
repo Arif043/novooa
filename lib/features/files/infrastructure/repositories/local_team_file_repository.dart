@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:multiple_result/multiple_result.dart';
 
-import '../../../../core/network/local_runtime_api_client.dart';
+import '../../../../core/network/workspace_api_client.dart';
 import '../../domain/entities/file_failure.dart';
 import '../../domain/entities/file_version.dart';
 import '../../domain/entities/team_file.dart';
@@ -17,7 +17,7 @@ class LocalTeamFileRepository
     implements TeamFileRepository, FileVersionRepository {
   const LocalTeamFileRepository(this._client);
 
-  final LocalRuntimeApiClient _client;
+  final WorkspaceApiClient _client;
 
   @override
   Future<Result<TeamFolder, FileFailure>> createFolder({
@@ -77,16 +77,15 @@ class LocalTeamFileRepository
   }) => _write('/v1/files', input, folderId: folderId);
 
   @override
-  Stream<List<TeamFile>> watchFiles(TeamId teamId) =>
-      pollLocalRuntime(_loadFiles);
+  Stream<List<TeamFile>> watchFiles(TeamId teamId) => pollWorkspace(_loadFiles);
 
   @override
   Stream<List<TeamFolder>> watchFolders(TeamId teamId) =>
-      pollLocalRuntime(_loadFolders);
+      pollWorkspace(_loadFolders);
 
   @override
   Stream<List<FileVersion>> watchVersions(TeamId teamId, String fileId) =>
-      pollLocalRuntime(() => _loadVersions(fileId));
+      pollWorkspace(() => _loadVersions(fileId));
 
   Future<Result<TeamFile, FileFailure>> _write(
     String path,

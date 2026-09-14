@@ -12,19 +12,19 @@ import '../widgets/approval_run_grid.dart';
 import '../widgets/task_run_interaction_dialog.dart';
 import '../widgets/activity_tab_content.dart';
 import '../widgets/task_activity_history.dart';
-import '../../../application_logs/presentation/widgets/local_application_logs_view.dart';
+import '../../../application_logs/presentation/widgets/runtime_application_logs_view.dart';
 
 class ActivityPage extends StatelessWidget {
   const ActivityPage({
     super.key,
     this.initialRunId,
     this.notificationOpenId,
-    this.isLocal = false,
+    this.isStandalone = false,
   });
 
   final String? initialRunId;
   final String? notificationOpenId;
-  final bool isLocal;
+  final bool isStandalone;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +33,7 @@ class ActivityPage extends StatelessWidget {
       child: _ActivityView(
         initialRunId: initialRunId,
         notificationOpenId: notificationOpenId,
-        isLocal: isLocal,
+        isStandalone: isStandalone,
       ),
     );
   }
@@ -45,12 +45,12 @@ class _ActivityView extends StatefulWidget {
   const _ActivityView({
     this.initialRunId,
     this.notificationOpenId,
-    required this.isLocal,
+    required this.isStandalone,
   });
 
   final String? initialRunId;
   final String? notificationOpenId;
-  final bool isLocal;
+  final bool isStandalone;
 
   @override
   State<_ActivityView> createState() => _ActivityViewState();
@@ -77,7 +77,7 @@ class _ActivityViewState extends State<_ActivityView> {
           children: [
             _FilterTabs(
               filter: filter,
-              isLocal: widget.isLocal,
+              isStandalone: widget.isStandalone,
               onChanged: (value) => setState(() => filter = value),
             ),
             Expanded(
@@ -91,7 +91,7 @@ class _ActivityViewState extends State<_ActivityView> {
                 ActivityLoadStatus.ready => _TabBody(
                   filter: filter,
                   state: state,
-                  isLocal: widget.isLocal,
+                  isStandalone: widget.isStandalone,
                 ),
               },
             ),
@@ -128,12 +128,12 @@ class _FilterTabs extends StatelessWidget {
   const _FilterTabs({
     required this.filter,
     required this.onChanged,
-    required this.isLocal,
+    required this.isStandalone,
   });
 
   final TaskActivityFilter filter;
   final ValueChanged<TaskActivityFilter> onChanged;
-  final bool isLocal;
+  final bool isStandalone;
 
   @override
   Widget build(BuildContext context) {
@@ -150,7 +150,8 @@ class _FilterTabs extends StatelessWidget {
           TaskActivityFilter.denied: Text('Abgelehnt'),
           TaskActivityFilter.running: Text('Laufend'),
           TaskActivityFilter.history: Text('Verlauf'),
-          if (isLocal) TaskActivityFilter.protocol: const Text('Protokoll'),
+          if (isStandalone)
+            TaskActivityFilter.protocol: const Text('Protokoll'),
         },
       ),
     );
@@ -161,12 +162,12 @@ class _TabBody extends StatelessWidget {
   const _TabBody({
     required this.filter,
     required this.state,
-    required this.isLocal,
+    required this.isStandalone,
   });
 
   final TaskActivityFilter filter;
   final ActivityState state;
-  final bool isLocal;
+  final bool isStandalone;
 
   @override
   Widget build(BuildContext context) {
@@ -187,8 +188,8 @@ class _TabBody extends StatelessWidget {
         activities: state.activities,
         onRefresh: context.read<ActivityCubit>().load,
       ),
-      TaskActivityFilter.protocol when isLocal =>
-        const LocalApplicationLogsView(),
+      TaskActivityFilter.protocol when isStandalone =>
+        const RuntimeApplicationLogsView(),
       TaskActivityFilter.protocol => const SizedBox.shrink(),
     };
   }

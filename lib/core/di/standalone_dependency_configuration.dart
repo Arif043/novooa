@@ -47,11 +47,11 @@ import '../../features/task_builder/presentation/cubits/node_file_attachments_cu
 import '../../features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_language_models_cubit.dart';
 import '../../features/teams/domain/usecases/get_current_team_id.dart';
-import '../../features/licensing/domain/repositories/local_runtime_license_repository.dart';
-import '../../features/licensing/domain/usecases/activate_local_runtime_license.dart';
-import '../../features/licensing/domain/usecases/load_local_runtime_license_status.dart';
-import '../../features/licensing/infrastructure/repositories/http_local_runtime_license_repository.dart';
-import '../../features/licensing/presentation/cubits/local_runtime_license_cubit.dart';
+import '../../features/licensing/domain/repositories/runtime_license_repository.dart';
+import '../../features/licensing/domain/usecases/activate_runtime_license.dart';
+import '../../features/licensing/domain/usecases/load_runtime_license_status.dart';
+import '../../features/licensing/infrastructure/repositories/http_runtime_license_repository.dart';
+import '../../features/licensing/presentation/cubits/runtime_license_cubit.dart';
 import '../../features/notifications/domain/repositories/app_notification_repository.dart';
 import '../../features/notifications/domain/repositories/push_device_repository.dart';
 import '../../features/notifications/domain/usecases/accept_team_invitation.dart';
@@ -65,13 +65,13 @@ import '../../features/notifications/infrastructure/repositories/local_relay_pus
 import '../../features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import '../../features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import '../config/runtime_profile.dart';
-import '../network/local_runtime_api_client.dart';
+import '../network/workspace_api_client.dart';
 import '../routing/app_router.dart';
-import 'local_workspace_dependency_configuration.dart';
+import 'standalone_workspace_dependency_configuration.dart';
 
-void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
-  locator.registerLazySingleton<LocalRuntimeApiClient>(
-    () => HttpLocalRuntimeApiClient(baseUri: profile.localRuntimeUri),
+void configureStandaloneDependencies(GetIt locator, RuntimeProfile profile) {
+  locator.registerLazySingleton<WorkspaceApiClient>(
+    () => HttpWorkspaceApiClient(baseUri: profile.workspaceApiUri),
   );
   locator
     ..registerLazySingleton<AuthRepository>(
@@ -81,7 +81,7 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
       LocalAppNotificationRepository.new,
     )
     ..registerLazySingleton<PushDeviceRepository>(
-      () => LocalRelayPushDeviceRepository(locator<LocalRuntimeApiClient>()),
+      () => LocalRelayPushDeviceRepository(locator<WorkspaceApiClient>()),
     )
     ..registerLazySingleton(
       () => FirebaseMessagingTokenProvider(FirebaseMessaging.instance),
@@ -110,34 +110,34 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
       ),
       dispose: (bootstrapper) => bootstrapper.dispose(),
     );
-  configureLocalWorkspaceDependencies(locator);
+  configureStandaloneWorkspaceDependencies(locator);
   locator
-    ..registerLazySingleton<LocalRuntimeLicenseRepository>(
-      () => HttpLocalRuntimeLicenseRepository(locator<LocalRuntimeApiClient>()),
+    ..registerLazySingleton<RuntimeLicenseRepository>(
+      () => HttpRuntimeLicenseRepository(locator<WorkspaceApiClient>()),
     )
     ..registerLazySingleton<TaskRunnerDatasource>(
-      () => LocalHttpTaskRunnerDatasource(locator<LocalRuntimeApiClient>()),
+      () => LocalHttpTaskRunnerDatasource(locator<WorkspaceApiClient>()),
     )
     ..registerLazySingleton<TaskRepository>(
       () => LocalTaskRepository(
-        locator<LocalRuntimeApiClient>(),
+        locator<WorkspaceApiClient>(),
         locator<TaskRunnerDatasource>(),
       ),
     )
     ..registerLazySingleton<TaskRunRepository>(
-      () => LocalTaskRunRepository(locator<LocalRuntimeApiClient>()),
+      () => LocalTaskRunRepository(locator<WorkspaceApiClient>()),
     )
     ..registerLazySingleton<TaskActivityRepository>(
-      () => LocalTaskActivityRepository(locator<LocalRuntimeApiClient>()),
+      () => LocalTaskActivityRepository(locator<WorkspaceApiClient>()),
     )
     ..registerLazySingleton<ApplicationLogRepository>(
-      () => LocalApplicationLogRepository(locator<LocalRuntimeApiClient>()),
+      () => LocalApplicationLogRepository(locator<WorkspaceApiClient>()),
     )
     ..registerLazySingleton<LanguageModelRepository>(
-      () => LocalLanguageModelRepository(locator<LocalRuntimeApiClient>()),
+      () => LocalLanguageModelRepository(locator<WorkspaceApiClient>()),
     )
     ..registerLazySingleton<ModelCatalogRepository>(
-      () => LocalModelCatalogRepository(locator<LocalRuntimeApiClient>()),
+      () => LocalModelCatalogRepository(locator<WorkspaceApiClient>()),
     )
     ..registerLazySingleton<LanguageModelConnectionRepository>(
       () =>
@@ -182,18 +182,15 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
       () => RemoveModelCatalogEntry(locator<ModelCatalogRepository>()),
     )
     ..registerLazySingleton(
-      () => LoadLocalRuntimeLicenseStatus(
-        locator<LocalRuntimeLicenseRepository>(),
-      ),
+      () => LoadRuntimeLicenseStatus(locator<RuntimeLicenseRepository>()),
     )
     ..registerLazySingleton(
-      () =>
-          ActivateLocalRuntimeLicense(locator<LocalRuntimeLicenseRepository>()),
+      () => ActivateRuntimeLicense(locator<RuntimeLicenseRepository>()),
     )
     ..registerLazySingleton(
-      () => LocalRuntimeLicenseCubit(
-        loadStatus: locator<LoadLocalRuntimeLicenseStatus>(),
-        activateLicense: locator<ActivateLocalRuntimeLicense>(),
+      () => RuntimeLicenseCubit(
+        loadStatus: locator<LoadRuntimeLicenseStatus>(),
+        activateLicense: locator<ActivateRuntimeLicense>(),
       )..load(),
       dispose: (cubit) => cubit.close(),
     )
@@ -265,7 +262,7 @@ void configureLocalDependencies(GetIt locator, RuntimeProfile profile) {
       () => ApplicationLogsCubit(locator<WatchApplicationLogs>()),
     )
     ..registerLazySingleton<AppRouter>(
-      AppRouter.local,
+      AppRouter.standalone,
       dispose: (router) => router.dispose(),
     );
 }

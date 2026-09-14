@@ -5,7 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
 import '../config/runtime_profile.dart';
-import 'local_dependency_configuration.dart';
+import 'standalone_dependency_configuration.dart';
 import 'package:syscat2/features/assistant/domain/entities/assistant_context.dart';
 import 'package:syscat2/features/assistant/domain/repositories/assistant_repository.dart';
 import 'package:syscat2/features/assistant/domain/usecases/ask_assistant.dart';
@@ -140,8 +140,8 @@ final serviceLocator = GetIt.instance;
 
 void configureDependencies({RuntimeProfile? runtimeProfile}) {
   final profile = runtimeProfile ?? RuntimeProfile.fromEnvironment();
-  if (profile.isLocal) {
-    configureLocalDependencies(serviceLocator, profile);
+  if (profile.isStandalone) {
+    configureStandaloneDependencies(serviceLocator, profile);
     return;
   }
   _configureCloudDependencies();

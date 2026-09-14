@@ -9,8 +9,8 @@ import '../../domain/entities/application_log.dart';
 import '../cubits/application_logs_cubit.dart';
 import '../cubits/application_logs_state.dart';
 
-class LocalApplicationLogsView extends StatelessWidget {
-  const LocalApplicationLogsView({super.key});
+class RuntimeApplicationLogsView extends StatelessWidget {
+  const RuntimeApplicationLogsView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +102,7 @@ class _LogSummary extends StatelessWidget {
     final style = Theme.of(context).textTheme.bodySmall;
     final details = <String>[
       if (log.message != null) log.event,
-      log.source == ApplicationLogSource.client ? 'Client' : 'Lokale Runtime',
+      log.source == ApplicationLogSource.client ? 'Client' : 'Runtime',
       _timestamp(log.occurredAt),
     ];
     return Column(

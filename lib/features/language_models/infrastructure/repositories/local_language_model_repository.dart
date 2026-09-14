@@ -1,4 +1,4 @@
-import 'package:syscat2/core/network/local_runtime_api_client.dart';
+import 'package:syscat2/core/network/workspace_api_client.dart';
 
 import '../../../files/domain/entities/team_id.dart';
 import '../../domain/entities/language_model.dart';
@@ -11,7 +11,7 @@ class LocalLanguageModelRepository
     implements LanguageModelRepository, LanguageModelConnectionRepository {
   const LocalLanguageModelRepository(this._client);
 
-  final LocalRuntimeApiClient _client;
+  final WorkspaceApiClient _client;
 
   @override
   Future<void> connectLanguageModels(LanguageModelConnectionDraft draft) async {
@@ -38,7 +38,7 @@ class LocalLanguageModelRepository
 
   @override
   Stream<List<LanguageModel>> watchLanguageModels(TeamId teamId) {
-    return pollLocalRuntime(_load);
+    return pollWorkspace(_load);
   }
 
   Future<List<LanguageModel>> _load() async {

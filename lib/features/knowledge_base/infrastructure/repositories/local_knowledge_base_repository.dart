@@ -1,6 +1,6 @@
 import 'package:multiple_result/multiple_result.dart';
 
-import '../../../../core/network/local_runtime_api_client.dart';
+import '../../../../core/network/workspace_api_client.dart';
 import '../../../files/domain/entities/team_id.dart';
 import '../../domain/entities/knowledge_failure.dart';
 import '../../domain/entities/knowledge_note.dart';
@@ -10,7 +10,7 @@ import '../../domain/repositories/knowledge_base_repository.dart';
 class LocalKnowledgeBaseRepository implements KnowledgeBaseRepository {
   const LocalKnowledgeBaseRepository(this._client);
 
-  final LocalRuntimeApiClient _client;
+  final WorkspaceApiClient _client;
 
   @override
   Future<Result<KnowledgeNote, KnowledgeFailure>> createNote({
@@ -59,7 +59,7 @@ class LocalKnowledgeBaseRepository implements KnowledgeBaseRepository {
 
   @override
   Stream<List<KnowledgeNote>> watchNotes(TeamId teamId) =>
-      pollLocalRuntime(_loadNotes);
+      pollWorkspace(_loadNotes);
 
   Future<List<KnowledgeNote>> _loadNotes() async {
     final response = await _client.get('/v1/knowledge-notes');

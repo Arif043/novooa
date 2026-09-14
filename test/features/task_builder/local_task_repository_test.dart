@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:syscat2/core/network/local_runtime_api_client.dart';
+import 'package:syscat2/core/network/workspace_api_client.dart';
 import 'package:syscat2/features/task_builder/infrastructure/datasources/local_http_task_runner_datasource.dart';
 import 'package:syscat2/features/task_builder/infrastructure/repositories/local_task_repository.dart';
 
 void main() {
   test('loads and starts a task through the local runtime', () async {
-    final client = RecordingLocalRuntimeApiClient()
+    final client = RecordingWorkspaceApiClient()
       ..responses['GET /v1/tasks'] = {
         'items': [taskJson()],
       }
@@ -32,7 +32,7 @@ void main() {
   });
 }
 
-class RecordingLocalRuntimeApiClient implements LocalRuntimeApiClient {
+class RecordingWorkspaceApiClient implements WorkspaceApiClient {
   final Map<String, Map<String, Object?>> responses = {};
   final List<String> requests = [];
 

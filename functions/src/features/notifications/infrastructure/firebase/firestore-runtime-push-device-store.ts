@@ -1,10 +1,10 @@
 import {createHash} from "node:crypto";
 import {FieldValue, type QueryDocumentSnapshot} from "firebase-admin/firestore";
-import {type LocalRuntimeLicense} from
-  "../../../licensing/domain/entities/local-runtime-license-lease.js";
-import {type LocalRuntimePushDevice} from "../../domain/entities/local-runtime-push.js";
-import {type LocalRuntimePushDeviceStore} from
-  "../../domain/repositories/local-runtime-push-device-store.js";
+import {type RuntimeLicense} from
+  "../../../licensing/domain/entities/runtime-license-lease.js";
+import {type RuntimePushDevice} from "../../domain/entities/runtime-push.js";
+import {type RuntimePushDeviceStore} from
+  "../../domain/repositories/runtime-push-device-store.js";
 import {
   type FcmTokenDocument,
   type FcmTokenStore,
@@ -13,11 +13,11 @@ import {getDatabase} from "../../../../shared/firebase/firestore-db.js";
 
 const collectionName = "localRuntimePushDevices";
 
-export class FirestoreLocalRuntimePushDeviceStore
-implements LocalRuntimePushDeviceStore {
+export class FirestoreRuntimePushDeviceStore
+implements RuntimePushDeviceStore {
   async save(
-    license: LocalRuntimeLicense,
-    device: LocalRuntimePushDevice,
+    license: RuntimeLicense,
+    device: RuntimePushDevice,
   ): Promise<void> {
     const reference = deviceReference(device.token);
     await reference.set({

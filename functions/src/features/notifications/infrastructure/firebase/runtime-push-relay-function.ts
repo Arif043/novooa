@@ -1,21 +1,21 @@
 import {onRequest} from "firebase-functions/v2/https";
-import {type SignedLocalRuntimeLicense} from
-  "../../../licensing/domain/entities/local-runtime-license-lease.js";
-import {FirebaseLocalRuntimeRelayLicenseVerifier} from
-  "../../../licensing/infrastructure/firebase/firebase-local-runtime-relay-license-verifier.js";
+import {type SignedRuntimeLicense} from
+  "../../../licensing/domain/entities/runtime-license-lease.js";
+import {FirebaseRuntimeRelayLicenseVerifier} from
+  "../../../licensing/infrastructure/firebase/firebase-runtime-relay-license-verifier.js";
 import {localRuntimeLicenseSigningKey} from
   "../../../licensing/infrastructure/firebase/local-runtime-license-signing-key.js";
-import {LocalRuntimePushRelay} from "../../domain/usecases/local-runtime-push-relay.js";
+import {RuntimePushRelay} from "../../domain/usecases/runtime-push-relay.js";
 import {logException, logInfo} from "../../../../shared/logging/logger.js";
 import {FirebasePushNotificationSender} from "./firebase-push-notification-sender.js";
 import {
   FirestoreLocalRuntimeFcmTokenStore,
-  FirestoreLocalRuntimePushDeviceStore,
-} from "./firestore-local-runtime-push-device-store.js";
+  FirestoreRuntimePushDeviceStore,
+} from "./firestore-runtime-push-device-store.js";
 
-const relay = new LocalRuntimePushRelay(
-  new FirebaseLocalRuntimeRelayLicenseVerifier(),
-  new FirestoreLocalRuntimePushDeviceStore(),
+const relay = new RuntimePushRelay(
+  new FirebaseRuntimeRelayLicenseVerifier(),
+  new FirestoreRuntimePushDeviceStore(),
   new FirebasePushNotificationSender(new FirestoreLocalRuntimeFcmTokenStore()),
 );
 
@@ -37,11 +37,11 @@ export const localRuntimePushRelay = onRequest(
 );
 
 type RelayCommand =
-  | {type: "registerDevice"; license: SignedLocalRuntimeLicense; token: string; platform: string}
-  | {type: "removeDevice"; license: SignedLocalRuntimeLicense; token: string}
+  | {type: "registerDevice"; license: SignedRuntimeLicense; token: string; platform: string}
+  | {type: "removeDevice"; license: SignedRuntimeLicense; token: string}
   | {
     type: "send";
-    license: SignedLocalRuntimeLicense;
+    license: SignedRuntimeLicense;
     title: string;
     body: string;
     data: Record<string, string>;
@@ -96,7 +96,7 @@ function stringRecord(value: unknown, name: string): Record<string, string> {
   ]));
 }
 
-function licenseFrom(value: unknown): SignedLocalRuntimeLicense {
+function licenseFrom(value: unknown): SignedRuntimeLicense {
   const signed = record(value);
   const payload = record(signed.payload);
   return {

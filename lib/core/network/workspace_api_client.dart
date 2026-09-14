@@ -3,15 +3,15 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-abstract interface class LocalRuntimeApiClient {
+abstract interface class WorkspaceApiClient {
   Future<Map<String, Object?>> delete(String path);
   Future<Map<String, Object?>> get(String path);
   Future<Map<String, Object?>> post(String path, Map<String, Object?> body);
   Future<Map<String, Object?>> put(String path, Map<String, Object?> body);
 }
 
-class HttpLocalRuntimeApiClient implements LocalRuntimeApiClient {
-  HttpLocalRuntimeApiClient({
+class HttpWorkspaceApiClient implements WorkspaceApiClient {
+  HttpWorkspaceApiClient({
     required Uri baseUri,
     http.Client? client,
     this.timeout = const Duration(seconds: 15),
@@ -53,31 +53,31 @@ class HttpLocalRuntimeApiClient implements LocalRuntimeApiClient {
       final response = await _client.send(request).timeout(timeout);
       final text = await response.stream.bytesToString();
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw LocalRuntimeHttpException(response.statusCode, _errorFrom(text));
+        throw WorkspaceHttpException(response.statusCode, _errorFrom(text));
       }
       if (text.trim().isEmpty) return const {};
       return _objectFrom(jsonDecode(text));
     } on TimeoutException {
       rethrow;
-    } on LocalRuntimeHttpException {
+    } on WorkspaceHttpException {
       rethrow;
     } on Object catch (error) {
-      throw LocalRuntimeConnectionException(error);
+      throw WorkspaceConnectionException(error);
     }
   }
 }
 
-class LocalRuntimeConnectionException implements Exception {
-  const LocalRuntimeConnectionException(this.cause);
+class WorkspaceConnectionException implements Exception {
+  const WorkspaceConnectionException(this.cause);
 
   final Object cause;
 
   @override
-  String toString() => 'Lokale Runtime nicht erreichbar: $cause';
+  String toString() => 'Runtime nicht erreichbar: $cause';
 }
 
-class LocalRuntimeHttpException implements Exception {
-  LocalRuntimeHttpException(this.statusCode, LocalRuntimeError error)
+class WorkspaceHttpException implements Exception {
+  WorkspaceHttpException(this.statusCode, WorkspaceApiError error)
     : message = error.message,
       errorCode = error.code;
 
@@ -86,10 +86,10 @@ class LocalRuntimeHttpException implements Exception {
   final String? errorCode;
 
   @override
-  String toString() => 'Lokale Runtime antwortete mit $statusCode: $message';
+  String toString() => 'Runtime antwortete mit $statusCode: $message';
 }
 
-Stream<T> pollLocalRuntime<T>(
+Stream<T> pollWorkspace<T>(
   Future<T> Function() load, {
   Duration interval = const Duration(seconds: 2),
 }) async* {
@@ -105,7 +105,7 @@ Uri _validatedBaseUri(Uri value) {
     throw ArgumentError.value(
       value,
       'baseUri',
-      'Die lokale Runtime muss auf Loopback laufen.',
+      'Die Runtime muss auf Loopback laufen.',
     );
   }
   return value.replace(
@@ -115,21 +115,19 @@ Uri _validatedBaseUri(Uri value) {
 
 Map<String, Object?> _objectFrom(Object? value) {
   if (value is! Map) {
-    throw const FormatException(
-      'Die lokale Runtime lieferte kein JSON-Objekt.',
-    );
+    throw const FormatException('Die Runtime lieferte kein JSON-Objekt.');
   }
   return {for (final entry in value.entries) entry.key.toString(): entry.value};
 }
 
-class LocalRuntimeError {
-  const LocalRuntimeError({required this.message, this.code});
+class WorkspaceApiError {
+  const WorkspaceApiError({required this.message, this.code});
 
   final String message;
   final String? code;
 }
 
-LocalRuntimeError _errorFrom(String response) {
+WorkspaceApiError _errorFrom(String response) {
   try {
     final json = _objectFrom(jsonDecode(response));
     final failure = json['failure'];
@@ -137,18 +135,18 @@ LocalRuntimeError _errorFrom(String response) {
       final message = failure['message'];
       final code = failure['code'];
       if (message is String) {
-        return LocalRuntimeError(
+        return WorkspaceApiError(
           message: message,
           code: code is String ? code : null,
         );
       }
     }
     final message = json['error'];
-    if (message is String) return LocalRuntimeError(message: message);
+    if (message is String) return WorkspaceApiError(message: message);
   } catch (_) {
     // The HTTP status remains available to callers.
   }
-  return const LocalRuntimeError(
-    message: 'Die lokale Runtime konnte die Anfrage nicht verarbeiten.',
+  return const WorkspaceApiError(
+    message: 'Die Runtime konnte die Anfrage nicht verarbeiten.',
   );
 }

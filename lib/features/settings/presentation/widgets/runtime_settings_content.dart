@@ -2,15 +2,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
-import 'package:syscat2/features/licensing/presentation/cubits/local_runtime_license_cubit.dart';
-import 'package:syscat2/features/licensing/presentation/cubits/local_runtime_license_state.dart';
+import 'package:syscat2/features/licensing/presentation/cubits/runtime_license_cubit.dart';
+import 'package:syscat2/features/licensing/presentation/cubits/runtime_license_state.dart';
 
 import 'settings_section.dart';
 import 'ai_model_settings_tab.dart';
 import '../../../machine_learning/presentation/widgets/machine_learning_settings_tab.dart';
 
-class LocalSettingsContent extends StatelessWidget {
-  const LocalSettingsContent({super.key});
+class RuntimeSettingsContent extends StatelessWidget {
+  const RuntimeSettingsContent({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,23 +18,23 @@ class LocalSettingsContent extends StatelessWidget {
       length: 3,
       child: Column(
         children: [
-          const _LocalSettingsTabs(),
+          const _RuntimeSettingsTabs(),
           Expanded(
             child: TabBarView(
               children: [
                 ListView(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   children: const [
-                    _LocalRuntimeSection(),
+                    _RuntimeSection(),
                     SizedBox(height: AppSpacing.lg),
-                    _LocalDataSection(),
+                    _DeviceDataSection(),
                   ],
                 ),
                 const SingleChildScrollView(
                   padding: EdgeInsets.all(AppSpacing.lg),
                   child: AiModelSettingsTab(
                     scrollable: false,
-                    localRuntime: true,
+                    isStandalone: true,
                   ),
                 ),
                 const MachineLearningSettingsTab(),
@@ -47,8 +47,8 @@ class LocalSettingsContent extends StatelessWidget {
   }
 }
 
-class _LocalSettingsTabs extends StatelessWidget {
-  const _LocalSettingsTabs();
+class _RuntimeSettingsTabs extends StatelessWidget {
+  const _RuntimeSettingsTabs();
 
   @override
   Widget build(BuildContext context) {
@@ -64,15 +64,15 @@ class _LocalSettingsTabs extends StatelessWidget {
             if (selection != null) controller.animateTo(selection);
           },
           children: const {
-            0: _LocalSettingsTabLabel(
+            0: _RuntimeSettingsTabLabel(
               icon: Icons.settings_outlined,
               label: 'Allgemein',
             ),
-            1: _LocalSettingsTabLabel(
+            1: _RuntimeSettingsTabLabel(
               icon: Icons.auto_awesome,
               label: 'Sprachmodelle',
             ),
-            2: _LocalSettingsTabLabel(
+            2: _RuntimeSettingsTabLabel(
               icon: Icons.memory_outlined,
               label: 'Machine Learning',
             ),
@@ -83,8 +83,8 @@ class _LocalSettingsTabs extends StatelessWidget {
   }
 }
 
-class _LocalSettingsTabLabel extends StatelessWidget {
-  const _LocalSettingsTabLabel({required this.icon, required this.label});
+class _RuntimeSettingsTabLabel extends StatelessWidget {
+  const _RuntimeSettingsTabLabel({required this.icon, required this.label});
 
   final IconData icon;
   final String label;
@@ -102,29 +102,26 @@ class _LocalSettingsTabLabel extends StatelessWidget {
   }
 }
 
-class _LocalRuntimeSection extends StatelessWidget {
-  const _LocalRuntimeSection();
+class _RuntimeSection extends StatelessWidget {
+  const _RuntimeSection();
 
   @override
   Widget build(BuildContext context) {
     return SettingsSection(
       icon: Icons.dns_outlined,
-      title: 'Lokale Runtime',
-      description: 'Status und Lizenz der lokal ausgeführten novooa-Umgebung.',
-      child:
-          BlocBuilder<LocalRuntimeLicenseCubit, LocalRuntimeLicenseCubitState>(
-            builder: (context, state) => switch (state) {
-              LocalRuntimeLicenseLoading() || LocalRuntimeLicenseActivating() =>
-                const LinearProgressIndicator(),
-              LocalRuntimeLicenseActive(:final status) => _LicenseStatus(
-                expiresAt: status.expiresAt,
-              ),
-              LocalRuntimeLicenseNeedsActivation() ||
-              LocalRuntimeLicenseFailureState() => const Text(
-                'Die lokale Runtime ist nicht aktiviert.',
-              ),
-            },
+      title: 'Runtime',
+      description: 'Status und Lizenz dieser novooa-Installation.',
+      child: BlocBuilder<RuntimeLicenseCubit, RuntimeLicenseCubitState>(
+        builder: (context, state) => switch (state) {
+          RuntimeLicenseLoading() ||
+          RuntimeLicenseActivating() => const LinearProgressIndicator(),
+          RuntimeLicenseActive(:final status) => _LicenseStatus(
+            expiresAt: status.expiresAt,
           ),
+          RuntimeLicenseNeedsActivation() || RuntimeLicenseFailureState() =>
+            const Text('Die Runtime ist nicht aktiviert.'),
+        },
+      ),
     );
   }
 }
@@ -159,18 +156,18 @@ class _LicenseStatus extends StatelessWidget {
   }
 }
 
-class _LocalDataSection extends StatelessWidget {
-  const _LocalDataSection();
+class _DeviceDataSection extends StatelessWidget {
+  const _DeviceDataSection();
 
   @override
   Widget build(BuildContext context) {
     return const SettingsSection(
       icon: Icons.storage_outlined,
-      title: 'Lokale Daten',
+      title: 'Gerätedaten',
       description:
           'Daten und Anwendungsprotokolle werden auf diesem Gerät verwaltet.',
       child: Text(
-        'Die lokale Runtime nutzt SQLite für Aufgaben, Aktivitäten, Dateien und Protokolle.',
+        'Daten und Protokolle liegen in einer SQLite-Datenbank auf diesem Gerät.',
       ),
     );
   }

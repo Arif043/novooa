@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {type SignedLocalRuntimeLicense} from
-  "../../../licensing/domain/entities/local-runtime-license-lease.js";
+import {type SignedRuntimeLicense} from
+  "../../../licensing/domain/entities/runtime-license-lease.js";
 import {LocalPushDeviceHttpHandler} from "./local-push-device-http-handler.js";
-import {type LocalRuntimePushRelayClient} from "./local-runtime-push-relay-client.js";
+import {type RuntimePushRelayClient} from "./runtime-push-relay-client.js";
 
 test("forwards a local FCM token with the signed license to the relay", async () => {
   const relay = new RelayFake();
@@ -31,7 +31,7 @@ test("rejects push registration without a signed local license", async () => {
   assert.equal(response?.statusCode, 400);
 });
 
-const license: SignedLocalRuntimeLicense = {
+const license: SignedRuntimeLicense = {
   payload: {
     licenseId: "license-1",
     workspaceId: "workspace-1",
@@ -40,10 +40,10 @@ const license: SignedLocalRuntimeLicense = {
   signature: "signature",
 };
 
-class RelayFake implements LocalRuntimePushRelayClient {
-  readonly devices: {license: SignedLocalRuntimeLicense; token: string; platform: string}[] = [];
+class RelayFake implements RuntimePushRelayClient {
+  readonly devices: {license: SignedRuntimeLicense; token: string; platform: string}[] = [];
 
-  async register(nextLicense: SignedLocalRuntimeLicense, device: {token: string; platform: string}) {
+  async register(nextLicense: SignedRuntimeLicense, device: {token: string; platform: string}) {
     this.devices.push({license: nextLicense, ...device});
   }
 

@@ -1,8 +1,8 @@
-import {type SignedLocalRuntimeLicense} from
-  "../../../licensing/domain/entities/local-runtime-license-lease.js";
+import {type SignedRuntimeLicense} from
+  "../../../licensing/domain/entities/runtime-license-lease.js";
 import {
-  type LocalRuntimePushRelayClient,
-} from "./local-runtime-push-relay-client.js";
+  type RuntimePushRelayClient,
+} from "./runtime-push-relay-client.js";
 import {
   type LocalRuntimeRequest,
   type LocalRuntimeRequestHandler,
@@ -11,8 +11,8 @@ import {
 
 export class LocalPushDeviceHttpHandler implements LocalRuntimeRequestHandler {
   constructor(
-    private readonly signedLicense: () => SignedLocalRuntimeLicense | null,
-    private readonly relay: LocalRuntimePushRelayClient,
+    private readonly signedLicense: () => SignedRuntimeLicense | null,
+    private readonly relay: RuntimePushRelayClient,
   ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
@@ -40,7 +40,7 @@ export class LocalPushDeviceHttpHandler implements LocalRuntimeRequestHandler {
     }
   }
 
-  private requiredLicense(): SignedLocalRuntimeLicense {
+  private requiredLicense(): SignedRuntimeLicense {
     const license = this.signedLicense();
     if (license === null) throw new LocalPushDeviceRequestError("Die lokale Runtime benötigt eine gültige Lizenz.");
     return license;

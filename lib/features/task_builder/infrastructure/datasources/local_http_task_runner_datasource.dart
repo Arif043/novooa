@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import '../../../../core/network/local_runtime_api_client.dart';
+import '../../../../core/network/workspace_api_client.dart';
 import '../../domain/entities/task_run_failure.dart';
 import '../errors/task_runner_datasource_exception.dart';
 import 'task_runner_datasource.dart';
@@ -8,7 +8,7 @@ import 'task_runner_datasource.dart';
 class LocalHttpTaskRunnerDatasource implements TaskRunnerDatasource {
   const LocalHttpTaskRunnerDatasource(this._client);
 
-  final LocalRuntimeApiClient _client;
+  final WorkspaceApiClient _client;
 
   @override
   Future<Map<String, Object?>> runTaskDefinition(
@@ -22,12 +22,12 @@ class LocalHttpTaskRunnerDatasource implements TaskRunnerDatasource {
         timeout: const Duration(seconds: 15),
         cause: error,
       );
-    } on LocalRuntimeConnectionException catch (error) {
+    } on WorkspaceConnectionException catch (error) {
       throw TaskRunnerDatasourceConnectionException(
         endpoint: '/v1/task-runs',
         cause: error,
       );
-    } on LocalRuntimeHttpException catch (error) {
+    } on WorkspaceHttpException catch (error) {
       throw TaskRunnerDatasourceExecutionException(
         endpoint: '/v1/task-runs',
         statusCode: error.statusCode,

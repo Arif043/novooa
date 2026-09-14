@@ -1,11 +1,11 @@
-import {type SignedLocalRuntimeLicense} from "../../domain/entities/local-runtime-license-lease.js";
+import {type SignedRuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
 
-export interface LocalRuntimeLicenseGatewayClient {
-  requestLicense(token: string): Promise<SignedLocalRuntimeLicense>;
+export interface RuntimeLicenseGatewayClient {
+  requestLicense(token: string): Promise<SignedRuntimeLicense>;
 }
 
-export class HttpLocalRuntimeLicenseGatewayClient
-implements LocalRuntimeLicenseGatewayClient {
+export class HttpRuntimeLicenseGatewayClient
+implements RuntimeLicenseGatewayClient {
   private readonly endpoint: URL;
 
   constructor(endpoint: string) {
@@ -13,7 +13,7 @@ implements LocalRuntimeLicenseGatewayClient {
     if (this.endpoint.protocol !== "https:") throw new Error("Der Lizenz-Gateway muss HTTPS verwenden.");
   }
 
-  async requestLicense(token: string): Promise<SignedLocalRuntimeLicense> {
+  async requestLicense(token: string): Promise<SignedRuntimeLicense> {
     const response = await fetch(this.endpoint, {
       method: "POST",
       headers: {"content-type": "application/json"},
@@ -24,7 +24,7 @@ implements LocalRuntimeLicenseGatewayClient {
   }
 }
 
-function signedLicenseFrom(value: unknown): SignedLocalRuntimeLicense {
+function signedLicenseFrom(value: unknown): SignedRuntimeLicense {
   const signed = record(value);
   const payload = record(signed.payload);
   return {

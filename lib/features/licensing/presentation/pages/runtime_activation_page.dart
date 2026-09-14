@@ -2,23 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_spacing.dart';
-import '../cubits/local_runtime_license_cubit.dart';
-import '../cubits/local_runtime_license_state.dart';
+import '../cubits/runtime_license_cubit.dart';
+import '../cubits/runtime_license_state.dart';
 
-class LocalRuntimeLicensePage extends StatefulWidget {
-  const LocalRuntimeLicensePage({super.key});
+class RuntimeActivationPage extends StatefulWidget {
+  const RuntimeActivationPage({super.key});
 
   @override
-  State<LocalRuntimeLicensePage> createState() =>
-      _LocalRuntimeLicensePageState();
+  State<RuntimeActivationPage> createState() => _RuntimeActivationPageState();
 }
 
-class _LocalRuntimeLicensePageState extends State<LocalRuntimeLicensePage> {
+class _RuntimeActivationPageState extends State<RuntimeActivationPage> {
   String _licenseKey = '';
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LocalRuntimeLicenseCubit, LocalRuntimeLicenseCubitState>(
+    return BlocBuilder<RuntimeLicenseCubit, RuntimeLicenseCubitState>(
       builder: (context, state) => Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
@@ -31,20 +30,17 @@ class _LocalRuntimeLicensePageState extends State<LocalRuntimeLicensePage> {
     );
   }
 
-  Widget _contentFor(
-    BuildContext context,
-    LocalRuntimeLicenseCubitState state,
-  ) {
+  Widget _contentFor(BuildContext context, RuntimeLicenseCubitState state) {
     return switch (state) {
-      LocalRuntimeLicenseLoading() => const Center(
+      RuntimeLicenseLoading() => const Center(
         child: CircularProgressIndicator(),
       ),
-      LocalRuntimeLicenseActivating() => const Center(
+      RuntimeLicenseActivating() => const Center(
         child: CircularProgressIndicator(),
       ),
-      LocalRuntimeLicenseActive() => const SizedBox.shrink(),
-      LocalRuntimeLicenseNeedsActivation() => _activationForm(context),
-      LocalRuntimeLicenseFailureState(:final failure) => _activationForm(
+      RuntimeLicenseActive() => const SizedBox.shrink(),
+      RuntimeLicenseNeedsActivation() => _activationForm(context),
+      RuntimeLicenseFailureState(:final failure) => _activationForm(
         context,
         message: failure.message,
       ),
@@ -57,7 +53,7 @@ class _LocalRuntimeLicensePageState extends State<LocalRuntimeLicensePage> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Lokale Runtime aktivieren', style: theme.textTheme.headlineSmall),
+        Text('Runtime aktivieren', style: theme.textTheme.headlineSmall),
         const SizedBox(height: AppSpacing.sm),
         Text(
           'Gib den zwölfstelligen Lizenzschlüssel für diesen Arbeitsbereich ein.',
@@ -97,6 +93,6 @@ class _LocalRuntimeLicensePageState extends State<LocalRuntimeLicensePage> {
   }
 
   void _activate(BuildContext context) {
-    context.read<LocalRuntimeLicenseCubit>().activate(_licenseKey);
+    context.read<RuntimeLicenseCubit>().activate(_licenseKey);
   }
 }

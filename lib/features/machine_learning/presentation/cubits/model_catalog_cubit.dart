@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/network/local_runtime_api_client.dart';
+import '../../../../core/network/workspace_api_client.dart';
 import '../../domain/entities/model_catalog_entry.dart';
 import '../../domain/entities/model_catalog_import.dart';
 import '../../domain/usecases/import_model_catalog_entry.dart';
@@ -51,7 +51,7 @@ class ModelCatalogCubit extends Cubit<ModelCatalogState> {
     try {
       await action();
       emit(state.copyWith(isSaving: false, message: success));
-    } on LocalRuntimeHttpException catch (error) {
+    } on WorkspaceHttpException catch (error) {
       emit(state.copyWith(isSaving: false, message: error.message));
     } on FormatException catch (error) {
       emit(state.copyWith(isSaving: false, message: error.message));

@@ -1,10 +1,10 @@
-import '../network/local_runtime_api_client.dart';
+import '../network/workspace_api_client.dart';
 import 'client_logger.dart';
 
-class LocalRuntimeClientLogger implements ClientLogger {
-  LocalRuntimeClientLogger(this._client);
+class WorkspaceClientLogger implements ClientLogger {
+  WorkspaceClientLogger(this._client);
 
-  final LocalRuntimeApiClient _client;
+  final WorkspaceApiClient _client;
   Future<void> _pending = Future.value();
 
   @override

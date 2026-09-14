@@ -1,6 +1,6 @@
 import {
-  type LocalRuntimeLicenseActivation,
-  type LocalRuntimeLicenseService,
+  type RuntimeLicenseActivation,
+  type RuntimeLicenseService,
 } from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {
   type LocalRuntimeRequest,
@@ -8,11 +8,11 @@ import {
   type LocalRuntimeResponse,
 } from "./local-runtime-http-server.js";
 
-export class LocalRuntimeLicenseHttpHandler implements LocalRuntimeRequestHandler {
+export class RuntimeLicenseHttpHandler implements LocalRuntimeRequestHandler {
   constructor(
-    private readonly licenseService: LocalRuntimeLicenseService,
+    private readonly licenseService: RuntimeLicenseService,
     private readonly application: LocalRuntimeRequestHandler & {
-      activate(context: Awaited<ReturnType<LocalRuntimeLicenseService["activate"]>>): Promise<void>;
+      activate(context: Awaited<ReturnType<RuntimeLicenseService["activate"]>>): Promise<void>;
     },
   ) {}
 
@@ -45,7 +45,7 @@ function isActivationRequest(request: LocalRuntimeRequest): boolean {
   return request.method === "POST" && request.url === "/v1/license/activate";
 }
 
-function activationFrom(value: unknown): LocalRuntimeLicenseActivation {
+function activationFrom(value: unknown): RuntimeLicenseActivation {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     throw new Error("Ungültige Aktivierung.");
   }

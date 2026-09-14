@@ -1,12 +1,12 @@
 import {onRequest} from "firebase-functions/v2/https";
-import {localRuntimeActivationTokenFrom} from "../../domain/entities/local-runtime-activation-token.js";
-import {signLocalRuntimeLicense} from "../license-lease-crypto.js";
+import {runtimeActivationTokenFrom} from "../../domain/entities/activation-token.js";
+import {signRuntimeLicense} from "../license-lease-crypto.js";
 import {
-  FirestoreLocalRuntimeLicenseRegistry,
-} from "./firestore-local-runtime-license-registry.js";
+  FirestoreRuntimeLicenseRegistry,
+} from "./firestore-runtime-license-registry.js";
 import {localRuntimeLicenseSigningKey} from "./local-runtime-license-signing-key.js";
 
-const licenseRegistry = new FirestoreLocalRuntimeLicenseRegistry();
+const licenseRegistry = new FirestoreRuntimeLicenseRegistry();
 
 export const issueLocalRuntimeLicense = onRequest(
   {cors: false, invoker: "public", secrets: [localRuntimeLicenseSigningKey]},
@@ -16,9 +16,9 @@ export const issueLocalRuntimeLicense = onRequest(
       return;
     }
     try {
-      const activationToken = localRuntimeActivationTokenFrom(request.body?.activationToken);
+      const activationToken = runtimeActivationTokenFrom(request.body?.activationToken);
       const license = await licenseRegistry.licenseForActivationToken(activationToken, new Date());
-      const signedLicense = signLocalRuntimeLicense(license, localRuntimeLicenseSigningKey.value());
+      const signedLicense = signRuntimeLicense(license, localRuntimeLicenseSigningKey.value());
       response.status(200).json(signedLicense);
     } catch {
       response.status(401).json({error: "Der Lizenzschlüssel wurde abgelehnt."});

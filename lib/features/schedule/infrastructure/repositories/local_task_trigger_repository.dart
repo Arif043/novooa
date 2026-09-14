@@ -1,4 +1,4 @@
-import '../../../../core/network/local_runtime_api_client.dart';
+import '../../../../core/network/workspace_api_client.dart';
 import '../../domain/entities/create_task_trigger_input.dart';
 import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/schedule_config.dart';
@@ -8,7 +8,7 @@ import '../../domain/repositories/task_trigger_repository.dart';
 class LocalTaskTriggerRepository implements TaskTriggerRepository {
   const LocalTaskTriggerRepository(this._client);
 
-  final LocalRuntimeApiClient _client;
+  final WorkspaceApiClient _client;
 
   @override
   Future<void> createTrigger(CreateTaskTriggerInput input) async {
@@ -36,7 +36,7 @@ class LocalTaskTriggerRepository implements TaskTriggerRepository {
       _client.put('/v1/task-triggers/$triggerId/enabled', {'enabled': enabled});
 
   @override
-  Stream<List<TaskTrigger>> watchTriggers() => pollLocalRuntime(_loadTriggers);
+  Stream<List<TaskTrigger>> watchTriggers() => pollWorkspace(_loadTriggers);
 
   Future<List<TaskTrigger>> _loadTriggers() async {
     final response = await _client.get('/v1/task-triggers');

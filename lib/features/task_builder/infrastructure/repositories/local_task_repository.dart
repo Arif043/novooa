@@ -1,6 +1,6 @@
 import 'package:multiple_result/multiple_result.dart';
 
-import '../../../../core/network/local_runtime_api_client.dart';
+import '../../../../core/network/workspace_api_client.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/task_run_failure.dart';
 import '../../domain/entities/task_run_start.dart';
@@ -15,12 +15,12 @@ import '../models/task_run_start_model.dart';
 class LocalTaskRepository implements TaskRepository {
   LocalTaskRepository(this._client, this._runnerDatasource);
 
-  final LocalRuntimeApiClient _client;
+  final WorkspaceApiClient _client;
   final TaskRunnerDatasource _runnerDatasource;
   final TaskDocumentMapper _mapper = TaskDocumentMapper();
 
   @override
-  Stream<List<Task>> watchTasks() => pollLocalRuntime(_loadTasks);
+  Stream<List<Task>> watchTasks() => pollWorkspace(_loadTasks);
 
   @override
   Future<void> saveTask(Task task) {

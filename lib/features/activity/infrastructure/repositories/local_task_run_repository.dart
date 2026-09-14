@@ -1,5 +1,5 @@
 import '../../../../core/entities/unique_id.dart';
-import '../../../../core/network/local_runtime_api_client.dart';
+import '../../../../core/network/workspace_api_client.dart';
 import '../../domain/entities/task_run.dart';
 import '../../domain/entities/task_run_dialog_input_field.dart';
 import '../../domain/entities/task_run_interaction.dart';
@@ -9,10 +9,10 @@ import '../../domain/repositories/task_run_repository.dart';
 class LocalTaskRunRepository implements TaskRunRepository {
   const LocalTaskRunRepository(this._client);
 
-  final LocalRuntimeApiClient _client;
+  final WorkspaceApiClient _client;
 
   @override
-  Stream<List<TaskRun>> watchRecent() => pollLocalRuntime(_loadRuns);
+  Stream<List<TaskRun>> watchRecent() => pollWorkspace(_loadRuns);
 
   @override
   Future<void> review({

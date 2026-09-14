@@ -1,19 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {type LocalRuntimeLicense} from
-  "../../../licensing/domain/entities/local-runtime-license-lease.js";
-import {type LocalRuntimeRelayLicenseVerifier} from
-  "../../../licensing/domain/repositories/local-runtime-relay-license-verifier.js";
-import {type LocalRuntimePushDevice} from "../../domain/entities/local-runtime-push.js";
-import {type LocalRuntimePushDeviceStore} from
-  "../../domain/repositories/local-runtime-push-device-store.js";
+import {type RuntimeLicense} from
+  "../../../licensing/domain/entities/runtime-license-lease.js";
+import {type RuntimeRelayLicenseVerifier} from
+  "../../../licensing/domain/repositories/runtime-relay-license-verifier.js";
+import {type RuntimePushDevice} from "../../domain/entities/runtime-push.js";
+import {type RuntimePushDeviceStore} from
+  "../../domain/repositories/runtime-push-device-store.js";
 import {type PushNotificationSender} from
   "../../domain/repositories/push-notification-sender.js";
-import {LocalRuntimePushRelay} from "../../domain/usecases/local-runtime-push-relay.js";
+import {RuntimePushRelay} from "../../domain/usecases/runtime-push-relay.js";
 
 test("binds a registered FCM token to the verified local license", async () => {
   const devices = new DeviceStoreFake();
-  const relay = new LocalRuntimePushRelay(new LicenseVerifierFake(), devices, new SenderFake());
+  const relay = new RuntimePushRelay(new LicenseVerifierFake(), devices, new SenderFake());
 
   await relay.register(signedLicense(), {token: "a".repeat(32), platform: "macos"});
 
@@ -22,7 +22,7 @@ test("binds a registered FCM token to the verified local license", async () => {
 
 test("sends a relay notification to all devices of the verified license", async () => {
   const sender = new SenderFake();
-  const relay = new LocalRuntimePushRelay(new LicenseVerifierFake(), new DeviceStoreFake(), sender);
+  const relay = new RuntimePushRelay(new LicenseVerifierFake(), new DeviceStoreFake(), sender);
 
   await relay.send(signedLicense(), {
     title: "Freigabe erforderlich",
@@ -37,7 +37,7 @@ test("sends a relay notification to all devices of the verified license", async 
   }}]);
 });
 
-const license: LocalRuntimeLicense = {
+const license: RuntimeLicense = {
   licenseId: "license-1",
   workspaceId: "workspace-1",
   issuedAt: "2026-09-13T10:00:00.000Z",
@@ -47,16 +47,16 @@ function signedLicense() {
   return {payload: license, signature: "signature"};
 }
 
-class LicenseVerifierFake implements LocalRuntimeRelayLicenseVerifier {
+class LicenseVerifierFake implements RuntimeRelayLicenseVerifier {
   async verify() {
     return license;
   }
 }
 
-class DeviceStoreFake implements LocalRuntimePushDeviceStore {
-  readonly saved: {license: LocalRuntimeLicense; device: LocalRuntimePushDevice}[] = [];
+class DeviceStoreFake implements RuntimePushDeviceStore {
+  readonly saved: {license: RuntimeLicense; device: RuntimePushDevice}[] = [];
 
-  async save(nextLicense: LocalRuntimeLicense, device: LocalRuntimePushDevice) {
+  async save(nextLicense: RuntimeLicense, device: RuntimePushDevice) {
     this.saved.push({license: nextLicense, device});
   }
 

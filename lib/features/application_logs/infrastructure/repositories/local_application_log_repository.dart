@@ -1,15 +1,15 @@
 import '../../../../core/entities/unique_id.dart';
-import '../../../../core/network/local_runtime_api_client.dart';
+import '../../../../core/network/workspace_api_client.dart';
 import '../../domain/entities/application_log.dart';
 import '../../domain/repositories/application_log_repository.dart';
 
 class LocalApplicationLogRepository implements ApplicationLogRepository {
   const LocalApplicationLogRepository(this._client);
 
-  final LocalRuntimeApiClient _client;
+  final WorkspaceApiClient _client;
 
   @override
-  Stream<List<ApplicationLog>> watchRecent() => pollLocalRuntime(_load);
+  Stream<List<ApplicationLog>> watchRecent() => pollWorkspace(_load);
 
   Future<List<ApplicationLog>> _load() async {
     final response = await _client.get('/v1/application-logs');
