@@ -67,11 +67,12 @@ class _NotificationHeader extends StatelessWidget {
         Expanded(
           child: Text('Benachrichtigungen', style: theme.textTheme.titleLarge),
         ),
-        IconButton(
-          tooltip: 'Push-Benachrichtigungen aktivieren',
-          onPressed: () => _requestPushNotifications(context),
-          icon: const Icon(Icons.notifications_active_outlined),
-        ),
+        if (Firebase.apps.isNotEmpty)
+          IconButton(
+            tooltip: 'Push-Benachrichtigungen aktivieren',
+            onPressed: () => _requestPushNotifications(context),
+            icon: const Icon(Icons.notifications_active_outlined),
+          ),
         if (onClose != null)
           IconButton(
             tooltip: 'Schließen',

@@ -9,7 +9,7 @@ export type RuntimeLicenseContext = {
   licenseId: string;
   licenseName: string;
   workspaceId: string;
-  expiresAt?: string;
+  expiresAt: string;
 };
 export type RuntimeLicenseStatus = {state: "active" | "expired" | "notActivated"; expiresAt?: string; name?: string;};
 export type RuntimeLicenseActivationInput = {activationToken: string;};

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import {mkdtemp, readFile, rm} from "node:fs/promises";
+import {mkdir, mkdtemp, readFile, rm, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import test from "node:test";
@@ -18,7 +18,7 @@ test("encrypts the activation secret in the runtime license state", async () => 
         activationId: "activation-1",
         workspaceId: "workspace-1",
         issuedAt: "2026-09-15T10:00:00.000Z",
-        expiresAt: undefined,
+        expiresAt: "2026-12-31T23:59:59.000Z",
       },
     },
     activationSecret: "activation-secret",
@@ -32,6 +32,30 @@ test("encrypts the activation secret in the runtime license state", async () => 
     assert.deepEqual(await store.load(), state);
     await store.clear();
     assert.equal(await store.load(), null);
+  } finally {
+    await rm(runtimeRoot, {recursive: true, force: true});
+  }
+});
+
+test("removes a legacy license without an expiry date", async () => {
+  const runtimeRoot = await mkdtemp(join(tmpdir(), "novooa-license-"));
+  const credentials = join(runtimeRoot, "credentials");
+  const encryption = cipher();
+  const store = new FileRuntimeLicenseStore(runtimeRoot, encryption);
+
+  try {
+    await mkdir(credentials, {recursive: true});
+    await writeFile(join(credentials, "license-state.json"), JSON.stringify({
+      license: {signature: "signature", payload: {
+        licenseId: "license-1", licenseName: "Beispiel GmbH",
+        activationId: "activation-1", workspaceId: "workspace-1",
+        issuedAt: "2026-09-15T10:00:00.000Z",
+      }},
+      encryptedActivationSecret: encryption.encrypt("activation-secret"),
+    }));
+
+    assert.equal(await store.load(), null);
+    await assert.rejects(readFile(join(credentials, "license-state.json"), "utf8"));
   } finally {
     await rm(runtimeRoot, {recursive: true, force: true});
   }

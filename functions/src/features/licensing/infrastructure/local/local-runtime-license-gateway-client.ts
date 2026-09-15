@@ -56,7 +56,7 @@ function signedLicenseFrom(value: unknown): SignedRuntimeLicense {
       activationId: requiredString(payload.activationId),
       workspaceId: requiredString(payload.workspaceId),
       issuedAt: requiredString(payload.issuedAt),
-      expiresAt: optionalString(payload.expiresAt),
+      expiresAt: requiredString(payload.expiresAt),
     },
     signature: requiredString(signed.signature),
   };
@@ -70,9 +70,4 @@ function record(value: unknown): Record<string, unknown> {
 function requiredString(value: unknown): string {
   if (typeof value === "string" && value.trim().length > 0 && value.length <= 4000) return value;
   throw new Error("Die Lizenzantwort ist ungültig.");
-}
-
-function optionalString(value: unknown): string | undefined {
-  if (value === undefined || value === null) return undefined;
-  return requiredString(value);
 }

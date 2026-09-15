@@ -107,8 +107,7 @@ function licenseFrom(value: unknown): SignedRuntimeLicense {
       activationId: text(payload.activationId, "activationId", 200),
       workspaceId: text(payload.workspaceId, "workspaceId", 200),
       issuedAt: text(payload.issuedAt, "issuedAt", 80),
-      ...(payload.expiresAt === null || payload.expiresAt === undefined
-        ? {} : {expiresAt: text(payload.expiresAt, "expiresAt", 80)}),
+      expiresAt: text(payload.expiresAt, "expiresAt", 80),
     },
   };
 }

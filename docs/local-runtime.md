@@ -205,10 +205,13 @@ Das Checkout-Compose setzt absichtlich `NOVOOA_LOCAL_DEVELOPMENT=true`; diese
 Entwicklungsausnahme erzeugt nur den lokalen Beispielarbeitsbereich und darf nicht
 als Produktivmodus ausgeliefert werden.
 
-Der Vertriebsprozess erstellt einen eindeutigen Token und den gehashten
-Firestore-Eintrag mit
-`npm --prefix functions run licenses:issue-local -- --name "Kunde GmbH"`.
-Optional sind `--license-id`, `--workspace-id` und `--expires-at` möglich.
+Der Vertriebsprozess benötigt einmalig Application Default Credentials und das
+Zielprojekt:
+`gcloud auth application-default login` und
+`gcloud config set project syscat-90bff`. Anschließend erstellt er einen eindeutigen
+Token und den gehashten Firestore-Eintrag mit
+`npm --prefix functions run licenses:issue-local -- --name "Kunde GmbH" --expires-at 2027-09-16T00:00:00Z`.
+Optional sind `--license-id` und `--workspace-id`; `--expires-at` ist verpflichtend.
 Die Ausgabe ist der einmalig an den Kunden zu übergebende zwölfstellige Token. Der
 Prozess benötigt Firebase-Admin-Zugang, aber keinen Signaturschlüssel.
 
@@ -233,9 +236,15 @@ verwalten die Geräte einer Lizenz; `send` stellt jede fachliche
 Push-Benachrichtigung an deren registrierte Geräte zu. Freigaben sind damit
 ein Anwendungsfall des allgemeinen Push-Vertrags, nicht Teil der Relay-API.
 
-Für die Desktop-Auslieferung muss Firebase für die jeweilige Plattform
-konfiguriert sein. Bei macOS sind zusätzlich APNs-Credentials und die
-Push-Berechtigung des signierten App-Bundles erforderlich.
+Push ist in der Standalone-Variante optional und standardmäßig deaktiviert.
+Dadurch lässt sich der macOS-Client ohne Apple-Entwicklungszertifikat bauen. Die
+normalen Runtime-, Datei- und Netzwerkfunktionen sind davon nicht betroffen. Der
+Push-Schalter erscheint nur, wenn Firebase dafür initialisiert wurde.
+
+Für eine signierte macOS-Auslieferung kann Push mit
+`--dart-define=NOVOOA_PUSH_ENABLED=true` aktiviert werden. Dann müssen zusätzlich
+APNs-Credentials und die `aps-environment`-Berechtigung im signierten
+App-Bundle eingerichtet werden.
 
 ## Twilio und externe Trigger
 

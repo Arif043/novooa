@@ -21,6 +21,10 @@ export class FileRuntimeLicenseStore implements RuntimeLicenseStore {
       return stateFromJson(await readFile(this.path, "utf8"), this.cipher);
     } catch (error) {
       if (isMissingFile(error)) return null;
+      if (error instanceof StoredRuntimeLicenseStateError) {
+        await this.clear();
+        return null;
+      }
       throw error;
     }
   }
@@ -41,24 +45,30 @@ export class FileRuntimeLicenseStore implements RuntimeLicenseStore {
   }
 }
 
+class StoredRuntimeLicenseStateError extends Error {}
+
 function stateFromJson(value: string, cipher: CredentialCipher): RuntimeLicenseActivation {
-  const parsed = record(JSON.parse(value));
-  const license = record(parsed.license);
-  const payload = record(license.payload);
-  return {
-    activationSecret: cipher.decrypt(requiredString(parsed.encryptedActivationSecret)),
-    license: {
-      signature: requiredString(license.signature),
-      payload: {
-        licenseId: requiredString(payload.licenseId),
-        licenseName: requiredString(payload.licenseName),
-        activationId: requiredString(payload.activationId),
-        workspaceId: requiredString(payload.workspaceId),
-        issuedAt: requiredString(payload.issuedAt),
-        expiresAt: optionalString(payload.expiresAt),
+  try {
+    const parsed = record(JSON.parse(value));
+    const license = record(parsed.license);
+    const payload = record(license.payload);
+    return {
+      activationSecret: cipher.decrypt(requiredString(parsed.encryptedActivationSecret)),
+      license: {
+        signature: requiredString(license.signature),
+        payload: {
+          licenseId: requiredString(payload.licenseId),
+          licenseName: requiredString(payload.licenseName),
+          activationId: requiredString(payload.activationId),
+          workspaceId: requiredString(payload.workspaceId),
+          issuedAt: requiredString(payload.issuedAt),
+          expiresAt: requiredString(payload.expiresAt),
+        },
       },
-    },
-  };
+    };
+  } catch {
+    throw new StoredRuntimeLicenseStateError();
+  }
 }
 
 function isMissingFile(error: unknown): boolean {
@@ -75,8 +85,4 @@ function record(value: unknown): Record<string, unknown> {
 function requiredString(value: unknown): string {
   if (typeof value === "string" && value.trim().length > 0 && value.length <= 4000) return value;
   throw new Error("Der lokale Lizenzstatus ist ungültig.");
-}
-
-function optionalString(value: unknown): string | undefined {
-  return value === undefined || value === null ? undefined : requiredString(value);
 }

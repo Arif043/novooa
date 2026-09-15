@@ -49,3 +49,10 @@ node_modules
 functions/.genkit/
 .novooa/
 windows/
+# macOS entitlement profiles are product configuration, not generated output.
+!/macos/
+macos/*
+!macos/Runner/
+macos/Runner/*
+!macos/Runner/DebugProfile.entitlements
+!macos/Runner/Release.entitlements

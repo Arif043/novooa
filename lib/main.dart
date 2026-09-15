@@ -44,7 +44,9 @@ Future<void> main() =>
 Future<void> _startApplication() async {
   WidgetsFlutterBinding.ensureInitialized();
   final runtimeProfile = RuntimeProfile.fromEnvironment();
-  final pushFirebaseEnabled = await _initializeFirebase(runtimeProfile);
+  final pushFirebaseEnabled = runtimeProfile.pushNotificationsEnabled
+      ? await _initializeFirebase(runtimeProfile)
+      : false;
   configureClientLogger(const DeveloperClientLogger());
   Bloc.observer = ApplicationBlocObserver();
   _configureErrorLogging();

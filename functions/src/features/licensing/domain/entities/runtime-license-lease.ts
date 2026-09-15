@@ -4,7 +4,7 @@ export type RuntimeLicense = {
   activationId: string;
   workspaceId: string;
   issuedAt: string;
-  expiresAt?: string;
+  expiresAt: string;
 };
 
 export type SignedRuntimeLicense = {
@@ -19,16 +19,16 @@ export function runtimeLicensePayloadJson(license: RuntimeLicense): string {
     activationId: license.activationId,
     workspaceId: license.workspaceId,
     issuedAt: license.issuedAt,
-    expiresAt: license.expiresAt ?? null,
+    expiresAt: license.expiresAt,
   });
 }
 
 export function isActiveRuntimeLicense(license: RuntimeLicense, now: Date): boolean {
   const issuedAt = Date.parse(license.issuedAt);
-  const expiresAt = license.expiresAt === undefined ? undefined : Date.parse(license.expiresAt);
+  const expiresAt = Date.parse(license.expiresAt);
   return hasRequiredValues(license) && Number.isFinite(issuedAt) &&
     issuedAt <= now.getTime() &&
-    (expiresAt === undefined || (Number.isFinite(expiresAt) && expiresAt > now.getTime()));
+    Number.isFinite(expiresAt) && expiresAt > now.getTime();
 }
 
 function hasRequiredValues(license: RuntimeLicense): boolean {

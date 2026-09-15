@@ -60,7 +60,7 @@ function activeLicenseFromSnapshot(
   const data = snapshot.data();
   const expiresAt = expiresAtFrom(data?.expiresAt);
   const usageIsValid = requireInUse ? data?.inUse === true : data?.inUse === false;
-  const hasExpired = expiresAt !== undefined && Date.parse(expiresAt) <= now.getTime();
+  const hasExpired = Date.parse(expiresAt) <= now.getTime();
   if (!usageIsValid || hasExpired) {
     throw new RuntimeLicenseError("Die Lizenz ist nicht aktiv.");
   }
@@ -71,8 +71,7 @@ function activeLicenseFromSnapshot(
   };
 }
 
-function expiresAtFrom(value: unknown): string | undefined {
-  if (value === undefined || value === null) return undefined;
+function expiresAtFrom(value: unknown): string {
   if (value instanceof Timestamp) return value.toDate().toISOString();
   throw new RuntimeLicenseError("Die Lizenz ist ungültig.");
 }
