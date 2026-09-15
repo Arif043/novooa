@@ -50,6 +50,7 @@ import '../../features/teams/domain/usecases/get_current_team_id.dart';
 import '../../features/licensing/domain/repositories/runtime_license_repository.dart';
 import '../../features/licensing/domain/usecases/activate_runtime_license.dart';
 import '../../features/licensing/domain/usecases/load_runtime_license_status.dart';
+import '../../features/licensing/domain/usecases/release_runtime_license.dart';
 import '../../features/licensing/infrastructure/repositories/http_runtime_license_repository.dart';
 import '../../features/licensing/presentation/cubits/runtime_license_cubit.dart';
 import '../../features/notifications/domain/repositories/app_notification_repository.dart';
@@ -188,9 +189,13 @@ void configureStandaloneDependencies(GetIt locator, RuntimeProfile profile) {
       () => ActivateRuntimeLicense(locator<RuntimeLicenseRepository>()),
     )
     ..registerLazySingleton(
+      () => ReleaseRuntimeLicense(locator<RuntimeLicenseRepository>()),
+    )
+    ..registerLazySingleton(
       () => RuntimeLicenseCubit(
         loadStatus: locator<LoadRuntimeLicenseStatus>(),
         activateLicense: locator<ActivateRuntimeLicense>(),
+        releaseLicense: locator<ReleaseRuntimeLicense>(),
       )..load(),
       dispose: (cubit) => cubit.close(),
     )

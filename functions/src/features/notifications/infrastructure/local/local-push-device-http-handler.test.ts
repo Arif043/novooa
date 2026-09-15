@@ -34,6 +34,8 @@ test("rejects push registration without a signed local license", async () => {
 const license: SignedRuntimeLicense = {
   payload: {
     licenseId: "license-1",
+    licenseName: "Beispiel GmbH",
+    activationId: "activation-1",
     workspaceId: "workspace-1",
     issuedAt: "2026-09-13T10:00:00.000Z",
   },

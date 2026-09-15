@@ -35,7 +35,7 @@ class _RuntimeActivationPageState extends State<RuntimeActivationPage> {
       RuntimeLicenseLoading() => const Center(
         child: CircularProgressIndicator(),
       ),
-      RuntimeLicenseActivating() => const Center(
+      RuntimeLicenseActivating() || RuntimeLicenseReleasing() => const Center(
         child: CircularProgressIndicator(),
       ),
       RuntimeLicenseActive() => const SizedBox.shrink(),

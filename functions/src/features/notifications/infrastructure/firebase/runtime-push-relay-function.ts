@@ -103,6 +103,8 @@ function licenseFrom(value: unknown): SignedRuntimeLicense {
     signature: text(signed.signature, "signature", 4096),
     payload: {
       licenseId: text(payload.licenseId, "licenseId", 200),
+      licenseName: text(payload.licenseName, "licenseName", 200),
+      activationId: text(payload.activationId, "activationId", 200),
       workspaceId: text(payload.workspaceId, "workspaceId", 200),
       issuedAt: text(payload.issuedAt, "issuedAt", 80),
       ...(payload.expiresAt === null || payload.expiresAt === undefined

@@ -8,4 +8,6 @@ abstract interface class RuntimeLicenseRepository {
   Future<Result<RuntimeLicenseStatus, RuntimeLicenseFailure>> activate(
     RuntimeLicenseKey licenseKey,
   );
+
+  Future<Result<RuntimeLicenseStatus, RuntimeLicenseFailure>> release();
 }

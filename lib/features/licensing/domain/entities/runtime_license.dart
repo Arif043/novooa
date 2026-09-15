@@ -25,6 +25,7 @@ enum RuntimeLicenseFailureKind {
   invalidLicenseKey,
   runtimeUnavailable,
   activationRejected,
+  releaseRejected,
   unexpected,
 }
 
@@ -40,6 +41,8 @@ class RuntimeLicenseFailure {
       'Die Runtime ist nicht erreichbar.',
     RuntimeLicenseFailureKind.activationRejected =>
       'Der Lizenzschlüssel konnte nicht aktiviert werden.',
+    RuntimeLicenseFailureKind.releaseRejected =>
+      'Die Lizenz konnte nicht freigegeben werden.',
     RuntimeLicenseFailureKind.unexpected =>
       'Der Lizenzstatus konnte nicht geladen werden.',
   };

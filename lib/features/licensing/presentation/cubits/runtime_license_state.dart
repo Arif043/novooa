@@ -18,6 +18,10 @@ final class RuntimeLicenseActivating extends RuntimeLicenseCubitState {
   const RuntimeLicenseActivating();
 }
 
+final class RuntimeLicenseReleasing extends RuntimeLicenseCubitState {
+  const RuntimeLicenseReleasing();
+}
+
 final class RuntimeLicenseActive extends RuntimeLicenseCubitState {
   const RuntimeLicenseActive(this.status);
 

@@ -7,6 +7,7 @@ import 'package:syscat2/features/licensing/presentation/cubits/runtime_license_s
 
 import 'settings_section.dart';
 import 'ai_model_settings_tab.dart';
+import 'runtime_license_status.dart';
 import '../../../machine_learning/presentation/widgets/machine_learning_settings_tab.dart';
 
 class RuntimeSettingsContent extends StatelessWidget {
@@ -114,45 +115,16 @@ class _RuntimeSection extends StatelessWidget {
       child: BlocBuilder<RuntimeLicenseCubit, RuntimeLicenseCubitState>(
         builder: (context, state) => switch (state) {
           RuntimeLicenseLoading() ||
-          RuntimeLicenseActivating() => const LinearProgressIndicator(),
-          RuntimeLicenseActive(:final status) => _LicenseStatus(
-            expiresAt: status.expiresAt,
+          RuntimeLicenseActivating() ||
+          RuntimeLicenseReleasing() => const LinearProgressIndicator(),
+          RuntimeLicenseActive(:final status) => RuntimeLicenseStatusContent(
+            status: status,
           ),
           RuntimeLicenseNeedsActivation() || RuntimeLicenseFailureState() =>
             const Text('Die Runtime ist nicht aktiviert.'),
         },
       ),
     );
-  }
-}
-
-class _LicenseStatus extends StatelessWidget {
-  const _LicenseStatus({required this.expiresAt});
-
-  final DateTime? expiresAt;
-
-  @override
-  Widget build(BuildContext context) {
-    final date = expiresAt;
-    final expiresText = date == null
-        ? 'Unbefristet aktiv'
-        : 'Aktiv bis ${_dateLabel(date)}';
-    return Row(
-      children: [
-        Icon(
-          Icons.verified_outlined,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Text(expiresText),
-      ],
-    );
-  }
-
-  String _dateLabel(DateTime value) {
-    final day = value.day.toString().padLeft(2, '0');
-    final month = value.month.toString().padLeft(2, '0');
-    return '$day.$month.${value.year}';
   }
 }
 

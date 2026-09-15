@@ -4,6 +4,7 @@ import 'package:syscat2/features/licensing/domain/entities/runtime_license.dart'
 import 'package:syscat2/features/licensing/domain/repositories/runtime_license_repository.dart';
 import 'package:syscat2/features/licensing/domain/usecases/activate_runtime_license.dart';
 import 'package:syscat2/features/licensing/domain/usecases/load_runtime_license_status.dart';
+import 'package:syscat2/features/licensing/domain/usecases/release_runtime_license.dart';
 import 'package:syscat2/features/licensing/presentation/cubits/runtime_license_cubit.dart';
 import 'package:syscat2/features/licensing/presentation/cubits/runtime_license_state.dart';
 
@@ -30,6 +31,17 @@ void main() {
     await cubit.close();
   });
 
+  test('gibt eine aktive Lizenz frei', () async {
+    final repository = _LicenseRepositoryFake();
+    final cubit = _cubit(repository);
+
+    await cubit.release();
+
+    expect(cubit.state, isA<RuntimeLicenseNeedsActivation>());
+    expect(repository.releaseCalls, 1);
+    await cubit.close();
+  });
+
   test('meldet einen zu kurzen Lizenzschlüssel ohne Gateway-Aufruf', () async {
     final repository = _LicenseRepositoryFake();
     final cubit = _cubit(repository);
@@ -46,11 +58,13 @@ RuntimeLicenseCubit _cubit(RuntimeLicenseRepository repository) {
   return RuntimeLicenseCubit(
     loadStatus: LoadRuntimeLicenseStatus(repository),
     activateLicense: ActivateRuntimeLicense(repository),
+    releaseLicense: ReleaseRuntimeLicense(repository),
   );
 }
 
 class _LicenseRepositoryFake implements RuntimeLicenseRepository {
   int activationCalls = 0;
+  int releaseCalls = 0;
 
   @override
   Future<Result<RuntimeLicenseStatus, RuntimeLicenseFailure>> activate(
@@ -59,6 +73,14 @@ class _LicenseRepositoryFake implements RuntimeLicenseRepository {
     activationCalls++;
     return const Success(
       RuntimeLicenseStatus(state: RuntimeLicenseState.active),
+    );
+  }
+
+  @override
+  Future<Result<RuntimeLicenseStatus, RuntimeLicenseFailure>> release() async {
+    releaseCalls++;
+    return const Success(
+      RuntimeLicenseStatus(state: RuntimeLicenseState.notActivated),
     );
   }
 

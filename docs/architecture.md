@@ -137,12 +137,17 @@ Backend nach einer fehlgeschlagenen Zustellung. Identische Tokens werden vor
 dem Versand dedupliziert.
 
 Lokale Lizenzen liegen als backend-only Dokumente unter `licenses/{tokenHash}`
-in Firestore. Der Hash ist SHA-256 eines zwölfstelligen Aktivierungstokens;
-der Roh-Token wird nie gespeichert. Die öffentliche Cloud-Funktion löst den
-Token bei jeder Aktivierung zu einer Ed25519-signierten Lizenz auf. Die lokale
-Runtime prüft diese Lizenz anschließend mit ihrem eingebetteten öffentlichen Schlüssel,
-ohne Firebase-Auth- oder Gerätebindung, bevor sie fachliche API-Endpunkte oder
-Worker freigibt.
+in Firestore. Der Hash ist SHA-256 eines zwölfstelligen Aktivierungstokens; der
+Roh-Token wird nie gespeichert. Jedes Dokument enthält Name, Lizenz- und
+Arbeitsbereich-ID, Ablaufdatum sowie `inUse`. Die Aktivierung setzt in einer
+Firestore-Transaktion `inUse`, eine zufällige `activationId` und nur den Hash
+eines zufälligen Aktivierungsgeheimnisses. Das Lizenz-Gateway liefert der Runtime
+eine Ed25519-signierte Lizenz plus Geheimnis. Die Runtime speichert das Geheimnis
+verschlüsselt mit ihrem lokalen Master-Key; der Token verbleibt weder dort noch in
+Firestore. Eine Freigabe weist `activationId` und Geheimnis nach, setzt
+`inUse` zurück und macht den Token für genau eine neue Aktivierung frei. Das
+Push-Relay prüft zusätzlich die aktive `activationId`, sodass freigegebene
+Altinstallationen keine Cloud-Relay-Funktionen mehr verwenden können.
 Im Flutter-Web-Client zeigt FCM Hintergrund-Pushes selbst an. Der FCM-Klick
 öffnet auf Desktop die App-Startseite, ohne die aktuelle Arbeit automatisch
 zur Aktivitätenansicht umzuleiten. Mobile PWAs lesen den Klick-Payload aus und

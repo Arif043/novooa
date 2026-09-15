@@ -1,11 +1,12 @@
+import {type RuntimeLicenseActivation} from "../../domain/entities/runtime-license-activation.js";
 import {type SignedRuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
 
 export interface RuntimeLicenseGatewayClient {
-  requestLicense(token: string): Promise<SignedRuntimeLicense>;
+  activate(token: string): Promise<RuntimeLicenseActivation>;
+  release(activation: RuntimeLicenseActivation): Promise<void>;
 }
 
-export class HttpRuntimeLicenseGatewayClient
-implements RuntimeLicenseGatewayClient {
+export class HttpRuntimeLicenseGatewayClient implements RuntimeLicenseGatewayClient {
   private readonly endpoint: URL;
 
   constructor(endpoint: string) {
@@ -13,15 +14,36 @@ implements RuntimeLicenseGatewayClient {
     if (this.endpoint.protocol !== "https:") throw new Error("Der Lizenz-Gateway muss HTTPS verwenden.");
   }
 
-  async requestLicense(token: string): Promise<SignedRuntimeLicense> {
+  async activate(token: string): Promise<RuntimeLicenseActivation> {
+    const response = await this.request({action: "activate", activationToken: token});
+    return activationFrom(await response.json());
+  }
+
+  async release(activation: RuntimeLicenseActivation): Promise<void> {
+    await this.request({
+      action: "release",
+      license: activation.license,
+      activationSecret: activation.activationSecret,
+    });
+  }
+
+  private async request(body: object): Promise<Response> {
     const response = await fetch(this.endpoint, {
       method: "POST",
       headers: {"content-type": "application/json"},
-      body: JSON.stringify({activationToken: token}),
+      body: JSON.stringify(body),
     });
-    if (!response.ok) throw new Error("Der Lizenzschlüssel wurde abgelehnt.");
-    return signedLicenseFrom(await response.json());
+    if (!response.ok) throw new Error("Die Lizenzanfrage wurde abgelehnt.");
+    return response;
   }
+}
+
+function activationFrom(value: unknown): RuntimeLicenseActivation {
+  const input = record(value);
+  return {
+    license: signedLicenseFrom(input.license),
+    activationSecret: requiredString(input.activationSecret),
+  };
 }
 
 function signedLicenseFrom(value: unknown): SignedRuntimeLicense {
@@ -30,6 +52,8 @@ function signedLicenseFrom(value: unknown): SignedRuntimeLicense {
   return {
     payload: {
       licenseId: requiredString(payload.licenseId),
+      licenseName: requiredString(payload.licenseName),
+      activationId: requiredString(payload.activationId),
       workspaceId: requiredString(payload.workspaceId),
       issuedAt: requiredString(payload.issuedAt),
       expiresAt: optionalString(payload.expiresAt),

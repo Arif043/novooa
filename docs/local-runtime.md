@@ -68,11 +68,12 @@ Migrationen aus und meldet ihren Health-Status. Für Runtime und ML-Dienst gilt
 ohne geöffnete Desktop-App verarbeitet werden.
 
 Der private Signaturschlüssel bleibt außerhalb des Daten-Volumes. Die Runtime
-speichert unter `credentials/license-state.json` nur die bereits verifizierte,
-signierte Lizenz mit restriktiven Dateirechten. Sie enthält weder einen privaten
-Signaturschlüssel noch Firebase-Credentials. Die Runtime darf ausgehend den
-novooa-Relay und konfigurierte Modellprovider erreichen; der ML-Dienst erhält
-keinen direkten Internetzugang.
+speichert unter `credentials/license-state.json` die signierte Lizenz und ein
+verschlüsseltes Aktivierungsgeheimnis mit restriktiven Dateirechten. Das Geheimnis
+ist mit dem bei der Installation erzeugten Runtime-Master-Key geschützt. Die Datei
+enthält weder den Kunden-Token, einen privaten Signaturschlüssel noch
+Firebase-Credentials. Die Runtime darf ausgehend den novooa-Relay und konfigurierte
+Modellprovider erreichen; der ML-Dienst erhält keinen direkten Internetzugang.
 
 ## Lokale Datenhaltung
 
@@ -156,51 +157,60 @@ Modell-Baustein sind an Firebase Storage oder Bilder gekoppelt.
 
 ## Lizenz und lokale Identität
 
-Die lokale Runtime ist ohne gültigen Lizenzschlüssel nicht nutzbar. Beim Kauf
-stellt novooa einen zwölfstelligen Aktivierungstoken aus dem Alphabet
-`A-H`, `J-N`, `P-Z` und `2-9` aus. Der Kunde gibt diesen Token in der nativen
-Aktivierungsseite ein. Der Client sendet ihn ausschließlich an
-`POST /v1/license/activate`; die Runtime löst ihn einmalig per HTTPS am
-novooa-Lizenz-Gateway ein.
+Die Runtime ist ohne gültigen Lizenzschlüssel nicht nutzbar. Beim Kauf stellt
+novooa einen zwölfstelligen Token aus dem Alphabet `A-H`, `J-N`, `P-Z` und
+`2-9` aus. Der Kunde gibt ihn auf der nativen Aktivierungsseite ein. Der Client
+sendet ihn ausschließlich an `POST /v1/license/activate`; die Runtime löst ihn
+per HTTPS am novooa-Lizenz-Gateway ein.
 
-Firestore speichert nur den SHA-256-Hash des Tokens sowie Lizenz-ID,
-Arbeitsbereich-ID, Status und optionales Ablaufdatum. Das Gateway liefert eine
-Ed25519-signierte Lizenz; die Runtime prüft deren Signatur mit ihrem
-öffentlichen Schlüssel und speichert nur die signierte Lizenz lokal. Alle
-fachlichen Runtime-Endpunkte geben ohne gültige Lizenz `423` zurück. Die
-Task- und Trigger-Worker prüfen denselben Zustand vor jedem Poll und führen bei
-abgelaufener Lizenz keine Jobs aus. Eine unbefristete Lizenz benötigt nach der
-Aktivierung keine Online-Verbindung und kann auf mehreren Installationen
-verwendet werden; die vertragliche Nutzung wird durch das Lizenzmodell geregelt,
-nicht durch eine technische Gerätebindung.
+Firestore speichert den SHA-256-Hash des Tokens als Dokument-ID, niemals den
+Roh-Token. Das Dokument enthält mindestens `licenseId`, `name`,
+`workspaceId`, `expiresAt` und `inUse`. Die Aktivierung läuft atomar ab: Ist
+`inUse` false und die Lizenz nicht abgelaufen, erzeugt das Gateway eine neue
+`activationId` und ein zufälliges Aktivierungsgeheimnis. Es speichert nur dessen
+Hash, setzt `inUse` auf true und liefert der Runtime eine Ed25519-signierte Lizenz
+plus Aktivierungsgeheimnis.
+
+Die Runtime prüft die Signatur mit ihrem öffentlichen Verifikationsschlüssel und
+speichert Lizenz und Geheimnis verschlüsselt mit ihrem lokalen Master-Key. Damit
+kann eine Lizenz immer nur durch diese konkrete Aktivierung verwendet werden, ohne
+einen Gerätefingerabdruck zu benötigen. Fachliche Runtime-Endpunkte liefern ohne
+gültige Lizenz `423`; Task- und Trigger-Worker starten dann keine Jobs. Bis zum
+signierten Ablaufdatum ist keine ständige Internetverbindung nötig.
+
+In den Runtime-Einstellungen kann der Kunde die Lizenz entfernen. Dies ruft
+`POST /v1/license/release` auf. Die Runtime übergibt die signierte
+`activationId` sowie ihr Aktivierungsgeheimnis; das Gateway vergleicht dessen
+Hash, setzt `inUse` atomar auf false und löscht die lokale Aktivierung. Danach
+kann derselbe Token eine andere Runtime aktivieren. Eine alte signierte Lizenz
+wird vom Push-Relay über ihre nicht mehr aktive `activationId` abgelehnt.
 
 Der Produktiv-Container benötigt diese Variablen:
 
 ```text
-LOCAL_RUNTIME_LICENSE_PUBLIC_KEY=<Ed25519-Public-Key im PEM-Format>
 LOCAL_RUNTIME_LICENSE_GATEWAY_URL=https://<region>-<projekt>.cloudfunctions.net/issueLocalRuntimeLicense
+LOCAL_RUNTIME_LICENSE_PUBLIC_KEY_FILE=/run/secrets/novooa_runtime_license_public_key
 LOCAL_RUNTIME_PUSH_RELAY_URL=https://<region>-<projekt>.cloudfunctions.net/localRuntimePushRelay
 ```
 
-Im Compose-Betrieb wird der öffentliche Lizenzschlüssel bevorzugt über
+Der Verifikationsschlüssel ist kein Kundengeheimnis und dient ausschließlich dazu,
+die Server-Signatur offline zu prüfen. Im Compose-Betrieb wird er bevorzugt über
 `LOCAL_RUNTIME_LICENSE_PUBLIC_KEY_FILE` aus dem Docker-Secret
-`novooa_runtime_license_public_key` gelesen. Die Entwicklungsumgebung kann
-explizit mit `NOVOOA_LOCAL_DEVELOPMENT=true` gestartet werden; sie umgeht die
-Lizenzprüfung, kann jedoch keine produktiven Push-Geräte beim Cloud-Relay
-registrieren.
+`novooa_runtime_license_public_key` gelesen. Der zugehörige private
+Ed25519-Schlüssel ist als Firebase-Secret `LOCAL_RUNTIME_LICENSE_SIGNING_KEY`
+ausschließlich im Lizenz-Gateway verfügbar. Er gehört weder in ein Image,
+Compose-File noch in die Desktop-App.
 
-Der zugehörige private Ed25519-Schlüssel ist als Firebase-Secret
-`LOCAL_RUNTIME_LICENSE_SIGNING_KEY` ausschließlich im Lizenz-Gateway
-verfügbar. Er gehört weder in ein Image, Compose-File noch in die Desktop-App.
 Das Checkout-Compose setzt absichtlich `NOVOOA_LOCAL_DEVELOPMENT=true`; diese
-Entwicklungsausnahme erzeugt nur den lokalen Beispielarbeitsbereich und darf
-nicht in ein ausgeliefertes Compose übernommen werden.
+Entwicklungsausnahme erzeugt nur den lokalen Beispielarbeitsbereich und darf nicht
+als Produktivmodus ausgeliefert werden.
 
-Der geschützte Vertriebsprozess erstellt einen Token und dessen gehashten
+Der Vertriebsprozess erstellt einen eindeutigen Token und den gehashten
 Firestore-Eintrag mit
-`npm --prefix functions run licenses:issue-local -- --license-id <id>`
-aus. Die Ausgabe ist der zwölfstellige Kundentoken. Der Prozess benötigt
-Firebase-Admin-Zugang, aber keinen Signaturschlüssel.
+`npm --prefix functions run licenses:issue-local -- --name "Kunde GmbH"`.
+Optional sind `--license-id`, `--workspace-id` und `--expires-at` möglich.
+Die Ausgabe ist der einmalig an den Kunden zu übergebende zwölfstellige Token. Der
+Prozess benötigt Firebase-Admin-Zugang, aber keinen Signaturschlüssel.
 
 Der lokale SQLite-Arbeitsbereich wird deterministisch aus der signierten
 Arbeitsbereich-ID erzeugt. Die lokale Desktop-App verwendet für UI-seitige
@@ -297,7 +307,7 @@ dessen Infrastructure-Bereich.
   `runtime` veröffentlicht fest `8090` auf allen Host-Schnittstellen; `novooa-ml` hat
   keinen Host-Port und hängt ausschließlich in `novooa-private`.
 - Beim Start stellt die Runtime ohne Lizenz nur `/healthz`, `GET /v1/license`
-  und `POST /v1/license/activate` bereit. Nach erfolgreicher Aktivierung legt
+  und `POST /v1/license/activate` und `POST /v1/license/release` bereit. Nach erfolgreicher Aktivierung legt
   sie den durch die signierte Lizenz bestimmten Teamarbeitsbereich idempotent
   an. Erst dann sind Ausführung, Review, Dateien, Wissensbasis und Zeitpläne
   erreichbar.

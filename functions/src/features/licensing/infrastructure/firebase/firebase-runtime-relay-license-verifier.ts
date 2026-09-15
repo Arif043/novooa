@@ -22,7 +22,8 @@ implements RuntimeRelayLicenseVerifier {
   async verify(license: SignedRuntimeLicense): Promise<RuntimeLicense> {
     if (!this.isSignedAndActive(license)) throw new Error("Die Lizenz ist ungültig.");
     const active = await this.registry.licenseForId(license.payload.licenseId, this.now());
-    if (active.workspaceId !== license.payload.workspaceId) {
+    if (active.workspaceId !== license.payload.workspaceId ||
+      active.activationId !== license.payload.activationId) {
       throw new Error("Die Lizenz ist ungültig.");
     }
     return active;

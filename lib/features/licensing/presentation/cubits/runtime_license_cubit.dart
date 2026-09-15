@@ -3,14 +3,19 @@ import 'package:bloc/bloc.dart';
 import '../../domain/entities/runtime_license.dart';
 import '../../domain/usecases/activate_runtime_license.dart';
 import '../../domain/usecases/load_runtime_license_status.dart';
+import '../../domain/usecases/release_runtime_license.dart';
 import 'runtime_license_state.dart';
 
 class RuntimeLicenseCubit extends Cubit<RuntimeLicenseCubitState> {
-  RuntimeLicenseCubit({required this.loadStatus, required this.activateLicense})
-    : super(const RuntimeLicenseLoading());
+  RuntimeLicenseCubit({
+    required this.loadStatus,
+    required this.activateLicense,
+    required this.releaseLicense,
+  }) : super(const RuntimeLicenseLoading());
 
   final LoadRuntimeLicenseStatus loadStatus;
   final ActivateRuntimeLicense activateLicense;
+  final ReleaseRuntimeLicense releaseLicense;
 
   Future<void> load() async {
     emit(const RuntimeLicenseLoading());
@@ -24,6 +29,13 @@ class RuntimeLicenseCubit extends Cubit<RuntimeLicenseCubitState> {
     if (licenseKey == null) return _emitInvalidLicenseKey();
     emit(const RuntimeLicenseActivating());
     final statusOrFailure = await activateLicense(licenseKey);
+    if (isClosed) return;
+    statusOrFailure.when(_emitStatus, _emitFailure);
+  }
+
+  Future<void> release() async {
+    emit(const RuntimeLicenseReleasing());
+    final statusOrFailure = await releaseLicense();
     if (isClosed) return;
     statusOrFailure.when(_emitStatus, _emitFailure);
   }

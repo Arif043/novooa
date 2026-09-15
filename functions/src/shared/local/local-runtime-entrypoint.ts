@@ -14,6 +14,7 @@ import {createLocalRuntimeHttpServer} from "./local-runtime-http-server.js";
 import {RuntimeLicenseHttpHandler} from "./local-runtime-license-http-handler.js";
 import {localRuntimeMasterKeyFrom} from "./local-runtime-master-key.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
+import {CredentialCipher} from "../../features/communication/infrastructure/security/credential-cipher.js";
 
 void startLocalRuntime().catch(reportStartupFailure);
 
@@ -27,7 +28,7 @@ async function startLocalRuntime(): Promise<void> {
     migrationsDirectory: migrationsDirectory(),
   });
   try {
-    const licenses = licenseServiceFor(runtimeRoot);
+    const licenses = licenseServiceFor(runtimeRoot, localMasterKey);
     const application = new LocalRuntimeApplication({
       database,
       runtimeRoot,
@@ -67,16 +68,20 @@ function requiredEnvironment(name: string): string {
   throw new Error(`${name} fehlt.`);
 }
 
-function licenseServiceFor(runtimeRoot: string): RuntimeLicenseService {
+function licenseServiceFor(runtimeRoot: string, localMasterKey: string): RuntimeLicenseService {
   if (process.env.NOVOOA_LOCAL_DEVELOPMENT === "true") {
     return new DevelopmentRuntimeLicenseService({
       licenseId: "development-license",
+      licenseName: "Entwicklungsumgebung",
       workspaceId: optionalEnvironment("LOCAL_RUNTIME_TEAM_ID") ?? "local-team",
       expiresAt: "2099-01-01T00:00:00.000Z",
     });
   }
   return new GatewayRuntimeLicenseService(
-    new FileRuntimeLicenseStore(runtimeRoot),
+    new FileRuntimeLicenseStore(
+      runtimeRoot,
+      new CredentialCipher(localMasterKey, "LOCAL_RUNTIME_MASTER_KEY"),
+    ),
     new HttpRuntimeLicenseGatewayClient(
       requiredEnvironment("LOCAL_RUNTIME_LICENSE_GATEWAY_URL"),
     ),

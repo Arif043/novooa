@@ -43,6 +43,22 @@ class HttpRuntimeLicenseRepository implements RuntimeLicenseRepository {
     }
   }
 
+  @override
+  Future<Result<RuntimeLicenseStatus, RuntimeLicenseFailure>> release() async {
+    try {
+      final status = await _runtimeClient.post('/v1/license/release', const {});
+      return Success(_statusFrom(status));
+    } on WorkspaceConnectionException {
+      return _runtimeUnavailable();
+    } on WorkspaceHttpException catch (error) {
+      return error.statusCode == 409
+          ? _releaseRejected()
+          : _unexpectedFailure();
+    } on Object {
+      return _unexpectedFailure();
+    }
+  }
+
   RuntimeLicenseStatus _statusFrom(Map<String, Object?> value) {
     final expiresAt = _dateOrNull(value['expiresAt']);
     return RuntimeLicenseStatus(
@@ -62,6 +78,12 @@ class HttpRuntimeLicenseRepository implements RuntimeLicenseRepository {
   Result<RuntimeLicenseStatus, RuntimeLicenseFailure> _activationRejected() {
     return const Error(
       RuntimeLicenseFailure(RuntimeLicenseFailureKind.activationRejected),
+    );
+  }
+
+  Result<RuntimeLicenseStatus, RuntimeLicenseFailure> _releaseRejected() {
+    return const Error(
+      RuntimeLicenseFailure(RuntimeLicenseFailureKind.releaseRejected),
     );
   }
 

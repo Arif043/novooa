@@ -39,6 +39,8 @@ test("sends a relay notification to all devices of the verified license", async 
 
 const license: RuntimeLicense = {
   licenseId: "license-1",
+  licenseName: "Beispiel GmbH",
+  activationId: "activation-1",
   workspaceId: "workspace-1",
   issuedAt: "2026-09-13T10:00:00.000Z",
 };
