@@ -100,17 +100,31 @@ Stream<T> pollWorkspace<T>(
 }
 
 Uri _validatedBaseUri(Uri value) {
-  const loopbackHosts = {'127.0.0.1', 'localhost', '::1'};
-  if (value.scheme != 'http' || !loopbackHosts.contains(value.host)) {
+  if (value.scheme != 'http' || !_isPrivateRuntimeHost(value.host)) {
     throw ArgumentError.value(
       value,
       'baseUri',
-      'Die Runtime muss auf Loopback laufen.',
+      'Die Runtime-Adresse muss eine private IPv4-Adresse sein.',
     );
   }
   return value.replace(
     path: value.path.endsWith('/') ? value.path : '${value.path}/',
   );
+}
+
+bool _isPrivateRuntimeHost(String host) {
+  final octets = host.split('.');
+  if (octets.length != 4) return false;
+  final values = octets.map(int.tryParse).toList(growable: false);
+  if (values.any((value) => value == null || value < 0 || value > 255)) {
+    return false;
+  }
+  final first = values[0]!;
+  final second = values[1]!;
+  return first == 127 ||
+      first == 10 ||
+      (first == 172 && second >= 16 && second <= 31) ||
+      (first == 192 && second == 168);
 }
 
 Map<String, Object?> _objectFrom(Object? value) {

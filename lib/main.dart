@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/di/service_locator.dart';
-import 'core/config/runtime_profile.dart';
+import 'core/runtime/runtime_profile.dart';
 import 'core/firebase/firebase_emulator_config.dart';
 import 'core/firebase/firestore_web_cache.dart';
 import 'core/logging/logger.dart';
@@ -25,6 +25,7 @@ import 'features/notifications/infrastructure/datasources/push_click_navigation_
 import 'features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import 'features/notifications/presentation/widgets/fcm_foreground_notification_listener.dart';
 import 'features/licensing/presentation/cubits/runtime_license_cubit.dart';
+import 'core/runtime/runtime_connection_gate.dart';
 import 'features/activity/infrastructure/datasources/media_input_picker_platform_registration.dart';
 import 'firebase_options.dart';
 
@@ -44,39 +45,63 @@ Future<void> _startApplication() async {
   WidgetsFlutterBinding.ensureInitialized();
   final runtimeProfile = RuntimeProfile.fromEnvironment();
   final pushFirebaseEnabled = await _initializeFirebase(runtimeProfile);
+  configureClientLogger(const DeveloperClientLogger());
+  Bloc.observer = ApplicationBlocObserver();
+  _configureErrorLogging();
+  registerMediaInputPickerPlatform();
   if (runtimeProfile.isCloud) {
-    await FirebaseAppCheck.instance.activate(
-      providerWeb: _webAppCheckProvider(),
-    );
-    configureFirestoreWebCache(FirebaseFirestore.instance);
-    if (FirebaseEmulatorConfig.enabled) {
-      await const FirebaseEmulatorConfig().connect();
-    }
+    await _configureCloudPlatform();
   }
   if (pushFirebaseEnabled) {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   }
-  registerMediaInputPickerPlatform();
-  configureDependencies(runtimeProfile: runtimeProfile);
-  configureClientLogger(
-    runtimeProfile.isStandalone
-        ? WorkspaceClientLogger(serviceLocator<WorkspaceApiClient>())
-        : const DeveloperClientLogger(),
-  );
-  Bloc.observer = ApplicationBlocObserver();
-  _configureErrorLogging();
-  if (!runtimeProfile.isStandalone && shouldNavigateFromPushClick()) {
-    const FcmPushClickBridge().start(_openNotificationData);
+  if (runtimeProfile.isStandalone) {
+    runApp(
+      RuntimeConnectionGate(
+        runtimeProfile: runtimeProfile,
+        configureApplication: (profile) =>
+            _configureApplication(profile, pushFirebaseEnabled),
+        createApplication: (profile) => MyApp(
+          runtimeProfile: profile,
+          pushFirebaseEnabled: pushFirebaseEnabled,
+        ),
+      ),
+    );
+    return;
   }
-  if (pushFirebaseEnabled) {
-    unawaited(serviceLocator<FcmBootstrapper>().start());
-  }
+  await _configureApplication(runtimeProfile, pushFirebaseEnabled);
   runApp(
     MyApp(
       runtimeProfile: runtimeProfile,
       pushFirebaseEnabled: pushFirebaseEnabled,
     ),
   );
+}
+
+Future<void> _configureCloudPlatform() async {
+  await FirebaseAppCheck.instance.activate(providerWeb: _webAppCheckProvider());
+  configureFirestoreWebCache(FirebaseFirestore.instance);
+  if (FirebaseEmulatorConfig.enabled) {
+    await const FirebaseEmulatorConfig().connect();
+  }
+}
+
+Future<void> _configureApplication(
+  RuntimeProfile runtimeProfile,
+  bool pushFirebaseEnabled,
+) async {
+  configureDependencies(runtimeProfile: runtimeProfile);
+  configureClientLogger(
+    runtimeProfile.isStandalone
+        ? WorkspaceClientLogger(serviceLocator<WorkspaceApiClient>())
+        : const DeveloperClientLogger(),
+  );
+  if (!runtimeProfile.isStandalone && shouldNavigateFromPushClick()) {
+    const FcmPushClickBridge().start(_openNotificationData);
+  }
+  if (pushFirebaseEnabled) {
+    unawaited(serviceLocator<FcmBootstrapper>().start());
+  }
 }
 
 Future<bool> _initializeFirebase(RuntimeProfile profile) async {

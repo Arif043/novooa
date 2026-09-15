@@ -59,6 +59,20 @@ python3 -m venv .novooa/python
 Die Node-Runtime verbindet sich mit diesem Sidecar über `novooa-private`; sie
 enthält weder einen Python-Interpreter noch Python-Abhängigkeiten.
 
+
+## Clients im LAN
+
+Der Compose-Stack veröffentlicht ausschließlich den Runtime-Port `8090`; der
+Python-Sidecar bleibt im privaten Docker-Netz. Auf dem Host verbindet sich der
+native Client automatisch mit `127.0.0.1`. Ein weiterer nativer Client im selben
+LAN gibt nur die private IPv4-Adresse des Runtime-Hosts ein, zum Beispiel
+`192.168.1.42`. Die Adresse wird als normale App-Einstellung gespeichert und vor
+der Verwendung über `GET /healthz` geprüft.
+
+Die Runtime richtet weder Portweiterleitungen noch externen Fernzugriff ein. Ob
+der Host aus anderen Netzen erreichbar ist, bestimmen Router und Firewall des
+Kunden.
+
 ## Lokaler Stack
 
 ```bash

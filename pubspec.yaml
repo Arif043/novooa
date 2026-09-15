@@ -38,6 +38,7 @@ dependencies:
   equatable: 
   get_it:
   http:
+  shared_preferences: ^2.5.5
   multiple_result: 
   uuid:
   web: ^1.1.1

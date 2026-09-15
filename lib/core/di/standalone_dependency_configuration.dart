@@ -64,7 +64,7 @@ import '../../features/notifications/infrastructure/repositories/local_app_notif
 import '../../features/notifications/infrastructure/repositories/local_relay_push_device_repository.dart';
 import '../../features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import '../../features/notifications/presentation/cubits/app_notifications_cubit.dart';
-import '../config/runtime_profile.dart';
+import '../runtime/runtime_profile.dart';
 import '../network/workspace_api_client.dart';
 import '../routing/app_router.dart';
 import 'standalone_workspace_dependency_configuration.dart';

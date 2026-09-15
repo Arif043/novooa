@@ -32,6 +32,8 @@ class RuntimeProfile {
   final RuntimeKind kind;
   final Uri workspaceApiUri;
 
+  RuntimeProfile withWorkspaceApiUri(Uri uri) => RuntimeProfile._(kind, uri);
+
   bool get isCloud => kind == RuntimeKind.cloud;
   bool get isStandalone => kind == RuntimeKind.standalone;
 }

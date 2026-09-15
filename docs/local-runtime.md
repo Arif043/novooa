@@ -46,8 +46,10 @@ Flutter-Desktop-App
 ```
 
 `novooa-runtime` ist der einzige Dienst mit einem veröffentlichten Host-Port.
-Compose bindet ihn ausschließlich an `127.0.0.1`; die konkrete Portzuordnung
-konfiguriert die Desktop-App für die jeweilige Installation. `novooa-ml` ist
+Compose veröffentlicht standardmäßig `8090` auf allen Host-Schnittstellen, damit
+native novooa-Clients im selben LAN ihn erreichen können. Der Host-Client nutzt
+dabei weiterhin automatisch `127.0.0.1`; weitere Clients geben ausschließlich
+die private IPv4-Adresse des Runtime-Hosts ein. `novooa-ml` ist
 nicht vom Host erreichbar und kommuniziert nur über das interne
 Compose-Netzwerk mit `novooa-runtime`.
 
@@ -82,7 +84,7 @@ Anwendungsprotokolle liegen getrennt von Workflow-Aktivitäten in
 `application_logs`. Der lokale `ApplicationLogger` speichert strukturierte
 Info- und Fehlerereignisse dort und gibt sie zusätzlich als JSON nach Docker-
 Stdout aus. Der native Flutter-Client sendet seine eigenen Ereignisse per
-`POST /v1/application-logs` an die Loopback-Runtime; diese vergibt ID und
+`POST /v1/application-logs` an die Runtime; diese vergibt ID und
 Zeitstempel und markiert die Quelle als `client`. `GET /v1/application-logs`
 liefert die jüngsten Einträge an den Client; dieser zeigt sie im Tab
 **Aktivitäten → Protokoll**. Der gleiche Port wird in der Cloud durch den
@@ -157,7 +159,7 @@ Modell-Baustein sind an Firebase Storage oder Bilder gekoppelt.
 Die lokale Runtime ist ohne gültigen Lizenzschlüssel nicht nutzbar. Beim Kauf
 stellt novooa einen zwölfstelligen Aktivierungstoken aus dem Alphabet
 `A-H`, `J-N`, `P-Z` und `2-9` aus. Der Kunde gibt diesen Token in der nativen
-Aktivierungsseite ein. Der Client sendet ihn ausschließlich über Loopback an
+Aktivierungsseite ein. Der Client sendet ihn ausschließlich an
 `POST /v1/license/activate`; die Runtime löst ihn einmalig per HTTPS am
 novooa-Lizenz-Gateway ein.
 
@@ -165,7 +167,7 @@ Firestore speichert nur den SHA-256-Hash des Tokens sowie Lizenz-ID,
 Arbeitsbereich-ID, Status und optionales Ablaufdatum. Das Gateway liefert eine
 Ed25519-signierte Lizenz; die Runtime prüft deren Signatur mit ihrem
 öffentlichen Schlüssel und speichert nur die signierte Lizenz lokal. Alle
-fachlichen Loopback-Endpunkte geben ohne gültige Lizenz `423` zurück. Die
+fachlichen Runtime-Endpunkte geben ohne gültige Lizenz `423` zurück. Die
 Task- und Trigger-Worker prüfen denselben Zustand vor jedem Poll und führen bei
 abgelaufener Lizenz keine Jobs aus. Eine unbefristete Lizenz benötigt nach der
 Aktivierung keine Online-Verbindung und kann auf mehreren Installationen
@@ -292,7 +294,7 @@ dessen Infrastructure-Bereich.
 - `openLocalRuntimeDatabase` lädt alle versionierten SQL-Migrationen beim
   Start und schließt die Datenbank wieder, falls eine Migration fehlschlägt.
 - `docker-compose.local.yaml` startet `runtime` und `novooa-ml`. Nur
-  `runtime` bindet `127.0.0.1:${LOCAL_RUNTIME_PORT:-8090}`; `novooa-ml` hat
+  `runtime` veröffentlicht fest `8090` auf allen Host-Schnittstellen; `novooa-ml` hat
   keinen Host-Port und hängt ausschließlich in `novooa-private`.
 - Beim Start stellt die Runtime ohne Lizenz nur `/healthz`, `GET /v1/license`
   und `POST /v1/license/activate` bereit. Nach erfolgreicher Aktivierung legt
@@ -305,7 +307,7 @@ dessen Infrastructure-Bereich.
   über `/v1/task-triggers` sowie Dateien und Ordner über `/v1/files` und
   `/v1/folders`. Dateien werden als Base64-kodierte JSON-Payloads bis zur
   lokalen Runtime übertragen und dort im Volume abgelegt. Diese Endpunkte sind
-  ausschließlich Loopback-APIs der lokalen Runtime und kein Cloud-HTTP-Vertrag.
+  Runtime-APIs im lokalen Netzwerk und kein Cloud-HTTP-Vertrag.
 - `006_task_run_jobs.sql` ergänzt eine haltbare SQLite-Jobqueue. Der
   `PollingTaskRunWorker` least Jobs, bestätigt erfolgreiche Ausführungen und
   versucht fehlgeschlagene Jobs mit 30 bis 300 Sekunden Backoff höchstens

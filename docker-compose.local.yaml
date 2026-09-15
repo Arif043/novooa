@@ -17,7 +17,7 @@ services:
       novooa-ml:
         condition: service_healthy
     ports:
-      - 127.0.0.1:${LOCAL_RUNTIME_PORT:-8090}:8080
+      - "8090:8080"
     volumes:
       - novooa-data:/var/lib/novooa
     secrets:
