@@ -1,11 +1,16 @@
 import {type ModelTensor, validateTensorsForContract} from "../entities/model-tensor.js";
 import {type ModelArtifactReader} from "../repositories/model-artifact-reader.js";
-import {type ModelInferenceRuntime} from "../repositories/model-inference-runtime.js";
+import {
+  type ModelInferenceRuntime,
+  type ModelRuntimeOutput,
+} from "../repositories/model-inference-runtime.js";
+import {type ModelOutputParameterValue} from "../repositories/model-inference.js";
 import {type ModelCatalogEntry} from "../entities/model-catalog-entry.js";
 
 export type RunModelInferenceRequest = {
-  model: ModelCatalogEntry;
-  inputs: readonly ModelTensor[];
+  readonly model: ModelCatalogEntry;
+  readonly inputs: readonly ModelTensor[];
+  readonly outputParameters?: readonly ModelOutputParameterValue[];
 };
 
 export class RunModelInference {
@@ -14,15 +19,11 @@ export class RunModelInference {
     private readonly runtime: ModelInferenceRuntime,
   ) {}
 
-  async execute(request: RunModelInferenceRequest): Promise<readonly ModelTensor[]> {
+  async execute(request: RunModelInferenceRequest): Promise<readonly ModelRuntimeOutput[]> {
     validateTensorsForContract(request.inputs, request.model.contract.inputs, "Eingabe");
     const artifact = await this.artifactReader.read(request.model.artifactReference);
-    const outputs = await this.runtime.execute({
-      model: request.model,
-      artifact,
-      inputs: request.inputs,
-    });
-    validateTensorsForContract(outputs, request.model.contract.outputs, "Ausgabe");
+    const outputs = await this.runtime.execute({...request, artifact});
+    validateTensorsForContract(outputs.map((output) => output.tensor), request.model.contract.outputs, "Ausgabe");
     return outputs;
   }
 }

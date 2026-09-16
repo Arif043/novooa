@@ -1,17 +1,25 @@
 import {type ModelArtifactReference} from "../domain/entities/model-artifact-reference.js";
+import {type ModelOutput} from "../domain/entities/model-contract.js";
 import {type ModelTensor} from "../domain/entities/model-tensor.js";
-import {type ModelInferenceRuntime, type ModelRuntimeRequest} from "../domain/repositories/model-inference-runtime.js";
+import {
+  type ModelInferenceRuntime,
+  type ModelRuntimeOutput,
+  type ModelRuntimeRequest,
+} from "../domain/repositories/model-inference-runtime.js";
+import {type ModelOutputParameterValue} from "../domain/repositories/model-inference.js";
 import {modelTensorFromJson, modelTensorToJson} from "./local/model-tensor-json-codec.js";
+import {type ModelOutputValue} from "../domain/entities/model-output-value.js";
 
 export interface PythonInferenceSidecar {
   load(reference: ModelArtifactReference, artifact: Uint8Array): Promise<void>;
-  infer(request: SidecarInferenceRequest): Promise<readonly ModelTensor[]>;
+  infer(request: SidecarInferenceRequest): Promise<readonly ModelRuntimeOutput[]>;
 }
 
 export type SidecarInferenceRequest = {
-  reference: ModelArtifactReference;
-  inputs: readonly ModelTensor[];
-  outputNames: readonly string[];
+  readonly reference: ModelArtifactReference;
+  readonly inputs: readonly ModelTensor[];
+  readonly outputs: readonly ModelOutput[];
+  readonly outputParameters?: readonly ModelOutputParameterValue[];
 };
 
 export class SidecarOnnxInferenceRuntime implements ModelInferenceRuntime {
@@ -19,7 +27,7 @@ export class SidecarOnnxInferenceRuntime implements ModelInferenceRuntime {
 
   constructor(private readonly sidecar: PythonInferenceSidecar) {}
 
-  async execute(request: ModelRuntimeRequest): Promise<readonly ModelTensor[]> {
+  async execute(request: ModelRuntimeRequest): Promise<readonly ModelRuntimeOutput[]> {
     const reference = request.model.artifactReference;
     await this.load(reference, request.artifact);
     return this.inferWithReload(reference, request);
@@ -55,7 +63,8 @@ export class SidecarOnnxInferenceRuntime implements ModelInferenceRuntime {
     return this.sidecar.infer({
       reference,
       inputs: request.inputs,
-      outputNames: request.model.contract.outputs.map((output) => output.name),
+      outputs: request.model.contract.outputs,
+      outputParameters: request.outputParameters ?? [],
     });
   }
 }
@@ -70,13 +79,14 @@ export class HttpPythonInferenceSidecar implements PythonInferenceSidecar {
     });
   }
 
-  async infer(request: SidecarInferenceRequest): Promise<readonly ModelTensor[]> {
+  async infer(request: SidecarInferenceRequest): Promise<readonly ModelRuntimeOutput[]> {
     const body = await this.post("/v1/inferences", {
       modelKey: modelKey(request.reference),
       inputs: request.inputs.map(modelTensorToJson),
-      outputNames: request.outputNames,
+      outputs: request.outputs,
+      outputParameters: request.outputParameters,
     });
-    return outputTensors(body);
+    return runtimeOutputs(body);
   }
 
   private async post(path: string, body: object): Promise<unknown> {
@@ -92,9 +102,30 @@ export class HttpPythonInferenceSidecar implements PythonInferenceSidecar {
 
 export class ModelNotLoadedError extends Error {}
 
-function outputTensors(value: unknown): readonly ModelTensor[] {
-  if (!isRecord(value) || !Array.isArray(value.outputs)) throw new Error("Der Python-Sidecar lieferte keine Tensoren.");
-  return value.outputs.map(modelTensorFromJson);
+function runtimeOutputs(value: unknown): readonly ModelRuntimeOutput[] {
+  if (!isRecord(value) || !Array.isArray(value.outputs)) throw new Error("Der Python-Sidecar lieferte keine Ausgaben.");
+  return value.outputs.map((output) => {
+    const data = recordFrom(output);
+    const tensor = modelTensorFromJson(data);
+    return {
+      ...tensor,
+      tensor,
+      transformationValues: transformationValuesFrom(data.transformationValues),
+    };
+  });
+}
+
+function transformationValuesFrom(value: unknown): Readonly<Record<string, ModelOutputValue>> {
+  const data = recordFrom(value);
+  return Object.fromEntries(Object.entries(data).map(([name, item]) => [name, outputValueFrom(item)]));
+}
+
+function outputValueFrom(value: unknown): ModelOutputValue {
+  if (typeof value === "string" || typeof value === "boolean") return value;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (Array.isArray(value)) return value.map(outputValueFrom);
+  const data = recordFrom(value);
+  return Object.fromEntries(Object.entries(data).map(([name, item]) => [name, outputValueFrom(item)]));
 }
 
 function modelKey(reference: ModelArtifactReference): string {
@@ -107,6 +138,11 @@ function isMissingModel(value: unknown): boolean {
 
 function errorMessage(value: unknown): string {
   return isRecord(value) && typeof value.error === "string" ? value.error : "Der Python-Sidecar ist fehlgeschlagen.";
+}
+
+function recordFrom(value: unknown): Record<string, unknown> {
+  if (!isRecord(value)) throw new Error("Die Antwort des Python-Sidecars ist ungültig.");
+  return value;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

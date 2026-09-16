@@ -18,7 +18,7 @@ test("serializes binary model and tensor inputs for the Python worker", () => {
 
 test("decodes typed tensors returned by the Python worker", () => {
   const tensors = pythonOnnxWorkerOutputFromJson(JSON.stringify({
-    outputs: [{name: "output", dataType: "uint8", shape: [1], dataBase64: "DA=="}],
+    outputs: [{name: "output", dataType: "uint8", shape: [1], dataBase64: "DA==", transformationValues: {tensor: [12]}}],
   }));
 
   assert.equal(tensors[0].name, "output");
@@ -29,6 +29,13 @@ function request(): PythonOnnxWorkerRequest {
   return {
     artifact: Uint8Array.from([1, 2, 3, 4]),
     inputs: [{name: "input", dataType: "uint8", shape: [1], bytes: Uint8Array.from([12])}],
-    outputNames: ["output"],
+    outputs: [output()],
+  };
+}
+
+function output() {
+  return {
+    name: "output", dataType: "uint8" as const, shape: [1], semantic: "test.output",
+    transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
   };
 }

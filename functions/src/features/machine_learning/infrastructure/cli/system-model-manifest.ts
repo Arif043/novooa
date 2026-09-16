@@ -3,7 +3,6 @@ import {type ModelCatalogEntry, validateModelCatalogEntry} from "../../domain/en
 import {type ModelArtifactReference} from "../../domain/entities/model-artifact-reference.js";
 import {type ModelContract} from "../../domain/entities/model-contract.js";
 import {modelContractFromUnknown} from "../model-contract-codec.js";
-import {validateModelOutputPostprocessing} from "../../domain/services/model-output-postprocessor.js";
 
 export type SystemModelManifest = {
   id: string;
@@ -27,7 +26,6 @@ export function systemModelManifestFromUnknown(value: unknown): SystemModelManif
     description: text(data.description, "Die Modellbeschreibung fehlt."),
     tags: tags(data.tags), artifact: artifact(data.artifact), contract: modelContractFromUnknown(data.contract),
   };
-  manifest.contract.outputs.forEach((output) => validateModelOutputPostprocessing(output));
   return manifest;
 }
 

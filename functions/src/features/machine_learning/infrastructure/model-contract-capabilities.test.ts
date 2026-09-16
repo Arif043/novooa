@@ -11,18 +11,16 @@ test("rejects an unsupported input source before publication", () => {
   assert.throws(() => cloudModelContractCapabilityValidator().validate(contract("text", [])), /text-Eingänge/);
 });
 
-test("rejects an unsupported output transformation before publication", () => {
+test("delegates output transformation support to the Python runtime", () => {
   const value = contract("tensor", []);
   const changed: ModelContract = {
     ...value,
     outputs: [{
       ...value.outputs[0]!,
-      transformations: [
-        {type: "scores.topK", parameters: {count: 3}},
-      ],
+      transformations: [{type: "custom.output", parameters: {}}],
     }],
   };
-  assert.throws(() => cloudModelContractCapabilityValidator().validate(changed), /scores.topK/);
+  cloudModelContractCapabilityValidator().validate(changed);
 });
 
 test("accepts a configured generic top-k output transformation", () => {

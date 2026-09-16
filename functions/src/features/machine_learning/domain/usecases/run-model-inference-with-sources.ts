@@ -5,26 +5,29 @@ import {
   type ModelInferenceRequest,
   type ModelInferenceResult,
 } from "../repositories/model-inference.js";
+import {mapWorkflowOutput} from "../services/workflow-output-mapper.js";
 import {PrepareModelInputs} from "./prepare-model-inputs.js";
 import {RunModelInference} from "./run-model-inference.js";
-import {ModelOutputPostprocessor} from "../services/model-output-postprocessor.js";
 
 export class RunModelInferenceWithSources implements ModelInference {
   constructor(
     private readonly catalog: ModelCatalog,
     private readonly prepareModelInputs: PrepareModelInputs,
     private readonly runModelInference: RunModelInference,
-    private readonly outputPostprocessor = new ModelOutputPostprocessor(),
   ) {}
 
   async execute(request: ModelInferenceRequest): Promise<ModelInferenceResult> {
     const model = await this.modelFor(request.teamId, request.modelId);
     const inputs = await this.prepareModelInputs.execute(model.contract, request.inputs);
-    const outputs = await this.runModelInference.execute({model, inputs});
-    return resultFor(model, outputs, request.outputParameters ?? [], this.outputPostprocessor);
+    const outputs = await this.runModelInference.execute({
+      model,
+      inputs,
+      outputParameters: request.outputParameters ?? [],
+    });
+    return resultFor(model, outputs);
   }
 
-  private async modelFor(teamId: string, modelId: string) {
+  private async modelFor(teamId: string, modelId: string): Promise<ModelCatalogEntry> {
     required(teamId, "Die Team-ID fehlt.");
     required(modelId, "Die Modell-ID fehlt.");
     const model = await this.catalog.findAvailableFor(teamId, modelId);
@@ -35,25 +38,20 @@ export class RunModelInferenceWithSources implements ModelInference {
 
 function resultFor(
   model: ModelCatalogEntry,
-  tensors: Awaited<ReturnType<RunModelInference["execute"]>>,
-  parameterValues: NonNullable<ModelInferenceRequest["outputParameters"]>,
-  postprocessor: ModelOutputPostprocessor,
+  runtimeOutputs: Awaited<ReturnType<RunModelInference["execute"]>>,
 ): ModelInferenceResult {
-  const semantics = new Map(model.contract.outputs.map((output) => [
-    output.name,
-    output.semantic,
-  ]));
   const definitions = new Map(model.contract.outputs.map((output) => [output.name, output]));
   return {
     modelId: model.id,
-    outputs: tensors.map((tensor) => {
-      const definition = definitions.get(tensor.name)!;
-      const processed = postprocessor.process(definition, tensor, parameterValues);
+    outputs: runtimeOutputs.map(({tensor, transformationValues}) => {
+      const output = definitions.get(tensor.name)!;
       return {
         ...tensor,
-        semantic: semantics.get(tensor.name)!,
-        workflowOutput: processed.workflowOutput,
-        value: processed.value,
+        semantic: output.semantic,
+        workflowOutput: output.workflowOutput,
+        value: mapWorkflowOutput(output.workflowOutput.mapping, new Map(
+          Object.entries(transformationValues),
+        )),
       };
     }),
   };

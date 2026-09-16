@@ -3,6 +3,7 @@ import test from "node:test";
 import {type ModelCatalogEntry} from "../domain/entities/model-catalog-entry.js";
 import {type ModelTensor} from "../domain/entities/model-tensor.js";
 import {ModelNotLoadedError, type PythonInferenceSidecar, SidecarOnnxInferenceRuntime} from "./python-inference-sidecar.js";
+import {type ModelRuntimeOutput} from "../domain/repositories/model-inference-runtime.js";
 
 test("loads an artifact once before reusing the sidecar session", async () => {
   const sidecar = new Sidecar();
@@ -33,13 +34,14 @@ class Sidecar implements PythonInferenceSidecar {
 
   async load(): Promise<void> { this.loads += 1; }
 
-  async infer(): Promise<readonly ModelTensor[]> {
+  async infer(): Promise<readonly ModelRuntimeOutput[]> {
     this.inferences += 1;
     if (this.evicted) {
       this.evicted = false;
       throw new ModelNotLoadedError();
     }
-    return [tensor("output")];
+    const tensorOutput = tensor("output");
+    return [{...tensorOutput, tensor: tensorOutput, transformationValues: {tensor: []}}];
   }
 }
 

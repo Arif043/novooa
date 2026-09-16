@@ -18,7 +18,7 @@ test("exchanges binary tensors with an injected local Python worker", async () =
     const outputs = await worker.execute({
       artifact: Uint8Array.from([1]),
       inputs: [{name: "input", dataType: "uint8", shape: [1], bytes: Uint8Array.from([12])}],
-      outputNames: ["output"],
+      outputs: [output()],
     });
     assert.equal(outputs[0].name, "output");
     assert.deepEqual([...outputs[0].bytes], [12]);
@@ -33,6 +33,13 @@ async function workerScriptIn(directory: string): Promise<string> {
   return scriptPath;
 }
 
+function output() {
+  return {
+    name: "output", dataType: "uint8" as const, shape: [1], semantic: "test.output",
+    transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
+  };
+}
+
 const workerSource = `
 import json
 import sys
@@ -40,10 +47,11 @@ import sys
 payload = json.loads(sys.stdin.read())
 sys.stdout.write(json.dumps({
   "outputs": [{
-    "name": payload["outputNames"][0],
+    "name": payload["outputs"][0]["name"],
     "dataType": payload["inputs"][0]["dataType"],
     "shape": payload["inputs"][0]["shape"],
     "dataBase64": payload["inputs"][0]["dataBase64"],
+    "transformationValues": {"tensor": [12]},
   }],
 }))
 `;

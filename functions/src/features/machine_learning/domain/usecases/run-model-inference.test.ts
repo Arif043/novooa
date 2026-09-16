@@ -6,6 +6,7 @@ import {type ModelArtifactReader} from "../repositories/model-artifact-reader.js
 import {
   type ModelInferenceRuntime,
   type ModelRuntimeRequest,
+  type ModelRuntimeOutput,
 } from "../repositories/model-inference-runtime.js";
 import {RunModelInference} from "./run-model-inference.js";
 
@@ -55,14 +56,22 @@ class RecordingRuntime implements ModelInferenceRuntime {
 
   constructor(private readonly output = tensor("output", [1], [12])) {}
 
-  async execute(request: ModelRuntimeRequest): Promise<readonly ModelTensor[]> {
+  async execute(request: ModelRuntimeRequest): Promise<readonly ModelRuntimeOutput[]> {
     this.request = request;
-    return [this.output];
+    return [runtimeOutput(this.output)];
   }
 }
 
 function tensor(name: string, shape: readonly number[], values: readonly number[]): ModelTensor {
   return {name, dataType: "uint8", shape, bytes: Uint8Array.from(values)};
+}
+
+function runtimeOutput(tensor: ModelTensor): ModelRuntimeOutput {
+  return {
+    ...tensor,
+    tensor,
+    transformationValues: {tensor: []},
+  };
 }
 
 function entry(): ModelCatalogEntry {

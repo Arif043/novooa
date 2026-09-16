@@ -5,7 +5,7 @@ import {type ModelTensor} from "../entities/model-tensor.js";
 import {type ModelArtifactReader} from "../repositories/model-artifact-reader.js";
 import {type ModelCatalog} from "../repositories/model-catalog.js";
 import {type ModelInputTransformer} from "../repositories/model-input-transformer.js";
-import {type ModelInferenceRuntime} from "../repositories/model-inference-runtime.js";
+import {type ModelInferenceRuntime, type ModelRuntimeOutput} from "../repositories/model-inference-runtime.js";
 import {PrepareModelInputs} from "./prepare-model-inputs.js";
 import {RunModelInference} from "./run-model-inference.js";
 import {RunModelInferenceWithSources} from "./run-model-inference-with-sources.js";
@@ -31,6 +31,7 @@ test("binds named sources according to the model manifest", async () => {
     type: "json",
     mapping: "$tensor",
   });
+  assert.deepEqual(result.outputs[0].value, [2]);
 });
 
 test("rejects a workflow value that conflicts with the model contract", async () => {
@@ -78,7 +79,10 @@ class Transformer implements ModelInputTransformer {
 }
 
 class Runtime implements ModelInferenceRuntime {
-  async execute(): Promise<readonly ModelTensor[]> { return [tensor("scores", [1], [2])]; }
+  async execute(): Promise<readonly ModelRuntimeOutput[]> {
+    const tensorOutput = tensor("scores", [1], [2]);
+    return [{...tensorOutput, tensor: tensorOutput, transformationValues: {tensor: [2]}}];
+  }
 }
 
 function tensor(name: string, shape: readonly number[], values: readonly number[]): ModelTensor {

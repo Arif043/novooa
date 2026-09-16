@@ -2,6 +2,8 @@ import base64
 import json
 import sys
 
+from novooa_ml.output_transforms.worker import transform_outputs
+
 
 def runtime_dependencies():
     try:
@@ -75,14 +77,24 @@ def execute(payload, numpy, onnxruntime):
     session = onnxruntime.InferenceSession(
         model_bytes, providers=["CPUExecutionProvider"]
     )
-    outputs = session.run(payload["outputNames"], input_arrays(payload, numpy))
-    return {
-        "outputs": [
-            tensor_for_output(name, value, numpy)
-            for name, value in zip(payload["outputNames"], outputs, strict=True)
-        ]
-    }
+    values = session.run([output["name"] for output in payload["outputs"]], input_arrays(payload, numpy))
+    return {"outputs": transformed_output_tensors(payload, values, numpy)}
 
+
+def transformed_output_tensors(payload, values, numpy):
+    named = zip(
+        [output["name"] for output in payload["outputs"]],
+        values,
+        strict=True,
+    )
+    transformed = transform_outputs(named, payload["outputs"], payload.get("outputParameters", []), numpy)
+    return [
+        {
+            **tensor_for_output(output["name"], output["tensor"], numpy),
+            "transformationValues": output["transformationValues"],
+        }
+        for output in transformed
+    ]
 
 def main():
     payload = json.loads(sys.stdin.read())

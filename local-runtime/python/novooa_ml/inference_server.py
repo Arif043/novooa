@@ -4,7 +4,7 @@ import os
 from collections import OrderedDict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from onnx_worker import input_arrays, runtime_dependencies, tensor_for_output
+from onnx_worker import input_arrays, runtime_dependencies, transformed_output_tensors
 from novooa_ml.input_transforms.worker import transform_payload
 
 
@@ -41,9 +41,9 @@ class SessionCache:
 def execute(payload, cache, numpy):
     key = required_string(payload, "modelKey")
     session = cache.session_for(key, None)
-    output_names = required_list(payload, "outputNames")
-    outputs = session.run(output_names, input_arrays(payload, numpy))
-    return {"outputs": output_tensors(output_names, outputs, numpy)}
+    definitions = required_list(payload, "outputs")
+    outputs = session.run([definition["name"] for definition in definitions], input_arrays(payload, numpy))
+    return {"outputs": transformed_output_tensors(payload, outputs, numpy)}
 
 
 def load(payload, cache):
@@ -56,12 +56,6 @@ def load(payload, cache):
 def transform(payload):
     return transform_payload(payload)
 
-
-def output_tensors(output_names, outputs, numpy):
-    return [
-        tensor_for_output(name, value, numpy)
-        for name, value in zip(output_names, outputs, strict=True)
-    ]
 
 
 def required_string(payload, name):

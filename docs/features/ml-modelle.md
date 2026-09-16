@@ -13,7 +13,7 @@ Provider-spezifische Download-URLs.
 - System- und künftig teamweite Modelle über `ModelCatalog` auffindbar machen.
 - ONNX-Artefakte über `artifactId` und `versionId` logisch referenzieren und
   vor der Inferenz auf Größe sowie SHA-256 prüfen.
-- Erwartete Tensoren, Vorverarbeitung und Ergebnissemantik verbindlich
+- Erwartete Tensoren, Transformationen und Ergebnissemantik verbindlich
   dokumentieren und validieren.
 - Das Manifest in Firestore und SQLite identisch persistieren.
 
@@ -54,8 +54,8 @@ Rückgabe; die ONNX-Runtime kennt deshalb keinen Speichertyp.
 
 Alle Modelle arbeiten an der Runtime-Grenze mit Tensoren. Ein Eingang beschreibt
 zusätzlich seine Quelle (`image`, `file`, `text`, `datetime`, `number`,
-`boolean`, `json` oder `tensor`) und eine Vorverarbeitung. Ein Ausgang beschreibt
-seine fachliche Semantik sowie optionale Nachverarbeitung.
+`boolean`, `json` oder `tensor`) und eine Transformationspipeline. Ein Ausgang beschreibt
+seine fachliche Semantik sowie eine optionale Transformationspipeline.
 
 ```ts
 {
@@ -109,14 +109,14 @@ seine fachliche Semantik sowie optionale Nachverarbeitung.
 }
 ```
 
-`transformations` und `transformations` sind beide deklarative Pipelines, haben
-aber getrennte Strategieregistries: Eingabestrategien erzeugen Tensoren,
-Ausgabestrategien erzeugen allgemeine Zwischenwerte. `result` benennt einen
-solchen Zwischenwert für das `workflowOutput.mapping`. Die Registry für Ausgaben enthält allgemeine numerische, geometrische und
-Sequenzstrategien. Jede Strategie implementiert denselben Domain-Vertrag und
-wird in der Composition registriert. Eine neue Transformation ergänzt daher
-eine Strategie und deren Registrierung, ohne den Postprocessor oder bestehende
-Strategien zu verändern. Ihre Ergebnisse bleiben technische Zwischenwerte; erst
+`transformations` ist für Ein- und Ausgänge dieselbe deklarative Syntax. Der
+Python-Worker verarbeitet sie an beiden Tensorgrenzen: Eingabestrategien erzeugen
+Tensoren aus Workflow-Quellen, Ausgabestrategien erzeugen allgemeine
+Zwischenwerte. `result` benennt einen solchen Zwischenwert für das
+`workflowOutput.mapping`. Python registriert Strategien über ihre
+Transformationskennung; eine neue Strategie ergänzt daher nur ihre eigene
+Implementierung und die Composition Root. TypeScript wertet keine
+Transformation aus. Ihre Ergebnisse bleiben technische Zwischenwerte; erst
 `workflowOutput.mapping` definiert den fachlichen Workflow-Wert.
 
 `tensor.topK` besitzt keinen fest kodierten Wert. Die Beschreibung
@@ -239,10 +239,10 @@ unter `{{modell1.classifications}}` und lautet beispielsweise
 `{{modell1.classifications.0.score}}` erreichbar. Base64 bleibt auf die technische
 HTTP-Grenze der Inferenz beschränkt.
 
-Lokal erfüllt `LocalPythonModelInputTransformer` den Port für Eingaben. Die
-plattformneutrale Ausgabepipeline läuft danach in TypeScript und ist damit in
-Cloud und lokaler Runtime identisch. Neue Ausgabestrategien ergänzen den
-`ModelOutputPostprocessor`; neue Eingabestrategien ergänzen den Python-Worker.
+Lokal erfüllt `LocalPythonModelInputTransformer` den Port für Eingaben. In
+Cloud und lokaler Runtime verarbeitet Python sowohl Eingabe- als auch
+Ausgabetransformationen. TypeScript bindet die daraus gewonnenen Werte über
+`workflowOutput.mapping` an den Workflow und führt keine Transformation aus.
 
 Aktuell enthält die lokale Runtime konkrete Strategien für Bildquellen und
 unveränderte Tensoren. Verträge mit Text-, Zahlen-, Boolean-, JSON- oder
@@ -270,7 +270,7 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 Der Worker fügt bei einem Manifest mit einer Eingabeform wie `["dynamic", 3, 224, 224]` den Batch-
 Index hinzu, wenn das Bild zunächst als `[3, 224, 224]` vorliegt. Vor der
 Rückgabe prüft er Form, Datentyp und Byte-Länge. Tensorquellen werden zunächst
-nur ohne Vorverarbeitung durchgereicht; weitere Tensorstrategien ergänzen wir
+nur ohne Transformation durchgereicht; weitere Tensorstrategien ergänzen wir
 über denselben Port.
 
 ### Allgemeine OCR-Pipeline
@@ -291,7 +291,7 @@ durch `workflowOutput.mapping` beschrieben. Ein CTC-Textmodell verwendet
 `sequence.ctcGreedyDecode`; sein Alphabet und der Leerindex liegen im Manifest.
 
 `image.crop` und `image.perspectiveCrop` sind allgemeine
-Vorverarbeitungsschritte. Sie akzeptieren derzeit deklarierte
+Transformationen für Bildeingaben. Sie akzeptieren derzeit deklarierte
 Manifestparameter. Damit eine Iteration über Detektorregionen diese Parameter
 dynamisch setzt, wird der `modelInference`-Baustein als nächstes um explizite
 Transformationsparameter-Mappings erweitert. Das ist kein zweites
@@ -417,9 +417,9 @@ Cache. Der Sidecar hält ONNX-Sessions mit dem Schlüssel
 Modellversion nur beim ersten Zugriff einer warmen Instanz aus Storage geladen
 und als ONNX-Session initialisiert.
 
-Die bestehende Bildvorverarbeitung verwendet in dieser ersten Stufe weiter den
-lokalen Python-Worker. Sie wird in einem folgenden Schritt auf den Sidecar
-umgestellt, damit auch ihre Prozesse zwischen Anfragen wiederverwendet werden.
+Eingabe- und Ausgabetransformationen laufen im Python-Sidecar. Dadurch
+verwenden sie dieselben Strategieregistries und können dessen Prozesse zwischen
+Anfragen wiederverwenden.
 
 Der Sidecar meldet einen verworfenen Session-Cache-Eintrag explizit zurück.
 Das Gateway lädt dann dieselbe unveränderliche Artefaktversion erneut und

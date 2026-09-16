@@ -2,26 +2,28 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
 import {type ModelTensor} from "../../domain/entities/model-tensor.js";
+import {type ModelRuntimeOutput} from "../../domain/repositories/model-inference-runtime.js";
 import {LocalOnnxInferenceRuntime} from "./local-onnx-inference-runtime.js";
 import {type PythonOnnxWorker, type PythonOnnxWorkerRequest} from "./python-onnx-worker.js";
 
-test("passes supplied artifact bytes and expected output names to the Python worker", async () => {
+test("passes supplied artifact bytes and output definitions to the Python worker", async () => {
   const worker = new Worker();
   const runtime = new LocalOnnxInferenceRuntime(worker);
 
   await runtime.execute({model: entry(), artifact: Uint8Array.from([9]), inputs: [tensor()]});
 
   assert.deepEqual([...worker.request!.artifact], [9]);
-  assert.deepEqual(worker.request!.outputNames, ["output"]);
+  assert.deepEqual(worker.request!.outputs?.map((output) => output.name), ["output"]);
   assert.equal(worker.request!.inputs[0].name, "input");
 });
 
 class Worker implements PythonOnnxWorker {
   request: PythonOnnxWorkerRequest | undefined;
 
-  async execute(request: PythonOnnxWorkerRequest): Promise<readonly ModelTensor[]> {
+  async execute(request: PythonOnnxWorkerRequest): Promise<readonly ModelRuntimeOutput[]> {
     this.request = request;
-    return [tensor("output")];
+    const tensorOutput = tensor("output");
+    return [{...tensorOutput, tensor: tensorOutput, transformationValues: {tensor: []}}];
   }
 }
 

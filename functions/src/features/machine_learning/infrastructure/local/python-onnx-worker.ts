@@ -1,11 +1,17 @@
+import {type ModelOutput} from "../../domain/entities/model-contract.js";
+import {type ModelOutputParameterValue} from "../../domain/repositories/model-inference.js";
+import {
+  type ModelRuntimeOutput,
+} from "../../domain/repositories/model-inference-runtime.js";
 import {type ModelTensor} from "../../domain/entities/model-tensor.js";
 
 export type PythonOnnxWorkerRequest = {
-  artifact: Uint8Array;
-  inputs: readonly ModelTensor[];
-  outputNames: readonly string[];
+  readonly artifact: Uint8Array;
+  readonly inputs: readonly ModelTensor[];
+  readonly outputs: readonly ModelOutput[];
+  readonly outputParameters?: readonly ModelOutputParameterValue[];
 };
 
 export interface PythonOnnxWorker {
-  execute(request: PythonOnnxWorkerRequest): Promise<readonly ModelTensor[]>;
+  execute(request: PythonOnnxWorkerRequest): Promise<readonly ModelRuntimeOutput[]>;
 }
