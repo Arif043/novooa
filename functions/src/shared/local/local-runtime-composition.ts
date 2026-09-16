@@ -7,6 +7,10 @@ import {createLocalSidecarModelInference} from "../../features/machine_learning/
 import {LocalModelArtifactPublisher} from "../../features/machine_learning/infrastructure/local/local-model-artifact-publisher.js";
 import {LocalModelCatalogHttpHandler} from "../../features/machine_learning/infrastructure/local/local-model-catalog-http-handler.js";
 import {SQLiteModelCatalog} from "../../features/machine_learning/infrastructure/local/sqlite-model-catalog.js";
+import {
+  PythonModelContractValidator,
+  UnavailablePythonModelContractValidator,
+} from "../../features/machine_learning/infrastructure/local/python-model-contract-validator.js";
 import {UnavailableLocalModelInference} from "../../features/machine_learning/infrastructure/local/unavailable-local-model-inference.js";
 import {SQLiteTeamContextStore} from "../../features/teams/infrastructure/local/sqlite-team-context-store.js";
 import {LocalTaskMessageSender} from "../../features/task_execution/infrastructure/local/local-task-message-sender.js";
@@ -116,6 +120,7 @@ export function createLocalRuntimeComposition(
         new SQLiteModelCatalog(options.database),
         new LocalModelArtifactPublisher(options.runtimeRoot),
         options.workspace.teamId,
+        modelContractValidatorFor(),
         applicationLogger,
       ),
       new LocalTaskActivityHttpHandler(options.database, options.workspace.teamId),
@@ -193,6 +198,13 @@ function createTaskWorkflow(
       ),
     },
   });
+}
+
+function modelContractValidatorFor() {
+  const sidecarUrl = process.env.PYTHON_INFERENCE_SIDECAR_URL?.trim();
+  return sidecarUrl
+    ? new PythonModelContractValidator(sidecarUrl)
+    : new UnavailablePythonModelContractValidator();
 }
 
 function modelInferenceFor(options: LocalRuntimeCompositionOptions) {

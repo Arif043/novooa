@@ -8,6 +8,7 @@ import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.
 import {type TeamModelCatalog} from "../../domain/repositories/model-catalog.js";
 import {LocalModelArtifactPublisher} from "./local-model-artifact-publisher.js";
 import {LocalModelCatalogHttpHandler} from "./local-model-catalog-http-handler.js";
+import {type ModelContractValidator} from "./python-model-contract-validator.js";
 
 test("installs a team-scoped ONNX model from a manifest and lists it", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-model-import-"));
@@ -16,6 +17,7 @@ test("installs a team-scoped ONNX model from a manifest and lists it", async () 
     catalog,
     new LocalModelArtifactPublisher(directory),
     "team-1",
+    new Validator(),
     new Logger(),
   );
 
@@ -35,11 +37,36 @@ test("installs a team-scoped ONNX model from a manifest and lists it", async () 
   }
 });
 
+test("rejects a manifest whose transformation is not supported by the Python runtime", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-model-import-"));
+  const handler = new LocalModelCatalogHttpHandler(
+    new Catalog(),
+    new LocalModelArtifactPublisher(directory),
+    "team-1",
+    new RejectingValidator(),
+    new Logger(),
+  );
+
+  try {
+    const response = await handler.handle({
+      method: "POST",
+      url: "/v1/ml-models",
+      body: {manifest: manifest(), artifactBase64: Buffer.from("onnx").toString("base64")},
+    });
+
+    assert.equal(response?.statusCode, 400);
+    assert.deepEqual(response?.body, {error: "Die Ausgabe-Transformation unknown.type wird von der lokalen Runtime nicht unterstützt."});
+  } finally {
+    await rm(directory, {recursive: true, force: true});
+  }
+});
+
 test("does not remove a model owned by another team", async () => {
   const handler = new LocalModelCatalogHttpHandler(
     new Catalog(),
     new LocalModelArtifactPublisher("/tmp/novooa-unused"),
     "team-1",
+    new Validator(),
     new Logger(),
   );
 
@@ -59,6 +86,7 @@ test("removes the ONNX artifact with the local catalog entry", async () => {
     catalog,
     new LocalModelArtifactPublisher(directory),
     "team-1",
+    new Validator(),
     new Logger(),
   );
 
@@ -84,6 +112,7 @@ test("recovers an interrupted import with an existing local artifact", async () 
     catalog,
     new LocalModelArtifactPublisher(directory),
     "team-1",
+    new Validator(),
     new Logger(),
   );
   const request = {
@@ -124,6 +153,16 @@ class Catalog implements TeamModelCatalog {
     const exists = this.entries.some((entry) => entry.id === modelId);
     this.entries = this.entries.filter((entry) => entry.id !== modelId);
     return exists;
+  }
+}
+
+class Validator implements ModelContractValidator {
+  async validate(): Promise<void> {}
+}
+
+class RejectingValidator implements ModelContractValidator {
+  async validate(): Promise<void> {
+    throw new Error("Die Ausgabe-Transformation unknown.type wird von der lokalen Runtime nicht unterstützt.");
   }
 }
 

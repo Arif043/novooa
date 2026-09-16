@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from novooa_ml.inference_server import ModelNotLoadedError, SessionCache, transform
+from novooa_ml.inference_server import ModelNotLoadedError, SessionCache, transformation_capabilities, transform
 
 
 class SessionCacheTest(unittest.TestCase):
@@ -38,6 +38,14 @@ class SessionCacheTest(unittest.TestCase):
 
         self.assertEqual(response, {"tensor": {"name": "image"}})
         transform_payload.assert_called_once_with({"input": {"name": "image"}})
+
+
+class TransformationCapabilitiesTest(unittest.TestCase):
+    def test_lists_the_registered_input_and_output_strategies(self):
+        capabilities = transformation_capabilities()
+
+        self.assertIn("image.resize", capabilities["inputTransformationTypes"])
+        self.assertIn("tensor.topK", capabilities["outputTransformationTypes"])
 
 
 class RecordingFactory:

@@ -154,10 +154,15 @@ POST   /v1/ml-models       { manifest, artifactBase64 }
 DELETE /v1/ml-models/:id
 ```
 
-Lokale Importe gehören immer dem aktiven Team. Sie lassen sich aus dem Katalog
-entfernen; das unveränderliche Artefakt bleibt bis zu einer späteren Bereinigung
-im lokalen Runtime-Speicher erhalten. Systemmodelle sind in der Ansicht
-erkennbar, aber dort nicht löschbar.
+Lokale Importe gehören immer dem aktiven Team. Vor dem Speichern fragt das
+Node-Gateway den privaten Python-Sidecar nach dessen registrierten Ein- und
+Ausgabetransformationen. Enthält das Manifest einen unbekannten Typ, lehnt die
+Runtime den Import mit einer verständlichen Validierungsmeldung ab. Der
+Python-Sidecar bleibt damit die verbindliche Quelle der unterstützten
+Transformationen. Importierte Modelle lassen sich aus dem Katalog entfernen;
+das unveränderliche Artefakt bleibt bis zu einer späteren Bereinigung im lokalen
+Runtime-Speicher erhalten. Systemmodelle sind in der Ansicht erkennbar, aber
+dort nicht löschbar.
 
 Artefakte liegen ausschließlich in der Infrastructure unter dem technischen
 Pfad `model-artifacts/{artifactId}/versions/{versionId}/model.onnx`. Dieser

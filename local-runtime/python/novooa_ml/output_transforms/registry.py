@@ -18,6 +18,10 @@ class OutputTransformationRegistry:
         if len(self._strategies) != len(strategies):
             raise ValueError("Ausgabetransformationen dürfen nur einmal registriert werden.")
 
+    @property
+    def supported_types(self):
+        return tuple(self._strategies.keys())
+
     def process(self, tensor, transformations, context):
         value = tensor
         values = {"tensor": workflow_value(value)}

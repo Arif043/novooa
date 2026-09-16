@@ -8,6 +8,7 @@ import {
 import {InstallTeamModel} from "../../domain/usecases/install-team-model.js";
 import {type TeamModelCatalog} from "../../domain/repositories/model-catalog.js";
 import {LocalModelArtifactPublisher} from "./local-model-artifact-publisher.js";
+import {type ModelContractValidator} from "./python-model-contract-validator.js";
 import {systemModelEntry, systemModelManifestFromUnknown} from "../cli/system-model-manifest.js";
 
 export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler {
@@ -15,6 +16,7 @@ export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler 
     private readonly catalog: TeamModelCatalog,
     private readonly artifactPublisher: LocalModelArtifactPublisher,
     private readonly teamId: string,
+    private readonly contractValidator: ModelContractValidator,
     private readonly logger: ApplicationLogger,
   ) {
     this.installer = new InstallTeamModel(artifactPublisher, catalog);
@@ -38,6 +40,7 @@ export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler 
     try {
       const input = importFrom(body);
       const entry = systemModelEntry(input.manifest, input.artifact.reference);
+      await validateContract(this.contractValidator, entry.contract);
       const teamEntry = {...entry, scope: {type: "team" as const, teamId: this.teamId}};
       const installed = await this.installer.execute({entry: teamEntry, artifact: input.artifact});
       this.logger.info("local_model_catalog.installed", {modelId: installed.id, teamId: this.teamId});
@@ -91,6 +94,14 @@ function importFrom(value: unknown) {
     return {manifest, artifact: {reference, content: byteChunks(bytes)}};
   } catch (error) {
     if (error instanceof LocalModelCatalogRequestError) throw error;
+    throw new LocalModelCatalogRequestError(errorMessage(error));
+  }
+}
+
+async function validateContract(validator: ModelContractValidator, contract: Parameters<ModelContractValidator["validate"]>[0]): Promise<void> {
+  try {
+    await validator.validate(contract);
+  } catch (error) {
     throw new LocalModelCatalogRequestError(errorMessage(error));
   }
 }

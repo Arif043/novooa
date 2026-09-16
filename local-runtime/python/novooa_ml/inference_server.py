@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from onnx_worker import input_arrays, runtime_dependencies, transformed_output_tensors
 from novooa_ml.input_transforms.worker import transform_payload
+from novooa_ml.transformation_capabilities import transformation_capabilities
 
 
 class ModelNotLoadedError(Exception):
@@ -75,6 +76,9 @@ def required_list(payload, name):
 def handler_for(cache, numpy):
     class InferenceHandler(BaseHTTPRequestHandler):
         def do_GET(self):
+            if self.path == "/v1/transformation-capabilities":
+                self._respond(200, transformation_capabilities())
+                return
             self._respond(200, {"status": "ok"})
 
         def do_POST(self):

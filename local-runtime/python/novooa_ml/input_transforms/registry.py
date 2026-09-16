@@ -2,6 +2,10 @@ class TransformationRegistry:
     def __init__(self, strategies):
         self._strategies = strategy_map(strategies)
 
+    @property
+    def supported_types(self):
+        return tuple(self._strategies.keys())
+
     def apply(self, context, transformations):
         for transformation in transformations:
             self._strategy_for(transformation).transform(
