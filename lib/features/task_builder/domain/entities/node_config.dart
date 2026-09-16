@@ -24,6 +24,8 @@ part 'write_file_node_config.dart';
 part 'read_file_node_config.dart';
 part 'read_email_node_config.dart';
 part 'send_channel_message_node_config.dart';
+part 'document_lookup_node_config.dart';
+part 'save_document_node_config.dart';
 
 sealed class NodeConfig extends Equatable {
   const NodeConfig();
@@ -44,6 +46,8 @@ sealed class NodeConfig extends Equatable {
       .forEach => ForEachNodeConfig.initial(),
       .writeFile => WriteFileNodeConfig.initial(),
       .readFile => ReadFileNodeConfig.initial(),
+      .documentLookup => DocumentLookupNodeConfig.initial(),
+      .saveDocument => SaveDocumentNodeConfig.initial(),
       .readEmail => ReadEmailNodeConfig.initial(),
       .readChannelEvent => ReadChannelEventNodeConfig.initial(),
       .sendChannelMessage => SendChannelMessageNodeConfig.initial(),

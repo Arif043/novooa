@@ -6,6 +6,7 @@ import {type TaskMessageSender} from "../../../domain/repositories/task-message-
 import {type ModelInference} from "../../../../machine_learning/domain/repositories/model-inference.js";
 import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
+import {type DocumentStore} from "../../../../data/domain/repositories/document-store.js";
 
 export type TaskGraphRuntime = {
   objectStore: ObjectStore;
@@ -13,6 +14,7 @@ export type TaskGraphRuntime = {
   teamFileStore: TeamFileStore;
   fileContentReader: TeamFileContentReader;
   messageSender: TaskMessageSender;
+  documentStore: DocumentStore;
   modelInference: ModelInference;
   logger: ApplicationLogger;
   languageModelResolver?: GenkitLanguageModelResolver;

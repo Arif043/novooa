@@ -24,6 +24,8 @@ enum WorkflowPrimitive {
   mediaInput,
   modelInference,
   forEach,
+  documentLookup,
+  saveDocument,
   validation,
 }
 

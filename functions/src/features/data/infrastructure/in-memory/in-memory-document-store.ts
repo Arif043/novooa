@@ -8,9 +8,11 @@ import {
   cloneDocumentData,
   type CreateDocumentInput,
   type DocumentRecord,
+  type FindDocumentByIdInput,
   type UpdateDocumentInput,
   type UpsertDocumentInput,
   validateCreateDocumentInput,
+  validateFindDocumentByIdInput,
   validateUpdateDocumentInput,
 } from "../../domain/entities/document.js";
 import {
@@ -40,6 +42,16 @@ export class InMemoryDocumentStore implements DocumentStore {
 
   findOne(input: FindDocumentsInput): Promise<DocumentRecord | null> {
     return this.findMany({...input, limit: 1}).then((documents) => documents[0] ?? null);
+  }
+
+  findById(input: FindDocumentByIdInput): Promise<DocumentRecord | null> {
+    return this.exclusively(() => {
+      validateFindDocumentByIdInput(input);
+      const document = this.documents.get(documentKey(
+        input.teamId, input.collectionId, input.documentId,
+      ));
+      return document === undefined ? null : copyDocument(document);
+    });
   }
 
   findMany(input: FindDocumentsInput): Promise<DocumentRecord[]> {

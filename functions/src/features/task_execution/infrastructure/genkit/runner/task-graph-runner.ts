@@ -200,6 +200,7 @@ function runContextFor(
     teamFileStore: runtime.teamFileStore,
     fileContentReader: runtime.fileContentReader,
     messageSender: runtime.messageSender,
+    documentStore: runtime.documentStore,
     modelInference: runtime.modelInference,
     runSubgraph: runSubgraphFor(ai, variables, input.teamId, runtime),
     resolveTemplates: (text: string) => resolveVariableTemplates(

@@ -32,6 +32,8 @@ class NodeConfigDocumentMapper {
       ForEachNodeConfig() => _forEachToDocument(config),
       WriteFileNodeConfig() => _writeFileToDocument(config),
       ReadFileNodeConfig() => _readFileToDocument(config),
+      DocumentLookupNodeConfig() => _documentLookupToDocument(config),
+      SaveDocumentNodeConfig() => _saveDocumentToDocument(config),
       ReadEmailNodeConfig() => {'primitive': config.primitive.name},
       ReadChannelEventNodeConfig() => {
         'primitive': config.primitive.name,
@@ -57,6 +59,8 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.forEach => _forEachFrom(data),
       WorkflowPrimitive.writeFile => _writeFileFrom(data),
       WorkflowPrimitive.readFile => _readFileFrom(data),
+      WorkflowPrimitive.documentLookup => _documentLookupFrom(data),
+      WorkflowPrimitive.saveDocument => _saveDocumentFrom(data),
       WorkflowPrimitive.readEmail => const ReadEmailNodeConfig(),
       WorkflowPrimitive.readChannelEvent => ReadChannelEventNodeConfig(
         kind: _channelEventKindFrom(data['kind']),
@@ -212,6 +216,40 @@ class NodeConfigDocumentMapper {
       'primitive': config.primitive.name,
       if (config.file != null) 'file': _attachmentToDocument(config.file!),
     };
+  }
+
+  Map<String, Object?> _documentLookupToDocument(
+    DocumentLookupNodeConfig config,
+  ) {
+    return {
+      'primitive': config.primitive.name,
+      'collectionId': config.collectionId,
+      'filters': config.filters.map(_lookupFilterToDocument).toList(),
+    };
+  }
+
+  Map<String, Object?> _lookupFilterToDocument(DocumentLookupFilter filter) {
+    return {
+      'field': filter.field,
+      'operator': filter.operator.name,
+      'value': filter.value,
+    };
+  }
+
+  Map<String, Object?> _saveDocumentToDocument(SaveDocumentNodeConfig config) {
+    return {
+      'primitive': config.primitive.name,
+      'collectionId': config.collectionId,
+      'mode': config.mode.name,
+      'documentId': config.documentId,
+      'fields': config.fields.map(_fieldAssignmentToDocument).toList(),
+    };
+  }
+
+  Map<String, Object?> _fieldAssignmentToDocument(
+    DocumentFieldAssignment field,
+  ) {
+    return {'field': field.field, 'value': field.value};
   }
 
   Map<String, Object?> _sendMessageToDocument(
@@ -373,6 +411,59 @@ class NodeConfigDocumentMapper {
     final file = data['file'];
     return ReadFileNodeConfig(
       file: file is Map ? _attachmentFrom(_objectMapFrom(file)) : null,
+    );
+  }
+
+  DocumentLookupNodeConfig _documentLookupFrom(Map<String, Object?> data) {
+    final filters = _mapListFrom(
+      data['filters'],
+    ).map(_lookupFilterFrom).toList(growable: false);
+    return DocumentLookupNodeConfig(
+      collectionId: data['collectionId'] as String? ?? '',
+      filters: filters.isEmpty
+          ? DocumentLookupNodeConfig.initial().filters
+          : filters,
+    );
+  }
+
+  DocumentLookupFilter _lookupFilterFrom(Map<String, Object?> data) {
+    return DocumentLookupFilter(
+      field: data['field'] as String? ?? '',
+      operator: _lookupOperatorFrom(data['operator']),
+      value: data['value'] as String? ?? '',
+    );
+  }
+
+  DocumentFilterOperator _lookupOperatorFrom(Object? value) {
+    return DocumentFilterOperator.values.firstWhere(
+      (operator) => operator.name == value,
+      orElse: () => DocumentFilterOperator.equals,
+    );
+  }
+
+  SaveDocumentNodeConfig _saveDocumentFrom(Map<String, Object?> data) {
+    final fields = _mapListFrom(
+      data['fields'],
+    ).map(_fieldAssignmentFrom).toList(growable: false);
+    return SaveDocumentNodeConfig(
+      collectionId: data['collectionId'] as String? ?? '',
+      mode: _saveModeFrom(data['mode']),
+      documentId: data['documentId'] as String? ?? '',
+      fields: fields.isEmpty ? SaveDocumentNodeConfig.initial().fields : fields,
+    );
+  }
+
+  DocumentFieldAssignment _fieldAssignmentFrom(Map<String, Object?> data) {
+    return DocumentFieldAssignment(
+      field: data['field'] as String? ?? '',
+      value: data['value'] as String? ?? '',
+    );
+  }
+
+  DocumentSaveMode _saveModeFrom(Object? value) {
+    return DocumentSaveMode.values.firstWhere(
+      (mode) => mode.name == value,
+      orElse: () => DocumentSaveMode.create,
     );
   }
 

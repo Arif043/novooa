@@ -8,9 +8,11 @@ import {
   type CreateDocumentInput,
   cloneDocumentData,
   type DocumentRecord,
+  type FindDocumentByIdInput,
   type UpdateDocumentInput,
   type UpsertDocumentInput,
   validateCreateDocumentInput,
+  validateFindDocumentByIdInput,
   validateUpdateDocumentInput,
 } from "../../domain/entities/document.js";
 import {
@@ -43,6 +45,11 @@ export class SQLiteDocumentStore implements DocumentStore {
   async findOne(input: FindDocumentsInput): Promise<DocumentRecord | null> {
     const documents = await this.findMany({...input, limit: 1});
     return documents[0] ?? null;
+  }
+
+  async findById(input: FindDocumentByIdInput): Promise<DocumentRecord | null> {
+    validateFindDocumentByIdInput(input);
+    return this.documentById(input.teamId, input.collectionId, input.documentId);
   }
 
   async findMany(input: FindDocumentsInput): Promise<DocumentRecord[]> {

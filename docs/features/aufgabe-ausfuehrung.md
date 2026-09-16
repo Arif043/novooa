@@ -62,6 +62,18 @@ weiteres `forEach` enthalten. Diese Regeln und die RFC-6901-JSON-Pointer-
 Auswertung liegen in der Domain; der Genkit-Executor startet nur den Unterplan
 im Runner.
 
+`documentLookup` fragt genau einen Datensatz über eine Sammlung und sichere
+Feldbedingungen ab. Sein primärer Wert ist immer ein für den bestehenden
+Wenn-dann-Baustein lesbares Label: `Datensatz gefunden`, `Kein passender
+Datensatz gefunden` oder `Suche fehlgeschlagen`. Für ein gefundenes Ergebnis
+stehen zusätzlich die Datensatz-ID und der Datensatz als strukturierter Output
+bereit. Ein gesonderter „Existiert Dokument?“-Baustein ist daher nicht nötig.
+`saveDocument` speichert nur die konfigurierten Felder: Bei Aktualisierung und
+„Anlegen oder aktualisieren“ erhält es die übrigen Felder eines vorhandenen
+Datensatzes und schreibt sie unverändert zurück. Die Version aus diesem Read
+wird an den Store weitergegeben, sodass eine parallele Änderung sicher
+abgewiesen statt überschrieben wird.
+
 Die letzte lesbare `value`-Ausgabe ist das `finalOutput` des Runs. Die vollständige
 Referenz aller Executor-Outputs liegt in
 [`../node-executor-outputs.md`](../node-executor-outputs.md).

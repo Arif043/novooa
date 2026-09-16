@@ -102,6 +102,8 @@ class _ActivityText extends StatelessWidget {
       'toolCall' => 'Werkzeug-Aufruf',
       'humanApproval' => 'Freigabe',
       'dialogInput' => 'Formulareingabe',
+      'documentLookup' => 'Datensatz suchen',
+      'saveDocument' => 'Datensatz speichern',
       'validation' => 'Validierung',
       _ => 'Baustein',
     };

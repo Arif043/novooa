@@ -18,6 +18,11 @@ import {
   type ModelTensorDataType,
   type TensorDimension,
 } from "../../../machine_learning/domain/entities/model-contract.js";
+import {
+  type DocumentFieldAssignment,
+  type DocumentLookupFilterConfig,
+  type DocumentSaveMode,
+} from "./data-node-config.js";
 import {type NodeOutputValue} from "./workflow-value.js";
 export type {
   DialogInputDefinition,
@@ -58,6 +63,8 @@ export const workflowPrimitives = [
   "mediaInput",
   "modelInference",
   "forEach",
+  "documentLookup",
+  "saveDocument",
   "validation",
 ] as const;
 
@@ -170,6 +177,18 @@ export type ReadFileNodeConfig = {
   primitive: "readFile";
   file?: NodeAttachment;
 };
+export type DocumentLookupNodeConfig = {
+  primitive: "documentLookup";
+  collectionId: string;
+  filters: DocumentLookupFilterConfig[];
+};
+export type SaveDocumentNodeConfig = {
+  primitive: "saveDocument";
+  collectionId: string;
+  mode: DocumentSaveMode;
+  documentId: string;
+  fields: DocumentFieldAssignment[];
+};
 export type ReadEmailNodeConfig = {
   primitive: "readEmail";
 };
@@ -198,6 +217,8 @@ export type NodeConfig =
   | ForEachNodeConfig
   | WriteFileNodeConfig
   | ReadFileNodeConfig
+  | DocumentLookupNodeConfig
+  | SaveDocumentNodeConfig
   | ReadEmailNodeConfig
   | ReadChannelEventNodeConfig
   | SendChannelMessageNodeConfig;

@@ -59,13 +59,26 @@ eine Referenz wie `dateiId`, niemals den Binärinhalt einer Datei.
 
 ## Arbeitsplan-Anbindung
 
-Die Runtime-Komposition stellt den `DocumentStore` bereits als injizierten Port
-bereit. Die sichtbaren Bausteine **Datensatz suchen**, **Datensätze suchen**
-und **Datensatz speichern** folgen als eigener Workflow-Vertrag. Der
-Suchbaustein wird dann fachlich „gefunden", „nicht gefunden" oder „Suche
-fehlgeschlagen" liefern; der bestehende Wenn-dann-Baustein entscheidet anhand
-dieses Ergebnisses oder einzelner Felder. Es gibt bewusst keinen separaten
-Baustein „Dokument existiert".
+Die Runtime-Komposition injiziert den `DocumentStore` in den lokalen
+Task-Worker. Der sichtbare Baustein **Datensatz suchen** findet genau einen
+Datensatz und erhält nur Sammlung, Feld, Vergleich und Wert. Er liefert immer
+einen lesbaren primären Wert: **Datensatz gefunden**, **Kein passender
+Datensatz gefunden** oder **Suche fehlgeschlagen**. Damit entscheidet der
+normale Wenn-dann-Baustein ohne Speziallogik und ohne separaten Baustein
+„Dokument existiert".
+
+**Datensatz speichern** kennt die Modi **Anlegen**, **Aktualisieren** und
+**Anlegen oder aktualisieren**. Er erhält eine Sammlung, bei Bedarf eine
+Datensatz-ID und eine Liste sichtbarer Feldzuordnungen. Beim Aktualisieren
+bleiben nicht konfigurierte Felder unverändert; der Store prüft dabei den
+Versionsstand. Werte aus vorherigen Bausteinen werden als bekannte
+Bausteinwerte aufgelöst, etwa die E-Mail einer eingegangenen Nachricht oder
+die ID eines zuvor gefundenen Datensatzes. Die Oberfläche zeigt weder SQL noch
+JSON-Pfade.
+
+**Datensätze suchen** bleibt als nächster Baustein vorgesehen. Die
+Fachlogik `findMany` ist bereits vorhanden, aber die erste sichtbare Variante
+umfasst bewusst nur die klare Einzeltreffer-Entscheidung.
 
 ## Qualitätssicherung
 
@@ -77,8 +90,10 @@ Rückgaben und konkurrierende Updates mit derselben erwarteten Version ab.
 
 - Enthalten: lokale Datensammlungen, strukturierte Filter, Speichern und
   optimistische Versionierung.
-- Nicht enthalten: Löschen, freie SQL-Abfragen, Aggregationen,
-  Cloud-Synchronisierung und sichtbare Workflow-Bausteine.
+- Nicht enthalten: Löschen, freie SQL-Abfragen, Aggregationen und
+  Cloud-Synchronisierung. Die Cloud-Runtime meldet für Datenbausteine bis zu
+  einem späteren Firestore-Adapter eindeutig, dass die Datenablage dort noch
+  nicht verfügbar ist.
 
 ## Offene Fragen
 

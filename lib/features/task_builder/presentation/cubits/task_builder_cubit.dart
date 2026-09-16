@@ -28,6 +28,8 @@ part 'task_builder_string_input_mutations.dart';
 part 'task_builder_write_file_mutations.dart';
 part 'task_builder_read_file_mutations.dart';
 part 'task_builder_send_message_mutations.dart';
+part 'task_builder_document_lookup_mutations.dart';
+part 'task_builder_save_document_mutations.dart';
 
 /// Zustandsverwaltung für den Aufgaben-Builder.
 ///
@@ -402,6 +404,8 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       WorkflowPrimitive.mediaInput => 'media',
       WorkflowPrimitive.modelInference => 'model',
       WorkflowPrimitive.forEach => 'element',
+      WorkflowPrimitive.documentLookup => 'datensatz',
+      WorkflowPrimitive.saveDocument => 'speichern',
       WorkflowPrimitive.validation => 'validation',
     };
   }

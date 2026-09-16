@@ -21,6 +21,7 @@ import {
 } from "../../../domain/repositories/task-run-store.js";
 import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
+import {type DocumentStore} from "../../../../data/domain/repositories/document-store.js";
 
 export type TaskRunWorkerStores = {
   taskStore: TaskStore;
@@ -30,6 +31,7 @@ export type TaskRunWorkerStores = {
   teamFileStore: TeamFileStore;
   fileContentReader: TeamFileContentReader;
   messageSender: TaskMessageSender;
+  documentStore: DocumentStore;
   modelInference: ModelInference;
   languageModelResolver?: GenkitLanguageModelResolver;
 };
@@ -57,6 +59,7 @@ export async function executeQueuedTaskRun(
     teamFileStore: stores.teamFileStore,
     fileContentReader: stores.fileContentReader,
     messageSender: stores.messageSender,
+    documentStore: stores.documentStore,
     modelInference: stores.modelInference,
     logger,
     languageModelResolver: stores.languageModelResolver,
@@ -93,6 +96,7 @@ export async function continueApprovedTaskRun(
       teamFileStore: stores.teamFileStore,
       fileContentReader: stores.fileContentReader,
       messageSender: stores.messageSender,
+      documentStore: stores.documentStore,
       modelInference: stores.modelInference,
       logger,
       languageModelResolver: stores.languageModelResolver,

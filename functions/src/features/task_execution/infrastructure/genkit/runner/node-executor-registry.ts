@@ -15,6 +15,8 @@ import {createScriptNodeExecutor} from "../../../domain/executors/script-node-ex
 import {createSendChannelMessageNodeExecutor} from "../../../domain/executors/send-channel-message-node-executor.js";
 import {stringInputNodeExecutor} from "../../../domain/executors/string-input-node-executor.js";
 import {writeFileNodeExecutor} from "../../../domain/executors/write-file-node-executor.js";
+import {documentLookupNodeExecutor} from "../../../domain/executors/document-lookup-node-executor.js";
+import {saveDocumentNodeExecutor} from "../../../domain/executors/save-document-node-executor.js";
 import {type WorkflowNode} from "./task-definition.js";
 import {type NodeExecutor} from "../../../domain/executors/node-executor.js";
 import {type GenkitBeta} from "genkit/beta";
@@ -40,6 +42,8 @@ function executorsFor(logger: ApplicationLogger) {
     mediaInputNodeExecutor,
     modelInferenceNodeExecutor,
     forEachNodeExecutor,
+    documentLookupNodeExecutor,
+    saveDocumentNodeExecutor,
   ].map((executor) => [executor.primitive, executor]));
 }
 

@@ -27,6 +27,12 @@ export type CreateDocumentInput = {
   data: DocumentData;
 };
 
+export type FindDocumentByIdInput = {
+  teamId: string;
+  collectionId: string;
+  documentId: string;
+};
+
 export type UpdateDocumentInput = {
   teamId: string;
   collectionId: string;
@@ -40,6 +46,10 @@ export type UpsertDocumentInput = UpdateDocumentInput;
 export function validateCreateDocumentInput(input: CreateDocumentInput): void {
   validateDocumentTarget(input.teamId, input.collectionId, input.documentId);
   validateDocumentData(input.data);
+}
+
+export function validateFindDocumentByIdInput(input: FindDocumentByIdInput): void {
+  validateDocumentTarget(input.teamId, input.collectionId, input.documentId);
 }
 
 export function validateUpdateDocumentInput(input: UpdateDocumentInput): void {

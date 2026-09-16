@@ -299,7 +299,9 @@ dessen Infrastructure-Bereich.
   persistiert Datei-/Versions-Metadaten über `LocalSqlDatabase`.
 - `SQLiteDocumentStore` kapselt lokale, team-scoped Datensammlungen hinter dem
   fachlichen `DocumentStore`-Port. Dokumentfelder liegen intern als JSON, ohne
-  diesen Speichermechanismus an Arbeitspläne weiterzugeben.
+  diesen Speichermechanismus an Arbeitspläne weiterzugeben. Der lokale
+  Task-Worker erhält denselben Port und führt damit die Bausteine
+  **Datensatz suchen** und **Datensatz speichern** aus.
 - `LocalOnnxInferenceRuntime` und `LocalPythonOnnxWorker` führen ONNX-Modelle
   über `local-runtime/python/onnx_worker.py` aus. Der gemeinsame
   `ModelInferenceRuntime`-Port hält diese lokale Ausführung von einer späteren

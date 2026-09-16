@@ -9,6 +9,7 @@ import {type TeamFileContentReader} from "../../../files/domain/repositories/tea
 import {type TeamFileStore} from "../../../files/domain/repositories/team-file-store.js";
 import {type ModelInference} from "../../../machine_learning/domain/repositories/model-inference.js";
 import {type TaskMessageSender} from "../repositories/task-message-sender.js";
+import {type DocumentStore} from "../../../data/domain/repositories/document-store.js";
 
 export type TaskVariables = Record<string, unknown>;
 
@@ -30,6 +31,7 @@ export type TaskRunContext = {
   teamFileStore: TeamFileStore;
   fileContentReader: TeamFileContentReader;
   messageSender: TaskMessageSender;
+  documentStore: DocumentStore;
   modelInference: ModelInference;
 };
 

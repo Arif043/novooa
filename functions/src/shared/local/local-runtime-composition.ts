@@ -106,6 +106,7 @@ export function createLocalRuntimeComposition(
     jobStore,
     applicationLogger,
     new SQLiteLanguageModelCatalog(options.database, languageModelSecretStore),
+    documentStore,
   );
   applicationLogger.info("local_runtime.workspace_activated", {
     teamId: options.workspace.teamId,
@@ -181,6 +182,7 @@ function createTaskWorkflow(
   jobStore: SQLiteTaskRunJobStore,
   logger: LocalApplicationLogger,
   languageModelCatalog: SQLiteLanguageModelCatalog,
+  documentStore: DocumentStore,
 ) {
   return createGenkitTaskWorkflow({
     taskStore: new SQLiteTaskStore(options.database),
@@ -197,6 +199,7 @@ function createTaskWorkflow(
       teamFileStore,
       fileContentReader: teamFileStore,
       messageSender: new LocalTaskMessageSender(),
+      documentStore,
       modelInference: modelInferenceFor(options),
       languageModelResolver: new CatalogGenkitLanguageModelResolver(
         languageModelCatalog,

@@ -51,6 +51,19 @@ class NodeOutputChips extends StatelessWidget {
       MediaInputNodeConfig() => _mediaInputOutputs,
       ModelInferenceNodeConfig() => const ['value', 'modelId'],
       ForEachNodeConfig() => const ['value'],
+      DocumentLookupNodeConfig() => const [
+        'value',
+        'found',
+        'recordId',
+        'record',
+        'message',
+      ],
+      SaveDocumentNodeConfig() => const [
+        'value',
+        'recordId',
+        'record',
+        'isNew',
+      ],
       _ => const [],
     };
   }

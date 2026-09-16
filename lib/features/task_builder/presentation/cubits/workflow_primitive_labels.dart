@@ -19,6 +19,8 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.mediaInput => 'Bild anfordern',
       WorkflowPrimitive.modelInference => 'Modell ausführen',
       WorkflowPrimitive.forEach => 'Für jedes Element',
+      WorkflowPrimitive.documentLookup => 'Datensatz suchen',
+      WorkflowPrimitive.saveDocument => 'Datensatz speichern',
       WorkflowPrimitive.validation => 'Validierung',
     };
   }
@@ -54,6 +56,10 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         'Bereitet ein Bild nach Modellvertrag vor und führt ein Modell aus.',
       WorkflowPrimitive.forEach =>
         'Führt einen Unterplan für jedes Element eines JSON-Arrays aus.',
+      WorkflowPrimitive.documentLookup =>
+        'Findet einen Datensatz über sichtbare Felder und Bedingungen.',
+      WorkflowPrimitive.saveDocument =>
+        'Legt einen Datensatz an oder aktualisiert seine Felder.',
       WorkflowPrimitive.validation =>
         'Prüft Ergebnis, Schema oder Qualitätskriterien.',
     };

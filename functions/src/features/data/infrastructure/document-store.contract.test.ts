@@ -36,6 +36,21 @@ for (const adapter of adapters) {
     });
   });
 
+  test(`${adapter.name}: loads a document by its identity within its collection`, async () => {
+    await withStore(adapter, async (store) => {
+      await prepareOrders(store);
+      const found = await store.findById({
+        teamId: "team-1", collectionId: "bestellungen", documentId: "order-1",
+      });
+      const absent = await store.findById({
+        teamId: "team-1", collectionId: "bestellungen", documentId: "order-3",
+      });
+
+      assert.equal(found?.data.email, "anna@example.com");
+      assert.equal(absent, null);
+    });
+  });
+
   test(`${adapter.name}: updates and upserts documents with versions`, async () => {
     await withStore(adapter, async (store) => {
       await prepareOrders(store);

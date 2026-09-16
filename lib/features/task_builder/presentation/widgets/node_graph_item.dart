@@ -19,6 +19,8 @@ import 'package:syscat2/features/task_builder/presentation/widgets/script_widget
 import 'package:syscat2/features/task_builder/presentation/widgets/send_message_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/string_input_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/write_file_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/document_lookup_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/save_document_widget.dart';
 
 class NodeGraphItem extends StatelessWidget {
   const NodeGraphItem({
@@ -192,6 +194,8 @@ class NodeGraphItem extends StatelessWidget {
       .mediaInput => MediaInputWidget(node: node),
       .modelInference => ModelInferenceWidget(node: node),
       .forEach => ForEachWidget(node: node),
+      .documentLookup => DocumentLookupWidget(node: node),
+      .saveDocument => SaveDocumentWidget(node: node),
       _ => const SizedBox.shrink(),
     };
     return FocusScope(

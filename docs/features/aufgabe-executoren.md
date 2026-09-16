@@ -118,6 +118,20 @@ Ereignislesen und Pausen sind deshalb Domain-Executor. Deterministische
 Bausteine wie Eingabe, Bedingung und Freigabe benötigen keinen eigenen
 externen Executor-Port.
 
+## Daten
+
+`documentLookup` und `saveDocument` hängen ausschließlich am fachlichen
+`DocumentStore`-Port. Die lokale Runtime injiziert dessen SQLite-Adapter in
+den Graph-Runner. Ein Suchfehler wird als fachlicher Output zurückgegeben,
+damit ein Arbeitsplan ihn mit dem vorhandenen Wenn-dann-Baustein behandeln
+kann. Ein Speicherfehler bleibt dagegen ein Run-Fehler; so wird kein
+unvollständig gespeicherter Datensatz als Erfolg ausgegeben.
+
+Der Speichern-Executor liest bei Aktualisierung einen Datensatz anhand seiner
+ID, vereinigt seine sichtbaren Felder mit den neuen Feldzuordnungen und reicht
+die gelesene Versionsnummer an den Store weiter. Dadurch bleibt die
+optimistische Sperre auch innerhalb eines Arbeitsplans erhalten.
+
 ## Dateien und Kanaele
 
 `readFile` gibt den UTF-8-Inhalt einer konkret referenzierten Version als
