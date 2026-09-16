@@ -108,6 +108,8 @@ knowledge_notes
 files
 file_versions
 file_folders
+document_collections
+documents
 ```
 
 Die Migration
@@ -295,6 +297,9 @@ dessen Infrastructure-Bereich.
   Firebase verwendet für den Wissensbasis-Adapter Firestore und Firebase Auth.
 - `LocalTeamFileStore` schreibt Dateien in ein lokales Root-Verzeichnis und
   persistiert Datei-/Versions-Metadaten über `LocalSqlDatabase`.
+- `SQLiteDocumentStore` kapselt lokale, team-scoped Datensammlungen hinter dem
+  fachlichen `DocumentStore`-Port. Dokumentfelder liegen intern als JSON, ohne
+  diesen Speichermechanismus an Arbeitspläne weiterzugeben.
 - `LocalOnnxInferenceRuntime` und `LocalPythonOnnxWorker` führen ONNX-Modelle
   über `local-runtime/python/onnx_worker.py` aus. Der gemeinsame
   `ModelInferenceRuntime`-Port hält diese lokale Ausführung von einer späteren

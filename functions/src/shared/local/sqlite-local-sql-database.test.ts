@@ -42,6 +42,8 @@ test("initializes all local runtime migrations", async () => {
       "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name",
     );
     assert.equal(tables.some((table) => table.name === "language_models"), true);
+    assert.equal(tables.some((table) => table.name === "document_collections"), true);
+    assert.equal(tables.some((table) => table.name === "documents"), true);
     const migrations = await database.all<{version: string}>("SELECT version FROM schema_migrations ORDER BY version");
     assert.deepEqual(migrations.map((migration) => migration.version), expectedMigrationVersions);
   });
@@ -84,6 +86,7 @@ const expectedMigrationVersions = [
   "009_application_logs",
   "010_application_log_source",
   "011_language_model_secrets",
+  "012_document_store",
 ];
 
 const migrationDirectory = resolve(__dirname, "../../../../local-runtime/migrations");

@@ -28,6 +28,7 @@ pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
 | Zeitplan        | [`features/zeitplan.md`](./features/zeitplan.md)          | Zeitbasierte Trigger |
 | Aktivitäten     | [`features/aktivitaeten.md`](./features/aktivitaeten.md)  | Stub           |
 | Dateien         | [`features/dateien.md`](./features/dateien.md)            | In Entwicklung |
+| Daten           | [`features/daten.md`](./features/daten.md)                | Fachlogik und lokaler Store |
 | Wissensbasis    | [`features/wissensbasis.md`](./features/wissensbasis.md)  | In Entwicklung |
 | KI-Agent        | [`features/ki-agent.md`](./features/ki-agent.md)          | In Entwicklung |
 | ML-Modelle      | [`features/ml-modelle.md`](./features/ml-modelle.md)      | Katalog und Vertrag |

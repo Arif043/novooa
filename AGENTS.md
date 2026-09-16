@@ -130,6 +130,7 @@ npm run deploy         # firebase deploy --only functions
 | Feature „Kommunikation" | [`docs/features/kommunikation.md`](./docs/features/kommunikation.md) | System-E-Mail und Kundenpostfach-Connectoren          |
 | Feature „Aktivitäten" | [`docs/features/aktivitaeten.md`](./docs/features/aktivitaeten.md) | Stub: Runs, Traces, Freigaben                           |
 | Feature „Dateien"     | [`docs/features/dateien.md`](./docs/features/dateien.md)           | Dateiablage, Storage, Versionierung                     |
+| Feature „Daten"       | [`docs/features/daten.md`](./docs/features/daten.md)               | Dokumentorientierte Daten und lokale Speicherung         |
 | Feature „Wissensbasis" | [`docs/features/wissensbasis.md`](./docs/features/wissensbasis.md) | Markdown-Zettelkasten für Node-Anhänge                  |
 | Feature „Fähigkeiten" | [`docs/features/skills.md`](./docs/features/skills.md)             | SKILL.md-Fähigkeiten mit Progressive Disclosure         |
 | Feature „Mitarbeiter" | [`docs/features/mitarbeiter.md`](./docs/features/mitarbeiter.md)   | Subagents mit Rolle, Prompt-Vorlage und Default-Skills  |

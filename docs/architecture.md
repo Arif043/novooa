@@ -36,6 +36,7 @@ Adapter sind austauschbare Implementierungen. Details stehen in
 | `WorkflowEdge`      | `lib/features/task_builder/domain/entities/workflow_edge.dart`         | Gerichtete Kante                 |
 | `NodeId`            | `lib/features/task_builder/domain/entities/workflow_node.dart`         | Value Object (`==` + `hashCode`) |
 | `WorkflowPrimitive` | `lib/features/task_builder/domain/entities/workflow_node.dart`         | Enum der Bausteintypen           |
+| `DocumentStore`     | `functions/src/features/data/domain/repositories/document-store.ts`    | Port für team-scoped Datensätze  |
 
 Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md).
 

@@ -50,6 +50,8 @@ import {LocalLanguageModelHttpHandler} from "../../features/language_models/infr
 import {SQLiteLanguageModelConfigurationStore} from "../../features/language_models/infrastructure/local/sqlite-language-model-configuration-store.js";
 import {SQLiteLanguageModelCatalog} from "../../features/language_models/infrastructure/local/sqlite-language-model-catalog.js";
 import {CatalogGenkitLanguageModelResolver} from "../../features/language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {type DocumentStore} from "../../features/data/domain/repositories/document-store.js";
+import {SQLiteDocumentStore} from "../../features/data/infrastructure/local/sqlite-document-store.js";
 
 export type LocalRuntimeComposition = {
   requestHandler: LocalRuntimeRequestHandler;
@@ -57,6 +59,7 @@ export type LocalRuntimeComposition = {
   taskTriggerWorker: PollingTaskTriggerWorker;
   applicationLogger: LocalApplicationLogger;
   languageModelSecretStore: LocalLanguageModelSecretStore;
+  documentStore: DocumentStore;
 };
 
 export type LocalRuntimeCompositionOptions = {
@@ -95,6 +98,7 @@ export function createLocalRuntimeComposition(
     options.database,
     languageModelSecretStore,
   );
+  const documentStore = new SQLiteDocumentStore(options.database);
   const taskWorkflow = createTaskWorkflow(
     options,
     taskRunStore,
@@ -159,6 +163,7 @@ export function createLocalRuntimeComposition(
     ),
     applicationLogger,
     languageModelSecretStore,
+    documentStore,
   };
 }
 
