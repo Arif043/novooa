@@ -38,8 +38,8 @@ class Transformer implements ModelInputTransformer {
 
 function contract() {
   return {
-    inputs: [{name: "image", source: "image" as const, dataType: "uint8" as const, shape: [1], preprocessing: []}],
-    outputs: [{name: "output", dataType: "uint8" as const, shape: [1], semantic: "test.output", postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}}],
+    inputs: [{name: "image", source: "image" as const, dataType: "uint8" as const, shape: [1], transformations: []}],
+    outputs: [{name: "output", dataType: "uint8" as const, shape: [1], semantic: "test.output", transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}}],
   };
 }
 

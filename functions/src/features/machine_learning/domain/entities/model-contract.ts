@@ -49,12 +49,12 @@ export type Tensor = {
 
 export type ModelInput = Tensor & {
   source: ModelInputSourceType;
-  preprocessing: TransformationPipeline;
+  transformations: TransformationPipeline;
 };
 
 export type ModelOutput = Tensor & {
   semantic: string;
-  postprocessing: TransformationPipeline;
+  transformations: TransformationPipeline;
   workflowOutput: ModelWorkflowOutput;
 };
 
@@ -80,7 +80,7 @@ function validateInput(inputs: readonly ModelInput[]): void {
   uniqueTensorNames(inputs);
   for (const input of inputs) {
     validateTensor(input);
-    validateTransformations(input.preprocessing);
+    validateTransformations(input.transformations);
   }
 }
 
@@ -164,8 +164,8 @@ function validateTransformations(
 }
 
 function validateOutputTransformations(output: ModelOutput): void {
-  validateTransformations(output.postprocessing);
-  uniqueTransformationResults(output.postprocessing);
+  validateTransformations(output.transformations);
+  uniqueTransformationResults(output.transformations);
   validateWorkflowOutput(output.workflowOutput);
 }
 

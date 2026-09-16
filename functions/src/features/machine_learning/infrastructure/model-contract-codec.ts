@@ -27,7 +27,7 @@ function inputFrom(value: unknown): ModelInput {
   return {
     ...tensorFrom(data),
     source: inputSourceFrom(data.source),
-    preprocessing: listFrom(data.preprocessing, transformationFrom),
+    transformations: listFrom(data.transformations, transformationFrom),
   };
 }
 
@@ -36,7 +36,7 @@ function outputFrom(value: unknown): ModelOutput {
   return {
     ...tensorFrom(data),
     semantic: stringFrom(data.semantic, "Die Ausgangssemantik fehlt."),
-    postprocessing: listFrom(data.postprocessing, transformationFrom),
+    transformations: listFrom(data.transformations, transformationFrom),
     workflowOutput: workflowOutputFrom(data),
   };
 }

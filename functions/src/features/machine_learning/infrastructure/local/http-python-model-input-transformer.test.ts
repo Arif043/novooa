@@ -6,7 +6,7 @@ import {
   type PythonTransformHttpClient,
 } from "./http-python-model-input-transformer.js";
 
-test("sends image preprocessing to the private Python sidecar", async () => {
+test("sends image transformations to the private Python sidecar", async () => {
   const client = new RecordingClient();
   const transformer = new HttpPythonModelInputTransformer(
     "http://novooa-ml:8081",
@@ -45,7 +45,7 @@ function imageRequest(): ModelInputTransformationRequest {
   return {
     input: {
       name: "image", source: "image", dataType: "uint8", shape: [1],
-      preprocessing: [{type: "image.resize", parameters: {width: 1, height: 1}}],
+      transformations: [{type: "image.resize", parameters: {width: 1, height: 1}}],
     },
     source: {name: "image", type: "image", contentType: "image/png", bytes: Uint8Array.from([1])},
   };
@@ -53,7 +53,7 @@ function imageRequest(): ModelInputTransformationRequest {
 
 function tensorRequest(): ModelInputTransformationRequest {
   return {
-    input: {name: "tensor", source: "tensor", dataType: "uint8", shape: [1], preprocessing: []},
+    input: {name: "tensor", source: "tensor", dataType: "uint8", shape: [1], transformations: []},
     source: {
       name: "tensor", type: "tensor",
       tensor: {name: "tensor", dataType: "uint8", shape: [1], bytes: Uint8Array.from([1])},

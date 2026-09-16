@@ -63,14 +63,14 @@ function validEntry(): ModelCatalogEntry {
         source: "image",
         dataType: "float32",
         shape: ["dynamic", 3, 224, 224],
-        preprocessing: [],
+        transformations: [],
       }],
       outputs: [{
         name: "scores",
         dataType: "float32",
         shape: ["dynamic", 1000],
         semantic: "classification.scores",
-        postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
+        transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
       }],
     },
   };

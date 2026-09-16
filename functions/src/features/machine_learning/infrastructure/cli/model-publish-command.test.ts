@@ -66,8 +66,8 @@ function options(dryRun: boolean): ModelPublishOptions {
 
 function contract() {
   return {
-    inputs: [{name: "input", source: "tensor" as const, dataType: "uint8" as const, shape: [1], preprocessing: []}],
-    outputs: [{name: "output", semantic: "test", dataType: "uint8" as const, shape: [1], postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}}],
+    inputs: [{name: "input", source: "tensor" as const, dataType: "uint8" as const, shape: [1], transformations: []}],
+    outputs: [{name: "output", semantic: "test", dataType: "uint8" as const, shape: [1], transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}}],
   };
 }
 

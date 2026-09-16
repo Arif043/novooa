@@ -64,7 +64,7 @@ class _Client implements WorkspaceApiClient {
                 'type': 'json',
                 'mapping': {'classes': {}},
               },
-              'postprocessing': [
+              'transformations': [
                 {
                   'type': 'tensor.topK',
                   'result': 'topClasses',

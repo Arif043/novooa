@@ -43,7 +43,7 @@ export class FetchPythonTransformHttpClient implements PythonTransformHttpClient
 }
 
 function tensorFrom(request: ModelInputTransformationRequest): ModelTensor {
-  if (request.input.preprocessing.length > 0) {
+  if (request.input.transformations.length > 0) {
     throw new Error("Tensorquellen mit Vorverarbeitung werden noch nicht unterstützt.");
   }
   if (request.source.type !== "tensor") throw new Error("Die Tensorquelle fehlt.");

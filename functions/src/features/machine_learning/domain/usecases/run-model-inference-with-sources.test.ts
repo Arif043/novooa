@@ -91,13 +91,13 @@ function contractEntry(): ModelCatalogEntry {
     source: source as "text" | "number" | "boolean" | "json",
     dataType: "uint8" as const,
     shape: [1],
-    preprocessing: [],
+    transformations: [],
   }));
   return {
     id: "classifier", title: "Klassifikation", description: "Testmodell", tags: ["test"],
     scope: {type: "system"}, runtime: "onnx",
     artifactReference: {artifactId: "artifact", versionId: "1", format: "onnx", contentType: "application/onnx", sizeBytes: 1, sha256: "0000000000000000000000000000000000000000000000000000000000000000"},
-    contract: {inputs, outputs: [{name: "scores", dataType: "uint8", shape: [1], semantic: "classification.scores", postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}}]},
+    contract: {inputs, outputs: [{name: "scores", dataType: "uint8", shape: [1], semantic: "classification.scores", transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}}]},
   };
 }
 
@@ -112,7 +112,7 @@ function textEntry(): ModelCatalogEntry {
         source: "text",
         dataType: "uint8",
         shape: [1],
-        preprocessing: [],
+        transformations: [],
       }],
     },
   };

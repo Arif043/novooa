@@ -4,7 +4,7 @@ import {type ModelContract} from "../domain/entities/model-contract.js";
 import {cloudModelContractCapabilityValidator} from "./model-contract-capabilities.js";
 
 test("accepts the registered image transformations", () => {
-  cloudModelContractCapabilityValidator().validate(contract("image", ["image.decode", "image.resize"]));
+  cloudModelContractCapabilityValidator().validate(contract("image", ["image.decode", "image.crop", "image.perspectiveCrop", "image.resize"]));
 });
 
 test("rejects an unsupported input source before publication", () => {
@@ -17,7 +17,7 @@ test("rejects an unsupported output transformation before publication", () => {
     ...value,
     outputs: [{
       ...value.outputs[0]!,
-      postprocessing: [
+      transformations: [
         {type: "scores.topK", parameters: {count: 3}},
       ],
     }],
@@ -32,7 +32,7 @@ test("accepts a configured generic top-k output transformation", () => {
     outputs: [{
       ...value.outputs[0]!,
       shape: [3],
-      postprocessing: [{
+      transformations: [{
         type: "tensor.topK",
         result: "topValues",
         parameters: {
@@ -56,10 +56,10 @@ function contract(
   return {
     inputs: [{
       name: "input", source, dataType: "float32" as const, shape: [1],
-      preprocessing: transformations.map((type) => ({type, parameters: {}})),
+      transformations: transformations.map((type) => ({type, parameters: {}})),
     }],
     outputs: [{
-      name: "output", semantic: "test", dataType: "float32" as const, shape: [1], postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
+      name: "output", semantic: "test", dataType: "float32" as const, shape: [1], transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
     }],
   };
 }

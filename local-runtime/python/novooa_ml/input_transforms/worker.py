@@ -10,7 +10,7 @@ def transform_payload(payload):
     numpy, image = runtime_dependencies()
     context = image_context(payload, image, numpy)
     transformed = default_transformation_registry().apply(
-        context, payload["input"]["preprocessing"]
+        context, payload["input"]["transformations"]
     )
     return {"tensor": tensor_for_contract(transformed, payload["input"])}
 

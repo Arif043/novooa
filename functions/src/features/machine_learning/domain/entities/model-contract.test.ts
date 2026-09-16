@@ -27,7 +27,7 @@ test("rejects duplicate transformation result names", () => {
   const contract = imageClassificationContract();
   const output: ModelContract["outputs"][number] = {
     ...contract.outputs[0]!,
-    postprocessing: [
+    transformations: [
       {type: "tensor.softmax", result: "scores", parameters: {axis: -1}},
       {type: "tensor.softmax", result: "scores", parameters: {axis: -1}},
     ],
@@ -46,7 +46,7 @@ function imageClassificationContract(): ModelContract {
       source: "image",
       dataType: "float32",
       shape: ["dynamic", 3, 224, 224],
-      preprocessing: [{
+      transformations: [{
         type: "image.resize",
         parameters: {width: 224, height: 224, colorSpace: "rgb"},
       }],
@@ -56,7 +56,7 @@ function imageClassificationContract(): ModelContract {
       dataType: "float32",
       shape: ["dynamic", 1000],
       semantic: "classification.scores",
-      postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
+      transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
     }],
   };
 }

@@ -27,7 +27,7 @@ export function systemModelManifestFromUnknown(value: unknown): SystemModelManif
     description: text(data.description, "Die Modellbeschreibung fehlt."),
     tags: tags(data.tags), artifact: artifact(data.artifact), contract: modelContractFromUnknown(data.contract),
   };
-  manifest.contract.outputs.forEach(validateModelOutputPostprocessing);
+  manifest.contract.outputs.forEach((output) => validateModelOutputPostprocessing(output));
   return manifest;
 }
 

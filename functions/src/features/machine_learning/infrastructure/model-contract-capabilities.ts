@@ -11,7 +11,7 @@ export class ModelContractCapabilityValidator {
 
   validate(contract: ModelContract): void {
     for (const input of contract.inputs) this.capabilityFor(input).validate(input);
-    contract.outputs.forEach(validateModelOutputPostprocessing);
+    contract.outputs.forEach((output) => validateModelOutputPostprocessing(output));
   }
 
   private capabilityFor(input: ModelInput): ModelInputContractCapability {
@@ -29,7 +29,7 @@ export class ImageInputContractCapability implements ModelInputContractCapabilit
   }
 
   validate(input: ModelInput): void {
-    for (const transformation of input.preprocessing) {
+    for (const transformation of input.transformations) {
       if (!this.transformations.has(transformation.type)) {
         throw new Error(`Die Bildtransformation ${transformation.type} wird noch nicht unterstützt.`);
       }
@@ -43,7 +43,7 @@ export class TensorInputContractCapability implements ModelInputContractCapabili
   }
 
   validate(input: ModelInput): void {
-    if (input.preprocessing.length > 0) {
+    if (input.transformations.length > 0) {
       throw new Error("Tensor-Eingänge mit Vorverarbeitung werden noch nicht unterstützt.");
     }
   }
@@ -52,7 +52,8 @@ export class TensorInputContractCapability implements ModelInputContractCapabili
 export function cloudModelContractCapabilityValidator(): ModelContractCapabilityValidator {
   return new ModelContractCapabilityValidator([
     new ImageInputContractCapability(new Set([
-      "image.decode", "image.resize", "tensor.layout", "tensor.normalize",
+      "image.decode", "image.crop", "image.perspectiveCrop", "image.resize",
+      "tensor.layout", "tensor.normalize",
     ])),
     new TensorInputContractCapability(),
   ]);

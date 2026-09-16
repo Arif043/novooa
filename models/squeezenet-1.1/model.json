@@ -24,7 +24,7 @@
           224,
           224
         ],
-        "preprocessing": [
+        "transformations": [
           {
             "type": "image.decode",
             "parameters": {
@@ -71,7 +71,7 @@
           1,
           1000
         ],
-        "postprocessing": [
+        "transformations": [
           {
             "type": "tensor.softmax",
             "parameters": {

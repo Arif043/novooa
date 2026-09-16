@@ -64,7 +64,7 @@ seine fachliche Semantik sowie optionale Nachverarbeitung.
     source: "image",
     dataType: "float32",
     shape: ["dynamic", 3, 224, 224],
-    preprocessing: [
+    transformations: [
       {type: "image.decode", parameters: {colorSpace: "rgb"}},
       {type: "image.resize", parameters: {width: 224, height: 224}},
       {type: "tensor.layout", parameters: {order: "channelsFirst"}},
@@ -78,7 +78,7 @@ seine fachliche Semantik sowie optionale Nachverarbeitung.
     dataType: "float32",
     shape: ["dynamic", 1000],
     semantic: "classification.scores",
-    postprocessing: [
+    transformations: [
       {type: "tensor.softmax", parameters: {axis: -1}},
       {
         type: "tensor.topK",
@@ -109,11 +109,15 @@ seine fachliche Semantik sowie optionale Nachverarbeitung.
 }
 ```
 
-`preprocessing` und `postprocessing` sind beide deklarative Pipelines, haben
+`transformations` und `transformations` sind beide deklarative Pipelines, haben
 aber getrennte Strategieregistries: Eingabestrategien erzeugen Tensoren,
 Ausgabestrategien erzeugen allgemeine Zwischenwerte. `result` benennt einen
-solchen Zwischenwert für das `workflowOutput.mapping`. Die erste Registry für
-Ausgaben enthält `tensor.softmax` und `tensor.topK`.
+solchen Zwischenwert für das `workflowOutput.mapping`. Die Registry für Ausgaben enthält allgemeine numerische, geometrische und
+Sequenzstrategien. Jede Strategie implementiert denselben Domain-Vertrag und
+wird in der Composition registriert. Eine neue Transformation ergänzt daher
+eine Strategie und deren Registrierung, ohne den Postprocessor oder bestehende
+Strategien zu verändern. Ihre Ergebnisse bleiben technische Zwischenwerte; erst
+`workflowOutput.mapping` definiert den fachlichen Workflow-Wert.
 
 `tensor.topK` besitzt keinen fest kodierten Wert. Die Beschreibung
 unter `parameter` definiert Name, sichtbares Label, Standardwert und erlaubten
@@ -249,9 +253,16 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | --- | --- | --- |
 | `image.decode` | `colorSpace`: `rgb`, `rgba`, `grayscale` | Dekodiert und setzt den Farbraum. |
 | `image.resize` | `width`, `height`, optional `colorSpace` | Skaliert mit LANCZOS. |
+| `image.crop` | `left`, `top`, `width`, `height` | Schneidet einen achsenparallelen Bildbereich aus. |
+| `image.perspectiveCrop` | `points: [x1, y1, ... x4, y4]`, `width`, `height` | Richtet ein Viereck perspektivisch zu einem Bild aus. |
 | `tensor.layout` | `order`: `channelsFirst`, `channelsLast` | Ordnet HWC und CHW um. |
 | `tensor.normalize` | `mean`, `std` | Normalisiert jeden Farbkanal. |
-| `tensor.softmax` | optional `axis: -1` | Normalisiert Klassifikationslogits. |
+| `tensor.softmax` | optional `axis: -1` | Normalisiert Werte entlang der letzten Tensorachse. |
+| `tensor.sigmoid` | keine | Wandelt Logits elementweise in Wahrscheinlichkeiten. |
+| `tensor.threshold` | optional `value` (Standard `0.5`) | Wandelt numerische Werte in eine boolesche Maske. |
+| `mask.connectedComponents` | optional `minimumPixels` | Liefert Regionen als `{bounds, pixelCount}`; `bounds` enthält `left`, `top`, `width`, `height`. |
+| `tensor.nonMaximumSuppression` | `box`-Spalten, `scoreIndex`, optional `scoreThreshold`, `iouThreshold` | Unterdrückt überlappende Erkennungen und liefert `{index, score, box}`. |
+| `sequence.ctcGreedyDecode` | `labels`, `blankIndex`, optional `applySoftmax`, `collapseRepeated` | Dekodiert CTC-Logits in `{text, confidence}`. |
 | `tensor.topK` | Parameterbeschreibung für `k`, optional `result` | Liefert allgemeine Paare aus Index und Wert. |
 | `workflowOutput.mapping.$map` | `from`, `item` | Formt ein Transformations-Ergebnis zu einer Liste. |
 | `workflowOutput.mapping.$lookup` | `values`, `key` | Liest einen Wert aus einer indizierten Tabelle. |
@@ -261,6 +272,31 @@ Index hinzu, wenn das Bild zunächst als `[3, 224, 224]` vorliegt. Vor der
 Rückgabe prüft er Form, Datentyp und Byte-Länge. Tensorquellen werden zunächst
 nur ohne Vorverarbeitung durchgereicht; weitere Tensorstrategien ergänzen wir
 über denselben Port.
+
+### Allgemeine OCR-Pipeline
+
+Ein Texterkennungs-Detektor kann seine Logits ohne modellspezifischen Code in
+Regionen überführen:
+
+```ts
+transformations: [
+  {type: "tensor.sigmoid", parameters: {}},
+  {type: "tensor.threshold", parameters: {value: 0.7}},
+  {type: "mask.connectedComponents", result: "regions", parameters: {minimumPixels: 12}},
+]
+```
+
+Die konkrete fachliche Form, etwa `{pageRegions: [...]}`, wird danach allein
+durch `workflowOutput.mapping` beschrieben. Ein CTC-Textmodell verwendet
+`sequence.ctcGreedyDecode`; sein Alphabet und der Leerindex liegen im Manifest.
+
+`image.crop` und `image.perspectiveCrop` sind allgemeine
+Vorverarbeitungsschritte. Sie akzeptieren derzeit deklarierte
+Manifestparameter. Damit eine Iteration über Detektorregionen diese Parameter
+dynamisch setzt, wird der `modelInference`-Baustein als nächstes um explizite
+Transformationsparameter-Mappings erweitert. Das ist kein zweites
+Manifest-Format, sondern eine konkrete Bindung von Workflow-Werten an bereits
+deklarierte Transformationsparameter.
 
 ### Cloud-Runtime
 
@@ -446,7 +482,7 @@ models/mobilenet-v3/
       "source": "image",
       "dataType": "float32",
       "shape": ["dynamic", 3, 224, 224],
-      "preprocessing": [
+      "transformations": [
         {"type": "image.decode", "parameters": {"colorSpace": "rgb"}},
         {"type": "image.resize", "parameters": {"width": 224, "height": 224}},
         {"type": "tensor.layout", "parameters": {"order": "channelsFirst"}},
@@ -461,7 +497,7 @@ models/mobilenet-v3/
       "semantic": "classification.scores",
       "dataType": "float32",
       "shape": ["dynamic", 1000],
-      "postprocessing": []
+      "transformations": []
     }]
   }
 }

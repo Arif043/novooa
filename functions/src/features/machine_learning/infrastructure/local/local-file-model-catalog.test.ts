@@ -32,8 +32,8 @@ function systemEntry(): ModelCatalogEntry {
       sha256: "a".repeat(64),
     },
     contract: {
-      inputs: [{name: "input", source: "tensor", dataType: "uint8", shape: [1], preprocessing: []}],
-      outputs: [{name: "output", dataType: "uint8", shape: [1], semantic: "classification.scores", postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}}],
+      inputs: [{name: "input", source: "tensor", dataType: "uint8", shape: [1], transformations: []}],
+      outputs: [{name: "output", dataType: "uint8", shape: [1], semantic: "classification.scores", transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}}],
     },
   };
 }

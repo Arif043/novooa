@@ -86,7 +86,7 @@ class LocalModelCatalogRepository implements ModelCatalogRepository {
       tensorName: _text(output, 'name'),
       workflowName: workflowOutput['name'] as String,
       workflowType: workflowOutput['type'] as String,
-      parameters: _outputParametersFrom(output['postprocessing']),
+      parameters: _outputParametersFrom(output['transformations']),
     );
   }
 

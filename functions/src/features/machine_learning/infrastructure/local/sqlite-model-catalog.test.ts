@@ -103,14 +103,14 @@ function contract() {
       source: "image" as const,
       dataType: "float32" as const,
       shape: ["dynamic" as const, 3, 16, 16],
-      preprocessing: [],
+      transformations: [],
     }],
     outputs: [{
       name: "output",
       dataType: "float32" as const,
       shape: ["dynamic" as const, 2],
       semantic: "classification.scores",
-      postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
+      transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
     }],
   };
 }

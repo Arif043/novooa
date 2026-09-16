@@ -4,18 +4,18 @@ import {type ModelInputTransformationRequest} from "../../domain/repositories/mo
 import {type PythonJsonProcess} from "./local-python-process.js";
 import {LocalPythonModelInputTransformer} from "./local-python-model-input-transformer.js";
 
-test("sends image bytes and preprocessing instructions to the Python process", async () => {
+test("sends image bytes and transformations instructions to the Python process", async () => {
   const process = new Process();
   const transformer = new LocalPythonModelInputTransformer(process);
 
   const tensor = await transformer.transform(imageRequest());
 
   assert.equal(tensor.name, "image");
-  assert.equal(process.payload?.input.preprocessing[0].type, "image.resize");
+  assert.equal(process.payload?.input.transformations[0].type, "image.resize");
   assert.equal(process.payload?.source.contentType, "image/png");
 });
 
-test("returns tensor sources without starting Python when no preprocessing is needed", async () => {
+test("returns tensor sources without starting Python when no transformations is needed", async () => {
   const process = new Process();
   const transformer = new LocalPythonModelInputTransformer(process);
   const tensor = await transformer.transform(tensorRequest());
@@ -26,7 +26,7 @@ test("returns tensor sources without starting Python when no preprocessing is ne
 
 class Process implements PythonJsonProcess {
   calls = 0;
-  payload: {input: {preprocessing: Array<{type: string}>}; source: {contentType: string}} | undefined;
+  payload: {input: {transformations: Array<{type: string}>}; source: {contentType: string}} | undefined;
 
   async execute(value: string): Promise<string> {
     this.calls += 1;
@@ -41,7 +41,7 @@ function imageRequest(): ModelInputTransformationRequest {
   return {
     input: {
       name: "image", source: "image", dataType: "uint8", shape: [1],
-      preprocessing: [{type: "image.resize", parameters: {width: 1, height: 1}}],
+      transformations: [{type: "image.resize", parameters: {width: 1, height: 1}}],
     },
     source: {name: "image", type: "image", contentType: "image/png", bytes: Uint8Array.from([1])},
   };
@@ -49,7 +49,7 @@ function imageRequest(): ModelInputTransformationRequest {
 
 function tensorRequest(): ModelInputTransformationRequest {
   return {
-    input: {name: "tensor", source: "tensor", dataType: "uint8", shape: [1], preprocessing: []},
+    input: {name: "tensor", source: "tensor", dataType: "uint8", shape: [1], transformations: []},
     source: {
       name: "tensor", type: "tensor",
       tensor: {name: "tensor", dataType: "uint8", shape: [1], bytes: Uint8Array.from([1])},

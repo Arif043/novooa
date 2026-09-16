@@ -144,10 +144,10 @@ function manifest() {
     artifact: {artifactId: "example-model", versionId: "1"},
     contract: {
       inputs: [{
-        name: "input", source: "tensor", dataType: "uint8", shape: [1], preprocessing: [],
+        name: "input", source: "tensor", dataType: "uint8", shape: [1], transformations: [],
       }],
       outputs: [{
-        name: "output", dataType: "uint8", shape: [1], semantic: "classification.scores", postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
+        name: "output", dataType: "uint8", shape: [1], semantic: "classification.scores", transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
       }],
     },
   };

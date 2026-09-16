@@ -11,14 +11,14 @@ test("decodes every supported model input source", () => {
       source,
       dataType: "float32",
       shape: [1],
-      preprocessing: [],
+      transformations: [],
     })),
     outputs: [{
       name: "output",
       dataType: "float32",
       shape: [1],
       semantic: "test.output",
-      postprocessing: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
+      transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
     }],
   });
 
@@ -30,10 +30,10 @@ test("decodes every supported model input source", () => {
 test("requires a declarative workflow output mapping", () => {
   assert.throws(
     () => modelContractFromUnknown({
-      inputs: [{name: "input", source: "tensor", dataType: "float32", shape: [1], preprocessing: []}],
+      inputs: [{name: "input", source: "tensor", dataType: "float32", shape: [1], transformations: []}],
       outputs: [{
         name: "output", dataType: "float32", shape: [1], semantic: "test.output",
-        postprocessing: [],
+        transformations: [],
       }],
     }),
     /Workflow-Ausgabe/,
