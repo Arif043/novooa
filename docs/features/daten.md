@@ -31,7 +31,7 @@ Datensammlung „Kund:innen"
 
 Der Domain-Port `DocumentStore` definiert `findOne`, `findMany`, `create`,
 `update` und `upsert`. Die Domain kennt weder SQLite noch Node- oder
-Firebase-Abhängigkeiten. Für eine Suche wird ausschließlich eine sichere
+Firebase-Abhängigkeiten. Zusätzlich listet und zählt er Sammlungen und Datensätze sowie löscht einen Datensatz über seine interne Identität. Für eine Suche wird ausschließlich eine sichere
 Struktur übergeben: Feldname, Operator und Wert.
 
 | Operator | Fachliche Bedeutung |
@@ -71,6 +71,20 @@ normale Wenn-dann-Baustein ohne Speziallogik und ohne separaten Baustein
 
 **Datensätze suchen** liefert weiterhin einen einzelnen fachlich passenden Datensatz. Der Speichern-Baustein verwendet dagegen `findMany`, damit er alle passenden Datensätze aktualisieren kann.
 
+## Datenbank-Unterseite
+
+Die Unterseite **Datenbank** ist ausschließlich in der lokalen Variante als eigener Hauptbereich sichtbar. Sie listet nur Datensammlungen, die durch einen Arbeitsplan entstanden sind. Sammlungen können dort nicht manuell angelegt, umbenannt oder gelöscht werden.
+
+Nach dem Öffnen einer Sammlung zeigt die Runtime ihre Datensätze tabellarisch. Die Suche durchsucht alle skalaren Feldwerte; strukturierte Filter werden mit Feld, Vergleich und Wert an die Runtime gesendet. Datensätze lassen sich anlegen, bearbeiten und löschen. Die technische Datensatz-ID bleibt dabei ein internes Detail des Repositories und erscheint nicht in der Oberfläche. Werte werden beim Bearbeiten automatisch als Zahl oder Boolean erkannt, alle übrigen Eingaben bleiben Text. Verschachtelte Werte können im Editor als gültiges JSON bearbeitet werden.
+
+Die lokale HTTP-API stellt dafür folgende fachliche Endpunkte bereit:
+
+- GET /v1/data/collections
+- POST /v1/data/collections/{name}/query
+- POST /v1/data/collections/{name}/documents
+- PUT /v1/data/collections/{name}/documents/{id}
+- DELETE /v1/data/collections/{name}/documents/{id}
+
 ## Qualitätssicherung
 
 Der gleiche Fachvertrag läuft gegen einen In-Memory-Adapter und gegen SQLite.
@@ -81,8 +95,8 @@ Rückgaben und konkurrierende Updates mit derselben erwarteten Version ab.
 
 - Enthalten: lokale Datensammlungen, strukturierte Filter, Speichern und
   optimistische Versionierung.
-- Nicht enthalten: Löschen, freie SQL-Abfragen, Aggregationen und
-  Cloud-Synchronisierung. Die Cloud-Runtime meldet für Datenbausteine bis zu
+- Nicht enthalten: freie SQL-Abfragen, Aggregationen, manuelle
+  Sammlungsverwaltung und Cloud-Synchronisierung. Die Cloud-Runtime meldet für Datenbausteine bis zu
   einem späteren Firestore-Adapter eindeutig, dass die Datenablage dort noch
   nicht verfügbar ist.
 
@@ -92,8 +106,6 @@ Rückgaben und konkurrierende Updates mit derselben erwarteten Version ab.
   optimiert werden?
 - Wie werden Schema-Hinweise für Einsteiger:innen gepflegt, ohne flexible
   Dokumente einzuschränken?
-- Welche explizite Freigabe oder Archivierung ist vor einer späteren
-  Löschfunktion erforderlich?
 
 ## Verwandt
 

@@ -52,6 +52,7 @@ import {SQLiteLanguageModelCatalog} from "../../features/language_models/infrast
 import {CatalogGenkitLanguageModelResolver} from "../../features/language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {type DocumentStore} from "../../features/data/domain/repositories/document-store.js";
 import {SQLiteDocumentStore} from "../../features/data/infrastructure/local/sqlite-document-store.js";
+import {LocalDataHttpHandler} from "../../features/data/infrastructure/local/local-data-http-handler.js";
 
 export type LocalRuntimeComposition = {
   requestHandler: LocalRuntimeRequestHandler;
@@ -121,6 +122,7 @@ export function createLocalRuntimeComposition(
         options.workspace.userId,
       ),
       new LocalLanguageModelHttpHandler(languageModelStore, options.workspace.teamId),
+      new LocalDataHttpHandler(documentStore, options.workspace.teamId),
       new LocalModelCatalogHttpHandler(
         new SQLiteModelCatalog(options.database),
         new LocalModelArtifactPublisher(options.runtimeRoot),

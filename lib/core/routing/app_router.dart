@@ -7,6 +7,7 @@ import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
 import 'package:syscat2/features/activity/presentation/pages/activity_page.dart';
 import 'package:syscat2/features/notifications/infrastructure/datasources/push_click_navigation_policy.dart';
 import 'package:syscat2/features/files/presentation/pages/files_page.dart';
+import 'package:syscat2/features/data/presentation/pages/database_page.dart';
 import 'package:syscat2/features/employees/presentation/pages/employees_page.dart';
 import 'package:syscat2/features/knowledge_base/presentation/pages/knowledge_base_page.dart';
 import 'package:syscat2/features/schedule/presentation/pages/schedule_page.dart';
@@ -24,6 +25,7 @@ class AppRouter {
   static const String schedule = '/schedule';
   static const String activity = '/activity';
   static const String files = '/files';
+  static const String database = '/database';
   static const String knowledgeBase = '/knowledge-base';
   static const String skills = '/skills';
   static const String employees = '/employees';
@@ -99,6 +101,12 @@ class AppRouter {
             path: files,
             pageBuilder: (context, state) =>
                 _shellPage(state, const FilesPage()),
+          ),
+          GoRoute(
+            path: database,
+            redirect: (context, state) => isStandalone ? null : home,
+            pageBuilder: (context, state) =>
+                _shellPage(state, const DatabasePage()),
           ),
           GoRoute(
             path: knowledgeBase,

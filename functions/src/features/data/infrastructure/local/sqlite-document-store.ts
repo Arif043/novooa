@@ -68,6 +68,32 @@ export class SQLiteDocumentStore implements DocumentStore {
     return row === null ? null : collectionFromRow(row);
   }
 
+  async listCollections(teamId: string): Promise<DocumentCollection[]> {
+    const rows = await this.database.all<DocumentCollectionRow>(
+      "SELECT id, team_id, display_name, created_at, updated_at FROM document_collections WHERE team_id = ? ORDER BY display_name COLLATE BINARY",
+      [teamId],
+    );
+    return rows.map(collectionFromRow);
+  }
+
+  async countDocuments(input: FindDocumentsInput): Promise<number> {
+    validateFindDocumentsInput(input);
+    const filters = (input.filters ?? []).map(sqlFilterFor);
+    const query = countQueryFor(input, filters);
+    const row = await this.database.get<{count: number}>(query.sql, query.parameters);
+    return row?.count ?? 0;
+  }
+
+  async delete(input: FindDocumentByIdInput): Promise<boolean> {
+    validateFindDocumentByIdInput(input);
+    const existing = await this.documentById(input.teamId, input.collectionId, input.documentId);
+    if (existing === null) return false;
+    await this.database.run(
+      "DELETE FROM documents WHERE team_id = ? AND collection_id = ? AND id = ?",
+      [input.teamId, input.collectionId, input.documentId],
+    );
+    return true;
+  }
   async findOne(input: FindDocumentsInput): Promise<DocumentRecord | null> {
     const documents = await this.findMany({...input, limit: 1});
     return documents[0] ?? null;
@@ -202,6 +228,13 @@ function queryFor(input: FindDocumentsInput, filters: ReturnType<typeof sqlFilte
   };
 }
 
+function countQueryFor(input: FindDocumentsInput, filters: ReturnType<typeof sqlFilterFor>[]) {
+  const predicates = ["team_id = ?", "collection_id = ?", ...filters.map((filter) => filter.sql)];
+  return {
+    sql: "SELECT COUNT(*) AS count FROM documents WHERE " + predicates.join(" AND "),
+    parameters: [input.teamId, input.collectionId, ...filters.flatMap((filter) => filter.parameters)],
+  };
+}
 function insertCollectionSql(): string {
   return `INSERT INTO document_collections(id, team_id, display_name, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?)`;

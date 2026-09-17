@@ -61,6 +61,23 @@ export class InMemoryDocumentStore implements DocumentStore {
     });
   }
 
+  listCollections(teamId: string): Promise<DocumentCollection[]> {
+    return this.exclusively(() => [...this.collections.values()]
+      .filter((collection) => collection.teamId === teamId)
+      .sort((left, right) => left.displayName.localeCompare(right.displayName))
+      .map(copyCollection));
+  }
+
+  countDocuments(input: FindDocumentsInput): Promise<number> {
+    return this.findMany({...input, limit: 500}).then((documents) => documents.length);
+  }
+
+  delete(input: FindDocumentByIdInput): Promise<boolean> {
+    return this.exclusively(() => {
+      validateFindDocumentByIdInput(input);
+      return this.documents.delete(documentKey(input.teamId, input.collectionId, input.documentId));
+    });
+  }
   findOne(input: FindDocumentsInput): Promise<DocumentRecord | null> {
     return this.findMany({...input, limit: 1}).then((documents) => documents[0] ?? null);
   }

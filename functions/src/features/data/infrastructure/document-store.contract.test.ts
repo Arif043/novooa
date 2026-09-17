@@ -71,6 +71,20 @@ for (const adapter of adapters) {
     });
   });
 
+  test(adapter.name + ": lists, counts, and deletes collection records", async () => {
+    await withStore(adapter, async (store) => {
+      await prepareOrders(store);
+      const collections = await store.listCollections("team-1");
+      const first = await store.findOne(search("team-1", "anna@example.com"));
+      if (first === null) throw new Error("Der erwartete Datensatz fehlt.");
+
+      assert.equal(collections[0]?.displayName, "Bestellungen");
+      assert.equal(await store.countDocuments({teamId: "team-1", collectionId: "bestellungen"}), 2);
+      assert.equal(await store.delete({...target(first)}), true);
+      assert.equal(await store.delete({...target(first)}), false);
+    });
+  });
+
   test(`${adapter.name}: keeps collections and records scoped to their team`, async () => {
     await withStore(adapter, async (store) => {
       await store.createCollection(collection("team-1"));

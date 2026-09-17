@@ -26,6 +26,18 @@ export class UnavailableDocumentStore implements DocumentStore {
     return unavailable();
   }
 
+  listCollections(_teamId: string): Promise<DocumentCollection[]> {
+    return unavailable();
+  }
+
+  countDocuments(_input: FindDocumentsInput): Promise<number> {
+    return unavailable();
+  }
+
+  delete(_input: FindDocumentByIdInput): Promise<boolean> {
+    return unavailable();
+  }
+
   findById(_input: FindDocumentByIdInput): Promise<DocumentRecord | null> {
     return unavailable();
   }

@@ -21,6 +21,10 @@ import '../../features/application_logs/presentation/cubits/application_logs_cub
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/infrastructure/repositories/local_workspace_auth_repository.dart';
 import '../../features/files/domain/usecases/upload_team_file.dart';
+import '../../features/data/domain/repositories/data_repository.dart';
+import '../../features/data/domain/usecases/data_records.dart';
+import '../../features/data/infrastructure/repositories/local_data_repository.dart';
+import '../../features/data/presentation/cubits/database_cubit.dart';
 import '../../features/files/domain/usecases/watch_team_files.dart';
 import '../../features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import '../../features/language_models/domain/repositories/language_model_repository.dart';
@@ -131,6 +135,9 @@ void configureStandaloneDependencies(GetIt locator, RuntimeProfile profile) {
     ..registerLazySingleton<TaskActivityRepository>(
       () => LocalTaskActivityRepository(locator<WorkspaceApiClient>()),
     )
+    ..registerLazySingleton<DataRepository>(
+      () => LocalDataRepository(locator<WorkspaceApiClient>()),
+    )
     ..registerLazySingleton<ApplicationLogRepository>(
       () => LocalApplicationLogRepository(locator<WorkspaceApiClient>()),
     )
@@ -155,6 +162,13 @@ void configureStandaloneDependencies(GetIt locator, RuntimeProfile profile) {
     ..registerLazySingleton<MediaInputPicker>(
       () => ImagePickerMediaInputPicker(ImagePicker()),
     )
+    ..registerLazySingleton(
+      () => ListDataCollections(locator<DataRepository>()),
+    )
+    ..registerLazySingleton(() => QueryDataRecords(locator<DataRepository>()))
+    ..registerLazySingleton(() => CreateDataRecord(locator<DataRepository>()))
+    ..registerLazySingleton(() => UpdateDataRecord(locator<DataRepository>()))
+    ..registerLazySingleton(() => DeleteDataRecord(locator<DataRepository>()))
     ..registerLazySingleton(() => ExecuteTask(locator<TaskRepository>()))
     ..registerLazySingleton(() => WatchTaskRuns(locator<TaskRunRepository>()))
     ..registerLazySingleton(
@@ -208,6 +222,15 @@ void configureStandaloneDependencies(GetIt locator, RuntimeProfile profile) {
     )
     ..registerLazySingleton(
       () => UploadTaskRunMediaInput(locator<TaskRunMediaInputRepository>()),
+    )
+    ..registerFactory(
+      () => DatabaseCubit(
+        listCollections: locator<ListDataCollections>(),
+        queryRecords: locator<QueryDataRecords>(),
+        createRecord: locator<CreateDataRecord>(),
+        updateRecord: locator<UpdateDataRecord>(),
+        deleteRecord: locator<DeleteDataRecord>(),
+      ),
     )
     ..registerFactory(
       () =>

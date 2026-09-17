@@ -11,6 +11,8 @@ List<RootTab> rootTabs({required bool isStandalone}) => [
     path: '/tasks',
   ),
   RootTab(title: 'Zeitplan', icon: CupertinoIcons.calendar, path: '/schedule'),
+  if (isStandalone)
+    RootTab(title: 'Datenbank', icon: CupertinoIcons.table, path: '/database'),
   RootTab(title: 'Dateien', icon: CupertinoIcons.folder, path: '/files'),
   RootTab(
     title: 'Wissensbasis',
