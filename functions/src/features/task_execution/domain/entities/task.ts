@@ -18,10 +18,6 @@ import {
   type ModelTensorDataType,
   type TensorDimension,
 } from "../../../machine_learning/domain/entities/model-contract.js";
-import {
-  type DocumentFieldAssignment,
-  type DocumentLookupFilterConfig,
-} from "./data-node-config.js";
 import {type NodeOutputValue} from "./workflow-value.js";
 export type {
   DialogInputDefinition,
@@ -176,11 +172,23 @@ export type ReadFileNodeConfig = {
   primitive: "readFile";
   file?: NodeAttachment;
 };
+export type DocumentLookupFilterConfig = {
+  field: string;
+  operator: import("../../../data/domain/entities/document-filter.js").DocumentFilterOperator;
+  value: string;
+};
+
 export type DocumentLookupNodeConfig = {
   primitive: "documentLookup";
   collectionName: string;
   filters: DocumentLookupFilterConfig[];
 };
+
+export type DocumentFieldAssignment = {
+  field: string;
+  value: string;
+};
+
 export type SaveDocumentNodeConfig = {
   primitive: "saveDocument";
   collectionName: string;
