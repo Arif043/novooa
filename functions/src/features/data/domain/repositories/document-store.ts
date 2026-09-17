@@ -1,6 +1,7 @@
 import {
   type CreateDocumentCollectionInput,
   type DocumentCollection,
+  type DocumentCollectionNameInput,
 } from "../entities/document-collection.js";
 import {
   type CreateDocumentInput,
@@ -13,6 +14,8 @@ import {type FindDocumentsInput} from "../entities/document-filter.js";
 
 export interface DocumentStore {
   createCollection(input: CreateDocumentCollectionInput): Promise<DocumentCollection>;
+  ensureCollection(input: DocumentCollectionNameInput): Promise<DocumentCollection>;
+  findCollectionByName(input: DocumentCollectionNameInput): Promise<DocumentCollection | null>;
   findById(input: FindDocumentByIdInput): Promise<DocumentRecord | null>;
   findOne(input: FindDocumentsInput): Promise<DocumentRecord | null>;
   findMany(input: FindDocumentsInput): Promise<DocumentRecord[]>;

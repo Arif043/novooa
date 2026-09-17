@@ -1,7 +1,5 @@
 part of 'node_config.dart';
 
-enum DocumentSaveMode { create, update, upsert }
-
 class DocumentFieldAssignment extends Equatable {
   const DocumentFieldAssignment({required this.field, required this.value});
 
@@ -21,22 +19,19 @@ class DocumentFieldAssignment extends Equatable {
 
 class SaveDocumentNodeConfig extends NodeConfig {
   const SaveDocumentNodeConfig({
-    required this.collectionId,
-    required this.mode,
-    required this.documentId,
+    required this.collectionName,
+    required this.filters,
     required this.fields,
   });
 
-  final String collectionId;
-  final DocumentSaveMode mode;
-  final String documentId;
+  final String collectionName;
+  final List<DocumentLookupFilter> filters;
   final List<DocumentFieldAssignment> fields;
 
   factory SaveDocumentNodeConfig.initial() {
     return const SaveDocumentNodeConfig(
-      collectionId: '',
-      mode: DocumentSaveMode.create,
-      documentId: '',
+      collectionName: '',
+      filters: [],
       fields: [DocumentFieldAssignment(field: '', value: '')],
     );
   }
@@ -45,18 +40,16 @@ class SaveDocumentNodeConfig extends NodeConfig {
   WorkflowPrimitive get primitive => .saveDocument;
 
   @override
-  List<Object?> get props => [collectionId, mode, documentId, fields];
+  List<Object?> get props => [collectionName, filters, fields];
 
   SaveDocumentNodeConfig copyWith({
-    String? collectionId,
-    DocumentSaveMode? mode,
-    String? documentId,
+    String? collectionName,
+    List<DocumentLookupFilter>? filters,
     List<DocumentFieldAssignment>? fields,
   }) {
     return SaveDocumentNodeConfig(
-      collectionId: collectionId ?? this.collectionId,
-      mode: mode ?? this.mode,
-      documentId: documentId ?? this.documentId,
+      collectionName: collectionName ?? this.collectionName,
+      filters: filters ?? this.filters,
       fields: fields ?? this.fields,
     );
   }

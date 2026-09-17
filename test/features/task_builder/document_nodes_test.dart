@@ -33,7 +33,7 @@ void main() {
 
     final config =
         _taskOf(cubit).nodes.single.config as DocumentLookupNodeConfig;
-    expect(config.collectionId, 'kunden');
+    expect(config.collectionName, 'kunden');
     expect(config.filters, hasLength(1));
     expect(config.filters.single.field, 'email');
     await cubit.close();
@@ -45,8 +45,18 @@ void main() {
       final cubit = await _cubitFor(_saveTask());
       const nodeId = NodeId('save');
       await cubit.updateSaveDocumentCollection(nodeId, 'bestellungen');
-      await cubit.updateSaveDocumentMode(nodeId, DocumentSaveMode.upsert);
-      await cubit.updateSaveDocumentId(nodeId, '{{eingang.bestellnummer}}');
+      await cubit.addSaveDocumentFilter(nodeId);
+      await cubit.updateSaveDocumentFilter(
+        nodeId,
+        0,
+        const DocumentLookupFilter(
+          field: 'bestellnummer',
+          operator: DocumentFilterOperator.equals,
+          value: '{{eingang.bestellnummer}}',
+        ),
+      );
+      await cubit.addSaveDocumentFilter(nodeId);
+      await cubit.removeSaveDocumentFilter(nodeId, 1);
       await cubit.updateSaveDocumentField(
         nodeId,
         0,
@@ -57,9 +67,8 @@ void main() {
 
       final config =
           _taskOf(cubit).nodes.single.config as SaveDocumentNodeConfig;
-      expect(config.collectionId, 'bestellungen');
-      expect(config.mode, DocumentSaveMode.upsert);
-      expect(config.documentId, '{{eingang.bestellnummer}}');
+      expect(config.collectionName, 'bestellungen');
+      expect(config.filters.single.field, 'bestellnummer');
       expect(config.fields, const [
         DocumentFieldAssignment(field: 'status', value: 'bezahlt'),
       ]);
@@ -82,14 +91,17 @@ void main() {
     await cubit.close();
   });
 
-  testWidgets('zeigt den Speichermodus und ergänzt Felder', (tester) async {
+  testWidgets('zeigt Speicherbedingungen und ergänzt Felder', (tester) async {
     final cubit = await _cubitFor(_saveTask());
     await tester.pumpWidget(
       _host(cubit, (task) => SaveDocumentWidget(node: task.nodes.single)),
     );
 
     expect(find.text('Datensatz speichern'), findsOneWidget);
-    await tester.tap(find.text('Feld hinzufügen'));
+    expect(find.text('Modus: Anlegen'), findsOneWidget);
+    final addField = find.text('Feld hinzufügen');
+    await tester.ensureVisible(addField);
+    await tester.tap(addField);
     await tester.pump();
 
     expect(find.bySemanticsLabel('Feldzuordnung 2'), findsOneWidget);
@@ -130,7 +142,7 @@ Task _lookupTask() {
       title: 'Datensatz suchen',
       description: '',
       config: DocumentLookupNodeConfig(
-        collectionId: '',
+        collectionName: '',
         filters: [
           DocumentLookupFilter(
             field: '',
@@ -150,9 +162,8 @@ Task _saveTask() {
       title: 'Datensatz speichern',
       description: '',
       config: SaveDocumentNodeConfig(
-        collectionId: '',
-        mode: DocumentSaveMode.create,
-        documentId: '',
+        collectionName: '',
+        filters: [],
         fields: [DocumentFieldAssignment(field: '', value: '')],
       ),
     ),

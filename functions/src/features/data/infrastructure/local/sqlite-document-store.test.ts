@@ -7,6 +7,19 @@ import {type DocumentStore} from "../../domain/repositories/document-store.js";
 import {openLocalRuntimeDatabase} from "../../../../shared/local/local-runtime-database.js";
 import {SQLiteDocumentStore} from "./sqlite-document-store.js";
 
+test("uses exact collection names and hides generated identifiers", async () => {
+  await withDocumentStore(async (store) => {
+    const first = await store.ensureCollection({teamId: "team-1", displayName: "Kunden"});
+    const duplicate = await store.ensureCollection({teamId: "team-1", displayName: "Kunden"});
+    const lowercase = await store.ensureCollection({teamId: "team-1", displayName: "kunden"});
+
+    assert.equal(first.id, duplicate.id);
+    assert.notEqual(first.id, lowercase.id);
+    assert.equal((await store.findCollectionByName({teamId: "team-1", displayName: "Kunden"}))?.id, first.id);
+    assert.equal((await store.findCollectionByName({teamId: "team-1", displayName: "kunden"}))?.id, lowercase.id);
+  });
+});
+
 test("creates documents and finds them through structured filters", async () => {
   await withDocumentStore(async (store) => {
     await store.createCollection(collection("team-1"));

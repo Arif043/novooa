@@ -7,6 +7,7 @@ import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 import 'document_field_assignment_editor.dart';
+import 'document_lookup_filter_editor.dart';
 
 class SaveDocumentWidget extends StatelessWidget {
   const SaveDocumentWidget({super.key, required this.node});
@@ -26,21 +27,52 @@ class SaveDocumentWidget extends StatelessWidget {
             Text('Datensatz speichern', style: SyscatTheme.taskBody),
             const SizedBox(height: AppSpacing.sm),
             TextFormField(
-              initialValue: config.collectionId,
+              initialValue: config.collectionName,
               decoration: const InputDecoration(labelText: 'Speichere in'),
               onChanged: (value) => context
                   .read<TaskBuilderCubit>()
                   .updateSaveDocumentCollection(node.id, value),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            DropdownButtonFormField<DocumentSaveMode>(
-              initialValue: config.mode,
-              decoration: const InputDecoration(labelText: 'Aktion'),
-              items: DocumentSaveMode.values.map(_modeItem).toList(),
-              onChanged: (value) => _updateMode(context, value),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              config.filters.isEmpty
+                  ? 'Modus: Anlegen'
+                  : 'Modus: Aktualisieren oder anlegen',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              config.filters.isEmpty
+                  ? 'Ein neuer Datensatz wird angelegt.'
+                  : 'Passende Datensätze werden aktualisiert. Ohne Treffer wird ein neuer angelegt.',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: AppSpacing.sm),
-            _DocumentIdField(nodeId: node.id, config: config),
+            for (var index = 0; index < config.filters.length; index++) ...[
+              DocumentLookupFilterEditor(
+                key: ValueKey('save-document-filter-${node.id.value}-$index'),
+                nodeId: node.id,
+                index: index,
+                filter: config.filters[index],
+                canRemove: true,
+                onChanged: (filter) => context
+                    .read<TaskBuilderCubit>()
+                    .updateSaveDocumentFilter(node.id, index, filter),
+                onRemove: () => context
+                    .read<TaskBuilderCubit>()
+                    .removeSaveDocumentFilter(node.id, index),
+              ),
+              if (index < config.filters.length - 1)
+                const Divider(height: AppSpacing.lg),
+            ],
+            const SizedBox(height: AppSpacing.sm),
+            OutlinedButton.icon(
+              onPressed: () => context
+                  .read<TaskBuilderCubit>()
+                  .addSaveDocumentFilter(node.id),
+              icon: const Icon(Icons.add),
+              label: const Text('Bedingung hinzufügen'),
+            ),
             const SizedBox(height: AppSpacing.md),
             Text('Felder', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: AppSpacing.sm),
@@ -67,47 +99,5 @@ class SaveDocumentWidget extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  DropdownMenuItem<DocumentSaveMode> _modeItem(DocumentSaveMode mode) {
-    return DropdownMenuItem(value: mode, child: Text(mode.label));
-  }
-
-  void _updateMode(BuildContext context, DocumentSaveMode? mode) {
-    if (mode == null) return;
-    context.read<TaskBuilderCubit>().updateSaveDocumentMode(node.id, mode);
-  }
-}
-
-class _DocumentIdField extends StatelessWidget {
-  const _DocumentIdField({required this.nodeId, required this.config});
-
-  final NodeId nodeId;
-  final SaveDocumentNodeConfig config;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      initialValue: config.documentId,
-      decoration: InputDecoration(labelText: _label),
-      onChanged: (value) =>
-          context.read<TaskBuilderCubit>().updateSaveDocumentId(nodeId, value),
-    );
-  }
-
-  String get _label {
-    return config.mode == DocumentSaveMode.create
-        ? 'Datensatz-ID (optional)'
-        : 'Datensatz-ID';
-  }
-}
-
-extension on DocumentSaveMode {
-  String get label {
-    return switch (this) {
-      .create => 'Anlegen',
-      .update => 'Aktualisieren',
-      .upsert => 'Anlegen oder aktualisieren',
-    };
   }
 }

@@ -4,7 +4,7 @@ extension TaskBuilderDocumentLookupMutations on TaskBuilderCubit {
   Future<void> updateDocumentLookupCollection(NodeId nodeId, String value) {
     return _updateLookup(
       nodeId,
-      (config) => config.copyWith(collectionId: value),
+      (config) => config.copyWith(collectionName: value),
     );
   }
 

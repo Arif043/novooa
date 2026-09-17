@@ -4,50 +4,76 @@ import {InMemoryDocumentStore} from "../../../data/infrastructure/in-memory/in-m
 import {saveDocumentNodeExecutor} from "./save-document-node-executor.js";
 import {type TaskRunContext} from "./node-executor.js";
 
-test("legt mit dem Speichermodus Anlegen einen Datensatz an", async () => {
+test("legt ohne passende Datensätze einen neuen Datensatz an", async () => {
   const store = await storeWithCollection();
-  const result = await executeSave(store, "create", "", [{field: "status", value: "neu"}]);
 
-  assert.deepEqual(result.outputs.isNew, {type: "boolean", value: true});
-  assert.equal((result.outputs.record?.value as {fields: {status: string}}).fields.status, "neu");
+  const result = await executeSave(store, "kunde@example.com", "neu");
+
+  assert.deepEqual(result.outputs.created, {type: "boolean", value: true});
+  assert.deepEqual(result.outputs.count, {type: "number", value: 1});
+  assert.equal((await store.findMany({teamId: "team_1", collectionId: "kunden"})).length, 1);
 });
 
-test("aktualisiert nur konfigurierte Felder eines vorhandenen Datensatzes", async () => {
+test("aktualisiert alle passenden Datensätze", async () => {
   const store = await storeWithCollection();
   await store.create({
-    teamId: "team_1", collectionId: "kunden", documentId: "kunde_1",
-    data: {email: "lea@example.com", status: "neu"},
+    teamId: "team_1", collectionId: "kunden", data: {email: "kunde@example.com", status: "neu"},
+  });
+  await store.create({
+    teamId: "team_1", collectionId: "kunden", data: {email: "kunde@example.com", status: "offen"},
   });
 
-  const result = await executeSave(store, "update", "kunde_1", [{field: "status", value: "aktiv"}]);
-  const saved = await store.findById({teamId: "team_1", collectionId: "kunden", documentId: "kunde_1"});
+  const result = await executeSave(store, "kunde@example.com", "aktiv");
+  const records = await store.findMany({
+    teamId: "team_1",
+    collectionId: "kunden",
+    filters: [{field: "email", operator: "equals", value: "kunde@example.com"}],
+  });
 
-  assert.deepEqual(result.outputs.isNew, {type: "boolean", value: false});
-  assert.deepEqual(saved?.data, {email: "lea@example.com", status: "aktiv"});
+  assert.deepEqual(result.outputs.created, {type: "boolean", value: false});
+  assert.deepEqual(result.outputs.count, {type: "number", value: 2});
+  assert.deepEqual(records.map((record) => record.data.status), ["aktiv", "aktiv"]);
 });
 
-test("legt beim Anlegen oder Aktualisieren fehlende Datensätze an", async () => {
-  const store = await storeWithCollection();
-  const first = await executeSave(store, "upsert", "kunde_1", [{field: "status", value: "neu"}]);
-  const second = await executeSave(store, "upsert", "kunde_1", [{field: "email", value: "lea@example.com"}]);
-  const saved = await store.findById({teamId: "team_1", collectionId: "kunden", documentId: "kunde_1"});
+test("legt eine fehlende Datensammlung beim Speichern implizit an", async () => {
+  const store = new InMemoryDocumentStore();
 
-  assert.deepEqual(first.outputs.isNew, {type: "boolean", value: true});
-  assert.deepEqual(second.outputs.isNew, {type: "boolean", value: false});
-  assert.deepEqual(saved?.data, {status: "neu", email: "lea@example.com"});
+  await executeSave(store, "kunde@example.com", "neu");
+
+  assert.equal((await store.findMany({teamId: "team_1", collectionId: "kunden"})).length, 1);
+});
+
+test("legt ohne Bedingungen immer einen neuen Datensatz an", async () => {
+  const store = await storeWithCollection();
+  await store.create({
+    teamId: "team_1", collectionId: "kunden",
+    data: {email: "kunde@example.com", status: "bestehend"},
+  });
+
+  const result = await executeSave(store, "kunde@example.com", "neu", []);
+  const records = await store.findMany({teamId: "team_1", collectionId: "kunden"});
+
+  assert.deepEqual(result.outputs.created, {type: "boolean", value: true});
+  assert.equal(records.length, 2);
+  assert.equal(records.some((record) => record.data.status === "bestehend"), true);
 });
 
 async function executeSave(
   store: InMemoryDocumentStore,
-  mode: "create" | "update" | "upsert",
-  documentId: string,
-  fields: {field: string; value: string}[],
+  email: string,
+  status: string,
+  filters: {field: string; operator: "equals"; value: string}[] = [
+    {field: "email", operator: "equals", value: email},
+  ],
 ) {
   return saveDocumentNodeExecutor.execute({
     node: {
       id: "save", primitive: "saveDocument", title: "Datensatz speichern",
       description: "", referenceName: "speichern",
-      config: {primitive: "saveDocument", collectionId: "kunden", mode, documentId, fields},
+      config: {
+        primitive: "saveDocument", collectionName: "kunden", filters,
+        fields: [{field: "status", value: status}],
+      },
     }, context: "", parentOutputs: [],
   }, {
     teamId: "team_1",
@@ -59,7 +85,7 @@ async function executeSave(
 async function storeWithCollection(): Promise<InMemoryDocumentStore> {
   const store = new InMemoryDocumentStore();
   await store.createCollection({
-    teamId: "team_1", id: "kunden", displayName: "Kundinnen und Kunden",
+    teamId: "team_1", id: "kunden", displayName: "kunden",
   });
   return store;
 }

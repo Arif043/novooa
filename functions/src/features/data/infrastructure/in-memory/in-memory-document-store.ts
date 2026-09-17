@@ -2,7 +2,9 @@ import {randomUUID} from "node:crypto";
 import {
   type CreateDocumentCollectionInput,
   type DocumentCollection,
+  type DocumentCollectionNameInput,
   validateDocumentCollectionInput,
+  validateDocumentCollectionNameInput,
 } from "../../domain/entities/document-collection.js";
 import {
   cloneDocumentData,
@@ -37,6 +39,25 @@ export class InMemoryDocumentStore implements DocumentStore {
       const collection = {...input, createdAt: timestamp, updatedAt: timestamp};
       this.collections.set(key, collection);
       return copyCollection(collection);
+    });
+  }
+
+  ensureCollection(input: DocumentCollectionNameInput): Promise<DocumentCollection> {
+    return this.exclusively(() => {
+      validateDocumentCollectionNameInput(input);
+      const existing = this.collectionByName(input);
+      if (existing !== undefined) return copyCollection(existing);
+      const timestamp = new Date();
+      const collection = {id: randomUUID(), ...input, createdAt: timestamp, updatedAt: timestamp};
+      this.collections.set(collectionKey(input.teamId, collection.id), collection);
+      return copyCollection(collection);
+    });
+  }
+
+  findCollectionByName(input: DocumentCollectionNameInput): Promise<DocumentCollection | null> {
+    return this.exclusively(() => {
+      validateDocumentCollectionNameInput(input);
+      return copyOrNull(this.collectionByName(input));
     });
   }
 
@@ -114,6 +135,12 @@ export class InMemoryDocumentStore implements DocumentStore {
     return this.documents.get(documentKey(input.teamId, input.collectionId, input.documentId));
   }
 
+  private collectionByName(input: DocumentCollectionNameInput): DocumentCollection | undefined {
+    return [...this.collections.values()].find((collection) =>
+      collection.teamId === input.teamId && collection.displayName === input.displayName,
+    );
+  }
+
   private requireCollection(teamId: string, collectionId: string): void {
     if (!this.collections.has(collectionKey(teamId, collectionId))) {
       throw new Error("Die Datensammlung wurde nicht gefunden.");
@@ -173,6 +200,10 @@ function documentFrom(
 
 function copyDocument(document: DocumentRecord): DocumentRecord {
   return {...document, data: cloneDocumentData(document.data), createdAt: new Date(document.createdAt), updatedAt: new Date(document.updatedAt)};
+}
+
+function copyOrNull(collection: DocumentCollection | undefined): DocumentCollection | null {
+  return collection === undefined ? null : copyCollection(collection);
 }
 
 function copyCollection(collection: DocumentCollection): DocumentCollection {

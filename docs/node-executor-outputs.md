@@ -43,8 +43,8 @@ Primitives erhalten den Status `skipped` und keine Outputs.
 | `mediaInput` | wartet auf ein Bild; Nutzer wählt Kamera oder Galerie | nach dem Absenden: `value` (`media`) |
 | `modelInference` | ausgefuehrt | `value` (`json`: Modell-ID und Tensoren mit Semantik, Form, Typ und Base64-Daten), `modelId` (`string`) |
 | `writeFile` | ausgefuehrt | siehe nächster Abschnitt |
-| `documentLookup` | ausgefuehrt | `value` (`string`: verständliches Suchergebnis), `found` (`boolean`), `recordId` (`string`), `record` (`json` oder `null`), `message` (`string`) |
-| `saveDocument` | ausgefuehrt | `value` (`string`: „Datensatz gespeichert“), `recordId` (`string`), `record` (`json`), `isNew` (`boolean`) |
+| `documentLookup` | ausgefuehrt | `value` (`string`: verständliches Suchergebnis), `found` (`boolean`), `record` (`json` mit Fachfeldern oder `null`), `message` (`string`) |
+| `saveDocument` | ausgefuehrt | `value` (`string`: „Datensätze gespeichert“), `created` (`boolean`), `count` (`number`), `records` (`json`: gespeicherte Fachfelder) |
 
 ## Datei schreiben
 

@@ -54,15 +54,14 @@ class NodeOutputChips extends StatelessWidget {
       DocumentLookupNodeConfig() => const [
         'value',
         'found',
-        'recordId',
         'record',
         'message',
       ],
       SaveDocumentNodeConfig() => const [
         'value',
-        'recordId',
-        'record',
-        'isNew',
+        'created',
+        'count',
+        'records',
       ],
       _ => const [],
     };

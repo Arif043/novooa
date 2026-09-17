@@ -21,7 +21,6 @@ import {
 import {
   type DocumentFieldAssignment,
   type DocumentLookupFilterConfig,
-  type DocumentSaveMode,
 } from "./data-node-config.js";
 import {type NodeOutputValue} from "./workflow-value.js";
 export type {
@@ -179,14 +178,13 @@ export type ReadFileNodeConfig = {
 };
 export type DocumentLookupNodeConfig = {
   primitive: "documentLookup";
-  collectionId: string;
+  collectionName: string;
   filters: DocumentLookupFilterConfig[];
 };
 export type SaveDocumentNodeConfig = {
   primitive: "saveDocument";
-  collectionId: string;
-  mode: DocumentSaveMode;
-  documentId: string;
+  collectionName: string;
+  filters: DocumentLookupFilterConfig[];
   fields: DocumentFieldAssignment[];
 };
 export type ReadEmailNodeConfig = {

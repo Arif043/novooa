@@ -9,13 +9,9 @@ export type DocumentLookupFilterConfig = {
 
 export type DocumentLookupNodeConfig = {
   primitive: "documentLookup";
-  collectionId: string;
+  collectionName: string;
   filters: DocumentLookupFilterConfig[];
 };
-
-export const documentSaveModes = ["create", "update", "upsert"] as const;
-
-export type DocumentSaveMode = (typeof documentSaveModes)[number];
 
 export type DocumentFieldAssignment = {
   field: string;
@@ -24,8 +20,7 @@ export type DocumentFieldAssignment = {
 
 export type SaveDocumentNodeConfig = {
   primitive: "saveDocument";
-  collectionId: string;
-  mode: DocumentSaveMode;
-  documentId: string;
+  collectionName: string;
+  filters: DocumentLookupFilterConfig[];
   fields: DocumentFieldAssignment[];
 };

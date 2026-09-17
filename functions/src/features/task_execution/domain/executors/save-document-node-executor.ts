@@ -5,17 +5,29 @@ import {
   validateDocumentData,
 } from "../../../data/domain/entities/document.js";
 import {
+  type DocumentFilter,
+  type DocumentFilterValue,
+  isNumericOperator,
+  validateDocumentFilter,
+} from "../../../data/domain/entities/document-filter.js";
+import {
   type NodeExecutor,
   executedNode,
   stringOutput,
 } from "./node-executor.js";
-import {workflowDocumentRecordFor} from "../services/workflow-document-record.js";
 
 export const saveDocumentNodeExecutor: NodeExecutor = {
   primitive: "saveDocument",
   async execute(input, runContext) {
     const config = configFor(input.node);
-    const saved = await saveDocument(config, runContext);
+    const collection = await runContext.documentStore.ensureCollection({
+      teamId: runContext.teamId, displayName: config.collectionName.trim(),
+    });
+    const data = dataFor(config, runContext);
+    const filters = filtersFor(config, runContext);
+    const saved = filters.length === 0
+      ? await createDocument(collection.id, data, runContext)
+      : await saveMatchingDocuments(collection.id, filters, data, runContext);
     return executedNode(input.node, outputsFor(saved));
   },
 };
@@ -25,71 +37,6 @@ function configFor(node: Parameters<NodeExecutor["execute"]>[0]["node"]) {
     throw new Error("Datensatz speichern: Die Konfiguration fehlt.");
   }
   return node.config;
-}
-
-async function saveDocument(
-  config: ReturnType<typeof configFor>,
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): Promise<SavedDocument> {
-  const data = dataFor(config, runContext);
-  if (config.mode === "create") return createDocument(config, data, runContext);
-  const documentId = documentIdFor(config, runContext);
-  if (config.mode === "update") return updateDocument(config, documentId, data, runContext);
-  return upsertDocument(config, documentId, data, runContext);
-}
-
-async function createDocument(
-  config: ReturnType<typeof configFor>,
-  data: DocumentData,
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): Promise<SavedDocument> {
-  const record = await runContext.documentStore.create({
-    teamId: runContext.teamId, collectionId: collectionIdFor(config),
-    documentId: optionalDocumentIdFor(config, runContext), data,
-  });
-  return {created: true, record};
-}
-
-async function updateDocument(
-  config: ReturnType<typeof configFor>,
-  documentId: string,
-  data: DocumentData,
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): Promise<SavedDocument> {
-  const current = await requiredDocumentFor(config, documentId, runContext);
-  const record = await runContext.documentStore.update({
-    teamId: runContext.teamId, collectionId: collectionIdFor(config), documentId,
-    data: {...current.data, ...data}, expectedVersion: current.version,
-  });
-  return {created: false, record};
-}
-
-async function upsertDocument(
-  config: ReturnType<typeof configFor>,
-  documentId: string,
-  data: DocumentData,
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): Promise<SavedDocument> {
-  const current = await runContext.documentStore.findById({
-    teamId: runContext.teamId, collectionId: collectionIdFor(config), documentId,
-  });
-  const record = await runContext.documentStore.upsert({
-    teamId: runContext.teamId, collectionId: collectionIdFor(config), documentId,
-    data: {...current?.data, ...data}, expectedVersion: current?.version,
-  });
-  return {created: current === null, record};
-}
-
-async function requiredDocumentFor(
-  config: ReturnType<typeof configFor>,
-  documentId: string,
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): Promise<DocumentRecord> {
-  const record = await runContext.documentStore.findById({
-    teamId: runContext.teamId, collectionId: collectionIdFor(config), documentId,
-  });
-  if (record !== null) return record;
-  throw new Error("Datensatz speichern: Der Datensatz wurde nicht gefunden.");
 }
 
 function dataFor(
@@ -102,6 +49,100 @@ function dataFor(
   requireUniqueFields(config);
   validateDocumentData(data);
   return data;
+}
+
+function filtersFor(
+  config: ReturnType<typeof configFor>,
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+): DocumentFilter[] {
+  return config.filters.map((filter) => filterFor(filter, runContext));
+}
+
+function filterFor(
+  filter: ReturnType<typeof configFor>["filters"][number],
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+): DocumentFilter {
+  const resolved: DocumentFilter = {
+    field: filter.field.trim(),
+    operator: filter.operator,
+    value: filterValueFor(filter, runContext),
+  };
+  validateDocumentFilter(resolved);
+  return resolved;
+}
+
+function filterValueFor(
+  filter: ReturnType<typeof configFor>["filters"][number],
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+): DocumentFilterValue {
+  const value = runContext.resolveTemplateValue(filter.value);
+  if (isNumericOperator(filter.operator)) return numberValueFor(value);
+  if (isDocumentFilterValue(value)) return value;
+  throw new Error("Datensatz speichern: Der Filterwert ist ungültig.");
+}
+
+function numberValueFor(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim().length > 0) {
+    const number = Number(value);
+    if (Number.isFinite(number)) return number;
+  }
+  throw new Error("Datensatz speichern: Für den Vergleich wird eine Zahl benötigt.");
+}
+
+function isDocumentFilterValue(value: unknown): value is DocumentFilterValue {
+  return typeof value === "string" || typeof value === "boolean" ||
+    (typeof value === "number" && Number.isFinite(value));
+}
+
+async function saveMatchingDocuments(
+  collectionId: string,
+  filters: readonly DocumentFilter[],
+  data: DocumentData,
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+): Promise<SavedDocuments> {
+  const matching = await runContext.documentStore.findMany({
+    teamId: runContext.teamId, collectionId, filters: [...filters],
+  });
+  return saveOrUpdate(collectionId, matching, data, runContext);
+}
+async function saveOrUpdate(
+  collectionId: string,
+  matching: readonly DocumentRecord[],
+  data: DocumentData,
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+): Promise<SavedDocuments> {
+  if (matching.length === 0) return createDocument(collectionId, data, runContext);
+  const records = await Promise.all(matching.map((current) => updateDocument(
+    collectionId, current, data, runContext,
+  )));
+  return {created: false, records};
+}
+
+async function createDocument(
+  collectionId: string,
+  data: DocumentData,
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+): Promise<SavedDocuments> {
+  const record = await runContext.documentStore.create({
+    teamId: runContext.teamId, collectionId, data,
+  });
+  return {created: true, records: [record]};
+}
+
+function updateDocument(
+  collectionId: string,
+  current: DocumentRecord,
+  data: DocumentData,
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+): Promise<DocumentRecord> {
+  return runContext.documentStore.update({
+    teamId: runContext.teamId,
+    collectionId,
+    documentId: current.id,
+    data: {...current.data, ...data},
+    expectedVersion: current.version,
+  });
 }
 
 function valueFor(
@@ -120,34 +161,16 @@ function requireUniqueFields(config: ReturnType<typeof configFor>): void {
   }
 }
 
-function collectionIdFor(config: ReturnType<typeof configFor>): string {
-  return config.collectionId.trim();
-}
-
-function documentIdFor(
-  config: ReturnType<typeof configFor>,
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): string {
-  const documentId = optionalDocumentIdFor(config, runContext);
-  if (documentId) return documentId;
-  throw new Error("Datensatz speichern: Für diese Speicherart wird eine Datensatz-ID benötigt.");
-}
-
-function optionalDocumentIdFor(
-  config: ReturnType<typeof configFor>,
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): string | undefined {
-  const value = runContext.resolveTemplateValue(config.documentId);
-  return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
-}
-
-function outputsFor(saved: SavedDocument) {
+function outputsFor(saved: SavedDocuments) {
   return {
-    value: stringOutput("Datensatz gespeichert"),
-    recordId: stringOutput(saved.record.id),
-    record: {type: "json" as const, value: workflowDocumentRecordFor(saved.record)},
-    isNew: {type: "boolean" as const, value: saved.created},
+    value: stringOutput("Datensätze gespeichert"),
+    created: {type: "boolean" as const, value: saved.created},
+    count: {type: "number" as const, value: saved.records.length},
+    records: {
+      type: "json" as const,
+      value: saved.records.map((record) => ({fields: record.data})),
+    },
   };
 }
 
-type SavedDocument = {created: boolean; record: DocumentRecord};
+type SavedDocuments = {created: boolean; records: DocumentRecord[]};

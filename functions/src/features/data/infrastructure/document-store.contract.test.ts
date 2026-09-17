@@ -133,7 +133,7 @@ async function createInMemoryFixture(): Promise<StoreFixture> {
 
 async function createSqliteFixture(): Promise<StoreFixture> {
   const database = new SqliteLocalSqlDatabase(":memory:");
-  await database.run("CREATE TABLE document_collections (id TEXT, team_id TEXT, display_name TEXT, created_at TEXT, updated_at TEXT, PRIMARY KEY (team_id, id))");
+  await database.run("CREATE TABLE document_collections (id TEXT, team_id TEXT, display_name TEXT, created_at TEXT, updated_at TEXT, PRIMARY KEY (team_id, id), UNIQUE(team_id, display_name))");
   await database.run("CREATE TABLE documents (id TEXT, team_id TEXT, collection_id TEXT, data_json TEXT, version INTEGER, created_at TEXT, updated_at TEXT, PRIMARY KEY (team_id, collection_id, id))");
   return {store: new SQLiteDocumentStore(database), dispose: () => database.close()};
 }

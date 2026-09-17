@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
-import '../cubits/task_builder_cubit.dart';
 
 class DocumentLookupFilterEditor extends StatelessWidget {
   const DocumentLookupFilterEditor({
@@ -13,12 +11,16 @@ class DocumentLookupFilterEditor extends StatelessWidget {
     required this.index,
     required this.filter,
     required this.canRemove,
+    required this.onChanged,
+    required this.onRemove,
   });
 
   final NodeId nodeId;
   final int index;
   final DocumentLookupFilter filter;
   final bool canRemove;
+  final ValueChanged<DocumentLookupFilter> onChanged;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -31,29 +33,27 @@ class DocumentLookupFilterEditor extends StatelessWidget {
           TextFormField(
             initialValue: filter.field,
             decoration: const InputDecoration(labelText: 'Feld'),
-            onChanged: (value) => _update(context, field: value),
+            onChanged: (value) => _update(field: value),
           ),
           const SizedBox(height: AppSpacing.sm),
           DropdownButtonFormField<DocumentFilterOperator>(
             initialValue: filter.operator,
             decoration: const InputDecoration(labelText: 'Vergleich'),
             items: DocumentFilterOperator.values.map(_operatorItem).toList(),
-            onChanged: (value) => _update(context, operator: value),
+            onChanged: (value) => _update(operator: value),
           ),
           const SizedBox(height: AppSpacing.sm),
           TextFormField(
             initialValue: filter.value,
             decoration: const InputDecoration(labelText: 'Wert'),
-            onChanged: (value) => _update(context, value: value),
+            onChanged: (value) => _update(value: value),
           ),
           if (canRemove)
             Align(
               alignment: Alignment.centerRight,
               child: IconButton(
                 tooltip: 'Suchbedingung entfernen',
-                onPressed: () => context
-                    .read<TaskBuilderCubit>()
-                    .removeDocumentLookupFilter(nodeId, index),
+                onPressed: onRemove,
                 icon: const Icon(Icons.remove_circle_outline),
               ),
             ),
@@ -68,17 +68,12 @@ class DocumentLookupFilterEditor extends StatelessWidget {
     return DropdownMenuItem(value: operator, child: Text(operator.label));
   }
 
-  void _update(
-    BuildContext context, {
+  void _update({
     String? field,
     DocumentFilterOperator? operator,
     String? value,
   }) {
-    context.read<TaskBuilderCubit>().updateDocumentLookupFilter(
-      nodeId,
-      index,
-      filter.copyWith(field: field, operator: operator, value: value),
-    );
+    onChanged(filter.copyWith(field: field, operator: operator, value: value));
   }
 }
 

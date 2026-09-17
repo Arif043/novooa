@@ -52,7 +52,21 @@ function configFromStorage(value: unknown): Record<string, unknown> {
   const primitive = stringFrom(config.primitive);
   if (primitive === "conditionalFlow") return conditionalConfig(config, primitive);
   if (primitive === "forEach") return forEachConfig(config, primitive);
+  if (primitive === "documentLookup" || primitive === "saveDocument") {
+    return documentConfig(config, primitive);
+  }
   return {...config, primitive};
+}
+
+function documentConfig(
+  config: Record<string, unknown>,
+  primitive: string,
+): Record<string, unknown> {
+  return {
+    ...config,
+    primitive,
+    collectionName: stringFrom(config.collectionName) || stringFrom(config.collectionId),
+  };
 }
 
 function conditionalConfig(

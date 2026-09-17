@@ -36,6 +36,7 @@ test("loads data nodes whose primitive is stored in node configuration", async (
 
   assert.equal(task.nodes[0]?.config.primitive, "documentLookup");
   assert.equal(task.nodes[1]?.config.primitive, "saveDocument");
+  assert.equal(task.nodes[1]?.config.collectionName, "Kunden");
   database.close();
 });
 
@@ -58,12 +59,12 @@ function dataGraphDocument() {
     nodes: [
       {
         id: "lookup", title: "Datensatz suchen", description: "", referenceName: "lookup",
-        config: {primitive: "documentLookup", collectionId: "kunden", filters: []},
+        config: {primitive: "documentLookup", collectionId: "Kunden", filters: []},
       },
       {
         id: "save", title: "Datensatz speichern", description: "", referenceName: "save",
         config: {
-          primitive: "saveDocument", collectionId: "kunden", mode: "create", documentId: "",
+          primitive: "saveDocument", collectionId: "Kunden", mode: "create", documentId: "",
           fields: [{field: "name", value: "Max"}],
         },
       },

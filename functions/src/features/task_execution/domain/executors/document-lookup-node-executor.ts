@@ -22,7 +22,7 @@ export const documentLookupNodeExecutor: NodeExecutor = {
   primitive: "documentLookup",
   async execute(input, runContext) {
     try {
-      const document = await runContext.documentStore.findOne(inputFor(input.node, runContext));
+      const document = await findDocument(input.node, runContext);
       return executedNode(input.node, outputsFor(document));
     } catch {
       return executedNode(input.node, failureOutputs());
@@ -30,16 +30,20 @@ export const documentLookupNodeExecutor: NodeExecutor = {
   },
 };
 
-function inputFor(
+async function findDocument(
   node: Parameters<NodeExecutor["execute"]>[0]["node"],
   runContext: Parameters<NodeExecutor["execute"]>[1],
-) {
+): Promise<DocumentRecord | null> {
   const config = configFor(node);
-  return {
+  const collection = await runContext.documentStore.findCollectionByName({
+    teamId: runContext.teamId, displayName: config.collectionName.trim(),
+  });
+  if (collection === null) return null;
+  return runContext.documentStore.findOne({
     teamId: runContext.teamId,
-    collectionId: config.collectionId.trim(),
+    collectionId: collection.id,
     filters: config.filters.map((filter) => filterFor(filter, runContext)),
-  };
+  });
 }
 
 function configFor(node: Parameters<NodeExecutor["execute"]>[0]["node"]) {
@@ -91,7 +95,6 @@ function outputsFor(document: DocumentRecord | null) {
   return {
     value: stringOutput(foundMessage),
     found: {type: "boolean" as const, value: true},
-    recordId: stringOutput(document.id),
     record: {type: "json" as const, value: workflowDocumentRecordFor(document)},
     message: stringOutput(foundMessage),
   };
@@ -101,7 +104,6 @@ function absentOutputs() {
   return {
     value: stringOutput(notFoundMessage),
     found: {type: "boolean" as const, value: false},
-    recordId: stringOutput(""),
     record: {type: "json" as const, value: null},
     message: stringOutput(notFoundMessage),
   };
@@ -111,7 +113,6 @@ function failureOutputs() {
   return {
     value: stringOutput(failureMessage),
     found: {type: "boolean" as const, value: false},
-    recordId: stringOutput(""),
     record: {type: "json" as const, value: null},
     message: stringOutput("Der Datensatz konnte nicht gesucht werden."),
   };

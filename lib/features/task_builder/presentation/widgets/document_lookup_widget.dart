@@ -26,7 +26,7 @@ class DocumentLookupWidget extends StatelessWidget {
             Text('Datensatz suchen', style: SyscatTheme.taskBody),
             const SizedBox(height: AppSpacing.sm),
             TextFormField(
-              initialValue: config.collectionId,
+              initialValue: config.collectionName,
               decoration: const InputDecoration(labelText: 'Suche in'),
               onChanged: (value) => context
                   .read<TaskBuilderCubit>()
@@ -42,6 +42,12 @@ class DocumentLookupWidget extends StatelessWidget {
                 index: index,
                 filter: config.filters[index],
                 canRemove: config.filters.length > 1,
+                onChanged: (filter) => context
+                    .read<TaskBuilderCubit>()
+                    .updateDocumentLookupFilter(node.id, index, filter),
+                onRemove: () => context
+                    .read<TaskBuilderCubit>()
+                    .removeDocumentLookupFilter(node.id, index),
               ),
               if (index < config.filters.length - 1)
                 const Divider(height: AppSpacing.lg),

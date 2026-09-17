@@ -87,6 +87,7 @@ const expectedMigrationVersions = [
   "010_application_log_source",
   "011_language_model_secrets",
   "012_document_store",
+  "013_document_collection_display_name",
 ];
 
 const migrationDirectory = resolve(__dirname, "../../../../local-runtime/migrations");

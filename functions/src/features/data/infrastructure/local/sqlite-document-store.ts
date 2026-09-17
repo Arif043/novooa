@@ -2,7 +2,9 @@ import {randomUUID} from "node:crypto";
 import {
   type CreateDocumentCollectionInput,
   type DocumentCollection,
+  type DocumentCollectionNameInput,
   validateDocumentCollectionInput,
+  validateDocumentCollectionNameInput,
 } from "../../domain/entities/document-collection.js";
 import {
   type CreateDocumentInput,
@@ -40,6 +42,30 @@ export class SQLiteDocumentStore implements DocumentStore {
       await this.database.run(insertCollectionSql(), [input.id, input.teamId, input.displayName, timestamp, timestamp]);
       return {...input, createdAt: new Date(timestamp), updatedAt: new Date(timestamp)};
     });
+  }
+
+  async ensureCollection(input: DocumentCollectionNameInput): Promise<DocumentCollection> {
+    validateDocumentCollectionNameInput(input);
+    return this.database.transaction(async () => {
+      const existing = await this.findCollectionByName(input);
+      if (existing !== null) return existing;
+      const timestamp = new Date().toISOString();
+      await this.database.run(insertCollectionIfMissingSql(), [
+        randomUUID(), input.teamId, input.displayName, timestamp, timestamp,
+      ]);
+      const collection = await this.findCollectionByName(input);
+      if (collection === null) throw new Error("Die Datensammlung konnte nicht angelegt werden.");
+      return collection;
+    });
+  }
+
+  async findCollectionByName(input: DocumentCollectionNameInput): Promise<DocumentCollection | null> {
+    validateDocumentCollectionNameInput(input);
+    const row = await this.database.get<DocumentCollectionRow>(
+      "SELECT id, team_id, display_name, created_at, updated_at FROM document_collections WHERE team_id = ? AND display_name = ? COLLATE BINARY",
+      [input.teamId, input.displayName],
+    );
+    return row === null ? null : collectionFromRow(row);
   }
 
   async findOne(input: FindDocumentsInput): Promise<DocumentRecord | null> {
@@ -120,11 +146,19 @@ export class SQLiteDocumentStore implements DocumentStore {
   }
 
   private async collectionExists(teamId: string, collectionId: string): Promise<boolean> {
+    return (await this.collectionFor(teamId, collectionId)) !== null;
+  }
+
+  private async collectionFor(teamId: string, collectionId: string): Promise<DocumentCollection | null> {
     const row = await this.database.get<DocumentCollectionRow>(
       "SELECT id, team_id, display_name, created_at, updated_at FROM document_collections WHERE team_id = ? AND id = ?",
       [teamId, collectionId],
     );
-    return row !== null;
+    if (row === null) return null;
+    return {
+      id: row.id, teamId: row.team_id, displayName: row.display_name,
+      createdAt: new Date(row.created_at), updatedAt: new Date(row.updated_at),
+    };
   }
 
   private async documentById(
@@ -135,6 +169,13 @@ export class SQLiteDocumentStore implements DocumentStore {
     const row = await this.database.get<DocumentRow>(selectDocumentByIdSql(), [teamId, collectionId, documentId]);
     return row === null ? null : documentFromRow(row);
   }
+}
+
+function collectionFromRow(row: DocumentCollectionRow): DocumentCollection {
+  return {
+    id: row.id, teamId: row.team_id, displayName: row.display_name,
+    createdAt: new Date(row.created_at), updatedAt: new Date(row.updated_at),
+  };
 }
 
 function documentFromInput(
@@ -163,6 +204,11 @@ function queryFor(input: FindDocumentsInput, filters: ReturnType<typeof sqlFilte
 
 function insertCollectionSql(): string {
   return `INSERT INTO document_collections(id, team_id, display_name, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?)`;
+}
+
+function insertCollectionIfMissingSql(): string {
+  return `INSERT OR IGNORE INTO document_collections(id, team_id, display_name, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?)`;
 }
 

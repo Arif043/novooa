@@ -1,6 +1,7 @@
 import {
   type CreateDocumentCollectionInput,
   type DocumentCollection,
+  type DocumentCollectionNameInput,
 } from "../domain/entities/document-collection.js";
 import {
   type CreateDocumentInput,
@@ -14,6 +15,14 @@ import {type DocumentStore} from "../domain/repositories/document-store.js";
 
 export class UnavailableDocumentStore implements DocumentStore {
   createCollection(_input: CreateDocumentCollectionInput): Promise<DocumentCollection> {
+    return unavailable();
+  }
+
+  ensureCollection(_input: DocumentCollectionNameInput): Promise<DocumentCollection> {
+    return unavailable();
+  }
+
+  findCollectionByName(_input: DocumentCollectionNameInput): Promise<DocumentCollection | null> {
     return unavailable();
   }
 

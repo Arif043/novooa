@@ -127,10 +127,7 @@ damit ein Arbeitsplan ihn mit dem vorhandenen Wenn-dann-Baustein behandeln
 kann. Ein Speicherfehler bleibt dagegen ein Run-Fehler; so wird kein
 unvollständig gespeicherter Datensatz als Erfolg ausgegeben.
 
-Der Speichern-Executor liest bei Aktualisierung einen Datensatz anhand seiner
-ID, vereinigt seine sichtbaren Felder mit den neuen Feldzuordnungen und reicht
-die gelesene Versionsnummer an den Store weiter. Dadurch bleibt die
-optimistische Sperre auch innerhalb eines Arbeitsplans erhalten.
+Der Speichern-Executor stellt die benannte Datensammlung vor dem Speichern atomar sicher. Fehlt sie, wird sie für das aktive Team implizit angelegt; bei wiederholten Ausführungen bleibt sie unverändert. Ohne Fachbedingungen ist der Modus Anlegen aktiv und er erzeugt immer einen neuen Datensatz. Sobald mindestens eine Bedingung konfiguriert ist, verwendet er den Modus Aktualisieren oder anlegen: Er findet alle passenden Datensätze, aktualisiert sie mit den sichtbaren Feldzuordnungen und verwendet ihre IDs und Versionsstände ausschließlich intern. Ohne Treffer legt er einen neuen Datensatz an.
 
 ## Dateien und Kanaele
 

@@ -223,7 +223,7 @@ class NodeConfigDocumentMapper {
   ) {
     return {
       'primitive': config.primitive.name,
-      'collectionId': config.collectionId,
+      'collectionName': config.collectionName,
       'filters': config.filters.map(_lookupFilterToDocument).toList(),
     };
   }
@@ -239,9 +239,8 @@ class NodeConfigDocumentMapper {
   Map<String, Object?> _saveDocumentToDocument(SaveDocumentNodeConfig config) {
     return {
       'primitive': config.primitive.name,
-      'collectionId': config.collectionId,
-      'mode': config.mode.name,
-      'documentId': config.documentId,
+      'collectionName': config.collectionName,
+      'filters': config.filters.map(_lookupFilterToDocument).toList(),
       'fields': config.fields.map(_fieldAssignmentToDocument).toList(),
     };
   }
@@ -419,7 +418,10 @@ class NodeConfigDocumentMapper {
       data['filters'],
     ).map(_lookupFilterFrom).toList(growable: false);
     return DocumentLookupNodeConfig(
-      collectionId: data['collectionId'] as String? ?? '',
+      collectionName:
+          data['collectionName'] as String? ??
+          data['collectionId'] as String? ??
+          '',
       filters: filters.isEmpty
           ? DocumentLookupNodeConfig.initial().filters
           : filters,
@@ -446,24 +448,26 @@ class NodeConfigDocumentMapper {
       data['fields'],
     ).map(_fieldAssignmentFrom).toList(growable: false);
     return SaveDocumentNodeConfig(
-      collectionId: data['collectionId'] as String? ?? '',
-      mode: _saveModeFrom(data['mode']),
-      documentId: data['documentId'] as String? ?? '',
+      collectionName:
+          data['collectionName'] as String? ??
+          data['collectionId'] as String? ??
+          '',
+      filters: _saveFiltersFrom(data['filters']),
       fields: fields.isEmpty ? SaveDocumentNodeConfig.initial().fields : fields,
     );
+  }
+
+  List<DocumentLookupFilter> _saveFiltersFrom(Object? value) {
+    final filters = _mapListFrom(
+      value,
+    ).map(_lookupFilterFrom).toList(growable: false);
+    return filters.isEmpty ? SaveDocumentNodeConfig.initial().filters : filters;
   }
 
   DocumentFieldAssignment _fieldAssignmentFrom(Map<String, Object?> data) {
     return DocumentFieldAssignment(
       field: data['field'] as String? ?? '',
       value: data['value'] as String? ?? '',
-    );
-  }
-
-  DocumentSaveMode _saveModeFrom(Object? value) {
-    return DocumentSaveMode.values.firstWhere(
-      (mode) => mode.name == value,
-      orElse: () => DocumentSaveMode.create,
     );
   }
 

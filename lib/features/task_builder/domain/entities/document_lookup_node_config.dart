@@ -39,16 +39,16 @@ class DocumentLookupFilter extends Equatable {
 
 class DocumentLookupNodeConfig extends NodeConfig {
   const DocumentLookupNodeConfig({
-    required this.collectionId,
+    required this.collectionName,
     required this.filters,
   });
 
-  final String collectionId;
+  final String collectionName;
   final List<DocumentLookupFilter> filters;
 
   factory DocumentLookupNodeConfig.initial() {
     return const DocumentLookupNodeConfig(
-      collectionId: '',
+      collectionName: '',
       filters: [
         DocumentLookupFilter(
           field: '',
@@ -63,14 +63,14 @@ class DocumentLookupNodeConfig extends NodeConfig {
   WorkflowPrimitive get primitive => .documentLookup;
 
   @override
-  List<Object?> get props => [collectionId, filters];
+  List<Object?> get props => [collectionName, filters];
 
   DocumentLookupNodeConfig copyWith({
-    String? collectionId,
+    String? collectionName,
     List<DocumentLookupFilter>? filters,
   }) {
     return DocumentLookupNodeConfig(
-      collectionId: collectionId ?? this.collectionId,
+      collectionName: collectionName ?? this.collectionName,
       filters: filters ?? this.filters,
     );
   }

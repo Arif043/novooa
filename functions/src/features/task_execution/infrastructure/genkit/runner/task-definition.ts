@@ -1,6 +1,5 @@
 import {z} from "genkit";
 import {documentFilterOperators} from "../../../../data/domain/entities/document-filter.js";
-import {documentSaveModes} from "../../../domain/entities/data-node-config.js";
 import {
   type NodeOutputValue,
   workflowPrimitives,
@@ -197,7 +196,7 @@ export const readFileNodeConfigSchema = z.object({
 
 export const documentLookupNodeConfigSchema = z.object({
   primitive: z.literal("documentLookup").default("documentLookup"),
-  collectionId: z.string().default(""),
+  collectionName: z.string().default(""),
   filters: z.array(z.object({
     field: z.string().default(""),
     operator: z.enum(documentFilterOperators).default("equals"),
@@ -207,9 +206,12 @@ export const documentLookupNodeConfigSchema = z.object({
 
 export const saveDocumentNodeConfigSchema = z.object({
   primitive: z.literal("saveDocument").default("saveDocument"),
-  collectionId: z.string().default(""),
-  mode: z.enum(documentSaveModes).default("create"),
-  documentId: z.string().default(""),
+  collectionName: z.string().default(""),
+  filters: z.array(z.object({
+    field: z.string().default(""),
+    operator: z.enum(documentFilterOperators).default("equals"),
+    value: z.string().default(""),
+  })).default([]),
   fields: z.array(z.object({
     field: z.string().default(""),
     value: z.string().default(""),

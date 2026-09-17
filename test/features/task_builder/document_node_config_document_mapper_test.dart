@@ -6,7 +6,7 @@ import 'package:syscat2/features/task_builder/infrastructure/models/node_config_
 void main() {
   test('serialisiert und deserialisiert Datensatz suchen', () {
     const config = DocumentLookupNodeConfig(
-      collectionId: 'kunden',
+      collectionName: 'kunden',
       filters: [
         DocumentLookupFilter(
           field: 'email',
@@ -25,9 +25,14 @@ void main() {
 
   test('serialisiert und deserialisiert Datensatz speichern', () {
     const config = SaveDocumentNodeConfig(
-      collectionId: 'bestellungen',
-      mode: DocumentSaveMode.upsert,
-      documentId: '{{eingang.bestellnummer}}',
+      collectionName: 'bestellungen',
+      filters: [
+        DocumentLookupFilter(
+          field: 'bestellnummer',
+          operator: DocumentFilterOperator.equals,
+          value: '{{eingang.bestellnummer}}',
+        ),
+      ],
       fields: [
         DocumentFieldAssignment(field: 'status', value: 'bezahlt'),
         DocumentFieldAssignment(field: 'betrag', value: '{{eingang.betrag}}'),

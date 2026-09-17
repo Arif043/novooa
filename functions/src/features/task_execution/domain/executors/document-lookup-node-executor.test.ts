@@ -19,7 +19,6 @@ test("gibt einen gefundenen Datensatz mit verständlichem Ergebnis zurück", asy
 
   assert.deepEqual(result.outputs.value, {type: "string", value: "Datensatz gefunden"});
   assert.deepEqual(result.outputs.found, {type: "boolean", value: true});
-  assert.deepEqual(result.outputs.recordId, {type: "string", value: "kunde_1"});
 });
 
 test("liefert keinen Treffer als reguläres Bedingungsergebnis", async () => {
@@ -52,7 +51,7 @@ function lookupNode(value: string) {
     id: "lookup", primitive: "documentLookup" as const, title: "Datensatz suchen",
     description: "", referenceName: "kunde",
     config: {
-      primitive: "documentLookup" as const, collectionId: "kunden",
+      primitive: "documentLookup" as const, collectionName: "kunden",
       filters: [{field: "email", operator: "equals" as const, value}],
     },
   };
@@ -69,7 +68,7 @@ function runContext(
 }
 
 function collection() {
-  return {teamId: "team_1", id: "kunden", displayName: "Kundinnen und Kunden"};
+  return {teamId: "team_1", id: "kunden", displayName: "kunden"};
 }
 
 class FailingDocumentStore extends InMemoryDocumentStore {

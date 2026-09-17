@@ -49,8 +49,8 @@ SQL oder eine technische Datenbankabfrage einschleusen.
 
 Die lokale Runtime implementiert den Port mit `SQLiteDocumentStore`. SQLite ist
 eine unsichtbare Implementierungsentscheidung. Die Migration
-`012_document_store.sql` legt `document_collections` und `documents` an.
-Dokumentfelder liegen als valides JSON in `data_json`; Team, Sammlung, ID,
+`012_document_store.sql` legt `document_collections` und `documents` an; `013_document_collection_display_name.sql` sichert eindeutige, exakte Sammlungsnamen je Team.
+Die Runtime erzeugt eine interne Sammlungs-ID. Arbeitspläne verwenden ausschließlich den sichtbaren Namen; Groß- und Kleinschreibung bleiben Teil dieses Namens, daher sind Kunden und kunden getrennte Sammlungen. Dokumentfelder liegen als valides JSON in `data_json`; Team, Sammlung, ID,
 Version und Zeitstempel sind getrennte Spalten. Der Zugriff enthält immer die
 Team- und Sammlungsgrenze.
 
@@ -67,18 +67,9 @@ Datensatz gefunden** oder **Suche fehlgeschlagen**. Damit entscheidet der
 normale Wenn-dann-Baustein ohne Speziallogik und ohne separaten Baustein
 „Dokument existiert".
 
-**Datensatz speichern** kennt die Modi **Anlegen**, **Aktualisieren** und
-**Anlegen oder aktualisieren**. Er erhält eine Sammlung, bei Bedarf eine
-Datensatz-ID und eine Liste sichtbarer Feldzuordnungen. Beim Aktualisieren
-bleiben nicht konfigurierte Felder unverändert; der Store prüft dabei den
-Versionsstand. Werte aus vorherigen Bausteinen werden als bekannte
-Bausteinwerte aufgelöst, etwa die E-Mail einer eingegangenen Nachricht oder
-die ID eines zuvor gefundenen Datensatzes. Die Oberfläche zeigt weder SQL noch
-JSON-Pfade.
+**Datensatz speichern** erhält eine Sammlung, sichtbare Feldbedingungen und eine Liste sichtbarer Feldzuordnungen. Ohne Bedingungen legt es immer einen neuen Datensatz an. Mit mindestens einer Bedingung aktualisiert es alle Datensätze, die die Bedingungen erfüllen; werden keine Datensätze gefunden, legt die Runtime einen neuen an. Nicht konfigurierte Felder bestehender Datensätze bleiben unverändert; der Store prüft dabei den Versionsstand.
 
-**Datensätze suchen** bleibt als nächster Baustein vorgesehen. Die
-Fachlogik `findMany` ist bereits vorhanden, aber die erste sichtbare Variante
-umfasst bewusst nur die klare Einzeltreffer-Entscheidung.
+**Datensätze suchen** liefert weiterhin einen einzelnen fachlich passenden Datensatz. Der Speichern-Baustein verwendet dagegen `findMany`, damit er alle passenden Datensätze aktualisieren kann.
 
 ## Qualitätssicherung
 

@@ -66,11 +66,11 @@ im Runner.
 Feldbedingungen ab. Sein primärer Wert ist immer ein für den bestehenden
 Wenn-dann-Baustein lesbares Label: `Datensatz gefunden`, `Kein passender
 Datensatz gefunden` oder `Suche fehlgeschlagen`. Für ein gefundenes Ergebnis
-stehen zusätzlich die Datensatz-ID und der Datensatz als strukturierter Output
+steht zusätzlich der Datensatz mit seinen fachlichen Feldern als strukturierter Output
 bereit. Ein gesonderter „Existiert Dokument?“-Baustein ist daher nicht nötig.
-`saveDocument` speichert nur die konfigurierten Felder: Bei Aktualisierung und
-„Anlegen oder aktualisieren“ erhält es die übrigen Felder eines vorhandenen
-Datensatzes und schreibt sie unverändert zurück. Die Version aus diesem Read
+`saveDocument` findet Datensätze ausschließlich über sichtbare Feldbedingungen.
+Es aktualisiert alle Treffer und legt ohne Treffer einen neuen Datensatz an. Nicht
+konfigurierte Felder eines Treffers bleiben unverändert. Die Version aus diesem Read
 wird an den Store weitergegeben, sodass eine parallele Änderung sicher
 abgewiesen statt überschrieben wird.
 

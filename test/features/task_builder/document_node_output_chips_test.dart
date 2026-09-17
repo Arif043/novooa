@@ -22,9 +22,10 @@ void main() {
     );
 
     expect(find.text('found'), findsOneWidget);
-    expect(find.text('recordId'), findsNWidgets(2));
-    expect(find.text('record'), findsNWidgets(2));
-    expect(find.text('isNew'), findsOneWidget);
+    expect(find.text('record'), findsOneWidget);
+    expect(find.text('created'), findsOneWidget);
+    expect(find.text('count'), findsOneWidget);
+    expect(find.text('records'), findsOneWidget);
   });
 }
 
