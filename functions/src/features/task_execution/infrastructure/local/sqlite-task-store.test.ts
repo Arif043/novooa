@@ -21,6 +21,24 @@ test("loads client task documents whose primitive is stored in node config", asy
   database.close();
 });
 
+test("loads data nodes whose primitive is stored in node configuration", async () => {
+  const database = new SqliteLocalSqlDatabase(":memory:");
+  await database.run(`CREATE TABLE tasks (
+    id TEXT PRIMARY KEY, team_id TEXT NOT NULL, title TEXT NOT NULL,
+    objective TEXT NOT NULL, graph_json TEXT NOT NULL
+  )`);
+  await database.run(
+    "INSERT INTO tasks (id, team_id, title, objective, graph_json) VALUES (?, ?, ?, ?, ?)",
+    ["task-1", "team-1", "Aufgabe", "", JSON.stringify(dataGraphDocument())],
+  );
+
+  const task = await new SQLiteTaskStore(database).loadTask("team-1", "task-1");
+
+  assert.equal(task.nodes[0]?.config.primitive, "documentLookup");
+  assert.equal(task.nodes[1]?.config.primitive, "saveDocument");
+  database.close();
+});
+
 function graphDocument() {
   return {
     nodes: [{
@@ -31,6 +49,25 @@ function graphDocument() {
         attachments: [], knowledgeAttachments: [], skillAttachments: [],
       },
     }],
+    edges: [],
+  };
+}
+
+function dataGraphDocument() {
+  return {
+    nodes: [
+      {
+        id: "lookup", title: "Datensatz suchen", description: "", referenceName: "lookup",
+        config: {primitive: "documentLookup", collectionId: "kunden", filters: []},
+      },
+      {
+        id: "save", title: "Datensatz speichern", description: "", referenceName: "save",
+        config: {
+          primitive: "saveDocument", collectionId: "kunden", mode: "create", documentId: "",
+          fields: [{field: "name", value: "Max"}],
+        },
+      },
+    ],
     edges: [],
   };
 }

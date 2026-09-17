@@ -1,4 +1,6 @@
 import {z} from "genkit";
+import {documentFilterOperators} from "../../../../data/domain/entities/document-filter.js";
+import {documentSaveModes} from "../../../domain/entities/data-node-config.js";
 import {
   type NodeOutputValue,
   workflowPrimitives,
@@ -193,6 +195,27 @@ export const readFileNodeConfigSchema = z.object({
   file: nodeAttachmentSchema.optional(),
 });
 
+export const documentLookupNodeConfigSchema = z.object({
+  primitive: z.literal("documentLookup").default("documentLookup"),
+  collectionId: z.string().default(""),
+  filters: z.array(z.object({
+    field: z.string().default(""),
+    operator: z.enum(documentFilterOperators).default("equals"),
+    value: z.string().default(""),
+  })).default([]),
+});
+
+export const saveDocumentNodeConfigSchema = z.object({
+  primitive: z.literal("saveDocument").default("saveDocument"),
+  collectionId: z.string().default(""),
+  mode: z.enum(documentSaveModes).default("create"),
+  documentId: z.string().default(""),
+  fields: z.array(z.object({
+    field: z.string().default(""),
+    value: z.string().default(""),
+  })).default([]),
+});
+
 export const readEmailNodeConfigSchema = z.object({
   primitive: z.literal("readEmail").default("readEmail"),
 });
@@ -224,6 +247,8 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   forEachNodeConfigSchema,
   writeFileNodeConfigSchema,
   readFileNodeConfigSchema,
+  documentLookupNodeConfigSchema,
+  saveDocumentNodeConfigSchema,
   readEmailNodeConfigSchema,
   readChannelEventNodeConfigSchema,
   sendChannelMessageNodeConfigSchema,
