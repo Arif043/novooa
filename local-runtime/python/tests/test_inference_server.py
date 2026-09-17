@@ -45,7 +45,11 @@ class TransformationCapabilitiesTest(unittest.TestCase):
         capabilities = transformation_capabilities()
 
         self.assertIn("image.resize", capabilities["inputTransformationTypes"])
+        self.assertIn("image.resizePad", capabilities["inputTransformationTypes"])
+        self.assertIn("image.padToMultiple", capabilities["inputTransformationTypes"])
+        self.assertIn("tensor.channelOrder", capabilities["inputTransformationTypes"])
         self.assertIn("tensor.topK", capabilities["outputTransformationTypes"])
+        self.assertIn("geometry.scaleBounds", capabilities["outputTransformationTypes"])
 
 
 class RecordingFactory:

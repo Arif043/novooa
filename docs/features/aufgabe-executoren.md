@@ -77,13 +77,12 @@ read_file(display_name)
 Der Conditional-Executor nutzt die lesbaren primären Werte seiner direkten
 Vorgänger als Ziellabel.
 Er waehlt den Branch mit dem exakt passenden Label, ansonsten den ersten
-Branch. Der Branch-Graph wird als Subgraph ausgefuehrt; dessen finale Ausgabe
+Branch. Der Branch-Graph wird durch denselben Graph-Runner ausgefuehrt; dessen finale Ausgabe
 wird `text` des Conditional-Knotens. Ausgehende Top-Level-Kanten sind nur ein
 Legacy-Fallback.
 
 `executeConditionalFlow` enthaelt die Auswahlregel als Domain-Funktion. Der
-Genkit-Executor loest Templates auf, startet gegebenenfalls den ausgewaehlten
-Subgraph und protokolliert dessen Lauf.
+Genkit-Executor loest Templates auf, startet gegebenenfalls den ausgewaehlten eingebetteten Graphen und protokolliert dessen Lauf.
 
 ## Iterative Verfeinerung
 

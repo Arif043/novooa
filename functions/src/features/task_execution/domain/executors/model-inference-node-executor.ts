@@ -17,6 +17,7 @@ export const modelInferenceNodeExecutor: NodeExecutor = {
       modelId: modelIdFor(input.node),
       inputs,
       outputParameters: outputParametersFor(input.node),
+      transformationBindings: runContext.scope,
     });
     return executedNode(input.node, outputsFor(result));
   },

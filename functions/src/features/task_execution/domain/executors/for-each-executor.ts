@@ -2,17 +2,17 @@ import {
   type ForEachNodeConfig,
   type NodeExecutionResult,
   type NodeOutputValue,
-  type TaskDefinition,
+  type WorkflowGraph,
 } from "../entities/task.js";
 import {valueAtJsonPointer} from "../services/json-pointer.js";
+import {type WorkflowGraphInput} from "./node-executor.js";
 
 export type ForEachExecutionRequest = {
-  nodeId: string;
   config: ForEachNodeConfig;
   inputValue: NodeOutputValue | undefined;
-  runSubgraph: (
-    task: TaskDefinition,
-    initialValue: NodeOutputValue,
+  runGraph: (
+    graph: WorkflowGraph,
+    input: WorkflowGraphInput,
   ) => Promise<NodeExecutionResult[]>;
 };
 
@@ -23,15 +23,18 @@ export async function executeForEach(
     throw new Error("Für jedes Element benötigt einen JSON-Eingang.");
   }
   const items = itemsFor(request.inputValue.value, request.config.itemsPointer);
-  validateSubgraph(request.config.graph.nodes);
+  validateGraph(request.config.graph.nodes);
   const results: unknown[] = [];
   for (const [index, item] of items.entries()) {
     try {
-      const subgraphResults = await request.runSubgraph(
-        subgraphTask(request.nodeId, request.config),
-        {type: "json", value: item},
+      const graphResults = await request.runGraph(
+        graphFor(request.config.graph),
+        {
+          initialValue: {type: "json", value: item},
+          scope: {iteration: {index, value: item}},
+        },
       );
-      results.push(primaryValueOf(subgraphResults));
+      results.push(outputsOf(graphResults, request.config.graph.nodes));
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unbekannter Fehler";
       throw new Error(`Iteration ${index} ist fehlgeschlagen: ${message}`);
@@ -48,7 +51,7 @@ function itemsFor(value: unknown, pointer: string): unknown[] {
   return items;
 }
 
-function validateSubgraph(nodes: readonly {primitive: string}[]): void {
+function validateGraph(nodes: readonly {primitive: string}[]): void {
   if (nodes.some((node) => node.primitive === "forEach")) {
     throw new Error("Verschachtelte Für-jedes-Element-Bausteine werden noch nicht unterstützt.");
   }
@@ -63,23 +66,21 @@ function isPausingNode(node: {primitive: string}): boolean {
     node.primitive === "mediaInput";
 }
 
-function subgraphTask(
-  nodeId: string,
-  config: ForEachNodeConfig,
-): TaskDefinition {
-  return {
-    id: `${nodeId}:forEach`,
-    title: "Für jedes Element",
-    objective: "",
-    nodes: config.graph.nodes as TaskDefinition["nodes"],
-    edges: config.graph.edges,
-  };
+function graphFor(config: ForEachNodeConfig["graph"]): WorkflowGraph {
+  return config as WorkflowGraph;
 }
 
-function primaryValueOf(results: readonly NodeExecutionResult[]): unknown {
-  for (let index = results.length - 1; index >= 0; index -= 1) {
-    const output = results[index].outputs.value;
-    if (output !== undefined) return output.value;
-  }
-  return null;
+function outputsOf(
+  results: readonly NodeExecutionResult[],
+  nodes: readonly {id: string; referenceName: string}[],
+): Record<string, unknown> {
+  const resultByNodeId = new Map(results.map((result) => [result.nodeId, result]));
+  return Object.fromEntries(nodes.flatMap((node) => {
+    const result = resultByNodeId.get(node.id);
+    if (result?.status !== "executed") return [];
+    const name = node.referenceName.trim() || node.id;
+    return [[name, Object.fromEntries(
+      Object.entries(result.outputs).map(([key, output]) => [key, output.value]),
+    )]];
+  }));
 }

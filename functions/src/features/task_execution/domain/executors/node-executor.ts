@@ -2,6 +2,7 @@ import {
   type NodeExecutionResult,
   type NodeOutputValue,
   type TaskDefinition,
+  type WorkflowGraph,
   type WorkflowNode,
 } from "../entities/task.js";
 import {type TaskRunInteraction} from "../entities/task-run-interaction.js";
@@ -13,19 +14,34 @@ import {type DocumentStore} from "../../../data/domain/repositories/document-sto
 
 export type TaskVariables = Record<string, unknown>;
 
-export type SubgraphRunner = (
-  task: TaskDefinition,
+export type WorkflowExecutionScope = {
+  global?: Record<string, unknown>;
+  iteration?: {
+    index: number;
+    value: unknown;
+  };
+};
+
+export type WorkflowGraphInput = {
+  initialValue?: NodeOutputValue;
+  scope?: WorkflowExecutionScope;
+};
+
+export type WorkflowGraphRunner = (
+  graph: WorkflowGraph,
   context: string,
-  initialValue?: NodeOutputValue,
+  input?: WorkflowGraphInput,
 ) => Promise<NodeExecutionResult[]>;
 
 export type TaskRunContext = {
   variables: TaskVariables;
   task: TaskDefinition;
+  graph: WorkflowGraph;
   teamId: string;
   input: Record<string, unknown>;
+  scope: WorkflowExecutionScope;
   results: Map<string, NodeExecutionResult>;
-  runSubgraph: SubgraphRunner;
+  runGraph: WorkflowGraphRunner;
   resolveTemplates: (text: string) => string;
   resolveTemplateValue: (text: string) => unknown;
   teamFileStore: TeamFileStore;
@@ -106,10 +122,10 @@ export function waitingForInteractionNode(
 
 export function parentOutputsFor(
   node: WorkflowNode,
-  task: TaskDefinition,
+  graph: WorkflowGraph,
   results: Map<string, NodeExecutionResult>,
 ): ParentNodeOutput[] {
-  return parentResultsFor(node, task, results).flatMap((parent) => {
+  return parentResultsFor(node, graph, results).flatMap((parent) => {
     const value = primaryOutputFromResult(parent.result);
     if (value === undefined) return [];
     return [{nodeId: parent.result.nodeId, outputName: "value", value}];
@@ -167,14 +183,14 @@ function textForOutputValue(value: NodeOutputValue): string {
 
 export function parentResultsFor(
   node: WorkflowNode,
-  task: TaskDefinition,
+  graph: WorkflowGraph,
   results: Map<string, NodeExecutionResult>,
 ) {
-  return task.edges
+  return graph.edges
     .filter((edge) => edge.to === node.id)
     .map((edge) => ({edge, result: results.get(edge.from)}))
     .filter((parent) => parent.result !== undefined) as {
-      edge: TaskDefinition["edges"][number];
+      edge: WorkflowGraph["edges"][number];
       result: NodeExecutionResult;
     }[];
 }

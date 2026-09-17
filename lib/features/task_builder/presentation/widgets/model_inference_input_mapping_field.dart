@@ -64,7 +64,7 @@ class ModelInferenceInputMappingField extends StatelessWidget {
     initialValue: mapping.workflowMapping,
     decoration: const InputDecoration(
       labelText: 'Workflow-Mapping',
-      hintText: '{{eingabe.wert}} oder fester Wert',
+      hintText: '{{eingabe.wert}} oder {{iteration.value}}',
     ),
     onChanged: (workflowMapping) =>
         context.read<TaskBuilderCubit>().updateModelInferenceWorkflowMapping(

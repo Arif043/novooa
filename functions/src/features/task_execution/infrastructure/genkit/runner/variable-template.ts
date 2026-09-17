@@ -1,8 +1,11 @@
-import {type TaskVariables} from "../../../domain/executors/node-executor.js";
+import {
+  type TaskVariables,
+  type WorkflowExecutionScope,
+} from "../../../domain/executors/node-executor.js";
 import {
   type NodeExecutionResult,
   type NodeOutputValue,
-  type TaskDefinition,
+  type WorkflowGraph,
   type WorkflowNode,
 } from "./task-definition.js";
 
@@ -10,6 +13,7 @@ const variablePattern = /\{\{\s*([a-zA-Z_][\w]*(?:\.[a-zA-Z_][\w]*|\.\d+)*)\s*\}
 
 export type VariableTemplateContext = {
   variables: TaskVariables;
+  scope: WorkflowExecutionScope;
   nodeOutputs: Record<string, Record<string, NodeOutputValue>>;
 };
 
@@ -34,13 +38,15 @@ export function resolveVariableTemplateValue(
 }
 
 export function variableTemplateContextFor(
-  task: TaskDefinition,
+  graph: WorkflowGraph,
   results: Map<string, NodeExecutionResult>,
   variables: TaskVariables,
+  scope: WorkflowExecutionScope = {},
 ): VariableTemplateContext {
   return {
     variables,
-    nodeOutputs: nodeOutputScopesFor(task.nodes, results),
+    scope,
+    nodeOutputs: nodeOutputScopesFor(graph.nodes, results),
   };
 }
 
@@ -49,8 +55,12 @@ function templateValueAt(
   path: string,
 ): unknown {
   const segments = path.split(".");
+  const scopeValue = valueAtPath(context.scope, segments);
+  if (scopeValue !== undefined) return scopeValue;
   const outputValue = nodeOutputAt(context.nodeOutputs, segments);
   if (outputValue !== undefined) return outputValue;
+  const globalValue = valueAtPath(context.scope.global, segments);
+  if (globalValue !== undefined) return globalValue;
   return valueAtPath(context.variables, segments);
 }
 

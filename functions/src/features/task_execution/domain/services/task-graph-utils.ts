@@ -1,6 +1,6 @@
 import {
   type NodeExecutionResult,
-  type TaskDefinition,
+  type WorkflowGraph,
   type WorkflowEdge,
   type WorkflowNode,
 } from "../entities/task.js";
@@ -36,15 +36,15 @@ function formatVariable(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 
-export function validateGraph(taskDefinition: TaskDefinition): void {
+export function validateGraph(graph: WorkflowGraph): void {
   const nodeIds = new Set<string>();
-  for (const node of taskDefinition.nodes) {
+  for (const node of graph.nodes) {
     if (nodeIds.has(node.id)) {
       throw new Error(`Task graph contains a duplicate node: ${node.id}.`);
     }
     nodeIds.add(node.id);
   }
-  for (const edge of taskDefinition.edges) {
+  for (const edge of graph.edges) {
     if (!nodeIds.has(edge.from) || !nodeIds.has(edge.to)) {
       throw new Error(
         `Task graph edge references an unknown node: ${edge.from}->${edge.to}.`,
@@ -55,24 +55,24 @@ export function validateGraph(taskDefinition: TaskDefinition): void {
 
 export function shouldSkipNode(
   node: WorkflowNode,
-  taskDefinition: TaskDefinition,
+  graph: WorkflowGraph,
   results: Map<string, NodeExecutionResult>,
   skippedNodeIds: Set<string>,
 ): boolean {
   if (skippedNodeIds.has(node.id)) return true;
-  const parents = taskDefinition.edges.filter((edge) => edge.to === node.id);
+  const parents = graph.edges.filter((edge) => edge.to === node.id);
   if (parents.length === 0) return false;
   return parents.every((edge) => results.get(edge.from)?.status === "skipped");
 }
 
 export function skipInactiveBranches(
   node: WorkflowNode,
-  taskDefinition: TaskDefinition,
+  graph: WorkflowGraph,
   result: NodeExecutionResult,
   skippedNodeIds: Set<string>,
 ): void {
   if (node.primitive !== "conditionalFlow") return;
-  const outgoingEdges = taskDefinition.edges.filter((edge) => {
+  const outgoingEdges = graph.edges.filter((edge) => {
     return edge.from === node.id;
   });
   for (const edge of outgoingEdges) {

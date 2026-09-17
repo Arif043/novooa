@@ -6,6 +6,7 @@ import {
   type ModelInferenceResult,
 } from "../repositories/model-inference.js";
 import {mapWorkflowOutput} from "../services/workflow-output-mapper.js";
+import {resolveModelContractBindings} from "../services/resolve-model-contract-bindings.js";
 import {PrepareModelInputs} from "./prepare-model-inputs.js";
 import {RunModelInference} from "./run-model-inference.js";
 
@@ -17,7 +18,14 @@ export class RunModelInferenceWithSources implements ModelInference {
   ) {}
 
   async execute(request: ModelInferenceRequest): Promise<ModelInferenceResult> {
-    const model = await this.modelFor(request.teamId, request.modelId);
+    const storedModel = await this.modelFor(request.teamId, request.modelId);
+    const model = {
+      ...storedModel,
+      contract: resolveModelContractBindings(
+        storedModel.contract,
+        request.transformationBindings,
+      ),
+    };
     const inputs = await this.prepareModelInputs.execute(model.contract, request.inputs);
     const outputs = await this.runModelInference.execute({
       model,

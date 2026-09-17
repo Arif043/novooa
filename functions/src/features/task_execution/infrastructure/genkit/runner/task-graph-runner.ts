@@ -1,16 +1,13 @@
 import { type GenkitBeta } from "genkit/beta";
 import {
-  type SubgraphRunner,
   type ParentNodeOutput,
-  type TaskRunContext,
-  type TaskVariables,
+  type WorkflowExecutionScope,
 } from "../../../domain/executors/node-executor.js";
 import {
-  type NodeExecutionResult,
   type NodeOutputValue,
   type TaskGraphInput,
   type TaskGraphOutput,
-  type TaskDefinition as Task,
+  type WorkflowGraph,
   type TaskResumeState,
 } from "./task-definition.js";
 import {
@@ -37,13 +34,9 @@ import {
   logSkippedBranches,
   runNodeWithTrail,
 } from "./task-node-runner.js";
-import {
-  resolveVariableTemplates,
-  resolveVariableTemplateValue,
-  variableTemplateContextFor,
-} from "./variable-template.js";
 import {type TaskGraphRuntime} from "./task-graph-runtime.js";
 import {updateTaskVariables} from "./task-run-variables.js";
+import {createTaskRunContext} from "./workflow-graph-run-context.js";
 export async function executeTaskGraph(
   ai: GenkitBeta,
   input: TaskGraphInput,
@@ -93,8 +86,10 @@ async function runNodes(
   runtime: TaskGraphRuntime,
   initialState?: InitialNodeRunState,
   initialParentOutputs: readonly ParentNodeOutput[] = [],
+  scope: WorkflowExecutionScope = {},
+  graph: WorkflowGraph = input.taskDefinition,
 ): Promise<NodeRunState> {
-  const remaining = remainingNodes(input.taskDefinition, initialState);
+  const remaining = remainingNodes(graph, initialState);
   const results = resultsMapFrom(initialState?.nodeResults ?? []);
   const skippedNodeIds = new Set(initialState?.skippedNodeIds ?? []);
   const variables = {...initialState?.variables};
@@ -102,7 +97,7 @@ async function runNodes(
   while (remaining.length > 0) {
     const index = nextRunnableIndex(
       remaining,
-      input.taskDefinition.edges,
+      graph.edges,
       results,
     );
     if (index === -1) throw new Error("Task graph contains a cycle.");
@@ -110,26 +105,54 @@ async function runNodes(
     const context = contextFor(variables);
     const parentOutputs = parentOutputsFor(
       node,
-      input.taskDefinition,
+      graph,
       results,
     );
     const effectiveParentOutputs = parentOutputs.length === 0
-      && input.taskDefinition.edges.every((edge) => edge.to !== node.id)
+      && graph.edges.every((edge) => edge.to !== node.id)
       ? [...initialParentOutputs]
       : parentOutputs;
     const skipNode = shouldSkipNode(
       node,
-      input.taskDefinition,
+      graph,
       results,
       skippedNodeIds,
     );
     const startedAt = Date.now();
-    logNodeHeaderLine(runtime.logger, node, input.taskDefinition, context, skipNode, results);
+    logNodeHeaderLine(runtime.logger, node, input.taskDefinition.id, graph, context, skipNode, results);
     const result = await runNodeWithTrail(ai, {
       node,
       context,
       parentOutputs: effectiveParentOutputs,
-      runContext: runContextFor(ai, input, runtime, results, variables),
+      runContext: createTaskRunContext({
+        input,
+        runtime,
+        graph,
+        results,
+        variables,
+        scope,
+        executeGraph: async (embeddedGraph, embeddedContext, graphInput, embeddedScope) => {
+          const state = await runNodes(
+            ai,
+            input,
+            runtime,
+            {
+              nodeResults: [],
+              variables,
+              remainingNodeIds: embeddedGraph.nodes.map((item) => item.id),
+              skippedNodeIds: [],
+            },
+            graphInput.initialValue === undefined ? [] : [{
+              nodeId: "$iteration",
+              outputName: "value",
+              value: graphInput.initialValue,
+            }],
+            embeddedScope,
+            embeddedGraph,
+          );
+          return state.nodeResults;
+        },
+      }),
       skipNode,
       startedAt,
       objectStore: runtime.objectStore,
@@ -139,12 +162,12 @@ async function runNodes(
     });
     updateTaskVariables(variables, result);
     results.set(node.id, result);
-    skipInactiveBranches(node, input.taskDefinition, result, skippedNodeIds);
+    skipInactiveBranches(node, graph, result, skippedNodeIds);
     logSkippedBranches(runtime.logger, node, input.taskDefinition.id, result, skippedNodeIds);
     if (result.status === "waitingForApproval") {
       return {
         status: "waitingForApproval",
-        nodeResults: orderedResults(input.taskDefinition, results),
+        nodeResults: orderedResults(graph, results),
         variables: {...variables},
         remainingNodeIds: remaining.map((item) => item.id),
         skippedNodeIds: Array.from(skippedNodeIds),
@@ -155,61 +178,6 @@ async function runNodes(
 
   return {
     status: "completed",
-    nodeResults: orderedResults(input.taskDefinition, results),
-  };
-}
-function runSubgraphFor(
-  ai: GenkitBeta,
-  variables: TaskVariables,
-  teamId: string,
-  runtime: TaskGraphRuntime,
-): SubgraphRunner {
-  return async (task: Task, context: string, initialValue?: NodeOutputValue) => {
-    const state = await runNodes(ai, {
-      taskDefinition: task,
-      context,
-      teamId,
-      input: {},
-    }, runtime, {
-      nodeResults: [],
-      variables,
-      remainingNodeIds: task.nodes.map((node) => node.id),
-      skippedNodeIds: [],
-    }, initialValue === undefined ? [] : [{
-      nodeId: "$iteration",
-      outputName: "value",
-      value: initialValue,
-    }]);
-    return state.nodeResults;
-  };
-}
-
-function runContextFor(
-  ai: GenkitBeta,
-  input: TaskGraphInput,
-  runtime: TaskGraphRuntime,
-  results: Map<string, NodeExecutionResult>,
-  variables: TaskVariables,
-): TaskRunContext {
-  return {
-    task: input.taskDefinition,
-    teamId: input.teamId,
-    input: input.input ?? {},
-    results,
-    variables,
-    teamFileStore: runtime.teamFileStore,
-    fileContentReader: runtime.fileContentReader,
-    messageSender: runtime.messageSender,
-    documentStore: runtime.documentStore,
-    modelInference: runtime.modelInference,
-    runSubgraph: runSubgraphFor(ai, variables, input.teamId, runtime),
-    resolveTemplates: (text: string) => resolveVariableTemplates(
-      text,
-      variableTemplateContextFor(input.taskDefinition, results, variables),
-    ),
-    resolveTemplateValue: (text: string) => resolveVariableTemplateValue(
-      text,
-      variableTemplateContextFor(input.taskDefinition, results, variables),
-    ),
+    nodeResults: orderedResults(graph, results),
   };
 }

@@ -40,6 +40,15 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
         return (node: _withBranches(node, config, branches), changed: true);
       }
     }
+    if (node.config case final ForEachNodeConfig config) {
+      final result = _swapNodesInGraph(config.graph, sourceId, targetId);
+      if (result.changed) {
+        return (
+          node: node.copyWith(config: config.copyWith(graph: result.graph)),
+          changed: true,
+        );
+      }
+    }
     return (node: node, changed: false);
   }
 
@@ -80,6 +89,15 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
     if (node.config case final ConditionalNodeConfig config) {
       return _updateNodeInBranches(node, config, nodeId, update);
     }
+    if (node.config case final ForEachNodeConfig config) {
+      final result = _updateNodeInGraph(config.graph, nodeId, update);
+      if (result.changed) {
+        return (
+          node: node.copyWith(config: config.copyWith(graph: result.graph)),
+          changed: true,
+        );
+      }
+    }
     return (node: node, changed: false);
   }
 
@@ -115,6 +133,10 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
         final nestedNode = _nodeOrNullInBranches(config, nodeId);
         if (nestedNode != null) return nestedNode;
       }
+      if (node.config case final ForEachNodeConfig config) {
+        final nestedNode = _nodeOrNullInGraph(config.graph, nodeId);
+        if (nestedNode != null) return nestedNode;
+      }
     }
     return null;
   }
@@ -145,6 +167,10 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
     for (final node in graph.nodes) {
       if (node.config case final ConditionalNodeConfig config) {
         final owner = _owningGraphInBranches(config, nodeId);
+        if (owner != null) return owner;
+      }
+      if (node.config case final ForEachNodeConfig config) {
+        final owner = _owningGraphOrNull(config.graph, nodeId);
         if (owner != null) return owner;
       }
     }

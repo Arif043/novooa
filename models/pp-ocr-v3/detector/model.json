@@ -1,0 +1,109 @@
+{
+  "id": "pp-ocr-v3-text-detector",
+  "title": "PP-OCRv3 Texterkennung",
+  "description": "Erkennt zusammenhängende Textbereiche in Dokumentbildern.",
+  "tags": [
+    "ocr",
+    "dokument",
+    "texterkennung",
+    "rechnung"
+  ],
+  "artifact": {
+    "artifactId": "pp-ocr-v3-text-detector",
+    "versionId": "rapidocr-3.9.2"
+  },
+  "contract": {
+    "inputs": [
+      {
+        "name": "x",
+        "source": "image",
+        "dataType": "float32",
+        "shape": [
+          "dynamic",
+          3,
+          "dynamic",
+          "dynamic"
+        ],
+        "transformations": [
+          {
+            "type": "image.decode",
+            "parameters": {
+              "colorSpace": "rgb"
+            }
+          },
+          {
+            "type": "image.padToMultiple",
+            "parameters": {
+              "multiple": 32,
+              "background": 0
+            }
+          },
+          {
+            "type": "tensor.channelOrder",
+            "parameters": {
+              "order": [
+                2,
+                1,
+                0
+              ]
+            }
+          },
+          {
+            "type": "tensor.layout",
+            "parameters": {
+              "order": "channelsFirst"
+            }
+          },
+          {
+            "type": "tensor.normalize",
+            "parameters": {
+              "mean": [
+                123.675,
+                116.28,
+                103.53
+              ],
+              "std": [
+                58.395,
+                57.12,
+                57.375
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "sigmoid_0.tmp_0",
+        "semantic": "textDetection.probabilityMask",
+        "dataType": "float32",
+        "shape": [
+          "dynamic",
+          1,
+          "dynamic",
+          "dynamic"
+        ],
+        "transformations": [
+          {
+            "type": "tensor.threshold",
+            "parameters": {
+              "value": 0.3
+            }
+          },
+          {
+            "type": "mask.connectedComponents",
+            "parameters": {
+              "minimumPixels": 64
+            },
+            "result": "regions"
+          }
+        ],
+        "workflowOutput": {
+          "name": "regions",
+          "type": "json",
+          "mapping": "$regions"
+        }
+      }
+    ]
+  }
+}

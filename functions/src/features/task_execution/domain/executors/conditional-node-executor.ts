@@ -46,7 +46,7 @@ export function createConditionalFlowNodeExecutor(
       const output = executeConditionalFlow({
         node: input.node,
         targetLabel,
-        outgoingEdges: runContext.task.edges.filter(
+        outgoingEdges: runContext.graph.edges.filter(
           (edge) => edge.from === input.node.id,
         ),
       });
@@ -82,8 +82,8 @@ async function executeSelectedBranch(
     nodeCount: branch.graph.nodes.length,
     edgeCount: branch.graph.edges.length,
   });
-  const results = await runContext.runSubgraph(
-    branchTaskFor(runContext.task, branch),
+  const results = await runContext.runGraph(
+    graphFor(branch.graph),
     input.context,
   );
   const finalOutput = finalOutputOf(results);
@@ -104,17 +104,8 @@ function emptyBranchOutput(output: ConditionalExecutionResult): string {
   return `Branch ${output.selectedBranchLabel ?? ""} has no nodes.`;
 }
 
-function branchTaskFor(
-  task: Parameters<NodeExecutor["execute"]>[1]["task"],
-  branch: Branch,
-) {
-  return {
-    id: `${task.id}:${branch.id}`,
-    title: `${task.title}:${branch.label}`,
-    objective: task.objective,
-    nodes: branch.graph.nodes as WorkflowNode[],
-    edges: branch.graph.edges,
-  };
+function graphFor(branch: Branch["graph"]): import("../entities/task.js").WorkflowGraph {
+  return branch as import("../entities/task.js").WorkflowGraph;
 }
 
 type Branch = Extract<

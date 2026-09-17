@@ -13,7 +13,7 @@ import {
 import {prepareNodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 import {
   type NodeExecutionResult,
-  type TaskDefinition as Task,
+  type WorkflowGraph,
   type WorkflowNode,
 } from "./task-definition.js";
 import {
@@ -56,16 +56,17 @@ export async function runNodeWithTrail(
 export function logNodeHeaderLine(
   logger: ApplicationLogger,
   node: WorkflowNode,
-  task: Task,
+  taskId: string,
+  graph: WorkflowGraph,
   context: string,
   skipNode: boolean,
   results: Map<string, NodeExecutionResult>,
 ): void {
   logger.readableInfo(formatNodeHeader({
-    taskId: task.id,
+    taskId,
     node,
     context,
-    parentNodeIds: parentResultsFor(node, task, results).map(
+    parentNodeIds: parentResultsFor(node, graph, results).map(
       (parent) => parent.result.nodeId,
     ),
     skipNode,

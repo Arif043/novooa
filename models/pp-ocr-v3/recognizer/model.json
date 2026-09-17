@@ -1,0 +1,308 @@
+{
+  "id": "pp-ocr-v3-latin-text-recognizer",
+  "title": "PP-OCRv3 Latin Texterkennung",
+  "description": "Liest Text aus einer einzelnen, erkannten Dokumentregion.",
+  "tags": [
+    "ocr",
+    "text",
+    "lateinisch",
+    "deutsch",
+    "rechnung"
+  ],
+  "artifact": {
+    "artifactId": "pp-ocr-v3-latin-text-recognizer",
+    "versionId": "rapidocr-3.9.2"
+  },
+  "contract": {
+    "inputs": [
+      {
+        "name": "x",
+        "source": "image",
+        "dataType": "float32",
+        "shape": [
+          "dynamic",
+          3,
+          "dynamic",
+          "dynamic"
+        ],
+        "transformations": [
+          {
+            "type": "image.decode",
+            "parameters": {
+              "colorSpace": "rgb"
+            }
+          },
+          {
+            "type": "image.crop",
+            "parameters": {
+              "left": "$iteration.value.bounds.left",
+              "top": "$iteration.value.bounds.top",
+              "width": "$iteration.value.bounds.width",
+              "height": "$iteration.value.bounds.height"
+            }
+          },
+          {
+            "type": "image.resizePad",
+            "parameters": {
+              "width": 320,
+              "height": 48,
+              "alignment": "topLeft",
+              "background": 0
+            }
+          },
+          {
+            "type": "tensor.channelOrder",
+            "parameters": {
+              "order": [
+                2,
+                1,
+                0
+              ]
+            }
+          },
+          {
+            "type": "tensor.layout",
+            "parameters": {
+              "order": "channelsFirst"
+            }
+          },
+          {
+            "type": "tensor.normalize",
+            "parameters": {
+              "mean": [
+                127.5,
+                127.5,
+                127.5
+              ],
+              "std": [
+                127.5,
+                127.5,
+                127.5
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "softmax_2.tmp_0",
+        "semantic": "textRecognition.ctcLogits",
+        "dataType": "float32",
+        "shape": [
+          "dynamic",
+          "dynamic",
+          187
+        ],
+        "transformations": [
+          {
+            "type": "sequence.ctcGreedyDecode",
+            "parameters": {
+              "labels": [
+                "",
+                " ",
+                "!",
+                "\"",
+                "#",
+                "$",
+                "%",
+                "&",
+                "'",
+                "(",
+                ")",
+                "*",
+                "+",
+                ",",
+                "-",
+                ".",
+                "/",
+                "0",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                ":",
+                ";",
+                "<",
+                "=",
+                ">",
+                "?",
+                "@",
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+                "F",
+                "G",
+                "H",
+                "I",
+                "J",
+                "K",
+                "L",
+                "M",
+                "N",
+                "O",
+                "P",
+                "Q",
+                "R",
+                "S",
+                "T",
+                "U",
+                "V",
+                "W",
+                "X",
+                "Y",
+                "Z",
+                "[",
+                "]",
+                "_",
+                "`",
+                "a",
+                "b",
+                "c",
+                "d",
+                "e",
+                "f",
+                "g",
+                "h",
+                "i",
+                "j",
+                "k",
+                "l",
+                "m",
+                "n",
+                "o",
+                "p",
+                "q",
+                "r",
+                "s",
+                "t",
+                "u",
+                "v",
+                "w",
+                "x",
+                "y",
+                "z",
+                "{",
+                "}",
+                "¡",
+                "£",
+                "§",
+                "ª",
+                "«",
+                "­",
+                "°",
+                "²",
+                "³",
+                "´",
+                "µ",
+                "·",
+                "º",
+                "»",
+                "¿",
+                "À",
+                "Á",
+                "Â",
+                "Ä",
+                "Å",
+                "Ç",
+                "È",
+                "É",
+                "Ê",
+                "Ë",
+                "Ì",
+                "Í",
+                "Î",
+                "Ï",
+                "Ò",
+                "Ó",
+                "Ô",
+                "Õ",
+                "Ö",
+                "Ú",
+                "Ü",
+                "Ý",
+                "ß",
+                "à",
+                "á",
+                "â",
+                "ã",
+                "ä",
+                "å",
+                "æ",
+                "ç",
+                "è",
+                "é",
+                "ê",
+                "ë",
+                "ì",
+                "í",
+                "î",
+                "ï",
+                "ñ",
+                "ò",
+                "ó",
+                "ô",
+                "õ",
+                "ö",
+                "ø",
+                "ù",
+                "ú",
+                "û",
+                "ü",
+                "ý",
+                "ą",
+                "Ć",
+                "ć",
+                "Č",
+                "č",
+                "Đ",
+                "đ",
+                "ę",
+                "ı",
+                "Ł",
+                "ł",
+                "ō",
+                "Œ",
+                "œ",
+                "Š",
+                "š",
+                "Ÿ",
+                "Ž",
+                "ž",
+                "ʒ",
+                "β",
+                "δ",
+                "ε",
+                "з",
+                "Ṡ",
+                "‘",
+                "€",
+                "™",
+                " "
+              ],
+              "blankIndex": 0,
+              "applySoftmax": false,
+              "collapseRepeated": true
+            },
+            "result": "recognitions"
+          }
+        ],
+        "workflowOutput": {
+          "name": "recognition",
+          "type": "json",
+          "mapping": {
+            "text": "$recognitions.0.text",
+            "confidence": "$recognitions.0.confidence"
+          }
+        }
+      }
+    ]
+  }
+}

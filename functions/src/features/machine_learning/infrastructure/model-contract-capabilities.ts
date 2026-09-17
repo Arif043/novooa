@@ -50,8 +50,8 @@ export class TensorInputContractCapability implements ModelInputContractCapabili
 export function cloudModelContractCapabilityValidator(): ModelContractCapabilityValidator {
   return new ModelContractCapabilityValidator([
     new ImageInputContractCapability(new Set([
-      "image.decode", "image.crop", "image.perspectiveCrop", "image.resize",
-      "tensor.layout", "tensor.normalize",
+      "image.decode", "image.crop", "image.perspectiveCrop", "image.resize", "image.resizePad",
+      "image.padToMultiple", "tensor.channelOrder", "tensor.layout", "tensor.normalize",
     ])),
     new TensorInputContractCapability(),
   ]);

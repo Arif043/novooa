@@ -236,12 +236,15 @@ export type WorkflowNode = {
   referenceName: string;
   config: NodeConfig;
 };
-export type TaskDefinition = {
+export type WorkflowGraph = {
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+};
+
+export type TaskDefinition = WorkflowGraph & {
   id: string;
   title: string;
   objective: string;
-  nodes: WorkflowNode[];
-  edges: WorkflowEdge[];
 };
 export type NodeExecutionResult = {
   nodeId: string;

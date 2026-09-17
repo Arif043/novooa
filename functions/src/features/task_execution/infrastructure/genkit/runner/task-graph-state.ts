@@ -1,7 +1,7 @@
 import {
   type NodeExecutionResult,
   type NodeOutputValue,
-  type TaskDefinition as Task,
+  type WorkflowGraph,
   type TaskGraphInput,
   type TaskGraphOutput,
   type TaskResumeState,
@@ -25,10 +25,10 @@ export type NodeRunState = {
 } & TaskResumeState);
 
 export function orderedResults(
-  task: Task,
+  graph: WorkflowGraph,
   results: Map<string, NodeExecutionResult>,
 ): NodeExecutionResult[] {
-  return task.nodes
+  return graph.nodes
     .map((node) => results.get(node.id))
     .filter((result): result is NodeExecutionResult => result !== undefined);
 }
@@ -81,12 +81,12 @@ export function resumedState(
 }
 
 export function remainingNodes(
-  task: Task,
+  graph: WorkflowGraph,
   state?: InitialNodeRunState,
 ): WorkflowNode[] {
-  if (!state) return [...task.nodes];
+  if (!state) return [...graph.nodes];
   const remainingIds = new Set(state.remainingNodeIds);
-  return task.nodes.filter((node) => remainingIds.has(node.id));
+  return graph.nodes.filter((node) => remainingIds.has(node.id));
 }
 
 export function resultsMapFrom(results: NodeExecutionResult[]) {

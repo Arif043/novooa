@@ -10,13 +10,12 @@ export const forEachNodeExecutor: NodeExecutor = {
   async execute(input, runContext) {
     const config = configFor(input.node);
     const results = await executeForEach({
-      nodeId: input.node.id,
       config,
       inputValue: singleParentOutput(input.parentOutputs),
-      runSubgraph: (task, initialValue) => runContext.runSubgraph(
-        task,
+      runGraph: (graph, graphInput) => runContext.runGraph(
+        graph,
         input.context,
-        initialValue,
+        graphInput,
       ),
     });
     return executedNode(input.node, {value: {type: "json", value: results}});

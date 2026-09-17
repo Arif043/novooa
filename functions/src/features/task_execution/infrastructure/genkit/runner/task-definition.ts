@@ -387,6 +387,7 @@ export type {
   TaskResumeState,
   WaitingTaskGraphOutput,
   WorkflowEdge,
+  WorkflowGraph,
   WorkflowNode,
 } from "../../../domain/entities/task.js";
 

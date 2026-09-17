@@ -217,6 +217,15 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
         );
       }
     }
+    if (node.config case final ForEachNodeConfig config) {
+      final result = _removeNodeFromGraph(config.graph, nodeId);
+      if (result.changed) {
+        return (
+          node: node.copyWith(config: config.copyWith(graph: result.graph)),
+          changed: true,
+        );
+      }
+    }
     return (node: node, changed: false);
   }
 
@@ -235,6 +244,9 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
         )) {
           return true;
         }
+      }
+      if (node.config case final ForEachNodeConfig config) {
+        if (_containsNode(config.graph, nodeId)) return true;
       }
     }
     return false;
@@ -329,6 +341,9 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
           _collectNodeIds(branch.graph, ids);
         }
       }
+      if (node.config case final ForEachNodeConfig config) {
+        _collectNodeIds(config.graph, ids);
+      }
     }
   }
 
@@ -357,6 +372,11 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
           )) {
             return true;
           }
+        }
+      }
+      if (node.config case final ForEachNodeConfig config) {
+        if (_referenceNameExists(config.graph, currentNodeId, referenceName)) {
+          return true;
         }
       }
     }

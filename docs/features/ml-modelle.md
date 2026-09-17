@@ -229,8 +229,10 @@ Manifestnamen, ein `workflowMapping` sowie Quelltyp, Tensor-Datentyp und Form.
 Im Task Builder wird das Manifest des ausgewählten Katalogmodells geparst: Jeder
 Manifest-Eingang erscheint als eigene Reihe mit Name, frei editierbarem
 Workflow-Mapping und Datentyp. Das Mapping akzeptiert feste Werte und
-Variablen wie `{{eingabe.value}}`. Bei einer alleinstehenden Variable übernimmt
-die Runtime deren ursprünglichen Wert statt einer Textdarstellung. Kanten
+Variablen wie `{{eingabe.value}}`. Innerhalb eines `forEach`-eingebetteten Graphen
+steht zusätzlich `{{iteration.value}}` und `{{iteration.index}}` zur
+Verfügung. Äußere Ergebnisse sind zusätzlich über `{{global.referenz.value}}` und Eingabewerte über `{{global.input.feld}}` verfügbar. Bei einer alleinstehenden Variable übernimmt die Runtime deren
+ursprünglichen Wert statt einer Textdarstellung. Kanten
 bestimmen weiterhin ausschließlich die Ausführungsreihenfolge. Das Manifest
 prüft anschließend Vollständigkeit, Eindeutigkeit und Typ jeder Quelle.
 Datei- und Bildwerte lädt der Adapter über den
@@ -258,14 +260,18 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | --- | --- | --- |
 | `image.decode` | `colorSpace`: `rgb`, `rgba`, `grayscale` | Dekodiert und setzt den Farbraum. |
 | `image.resize` | `width`, `height`, optional `colorSpace` | Skaliert mit LANCZOS. |
+| `image.resizePad` | `width`, `height`, optional `alignment` (`topLeft` oder `center`), `background`, `colorSpace` | Erhält das Seitenverhältnis und füllt bis zur Zielgröße auf. |
+| `image.padToMultiple` | `multiple`, optional `background`, `colorSpace` | Füllt rechts und unten bis zu einem Vielfachen auf; Bildkoordinaten bleiben erhalten. |
 | `image.crop` | `left`, `top`, `width`, `height` | Schneidet einen achsenparallelen Bildbereich aus. |
 | `image.perspectiveCrop` | `points: [x1, y1, ... x4, y4]`, `width`, `height` | Richtet ein Viereck perspektivisch zu einem Bild aus. |
+| `tensor.channelOrder` | `order`, etwa `[2, 1, 0]` | Ordnet Farbkanäle über eine vollständige Indexpermutation um. |
 | `tensor.layout` | `order`: `channelsFirst`, `channelsLast` | Ordnet HWC und CHW um. |
 | `tensor.normalize` | `mean`, `std` | Normalisiert jeden Farbkanal. |
 | `tensor.softmax` | optional `axis: -1` | Normalisiert Werte entlang der letzten Tensorachse. |
 | `tensor.sigmoid` | keine | Wandelt Logits elementweise in Wahrscheinlichkeiten. |
 | `tensor.threshold` | optional `value` (Standard `0.5`) | Wandelt numerische Werte in eine boolesche Maske. |
 | `mask.connectedComponents` | optional `minimumPixels` | Liefert Regionen als `{bounds, pixelCount}`; `bounds` enthält `left`, `top`, `width`, `height`. |
+| `geometry.scaleBounds` | `scaleX`, `scaleY`, optional `offsetX`, `offsetY` | Rechnet eine Regionsliste vom Maskenraster in Bildkoordinaten zurück. |
 | `tensor.nonMaximumSuppression` | `box`-Spalten, `scoreIndex`, optional `scoreThreshold`, `iouThreshold` | Unterdrückt überlappende Erkennungen und liefert `{index, score, box}`. |
 | `sequence.ctcGreedyDecode` | `labels`, `blankIndex`, optional `applySoftmax`, `collapseRepeated` | Dekodiert CTC-Logits in `{text, confidence}`. |
 | `tensor.topK` | Parameterbeschreibung für `k`, optional `result` | Liefert allgemeine Paare aus Index und Wert. |
@@ -291,17 +297,22 @@ transformations: [
 ]
 ```
 
+Die Maskenregionen eines Detektors liegen häufig in einem kleineren Ausgaberaster. `geometry.scaleBounds` projiziert sie mit dem bekannten Modell-Stride in die Bildkoordinaten zurück, bevor ein nachfolgender `forEach` sie für `image.crop` verwendet.
+
 Die konkrete fachliche Form, etwa `{pageRegions: [...]}`, wird danach allein
 durch `workflowOutput.mapping` beschrieben. Ein CTC-Textmodell verwendet
 `sequence.ctcGreedyDecode`; sein Alphabet und der Leerindex liegen im Manifest.
 
 `image.crop` und `image.perspectiveCrop` sind allgemeine
-Transformationen für Bildeingaben. Sie akzeptieren derzeit deklarierte
-Manifestparameter. Damit eine Iteration über Detektorregionen diese Parameter
-dynamisch setzt, wird der `modelInference`-Baustein als nächstes um explizite
-Transformationsparameter-Mappings erweitert. Das ist kein zweites
-Manifest-Format, sondern eine konkrete Bindung von Workflow-Werten an bereits
-deklarierte Transformationsparameter.
+Transformationen für Bildeingaben. Transformationsparameter können statisch
+sein oder einen Ausführungskontext referenzieren. Eine Referenz besteht aus
+einem vollständigen `$iteration.value.bounds`-Pfad, etwa für die vom
+Detektor gelieferte Region. Werte des äußeren Graphen werden mit
+`$global.detektor.value.bounds` referenziert. Die Runtime löst solche Referenzen unmittelbar vor
+der Python-Inferenz auf; für das Python-Backend bleiben ausschließlich konkrete
+Parameter übrig. So kann ein Manifest dieselbe Crop-Transformation in jeder
+Iteration mit anderen Koordinaten ausführen, ohne ein zweites Manifestformat
+oder modellspezifische Logik.
 
 ### Cloud-Runtime
 

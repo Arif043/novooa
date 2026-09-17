@@ -6,30 +6,33 @@ import {executeForEach} from "./for-each-executor.js";
 test("executes every item serially and preserves its result order", async () => {
   const values: unknown[] = [];
   const result = await executeForEach({
-    nodeId: "each-1",
     config: config(),
     inputValue: {type: "json", value: {items: ["first", "second"]}},
-    async runSubgraph(_task, initialValue) {
-      values.push(initialValue.value);
-      return [resultFor(`${initialValue.value}-done`)];
+    async runGraph(_task, input) {
+      const value = input.initialValue!.value;
+      values.push(value);
+      return [resultFor(`${value}-done`)];
     },
   });
 
   assert.deepEqual(values, ["first", "second"]);
-  assert.deepEqual(result, ["first-done", "second-done"]);
+  assert.deepEqual(result, [
+    {unterplan: {value: "first-done"}},
+    {unterplan: {value: "second-done"}},
+  ]);
 });
 
 test("fails fast and includes the failing item index", async () => {
   const calls: unknown[] = [];
   await assert.rejects(
     executeForEach({
-      nodeId: "each-1",
-      config: config(),
+        config: config(),
       inputValue: {type: "json", value: {items: ["first", "second", "third"]}},
-      async runSubgraph(_task, initialValue) {
-        calls.push(initialValue.value);
-        if (initialValue.value === "second") throw new Error("ungültiger Wert");
-        return [resultFor(initialValue.value)];
+      async runGraph(_task, input) {
+        const value = input.initialValue!.value;
+        calls.push(value);
+        if (value === "second") throw new Error("ungültiger Wert");
+        return [resultFor(value)];
       },
     }),
     /Iteration 1 ist fehlgeschlagen: ungültiger Wert/,
@@ -37,14 +40,13 @@ test("fails fast and includes the failing item index", async () => {
   assert.deepEqual(calls, ["first", "second"]);
 });
 
-test("rejects pausing primitives in the subgraph", async () => {
+test("rejects pausing primitives in the embedded graph", async () => {
   const invalidConfig = config({primitive: "humanApproval"});
   await assert.rejects(
     executeForEach({
-      nodeId: "each-1",
-      config: invalidConfig,
+        config: invalidConfig,
       inputValue: {type: "json", value: {items: ["first"]}},
-      async runSubgraph() {
+      async runGraph() {
         return [];
       },
     }),
@@ -57,13 +59,13 @@ function config(node?: {primitive: string}): ForEachNodeConfig {
     primitive: "forEach",
     itemsPointer: "/items",
     graph: {
-      nodes: node ? [{
+      nodes: [{
         id: "sub-1",
-        primitive: node.primitive as "humanApproval",
+        primitive: (node?.primitive ?? "stringInput") as "humanApproval",
         title: "Unterplan",
         description: "",
         referenceName: "unterplan",
-      }] : [],
+      }],
       edges: [],
     },
   };

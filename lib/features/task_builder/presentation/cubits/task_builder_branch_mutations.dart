@@ -58,6 +58,20 @@ extension TaskBuilderBranchMutations on TaskBuilderCubit {
         node,
       );
     }
+    if (config is ForEachNodeConfig) {
+      final update = _addNodeToBranchInGraph(
+        graph: config.graph,
+        conditionalNodeId: conditionalNodeId,
+        branchId: branchId,
+        node: node,
+      );
+      if (update.changed) {
+        return (
+          node: owner.copyWith(config: config.copyWith(graph: update.graph)),
+          changed: true,
+        );
+      }
+    }
     return (node: owner, changed: false);
   }
 

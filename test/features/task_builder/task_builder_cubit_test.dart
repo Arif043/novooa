@@ -50,6 +50,23 @@ Future<void> _closeAndExpectSaved(
 }
 
 void main() {
+  test('addNodeToForEachGraph fuegt einen Node in den Unterplan ein', () async {
+    final repository = _InMemoryTaskRepository(_taskWithForEachNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.addNodeToForEachGraph(
+      forEachNodeId: const NodeId('node.1'),
+      primitive: WorkflowPrimitive.modelInference,
+    );
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final config = state.editingTask.nodes.single.config as ForEachNodeConfig;
+    expect(config.graph.nodes, hasLength(1));
+    expect(config.graph.nodes.single.config, isA<ModelInferenceNodeConfig>());
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
+  });
+
   test('addNodeToBranch fuegt einen Node in den Branch-Graph ein', () async {
     final repository = _InMemoryTaskRepository(_taskWithConditionalNode());
     final cubit = TaskBuilderCubit(repository: repository);
@@ -611,6 +628,29 @@ const _employeeAttachment = EmployeeAttachment(
   promptTemplate: '{{instruction}}',
   defaultSkills: [_skillAttachment],
 );
+
+Task _taskWithForEachNode() {
+  return const Task(
+    id: 'task.for-each',
+    title: 'Aufgabe',
+    objective: '',
+    selectedNodeId: NodeId('node.1'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.1'),
+          title: 'Für jedes Element',
+          description: 'Verarbeitet alle Werte.',
+          config: ForEachNodeConfig(
+            itemsPointer: '/items',
+            graph: WorkflowGraph(nodes: [], edges: []),
+          ),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
 
 Task _taskWithConditionalNode() {
   return _taskWithRootBranch(
