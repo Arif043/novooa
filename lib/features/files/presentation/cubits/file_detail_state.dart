@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../domain/entities/file_version.dart';
 
 enum FileDetailStatus { loading, ready, failure }
@@ -7,7 +9,7 @@ class FileDetailState {
     this.status = FileDetailStatus.loading,
     this.versions = const [],
     this.selectedVersion,
-    this.content,
+    this.bytes,
     this.isSaving = false,
     this.message,
   });
@@ -15,7 +17,7 @@ class FileDetailState {
   final FileDetailStatus status;
   final List<FileVersion> versions;
   final FileVersion? selectedVersion;
-  final String? content;
+  final Uint8List? bytes;
   final bool isSaving;
   final String? message;
 
@@ -24,8 +26,8 @@ class FileDetailState {
     List<FileVersion>? versions,
     FileVersion? selectedVersion,
     bool clearSelectedVersion = false,
-    String? content,
-    bool clearContent = false,
+    Uint8List? bytes,
+    bool clearBytes = false,
     bool? isSaving,
     String? message,
   }) {
@@ -35,7 +37,7 @@ class FileDetailState {
       selectedVersion: clearSelectedVersion
           ? null
           : selectedVersion ?? this.selectedVersion,
-      content: clearContent ? null : content ?? this.content,
+      bytes: clearBytes ? null : bytes ?? this.bytes,
       isSaving: isSaving ?? this.isSaving,
       message: message,
     );

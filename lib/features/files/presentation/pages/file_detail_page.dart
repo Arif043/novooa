@@ -5,7 +5,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../domain/entities/team_file.dart';
 import '../cubits/file_detail_cubit.dart';
 import '../cubits/file_detail_state.dart';
-import '../widgets/file_content_editor.dart';
+import '../widgets/file_content_viewer.dart';
 import '../widgets/file_version_timeline.dart';
 
 class FileDetailPage extends StatelessWidget {
@@ -67,7 +67,7 @@ class _FileDetailBody extends StatelessWidget {
           ? Row(
               children: [
                 Expanded(
-                  child: FileContentEditor(file: file, state: state),
+                  child: FileContentViewer(file: file, state: state),
                 ),
                 FileVersionTimeline(state: state),
               ],
@@ -75,7 +75,7 @@ class _FileDetailBody extends StatelessWidget {
           : Column(
               children: [
                 Expanded(
-                  child: FileContentEditor(file: file, state: state),
+                  child: FileContentViewer(file: file, state: state),
                 ),
                 FileVersionTimeline(state: state),
               ],

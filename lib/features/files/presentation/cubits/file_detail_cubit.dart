@@ -42,16 +42,15 @@ class FileDetailCubit extends Cubit<FileDetailState> {
     emit(
       state.copyWith(
         selectedVersion: version,
-        clearContent: true,
+        clearBytes: true,
         message: null,
       ),
     );
     final bytesOrFailure = await _downloadFileVersion(version);
     if (isClosed) return;
     bytesOrFailure.when(
-      (bytes) => emit(
-        state.copyWith(status: FileDetailStatus.ready, content: _decode(bytes)),
-      ),
+      (bytes) =>
+          emit(state.copyWith(status: FileDetailStatus.ready, bytes: bytes)),
       (failure) => _emitFailure(failure.kind),
     );
   }
@@ -77,7 +76,7 @@ class FileDetailCubit extends Cubit<FileDetailState> {
           state.copyWith(
             isSaving: false,
             clearSelectedVersion: true,
-            clearContent: true,
+            clearBytes: true,
             message: 'Neue Version gespeichert.',
           ),
         );
@@ -107,8 +106,6 @@ class FileDetailCubit extends Cubit<FileDetailState> {
       contentType: file.contentType,
     );
   }
-
-  String _decode(Uint8List bytes) => utf8.decode(bytes, allowMalformed: true);
 
   void _emitFailure(FileFailureKind kind) {
     if (!isClosed) {
