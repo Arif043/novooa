@@ -12,6 +12,7 @@ class Toolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final actions = _actions(context);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
@@ -32,178 +33,133 @@ class Toolbar extends StatelessWidget {
           child: Row(
             mainAxisSize: .min,
             children: [
-              Draggable<WorkflowPrimitive>(
-                data: WorkflowPrimitive.stringInput,
-                feedback: const _DraggingDummy(icon: Icons.text_fields),
-                child: IconButton(
-                  onPressed: () => context
-                      .read<TaskBuilderCubit>()
-                      .addNodeToMainGraph(.stringInput),
-                  icon: const Icon(Icons.text_fields),
-                  tooltip: "Text bauen",
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Draggable<WorkflowPrimitive>(
-                data: WorkflowPrimitive.script,
-                feedback: const _DraggingDummy(icon: Icons.terminal),
-                child: IconButton(
-                  onPressed: () => context
-                      .read<TaskBuilderCubit>()
-                      .addNodeToMainGraph(.script),
-                  icon: const Icon(Icons.code),
-                  tooltip: "Script hinzufügen",
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Draggable<WorkflowPrimitive>(
-                data: WorkflowPrimitive.prompt,
-                feedback: const _DraggingDummy(icon: Icons.format_align_left),
-                child: IconButton(
-                  onPressed: () => context
-                      .read<TaskBuilderCubit>()
-                      .addNodeToMainGraph(.prompt),
-                  icon: const Icon(Icons.format_align_left),
-                  tooltip: "Prompt hinzufügen",
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Draggable<WorkflowPrimitive>(
-                data: WorkflowPrimitive.conditional,
-                feedback: const _DraggingDummy(icon: Icons.call_split),
-                child: IconButton(
-                  onPressed: () => context
-                      .read<TaskBuilderCubit>()
-                      .addNodeToMainGraph(.conditional),
-                  icon: const Icon(Icons.call_split),
-                  tooltip: "Verzweigung hinzufügen",
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                onPressed: () => context
-                    .read<TaskBuilderCubit>()
-                    .addNodeToMainGraph(.iterativeRefinement),
-                icon: const Icon(Icons.auto_awesome),
-                tooltip: "Verfeinerung hinzufügen",
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                onPressed: () => context
-                    .read<TaskBuilderCubit>()
-                    .addNodeToMainGraph(.writeFile),
-                icon: const Icon(Icons.note_add_outlined),
-                tooltip: "Datei schreiben hinzufügen",
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                onPressed: () => context
-                    .read<TaskBuilderCubit>()
-                    .addNodeToMainGraph(.readFile),
-                icon: const Icon(Icons.file_open_outlined),
-                tooltip: "Datei lesen hinzufügen",
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                onPressed: () => context
-                    .read<TaskBuilderCubit>()
-                    .addChannelEventNodeToMainGraph(ChannelEventKind.email),
-                icon: const Icon(Icons.mark_email_read_outlined),
-                tooltip: "E-Mail lesen hinzufügen",
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                onPressed: () => context
-                    .read<TaskBuilderCubit>()
-                    .addChannelEventNodeToMainGraph(ChannelEventKind.whatsapp),
-                icon: const Icon(Icons.chat_outlined),
-                tooltip: "WhatsApp lesen hinzufügen",
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                onPressed: () => context
-                    .read<TaskBuilderCubit>()
-                    .addChannelEventNodeToMainGraph(ChannelEventKind.sms),
-                icon: const Icon(Icons.sms_outlined),
-                tooltip: "SMS lesen hinzufügen",
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                tooltip: 'Nachricht senden hinzufügen',
-                icon: const Icon(Icons.send_outlined),
-                onPressed: () => _showSendMessageActions(context),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                onPressed: () => context
-                    .read<TaskBuilderCubit>()
-                    .addNodeToMainGraph(.humanApproval),
-                icon: const Icon(Icons.face),
-                tooltip: "Freigabe hinzufügen",
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                onPressed: () => context
-                    .read<TaskBuilderCubit>()
-                    .addNodeToMainGraph(.dialogInput),
-                icon: const Icon(Icons.dynamic_form_outlined),
-                tooltip: 'Formulareingabe hinzufügen',
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                onPressed: () => context
-                    .read<TaskBuilderCubit>()
-                    .addNodeToMainGraph(.mediaInput),
-                icon: const Icon(Icons.add_a_photo_outlined),
-                tooltip: 'Bild-Eingabe hinzufügen',
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                onPressed: () => context
-                    .read<TaskBuilderCubit>()
-                    .addNodeToMainGraph(.modelInference),
-                icon: const Icon(Icons.model_training_outlined),
-                tooltip: 'Modell-Inferenz hinzufügen',
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                onPressed: () => context
-                    .read<TaskBuilderCubit>()
-                    .addNodeToMainGraph(.forEach),
-                icon: const Icon(Icons.repeat_outlined),
-                tooltip: 'Für jedes Element hinzufügen',
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Draggable<WorkflowPrimitive>(
-                data: WorkflowPrimitive.documentLookup,
-                feedback: const _DraggingDummy(
-                  icon: Icons.manage_search_outlined,
-                ),
-                child: IconButton(
-                  onPressed: () => context
-                      .read<TaskBuilderCubit>()
-                      .addNodeToMainGraph(.documentLookup),
-                  icon: const Icon(Icons.manage_search_outlined),
-                  tooltip: 'Datensatz suchen hinzufügen',
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Draggable<WorkflowPrimitive>(
-                data: WorkflowPrimitive.saveDocument,
-                feedback: const _DraggingDummy(icon: Icons.save_outlined),
-                child: IconButton(
-                  onPressed: () => context
-                      .read<TaskBuilderCubit>()
-                      .addNodeToMainGraph(.saveDocument),
-                  icon: const Icon(Icons.save_outlined),
-                  tooltip: 'Datensatz speichern hinzufügen',
-                ),
-              ),
+              for (final action in actions) ...[
+                _ToolbarActionButton(action: action),
+                if (action != actions.last)
+                  const SizedBox(width: AppSpacing.xs),
+              ],
             ],
           ),
         ),
       ),
     );
+  }
+
+  List<_ToolbarAction> _actions(BuildContext context) {
+    final cubit = context.read<TaskBuilderCubit>();
+    return [
+      _ToolbarAction(
+        primitive: .stringInput,
+        icon: Icons.text_fields,
+        tooltip: 'Text bauen',
+        onPressed: () => cubit.addNodeToMainGraph(.stringInput),
+      ),
+      _ToolbarAction(
+        primitive: .script,
+        icon: Icons.code,
+        tooltip: 'Script hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.script),
+      ),
+      _ToolbarAction(
+        primitive: .prompt,
+        icon: Icons.format_align_left,
+        tooltip: 'Prompt hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.prompt),
+      ),
+      _ToolbarAction(
+        primitive: .conditional,
+        icon: Icons.call_split,
+        tooltip: 'Verzweigung hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.conditional),
+      ),
+      _ToolbarAction(
+        primitive: .iterativeRefinement,
+        icon: Icons.auto_awesome,
+        tooltip: 'Verfeinerung hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.iterativeRefinement),
+      ),
+      _ToolbarAction(
+        primitive: .writeFile,
+        icon: Icons.note_add_outlined,
+        tooltip: 'Datei schreiben hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.writeFile),
+      ),
+      _ToolbarAction(
+        primitive: .readFile,
+        icon: Icons.file_open_outlined,
+        tooltip: 'Datei lesen hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.readFile),
+      ),
+      _ToolbarAction(
+        primitive: .readChannelEvent,
+        icon: Icons.mark_email_read_outlined,
+        tooltip: 'E-Mail lesen hinzufügen',
+        onPressed: () =>
+            cubit.addChannelEventNodeToMainGraph(ChannelEventKind.email),
+      ),
+      _ToolbarAction(
+        primitive: .readChannelEvent,
+        icon: Icons.chat_outlined,
+        tooltip: 'WhatsApp lesen hinzufügen',
+        onPressed: () =>
+            cubit.addChannelEventNodeToMainGraph(ChannelEventKind.whatsapp),
+      ),
+      _ToolbarAction(
+        primitive: .readChannelEvent,
+        icon: Icons.sms_outlined,
+        tooltip: 'SMS lesen hinzufügen',
+        onPressed: () =>
+            cubit.addChannelEventNodeToMainGraph(ChannelEventKind.sms),
+      ),
+      _ToolbarAction(
+        primitive: .sendChannelMessage,
+        icon: Icons.send_outlined,
+        tooltip: 'Nachricht senden hinzufügen',
+        onPressed: () => _showSendMessageActions(context),
+      ),
+      _ToolbarAction(
+        primitive: .humanApproval,
+        icon: Icons.face,
+        tooltip: 'Freigabe hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.humanApproval),
+      ),
+      _ToolbarAction(
+        primitive: .dialogInput,
+        icon: Icons.dynamic_form_outlined,
+        tooltip: 'Formulareingabe hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.dialogInput),
+      ),
+      _ToolbarAction(
+        primitive: .mediaInput,
+        icon: Icons.add_a_photo_outlined,
+        tooltip: 'Bild-Eingabe hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.mediaInput),
+      ),
+      _ToolbarAction(
+        primitive: .modelInference,
+        icon: Icons.model_training_outlined,
+        tooltip: 'Modell-Inferenz hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.modelInference),
+      ),
+      _ToolbarAction(
+        primitive: .forEach,
+        icon: Icons.repeat_outlined,
+        tooltip: 'Für jedes Element hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.forEach),
+      ),
+      _ToolbarAction(
+        primitive: .documentLookup,
+        icon: Icons.manage_search_outlined,
+        tooltip: 'Datensatz suchen hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.documentLookup),
+      ),
+      _ToolbarAction(
+        primitive: .saveDocument,
+        icon: Icons.save_outlined,
+        tooltip: 'Datensatz speichern hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.saveDocument),
+      ),
+    ];
   }
 
   Future<void> _showSendMessageActions(BuildContext context) async {
@@ -218,6 +174,39 @@ class Toolbar extends StatelessWidget {
     );
     if (kind == null || !context.mounted) return;
     context.read<TaskBuilderCubit>().addSendMessageNodeToMainGraph(kind);
+  }
+}
+
+class _ToolbarAction {
+  const _ToolbarAction({
+    required this.primitive,
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final WorkflowPrimitive primitive;
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+}
+
+class _ToolbarActionButton extends StatelessWidget {
+  const _ToolbarActionButton({required this.action});
+
+  final _ToolbarAction action;
+
+  @override
+  Widget build(BuildContext context) {
+    return Draggable<WorkflowPrimitive>(
+      data: action.primitive,
+      feedback: _DraggingDummy(icon: action.icon),
+      child: IconButton(
+        onPressed: action.onPressed,
+        icon: Icon(action.icon),
+        tooltip: action.tooltip,
+      ),
+    );
   }
 }
 
