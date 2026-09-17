@@ -127,7 +127,7 @@ async function runNodes(
       runContext: createTaskRunContext({
         input,
         runtime,
-        graph,
+        currentGraph: graph,
         results,
         variables,
         scope,

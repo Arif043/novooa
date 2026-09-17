@@ -136,7 +136,7 @@ function logNodeErrorTrail(input: NodeRunInput, error: unknown): void {
     error,
   }));
   input.logger.error("task_node.exception", {
-    taskId: input.runContext.task.id,
+    taskId: input.runContext.rootTask.id,
     nodeId: input.node.id,
     primitive: input.node.primitive,
     title: input.node.title,

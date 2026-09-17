@@ -35,8 +35,8 @@ export type WorkflowGraphRunner = (
 
 export type TaskRunContext = {
   variables: TaskVariables;
-  task: TaskDefinition;
-  graph: WorkflowGraph;
+  rootTask: TaskDefinition;
+  currentGraph: WorkflowGraph;
   teamId: string;
   input: Record<string, unknown>;
   scope: WorkflowExecutionScope;

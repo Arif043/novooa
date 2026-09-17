@@ -46,7 +46,7 @@ export function createConditionalFlowNodeExecutor(
       const output = executeConditionalFlow({
         node: input.node,
         targetLabel,
-        outgoingEdges: runContext.graph.edges.filter(
+        outgoingEdges: runContext.currentGraph.edges.filter(
           (edge) => edge.from === input.node.id,
         ),
       });

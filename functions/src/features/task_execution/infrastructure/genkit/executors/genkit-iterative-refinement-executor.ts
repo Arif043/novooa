@@ -62,7 +62,7 @@ export function createGenkitIterativeRefinementNodeExecutor(
         workspace,
         logger,
       ).execute({
-        objective: runContext.resolveTemplates(runContext.task.objective),
+        objective: runContext.resolveTemplates(runContext.rootTask.objective),
         draft: runContext.resolveTemplates(draft),
         optimizerPrompt: runContext.resolveTemplates(config?.optimizerPrompt ||
           input.node.description ||

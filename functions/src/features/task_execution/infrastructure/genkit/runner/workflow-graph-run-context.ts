@@ -28,7 +28,7 @@ export type ExecuteWorkflowGraph = (
 type TaskRunContextOptions = {
   input: TaskGraphInput;
   runtime: TaskGraphRuntime;
-  graph: WorkflowGraph;
+  currentGraph: WorkflowGraph;
   results: Map<string, NodeExecutionResult>;
   variables: TaskVariables;
   scope: WorkflowExecutionScope;
@@ -39,14 +39,14 @@ export function createTaskRunContext(
   options: TaskRunContextOptions,
 ): TaskRunContext {
   const templateContext = () => variableTemplateContextFor(
-    options.graph,
+    options.currentGraph,
     options.results,
     options.variables,
     options.scope,
   );
   return {
-    task: options.input.taskDefinition,
-    graph: options.graph,
+    rootTask: options.input.taskDefinition,
+    currentGraph: options.currentGraph,
     teamId: options.input.teamId,
     input: options.input.input ?? {},
     scope: options.scope,
@@ -87,7 +87,7 @@ function globalContextFor(
   options: TaskRunContextOptions,
 ): Record<string, unknown> {
   const context = variableTemplateContextFor(
-    options.graph,
+    options.currentGraph,
     options.results,
     options.variables,
   );
