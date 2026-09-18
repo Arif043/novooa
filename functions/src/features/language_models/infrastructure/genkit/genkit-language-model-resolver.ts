@@ -4,6 +4,7 @@ import {modelRef, type ModelArgument} from "genkit";
 import {genkit, type GenkitBeta} from "genkit/beta";
 import {type LanguageModelCapabilities} from "../../domain/entities/language-model.js";
 import {type LanguageModelCatalog} from "../../domain/repositories/language-model-catalog.js";
+import {OllamaLanguageModelCapabilityInspector} from "../ollama/ollama-language-model-capability-inspector.js";
 
 export type ResolvedGenkitLanguageModel = {
   ai: GenkitBeta;
@@ -21,7 +22,10 @@ export interface GenkitLanguageModelResolver {
 
 export class CatalogGenkitLanguageModelResolver
     implements GenkitLanguageModelResolver {
-  constructor(catalog: LanguageModelCatalog) {
+  constructor(
+    catalog: LanguageModelCatalog,
+    private readonly ollamaCapabilities = new OllamaLanguageModelCapabilityInspector(),
+  ) {
     this.#catalog = catalog;
   }
 
@@ -44,6 +48,7 @@ export class CatalogGenkitLanguageModelResolver
     }
     if (!connection.baseUrl) throw new Error("Der OpenAI-kompatiblen Verbindung fehlt die Base-URL.");
     const providerName = `language-model-${connection.id}`;
+    const capabilities = await this.capabilitiesFor(connection.provider, connection.baseUrl, model.modelId, model.capabilities);
     return {
       ai: genkit({plugins: [openAICompatible({
         name: providerName,
@@ -51,12 +56,21 @@ export class CatalogGenkitLanguageModelResolver
         baseURL: connection.baseUrl,
       })]}),
       model: modelRef({name: `${providerName}/${model.modelId}`}),
-      capabilities: model.capabilities,
+      capabilities,
       logContext: {
         provider: connection.provider,
         endpoint: connection.name,
         model: model.modelId,
       },
     };
+  }
+  private capabilitiesFor(
+    provider: string,
+    baseUrl: string,
+    modelId: string,
+    fallback: LanguageModelCapabilities,
+  ): Promise<LanguageModelCapabilities> {
+    if (provider !== "ollama") return Promise.resolve(fallback);
+    return this.ollamaCapabilities.inspect({baseUrl, fallback, modelId});
   }
 }
