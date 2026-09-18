@@ -30,6 +30,17 @@ test("resolves outer graph values from the global scope", () => {
   assert.equal(resolveVariableTemplateValue("{{global.input.customer}}", context), "Meyer GmbH");
 });
 
+
+test("resolves an isolated template with surrounding whitespace as its original value", () => {
+  const media = {fileId: "file-1", versionId: "version-1"};
+  const context = contextFor({global: {media3: {value: media}}});
+
+  assert.equal(
+    resolveVariableTemplateValue(" {{global.media3.value}}", context),
+    media,
+  );
+});
+
 function contextFor(scope: WorkflowExecutionScope) {
   return variableTemplateContextFor(
     {nodes: [], edges: []},
