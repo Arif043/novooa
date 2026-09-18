@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/core/network/workspace_api_client.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_import.dart';
@@ -12,9 +10,10 @@ void main() {
 
     final entries = await repository.watchEntries().first;
     await repository.importEntry(
-      const ModelCatalogImport(
+      ModelCatalogImport(
         manifestJson: '{"id":"model","title":"Modell"}',
-        artifactBytes: [1, 2, 3],
+        artifactLength: 3,
+        openArtifact: () => Stream.value([1, 2, 3]),
       ),
     );
 
@@ -24,14 +23,24 @@ void main() {
     expect(entries.single.outputs.single.workflowType, 'json');
     expect(entries.single.outputs.single.parameters.single.defaultValue, 3);
     expect(entries.single.isManagedLocally, isTrue);
-    expect(client.postPath, '/v1/ml-models');
-    expect(client.postBody?['artifactBase64'], base64Encode([1, 2, 3]));
+    expect(client.postPath, '/v1/ml-models/imports');
+    expect(client.postBody, {
+      'manifest': {'id': 'model', 'title': 'Modell'},
+    });
+    expect(client.uploadPath, '/v1/ml-models/imports/upload-1/artifact');
+    expect(client.uploadLength, 3);
+    expect(client.uploadContentType, 'application/onnx');
+    expect(client.uploadedBytes, [1, 2, 3]);
   });
 }
 
-class _Client implements WorkspaceApiClient {
+class _Client extends WorkspaceApiClient {
   String? postPath;
   Map<String, Object?>? postBody;
+  String? uploadPath;
+  int? uploadLength;
+  String? uploadContentType;
+  List<int> uploadedBytes = [];
 
   @override
   Future<Map<String, Object?>> delete(String path) async => const {};
@@ -93,6 +102,21 @@ class _Client implements WorkspaceApiClient {
   ) async {
     postPath = path;
     postBody = body;
+    return const {'importId': 'upload-1'};
+  }
+
+  @override
+  Future<Map<String, Object?>> putStream(
+    String path, {
+    required Stream<List<int>> body,
+    required int contentLength,
+    required String contentType,
+    Duration? timeout,
+  }) async {
+    uploadPath = path;
+    uploadLength = contentLength;
+    uploadContentType = contentType;
+    uploadedBytes = await body.expand((chunk) => chunk).toList();
     return const {};
   }
 

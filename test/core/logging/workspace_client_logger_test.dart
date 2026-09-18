@@ -42,7 +42,7 @@ void main() {
   );
 }
 
-class _RecordingWorkspaceApiClient implements WorkspaceApiClient {
+class _RecordingWorkspaceApiClient extends WorkspaceApiClient {
   _RecordingWorkspaceApiClient({this.throwsOnPost = false});
 
   final bool throwsOnPost;

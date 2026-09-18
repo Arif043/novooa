@@ -37,6 +37,19 @@ class ImageResizeHeightPadStrategyTest(unittest.TestCase):
         self.assertEqual(context.image.size, (320, 48))
         self.assertEqual(context.image.getpixel((319, 47)), 0)
 
+
+    def test_keeps_the_scaled_width_dynamic_when_no_width_is_declared(self):
+        context = self.context((260, 14), 255)
+        default_transformation_registry().apply(
+            context,
+            [{
+                "type": "image.resizeHeightPad",
+                "parameters": {"height": 48, "widthMultiple": 8},
+            }],
+        )
+
+        self.assertEqual(context.image.size, (896, 48))
+
     def context(self, size, fill):
         return ImageTransformContext(
             self.image.new("L", size, fill), self.numpy, self.image

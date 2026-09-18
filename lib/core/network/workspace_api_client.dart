@@ -3,11 +3,20 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-abstract interface class WorkspaceApiClient {
+abstract class WorkspaceApiClient {
   Future<Map<String, Object?>> delete(String path);
   Future<Map<String, Object?>> get(String path);
   Future<Map<String, Object?>> post(String path, Map<String, Object?> body);
   Future<Map<String, Object?>> put(String path, Map<String, Object?> body);
+  Future<Map<String, Object?>> putStream(
+    String path, {
+    required Stream<List<int>> body,
+    required int contentLength,
+    required String contentType,
+    Duration? timeout,
+  }) => throw UnsupportedError(
+    'Stream-Uploads werden von diesem Client nicht unterstützt.',
+  );
 }
 
 class HttpWorkspaceApiClient implements WorkspaceApiClient {
@@ -38,6 +47,35 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
     return _request('PUT', path, body: body);
   }
 
+  @override
+  Future<Map<String, Object?>> putStream(
+    String path, {
+    required Stream<List<int>> body,
+    required int contentLength,
+    required String contentType,
+    Duration? timeout,
+  }) async {
+    try {
+      final request = http.StreamedRequest('PUT', _baseUri.resolve(path));
+      request.headers['accept'] = 'application/json';
+      request.headers['content-type'] = contentType;
+      request.contentLength = contentLength;
+      final response = _client.send(request);
+      try {
+        await request.sink.addStream(body);
+      } finally {
+        await request.sink.close();
+      }
+      return _responseFor(await response.timeout(timeout ?? this.timeout));
+    } on TimeoutException {
+      rethrow;
+    } on WorkspaceHttpException {
+      rethrow;
+    } on Object catch (error) {
+      throw WorkspaceConnectionException(error);
+    }
+  }
+
   Future<Map<String, Object?>> _request(
     String method,
     String path, {
@@ -51,12 +89,7 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
         request.body = jsonEncode(body);
       }
       final response = await _client.send(request).timeout(timeout);
-      final text = await response.stream.bytesToString();
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw WorkspaceHttpException(response.statusCode, _errorFrom(text));
-      }
-      if (text.trim().isEmpty) return const {};
-      return _objectFrom(jsonDecode(text));
+      return _responseFor(response);
     } on TimeoutException {
       rethrow;
     } on WorkspaceHttpException {
@@ -65,6 +98,17 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
       throw WorkspaceConnectionException(error);
     }
   }
+}
+
+Future<Map<String, Object?>> _responseFor(
+  http.StreamedResponse response,
+) async {
+  final text = await response.stream.bytesToString();
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    throw WorkspaceHttpException(response.statusCode, _errorFrom(text));
+  }
+  if (text.trim().isEmpty) return const {};
+  return _objectFrom(jsonDecode(text));
 }
 
 class WorkspaceConnectionException implements Exception {

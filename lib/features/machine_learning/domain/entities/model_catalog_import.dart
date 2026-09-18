@@ -1,9 +1,11 @@
 class ModelCatalogImport {
   const ModelCatalogImport({
     required this.manifestJson,
-    required this.artifactBytes,
+    required this.artifactLength,
+    required this.openArtifact,
   });
 
   final String manifestJson;
-  final List<int> artifactBytes;
+  final int artifactLength;
+  final Stream<List<int>> Function() openArtifact;
 }

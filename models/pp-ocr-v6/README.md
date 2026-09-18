@@ -5,8 +5,9 @@ Dieses Verzeichnis enthält die ONNX-Artefakte `PP-OCRv6_det_small` und
 [RapidOCR-Modellkatalog](https://github.com/RapidAI/RapidOCR/blob/main/python/rapidocr/default_models.yaml).
 
 Die Manifeste halten Detektion und Erkennung als getrennte, allgemein
-kombinierbare Modellbausteine. Der Recognizer verwendet
-`image.resizeHeightPad`, damit flache Textregionen auf die erwartete
+kombinierbare Modellbausteine. Der Detector führt seine Wahrscheinlichkeitsmaske über `mask.textRegions` in
+Textzeilen in der Originalbildauflösung über. Der Recognizer verwendet `image.resizeHeightPad`
+mit dynamischer Breite, damit flache oder lange Textregionen auf die erwartete
 Modellhöhe normalisiert werden.
 
 ## Prüfsummen

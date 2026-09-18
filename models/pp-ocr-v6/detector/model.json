@@ -87,15 +87,21 @@
         ],
         "transformations": [
           {
-            "type": "tensor.threshold",
+            "type": "mask.textRegions",
             "parameters": {
-              "value": 0.3
-            }
+              "threshold": 0.3,
+              "minimumPixels": 8,
+              "minimumScore": 0.5,
+              "dilationWidth": 3,
+              "dilationHeight": 1,
+              "padding": 1
+            },
+            "result": "detectedRegions"
           },
           {
-            "type": "mask.connectedComponents",
+            "type": "geometry.mergeRows",
             "parameters": {
-              "minimumPixels": 64
+              "minimumVerticalOverlap": 0.5
             },
             "result": "regions"
           }

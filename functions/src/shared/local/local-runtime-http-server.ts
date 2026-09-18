@@ -16,8 +16,19 @@ export type LocalRuntimeResponse = {
   statusCode: number;
 };
 
+export type LocalRuntimeStreamRequest = {
+  body: AsyncIterable<Uint8Array>;
+  headers: Readonly<Record<string, string | readonly string[] | undefined>>;
+  method?: string;
+  url?: string;
+};
+
 export interface LocalRuntimeRequestHandler {
   handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null>;
+}
+
+export interface LocalRuntimeStreamRequestHandler {
+  handleStream(request: LocalRuntimeStreamRequest): Promise<LocalRuntimeResponse | null>;
 }
 
 export function createLocalRuntimeHttpServer(
@@ -39,6 +50,8 @@ async function responseFor(
   request: IncomingMessage,
   handler: LocalRuntimeRequestHandler | undefined,
 ): Promise<LocalRuntimeResponse> {
+  const streamed = await streamedResponseFor(request, handler);
+  if (streamed !== null) return streamed;
   const body = await requestBody(request);
   return localRuntimeResponseFor({...request, body}, handler);
 }
@@ -60,13 +73,29 @@ function respondJson(response: ServerResponse, statusCode: number, body: object)
   response.end(JSON.stringify(body));
 }
 
+async function streamedResponseFor(
+  request: IncomingMessage,
+  handler: LocalRuntimeRequestHandler | undefined,
+): Promise<LocalRuntimeResponse | null> {
+  if (!isStreamHandler(handler)) return null;
+  return handler.handleStream({
+    body: request, headers: request.headers, method: request.method, url: request.url,
+  });
+}
+
+function isStreamHandler(handler: LocalRuntimeRequestHandler | undefined): handler is LocalRuntimeRequestHandler & LocalRuntimeStreamRequestHandler {
+  return handler !== undefined && "handleStream" in handler;
+}
+
+const maximumRequestBytes = 1024 * 1024;
+
 async function requestBody(request: IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = [];
   let size = 0;
   for await (const chunk of request) {
     const buffer = Buffer.from(chunk);
     size += buffer.length;
-    if (size > 75 * 1024 * 1024) throw new InvalidLocalRuntimeRequestError();
+    if (size > maximumRequestBytes) throw new InvalidLocalRuntimeRequestError();
     chunks.push(buffer);
   }
   const value = Buffer.concat(chunks).toString("utf8").trim();

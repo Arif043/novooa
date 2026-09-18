@@ -150,9 +150,12 @@ Cloud-Variante.
 
 ```text
 GET    /v1/ml-models
-POST   /v1/ml-models       { manifest, artifactBase64 }
+POST   /v1/ml-models/imports              { manifest }
+PUT    /v1/ml-models/imports/:id/artifact  application/onnx (Binärstream)
 DELETE /v1/ml-models/:id
 ```
+
+Der Client sendet zuerst das kleine Manifest und erhält eine kurzlebige Import-ID. Anschließend überträgt er das ONNX-Artefakt als einzelnen Binärstream per `PUT`. Die Runtime schreibt den Stream direkt in eine temporäre Datei, begrenzt ihn auf 2 GiB und berechnet Größe sowie SHA-256 beim Empfang. Erst wenn der gesamte Stream vorliegt und Manifest und Modellvertrag validiert sind, wird das Artefakt in den Katalog übernommen; die temporäre Datei wird danach entfernt. JSON-Anfragen der Runtime bleiben auf 1 MiB begrenzt.
 
 Lokale Importe gehören immer dem aktiven Team. Vor dem Speichern fragt das
 Node-Gateway den privaten Python-Sidecar nach dessen registrierten Ein- und
@@ -261,7 +264,7 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `image.decode` | `colorSpace`: `rgb`, `rgba`, `grayscale` | Dekodiert und setzt den Farbraum. |
 | `image.resize` | `width`, `height`, optional `colorSpace` | Skaliert mit LANCZOS. |
 | `image.resizePad` | `width`, `height`, optional `alignment` (`topLeft` oder `center`), `background`, `colorSpace` | Erhält das Seitenverhältnis und füllt bis zur Zielgröße auf. |
-| `image.resizeHeightPad` | `width`, `height`, optional `alignment`, `background`, `colorSpace` | Skaliert zuerst auf die Zielhöhe und füllt rechts auf oder schneidet rechts ab; geeignet für Textzeilen. |
+| `image.resizeHeightPad` | `height`, optional `width` oder `widthMultiple`, optional `alignment`, `background`, `colorSpace` | Skaliert auf die Zielhöhe. Mit `width` wird bis zur festen Breite aufgefüllt bzw. abgeschnitten; ohne `width` bleibt die Breite dynamisch und kann auf ein Vielfaches aufgefüllt werden. |
 | `image.padToMultiple` | `multiple`, optional `background`, `colorSpace` | Füllt rechts und unten bis zu einem Vielfachen auf; Bildkoordinaten bleiben erhalten. |
 | `image.crop` | `left`, `top`, `width`, `height` | Schneidet einen achsenparallelen Bildbereich aus. |
 | `image.perspectiveCrop` | `points: [x1, y1, ... x4, y4]`, `width`, `height` | Richtet ein Viereck perspektivisch zu einem Bild aus. |
@@ -272,9 +275,11 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `tensor.sigmoid` | keine | Wandelt Logits elementweise in Wahrscheinlichkeiten. |
 | `tensor.threshold` | optional `value` (Standard `0.5`) | Wandelt numerische Werte in eine boolesche Maske. |
 | `mask.connectedComponents` | optional `minimumPixels` | Liefert Regionen als `{bounds, pixelCount}`; `bounds` enthält `left`, `top`, `width`, `height`. |
+| `mask.textRegions` | `threshold`, `minimumPixels`, `minimumScore`, `dilationWidth`, `dilationHeight`, `padding` | Leitet aus einer Wahrscheinlichkeitsmaske bewertete Textregionen ab. |
+| `geometry.mergeRows` | `minimumVerticalOverlap` | Fasst horizontale Textregionen mit ausreichender vertikaler Überlappung zu einer Zeile zusammen. |
 | `geometry.scaleBounds` | `scaleX`, `scaleY`, optional `offsetX`, `offsetY` | Rechnet eine Regionsliste vom Maskenraster in Bildkoordinaten zurück. |
 | `tensor.nonMaximumSuppression` | `box`-Spalten, `scoreIndex`, optional `scoreThreshold`, `iouThreshold` | Unterdrückt überlappende Erkennungen und liefert `{index, score, box}`. |
-| `sequence.ctcGreedyDecode` | `labels`, `blankIndex`, optional `applySoftmax`, `collapseRepeated` | Dekodiert CTC-Logits in `{text, confidence}`. |
+| `sequence.ctcGreedyDecode` | `labels`, `blankIndex`, optional `applySoftmax`, `collapseRepeated`, `allowedCharacters` | Dekodiert CTC-Logits in `{text, confidence}`; `allowedCharacters` begrenzt die Auswahl auf ein fachlich zulässiges Alphabet. |
 | `tensor.topK` | Parameterbeschreibung für `k`, optional `result` | Liefert allgemeine Paare aus Index und Wert. |
 | `workflowOutput.mapping.$map` | `from`, `item` | Formt ein Transformations-Ergebnis zu einer Liste. |
 | `workflowOutput.mapping.$lookup` | `values`, `key` | Liest einen Wert aus einer indizierten Tabelle. |
@@ -292,13 +297,26 @@ Regionen überführen:
 
 ```ts
 transformations: [
-  {type: "tensor.sigmoid", parameters: {}},
-  {type: "tensor.threshold", parameters: {value: 0.7}},
-  {type: "mask.connectedComponents", result: "regions", parameters: {minimumPixels: 12}},
+  {
+    type: "mask.textRegions",
+    result: "detectedRegions",
+    parameters: {threshold: 0.3, minimumPixels: 8, minimumScore: 0.5},
+  },
+  {
+    type: "geometry.mergeRows",
+    result: "regions",
+    parameters: {minimumVerticalOverlap: 0.5},
+  },
 ]
 ```
 
-Die Maskenregionen eines Detektors liegen häufig in einem kleineren Ausgaberaster. `geometry.scaleBounds` projiziert sie mit dem bekannten Modell-Stride in die Bildkoordinaten zurück, bevor ein nachfolgender `forEach` sie für `image.crop` verwendet.
+`mask.textRegions` bildet eine Wahrscheinlichkeitsmaske direkt auf bewertete
+Textregionen ab. `geometry.mergeRows` fasst nebeneinander liegende Regionen zu
+Lesenzeilen zusammen. Liefert ein Detektor ein kleineres Ausgaberaster, projiziert
+`geometry.scaleBounds` die Bounds mit dem bekannten Modell-Stride in
+Bildkoordinaten zurück, bevor ein nachfolgender `forEach` sie für `image.crop`
+verwendet. Gibt das Modell - wie das verwendete PP-OCRv6-Small-Artefakt - bereits
+Koordinaten in der Eingabauflösung aus, wird keine Skalierung ergänzt.
 
 Die konkrete fachliche Form, etwa `{pageRegions: [...]}`, wird danach allein
 durch `workflowOutput.mapping` beschrieben. Ein CTC-Textmodell verwendet

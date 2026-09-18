@@ -1,20 +1,28 @@
-import {createHash} from "node:crypto";
+import {randomUUID} from "node:crypto";
 import {type ApplicationLogger} from "../../../../shared/logging/application-logger.js";
 import {
   type LocalRuntimeRequest,
   type LocalRuntimeRequestHandler,
   type LocalRuntimeResponse,
+  type LocalRuntimeStreamRequest,
+  type LocalRuntimeStreamRequestHandler,
 } from "../../../../shared/local/local-runtime-http-server.js";
 import {InstallTeamModel} from "../../domain/usecases/install-team-model.js";
 import {type TeamModelCatalog} from "../../domain/repositories/model-catalog.js";
 import {LocalModelArtifactPublisher} from "./local-model-artifact-publisher.js";
+import {LocalModelArtifactUploadStore, type StagedModelArtifact} from "./local-model-artifact-upload-store.js";
 import {type ModelContractValidator} from "./python-model-contract-validator.js";
 import {systemModelEntry, systemModelManifestFromUnknown} from "../cli/system-model-manifest.js";
 
-export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler {
+type PendingModelImport = {
+  manifest: ReturnType<typeof systemModelManifestFromUnknown>;
+};
+
+export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler, LocalRuntimeStreamRequestHandler {
   constructor(
     private readonly catalog: TeamModelCatalog,
     private readonly artifactPublisher: LocalModelArtifactPublisher,
+    private readonly uploadStore: LocalModelArtifactUploadStore,
     private readonly teamId: string,
     private readonly contractValidator: ModelContractValidator,
     private readonly logger: ApplicationLogger,
@@ -23,30 +31,57 @@ export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler 
   }
 
   private readonly installer: InstallTeamModel;
+  private readonly imports = new Map<string, PendingModelImport>();
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
     if (request.url === "/v1/ml-models" && request.method === "GET") return this.list();
-    if (request.url === "/v1/ml-models" && request.method === "POST") return this.install(request.body);
+    if (request.url === "/v1/ml-models/imports" && request.method === "POST") return this.createImport(request.body);
     const modelId = modelIdFrom(request.url);
     if (modelId !== null && request.method === "DELETE") return this.remove(modelId);
     return null;
+  }
+
+  async handleStream(request: LocalRuntimeStreamRequest): Promise<LocalRuntimeResponse | null> {
+    const importId = importIdFrom(request.url);
+    if (importId === null || request.method !== "PUT") return null;
+    return this.uploadArtifact(importId, request);
   }
 
   private async list(): Promise<LocalRuntimeResponse> {
     return {body: {items: await this.catalog.listAvailableFor(this.teamId)}, statusCode: 200};
   }
 
-  private async install(body: unknown): Promise<LocalRuntimeResponse> {
+  private async createImport(body: unknown): Promise<LocalRuntimeResponse> {
     try {
-      const input = importFrom(body);
-      const entry = systemModelEntry(input.manifest, input.artifact.reference);
+      const manifest = systemModelManifestFromUnknown(record(body).manifest);
+      const importId = randomUUID();
+      this.imports.set(importId, {manifest});
+      return {body: {importId}, statusCode: 201};
+    } catch (error) {
+      return this.failure("create_failed", error);
+    }
+  }
+
+  private async uploadArtifact(importId: string, request: LocalRuntimeStreamRequest): Promise<LocalRuntimeResponse> {
+    const pending = this.imports.get(importId);
+    if (pending === undefined) return {body: {error: "Der Modellimport wurde nicht gefunden."}, statusCode: 404};
+    if (!isOnnxContentType(request.headers)) return {body: {error: "Der Upload erwartet application/onnx."}, statusCode: 415};
+    let staged: StagedModelArtifact | null = null;
+    try {
+      staged = await this.uploadStore.stage(importId, request.body, contentLength(request.headers));
+      const entry = systemModelEntry(pending.manifest, artifactReferenceFor(pending.manifest, staged));
       await validateContract(this.contractValidator, entry.contract);
-      const teamEntry = {...entry, scope: {type: "team" as const, teamId: this.teamId}};
-      const installed = await this.installer.execute({entry: teamEntry, artifact: input.artifact});
+      const installed = await this.installer.execute({
+        entry: {...entry, scope: {type: "team", teamId: this.teamId}},
+        artifact: {reference: entry.artifactReference, content: this.uploadStore.contentFor(staged)},
+      });
+      this.imports.delete(importId);
       this.logger.info("local_model_catalog.installed", {modelId: installed.id, teamId: this.teamId});
       return {body: installed, statusCode: 201};
     } catch (error) {
-      return this.failure("install_failed", error);
+      return this.failure("upload_failed", error);
+    } finally {
+      if (staged !== null) await this.uploadStore.discard(staged);
     }
   }
 
@@ -67,35 +102,16 @@ export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler 
   }
 
   private failure(event: string, error: unknown): LocalRuntimeResponse {
-    if (error instanceof LocalModelCatalogRequestError) {
+    if (error instanceof LocalModelCatalogRequestError || error instanceof Error && isValidationError(error)) {
       return {body: {error: error.message}, statusCode: 400};
     }
-    if (error instanceof Error && isValidationError(error)) {
-      return {body: {error: error.message}, statusCode: 400};
-    }
-    this.logger.exception(`local_model_catalog.${event}`, error, {teamId: this.teamId});
+    this.logger.exception("local_model_catalog." + event, error, {teamId: this.teamId});
     return {body: {error: "Der Modellkatalog konnte nicht aktualisiert werden."}, statusCode: 500};
   }
 }
 
-function importFrom(value: unknown) {
-  try {
-    const input = record(value);
-    const manifest = systemModelManifestFromUnknown(input.manifest);
-    const bytes = artifactBytes(input.artifactBase64);
-    const reference = {
-      artifactId: manifest.artifact.artifactId,
-      versionId: manifest.artifact.versionId,
-      format: "onnx" as const,
-      contentType: "application/onnx",
-      sizeBytes: bytes.length,
-      sha256: createHash("sha256").update(bytes).digest("hex"),
-    };
-    return {manifest, artifact: {reference, content: byteChunks(bytes)}};
-  } catch (error) {
-    if (error instanceof LocalModelCatalogRequestError) throw error;
-    throw new LocalModelCatalogRequestError(errorMessage(error));
-  }
+function artifactReferenceFor(manifest: ReturnType<typeof systemModelManifestFromUnknown>, staged: StagedModelArtifact) {
+  return {artifactId: manifest.artifact.artifactId, versionId: manifest.artifact.versionId, format: "onnx" as const, contentType: "application/onnx", sizeBytes: staged.sizeBytes, sha256: staged.sha256};
 }
 
 async function validateContract(validator: ModelContractValidator, contract: Parameters<ModelContractValidator["validate"]>[0]): Promise<void> {
@@ -111,24 +127,29 @@ function record(value: unknown): Record<string, unknown> {
   throw new LocalModelCatalogRequestError("Der Modellimport erwartet ein Objekt.");
 }
 
-function artifactBytes(value: unknown): Buffer {
-  if (typeof value !== "string" || value.length === 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(value)) {
-    throw new LocalModelCatalogRequestError("Die ONNX-Datei ist ungültig.");
-  }
-  const bytes = Buffer.from(value, "base64");
-  if (bytes.length === 0 || bytes.toString("base64") !== value) {
-    throw new LocalModelCatalogRequestError("Die ONNX-Datei ist ungültig.");
-  }
-  return bytes;
-}
-
-async function* byteChunks(bytes: Uint8Array): AsyncGenerator<Uint8Array> {
-  yield bytes;
-}
-
 function modelIdFrom(url: string | undefined): string | null {
   const match = /^\/v1\/ml-models\/([^/]+)$/.exec(new URL(url ?? "/", "http://local-runtime").pathname);
   return match?.[1] ? decodeURIComponent(match[1]) : null;
+}
+
+function importIdFrom(url: string | undefined): string | null {
+  const match = /^\/v1\/ml-models\/imports\/([0-9a-f-]+)\/artifact$/.exec(new URL(url ?? "/", "http://local-runtime").pathname);
+  return match?.[1] ?? null;
+}
+
+function isOnnxContentType(headers: LocalRuntimeStreamRequest["headers"]): boolean {
+  const value = headers["content-type"];
+  const contentType = Array.isArray(value) ? value[0] : value;
+  return contentType?.split(";", 1)[0] === "application/onnx";
+}
+
+function contentLength(headers: LocalRuntimeStreamRequest["headers"]): number | null {
+  const value = headers["content-length"];
+  const text = Array.isArray(value) ? value[0] : value;
+  if (text === undefined) return null;
+  const length = Number(text);
+  if (!Number.isSafeInteger(length) || length < 0) throw new LocalModelCatalogRequestError("Die Uploadgröße ist ungültig.");
+  return length;
 }
 
 function isValidationError(error: Error): boolean {

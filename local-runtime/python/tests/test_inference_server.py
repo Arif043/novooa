@@ -51,6 +51,8 @@ class TransformationCapabilitiesTest(unittest.TestCase):
         self.assertIn("tensor.channelOrder", capabilities["inputTransformationTypes"])
         self.assertIn("tensor.topK", capabilities["outputTransformationTypes"])
         self.assertIn("geometry.scaleBounds", capabilities["outputTransformationTypes"])
+        self.assertIn("mask.textRegions", capabilities["outputTransformationTypes"])
+        self.assertIn("geometry.mergeRows", capabilities["outputTransformationTypes"])
 
 
 class RecordingFactory:

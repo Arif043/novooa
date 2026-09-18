@@ -5,6 +5,7 @@ import {LocalKnowledgeNoteHttpHandler} from "../../features/knowledge_base/infra
 import {SQLiteKnowledgeBaseStore} from "../../features/knowledge_base/infrastructure/local/sqlite-knowledge-base-store.js";
 import {createLocalSidecarModelInference} from "../../features/machine_learning/infrastructure/local/local-sidecar-model-inference.js";
 import {LocalModelArtifactPublisher} from "../../features/machine_learning/infrastructure/local/local-model-artifact-publisher.js";
+import {LocalModelArtifactUploadStore} from "../../features/machine_learning/infrastructure/local/local-model-artifact-upload-store.js";
 import {LocalModelCatalogHttpHandler} from "../../features/machine_learning/infrastructure/local/local-model-catalog-http-handler.js";
 import {SQLiteModelCatalog} from "../../features/machine_learning/infrastructure/local/sqlite-model-catalog.js";
 import {
@@ -126,6 +127,7 @@ export function createLocalRuntimeComposition(
       new LocalModelCatalogHttpHandler(
         new SQLiteModelCatalog(options.database),
         new LocalModelArtifactPublisher(options.runtimeRoot),
+        new LocalModelArtifactUploadStore(options.runtimeRoot),
         options.workspace.teamId,
         modelContractValidatorFor(),
         applicationLogger,

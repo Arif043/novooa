@@ -7,6 +7,7 @@ import {type ApplicationLogger} from "../../../../shared/logging/application-log
 import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
 import {type TeamModelCatalog} from "../../domain/repositories/model-catalog.js";
 import {LocalModelArtifactPublisher} from "./local-model-artifact-publisher.js";
+import {LocalModelArtifactUploadStore} from "./local-model-artifact-upload-store.js";
 import {LocalModelCatalogHttpHandler} from "./local-model-catalog-http-handler.js";
 import {type ModelContractValidator} from "./python-model-contract-validator.js";
 
@@ -16,17 +17,19 @@ test("installs a team-scoped ONNX model from a manifest and lists it", async () 
   const handler = new LocalModelCatalogHttpHandler(
     catalog,
     new LocalModelArtifactPublisher(directory),
+    new LocalModelArtifactUploadStore(directory),
     "team-1",
     new Validator(),
     new Logger(),
   );
 
   try {
-    const imported = await handler.handle({
+    const importRequest = await handler.handle({
       method: "POST",
-      url: "/v1/ml-models",
-      body: {manifest: manifest(), artifactBase64: Buffer.from("onnx").toString("base64")},
+      url: "/v1/ml-models/imports",
+      body: {manifest: manifest()},
     });
+    const imported = await upload(handler, importRequest);
     const listed = await handler.handle({method: "GET", url: "/v1/ml-models", body: {}});
 
     assert.equal(imported?.statusCode, 201);
@@ -42,17 +45,19 @@ test("rejects a manifest whose transformation is not supported by the Python run
   const handler = new LocalModelCatalogHttpHandler(
     new Catalog(),
     new LocalModelArtifactPublisher(directory),
+    new LocalModelArtifactUploadStore(directory),
     "team-1",
     new RejectingValidator(),
     new Logger(),
   );
 
   try {
-    const response = await handler.handle({
+    const importRequest = await handler.handle({
       method: "POST",
-      url: "/v1/ml-models",
-      body: {manifest: manifest(), artifactBase64: Buffer.from("onnx").toString("base64")},
+      url: "/v1/ml-models/imports",
+      body: {manifest: manifest()},
     });
+    const response = await upload(handler, importRequest);
 
     assert.equal(response?.statusCode, 400);
     assert.deepEqual(response?.body, {error: "Die Ausgabe-Transformation unknown.type wird von der lokalen Runtime nicht unterstützt."});
@@ -65,6 +70,7 @@ test("does not remove a model owned by another team", async () => {
   const handler = new LocalModelCatalogHttpHandler(
     new Catalog(),
     new LocalModelArtifactPublisher("/tmp/novooa-unused"),
+    new LocalModelArtifactUploadStore("/tmp/novooa-unused"),
     "team-1",
     new Validator(),
     new Logger(),
@@ -85,17 +91,19 @@ test("removes the ONNX artifact with the local catalog entry", async () => {
   const handler = new LocalModelCatalogHttpHandler(
     catalog,
     new LocalModelArtifactPublisher(directory),
+    new LocalModelArtifactUploadStore(directory),
     "team-1",
     new Validator(),
     new Logger(),
   );
 
   try {
-    await handler.handle({
+    const importRequest = await handler.handle({
       method: "POST",
-      url: "/v1/ml-models",
-      body: {manifest: manifest(), artifactBase64: Buffer.from("onnx").toString("base64")},
+      url: "/v1/ml-models/imports",
+      body: {manifest: manifest()},
     });
+    await upload(handler, importRequest);
     const removed = await handler.handle({method: "DELETE", url: "/v1/ml-models/example-model", body: {}});
 
     assert.equal(removed?.statusCode, 204);
@@ -111,21 +119,22 @@ test("recovers an interrupted import with an existing local artifact", async () 
   const handler = new LocalModelCatalogHttpHandler(
     catalog,
     new LocalModelArtifactPublisher(directory),
+    new LocalModelArtifactUploadStore(directory),
     "team-1",
     new Validator(),
     new Logger(),
   );
   const request = {
     method: "POST" as const,
-    url: "/v1/ml-models",
-    body: {manifest: manifest(), artifactBase64: Buffer.from("onnx").toString("base64")},
+    url: "/v1/ml-models/imports",
+    body: {manifest: manifest()},
   };
 
   try {
-    await handler.handle(request);
+    await upload(handler, await handler.handle(request));
     await catalog.removeTeamEntry("team-1", "example-model");
 
-    const recovered = await handler.handle(request);
+    const recovered = await upload(handler, await handler.handle(request));
 
     assert.equal(recovered?.statusCode, 201);
     assert.equal(catalog.entries.length, 1);
@@ -133,6 +142,24 @@ test("recovers an interrupted import with an existing local artifact", async () 
     await rm(directory, {recursive: true, force: true});
   }
 });
+
+async function upload(
+  handler: LocalModelCatalogHttpHandler,
+  importRequest: {body: unknown} | null,
+) {
+  const importId = (importRequest?.body as {importId?: unknown}).importId;
+  assert.equal(typeof importId, "string");
+  return handler.handleStream({
+    method: "PUT",
+    url: `/v1/ml-models/imports/${importId}/artifact`,
+    headers: {"content-type": "application/onnx", "content-length": "4"},
+    body: artifactContent(),
+  });
+}
+
+async function* artifactContent(): AsyncIterable<Uint8Array> {
+  yield Buffer.from("onnx");
+}
 
 class Catalog implements TeamModelCatalog {
   entries: ModelCatalogEntry[] = [];

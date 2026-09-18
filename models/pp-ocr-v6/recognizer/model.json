@@ -45,8 +45,8 @@
           {
             "type": "image.resizeHeightPad",
             "parameters": {
-              "width": 320,
               "height": 48,
+              "widthMultiple": 8,
               "alignment": "topLeft",
               "background": 0
             }

@@ -31,6 +31,49 @@ class OutputTransformationRegistryTest(unittest.TestCase):
             [{"bounds": {"left": 0, "top": 0, "width": 2, "height": 2}, "pixelCount": 3}],
         )
 
+
+    def test_groups_mask_fragments_into_scored_text_regions(self):
+        values = self.registry.process(
+            self.numpy.array([[[[0, .9, .9, 0, 0, .8, .8, 0], [0, .9, .9, 0, 0, .8, .8, 0], [0, 0, 0, 0, 0, 0, 0, 0], [0, .7, .7, 0, 0, .7, .7, 0]]]]),
+            [{
+                "type": "mask.textRegions",
+                "result": "regions",
+                "parameters": {
+                    "threshold": .5,
+                    "minimumPixels": 4,
+                    "minimumScore": .6,
+                    "dilationWidth": 3,
+                    "dilationHeight": 1,
+                },
+            }],
+            self.context(),
+        )
+
+        self.assertEqual(len(values["regions"]), 2)
+        self.assertEqual(values["regions"][0]["pixelCount"], 8)
+        self.assertGreater(values["regions"][0]["score"], .8)
+        self.assertEqual(values["regions"][1]["bounds"]["top"], 3)
+
+
+    def test_merges_regions_sharing_a_text_row(self):
+        values = self.registry.process(
+            [
+                {"bounds": {"left": 10, "top": 20, "width": 80, "height": 18}, "pixelCount": 20, "score": .9},
+                {"bounds": {"left": 200, "top": 24, "width": 30, "height": 18}, "pixelCount": 10, "score": .8},
+                {"bounds": {"left": 10, "top": 60, "width": 80, "height": 18}, "pixelCount": 20, "score": .9},
+            ],
+            [{
+                "type": "geometry.mergeRows",
+                "result": "rows",
+                "parameters": {"minimumVerticalOverlap": .5},
+            }],
+            self.context(),
+        )
+
+        self.assertEqual(len(values["rows"]), 2)
+        self.assertEqual(values["rows"][0]["bounds"], {"left": 10, "top": 20, "width": 220, "height": 22})
+        self.assertEqual(values["rows"][0]["memberCount"], 2)
+
     def test_decodes_ctc_logits_with_manifest_labels(self):
         values = self.registry.process(
             self.numpy.array([[[0, 5, 0], [0, 5, 0], [5, 0, 0], [0, 0, 5]]]),
@@ -39,6 +82,15 @@ class OutputTransformationRegistryTest(unittest.TestCase):
         )
 
         self.assertEqual(values["lines"][0]["text"], "AB")
+
+    def test_limits_ctc_decoding_to_allowed_characters(self):
+        values = self.registry.process(
+            self.numpy.array([[[0, 2, 5], [0, 4, 3]]]),
+            [{"type": "sequence.ctcGreedyDecode", "result": "lines", "parameters": {"labels": ["", "A", "中"], "blankIndex": 0, "allowedCharacters": "A", "collapseRepeated": False}}],
+            self.context(),
+        )
+
+        self.assertEqual(values["lines"][0]["text"], "AA")
 
     def test_uses_the_declared_top_k_parameter(self):
         values = self.registry.process(

@@ -50,7 +50,7 @@ void main() {
   });
 }
 
-class _RecordingClient implements WorkspaceApiClient {
+class _RecordingClient extends WorkspaceApiClient {
   String? postPath;
   Map<String, Object?>? postBody;
 

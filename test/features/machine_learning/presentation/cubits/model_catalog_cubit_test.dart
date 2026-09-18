@@ -17,9 +17,7 @@ void main() {
       RemoveModelCatalogEntry(repository),
     );
 
-    await cubit.importModel(
-      const ModelCatalogImport(manifestJson: '{}', artifactBytes: [1]),
-    );
+    await cubit.importModel(catalogImport());
 
     expect(repository.imported, isNotNull);
     expect(cubit.state.message, 'Modell wurde importiert.');
@@ -42,9 +40,7 @@ void main() {
         RemoveModelCatalogEntry(repository),
       );
 
-      await cubit.importModel(
-        const ModelCatalogImport(manifestJson: '{}', artifactBytes: [1]),
-      );
+      await cubit.importModel(catalogImport());
 
       expect(
         cubit.state.message,
@@ -54,6 +50,12 @@ void main() {
     },
   );
 }
+
+ModelCatalogImport catalogImport() => ModelCatalogImport(
+  manifestJson: '{}',
+  artifactLength: 1,
+  openArtifact: () => Stream.value([1]),
+);
 
 class _Repository implements ModelCatalogRepository {
   ModelCatalogImport? imported;

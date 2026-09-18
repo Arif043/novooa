@@ -32,7 +32,7 @@ void main() {
   });
 }
 
-class RecordingWorkspaceApiClient implements WorkspaceApiClient {
+class RecordingWorkspaceApiClient extends WorkspaceApiClient {
   final Map<String, Map<String, Object?>> responses = {};
   final List<String> requests = [];
 

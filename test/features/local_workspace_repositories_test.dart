@@ -71,7 +71,7 @@ void main() {
   });
 }
 
-class _LocalClient implements WorkspaceApiClient {
+class _LocalClient extends WorkspaceApiClient {
   String? lastPostPath;
 
   @override

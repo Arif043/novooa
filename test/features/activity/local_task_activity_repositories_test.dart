@@ -24,7 +24,7 @@ void main() {
   });
 }
 
-class RecordingWorkspaceApiClient implements WorkspaceApiClient {
+class RecordingWorkspaceApiClient extends WorkspaceApiClient {
   String? reviewedRunId;
 
   @override

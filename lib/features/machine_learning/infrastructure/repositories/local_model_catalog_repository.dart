@@ -14,10 +14,17 @@ class LocalModelCatalogRepository implements ModelCatalogRepository {
   @override
   Future<void> importEntry(ModelCatalogImport value) async {
     final manifest = _manifestFrom(value.manifestJson);
-    await _client.post('/v1/ml-models', {
+    final import = await _client.post('/v1/ml-models/imports', {
       'manifest': manifest,
-      'artifactBase64': base64Encode(value.artifactBytes),
     });
+    final importId = _importIdFrom(import);
+    await _client.putStream(
+      '/v1/ml-models/imports/${Uri.encodeComponent(importId)}/artifact',
+      body: value.openArtifact(),
+      contentLength: value.artifactLength,
+      contentType: 'application/onnx',
+      timeout: const Duration(minutes: 10),
+    );
   }
 
   @override
@@ -37,6 +44,12 @@ class LocalModelCatalogRepository implements ModelCatalogRepository {
       throw const FormatException('Der Modellkatalog ist ungültig.');
     }
     return items.map(_entryFrom).toList(growable: false);
+  }
+
+  String _importIdFrom(Map<String, Object?> value) {
+    final importId = value['importId'];
+    if (importId is String && importId.isNotEmpty) return importId;
+    throw const FormatException('Die Runtime lieferte keine Import-ID.');
   }
 
   Map<String, Object?> _manifestFrom(String value) {
