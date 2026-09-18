@@ -261,6 +261,7 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `image.decode` | `colorSpace`: `rgb`, `rgba`, `grayscale` | Dekodiert und setzt den Farbraum. |
 | `image.resize` | `width`, `height`, optional `colorSpace` | Skaliert mit LANCZOS. |
 | `image.resizePad` | `width`, `height`, optional `alignment` (`topLeft` oder `center`), `background`, `colorSpace` | Erhält das Seitenverhältnis und füllt bis zur Zielgröße auf. |
+| `image.resizeHeightPad` | `width`, `height`, optional `alignment`, `background`, `colorSpace` | Skaliert zuerst auf die Zielhöhe und füllt rechts auf oder schneidet rechts ab; geeignet für Textzeilen. |
 | `image.padToMultiple` | `multiple`, optional `background`, `colorSpace` | Füllt rechts und unten bis zu einem Vielfachen auf; Bildkoordinaten bleiben erhalten. |
 | `image.crop` | `left`, `top`, `width`, `height` | Schneidet einen achsenparallelen Bildbereich aus. |
 | `image.perspectiveCrop` | `points: [x1, y1, ... x4, y4]`, `width`, `height` | Richtet ein Viereck perspektivisch zu einem Bild aus. |

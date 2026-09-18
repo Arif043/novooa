@@ -46,6 +46,7 @@ class TransformationCapabilitiesTest(unittest.TestCase):
 
         self.assertIn("image.resize", capabilities["inputTransformationTypes"])
         self.assertIn("image.resizePad", capabilities["inputTransformationTypes"])
+        self.assertIn("image.resizeHeightPad", capabilities["inputTransformationTypes"])
         self.assertIn("image.padToMultiple", capabilities["inputTransformationTypes"])
         self.assertIn("tensor.channelOrder", capabilities["inputTransformationTypes"])
         self.assertIn("tensor.topK", capabilities["outputTransformationTypes"])

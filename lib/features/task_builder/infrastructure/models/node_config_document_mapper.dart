@@ -342,7 +342,7 @@ class NodeConfigDocumentMapper {
 
   ForEachNodeConfig _forEachFrom(Map<String, Object?> data) {
     return ForEachNodeConfig(
-      itemsPointer: data['itemsPointer'] as String? ?? '/',
+      itemsPointer: data['itemsPointer'] as String? ?? '',
       graph: graphFromDocument(data['graph']),
     );
   }

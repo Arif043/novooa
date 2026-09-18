@@ -5,6 +5,11 @@
 gegen den JSON-`value` des direkten Vorgängers auf und ruft denselben
 Graph-Runner für jedes Element auf.
 
+Ein leerer Pointer wählt den vollständigen Wert des Vorgängers. Gibt ein
+Modell direkt eine Liste aus, bleibt `itemsPointer` daher leer. Ein Pointer wie
+`/regions` ist nur nötig, wenn der Vorgänger ein Objekt mit dem Array-Feld
+`regions` liefert.
+
 ```text
 JSON value -> RFC-6901 pointer -> serielle Graph-Ausführungen -> strukturierte JSON-Liste
 ```

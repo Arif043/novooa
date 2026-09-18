@@ -59,7 +59,9 @@ Kanten regeln ausschließlich Reihenfolge und Abhängigkeiten. Der Baustein
 eingebetteten Graphen seriell aus und gibt dessen benannte Ergebnisse als JSON-Array
 zurück. Eingebettete Graphen dürfen in Version 1 weder pausierende Bausteine noch ein
 weiteres `forEach` enthalten. Diese Regeln und die RFC-6901-JSON-Pointer-
-Auswertung liegen in der Domain; der Graph-Runner führt Root-Graph, Bedingungszweig und eingebetteten Graphen über dieselbe Topologie aus.
+Auswertung liegen in der Domain; der Graph-Runner führt Root-Graph, Bedingungszweig und eingebetteten Graphen über dieselbe Topologie aus. Ein leerer
+Pointer bedeutet den vollständigen Vorgängerwert und ist die Voreinstellung für
+direkte Array-Ausgaben.
 
 `documentLookup` fragt genau einen Datensatz über eine Sammlung und sichere
 Feldbedingungen ab. Sein primärer Wert ist immer ein für den bestehenden

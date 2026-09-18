@@ -178,7 +178,7 @@ export const modelInferenceNodeConfigSchema = z.object({
 
 export const forEachNodeConfigSchema = z.object({
   primitive: z.literal("forEach").default("forEach"),
-  itemsPointer: z.string().default("/"),
+  itemsPointer: z.string().default(""),
   graph: branchWorkflowGraphSchema.default({nodes: [], edges: []}),
 });
 

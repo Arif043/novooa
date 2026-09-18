@@ -7,7 +7,7 @@ class ForEachNodeConfig extends NodeConfig {
   final WorkflowGraph graph;
 
   factory ForEachNodeConfig.initial() {
-    return ForEachNodeConfig(itemsPointer: '/', graph: WorkflowGraph.empty());
+    return ForEachNodeConfig(itemsPointer: '', graph: WorkflowGraph.empty());
   }
 
   @override

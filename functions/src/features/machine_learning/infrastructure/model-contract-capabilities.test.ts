@@ -4,7 +4,7 @@ import {type ModelContract} from "../domain/entities/model-contract.js";
 import {cloudModelContractCapabilityValidator} from "./model-contract-capabilities.js";
 
 test("accepts the registered image transformations", () => {
-  cloudModelContractCapabilityValidator().validate(contract("image", ["image.decode", "image.crop", "image.perspectiveCrop", "image.resize", "image.resizePad", "image.padToMultiple", "tensor.channelOrder"]));
+  cloudModelContractCapabilityValidator().validate(contract("image", ["image.decode", "image.crop", "image.perspectiveCrop", "image.resize", "image.resizePad", "image.resizeHeightPad", "image.padToMultiple", "tensor.channelOrder"]));
 });
 
 test("rejects an unsupported input source before publication", () => {

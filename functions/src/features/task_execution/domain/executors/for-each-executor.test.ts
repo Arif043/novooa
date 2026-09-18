@@ -22,6 +22,19 @@ test("executes every item serially and preserves its result order", async () => 
   ]);
 });
 
+test("uses the complete predecessor value for an empty pointer", async () => {
+  const values: unknown[] = [];
+  await executeForEach({
+    config: {...config(), itemsPointer: ""},
+    inputValue: {type: "json", value: ["first", "second"]},
+    async runGraph(_task, input) {
+      values.push(input.initialValue!.value);
+      return [resultFor(input.initialValue!.value)];
+    },
+  });
+  assert.deepEqual(values, ["first", "second"]);
+});
+
 test("fails fast and includes the failing item index", async () => {
   const calls: unknown[] = [];
   await assert.rejects(

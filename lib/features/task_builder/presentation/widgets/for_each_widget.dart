@@ -28,13 +28,18 @@ class ForEachWidget extends StatelessWidget {
             initialValue: config.itemsPointer,
             decoration: const InputDecoration(
               labelText: 'Elemente aus',
-              hintText: 'JSON-Pointer, z. B. /regions',
+              hintText: 'Leer für die gesamte Liste, z. B. /regions',
             ),
             onChanged: (value) => context
                 .read<TaskBuilderCubit>()
                 .updateForEachPointer(node.id, value),
           ),
           const SizedBox(height: AppSpacing.md),
+          Text(
+            'Leer lassen, wenn der vorherige Baustein bereits eine Liste ausgibt.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: AppSpacing.sm),
           Text('Für jedes gefundene Element', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),
           Text(
