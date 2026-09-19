@@ -6,10 +6,9 @@ import {
   type WorkflowGraphRunner,
 } from "../../../domain/executors/node-executor.js";
 import {
-  resolveVariableTemplateValue,
-  resolveVariableTemplates,
+  TemplateExpressionResolver,
   variableTemplateContextFor,
-} from "./variable-template.js";
+} from "./template-expression-resolver.js";
 import {
   type NodeExecutionResult,
   type TaskGraphInput,
@@ -39,12 +38,7 @@ type TaskRunContextOptions = {
 export function createTaskRunContext(
   options: TaskRunContextOptions,
 ): TaskRunContext {
-  const templateContext = () => variableTemplateContextFor(
-    options.currentGraph,
-    options.results,
-    options.variables,
-    options.scope,
-  );
+  const templateResolver = new TemplateExpressionResolver(() => templateContextFor(options));
   return {
     context: options.context,
     rootTask: options.input.taskDefinition,
@@ -60,9 +54,19 @@ export function createTaskRunContext(
     documentStore: options.runtime.documentStore,
     modelInference: options.runtime.modelInference,
     runGraph: graphRunnerFor(options),
-    resolveTemplates: (text) => resolveVariableTemplates(text, templateContext()),
-    resolveTemplateValue: (text) => resolveVariableTemplateValue(text, templateContext()),
+    templateExpressionResolver: templateResolver,
+    resolveTemplates: (text) => templateResolver.resolveText(text),
+    resolveTemplateValue: (text) => templateResolver.resolveValue(text),
   };
+}
+
+function templateContextFor(options: TaskRunContextOptions) {
+  return variableTemplateContextFor(
+    options.currentGraph,
+    options.results,
+    options.variables,
+    options.scope,
+  );
 }
 
 function graphRunnerFor(options: TaskRunContextOptions): WorkflowGraphRunner {

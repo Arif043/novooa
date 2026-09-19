@@ -1,6 +1,7 @@
 import {
   type NodeExecutionResult,
   type NodeOutputValue,
+  type FileReference,
   type TaskDefinition,
   type WorkflowGraph,
   type WorkflowNode,
@@ -13,6 +14,12 @@ import {type TaskMessageSender} from "../repositories/task-message-sender.js";
 import {type DocumentStore} from "../../../data/domain/repositories/document-store.js";
 
 export type TaskVariables = Record<string, unknown>;
+
+export type TemplateExpressionResolver = {
+  resolveText(template: string): string;
+  resolveValue(template: string): unknown;
+  resolveMediaReferences(template: string): FileReference[];
+};
 
 export type WorkflowExecutionScope = {
   global?: Record<string, unknown>;
@@ -43,6 +50,7 @@ export type TaskRunContext = {
   scope: WorkflowExecutionScope;
   results: Map<string, NodeExecutionResult>;
   runGraph: WorkflowGraphRunner;
+  templateExpressionResolver: TemplateExpressionResolver;
   resolveTemplates: (text: string) => string;
   resolveTemplateValue: (text: string) => unknown;
   teamFileStore: TeamFileStore;
