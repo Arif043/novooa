@@ -5,6 +5,7 @@ import {genkit, type GenkitBeta} from "genkit/beta";
 import {type LanguageModelCapabilities} from "../../domain/entities/language-model.js";
 import {type LanguageModelCatalog} from "../../domain/repositories/language-model-catalog.js";
 import {OllamaLanguageModelCapabilityInspector} from "../ollama/ollama-language-model-capability-inspector.js";
+import {nativeOllamaPlugin} from "../ollama/native-ollama-genkit-plugin.js";
 
 export type ResolvedGenkitLanguageModel = {
   ai: GenkitBeta;
@@ -47,6 +48,22 @@ export class CatalogGenkitLanguageModelResolver
       };
     }
     if (!connection.baseUrl) throw new Error("Der OpenAI-kompatiblen Verbindung fehlt die Base-URL.");
+    if (connection.provider === "ollama") {
+      const capabilities = await this.capabilitiesFor(
+        connection.provider, connection.baseUrl, model.modelId, model.capabilities,
+      );
+      const providerName = "language-model-" + connection.id;
+      return {
+        ai: genkit({plugins: [nativeOllamaPlugin({
+          name: providerName,
+          serverAddress: nativeServerAddressFor(connection.baseUrl),
+          modelId: model.modelId,
+        })]}),
+        model: modelRef({name: providerName + "/" + model.modelId}),
+        capabilities,
+        logContext: {provider: "ollama", endpoint: connection.name, model: model.modelId},
+      };
+    }
     const providerName = `language-model-${connection.id}`;
     const capabilities = await this.capabilitiesFor(connection.provider, connection.baseUrl, model.modelId, model.capabilities);
     return {
@@ -73,4 +90,8 @@ export class CatalogGenkitLanguageModelResolver
     if (provider !== "ollama") return Promise.resolve(fallback);
     return this.ollamaCapabilities.inspect({baseUrl, fallback, modelId});
   }
+}
+
+function nativeServerAddressFor(baseUrl: string): string {
+  return new URL(baseUrl).origin;
 }

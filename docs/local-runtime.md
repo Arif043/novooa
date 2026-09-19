@@ -129,7 +129,7 @@ speichert alle verfügbaren Textmodelle unter einer gemeinsamen Verbindung. Die
 Modellauswahl findet anschließend im TaskBuilder statt; dort liest der Client
 den Katalog über `GET /v1/language-models`. API-Keys werden in keiner Antwort
 ausgegeben. Ollama verwendet ohne weitere Eingabe
-`http://host.docker.internal:11434/v1` und Genkits OpenAI-kompatiblen Adapter.
+`http://host.docker.internal:11434/v1`. Die Runtime registriert Ollama als lokales Genkit-Modell. Genkit steuert Prompt-Bausteine fuer Text, Bildanalyse und strukturierte Ausgabe und delegiert den Provider-Transport an die native `/api/chat`-API; JSON-Schemas werden dabei als Ollama-`format` uebergeben.
 Für einen abweichenden OpenAI-kompatiblen Dienst wird als Base-URL
 `http://host.docker.internal:<port>/v1` verwendet. Externe Anbieter benötigen
 eine HTTPS-URL und einen API-Key. Für Ollama verwendet die Runtime intern einen

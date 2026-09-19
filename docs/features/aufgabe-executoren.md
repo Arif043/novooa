@@ -36,6 +36,8 @@ Das generierte Bild wird als Team-Datei gespeichert und als `media`-`value`
 weitergereicht; Data-URLs verlassen den Executor nicht. Die Cloud Function
 erhält den benötigten `GEMINI_API_KEY` als gebundenes Secret.
 
+Bei einer Ollama-Verbindung registriert die Runtime ein lokales Genkit-Modell. Genkit steuert den gesamten Prompt-Aufruf und delegiert nur den Provider-Transport ueber einen nativen Ollama-Adapter an `/api/chat`. Bild-Data-URLs werden als Ollama-Bilder uebertragen; Entscheidungen und strukturierte Ausgaben reichen das von Genkit erzeugte JSON-Schema als natives `format` weiter. Middleware, Tracing und eine spaetere Werkzeugschleife bleiben damit im Genkit-Kontrollfluss.
+
 `PromptExecutor` ist der Domain-Port mit `PromptExecutionRequest` und
 `PromptExecutionResult`. `createGenkitPromptExecutor` bindet Genkit und den
 temporären Anhangs-Workspace als Infrastrukturadapter. Der Node-Executor
