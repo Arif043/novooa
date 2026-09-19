@@ -27,6 +27,7 @@ export type ExecuteWorkflowGraph = (
 
 type TaskRunContextOptions = {
   input: TaskGraphInput;
+  context: string;
   runtime: TaskGraphRuntime;
   currentGraph: WorkflowGraph;
   results: Map<string, NodeExecutionResult>;
@@ -45,6 +46,7 @@ export function createTaskRunContext(
     options.scope,
   );
   return {
+    context: options.context,
     rootTask: options.input.taskDefinition,
     currentGraph: options.currentGraph,
     teamId: options.input.teamId,

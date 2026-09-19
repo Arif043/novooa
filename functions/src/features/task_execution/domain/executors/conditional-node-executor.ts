@@ -39,24 +39,24 @@ export function createConditionalFlowNodeExecutor(
 ): NodeExecutor {
   return {
     primitive: "conditionalFlow",
-    async execute(input, runContext) {
+    async execute(node, runContext, parentOutputs) {
       const targetLabel = runContext.resolveTemplates(
-        textForParentOutputs(input.parentOutputs),
+        textForParentOutputs(parentOutputs),
       );
       const output = executeConditionalFlow({
-        node: input.node,
+        node,
         targetLabel,
         outgoingEdges: runContext.currentGraph.edges.filter(
-          (edge) => edge.from === input.node.id,
+          (edge) => edge.from === node.id,
         ),
       });
       const branchOutput = await executeSelectedBranch(
-        input,
+        node,
         runContext,
         output,
         observer,
       );
-      return executedNode(input.node, textOutputs(branchOutput), {
+      return executedNode(node, textOutputs(branchOutput), {
         selectedNodeId: output.selectedNodeId,
         selection: {
           selectedBranchId: output.selectedBranchId,
@@ -68,23 +68,23 @@ export function createConditionalFlowNodeExecutor(
 }
 
 async function executeSelectedBranch(
-  input: Parameters<NodeExecutor["execute"]>[0],
+  node: Parameters<NodeExecutor["execute"]>[0],
   runContext: Parameters<NodeExecutor["execute"]>[1],
   output: ConditionalExecutionResult,
   observer: ConditionalBranchObserver,
 ): Promise<string> {
-  const branch = selectedBranchFor(input.node, output.selectedBranchId);
+  const branch = selectedBranchFor(node, output.selectedBranchId);
   if (!branch) return output.reason;
   if (branch.graph.nodes.length === 0) return emptyBranchOutput(output);
   observer.started({
-    node: input.node,
+    node,
     branchLabel: branch.label,
     nodeCount: branch.graph.nodes.length,
     edgeCount: branch.graph.edges.length,
   });
   const results = await runContext.runGraph(
     graphFor(branch.graph),
-    input.context,
+    runContext.context,
   );
   const finalOutput = finalOutputOf(results);
   observer.finished({

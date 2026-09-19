@@ -9,18 +9,18 @@ import {approvalInteraction} from
 
 export const humanApprovalNodeExecutor: NodeExecutor = {
   primitive: "humanApproval",
-  async execute(input, runContext) {
-    const output = textForParentOutputs(input.parentOutputs);
+  async execute(node, runContext, parentOutputs) {
+    const output = textForParentOutputs(parentOutputs);
     const reviewOutput = runContext.resolveTemplates(output);
     return waitingForInteractionNode(
-      input.node,
+      node,
       textOutputs(reviewOutput),
-      approvalInteraction(runContext.resolveTemplates(messageFor(input.node.config))),
+      approvalInteraction(runContext.resolveTemplates(messageFor(node.config))),
     );
   },
 };
 
-function messageFor(config: Parameters<NodeExecutor["execute"]>[0]["node"]["config"]) {
+function messageFor(config: Parameters<NodeExecutor["execute"]>[0]["config"]) {
   if (config.primitive !== "humanApproval") {
     return "Aufgabe wartet auf Freigabe.";
   }

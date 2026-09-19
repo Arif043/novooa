@@ -10,11 +10,11 @@ import {dialogInputInteraction} from
 
 export const dialogInputNodeExecutor: NodeExecutor = {
   primitive: "dialogInput",
-  async execute(input, runContext) {
-    const definition = dialogInputDefinitionFor(input.node.config);
+  async execute(node, runContext) {
+    const definition = dialogInputDefinitionFor(node.config);
     validateDialogInputDefinition(definition);
     return waitingForInteractionNode(
-      input.node,
+      node,
       {},
       dialogInputInteraction({
         ...definition,
@@ -25,7 +25,7 @@ export const dialogInputNodeExecutor: NodeExecutor = {
 };
 
 function dialogInputDefinitionFor(
-  config: Parameters<NodeExecutor["execute"]>[0]["node"]["config"],
+  config: Parameters<NodeExecutor["execute"]>[0]["config"],
 ) {
   if (config.primitive !== "dialogInput") {
     throw new Error("DialogInput-Konfiguration fehlt.");

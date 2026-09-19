@@ -126,6 +126,7 @@ async function runNodes(
       parentOutputs: effectiveParentOutputs,
       runContext: createTaskRunContext({
         input,
+        context,
         runtime,
         currentGraph: graph,
         results,

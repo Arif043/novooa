@@ -67,19 +67,17 @@ async function executeSave(
   ],
 ) {
   return saveDocumentNodeExecutor.execute({
-    node: {
       id: "save", primitive: "saveDocument", title: "Datensatz speichern",
       description: "", referenceName: "speichern",
       config: {
         primitive: "saveDocument", collectionName: "kunden", filters,
         fields: [{field: "status", value: status}],
       },
-    }, context: "", parentOutputs: [],
-  }, {
+    }, {
     teamId: "team_1",
     documentStore: store,
     resolveTemplateValue: (value: string) => value,
-  } as unknown as TaskRunContext);
+  } as unknown as TaskRunContext, []);
 }
 
 async function storeWithCollection(): Promise<InMemoryDocumentStore> {

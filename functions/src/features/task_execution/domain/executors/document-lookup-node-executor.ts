@@ -20,18 +20,18 @@ const failureMessage = "Suche fehlgeschlagen";
 
 export const documentLookupNodeExecutor: NodeExecutor = {
   primitive: "documentLookup",
-  async execute(input, runContext) {
+  async execute(node, runContext) {
     try {
-      const document = await findDocument(input.node, runContext);
-      return executedNode(input.node, outputsFor(document));
+      const document = await findDocument(node, runContext);
+      return executedNode(node, outputsFor(document));
     } catch {
-      return executedNode(input.node, failureOutputs());
+      return executedNode(node, failureOutputs());
     }
   },
 };
 
 async function findDocument(
-  node: Parameters<NodeExecutor["execute"]>[0]["node"],
+  node: Parameters<NodeExecutor["execute"]>[0],
   runContext: Parameters<NodeExecutor["execute"]>[1],
 ): Promise<DocumentRecord | null> {
   const config = configFor(node);
@@ -46,7 +46,7 @@ async function findDocument(
   });
 }
 
-function configFor(node: Parameters<NodeExecutor["execute"]>[0]["node"]) {
+function configFor(node: Parameters<NodeExecutor["execute"]>[0]) {
   if (node.config.primitive !== "documentLookup") {
     throw new Error("Datensatz suchen: Die Konfiguration fehlt.");
   }

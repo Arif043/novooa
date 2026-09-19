@@ -18,8 +18,8 @@ import {
 
 export const saveDocumentNodeExecutor: NodeExecutor = {
   primitive: "saveDocument",
-  async execute(input, runContext) {
-    const config = configFor(input.node);
+  async execute(node, runContext) {
+    const config = configFor(node);
     const collection = await runContext.documentStore.ensureCollection({
       teamId: runContext.teamId, displayName: config.collectionName.trim(),
     });
@@ -28,11 +28,11 @@ export const saveDocumentNodeExecutor: NodeExecutor = {
     const saved = filters.length === 0
       ? await createDocument(collection.id, data, runContext)
       : await saveMatchingDocuments(collection.id, filters, data, runContext);
-    return executedNode(input.node, outputsFor(saved));
+    return executedNode(node, outputsFor(saved));
   },
 };
 
-function configFor(node: Parameters<NodeExecutor["execute"]>[0]["node"]) {
+function configFor(node: Parameters<NodeExecutor["execute"]>[0]) {
   if (node.config.primitive !== "saveDocument") {
     throw new Error("Datensatz speichern: Die Konfiguration fehlt.");
   }

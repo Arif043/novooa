@@ -108,11 +108,11 @@ async function executeNode(
       input.languageModelResolver,
     );
     if (!executor) return skippedNode(input.node);
-    return await executor.execute({
-      node: input.node,
-      context: input.context,
-      parentOutputs: input.parentOutputs,
-    }, input.runContext);
+    return await executor.execute(
+      input.node,
+      input.runContext,
+      input.parentOutputs,
+    );
   } finally {
     await attachmentWorkspace?.cleanup();
   }

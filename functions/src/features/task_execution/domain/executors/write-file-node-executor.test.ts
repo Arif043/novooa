@@ -5,10 +5,11 @@ import {writeFileNodeExecutor} from "./write-file-node-executor.js";
 test("writes a media reference as binary data with its image metadata", async () => {
   const writtenFiles: Array<Record<string, unknown>> = [];
 
-  await writeFileNodeExecutor.execute({
-    node: writeFileNode(),
-    parentOutputs: [mediaOutput()],
-  } as never, runContextFor(writtenFiles) as never);
+  await writeFileNodeExecutor.execute(
+    writeFileNode() as never,
+    runContextFor(writtenFiles) as never,
+    [mediaOutput()] as never,
+  );
 
   const input = writtenFiles[0];
   assert.equal(input.contentType, "image/png");

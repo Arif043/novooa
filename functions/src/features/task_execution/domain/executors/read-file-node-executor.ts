@@ -8,13 +8,13 @@ import {type NodeAttachment, type WorkflowNode} from "../entities/task.js";
 
 export const readFileNodeExecutor: NodeExecutor = {
   primitive: "readFile",
-  async execute(input, runContext) {
+  async execute(node, runContext) {
     const output = await readNodeFile(
       runContext.teamFileStore,
       runContext.teamId,
-      input.node,
+      node,
     );
-    return executedNode(input.node, textOutputs(output));
+    return executedNode(node, textOutputs(output));
   },
 };
 

@@ -14,19 +14,19 @@ export function createScriptNodeExecutor(
 ): NodeExecutor {
   return {
     primitive: "script",
-    async execute(input, runContext) {
-      const parentOutput = textForParentOutputs(input.parentOutputs);
+    async execute(node, runContext, parentOutputs) {
+      const parentOutput = textForParentOutputs(parentOutputs);
       const output = await scriptExecutor.execute({
         input: runContext.resolveTemplates(parentOutput),
-        script: runContext.resolveTemplates(scriptFor(input.node)),
+        script: runContext.resolveTemplates(scriptFor(node)),
         variables: runContext.variables,
       });
       observeOutput(output.printed);
-      return executedNode(input.node, textOutputs(output.output), {variables: output.variables});
+      return executedNode(node, textOutputs(output.output), {variables: output.variables});
     },
   };
 }
 
-function scriptFor(node: Parameters<NodeExecutor["execute"]>[0]["node"]): string {
+function scriptFor(node: Parameters<NodeExecutor["execute"]>[0]): string {
   return node.config.primitive === "script" ? node.config.script : "";
 }

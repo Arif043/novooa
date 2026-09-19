@@ -7,22 +7,22 @@ import {
 
 export const forEachNodeExecutor: NodeExecutor = {
   primitive: "forEach",
-  async execute(input, runContext) {
-    const config = configFor(input.node);
+  async execute(node, runContext, parentOutputs) {
+    const config = configFor(node);
     const results = await executeForEach({
       config,
-      inputValue: singleParentOutput(input.parentOutputs),
+      inputValue: singleParentOutput(parentOutputs),
       runGraph: (graph, graphInput) => runContext.runGraph(
         graph,
-        input.context,
+        runContext.context,
         graphInput,
       ),
     });
-    return executedNode(input.node, {value: {type: "json", value: results}});
+    return executedNode(node, {value: {type: "json", value: results}});
   },
 };
 
-function configFor(node: Parameters<NodeExecutor["execute"]>[0]["node"]) {
+function configFor(node: Parameters<NodeExecutor["execute"]>[0]) {
   if (node.config.primitive !== "forEach") {
     throw new Error("Für-jedes-Element-Konfiguration fehlt.");
   }

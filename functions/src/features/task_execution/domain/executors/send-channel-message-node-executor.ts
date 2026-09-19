@@ -16,7 +16,7 @@ export type TaskMessageObserver = {
 
 export type TaskMessageStarted = {
   teamId: string;
-  node: Parameters<NodeExecutor["execute"]>[0]["node"];
+  node: Parameters<NodeExecutor["execute"]>[0];
   kind: TaskMessageKind;
   recipient: string;
   body: string;
@@ -53,15 +53,15 @@ export function createSendChannelMessageNodeExecutor(
 ): NodeExecutor {
   return {
     primitive: "sendChannelMessage",
-    async execute(input, runContext) {
-      const config = sendConfigFrom(input.node.config);
+    async execute(node, runContext) {
+      const config = sendConfigFrom(node.config);
       const recipient = runContext.resolveTemplates(config.recipient).trim();
       const body = runContext.resolveTemplates(config.message).trim();
       const subject = subjectFrom(config.subject, runContext);
       const connectorId = connectorIdFrom(config.connectorId, runContext.input);
       if (!recipient) throw new Error(`${labelFor(config.kind)} senden: Empfänger fehlt.`);
       if (!body) throw new Error(`${labelFor(config.kind)} senden: Nachricht fehlt.`);
-      const started = {teamId: runContext.teamId, node: input.node, kind: config.kind, recipient, body};
+      const started = {teamId: runContext.teamId, node, kind: config.kind, recipient, body};
       observer.started(started);
       const sent = await sendMessage(runContext, {
         kind: config.kind,
@@ -71,7 +71,7 @@ export function createSendChannelMessageNodeExecutor(
         body,
       }, observer);
       observer.sent({...started, ...sent});
-      return executedNode(input.node, {
+      return executedNode(node, {
         value: stringOutput(body),
         text: stringOutput(body),
         recipient: stringOutput(recipient),

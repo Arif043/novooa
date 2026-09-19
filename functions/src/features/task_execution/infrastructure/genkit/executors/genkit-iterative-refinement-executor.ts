@@ -52,11 +52,11 @@ export function createGenkitIterativeRefinementNodeExecutor(
 ): NodeExecutor {
   return {
     primitive: "iterativeRefinement",
-    async execute(input, runContext) {
-      const config = refinementConfigFor(input.node);
-      const parentOutput = textForParentOutputs(input.parentOutputs);
-      const draft = parentOutput || input.context;
-      const employee = employeeFor(input.node);
+    async execute(node, runContext, parentOutputs) {
+      const config = refinementConfigFor(node);
+      const parentOutput = textForParentOutputs(parentOutputs);
+      const draft = parentOutput || runContext.context;
+      const employee = employeeFor(node);
       const output = await createGenkitIterativeRefinementExecutor(
         ai,
         workspace,
@@ -65,15 +65,15 @@ export function createGenkitIterativeRefinementNodeExecutor(
         objective: runContext.resolveTemplates(runContext.rootTask.objective),
         draft: runContext.resolveTemplates(draft),
         optimizerPrompt: runContext.resolveTemplates(config?.optimizerPrompt ||
-          input.node.description ||
-          input.node.title),
+          node.description ||
+          node.title),
         critiquePrompt: runContext.resolveTemplates(config?.critiquePrompt ||
-          input.node.description ||
-          input.node.title),
+          node.description ||
+          node.title),
         maxIterations: config?.maxIterations ?? 2,
         employee,
       });
-      return executedNode(input.node, textOutputs(output.answer));
+      return executedNode(node, textOutputs(output.answer));
     },
   };
 }

@@ -8,9 +8,9 @@ import {
 
 export const readEmailNodeExecutor: NodeExecutor = {
   primitive: "readEmail",
-  async execute(input, runContext) {
+  async execute(node, runContext) {
     const event = emailEventFrom(runContext.input);
-    return executedNode(input.node, {
+    return executedNode(node, {
       ...textOutputs(event.message),
       sender: stringOutput(event.senderEmail),
       subject: stringOutput(event.subject),
@@ -22,14 +22,14 @@ export const readEmailNodeExecutor: NodeExecutor = {
 
 export const readChannelEventNodeExecutor: NodeExecutor = {
   primitive: "readChannelEvent",
-  async execute(input, runContext) {
-    const config = channelEventConfigFrom(input.node);
+  async execute(node, runContext) {
+    const config = channelEventConfigFrom(node);
     if (config.kind === "email") {
       const event = emailEventFrom(runContext.input);
-      return executedNode(input.node, emailOutputs(event));
+      return executedNode(node, emailOutputs(event));
     }
     const event = messageEventFrom(runContext.input, eventTypeFor(config.kind));
-    return executedNode(input.node, messageOutputs(event));
+    return executedNode(node, messageOutputs(event));
   },
 };
 

@@ -39,7 +39,7 @@ async function execute(input: {
   sentMessages: SendTaskMessageInput[];
 }) {
   return createSendChannelMessageNodeExecutor().execute(
-    {node: {id: "node-1", primitive: "sendChannelMessage", config: input.config}} as never,
+    {id: "node-1", primitive: "sendChannelMessage", config: input.config} as never,
     {
       teamId: "team-1",
       input: input.input,
@@ -51,5 +51,6 @@ async function execute(input: {
         },
       },
     } as never,
+    [],
   );
 }

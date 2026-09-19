@@ -13,9 +13,9 @@ test("gibt einen gefundenen Datensatz mit verständlichem Ergebnis zurück", asy
     data: {email: "lea@example.com", status: "aktiv"},
   });
 
-  const result = await documentLookupNodeExecutor.execute({
-    node: lookupNode("{{email}}"), context: "", parentOutputs: [],
-  }, runContext(store, {"{{email}}": "lea@example.com"}));
+  const result = await documentLookupNodeExecutor.execute(
+    lookupNode("{{email}}"), runContext(store, {"{{email}}": "lea@example.com"}), [],
+  );
 
   assert.deepEqual(result.outputs.value, {type: "string", value: "Datensatz gefunden"});
   assert.deepEqual(result.outputs.found, {type: "boolean", value: true});
@@ -25,9 +25,9 @@ test("liefert keinen Treffer als reguläres Bedingungsergebnis", async () => {
   const store = new InMemoryDocumentStore();
   await store.createCollection(collection());
 
-  const result = await documentLookupNodeExecutor.execute({
-    node: lookupNode("unbekannt@example.com"), context: "", parentOutputs: [],
-  }, runContext(store));
+  const result = await documentLookupNodeExecutor.execute(
+    lookupNode("unbekannt@example.com"), runContext(store), [],
+  );
 
   assert.deepEqual(result.outputs.value, {
     type: "string", value: "Kein passender Datensatz gefunden",
@@ -36,9 +36,9 @@ test("liefert keinen Treffer als reguläres Bedingungsergebnis", async () => {
 });
 
 test("übersetzt einen Suchfehler in ein verständliches Ergebnis", async () => {
-  const result = await documentLookupNodeExecutor.execute({
-    node: lookupNode("lea@example.com"), context: "", parentOutputs: [],
-  }, runContext(new FailingDocumentStore()));
+  const result = await documentLookupNodeExecutor.execute(
+    lookupNode("lea@example.com"), runContext(new FailingDocumentStore()), [],
+  );
 
   assert.deepEqual(result.outputs.value, {type: "string", value: "Suche fehlgeschlagen"});
   assert.deepEqual(result.outputs.message, {

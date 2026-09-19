@@ -4,17 +4,15 @@ import {mediaInputNodeExecutor} from "./media-input-node-executor.js";
 
 test("pauses a run and preserves the media interaction", async () => {
   const result = await mediaInputNodeExecutor.execute({
-    node: {
       id: "media",
       primitive: "mediaInput",
       config: {
         primitive: "mediaInput",
         instruction: "Foto von {{object}} aufnehmen.",
       },
-    },
   } as never, {
     resolveTemplates: (value: string) => value.replace("{{object}}", "Beleg"),
-  } as never);
+  } as never, []);
 
   assert.equal(result.status, "waitingForApproval");
   assert.deepEqual(result.interaction, {

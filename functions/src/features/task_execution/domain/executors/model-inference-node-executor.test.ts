@@ -4,7 +4,6 @@ import {modelInferenceNodeExecutor} from "./model-inference-node-executor.js";
 
 test("maps the manifest-defined workflow output", async () => {
   const result = await modelInferenceNodeExecutor.execute({
-    node: {
       id: "infer", primitive: "modelInference",
       config: {
         primitive: "modelInference",
@@ -20,9 +19,7 @@ test("maps the manifest-defined workflow output", async () => {
           },
         ],
       },
-    },
-    parentOutputs: [],
-  } as never, runContext() as never);
+  } as never, runContext() as never, []);
 
   assert.deepEqual(result.outputs.scores, {type: "json", value: [1, 2]});
 });

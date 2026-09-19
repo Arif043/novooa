@@ -34,6 +34,7 @@ export type WorkflowGraphRunner = (
 ) => Promise<NodeExecutionResult[]>;
 
 export type TaskRunContext = {
+  context: string;
   variables: TaskVariables;
   rootTask: TaskDefinition;
   currentGraph: WorkflowGraph;
@@ -57,17 +58,12 @@ export type ParentNodeOutput = {
   value: NodeOutputValue;
 };
 
-export type NodeExecutorInput = {
-  node: WorkflowNode;
-  context: string;
-  parentOutputs: ParentNodeOutput[];
-};
-
 export type NodeExecutor = {
   primitive: WorkflowNode["primitive"];
   execute(
-    input: NodeExecutorInput,
+    node: WorkflowNode,
     runContext: TaskRunContext,
+    parentOutputs: ParentNodeOutput[],
   ): Promise<NodeExecutionResult>;
 };
 

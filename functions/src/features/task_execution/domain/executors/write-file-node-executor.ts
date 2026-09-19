@@ -21,21 +21,21 @@ import {imageExtensionFor} from "../services/image-content-type.js";
 
 export const writeFileNodeExecutor: NodeExecutor = {
   primitive: "writeFile",
-  async execute(input, runContext) {
-    const parentOutput = singleParentOutput(input.parentOutputs);
+  async execute(node, runContext, parentOutputs) {
+    const parentOutput = singleParentOutput(parentOutputs);
     const source = await sourceContentFor(parentOutput, runContext);
     const writeInput = {
       teamId: runContext.teamId,
       content: source.content,
-      fileName: runContext.resolveTemplates(fileNameFor(input.node)),
-      contentType: runContext.resolveTemplates(contentTypeFor(input.node)),
-      targetFileId: targetFileIdFor(input.node),
+      fileName: runContext.resolveTemplates(fileNameFor(node)),
+      contentType: runContext.resolveTemplates(contentTypeFor(node)),
+      targetFileId: targetFileIdFor(node),
     };
     const file = await writeNodeFile(
       runContext.teamFileStore,
       mediaWriteInputFor(writeInput, source.sourceContentType),
     );
-    return executedNode(input.node, fileOutputs(file));
+    return executedNode(node, fileOutputs(file));
   },
 };
 

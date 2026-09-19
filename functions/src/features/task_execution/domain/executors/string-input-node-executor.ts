@@ -6,12 +6,12 @@ import {
 
 export const stringInputNodeExecutor: NodeExecutor = {
   primitive: "stringInput",
-  async execute(input, runContext) {
-    const value = input.node.config.primitive === "stringInput"
-      ? input.node.config.value
+  async execute(node, runContext) {
+    const value = node.config.primitive === "stringInput"
+      ? node.config.value
       : "";
     return executedNode(
-      input.node,
+      node,
       textOutputs(runContext.resolveTemplates(value)),
     );
   },

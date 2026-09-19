@@ -10,20 +10,20 @@ import {workflowValueForModelOutput} from "../services/tensor-workflow-value.js"
 
 export const modelInferenceNodeExecutor: NodeExecutor = {
   primitive: "modelInference",
-  async execute(input, runContext) {
-    const inputs = await inputsFor(input, runContext);
+  async execute(node, runContext) {
+    const inputs = await inputsFor(node, runContext);
     const result = await runContext.modelInference.execute({
       teamId: runContext.teamId,
-      modelId: modelIdFor(input.node),
+      modelId: modelIdFor(node),
       inputs,
-      outputParameters: outputParametersFor(input.node),
+      outputParameters: outputParametersFor(node),
       transformationBindings: runContext.scope,
     });
-    return executedNode(input.node, outputsFor(result));
+    return executedNode(node, outputsFor(result));
   },
 };
 
-function modelIdFor(node: Parameters<NodeExecutor["execute"]>[0]["node"]): string {
+function modelIdFor(node: Parameters<NodeExecutor["execute"]>[0]): string {
   if (node.config.primitive !== "modelInference") {
     throw new Error("Modell-Inferenz-Konfiguration fehlt.");
   }
@@ -34,10 +34,10 @@ function modelIdFor(node: Parameters<NodeExecutor["execute"]>[0]["node"]): strin
 }
 
 async function inputsFor(
-  input: Parameters<NodeExecutor["execute"]>[0],
+  node: Parameters<NodeExecutor["execute"]>[0],
   runContext: Parameters<NodeExecutor["execute"]>[1],
 ) {
-  const mappings = mappingsFor(input.node);
+  const mappings = mappingsFor(node);
   return Promise.all(mappings.map(async (mapping) => ({
     name: mapping.modelInputName,
     ...await modelInputFromWorkflowMapping(
@@ -49,7 +49,7 @@ async function inputsFor(
   })));
 }
 
-function mappingsFor(node: Parameters<NodeExecutor["execute"]>[0]["node"]) {
+function mappingsFor(node: Parameters<NodeExecutor["execute"]>[0]) {
   if (node.config.primitive !== "modelInference") {
     throw new Error("Modell-Inferenz-Konfiguration fehlt.");
   }
@@ -66,7 +66,7 @@ function mappingsFor(node: Parameters<NodeExecutor["execute"]>[0]["node"]) {
   return node.config.inputMappings;
 }
 
-function outputParametersFor(node: Parameters<NodeExecutor["execute"]>[0]["node"]) {
+function outputParametersFor(node: Parameters<NodeExecutor["execute"]>[0]) {
   if (node.config.primitive !== "modelInference") {
     throw new Error("Modell-Inferenz-Konfiguration fehlt.");
   }

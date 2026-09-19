@@ -1,5 +1,4 @@
 import {
-  type NodeExecutorInput,
   type ParentNodeOutput,
   type TaskRunContext,
 } from "../../../domain/executors/node-executor.js";
@@ -11,19 +10,20 @@ import {type NodeOutputValue, type WorkflowNode} from "../runner/task-definition
 import {type PromptContent, type PromptNodeInput, type StructuredOutputField} from "./prompt-node-types.js";
 
 export async function promptInputFor(
-  input: NodeExecutorInput,
+  node: WorkflowNode,
   runContext: TaskRunContext,
+  parentOutputs: ParentNodeOutput[],
 ): Promise<PromptNodeInput> {
-  const config = promptConfigFor(input.node);
-  const employee = employeeFor(input.node);
+  const config = promptConfigFor(node);
+  const employee = employeeFor(node);
   return {
-    instruction: instructionFor(input.node, employee, runContext),
-    context: contextFor(input.parentOutputs, input.context),
+    instruction: instructionFor(node, employee, runContext),
+    context: contextFor(parentOutputs, runContext.context),
     languageModelId: config.languageModelId,
     outputType: config.outputType,
     choices: config.choices.map(runContext.resolveTemplates),
     structuredFields: config.structuredFields,
-    mediaUrls: await mediaUrlsFor(input.parentOutputs, runContext),
+    mediaUrls: await mediaUrlsFor(parentOutputs, runContext),
     employee,
   };
 }

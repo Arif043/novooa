@@ -13,24 +13,21 @@ test("resolves workflow values and delegates execution through the script port",
   }, (value: string) => printed.push(value));
 
   const result = await executor.execute({
-    context: "",
-    node: {
       id: "script-1",
       primitive: "script",
       title: "Script",
       description: "",
       referenceName: "script",
       config: {primitive: "script", script: "output = '{{name}}'", attachments: []},
-    },
-    parentOutputs: [{
+  } as never, {
+    variables: {},
+    context: "",
+    resolveTemplates: (value: string) => value.replace(/\{\{name\}\}/g, "Mila"),
+  } as never, [{
       nodeId: "input-1",
       outputName: "value",
       value: {type: "string", value: "Hallo {{name}}"},
-    }],
-  }, {
-    variables: {},
-    resolveTemplates: (value: string) => value.replace(/\{\{name\}\}/g, "Mila"),
-  } as never);
+  }]);
 
   assert.deepEqual(requests, [{
     input: "Hallo Mila",

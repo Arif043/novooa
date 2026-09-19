@@ -10,11 +10,11 @@ import {
 
 export const mediaInputNodeExecutor: NodeExecutor = {
   primitive: "mediaInput",
-  async execute(input, runContext) {
-    const definition = mediaInputDefinitionFor(input.node.config);
+  async execute(node, runContext) {
+    const definition = mediaInputDefinitionFor(node.config);
     validateMediaInputDefinition(definition);
     return waitingForInteractionNode(
-      input.node,
+      node,
       {},
       mediaInputInteraction({
         ...definition,
@@ -25,7 +25,7 @@ export const mediaInputNodeExecutor: NodeExecutor = {
 };
 
 function mediaInputDefinitionFor(
-  config: Parameters<NodeExecutor["execute"]>[0]["node"]["config"],
+  config: Parameters<NodeExecutor["execute"]>[0]["config"],
 ) {
   if (config.primitive !== "mediaInput") {
     throw new Error("MediaInput-Konfiguration fehlt.");

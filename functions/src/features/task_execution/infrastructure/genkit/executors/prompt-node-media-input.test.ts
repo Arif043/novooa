@@ -5,8 +5,9 @@ import {createGenkitPromptNodeExecutor} from "./genkit-prompt-executor.js";
 test("provides a direct media value as a Genkit media part", async () => {
   const prompts: unknown[] = [];
   await createGenkitPromptNodeExecutor(fakeAi(prompts)).execute(
-    executorInput(),
+    executorInput().node,
     runContext() as never,
+    executorInput().parentOutputs,
   );
   assert.deepEqual(prompts, [[
     {text: "Kannst du das Bild sehen?"},
@@ -16,8 +17,9 @@ test("provides a direct media value as a Genkit media part", async () => {
 
 test("persists a generated image as a media value", async () => {
   const output = await createGenkitPromptNodeExecutor(imageAi()).execute(
-    imageExecutorInput(),
+    imageExecutorInput().node,
     imageRunContext() as never,
+    imageExecutorInput().parentOutputs,
   );
   assert.deepEqual(output.outputs.value, {
     type: "media",
@@ -52,12 +54,9 @@ test("uses the selected team language model for a text prompt", async () => {
       },
     },
   ).execute({
-    ...executorInput(),
-    node: {
       ...executorInput().node,
       config: {...promptConfig(), languageModelId: "model-1"},
-    },
-  }, runContext() as never);
+  }, runContext() as never, executorInput().parentOutputs);
 
   assert.equal(output.outputs.value?.value, "Aus dem Teammodell.");
   assert.deepEqual(models, ["team-model"]);
@@ -76,12 +75,9 @@ test("rejects a selected model that cannot receive the supplied image", async ()
         } as never;
       }},
     ).execute({
-      ...executorInput(),
-      node: {
         ...executorInput().node,
         config: {...promptConfig(), languageModelId: "model-1"},
-      },
-    }, runContext() as never),
+    }, runContext() as never, executorInput().parentOutputs),
     /keine Bildeingaben/,
   );
 });
@@ -143,6 +139,7 @@ function mediaParentOutput() {
 
 function runContext() {
   return {
+    context: "",
     resolveTemplates: (value: string) => value,
     teamId: "team-1",
     fileContentReader: {

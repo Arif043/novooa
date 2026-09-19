@@ -31,8 +31,8 @@ export function createGenkitPromptNodeExecutor(
 ): NodeExecutor {
   return {
     primitive: "prompt",
-    async execute(input, runContext) {
-      const promptInput = await promptInputFor(input, runContext);
+    async execute(node, runContext, parentOutputs) {
+      const promptInput = await promptInputFor(node, runContext, parentOutputs);
       const languageModel = await languageModelFor(
         promptInput.languageModelId,
         runContext.teamId,
@@ -47,9 +47,9 @@ export function createGenkitPromptNodeExecutor(
         logger,
       );
       const outputs = promptInput.outputType === "image"
-        ? await persistedImageOutputsFor(output, input.node, runContext)
+        ? await persistedImageOutputsFor(output, node, runContext)
         : output.outputs;
-      return executedNode(input.node, outputs);
+      return executedNode(node, outputs);
     },
   };
 }
