@@ -477,7 +477,9 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   @override
   void onChange(Change<TaskBuilderState> change) {
     super.onChange(change);
-    debugPrint("TaskBuilderState: ${change.currentState}");
-    debugPrint("TaskBuilderState: ${change.nextState}");
+    if (change.currentState is TaskBuilderLoaded && change.nextState is TaskBuilderLoaded) {
+      debugPrint("TaskBuilderState Before: ${(change.currentState as TaskBuilderLoaded).editingTask.edges.toList()}");
+      debugPrint("TaskBuilderState After: ${(change.nextState as TaskBuilderLoaded).editingTask.edges.toList()}");
+    }
   }
 }

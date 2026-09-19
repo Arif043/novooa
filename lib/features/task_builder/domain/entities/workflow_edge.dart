@@ -1,3 +1,5 @@
+import 'package:equatable/equatable.dart';
+
 import 'workflow_node.dart';
 
 /// Gerichtete Verbindung zwischen zwei [WorkflowNode]-Instanzen.
@@ -9,7 +11,7 @@ import 'workflow_node.dart';
 ///
 /// Invariante: `from` und `to` müssen auf existierende Knoten zeigen — die
 /// Verantwortung liegt im [TaskDefinition] (siehe `removeNode`).
-class WorkflowEdge {
+class WorkflowEdge extends Equatable {
   const WorkflowEdge({
     required this.from,
     required this.to,
@@ -19,4 +21,7 @@ class WorkflowEdge {
   final NodeId from;
   final NodeId to;
   final String? conditionLabel;
+
+  @override
+  List<Object?> get props => [from, to, conditionLabel];
 }
