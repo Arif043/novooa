@@ -10,7 +10,9 @@ test("pauses a run and preserves the dialog definition", async () => {
         ],
       },
   } as never, {
-    resolveTemplates: (value: string) => value.replace("{{name}}", "Mila"),
+    templateExpressionResolver: {
+      resolveText: (value: string) => value.replace("{{name}}", "Mila"),
+    },
   } as never, []);
 
   assert.equal(result.status, "waitingForApproval");

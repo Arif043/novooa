@@ -11,11 +11,11 @@ export const humanApprovalNodeExecutor: NodeExecutor = {
   primitive: "humanApproval",
   async execute(node, runContext, parentOutputs) {
     const output = textForParentOutputs(parentOutputs);
-    const reviewOutput = runContext.resolveTemplates(output);
+    const reviewOutput = runContext.templateExpressionResolver.resolveText(output);
     return waitingForInteractionNode(
       node,
       textOutputs(reviewOutput),
-      approvalInteraction(runContext.resolveTemplates(messageFor(node.config))),
+      approvalInteraction(runContext.templateExpressionResolver.resolveText(messageFor(node.config))),
     );
   },
 };

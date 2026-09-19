@@ -22,7 +22,9 @@ test("resolves workflow values and delegates execution through the script port",
   } as never, {
     variables: {},
     context: "",
-    resolveTemplates: (value: string) => value.replace(/\{\{name\}\}/g, "Mila"),
+    templateExpressionResolver: {
+      resolveText: (value: string) => value.replace(/\{\{name\}\}/g, "Mila"),
+    },
   } as never, [{
       nodeId: "input-1",
       outputName: "value",

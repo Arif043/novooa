@@ -18,7 +18,7 @@ export const dialogInputNodeExecutor: NodeExecutor = {
       {},
       dialogInputInteraction({
         ...definition,
-        instruction: runContext.resolveTemplates(definition.instruction),
+        instruction: runContext.templateExpressionResolver.resolveText(definition.instruction),
       }),
     );
   },

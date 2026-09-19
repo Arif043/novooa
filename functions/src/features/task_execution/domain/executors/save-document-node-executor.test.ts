@@ -76,7 +76,7 @@ async function executeSave(
     }, {
     teamId: "team_1",
     documentStore: store,
-    resolveTemplateValue: (value: string) => value,
+    templateExpressionResolver: {resolveValue: (value: string) => value},
   } as unknown as TaskRunContext, []);
 }
 

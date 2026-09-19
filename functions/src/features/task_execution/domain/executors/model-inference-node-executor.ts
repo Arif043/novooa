@@ -42,7 +42,7 @@ async function inputsFor(
     name: mapping.modelInputName,
     ...await modelInputFromWorkflowMapping(
       mapping,
-      runContext.resolveTemplateValue(mapping.workflowMapping),
+      runContext.templateExpressionResolver.resolveValue(mapping.workflowMapping),
       runContext.teamId,
       runContext.fileContentReader,
     ),

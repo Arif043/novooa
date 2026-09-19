@@ -21,7 +21,7 @@ export async function promptInputFor(
     context: contextFor(parentOutputs, runContext.context),
     languageModelId: config.languageModelId,
     outputType: config.outputType,
-    choices: config.choices.map(runContext.resolveTemplates),
+    choices: config.choices.map((choice) => runContext.templateExpressionResolver.resolveText(choice)),
     structuredFields: config.structuredFields,
     mediaUrls: await mediaUrlsFor(parentOutputs, runContext),
     employee,
@@ -46,7 +46,7 @@ function instructionFor(
   const rendered = employee
     ? renderEmployeePrompt(employee.promptTemplate, instruction)
     : instruction;
-  return runContext.resolveTemplates(rendered);
+  return runContext.templateExpressionResolver.resolveText(rendered);
 }
 
 function rawInstructionFor(node: WorkflowNode): string {

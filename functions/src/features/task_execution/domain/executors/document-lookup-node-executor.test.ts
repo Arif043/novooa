@@ -63,7 +63,9 @@ function runContext(
 ): TaskRunContext {
   return {
     teamId: "team_1", documentStore,
-    resolveTemplateValue: (value) => templateValues[value] ?? value,
+    templateExpressionResolver: {
+      resolveValue: (value: string) => templateValues[value] ?? value,
+    },
   } as TaskRunContext;
 }
 

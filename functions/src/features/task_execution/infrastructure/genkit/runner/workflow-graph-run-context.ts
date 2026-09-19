@@ -55,8 +55,6 @@ export function createTaskRunContext(
     modelInference: options.runtime.modelInference,
     runGraph: graphRunnerFor(options),
     templateExpressionResolver: templateResolver,
-    resolveTemplates: (text) => templateResolver.resolveText(text),
-    resolveTemplateValue: (text) => templateResolver.resolveValue(text),
   };
 }
 

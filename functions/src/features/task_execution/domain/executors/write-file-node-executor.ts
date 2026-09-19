@@ -27,8 +27,8 @@ export const writeFileNodeExecutor: NodeExecutor = {
     const writeInput = {
       teamId: runContext.teamId,
       content: source.content,
-      fileName: runContext.resolveTemplates(fileNameFor(node)),
-      contentType: runContext.resolveTemplates(contentTypeFor(node)),
+      fileName: runContext.templateExpressionResolver.resolveText(fileNameFor(node)),
+      contentType: runContext.templateExpressionResolver.resolveText(contentTypeFor(node)),
       targetFileId: targetFileIdFor(node),
     };
     const file = await writeNodeFile(
@@ -52,7 +52,7 @@ async function sourceContentFor(
     );
     return {content: file.content, sourceContentType: file.contentType};
   }
-  return {content: runContext.resolveTemplates(contentFrom(output))};
+  return {content: runContext.templateExpressionResolver.resolveText(contentFrom(output))};
 }
 
 function contentFrom(

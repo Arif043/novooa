@@ -11,7 +11,9 @@ test("pauses a run and preserves the media interaction", async () => {
         instruction: "Foto von {{object}} aufnehmen.",
       },
   } as never, {
-    resolveTemplates: (value: string) => value.replace("{{object}}", "Beleg"),
+    templateExpressionResolver: {
+      resolveText: (value: string) => value.replace("{{object}}", "Beleg"),
+    },
   } as never, []);
 
   assert.equal(result.status, "waitingForApproval");

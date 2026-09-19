@@ -18,7 +18,7 @@ export const mediaInputNodeExecutor: NodeExecutor = {
       {},
       mediaInputInteraction({
         ...definition,
-        instruction: runContext.resolveTemplates(definition.instruction),
+        instruction: runContext.templateExpressionResolver.resolveText(definition.instruction),
       }),
     );
   },

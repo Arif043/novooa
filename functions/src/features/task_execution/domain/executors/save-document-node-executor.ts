@@ -75,7 +75,7 @@ function filterValueFor(
   filter: ReturnType<typeof configFor>["filters"][number],
   runContext: Parameters<NodeExecutor["execute"]>[1],
 ): DocumentFilterValue {
-  const value = runContext.resolveTemplateValue(filter.value);
+  const value = runContext.templateExpressionResolver.resolveValue(filter.value);
   if (isNumericOperator(filter.operator)) return numberValueFor(value);
   if (isDocumentFilterValue(value)) return value;
   throw new Error("Datensatz speichern: Der Filterwert ist ungültig.");
@@ -149,7 +149,7 @@ function valueFor(
   template: string,
   runContext: Parameters<NodeExecutor["execute"]>[1],
 ): DocumentValue {
-  const value = runContext.resolveTemplateValue(template);
+  const value = runContext.templateExpressionResolver.resolveValue(template);
   if (value !== undefined) return value as DocumentValue;
   throw new Error("Datensatz speichern: Ein Feldwert konnte nicht aufgelöst werden.");
 }

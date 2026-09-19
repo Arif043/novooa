@@ -140,7 +140,7 @@ function mediaParentOutput() {
 function runContext() {
   return {
     context: "",
-    resolveTemplates: (value: string) => value,
+    templateExpressionResolver: {resolveText: (value: string) => value},
     teamId: "team-1",
     fileContentReader: {
       async readTeamFileContent() {

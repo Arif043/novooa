@@ -70,7 +70,7 @@ function filterValueFor(
   filter: ReturnType<typeof configFor>["filters"][number],
   runContext: Parameters<NodeExecutor["execute"]>[1],
 ): DocumentFilterValue {
-  const resolved = runContext.resolveTemplateValue(filter.value);
+  const resolved = runContext.templateExpressionResolver.resolveValue(filter.value);
   if (isNumericOperator(filter.operator)) return numberValueFor(resolved);
   if (isDocumentFilterValue(resolved)) return resolved;
   throw new Error("Datensatz suchen: Der Filterwert ist ungültig.");

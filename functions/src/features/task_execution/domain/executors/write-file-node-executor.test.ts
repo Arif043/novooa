@@ -52,7 +52,7 @@ function mediaOutput() {
 function runContextFor(writtenFiles: Array<Record<string, unknown>>) {
   return {
     teamId: "team-1",
-    resolveTemplates: (value: string) => value,
+    templateExpressionResolver: {resolveText: (value: string) => value},
     fileContentReader: {
       async readTeamFileContent() {
         return {

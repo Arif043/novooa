@@ -27,11 +27,12 @@ test("maps the manifest-defined workflow output", async () => {
 function runContext() {
   return {
     teamId: "team-1",
-    resolveTemplateValue: (mapping: string) =>
-      mapping === "{{text.value}}" ? "Hallo" : {
-        name: "y", dataType: "float32", shape: [2],
-        dataBase64: "AACAPwAAAEA=",
-      },
+    templateExpressionResolver: {
+      resolveValue: (mapping: string) => mapping === "{{text.value}}" ? "Hallo" : {
+          name: "y", dataType: "float32", shape: [2],
+          dataBase64: "AACAPwAAAEA=",
+        },
+    },
     modelInference: {
       async execute(request: {inputs: readonly {name: string; type: string}[]}) {
         assert.deepEqual(request.inputs.map((input) => input.type), ["text", "tensor"]);

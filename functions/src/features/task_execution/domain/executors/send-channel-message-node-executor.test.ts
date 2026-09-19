@@ -43,7 +43,7 @@ async function execute(input: {
     {
       teamId: "team-1",
       input: input.input,
-      resolveTemplates: (value: string) => value,
+      templateExpressionResolver: {resolveText: (value: string) => value},
       messageSender: {
         async send(message: SendTaskMessageInput) {
           input.sentMessages.push(message);

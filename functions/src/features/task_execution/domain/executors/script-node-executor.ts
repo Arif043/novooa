@@ -17,8 +17,8 @@ export function createScriptNodeExecutor(
     async execute(node, runContext, parentOutputs) {
       const parentOutput = textForParentOutputs(parentOutputs);
       const output = await scriptExecutor.execute({
-        input: runContext.resolveTemplates(parentOutput),
-        script: runContext.resolveTemplates(scriptFor(node)),
+        input: runContext.templateExpressionResolver.resolveText(parentOutput),
+        script: runContext.templateExpressionResolver.resolveText(scriptFor(node)),
         variables: runContext.variables,
       });
       observeOutput(output.printed);

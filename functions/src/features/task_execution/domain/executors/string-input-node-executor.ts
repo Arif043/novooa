@@ -12,7 +12,7 @@ export const stringInputNodeExecutor: NodeExecutor = {
       : "";
     return executedNode(
       node,
-      textOutputs(runContext.resolveTemplates(value)),
+      textOutputs(runContext.templateExpressionResolver.resolveText(value)),
     );
   },
 };

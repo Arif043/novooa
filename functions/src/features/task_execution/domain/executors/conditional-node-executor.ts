@@ -40,7 +40,7 @@ export function createConditionalFlowNodeExecutor(
   return {
     primitive: "conditionalFlow",
     async execute(node, runContext, parentOutputs) {
-      const targetLabel = runContext.resolveTemplates(
+      const targetLabel = runContext.templateExpressionResolver.resolveText(
         textForParentOutputs(parentOutputs),
       );
       const output = executeConditionalFlow({

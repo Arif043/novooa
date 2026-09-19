@@ -55,8 +55,8 @@ export function createSendChannelMessageNodeExecutor(
     primitive: "sendChannelMessage",
     async execute(node, runContext) {
       const config = sendConfigFrom(node.config);
-      const recipient = runContext.resolveTemplates(config.recipient).trim();
-      const body = runContext.resolveTemplates(config.message).trim();
+      const recipient = runContext.templateExpressionResolver.resolveText(config.recipient).trim();
+      const body = runContext.templateExpressionResolver.resolveText(config.message).trim();
       const subject = subjectFrom(config.subject, runContext);
       const connectorId = connectorIdFrom(config.connectorId, runContext.input);
       if (!recipient) throw new Error(`${labelFor(config.kind)} senden: Empfänger fehlt.`);
@@ -141,7 +141,7 @@ function subjectFrom(
   configuredSubject: string,
   runContext: Parameters<NodeExecutor["execute"]>[1],
 ): string {
-  const subject = runContext.resolveTemplates(configuredSubject).trim();
+  const subject = runContext.templateExpressionResolver.resolveText(configuredSubject).trim();
   if (subject) return subject;
   return replySubjectFrom(runContext.input) || "Nachricht von novooa";
 }
