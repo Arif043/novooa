@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
-import 'package:syscat2/core/theme/syscat_theme.dart';
 
 import '../../domain/entities/knowledge_note.dart';
 import '../cubits/knowledge_base_cubit.dart';
@@ -16,9 +15,7 @@ class KnowledgeBaseGraphPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectedNote = state.selectedNote;
     return DecoratedBox(
-      decoration: SyscatTheme.glassPanelDecoration.copyWith(
-        borderRadius: BorderRadius.circular(AppSpacing.md),
-      ),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
@@ -66,20 +63,13 @@ class _DetailsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return ListView(
       children: [
         _Metadata(note: state.selectedNote!),
         const Divider(height: AppSpacing.xl),
-        Expanded(
-          child: ListView(
-            children: [
-              _LinkSection(title: 'Verlinkt', notes: state.linkedNotes),
-              const SizedBox(height: AppSpacing.lg),
-              _LinkSection(title: 'Backlinks', notes: state.backlinks),
-            ],
-          ),
-        ),
+        _LinkSection(title: 'Verlinkt', notes: state.linkedNotes),
+        const SizedBox(height: AppSpacing.lg),
+        _LinkSection(title: 'Verweist auf diese Notiz', notes: state.backlinks),
       ],
     );
   }
@@ -114,10 +104,13 @@ class _MetaRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.xs),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 72, child: Text(label)),
-          Expanded(child: Text(value, overflow: TextOverflow.ellipsis)),
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 4),
+          SelectableText(value, style: Theme.of(context).textTheme.bodyLarge),
+          const SizedBox(height: 12),
         ],
       ),
     );
@@ -135,7 +128,7 @@ class _LinkSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: Theme.of(context).textTheme.titleLarge),
+        Text(title, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: AppSpacing.sm),
         if (notes.isEmpty)
           Text('Keine Einträge.', style: Theme.of(context).textTheme.bodySmall)
@@ -154,7 +147,6 @@ class _LinkedNoteTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      dense: true,
       contentPadding: EdgeInsets.zero,
       leading: const Icon(Icons.link),
       title: Text(note.title, overflow: TextOverflow.ellipsis),

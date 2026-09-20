@@ -67,7 +67,7 @@ class _PreviewLine extends StatelessWidget {
   TextStyle? _styleFor(BuildContext context, String text) {
     if (text.startsWith('# ')) return Theme.of(context).textTheme.headlineSmall;
     if (text.startsWith('## ')) return Theme.of(context).textTheme.titleLarge;
-    return Theme.of(context).textTheme.bodyMedium;
+    return Theme.of(context).textTheme.bodyLarge;
   }
 
   String _displayText(String text) {

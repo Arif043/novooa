@@ -70,14 +70,16 @@ class _NodeDot extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     const size = 14.0;
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 160),
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 160),
       width: selected ? 18.0 : size,
       height: selected ? 18.0 : size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: selected
             ? colorScheme.primary
-            : colorScheme.onInverseSurface.withValues(alpha: 0.58),
+            : colorScheme.onSurfaceVariant.withValues(alpha: 0.58),
         boxShadow: selected
             ? [
                 BoxShadow(
@@ -105,9 +107,7 @@ class _NodeLabel extends StatelessWidget {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: selected
-            ? colorScheme.primary
-            : colorScheme.onInverseSurface.withValues(alpha: 0.66),
+        color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant,
         fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
       ),
     );

@@ -121,7 +121,7 @@ class KnowledgeGraphPainter extends CustomPainter {
   Paint _paintFor(String sourceId, String targetId) {
     final selected = sourceId == selectedNoteId || targetId == selectedNoteId;
     return Paint()
-      ..color = colorScheme.onInverseSurface.withValues(
+      ..color = colorScheme.onSurfaceVariant.withValues(
         alpha: selected ? 0.46 : 0.16,
       )
       ..strokeWidth = selected ? 1.7 : 1.1

@@ -8,6 +8,7 @@ import '../widgets/knowledge_base_empty_state.dart';
 import '../widgets/knowledge_base_main_panel.dart';
 import '../widgets/knowledge_base_shell_controller.dart';
 import '../widgets/knowledge_base_sidebar.dart';
+import '../widgets/knowledge_base_theme.dart';
 
 class KnowledgeBasePage extends StatelessWidget {
   const KnowledgeBasePage({super.key});
@@ -16,20 +17,23 @@ class KnowledgeBasePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => serviceLocator<KnowledgeBaseCubit>()..load(),
-      child: const KnowledgeBaseShellController(child: _KnowledgeBaseView()),
+      child: const KnowledgeBaseShellController(child: KnowledgeBaseView()),
     );
   }
 }
 
-class _KnowledgeBaseView extends StatelessWidget {
-  const _KnowledgeBaseView();
+class KnowledgeBaseView extends StatelessWidget {
+  const KnowledgeBaseView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<KnowledgeBaseCubit, KnowledgeBaseState>(
-      listenWhen: (previous, current) => previous.message != current.message,
-      listener: _showMessage,
-      builder: (context, state) => _KnowledgeBaseBody(state: state),
+    return Theme(
+      data: KnowledgeBaseTheme.from(Theme.of(context)),
+      child: BlocConsumer<KnowledgeBaseCubit, KnowledgeBaseState>(
+        listenWhen: (previous, current) => previous.message != current.message,
+        listener: _showMessage,
+        builder: (context, state) => _KnowledgeBaseBody(state: state),
+      ),
     );
   }
 
@@ -49,16 +53,21 @@ class _KnowledgeBaseBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: AppSpacing.xxl, right: AppSpacing.xxl, bottom: AppSpacing.xxl, top: AppSpacing.md),
-      child: switch (state.status) {
-        KnowledgeBaseStatus.loading => const Center(
-          child: CircularProgressIndicator(),
+    return ColoredBox(
+      color: Theme.of(context).colorScheme.surfaceContainerLowest,
+      child: Padding(
+        padding: EdgeInsets.all(
+          MediaQuery.sizeOf(context).width < 760 ? 16 : 24,
         ),
-        KnowledgeBaseStatus.failure when state.notes.isEmpty =>
-          _KnowledgeBaseError(message: state.message),
-        _ => _KnowledgeBaseWorkspace(state: state),
-      },
+        child: switch (state.status) {
+          KnowledgeBaseStatus.loading => const Center(
+            child: CircularProgressIndicator(),
+          ),
+          KnowledgeBaseStatus.failure when state.notes.isEmpty =>
+            _KnowledgeBaseError(message: state.message),
+          _ => _KnowledgeBaseWorkspace(state: state),
+        },
+      ),
     );
   }
 }
@@ -73,7 +82,10 @@ class _KnowledgeBaseWorkspace extends StatelessWidget {
     if (state.notes.isEmpty) return const KnowledgeBaseEmptyState();
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 760) return _MobileWorkspace(state: state);
+        if (constraints.maxWidth < 900 ||
+            MediaQuery.textScalerOf(context).scale(14) > 21) {
+          return _MobileWorkspace(state: state);
+        }
         return _DesktopWorkspace(state: state);
       },
     );
@@ -90,7 +102,7 @@ class _DesktopWorkspace extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(width: 280, child: KnowledgeBaseSidebar(state: state)),
+        SizedBox(width: 300, child: KnowledgeBaseSidebar(state: state)),
         const SizedBox(width: AppSpacing.md),
         Expanded(child: KnowledgeBaseMainPanel(state: state)),
       ],
@@ -98,21 +110,38 @@ class _DesktopWorkspace extends StatelessWidget {
   }
 }
 
-class _MobileWorkspace extends StatelessWidget {
+class _MobileWorkspace extends StatefulWidget {
   const _MobileWorkspace({required this.state});
 
   final KnowledgeBaseState state;
 
   @override
-  Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        SizedBox(height: 340, child: KnowledgeBaseSidebar(state: state)),
-        const SizedBox(height: AppSpacing.md),
-        SizedBox(height: 560, child: KnowledgeBaseMainPanel(state: state)),
-      ],
-    );
-  }
+  State<_MobileWorkspace> createState() => _MobileWorkspaceState();
+}
+
+class _MobileWorkspaceState extends State<_MobileWorkspace> {
+  bool _showNote = false;
+  @override
+  Widget build(BuildContext context) => _showNote
+      ? Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => setState(() => _showNote = false),
+                icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+                label: const Text('Alle Notizen'),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(child: KnowledgeBaseMainPanel(state: widget.state)),
+          ],
+        )
+      : KnowledgeBaseSidebar(
+          state: widget.state,
+          onNoteOpened: () => setState(() => _showNote = true),
+        );
 }
 
 class _KnowledgeBaseError extends StatelessWidget {

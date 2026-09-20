@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
-import 'package:syscat2/core/theme/syscat_theme.dart';
 
 import '../../domain/entities/knowledge_note.dart';
 import '../cubits/knowledge_base_cubit.dart';
@@ -48,35 +47,28 @@ class _KnowledgeBaseEditorState extends State<KnowledgeBaseEditor> {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: SyscatTheme.glassPanelDecoration.copyWith(
-        borderRadius: BorderRadius.circular(AppSpacing.md),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _titleController,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.headlineMedium?.copyWith(fontWeight: .bold),
-                    decoration: const InputDecoration(hintText: 'Titel'),
-                    onChanged: context.read<KnowledgeBaseCubit>().updateTitle,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                widget.titleActions,
-              ],
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _titleController,
+            style: Theme.of(context).textTheme.titleLarge,
+            maxLines: 2,
+            minLines: 1,
+            decoration: const InputDecoration(
+              labelText: 'Titel',
+              filled: false,
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
             ),
-            const SizedBox(height: AppSpacing.md),
-            Expanded(child: _MarkdownEditor(this)),
-          ],
-        ),
+            onChanged: context.read<KnowledgeBaseCubit>().updateTitle,
+          ),
+          widget.titleActions,
+          const SizedBox(height: AppSpacing.md),
+          Expanded(child: _MarkdownEditor(this)),
+        ],
       ),
     );
   }
@@ -103,9 +95,14 @@ class _MarkdownEditor extends StatelessWidget {
       maxLines: null,
       minLines: null,
       textAlignVertical: TextAlignVertical.top,
-      style: const TextStyle(fontFamily: 'monospace', height: 1.45),
+      style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.6),
       decoration: const InputDecoration(
-        hintText: 'Schreibe Markdown. Links: [[Andere Notiz]]',
+        labelText: 'Notizinhalt',
+        alignLabelWithHint: true,
+        hintText: 'Halte dein Wissen fest. Verlinke mit [[Andere Notiz]].',
+        filled: false,
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
       ),
       onChanged: context.read<KnowledgeBaseCubit>().updateContent,
     );

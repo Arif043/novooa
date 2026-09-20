@@ -44,17 +44,23 @@ Copy-on-Write-Versionierung unter `teams/{teamId}/files/{fileId}/versions`.
 
 Route: `/knowledge-base`, Drawer-Label: **Wissensbasis**.
 
-Die Seite ist an Obsidian angelehnt:
+Die Seite kombiniert einen Obsidian-artigen Notiz-Workflow mit dem Designsystem
+„Luminous Precision“ (Inter, ruhige Flächen, dezente Orange-Akzente):
 
-- Links: Vault/Explorer mit Suche und „Notiz erstellen".
-- Mitte: Umschaltbares Hauptpanel mit Markdown-Editor oder Graph-View.
+- Links: Notizliste mit Suche, Inhaltsvorschau und „Notiz erstellen".
+- Mitte: Dokumentfläche mit „Schreiben“, „Lesen“ und „Graph“ sowie sichtbarem Speicherstatus.
 - Rechts: Eigenschaften, Speicherstatus, verlinkte Notizen und Backlinks.
 
-Die Graph-Ansicht orientiert sich am Obsidian-Look-and-Feel: dunkle Canvas,
+Auf kleinen Displays bzw. bei großer Schrift wechseln Notizliste und Dokument
+in eine Einspaltenansicht mit „Alle Notizen“-Navigation. Kompakte Auswahlfelder
+ersetzen bei Platzmangel die Segmentauswahl. Löschen erfordert eine Bestätigung.
+
+Die Graph-Ansicht folgt dem Hell-/Dunkelmodus: ruhige Canvas,
 organisch verteilte verschiebbare Punkt-Knoten, feine gedämpfte
 Verbindungslinien, dezente Labels, Pan/Zoom und eine kleine Overlay-Leiste zum
 Zurücksetzen der Ansicht. Verbundene Knoten werden beim Ziehen federnd
-mitbewegt und springen beim Loslassen zurück. Kanten entstehen aus
+mitbewegt und springen beim Loslassen zurück; bei reduzierter Bewegung bleibt
+die direkte Positionierung ohne federnde Animation erhalten. Kanten entstehen aus
 `outgoingLinks`. Ein Klick auf einen Knoten selektiert die zugehörige Notiz im
 Editor.
 

@@ -5,6 +5,7 @@ import 'package:syscat2/core/widgets/root_shell_scope.dart';
 
 import '../cubits/knowledge_base_cubit.dart';
 import 'knowledge_base_side_panel.dart';
+import 'knowledge_base_theme.dart';
 
 class KnowledgeBaseShellFrame extends StatefulWidget {
   const KnowledgeBaseShellFrame({
@@ -37,9 +38,12 @@ class _KnowledgeBaseShellFrameState extends State<KnowledgeBaseShellFrame> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SafeArea(child: _sideMenu()),
+    return Theme(
+      data: KnowledgeBaseTheme.from(Theme.of(context)),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(child: _sideMenu()),
+      ),
     );
   }
 
@@ -50,28 +54,19 @@ class _KnowledgeBaseShellFrameState extends State<KnowledgeBaseShellFrame> {
       centerBackgroundOpacity: 0.16,
       menuWidthOfScreen: widget.menuWidthOfScreen,
       rightMenu: _sidePanel == null ? null : _rightMenu(),
-      centerPage: Stack(
+      centerPage: Column(
         children: [
-          Positioned.fill(
-            child: Column(
-              children: [
-                RootAppBar(
-                  title: widget.title,
-                  onMenuPressed: widget.onMenuPressed,
-                  actions: const [],
-                ),
-                Expanded(child: widget.child),
-              ],
-            ),
+          RootAppBar(
+            title: widget.title,
+            onMenuPressed: widget.onMenuPressed,
+            actions: [
+              KnowledgeBaseSideRail(
+                selectedPanel: _sidePanel,
+                onPanelSelected: _openPanel,
+              ),
+            ],
           ),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: KnowledgeBaseSideRail(
-              selectedPanel: _sidePanel,
-              onPanelSelected: _openPanel,
-            ),
-          ),
+          Expanded(child: widget.child),
         ],
       ),
     );

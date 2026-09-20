@@ -68,7 +68,7 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
         return ClipRRect(
           borderRadius: BorderRadius.circular(AppSpacing.md),
           child: ColoredBox(
-            color: Theme.of(context).colorScheme.inverseSurface,
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
             child: Stack(
               children: [
                 InteractiveViewer(
@@ -152,6 +152,7 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
   }
 
   void _startPhysics() {
+    if (MediaQuery.disableAnimationsOf(context)) return;
     if (!_physicsController.isAnimating) {
       _physicsController.repeat(period: const Duration(milliseconds: 16));
     }

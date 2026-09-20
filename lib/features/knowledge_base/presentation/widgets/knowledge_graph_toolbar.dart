@@ -11,9 +11,9 @@ class KnowledgeGraphToolbar extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colorScheme.inverseSurface.withValues(alpha: 0.86),
+        color: colorScheme.surfaceContainerLow.withValues(alpha: 0.86),
         border: Border.all(
-          color: colorScheme.onInverseSurface.withValues(alpha: 0.12),
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
         ),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -28,13 +28,13 @@ class KnowledgeGraphToolbar extends StatelessWidget {
             Icon(
               Icons.hub_outlined,
               size: 18,
-              color: colorScheme.onInverseSurface.withValues(alpha: 0.7),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
             const SizedBox(width: AppSpacing.sm),
             Text(
               'Graph',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: colorScheme.onInverseSurface.withValues(alpha: 0.76),
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.76),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -42,7 +42,7 @@ class KnowledgeGraphToolbar extends StatelessWidget {
               tooltip: 'Ansicht zurücksetzen',
               onPressed: onResetView,
               icon: const Icon(Icons.center_focus_strong),
-              color: colorScheme.onInverseSurface.withValues(alpha: 0.78),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.78),
             ),
           ],
         ),

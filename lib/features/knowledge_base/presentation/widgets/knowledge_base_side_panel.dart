@@ -30,7 +30,7 @@ class KnowledgeBaseSideRail extends StatelessWidget {
     return BlocConsumer<AppNotificationsCubit, AppNotificationsState>(
       listenWhen: (previous, current) => previous.message != current.message,
       listener: _showMessage,
-      builder: (context, state) => Column(
+      builder: (context, state) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _RailIconButton(
