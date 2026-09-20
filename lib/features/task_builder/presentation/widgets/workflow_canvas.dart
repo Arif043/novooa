@@ -29,13 +29,36 @@ class WorkflowCanvas extends StatefulWidget {
   State<WorkflowCanvas> createState() => _WorkflowCanvasState();
 }
 
-class _WorkflowCanvasState extends State<WorkflowCanvas> {
+class _WorkflowCanvasState extends State<WorkflowCanvas>
+    with SingleTickerProviderStateMixin {
   final _transform = TransformationController();
+  late final AnimationController _zoomAnimation;
+  Matrix4Tween? _zoomTween;
+  Matrix4? _zoomTarget;
+  Size _viewport = Size.zero;
   bool _positioned = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _zoomAnimation =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 240),
+        )..addListener(() {
+          final tween = _zoomTween;
+          if (tween == null) return;
+          _transform.value = tween.transform(
+            Curves.easeOutCubic.transform(_zoomAnimation.value),
+          );
+        });
+  }
+
   @override
   void didUpdateWidget(WorkflowCanvas oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.inspectorWidth != widget.inspectorWidth) {
+      _stopZoom();
       final matrix = _transform.value.clone();
       matrix.setEntry(
         0,
@@ -49,6 +72,7 @@ class _WorkflowCanvasState extends State<WorkflowCanvas> {
 
   @override
   void dispose() {
+    _zoomAnimation.dispose();
     _transform.dispose();
     super.dispose();
   }
@@ -61,6 +85,7 @@ class _WorkflowCanvasState extends State<WorkflowCanvas> {
     );
     return LayoutBuilder(
       builder: (context, constraints) {
+        _viewport = constraints.biggest;
         if (!_positioned) {
           _positioned = true;
           _transform.value = Matrix4.translationValues(
@@ -84,6 +109,7 @@ class _WorkflowCanvasState extends State<WorkflowCanvas> {
             Positioned.fill(
               child: InteractiveViewer(
                 transformationController: _transform,
+                onInteractionStart: (_) => _stopZoom(),
                 constrained: false,
                 minScale: .35,
                 maxScale: 1.8,
@@ -147,10 +173,14 @@ class _WorkflowCanvasState extends State<WorkflowCanvas> {
                       onPressed: () => _zoom(.8),
                       icon: const Icon(Icons.remove),
                     ),
-                    ValueListenableBuilder<Matrix4>(
-                      valueListenable: _transform,
-                      builder: (_, matrix, _) => Text(
-                        '${(matrix.getMaxScaleOnAxis() * 100).round()} %',
+                    SizedBox(
+                      width: 56,
+                      child: ValueListenableBuilder<Matrix4>(
+                        valueListenable: _transform,
+                        builder: (_, matrix, _) => Text(
+                          '${(matrix.getMaxScaleOnAxis() * 100).round()} %',
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
                     IconButton(
@@ -162,18 +192,23 @@ class _WorkflowCanvasState extends State<WorkflowCanvas> {
                       tooltip: 'Gesamten Arbeitsplan anzeigen',
                       icon: const Icon(Icons.fit_screen),
                       onPressed: () {
+                        final availableWidth = math.max(
+                          1.0,
+                          constraints.maxWidth - widget.inspectorWidth,
+                        );
                         final scale = math
                             .min(
-                              constraints.maxWidth / layout.size.width,
+                              availableWidth / layout.size.width,
                               constraints.maxHeight / layout.size.height,
                             )
                             .clamp(.35, 1.0);
-                        _transform.value = Matrix4.translationValues(
-                          (constraints.maxWidth - layout.size.width * scale) /
-                              2,
-                          0,
-                          0,
-                        )..scaleByDouble(scale, scale, scale, 1);
+                        _animateTo(
+                          Matrix4.translationValues(
+                            (availableWidth - layout.size.width * scale) / 2,
+                            0,
+                            0,
+                          )..scaleByDouble(scale, scale, scale, 1),
+                        );
                       },
                     ),
                   ],
@@ -187,10 +222,40 @@ class _WorkflowCanvasState extends State<WorkflowCanvas> {
   }
 
   void _zoom(double factor) {
-    final scale = _transform.value.getMaxScaleOnAxis();
-    final next = (scale * factor).clamp(.35, 1.8) / scale;
-    _transform.value = _transform.value.clone()
-      ..scaleByDouble(next, next, next, 1);
+    // Repeated clicks extend the pending destination without restarting from
+    // an old frame; the viewport center remains the same scene point.
+    final base = _zoomAnimation.isAnimating ? _zoomTarget! : _transform.value;
+    final scale = base.getMaxScaleOnAxis();
+    final nextScale = (scale * factor).clamp(.35, 1.8);
+    final ratio = nextScale / scale;
+    final center = Offset(
+      math.max(1.0, _viewport.width - widget.inspectorWidth) / 2,
+      _viewport.height / 2,
+    );
+    _animateTo(
+      Matrix4.translationValues(
+        center.dx - (center.dx - base.entry(0, 3)) * ratio,
+        center.dy - (center.dy - base.entry(1, 3)) * ratio,
+        0,
+      )..scaleByDouble(nextScale, nextScale, nextScale, 1),
+    );
+  }
+
+  void _animateTo(Matrix4 target) {
+    _zoomAnimation.stop();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _zoomTarget = null;
+      _transform.value = target;
+      return;
+    }
+    _zoomTarget = target;
+    _zoomTween = Matrix4Tween(begin: _transform.value.clone(), end: target);
+    _zoomAnimation.forward(from: 0);
+  }
+
+  void _stopZoom() {
+    _zoomAnimation.stop();
+    _zoomTarget = null;
   }
 }
 
