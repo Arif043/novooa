@@ -31,6 +31,7 @@ class NodeGraphItem extends StatelessWidget {
     required this.isDragActive,
     required this.onDragStarted,
     required this.onDragEnded,
+    this.configurationOnly = false,
   });
 
   static const animationDuration = Duration(milliseconds: 500);
@@ -41,9 +42,29 @@ class NodeGraphItem extends StatelessWidget {
   final bool isDragActive;
   final VoidCallback onDragStarted;
   final VoidCallback onDragEnded;
+  final bool configurationOnly;
 
   @override
   Widget build(BuildContext context) {
+    if (configurationOnly) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: NodeReferenceNameField(node: node),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _nodeWidget(),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Ergebnis für nächste Bausteine',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          NodeOutputChips(node: node),
+        ],
+      );
+    }
     return DragTarget<NodeId>(
       key: ValueKey('node-target-${node.id.value}'),
       onWillAcceptWithDetails: _accepts,

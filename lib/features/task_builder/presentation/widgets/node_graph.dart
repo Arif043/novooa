@@ -3,6 +3,10 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart
 import 'package:syscat2/features/task_builder/presentation/widgets/node_graph_item.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_placeholder.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_position_transition.dart';
+import 'workflow_editor_scope.dart';
+import 'workflow_canvas.dart';
+import '../cubits/workflow_primitive_labels.dart';
+import 'baustein_palette.dart';
 
 class NodeGraph extends StatefulWidget {
   const NodeGraph({super.key, required this.nodes, this.onPrimitiveAccepted});
@@ -29,6 +33,50 @@ class _NodeGraphState extends State<NodeGraph> {
 
   @override
   Widget build(BuildContext context) {
+    final editor = WorkflowEditorScope.maybeOf(context);
+    if (editor != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final node in widget.nodes)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: SizedBox(
+                height: 100,
+                child: CompactWorkflowNode(
+                  node: node,
+                  selected: false,
+                  peers: widget.nodes.map((node) => node.id).toSet(),
+                  onTap: () => editor.onSelect(node),
+                ),
+              ),
+            ),
+          PopupMenuButton<WorkflowPrimitive>(
+            tooltip: 'Baustein hinzufügen',
+            onSelected: widget.onPrimitiveAccepted,
+            itemBuilder: (_) => [
+              for (final primitive
+                  in bausteinGroups.values
+                      .expand((group) => group)
+                      .map((choice) => choice.primitive)
+                      .toSet())
+                PopupMenuItem(value: primitive, child: Text(primitive.label)),
+            ],
+            child: const Padding(
+              padding: EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add),
+                  SizedBox(width: 8),
+                  Text('Baustein hinzufügen'),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
     _removeObsoleteKeys();
     final graphNodeIds = widget.nodes.map((node) => node.id).toSet();
     return MouseRegion(

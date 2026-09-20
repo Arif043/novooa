@@ -1,6 +1,65 @@
 part of 'task_builder_cubit.dart';
 
 extension TaskBuilderGraphMutations on TaskBuilderCubit {
+  Future<void> addConnectedNode({
+    required WorkflowPrimitive primitive,
+    NodeId? ownerId,
+    String? branchId,
+    NodeId? afterId,
+    ChannelEventKind? channelKind,
+  }) async {
+    final task = loadedTaskOrNull();
+    if (task == null) return;
+    var node = _buildNode(primitive, _nextNodeNumber(task.graph));
+    if (channelKind != null) {
+      node = switch (node.config) {
+        ReadChannelEventNodeConfig() => node.copyWith(
+          config: ReadChannelEventNodeConfig(kind: channelKind),
+        ),
+        SendChannelMessageNodeConfig config => node.copyWith(
+          config: config.copyWith(kind: channelKind),
+        ),
+        _ => node,
+      };
+    }
+    WorkflowGraph insert(WorkflowGraph graph) {
+      final source =
+          afterId ?? (graph.nodes.isEmpty ? node.id : graph.nodes.last.id);
+      if (graph.nodes.isNotEmpty && graph.nodeOrNull(source) == null) {
+        return graph;
+      }
+      return graph.addNode(node, source);
+    }
+
+    if (ownerId == null) {
+      final graph = insert(task.graph);
+      if (graph == task.graph) return;
+      await _saveAndEmit(task.copyWith(graph: graph, selectedNodeId: node.id));
+      return;
+    }
+    await _updateNode(ownerId, (owner) {
+      if (owner.config case ConditionalNodeConfig config) {
+        return owner.copyWith(
+          config: config.copyWith(
+            branches: [
+              for (final branch in config.branches)
+                if (branch.id == branchId)
+                  branch.copyWith(graph: insert(branch.graph))
+                else
+                  branch,
+            ],
+          ),
+        );
+      }
+      if (owner.config case ForEachNodeConfig config) {
+        return owner.copyWith(
+          config: config.copyWith(graph: insert(config.graph)),
+        );
+      }
+      return owner;
+    });
+  }
+
   Future<void> swapNodes(NodeId sourceId, NodeId targetId) async {
     final task = loadedTaskOrNull();
     if (task == null || sourceId == targetId) return;

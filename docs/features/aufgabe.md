@@ -66,6 +66,21 @@ Die vollstaendigen Output-Slots dokumentiert
 
 ## UI-Prinzipien
 
+- Links steht eine durchsuchbare, nach Kategorien gruppierte Baustein-Palette.
+  Ein Klick fügt den Baustein ein; Drag-and-Drop oder die Plus-Aktion einer Karte
+  wählt eine konkrete Anschlussstelle, auch in Verzweigungen und Schleifen.
+- Die verschiebbare und zoombare Arbeitsfläche zeigt kompakte Karten mit Typ
+  und ID. Gespeicherte `WorkflowEdge`-Verbindungen werden mit Richtungspfeilen
+  und vorhandenen Bedingungslabels gezeichnet. Unterpläne erhalten zusätzlich
+  beschriftete Verbindungen zu ihrem übergeordneten Baustein.
+- Ein Klick auf eine Karte öffnet rechts ein Konfigurations-Overlay im selben
+  Provider-Kontext. Alle bisherigen Editoren, Anhänge, Referenznamen und
+  Workflow-Ausgabewerte bleiben dort verfügbar. Änderungen aktualisieren das
+  Overlay unmittelbar. Schließen ist per Schaltfläche oder Escape möglich.
+- Auf schmalen Fenstern wird die linke Palette über „Bausteine“ eingeblendet.
+- `TaskBuilderCubit.addConnectedNode` verbindet einen neuen Baustein mit
+  `afterId` im Hauptgraphen oder mit `ownerId`/`branchId` im Unterplan;
+  `channelKind` erhält die Kanalwahl auch innerhalb eines Unterplans.
 - Autosave statt Speichern-Dialog.
 - Anlass statt technischer Konfiguration.
 - Inline-Vorschau, wo sie den naechsten Schritt verstaendlicher macht.
