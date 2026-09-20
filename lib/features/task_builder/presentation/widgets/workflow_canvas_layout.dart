@@ -29,13 +29,15 @@ class CanvasLink {
 /// Presentation-only layout: persisted edges remain the source of truth.
 /// Containment links additionally make conditional and loop subplans visible.
 class WorkflowCanvasLayout {
-  WorkflowCanvasLayout(WorkflowGraph graph) {
+  WorkflowCanvasLayout(WorkflowGraph graph, {double textScale = 1})
+    : nodeHeight = cardHeight * textScale.clamp(1.0, 3.0) {
     _collect(graph, const BausteinInsertion());
     _arrange();
   }
 
-  static const cardWidth = 310.0;
-  static const cardHeight = 100.0;
+  static const cardWidth = 340.0;
+  static const cardHeight = 120.0;
+  final double nodeHeight;
   final entries = <String, CanvasEntry>{};
   final links = <CanvasLink>[];
   final rectangles = <String, Rect>{};
@@ -139,16 +141,16 @@ class WorkflowCanvasLayout {
     );
     final width = math.max(720.0, columns * 390.0 + 100);
     for (final row in rows.entries) {
-      final left = (width - (row.value.length * 390 - 80)) / 2;
+      final left = (width - ((row.value.length - 1) * 390 + cardWidth)) / 2;
       for (var index = 0; index < row.value.length; index++) {
         rectangles[row.value[index]] = Rect.fromLTWH(
           left + index * 390,
-          90 + row.key * 220,
+          90 + row.key * (nodeHeight + 100),
           cardWidth,
-          cardHeight,
+          nodeHeight,
         );
       }
     }
-    size = Size(width, math.max(600, (rows.length + 1) * 220.0));
+    size = Size(width, math.max(600, (rows.length + 1) * (nodeHeight + 100)));
   }
 }

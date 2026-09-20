@@ -42,7 +42,7 @@ class _NodeGraphState extends State<NodeGraph> {
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: SizedBox(
-                height: 100,
+                height: MediaQuery.textScalerOf(context).scale(120),
                 child: CompactWorkflowNode(
                   node: node,
                   selected: false,

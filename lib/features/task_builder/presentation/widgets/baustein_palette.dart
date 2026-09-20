@@ -102,18 +102,18 @@ class _BausteinPaletteState extends State<BausteinPalette> {
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
               child: Text(
                 'Bausteine',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: TextField(
+                style: Theme.of(context).textTheme.bodyMedium,
                 onChanged: (value) =>
                     setState(() => _query = value.trim().toLowerCase()),
                 decoration: const InputDecoration(
-                  hintText: 'Bausteine suchen …',
+                  labelText: 'Bausteine suchen',
+                  floatingLabelBehavior: FloatingLabelBehavior.never,
                   prefixIcon: Icon(Icons.search, size: 20),
                   isDense: true,
                 ),
@@ -134,9 +134,8 @@ class _BausteinPaletteState extends State<BausteinPalette> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 24, 8, 8),
                         child: Text(
-                          group.key,
-                          style: Theme.of(context).textTheme.labelMedium
-                              ?.copyWith(color: colors.onSurfaceVariant),
+                          group.key.toUpperCase(),
+                          style: Theme.of(context).textTheme.labelSmall,
                         ),
                       ),
                       for (final choice in group.value)
@@ -151,18 +150,32 @@ class _BausteinPaletteState extends State<BausteinPalette> {
                             ),
                           ),
                           child: ListTile(
-                            dense: true,
+                            minTileHeight: 52,
+                            horizontalTitleGap: 12,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 8,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            leading: Icon(
-                              bausteinIcon(choice.primitive),
-                              size: 22,
+                            leading: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: colors.surfaceContainerLow,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                bausteinIcon(choice.primitive),
+                                size: 20,
+                                color: colors.onSurfaceVariant,
+                              ),
                             ),
-                            title: Text(choice.label),
+                            title: Text(
+                              choice.label,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w500),
+                            ),
                             onTap: () => widget.onAdd(choice),
                           ),
                         ),

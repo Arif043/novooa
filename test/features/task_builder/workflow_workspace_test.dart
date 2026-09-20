@@ -19,6 +19,10 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_s
 import 'package:syscat2/features/task_builder/presentation/widgets/task_builder_body.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_configuration_panel.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/workflow_canvas_layout.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/task_builder_theme.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/task_builder_header.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/task_title_field.dart';
+import 'package:syscat2/core/theme/syscat_theme.dart';
 
 void main() {
   test('layout preserves actual edges and exposes named branch entries', () {
@@ -87,7 +91,7 @@ void main() {
           if (fontPath != null) {
             final bytes = await File(fontPath).readAsBytes();
             await (FontLoader(
-              'Roboto',
+              'Inter',
             )..addFont(Future.value(ByteData.sublistView(bytes)))).load();
           }
           await (FontLoader('MaterialIcons')
@@ -99,17 +103,23 @@ void main() {
         BlocProvider.value(
           value: cubit,
           child: MaterialApp(
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: const Color(0xFFFF9500),
-              ),
-              useMaterial3: true,
-            ),
+            theme: TaskBuilderTheme.from(SyscatTheme.lightTheme),
             home: Scaffold(
               body: RepaintBoundary(
                 key: captureKey,
-                child: BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
-                  builder: (_, state) => TaskBuilderBody(state: state),
+                child: Column(
+                  children: [
+                    TaskBuilderHeader(
+                      title: const TaskTitleField(),
+                      onMenuPressed: () {},
+                      actions: const _HeaderActions(),
+                    ),
+                    Expanded(
+                      child: BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
+                        builder: (_, state) => TaskBuilderBody(state: state),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -152,7 +162,14 @@ void main() {
       await tester.tap(find.byTooltip('Konfiguration schließen'));
       await tester.pumpAndSettle();
       expect(find.byType(NodeConfigurationPanel), findsNothing);
-      await tester.enterText(find.byType(TextField), 'Script');
+      await tester.enterText(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is TextField &&
+              widget.decoration?.labelText == 'Bausteine suchen',
+        ),
+        'Script',
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ListTile, 'Script'));
       await tester.pumpAndSettle();
@@ -170,10 +187,88 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(FilledButton, 'Bausteine'));
       await tester.pumpAndSettle();
-      expect(find.byType(TextField), findsOneWidget);
+      expect(find.byType(TextField), findsNWidgets(2));
       expect(tester.takeException(), isNull);
       await cubit.close();
     },
+  );
+
+  testWidgets(
+    'header retains editable title at small widths and large text in both themes',
+    (tester) async {
+      final cubit = TaskBuilderCubit(repository: _Repository());
+      await cubit.load(_task);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      tester.view.devicePixelRatio = 1;
+      for (final dark in [false, true]) {
+        for (final size in [
+          const Size(375, 812),
+          const Size(812, 375),
+          const Size(1280, 900),
+        ]) {
+          tester.view.physicalSize = size;
+          await tester.pumpWidget(
+            BlocProvider.value(
+              value: cubit,
+              child: MaterialApp(
+                theme: TaskBuilderTheme.from(
+                  dark ? SyscatTheme.darkTheme : SyscatTheme.lightTheme,
+                ),
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.linear(2),
+                    disableAnimations: true,
+                  ),
+                  child: child!,
+                ),
+                home: Scaffold(
+                  body: Column(
+                    children: [
+                      TaskBuilderHeader(
+                        title: const TaskTitleField(),
+                        onMenuPressed: () {},
+                        actions: const _HeaderActions(),
+                      ),
+                      const Expanded(child: SizedBox()),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          await tester.enterText(find.byType(TextField), 'Rechnung prüfen');
+          await tester.pump();
+          expect(
+            (cubit.state as TaskBuilderLoaded).editingTask.title,
+            'Rechnung prüfen',
+          );
+        }
+      }
+      await cubit.close();
+    },
+  );
+}
+
+class _HeaderActions extends StatelessWidget {
+  const _HeaderActions();
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      IconButton(
+        tooltip: 'KI-Agent',
+        onPressed: () {},
+        icon: const Icon(Icons.auto_awesome_outlined),
+      ),
+      IconButton(
+        tooltip: 'Benachrichtigungen',
+        onPressed: () {},
+        icon: const Icon(Icons.notifications_outlined),
+      ),
+    ],
   );
 }
 

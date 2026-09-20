@@ -28,7 +28,7 @@ class TaskBuilderSideRail extends StatelessWidget {
     return BlocConsumer<AppNotificationsCubit, AppNotificationsState>(
       listenWhen: (previous, current) => previous.message != current.message,
       listener: _showMessage,
-      builder: (context, state) => Column(
+      builder: (context, state) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _RailIconButton(
@@ -140,7 +140,11 @@ class _RailIconButton extends StatelessWidget {
       style: IconButton.styleFrom(
         minimumSize: const Size.square(48),
         foregroundColor: Theme.of(context).colorScheme.onSurface,
-        backgroundColor: Colors.transparent,
+        backgroundColor: selected
+            ? Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withValues(alpha: .12)
+            : Colors.transparent,
       ),
       onPressed: onPressed,
       icon: child ?? Icon(icon),

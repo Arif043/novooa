@@ -54,7 +54,10 @@ class _WorkflowCanvasState extends State<WorkflowCanvas> {
 
   @override
   Widget build(BuildContext context) {
-    final layout = WorkflowCanvasLayout(widget.graph);
+    final layout = WorkflowCanvasLayout(
+      widget.graph,
+      textScale: MediaQuery.textScalerOf(context).scale(17) / 17,
+    );
     return LayoutBuilder(
       builder: (context, constraints) {
         if (!_positioned) {
@@ -94,6 +97,7 @@ class _WorkflowCanvasState extends State<WorkflowCanvas> {
                           painter: WorkflowEdgesPainter(
                             layout,
                             Theme.of(context).colorScheme,
+                            Theme.of(context).textTheme.labelMedium!,
                           ),
                         ),
                       ),
@@ -225,13 +229,13 @@ class CompactWorkflowNode extends StatelessWidget {
           context.read<TaskBuilderCubit>().swapNodes(details.data, node.id),
       builder: (context, candidates, _) => Material(
         elevation: selected ? 4 : 1,
-        shadowColor: Colors.black26,
+        shadowColor: colors.shadow.withValues(alpha: .12),
         color: colors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
             color: selected || targeted || candidates.isNotEmpty
-                ? colors.primary
+                ? colors.primaryContainer
                 : colors.outlineVariant,
             width: selected ? 2 : 1,
           ),
@@ -241,7 +245,7 @@ class CompactWorkflowNode extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Draggable<NodeId>(
@@ -257,7 +261,9 @@ class CompactWorkflowNode extends StatelessWidget {
                     message: 'Baustein tauschen',
                     child: CircleAvatar(
                       radius: 23,
-                      backgroundColor: colors.primary.withValues(alpha: .09),
+                      backgroundColor: colors.primaryContainer.withValues(
+                        alpha: .12,
+                      ),
                       child: Icon(
                         bausteinIcon(node.config.primitive),
                         color: colors.primary,
@@ -275,11 +281,9 @@ class CompactWorkflowNode extends StatelessWidget {
                         node.config.primitive.label,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 8),
                       Tooltip(
                         message: node.id.value,
                         child: Text(
@@ -315,7 +319,7 @@ class CanvasDotsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     canvas.drawRect(Offset.zero & size, Paint()..color = background);
-    final paint = Paint()..color = color.withValues(alpha: .65);
+    final paint = Paint()..color = color.withValues(alpha: .4);
     for (double x = 12; x < size.width; x += 22) {
       for (double y = 12; y < size.height; y += 22) {
         canvas.drawCircle(Offset(x, y), .8, paint);
@@ -329,9 +333,10 @@ class CanvasDotsPainter extends CustomPainter {
 }
 
 class WorkflowEdgesPainter extends CustomPainter {
-  const WorkflowEdgesPainter(this.layout, this.colors);
+  const WorkflowEdgesPainter(this.layout, this.colors, this.labelStyle);
   final WorkflowCanvasLayout layout;
   final ColorScheme colors;
+  final TextStyle labelStyle;
   @override
   void paint(Canvas canvas, Size size) {
     for (final edge in layout.links) {
@@ -340,7 +345,9 @@ class WorkflowEdgesPainter extends CustomPainter {
       if (from == null || to == null) continue;
       final start = from.bottomCenter;
       final end = to.topCenter;
-      final color = edge.label == null ? colors.outline : colors.primary;
+      final color = edge.label == null
+          ? colors.onSurfaceVariant.withValues(alpha: .6)
+          : colors.primary;
       final paint = Paint()
         ..color = color
         ..strokeWidth = 1.8
@@ -370,7 +377,7 @@ class WorkflowEdgesPainter extends CustomPainter {
         final text = TextPainter(
           text: TextSpan(
             text: label,
-            style: TextStyle(
+            style: labelStyle.copyWith(
               color: colors.onSurface,
               fontSize: 12,
               fontWeight: FontWeight.w600,

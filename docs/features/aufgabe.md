@@ -66,6 +66,12 @@ Die vollstaendigen Output-Slots dokumentiert
 
 ## UI-Prinzipien
 
+- Das Aufgabenstudio übernimmt die Inter-Typografie und die abgestuften
+  Oberflächen aus [`../DESIGN.md`](../DESIGN.md). `TaskBuilderTheme` bündelt
+  diese Gestaltung für Hell- und Dunkelmodus innerhalb des Builders.
+  Die gemeinsame Kopfzeile richtet Navigation über der Palette, den
+  editierbaren Aufgabentitel über der Arbeitsfläche und KI-Agent sowie
+  Benachrichtigungen rechts nebeneinander aus.
 - Links steht eine durchsuchbare, nach Kategorien gruppierte Baustein-Palette.
   Ein Klick fügt den Baustein ein; Drag-and-Drop oder die Plus-Aktion einer Karte
   wählt eine konkrete Anschlussstelle, auch in Verzweigungen und Schleifen.

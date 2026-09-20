@@ -18,8 +18,8 @@ class NodeConfigurationPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Material(
-      elevation: 12,
-      shadowColor: Colors.black26,
+      elevation: 8,
+      shadowColor: colors.shadow.withValues(alpha: .12),
       color: colors.surface,
       borderRadius: BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
@@ -27,12 +27,20 @@ class NodeConfigurationPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
+            padding: const EdgeInsets.fromLTRB(24, 24, 16, 8),
             child: Row(
               children: [
-                Icon(
-                  bausteinIcon(node.config.primitive),
-                  color: colors.primary,
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: colors.primaryContainer.withValues(alpha: .12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    bausteinIcon(node.config.primitive),
+                    color: colors.primary,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -50,7 +58,7 @@ class NodeConfigurationPanel extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: SelectableText(
               'ID: ${node.id.value}',
               style: Theme.of(context).textTheme.bodySmall,
@@ -61,7 +69,7 @@ class NodeConfigurationPanel extends StatelessWidget {
           Expanded(
             child: SingleChildScrollView(
               key: ValueKey('configuration-scroll-${node.id.value}'),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(24),
               child: NodeGraphItem(
                 key: ValueKey(node.id),
                 node: node,
@@ -81,10 +89,10 @@ class NodeConfigurationPanel extends StatelessWidget {
               children: [
                 const Icon(Icons.check_circle_outline, size: 16),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Änderungen werden automatisch gespeichert.',
-                    style: TextStyle(fontSize: 12),
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),
                 IconButton(

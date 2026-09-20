@@ -32,14 +32,23 @@ class _TaskTitleFieldState extends State<TaskTitleField> {
     return BlocListener<TaskBuilderCubit, TaskBuilderState>(
       listener: _syncTitle,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
+        constraints: const BoxConstraints(maxWidth: 640),
         child: TextField(
           controller: _controller,
           decoration: const InputDecoration(
             hintText: 'Name der Aufgabe',
+            filled: false,
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(vertical: 8),
             border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: UnderlineInputBorder(),
+            suffixIcon: Icon(Icons.edit_outlined, size: 16),
           ),
-          style: Theme.of(context).textTheme.titleLarge,
+          style: MediaQuery.sizeOf(context).width < 600
+              ? Theme.of(context).textTheme.titleMedium
+              : Theme.of(context).textTheme.titleLarge,
+          onTapOutside: (_) => FocusScope.of(context).unfocus(),
           textInputAction: TextInputAction.done,
           onChanged: context.read<TaskBuilderCubit>().updateTitle,
         ),

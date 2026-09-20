@@ -11,6 +11,7 @@ import 'node_configuration_panel.dart';
 import 'workflow_canvas.dart';
 import 'workflow_canvas_layout.dart';
 import 'workflow_editor_scope.dart';
+import 'task_builder_theme.dart';
 
 class TaskBuilderBody extends StatefulWidget {
   const TaskBuilderBody({super.key, required this.state});
@@ -72,7 +73,7 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
           builder: (context, constraints) {
             final desktop = constraints.maxWidth >= 850;
             final paletteWidth = desktop
-                ? 250.0
+                ? TaskBuilderTheme.paletteWidth
                 : math.min(280.0, constraints.maxWidth - 48);
             final palette = BausteinPalette(
               onAdd: (choice) => _add(
