@@ -106,6 +106,7 @@ class _WorkflowCanvasState extends State<WorkflowCanvas> {
                         Positioned.fromRect(
                           rect: layout.rectangles[entry.id]!,
                           child: DragTarget<BausteinChoice>(
+                            onWillAcceptWithDetails: (_) => entry.canInsert,
                             onAcceptWithDetails: (details) =>
                                 widget.onDrop(details.data, entry.insertion),
                             builder: (context, candidates, _) =>
@@ -223,27 +224,28 @@ class _PathInsertion extends StatelessWidget {
               const Expanded(child: Divider()),
             ],
           ),
-          const SizedBox(height: 12),
+          if (entry.canInsert) const SizedBox(height: 12),
         ],
-        Expanded(
-          child: OutlinedButton.icon(
-            key: ValueKey('path-insertion-${entry.id}'),
-            style: OutlinedButton.styleFrom(
-              backgroundColor: targeted
-                  ? colors.primaryContainer.withValues(alpha: .12)
-                  : colors.surface.withValues(alpha: .8),
-              side: BorderSide(
-                color: targeted ? colors.primary : colors.outlineVariant,
+        if (entry.canInsert)
+          Expanded(
+            child: OutlinedButton.icon(
+              key: ValueKey('path-insertion-${entry.id}'),
+              style: OutlinedButton.styleFrom(
+                backgroundColor: targeted
+                    ? colors.primaryContainer.withValues(alpha: .12)
+                    : colors.surface.withValues(alpha: .8),
+                side: BorderSide(
+                  color: targeted ? colors.primary : colors.outlineVariant,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
+              onPressed: onPressed,
+              icon: const Icon(Icons.add),
+              label: const Text('Baustein hier verbinden'),
             ),
-            onPressed: onPressed,
-            icon: const Icon(Icons.add),
-            label: const Text('Baustein hier verbinden'),
           ),
-        ),
       ],
     );
   }

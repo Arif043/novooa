@@ -338,6 +338,17 @@ void main() {
         WorkflowPrimitive.script,
       );
       expect(
+        find.byKey(const ValueKey('path-insertion-@continue:decision')),
+        findsNothing,
+      );
+      expect(find.text('Nach der Bedingung'), findsOneWidget);
+      final insertedId =
+          (cubit.state as TaskBuilderLoaded).editingTask.nodes.last.id;
+      expect(
+        find.byKey(ValueKey('path-insertion-@append:${insertedId.value}')),
+        findsOneWidget,
+      );
+      expect(
         (cubit.state as TaskBuilderLoaded).editingTask.edges.last.from,
         const NodeId('decision'),
       );

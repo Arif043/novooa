@@ -18,12 +18,14 @@ class CanvasEntry {
     this.insertion,
     this.peers, {
     this.continuationLabel,
+    this.canInsert = true,
   });
   final String id;
   final WorkflowNode? node;
   final BausteinInsertion insertion;
   final Set<NodeId> peers;
   final String? continuationLabel;
+  final bool canInsert;
 }
 
 class CanvasLink {
@@ -131,6 +133,9 @@ class WorkflowCanvasLayout {
           continuationLabel: node.config is ConditionalNodeConfig
               ? 'Nach der Bedingung'
               : 'Nach der Schleife',
+          canInsert: !graph.edges.any(
+            (edge) => edge.from == node.id && peers.contains(edge.to),
+          ),
         );
         for (final end in branchEnds.isEmpty ? [node.id.value] : branchEnds) {
           links.add(CanvasLink(end, id, null, true));
@@ -195,6 +200,21 @@ class WorkflowCanvasLayout {
   }
 
   void _arrangeLanes(Map<String, int> levels) {
+    double heightOf(String id) =>
+        entries[id]!.canInsert ? nodeHeight : nodeHeight / cardHeight * 32;
+    final rowHeights = <int, double>{};
+    for (final entry in levels.entries) {
+      rowHeights[entry.value] = math.max(
+        rowHeights[entry.value] ?? 0,
+        heightOf(entry.key),
+      );
+    }
+    final rowTops = <int, double>{};
+    var top = 90.0;
+    for (final level in rowHeights.keys.toList()..sort()) {
+      rowTops[level] = top;
+      top += rowHeights[level]! + 100;
+    }
     final successors = <String, List<String>>{};
     final continuations = <String, String>{};
     for (final edge in links.where((edge) => !edge.isReturn)) {
@@ -255,9 +275,9 @@ class WorkflowCanvasLayout {
     void place(String id, double center) {
       rectangles[id] = Rect.fromLTWH(
         center - cardWidth / 2,
-        90 + levels[id]! * (nodeHeight + 100),
+        rowTops[levels[id]]!,
         cardWidth,
-        nodeHeight,
+        heightOf(id),
       );
       final branches = children[id]!
           .where((child) => child != continuations[id])
@@ -279,7 +299,6 @@ class WorkflowCanvasLayout {
       place(root, left + spans[root]! * 390 / 2);
       left += spans[root]! * 390;
     }
-    final lastLevel = levels.values.fold(0, math.max);
-    size = Size(width, math.max(600, (lastLevel + 2) * (nodeHeight + 100)));
+    size = Size(width, math.max(600, top));
   }
 }
