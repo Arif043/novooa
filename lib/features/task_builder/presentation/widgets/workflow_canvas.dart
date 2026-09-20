@@ -7,6 +7,7 @@ import '../cubits/task_builder_cubit.dart';
 import '../cubits/workflow_primitive_labels.dart';
 import 'baustein_palette.dart';
 import 'workflow_canvas_layout.dart';
+import 'workflow_canvas_options.dart';
 
 class WorkflowCanvas extends StatefulWidget {
   const WorkflowCanvas({
@@ -385,6 +386,7 @@ class WorkflowEdgesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final edge in layout.links) {
+      if (edge.isReturn && !WorkflowCanvasOptions.showReturnEdges) continue;
       final from = layout.rectangles[edge.from];
       final to = layout.rectangles[edge.to];
       if (from == null || to == null) continue;
@@ -399,7 +401,15 @@ class WorkflowEdgesPainter extends CustomPainter {
         ..style = PaintingStyle.stroke;
       final path = Path()..moveTo(start.dx, start.dy);
       final middle = (start.dy + end.dy) / 2;
-      if (end.dy > start.dy && end.dy - start.dy < 200) {
+      if (edge.isReturn && end.dy > start.dy) {
+        // Collect returns just above the continuation, below every branch.
+        final joinY = end.dy - 32;
+        path.lineTo(start.dx, joinY);
+        path.lineTo(end.dx, joinY);
+        path.lineTo(end.dx, end.dy);
+      } else if (end.dy > start.dy && (start.dx - end.dx).abs() < .01) {
+        path.lineTo(end.dx, end.dy);
+      } else if (end.dy > start.dy && end.dy - start.dy < 200) {
         path.cubicTo(start.dx, middle, end.dx, middle, end.dx, end.dy);
       } else {
         // Route long and backward edges outside the cards.

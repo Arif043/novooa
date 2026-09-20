@@ -85,6 +85,10 @@ Die vollstaendigen Output-Slots dokumentiert
   Schleifen bieten analog „Nach der Schleife“. Gestrichelte Rückführungen
   und die Trennlinie kennzeichnen diese Fortsetzung. Diese Anschlüsse sind
   reine Darstellungselemente, keine zusätzlichen gespeicherten Bausteine.
+- Pfade behalten ihre eigene horizontale Spalte bis zum letzten Anschluss;
+  unterschiedlich lange Zweige werden nicht zeilenweise neu zentriert.
+  `WorkflowCanvasOptions.showReturnEdges` steuert die Rückführungspfeile
+  (standardmäßig `false`). Layout und Ausführung bleiben davon unabhängig.
 - Ein Klick auf eine Karte öffnet rechts ein Konfigurations-Overlay im selben
   Provider-Kontext. Alle bisherigen Editoren, Anhänge, Referenznamen und
   Workflow-Ausgabewerte bleiben dort verfügbar. Änderungen aktualisieren das

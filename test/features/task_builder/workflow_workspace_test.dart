@@ -25,6 +25,44 @@ import 'package:syscat2/features/task_builder/presentation/widgets/task_title_fi
 import 'package:syscat2/core/theme/syscat_theme.dart';
 
 void main() {
+  test('an uneven Ja path retains its column through the final insertion', () {
+    const child = WorkflowNode(
+      id: NodeId('yes-child'),
+      title: '',
+      description: '',
+      config: StringInputNodeConfig(value: ''),
+    );
+    final decision = _task.nodes.last.copyWith(
+      config: const ConditionalNodeConfig(
+        branches: [
+          ConditionalBranch(
+            id: 'yes',
+            label: 'Ja',
+            graph: WorkflowGraph(nodes: [child], edges: []),
+          ),
+          ConditionalBranch(
+            id: 'no',
+            label: 'Nein',
+            graph: WorkflowGraph(nodes: [], edges: []),
+          ),
+        ],
+      ),
+    );
+    final layout = WorkflowCanvasLayout(
+      WorkflowGraph(nodes: [decision], edges: const []),
+    );
+    final yes = layout.rectangles['yes-child']!;
+    final append = layout.rectangles['@append:yes-child']!;
+    final no = layout.rectangles['@empty:decision:no']!;
+    final continuation = layout.rectangles['@continue:decision']!;
+    expect(append.left, yes.left);
+    expect(append.top, greaterThan(yes.bottom));
+    expect(yes.right, lessThan(no.left));
+    expect(continuation.center.dx, layout.rectangles['decision']!.center.dx);
+    expect(continuation.top, greaterThan(append.bottom));
+    expect(continuation.top, greaterThan(no.bottom));
+  });
+
   test('layout preserves actual edges and exposes named branch entries', () {
     final layout = WorkflowCanvasLayout(_task.graph);
     expect(
@@ -105,6 +143,22 @@ void main() {
         ),
       );
       final nestedInsertion = layout.entries['@continue:nested']!.insertion;
+      expect(
+        layout.rectangles['left']!.center.dx,
+        layout.rectangles['nested']!.center.dx,
+      );
+      expect(
+        layout.rectangles['nested']!.center.dx,
+        layout.rectangles['@continue:nested']!.center.dx,
+      );
+      expect(
+        layout.rectangles['decision']!.center.dx,
+        layout.rectangles['@continue:decision']!.center.dx,
+      );
+      expect(
+        layout.rectangles['next']!.center.dx,
+        layout.rectangles['decision']!.center.dx,
+      );
       expect(nestedInsertion.owner, decision.id);
       expect(nestedInsertion.branchId, 'yes');
       expect(nestedInsertion.after, nested.id);

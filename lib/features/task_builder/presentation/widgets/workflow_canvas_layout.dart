@@ -191,26 +191,95 @@ class WorkflowCanvasLayout {
         remaining.remove(id);
       }
     }
-    final rows = <int, List<String>>{};
-    for (final entry in levels.entries) {
-      (rows[entry.value] ??= []).add(entry.key);
+    _arrangeLanes(levels);
+  }
+
+  void _arrangeLanes(Map<String, int> levels) {
+    final successors = <String, List<String>>{};
+    final continuations = <String, String>{};
+    for (final edge in links.where((edge) => !edge.isReturn)) {
+      (successors[edge.from] ??= []).add(edge.to);
     }
-    final columns = rows.values.fold(
-      1,
-      (count, row) => math.max(count, row.length),
-    );
-    final width = math.max(720.0, columns * 390.0 + 100);
-    for (final row in rows.entries) {
-      final left = (width - ((row.value.length - 1) * 390 + cardWidth)) / 2;
-      for (var index = 0; index < row.value.length; index++) {
-        rectangles[row.value[index]] = Rect.fromLTWH(
-          left + index * 390,
-          90 + row.key * (nodeHeight + 100),
-          cardWidth,
-          nodeHeight,
-        );
+    for (final entry in entries.values) {
+      if (entry.continuationLabel != null) {
+        continuations[entry.insertion.after!.value] = entry.id;
       }
     }
-    size = Size(width, math.max(600, (rows.length + 1) * (nodeHeight + 100)));
+    final incoming = <String>{
+      ...successors.values.expand((ids) => ids),
+      ...continuations.values,
+    };
+    final children = <String, List<String>>{};
+    final visited = <String>{};
+    final roots = <String>[];
+    // A spanning forest handles shared successors and imported cycles without
+    // duplicating cards. Return edges affect vertical order, never path lanes.
+    void visit(String id) {
+      visited.add(id);
+      children[id] = [];
+      for (final next in [
+        ...?successors[id],
+        if (continuations[id] case final String next) next,
+      ]) {
+        if (visited.contains(next)) continue;
+        children[id]!.add(next);
+        visit(next);
+      }
+    }
+
+    for (final id in [
+      ...entries.keys.where((id) => !incoming.contains(id)),
+      ...entries.keys,
+    ]) {
+      if (visited.contains(id)) continue;
+      roots.add(id);
+      visit(id);
+    }
+    final spans = <String, double>{};
+    double measure(String id) {
+      var branches = 0.0;
+      var continuation = 0.0;
+      for (final child in children[id]!) {
+        final span = measure(child);
+        if (child == continuations[id]) {
+          continuation = span;
+        } else {
+          branches += span;
+        }
+      }
+      return spans[id] = math.max(1.0, math.max(branches, continuation));
+    }
+
+    final total = roots.fold(0.0, (sum, id) => sum + measure(id));
+    final width = math.max(720.0, total * 390 + 100);
+    void place(String id, double center) {
+      rectangles[id] = Rect.fromLTWH(
+        center - cardWidth / 2,
+        90 + levels[id]! * (nodeHeight + 100),
+        cardWidth,
+        nodeHeight,
+      );
+      final branches = children[id]!
+          .where((child) => child != continuations[id])
+          .toList();
+      final span = branches.fold(0.0, (sum, child) => sum + spans[child]!);
+      var left = center - span * 390 / 2;
+      for (final child in branches) {
+        place(child, left + spans[child]! * 390 / 2);
+        left += spans[child]! * 390;
+      }
+      final continuation = continuations[id];
+      if (continuation != null && children[id]!.contains(continuation)) {
+        place(continuation, center);
+      }
+    }
+
+    var left = (width - total * 390) / 2;
+    for (final root in roots) {
+      place(root, left + spans[root]! * 390 / 2);
+      left += spans[root]! * 390;
+    }
+    final lastLevel = levels.values.fold(0, math.max);
+    size = Size(width, math.max(600, (lastLevel + 2) * (nodeHeight + 100)));
   }
 }
