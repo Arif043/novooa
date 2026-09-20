@@ -17,6 +17,7 @@ export type TaskVariables = Record<string, unknown>;
 
 export type TemplateExpressionResolver = {
   resolveText(template: string): string;
+  resolveTextWithoutMediaReferences(template: string): string;
   resolveValue(template: string): unknown;
   resolveMediaReferences(template: string): FileReference[];
 };

@@ -1,29 +1,26 @@
-import {
-  type ParentNodeOutput,
-  type TaskRunContext,
-} from "../../../domain/executors/node-executor.js";
+import {type TaskRunContext} from "../../../domain/executors/node-executor.js";
 import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
 import {attachmentInstructions} from "../runner/node-attachment-genkit.js";
 import {employeeFor, renderEmployeePrompt} from "../runner/employee-context.js";
 import {mediaDataUrlFor} from "../runner/media-value-loader.js";
-import {type NodeOutputValue, type WorkflowNode} from "../runner/task-definition.js";
+import {type WorkflowNode} from "../runner/task-definition.js";
 import {type PromptContent, type PromptNodeInput, type StructuredOutputField} from "./prompt-node-types.js";
 
 export async function promptInputFor(
   node: WorkflowNode,
   runContext: TaskRunContext,
-  parentOutputs: ParentNodeOutput[],
 ): Promise<PromptNodeInput> {
   const config = promptConfigFor(node);
   const employee = employeeFor(node);
+  const instruction = await resolvedInstructionFor(node, employee, runContext);
   return {
-    instruction: instructionFor(node, employee, runContext),
-    context: contextFor(parentOutputs, runContext.context),
+    instruction: instruction.text,
+    context: runContext.context,
     languageModelId: config.languageModelId,
     outputType: config.outputType,
     choices: config.choices.map((choice) => runContext.templateExpressionResolver.resolveText(choice)),
     structuredFields: config.structuredFields,
-    mediaUrls: await mediaUrlsFor(parentOutputs, runContext),
+    mediaUrls: instruction.mediaUrls,
     employee,
   };
 }
@@ -37,16 +34,20 @@ export function promptContentFor(
   return {text, content: [{text}, ...input.mediaUrls.map(mediaPartFor)]};
 }
 
-function instructionFor(
+async function resolvedInstructionFor(
   node: WorkflowNode,
   employee: PromptNodeInput["employee"],
   runContext: TaskRunContext,
-): string {
+): Promise<ResolvedPromptInstruction> {
   const instruction = rawInstructionFor(node);
   const rendered = employee
     ? renderEmployeePrompt(employee.promptTemplate, instruction)
     : instruction;
-  return runContext.templateExpressionResolver.resolveText(rendered);
+  return {
+    text: runContext.templateExpressionResolver
+      .resolveTextWithoutMediaReferences(rendered).trim(),
+    mediaUrls: await mediaUrlsFor(rendered, runContext),
+  };
 }
 
 function rawInstructionFor(node: WorkflowNode): string {
@@ -64,34 +65,20 @@ function promptConfigFor(node: WorkflowNode) {
   return node.config;
 }
 
-function contextFor(outputs: ParentNodeOutput[], context: string): string {
-  const values = outputs
-    .filter((output) => output.value.type !== "media")
-    .map((output) => valueTextFor(output.value))
-    .filter((value) => value.length > 0);
-  return [context, ...values].filter((value) => value.length > 0).join("\n\n");
-}
-
 async function mediaUrlsFor(
-  outputs: ParentNodeOutput[],
+  template: string,
   runContext: TaskRunContext,
 ): Promise<string[]> {
-  return Promise.all(outputs.flatMap((output) => {
-    if (output.value.type !== "media") return [];
-    return [mediaDataUrlFor(
-      output.value.value,
+  return Promise.all(runContext.templateExpressionResolver
+    .resolveMediaReferences(template)
+    .map((reference) => mediaDataUrlFor(
+      reference,
       runContext.teamId,
       runContext.fileContentReader,
-    )];
-  }));
+    )));
 }
 
-function valueTextFor(value: NodeOutputValue): string {
-  if (value.type === "string" || value.type === "datetime") return value.value;
-  if (value.type === "number" || value.type === "boolean") return String(value.value);
-  if (value.type === "json") return JSON.stringify(value.value);
-  return `Datei: ${value.value.displayName}`;
-}
+type ResolvedPromptInstruction = {text: string; mediaUrls: string[]};
 
 function promptTextFor(
   input: PromptNodeInput,

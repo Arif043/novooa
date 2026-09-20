@@ -31,8 +31,8 @@ export function createGenkitPromptNodeExecutor(
 ): NodeExecutor {
   return {
     primitive: "prompt",
-    async execute(node, runContext, parentOutputs) {
-      const promptInput = await promptInputFor(node, runContext, parentOutputs);
+    async execute(node, runContext) {
+      const promptInput = await promptInputFor(node, runContext);
       const languageModel = await languageModelFor(
         promptInput.languageModelId,
         runContext.teamId,

@@ -34,6 +34,14 @@ export class TemplateExpressionResolver {
     return match === null ? this.resolveText(template) : this.valueAt(match[1]);
   }
 
+  resolveTextWithoutMediaReferences(template: string): string {
+    return template.replace(expressionPattern, (expression, path: string) => {
+      const value = this.valueAt(path);
+      if (isMediaReference(value)) return "";
+      return value === undefined ? expression : textFor(value);
+    });
+  }
+
   resolveMediaReferences(template: string): FileReference[] {
     return Array.from(template.matchAll(expressionPattern))
       .map((match) => this.valueAt(match[1]))

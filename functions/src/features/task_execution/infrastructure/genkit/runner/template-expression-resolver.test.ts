@@ -33,6 +33,7 @@ test("resolves media references without converting them to text", () => {
 
   assert.deepEqual(resolver.resolveMediaReferences("Prüfe {{beleg.value}}."), [media]);
   assert.equal(resolver.resolveText("{{beleg.value}}").includes("file-1"), true);
+  assert.equal(resolver.resolveTextWithoutMediaReferences("Prüfe {{beleg.value}}."), "Prüfe .");
 });
 
 function resolverFor(scope: WorkflowExecutionScope): TemplateExpressionResolver {

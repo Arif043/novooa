@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {createGenkitPromptNodeExecutor} from "./genkit-prompt-executor.js";
 
-test("provides a direct media value as a Genkit media part", async () => {
+test("provides a media template value as a Genkit media part", async () => {
   const prompts: unknown[] = [];
   await createGenkitPromptNodeExecutor(fakeAi(prompts)).execute(
     executorInput().node,
     runContext() as never,
-    executorInput().parentOutputs,
+    [],
   );
   assert.deepEqual(prompts, [[
     {text: "Kannst du das Bild sehen?"},
@@ -19,7 +19,7 @@ test("persists a generated image as a media value", async () => {
   const output = await createGenkitPromptNodeExecutor(imageAi()).execute(
     imageExecutorInput().node,
     imageRunContext() as never,
-    imageExecutorInput().parentOutputs,
+    [],
   );
   assert.deepEqual(output.outputs.value, {
     type: "media",
@@ -56,7 +56,7 @@ test("uses the selected team language model for a text prompt", async () => {
   ).execute({
       ...executorInput().node,
       config: {...promptConfig(), languageModelId: "model-1"},
-  }, runContext() as never, executorInput().parentOutputs);
+  }, runContext() as never, []);
 
   assert.equal(output.outputs.value?.value, "Aus dem Teammodell.");
   assert.deepEqual(models, ["team-model"]);
@@ -77,7 +77,7 @@ test("rejects a selected model that cannot receive the supplied image", async ()
     ).execute({
         ...executorInput().node,
         config: {...promptConfig(), languageModelId: "model-1"},
-    }, runContext() as never, executorInput().parentOutputs),
+    }, runContext() as never, []),
     /keine Bildeingaben/,
   );
 });
@@ -93,14 +93,13 @@ function executorInput() {
       referenceName: "bildPruefen",
       config: promptConfig(),
     },
-    parentOutputs: [mediaParentOutput()],
   };
 }
 
 function promptConfig() {
   return {
     primitive: "prompt" as const,
-    instruction: "Kannst du das Bild sehen?",
+    instruction: "Kannst du das Bild sehen? {{bild.value}}",
     outputType: "text" as const,
     choices: [],
     structuredFields: [],
@@ -116,31 +115,27 @@ function imageExecutorInput() {
   return {
     context: "",
     node: {...executorInput().node, id: "prompt-2", config: {...promptConfig(), outputType: "image" as const}},
-    parentOutputs: [],
   };
 }
 
-function mediaParentOutput() {
+function mediaReference() {
   return {
-    nodeId: "media-1",
-    outputName: "value",
-    value: {
-      type: "media" as const,
-      value: {
-        fileId: "file-1",
-        versionId: "version-1",
-        displayName: "bild.png",
-        contentType: "image/png",
-        sizeBytes: 8,
-      },
-    },
+    fileId: "file-1",
+    versionId: "version-1",
+    displayName: "bild.png",
+    contentType: "image/png",
+    sizeBytes: 8,
   };
 }
 
 function runContext() {
   return {
     context: "",
-    templateExpressionResolver: {resolveText: (value: string) => value},
+    templateExpressionResolver: {
+      resolveText: (value: string) => value,
+      resolveTextWithoutMediaReferences: (value: string) => value.replace("{{bild.value}}", ""),
+      resolveMediaReferences: () => [mediaReference()],
+    },
     teamId: "team-1",
     fileContentReader: {
       async readTeamFileContent() {
