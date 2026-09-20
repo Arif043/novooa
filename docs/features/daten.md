@@ -77,6 +77,15 @@ Die Unterseite **Datenbank** ist ausschließlich in der lokalen Variante als eig
 
 Nach dem Öffnen einer Sammlung zeigt die Runtime ihre Datensätze tabellarisch. Die Suche durchsucht alle skalaren Feldwerte; strukturierte Filter werden mit Feld, Vergleich und Wert an die Runtime gesendet. Datensätze lassen sich anlegen, bearbeiten und löschen. Die technische Datensatz-ID bleibt dabei ein internes Detail des Repositories und erscheint nicht in der Oberfläche. Werte werden beim Bearbeiten automatisch als Zahl oder Boolean erkannt, alle übrigen Eingaben bleiben Text. Verschachtelte Werte können im Editor als gültiges JSON bearbeitet werden.
 
+Die Oberfläche folgt „Luminous Precision“ und stellt Sammlungen als
+Excel-artige Arbeitsblätter dar: Spaltenbuchstaben, Zeilennummern, Zellraster,
+eine feste Kopfzeile und horizontaler Bildlauf für breite Datensätze.
+Sammlungsreiter wechseln das aktive Arbeitsblatt. Zeilen öffnen weiterhin den
+bestehenden Editor; direkte Zellbearbeitung oder zusätzliche Excel-Funktionen
+werden nicht eingeführt. Filter und Editor brechen bei schmalen Fenstern bzw.
+großer Schrift untereinander um. Die Tabellenzeilen werden beim Scrollen
+bedarfsgerecht aufgebaut.
+
 Die lokale HTTP-API stellt dafür folgende fachliche Endpunkte bereit:
 
 - GET /v1/data/collections

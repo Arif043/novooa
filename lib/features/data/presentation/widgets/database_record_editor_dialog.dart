@@ -103,10 +103,11 @@ class _DatabaseRecordEditorDialogState
     try {
       for (final field in _fields) {
         final name = field.name.text.trim();
-        if (!_isFieldName(name))
+        if (!_isFieldName(name)) {
           throw const FormatException(
             'Feldnamen beginnen mit einem Buchstaben oder Unterstrich.',
           );
+        }
         if (entries.containsKey(name)) {
           throw const FormatException(
             'Jeder Feldname darf nur einmal vorkommen.',
@@ -160,30 +161,46 @@ class _EditableRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: field.name,
-              decoration: const InputDecoration(labelText: 'Feld'),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: TextField(
-              controller: field.value,
-              maxLines: field.isJson ? 3 : 1,
-              decoration: InputDecoration(
-                labelText: field.isJson ? 'JSON-Wert' : 'Wert',
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final count = 2;
+          final wide =
+              constraints.maxWidth > 440 &&
+              MediaQuery.textScalerOf(context).scale(14) < 22;
+          final fieldWidth = wide
+              ? (constraints.maxWidth - 64) / count
+              : constraints.maxWidth;
+          return Wrap(
+            spacing: 8,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SizedBox(
+                width: fieldWidth,
+                child: TextField(
+                  controller: field.name,
+                  decoration: const InputDecoration(labelText: 'Feld'),
+                ),
               ),
-            ),
-          ),
-          IconButton(
-            tooltip: 'Feld entfernen',
-            onPressed: canRemove ? onRemove : null,
-            icon: const Icon(Icons.remove_circle_outline),
-          ),
-        ],
+
+              SizedBox(
+                width: fieldWidth,
+                child: TextField(
+                  controller: field.value,
+                  maxLines: field.isJson ? 3 : 1,
+                  decoration: InputDecoration(
+                    labelText: field.isJson ? 'JSON-Wert' : 'Wert',
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Feld entfernen',
+                onPressed: canRemove ? onRemove : null,
+                icon: const Icon(Icons.remove_circle_outline),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

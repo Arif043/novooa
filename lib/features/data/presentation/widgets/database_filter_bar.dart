@@ -15,13 +15,14 @@ class DatabaseFilterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        TextField(
+        TextFormField(
           key: ValueKey(state.collection!.name),
+          initialValue: state.search,
           decoration: const InputDecoration(
             labelText: 'Suchen',
             prefixIcon: Icon(Icons.search),
           ),
-          onSubmitted: context.read<DatabaseCubit>().search,
+          onFieldSubmitted: context.read<DatabaseCubit>().search,
         ),
         const SizedBox(height: AppSpacing.sm),
         Align(
@@ -51,57 +52,78 @@ class _FilterRow extends StatelessWidget {
     final cubit = context.read<DatabaseCubit>();
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.xs),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextFormField(
-              key: ValueKey('filter-field-$index-${filter.field}'),
-              initialValue: filter.field,
-              decoration: const InputDecoration(labelText: 'Feld'),
-              onFieldSubmitted: (value) => cubit.changeFilter(
-                index,
-                filter.copyWith(field: value.trim()),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final count = 3;
+          final wide =
+              constraints.maxWidth > 700 &&
+              MediaQuery.textScalerOf(context).scale(14) < 22;
+          final fieldWidth = wide
+              ? (constraints.maxWidth - 64) / count
+              : constraints.maxWidth;
+          return Wrap(
+            spacing: 8,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SizedBox(
+                width: fieldWidth,
+                child: TextFormField(
+                  key: ValueKey('filter-field-$index-${filter.field}'),
+                  initialValue: filter.field,
+                  decoration: const InputDecoration(labelText: 'Feld'),
+                  onFieldSubmitted: (value) => cubit.changeFilter(
+                    index,
+                    filter.copyWith(field: value.trim()),
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: DropdownButtonFormField<DataFilterOperator>(
-              initialValue: filter.operator,
-              decoration: const InputDecoration(labelText: 'Vergleich'),
-              items: DataFilterOperator.values
-                  .map((operator) {
-                    return DropdownMenuItem(
-                      value: operator,
-                      child: Text(operator.label),
-                    );
-                  })
-                  .toList(growable: false),
-              onChanged: (value) {
-                if (value != null) {
-                  cubit.changeFilter(index, filter.copyWith(operator: value));
-                }
-              },
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: TextFormField(
-              key: ValueKey('filter-value-$index-${filter.value}'),
-              initialValue: '${filter.value}',
-              decoration: const InputDecoration(labelText: 'Wert'),
-              onFieldSubmitted: (value) => cubit.changeFilter(
-                index,
-                filter.copyWith(value: _valueFrom(value)),
+
+              SizedBox(
+                width: fieldWidth,
+                child: DropdownButtonFormField<DataFilterOperator>(
+                  initialValue: filter.operator,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Vergleich'),
+                  items: DataFilterOperator.values
+                      .map((operator) {
+                        return DropdownMenuItem(
+                          value: operator,
+                          child: Text(operator.label),
+                        );
+                      })
+                      .toList(growable: false),
+                  onChanged: (value) {
+                    if (value != null) {
+                      cubit.changeFilter(
+                        index,
+                        filter.copyWith(operator: value),
+                      );
+                    }
+                  },
+                ),
               ),
-            ),
-          ),
-          IconButton(
-            tooltip: 'Filter entfernen',
-            onPressed: () => cubit.removeFilter(index),
-            icon: const Icon(Icons.close),
-          ),
-        ],
+
+              SizedBox(
+                width: fieldWidth,
+                child: TextFormField(
+                  key: ValueKey('filter-value-$index-${filter.value}'),
+                  initialValue: '${filter.value}',
+                  decoration: const InputDecoration(labelText: 'Wert'),
+                  onFieldSubmitted: (value) => cubit.changeFilter(
+                    index,
+                    filter.copyWith(value: _valueFrom(value)),
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Filter entfernen',
+                onPressed: () => cubit.removeFilter(index),
+                icon: const Icon(Icons.close),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
