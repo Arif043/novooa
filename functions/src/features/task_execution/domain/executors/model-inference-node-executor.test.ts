@@ -19,7 +19,7 @@ test("maps the manifest-defined workflow output", async () => {
           },
         ],
       },
-  } as never, runContext() as never, []);
+  } as never, runContext() as never);
 
   assert.deepEqual(result.outputs.scores, {type: "json", value: [1, 2]});
 });

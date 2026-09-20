@@ -36,6 +36,18 @@ class HumanApprovalWidget extends StatelessWidget {
               (config) => config.copyWith(instruction: value),
             ),
           ),
+          const SizedBox(height: AppSpacing.sm),
+          TextFormField(
+            initialValue: _config.reviewTemplate,
+            decoration: const InputDecoration(
+              labelText: 'Zu prüfender Wert',
+              hintText: '{{baustein.value}}',
+            ),
+            onChanged: (value) => _update(
+              context,
+              (config) => config.copyWith(reviewTemplate: value),
+            ),
+          ),
         ],
       ),
     );

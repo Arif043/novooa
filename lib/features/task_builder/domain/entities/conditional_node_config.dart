@@ -24,9 +24,13 @@ class ConditionalBranch extends Equatable {
 }
 
 class ConditionalNodeConfig extends NodeConfig {
-  const ConditionalNodeConfig({required this.branches});
+  const ConditionalNodeConfig({
+    required this.branches,
+    this.valueTemplate = '',
+  });
 
   final List<ConditionalBranch> branches;
+  final String valueTemplate;
 
   List<String> get choices {
     return branches.map((branch) => branch.label).toList(growable: false);
@@ -53,18 +57,23 @@ class ConditionalNodeConfig extends NodeConfig {
   WorkflowPrimitive get primitive => .conditional;
 
   @override
-  List<Object?> get props => [branches];
+  List<Object?> get props => [branches, valueTemplate];
 
   ConditionalNodeConfig copyWith({
     List<ConditionalBranch>? branches,
     List<String>? choices,
+    String? valueTemplate,
   }) {
     if (choices != null) return updateBranchLabels(choices);
-    return ConditionalNodeConfig(branches: branches ?? this.branches);
+    return ConditionalNodeConfig(
+      branches: branches ?? this.branches,
+      valueTemplate: valueTemplate ?? this.valueTemplate,
+    );
   }
 
   ConditionalNodeConfig updateBranchLabels(List<String> labels) {
     return ConditionalNodeConfig(
+      valueTemplate: valueTemplate,
       branches: [
         for (var index = 0; index < labels.length; index++)
           _branchFor(index, labels[index]),

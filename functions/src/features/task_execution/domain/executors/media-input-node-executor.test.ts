@@ -14,7 +14,7 @@ test("pauses a run and preserves the media interaction", async () => {
     templateExpressionResolver: {
       resolveText: (value: string) => value.replace("{{object}}", "Beleg"),
     },
-  } as never, []);
+  } as never);
 
   assert.equal(result.status, "waitingForApproval");
   assert.deepEqual(result.interaction, {

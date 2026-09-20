@@ -77,6 +77,7 @@ export type StringInputNodeConfig = {
 export type ScriptNodeConfig = {
   primitive: "script";
   script: string;
+  inputTemplate?: string;
   attachments: NodeAttachment[];
 };
 export type PromptNodeConfig = {
@@ -118,11 +119,13 @@ export type ConditionalBranch = {
 };
 export type ConditionalNodeConfig = {
   primitive: "conditionalFlow";
+  valueTemplate?: string;
   choices: string[];
   branches: ConditionalBranch[];
 };
 export type IterativeRefinementNodeConfig = {
   primitive: "iterativeRefinement";
+  draftTemplate?: string;
   optimizerPrompt: string;
   critiquePrompt: string;
   maxIterations: number;
@@ -132,6 +135,7 @@ export type IterativeRefinementNodeConfig = {
 export type HumanApprovalNodeConfig = {
   primitive: "humanApproval";
   instruction: string;
+  reviewTemplate?: string;
 };
 export type DialogInputNodeConfig = DialogInputDefinition & {
   primitive: "dialogInput";
@@ -159,11 +163,13 @@ export type ModelInferenceOutputParameter = {
 };
 export type ForEachNodeConfig = {
   primitive: "forEach";
+  itemsTemplate?: string;
   itemsPointer: string;
   graph: BranchWorkflowGraph;
 };
 export type WriteFileNodeConfig = {
   primitive: "writeFile";
+  contentTemplate?: string;
   fileName: string;
   contentType: string;
   fileId?: string;

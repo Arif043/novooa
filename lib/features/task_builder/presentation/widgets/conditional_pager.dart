@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/branch_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
 class ConditionalPager extends StatefulWidget {
   const ConditionalPager({super.key, required this.node});
@@ -47,6 +49,9 @@ class _ConditionalPagerState extends State<ConditionalPager> {
   Widget _conditionalPage(_ConditionalPage page) {
     return ConditionalWidget(
       nodeConfig: page.config,
+      onValueTemplateChanged: (value) => context
+          .read<TaskBuilderCubit>()
+          .updateConditionalValue(page.conditionalNodeId, value),
       onBranchSelected: (branch) {
         setState(() => _pages.add(page.withBranch(branch)));
       },

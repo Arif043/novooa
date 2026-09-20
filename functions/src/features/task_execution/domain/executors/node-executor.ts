@@ -30,10 +30,7 @@ export type WorkflowExecutionScope = {
   };
 };
 
-export type WorkflowGraphInput = {
-  initialValue?: NodeOutputValue;
-  scope?: WorkflowExecutionScope;
-};
+export type WorkflowGraphInput = {scope?: WorkflowExecutionScope};
 
 export type WorkflowGraphRunner = (
   graph: WorkflowGraph,
@@ -59,18 +56,11 @@ export type TaskRunContext = {
   modelInference: ModelInference;
 };
 
-export type ParentNodeOutput = {
-  nodeId: string;
-  outputName: string;
-  value: NodeOutputValue;
-};
-
 export type NodeExecutor = {
   primitive: WorkflowNode["primitive"];
   execute(
     node: WorkflowNode,
     runContext: TaskRunContext,
-    parentOutputs: ParentNodeOutput[],
   ): Promise<NodeExecutionResult>;
 };
 
@@ -123,18 +113,6 @@ export function waitingForInteractionNode(
   };
 }
 
-export function parentOutputsFor(
-  node: WorkflowNode,
-  graph: WorkflowGraph,
-  results: Map<string, NodeExecutionResult>,
-): ParentNodeOutput[] {
-  return parentResultsFor(node, graph, results).flatMap((parent) => {
-    const value = primaryOutputFromResult(parent.result);
-    if (value === undefined) return [];
-    return [{nodeId: parent.result.nodeId, outputName: "value", value}];
-  });
-}
-
 export function stringOutput(value: string): NodeOutputValue {
   return {type: "string", value};
 }
@@ -152,20 +130,6 @@ export function textOutputs(text: string): Record<string, NodeOutputValue> {
 export function textOutputFromResult(result: NodeExecutionResult): string {
   const value = primaryOutputFromResult(result);
   return value === undefined ? "" : textForOutputValue(value);
-}
-
-export function textForParentOutputs(outputs: ParentNodeOutput[]): string {
-  return outputs
-    .map((output) => textForOutputValue(output.value))
-    .filter((value) => value.trim().length > 0)
-    .join("\n\n");
-}
-
-export function singleParentOutput(
-  outputs: ParentNodeOutput[],
-): NodeOutputValue | undefined {
-  if (outputs.length <= 1) return outputs[0]?.value;
-  throw new Error("Dieser Baustein erwartet genau eine Eingabe.");
 }
 
 function primaryOutputFromResult(

@@ -18,18 +18,19 @@ test("resolves workflow values and delegates execution through the script port",
       title: "Script",
       description: "",
       referenceName: "script",
-      config: {primitive: "script", script: "output = '{{name}}'", attachments: []},
+      config: {
+        primitive: "script",
+        script: "output = '{{name}}'",
+        inputTemplate: "Hallo {{name}}",
+        attachments: [],
+      },
   } as never, {
     variables: {},
     context: "",
     templateExpressionResolver: {
       resolveText: (value: string) => value.replace(/\{\{name\}\}/g, "Mila"),
     },
-  } as never, [{
-      nodeId: "input-1",
-      outputName: "value",
-      value: {type: "string", value: "Hallo {{name}}"},
-  }]);
+  } as never);
 
   assert.deepEqual(requests, [{
     input: "Hallo Mila",

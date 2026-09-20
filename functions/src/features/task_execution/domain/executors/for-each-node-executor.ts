@@ -2,16 +2,17 @@ import {executeForEach} from "./for-each-executor.js";
 import {
   type NodeExecutor,
   executedNode,
-  singleParentOutput,
 } from "./node-executor.js";
 
 export const forEachNodeExecutor: NodeExecutor = {
   primitive: "forEach",
-  async execute(node, runContext, parentOutputs) {
+  async execute(node, runContext) {
     const config = configFor(node);
     const results = await executeForEach({
       config,
-      inputValue: singleParentOutput(parentOutputs),
+      items: runContext.templateExpressionResolver.resolveValue(
+        config.itemsTemplate ?? "",
+      ),
       runGraph: (graph, graphInput) => runContext.runGraph(
         graph,
         runContext.context,

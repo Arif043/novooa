@@ -8,6 +8,7 @@ class IterativeRefinementNodeConfig extends NodeConfig
     required this.optimizerPrompt,
     required this.critiquePrompt,
     required this.maxIterations,
+    this.draftTemplate = '',
     this.skillAttachments = const [],
     this.employee,
   });
@@ -15,6 +16,7 @@ class IterativeRefinementNodeConfig extends NodeConfig
   final String optimizerPrompt;
   final String critiquePrompt;
   final int maxIterations;
+  final String draftTemplate;
   @override
   final List<SkillAttachment> skillAttachments;
   @override
@@ -38,6 +40,7 @@ class IterativeRefinementNodeConfig extends NodeConfig
     optimizerPrompt,
     critiquePrompt,
     maxIterations,
+    draftTemplate,
     skillAttachments,
     employee,
   ];
@@ -46,6 +49,7 @@ class IterativeRefinementNodeConfig extends NodeConfig
     String? optimizerPrompt,
     String? critiquePrompt,
     int? maxIterations,
+    String? draftTemplate,
     List<SkillAttachment>? skillAttachments,
     EmployeeAttachment? employee,
     bool clearEmployee = false,
@@ -54,6 +58,7 @@ class IterativeRefinementNodeConfig extends NodeConfig
       optimizerPrompt: optimizerPrompt ?? this.optimizerPrompt,
       critiquePrompt: critiquePrompt ?? this.critiquePrompt,
       maxIterations: maxIterations ?? this.maxIterations,
+      draftTemplate: draftTemplate ?? this.draftTemplate,
       skillAttachments: skillAttachments ?? this.skillAttachments,
       employee: clearEmployee ? null : employee ?? this.employee,
     );

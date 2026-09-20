@@ -1,8 +1,5 @@
 import { type GenkitBeta } from "genkit/beta";
-import {
-  type ParentNodeOutput,
-  type WorkflowExecutionScope,
-} from "../../../domain/executors/node-executor.js";
+import {type WorkflowExecutionScope} from "../../../domain/executors/node-executor.js";
 import {
   type NodeOutputValue,
   type TaskGraphInput,
@@ -27,7 +24,6 @@ import {
   skipInactiveBranches,
   validateGraph,
 } from "../../../domain/services/task-graph-utils.js";
-import {parentOutputsFor} from "../../../domain/executors/node-executor.js";
 import {formatTaskFinished, formatTaskStarted} from "./structured-logger.js";
 import {
   logNodeHeaderLine,
@@ -85,7 +81,6 @@ async function runNodes(
   input: TaskGraphInput,
   runtime: TaskGraphRuntime,
   initialState?: InitialNodeRunState,
-  initialParentOutputs: readonly ParentNodeOutput[] = [],
   scope: WorkflowExecutionScope = {},
   graph: WorkflowGraph = input.taskDefinition,
 ): Promise<NodeRunState> {
@@ -103,15 +98,6 @@ async function runNodes(
     if (index === -1) throw new Error("Task graph contains a cycle.");
     const node = remaining.splice(index, 1)[0];
     const context = contextFor(variables);
-    const parentOutputs = parentOutputsFor(
-      node,
-      graph,
-      results,
-    );
-    const effectiveParentOutputs = parentOutputs.length === 0
-      && graph.edges.every((edge) => edge.to !== node.id)
-      ? [...initialParentOutputs]
-      : parentOutputs;
     const skipNode = shouldSkipNode(
       node,
       graph,
@@ -123,7 +109,6 @@ async function runNodes(
     const result = await runNodeWithTrail(ai, {
       node,
       context,
-      parentOutputs: effectiveParentOutputs,
       runContext: createTaskRunContext({
         input,
         context,
@@ -143,11 +128,6 @@ async function runNodes(
               remainingNodeIds: embeddedGraph.nodes.map((item) => item.id),
               skippedNodeIds: [],
             },
-            graphInput.initialValue === undefined ? [] : [{
-              nodeId: "$iteration",
-              outputName: "value",
-              value: graphInput.initialValue,
-            }],
             embeddedScope,
             embeddedGraph,
           );

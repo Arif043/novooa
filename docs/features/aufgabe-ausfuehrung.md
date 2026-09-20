@@ -45,8 +45,9 @@ Resultat und Domain-Ports.
 Ein `NodeExecutionResult` enthaelt `nodeId`, `primitive`, `status` und
 benannte `outputs`. Der primäre Output heisst `value` und ist typisiert.
 Kanten bestimmen ausschliesslich Reihenfolge und Verzweigungen. Ein Knoten
-erhält die typisierten `value`-Outputs seiner direkten Vorgänger. Benannte Werte sind ueber den Referenznamen eines Knotens
-in Templates erreichbar, zum Beispiel:
+erhält keine Werte seiner direkten Vorgänger. Benannte Werte werden
+ausschliesslich über einen expliziten Template-Ausdruck und den Referenznamen
+eines Knotens eingebunden, zum Beispiel:
 
 ```text
 {{email.sender}}
@@ -55,13 +56,14 @@ in Templates erreichbar, zum Beispiel:
 ```
 
 Kanten regeln ausschließlich Reihenfolge und Abhängigkeiten. Der Baustein
-`forEach` löst seinen `itemsPointer` gegen den JSON-`value` auf, führt seinen
+`forEach` löst zuerst sein `itemsTemplate` auf und wendet anschließend seinen
+`itemsPointer` auf den resultierenden JSON-Wert an. Er führt seinen
 eingebetteten Graphen seriell aus und gibt dessen benannte Ergebnisse als JSON-Array
 zurück. Eingebettete Graphen dürfen in Version 1 weder pausierende Bausteine noch ein
 weiteres `forEach` enthalten. Diese Regeln und die RFC-6901-JSON-Pointer-
 Auswertung liegen in der Domain; der Graph-Runner führt Root-Graph, Bedingungszweig und eingebetteten Graphen über dieselbe Topologie aus. Ein leerer
-Pointer bedeutet den vollständigen Vorgängerwert und ist die Voreinstellung für
-direkte Array-Ausgaben.
+Pointer bedeutet den vollständigen Wert. Innerhalb jeder Iteration stehen nur
+`{{iteration.value}}` und `{{iteration.index}}` im Iterations-Scope bereit.
 
 `documentLookup` fragt genau einen Datensatz über eine Sammlung und sichere
 Feldbedingungen ab. Sein primärer Wert ist immer ein für den bestehenden

@@ -42,11 +42,11 @@ referenzieren.
 | Enum-Wert | UI-Label | Beschreibung | Status |
 | --- | --- | --- | --- |
 | `stringInput` | Texteingabe | Gibt festen Text weiter | Implementiert |
-| `script` | Script | Fuehrt Python mit Vorgaengeroutput aus | Implementiert |
+| `script` | Script | Fuehrt Python mit einer explizit konfigurierten Eingabe aus | Implementiert |
 | `prompt` | Prompt | LLM-Aufruf mit Vorlage und Variablen | Implementiert |
 | `conditionalFlow` | Bedingter Ablauf | Verzweigt anhand eines Labels | Implementiert |
 | `iterativeRefinement` | Iterative Verfeinerung | Bewertet und verbessert einen Entwurf | Implementiert |
-| `writeFile` | Datei schreiben | Schreibt den Vorgaengeroutput als Datei | Implementiert |
+| `writeFile` | Datei schreiben | Schreibt einen explizit konfigurierten Wert als Datei | Implementiert |
 | `readFile` | Datei lesen | Liest eine konkrete Datei-Version | Implementiert |
 | `readEmail` | E-Mail lesen | Liest Absender, Betreff und Inhalt eines Events | Microsoft Graph implementiert |
 | `readChannelEvent` | Nachricht lesen | Liest E-Mail-, WhatsApp- oder SMS-Events | Implementiert |
@@ -54,7 +54,7 @@ referenzieren.
 | `humanApproval` | Freigabe | Haltet den Run bis zur menschlichen Entscheidung an | Implementiert |
 | `dialogInput` | Formulareingabe | Pausiert den Run und fragt typisierte Eingaben per Formular ab | Implementiert |
 | `mediaInput` | Bild anfordern | Pausiert den Run und fordert ein Bild an; Quelle wird während der Ausführung gewählt | Implementiert |
-| `modelInference` | Modell ausführen | Prüft Vorgängerwerte gegen das Manifest und führt ein ONNX-Modell aus | Backend-Pipeline implementiert; Runtime-Composition ausstehend |
+| `modelInference` | Modell ausführen | Prüft explizite Workflow-Zuordnungen gegen das Manifest und führt ein ONNX-Modell aus | Backend-Pipeline implementiert; Runtime-Composition ausstehend |
 | `forEach` | Für jedes Element | Führt einen eingebetteten Arbeitsplan seriell für jedes Element eines JSON-Arrays aus | Implementiert |
 | `documentLookup` | Datensatz suchen | Findet genau einen Datensatz über sichtbare Feldbedingungen | Lokale Runtime implementiert |
 | `saveDocument` | Datensatz speichern | Legt ohne Bedingungen einen neuen Datensatz an; mit Feldbedingungen aktualisiert er alle Treffer oder legt bei keinem Treffer einen neuen an | Lokale Runtime implementiert |

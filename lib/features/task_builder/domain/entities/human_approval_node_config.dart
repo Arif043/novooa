@@ -1,9 +1,13 @@
 part of 'node_config.dart';
 
 class HumanApprovalNodeConfig extends NodeConfig {
-  const HumanApprovalNodeConfig({required this.instruction});
+  const HumanApprovalNodeConfig({
+    required this.instruction,
+    this.reviewTemplate = '',
+  });
 
   final String instruction;
+  final String reviewTemplate;
 
   factory HumanApprovalNodeConfig.initial() {
     return const HumanApprovalNodeConfig(
@@ -16,12 +20,16 @@ class HumanApprovalNodeConfig extends NodeConfig {
 
   @override
   List<Object?> get props {
-    return [instruction];
+    return [instruction, reviewTemplate];
   }
 
-  HumanApprovalNodeConfig copyWith({String? instruction}) {
+  HumanApprovalNodeConfig copyWith({
+    String? instruction,
+    String? reviewTemplate,
+  }) {
     return HumanApprovalNodeConfig(
       instruction: instruction ?? this.instruction,
+      reviewTemplate: reviewTemplate ?? this.reviewTemplate,
     );
   }
 }

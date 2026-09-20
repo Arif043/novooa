@@ -1,6 +1,17 @@
 part of 'task_builder_cubit.dart';
 
 extension TaskBuilderForEachMutations on TaskBuilderCubit {
+  Future<void> updateForEachItems(NodeId nodeId, String itemsTemplate) {
+    return _updateNode(nodeId, (node) {
+      if (node.config case ForEachNodeConfig config) {
+        return node.copyWith(
+          config: config.copyWith(itemsTemplate: itemsTemplate),
+        );
+      }
+      return node;
+    });
+  }
+
   Future<void> addNodeToForEachGraph({
     required NodeId forEachNodeId,
     required WorkflowPrimitive primitive,

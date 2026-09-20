@@ -8,7 +8,6 @@ import {modelLogContext, reasoningModel} from "../runner/ai-models.js";
 import {
   type NodeExecutor,
   executedNode,
-  textForParentOutputs,
   textOutputs,
 } from "../../../domain/executors/node-executor.js";
 import {refinementConfigFor} from "./iterative-refinement-config.js";
@@ -52,10 +51,9 @@ export function createGenkitIterativeRefinementNodeExecutor(
 ): NodeExecutor {
   return {
     primitive: "iterativeRefinement",
-    async execute(node, runContext, parentOutputs) {
+    async execute(node, runContext) {
       const config = refinementConfigFor(node);
-      const parentOutput = textForParentOutputs(parentOutputs);
-      const draft = parentOutput || runContext.context;
+      const draft = config?.draftTemplate ?? "";
       const employee = employeeFor(node);
       const output = await createGenkitIterativeRefinementExecutor(
         ai,

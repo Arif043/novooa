@@ -77,7 +77,7 @@ async function executeSave(
     teamId: "team_1",
     documentStore: store,
     templateExpressionResolver: {resolveValue: (value: string) => value},
-  } as unknown as TaskRunContext, []);
+  } as unknown as TaskRunContext);
 }
 
 async function storeWithCollection(): Promise<InMemoryDocumentStore> {

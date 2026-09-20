@@ -61,6 +61,15 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
         children: [
           Text('Iterative Verfeinerung', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.md),
+          TextFormField(
+            initialValue: _config.draftTemplate,
+            decoration: const InputDecoration(
+              labelText: 'Entwurf',
+              hintText: '{{baustein.value}}',
+            ),
+            onChanged: _updateDraft,
+          ),
+          const SizedBox(height: AppSpacing.md),
           TextField(
             controller: _optimizerController,
             minLines: 2,
@@ -90,7 +99,7 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Verfeinert die Ausgabe des vorherigen Bausteins.',
+            'Verfeinert den angegebenen Entwurf.',
             style: SyscatTheme.taskBodySmall,
           ),
           if (MvpFeatureFlags.skillsEnabled) ...[
@@ -151,6 +160,13 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
 
   void _updateCritique(String value) {
     context.read<TaskBuilderCubit>().updateIterativeCritique(
+      widget.node.id,
+      value,
+    );
+  }
+
+  void _updateDraft(String value) {
+    context.read<TaskBuilderCubit>().updateIterativeDraft(
       widget.node.id,
       value,
     );

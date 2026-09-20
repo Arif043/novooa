@@ -1,7 +1,6 @@
 import {
   type NodeExecutor,
   executedNode,
-  singleParentOutput,
 } from "./node-executor.js";
 import {
   type FileContent,
@@ -21,9 +20,11 @@ import {imageExtensionFor} from "../services/image-content-type.js";
 
 export const writeFileNodeExecutor: NodeExecutor = {
   primitive: "writeFile",
-  async execute(node, runContext, parentOutputs) {
-    const parentOutput = singleParentOutput(parentOutputs);
-    const source = await sourceContentFor(parentOutput, runContext);
+  async execute(node, runContext) {
+    const source = await sourceContentFor(
+      runContext.templateExpressionResolver.resolveValue(contentTemplateFor(node)),
+      runContext,
+    );
     const writeInput = {
       teamId: runContext.teamId,
       content: source.content,
@@ -40,27 +41,36 @@ export const writeFileNodeExecutor: NodeExecutor = {
 };
 
 async function sourceContentFor(
-  output: ReturnType<typeof singleParentOutput>,
+  value: unknown,
   runContext: Parameters<NodeExecutor["execute"]>[1],
 ): Promise<SourceContent> {
-  if (output === undefined) return {content: ""};
-  if (output.type === "media" || output.type === "file") {
+  if (isFileReference(value)) {
     const file = await runContext.fileContentReader.readTeamFileContent(
       runContext.teamId,
-      output.value.fileId,
-      output.value.versionId,
+      value.fileId,
+      value.versionId,
     );
     return {content: file.content, sourceContentType: file.contentType};
   }
-  return {content: runContext.templateExpressionResolver.resolveText(contentFrom(output))};
+  return {content: contentFrom(value)};
 }
 
-function contentFrom(
-  output: Exclude<ReturnType<typeof singleParentOutput>, undefined>,
-): string {
-  if (output.type === "string" || output.type === "datetime") return output.value;
-  if (output.type === "number" || output.type === "boolean") return String(output.value);
-  return JSON.stringify(output.value);
+function contentTemplateFor(node: Parameters<NodeExecutor["execute"]>[0]): string {
+  return node.config.primitive === "writeFile" ? node.config.contentTemplate ?? "" : "";
+}
+
+function contentFrom(value: unknown): string {
+  if (value === undefined || value === null) return "";
+  if (typeof value === "string") return value;
+  return typeof value === "number" || typeof value === "boolean"
+    ? String(value)
+    : JSON.stringify(value);
+}
+
+function isFileReference(value: unknown): value is {fileId: string; versionId: string} {
+  if (typeof value !== "object" || value === null) return false;
+  const reference = value as Record<string, unknown>;
+  return typeof reference.fileId === "string" && typeof reference.versionId === "string";
 }
 
 function mediaWriteInputFor(

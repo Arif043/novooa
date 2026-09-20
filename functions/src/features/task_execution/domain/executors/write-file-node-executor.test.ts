@@ -8,7 +8,6 @@ test("writes a media reference as binary data with its image metadata", async ()
   await writeFileNodeExecutor.execute(
     writeFileNode() as never,
     runContextFor(writtenFiles) as never,
-    [mediaOutput()] as never,
   );
 
   const input = writtenFiles[0];
@@ -26,33 +25,30 @@ function writeFileNode() {
     primitive: "writeFile",
     config: {
       primitive: "writeFile",
+      contentTemplate: "{{bild.value}}",
       fileName: "entwurf.txt",
       contentType: "text/plain",
     },
   };
 }
 
-function mediaOutput() {
+function mediaReference() {
   return {
-    nodeId: "image",
-    outputName: "value",
-    value: {
-      type: "media",
-      value: {
-        fileId: "image-1",
-        versionId: "version-1",
-        displayName: "eingabe.png",
-        contentType: "image/png",
-        sizeBytes: 8,
-      },
-    },
+    fileId: "image-1",
+    versionId: "version-1",
+    displayName: "eingabe.png",
+    contentType: "image/png",
+    sizeBytes: 8,
   };
 }
 
 function runContextFor(writtenFiles: Array<Record<string, unknown>>) {
   return {
     teamId: "team-1",
-    templateExpressionResolver: {resolveText: (value: string) => value},
+    templateExpressionResolver: {
+      resolveText: (value: string) => value,
+      resolveValue: () => mediaReference(),
+    },
     fileContentReader: {
       async readTeamFileContent() {
         return {

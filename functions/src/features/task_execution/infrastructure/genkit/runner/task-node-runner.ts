@@ -7,7 +7,6 @@ import {executorFor} from "./node-executor-registry.js";
 import {
   parentResultsFor,
   skippedNode,
-  type ParentNodeOutput,
   type TaskRunContext,
 } from "../../../domain/executors/node-executor.js";
 import {prepareNodeAttachmentWorkspace} from "./node-attachment-workspace.js";
@@ -27,7 +26,6 @@ import {type ApplicationLogger} from "../../../../../shared/logging/application-
 type NodeRunInput = {
   node: WorkflowNode;
   context: string;
-  parentOutputs: ParentNodeOutput[];
   runContext: TaskRunContext;
   skipNode: boolean;
   startedAt: number;
@@ -108,11 +106,7 @@ async function executeNode(
       input.languageModelResolver,
     );
     if (!executor) return skippedNode(input.node);
-    return await executor.execute(
-      input.node,
-      input.runContext,
-      input.parentOutputs,
-    );
+    return await executor.execute(input.node, input.runContext);
   } finally {
     await attachmentWorkspace?.cleanup();
   }

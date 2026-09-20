@@ -51,6 +51,5 @@ async function execute(input: {
         },
       },
     } as never,
-    [],
   );
 }

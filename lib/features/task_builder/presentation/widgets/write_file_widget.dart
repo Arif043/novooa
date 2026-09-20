@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/write_file_target_dialog.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
 class WriteFileWidget extends StatelessWidget {
   const WriteFileWidget({super.key, required this.node});
@@ -21,6 +23,17 @@ class WriteFileWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Datei schreiben', style: SyscatTheme.taskBody),
+          const SizedBox(height: AppSpacing.sm),
+          TextFormField(
+            initialValue: _config.contentTemplate,
+            decoration: const InputDecoration(
+              labelText: 'Inhalt',
+              hintText: '{{baustein.value}}',
+            ),
+            onChanged: (value) => context
+                .read<TaskBuilderCubit>()
+                .updateWriteFileContent(node.id, value),
+          ),
           const SizedBox(height: AppSpacing.sm),
           _WriteFileTargetTile(
             config: _config,

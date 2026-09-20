@@ -1,6 +1,5 @@
 import {
   type NodeExecutor,
-  textForParentOutputs,
   textOutputs,
   waitingForInteractionNode,
 } from "./node-executor.js";
@@ -9,9 +8,10 @@ import {approvalInteraction} from
 
 export const humanApprovalNodeExecutor: NodeExecutor = {
   primitive: "humanApproval",
-  async execute(node, runContext, parentOutputs) {
-    const output = textForParentOutputs(parentOutputs);
-    const reviewOutput = runContext.templateExpressionResolver.resolveText(output);
+  async execute(node, runContext) {
+    const reviewOutput = runContext.templateExpressionResolver.resolveText(
+      reviewTemplateFor(node.config),
+    );
     return waitingForInteractionNode(
       node,
       textOutputs(reviewOutput),
@@ -25,4 +25,8 @@ function messageFor(config: Parameters<NodeExecutor["execute"]>[0]["config"]) {
     return "Aufgabe wartet auf Freigabe.";
   }
   return config.instruction.trim() || "Aufgabe wartet auf Freigabe.";
+}
+
+function reviewTemplateFor(config: Parameters<NodeExecutor["execute"]>[0]["config"]) {
+  return config.primitive === "humanApproval" ? config.reviewTemplate ?? "" : "";
 }

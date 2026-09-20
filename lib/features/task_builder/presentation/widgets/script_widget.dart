@@ -33,7 +33,11 @@ class _ScriptWidgetState extends State<ScriptWidget> {
   @override
   void initState() {
     super.initState();
-    _controller = CodeController(text: _config.script, language: python, analyzer: PythonAnalyzer());
+    _controller = CodeController(
+      text: _config.script,
+      language: python,
+      analyzer: PythonAnalyzer(),
+    );
   }
 
   @override
@@ -58,9 +62,20 @@ class _ScriptWidgetState extends State<ScriptWidget> {
         children: [
           Text('Script', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),
+          TextFormField(
+            initialValue: _config.inputTemplate,
+            decoration: const InputDecoration(
+              labelText: 'Eingabe',
+              hintText: '{{baustein.value}}',
+            ),
+            onChanged: _updateInput,
+          ),
+          const SizedBox(height: AppSpacing.md),
           CodeTheme(
             data: CodeThemeData(
-              styles: Theme.of(context).brightness == Brightness.dark ? atomOneDarkTheme : atomOneLightTheme,
+              styles: Theme.of(context).brightness == Brightness.dark
+                  ? atomOneDarkTheme
+                  : atomOneLightTheme,
             ),
             child: CodeField(
               controller: _controller,
@@ -74,7 +89,9 @@ class _ScriptWidgetState extends State<ScriptWidget> {
               textStyle: GoogleFonts.jetBrainsMono(),
               gutterStyle: GutterStyle(
                 margin: 0,
-                textStyle: GoogleFonts.jetBrainsMono(color: ColorScheme.of(context).onSecondary),
+                textStyle: GoogleFonts.jetBrainsMono(
+                  color: ColorScheme.of(context).onSecondary,
+                ),
                 showErrors: true,
                 showLineNumbers: true,
                 showFoldingHandles: true,
@@ -84,7 +101,11 @@ class _ScriptWidgetState extends State<ScriptWidget> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          NodeFileAttachmentSection(attachments: _config.attachments, onAttach: _attachFile, onDetach: _detachFile),
+          NodeFileAttachmentSection(
+            attachments: _config.attachments,
+            onAttach: _attachFile,
+            onDetach: _detachFile,
+          ),
         ],
       ),
     );
@@ -102,11 +123,24 @@ class _ScriptWidgetState extends State<ScriptWidget> {
     context.read<TaskBuilderCubit>().updateScript(widget.node.id, script);
   }
 
+  void _updateInput(String inputTemplate) {
+    context.read<TaskBuilderCubit>().updateScriptInput(
+      widget.node.id,
+      inputTemplate,
+    );
+  }
+
   void _attachFile(NodeAttachment attachment) {
-    context.read<TaskBuilderCubit>().attachNodeFile(nodeId: widget.node.id, attachment: attachment);
+    context.read<TaskBuilderCubit>().attachNodeFile(
+      nodeId: widget.node.id,
+      attachment: attachment,
+    );
   }
 
   void _detachFile(String attachmentId) {
-    context.read<TaskBuilderCubit>().detachNodeFile(nodeId: widget.node.id, attachmentId: attachmentId);
+    context.read<TaskBuilderCubit>().detachNodeFile(
+      nodeId: widget.node.id,
+      attachmentId: attachmentId,
+    );
   }
 }

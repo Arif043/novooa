@@ -50,10 +50,9 @@ exponentiellem Backoff wiederholt.
 
 ## Script
 
-Der Script-Executor fuehrt isoliertes Python aus. Der direkte Vorgaengeroutput
-liegt als `input` vor. Setzt das Script eine String-Variable `output`, wird sie
-als Baustein-Ausgabe verwendet. Ohne `output` reicht der Baustein den
-Vorgaengeroutput unveraendert weiter.
+Der Script-Executor fuehrt isoliertes Python aus. Sein `input` wird aus dem
+expliziten Feld `inputTemplate` aufgeloest. Setzt das Script eine String-
+Variable `output`, wird sie als Baustein-Ausgabe verwendet.
 
 ```python
 output = input.upper()
@@ -76,8 +75,8 @@ read_file(display_name)
 
 ## Bedingter Ablauf
 
-Der Conditional-Executor nutzt die lesbaren primären Werte seiner direkten
-Vorgänger als Ziellabel.
+Der Conditional-Executor löst sein explizites `valueTemplate` als Ziellabel
+auf.
 Er waehlt den Branch mit dem exakt passenden Label, ansonsten den ersten
 Branch. Der Branch-Graph wird durch denselben Graph-Runner ausgefuehrt; dessen finale Ausgabe
 wird `text` des Conditional-Knotens. Ausgehende Top-Level-Kanten sind nur ein
@@ -90,7 +89,8 @@ Genkit-Executor loest Templates auf, startet gegebenenfalls den ausgewaehlten ei
 
 Der Refinement-Executor bewertet einen Entwurf in mehreren Runden mit
 `{ critique, satisfied }` und verbessert ihn, bis die Bewertung erfuellt ist
-oder `maxIterations` erreicht wird. Der Draft stammt aus dem Vorgaengeroutput;
+oder `maxIterations` erreicht wird. Der Draft stammt ausschließlich aus
+`draftTemplate`; ist dieses leer, erhält der Baustein einen leeren Entwurf.
 `optimizerPrompt`, `critiquePrompt` und `maxIterations` steuern die Schleife.
 Bei OpenAI-kompatiblen Providern existiert ein Text-JSON-Fallback fuer die
 strukturierte Bewertung.
@@ -109,8 +109,9 @@ Genkit-Registry bindet die Python-Runtime, den temporären Workspace und das
 Protokollieren der Script-Ausgabe.
 
 `forEach` verwendet `executeForEach` aus der Domain. Die Funktion validiert den
-Unterplan, fuehrt die Elemente seriell und fail-fast aus und aggregiert dessen
-primaere Ausgaben. Der JSON-Pointer ist ebenfalls eine Domain-Operation.
+Unterplan, fuehrt die durch `itemsTemplate` und JSON-Pointer bestimmten Elemente
+seriell und fail-fast aus und aggregiert dessen primaere Ausgaben. Der aktuelle
+Wert wird ausschließlich als `iteration`-Scope in den Unterplan injiziert.
 
 `modelInference`, Dateioperationen und das Senden von Nachrichten verwenden
 bereits `ModelInference`, `TeamFileStore` beziehungsweise `TaskMessageSender`

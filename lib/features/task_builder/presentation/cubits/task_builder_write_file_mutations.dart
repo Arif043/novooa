@@ -1,6 +1,13 @@
 part of 'task_builder_cubit.dart';
 
 extension TaskBuilderWriteFileMutations on TaskBuilderCubit {
+  Future<void> updateWriteFileContent(NodeId nodeId, String contentTemplate) {
+    return _updateWriteFileConfig(nodeId, (config) {
+      if (config.contentTemplate == contentTemplate) return config;
+      return config.copyWith(contentTemplate: contentTemplate);
+    });
+  }
+
   Future<void> updateWriteFileName(NodeId nodeId, String fileName) {
     return _updateWriteFileConfig(nodeId, (config) {
       if (config.fileName == fileName) return config;

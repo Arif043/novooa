@@ -58,6 +58,7 @@ export const stringInputNodeConfigSchema = z.object({
 export const scriptNodeConfigSchema = z.object({
   primitive: z.literal("script").default("script"),
   script: z.string().default("output = input"),
+  inputTemplate: z.string().default(""),
   attachments: z.array(nodeAttachmentSchema).default([]),
 });
 
@@ -108,12 +109,14 @@ export const conditionalBranchSchema = z.object({
 
 export const conditionalNodeConfigSchema = z.object({
   primitive: z.literal("conditionalFlow").default("conditionalFlow"),
+  valueTemplate: z.string().default(""),
   choices: z.array(z.string()).default([]),
   branches: z.array(conditionalBranchSchema).default([]),
 });
 
 export const iterativeRefinementNodeConfigSchema = z.object({
   primitive: z.literal("iterativeRefinement").default("iterativeRefinement"),
+  draftTemplate: z.string().default(""),
   optimizerPrompt: z.string().default(""),
   critiquePrompt: z.string().default(""),
   maxIterations: z.number().int().min(1).max(5).default(2),
@@ -124,6 +127,7 @@ export const iterativeRefinementNodeConfigSchema = z.object({
 export const humanApprovalNodeConfigSchema = z.object({
   primitive: z.literal("humanApproval").default("humanApproval"),
   instruction: z.string().default("Prüfe das Ergebnis und gib es frei."),
+  reviewTemplate: z.string().default(""),
 });
 
 export const dialogInputFieldTypeSchema = z.enum([
@@ -178,12 +182,14 @@ export const modelInferenceNodeConfigSchema = z.object({
 
 export const forEachNodeConfigSchema = z.object({
   primitive: z.literal("forEach").default("forEach"),
+  itemsTemplate: z.string().default(""),
   itemsPointer: z.string().default(""),
   graph: branchWorkflowGraphSchema.default({nodes: [], edges: []}),
 });
 
 export const writeFileNodeConfigSchema = z.object({
   primitive: z.literal("writeFile").default("writeFile"),
+  contentTemplate: z.string().default(""),
   fileName: z.string().max(240).default(""),
   contentType: z.string().max(120).default(""),
   fileId: z.string().optional(),

@@ -5,7 +5,6 @@ import {
 import {
   type NodeExecutor,
   executedNode,
-  textForParentOutputs,
   textOutputs,
 } from "./node-executor.js";
 import {type WorkflowNode} from "../entities/task.js";
@@ -39,9 +38,9 @@ export function createConditionalFlowNodeExecutor(
 ): NodeExecutor {
   return {
     primitive: "conditionalFlow",
-    async execute(node, runContext, parentOutputs) {
+    async execute(node, runContext) {
       const targetLabel = runContext.templateExpressionResolver.resolveText(
-        textForParentOutputs(parentOutputs),
+        valueTemplateFor(node),
       );
       const output = executeConditionalFlow({
         node,
@@ -65,6 +64,12 @@ export function createConditionalFlowNodeExecutor(
       });
     },
   };
+}
+
+function valueTemplateFor(node: WorkflowNode): string {
+  return node.config.primitive === "conditionalFlow"
+    ? node.config.valueTemplate ?? ""
+    : "";
 }
 
 async function executeSelectedBranch(

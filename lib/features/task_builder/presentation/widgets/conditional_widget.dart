@@ -8,10 +8,12 @@ class ConditionalWidget extends StatelessWidget {
     super.key,
     required this.nodeConfig,
     required this.onBranchSelected,
+    required this.onValueTemplateChanged,
   });
 
   final ConditionalNodeConfig nodeConfig;
   final ValueChanged<ConditionalBranch> onBranchSelected;
+  final ValueChanged<String> onValueTemplateChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +23,16 @@ class ConditionalWidget extends StatelessWidget {
       child: Column(
         children: [
           Text('Wenn', style: SyscatTheme.taskBody),
+          const SizedBox(height: AppSpacing.sm),
+          TextFormField(
+            initialValue: nodeConfig.valueTemplate,
+            decoration: const InputDecoration(
+              labelText: 'Wert',
+              hintText: '{{baustein.value}}',
+            ),
+            onChanged: onValueTemplateChanged,
+          ),
+          const SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: 8,
             runSpacing: 8,

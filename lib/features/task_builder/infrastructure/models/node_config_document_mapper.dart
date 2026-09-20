@@ -78,6 +78,7 @@ class NodeConfigDocumentMapper {
     return {
       'primitive': config.primitive.name,
       'script': config.script,
+      'inputTemplate': config.inputTemplate,
       'attachments': config.attachments.map(_attachmentToDocument).toList(),
     };
   }
@@ -107,6 +108,7 @@ class NodeConfigDocumentMapper {
   Map<String, Object?> _conditionalToDocument(ConditionalNodeConfig config) {
     return {
       'primitive': config.primitive.name,
+      'valueTemplate': config.valueTemplate,
       'branches': config.branches.map(_branchToDocument).toList(),
     };
   }
@@ -116,6 +118,7 @@ class NodeConfigDocumentMapper {
   ) {
     return {
       'primitive': config.primitive.name,
+      'draftTemplate': config.draftTemplate,
       'optimizerPrompt': config.optimizerPrompt,
       'critiquePrompt': config.critiquePrompt,
       'maxIterations': config.maxIterations,
@@ -131,6 +134,7 @@ class NodeConfigDocumentMapper {
     return {
       'primitive': config.primitive.name,
       'instruction': config.instruction,
+      'reviewTemplate': config.reviewTemplate,
     };
   }
 
@@ -197,6 +201,7 @@ class NodeConfigDocumentMapper {
   Map<String, Object?> _forEachToDocument(ForEachNodeConfig config) {
     return {
       'primitive': config.primitive.name,
+      'itemsTemplate': config.itemsTemplate,
       'itemsPointer': config.itemsPointer,
       'graph': graphToDocument(config.graph),
     };
@@ -205,6 +210,7 @@ class NodeConfigDocumentMapper {
   Map<String, Object?> _writeFileToDocument(WriteFileNodeConfig config) {
     return {
       'primitive': config.primitive.name,
+      'contentTemplate': config.contentTemplate,
       'fileName': config.fileName,
       'contentType': config.contentType,
       if (config.fileId != null) 'fileId': config.fileId,
@@ -271,6 +277,7 @@ class NodeConfigDocumentMapper {
   ScriptNodeConfig _scriptFrom(Map<String, Object?> data) {
     return ScriptNodeConfig(
       script: data['script'] as String? ?? '',
+      inputTemplate: data['inputTemplate'] as String? ?? '',
       attachments: _attachmentsFrom(data['attachments']),
     );
   }
@@ -292,7 +299,10 @@ class NodeConfigDocumentMapper {
   }
 
   ConditionalNodeConfig _conditionalFrom(Map<String, Object?> data) {
-    return ConditionalNodeConfig(branches: _branchesFrom(data['branches']));
+    return ConditionalNodeConfig(
+      branches: _branchesFrom(data['branches']),
+      valueTemplate: data['valueTemplate'] as String? ?? '',
+    );
   }
 
   IterativeRefinementNodeConfig _refinementFrom(Map<String, Object?> data) {
@@ -300,6 +310,7 @@ class NodeConfigDocumentMapper {
       optimizerPrompt: data['optimizerPrompt'] as String? ?? '',
       critiquePrompt: data['critiquePrompt'] as String? ?? '',
       maxIterations: data['maxIterations'] as int? ?? 2,
+      draftTemplate: data['draftTemplate'] as String? ?? '',
       skillAttachments: _skillAttachmentsFrom(data['skillAttachments']),
       employee: _employeeAttachmentFromOrNull(data['employee']),
     );
@@ -308,6 +319,7 @@ class NodeConfigDocumentMapper {
   HumanApprovalNodeConfig _approvalFrom(Map<String, Object?> data) {
     return HumanApprovalNodeConfig(
       instruction: data['instruction'] as String? ?? '',
+      reviewTemplate: data['reviewTemplate'] as String? ?? '',
     );
   }
 
@@ -343,6 +355,7 @@ class NodeConfigDocumentMapper {
   ForEachNodeConfig _forEachFrom(Map<String, Object?> data) {
     return ForEachNodeConfig(
       itemsPointer: data['itemsPointer'] as String? ?? '',
+      itemsTemplate: data['itemsTemplate'] as String? ?? '',
       graph: graphFromDocument(data['graph']),
     );
   }
@@ -402,6 +415,7 @@ class NodeConfigDocumentMapper {
     return WriteFileNodeConfig(
       fileName: data['fileName'] as String? ?? '',
       contentType: data['contentType'] as String? ?? '',
+      contentTemplate: data['contentTemplate'] as String? ?? '',
       fileId: data['fileId'] as String?,
     );
   }

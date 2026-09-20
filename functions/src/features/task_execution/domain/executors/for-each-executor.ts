@@ -1,7 +1,6 @@
 import {
   type ForEachNodeConfig,
   type NodeExecutionResult,
-  type NodeOutputValue,
   type WorkflowGraph,
 } from "../entities/task.js";
 import {valueAtJsonPointer} from "../services/json-pointer.js";
@@ -9,7 +8,7 @@ import {type WorkflowGraphInput} from "./node-executor.js";
 
 export type ForEachExecutionRequest = {
   config: ForEachNodeConfig;
-  inputValue: NodeOutputValue | undefined;
+  items: unknown;
   runGraph: (
     graph: WorkflowGraph,
     input: WorkflowGraphInput,
@@ -19,10 +18,7 @@ export type ForEachExecutionRequest = {
 export async function executeForEach(
   request: ForEachExecutionRequest,
 ): Promise<unknown[]> {
-  if (request.inputValue?.type !== "json") {
-    throw new Error("Für jedes Element benötigt einen JSON-Eingang.");
-  }
-  const items = itemsFor(request.inputValue.value, request.config.itemsPointer);
+  const items = itemsFor(request.items, request.config.itemsPointer);
   validateGraph(request.config.graph.nodes);
   const results: unknown[] = [];
   for (const [index, item] of items.entries()) {
@@ -30,7 +26,6 @@ export async function executeForEach(
       const graphResults = await request.runGraph(
         graphFor(request.config.graph),
         {
-          initialValue: {type: "json", value: item},
           scope: {iteration: {index, value: item}},
         },
       );

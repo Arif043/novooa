@@ -7,9 +7,9 @@ test("executes every item serially and preserves its result order", async () => 
   const values: unknown[] = [];
   const result = await executeForEach({
     config: config(),
-    inputValue: {type: "json", value: {items: ["first", "second"]}},
+    items: {items: ["first", "second"]},
     async runGraph(_task, input) {
-      const value = input.initialValue!.value;
+      const value = input.scope?.iteration?.value;
       values.push(value);
       return [resultFor(`${value}-done`)];
     },
@@ -26,10 +26,10 @@ test("uses the complete predecessor value for an empty pointer", async () => {
   const values: unknown[] = [];
   await executeForEach({
     config: {...config(), itemsPointer: ""},
-    inputValue: {type: "json", value: ["first", "second"]},
+    items: ["first", "second"],
     async runGraph(_task, input) {
-      values.push(input.initialValue!.value);
-      return [resultFor(input.initialValue!.value)];
+      values.push(input.scope?.iteration?.value);
+      return [resultFor(input.scope?.iteration?.value)];
     },
   });
   assert.deepEqual(values, ["first", "second"]);
@@ -40,9 +40,9 @@ test("fails fast and includes the failing item index", async () => {
   await assert.rejects(
     executeForEach({
         config: config(),
-      inputValue: {type: "json", value: {items: ["first", "second", "third"]}},
+      items: {items: ["first", "second", "third"]},
       async runGraph(_task, input) {
-        const value = input.initialValue!.value;
+        const value = input.scope?.iteration?.value;
         calls.push(value);
         if (value === "second") throw new Error("ungültiger Wert");
         return [resultFor(value)];
@@ -58,7 +58,7 @@ test("rejects pausing primitives in the embedded graph", async () => {
   await assert.rejects(
     executeForEach({
         config: invalidConfig,
-      inputValue: {type: "json", value: {items: ["first"]}},
+      items: {items: ["first"]},
       async runGraph() {
         return [];
       },

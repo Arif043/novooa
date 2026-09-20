@@ -25,6 +25,17 @@ class ForEachWidget extends StatelessWidget {
           Text('Für jedes Element', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
           TextFormField(
+            initialValue: config.itemsTemplate,
+            decoration: const InputDecoration(
+              labelText: 'Liste',
+              hintText: '{{erkennung.regions}}',
+            ),
+            onChanged: (value) => context
+                .read<TaskBuilderCubit>()
+                .updateForEachItems(node.id, value),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextFormField(
             initialValue: config.itemsPointer,
             decoration: const InputDecoration(
               labelText: 'Elemente aus',
@@ -36,7 +47,7 @@ class ForEachWidget extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Leer lassen, wenn der vorherige Baustein bereits eine Liste ausgibt.',
+            'Der Pfad wählt innerhalb der angegebenen Liste die Elemente aus.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: AppSpacing.sm),

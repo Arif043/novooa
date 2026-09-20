@@ -20,6 +20,7 @@ void main() {
     expect(document['fileName'], 'bericht.md');
     expect(document['contentType'], 'text/markdown');
     expect(document['fileId'], 'file.1');
+    expect(document['contentTemplate'], '');
   });
 
   test('deserialisiert WriteFileNodeConfig', () {
@@ -35,7 +36,48 @@ void main() {
     expect(writeFileConfig.fileName, 'bericht.md');
     expect(writeFileConfig.contentType, 'text/markdown');
     expect(writeFileConfig.fileId, 'file.1');
+    expect(writeFileConfig.contentTemplate, '');
   });
+
+  test(
+    'bewahrt explizite Eingabe-Templates aller konsumierenden Bausteine',
+    () {
+      final mapper = _mapper();
+      final configs = <NodeConfig>[
+        const ScriptNodeConfig(
+          script: 'output = input',
+          inputTemplate: '{{text.value}}',
+        ),
+        ConditionalNodeConfig.fromChoices([
+          'Ja',
+        ]).copyWith(valueTemplate: '{{entscheidung.value}}'),
+        const IterativeRefinementNodeConfig(
+          optimizerPrompt: 'Verbessere.',
+          critiquePrompt: 'Prüfe.',
+          maxIterations: 2,
+          draftTemplate: '{{entwurf.value}}',
+        ),
+        const HumanApprovalNodeConfig(
+          instruction: 'Prüfen',
+          reviewTemplate: '{{pruefung.value}}',
+        ),
+        const ForEachNodeConfig(
+          itemsTemplate: '{{erkennung.value}}',
+          itemsPointer: '/regions',
+          graph: WorkflowGraph(nodes: [], edges: []),
+        ),
+        const WriteFileNodeConfig(
+          contentTemplate: '{{bericht.value}}',
+          fileName: 'bericht.txt',
+          contentType: 'text/plain',
+        ),
+      ];
+
+      for (final config in configs) {
+        expect(mapper.fromDocument(mapper.toDocument(config)), config);
+      }
+    },
+  );
 
   test('serialisiert ReadFileNodeConfig', () {
     final document = _mapper().toDocument(
