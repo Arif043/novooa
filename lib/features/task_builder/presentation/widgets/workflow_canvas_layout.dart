@@ -12,18 +12,26 @@ class BausteinInsertion {
 }
 
 class CanvasEntry {
-  const CanvasEntry(this.id, this.node, this.insertion, this.peers);
+  const CanvasEntry(
+    this.id,
+    this.node,
+    this.insertion,
+    this.peers, {
+    this.continuationLabel,
+  });
   final String id;
   final WorkflowNode? node;
   final BausteinInsertion insertion;
   final Set<NodeId> peers;
+  final String? continuationLabel;
 }
 
 class CanvasLink {
-  const CanvasLink(this.from, this.to, [this.label]);
+  const CanvasLink(this.from, this.to, [this.label, this.isReturn = false]);
   final String from;
   final String to;
   final String? label;
+  final bool isReturn;
 }
 
 /// Presentation-only layout: persisted edges remain the source of truth.
@@ -43,7 +51,7 @@ class WorkflowCanvasLayout {
   final rectangles = <String, Rect>{};
   late final Size size;
 
-  void _collect(
+  List<String> _collect(
     WorkflowGraph graph,
     BausteinInsertion insertion, {
     String? parent,
@@ -54,7 +62,7 @@ class WorkflowCanvasLayout {
       final id = '@empty:${parent ?? 'main'}:${insertion.branchId ?? ''}';
       entries[id] = CanvasEntry(id, null, insertion, peers);
       if (parent != null) links.add(CanvasLink(parent, id, label));
-      return;
+      return [id];
     }
     for (final node in graph.nodes) {
       entries[node.id.value] = CanvasEntry(
@@ -71,7 +79,11 @@ class WorkflowCanvasLayout {
     for (final edge in graph.edges) {
       if (peers.contains(edge.from) && peers.contains(edge.to)) {
         links.add(
-          CanvasLink(edge.from.value, edge.to.value, edge.conditionLabel),
+          CanvasLink(
+            _exitId(graph.nodeOrNull(edge.from)!),
+            edge.to.value,
+            edge.conditionLabel,
+          ),
         );
       }
     }
@@ -84,28 +96,76 @@ class WorkflowCanvasLayout {
       }
     }
     for (final node in graph.nodes) {
+      final branchEnds = <String>[];
       switch (node.config) {
         case ConditionalNodeConfig(:final branches):
           for (final branch in branches) {
-            _collect(
-              branch.graph,
-              BausteinInsertion(owner: node.id, branchId: branch.id),
-              parent: node.id.value,
-              label: branch.label,
+            branchEnds.addAll(
+              _collect(
+                branch.graph,
+                BausteinInsertion(owner: node.id, branchId: branch.id),
+                parent: node.id.value,
+                label: branch.label,
+              ),
             );
           }
         case ForEachNodeConfig(:final graph):
-          _collect(
-            graph,
-            BausteinInsertion(owner: node.id),
-            parent: node.id.value,
-            label: 'Für jedes Element',
+          branchEnds.addAll(
+            _collect(
+              graph,
+              BausteinInsertion(owner: node.id),
+              parent: node.id.value,
+              label: 'Für jedes Element',
+            ),
           );
         default:
           break;
       }
+      if (_exitId(node) != node.id.value) {
+        final id = _exitId(node);
+        entries[id] = CanvasEntry(
+          id,
+          null,
+          entries[node.id.value]!.insertion,
+          peers,
+          continuationLabel: node.config is ConditionalNodeConfig
+              ? 'Nach der Bedingung'
+              : 'Nach der Schleife',
+        );
+        for (final end in branchEnds.isEmpty ? [node.id.value] : branchEnds) {
+          links.add(CanvasLink(end, id, null, true));
+        }
+      }
     }
+    final ends = <String>[];
+    for (final node in graph.nodes) {
+      if (graph.edges.any(
+        (edge) => edge.from == node.id && peers.contains(edge.to),
+      )) {
+        continue;
+      }
+      if (_exitId(node) != node.id.value) {
+        ends.add(_exitId(node));
+      } else {
+        final id = '@append:${node.id.value}';
+        entries[id] = CanvasEntry(
+          id,
+          null,
+          entries[node.id.value]!.insertion,
+          peers,
+        );
+        links.add(CanvasLink(node.id.value, id));
+        ends.add(id);
+      }
+    }
+    return ends;
   }
+
+  String _exitId(WorkflowNode node) => switch (node.config) {
+    ConditionalNodeConfig() ||
+    ForEachNodeConfig() => '@continue:${node.id.value}',
+    _ => node.id.value,
+  };
 
   void _arrange() {
     final remaining = entries.keys.toSet();

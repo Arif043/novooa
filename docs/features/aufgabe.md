@@ -79,6 +79,12 @@ Die vollstaendigen Output-Slots dokumentiert
   und ID. Gespeicherte `WorkflowEdge`-Verbindungen werden mit Richtungspfeilen
   und vorhandenen Bedingungslabels gezeichnet. Unterpläne erhalten zusätzlich
   beschriftete Verbindungen zu ihrem übergeordneten Baustein.
+- Jeder offene Pfad endet mit „Baustein hier verbinden“, auch wenn er bereits
+  Bausteine enthält. Unter sämtlichen Zweigen einer Bedingung steht der
+  getrennte Anschluss „Nach der Bedingung“ für den übergeordneten Pfad;
+  Schleifen bieten analog „Nach der Schleife“. Gestrichelte Rückführungen
+  und die Trennlinie kennzeichnen diese Fortsetzung. Diese Anschlüsse sind
+  reine Darstellungselemente, keine zusätzlichen gespeicherten Bausteine.
 - Ein Klick auf eine Karte öffnet rechts ein Konfigurations-Overlay im selben
   Provider-Kontext. Alle bisherigen Editoren, Anhänge, Referenznamen und
   Workflow-Ausgabewerte bleiben dort verfügbar. Änderungen aktualisieren das

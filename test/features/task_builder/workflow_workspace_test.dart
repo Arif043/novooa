@@ -42,8 +42,103 @@ void main() {
     final disconnected = WorkflowCanvasLayout(
       WorkflowGraph(nodes: _task.nodes, edges: const []),
     );
-    expect(disconnected.links.where((link) => link.from == 'text'), isEmpty);
+    expect(
+      disconnected.links.where(
+        (link) => link.from == 'text' && link.to == 'decision',
+      ),
+      isEmpty,
+    );
+    expect(
+      disconnected.entries['@append:text']!.insertion.after,
+      const NodeId('text'),
+    );
   });
+
+  test(
+    'every branch ends with an insertion and continuation follows the longest nested branch',
+    () {
+      final left = WorkflowNode(
+        id: const NodeId('left'),
+        title: '',
+        description: '',
+        config: const StringInputNodeConfig(value: ''),
+      );
+      final nested = WorkflowNode(
+        id: const NodeId('nested'),
+        title: '',
+        description: '',
+        config: ConditionalNodeConfig.initial(),
+      );
+      final decision = _task.nodes.last.copyWith(
+        config: ConditionalNodeConfig(
+          branches: [
+            ConditionalBranch(
+              id: 'yes',
+              label: 'Ja',
+              graph: WorkflowGraph(
+                nodes: [left, nested],
+                edges: const [
+                  WorkflowEdge(from: NodeId('left'), to: NodeId('nested')),
+                ],
+              ),
+            ),
+            const ConditionalBranch(
+              id: 'no',
+              label: 'Nein',
+              graph: WorkflowGraph(nodes: [], edges: []),
+            ),
+          ],
+        ),
+      );
+      final next = WorkflowNode(
+        id: const NodeId('next'),
+        title: '',
+        description: '',
+        config: const StringInputNodeConfig(value: ''),
+      );
+      final layout = WorkflowCanvasLayout(
+        WorkflowGraph(
+          nodes: [decision, next],
+          edges: const [
+            WorkflowEdge(from: NodeId('decision'), to: NodeId('next')),
+          ],
+        ),
+      );
+      final nestedInsertion = layout.entries['@continue:nested']!.insertion;
+      expect(nestedInsertion.owner, decision.id);
+      expect(nestedInsertion.branchId, 'yes');
+      expect(nestedInsertion.after, nested.id);
+      final continuation = layout.entries['@continue:decision']!.insertion;
+      expect(continuation.owner, isNull);
+      expect(continuation.after, decision.id);
+      expect(
+        layout.rectangles['@continue:decision']!.top,
+        greaterThan(layout.rectangles['@continue:nested']!.bottom),
+      );
+      expect(
+        layout.rectangles['next']!.top,
+        greaterThan(layout.rectangles['@continue:decision']!.bottom),
+      );
+      expect(layout.entries['@append:next']!.insertion.after, next.id);
+      final plainBranch = decision.copyWith(
+        config: ConditionalNodeConfig(
+          branches: [
+            ConditionalBranch(
+              id: 'yes',
+              label: 'Ja',
+              graph: WorkflowGraph(nodes: [left], edges: const []),
+            ),
+          ],
+        ),
+      );
+      final plainLayout = WorkflowCanvasLayout(
+        WorkflowGraph(nodes: [plainBranch], edges: const []),
+      );
+      expect(plainLayout.entries['@append:left']!.insertion.owner, decision.id);
+      expect(plainLayout.entries['@append:left']!.insertion.branchId, 'yes');
+      expect(plainLayout.entries['@append:left']!.insertion.after, left.id);
+    },
+  );
 
   test(
     'connects selected predecessors and preserves channel in nested branches',
@@ -162,6 +257,12 @@ void main() {
       await tester.tap(find.byTooltip('Konfiguration schließen'));
       await tester.pumpAndSettle();
       expect(find.byType(NodeConfigurationPanel), findsNothing);
+      await tester.tap(find.byTooltip('Gesamten Arbeitsplan anzeigen'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('path-insertion-@continue:decision')),
+      );
+      await tester.pumpAndSettle();
       await tester.enterText(
         find.byWidgetPredicate(
           (widget) =>
@@ -181,6 +282,10 @@ void main() {
             .config
             .primitive,
         WorkflowPrimitive.script,
+      );
+      expect(
+        (cubit.state as TaskBuilderLoaded).editingTask.edges.last.from,
+        const NodeId('decision'),
       );
       expect(tester.takeException(), isNull);
       tester.view.physicalSize = const Size(390, 844);
