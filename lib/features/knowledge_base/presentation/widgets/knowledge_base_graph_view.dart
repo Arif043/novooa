@@ -26,8 +26,12 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
   final _transformationController = TransformationController();
   final Map<String, Offset> _positions = {};
   final Map<String, Offset> _velocities = {};
+  final Map<String, Offset> _restPositions = {};
+  Duration _previousTick = Duration.zero;
+  double _pendingSeconds = 0;
   late final AnimationController _physicsController;
   String? _draggingNoteId;
+  String? _settlingNoteId;
   Size _lastCanvasSize = Size.zero;
 
   @override
@@ -45,6 +49,7 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
     final noteIds = widget.notes.map((note) => note.id).toSet();
     _positions.removeWhere((noteId, _) => !noteIds.contains(noteId));
     _velocities.removeWhere((noteId, _) => !noteIds.contains(noteId));
+    _restPositions.removeWhere((noteId, _) => !noteIds.contains(noteId));
   }
 
   @override
@@ -62,8 +67,10 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
     return LayoutBuilder(
       builder: (context, constraints) {
         final canvasSize = _canvasSizeFor(constraints.biggest);
-        final layout = KnowledgeGraphLayout(widget.notes, canvasSize);
-        _syncPositions(layout.positions);
+        if (widget.notes.any((note) => !_positions.containsKey(note.id))) {
+          final layout = KnowledgeGraphLayout(widget.notes, canvasSize);
+          _syncPositions(layout.positions);
+        }
         _lastCanvasSize = canvasSize;
         return ClipRRect(
           borderRadius: BorderRadius.circular(AppSpacing.md),
@@ -109,13 +116,18 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
     setState(() {
       _positions.clear();
       _velocities.clear();
+      _restPositions.clear();
       _draggingNoteId = null;
+      _settlingNoteId = null;
     });
   }
 
   void _startNodeDrag(String noteId) {
+    _physicsController.stop();
+    _velocities.clear();
     setState(() {
       _draggingNoteId = noteId;
+      _settlingNoteId = null;
       _velocities[noteId] = Offset.zero;
     });
     _startPhysics();
@@ -131,16 +143,20 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
     final canvasDelta = screenDelta / scale;
     setState(() {
       _positions[noteId] = _clamp(currentPosition + canvasDelta, canvasSize);
-      _velocities[noteId] =
-          (_velocities[noteId] ?? Offset.zero) * 0.35 + canvasDelta * 0.65;
+      _velocities[noteId] = Offset.zero;
     });
   }
 
   void _endNodeDrag() {
     final noteId = _draggingNoteId;
-    setState(() => _draggingNoteId = null);
+    setState(() {
+      _draggingNoteId = null;
+      _settlingNoteId = noteId;
+    });
     if (noteId != null) {
-      _velocities[noteId] = (_velocities[noteId] ?? Offset.zero) * 0.18;
+      // A deliberate drop becomes the new resting position, without a fling.
+      _restPositions[noteId] = _positions[noteId]!;
+      _velocities[noteId] = Offset.zero;
     }
     _startPhysics();
   }
@@ -148,23 +164,43 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
   void _syncPositions(Map<String, Offset> layoutPositions) {
     for (final entry in layoutPositions.entries) {
       _positions.putIfAbsent(entry.key, () => entry.value);
+      _restPositions.putIfAbsent(entry.key, () => entry.value);
     }
   }
 
   void _startPhysics() {
     if (MediaQuery.disableAnimationsOf(context)) return;
     if (!_physicsController.isAnimating) {
+      _previousTick = Duration.zero;
+      _pendingSeconds = 0;
       _physicsController.repeat(period: const Duration(milliseconds: 16));
     }
   }
 
   void _tickPhysics() {
     if (_lastCanvasSize == Size.zero || widget.notes.isEmpty) return;
-    final moving = KnowledgeGraphPhysics(
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _physicsController.stop();
+      _velocities.clear();
+      return;
+    }
+    final elapsed = _physicsController.lastElapsedDuration ?? Duration.zero;
+    final seconds = (elapsed - _previousTick).inMicroseconds / 1000000;
+    _previousTick = elapsed;
+    _pendingSeconds += seconds.clamp(0, 1 / 15);
+    const stepSeconds = 1 / 60;
+    if (_pendingSeconds < stepSeconds) return;
+    final physics = KnowledgeGraphPhysics(
       notes: widget.notes,
       canvasSize: _lastCanvasSize,
-      pinnedNoteId: _draggingNoteId,
-    ).step(_positions, _velocities);
+      pinnedNoteId: _draggingNoteId ?? _settlingNoteId,
+      restPositions: _restPositions,
+    );
+    var moving = false;
+    while (_pendingSeconds >= stepSeconds) {
+      moving = physics.step(_positions, _velocities);
+      _pendingSeconds -= stepSeconds;
+    }
     if (!moving && _draggingNoteId == null) _physicsController.stop();
     setState(() {});
   }

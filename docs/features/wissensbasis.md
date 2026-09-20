@@ -59,8 +59,11 @@ Die Graph-Ansicht folgt dem Hell-/Dunkelmodus: ruhige Canvas,
 organisch verteilte verschiebbare Punkt-Knoten, feine gedämpfte
 Verbindungslinien, dezente Labels, Pan/Zoom und eine kleine Overlay-Leiste zum
 Zurücksetzen der Ansicht. Verbundene Knoten werden beim Ziehen federnd
-mitbewegt und springen beim Loslassen zurück; bei reduzierter Bewegung bleibt
-die direkte Positionierung ohne federnde Animation erhalten. Kanten entstehen aus
+sanft mitbewegt und kehren gedämpft zu ihrer Ruheposition zurück. Der gezogene
+Knoten bleibt am Ablagepunkt; unverbundene Notizen werden nicht abgestoßen.
+Die Interaktionsphysik verwendet feste Zeitschritte und die bestehende Anordnung
+als Ruheposition statt einer erneuten globalen Kräfteverteilung. Bei reduzierter
+Bewegung bleibt die direkte Positionierung ohne federnde Animation erhalten. Kanten entstehen aus
 `outgoingLinks`. Ein Klick auf einen Knoten selektiert die zugehörige Notiz im
 Editor.
 
