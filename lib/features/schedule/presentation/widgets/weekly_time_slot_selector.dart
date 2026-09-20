@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/schedule_config.dart';
 import 'schedule_formatters.dart';
+import 'schedule_trigger_form_controls.dart';
 
 class WeeklyTimeSlotSelector extends StatelessWidget {
   const WeeklyTimeSlotSelector({
@@ -29,50 +31,45 @@ class WeeklyTimeSlotSelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            _WeekdayDropdown(value: weekday, onChanged: onWeekdayChanged),
-            OutlinedButton.icon(
-              onPressed: onPickTime,
-              icon: const Icon(Icons.schedule_outlined),
-              label: Text(_timeLabel),
-            ),
-            FilledButton.icon(
-              onPressed: onAdd,
-              icon: const Icon(Icons.add),
-              label: const Text('Zeit hinzufügen'),
-            ),
-          ],
-        ),
+        _WeekdayDropdown(value: weekday, onChanged: onWeekdayChanged),
         const SizedBox(height: AppSpacing.sm),
+        ScheduleTimeButton(time: time, onPick: onPickTime),
+        const SizedBox(height: AppSpacing.sm),
+        OutlinedButton.icon(
+          onPressed: onAdd,
+          icon: const Icon(CupertinoIcons.add),
+          label: const Text('Zeit hinzufügen'),
+        ),
+        const SizedBox(height: AppSpacing.md),
         if (slots.isEmpty)
           Text(
             'Noch kein Zeitpunkt ausgewählt.',
             style: Theme.of(context).textTheme.bodySmall,
           )
         else
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.xs,
-            children: slots.map(_chipFor).toList(growable: false),
+          ...slots.map(
+            (slot) => Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    slotLabels([slot]),
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                ),
+                IconButton(
+                  tooltip: '${slotLabels([slot])} entfernen',
+                  onPressed: () => onRemove(slot),
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                  icon: const Icon(CupertinoIcons.minus_circle),
+                ),
+              ],
+            ),
           ),
       ],
     );
-  }
-
-  Widget _chipFor(WeeklyTimeSlot slot) {
-    return InputChip(
-      label: Text(slotLabels([slot])),
-      onDeleted: () => onRemove(slot),
-    );
-  }
-
-  String get _timeLabel {
-    return '${time.hour.toString().padLeft(2, '0')}:'
-        '${time.minute.toString().padLeft(2, '0')}';
   }
 }
 
@@ -84,8 +81,10 @@ class _WeekdayDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButton<int>(
-      value: value,
+    return DropdownButtonFormField<int>(
+      initialValue: value,
+      isExpanded: true,
+      decoration: const InputDecoration(labelText: 'Wochentag'),
       items: _weekdays.map(_itemFor).toList(growable: false),
       onChanged: (value) {
         if (value != null) onChanged(value);

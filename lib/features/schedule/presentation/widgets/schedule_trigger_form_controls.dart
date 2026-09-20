@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../task_builder/domain/entities/task.dart';
 import '../../domain/entities/schedule_config.dart';
+import 'schedule_choice_control.dart';
 
 class ScheduleTaskDropdown extends StatelessWidget {
   const ScheduleTaskDropdown({
@@ -19,6 +21,7 @@ class ScheduleTaskDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<Task>(
+      isExpanded: true,
       initialValue: value,
       decoration: const InputDecoration(labelText: 'Aufgabe'),
       items: tasks.map(_itemFor).toList(growable: false),
@@ -27,7 +30,10 @@ class ScheduleTaskDropdown extends StatelessWidget {
   }
 
   DropdownMenuItem<Task> _itemFor(Task task) {
-    return DropdownMenuItem(value: task, child: Text(task.title));
+    return DropdownMenuItem(
+      value: task,
+      child: Text(task.title, maxLines: 2, overflow: TextOverflow.ellipsis),
+    );
   }
 }
 
@@ -43,14 +49,15 @@ class ScheduleKindSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SegmentedButton<ScheduleKind>(
-      segments: const [
-        ButtonSegment(value: ScheduleKind.once, label: Text('Einmalig')),
-        ButtonSegment(value: ScheduleKind.daily, label: Text('Täglich')),
-        ButtonSegment(value: ScheduleKind.weekly, label: Text('Wöchentlich')),
-      ],
-      selected: {value},
-      onSelectionChanged: onChanged,
+    return ScheduleChoiceControl<ScheduleKind>(
+      value: value,
+      label: 'Wiederholung',
+      labels: const {
+        ScheduleKind.once: 'Einmalig',
+        ScheduleKind.daily: 'Täglich',
+        ScheduleKind.weekly: 'Wöchentlich',
+      },
+      onChanged: (value) => onChanged({value}),
     );
   }
 }
@@ -67,10 +74,10 @@ class ScheduleDateButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
+    return TextButton.icon(
       onPressed: onPick,
-      icon: const Icon(Icons.calendar_month_outlined),
-      label: Text(_dateLabel),
+      icon: const Icon(CupertinoIcons.calendar),
+      label: Text('Datum · $_dateLabel'),
     );
   }
 
@@ -92,10 +99,10 @@ class ScheduleTimeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
+    return TextButton.icon(
       onPressed: onPick,
-      icon: const Icon(Icons.schedule_outlined),
-      label: Text(_timeLabel),
+      icon: const Icon(CupertinoIcons.clock),
+      label: Text('Uhrzeit · $_timeLabel'),
     );
   }
 

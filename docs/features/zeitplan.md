@@ -128,21 +128,30 @@ teams/{teamId}/inboxes/{channelId}/conversations/{conversationId}/messages/{mess
 
 ## UI
 
-Die Seite `Zeitplan` zeigt Trigger als Kacheln. Jede Kachel enthält:
+Die Seite `Zeitplan` verwendet das Designsystem „Luminous Precision“ mit
+Inter-Typografie, zurückhaltenden Orange-Akzenten und iOS-artigen Steuerelementen.
+Eine scrollbare Liste mit höhenflexiblen Karten ersetzt das starre Kachelraster.
+Der Kopfbereich zeigt die Anzahl aktiver und pausierter Auslöser. Jede Karte enthält:
 
 - Aufgabe
 - Trigger-Regel
 - Aktiv/Pausiert-Schalter
 - nächste Ausführung
-- Löschen-Aktion
+- Löschen-Aktion mit Bestätigung (die Aufgabe bleibt erhalten)
 
-Der Dialog „Trigger hinzufügen“ bietet:
+Der Dialog „Auslöser hinzufügen“ bietet gruppierte Einstellungen, native
+Datums-/Zeitpicker und folgende Optionen:
 
 - Ereignis: E-Mail, SMS, WhatsApp, Datei erstellt, Webhook
 - einmalig
 - täglich
 - wöchentlich mit frei wählbaren Wochenzeitpunkten wie „Mo 09:00“,
   „Mi 14:30“ oder „Fr 08:15“
+
+Auf kleinen Displays und bei großer Systemschrift werden Segmentauswahlen
+durch beschriftete Auswahlfelder ersetzt. Der Dialog bleibt scrollbar.
+Speichern verhindert doppelte Übermittlung und erhält bei Fehlern die Eingaben.
+Hell- und Dunkelmodus, Leerzustände und Lade-/Fehlerrückmeldungen sind berücksichtigt.
 
 Cron-Ausdrücke werden nicht direkt im UI eingegeben. Die UI erzeugt einfache
 strukturierte Konfigurationen, aus denen Backend und Client `nextRunAt`

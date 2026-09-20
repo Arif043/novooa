@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/event_trigger_config.dart';
+import 'schedule_choice_control.dart';
 
 enum TriggerFormMode { schedule, event }
 
@@ -17,21 +18,14 @@ class TriggerModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SegmentedButton<TriggerFormMode>(
-      segments: const [
-        ButtonSegment(
-          value: TriggerFormMode.schedule,
-          icon: Icon(Icons.schedule_outlined),
-          label: Text('Zeitplan'),
-        ),
-        ButtonSegment(
-          value: TriggerFormMode.event,
-          icon: Icon(Icons.bolt_outlined),
-          label: Text('Ereignis'),
-        ),
-      ],
-      selected: {value},
-      onSelectionChanged: onChanged,
+    return ScheduleChoiceControl<TriggerFormMode>(
+      value: value,
+      label: 'Auslöser',
+      labels: const {
+        TriggerFormMode.schedule: 'Zeitplan',
+        TriggerFormMode.event: 'Ereignis',
+      },
+      onChanged: (value) => onChanged({value}),
     );
   }
 }
@@ -54,6 +48,7 @@ class EventTriggerControls extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         DropdownButtonFormField<EventTriggerSource>(
+          isExpanded: true,
           initialValue: source,
           decoration: const InputDecoration(labelText: 'Ereignis'),
           items: EventTriggerSource.values.map(_itemFor).toList(),
@@ -65,7 +60,10 @@ class EventTriggerControls extends StatelessWidget {
         TextField(
           controller: filterController,
           decoration: const InputDecoration(
-            labelText: 'Filter',
+            labelText: 'Filter (optional)',
+            helperText:
+                'Ohne Filter werden alle passenden Ereignisse berücksichtigt.',
+            helperMaxLines: 4,
             hintText: 'z. B. Absender, Nummer, Pfad oder Topic',
           ),
         ),
@@ -74,6 +72,9 @@ class EventTriggerControls extends StatelessWidget {
   }
 
   DropdownMenuItem<EventTriggerSource> _itemFor(EventTriggerSource source) {
-    return DropdownMenuItem(value: source, child: Text(source.label));
+    return DropdownMenuItem(
+      value: source,
+      child: Text(source.label, maxLines: 2, overflow: TextOverflow.ellipsis),
+    );
   }
 }

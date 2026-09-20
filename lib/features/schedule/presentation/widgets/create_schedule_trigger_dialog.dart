@@ -11,6 +11,7 @@ import 'event_trigger_form_controls.dart';
 import 'schedule_form_values.dart';
 import 'schedule_trigger_form_controls.dart';
 import 'time_trigger_controls.dart';
+import 'schedule_theme.dart';
 
 class CreateScheduleTriggerDialog extends StatefulWidget {
   const CreateScheduleTriggerDialog({
@@ -30,6 +31,8 @@ class CreateScheduleTriggerDialog extends StatefulWidget {
 class _CreateScheduleTriggerDialogState
     extends State<CreateScheduleTriggerDialog> {
   Task? _task;
+  bool _saving = false;
+  String? _error;
   TriggerFormMode _mode = TriggerFormMode.schedule;
   EventTriggerSource _eventSource = EventTriggerSource.emailReceived;
   final TextEditingController _eventFilterController = TextEditingController();
@@ -57,37 +60,114 @@ class _CreateScheduleTriggerDialogState
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoAlertDialog(
-      title: const Text('Trigger hinzufügen'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ScheduleTaskDropdown(
-              tasks: widget.tasks,
-              value: _task,
-              onChanged: _setTask,
+    return Theme(
+      data: ScheduleTheme.from(Theme.of(context)),
+      child: Builder(
+        builder: (context) => PopScope(
+          canPop: !_saving,
+          child: Dialog(
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 24,
             ),
-            const SizedBox(height: AppSpacing.md),
-            TriggerModeSelector(value: _mode, onChanged: _setMode),
-            const SizedBox(height: AppSpacing.md),
-            if (_mode == TriggerFormMode.schedule) _scheduleControls(),
-            if (_mode == TriggerFormMode.event) _eventControls(),
-          ],
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerLowest,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Auslöser hinzufügen',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Schließen',
+                          onPressed: _saving
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                          icon: const Icon(CupertinoIcons.xmark, size: 20),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Lege fest, wann deine Aufgabe automatisch startet.',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 24),
+                    ScheduleSection(
+                      title: 'Aufgabe',
+                      child: ScheduleTaskDropdown(
+                        tasks: widget.tasks,
+                        value: _task,
+                        onChanged: _setTask,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    TriggerModeSelector(value: _mode, onChanged: _setMode),
+                    const SizedBox(height: AppSpacing.lg),
+                    ScheduleSection(
+                      title: _mode == TriggerFormMode.schedule
+                          ? 'Wann soll die Aufgabe starten?'
+                          : 'Was soll die Aufgabe auslösen?',
+                      child: _mode == TriggerFormMode.schedule
+                          ? _scheduleControls()
+                          : _eventControls(),
+                    ),
+                    if (_mode == TriggerFormMode.schedule) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        'Zeitzone: Europe/Berlin',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                    if (_error != null) ...[
+                      const SizedBox(height: 16),
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          _error!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: _canSubmit && !_saving ? _submit : null,
+                      child: _saving
+                          ? const Padding(
+                              padding: EdgeInsets.all(8),
+                              child: CupertinoActivityIndicator(),
+                            )
+                          : const Text('Auslöser erstellen'),
+                    ),
+                    TextButton(
+                      onPressed: _saving
+                          ? null
+                          : () => Navigator.of(context).pop(),
+                      child: const Text('Abbrechen'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
-      actions: [
-        CupertinoDialogAction(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Abbrechen'),
-        ),
-        CupertinoDialogAction(
-          isDefaultAction: true,
-          onPressed: _canSubmit ? _submit : null,
-          child: const Text('Erstellen'),
-        ),
-      ],
     );
   }
 
@@ -187,12 +267,29 @@ class _CreateScheduleTriggerDialogState
   Future<void> _submit() async {
     final task = _task;
     if (task == null) return;
-    if (_mode == TriggerFormMode.schedule) {
-      await widget.cubit.createTrigger(task, _config());
-    } else {
-      await widget.cubit.createEventTrigger(task, _eventConfig());
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      if (_mode == TriggerFormMode.schedule) {
+        await widget.cubit.createTrigger(task, _config());
+      } else {
+        await widget.cubit.createEventTrigger(task, _eventConfig());
+      }
+      if (mounted) {
+        setState(() => _saving = false);
+        Navigator.of(context).pop();
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          _error =
+              'Der Auslöser konnte nicht erstellt werden. Deine Eingaben bleiben erhalten. Bitte versuche es erneut.';
+        });
+      }
     }
-    if (mounted) Navigator.of(context).pop();
   }
 
   EventTriggerConfig _eventConfig() => EventTriggerConfig(
