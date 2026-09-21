@@ -43,3 +43,47 @@ test("resolves an OpenAI-compatible team model with its own endpoint", async () 
   });
   assert.equal(model.capabilities.structuredOutput, true);
 });
+
+test("resolves xAI through its registered OpenAI-compatible endpoint", async () => {
+  const resolver = new CatalogGenkitLanguageModelResolver({
+    async loadModel() {
+      return modelFor("connection-1");
+    },
+    async loadConnection() {
+      return {
+        id: "connection-1",
+        teamId: "team-1",
+        name: "xAI (Grok)",
+        provider: "xAi" as const,
+      };
+    },
+    async loadConnectionApiKey() {
+      return "customer-api-key";
+    },
+  });
+
+  const model = await resolver.resolve("team-1", "model-1");
+
+  assert.deepEqual(model.logContext, {
+    provider: "xAi",
+    endpoint: "xAI (Grok)",
+    model: "grok-4",
+  });
+});
+
+function modelFor(connectionId: string) {
+  return {
+    id: "model-1",
+    teamId: "team-1",
+    connectionId,
+    name: "Grok 4",
+    modelId: "grok-4",
+    capabilities: {
+      textGeneration: true,
+      imageInput: false,
+      structuredOutput: true,
+      toolCalling: false,
+      imageGeneration: false,
+    },
+  };
+}

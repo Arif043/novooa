@@ -36,7 +36,7 @@ class FirestoreLanguageModelRepository implements LanguageModelRepository {
     await _functions.httpsCallable('saveLanguageModel').call({
       'connectionName': draft.connectionName,
       'provider': draft.provider.id,
-      if (draft.provider == LanguageModelProvider.openAiCompatible)
+      if (draft.provider != LanguageModelProvider.googleAi)
         'baseUrl': draft.baseUrl,
       'name': draft.name,
       'languageModelId': draft.modelId,

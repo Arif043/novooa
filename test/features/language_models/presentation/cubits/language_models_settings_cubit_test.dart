@@ -60,6 +60,20 @@ void main() {
       await cubit.close();
     },
   );
+
+  test('verbindet xAI mit dem festen Grok-Endpunkt', () async {
+    final connections = _Connections();
+    final cubit = _cubit(connections);
+
+    cubit.updateProvider(LanguageModelProvider.xAi);
+    cubit.updateApiKey('customer-api-key');
+    await cubit.connect();
+
+    expect(connections.draft?.provider, LanguageModelProvider.xAi);
+    expect(connections.draft?.baseUrl, 'https://api.x.ai/v1');
+    expect(connections.draft?.apiKey, 'customer-api-key');
+    await cubit.close();
+  });
 }
 
 LanguageModelsSettingsCubit _cubit(_Connections connections) {

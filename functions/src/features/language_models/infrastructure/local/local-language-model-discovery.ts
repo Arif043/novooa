@@ -2,6 +2,13 @@ import {
   defaultLanguageModelCapabilities,
   type LanguageModelProvider,
 } from "../../domain/entities/language-model.js";
+import {
+  namedLanguageModelProviderFor,
+} from "../openai-compatible/named-language-model-provider-registry.js";
+import {
+  openAiCompatibleModels,
+  type DiscoveredOpenAiCompatibleLanguageModel,
+} from "../openai-compatible/named-language-model-provider.js";
 
 export type LocalLanguageModelConnectionInput = {
   apiKey: string;
@@ -9,11 +16,7 @@ export type LocalLanguageModelConnectionInput = {
   provider: LanguageModelProvider;
 };
 
-export type DiscoveredLanguageModel = {
-  capabilities: typeof defaultLanguageModelCapabilities;
-  modelId: string;
-  name: string;
-};
+export type DiscoveredLanguageModel = DiscoveredOpenAiCompatibleLanguageModel;
 
 export interface LanguageModelDiscovery {
   discover(input: LocalLanguageModelConnectionInput): Promise<DiscoveredLanguageModel[]>;
@@ -25,14 +28,15 @@ export class LocalLanguageModelDiscovery implements LanguageModelDiscovery {
   async discover(input: LocalLanguageModelConnectionInput): Promise<DiscoveredLanguageModel[]> {
     const response = await this.fetchModels(input);
     if (!response.ok) throw new LocalLanguageModelDiscoveryError();
-    const models = input.provider === "googleAi" ? googleModels(await response.json()) : openAiModels(await response.json());
+    const models = modelsFor(input.provider, await response.json());
     if (models.length === 0) throw new LocalLanguageModelDiscoveryError("Der Anbieter stellt keine Textmodelle bereit.");
     return models;
   }
 
   private fetchModels(input: LocalLanguageModelConnectionInput): Promise<Response> {
     if (input.provider === "googleAi") return this.request(googleModelsUrl(input.apiKey), {signal: AbortSignal.timeout(10000)});
-    return this.request(openAiModelsUrl(input.baseUrl ?? ""), {
+    const provider = namedLanguageModelProviderFor(input.provider);
+    return this.request(openAiModelsUrl(input.baseUrl ?? provider?.baseUrl ?? ""), {
       headers: {Authorization: `Bearer ${input.apiKey}`},
       signal: AbortSignal.timeout(10000),
     });
@@ -59,9 +63,20 @@ function googleModels(value: unknown): DiscoveredLanguageModel[] {
   });
 }
 
+function modelsFor(
+  provider: LanguageModelProvider,
+  value: unknown,
+): DiscoveredLanguageModel[] {
+  if (provider === "googleAi") return googleModels(value);
+  const namedProvider = namedLanguageModelProviderFor(provider);
+  return namedProvider?.discoverModels(value) ?? openAiModels(value);
+}
+
 function openAiModels(value: unknown): DiscoveredLanguageModel[] {
-  const values = isRecord(value) && Array.isArray(value.models) ? value.models : isRecord(value) && Array.isArray(value.data) ? value.data : [];
-  return values.flatMap((model) => modelFromProvider(model));
+  const models = openAiCompatibleModels(value);
+  if (models.length > 0) return models;
+  if (!isRecord(value) || !Array.isArray(value.models)) return [];
+  return value.models.flatMap(modelFromProvider);
 }
 
 function modelFromProvider(value: unknown): DiscoveredLanguageModel[] {

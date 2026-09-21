@@ -6,6 +6,9 @@ import {
 import {type LanguageModelConfigurationStore} from "../../domain/repositories/language-model-configuration-store.js";
 import {LocalLanguageModelDiscovery, type LanguageModelDiscovery} from "./local-language-model-discovery.js";
 import {
+  namedLanguageModelProviderFor,
+} from "../openai-compatible/named-language-model-provider-registry.js";
+import {
   type LocalRuntimeRequest,
   type LocalRuntimeRequestHandler,
   type LocalRuntimeResponse,
@@ -67,6 +70,8 @@ function connectionFrom(value: unknown, teamId: string) {
 function connectionName(provider: LanguageModelProvider, baseUrl: string | undefined): string {
   if (provider === "googleAi") return "Google AI";
   if (provider === "ollama") return "Ollama";
+  const namedProvider = namedLanguageModelProviderFor(provider);
+  if (namedProvider) return namedProvider.displayName;
   return new URL(baseUrl ?? "").hostname;
 }
 
@@ -103,6 +108,8 @@ function providerFrom(value: unknown): LanguageModelProvider {
 function baseUrlFrom(value: unknown, provider: LanguageModelProvider): string | undefined {
   if (provider === "googleAi") return undefined;
   if (provider === "ollama" && value === undefined) return "http://host.docker.internal:11434/v1";
+  const namedProvider = namedLanguageModelProviderFor(provider);
+  if (namedProvider) return namedProviderBaseUrl(value, namedProvider.baseUrl);
   const url = text(value, "baseUrl", 2048);
   try {
     const parsed = new URL(url);
@@ -113,6 +120,23 @@ function baseUrlFrom(value: unknown, provider: LanguageModelProvider): string | 
   } catch (error) {
     if (error instanceof LocalLanguageModelRequestError) throw error;
     throw new LocalLanguageModelRequestError("baseUrl ist ungültig.");
+  }
+}
+
+function namedProviderBaseUrl(value: unknown, defaultBaseUrl: string): string {
+  if (value === undefined) return defaultBaseUrl;
+  const baseUrl = text(value, "baseUrl", 2048);
+  if (normalizedUrlOrNull(baseUrl) !== defaultBaseUrl) {
+    throw new LocalLanguageModelRequestError("Die API-Adresse dieses Anbieters kann nicht geändert werden.");
+  }
+  return defaultBaseUrl;
+}
+
+function normalizedUrlOrNull(value: string): string | null {
+  try {
+    return new URL(value).toString().replace(/\/$/, "");
+  } catch (_) {
+    return null;
   }
 }
 

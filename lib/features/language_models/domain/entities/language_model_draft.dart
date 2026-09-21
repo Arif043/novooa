@@ -1,12 +1,22 @@
 enum LanguageModelProvider {
   googleAi('googleAi', 'Google AI'),
+  xAi('xAi', 'xAI (Grok)', defaultBaseUrl: 'https://api.x.ai/v1'),
+  mistral('mistral', 'Mistral AI', defaultBaseUrl: 'https://api.mistral.ai/v1'),
+  openRouter(
+    'openRouter',
+    'OpenRouter',
+    defaultBaseUrl: 'https://openrouter.ai/api/v1',
+  ),
   ollama('ollama', 'Ollama (lokal)'),
   openAiCompatible('openAiCompatible', 'OpenAI-kompatibel');
 
-  const LanguageModelProvider(this.id, this.label);
+  const LanguageModelProvider(this.id, this.label, {this.defaultBaseUrl});
 
   final String id;
   final String label;
+  final String? defaultBaseUrl;
+
+  bool get requiresCustomBaseUrl => this == openAiCompatible;
 }
 
 class LanguageModelDraft {

@@ -48,6 +48,23 @@ void main() {
     expect(client.postBody?['provider'], 'googleAi');
     expect(client.postBody?['apiKey'], 'provider-api-key');
   });
+
+  test('sends the fixed Mistral endpoint with the customer API key', () async {
+    final client = _RecordingClient();
+    final repository = LocalLanguageModelRepository(client);
+
+    await repository.connectLanguageModels(
+      const LanguageModelConnectionDraft(
+        provider: LanguageModelProvider.mistral,
+        baseUrl: 'https://api.mistral.ai/v1',
+        apiKey: 'customer-api-key',
+      ),
+    );
+
+    expect(client.postBody?['provider'], 'mistral');
+    expect(client.postBody?['baseUrl'], 'https://api.mistral.ai/v1');
+    expect(client.postBody?['apiKey'], 'customer-api-key');
+  });
 }
 
 class _RecordingClient extends WorkspaceApiClient {

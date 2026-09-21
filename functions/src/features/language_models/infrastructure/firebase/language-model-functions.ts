@@ -11,6 +11,9 @@ import {
   languageModelCipher,
   languageModelEncryptionKey,
 } from "./language-model-encryption.js";
+import {
+  namedLanguageModelProviderFor,
+} from "../openai-compatible/named-language-model-provider-registry.js";
 
 export const saveLanguageModel = onCall(
   {secrets: [languageModelEncryptionKey]},
@@ -73,6 +76,8 @@ function baseUrlFrom(
   provider: LanguageModelProvider,
 ): string | undefined {
   if (provider === "googleAi") return undefined;
+  const namedProvider = namedLanguageModelProviderFor(provider);
+  if (namedProvider) return namedProviderBaseUrl(value, namedProvider.baseUrl);
   const url = boundedString(value, "baseUrl", 2048);
   try {
     const parsed = new URL(url);
@@ -83,6 +88,23 @@ function baseUrlFrom(
   } catch (error) {
     if (error instanceof HttpsError) throw error;
     throw invalidInput("baseUrl ist ungültig.");
+  }
+}
+
+function namedProviderBaseUrl(value: unknown, defaultBaseUrl: string): string {
+  if (value === undefined) return defaultBaseUrl;
+  const suppliedBaseUrl = boundedString(value, "baseUrl", 2048);
+  if (normalizedUrlOrNull(suppliedBaseUrl) !== defaultBaseUrl) {
+    throw invalidInput("Die API-Adresse dieses Anbieters kann nicht geändert werden.");
+  }
+  return defaultBaseUrl;
+}
+
+function normalizedUrlOrNull(value: string): string | null {
+  try {
+    return new URL(value).toString().replace(/\/$/, "");
+  } catch (_) {
+    return null;
   }
 }
 

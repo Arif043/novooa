@@ -6,6 +6,7 @@ import {type LanguageModelCapabilities} from "../../domain/entities/language-mod
 import {type LanguageModelCatalog} from "../../domain/repositories/language-model-catalog.js";
 import {OllamaLanguageModelCapabilityInspector} from "../ollama/ollama-language-model-capability-inspector.js";
 import {nativeOllamaPlugin} from "../ollama/native-ollama-genkit-plugin.js";
+import {namedLanguageModelProviderFor} from "../openai-compatible/named-language-model-provider-registry.js";
 
 export type ResolvedGenkitLanguageModel = {
   ai: GenkitBeta;
@@ -47,16 +48,18 @@ export class CatalogGenkitLanguageModelResolver
         logContext: {provider: "googleAi", model: model.modelId},
       };
     }
-    if (!connection.baseUrl) throw new Error("Der OpenAI-kompatiblen Verbindung fehlt die Base-URL.");
+    const namedProvider = namedLanguageModelProviderFor(connection.provider);
+    const baseUrl = namedProvider?.baseUrl ?? connection.baseUrl;
+    if (!baseUrl) throw new Error("Der OpenAI-kompatiblen Verbindung fehlt die Base-URL.");
     if (connection.provider === "ollama") {
       const capabilities = await this.capabilitiesFor(
-        connection.provider, connection.baseUrl, model.modelId, model.capabilities,
+        connection.provider, baseUrl, model.modelId, model.capabilities,
       );
       const providerName = "language-model-" + connection.id;
       return {
         ai: genkit({plugins: [nativeOllamaPlugin({
           name: providerName,
-          serverAddress: nativeServerAddressFor(connection.baseUrl),
+          serverAddress: nativeServerAddressFor(baseUrl),
           modelId: model.modelId,
         })]}),
         model: modelRef({name: providerName + "/" + model.modelId}),
@@ -65,12 +68,12 @@ export class CatalogGenkitLanguageModelResolver
       };
     }
     const providerName = `language-model-${connection.id}`;
-    const capabilities = await this.capabilitiesFor(connection.provider, connection.baseUrl, model.modelId, model.capabilities);
+    const capabilities = await this.capabilitiesFor(connection.provider, baseUrl, model.modelId, model.capabilities);
     return {
       ai: genkit({plugins: [openAICompatible({
         name: providerName,
         apiKey,
-        baseURL: connection.baseUrl,
+        baseURL: baseUrl,
       })]}),
       model: modelRef({name: `${providerName}/${model.modelId}`}),
       capabilities,

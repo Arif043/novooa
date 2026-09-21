@@ -55,7 +55,9 @@ class LanguageModelsSettingsCubit extends Cubit<LanguageModelsSettingsState> {
     emit(
       state.copyWith(
         provider: value,
-        baseUrl: value == LanguageModelProvider.ollama ? _ollamaBaseUrl : '',
+        baseUrl:
+            value.defaultBaseUrl ??
+            (value == LanguageModelProvider.ollama ? _ollamaBaseUrl : ''),
       ),
     );
   }
@@ -119,7 +121,7 @@ class LanguageModelsSettingsCubit extends Cubit<LanguageModelsSettingsState> {
 
   LanguageModelConnectionDraft? _connectionDraftOrNull() {
     final hasEndpoint =
-        state.provider == LanguageModelProvider.googleAi ||
+        !state.provider.requiresCustomBaseUrl ||
         state.baseUrl.trim().isNotEmpty;
     if (!hasEndpoint || (_requiresApiKey() && state.apiKey.trim().length < 8)) {
       return null;
@@ -132,7 +134,7 @@ class LanguageModelsSettingsCubit extends Cubit<LanguageModelsSettingsState> {
   }
 
   LanguageModelDraft? _draftOrNull() {
-    final requiresBaseUrl = state.provider != LanguageModelProvider.googleAi;
+    final requiresBaseUrl = state.provider.requiresCustomBaseUrl;
     if (state.connectionName.trim().isEmpty ||
         state.name.trim().isEmpty ||
         state.modelId.trim().isEmpty ||

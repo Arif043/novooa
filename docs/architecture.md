@@ -92,7 +92,10 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md).
 - Firestore-Dokumente enthalten `id`, `title`, `objective`, `selectedNodeId`,
   `teamId`, `graph`, `createdAt` und `updatedAt`.
 - Sprachmodelle sind team-scoped. `languageModelConnections` enthalten
-  Anbieter-Metadaten und optionale OpenAI-kompatible Endpunkte;
+  Anbieter-Metadaten und den zugehörigen Endpunkt. Google AI bleibt nativ;
+  xAI (Grok), Mistral AI und OpenRouter verwenden festgelegte
+  OpenAI-kompatible Endpunkte. Nur der generische OpenAI-kompatible Anbieter
+  erlaubt eine frei gewählte HTTPS-Adresse;
   `languageModels` referenzieren eine Verbindung und eine konkrete Modell-ID.
   API-Keys werden ausschließlich durch Callable Functions verschlüsselt unter
   `languageModelSecrets` gespeichert. Diese Collection ist weder im Client
