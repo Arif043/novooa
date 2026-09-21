@@ -16,7 +16,18 @@ oskan@192.168.0.134's password:
 
 **PowerShell als Administrator öffnen und ausführen:**
 
-### 1. OpenSSH-Server Status prüfen
+### 0. OpenSSH-Server Installation überprüfen (ERSTE PRÜFUNG!)
+
+```powershell
+# Ist OpenSSH installiert?
+Get-Service sshd
+
+# Falls ERROR: "Service 'sshd' cannot be found"
+# → OpenSSH MUSS zuerst installiert werden!
+# → Siehe oben: "WICHTIG: Windows OpenSSH Installation"
+```
+
+### 1. OpenSSH-Server Status prüfen (nach Installation)
 
 ```powershell
 # Service läuft?
@@ -28,6 +39,9 @@ Start-Service sshd
 
 # Auto-Start konfigurieren:
 Set-Service -Name sshd -StartupType Automatic
+
+# Nochmal prüfen
+Get-Service sshd
 ```
 
 ### 2. SSH-Verzeichnis und Berechtigungen prüfen
@@ -121,6 +135,12 @@ ssh -vvv -i ~/.ssh/id_ed25519 oskan@192.168.0.134 "Echo 'OK'"
 
 ## Häufige Probleme
 
+### Problem 0: "Service 'sshd' cannot be found on computer"
+- ✗ OpenSSH Server nicht installiert
+- ✓ Lösung: Siehe oben "WICHTIG: Windows OpenSSH Installation"
+  - Methode 1 (Einstellungen): Settings → Apps → Optional features → OpenSSH Server
+  - Methode 2 (PowerShell): `Add-WindowsCapability -Online -Name OpenSSH.Server~0.0.1.0`
+
 ### Problem 1: "Permission denied (publickey,password)"
 - ✗ authorized_keys hat falsche Berechtigungen
 - ✓ Lösung: icacls korrekt setzen (siehe Schritt 3)
@@ -154,15 +174,69 @@ ssh-ed25519 AAAA... (paste here)
   ssh -i ~/.ssh/id_ed25519 oskan@192.168.0.134 "powershell -NoProfile -Command {Write-Output 'OK'}"
   ```
 
-## Windows OpenSSH Installation (falls nötig)
+## ⚠️ WICHTIG: Windows OpenSSH Installation
+
+**Falls `Get-Service sshd` "Service not found" zeigt:**
+
+### Methode 1: Windows Optional Features (empfohlen)
 
 ```powershell
-# OpenSSH Server installieren (Windows 10/11)
+# PowerShell als Administrator öffnen!
+
+# OpenSSH Server installieren
 Add-WindowsCapability -Online -Name OpenSSH.Server~0.0.1.0
 
-# Oder mit winget (neue Methode)
-winget install Microsoft.OpenSSH.Beta
+# OpenSSH Client (falls nicht vorhanden)
+Add-WindowsCapability -Online -Name OpenSSH.Client~0.0.1.0
+
+# Service starten
+Start-Service sshd
+
+# Auto-Start aktivieren
+Set-Service -Name sshd -StartupType Automatic
+
+# Prüfen (sollte "Running" zeigen)
+Get-Service sshd
 ```
+
+### Methode 2: Mit Chocolatey (falls Windows Features nicht geht)
+
+```powershell
+# Chocolatey installieren (falls noch nicht)
+# https://chocolatey.org/install
+
+# OpenSSH installieren
+choco install openssh -params '"/SSHServerFeature"' -y
+
+# Service starten
+Start-Service sshd
+Set-Service -Name sshd -StartupType Automatic
+```
+
+### Methode 3: Mit Scoop
+
+```powershell
+# Scoop installieren (falls noch nicht)
+# https://scoop.sh/
+
+# OpenSSH installieren
+scoop install openssh
+
+# Service starten (manuell notwendig)
+Start-Service sshd
+```
+
+### Methode 4: Manuelle Installation (Windows 10/11)
+
+1. Öffne **Settings → Apps → Optional features**
+2. Klicke auf **"View features"**
+3. Suche nach **"OpenSSH Server"**
+4. Klicke darauf und **Install**
+5. Nach Installation: PowerShell als Admin
+   ```powershell
+   Start-Service sshd
+   Set-Service -Name sshd -StartupType Automatic
+   ```
 
 ## SSH-Agent konfigurieren (optional, für Windows)
 
