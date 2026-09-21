@@ -165,15 +165,26 @@ export async function repositoryExists(
   targetPath: string,
 ): Promise<boolean> {
   try {
-    await executeSshCommand(options, `Test-Path "${targetPath}" -PathType Container`);
-    return true;
+    const result = await executeSshCommand(options, `if (Test-Path "${targetPath}") { Write-Host "exists" }`);
+    return result.includes('exists');
   } catch {
     return false;
   }
 }
 
 /**
- * Klont Repository auf Remote-Windows-Rechner.
+ * Erstellt Verzeichnis rekursiv auf Remote.
+ */
+export async function ensureDirectory(
+  options: SshOptions,
+  directoryPath: string,
+): Promise<void> {
+  const cmd = `mkdir -Force "${directoryPath}" | Out-Null; Write-Host "ok"`;
+  await executeSshCommand(options, cmd);
+}
+
+/**
+ * Klont Repository auf Remote-Windows-Rechner (erstellt Verzeichnis automatisch).
  */
 export async function cloneRepository(
   options: SshOptions,
@@ -183,15 +194,8 @@ export async function cloneRepository(
   const parentDir = targetPath.split('\\').slice(0, -1).join('\\');
   const repoName = targetPath.split('\\').pop();
 
-  // Zuerst Verzeichnis anlegen
-  try {
-    await executeSshCommand(
-      options,
-      `mkdir -Force "${parentDir}" | Out-Null`,
-    );
-  } catch {
-    throw new Error(`Konnte nicht auf ${parentDir} zugreifen. Prüfe Berechtigungen!`);
-  }
+  // Stelle sicher dass Parent-Verzeichnis existiert
+  await ensureDirectory(options, parentDir);
 
   // Dann klonen oder aktualisieren
   const cmd = `
@@ -202,11 +206,7 @@ if (Test-Path "${targetPath}") {
 }
 `;
 
-  try {
-    await executeSshCommand(options, cmd);
-  } catch (error) {
-    throw new Error(`Repository-Klonen fehlgeschlagen: ${error}`);
-  }
+  await executeSshCommand(options, cmd);
 }
 
 /**
