@@ -5,6 +5,7 @@ import {type SignedRuntimeLicense} from "../../domain/entities/runtime-license-l
 import {FirebaseRuntimeRelayLicenseVerifier} from "./firebase-runtime-relay-license-verifier.js";
 import {FirestoreRuntimeLicenseRegistry} from "./firestore-runtime-license-registry.js";
 import {localRuntimeLicenseSigningKey} from "./local-runtime-license-signing-key.js";
+import {logException} from "../../../../shared/logging/logger.js";
 
 const licenses = new FirebaseRuntimeRelayLicenseVerifier();
 const registry = new FirestoreRuntimeLicenseRegistry();
@@ -18,7 +19,8 @@ export const issueLocalRuntimeFirebaseToken = onRequest(
     }
     try {
       response.status(200).json({token: await tokenFor(request.body)});
-    } catch {
+    } catch (error) {
+      logException("local_runtime.firebase_token_rejected", error);
       response.status(401).json({error: "Die Firebase-Anmeldung wurde abgelehnt."});
     }
   },

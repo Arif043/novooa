@@ -66,18 +66,27 @@ export class LocalRuntimeApplication implements LocalRuntimeRequestHandler {
       await runtime.firebaseSession.start(activation);
       runtime.firebaseSession.listenForWakeups(
         activation.license.payload.licenseId,
-        () => { void runtime.mailRelayWorker?.processOnce(); },
-        (error) => runtime.applicationLogger.exception(
-          "local_runtime.firebase_wakeup_listener_failed", error,
-          {licenseId: activation.license.payload.licenseId},
-        ),
+        () => {
+          void runtime.mailRelayWorker?.processOnce().catch((error) =>
+            runtime.applicationLogger.exception(
+              "local_runtime.firebase_wakeup_processing_failed", error,
+              {licenseId: activation.license.payload.licenseId},
+            ));
+        },
+        (error) => {
+          runtime.applicationLogger.exception(
+            "local_runtime.firebase_wakeup_listener_failed", error,
+            {licenseId: activation.license.payload.licenseId},
+          );
+          runtime.mailRelayWorker?.startFallbackPolling();
+        },
       );
     } catch (error) {
       runtime.applicationLogger.exception(
         "local_runtime.firebase_session_failed", error,
         {licenseId: activation.license.payload.licenseId},
       );
-      throw error;
+      runtime.mailRelayWorker?.startFallbackPolling();
     }
   }
 }

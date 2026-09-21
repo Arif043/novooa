@@ -14,7 +14,7 @@ services:
       LOCAL_RUNTIME_LICENSE_GATEWAY_URL: ${LOCAL_RUNTIME_LICENSE_GATEWAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/issueLocalRuntimeLicense}
       LOCAL_RUNTIME_PUSH_RELAY_URL: ${LOCAL_RUNTIME_PUSH_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimePushRelay}
       LOCAL_RUNTIME_MAIL_RELAY_URL: ${LOCAL_RUNTIME_MAIL_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeMailRelay}
-      LOCAL_RUNTIME_FIREBASE_API_KEY: ${LOCAL_RUNTIME_FIREBASE_API_KEY:-}
+      LOCAL_RUNTIME_FIREBASE_API_KEY: ${LOCAL_RUNTIME_FIREBASE_API_KEY:-AIzaSyCqT815piSitiqbdyIt_r5V57p0_95tGaI}
       LOCAL_RUNTIME_FIREBASE_PROJECT_ID: ${LOCAL_RUNTIME_FIREBASE_PROJECT_ID:-syscat-90bff}
       LOCAL_RUNTIME_FIREBASE_TOKEN_URL: ${LOCAL_RUNTIME_FIREBASE_TOKEN_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/issueLocalRuntimeFirebaseToken}
     depends_on:

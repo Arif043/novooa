@@ -228,6 +228,8 @@ Der technische User trägt ausschließlich die Claims `localRuntime`,
 `pushNotifications`. Firestore-Regeln erlauben ihm nur das Lesen seines eigenen
 Wake-up-Dokuments. Das Firebase-Token und die Sitzung sind flüchtig; die Runtime
 speichert weder Firebase-Credentials noch einen Admin-Schlüssel.
+`LOCAL_RUNTIME_FIREBASE_API_KEY` ist der öffentliche Web-API-Key der Firebase-
+Konfiguration, kein Firebase-Admin- oder Kundengeheimnis.
 
 Das Checkout-Compose setzt absichtlich `NOVOOA_LOCAL_DEVELOPMENT=true`; diese
 Entwicklungsausnahme erzeugt nur den lokalen Beispielarbeitsbereich und darf nicht

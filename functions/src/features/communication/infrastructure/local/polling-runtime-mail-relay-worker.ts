@@ -38,6 +38,12 @@ export class PollingRuntimeMailRelayWorker {
     this.requestProcessing();
   }
 
+  startFallbackPolling(): void {
+    if (this.timer !== undefined) return;
+    this.timer = setInterval(() => this.requestProcessing(), 60_000);
+    this.requestProcessing();
+  }
+
   async processOnce(): Promise<void> {
     if (this.processing !== undefined) return this.processing;
     this.processing = this.process().finally(() => { this.processing = undefined; });
