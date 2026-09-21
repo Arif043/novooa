@@ -5,17 +5,14 @@ import {type LocalApplicationLogger} from
 import {type RuntimeMailRelayClient} from "./runtime-mail-relay-client.js";
 import {type LocalMailRelayEventProcessor} from "./local-mail-relay-event-processor.js";
 
-export type PollingRuntimeMailRelayWorkerOptions = {
-  pollIntervalMs?: number | null;
+export type RuntimeMailRelayWorkerOptions = {
   canProcess?: () => boolean;
   onFailure?: (error: unknown) => void;
 };
 
-export class PollingRuntimeMailRelayWorker {
-  private readonly pollIntervalMs: number | null;
+export class RuntimeMailRelayWorker {
   private readonly canProcess: () => boolean;
   private readonly onFailure: (error: unknown) => void;
-  private timer: NodeJS.Timeout | undefined;
   private processing: Promise<void> | undefined;
 
   constructor(
@@ -23,24 +20,13 @@ export class PollingRuntimeMailRelayWorker {
     private readonly relay: RuntimeMailRelayClient,
     private readonly processor: LocalMailRelayEventProcessor,
     private readonly logger: LocalApplicationLogger,
-    options: PollingRuntimeMailRelayWorkerOptions = {},
+    options: RuntimeMailRelayWorkerOptions = {},
   ) {
-    this.pollIntervalMs = options.pollIntervalMs === undefined ? 10_000 : options.pollIntervalMs;
     this.canProcess = options.canProcess ?? (() => true);
     this.onFailure = options.onFailure ?? (() => undefined);
   }
 
   start(): void {
-    if (this.timer !== undefined) return;
-    if (this.pollIntervalMs !== null) {
-      this.timer = setInterval(() => this.requestProcessing(), this.pollIntervalMs);
-    }
-    this.requestProcessing();
-  }
-
-  startFallbackPolling(): void {
-    if (this.timer !== undefined) return;
-    this.timer = setInterval(() => this.requestProcessing(), 60_000);
     this.requestProcessing();
   }
 
@@ -51,8 +37,6 @@ export class PollingRuntimeMailRelayWorker {
   }
 
   async stop(): Promise<void> {
-    if (this.timer !== undefined) clearInterval(this.timer);
-    this.timer = undefined;
     await this.processing;
   }
 

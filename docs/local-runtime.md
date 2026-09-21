@@ -222,6 +222,9 @@ Listener auf `localRuntimeWakeups/{licenseId}`. Der Relay schreibt dort bei eine
 neuen Mail nur eine Revisionsnummer; E-Mail-Inhalte verbleiben in der Relay-Queue.
 Die Runtime zieht sie anschließend wie bisher per `pull`, verarbeitet sie lokal
 und sendet `ack` oder `reject`. Die Dead-Letter-Queue bleibt unverändert.
+Firestore stellt den Listener nach Netzwerkunterbrechungen selbst wieder her und
+liefert den aktuellen Dokumentzustand erneut. Da die Wake-up-Revision erhalten
+bleibt, gibt es für Mail-Ereignisse kein zeitbasiertes Fallback-Polling.
 
 Der technische User trägt ausschließlich die Claims `localRuntime`,
 `runtimeLicenseId`, `runtimeActivationId` sowie die Scopes `communication` und

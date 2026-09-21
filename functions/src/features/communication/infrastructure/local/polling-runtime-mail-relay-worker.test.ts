@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {PollingRuntimeMailRelayWorker} from "./polling-runtime-mail-relay-worker.js";
+import {RuntimeMailRelayWorker} from "./polling-runtime-mail-relay-worker.js";
 
 test("acknowledges an event only after local processing succeeds", async () => {
   const relay = new RelayFake();
-  const worker = new PollingRuntimeMailRelayWorker(
+  const worker = new RuntimeMailRelayWorker(
     signedLicense,
     relay,
     {process: async () => undefined} as never,
@@ -19,7 +19,7 @@ test("acknowledges an event only after local processing succeeds", async () => {
 
 test("rejects a delivery when local processing fails", async () => {
   const relay = new RelayFake();
-  const worker = new PollingRuntimeMailRelayWorker(
+  const worker = new RuntimeMailRelayWorker(
     signedLicense,
     relay,
     {process: async () => { throw new Error("SQLite nicht verfügbar"); }} as never,

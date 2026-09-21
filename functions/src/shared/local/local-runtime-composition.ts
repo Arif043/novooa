@@ -17,7 +17,7 @@ import {SQLiteTeamContextStore} from "../../features/teams/infrastructure/local/
 import {LocalTaskMessageSender} from "../../features/task_execution/infrastructure/local/local-task-message-sender.js";
 import {LocalMailRelayHttpHandler} from "../../features/communication/infrastructure/local/local-mail-relay-http-handler.js";
 import {LocalMailRelayEventProcessor} from "../../features/communication/infrastructure/local/local-mail-relay-event-processor.js";
-import {PollingRuntimeMailRelayWorker} from "../../features/communication/infrastructure/local/polling-runtime-mail-relay-worker.js";
+import {RuntimeMailRelayWorker} from "../../features/communication/infrastructure/local/polling-runtime-mail-relay-worker.js";
 import {
   HttpRuntimeMailRelayClient,
   type RuntimeMailRelayClient,
@@ -73,7 +73,7 @@ export type LocalRuntimeComposition = {
   requestHandler: LocalRuntimeRequestHandler;
   taskRunWorker: PollingTaskRunWorker;
   taskTriggerWorker: PollingTaskTriggerWorker;
-  mailRelayWorker: PollingRuntimeMailRelayWorker | undefined;
+  mailRelayWorker: RuntimeMailRelayWorker | undefined;
   firebaseSession: RuntimeFirebaseSession | undefined;
   applicationLogger: LocalApplicationLogger;
   languageModelSecretStore: LocalLanguageModelSecretStore;
@@ -131,7 +131,7 @@ export function createLocalRuntimeComposition(
     mailRelay,
   );
   const mailRelayWorker = mailRelayWorkerFor(
-    options, mailRelay, taskStore, taskRunStore, jobStore, applicationLogger, firebaseSession,
+    options, mailRelay, taskStore, taskRunStore, jobStore, applicationLogger,
   );
   applicationLogger.info("local_runtime.workspace_activated", {
     teamId: options.workspace.teamId,
@@ -219,10 +219,9 @@ function mailRelayWorkerFor(
   taskRunStore: SQLiteTaskRunStore,
   jobStore: SQLiteTaskRunJobStore,
   logger: LocalApplicationLogger,
-  firebaseSession: RuntimeFirebaseSession | undefined,
-): PollingRuntimeMailRelayWorker | undefined {
+): RuntimeMailRelayWorker | undefined {
   if (!process.env.LOCAL_RUNTIME_MAIL_RELAY_URL?.trim()) return undefined;
-  return new PollingRuntimeMailRelayWorker(
+  return new RuntimeMailRelayWorker(
     options.signedLicense, relay,
     new LocalMailRelayEventProcessor(
       new SQLiteInboundChannelMessageStore(options.database),
@@ -233,9 +232,8 @@ function mailRelayWorkerFor(
     ), logger, {
       canProcess: options.isLicenseActive,
       onFailure: (error) => logger.exception(
-        "local_mail_relay.poll_failed", error, {teamId: options.workspace.teamId},
+        "local_mail_relay.processing_failed", error, {teamId: options.workspace.teamId},
       ),
-      pollIntervalMs: firebaseSession === undefined ? undefined : null,
     },
   );
 }

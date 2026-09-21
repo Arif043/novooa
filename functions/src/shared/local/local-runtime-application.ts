@@ -78,7 +78,6 @@ export class LocalRuntimeApplication implements LocalRuntimeRequestHandler {
             "local_runtime.firebase_wakeup_listener_failed", error,
             {licenseId: activation.license.payload.licenseId},
           );
-          runtime.mailRelayWorker?.startFallbackPolling();
         },
       );
     } catch (error) {
@@ -86,7 +85,6 @@ export class LocalRuntimeApplication implements LocalRuntimeRequestHandler {
         "local_runtime.firebase_session_failed", error,
         {licenseId: activation.license.payload.licenseId},
       );
-      runtime.mailRelayWorker?.startFallbackPolling();
     }
   }
 }
