@@ -35,6 +35,7 @@ async function startLocalRuntime(): Promise<void> {
       localMasterKey,
       isLicenseActive: () => licenses.activeContext() !== null,
       signedLicense: () => licenses.signedActiveLicense(),
+      activeLicenseActivation: () => licenses.activeActivation(),
     });
     const restored = await licenses.restore();
     if (restored !== null) await application.activate(restored);

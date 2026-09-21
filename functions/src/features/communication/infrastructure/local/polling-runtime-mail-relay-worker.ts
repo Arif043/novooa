@@ -6,13 +6,13 @@ import {type RuntimeMailRelayClient} from "./runtime-mail-relay-client.js";
 import {type LocalMailRelayEventProcessor} from "./local-mail-relay-event-processor.js";
 
 export type PollingRuntimeMailRelayWorkerOptions = {
-  pollIntervalMs?: number;
+  pollIntervalMs?: number | null;
   canProcess?: () => boolean;
   onFailure?: (error: unknown) => void;
 };
 
 export class PollingRuntimeMailRelayWorker {
-  private readonly pollIntervalMs: number;
+  private readonly pollIntervalMs: number | null;
   private readonly canProcess: () => boolean;
   private readonly onFailure: (error: unknown) => void;
   private timer: NodeJS.Timeout | undefined;
@@ -25,14 +25,16 @@ export class PollingRuntimeMailRelayWorker {
     private readonly logger: LocalApplicationLogger,
     options: PollingRuntimeMailRelayWorkerOptions = {},
   ) {
-    this.pollIntervalMs = options.pollIntervalMs ?? 10_000;
+    this.pollIntervalMs = options.pollIntervalMs === undefined ? 10_000 : options.pollIntervalMs;
     this.canProcess = options.canProcess ?? (() => true);
     this.onFailure = options.onFailure ?? (() => undefined);
   }
 
   start(): void {
     if (this.timer !== undefined) return;
-    this.timer = setInterval(() => this.requestProcessing(), this.pollIntervalMs);
+    if (this.pollIntervalMs !== null) {
+      this.timer = setInterval(() => this.requestProcessing(), this.pollIntervalMs);
+    }
     this.requestProcessing();
   }
 

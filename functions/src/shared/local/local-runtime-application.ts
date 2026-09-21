@@ -1,5 +1,6 @@
 import {type RuntimeLicenseContext} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {type SignedRuntimeLicense} from "../../features/licensing/domain/entities/runtime-license-lease.js";
+import {type RuntimeLicenseActivation} from "../../features/licensing/domain/entities/runtime-license-activation.js";
 import {createLocalRuntimeComposition, type LocalRuntimeComposition} from "./local-runtime-composition.js";
 import {type LocalRuntimeRequest, type LocalRuntimeRequestHandler, type LocalRuntimeResponse} from "./local-runtime-http-server.js";
 import {ensureLocalRuntimeWorkspace, type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
@@ -11,6 +12,7 @@ export type LocalRuntimeApplicationOptions = {
   localMasterKey: string;
   isLicenseActive: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;
+  activeLicenseActivation: () => RuntimeLicenseActivation | null;
 };
 
 export class LocalRuntimeApplication implements LocalRuntimeRequestHandler {
@@ -30,10 +32,12 @@ export class LocalRuntimeApplication implements LocalRuntimeRequestHandler {
       workspace,
       isLicenseActive: this.options.isLicenseActive,
       signedLicense: this.options.signedLicense,
+      activeLicenseActivation: this.options.activeLicenseActivation,
     });
     this.runtime.taskRunWorker.start();
     this.runtime.taskTriggerWorker.start();
     this.runtime.mailRelayWorker?.start();
+    await this.startFirebaseWakeups();
   }
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
@@ -49,8 +53,32 @@ export class LocalRuntimeApplication implements LocalRuntimeRequestHandler {
     await this.runtime.taskTriggerWorker.stop();
     await this.runtime.taskRunWorker.stop();
     await this.runtime.mailRelayWorker?.stop();
+    await this.runtime.firebaseSession?.stop();
     await this.runtime.applicationLogger.flush();
     this.runtime = undefined;
+  }
+
+  private async startFirebaseWakeups(): Promise<void> {
+    const runtime = this.runtime;
+    const activation = this.options.activeLicenseActivation();
+    if (runtime?.firebaseSession === undefined || activation === null) return;
+    try {
+      await runtime.firebaseSession.start(activation);
+      runtime.firebaseSession.listenForWakeups(
+        activation.license.payload.licenseId,
+        () => { void runtime.mailRelayWorker?.processOnce(); },
+        (error) => runtime.applicationLogger.exception(
+          "local_runtime.firebase_wakeup_listener_failed", error,
+          {licenseId: activation.license.payload.licenseId},
+        ),
+      );
+    } catch (error) {
+      runtime.applicationLogger.exception(
+        "local_runtime.firebase_session_failed", error,
+        {licenseId: activation.license.payload.licenseId},
+      );
+      throw error;
+    }
   }
 }
 

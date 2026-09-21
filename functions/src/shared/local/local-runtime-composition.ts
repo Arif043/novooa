@@ -63,12 +63,18 @@ import {CatalogGenkitLanguageModelResolver} from "../../features/language_models
 import {type DocumentStore} from "../../features/data/domain/repositories/document-store.js";
 import {SQLiteDocumentStore} from "../../features/data/infrastructure/local/sqlite-document-store.js";
 import {LocalDataHttpHandler} from "../../features/data/infrastructure/local/local-data-http-handler.js";
+import {
+  RuntimeFirebaseSession,
+  runtimeFirebaseConfigurationFromEnvironment,
+} from "../../features/licensing/infrastructure/local/runtime-firebase-session.js";
+import {type RuntimeLicenseActivation} from "../../features/licensing/domain/entities/runtime-license-activation.js";
 
 export type LocalRuntimeComposition = {
   requestHandler: LocalRuntimeRequestHandler;
   taskRunWorker: PollingTaskRunWorker;
   taskTriggerWorker: PollingTaskTriggerWorker;
   mailRelayWorker: PollingRuntimeMailRelayWorker | undefined;
+  firebaseSession: RuntimeFirebaseSession | undefined;
   applicationLogger: LocalApplicationLogger;
   languageModelSecretStore: LocalLanguageModelSecretStore;
   documentStore: DocumentStore;
@@ -81,6 +87,7 @@ export type LocalRuntimeCompositionOptions = {
   localMasterKey: string;
   isLicenseActive?: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;
+  activeLicenseActivation: () => RuntimeLicenseActivation | null;
 };
 
 export function createLocalRuntimeComposition(
@@ -94,6 +101,7 @@ export function createLocalRuntimeComposition(
   );
   const pushRelay = pushRelayFor();
   const mailRelay = mailRelayFor();
+  const firebaseSession = firebaseSessionFor();
   const taskRunStore = new SQLiteTaskRunStore(
     options.database,
     activityStore,
@@ -123,7 +131,7 @@ export function createLocalRuntimeComposition(
     mailRelay,
   );
   const mailRelayWorker = mailRelayWorkerFor(
-    options, mailRelay, taskStore, taskRunStore, jobStore, applicationLogger,
+    options, mailRelay, taskStore, taskRunStore, jobStore, applicationLogger, firebaseSession,
   );
   applicationLogger.info("local_runtime.workspace_activated", {
     teamId: options.workspace.teamId,
@@ -183,6 +191,7 @@ export function createLocalRuntimeComposition(
       },
     ),
     mailRelayWorker,
+    firebaseSession,
     applicationLogger,
     languageModelSecretStore,
     documentStore,
@@ -210,6 +219,7 @@ function mailRelayWorkerFor(
   taskRunStore: SQLiteTaskRunStore,
   jobStore: SQLiteTaskRunJobStore,
   logger: LocalApplicationLogger,
+  firebaseSession: RuntimeFirebaseSession | undefined,
 ): PollingRuntimeMailRelayWorker | undefined {
   if (!process.env.LOCAL_RUNTIME_MAIL_RELAY_URL?.trim()) return undefined;
   return new PollingRuntimeMailRelayWorker(
@@ -225,8 +235,14 @@ function mailRelayWorkerFor(
       onFailure: (error) => logger.exception(
         "local_mail_relay.poll_failed", error, {teamId: options.workspace.teamId},
       ),
+      pollIntervalMs: firebaseSession === undefined ? undefined : null,
     },
   );
+}
+
+function firebaseSessionFor(): RuntimeFirebaseSession | undefined {
+  const configuration = runtimeFirebaseConfigurationFromEnvironment();
+  return configuration ? new RuntimeFirebaseSession(configuration) : undefined;
 }
 
 function createTaskWorkflow(

@@ -199,6 +199,9 @@ LOCAL_RUNTIME_LICENSE_GATEWAY_URL=https://<region>-<projekt>.cloudfunctions.net/
 LOCAL_RUNTIME_LICENSE_PUBLIC_KEY_FILE=/run/secrets/novooa_runtime_license_public_key
 LOCAL_RUNTIME_PUSH_RELAY_URL=https://<region>-<projekt>.cloudfunctions.net/localRuntimePushRelay
 LOCAL_RUNTIME_MAIL_RELAY_URL=https://<region>-<projekt>.cloudfunctions.net/localRuntimeMailRelay
+LOCAL_RUNTIME_FIREBASE_API_KEY=<Firebase-Web-API-Key>
+LOCAL_RUNTIME_FIREBASE_PROJECT_ID=<Firebase-Projekt-ID>
+LOCAL_RUNTIME_FIREBASE_TOKEN_URL=https://<region>-<projekt>.cloudfunctions.net/issueLocalRuntimeFirebaseToken
 ```
 
 Der Verifikationsschlüssel ist kein Kundengeheimnis und dient ausschließlich dazu,
@@ -208,6 +211,23 @@ die Server-Signatur offline zu prüfen. Im Compose-Betrieb wird er bevorzugt üb
 Ed25519-Schlüssel ist als Firebase-Secret `LOCAL_RUNTIME_LICENSE_SIGNING_KEY`
 ausschließlich im Lizenz-Gateway verfügbar. Er gehört weder in ein Image,
 Compose-File noch in die Desktop-App.
+
+### Firebase-Realtime-Sitzung
+
+Nach der Lizenzaktivierung bzw. bei jedem Runtime-Start fordert die Runtime mit
+der signierten Lizenz **und** dem verschlüsselt gespeicherten
+Aktivierungsgeheimnis ein kurzlebiges Firebase-Custom-Token an. Damit meldet sie
+sich als technischer Runtime-User bei Firebase Auth an und hält einen Firestore-
+Listener auf `localRuntimeWakeups/{licenseId}`. Der Relay schreibt dort bei einer
+neuen Mail nur eine Revisionsnummer; E-Mail-Inhalte verbleiben in der Relay-Queue.
+Die Runtime zieht sie anschließend wie bisher per `pull`, verarbeitet sie lokal
+und sendet `ack` oder `reject`. Die Dead-Letter-Queue bleibt unverändert.
+
+Der technische User trägt ausschließlich die Claims `localRuntime`,
+`runtimeLicenseId`, `runtimeActivationId` sowie die Scopes `communication` und
+`pushNotifications`. Firestore-Regeln erlauben ihm nur das Lesen seines eigenen
+Wake-up-Dokuments. Das Firebase-Token und die Sitzung sind flüchtig; die Runtime
+speichert weder Firebase-Credentials noch einen Admin-Schlüssel.
 
 Das Checkout-Compose setzt absichtlich `NOVOOA_LOCAL_DEVELOPMENT=true`; diese
 Entwicklungsausnahme erzeugt nur den lokalen Beispielarbeitsbereich und darf nicht

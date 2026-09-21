@@ -1,6 +1,6 @@
 import {randomBytes, randomUUID} from "node:crypto";
 import {Timestamp} from "firebase-admin/firestore";
-import {type RuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
+import {type RuntimeLicense, type SignedRuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
 import {type RuntimeLicenseActivationGrant, type RuntimeLicenseRegistry} from "../../domain/repositories/runtime-license-registry.js";
 import {localRuntimeActivationTokenHash, runtimeActivationSecretHash} from "../license-activation-token-hash.js";
 import {getDatabase} from "../../../../shared/firebase/firestore-db.js";
@@ -42,6 +42,21 @@ export class FirestoreRuntimeLicenseRegistry implements RuntimeLicenseRegistry {
   async licenseForId(licenseId: string, now: Date): Promise<RuntimeLicense> {
     const snapshot = await this.snapshotForId(licenseId);
     return activeLicenseFromSnapshot(snapshot, now, true);
+  }
+
+  async verifyActiveActivation(
+    license: SignedRuntimeLicense,
+    activationSecret: string,
+    now: Date,
+  ): Promise<RuntimeLicense> {
+    const snapshot = await this.snapshotForId(license.payload.licenseId);
+    const active = activeLicenseFromSnapshot(snapshot, now, true);
+    const data = snapshot.data();
+    if (active.activationId !== license.payload.activationId ||
+      data.activationSecretHash !== runtimeActivationSecretHash(activationSecret)) {
+      throw new RuntimeLicenseError("Die Runtime-Aktivierung ist ungültig.");
+    }
+    return active;
   }
 
   private async snapshotForId(licenseId: string): Promise<FirebaseFirestore.QueryDocumentSnapshot> {

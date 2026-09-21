@@ -68,8 +68,10 @@ Versand verwendet die Callable Function `sendMicrosoftMailConnectorMessage`.
 
 In der lokalen Runtime bleibt der Microsoft-Graph-Connector vollständig im
 novooa Cloud Relay: OAuth, Token-Refresh, Versand und Graph-Webhooks werden
-dort ausgeführt. Die Runtime ruft mit ihrer signierten Lizenz normalisierte
-E-Mail-Ereignisse ab und bestätigt sie nach idempotenter lokaler Verarbeitung.
+dort ausgeführt. Nach einer Firebase-Custom-Token-Anmeldung beobachtet die
+Runtime ausschließlich ihr lizenzgebundenes Firestore-Wake-up-Dokument. Bei
+einer neuen Revision ruft sie normalisierte E-Mail-Ereignisse aus dem Relay ab
+und bestätigt sie nach idempotenter lokaler Verarbeitung.
 Nach maximal fünf fehlgeschlagenen Zustellversuchen bewahrt der Relay das
 Ereignis in einer lizenzgebundenen Dead-Letter-Queue auf, die die lokale Runtime
 anzeigen und gezielt erneut zustellen lassen kann.

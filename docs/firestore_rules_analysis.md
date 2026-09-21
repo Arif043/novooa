@@ -22,6 +22,12 @@
   - Client can read/list/create/update/delete notes as a team member.
   - Creates/updates validate title, path, type, content size, link list size,
     and timestamps.
+- `/localRuntimeWakeups/{licenseId}`
+  - Contains only `licenseId`, a communication revision and an update timestamp;
+    it never contains mail or push payloads.
+  - A Firebase Custom-Token-authenticated technical runtime may only read the
+    document whose ID equals its `runtimeLicenseId` claim. All client writes and
+    collection queries are denied.
 
 ## User Document Shape
 - `uid`: string, required, immutable, equals document ID and `request.auth.uid`

@@ -20,6 +20,7 @@ export interface RuntimeLicenseService {
   release(): Promise<void>;
   activeContext(): RuntimeLicenseContext | null;
   signedActiveLicense(): SignedRuntimeLicense | null;
+  activeActivation(): RuntimeLicenseActivation | null;
   status(): RuntimeLicenseStatus;
 }
 
@@ -61,6 +62,10 @@ export class GatewayRuntimeLicenseService implements RuntimeLicenseService {
     return this.state !== undefined && this.isValid(this.state) ? this.state.license : null;
   }
 
+  activeActivation(): RuntimeLicenseActivation | null {
+    return this.state !== undefined && this.isValid(this.state) ? this.state : null;
+  }
+
   status(): RuntimeLicenseStatus {
     const active = this.activeContext();
     if (active !== null) return {state: "active", expiresAt: active.expiresAt, name: active.licenseName};
@@ -88,5 +93,6 @@ export class DevelopmentRuntimeLicenseService implements RuntimeLicenseService {
   async release(): Promise<void> {}
   activeContext(): RuntimeLicenseContext { return this.context; }
   signedActiveLicense(): SignedRuntimeLicense | null { return null; }
+  activeActivation(): RuntimeLicenseActivation | null { return null; }
   status(): RuntimeLicenseStatus { return {state: "active", name: this.context.licenseName, expiresAt: this.context.expiresAt}; }
 }

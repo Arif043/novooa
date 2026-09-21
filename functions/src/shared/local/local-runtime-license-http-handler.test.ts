@@ -45,6 +45,7 @@ class FakeLicenseService implements RuntimeLicenseService {
   async release(): Promise<void> { this.active = false; this.released = true; }
   activeContext(): RuntimeLicenseContext | null { return this.active ? context : null; }
   signedActiveLicense() { return null; }
+  activeActivation() { return null; }
   status(): RuntimeLicenseStatus { return this.active ? {state: "active", expiresAt: context.expiresAt} : {state: "notActivated"}; }
 }
 

@@ -1,5 +1,5 @@
 import {randomUUID} from "node:crypto";
-import {Timestamp, type DocumentData} from "firebase-admin/firestore";
+import {FieldValue, Timestamp, type DocumentData} from "firebase-admin/firestore";
 import {
   type RuntimeMailRelayDeadLetter,
 } from "../../domain/entities/runtime-mail-relay-event.js";
@@ -24,6 +24,11 @@ implements RuntimeMailRelayEventStore {
     await getDatabase().runTransaction(async (transaction) => {
       if ((await transaction.get(reference)).exists) return;
       transaction.create(reference, eventDocument(input));
+      transaction.set(wakeupReference(input.licenseId), {
+        licenseId: input.licenseId,
+        communicationRevision: FieldValue.increment(1),
+        updatedAt: FieldValue.serverTimestamp(),
+      }, {merge: true});
     });
   }
 
@@ -119,6 +124,10 @@ function events() {
 
 function deadLetters() {
   return getDatabase().collection("localRuntimeMailRelayDeadLetters");
+}
+
+function wakeupReference(licenseId: string) {
+  return getDatabase().collection("localRuntimeWakeups").doc(licenseId);
 }
 
 function eventReference(eventId: string) {

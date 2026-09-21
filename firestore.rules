@@ -148,6 +148,13 @@ rules_version = '2';
 //   - createdAt / updatedAt: timestamp
 //   - createdAt, updatedAt: timestamp
 //
+// Collection: localRuntimeWakeups
+// Document ID: active runtime license ID
+// Fields (written only by Cloud Functions):
+//   - licenseId: string (required, immutable) - matches document ID
+//   - communicationRevision: number (required) - monotonically advances on mail
+//   - updatedAt: timestamp (required) - last relay wake-up
+//
 // ===============================================================
 
 service cloud.firestore {
@@ -163,6 +170,12 @@ service cloud.firestore {
     function isTeamMember(teamId) {
       return isAuthenticated() &&
         exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid));
+    }
+
+    function isLocalRuntimeForLicense(licenseId) {
+      return isAuthenticated() &&
+        request.auth.token.localRuntime == true &&
+        request.auth.token.runtimeLicenseId == licenseId;
     }
 
     function isTeamOwner(teamId) {
@@ -970,6 +983,12 @@ service cloud.firestore {
 
     match /licenses/{tokenHash} {
       allow read, write: if false;
+    }
+
+    // Contains only a communication wake-up revision, never message contents.
+    match /localRuntimeWakeups/{licenseId} {
+      allow get: if isLocalRuntimeForLicense(licenseId);
+      allow list, create, update, delete: if false;
     }
 
     match /{document=**} {
