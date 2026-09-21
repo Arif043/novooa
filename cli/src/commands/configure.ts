@@ -98,16 +98,29 @@ export async function configureCommand(): Promise<void> {
       console.log(chalk.dim('  Authentifizierung: ' + (answers.sshAuthMethod === 'key' ? '🔑 SSH-Schlüssel' : '🔐 Passwort')));
     } else {
       console.log(chalk.yellow('⚠ SSH-Verbindung fehlgeschlagen.'));
-      console.log(chalk.dim('Stelle sicher, dass:'));
+      console.log(chalk.dim('\nFehlerbehandlung:'));
       if (answers.sshAuthMethod === 'key') {
-        console.log(chalk.dim('  • Der SSH-Schlüssel existiert: ' + keyPath));
-        console.log(chalk.dim('  • Der öffentliche Schlüssel auf Windows hinterlegt ist'));
+        console.log(chalk.dim('\n1️⃣  SSH-Schlüssel überprüfen:'));
+        console.log(chalk.dim(`  • Schlüssel-Datei existiert? ${keyPath}`));
+        console.log(chalk.dim('    ls -la ' + keyPath));
+
+        console.log(chalk.dim('\n2️⃣  Öffentlichen Schlüssel auf Windows hinzufügen:'));
+        console.log(chalk.dim('  Mac: cat ~/.ssh/id_ed25519.pub'));
+        console.log(chalk.dim('  Windows (PowerShell als Admin):'));
+        console.log(chalk.dim('    mkdir $env:USERPROFILE\\.ssh -Force'));
+        console.log(chalk.dim('    Add-Content -Path $env:USERPROFILE\\.ssh\\authorized_keys -Value "<paste key here>"'));
+        console.log(chalk.dim('    icacls $env:USERPROFILE\\.ssh\\authorized_keys /inheritance:r /grant:r "$env:USERNAME`:(F)"'));
+
+        console.log(chalk.dim('\n3️⃣  SSH-Test direkt vom Mac:'));
+        console.log(chalk.dim(`  ssh -i ${keyPath} ${answers.windowsUsername}@${answers.windowsHost} "Write-Host 'OK'"`));
       } else {
-        console.log(chalk.dim('  • sshpass installiert ist (brew install sshpass)'));
-        console.log(chalk.dim('  • Das Passwort korrekt ist'));
+        console.log(chalk.dim('  • sshpass installiert? brew install sshpass'));
+        console.log(chalk.dim('  • Passwort korrekt?'));
       }
-      console.log(chalk.dim('  • Die IP-Adresse korrekt ist'));
-      console.log(chalk.dim('  • OpenSSH auf Windows aktiviert ist'));
+      console.log(chalk.dim('\n  • IP-Adresse korrekt: ' + answers.windowsHost));
+      console.log(chalk.dim('  • Benutzer korrekt: ' + answers.windowsUsername));
+      console.log(chalk.dim('  • OpenSSH auf Windows aktiviert?'));
+      console.log(chalk.dim('    Get-Service sshd (sollte Running sein)\n'));
     }
   }
 

@@ -133,13 +133,15 @@ function buildSshCommand(options: SshOptions, command: string): string {
   }
 
   // PowerShell-Befehl escapen für SSH
+  // Wichtig: Backslashes müssen escaped sein für SSH/Shell
   const escapedCmd = command
+    .replace(/\\/g, '\\\\') // Backslashes first!
     .replace(/"/g, '\\"')
     .replace(/\$/g, '\\$')
     .replace(/`/g, '\\`');
 
   // SSH mit Schlüssel
-  return `ssh -i "${keyFile}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 ${host} "powershell -NoProfile -Command \\"${escapedCmd}\\""`;
+  return `ssh -i "${keyFile}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 -o BatchMode=yes ${host} "powershell -NoProfile -Command \\"${escapedCmd}\\""`;
 }
 
 /**
