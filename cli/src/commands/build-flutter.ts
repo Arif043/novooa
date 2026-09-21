@@ -57,11 +57,34 @@ export async function buildFlutterCommand(): Promise<void> {
     }
     spinner.succeed('SSH-Verbindung erfolgreich');
 
-    // Step 2: Clone repository
-    if (answers.cloneFirst) {
-      spinner = ora('Repository wird geklont/aktualisiert...').start();
-      await ssh.cloneRepository(sshOpts, cfg.repoUrl, cfg.repoPath);
-      spinner.succeed('Repository aktualisiert');
+    // Step 2: Clone or update repository
+    spinner = ora('Überprüfe Repository...').start();
+    const repoExists = await ssh.repositoryExists(sshOpts, cfg.repoPath);
+
+    if (!repoExists) {
+      spinner.text = 'Repository nicht gefunden. Klone es jetzt...';
+      try {
+        await ssh.cloneRepository(sshOpts, cfg.repoUrl, cfg.repoPath);
+        spinner.succeed('Repository geklont');
+      } catch (error) {
+        spinner.fail(`Repository-Klonen fehlgeschlagen: ${error}`);
+        console.log(chalk.dim('\nMögliche Ursachen:'));
+        console.log(chalk.dim('  • Git nicht auf Windows installiert?'));
+        console.log(chalk.dim('  • Repository-URL falsch?'));
+        console.log(chalk.dim('  • Berechtigungen?\n'));
+        return;
+      }
+    } else if (answers.cloneFirst) {
+      spinner.text = 'Repository wird aktualisiert...';
+      try {
+        await ssh.cloneRepository(sshOpts, cfg.repoUrl, cfg.repoPath);
+        spinner.succeed('Repository aktualisiert');
+      } catch (error) {
+        spinner.fail(`Repository-Update fehlgeschlagen: ${error}`);
+        console.log(chalk.dim('Versuche trotzdem den Build...\n'));
+      }
+    } else {
+      spinner.succeed('Repository existiert');
     }
 
     // Step 3: Build Flutter

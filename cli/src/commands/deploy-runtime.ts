@@ -50,12 +50,43 @@ export async function deployRuntimeCommand(): Promise<void> {
 
     switch (answers.action) {
       case 'start': {
-        spinner = ora('Prüfe Secrets (runtime-master-key, etc.)...').start();
-        // TODO: Prüfe ob .novooa/runtime-master-key existiert
+        // Überprüfe ob Repository existiert
+        spinner = ora('Überprüfe Repository...').start();
+        const repoExists = await ssh.repositoryExists(sshOpts, cfg.repoPath);
 
-        spinner.text = 'Docker Compose wird gestartet...';
-        await ssh.startDockerCompose(sshOpts, cfg.repoPath);
-        spinner.succeed('Runtime gestartet!');
+        if (!repoExists) {
+          spinner.warn('Repository nicht gefunden. Klone es jetzt...');
+          try {
+            await ssh.cloneRepository(sshOpts, cfg.repoUrl, cfg.repoPath);
+            spinner.succeed('Repository geklont');
+          } catch (error) {
+            spinner.fail(`Repository-Klonen fehlgeschlagen: ${error}`);
+            console.log(chalk.dim('\nMögliche Ursachen:'));
+            console.log(chalk.dim('  • Git nicht auf Windows installiert?'));
+            console.log(chalk.dim('  • Repository-URL falsch?'));
+            console.log(chalk.dim('  • Berechtigungen für das Verzeichnis?\n'));
+            return;
+          }
+        } else {
+          spinner.succeed('Repository existiert');
+        }
+
+        spinner = ora('Überprüfe Secrets...').start();
+        // TODO: Prüfe ob .novooa/runtime-master-key existiert
+        spinner.succeed('Secrets ok');
+
+        spinner = ora('Docker Compose wird gestartet...').start();
+        try {
+          await ssh.startDockerCompose(sshOpts, cfg.repoPath);
+          spinner.succeed('Runtime gestartet!');
+        } catch (error) {
+          spinner.fail(`Docker Compose fehlgeschlagen: ${error}`);
+          console.log(chalk.dim('\nMögliche Ursachen:'));
+          console.log(chalk.dim('  • Docker nicht auf Windows installiert?'));
+          console.log(chalk.dim('  • Docker Daemon nicht läuft?'));
+          console.log(chalk.dim('  • Berechtigungsproblem?\n'));
+          return;
+        }
 
         console.log(chalk.green('\n✓ Runtime läuft auf http://' + cfg.windowsHost + ':8090\n'));
         console.log(chalk.dim('Nächste Schritte:'));

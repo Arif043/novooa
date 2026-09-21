@@ -158,6 +158,21 @@ export async function testConnection(options: SshOptions): Promise<boolean> {
 }
 
 /**
+ * Überprüft ob Repository auf Remote existiert.
+ */
+export async function repositoryExists(
+  options: SshOptions,
+  targetPath: string,
+): Promise<boolean> {
+  try {
+    await executeSshCommand(options, `Test-Path "${targetPath}" -PathType Container`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Klont Repository auf Remote-Windows-Rechner.
  */
 export async function cloneRepository(
@@ -175,7 +190,7 @@ export async function cloneRepository(
       `mkdir -Force "${parentDir}" | Out-Null`,
     );
   } catch {
-    // Ignorieren falls Verzeichnis existiert
+    throw new Error(`Konnte nicht auf ${parentDir} zugreifen. Prüfe Berechtigungen!`);
   }
 
   // Dann klonen oder aktualisieren
@@ -187,7 +202,11 @@ if (Test-Path "${targetPath}") {
 }
 `;
 
-  await executeSshCommand(options, cmd);
+  try {
+    await executeSshCommand(options, cmd);
+  } catch (error) {
+    throw new Error(`Repository-Klonen fehlgeschlagen: ${error}`);
+  }
 }
 
 /**
