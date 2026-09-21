@@ -1,4 +1,4 @@
-import { execSync, spawnSync } from 'child_process';
+import { execSync } from 'child_process';
 import chalk from 'chalk';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -28,6 +28,13 @@ function findSshKey(): string | null {
 }
 
 /**
+ * Expandiert ~ zu Home-Verzeichnis
+ */
+function expandPath(filePath: string): string {
+  return filePath.replace('~', os.homedir());
+}
+
+/**
  * Führt einen PowerShell-Befehl auf dem Remote-Windows-Rechner aus.
  * Nutzt SSH mit Schlüssel-Authentifizierung (bevorzugt) oder Passwort.
  */
@@ -35,8 +42,6 @@ export async function executeSshCommand(
   options: SshOptions,
   command: string,
 ): Promise<string> {
-  const sshCommand = buildSshCommand(options, command);
-
   try {
     // Mit sshpass für Passwort-Auth
     if (options.password) {
@@ -44,6 +49,7 @@ export async function executeSshCommand(
     }
 
     // Normale SSH (mit Schlüssel)
+    const sshCommand = buildSshCommand(options, command);
     const output = execSync(sshCommand, {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -63,10 +69,15 @@ export async function executeSshCommand(
  */
 function executeSshWithPassword(options: SshOptions, command: string): string {
   const host = `${options.username}@${options.host}`;
-  const escapedCmd = command.replace(/"/g, '\\"').replace(/\$/g, '\\$');
+
+  // PowerShell-Befehl escapen
+  const escapedCmd = command
+    .replace(/"/g, '\\"')
+    .replace(/\$/g, '\\$')
+    .replace(/`/g, '\\`');
 
   // sshpass -p password ssh ...
-  const sshCommand = `sshpass -p "${options.password}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${host} "powershell -NoProfile -Command \\"${escapedCmd}\\""`;
+  const sshCommand = `sshpass -p "${options.password}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 ${host} "powershell -NoProfile -Command \\"${escapedCmd}\\""`;
 
   try {
     const output = execSync(sshCommand, {
@@ -98,15 +109,37 @@ function executeSshWithPassword(options: SshOptions, command: string): string {
 function buildSshCommand(options: SshOptions, command: string): string {
   const host = `${options.username}@${options.host}`;
 
-  // SSH-Schlüssel-Option falls vorhanden
-  const keyFile = options.keyFile || findSshKey();
-  const keyOption = keyFile ? `-i "${keyFile}"` : '';
+  // SSH-Schlüssel auswählen
+  let keyFile: string | undefined = options.keyFile;
+  if (!keyFile) {
+    const found = findSshKey();
+    if (found) {
+      keyFile = found;
+    }
+  }
+  if (keyFile) {
+    keyFile = expandPath(keyFile);
+  }
+
+  if (!keyFile) {
+    throw new Error(
+      'SSH-Schlüssel nicht gefunden. Generiere einen mit: ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""',
+    );
+  }
+
+  // Prüfe ob Schlüssel-Datei existiert
+  if (!fs.existsSync(keyFile)) {
+    throw new Error(`SSH-Schlüssel-Datei nicht gefunden: ${keyFile}`);
+  }
 
   // PowerShell-Befehl escapen für SSH
-  const escapedCmd = command.replace(/"/g, '\\"').replace(/\$/g, '\\$');
+  const escapedCmd = command
+    .replace(/"/g, '\\"')
+    .replace(/\$/g, '\\$')
+    .replace(/`/g, '\\`');
 
-  // SSH mit StrictHostKeyChecking=no für automation
-  return `ssh ${keyOption} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 ${host} "powershell -NoProfile -Command \\"${escapedCmd}\\""`;
+  // SSH mit Schlüssel
+  return `ssh -i "${keyFile}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 ${host} "powershell -NoProfile -Command \\"${escapedCmd}\\""`;
 }
 
 /**
@@ -129,21 +162,29 @@ export async function cloneRepository(
   repoUrl: string,
   targetPath: string,
 ): Promise<void> {
-  const mkdirCmd = `mkdir -Force ${targetPath.split('\\').slice(0, -1).join('\\')} | Out-Null`;
-  const gitCloneCmd = `cd ${targetPath.split('\\').slice(0, -1).join('\\')} && git clone ${repoUrl} ${targetPath.split('\\').pop()}`;
+  const parentDir = targetPath.split('\\').slice(0, -1).join('\\');
+  const repoName = targetPath.split('\\').pop();
 
   // Zuerst Verzeichnis anlegen
   try {
-    await executeSshCommand(options, mkdirCmd);
+    await executeSshCommand(
+      options,
+      `mkdir -Force "${parentDir}" | Out-Null`,
+    );
   } catch {
     // Ignorieren falls Verzeichnis existiert
   }
 
-  // Dann klonen (oder aktualisieren falls vorhanden)
-  await executeSshCommand(
-    options,
-    `if (Test-Path ${targetPath}) { cd ${targetPath}; git pull } else { ${gitCloneCmd} }`,
-  );
+  // Dann klonen oder aktualisieren
+  const cmd = `
+if (Test-Path "${targetPath}") {
+  cd "${targetPath}"; git pull
+} else {
+  cd "${parentDir}"; git clone "${repoUrl}" "${repoName}"
+}
+`;
+
+  await executeSshCommand(options, cmd);
 }
 
 /**
@@ -154,7 +195,12 @@ export async function buildFlutterWindows(
   repoPath: string,
   apiUrl: string,
 ): Promise<void> {
-  const buildCmd = `cd ${repoPath} && flutter build windows --dart-define=NOVOOA_RUNTIME=standalone --dart-define=WORKSPACE_API_URL=http://${apiUrl}:8090 --release`;
+  const buildCmd = `
+cd "${repoPath}" && flutter build windows `
+    + `--dart-define=NOVOOA_RUNTIME=standalone `
+    + `--dart-define=WORKSPACE_API_URL=http://${apiUrl}:8090 `
+    + `--release
+`;
 
   await executeSshCommand(options, buildCmd);
 }
@@ -166,7 +212,7 @@ export async function startDockerCompose(
   options: SshOptions,
   repoPath: string,
 ): Promise<void> {
-  const cmd = `cd ${repoPath} && docker compose -f docker-compose.local.yaml up --build --detach`;
+  const cmd = `cd "${repoPath}" && docker compose -f docker-compose.local.yaml up --build --detach`;
 
   await executeSshCommand(options, cmd);
 }
@@ -175,7 +221,7 @@ export async function startDockerCompose(
  * Prüft Docker Compose Status.
  */
 export async function checkDockerStatus(options: SshOptions, repoPath: string): Promise<string> {
-  const cmd = `cd ${repoPath} && docker compose -f docker-compose.local.yaml ps`;
+  const cmd = `cd "${repoPath}" && docker compose -f docker-compose.local.yaml ps`;
 
   return await executeSshCommand(options, cmd);
 }
@@ -184,7 +230,7 @@ export async function checkDockerStatus(options: SshOptions, repoPath: string): 
  * Zeigt Docker Compose Logs.
  */
 export async function showDockerLogs(options: SshOptions, repoPath: string): Promise<string> {
-  const cmd = `cd ${repoPath} && docker compose -f docker-compose.local.yaml logs --tail=50`;
+  const cmd = `cd "${repoPath}" && docker compose -f docker-compose.local.yaml logs --tail=50`;
 
   return await executeSshCommand(options, cmd);
 }
@@ -193,7 +239,7 @@ export async function showDockerLogs(options: SshOptions, repoPath: string): Pro
  * Stoppt Docker Compose.
  */
 export async function stopDockerCompose(options: SshOptions, repoPath: string): Promise<void> {
-  const cmd = `cd ${repoPath} && docker compose -f docker-compose.local.yaml down`;
+  const cmd = `cd "${repoPath}" && docker compose -f docker-compose.local.yaml down`;
 
   await executeSshCommand(options, cmd);
 }
