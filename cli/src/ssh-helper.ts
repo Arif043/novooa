@@ -223,13 +223,14 @@ export async function buildFlutterWindows(
 }
 
 /**
- * Startet Docker Compose auf Remote Windows.
+ * Startet Docker Compose auf Remote Windows (nutzt absoluten Pfad).
  */
 export async function startDockerCompose(
   options: SshOptions,
   repoPath: string,
 ): Promise<void> {
-  const cmd = `cd "${repoPath}"; docker compose -f docker-compose.local.yaml up --build --detach`;
+  const composeFile = `${repoPath}\\docker-compose.local.yaml`;
+  const cmd = `docker compose -f "${composeFile}" up --build --detach`;
 
   await executeSshCommand(options, cmd);
 }
@@ -238,7 +239,8 @@ export async function startDockerCompose(
  * Prüft Docker Compose Status.
  */
 export async function checkDockerStatus(options: SshOptions, repoPath: string): Promise<string> {
-  const cmd = `cd "${repoPath}"; docker compose -f docker-compose.local.yaml ps`;
+  const composeFile = `${repoPath}\\docker-compose.local.yaml`;
+  const cmd = `docker compose -f "${composeFile}" ps`;
 
   return await executeSshCommand(options, cmd);
 }
@@ -247,7 +249,8 @@ export async function checkDockerStatus(options: SshOptions, repoPath: string): 
  * Zeigt Docker Compose Logs.
  */
 export async function showDockerLogs(options: SshOptions, repoPath: string): Promise<string> {
-  const cmd = `cd "${repoPath}"; docker compose -f docker-compose.local.yaml logs --tail=50`;
+  const composeFile = `${repoPath}\\docker-compose.local.yaml`;
+  const cmd = `docker compose -f "${composeFile}" logs --tail=50`;
 
   return await executeSshCommand(options, cmd);
 }
@@ -256,7 +259,8 @@ export async function showDockerLogs(options: SshOptions, repoPath: string): Pro
  * Stoppt Docker Compose.
  */
 export async function stopDockerCompose(options: SshOptions, repoPath: string): Promise<void> {
-  const cmd = `cd "${repoPath}"; docker compose -f docker-compose.local.yaml down`;
+  const composeFile = `${repoPath}\\docker-compose.local.yaml`;
+  const cmd = `docker compose -f "${composeFile}" down`;
 
   await executeSshCommand(options, cmd);
 }
