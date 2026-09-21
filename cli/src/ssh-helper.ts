@@ -146,10 +146,11 @@ function buildSshCommand(options: SshOptions, command: string): string {
 
 /**
  * Prüft ob Host erreichbar ist via SSH.
+ * Nutzt cmd statt PowerShell für bessere Kompatibilität.
  */
 export async function testConnection(options: SshOptions): Promise<boolean> {
   try {
-    await executeSshCommand(options, 'Write-Host "OK"');
+    await executeSshCommand(options, 'cmd /c echo OK');
     return true;
   } catch {
     return false;
