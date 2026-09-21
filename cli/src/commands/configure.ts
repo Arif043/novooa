@@ -4,7 +4,8 @@ import * as config from '../config.js';
 import { testConnection } from '../ssh-helper.js';
 
 export async function configureCommand(): Promise<void> {
-  console.log('\n' + chalk.blue('⚙️  Konfiguration'));
+  const orange = chalk.hex('#FF8C00');
+  console.log('\n' + orange('⚙️  Konfiguration'));
 
   const currentConfig = await config.loadConfig();
   const defaults = currentConfig || config.getDefaultConfig();

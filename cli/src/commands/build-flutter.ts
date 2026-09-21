@@ -5,7 +5,8 @@ import * as config from '../config.js';
 import * as ssh from '../ssh-helper.js';
 
 export async function buildFlutterCommand(): Promise<void> {
-  console.log('\n' + chalk.blue('🚀 Flutter Windows Client bauen'));
+  const orange = chalk.hex('#FF8C00');
+  console.log('\n' + orange('🚀 Flutter Windows Client bauen'));
 
   const cfg = await config.loadConfig();
   if (!cfg) {

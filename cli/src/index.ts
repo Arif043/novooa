@@ -10,9 +10,10 @@ import { buildRuntimeCommand } from './commands/build-runtime.js';
 const VERSION = '1.0.0';
 
 async function main(): Promise<void> {
-  console.log(chalk.cyan('\n╔════════════════════════════════════════╗'));
-  console.log(chalk.cyan('║     novooa Deployment CLI v' + VERSION.padEnd(20) + '║'));
-  console.log(chalk.cyan('╚════════════════════════════════════════╝\n'));
+  const orange = chalk.hex('#FF8C00');
+  console.log(orange('\n╔════════════════════════════════════════╗'));
+  console.log(orange('║     novooa Deployment CLI v' + VERSION.padEnd(20) + '║'));
+  console.log(orange('╚════════════════════════════════════════╝\n'));
 
   const { command } = await inquirer.prompt([
     {

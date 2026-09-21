@@ -5,7 +5,8 @@ import * as config from '../config.js';
 import * as ssh from '../ssh-helper.js';
 
 export async function deployRuntimeCommand(): Promise<void> {
-  console.log('\n' + chalk.blue('🐳 Lokale Runtime deployen'));
+  const orange = chalk.hex('#FF8C00');
+  console.log('\n' + orange('🐳 Lokale Runtime deployen'));
 
   const cfg = await config.loadConfig();
   if (!cfg) {
