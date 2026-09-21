@@ -33,6 +33,7 @@ export class LocalRuntimeApplication implements LocalRuntimeRequestHandler {
     });
     this.runtime.taskRunWorker.start();
     this.runtime.taskTriggerWorker.start();
+    this.runtime.mailRelayWorker?.start();
   }
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
@@ -47,6 +48,7 @@ export class LocalRuntimeApplication implements LocalRuntimeRequestHandler {
     if (this.runtime === undefined) return;
     await this.runtime.taskTriggerWorker.stop();
     await this.runtime.taskRunWorker.stop();
+    await this.runtime.mailRelayWorker?.stop();
     await this.runtime.applicationLogger.flush();
     this.runtime = undefined;
   }

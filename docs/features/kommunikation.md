@@ -66,6 +66,14 @@ gestartete E-Mail-Tasks benötigen eine explizite `connectorId`. So geht jede
 Arbeitsplan-E-Mail aus einem verbundenen Kundenpostfach heraus. Der manuelle
 Versand verwendet die Callable Function `sendMicrosoftMailConnectorMessage`.
 
+In der lokalen Runtime bleibt der Microsoft-Graph-Connector vollständig im
+novooa Cloud Relay: OAuth, Token-Refresh, Versand und Graph-Webhooks werden
+dort ausgeführt. Die Runtime ruft mit ihrer signierten Lizenz normalisierte
+E-Mail-Ereignisse ab und bestätigt sie nach idempotenter lokaler Verarbeitung.
+Nach maximal fünf fehlgeschlagenen Zustellversuchen bewahrt der Relay das
+Ereignis in einer lizenzgebundenen Dead-Letter-Queue auf, die die lokale Runtime
+anzeigen und gezielt erneut zustellen lassen kann.
+
 ## Ereignisse
 
 Ein Connector normalisiert neue E-Mails in ein `EmailReceivedEvent`. Dieses

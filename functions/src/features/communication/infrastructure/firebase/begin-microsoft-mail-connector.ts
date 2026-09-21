@@ -31,6 +31,7 @@ async function beginAuthorization(uid: string): Promise<{authorizationUrl: strin
   return beginMailConnectorAuthorization({
     authorization: {
       id: authorizationId(), teamId, uid, provider: "microsoftGraph", codeVerifier: verifier,
+      deliveryTarget: "cloud", runtimeLicenseId: null,
       expiresAt: expiresAt(),
     },
     codeChallenge: codeChallenge(verifier),

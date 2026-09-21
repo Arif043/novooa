@@ -23,34 +23,35 @@ export async function completeMailConnectorAuthorization(input: {
     code: input.authorizationCode,
     codeVerifier: authorization.codeVerifier,
   });
-  return createConnector(input, authorization.teamId, authorization.uid, token);
+  return createConnector(input, authorization, token);
 }
 
 async function createConnector(
   input: Parameters<typeof completeMailConnectorAuthorization>[0],
-  teamId: string,
-  uid: string,
+  authorization: Awaited<ReturnType<MailConnectorRepository["consumeAuthorization"]>> & {},
   token: {accessToken: string; refreshToken: string},
 ): Promise<MailConnector> {
+  if (authorization === null) throw new Error("The mail connector authorization is invalid or expired.");
   const profile = await input.provider.loadProfile(token.accessToken);
   const subscription = await input.provider.createMessageSubscription({
     accessToken: token.accessToken,
     clientState: input.subscriptionClientState,
   });
-  const connector = connectorFrom(input, teamId, uid, profile, subscription);
+  const connector = connectorFrom(input, authorization, profile, subscription);
   await input.repository.createConnector({connector, credentials: credentialsFrom(token, input)});
   return connector;
 }
 
 function connectorFrom(
   input: Parameters<typeof completeMailConnectorAuthorization>[0],
-  teamId: string,
-  uid: string,
+  authorization: NonNullable<Awaited<ReturnType<MailConnectorRepository["consumeAuthorization"]>>>,
   profile: {emailAddress: string; displayName: string},
   subscription: {id: string; expiresAt: Date},
 ): MailConnector {
   return {
-    id: input.connectorId, teamId, createdByUid: uid, provider: input.provider.provider,
+    id: input.connectorId, teamId: authorization.teamId, createdByUid: authorization.uid, provider: input.provider.provider,
+    deliveryTarget: authorization.deliveryTarget,
+    runtimeLicenseId: authorization.runtimeLicenseId,
     emailAddress: profile.emailAddress, displayName: profile.displayName, status: "active",
     subscriptionId: subscription.id, subscriptionExpiresAt: subscription.expiresAt,
     createdAt: input.now, updatedAt: input.now,

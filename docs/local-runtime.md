@@ -198,6 +198,7 @@ Der Produktiv-Container benötigt diese Variablen:
 LOCAL_RUNTIME_LICENSE_GATEWAY_URL=https://<region>-<projekt>.cloudfunctions.net/issueLocalRuntimeLicense
 LOCAL_RUNTIME_LICENSE_PUBLIC_KEY_FILE=/run/secrets/novooa_runtime_license_public_key
 LOCAL_RUNTIME_PUSH_RELAY_URL=https://<region>-<projekt>.cloudfunctions.net/localRuntimePushRelay
+LOCAL_RUNTIME_MAIL_RELAY_URL=https://<region>-<projekt>.cloudfunctions.net/localRuntimeMailRelay
 ```
 
 Der Verifikationsschlüssel ist kein Kundengeheimnis und dient ausschließlich dazu,
@@ -278,6 +279,23 @@ Der Relay verwaltet Twilio-Credentials und Subaccounts zentral. Die lokale
 Runtime authentifiziert sich beim Relay über ein Geräte-/Workspace-Token. Wenn
 die lokale Runtime offline ist, kann der Relay Events puffern und später
 zustellen.
+
+## Mail-Relay und Dead-Letter-Queue
+
+Microsoft-Graph-Connectoren der lokalen Variante werden vollständig durch den
+novooa Cloud Relay betrieben: OAuth, Refresh-Tokens, Graph-Aufrufe, Versand und
+Webhook-Verarbeitung verbleiben in der Cloud. Die lokale Runtime hält nur eine
+ausgehende HTTPS-Verbindung und ruft mit ihrer signierten Lizenz normalisierte
+`emailReceived`-Ereignisse ab. Nach erfolgreicher lokaler, idempotenter
+Verarbeitung bestätigt sie jedes Ereignis; fehlgeschlagene Zustellungen werden
+mit begrenzten Wiederholungen erneut angeboten.
+
+Nach fünf nicht bestätigten oder abgelehnten Zustellversuchen verschiebt der
+Relay das Ereignis in die team- und lizenzgebundene Dead-Letter-Queue. Die
+lokale Runtime kann diese über `GET /v1/mail-relay/dead-letters` einsehen und
+ein Ereignis über `POST /v1/mail-relay/dead-letters/{eventId}/replay` erneut
+einstellen. Damit gehen E-Mails bei einer längeren Offline-Phase nicht verloren,
+ohne dass die Cloud die lokale Runtime direkt erreichen muss.
 
 ## Aktueller Implementierungsstand
 

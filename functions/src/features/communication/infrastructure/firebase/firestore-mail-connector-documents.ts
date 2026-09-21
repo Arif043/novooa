@@ -29,14 +29,18 @@ export function authorizationFrom(data: DocumentData): MailConnectorAuthorizatio
   if (!expiresAt || expiresAt <= new Date() || data.provider !== "microsoftGraph") return null;
   return {
     id: String(data.id ?? ""), teamId: String(data.teamId ?? ""), uid: String(data.uid ?? ""),
-    provider: data.provider, codeVerifier: String(data.codeVerifier ?? ""), expiresAt,
+    provider: data.provider,
+    deliveryTarget: deliveryTargetFrom(data.deliveryTarget),
+    runtimeLicenseId: runtimeLicenseIdFrom(data.runtimeLicenseId),
+    codeVerifier: String(data.codeVerifier ?? ""), expiresAt,
   };
 }
 
 export function connectorFrom(data: DocumentData, id: string): MailConnector {
   return {
     id, teamId: String(data.teamId ?? ""), createdByUid: String(data.createdByUid ?? ""),
-    provider: providerFrom(data.provider), emailAddress: String(data.emailAddress ?? ""),
+    provider: providerFrom(data.provider), deliveryTarget: deliveryTargetFrom(data.deliveryTarget),
+    runtimeLicenseId: runtimeLicenseIdFrom(data.runtimeLicenseId), emailAddress: String(data.emailAddress ?? ""),
     displayName: String(data.displayName ?? ""), status: statusFrom(data.status),
     subscriptionId: optionalString(data.subscriptionId),
     subscriptionExpiresAt: dateFrom(data.subscriptionExpiresAt),
@@ -57,6 +61,14 @@ function providerFrom(value: unknown): "microsoftGraph" {
 function statusFrom(value: unknown): MailConnector["status"] {
   if (value === "active" || value === "reauthorizationRequired" || value === "disconnected") return value;
   throw new Error("Unsupported mail connector status.");
+}
+
+function deliveryTargetFrom(value: unknown): MailConnector["deliveryTarget"] {
+  return value === "localRuntime" ? value : "cloud";
+}
+
+function runtimeLicenseIdFrom(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
 
 function dateFrom(value: unknown): Date | null {

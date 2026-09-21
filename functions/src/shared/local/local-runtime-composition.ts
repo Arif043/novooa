@@ -15,6 +15,15 @@ import {
 import {UnavailableLocalModelInference} from "../../features/machine_learning/infrastructure/local/unavailable-local-model-inference.js";
 import {SQLiteTeamContextStore} from "../../features/teams/infrastructure/local/sqlite-team-context-store.js";
 import {LocalTaskMessageSender} from "../../features/task_execution/infrastructure/local/local-task-message-sender.js";
+import {LocalMailRelayHttpHandler} from "../../features/communication/infrastructure/local/local-mail-relay-http-handler.js";
+import {LocalMailRelayEventProcessor} from "../../features/communication/infrastructure/local/local-mail-relay-event-processor.js";
+import {PollingRuntimeMailRelayWorker} from "../../features/communication/infrastructure/local/polling-runtime-mail-relay-worker.js";
+import {
+  HttpRuntimeMailRelayClient,
+  type RuntimeMailRelayClient,
+  UnavailableRuntimeMailRelayClient,
+} from "../../features/communication/infrastructure/local/runtime-mail-relay-client.js";
+import {SQLiteInboundChannelMessageStore} from "../../features/communication/infrastructure/local/sqlite-inbound-channel-message-store.js";
 import {LocalPushDeviceHttpHandler} from "../../features/notifications/infrastructure/local/local-push-device-http-handler.js";
 import {
   HttpRuntimePushRelayClient,
@@ -59,6 +68,7 @@ export type LocalRuntimeComposition = {
   requestHandler: LocalRuntimeRequestHandler;
   taskRunWorker: PollingTaskRunWorker;
   taskTriggerWorker: PollingTaskTriggerWorker;
+  mailRelayWorker: PollingRuntimeMailRelayWorker | undefined;
   applicationLogger: LocalApplicationLogger;
   languageModelSecretStore: LocalLanguageModelSecretStore;
   documentStore: DocumentStore;
@@ -83,6 +93,7 @@ export function createLocalRuntimeComposition(
     options.workspace.teamId,
   );
   const pushRelay = pushRelayFor();
+  const mailRelay = mailRelayFor();
   const taskRunStore = new SQLiteTaskRunStore(
     options.database,
     activityStore,
@@ -109,6 +120,10 @@ export function createLocalRuntimeComposition(
     applicationLogger,
     new SQLiteLanguageModelCatalog(options.database, languageModelSecretStore),
     documentStore,
+    mailRelay,
+  );
+  const mailRelayWorker = mailRelayWorkerFor(
+    options, mailRelay, taskStore, taskRunStore, jobStore, applicationLogger,
   );
   applicationLogger.info("local_runtime.workspace_activated", {
     teamId: options.workspace.teamId,
@@ -117,6 +132,7 @@ export function createLocalRuntimeComposition(
     requestHandler: new LocalRuntimeRequestRouter([
       new LocalTaskRunHttpHandler(taskWorkflow, options.workspace.userId, applicationLogger),
       new LocalPushDeviceHttpHandler(options.signedLicense, pushRelay),
+      new LocalMailRelayHttpHandler(options.signedLicense, mailRelay),
       new LocalTaskDefinitionHttpHandler(
         taskDefinitionStore,
         options.workspace.teamId,
@@ -166,6 +182,7 @@ export function createLocalRuntimeComposition(
         ),
       },
     ),
+    mailRelayWorker,
     applicationLogger,
     languageModelSecretStore,
     documentStore,
@@ -179,6 +196,39 @@ function pushRelayFor() {
     : new UnavailableRuntimePushRelayClient();
 }
 
+function mailRelayFor(): RuntimeMailRelayClient {
+  const endpoint = process.env.LOCAL_RUNTIME_MAIL_RELAY_URL?.trim();
+  return endpoint
+    ? new HttpRuntimeMailRelayClient(endpoint)
+    : new UnavailableRuntimeMailRelayClient();
+}
+
+function mailRelayWorkerFor(
+  options: LocalRuntimeCompositionOptions,
+  relay: RuntimeMailRelayClient,
+  taskStore: SQLiteTaskStore,
+  taskRunStore: SQLiteTaskRunStore,
+  jobStore: SQLiteTaskRunJobStore,
+  logger: LocalApplicationLogger,
+): PollingRuntimeMailRelayWorker | undefined {
+  if (!process.env.LOCAL_RUNTIME_MAIL_RELAY_URL?.trim()) return undefined;
+  return new PollingRuntimeMailRelayWorker(
+    options.signedLicense, relay,
+    new LocalMailRelayEventProcessor(
+      new SQLiteInboundChannelMessageStore(options.database),
+      {
+        triggerStore: new SQLiteTaskTriggerStore(options.database), taskStore, taskRunStore,
+        taskRunDispatcher: new SQLiteTaskRunDispatcher(jobStore),
+      }, options.workspace.teamId, logger,
+    ), logger, {
+      canProcess: options.isLicenseActive,
+      onFailure: (error) => logger.exception(
+        "local_mail_relay.poll_failed", error, {teamId: options.workspace.teamId},
+      ),
+    },
+  );
+}
+
 function createTaskWorkflow(
   options: LocalRuntimeCompositionOptions,
   taskRunStore: SQLiteTaskRunStore,
@@ -187,6 +237,7 @@ function createTaskWorkflow(
   logger: LocalApplicationLogger,
   languageModelCatalog: SQLiteLanguageModelCatalog,
   documentStore: DocumentStore,
+  mailRelay: RuntimeMailRelayClient,
 ) {
   return createGenkitTaskWorkflow({
     taskStore: new SQLiteTaskStore(options.database),
@@ -202,7 +253,7 @@ function createTaskWorkflow(
       knowledgeBaseStore: new SQLiteKnowledgeBaseStore(options.database),
       teamFileStore,
       fileContentReader: teamFileStore,
-      messageSender: new LocalTaskMessageSender(),
+      messageSender: new LocalTaskMessageSender(options.signedLicense, mailRelay),
       documentStore,
       modelInference: modelInferenceFor(options),
       languageModelResolver: new CatalogGenkitLanguageModelResolver(

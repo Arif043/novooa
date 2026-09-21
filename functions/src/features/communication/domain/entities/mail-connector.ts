@@ -1,5 +1,7 @@
 export type MailConnectorProvider = "microsoftGraph";
 
+export type MailConnectorDeliveryTarget = "cloud" | "localRuntime";
+
 export type MailConnectorStatus =
   | "active"
   | "reauthorizationRequired"
@@ -10,6 +12,8 @@ export type MailConnector = {
   teamId: string;
   createdByUid: string;
   provider: MailConnectorProvider;
+  deliveryTarget: MailConnectorDeliveryTarget;
+  runtimeLicenseId: string | null;
   emailAddress: string;
   displayName: string;
   status: MailConnectorStatus;

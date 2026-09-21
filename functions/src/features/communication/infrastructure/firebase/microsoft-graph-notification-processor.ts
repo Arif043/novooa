@@ -1,5 +1,6 @@
 import {type ChannelMessageEvent} from
   "../../domain/entities/channel-message-event.js";
+import {createHash} from "node:crypto";
 import {
   storeInboundChannelMessage,
   type CommunicationChannel,
@@ -13,6 +14,8 @@ import {
   mailConnectorCipher,
   microsoftGraphProvider,
 } from "../microsoft_graph/microsoft-graph-config.js";
+import {FirestoreRuntimeMailRelayEventStore} from
+  "./firestore-runtime-mail-relay-event-store.js";
 
 export type GraphNotification = {
   subscriptionId: string;
@@ -51,14 +54,43 @@ async function refreshToken(
 
 async function storeMessage(
   message: {id: string; senderEmail: string; recipientEmail: string; subject: string; body: string; receivedAt: Date},
-  connector: {id: string; teamId: string; emailAddress: string},
+  connector: {
+    id: string;
+    teamId: string;
+    emailAddress: string;
+    deliveryTarget: "cloud" | "localRuntime";
+    runtimeLicenseId: string | null;
+  },
   messageId: string,
 ): Promise<void> {
   const event = eventFrom(message, connector.id);
+  if (connector.deliveryTarget === "localRuntime") {
+    await queueForLocalRuntime(connector, event);
+    logInfo("microsoft_graph.message_queued_for_local_runtime", {
+      teamId: connector.teamId, connectorId: connector.id, messageId,
+    });
+    return;
+  }
   const channel = channelFrom(connector);
   const created = await storeInboundChannelMessage({channel, event});
   if (created) await dispatchChannelMessageTriggers({teamId: channel.teamId, channelId: channel.id, event});
   logInfo("microsoft_graph.message_received", {teamId: channel.teamId, connectorId: channel.id, messageId, created});
+}
+
+async function queueForLocalRuntime(
+  connector: {id: string; teamId: string; runtimeLicenseId: string | null},
+  event: ChannelMessageEvent,
+): Promise<void> {
+  if (!connector.runtimeLicenseId || event.type !== "emailReceived") {
+    throw new Error("Der lokale Mail-Connector hat keine Runtime-Lizenz.");
+  }
+  await new FirestoreRuntimeMailRelayEventStore().enqueue({
+    licenseId: connector.runtimeLicenseId, workspaceId: connector.teamId,
+    event: {
+      eventId: relayEventId(connector.runtimeLicenseId, event.providerMessageId),
+      connectorId: connector.id, event, createdAt: event.receivedAt,
+    },
+  });
 }
 
 function eventFrom(
@@ -75,4 +107,8 @@ function eventFrom(
 
 function channelFrom(connector: {id: string; teamId: string; emailAddress: string}): CommunicationChannel {
   return {id: connector.id, teamId: connector.teamId, kind: "email", address: connector.emailAddress};
+}
+
+function relayEventId(licenseId: string, providerMessageId: string): string {
+  return createHash("sha256").update(`${licenseId}:${providerMessageId}`).digest("base64url");
 }

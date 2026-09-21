@@ -41,6 +41,7 @@ export {askTaskBuilderAssistant} from "./features/task_execution/infrastructure/
 export {saveLanguageModel} from "./features/language_models/infrastructure/firebase/language-model-functions.js";
 export {issueLocalRuntimeLicense} from "./features/licensing/infrastructure/firebase/local-runtime-license-functions.js";
 export {localRuntimePushRelay} from "./features/notifications/infrastructure/firebase/runtime-push-relay-function.js";
+export {localRuntimeMailRelay} from "./features/communication/infrastructure/firebase/local-runtime-mail-relay-function.js";
 export {twilioWebhook} from "./features/communication/infrastructure/twilio/twilio-webhook.js";
 export {dispatchFakeChannelMessage} from "./features/communication/infrastructure/firebase/fake-channel-message.js";
 export {sendChannelMessage} from "./features/communication/infrastructure/firebase/send-channel-message.js";
