@@ -33,7 +33,7 @@ import {LocalTaskRunApprovalPushNotifier} from "../../features/notifications/inf
 import {LocalTaskActivityHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-activity-http-handler.js";
 import {LocalTaskDefinitionHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-definition-http-handler.js";
 import {LocalTaskRunHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-run-http-handler.js";
-import {PollingTaskRunWorker} from "../../features/task_execution/infrastructure/local/polling-task-run-worker.js";
+import {TaskRunQueueWorker} from "../../features/task_execution/infrastructure/local/task-run-queue-worker.js";
 import {SQLiteActivityStore} from "../../features/task_execution/infrastructure/local/sqlite-activity-store.js";
 import {SQLiteTaskRunDispatcher} from "../../features/task_execution/infrastructure/local/sqlite-task-run-dispatcher.js";
 import {SQLiteTaskRunJobStore} from "../../features/task_execution/infrastructure/local/sqlite-task-run-job-store.js";
@@ -68,10 +68,11 @@ import {
   runtimeFirebaseConfigurationFromEnvironment,
 } from "../../features/licensing/infrastructure/local/runtime-firebase-session.js";
 import {type RuntimeLicenseActivation} from "../../features/licensing/domain/entities/runtime-license-activation.js";
+import {type TaskWorkflow} from "../../features/task_execution/domain/usecases/task-workflow.js";
 
 export type LocalRuntimeComposition = {
   requestHandler: LocalRuntimeRequestHandler;
-  taskRunWorker: PollingTaskRunWorker;
+  taskRunWorker: TaskRunQueueWorker;
   taskTriggerWorker: PollingTaskTriggerWorker;
   mailRelayWorker: RuntimeMailRelayWorker | undefined;
   firebaseSession: RuntimeFirebaseSession | undefined;
@@ -120,18 +121,38 @@ export function createLocalRuntimeComposition(
     languageModelSecretStore,
   );
   const documentStore = new SQLiteDocumentStore(options.database);
-  const taskWorkflow = createTaskWorkflow(
+  let taskWorkflow: TaskWorkflow | undefined;
+  const taskRunWorker = new TaskRunQueueWorker(
+    jobStore,
+    async (input) => {
+      if (taskWorkflow === undefined) throw new Error("Die Aufgabenverarbeitung ist nicht initialisiert.");
+      await taskWorkflow.dispatch(input);
+    },
+    {
+      canProcess: options.isLicenseActive,
+      onFailure: (job, error) => applicationLogger.exception(
+        "task_run_worker.job_failed",
+        error,
+        {jobId: job.jobId, runId: job.runId, teamId: job.teamId},
+      ),
+      onDrainFailure: (error) => applicationLogger.exception(
+        "task_run_worker.drain_failed", error, {teamId: options.workspace.teamId},
+      ),
+    },
+  );
+  const taskRunDispatcher = new SQLiteTaskRunDispatcher(jobStore, taskRunWorker);
+  taskWorkflow = createTaskWorkflow(
     options,
     taskRunStore,
     teamFileStore,
-    jobStore,
+    taskRunDispatcher,
     applicationLogger,
     new SQLiteLanguageModelCatalog(options.database, languageModelSecretStore),
     documentStore,
     mailRelay,
   );
   const mailRelayWorker = mailRelayWorkerFor(
-    options, mailRelay, taskStore, taskRunStore, jobStore, applicationLogger,
+    options, mailRelay, taskStore, taskRunStore, taskRunDispatcher, applicationLogger,
   );
   applicationLogger.info("local_runtime.workspace_activated", {
     teamId: options.workspace.teamId,
@@ -162,24 +183,13 @@ export function createLocalRuntimeComposition(
       new LocalTaskTriggerHttpHandler(options.database, options.workspace.teamId, options.workspace.userId),
       new LocalFileResourceHttpHandler(options.database, teamFileStore, options.workspace.teamId, options.workspace.userId),
     ]),
-    taskRunWorker: new PollingTaskRunWorker(
-      jobStore,
-      (input) => taskWorkflow.dispatch(input),
-      {
-        canProcess: options.isLicenseActive,
-        onFailure: (job, error) => applicationLogger.exception(
-          "task_run_worker.job_failed",
-          error,
-          {jobId: job.jobId, runId: job.runId, teamId: job.teamId},
-        ),
-      },
-    ),
+    taskRunWorker,
     taskTriggerWorker: new PollingTaskTriggerWorker(
       () => runDueTaskTriggers(new Date(), {
         triggerStore: new SQLiteTaskTriggerStore(options.database),
         taskStore,
         taskRunStore,
-        taskRunDispatcher: new SQLiteTaskRunDispatcher(jobStore),
+        taskRunDispatcher,
       }),
       {
         canProcess: options.isLicenseActive,
@@ -217,7 +227,7 @@ function mailRelayWorkerFor(
   relay: RuntimeMailRelayClient,
   taskStore: SQLiteTaskStore,
   taskRunStore: SQLiteTaskRunStore,
-  jobStore: SQLiteTaskRunJobStore,
+  taskRunDispatcher: SQLiteTaskRunDispatcher,
   logger: LocalApplicationLogger,
 ): RuntimeMailRelayWorker | undefined {
   if (!process.env.LOCAL_RUNTIME_MAIL_RELAY_URL?.trim()) return undefined;
@@ -227,7 +237,7 @@ function mailRelayWorkerFor(
       new SQLiteInboundChannelMessageStore(options.database),
       {
         triggerStore: new SQLiteTaskTriggerStore(options.database), taskStore, taskRunStore,
-        taskRunDispatcher: new SQLiteTaskRunDispatcher(jobStore),
+        taskRunDispatcher,
       }, options.workspace.teamId, logger,
     ), logger, {
       canProcess: options.isLicenseActive,
@@ -247,7 +257,7 @@ function createTaskWorkflow(
   options: LocalRuntimeCompositionOptions,
   taskRunStore: SQLiteTaskRunStore,
   teamFileStore: LocalTeamFileStore,
-  jobStore: SQLiteTaskRunJobStore,
+  taskRunDispatcher: SQLiteTaskRunDispatcher,
   logger: LocalApplicationLogger,
   languageModelCatalog: SQLiteLanguageModelCatalog,
   documentStore: DocumentStore,
@@ -256,7 +266,7 @@ function createTaskWorkflow(
   return createGenkitTaskWorkflow({
     taskStore: new SQLiteTaskStore(options.database),
     taskRunStore,
-    taskRunDispatcher: new SQLiteTaskRunDispatcher(jobStore),
+    taskRunDispatcher,
     teamContextStore: new SQLiteTeamContextStore(options.database),
     teamFileStore,
     logger,

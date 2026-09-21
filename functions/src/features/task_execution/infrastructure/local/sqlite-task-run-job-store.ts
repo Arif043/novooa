@@ -15,6 +15,10 @@ type TaskRunJobRow = SqlRow & {
   attempts: number;
 };
 
+type NextClaimableDelayRow = SqlRow & {
+  delay_ms: number | null;
+};
+
 export type LeasedTaskRunJob = TaskRunDispatch & {
   jobId: string;
   attempt: number;
@@ -52,6 +56,11 @@ export class SQLiteTaskRunJobStore {
     }
     await this.database.run(retryJobSql(backoffSecondsFor(job.attempt)), [job.jobId]);
   }
+
+  async nextClaimableDelayMs(): Promise<number | null> {
+    const row = await this.database.get<NextClaimableDelayRow>(nextClaimableDelaySql);
+    return row?.delay_ms ?? null;
+  }
 }
 
 const enqueueSql = `INSERT INTO task_run_jobs(
@@ -79,6 +88,14 @@ const completeJobSql = `UPDATE task_run_jobs SET status = 'completed',
 const failJobSql = `UPDATE task_run_jobs SET status = 'failed',
   lease_expires_at = NULL, updated_at = CURRENT_TIMESTAMP
   WHERE id = ? AND status = 'leased'`;
+
+const nextClaimableDelaySql = `SELECT MAX(0,
+  (unixepoch(next_at) - unixepoch('now')) * 1000
+) AS delay_ms FROM (
+  SELECT available_at AS next_at FROM task_run_jobs WHERE status = 'queued'
+  UNION ALL
+  SELECT lease_expires_at AS next_at FROM task_run_jobs WHERE status = 'leased'
+)`;
 
 function leaseJobSql(leaseSeconds: number): string {
   return `UPDATE task_run_jobs SET status = 'leased', attempts = attempts + 1,

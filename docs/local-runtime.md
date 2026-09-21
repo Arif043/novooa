@@ -383,9 +383,12 @@ dessen Infrastructure-Bereich.
   lokalen Runtime übertragen und dort im Volume abgelegt. Diese Endpunkte sind
   Runtime-APIs im lokalen Netzwerk und kein Cloud-HTTP-Vertrag.
 - `006_task_run_jobs.sql` ergänzt eine haltbare SQLite-Jobqueue. Der
-  `PollingTaskRunWorker` least Jobs, bestätigt erfolgreiche Ausführungen und
-  versucht fehlgeschlagene Jobs mit 30 bis 300 Sekunden Backoff höchstens
-  dreimal erneut.
+  `TaskRunQueueWorker` wird nach einem erfolgreichen Enqueue unmittelbar
+  benachrichtigt, drainiert verfügbare Jobs seriell und bestätigt erfolgreiche
+  Ausführungen. Persistierte Jobs werden beim Runtime-Start einmal drainiert;
+  fehlgeschlagene Jobs werden mit 30 bis 300 Sekunden Backoff höchstens dreimal
+  erneut versucht. Dazu setzt der Worker ausschließlich einen einmaligen Timer
+  auf den gespeicherten Fälligkeitszeitpunkt, kein Intervall-Polling.
 - Der `PollingTaskTriggerWorker` wertet fällige Zeitpläne alle 30 Sekunden
   aus, erzeugt Runs über den gemeinsamen Scheduling-Use-Case und schreibt den
   nächsten Ausführungszeitpunkt atomar in SQLite fort.

@@ -5,8 +5,6 @@ import {join, resolve} from "node:path";
 import test from "node:test";
 import {openLocalRuntimeDatabase} from "../../../../shared/local/local-runtime-database.js";
 import {type SqliteLocalSqlDatabase} from "../../../../shared/local/sqlite-local-sql-database.js";
-import {PollingTaskRunWorker} from "./polling-task-run-worker.js";
-import {SQLiteTaskRunDispatcher} from "./sqlite-task-run-dispatcher.js";
 import {SQLiteTaskRunJobStore} from "./sqlite-task-run-job-store.js";
 
 test("persists and leases a dispatched task run", async () => {
@@ -50,42 +48,6 @@ test("marks a failed dispatch as terminal after the final attempt", async () => 
       "SELECT status, attempts FROM task_run_jobs",
     );
     assert.deepEqual(row, {status: "failed", attempts: 1});
-  });
-});
-
-test("worker completes a queued task run", async () => {
-  await withJobStore(async ({jobStore, database}) => {
-    const dispatched: string[] = [];
-    const dispatcher = new SQLiteTaskRunDispatcher(jobStore);
-    await dispatcher.dispatchTaskRun(dispatch("start"));
-    const worker = new PollingTaskRunWorker(jobStore, async (input) => {
-      dispatched.push(input.runId);
-    });
-
-    await worker.processOne();
-
-    assert.deepEqual(dispatched, ["run-1"]);
-    assert.deepEqual(await database.get<{status: string}>(
-      "SELECT status FROM task_run_jobs",
-    ), {status: "completed"});
-  });
-});
-
-test("worker leaves queued runs untouched without an active license", async () => {
-  await withJobStore(async ({jobStore, database}) => {
-    const dispatcher = new SQLiteTaskRunDispatcher(jobStore);
-    await dispatcher.dispatchTaskRun(dispatch("start"));
-    const worker = new PollingTaskRunWorker(
-      jobStore,
-      async () => assert.fail("Die Ausführung darf nicht gestartet werden."),
-      {canProcess: () => false},
-    );
-
-    await worker.processOne();
-
-    assert.deepEqual(await database.get<{status: string}>(
-      "SELECT status FROM task_run_jobs",
-    ), {status: "queued"});
   });
 });
 
