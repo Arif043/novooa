@@ -1,5 +1,6 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
+import * as os from 'os';
 import * as config from '../config.js';
 import { testConnection } from '../ssh-helper.js';
 
@@ -84,7 +85,7 @@ export async function configureCommand(): Promise<void> {
     console.log(chalk.dim('\nVerbindung wird getestet...'));
 
     // Schlüssel-Pfad expandieren (~/ → Home)
-    const keyPath = answers.sshKeyPath?.replace('~', require('os').homedir());
+    const keyPath = answers.sshKeyPath?.replace('~', os.homedir());
 
     const connected = await testConnection({
       host: newConfig.windowsHost,

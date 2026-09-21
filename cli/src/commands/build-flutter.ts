@@ -1,6 +1,7 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora from 'ora';
+import * as os from 'os';
 import * as config from '../config.js';
 import * as ssh from '../ssh-helper.js';
 
@@ -35,7 +36,7 @@ export async function buildFlutterCommand(): Promise<void> {
   ]);
 
   // Schlüssel-Pfad expandieren
-  const keyPath = cfg.sshKeyPath?.replace('~', require('os').homedir());
+  const keyPath = cfg.sshKeyPath?.replace('~', os.homedir());
 
   const sshOpts = {
     host: cfg.windowsHost,
