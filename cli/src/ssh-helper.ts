@@ -1,5 +1,4 @@
-import { execSync } from 'child_process';
-import chalk from 'chalk';
+import { spawnSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -11,8 +10,17 @@ export interface SshOptions {
   keyFile?: string;
 }
 
+const SSH_BASE_OPTIONS = [
+  '-o', 'StrictHostKeyChecking=no',
+  '-o', 'UserKnownHostsFile=/dev/null',
+  '-o', 'ConnectTimeout=10',
+  '-o', 'BatchMode=yes',
+];
+
+const SSH_TIMEOUT_MS = 120_000;
+
 /**
- * Findet den SSH-Schlüssel (~/.ssh/id_rsa, id_ed25519, etc.)
+ * Findet den SSH-Schlüssel (~/.ssh/id_ed25519, id_rsa, etc.)
  */
 function findSshKey(): string | null {
   const sshDir = path.join(os.homedir(), '.ssh');
@@ -28,239 +36,219 @@ function findSshKey(): string | null {
 }
 
 /**
- * Expandiert ~ zu Home-Verzeichnis
+ * Expandiert ~ zu Home-Verzeichnis.
  */
 function expandPath(filePath: string): string {
-  return filePath.replace('~', os.homedir());
+  return filePath.replace(/^~/, os.homedir());
 }
 
 /**
- * Führt einen PowerShell-Befehl auf dem Remote-Windows-Rechner aus.
- * Nutzt SSH mit Schlüssel-Authentifizierung (bevorzugt) oder Passwort.
+ * Löst die zu verwendende SSH-Schlüssel-Datei auf und validiert sie.
  */
-export async function executeSshCommand(
-  options: SshOptions,
-  command: string,
-): Promise<string> {
-  try {
-    // Mit sshpass für Passwort-Auth
-    if (options.password) {
-      return executeSshWithPassword(options, command);
-    }
-
-    // Normale SSH (mit Schlüssel)
-    const sshCommand = buildSshCommand(options, command);
-    const output = execSync(sshCommand, {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 60000,
-    });
-    return output.trim();
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`SSH-Befehl fehlgeschlagen: ${error.message}`);
-    }
-    throw error;
-  }
-}
-
-/**
- * SSH-Befehl mit Passwort-Authentifizierung via sshpass
- */
-function executeSshWithPassword(options: SshOptions, command: string): string {
-  const host = `${options.username}@${options.host}`;
-
-  // PowerShell-Befehl escapen
-  const escapedCmd = command
-    .replace(/"/g, '\\"')
-    .replace(/\$/g, '\\$')
-    .replace(/`/g, '\\`');
-
-  // sshpass -p password ssh ...
-  const sshCommand = `sshpass -p "${options.password}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 ${host} "powershell -NoProfile -Command \\"${escapedCmd}\\""`;
-
-  try {
-    const output = execSync(sshCommand, {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 60000,
-    });
-    return output.trim();
-  } catch (error) {
-    if (error instanceof Error) {
-      const msg = error.message;
-      if (msg.includes('Permission denied')) {
-        throw new Error('SSH: Passwort falsch oder Benutzer nicht korrekt');
-      }
-      if (msg.includes('not found')) {
-        throw new Error(
-          'sshpass nicht installiert. Installiere es oder nutze SSH-Schlüssel.\n  Mac: brew install sshpass\n  Linux: apt-get install sshpass',
-        );
-      }
-      throw new Error(`SSH-Befehl fehlgeschlagen: ${msg}`);
-    }
-    throw error;
-  }
-}
-
-/**
- * Baut den SSH-Befehl zusammen (für Schlüssel-Auth).
- */
-function buildSshCommand(options: SshOptions, command: string): string {
-  const host = `${options.username}@${options.host}`;
-
-  // SSH-Schlüssel auswählen
-  let keyFile: string | undefined = options.keyFile;
-  if (!keyFile) {
-    const found = findSshKey();
-    if (found) {
-      keyFile = found;
-    }
-  }
-  if (keyFile) {
-    keyFile = expandPath(keyFile);
-  }
+function resolveKeyFile(options: SshOptions): string {
+  const configured = options.keyFile ? expandPath(options.keyFile) : null;
+  const keyFile = configured ?? findSshKey();
 
   if (!keyFile) {
     throw new Error(
       'SSH-Schlüssel nicht gefunden. Generiere einen mit: ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""',
     );
   }
-
-  // Prüfe ob Schlüssel-Datei existiert
   if (!fs.existsSync(keyFile)) {
     throw new Error(`SSH-Schlüssel-Datei nicht gefunden: ${keyFile}`);
   }
+  return keyFile;
+}
 
-  // PowerShell-Befehl escapen für SSH
-  // Wichtig: Backslashes müssen escaped sein für SSH/Shell
-  const escapedCmd = command
-    .replace(/\\/g, '\\\\') // Backslashes first!
-    .replace(/"/g, '\\"')
-    .replace(/\$/g, '\\$')
-    .replace(/`/g, '\\`');
+/**
+ * Kodiert ein PowerShell-Skript für `-EncodedCommand` (UTF-16LE, Base64).
+ *
+ * Das umgeht sämtliche Quoting-Probleme über die vielen Schichten
+ * (lokale Shell, ssh-Argument, Windows sshd, PowerShell-Parser): Base64
+ * enthält nur [A-Za-z0-9+/=], das ist in jeder Schicht unverändert sicher.
+ */
+function encodePowerShellCommand(script: string): string {
+  return Buffer.from(script, 'utf16le').toString('base64');
+}
 
-  // SSH mit Schlüssel
-  return `ssh -i "${keyFile}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 -o BatchMode=yes ${host} "powershell -NoProfile -Command \\"${escapedCmd}\\""`;
+/**
+ * Führt ein PowerShell-Skript auf dem Remote-Windows-Rechner über SSH aus.
+ * Nutzt Argument-Arrays (kein lokales Shell-Parsing) und `-EncodedCommand`
+ * (kein Remote-Quoting-Problem).
+ */
+export async function executeSshCommand(
+  options: SshOptions,
+  script: string,
+): Promise<string> {
+  const encoded = encodePowerShellCommand(script);
+  const host = `${options.username}@${options.host}`;
+  const remoteArgs = [host, 'powershell', '-NoProfile', '-EncodedCommand', encoded];
+
+  const { command, args } = options.password
+    ? buildPasswordInvocation(options.password, remoteArgs)
+    : buildKeyInvocation(options, remoteArgs);
+
+  const result = spawnSync(command, args, {
+    encoding: 'utf-8',
+    timeout: SSH_TIMEOUT_MS,
+  });
+
+  if (result.error) {
+    const err = result.error as NodeJS.ErrnoException;
+    if (err.code === 'ENOENT') {
+      throw new Error(
+        `Befehl "${command}" nicht gefunden. ${command === 'sshpass' ? 'Installiere es mit: brew install sshpass' : 'Ist OpenSSH-Client installiert?'}`,
+      );
+    }
+    throw new Error(`SSH-Befehl fehlgeschlagen: ${err.message}`);
+  }
+
+  if (result.status !== 0) {
+    const stderr = (result.stderr ?? '').trim();
+    const stdout = (result.stdout ?? '').trim();
+    const detail = stderr || stdout || `Exit-Code ${result.status}`;
+    if (detail.includes('Permission denied')) {
+      throw new Error('SSH: Authentifizierung fehlgeschlagen (Schlüssel oder Passwort falsch)');
+    }
+    throw new Error(`SSH-Befehl fehlgeschlagen: ${detail}`);
+  }
+
+  return (result.stdout ?? '').trim();
+}
+
+function buildKeyInvocation(
+  options: SshOptions,
+  remoteArgs: string[],
+): { command: string; args: string[] } {
+  const keyFile = resolveKeyFile(options);
+  return {
+    command: 'ssh',
+    args: ['-i', keyFile, ...SSH_BASE_OPTIONS, ...remoteArgs],
+  };
+}
+
+function buildPasswordInvocation(
+  password: string,
+  remoteArgs: string[],
+): { command: string; args: string[] } {
+  return {
+    command: 'sshpass',
+    args: ['-p', password, 'ssh', ...SSH_BASE_OPTIONS, ...remoteArgs],
+  };
 }
 
 /**
  * Prüft ob Host erreichbar ist via SSH.
- * Nutzt cmd statt PowerShell für bessere Kompatibilität.
  */
 export async function testConnection(options: SshOptions): Promise<boolean> {
   try {
-    await executeSshCommand(options, 'cmd /c echo OK');
-    return true;
+    const result = await executeSshCommand(options, `Write-Output 'OK'`);
+    return result.includes('OK');
   } catch {
     return false;
   }
 }
 
 /**
- * Überprüft ob Repository auf Remote existiert.
+ * Überprüft ob ein Pfad auf dem Remote-Rechner existiert.
  */
 export async function repositoryExists(
   options: SshOptions,
   targetPath: string,
 ): Promise<boolean> {
-  try {
-    const result = await executeSshCommand(options, `if (Test-Path "${targetPath}") { Write-Host "exists" }`);
-    return result.includes('exists');
-  } catch {
-    return false;
-  }
+  const script = `if (Test-Path "${targetPath}") { Write-Output 'exists' } else { Write-Output 'missing' }`;
+  const result = await executeSshCommand(options, script);
+  return result.includes('exists');
 }
 
 /**
- * Erstellt Verzeichnis rekursiv auf Remote.
+ * Erstellt ein Verzeichnis rekursiv auf dem Remote-Rechner (idempotent).
  */
 export async function ensureDirectory(
   options: SshOptions,
   directoryPath: string,
 ): Promise<void> {
-  const cmd = `mkdir -Force "${directoryPath}" | Out-Null; Write-Host "ok"`;
-  await executeSshCommand(options, cmd);
+  const script = `New-Item -ItemType Directory -Force -Path "${directoryPath}" | Out-Null; Write-Output 'ok'`;
+  await executeSshCommand(options, script);
 }
 
 /**
- * Klont Repository auf Remote-Windows-Rechner (erstellt Verzeichnis automatisch).
+ * Klont das Repository auf den Remote-Windows-Rechner, oder aktualisiert es,
+ * falls es bereits existiert. Legt fehlende Elternverzeichnisse automatisch an.
  */
 export async function cloneRepository(
   options: SshOptions,
   repoUrl: string,
   targetPath: string,
 ): Promise<void> {
-  const parentDir = targetPath.split('\\').slice(0, -1).join('\\');
-  const repoName = targetPath.split('\\').pop();
+  const parentDir = targetPath.substring(0, targetPath.lastIndexOf('\\'));
+  if (parentDir) {
+    await ensureDirectory(options, parentDir);
+  }
 
-  // Stelle sicher dass Parent-Verzeichnis existiert
-  await ensureDirectory(options, parentDir);
-
-  // Dann klonen oder aktualisieren
-  const cmd = `
+  const script = `
 if (Test-Path "${targetPath}") {
-  cd "${targetPath}"; git pull
+  Set-Location "${targetPath}"
+  git pull
 } else {
-  cd "${parentDir}"; git clone "${repoUrl}" "${repoName}"
+  git clone "${repoUrl}" "${targetPath}"
 }
 `;
 
-  await executeSshCommand(options, cmd);
+  await executeSshCommand(options, script);
 }
 
 /**
- * Startet Flutter Build auf Remote Windows.
+ * Startet den Flutter Windows-Build auf dem Remote-Rechner.
  */
 export async function buildFlutterWindows(
   options: SshOptions,
   repoPath: string,
   apiUrl: string,
 ): Promise<void> {
-  const buildCmd = `cd "${repoPath}"; flutter build windows --dart-define=NOVOOA_RUNTIME=standalone --dart-define=WORKSPACE_API_URL=http://${apiUrl}:8090 --release`;
+  const script = `
+Set-Location "${repoPath}"
+flutter build windows --dart-define=NOVOOA_RUNTIME=standalone --dart-define=WORKSPACE_API_URL=http://${apiUrl}:8090 --release
+`;
 
-  await executeSshCommand(options, buildCmd);
+  await executeSshCommand(options, script);
+}
+
+function composeFilePath(repoPath: string): string {
+  return `${repoPath}\\docker-compose.local.yaml`;
 }
 
 /**
- * Startet Docker Compose auf Remote Windows (nutzt absoluten Pfad).
+ * Startet Docker Compose auf dem Remote-Rechner.
  */
 export async function startDockerCompose(
   options: SshOptions,
   repoPath: string,
 ): Promise<void> {
-  const composeFile = `${repoPath}/docker-compose.local.yaml`;
-  const cmd = `docker compose -f "${composeFile}" up --build --detach`;
-
-  await executeSshCommand(options, cmd);
+  const script = `docker compose -f "${composeFilePath(repoPath)}" up --build --detach`;
+  await executeSshCommand(options, script);
 }
 
 /**
- * Prüft Docker Compose Status.
+ * Prüft den Docker Compose Status.
  */
 export async function checkDockerStatus(options: SshOptions, repoPath: string): Promise<string> {
-  const composeFile = `${repoPath}/docker-compose.local.yaml`;
-  const cmd = `docker compose -f "${composeFile}" ps`;
-
-  return await executeSshCommand(options, cmd);
+  const script = `docker compose -f "${composeFilePath(repoPath)}" ps`;
+  return executeSshCommand(options, script);
 }
 
 /**
- * Zeigt Docker Compose Logs.
+ * Zeigt die letzten Docker Compose Logs.
  */
 export async function showDockerLogs(options: SshOptions, repoPath: string): Promise<string> {
-  const composeFile = `${repoPath}/docker-compose.local.yaml`;
-  const cmd = `docker compose -f "${composeFile}" logs --tail=50`;
-
-  return await executeSshCommand(options, cmd);
+  const script = `docker compose -f "${composeFilePath(repoPath)}" logs --tail=50`;
+  return executeSshCommand(options, script);
 }
 
 /**
  * Stoppt Docker Compose.
  */
 export async function stopDockerCompose(options: SshOptions, repoPath: string): Promise<void> {
-  const composeFile = `${repoPath}/docker-compose.local.yaml`;
-  const cmd = `docker compose -f "${composeFile}" down`;
-
-  await executeSshCommand(options, cmd);
+  const script = `docker compose -f "${composeFilePath(repoPath)}" down`;
+  await executeSshCommand(options, script);
 }
