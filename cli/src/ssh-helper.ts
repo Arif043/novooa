@@ -1,15 +1,35 @@
-import { execSync } from 'child_process';
+import { execSync, spawnSync } from 'child_process';
 import chalk from 'chalk';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
 export interface SshOptions {
   host: string;
   username: string;
   password?: string;
+  keyFile?: string;
+}
+
+/**
+ * Findet den SSH-Schlüssel (~/.ssh/id_rsa, id_ed25519, etc.)
+ */
+function findSshKey(): string | null {
+  const sshDir = path.join(os.homedir(), '.ssh');
+  const keyNames = ['id_ed25519', 'id_rsa', 'id_ecdsa'];
+
+  for (const name of keyNames) {
+    const keyPath = path.join(sshDir, name);
+    if (fs.existsSync(keyPath)) {
+      return keyPath;
+    }
+  }
+  return null;
 }
 
 /**
  * Führt einen PowerShell-Befehl auf dem Remote-Windows-Rechner aus.
- * Nutzt OpenSSH (muss auf Windows installiert sein).
+ * Nutzt SSH mit Schlüssel-Authentifizierung (bevorzugt) oder Passwort.
  */
 export async function executeSshCommand(
   options: SshOptions,
@@ -18,9 +38,16 @@ export async function executeSshCommand(
   const sshCommand = buildSshCommand(options, command);
 
   try {
+    // Mit sshpass für Passwort-Auth
+    if (options.password) {
+      return executeSshWithPassword(options, command);
+    }
+
+    // Normale SSH (mit Schlüssel)
     const output = execSync(sshCommand, {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 60000,
     });
     return output.trim();
   } catch (error) {
@@ -32,16 +59,54 @@ export async function executeSshCommand(
 }
 
 /**
- * Baut den SSH-Befehl zusammen. Nutzt SSH_PASSWORD env var falls vorhanden.
+ * SSH-Befehl mit Passwort-Authentifizierung via sshpass
+ */
+function executeSshWithPassword(options: SshOptions, command: string): string {
+  const host = `${options.username}@${options.host}`;
+  const escapedCmd = command.replace(/"/g, '\\"').replace(/\$/g, '\\$');
+
+  // sshpass -p password ssh ...
+  const sshCommand = `sshpass -p "${options.password}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${host} "powershell -NoProfile -Command \\"${escapedCmd}\\""`;
+
+  try {
+    const output = execSync(sshCommand, {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 60000,
+    });
+    return output.trim();
+  } catch (error) {
+    if (error instanceof Error) {
+      const msg = error.message;
+      if (msg.includes('Permission denied')) {
+        throw new Error('SSH: Passwort falsch oder Benutzer nicht korrekt');
+      }
+      if (msg.includes('not found')) {
+        throw new Error(
+          'sshpass nicht installiert. Installiere es oder nutze SSH-Schlüssel.\n  Mac: brew install sshpass\n  Linux: apt-get install sshpass',
+        );
+      }
+      throw new Error(`SSH-Befehl fehlgeschlagen: ${msg}`);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Baut den SSH-Befehl zusammen (für Schlüssel-Auth).
  */
 function buildSshCommand(options: SshOptions, command: string): string {
   const host = `${options.username}@${options.host}`;
 
-  // PowerShell-Befehl escapen für SSH
-  const escapedCmd = command.replace(/"/g, '\\"');
+  // SSH-Schlüssel-Option falls vorhanden
+  const keyFile = options.keyFile || findSshKey();
+  const keyOption = keyFile ? `-i "${keyFile}"` : '';
 
-  // SSH mit forciertem Passwordauth und stdout redirection
-  return `ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${host} "powershell -NoProfile -Command \\"${escapedCmd}\\""`;
+  // PowerShell-Befehl escapen für SSH
+  const escapedCmd = command.replace(/"/g, '\\"').replace(/\$/g, '\\$');
+
+  // SSH mit StrictHostKeyChecking=no für automation
+  return `ssh ${keyOption} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 ${host} "powershell -NoProfile -Command \\"${escapedCmd}\\""`;
 }
 
 /**

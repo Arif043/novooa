@@ -34,9 +34,13 @@ export async function buildFlutterCommand(): Promise<void> {
     },
   ]);
 
+  // Schlüssel-Pfad expandieren
+  const keyPath = cfg.sshKeyPath?.replace('~', require('os').homedir());
+
   const sshOpts = {
     host: cfg.windowsHost,
     username: cfg.windowsUsername,
+    keyFile: cfg.sshAuthMethod === 'key' ? keyPath : undefined,
   };
 
   try {

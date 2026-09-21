@@ -7,6 +7,8 @@ export interface DeployConfig {
   windowsUsername: string;
   repoUrl: string;
   repoPath: string;
+  sshAuthMethod?: 'key' | 'password'; // 'key' = SSH-Schlüssel, 'password' = Passwort
+  sshKeyPath?: string; // Z.B. ~/.ssh/id_ed25519
 }
 
 const CONFIG_DIR = path.join(os.homedir(), '.novooa-cli');
