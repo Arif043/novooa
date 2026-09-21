@@ -217,12 +217,7 @@ export async function buildFlutterWindows(
   repoPath: string,
   apiUrl: string,
 ): Promise<void> {
-  const buildCmd = `
-cd "${repoPath}" && flutter build windows `
-    + `--dart-define=NOVOOA_RUNTIME=standalone `
-    + `--dart-define=WORKSPACE_API_URL=http://${apiUrl}:8090 `
-    + `--release
-`;
+  const buildCmd = `cd "${repoPath}"; flutter build windows --dart-define=NOVOOA_RUNTIME=standalone --dart-define=WORKSPACE_API_URL=http://${apiUrl}:8090 --release`;
 
   await executeSshCommand(options, buildCmd);
 }
@@ -234,7 +229,7 @@ export async function startDockerCompose(
   options: SshOptions,
   repoPath: string,
 ): Promise<void> {
-  const cmd = `cd "${repoPath}" && docker compose -f docker-compose.local.yaml up --build --detach`;
+  const cmd = `cd "${repoPath}"; docker compose -f docker-compose.local.yaml up --build --detach`;
 
   await executeSshCommand(options, cmd);
 }
@@ -243,7 +238,7 @@ export async function startDockerCompose(
  * Prüft Docker Compose Status.
  */
 export async function checkDockerStatus(options: SshOptions, repoPath: string): Promise<string> {
-  const cmd = `cd "${repoPath}" && docker compose -f docker-compose.local.yaml ps`;
+  const cmd = `cd "${repoPath}"; docker compose -f docker-compose.local.yaml ps`;
 
   return await executeSshCommand(options, cmd);
 }
@@ -252,7 +247,7 @@ export async function checkDockerStatus(options: SshOptions, repoPath: string): 
  * Zeigt Docker Compose Logs.
  */
 export async function showDockerLogs(options: SshOptions, repoPath: string): Promise<string> {
-  const cmd = `cd "${repoPath}" && docker compose -f docker-compose.local.yaml logs --tail=50`;
+  const cmd = `cd "${repoPath}"; docker compose -f docker-compose.local.yaml logs --tail=50`;
 
   return await executeSshCommand(options, cmd);
 }
@@ -261,7 +256,7 @@ export async function showDockerLogs(options: SshOptions, repoPath: string): Pro
  * Stoppt Docker Compose.
  */
 export async function stopDockerCompose(options: SshOptions, repoPath: string): Promise<void> {
-  const cmd = `cd "${repoPath}" && docker compose -f docker-compose.local.yaml down`;
+  const cmd = `cd "${repoPath}"; docker compose -f docker-compose.local.yaml down`;
 
   await executeSshCommand(options, cmd);
 }
