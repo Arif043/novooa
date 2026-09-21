@@ -1,0 +1,28 @@
+{
+  "name": "novooa-deploy-cli",
+  "version": "1.0.0",
+  "description": "Deployment CLI für novooa lokale Runtime und Flutter Client",
+  "type": "module",
+  "bin": {
+    "novooa-deploy": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "node --loader tsx src/index.ts",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "inquirer": "^9.2.11",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.1",
+    "dotenv": "^16.3.1",
+    "yaml": "^2.3.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "@types/node": "^20.4.5",
+    "@types/inquirer": "^9.0.3",
+    "tsx": "^4.2.0"
+  }
+}

@@ -1,0 +1,72 @@
+import inquirer from 'inquirer';
+import chalk from 'chalk';
+import ora from 'ora';
+import * as config from '../config.js';
+import * as ssh from '../ssh-helper.js';
+
+export async function buildFlutterCommand(): Promise<void> {
+  console.log('\n' + chalk.blue('🚀 Flutter Windows Client bauen'));
+
+  const cfg = await config.loadConfig();
+  if (!cfg) {
+    console.log(chalk.red('✗ Konfiguration nicht gefunden. Bitte zunächst `configure` ausführen.\n'));
+    return;
+  }
+
+  const answers = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'apiUrl',
+      message: 'API-Endpoint IP (wird zu http://<ip>:8090):',
+      default: cfg.windowsHost,
+      validate: (input) => {
+        const ipRegex =
+          /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        return ipRegex.test(input) || 'Bitte eine gültige IP-Adresse eingeben';
+      },
+    },
+    {
+      type: 'confirm',
+      name: 'cloneFirst',
+      message: 'Repository vor dem Build klonen/aktualisieren?',
+      default: true,
+    },
+  ]);
+
+  const sshOpts = {
+    host: cfg.windowsHost,
+    username: cfg.windowsUsername,
+  };
+
+  try {
+    // Step 1: Test connection
+    let spinner = ora('SSH-Verbindung wird getestet...').start();
+    const connected = await ssh.testConnection(sshOpts);
+    if (!connected) {
+      spinner.fail('SSH-Verbindung fehlgeschlagen');
+      console.log(chalk.dim('Tipps:'));
+      console.log(chalk.dim('  • OpenSSH muss auf Windows 10/11 aktiviert sein'));
+      console.log(chalk.dim('  • Oder: SSH-Schlüssel im ~/.ssh konfigurieren'));
+      return;
+    }
+    spinner.succeed('SSH-Verbindung erfolgreich');
+
+    // Step 2: Clone repository
+    if (answers.cloneFirst) {
+      spinner = ora('Repository wird geklont/aktualisiert...').start();
+      await ssh.cloneRepository(sshOpts, cfg.repoUrl, cfg.repoPath);
+      spinner.succeed('Repository aktualisiert');
+    }
+
+    // Step 3: Build Flutter
+    spinner = ora('Flutter wird gebaut (dies kann 5-10 Minuten dauern)...').start();
+    await ssh.buildFlutterWindows(sshOpts, cfg.repoPath, answers.apiUrl);
+    spinner.succeed('Flutter Build erfolgreich abgeschlossen!');
+
+    console.log(chalk.green('\n✓ Build erfolgreich!\n'));
+    console.log(chalk.dim('Pfad zur .exe:'));
+    console.log(chalk.cyan(`${cfg.repoPath}\\build\\windows\\runner\\Release\\syscat2.exe\n`));
+  } catch (error) {
+    console.log(chalk.red(`\n✗ Fehler beim Build: ${error}\n`));
+  }
+}
