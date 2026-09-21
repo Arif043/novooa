@@ -16,7 +16,25 @@ oskan@192.168.0.134's password:
 
 **PowerShell als Administrator öffnen und ausführen:**
 
-### 0. OpenSSH-Server Installation überprüfen (ERSTE PRÜFUNG!)
+### 0. Welcher SSH-Server läuft? (ERSTE PRÜFUNG!)
+
+```powershell
+# Welcher Prozess nutzt Port 22?
+netstat -ano | findstr :22
+
+# Beispiel-Output:
+#   TCP    0.0.0.0:22    0.0.0.0:0    LISTENING    1234
+
+# PID 1234 ist der Prozess. Was ist das?
+Get-Process -Id 1234
+
+# Beispiele:
+# - "sshd.exe" → Windows Built-in OpenSSH ✓ (das wollen wir!)
+# - "ssh-agent.exe" → Git for Windows SSH ✗ (nicht ideal)
+# - "sshd" (WSL) → WSL SSH ✗ (funktioniert auch, aber kompliziert)
+```
+
+### 1. OpenSSH-Server Installation überprüfen (NÄCHSTE PRÜFUNG!)
 
 ```powershell
 # Ist OpenSSH installiert?
@@ -135,11 +153,41 @@ ssh -vvv -i ~/.ssh/id_ed25519 oskan@192.168.0.134 "Echo 'OK'"
 
 ## Häufige Probleme
 
-### Problem 0: "Service 'sshd' cannot be found on computer"
-- ✗ OpenSSH Server nicht installiert
-- ✓ Lösung: Siehe oben "WICHTIG: Windows OpenSSH Installation"
-  - Methode 1 (Einstellungen): Settings → Apps → Optional features → OpenSSH Server
-  - Methode 2 (PowerShell): `Add-WindowsCapability -Online -Name OpenSSH.Server~0.0.1.0`
+### Problem 0: "Service 'sshd' cannot be found" oder "Port 22 already in use"
+- ✗ OpenSSH Server nicht installiert ODER anderer SSH-Server läuft
+- ✓ Lösung:
+
+**Schritt 1: Überprüfe welcher SSH-Server läuft**
+```powershell
+netstat -ano | findstr :22
+Get-Process -Id <PID>
+```
+
+**Schritt 2: Je nachdem was das ist:**
+
+**Fall A: Nichts läuft (Port frei)**
+→ Methode 1: Settings → Apps → Optional features → OpenSSH Server installieren
+
+**Fall B: Git for Windows SSH läuft**
+→ Deinstalliere Git for Windows und installiere neu OHNE OpenSSH:
+   1. Control Panel → Programs → Uninstall a program
+   2. Klicke "Git for Windows" → Uninstall
+   3. Neu installieren von https://git-scm.com/download/win
+   4. Im Installer: Wähle "Use the native Windows Secure Channel library" (nicht OpenSSH)
+   5. Danach: Methode 1 oben verwenden
+
+**Fall C: WSL SSH läuft**
+→ WSL SSH ist auch okay! Du kannst es so lassen oder:
+   - WSL SSH deaktivieren: `wsl --shutdown`
+   - Dann Windows OpenSSH installieren (Methode 1)
+
+**Methode 1 (einfachste): Windows Built-in OpenSSH installieren**
+```powershell
+Add-WindowsCapability -Online -Name OpenSSH.Server~0.0.1.0
+Start-Service sshd
+Set-Service -Name sshd -StartupType Automatic
+Get-Service sshd
+```
 
 ### Problem 1: "Permission denied (publickey,password)"
 - ✗ authorized_keys hat falsche Berechtigungen
@@ -199,18 +247,24 @@ Set-Service -Name sshd -StartupType Automatic
 Get-Service sshd
 ```
 
-### Methode 2: Mit Chocolatey (falls Windows Features nicht geht)
+### Methode 2: Wenn Portkonflikt bei Chocolatey
+
+Falls choco Error "Port 22 already in use":
 
 ```powershell
-# Chocolatey installieren (falls noch nicht)
-# https://chocolatey.org/install
+# 1. Prüfen welcher SSH-Server läuft
+netstat -ano | findstr :22
 
-# OpenSSH installieren
-choco install openssh -params '"/SSHServerFeature"' -y
+# 2. Prozess-ID (PID) anzeigen, z.B. "1234"
+# 3. Prüfen was das ist
+Get-Process -Id 1234
 
-# Service starten
-Start-Service sshd
-Set-Service -Name sshd -StartupType Automatic
+# 4. Wenn das nicht Windows OpenSSH sein soll: deinstallieren
+# z.B. für Git Bash SSH:
+#   Deinstalliere "Git for Windows" aus Control Panel
+#   (oder wähle nur Git ohne OpenSSH)
+
+# 5. Danach Methode 1 (Windows Features) verwenden!
 ```
 
 ### Methode 3: Mit Scoop
