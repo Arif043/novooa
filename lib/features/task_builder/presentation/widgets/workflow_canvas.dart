@@ -410,12 +410,19 @@ class CompactWorkflowNode extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (onAdd != null)
-                  IconButton(
-                    tooltip: 'Baustein verbinden',
-                    onPressed: onAdd,
-                    icon: const Icon(Icons.add, size: 20),
-                  ),
+                // Deaktiviert: Dieser Button hängte bedingungslos einen
+                // weiteren Nachfolger an jeden Baustein an, auch an
+                // nicht-verzweigende Primitives — der Runner führt einen so
+                // entstandenen zweiten Zweig einfach sequenziell mit aus,
+                // ohne Zusammenführung (kein Guard in WorkflowGraph.addNode).
+                // Das Anhängen des ersten Nachfolgers bleibt über den
+                // separaten "+ Baustein hier verbinden"-Platzhalter möglich.
+                // if (onAdd != null)
+                  // IconButton(
+                  //   tooltip: 'Baustein verbinden',
+                  //   onPressed: onAdd,
+                  //   icon: const Icon(Icons.add, size: 20),
+                  // ),
               ],
             ),
           ),
