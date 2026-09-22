@@ -18,7 +18,7 @@ class ForEachWidget extends StatelessWidget {
     final config = node.config as ForEachNodeConfig;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: SyscatTheme.nodePanelDecoration,
+      decoration: SyscatTheme.nodePanelDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

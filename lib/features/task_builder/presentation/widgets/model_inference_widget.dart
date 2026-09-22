@@ -63,7 +63,7 @@ class _ModelInferenceContent extends StatelessWidget {
     final model = _modelFor(_config.modelId);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: SyscatTheme.nodePanelDecoration,
+      decoration: SyscatTheme.nodePanelDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

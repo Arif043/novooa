@@ -19,7 +19,7 @@ class SaveDocumentWidget extends StatelessWidget {
     final config = node.config as SaveDocumentNodeConfig;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: SyscatTheme.nodePanelDecoration,
+      decoration: SyscatTheme.nodePanelDecoration(context),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -90,30 +90,37 @@ class SyscatTheme {
     ];
   }
 
-  static BoxDecoration get glassPanelDecoration {
+  /// Nimmt bewusst [BuildContext] statt eines parameterlosen Getters: Die
+  /// Variante mit `WidgetsBinding.instance.platformDispatcher.platformBrightness`
+  /// fragte die OS-Einstellung direkt ab und ignorierte dabei, welches Theme
+  /// `MaterialApp` (`theme`/`darkTheme`/`themeMode`) tatsächlich aufgelöst
+  /// hat — sichtbar als schwarzes Panel, sobald das Betriebssystem dunkel,
+  /// die App aber hell dargestellt wurde.
+  static BoxDecoration glassPanelDecoration(BuildContext context) {
     return _adaptivePanelDecoration(
+      context,
       lightColor: glassSurfaceSoft,
       darkColor: glassSurfaceDark,
       radius: 20,
     );
   }
 
-  static BoxDecoration get nodePanelDecoration {
+  static BoxDecoration nodePanelDecoration(BuildContext context) {
     return _adaptivePanelDecoration(
+      context,
       lightColor: glassSurface,
       darkColor: surfaceDark,
       radius: 16,
     );
   }
 
-  static BoxDecoration _adaptivePanelDecoration({
+  static BoxDecoration _adaptivePanelDecoration(
+    BuildContext context, {
     required Color lightColor,
     required Color darkColor,
     required double radius,
   }) {
-    final platformBrightness =
-        WidgetsBinding.instance.platformDispatcher.platformBrightness;
-    final isDark = platformBrightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return BoxDecoration(
       color: isDark ? darkColor : lightColor,
       borderRadius: BorderRadius.only(bottomRight: Radius.circular(radius), topRight: Radius.circular(radius)),

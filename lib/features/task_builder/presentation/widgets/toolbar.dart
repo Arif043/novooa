@@ -222,7 +222,7 @@ class _DraggingDummy extends StatelessWidget {
       child: Container(
         width: 96,
         height: 64,
-        decoration: SyscatTheme.nodePanelDecoration,
+        decoration: SyscatTheme.nodePanelDecoration(context),
         child: Icon(icon, color: SyscatTheme.primaryOrange),
       ),
     );

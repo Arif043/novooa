@@ -144,7 +144,7 @@ class _EmployeeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final skillCount = employee.defaultSkills.length;
     return Container(
-      decoration: SyscatTheme.nodePanelDecoration,
+      decoration: SyscatTheme.nodePanelDecoration(context),
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [

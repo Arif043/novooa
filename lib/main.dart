@@ -183,7 +183,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: _scaffoldMessengerKey,
       theme: SyscatTheme.lightTheme,
-      darkTheme: SyscatTheme.darkTheme,
+      // darkTheme: SyscatTheme.darkTheme,
       themeMode: ThemeMode.system,
       routerConfig: serviceLocator<AppRouter>().router,
       builder: _wrapApplication,

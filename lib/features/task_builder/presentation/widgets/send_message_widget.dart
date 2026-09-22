@@ -52,7 +52,7 @@ class _SendMessageWidgetState extends State<SendMessageWidget> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: SyscatTheme.nodePanelDecoration,
+      decoration: SyscatTheme.nodePanelDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -19,7 +19,7 @@ class ConditionalWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: SyscatTheme.nodePanelDecoration,
+      decoration: SyscatTheme.nodePanelDecoration(context),
       child: Column(
         children: [
           Text('Wenn', style: SyscatTheme.taskBody),

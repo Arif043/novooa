@@ -64,7 +64,7 @@ class _PromptWidgetState extends State<PromptWidget> {
     final config = widget.node.config as PromptNodeConfig;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: SyscatTheme.nodePanelDecoration,
+      decoration: SyscatTheme.nodePanelDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

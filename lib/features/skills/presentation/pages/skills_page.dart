@@ -129,7 +129,7 @@ class _SkillTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: SyscatTheme.nodePanelDecoration,
+      decoration: SyscatTheme.nodePanelDecoration(context),
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
