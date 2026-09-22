@@ -242,6 +242,12 @@ export const sendChannelMessageNodeConfigSchema = z.object({
   message: z.string().default(""),
 });
 
+export const notificationSendNodeConfigSchema = z.object({
+  primitive: z.literal("notificationSend").default("notificationSend"),
+  title: z.string().optional(),
+  message: z.string().default(""),
+});
+
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   stringInputNodeConfigSchema,
   scriptNodeConfigSchema,
@@ -260,6 +266,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   readEmailNodeConfigSchema,
   readChannelEventNodeConfigSchema,
   sendChannelMessageNodeConfigSchema,
+  notificationSendNodeConfigSchema,
 ]);
 
 export const workflowNodeSchema = z.object({
