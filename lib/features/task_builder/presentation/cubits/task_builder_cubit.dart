@@ -28,6 +28,7 @@ part 'task_builder_string_input_mutations.dart';
 part 'task_builder_write_file_mutations.dart';
 part 'task_builder_read_file_mutations.dart';
 part 'task_builder_send_message_mutations.dart';
+part 'task_builder_notification_send_mutations.dart';
 part 'task_builder_document_lookup_mutations.dart';
 part 'task_builder_save_document_mutations.dart';
 
@@ -418,6 +419,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       WorkflowPrimitive.readEmail => 'email',
       WorkflowPrimitive.readChannelEvent => 'message',
       WorkflowPrimitive.sendChannelMessage => 'send',
+      WorkflowPrimitive.notificationSend => 'notification',
       WorkflowPrimitive.toolCall => 'tool',
       WorkflowPrimitive.humanApproval => 'approval',
       WorkflowPrimitive.dialogInput => 'dialog',

@@ -4,6 +4,7 @@ import {FirestoreTeamFileStore} from "../../../files/infrastructure/firebase/fir
 import {FirestoreKnowledgeBaseStore} from "../../../knowledge_base/infrastructure/firebase/firestore-knowledge-base-store.js";
 import {modelInference} from "../../../machine_learning/infrastructure/cloud_run/model-inference-service-config.js";
 import {createFirebaseTaskRunApprovalNotificationStore} from "../../../notifications/infrastructure/firebase/firebase-task-run-approval-notification-store-factory.js";
+import {FirebaseTeamNotificationSender} from "../../../notifications/infrastructure/firebase/firebase-team-notification-sender.js";
 import {FirestoreTeamContextStore} from "../../../teams/infrastructure/firebase/firestore-team-context-store.js";
 import {type TaskRunStore} from "../../domain/repositories/task-run-store.js";
 import {FirebaseTaskRunDispatcher} from "./firebase-task-run-dispatcher.js";
@@ -55,6 +56,7 @@ function workerStoresFor(
     documentStore: new UnavailableDocumentStore(),
     knowledgeBaseStore: new FirestoreKnowledgeBaseStore(),
     modelInference: modelInference(),
+    teamNotificationSender: new FirebaseTeamNotificationSender(),
     languageModelResolver: new CatalogGenkitLanguageModelResolver(
       new FirestoreLanguageModelCatalog(languageModelCipher),
     ),

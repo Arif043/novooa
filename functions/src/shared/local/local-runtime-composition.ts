@@ -27,9 +27,11 @@ import {SQLiteInboundChannelMessageStore} from "../../features/communication/inf
 import {LocalPushDeviceHttpHandler} from "../../features/notifications/infrastructure/local/local-push-device-http-handler.js";
 import {
   HttpRuntimePushRelayClient,
+  type RuntimePushRelayClient,
   UnavailableRuntimePushRelayClient,
 } from "../../features/notifications/infrastructure/local/runtime-push-relay-client.js";
 import {LocalTaskRunApprovalPushNotifier} from "../../features/notifications/infrastructure/local/local-task-run-approval-push-notifier.js";
+import {LocalTeamNotificationSender} from "../../features/notifications/infrastructure/local/local-team-notification-sender.js";
 import {LocalTaskActivityHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-activity-http-handler.js";
 import {LocalTaskDefinitionHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-definition-http-handler.js";
 import {LocalTaskRunHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-run-http-handler.js";
@@ -150,6 +152,7 @@ export function createLocalRuntimeComposition(
     new SQLiteLanguageModelCatalog(options.database, languageModelSecretStore),
     documentStore,
     mailRelay,
+    pushRelay,
   );
   const mailRelayWorker = mailRelayWorkerFor(
     options, mailRelay, taskStore, taskRunStore, taskRunDispatcher, applicationLogger,
@@ -262,6 +265,7 @@ function createTaskWorkflow(
   languageModelCatalog: SQLiteLanguageModelCatalog,
   documentStore: DocumentStore,
   mailRelay: RuntimeMailRelayClient,
+  pushRelay: RuntimePushRelayClient,
 ) {
   return createGenkitTaskWorkflow({
     taskStore: new SQLiteTaskStore(options.database),
@@ -280,6 +284,11 @@ function createTaskWorkflow(
       messageSender: new LocalTaskMessageSender(options.signedLicense, mailRelay),
       documentStore,
       modelInference: modelInferenceFor(options),
+      teamNotificationSender: new LocalTeamNotificationSender(
+        options.signedLicense,
+        pushRelay,
+        logger,
+      ),
       languageModelResolver: new CatalogGenkitLanguageModelResolver(
         languageModelCatalog,
       ),

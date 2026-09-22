@@ -38,6 +38,7 @@ Primitives erhalten den Status `skipped` und keine Outputs.
 | `readChannelEvent` mit E-Mail | ausgefuehrt | `value`, `sender`, `subject`, `message` (je `string`), `receivedAt` (`datetime`) |
 | `readChannelEvent` mit WhatsApp/SMS | ausgefuehrt | `value`, `sender`, `message` (je `string`), `receivedAt` (`datetime`) |
 | `sendChannelMessage` | ausgefuehrt | `value`, `recipient`, `channelId`, `providerMessageId` (je `string`) |
+| `notificationSend` | ausgefuehrt | `value` (`string`: gesendeter Text) |
 | `humanApproval` | wartet auf Freigabe | `value` (`string`) |
 | `dialogInput` | wartet auf Formulareingabe | nach dem Absenden: `value` (`json`) und ein typisierter Output pro Feld |
 | `mediaInput` | wartet auf ein Bild; Nutzer wählt Kamera oder Galerie | nach dem Absenden: `value` (`media`) |

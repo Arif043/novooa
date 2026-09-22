@@ -36,8 +36,11 @@ test("liefert keinen Treffer als reguläres Bedingungsergebnis", async () => {
 });
 
 test("übersetzt einen Suchfehler in ein verständliches Ergebnis", async () => {
+  const store = new FailingDocumentStore();
+  await store.createCollection(collection());
+
   const result = await documentLookupNodeExecutor.execute(
-    lookupNode("lea@example.com"), runContext(new FailingDocumentStore()),
+    lookupNode("lea@example.com"), runContext(store),
   );
 
   assert.deepEqual(result.outputs.value, {type: "string", value: "Suche fehlgeschlagen"});

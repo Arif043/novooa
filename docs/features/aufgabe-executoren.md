@@ -152,6 +152,23 @@ Bei einem Microsoft-Graph-E-Mail-Event nutzt der Sende-Baustein ohne explizite
 `Re: <eingehender Betreff>`. Ein unabhängig gestarteter E-Mail-Baustein
 benötigt eine `connectorId` eines aktiven Mail-Connectors.
 
+## Push-Benachrichtigung
+
+`notificationSend` sendet einen aufgelösten Text als Push-Benachrichtigung an
+alle Nutzer:innen des aktuellen Teams. Der optionale `title` wird ebenfalls
+als Template aufgelöst; ohne Wert verwendet der Baustein
+„Benachrichtigung von novooa“. Ein leerer aufgelöster Text ist ein Run-Fehler.
+
+Der Baustein hängt am fachlichen `TeamNotificationSender`-Port. In der Cloud
+löst `FirebaseTeamNotificationSender` die Team-Mitglieder-UIDs über
+`TeamMembershipStore.memberUids` auf und sendet je Mitglied über
+`PushNotificationSender.sendToRecipient` (fehlerhafte Einzelzustellungen
+werden dort bereits protokolliert und brechen die übrigen Zustellungen
+nicht ab). Die lokale Runtime kennt keine einzelnen Mitglieder-UIDs, sondern
+nur die beim Push-Relay registrierten Geräte der aktiven Lizenz; ein Team
+entspricht dort einem Arbeitsbereich, daher sendet `LocalTeamNotificationSender`
+einmalig über den bestehenden `RuntimePushRelayClient`.
+
 ## Verwandt
 
 - [`aufgabe.md`](./aufgabe.md)

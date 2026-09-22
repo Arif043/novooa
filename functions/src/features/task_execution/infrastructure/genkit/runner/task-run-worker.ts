@@ -22,6 +22,7 @@ import {
 import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 import {type DocumentStore} from "../../../../data/domain/repositories/document-store.js";
+import {type TeamNotificationSender} from "../../../../notifications/domain/repositories/team-notification-sender.js";
 
 export type TaskRunWorkerStores = {
   taskStore: TaskStore;
@@ -33,6 +34,7 @@ export type TaskRunWorkerStores = {
   messageSender: TaskMessageSender;
   documentStore: DocumentStore;
   modelInference: ModelInference;
+  teamNotificationSender: TeamNotificationSender;
   languageModelResolver?: GenkitLanguageModelResolver;
 };
 
@@ -61,6 +63,7 @@ export async function executeQueuedTaskRun(
     messageSender: stores.messageSender,
     documentStore: stores.documentStore,
     modelInference: stores.modelInference,
+    teamNotificationSender: stores.teamNotificationSender,
     logger,
     languageModelResolver: stores.languageModelResolver,
   });
@@ -98,6 +101,7 @@ export async function continueApprovedTaskRun(
       messageSender: stores.messageSender,
       documentStore: stores.documentStore,
       modelInference: stores.modelInference,
+      teamNotificationSender: stores.teamNotificationSender,
       logger,
       languageModelResolver: stores.languageModelResolver,
     },

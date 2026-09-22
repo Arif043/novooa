@@ -47,6 +47,7 @@ const bausteinGroups = <String, List<BausteinChoice>>{
     BausteinChoice(.sendChannelMessage, kind: ChannelEventKind.email),
     BausteinChoice(.sendChannelMessage, kind: ChannelEventKind.whatsapp),
     BausteinChoice(.sendChannelMessage, kind: ChannelEventKind.sms),
+    BausteinChoice(.notificationSend),
   ],
 };
 
@@ -60,6 +61,7 @@ IconData bausteinIcon(WorkflowPrimitive primitive) => switch (primitive) {
   .readFile => Icons.file_open_outlined,
   .readEmail || .readChannelEvent => Icons.mark_email_read_outlined,
   .sendChannelMessage => Icons.send_outlined,
+  .notificationSend => Icons.notifications_active_outlined,
   .humanApproval => Icons.verified_user_outlined,
   .dialogInput => Icons.dynamic_form_outlined,
   .mediaInput => Icons.add_a_photo_outlined,

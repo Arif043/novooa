@@ -40,6 +40,7 @@ class NodeConfigDocumentMapper {
         'kind': config.kind.name,
       },
       SendChannelMessageNodeConfig() => _sendMessageToDocument(config),
+      NotificationSendNodeConfig() => _notificationSendToDocument(config),
       _ => {'primitive': config.primitive.name},
     };
   }
@@ -66,6 +67,7 @@ class NodeConfigDocumentMapper {
         kind: _channelEventKindFrom(data['kind']),
       ),
       WorkflowPrimitive.sendChannelMessage => _sendMessageFrom(data),
+      WorkflowPrimitive.notificationSend => _notificationSendFrom(data),
       _ => NodeConfig.initial(primitive),
     };
   }
@@ -268,6 +270,23 @@ class NodeConfigDocumentMapper {
       'subject': config.subject,
       'message': config.message,
     };
+  }
+
+  Map<String, Object?> _notificationSendToDocument(
+    NotificationSendNodeConfig config,
+  ) {
+    return {
+      'primitive': config.primitive.name,
+      'title': config.title,
+      'message': config.message,
+    };
+  }
+
+  NotificationSendNodeConfig _notificationSendFrom(Map<String, Object?> data) {
+    return NotificationSendNodeConfig(
+      title: data['title'] as String? ?? '',
+      message: data['message'] as String? ?? '',
+    );
   }
 
   StringInputNodeConfig _stringInputFrom(Map<String, Object?> data) {

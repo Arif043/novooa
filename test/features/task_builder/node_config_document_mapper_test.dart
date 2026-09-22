@@ -135,6 +135,32 @@ void main() {
     expect(sendConfig.message, 'Hallo {{name}}');
   });
 
+  test('serialisiert NotificationSendNodeConfig', () {
+    final document = _mapper().toDocument(
+      const NotificationSendNodeConfig(
+        title: 'Status',
+        message: '{{ergebnis.value}}',
+      ),
+    );
+
+    expect(document['primitive'], 'notificationSend');
+    expect(document['title'], 'Status');
+    expect(document['message'], '{{ergebnis.value}}');
+  });
+
+  test('deserialisiert NotificationSendNodeConfig', () {
+    final config = _mapper().fromDocument({
+      'primitive': 'notificationSend',
+      'title': 'Status',
+      'message': 'Fertig!',
+    });
+
+    expect(config, isA<NotificationSendNodeConfig>());
+    final notificationConfig = config as NotificationSendNodeConfig;
+    expect(notificationConfig.title, 'Status');
+    expect(notificationConfig.message, 'Fertig!');
+  });
+
   test('serialisiert und deserialisiert DialogInputNodeConfig', () {
     const config = DialogInputNodeConfig(
       instruction: 'Bitte ergänze die Daten.',

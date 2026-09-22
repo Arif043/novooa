@@ -18,6 +18,7 @@ enum WorkflowPrimitive {
   readEmail,
   readChannelEvent,
   sendChannelMessage,
+  notificationSend,
   toolCall,
   humanApproval,
   dialogInput,

@@ -24,6 +24,7 @@ part 'write_file_node_config.dart';
 part 'read_file_node_config.dart';
 part 'read_email_node_config.dart';
 part 'send_channel_message_node_config.dart';
+part 'notification_send_node_config.dart';
 part 'document_lookup_node_config.dart';
 part 'save_document_node_config.dart';
 
@@ -51,6 +52,7 @@ sealed class NodeConfig extends Equatable {
       .readEmail => ReadEmailNodeConfig.initial(),
       .readChannelEvent => ReadChannelEventNodeConfig.initial(),
       .sendChannelMessage => SendChannelMessageNodeConfig.initial(),
+      .notificationSend => NotificationSendNodeConfig.initial(),
       _ => throw UnimplementedError(),
     };
   }

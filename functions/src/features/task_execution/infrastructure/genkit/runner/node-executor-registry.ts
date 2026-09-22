@@ -13,6 +13,7 @@ import {
 } from "../../../domain/executors/read-email-node-executor.js";
 import {createScriptNodeExecutor} from "../../../domain/executors/script-node-executor.js";
 import {createSendChannelMessageNodeExecutor} from "../../../domain/executors/send-channel-message-node-executor.js";
+import {createNotificationSendNodeExecutor} from "../../../domain/executors/notification-send-node-executor.js";
 import {stringInputNodeExecutor} from "../../../domain/executors/string-input-node-executor.js";
 import {writeFileNodeExecutor} from "../../../domain/executors/write-file-node-executor.js";
 import {documentLookupNodeExecutor} from "../../../domain/executors/document-lookup-node-executor.js";
@@ -25,6 +26,7 @@ import {createPythonScriptExecutor} from "../../local/python-script-executor.js"
 import {scriptOutputLogger} from "./script-output-logger.js";
 import {conditionalBranchLogger} from "./conditional-branch-logger.js";
 import {taskMessageLogger} from "./task-message-logger.js";
+import {notificationSendLogger} from "./notification-send-logger.js";
 import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 
@@ -37,6 +39,7 @@ function executorsFor(logger: ApplicationLogger) {
     readEmailNodeExecutor,
     readChannelEventNodeExecutor,
     createSendChannelMessageNodeExecutor(taskMessageLogger(logger)),
+    createNotificationSendNodeExecutor(notificationSendLogger(logger)),
     humanApprovalNodeExecutor,
     dialogInputNodeExecutor,
     mediaInputNodeExecutor,

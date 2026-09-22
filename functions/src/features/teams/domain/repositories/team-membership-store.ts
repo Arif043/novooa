@@ -26,6 +26,7 @@ export type RejectTeamInvitationInput = {
 export interface TeamMembershipStore {
   teamName(teamId: string): Promise<string>;
   isMember(teamId: string, uid: string): Promise<boolean>;
+  memberUids(teamId: string): Promise<string[]>;
   inviteMember(input: InviteTeamMemberInput): Promise<string>;
   removeMember(input: RemoveTeamMemberInput): Promise<void>;
   invitationFor(uid: string, invitationId: string): Promise<TeamInvitation>;

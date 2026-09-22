@@ -52,6 +52,7 @@ export const workflowPrimitives = [
   "readEmail",
   "readChannelEvent",
   "sendChannelMessage",
+  "notificationSend",
   "toolCall",
   "humanApproval",
   "dialogInput",
@@ -216,6 +217,11 @@ export type SendChannelMessageNodeConfig = {
   subject?: string;
   message: string;
 };
+export type NotificationSendNodeConfig = {
+  primitive: "notificationSend";
+  title?: string;
+  message: string;
+};
 export type NodeConfig =
   | StringInputNodeConfig
   | ScriptNodeConfig
@@ -233,7 +239,8 @@ export type NodeConfig =
   | SaveDocumentNodeConfig
   | ReadEmailNodeConfig
   | ReadChannelEventNodeConfig
-  | SendChannelMessageNodeConfig;
+  | SendChannelMessageNodeConfig
+  | NotificationSendNodeConfig;
 export type WorkflowNode = {
   id: string;
   primitive: WorkflowPrimitive;

@@ -13,6 +13,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.readEmail => 'E-Mail lesen',
       WorkflowPrimitive.readChannelEvent => 'Nachricht lesen',
       WorkflowPrimitive.sendChannelMessage => 'Nachricht senden',
+      WorkflowPrimitive.notificationSend => 'Push-Benachrichtigung senden',
       WorkflowPrimitive.toolCall => 'Werkzeug-Aufruf',
       WorkflowPrimitive.humanApproval => 'Freigabe',
       WorkflowPrimitive.dialogInput => 'Formulareingabe',
@@ -45,6 +46,8 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         'Liest ein eingehendes E-Mail-, WhatsApp- oder SMS-Event.',
       WorkflowPrimitive.sendChannelMessage =>
         'Sendet eine Nachricht über einen verbundenen Kanal.',
+      WorkflowPrimitive.notificationSend =>
+        'Sendet einen Text als Push-Benachrichtigung an alle Team-Mitglieder.',
       WorkflowPrimitive.toolCall =>
         'Bindet externe Aktionen oder Datenquellen ein.',
       WorkflowPrimitive.humanApproval => 'Wartet auf menschliche Freigabe.',

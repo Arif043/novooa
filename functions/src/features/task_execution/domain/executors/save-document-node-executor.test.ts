@@ -40,7 +40,14 @@ test("legt eine fehlende Datensammlung beim Speichern implizit an", async () => 
 
   await executeSave(store, "kunde@example.com", "neu");
 
-  assert.equal((await store.findMany({teamId: "team_1", collectionId: "kunden"})).length, 1);
+  const collection = await store.findCollectionByName({
+    teamId: "team_1", displayName: "kunden",
+  });
+  assert.notEqual(collection, null);
+  const records = await store.findMany({
+    teamId: "team_1", collectionId: collection!.id,
+  });
+  assert.equal(records.length, 1);
 });
 
 test("legt ohne Bedingungen immer einen neuen Datensatz an", async () => {

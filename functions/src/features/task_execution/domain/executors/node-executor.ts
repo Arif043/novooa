@@ -12,6 +12,7 @@ import {type TeamFileStore} from "../../../files/domain/repositories/team-file-s
 import {type ModelInference} from "../../../machine_learning/domain/repositories/model-inference.js";
 import {type TaskMessageSender} from "../repositories/task-message-sender.js";
 import {type DocumentStore} from "../../../data/domain/repositories/document-store.js";
+import {type TeamNotificationSender} from "../../../notifications/domain/repositories/team-notification-sender.js";
 
 export type TaskVariables = Record<string, unknown>;
 
@@ -54,6 +55,7 @@ export type TaskRunContext = {
   messageSender: TaskMessageSender;
   documentStore: DocumentStore;
   modelInference: ModelInference;
+  teamNotificationSender: TeamNotificationSender;
 };
 
 export type NodeExecutor = {

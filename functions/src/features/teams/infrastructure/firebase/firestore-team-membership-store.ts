@@ -21,6 +21,11 @@ export class FirestoreTeamMembershipStore implements TeamMembershipStore {
     return member.exists;
   }
 
+  async memberUids(teamId: string): Promise<string[]> {
+    const members = await teamReference(teamId).collection("members").get();
+    return members.docs.map((doc) => doc.id);
+  }
+
   async inviteMember(input: InviteTeamMemberInput): Promise<string> {
     const notificationId = `teamInvitation_${input.teamId}`;
     await notificationReference(input.inviteeUid, notificationId).set(

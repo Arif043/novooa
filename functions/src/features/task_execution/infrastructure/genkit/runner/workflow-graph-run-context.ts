@@ -53,6 +53,7 @@ export function createTaskRunContext(
     messageSender: options.runtime.messageSender,
     documentStore: options.runtime.documentStore,
     modelInference: options.runtime.modelInference,
+    teamNotificationSender: options.runtime.teamNotificationSender,
     runGraph: graphRunnerFor(options),
     templateExpressionResolver: templateResolver,
   };
