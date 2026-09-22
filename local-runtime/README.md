@@ -90,3 +90,39 @@ mountet ihn ausschließlich für `runtime` als Datei unter `/run/secrets`. Der
 Key ist absichtlich nicht Teil des Daten-Volumes und darf weder eingecheckt noch
 gelöscht werden, solange verschlüsselte Provider-Zugänge wiederherstellbar sein
 sollen.
+
+## Images für einen Ziel-Rechner bauen
+
+`build-images.sh` baut die beiden Runtime-Images (`novooa-runtime`,
+`novooa-ml`) eigenständig auf diesem Rechner für `linux/amd64` — unabhängig
+von der eigenen Host-Architektur (Cross-Compile via Docker Buildx/QEMU) und
+ohne SSH oder eine Deployment-CLI. Das Ergebnis ist eine einzelne `.tar`-Datei
+mit beiden Images, die auf jedem Docker-Host ohne Registry-Zugriff eingespielt
+werden kann:
+
+```bash
+./local-runtime/build-images.sh 0.1.0
+```
+
+Ergebnis:
+
+```text
+local-runtime/build/novooa-images-0.1.0.tar
+```
+
+Auf dem Ziel-Rechner (z.B. dem Windows-Host, der `docker-compose.local.yaml`
+betreibt):
+
+```powershell
+docker load -i novooa-images-0.1.0.tar
+```
+
+Anschließend referenziert eine Compose-Datei die geladenen Images per
+`image: novooa-runtime:0.1.0` / `image: novooa-ml:0.1.0` statt sie per
+`build:` aus dem Quellcode zu bauen — genau das, was
+[`deployment.md`](../docs/deployment.md) für auslieferbare, versionierte
+Images fordert ("niemals `latest`, immer eine konkrete Version").
+
+Voraussetzung ist ein Buildx-Builder mit `linux/amd64`-Unterstützung
+(`docker buildx ls` zeigt die verfügbaren Plattformen je Builder). Docker
+Desktop und OrbStack bringen das standardmäßig mit.
