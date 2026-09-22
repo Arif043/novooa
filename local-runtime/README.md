@@ -60,18 +60,27 @@ Die Node-Runtime verbindet sich mit diesem Sidecar über `novooa-private`; sie
 enthält weder einen Python-Interpreter noch Python-Abhängigkeiten.
 
 
-## Clients im LAN
+## Clients im LAN und öffentlich
 
-Der Compose-Stack veröffentlicht ausschließlich den Runtime-Port `8090`; der
-Python-Sidecar bleibt im privaten Docker-Netz. Auf dem Host verbindet sich der
-native Client automatisch mit `127.0.0.1`. Ein weiterer nativer Client im selben
-LAN gibt nur die private IPv4-Adresse des Runtime-Hosts ein, zum Beispiel
-`192.168.1.42`. Die Adresse wird als normale App-Einstellung gespeichert und vor
-der Verwendung über `GET /healthz` geprüft.
+Der Compose-Stack veröffentlicht den Runtime-Port `8090` auf allen
+Schnittstellen sowie den Setup-Port `8091` ausschließlich auf `127.0.0.1`;
+der Python-Sidecar bleibt im privaten Docker-Netz. Clients im LAN geben die
+private IPv4-Adresse des Hosts ein und verbinden sich unverschlüsselt über
+HTTP.
 
-Die Runtime richtet weder Portweiterleitungen noch externen Fernzugriff ein. Ob
-der Host aus anderen Netzen erreichbar ist, bestimmen Router und Firewall des
-Kunden.
+novooa terminiert selbst kein TLS. Wer die Runtime aus dem Internet
+erreichbar machen will, stellt einen eigenen Reverse Proxy mit Domain und
+Zertifikat davor — der Client erkennt eine Domain und verwendet dann HTTPS.
+Port `8090` darf dabei nicht direkt öffentlich erreichbar sein, sonst gehen
+Passwort und Session-Token im Klartext übers Internet. Jede Verbindung
+verlangt zusätzlich ein selbst gewähltes Betreiber-Passwort — siehe
+[`docs/local-runtime.md`](../docs/local-runtime.md#zugriff-und-authentifizierung)
+für das einmalige Setzen des Passworts, den Login-Ablauf und ein
+nginx-Beispiel.
+
+Die Runtime richtet von sich aus keine Portweiterleitungen ein; ob der Host
+aus anderen Netzen erreichbar ist, bestimmen ansonsten Router und Firewall
+des Kunden.
 
 ## Lokaler Stack
 

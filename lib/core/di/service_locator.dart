@@ -138,10 +138,10 @@ import '../routing/app_router.dart';
 
 final serviceLocator = GetIt.instance;
 
-void configureDependencies({RuntimeProfile? runtimeProfile}) {
+Future<void> configureDependencies({RuntimeProfile? runtimeProfile}) async {
   final profile = runtimeProfile ?? RuntimeProfile.fromEnvironment();
   if (profile.isStandalone) {
-    configureStandaloneDependencies(serviceLocator, profile);
+    await configureStandaloneDependencies(serviceLocator, profile);
     return;
   }
   _configureCloudDependencies();

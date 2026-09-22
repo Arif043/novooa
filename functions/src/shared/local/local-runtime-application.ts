@@ -44,6 +44,15 @@ export class LocalRuntimeApplication implements LocalRuntimeRequestHandler {
     return this.runtime?.requestHandler.handle(request) ?? null;
   }
 
+  /**
+   * Nur über den separaten, host-loopback-gebundenen Setup-Server erreicht
+   * (siehe local-runtime-entrypoint.ts) — niemals über den regulären,
+   * öffentlich erreichbaren API-Port.
+   */
+  async handleSetup(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
+    return this.runtime?.setupHandler.handle(request) ?? null;
+  }
+
   async stop(): Promise<void> {
     await this.stopRuntime();
   }

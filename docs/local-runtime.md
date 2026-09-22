@@ -45,12 +45,18 @@ Flutter-Desktop-App
           Tensor-Transformationen und ONNX-Inferenz
 ```
 
-`novooa-runtime` ist der einzige Dienst mit einem veröffentlichten Host-Port.
-Compose veröffentlicht standardmäßig `8090` auf allen Host-Schnittstellen, damit
-native novooa-Clients im selben LAN ihn erreichen können. Der Host-Client nutzt
-dabei weiterhin automatisch `127.0.0.1`; weitere Clients geben ausschließlich
-die private IPv4-Adresse des Runtime-Hosts ein. `novooa-ml` ist
-nicht vom Host erreichbar und kommuniziert nur über das interne
+`novooa-runtime` ist der einzige Dienst mit veröffentlichten Host-Ports:
+`8090` auf allen Schnittstellen für die reguläre API und `127.0.0.1:8091` für
+das einmalige Setzen des Betreiber-Passworts. Clients im LAN geben die private
+IPv4-Adresse des Hosts ein und sprechen die Runtime unverschlüsselt über HTTP
+an. **novooa terminiert selbst kein TLS und verwaltet keine Zertifikate** —
+das ist Infrastruktur und gehört nicht zur Fachlogik des Produkts. Wer die
+Runtime aus dem Internet erreichbar machen will, stellt einen eigenen Reverse
+Proxy mit Domain und Zertifikat davor; der Client erkennt eine Domain und
+verwendet dann HTTPS. Details dazu und zur zwingenden
+Passwort-Authentifizierung unter
+[Zugriff und Authentifizierung](#zugriff-und-authentifizierung). `novooa-ml`
+ist nicht vom Host erreichbar und kommuniziert nur über das interne
 Compose-Netzwerk mit `novooa-runtime`.
 
 Das benannte Volume `novooa-data` enthält SQLite, Dateien, Wissensbasis und
@@ -74,6 +80,146 @@ ist mit dem bei der Installation erzeugten Runtime-Master-Key geschützt. Die Da
 enthält weder den Kunden-Token, einen privaten Signaturschlüssel noch
 Firebase-Credentials. Die Runtime darf ausgehend den novooa-Relay und konfigurierte
 Modellprovider erreichen; der ML-Dienst erhält keinen direkten Internetzugang.
+
+## Zugriff und Authentifizierung
+
+**Jede** Verbindung — auch im LAN, auch rein lokal auf demselben Rechner —
+verlangt ein selbst gewähltes Betreiber-Passwort. Das ist ein bewusster
+Breaking Change: bestehende Installationen müssen nach einem Update einmalig
+ein Passwort setzen (siehe unten), bevor der native Client sich wieder
+verbinden kann.
+
+### Transportverschlüsselung ist Infrastruktur, nicht Produktlogik
+
+novooa unterscheidet zwei Belange bewusst:
+
+- **Authentifizierung** (Passwort, Session-Token) beantwortet die fachliche
+  Frage „wer darf diesen Arbeitsbereich benutzen“ und liegt deshalb in der
+  Runtime. Sie wirkt unabhängig vom Transport.
+- **Transportverschlüsselung** ist Infrastruktur. novooa liefert dafür
+  **keinen Reverse Proxy mit und verwaltet keine Zertifikate**. Andernfalls
+  kollidierte es mit Hosts, die bereits einen Reverse Proxy betreiben oder
+  deren Domain längst ein Zertifikat besitzt — und belegte Port 443, der dort
+  schon vergeben ist.
+
+Daraus ergeben sich zwei Betriebsarten, die der Client an der Adresse
+erkennt:
+
+| Adresse | Schema | Standardport | Einsatz |
+| --- | --- | --- | --- |
+| IP-Adresse (`192.168.1.42`) | `http` | `8090` | Direkter Zugriff im vertrauenswürdigen Netz |
+| Domain (`novooa.example.de`) | `https` | `443` | Über einen selbst betriebenen Reverse Proxy mit Zertifikat |
+
+Ein abweichender Port lässt sich in beiden Fällen anhängen
+(`192.168.1.42:9000`, `novooa.example.de:8443`).
+
+Beide Vorgaben lassen sich durch ein ausdrücklich angegebenes Schema
+überschreiben — nötig für **interne Hostnamen ohne Zertifikat**
+(`http://novooa.fritz.box`, `http://raspberrypi.local`), die sonst als Domain
+gälten und an der Zertifikatsprüfung scheiterten. Umgekehrt ist
+`https://192.168.1.42` möglich, wenn ein Proxy ein Zertifikat für eine
+IP-Adresse ausliefert. Eine Domain fällt dabei **niemals von selbst** auf
+HTTP zurück: Ein stiller Downgrade würde die Verschlüsselung durch einen
+bloßen Konfigurationsfehler unbemerkt abschalten. Hat eine Domain kein
+gültiges Zertifikat (abgelaufen, selbstsigniert, auf einen anderen Namen
+ausgestellt), meldet der Client das ausdrücklich als Zertifikatsproblem und
+nicht als Netzwerkfehler.
+
+> **Sicherheitsgrenze:** Über eine IP-Adresse läuft der Verkehr
+> unverschlüsselt — Passwort und Session-Token gehen im Klartext über das
+> Netz. Das ist innerhalb eines vertrauenswürdigen LAN vertretbar, aber
+> **niemals aus dem Internet**. Port `8090` darf nicht per Portweiterleitung
+> oder Firewallregel öffentlich erreichbar gemacht werden. Für externen
+> Zugriff gehört zwingend ein Reverse Proxy mit Domain und Zertifikat davor;
+> der Client verwendet dann automatisch HTTPS.
+
+Für den externen Zugriff terminiert der eigene Proxy TLS und leitet an
+`127.0.0.1:8090` weiter. Ein minimales nginx-Beispiel:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name novooa.example.de;
+
+    ssl_certificate     /etc/letsencrypt/live/novooa.example.de/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/novooa.example.de/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:8090;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+Damit die Runtime in diesem Fall nicht zusätzlich direkt erreichbar bleibt,
+wird das Port-Mapping in `docker-compose.local.yaml` auf den Host beschränkt:
+`"127.0.0.1:8090:8080"` statt `"8090:8080"`.
+
+### Erstmaliges Setzen des Passworts
+
+Die Runtime veröffentlicht dafür einen zweiten HTTP-Port (Standard `8091`),
+der auf dem Docker-Host ausschließlich an `127.0.0.1` gebunden ist
+(`docker-compose.local.yaml`, Port-Mapping `127.0.0.1:8091:8091`) — das wird
+vom Docker-Host selbst durchgesetzt, nicht durch eine IP-Prüfung im
+Anwendungscode (die wäre hinter Docker-NAT unzuverlässig, da der Container je
+nach Docker-Implementierung nie die echte `127.0.0.1` des Hosts als
+Absenderadresse sieht). `POST /v1/setup` funktioniert genau einmal und sperrt
+sich danach dauerhaft (`409`), egal von wo aus er später aufgerufen wird.
+
+- **LAN/lokal**: direkt erreichbar unter `http://127.0.0.1:8091/v1/setup`.
+- **VPS**: nur per SSH-Portweiterleitung erreichbar, z.B.
+  `ssh -L 8091:127.0.0.1:8091 nutzer@vps-adresse`, danach lokal
+  `http://127.0.0.1:8091/v1/setup` aufrufen.
+
+Nach dem Setzen des Passworts meldet sich der Client über
+`POST /v1/auth/login` an und erhält ein Session-Token, das er fortan als
+`Authorization: Bearer <token>` mitschickt. `/healthz` und `/v1/license/*`
+bleiben unverändert außerhalb dieser Passwort-Pflicht — die Lizenzaktivierung
+ist bereits durch den Lizenz-Token selbst geschützt.
+
+### Client-Voraussetzungen
+
+Das Session-Token liegt verschlüsselt im plattformeigenen
+Credential-Speicher (`flutter_secure_storage`), nicht in `SharedPreferences`.
+
+- **macOS**: `keychain-access-groups` ist als Entitlement gesetzt
+  (`macos/Runner/{Debug,Release}.entitlements`) — `flutter_secure_storage`
+  verlangt es laut eigener Dokumentation, sonst scheitert jeder
+  Schreibzugriff zur Laufzeit mit
+  `PlatformException(-34018, A required entitlement isn't present.)`.
+  Sichtbar wird das erst bei der Anmeldung: Das Session-Token lässt sich
+  nicht speichern.
+
+  Dieses Entitlement verlangt eine **Development-Signing-Identität**; ohne
+  sie bricht bereits der Build mit `"Runner" has entitlements that require
+  signing with a development certificate` ab. Ein ad-hoc signierter Build
+  (`Signature=adhoc`, `TeamIdentifier=not set`) genügt nicht. Einmalige
+  Einrichtung — ein kostenloses Personal Team reicht, kein bezahlter
+  Apple-Developer-Account nötig:
+
+  1. Xcode → Settings → Accounts → Apple-ID hinzufügen.
+  2. `macos/Runner.xcworkspace` öffnen, Target **Runner** → Signing &
+     Capabilities → „Automatically manage signing“ aktivieren und das Team
+     auswählen. Dadurch wird `DEVELOPMENT_TEAM` in `project.pbxproj`
+     gesetzt.
+
+  Dieser Schritt ist **pro Entwicklungsrechner** nötig: Die beiden
+  `.entitlements`-Dateien sind versioniert, das Xcode-Projekt selbst ist es
+  laut `.gitignore` nicht (`macos/*` mit Ausnahme genau dieser Dateien).
+  `DEVELOPMENT_TEAM` und das zugehörige Zertifikat sind damit
+  maschinenlokal und werden nicht mitverteilt.
+- **Windows**: `flutter_secure_storage` benötigt die C++-ATL-Bibliotheken der
+  Visual Studio Build Tools.
+
+### Nicht Teil dieser Erweiterung
+
+- Kein Rate-Limiting/Brute-Force-Schutz auf `POST /v1/auth/login`.
+- Keine mitgelieferte Reverse-Proxy-Konfiguration. novooa prüft nicht, ob vor
+  der Runtime tatsächlich TLS terminiert wird — die Zusicherung „nicht
+  unverschlüsselt aus dem Internet erreichbar“ liegt beim Betreiber.
+- Kein automatisches Erkennen einer falsch gesetzten Portfreigabe: Wird
+  Port `8090` versehentlich öffentlich geroutet, meldet die Runtime das
+  nicht.
 
 ## Lokale Datenhaltung
 
@@ -368,8 +514,10 @@ dessen Infrastructure-Bereich.
 - `openLocalRuntimeDatabase` lädt alle versionierten SQL-Migrationen beim
   Start und schließt die Datenbank wieder, falls eine Migration fehlschlägt.
 - `docker-compose.local.yaml` startet `runtime` und `novooa-ml`. Nur
-  `runtime` veröffentlicht fest `8090` auf allen Host-Schnittstellen; `novooa-ml` hat
-  keinen Host-Port und hängt ausschließlich in `novooa-private`.
+  `runtime` veröffentlicht Host-Ports: `8090` für die API auf allen
+  Schnittstellen und den an `127.0.0.1` gebundenen Setup-Port `8091`.
+  `novooa-ml` hat keinen Host-Port und hängt ausschließlich in
+  `novooa-private`.
 - Beim Start stellt die Runtime ohne Lizenz nur `/healthz`, `GET /v1/license`
   und `POST /v1/license/activate` und `POST /v1/license/release` bereit. Nach erfolgreicher Aktivierung legt
   sie den durch die signierte Lizenz bestimmten Teamarbeitsbereich idempotent
@@ -406,6 +554,10 @@ curl http://127.0.0.1:8090/healthz
 docker compose -f docker-compose.local.yaml ps
 flutter run -d macos --dart-define=NOVOOA_RUNTIME=standalone
 ```
+
+Vor dem ersten fachlichen Zugriff muss einmalig ein Betreiber-Passwort
+gesetzt werden (siehe
+[Erstmaliges Setzen des Passworts](#erstmaliges-setzen-des-passworts)).
 
 Der Stack legt das benannte Volume `novooa-local_novooa-data` an. Ein
 `docker compose down` entfernt weder dieses Volume noch SQLite, Dateien oder

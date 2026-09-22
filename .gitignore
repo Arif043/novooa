@@ -57,3 +57,6 @@ macos/*
 macos/Runner/*
 !macos/Runner/DebugProfile.entitlements
 !macos/Runner/Release.entitlements
+
+# Lokale Compose-Variablen (Entwicklungsmodus, Domain) — nie committen.
+.env

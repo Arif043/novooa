@@ -15,6 +15,13 @@ final class RuntimeConnectionNeedsAddress extends RuntimeConnectionState {
   final String? errorMessage;
 }
 
+final class RuntimeConnectionNeedsPassword extends RuntimeConnectionState {
+  const RuntimeConnectionNeedsPassword(this.endpoint, {this.errorMessage});
+
+  final RuntimeEndpoint endpoint;
+  final String? errorMessage;
+}
+
 final class RuntimeConnectionConnecting extends RuntimeConnectionState {
   const RuntimeConnectionConnecting(this.address);
 

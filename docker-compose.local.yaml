@@ -7,6 +7,7 @@ services:
       dockerfile: functions/Dockerfile.local-runtime
     environment:
       PORT: "8080"
+      SETUP_PORT: "8091"
       NOVOOA_LOCAL_DEVELOPMENT: ${NOVOOA_LOCAL_DEVELOPMENT:-false}
       PYTHON_INFERENCE_SIDECAR_URL: http://novooa-ml:8081
       LOCAL_RUNTIME_MASTER_KEY_FILE: /run/secrets/novooa_runtime_master_key
@@ -21,7 +22,15 @@ services:
       novooa-ml:
         condition: service_healthy
     ports:
+      # Reguläre API auf allen Host-Schnittstellen, damit Clients im LAN die
+      # private IPv4-Adresse des Hosts verwenden können. Der Verkehr ist dabei
+      # unverschlüsselt — diesen Port niemals aus dem Internet erreichbar
+      # machen; für externen Zugriff gehört ein eigener Reverse Proxy mit
+      # Domain und Zertifikat davor (siehe docs/local-runtime.md).
       - "8090:8080"
+      # Der Setup-Port setzt einmalig das Betreiber-Passwort und ist deshalb
+      # strikt an den Host selbst gebunden.
+      - "127.0.0.1:8091:8091"
     volumes:
       - novooa-data:/var/lib/novooa
     secrets:

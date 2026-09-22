@@ -9,6 +9,8 @@ export type LocalRuntimeRequest = {
   body: unknown;
   method?: string;
   url?: string;
+  remoteAddress?: string;
+  headers?: Readonly<Record<string, string | readonly string[] | undefined>>;
 };
 
 export type LocalRuntimeResponse = {
@@ -53,7 +55,13 @@ async function responseFor(
   const streamed = await streamedResponseFor(request, handler);
   if (streamed !== null) return streamed;
   const body = await requestBody(request);
-  return localRuntimeResponseFor({...request, body}, handler);
+  return localRuntimeResponseFor({
+    method: request.method,
+    url: request.url,
+    remoteAddress: request.socket.remoteAddress,
+    headers: request.headers,
+    body,
+  }, handler);
 }
 
 export async function localRuntimeResponseFor(

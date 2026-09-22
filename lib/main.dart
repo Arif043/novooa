@@ -92,7 +92,7 @@ Future<void> _configureApplication(
   RuntimeProfile runtimeProfile,
   bool pushFirebaseEnabled,
 ) async {
-  configureDependencies(runtimeProfile: runtimeProfile);
+  await configureDependencies(runtimeProfile: runtimeProfile);
   configureClientLogger(
     runtimeProfile.isStandalone
         ? WorkspaceClientLogger(serviceLocator<WorkspaceApiClient>())

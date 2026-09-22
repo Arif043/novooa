@@ -19,17 +19,26 @@ abstract class WorkspaceApiClient {
   );
 }
 
+/// Liefert den Wert des `Authorization`-Headers (z.B. `Bearer <token>`) oder
+/// `null`, falls (noch) keine Session besteht. Wird vor jedem Request neu
+/// abgefragt, damit ein nach dem Verbindungsaufbau erhaltenes Token sofort
+/// wirkt, ohne den Client neu zu bauen.
+typedef AuthHeaderProvider = Future<String?> Function();
+
 class HttpWorkspaceApiClient implements WorkspaceApiClient {
   HttpWorkspaceApiClient({
     required Uri baseUri,
     http.Client? client,
     this.timeout = const Duration(seconds: 15),
+    AuthHeaderProvider? authHeaderProvider,
   }) : _baseUri = _validatedBaseUri(baseUri),
-       _client = client ?? http.Client();
+       _client = client ?? http.Client(),
+       _authHeaderProvider = authHeaderProvider;
 
   final Uri _baseUri;
   final http.Client _client;
   final Duration timeout;
+  final AuthHeaderProvider? _authHeaderProvider;
 
   @override
   Future<Map<String, Object?>> delete(String path) => _request('DELETE', path);
@@ -60,6 +69,7 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
       request.headers['accept'] = 'application/json';
       request.headers['content-type'] = contentType;
       request.contentLength = contentLength;
+      await _applyAuthHeader(request);
       final response = _client.send(request);
       try {
         await request.sink.addStream(body);
@@ -88,6 +98,7 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
         request.headers['content-type'] = 'application/json';
         request.body = jsonEncode(body);
       }
+      await _applyAuthHeader(request);
       final response = await _client.send(request).timeout(timeout);
       return _responseFor(response);
     } on TimeoutException {
@@ -97,6 +108,11 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
     } on Object catch (error) {
       throw WorkspaceConnectionException(error);
     }
+  }
+
+  Future<void> _applyAuthHeader(http.BaseRequest request) async {
+    final header = await _authHeaderProvider?.call();
+    if (header != null) request.headers['authorization'] = header;
   }
 }
 
@@ -143,32 +159,21 @@ Stream<T> pollWorkspace<T>(
   }
 }
 
+/// Welche Adresse gültig ist und ob sie über `http` (IP im vertrauenswürdigen
+/// Netz) oder `https` (Domain hinter einem Reverse Proxy mit Zertifikat)
+/// angesprochen wird, entscheidet `RuntimeEndpoint`. Hier wird nur
+/// sichergestellt, dass überhaupt ein HTTP-Schema vorliegt.
 Uri _validatedBaseUri(Uri value) {
-  if (value.scheme != 'http' || !_isPrivateRuntimeHost(value.host)) {
+  if (value.scheme != 'http' && value.scheme != 'https') {
     throw ArgumentError.value(
       value,
       'baseUri',
-      'Die Runtime-Adresse muss eine private IPv4-Adresse sein.',
+      'Die Runtime-Adresse muss http oder https verwenden.',
     );
   }
   return value.replace(
     path: value.path.endsWith('/') ? value.path : '${value.path}/',
   );
-}
-
-bool _isPrivateRuntimeHost(String host) {
-  final octets = host.split('.');
-  if (octets.length != 4) return false;
-  final values = octets.map(int.tryParse).toList(growable: false);
-  if (values.any((value) => value == null || value < 0 || value > 255)) {
-    return false;
-  }
-  final first = values[0]!;
-  final second = values[1]!;
-  return first == 127 ||
-      first == 10 ||
-      (first == 172 && second >= 16 && second <= 31) ||
-      (first == 192 && second == 168);
 }
 
 Map<String, Object?> _objectFrom(Object? value) {

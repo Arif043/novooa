@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../theme/app_spacing.dart';
 import 'runtime_connection_cubit.dart';
 import 'runtime_connection_state.dart';
+import 'runtime_endpoint.dart';
 
 class RuntimeConnectionPage extends StatelessWidget {
   const RuntimeConnectionPage({super.key});
@@ -29,6 +30,14 @@ class RuntimeConnectionPage extends StatelessWidget {
                       ) =>
                         _AddressForm(
                           address: address,
+                          errorMessage: errorMessage,
+                        ),
+                      RuntimeConnectionNeedsPassword(
+                        :final endpoint,
+                        :final errorMessage,
+                      ) =>
+                        _PasswordForm(
+                          endpoint: endpoint,
                           errorMessage: errorMessage,
                         ),
                       RuntimeConnectionReady() => const _ConnectionLoading(),
@@ -112,7 +121,11 @@ class _AddressFormState extends State<_AddressForm> {
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Gib die IP-Adresse des Rechners ein, auf dem novooa ausgeführt wird.',
+          'Gib die IP-Adresse des Rechners im LAN ein, auf dem novooa läuft. '
+          'Ist die Runtime über eine Domain mit Zertifikat erreichbar, gib '
+          'stattdessen die Domain ein — die Verbindung läuft dann '
+          'verschlüsselt. Für einen internen Hostnamen ohne Zertifikat stelle '
+          'http:// voran.',
           style: Theme.of(context).textTheme.bodyMedium,
           textAlign: TextAlign.center,
         ),
@@ -123,9 +136,10 @@ class _AddressFormState extends State<_AddressForm> {
           keyboardType: TextInputType.url,
           autocorrect: false,
           decoration: InputDecoration(
-            labelText: 'IP-Adresse der Runtime',
-            hintText: '192.168.1.42',
+            labelText: 'Adresse der Runtime',
+            hintText: '192.168.1.42 oder novooa.beispiel.de',
             errorText: widget.errorMessage,
+            errorMaxLines: 4,
             prefixIcon: const Icon(Icons.lan_outlined),
           ),
           onSubmitted: (_) => _connect(),
@@ -147,5 +161,79 @@ class _AddressFormState extends State<_AddressForm> {
 
   void _connect() {
     context.read<RuntimeConnectionCubit>().connect(_addressController.text);
+  }
+}
+
+class _PasswordForm extends StatefulWidget {
+  const _PasswordForm({required this.endpoint, this.errorMessage});
+
+  final RuntimeEndpoint endpoint;
+  final String? errorMessage;
+
+  @override
+  State<_PasswordForm> createState() => _PasswordFormState();
+}
+
+class _PasswordFormState extends State<_PasswordForm> {
+  final _passwordController = TextEditingController();
+  bool _obscure = true;
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Icon(Icons.lock_outline, size: 48, color: colorScheme.primary),
+        const SizedBox(height: AppSpacing.lg),
+        Text(
+          'Anmeldung erforderlich',
+          style: Theme.of(context).textTheme.headlineSmall,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          'Gib das Zugriffs-Passwort dieser Runtime ein.',
+          style: Theme.of(context).textTheme.bodyMedium,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        TextField(
+          controller: _passwordController,
+          obscureText: _obscure,
+          autocorrect: false,
+          decoration: InputDecoration(
+            labelText: 'Passwort',
+            errorText: widget.errorMessage,
+            prefixIcon: const Icon(Icons.password_outlined),
+            suffixIcon: IconButton(
+              icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+              onPressed: () => setState(() => _obscure = !_obscure),
+            ),
+          ),
+          onSubmitted: (_) => _login(),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        FilledButton.icon(
+          onPressed: _login,
+          icon: const Icon(Icons.login),
+          label: const Text('Anmelden'),
+        ),
+      ],
+    );
+  }
+
+  void _login() {
+    context.read<RuntimeConnectionCubit>().login(
+      widget.endpoint,
+      _passwordController.text,
+    );
   }
 }

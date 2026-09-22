@@ -49,6 +49,11 @@ import {SQLiteTaskTriggerStore} from "../../features/scheduling/infrastructure/l
 import {createGenkitTaskWorkflow} from "../../features/task_execution/infrastructure/genkit/task-workflow.js";
 import {type LocalRuntimeRequestHandler} from "./local-runtime-http-server.js";
 import {LocalRuntimeRequestRouter} from "./local-runtime-request-router.js";
+import {LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
+import {LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
+import {LocalRuntimeLoginHttpHandler} from "./local-runtime-login-http-handler.js";
+import {LocalRuntimeSetupHttpHandler} from "./local-runtime-setup-http-handler.js";
+import {LocalRuntimeSessionAuthGate} from "./local-runtime-session-auth-gate.js";
 import {type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
 import {type SignedRuntimeLicense} from "../../features/licensing/domain/entities/runtime-license-lease.js";
@@ -74,6 +79,7 @@ import {type TaskWorkflow} from "../../features/task_execution/domain/usecases/t
 
 export type LocalRuntimeComposition = {
   requestHandler: LocalRuntimeRequestHandler;
+  setupHandler: LocalRuntimeRequestHandler;
   taskRunWorker: TaskRunQueueWorker;
   taskTriggerWorker: PollingTaskTriggerWorker;
   mailRelayWorker: RuntimeMailRelayWorker | undefined;
@@ -160,32 +166,37 @@ export function createLocalRuntimeComposition(
   applicationLogger.info("local_runtime.workspace_activated", {
     teamId: options.workspace.teamId,
   });
+  const sessionStore = new LocalRuntimeSessionStore(options.database);
+  const credentialStore = new LocalRuntimeAccessCredentialStore(options.database);
+  const router = new LocalRuntimeRequestRouter([
+    new LocalRuntimeLoginHttpHandler(credentialStore, sessionStore),
+    new LocalTaskRunHttpHandler(taskWorkflow, options.workspace.userId, applicationLogger),
+    new LocalPushDeviceHttpHandler(options.signedLicense, pushRelay),
+    new LocalMailRelayHttpHandler(options.signedLicense, mailRelay),
+    new LocalTaskDefinitionHttpHandler(
+      taskDefinitionStore,
+      options.workspace.teamId,
+      options.workspace.userId,
+    ),
+    new LocalLanguageModelHttpHandler(languageModelStore, options.workspace.teamId),
+    new LocalDataHttpHandler(documentStore, options.workspace.teamId),
+    new LocalModelCatalogHttpHandler(
+      new SQLiteModelCatalog(options.database),
+      new LocalModelArtifactPublisher(options.runtimeRoot),
+      new LocalModelArtifactUploadStore(options.runtimeRoot),
+      options.workspace.teamId,
+      modelContractValidatorFor(),
+      applicationLogger,
+    ),
+    new LocalTaskActivityHttpHandler(options.database, options.workspace.teamId),
+    new LocalApplicationLogHttpHandler(applicationLogStore, options.workspace.teamId),
+    new LocalKnowledgeNoteHttpHandler(options.database, options.workspace.teamId),
+    new LocalTaskTriggerHttpHandler(options.database, options.workspace.teamId, options.workspace.userId),
+    new LocalFileResourceHttpHandler(options.database, teamFileStore, options.workspace.teamId, options.workspace.userId),
+  ]);
   return {
-    requestHandler: new LocalRuntimeRequestRouter([
-      new LocalTaskRunHttpHandler(taskWorkflow, options.workspace.userId, applicationLogger),
-      new LocalPushDeviceHttpHandler(options.signedLicense, pushRelay),
-      new LocalMailRelayHttpHandler(options.signedLicense, mailRelay),
-      new LocalTaskDefinitionHttpHandler(
-        taskDefinitionStore,
-        options.workspace.teamId,
-        options.workspace.userId,
-      ),
-      new LocalLanguageModelHttpHandler(languageModelStore, options.workspace.teamId),
-      new LocalDataHttpHandler(documentStore, options.workspace.teamId),
-      new LocalModelCatalogHttpHandler(
-        new SQLiteModelCatalog(options.database),
-        new LocalModelArtifactPublisher(options.runtimeRoot),
-        new LocalModelArtifactUploadStore(options.runtimeRoot),
-        options.workspace.teamId,
-        modelContractValidatorFor(),
-        applicationLogger,
-      ),
-      new LocalTaskActivityHttpHandler(options.database, options.workspace.teamId),
-      new LocalApplicationLogHttpHandler(applicationLogStore, options.workspace.teamId),
-      new LocalKnowledgeNoteHttpHandler(options.database, options.workspace.teamId),
-      new LocalTaskTriggerHttpHandler(options.database, options.workspace.teamId, options.workspace.userId),
-      new LocalFileResourceHttpHandler(options.database, teamFileStore, options.workspace.teamId, options.workspace.userId),
-    ]),
+    requestHandler: new LocalRuntimeSessionAuthGate(sessionStore, router),
+    setupHandler: new LocalRuntimeSetupHttpHandler(credentialStore),
     taskRunWorker,
     taskTriggerWorker: new PollingTaskTriggerWorker(
       () => runDueTaskTriggers(new Date(), {

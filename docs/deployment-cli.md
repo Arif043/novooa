@@ -81,7 +81,7 @@ cd cli && npm install && npm run build && node dist/index.js
    New-NetFirewallRule -Name "SSH" -DisplayName "SSH" `
      -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
 
-   # Optional: Runtime (Port 8090) für LAN erreichbar machen
+   # Runtime (Port 8090) für LAN erreichbar machen
    New-NetFirewallRule -Name "novooa-runtime" -DisplayName "novooa Runtime" `
      -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 8090
    ```

@@ -10,8 +10,10 @@ import 'http_runtime_availability.dart';
 import 'runtime_connection_cubit.dart';
 import 'runtime_connection_page.dart';
 import 'runtime_connection_state.dart';
+import 'runtime_credential_store.dart';
 import 'runtime_endpoint.dart';
 import 'runtime_endpoint_preferences.dart';
+import 'runtime_login_client.dart';
 
 class RuntimeConnectionGate extends StatefulWidget {
   const RuntimeConnectionGate({
@@ -39,6 +41,8 @@ class _RuntimeConnectionGateState extends State<RuntimeConnectionGate> {
     super.initState();
     _cubit = RuntimeConnectionCubit(
       RuntimeEndpointPreferences(SharedPreferencesAsync()),
+      SecureRuntimeCredentialStore(),
+      const HttpRuntimeLoginClient(),
       const HttpRuntimeAvailability(),
     );
     unawaited(

@@ -10,7 +10,10 @@ import {FileRuntimeLicenseStore} from "../../features/licensing/infrastructure/l
 import {HttpRuntimeLicenseGatewayClient} from "../../features/licensing/infrastructure/local/local-runtime-license-gateway-client.js";
 import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {openLocalRuntimeDatabase} from "./local-runtime-database.js";
-import {createLocalRuntimeHttpServer} from "./local-runtime-http-server.js";
+import {
+  createLocalRuntimeHttpServer,
+  type LocalRuntimeRequestHandler,
+} from "./local-runtime-http-server.js";
 import {RuntimeLicenseHttpHandler} from "./local-runtime-license-http-handler.js";
 import {localRuntimeMasterKeyFrom} from "./local-runtime-master-key.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
@@ -42,10 +45,12 @@ async function startLocalRuntime(): Promise<void> {
     const server = createLocalRuntimeHttpServer(
       new RuntimeLicenseHttpHandler(licenses, application),
     );
+    const setupServer = createLocalRuntimeHttpServer(setupHandlerFor(application));
     const port = configuredPort();
-    await listen(server, port);
-    registerShutdown(server, database, application);
-    console.info(JSON.stringify({event: "local_runtime.started", port}));
+    const setupPort = configuredSetupPort();
+    await Promise.all([listen(server, port), listen(setupServer, setupPort)]);
+    registerShutdown([server, setupServer], database, application);
+    console.info(JSON.stringify({event: "local_runtime.started", port, setupPort}));
   } catch (error) {
     database.close();
     throw error;
@@ -58,9 +63,28 @@ function migrationsDirectory(): string {
 }
 
 function configuredPort(): number {
-  const port = Number(process.env.PORT ?? "8080");
+  return portFromEnvironment("PORT", "8080", "PORT");
+}
+
+/**
+ * Der Setup-Port wird ausschließlich an `127.0.0.1` des Docker-Hosts
+ * veröffentlicht (siehe docker-compose.local.yaml) — das ist die eigentliche
+ * Zugriffsbeschränkung für `/v1/setup`, nicht Code in diesem Prozess. Der
+ * Server selbst lauscht wie gewohnt auf allen Interfaces innerhalb des
+ * Containers, sonst würde Dockers Port-Weiterleitung ihn nicht erreichen.
+ */
+function configuredSetupPort(): number {
+  return portFromEnvironment("SETUP_PORT", "8091", "SETUP_PORT");
+}
+
+function portFromEnvironment(name: string, fallback: string, label: string): number {
+  const port = Number(process.env[name] ?? fallback);
   if (Number.isSafeInteger(port) && port > 0 && port <= 65535) return port;
-  throw new Error("Der PORT für die lokale Runtime ist ungültig.");
+  throw new Error(`Der ${label} für die lokale Runtime ist ungültig.`);
+}
+
+function setupHandlerFor(application: LocalRuntimeApplication): LocalRuntimeRequestHandler {
+  return {handle: (request) => application.handleSetup(request)};
 }
 
 function requiredEnvironment(name: string): string {
@@ -109,7 +133,7 @@ function listen(server: Server, port: number): Promise<void> {
 }
 
 function registerShutdown(
-  server: Server,
+  servers: Server[],
   database: SqliteLocalSqlDatabase,
   application: LocalRuntimeApplication,
 ): void {
@@ -117,7 +141,9 @@ function registerShutdown(
   const shutdown = () => {
     if (closing) return;
     closing = true;
-    server.close(() => void closeRuntime(database, application));
+    Promise.all(servers.map((server) => new Promise<void>((resolve) => server.close(() => resolve()))))
+      .then(() => closeRuntime(database, application))
+      .catch(() => closeRuntime(database, application));
   };
   process.once("SIGINT", shutdown);
   process.once("SIGTERM", shutdown);

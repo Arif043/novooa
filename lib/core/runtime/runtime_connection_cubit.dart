@@ -1,25 +1,35 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'runtime_availability.dart';
+import 'runtime_connection_failure.dart';
 import 'runtime_connection_state.dart';
+import 'runtime_credential_store.dart';
 import 'runtime_endpoint.dart';
 import 'runtime_endpoint_store.dart';
+import 'runtime_login_client.dart';
 
 class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
-  RuntimeConnectionCubit(this._endpoints, this._availability)
-    : super(const RuntimeConnectionLoading());
+  RuntimeConnectionCubit(
+    this._endpoints,
+    this._credentials,
+    this._loginClient,
+    this._availability,
+  ) : super(const RuntimeConnectionLoading());
 
   final RuntimeEndpointStore _endpoints;
+  final RuntimeCredentialStore _credentials;
+  final RuntimeLoginClient _loginClient;
   final RuntimeAvailability _availability;
 
   Future<void> initialize(RuntimeEndpoint defaultEndpoint) async {
     try {
       final endpoint = await _endpoints.load() ?? defaultEndpoint;
-      await connect(endpoint.address);
+      await connect(endpoint.displayAddress);
     } on Object {
       emit(
         RuntimeConnectionNeedsAddress(
-          defaultEndpoint.address,
+          defaultEndpoint.displayAddress,
           errorMessage:
               'Die gespeicherte Runtime-Adresse konnte nicht geladen werden.',
         ),
@@ -29,26 +39,81 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
 
   Future<void> connect(String address) async {
     emit(RuntimeConnectionConnecting(address));
+    final endpoint = _endpointFrom(address);
+    if (endpoint == null) return;
+    await _connectTo(endpoint, address);
+  }
+
+  RuntimeEndpoint? _endpointFrom(String address) {
     try {
-      final endpoint = RuntimeEndpoint.fromAddress(address);
-      await _availability.check(endpoint);
-      await _endpoints.save(endpoint);
-      emit(RuntimeConnectionReady(endpoint));
+      return RuntimeEndpoint.fromAddress(address);
     } on RuntimeEndpointValidationFailure {
       emit(
         RuntimeConnectionNeedsAddress(
           address,
-          errorMessage: 'Bitte gib eine private IPv4-Adresse ein.',
+          errorMessage:
+              'Bitte gib eine IP-Adresse oder eine Domain ein, optional mit '
+              'Port (z.B. 192.168.1.42 oder novooa.example.de).',
         ),
       );
-    } on Object {
+      return null;
+    }
+  }
+
+  Future<void> _connectTo(RuntimeEndpoint endpoint, String address) async {
+    try {
+      await _availability.check(endpoint);
+      await _finishConnecting(endpoint);
+    } on Object catch (error, stackTrace) {
+      _reportFailure('connect', error, stackTrace);
       emit(
         RuntimeConnectionNeedsAddress(
           address,
-          errorMessage:
-              'Die Runtime konnte unter dieser Adresse nicht erreicht werden.',
+          errorMessage: runtimeConnectionFailureMessageFor(
+            error,
+            isSecure: endpoint.isSecure,
+          ),
         ),
       );
     }
+  }
+
+  Future<void> login(RuntimeEndpoint endpoint, String password) async {
+    emit(RuntimeConnectionConnecting(endpoint.displayAddress));
+    try {
+      final token = await _loginClient.login(endpoint, password);
+      await _credentials.saveSessionToken(endpoint.address, token);
+      await _endpoints.save(endpoint);
+      emit(RuntimeConnectionReady(endpoint));
+    } on RuntimeLoginFailure catch (error) {
+      emit(RuntimeConnectionNeedsPassword(endpoint, errorMessage: error.message));
+    } on Object catch (error, stackTrace) {
+      _reportFailure('login', error, stackTrace);
+      emit(
+        RuntimeConnectionNeedsPassword(
+          endpoint,
+          errorMessage: 'Anmeldung fehlgeschlagen.',
+        ),
+      );
+    }
+  }
+
+  Future<void> _finishConnecting(RuntimeEndpoint endpoint) async {
+    final token = await _credentials.sessionToken(endpoint.address);
+    if (token == null) {
+      emit(RuntimeConnectionNeedsPassword(endpoint));
+      return;
+    }
+    await _endpoints.save(endpoint);
+    emit(RuntimeConnectionReady(endpoint));
+  }
+
+  /// Die nach außen sichtbare Meldung bleibt bewusst allgemein — die
+  /// technische Ursache (Netzwerk, Keychain, HTTP-Status) gehört aber ins
+  /// Log, sonst ist ein fehlgeschlagener Verbindungsaufbau nicht
+  /// diagnostizierbar.
+  void _reportFailure(String step, Object error, StackTrace stackTrace) {
+    debugPrint('[runtime-connection] $step fehlgeschlagen: $error');
+    debugPrintStack(stackTrace: stackTrace, maxFrames: 8);
   }
 }
