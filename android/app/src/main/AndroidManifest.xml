@@ -1,5 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Für den Dokumentenscanner (cunning_document_scanner) am Baustein
+         "Bild anfordern" — der öffnet die Kamera in-app statt per externem
+         Intent wie image_picker, deshalb ist die Berechtigung hier nötig. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
 
     <application
         android:label="novooa"

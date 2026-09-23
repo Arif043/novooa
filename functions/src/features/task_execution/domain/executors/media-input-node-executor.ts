@@ -30,5 +30,8 @@ function mediaInputDefinitionFor(
   if (config.primitive !== "mediaInput") {
     throw new Error("MediaInput-Konfiguration fehlt.");
   }
-  return {instruction: config.instruction};
+  return {
+    instruction: config.instruction,
+    documentScanEnabled: config.documentScanEnabled ?? false,
+  };
 }

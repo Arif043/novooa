@@ -85,6 +85,7 @@ function mediaResumeState(): TaskResumeState {
       interaction: {
         kind: "mediaInput",
         instruction: "Bitte Bild hinzufügen.",
+        documentScanEnabled: false,
       },
     }],
     variables: {}, remainingNodeIds: [], skippedNodeIds: [], waitingNodeId: "media",

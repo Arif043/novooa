@@ -27,7 +27,10 @@ android {
         applicationId = "com.example.syscat2"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // cunning_document_scanner (Dokumentenscanner-Option am Baustein
+        // "Bild anfordern") verlangt mindestens SDK 24 — Flutters eigener
+        // Default ist das nicht garantiert.
+        minSdk = maxOf(flutter.minSdkVersion, 24)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

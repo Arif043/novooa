@@ -114,7 +114,9 @@ class FirestoreTaskRunRepository implements TaskRunRepository {
       TaskRunInteractionType.mediaInput => TaskRunInteraction(
         type: type,
         instruction: instruction,
-        mediaInput: const TaskRunMediaInput(),
+        mediaInput: TaskRunMediaInput(
+          documentScanEnabled: data['documentScanEnabled'] as bool? ?? false,
+        ),
       ),
     };
   }

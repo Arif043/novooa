@@ -71,7 +71,10 @@ class _RecordingRunRepository extends _RunRepository {
 
 class _MediaInputPicker implements MediaInputPicker {
   @override
-  Future<MediaInputSubmission?> pick(TaskRunMediaInputSource source) async {
+  Future<MediaInputSubmission?> pick(
+    TaskRunMediaInputSource source, {
+    bool documentScanEnabled = false,
+  }) async {
     return null;
   }
 }
@@ -82,7 +85,10 @@ class _FixedMediaInputPicker implements MediaInputPicker {
   final MediaInputSubmission submission;
 
   @override
-  Future<MediaInputSubmission?> pick(TaskRunMediaInputSource source) async {
+  Future<MediaInputSubmission?> pick(
+    TaskRunMediaInputSource source, {
+    bool documentScanEnabled = false,
+  }) async {
     return submission;
   }
 }

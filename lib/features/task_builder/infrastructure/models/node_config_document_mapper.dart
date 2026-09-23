@@ -160,6 +160,7 @@ class NodeConfigDocumentMapper {
     return {
       'primitive': config.primitive.name,
       'instruction': config.instruction,
+      'documentScanEnabled': config.documentScanEnabled,
     };
   }
 
@@ -368,6 +369,7 @@ class NodeConfigDocumentMapper {
   MediaInputNodeConfig _mediaInputFrom(Map<String, Object?> data) {
     return MediaInputNodeConfig(
       instruction: data['instruction'] as String? ?? '',
+      documentScanEnabled: data['documentScanEnabled'] as bool? ?? false,
     );
   }
 

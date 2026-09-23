@@ -2,6 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {mediaInputNodeExecutor} from "./media-input-node-executor.js";
 
+const runContext = {
+  templateExpressionResolver: {
+    resolveText: (value: string) => value.replace("{{object}}", "Beleg"),
+  },
+} as never;
+
 test("pauses a run and preserves the media interaction", async () => {
   const result = await mediaInputNodeExecutor.execute({
       id: "media",
@@ -9,16 +15,49 @@ test("pauses a run and preserves the media interaction", async () => {
       config: {
         primitive: "mediaInput",
         instruction: "Foto von {{object}} aufnehmen.",
+        documentScanEnabled: false,
       },
-  } as never, {
-    templateExpressionResolver: {
-      resolveText: (value: string) => value.replace("{{object}}", "Beleg"),
-    },
-  } as never);
+  } as never, runContext);
 
   assert.equal(result.status, "waitingForApproval");
   assert.deepEqual(result.interaction, {
     kind: "mediaInput",
     instruction: "Foto von Beleg aufnehmen.",
+    documentScanEnabled: false,
+  });
+});
+
+test("passes documentScanEnabled through to the interaction", async () => {
+  const result = await mediaInputNodeExecutor.execute({
+      id: "media",
+      primitive: "mediaInput",
+      config: {
+        primitive: "mediaInput",
+        instruction: "Beleg fotografieren.",
+        documentScanEnabled: true,
+      },
+  } as never, runContext);
+
+  assert.deepEqual(result.interaction, {
+    kind: "mediaInput",
+    instruction: "Beleg fotografieren.",
+    documentScanEnabled: true,
+  });
+});
+
+test("defaults documentScanEnabled to false for legacy configs without the field", async () => {
+  const result = await mediaInputNodeExecutor.execute({
+      id: "media",
+      primitive: "mediaInput",
+      config: {
+        primitive: "mediaInput",
+        instruction: "Beleg fotografieren.",
+      },
+  } as never, runContext);
+
+  assert.deepEqual(result.interaction, {
+    kind: "mediaInput",
+    instruction: "Beleg fotografieren.",
+    documentScanEnabled: false,
   });
 });

@@ -157,6 +157,7 @@ export const dialogInputNodeConfigSchema = dialogInputDefinitionSchema.extend({
 
 export const mediaInputDefinitionSchema = z.object({
   instruction: z.string().default("Bitte füge ein Bild hinzu."),
+  documentScanEnabled: z.boolean().default(false),
 });
 
 export const mediaInputNodeConfigSchema = mediaInputDefinitionSchema.extend({

@@ -79,7 +79,9 @@ class LocalTaskRunRepository implements TaskRunRepository {
       TaskRunInteractionType.mediaInput => TaskRunInteraction(
         type: type,
         instruction: instruction,
-        mediaInput: const TaskRunMediaInput(),
+        mediaInput: TaskRunMediaInput(
+          documentScanEnabled: value['documentScanEnabled'] as bool? ?? false,
+        ),
       ),
     };
   }

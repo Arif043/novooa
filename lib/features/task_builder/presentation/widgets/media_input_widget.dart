@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/platform/document_scan_support.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/syscat_theme.dart';
 import '../../domain/entities/node_config.dart';
@@ -34,6 +35,23 @@ class MediaInputWidget extends StatelessWidget {
               (config) => config.copyWith(instruction: value),
             ),
           ),
+          if (documentScanSupportedOnThisPlatform()) ...[
+            const SizedBox(height: AppSpacing.sm),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Als Dokument scannen'),
+              subtitle: const Text(
+                'Erkennt beim Fotografieren automatisch die Kanten des '
+                'Dokuments, entzerrt es perspektivisch und schneidet den '
+                'Hintergrund aus.',
+              ),
+              value: _config.documentScanEnabled,
+              onChanged: (value) => _update(
+                context,
+                (config) => config.copyWith(documentScanEnabled: value),
+              ),
+            ),
+          ],
         ],
       ),
     );

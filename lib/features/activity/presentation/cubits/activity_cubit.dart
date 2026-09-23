@@ -90,7 +90,10 @@ class ActivityCubit extends Cubit<ActivityState> {
     TaskRunMediaInputSource source,
   ) {
     if (!run.requiresMediaInput) return Future.value(null);
-    return _mediaInputPicker.pick(source);
+    return _mediaInputPicker.pick(
+      source,
+      documentScanEnabled: run.mediaInput?.documentScanEnabled ?? false,
+    );
   }
 
   Future<void> submitMediaInput(

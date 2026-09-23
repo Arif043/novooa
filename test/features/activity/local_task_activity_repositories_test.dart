@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/core/network/workspace_api_client.dart';
 import 'package:syscat2/features/activity/domain/entities/task_run.dart';
+import 'package:syscat2/features/activity/domain/entities/task_run_interaction.dart';
 import 'package:syscat2/features/activity/infrastructure/repositories/local_task_activity_repository.dart';
 import 'package:syscat2/features/activity/infrastructure/repositories/local_task_run_repository.dart';
 
@@ -22,9 +23,43 @@ void main() {
     expect(activity.taskTitle, 'Lokale Aufgabe');
     expect(client.reviewedRunId, 'run-1');
   });
+
+  test('liest documentScanEnabled aus einer mediaInput-Interaction', () async {
+    final client = RecordingWorkspaceApiClient(
+      interaction: {
+        'kind': 'mediaInput',
+        'instruction': 'Beleg fotografieren.',
+        'documentScanEnabled': true,
+      },
+    );
+    final run = (await LocalTaskRunRepository(client).watchRecent().first).single;
+
+    expect(run.interaction?.type, TaskRunInteractionType.mediaInput);
+    expect(run.mediaInput?.documentScanEnabled, isTrue);
+  });
+
+  test('liest documentScanEnabled als false, wenn das Feld fehlt', () async {
+    final client = RecordingWorkspaceApiClient(
+      interaction: {
+        'kind': 'mediaInput',
+        'instruction': 'Beleg fotografieren.',
+      },
+    );
+    final run = (await LocalTaskRunRepository(client).watchRecent().first).single;
+
+    expect(run.mediaInput?.documentScanEnabled, isFalse);
+  });
 }
 
 class RecordingWorkspaceApiClient extends WorkspaceApiClient {
+  RecordingWorkspaceApiClient({Map<String, Object?>? interaction})
+    : _interaction = interaction;
+
+  final Map<String, Object?>? _interaction;
+  // Initialisierender Formalparameter (this._interaction) ist hier nicht
+  // möglich, weil der Konstruktorparameter benannt ("interaction") anders
+  // heißt als das private Feld — bewusste Namensklarheit im Aufruf
+  // (`RecordingWorkspaceApiClient(interaction: ...)`).
   String? reviewedRunId;
 
   @override
@@ -34,7 +69,7 @@ class RecordingWorkspaceApiClient extends WorkspaceApiClient {
   Future<Map<String, Object?>> get(String path) async {
     return switch (path) {
       '/v1/task-runs' => {
-        'items': [runJson()],
+        'items': [runJson(interaction: _interaction)],
       },
       '/v1/activities' => {
         'items': [activityJson()],
@@ -61,14 +96,15 @@ class RecordingWorkspaceApiClient extends WorkspaceApiClient {
   ) async => const {};
 }
 
-Map<String, Object?> runJson() => {
+Map<String, Object?> runJson({Map<String, Object?>? interaction}) => {
   'runId': 'run-1',
   'taskId': 'task-1',
   'taskTitle': 'Lokale Aufgabe',
   'status': 'waitingForApproval',
   'createdAt': '2026-09-08T10:00:00Z',
   'updatedAt': '2026-09-08T10:01:00Z',
-  'interaction': {'kind': 'approval', 'instruction': 'Bitte prüfen.'},
+  'interaction':
+      interaction ?? {'kind': 'approval', 'instruction': 'Bitte prüfen.'},
 };
 
 Map<String, Object?> activityJson() => {

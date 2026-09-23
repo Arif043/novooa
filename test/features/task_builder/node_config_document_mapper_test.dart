@@ -192,6 +192,30 @@ void main() {
     expect(restored, config);
   });
 
+  test('serialisiert und deserialisiert documentScanEnabled', () {
+    const config = MediaInputNodeConfig(
+      instruction: 'Fotografiere den Beleg.',
+      documentScanEnabled: true,
+    );
+
+    final document = _mapper().toDocument(config);
+    final restored = _mapper().fromDocument(document) as MediaInputNodeConfig;
+
+    expect(document['documentScanEnabled'], isTrue);
+    expect(restored.documentScanEnabled, isTrue);
+  });
+
+  test('liest documentScanEnabled als false, wenn das Feld fehlt', () {
+    final restored =
+        _mapper().fromDocument(const {
+              'primitive': 'mediaInput',
+              'instruction': 'Fotografiere den Beleg.',
+            })
+            as MediaInputNodeConfig;
+
+    expect(restored.documentScanEnabled, isFalse);
+  });
+
   test('serialisiert und deserialisiert ModelInferenceNodeConfig', () {
     const config = ModelInferenceNodeConfig(
       modelId: 'mobilenet-v3',

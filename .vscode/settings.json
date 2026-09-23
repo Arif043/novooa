@@ -1,3 +1,4 @@
 {
-    "flutterGenerateAssets.watchEnabled": true
+    "flutterGenerateAssets.watchEnabled": true,
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

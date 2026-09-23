@@ -2,6 +2,7 @@ import {type MediaReference} from "./workflow-value.js";
 
 export type MediaInputDefinition = {
   instruction: string;
+  documentScanEnabled: boolean;
 };
 
 export type MediaInputFileReference = MediaReference;
