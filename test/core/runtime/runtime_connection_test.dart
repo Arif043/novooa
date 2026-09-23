@@ -257,6 +257,43 @@ void main() {
       await cubit.close();
     });
 
+    test(
+      'signOut löscht das Session-Token und verlangt das Passwort erneut',
+      () async {
+        final endpoints = _MemoryEndpointStore(null);
+        final credentials = _MemoryCredentialStore();
+        final cubit = RuntimeConnectionCubit(
+          endpoints,
+          credentials,
+          const _FakeLoginClient(token: 'fresh-token'),
+          const _FakeAvailability(),
+        );
+        final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
+        await cubit.login(endpoint, 'correct-horse-battery-staple');
+        expect(credentials.sessions['192.168.1.20'], 'fresh-token');
+
+        await cubit.signOut();
+
+        expect(cubit.state, isA<RuntimeConnectionNeedsPassword>());
+        expect(credentials.sessions.containsKey('192.168.1.20'), isFalse);
+        await cubit.close();
+      },
+    );
+
+    test('signOut vor einer bestehenden Verbindung ist wirkungslos', () async {
+      final cubit = RuntimeConnectionCubit(
+        _MemoryEndpointStore(null),
+        _MemoryCredentialStore(),
+        const _FakeLoginClient(),
+        const _FakeAvailability(),
+      );
+
+      await cubit.signOut();
+
+      expect(cubit.state, isA<RuntimeConnectionLoading>());
+      await cubit.close();
+    });
+
     test('bleibt bei falschem Passwort mit Fehlermeldung stehen', () async {
       final cubit = RuntimeConnectionCubit(
         _MemoryEndpointStore(null),

@@ -33,6 +33,12 @@ class RuntimeConnectionGate extends StatefulWidget {
 
 class _RuntimeConnectionGateState extends State<RuntimeConnectionGate> {
   late final RuntimeConnectionCubit _cubit;
+
+  /// Wird genau einmal pro Prozesslaufzeit gebaut (siehe [_startApplication])
+  /// — die Dependency-Injection registriert Singletons und verträgt kein
+  /// zweites `configureApplication`. Ein erneutes Anmelden nach
+  /// [RuntimeConnectionCubit.signOut] zeigt deshalb dieselbe Instanz wieder,
+  /// statt die App neu aufzubauen.
   Widget? _application;
   bool _isStartingApplication = false;
 
@@ -60,31 +66,46 @@ class _RuntimeConnectionGateState extends State<RuntimeConnectionGate> {
 
   @override
   Widget build(BuildContext context) {
-    final application = _application;
-    if (application != null) return application;
     return BlocProvider.value(
       value: _cubit,
-      child: MaterialApp(
-        title: 'novooa',
-        debugShowCheckedModeBanner: false,
-        theme: SyscatTheme.lightTheme,
-        darkTheme: SyscatTheme.darkTheme,
-        themeMode: ThemeMode.system,
-        home: BlocListener<RuntimeConnectionCubit, RuntimeConnectionState>(
-          listenWhen: (_, state) =>
-              state is RuntimeConnectionReady && !_isStartingApplication,
-          listener: (_, state) {
-            final endpoint = (state as RuntimeConnectionReady).endpoint;
-            unawaited(_startApplication(endpoint));
-          },
-          child: const RuntimeConnectionPage(),
-        ),
+      child: BlocConsumer<RuntimeConnectionCubit, RuntimeConnectionState>(
+        listener: _onStateChanged,
+        builder: (context, state) {
+          final application = _application;
+          if (state is RuntimeConnectionReady && application != null) {
+            return application;
+          }
+          return MaterialApp(
+            title: 'novooa',
+            debugShowCheckedModeBanner: false,
+            theme: SyscatTheme.lightTheme,
+            darkTheme: SyscatTheme.darkTheme,
+            themeMode: ThemeMode.system,
+            home: const RuntimeConnectionPage(),
+          );
+        },
       ),
     );
   }
 
+  void _onStateChanged(BuildContext context, RuntimeConnectionState state) {
+    if (state is! RuntimeConnectionReady) {
+      // Betrifft insbesondere ein per Abmelden erzwungenes
+      // RuntimeConnectionNeedsPassword: die nächste erfolgreiche Anmeldung
+      // muss wieder als "Ready" behandelt werden können.
+      _isStartingApplication = false;
+      return;
+    }
+    if (_isStartingApplication) return;
+    unawaited(_startApplication(state.endpoint));
+  }
+
   Future<void> _startApplication(RuntimeEndpoint endpoint) async {
     _isStartingApplication = true;
+    if (_application != null) {
+      setState(() {});
+      return;
+    }
     final profile = widget.runtimeProfile.withWorkspaceApiUri(endpoint.apiUri);
     await widget.configureApplication(profile);
     if (!mounted) return;

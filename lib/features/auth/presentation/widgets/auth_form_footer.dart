@@ -97,7 +97,7 @@ class _ModeHint extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: AppSpacing.xs,
       children: [
-        Text(_prefix, style: Theme.of(context).textTheme.bodyMedium),
+        Text('Du nutzt novooa Standalone?', style: Theme.of(context).textTheme.bodyMedium),
         TextButton(
           onPressed: isEnabled ? () => _changeMode(context) : null,
           child: Text(_action),

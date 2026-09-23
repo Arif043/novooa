@@ -1,8 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syscat2/features/auth/presentation/cubits/auth_session_cubit.dart';
-import 'package:syscat2/features/auth/presentation/cubits/auth_session_state.dart';
 import '../../root_tab.dart';
 import '../theme/app_spacing.dart';
 import 'root_side_menu_sections.dart';
@@ -14,19 +11,25 @@ class RootSideMenu extends StatelessWidget {
     required this.selectedIndex,
     required this.onSelected,
     this.showCurrentUserProfile = true,
-    this.showSessionActions = true,
+    this.onSignOut,
   });
 
   final List<RootTab> tabs;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
   final bool showCurrentUserProfile;
-  final bool showSessionActions;
+
+  /// `null` blendet den Menüpunkt „Abmelden“ aus. Was Abmelden konkret
+  /// bedeutet, entscheidet der Aufrufer — z.B. `AuthSessionCubit.signOut()`
+  /// in der Cloud-Variante oder `RuntimeConnectionCubit.signOut()` im
+  /// Standalone-Betrieb (siehe `RootPage`). `RootSideMenu` kennt bewusst
+  /// keine dieser Fachlichkeiten.
+  final VoidCallback? onSignOut;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final menu = Material(
+    return Material(
       color: colorScheme.surface,
       child: SafeArea(
         child: Padding(
@@ -41,29 +44,11 @@ class RootSideMenu extends StatelessWidget {
             selectedIndex: selectedIndex,
             onSelected: onSelected,
             showCurrentUserProfile: showCurrentUserProfile,
-            showSessionActions: showSessionActions,
+            onSignOut: onSignOut,
           ),
         ),
       ),
     );
-    if (!showSessionActions) return menu;
-    return BlocListener<AuthSessionCubit, AuthSessionState>(
-      listenWhen: _isNewFailure,
-      listener: _showFailure,
-      child: menu,
-    );
-  }
-
-  bool _isNewFailure(AuthSessionState previous, AuthSessionState current) {
-    return current.status == AuthSessionStatus.failure &&
-        previous.message != current.message;
-  }
-
-  void _showFailure(BuildContext context, AuthSessionState state) {
-    final message = state.message ?? 'Abmelden fehlgeschlagen.';
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
@@ -73,18 +58,19 @@ class _SideMenuContent extends StatelessWidget {
     required this.selectedIndex,
     required this.onSelected,
     required this.showCurrentUserProfile,
-    required this.showSessionActions,
+    required this.onSignOut,
   });
 
   final List<RootTab> tabs;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
   final bool showCurrentUserProfile;
-  final bool showSessionActions;
+  final VoidCallback? onSignOut;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final onSignOut = this.onSignOut;
     return ListView(
       children: [
         SideMenuHeader(showCurrentUserProfile: showCurrentUserProfile),
@@ -94,7 +80,7 @@ class _SideMenuContent extends StatelessWidget {
           selectedIndex: selectedIndex,
           onSelected: onSelected,
         ),
-        if (showSessionActions)
+        if (onSignOut != null)
           ListTile(
             selected: false,
             iconColor: colorScheme.error,
@@ -105,7 +91,7 @@ class _SideMenuContent extends StatelessWidget {
               foregroundColor: colorScheme.onError,
             ),
             title: const Text('Abmelden'),
-            onTap: () => context.read<AuthSessionCubit>().signOut(),
+            onTap: onSignOut,
           ),
       ],
     );

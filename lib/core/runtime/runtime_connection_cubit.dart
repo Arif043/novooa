@@ -98,6 +98,29 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     }
   }
 
+  /// Verwirft die gespeicherte Sitzung dieser Runtime und verlangt beim
+  /// nächsten Zugriff wieder das Passwort — die App selbst (DI, Router,
+  /// aktueller Bildschirm) bleibt unangetastet, da der bereits konfigurierte
+  /// `WorkspaceApiClient` seinen Auth-Header ohnehin bei jeder Anfrage neu
+  /// aus dem Credential-Store liest (siehe
+  /// `standalone_dependency_configuration.dart`).
+  Future<void> signOut() async {
+    final current = state;
+    if (current is! RuntimeConnectionReady) return;
+    try {
+      await _credentials.clearSessionToken(current.endpoint.address);
+      emit(RuntimeConnectionNeedsPassword(current.endpoint));
+    } on Object catch (error, stackTrace) {
+      _reportFailure('signOut', error, stackTrace);
+      emit(
+        RuntimeConnectionNeedsPassword(
+          current.endpoint,
+          errorMessage: 'Abmelden fehlgeschlagen.',
+        ),
+      );
+    }
+  }
+
   Future<void> _finishConnecting(RuntimeEndpoint endpoint) async {
     final token = await _credentials.sessionToken(endpoint.address);
     if (token == null) {

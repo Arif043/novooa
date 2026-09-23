@@ -3,12 +3,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cupertino_sidemenu/cupertino_sidemenu.dart';
 import 'package:go_router/go_router.dart';
 import 'core/di/service_locator.dart';
+import 'core/runtime/runtime_connection_cubit.dart';
 import 'root_tab.dart';
 import 'core/widgets/root_center_page.dart';
 import 'core/widgets/root_navigation.dart';
 import 'core/widgets/root_shell_scope.dart';
 import 'core/widgets/root_side_menu.dart';
 import 'core/widgets/syscat_background.dart';
+import 'features/auth/presentation/cubits/auth_session_cubit.dart';
+import 'features/auth/presentation/cubits/auth_session_state.dart';
 import 'features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import 'features/notifications/presentation/widgets/notification_side_drawer.dart';
 import 'features/licensing/presentation/cubits/runtime_license_cubit.dart';
@@ -40,6 +43,36 @@ class _RootPageState extends State<RootPage> {
   void _selectTab(List<RootTab> tabs, int index) {
     _sideMenuController.closeMenu();
     context.go(tabs[index].path);
+  }
+
+  Widget _sideMenu(BuildContext context, List<RootTab> tabs, int selectedTabIndex) {
+    final menu = RootSideMenu(
+      tabs: tabs,
+      selectedIndex: selectedTabIndex,
+      onSelected: (index) => _selectTab(tabs, index),
+      showCurrentUserProfile: !widget.isStandalone,
+      onSignOut: widget.isStandalone
+          ? () => context.read<RuntimeConnectionCubit>().signOut()
+          : () => context.read<AuthSessionCubit>().signOut(),
+    );
+    if (widget.isStandalone) return menu;
+    return BlocListener<AuthSessionCubit, AuthSessionState>(
+      listenWhen: _isNewSignOutFailure,
+      listener: _showSignOutFailure,
+      child: menu,
+    );
+  }
+
+  bool _isNewSignOutFailure(AuthSessionState previous, AuthSessionState current) {
+    return current.status == AuthSessionStatus.failure &&
+        previous.message != current.message;
+  }
+
+  void _showSignOutFailure(BuildContext context, AuthSessionState state) {
+    final message = state.message ?? 'Abmelden fehlgeschlagen.';
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -87,13 +120,7 @@ class _RootPageState extends State<RootPage> {
           menuWidthOfScreen: _menuWidthOfScreen(context),
           hapticFeedback: false,
           centerBackgroundOpacity: 0.18,
-          leftMenu: RootSideMenu(
-            tabs: tabs,
-            selectedIndex: selectedTabIndex,
-            onSelected: (index) => _selectTab(tabs, index),
-            showCurrentUserProfile: !widget.isStandalone,
-            showSessionActions: !widget.isStandalone,
-          ),
+          leftMenu: _sideMenu(context, tabs, selectedTabIndex),
           rightMenu: _isNotificationDrawerOpen
               ? NotificationSideDrawer(onClose: _closeNotificationDrawer)
               : null,
