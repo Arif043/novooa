@@ -363,6 +363,7 @@ class CompactWorkflowNode extends StatelessWidget {
             child: Row(
               children: [
                 Draggable<NodeId>(
+                  key: ValueKey('compact-node-drag-${node.id.value}'),
                   data: node.id,
                   feedback: Material(
                     elevation: 4,

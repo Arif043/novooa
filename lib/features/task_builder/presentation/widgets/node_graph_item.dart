@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/conditional_pager.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/conditional_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/dialog_input_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/media_input_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/model_inference_widget.dart';
@@ -206,7 +206,7 @@ class NodeGraphItem extends StatelessWidget {
       .stringInput => StringInputWidget(node: node),
       .script => ScriptWidget(node: node),
       .prompt => PromptWidget(node: node),
-      .conditional => ConditionalPager(key: ValueKey(node.id), node: node),
+      .conditional => ConditionalWidget(key: ValueKey(node.id), node: node),
       .iterativeRefinement => IterativeRefinementWidget(node: node),
       .writeFile => WriteFileWidget(node: node),
       .readFile => ReadFileWidget(node: node),

@@ -50,70 +50,6 @@ Future<void> _closeAndExpectSaved(
 }
 
 void main() {
-  test('addNodeToForEachGraph fuegt einen Node in den Unterplan ein', () async {
-    final repository = _InMemoryTaskRepository(_taskWithForEachNode());
-    final cubit = TaskBuilderCubit(repository: repository);
-
-    await cubit.load(repository.savedTask);
-    await cubit.addNodeToForEachGraph(
-      forEachNodeId: const NodeId('node.1'),
-      primitive: WorkflowPrimitive.modelInference,
-    );
-
-    final state = cubit.state as TaskBuilderLoaded;
-    final config = state.editingTask.nodes.single.config as ForEachNodeConfig;
-    expect(config.graph.nodes, hasLength(1));
-    expect(config.graph.nodes.single.config, isA<ModelInferenceNodeConfig>());
-    await _closeAndExpectSaved(cubit, repository, state.editingTask);
-  });
-
-  test('addNodeToBranch fuegt einen Node in den Branch-Graph ein', () async {
-    final repository = _InMemoryTaskRepository(_taskWithConditionalNode());
-    final cubit = TaskBuilderCubit(repository: repository);
-
-    await cubit.load(repository.savedTask);
-    await cubit.addNodeToBranch(
-      conditionalNodeId: const NodeId('node.1'),
-      branchId: 'branch.yes',
-      primitive: WorkflowPrimitive.prompt,
-    );
-
-    final state = cubit.state as TaskBuilderLoaded;
-    final config =
-        state.editingTask.nodes.first.config as ConditionalNodeConfig;
-    final branch = config.branches.first;
-
-    expect(branch.graph.nodes, hasLength(1));
-    expect(branch.graph.nodes.first.config, isA<PromptNodeConfig>());
-    await _closeAndExpectSaved(cubit, repository, state.editingTask);
-  });
-
-  test('addNodeToBranch findet Conditional-Nodes in Branch-Graphs', () async {
-    final repository = _InMemoryTaskRepository(
-      _taskWithNestedConditionalNode(),
-    );
-    final cubit = TaskBuilderCubit(repository: repository);
-
-    await cubit.load(repository.savedTask);
-    await cubit.addNodeToBranch(
-      conditionalNodeId: const NodeId('node.2'),
-      branchId: 'branch.nested',
-      primitive: WorkflowPrimitive.prompt,
-    );
-
-    final state = cubit.state as TaskBuilderLoaded;
-    final rootConfig =
-        state.editingTask.nodes.first.config as ConditionalNodeConfig;
-    final nestedNode = rootConfig.branches.first.graph.nodes.first;
-    final nestedConfig = nestedNode.config as ConditionalNodeConfig;
-    final nestedBranch = nestedConfig.branches.first;
-
-    expect(nestedBranch.graph.nodes, hasLength(1));
-    expect(nestedBranch.graph.nodes.first.config, isA<PromptNodeConfig>());
-
-    await cubit.close();
-  });
-
   test(
     'updatePromptOutputType aktualisiert Bild-Prompts in Branch-Graphs',
     () async {
@@ -727,68 +663,11 @@ const _employeeAttachment = EmployeeAttachment(
   defaultSkills: [_skillAttachment],
 );
 
-Task _taskWithForEachNode() {
-  return const Task(
-    id: 'task.for-each',
-    title: 'Aufgabe',
-    objective: '',
-    selectedNodeId: NodeId('node.1'),
-    graph: WorkflowGraph(
-      nodes: [
-        WorkflowNode(
-          id: NodeId('node.1'),
-          title: 'Für jedes Element',
-          description: 'Verarbeitet alle Werte.',
-          config: ForEachNodeConfig(
-            itemsPointer: '/items',
-            graph: WorkflowGraph(nodes: [], edges: []),
-          ),
-        ),
-      ],
-      edges: [],
-    ),
-  );
-}
-
-Task _taskWithConditionalNode() {
-  return _taskWithRootBranch(
-    id: 'task.1',
-    branchId: 'branch.yes',
-    branchLabel: 'Ja',
-    branchGraph: const WorkflowGraph(nodes: [], edges: []),
-  );
-}
-
 PromptNodeConfig _branchPromptConfig(TaskBuilderCubit cubit) {
   final state = cubit.state as TaskBuilderLoaded;
   final rootConfig =
       state.editingTask.nodes.first.config as ConditionalNodeConfig;
   return rootConfig.branches.first.graph.nodes.first.config as PromptNodeConfig;
-}
-
-Task _taskWithNestedConditionalNode() {
-  return _taskWithRootBranch(
-    id: 'task.2',
-    branchGraph: const WorkflowGraph(
-      nodes: [
-        WorkflowNode(
-          id: NodeId('node.2'),
-          title: 'Verzweigung',
-          description: 'Beschreibung',
-          config: ConditionalNodeConfig(
-            branches: [
-              ConditionalBranch(
-                id: 'branch.nested',
-                label: 'Nested',
-                graph: WorkflowGraph(nodes: [], edges: []),
-              ),
-            ],
-          ),
-        ),
-      ],
-      edges: [],
-    ),
-  );
 }
 
 Task _taskWithBranchPrompt() {

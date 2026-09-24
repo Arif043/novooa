@@ -6,7 +6,6 @@ import '../../../../core/theme/syscat_theme.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
-import 'node_graph.dart';
 
 class ForEachWidget extends StatelessWidget {
   const ForEachWidget({super.key, required this.node});
@@ -54,17 +53,9 @@ class ForEachWidget extends StatelessWidget {
           Text('Für jedes gefundene Element', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'In diesem Unterplan ist {{iteration.value}} der aktuelle Wert.',
+            'In diesem Unterplan ist {{iteration.value}} der aktuelle Wert. '
+            'Bausteine für den Unterplan werden auf der Leinwand verbunden.',
             style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          NodeGraph(
-            nodes: config.graph.nodes,
-            onPrimitiveAccepted: (primitive) =>
-                context.read<TaskBuilderCubit>().addNodeToForEachGraph(
-                  forEachNodeId: node.id,
-                  primitive: primitive,
-                ),
           ),
         ],
       ),
