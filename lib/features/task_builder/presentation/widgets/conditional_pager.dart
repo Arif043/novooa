@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_predecessor.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/branch_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 
 class ConditionalPager extends StatefulWidget {
   const ConditionalPager({super.key, required this.node});
@@ -49,6 +51,7 @@ class _ConditionalPagerState extends State<ConditionalPager> {
   Widget _conditionalPage(_ConditionalPage page) {
     return ConditionalWidget(
       nodeConfig: page.config,
+      derivedFromDecisionPrompt: _isDrivenByDecisionPrompt(context, page),
       onValueTemplateChanged: (value) => context
           .read<TaskBuilderCubit>()
           .updateConditionalValue(page.conditionalNodeId, value),
@@ -56,6 +59,22 @@ class _ConditionalPagerState extends State<ConditionalPager> {
         setState(() => _pages.add(page.withBranch(branch)));
       },
     );
+  }
+
+  /// Ist der direkte Vorgänger dieses Bedingter-Ablauf-Bausteins ein
+  /// Entscheidungs-Prompt, hält `TaskBuilderGraphMutations` seine Choices
+  /// und `valueTemplate` bereits automatisch synchron — die manuelle
+  /// „Wenn"-Eingabe wäre hier nur verwirrend/redundant.
+  bool _isDrivenByDecisionPrompt(BuildContext context, _ConditionalPage page) {
+    final state = context.watch<TaskBuilderCubit>().state;
+    if (state is! TaskBuilderLoaded) return false;
+    final predecessor = directPredecessorOf(
+      state.editingTask.graph,
+      page.conditionalNodeId,
+    );
+    return predecessor?.config is PromptNodeConfig &&
+        (predecessor!.config as PromptNodeConfig).outputType ==
+            PromptOutputType.decision;
   }
 
   void _popPage() {

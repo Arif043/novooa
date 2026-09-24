@@ -96,7 +96,9 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     final task = loadedTaskOrNull();
     if (task == null) return;
     final node = _buildNode(primitive, _nextNodeNumber(task.graph), task.graph);
+    final previousSelection = task.selectedNodeId;
     await _saveAndEmit(task.addNode(node));
+    await _syncNewSuccessorIfNeeded(previousSelection);
   }
 
   Future<void> addChannelEventNodeToMainGraph(ChannelEventKind kind) async {
