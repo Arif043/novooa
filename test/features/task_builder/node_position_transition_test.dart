@@ -178,7 +178,7 @@ WorkflowNode _node(String id) {
     id: NodeId(id),
     title: id,
     description: '',
-    referenceName: id,
+    outputName: id,
     config: StringInputNodeConfig.initial(),
   );
 }

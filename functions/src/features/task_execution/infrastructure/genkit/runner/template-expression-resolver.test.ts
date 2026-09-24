@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {type WorkflowExecutionScope} from "../../../domain/executors/node-executor.js";
 import {
+  type NodeExecutionResult,
+  type WorkflowNode,
+} from "./task-definition.js";
+import {
   TemplateExpressionResolver,
   variableTemplateContextFor,
 } from "./template-expression-resolver.js";
@@ -36,8 +40,118 @@ test("resolves media references without converting them to text", () => {
   assert.equal(resolver.resolveTextWithoutMediaReferences("Prüfe {{beleg.value}}."), "Prüfe .");
 });
 
+test("resolves a node's primary output flat under its outputName", () => {
+  const resolver = graphResolverFor(
+    [stringInputNode("n1", "eingang")],
+    [result("n1", "stringInput", {value: {type: "string", value: "Hallo"}})],
+  );
+
+  assert.equal(resolver.resolveValue("{{eingang}}"), "Hallo");
+});
+
+test("resolves a node's fixed secondary output via dot-path under its outputName", () => {
+  const resolver = graphResolverFor(
+    [{...stringInputNode("n1", "eingang"), primitive: "readEmail", config: {primitive: "readEmail"}}],
+    [result("n1", "readEmail", {
+      value: {type: "string", value: "Hallo"},
+      sender: {type: "string", value: "a@b.de"},
+    })],
+  );
+
+  assert.equal(resolver.resolveValue("{{eingang.sender}}"), "a@b.de");
+});
+
+test("flattens structured prompt fields directly without a node name", () => {
+  const resolver = graphResolverFor(
+    [{
+      id: "n1",
+      primitive: "prompt",
+      title: "",
+      description: "",
+      outputName: "",
+      config: {
+        primitive: "prompt",
+        instruction: "",
+        outputType: "structured",
+        choices: [],
+        structuredFields: [
+          {name: "Name", description: ""},
+          {name: "Alter", description: ""},
+        ],
+        firstChoice: "",
+        secondChoice: "",
+        attachments: [],
+        knowledgeAttachments: [],
+        skillAttachments: [],
+      },
+    }],
+    [result("n1", "prompt", {
+      value: {type: "json", value: {Name: "Anna", Alter: 30}},
+      text: {type: "string", value: "{\"Name\":\"Anna\",\"Alter\":30}"},
+      Name: {type: "string", value: "Anna"},
+      Alter: {type: "number", value: 30},
+    })],
+  );
+
+  assert.equal(resolver.resolveValue("{{Name}}"), "Anna");
+  assert.equal(resolver.resolveValue("{{Alter}}"), 30);
+  assert.equal(resolver.resolveValue("{{value}}"), undefined);
+});
+
+test("flattens dialog input fields directly without a node name", () => {
+  const resolver = graphResolverFor(
+    [{
+      id: "n1",
+      primitive: "dialogInput",
+      title: "",
+      description: "",
+      outputName: "",
+      config: {primitive: "dialogInput", instruction: "", fields: [
+        {name: "Kundennummer", type: "string", options: []},
+      ]},
+    }],
+    [result("n1", "dialogInput", {
+      value: {type: "json", value: {Kundennummer: "K-1"}},
+      text: {type: "string", value: "{\"Kundennummer\":\"K-1\"}"},
+      Kundennummer: {type: "string", value: "K-1"},
+    })],
+  );
+
+  assert.equal(resolver.resolveValue("{{Kundennummer}}"), "K-1");
+});
+
 function resolverFor(scope: WorkflowExecutionScope): TemplateExpressionResolver {
   return new TemplateExpressionResolver(() => variableTemplateContextFor(
     {nodes: [], edges: []}, new Map(), {}, scope,
   ));
+}
+
+function graphResolverFor(
+  nodes: WorkflowNode[],
+  results: NodeExecutionResult[],
+): TemplateExpressionResolver {
+  return new TemplateExpressionResolver(() => variableTemplateContextFor(
+    {nodes, edges: []},
+    new Map(results.map((nodeResult) => [nodeResult.nodeId, nodeResult])),
+    {},
+  ));
+}
+
+function stringInputNode(id: string, outputName: string): WorkflowNode {
+  return {
+    id,
+    primitive: "stringInput",
+    title: "",
+    description: "",
+    outputName,
+    config: {primitive: "stringInput", value: ""},
+  };
+}
+
+function result(
+  nodeId: string,
+  primitive: WorkflowNode["primitive"],
+  outputs: NodeExecutionResult["outputs"],
+): NodeExecutionResult {
+  return {nodeId, primitive, status: "executed", outputs};
 }

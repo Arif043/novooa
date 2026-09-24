@@ -16,7 +16,20 @@ const isolatedExpressionPattern = /^\{\{\s*([a-zA-Z_][\w]*(?:\.[a-zA-Z_][\w]*|\.
 export type TemplateExpressionContext = {
   variables: TaskVariables;
   scope: WorkflowExecutionScope;
+  /**
+   * Zweitschlüssel fest vorgegebener Ausgaben (z.B. `sender`, `fileId`),
+   * genestet unter dem `outputName` des erzeugenden Bausteins — erreichbar
+   * per Dot-Pfad, z.B. `{{eingang.sender}}`.
+   */
   nodeOutputs: Record<string, Record<string, NodeOutputValue>>;
+  /**
+   * Flacher, graph-weiter Namensraum: der primäre Wert jedes benannten
+   * Bausteins (`outputName`) sowie jedes einzelne Feld eines Bausteins mit
+   * mehreren fachlichen Outputs (strukturierte Prompt-Ausgabe,
+   * Dialogeingabe-Felder) — ohne umschließenden Knotennamen, z.B.
+   * `{{eingang}}`, `{{Name}}`.
+   */
+  flatOutputs: Record<string, NodeOutputValue>;
 };
 
 export class TemplateExpressionResolver {
@@ -52,6 +65,7 @@ export class TemplateExpressionResolver {
     const context = this.contextFor();
     const segments = path.split(".");
     return valueAtPath(context.scope, segments) ??
+      flatOutputAt(context.flatOutputs, segments) ??
       nodeOutputAt(context.nodeOutputs, segments) ??
       valueAtPath(context.scope.global, segments) ??
       valueAtPath(context.variables, segments);
@@ -64,7 +78,20 @@ export function variableTemplateContextFor(
   variables: TaskVariables,
   scope: WorkflowExecutionScope = {},
 ): TemplateExpressionContext {
-  return {variables, scope, nodeOutputs: nodeOutputScopesFor(graph.nodes, results)};
+  return {variables, scope, ...nodeOutputContextFor(graph.nodes, results)};
+}
+
+/** Ein einzelnes Segment (`{{eingang}}`) oder ein Dot-Pfad in den eigenen
+ * JSON-Wert eines flachen Outputs (`{{bericht.summe}}`, wenn `bericht` ein
+ * JSON-Objekt ist) — nicht zu verwechseln mit den festen Zweitschlüsseln in
+ * [nodeOutputAt], die als eigene Einträge in `result.outputs` existieren. */
+function flatOutputAt(
+  flatOutputs: TemplateExpressionContext["flatOutputs"],
+  path: string[],
+): unknown {
+  const [name, ...valuePath] = path;
+  const output = flatOutputs[name];
+  return output === undefined ? undefined : valueAtPath(output.value, valuePath);
 }
 
 function nodeOutputAt(
@@ -72,21 +99,54 @@ function nodeOutputAt(
   path: string[],
 ): unknown {
   if (path.length < 2) return undefined;
-  const [referenceName, outputName, ...valuePath] = path;
-  const output = scopes[referenceName]?.[outputName];
+  const [outputName, secondaryKey, ...valuePath] = path;
+  const output = scopes[outputName]?.[secondaryKey];
   return output === undefined ? undefined : valueAtPath(output.value, valuePath);
 }
 
-function nodeOutputScopesFor(
+/**
+ * Baut sowohl den geschachtelten Zweitschlüssel-Namensraum als auch den
+ * flachen, graph-weiten Namensraum aus den Ausführungsergebnissen auf.
+ * Bausteine mit mehreren fachlichen Outputs (strukturierte Prompt-Ausgabe,
+ * Dialogeingabe) verzichten auf einen eigenen Knotennamen — ihre Feldnamen
+ * fließen direkt in den flachen Namensraum ein, der generische `value`/
+ * `text`-Platzhalter (das ganze Objekt) entfällt dabei bewusst, da er ohne
+ * Knotennamen nicht mehr eindeutig adressierbar wäre.
+ */
+function nodeOutputContextFor(
   nodes: WorkflowNode[],
   results: Map<string, NodeExecutionResult>,
-) {
-  return nodes.reduce<TemplateExpressionContext["nodeOutputs"]>((scopes, node) => {
+): Pick<TemplateExpressionContext, "nodeOutputs" | "flatOutputs"> {
+  const nodeOutputs: TemplateExpressionContext["nodeOutputs"] = {};
+  const flatOutputs: TemplateExpressionContext["flatOutputs"] = {};
+  for (const node of nodes) {
     const result = results.get(node.id);
-    const name = node.referenceName.trim() || node.id.replace(/[^\w]/g, "");
-    if (name.length > 0 && result) scopes[name] = result.outputs;
-    return scopes;
-  }, {});
+    if (!result) continue;
+    if (hasFlatOutputs(node)) {
+      mergeFlatFieldOutputs(flatOutputs, result.outputs);
+      continue;
+    }
+    const name = node.outputName.trim() || node.id.replace(/[^\w]/g, "");
+    if (name.length === 0) continue;
+    nodeOutputs[name] = result.outputs;
+    if (result.outputs.value !== undefined) flatOutputs[name] = result.outputs.value;
+  }
+  return {nodeOutputs, flatOutputs};
+}
+
+function hasFlatOutputs(node: WorkflowNode): boolean {
+  if (node.config.primitive === "dialogInput") return true;
+  return node.config.primitive === "prompt" && node.config.outputType === "structured";
+}
+
+function mergeFlatFieldOutputs(
+  flatOutputs: TemplateExpressionContext["flatOutputs"],
+  outputs: Record<string, NodeOutputValue>,
+): void {
+  for (const [key, value] of Object.entries(outputs)) {
+    if (key === "value" || key === "text") continue;
+    flatOutputs[key] = value;
+  }
 }
 
 function valueAtPath(value: unknown, path: string[]): unknown {

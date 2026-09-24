@@ -56,15 +56,34 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
     await _syncConditionalSuccessors(nodeId);
   }
 
+  /// Der Feldname ist ein fachlicher Output ohne umschließenden Knotennamen
+  /// (siehe `workflow_canvas_layout.dart`) und muss deshalb graph-weit
+  /// eindeutig sein — nicht nur innerhalb dieses Bausteins.
   Future<void> updatePromptStructuredField({
     required NodeId nodeId,
     required int fieldIndex,
     required StructuredOutputField field,
   }) {
-    return _updatePromptConfig(
-      nodeId,
-      (config) => config.updateStructuredField(fieldIndex, field),
-    );
+    final task = loadedTaskOrNull();
+    if (task == null) return Future.value();
+    return _updatePromptConfig(nodeId, (config) {
+      if (fieldIndex < 0 || fieldIndex >= config.structuredFields.length) {
+        return config;
+      }
+      final previousName = config.structuredFields[fieldIndex].name;
+      final uniqueField = _uniqueStructuredField(task.graph, previousName, field);
+      return config.updateStructuredField(fieldIndex, uniqueField);
+    });
+  }
+
+  StructuredOutputField _uniqueStructuredField(
+    WorkflowGraph graph,
+    String previousName,
+    StructuredOutputField field,
+  ) {
+    final normalized = _normalizedOutputName(field.name);
+    if (normalized.isEmpty) return field.copyWith(name: '');
+    return field.copyWith(name: _uniqueOutputName(graph, previousName, normalized));
   }
 
   Future<void> addPromptStructuredField(NodeId nodeId) {

@@ -19,7 +19,11 @@ extension TaskBuilderBranchMutations on TaskBuilderCubit {
   }) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
-    final node = _buildNode(primitive, _nextNodeNumber(task.graph));
+    final node = _buildNode(
+      primitive,
+      _nextNodeNumber(task.graph),
+      task.graph,
+    );
     final update = _addNodeToBranchInGraph(
       graph: task.graph,
       conditionalNodeId: conditionalNodeId,

@@ -46,14 +46,21 @@ Ein `NodeExecutionResult` enthaelt `nodeId`, `primitive`, `status` und
 benannte `outputs`. Der primäre Output heisst `value` und ist typisiert.
 Kanten bestimmen ausschliesslich Reihenfolge und Verzweigungen. Ein Knoten
 erhält keine Werte seiner direkten Vorgänger. Benannte Werte werden
-ausschliesslich über einen expliziten Template-Ausdruck und den Referenznamen
-eines Knotens eingebunden, zum Beispiel:
+ausschliesslich über einen expliziten Template-Ausdruck eingebunden — entweder
+flach über den Ausgabenamen eines Bausteins (der primäre Wert braucht kein
+`.value`-Suffix) oder per Dot-Pfad für seine benannten Nebenoutputs, zum
+Beispiel:
 
 ```text
+{{kunde}}
 {{email.sender}}
 {{bericht.displayName}}
-{{kunde}}
 ```
+
+Bausteine mit mehreren fachlichen Ausgabewerten (strukturierte Prompt-Ausgabe,
+Dialogeingabe) haben keinen eigenen Ausgabenamen — jedes ihrer Felder ist
+stattdessen direkt und flach unter seinem eigenen, graph-weit eindeutigen
+Namen erreichbar, ohne umschliessenden Knotennamen.
 
 Kanten regeln ausschließlich Reihenfolge und Abhängigkeiten. Der Baustein
 `forEach` löst zuerst sein `itemsTemplate` auf und wendet anschließend seinen
@@ -108,9 +115,10 @@ output: { runId: string; status: "queued" | "rejected" }
 speichert Feldname, Datentyp und Optionen in `resumeState`, sendet eine
 Benachrichtigung und erwartet beim Bestätigen `formValues`. Das Backend prüft
 alle Werte gegen die gespeicherte Definition. Danach erhält der wartende Knoten
-einen primären JSON-`value`-Output sowie einen typisierten Output pro Feld. Feldnamen
-müssen eindeutige Template-Identifier sein, zum Beispiel `kundennummer`; der
-Wert ist dann über `{{formular1.kundennummer}}` verfügbar.
+einen flachen, typisierten Output pro Feld — ohne umschliessenden Knotennamen
+und ohne primären JSON-`value`-Output. Feldnamen müssen graph-weit eindeutige
+Template-Identifier sein, zum Beispiel `kundennummer`; der Wert ist dann
+direkt über `{{kundennummer}}` verfügbar.
 
 `mediaInput` verwendet denselben Interaktionsvertrag. Während der Ausführung
 entscheidet der Nutzer zwischen Bildergalerie und Kamera. Der Client speichert das Bild zuerst

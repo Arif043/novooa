@@ -14,7 +14,7 @@ OCR-Pipeline.
 Der Builder kann den eingebetteten Graphen anlegen, konfigurieren, verschieben
 und löschen. Pro Iteration stehen `{{iteration.value}}` und
 `{{iteration.index}}` zur Verfügung; die Ausgaben aller Unterplan-Bausteine
-werden unter ihren Referenznamen aggregiert.
+werden unter ihren Ausgabenamen aggregiert.
 
 ## Modellverträge
 

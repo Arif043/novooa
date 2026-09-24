@@ -71,10 +71,10 @@ class NodeOutputChips extends StatelessWidget {
     return switch (config.outputType) {
       PromptOutputType.text => const ['value'],
       PromptOutputType.decision => const ['value'],
-      PromptOutputType.structured => [
-        'value',
-        ..._structuredNames(config.structuredFields),
-      ],
+      // Jedes Feld ist ein eigenständiger, flacher Output ohne
+      // umschließenden Knotennamen — kein gemeinsamer `value`-Gesamtwert
+      // mehr adressierbar (siehe workflow_canvas_layout.dart).
+      PromptOutputType.structured => _structuredNames(config.structuredFields),
       PromptOutputType.image => const ['value'],
     };
   }
@@ -91,9 +91,11 @@ class NodeOutputChips extends StatelessWidget {
     ];
   }
 
+  // Jedes Feld ist ein eigenständiger, flacher Output ohne umschließenden
+  // Knotennamen — kein gemeinsamer `value`-Gesamtwert mehr adressierbar
+  // (siehe workflow_canvas_layout.dart).
   List<String> _dialogInputOutputNames(DialogInputNodeConfig config) {
     return [
-      'value',
       for (final field in config.fields)
         if (field.name.trim().isNotEmpty) field.name.trim(),
     ];

@@ -90,7 +90,7 @@ Die vollstaendigen Output-Slots dokumentiert
   `WorkflowCanvasOptions.showReturnEdges` steuert die Rückführungspfeile
   (standardmäßig `false`). Layout und Ausführung bleiben davon unabhängig.
 - Ein Klick auf eine Karte öffnet rechts ein Konfigurations-Overlay im selben
-  Provider-Kontext. Alle bisherigen Editoren, Anhänge, Referenznamen und
+  Provider-Kontext. Alle bisherigen Editoren, Anhänge, Ausgabenamen und
   Workflow-Ausgabewerte bleiben dort verfügbar. Änderungen aktualisieren das
   Overlay unmittelbar. Schließen ist per Schaltfläche oder Escape möglich.
 - Auf schmalen Fenstern wird die linke Palette über „Bausteine“ eingeblendet.

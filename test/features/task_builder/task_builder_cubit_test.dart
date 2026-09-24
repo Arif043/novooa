@@ -156,27 +156,27 @@ void main() {
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
-  test('updateNodeReferenceName normalisiert Referenznamen', () async {
+  test('updateNodeOutputName normalisiert Ausgabenamen', () async {
     final repository = _InMemoryTaskRepository(_taskWithTwoPromptNodes());
     final cubit = TaskBuilderCubit(repository: repository);
 
     await cubit.load(repository.savedTask);
-    await cubit.updateNodeReferenceName(const NodeId('node.1'), '1 email!');
+    await cubit.updateNodeOutputName(const NodeId('node.1'), '1 email!');
 
     final state = cubit.state as TaskBuilderLoaded;
-    expect(state.editingTask.nodes.first.referenceName, 'n1email');
+    expect(state.editingTask.nodes.first.outputName, 'n1email');
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
-  test('updateNodeReferenceName macht doppelte Referenzen eindeutig', () async {
+  test('updateNodeOutputName macht doppelte Ausgabenamen eindeutig', () async {
     final repository = _InMemoryTaskRepository(_taskWithTwoPromptNodes());
     final cubit = TaskBuilderCubit(repository: repository);
 
     await cubit.load(repository.savedTask);
-    await cubit.updateNodeReferenceName(const NodeId('node.2'), 'prompt1');
+    await cubit.updateNodeOutputName(const NodeId('node.2'), 'prompt1');
 
     final state = cubit.state as TaskBuilderLoaded;
-    expect(state.editingTask.nodes.last.referenceName, 'prompt1_2');
+    expect(state.editingTask.nodes.last.outputName, 'prompt1_2');
 
     await cubit.close();
   });
@@ -423,6 +423,104 @@ void main() {
     expect(config.fields.single.type, DialogInputFieldType.integer);
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
+
+  test(
+    'updateDialogInputField macht einen Feldnamen graph-weit eindeutig',
+    () async {
+      final repository = _InMemoryTaskRepository(
+        _taskWithDialogInputNode().copyWith(
+          graph: _taskWithDialogInputNode().graph.copyWith(
+            nodes: [
+              ..._taskWithDialogInputNode().nodes,
+              const WorkflowNode(
+                id: NodeId('node.text'),
+                title: 'Text',
+                description: '',
+                outputName: 'kundennummer',
+                config: StringInputNodeConfig(value: ''),
+              ),
+            ],
+          ),
+        ),
+      );
+      final cubit = TaskBuilderCubit(repository: repository);
+
+      await cubit.load(repository.savedTask);
+      await cubit.updateDialogInputField(
+        nodeId: const NodeId('node.dialog'),
+        fieldIndex: 0,
+        field: const DialogInputField(
+          name: 'kundennummer',
+          type: DialogInputFieldType.string,
+        ),
+      );
+
+      final state = cubit.state as TaskBuilderLoaded;
+      final config =
+          state.editingTask.nodes
+                  .firstWhere((node) => node.id == const NodeId('node.dialog'))
+                  .config
+              as DialogInputNodeConfig;
+      expect(config.fields.single.name, 'kundennummer_2');
+      await cubit.close();
+    },
+  );
+
+  test(
+    'updatePromptStructuredField macht einen Feldnamen graph-weit eindeutig',
+    () async {
+      final repository = _InMemoryTaskRepository(
+        const Task(
+          id: 'task.structured',
+          title: 'Aufgabe',
+          objective: '',
+          selectedNodeId: NodeId('node.prompt'),
+          graph: WorkflowGraph(
+            nodes: [
+              WorkflowNode(
+                id: NodeId('node.text'),
+                title: 'Text',
+                description: '',
+                outputName: 'name',
+                config: StringInputNodeConfig(value: ''),
+              ),
+              WorkflowNode(
+                id: NodeId('node.prompt'),
+                title: 'Prompt',
+                description: '',
+                config: PromptNodeConfig(
+                  instruction: '',
+                  outputType: PromptOutputType.structured,
+                  choices: [],
+                  structuredFields: [
+                    StructuredOutputField(name: '', description: ''),
+                  ],
+                ),
+              ),
+            ],
+            edges: [],
+          ),
+        ),
+      );
+      final cubit = TaskBuilderCubit(repository: repository);
+
+      await cubit.load(repository.savedTask);
+      await cubit.updatePromptStructuredField(
+        nodeId: const NodeId('node.prompt'),
+        fieldIndex: 0,
+        field: const StructuredOutputField(name: 'name', description: ''),
+      );
+
+      final state = cubit.state as TaskBuilderLoaded;
+      final config =
+          state.editingTask.nodes
+                  .firstWhere((node) => node.id == const NodeId('node.prompt'))
+                  .config
+              as PromptNodeConfig;
+      expect(config.structuredFields.single.name, 'name_2');
+      await cubit.close();
+    },
+  );
 
   test('updateMediaInput speichert Anweisung', () async {
     final repository = _InMemoryTaskRepository(_taskWithMediaInputNode());
@@ -763,7 +861,7 @@ Task _taskWithTwoPromptNodes() {
           id: NodeId('node.1'),
           title: 'Prompt',
           description: 'Beschreibung',
-          referenceName: 'prompt1',
+          outputName: 'prompt1',
           config: PromptNodeConfig(
             instruction: '',
             outputType: PromptOutputType.text,
@@ -774,7 +872,7 @@ Task _taskWithTwoPromptNodes() {
           id: NodeId('node.2'),
           title: 'Prompt',
           description: 'Beschreibung',
-          referenceName: 'prompt2',
+          outputName: 'prompt2',
           config: PromptNodeConfig(
             instruction: '',
             outputType: PromptOutputType.text,
@@ -797,7 +895,7 @@ Task _taskWithThreePromptNodes() {
           id: NodeId('node.3'),
           title: 'Prompt',
           description: 'Beschreibung',
-          referenceName: 'prompt3',
+          outputName: 'prompt3',
           config: PromptNodeConfig(
             instruction: '',
             outputType: PromptOutputType.text,

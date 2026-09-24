@@ -10,7 +10,7 @@ final class AddNodeAgentCommand extends TaskBuilderAgentCommand {
     required this.channelKind,
     this.title,
     this.description,
-    this.referenceName,
+    this.outputName,
     this.value,
     this.instruction,
     this.modelId,
@@ -22,7 +22,7 @@ final class AddNodeAgentCommand extends TaskBuilderAgentCommand {
   final ChannelEventKind channelKind;
   final String? title;
   final String? description;
-  final String? referenceName;
+  final String? outputName;
   final String? value;
   final String? instruction;
   final String? modelId;
@@ -59,8 +59,8 @@ final class AddNodeAgentCommand extends TaskBuilderAgentCommand {
     if (description case final text?) {
       await cubit.updateNodeDescription(nodeId, text);
     }
-    if (referenceName case final text?) {
-      await cubit.updateNodeReferenceName(nodeId, text);
+    if (outputName case final text?) {
+      await cubit.updateNodeOutputName(nodeId, text);
     }
   }
 

@@ -72,7 +72,7 @@ Map<String, Object?> taskJson() => {
         'id': 'node-1',
         'title': 'Text',
         'description': '',
-        'referenceName': 'text',
+        'outputName': 'text',
         'config': {'primitive': 'stringInput', 'value': 'Hallo'},
       },
     ],

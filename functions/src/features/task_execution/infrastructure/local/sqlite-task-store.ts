@@ -44,7 +44,14 @@ function graphFromStorage(value: Record<string, unknown>): Record<string, unknow
 function nodeFromStorage(value: unknown): Record<string, unknown> {
   const node = jsonObjectValue(value);
   const config = configFromStorage(node.config);
-  return {...node, primitive: stringFrom(config.primitive), config};
+  return {
+    ...node,
+    primitive: stringFrom(config.primitive),
+    // Rückwärtskompatibel: alte Dokumente speichern den Namen noch unter
+    // dem früheren Feldnamen `referenceName`.
+    outputName: stringFrom(node.outputName) || stringFrom(node.referenceName),
+    config,
+  };
 }
 
 function configFromStorage(value: unknown): Record<string, unknown> {

@@ -75,7 +75,7 @@ async function executeSave(
 ) {
   return saveDocumentNodeExecutor.execute({
       id: "save", primitive: "saveDocument", title: "Datensatz speichern",
-      description: "", referenceName: "speichern",
+      description: "", outputName: "speichern",
       config: {
         primitive: "saveDocument", collectionName: "kunden", filters,
         fields: [{field: "status", value: status}],

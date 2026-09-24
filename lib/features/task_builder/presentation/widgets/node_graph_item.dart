@@ -10,7 +10,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/model_inferen
 import 'package:syscat2/features/task_builder/presentation/widgets/for_each_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/node_reference_name_field.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/node_output_name_field.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_output_chips.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_email_widget.dart';
@@ -53,7 +53,7 @@ class NodeGraphItem extends StatelessWidget {
         children: [
           Align(
             alignment: Alignment.centerLeft,
-            child: NodeReferenceNameField(node: node),
+            child: NodeOutputNameField(node: node),
           ),
           const SizedBox(height: AppSpacing.md),
           _nodeWidget(),
@@ -131,7 +131,7 @@ class NodeGraphItem extends StatelessWidget {
         Positioned(
           top: AppSpacing.sm,
           right: AppSpacing.xxl + AppSpacing.sm,
-          child: NodeReferenceNameField(node: node),
+          child: NodeOutputNameField(node: node),
         ),
       Positioned(
         top: AppSpacing.xs,

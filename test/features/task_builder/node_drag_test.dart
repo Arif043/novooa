@@ -85,14 +85,14 @@ const _nodes = [
     id: NodeId('node.1'),
     title: 'Eins',
     description: '',
-    referenceName: 'eins',
+    outputName: 'eins',
     config: StringInputNodeConfig(value: ''),
   ),
   WorkflowNode(
     id: NodeId('node.2'),
     title: 'Zwei',
     description: '',
-    referenceName: 'zwei',
+    outputName: 'zwei',
     config: StringInputNodeConfig(value: ''),
   ),
 ];

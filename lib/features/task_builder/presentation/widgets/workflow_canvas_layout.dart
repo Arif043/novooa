@@ -207,22 +207,29 @@ class WorkflowCanvasLayout {
 
   /// Fachliche Workflow-Ausgabewerte eines Bausteins als Chip-Texte auf
   /// seinem Ausgangspfeil — analog zu den "Ja"/"Nein"-Chips verzweigender
-  /// Primitives. Die meisten Bausteine haben genau einen, namenlosen
-  /// Ausgabewert (Chip = eigener Referenzname); ein Prompt-Baustein mit
-  /// strukturierter Ausgabe hat dagegen einen benannten Ausgabewert pro
-  /// Feld, jeweils als eigener Chip.
+  /// Primitives. Die meisten Bausteine haben genau einen fachlichen
+  /// Ausgabewert (Chip = eigener Ausgabename); ein Prompt-Baustein mit
+  /// strukturierter Ausgabe oder eine Dialogeingabe haben dagegen mehrere,
+  /// eigenständig benannte Ausgabewerte — jeweils ein Chip pro Feld, ohne
+  /// umschließenden Knotennamen.
   List<String> _outputLabels(WorkflowNode node) {
     if (node.config case PromptNodeConfig(
       outputType: PromptOutputType.structured,
       :final structuredFields,
     )) {
-      final fieldNames = structuredFields
-          .map((field) => field.name.trim())
-          .where((name) => name.isNotEmpty)
-          .toList(growable: false);
-      if (fieldNames.isNotEmpty) return fieldNames;
+      return _fieldNames(structuredFields.map((field) => field.name));
     }
-    return _labelList(node.referenceName.isEmpty ? null : node.referenceName);
+    if (node.config case DialogInputNodeConfig(:final fields)) {
+      return _fieldNames(fields.map((field) => field.name));
+    }
+    return _labelList(node.outputName.isEmpty ? null : node.outputName);
+  }
+
+  List<String> _fieldNames(Iterable<String> names) {
+    return names
+        .map((name) => name.trim())
+        .where((name) => name.isNotEmpty)
+        .toList(growable: false);
   }
 
   List<String> _labelList(String? label) => label == null ? const [] : [label];

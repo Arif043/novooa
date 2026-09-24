@@ -94,7 +94,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   Future<void> addNodeToMainGraph(WorkflowPrimitive primitive) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
-    final node = _buildNode(primitive, _nextNodeNumber(task.graph));
+    final node = _buildNode(primitive, _nextNodeNumber(task.graph), task.graph);
     await _saveAndEmit(task.addNode(node));
   }
 
@@ -102,11 +102,19 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     final task = loadedTaskOrNull();
     if (task == null) return;
     final nodeNumber = _nextNodeNumber(task.graph);
-    final node = _buildNode(WorkflowPrimitive.readChannelEvent, nodeNumber);
+    final node = _buildNode(
+      WorkflowPrimitive.readChannelEvent,
+      nodeNumber,
+      task.graph,
+    );
     final configuredNode = node.copyWith(
       title: _channelEventTitle(kind),
       description: _channelEventDescription(kind),
-      referenceName: _referenceNameForKind(kind, nodeNumber),
+      outputName: _uniqueOutputName(
+        task.graph,
+        '',
+        _outputNameForKind(kind, nodeNumber),
+      ),
       config: ReadChannelEventNodeConfig(kind: kind),
     );
     await _saveAndEmit(task.addNode(configuredNode));
@@ -116,11 +124,19 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     final task = loadedTaskOrNull();
     if (task == null) return;
     final nodeNumber = _nextNodeNumber(task.graph);
-    final node = _buildNode(WorkflowPrimitive.sendChannelMessage, nodeNumber);
+    final node = _buildNode(
+      WorkflowPrimitive.sendChannelMessage,
+      nodeNumber,
+      task.graph,
+    );
     final configuredNode = node.copyWith(
       title: _sendMessageTitle(kind),
       description: _sendMessageDescription(kind),
-      referenceName: _referenceNameForSendKind(kind, nodeNumber),
+      outputName: _uniqueOutputName(
+        task.graph,
+        '',
+        _outputNameForSendKind(kind, nodeNumber),
+      ),
       config: SendChannelMessageNodeConfig.initial().copyWith(kind: kind),
     );
     await _saveAndEmit(task.addNode(configuredNode));
@@ -156,19 +172,19 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     });
   }
 
-  Future<void> updateNodeReferenceName(NodeId nodeId, String value) {
+  Future<void> updateNodeOutputName(NodeId nodeId, String value) {
     final task = loadedTaskOrNull();
     if (task == null) return Future.value();
-    final normalizedName = _normalizedReferenceName(value);
+    final normalizedName = _normalizedOutputName(value);
     if (normalizedName.isEmpty) return Future.value();
-    final referenceName = _uniqueReferenceName(
-      task.graph,
-      nodeId,
-      normalizedName,
-    );
     return _updateNode(nodeId, (node) {
-      if (node.referenceName == referenceName) return node;
-      return node.copyWith(referenceName: referenceName);
+      final outputName = _uniqueOutputName(
+        task.graph,
+        node.outputName,
+        normalizedName,
+      );
+      if (node.outputName == outputName) return node;
+      return node.copyWith(outputName: outputName);
     });
   }
 
@@ -309,14 +325,41 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     }
   }
 
-  WorkflowNode _buildNode(WorkflowPrimitive primitive, int number) {
+  WorkflowNode _buildNode(
+    WorkflowPrimitive primitive,
+    int number,
+    WorkflowGraph graph,
+  ) {
+    // Dialogeingabe-Bausteine haben immer mehrere, eigenständig benannte
+    // Outputs (siehe _collectOutputNames) und deshalb nie einen eigenen
+    // Ausgabenamen.
+    final outputName = primitive == WorkflowPrimitive.dialogInput
+        ? ''
+        : _uniqueOutputName(graph, '', _outputNameFor(primitive, number));
     return WorkflowNode(
       id: NodeId('node.$number'),
-      config: NodeConfig.initial(primitive),
+      config: _initialConfig(primitive, graph),
       title: primitive.label,
       description: primitive.description,
-      referenceName: _referenceNameFor(primitive, number),
+      outputName: outputName,
     );
+  }
+
+  /// [NodeConfig.initial] liefert für Dialogeingabe-Bausteine ein Feld mit
+  /// dem festen Namen "Antwort" — ohne Korrektur würde ein zweiter
+  /// Dialogeingabe-Baustein denselben, nicht mehr eindeutigen Namen tragen.
+  NodeConfig _initialConfig(WorkflowPrimitive primitive, WorkflowGraph graph) {
+    final config = NodeConfig.initial(primitive);
+    if (config is DialogInputNodeConfig && config.fields.isNotEmpty) {
+      final uniqueName = _uniqueOutputName(graph, '', config.fields.first.name);
+      return config.copyWith(
+        fields: [
+          config.fields.first.copyWith(name: uniqueName),
+          ...config.fields.skip(1),
+        ],
+      );
+    }
+    return config;
   }
 
   int _nextNodeNumber(WorkflowGraph graph) {
@@ -348,66 +391,77 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     }
   }
 
-  String _normalizedReferenceName(String value) {
+  String _normalizedOutputName(String value) {
     final sanitized = value.trim().replaceAll(RegExp(r'[^\w]'), '');
     if (sanitized.isEmpty) return '';
     if (RegExp(r'^\d').hasMatch(sanitized)) return 'n$sanitized';
     return sanitized;
   }
 
-  bool _referenceNameExists(
-    WorkflowGraph graph,
-    NodeId currentNodeId,
-    String referenceName,
-  ) {
-    for (final node in graph.nodes) {
-      if (node.id != currentNodeId && node.referenceName == referenceName) {
-        return true;
-      }
-      if (node.config case final ConditionalNodeConfig config) {
-        for (final branch in config.branches) {
-          if (_referenceNameExists(
-            branch.graph,
-            currentNodeId,
-            referenceName,
-          )) {
-            return true;
-          }
-        }
-      }
-      if (node.config case final ForEachNodeConfig config) {
-        if (_referenceNameExists(config.graph, currentNodeId, referenceName)) {
-          return true;
-        }
-      }
-    }
-    return false;
+  /// Alle bereits vergebenen fachlichen Ausgabenamen im gesamten Graphen —
+  /// sowohl der `outputName` eines Bausteins mit genau einem Output als auch
+  /// jeder Feldname eines Bausteins mit mehreren fachlichen Outputs
+  /// (strukturierte Prompt-Ausgabe, Dialogeingabe). Da referenceName als
+  /// Konzept entfällt, ist das ein einziger, flacher, graph-weiter
+  /// Namensraum statt einer Prüfung pro Knoten.
+  Set<String> _allOutputNames(WorkflowGraph graph) {
+    final names = <String>{};
+    _collectOutputNames(graph, names);
+    return names;
   }
 
-  String _uniqueReferenceName(
-    WorkflowGraph graph,
-    NodeId currentNodeId,
-    String referenceName,
-  ) {
-    if (!_referenceNameExists(graph, currentNodeId, referenceName)) {
-      return referenceName;
+  void _collectOutputNames(WorkflowGraph graph, Set<String> names) {
+    for (final node in graph.nodes) {
+      if (node.config case PromptNodeConfig(
+        outputType: PromptOutputType.structured,
+        :final structuredFields,
+      )) {
+        for (final field in structuredFields) {
+          final name = field.name.trim();
+          if (name.isNotEmpty) names.add(name);
+        }
+      } else if (node.config case DialogInputNodeConfig(:final fields)) {
+        for (final field in fields) {
+          final name = field.name.trim();
+          if (name.isNotEmpty) names.add(name);
+        }
+      } else {
+        final name = node.outputName.trim();
+        if (name.isNotEmpty) names.add(name);
+      }
+      if (node.config case ConditionalNodeConfig(:final branches)) {
+        for (final branch in branches) {
+          _collectOutputNames(branch.graph, names);
+        }
+      }
+      if (node.config case ForEachNodeConfig(graph: final nestedGraph)) {
+        _collectOutputNames(nestedGraph, names);
+      }
     }
+  }
+
+  /// Liefert [candidate] unverändert, wenn er (abgesehen von [previousName],
+  /// dem bisherigen Namen derselben Stelle) noch frei ist — sonst mit einem
+  /// `_2`/`_3`-Suffix, bis er eindeutig ist.
+  String _uniqueOutputName(
+    WorkflowGraph graph,
+    String previousName,
+    String candidate,
+  ) {
+    final taken = _allOutputNames(graph)..remove(previousName);
+    if (!taken.contains(candidate)) return candidate;
     var suffix = 2;
-    while (_referenceNameExists(
-      graph,
-      currentNodeId,
-      '${referenceName}_$suffix',
-    )) {
+    while (taken.contains('${candidate}_$suffix')) {
       suffix += 1;
     }
-    return '${referenceName}_$suffix';
+    return '${candidate}_$suffix';
   }
 
-  String _referenceNameFor(WorkflowPrimitive primitive, int number) {
-    return '${_referenceBaseFor(primitive)}$number';
+  String _outputNameFor(WorkflowPrimitive primitive, int number) {
+    return '${_outputBaseFor(primitive)}$number';
   }
 
-  String _referenceBaseFor(WorkflowPrimitive primitive) {
+  String _outputBaseFor(WorkflowPrimitive primitive) {
     return switch (primitive) {
       WorkflowPrimitive.stringInput => 'input',
       WorkflowPrimitive.script => 'script',
@@ -432,11 +486,11 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     };
   }
 
-  String _referenceNameForKind(ChannelEventKind kind, int number) {
+  String _outputNameForKind(ChannelEventKind kind, int number) {
     return '${kind.name}$number';
   }
 
-  String _referenceNameForSendKind(ChannelEventKind kind, int number) {
+  String _outputNameForSendKind(ChannelEventKind kind, int number) {
     return 'send${kind.name}$number';
   }
 

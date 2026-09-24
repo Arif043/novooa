@@ -10,7 +10,7 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
   }) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
-    var node = _buildNode(primitive, _nextNodeNumber(task.graph));
+    var node = _buildNode(primitive, _nextNodeNumber(task.graph), task.graph);
     if (channelKind != null) {
       node = switch (node.config) {
         ReadChannelEventNodeConfig() => node.copyWith(

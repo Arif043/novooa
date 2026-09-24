@@ -102,7 +102,7 @@ function taskBody() {
         primitive: "stringInput",
         title: "Text",
         description: "",
-        referenceName: "text",
+        outputName: "text",
         config: {primitive: "stringInput", value: "Hallo"},
       }],
       edges: [],

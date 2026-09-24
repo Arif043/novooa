@@ -50,7 +50,7 @@ class TaskBuilderAgentCommandFactory {
       channelKind: _kindFrom(suggestion.stringArgument('kind')),
       title: suggestion.stringArgument('title'),
       description: suggestion.stringArgument('description'),
-      referenceName: suggestion.stringArgument('referenceName'),
+      outputName: suggestion.stringArgument('outputName'),
       value: suggestion.stringArgument('value'),
       instruction: suggestion.stringArgument('instruction'),
       modelId: suggestion.stringArgument('modelId'),

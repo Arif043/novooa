@@ -105,7 +105,7 @@ export type BranchWorkflowNode = {
   primitive: WorkflowPrimitive;
   title: string;
   description: string;
-  referenceName: string;
+  outputName: string;
   config?: unknown;
 };
 export type BranchWorkflowGraph = {
@@ -246,7 +246,7 @@ export type WorkflowNode = {
   primitive: WorkflowPrimitive;
   title: string;
   description: string;
-  referenceName: string;
+  outputName: string;
   config: NodeConfig;
 };
 export type WorkflowGraph = {

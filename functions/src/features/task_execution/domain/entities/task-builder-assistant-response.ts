@@ -16,7 +16,7 @@ export type TaskBuilderAssistantCommand = AssistantCommand & {
   primitive?: TaskBuilderAssistantPrimitive;
   kind?: "email" | "whatsapp" | "sms";
   title?: string;
-  referenceName?: string;
+  outputName?: string;
   description?: string;
   value?: string;
   instruction?: string;

@@ -42,10 +42,13 @@ class DialogInputWidget extends StatelessWidget {
             DialogInputFieldEditor(
               field: _config.fields[index],
               canRemove: _config.fields.length > 1,
-              onChanged: (field) => _update(
-                context,
-                (config) => config.updateField(index, field),
-              ),
+              onChanged: (field) => context
+                  .read<TaskBuilderCubit>()
+                  .updateDialogInputField(
+                    nodeId: node.id,
+                    fieldIndex: index,
+                    field: field,
+                  ),
               onRemove: () =>
                   _update(context, (config) => config.removeField(index)),
             ),

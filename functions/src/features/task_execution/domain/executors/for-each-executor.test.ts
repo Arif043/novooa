@@ -77,7 +77,7 @@ function config(node?: {primitive: string}): ForEachNodeConfig {
         primitive: (node?.primitive ?? "stringInput") as "humanApproval",
         title: "Unterplan",
         description: "",
-        referenceName: "unterplan",
+        outputName: "unterplan",
       }],
       edges: [],
     },

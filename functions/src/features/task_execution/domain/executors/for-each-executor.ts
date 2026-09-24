@@ -67,13 +67,13 @@ function graphFor(config: ForEachNodeConfig["graph"]): WorkflowGraph {
 
 function outputsOf(
   results: readonly NodeExecutionResult[],
-  nodes: readonly {id: string; referenceName: string}[],
+  nodes: readonly {id: string; outputName: string}[],
 ): Record<string, unknown> {
   const resultByNodeId = new Map(results.map((result) => [result.nodeId, result]));
   return Object.fromEntries(nodes.flatMap((node) => {
     const result = resultByNodeId.get(node.id);
     if (result?.status !== "executed") return [];
-    const name = node.referenceName.trim() || node.id;
+    const name = node.outputName.trim() || node.id;
     return [[name, Object.fromEntries(
       Object.entries(result.outputs).map(([key, output]) => [key, output.value]),
     )]];

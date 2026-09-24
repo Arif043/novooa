@@ -15,8 +15,13 @@ seiner direkten Vorgaenger, nicht mehr den letzten Textwert eines Runs.
 `media` und `file` enthalten eine fachliche Referenz mit `fileId`, `versionId`,
 `displayName`, `contentType` und `sizeBytes`. Der konkrete Speicherort bleibt
 innerhalb der Dateiinfrastruktur; erst der konsumierende Executor liest die
-referenzierte Version. Benannte Nebenoutputs bleiben fuer Templates erreichbar,
-etwa `{{eingang.sender}}` oder `{{bericht.fileId}}`.
+referenzierte Version. Der primäre Wert eines benannten Bausteins ist direkt
+per `{{ausgabename}}` erreichbar (kein `.value`-Suffix nötig); benannte
+Nebenoutputs bleiben per Dot-Pfad erreichbar, etwa `{{eingang.sender}}` oder
+`{{bericht.fileId}}`. Bausteine mit mehreren fachlichen Ausgabewerten
+(strukturierte Prompt-Ausgabe, Dialogeingabe) haben keinen eigenen
+Ausgabenamen — hier ist jedes Feld direkt und flach unter seinem eigenen,
+graph-weit eindeutigen Namen erreichbar, z.B. `{{Name}}`.
 
 Ein leerer Text erzeugt keinen `text`-Output. `humanApproval`, `dialogInput`
 und `mediaInput` liefern den Status `waitingForApproval`; nicht registrierte
@@ -29,7 +34,7 @@ Primitives erhalten den Status `skipped` und keine Outputs.
 | `stringInput` | ausgefuehrt | `value` (`string`) |
 | `script` | ausgefuehrt | `value` (`string`); interne Laufzeitvariablen stehen nachfolgenden Templates zur Verfuegung |
 | `prompt` mit Text oder Entscheidung | ausgefuehrt | `value` (`string`) |
-| `prompt` strukturiert | ausgefuehrt | `value` (`json`) und ein `string`-Output fuer jedes konfigurierte Feld |
+| `prompt` strukturiert | ausgefuehrt | ein flacher `string`-Output je konfiguriertem Feld, ohne umschliessenden Knotennamen (kein `value`-Gesamtwert mehr adressierbar) |
 | `prompt` mit Bild | ausgefuehrt | `value` (`media`); das generierte Bild wird als Team-Datei referenziert |
 | `conditionalFlow` | ausgefuehrt | `value` (`string`, Ergebnis des gewaehlten Zweigs oder Begruendung); Resultat-Metadaten: `selectedNodeId`, `selectedBranchId`, `selectedBranchLabel` |
 | `iterativeRefinement` | ausgefuehrt | `value` (`string`) |
@@ -40,7 +45,7 @@ Primitives erhalten den Status `skipped` und keine Outputs.
 | `sendChannelMessage` | ausgefuehrt | `value`, `recipient`, `channelId`, `providerMessageId` (je `string`) |
 | `notificationSend` | ausgefuehrt | `value` (`string`: gesendeter Text) |
 | `humanApproval` | wartet auf Freigabe | `value` (`string`) |
-| `dialogInput` | wartet auf Formulareingabe | nach dem Absenden: `value` (`json`) und ein typisierter Output pro Feld |
+| `dialogInput` | wartet auf Formulareingabe | nach dem Absenden: ein flacher, typisierter Output pro Feld, ohne umschliessenden Knotennamen (kein `value`-Gesamtwert mehr adressierbar) |
 | `mediaInput` | wartet auf ein Bild; Nutzer wählt Kamera oder Galerie | nach dem Absenden: `value` (`media`) |
 | `modelInference` | ausgefuehrt | `value` (`json`: Modell-ID und Tensoren mit Semantik, Form, Typ und Base64-Daten), `modelId` (`string`) |
 | `writeFile` | ausgefuehrt | siehe nächster Abschnitt |
@@ -65,9 +70,9 @@ und Endung der gespeicherten Version. Sein primaerer Output ist ein `file`- bzw.
 | `folderId` | `json` | Ordner-ID oder `null` |
 | `isNewFile` | `boolean` | `true` bei einer neu angelegten Datei |
 
-Hat der Knoten den Referenznamen `bericht`, koennen Templates beispielsweise
-`{{bericht.fileId}}`, `{{bericht.versionId}}` oder
-`{{bericht.displayName}}` verwenden.
+Hat der Knoten den Ausgabenamen `bericht`, koennen Templates beispielsweise
+`{{bericht}}` (primaerer Datei-/Bildwert), `{{bericht.fileId}}`,
+`{{bericht.versionId}}` oder `{{bericht.displayName}}` verwenden.
 
 ## Nicht implementierte Primitives
 

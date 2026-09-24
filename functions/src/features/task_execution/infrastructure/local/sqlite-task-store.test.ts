@@ -21,6 +21,30 @@ test("loads client task documents whose primitive is stored in node config", asy
   database.close();
 });
 
+test("reads outputName from a legacy referenceName field", async () => {
+  const database = new SqliteLocalSqlDatabase(":memory:");
+  await database.run(`CREATE TABLE tasks (
+    id TEXT PRIMARY KEY, team_id TEXT NOT NULL, title TEXT NOT NULL,
+    objective TEXT NOT NULL, graph_json TEXT NOT NULL
+  )`);
+  const legacyDocument = {
+    nodes: [{
+      id: "node-1", title: "Text", description: "", referenceName: "eingang",
+      config: {primitive: "stringInput", value: ""},
+    }],
+    edges: [],
+  };
+  await database.run(
+    "INSERT INTO tasks (id, team_id, title, objective, graph_json) VALUES (?, ?, ?, ?, ?)",
+    ["task-1", "team-1", "Aufgabe", "", JSON.stringify(legacyDocument)],
+  );
+
+  const task = await new SQLiteTaskStore(database).loadTask("team-1", "task-1");
+
+  assert.equal(task.nodes[0]?.outputName, "eingang");
+  database.close();
+});
+
 test("loads data nodes whose primitive is stored in node configuration", async () => {
   const database = new SqliteLocalSqlDatabase(":memory:");
   await database.run(`CREATE TABLE tasks (
@@ -43,7 +67,7 @@ test("loads data nodes whose primitive is stored in node configuration", async (
 function graphDocument() {
   return {
     nodes: [{
-      id: "node-1", title: "Prompt", description: "", referenceName: "prompt1",
+      id: "node-1", title: "Prompt", description: "", outputName: "prompt1",
       config: {
         primitive: "prompt", instruction: "Hallo", languageModelId: "model-1",
         outputType: "text", choices: ["", ""], structuredFields: [],
@@ -58,11 +82,11 @@ function dataGraphDocument() {
   return {
     nodes: [
       {
-        id: "lookup", title: "Datensatz suchen", description: "", referenceName: "lookup",
+        id: "lookup", title: "Datensatz suchen", description: "", outputName: "lookup",
         config: {primitive: "documentLookup", collectionId: "Kunden", filters: []},
       },
       {
-        id: "save", title: "Datensatz speichern", description: "", referenceName: "save",
+        id: "save", title: "Datensatz speichern", description: "", outputName: "save",
         config: {
           primitive: "saveDocument", collectionId: "Kunden", mode: "create", documentId: "",
           fields: [{field: "name", value: "Max"}],

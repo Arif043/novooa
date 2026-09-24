@@ -15,7 +15,7 @@ const rawCommandSchema = z.object({
   primitive: primitiveSchema.optional(),
   kind: z.enum(["email", "whatsapp", "sms"]).optional(),
   title: z.string().optional(),
-  referenceName: z.string().optional(),
+  outputName: z.string().optional(),
   description: z.string().optional(),
   value: z.string().optional(),
   instruction: z.string().optional(),

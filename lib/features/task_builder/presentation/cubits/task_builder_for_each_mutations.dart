@@ -18,7 +18,11 @@ extension TaskBuilderForEachMutations on TaskBuilderCubit {
   }) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
-    final node = _buildNode(primitive, _nextNodeNumber(task.graph));
+    final node = _buildNode(
+      primitive,
+      _nextNodeNumber(task.graph),
+      task.graph,
+    );
     await _updateNode(forEachNodeId, (owner) {
       if (owner.config case final ForEachNodeConfig config) {
         final graph = _appendNode(config.graph, node);

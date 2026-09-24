@@ -17,7 +17,7 @@ test("resolves workflow values and delegates execution through the script port",
       primitive: "script",
       title: "Script",
       description: "",
-      referenceName: "script",
+      outputName: "script",
       config: {
         primitive: "script",
         script: "output = '{{name}}'",

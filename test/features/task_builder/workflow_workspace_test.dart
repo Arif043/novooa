@@ -109,7 +109,7 @@ void main() {
   });
 
   test(
-    'zeigt den Referenznamen als Chip auf dem Ausgangspfeil eines Bausteins',
+    'zeigt den Ausgabenamen als Chip auf dem Ausgangspfeil eines Bausteins',
     () {
       expect(
         WorkflowCanvasLayout(_task.graph).links
@@ -117,7 +117,7 @@ void main() {
             .labels,
         ['text'],
       );
-      const withoutReferenceName = WorkflowNode(
+      const withoutOutputName = WorkflowNode(
         id: NodeId('anon'),
         title: '',
         description: '',
@@ -131,7 +131,7 @@ void main() {
       );
       final plainLayout = WorkflowCanvasLayout(
         const WorkflowGraph(
-          nodes: [withoutReferenceName, successor],
+          nodes: [withoutOutputName, successor],
           edges: [WorkflowEdge(from: NodeId('anon'), to: NodeId('next'))],
         ),
       );
@@ -145,7 +145,7 @@ void main() {
         id: NodeId('branching'),
         title: '',
         description: '',
-        referenceName: 'branching',
+        outputName: 'branching',
         config: StringInputNodeConfig(value: ''),
       );
       final overriddenLayout = WorkflowCanvasLayout(
@@ -178,7 +178,7 @@ void main() {
         id: NodeId('prompt2'),
         title: '',
         description: '',
-        referenceName: 'prompt2',
+        outputName: 'prompt2',
         config: PromptNodeConfig(
           instruction: '',
           outputType: PromptOutputType.structured,
@@ -218,7 +218,7 @@ void main() {
           id: const NodeId('prompt'),
           title: '',
           description: '',
-          referenceName: 'prompt',
+          outputName: 'prompt',
           config: PromptNodeConfig(
             instruction: '',
             outputType: PromptOutputType.structured,
@@ -618,7 +618,7 @@ const _task = Task(
         id: NodeId('text'),
         title: 'Text',
         description: '',
-        referenceName: 'text',
+        outputName: 'text',
         config: StringInputNodeConfig(value: 'Beispiel'),
       ),
       WorkflowNode(

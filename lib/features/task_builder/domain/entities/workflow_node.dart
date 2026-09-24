@@ -63,32 +63,38 @@ class WorkflowNode extends Equatable {
     required this.title,
     required this.description,
     required this.config,
-    this.referenceName = '',
+    this.outputName = '',
   });
 
   final NodeId id;
   final String title;
   final String description;
-  final String referenceName;
+
+  /// Eindeutiger Name des primären fachlichen Outputs dieses Bausteins
+  /// (`{{outputName}}` in Templates). Bleibt leer bei Bausteinen mit
+  /// mehreren fachlichen Outputs (z.B. strukturierte Prompt-Ausgabe,
+  /// Dialogeingabe) — dort trägt jedes Feld seinen eigenen Namen (siehe
+  /// `StructuredOutputField.name`/`DialogInputField.name`).
+  final String outputName;
   final NodeConfig config;
 
   WorkflowNode copyWith({
     String? title,
     String? description,
-    String? referenceName,
+    String? outputName,
     NodeConfig? config,
   }) {
     return WorkflowNode(
       id: id,
       title: title ?? this.title,
       description: description ?? this.description,
-      referenceName: referenceName ?? this.referenceName,
+      outputName: outputName ?? this.outputName,
       config: config ?? this.config,
     );
   }
 
   @override
-  List<Object?> get props => [id, title, description, referenceName, config];
+  List<Object?> get props => [id, title, description, outputName, config];
 
   @override
   bool? get stringify => true;

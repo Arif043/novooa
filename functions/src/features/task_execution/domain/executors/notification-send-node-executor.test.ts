@@ -67,7 +67,7 @@ function notificationNode(config: {title?: string; message: string}) {
     primitive: "notificationSend" as const,
     title: "Push senden",
     description: "",
-    referenceName: "notify",
+    outputName: "notify",
     config: {primitive: "notificationSend" as const, ...config},
   };
 }

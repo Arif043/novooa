@@ -88,7 +88,7 @@ function executorInput() {
       primitive: "prompt" as const,
       title: "Bild prüfen",
       description: "",
-      referenceName: "bildPruefen",
+      outputName: "bildPruefen",
       config: promptConfig(),
     },
   };
