@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
@@ -52,23 +53,23 @@ const bausteinGroups = <String, List<BausteinChoice>>{
 };
 
 IconData bausteinIcon(WorkflowPrimitive primitive) => switch (primitive) {
-  .stringInput => Icons.text_fields,
-  .script => Icons.code,
-  .prompt => Icons.auto_awesome_outlined,
-  .conditional => Icons.call_split,
-  .iterativeRefinement => Icons.autorenew,
-  .writeFile => Icons.note_add_outlined,
-  .readFile => Icons.file_open_outlined,
-  .readEmail || .readChannelEvent => Icons.mark_email_read_outlined,
+  .stringInput => CupertinoIcons.textformat,
+  .script => CupertinoIcons.chevron_left_slash_chevron_right,
+  .prompt => CupertinoIcons.wand_stars,
+  .conditional => CupertinoIcons.arrow_branch,
+  .iterativeRefinement => CupertinoIcons.paintbrush,
+  .writeFile => CupertinoIcons.doc_plaintext,
+  .readFile => CupertinoIcons.doc_text_search,
+  .readEmail || .readChannelEvent => CupertinoIcons.mail,
   .sendChannelMessage => Icons.send_outlined,
-  .notificationSend => Icons.notifications_active_outlined,
-  .humanApproval => Icons.verified_user_outlined,
-  .dialogInput => Icons.dynamic_form_outlined,
-  .mediaInput => Icons.add_a_photo_outlined,
-  .modelInference => Icons.model_training_outlined,
-  .forEach => Icons.repeat,
-  .documentLookup => Icons.search,
-  .saveDocument => Icons.save_outlined,
+  .notificationSend => CupertinoIcons.bell,
+  .humanApproval => CupertinoIcons.person_alt,
+  .dialogInput => CupertinoIcons.line_horizontal_3,
+  .mediaInput => CupertinoIcons.camera,
+  .modelInference => CupertinoIcons.rectangle,
+  .forEach => CupertinoIcons.arrow_2_squarepath,
+  .documentLookup => CupertinoIcons.search,
+  .saveDocument => CupertinoIcons.archivebox,
   .toolCall => Icons.build_outlined,
   .validation => Icons.fact_check_outlined,
 };

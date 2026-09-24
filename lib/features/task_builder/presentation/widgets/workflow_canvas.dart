@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/theme/syscat_theme.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
@@ -517,6 +518,7 @@ class WorkflowEdgesPainter extends CustomPainter {
         canvas,
         edge.labels,
         Offset((start.dx + end.dx) / 2, middle),
+        edge.isCondition ? colors.surfaceContainerHighest : colors.surfaceContainer,
       );
     }
   }
@@ -524,8 +526,16 @@ class WorkflowEdgesPainter extends CustomPainter {
   /// Zeichnet die Chips eines Pfeils als zentrierte, vertikale Reihe —
   /// üblicherweise genau einer (Bedingungs-Label oder Referenzname), bei
   /// mehreren fachlichen Ausgabewerten (z.B. strukturierte Prompt-Ausgabe)
-  /// aber mehrere untereinander.
-  void _paintLabels(Canvas canvas, List<String> labels, Offset center) {
+  /// aber mehrere untereinander. Bedingungs-/Verzweigungs-Labels (z.B.
+  /// "Ja"/"Nein") und fachliche Ausgabewerte erhalten unterschiedliche
+  /// Hintergrundfarben ([background]), damit sie auf einen Blick
+  /// unterscheidbar sind.
+  void _paintLabels(
+    Canvas canvas,
+    List<String> labels,
+    Offset center,
+    Color background,
+  ) {
     final painters = [
       for (final label in labels)
         if (label.isNotEmpty) _labelPainter(label),
@@ -548,7 +558,7 @@ class WorkflowEdgesPainter extends CustomPainter {
       );
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, const Radius.circular(20)),
-        Paint()..color = colors.surfaceContainerHighest,
+        Paint()..color = background,
       );
       text.paint(canvas, Offset(rect.left + 12, rect.top + 6));
       top += heights[i] + gap;

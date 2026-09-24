@@ -34,6 +34,7 @@ class CanvasLink {
     this.to, [
     this.labels = const [],
     this.isReturn = false,
+    this.isCondition = false,
   ]);
   final String from;
   final String to;
@@ -44,6 +45,12 @@ class CanvasLink {
   /// Prompt-Ausgabe mit mehreren Feldern) aber auch mehrere.
   final List<String> labels;
   final bool isReturn;
+
+  /// Unterscheidet Bedingungs-/Verzweigungs-Labels (z.B. "Ja"/"Nein",
+  /// "Für jedes Element") von fachlichen Workflow-Ausgabewerten — beide
+  /// werden als Chip dargestellt, aber mit unterschiedlicher Hintergrundfarbe
+  /// (siehe [WorkflowEdgesPainter._paintLabels]).
+  final bool isCondition;
 }
 
 /// Presentation-only layout: persisted edges remain the source of truth.
@@ -80,7 +87,9 @@ class WorkflowCanvasLayout {
     if (graph.nodes.isEmpty) {
       final id = '@empty:${parent ?? 'main'}:${insertion.branchId ?? ''}';
       entries[id] = CanvasEntry(id, null, insertion, peers);
-      if (parent != null) links.add(CanvasLink(parent, id, _labelList(label)));
+      if (parent != null) {
+        links.add(CanvasLink(parent, id, _labelList(label), false, true));
+      }
       return [id];
     }
     for (final node in graph.nodes) {
@@ -105,6 +114,8 @@ class WorkflowCanvasLayout {
             edge.conditionLabel != null
                 ? [edge.conditionLabel!]
                 : _outputLabels(fromNode),
+            false,
+            edge.conditionLabel != null,
           ),
         );
       }
@@ -114,7 +125,9 @@ class WorkflowCanvasLayout {
         (node) => !graph.edges.any((edge) => edge.to == node.id),
       );
       for (final root in roots) {
-        links.add(CanvasLink(parent, root.id.value, _labelList(label)));
+        links.add(
+          CanvasLink(parent, root.id.value, _labelList(label), false, true),
+        );
       }
     }
     for (final node in graph.nodes) {

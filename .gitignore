@@ -60,3 +60,5 @@ macos/Runner/*
 
 # Lokale Compose-Variablen (Entwicklungsmodus, Domain) — nie committen.
 .env
+/ios/
+/android/

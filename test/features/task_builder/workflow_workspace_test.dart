@@ -72,12 +72,22 @@ void main() {
       hasLength(1),
     );
     expect(
+      layout.links
+          .firstWhere((link) => link.from == 'text' && link.to == 'decision')
+          .isCondition,
+      isFalse,
+    );
+    expect(
       layout.links.where((link) => link.labels.contains('Ja')),
       hasLength(1),
     );
     expect(
       layout.links.where((link) => link.labels.contains('Nein')),
       hasLength(1),
+    );
+    expect(
+      layout.links.where((link) => link.labels.contains('Ja')).single.isCondition,
+      isTrue,
     );
     expect(
       layout.rectangles['decision']!.top,
