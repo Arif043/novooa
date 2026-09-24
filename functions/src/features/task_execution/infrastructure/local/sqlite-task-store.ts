@@ -47,9 +47,7 @@ function nodeFromStorage(value: unknown): Record<string, unknown> {
   return {
     ...node,
     primitive: stringFrom(config.primitive),
-    // Rückwärtskompatibel: alte Dokumente speichern den Namen noch unter
-    // dem früheren Feldnamen `referenceName`.
-    outputName: stringFrom(node.outputName) || stringFrom(node.referenceName),
+    outputName: stringFrom(node.outputName),
     config,
   };
 }
@@ -72,7 +70,7 @@ function documentConfig(
   return {
     ...config,
     primitive,
-    collectionName: stringFrom(config.collectionName) || stringFrom(config.collectionId),
+    collectionName: stringFrom(config.collectionName),
   };
 }
 

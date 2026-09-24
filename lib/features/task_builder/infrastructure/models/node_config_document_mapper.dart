@@ -453,10 +453,7 @@ class NodeConfigDocumentMapper {
       data['filters'],
     ).map(_lookupFilterFrom).toList(growable: false);
     return DocumentLookupNodeConfig(
-      collectionName:
-          data['collectionName'] as String? ??
-          data['collectionId'] as String? ??
-          '',
+      collectionName: data['collectionName'] as String? ?? '',
       filters: filters.isEmpty
           ? DocumentLookupNodeConfig.initial().filters
           : filters,
@@ -483,10 +480,7 @@ class NodeConfigDocumentMapper {
       data['fields'],
     ).map(_fieldAssignmentFrom).toList(growable: false);
     return SaveDocumentNodeConfig(
-      collectionName:
-          data['collectionName'] as String? ??
-          data['collectionId'] as String? ??
-          '',
+      collectionName: data['collectionName'] as String? ?? '',
       filters: _saveFiltersFrom(data['filters']),
       fields: fields.isEmpty ? SaveDocumentNodeConfig.initial().fields : fields,
     );

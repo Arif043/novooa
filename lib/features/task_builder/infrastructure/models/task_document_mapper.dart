@@ -87,9 +87,7 @@ class TaskDocumentMapper {
       id: NodeId(data['id'] as String? ?? ''),
       title: data['title'] as String? ?? '',
       description: data['description'] as String? ?? '',
-      // Rückwärtskompatibel: alte Dokumente speichern den Namen noch unter
-      // dem früheren Feldnamen `referenceName`.
-      outputName: (data['outputName'] ?? data['referenceName']) as String? ?? '',
+      outputName: data['outputName'] as String? ?? '',
       config: config,
     );
   }

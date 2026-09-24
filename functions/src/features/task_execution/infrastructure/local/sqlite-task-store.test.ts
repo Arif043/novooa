@@ -21,30 +21,6 @@ test("loads client task documents whose primitive is stored in node config", asy
   database.close();
 });
 
-test("reads outputName from a legacy referenceName field", async () => {
-  const database = new SqliteLocalSqlDatabase(":memory:");
-  await database.run(`CREATE TABLE tasks (
-    id TEXT PRIMARY KEY, team_id TEXT NOT NULL, title TEXT NOT NULL,
-    objective TEXT NOT NULL, graph_json TEXT NOT NULL
-  )`);
-  const legacyDocument = {
-    nodes: [{
-      id: "node-1", title: "Text", description: "", referenceName: "eingang",
-      config: {primitive: "stringInput", value: ""},
-    }],
-    edges: [],
-  };
-  await database.run(
-    "INSERT INTO tasks (id, team_id, title, objective, graph_json) VALUES (?, ?, ?, ?, ?)",
-    ["task-1", "team-1", "Aufgabe", "", JSON.stringify(legacyDocument)],
-  );
-
-  const task = await new SQLiteTaskStore(database).loadTask("team-1", "task-1");
-
-  assert.equal(task.nodes[0]?.outputName, "eingang");
-  database.close();
-});
-
 test("loads data nodes whose primitive is stored in node configuration", async () => {
   const database = new SqliteLocalSqlDatabase(":memory:");
   await database.run(`CREATE TABLE tasks (
@@ -83,12 +59,12 @@ function dataGraphDocument() {
     nodes: [
       {
         id: "lookup", title: "Datensatz suchen", description: "", outputName: "lookup",
-        config: {primitive: "documentLookup", collectionId: "Kunden", filters: []},
+        config: {primitive: "documentLookup", collectionName: "Kunden", filters: []},
       },
       {
         id: "save", title: "Datensatz speichern", description: "", outputName: "save",
         config: {
-          primitive: "saveDocument", collectionId: "Kunden", mode: "create", documentId: "",
+          primitive: "saveDocument", collectionName: "Kunden", mode: "create", documentId: "",
           fields: [{field: "name", value: "Max"}],
         },
       },
