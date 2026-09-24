@@ -75,6 +75,7 @@ class FilesActionBar extends StatelessWidget {
       'jpg' || 'jpeg' => 'image/jpeg',
       'png' => 'image/png',
       'webp' => 'image/webp',
+      'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
       _ => 'application/octet-stream',
     };
   }

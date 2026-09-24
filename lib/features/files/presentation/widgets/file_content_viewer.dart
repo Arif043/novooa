@@ -6,6 +6,7 @@ import '../../domain/entities/team_file.dart';
 import '../cubits/file_detail_state.dart';
 import 'content/image_content_view.dart';
 import 'content/pdf_content_view.dart';
+import 'content/spreadsheet_content_view.dart';
 import 'content/text_content_view.dart';
 import 'content/unsupported_content_view.dart';
 
@@ -53,10 +54,14 @@ class _Body extends StatelessWidget {
     if (bytes == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    return switch (classifier.classify(file.contentType)) {
+    return switch (classifier.classify(
+      file.contentType,
+      fileName: file.displayName,
+    )) {
       FileContentKind.text => TextContentView(state: state),
       FileContentKind.image => ImageContentView(file: file, bytes: bytes),
       FileContentKind.pdf => PdfContentView(bytes: bytes),
+      FileContentKind.spreadsheet => SpreadsheetContentView(bytes: bytes),
       FileContentKind.unsupported => UnsupportedContentView(file: file),
     };
   }

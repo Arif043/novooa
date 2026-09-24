@@ -1,28 +1,60 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:printing/printing.dart';
+import 'package:pdfx/pdfx.dart';
 
-/// Renders PDF bytes with built-in page navigation and zoom.
+/// Renders PDF bytes with built-in page navigation and pinch-to-zoom.
 ///
-/// Wraps the `printing` package's [PdfPreview], hiding the print/share/page
-/// format actions we don't need inside this internal viewer.
-class PdfContentView extends StatelessWidget {
+/// Wraps `pdfx`'s [PdfViewPinch]/[PdfControllerPinch], hiding the
+/// loading/error builders behind app-consistent widgets.
+class PdfContentView extends StatefulWidget {
   const PdfContentView({super.key, required this.bytes});
 
   final Uint8List bytes;
 
   @override
+  State<PdfContentView> createState() => _PdfContentViewState();
+}
+
+class _PdfContentViewState extends State<PdfContentView> {
+  late PdfControllerPinch _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = _controllerFor(widget.bytes);
+  }
+
+  @override
+  void didUpdateWidget(covariant PdfContentView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (identical(oldWidget.bytes, widget.bytes)) return;
+    final previous = _controller;
+    _controller = _controllerFor(widget.bytes);
+    previous.dispose();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  PdfControllerPinch _controllerFor(Uint8List bytes) {
+    return PdfControllerPinch(document: PdfDocument.openData(bytes));
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PdfPreview(
-      build: (format) async => bytes,
-      useActions: false,
-      canChangePageFormat: false,
-      canChangeOrientation: false,
-      canDebug: false,
-      loadingWidget: const Center(child: CircularProgressIndicator()),
-      onError: (context, error) => Center(
-        child: Text('PDF konnte nicht angezeigt werden: $error'),
+    return PdfViewPinch(
+      controller: _controller,
+      builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
+        options: const DefaultBuilderOptions(),
+        documentLoaderBuilder: (context) =>
+            const Center(child: CircularProgressIndicator()),
+        errorBuilder: (context, error) => Center(
+          child: Text('PDF konnte nicht angezeigt werden: $error'),
+        ),
       ),
     );
   }
