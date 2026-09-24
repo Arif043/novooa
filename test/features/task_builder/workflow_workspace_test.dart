@@ -71,8 +71,14 @@ void main() {
       ),
       hasLength(1),
     );
-    expect(layout.links.where((link) => link.label == 'Ja'), hasLength(1));
-    expect(layout.links.where((link) => link.label == 'Nein'), hasLength(1));
+    expect(
+      layout.links.where((link) => link.labels.contains('Ja')),
+      hasLength(1),
+    );
+    expect(
+      layout.links.where((link) => link.labels.contains('Nein')),
+      hasLength(1),
+    );
     expect(
       layout.rectangles['decision']!.top,
       greaterThan(layout.rectangles['text']!.bottom),
@@ -91,6 +97,155 @@ void main() {
       const NodeId('text'),
     );
   });
+
+  test(
+    'zeigt den Referenznamen als Chip auf dem Ausgangspfeil eines Bausteins',
+    () {
+      expect(
+        WorkflowCanvasLayout(_task.graph).links
+            .firstWhere((link) => link.from == 'text' && link.to == 'decision')
+            .labels,
+        ['text'],
+      );
+      const withoutReferenceName = WorkflowNode(
+        id: NodeId('anon'),
+        title: '',
+        description: '',
+        config: StringInputNodeConfig(value: ''),
+      );
+      const successor = WorkflowNode(
+        id: NodeId('next'),
+        title: '',
+        description: '',
+        config: StringInputNodeConfig(value: ''),
+      );
+      final plainLayout = WorkflowCanvasLayout(
+        const WorkflowGraph(
+          nodes: [withoutReferenceName, successor],
+          edges: [WorkflowEdge(from: NodeId('anon'), to: NodeId('next'))],
+        ),
+      );
+      expect(
+        plainLayout.links
+            .firstWhere((link) => link.from == 'anon' && link.to == 'next')
+            .labels,
+        isEmpty,
+      );
+      const withConditionLabel = WorkflowNode(
+        id: NodeId('branching'),
+        title: '',
+        description: '',
+        referenceName: 'branching',
+        config: StringInputNodeConfig(value: ''),
+      );
+      final overriddenLayout = WorkflowCanvasLayout(
+        WorkflowGraph(
+          nodes: const [withConditionLabel, successor],
+          edges: const [
+            WorkflowEdge(
+              from: NodeId('branching'),
+              to: NodeId('next'),
+              conditionLabel: 'Ja',
+            ),
+          ],
+        ),
+      );
+      expect(
+        overriddenLayout.links
+            .firstWhere(
+              (link) => link.from == 'branching' && link.to == 'next',
+            )
+            .labels,
+        ['Ja'],
+      );
+    },
+  );
+
+  test(
+    'zeigt für strukturierte Prompt-Ausgaben einen Chip pro Feld',
+    () {
+      const promptNode = WorkflowNode(
+        id: NodeId('prompt2'),
+        title: '',
+        description: '',
+        referenceName: 'prompt2',
+        config: PromptNodeConfig(
+          instruction: '',
+          outputType: PromptOutputType.structured,
+          choices: [],
+          structuredFields: [
+            StructuredOutputField(name: 'Name', description: ''),
+            StructuredOutputField(name: 'Alter', description: ''),
+          ],
+        ),
+      );
+      const successor = WorkflowNode(
+        id: NodeId('next'),
+        title: '',
+        description: '',
+        config: StringInputNodeConfig(value: ''),
+      );
+      final layout = WorkflowCanvasLayout(
+        const WorkflowGraph(
+          nodes: [promptNode, successor],
+          edges: [WorkflowEdge(from: NodeId('prompt2'), to: NodeId('next'))],
+        ),
+      );
+      expect(
+        layout.links
+            .firstWhere((link) => link.from == 'prompt2' && link.to == 'next')
+            .labels,
+        ['Name', 'Alter'],
+      );
+    },
+  );
+
+  test(
+    'verlängert den Pfeil, je mehr Chips darauf gestapelt werden',
+    () {
+      double gapFor(List<String> fieldNames) {
+        final promptNode = WorkflowNode(
+          id: const NodeId('prompt'),
+          title: '',
+          description: '',
+          referenceName: 'prompt',
+          config: PromptNodeConfig(
+            instruction: '',
+            outputType: PromptOutputType.structured,
+            choices: const [],
+            structuredFields: fieldNames.isEmpty
+                ? const [StructuredOutputField(name: '', description: '')]
+                : [
+                    for (final name in fieldNames)
+                      StructuredOutputField(name: name, description: ''),
+                  ],
+          ),
+        );
+        const successor = WorkflowNode(
+          id: NodeId('next'),
+          title: '',
+          description: '',
+          config: StringInputNodeConfig(value: ''),
+        );
+        final layout = WorkflowCanvasLayout(
+          WorkflowGraph(
+            nodes: [promptNode, successor],
+            edges: const [
+              WorkflowEdge(from: NodeId('prompt'), to: NodeId('next')),
+            ],
+          ),
+        );
+        return layout.rectangles['next']!.top -
+            layout.rectangles['prompt']!.bottom;
+      }
+
+      final oneLabelGap = gapFor([]);
+      final twoLabelGap = gapFor(['Name', 'Alter']);
+      final threeLabelGap = gapFor(['Name', 'Alter', 'Beruf']);
+      expect(twoLabelGap, greaterThan(oneLabelGap));
+      expect(threeLabelGap, greaterThan(twoLabelGap));
+    },
+  );
 
   test(
     'every branch ends with an insertion and continuation follows the longest nested branch',

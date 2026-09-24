@@ -29,10 +29,20 @@ class CanvasEntry {
 }
 
 class CanvasLink {
-  const CanvasLink(this.from, this.to, [this.label, this.isReturn = false]);
+  const CanvasLink(
+    this.from,
+    this.to, [
+    this.labels = const [],
+    this.isReturn = false,
+  ]);
   final String from;
   final String to;
-  final String? label;
+
+  /// Chip-Texte auf dem Pfeil — normalerweise höchstens einer (Bedingungs-
+  /// Label wie "Ja"/"Nein" oder der Referenzname des Zielbausteins), bei
+  /// mehreren fachlichen Ausgabewerten eines Bausteins (z.B. strukturierte
+  /// Prompt-Ausgabe mit mehreren Feldern) aber auch mehrere.
+  final List<String> labels;
   final bool isReturn;
 }
 
@@ -47,6 +57,13 @@ class WorkflowCanvasLayout {
 
   static const cardWidth = 340.0;
   static const cardHeight = 120.0;
+  static const _baseRowGap = 100.0;
+
+  /// Zusätzlicher Platzbedarf pro weiterem, untereinander gestapeltem Chip
+  /// auf einem Pfeil (siehe [WorkflowEdgesPainter._paintLabels]) — grobe
+  /// Schätzung aus Chip-Höhe und -Abstand, da das Layout selbst keine
+  /// Textmetriken kennt.
+  static const _labelStackHeight = 34.0;
   final double nodeHeight;
   final entries = <String, CanvasEntry>{};
   final links = <CanvasLink>[];
@@ -63,7 +80,7 @@ class WorkflowCanvasLayout {
     if (graph.nodes.isEmpty) {
       final id = '@empty:${parent ?? 'main'}:${insertion.branchId ?? ''}';
       entries[id] = CanvasEntry(id, null, insertion, peers);
-      if (parent != null) links.add(CanvasLink(parent, id, label));
+      if (parent != null) links.add(CanvasLink(parent, id, _labelList(label)));
       return [id];
     }
     for (final node in graph.nodes) {
@@ -80,11 +97,14 @@ class WorkflowCanvasLayout {
     }
     for (final edge in graph.edges) {
       if (peers.contains(edge.from) && peers.contains(edge.to)) {
+        final fromNode = graph.nodeOrNull(edge.from)!;
         links.add(
           CanvasLink(
-            _exitId(graph.nodeOrNull(edge.from)!),
+            _exitId(fromNode),
             edge.to.value,
-            edge.conditionLabel,
+            edge.conditionLabel != null
+                ? [edge.conditionLabel!]
+                : _outputLabels(fromNode),
           ),
         );
       }
@@ -94,7 +114,7 @@ class WorkflowCanvasLayout {
         (node) => !graph.edges.any((edge) => edge.to == node.id),
       );
       for (final root in roots) {
-        links.add(CanvasLink(parent, root.id.value, label));
+        links.add(CanvasLink(parent, root.id.value, _labelList(label)));
       }
     }
     for (final node in graph.nodes) {
@@ -138,7 +158,7 @@ class WorkflowCanvasLayout {
           ),
         );
         for (final end in branchEnds.isEmpty ? [node.id.value] : branchEnds) {
-          links.add(CanvasLink(end, id, null, true));
+          links.add(CanvasLink(end, id, const [], true));
         }
       }
     }
@@ -172,6 +192,28 @@ class WorkflowCanvasLayout {
     _ => node.id.value,
   };
 
+  /// Fachliche Workflow-Ausgabewerte eines Bausteins als Chip-Texte auf
+  /// seinem Ausgangspfeil — analog zu den "Ja"/"Nein"-Chips verzweigender
+  /// Primitives. Die meisten Bausteine haben genau einen, namenlosen
+  /// Ausgabewert (Chip = eigener Referenzname); ein Prompt-Baustein mit
+  /// strukturierter Ausgabe hat dagegen einen benannten Ausgabewert pro
+  /// Feld, jeweils als eigener Chip.
+  List<String> _outputLabels(WorkflowNode node) {
+    if (node.config case PromptNodeConfig(
+      outputType: PromptOutputType.structured,
+      :final structuredFields,
+    )) {
+      final fieldNames = structuredFields
+          .map((field) => field.name.trim())
+          .where((name) => name.isNotEmpty)
+          .toList(growable: false);
+      if (fieldNames.isNotEmpty) return fieldNames;
+    }
+    return _labelList(node.referenceName.isEmpty ? null : node.referenceName);
+  }
+
+  List<String> _labelList(String? label) => label == null ? const [] : [label];
+
   void _arrange() {
     final remaining = entries.keys.toSet();
     final levels = <String, int>{};
@@ -199,6 +241,27 @@ class WorkflowCanvasLayout {
     _arrangeLanes(levels);
   }
 
+  /// Vertikaler Abstand nach der Reihe [level] — wächst mit der Anzahl
+  /// untereinander gestapelter Chips auf einem aus dieser Reihe
+  /// herausführenden Pfeil, damit die Pfeillinie sichtbar bleibt statt vom
+  /// Chip-Stapel verdeckt zu werden.
+  double _rowGap(int level, Map<String, int> levels) {
+    var maxLabelCount = 1;
+    for (final link in links) {
+      if (link.isReturn || link.labels.length <= maxLabelCount) continue;
+      final fromLevel = levels[link.from];
+      final toLevel = levels[link.to];
+      if (fromLevel == null ||
+          fromLevel != level ||
+          toLevel == null ||
+          toLevel <= fromLevel) {
+        continue;
+      }
+      maxLabelCount = link.labels.length;
+    }
+    return _baseRowGap + (maxLabelCount - 1) * _labelStackHeight;
+  }
+
   void _arrangeLanes(Map<String, int> levels) {
     double heightOf(String id) =>
         entries[id]!.canInsert ? nodeHeight : nodeHeight / cardHeight * 32;
@@ -213,7 +276,7 @@ class WorkflowCanvasLayout {
     var top = 90.0;
     for (final level in rowHeights.keys.toList()..sort()) {
       rowTops[level] = top;
-      top += rowHeights[level]! + 100;
+      top += rowHeights[level]! + _rowGap(level, levels);
     }
     final successors = <String, List<String>>{};
     final continuations = <String, String>{};

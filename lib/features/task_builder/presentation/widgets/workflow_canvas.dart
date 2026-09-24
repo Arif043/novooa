@@ -466,7 +466,7 @@ class WorkflowEdgesPainter extends CustomPainter {
       if (from == null || to == null) continue;
       final start = from.bottomCenter;
       final end = to.topCenter;
-      final color = edge.label == null
+      final color = edge.labels.isEmpty
           ? colors.onSurfaceVariant.withValues(alpha: .6)
           : colors.primary;
       final paint = Paint()
@@ -513,31 +513,61 @@ class WorkflowEdgesPainter extends CustomPainter {
           ..lineTo(end.dx + 5, end.dy - 7),
         paint,
       );
-      if (edge.label case final String label when label.isNotEmpty) {
-        final text = TextPainter(
-          text: TextSpan(
-            text: label,
-            style: labelStyle.copyWith(
-              color: colors.onSurface,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout(maxWidth: 240);
-        final center = Offset((start.dx + end.dx) / 2, middle);
-        final rect = Rect.fromCenter(
-          center: center,
-          width: text.width + 24,
-          height: text.height + 12,
-        );
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(20)),
-          Paint()..color = colors.surfaceContainerHighest,
-        );
-        text.paint(canvas, Offset(rect.left + 12, rect.top + 6));
-      }
+      _paintLabels(
+        canvas,
+        edge.labels,
+        Offset((start.dx + end.dx) / 2, middle),
+      );
     }
+  }
+
+  /// Zeichnet die Chips eines Pfeils als zentrierte, vertikale Reihe —
+  /// üblicherweise genau einer (Bedingungs-Label oder Referenzname), bei
+  /// mehreren fachlichen Ausgabewerten (z.B. strukturierte Prompt-Ausgabe)
+  /// aber mehrere untereinander.
+  void _paintLabels(Canvas canvas, List<String> labels, Offset center) {
+    final painters = [
+      for (final label in labels)
+        if (label.isNotEmpty) _labelPainter(label),
+    ];
+    if (painters.isEmpty) return;
+    const gap = 14.0;
+    final heights = [for (final text in painters) text.height + 12];
+    final totalHeight =
+        heights.fold(0.0, (sum, height) => sum + height) +
+        gap * (painters.length - 1);
+    var top = center.dy - totalHeight / 2;
+    for (var i = 0; i < painters.length; i++) {
+      final text = painters[i];
+      final width = text.width + 24;
+      final rect = Rect.fromLTWH(
+        center.dx - width / 2,
+        top,
+        width,
+        heights[i],
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, const Radius.circular(20)),
+        Paint()..color = colors.surfaceContainerHighest,
+      );
+      text.paint(canvas, Offset(rect.left + 12, rect.top + 6));
+      top += heights[i] + gap;
+    }
+  }
+
+  TextPainter _labelPainter(String label) {
+    return TextPainter(
+        text: TextSpan(
+          text: label,
+          style: labelStyle.copyWith(
+            color: colors.onSurface,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )
+      ..layout(maxWidth: 240);
   }
 
   @override
