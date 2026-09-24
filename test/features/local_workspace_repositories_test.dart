@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/core/network/workspace_api_client.dart';
+import 'package:syscat2/core/network/workspace_realtime_channel.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/files/domain/entities/upload_file_input.dart';
 import 'package:syscat2/features/files/infrastructure/repositories/local_team_file_repository.dart';
@@ -10,10 +11,20 @@ import 'package:syscat2/features/knowledge_base/domain/entities/knowledge_note_d
 import 'package:syscat2/features/knowledge_base/infrastructure/repositories/local_knowledge_base_repository.dart';
 import 'package:syscat2/features/schedule/infrastructure/repositories/local_task_trigger_repository.dart';
 
+// `watchWorkspaceChannel` lädt beim ersten Listener sofort per `load()` —
+// unabhängig davon, ob der Realtime-Kanal erfolgreich verbindet. Für diese
+// Mapping-Tests reicht daher ein Kanal auf eine unerreichbare Adresse, mit
+// einem eigenen, nicht-aufzeichnenden Client für den Ticket-Abruf — sonst
+// würde dessen `POST /v1/realtime/ticket` sowohl die `lastPostPath`-
+// Aufzeichnung als auch den strikten Endpunkt-`switch` von `_LocalClient`
+// durcheinanderbringen.
+WorkspaceRealtimeChannel _fakeChannel() =>
+    WorkspaceRealtimeChannel(Uri.parse('http://127.0.0.1:0'), _NoopClient());
+
 void main() {
   test('loads and saves local knowledge notes', () async {
     final client = _LocalClient();
-    final repository = LocalKnowledgeBaseRepository(client);
+    final repository = LocalKnowledgeBaseRepository(client, _fakeChannel());
 
     final notes = await repository.watchNotes(const TeamId('team-1')).first;
     final noteOrFailure = await repository.createNote(
@@ -35,6 +46,7 @@ void main() {
   test('maps local task triggers', () async {
     final triggers = await LocalTaskTriggerRepository(
       _LocalClient(),
+      _fakeChannel(),
     ).watchTriggers().first;
 
     expect(triggers.single.taskTitle, 'Tägliche Aufgabe');
@@ -43,7 +55,7 @@ void main() {
 
   test('uploads and downloads local file versions', () async {
     final client = _LocalClient();
-    final repository = LocalTeamFileRepository(client);
+    final repository = LocalTeamFileRepository(client, _fakeChannel());
     final fileOrFailure = await repository.uploadFile(
       teamId: const TeamId('team-1'),
       ownerUid: 'user-1',
@@ -174,4 +186,24 @@ class _LocalClient extends WorkspaceApiClient {
     'sizeBytes': 5,
     'createdAt': '2026-09-08T10:00:00Z',
   };
+}
+
+class _NoopClient extends WorkspaceApiClient {
+  @override
+  Future<Map<String, Object?>> delete(String path) async => const {};
+
+  @override
+  Future<Map<String, Object?>> get(String path) async => const {};
+
+  @override
+  Future<Map<String, Object?>> post(
+    String path,
+    Map<String, Object?> body,
+  ) async => const {};
+
+  @override
+  Future<Map<String, Object?>> put(
+    String path,
+    Map<String, Object?> body,
+  ) async => const {};
 }

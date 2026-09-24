@@ -1,13 +1,18 @@
+import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
+
 export type PollingTaskTriggerWorkerOptions = {
   pollIntervalMs?: number;
   canProcess?: () => boolean;
   onFailure?: (error: unknown) => void;
+  /** Optional, damit bestehende Tests ohne Realtime-Infrastruktur auskommen. */
+  notifier?: LocalRuntimeRealtimeNotifier;
 };
 
 export class PollingTaskTriggerWorker {
   private readonly pollIntervalMs: number;
   private readonly canProcess: () => boolean;
   private readonly onFailure: (error: unknown) => void;
+  private readonly notifier: LocalRuntimeRealtimeNotifier | undefined;
   private processing: Promise<void> | undefined;
   private timer: NodeJS.Timeout | undefined;
 
@@ -18,6 +23,7 @@ export class PollingTaskTriggerWorker {
     this.pollIntervalMs = options.pollIntervalMs ?? 30_000;
     this.canProcess = options.canProcess ?? (() => true);
     this.onFailure = options.onFailure ?? (() => undefined);
+    this.notifier = options.notifier;
   }
 
   start(): void {
@@ -30,6 +36,8 @@ export class PollingTaskTriggerWorker {
     if (this.processing !== undefined) return this.processing;
     this.processing = this.processDueTriggers().finally(() => {
       this.processing = undefined;
+      this.notifier?.publish("task-triggers");
+      this.notifier?.publish("task-runs");
     });
     return this.processing;
   }

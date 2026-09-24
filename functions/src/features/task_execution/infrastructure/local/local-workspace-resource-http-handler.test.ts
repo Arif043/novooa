@@ -8,11 +8,12 @@ import {LocalFileResourceHttpHandler} from "../../../files/infrastructure/local/
 import {LocalKnowledgeNoteHttpHandler} from "../../../knowledge_base/infrastructure/local/local-knowledge-note-http-handler.js";
 import {LocalTaskTriggerHttpHandler} from "../../../scheduling/infrastructure/local/local-task-trigger-http-handler.js";
 import {SqliteLocalSqlDatabase} from "../../../../shared/local/sqlite-local-sql-database.js";
+import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 
 test("persists local knowledge notes and task triggers", async () => {
   const database = await databaseForResources();
-  const notes = new LocalKnowledgeNoteHttpHandler(database, "team-1");
-  const triggers = new LocalTaskTriggerHttpHandler(database, "team-1", "user-1");
+  const notes = new LocalKnowledgeNoteHttpHandler(database, "team-1", new LocalRuntimeRealtimeNotifier());
+  const triggers = new LocalTaskTriggerHttpHandler(database, "team-1", "user-1", new LocalRuntimeRealtimeNotifier());
 
   const createdNote = await notes.handle({
     method: "POST", url: "/v1/knowledge-notes",
@@ -45,6 +46,7 @@ test("stores, versions, and reads local files", async () => {
     new LocalTeamFileStore(database, root),
     "team-1",
     "user-1",
+    new LocalRuntimeRealtimeNotifier(),
   );
 
   try {

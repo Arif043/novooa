@@ -1,15 +1,18 @@
 import '../../../../core/entities/unique_id.dart';
 import '../../../../core/network/workspace_api_client.dart';
+import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../domain/entities/task_activity.dart';
 import '../../domain/repositories/task_activity_repository.dart';
 
 class LocalTaskActivityRepository implements TaskActivityRepository {
-  const LocalTaskActivityRepository(this._client);
+  const LocalTaskActivityRepository(this._client, this._channel);
 
   final WorkspaceApiClient _client;
+  final WorkspaceRealtimeChannel _channel;
 
   @override
-  Stream<List<TaskActivity>> watchRecent() => pollWorkspace(_loadActivities);
+  Stream<List<TaskActivity>> watchRecent() =>
+      watchWorkspaceChannel('task-activities', _loadActivities, _channel);
 
   @override
   Future<void> add(TaskActivity activity) {

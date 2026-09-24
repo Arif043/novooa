@@ -13,11 +13,13 @@ import {
   type LocalRuntimeRequestHandler,
   type LocalRuntimeResponse,
 } from "../../../../shared/local/local-runtime-http-server.js";
+import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 
 export class LocalLanguageModelHttpHandler implements LocalRuntimeRequestHandler {
   constructor(
     private readonly store: LanguageModelConfigurationStore,
     private readonly teamId: string,
+    private readonly notifier: LocalRuntimeRealtimeNotifier,
     private readonly discovery: LanguageModelDiscovery = new LocalLanguageModelDiscovery(),
   ) {}
 
@@ -30,6 +32,7 @@ export class LocalLanguageModelHttpHandler implements LocalRuntimeRequestHandler
     if (request.method !== "POST") return null;
     try {
       const model = await this.store.save(inputFrom(request.body, this.teamId));
+      this.notifier.publish("language-models");
       return {body: model, statusCode: 201};
     } catch (error) {
       if (error instanceof LocalLanguageModelRequestError) {
@@ -48,6 +51,7 @@ export class LocalLanguageModelHttpHandler implements LocalRuntimeRequestHandler
         apiKey: connection.apiKey,
       });
       const saved = await this.store.saveConnection({...connection, models});
+      this.notifier.publish("language-models");
       return {body: {items: saved}, statusCode: 201};
     } catch (error) {
       const message = error instanceof Error ? error.message : "Sprachmodell-Verbindung konnte nicht hergestellt werden.";

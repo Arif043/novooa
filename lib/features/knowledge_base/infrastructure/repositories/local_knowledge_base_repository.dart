@@ -1,6 +1,7 @@
 import 'package:multiple_result/multiple_result.dart';
 
 import '../../../../core/network/workspace_api_client.dart';
+import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../../files/domain/entities/team_id.dart';
 import '../../domain/entities/knowledge_failure.dart';
 import '../../domain/entities/knowledge_note.dart';
@@ -8,9 +9,10 @@ import '../../domain/entities/knowledge_note_draft.dart';
 import '../../domain/repositories/knowledge_base_repository.dart';
 
 class LocalKnowledgeBaseRepository implements KnowledgeBaseRepository {
-  const LocalKnowledgeBaseRepository(this._client);
+  const LocalKnowledgeBaseRepository(this._client, this._channel);
 
   final WorkspaceApiClient _client;
+  final WorkspaceRealtimeChannel _channel;
 
   @override
   Future<Result<KnowledgeNote, KnowledgeFailure>> createNote({
@@ -59,7 +61,7 @@ class LocalKnowledgeBaseRepository implements KnowledgeBaseRepository {
 
   @override
   Stream<List<KnowledgeNote>> watchNotes(TeamId teamId) =>
-      pollWorkspace(_loadNotes);
+      watchWorkspaceChannel('knowledge-notes', _loadNotes, _channel);
 
   Future<List<KnowledgeNote>> _loadNotes() async {
     final response = await _client.get('/v1/knowledge-notes');

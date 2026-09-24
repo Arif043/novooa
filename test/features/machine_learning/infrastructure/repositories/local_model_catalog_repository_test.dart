@@ -1,12 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/core/network/workspace_api_client.dart';
+import 'package:syscat2/core/network/workspace_realtime_channel.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_import.dart';
 import 'package:syscat2/features/machine_learning/infrastructure/repositories/local_model_catalog_repository.dart';
 
 void main() {
   test('maps local catalog entries and imports an ONNX artifact', () async {
     final client = _Client();
-    final repository = LocalModelCatalogRepository(client);
+    // Ein eigener, nicht-aufzeichnender Client für den Ticket-Abruf — sonst
+    // würde dessen `POST /v1/realtime/ticket` die `postPath`/`postBody`-
+    // Aufzeichnung von `_Client` durcheinanderbringen.
+    final channel = WorkspaceRealtimeChannel(
+      Uri.parse('http://127.0.0.1:0'),
+      _NoopClient(),
+    );
+    final repository = LocalModelCatalogRepository(client, channel);
 
     final entries = await repository.watchEntries().first;
     await repository.importEntry(
@@ -119,6 +127,26 @@ class _Client extends WorkspaceApiClient {
     uploadedBytes = await body.expand((chunk) => chunk).toList();
     return const {};
   }
+
+  @override
+  Future<Map<String, Object?>> put(
+    String path,
+    Map<String, Object?> body,
+  ) async => const {};
+}
+
+class _NoopClient extends WorkspaceApiClient {
+  @override
+  Future<Map<String, Object?>> delete(String path) async => const {};
+
+  @override
+  Future<Map<String, Object?>> get(String path) async => const {};
+
+  @override
+  Future<Map<String, Object?>> post(
+    String path,
+    Map<String, Object?> body,
+  ) async => const {};
 
   @override
   Future<Map<String, Object?>> put(

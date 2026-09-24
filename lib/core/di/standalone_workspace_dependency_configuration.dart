@@ -32,6 +32,7 @@ import '../../features/teams/domain/repositories/team_repository.dart';
 import '../../features/teams/domain/usecases/get_current_team_id.dart';
 import '../../features/teams/infrastructure/repositories/local_workspace_team_repository.dart';
 import '../network/workspace_api_client.dart';
+import '../network/workspace_realtime_channel.dart';
 
 void configureStandaloneWorkspaceDependencies(GetIt locator) {
   locator
@@ -42,16 +43,25 @@ void configureStandaloneWorkspaceDependencies(GetIt locator) {
       ),
     )
     ..registerLazySingleton<TeamFileRepository>(
-      () => LocalTeamFileRepository(locator<WorkspaceApiClient>()),
+      () => LocalTeamFileRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceRealtimeChannel>(),
+      ),
     )
     ..registerLazySingleton<FileVersionRepository>(
       () => locator<TeamFileRepository>() as FileVersionRepository,
     )
     ..registerLazySingleton<KnowledgeBaseRepository>(
-      () => LocalKnowledgeBaseRepository(locator<WorkspaceApiClient>()),
+      () => LocalKnowledgeBaseRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceRealtimeChannel>(),
+      ),
     )
     ..registerLazySingleton<TaskTriggerRepository>(
-      () => LocalTaskTriggerRepository(locator<WorkspaceApiClient>()),
+      () => LocalTaskTriggerRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceRealtimeChannel>(),
+      ),
     )
     ..registerLazySingleton(() => GetCurrentTeamId(locator<TeamRepository>()))
     ..registerLazySingleton(() => WatchTeamFiles(locator<TeamFileRepository>()))

@@ -13,7 +13,7 @@
     "local-runtime:prepare": "npm run build && node lib/shared/local/local-runtime-master-key-setup-cli.js",
     "local-runtime:docker:down": "docker compose -f ../docker-compose.local.yaml down",
     "local-runtime:docker:up": "docker compose -f ../docker-compose.local.yaml up --build --detach",
-    "local-runtime:docker:wait-healthy": "i=0; until curl -sfk https://localhost/healthz >/dev/null; do i=$((i+1)); if [ $i -ge 12 ]; then echo 'Runtime healthz nach 60s nicht erreichbar.' >&2; exit 1; fi; sleep 5; done; echo 'Runtime laeuft: https://localhost (ueber Caddy, selbstsigniert)'",
+    "local-runtime:docker:wait-healthy": "i=0; until curl -sf http://localhost:8090/healthz >/dev/null; do i=$((i+1)); if [ $i -ge 12 ]; then echo 'Runtime healthz nach 60s nicht erreichbar.' >&2; exit 1; fi; sleep 5; done; echo 'Runtime laeuft: http://localhost:8090'",
     "local-runtime:docker:deploy": "npm run local-runtime:docker:down && npm run local-runtime:docker:up && npm run local-runtime:docker:wait-healthy",
     "schedule:run:local": "curl -i -X POST -H \"X-CloudScheduler: true\" http://127.0.0.1:5001/syscat-90bff/europe-west3/runDueTaskTriggersWorker-0",
     "schedule:watch:local": "while true; do npm run schedule:run:local; sleep 60; done",
@@ -37,9 +37,11 @@
     "genkit": "^1.37.0",
     "google-auth-library": "^10.9.1",
     "twilio": "^6.0.2",
-    "undici": "^7.29.0"
+    "undici": "^7.29.0",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
+    "@types/ws": "^8.18.1",
     "firebase-functions-test": "^3.4.1",
     "typescript": "^6.0.3"
   },

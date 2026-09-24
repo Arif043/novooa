@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/core/network/workspace_api_client.dart';
+import 'package:syscat2/core/network/workspace_realtime_channel.dart';
 import 'package:syscat2/features/task_builder/infrastructure/datasources/local_http_task_runner_datasource.dart';
 import 'package:syscat2/features/task_builder/infrastructure/repositories/local_task_repository.dart';
 
@@ -17,6 +18,7 @@ void main() {
     final repository = LocalTaskRepository(
       client,
       LocalHttpTaskRunnerDatasource(client),
+      WorkspaceRealtimeChannel(Uri.parse('http://127.0.0.1:0'), client),
     );
 
     final tasks = await repository.watchTasks().first;

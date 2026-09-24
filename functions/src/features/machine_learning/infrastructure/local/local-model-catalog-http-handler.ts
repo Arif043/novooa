@@ -13,6 +13,7 @@ import {LocalModelArtifactPublisher} from "./local-model-artifact-publisher.js";
 import {LocalModelArtifactUploadStore, type StagedModelArtifact} from "./local-model-artifact-upload-store.js";
 import {type ModelContractValidator} from "./python-model-contract-validator.js";
 import {systemModelEntry, systemModelManifestFromUnknown} from "../cli/system-model-manifest.js";
+import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 
 type PendingModelImport = {
   manifest: ReturnType<typeof systemModelManifestFromUnknown>;
@@ -26,6 +27,7 @@ export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler,
     private readonly teamId: string,
     private readonly contractValidator: ModelContractValidator,
     private readonly logger: ApplicationLogger,
+    private readonly notifier: LocalRuntimeRealtimeNotifier,
   ) {
     this.installer = new InstallTeamModel(artifactPublisher, catalog);
   }
@@ -77,6 +79,7 @@ export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler,
       });
       this.imports.delete(importId);
       this.logger.info("local_model_catalog.installed", {modelId: installed.id, teamId: this.teamId});
+      this.notifier.publish("model-catalog");
       return {body: installed, statusCode: 201};
     } catch (error) {
       return this.failure("upload_failed", error);
@@ -95,6 +98,7 @@ export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler,
       const removed = await this.catalog.removeTeamEntry(this.teamId, modelId);
       if (!removed) return {body: {error: "Der lokale Katalogeintrag wurde nicht gefunden."}, statusCode: 404};
       this.logger.info("local_model_catalog.removed", {modelId, teamId: this.teamId});
+      this.notifier.publish("model-catalog");
       return {body: {}, statusCode: 204};
     } catch (error) {
       return this.failure("remove_failed", error);

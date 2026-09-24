@@ -1,16 +1,29 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/core/network/workspace_api_client.dart';
+import 'package:syscat2/core/network/workspace_realtime_channel.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_connection_draft.dart';
 import 'package:syscat2/features/language_models/infrastructure/repositories/local_language_model_repository.dart';
+
+// `watchWorkspaceChannel` lädt beim ersten Listener sofort per `load()` —
+// unabhängig davon, ob der Realtime-Kanal erfolgreich verbindet. Für diese
+// Mapping-Tests reicht daher ein Kanal auf eine unerreichbare Adresse, mit
+// einem eigenen, nicht-aufzeichnenden Client für den Ticket-Abruf — sonst
+// würde dessen `POST /v1/realtime/ticket` die `postPath`/`postBody`-
+// Aufzeichnung der eigentlichen `_RecordingClient`-Testdouble überschreiben.
+WorkspaceRealtimeChannel _fakeChannel() =>
+    WorkspaceRealtimeChannel(Uri.parse('http://127.0.0.1:0'), _NoopClient());
 
 void main() {
   test(
     'saves and maps local language models through the runtime API',
     () async {
       final client = _RecordingClient();
-      final repository = LocalLanguageModelRepository(client);
+      final repository = LocalLanguageModelRepository(
+        client,
+        _fakeChannel(),
+      );
 
       await repository.saveLanguageModel(
         const LanguageModelDraft(
@@ -35,7 +48,10 @@ void main() {
 
   test('connects a provider without selecting a model', () async {
     final client = _RecordingClient();
-    final repository = LocalLanguageModelRepository(client);
+    final repository = LocalLanguageModelRepository(
+      client,
+      _fakeChannel(),
+    );
     await repository.connectLanguageModels(
       const LanguageModelConnectionDraft(
         provider: LanguageModelProvider.googleAi,
@@ -51,7 +67,10 @@ void main() {
 
   test('sends the fixed Mistral endpoint with the customer API key', () async {
     final client = _RecordingClient();
-    final repository = LocalLanguageModelRepository(client);
+    final repository = LocalLanguageModelRepository(
+      client,
+      _fakeChannel(),
+    );
 
     await repository.connectLanguageModels(
       const LanguageModelConnectionDraft(
@@ -99,6 +118,26 @@ class _RecordingClient extends WorkspaceApiClient {
     postBody = body;
     return const {};
   }
+
+  @override
+  Future<Map<String, Object?>> put(
+    String path,
+    Map<String, Object?> body,
+  ) async => const {};
+}
+
+class _NoopClient extends WorkspaceApiClient {
+  @override
+  Future<Map<String, Object?>> delete(String path) async => const {};
+
+  @override
+  Future<Map<String, Object?>> get(String path) async => const {};
+
+  @override
+  Future<Map<String, Object?>> post(
+    String path,
+    Map<String, Object?> body,
+  ) async => const {};
 
   @override
   Future<Map<String, Object?>> put(

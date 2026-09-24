@@ -1,15 +1,17 @@
 import 'dart:convert';
 
 import 'package:syscat2/core/network/workspace_api_client.dart';
+import 'package:syscat2/core/network/workspace_realtime_channel.dart';
 
 import '../../domain/entities/model_catalog_entry.dart';
 import '../../domain/entities/model_catalog_import.dart';
 import '../../domain/repositories/model_catalog_repository.dart';
 
 class LocalModelCatalogRepository implements ModelCatalogRepository {
-  const LocalModelCatalogRepository(this._client);
+  const LocalModelCatalogRepository(this._client, this._channel);
 
   final WorkspaceApiClient _client;
+  final WorkspaceRealtimeChannel _channel;
 
   @override
   Future<void> importEntry(ModelCatalogImport value) async {
@@ -34,7 +36,7 @@ class LocalModelCatalogRepository implements ModelCatalogRepository {
 
   @override
   Stream<List<ModelCatalogEntry>> watchEntries() {
-    return pollWorkspace(_load);
+    return watchWorkspaceChannel('model-catalog', _load, _channel);
   }
 
   Future<List<ModelCatalogEntry>> _load() async {

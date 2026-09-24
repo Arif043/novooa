@@ -16,12 +16,14 @@ import {
   triggerIdFrom,
   type TriggerRow,
 } from "./local-task-trigger-http-support.js";
+import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 
 export class LocalTaskTriggerHttpHandler implements LocalRuntimeRequestHandler {
   constructor(
     private readonly database: LocalSqlDatabase,
     private readonly teamId: string,
     private readonly userId: string,
+    private readonly notifier: LocalRuntimeRealtimeNotifier,
   ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
@@ -50,6 +52,7 @@ export class LocalTaskTriggerHttpHandler implements LocalRuntimeRequestHandler {
         JSON.stringify(input.config), JSON.stringify(input.eventConfig), JSON.stringify(input.policy),
         input.nextRunAt?.toISOString() ?? null, this.userId,
       ]);
+      this.notifier.publish("task-triggers");
       return this.byId(id, 201);
     } catch (error) {
       return invalidResponse(error);
@@ -59,6 +62,7 @@ export class LocalTaskTriggerHttpHandler implements LocalRuntimeRequestHandler {
   private async setEnabled(id: string, body: unknown): Promise<LocalRuntimeResponse> {
     try {
       await this.database.run(updateEnabledSql(), [enabledFrom(body) ? 1 : 0, this.teamId, id]);
+      this.notifier.publish("task-triggers");
       return this.byId(id, 200);
     } catch (error) {
       return invalidResponse(error);
@@ -67,6 +71,7 @@ export class LocalTaskTriggerHttpHandler implements LocalRuntimeRequestHandler {
 
   private async delete(id: string): Promise<LocalRuntimeResponse> {
     await this.database.run("DELETE FROM task_triggers WHERE team_id = ? AND id = ?", [this.teamId, id]);
+    this.notifier.publish("task-triggers");
     return {body: {}, statusCode: 204};
   }
 

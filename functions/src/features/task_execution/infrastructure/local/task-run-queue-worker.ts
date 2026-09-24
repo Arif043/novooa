@@ -5,12 +5,20 @@ import {
   type LeasedTaskRunJob,
   type SQLiteTaskRunJobStore,
 } from "./sqlite-task-run-job-store.js";
+import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 
 export type TaskRunQueueWorkerOptions = {
   maximumAttempts?: number;
   canProcess?: () => boolean;
   onFailure?: (job: LeasedTaskRunJob, error: unknown) => void;
   onDrainFailure?: (error: unknown) => void;
+  /**
+   * Optional, damit bestehende Tests den Worker ohne Realtime-Infrastruktur
+   * konstruieren können. Ein Run ändert sich nicht nur durch HTTP-Requests
+   * (`/v1/task-runs`), sondern auch hier im Hintergrund — Watch-Clients
+   * müssen also auch von hier benachrichtigt werden.
+   */
+  notifier?: LocalRuntimeRealtimeNotifier;
 };
 
 export class TaskRunQueueWorker {
@@ -18,6 +26,7 @@ export class TaskRunQueueWorker {
   private readonly canProcess: () => boolean;
   private readonly onFailure: (job: LeasedTaskRunJob, error: unknown) => void;
   private readonly onDrainFailure: (error: unknown) => void;
+  private readonly notifier: LocalRuntimeRealtimeNotifier | undefined;
   private started = false;
   private stopping = false;
   private drainRequested = false;
@@ -33,6 +42,7 @@ export class TaskRunQueueWorker {
     this.canProcess = options.canProcess ?? (() => true);
     this.onFailure = options.onFailure ?? (() => undefined);
     this.onDrainFailure = options.onDrainFailure ?? (() => undefined);
+    this.notifier = options.notifier;
   }
 
   start(): void {
@@ -91,6 +101,9 @@ export class TaskRunQueueWorker {
     } catch (error) {
       this.onFailure(job, error);
       await this.jobStore.retryOrFail(job, this.maximumAttempts);
+    } finally {
+      this.notifier?.publish("task-runs");
+      this.notifier?.publish("task-activities");
     }
   }
 

@@ -3,6 +3,8 @@ import {type SignedRuntimeLicense} from "../../features/licensing/domain/entitie
 import {type RuntimeLicenseActivation} from "../../features/licensing/domain/entities/runtime-license-activation.js";
 import {createLocalRuntimeComposition, type LocalRuntimeComposition} from "./local-runtime-composition.js";
 import {type LocalRuntimeRequest, type LocalRuntimeRequestHandler, type LocalRuntimeResponse} from "./local-runtime-http-server.js";
+import {type LocalRuntimeRealtimeGateway} from "./local-runtime-realtime-server.js";
+import {type LocalRuntimeRealtimeSubscriber} from "./local-runtime-realtime-notifier.js";
 import {ensureLocalRuntimeWorkspace, type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
 
@@ -15,7 +17,8 @@ export type LocalRuntimeApplicationOptions = {
   activeLicenseActivation: () => RuntimeLicenseActivation | null;
 };
 
-export class LocalRuntimeApplication implements LocalRuntimeRequestHandler {
+export class LocalRuntimeApplication
+implements LocalRuntimeRequestHandler, LocalRuntimeRealtimeGateway {
   private runtime: LocalRuntimeComposition | undefined;
   private workspace: LocalRuntimeWorkspace | undefined;
 
@@ -51,6 +54,22 @@ export class LocalRuntimeApplication implements LocalRuntimeRequestHandler {
    */
   async handleSetup(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
     return this.runtime?.setupHandler.handle(request) ?? null;
+  }
+
+  /**
+   * Vor der Lizenzaktivierung (kein `this.runtime`) gibt es nichts zu
+   * konsumieren — ein Ticket kann dann per Definition nie gültig sein.
+   */
+  consumeRealtimeTicket(ticket: string): boolean {
+    return this.runtime?.realtimeTicketStore.consume(ticket) ?? false;
+  }
+
+  subscribeRealtime(topic: string, subscriber: LocalRuntimeRealtimeSubscriber): void {
+    this.runtime?.realtimeNotifier.subscribe(topic, subscriber);
+  }
+
+  unsubscribeRealtime(topic: string, subscriber: LocalRuntimeRealtimeSubscriber): void {
+    this.runtime?.realtimeNotifier.unsubscribe(topic, subscriber);
   }
 
   async stop(): Promise<void> {

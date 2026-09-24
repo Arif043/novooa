@@ -3,6 +3,7 @@ import {randomBytes} from "node:crypto";
 import test from "node:test";
 import {CredentialCipher} from "../../../communication/infrastructure/security/credential-cipher.js";
 import {SqliteLocalSqlDatabase} from "../../../../shared/local/sqlite-local-sql-database.js";
+import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "./encrypted-sqlite-language-model-secret-store.js";
 import {LocalLanguageModelHttpHandler} from "./local-language-model-http-handler.js";
 import {LocalLanguageModelDiscovery} from "./local-language-model-discovery.js";
@@ -17,6 +18,7 @@ test("connects Mistral with its fixed endpoint and the customer API key", async 
   const handler = new LocalLanguageModelHttpHandler(
     new SQLiteLanguageModelConfigurationStore(database, secrets),
     "team-1",
+    new LocalRuntimeRealtimeNotifier(),
     {discover: async () => [discoveredModel()]},
   );
 

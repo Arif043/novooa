@@ -73,6 +73,7 @@ import '../runtime/runtime_credential_store.dart';
 import '../runtime/runtime_endpoint.dart';
 import '../runtime/runtime_profile.dart';
 import '../network/workspace_api_client.dart';
+import '../network/workspace_realtime_channel.dart';
 import '../routing/app_router.dart';
 import 'standalone_workspace_dependency_configuration.dart';
 
@@ -90,6 +91,13 @@ Future<void> configureStandaloneDependencies(
         return token == null ? null : 'Bearer $token';
       },
     ),
+  );
+  locator.registerLazySingleton<WorkspaceRealtimeChannel>(
+    () => WorkspaceRealtimeChannel(
+      profile.workspaceApiUri,
+      locator<WorkspaceApiClient>(),
+    ),
+    dispose: (channel) => channel.close(),
   );
   locator
     ..registerLazySingleton<AuthRepository>(
@@ -140,25 +148,41 @@ Future<void> configureStandaloneDependencies(
       () => LocalTaskRepository(
         locator<WorkspaceApiClient>(),
         locator<TaskRunnerDatasource>(),
+        locator<WorkspaceRealtimeChannel>(),
       ),
     )
     ..registerLazySingleton<TaskRunRepository>(
-      () => LocalTaskRunRepository(locator<WorkspaceApiClient>()),
+      () => LocalTaskRunRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceRealtimeChannel>(),
+      ),
     )
     ..registerLazySingleton<TaskActivityRepository>(
-      () => LocalTaskActivityRepository(locator<WorkspaceApiClient>()),
+      () => LocalTaskActivityRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceRealtimeChannel>(),
+      ),
     )
     ..registerLazySingleton<DataRepository>(
       () => LocalDataRepository(locator<WorkspaceApiClient>()),
     )
     ..registerLazySingleton<ApplicationLogRepository>(
-      () => LocalApplicationLogRepository(locator<WorkspaceApiClient>()),
+      () => LocalApplicationLogRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceRealtimeChannel>(),
+      ),
     )
     ..registerLazySingleton<LanguageModelRepository>(
-      () => LocalLanguageModelRepository(locator<WorkspaceApiClient>()),
+      () => LocalLanguageModelRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceRealtimeChannel>(),
+      ),
     )
     ..registerLazySingleton<ModelCatalogRepository>(
-      () => LocalModelCatalogRepository(locator<WorkspaceApiClient>()),
+      () => LocalModelCatalogRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceRealtimeChannel>(),
+      ),
     )
     ..registerLazySingleton<LanguageModelConnectionRepository>(
       () =>

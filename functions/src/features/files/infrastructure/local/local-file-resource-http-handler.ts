@@ -6,6 +6,7 @@ import {
 } from "../../../../shared/local/local-runtime-http-server.js";
 import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
 import {type LocalTeamFileStore} from "./local-team-file-store.js";
+import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 import {
   fileByIdSql,
   fileFromRow,
@@ -27,6 +28,7 @@ export class LocalFileResourceHttpHandler implements LocalRuntimeRequestHandler 
     private readonly fileStore: LocalTeamFileStore,
     private readonly teamId: string,
     private readonly userId: string,
+    private readonly notifier: LocalRuntimeRealtimeNotifier,
   ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
@@ -59,6 +61,7 @@ export class LocalFileResourceHttpHandler implements LocalRuntimeRequestHandler 
       await ensureFolder(this.database, this.teamId, input.parentFolderId);
       const id = randomUUID();
       await this.database.run(insertFolderSql(), [id, this.teamId, this.userId, input.name, input.parentFolderId]);
+      this.notifier.publish("folders");
       return this.folderById(id, 201);
     } catch (error) {
       return invalidResponse(error);
@@ -73,6 +76,8 @@ export class LocalFileResourceHttpHandler implements LocalRuntimeRequestHandler 
         teamId: this.teamId, fileName: input.name, contentType: input.contentType,
         content: Buffer.from(input.contentBase64, "base64"), folderId: input.folderId, targetFileId,
       });
+      this.notifier.publish("files");
+      this.notifier.publish(`file-versions:${written.fileId}`);
       return this.fileById(written.fileId, targetFileId === null ? 201 : 200);
     } catch (error) {
       return invalidResponse(error);

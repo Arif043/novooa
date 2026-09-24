@@ -14,13 +14,23 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     this._endpoints,
     this._credentials,
     this._loginClient,
-    this._availability,
-  ) : super(const RuntimeConnectionLoading());
+    this._availability, {
+    Future<void> Function()? onSignedOut,
+  }) : _onSignedOut = onSignedOut ?? _noOp,
+       super(const RuntimeConnectionLoading());
 
   final RuntimeEndpointStore _endpoints;
   final RuntimeCredentialStore _credentials;
   final RuntimeLoginClient _loginClient;
   final RuntimeAvailability _availability;
+
+  /// Schließt die offene Realtime-Verbindung (siehe
+  /// `WorkspaceRealtimeChannel`) — optional, weil diese vor dem allerersten
+  /// Verbindungsaufbau (und damit vor der DI-Konfiguration) noch nicht
+  /// existiert und `RuntimeConnectionGate` sie erst dann bereitstellen kann.
+  final Future<void> Function() _onSignedOut;
+
+  static Future<void> _noOp() async {}
 
   Future<void> initialize(RuntimeEndpoint defaultEndpoint) async {
     try {
@@ -103,12 +113,16 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
   /// aktueller Bildschirm) bleibt unangetastet, da der bereits konfigurierte
   /// `WorkspaceApiClient` seinen Auth-Header ohnehin bei jeder Anfrage neu
   /// aus dem Credential-Store liest (siehe
-  /// `standalone_dependency_configuration.dart`).
+  /// `standalone_dependency_configuration.dart`). Schließt zusätzlich die
+  /// offene Realtime-Verbindung — sonst bliebe ein Socket mit ungültig
+  /// gewordenem Token bestehen und würde bei jedem Reconnect-Versuch erneut
+  /// scheitern (siehe `WorkspaceRealtimeChannel`).
   Future<void> signOut() async {
     final current = state;
     if (current is! RuntimeConnectionReady) return;
     try {
       await _credentials.clearSessionToken(current.endpoint.address);
+      await _onSignedOut();
       emit(RuntimeConnectionNeedsPassword(current.endpoint));
     } on Object catch (error, stackTrace) {
       _reportFailure('signOut', error, stackTrace);

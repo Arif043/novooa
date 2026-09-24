@@ -3,10 +3,11 @@ import test from "node:test";
 import {type TaskWorkflow} from "../../domain/usecases/task-workflow.js";
 import {type ApplicationLogger, type LogData} from "../../../../shared/logging/application-logger.js";
 import {LocalTaskRunHttpHandler} from "./local-task-run-http-handler.js";
+import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 
 test("starts a task run for the local workspace user", async () => {
   const calls: Array<{taskId: string; context: string; uid: string}> = [];
-  const handler = new LocalTaskRunHttpHandler(taskWorkflow(calls), "local-user", new TestLogger());
+  const handler = new LocalTaskRunHttpHandler(taskWorkflow(calls), "local-user", new TestLogger(), new LocalRuntimeRealtimeNotifier());
 
   const response = await handler.handle({
     body: {taskId: "task-1", context: "Morgen"},
@@ -22,7 +23,7 @@ test("starts a task run for the local workspace user", async () => {
 });
 
 test("rejects an invalid local task run request", async () => {
-  const handler = new LocalTaskRunHttpHandler(taskWorkflow([]), "local-user", new TestLogger());
+  const handler = new LocalTaskRunHttpHandler(taskWorkflow([]), "local-user", new TestLogger(), new LocalRuntimeRealtimeNotifier());
 
   const response = await handler.handle({
     body: {context: "Morgen"}, method: "POST", url: "/v1/task-runs",
@@ -40,7 +41,7 @@ test("rejects an invalid local task run request", async () => {
 });
 
 test("reviews a local task run", async () => {
-  const handler = new LocalTaskRunHttpHandler(taskWorkflow([]), "local-user", new TestLogger());
+  const handler = new LocalTaskRunHttpHandler(taskWorkflow([]), "local-user", new TestLogger(), new LocalRuntimeRealtimeNotifier());
 
   const response = await handler.handle({
     body: {decision: "approve", formValues: {}, runId: "run-1"},
@@ -59,7 +60,7 @@ test("logs unexpected task run errors and hides their details", async () => {
   workflow.start = async () => {
     throw new Error("database unavailable");
   };
-  const handler = new LocalTaskRunHttpHandler(workflow, "local-user", logger);
+  const handler = new LocalTaskRunHttpHandler(workflow, "local-user", logger, new LocalRuntimeRealtimeNotifier());
 
   const response = await handler.handle({
     body: {taskId: "task-1"}, method: "POST", url: "/v1/task-runs",

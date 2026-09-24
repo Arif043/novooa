@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'runtime_profile.dart';
+import '../di/service_locator.dart';
+import '../network/workspace_realtime_channel.dart';
 import '../theme/syscat_theme.dart';
 import 'http_runtime_availability.dart';
 import 'runtime_connection_cubit.dart';
@@ -50,6 +52,10 @@ class _RuntimeConnectionGateState extends State<RuntimeConnectionGate> {
       SecureRuntimeCredentialStore(),
       const HttpRuntimeLoginClient(),
       const HttpRuntimeAvailability(),
+      // Erst ab der ersten erfolgreichen Verbindung registriert (siehe
+      // `_startApplication`) — signOut() ist aber ohnehin erst erreichbar,
+      // nachdem die App-Oberfläche (und damit die DI) schon steht.
+      onSignedOut: () => serviceLocator<WorkspaceRealtimeChannel>().close(),
     );
     unawaited(
       _cubit.initialize(

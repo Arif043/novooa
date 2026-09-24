@@ -1,4 +1,5 @@
 import 'package:syscat2/core/network/workspace_api_client.dart';
+import 'package:syscat2/core/network/workspace_realtime_channel.dart';
 
 import '../../../files/domain/entities/team_id.dart';
 import '../../domain/entities/language_model.dart';
@@ -9,9 +10,10 @@ import '../../domain/repositories/language_model_repository.dart';
 
 class LocalLanguageModelRepository
     implements LanguageModelRepository, LanguageModelConnectionRepository {
-  const LocalLanguageModelRepository(this._client);
+  const LocalLanguageModelRepository(this._client, this._channel);
 
   final WorkspaceApiClient _client;
+  final WorkspaceRealtimeChannel _channel;
 
   @override
   Future<void> connectLanguageModels(LanguageModelConnectionDraft draft) async {
@@ -38,7 +40,7 @@ class LocalLanguageModelRepository
 
   @override
   Stream<List<LanguageModel>> watchLanguageModels(TeamId teamId) {
-    return pollWorkspace(_load);
+    return watchWorkspaceChannel('language-models', _load, _channel);
   }
 
   Future<List<LanguageModel>> _load() async {

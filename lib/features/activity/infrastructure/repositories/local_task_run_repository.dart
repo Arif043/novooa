@@ -1,5 +1,6 @@
 import '../../../../core/entities/unique_id.dart';
 import '../../../../core/network/workspace_api_client.dart';
+import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../domain/entities/task_run.dart';
 import '../../domain/entities/task_run_dialog_input_field.dart';
 import '../../domain/entities/task_run_interaction.dart';
@@ -7,12 +8,14 @@ import '../../domain/entities/task_run_media_input.dart';
 import '../../domain/repositories/task_run_repository.dart';
 
 class LocalTaskRunRepository implements TaskRunRepository {
-  const LocalTaskRunRepository(this._client);
+  const LocalTaskRunRepository(this._client, this._channel);
 
   final WorkspaceApiClient _client;
+  final WorkspaceRealtimeChannel _channel;
 
   @override
-  Stream<List<TaskRun>> watchRecent() => pollWorkspace(_loadRuns);
+  Stream<List<TaskRun>> watchRecent() =>
+      watchWorkspaceChannel('task-runs', _loadRuns, _channel);
 
   @override
   Future<void> review({

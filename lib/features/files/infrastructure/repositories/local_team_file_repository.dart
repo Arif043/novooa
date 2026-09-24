@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:multiple_result/multiple_result.dart';
 
 import '../../../../core/network/workspace_api_client.dart';
+import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../domain/entities/file_failure.dart';
 import '../../domain/entities/file_version.dart';
 import '../../domain/entities/team_file.dart';
@@ -15,9 +16,10 @@ import '../../domain/repositories/team_file_repository.dart';
 
 class LocalTeamFileRepository
     implements TeamFileRepository, FileVersionRepository {
-  const LocalTeamFileRepository(this._client);
+  const LocalTeamFileRepository(this._client, this._channel);
 
   final WorkspaceApiClient _client;
+  final WorkspaceRealtimeChannel _channel;
 
   @override
   Future<Result<TeamFolder, FileFailure>> createFolder({
@@ -77,15 +79,20 @@ class LocalTeamFileRepository
   }) => _write('/v1/files', input, folderId: folderId);
 
   @override
-  Stream<List<TeamFile>> watchFiles(TeamId teamId) => pollWorkspace(_loadFiles);
+  Stream<List<TeamFile>> watchFiles(TeamId teamId) =>
+      watchWorkspaceChannel('files', _loadFiles, _channel);
 
   @override
   Stream<List<TeamFolder>> watchFolders(TeamId teamId) =>
-      pollWorkspace(_loadFolders);
+      watchWorkspaceChannel('folders', _loadFolders, _channel);
 
   @override
   Stream<List<FileVersion>> watchVersions(TeamId teamId, String fileId) =>
-      pollWorkspace(() => _loadVersions(fileId));
+      watchWorkspaceChannel(
+        'file-versions:$fileId',
+        () => _loadVersions(fileId),
+        _channel,
+      );
 
   Future<Result<TeamFile, FileFailure>> _write(
     String path,

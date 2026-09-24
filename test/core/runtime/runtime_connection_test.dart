@@ -280,6 +280,25 @@ void main() {
       },
     );
 
+    test('signOut schließt die Realtime-Verbindung über den Callback', () async {
+      var closeCallCount = 0;
+      final cubit = RuntimeConnectionCubit(
+        _MemoryEndpointStore(null),
+        _MemoryCredentialStore(),
+        const _FakeLoginClient(token: 'fresh-token'),
+        const _FakeAvailability(),
+        onSignedOut: () async => closeCallCount++,
+      );
+      final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
+      await cubit.login(endpoint, 'correct-horse-battery-staple');
+
+      await cubit.signOut();
+
+      expect(closeCallCount, 1);
+      expect(cubit.state, isA<RuntimeConnectionNeedsPassword>());
+      await cubit.close();
+    });
+
     test('signOut vor einer bestehenden Verbindung ist wirkungslos', () async {
       final cubit = RuntimeConnectionCubit(
         _MemoryEndpointStore(null),

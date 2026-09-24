@@ -1,15 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/core/network/workspace_api_client.dart';
+import 'package:syscat2/core/network/workspace_realtime_channel.dart';
 import 'package:syscat2/features/activity/domain/entities/task_run.dart';
 import 'package:syscat2/features/activity/domain/entities/task_run_interaction.dart';
 import 'package:syscat2/features/activity/infrastructure/repositories/local_task_activity_repository.dart';
 import 'package:syscat2/features/activity/infrastructure/repositories/local_task_run_repository.dart';
 
+// `watchWorkspaceChannel` lädt beim ersten Listener sofort per `load()` —
+// unabhängig davon, ob der Realtime-Kanal erfolgreich verbindet. Für diese
+// reinen Mapping-Tests reicht daher ein Kanal auf eine unerreichbare Adresse;
+// der (scheiternde) Verbindungsaufbau läuft im Hintergrund und stört den
+// ersten geladenen Wert nicht.
+WorkspaceRealtimeChannel _fakeChannel(WorkspaceApiClient client) =>
+    WorkspaceRealtimeChannel(Uri.parse('http://127.0.0.1:0'), client);
+
 void main() {
   test('maps local runs, activities and a review command', () async {
     final client = RecordingWorkspaceApiClient();
-    final runs = LocalTaskRunRepository(client);
-    final activities = LocalTaskActivityRepository(client);
+    final runs = LocalTaskRunRepository(client, _fakeChannel(client));
+    final activities = LocalTaskActivityRepository(client, _fakeChannel(client));
 
     final run = (await runs.watchRecent().first).single;
     final activity = (await activities.watchRecent().first).single;
@@ -32,7 +41,11 @@ void main() {
         'documentScanEnabled': true,
       },
     );
-    final run = (await LocalTaskRunRepository(client).watchRecent().first).single;
+    final run =
+        (await LocalTaskRunRepository(
+          client,
+          _fakeChannel(client),
+        ).watchRecent().first).single;
 
     expect(run.interaction?.type, TaskRunInteractionType.mediaInput);
     expect(run.mediaInput?.documentScanEnabled, isTrue);
@@ -45,7 +58,11 @@ void main() {
         'instruction': 'Beleg fotografieren.',
       },
     );
-    final run = (await LocalTaskRunRepository(client).watchRecent().first).single;
+    final run =
+        (await LocalTaskRunRepository(
+          client,
+          _fakeChannel(client),
+        ).watchRecent().first).single;
 
     expect(run.mediaInput?.documentScanEnabled, isFalse);
   });

@@ -1,15 +1,18 @@
 import '../../../../core/entities/unique_id.dart';
 import '../../../../core/network/workspace_api_client.dart';
+import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../domain/entities/application_log.dart';
 import '../../domain/repositories/application_log_repository.dart';
 
 class LocalApplicationLogRepository implements ApplicationLogRepository {
-  const LocalApplicationLogRepository(this._client);
+  const LocalApplicationLogRepository(this._client, this._channel);
 
   final WorkspaceApiClient _client;
+  final WorkspaceRealtimeChannel _channel;
 
   @override
-  Stream<List<ApplicationLog>> watchRecent() => pollWorkspace(_load);
+  Stream<List<ApplicationLog>> watchRecent() =>
+      watchWorkspaceChannel('application-logs', _load, _channel);
 
   Future<List<ApplicationLog>> _load() async {
     final response = await _client.get('/v1/application-logs');

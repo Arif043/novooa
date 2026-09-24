@@ -5,11 +5,12 @@ import {type TaskDefinitionStore} from "../../domain/repositories/task-definitio
 import {SqliteLocalSqlDatabase} from "../../../../shared/local/sqlite-local-sql-database.js";
 import {LocalTaskActivityHttpHandler} from "./local-task-activity-http-handler.js";
 import {LocalTaskDefinitionHttpHandler} from "./local-task-definition-http-handler.js";
+import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 import {SQLiteTaskDefinitionStore} from "./sqlite-task-definition-store.js";
 
 test("stores and lists a local task definition", async () => {
   const database = await databaseWithTaskTables();
-  const handler = new LocalTaskDefinitionHttpHandler(new SQLiteTaskDefinitionStore(database), "team-1", "user-1");
+  const handler = new LocalTaskDefinitionHttpHandler(new SQLiteTaskDefinitionStore(database), "team-1", "user-1", new LocalRuntimeRealtimeNotifier());
 
   const saved = await handler.handle({body: taskBody(), method: "PUT", url: "/v1/tasks/task-1"});
   const listed = await handler.handle({body: {}, method: "GET", url: "/v1/tasks"});
@@ -21,7 +22,7 @@ test("stores and lists a local task definition", async () => {
 
 test("stores an empty local task definition", async () => {
   const database = await databaseWithTaskTables();
-  const handler = new LocalTaskDefinitionHttpHandler(new SQLiteTaskDefinitionStore(database), "team-1", "user-1");
+  const handler = new LocalTaskDefinitionHttpHandler(new SQLiteTaskDefinitionStore(database), "team-1", "user-1", new LocalRuntimeRealtimeNotifier());
   const draft = {
     id: "draft-1",
     title: "Neue Aufgabe",
@@ -38,7 +39,7 @@ test("stores an empty local task definition", async () => {
 
 test("uses the task definition store without a SQL dependency", async () => {
   const store = new MemoryTaskDefinitionStore();
-  const handler = new LocalTaskDefinitionHttpHandler(store, "team-1", "user-1");
+  const handler = new LocalTaskDefinitionHttpHandler(store, "team-1", "user-1", new LocalRuntimeRealtimeNotifier());
 
   const saved = await handler.handle({body: taskBody(), method: "PUT", url: "/v1/tasks/task-1"});
   const listed = await handler.handle({body: {}, method: "GET", url: "/v1/tasks"});

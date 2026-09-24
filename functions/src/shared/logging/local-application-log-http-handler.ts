@@ -8,11 +8,13 @@ import {
   type ApplicationLogLevel,
   type LocalApplicationLogStore,
 } from "./local-application-log-store.js";
+import {type LocalRuntimeRealtimeNotifier} from "../local/local-runtime-realtime-notifier.js";
 
 export class LocalApplicationLogHttpHandler implements LocalRuntimeRequestHandler {
   constructor(
     private readonly store: LocalApplicationLogStore,
     private readonly teamId: string,
+    private readonly notifier: LocalRuntimeRealtimeNotifier,
   ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
@@ -39,6 +41,7 @@ export class LocalApplicationLogHttpHandler implements LocalRuntimeRequestHandle
         data: input.data,
         occurredAt: new Date().toISOString(),
       });
+      this.notifier.publish("application-logs");
       return {body: {}, statusCode: 202};
     } catch (error) {
       if (error instanceof LocalApplicationLogRequestError) {

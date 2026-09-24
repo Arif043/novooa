@@ -10,12 +10,14 @@ import {
   type LocalRuntimeResponse,
 } from "../../../../shared/local/local-runtime-http-server.js";
 import {type ApplicationLogger} from "../../../../shared/logging/application-logger.js";
+import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 
 export class LocalTaskRunHttpHandler implements LocalRuntimeRequestHandler {
   constructor(
     private readonly taskWorkflow: TaskWorkflow,
     private readonly userId: string,
     private readonly logger: ApplicationLogger,
+    private readonly notifier: LocalRuntimeRealtimeNotifier,
   ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
@@ -30,6 +32,7 @@ export class LocalTaskRunHttpHandler implements LocalRuntimeRequestHandler {
     if (inputOrFailure instanceof TaskRunFailure) return failureResponse(inputOrFailure);
     try {
       const output = await this.taskWorkflow.start(inputOrFailure, {uid: this.userId});
+      this.publishRunChanges();
       return {body: output, statusCode: 202};
     } catch (error) {
       return this.unexpectedFailure("start_failed", error);
@@ -41,10 +44,17 @@ export class LocalTaskRunHttpHandler implements LocalRuntimeRequestHandler {
     if (inputOrFailure instanceof TaskRunFailure) return failureResponse(inputOrFailure);
     try {
       const output = await this.taskWorkflow.review(inputOrFailure, {uid: this.userId});
+      this.publishRunChanges();
       return {body: output, statusCode: 200};
     } catch (error) {
       return this.unexpectedFailure("review_failed", error);
     }
+  }
+
+  /** Ein Run ändert seinen Status nie ohne eine begleitende Aktivität. */
+  private publishRunChanges(): void {
+    this.notifier.publish("task-runs");
+    this.notifier.publish("task-activities");
   }
 
   private unexpectedFailure(event: string, error: unknown): LocalRuntimeResponse {

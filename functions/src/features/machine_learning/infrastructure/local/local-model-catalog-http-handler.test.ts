@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {type ApplicationLogger} from "../../../../shared/logging/application-logger.js";
+import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
 import {type TeamModelCatalog} from "../../domain/repositories/model-catalog.js";
 import {LocalModelArtifactPublisher} from "./local-model-artifact-publisher.js";
@@ -21,6 +22,7 @@ test("installs a team-scoped ONNX model from a manifest and lists it", async () 
     "team-1",
     new Validator(),
     new Logger(),
+    new LocalRuntimeRealtimeNotifier(),
   );
 
   try {
@@ -49,6 +51,7 @@ test("rejects a manifest whose transformation is not supported by the Python run
     "team-1",
     new RejectingValidator(),
     new Logger(),
+    new LocalRuntimeRealtimeNotifier(),
   );
 
   try {
@@ -74,6 +77,7 @@ test("does not remove a model owned by another team", async () => {
     "team-1",
     new Validator(),
     new Logger(),
+    new LocalRuntimeRealtimeNotifier(),
   );
 
   const response = await handler.handle({
@@ -95,6 +99,7 @@ test("removes the ONNX artifact with the local catalog entry", async () => {
     "team-1",
     new Validator(),
     new Logger(),
+    new LocalRuntimeRealtimeNotifier(),
   );
 
   try {
@@ -123,6 +128,7 @@ test("recovers an interrupted import with an existing local artifact", async () 
     "team-1",
     new Validator(),
     new Logger(),
+    new LocalRuntimeRealtimeNotifier(),
   );
   const request = {
     method: "POST" as const,

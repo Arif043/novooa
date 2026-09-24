@@ -15,6 +15,7 @@ import {
   type LocalRuntimeRequestHandler,
 } from "./local-runtime-http-server.js";
 import {RuntimeLicenseHttpHandler} from "./local-runtime-license-http-handler.js";
+import {attachLocalRuntimeRealtimeServer} from "./local-runtime-realtime-server.js";
 import {localRuntimeMasterKeyFrom} from "./local-runtime-master-key.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
 import {CredentialCipher} from "../../features/communication/infrastructure/security/credential-cipher.js";
@@ -45,6 +46,7 @@ async function startLocalRuntime(): Promise<void> {
     const server = createLocalRuntimeHttpServer(
       new RuntimeLicenseHttpHandler(licenses, application),
     );
+    attachLocalRuntimeRealtimeServer(server, application);
     const setupServer = createLocalRuntimeHttpServer(setupHandlerFor(application));
     const port = configuredPort();
     const setupPort = configuredSetupPort();

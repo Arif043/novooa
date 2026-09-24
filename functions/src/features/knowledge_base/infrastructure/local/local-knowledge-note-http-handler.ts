@@ -5,6 +5,7 @@ import {
   type LocalRuntimeResponse,
 } from "../../../../shared/local/local-runtime-http-server.js";
 import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
+import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 
 type NoteRow = SqlRow & {
   content: string;
@@ -17,7 +18,11 @@ type NoteRow = SqlRow & {
 };
 
 export class LocalKnowledgeNoteHttpHandler implements LocalRuntimeRequestHandler {
-  constructor(private readonly database: LocalSqlDatabase, private readonly teamId: string) {}
+  constructor(
+    private readonly database: LocalSqlDatabase,
+    private readonly teamId: string,
+    private readonly notifier: LocalRuntimeRealtimeNotifier,
+  ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
     const path = pathFrom(request.url);
@@ -43,6 +48,7 @@ export class LocalKnowledgeNoteHttpHandler implements LocalRuntimeRequestHandler
         id, this.teamId, note.knowledgeBaseId, note.title, note.path,
         note.content, JSON.stringify(note.outgoingLinks),
       ]);
+      this.notifier.publish("knowledge-notes");
       return this.byId(id, 201);
     } catch (error) {
       return invalidResponse(error);
@@ -56,6 +62,7 @@ export class LocalKnowledgeNoteHttpHandler implements LocalRuntimeRequestHandler
         note.title, note.path, note.content, JSON.stringify(note.outgoingLinks),
         this.teamId, id,
       ]);
+      this.notifier.publish("knowledge-notes");
       return this.byId(id, 200);
     } catch (error) {
       return invalidResponse(error);
@@ -64,6 +71,7 @@ export class LocalKnowledgeNoteHttpHandler implements LocalRuntimeRequestHandler
 
   private async delete(id: string): Promise<LocalRuntimeResponse> {
     await this.database.run("DELETE FROM knowledge_notes WHERE team_id = ? AND id = ?", [this.teamId, id]);
+    this.notifier.publish("knowledge-notes");
     return {body: {}, statusCode: 204};
   }
 

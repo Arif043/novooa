@@ -3,6 +3,7 @@ import {randomBytes} from "node:crypto";
 import test from "node:test";
 import {CredentialCipher} from "../../../communication/infrastructure/security/credential-cipher.js";
 import {SqliteLocalSqlDatabase} from "../../../../shared/local/sqlite-local-sql-database.js";
+import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "./encrypted-sqlite-language-model-secret-store.js";
 import {LocalLanguageModelHttpHandler} from "./local-language-model-http-handler.js";
 import {type DiscoveredLanguageModel} from "./local-language-model-discovery.js";
@@ -19,6 +20,7 @@ test("stores a local model configuration without exposing its API key", async ()
   const handler = new LocalLanguageModelHttpHandler(
     new SQLiteLanguageModelConfigurationStore(database, secretStore),
     "team-1",
+    new LocalRuntimeRealtimeNotifier(),
   );
 
   const saved = await handler.handle({body: requestBody(), method: "POST", url: "/v1/language-models"});
@@ -46,6 +48,7 @@ test("uses an internal credential for a keyless local endpoint", async () => {
   const handler = new LocalLanguageModelHttpHandler(
     new SQLiteLanguageModelConfigurationStore(database, secretStore),
     "team-1",
+    new LocalRuntimeRealtimeNotifier(),
   );
 
   const response = await handler.handle({
@@ -70,6 +73,7 @@ test("connects all models discovered for one provider connection", async () => {
       database, new CredentialCipher(randomBytes(32).toString("base64")),
     )),
     "team-1",
+    new LocalRuntimeRealtimeNotifier(),
     {discover: async () => discoveredModels()},
   );
 
@@ -93,6 +97,7 @@ test("connects Ollama with its local default endpoint and no API key", async () 
   const handler = new LocalLanguageModelHttpHandler(
     new SQLiteLanguageModelConfigurationStore(database, secrets),
     "team-1",
+    new LocalRuntimeRealtimeNotifier(),
     {discover: async () => discoveredModels()},
   );
 

@@ -5,12 +5,14 @@ import {
 } from "../../../../shared/local/local-runtime-http-server.js";
 import {type TaskDefinition} from "../../domain/entities/task.js";
 import {type TaskDefinitionStore} from "../../domain/repositories/task-definition-store.js";
+import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 
 export class LocalTaskDefinitionHttpHandler implements LocalRuntimeRequestHandler {
   constructor(
     private readonly store: TaskDefinitionStore,
     private readonly teamId: string,
     private readonly userId: string,
+    private readonly notifier: LocalRuntimeRealtimeNotifier,
   ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
@@ -33,6 +35,7 @@ export class LocalTaskDefinitionHttpHandler implements LocalRuntimeRequestHandle
     try {
       const task = taskFromRequest(taskId, body);
       await this.store.save(this.teamId, this.userId, task.definition, task.selectedNodeId);
+      this.notifier.publish("tasks");
       return {body: await this.documentFrom(task.definition), statusCode: 200};
     } catch (error) {
       if (error instanceof LocalTaskRequestError) return inputError(error.message);
@@ -42,6 +45,7 @@ export class LocalTaskDefinitionHttpHandler implements LocalRuntimeRequestHandle
 
   private async delete(taskId: string): Promise<LocalRuntimeResponse> {
     await this.store.delete(this.teamId, taskId);
+    this.notifier.publish("tasks");
     return {body: {}, statusCode: 204};
   }
 
