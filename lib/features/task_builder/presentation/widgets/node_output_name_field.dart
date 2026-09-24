@@ -45,28 +45,46 @@ class NodeOutputNameField extends StatelessWidget {
   }
 
   Future<void> _showEditor(BuildContext context) async {
-    final controller = TextEditingController(text: node.outputName);
     final outputName = await showIosDialog<String>(
       context: context,
-      builder: (dialogContext) => _OutputNameDialog(controller: controller),
+      builder: (dialogContext) =>
+          _OutputNameDialog(initialValue: node.outputName),
     );
-    controller.dispose();
     if (!context.mounted || outputName == null) return;
     context.read<TaskBuilderCubit>().updateNodeOutputName(node.id, outputName);
   }
 }
 
-class _OutputNameDialog extends StatelessWidget {
-  const _OutputNameDialog({required this.controller});
+/// Besitzt seinen [TextEditingController] selbst (statt ihn von außen zu
+/// bekommen) und gibt ihn erst in seinem eigenen `dispose()` frei — der
+/// Cupertino-Dialog animiert beim Schließen, das `TextField` bleibt also
+/// noch kurz gemountet, nachdem `Navigator.pop()` zurückkehrt. Ein von außen
+/// direkt danach disposter Controller führt dort zu „used after being
+/// disposed". Gleiches Muster wie `RenameTaskDialog`.
+class _OutputNameDialog extends StatefulWidget {
+  const _OutputNameDialog({required this.initialValue});
 
-  final TextEditingController controller;
+  final String initialValue;
+
+  @override
+  State<_OutputNameDialog> createState() => _OutputNameDialogState();
+}
+
+class _OutputNameDialogState extends State<_OutputNameDialog> {
+  late final _controller = TextEditingController(text: widget.initialValue);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return CupertinoAlertDialog(
       title: const Text('Ausgabename'),
       content: TextField(
-        controller: controller,
+        controller: _controller,
         autofocus: true,
         inputFormatters: [
           FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
@@ -81,7 +99,7 @@ class _OutputNameDialog extends StatelessWidget {
         ),
         CupertinoDialogAction(
           isDefaultAction: true,
-          onPressed: () => Navigator.pop(context, controller.text),
+          onPressed: () => Navigator.pop(context, _controller.text),
           child: const Text('Speichern'),
         ),
       ],

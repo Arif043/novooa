@@ -531,13 +531,4 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       ChannelEventKind.sms => 'Sendet eine SMS über novooa.',
     };
   }
-
-  @override
-  void onChange(Change<TaskBuilderState> change) {
-    super.onChange(change);
-    if (change.currentState is TaskBuilderLoaded && change.nextState is TaskBuilderLoaded) {
-      debugPrint("TaskBuilderState Before: ${(change.currentState as TaskBuilderLoaded).editingTask.edges.toList()}");
-      debugPrint("TaskBuilderState After: ${(change.nextState as TaskBuilderLoaded).editingTask.edges.toList()}");
-    }
-  }
 }
