@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:archive/archive.dart';
+import 'package:excel/excel.dart' as excel_lib;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/files/presentation/widgets/content/spreadsheet_content_view.dart';
@@ -13,32 +13,78 @@ void main() {
     );
   }
 
-  testWidgets('zeigt Zellinhalte einer gültigen ODS-Tabelle', (tester) async {
-    await pump(
-      tester,
-      _odsBytes('''
-<?xml version="1.0" encoding="UTF-8"?>
-<office:document-content
-    xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
-    xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
-    xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">
-  <office:body>
-    <office:spreadsheet>
-      <table:table table:name="Sheet1">
-        <table:table-row>
-          <table:table-cell office:value-type="string"><text:p>Kunde</text:p></table:table-cell>
-        </table:table-row>
-      </table:table>
-    </office:spreadsheet>
-  </office:body>
-</office:document-content>
-'''),
+  testWidgets('zeigt Zellinhalte einer gültigen XLSX-Tabelle', (
+    tester,
+  ) async {
+    final workbook = excel_lib.Excel.createExcel();
+    workbook['Sheet1'].cell(_at(0, 0)).value = excel_lib.TextCellValue(
+      'Kunde',
     );
+
+    await pump(tester, _encode(workbook));
 
     expect(find.text('Kunde'), findsOneWidget);
     expect(find.text('A'), findsOneWidget);
     expect(find.text('1'), findsOneWidget);
     expect(find.byType(Table), findsOneWidget);
+  });
+
+  testWidgets(
+    'zeigt fett formatierte Zellen aus der Datei und E-Mail-Zellen als Link',
+    (tester) async {
+      final workbook = excel_lib.Excel.createExcel();
+      final sheet = workbook['Sheet1'];
+      sheet.cell(_at(0, 0))
+        ..value = excel_lib.TextCellValue('Vorname')
+        ..cellStyle = excel_lib.CellStyle(bold: true);
+      sheet.cell(_at(1, 0))
+        ..value = excel_lib.TextCellValue('email')
+        ..cellStyle = excel_lib.CellStyle(bold: true);
+      sheet.cell(_at(0, 1)).value = excel_lib.TextCellValue('Christian');
+      sheet.cell(_at(1, 1)).value = excel_lib.TextCellValue(
+        'c.mustermann@muster.at',
+      );
+
+      await pump(tester, _encode(workbook));
+
+      final headerCell = tester.widget<Text>(find.text('Vorname'));
+      expect(headerCell.style?.fontWeight, FontWeight.bold);
+
+      final plainDataCell = tester.widget<Text>(find.text('Christian'));
+      expect(plainDataCell.style?.fontWeight, isNot(FontWeight.bold));
+      expect(plainDataCell.style?.decoration, isNot(TextDecoration.underline));
+
+      final emailFinder = find.text('c.mustermann@muster.at');
+      final emailCell = tester.widget<Text>(emailFinder);
+      expect(emailCell.style?.decoration, TextDecoration.underline);
+      expect(
+        find.ancestor(of: emailFinder, matching: find.byType(InkWell)),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('zeigt Schrift- und Hintergrundfarbe aus der Datei', (
+    tester,
+  ) async {
+    final workbook = excel_lib.Excel.createExcel();
+    workbook['Sheet1'].cell(_at(0, 0))
+      ..value = excel_lib.TextCellValue('Wichtig')
+      ..cellStyle = excel_lib.CellStyle(
+        fontColorHex: excel_lib.ExcelColor.red,
+        backgroundColorHex: excel_lib.ExcelColor.yellow,
+      );
+
+    await pump(tester, _encode(workbook));
+
+    final textFinder = find.text('Wichtig');
+    final textWidget = tester.widget<Text>(textFinder);
+    expect(textWidget.style?.color, Color(excel_lib.ExcelColor.red.colorInt));
+
+    final container = tester.widget<Container>(
+      find.ancestor(of: textFinder, matching: find.byType(Container)).first,
+    );
+    expect(container.color, Color(excel_lib.ExcelColor.yellow.colorInt));
   });
 
   testWidgets('zeigt einen Fehler für korrupte Bytes', (tester) async {
@@ -48,22 +94,10 @@ void main() {
   });
 
   testWidgets('zeigt einen Leer-Zustand ohne Zeilen', (tester) async {
-    await pump(
-      tester,
-      _odsBytes('''
-<?xml version="1.0" encoding="UTF-8"?>
-<office:document-content
-    xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
-    xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
-    xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">
-  <office:body>
-    <office:spreadsheet>
-      <table:table table:name="Leer"></table:table>
-    </office:spreadsheet>
-  </office:body>
-</office:document-content>
-'''),
-    );
+    final workbook = excel_lib.Excel.createExcel();
+    workbook.rename('Sheet1', 'Leer');
+
+    await pump(tester, _encode(workbook));
 
     expect(find.text('Diese Tabelle enthält keine Daten.'), findsOneWidget);
   });
@@ -72,27 +106,14 @@ void main() {
     'zeigt den Leer-Zustand statt abzustürzen, wenn ein leeres Blatt per '
     'Sheet-Selector ausgewählt wird (Regressionstest)',
     (tester) async {
-      await pump(
-        tester,
-        _odsBytes('''
-<?xml version="1.0" encoding="UTF-8"?>
-<office:document-content
-    xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
-    xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
-    xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">
-  <office:body>
-    <office:spreadsheet>
-      <table:table table:name="Tabelle1">
-        <table:table-row>
-          <table:table-cell office:value-type="string"><text:p>Kunde</text:p></table:table-cell>
-        </table:table-row>
-      </table:table>
-      <table:table table:name="Tabelle2"></table:table>
-    </office:spreadsheet>
-  </office:body>
-</office:document-content>
-'''),
+      final workbook = excel_lib.Excel.createExcel();
+      workbook.rename('Sheet1', 'Tabelle1');
+      workbook['Tabelle1'].cell(_at(0, 0)).value = excel_lib.TextCellValue(
+        'Kunde',
       );
+      workbook['Tabelle2']; // touched, but left without any cell
+
+      await pump(tester, _encode(workbook));
       expect(find.text('Kunde'), findsOneWidget);
 
       await tester.tap(find.byType(DropdownButton<int>));
@@ -107,14 +128,11 @@ void main() {
   );
 }
 
-Uint8List _odsBytes(String contentXml) {
-  final archive = Archive();
-  final mimetype = utf8.encode(
-    'application/vnd.oasis.opendocument.spreadsheet',
-  );
-  archive.addFile(ArchiveFile('mimetype', mimetype.length, mimetype));
-  final content = utf8.encode(contentXml);
-  archive.addFile(ArchiveFile('content.xml', content.length, content));
-  final encoded = ZipEncoder().encode(archive);
-  return Uint8List.fromList(encoded);
-}
+excel_lib.CellIndex _at(int columnIndex, int rowIndex) =>
+    excel_lib.CellIndex.indexByColumnRow(
+      columnIndex: columnIndex,
+      rowIndex: rowIndex,
+    );
+
+Uint8List _encode(excel_lib.Excel workbook) =>
+    Uint8List.fromList(workbook.encode()!);

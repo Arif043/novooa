@@ -11,7 +11,7 @@ void main() {
 
   test(
     'ein Blatt mit Zeilen, aber null Spalten gilt ebenfalls als leer '
-    '(table_parser liefert für komplett inhaltslose Blätter genau das)',
+    '(z.B. wenn jede Zeile ohne eine einzige Zelle vorliegt)',
     () {
       const sheet = SpreadsheetSheet(name: 'Tabelle2', rows: [[], []]);
 
@@ -24,7 +24,7 @@ void main() {
     const sheet = SpreadsheetSheet(
       name: 'Sheet1',
       rows: [
-        ['Name', 42],
+        [SpreadsheetCell(value: 'Name'), SpreadsheetCell(value: 42)],
       ],
     );
 
@@ -32,21 +32,24 @@ void main() {
     expect(sheet.columnCount, 2);
   });
 
-  test('das Dokument gilt nur als leer, wenn ausnahmslos alle Blätter leer sind', () {
-    const document = SpreadsheetDocument(
-      sheets: [
-        SpreadsheetSheet(
-          name: 'Sheet1',
-          rows: [
-            ['Wert'],
-          ],
-        ),
-        SpreadsheetSheet(name: 'Sheet2', rows: []),
-      ],
-    );
+  test(
+    'das Dokument gilt nur als leer, wenn ausnahmslos alle Blätter leer sind',
+    () {
+      const document = SpreadsheetDocument(
+        sheets: [
+          SpreadsheetSheet(
+            name: 'Sheet1',
+            rows: [
+              [SpreadsheetCell(value: 'Wert')],
+            ],
+          ),
+          SpreadsheetSheet(name: 'Sheet2', rows: []),
+        ],
+      );
 
-    expect(document.isEmpty, isFalse);
-  });
+      expect(document.isEmpty, isFalse);
+    },
+  );
 
   test('spreadsheetColumnLabel liefert Excel-übliche Spaltenbuchstaben', () {
     expect(spreadsheetColumnLabel(0), 'A');
@@ -56,5 +59,30 @@ void main() {
     expect(spreadsheetColumnLabel(51), 'AZ');
     expect(spreadsheetColumnLabel(701), 'ZZ');
     expect(spreadsheetColumnLabel(702), 'AAA');
+  });
+
+  test('spreadsheetCellLink erkennt E-Mail-Adressen als mailto-Link', () {
+    expect(
+      spreadsheetCellLink('c.mustermann@muster.at'),
+      Uri(scheme: 'mailto', path: 'c.mustermann@muster.at'),
+    );
+    expect(
+      spreadsheetCellLink('  susi.musterfrau@muster.at  '),
+      Uri(scheme: 'mailto', path: 'susi.musterfrau@muster.at'),
+    );
+  });
+
+  test('spreadsheetCellLink erkennt absolute Web-URLs', () {
+    expect(
+      spreadsheetCellLink('https://novooa.de/produkt'),
+      Uri.parse('https://novooa.de/produkt'),
+    );
+  });
+
+  test('spreadsheetCellLink liefert null für gewöhnliche Zellwerte', () {
+    expect(spreadsheetCellLink('Mustermann'), isNull);
+    expect(spreadsheetCellLink(42), isNull);
+    expect(spreadsheetCellLink(true), isNull);
+    expect(spreadsheetCellLink(null), isNull);
   });
 }

@@ -13,7 +13,7 @@ class FileContentKindClassifier {
 
   /// [fileName] is an optional fallback for files whose stored `contentType`
   /// is a generic placeholder like `application/octet-stream` — browsers and
-  /// `file_picker` don't reliably know less common MIME types (e.g. `.ods`)
+  /// `file_picker` don't reliably know less common MIME types (e.g. `.xlsx`)
   /// at upload time, and files uploaded before such a type was supported
   /// keep their old, generic content type forever. The extension fallback
   /// lets those files still be classified correctly without re-uploading.
@@ -22,7 +22,7 @@ class FileContentKindClassifier {
     if (_isImage(contentType)) return FileContentKind.image;
     if (_isPdf(contentType)) return FileContentKind.pdf;
     if (_isSpreadsheet(contentType)) return FileContentKind.spreadsheet;
-    if (_isGenericBinary(contentType) && _hasOdsExtension(fileName)) {
+    if (_isGenericBinary(contentType) && _hasXlsxExtension(fileName)) {
       return FileContentKind.spreadsheet;
     }
     return FileContentKind.unsupported;
@@ -36,11 +36,12 @@ class FileContentKindClassifier {
   bool _isPdf(String contentType) => contentType == 'application/pdf';
 
   bool _isSpreadsheet(String contentType) =>
-      contentType == 'application/vnd.oasis.opendocument.spreadsheet';
+      contentType ==
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
   bool _isGenericBinary(String contentType) =>
       contentType == 'application/octet-stream' || contentType.isEmpty;
 
-  bool _hasOdsExtension(String? fileName) =>
-      fileName?.toLowerCase().endsWith('.ods') ?? false;
+  bool _hasXlsxExtension(String? fileName) =>
+      fileName?.toLowerCase().endsWith('.xlsx') ?? false;
 }

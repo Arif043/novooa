@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_spacing.dart';
 import '../../../domain/entities/spreadsheet_document.dart';
-import '../../../infrastructure/parsers/ods_spreadsheet_parser.dart';
+import '../../../infrastructure/parsers/xlsx_spreadsheet_parser.dart';
+import 'spreadsheet_sheet_table.dart';
 
-/// Renders an ODS spreadsheet's cells as a scrollable table.
+/// Renders an XLSX spreadsheet's cells as a scrollable table.
 ///
 /// Parses once per [bytes] payload (not on every rebuild) and handles all
 /// four states explicitly: loading is implicit (parsing is synchronous, so
@@ -18,11 +19,11 @@ class SpreadsheetContentView extends StatefulWidget {
   const SpreadsheetContentView({
     super.key,
     required this.bytes,
-    this.parser = const OdsSpreadsheetParser(),
+    this.parser = const XlsxSpreadsheetParser(),
   });
 
   final Uint8List bytes;
-  final OdsSpreadsheetParser parser;
+  final XlsxSpreadsheetParser parser;
 
   @override
   State<SpreadsheetContentView> createState() =>
@@ -104,7 +105,7 @@ class _Table extends StatelessWidget {
         Expanded(
           child: sheet.isEmpty
               ? const _EmptySpreadsheet()
-              : _SheetTable(sheet: sheet),
+              : SheetTable(sheet: sheet),
         ),
       ],
     );
@@ -136,114 +137,6 @@ class _SheetSelector extends StatelessWidget {
             DropdownMenuItem(value: index, child: Text(sheets[index].name)),
         ],
       ),
-    );
-  }
-}
-
-/// Renders [sheet] as an Excel/Sheets-style grid: lettered column headers
-/// (A, B, C, …), numbered row headers (1, 2, 3, …) and full gridlines —
-/// familiar spreadsheet chrome around the actual cell data.
-class _SheetTable extends StatelessWidget {
-  const _SheetTable({required this.sheet});
-
-  final SpreadsheetSheet sheet;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Semantics(
-      label: 'Tabellenblatt ${sheet.name}',
-      child: SingleChildScrollView(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Table(
-            border: TableBorder.all(color: theme.colorScheme.outlineVariant),
-            defaultColumnWidth: const IntrinsicColumnWidth(),
-            children: [
-              _headerRow(theme),
-              for (var index = 0; index < sheet.rows.length; index++)
-                _dataRow(theme, index),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  TableRow _headerRow(ThemeData theme) {
-    final headerStyle = theme.textTheme.labelLarge?.copyWith(
-      color: theme.colorScheme.onSurfaceVariant,
-    );
-    return TableRow(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-      ),
-      children: [
-        const _GridCell(text: ''),
-        for (var index = 0; index < sheet.columnCount; index++)
-          _GridCell(
-            text: spreadsheetColumnLabel(index),
-            textStyle: headerStyle,
-            alignment: Alignment.center,
-          ),
-      ],
-    );
-  }
-
-  TableRow _dataRow(ThemeData theme, int rowIndex) {
-    return TableRow(
-      children: [
-        _GridCell(
-          text: '${rowIndex + 1}',
-          textStyle: theme.textTheme.labelLarge?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-          alignment: Alignment.center,
-          background: theme.colorScheme.surfaceContainerHighest,
-        ),
-        for (final value in sheet.rows[rowIndex])
-          _GridCell(text: _cellText(value)),
-      ],
-    );
-  }
-
-  String _cellText(Object? value) {
-    if (value == null) return '';
-    if (value is bool) return value ? 'Ja' : 'Nein';
-    if (value is num) {
-      final rounded = value.roundToDouble();
-      return value == rounded ? rounded.toInt().toString() : value.toString();
-    }
-    return value.toString();
-  }
-}
-
-/// A single spreadsheet grid cell — a padded, optionally shaded and aligned
-/// text container. Shared by header cells (column letters, row numbers) and
-/// plain data cells so the grid's visual rhythm stays consistent.
-class _GridCell extends StatelessWidget {
-  const _GridCell({
-    required this.text,
-    this.textStyle,
-    this.alignment = Alignment.centerLeft,
-    this.background,
-  });
-
-  final String text;
-  final TextStyle? textStyle;
-  final Alignment alignment;
-  final Color? background;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: background,
-      alignment: alignment,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      child: Text(text, style: textStyle),
     );
   }
 }

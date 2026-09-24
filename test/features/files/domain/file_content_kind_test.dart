@@ -4,20 +4,22 @@ import 'package:syscat2/features/files/domain/entities/file_content_kind.dart';
 void main() {
   const classifier = FileContentKindClassifier();
 
-  test('klassifiziert ODS-Dokumente als spreadsheet', () {
+  test('klassifiziert XLSX-Dokumente als spreadsheet', () {
     expect(
-      classifier.classify('application/vnd.oasis.opendocument.spreadsheet'),
+      classifier.classify(
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ),
       FileContentKind.spreadsheet,
     );
   });
 
   test(
-    'erkennt .ods am Dateinamen, wenn der Content-Type nur octet-stream ist',
+    'erkennt .xlsx am Dateinamen, wenn der Content-Type nur octet-stream ist',
     () {
       expect(
         classifier.classify(
           'application/octet-stream',
-          fileName: 'bericht.ods',
+          fileName: 'bericht.xlsx',
         ),
         FileContentKind.spreadsheet,
       );

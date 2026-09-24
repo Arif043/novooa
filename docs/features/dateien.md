@@ -97,9 +97,11 @@ chronologischen Verlauf. Textdateien und JSON können dort bearbeitet werden.
 Das Sichern erzeugt immer eine neue Version; vorhandene Versionen werden weder
 überschrieben noch verändert. Die aktuelle Version ist im Verlauf hervorgehoben,
 während ältere Stände jederzeit zur Ansicht ausgewählt werden können.
-Tabellenkalkulationsdateien (`.ods`) werden schreibgeschützt als Tabelle mit
-Blattauswahl angezeigt (`package:table_parser`); PDF-Dateien werden über
-`package:pdfx` mit Seitennavigation und Zoom dargestellt.
+Tabellenkalkulationsdateien (`.xlsx`) werden schreibgeschützt als Tabelle mit
+Blattauswahl angezeigt (`package:excel`) — Fettformatierung aus der Quelldatei
+wird übernommen, Zellen mit E-Mail-Adressen oder Web-URLs erscheinen als
+anklickbare Links; PDF-Dateien werden über `package:pdfx` mit
+Seitennavigation und Zoom dargestellt.
 
 ## Nutzung in Aufgaben
 
