@@ -1,5 +1,4 @@
-import 'dart:typed_data';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_spacing.dart';
@@ -10,20 +9,18 @@ import 'spreadsheet_sheet_table.dart';
 /// Renders an XLSX spreadsheet's cells as a scrollable table.
 ///
 /// Parses once per [bytes] payload (not on every rebuild) and handles all
-/// four states explicitly: loading is implicit (parsing is synchronous, so
-/// there is no separate loading frame), a corrupt/unsupported archive shows
-/// a friendly error, a document without any filled cell shows an empty
-/// state, and the happy path renders the (optionally sheet-switchable)
-/// table.
+/// four states explicitly: a genuine loading spinner while the parse runs,
+/// a corrupt/unsupported archive shows a friendly error, a document without
+/// any filled cell shows an empty state, and the happy path renders the
+/// (optionally sheet-switchable) table.
+///
+/// Parsing runs on a background isolate via [compute] — a large spreadsheet
+/// is real, synchronous CPU work (`package:excel` decoding an entire
+/// workbook) that would otherwise jank the UI thread while it runs.
 class SpreadsheetContentView extends StatefulWidget {
-  const SpreadsheetContentView({
-    super.key,
-    required this.bytes,
-    this.parser = const XlsxSpreadsheetParser(),
-  });
+  const SpreadsheetContentView({super.key, required this.bytes});
 
   final Uint8List bytes;
-  final XlsxSpreadsheetParser parser;
 
   @override
   State<SpreadsheetContentView> createState() =>
@@ -33,6 +30,7 @@ class SpreadsheetContentView extends StatefulWidget {
 class _SpreadsheetContentViewState extends State<SpreadsheetContentView> {
   SpreadsheetDocument? _document;
   Object? _error;
+  bool _isLoading = true;
   int _selectedSheetIndex = 0;
 
   @override
@@ -46,21 +44,32 @@ class _SpreadsheetContentViewState extends State<SpreadsheetContentView> {
     super.didUpdateWidget(oldWidget);
     if (identical(oldWidget.bytes, widget.bytes)) return;
     _selectedSheetIndex = 0;
+    _isLoading = true;
     _parse(widget.bytes);
   }
 
-  void _parse(Uint8List bytes) {
+  Future<void> _parse(Uint8List bytes) async {
     try {
-      _document = widget.parser.parse(bytes);
-      _error = null;
+      final document = await compute(_parseXlsxDocument, bytes);
+      if (!mounted) return;
+      setState(() {
+        _document = document;
+        _error = null;
+        _isLoading = false;
+      });
     } on Object catch (error) {
-      _document = null;
-      _error = error;
+      if (!mounted) return;
+      setState(() {
+        _document = null;
+        _error = error;
+        _isLoading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) return const _SpreadsheetLoading();
     final error = _error;
     if (error != null) return _SpreadsheetLoadError(error: error);
     final document = _document!;
@@ -69,6 +78,28 @@ class _SpreadsheetContentViewState extends State<SpreadsheetContentView> {
       document: document,
       selectedSheetIndex: _selectedSheetIndex,
       onSheetSelected: (index) => setState(() => _selectedSheetIndex = index),
+    );
+  }
+}
+
+/// Top-level so [compute] can send it to a background isolate — instance
+/// methods (even on a stateless, `const`-constructible class like
+/// [XlsxSpreadsheetParser]) implicitly capture `this` and can't cross an
+/// isolate boundary.
+SpreadsheetDocument _parseXlsxDocument(Uint8List bytes) {
+  return const XlsxSpreadsheetParser().parse(bytes);
+}
+
+class _SpreadsheetLoading extends StatelessWidget {
+  const _SpreadsheetLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Semantics(
+        label: 'Tabelle wird geladen',
+        child: const CircularProgressIndicator(),
+      ),
     );
   }
 }

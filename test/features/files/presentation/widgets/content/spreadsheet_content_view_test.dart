@@ -7,11 +7,48 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/files/presentation/widgets/content/spreadsheet_content_view.dart';
 
 void main() {
-  Future<void> pump(WidgetTester tester, Uint8List bytes) {
-    return tester.pumpWidget(
+  Future<void> pump(WidgetTester tester, Uint8List bytes) async {
+    await tester.pumpWidget(
       MaterialApp(home: Scaffold(body: SpreadsheetContentView(bytes: bytes))),
     );
+    // Parsing now runs on a real background isolate (`compute`) — a plain
+    // `pump()`/`pumpAndSettle()` can't drive that (they only advance
+    // fake/animation time, and the loading spinner's own indeterminate
+    // animation makes `pumpAndSettle` time out besides). `runAsync` steps
+    // outside the fake test zone so the real isolate round-trip can
+    // actually finish, then a normal `pump()` applies the resulting
+    // `setState`.
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 200)),
+    );
+    await tester.pump();
   }
+
+  testWidgets(
+    'zeigt einen Ladeindikator, während die Datei im Hintergrund geparst '
+    'wird',
+    (tester) async {
+      final workbook = excel_lib.Excel.createExcel();
+      workbook['Sheet1'].cell(_at(0, 0)).value = excel_lib.TextCellValue(
+        'Kunde',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SpreadsheetContentView(bytes: _encode(workbook)),
+          ),
+        ),
+      );
+      // Absichtlich kein `runAsync`/Verzögerung hier — direkt nach dem
+      // ersten Frame läuft der Parse-Isolate noch, der Ladezustand muss
+      // sofort sichtbar sein.
+      await tester.pump();
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('Kunde'), findsNothing);
+    },
+  );
 
   testWidgets('zeigt Zellinhalte einer gültigen XLSX-Tabelle', (
     tester,
