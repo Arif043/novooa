@@ -31,6 +31,7 @@ part 'task_builder_send_message_mutations.dart';
 part 'task_builder_notification_send_mutations.dart';
 part 'task_builder_document_lookup_mutations.dart';
 part 'task_builder_save_document_mutations.dart';
+part 'task_builder_table_from_collection_mutations.dart';
 
 /// Zustandsverwaltung für den Aufgaben-Builder.
 ///
@@ -482,6 +483,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       WorkflowPrimitive.forEach => 'element',
       WorkflowPrimitive.documentLookup => 'datensatz',
       WorkflowPrimitive.saveDocument => 'speichern',
+      WorkflowPrimitive.tableFromCollection => 'tabelle',
       WorkflowPrimitive.validation => 'validation',
     };
   }

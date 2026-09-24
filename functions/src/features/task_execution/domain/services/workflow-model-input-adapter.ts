@@ -20,6 +20,8 @@ export async function modelInputForWorkflowValue(
       return {type: "boolean", value: value.value};
     case "json":
       return {type: "json", value: value.value};
+    case "table":
+      return {type: "json", value: value.value};
     case "file":
     case "media":
       return modelInputForFile(value.value, teamId, fileContentReader);

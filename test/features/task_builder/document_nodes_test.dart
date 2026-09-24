@@ -13,6 +13,7 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_c
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/document_lookup_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/save_document_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/table_from_collection_widget.dart';
 
 void main() {
   test('aktualisiert alle Konfigurationswerte für Datensatz suchen', () async {
@@ -72,6 +73,41 @@ void main() {
       expect(config.fields, const [
         DocumentFieldAssignment(field: 'status', value: 'bezahlt'),
       ]);
+      await cubit.close();
+    },
+  );
+
+  test('aktualisiert die Collection für Sammlung als Tabelle', () async {
+    final cubit = await _cubitFor(_tableTask());
+    const nodeId = NodeId('table');
+    await cubit.updateTableFromCollectionCollectionName(nodeId, 'kunden');
+
+    final config =
+        _taskOf(cubit).nodes.single.config as TableFromCollectionNodeConfig;
+    expect(config.collectionName, 'kunden');
+    await cubit.close();
+  });
+
+  testWidgets(
+    'zeigt ein Freitextfeld für die Sammlung ohne registriertes '
+    'DataRepository (Cloud-Profil)',
+    (tester) async {
+      final cubit = await _cubitFor(_tableTask());
+      await tester.pumpWidget(
+        _host(
+          cubit,
+          (task) => TableFromCollectionWidget(node: task.nodes.single),
+        ),
+      );
+
+      expect(find.text('Sammlung als Tabelle'), findsOneWidget);
+      expect(find.byType(TextFormField), findsOneWidget);
+      await tester.enterText(find.byType(TextFormField), 'bestellungen');
+      await tester.pump();
+
+      final config =
+          _taskOf(cubit).nodes.single.config as TableFromCollectionNodeConfig;
+      expect(config.collectionName, 'bestellungen');
       await cubit.close();
     },
   );
@@ -166,6 +202,17 @@ Task _saveTask() {
         filters: [],
         fields: [DocumentFieldAssignment(field: '', value: '')],
       ),
+    ),
+  );
+}
+
+Task _tableTask() {
+  return _task(
+    const WorkflowNode(
+      id: NodeId('table'),
+      title: 'Sammlung als Tabelle',
+      description: '',
+      config: TableFromCollectionNodeConfig(collectionName: ''),
     ),
   );
 }

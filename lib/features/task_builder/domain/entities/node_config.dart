@@ -27,6 +27,7 @@ part 'send_channel_message_node_config.dart';
 part 'notification_send_node_config.dart';
 part 'document_lookup_node_config.dart';
 part 'save_document_node_config.dart';
+part 'table_from_collection_node_config.dart';
 
 sealed class NodeConfig extends Equatable {
   const NodeConfig();
@@ -49,6 +50,7 @@ sealed class NodeConfig extends Equatable {
       .readFile => ReadFileNodeConfig.initial(),
       .documentLookup => DocumentLookupNodeConfig.initial(),
       .saveDocument => SaveDocumentNodeConfig.initial(),
+      .tableFromCollection => TableFromCollectionNodeConfig.initial(),
       .readEmail => ReadEmailNodeConfig.initial(),
       .readChannelEvent => ReadChannelEventNodeConfig.initial(),
       .sendChannelMessage => SendChannelMessageNodeConfig.initial(),

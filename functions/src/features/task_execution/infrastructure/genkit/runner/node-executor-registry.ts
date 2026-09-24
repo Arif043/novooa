@@ -18,6 +18,7 @@ import {stringInputNodeExecutor} from "../../../domain/executors/string-input-no
 import {writeFileNodeExecutor} from "../../../domain/executors/write-file-node-executor.js";
 import {documentLookupNodeExecutor} from "../../../domain/executors/document-lookup-node-executor.js";
 import {saveDocumentNodeExecutor} from "../../../domain/executors/save-document-node-executor.js";
+import {tableFromCollectionNodeExecutor} from "../../../domain/executors/table-from-collection-node-executor.js";
 import {type WorkflowNode} from "./task-definition.js";
 import {type NodeExecutor} from "../../../domain/executors/node-executor.js";
 import {type GenkitBeta} from "genkit/beta";
@@ -47,6 +48,7 @@ function executorsFor(logger: ApplicationLogger) {
     forEachNodeExecutor,
     documentLookupNodeExecutor,
     saveDocumentNodeExecutor,
+    tableFromCollectionNodeExecutor,
   ].map((executor) => [executor.primitive, executor]));
 }
 

@@ -19,6 +19,27 @@ test("writes a media reference as binary data with its image metadata", async ()
   );
 });
 
+test("writes a table value as an .xlsx file with a matching content type", async () => {
+  const writtenFiles: Array<Record<string, unknown>> = [];
+
+  await writeFileNodeExecutor.execute(
+    writeFileNode() as never,
+    runContextFor(writtenFiles, tableValue()) as never,
+  );
+
+  const input = writtenFiles[0];
+  assert.equal(
+    input.contentType,
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  );
+  assert.equal(input.fileName, "entwurf.xlsx");
+  assert.ok((input.content as Uint8Array).byteLength > 0);
+});
+
+function tableValue() {
+  return {columns: ["name", "status"], rows: [["Lea", "aktiv"], ["Tom", null]]};
+}
+
 function writeFileNode() {
   return {
     id: "write",
@@ -42,12 +63,15 @@ function mediaReference() {
   };
 }
 
-function runContextFor(writtenFiles: Array<Record<string, unknown>>) {
+function runContextFor(
+  writtenFiles: Array<Record<string, unknown>>,
+  resolvedValue: unknown = mediaReference(),
+) {
   return {
     teamId: "team-1",
     templateExpressionResolver: {
       resolveText: (value: string) => value,
-      resolveValue: () => mediaReference(),
+      resolveValue: () => resolvedValue,
     },
     fileContentReader: {
       async readTeamFileContent() {

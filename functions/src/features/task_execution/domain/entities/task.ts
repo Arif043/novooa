@@ -61,6 +61,7 @@ export const workflowPrimitives = [
   "forEach",
   "documentLookup",
   "saveDocument",
+  "tableFromCollection",
   "validation",
 ] as const;
 
@@ -202,6 +203,10 @@ export type SaveDocumentNodeConfig = {
   filters: DocumentLookupFilterConfig[];
   fields: DocumentFieldAssignment[];
 };
+export type TableFromCollectionNodeConfig = {
+  primitive: "tableFromCollection";
+  collectionName: string;
+};
 export type ReadEmailNodeConfig = {
   primitive: "readEmail";
 };
@@ -237,6 +242,7 @@ export type NodeConfig =
   | ReadFileNodeConfig
   | DocumentLookupNodeConfig
   | SaveDocumentNodeConfig
+  | TableFromCollectionNodeConfig
   | ReadEmailNodeConfig
   | ReadChannelEventNodeConfig
   | SendChannelMessageNodeConfig

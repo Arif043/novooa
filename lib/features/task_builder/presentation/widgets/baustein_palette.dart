@@ -22,6 +22,7 @@ const bausteinGroups = <String, List<BausteinChoice>>{
   'Daten': [
     BausteinChoice(.documentLookup),
     BausteinChoice(.saveDocument),
+    BausteinChoice(.tableFromCollection),
     BausteinChoice(.stringInput),
     BausteinChoice(.readFile),
     BausteinChoice(.writeFile),
@@ -70,6 +71,7 @@ IconData bausteinIcon(WorkflowPrimitive primitive) => switch (primitive) {
   .forEach => CupertinoIcons.arrow_2_squarepath,
   .documentLookup => CupertinoIcons.search,
   .saveDocument => CupertinoIcons.archivebox,
+  .tableFromCollection => CupertinoIcons.table,
   .toolCall => Icons.build_outlined,
   .validation => Icons.fact_check_outlined,
 };

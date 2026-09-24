@@ -17,6 +17,10 @@ import {
   fileOutputFor,
 } from "../services/file-output-values.js";
 import {imageExtensionFor} from "../services/image-content-type.js";
+import {isWorkflowTable} from "../services/workflow-table.js";
+import {xlsxBufferFor} from "../../infrastructure/xlsx/xlsx-buffer.js";
+
+const xlsxContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 export const writeFileNodeExecutor: NodeExecutor = {
   primitive: "writeFile",
@@ -34,7 +38,7 @@ export const writeFileNodeExecutor: NodeExecutor = {
     };
     const file = await writeNodeFile(
       runContext.teamFileStore,
-      mediaWriteInputFor(writeInput, source.sourceContentType),
+      writeInputFor(writeInput, source.sourceContentType),
     );
     return executedNode(node, fileOutputs(file));
   },
@@ -51,6 +55,9 @@ async function sourceContentFor(
       value.versionId,
     );
     return {content: file.content, sourceContentType: file.contentType};
+  }
+  if (isWorkflowTable(value)) {
+    return {content: await xlsxBufferFor(value), sourceContentType: xlsxContentType};
   }
   return {content: contentFrom(value)};
 }
@@ -73,7 +80,11 @@ function isFileReference(value: unknown): value is {fileId: string; versionId: s
   return typeof reference.fileId === "string" && typeof reference.versionId === "string";
 }
 
-function mediaWriteInputFor(
+/** Überschreibt `contentType`/Dateiendung, wenn der aufgelöste Eingabewert
+ * seinen eigenen Content-Type mitbringt — ein Bild, oder eine Tabelle, die
+ * als XLSX geschrieben wird. Ohne `sourceContentType` (reiner Text) bleibt
+ * die vom Nutzer konfigurierte Ausgabe unverändert. */
+function writeInputFor(
   input: WriteNodeFileInput,
   sourceContentType?: string,
 ): WriteNodeFileInput {
@@ -82,10 +93,19 @@ function mediaWriteInputFor(
   return {
     ...input,
     contentType,
-    fileName: contentType.startsWith("image/")
-      ? imageFileNameFor(input.fileName, contentType)
-      : input.fileName,
+    fileName: fileNameForContentType(input.fileName, contentType),
   };
+}
+
+function fileNameForContentType(fileName: string, contentType: string): string {
+  if (contentType.startsWith("image/")) return imageFileNameFor(fileName, contentType);
+  if (contentType === xlsxContentType) return xlsxFileNameFor(fileName);
+  return fileName;
+}
+
+function xlsxFileNameFor(fileName: string): string {
+  const baseName = fileName.replace(/\.[^.]+$/, "");
+  return `${baseName || "tabelle"}.xlsx`;
 }
 
 type WriteNodeFileInput = {

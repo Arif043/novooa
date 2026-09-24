@@ -27,6 +27,7 @@ enum WorkflowPrimitive {
   forEach,
   documentLookup,
   saveDocument,
+  tableFromCollection,
   validation,
 }
 

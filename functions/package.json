@@ -38,6 +38,7 @@
     "google-auth-library": "^10.9.1",
     "twilio": "^6.0.2",
     "undici": "^7.29.0",
+    "write-excel-file": "^4.1.1",
     "ws": "^8.21.3"
   },
   "devDependencies": {

@@ -58,6 +58,7 @@ referenzieren.
 | `forEach` | Für jedes Element | Führt einen eingebetteten Arbeitsplan seriell für jedes Element eines JSON-Arrays aus | Implementiert |
 | `documentLookup` | Datensatz suchen | Findet genau einen Datensatz über sichtbare Feldbedingungen | Lokale Runtime implementiert |
 | `saveDocument` | Datensatz speichern | Legt ohne Bedingungen einen neuen Datensatz an; mit Feldbedingungen aktualisiert er alle Treffer oder legt bei keinem Treffer einen neuen an | Lokale Runtime implementiert |
+| `tableFromCollection` | Sammlung als Tabelle | Liest eine Datensammlung vollständig und gibt sie als fachlichen Tabellen-Wert weiter; „Datei schreiben" speichert einen solchen Wert als `.xlsx` | Lokale Runtime implementiert |
 | `toolCall` | Werkzeug-Aufruf | Strukturierter Aufruf eines Werkzeugs | Geplant |
 | `validation` | Validierung | Prueft Output gegen Schema oder Regeln | Geplant |
 

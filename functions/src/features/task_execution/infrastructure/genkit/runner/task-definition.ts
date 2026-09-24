@@ -225,6 +225,11 @@ export const saveDocumentNodeConfigSchema = z.object({
   })).default([]),
 });
 
+export const tableFromCollectionNodeConfigSchema = z.object({
+  primitive: z.literal("tableFromCollection").default("tableFromCollection"),
+  collectionName: z.string().default(""),
+});
+
 export const readEmailNodeConfigSchema = z.object({
   primitive: z.literal("readEmail").default("readEmail"),
 });
@@ -264,6 +269,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   readFileNodeConfigSchema,
   documentLookupNodeConfigSchema,
   saveDocumentNodeConfigSchema,
+  tableFromCollectionNodeConfigSchema,
   readEmailNodeConfigSchema,
   readChannelEventNodeConfigSchema,
   sendChannelMessageNodeConfigSchema,

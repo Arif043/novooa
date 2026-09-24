@@ -34,6 +34,7 @@ class NodeConfigDocumentMapper {
       ReadFileNodeConfig() => _readFileToDocument(config),
       DocumentLookupNodeConfig() => _documentLookupToDocument(config),
       SaveDocumentNodeConfig() => _saveDocumentToDocument(config),
+      TableFromCollectionNodeConfig() => _tableFromCollectionToDocument(config),
       ReadEmailNodeConfig() => {'primitive': config.primitive.name},
       ReadChannelEventNodeConfig() => {
         'primitive': config.primitive.name,
@@ -62,6 +63,7 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.readFile => _readFileFrom(data),
       WorkflowPrimitive.documentLookup => _documentLookupFrom(data),
       WorkflowPrimitive.saveDocument => _saveDocumentFrom(data),
+      WorkflowPrimitive.tableFromCollection => _tableFromCollectionFrom(data),
       WorkflowPrimitive.readEmail => const ReadEmailNodeConfig(),
       WorkflowPrimitive.readChannelEvent => ReadChannelEventNodeConfig(
         kind: _channelEventKindFrom(data['kind']),
@@ -234,6 +236,15 @@ class NodeConfigDocumentMapper {
       'primitive': config.primitive.name,
       'collectionName': config.collectionName,
       'filters': config.filters.map(_lookupFilterToDocument).toList(),
+    };
+  }
+
+  Map<String, Object?> _tableFromCollectionToDocument(
+    TableFromCollectionNodeConfig config,
+  ) {
+    return {
+      'primitive': config.primitive.name,
+      'collectionName': config.collectionName,
     };
   }
 
@@ -457,6 +468,14 @@ class NodeConfigDocumentMapper {
       filters: filters.isEmpty
           ? DocumentLookupNodeConfig.initial().filters
           : filters,
+    );
+  }
+
+  TableFromCollectionNodeConfig _tableFromCollectionFrom(
+    Map<String, Object?> data,
+  ) {
+    return TableFromCollectionNodeConfig(
+      collectionName: data['collectionName'] as String? ?? '',
     );
   }
 

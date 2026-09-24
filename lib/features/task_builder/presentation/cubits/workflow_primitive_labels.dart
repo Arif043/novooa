@@ -22,6 +22,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.forEach => 'Für jedes Element',
       WorkflowPrimitive.documentLookup => 'Datensatz suchen',
       WorkflowPrimitive.saveDocument => 'Datensatz speichern',
+      WorkflowPrimitive.tableFromCollection => 'Sammlung als Tabelle',
       WorkflowPrimitive.validation => 'Validierung',
     };
   }
@@ -63,6 +64,8 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         'Findet einen Datensatz über sichtbare Felder und Bedingungen.',
       WorkflowPrimitive.saveDocument =>
         'Legt einen Datensatz an oder aktualisiert seine Felder.',
+      WorkflowPrimitive.tableFromCollection =>
+        'Liest eine Datensammlung vollständig ein und gibt sie als Tabellen-Wert weiter.',
       WorkflowPrimitive.validation =>
         'Prüft Ergebnis, Schema oder Qualitätskriterien.',
     };

@@ -7,7 +7,7 @@
 
 Jeder Executor liefert ein `NodeExecutionResult` mit einem `outputs`-Objekt.
 Ein Output hat einen der Typen `string`, `datetime`, `number`, `boolean`,
-`json`, `file` oder `media`. Jeder ausgefuehrte Baustein stellt seinen
+`json`, `file`, `media` oder `table`. Jeder ausgefuehrte Baustein stellt seinen
 primaeren, typisierten Wert unter `value` bereit. Kanten bestimmen weiterhin
 nur Reihenfolge und Verzweigung; ein Executor erhaelt die `value`-Outputs
 seiner direkten Vorgaenger, nicht mehr den letzten Textwert eines Runs.
@@ -51,14 +51,30 @@ Primitives erhalten den Status `skipped` und keine Outputs.
 | `writeFile` | ausgefuehrt | siehe nächster Abschnitt |
 | `documentLookup` | ausgefuehrt | `value` (`string`: verständliches Suchergebnis), `found` (`boolean`), `record` (`json` mit Fachfeldern oder `null`), `message` (`string`) |
 | `saveDocument` | ausgefuehrt | `value` (`string`: „Datensätze gespeichert“), `created` (`boolean`), `count` (`number`), `records` (`json`: gespeicherte Fachfelder) |
+| `tableFromCollection` | ausgefuehrt | siehe „Sammlung als Tabelle" |
+
+## Sammlung als Tabelle
+
+`tableFromCollection` liest eine komplette Datensammlung (kein Filter) und
+gibt sie als `table`-Wert (`{columns: string[], rows: unknown[][]}`) weiter —
+Spalten sind die Vereinigung aller Feldnamen über alle Datensätze, fehlende
+Felder werden pro Zeile zu `null`. Existiert die Sammlung nicht, liefert der
+Baustein eine leere Tabelle statt eines Fehlers.
+
+| Output | Typ | Bedeutung |
+| --- | --- | --- |
+| `value` | `table` | Spalten und Zeilen der Sammlung |
+| `rowCount` | `number` | Anzahl gelesener Datensätze |
 
 ## Datei schreiben
 
 `writeFile` akzeptiert genau einen primaeren Vorgaengerwert. Textwerte werden
 als UTF-8 geschrieben; `file`- und `media`-Referenzen werden über den
-`TeamFileContentReader` als Bytes geladen. Bei Bildern übernimmt der Executor MIME-Type
-und Endung der gespeicherten Version. Sein primaerer Output ist ein `file`- bzw.
-`media`-Wert; zusaetzlich liefert der Executor:
+`TeamFileContentReader` als Bytes geladen; `table`-Werte (z. B. von
+`tableFromCollection`) werden als `.xlsx`-Datei geschrieben. Bei Bildern
+übernimmt der Executor MIME-Type und Endung der gespeicherten Version, bei
+Tabellen MIME-Type und Endung von XLSX. Sein primaerer Output ist ein
+`file`- bzw. `media`-Wert; zusaetzlich liefert der Executor:
 
 | Output | Typ | Bedeutung |
 | --- | --- | --- |
