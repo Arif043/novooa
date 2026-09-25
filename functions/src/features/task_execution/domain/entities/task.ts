@@ -115,11 +115,29 @@ export type BranchWorkflowGraph = {
   nodes: BranchWorkflowNode[];
   edges: WorkflowEdge[];
 };
+export type ComparisonOperator =
+  | "equals"
+  | "notEquals"
+  | "greaterThan"
+  | "greaterThanOrEqual"
+  | "lessThan"
+  | "lessThanOrEqual"
+  | "contains";
+export type BooleanCombinator = "and" | "or" | "xor";
+export type BranchCondition =
+  | {kind: "comparison"; left: string; operator: ComparisonOperator; right: string}
+  | {kind: "group"; combinator: BooleanCombinator; children: BranchCondition[]};
 export type ConditionalBranch = {
   id: string;
   label: string;
   nodeIds: string[];
   graph: BranchWorkflowGraph;
+  /** `undefined` = kein eigener Ausdruck — entweder der "Sonst"-Zweig oder
+   * ein Alt-/Entscheidungs-Prompt-getriebener Zweig aus dem bisherigen
+   * Label-Matching-Pfad (`conditional-executor.ts`). Trägt irgendein Zweig
+   * dieses Knotens ein `condition`, wertet `conditional-node-executor.ts`
+   * ausschließlich über `selectConditionedBranch` aus. */
+  condition?: BranchCondition;
 };
 export type ConditionalNodeConfig = {
   primitive: "conditionalFlow";

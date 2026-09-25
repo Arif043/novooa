@@ -379,6 +379,79 @@ void main() {
       expect(config.structuredFields.single.type, StructuredFieldType.string);
     },
   );
+
+  test(
+    'serialisiert und deserialisiert einen verschachtelten '
+    'Branch-Ausdrucksbaum (Klammerung)',
+    () {
+      const config = ConditionalNodeConfig(
+        branches: [
+          ConditionalBranch(
+            id: 'branch.1',
+            label: 'Bedingung 1',
+            graph: WorkflowGraph(nodes: [], edges: []),
+            condition: GroupCondition(
+              combinator: BooleanCombinator.or,
+              children: [
+                GroupCondition(
+                  combinator: BooleanCombinator.and,
+                  children: [
+                    ComparisonCondition(
+                      left: '{{x}}',
+                      operator: ComparisonOperator.greaterThan,
+                      right: '0',
+                    ),
+                    ComparisonCondition(
+                      left: '{{y}}',
+                      operator: ComparisonOperator.equals,
+                      right: 'ja',
+                    ),
+                  ],
+                ),
+                ComparisonCondition(
+                  left: '{{z}}',
+                  operator: ComparisonOperator.contains,
+                  right: 'immer',
+                ),
+              ],
+            ),
+          ),
+          ConditionalBranch(
+            id: 'branch.sonst',
+            label: 'Sonst',
+            graph: WorkflowGraph(nodes: [], edges: []),
+          ),
+        ],
+      );
+
+      final document = _mapper().toDocument(config);
+      final restored = _mapper().fromDocument(document) as ConditionalNodeConfig;
+
+      expect(restored, config);
+      expect(restored.branches[1].condition, isNull);
+    },
+  );
+
+  test(
+    'Branches ohne persistiertes condition-Feld (Altdaten) bleiben '
+    'branchlos-condition (null) statt eine erfundene Bedingung zu bekommen',
+    () {
+      final config = _mapper().fromDocument({
+            'primitive': 'conditionalFlow',
+            'valueTemplate': '{{entscheidung.value}}',
+            'branches': [
+              {
+                'id': 'branch.1',
+                'label': 'Ja',
+                'graph': {'nodes': [], 'edges': []},
+              },
+            ],
+          })
+          as ConditionalNodeConfig;
+
+      expect(config.branches.single.condition, isNull);
+    },
+  );
 }
 
 const _attachment = NodeAttachment(

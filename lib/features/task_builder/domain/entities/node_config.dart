@@ -14,6 +14,7 @@ part 'employee_assignment_support.dart';
 part 'string_input_node_config.dart';
 part 'script_node_config.dart';
 part 'conditional_node_config.dart';
+part 'branch_condition.dart';
 part 'iterative_refinement_node_config.dart';
 part 'human_approval_node_config.dart';
 part 'dialog_input_node_config.dart';

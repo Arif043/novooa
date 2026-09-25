@@ -44,41 +44,67 @@ void main() {
     );
   });
 
-  testWidgets('zeigt die normale Wenn-Eingabe, wenn kein Entscheidungs-Prompt '
-      'direkt vorausgeht', (tester) async {
-    final node = _conditionalNode();
-    await tester.pumpWidget(await _app(_taskFor(node), node));
+  testWidgets(
+    'zeigt den Baukasten-Editor mit leerem Zustand, wenn kein '
+    'Entscheidungs-Prompt direkt vorausgeht und noch keine Bedingung '
+    'existiert',
+    (tester) async {
+      final node = _branchFreeConditionalNode();
+      await tester.pumpWidget(await _app(_taskFor(node), node));
 
-    expect(find.text('Wenn'), findsOneWidget);
-    expect(find.byType(TextFormField), findsOneWidget);
-  });
-
-  testWidgets('speichert einen bearbeiteten Wert über updateConditionalValue', (
-    tester,
-  ) async {
-    final node = _conditionalNode();
-    final cubit = TaskBuilderCubit(
-      repository: _FakeTaskRepository(_taskFor(node)),
-    );
-    await cubit.load(_taskFor(node));
-    await tester.pumpWidget(
-      MaterialApp(
-        home: BlocProvider.value(
-          value: cubit,
-          child: Scaffold(body: ConditionalWidget(node: node)),
+      expect(find.text('Wenn'), findsOneWidget);
+      expect(
+        find.text(
+          'Noch keine Bedingung — ohne Bedingung läuft dieser Baustein '
+          'direkt weiter.',
         ),
-      ),
-    );
+        findsOneWidget,
+      );
+      expect(find.widgetWithText(OutlinedButton, 'Bedingung hinzufügen'), findsOneWidget);
+    },
+  );
 
-    await tester.enterText(find.byType(TextFormField), '{{eingang.value}}');
-    await tester.pump();
+  testWidgets(
+    'fügt über "Bedingung hinzufügen" einen bedingten Branch plus '
+    'automatischen Sonst-Branch hinzu',
+    (tester) async {
+      final node = _branchFreeConditionalNode();
+      final cubit = TaskBuilderCubit(
+        repository: _FakeTaskRepository(_taskFor(node)),
+      );
+      await cubit.load(_taskFor(node));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider.value(
+            value: cubit,
+            child: Scaffold(
+              body: BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
+                builder: (context, state) {
+                  final currentNode = (state as TaskBuilderLoaded)
+                      .editingTask
+                      .nodes
+                      .single;
+                  return ConditionalWidget(node: currentNode);
+                },
+              ),
+            ),
+          ),
+        ),
+      );
 
-    final state = cubit.state as TaskBuilderLoaded;
-    final config =
-        state.editingTask.nodes.single.config as ConditionalNodeConfig;
-    expect(config.valueTemplate, '{{eingang.value}}');
-    await cubit.close();
-  });
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Bedingung hinzufügen'));
+      await tester.pump();
+
+      final state = cubit.state as TaskBuilderLoaded;
+      final config =
+          state.editingTask.nodes.single.config as ConditionalNodeConfig;
+      expect(config.branches, hasLength(2));
+      expect(config.branches[0].condition, isNotNull);
+      expect(config.branches[1].label, 'Sonst');
+      expect(config.branches[1].condition, isNull);
+      await cubit.close();
+    },
+  );
 }
 
 Future<Widget> _app(Task task, WorkflowNode node) async {
@@ -121,6 +147,15 @@ WorkflowNode _conditionalNode() {
         ),
       ],
     ),
+  );
+}
+
+WorkflowNode _branchFreeConditionalNode() {
+  return const WorkflowNode(
+    id: NodeId('node.1'),
+    title: 'Verzweigung',
+    description: 'Beschreibung',
+    config: ConditionalNodeConfig(branches: []),
   );
 }
 

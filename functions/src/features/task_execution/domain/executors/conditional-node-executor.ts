@@ -2,6 +2,7 @@ import {
   executeConditionalFlow,
   type ConditionalExecutionResult,
 } from "./conditional-executor.js";
+import {selectConditionedBranch} from "./branch-condition-evaluator.js";
 import {
   type NodeExecutor,
   executedNode,
@@ -39,16 +40,9 @@ export function createConditionalFlowNodeExecutor(
   return {
     primitive: "conditionalFlow",
     async execute(node, runContext) {
-      const targetLabel = runContext.templateExpressionResolver.resolveText(
-        valueTemplateFor(node),
-      );
-      const output = executeConditionalFlow({
-        node,
-        targetLabel,
-        outgoingEdges: runContext.currentGraph.edges.filter(
-          (edge) => edge.from === node.id,
-        ),
-      });
+      const output = hasExpressionBranches(node)
+        ? conditionedOutputFor(node, runContext)
+        : labelMatchedOutputFor(node, runContext);
       const branchOutput = await executeSelectedBranch(
         node,
         runContext,
@@ -70,6 +64,59 @@ function valueTemplateFor(node: WorkflowNode): string {
   return node.config.primitive === "conditionalFlow"
     ? node.config.valueTemplate ?? ""
     : "";
+}
+
+// Trägt irgendein Zweig dieses Knotens ein `condition` (Baukasten-Bedingung
+// ohne Entscheidungs-Prompt-Vorgänger), wertet ausschließlich
+// `selectConditionedBranch` aus — der bestehende Label-Matching-Pfad bleibt
+// für alle anderen Knoten (Entscheidungs-Prompt-getrieben oder Altdaten)
+// unverändert, da dort niemals ein `condition` gesetzt ist.
+function hasExpressionBranches(node: WorkflowNode): boolean {
+  return node.config.primitive === "conditionalFlow" &&
+    node.config.branches.some((branch) => branch.condition !== undefined);
+}
+
+function conditionedOutputFor(
+  node: WorkflowNode,
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+): ConditionalExecutionResult {
+  if (node.config.primitive !== "conditionalFlow") {
+    return {selectedNodeId: null, reason: "Kein Bedingter-Ablauf-Baustein."};
+  }
+  const match = selectConditionedBranch(
+    node.config.branches,
+    (template) => runContext.templateExpressionResolver.resolveValue(template),
+  );
+  if (!match) {
+    return {
+      selectedNodeId: null,
+      reason: "Keine Bedingung trifft zu und kein Sonst-Zweig vorhanden.",
+    };
+  }
+  return {
+    selectedNodeId: null,
+    selectedBranchId: match.branch.id,
+    selectedBranchLabel: match.branch.label,
+    reason: match.matched
+      ? `Bedingung erfüllt: ${match.branch.label}`
+      : `Keine Bedingung trifft zu. Sonst-Zweig verwendet: ${match.branch.label}`,
+  };
+}
+
+function labelMatchedOutputFor(
+  node: WorkflowNode,
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+): ConditionalExecutionResult {
+  const targetLabel = runContext.templateExpressionResolver.resolveText(
+    valueTemplateFor(node),
+  );
+  return executeConditionalFlow({
+    node,
+    targetLabel,
+    outgoingEdges: runContext.currentGraph.edges.filter(
+      (edge) => edge.from === node.id,
+    ),
+  });
 }
 
 async function executeSelectedBranch(

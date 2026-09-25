@@ -26,9 +26,14 @@ die Function-Instanz, nicht auf den Rechner der Nutzer:innen.
 ## Prompt
 
 Der Prompt-Executor bietet die Output-Arten `text`, `decision`, `structured`
-und `image`. Entscheidungen liefern die gewählte Option als `value`.
-Strukturierte Prompts validieren ein required Zod-Object, legen jedes Feld als
-benannten Output ab und schreiben die Gesamtstruktur als JSON in `text`.
+und `image`. Entscheidungen liefern die gewählte Option (ein Wert aus den vom
+Nutzer definierten `choices` — fachlich ein Enum, kein Wahrheitswert) als
+`value`. Strukturierte Prompts validieren ein required Zod-Object und legen
+jedes Feld als benannten Output ab; jedes Feld trägt einen eigenen Typ
+(`string`/`number`/`boolean`), der das Zod-Schema pro Feld steuert (inkl.
+Koerzion bei `number`/`boolean`) und den resultierenden Workflow-Ausgabewert
+entsprechend taggt, statt wie zuvor immer `string`. Die Gesamtstruktur wird
+zusätzlich als JSON in `text` geschrieben.
 Bild-Prompts verwenden Google GenAI mit `gemini-2.5-flash-image` (optional
 ueber `GOOGLE_IMAGE_MODEL` konfigurierbar). Ein vorangehender `media`-Wert
 wird aus Object Storage geladen und als Genkit-Medienteil an Gemini übergeben.
@@ -75,15 +80,35 @@ read_file(display_name)
 
 ## Bedingter Ablauf
 
-Der Conditional-Executor löst sein explizites `valueTemplate` als Ziellabel
-auf.
-Er waehlt den Branch mit dem exakt passenden Label, ansonsten den ersten
-Branch. Der Branch-Graph wird durch denselben Graph-Runner ausgefuehrt; dessen finale Ausgabe
-wird `text` des Conditional-Knotens. Ausgehende Top-Level-Kanten sind nur ein
-Legacy-Fallback.
+Die Branch-Auswahl kennt zwei unabhängige Pfade — welcher greift, entscheidet
+sich pro Knoten daran, ob irgendein Branch ein `condition` trägt:
 
-`executeConditionalFlow` enthaelt die Auswahlregel als Domain-Funktion. Der
-Genkit-Executor loest Templates auf, startet gegebenenfalls den ausgewaehlten eingebetteten Graphen und protokolliert dessen Lauf.
+**Label-Matching** (Entscheidungs-Prompt-Vorgänger oder Altdaten): Der
+Conditional-Executor löst sein explizites `valueTemplate` als Ziellabel auf
+und waehlt den Branch mit dem exakt passenden Label, ansonsten den ersten
+Branch (`executeConditionalFlow`, Domain-Funktion). Trägt ein direkt
+vorgeschalteter Entscheidungs-Prompt eine Entscheidung bei, hält
+`_syncConditionalSuccessors` `valueTemplate`/Branch-Labels automatisch mit
+dessen `choices` synchron.
+
+**Baukasten-Bedingungen** (kein Entscheidungs-Prompt-Vorgänger): Jeder Branch
+trägt stattdessen einen eigenen booleschen Ausdrucksbaum (`BranchCondition`:
+Vergleich `left`/`operator`/`right` oder Gruppe mit AND/OR/XOR-verknüpften
+Kindern, beliebig verschachtelt — Verschachtelung ersetzt Klammern).
+`selectConditionedBranch`/`evaluateBranchCondition`
+(`branch-condition-evaluator.ts`) werten die Branches der Reihe nach aus und
+wählen den ersten zutreffenden; ein Branch ohne `condition` ("Sonst") ist der
+garantierte, in der UI erzwungene Fallback — kein stiller Rückfall auf den
+ersten Branch wie beim Label-Matching. Operanden werden über
+`resolveValue` (nicht `resolveText`) als Rohwert aufgelöst, damit echte
+Zahlen-/Boolean-Vergleiche möglich sind; nicht-typisierte Werte werden beim
+Vergleich ad-hoc koerziert. Der Baukasten-Editor
+(`ConditionalBranchesEditor`) ersetzt für diesen Fall die frühere einzelne
+"Wenn"-Freitexteingabe.
+
+In beiden Faellen wird der Branch-Graph durch denselben Graph-Runner
+ausgefuehrt; dessen finale Ausgabe wird `text` des Conditional-Knotens.
+Ausgehende Top-Level-Kanten sind nur ein Legacy-Fallback.
 
 ## Iterative Verfeinerung
 

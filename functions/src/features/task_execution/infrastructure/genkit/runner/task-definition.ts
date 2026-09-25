@@ -1,6 +1,7 @@
 import {z} from "genkit";
 import {documentFilterOperators} from "../../../../data/domain/entities/document-filter.js";
 import {
+  type BranchCondition,
   type NodeOutputValue,
   workflowPrimitives,
 } from "../../../domain/entities/task.js";
@@ -107,11 +108,43 @@ const branchWorkflowGraphSchema = z.object({
   edges: z.array(workflowEdgeSchema).default([]),
 });
 
+export const comparisonOperatorSchema = z.enum([
+  "equals",
+  "notEquals",
+  "greaterThan",
+  "greaterThanOrEqual",
+  "lessThan",
+  "lessThanOrEqual",
+  "contains",
+]);
+
+export const booleanCombinatorSchema = z.enum(["and", "or", "xor"]);
+
+// Selbstreferenzierend (eine Gruppe enthält weitere Bedingungen) — `z.lazy`
+// ist Zods Standardmuster dafür, da die Schema-Definition sonst sich selbst
+// referenzieren müsste, bevor sie existiert.
+export const branchConditionSchema: z.ZodType<BranchCondition> = z.lazy(() =>
+  z.discriminatedUnion("kind", [
+    z.object({
+      kind: z.literal("comparison"),
+      left: z.string(),
+      operator: comparisonOperatorSchema,
+      right: z.string(),
+    }),
+    z.object({
+      kind: z.literal("group"),
+      combinator: booleanCombinatorSchema,
+      children: z.array(branchConditionSchema),
+    }),
+  ]),
+);
+
 export const conditionalBranchSchema = z.object({
   id: z.string().min(1),
   label: z.string().default(""),
   nodeIds: z.array(z.string().min(1)).default([]),
   graph: branchWorkflowGraphSchema.default({nodes: [], edges: []}),
+  condition: branchConditionSchema.optional(),
 });
 
 export const conditionalNodeConfigSchema = z.object({

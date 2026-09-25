@@ -5,20 +5,34 @@ class ConditionalBranch extends Equatable {
     required this.id,
     required this.label,
     required this.graph,
+    this.condition,
   });
 
   final String id;
   final String label;
   final WorkflowGraph graph;
 
-  @override
-  List<Object?> get props => [id, label, graph];
+  /// `null` bedeutet: kein eigener Ausdruck — entweder der "Sonst"-Branch
+  /// (greift immer, wenn kein anderer Branch dieses Knotens zutrifft) oder
+  /// ein Alt-/Entscheidungs-Prompt-getriebener Branch aus dem bisherigen
+  /// Label-Matching-Pfad (`conditional-executor.ts`), der unverändert
+  /// weiterläuft, solange kein Branch dieses Knotens ein `condition` trägt.
+  final BranchCondition? condition;
 
-  ConditionalBranch copyWith({String? label, WorkflowGraph? graph}) {
+  @override
+  List<Object?> get props => [id, label, graph, condition];
+
+  ConditionalBranch copyWith({
+    String? label,
+    WorkflowGraph? graph,
+    BranchCondition? condition,
+    bool clearCondition = false,
+  }) {
     return ConditionalBranch(
       id: id,
       label: label ?? this.label,
       graph: graph ?? this.graph,
+      condition: clearCondition ? null : condition ?? this.condition,
     );
   }
 }

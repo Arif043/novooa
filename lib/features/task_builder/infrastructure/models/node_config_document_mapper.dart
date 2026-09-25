@@ -534,6 +534,24 @@ class NodeConfigDocumentMapper {
       'id': branch.id,
       'label': branch.label,
       'graph': graphToDocument(branch.graph),
+      if (branch.condition != null)
+        'condition': _branchConditionToDocument(branch.condition!),
+    };
+  }
+
+  Map<String, Object?> _branchConditionToDocument(BranchCondition condition) {
+    return switch (condition) {
+      ComparisonCondition(:final left, :final operator, :final right) => {
+        'kind': 'comparison',
+        'left': left,
+        'operator': operator.name,
+        'right': right,
+      },
+      GroupCondition(:final combinator, :final children) => {
+        'kind': 'group',
+        'combinator': combinator.name,
+        'children': children.map(_branchConditionToDocument).toList(),
+      },
     };
   }
 
@@ -575,12 +593,43 @@ class NodeConfigDocumentMapper {
     return _mapListFrom(value).map(_branchFrom).toList();
   }
 
+  // `condition` fehlt bei allen vor dieser Erweiterung persistierten
+  // Branches (Entscheidungs-Prompt-getrieben oder branchfrei) — `null`
+  // reproduziert exakt deren bisheriges Verhalten (Label-Matching-Pfad).
   ConditionalBranch _branchFrom(Map<String, Object?> data) {
+    final conditionData = data['condition'];
     return ConditionalBranch(
       id: data['id'] as String? ?? '',
       label: data['label'] as String? ?? '',
       graph: graphFromDocument(data['graph']),
+      condition: conditionData is Map
+          ? _branchConditionFrom(conditionData.cast<String, Object?>())
+          : null,
     );
+  }
+
+  // Unbekannte/korrupte `kind`-Werte fallen auf einen leeren Vergleich
+  // zurück, statt das Laden der gesamten Aufgabe zu verhindern.
+  BranchCondition _branchConditionFrom(Map<String, Object?> data) {
+    return switch (data['kind']) {
+      'group' => GroupCondition(
+        combinator: BooleanCombinator.values.firstWhere(
+          (candidate) => candidate.name == data['combinator'],
+          orElse: () => BooleanCombinator.and,
+        ),
+        children: _mapListFrom(data['children'])
+            .map(_branchConditionFrom)
+            .toList(),
+      ),
+      _ => ComparisonCondition(
+        left: data['left'] as String? ?? '',
+        operator: ComparisonOperator.values.firstWhere(
+          (candidate) => candidate.name == data['operator'],
+          orElse: () => ComparisonOperator.equals,
+        ),
+        right: data['right'] as String? ?? '',
+      ),
+    };
   }
 
   Map<String, Object?> _attachmentToDocument(NodeAttachment attachment) {

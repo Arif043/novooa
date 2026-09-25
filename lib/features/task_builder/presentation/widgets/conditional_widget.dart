@@ -7,17 +7,19 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart
 import 'package:syscat2/features/task_builder/domain/entities/workflow_predecessor.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/conditional_branches_editor.dart';
 
-/// Konfigurationsfläche für „Bedingter Ablauf". Branches selbst werden
-/// ausschließlich auf der Haupt-Leinwand verbunden/befüllt (dort bereits
-/// vollständig rekursiv abgebildet, siehe `WorkflowCanvasLayout`) — dieses
-/// Panel zeigt nur noch die Wert-Bedingung.
+/// Konfigurationsfläche für „Bedingter Ablauf". Die Zweig-Subgraphen selbst
+/// werden ausschließlich auf der Haupt-Leinwand verbunden/befüllt (dort
+/// bereits vollständig rekursiv abgebildet, siehe `WorkflowCanvasLayout`) —
+/// dieses Panel zeigt die Bedingung: bei einem Entscheidungs-Prompt-
+/// Vorgänger nur einen Hinweis (automatisch synchronisiert), sonst den
+/// Baukasten-Editor für boolesche Branch-Bedingungen
+/// ([ConditionalBranchesEditor]).
 class ConditionalWidget extends StatelessWidget {
   const ConditionalWidget({super.key, required this.node});
 
   final WorkflowNode node;
-
-  ConditionalNodeConfig get _config => node.config as ConditionalNodeConfig;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +28,7 @@ class ConditionalWidget extends StatelessWidget {
       decoration: SyscatTheme.nodePanelDecoration(context),
       child: _isDrivenByDecisionPrompt(context)
           ? _derivedNotice()
-          : _whenSection(context),
+          : ConditionalBranchesEditor(node: node),
     );
   }
 
@@ -48,26 +50,6 @@ class ConditionalWidget extends StatelessWidget {
       'Die Verzweigungen werden aus dem vorherigen Prompt-Baustein '
       'ermittelt.',
       style: SyscatTheme.taskBody,
-    );
-  }
-
-  Widget _whenSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Wenn', style: SyscatTheme.taskBody),
-        const SizedBox(height: AppSpacing.sm),
-        TextFormField(
-          initialValue: _config.valueTemplate,
-          decoration: const InputDecoration(
-            labelText: 'Wert',
-            hintText: '{{baustein.value}}',
-          ),
-          onChanged: (value) => context
-              .read<TaskBuilderCubit>()
-              .updateConditionalValue(node.id, value),
-        ),
-      ],
     );
   }
 }

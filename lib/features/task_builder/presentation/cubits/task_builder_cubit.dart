@@ -14,6 +14,7 @@ import '../../domain/entities/workflow_node.dart';
 import 'task_builder_state.dart';
 import 'workflow_primitive_labels.dart';
 part 'task_builder_branch_mutations.dart';
+part 'task_builder_condition_branch_mutations.dart';
 part 'task_builder_attachment_mutations.dart';
 part 'task_builder_graph_mutations.dart';
 part 'task_builder_iterative_refinement_mutations.dart';
