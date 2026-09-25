@@ -75,8 +75,8 @@ test("flattens structured prompt fields directly without a node name", () => {
         outputType: "structured",
         choices: [],
         structuredFields: [
-          {name: "Name", description: ""},
-          {name: "Alter", description: ""},
+          {name: "Name", description: "", type: "string"},
+          {name: "Alter", description: "", type: "string"},
         ],
         firstChoice: "",
         secondChoice: "",

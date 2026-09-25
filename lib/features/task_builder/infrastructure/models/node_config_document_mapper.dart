@@ -538,7 +538,11 @@ class NodeConfigDocumentMapper {
   }
 
   Map<String, Object?> _structuredFieldToDocument(StructuredOutputField field) {
-    return {'name': field.name, 'description': field.description};
+    return {
+      'name': field.name,
+      'description': field.description,
+      'type': field.type.name,
+    };
   }
 
   List<StructuredOutputField> _structuredFieldsFrom(Object? value) {
@@ -548,10 +552,18 @@ class NodeConfigDocumentMapper {
         : fields;
   }
 
+  // Altdaten ohne `type`-Schlüssel fallen auf `string` zurück — exakt das
+  // Verhalten, das jedes strukturierte Feld vor dieser Erweiterung hatte.
   StructuredOutputField _structuredFieldFrom(Map<String, Object?> data) {
+    final typeName = data['type'] as String? ?? '';
+    final type = StructuredFieldType.values.firstWhere(
+      (candidate) => candidate.name == typeName,
+      orElse: () => StructuredFieldType.string,
+    );
     return StructuredOutputField(
       name: data['name'] as String? ?? '',
       description: data['description'] as String? ?? '',
+      type: type,
     );
   }
 

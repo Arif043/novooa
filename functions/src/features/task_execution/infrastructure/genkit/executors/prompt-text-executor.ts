@@ -7,6 +7,7 @@ import {runEmployeeAgentTurn} from "../runner/employee-agent.js";
 import {formatModelCallFinished, formatModelCallStarted} from "../runner/structured-logger.js";
 import {promptContentFor, validStructuredFields} from "./prompt-node-input.js";
 import {type PromptNodeInput, type PromptNodeOutput, type StructuredOutputField} from "./prompt-node-types.js";
+import {primitiveNodeOutputValue} from "../../../domain/entities/workflow-value.js";
 import {type ResolvedGenkitLanguageModel} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 import {FirebaseApplicationLogger} from "../../../../../shared/logging/firebase-application-logger.js";
@@ -126,9 +127,9 @@ async function decisionResponseFor(
 }
 
 async function structuredResponseFor(
-  ai: GenkitBeta, input: PromptNodeInput, prompt: ReturnType<typeof promptContentFor>, schema: z.ZodType<Record<string, string>>, workspace?: NodeAttachmentWorkspace,
+  ai: GenkitBeta, input: PromptNodeInput, prompt: ReturnType<typeof promptContentFor>, schema: z.ZodType<Record<string, StructuredFieldValue>>, workspace?: NodeAttachmentWorkspace,
   languageModel?: ResolvedGenkitLanguageModel,
-): Promise<{output: Record<string, string> | undefined; text: string}> {
+): Promise<{output: Record<string, StructuredFieldValue> | undefined; text: string}> {
   const model = languageModel?.model ?? textModel();
   if (input.employee && input.mediaUrls.length === 0) {
     const response = await runEmployeeAgentTurn(ai, {
@@ -147,19 +148,39 @@ function logContextFor(languageModel: ResolvedGenkitLanguageModel | undefined) {
   return languageModel?.logContext ?? modelLogContext();
 }
 
-function structuredSchemaFor(fields: StructuredOutputField[]) {
-  const shape = fields.reduce<Record<string, z.ZodString>>((schema, field) => {
-    schema[field.name.trim()] = field.description.trim().length === 0
-      ? z.string().min(1)
-      : z.string().min(1).describe(field.description.trim());
+type StructuredFieldValue = string | number | boolean;
+
+// Exportiert für direkte Unit-Tests der Schema-/Ausgabe-Zuordnung, ohne die
+// gesamte `ai.generate()`-Pipeline mocken zu müssen — reine Funktionen ohne
+// Seiteneffekt.
+export function structuredSchemaFor(fields: StructuredOutputField[]) {
+  const shape = fields.reduce<Record<string, z.ZodTypeAny>>((schema, field) => {
+    schema[field.name.trim()] = fieldSchemaFor(field);
     return schema;
   }, {});
   return z.object(shape);
 }
 
-function fieldOutputsFor(output: Record<string, string>) {
-  return Object.entries(output).reduce<Record<string, {type: "string"; value: string}>>(
-    (outputs, [key, value]) => ({...outputs, [key]: {type: "string", value}}),
+// `number`/`boolean` nutzen Zods Coercion (Genkits eigene Empfehlung für
+// robuste strukturierte Ausgaben), da Modelle Zahlen/Wahrheitswerte
+// gelegentlich als String statt als natives JSON liefern.
+function fieldSchemaFor(field: StructuredOutputField): z.ZodTypeAny {
+  const description = field.description.trim();
+  const base = baseSchemaFor(field.type);
+  return description.length === 0 ? base : base.describe(description);
+}
+
+function baseSchemaFor(type: StructuredOutputField["type"]): z.ZodTypeAny {
+  switch (type) {
+    case "number": return z.coerce.number();
+    case "boolean": return z.coerce.boolean();
+    default: return z.string().min(1);
+  }
+}
+
+export function fieldOutputsFor(output: Record<string, StructuredFieldValue>) {
+  return Object.entries(output).reduce<Record<string, ReturnType<typeof primitiveNodeOutputValue>>>(
+    (outputs, [key, value]) => ({...outputs, [key]: primitiveNodeOutputValue(value)}),
     {},
   );
 }

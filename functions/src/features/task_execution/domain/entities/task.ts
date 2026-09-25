@@ -68,9 +68,11 @@ export const workflowPrimitives = [
 export type WorkflowPrimitive = (typeof workflowPrimitives)[number];
 export type PromptOutputType = "text" | "decision" | "structured" | "image";
 export type ChannelMessageKind = "email" | "whatsapp" | "sms";
+export type StructuredOutputFieldType = "string" | "number" | "boolean";
 export type StructuredOutputField = {
   name: string;
   description: string;
+  type: StructuredOutputFieldType;
 };
 export type StringInputNodeConfig = {
   primitive: "stringInput";

@@ -328,6 +328,57 @@ void main() {
     expect(document['outputType'], 'image');
     expect(config.outputType, PromptOutputType.image);
   });
+
+  test(
+    'serialisiert und deserialisiert den Typ strukturierter Prompt-Ausgabefelder',
+    () {
+      const config = PromptNodeConfig(
+        instruction: 'Extrahiere die Rechnungsdaten.',
+        outputType: PromptOutputType.structured,
+        choices: [],
+        structuredFields: [
+          StructuredOutputField(
+            name: 'summe',
+            description: 'Gesamtsumme in Euro',
+            type: StructuredFieldType.number,
+          ),
+          StructuredOutputField(
+            name: 'bezahlt',
+            description: '',
+            type: StructuredFieldType.boolean,
+          ),
+        ],
+      );
+
+      final document = _mapper().toDocument(config);
+      final restored = _mapper().fromDocument(document) as PromptNodeConfig;
+
+      expect(document['structuredFields'], [
+        {'name': 'summe', 'description': 'Gesamtsumme in Euro', 'type': 'number'},
+        {'name': 'bezahlt', 'description': '', 'type': 'boolean'},
+      ]);
+      expect(restored, config);
+    },
+  );
+
+  test(
+    'strukturierte Prompt-Ausgabefelder ohne persistierten Typ (Altdaten) '
+    'fallen auf StructuredFieldType.string zurück',
+    () {
+      final config = _mapper().fromDocument({
+            'primitive': 'prompt',
+            'instruction': 'Fasse zusammen',
+            'outputType': 'structured',
+            'choices': <String>[],
+            'structuredFields': [
+              {'name': 'titel', 'description': ''},
+            ],
+          })
+          as PromptNodeConfig;
+
+      expect(config.structuredFields.single.type, StructuredFieldType.string);
+    },
+  );
 }
 
 const _attachment = NodeAttachment(

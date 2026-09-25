@@ -8,7 +8,7 @@ import {
 } from "../entities/task.js";
 import {type TaskRunInteraction} from "../entities/task-run-interaction.js";
 import {type TeamFileStore} from "../../../files/domain/repositories/team-file-store.js";
-import {mediaReferenceFor} from "../entities/workflow-value.js";
+import {mediaReferenceFor, primitiveNodeOutputValue} from "../entities/workflow-value.js";
 
 export async function responseOutputsForTaskRun(
   resumeState: TaskResumeState,
@@ -54,7 +54,7 @@ function dialogInputOutputs(
   const values = validateDialogInputValues(interaction, formValues);
   const outputs = Object.entries(values).reduce<Record<string, NodeOutputValue>>(
     (current, [name, value]) => {
-      current[name] = outputFor(value);
+      current[name] = primitiveNodeOutputValue(value);
       return current;
     },
     {},
@@ -98,8 +98,3 @@ function mediaFileOutputs(
   };
 }
 
-function outputFor(value: string | number | boolean): NodeOutputValue {
-  if (typeof value === "number") return {type: "number", value};
-  if (typeof value === "boolean") return {type: "boolean", value};
-  return {type: "string", value};
-}

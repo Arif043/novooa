@@ -18,6 +18,12 @@ export const promptOutputTypeSchema = z.enum([
   "image",
 ]);
 
+export const structuredOutputFieldTypeSchema = z.enum([
+  "string",
+  "number",
+  "boolean",
+]);
+
 export const nodeAttachmentSchema = z.object({
   id: z.string().min(1),
   storagePath: z.string().min(1),
@@ -71,6 +77,7 @@ export const promptNodeConfigSchema = z.object({
   structuredFields: z.array(z.object({
     name: z.string().default(""),
     description: z.string().default(""),
+    type: structuredOutputFieldTypeSchema.default("string"),
   })).default([]),
   firstChoice: z.string().default(""),
   secondChoice: z.string().default(""),

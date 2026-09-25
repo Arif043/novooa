@@ -36,3 +36,15 @@ export function mediaReferenceFor(file: FileReference): MediaReference {
 export function tableOutput(value: WorkflowTable): NodeOutputValue {
   return {type: "table", value};
 }
+
+/** Übersetzt einen rohen Primitiv-Wert (z.B. aus einem typisierten
+ * Formular- oder strukturierten Prompt-Feld) in seinen passenden,
+ * getaggten `NodeOutputValue` — einzige Stelle für dieses Mapping, damit
+ * `string`/`number`/`boolean` überall gleich getaggt werden. */
+export function primitiveNodeOutputValue(
+  value: string | number | boolean,
+): NodeOutputValue {
+  if (typeof value === "number") return {type: "number", value};
+  if (typeof value === "boolean") return {type: "boolean", value};
+  return {type: "string", value};
+}

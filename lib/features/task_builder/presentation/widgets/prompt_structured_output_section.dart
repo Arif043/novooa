@@ -93,27 +93,45 @@ class _StructuredOutputFieldRowState extends State<_StructuredOutputFieldRow> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(hintText: 'Feldname'),
-              onChanged: _emit,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(hintText: 'Feldname'),
+                  onChanged: _emit,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: TextField(
+                  controller: _descriptionController,
+                  decoration: const InputDecoration(hintText: 'Beschreibung'),
+                  onChanged: _emit,
+                ),
+              ),
+              IconButton(
+                tooltip: 'Feld entfernen',
+                onPressed: widget.canRemove ? widget.onRemove : null,
+                icon: const Icon(Icons.remove_circle_outline),
+              ),
+            ],
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: TextField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(hintText: 'Beschreibung'),
-              onChanged: _emit,
-            ),
-          ),
-          IconButton(
-            tooltip: 'Feld entfernen',
-            onPressed: widget.canRemove ? widget.onRemove : null,
-            icon: const Icon(Icons.remove_circle_outline),
+          const SizedBox(height: AppSpacing.xs),
+          DropdownButtonFormField<StructuredFieldType>(
+            initialValue: widget.field.type,
+            decoration: const InputDecoration(labelText: 'Typ'),
+            items: [
+              for (final type in StructuredFieldType.values)
+                DropdownMenuItem(value: type, child: Text(type.label)),
+            ],
+            onChanged: (type) {
+              if (type == null) return;
+              widget.onChanged(widget.field.copyWith(type: type));
+            },
           ),
         ],
       ),
@@ -122,7 +140,7 @@ class _StructuredOutputFieldRowState extends State<_StructuredOutputFieldRow> {
 
   void _emit(String _) {
     widget.onChanged(
-      StructuredOutputField(
+      widget.field.copyWith(
         name: _nameController.text,
         description: _descriptionController.text,
       ),
