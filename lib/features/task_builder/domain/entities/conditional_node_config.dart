@@ -36,8 +36,14 @@ class ConditionalNodeConfig extends NodeConfig {
     return branches.map((branch) => branch.label).toList(growable: false);
   }
 
-  factory ConditionalNodeConfig.initial([List<String>? choices]) {
-    return ConditionalNodeConfig.fromChoices(choices ?? ['Ja', 'Nein']);
+  /// Ohne explizite [choices] bleibt der Baustein bewusst branchfrei (eine
+  /// leere Liste bei [fromChoices] erzeugt bereits `branches: []` — kein
+  /// Sonderfall nötig): nur ein direkt vorgeschalteter Entscheidungs-Prompt
+  /// (siehe `TaskBuilderGraphMutations._syncConditionalSuccessors`) füllt
+  /// die Branches automatisch — ein frei eingefügter
+  /// Bedingter-Ablauf-Baustein soll nicht ungefragt "Ja"/"Nein" erfinden.
+  factory ConditionalNodeConfig.initial([List<String> choices = const []]) {
+    return ConditionalNodeConfig.fromChoices(choices);
   }
 
   factory ConditionalNodeConfig.fromChoices(List<String> choices) {

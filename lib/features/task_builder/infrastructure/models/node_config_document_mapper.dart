@@ -555,11 +555,12 @@ class NodeConfigDocumentMapper {
     );
   }
 
+  // Eine leere Branch-Liste ist ein gültiger, persistierter Zustand (ein
+  // frei eingefügter, branchfreier Bedingter-Ablauf-Baustein — siehe
+  // `ConditionalNodeConfig.initial`) und wird nicht mehr durch erfundene
+  // "Ja"/"Nein"-Branches ersetzt.
   List<ConditionalBranch> _branchesFrom(Object? value) {
-    final branches = _mapListFrom(value).map(_branchFrom).toList();
-    return branches.isEmpty
-        ? ConditionalNodeConfig.initial().branches
-        : branches;
+    return _mapListFrom(value).map(_branchFrom).toList();
   }
 
   ConditionalBranch _branchFrom(Map<String, Object?> data) {

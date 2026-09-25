@@ -39,7 +39,7 @@ sealed class NodeConfig extends Equatable {
       .stringInput => StringInputNodeConfig.initial(),
       .script => ScriptNodeConfig.initial(),
       .prompt => PromptNodeConfig.initial(),
-      .conditional => ConditionalNodeConfig.initial(null),
+      .conditional => ConditionalNodeConfig.initial(),
       .iterativeRefinement => IterativeRefinementNodeConfig.initial(),
       .humanApproval => HumanApprovalNodeConfig.initial(),
       .dialogInput => DialogInputNodeConfig.initial(),

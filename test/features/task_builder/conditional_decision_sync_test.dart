@@ -74,6 +74,70 @@ void main() {
       await cubit.close();
     },
   );
+
+  test(
+    'fügt einen neuen Bedingter-Ablauf-Baustein branchfrei ein, wenn der '
+    'Vorgänger kein Entscheidungs-Prompt ist — kein automatisches '
+    '"Ja"/"Nein"',
+    () async {
+      final cubit = await _cubitFor(_taskWithSelectedStringInput());
+
+      await cubit.addNodeToMainGraph(WorkflowPrimitive.conditional);
+
+      final config = _conditionalConfigOf(cubit);
+      expect(config.branches, isEmpty);
+      await cubit.close();
+    },
+  );
+
+  test(
+    'fügt den allerersten Baustein eines leeren Arbeitsplans branchfrei '
+    'ein, wenn es ein Bedingter-Ablauf-Baustein ist',
+    () async {
+      final cubit = await _cubitFor(Task.empty());
+
+      await cubit.addNodeToMainGraph(WorkflowPrimitive.conditional);
+
+      final config = _conditionalConfigOf(cubit);
+      expect(config.branches, isEmpty);
+      await cubit.close();
+    },
+  );
+
+  test(
+    'bleibt auch über `addConnectedNode` (Leinwand-Einfügepunkt) branchfrei, '
+    'wenn der explizite Vorgänger kein Entscheidungs-Prompt ist',
+    () async {
+      final cubit = await _cubitFor(_taskWithSelectedStringInput());
+
+      await cubit.addConnectedNode(
+        primitive: WorkflowPrimitive.conditional,
+        afterId: const NodeId('string.1'),
+      );
+
+      final config = _conditionalConfigOf(cubit);
+      expect(config.branches, isEmpty);
+      await cubit.close();
+    },
+  );
+
+  test(
+    'übernimmt Choices sofort über `addConnectedNode`, wenn direkt nach '
+    'einem Entscheidungs-Prompt eingefügt wird',
+    () async {
+      final cubit = await _cubitFor(_taskWithSelectedDecisionPrompt());
+
+      await cubit.addConnectedNode(
+        primitive: WorkflowPrimitive.conditional,
+        afterId: const NodeId('prompt.1'),
+      );
+
+      final config = _conditionalConfigOf(cubit);
+      expect(config.choices, ['Ja', 'Nein', 'Vielleicht']);
+      expect(config.valueTemplate, '{{entscheidung}}');
+      await cubit.close();
+    },
+  );
 }
 
 Future<TaskBuilderCubit> _cubitFor(Task task) async {
@@ -175,6 +239,28 @@ Task _taskWithSelectedDecisionPrompt() {
             outputType: PromptOutputType.decision,
             choices: ['Ja', 'Nein', 'Vielleicht'],
           ),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+Task _taskWithSelectedStringInput() {
+  const stringInputId = NodeId('string.1');
+  return const Task(
+    id: 'task',
+    title: 'Aufgabe',
+    objective: '',
+    selectedNodeId: stringInputId,
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: stringInputId,
+          title: 'Text',
+          description: '',
+          outputName: 'text',
+          config: StringInputNodeConfig(value: 'Beispiel'),
         ),
       ],
       edges: [],
