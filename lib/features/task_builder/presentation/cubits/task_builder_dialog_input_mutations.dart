@@ -31,6 +31,31 @@ extension TaskBuilderDialogInputMutations on TaskBuilderCubit {
     });
   }
 
+  /// Bequemlichkeits-Wrapper für Aufrufer, die nur Feldindex und neuen Namen
+  /// kennen (z.B. ein Leinwand-Label-Doppelklick) — holt das aktuelle Feld
+  /// selbst und ändert nur `name`, restliche Feldeigenschaften bleiben
+  /// erhalten.
+  Future<void> renameDialogInputFieldName({
+    required NodeId nodeId,
+    required int fieldIndex,
+    required String name,
+  }) {
+    final task = loadedTaskOrNull();
+    final node = task == null ? null : _nodeOrNullInGraph(task.graph, nodeId);
+    final field = switch (node?.config) {
+      DialogInputNodeConfig(:final fields)
+          when fieldIndex >= 0 && fieldIndex < fields.length =>
+        fields[fieldIndex],
+      _ => null,
+    };
+    if (field == null) return Future.value();
+    return updateDialogInputField(
+      nodeId: nodeId,
+      fieldIndex: fieldIndex,
+      field: field.copyWith(name: name),
+    );
+  }
+
   DialogInputField _uniqueDialogField(
     WorkflowGraph graph,
     String previousName,

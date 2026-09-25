@@ -125,10 +125,22 @@ class _WorkflowCanvasState extends State<WorkflowCanvas>
                           painter: WorkflowEdgesPainter(
                             layout,
                             Theme.of(context).colorScheme,
-                            Theme.of(context).textTheme.labelMedium!,
                           ),
                         ),
                       ),
+                      for (final link in layout.links)
+                        if (link.labels.isNotEmpty &&
+                            (!link.isReturn ||
+                                WorkflowCanvasOptions.showReturnEdges))
+                          if (_labelAnchor(layout, link) case final Offset anchor)
+                            Positioned(
+                              left: anchor.dx,
+                              top: anchor.dy,
+                              child: FractionalTranslation(
+                                translation: const Offset(-0.5, -0.5),
+                                child: _CanvasLabelStack(link: link),
+                              ),
+                            ),
                       for (final entry in layout.entries.values)
                         Positioned.fromRect(
                           rect: layout.rectangles[entry.id]!,
@@ -455,10 +467,9 @@ class CanvasDotsPainter extends CustomPainter {
 }
 
 class WorkflowEdgesPainter extends CustomPainter {
-  const WorkflowEdgesPainter(this.layout, this.colors, this.labelStyle);
+  const WorkflowEdgesPainter(this.layout, this.colors);
   final WorkflowCanvasLayout layout;
   final ColorScheme colors;
-  final TextStyle labelStyle;
   @override
   void paint(Canvas canvas, Size size) {
     for (final edge in layout.links) {
@@ -515,72 +526,184 @@ class WorkflowEdgesPainter extends CustomPainter {
           ..lineTo(end.dx + 5, end.dy - 7),
         paint,
       );
-      _paintLabels(
-        canvas,
-        edge.labels,
-        Offset((start.dx + end.dx) / 2, middle),
-        edge.isCondition ? colors.surfaceContainerHighest : colors.surfaceContainer,
-      );
     }
-  }
-
-  /// Zeichnet die Chips eines Pfeils als zentrierte, vertikale Reihe —
-  /// üblicherweise genau einer (Bedingungs-Label oder Referenzname), bei
-  /// mehreren fachlichen Ausgabewerten (z.B. strukturierte Prompt-Ausgabe)
-  /// aber mehrere untereinander. Bedingungs-/Verzweigungs-Labels (z.B.
-  /// "Ja"/"Nein") und fachliche Ausgabewerte erhalten unterschiedliche
-  /// Hintergrundfarben ([background]), damit sie auf einen Blick
-  /// unterscheidbar sind.
-  void _paintLabels(
-    Canvas canvas,
-    List<String> labels,
-    Offset center,
-    Color background,
-  ) {
-    final painters = [
-      for (final label in labels)
-        if (label.isNotEmpty) _labelPainter(label),
-    ];
-    if (painters.isEmpty) return;
-    const gap = 14.0;
-    final heights = [for (final text in painters) text.height + 12];
-    final totalHeight =
-        heights.fold(0.0, (sum, height) => sum + height) +
-        gap * (painters.length - 1);
-    var top = center.dy - totalHeight / 2;
-    for (var i = 0; i < painters.length; i++) {
-      final text = painters[i];
-      final width = text.width + 24;
-      final rect = Rect.fromLTWH(
-        center.dx - width / 2,
-        top,
-        width,
-        heights[i],
-      );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(rect, const Radius.circular(20)),
-        Paint()..color = background,
-      );
-      text.paint(canvas, Offset(rect.left + 12, rect.top + 6));
-      top += heights[i] + gap;
-    }
-  }
-
-  TextPainter _labelPainter(String label) {
-    return TextPainter(
-        text: TextSpan(
-          text: label,
-          style: labelStyle.copyWith(
-            color: colors.onSurface,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )
-      ..layout(maxWidth: 240);
   }
 
   @override
   bool shouldRepaint(WorkflowEdgesPainter oldDelegate) => true;
+}
+
+/// Anker-Punkt für die Label-Chips eines Pfeils — exakt derselbe
+/// Mittelpunkt, den der Pfeil selbst in [WorkflowEdgesPainter] anpeilt
+/// (`start`/`end`/`middle`), damit Pfeil und Chip-Stapel optisch
+/// zusammenpassen.
+Offset? _labelAnchor(WorkflowCanvasLayout layout, CanvasLink link) {
+  final from = layout.rectangles[link.from];
+  final to = layout.rectangles[link.to];
+  if (from == null || to == null) return null;
+  final start = from.bottomCenter;
+  final end = to.topCenter;
+  return Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
+}
+
+/// Die Chips eines Pfeils als zentrierte, vertikale Reihe — üblicherweise
+/// genau einer (Bedingungs-Label oder Ausgabename), bei mehreren
+/// fachlichen Ausgabewerten (z.B. strukturierte Prompt-Ausgabe) aber
+/// mehrere untereinander.
+class _CanvasLabelStack extends StatelessWidget {
+  const _CanvasLabelStack({required this.link});
+
+  final CanvasLink link;
+
+  @override
+  Widget build(BuildContext context) {
+    final background = link.isCondition
+        ? Theme.of(context).colorScheme.surfaceContainerHighest
+        : Theme.of(context).colorScheme.surfaceContainer;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < link.labels.length; i++) ...[
+          if (i > 0) const SizedBox(height: 14),
+          _CanvasLabelChip(label: link.labels[i], background: background),
+        ],
+      ],
+    );
+  }
+}
+
+/// Ein einzelner Label-Chip. Ohne [CanvasLabel.editTarget] (strukturelle
+/// Labels wie "Für jedes Element") reiner Text ohne Geste. Mit Edit-Ziel:
+/// Doppelklick macht den Text direkt inline editierbar (voll selektiert,
+/// bereit zum Überschreiben) — bewusst kein Dialog, die Änderung wird bei
+/// Enter/Fokusverlust sofort fachlich übernommen (siehe [_submit]).
+class _CanvasLabelChip extends StatefulWidget {
+  const _CanvasLabelChip({required this.label, required this.background});
+
+  final CanvasLabel label;
+  final Color background;
+
+  @override
+  State<_CanvasLabelChip> createState() => _CanvasLabelChipState();
+}
+
+class _CanvasLabelChipState extends State<_CanvasLabelChip> {
+  TextEditingController? _controller;
+  FocusNode? _focusNode;
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    _focusNode?.dispose();
+    super.dispose();
+  }
+
+  void _startEditing() {
+    if (widget.label.editTarget == null) return;
+    final controller = TextEditingController(text: widget.label.text);
+    final focusNode = FocusNode();
+    setState(() {
+      _controller = controller;
+      _focusNode = focusNode;
+    });
+    // Erst nach dem Aufbau des Textfelds fokussieren/selektieren — sonst
+    // existiert der EditableText-State noch nicht.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      focusNode.requestFocus();
+      controller.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: controller.text.length,
+      );
+    });
+  }
+
+  void _submit(BuildContext context) {
+    final controller = _controller;
+    final target = widget.label.editTarget;
+    if (controller == null) return;
+    final value = controller.text.trim();
+    setState(() {
+      _controller = null;
+      _focusNode = null;
+    });
+    controller.dispose();
+    if (target == null || value.isEmpty || value == widget.label.text) return;
+    _applyEdit(context, target, value);
+  }
+
+  void _applyEdit(
+    BuildContext context,
+    CanvasLabelEditTarget target,
+    String value,
+  ) {
+    final cubit = context.read<TaskBuilderCubit>();
+    switch (target) {
+      case OutputNameEditTarget(:final nodeId):
+        cubit.updateNodeOutputName(nodeId, value);
+      case ConditionalBranchEditTarget(:final conditionalNodeId, :final branchId):
+        cubit.updateConditionalBranchLabel(
+          conditionalNodeId: conditionalNodeId,
+          branchId: branchId,
+          label: value,
+        );
+      case StructuredFieldEditTarget(:final nodeId, :final fieldIndex):
+        cubit.renamePromptStructuredFieldName(
+          nodeId: nodeId,
+          fieldIndex: fieldIndex,
+          name: value,
+        );
+      case DialogFieldEditTarget(:final nodeId, :final fieldIndex):
+        cubit.renameDialogInputFieldName(
+          nodeId: nodeId,
+          fieldIndex: fieldIndex,
+          name: value,
+        );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.labelMedium?.copyWith(
+      color: theme.colorScheme.onSurface,
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+    );
+    final editable = widget.label.editTarget != null;
+    final editing = _controller != null;
+    final chip = Container(
+      constraints: const BoxConstraints(minWidth: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: widget.background,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: editing
+          ? IntrinsicWidth(
+              child: TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                autofocus: true,
+                style: textStyle,
+                textAlign: TextAlign.center,
+                decoration: const InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  focusedBorder: UnderlineInputBorder(borderSide: .new(color: SyscatTheme.primaryOrange)),
+                ),
+                onSubmitted: (_) => _submit(context),
+                onTapOutside: (_) => _submit(context),
+              ),
+            )
+          : Text(widget.label.text, style: textStyle),
+    );
+    if (!editable) return chip;
+    return Semantics(
+      button: true,
+      label: 'Label "${widget.label.text}" bearbeiten, Doppelklick',
+      child: GestureDetector(onDoubleTap: _startEditing, child: chip),
+    );
+  }
 }

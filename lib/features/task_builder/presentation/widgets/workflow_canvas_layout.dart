@@ -11,6 +11,53 @@ class BausteinInsertion {
   final NodeId? after;
 }
 
+/// Wohin eine Doppelklick-Umbenennung eines Leinwand-Labels fachlich
+/// abzielt — `null` (kein [CanvasLabel.editTarget]) heißt: rein
+/// strukturelles Label (z.B. "Für jedes Element"), nicht editierbar.
+sealed class CanvasLabelEditTarget {
+  const CanvasLabelEditTarget();
+}
+
+/// Der primäre Ausgabename eines Bausteins mit genau einem fachlichen
+/// Output (die meisten Primitives).
+class OutputNameEditTarget extends CanvasLabelEditTarget {
+  const OutputNameEditTarget(this.nodeId);
+  final NodeId nodeId;
+}
+
+/// Ein einzelnes Feld einer strukturierten Prompt-Ausgabe — [fieldIndex]
+/// ist der Original-Index in `PromptNodeConfig.structuredFields`, nicht der
+/// Index in der (leere Namen herausfilternden) Chip-Liste.
+class StructuredFieldEditTarget extends CanvasLabelEditTarget {
+  const StructuredFieldEditTarget(this.nodeId, this.fieldIndex);
+  final NodeId nodeId;
+  final int fieldIndex;
+}
+
+/// Ein einzelnes Feld einer Dialogeingabe — [fieldIndex] wie bei
+/// [StructuredFieldEditTarget] der Original-Index in
+/// `DialogInputNodeConfig.fields`.
+class DialogFieldEditTarget extends CanvasLabelEditTarget {
+  const DialogFieldEditTarget(this.nodeId, this.fieldIndex);
+  final NodeId nodeId;
+  final int fieldIndex;
+}
+
+/// Das Label eines Zweigs eines Bedingter-Ablauf-Bausteins (z.B. "Ja").
+class ConditionalBranchEditTarget extends CanvasLabelEditTarget {
+  const ConditionalBranchEditTarget(this.conditionalNodeId, this.branchId);
+  final NodeId conditionalNodeId;
+  final String branchId;
+}
+
+/// Ein einzelner Chip-Text auf einem Leinwand-Pfeil, optional editierbar
+/// (siehe [CanvasLabelEditTarget]).
+class CanvasLabel {
+  const CanvasLabel(this.text, [this.editTarget]);
+  final String text;
+  final CanvasLabelEditTarget? editTarget;
+}
+
 class CanvasEntry {
   const CanvasEntry(
     this.id,
@@ -39,11 +86,11 @@ class CanvasLink {
   final String from;
   final String to;
 
-  /// Chip-Texte auf dem Pfeil — normalerweise höchstens einer (Bedingungs-
-  /// Label wie "Ja"/"Nein" oder der Referenzname des Zielbausteins), bei
-  /// mehreren fachlichen Ausgabewerten eines Bausteins (z.B. strukturierte
-  /// Prompt-Ausgabe mit mehreren Feldern) aber auch mehrere.
-  final List<String> labels;
+  /// Chips auf dem Pfeil — normalerweise höchstens einer (Bedingungs-Label
+  /// wie "Ja"/"Nein" oder der Referenzname des Zielbausteins), bei mehreren
+  /// fachlichen Ausgabewerten eines Bausteins (z.B. strukturierte Prompt-
+  /// Ausgabe mit mehreren Feldern) aber auch mehrere.
+  final List<CanvasLabel> labels;
   final bool isReturn;
 
   /// Unterscheidet Bedingungs-/Verzweigungs-Labels (z.B. "Ja"/"Nein",
@@ -82,13 +129,22 @@ class WorkflowCanvasLayout {
     BausteinInsertion insertion, {
     String? parent,
     String? label,
+    CanvasLabelEditTarget? labelEditTarget,
   }) {
     final peers = graph.nodes.map((node) => node.id).toSet();
     if (graph.nodes.isEmpty) {
       final id = '@empty:${parent ?? 'main'}:${insertion.branchId ?? ''}';
       entries[id] = CanvasEntry(id, null, insertion, peers);
       if (parent != null) {
-        links.add(CanvasLink(parent, id, _labelList(label), false, true));
+        links.add(
+          CanvasLink(
+            parent,
+            id,
+            _labelList(label, labelEditTarget),
+            false,
+            true,
+          ),
+        );
       }
       return [id];
     }
@@ -112,7 +168,7 @@ class WorkflowCanvasLayout {
             _exitId(fromNode),
             edge.to.value,
             edge.conditionLabel != null
-                ? [edge.conditionLabel!]
+                ? [CanvasLabel(edge.conditionLabel!)]
                 : _outputLabels(fromNode),
             false,
             edge.conditionLabel != null,
@@ -126,7 +182,13 @@ class WorkflowCanvasLayout {
       );
       for (final root in roots) {
         links.add(
-          CanvasLink(parent, root.id.value, _labelList(label), false, true),
+          CanvasLink(
+            parent,
+            root.id.value,
+            _labelList(label, labelEditTarget),
+            false,
+            true,
+          ),
         );
       }
     }
@@ -141,6 +203,10 @@ class WorkflowCanvasLayout {
                 BausteinInsertion(owner: node.id, branchId: branch.id),
                 parent: node.id.value,
                 label: branch.label,
+                labelEditTarget: ConditionalBranchEditTarget(
+                  node.id,
+                  branch.id,
+                ),
               ),
             );
           }
@@ -205,34 +271,57 @@ class WorkflowCanvasLayout {
     _ => node.id.value,
   };
 
-  /// Fachliche Workflow-Ausgabewerte eines Bausteins als Chip-Texte auf
-  /// seinem Ausgangspfeil — analog zu den "Ja"/"Nein"-Chips verzweigender
+  /// Fachliche Workflow-Ausgabewerte eines Bausteins als Chips auf seinem
+  /// Ausgangspfeil — analog zu den "Ja"/"Nein"-Chips verzweigender
   /// Primitives. Die meisten Bausteine haben genau einen fachlichen
   /// Ausgabewert (Chip = eigener Ausgabename); ein Prompt-Baustein mit
   /// strukturierter Ausgabe oder eine Dialogeingabe haben dagegen mehrere,
   /// eigenständig benannte Ausgabewerte — jeweils ein Chip pro Feld, ohne
   /// umschließenden Knotennamen.
-  List<String> _outputLabels(WorkflowNode node) {
+  List<CanvasLabel> _outputLabels(WorkflowNode node) {
     if (node.config case PromptNodeConfig(
       outputType: PromptOutputType.structured,
       :final structuredFields,
     )) {
-      return _fieldNames(structuredFields.map((field) => field.name));
+      return _fieldLabels(
+        structuredFields.map((field) => field.name),
+        (index) => StructuredFieldEditTarget(node.id, index),
+      );
     }
     if (node.config case DialogInputNodeConfig(:final fields)) {
-      return _fieldNames(fields.map((field) => field.name));
+      return _fieldLabels(
+        fields.map((field) => field.name),
+        (index) => DialogFieldEditTarget(node.id, index),
+      );
     }
-    return _labelList(node.outputName.isEmpty ? null : node.outputName);
+    return _labelList(
+      node.outputName.isEmpty ? null : node.outputName,
+      OutputNameEditTarget(node.id),
+    );
   }
 
-  List<String> _fieldNames(Iterable<String> names) {
-    return names
-        .map((name) => name.trim())
-        .where((name) => name.isNotEmpty)
-        .toList(growable: false);
+  /// Wie [_labelList], aber für mehrere, unabhängig benannte Felder — leere
+  /// Namen werden für die Anzeige herausgefiltert, das Edit-Ziel trägt aber
+  /// weiterhin den echten Original-Index in `names` (nicht den Index in der
+  /// gefilterten Ergebnisliste).
+  List<CanvasLabel> _fieldLabels(
+    Iterable<String> names,
+    CanvasLabelEditTarget Function(int fieldIndex) editTargetFor,
+  ) {
+    final labels = <CanvasLabel>[];
+    var index = 0;
+    for (final name in names) {
+      final trimmed = name.trim();
+      if (trimmed.isNotEmpty) {
+        labels.add(CanvasLabel(trimmed, editTargetFor(index)));
+      }
+      index++;
+    }
+    return labels;
   }
 
-  List<String> _labelList(String? label) => label == null ? const [] : [label];
+  List<CanvasLabel> _labelList(String? label, [CanvasLabelEditTarget? target]) =>
+      label == null ? const [] : [CanvasLabel(label, target)];
 
   void _arrange() {
     final remaining = entries.keys.toSet();

@@ -24,6 +24,9 @@ import 'package:syscat2/features/task_builder/presentation/widgets/task_builder_
 import 'package:syscat2/features/task_builder/presentation/widgets/task_title_field.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 
+List<String> _texts(List<CanvasLabel> labels) =>
+    labels.map((label) => label.text).toList();
+
 void main() {
   test('an uneven Ja path retains its column through the final insertion', () {
     const child = WorkflowNode(
@@ -78,15 +81,22 @@ void main() {
       isFalse,
     );
     expect(
-      layout.links.where((link) => link.labels.contains('Ja')),
+      layout.links.where(
+        (link) => link.labels.any((label) => label.text == 'Ja'),
+      ),
       hasLength(1),
     );
     expect(
-      layout.links.where((link) => link.labels.contains('Nein')),
+      layout.links.where(
+        (link) => link.labels.any((label) => label.text == 'Nein'),
+      ),
       hasLength(1),
     );
     expect(
-      layout.links.where((link) => link.labels.contains('Ja')).single.isCondition,
+      layout.links
+          .where((link) => link.labels.any((label) => label.text == 'Ja'))
+          .single
+          .isCondition,
       isTrue,
     );
     expect(
@@ -112,9 +122,13 @@ void main() {
     'zeigt den Ausgabenamen als Chip auf dem Ausgangspfeil eines Bausteins',
     () {
       expect(
-        WorkflowCanvasLayout(_task.graph).links
-            .firstWhere((link) => link.from == 'text' && link.to == 'decision')
-            .labels,
+        _texts(
+          WorkflowCanvasLayout(_task.graph).links
+              .firstWhere(
+                (link) => link.from == 'text' && link.to == 'decision',
+              )
+              .labels,
+        ),
         ['text'],
       );
       const withoutOutputName = WorkflowNode(
@@ -161,11 +175,13 @@ void main() {
         ),
       );
       expect(
-        overriddenLayout.links
-            .firstWhere(
-              (link) => link.from == 'branching' && link.to == 'next',
-            )
-            .labels,
+        _texts(
+          overriddenLayout.links
+              .firstWhere(
+                (link) => link.from == 'branching' && link.to == 'next',
+              )
+              .labels,
+        ),
         ['Ja'],
       );
     },
@@ -202,9 +218,13 @@ void main() {
         ),
       );
       expect(
-        layout.links
-            .firstWhere((link) => link.from == 'prompt2' && link.to == 'next')
-            .labels,
+        _texts(
+          layout.links
+              .firstWhere(
+                (link) => link.from == 'prompt2' && link.to == 'next',
+              )
+              .labels,
+        ),
         ['Name', 'Alter'],
       );
     },

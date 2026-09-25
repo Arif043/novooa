@@ -76,6 +76,30 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
     });
   }
 
+  /// Bequemlichkeits-Wrapper für Aufrufer, die nur Feldindex und neuen Namen
+  /// kennen (z.B. ein Leinwand-Label-Doppelklick) — holt das aktuelle Feld
+  /// selbst und ändert nur `name`, Beschreibung bleibt erhalten.
+  Future<void> renamePromptStructuredFieldName({
+    required NodeId nodeId,
+    required int fieldIndex,
+    required String name,
+  }) {
+    final task = loadedTaskOrNull();
+    final node = task == null ? null : _nodeOrNullInGraph(task.graph, nodeId);
+    final field = switch (node?.config) {
+      PromptNodeConfig(:final structuredFields)
+          when fieldIndex >= 0 && fieldIndex < structuredFields.length =>
+        structuredFields[fieldIndex],
+      _ => null,
+    };
+    if (field == null) return Future.value();
+    return updatePromptStructuredField(
+      nodeId: nodeId,
+      fieldIndex: fieldIndex,
+      field: field.copyWith(name: name),
+    );
+  }
+
   StructuredOutputField _uniqueStructuredField(
     WorkflowGraph graph,
     String previousName,
