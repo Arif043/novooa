@@ -4,6 +4,7 @@ import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_run_failure.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_run_start.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_edge.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
@@ -13,9 +14,9 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_s
 // Deckt `TaskBuilderBranchMutations.updateConditionalBranchLabel` ab — den
 // neuen Mutations-Pfad für das Doppelklick-Umbenennen von
 // Bedingungs-Branch-Labels ("Ja"/"Nein") direkt auf der Leinwand.
-void main() {
-  const conditionalId = NodeId('conditional.1');
+const conditionalId = NodeId('conditional.1');
 
+void main() {
   test(
     'benennt genau den angesprochenen Zweig um und lässt andere Zweige '
     'sowie valueTemplate unverändert',
@@ -78,6 +79,62 @@ void main() {
     expect(config.branches[1].label, 'Nein');
     await cubit.close();
   });
+
+  test(
+    'synchronisiert die Antwort (Choice) des vorgeschalteten '
+    'Entscheidungs-Prompts, wenn ein Branch-Label direkt auf der Leinwand '
+    'umbenannt wird — sonst generiert der Prompt weiterhin die alte, nicht '
+    'mehr passende Option',
+    () async {
+      final cubit = await _cubitFor(_taskWithDecisionPromptAndConditional());
+
+      await cubit.updateConditionalBranchLabel(
+        conditionalNodeId: conditionalId,
+        branchId: 'branch.1',
+        label: 'Doch',
+      );
+
+      final state = cubit.state as TaskBuilderLoaded;
+      final promptConfig =
+          state.editingTask.nodes
+                  .firstWhere((node) => node.id == const NodeId('prompt.1'))
+                  .config
+              as PromptNodeConfig;
+      expect(promptConfig.choices, ['Doch', 'Nein']);
+      final config = _conditionalConfigOf(cubit);
+      expect(config.branches[0].label, 'Doch');
+      expect(config.branches[1].label, 'Nein');
+      expect(config.valueTemplate, '{{entscheidung}}');
+      await cubit.close();
+    },
+  );
+
+  test(
+    'lässt einen Bedingungs-Baustein ohne Entscheidungs-Prompt-Vorgänger '
+    'weiterhin direkt umbenennbar (kein Sync-Ziel vorhanden)',
+    () async {
+      final cubit = await _cubitFor(_taskWithTextPromptAndConditional());
+
+      await cubit.updateConditionalBranchLabel(
+        conditionalNodeId: conditionalId,
+        branchId: 'branch.1',
+        label: 'Doch',
+      );
+
+      final state = cubit.state as TaskBuilderLoaded;
+      final promptConfig =
+          state.editingTask.nodes
+                  .firstWhere((node) => node.id == const NodeId('prompt.1'))
+                  .config
+              as PromptNodeConfig;
+      // Kein Entscheidungs-Prompt (outputType text) — dessen Inhalt bleibt
+      // unangetastet, die Branch wird stattdessen direkt umbenannt.
+      expect(promptConfig.instruction, 'Alte Anweisung');
+      final config = _conditionalConfigOf(cubit);
+      expect(config.branches[0].label, 'Doch');
+      await cubit.close();
+    },
+  );
 }
 
 Future<TaskBuilderCubit> _cubitFor(Task task) async {
@@ -113,6 +170,70 @@ Task _taskWithConditional() {
         ),
       ],
       edges: const [],
+    ),
+  );
+}
+
+Task _taskWithDecisionPromptAndConditional() {
+  const promptId = NodeId('prompt.1');
+  return Task(
+    id: 'task',
+    title: 'Aufgabe',
+    objective: '',
+    selectedNodeId: conditionalId,
+    graph: WorkflowGraph(
+      nodes: [
+        const WorkflowNode(
+          id: promptId,
+          title: 'Prompt',
+          description: '',
+          outputName: 'entscheidung',
+          config: PromptNodeConfig(
+            instruction: '',
+            outputType: PromptOutputType.decision,
+            choices: ['Ja', 'Nein'],
+          ),
+        ),
+        WorkflowNode(
+          id: conditionalId,
+          title: 'Bedingter Ablauf',
+          description: '',
+          config: ConditionalNodeConfig.fromChoices(const ['Ja', 'Nein']),
+        ),
+      ],
+      edges: const [WorkflowEdge(from: promptId, to: conditionalId)],
+    ),
+  );
+}
+
+Task _taskWithTextPromptAndConditional() {
+  const promptId = NodeId('prompt.1');
+  return Task(
+    id: 'task',
+    title: 'Aufgabe',
+    objective: '',
+    selectedNodeId: conditionalId,
+    graph: WorkflowGraph(
+      nodes: [
+        const WorkflowNode(
+          id: promptId,
+          title: 'Prompt',
+          description: '',
+          outputName: 'freitext',
+          config: PromptNodeConfig(
+            instruction: 'Alte Anweisung',
+            outputType: PromptOutputType.text,
+            choices: [],
+          ),
+        ),
+        WorkflowNode(
+          id: conditionalId,
+          title: 'Bedingter Ablauf',
+          description: '',
+          config: ConditionalNodeConfig.fromChoices(const ['Ja', 'Nein']),
+        ),
+      ],
+      edges: const [WorkflowEdge(from: promptId, to: conditionalId)],
     ),
   );
 }
