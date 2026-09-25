@@ -40,7 +40,8 @@ enum NodeOutputType {
   boolean,
   json,
   file,
-  media;
+  media,
+  table;
 
   static NodeOutputType fromName(String name) {
     return NodeOutputType.values.firstWhere(

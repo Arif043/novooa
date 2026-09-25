@@ -315,6 +315,13 @@ const jsonValueSchema = z.union([
   z.record(z.string(), z.unknown()),
 ]);
 
+// Spiegelt `WorkflowTable` (workflow-value.ts) — schemalos, da
+// Datensammlungen selbst schemalos sind (siehe dortiger Kommentar).
+const workflowTableValueSchema = z.object({
+  columns: z.array(z.string()),
+  rows: z.array(z.array(z.unknown())),
+});
+
 export const nodeOutputValueSchema: z.ZodType<NodeOutputValue> =
   z.discriminatedUnion("type", [
     z.object({type: z.literal("string"), value: z.string()}),
@@ -324,6 +331,7 @@ export const nodeOutputValueSchema: z.ZodType<NodeOutputValue> =
     z.object({type: z.literal("json"), value: jsonValueSchema}),
     z.object({type: z.literal("file"), value: fileReferenceSchema}),
     z.object({type: z.literal("media"), value: fileReferenceSchema}),
+    z.object({type: z.literal("table"), value: workflowTableValueSchema}),
   ]);
 
 export const nodeExecutionResultSchema = z.object({
