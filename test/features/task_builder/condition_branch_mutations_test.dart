@@ -16,23 +16,56 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_s
 void main() {
   const conditionalId = NodeId('conditional.1');
 
-  test(
-    'addConditionBranch erzeugt beim ersten Aufruf einen bedingten Branch '
-    'plus automatischen Sonst-Branch',
-    () async {
-      final cubit = await _cubitFor(_branchFreeTask());
+  test('Sonst lässt sich idempotent entfernen und wieder hinzufügen', () async {
+    final cubit = await _cubitFor(_branchFreeTask());
+    await cubit.addConditionBranch(conditionalId);
+    final condition = _configOf(cubit).branches.first;
+    await cubit.setOtherwiseBranchEnabled(conditionalId, false);
+    await cubit.setOtherwiseBranchEnabled(conditionalId, false);
+    expect(_configOf(cubit).branches, [condition]);
+    await cubit.addConditionBranch(conditionalId);
+    expect(_configOf(cubit).branches.every((b) => b.condition != null), isTrue);
+    await cubit.setOtherwiseBranchEnabled(conditionalId, true);
+    await cubit.setOtherwiseBranchEnabled(conditionalId, true);
+    final branches = _configOf(cubit).branches;
+    expect(branches, hasLength(3));
+    expect(branches.first, condition);
+    expect(branches.last.condition, isNull);
+    expect(branches.map((b) => b.id).toSet(), hasLength(3));
+    await cubit.close();
+  });
 
-      await cubit.addConditionBranch(conditionalId);
+  test('Sonst-Umschalter verändert keine labelgesteuerten Zweige', () async {
+    final task = _branchFreeTask();
+    final node = task.nodes.single.copyWith(
+      config: ConditionalNodeConfig.fromChoices(['Ja', 'Nein']),
+    );
+    final cubit = await _cubitFor(
+      task.copyWith(
+        graph: WorkflowGraph(nodes: [node], edges: const []),
+      ),
+    );
+    final before = _configOf(cubit);
+    await cubit.setOtherwiseBranchEnabled(conditionalId, false);
+    await cubit.setOtherwiseBranchEnabled(conditionalId, true);
+    expect(_configOf(cubit), before);
+    await cubit.close();
+  });
 
-      final config = _configOf(cubit);
-      expect(config.branches, hasLength(2));
-      expect(config.branches[0].label, 'Bedingung 1');
-      expect(config.branches[0].condition, isA<ComparisonCondition>());
-      expect(config.branches[1].label, 'Sonst');
-      expect(config.branches[1].condition, isNull);
-      await cubit.close();
-    },
-  );
+  test('addConditionBranch erzeugt beim ersten Aufruf einen bedingten Branch '
+      'plus automatischen Sonst-Branch', () async {
+    final cubit = await _cubitFor(_branchFreeTask());
+
+    await cubit.addConditionBranch(conditionalId);
+
+    final config = _configOf(cubit);
+    expect(config.branches, hasLength(2));
+    expect(config.branches[0].label, 'Bedingung 1');
+    expect(config.branches[0].condition, isA<ComparisonCondition>());
+    expect(config.branches[1].label, 'Sonst');
+    expect(config.branches[1].condition, isNull);
+    await cubit.close();
+  });
 
   test(
     'ein zweiter addConditionBranch-Aufruf fügt vor dem bestehenden '
@@ -53,25 +86,22 @@ void main() {
     },
   );
 
-  test(
-    'removeConditionBranch entfernt einen bedingten Branch, lässt den '
-    'Sonst-Branch aber bestehen, solange ein weiterer bedingter Branch '
-    'übrig bleibt',
-    () async {
-      final cubit = await _cubitFor(_branchFreeTask());
-      await cubit.addConditionBranch(conditionalId);
-      await cubit.addConditionBranch(conditionalId);
-      final firstBranchId = _configOf(cubit).branches[0].id;
+  test('removeConditionBranch entfernt einen bedingten Branch, lässt den '
+      'Sonst-Branch aber bestehen, solange ein weiterer bedingter Branch '
+      'übrig bleibt', () async {
+    final cubit = await _cubitFor(_branchFreeTask());
+    await cubit.addConditionBranch(conditionalId);
+    await cubit.addConditionBranch(conditionalId);
+    final firstBranchId = _configOf(cubit).branches[0].id;
 
-      await cubit.removeConditionBranch(conditionalId, firstBranchId);
+    await cubit.removeConditionBranch(conditionalId, firstBranchId);
 
-      final config = _configOf(cubit);
-      expect(config.branches, hasLength(2));
-      expect(config.branches[0].label, 'Bedingung 2');
-      expect(config.branches[1].label, 'Sonst');
-      await cubit.close();
-    },
-  );
+    final config = _configOf(cubit);
+    expect(config.branches, hasLength(2));
+    expect(config.branches[0].label, 'Bedingung 2');
+    expect(config.branches[1].label, 'Sonst');
+    await cubit.close();
+  });
 
   test(
     'removeConditionBranch entfernt auch den Sonst-Branch, wenn der letzte '
@@ -88,50 +118,50 @@ void main() {
     },
   );
 
-  test('removeConditionBranch entfernt den Sonst-Branch selbst nicht', () async {
-    final cubit = await _cubitFor(_branchFreeTask());
-    await cubit.addConditionBranch(conditionalId);
-    final sonstId = _configOf(cubit).branches[1].id;
-
-    await cubit.removeConditionBranch(conditionalId, sonstId);
-
-    expect(_configOf(cubit).branches, hasLength(2));
-    await cubit.close();
-  });
-
   test(
-    'updateBranchCondition ersetzt den Ausdrucksbaum eines bedingten '
-    'Branches atomar',
+    'removeConditionBranch entfernt den Sonst-Branch selbst nicht',
     () async {
       final cubit = await _cubitFor(_branchFreeTask());
       await cubit.addConditionBranch(conditionalId);
-      final branchId = _configOf(cubit).branches[0].id;
-      const newCondition = GroupCondition(
-        combinator: BooleanCombinator.and,
-        children: [
-          ComparisonCondition(
-            left: '{{x}}',
-            operator: ComparisonOperator.greaterThan,
-            right: '0',
-          ),
-          ComparisonCondition(
-            left: '{{y}}',
-            operator: ComparisonOperator.equals,
-            right: 'ja',
-          ),
-        ],
-      );
+      final sonstId = _configOf(cubit).branches[1].id;
 
-      await cubit.updateBranchCondition(
-        conditionalNodeId: conditionalId,
-        branchId: branchId,
-        condition: newCondition,
-      );
+      await cubit.removeConditionBranch(conditionalId, sonstId);
 
-      expect(_configOf(cubit).branches[0].condition, newCondition);
+      expect(_configOf(cubit).branches, hasLength(2));
       await cubit.close();
     },
   );
+
+  test('updateBranchCondition ersetzt den Ausdrucksbaum eines bedingten '
+      'Branches atomar', () async {
+    final cubit = await _cubitFor(_branchFreeTask());
+    await cubit.addConditionBranch(conditionalId);
+    final branchId = _configOf(cubit).branches[0].id;
+    const newCondition = GroupCondition(
+      combinator: BooleanCombinator.and,
+      children: [
+        ComparisonCondition(
+          left: '{{x}}',
+          operator: ComparisonOperator.greaterThan,
+          right: '0',
+        ),
+        ComparisonCondition(
+          left: '{{y}}',
+          operator: ComparisonOperator.equals,
+          right: 'ja',
+        ),
+      ],
+    );
+
+    await cubit.updateBranchCondition(
+      conditionalNodeId: conditionalId,
+      branchId: branchId,
+      condition: newCondition,
+    );
+
+    expect(_configOf(cubit).branches[0].condition, newCondition);
+    await cubit.close();
+  });
 
   test(
     'updateBranchCondition lässt den Sonst-Branch unangetastet (er hat '

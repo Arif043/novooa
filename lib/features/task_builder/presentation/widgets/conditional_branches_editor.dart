@@ -68,7 +68,45 @@ class ConditionalBranchesEditor extends StatelessWidget {
             label: const Text('Bedingung hinzufügen'),
           ),
           const SizedBox(height: AppSpacing.md),
-          for (final branch in sonst) _SonstBranchRow(branch: branch),
+          Material(
+            type: MaterialType.transparency,
+            child: CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: sonst.isNotEmpty,
+              title: const Text('Sonst-Pfad verwenden'),
+              subtitle: const Text(
+                'Wird ausgeführt, wenn keine Bedingung zutrifft.',
+              ),
+              onChanged: (enabled) async {
+                if (enabled == null) return;
+                if (!enabled &&
+                    sonst.any((branch) => branch.graph.nodes.isNotEmpty)) {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      title: const Text('Sonst-Pfad entfernen?'),
+                      content: const Text(
+                        'Der Sonst-Pfad und alle darin enthaltenen Bausteine werden entfernt.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext, false),
+                          child: const Text('Abbrechen'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext, true),
+                          child: const Text('Pfad entfernen'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed != true || !context.mounted) return;
+                }
+                await cubit.setOtherwiseBranchEnabled(node.id, enabled);
+              },
+            ),
+          ),
         ],
       ],
     );
@@ -153,32 +191,6 @@ class _ConditionBranchCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _SonstBranchRow extends StatelessWidget {
-  const _SonstBranchRow({required this.branch});
-
-  final ConditionalBranch branch;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(
-          Icons.arrow_forward,
-          size: 16,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        Expanded(
-          child: Text(
-            '${branch.label}: greift, wenn keine Bedingung oben zutrifft.',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ),
-      ],
     );
   }
 }

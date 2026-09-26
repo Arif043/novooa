@@ -5,10 +5,8 @@ part of 'task_builder_cubit.dart';
 /// Entscheidungs-Prompt-Vorgänger — für den anderen Fall bleibt
 /// `TaskBuilderBranchMutations.updateConditionalBranchLabel` zuständig.
 extension TaskBuilderConditionBranchMutations on TaskBuilderCubit {
-  /// Fügt einen neuen, bedingten Zweig hinzu. Existiert noch kein
-  /// "Sonst"-Zweig, wird er hier zusammen mit dem ersten bedingten Zweig
-  /// erzeugt — ein Nutzerentscheid, der stille Fallbacks vermeidet (siehe
-  /// `selectConditionedBranch` im Backend).
+  /// Der erste bedingte Zweig erhält standardmäßig einen Sonst-Pfad.
+  /// Ein später explizit entfernter Sonst-Pfad bleibt ausgeschaltet.
   Future<void> addConditionBranch(NodeId conditionalNodeId) {
     return _updateNode(conditionalNodeId, (node) {
       if (node.config case ConditionalNodeConfig config) {
@@ -32,11 +30,12 @@ extension TaskBuilderConditionBranchMutations on TaskBuilderCubit {
             ? [
                 ...config.branches,
                 newBranch,
-                ConditionalBranch(
-                  id: _nextBranchId([...config.branches, newBranch]),
-                  label: 'Sonst',
-                  graph: const WorkflowGraph(nodes: [], edges: []),
-                ),
+                if (conditionedCount == 0)
+                  ConditionalBranch(
+                    id: _nextBranchId([...config.branches, newBranch]),
+                    label: 'Sonst',
+                    graph: const WorkflowGraph(nodes: [], edges: []),
+                  ),
               ]
             : [
                 ...config.branches.sublist(0, sonstIndex),
@@ -49,8 +48,7 @@ extension TaskBuilderConditionBranchMutations on TaskBuilderCubit {
     });
   }
 
-  /// Entfernt einen bedingten Zweig (nicht den "Sonst"-Zweig selbst — dafür
-  /// gibt es hier bewusst keinen Pfad). War es der letzte bedingte Zweig,
+  /// Entfernt einen bedingten Zweig. War es der letzte bedingte Zweig,
   /// wird der "Sonst"-Zweig mitentfernt: Rückkehr zum branchfreien
   /// Ausgangszustand statt eines nutzlosen Einzel-"Sonst"-Zweigs.
   Future<void> removeConditionBranch(
@@ -59,9 +57,7 @@ extension TaskBuilderConditionBranchMutations on TaskBuilderCubit {
   ) {
     return _updateNode(conditionalNodeId, (node) {
       if (node.config case ConditionalNodeConfig config) {
-        final target = config.branches.where(
-          (branch) => branch.id == branchId,
-        );
+        final target = config.branches.where((branch) => branch.id == branchId);
         if (target.isEmpty || target.first.condition == null) return node;
         final remaining = [
           for (final branch in config.branches)
@@ -73,6 +69,35 @@ extension TaskBuilderConditionBranchMutations on TaskBuilderCubit {
         final branches = hasConditionedLeft
             ? remaining
             : const <ConditionalBranch>[];
+        return node.copyWith(config: config.copyWith(branches: branches));
+      }
+      return node;
+    });
+  }
+
+  /// Nur bedingungsgesteuerte Verzweigungen haben einen optionalen Fallback.
+  Future<void> setOtherwiseBranchEnabled(NodeId nodeId, bool enabled) {
+    return _updateNode(nodeId, (node) {
+      if (node.config case ConditionalNodeConfig config) {
+        if (!config.branches.any((branch) => branch.condition != null)) {
+          return node;
+        }
+        final hasOtherwise = config.branches.any(
+          (branch) => branch.condition == null,
+        );
+        if (enabled == hasOtherwise) return node;
+        final branches = enabled
+            ? [
+                ...config.branches,
+                ConditionalBranch(
+                  id: _nextBranchId(config.branches),
+                  label: 'Sonst',
+                  graph: const WorkflowGraph(nodes: [], edges: []),
+                ),
+              ]
+            : config.branches
+                  .where((branch) => branch.condition != null)
+                  .toList();
         return node.copyWith(config: config.copyWith(branches: branches));
       }
       return node;

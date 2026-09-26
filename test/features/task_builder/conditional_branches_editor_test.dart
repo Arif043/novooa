@@ -45,6 +45,67 @@ void main() {
     return state.editingTask.nodes.last.config as ConditionalNodeConfig;
   }
 
+  testWidgets('Checkbox entfernt und ergänzt den Sonst-Pfad', (tester) async {
+    final cubit = await pumpEditor(tester);
+    await cubit.addConditionBranch(const NodeId('conditional.1'));
+    await tester.pump();
+    await tester.ensureVisible(find.byType(CheckboxListTile));
+    expect(
+      tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value,
+      isTrue,
+    );
+    await tester.tap(find.byType(CheckboxListTile));
+    await tester.pumpAndSettle();
+    expect(configOf(cubit).branches, hasLength(1));
+    expect(
+      tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value,
+      isFalse,
+    );
+    await tester.tap(find.byType(CheckboxListTile));
+    await tester.pumpAndSettle();
+    expect(configOf(cubit).branches, hasLength(2));
+    await cubit.close();
+  });
+
+  testWidgets('Gefüllter Sonst-Pfad benötigt Bestätigung', (tester) async {
+    final cubit = await pumpEditor(tester);
+    await cubit.addConditionBranch(const NodeId('conditional.1'));
+    final task = (cubit.state as TaskBuilderLoaded).editingTask;
+    final config = configOf(cubit);
+    final filled = config.branches.last.copyWith(
+      graph: WorkflowGraph(nodes: [task.nodes.first], edges: const []),
+    );
+    await cubit.repository.saveTask(
+      task.copyWith(
+        graph: task.graph.copyWith(
+          nodes: [
+            task.nodes.first,
+            task.nodes.last.copyWith(
+              config: config.copyWith(
+                branches: [config.branches.first, filled],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    await cubit.load(task);
+    await tester.pump();
+    await tester.ensureVisible(find.byType(CheckboxListTile));
+    await tester.tap(find.byType(CheckboxListTile));
+    await tester.pumpAndSettle();
+    expect(find.text('Sonst-Pfad entfernen?'), findsOneWidget);
+    await tester.tap(find.text('Abbrechen'));
+    await tester.pumpAndSettle();
+    expect(configOf(cubit).branches.last, filled);
+    await tester.tap(find.byType(CheckboxListTile));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Pfad entfernen'));
+    await tester.pumpAndSettle();
+    expect(configOf(cubit).branches, [config.branches.first]);
+    await cubit.close();
+  });
+
   testWidgets(
     'Branch hinzufügen, Vergleich eintippen und per Klammer-Aktion zu '
     'einer UND-Gruppe erweitern',
