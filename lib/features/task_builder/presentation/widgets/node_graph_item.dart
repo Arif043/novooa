@@ -217,6 +217,14 @@ class NodeGraphItem extends StatelessWidget {
       .dialogInput => DialogInputWidget(node: node),
       .mediaInput => MediaInputWidget(node: node),
       .modelInference => ModelInferenceWidget(node: node),
+      .textToSpeech => ModelInferenceWidget(
+        node: node,
+        speechDirection: SpeechModelDirection.textToSpeech,
+      ),
+      .speechToText => ModelInferenceWidget(
+        node: node,
+        speechDirection: SpeechModelDirection.speechToText,
+      ),
       .forEach => ForEachWidget(node: node),
       .documentLookup => DocumentLookupWidget(node: node),
       .saveDocument => SaveDocumentWidget(node: node),

@@ -19,6 +19,8 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.dialogInput => 'Formulareingabe',
       WorkflowPrimitive.mediaInput => 'Bild anfordern',
       WorkflowPrimitive.modelInference => 'Modell ausführen',
+      WorkflowPrimitive.textToSpeech => 'Text vorlesen',
+      WorkflowPrimitive.speechToText => 'Audio transkribieren',
       WorkflowPrimitive.forEach => 'Für jedes Element',
       WorkflowPrimitive.documentLookup => 'Datensatz suchen',
       WorkflowPrimitive.saveDocument => 'Datensatz speichern',
@@ -58,6 +60,10 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         'Pausiert die Aufgabe, bis ein Bild aufgenommen oder ausgewählt wurde.',
       WorkflowPrimitive.modelInference =>
         'Bereitet ein Bild nach Modellvertrag vor und führt ein Modell aus.',
+      WorkflowPrimitive.textToSpeech =>
+        'Wandelt Text in eine Audiodatei um.',
+      WorkflowPrimitive.speechToText =>
+        'Wandelt eine Audiodatei in Text um.',
       WorkflowPrimitive.forEach =>
         'Führt einen Unterplan für jedes Element eines JSON-Arrays aus.',
       WorkflowPrimitive.documentLookup =>

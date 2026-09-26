@@ -3,6 +3,7 @@ import {type ModelTensor, validateModelTensor} from "./model-tensor.js";
 
 export type ModelInputValue =
   | {type: "image"; contentType: string; bytes: Uint8Array}
+  | {type: "audio"; contentType: string; bytes: Uint8Array}
   | {type: "file"; contentType: string; bytes: Uint8Array}
   | {type: "text"; value: string}
   | {type: "datetime"; value: string}
@@ -28,6 +29,9 @@ function validateSourceValue(source: ModelInputSource): void {
   switch (source.type) {
     case "image":
       validateImageSource(source);
+      return;
+    case "audio":
+      validateAudioSource(source);
       return;
     case "file":
       validateFileSource(source);
@@ -58,6 +62,15 @@ function validateImageSource(source: Extract<ModelInputSource, {type: "image"}>)
   }
   if (source.bytes.byteLength === 0) {
     throw new Error(`Die Bildquelle für ${source.name} ist leer.`);
+  }
+}
+
+function validateAudioSource(source: Extract<ModelInputSource, {type: "audio"}>): void {
+  if (!source.contentType.startsWith("audio/")) {
+    throw new Error(`Die Quelle für ${source.name} ist keine Audiodatei.`);
+  }
+  if (source.bytes.byteLength === 0) {
+    throw new Error(`Die Audioquelle für ${source.name} ist leer.`);
   }
 }
 

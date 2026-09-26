@@ -3,6 +3,10 @@ import {humanApprovalNodeExecutor} from "../../../domain/executors/human-approva
 import {dialogInputNodeExecutor} from "../../../domain/executors/dialog-input-node-executor.js";
 import {mediaInputNodeExecutor} from "../../../domain/executors/media-input-node-executor.js";
 import {modelInferenceNodeExecutor} from "../../../domain/executors/model-inference-node-executor.js";
+import {
+  speechToTextNodeExecutor,
+  textToSpeechNodeExecutor,
+} from "../../../domain/executors/speech-node-executor.js";
 import {forEachNodeExecutor} from "../../../domain/executors/for-each-node-executor.js";
 import {createGenkitIterativeRefinementNodeExecutor} from "../executors/genkit-iterative-refinement-executor.js";
 import {createGenkitPromptNodeExecutor} from "../executors/genkit-prompt-executor.js";
@@ -45,6 +49,8 @@ function executorsFor(logger: ApplicationLogger) {
     dialogInputNodeExecutor,
     mediaInputNodeExecutor,
     modelInferenceNodeExecutor,
+    textToSpeechNodeExecutor,
+    speechToTextNodeExecutor,
     forEachNodeExecutor,
     documentLookupNodeExecutor,
     saveDocumentNodeExecutor,

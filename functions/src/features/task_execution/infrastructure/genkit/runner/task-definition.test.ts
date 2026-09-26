@@ -43,4 +43,11 @@ test("akzeptiert weiterhin die übrigen bekannten Ausgabewert-Typen", () => {
   assert.doesNotThrow(() =>
     nodeOutputValueSchema.parse({type: "json", value: {a: 1}}),
   );
+  assert.doesNotThrow(() => nodeOutputValueSchema.parse({
+    type: "audio",
+    value: {
+      fileId: "audio", versionId: "version", displayName: "antwort.wav",
+      contentType: "audio/wav", sizeBytes: 1,
+    },
+  }));
 });

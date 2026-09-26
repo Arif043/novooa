@@ -24,6 +24,8 @@ enum WorkflowPrimitive {
   dialogInput,
   mediaInput,
   modelInference,
+  textToSpeech,
+  speechToText,
   forEach,
   documentLookup,
   saveDocument,

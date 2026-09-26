@@ -7,6 +7,7 @@ export type FileReference = {
 };
 
 export type MediaReference = FileReference;
+export type AudioReference = FileReference;
 
 /** Ein fachlicher Tabellen-Wert: Spaltennamen plus Zeilen, jede Zeile auf
  * `columns` ausgerichtet (fehlende Felder als `null`). Schemalos, da
@@ -24,11 +25,19 @@ export type NodeOutputValue =
   | {type: "json"; value: unknown}
   | {type: "file"; value: FileReference}
   | {type: "media"; value: MediaReference}
+  | {type: "audio"; value: AudioReference}
   | {type: "table"; value: WorkflowTable};
 
 export function mediaReferenceFor(file: FileReference): MediaReference {
   if (!file.contentType.startsWith("image/")) {
     throw new Error("Die Medienreferenz muss auf ein Bild verweisen.");
+  }
+  return file;
+}
+
+export function audioReferenceFor(file: FileReference): AudioReference {
+  if (!file.contentType.startsWith("audio/")) {
+    throw new Error("Die Audioreferenz muss auf eine Audiodatei verweisen.");
   }
   return file;
 }

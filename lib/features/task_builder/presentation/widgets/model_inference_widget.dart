@@ -12,30 +12,46 @@ import '../cubits/task_builder_cubit.dart';
 import 'model_inference_input_mapping_field.dart';
 import 'model_inference_output_configuration.dart';
 
+enum SpeechModelDirection { textToSpeech, speechToText }
+
 class ModelInferenceWidget extends StatelessWidget {
-  const ModelInferenceWidget({super.key, required this.node});
+  const ModelInferenceWidget({
+    super.key,
+    required this.node,
+    this.speechDirection,
+  });
 
   final WorkflowNode node;
+  final SpeechModelDirection? speechDirection;
 
   @override
   Widget build(BuildContext context) {
-    return _ModelInferenceCatalog(node: node);
+    return _ModelInferenceCatalog(node: node, speechDirection: speechDirection);
   }
 }
 
 class _ModelInferenceCatalog extends StatelessWidget {
-  const _ModelInferenceCatalog({required this.node});
+  const _ModelInferenceCatalog({required this.node, required this.speechDirection});
 
   final WorkflowNode node;
+  final SpeechModelDirection? speechDirection;
 
   @override
   Widget build(BuildContext context) {
     if (!_hasCatalog(context)) {
-      return _ModelInferenceContent(node: node, models: const []);
+      return _ModelInferenceContent(
+        node: node,
+        models: const [],
+        speechDirection: speechDirection,
+      );
     }
     return BlocBuilder<ModelCatalogCubit, ModelCatalogState>(
       builder: (context, state) =>
-          _ModelInferenceContent(node: node, models: state.entries),
+          _ModelInferenceContent(
+            node: node,
+            models: state.entries,
+            speechDirection: speechDirection,
+          ),
     );
   }
 
@@ -50,26 +66,39 @@ class _ModelInferenceCatalog extends StatelessWidget {
 }
 
 class _ModelInferenceContent extends StatelessWidget {
-  const _ModelInferenceContent({required this.node, required this.models});
+  const _ModelInferenceContent({
+    required this.node,
+    required this.models,
+    required this.speechDirection,
+  });
 
   final WorkflowNode node;
   final List<ModelCatalogEntry> models;
+  final SpeechModelDirection? speechDirection;
 
-  ModelInferenceNodeConfig get _config =>
-      node.config as ModelInferenceNodeConfig;
+  ModelInferenceNodeConfig get _config => node.config as ModelInferenceNodeConfig;
+
+  List<ModelCatalogEntry> get _availableModels => switch (speechDirection) {
+    SpeechModelDirection.textToSpeech =>
+      models.where(_isTextToSpeechModel).toList(growable: false),
+    SpeechModelDirection.speechToText =>
+      models.where(_isSpeechToTextModel).toList(growable: false),
+    null => models,
+  };
 
   @override
   Widget build(BuildContext context) {
-    final model = _modelFor(_config.modelId);
+    final availableModels = _availableModels;
+    final model = _modelFor(_config.modelId, availableModels);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: SyscatTheme.nodePanelDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Modell ausführen', style: SyscatTheme.taskBody),
+          Text(_title, style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
-          _ModelSelection(node: node, models: models, selectedModel: model),
+          _ModelSelection(node: node, models: availableModels, selectedModel: model),
           if (model != null) ...[
             const SizedBox(height: AppSpacing.md),
             Text(
@@ -94,12 +123,27 @@ class _ModelInferenceContent extends StatelessWidget {
     );
   }
 
-  ModelCatalogEntry? _modelFor(String modelId) {
-    for (final model in models) {
+  ModelCatalogEntry? _modelFor(
+    String modelId,
+    List<ModelCatalogEntry> availableModels,
+  ) {
+    for (final model in availableModels) {
       if (model.id == modelId) return model;
     }
     return null;
   }
+
+  String get _title => switch (speechDirection) {
+    SpeechModelDirection.textToSpeech => 'Text vorlesen',
+    SpeechModelDirection.speechToText => 'Audio transkribieren',
+    null => 'Modell ausführen',
+  };
+
+  bool _isTextToSpeechModel(ModelCatalogEntry model) =>
+      model.outputs.any((output) => output.workflowType == 'audio');
+
+  bool _isSpeechToTextModel(ModelCatalogEntry model) =>
+      model.inputs.any((input) => input.source == ModelInputSource.audio);
 
   ModelInferenceInputMapping _mappingFor(ModelManifestInput input) {
     for (final mapping in _config.inputMappings) {

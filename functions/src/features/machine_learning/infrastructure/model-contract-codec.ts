@@ -51,7 +51,7 @@ function workflowOutputFrom(data: Record<string, unknown>): ModelOutput["workflo
 }
 
 function workflowTypeFrom(value: unknown): ModelOutput["workflowOutput"]["type"] {
-  if (value === "string" || value === "number" || value === "boolean" || value === "json") {
+  if (value === "string" || value === "number" || value === "boolean" || value === "json" || value === "audio") {
     return value;
   }
   throw new Error("Der Typ der Workflow-Ausgabe ist ungültig.");

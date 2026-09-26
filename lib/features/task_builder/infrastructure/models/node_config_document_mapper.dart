@@ -28,6 +28,8 @@ class NodeConfigDocumentMapper {
       HumanApprovalNodeConfig() => _approvalToDocument(config),
       DialogInputNodeConfig() => _dialogInputToDocument(config),
       MediaInputNodeConfig() => _mediaInputToDocument(config),
+      TextToSpeechNodeConfig() => _modelInferenceToDocument(config),
+      SpeechToTextNodeConfig() => _modelInferenceToDocument(config),
       ModelInferenceNodeConfig() => _modelInferenceToDocument(config),
       ForEachNodeConfig() => _forEachToDocument(config),
       WriteFileNodeConfig() => _writeFileToDocument(config),
@@ -58,6 +60,8 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.dialogInput => _dialogInputFrom(data),
       WorkflowPrimitive.mediaInput => _mediaInputFrom(data),
       WorkflowPrimitive.modelInference => _modelInferenceFrom(data),
+      WorkflowPrimitive.textToSpeech => _textToSpeechFrom(data),
+      WorkflowPrimitive.speechToText => _speechToTextFrom(data),
       WorkflowPrimitive.forEach => _forEachFrom(data),
       WorkflowPrimitive.writeFile => _writeFileFrom(data),
       WorkflowPrimitive.readFile => _readFileFrom(data),
@@ -399,6 +403,24 @@ class NodeConfigDocumentMapper {
       outputParameters: _modelInferenceOutputParametersFrom(
         data['outputParameters'],
       ),
+    );
+  }
+
+  TextToSpeechNodeConfig _textToSpeechFrom(Map<String, Object?> data) {
+    final config = _modelInferenceFrom(data);
+    return TextToSpeechNodeConfig(
+      modelId: config.modelId,
+      inputMappings: config.inputMappings,
+      outputParameters: config.outputParameters,
+    );
+  }
+
+  SpeechToTextNodeConfig _speechToTextFrom(Map<String, Object?> data) {
+    final config = _modelInferenceFrom(data);
+    return SpeechToTextNodeConfig(
+      modelId: config.modelId,
+      inputMappings: config.inputMappings,
+      outputParameters: config.outputParameters,
     );
   }
 

@@ -10,27 +10,45 @@ import {workflowValueForModelOutput} from "../services/tensor-workflow-value.js"
 
 export const modelInferenceNodeExecutor: NodeExecutor = {
   primitive: "modelInference",
-  async execute(node, runContext) {
-    const inputs = await inputsFor(node, runContext);
-    const result = await runContext.modelInference.execute({
-      teamId: runContext.teamId,
-      modelId: modelIdFor(node),
-      inputs,
-      outputParameters: outputParametersFor(node),
-      transformationBindings: runContext.scope,
-    });
-    return executedNode(node, outputsFor(result));
-  },
+  execute: executeModelInferenceNode,
 };
 
-function modelIdFor(node: Parameters<NodeExecutor["execute"]>[0]): string {
-  if (node.config.primitive !== "modelInference") {
+export async function executeModelInferenceNode(
+  node: Parameters<NodeExecutor["execute"]>[0],
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+) {
+  const inputs = await inputsFor(node, runContext);
+  const result = await runContext.modelInference.execute({
+    teamId: runContext.teamId,
+    modelId: modelIdFor(node),
+    inputs,
+    outputParameters: outputParametersFor(node),
+    transformationBindings: runContext.scope,
+  });
+  return executedNode(node, await outputsFor(result, runContext));
+}
+
+type ModelNodeConfig = Extract<Parameters<NodeExecutor["execute"]>[0]["config"], {
+  primitive: "modelInference" | "textToSpeech" | "speechToText";
+}>;
+
+function modelConfigFor(node: Parameters<NodeExecutor["execute"]>[0]): ModelNodeConfig {
+  if (
+    node.config.primitive !== "modelInference" &&
+    node.config.primitive !== "textToSpeech" &&
+    node.config.primitive !== "speechToText"
+  ) {
     throw new Error("Modell-Inferenz-Konfiguration fehlt.");
   }
-  if (node.config.modelId.trim().length === 0) {
+  return node.config;
+}
+
+function modelIdFor(node: Parameters<NodeExecutor["execute"]>[0]): string {
+  const config = modelConfigFor(node);
+  if (config.modelId.trim().length === 0) {
     throw new Error("Für die Modell-Inferenz wurde kein Modell ausgewählt.");
   }
-  return node.config.modelId.trim();
+  return config.modelId.trim();
 }
 
 async function inputsFor(
@@ -50,11 +68,9 @@ async function inputsFor(
 }
 
 function mappingsFor(node: Parameters<NodeExecutor["execute"]>[0]) {
-  if (node.config.primitive !== "modelInference") {
-    throw new Error("Modell-Inferenz-Konfiguration fehlt.");
-  }
+  const config = modelConfigFor(node);
   const names = new Set<string>();
-  for (const mapping of node.config.inputMappings) {
+  for (const mapping of config.inputMappings) {
     if (!mapping.modelInputName.trim() || !mapping.workflowMapping.trim()) {
       throw new Error("Eine Modelleingabe ist nicht vollständig zugeordnet.");
     }
@@ -63,15 +79,13 @@ function mappingsFor(node: Parameters<NodeExecutor["execute"]>[0]) {
     }
     names.add(mapping.modelInputName);
   }
-  return node.config.inputMappings;
+  return config.inputMappings;
 }
 
 function outputParametersFor(node: Parameters<NodeExecutor["execute"]>[0]) {
-  if (node.config.primitive !== "modelInference") {
-    throw new Error("Modell-Inferenz-Konfiguration fehlt.");
-  }
+  const config = modelConfigFor(node);
   const identities = new Set<string>();
-  for (const parameter of node.config.outputParameters ?? []) {
+  for (const parameter of config.outputParameters ?? []) {
     if (!parameter.outputName.trim() || !parameter.name.trim() || !Number.isSafeInteger(parameter.value)) {
       throw new Error("Ein Ausgangsparameter der Modell-Inferenz ist ungültig.");
     }
@@ -79,21 +93,57 @@ function outputParametersFor(node: Parameters<NodeExecutor["execute"]>[0]) {
     if (identities.has(identity)) throw new Error(`Der Ausgangsparameter ${parameter.name} ist mehrfach gesetzt.`);
     identities.add(identity);
   }
-  return node.config.outputParameters ?? [];
+  return config.outputParameters ?? [];
 }
 
-function outputsFor(result: ModelInferenceResult) {
-  return Object.fromEntries(result.outputs.map((output) => [
+async function outputsFor(
+  result: ModelInferenceResult,
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+) {
+  const outputs = await Promise.all(result.outputs.map(async (output) => [
     output.workflowOutput.name,
-    workflowOutputValueFor(output),
-  ]));
+    await workflowOutputValueFor(output, runContext),
+  ] as const));
+  return Object.fromEntries(outputs);
 }
 
-function workflowOutputValueFor(
+async function workflowOutputValueFor(
   output: ModelInferenceResult["outputs"][number],
-): NodeOutputValue {
-  if (output.workflowOutput.type !== "json") {
-    throw new Error(`Der Workflow-Typ ${output.workflowOutput.type} wird noch nicht unterstützt.`);
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+): Promise<NodeOutputValue> {
+  if (output.workflowOutput.type === "audio") {
+    return audioOutputValue(output, runContext);
   }
-  return {type: "json", value: workflowValueForModelOutput(output.value)};
+  return {type: output.workflowOutput.type, value: workflowValueForModelOutput(output.value)} as NodeOutputValue;
+}
+
+async function audioOutputValue(
+  output: ModelInferenceResult["outputs"][number],
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+): Promise<NodeOutputValue> {
+  const audio = audioPayload(output.value);
+  const file = await runContext.teamFileStore.writeTeamFile({
+    teamId: runContext.teamId,
+    content: Uint8Array.from(Buffer.from(audio.dataBase64, "base64")),
+    fileName: audio.fileName ?? "sprach-ausgabe.wav",
+    contentType: audio.contentType,
+    targetFileId: null,
+  });
+  return {type: "audio", value: file};
+}
+
+function audioPayload(value: unknown): {dataBase64: string; contentType: string; fileName?: string} {
+  if (!isRecord(value) || typeof value.dataBase64 !== "string" || typeof value.contentType !== "string") {
+    throw new Error("Die Audioausgabe des Modells ist ungültig.");
+  }
+  if (!value.contentType.startsWith("audio/")) {
+    throw new Error("Die Audioausgabe des Modells hat keinen Audio-Content-Type.");
+  }
+  return typeof value.fileName === "string"
+    ? {dataBase64: value.dataBase64, contentType: value.contentType, fileName: value.fileName}
+    : {dataBase64: value.dataBase64, contentType: value.contentType};
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }

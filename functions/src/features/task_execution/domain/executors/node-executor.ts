@@ -147,6 +147,7 @@ function textForOutputValue(value: NodeOutputValue): string {
   if (value.type === "number" || value.type === "boolean") return String(value.value);
   if (value.type === "json") return JSON.stringify(value.value);
   if (value.type === "media") return `Bild: ${value.value.displayName}`;
+  if (value.type === "audio") return `Audio: ${value.value.displayName}`;
   if (value.type === "table") {
     return `Tabelle mit ${value.value.rows.length} Zeile(n)`;
   }

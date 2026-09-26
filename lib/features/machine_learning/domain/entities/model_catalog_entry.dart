@@ -64,6 +64,7 @@ class ModelManifestOutput extends Equatable {
     'string' => 'Text',
     'number' => 'Zahl',
     'boolean' => 'Ja oder Nein',
+    'audio' => 'Audio',
     _ => 'Strukturierte Daten',
   };
 }
@@ -108,6 +109,7 @@ class ModelManifestInput extends Equatable {
 
 enum ModelInputSource {
   image,
+  audio,
   file,
   text,
   datetime,
@@ -120,6 +122,7 @@ enum ModelInputSource {
 extension ModelInputSourceLabel on ModelInputSource {
   String get label => switch (this) {
     .image => 'Bild',
+    .audio => 'Audio',
     .file => 'Datei',
     .text => 'Text',
     .datetime => 'Datum und Uhrzeit',

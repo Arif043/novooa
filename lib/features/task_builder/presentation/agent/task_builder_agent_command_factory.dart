@@ -70,6 +70,8 @@ WorkflowPrimitive? _primitiveFrom(String? value) {
     'dialogInput' => WorkflowPrimitive.dialogInput,
     'mediaInput' => WorkflowPrimitive.mediaInput,
     'modelInference' => WorkflowPrimitive.modelInference,
+    'textToSpeech' => WorkflowPrimitive.textToSpeech,
+    'speechToText' => WorkflowPrimitive.speechToText,
     'script' => WorkflowPrimitive.script,
     _ => null,
   };

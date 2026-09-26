@@ -13,6 +13,7 @@ export type ModelTensorDataType = (typeof modelTensorDataTypes)[number];
 export type TensorDimension = number | "dynamic";
 export const modelInputSourceTypes = [
   "image",
+  "audio",
   "file",
   "text",
   "datetime",

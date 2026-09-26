@@ -53,9 +53,17 @@ Rückgabe; die ONNX-Runtime kennt deshalb keinen Speichertyp.
 ## Manifest
 
 Alle Modelle arbeiten an der Runtime-Grenze mit Tensoren. Ein Eingang beschreibt
-zusätzlich seine Quelle (`image`, `file`, `text`, `datetime`, `number`,
+zusätzlich seine Quelle (`image`, `audio`, `file`, `text`, `datetime`, `number`,
 `boolean`, `json` oder `tensor`) und eine Transformationspipeline. Ein Ausgang beschreibt
 seine fachliche Semantik sowie eine optionale Transformationspipeline.
+
+`audio` ist ein fachlicher Workflow-Wert, der immer auf eine gespeicherte
+Audiodatei verweist. Sprach-zu-Text-Manifeste deklarieren einen `audio`-Eingang;
+Text-zu-Sprache-Manifeste deklarieren einen Workflow-Ausgang vom Typ `audio`.
+Die Runtime speichert diesen Ausgang als Team-Datei. Der Baustein
+`textToSpeech` und `speechToText` verwenden denselben Vertrag wie
+`modelInference`. Ihre Oberflächen filtern den Modellkatalog jeweils auf
+Audio-Ausgänge beziehungsweise Audio-Eingänge.
 
 ```ts
 {

@@ -142,6 +142,18 @@ class Toolbar extends StatelessWidget {
         onPressed: () => cubit.addNodeToMainGraph(.modelInference),
       ),
       _ToolbarAction(
+        primitive: .textToSpeech,
+        icon: Icons.volume_up_outlined,
+        tooltip: 'Text vorlesen hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.textToSpeech),
+      ),
+      _ToolbarAction(
+        primitive: .speechToText,
+        icon: Icons.graphic_eq_outlined,
+        tooltip: 'Audio transkribieren hinzufügen',
+        onPressed: () => cubit.addNodeToMainGraph(.speechToText),
+      ),
+      _ToolbarAction(
         primitive: .forEach,
         icon: Icons.repeat_outlined,
         tooltip: 'Für jedes Element hinzufügen',

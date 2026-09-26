@@ -260,6 +260,27 @@ void main() {
     expect(restored, config);
   });
 
+  test('serialisiert und deserialisiert SpeechToTextNodeConfig', () {
+    const config = SpeechToTextNodeConfig(
+      modelId: 'whisper-tiny',
+      inputMappings: [
+        ModelInferenceInputMapping(
+          modelInputName: 'audio',
+          workflowMapping: '{{aufnahme.value}}',
+          sourceType: 'audio',
+          dataType: 'float32',
+          shape: [1, 'dynamic'],
+        ),
+      ],
+    );
+
+    final document = _mapper().toDocument(config);
+    final restored = _mapper().fromDocument(document);
+
+    expect(document['primitive'], 'speechToText');
+    expect(restored, config);
+  });
+
   test('serialisiert PromptNodeConfig mit Wissensanhang', () {
     final document = _mapper().toDocument(
       const PromptNodeConfig(

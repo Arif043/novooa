@@ -5,6 +5,7 @@ export const modelWorkflowValueTypes = [
   "number",
   "boolean",
   "json",
+  "audio",
 ] as const;
 
 export type ModelWorkflowValueType =

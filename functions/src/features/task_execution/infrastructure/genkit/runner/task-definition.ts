@@ -221,6 +221,14 @@ export const modelInferenceNodeConfigSchema = z.object({
   })).default([]),
 });
 
+export const textToSpeechNodeConfigSchema = modelInferenceNodeConfigSchema.extend({
+  primitive: z.literal("textToSpeech").default("textToSpeech"),
+});
+
+export const speechToTextNodeConfigSchema = modelInferenceNodeConfigSchema.extend({
+  primitive: z.literal("speechToText").default("speechToText"),
+});
+
 export const forEachNodeConfigSchema = z.object({
   primitive: z.literal("forEach").default("forEach"),
   itemsTemplate: z.string().default(""),
@@ -304,6 +312,8 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   dialogInputNodeConfigSchema,
   mediaInputNodeConfigSchema,
   modelInferenceNodeConfigSchema,
+  textToSpeechNodeConfigSchema,
+  speechToTextNodeConfigSchema,
   forEachNodeConfigSchema,
   writeFileNodeConfigSchema,
   readFileNodeConfigSchema,
@@ -371,6 +381,7 @@ export const nodeOutputValueSchema: z.ZodType<NodeOutputValue> =
     z.object({type: z.literal("json"), value: jsonValueSchema}),
     z.object({type: z.literal("file"), value: fileReferenceSchema}),
     z.object({type: z.literal("media"), value: fileReferenceSchema}),
+    z.object({type: z.literal("audio"), value: fileReferenceSchema}),
     z.object({type: z.literal("table"), value: workflowTableValueSchema}),
   ]);
 

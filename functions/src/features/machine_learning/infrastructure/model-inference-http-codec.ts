@@ -64,6 +64,7 @@ export function modelInferenceResultFromJson(value: unknown): ModelInferenceResu
 function inputJson(input: ModelInputSource) {
   switch (input.type) {
     case "image":
+    case "audio":
     case "file":
       return binaryInputJson(input);
     case "tensor":
@@ -92,7 +93,7 @@ function outputFrom(value: unknown): ModelInferenceOutput {
 function workflowOutputFrom(value: unknown): ModelInferenceOutput["workflowOutput"] {
   const data = objectFrom(value, "Die Workflow-Ausgabe ist ungültig.");
   const name = requiredString(data.name, "Der Name der Workflow-Ausgabe fehlt.");
-  if (data.type !== "string" && data.type !== "number" && data.type !== "boolean" && data.type !== "json") {
+  if (data.type !== "string" && data.type !== "number" && data.type !== "boolean" && data.type !== "json" && data.type !== "audio") {
     throw new Error("Der Typ der Workflow-Ausgabe ist ungültig.");
   }
   return {
@@ -125,6 +126,7 @@ function inputFrom(value: unknown): ModelInputSource {
 function inputForType(type: string, data: Record<string, unknown>) {
   switch (type) {
     case "image":
+    case "audio":
     case "file":
       return binaryInput(type, data);
     case "text":
@@ -143,7 +145,7 @@ function inputForType(type: string, data: Record<string, unknown>) {
   }
 }
 
-function binaryInput(type: "image" | "file", data: Record<string, unknown>) {
+function binaryInput(type: "image" | "audio" | "file", data: Record<string, unknown>) {
   return {
     type,
     contentType: requiredString(data.contentType, "Der Content-Type fehlt."),

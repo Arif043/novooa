@@ -19,6 +19,7 @@ export async function modelInputFromWorkflowMapping(
 ): Promise<ModelInputValue> {
   switch (mapping.sourceType) {
     case "image":
+    case "audio":
     case "file":
       return fileInput(mapping.sourceType, value, teamId, fileContentReader);
     case "text": return {type: "text", value: textValue(value)};
@@ -31,7 +32,7 @@ export async function modelInputFromWorkflowMapping(
 }
 
 async function fileInput(
-  type: "image" | "file",
+  type: "image" | "audio" | "file",
   value: unknown,
   teamId: string,
   reader: TeamFileContentReader,
@@ -42,6 +43,9 @@ async function fileInput(
   );
   if (type === "image" && !content.contentType.startsWith("image/")) {
     throw new Error("Die Modelleingabe erwartet ein Bild.");
+  }
+  if (type === "audio" && !content.contentType.startsWith("audio/")) {
+    throw new Error("Die Modelleingabe erwartet eine Audiodatei.");
   }
   return {type, contentType: content.contentType, bytes: content.content};
 }

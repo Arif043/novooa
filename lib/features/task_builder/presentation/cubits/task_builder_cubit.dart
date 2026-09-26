@@ -483,6 +483,8 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       WorkflowPrimitive.dialogInput => 'dialog',
       WorkflowPrimitive.mediaInput => 'media',
       WorkflowPrimitive.modelInference => 'model',
+      WorkflowPrimitive.textToSpeech => 'audio',
+      WorkflowPrimitive.speechToText => 'transkript',
       WorkflowPrimitive.forEach => 'element',
       WorkflowPrimitive.documentLookup => 'datensatz',
       WorkflowPrimitive.saveDocument => 'speichern',

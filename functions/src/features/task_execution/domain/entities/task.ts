@@ -39,6 +39,7 @@ export type {
 export type {
   FileReference,
   MediaReference,
+  AudioReference,
   NodeOutputValue,
 } from "./workflow-value.js";
 export const workflowPrimitives = [
@@ -58,6 +59,8 @@ export const workflowPrimitives = [
   "dialogInput",
   "mediaInput",
   "modelInference",
+  "textToSpeech",
+  "speechToText",
   "forEach",
   "documentLookup",
   "saveDocument",
@@ -171,6 +174,17 @@ export type ModelInferenceNodeConfig = {
   inputMappings: ModelInferenceInputMapping[];
   outputParameters: ModelInferenceOutputParameter[];
 };
+type SpeechModelNodeConfig = {
+  modelId: string;
+  inputMappings: ModelInferenceInputMapping[];
+  outputParameters: ModelInferenceOutputParameter[];
+};
+export type TextToSpeechNodeConfig = SpeechModelNodeConfig & {
+  primitive: "textToSpeech";
+};
+export type SpeechToTextNodeConfig = SpeechModelNodeConfig & {
+  primitive: "speechToText";
+};
 export type ModelInferenceInputMapping = {
   modelInputName: string;
   workflowMapping: string;
@@ -257,6 +271,8 @@ export type NodeConfig =
   | DialogInputNodeConfig
   | MediaInputNodeConfig
   | ModelInferenceNodeConfig
+  | TextToSpeechNodeConfig
+  | SpeechToTextNodeConfig
   | ForEachNodeConfig
   | WriteFileNodeConfig
   | ReadFileNodeConfig

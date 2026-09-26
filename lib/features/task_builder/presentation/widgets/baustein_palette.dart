@@ -36,6 +36,8 @@ const bausteinGroups = <String, List<BausteinChoice>>{
     BausteinChoice(.prompt),
     BausteinChoice(.iterativeRefinement),
     BausteinChoice(.modelInference),
+    BausteinChoice(.textToSpeech),
+    BausteinChoice(.speechToText),
   ],
   'Interaktion': [
     BausteinChoice(.humanApproval),
@@ -68,6 +70,8 @@ IconData bausteinIcon(WorkflowPrimitive primitive) => switch (primitive) {
   .dialogInput => CupertinoIcons.line_horizontal_3,
   .mediaInput => CupertinoIcons.camera,
   .modelInference => CupertinoIcons.rectangle,
+  .textToSpeech => CupertinoIcons.speaker_2,
+  .speechToText => CupertinoIcons.waveform,
   .forEach => CupertinoIcons.arrow_2_squarepath,
   .documentLookup => CupertinoIcons.search,
   .saveDocument => CupertinoIcons.archivebox,
