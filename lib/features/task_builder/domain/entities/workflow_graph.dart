@@ -104,14 +104,34 @@ class WorkflowGraph extends Equatable {
     );
   }
 
+  /// Entfernt [nodeId] und spleißt dabei seine Vorgänger direkt mit seinen
+  /// Nachfolgern zusammen (Kreuzprodukt aller ein-/ausgehenden Kanten),
+  /// statt den Graphen in zwei unverbundene Komponenten zu zerlegen — ein
+  /// Knoten in der Mitte einer Kette hat normalerweise genau einen
+  /// Vorgänger/Nachfolger, wodurch daraus schlicht eine direkte Kante wird.
   WorkflowGraph removeNode(NodeId nodeId) {
     final remainingNodes = nodes
         .where((node) => node.id != nodeId)
         .toList(growable: false);
     final remainingEdges = edges
         .where((edge) => edge.from != nodeId && edge.to != nodeId)
-        .toList(growable: false);
-    return copyWith(nodes: remainingNodes, edges: remainingEdges);
+        .toList();
+    final predecessorIds = incomingEdgesOf(nodeId).map((edge) => edge.from);
+    final successorIds = outgoingEdgesOf(nodeId).map((edge) => edge.to);
+    for (final from in predecessorIds) {
+      for (final to in successorIds) {
+        final alreadyConnected = remainingEdges.any(
+          (edge) => edge.from == from && edge.to == to,
+        );
+        if (from != to && !alreadyConnected) {
+          remainingEdges.add(WorkflowEdge(from: from, to: to));
+        }
+      }
+    }
+    return copyWith(
+      nodes: remainingNodes,
+      edges: remainingEdges.toList(growable: false),
+    );
   }
 
   WorkflowGraph swapNodes(NodeId sourceId, NodeId targetId) {
