@@ -4,6 +4,8 @@ import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_import.dart';
 import 'package:syscat2/features/machine_learning/domain/repositories/model_catalog_repository.dart';
 import 'package:syscat2/features/machine_learning/domain/usecases/import_model_catalog_entry.dart';
+import 'package:syscat2/features/machine_learning/domain/usecases/install_global_model.dart';
+import 'package:syscat2/features/machine_learning/domain/usecases/load_global_model_catalog.dart';
 import 'package:syscat2/features/machine_learning/domain/usecases/remove_model_catalog_entry.dart';
 import 'package:syscat2/features/machine_learning/domain/usecases/watch_model_catalog_entries.dart';
 import 'package:syscat2/features/machine_learning/presentation/cubits/model_catalog_cubit.dart';
@@ -49,6 +51,25 @@ void main() {
       await cubit.close();
     },
   );
+
+  test('loads and installs a model from the global catalog', () async {
+    final repository = _Repository()..globalEntries = [catalogEntry()];
+    final cubit = ModelCatalogCubit(
+      WatchModelCatalogEntries(repository),
+      ImportModelCatalogEntry(repository),
+      RemoveModelCatalogEntry(repository),
+      LoadGlobalModelCatalog(repository),
+      InstallGlobalModel(repository),
+    );
+
+    await cubit.loadGlobal();
+    await cubit.installGlobalModel('system-model');
+
+    expect(cubit.state.globalEntries, [catalogEntry()]);
+    expect(repository.installedGlobalModelId, 'system-model');
+    expect(cubit.state.message, 'Modell wurde installiert.');
+    await cubit.close();
+  });
 }
 
 ModelCatalogImport catalogImport() => ModelCatalogImport(
@@ -57,9 +78,24 @@ ModelCatalogImport catalogImport() => ModelCatalogImport(
   openArtifact: () => Stream.value([1]),
 );
 
-class _Repository implements ModelCatalogRepository {
+ModelCatalogEntry catalogEntry() => const ModelCatalogEntry(
+  id: 'system-model',
+  title: 'Systemmodell',
+  description: 'Ein Modell aus dem globalen Katalog.',
+  tags: ['test'],
+  inputs: [],
+  outputs: [],
+  outputCount: 0,
+  sizeBytes: 4,
+  isManagedLocally: false,
+);
+
+class _Repository
+    implements ModelCatalogRepository, GlobalModelCatalogRepository {
   ModelCatalogImport? imported;
   Object? importError;
+  List<ModelCatalogEntry> globalEntries = const [];
+  String? installedGlobalModelId;
 
   @override
   Future<void> importEntry(ModelCatalogImport value) async {
@@ -69,6 +105,14 @@ class _Repository implements ModelCatalogRepository {
 
   @override
   Future<void> removeEntry(String modelId) async {}
+
+  @override
+  Future<void> installGlobalEntry(String modelId) async {
+    installedGlobalModelId = modelId;
+  }
+
+  @override
+  Future<List<ModelCatalogEntry>> loadGlobalEntries() async => globalEntries;
 
   @override
   Stream<List<ModelCatalogEntry>> watchEntries() => const Stream.empty();

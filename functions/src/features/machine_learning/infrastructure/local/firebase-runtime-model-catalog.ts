@@ -1,10 +1,13 @@
 import {modelCatalogEntryFromData} from "../model-catalog-entry-codec.js";
 import {modelArtifactDistributionFromUnknown} from "../model-artifact-distribution.js";
-import {type RuntimeFirebaseSession} from "../../../licensing/infrastructure/local/runtime-firebase-session.js";
 import {type RuntimeSystemModel, type RuntimeSystemModelCatalog} from "./runtime-system-model-catalog.js";
 
+export interface RuntimeCollectionReader {
+  listCollection(collectionName: string): Promise<readonly {id: string; data: Record<string, unknown>}[]>;
+}
+
 export class FirebaseRuntimeModelCatalog implements RuntimeSystemModelCatalog {
-  constructor(private readonly session: RuntimeFirebaseSession) {}
+  constructor(private readonly session: RuntimeCollectionReader) {}
 
   async list(): Promise<readonly RuntimeSystemModel[]> {
     const documents = await this.session.listCollection("modelCatalog");

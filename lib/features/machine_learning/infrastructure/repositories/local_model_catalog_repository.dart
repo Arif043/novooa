@@ -39,8 +39,9 @@ class LocalModelCatalogRepository
   Future<List<ModelCatalogEntry>> loadGlobalEntries() async {
     final response = await _client.get('/v1/ml-models/catalog');
     final items = response['items'];
-    if (items is! List)
+    if (items is! List) {
       throw const FormatException('Der globale Modellkatalog ist ungültig.');
+    }
     return items.map(_entryFrom).toList(growable: false);
   }
 
@@ -203,16 +204,18 @@ class LocalModelCatalogRepository
   }
 
   Map<String, Object?> _object(Object? value) {
-    if (value is! Map)
+    if (value is! Map) {
       throw const FormatException('Ein Modellkatalogeintrag ist ungültig.');
+    }
     return {
       for (final entry in value.entries) entry.key.toString(): entry.value,
     };
   }
 
   List<Object?> _items(Object? value) {
-    if (value is! List)
+    if (value is! List) {
       throw const FormatException('Ein Modellkatalogeintrag ist ungültig.');
+    }
     return value;
   }
 

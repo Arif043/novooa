@@ -6,11 +6,15 @@ import test from "node:test";
 import {type ApplicationLogger} from "../../../../shared/logging/application-logger.js";
 import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
+import {type ModelArtifactPublication} from "../../domain/repositories/model-artifact-publisher.js";
 import {type TeamModelCatalog} from "../../domain/repositories/model-catalog.js";
+import {systemModelEntry, systemModelManifestFromUnknown} from "../cli/system-model-manifest.js";
+import {type ModelArtifactDistribution} from "../model-artifact-distribution.js";
 import {LocalModelArtifactPublisher} from "./local-model-artifact-publisher.js";
 import {LocalModelArtifactUploadStore} from "./local-model-artifact-upload-store.js";
-import {LocalModelCatalogHttpHandler} from "./local-model-catalog-http-handler.js";
+import {LocalModelCatalogHttpHandler, type ModelArtifactDownloader} from "./local-model-catalog-http-handler.js";
 import {type ModelContractValidator} from "./python-model-contract-validator.js";
+import {type RuntimeSystemModel, type RuntimeSystemModelCatalog} from "./runtime-system-model-catalog.js";
 
 test("installs a team-scoped ONNX model from a manifest and lists it", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-model-import-"));
@@ -37,6 +41,41 @@ test("installs a team-scoped ONNX model from a manifest and lists it", async () 
     assert.equal(imported?.statusCode, 201);
     assert.equal(catalog.entries[0]?.scope.type, "team");
     assert.deepEqual(listed?.body, {items: catalog.entries});
+  } finally {
+    await rm(directory, {recursive: true, force: true});
+  }
+});
+
+test("lists global models without their distribution and installs one locally", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-global-model-"));
+  const catalog = new Catalog();
+  const model = globalModel();
+  const downloader = new Downloader();
+  const handler = new LocalModelCatalogHttpHandler(
+    catalog,
+    new LocalModelArtifactPublisher(directory),
+    new LocalModelArtifactUploadStore(directory),
+    "team-1",
+    new Validator(),
+    new Logger(),
+    new LocalRuntimeRealtimeNotifier(),
+    new GlobalCatalog(model),
+    downloader,
+  );
+
+  try {
+    const listed = await handler.handle({method: "GET", url: "/v1/ml-models/catalog", body: {}});
+    const installed = await handler.handle({
+      method: "POST",
+      url: "/v1/ml-models/catalog/example-model/install",
+      body: {},
+    });
+
+    assert.deepEqual(listed?.body, {items: [model.entry]});
+    assert.equal(JSON.stringify(listed?.body).includes("huggingFace"), false);
+    assert.equal(installed?.statusCode, 201);
+    assert.deepEqual(catalog.entries[0]?.scope, {type: "team", teamId: "team-1"});
+    assert.equal(downloader.downloaded, true);
   } finally {
     await rm(directory, {recursive: true, force: true});
   }
@@ -199,6 +238,27 @@ class RejectingValidator implements ModelContractValidator {
   }
 }
 
+class GlobalCatalog implements RuntimeSystemModelCatalog {
+  constructor(private readonly model: RuntimeSystemModel) {}
+
+  async list(): Promise<readonly RuntimeSystemModel[]> {
+    return [this.model];
+  }
+
+  async find(modelId: string): Promise<RuntimeSystemModel | null> {
+    return modelId === this.model.entry.id ? this.model : null;
+  }
+}
+
+class Downloader implements ModelArtifactDownloader {
+  downloaded = false;
+
+  async download(reference: ModelCatalogEntry["artifactReference"], distribution: ModelArtifactDistribution): Promise<ModelArtifactPublication> {
+    this.downloaded = distribution.type === "huggingFace";
+    return {reference, content: artifactContent()};
+  }
+}
+
 class Logger implements ApplicationLogger {
   error(): void {}
   exception(): void {}
@@ -221,6 +281,25 @@ function manifest() {
       outputs: [{
         name: "output", dataType: "uint8", shape: [1], semantic: "classification.scores", transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"},
       }],
+    },
+  };
+}
+
+function globalModel(): RuntimeSystemModel {
+  return {
+    entry: systemModelEntry(systemModelManifestFromUnknown(manifest()), {
+      artifactId: "example-model",
+      versionId: "1",
+      format: "onnx",
+      contentType: "application/onnx",
+      sizeBytes: 4,
+      sha256: "0".repeat(64),
+    }),
+    distribution: {
+      type: "huggingFace",
+      repository: "novooa/example-model",
+      revision: "a".repeat(40),
+      path: "model.onnx",
     },
   };
 }

@@ -380,9 +380,9 @@ speichert weder Firebase-Credentials noch einen Admin-Schlüssel.
 `LOCAL_RUNTIME_FIREBASE_API_KEY` ist der öffentliche Web-API-Key der Firebase-
 Konfiguration, kein Firebase-Admin- oder Kundengeheimnis.
 
-Das Checkout-Compose setzt absichtlich `NOVOOA_LOCAL_DEVELOPMENT=true`; diese
-Entwicklungsausnahme erzeugt nur den lokalen Beispielarbeitsbereich und darf nicht
-als Produktivmodus ausgeliefert werden.
+`NOVOOA_LOCAL_DEVELOPMENT=true` ist ausschließlich für isolierte
+Entwicklungstests vorgesehen. Der reguläre Compose-Start verwendet den
+Lizenzmodus und baut damit auch die Firebase-Sitzung der Runtime auf.
 
 Der Vertriebsprozess benötigt einmalig Application Default Credentials und das
 Zielprojekt:
