@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/syscat_theme.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 import '../cubits/task_builder_state.dart';
 import 'branch_condition_editor.dart';
+import 'condition_value_sources.dart';
 
 /// Ersetzt die frühere einzelne "Wenn"-Freitexteingabe für Bedingter-
 /// Ablauf-Bausteine ohne Entscheidungs-Prompt-Vorgänger: Baukasten-Bedingte
@@ -26,7 +26,7 @@ class ConditionalBranchesEditor extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<TaskBuilderCubit>().state;
     final graph = state is TaskBuilderLoaded
-        ? state.editingTask.graph
+        ? conditionSourceGraph(state.editingTask.graph, node.id)
         : WorkflowGraph.empty();
     final cubit = context.read<TaskBuilderCubit>();
     final conditioned = _config.branches
@@ -36,15 +36,22 @@ class ConditionalBranchesEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Wenn', style: SyscatTheme.taskBody),
+        Text('Pfade festlegen', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Text(
+          'Prüfe Werte aus vorherigen Bausteinen. Der erste passende Pfad wird ausgeführt.',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
         const SizedBox(height: AppSpacing.sm),
         if (conditioned.isEmpty)
           _EmptyBranchesNotice(onAdd: () => cubit.addConditionBranch(node.id))
         else ...[
           for (final branch in conditioned)
             Padding(
+              key: ValueKey(branch.id),
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: _ConditionBranchCard(
+                key: ValueKey(branch.id),
                 branch: branch,
                 graph: graph,
                 onConditionChanged: (condition) => cubit.updateBranchCondition(
@@ -81,7 +88,7 @@ class _EmptyBranchesNotice extends StatelessWidget {
         Text(
           'Noch keine Bedingung — ohne Bedingung läuft dieser Baustein '
           'direkt weiter.',
-          style: SyscatTheme.taskBodySmall,
+          style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: AppSpacing.sm),
         OutlinedButton.icon(
@@ -96,6 +103,7 @@ class _EmptyBranchesNotice extends StatelessWidget {
 
 class _ConditionBranchCard extends StatelessWidget {
   const _ConditionBranchCard({
+    super.key,
     required this.branch,
     required this.graph,
     required this.onConditionChanged,
@@ -113,11 +121,12 @@ class _ConditionBranchCard extends StatelessWidget {
     if (condition == null) return const SizedBox.shrink();
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(AppSpacing.sm),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -166,7 +175,7 @@ class _SonstBranchRow extends StatelessWidget {
         Expanded(
           child: Text(
             '${branch.label}: greift, wenn keine Bedingung oben zutrifft.',
-            style: SyscatTheme.taskBodySmall,
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ),
       ],

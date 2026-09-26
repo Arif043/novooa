@@ -30,7 +30,10 @@ class GroupBox extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border(
-          left: BorderSide(color: Theme.of(context).colorScheme.primary, width: 3),
+          left: BorderSide(
+            color: Theme.of(context).colorScheme.primary,
+            width: 3,
+          ),
         ),
       ),
       child: Padding(
@@ -64,7 +67,7 @@ class GroupBox extends StatelessWidget {
                 ),
               ),
               icon: const Icon(Icons.add),
-              label: const Text('Bedingung'),
+              label: const Text('Weitere Bedingung'),
             ),
           ],
         ),
@@ -98,36 +101,45 @@ class _GroupHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // `Flexible` statt einer festen Breite + `isExpanded: true`: das
-        // längste Label ("ENTWEDER-ODER") ist breiter als ein
-        // fest-dimensionierter SizedBox — ohne `isExpanded` sizt sich das
-        // Dropdown intern am Inhalt und lief über statt zu ellipsieren.
-        Flexible(
-          child: DropdownButtonFormField<BooleanCombinator>(
-            isExpanded: true,
-            initialValue: group.combinator,
-            decoration: const InputDecoration(labelText: 'Verknüpfung'),
-            items: [
-              for (final combinator in BooleanCombinator.values)
-                DropdownMenuItem(value: combinator, child: Text(combinator.label)),
-            ],
-            onChanged: (combinator) {
-              if (combinator != null) {
-                onChanged(group.copyWith(combinator: combinator));
-              }
-            },
+        DropdownButtonFormField<BooleanCombinator>(
+          key: ValueKey(group.combinator),
+          isExpanded: true,
+          initialValue: group.combinator,
+          decoration: const InputDecoration(
+            labelText: 'Diese Gruppe trifft zu, wenn …',
           ),
+          items: [
+            for (final combinator in BooleanCombinator.values)
+              DropdownMenuItem(
+                value: combinator,
+                child: Text(
+                  conditionGroupLabel(combinator),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+          onChanged: (combinator) {
+            if (combinator != null) {
+              onChanged(group.copyWith(combinator: combinator));
+            }
+          },
         ),
-        const Spacer(),
-        GroupMenuButton(onSelected: onGroup),
-        if (onRemove != null)
-          IconButton(
-            tooltip: 'Gruppe entfernen',
-            onPressed: onRemove,
-            icon: const Icon(Icons.remove_circle_outline),
-          ),
+        Wrap(
+          alignment: WrapAlignment.end,
+          children: [
+            GroupMenuButton(onSelected: onGroup),
+            if (onRemove != null)
+              IconButton(
+                tooltip: 'Gruppe entfernen',
+                onPressed: onRemove,
+                icon: const Icon(Icons.remove_circle_outline),
+              ),
+          ],
+        ),
       ],
     );
   }

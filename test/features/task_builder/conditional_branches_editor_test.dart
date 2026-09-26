@@ -7,15 +7,14 @@ import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_run_failure.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_run_start.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_edge.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_branches_editor.dart';
 
-// End-to-End-Test des Baukasten-Editors: Branch hinzufügen, einen echten
-// Vergleich eintippen, per Klammer-Aktion zu einer UND-Gruppe erweitern —
-// prüft nach jedem Schritt den tatsächlich persistierten Cubit-State.
+// Die Auswahl erzeugt die Referenz intern und persistiert sie im Cubit.
 void main() {
   Future<TaskBuilderCubit> pumpEditor(WidgetTester tester) async {
     final cubit = TaskBuilderCubit(repository: _FakeTaskRepository(_task()));
@@ -27,11 +26,11 @@ void main() {
           child: Scaffold(
             body: BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
               builder: (context, state) {
-                final node = (state as TaskBuilderLoaded)
-                    .editingTask
-                    .nodes
-                    .single;
-                return ConditionalBranchesEditor(node: node);
+                final node =
+                    (state as TaskBuilderLoaded).editingTask.nodes.last;
+                return SingleChildScrollView(
+                  child: ConditionalBranchesEditor(node: node),
+                );
               },
             ),
           ),
@@ -43,7 +42,7 @@ void main() {
 
   ConditionalNodeConfig configOf(TaskBuilderCubit cubit) {
     final state = cubit.state as TaskBuilderLoaded;
-    return state.editingTask.nodes.single.config as ConditionalNodeConfig;
+    return state.editingTask.nodes.last.config as ConditionalNodeConfig;
   }
 
   testWidgets(
@@ -52,22 +51,26 @@ void main() {
     (tester) async {
       final cubit = await pumpEditor(tester);
 
-      await tester.tap(find.widgetWithText(OutlinedButton, 'Bedingung hinzufügen'));
+      await tester.tap(
+        find.widgetWithText(OutlinedButton, 'Bedingung hinzufügen'),
+      );
       await tester.pump();
 
       expect(configOf(cubit).branches, hasLength(2));
-      expect(find.byType(TextFormField), findsNWidgets(2));
-
-      await tester.enterText(find.byType(TextFormField).first, '{{eingabe}}');
-      await tester.pump();
+      await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Texteingabe · eingabe').last);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('{{'), findsNothing);
 
       final afterTyping = configOf(cubit).branches[0].condition;
       expect(afterTyping, isA<ComparisonCondition>());
       expect((afterTyping as ComparisonCondition).left, '{{eingabe}}');
 
-      await tester.tap(find.byIcon(Icons.data_object).first);
+      await tester.ensureVisible(find.byIcon(Icons.playlist_add).first);
+      await tester.tap(find.byIcon(Icons.playlist_add).first);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('UND-Gruppe').last);
+      await tester.tap(find.text('Alle Bedingungen müssen zutreffen').last);
       await tester.pumpAndSettle();
 
       final grouped = configOf(cubit).branches[0].condition;
@@ -85,7 +88,9 @@ void main() {
     'Bedingung entfernen kehrt zum branchfreien Ausgangszustand zurück',
     (tester) async {
       final cubit = await pumpEditor(tester);
-      await tester.tap(find.widgetWithText(OutlinedButton, 'Bedingung hinzufügen'));
+      await tester.tap(
+        find.widgetWithText(OutlinedButton, 'Bedingung hinzufügen'),
+      );
       await tester.pump();
 
       await tester.tap(find.byTooltip('Bedingung entfernen'));
@@ -114,13 +119,20 @@ Task _task() {
     graph: WorkflowGraph(
       nodes: [
         WorkflowNode(
+          id: NodeId('input'),
+          title: 'Texteingabe',
+          description: '',
+          outputName: 'eingabe',
+          config: StringInputNodeConfig(value: ''),
+        ),
+        WorkflowNode(
           id: conditionalId,
           title: 'Bedingter Ablauf',
           description: '',
           config: ConditionalNodeConfig(branches: []),
         ),
       ],
-      edges: [],
+      edges: [WorkflowEdge(from: NodeId('input'), to: conditionalId)],
     ),
   );
 }

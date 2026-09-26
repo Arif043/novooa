@@ -75,16 +75,33 @@ class GroupMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<BooleanCombinator>(
-      tooltip: 'Mit Klammer gruppieren',
+      tooltip: 'Weitere Bedingung verknüpfen',
       onSelected: onSelected,
       itemBuilder: (context) => [
         for (final combinator in BooleanCombinator.values)
           PopupMenuItem(
             value: combinator,
-            child: Text('${combinator.label}-Gruppe'),
+            child: Text(conditionGroupLabel(combinator)),
           ),
       ],
-      icon: const Icon(Icons.data_object),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.playlist_add, size: 20),
+            const SizedBox(width: 8),
+            Text('Verknüpfen', style: Theme.of(context).textTheme.labelLarge),
+          ],
+        ),
+      ),
     );
   }
 }
+
+String conditionGroupLabel(BooleanCombinator combinator) =>
+    switch (combinator) {
+      BooleanCombinator.and => 'Alle Bedingungen müssen zutreffen',
+      BooleanCombinator.or => 'Mindestens eine Bedingung muss zutreffen',
+      BooleanCombinator.xor => 'Genau eine Bedingung muss zutreffen',
+    };

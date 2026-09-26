@@ -44,7 +44,7 @@ referenzieren.
 | `stringInput` | Texteingabe | Gibt festen Text weiter | Implementiert |
 | `script` | Script | Fuehrt Python mit einer explizit konfigurierten Eingabe aus | Implementiert |
 | `prompt` | Prompt | LLM-Aufruf mit Vorlage und Variablen | Implementiert |
-| `conditionalFlow` | Bedingter Ablauf | Verzweigt anhand eines Labels (Entscheidungs-Prompt-Vorgänger) oder anhand eigener boolescher Branch-Bedingungen (Baukasten: Vergleiche, AND/OR/XOR, verschachtelt) | Implementiert |
+| `conditionalFlow` | Bedingter Ablauf | Verzweigt anhand eines Labels (Entscheidungs-Prompt-Vorgänger) oder anhand eigener boolescher Branch-Bedingungen (geführte Wertauswahl, Vergleiche, alle/mindestens eine/genau eine Bedingung, verschachtelt) | Implementiert |
 | `iterativeRefinement` | Iterative Verfeinerung | Bewertet und verbessert einen Entwurf | Implementiert |
 | `writeFile` | Datei schreiben | Schreibt einen explizit konfigurierten Wert als Datei | Implementiert |
 | `readFile` | Datei lesen | Liest eine konkrete Datei-Version | Implementiert |
