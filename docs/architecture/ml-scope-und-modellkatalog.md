@@ -47,20 +47,21 @@ Variante.
 ## Modellkatalog als Cloud-Dienst
 
 Firestore `modelCatalog` bleibt der Master. Die Betreiber-CLI `models:publish`
-bleibt unverändert; es ändert sich nur, wer den Katalog konsumiert.
+bleibt unverändert; lokale Runtimes lesen die Metadaten nach ihrer Firebase-
+Anmeldung direkt aus Firestore. Die Artefakte werden nicht über novooa
+proxied, sondern anhand der katalogisierten Hugging-Face-Quelle direkt geladen.
 
 ```text
-GET /v1/catalog
-GET /v1/catalog/:modelId/versions/:versionId/artifact
+GET /v1/ml-models/catalog
+POST /v1/ml-models/catalog/:modelId/install
 ```
 
-Der erste Endpunkt liefert Katalogeinträge samt Manifest — kleine JSON-Nutzlast.
-Der zweite liefert eine kurzlebige signierte Download-URL auf das Artefakt in
-Cloud Storage. Beide sind über den Lizenztoken der Runtime authentifiziert; ein
-unauthentifizierter Download ist nicht vorgesehen.
+Der Endpunkt liefert Katalogeinträge samt Manifest als kleine JSON-Nutzlast.
+Die Installation lädt anschließend die in den Infrastrukturmetadaten unter
+`distribution` deklarierte Datei direkt von Hugging Face. Firestore liefert nur
+Metadaten; ein unauthentifizierter Katalogzugriff ist nicht vorgesehen.
 
-Die Runtime schreibt Artefakt und Katalogeintrag über denselben Pfad, den
-`models:install-local` heute verwendet:
+Die Runtime schreibt Artefakt und Katalogeintrag über denselben lokalen Pfad:
 
 ```text
 .novooa/
@@ -73,10 +74,10 @@ Die Runtime schreibt Artefakt und Katalogeintrag über denselben Pfad, den
 Diese vier Punkte sind Bestandteil der Entscheidung, nicht optionale
 Verbesserungen.
 
-**1. Signatur.** Ein Modellkanal in ein Kundennetz ist ein Code-Lieferkanal. Der
-Katalogeintrag wird von novooa signiert, der SHA-256 des Artefakts liegt
-*innerhalb* der Signatur, und die Runtime prüft die Signatur vor der
-Installation. Dieselbe Mechanik trägt bereits die Offline-Lizenzaktivierung.
+**1. Integrität.** Ein Modellkanal in ein Kundennetz ist ein Code-Lieferkanal.
+Der Katalog enthält deshalb eine feste Hugging-Face-Revision sowie die
+SHA-256-Prüfsumme des Artefakts. Die Runtime prüft Größe und Prüfsumme vor der
+Installation.
 
 **2. Optionalität.** Offline-Aktivierung ist ein Enterprise-Merkmal; solche
 Installationen haben keinen Internetzugang. Der Katalog braucht daher einen

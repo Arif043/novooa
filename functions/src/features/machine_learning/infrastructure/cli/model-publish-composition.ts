@@ -1,8 +1,7 @@
 import {getApps, initializeApp} from "firebase-admin/app";
 import path from "node:path";
-import {PublishSystemModel} from "../../domain/usecases/publish-system-model.js";
-import {FirestoreModelCatalog} from "../firebase/firestore-model-catalog.js";
-import {FirebaseModelArtifactPublisher} from "../firebase/firebase-model-artifact-publisher.js";
+import {FirestoreModelDistributionPublisher} from "../firebase/firestore-model-distribution-publisher.js";
+import {FirestoreSystemModelPublisher} from "../firebase/firestore-system-model-publisher.js";
 import {LocalPythonProcess} from "../local/local-python-process.js";
 import {PythonOnnxModelValidator} from "../python-onnx-model-validator.js";
 import {type ModelPublishCommandDependencies} from "./model-publish-command.js";
@@ -13,7 +12,8 @@ export function cloudModelPublishDependencies(
 ): ModelPublishCommandDependencies {
   initializeCloudApp(options);
   return {
-    publisher: new PublishSystemModel(new FirebaseModelArtifactPublisher(), new FirestoreModelCatalog()),
+    publisher: new FirestoreSystemModelPublisher(),
+    distributionPublisher: new FirestoreModelDistributionPublisher(),
     onnxValidator: new PythonOnnxModelValidator(new LocalPythonProcess({
       pythonExecutable: options.pythonExecutable, workerScriptPath: onnxValidationWorkerPath(),
     })),
@@ -22,7 +22,7 @@ export function cloudModelPublishDependencies(
 
 function initializeCloudApp(options: ModelPublishOptions): void {
   if (getApps().length > 0) return;
-  initializeApp({projectId: options.projectId, storageBucket: options.bucketName});
+  initializeApp({projectId: options.projectId});
 }
 
 function onnxValidationWorkerPath(): string {

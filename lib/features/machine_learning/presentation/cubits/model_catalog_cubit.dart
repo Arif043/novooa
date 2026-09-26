@@ -8,15 +8,24 @@ import '../../domain/entities/model_catalog_import.dart';
 import '../../domain/usecases/import_model_catalog_entry.dart';
 import '../../domain/usecases/remove_model_catalog_entry.dart';
 import '../../domain/usecases/watch_model_catalog_entries.dart';
+import '../../domain/usecases/load_global_model_catalog.dart';
+import '../../domain/usecases/install_global_model.dart';
 import 'model_catalog_state.dart';
 
 class ModelCatalogCubit extends Cubit<ModelCatalogState> {
-  ModelCatalogCubit(this._watchEntries, this._importEntry, this._removeEntry)
-    : super(const ModelCatalogState());
+  ModelCatalogCubit(
+    this._watchEntries,
+    this._importEntry,
+    this._removeEntry, [
+    this._loadGlobal,
+    this._installGlobal,
+  ]) : super(const ModelCatalogState());
 
   final WatchModelCatalogEntries _watchEntries;
   final ImportModelCatalogEntry _importEntry;
   final RemoveModelCatalogEntry _removeEntry;
+  final LoadGlobalModelCatalog? _loadGlobal;
+  final InstallGlobalModel? _installGlobal;
   StreamSubscription<List<ModelCatalogEntry>>? _subscription;
 
   void load() {
@@ -33,6 +42,29 @@ class ModelCatalogCubit extends Cubit<ModelCatalogState> {
         ),
       ),
     );
+  }
+
+  Future<void> loadGlobal() async {
+    final loader = _loadGlobal;
+    if (loader == null) return;
+    emit(state.copyWith(globalStatus: ModelCatalogStatus.loading));
+    try {
+      final entries = await loader();
+      emit(
+        state.copyWith(
+          globalStatus: ModelCatalogStatus.ready,
+          globalEntries: entries,
+        ),
+      );
+    } on Object catch (_) {
+      emit(state.copyWith(globalStatus: ModelCatalogStatus.failure));
+    }
+  }
+
+  Future<void> installGlobalModel(String modelId) async {
+    final installer = _installGlobal;
+    if (installer == null) return;
+    await _save(() => installer(modelId), 'Modell wurde installiert.');
   }
 
   Future<void> importModel(ModelCatalogImport value) async {

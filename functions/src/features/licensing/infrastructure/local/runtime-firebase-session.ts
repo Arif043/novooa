@@ -5,7 +5,16 @@ import {
   signInWithCustomToken,
   type Auth,
 } from "firebase/auth";
-import {doc, getFirestore, onSnapshot, type Firestore, type Unsubscribe} from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  getFirestore,
+  onSnapshot,
+  type DocumentData,
+  type Firestore,
+  type Unsubscribe,
+} from "firebase/firestore";
 import {type RuntimeLicenseActivation} from "../../domain/entities/runtime-license-activation.js";
 
 export type RuntimeFirebaseConfiguration = {
@@ -14,7 +23,7 @@ export type RuntimeFirebaseConfiguration = {
   tokenEndpoint: string;
 };
 
-export class RuntimeFirebaseSession {
+export class  RuntimeFirebaseSession {
   private app: FirebaseApp | undefined;
   private auth: Auth | undefined;
   private database: Firestore | undefined;
@@ -45,6 +54,12 @@ export class RuntimeFirebaseSession {
       () => onWakeup(),
       onFailure,
     );
+  }
+
+  async listCollection(collectionName: string): Promise<readonly {id: string; data: DocumentData}[]> {
+    if (this.database === undefined) throw new Error("Die Firebase-Sitzung wurde nicht gestartet.");
+    const snapshot = await getDocs(collection(this.database, collectionName));
+    return snapshot.docs.map((item) => ({id: item.id, data: item.data()}));
   }
 
   async stop(): Promise<void> {

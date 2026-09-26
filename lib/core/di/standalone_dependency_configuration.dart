@@ -38,6 +38,8 @@ import '../../features/machine_learning/domain/repositories/model_catalog_reposi
 import '../../features/machine_learning/domain/usecases/import_model_catalog_entry.dart';
 import '../../features/machine_learning/domain/usecases/remove_model_catalog_entry.dart';
 import '../../features/machine_learning/domain/usecases/watch_model_catalog_entries.dart';
+import '../../features/machine_learning/domain/usecases/load_global_model_catalog.dart';
+import '../../features/machine_learning/domain/usecases/install_global_model.dart';
 import '../../features/machine_learning/infrastructure/repositories/local_model_catalog_repository.dart';
 import '../../features/machine_learning/presentation/cubits/model_catalog_cubit.dart';
 import '../../features/task_builder/domain/repositories/task_repository.dart';
@@ -184,6 +186,9 @@ Future<void> configureStandaloneDependencies(
         locator<WorkspaceRealtimeChannel>(),
       ),
     )
+    ..registerLazySingleton<GlobalModelCatalogRepository>(
+      () => locator<ModelCatalogRepository>() as GlobalModelCatalogRepository,
+    )
     ..registerLazySingleton<LanguageModelConnectionRepository>(
       () =>
           locator<LanguageModelRepository>()
@@ -232,6 +237,12 @@ Future<void> configureStandaloneDependencies(
     )
     ..registerLazySingleton(
       () => RemoveModelCatalogEntry(locator<ModelCatalogRepository>()),
+    )
+    ..registerLazySingleton(
+      () => LoadGlobalModelCatalog(locator<GlobalModelCatalogRepository>()),
+    )
+    ..registerLazySingleton(
+      () => InstallGlobalModel(locator<GlobalModelCatalogRepository>()),
     )
     ..registerLazySingleton(
       () => LoadRuntimeLicenseStatus(locator<RuntimeLicenseRepository>()),
@@ -312,6 +323,8 @@ Future<void> configureStandaloneDependencies(
         locator<WatchModelCatalogEntries>(),
         locator<ImportModelCatalogEntry>(),
         locator<RemoveModelCatalogEntry>(),
+        locator<LoadGlobalModelCatalog>(),
+        locator<InstallGlobalModel>(),
       ),
     )
     ..registerFactory(

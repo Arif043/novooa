@@ -40,7 +40,18 @@ void main() {
     expect(client.uploadContentType, 'application/onnx');
     expect(client.uploadedBytes, [1, 2, 3]);
   });
+
+  test('maps an audio workflow output from the global catalog', () async {
+    final repository = LocalModelCatalogRepository(_AudioClient(), _channel());
+
+    final entries = await repository.loadGlobalEntries();
+
+    expect(entries.single.outputs.single.workflowType, 'audio');
+  });
 }
+
+WorkspaceRealtimeChannel _channel() =>
+    WorkspaceRealtimeChannel(Uri.parse('http://127.0.0.1:0'), _NoopClient());
 
 class _Client extends WorkspaceApiClient {
   String? postPath;
@@ -153,4 +164,35 @@ class _NoopClient extends WorkspaceApiClient {
     String path,
     Map<String, Object?> body,
   ) async => const {};
+}
+
+class _AudioClient extends _Client {
+  @override
+  Future<Map<String, Object?>> get(String path) async => {
+    'items': [
+      {
+        'id': 'speech-model',
+        'title': 'Sprachmodell',
+        'description': 'Erzeugt Audio.',
+        'tags': ['sprache'],
+        'scope': {'type': 'system'},
+        'artifactReference': {'sizeBytes': 1024},
+        'contract': {
+          'inputs': [],
+          'outputs': [
+            {
+              'name': 'audio',
+              'semantic': 'speech.audio',
+              'workflowOutput': {
+                'name': 'audio',
+                'type': 'audio',
+                'mapping': r'$tensor',
+              },
+              'transformations': [],
+            },
+          ],
+        },
+      },
+    ],
+  };
 }

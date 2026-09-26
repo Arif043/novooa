@@ -7,7 +7,8 @@ import '../../domain/entities/model_catalog_entry.dart';
 import '../../domain/entities/model_catalog_import.dart';
 import '../../domain/repositories/model_catalog_repository.dart';
 
-class LocalModelCatalogRepository implements ModelCatalogRepository {
+class LocalModelCatalogRepository
+    implements ModelCatalogRepository, GlobalModelCatalogRepository {
   const LocalModelCatalogRepository(this._client, this._channel);
 
   final WorkspaceApiClient _client;
@@ -32,6 +33,23 @@ class LocalModelCatalogRepository implements ModelCatalogRepository {
   @override
   Future<void> removeEntry(String modelId) {
     return _client.delete('/v1/ml-models/${Uri.encodeComponent(modelId)}');
+  }
+
+  @override
+  Future<List<ModelCatalogEntry>> loadGlobalEntries() async {
+    final response = await _client.get('/v1/ml-models/catalog');
+    final items = response['items'];
+    if (items is! List)
+      throw const FormatException('Der globale Modellkatalog ist ungültig.');
+    return items.map(_entryFrom).toList(growable: false);
+  }
+
+  @override
+  Future<void> installGlobalEntry(String modelId) async {
+    await _client.post(
+      '/v1/ml-models/catalog/${Uri.encodeComponent(modelId)}/install',
+      {},
+    );
   }
 
   @override
@@ -111,7 +129,13 @@ class LocalModelCatalogRepository implements ModelCatalogRepository {
     if (name is! String ||
         name.isEmpty ||
         type is! String ||
-        !const {'string', 'number', 'boolean', 'json'}.contains(type)) {
+        !const {
+          'string',
+          'number',
+          'boolean',
+          'json',
+          'audio',
+        }.contains(type)) {
       throw const FormatException('Die Workflow-Ausgabe ist ungültig.');
     }
     return {'name': name, 'type': type};

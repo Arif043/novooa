@@ -9,11 +9,15 @@ import {
 } from "../../../../shared/local/local-runtime-http-server.js";
 import {InstallTeamModel} from "../../domain/usecases/install-team-model.js";
 import {type TeamModelCatalog} from "../../domain/repositories/model-catalog.js";
+import {type ModelArtifactReference} from "../../domain/entities/model-artifact-reference.js";
+import {type ModelArtifactPublication} from "../../domain/repositories/model-artifact-publisher.js";
+import {type ModelArtifactDistribution} from "../model-artifact-distribution.js";
 import {LocalModelArtifactPublisher} from "./local-model-artifact-publisher.js";
 import {LocalModelArtifactUploadStore, type StagedModelArtifact} from "./local-model-artifact-upload-store.js";
 import {type ModelContractValidator} from "./python-model-contract-validator.js";
 import {systemModelEntry, systemModelManifestFromUnknown} from "../cli/system-model-manifest.js";
 import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
+import {type RuntimeSystemModelCatalog} from "./runtime-system-model-catalog.js";
 
 type PendingModelImport = {
   manifest: ReturnType<typeof systemModelManifestFromUnknown>;
@@ -28,6 +32,8 @@ export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler,
     private readonly contractValidator: ModelContractValidator,
     private readonly logger: ApplicationLogger,
     private readonly notifier: LocalRuntimeRealtimeNotifier,
+    private readonly globalCatalog?: RuntimeSystemModelCatalog,
+    private readonly artifactDownloader?: ModelArtifactDownloader,
   ) {
     this.installer = new InstallTeamModel(artifactPublisher, catalog);
   }
@@ -37,6 +43,9 @@ export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler,
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
     if (request.url === "/v1/ml-models" && request.method === "GET") return this.list();
+    if (request.url === "/v1/ml-models/catalog" && request.method === "GET") return this.listGlobal();
+    const catalogModelId = catalogModelIdFrom(request.url);
+    if (catalogModelId !== null && request.method === "POST") return this.installGlobal(catalogModelId);
     if (request.url === "/v1/ml-models/imports" && request.method === "POST") return this.createImport(request.body);
     const modelId = modelIdFrom(request.url);
     if (modelId !== null && request.method === "DELETE") return this.remove(modelId);
@@ -51,6 +60,44 @@ export class LocalModelCatalogHttpHandler implements LocalRuntimeRequestHandler,
 
   private async list(): Promise<LocalRuntimeResponse> {
     return {body: {items: await this.catalog.listAvailableFor(this.teamId)}, statusCode: 200};
+  }
+
+  private async listGlobal(): Promise<LocalRuntimeResponse> {
+    if (this.globalCatalog === undefined) return this.unavailableGlobalCatalog();
+    try {
+      const models = await this.globalCatalog.list();
+      return {body: {items: models.map((model) => model.entry)}, statusCode: 200};
+    } catch (error) {
+      return this.failure("catalog_list_failed", error);
+    }
+  }
+
+  private async installGlobal(modelId: string): Promise<LocalRuntimeResponse> {
+    if (this.globalCatalog === undefined || this.artifactDownloader === undefined) {
+      return this.unavailableGlobalCatalog();
+    }
+    try {
+      const model = await this.globalCatalog.find(modelId);
+      if (model === null || model.entry.scope.type !== "system") {
+        return {body: {error: "Der globale Katalogeintrag wurde nicht gefunden."}, statusCode: 404};
+      }
+      const {entry, distribution} = model;
+      await validateContract(this.contractValidator, entry.contract);
+      const artifact = await this.artifactDownloader.download(entry.artifactReference, distribution);
+      const installed = await this.installer.execute({
+        entry: {...entry, scope: {type: "team", teamId: this.teamId}},
+        artifact,
+      });
+      this.logger.info("local_model_catalog.installed_from_catalog", {modelId, teamId: this.teamId});
+      this.notifier.publish("model-catalog");
+      return {body: installed, statusCode: 201};
+    } catch (error) {
+      return this.failure("catalog_install_failed", error);
+    }
+  }
+
+  private unavailableGlobalCatalog(): LocalRuntimeResponse {
+    return {body: {error: "Der globale Modellkatalog ist nicht verfügbar."}, statusCode: 503};
   }
 
   private async createImport(body: unknown): Promise<LocalRuntimeResponse> {
@@ -136,6 +183,13 @@ function modelIdFrom(url: string | undefined): string | null {
   return match?.[1] ? decodeURIComponent(match[1]) : null;
 }
 
+function catalogModelIdFrom(url: string | undefined): string | null {
+  const match = /^\/v1\/ml-models\/catalog\/([^/]+)\/install$/.exec(
+    new URL(url ?? "/", "http://local-runtime").pathname,
+  );
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
+}
+
 function importIdFrom(url: string | undefined): string | null {
   const match = /^\/v1\/ml-models\/imports\/([0-9a-f-]+)\/artifact$/.exec(new URL(url ?? "/", "http://local-runtime").pathname);
   return match?.[1] ?? null;
@@ -164,4 +218,11 @@ class LocalModelCatalogRequestError extends Error {}
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Das Manifest ist ungültig.";
+}
+
+export interface ModelArtifactDownloader {
+  download(
+    reference: ModelArtifactReference,
+    distribution: ModelArtifactDistribution,
+  ): Promise<ModelArtifactPublication>;
 }

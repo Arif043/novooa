@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
 import {type ModelArtifactPublication} from "../../domain/repositories/model-artifact-publisher.js";
-import {publishSystemModelCommand, type OnnxModelValidator, type SystemModelPublisher} from "./model-publish-command.js";
+import {
+  publishSystemModelCommand,
+  type OnnxModelValidator,
+  type SystemModelDistributionPublisher,
+  type SystemModelPublisher,
+} from "./model-publish-command.js";
 import {type ModelPublishOptions} from "./model-publish-options.js";
 
 test("validates a model without persisting during a dry run", async () => {
@@ -23,6 +28,20 @@ test("publishes a verified system model", async () => {
   assert.equal(publisher.calls, 1);
 });
 
+test("persists a manifest distribution separately from the catalog entry", async () => {
+  const publisher = new Publisher();
+  const distributions = new DistributionPublisher();
+  await publishSystemModelCommand(options(false), {
+    ...dependencies(publisher, new Validator()),
+    distributionPublisher: distributions,
+    manifestFromFile: async () => ({
+      ...manifest(), distribution: distribution(),
+    }),
+  });
+
+  assert.deepEqual(distributions.items, [{modelId: "model", distribution: distribution()}]);
+});
+
 class Publisher implements SystemModelPublisher {
   calls = 0;
 
@@ -40,13 +59,18 @@ class Validator implements OnnxModelValidator {
   }
 }
 
+class DistributionPublisher implements SystemModelDistributionPublisher {
+  items: {modelId: string; distribution: ReturnType<typeof distribution>}[] = [];
+
+  async publish(modelId: string, value: ReturnType<typeof distribution>): Promise<void> {
+    this.items.push({modelId, distribution: value});
+  }
+}
+
 function dependencies(publisher: Publisher, validator: Validator) {
   return {
     publisher, onnxValidator: validator,
-    manifestFromFile: async () => ({
-      id: "model", title: "Modell", description: "Beschreibung", tags: ["bild"],
-      artifact: {artifactId: "model", versionId: "1"}, contract: contract(),
-    }),
+    manifestFromFile: async () => manifest(),
     artifactFromFile: async (): Promise<ModelArtifactPublication> => ({
       reference: {
         artifactId: "model", versionId: "1", format: "onnx", contentType: "application/onnx",
@@ -57,9 +81,25 @@ function dependencies(publisher: Publisher, validator: Validator) {
   };
 }
 
+function manifest() {
+  return {
+    id: "model", title: "Modell", description: "Beschreibung", tags: ["bild"],
+    artifact: {artifactId: "model", versionId: "1"}, contract: contract(),
+  };
+}
+
+function distribution() {
+  return {
+    type: "huggingFace" as const,
+    repository: "novooa/model",
+    revision: "a".repeat(40),
+    path: "model.onnx",
+  };
+}
+
 function options(dryRun: boolean): ModelPublishOptions {
   return {
-    projectId: "project", bucketName: "bucket", manifestPath: "model.json", artifactPath: "model.onnx",
+    projectId: "project", manifestPath: "model.json", artifactPath: "model.onnx",
     pythonExecutable: "python3", dryRun,
   };
 }

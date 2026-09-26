@@ -7,6 +7,7 @@ import '../../domain/entities/model_catalog_import.dart';
 import '../cubits/model_catalog_cubit.dart';
 import '../cubits/model_catalog_state.dart';
 import 'model_catalog_list.dart';
+import 'global_model_catalog_list.dart';
 import 'model_import_picker.dart';
 import '../../../settings/presentation/widgets/settings_section.dart';
 
@@ -25,7 +26,9 @@ class _MachineLearningSettingsTabState
   @override
   void initState() {
     super.initState();
-    _cubit = serviceLocator<ModelCatalogCubit>()..load();
+    _cubit = serviceLocator<ModelCatalogCubit>()
+      ..load()
+      ..loadGlobal();
   }
 
   @override
@@ -67,6 +70,13 @@ class _Content extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ModelCatalogList(state: state),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Globale Modelle',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            GlobalModelCatalogList(state: state),
             const SizedBox(height: AppSpacing.lg),
             Align(
               alignment: Alignment.centerRight,

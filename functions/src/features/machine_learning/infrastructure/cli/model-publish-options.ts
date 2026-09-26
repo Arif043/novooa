@@ -1,6 +1,5 @@
 export type ModelPublishOptions = {
   projectId: string;
-  bucketName: string;
   manifestPath: string;
   artifactPath: string;
   pythonExecutable: string;
@@ -12,7 +11,6 @@ export function modelPublishOptionsFromArguments(arguments_: readonly string[]):
   const projectId = requiredValue(values, "project");
   return {
     projectId,
-    bucketName: values.get("bucket") ?? `${projectId}.firebasestorage.app`,
     manifestPath: requiredValue(values, "manifest"),
     artifactPath: requiredValue(values, "artifact"),
     pythonExecutable: values.get("python") ?? process.env.PYTHON_EXECUTABLE ?? "python3",
@@ -22,7 +20,7 @@ export function modelPublishOptionsFromArguments(arguments_: readonly string[]):
 
 export const modelPublishUsage = [
   "Verwendung: npm --prefix functions run models:publish -- --project <projekt-id>",
-  "  --manifest <model.json> --artifact <model.onnx> [--bucket <bucket>] [--python <pfad>] [--dry-run]",
+  "  --manifest <model.json> --artifact <model.onnx> [--python <pfad>] [--dry-run]",
 ].join("\n");
 
 function optionValues(arguments_: readonly string[]): Map<string, string> {

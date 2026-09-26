@@ -155,6 +155,10 @@ rules_version = '2';
 //   - communicationRevision: number (required) - monotonically advances on mail
 //   - updatedAt: timestamp (required) - last relay wake-up
 //
+// Collection: modelCatalog
+// Document ID: public model id
+// Fields contain curated metadata and immutable Hugging Face source references.
+//
 // ===============================================================
 
 service cloud.firestore {
@@ -989,6 +993,13 @@ service cloud.firestore {
     match /localRuntimeWakeups/{licenseId} {
       allow get: if isLocalRuntimeForLicense(licenseId);
       allow list, create, update, delete: if false;
+    }
+
+    // The local runtime reads curated model metadata after Firebase sign-in.
+    // Model artifacts are downloaded directly from their declared public source.
+    match /modelCatalog/{modelId} {
+      allow get, list: if isAuthenticated() && request.auth.token.localRuntime == true;
+      allow write: if false;
     }
 
     match /{document=**} {

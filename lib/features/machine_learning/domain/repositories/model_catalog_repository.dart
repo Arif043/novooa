@@ -6,3 +6,8 @@ abstract interface class ModelCatalogRepository {
   Future<void> importEntry(ModelCatalogImport value);
   Future<void> removeEntry(String modelId);
 }
+
+abstract interface class GlobalModelCatalogRepository {
+  Future<List<ModelCatalogEntry>> loadGlobalEntries();
+  Future<void> installGlobalEntry(String modelId);
+}

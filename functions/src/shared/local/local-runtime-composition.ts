@@ -1,3 +1,4 @@
+import path from "node:path";
 import {LocalObjectStore} from "../../features/files/infrastructure/local/local-object-store.js";
 import {LocalFileResourceHttpHandler} from "../../features/files/infrastructure/local/local-file-resource-http-handler.js";
 import {LocalTeamFileStore} from "../../features/files/infrastructure/local/local-team-file-store.js";
@@ -7,6 +8,8 @@ import {createLocalSidecarModelInference} from "../../features/machine_learning/
 import {LocalModelArtifactPublisher} from "../../features/machine_learning/infrastructure/local/local-model-artifact-publisher.js";
 import {LocalModelArtifactUploadStore} from "../../features/machine_learning/infrastructure/local/local-model-artifact-upload-store.js";
 import {LocalModelCatalogHttpHandler} from "../../features/machine_learning/infrastructure/local/local-model-catalog-http-handler.js";
+import {FirebaseRuntimeModelCatalog} from "../../features/machine_learning/infrastructure/local/firebase-runtime-model-catalog.js";
+import {HuggingFaceModelArtifactDownloader} from "../../features/machine_learning/infrastructure/local/hugging-face-model-artifact-downloader.js";
 import {SQLiteModelCatalog} from "../../features/machine_learning/infrastructure/local/sqlite-model-catalog.js";
 import {
   PythonModelContractValidator,
@@ -198,6 +201,11 @@ export function createLocalRuntimeComposition(
       modelContractValidatorFor(),
       applicationLogger,
       realtimeNotifier,
+      firebaseSession === undefined ? undefined : new FirebaseRuntimeModelCatalog(firebaseSession),
+      new HuggingFaceModelArtifactDownloader(
+        path.join(options.runtimeRoot, "model-cache"),
+        process.env.HF_TOKEN?.trim() || undefined,
+      ),
     ),
     new LocalTaskActivityHttpHandler(options.database, options.workspace.teamId),
     new LocalApplicationLogHttpHandler(applicationLogStore, options.workspace.teamId, realtimeNotifier),

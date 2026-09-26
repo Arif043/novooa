@@ -25,10 +25,11 @@ Provider-spezifische Download-URLs.
 - `team`: später ein teamweit bereitgestelltes Modell. Hochladen durch Nutzer
   ist in der ersten Ausbaustufe noch nicht vorgesehen.
 
-`artifactReference` ist eine logische Referenz. `ModelArtifactReader` löst sie
-in verifizierte Modellbytes auf. Sein Firebase-Adapter liest Cloud Storage, der
-lokale Adapter das lokale Dateisystem. Beide prüfen Größe und SHA-256 vor der
-Rückgabe; die ONNX-Runtime kennt deshalb keinen Speichertyp.
+`artifactReference` ist eine logische Referenz. Die technische Distribution
+eines globalen Modells liegt separat in der Firestore-Infrastruktur. Die lokale
+Runtime lädt das Artefakt direkt mit `@huggingface/hub`, prüft Größe und
+SHA-256 und legt danach eine teamgebundene lokale Kopie an. Modellbytes werden
+weder über Firestore noch über novooa-Functions proxied.
 
 ```ts
 {
@@ -45,6 +46,12 @@ Rückgabe; die ONNX-Runtime kennt deshalb keinen Speichertyp.
     contentType: "application/onnx",
     sizeBytes: 10500000,
     sha256: "<sha-256>",
+  },
+  distribution: {
+    type: "huggingFace",
+    repository: "organisation/modell",
+    revision: "<40-stelliger-commit-hash>",
+    path: "model.onnx",
   },
   contract: {inputs: [...], outputs: [...]},
 }
@@ -146,6 +153,14 @@ Cloud: `modelCatalog/{modelId}` in Firestore. Lokal: SQLite-Tabelle
 `model_catalog` aus Migration `004_model_catalog.sql`. Beide Adapter
 implementieren den Domain-Port `ModelCatalog`.
 
+Die lokale Runtime liest den globalen Firestore-Katalog nach der Firebase-
+Anmeldung über `GET /v1/ml-models/catalog`. Eine Installation erfolgt über
+`POST /v1/ml-models/catalog/:modelId/install`; dabei wird die technische
+Distribution geladen, die Prüfsumme verifiziert und der Eintrag in den lokalen
+Teamkatalog übernommen. Öffentliche Hugging-Face-Modelle benötigen kein
+Betreiber-Token. Ein optionales `HF_TOKEN` dient ausschließlich lokalen,
+zugriffsbeschränkten Quellen und wird nicht ausgeliefert.
+
 ### Lokale Verwaltung
 
 In den lokalen Einstellungen ist der Tab **Machine Learning** verfügbar. Er
@@ -158,6 +173,8 @@ Cloud-Variante.
 
 ```text
 GET    /v1/ml-models
+GET    /v1/ml-models/catalog
+POST   /v1/ml-models/catalog/:modelId/install
 POST   /v1/ml-models/imports              { manifest }
 PUT    /v1/ml-models/imports/:id/artifact  application/onnx (Binärstream)
 DELETE /v1/ml-models/:id
@@ -481,8 +498,7 @@ werden über `MODEL_ARTIFACT_CACHE_ENTRIES` und
 In der ersten Ausbaustufe veröffentlicht ausschließlich novooa
 Systemmodelle. Dazu gibt es keine öffentliche Function und keine
 App-Oberfläche. Der Betreiber startet eine nicht-interaktive TypeScript-CLI,
-die ausschließlich Firestore und Cloud Storage des angegebenen GCP-Projekts
-verwendet.
+die ausschließlich Firestore des angegebenen GCP-Projekts verwendet.
 
 ```bash
 gcloud auth application-default login
@@ -493,12 +509,13 @@ npm --prefix functions run models:publish -- \
   --dry-run
 ```
 
-Ohne `--dry-run` lädt die CLI das Artefakt hoch und registriert den
-Katalogeintrag. Optional überschreibt `--bucket <bucket>` den aus der
-Projekt-ID abgeleiteten Firebase-Bucket. `--python <pfad>` wählt den
+Ohne `--dry-run` registriert die CLI den Katalogeintrag und seine technische
+Distribution. Das lokale Artefakt wird dabei nur gegen das Manifest validiert
+und gehasht; es wird nicht in Firebase Storage hochgeladen. Die
+`distribution` im Manifest ist dafür Pflicht. `--python <pfad>` wählt den
 Interpreter für die ONNX-Prüfung; ohne Angabe wird `PYTHON_EXECUTABLE` oder
 `python3` verwendet. Die Betreiberidentität benötigt Schreibzugriff auf
-`modelCatalog` sowie `storage.objects.create` auf dem Artefakt-Bucket.
+`modelCatalog`.
 
 Jedes Modell besteht mindestens aus einer ONNX-Datei und einem versionierten
 Manifest:
@@ -518,6 +535,12 @@ models/mobilenet-v3/
   "artifact": {
     "artifactId": "mobilenet-v3",
     "versionId": "2026-08"
+  },
+  "distribution": {
+    "type": "huggingFace",
+    "repository": "organisation/mobilenet-v3-onnx",
+    "revision": "<40-stelliger-commit-hash>",
+    "path": "model.onnx"
   },
   "contract": {
     "inputs": [{
@@ -550,21 +573,14 @@ Die CLI validiert Manifest und Modell, prüft das Modell durch das Öffnen einer
 ONNX-Runtime-Session und vergleicht Namen, Datentypen sowie statische
 Tensorformen mit dem Manifest. Gegenwärtig akzeptiert sie Bild- und
 Tensoreingänge, die registrierten Bildtransformationen sowie keine
-Ausgangsnachverarbeitung. Anschließend berechnet sie Größe und SHA-256,
-schreibt das Artefakt unveränderlich nach
-`model-artifacts/<artifactId>/versions/<versionId>/model.onnx` und speichert
-erst danach den Firestore-Katalogeintrag. `ifGenerationMatch: 0` verhindert,
-dass eine bestehende Modellversion überschrieben wird.
-
-Ein fehlgeschlagener Katalogeintrag kann ein bereits hochgeladenes, aber nicht
-referenziertes Artefakt hinterlassen. Solche Artefakte werden später von einem
-separaten Betreiber-Cleanup entfernt; eine Dateiablage und Firestore bieten
-keine gemeinsame Transaktion.
+Ausgangsnachverarbeitung. Anschließend berechnet sie Größe und SHA-256 und
+speichert den Firestore-Katalogeintrag zusammen mit der technischen
+Distribution. Die Runtime lädt später die durch Commit und Pfad unveränderlich
+referenzierte Datei direkt von Hugging Face und verifiziert sie erneut.
 
 ## Nächste Schritte
 
-1. Einen Betreiber-Cleanup für nicht referenzierte Modellartefakte ergänzen.
-2. Weitere Eingabe- und Ausgangstransformationen als Strategien ergänzen.
+1. Weitere Eingabe- und Ausgangstransformationen als Strategien ergänzen.
 
 ## Verwandt
 
