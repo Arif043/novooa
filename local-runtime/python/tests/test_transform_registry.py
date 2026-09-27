@@ -37,6 +37,10 @@ class TransformRegistryTest(unittest.TestCase):
             "text.piperPhonemes",
             default_transformation_registry().supported_types,
         )
+        self.assertIn(
+            "text.kokoroTokens",
+            default_transformation_registry().supported_types,
+        )
 
 
 class RecordingStrategy(InputTransformStrategy):

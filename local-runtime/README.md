@@ -56,8 +56,9 @@ python3 -m venv .novooa/python
 .novooa/python/bin/python -m pip install -r local-runtime/python/requirements.txt
 ```
 
-Die Node-Runtime verbindet sich mit diesem Sidecar über `novooa-private`; sie
-enthält weder einen Python-Interpreter noch Python-Abhängigkeiten.
+Die Node-Runtime verbindet sich mit diesem Sidecar über `novooa-private`. Sie
+enthält einen minimalen Python-Interpreter für isolierte Script-Bausteine,
+jedoch keine Python-ML-Abhängigkeiten.
 
 
 ## Clients im LAN und öffentlich

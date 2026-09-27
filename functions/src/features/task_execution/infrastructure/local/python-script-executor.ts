@@ -38,7 +38,7 @@ async function executePythonScript(
 
 function runPython(request: ScriptExecutionRequest, workspace?: ScriptWorkspace): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn("python3", ["-I", "-c", scriptPythonSource], {
+    const child = spawn(pythonExecutable(), ["-I", "-c", scriptPythonSource], {
       stdio: ["pipe", "pipe", "pipe"], cwd: workspace?.rootDirectory,
     });
     const timer = setTimeout(() => { child.kill("SIGKILL"); reject(new Error("Script-Timeout überschritten.")); }, timeoutMs);
@@ -50,6 +50,10 @@ function runPython(request: ScriptExecutionRequest, workspace?: ScriptWorkspace)
     child.on("close", (code) => finish(timer, () => completeProcess(code, output, errors, resolve, reject)));
     child.stdin.end(JSON.stringify(payloadFor(request, workspace)));
   });
+}
+
+function pythonExecutable(): string {
+  return process.env.PYTHON_EXECUTABLE?.trim() || "python3";
 }
 
 function completeProcess(

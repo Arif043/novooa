@@ -15,6 +15,10 @@ test("accepts the registered Piper text transformations", () => {
   cloudModelContractCapabilityValidator().validate(contract("text", ["text.piperPhonemes"]));
 });
 
+test("accepts the registered Kokoro token transformation", () => {
+  cloudModelContractCapabilityValidator().validate(contract("text", ["text.kokoroTokens"]));
+});
+
 test("delegates output transformation support to the Python runtime", () => {
   const value = contract("tensor", []);
   const changed: ModelContract = {

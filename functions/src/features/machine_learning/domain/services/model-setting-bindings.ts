@@ -39,6 +39,11 @@ function booleanValue(parameter: ModelSetting, value: unknown): boolean {
 
 function radioValue(parameter: ModelSetting, value: unknown): ModelSettingValue {
   if (parameter.control.type !== "radioGroup") throw new Error("Der Modellparameter ist ungültig.");
-  if (parameter.control.options.some((option) => option.value === value)) return value as ModelSettingValue;
+  const option = parameter.control.options.find((candidate) => matchesOption(candidate.value, value));
+  if (option !== undefined) return option.value;
   throw new Error(`Der Modellparameter ${parameter.label} ist ungültig.`);
+}
+
+function matchesOption(optionValue: ModelSettingValue, value: unknown): boolean {
+  return optionValue === value || (typeof value === "string" && String(optionValue) === value);
 }

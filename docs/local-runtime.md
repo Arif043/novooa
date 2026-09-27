@@ -306,7 +306,8 @@ Speicherpfade, sondern verifizierte Modellbytes und Tensoren über das
 standardisierte HTTP-Protokoll. Die Abhängigkeiten liegen in
 [`local-runtime/python/requirements.txt`](../local-runtime/python/requirements.txt);
 die Compose-Definition startet daraus den `novooa-ml`-Container. Der
-Node-Container enthält keinen Python-Interpreter und keine ML-Abhängigkeiten.
+Node-Container enthält einen minimalen Python-Interpreter für isolierte
+Script-Bausteine, aber keine Python-ML-Abhängigkeiten.
 
 Workflow-Werte werden vor der lokalen Inferenz gemäß Manifest in Tensoren
 transformiert. `input_transform_worker.py` verwendet für Bildquellen eine
