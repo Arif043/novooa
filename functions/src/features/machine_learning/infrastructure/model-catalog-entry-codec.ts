@@ -79,9 +79,19 @@ function artifactFrom(value: unknown): ModelArtifactReference {
     contentType: text(data.contentType, "Der Modell-Content-Type fehlt."),
     sizeBytes: numberFrom(data.sizeBytes),
     sha256: text(data.sha256, "Die Modell-Prüfsumme fehlt."),
+    resources: resourcesFrom(data.resources),
   };
   validateModelArtifactReference(reference);
   return reference;
+}
+
+function resourcesFrom(value: unknown): readonly {name: string; contentType: string; sizeBytes: number; sha256: string}[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) throw new Error("Die Modellressourcen sind ungültig.");
+  return value.map((item) => {
+    const data = record(item, "Die Modellressource ist ungültig.");
+    return {name: text(data.name, "Der Name einer Modellressource fehlt."), contentType: text(data.contentType, "Der Content-Type einer Modellressource fehlt."), sizeBytes: numberFrom(data.sizeBytes), sha256: text(data.sha256, "Die Prüfsumme einer Modellressource fehlt.")};
+  });
 }
 
 function formatFrom(value: unknown): "onnx" {

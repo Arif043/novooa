@@ -20,6 +20,12 @@ export type ModelRuntimeRequest = {
   }[];
 };
 
+export type ModelRuntimePreparationRequest = Pick<ModelRuntimeRequest, "model" | "artifact" | "resources">;
+
+export interface ModelInputPreparationRuntime {
+  prepareInputs(request: ModelRuntimePreparationRequest): Promise<string>;
+}
+
 export interface ModelInferenceRuntime {
   execute(request: ModelRuntimeRequest): Promise<readonly ModelRuntimeOutput[]>;
 }

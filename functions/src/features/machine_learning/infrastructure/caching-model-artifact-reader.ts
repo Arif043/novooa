@@ -1,4 +1,4 @@
-import {type ModelArtifactReference} from "../domain/entities/model-artifact-reference.js";
+import {type ModelArtifactReference, type ModelArtifactResourceReference} from "../domain/entities/model-artifact-reference.js";
 import {type ModelArtifactReader} from "../domain/repositories/model-artifact-reader.js";
 
 export class CachingModelArtifactReader implements ModelArtifactReader {
@@ -14,10 +14,18 @@ export class CachingModelArtifactReader implements ModelArtifactReader {
   }
 
   read(reference: ModelArtifactReference): Promise<Uint8Array> {
-    const key = artifactKey(reference);
+    return this.cached(artifactKey(reference), () => this.delegate.read(reference));
+  }
+
+  readResource(reference: ModelArtifactReference, resource: ModelArtifactResourceReference): Promise<Uint8Array> {
+    if (this.delegate.readResource === undefined) throw new Error("Die Quelle kann Modellressourcen nicht lesen.");
+    return this.cached(`${artifactKey(reference)}:resource:${resource.name}:${resource.sha256}`, () => this.delegate.readResource!(reference, resource));
+  }
+
+  private cached(key: string, loader: () => Promise<Uint8Array>): Promise<Uint8Array> {
     const existing = this.entries.get(key);
     if (existing !== undefined) return this.touch(key, existing);
-    return this.load(key, reference);
+    return this.load(key, loader);
   }
 
   private touch(key: string, content: Promise<Uint8Array>): Promise<Uint8Array> {
@@ -26,8 +34,8 @@ export class CachingModelArtifactReader implements ModelArtifactReader {
     return content;
   }
 
-  private load(key: string, reference: ModelArtifactReference): Promise<Uint8Array> {
-    const content = this.delegate.read(reference).catch((error: unknown) => {
+  private load(key: string, loader: () => Promise<Uint8Array>): Promise<Uint8Array> {
+    const content = loader().catch((error: unknown) => {
       this.entries.delete(key);
       throw error;
     });

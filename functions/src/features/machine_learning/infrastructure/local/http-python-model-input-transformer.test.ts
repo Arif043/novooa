@@ -31,6 +31,21 @@ test("returns a valid tensor source without calling the sidecar", async () => {
   assert.equal(client.url, undefined);
 });
 
+test("sends number transformations to the private Python sidecar", async () => {
+  const client = new RecordingClient();
+  const transformer = new HttpPythonModelInputTransformer("http://novooa-ml:8081", client);
+
+  await transformer.transform({
+    input: {
+      name: "speed", source: "number", dataType: "float32", shape: [1],
+      transformations: [{type: "tensor.constant", parameters: {values: [1]}}],
+    },
+    source: {name: "speed", type: "number", value: 1},
+  });
+
+  assert.equal(client.payload?.source.type, "number");
+});
+
 class RecordingClient implements PythonTransformHttpClient {
   url: string | undefined;
   payload: {source: {type: string; dataBase64?: string}} | undefined;

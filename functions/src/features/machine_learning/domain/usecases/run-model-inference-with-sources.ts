@@ -33,7 +33,8 @@ export class RunModelInferenceWithSources implements ModelInference {
         },
       ),
     };
-    const inputs = await this.prepareModelInputs.execute(model.contract, request.inputs);
+    const modelKey = await this.runModelInference.prepareInputs(model);
+    const inputs = await this.prepareModelInputs.execute(model.contract, request.inputs, modelKey);
     const outputs = await this.runModelInference.execute({
       model,
       inputs,

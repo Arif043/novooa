@@ -19,6 +19,10 @@ test("accepts the registered Kokoro token transformation", () => {
   cloudModelContractCapabilityValidator().validate(contract("text", ["text.kokoroTokens"]));
 });
 
+test("accepts the registered Kokoro style transformation", () => {
+  cloudModelContractCapabilityValidator().validate(contract("text", ["text.kokoroStyle"]));
+});
+
 test("delegates output transformation support to the Python runtime", () => {
   const value = contract("tensor", []);
   const changed: ModelContract = {

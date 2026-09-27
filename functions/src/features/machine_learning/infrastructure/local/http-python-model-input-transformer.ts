@@ -22,7 +22,11 @@ export class HttpPythonModelInputTransformer implements ModelInputTransformer {
   async transform(request: ModelInputTransformationRequest): Promise<ModelTensor> {
     validateModelInputSource(request.source, request.input);
     if (request.source.type === "tensor") return tensorFrom(request);
-    if (request.source.type !== "image" && request.source.type !== "text") {
+    if (
+      request.source.type !== "image"
+      && request.source.type !== "text"
+      && request.source.type !== "number"
+    ) {
       throw unsupportedSourceType(request.source.type);
     }
     const payload = await this.httpClient.post(

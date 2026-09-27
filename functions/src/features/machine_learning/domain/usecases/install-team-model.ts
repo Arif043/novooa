@@ -29,4 +29,9 @@ function validateRequest(request: InstallTeamModelRequest): void {
   if (JSON.stringify(request.entry.artifactReference) !== JSON.stringify(request.artifact.reference)) {
     throw new Error("Artefakt und Katalogeintrag referenzieren unterschiedliche Modellversionen.");
   }
+  const expected = request.entry.artifactReference.resources ?? [];
+  const received = request.artifact.resources ?? [];
+  if (JSON.stringify(expected) !== JSON.stringify(received.map((resource) => resource.reference))) {
+    throw new Error("Die Modellressourcen stimmen nicht mit dem Katalogeintrag überein.");
+  }
 }

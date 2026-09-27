@@ -47,6 +47,21 @@ test("rejects a workflow value that conflicts with the model contract", async ()
   );
 });
 
+test("prepares a resource-aware runtime before transforming inputs", async () => {
+  const transformer = new Transformer();
+  const runtime = new PreparingRuntime();
+  const useCase = new RunModelInferenceWithSources(
+    new Catalog(contractEntry()),
+    new PrepareModelInputs(transformer),
+    new RunModelInference(new ArtifactReader(), runtime),
+  );
+
+  await useCase.execute({teamId: "team-1", modelId: "classifier", inputs: sources()});
+
+  assert.deepEqual(transformer.modelKeys, ["prepared-model", "prepared-model", "prepared-model", "prepared-model"]);
+  assert.equal(runtime.preparations, 1);
+});
+
 function useCaseFor(
   entry: ModelCatalogEntry,
   transformer: ModelInputTransformer,
@@ -71,9 +86,11 @@ class ArtifactReader implements ModelArtifactReader {
 
 class Transformer implements ModelInputTransformer {
   sourceTypes: string[] = [];
+  modelKeys: (string | undefined)[] = [];
 
   async transform(request: Parameters<ModelInputTransformer["transform"]>[0]) {
     this.sourceTypes.push(request.source.type);
+    this.modelKeys.push(request.modelKey);
     return tensor(request.input.name, [1], [1]);
   }
 }
@@ -82,6 +99,15 @@ class Runtime implements ModelInferenceRuntime {
   async execute(): Promise<readonly ModelRuntimeOutput[]> {
     const tensorOutput = tensor("scores", [1], [2]);
     return [{...tensorOutput, tensor: tensorOutput, transformationValues: {tensor: [2]}}];
+  }
+}
+
+class PreparingRuntime extends Runtime {
+  preparations = 0;
+
+  async prepareInputs(): Promise<string> {
+    this.preparations += 1;
+    return "prepared-model";
   }
 }
 
@@ -103,6 +129,15 @@ function contractEntry(): ModelCatalogEntry {
     artifactReference: {artifactId: "artifact", versionId: "1", format: "onnx", contentType: "application/onnx", sizeBytes: 1, sha256: "0000000000000000000000000000000000000000000000000000000000000000"},
     contract: {inputs, outputs: [{name: "scores", dataType: "uint8", shape: [1], semantic: "classification.scores", transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}}]},
   };
+}
+
+function sources() {
+  return [
+    {name: "input-0", type: "text" as const, value: "Hallo"},
+    {name: "input-1", type: "number" as const, value: 4},
+    {name: "input-2", type: "boolean" as const, value: true},
+    {name: "input-3", type: "json" as const, value: {priority: "high"}},
+  ];
 }
 
 function textEntry(): ModelCatalogEntry {

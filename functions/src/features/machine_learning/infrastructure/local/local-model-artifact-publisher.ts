@@ -5,19 +5,26 @@ import path from "node:path";
 import {Readable} from "node:stream";
 import {pipeline} from "node:stream/promises";
 import {type ModelArtifactPublication, type ModelArtifactPublisher} from "../../domain/repositories/model-artifact-publisher.js";
-import {modelArtifactStoragePathFor} from "../model-artifact-storage-path.js";
+import {modelArtifactResourceStoragePathFor, modelArtifactStoragePathFor} from "../model-artifact-storage-path.js";
 
 export class LocalModelArtifactPublisher implements ModelArtifactPublisher {
   constructor(private readonly rootDirectory: string) {}
 
   async publish(publication: ModelArtifactPublication): Promise<void> {
-    const destination = path.join(this.rootDirectory, modelArtifactStoragePathFor(publication.reference));
+    await this.publishContent(modelArtifactStoragePathFor(publication.reference), publication.content, publication.reference.sha256);
+    for (const resource of publication.resources ?? []) {
+      await this.publishContent(modelArtifactResourceStoragePathFor(publication.reference, resource.reference), resource.content, resource.reference.sha256);
+    }
+  }
+
+  private async publishContent(storagePath: string, content: AsyncIterable<Uint8Array>, sha256: string): Promise<void> {
+    const destination = path.join(this.rootDirectory, storagePath);
     await mkdir(path.dirname(destination), {recursive: true});
     try {
-      await pipeline(Readable.from(publication.content), createWriteStream(destination, {flags: "wx"}));
+      await pipeline(Readable.from(content), createWriteStream(destination, {flags: "wx"}));
     } catch (error) {
       if (isAlreadyPublished(error)) {
-        await ensureMatchingArtifact(destination, publication.reference.sha256);
+        await ensureMatchingArtifact(destination, sha256);
         return;
       }
       throw publishError(error);
@@ -27,6 +34,9 @@ export class LocalModelArtifactPublisher implements ModelArtifactPublisher {
   async remove(reference: ModelArtifactPublication["reference"]): Promise<void> {
     const destination = path.join(this.rootDirectory, modelArtifactStoragePathFor(reference));
     await rm(destination, {force: true});
+    await Promise.all((reference.resources ?? []).map((resource) => rm(
+      path.join(this.rootDirectory, modelArtifactResourceStoragePathFor(reference, resource)), {force: true},
+    )));
   }
 }
 

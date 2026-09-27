@@ -70,7 +70,7 @@ export function cloudModelContractCapabilityValidator(): ModelContractCapability
       "image.padToMultiple", "tensor.channelOrder", "tensor.layout", "tensor.normalize",
     ])),
     new TextInputContractCapability(new Set([
-      "text.kokoroTokens", "text.piperPhonemes", "text.piperPhonemeLength", "tensor.constant",
+      "text.kokoroTokens", "text.kokoroStyle", "text.piperPhonemes", "text.piperPhonemeLength", "tensor.constant",
     ])),
     new TensorInputContractCapability(),
   ]);

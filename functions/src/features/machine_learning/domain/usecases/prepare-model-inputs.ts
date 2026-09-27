@@ -12,11 +12,12 @@ export class PrepareModelInputs {
   async execute(
     contract: ModelContract,
     sources: readonly ModelInputSource[],
+    modelKey?: string,
   ): Promise<readonly ModelTensor[]> {
     const sourcesByName = sourceMapFor(sources, contract.inputs);
     const tensors = await Promise.all(contract.inputs.map((input) => {
       const source = sourcesByName.get(input.name)!;
-      return this.transformer.transform({input, source});
+      return this.transformer.transform({input, source, modelKey});
     }));
     validateTensorsForContract(tensors, contract.inputs, "Eingabe");
     return tensors;

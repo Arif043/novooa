@@ -7,6 +7,7 @@ import {type ModelOutput} from "../domain/entities/model-contract.js";
 import {type ModelTensor} from "../domain/entities/model-tensor.js";
 import {
   type ModelInferenceRuntime,
+  type ModelInputPreparationRuntime,
   type ModelRuntimeOutput,
   type ModelRuntimeRequest,
 } from "../domain/repositories/model-inference-runtime.js";
@@ -32,7 +33,7 @@ export type SidecarInferenceRequest = {
   readonly outputParameters?: readonly ModelOutputParameterValue[];
 };
 
-export class SidecarOnnxInferenceRuntime implements ModelInferenceRuntime {
+export class SidecarOnnxInferenceRuntime implements ModelInferenceRuntime, ModelInputPreparationRuntime {
   private readonly loadedModels = new Map<string, Promise<void>>();
 
   constructor(private readonly sidecar: PythonInferenceSidecar) {}
@@ -43,6 +44,13 @@ export class SidecarOnnxInferenceRuntime implements ModelInferenceRuntime {
     validateModelRuntimeResources(resources);
     await this.load(reference, request.artifact, resources);
     return this.inferWithReload(reference, resources, request);
+  }
+
+  async prepareInputs(request: ModelRuntimeRequest): Promise<string> {
+    const resources = request.resources ?? [];
+    validateModelRuntimeResources(resources);
+    await this.load(request.model.artifactReference, request.artifact, resources);
+    return modelKey(request.model.artifactReference, resources);
   }
 
   private async load(

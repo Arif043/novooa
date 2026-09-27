@@ -25,7 +25,14 @@ export class HuggingFaceModelArtifactDownloader {
       accessToken: this.token,
     });
     await verifyDownloadedFile(filePath, reference);
-    return {reference, content: openFile(filePath)};
+    const resources = await Promise.all((reference.resources ?? []).map(async (resource) => {
+      const source = distribution.resources?.find((item) => item.name === resource.name);
+      if (source === undefined) throw new Error(`Die Downloadquelle für die Modellressource ${resource.name} fehlt.`);
+      const resourcePath = await downloadFileToCacheDir({repo: {type: "model", name: distribution.repository}, path: source.path, revision: distribution.revision, cacheDir: this.cacheDirectory, accessToken: this.token});
+      await verifyDownloadedFile(resourcePath, {...reference, ...resource});
+      return {reference: resource, content: openFile(resourcePath)};
+    }));
+    return {reference, content: openFile(filePath), resources};
   }
 }
 

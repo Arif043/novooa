@@ -8,6 +8,7 @@ export function pythonModelInputTransformationJson(
   return JSON.stringify({
     input: request.input,
     source: sourceFor(request),
+    ...(request.modelKey === undefined ? {} : {modelKey: request.modelKey}),
   });
 }
 

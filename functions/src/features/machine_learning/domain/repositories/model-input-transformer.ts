@@ -5,6 +5,7 @@ import {type ModelTensor} from "../entities/model-tensor.js";
 export type ModelInputTransformationRequest = {
   input: ModelInput;
   source: ModelInputSource;
+  modelKey?: string;
 };
 
 export interface ModelInputTransformer {
