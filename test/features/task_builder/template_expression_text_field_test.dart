@@ -33,5 +33,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(storedValue, 'Hallo {{prompt1}}');
+    expect(find.text('prompt1'), findsOneWidget);
   });
 }

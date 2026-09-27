@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:syscat2/core/theme/app_spacing.dart';
 
 import 'template_expression_suggestion.dart';
 
@@ -40,17 +41,14 @@ class _TemplateExpressionTextFieldState
   @override
   void initState() {
     super.initState();
-    _controller = _TemplateExpressionController(text: widget.value);
+    _controller = _TemplateExpressionController(widget.value);
   }
 
   @override
   void didUpdateWidget(TemplateExpressionTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_controller.text == widget.value) return;
-    _controller.value = _controller.value.copyWith(
-      text: widget.value,
-      selection: TextSelection.collapsed(offset: widget.value.length),
-    );
+    if (_controller.rawValue == widget.value) return;
+    _controller.replaceRawValue(widget.value);
   }
 
   @override
@@ -70,23 +68,16 @@ class _TemplateExpressionTextFieldState
     );
   }
 
-  void _handleChanged(String value) {
+  void _handleChanged(String displayValue) {
     final selection = _controller.selection;
-    if (!_shouldOpenPicker(value, selection)) {
-      widget.onChanged(value);
+    if (!_shouldOpenPicker(displayValue, selection)) {
+      _controller.normalizePlainExpressions();
+      widget.onChanged(_controller.rawValue);
       return;
     }
     final insertionOffset = selection.baseOffset - 1;
-    final withoutTrigger = value.replaceRange(
-      insertionOffset,
-      selection.baseOffset,
-      '',
-    );
-    _controller.value = TextEditingValue(
-      text: withoutTrigger,
-      selection: TextSelection.collapsed(offset: insertionOffset),
-    );
-    widget.onChanged(withoutTrigger);
+    _controller.removeDisplayRange(insertionOffset, selection.baseOffset);
+    widget.onChanged(_controller.rawValue);
     unawaited(_pickExpression(insertionOffset));
   }
 
@@ -114,20 +105,46 @@ class _TemplateExpressionTextFieldState
 
   void _insert(String expression, int insertionOffset) {
     final offset = insertionOffset.clamp(0, _controller.text.length);
-    final text = _controller.text;
-    final updated = text.replaceRange(offset, offset, expression);
-    _controller.value = TextEditingValue(
-      text: updated,
-      selection: TextSelection.collapsed(offset: offset + expression.length),
-    );
-    widget.onChanged(updated);
+    _controller.insertExpression(expression, offset);
+    widget.onChanged(_controller.rawValue);
   }
 }
 
 class _TemplateExpressionController extends TextEditingController {
-  _TemplateExpressionController({super.text});
+  _TemplateExpressionController(String rawValue) {
+    replaceRawValue(rawValue);
+  }
 
   static final _expression = RegExp(r'{{[^{}]+}}');
+  static const _firstToken = 0xe000;
+  final _expressions = <String, String>{};
+  var _nextToken = _firstToken;
+
+  String get rawValue => _rawValueFor(text);
+
+  void replaceRawValue(String rawValue) {
+    _expressions.clear();
+    _nextToken = _firstToken;
+    final displayValue = _displayValueFor(rawValue);
+    _setDisplayText(displayValue, selectionOffset: displayValue.length);
+  }
+
+  void removeDisplayRange(int start, int end) {
+    _setDisplayText(text.replaceRange(start, end, ''), selectionOffset: start);
+  }
+
+  void insertExpression(String expression, int offset) {
+    final token = _tokenFor(expression);
+    _setDisplayText(
+      text.replaceRange(offset, offset, token),
+      selectionOffset: offset + token.length,
+    );
+  }
+
+  void normalizePlainExpressions() {
+    if (!_expression.hasMatch(text)) return;
+    replaceRawValue(rawValue);
+  }
 
   @override
   TextSpan buildTextSpan({
@@ -135,28 +152,89 @@ class _TemplateExpressionController extends TextEditingController {
     TextStyle? style,
     required bool withComposing,
   }) {
-    final baseStyle = style ?? const TextStyle();
-    final labelStyle = baseStyle.copyWith(
-      color: Theme.of(context).colorScheme.onSecondaryContainer,
-      backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-      fontWeight: FontWeight.w600,
-    );
     final spans = <InlineSpan>[];
     var start = 0;
-    for (final match in _expression.allMatches(text)) {
-      if (match.start > start) {
-        spans.add(TextSpan(text: text.substring(start, match.start)));
+    for (var index = 0; index < text.length; index++) {
+      final token = text[index];
+      final expression = _expressions[token];
+      if (expression == null) continue;
+      if (index > start) {
+        spans.add(TextSpan(text: text.substring(start, index)));
       }
-      spans.add(TextSpan(text: _labelText(match.group(0)!), style: labelStyle));
-      start = match.end;
+      spans.add(_labelSpan(expression));
+      start = index + 1;
     }
     if (start < text.length) spans.add(TextSpan(text: text.substring(start)));
-    return TextSpan(style: baseStyle, children: spans);
+    return TextSpan(style: style, children: spans);
   }
 
-  String _labelText(String expression) {
+  String _displayValueFor(String rawValue) {
+    return rawValue.replaceAllMapped(
+      _expression,
+      (match) => _tokenFor(match.group(0)!),
+    );
+  }
+
+  String _rawValueFor(String displayValue) {
+    return displayValue.replaceAllMapped(
+      RegExp(
+        '[${String.fromCharCode(_firstToken)}-${String.fromCharCode(0xf8ff)}]',
+      ),
+      (match) => _expressions[match.group(0)!] ?? match.group(0)!,
+    );
+  }
+
+  String _tokenFor(String expression) {
+    final token = String.fromCharCode(_nextToken++);
+    _expressions[token] = expression;
+    return token;
+  }
+
+  void _setDisplayText(String value, {required int selectionOffset}) {
+    this.value = TextEditingValue(
+      text: value,
+      selection: TextSelection.collapsed(offset: selectionOffset),
+    );
+  }
+
+  InlineSpan _labelSpan(String expression) {
+    return WidgetSpan(
+      alignment: PlaceholderAlignment.baseline,
+      baseline: TextBaseline.alphabetic,
+      child: _TemplateExpressionLabel(expression: expression),
+    );
+  }
+}
+
+class _TemplateExpressionLabel extends StatelessWidget {
+  const _TemplateExpressionLabel({required this.expression});
+
+  final String expression;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final name = expression.substring(2, expression.length - 2).trim();
-    return '# $name'.padRight(expression.length);
+    return Semantics(
+      label: 'Workflow-Wert $name',
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(AppSpacing.lg),
+        ),
+        child: Text(
+          name,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
   }
 }
 
