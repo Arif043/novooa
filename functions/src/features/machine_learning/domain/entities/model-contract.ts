@@ -1,3 +1,15 @@
+import {
+  type ModelSetting,
+  validateModelSettings,
+} from "./model-setting.js";
+
+export type {
+  ModelSetting,
+  ModelSettingControl,
+  ModelSettingOption,
+  ModelSettingValue,
+} from "./model-setting.js";
+
 export const modelTensorDataTypes = [
   "float32",
   "float64",
@@ -50,8 +62,14 @@ export type Tensor = {
 
 export type ModelInput = Tensor & {
   source: ModelInputSourceType;
+  binding?: ModelInputBinding;
   transformations: TransformationPipeline;
 };
+
+export type ModelInputBinding =
+  | {type: "workflow"}
+  | {type: "derived"; inputName: string}
+  | {type: "generated"; value: TransformationParameter};
 
 export type ModelOutput = Tensor & {
   semantic: string;
@@ -62,6 +80,7 @@ export type ModelOutput = Tensor & {
 export type ModelContract = {
   inputs: readonly ModelInput[];
   outputs: readonly ModelOutput[];
+  settings?: readonly ModelSetting[];
 };
 
 export function validateModelContract(contract: ModelContract): void {
@@ -75,13 +94,24 @@ export function validateModelContract(contract: ModelContract): void {
   );
   validateInput(contract.inputs);
   validateOutput(contract.outputs);
+  validateModelSettings(contract.settings ?? []);
 }
 
 function validateInput(inputs: readonly ModelInput[]): void {
   uniqueTensorNames(inputs);
-  for (const input of inputs) {
+  for (const [index, input] of inputs.entries()) {
     validateTensor(input);
+    validateBinding(input, inputs.slice(0, index));
     validateTransformations(input.transformations);
+  }
+}
+
+function validateBinding(input: ModelInput, preceding: readonly ModelInput[]): void {
+  const binding = input.binding ?? {type: "workflow"};
+  if (binding.type === "workflow" || binding.type === "generated") return;
+  const source = preceding.find((candidate) => candidate.name === binding.inputName);
+  if (source === undefined || source.source !== input.source) {
+    throw new Error(`Der abgeleitete Modelleingang ${input.name} referenziert keine passende Quelle.`);
   }
 }
 

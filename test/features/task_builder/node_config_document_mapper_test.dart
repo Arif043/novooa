@@ -281,6 +281,19 @@ void main() {
     expect(restored, config);
   });
 
+  test('bewahrt konfigurierbare Modellparameter', () {
+    const config = ModelInferenceNodeConfig(
+      modelId: 'piper',
+      settings: [
+        ModelInferenceSetting(name: 'lengthScale', valueTemplate: '{{tempo}}'),
+      ],
+    );
+
+    final restored = _mapper().fromDocument(_mapper().toDocument(config));
+
+    expect(restored, config);
+  });
+
   test('serialisiert PromptNodeConfig mit Wissensanhang', () {
     final document = _mapper().toDocument(
       const PromptNodeConfig(
@@ -375,100 +388,100 @@ void main() {
       final restored = _mapper().fromDocument(document) as PromptNodeConfig;
 
       expect(document['structuredFields'], [
-        {'name': 'summe', 'description': 'Gesamtsumme in Euro', 'type': 'number'},
+        {
+          'name': 'summe',
+          'description': 'Gesamtsumme in Euro',
+          'type': 'number',
+        },
         {'name': 'bezahlt', 'description': '', 'type': 'boolean'},
       ]);
       expect(restored, config);
     },
   );
 
-  test(
-    'strukturierte Prompt-Ausgabefelder ohne persistierten Typ (Altdaten) '
-    'fallen auf StructuredFieldType.string zurück',
-    () {
-      final config = _mapper().fromDocument({
-            'primitive': 'prompt',
-            'instruction': 'Fasse zusammen',
-            'outputType': 'structured',
-            'choices': <String>[],
-            'structuredFields': [
-              {'name': 'titel', 'description': ''},
-            ],
-          })
-          as PromptNodeConfig;
-
-      expect(config.structuredFields.single.type, StructuredFieldType.string);
-    },
-  );
-
-  test(
-    'serialisiert und deserialisiert einen verschachtelten '
-    'Branch-Ausdrucksbaum (Klammerung)',
-    () {
-      const config = ConditionalNodeConfig(
-        branches: [
-          ConditionalBranch(
-            id: 'branch.1',
-            label: 'Bedingung 1',
-            graph: WorkflowGraph(nodes: [], edges: []),
-            condition: GroupCondition(
-              combinator: BooleanCombinator.or,
-              children: [
-                GroupCondition(
-                  combinator: BooleanCombinator.and,
-                  children: [
-                    ComparisonCondition(
-                      left: '{{x}}',
-                      operator: ComparisonOperator.greaterThan,
-                      right: '0',
-                    ),
-                    ComparisonCondition(
-                      left: '{{y}}',
-                      operator: ComparisonOperator.equals,
-                      right: 'ja',
-                    ),
-                  ],
-                ),
-                ComparisonCondition(
-                  left: '{{z}}',
-                  operator: ComparisonOperator.contains,
-                  right: 'immer',
-                ),
+  test('strukturierte Prompt-Ausgabefelder ohne persistierten Typ (Altdaten) '
+      'fallen auf StructuredFieldType.string zurück', () {
+    final config =
+        _mapper().fromDocument({
+              'primitive': 'prompt',
+              'instruction': 'Fasse zusammen',
+              'outputType': 'structured',
+              'choices': <String>[],
+              'structuredFields': [
+                {'name': 'titel', 'description': ''},
               ],
-            ),
-          ),
-          ConditionalBranch(
-            id: 'branch.sonst',
-            label: 'Sonst',
-            graph: WorkflowGraph(nodes: [], edges: []),
-          ),
-        ],
-      );
+            })
+            as PromptNodeConfig;
 
-      final document = _mapper().toDocument(config);
-      final restored = _mapper().fromDocument(document) as ConditionalNodeConfig;
+    expect(config.structuredFields.single.type, StructuredFieldType.string);
+  });
 
-      expect(restored, config);
-      expect(restored.branches[1].condition, isNull);
-    },
-  );
+  test('serialisiert und deserialisiert einen verschachtelten '
+      'Branch-Ausdrucksbaum (Klammerung)', () {
+    const config = ConditionalNodeConfig(
+      branches: [
+        ConditionalBranch(
+          id: 'branch.1',
+          label: 'Bedingung 1',
+          graph: WorkflowGraph(nodes: [], edges: []),
+          condition: GroupCondition(
+            combinator: BooleanCombinator.or,
+            children: [
+              GroupCondition(
+                combinator: BooleanCombinator.and,
+                children: [
+                  ComparisonCondition(
+                    left: '{{x}}',
+                    operator: ComparisonOperator.greaterThan,
+                    right: '0',
+                  ),
+                  ComparisonCondition(
+                    left: '{{y}}',
+                    operator: ComparisonOperator.equals,
+                    right: 'ja',
+                  ),
+                ],
+              ),
+              ComparisonCondition(
+                left: '{{z}}',
+                operator: ComparisonOperator.contains,
+                right: 'immer',
+              ),
+            ],
+          ),
+        ),
+        ConditionalBranch(
+          id: 'branch.sonst',
+          label: 'Sonst',
+          graph: WorkflowGraph(nodes: [], edges: []),
+        ),
+      ],
+    );
+
+    final document = _mapper().toDocument(config);
+    final restored = _mapper().fromDocument(document) as ConditionalNodeConfig;
+
+    expect(restored, config);
+    expect(restored.branches[1].condition, isNull);
+  });
 
   test(
     'Branches ohne persistiertes condition-Feld (Altdaten) bleiben '
     'branchlos-condition (null) statt eine erfundene Bedingung zu bekommen',
     () {
-      final config = _mapper().fromDocument({
-            'primitive': 'conditionalFlow',
-            'valueTemplate': '{{entscheidung.value}}',
-            'branches': [
-              {
-                'id': 'branch.1',
-                'label': 'Ja',
-                'graph': {'nodes': [], 'edges': []},
-              },
-            ],
-          })
-          as ConditionalNodeConfig;
+      final config =
+          _mapper().fromDocument({
+                'primitive': 'conditionalFlow',
+                'valueTemplate': '{{entscheidung.value}}',
+                'branches': [
+                  {
+                    'id': 'branch.1',
+                    'label': 'Ja',
+                    'graph': {'nodes': [], 'edges': []},
+                  },
+                ],
+              })
+              as ConditionalNodeConfig;
 
       expect(config.branches.single.condition, isNull);
     },

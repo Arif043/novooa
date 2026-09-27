@@ -1,5 +1,9 @@
 import 'package:equatable/equatable.dart';
 
+import 'model_manifest_input_parameter.dart';
+
+export 'model_manifest_input_parameter.dart';
+
 class ModelCatalogEntry extends Equatable {
   const ModelCatalogEntry({
     required this.id,
@@ -7,6 +11,7 @@ class ModelCatalogEntry extends Equatable {
     required this.description,
     required this.tags,
     required this.inputs,
+    this.settings = const [],
     required this.outputs,
     required this.outputCount,
     required this.sizeBytes,
@@ -18,6 +23,7 @@ class ModelCatalogEntry extends Equatable {
   final String description;
   final List<String> tags;
   final List<ModelManifestInput> inputs;
+  final List<ModelManifestSetting> settings;
   final List<ModelManifestOutput> outputs;
   final int outputCount;
   final int sizeBytes;
@@ -30,6 +36,7 @@ class ModelCatalogEntry extends Equatable {
     description,
     tags,
     inputs,
+    settings,
     outputs,
     outputCount,
     sizeBytes,
@@ -94,15 +101,23 @@ class ModelManifestInput extends Equatable {
     required this.source,
     required this.dataType,
     required this.shape,
+    this.requiresWorkflowMapping = true,
   });
 
   final String name;
   final ModelInputSource source;
   final String dataType;
   final List<Object> shape;
+  final bool requiresWorkflowMapping;
 
   @override
-  List<Object?> get props => [name, source, dataType, shape];
+  List<Object?> get props => [
+    name,
+    source,
+    dataType,
+    shape,
+    requiresWorkflowMapping,
+  ];
 
   String get dataTypeLabel => '$dataType (${shape.join(' x ')})';
 }

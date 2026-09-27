@@ -173,11 +173,13 @@ export type ModelInferenceNodeConfig = {
   modelId: string;
   inputMappings: ModelInferenceInputMapping[];
   outputParameters: ModelInferenceOutputParameter[];
+  settings?: ModelInferenceSetting[];
 };
 type SpeechModelNodeConfig = {
   modelId: string;
   inputMappings: ModelInferenceInputMapping[];
   outputParameters: ModelInferenceOutputParameter[];
+  settings?: ModelInferenceSetting[];
 };
 export type TextToSpeechNodeConfig = SpeechModelNodeConfig & {
   primitive: "textToSpeech";
@@ -191,6 +193,10 @@ export type ModelInferenceInputMapping = {
   sourceType: ModelInputSourceType;
   dataType: ModelTensorDataType;
   shape: readonly TensorDimension[];
+};
+export type ModelInferenceSetting = {
+  name: string;
+  valueTemplate: string;
 };
 export type ModelInferenceOutputParameter = {
   outputName: string;

@@ -22,6 +22,44 @@ test("rejects sources with a different type than the contract", async () => {
   );
 });
 
+test("derives and generates sources declared by the model contract", async () => {
+  const transformer = new Transformer();
+  const useCase = new PrepareModelInputs(transformer);
+  const inputs = [
+    {
+      name: "text",
+      source: "text" as const,
+      dataType: "uint8" as const,
+      shape: [1],
+      transformations: [],
+    },
+    {
+      name: "input_lengths",
+      source: "text" as const,
+      binding: {type: "derived" as const, inputName: "text"},
+      dataType: "uint8" as const,
+      shape: [1],
+      transformations: [],
+    },
+    {
+      name: "scales",
+      source: "text" as const,
+      binding: {type: "generated" as const, value: ""},
+      dataType: "uint8" as const,
+      shape: [1],
+      transformations: [],
+    },
+  ];
+
+  await useCase.execute({...contract(), inputs}, [
+    {name: "text", type: "text", value: "Hallo"},
+    {name: "input_lengths", type: "text", value: "Hallo"},
+    {name: "scales", type: "text", value: ""},
+  ]);
+
+  assert.deepEqual(transformer.inputNames, ["text", "input_lengths", "scales"]);
+});
+
 class Transformer implements ModelInputTransformer {
   inputNames: string[] = [];
 

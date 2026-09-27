@@ -219,6 +219,10 @@ export const modelInferenceNodeConfigSchema = z.object({
     name: z.string().min(1),
     value: z.number().int(),
   })).default([]),
+  settings: z.array(z.object({
+    name: z.string().min(1),
+    valueTemplate: z.string(),
+  })).default([]),
 });
 
 export const textToSpeechNodeConfigSchema = modelInferenceNodeConfigSchema.extend({

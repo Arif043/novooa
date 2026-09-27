@@ -5,11 +5,13 @@ class ModelInferenceNodeConfig extends NodeConfig {
     required this.modelId,
     this.inputMappings = const [],
     this.outputParameters = const [],
+    this.settings = const [],
   });
 
   final String modelId;
   final List<ModelInferenceInputMapping> inputMappings;
   final List<ModelInferenceOutputParameter> outputParameters;
+  final List<ModelInferenceSetting> settings;
 
   factory ModelInferenceNodeConfig.initial() {
     return const ModelInferenceNodeConfig(modelId: '');
@@ -19,19 +21,46 @@ class ModelInferenceNodeConfig extends NodeConfig {
   WorkflowPrimitive get primitive => WorkflowPrimitive.modelInference;
 
   @override
-  List<Object?> get props => [modelId, inputMappings, outputParameters];
+  List<Object?> get props => [
+    modelId,
+    inputMappings,
+    outputParameters,
+    settings,
+  ];
 
   ModelInferenceNodeConfig copyWith({
     String? modelId,
     List<ModelInferenceInputMapping>? inputMappings,
     List<ModelInferenceOutputParameter>? outputParameters,
+    List<ModelInferenceSetting>? settings,
   }) {
     return ModelInferenceNodeConfig(
       modelId: modelId ?? this.modelId,
       inputMappings: inputMappings ?? this.inputMappings,
       outputParameters: outputParameters ?? this.outputParameters,
+      settings: settings ?? this.settings,
     );
   }
+}
+
+class ModelInferenceSetting extends Equatable {
+  const ModelInferenceSetting({
+    required this.name,
+    required this.valueTemplate,
+  });
+
+  final String name;
+  final String valueTemplate;
+
+  ModelInferenceSetting copyWith({String? valueTemplate}) {
+    return ModelInferenceSetting(
+      name: name,
+      valueTemplate: valueTemplate ?? this.valueTemplate,
+    );
+  }
+
+  @override
+  List<Object?> get props => [name, valueTemplate];
 }
 
 class ModelInferenceOutputParameter extends Equatable {

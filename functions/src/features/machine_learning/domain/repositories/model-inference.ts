@@ -15,6 +15,7 @@ export type ModelInferenceRequest = {
   modelId: string;
   inputs: readonly ModelInputSource[];
   outputParameters?: readonly ModelOutputParameterValue[];
+  settings?: Readonly<Record<string, unknown>>;
   transformationBindings?: Readonly<Record<string, unknown>>;
 };
 

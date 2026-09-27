@@ -7,6 +7,7 @@ import {
 } from "../repositories/model-inference.js";
 import {mapWorkflowOutput} from "../services/workflow-output-mapper.js";
 import {resolveModelContractBindings} from "../services/resolve-model-contract-bindings.js";
+import {modelSettingBindings} from "../services/model-setting-bindings.js";
 import {PrepareModelInputs} from "./prepare-model-inputs.js";
 import {RunModelInference} from "./run-model-inference.js";
 
@@ -23,7 +24,13 @@ export class RunModelInferenceWithSources implements ModelInference {
       ...storedModel,
       contract: resolveModelContractBindings(
         storedModel.contract,
-        request.transformationBindings,
+        {
+          ...request.transformationBindings,
+          ...modelSettingBindings(
+            storedModel.contract.settings ?? [],
+            request.settings,
+          ),
+        },
       ),
     };
     const inputs = await this.prepareModelInputs.execute(model.contract, request.inputs);

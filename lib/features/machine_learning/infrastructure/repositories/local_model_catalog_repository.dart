@@ -98,12 +98,16 @@ class LocalModelCatalogRepository
     final outputs = _items(
       contract['outputs'],
     ).map(_manifestOutputFrom).toList(growable: false);
+    final settings = _itemsOrEmpty(
+      contract['settings'],
+    ).map(_manifestSettingFrom).toList(growable: false);
     return ModelCatalogEntry(
       id: _text(entry, 'id'),
       title: _text(entry, 'title'),
       description: _text(entry, 'description'),
       tags: _strings(entry['tags']),
       inputs: inputs,
+      settings: settings,
       outputs: outputs,
       outputCount: _items(contract['outputs']).length,
       sizeBytes: _positiveInt(artifact['sizeBytes']),
@@ -184,7 +188,59 @@ class LocalModelCatalogRepository
       source: _sourceFrom(_text(input, 'source')),
       dataType: _text(input, 'dataType'),
       shape: _shapeFrom(input['shape']),
+      requiresWorkflowMapping: _requiresWorkflowMapping(input['binding']),
     );
+  }
+
+  bool _requiresWorkflowMapping(Object? value) {
+    if (value == null) return true;
+    return _object(value)['type'] == 'workflow';
+  }
+
+  ModelManifestSetting _manifestSettingFrom(Object? value) {
+    final parameter = _object(value);
+    return ModelManifestSetting(
+      name: _text(parameter, 'name'),
+      label: _text(parameter, 'label'),
+      control: _settingControlFrom(parameter['control']),
+    );
+  }
+
+  ModelManifestSettingControl _settingControlFrom(Object? value) {
+    final control = _object(value);
+    return switch (_text(control, 'type')) {
+      'slider' => ModelManifestSliderControl(
+        initial: _number(control['initial']),
+        minimum: _number(control['minimum']),
+        maximum: _number(control['maximum']),
+        step: _number(control['step']),
+      ),
+      'checkbox' => ModelManifestCheckboxControl(
+        initial: _boolean(control['initial']),
+      ),
+      'radioGroup' => ModelManifestRadioGroupControl(
+        initial: _parameterValue(control['initial']),
+        options: _items(
+          control['options'],
+        ).map(_radioOptionFrom).toList(growable: false),
+      ),
+      _ => throw const FormatException('Der Modellparameter ist ungültig.'),
+    };
+  }
+
+  ModelManifestSettingOption _radioOptionFrom(Object? value) {
+    final option = _object(value);
+    return ModelManifestSettingOption(
+      value: _parameterValue(option['value']),
+      label: _text(option, 'label'),
+    );
+  }
+
+  Object _parameterValue(Object? value) {
+    if (value is String || value is bool || value is num) {
+      return value as Object;
+    }
+    throw const FormatException('Der Modellparameter ist ungültig.');
   }
 
   List<Object> _shapeFrom(Object? value) {
@@ -219,6 +275,11 @@ class LocalModelCatalogRepository
     return value;
   }
 
+  List<Object?> _itemsOrEmpty(Object? value) {
+    if (value == null) return const [];
+    return _items(value);
+  }
+
   List<String> _strings(Object? value) {
     if (value is! List || !value.every((item) => item is String)) {
       throw const FormatException('Ein Modellkatalogeintrag ist ungültig.');
@@ -229,6 +290,16 @@ class LocalModelCatalogRepository
   int _positiveInt(Object? value) {
     if (value is int && value > 0) return value;
     throw const FormatException('Ein Modellkatalogeintrag ist ungültig.');
+  }
+
+  double _number(Object? value) {
+    if (value is num && value.isFinite) return value.toDouble();
+    throw const FormatException('Der Modellparameter ist ungültig.');
+  }
+
+  bool _boolean(Object? value) {
+    if (value is bool) return value;
+    throw const FormatException('Der Modellparameter ist ungültig.');
   }
 
   String _text(Map<String, Object?> value, String field) {

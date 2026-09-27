@@ -18,6 +18,7 @@
       {
         "name": "input",
         "source": "text",
+        "binding": {"type": "workflow"},
         "dataType": "int64",
         "shape": ["dynamic", "dynamic"],
         "transformations": [{
@@ -28,6 +29,7 @@
       {
         "name": "input_lengths",
         "source": "text",
+        "binding": {"type": "derived", "inputName": "input"},
         "dataType": "int64",
         "shape": ["dynamic"],
         "transformations": [{
@@ -38,10 +40,16 @@
       {
         "name": "scales",
         "source": "text",
+        "binding": {"type": "generated", "value": ""},
         "dataType": "float32",
         "shape": [3],
-        "transformations": [{"type": "tensor.constant", "parameters": {"values": [0.667, 1, 0.8]}}]
+        "transformations": [{"type": "tensor.constant", "parameters": {"values": ["$noiseScale", "$lengthScale", "$noiseWidth"]}}]
       }
+    ],
+    "settings": [
+      {"name": "noiseScale", "label": "Stimmvariation", "control": {"type": "slider", "initial": 0.667, "minimum": 0.2, "maximum": 1, "step": 0.01}},
+      {"name": "lengthScale", "label": "Sprechtempo", "control": {"type": "slider", "initial": 1, "minimum": 0.6, "maximum": 1.4, "step": 0.01}},
+      {"name": "noiseWidth", "label": "Aussprachevariation", "control": {"type": "slider", "initial": 0.8, "minimum": 0, "maximum": 1, "step": 0.01}}
     ],
     "outputs": [{
       "name": "output",

@@ -28,18 +28,60 @@ function sourceMapFor(
   inputs: readonly ModelInput[],
 ): ReadonlyMap<string, ModelInputSource> {
   const sourcesByName = new Map(sources.map((source) => [source.name, source]));
-  if (sourcesByName.size !== sources.length || sourcesByName.size !== inputs.length) {
+  const workflowInputs = inputs.filter((input) => (input.binding?.type ?? "workflow") === "workflow");
+  if (sourcesByName.size !== sources.length) {
     throw new Error("Die Eingabezuordnungen stimmen nicht mit dem Manifest überein.");
   }
-  inputs.forEach((input) => validateSourceFor(input, sourcesByName));
-  return sourcesByName;
+  const workflowSources = new Map(workflowInputs.map((input) => [
+    input.name,
+    workflowSource(input, sourcesByName),
+  ]));
+  return resolvedSources(inputs, workflowSources);
 }
 
-function validateSourceFor(
-  input: ModelInput,
-  sources: ReadonlyMap<string, ModelInputSource>,
-): void {
+function resolvedSources(
+  inputs: readonly ModelInput[],
+  workflowSources: ReadonlyMap<string, ModelInputSource>,
+): ReadonlyMap<string, ModelInputSource> {
+  const resolved = new Map(workflowSources);
+  for (const input of inputs) {
+    const binding = input.binding ?? {type: "workflow"};
+    const source = binding.type === "workflow"
+      ? workflowSource(input, workflowSources)
+      : binding.type === "derived"
+        ? derivedSource(input, binding.inputName, resolved)
+        : generatedSource(input, binding.value);
+    validateModelInputSource(source, input);
+    resolved.set(input.name, source);
+  }
+  return resolved;
+}
+
+function workflowSource(input: ModelInput, sources: ReadonlyMap<string, ModelInputSource>): ModelInputSource {
   const source = sources.get(input.name);
-  if (!source) throw new Error(`Die Quelle für ${input.name} fehlt.`);
-  validateModelInputSource(source, input);
+  if (source === undefined) throw new Error(`Die Quelle für ${input.name} fehlt.`);
+  return source;
+}
+
+function derivedSource(
+  input: ModelInput,
+  inputName: string,
+  sources: ReadonlyMap<string, ModelInputSource>,
+): ModelInputSource {
+  const source = sources.get(inputName);
+  if (source === undefined) throw new Error(`Die Quelle für ${input.name} fehlt.`);
+  return {...source, name: input.name};
+}
+
+function generatedSource(input: ModelInput, value: unknown): ModelInputSource {
+  if (input.source === "text" || input.source === "datetime") return {name: input.name, type: input.source, value: stringValue(value)};
+  if (input.source === "number" && typeof value === "number") return {name: input.name, type: "number", value};
+  if (input.source === "boolean" && typeof value === "boolean") return {name: input.name, type: "boolean", value};
+  if (input.source === "json") return {name: input.name, type: "json", value};
+  throw new Error(`Der generierte Modelleingang ${input.name} hat keinen unterstützten Quelltyp.`);
+}
+
+function stringValue(value: unknown): string {
+  if (typeof value === "string") return value;
+  throw new Error("Der generierte Modelleingang benötigt Text.");
 }

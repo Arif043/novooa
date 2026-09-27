@@ -11,6 +11,7 @@ export function resolveModelContractBindings(
   bindings: Readonly<Record<string, unknown>> = {},
 ): ModelContract {
   return {
+    ...contract,
     inputs: contract.inputs.map((input) => ({
       ...input,
       transformations: transformationsWithBindings(input.transformations, bindings),

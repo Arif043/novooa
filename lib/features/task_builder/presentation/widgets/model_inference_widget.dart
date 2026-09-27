@@ -10,6 +10,7 @@ import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 import 'model_inference_input_mapping_field.dart';
+import 'model_input_parameter_configuration.dart';
 import 'model_inference_output_configuration.dart';
 import 'speech_text_mapping_field.dart';
 
@@ -116,6 +117,14 @@ class _ModelInferenceContent extends StatelessWidget {
               mappings: _config.inputMappings,
               mappingFor: _mappingFor,
             ),
+            if (model.settings.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.md),
+              ModelSettingConfiguration(
+                nodeId: node.id,
+                settings: model.settings,
+                values: _config.settings,
+              ),
+            ],
             ModelInferenceOutputConfiguration(
               nodeId: node.id,
               outputs: model.outputs,
@@ -201,7 +210,9 @@ class _InputSection extends StatelessWidget {
       children: [
         Text('Modelleingaben', style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: AppSpacing.sm),
-        for (final input in model.inputs)
+        for (final input in model.inputs.where(
+          (input) => input.requiresWorkflowMapping,
+        ))
           ModelInferenceInputMappingField(
             nodeId: node.id,
             input: input,
@@ -213,13 +224,16 @@ class _InputSection extends StatelessWidget {
 
   ModelInferenceInputMapping _textMapping() {
     final input = model.inputs.firstWhere(
-      (input) => input.source == ModelInputSource.text,
+      (input) =>
+          input.requiresWorkflowMapping &&
+          input.source == ModelInputSource.text,
     );
     return mappingFor(input);
   }
 
   void _updateTextMappings(BuildContext context, String value) {
     final updated = model.inputs
+        .where((input) => input.requiresWorkflowMapping)
         .map((input) {
           final mapping = mappingFor(input);
           return input.source == ModelInputSource.text
@@ -275,6 +289,7 @@ class _ModelSelection extends StatelessWidget {
     if (modelId == null) return;
     final model = models.firstWhere((entry) => entry.id == modelId);
     final mappings = model.inputs
+        .where((input) => input.requiresWorkflowMapping)
         .map(
           (input) => ModelInferenceInputMapping(
             modelInputName: input.name,
@@ -296,11 +311,20 @@ class _ModelSelection extends StatelessWidget {
           ),
         )
         .toList(growable: false);
+    final settings = model.settings
+        .map(
+          (parameter) => ModelInferenceSetting(
+            name: parameter.name,
+            valueTemplate: '${parameter.control.initialValue()}',
+          ),
+        )
+        .toList(growable: false);
     context.read<TaskBuilderCubit>().selectModelInference(
       node.id,
       model.id,
       mappings,
       outputParameters,
+      settings,
     );
   }
 }

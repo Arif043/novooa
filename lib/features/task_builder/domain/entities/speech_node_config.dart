@@ -5,6 +5,7 @@ abstract class SpeechNodeConfig extends ModelInferenceNodeConfig {
     required super.modelId,
     super.inputMappings,
     super.outputParameters,
+    super.settings,
   });
 }
 
@@ -13,6 +14,7 @@ class TextToSpeechNodeConfig extends SpeechNodeConfig {
     required super.modelId,
     super.inputMappings,
     super.outputParameters,
+    super.settings,
   });
 
   factory TextToSpeechNodeConfig.initial() =>
@@ -26,11 +28,13 @@ class TextToSpeechNodeConfig extends SpeechNodeConfig {
     String? modelId,
     List<ModelInferenceInputMapping>? inputMappings,
     List<ModelInferenceOutputParameter>? outputParameters,
+    List<ModelInferenceSetting>? settings,
   }) {
     return TextToSpeechNodeConfig(
       modelId: modelId ?? this.modelId,
       inputMappings: inputMappings ?? this.inputMappings,
       outputParameters: outputParameters ?? this.outputParameters,
+      settings: settings ?? this.settings,
     );
   }
 }
@@ -40,6 +44,7 @@ class SpeechToTextNodeConfig extends SpeechNodeConfig {
     required super.modelId,
     super.inputMappings,
     super.outputParameters,
+    super.settings,
   });
 
   factory SpeechToTextNodeConfig.initial() =>
@@ -53,11 +58,13 @@ class SpeechToTextNodeConfig extends SpeechNodeConfig {
     String? modelId,
     List<ModelInferenceInputMapping>? inputMappings,
     List<ModelInferenceOutputParameter>? outputParameters,
+    List<ModelInferenceSetting>? settings,
   }) {
     return SpeechToTextNodeConfig(
       modelId: modelId ?? this.modelId,
       inputMappings: inputMappings ?? this.inputMappings,
       outputParameters: outputParameters ?? this.outputParameters,
+      settings: settings ?? this.settings,
     );
   }
 }

@@ -182,6 +182,10 @@ class NodeConfigDocumentMapper {
       'outputParameters': config.outputParameters
           .map(_modelInferenceOutputParameterToDocument)
           .toList(),
+      if (config.settings.isNotEmpty)
+        'settings': config.settings
+            .map(_modelInferenceSettingToDocument)
+            .toList(),
     };
   }
 
@@ -205,6 +209,12 @@ class NodeConfigDocumentMapper {
       'dataType': mapping.dataType,
       'shape': mapping.shape,
     };
+  }
+
+  Map<String, Object?> _modelInferenceSettingToDocument(
+    ModelInferenceSetting parameter,
+  ) {
+    return {'name': parameter.name, 'valueTemplate': parameter.valueTemplate};
   }
 
   Map<String, Object?> _forEachToDocument(ForEachNodeConfig config) {
@@ -403,6 +413,7 @@ class NodeConfigDocumentMapper {
       outputParameters: _modelInferenceOutputParametersFrom(
         data['outputParameters'],
       ),
+      settings: _modelInferenceSettingsFrom(data['settings']),
     );
   }
 
@@ -412,6 +423,7 @@ class NodeConfigDocumentMapper {
       modelId: config.modelId,
       inputMappings: config.inputMappings,
       outputParameters: config.outputParameters,
+      settings: config.settings,
     );
   }
 
@@ -421,6 +433,7 @@ class NodeConfigDocumentMapper {
       modelId: config.modelId,
       inputMappings: config.inputMappings,
       outputParameters: config.outputParameters,
+      settings: config.settings,
     );
   }
 
@@ -455,6 +468,20 @@ class NodeConfigDocumentMapper {
             sourceType: data['sourceType'] as String? ?? '',
             dataType: data['dataType'] as String? ?? '',
             shape: _objectListFrom(data['shape']),
+          );
+        })
+        .toList(growable: false);
+  }
+
+  List<ModelInferenceSetting> _modelInferenceSettingsFrom(Object? value) {
+    if (value is! List) return const [];
+    return value
+        .whereType<Map>()
+        .map((entry) {
+          final data = _objectMapFrom(entry);
+          return ModelInferenceSetting(
+            name: data['name'] as String? ?? '',
+            valueTemplate: data['valueTemplate'] as String? ?? '',
           );
         })
         .toList(growable: false);
@@ -639,9 +666,9 @@ class NodeConfigDocumentMapper {
           (candidate) => candidate.name == data['combinator'],
           orElse: () => BooleanCombinator.and,
         ),
-        children: _mapListFrom(data['children'])
-            .map(_branchConditionFrom)
-            .toList(),
+        children: _mapListFrom(
+          data['children'],
+        ).map(_branchConditionFrom).toList(),
       ),
       _ => ComparisonCondition(
         left: data['left'] as String? ?? '',

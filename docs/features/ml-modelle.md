@@ -53,7 +53,7 @@ weder über Firestore noch über novooa-Functions proxied.
     revision: "<40-stelliger-commit-hash>",
     path: "model.onnx",
   },
-  contract: {inputs: [...], outputs: [...]},
+  contract: {inputs: [...], settings: [...], outputs: [...]},
 }
 ```
 
@@ -71,6 +71,40 @@ Die Runtime speichert diesen Ausgang als Team-Datei. Der Baustein
 `textToSpeech` und `speechToText` verwenden denselben Vertrag wie
 `modelInference`. Ihre Oberflächen filtern den Modellkatalog jeweils auf
 Audio-Ausgänge beziehungsweise Audio-Eingänge.
+
+Ein Eingang ist standardmäßig eine feste Workflow-Eingabe des Bausteins. Seine
+Zuordnung wird im Arbeitsplan gespeichert und kann ein Template enthalten.
+`binding: {type: "derived", inputName: "..."}` leitet denselben Quellwert für
+einen weiteren Tensor ab; `binding: {type: "generated", value: ...}` erzeugt
+eine technische Quelle aus dem Manifest. Beide erscheinen weder als zusätzliche
+Eingabefelder noch als Workflow-Konfiguration. So bleiben etwa Piper-`input_lengths`
+und `scales` technische Vertragsdetails.
+
+`settings` ergänzt sichtbare, feste Einstellungen eines Modellbausteins.
+Der Modellautor deklariert `slider`, `checkbox` oder `radioGroup` mit Label und
+Standardwert. Der Arbeitsplan speichert den jeweils gewählten Wert; ein
+Template-Ausdruck ist weiterhin erlaubt. Transformationen referenzieren ihn
+mit `$<parametername>`. Damit sind Modellparameter wie Sprechtempo klar
+konfigurierbar, ohne versteckte Modelleingaben zu erzeugen.
+
+```ts
+settings: [{
+  name: "lengthScale",
+  label: "Sprechtempo",
+  control: {type: "slider", minimum: 0.6, maximum: 1.4, initial: 1, step: 0.01},
+}],
+inputs: [{
+  name: "scales",
+  source: "text",
+  binding: {type: "generated", value: ""},
+  dataType: "float32",
+  shape: [3],
+  transformations: [{
+    type: "tensor.constant",
+    parameters: {values: ["$noiseScale", "$lengthScale", "$noiseWidth"]},
+  }],
+}],
+```
 
 ```ts
 {
@@ -144,7 +178,7 @@ natürlichere Ausgabe vorgesehen, Eva `x_low` für kleine, schnelle Installation
 Ihre Manifeste enthalten die für Piper notwendige Phonemzuordnung; die ONNX-Artefakte
 werden direkt von Hugging Face geladen.
 Die Eingabetransformationen `text.piperPhonemes` und `text.piperPhonemeLength`
-bereiten Text für Piper vor, `tensor.constant` liefert dessen feste Inferenzparameter
+bereiten Text für Piper vor, `tensor.constant` erhält die im Baustein konfigurierten Inferenzparameter
 und `audio.wav` serialisiert die Wellenform als fachlichen Audio-Ausgabewert.
 
 `tensor.topK` besitzt keinen fest kodierten Wert. Die Beschreibung

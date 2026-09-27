@@ -23,6 +23,7 @@ export async function executeModelInferenceNode(
     modelId: modelIdFor(node),
     inputs,
     outputParameters: outputParametersFor(node),
+    settings: settingsFor(node, runContext),
     transformationBindings: runContext.scope,
   });
   return executedNode(node, await outputsFor(result, runContext));
@@ -94,6 +95,21 @@ function outputParametersFor(node: Parameters<NodeExecutor["execute"]>[0]) {
     identities.add(identity);
   }
   return config.outputParameters ?? [];
+}
+
+function settingsFor(
+  node: Parameters<NodeExecutor["execute"]>[0],
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+): Record<string, unknown> {
+  const values = modelConfigFor(node).settings ?? [];
+  const names = new Set<string>();
+  return Object.fromEntries(values.map((parameter) => {
+    if (!parameter.name.trim() || !parameter.valueTemplate.trim() || names.has(parameter.name)) {
+      throw new Error("Ein Modellparameter ist ungültig.");
+    }
+    names.add(parameter.name);
+    return [parameter.name, runContext.templateExpressionResolver.resolveValue(parameter.valueTemplate)];
+  }));
 }
 
 async function outputsFor(
