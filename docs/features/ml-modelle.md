@@ -128,10 +128,13 @@ Audio-Ausgänge beziehungsweise Audio-Eingänge.
 Python-Worker verarbeitet sie an beiden Tensorgrenzen: Eingabestrategien erzeugen
 Tensoren aus Workflow-Quellen, Ausgabestrategien erzeugen allgemeine
 Zwischenwerte. `result` benennt einen solchen Zwischenwert für das
-`workflowOutput.mapping`. Python registriert Strategien über ihre
-Transformationskennung; eine neue Strategie ergänzt daher nur ihre eigene
-Implementierung und die Composition Root. TypeScript wertet keine
-Transformation aus. Ihre Ergebnisse bleiben technische Zwischenwerte; erst
+`workflowOutput.mapping`. Python entdeckt Strategien anhand ihrer
+Transformationskennung automatisch aus den Eingabe- und Ausgabepaketen. Eine
+neue Transformation ergänzt daher nur ihr eigenes Strategie-Modul; Worker,
+Registry und vorhandene Strategien bleiben unverändert. TypeScript wertet keine
+Transformation aus. Seine Verträge werden über injizierte Fähigkeiten
+validiert; das Deployment entscheidet als Composition Root, welche Fähigkeiten
+es freigibt. Ihre Ergebnisse bleiben technische Zwischenwerte; erst
 `workflowOutput.mapping` definiert den fachlichen Workflow-Wert.
 
 Die Systemmodelle [`piper-de-eva-x-low.json`](../../local-runtime/system-models/piper-de-eva-x-low.json)

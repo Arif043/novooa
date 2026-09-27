@@ -7,6 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from novooa_ml.input_transforms.registry import TransformationRegistry
 from novooa_ml.input_transforms.strategy import InputTransformStrategy
+from novooa_ml.input_transforms.default_registry import default_transformation_registry
 
 
 class TransformRegistryTest(unittest.TestCase):
@@ -30,6 +31,12 @@ class TransformRegistryTest(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "Nicht unterstützte Transformation"):
             registry.apply({}, [{"type": "unknown", "parameters": {}}])
+
+    def test_discovers_registered_strategy_modules(self):
+        self.assertIn(
+            "text.piperPhonemes",
+            default_transformation_registry().supported_types,
+        )
 
 
 class RecordingStrategy(InputTransformStrategy):

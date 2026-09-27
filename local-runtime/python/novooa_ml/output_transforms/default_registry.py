@@ -1,26 +1,8 @@
-from .ctc import CtcGreedyDecodeStrategy
-from .numeric import SigmoidStrategy, SoftmaxStrategy, ThresholdStrategy, TopKStrategy
-from .registry import OutputTransformationRegistry
-from .vision import ConnectedComponentsStrategy, NonMaximumSuppressionStrategy
-from .text_regions import TextRegionsStrategy
-from .geometry import ScaleBoundsStrategy
-from .row_grouping import MergeRowsStrategy
-from .audio import WaveAudioStrategy
+from .registry import OutputTransformationRegistry, OutputTransformationStrategy
+from novooa_ml.transformation_discovery import strategy_instances
 
 
 def default_output_transformation_registry():
     return OutputTransformationRegistry(
-        [
-            SoftmaxStrategy(),
-            SigmoidStrategy(),
-            ThresholdStrategy(),
-            TopKStrategy(),
-            ConnectedComponentsStrategy(),
-            TextRegionsStrategy(),
-            MergeRowsStrategy(),
-            ScaleBoundsStrategy(),
-            NonMaximumSuppressionStrategy(),
-            CtcGreedyDecodeStrategy(),
-            WaveAudioStrategy(),
-        ]
+        strategy_instances("novooa_ml.output_transforms", OutputTransformationStrategy)
     )
