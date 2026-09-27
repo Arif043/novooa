@@ -17,3 +17,15 @@ class ImageTransformContext:
             array = self.numpy.asarray(self.image)
             self.tensor = array[..., self.numpy.newaxis] if array.ndim == 2 else array
         return self.tensor
+
+
+class TextTransformContext:
+    def __init__(self, text, numpy):
+        self.text = text
+        self.numpy = numpy
+        self.tensor = None
+
+    def tensor_array(self):
+        if self.tensor is None:
+            raise ValueError("Die Texttransformation hat keinen Tensor erzeugt.")
+        return self.tensor

@@ -2,24 +2,28 @@ import {type ModelInputTransformationRequest} from "../../domain/repositories/mo
 import {type ModelTensor} from "../../domain/entities/model-tensor.js";
 import {modelTensorFromJson} from "./model-tensor-json-codec.js";
 
-export function pythonImageTransformationInputJson(
+export function pythonModelInputTransformationJson(
   request: ModelInputTransformationRequest,
 ): string {
-  if (request.source.type !== "image") {
-    throw new Error("Der lokale Bildtransformer benötigt eine Bildquelle.");
-  }
   return JSON.stringify({
     input: request.input,
-    source: {
-      contentType: request.source.contentType,
-      dataBase64: Buffer.from(request.source.bytes).toString("base64"),
-    },
+    source: sourceFor(request),
   });
 }
 
-export function transformedImageTensorFromJson(value: string): ModelTensor {
+export function transformedModelTensorFromJson(value: string): ModelTensor {
   const data = objectFrom(JSON.parse(value));
   return modelTensorFromJson(data.tensor);
+}
+
+function sourceFor(request: ModelInputTransformationRequest): object {
+  const source = request.source;
+  if (source.type === "image" || source.type === "audio" || source.type === "file") {
+    return {type: source.type, contentType: source.contentType, dataBase64: Buffer.from(source.bytes).toString("base64")};
+  }
+  if (source.type === "text" || source.type === "datetime") return {type: source.type, value: source.value};
+  if (source.type === "number" || source.type === "boolean" || source.type === "json") return {type: source.type, value: source.value};
+  throw new Error("Die Tensorquelle benötigt keine Python-Transformation.");
 }
 
 function objectFrom(value: unknown): Record<string, unknown> {

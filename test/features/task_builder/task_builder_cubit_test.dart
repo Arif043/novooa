@@ -531,6 +531,40 @@ void main() {
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
+  test('aktualisiert mehrere Modelleingabe-Mappings gemeinsam', () async {
+    final repository = _InMemoryTaskRepository(_taskWithModelInferenceNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+
+    await cubit.load(repository.savedTask);
+    await cubit.updateModelInferenceWorkflowMappings(
+      const NodeId('node.model'),
+      const [
+        ModelInferenceInputMapping(
+          modelInputName: 'input',
+          workflowMapping: '{{text.value}}',
+          sourceType: 'text',
+          dataType: 'int64',
+          shape: [1, 1],
+        ),
+        ModelInferenceInputMapping(
+          modelInputName: 'input_lengths',
+          workflowMapping: '{{text.value}}',
+          sourceType: 'text',
+          dataType: 'int64',
+          shape: [1],
+        ),
+      ],
+    );
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final config =
+        state.editingTask.nodes.first.config as ModelInferenceNodeConfig;
+    expect(
+      config.inputMappings.map((mapping) => mapping.workflowMapping),
+      everyElement('{{text.value}}'),
+    );
+  });
+
   test('aktualisiert den Ausgangsparameter einer Modellinferenz', () async {
     final repository = _InMemoryTaskRepository(_taskWithModelInferenceNode());
     final cubit = TaskBuilderCubit(repository: repository);

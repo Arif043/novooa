@@ -9,6 +9,8 @@ from .registry import TransformationRegistry
 from .tensor_channel_order_strategy import TensorChannelOrderStrategy
 from .tensor_layout_strategy import TensorLayoutStrategy
 from .tensor_normalize_strategy import TensorNormalizeStrategy
+from .piper_text_strategy import PiperPhonemeLengthStrategy, PiperPhonemesStrategy
+from .constant_tensor_strategy import ConstantTensorStrategy
 
 
 def default_transformation_registry():
@@ -24,5 +26,8 @@ def default_transformation_registry():
             TensorChannelOrderStrategy(),
             TensorLayoutStrategy(),
             TensorNormalizeStrategy(),
+            PiperPhonemesStrategy(),
+            PiperPhonemeLengthStrategy(),
+            ConstantTensorStrategy(),
         ]
     )

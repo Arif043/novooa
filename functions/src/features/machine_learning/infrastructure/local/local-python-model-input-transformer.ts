@@ -6,8 +6,8 @@ import {
 } from "../../domain/repositories/model-input-transformer.js";
 import {type PythonJsonProcess} from "./local-python-process.js";
 import {
-  pythonImageTransformationInputJson,
-  transformedImageTensorFromJson,
+  pythonModelInputTransformationJson,
+  transformedModelTensorFromJson,
 } from "./python-image-input-transformer-codec.js";
 
 export class LocalPythonModelInputTransformer implements ModelInputTransformer {
@@ -16,15 +16,15 @@ export class LocalPythonModelInputTransformer implements ModelInputTransformer {
   async transform(request: ModelInputTransformationRequest): Promise<ModelTensor> {
     validateModelInputSource(request.source, request.input);
     if (request.source.type === "tensor") return tensorFrom(request);
-    if (request.source.type === "image") return this.transformImage(request);
+    if (request.source.type === "image" || request.source.type === "text") return this.transformSource(request);
     throw new Error(`Der lokale Transformer unterstützt ${request.source.type}-Quellen noch nicht.`);
   }
 
-  private async transformImage(
+  private async transformSource(
     request: ModelInputTransformationRequest,
   ): Promise<ModelTensor> {
-    const payload = pythonImageTransformationInputJson(request);
-    return transformedImageTensorFromJson(await this.process.execute(payload));
+    const payload = pythonModelInputTransformationJson(request);
+    return transformedModelTensorFromJson(await this.process.execute(payload));
   }
 }
 

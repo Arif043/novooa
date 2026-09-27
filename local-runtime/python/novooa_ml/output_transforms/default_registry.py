@@ -5,6 +5,7 @@ from .vision import ConnectedComponentsStrategy, NonMaximumSuppressionStrategy
 from .text_regions import TextRegionsStrategy
 from .geometry import ScaleBoundsStrategy
 from .row_grouping import MergeRowsStrategy
+from .audio import WaveAudioStrategy
 
 
 def default_output_transformation_registry():
@@ -20,5 +21,6 @@ def default_output_transformation_registry():
             ScaleBoundsStrategy(),
             NonMaximumSuppressionStrategy(),
             CtcGreedyDecodeStrategy(),
+            WaveAudioStrategy(),
         ]
     )

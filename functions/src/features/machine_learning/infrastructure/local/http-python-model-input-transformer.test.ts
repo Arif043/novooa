@@ -16,6 +16,7 @@ test("sends image transformations to the private Python sidecar", async () => {
   const tensor = await transformer.transform(imageRequest());
 
   assert.equal(client.url, "http://novooa-ml:8081/v1/input-transforms");
+  assert.equal(client.payload?.source.type, "image");
   assert.equal(client.payload?.source.dataBase64, "AQ==");
   assert.equal(tensor.name, "image");
 });
@@ -32,7 +33,7 @@ test("returns a valid tensor source without calling the sidecar", async () => {
 
 class RecordingClient implements PythonTransformHttpClient {
   url: string | undefined;
-  payload: {source: {dataBase64: string}} | undefined;
+  payload: {source: {type: string; dataBase64?: string}} | undefined;
 
   async post(url: string, body: string): Promise<unknown> {
     this.url = url;

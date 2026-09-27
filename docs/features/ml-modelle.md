@@ -134,6 +134,16 @@ Implementierung und die Composition Root. TypeScript wertet keine
 Transformation aus. Ihre Ergebnisse bleiben technische Zwischenwerte; erst
 `workflowOutput.mapping` definiert den fachlichen Workflow-Wert.
 
+Die Systemmodelle [`piper-de-eva-x-low.json`](../../local-runtime/system-models/piper-de-eva-x-low.json)
+und [`piper-de-thorsten-medium.json`](../../local-runtime/system-models/piper-de-thorsten-medium.json)
+sind deutsche Text-zu-Sprache-Beispiele. Thorsten in mittlerer Qualität ist für
+natürlichere Ausgabe vorgesehen, Eva `x_low` für kleine, schnelle Installationen.
+Ihre Manifeste enthalten die für Piper notwendige Phonemzuordnung; die ONNX-Artefakte
+werden direkt von Hugging Face geladen.
+Die Eingabetransformationen `text.piperPhonemes` und `text.piperPhonemeLength`
+bereiten Text für Piper vor, `tensor.constant` liefert dessen feste Inferenzparameter
+und `audio.wav` serialisiert die Wellenform als fachlichen Audio-Ausgabewert.
+
 `tensor.topK` besitzt keinen fest kodierten Wert. Die Beschreibung
 unter `parameter` definiert Name, sichtbares Label, Standardwert und erlaubten
 Bereich. Der Arbeitsplan speichert ausschließlich den gewählten Wert, etwa

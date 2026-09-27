@@ -7,8 +7,12 @@ test("accepts the registered image transformations", () => {
   cloudModelContractCapabilityValidator().validate(contract("image", ["image.decode", "image.crop", "image.perspectiveCrop", "image.resize", "image.resizePad", "image.resizeHeightPad", "image.padToMultiple", "tensor.channelOrder"]));
 });
 
-test("rejects an unsupported input source before publication", () => {
-  assert.throws(() => cloudModelContractCapabilityValidator().validate(contract("text", [])), /text-Eingänge/);
+test("rejects an unsupported text transformation before publication", () => {
+  assert.throws(() => cloudModelContractCapabilityValidator().validate(contract("text", ["text.unknown"])), /Texttransformation/);
+});
+
+test("accepts the registered Piper text transformations", () => {
+  cloudModelContractCapabilityValidator().validate(contract("text", ["text.piperPhonemes"]));
 });
 
 test("delegates output transformation support to the Python runtime", () => {

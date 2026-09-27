@@ -47,11 +47,30 @@ export class TensorInputContractCapability implements ModelInputContractCapabili
   }
 }
 
+export class TextInputContractCapability implements ModelInputContractCapability {
+  constructor(private readonly transformations: ReadonlySet<string>) {}
+
+  supports(input: ModelInput): boolean {
+    return input.source === "text";
+  }
+
+  validate(input: ModelInput): void {
+    for (const transformation of input.transformations) {
+      if (!this.transformations.has(transformation.type)) {
+        throw new Error(`Die Texttransformation ${transformation.type} wird noch nicht unterstützt.`);
+      }
+    }
+  }
+}
+
 export function cloudModelContractCapabilityValidator(): ModelContractCapabilityValidator {
   return new ModelContractCapabilityValidator([
     new ImageInputContractCapability(new Set([
       "image.decode", "image.crop", "image.perspectiveCrop", "image.resize", "image.resizePad", "image.resizeHeightPad",
       "image.padToMultiple", "tensor.channelOrder", "tensor.layout", "tensor.normalize",
+    ])),
+    new TextInputContractCapability(new Set([
+      "text.piperPhonemes", "text.piperPhonemeLength", "tensor.constant",
     ])),
     new TensorInputContractCapability(),
   ]);

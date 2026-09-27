@@ -5,8 +5,8 @@ import {
   type ModelInputTransformer,
 } from "../../domain/repositories/model-input-transformer.js";
 import {
-  pythonImageTransformationInputJson,
-  transformedImageTensorFromJson,
+  pythonModelInputTransformationJson,
+  transformedModelTensorFromJson,
 } from "./python-image-input-transformer-codec.js";
 
 export interface PythonTransformHttpClient {
@@ -22,12 +22,14 @@ export class HttpPythonModelInputTransformer implements ModelInputTransformer {
   async transform(request: ModelInputTransformationRequest): Promise<ModelTensor> {
     validateModelInputSource(request.source, request.input);
     if (request.source.type === "tensor") return tensorFrom(request);
-    if (request.source.type !== "image") throw unsupportedSourceType(request.source.type);
+    if (request.source.type !== "image" && request.source.type !== "text") {
+      throw unsupportedSourceType(request.source.type);
+    }
     const payload = await this.httpClient.post(
       new URL("/v1/input-transforms", this.sidecarUrl).toString(),
-      pythonImageTransformationInputJson(request),
+      pythonModelInputTransformationJson(request),
     );
-    return transformedImageTensorFromJson(JSON.stringify(payload));
+    return transformedModelTensorFromJson(JSON.stringify(payload));
   }
 }
 
