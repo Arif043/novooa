@@ -519,10 +519,18 @@ Ausführung benötigt als nächsten Schritt den geplanten SQLite-Task-Runner.
 Eine Cloud-Run-Instanz besteht aus einem Node-Gateway und einem Python-
 Sidecar. Das Gateway prüft Manifest und Modellverfügbarkeit, löst Artefakte aus
 Cloud Storage auf und hält die zuletzt verwendeten Artefakte im lokalen LRU-
-Cache. Der Sidecar hält ONNX-Sessions mit dem Schlüssel
-`artifactId:versionId:sha256` in einem getrennten LRU-Cache. Dadurch wird eine
-Modellversion nur beim ersten Zugriff einer warmen Instanz aus Storage geladen
-und als ONNX-Session initialisiert.
+Cache. Der Sidecar hält unveränderliche Modell-Bundles aus ONNX-Session und
+benannten Zusatzressourcen in einem getrennten LRU-Cache. Sein Schlüssel enthält
+`artifactId`, `versionId`, die ONNX-Prüfsumme sowie Namen und Prüfsummen aller
+Zusatzressourcen. Dadurch wird eine Modellversion nur beim ersten Zugriff einer
+warmen Instanz aus Storage geladen und als ONNX-Session initialisiert.
+
+Zusatzressourcen werden vor dem Einfügen in den Cache vollständig dekodiert und
+gegen ihre SHA-256-Prüfsumme geprüft. Transformationen erhalten bei Bedarf nur
+einen lesenden Zugriff auf deren Bytes, nie einen Dateipfad oder einen
+beschreibbaren Cache-Eintrag. Damit können Modelle etwa Stimmen- oder
+Vokabular-Dateien verwenden, ohne Seiteneffekte zwischen Ausführungen zu
+verursachen.
 
 Eingabe- und Ausgabetransformationen laufen im Python-Sidecar. Dadurch
 verwenden sie dieselben Strategieregistries und können dessen Prozesse zwischen

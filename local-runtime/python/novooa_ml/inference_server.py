@@ -1,8 +1,10 @@
 import base64
+import hashlib
 import json
 import os
 from collections import OrderedDict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from threading import RLock
 
 from onnx_worker import input_arrays, runtime_dependencies, transformed_output_tensors
 from novooa_ml.input_transforms.worker import transform_payload
@@ -13,30 +15,60 @@ class ModelNotLoadedError(Exception):
     pass
 
 
+class LoadedModel:
+    def __init__(self, session, resources):
+        self.session = session
+        self._resources = resources
+
+    def resource_bytes(self, name):
+        value = self._resources.get(name)
+        if value is None:
+            raise ValueError(f"Die Modellressource {name} ist nicht geladen.")
+        return value
+
+
 class SessionCache:
     def __init__(self, maximum_entries, session_factory):
         self._maximum_entries = maximum_entries
         self._session_factory = session_factory
         self._sessions = OrderedDict()
+        self._lock = RLock()
 
-    def session_for(self, key, model_base64):
-        session = self._sessions.pop(key, None)
-        if session is not None:
-            self._sessions[key] = session
-            return session
-        if model_base64 is None:
-            raise ModelNotLoadedError()
-        return self._remember(key, self._new_session(model_base64))
+    def session_for(self, key, model_base64, resources=None):
+        return self.loaded_model_for(key, model_base64, resources).session
 
-    def _new_session(self, model_base64):
+    def resource_bytes_for(self, key, name):
+        with self._lock:
+            model = self._remember_recently_used(key)
+            if model is None:
+                raise ModelNotLoadedError()
+            return model.resource_bytes(name)
+
+    def loaded_model_for(self, key, model_base64, resources=None):
+        with self._lock:
+            model = self._remember_recently_used(key)
+            if model is not None:
+                return model
+            if model_base64 is None:
+                raise ModelNotLoadedError()
+            return self._remember(key, self._new_loaded_model(model_base64, resources))
+
+    def _remember_recently_used(self, key):
+        model = self._sessions.pop(key, None)
+        if model is not None:
+            self._sessions[key] = model
+        return model
+
+    def _new_loaded_model(self, model_base64, resources):
         model_bytes = base64.b64decode(model_base64, validate=True)
-        return self._session_factory(model_bytes)
+        decoded_resources = resources_from(resources)
+        return LoadedModel(self._session_factory(model_bytes), decoded_resources)
 
-    def _remember(self, key, session):
-        self._sessions[key] = session
+    def _remember(self, key, model):
+        self._sessions[key] = model
         while len(self._sessions) > self._maximum_entries:
             self._sessions.popitem(last=False)
-        return session
+        return model
 
 
 def execute(payload, cache, numpy):
@@ -50,12 +82,19 @@ def execute(payload, cache, numpy):
 def load(payload, cache):
     key = required_string(payload, "modelKey")
     model_base64 = required_string(payload, "modelBase64")
-    cache.session_for(key, model_base64)
+    cache.session_for(key, model_base64, payload.get("resources", []))
     return {"status": "loaded"}
 
 
-def transform(payload):
-    return transform_payload(payload)
+def transform(payload, cache=None):
+    key = payload.get("modelKey")
+    if key is None:
+        return transform_payload(payload)
+    if cache is None:
+        raise ValueError("Der Modellcache fehlt.")
+    if not isinstance(key, str) or not key:
+        raise ValueError("modelKey ist ungültig.")
+    return transform_payload(payload, lambda name: cache.resource_bytes_for(key, name))
 
 
 
@@ -95,7 +134,7 @@ def handler_for(cache, numpy):
             if self.path == "/v1/inferences":
                 return execute(payload, cache, numpy)
             if self.path == "/v1/input-transforms":
-                return transform(payload)
+                return transform(payload, cache)
             raise ValueError("Endpunkt nicht gefunden.")
 
         def _payload(self):
@@ -129,6 +168,43 @@ def session_factory(onnxruntime):
     return lambda model_bytes: onnxruntime.InferenceSession(
         model_bytes, providers=["CPUExecutionProvider"]
     )
+
+
+def resources_from(resources):
+    if resources is None:
+        return {}
+    if not isinstance(resources, list):
+        raise ValueError("Die Modellressourcen sind ungültig.")
+    decoded = {}
+    for resource in resources:
+        name, content = decoded_resource(resource)
+        if name in decoded:
+            raise ValueError("Die Namen der Modellressourcen müssen eindeutig sein.")
+        decoded[name] = content
+    return decoded
+
+
+def decoded_resource(resource):
+    if not isinstance(resource, dict):
+        raise ValueError("Eine Modellressource ist ungültig.")
+    name = resource.get("name")
+    content_type = resource.get("contentType")
+    sha256 = resource.get("sha256")
+    data_base64 = resource.get("dataBase64")
+    if not isinstance(name, str) or not name:
+        raise ValueError("Der Name einer Modellressource fehlt.")
+    if not isinstance(content_type, str) or not content_type:
+        raise ValueError("Der Content-Type einer Modellressource fehlt.")
+    if not isinstance(sha256, str) or len(sha256) != 64:
+        raise ValueError("Die Prüfsumme einer Modellressource ist ungültig.")
+    if not isinstance(data_base64, str) or not data_base64:
+        raise ValueError("Der Inhalt einer Modellressource fehlt.")
+    content = base64.b64decode(data_base64, validate=True)
+    if not content:
+        raise ValueError("Eine Modellressource darf nicht leer sein.")
+    if hashlib.sha256(content).hexdigest() != sha256.lower():
+        raise ValueError("Die Prüfsumme einer Modellressource stimmt nicht mit ihrem Inhalt überein.")
+    return name, content
 
 
 if __name__ == "__main__":

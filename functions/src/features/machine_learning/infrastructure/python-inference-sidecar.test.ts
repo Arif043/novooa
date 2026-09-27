@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {type ModelCatalogEntry} from "../domain/entities/model-catalog-entry.js";
+import {type ModelRuntimeResource} from "../domain/entities/model-runtime-resource.js";
 import {type ModelTensor} from "../domain/entities/model-tensor.js";
 import {ModelNotLoadedError, type PythonInferenceSidecar, SidecarOnnxInferenceRuntime} from "./python-inference-sidecar.js";
 import {type ModelRuntimeOutput} from "../domain/repositories/model-inference-runtime.js";
@@ -27,12 +28,28 @@ test("reloads an evicted sidecar session", async () => {
   assert.equal(sidecar.loads, 2);
 });
 
+test("loads resources with the model bundle and isolates its cache key", async () => {
+  const sidecar = new Sidecar();
+  const runtime = new SidecarOnnxInferenceRuntime(sidecar);
+
+  await runtime.execute({...request(), resources: [resource("voice", 1)]});
+  await runtime.execute({...request(), resources: [resource("voice", 2)]});
+
+  assert.equal(sidecar.loads, 2);
+  assert.equal(sidecar.resources[0]?.[0]?.bytes[0], 1);
+  assert.equal(sidecar.resources[1]?.[0]?.bytes[0], 2);
+});
+
 class Sidecar implements PythonInferenceSidecar {
   loads = 0;
   inferences = 0;
   evicted = false;
+  resources: ModelRuntimeResource[][] = [];
 
-  async load(): Promise<void> { this.loads += 1; }
+  async load(request: Parameters<PythonInferenceSidecar["load"]>[0]): Promise<void> {
+    this.loads += 1;
+    this.resources.push([...request.resources]);
+  }
 
   async infer(): Promise<readonly ModelRuntimeOutput[]> {
     this.inferences += 1;
@@ -51,6 +68,15 @@ function request() {
 
 function tensor(name: string): ModelTensor {
   return {name, dataType: "uint8", shape: [1], bytes: Uint8Array.from([1])};
+}
+
+function resource(name: string, value: number): ModelRuntimeResource {
+  return {
+    name,
+    contentType: "application/octet-stream",
+    sha256: `${value}`.padStart(64, "0"),
+    bytes: Uint8Array.from([value]),
+  };
 }
 
 function entry(): ModelCatalogEntry {

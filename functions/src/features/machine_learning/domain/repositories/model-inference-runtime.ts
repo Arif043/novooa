@@ -1,4 +1,5 @@
 import {type ModelCatalogEntry} from "../entities/model-catalog-entry.js";
+import {type ModelRuntimeResource} from "../entities/model-runtime-resource.js";
 import {type ModelOutputValue} from "../entities/model-output-value.js";
 import {type ModelTensor} from "../entities/model-tensor.js";
 
@@ -10,6 +11,7 @@ export type ModelRuntimeOutput = ModelTensor & {
 export type ModelRuntimeRequest = {
   readonly model: ModelCatalogEntry;
   readonly artifact: Uint8Array;
+  readonly resources?: readonly ModelRuntimeResource[];
   readonly inputs: readonly ModelTensor[];
   readonly outputParameters?: readonly {
     readonly outputName: string;

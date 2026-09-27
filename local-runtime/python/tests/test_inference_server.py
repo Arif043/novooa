@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import sys
 import unittest
 from pathlib import Path
@@ -29,6 +30,22 @@ class SessionCacheTest(unittest.TestCase):
         with self.assertRaises(ModelNotLoadedError):
             cache.session_for("model:1", None)
 
+    def test_keeps_resources_with_the_cached_model(self):
+        cache = SessionCache(1, RecordingFactory())
+
+        cache.session_for("model:1", encoded([1]), [resource("voice", [2, 3])])
+
+        self.assertEqual(cache.resource_bytes_for("model:1", "voice"), b"\x02\x03")
+
+    def test_does_not_cache_an_invalid_resource_bundle(self):
+        cache = SessionCache(1, RecordingFactory())
+
+        with self.assertRaises(ValueError):
+            cache.session_for("model:1", encoded([1]), [{"name": "voice"}])
+
+        with self.assertRaises(ModelNotLoadedError):
+            cache.session_for("model:1", None)
+
     def test_delegates_image_transforms_to_the_worker(self):
         with patch(
             "novooa_ml.inference_server.transform_payload",
@@ -38,6 +55,19 @@ class SessionCacheTest(unittest.TestCase):
 
         self.assertEqual(response, {"tensor": {"name": "image"}})
         transform_payload.assert_called_once_with({"input": {"name": "image"}})
+
+    def test_provides_cached_resources_to_model_aware_transformations(self):
+        cache = ResourceCache()
+        with patch(
+            "novooa_ml.inference_server.transform_payload",
+            return_value={"tensor": {"name": "tokens"}},
+        ) as transform_payload:
+            response = transform({"modelKey": "model:1", "input": {"name": "tokens"}}, cache)
+
+        reader = transform_payload.call_args.args[1]
+        self.assertEqual(reader("voice"), b"voice")
+        self.assertEqual(response, {"tensor": {"name": "tokens"}})
+        self.assertEqual(cache.requests, [("model:1", "voice")])
 
 
 class TransformationCapabilitiesTest(unittest.TestCase):
@@ -64,8 +94,26 @@ class RecordingFactory:
         return object()
 
 
+class ResourceCache:
+    def __init__(self):
+        self.requests = []
+
+    def resource_bytes_for(self, key, name):
+        self.requests.append((key, name))
+        return b"voice"
+
+
 def encoded(values):
     return base64.b64encode(bytes(values)).decode("ascii")
+
+
+def resource(name, values):
+    return {
+        "name": name,
+        "contentType": "application/octet-stream",
+        "sha256": hashlib.sha256(bytes(values)).hexdigest(),
+        "dataBase64": encoded(values),
+    }
 
 
 if __name__ == "__main__":

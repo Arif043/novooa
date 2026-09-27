@@ -6,9 +6,9 @@ from .default_registry import default_transformation_registry
 from .output_tensor import tensor_for_contract
 
 
-def transform_payload(payload):
+def transform_payload(payload, resource_reader=None):
     numpy, image = runtime_dependencies()
-    context = transformation_context(payload, image, numpy)
+    context = transformation_context(payload, image, numpy, resource_reader)
     transformed = default_transformation_registry().apply(
         context, payload["input"]["transformations"]
     )
@@ -27,11 +27,11 @@ def runtime_dependencies():
         ) from error
 
 
-def transformation_context(payload, image, numpy):
+def transformation_context(payload, image, numpy, resource_reader=None):
     if payload["source"]["type"] == "text":
-        return TextTransformContext(payload["source"]["value"], numpy)
+        return TextTransformContext(payload["source"]["value"], numpy, resource_reader)
     if payload["source"]["type"] != "image":
         raise ValueError("Die Eingabequelle wird von der lokalen Transformation nicht unterstützt.")
     image_bytes = base64.b64decode(payload["source"]["dataBase64"], validate=True)
     decoded = image.open(io.BytesIO(image_bytes))
-    return ImageTransformContext(decoded, numpy, image)
+    return ImageTransformContext(decoded, numpy, image, resource_reader)

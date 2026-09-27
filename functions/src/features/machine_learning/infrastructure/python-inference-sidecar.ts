@@ -1,4 +1,8 @@
 import {type ModelArtifactReference} from "../domain/entities/model-artifact-reference.js";
+import {
+  type ModelRuntimeResource,
+  validateModelRuntimeResources,
+} from "../domain/entities/model-runtime-resource.js";
 import {type ModelOutput} from "../domain/entities/model-contract.js";
 import {type ModelTensor} from "../domain/entities/model-tensor.js";
 import {
@@ -11,12 +15,18 @@ import {modelTensorFromJson, modelTensorToJson} from "./local/model-tensor-json-
 import {type ModelOutputValue} from "../domain/entities/model-output-value.js";
 
 export interface PythonInferenceSidecar {
-  load(reference: ModelArtifactReference, artifact: Uint8Array): Promise<void>;
+  load(request: SidecarModelLoadRequest): Promise<void>;
   infer(request: SidecarInferenceRequest): Promise<readonly ModelRuntimeOutput[]>;
 }
 
-export type SidecarInferenceRequest = {
+export type SidecarModelLoadRequest = {
   readonly reference: ModelArtifactReference;
+  readonly artifact: Uint8Array;
+  readonly resources: readonly ModelRuntimeResource[];
+};
+
+export type SidecarInferenceRequest = {
+  readonly modelKey: string;
   readonly inputs: readonly ModelTensor[];
   readonly outputs: readonly ModelOutput[];
   readonly outputParameters?: readonly ModelOutputParameterValue[];
@@ -29,18 +39,29 @@ export class SidecarOnnxInferenceRuntime implements ModelInferenceRuntime {
 
   async execute(request: ModelRuntimeRequest): Promise<readonly ModelRuntimeOutput[]> {
     const reference = request.model.artifactReference;
-    await this.load(reference, request.artifact);
-    return this.inferWithReload(reference, request);
+    const resources = request.resources ?? [];
+    validateModelRuntimeResources(resources);
+    await this.load(reference, request.artifact, resources);
+    return this.inferWithReload(reference, resources, request);
   }
 
-  private async load(reference: ModelArtifactReference, artifact: Uint8Array): Promise<void> {
-    const key = modelKey(reference);
-    const loading = this.loadedModels.get(key) ?? this.startLoading(key, reference, artifact);
+  private async load(
+    reference: ModelArtifactReference,
+    artifact: Uint8Array,
+    resources: readonly ModelRuntimeResource[],
+  ): Promise<void> {
+    const key = modelKey(reference, resources);
+    const loading = this.loadedModels.get(key) ?? this.startLoading(key, reference, artifact, resources);
     return loading;
   }
 
-  private startLoading(key: string, reference: ModelArtifactReference, artifact: Uint8Array) {
-    const loading = this.sidecar.load(reference, artifact).catch((error: unknown) => {
+  private startLoading(
+    key: string,
+    reference: ModelArtifactReference,
+    artifact: Uint8Array,
+    resources: readonly ModelRuntimeResource[],
+  ) {
+    const loading = this.sidecar.load({reference, artifact, resources}).catch((error: unknown) => {
       this.loadedModels.delete(key);
       throw error;
     });
@@ -48,20 +69,28 @@ export class SidecarOnnxInferenceRuntime implements ModelInferenceRuntime {
     return loading;
   }
 
-  private async inferWithReload(reference: ModelArtifactReference, request: ModelRuntimeRequest) {
+  private async inferWithReload(
+    reference: ModelArtifactReference,
+    resources: readonly ModelRuntimeResource[],
+    request: ModelRuntimeRequest,
+  ) {
     try {
-      return await this.infer(reference, request);
+      return await this.infer(reference, resources, request);
     } catch (error) {
       if (!(error instanceof ModelNotLoadedError)) throw error;
-      this.loadedModels.delete(modelKey(reference));
-      await this.load(reference, request.artifact);
-      return this.infer(reference, request);
+      this.loadedModels.delete(modelKey(reference, resources));
+      await this.load(reference, request.artifact, resources);
+      return this.infer(reference, resources, request);
     }
   }
 
-  private infer(reference: ModelArtifactReference, request: ModelRuntimeRequest) {
+  private infer(
+    reference: ModelArtifactReference,
+    resources: readonly ModelRuntimeResource[],
+    request: ModelRuntimeRequest,
+  ) {
     return this.sidecar.infer({
-      reference,
+      modelKey: modelKey(reference, resources),
       inputs: request.inputs,
       outputs: request.model.contract.outputs,
       outputParameters: request.outputParameters ?? [],
@@ -72,16 +101,17 @@ export class SidecarOnnxInferenceRuntime implements ModelInferenceRuntime {
 export class HttpPythonInferenceSidecar implements PythonInferenceSidecar {
   constructor(private readonly baseUrl: string) {}
 
-  async load(reference: ModelArtifactReference, artifact: Uint8Array): Promise<void> {
+  async load(request: SidecarModelLoadRequest): Promise<void> {
     await this.post("/v1/models", {
-      modelKey: modelKey(reference),
-      modelBase64: Buffer.from(artifact).toString("base64"),
+      modelKey: modelKey(request.reference, request.resources),
+      modelBase64: Buffer.from(request.artifact).toString("base64"),
+      resources: request.resources.map(resourceForJson),
     });
   }
 
   async infer(request: SidecarInferenceRequest): Promise<readonly ModelRuntimeOutput[]> {
     const body = await this.post("/v1/inferences", {
-      modelKey: modelKey(request.reference),
+      modelKey: request.modelKey,
       inputs: request.inputs.map(modelTensorToJson),
       outputs: request.outputs,
       outputParameters: request.outputParameters,
@@ -128,8 +158,24 @@ function outputValueFrom(value: unknown): ModelOutputValue {
   return Object.fromEntries(Object.entries(data).map(([name, item]) => [name, outputValueFrom(item)]));
 }
 
-function modelKey(reference: ModelArtifactReference): string {
-  return `${reference.artifactId}:${reference.versionId}:${reference.sha256}`;
+export function modelKey(
+  reference: ModelArtifactReference,
+  resources: readonly ModelRuntimeResource[] = [],
+): string {
+  const resourceFingerprint = resources
+    .map((resource) => `${resource.name}:${resource.sha256}`)
+    .sort()
+    .join(",");
+  return `${reference.artifactId}:${reference.versionId}:${reference.sha256}:${resourceFingerprint}`;
+}
+
+function resourceForJson(resource: ModelRuntimeResource): object {
+  return {
+    name: resource.name,
+    contentType: resource.contentType,
+    sha256: resource.sha256,
+    dataBase64: Buffer.from(resource.bytes).toString("base64"),
+  };
 }
 
 function isMissingModel(value: unknown): boolean {
