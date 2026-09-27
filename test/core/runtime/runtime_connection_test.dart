@@ -7,6 +7,7 @@ import 'package:syscat2/core/runtime/runtime_credential_store.dart';
 import 'package:syscat2/core/runtime/runtime_endpoint.dart';
 import 'package:syscat2/core/runtime/runtime_endpoint_store.dart';
 import 'package:syscat2/core/runtime/runtime_login_client.dart';
+import 'package:syscat2/core/runtime/runtime_onboarding_client.dart';
 
 void main() {
   group('RuntimeEndpoint', () {
@@ -191,6 +192,7 @@ void main() {
           _MemoryCredentialStore(),
           const _FakeLoginClient(),
           const _FakeAvailability(),
+          onboarding: const _FakeOnboarding(),
         );
 
         await cubit.initialize(RuntimeEndpoint.fromAddress('127.0.0.1'));
@@ -215,6 +217,7 @@ void main() {
         credentials,
         const _FakeLoginClient(),
         const _FakeAvailability(),
+        onboarding: const _FakeOnboarding(),
       );
 
       await cubit.initialize(RuntimeEndpoint.fromAddress('127.0.0.1'));
@@ -224,12 +227,43 @@ void main() {
       await cubit.close();
     });
 
+    test('fordert vor dem Passwort eine fehlende Lizenz an', () async {
+      final cubit = RuntimeConnectionCubit(
+        _MemoryEndpointStore(null),
+        _MemoryCredentialStore(),
+        const _FakeLoginClient(),
+        const _FakeAvailability(),
+        onboarding: const _FakeOnboarding(hasLicense: false),
+      );
+
+      await cubit.connect('192.168.1.20');
+
+      expect(cubit.state, isA<RuntimeConnectionNeedsLicense>());
+      await cubit.close();
+    });
+
+    test('fordert nach einer aktiven Lizenz das erstmalige Passwort an', () async {
+      final cubit = RuntimeConnectionCubit(
+        _MemoryEndpointStore(null),
+        _MemoryCredentialStore(),
+        const _FakeLoginClient(),
+        const _FakeAvailability(),
+        onboarding: const _FakeOnboarding(needsSetup: true),
+      );
+
+      await cubit.connect('192.168.1.20');
+
+      expect(cubit.state, isA<RuntimeConnectionNeedsPasswordSetup>());
+      await cubit.close();
+    });
+
     test('meldet eine nicht erreichbare Runtime', () async {
       final cubit = RuntimeConnectionCubit(
         _MemoryEndpointStore(null),
         _MemoryCredentialStore(),
         const _FakeLoginClient(),
         const _FakeAvailability(isReachable: false),
+        onboarding: const _FakeOnboarding(),
       );
 
       await cubit.connect('192.168.1.20');
@@ -247,6 +281,7 @@ void main() {
         credentials,
         const _FakeLoginClient(token: 'fresh-token'),
         const _FakeAvailability(),
+        onboarding: const _FakeOnboarding(),
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
 
@@ -267,6 +302,7 @@ void main() {
           credentials,
           const _FakeLoginClient(token: 'fresh-token'),
           const _FakeAvailability(),
+          onboarding: const _FakeOnboarding(),
         );
         final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
         await cubit.login(endpoint, 'correct-horse-battery-staple');
@@ -287,6 +323,7 @@ void main() {
         _MemoryCredentialStore(),
         const _FakeLoginClient(token: 'fresh-token'),
         const _FakeAvailability(),
+        onboarding: const _FakeOnboarding(),
         onSignedOut: () async => closeCallCount++,
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
@@ -305,6 +342,7 @@ void main() {
         _MemoryCredentialStore(),
         const _FakeLoginClient(),
         const _FakeAvailability(),
+        onboarding: const _FakeOnboarding(),
       );
 
       await cubit.signOut();
@@ -321,6 +359,7 @@ void main() {
           failure: RuntimeLoginFailure('Passwort ist ungültig.'),
         ),
         const _FakeAvailability(),
+        onboarding: const _FakeOnboarding(),
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
 
@@ -337,6 +376,7 @@ void main() {
         _MemoryCredentialStore(),
         const _FakeLoginClient(),
         const _FakeAvailability(),
+        onboarding: const _FakeOnboarding(),
       );
 
       await cubit.connect('not-an-address-!!');
@@ -403,4 +443,23 @@ class _FakeAvailability implements RuntimeAvailability {
   Future<void> check(RuntimeEndpoint endpoint) async {
     if (!isReachable) throw Exception('nicht erreichbar');
   }
+}
+
+class _FakeOnboarding implements RuntimeOnboardingClient {
+  const _FakeOnboarding({this.hasLicense = true, this.needsSetup = false});
+
+  final bool hasLicense;
+  final bool needsSetup;
+
+  @override
+  Future<void> activateLicense(RuntimeEndpoint endpoint, String token) async {}
+
+  @override
+  Future<bool> hasActiveLicense(RuntimeEndpoint endpoint) async => hasLicense;
+
+  @override
+  Future<bool> needsPasswordSetup() async => needsSetup;
+
+  @override
+  Future<void> setPassword(String password) async {}
 }

@@ -5,6 +5,8 @@ import '../theme/app_spacing.dart';
 import 'runtime_connection_cubit.dart';
 import 'runtime_connection_state.dart';
 import 'runtime_endpoint.dart';
+import 'runtime_license_form.dart';
+import 'runtime_password_setup_form.dart';
 
 class RuntimeConnectionPage extends StatelessWidget {
   const RuntimeConnectionPage({super.key});
@@ -40,6 +42,20 @@ class RuntimeConnectionPage extends StatelessWidget {
                           endpoint: endpoint,
                           errorMessage: errorMessage,
                         ),
+                      RuntimeConnectionNeedsLicense(
+                        :final endpoint,
+                        :final errorMessage,
+                      ) => RuntimeLicenseForm(
+                        endpoint: endpoint,
+                        errorMessage: errorMessage,
+                      ),
+                      RuntimeConnectionNeedsPasswordSetup(
+                        :final endpoint,
+                        :final errorMessage,
+                      ) => RuntimePasswordSetupForm(
+                        endpoint: endpoint,
+                        errorMessage: errorMessage,
+                      ),
                       RuntimeConnectionReady() => const _ConnectionLoading(),
                     },
                   ),

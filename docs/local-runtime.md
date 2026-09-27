@@ -177,6 +177,12 @@ Nach dem Setzen des Passworts meldet sich der Client über
 bleiben unverändert außerhalb dieser Passwort-Pflicht — die Lizenzaktivierung
 ist bereits durch den Lizenz-Token selbst geschützt.
 
+Der native novooa-Client führt die Einrichtung in dieser Reihenfolge: Runtime-
+Adresse, gegebenenfalls Lizenzaktivierung und anschließend das Betreiber-
+Passwort. Das Passwort kann nur in einem Client gesetzt werden, der auf dem
+Runtime-Rechner selbst läuft, weil der Setup-Port nicht im LAN veröffentlicht
+wird.
+
 ### Client-Voraussetzungen
 
 Das Session-Token liegt verschlüsselt im plattformeigenen

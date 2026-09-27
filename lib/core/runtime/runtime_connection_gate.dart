@@ -16,6 +16,7 @@ import 'runtime_credential_store.dart';
 import 'runtime_endpoint.dart';
 import 'runtime_endpoint_preferences.dart';
 import 'runtime_login_client.dart';
+import 'runtime_onboarding_client.dart';
 
 class RuntimeConnectionGate extends StatefulWidget {
   const RuntimeConnectionGate({
@@ -52,6 +53,7 @@ class _RuntimeConnectionGateState extends State<RuntimeConnectionGate> {
       SecureRuntimeCredentialStore(),
       const HttpRuntimeLoginClient(),
       const HttpRuntimeAvailability(),
+      onboarding: const HttpRuntimeOnboardingClient(),
       // Erst ab der ersten erfolgreichen Verbindung registriert (siehe
       // `_startApplication`) — signOut() ist aber ohnehin erst erreichbar,
       // nachdem die App-Oberfläche (und damit die DI) schon steht.

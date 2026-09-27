@@ -8,6 +8,7 @@ import 'runtime_credential_store.dart';
 import 'runtime_endpoint.dart';
 import 'runtime_endpoint_store.dart';
 import 'runtime_login_client.dart';
+import 'runtime_onboarding_client.dart';
 
 class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
   RuntimeConnectionCubit(
@@ -15,6 +16,7 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     this._credentials,
     this._loginClient,
     this._availability, {
+    required this.onboarding,
     Future<void> Function()? onSignedOut,
   }) : _onSignedOut = onSignedOut ?? _noOp,
        super(const RuntimeConnectionLoading());
@@ -23,6 +25,7 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
   final RuntimeCredentialStore _credentials;
   final RuntimeLoginClient _loginClient;
   final RuntimeAvailability _availability;
+  final RuntimeOnboardingClient onboarding;
 
   /// Schließt die offene Realtime-Verbindung (siehe
   /// `WorkspaceRealtimeChannel`) — optional, weil diese vor dem allerersten
@@ -73,7 +76,13 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
   Future<void> _connectTo(RuntimeEndpoint endpoint, String address) async {
     try {
       await _availability.check(endpoint);
-      await _finishConnecting(endpoint);
+      if (!await onboarding.hasActiveLicense(endpoint)) {
+        emit(RuntimeConnectionNeedsLicense(endpoint));
+        return;
+      }
+      await _continueAfterLicense(endpoint);
+    } on RuntimeOnboardingFailure catch (error) {
+      emit(RuntimeConnectionNeedsPasswordSetup(endpoint, errorMessage: error.message));
     } on Object catch (error, stackTrace) {
       _reportFailure('connect', error, stackTrace);
       emit(
@@ -103,6 +112,42 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
         RuntimeConnectionNeedsPassword(
           endpoint,
           errorMessage: 'Anmeldung fehlgeschlagen.',
+        ),
+      );
+    }
+  }
+
+  Future<void> activateLicense(RuntimeEndpoint endpoint, String token) async {
+    emit(RuntimeConnectionConnecting(endpoint.displayAddress));
+    try {
+      await onboarding.activateLicense(endpoint, token);
+      await _continueAfterLicense(endpoint);
+    } on RuntimeOnboardingFailure catch (error) {
+      emit(RuntimeConnectionNeedsLicense(endpoint, errorMessage: error.message));
+    } on Object catch (error, stackTrace) {
+      _reportFailure('activate-license', error, stackTrace);
+      emit(
+        RuntimeConnectionNeedsLicense(
+          endpoint,
+          errorMessage: 'Die Lizenz konnte nicht aktiviert werden.',
+        ),
+      );
+    }
+  }
+
+  Future<void> setPassword(RuntimeEndpoint endpoint, String password) async {
+    emit(RuntimeConnectionConnecting(endpoint.displayAddress));
+    try {
+      await onboarding.setPassword(password);
+      await login(endpoint, password);
+    } on RuntimeOnboardingFailure catch (error) {
+      emit(RuntimeConnectionNeedsPasswordSetup(endpoint, errorMessage: error.message));
+    } on Object catch (error, stackTrace) {
+      _reportFailure('setup-password', error, stackTrace);
+      emit(
+        RuntimeConnectionNeedsPasswordSetup(
+          endpoint,
+          errorMessage: 'Das Passwort konnte nicht gesetzt werden.',
         ),
       );
     }
@@ -143,6 +188,14 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     }
     await _endpoints.save(endpoint);
     emit(RuntimeConnectionReady(endpoint));
+  }
+
+  Future<void> _continueAfterLicense(RuntimeEndpoint endpoint) async {
+    if (await onboarding.needsPasswordSetup()) {
+      emit(RuntimeConnectionNeedsPasswordSetup(endpoint));
+      return;
+    }
+    await _finishConnecting(endpoint);
   }
 
   /// Die nach außen sichtbare Meldung bleibt bewusst allgemein — die
