@@ -59,6 +59,23 @@ weder über Firestore noch über novooa-Functions proxied.
 
 ## Manifest
 
+### Typen an den drei Grenzen
+
+Das ML-Feature unterscheidet bewusst drei Typ-Ebenen. Sie dürfen nicht
+gleichgesetzt werden:
+
+| Ebene | Zweck | Beispiele |
+| --- | --- | --- |
+| Workflow-Werttyp | Fachlicher Wert zwischen Bausteinen | `string`, `number`, `boolean`, `json`, `audio` |
+| Modellquelltyp | Wert, den eine Modelleingabe vor ihrer Transformation erhält | `text`, `number`, `image`, `audio`, `file`, `datetime`, `boolean`, `json`, `tensor` |
+| Tensor-Datentyp | Technische ONNX-Repräsentation an der Inferenzgrenze | `float32`, `int64`, `uint8`, einschließlich Tensorform |
+
+Ein Modellvertrag bildet Modellquelltypen über Transformationen auf
+Tensor-Datentypen ab. Ein Workflow-Wert kann dabei direkt als Quelle dienen,
+aber beide Ebenen bleiben getrennt. Beispielsweise liefert ein Slider den
+fachlichen Wert `number` `1.0`; `tensor.constant` formt ihn z.B. für Kokoro in den
+technischen ONNX-Tensor `float32[1]` für die Eingabe `speed` um.
+
 Alle Modelle arbeiten an der Runtime-Grenze mit Tensoren. Ein Eingang beschreibt
 zusätzlich seine Quelle (`image`, `audio`, `file`, `text`, `datetime`, `number`,
 `boolean`, `json` oder `tensor`) und eine Transformationspipeline. Ein Ausgang beschreibt
