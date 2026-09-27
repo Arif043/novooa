@@ -7,6 +7,8 @@ import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 import 'dialog_input_field_editor.dart';
+import 'template_expression_scope.dart';
+import 'template_expression_text_field.dart';
 
 class DialogInputWidget extends StatelessWidget {
   const DialogInputWidget({super.key, required this.node});
@@ -27,8 +29,9 @@ class DialogInputWidget extends StatelessWidget {
         children: [
           Text('Formulareingabe', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            initialValue: _config.instruction,
+          TemplateExpressionTextField(
+            value: _config.instruction,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: const InputDecoration(
               hintText: 'Hinweis für die Eingabe',
             ),
@@ -42,9 +45,8 @@ class DialogInputWidget extends StatelessWidget {
             DialogInputFieldEditor(
               field: _config.fields[index],
               canRemove: _config.fields.length > 1,
-              onChanged: (field) => context
-                  .read<TaskBuilderCubit>()
-                  .updateDialogInputField(
+              onChanged: (field) =>
+                  context.read<TaskBuilderCubit>().updateDialogInputField(
                     nodeId: node.id,
                     fieldIndex: index,
                     field: field,

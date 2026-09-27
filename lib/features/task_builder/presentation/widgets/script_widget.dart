@@ -13,6 +13,8 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_file_attachment_section.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/python_analyzer.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_scope.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_text_field.dart';
 
 class ScriptWidget extends StatefulWidget {
   const ScriptWidget({super.key, required this.node});
@@ -62,8 +64,9 @@ class _ScriptWidgetState extends State<ScriptWidget> {
         children: [
           Text('Script', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),
-          TextFormField(
-            initialValue: _config.inputTemplate,
+          TemplateExpressionTextField(
+            value: _config.inputTemplate,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: const InputDecoration(
               labelText: 'Eingabe',
               hintText: '{{baustein.value}}',

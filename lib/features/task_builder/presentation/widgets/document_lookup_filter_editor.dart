@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
+import 'template_expression_scope.dart';
+import 'template_expression_text_field.dart';
 
 class DocumentLookupFilterEditor extends StatelessWidget {
   const DocumentLookupFilterEditor({
@@ -43,8 +45,9 @@ class DocumentLookupFilterEditor extends StatelessWidget {
             onChanged: (value) => _update(operator: value),
           ),
           const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            initialValue: filter.value,
+          TemplateExpressionTextField(
+            value: filter.value,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: const InputDecoration(labelText: 'Wert'),
             onChanged: (value) => _update(value: value),
           ),

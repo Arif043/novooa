@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/dialog_input_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/media_input_widget.dart';
@@ -23,6 +24,8 @@ import 'package:syscat2/features/task_builder/presentation/widgets/write_file_wi
 import 'package:syscat2/features/task_builder/presentation/widgets/document_lookup_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/save_document_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/table_from_collection_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_scope.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_suggestion.dart';
 
 class NodeGraphItem extends StatelessWidget {
   const NodeGraphItem({
@@ -57,7 +60,7 @@ class NodeGraphItem extends StatelessWidget {
             child: NodeOutputNameField(node: node),
           ),
           const SizedBox(height: AppSpacing.md),
-          _nodeWidget(),
+          _templateAwareNodeWidget(context),
           const SizedBox(height: AppSpacing.lg),
           Text(
             'Ergebnis für nächste Bausteine',
@@ -106,7 +109,7 @@ class NodeGraphItem extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.only(left: AppSpacing.xxl),
-              child: _nodeWidget(),
+              child: _templateAwareNodeWidget(context),
             ),
             if (!isDragActive) ..._nodeActions(context),
             Positioned(
@@ -240,6 +243,24 @@ class NodeGraphItem extends StatelessWidget {
         ignoring: isDragActive,
         child: child,
       ),
+    );
+  }
+
+  Widget _templateAwareNodeWidget(BuildContext context) {
+    final suggestions = context
+        .select<TaskBuilderCubit, List<TemplateExpressionSuggestion>>(
+          (cubit) => switch (cubit.state) {
+            TaskBuilderLoaded(:final editingTask) =>
+              templateExpressionSuggestions(
+                graph: editingTask.graph,
+                targetNodeId: node.id,
+              ),
+            _ => const [],
+          },
+        );
+    return TemplateExpressionScope(
+      suggestions: suggestions,
+      child: _nodeWidget(),
     );
   }
 }

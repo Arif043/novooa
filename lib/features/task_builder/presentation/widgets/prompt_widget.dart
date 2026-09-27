@@ -18,6 +18,8 @@ import 'node_knowledge_attachment_section.dart';
 import 'prompt_choice_field.dart';
 import 'prompt_resource_selection.dart';
 import 'prompt_structured_output_section.dart';
+import 'template_expression_scope.dart';
+import 'template_expression_text_field.dart';
 
 class PromptWidget extends StatefulWidget {
   const PromptWidget({super.key, required this.node});
@@ -30,16 +32,12 @@ class PromptWidget extends StatefulWidget {
 
 class _PromptWidgetState extends State<PromptWidget> {
   late PromptOutputType selectedOutput;
-  late final TextEditingController _instructionController;
-  final List<TextEditingController> _choiceControllers = [];
 
   @override
   void initState() {
     super.initState();
     final config = widget.node.config as PromptNodeConfig;
     selectedOutput = config.outputType;
-    _instructionController = TextEditingController(text: config.instruction);
-    _syncChoiceControllers(config.choices);
   }
 
   @override
@@ -47,16 +45,6 @@ class _PromptWidgetState extends State<PromptWidget> {
     super.didUpdateWidget(oldWidget);
     final config = widget.node.config as PromptNodeConfig;
     selectedOutput = config.outputType;
-    _syncChoiceControllers(config.choices);
-  }
-
-  @override
-  void dispose() {
-    _instructionController.dispose();
-    for (final controller in _choiceControllers) {
-      controller.dispose();
-    }
-    super.dispose();
   }
 
   @override
@@ -70,8 +58,9 @@ class _PromptWidgetState extends State<PromptWidget> {
         children: [
           Text('Prompt', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),
-          TextField(
-            controller: _instructionController,
+          TemplateExpressionTextField(
+            value: config.instruction,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: const InputDecoration(
               hintText: 'Hier kommt die Anweisung',
             ),
@@ -108,13 +97,13 @@ class _PromptWidgetState extends State<PromptWidget> {
                 Text('Mögliche Antworten', style: SyscatTheme.taskBodySmall),
                 const SizedBox(height: AppSpacing.xs),
                 ListView.builder(
-                  itemCount: _choiceControllers.length,
+                  itemCount: config.choices.length,
                   shrinkWrap: true,
                   itemBuilder: (context, index) {
                     return PromptChoiceField(
-                      controller: _choiceControllers[index],
+                      value: config.choices[index],
                       index: index,
-                      canRemove: _choiceControllers.length > 1,
+                      canRemove: config.choices.length > 1,
                       onChanged: _updateChoice,
                       onRemove: _removeChoice,
                     );
@@ -165,18 +154,6 @@ class _PromptWidgetState extends State<PromptWidget> {
     );
   }
 
-  void _syncChoiceControllers(List<String> choices) {
-    while (_choiceControllers.length < choices.length) {
-      _choiceControllers.add(TextEditingController());
-    }
-    while (_choiceControllers.length > choices.length) {
-      _choiceControllers.removeLast().dispose();
-    }
-    for (var index = 0; index < choices.length; index++) {
-      _syncController(_choiceControllers[index], choices[index]);
-    }
-  }
-
   Widget _languageModelField(BuildContext context, PromptNodeConfig config) {
     final available = _hasLanguageModelsProvider(context);
     if (!available) {
@@ -224,14 +201,6 @@ class _PromptWidgetState extends State<PromptWidget> {
     } catch (_) {
       return false;
     }
-  }
-
-  void _syncController(TextEditingController controller, String text) {
-    if (controller.text == text) return;
-    controller.value = controller.value.copyWith(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
-    );
   }
 
   void _updateInstruction(String value) {

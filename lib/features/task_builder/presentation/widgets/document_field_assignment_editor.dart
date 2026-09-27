@@ -5,6 +5,8 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
+import 'template_expression_scope.dart';
+import 'template_expression_text_field.dart';
 
 class DocumentFieldAssignmentEditor extends StatelessWidget {
   const DocumentFieldAssignmentEditor({
@@ -34,8 +36,9 @@ class DocumentFieldAssignmentEditor extends StatelessWidget {
             onChanged: (value) => _update(context, field: value),
           ),
           const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            initialValue: assignment.value,
+          TemplateExpressionTextField(
+            value: assignment.value,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: const InputDecoration(labelText: 'Wert'),
             onChanged: (value) => _update(context, value: value),
           ),

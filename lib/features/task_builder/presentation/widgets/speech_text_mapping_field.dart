@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import 'template_expression_scope.dart';
+import 'template_expression_text_field.dart';
 
 class SpeechTextMappingField extends StatelessWidget {
   const SpeechTextMappingField({
@@ -18,9 +20,10 @@ class SpeechTextMappingField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: TextFormField(
+      child: TemplateExpressionTextField(
         key: ValueKey('$nodeId-speech-text'),
-        initialValue: value,
+        value: value,
+        suggestions: TemplateExpressionScope.suggestionsOf(context),
         decoration: const InputDecoration(
           labelText: 'Text',
           hintText: '{{eingabe.value}} oder {{global.eingabe.value}}',

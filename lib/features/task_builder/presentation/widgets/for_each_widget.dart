@@ -6,6 +6,8 @@ import '../../../../core/theme/syscat_theme.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
+import 'template_expression_scope.dart';
+import 'template_expression_text_field.dart';
 
 class ForEachWidget extends StatelessWidget {
   const ForEachWidget({super.key, required this.node});
@@ -23,8 +25,9 @@ class ForEachWidget extends StatelessWidget {
         children: [
           Text('Für jedes Element', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            initialValue: config.itemsTemplate,
+          TemplateExpressionTextField(
+            value: config.itemsTemplate,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: const InputDecoration(
               labelText: 'Liste',
               hintText: '{{erkennung.regions}}',

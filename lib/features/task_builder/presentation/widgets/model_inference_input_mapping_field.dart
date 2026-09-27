@@ -6,6 +6,8 @@ import '../../../machine_learning/domain/entities/model_catalog_entry.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
+import 'template_expression_scope.dart';
+import 'template_expression_text_field.dart';
 
 class ModelInferenceInputMappingField extends StatelessWidget {
   const ModelInferenceInputMappingField({
@@ -59,19 +61,22 @@ class ModelInferenceInputMappingField extends StatelessWidget {
     decoration: const InputDecoration(labelText: 'Name'),
   );
 
-  Widget _workflowMappingField(BuildContext context) => TextFormField(
-    key: ValueKey('${nodeId.value}-${input.name}'),
-    initialValue: mapping.workflowMapping,
-    decoration: const InputDecoration(
-      labelText: 'Workflow-Mapping',
-      hintText: '{{eingabe.value}} oder {{global.eingabe.value}}',
-    ),
-    onChanged: (workflowMapping) =>
-        context.read<TaskBuilderCubit>().updateModelInferenceWorkflowMapping(
-          nodeId,
-          mapping.copyWith(workflowMapping: workflowMapping),
+  Widget _workflowMappingField(BuildContext context) =>
+      TemplateExpressionTextField(
+        key: ValueKey('${nodeId.value}-${input.name}'),
+        value: mapping.workflowMapping,
+        suggestions: TemplateExpressionScope.suggestionsOf(context),
+        decoration: const InputDecoration(
+          labelText: 'Workflow-Mapping',
+          hintText: '{{eingabe.value}} oder {{global.eingabe.value}}',
         ),
-  );
+        onChanged: (workflowMapping) => context
+            .read<TaskBuilderCubit>()
+            .updateModelInferenceWorkflowMapping(
+              nodeId,
+              mapping.copyWith(workflowMapping: workflowMapping),
+            ),
+      );
 
   Widget _dataTypeField() => TextFormField(
     initialValue: input.source.label,

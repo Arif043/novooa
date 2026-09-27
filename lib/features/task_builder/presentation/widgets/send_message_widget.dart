@@ -5,6 +5,8 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_scope.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_text_field.dart';
 
 class SendMessageWidget extends StatefulWidget {
   const SendMessageWidget({super.key, required this.node});
@@ -16,36 +18,8 @@ class SendMessageWidget extends StatefulWidget {
 }
 
 class _SendMessageWidgetState extends State<SendMessageWidget> {
-  late final TextEditingController _recipientController;
-  late final TextEditingController _subjectController;
-  late final TextEditingController _messageController;
-
   SendChannelMessageNodeConfig get _config {
     return widget.node.config as SendChannelMessageNodeConfig;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _recipientController = TextEditingController(text: _config.recipient);
-    _subjectController = TextEditingController(text: _config.subject);
-    _messageController = TextEditingController(text: _config.message);
-  }
-
-  @override
-  void didUpdateWidget(SendMessageWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _sync(_recipientController, _config.recipient);
-    _sync(_subjectController, _config.subject);
-    _sync(_messageController, _config.message);
-  }
-
-  @override
-  void dispose() {
-    _recipientController.dispose();
-    _subjectController.dispose();
-    _messageController.dispose();
-    super.dispose();
   }
 
   @override
@@ -58,22 +32,25 @@ class _SendMessageWidgetState extends State<SendMessageWidget> {
         children: [
           Text(_title, style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
-          TextField(
-            controller: _recipientController,
+          TemplateExpressionTextField(
+            value: _config.recipient,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: InputDecoration(labelText: _recipientLabel),
             onChanged: _updateRecipient,
           ),
           if (_config.kind == ChannelEventKind.email) ...[
             const SizedBox(height: AppSpacing.sm),
-            TextField(
-              controller: _subjectController,
+            TemplateExpressionTextField(
+              value: _config.subject,
+              suggestions: TemplateExpressionScope.suggestionsOf(context),
               decoration: const InputDecoration(labelText: 'Betreff'),
               onChanged: _updateSubject,
             ),
           ],
           const SizedBox(height: AppSpacing.sm),
-          TextField(
-            controller: _messageController,
+          TemplateExpressionTextField(
+            value: _config.message,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 3,
             maxLines: 6,
             decoration: const InputDecoration(labelText: 'Nachricht'),
@@ -116,14 +93,6 @@ class _SendMessageWidgetState extends State<SendMessageWidget> {
     context.read<TaskBuilderCubit>().updateSendMessageSubject(
       widget.node.id,
       value,
-    );
-  }
-
-  void _sync(TextEditingController controller, String text) {
-    if (controller.text == text) return;
-    controller.value = controller.value.copyWith(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
     );
   }
 }

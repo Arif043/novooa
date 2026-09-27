@@ -7,6 +7,8 @@ import '../../../../core/theme/syscat_theme.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
+import 'template_expression_scope.dart';
+import 'template_expression_text_field.dart';
 
 class MediaInputWidget extends StatelessWidget {
   const MediaInputWidget({super.key, required this.node});
@@ -25,8 +27,9 @@ class MediaInputWidget extends StatelessWidget {
         children: [
           Text('Bild anfordern', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            initialValue: _config.instruction,
+          TemplateExpressionTextField(
+            value: _config.instruction,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: const InputDecoration(
               hintText: 'Hinweis für die Bildeingabe',
             ),

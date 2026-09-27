@@ -6,6 +6,8 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
+import 'template_expression_scope.dart';
+import 'template_expression_text_field.dart';
 
 class HumanApprovalWidget extends StatelessWidget {
   const HumanApprovalWidget({super.key, required this.node});
@@ -26,8 +28,9 @@ class HumanApprovalWidget extends StatelessWidget {
         children: [
           Text('Freigabe', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            initialValue: _config.instruction,
+          TemplateExpressionTextField(
+            value: _config.instruction,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: const InputDecoration(
               hintText: 'Was soll geprüft werden?',
             ),
@@ -37,8 +40,9 @@ class HumanApprovalWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            initialValue: _config.reviewTemplate,
+          TemplateExpressionTextField(
+            value: _config.reviewTemplate,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: const InputDecoration(
               labelText: 'Zu prüfender Wert',
               hintText: '{{baustein.value}}',

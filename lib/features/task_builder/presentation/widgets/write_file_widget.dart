@@ -6,6 +6,8 @@ import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/write_file_target_dialog.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_scope.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_text_field.dart';
 
 class WriteFileWidget extends StatelessWidget {
   const WriteFileWidget({super.key, required this.node});
@@ -24,8 +26,9 @@ class WriteFileWidget extends StatelessWidget {
         children: [
           Text('Datei schreiben', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            initialValue: _config.contentTemplate,
+          TemplateExpressionTextField(
+            value: _config.contentTemplate,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: const InputDecoration(
               labelText: 'Inhalt',
               hintText: '{{baustein.value}}',

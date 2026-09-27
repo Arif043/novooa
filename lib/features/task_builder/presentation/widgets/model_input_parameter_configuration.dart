@@ -7,6 +7,8 @@ import '../../../machine_learning/domain/entities/model_catalog_entry.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
+import 'template_expression_scope.dart';
+import 'template_expression_text_field.dart';
 
 part 'model_input_parameter_editor.dart';
 part 'model_input_parameter_controls.dart';

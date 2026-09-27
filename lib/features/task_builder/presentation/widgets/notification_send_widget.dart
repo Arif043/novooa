@@ -6,6 +6,8 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
+import 'template_expression_scope.dart';
+import 'template_expression_text_field.dart';
 
 class NotificationSendWidget extends StatelessWidget {
   const NotificationSendWidget({super.key, required this.node});
@@ -26,8 +28,9 @@ class NotificationSendWidget extends StatelessWidget {
         children: [
           Text('Push-Benachrichtigung', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            initialValue: _config.title,
+          TemplateExpressionTextField(
+            value: _config.title,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: const InputDecoration(
               labelText: 'Titel (optional)',
               hintText: 'Benachrichtigung von novooa',
@@ -36,8 +39,9 @@ class NotificationSendWidget extends StatelessWidget {
                 _update(context, (config) => config.copyWith(title: value)),
           ),
           const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            initialValue: _config.message,
+          TemplateExpressionTextField(
+            value: _config.message,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 2,
             maxLines: 4,
             decoration: const InputDecoration(

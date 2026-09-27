@@ -124,9 +124,10 @@ class _TemplateField extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     children: [
       Expanded(
-        child: TextFormField(
+        child: TemplateExpressionTextField(
           key: ValueKey(value),
-          initialValue: value,
+          value: value,
+          suggestions: TemplateExpressionScope.suggestionsOf(context),
           decoration: InputDecoration(
             labelText: '${parameter.label} (Template)',
           ),

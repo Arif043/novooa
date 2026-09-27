@@ -11,6 +11,8 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'node_employee_section.dart';
 import 'node_skill_attachment_section.dart';
+import 'template_expression_scope.dart';
+import 'template_expression_text_field.dart';
 
 class IterativeRefinementWidget extends StatefulWidget {
   const IterativeRefinementWidget({super.key, required this.node});
@@ -23,32 +25,8 @@ class IterativeRefinementWidget extends StatefulWidget {
 }
 
 class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
-  late final TextEditingController _optimizerController;
-  late final TextEditingController _critiqueController;
-
   IterativeRefinementNodeConfig get _config {
     return widget.node.config as IterativeRefinementNodeConfig;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _optimizerController = TextEditingController(text: _config.optimizerPrompt);
-    _critiqueController = TextEditingController(text: _config.critiquePrompt);
-  }
-
-  @override
-  void didUpdateWidget(IterativeRefinementWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _syncController(_optimizerController, _config.optimizerPrompt);
-    _syncController(_critiqueController, _config.critiquePrompt);
-  }
-
-  @override
-  void dispose() {
-    _optimizerController.dispose();
-    _critiqueController.dispose();
-    super.dispose();
   }
 
   @override
@@ -61,8 +39,9 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
         children: [
           Text('Iterative Verfeinerung', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.md),
-          TextFormField(
-            initialValue: _config.draftTemplate,
+          TemplateExpressionTextField(
+            value: _config.draftTemplate,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: const InputDecoration(
               labelText: 'Entwurf',
               hintText: '{{baustein.value}}',
@@ -70,16 +49,18 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
             onChanged: _updateDraft,
           ),
           const SizedBox(height: AppSpacing.md),
-          TextField(
-            controller: _optimizerController,
+          TemplateExpressionTextField(
+            value: _config.optimizerPrompt,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 2,
             maxLines: 4,
             decoration: const InputDecoration(hintText: 'Optimierer-Prompt'),
             onChanged: _updateOptimizer,
           ),
           const SizedBox(height: AppSpacing.md),
-          TextField(
-            controller: _critiqueController,
+          TemplateExpressionTextField(
+            value: _config.critiquePrompt,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 2,
             maxLines: 4,
             decoration: const InputDecoration(hintText: 'Kritik'),
@@ -147,14 +128,6 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
   void _unassignEmployee() {
     context.read<TaskBuilderCubit>().unassignNodeEmployee(
       nodeId: widget.node.id,
-    );
-  }
-
-  void _syncController(TextEditingController controller, String text) {
-    if (controller.text == text) return;
-    controller.value = controller.value.copyWith(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
     );
   }
 

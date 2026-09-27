@@ -9,6 +9,8 @@ import '../../../data/domain/usecases/data_records.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
+import 'template_expression_scope.dart';
+import 'template_expression_text_field.dart';
 
 /// Konfigurationsfläche für „Sammlung als Tabelle": eine Collection-Auswahl,
 /// sonst nichts — der Baustein gibt die gelesene Sammlung als Tabellen-Wert
@@ -57,8 +59,9 @@ class _CollectionField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!serviceLocator.isRegistered<ListDataCollections>()) {
-      return TextFormField(
-        initialValue: value,
+      return TemplateExpressionTextField(
+        value: value,
+        suggestions: TemplateExpressionScope.suggestionsOf(context),
         decoration: const InputDecoration(labelText: 'Sammlung'),
         onChanged: onChanged,
       );
@@ -90,8 +93,9 @@ class _CollectionDropdownState extends State<_CollectionDropdown> {
           return const _CollectionFieldLoading();
         }
         if (snapshot.hasError) {
-          return TextFormField(
-            initialValue: widget.value,
+          return TemplateExpressionTextField(
+            value: widget.value,
+            suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: const InputDecoration(labelText: 'Sammlung'),
             onChanged: widget.onChanged,
           );
