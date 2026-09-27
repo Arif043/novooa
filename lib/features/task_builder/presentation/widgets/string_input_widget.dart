@@ -5,6 +5,9 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_suggestion.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_text_field.dart';
 
 class StringInputWidget extends StatefulWidget {
   const StringInputWidget({super.key, required this.node});
@@ -16,32 +19,24 @@ class StringInputWidget extends StatefulWidget {
 }
 
 class _StringInputWidgetState extends State<StringInputWidget> {
-  late final TextEditingController _controller;
-
   StringInputNodeConfig get _config {
     return widget.node.config as StringInputNodeConfig;
   }
 
   @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: _config.value);
-  }
-
-  @override
-  void didUpdateWidget(StringInputWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _syncController(_config.value);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final task = context.select<TaskBuilderCubit, TaskBuilderLoaded?>(
+      (cubit) => switch (cubit.state) {
+        TaskBuilderLoaded() => cubit.state as TaskBuilderLoaded,
+        _ => null,
+      },
+    );
+    final suggestions = task == null
+        ? const <TemplateExpressionSuggestion>[]
+        : templateExpressionSuggestions(
+            graph: task.editingTask.graph,
+            targetNodeId: widget.node.id,
+          );
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: SyscatTheme.nodePanelDecoration(context),
@@ -50,8 +45,9 @@ class _StringInputWidgetState extends State<StringInputWidget> {
         children: [
           Text('Texteingabe', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),
-          TextField(
-            controller: _controller,
+          TemplateExpressionTextField(
+            value: _config.value,
+            suggestions: suggestions,
             minLines: 2,
             maxLines: 4,
             decoration: const InputDecoration(hintText: 'Text eingeben'),
@@ -59,14 +55,6 @@ class _StringInputWidgetState extends State<StringInputWidget> {
           ),
         ],
       ),
-    );
-  }
-
-  void _syncController(String text) {
-    if (_controller.text == text) return;
-    _controller.value = _controller.value.copyWith(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
     );
   }
 

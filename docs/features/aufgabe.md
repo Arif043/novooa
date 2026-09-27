@@ -101,6 +101,10 @@ Die vollstaendigen Output-Slots dokumentiert
   `afterId` im Hauptgraphen oder mit `ownerId`/`branchId` im Unterplan;
   `channelKind` erhält die Kanalwahl auch innerhalb eines Unterplans.
 - Autosave statt Speichern-Dialog.
+- Template-Ausdrücke werden in Texteingaben als Labels dargestellt. Mit `#`
+  öffnet sich eine Suche nach Workflow-Ausgabewerten und statisch erkennbaren
+  Script-Variablen aus dem erreichbaren Vorgängerpfad. Persistiert bleibt der
+  unveränderte Ausdruck `{{name}}`; die Label-Darstellung ist reine UI.
 - Anlass statt technischer Konfiguration.
 - Inline-Vorschau, wo sie den naechsten Schritt verstaendlicher macht.
 - Sofortiges Feedback bei Mutationen.
