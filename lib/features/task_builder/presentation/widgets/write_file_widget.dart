@@ -29,6 +29,8 @@ class WriteFileWidget extends StatelessWidget {
           TemplateExpressionTextField(
             value: _config.contentTemplate,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
+            minLines: 3,
+            maxLines: 8,
             decoration: const InputDecoration(
               labelText: 'Inhalt',
               hintText: '{{baustein.value}}',

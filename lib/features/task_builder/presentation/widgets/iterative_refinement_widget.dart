@@ -42,6 +42,8 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
           TemplateExpressionTextField(
             value: _config.draftTemplate,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
+            minLines: 3,
+            maxLines: 8,
             decoration: const InputDecoration(
               labelText: 'Entwurf',
               hintText: '{{baustein.value}}',

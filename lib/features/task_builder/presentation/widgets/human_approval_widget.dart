@@ -31,6 +31,8 @@ class HumanApprovalWidget extends StatelessWidget {
           TemplateExpressionTextField(
             value: _config.instruction,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
+            minLines: 2,
+            maxLines: 4,
             decoration: const InputDecoration(
               hintText: 'Was soll geprüft werden?',
             ),
@@ -43,6 +45,8 @@ class HumanApprovalWidget extends StatelessWidget {
           TemplateExpressionTextField(
             value: _config.reviewTemplate,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
+            minLines: 2,
+            maxLines: 4,
             decoration: const InputDecoration(
               labelText: 'Zu prüfender Wert',
               hintText: '{{baustein.value}}',

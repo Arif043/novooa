@@ -32,6 +32,8 @@ class DialogInputWidget extends StatelessWidget {
           TemplateExpressionTextField(
             value: _config.instruction,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
+            minLines: 2,
+            maxLines: 4,
             decoration: const InputDecoration(
               hintText: 'Hinweis für die Eingabe',
             ),

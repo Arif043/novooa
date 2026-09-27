@@ -61,6 +61,8 @@ class _PromptWidgetState extends State<PromptWidget> {
           TemplateExpressionTextField(
             value: config.instruction,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
+            minLines: 3,
+            maxLines: 8,
             decoration: const InputDecoration(
               hintText: 'Hier kommt die Anweisung',
             ),
