@@ -15,9 +15,8 @@ import '../cubits/node_language_models_state.dart';
 import '../cubits/task_builder_cubit.dart';
 import 'node_file_attachment_section.dart';
 import 'node_knowledge_attachment_section.dart';
-import 'prompt_choice_field.dart';
 import 'prompt_resource_selection.dart';
-import 'prompt_structured_output_section.dart';
+import 'prompt_output_configuration.dart';
 import 'template_expression_scope.dart';
 import 'template_expression_text_field.dart';
 
@@ -102,44 +101,16 @@ class _PromptWidgetState extends State<PromptWidget> {
               },
             ),
           ),
-          Visibility(
-            visible: selectedOutput == .decision,
-            child: Column(
-              crossAxisAlignment: .start,
-              children: [
-                const SizedBox(height: AppSpacing.lg),
-                Text('Mögliche Antworten', style: SyscatTheme.taskBodySmall),
-                const SizedBox(height: AppSpacing.xs),
-                ListView.builder(
-                  itemCount: config.choices.length,
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                    return PromptChoiceField(
-                      value: config.choices[index],
-                      index: index,
-                      canRemove: config.choices.length > 1,
-                      onChanged: _updateChoice,
-                      onRemove: _removeChoice,
-                    );
-                  },
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: _addChoice,
-                  child: const Text('Antwort hinzufügen'),
-                ),
-              ],
-            ),
-          ),
-          Visibility(
-            visible: selectedOutput == .structured,
-            child: PromptStructuredOutputSection(
-              fields: config.structuredFields,
-              onChanged: _updateStructuredField,
-              onAdd: _addStructuredField,
-              onRemove: _removeStructuredField,
-            ),
+          PromptOutputConfiguration(
+            outputType: selectedOutput,
+            choices: config.choices,
+            structuredFields: config.structuredFields,
+            onChoiceChanged: _updateChoice,
+            onChoiceAdded: _addChoice,
+            onChoiceRemoved: _removeChoice,
+            onStructuredFieldChanged: _updateStructuredField,
+            onStructuredFieldAdded: _addStructuredField,
+            onStructuredFieldRemoved: _removeStructuredField,
           ),
           const SizedBox(height: AppSpacing.md),
           NodeFileAttachmentSection(

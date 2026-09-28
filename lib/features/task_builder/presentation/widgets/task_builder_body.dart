@@ -6,8 +6,8 @@ import '../../domain/entities/task.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 import '../cubits/task_builder_state.dart';
+import 'animated_node_configuration_panel.dart';
 import 'baustein_palette.dart';
-import 'node_configuration_panel.dart';
 import 'workflow_canvas.dart';
 import 'workflow_canvas_layout.dart';
 import 'workflow_editor_scope.dart';
@@ -22,22 +22,42 @@ class TaskBuilderBody extends StatefulWidget {
 
 class _TaskBuilderBodyState extends State<TaskBuilderBody> {
   NodeId? _editing;
+  WorkflowNode? _panelNode;
   BausteinInsertion? _insertion;
   bool _showPalette = false;
+  bool _panelVisible = false;
 
   void _open(WorkflowNode node) {
     FocusManager.instance.primaryFocus?.unfocus();
+    final shouldAnimateIn = _panelNode == null;
     setState(() {
       _editing = node.id;
+      _panelNode = node;
+      _panelVisible = !shouldAnimateIn;
       _insertion = null;
       _showPalette = false;
     });
     context.read<TaskBuilderCubit>().selectNode(node.id);
+    if (shouldAnimateIn) _showPanelAfterBuild(node.id);
   }
 
   void _close() {
     FocusManager.instance.primaryFocus?.unfocus();
-    setState(() => _editing = null);
+    setState(() {
+      _editing = null;
+      _panelVisible = false;
+    });
+  }
+
+  void _showPanelAfterBuild(NodeId nodeId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _panelNode?.id != nodeId) return;
+      setState(() => _panelVisible = true);
+    });
+  }
+
+  void _removeClosedPanel() {
+    if (mounted && !_panelVisible) setState(() => _panelNode = null);
   }
 
   Future<void> _add(BausteinChoice choice, BausteinInsertion insertion) async {
@@ -65,6 +85,7 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
   Widget _workspace(Task task) {
     final entries = WorkflowCanvasLayout(task.graph).entries;
     final selected = entries[_editing?.value];
+    final panelNode = selected?.node ?? _panelNode;
     return WorkflowEditorScope(
       onSelect: _open,
       child: CallbackShortcuts(
@@ -93,7 +114,7 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
                       Expanded(
                         child: WorkflowCanvas(
                           graph: task.graph,
-                          inspectorWidth: desktop && selected?.node != null
+                          inspectorWidth: desktop && panelNode != null
                               ? 560
                               : 0,
                           selected: _editing,
@@ -103,6 +124,7 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
                             _insertion = insertion;
                             _showPalette = true;
                             _editing = null;
+                            _panelVisible = false;
                           }),
                         ),
                       ),
@@ -117,6 +139,7 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
                       onPressed: () => setState(() {
                         _showPalette = !_showPalette;
                         _editing = null;
+                        _panelVisible = false;
                       }),
                       icon: const Icon(Icons.widgets_outlined),
                       label: const Text('Bausteine'),
@@ -163,7 +186,7 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
                     child: palette,
                   ),
                 ],
-                if (selected?.node case final WorkflowNode node)
+                if (panelNode case final WorkflowNode node)
                   Positioned(
                     top: 24,
                     bottom: 24,
@@ -172,13 +195,11 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
                       540,
                       constraints.maxWidth - (desktop ? paletteWidth + 48 : 40),
                     ),
-                    child: Focus(
-                      autofocus: true,
-                      child: NodeConfigurationPanel(
-                        key: ValueKey(node.id),
-                        node: node,
-                        onClose: _close,
-                      ),
+                    child: AnimatedNodeConfigurationPanel(
+                      node: node,
+                      isVisible: _panelVisible,
+                      onClose: _close,
+                      onDismissed: _removeClosedPanel,
                     ),
                   ),
               ],

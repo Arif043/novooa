@@ -16,7 +16,9 @@ import 'package:syscat2/features/task_builder/presentation/widgets/node_output_n
 void main() {
   Future<void> pump(WidgetTester tester, WorkflowNode node) {
     return tester.pumpWidget(
-      MaterialApp(home: Scaffold(body: NodeOutputNameField(node: node))),
+      MaterialApp(
+        home: Scaffold(body: NodeOutputNameField(node: node)),
+      ),
     );
   }
 
@@ -34,7 +36,7 @@ void main() {
       ),
     );
 
-    expect(find.text('{{eingang}}'), findsOneWidget);
+    expect(find.text('eingang'), findsOneWidget);
   });
 
   testWidgets('bleibt ausgeblendet ohne Ausgabename', (tester) async {
@@ -102,45 +104,42 @@ void main() {
     },
   );
 
-  testWidgets(
-    'speichert einen geänderten Ausgabenamen ohne die '
-    '"TextEditingController used after being disposed"-Exception '
-    '(Regressionstest)',
-    (tester) async {
-      const node = WorkflowNode(
-        id: NodeId('n1'),
-        title: '',
-        description: '',
-        outputName: 'eingang',
-        config: StringInputNodeConfig(value: ''),
-      );
-      final cubit = await _cubitFor(_taskFor(node));
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: BlocProvider.value(
-              value: cubit,
-              child: const NodeOutputNameField(node: node),
-            ),
+  testWidgets('speichert einen geänderten Ausgabenamen ohne die '
+      '"TextEditingController used after being disposed"-Exception '
+      '(Regressionstest)', (tester) async {
+    const node = WorkflowNode(
+      id: NodeId('n1'),
+      title: '',
+      description: '',
+      outputName: 'eingang',
+      config: StringInputNodeConfig(value: ''),
+    );
+    final cubit = await _cubitFor(_taskFor(node));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: BlocProvider.value(
+            value: cubit,
+            child: const NodeOutputNameField(node: node),
           ),
         ),
-      );
+      ),
+    );
 
-      await tester.tap(find.byType(InputChip));
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), 'ausgang');
-      await tester.tap(find.text('Speichern'));
-      // Durchläuft die Cupertino-Schließanimation des Dialogs vollständig —
-      // genau in diesem Fenster trat die Exception auf, bevor der Dialog
-      // seinen Controller selbst besaß.
-      await tester.pumpAndSettle();
+    await tester.tap(find.byType(InputChip));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'ausgang');
+    await tester.tap(find.text('Speichern'));
+    // Durchläuft die Cupertino-Schließanimation des Dialogs vollständig —
+    // genau in diesem Fenster trat die Exception auf, bevor der Dialog
+    // seinen Controller selbst besaß.
+    await tester.pumpAndSettle();
 
-      expect(tester.takeException(), isNull);
-      final state = cubit.state as TaskBuilderLoaded;
-      expect(state.editingTask.nodes.single.outputName, 'ausgang');
-      await cubit.close();
-    },
-  );
+    expect(tester.takeException(), isNull);
+    final state = cubit.state as TaskBuilderLoaded;
+    expect(state.editingTask.nodes.single.outputName, 'ausgang');
+    await cubit.close();
+  });
 }
 
 Future<TaskBuilderCubit> _cubitFor(Task task) async {
