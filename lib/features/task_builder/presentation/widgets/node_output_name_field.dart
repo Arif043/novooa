@@ -28,11 +28,24 @@ class NodeOutputNameField extends StatelessWidget {
     }
     final outputName = node.outputName.trim();
     if (outputName.isEmpty) return const SizedBox.shrink();
+    final colors = Theme.of(context).colorScheme;
     return Tooltip(
       message: 'Ausgabename bearbeiten',
       child: InputChip(
-        avatar: const Icon(Icons.data_object_outlined, size: AppSpacing.md),
-        label: Text('{{$outputName}}'),
+
+        avatar: Icon(
+          CupertinoIcons.pen,
+          size: AppSpacing.md,
+          color: Colors.white,
+        ),
+        label: Text(outputName),
+        backgroundColor: colors.primaryContainer,
+        side: BorderSide.none,
+        shape: const StadiumBorder(),
+        labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
         onPressed: () => _showEditor(context),
       ),
     );
