@@ -7,8 +7,8 @@ import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 import '../cubits/task_builder_state.dart';
 import 'animated_node_configuration_panel.dart';
+import 'animated_workflow_canvas.dart';
 import 'baustein_palette.dart';
-import 'workflow_canvas.dart';
 import 'workflow_canvas_layout.dart';
 import 'workflow_editor_scope.dart';
 import 'task_builder_theme.dart';
@@ -112,12 +112,10 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
                       if (desktop)
                         SizedBox(width: paletteWidth, child: palette),
                       Expanded(
-                        child: WorkflowCanvas(
+                        child: AnimatedWorkflowCanvas(
                           graph: task.graph,
-                          inspectorWidth: desktop && panelNode != null
-                              ? 560
-                              : 0,
                           selected: _editing,
+                          isInspectorVisible: desktop && _panelVisible,
                           onSelect: _open,
                           onDrop: _add,
                           onChoose: (insertion) => setState(() {
