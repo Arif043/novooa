@@ -15,6 +15,7 @@ import 'runtime_connection_state.dart';
 import 'runtime_credential_store.dart';
 import 'runtime_endpoint.dart';
 import 'runtime_endpoint_preferences.dart';
+import 'runtime_kind_preferences.dart';
 import 'runtime_login_client.dart';
 import 'runtime_onboarding_client.dart';
 
@@ -24,11 +25,17 @@ class RuntimeConnectionGate extends StatefulWidget {
     required this.runtimeProfile,
     required this.configureApplication,
     required this.createApplication,
+    required this.onFullReset,
   });
 
   final RuntimeProfile runtimeProfile;
   final Future<void> Function(RuntimeProfile) configureApplication;
   final Widget Function(RuntimeProfile) createApplication;
+
+  /// Abmelden vergisst Sitzung, Adresse und Varianten-Wahl vollständig
+  /// (siehe `RuntimeConnectionCubit.signOut`) — dieser Callback baut die
+  /// Anwendung danach neu auf (DI-Reset + erneuter Boot-Versuch).
+  final Future<void> Function() onFullReset;
 
   @override
   State<RuntimeConnectionGate> createState() => _RuntimeConnectionGateState();
@@ -54,10 +61,14 @@ class _RuntimeConnectionGateState extends State<RuntimeConnectionGate> {
       const HttpRuntimeLoginClient(),
       const HttpRuntimeAvailability(),
       onboarding: const HttpRuntimeOnboardingClient(),
+      kindStore: RuntimeKindPreferences(SharedPreferencesAsync()),
       // Erst ab der ersten erfolgreichen Verbindung registriert (siehe
       // `_startApplication`) — signOut() ist aber ohnehin erst erreichbar,
       // nachdem die App-Oberfläche (und damit die DI) schon steht.
-      onSignedOut: () => serviceLocator<WorkspaceRealtimeChannel>().close(),
+      onSignedOut: () async {
+        serviceLocator<WorkspaceRealtimeChannel>().close();
+        await widget.onFullReset();
+      },
     );
     unawaited(
       _cubit.initialize(

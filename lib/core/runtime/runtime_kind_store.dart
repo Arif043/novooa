@@ -8,4 +8,8 @@ abstract interface class RuntimeKindStore {
   /// `RuntimeProfile.defaultKind`.
   Future<RuntimeKind?> load();
   Future<void> save(RuntimeKind kind);
+
+  /// Verwirft eine gespeicherte Wahl — bringt die nächste Prüfung zurück in
+  /// den unentschiedenen Zustand (siehe `RuntimeStartupDecision`).
+  Future<void> clear();
 }

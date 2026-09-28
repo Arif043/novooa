@@ -29,4 +29,7 @@ class RuntimeKindPreferences implements RuntimeKindStore {
   Future<void> save(RuntimeKind kind) {
     return _preferences.setString(_key, kind.name);
   }
+
+  @override
+  Future<void> clear() => _preferences.remove(_key);
 }

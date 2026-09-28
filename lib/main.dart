@@ -10,6 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/di/service_locator.dart';
 import 'core/runtime/runtime_kind_preferences.dart';
 import 'core/runtime/runtime_profile.dart';
+import 'core/runtime/runtime_startup_decision.dart';
+import 'core/runtime/runtime_variant_switcher.dart';
 import 'core/firebase/firebase_emulator_config.dart';
 import 'core/firebase/firestore_web_cache.dart';
 import 'core/logging/logger.dart';
@@ -43,9 +45,18 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 Future<void> main() =>
     runZonedGuarded(_startApplication, _logUncaughtZoneError) ?? Future.value();
 
+/// Auch der Wiedereinstiegspunkt nach einem vollständigen Reset (siehe
+/// `_bootRuntimeKind`s `onFullReset`) — löst die Startentscheidung dann
+/// einfach neu auf. `WidgetsFlutterBinding.ensureInitialized()` ist dafür
+/// mehrfach aufrufbar gemacht.
 Future<void> _startApplication() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final runtimeProfile = await _resolveRuntimeProfile();
+  final kind = await resolveStartupRuntimeKind();
+  await _bootRuntimeKind(kind);
+}
+
+Future<void> _bootRuntimeKind(RuntimeKind kind) async {
+  final runtimeProfile = RuntimeProfile.forKind(kind);
   final pushFirebaseEnabled = runtimeProfile.pushNotificationsEnabled
       ? await _initializeFirebase(runtimeProfile)
       : false;
@@ -61,13 +72,26 @@ Future<void> _startApplication() async {
   }
   if (runtimeProfile.isStandalone) {
     runApp(
-      RuntimeConnectionGate(
-        runtimeProfile: runtimeProfile,
-        configureApplication: (profile) =>
-            _configureApplication(profile, pushFirebaseEnabled),
-        createApplication: (profile) => MyApp(
-          runtimeProfile: profile,
-          pushFirebaseEnabled: pushFirebaseEnabled,
+      RuntimeVariantSwitcherScope(
+        switcher: const _AppRuntimeVariantSwitcher(),
+        child: RuntimeConnectionGate(
+          runtimeProfile: runtimeProfile,
+          configureApplication: (profile) =>
+              _configureApplication(profile, pushFirebaseEnabled),
+          createApplication: (profile) => MyApp(
+            runtimeProfile: profile,
+            pushFirebaseEnabled: pushFirebaseEnabled,
+          ),
+          // Abmelden vergisst Sitzung, Adresse und Varianten-Wahl
+          // vollständig und ruft diesen Callback. Ein erneutes Auflösen der
+          // Startentscheidung landet danach nativ korrekt wieder beim
+          // Cloud-Login (mit Wechsel-Hinweis zurück zur eigenen Runtime)
+          // oder im Web direkt wieder im Standalone-Fluss — dort gibt die
+          // Herkunft die Variante ohnehin fix vor.
+          onFullReset: () async {
+            await resetDependencies();
+            await _startApplication();
+          },
         ),
       ),
     );
@@ -75,34 +99,39 @@ Future<void> _startApplication() async {
   }
   await _configureApplication(runtimeProfile, pushFirebaseEnabled);
   runApp(
-    MyApp(
-      runtimeProfile: runtimeProfile,
-      pushFirebaseEnabled: pushFirebaseEnabled,
+    RuntimeVariantSwitcherScope(
+      switcher: const _AppRuntimeVariantSwitcher(),
+      child: MyApp(
+        runtimeProfile: runtimeProfile,
+        pushFirebaseEnabled: pushFirebaseEnabled,
+      ),
     ),
   );
 }
 
-/// Nativ hat eine gespeicherte Variantenwahl Vorrang vor dem Vorgabewert.
-/// Im Web gibt es keine Wahl: dort bestimmt die Herkunft die Variante, und
-/// `RuntimeKindPreferences` verwirft einen widersprechenden gespeicherten
-/// Wert von sich aus (siehe `RuntimeProfile.supports`).
-///
-/// Läuft bewusst vor der Firebase-Initialisierung, weil diese von der
-/// Variante abhängt. Ein Fehler im Einstellungsspeicher darf den Start nicht
-/// verhindern — dann greift ebenfalls der Vorgabewert.
-Future<RuntimeProfile> _resolveRuntimeProfile() async {
-  var kind = RuntimeProfile.defaultKind;
-  try {
-    kind = await RuntimeKindPreferences(SharedPreferencesAsync()).load() ?? kind;
-  } catch (error, stackTrace) {
-    logException(
-      message: 'Gespeicherte Betriebsvariante konnte nicht gelesen werden.',
-      error: error,
-      stackTrace: stackTrace,
-      name: 'runtime',
-    );
+/// Speichert die neue Wahl, baut die DI zurück und bootet die Anwendung
+/// für die neue Variante — alles im selben Prozess. Kein Neustart nötig,
+/// weil `configureDependencies` genau für diesen Zweck ein frisches
+/// `GetIt` verträgt (`resetDependencies()`) und Firebase nur einmal pro
+/// Prozess initialisiert wird (siehe Schutz in `_initializeFirebase`).
+class _AppRuntimeVariantSwitcher implements RuntimeVariantSwitcher {
+  const _AppRuntimeVariantSwitcher();
+
+  @override
+  Future<void> switchTo(RuntimeKind kind) async {
+    try {
+      await RuntimeKindPreferences(SharedPreferencesAsync()).save(kind);
+    } catch (error, stackTrace) {
+      logException(
+        message: 'Betriebsvariante konnte nicht gespeichert werden.',
+        error: error,
+        stackTrace: stackTrace,
+        name: 'runtime',
+      );
+    }
+    await resetDependencies();
+    await _startApplication();
   }
-  return RuntimeProfile.forKind(kind);
 }
 
 Future<void> _configureCloudPlatform() async {
@@ -132,6 +161,10 @@ Future<void> _configureApplication(
 }
 
 Future<bool> _initializeFirebase(RuntimeProfile profile) async {
+  // Nach einem vollständigen Reset (siehe `onFullReset`) kann derselbe
+  // Prozess `_bootRuntimeKind` ein zweites Mal durchlaufen — Firebase lässt
+  // sich aber nicht zweimal initialisieren.
+  if (Firebase.apps.isNotEmpty) return true;
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,

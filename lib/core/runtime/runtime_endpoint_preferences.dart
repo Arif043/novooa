@@ -26,4 +26,7 @@ class RuntimeEndpointPreferences implements RuntimeEndpointStore {
   Future<void> save(RuntimeEndpoint endpoint) {
     return _preferences.setString(_key, endpoint.address);
   }
+
+  @override
+  Future<void> clear() => _preferences.remove(_key);
 }

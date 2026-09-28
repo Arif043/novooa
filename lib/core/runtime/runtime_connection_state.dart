@@ -29,24 +29,48 @@ final class RuntimeConnectionNeedsLicense extends RuntimeConnectionState {
   final String? errorMessage;
 }
 
-final class RuntimeConnectionNeedsPasswordSetup extends RuntimeConnectionState {
-  const RuntimeConnectionNeedsPasswordSetup(
+/// Eigener Schritt vor dem Passwort — über den regulären Port verlangt die
+/// Runtime immer den Kopplungscode aus ihrem Start-Log (der code-freie
+/// Loopback-Weg ist ein dokumentierter Operator-Fallback außerhalb der
+/// App, siehe `docs/local-runtime.md`).
+final class RuntimeConnectionNeedsSetupCode extends RuntimeConnectionState {
+  const RuntimeConnectionNeedsSetupCode(
     this.endpoint, {
     this.errorMessage,
-    this.requiresCode = false,
     this.addresses = const [],
   });
 
   final RuntimeEndpoint endpoint;
   final String? errorMessage;
 
-  /// Über den regulären Port verlangt die Runtime den Kopplungscode aus
-  /// ihrem Start-Log — die Oberfläche blendet das Feld nur dann ein.
-  final bool requiresCode;
-
   /// Von der Runtime selbst ermittelte Adressen, unter denen andere Geräte
   /// sie erreichen. Werden angezeigt, nicht abgefragt.
   final List<String> addresses;
+}
+
+final class RuntimeConnectionNeedsPasswordSetup extends RuntimeConnectionState {
+  const RuntimeConnectionNeedsPasswordSetup(
+    this.endpoint, {
+    required this.code,
+    this.errorMessage,
+  });
+
+  final RuntimeEndpoint endpoint;
+  final String? errorMessage;
+
+  /// Im vorherigen Schritt eingegebener Kopplungscode — wird zusammen mit
+  /// dem Passwort in einem einzigen `/v1/setup`-Aufruf verschickt.
+  final String code;
+}
+
+/// Web-Pendant zu `RuntimeConnectionNeedsAddress`: Es gibt nichts
+/// einzugeben (die Origin ist die Adresse), also kein Adressfeld — nur
+/// Fehlertext und ein erneuter Versuch.
+final class RuntimeConnectionUnreachable extends RuntimeConnectionState {
+  const RuntimeConnectionUnreachable(this.endpoint, {this.errorMessage});
+
+  final RuntimeEndpoint endpoint;
+  final String? errorMessage;
 }
 
 final class RuntimeConnectionConnecting extends RuntimeConnectionState {

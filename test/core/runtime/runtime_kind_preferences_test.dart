@@ -58,4 +58,19 @@ void main() {
 
     expect(await preferences.load(), RuntimeKind.cloud);
   });
+
+  test('clear verwirft eine gespeicherte Wahl', () async {
+    await preferences.save(RuntimeKind.standalone);
+
+    await preferences.clear();
+
+    expect(await preferences.load(), isNull);
+    expect(await storedValue(), isNull);
+  });
+
+  test('clear ohne gespeicherte Wahl bleibt wirkungslos', () async {
+    await preferences.clear();
+
+    expect(await preferences.load(), isNull);
+  });
 }

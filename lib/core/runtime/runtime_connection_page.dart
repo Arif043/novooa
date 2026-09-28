@@ -7,6 +7,7 @@ import 'runtime_connection_state.dart';
 import 'runtime_endpoint.dart';
 import 'runtime_license_form.dart';
 import 'runtime_password_setup_form.dart';
+import 'runtime_setup_code_form.dart';
 
 class RuntimeConnectionPage extends StatelessWidget {
   const RuntimeConnectionPage({super.key});
@@ -49,16 +50,28 @@ class RuntimeConnectionPage extends StatelessWidget {
                         endpoint: endpoint,
                         errorMessage: errorMessage,
                       ),
+                      RuntimeConnectionNeedsSetupCode(
+                        :final endpoint,
+                        :final errorMessage,
+                        :final addresses,
+                      ) => RuntimeSetupCodeForm(
+                        endpoint: endpoint,
+                        errorMessage: errorMessage,
+                        addresses: addresses,
+                      ),
                       RuntimeConnectionNeedsPasswordSetup(
                         :final endpoint,
                         :final errorMessage,
-                        :final requiresCode,
-                        :final addresses,
                       ) => RuntimePasswordSetupForm(
                         endpoint: endpoint,
                         errorMessage: errorMessage,
-                        requiresCode: requiresCode,
-                        addresses: addresses,
+                      ),
+                      RuntimeConnectionUnreachable(
+                        :final endpoint,
+                        :final errorMessage,
+                      ) => _UnreachableNotice(
+                        endpoint: endpoint,
+                        errorMessage: errorMessage,
                       ),
                       RuntimeConnectionReady() => const _ConnectionLoading(),
                     },
@@ -82,6 +95,47 @@ class _ConnectionLoading extends StatelessWidget {
         CircularProgressIndicator(),
         SizedBox(height: AppSpacing.md),
         Text('Runtime wird verbunden ...'),
+      ],
+    );
+  }
+}
+
+/// Web-Pendant zur Adress-Eingabe: Es gibt nichts einzugeben, die Origin
+/// steht fest — nur der Grund und ein erneuter Versuch.
+class _UnreachableNotice extends StatelessWidget {
+  const _UnreachableNotice({required this.endpoint, this.errorMessage});
+
+  final RuntimeEndpoint endpoint;
+  final String? errorMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.cloud_off_outlined, size: 48, color: colorScheme.error),
+        const SizedBox(height: AppSpacing.lg),
+        Text(
+          'Runtime nicht erreichbar',
+          style: Theme.of(context).textTheme.headlineSmall,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          errorMessage ??
+              'Die Runtime unter dieser Adresse antwortet gerade nicht.',
+          style: Theme.of(context).textTheme.bodyMedium,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        FilledButton.icon(
+          onPressed: () => context.read<RuntimeConnectionCubit>().connect(
+            endpoint.displayAddress,
+          ),
+          icon: const Icon(Icons.refresh),
+          label: const Text('Erneut versuchen'),
+        ),
       ],
     );
   }

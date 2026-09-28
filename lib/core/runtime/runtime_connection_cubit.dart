@@ -7,6 +7,7 @@ import 'runtime_connection_state.dart';
 import 'runtime_credential_store.dart';
 import 'runtime_endpoint.dart';
 import 'runtime_endpoint_store.dart';
+import 'runtime_kind_store.dart';
 import 'runtime_login_client.dart';
 import 'runtime_onboarding_client.dart';
 
@@ -17,8 +18,11 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     this._loginClient,
     this._availability, {
     required this.onboarding,
+    required this.kindStore,
+    bool isWeb = kIsWeb,
     Future<void> Function()? onSignedOut,
-  }) : _onSignedOut = onSignedOut ?? _noOp,
+  }) : _isWeb = isWeb,
+       _onSignedOut = onSignedOut ?? _noOp,
        super(const RuntimeConnectionLoading());
 
   final RuntimeEndpointStore _endpoints;
@@ -27,8 +31,20 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
   final RuntimeAvailability _availability;
   final RuntimeOnboardingClient onboarding;
 
+  /// Für den vollständigen Reset beim Abmelden (siehe [signOut]).
+  final RuntimeKindStore kindStore;
+
+  /// Entscheidet, ob ein nicht erreichbarer Endpunkt als
+  /// [RuntimeConnectionUnreachable] (Web — kein Adressfeld, die Origin
+  /// steht fest) oder als [RuntimeConnectionNeedsAddress] (nativ — hier
+  /// lässt sich tatsächlich etwas eingeben) gemeldet wird. Als Parameter
+  /// statt direkt `kIsWeb`, damit beide Zweige testbar sind.
+  final bool _isWeb;
+
   /// Schließt die offene Realtime-Verbindung (siehe
-  /// `WorkspaceRealtimeChannel`) — optional, weil diese vor dem allerersten
+  /// `WorkspaceRealtimeChannel`) und baut anschließend die gesamte
+  /// Anwendung neu auf (DI-Reset + erneuter `runApp`-Aufruf zurück zur
+  /// Cloud/Standalone-Auswahl) — optional, weil diese vor dem allerersten
   /// Verbindungsaufbau (und damit vor der DI-Konfiguration) noch nicht
   /// existiert und `RuntimeConnectionGate` sie erst dann bereitstellen kann.
   final Future<void> Function() _onSignedOut;
@@ -37,8 +53,12 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
 
   Future<void> initialize(RuntimeEndpoint defaultEndpoint) async {
     try {
-      final endpoint = await _endpoints.load() ?? defaultEndpoint;
-      await connect(endpoint.displayAddress);
+      final saved = await _endpoints.load();
+      final endpoint = saved ?? defaultEndpoint;
+      // Kein gespeicherter Endpunkt heißt: Der Vorgabewert (127.0.0.1:8090)
+      // wird still versucht — "implizit localhost testen". Schlägt das
+      // fehl, ist das kein Fehler des Nutzers, also keine Fehlermeldung.
+      await connect(endpoint.displayAddress, isAutomaticProbe: saved == null);
     } on Object {
       emit(
         RuntimeConnectionNeedsAddress(
@@ -50,11 +70,11 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     }
   }
 
-  Future<void> connect(String address) async {
+  Future<void> connect(String address, {bool isAutomaticProbe = false}) async {
     emit(RuntimeConnectionConnecting(address));
     final endpoint = _endpointFrom(address);
     if (endpoint == null) return;
-    await _connectTo(endpoint, address);
+    await _connectTo(endpoint, address, isAutomaticProbe: isAutomaticProbe);
   }
 
   RuntimeEndpoint? _endpointFrom(String address) {
@@ -73,7 +93,11 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     }
   }
 
-  Future<void> _connectTo(RuntimeEndpoint endpoint, String address) async {
+  Future<void> _connectTo(
+    RuntimeEndpoint endpoint,
+    String address, {
+    required bool isAutomaticProbe,
+  }) async {
     try {
       await _availability.check(endpoint);
       if (!await onboarding.hasActiveLicense(endpoint)) {
@@ -82,19 +106,42 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
       }
       await _continueAfterLicense(endpoint);
     } on RuntimeOnboardingFailure catch (error) {
-      emit(RuntimeConnectionNeedsPasswordSetup(endpoint, errorMessage: error.message));
+      _emitUnreachable(
+        endpoint,
+        address,
+        error.message,
+        isAutomaticProbe: isAutomaticProbe,
+      );
     } on Object catch (error, stackTrace) {
       _reportFailure('connect', error, stackTrace);
-      emit(
-        RuntimeConnectionNeedsAddress(
-          address,
-          errorMessage: runtimeConnectionFailureMessageFor(
-            error,
-            isSecure: endpoint.isSecure,
-          ),
-        ),
+      _emitUnreachable(
+        endpoint,
+        address,
+        runtimeConnectionFailureMessageFor(error, isSecure: endpoint.isSecure),
+        isAutomaticProbe: isAutomaticProbe,
       );
     }
+  }
+
+  void _emitUnreachable(
+    RuntimeEndpoint endpoint,
+    String address,
+    String? errorMessage, {
+    required bool isAutomaticProbe,
+  }) {
+    if (_isWeb) {
+      // Web hat kein Adressfeld, in das man "still" zurückfallen könnte —
+      // die Meldung bleibt deshalb immer sichtbar, auch beim automatischen
+      // ersten Versuch.
+      emit(RuntimeConnectionUnreachable(endpoint, errorMessage: errorMessage));
+      return;
+    }
+    emit(
+      RuntimeConnectionNeedsAddress(
+        address,
+        errorMessage: isAutomaticProbe ? null : errorMessage,
+      ),
+    );
   }
 
   Future<void> login(RuntimeEndpoint endpoint, String password) async {
@@ -135,21 +182,33 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     }
   }
 
-  Future<void> setPassword(
-    RuntimeEndpoint endpoint,
-    String password, {
-    String code = '',
-  }) async {
-    // Der Einrichtungszustand des vorherigen Bildschirms muss über den
-    // Fehlerfall hinweg erhalten bleiben, sonst verschwänden Code-Feld und
-    // Adressliste ausgerechnet nach einem Fehlversuch.
-    final previous = state;
-    final requiresCode = previous is RuntimeConnectionNeedsPasswordSetup
-        ? previous.requiresCode
-        : false;
-    final addresses = previous is RuntimeConnectionNeedsPasswordSetup
-        ? previous.addresses
-        : const <String>[];
+  /// Schließt den Kopplungscode-Schritt lokal ab — der Code wird erst beim
+  /// finalen [setPassword] zusammen mit dem Passwort an die Runtime
+  /// geschickt, es gibt hier also keinen eigenen Netzwerk-Aufruf.
+  void submitSetupCode(RuntimeEndpoint endpoint, String code) {
+    final trimmed = code.trim();
+    if (trimmed.isEmpty) {
+      emit(
+        RuntimeConnectionNeedsSetupCode(
+          endpoint,
+          errorMessage:
+              'Bitte gib den Einrichtungscode aus dem Start-Log der Runtime ein.',
+        ),
+      );
+      return;
+    }
+    emit(RuntimeConnectionNeedsPasswordSetup(endpoint, code: trimmed));
+  }
+
+  /// Zurück zum Kopplungscode-Schritt — etwa wenn sich beim Passwort
+  /// herausstellt, dass der zuvor eingegebene Code falsch war.
+  void changeSetupCode(RuntimeEndpoint endpoint) {
+    emit(RuntimeConnectionNeedsSetupCode(endpoint));
+  }
+
+  Future<void> setPassword(RuntimeEndpoint endpoint, String password) async {
+    final current = state;
+    final code = current is RuntimeConnectionNeedsPasswordSetup ? current.code : '';
     emit(RuntimeConnectionConnecting(endpoint.displayAddress));
     try {
       await onboarding.setPassword(endpoint, password, code: code);
@@ -158,9 +217,8 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
       emit(
         RuntimeConnectionNeedsPasswordSetup(
           endpoint,
+          code: code,
           errorMessage: error.message,
-          requiresCode: requiresCode,
-          addresses: addresses,
         ),
       );
     } on Object catch (error, stackTrace) {
@@ -168,30 +226,27 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
       emit(
         RuntimeConnectionNeedsPasswordSetup(
           endpoint,
+          code: code,
           errorMessage: 'Das Passwort konnte nicht gesetzt werden.',
-          requiresCode: requiresCode,
-          addresses: addresses,
         ),
       );
     }
   }
 
-  /// Verwirft die gespeicherte Sitzung dieser Runtime und verlangt beim
-  /// nächsten Zugriff wieder das Passwort — die App selbst (DI, Router,
-  /// aktueller Bildschirm) bleibt unangetastet, da der bereits konfigurierte
-  /// `WorkspaceApiClient` seinen Auth-Header ohnehin bei jeder Anfrage neu
-  /// aus dem Credential-Store liest (siehe
-  /// `standalone_dependency_configuration.dart`). Schließt zusätzlich die
-  /// offene Realtime-Verbindung — sonst bliebe ein Socket mit ungültig
-  /// gewordenem Token bestehen und würde bei jedem Reconnect-Versuch erneut
-  /// scheitern (siehe `WorkspaceRealtimeChannel`).
+  /// Vollständiger Reset — Sitzung, gespeicherte Adresse und Varianten-Wahl
+  /// werden vergessen, wie bei einer frischen Installation. `_onSignedOut`
+  /// übernimmt anschließend den Wiederaufbau (DI-Reset + `runApp` zurück
+  /// zur Cloud/Standalone-Auswahl); ein eigener Zielzustand ist hier nicht
+  /// mehr nötig, weil dieser Cubit dabei ohnehin geschlossen wird.
   Future<void> signOut() async {
     final current = state;
     if (current is! RuntimeConnectionReady) return;
     try {
       await _credentials.clearSessionToken(current.endpoint.address);
+      await _endpoints.clear();
+      await kindStore.clear();
+      emit(const RuntimeConnectionLoading());
       await _onSignedOut();
-      emit(RuntimeConnectionNeedsPassword(current.endpoint));
     } on Object catch (error, stackTrace) {
       _reportFailure('signOut', error, stackTrace);
       emit(
@@ -217,11 +272,7 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     final status = await onboarding.setupStatus(endpoint);
     if (status.needsSetup) {
       emit(
-        RuntimeConnectionNeedsPasswordSetup(
-          endpoint,
-          requiresCode: status.requiresCode,
-          addresses: status.addresses,
-        ),
+        RuntimeConnectionNeedsSetupCode(endpoint, addresses: status.addresses),
       );
       return;
     }

@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:syscat2/core/runtime/runtime_kind_preferences.dart';
-import 'package:syscat2/core/runtime/runtime_kind_store.dart';
 import 'package:syscat2/core/runtime/runtime_profile.dart';
+import 'package:syscat2/core/runtime/runtime_variant_switcher.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/widgets/runtime_variant_switch_hint.dart';
 
 import 'settings_section.dart';
 
-/// Wechselt die Betriebsvariante (Cloud oder eigene lokale Runtime). Die
-/// Wahl wird persistiert und überschreibt ab dem nächsten Start den
-/// Build-Vorgabewert `NOVOOA_RUNTIME`. Ein Wechsel im laufenden Prozess ist
-/// bewusst nicht vorgesehen: Firebase-Initialisierung, DI-Graph und
-/// Anmeldung hängen an der Variante — ein Neustart ist der ehrlichere Weg
-/// als ein halb umgebauter Zustand.
+/// Wechselt die Betriebsvariante (Cloud oder eigene lokale Runtime) zur
+/// Laufzeit — kein Neustart nötig (siehe `RuntimeVariantSwitcher`).
 ///
 /// Wird in beiden Einstellungs-Oberflächen eingebunden (Cloud: Profil-Tab,
 /// Standalone: Allgemein-Tab), damit der Rückweg aus jeder Variante
@@ -22,24 +16,21 @@ class RuntimeVariantSection extends StatefulWidget {
   const RuntimeVariantSection({
     super.key,
     required this.currentKind,
-    this.store,
+    this.switcher,
   });
 
   final RuntimeKind currentKind;
 
-  /// Nur für Tests überschrieben; im Betrieb greift der
-  /// `SharedPreferences`-Speicher.
-  final RuntimeKindStore? store;
+  /// Nur für Tests überschrieben; im Betrieb kommt der Switcher aus
+  /// `RuntimeVariantSwitcherScope`.
+  final RuntimeVariantSwitcher? switcher;
 
   @override
   State<RuntimeVariantSection> createState() => _RuntimeVariantSectionState();
 }
 
 class _RuntimeVariantSectionState extends State<RuntimeVariantSection> {
-  late final RuntimeKindStore _store =
-      widget.store ?? RuntimeKindPreferences(SharedPreferencesAsync());
-  RuntimeKind? _savedKind;
-  bool _isSaving = false;
+  bool _isSwitching = false;
 
   @override
   Widget build(BuildContext context) {
@@ -52,15 +43,12 @@ class _RuntimeVariantSectionState extends State<RuntimeVariantSection> {
       title: 'Betriebsvariante',
       description:
           'Legt fest, ob novooa gegen die Cloud oder gegen eine eigene '
-          'lokale Runtime arbeitet.',
+          'lokale Runtime arbeitet. Der Wechsel gilt sofort.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           RadioGroup<RuntimeKind>(
-            groupValue: _savedKind ?? widget.currentKind,
-            // Kein Deaktivieren während des Speicherns: `RadioGroup`
-            // verlangt einen Handler. Den Doppelklick-Schutz übernimmt
-            // `_select` selbst.
+            groupValue: widget.currentKind,
             onChanged: (kind) => _select(kind!),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -69,27 +57,23 @@ class _RuntimeVariantSectionState extends State<RuntimeVariantSection> {
               ],
             ),
           ),
-          if (_pendingRestart) ...[
+          if (_isSwitching) ...[
             const SizedBox(height: AppSpacing.md),
-            const _RestartHint(),
+            const _SwitchingHint(),
           ],
         ],
       ),
     );
   }
 
-  bool get _pendingRestart =>
-      _savedKind != null && _savedKind != widget.currentKind;
-
   Future<void> _select(RuntimeKind kind) async {
-    if (_isSaving || kind == (_savedKind ?? widget.currentKind)) return;
-    setState(() => _isSaving = true);
-    try {
-      await _store.save(kind);
-      if (mounted) setState(() => _savedKind = kind);
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
-    }
+    if (_isSwitching || kind == widget.currentKind) return;
+    setState(() => _isSwitching = true);
+    final switcher = widget.switcher ?? RuntimeVariantSwitcherScope.of(context);
+    // Kein `if (mounted)`-Schutz nötig für die Zeit danach: `switchTo`
+    // ersetzt die gesamte Anwendung per `runApp` — dieses Widget existiert
+    // im Erfolgsfall danach gar nicht mehr.
+    await switcher.switchTo(kind);
   }
 }
 
@@ -121,8 +105,8 @@ class _RuntimeKindOption extends StatelessWidget {
   };
 }
 
-class _RestartHint extends StatelessWidget {
-  const _RestartHint();
+class _SwitchingHint extends StatelessWidget {
+  const _SwitchingHint();
 
   @override
   Widget build(BuildContext context) {
@@ -136,9 +120,15 @@ class _RestartHint extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
-            Icon(Icons.restart_alt, color: colors.onSurfaceVariant),
+            SizedBox.square(
+              dimension: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: colors.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(width: AppSpacing.sm),
-            const Expanded(child: Text(runtimeRestartHint)),
+            const Expanded(child: Text(runtimeVariantSwitchingHint)),
           ],
         ),
       ),

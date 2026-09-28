@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:syscat2/core/runtime/runtime_kind_preferences.dart';
-import 'package:syscat2/core/runtime/runtime_kind_store.dart';
 import 'package:syscat2/core/runtime/runtime_profile.dart';
+import 'package:syscat2/core/runtime/runtime_variant_switcher.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
-/// Der Satz, den beide Wechsel-Oberflächen zeigen — bewusst eine Quelle,
-/// damit die Formulierung nicht auseinanderläuft.
-const runtimeRestartHint =
-    'Gespeichert. Starte novooa neu, damit die Variante übernommen wird.';
+/// Der Satz, den beide Wechsel-Oberflächen während des Wechsels zeigen —
+/// bewusst eine Quelle, damit die Formulierung nicht auseinanderläuft.
+const runtimeVariantSwitchingHint = 'Variante wird gewechselt …';
 
 /// Kompakter Wechsel der Betriebsvariante **vor** der Anmeldung.
 ///
@@ -16,20 +13,23 @@ const runtimeRestartHint =
 /// erreichbar ist: Wer zu einer eigenen Runtime wechseln will, *weil* er
 /// kein Cloud-Konto hat, käme dort nie an. Zeigt nur die jeweils andere
 /// unterstützte Variante an; gibt es keine (heute: Web, das noch kein
-/// Standalone kann), blendet sich der Hinweis aus.
+/// Standalone kann), blendet sich der Hinweis aus. Der Wechsel selbst
+/// passiert zur Laufzeit — kein Neustart nötig (siehe
+/// `RuntimeVariantSwitcher`).
 class RuntimeVariantSwitchHint extends StatefulWidget {
   const RuntimeVariantSwitchHint({
     super.key,
     required this.currentKind,
     this.isEnabled = true,
-    this.store,
+    this.switcher,
   });
 
   final RuntimeKind currentKind;
   final bool isEnabled;
 
-  /// Nur für Tests überschrieben.
-  final RuntimeKindStore? store;
+  /// Nur für Tests überschrieben; im Betrieb kommt der Switcher aus
+  /// `RuntimeVariantSwitcherScope`.
+  final RuntimeVariantSwitcher? switcher;
 
   @override
   State<RuntimeVariantSwitchHint> createState() =>
@@ -37,15 +37,13 @@ class RuntimeVariantSwitchHint extends StatefulWidget {
 }
 
 class _RuntimeVariantSwitchHintState extends State<RuntimeVariantSwitchHint> {
-  late final RuntimeKindStore _store =
-      widget.store ?? RuntimeKindPreferences(SharedPreferencesAsync());
-  bool _didSwitch = false;
+  bool _isSwitching = false;
 
   @override
   Widget build(BuildContext context) {
     final target = _targetKind;
     if (target == null) return const SizedBox.shrink();
-    if (_didSwitch) return const _RestartNotice();
+    if (_isSwitching) return const _SwitchingNotice();
     return Wrap(
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
@@ -82,13 +80,17 @@ class _RuntimeVariantSwitchHintState extends State<RuntimeVariantSwitchHint> {
   };
 
   Future<void> _switchTo(RuntimeKind target) async {
-    await _store.save(target);
-    if (mounted) setState(() => _didSwitch = true);
+    setState(() => _isSwitching = true);
+    final switcher = widget.switcher ?? RuntimeVariantSwitcherScope.of(context);
+    // Kein `if (mounted)`-Schutz nötig für die Zeit danach: `switchTo`
+    // ersetzt die gesamte Anwendung per `runApp` — dieses Widget existiert
+    // im Erfolgsfall danach gar nicht mehr.
+    await switcher.switchTo(target);
   }
 }
 
-class _RestartNotice extends StatelessWidget {
-  const _RestartNotice();
+class _SwitchingNotice extends StatelessWidget {
+  const _SwitchingNotice();
 
   @override
   Widget build(BuildContext context) {
@@ -96,14 +98,17 @@ class _RestartNotice extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.restart_alt, size: 18, color: colors.onSurfaceVariant),
-        const SizedBox(width: AppSpacing.xs),
-        Flexible(
-          child: Text(
-            runtimeRestartHint,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
+        SizedBox.square(
+          dimension: 16,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: colors.onSurfaceVariant,
           ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Text(
+          runtimeVariantSwitchingHint,
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
       ],
     );
