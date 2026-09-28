@@ -10,15 +10,20 @@
             "request": "launch",
             "type": "dart",
             "deviceId": "macos",
-            "toolArgs": [
-                "--dart-define=NOVOOA_RUNTIME=standalone"
-            ]
+            // "toolArgs": [
+            //     "--dart-define=NOVOOA_RUNTIME=standalone"
+            // ]
         },
         {
+            // Ohne diesen Define wäre das Standalone: im Web entscheidet die
+            // Herkunft, und "localhost" ist keine Cloud-Domain.
             "name": "novooa cloud",
             "request": "launch",
             "type": "dart",
-            "deviceId": "chrome"
+            "deviceId": "chrome",
+            "toolArgs": [
+                "--dart-define=NOVOOA_RUNTIME=cloud"
+            ]
         },
         {
             "name": "syscat2 (release mode)",

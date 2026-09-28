@@ -134,6 +134,7 @@ npm run deploy         # firebase deploy --only functions
 | Bereich               | Datei                                                              | Inhalt                                                  |
 | --------------------- | ------------------------------------------------------------------ | ------------------------------------------------------- |
 | Cross-cutting         | [`docs/architecture.md`](./docs/architecture.md)                   | Datenmodell, Auth, Persistenz, Trigger, Telemetrie      |
+| Betriebsvarianten     | [`docs/architecture/betriebsvarianten.md`](./docs/architecture/betriebsvarianten.md) | Clients × Cloud/Standalone: Blocker und Umsetzungsschritte |
 | Feature „Aufgabe"     | [`docs/features/aufgabe.md`](./docs/features/aufgabe.md)           | Task Builder — Domain, UI, Genkit-Flows, DoD            |
 | Aufgabe-Ausfuehrung    | [`docs/features/aufgabe-ausfuehrung.md`](./docs/features/aufgabe-ausfuehrung.md) | Runner, Freigaben, lokale Ausfuehrung |
 | Aufgabe-Executoren     | [`docs/features/aufgabe-executoren.md`](./docs/features/aufgabe-executoren.md) | Modellprovider und Executor-Verhalten |

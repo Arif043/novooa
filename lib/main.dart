@@ -6,7 +6,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/di/service_locator.dart';
+import 'core/runtime/runtime_kind_preferences.dart';
 import 'core/runtime/runtime_profile.dart';
 import 'core/firebase/firebase_emulator_config.dart';
 import 'core/firebase/firestore_web_cache.dart';
@@ -43,7 +45,7 @@ Future<void> main() =>
 
 Future<void> _startApplication() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final runtimeProfile = RuntimeProfile.fromEnvironment();
+  final runtimeProfile = await _resolveRuntimeProfile();
   final pushFirebaseEnabled = runtimeProfile.pushNotificationsEnabled
       ? await _initializeFirebase(runtimeProfile)
       : false;
@@ -78,6 +80,29 @@ Future<void> _startApplication() async {
       pushFirebaseEnabled: pushFirebaseEnabled,
     ),
   );
+}
+
+/// Nativ hat eine gespeicherte Variantenwahl Vorrang vor dem Vorgabewert.
+/// Im Web gibt es keine Wahl: dort bestimmt die Herkunft die Variante, und
+/// `RuntimeKindPreferences` verwirft einen widersprechenden gespeicherten
+/// Wert von sich aus (siehe `RuntimeProfile.supports`).
+///
+/// Läuft bewusst vor der Firebase-Initialisierung, weil diese von der
+/// Variante abhängt. Ein Fehler im Einstellungsspeicher darf den Start nicht
+/// verhindern — dann greift ebenfalls der Vorgabewert.
+Future<RuntimeProfile> _resolveRuntimeProfile() async {
+  var kind = RuntimeProfile.defaultKind;
+  try {
+    kind = await RuntimeKindPreferences(SharedPreferencesAsync()).load() ?? kind;
+  } catch (error, stackTrace) {
+    logException(
+      message: 'Gespeicherte Betriebsvariante konnte nicht gelesen werden.',
+      error: error,
+      stackTrace: stackTrace,
+      name: 'runtime',
+    );
+  }
+  return RuntimeProfile.forKind(kind);
 }
 
 Future<void> _configureCloudPlatform() async {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/runtime/runtime_profile.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/core/widgets/runtime_variant_switch_hint.dart';
 
 import '../cubits/auth_form_cubit.dart';
 import '../cubits/auth_form_state.dart';
@@ -20,6 +22,14 @@ class AuthFormFooter extends StatelessWidget {
         _GoogleButton(isEnabled: !state.isSubmitting),
         const SizedBox(height: AppSpacing.lg),
         _ModeHint(mode: state.mode, isEnabled: !state.isSubmitting),
+        // Die Variantenwahl in den Einstellungen liegt hinter dem Login.
+        // Wer zur eigenen Runtime wechseln will, weil er kein Cloud-Konto
+        // hat, braucht den Weg deshalb schon hier.
+        const SizedBox(height: AppSpacing.sm),
+        RuntimeVariantSwitchHint(
+          currentKind: RuntimeKind.cloud,
+          isEnabled: !state.isSubmitting,
+        ),
       ],
     );
   }
@@ -97,7 +107,7 @@ class _ModeHint extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: AppSpacing.xs,
       children: [
-        Text('Du nutzt novooa Standalone?', style: Theme.of(context).textTheme.bodyMedium),
+        Text(_prefix, style: Theme.of(context).textTheme.bodyMedium),
         TextButton(
           onPressed: isEnabled ? () => _changeMode(context) : null,
           child: Text(_action),

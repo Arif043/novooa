@@ -14,6 +14,7 @@ pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
 | Backend        | [`backend-struktur.md`](./backend-struktur.md) | Functions-Struktur, Ports, Cloud-/Local-Trennung |
 | Executor-Outputs | [`node-executor-outputs.md`](./node-executor-outputs.md) | Output-Vertraege der Workflow-Executoren |
 | Lokale Runtime | [`local-runtime.md`](./local-runtime.md) | Docker-Deployment, Datenhaltung, Ports und Relay |
+| Betriebsvarianten | [`architecture/betriebsvarianten.md`](./architecture/betriebsvarianten.md) | Clients × Cloud/Standalone: Ist-Zustand, Blocker, Umsetzung |
 | Features       | [`features/`](./features/)         | Ein Deep-Dive pro Feature                               |
 
 ## Aktuelle Features

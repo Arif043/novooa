@@ -147,6 +147,11 @@ Future<void> configureDependencies({RuntimeProfile? runtimeProfile}) async {
   _configureCloudDependencies();
 }
 
+/// Leert den Container, damit [configureDependencies] mit einer anderen
+/// Variante erneut laufen kann. Beide Graphen registrieren dieselben
+/// Interfaces; ohne Reset kollidierte die zweite Registrierung.
+Future<void> resetDependencies() => serviceLocator.reset();
+
 void _configureCloudDependencies() {
   serviceLocator
     ..registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance)

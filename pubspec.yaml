@@ -84,6 +84,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+  # Liefert `InMemorySharedPreferencesAsync` für Tests der
+  # `SharedPreferencesAsync`-gestützten Einstellungsspeicher.
+  shared_preferences_platform_interface: ^2.4.2
+
 
 flutter_launcher_icons:
   android: "launcher_icon"
