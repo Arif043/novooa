@@ -247,22 +247,108 @@ Ebenfalls bewusst: **kein erzwungener Auswahldialog beim Erststart.** Der
 `dart-define`-Vorgabewert greift weiterhin, damit bestehende Builds, CI und
 die Erstlauf-Erfahrung unverändert bleiben.
 
-### Schritt 2 — CORS und Static-Serving in der lokalen Runtime
+### Schritt 2 — Die Runtime liefert die App aus und lässt sich von jedem Client einrichten — **umgesetzt**
 
-- `functions/src/shared/local/local-runtime-http-server.ts`: Antwortfunktion
-  um CORS-Header erweitern, OPTIONS-Preflight vor dem Router behandeln.
-  Erlaubte Origins über Env konfigurierbar, Default restriktiv — die Runtime
-  darf sich nicht still für fremde Origins öffnen.
-- Neuer `LocalRuntimeStaticFileHandler` als letztes Glied der bestehenden
-  Chain-of-Responsibility (`local-runtime-request-router.ts`), vor dem 404:
-  liefert das Web-Build aus, mit SPA-Fallback auf `index.html`. Verzeichnis
-  per Env, damit das Image den Build mitbringen kann.
-- `functions/src/shared/local/local-runtime-realtime-server.ts`:
-  `Origin`-Prüfung beim WebSocket-Upgrade ergänzen.
-- `docker-compose.local.yaml` / Image: Web-Build bereitstellen.
-- Tests: CORS-Header und Preflight; Static-Auslieferung inklusive
-  SPA-Fallback; unveränderte 404-Antwort für unbekannte `/v1/*`-Pfade;
-  Auslieferung bleibt hinter dem Lizenz- und Session-Gate korrekt sortiert.
+Neue Umgebungsvariablen:
+
+| Variable | Wirkung | Ohne Angabe |
+| --- | --- | --- |
+| `LOCAL_RUNTIME_WEB_DIRECTORY` | Verzeichnis des Flutter-Web-Builds, das die Runtime ausliefert | Die Runtime bleibt eine reine API — bestehende Installationen verhalten sich unverändert |
+| `LOCAL_RUNTIME_ALLOWED_ORIGINS` | Kommagetrennte Browser-Herkünfte, die CORS-Freigabe erhalten | Keine fremde Herkunft erlaubt |
+
+
+Ziel: Eine nackt installierte Runtime ist **ohne nativen Client und ohne
+SSH** einzurichten — auch headless auf VPS, NAS oder Raspberry Pi.
+
+#### 2a — Kopplungscode statt Netzwerkgrenze
+
+Heute ist `/v1/setup` dadurch geschützt, dass der Setup-Port nur an
+`127.0.0.1` des Docker-Hosts veröffentlicht wird. Der Vertrauensanker lautet
+also „wer Zugriff auf den Host hat, besitzt die Runtime“ — richtig, aber es
+schliesst headless-Installationen von der Einrichtung aus.
+
+Stattdessen erzeugt die Runtime beim ersten Start ein zufälliges
+**Setup-Geheimnis** und schreibt es in ihr Log (die Stelle existiert bereits:
+`local_runtime.started` in `local-runtime-entrypoint.ts`). `/v1/setup` wird
+damit auch auf dem regulären Port erreichbar, verlangt dort aber diesen Code.
+
+Der Vertrauensanker bleibt derselbe — `docker compose logs` setzt
+Host-Zugriff voraus —, aber die *Bedienung* löst sich davon: Jeder Client
+kann einrichten, solange jemand den Code vorliest. Es ist dasselbe Modell,
+das `/v1/license/*` hier schon verwendet: geschützt durch **Besitz eines
+Geheimnisses**, nicht durch **Netzwerkposition**.
+
+Entschieden:
+
+- Der Code verfällt nach erfolgreicher Einrichtung (er hat dann keinen Zweck
+  mehr und wäre nur noch Angriffsfläche).
+- Port `8091` bleibt als loopback-gebundener Rückfallweg bestehen — er
+  kostet nichts und rettet den Fall „Code verloren“. Dort ist weiterhin
+  **kein** Code nötig, weil die Netzwerkgrenze ihn ersetzt.
+
+#### 2b — Static-Serving
+
+Neuer `LocalRuntimeStaticFileHandler` als letztes Glied der bestehenden
+Chain-of-Responsibility (`local-runtime-request-router.ts`), vor dem 404:
+liefert das Web-Build aus, mit SPA-Fallback auf `index.html`. Verzeichnis
+per Env, damit das Image den Build mitbringen kann. Damit ist die Setup-UI
+kein Sonderfall, sondern schlicht der erste Bildschirm der normalen Web-App.
+
+#### 2c — CORS, eng zugeschnitten
+
+Im vorgesehenen Betrieb (Runtime liefert die App aus) wird CORS **nicht
+gebraucht** — und native Clients ignorieren es ohnehin, es ist ein reiner
+Browser-Mechanismus. Nötig ist es allein für die **lokale Entwicklung**:
+`flutter run -d chrome` läuft auf `localhost:59193`, die Runtime auf `:8090`
+— verschiedene Ports sind verschiedene Origins.
+
+Deshalb: erlaubte Origins über Env, **Standard leer**. Im Betrieb ist nichts
+offen, in der Entwicklung setzt man gezielt eine Origin. Kein pauschales
+`*`. Analog eine `Origin`-Prüfung beim WebSocket-Upgrade in
+`local-runtime-realtime-server.ts`, die es heute nicht gibt.
+
+#### 2d — Adressen anzeigen statt abfragen
+
+Die Setup-UI zeigt die Adressen, unter denen die Runtime erreichbar ist
+(Netzwerk-Interfaces über `node:os`; die Runtime ermittelt sie heute nicht).
+
+Bewusst **kein** Eingabefeld für die eigene Domain: Ein eingetippter Wert
+wird bei jedem DHCP-Wechsel still falsch, und niemand merkt es, bis sich
+jemand nicht mehr verbinden kann. Eine angezeigte Liste ist immer aktuell
+und spart das fehleranfällige Abtippen.
+
+Die Runtime braucht ihre eigene Adresse auch sonst nirgends: Sie baut
+keinen einzigen absoluten Link auf sich selbst, hat keine
+`publicUrl`-Konfiguration, und Microsoft-OAuth liegt vollständig im
+Cloud-Teil (`infrastructure/firebase/`). Same Origin macht die Zuordnung
+selbstkonfigurierend.
+
+#### Umsetzungsdetails
+
+- `local-runtime-setup-code.ts`: Der Code lebt **nur im Prozessspeicher** —
+  kein Geheimnis at rest, keine Migration, und er verfällt zusätzlich bei
+  jedem Neustart.
+- `/v1/setup` steht in `unauthenticatedPaths` des Session-Gates: Man braucht
+  das Passwort, um eine Session zu bekommen — Henne und Ei. Dort schützt
+  stattdessen der Code.
+- Die Reihenfolge bleibt Lizenz → Passwort: Vor der Aktivierung existiert
+  der Setup-Handler noch gar nicht (er hängt an der erst dann erzeugten
+  Datenbank), und das Lizenz-Gate blockiert den regulären Port ohnehin.
+- Die angezeigten Adressen übernehmen den Port aus dem `Host`-Header der
+  Anfrage. Im Container lauscht die Runtime auf 8080, Clients sprechen aber
+  den veröffentlichten 8090 an — nur der Browser weiß verlässlich, welcher
+  es war.
+- Statische Dateien werden erst geprüft, wenn **kein** Handler zuständig
+  war. Ein Endpunkt lässt sich dadurch nicht von einer Datei überschatten,
+  und `/v1/*` sowie `/healthz` sind zusätzlich ausgenommen.
+
+#### Tests
+
+38 neue Tests: Kopplungscode (Erzeugung, Normalisierung beim Abtippen,
+Verfall); Setup mit gültigem, fehlendem, falschem und verbrauchtem Code;
+loopback-Weg ohne Code; Static-Auslieferung mit SPA-Fallback,
+Content-Types, Pfad-Traversal und Endpunkt-Abschattung; CORS-Freigabe nur
+bei konfigurierter Herkunft, Same Origin ohne Header, kein pauschales `*`.
 
 ### Schritt 3 — Web × Standalone freischalten — **teilweise vorgezogen**
 

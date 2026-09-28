@@ -7,11 +7,13 @@ import {type LocalRuntimeRealtimeGateway} from "./local-runtime-realtime-server.
 import {type LocalRuntimeRealtimeSubscriber} from "./local-runtime-realtime-notifier.js";
 import {ensureLocalRuntimeWorkspace, type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
+import {type LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
 
 export type LocalRuntimeApplicationOptions = {
   database: SqliteLocalSqlDatabase;
   runtimeRoot: string;
   localMasterKey: string;
+  setupCode: LocalRuntimeSetupCode;
   isLicenseActive: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;
   activeLicenseActivation: () => RuntimeLicenseActivation | null;
@@ -48,9 +50,13 @@ implements LocalRuntimeRequestHandler, LocalRuntimeRealtimeGateway {
   }
 
   /**
-   * Nur über den separaten, host-loopback-gebundenen Setup-Server erreicht
-   * (siehe local-runtime-entrypoint.ts) — niemals über den regulären,
-   * öffentlich erreichbaren API-Port.
+   * Der Weg über den separaten, host-loopback-gebundenen Setup-Server
+   * (siehe local-runtime-entrypoint.ts). Dort genügt die Netzwerkgrenze als
+   * Schutz, ein Kopplungscode ist nicht nötig.
+   *
+   * Über den regulären Port ist `/v1/setup` ebenfalls erreichbar — dort
+   * aber über eine zweite Handler-Instanz im Router, die den Code verlangt
+   * (siehe `createLocalRuntimeComposition`).
    */
   async handleSetup(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
     return this.runtime?.setupHandler.handle(request) ?? null;

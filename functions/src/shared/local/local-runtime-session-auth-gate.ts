@@ -7,14 +7,18 @@ import {
 } from "./local-runtime-http-server.js";
 import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 
-const unauthenticatedPaths = new Set(["/v1/auth/login"]);
+const unauthenticatedPaths = new Set(["/v1/auth/login", "/v1/setup"]);
 
 /**
- * Verlangt für jede Anfrage außer `/v1/auth/login` ein gültiges
- * `Authorization: Bearer <token>`. Wrapt den fertigen Composition-Router —
- * Passwort-Pflicht gilt seit dieser Änderung ausnahmslos, auch im LAN
- * (bewusster Breaking Change). `/v1/setup` läuft auf einem eigenen,
- * host-loopback-gebundenen Port und läuft nie durch dieses Gate.
+ * Verlangt für jede Anfrage ein gültiges `Authorization: Bearer <token>`.
+ * Wrapt den fertigen Composition-Router — Passwort-Pflicht gilt
+ * ausnahmslos, auch im LAN (bewusster Breaking Change).
+ *
+ * Zwei Ausnahmen, beide notwendig und anders geschützt:
+ * - `/v1/auth/login` erzeugt die Session überhaupt erst.
+ * - `/v1/setup` setzt das Passwort, das man für eine Session bräuchte —
+ *   Henne und Ei. Dort schützt stattdessen der Kopplungscode aus dem
+ *   Start-Log (siehe `LocalRuntimeSetupHttpHandler`).
  */
 export class LocalRuntimeSessionAuthGate
 implements LocalRuntimeRequestHandler, LocalRuntimeStreamRequestHandler {

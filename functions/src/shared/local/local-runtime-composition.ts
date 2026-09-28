@@ -56,6 +56,7 @@ import {LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credenti
 import {LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 import {LocalRuntimeLoginHttpHandler} from "./local-runtime-login-http-handler.js";
 import {LocalRuntimeSetupHttpHandler} from "./local-runtime-setup-http-handler.js";
+import {type LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
 import {LocalRuntimeSessionAuthGate} from "./local-runtime-session-auth-gate.js";
 import {LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
 import {LocalRuntimeRealtimeTicketStore} from "./local-runtime-realtime-ticket-store.js";
@@ -102,6 +103,8 @@ export type LocalRuntimeCompositionOptions = {
   runtimeRoot: string;
   workspace: LocalRuntimeWorkspace;
   localMasterKey: string;
+  /** Prozessweit, im Entrypoint erzeugt — beide Setup-Wege teilen ihn. */
+  setupCode: LocalRuntimeSetupCode;
   isLicenseActive?: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;
   activeLicenseActivation: () => RuntimeLicenseActivation | null;
@@ -180,6 +183,14 @@ export function createLocalRuntimeComposition(
   const sessionStore = new LocalRuntimeSessionStore(options.database);
   const credentialStore = new LocalRuntimeAccessCredentialStore(options.database);
   const router = new LocalRuntimeRequestRouter([
+    // Auf dem regulären Port ersetzt der Kopplungscode die Session — sonst
+    // liesse sich das Passwort nie setzen, das man für eine Session
+    // bräuchte. Steht deshalb auch in `unauthenticatedPaths` des Gates.
+    new LocalRuntimeSetupHttpHandler({
+      credentials: credentialStore,
+      setupCode: options.setupCode,
+      requiresCode: true,
+    }),
     new LocalRuntimeLoginHttpHandler(credentialStore, sessionStore),
     new LocalRuntimeRealtimeTicketHttpHandler(realtimeTicketStore),
     new LocalTaskRunHttpHandler(taskWorkflow, options.workspace.userId, applicationLogger, realtimeNotifier),
@@ -217,7 +228,14 @@ export function createLocalRuntimeComposition(
   ]);
   return {
     requestHandler: new LocalRuntimeSessionAuthGate(sessionStore, router),
-    setupHandler: new LocalRuntimeSetupHttpHandler(credentialStore),
+    // Der loopback-gebundene Setup-Port braucht keinen Code: dort ist die
+    // Netzwerkgrenze selbst der Schutz. Bleibt als Rückfallweg bestehen,
+    // falls der Code verloren geht.
+    setupHandler: new LocalRuntimeSetupHttpHandler({
+      credentials: credentialStore,
+      setupCode: options.setupCode,
+      requiresCode: false,
+    }),
     taskRunWorker,
     taskTriggerWorker: new PollingTaskTriggerWorker(
       () => runDueTaskTriggers(new Date(), {

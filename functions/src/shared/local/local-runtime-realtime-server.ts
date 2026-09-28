@@ -2,6 +2,7 @@ import {type IncomingMessage, type Server} from "node:http";
 import {type Socket} from "node:net";
 import {WebSocket, WebSocketServer} from "ws";
 import {type LocalRuntimeRealtimeSubscriber} from "./local-runtime-realtime-notifier.js";
+import {LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
 
 const realtimePath = "/v1/realtime";
 
@@ -31,12 +32,20 @@ export interface LocalRuntimeRealtimeGateway {
 export function attachLocalRuntimeRealtimeServer(
   server: Server,
   gateway: LocalRuntimeRealtimeGateway,
+  cors: LocalRuntimeCorsPolicy = new LocalRuntimeCorsPolicy(),
 ): WebSocketServer {
   const wss = new WebSocketServer({noServer: true});
 
   server.on("upgrade", (request: IncomingMessage, socket: Socket, head: Buffer) => {
     const url = new URL(request.url ?? "", "http://localhost");
     const ticket = url.searchParams.get("ticket");
+    // WebSockets sind nicht CORS-gebunden — ohne diese Prüfung könnte jede
+    // beliebige Seite im Browser eine Verbindung aufbauen. Native Clients
+    // senden keinen `Origin` und bleiben unberührt.
+    if (!cors.allows(headerOf(request, "origin"), headerOf(request, "host"))) {
+      socket.destroy();
+      return;
+    }
     if (url.pathname !== realtimePath || ticket === null || !gateway.consumeRealtimeTicket(ticket)) {
       socket.destroy();
       return;
@@ -72,4 +81,9 @@ function subscribeTopicFrom(raw: Buffer): string | null {
   } catch {
     return null;
   }
+}
+
+function headerOf(request: IncomingMessage, name: "origin" | "host"): string | undefined {
+  const value = request.headers[name];
+  return Array.isArray(value) ? value[0] : value;
 }

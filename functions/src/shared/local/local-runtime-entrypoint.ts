@@ -17,6 +17,9 @@ import {
 import {RuntimeLicenseHttpHandler} from "./local-runtime-license-http-handler.js";
 import {attachLocalRuntimeRealtimeServer} from "./local-runtime-realtime-server.js";
 import {localRuntimeMasterKeyFrom} from "./local-runtime-master-key.js";
+import {LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
+import {LocalRuntimeStaticFiles} from "./local-runtime-static-files.js";
+import {LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
 import {CredentialCipher} from "../../features/communication/infrastructure/security/credential-cipher.js";
 
@@ -33,26 +36,41 @@ async function startLocalRuntime(): Promise<void> {
   });
   try {
     const licenses = licenseServiceFor(runtimeRoot, localMasterKey);
+    // Prozessweit: beide Setup-Wege teilen denselben Code, und er verfällt
+    // mit dem Prozess — es gibt kein Geheimnis at rest.
+    const setupCode = new LocalRuntimeSetupCode();
     const application = new LocalRuntimeApplication({
       database,
       runtimeRoot,
       localMasterKey,
+      setupCode,
       isLicenseActive: () => licenses.activeContext() !== null,
       signedLicense: () => licenses.signedActiveLicense(),
       activeLicenseActivation: () => licenses.activeActivation(),
     });
     const restored = await licenses.restore();
     if (restored !== null) await application.activate(restored);
+    const cors = LocalRuntimeCorsPolicy.fromEnvironment();
     const server = createLocalRuntimeHttpServer(
       new RuntimeLicenseHttpHandler(licenses, application),
+      webApplicationFiles(),
+      cors,
     );
-    attachLocalRuntimeRealtimeServer(server, application);
+    attachLocalRuntimeRealtimeServer(server, application, cors);
     const setupServer = createLocalRuntimeHttpServer(setupHandlerFor(application));
     const port = configuredPort();
     const setupPort = configuredSetupPort();
     await Promise.all([listen(server, port), listen(setupServer, setupPort)]);
     registerShutdown([server, setupServer], database, application);
-    console.info(JSON.stringify({event: "local_runtime.started", port, setupPort}));
+    // Der Code steht bewusst im Start-Log: `docker compose logs` zu lesen
+    // setzt Host-Zugriff voraus — derselbe Vertrauensanker wie die frühere
+    // Loopback-Bindung, aber von jedem Client aus bedienbar.
+    console.info(JSON.stringify({
+      event: "local_runtime.started",
+      port,
+      setupPort,
+      setupCode: setupCode.current,
+    }));
   } catch (error) {
     database.close();
     throw error;
@@ -77,6 +95,17 @@ function configuredPort(): number {
  */
 function configuredSetupPort(): number {
   return portFromEnvironment("SETUP_PORT", "8091", "SETUP_PORT");
+}
+
+/**
+ * Das Flutter-Web-Build, das die Runtime unter ihrer eigenen Herkunft
+ * ausliefert. Ohne gesetztes Verzeichnis bleibt die Runtime eine reine
+ * API — bestehende Installationen verhalten sich unverändert.
+ */
+function webApplicationFiles(): LocalRuntimeStaticFiles | undefined {
+  const directory = process.env.LOCAL_RUNTIME_WEB_DIRECTORY;
+  if (directory === undefined || directory.trim().length === 0) return undefined;
+  return new LocalRuntimeStaticFiles(directory);
 }
 
 function portFromEnvironment(name: string, fallback: string, label: string): number {
