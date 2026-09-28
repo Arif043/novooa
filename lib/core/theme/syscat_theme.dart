@@ -35,7 +35,7 @@ class SyscatTheme {
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
   static const Color error = CupertinoColors.destructiveRed;
-  static const Color info = Color(0xFF3B82F6);
+  static const Color info = Color.fromRGBO(26, 35, 126, 1);
 
   static const Color backgroundLight = Color(0xFFFCF8FB);
   static const Color backgroundDark = Color(0xFF141315);

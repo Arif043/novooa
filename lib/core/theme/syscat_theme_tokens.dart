@@ -26,7 +26,7 @@ class _ThemeTokens {
     text: SyscatTheme.textMain,
     textMuted: SyscatTheme.textTertiary,
     hint: SyscatTheme.textHint,
-    secondary: SyscatTheme.textTertiary,
+    secondary: Colors.black,
     border: SyscatTheme.borderLight,
     primaryHover: SyscatTheme.primaryOrangeHover,
     primaryContainerText: SyscatTheme.primaryOrangeDark,

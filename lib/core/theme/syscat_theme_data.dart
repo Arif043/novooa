@@ -17,6 +17,10 @@ ThemeData _buildTheme(_ThemeTokens tokens) {
     onSecondary: SyscatTheme.textMainLight,
     secondaryContainer: tokens.surfaceHigh,
     onSecondaryContainer: tokens.secondary,
+    tertiary: SyscatTheme.info,
+    onTertiary: SyscatTheme.textMainLight,
+    tertiaryContainer: SyscatTheme.info,
+    onTertiaryContainer: SyscatTheme.textMainLight,
     error: tokens.error,
   );
   return ThemeData(

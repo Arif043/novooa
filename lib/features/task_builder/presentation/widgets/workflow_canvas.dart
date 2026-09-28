@@ -481,7 +481,7 @@ class WorkflowEdgesPainter extends CustomPainter {
       final end = to.topCenter;
       final color = edge.labels.isEmpty
           ? colors.onSurfaceVariant.withValues(alpha: .6)
-          : colors.primary;
+          : colors.secondary;
       final paint = Paint()
         ..color = color
         ..strokeWidth = 1.8
@@ -558,8 +558,8 @@ class _CanvasLabelStack extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final background = link.isCondition
-        ? Theme.of(context).colorScheme.surfaceContainerHighest
-        : Theme.of(context).colorScheme.surfaceContainer;
+        ? Colors.grey[600] ?? Colors.grey
+        : Theme.of(context).colorScheme.primaryContainer;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -666,7 +666,7 @@ class _CanvasLabelChipState extends State<_CanvasLabelChip> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textStyle = theme.textTheme.labelMedium?.copyWith(
-      color: theme.colorScheme.onSurface,
+      color: Colors.white,
       fontSize: 12,
       fontWeight: FontWeight.w600,
     );

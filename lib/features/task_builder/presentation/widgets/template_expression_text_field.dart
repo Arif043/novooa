@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -59,16 +60,60 @@ class _TemplateExpressionTextFieldState
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (!constraints.hasBoundedWidth) return _textField();
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
+          height: _heightFor(context, constraints.maxWidth),
+          child: _textField(expands: true),
+        );
+      },
+    );
+  }
+
+  Widget _textField({bool expands = false}) {
     return TextField(
       controller: _controller,
-      minLines: widget.minLines,
-      maxLines: widget.maxLines,
+      expands: expands,
+      minLines: expands ? null : widget.minLines,
+      maxLines: expands ? null : widget.maxLines,
+      textAlignVertical: TextAlignVertical.top,
       decoration: widget.decoration,
       onChanged: _handleChanged,
     );
   }
 
+  double _heightFor(BuildContext context, double availableWidth) {
+    final theme = Theme.of(context);
+    final decoration = widget.decoration.applyDefaults(
+      theme.inputDecorationTheme,
+    );
+    final padding = (decoration.contentPadding ?? EdgeInsets.zero).resolve(
+      Directionality.of(context),
+    );
+    final maxWidth = math.max(0.0, availableWidth - padding.horizontal);
+    final painter = _textPainter(context, maxWidth);
+    final minHeight = painter.preferredLineHeight * (widget.minLines ?? 1);
+    return math.max(minHeight, painter.height) + padding.vertical + 2;
+  }
+
+  TextPainter _textPainter(BuildContext context, double maxWidth) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: _controller.measurementText,
+        style: Theme.of(context).textTheme.bodyLarge,
+      ),
+      textDirection: Directionality.of(context),
+      maxLines: widget.maxLines,
+    );
+    painter.layout(maxWidth: maxWidth);
+    return painter;
+  }
+
   void _handleChanged(String displayValue) {
+    setState(() {});
     final selection = _controller.selection;
     if (!_shouldOpenPicker(displayValue, selection)) {
       _controller.normalizePlainExpressions();
@@ -121,6 +166,16 @@ class _TemplateExpressionController extends TextEditingController {
   var _nextToken = _firstToken;
 
   String get rawValue => _rawValueFor(text);
+
+  String get measurementText {
+    final measured = text.replaceAllMapped(
+      RegExp(
+        '[${String.fromCharCode(_firstToken)}-${String.fromCharCode(0xf8ff)}]',
+      ),
+      (match) => '  ${_labelFor(match.group(0)!)}  ',
+    );
+    return measured.isEmpty ? 'M' : measured;
+  }
 
   void replaceRawValue(String rawValue) {
     _expressions.clear();
@@ -188,6 +243,11 @@ class _TemplateExpressionController extends TextEditingController {
     final token = String.fromCharCode(_nextToken++);
     _expressions[token] = expression;
     return token;
+  }
+
+  String _labelFor(String token) {
+    final expression = _expressions[token] ?? token;
+    return expression.substring(2, expression.length - 2).trim();
   }
 
   void _setDisplayText(String value, {required int selectionOffset}) {
