@@ -32,7 +32,6 @@ class NodeOutputNameField extends StatelessWidget {
     return Tooltip(
       message: 'Ausgabename bearbeiten',
       child: InputChip(
-
         avatar: Icon(
           CupertinoIcons.pen,
           size: AppSpacing.md,

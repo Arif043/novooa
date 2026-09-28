@@ -36,8 +36,8 @@ class PromptStructuredOutputSection extends StatelessWidget {
         const SizedBox(height: AppSpacing.xs),
         TextButton.icon(
           onPressed: onAdd,
-          icon: const Icon(Icons.add),
-          label: const Text('Feld hinzufügen'),
+          icon: const Icon(Icons.add, color: SyscatTheme.primaryOrange,),
+          label: Text('Feld hinzufügen', style: TextStyle(color: SyscatTheme.primaryOrange),),
         ),
       ],
     );
