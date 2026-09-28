@@ -20,7 +20,7 @@ const unauthenticatedPaths = new Set(["/v1/auth/login", "/v1/setup"]);
  *   Henne und Ei. Dort schützt stattdessen der Kopplungscode aus dem
  *   Start-Log (siehe `LocalRuntimeSetupHttpHandler`).
  */
-export class LocalRuntimeSessionAuthGate
+export class LocalRuntimeSessionAuthMiddleware
 implements LocalRuntimeRequestHandler, LocalRuntimeStreamRequestHandler {
   constructor(
     private readonly sessions: LocalRuntimeSessionStore,

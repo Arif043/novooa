@@ -7,7 +7,7 @@ import {type LocalRuntimeRealtimeTicketStore} from "./local-runtime-realtime-tic
 
 /**
  * `POST /v1/realtime/ticket` — läuft wie jeder andere Endpunkt hinter dem
- * `LocalRuntimeSessionAuthGate` (verlangt also bereits ein gültiges
+ * `LocalRuntimeSessionAuthMiddleware` (verlangt also bereits ein gültiges
  * `Authorization: Bearer <token>`) und tauscht das gegen ein kurzlebiges
  * Ticket für den WebSocket-Verbindungsaufbau (siehe
  * `LocalRuntimeRealtimeTicketStore`).

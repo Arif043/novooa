@@ -5,12 +5,12 @@ import {
   type RuntimeLicenseService,
   type RuntimeLicenseStatus,
 } from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
-import {RuntimeLicenseHttpHandler} from "./local-runtime-license-http-handler.js";
+import {RuntimeLicenseMiddleware} from "./local-runtime-license-middleware.js";
 import {type LocalRuntimeRequest, type LocalRuntimeResponse} from "./local-runtime-http-server.js";
 
 test("blocks local business endpoints until the runtime is activated", async () => {
   const application = new FakeApplication();
-  const handler = new RuntimeLicenseHttpHandler(new FakeLicenseService(), application);
+  const handler = new RuntimeLicenseMiddleware(new FakeLicenseService(), application);
   const response = await handler.handle({body: {}, method: "GET", url: "/v1/tasks"});
 
   assert.deepEqual(response, {
@@ -23,7 +23,7 @@ test("blocks local business endpoints until the runtime is activated", async () 
 test("activates and releases the local workspace", async () => {
   const service = new FakeLicenseService();
   const application = new FakeApplication();
-  const handler = new RuntimeLicenseHttpHandler(service, application);
+  const handler = new RuntimeLicenseMiddleware(service, application);
   const activation = await handler.handle({body: {activationToken: "A3K9N7P2Q4R6"}, method: "POST", url: "/v1/license/activate"});
   const release = await handler.handle({body: {}, method: "POST", url: "/v1/license/release"});
 

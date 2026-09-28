@@ -57,7 +57,7 @@ import {LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 import {LocalRuntimeLoginHttpHandler} from "./local-runtime-login-http-handler.js";
 import {LocalRuntimeSetupHttpHandler} from "./local-runtime-setup-http-handler.js";
 import {type LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
-import {LocalRuntimeSessionAuthGate} from "./local-runtime-session-auth-gate.js";
+import {LocalRuntimeSessionAuthMiddleware} from "./local-runtime-session-auth-middleware.js";
 import {LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
 import {LocalRuntimeRealtimeTicketStore} from "./local-runtime-realtime-ticket-store.js";
 import {LocalRuntimeRealtimeTicketHttpHandler} from "./local-runtime-realtime-ticket-http-handler.js";
@@ -185,7 +185,7 @@ export function createLocalRuntimeComposition(
   const router = new LocalRuntimeRequestRouter([
     // Auf dem regulären Port ersetzt der Kopplungscode die Session — sonst
     // liesse sich das Passwort nie setzen, das man für eine Session
-    // bräuchte. Steht deshalb auch in `unauthenticatedPaths` des Gates.
+    // bräuchte. Steht deshalb auch in `unauthenticatedPaths` der Session-Middleware.
     new LocalRuntimeSetupHttpHandler({
       credentials: credentialStore,
       setupCode: options.setupCode,
@@ -227,7 +227,7 @@ export function createLocalRuntimeComposition(
     ),
   ]);
   return {
-    requestHandler: new LocalRuntimeSessionAuthGate(sessionStore, router),
+    requestHandler: new LocalRuntimeSessionAuthMiddleware(sessionStore, router),
     // Der loopback-gebundene Setup-Port braucht keinen Code: dort ist die
     // Netzwerkgrenze selbst der Schutz. Bleibt als Rückfallweg bestehen,
     // falls der Code verloren geht.

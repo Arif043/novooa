@@ -7,15 +7,13 @@ import {
 import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
 import {
   enabledFrom,
-  enabledTriggerIdFrom,
   invalidResponse,
   LocalTaskTriggerError,
-  pathFrom,
   triggerFromRequest,
   triggerFromRow,
-  triggerIdFrom,
   type TriggerRow,
 } from "./local-task-trigger-http-support.js";
+import {routeMatch} from "../../../../shared/local/local-runtime-route.js";
 import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 
 export class LocalTaskTriggerHttpHandler implements LocalRuntimeRequestHandler {
@@ -27,13 +25,12 @@ export class LocalTaskTriggerHttpHandler implements LocalRuntimeRequestHandler {
   ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
-    const path = pathFrom(request.url);
-    if (request.method === "GET" && path === "/v1/task-triggers") return this.list();
-    if (request.method === "POST" && path === "/v1/task-triggers") return this.create(request.body);
-    const enabledId = enabledTriggerIdFrom(path);
-    if (request.method === "PUT" && enabledId !== null) return this.setEnabled(enabledId, request.body);
-    const triggerId = triggerIdFrom(path);
-    if (request.method === "DELETE" && triggerId !== null) return this.delete(triggerId);
+    if (routeMatch(request, "GET", "/v1/task-triggers")) return this.list();
+    if (routeMatch(request, "POST", "/v1/task-triggers")) return this.create(request.body);
+    const enabled = routeMatch(request, "PUT", "/v1/task-triggers/:triggerId/enabled");
+    if (enabled) return this.setEnabled(enabled.params.triggerId, request.body);
+    const trigger = routeMatch(request, "DELETE", "/v1/task-triggers/:triggerId");
+    if (trigger) return this.delete(trigger.params.triggerId);
     return null;
   }
 

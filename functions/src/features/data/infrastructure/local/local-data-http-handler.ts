@@ -14,19 +14,25 @@ import {
   type LocalRuntimeRequestHandler,
   type LocalRuntimeResponse,
 } from "../../../../shared/local/local-runtime-http-server.js";
+import {routeMatch} from "../../../../shared/local/local-runtime-route.js";
 
 export class LocalDataHttpHandler implements LocalRuntimeRequestHandler {
   constructor(private readonly store: DocumentStore, private readonly teamId: string) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
-    if (request.url === "/v1/data/collections" && request.method === "GET") return this.list();
-    const target = targetFrom(request.url);
-    if (target === null) return null;
+    if (routeMatch(request, "GET", "/v1/data/collections")) return this.list();
+    const collections = "/v1/data/collections/:collectionName";
+    const documents = `${collections}/documents` as const;
+    const document = `${documents}/:documentId` as const;
     try {
-      if (target.kind === "query" && request.method === "POST") return this.query(target.collectionName, request.body);
-      if (target.kind === "documents" && request.method === "POST") return this.create(target.collectionName, request.body);
-      if (target.kind === "document" && request.method === "PUT") return this.update(target, request.body);
-      if (target.kind === "document" && request.method === "DELETE") return this.remove(target);
+      const query = routeMatch(request, "POST", `${collections}/query` as const);
+      if (query) return this.query(query.params.collectionName, request.body);
+      const created = routeMatch(request, "POST", documents);
+      if (created) return this.create(created.params.collectionName, request.body);
+      const updated = routeMatch(request, "PUT", document);
+      if (updated) return this.update(targetOf(updated.params), request.body);
+      const removed = routeMatch(request, "DELETE", document);
+      if (removed) return this.remove(targetOf(removed.params));
       return null;
     } catch (error) {
       return {body: {error: messageFor(error)}, statusCode: 400};
@@ -80,20 +86,11 @@ export class LocalDataHttpHandler implements LocalRuntimeRequestHandler {
 
 type QueryInput = {filters: DocumentFilter[]; search: string};
 type DocumentTarget = {kind: "document"; collectionName: string; documentId: string};
-type CollectionTarget = {kind: "query" | "documents"; collectionName: string};
 
-function targetFrom(url: string | undefined): DocumentTarget | CollectionTarget | null {
-  const path = new URL(url ?? "/", "http://runtime").pathname;
-  const match = /^\/v1\/data\/collections\/([^/]+)(?:\/(query|documents)(?:\/([^/]+))?)?$/.exec(path);
-  if (match === null || match[1] === undefined) return null;
-  const collectionName = decodeURIComponent(match[1]);
-  if (match[2] === "query") return {kind: "query", collectionName};
-  if (match[2] === "documents" && match[3] === undefined) return {kind: "documents", collectionName};
-  if (match[2] === "documents" && match[3] !== undefined) {
-    return {kind: "document", collectionName, documentId: decodeURIComponent(match[3])};
-  }
-  return null;
+function targetOf(params: {collectionName: string; documentId: string}): DocumentTarget {
+  return {kind: "document", ...params};
 }
+
 
 function queryFrom(body: unknown): QueryInput {
   const value = record(body);

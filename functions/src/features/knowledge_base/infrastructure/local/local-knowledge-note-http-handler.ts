@@ -6,6 +6,7 @@ import {
 } from "../../../../shared/local/local-runtime-http-server.js";
 import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
 import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
+import {routeMatch} from "../../../../shared/local/local-runtime-route.js";
 
 type NoteRow = SqlRow & {
   content: string;
@@ -25,13 +26,12 @@ export class LocalKnowledgeNoteHttpHandler implements LocalRuntimeRequestHandler
   ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
-    const path = pathFrom(request.url);
-    if (request.method === "GET" && path === "/v1/knowledge-notes") return this.list();
-    if (request.method === "POST" && path === "/v1/knowledge-notes") return this.create(request.body);
-    const noteId = noteIdFrom(path);
-    if (noteId === null) return null;
-    if (request.method === "PUT") return this.update(noteId, request.body);
-    if (request.method === "DELETE") return this.delete(noteId);
+    if (routeMatch(request, "GET", "/v1/knowledge-notes")) return this.list();
+    if (routeMatch(request, "POST", "/v1/knowledge-notes")) return this.create(request.body);
+    const update = routeMatch(request, "PUT", "/v1/knowledge-notes/:noteId");
+    if (update) return this.update(update.params.noteId, request.body);
+    const remove = routeMatch(request, "DELETE", "/v1/knowledge-notes/:noteId");
+    if (remove) return this.delete(remove.params.noteId);
     return null;
   }
 
@@ -121,14 +121,7 @@ function noteFromRequest(value: unknown): NoteInput {
   };
 }
 
-function pathFrom(url: string | undefined): string {
-  return new URL(url ?? "/", "http://local-runtime").pathname;
-}
 
-function noteIdFrom(path: string): string | null {
-  const match = /^\/v1\/knowledge-notes\/([^/]+)$/.exec(path);
-  return match?.[1] ? decodeURIComponent(match[1]) : null;
-}
 
 function recordFrom(value: unknown): Record<string, unknown> {
   if (value !== null && typeof value === "object" && !Array.isArray(value)) {

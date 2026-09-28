@@ -12,7 +12,7 @@ export type LocalRuntimeStaticFile = {
  * `docs/architecture/betriebsvarianten.md`). Dadurch entfallen CORS und
  * Mixed Content vollständig.
  *
- * Liegt bewusst **außerhalb** der Lizenz- und Session-Gates: Die App muss
+ * Liegt bewusst **außerhalb** der Lizenz- und Session-Middleware: Die App muss
  * gerade *vor* Aktivierung und Anmeldung laden können — sonst gäbe es keine
  * Oberfläche, um beides durchzuführen.
  */

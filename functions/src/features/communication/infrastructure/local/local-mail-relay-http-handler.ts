@@ -6,6 +6,7 @@ import {
   type LocalRuntimeResponse,
 } from "../../../../shared/local/local-runtime-http-server.js";
 import {type RuntimeMailRelayClient} from "./runtime-mail-relay-client.js";
+import {routeMatch} from "../../../../shared/local/local-runtime-route.js";
 
 export class LocalMailRelayHttpHandler implements LocalRuntimeRequestHandler {
   constructor(
@@ -14,13 +15,12 @@ export class LocalMailRelayHttpHandler implements LocalRuntimeRequestHandler {
   ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
-    const path = pathFrom(request.url);
-    if (request.method === "POST" && path === "/v1/mail-connectors/microsoft/authorization") {
+    if (routeMatch(request, "POST", "/v1/mail-connectors/microsoft/authorization")) {
       return this.beginAuthorization();
     }
-    if (request.method === "GET" && path === "/v1/mail-relay/dead-letters") return this.deadLetters();
-    const eventId = replayEventId(path, request.method);
-    return eventId ? this.replay(eventId) : null;
+    if (routeMatch(request, "GET", "/v1/mail-relay/dead-letters")) return this.deadLetters();
+    const replay = routeMatch(request, "POST", "/v1/mail-relay/dead-letters/:eventId/replay");
+    return replay ? this.replay(replay.params.eventId) : null;
   }
 
   private async beginAuthorization(): Promise<LocalRuntimeResponse> {
@@ -46,11 +46,4 @@ export class LocalMailRelayHttpHandler implements LocalRuntimeRequestHandler {
   }
 }
 
-function pathFrom(url: string | undefined): string {
-  return (url ?? "").split("?")[0] ?? "";
-}
 
-function replayEventId(path: string, method: string | undefined): string | null {
-  const match = /^\/v1\/mail-relay\/dead-letters\/([^/]+)\/replay$/.exec(path);
-  return method === "POST" && match?.[1] ? decodeURIComponent(match[1]) : null;
-}

@@ -14,7 +14,7 @@ import {
   createLocalRuntimeHttpServer,
   type LocalRuntimeRequestHandler,
 } from "./local-runtime-http-server.js";
-import {RuntimeLicenseHttpHandler} from "./local-runtime-license-http-handler.js";
+import {RuntimeLicenseMiddleware} from "./local-runtime-license-middleware.js";
 import {attachLocalRuntimeRealtimeServer} from "./local-runtime-realtime-server.js";
 import {localRuntimeMasterKeyFrom} from "./local-runtime-master-key.js";
 import {LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
@@ -52,7 +52,7 @@ async function startLocalRuntime(): Promise<void> {
     if (restored !== null) await application.activate(restored);
     const cors = LocalRuntimeCorsPolicy.fromEnvironment();
     const server = createLocalRuntimeHttpServer(
-      new RuntimeLicenseHttpHandler(licenses, application),
+      new RuntimeLicenseMiddleware(licenses, application),
       webApplicationFiles(),
       cors,
     );

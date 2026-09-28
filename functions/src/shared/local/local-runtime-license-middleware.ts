@@ -1,7 +1,7 @@
 import {type RuntimeLicenseActivationInput, type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {type LocalRuntimeRequest, type LocalRuntimeRequestHandler, type LocalRuntimeResponse} from "./local-runtime-http-server.js";
 
-export class RuntimeLicenseHttpHandler implements LocalRuntimeRequestHandler {
+export class RuntimeLicenseMiddleware implements LocalRuntimeRequestHandler {
   constructor(
     private readonly licenseService: RuntimeLicenseService,
     private readonly application: LocalRuntimeRequestHandler & {

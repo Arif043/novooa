@@ -48,19 +48,8 @@ export function triggerFromRow(row: TriggerRow): Record<string, unknown> {
   };
 }
 
-export function pathFrom(url: string | undefined): string {
-  return new URL(url ?? "/", "http://local-runtime").pathname;
-}
 
-export function triggerIdFrom(path: string): string | null {
-  const match = /^\/v1\/task-triggers\/([^/]+)$/.exec(path);
-  return match?.[1] ? decodeURIComponent(match[1]) : null;
-}
 
-export function enabledTriggerIdFrom(path: string): string | null {
-  const match = /^\/v1\/task-triggers\/([^/]+)\/enabled$/.exec(path);
-  return match?.[1] ? decodeURIComponent(match[1]) : null;
-}
 
 export function enabledFrom(value: unknown): boolean {
   const enabled = recordFrom(value).enabled;

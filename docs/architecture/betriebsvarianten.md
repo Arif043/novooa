@@ -328,12 +328,12 @@ selbstkonfigurierend.
 - `local-runtime-setup-code.ts`: Der Code lebt **nur im Prozessspeicher** —
   kein Geheimnis at rest, keine Migration, und er verfällt zusätzlich bei
   jedem Neustart.
-- `/v1/setup` steht in `unauthenticatedPaths` des Session-Gates: Man braucht
+- `/v1/setup` steht in `unauthenticatedPaths` der Session-Middleware: Man braucht
   das Passwort, um eine Session zu bekommen — Henne und Ei. Dort schützt
   stattdessen der Code.
 - Die Reihenfolge bleibt Lizenz → Passwort: Vor der Aktivierung existiert
   der Setup-Handler noch gar nicht (er hängt an der erst dann erzeugten
-  Datenbank), und das Lizenz-Gate blockiert den regulären Port ohnehin.
+  Datenbank), und die Lizenz-Middleware blockiert den regulären Port ohnehin.
 - Die angezeigten Adressen übernehmen den Port aus dem `Host`-Header der
   Anfrage. Im Container lauscht die Runtime auf 8080, Clients sprechen aber
   den veröffentlichten 8090 an — nur der Browser weiß verlässlich, welcher

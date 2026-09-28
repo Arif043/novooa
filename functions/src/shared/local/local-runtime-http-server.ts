@@ -59,7 +59,7 @@ function headerValue(
 /**
  * Statische Dateien werden erst geprüft, wenn **kein** Handler zuständig
  * war — ein Endpunkt lässt sich dadurch nicht versehentlich von einer Datei
- * überschatten. Sie liegen bewusst außerhalb der Lizenz- und Session-Gates,
+ * überschatten. Sie liegen bewusst außerhalb der Lizenz- und Session-Middleware,
  * damit die App vor Aktivierung und Anmeldung laden kann.
  */
 async function respondTo(

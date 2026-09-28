@@ -7,6 +7,7 @@ import {
 import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
 import {type LocalTeamFileStore} from "./local-team-file-store.js";
 import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
+import {routeMatch} from "../../../../shared/local/local-runtime-route.js";
 import {
   fileByIdSql,
   fileFromRow,
@@ -32,16 +33,18 @@ export class LocalFileResourceHttpHandler implements LocalRuntimeRequestHandler 
   ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
-    const path = pathFrom(request.url);
-    if (request.method === "GET" && path === "/v1/files") return this.listFiles();
-    if (request.method === "POST" && path === "/v1/files") return this.write(request.body, null);
-    if (request.method === "GET" && path === "/v1/folders") return this.listFolders();
-    if (request.method === "POST" && path === "/v1/folders") return this.createFolder(request.body);
-    const content = versionContentFrom(path);
-    if (request.method === "GET" && content !== null) return this.content(content);
-    const fileId = versionFileIdFrom(path);
-    if (request.method === "GET" && fileId !== null) return this.listVersions(fileId);
-    if (request.method === "POST" && fileId !== null) return this.write(request.body, fileId);
+    if (routeMatch(request, "GET", "/v1/files")) return this.listFiles();
+    if (routeMatch(request, "POST", "/v1/files")) return this.write(request.body, null);
+    if (routeMatch(request, "GET", "/v1/folders")) return this.listFolders();
+    if (routeMatch(request, "POST", "/v1/folders")) return this.createFolder(request.body);
+    const content = routeMatch(
+      request, "GET", "/v1/files/:fileId/versions/:versionId/content",
+    );
+    if (content) return this.content(content.params);
+    const versions = routeMatch(request, "GET", "/v1/files/:fileId/versions");
+    if (versions) return this.listVersions(versions.params.fileId);
+    const newVersion = routeMatch(request, "POST", "/v1/files/:fileId/versions");
+    if (newVersion) return this.write(request.body, newVersion.params.fileId);
     return null;
   }
 
@@ -131,19 +134,8 @@ async function ensureFolder(database: LocalSqlDatabase, teamId: string, folderId
   if (folder === null) throw new LocalFileRequestError("Das Verzeichnis existiert nicht.");
 }
 
-function pathFrom(url: string | undefined): string {
-  return new URL(url ?? "/", "http://local-runtime").pathname;
-}
 
-function versionFileIdFrom(path: string): string | null {
-  const match = /^\/v1\/files\/([^/]+)\/versions$/.exec(path);
-  return match?.[1] ? decodeURIComponent(match[1]) : null;
-}
 
-function versionContentFrom(path: string): {fileId: string; versionId: string} | null {
-  const match = /^\/v1\/files\/([^/]+)\/versions\/([^/]+)\/content$/.exec(path);
-  return match?.[1] && match[2] ? {fileId: decodeURIComponent(match[1]), versionId: decodeURIComponent(match[2])} : null;
-}
 
 function recordFrom(value: unknown): Record<string, unknown> {
   if (value !== null && typeof value === "object" && !Array.isArray(value)) return value as Record<string, unknown>;

@@ -9,7 +9,7 @@ import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 /**
  * `POST /v1/auth/login` — tauscht das Betreiber-Passwort gegen ein
  * Session-Token. Bleibt bewusst außerhalb des
- * `LocalRuntimeSessionAuthGate` (sonst käme niemand an ein Token).
+ * `LocalRuntimeSessionAuthMiddleware` (sonst käme niemand an ein Token).
  * Läuft auf dem regulären, öffentlich erreichbaren API-Port — im
  * Unterschied zu `/v1/setup`, das ausschließlich über den separaten,
  * host-loopback-gebundenen Port erreichbar ist.

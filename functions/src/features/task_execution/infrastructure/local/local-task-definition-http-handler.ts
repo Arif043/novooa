@@ -6,6 +6,7 @@ import {
 import {type TaskDefinition} from "../../domain/entities/task.js";
 import {type TaskDefinitionStore} from "../../domain/repositories/task-definition-store.js";
 import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
+import {routeMatch} from "../../../../shared/local/local-runtime-route.js";
 
 export class LocalTaskDefinitionHttpHandler implements LocalRuntimeRequestHandler {
   constructor(
@@ -16,12 +17,11 @@ export class LocalTaskDefinitionHttpHandler implements LocalRuntimeRequestHandle
   ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
-    const path = pathFrom(request.url);
-    if (request.method === "GET" && path === "/v1/tasks") return this.list();
-    const taskId = taskIdFrom(path);
-    if (taskId === null) return null;
-    if (request.method === "PUT") return this.save(taskId, request.body);
-    if (request.method === "DELETE") return this.delete(taskId);
+    if (routeMatch(request, "GET", "/v1/tasks")) return this.list();
+    const save = routeMatch(request, "PUT", "/v1/tasks/:taskId");
+    if (save) return this.save(save.params.taskId, request.body);
+    const remove = routeMatch(request, "DELETE", "/v1/tasks/:taskId");
+    if (remove) return this.delete(remove.params.taskId);
     return null;
   }
 
@@ -89,14 +89,7 @@ function documentFrom(definition: TaskDefinition, selectedNodeId: string): Recor
   };
 }
 
-function pathFrom(url: string | undefined): string {
-  return new URL(url ?? "/", "http://local-runtime").pathname;
-}
 
-function taskIdFrom(path: string): string | null {
-  const match = /^\/v1\/tasks\/([^/]+)$/.exec(path);
-  return match?.[1] ? decodeURIComponent(match[1]) : null;
-}
 
 function recordFrom(value: unknown, message: string): Record<string, unknown> {
   if (value !== null && typeof value === "object" && !Array.isArray(value)) {
