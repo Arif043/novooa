@@ -73,17 +73,29 @@ class _PromptWidgetState extends State<PromptWidget> {
           const SizedBox(height: AppSpacing.md),
           Text('Ausgabe', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
+          SizedBox(
+            width: double.infinity,
             child: CupertinoSlidingSegmentedControl<PromptOutputType>(
               groupValue: selectedOutput,
               backgroundColor: SyscatTheme.surfaceContainer,
               thumbColor: SyscatTheme.glassSurface,
-              children: const {
-                PromptOutputType.text: Text('Freitext'),
-                PromptOutputType.decision: Text('Entscheidung'),
-                PromptOutputType.structured: Text('Strukturierte Ausgabe'),
-                PromptOutputType.image: Text('Bild'),
+              children: {
+                PromptOutputType.text: _outputTypeIcon(
+                  icon: Icons.notes_outlined,
+                  label: 'Freitext',
+                ),
+                PromptOutputType.decision: _outputTypeIcon(
+                  icon: Icons.call_split_outlined,
+                  label: 'Entscheidung',
+                ),
+                PromptOutputType.structured: _outputTypeIcon(
+                  icon: Icons.data_object_outlined,
+                  label: 'Strukturierte Ausgabe',
+                ),
+                PromptOutputType.image: _outputTypeIcon(
+                  icon: Icons.image_outlined,
+                  label: 'Bild',
+                ),
               },
               onValueChanged: (value) {
                 _updateOutputType({value!});
@@ -153,6 +165,13 @@ class _PromptWidgetState extends State<PromptWidget> {
           ],
         ],
       ),
+    );
+  }
+
+  Widget _outputTypeIcon({required IconData icon, required String label}) {
+    return Tooltip(
+      message: label,
+      child: Semantics(label: label, child: Icon(icon)),
     );
   }
 
