@@ -9,23 +9,29 @@ class RuntimePasswordSetupForm extends StatefulWidget {
   const RuntimePasswordSetupForm({
     required this.endpoint,
     this.errorMessage,
+    this.requiresCode = false,
+    this.addresses = const [],
     super.key,
   });
 
   final RuntimeEndpoint endpoint;
   final String? errorMessage;
+  final bool requiresCode;
+  final List<String> addresses;
 
   @override
   State<RuntimePasswordSetupForm> createState() => _RuntimePasswordSetupFormState();
 }
 
 class _RuntimePasswordSetupFormState extends State<RuntimePasswordSetupForm> {
+  final _codeController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmationController = TextEditingController();
   String? _validationMessage;
 
   @override
   void dispose() {
+    _codeController.dispose();
     _passwordController.dispose();
     _confirmationController.dispose();
     super.dispose();
@@ -53,6 +59,19 @@ class _RuntimePasswordSetupFormState extends State<RuntimePasswordSetupForm> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: AppSpacing.xl),
+        if (widget.requiresCode) ...[
+          TextField(
+            controller: _codeController,
+            autocorrect: false,
+            decoration: const InputDecoration(
+              labelText: 'Einrichtungscode',
+              helperText: 'Steht im Start-Log der Runtime '
+                  '(docker compose logs).',
+              prefixIcon: Icon(Icons.key_outlined),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         TextField(
           controller: _passwordController,
           obscureText: true,
@@ -78,6 +97,10 @@ class _RuntimePasswordSetupFormState extends State<RuntimePasswordSetupForm> {
           icon: const Icon(Icons.lock_open_outlined),
           label: const Text('Passwort festlegen'),
         ),
+        if (widget.addresses.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xl),
+          _ReachableAddresses(addresses: widget.addresses),
+        ],
       ],
     );
   }
@@ -89,6 +112,36 @@ class _RuntimePasswordSetupFormState extends State<RuntimePasswordSetupForm> {
       return;
     }
     setState(() => _validationMessage = null);
-    context.read<RuntimeConnectionCubit>().setPassword(widget.endpoint, password);
+    context.read<RuntimeConnectionCubit>().setPassword(
+      widget.endpoint,
+      password,
+      code: _codeController.text,
+    );
+  }
+}
+
+/// Zeigt, unter welchen Adressen andere Geräte diese Runtime erreichen —
+/// von ihr selbst ermittelt. Bewusst keine Eingabe: Ein abgetippter Wert
+/// würde bei jedem DHCP-Wechsel still falsch.
+class _ReachableAddresses extends StatelessWidget {
+  const _ReachableAddresses({required this.addresses});
+
+  final List<String> addresses;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Von anderen Geräten erreichbar unter', style: textTheme.labelLarge),
+        const SizedBox(height: AppSpacing.xs),
+        for (final address in addresses)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+            child: SelectableText(address, style: textTheme.bodyMedium),
+          ),
+      ],
+    );
   }
 }

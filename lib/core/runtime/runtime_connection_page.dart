@@ -52,9 +52,13 @@ class RuntimeConnectionPage extends StatelessWidget {
                       RuntimeConnectionNeedsPasswordSetup(
                         :final endpoint,
                         :final errorMessage,
+                        :final requiresCode,
+                        :final addresses,
                       ) => RuntimePasswordSetupForm(
                         endpoint: endpoint,
                         errorMessage: errorMessage,
+                        requiresCode: requiresCode,
+                        addresses: addresses,
                       ),
                       RuntimeConnectionReady() => const _ConnectionLoading(),
                     },

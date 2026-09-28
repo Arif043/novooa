@@ -135,19 +135,42 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     }
   }
 
-  Future<void> setPassword(RuntimeEndpoint endpoint, String password) async {
+  Future<void> setPassword(
+    RuntimeEndpoint endpoint,
+    String password, {
+    String code = '',
+  }) async {
+    // Der Einrichtungszustand des vorherigen Bildschirms muss über den
+    // Fehlerfall hinweg erhalten bleiben, sonst verschwänden Code-Feld und
+    // Adressliste ausgerechnet nach einem Fehlversuch.
+    final previous = state;
+    final requiresCode = previous is RuntimeConnectionNeedsPasswordSetup
+        ? previous.requiresCode
+        : false;
+    final addresses = previous is RuntimeConnectionNeedsPasswordSetup
+        ? previous.addresses
+        : const <String>[];
     emit(RuntimeConnectionConnecting(endpoint.displayAddress));
     try {
-      await onboarding.setPassword(password);
+      await onboarding.setPassword(endpoint, password, code: code);
       await login(endpoint, password);
     } on RuntimeOnboardingFailure catch (error) {
-      emit(RuntimeConnectionNeedsPasswordSetup(endpoint, errorMessage: error.message));
+      emit(
+        RuntimeConnectionNeedsPasswordSetup(
+          endpoint,
+          errorMessage: error.message,
+          requiresCode: requiresCode,
+          addresses: addresses,
+        ),
+      );
     } on Object catch (error, stackTrace) {
       _reportFailure('setup-password', error, stackTrace);
       emit(
         RuntimeConnectionNeedsPasswordSetup(
           endpoint,
           errorMessage: 'Das Passwort konnte nicht gesetzt werden.',
+          requiresCode: requiresCode,
+          addresses: addresses,
         ),
       );
     }
@@ -191,8 +214,15 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
   }
 
   Future<void> _continueAfterLicense(RuntimeEndpoint endpoint) async {
-    if (await onboarding.needsPasswordSetup()) {
-      emit(RuntimeConnectionNeedsPasswordSetup(endpoint));
+    final status = await onboarding.setupStatus(endpoint);
+    if (status.needsSetup) {
+      emit(
+        RuntimeConnectionNeedsPasswordSetup(
+          endpoint,
+          requiresCode: status.requiresCode,
+          addresses: status.addresses,
+        ),
+      );
       return;
     }
     await _finishConnecting(endpoint);

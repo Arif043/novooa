@@ -30,10 +30,23 @@ final class RuntimeConnectionNeedsLicense extends RuntimeConnectionState {
 }
 
 final class RuntimeConnectionNeedsPasswordSetup extends RuntimeConnectionState {
-  const RuntimeConnectionNeedsPasswordSetup(this.endpoint, {this.errorMessage});
+  const RuntimeConnectionNeedsPasswordSetup(
+    this.endpoint, {
+    this.errorMessage,
+    this.requiresCode = false,
+    this.addresses = const [],
+  });
 
   final RuntimeEndpoint endpoint;
   final String? errorMessage;
+
+  /// Über den regulären Port verlangt die Runtime den Kopplungscode aus
+  /// ihrem Start-Log — die Oberfläche blendet das Feld nur dann ein.
+  final bool requiresCode;
+
+  /// Von der Runtime selbst ermittelte Adressen, unter denen andere Geräte
+  /// sie erreichen. Werden angezeigt, nicht abgefragt.
+  final List<String> addresses;
 }
 
 final class RuntimeConnectionConnecting extends RuntimeConnectionState {

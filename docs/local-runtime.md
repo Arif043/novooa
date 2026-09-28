@@ -157,6 +157,26 @@ wird das Port-Mapping in `docker-compose.local.yaml` auf den Host beschränkt:
 
 ### Erstmaliges Setzen des Passworts
 
+Es gibt zwei Wege mit unterschiedlichem Schutz:
+
+**Von jedem Client, über den regulären Port** — der Normalfall, auch für
+headless installierte Runtimes ohne Browser auf dem Host. Die Runtime
+erzeugt beim Start einen **Kopplungscode** und schreibt ihn in ihr Log:
+
+```bash
+docker compose -f docker-compose.local.yaml logs runtime | grep setupCode
+```
+
+Diesen Code fragt die Einrichtung ab. Der Vertrauensanker ist derselbe wie
+zuvor die Loopback-Bindung — `docker compose logs` zu lesen setzt
+Host-Zugriff voraus —, aber die Bedienung löst sich davon. Der Code verfällt
+nach erfolgreicher Einrichtung und bei jedem Neustart der Runtime; er wird
+nie gespeichert.
+
+**Über den loopback-gebundenen Setup-Port** — der Rückfallweg, falls der
+Code verloren ging. Dort ist kein Code nötig, weil die Netzwerkgrenze ihn
+ersetzt:
+
 Die Runtime veröffentlicht dafür einen zweiten HTTP-Port (Standard `8091`),
 der auf dem Docker-Host ausschließlich an `127.0.0.1` gebunden ist
 (`docker-compose.local.yaml`, Port-Mapping `127.0.0.1:8091:8091`) — das wird
@@ -177,11 +197,16 @@ Nach dem Setzen des Passworts meldet sich der Client über
 bleiben unverändert außerhalb dieser Passwort-Pflicht — die Lizenzaktivierung
 ist bereits durch den Lizenz-Token selbst geschützt.
 
-Der native novooa-Client führt die Einrichtung in dieser Reihenfolge: Runtime-
-Adresse, gegebenenfalls Lizenzaktivierung und anschließend das Betreiber-
-Passwort. Das Passwort kann nur in einem Client gesetzt werden, der auf dem
-Runtime-Rechner selbst läuft, weil der Setup-Port nicht im LAN veröffentlicht
-wird.
+Der Client führt die Einrichtung in dieser Reihenfolge: Runtime-Adresse,
+gegebenenfalls Lizenzaktivierung und anschließend das Betreiber-Passwort.
+Diese Reihenfolge ist nicht willkürlich: Vor der Aktivierung existiert der
+Setup-Handler noch gar nicht, weil er an der erst dann erzeugten Datenbank
+hängt.
+
+Das Passwort lässt sich von **jedem** Client setzen, der den Kopplungscode
+kennt — auch aus dem LAN oder aus dem Browser. Die frühere Einschränkung
+„nur auf dem Runtime-Rechner“ gilt nur noch für den Rückfallweg über den
+Setup-Port.
 
 ### Client-Voraussetzungen
 
@@ -556,11 +581,17 @@ dessen Infrastructure-Bereich.
 ```bash
 npm --prefix functions run local-runtime:prepare -- \
   --secret-file ../.novooa/runtime-master-key
+flutter build web            # die Runtime liefert dieses Build selbst aus
 docker compose -f docker-compose.local.yaml up --build --detach
 curl http://127.0.0.1:8090/healthz
 docker compose -f docker-compose.local.yaml ps
 flutter run -d macos --dart-define=NOVOOA_RUNTIME=standalone
 ```
+
+`flutter build web` ist optional: Ohne das Verzeichnis bleibt die Runtime
+eine reine API und antwortet auf App-Pfade mit 404. Mit dem Build ist die
+Oberfläche unter derselben Adresse erreichbar wie die API — im Browser
+genügt dann `http://<adresse>:8090`, ohne installierten Client.
 
 Vor dem ersten fachlichen Zugriff muss einmalig ein Betreiber-Passwort
 gesetzt werden (siehe

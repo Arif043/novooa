@@ -8,6 +8,14 @@ services:
     environment:
       PORT: "8080"
       SETUP_PORT: "8091"
+      # Liefert die Web-App unter derselben Herkunft aus wie die API — damit
+      # entfallen CORS und Mixed Content (siehe
+      # docs/architecture/betriebsvarianten.md). Ohne Verzeichnis bleibt die
+      # Runtime eine reine API.
+      LOCAL_RUNTIME_WEB_DIRECTORY: /app/web
+      # Erlaubte Browser-Herkünfte für CORS. Leer = keine fremde Herkunft.
+      # Nur für lokale Entwicklung nötig (z.B. http://localhost:59193).
+      LOCAL_RUNTIME_ALLOWED_ORIGINS: ${LOCAL_RUNTIME_ALLOWED_ORIGINS:-}
       NOVOOA_LOCAL_DEVELOPMENT: ${NOVOOA_LOCAL_DEVELOPMENT:-false}
       PYTHON_INFERENCE_SIDECAR_URL: http://novooa-ml:8081
       LOCAL_RUNTIME_MASTER_KEY_FILE: /run/secrets/novooa_runtime_master_key
@@ -33,6 +41,11 @@ services:
       - "127.0.0.1:8091:8091"
     volumes:
       - novooa-data:/var/lib/novooa
+      # Als Bind-Mount statt COPY ins Image: So lässt sich die Web-App mit
+      # `flutter build web` neu bauen, ohne das Image anzufassen. Vor dem
+      # ersten Start einmal ausführen — fehlt das Verzeichnis, liefert die
+      # Runtime nur die API aus und antwortet auf App-Pfade mit 404.
+      - ./build/web:/app/web:ro
     secrets:
       - novooa_runtime_master_key
       - novooa_runtime_license_public_key

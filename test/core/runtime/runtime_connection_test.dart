@@ -192,7 +192,7 @@ void main() {
           _MemoryCredentialStore(),
           const _FakeLoginClient(),
           const _FakeAvailability(),
-          onboarding: const _FakeOnboarding(),
+          onboarding: _FakeOnboarding(),
         );
 
         await cubit.initialize(RuntimeEndpoint.fromAddress('127.0.0.1'));
@@ -217,7 +217,7 @@ void main() {
         credentials,
         const _FakeLoginClient(),
         const _FakeAvailability(),
-        onboarding: const _FakeOnboarding(),
+        onboarding: _FakeOnboarding(),
       );
 
       await cubit.initialize(RuntimeEndpoint.fromAddress('127.0.0.1'));
@@ -233,7 +233,7 @@ void main() {
         _MemoryCredentialStore(),
         const _FakeLoginClient(),
         const _FakeAvailability(),
-        onboarding: const _FakeOnboarding(hasLicense: false),
+        onboarding: _FakeOnboarding(hasLicense: false),
       );
 
       await cubit.connect('192.168.1.20');
@@ -248,7 +248,7 @@ void main() {
         _MemoryCredentialStore(),
         const _FakeLoginClient(),
         const _FakeAvailability(),
-        onboarding: const _FakeOnboarding(needsSetup: true),
+        onboarding: _FakeOnboarding(needsSetup: true),
       );
 
       await cubit.connect('192.168.1.20');
@@ -257,13 +257,93 @@ void main() {
       await cubit.close();
     });
 
+    test(
+      'reicht Kopplungscode-Pflicht und erreichbare Adressen an die '
+      'Oberfläche durch',
+      () async {
+        final cubit = RuntimeConnectionCubit(
+          _MemoryEndpointStore(null),
+          _MemoryCredentialStore(),
+          const _FakeLoginClient(),
+          const _FakeAvailability(),
+          onboarding: _FakeOnboarding(
+            needsSetup: true,
+            requiresCode: true,
+            addresses: const ['http://192.168.1.20:8090'],
+          ),
+        );
+
+        await cubit.connect('192.168.1.20');
+
+        final state = cubit.state as RuntimeConnectionNeedsPasswordSetup;
+        expect(state.requiresCode, isTrue);
+        expect(state.addresses, ['http://192.168.1.20:8090']);
+        await cubit.close();
+      },
+    );
+
+    test(
+      'schickt den Einrichtungscode an den regulären Endpunkt — nicht mehr '
+      'an den loopback-gebundenen Setup-Port',
+      () async {
+        final onboarding = _FakeOnboarding(needsSetup: true, requiresCode: true);
+        final cubit = RuntimeConnectionCubit(
+          _MemoryEndpointStore(null),
+          _MemoryCredentialStore(),
+          const _FakeLoginClient(),
+          const _FakeAvailability(),
+          onboarding: onboarding,
+        );
+        await cubit.connect('192.168.1.20');
+
+        await cubit.setPassword(
+          RuntimeEndpoint.fromAddress('192.168.1.20'),
+          'geheim',
+          code: 'abc123abc123',
+        );
+
+        expect(onboarding.submittedCode, 'abc123abc123');
+        expect(onboarding.submittedEndpoint?.address, '192.168.1.20');
+        await cubit.close();
+      },
+    );
+
+    test(
+      'ein Fehlversuch behält Code-Pflicht und Adressen — sonst verschwänden '
+      'sie ausgerechnet nach dem Fehlschlag',
+      () async {
+        final cubit = RuntimeConnectionCubit(
+          _MemoryEndpointStore(null),
+          _MemoryCredentialStore(),
+          const _FakeLoginClient(),
+          const _FakeAvailability(),
+          onboarding: _FailingSetupOnboarding(
+            addresses: const ['http://192.168.1.20:8090'],
+          ),
+        );
+        await cubit.connect('192.168.1.20');
+
+        await cubit.setPassword(
+          RuntimeEndpoint.fromAddress('192.168.1.20'),
+          'geheim',
+          code: 'falsch',
+        );
+
+        final state = cubit.state as RuntimeConnectionNeedsPasswordSetup;
+        expect(state.errorMessage, contains('Einrichtungscode'));
+        expect(state.requiresCode, isTrue);
+        expect(state.addresses, ['http://192.168.1.20:8090']);
+        await cubit.close();
+      },
+    );
+
     test('meldet eine nicht erreichbare Runtime', () async {
       final cubit = RuntimeConnectionCubit(
         _MemoryEndpointStore(null),
         _MemoryCredentialStore(),
         const _FakeLoginClient(),
         const _FakeAvailability(isReachable: false),
-        onboarding: const _FakeOnboarding(),
+        onboarding: _FakeOnboarding(),
       );
 
       await cubit.connect('192.168.1.20');
@@ -281,7 +361,7 @@ void main() {
         credentials,
         const _FakeLoginClient(token: 'fresh-token'),
         const _FakeAvailability(),
-        onboarding: const _FakeOnboarding(),
+        onboarding: _FakeOnboarding(),
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
 
@@ -302,7 +382,7 @@ void main() {
           credentials,
           const _FakeLoginClient(token: 'fresh-token'),
           const _FakeAvailability(),
-          onboarding: const _FakeOnboarding(),
+          onboarding: _FakeOnboarding(),
         );
         final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
         await cubit.login(endpoint, 'correct-horse-battery-staple');
@@ -323,7 +403,7 @@ void main() {
         _MemoryCredentialStore(),
         const _FakeLoginClient(token: 'fresh-token'),
         const _FakeAvailability(),
-        onboarding: const _FakeOnboarding(),
+        onboarding: _FakeOnboarding(),
         onSignedOut: () async => closeCallCount++,
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
@@ -342,7 +422,7 @@ void main() {
         _MemoryCredentialStore(),
         const _FakeLoginClient(),
         const _FakeAvailability(),
-        onboarding: const _FakeOnboarding(),
+        onboarding: _FakeOnboarding(),
       );
 
       await cubit.signOut();
@@ -359,7 +439,7 @@ void main() {
           failure: RuntimeLoginFailure('Passwort ist ungültig.'),
         ),
         const _FakeAvailability(),
-        onboarding: const _FakeOnboarding(),
+        onboarding: _FakeOnboarding(),
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
 
@@ -376,7 +456,7 @@ void main() {
         _MemoryCredentialStore(),
         const _FakeLoginClient(),
         const _FakeAvailability(),
-        onboarding: const _FakeOnboarding(),
+        onboarding: _FakeOnboarding(),
       );
 
       await cubit.connect('not-an-address-!!');
@@ -446,10 +526,21 @@ class _FakeAvailability implements RuntimeAvailability {
 }
 
 class _FakeOnboarding implements RuntimeOnboardingClient {
-  const _FakeOnboarding({this.hasLicense = true, this.needsSetup = false});
+  _FakeOnboarding({
+    this.hasLicense = true,
+    this.needsSetup = false,
+    this.requiresCode = false,
+    this.addresses = const [],
+  });
 
   final bool hasLicense;
   final bool needsSetup;
+  final bool requiresCode;
+  final List<String> addresses;
+
+  /// Was der letzte `setPassword`-Aufruf mitgeschickt hat.
+  String? submittedCode;
+  RuntimeEndpoint? submittedEndpoint;
 
   @override
   Future<void> activateLicense(RuntimeEndpoint endpoint, String token) async {}
@@ -458,8 +549,52 @@ class _FakeOnboarding implements RuntimeOnboardingClient {
   Future<bool> hasActiveLicense(RuntimeEndpoint endpoint) async => hasLicense;
 
   @override
-  Future<bool> needsPasswordSetup() async => needsSetup;
+  Future<RuntimeSetupStatus> setupStatus(RuntimeEndpoint endpoint) async {
+    return RuntimeSetupStatus(
+      needsSetup: needsSetup,
+      requiresCode: requiresCode,
+      addresses: addresses,
+    );
+  }
 
   @override
-  Future<void> setPassword(String password) async {}
+  Future<void> setPassword(
+    RuntimeEndpoint endpoint,
+    String password, {
+    String code = '',
+  }) async {
+    submittedEndpoint = endpoint;
+    submittedCode = code;
+  }
+}
+
+/// Lehnt die Einrichtung immer ab — für den Fehlversuch-Pfad.
+class _FailingSetupOnboarding implements RuntimeOnboardingClient {
+  _FailingSetupOnboarding({this.addresses = const []});
+
+  final List<String> addresses;
+
+  @override
+  Future<void> activateLicense(RuntimeEndpoint endpoint, String token) async {}
+
+  @override
+  Future<bool> hasActiveLicense(RuntimeEndpoint endpoint) async => true;
+
+  @override
+  Future<RuntimeSetupStatus> setupStatus(RuntimeEndpoint endpoint) async {
+    return RuntimeSetupStatus(
+      needsSetup: true,
+      requiresCode: true,
+      addresses: addresses,
+    );
+  }
+
+  @override
+  Future<void> setPassword(
+    RuntimeEndpoint endpoint,
+    String password, {
+    String code = '',
+  }) async {
+    throw const RuntimeOnboardingFailure('Der Einrichtungscode stimmt nicht.');
+  }
 }
