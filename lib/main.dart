@@ -12,6 +12,7 @@ import 'core/runtime/runtime_kind_preferences.dart';
 import 'core/runtime/runtime_profile.dart';
 import 'core/runtime/runtime_startup_decision.dart';
 import 'core/runtime/runtime_variant_switcher.dart';
+import 'core/runtime/workspace_capabilities.dart';
 import 'core/firebase/firebase_emulator_config.dart';
 import 'core/firebase/firestore_web_cache.dart';
 import 'core/logging/logger.dart';
@@ -57,9 +58,15 @@ Future<void> _startApplication() async {
 
 Future<void> _bootRuntimeKind(RuntimeKind kind) async {
   final runtimeProfile = RuntimeProfile.forKind(kind);
-  final pushFirebaseEnabled = runtimeProfile.pushNotificationsEnabled
-      ? await _initializeFirebase(runtimeProfile)
-      : false;
+  // Einzige Quelle dafür, ob Push aktiv wird: `WorkspaceCapabilities`. Muss
+  // hier als reine Funktion gelesen werden (statt aus dem DI-Container),
+  // weil `configureDependencies()` — das `WorkspaceCapabilities` erst
+  // registriert — von dieser Entscheidung selbst abhängt (Firebase muss vor
+  // der Cloud-DI stehen).
+  final capabilities = WorkspaceCapabilities.forKind(kind);
+  if (capabilities.push) {
+    await _initializeFirebase();
+  }
   configureClientLogger(const DeveloperClientLogger());
   Bloc.observer = ApplicationBlocObserver();
   _configureErrorLogging();
@@ -67,7 +74,7 @@ Future<void> _bootRuntimeKind(RuntimeKind kind) async {
   if (runtimeProfile.isCloud) {
     await _configureCloudPlatform();
   }
-  if (pushFirebaseEnabled) {
+  if (capabilities.push) {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   }
   if (runtimeProfile.isStandalone) {
@@ -76,12 +83,8 @@ Future<void> _bootRuntimeKind(RuntimeKind kind) async {
         switcher: const _AppRuntimeVariantSwitcher(),
         child: RuntimeConnectionGate(
           runtimeProfile: runtimeProfile,
-          configureApplication: (profile) =>
-              _configureApplication(profile, pushFirebaseEnabled),
-          createApplication: (profile) => MyApp(
-            runtimeProfile: profile,
-            pushFirebaseEnabled: pushFirebaseEnabled,
-          ),
+          configureApplication: _configureApplication,
+          createApplication: (profile) => MyApp(runtimeProfile: profile),
           // Abmelden vergisst Sitzung, Adresse und Varianten-Wahl
           // vollständig und ruft diesen Callback. Ein erneutes Auflösen der
           // Startentscheidung landet danach nativ korrekt wieder beim
@@ -97,14 +100,11 @@ Future<void> _bootRuntimeKind(RuntimeKind kind) async {
     );
     return;
   }
-  await _configureApplication(runtimeProfile, pushFirebaseEnabled);
+  await _configureApplication(runtimeProfile);
   runApp(
     RuntimeVariantSwitcherScope(
       switcher: const _AppRuntimeVariantSwitcher(),
-      child: MyApp(
-        runtimeProfile: runtimeProfile,
-        pushFirebaseEnabled: pushFirebaseEnabled,
-      ),
+      child: MyApp(runtimeProfile: runtimeProfile),
     ),
   );
 }
@@ -142,10 +142,7 @@ Future<void> _configureCloudPlatform() async {
   }
 }
 
-Future<void> _configureApplication(
-  RuntimeProfile runtimeProfile,
-  bool pushFirebaseEnabled,
-) async {
+Future<void> _configureApplication(RuntimeProfile runtimeProfile) async {
   await configureDependencies(runtimeProfile: runtimeProfile);
   configureClientLogger(
     runtimeProfile.isStandalone
@@ -155,31 +152,21 @@ Future<void> _configureApplication(
   if (!runtimeProfile.isStandalone && shouldNavigateFromPushClick()) {
     const FcmPushClickBridge().start(_openNotificationData);
   }
-  if (pushFirebaseEnabled) {
+  if (serviceLocator<WorkspaceCapabilities>().push) {
     unawaited(serviceLocator<FcmBootstrapper>().start());
   }
 }
 
-Future<bool> _initializeFirebase(RuntimeProfile profile) async {
+/// Wird nur aufgerufen, wenn `WorkspaceCapabilities.push` bereits true ist —
+/// die Fähigkeit hat die Zielplattform schon berücksichtigt (siehe dort),
+/// ein `UnsupportedError` an dieser Stelle wäre also ein echter Bug und darf
+/// durchschlagen statt Push still zur Laufzeit zu deaktivieren.
+Future<void> _initializeFirebase() async {
   // Nach einem vollständigen Reset (siehe `onFullReset`) kann derselbe
   // Prozess `_bootRuntimeKind` ein zweites Mal durchlaufen — Firebase lässt
   // sich aber nicht zweimal initialisieren.
-  if (Firebase.apps.isNotEmpty) return true;
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    return true;
-  } on UnsupportedError catch (error, stackTrace) {
-    if (profile.isCloud) rethrow;
-    logException(
-      message: 'Lokale Push-Benachrichtigungen sind nicht konfiguriert.',
-      error: error,
-      stackTrace: stackTrace,
-      name: 'fcm',
-    );
-    return false;
-  }
+  if (Firebase.apps.isNotEmpty) return;
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 }
 
 void _logUncaughtZoneError(Object error, StackTrace stackTrace) {
@@ -217,14 +204,9 @@ WebProvider _webAppCheckProvider() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({
-    super.key,
-    required this.runtimeProfile,
-    required this.pushFirebaseEnabled,
-  });
+  const MyApp({super.key, required this.runtimeProfile});
 
   final RuntimeProfile runtimeProfile;
-  final bool pushFirebaseEnabled;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -259,7 +241,7 @@ class _MyAppState extends State<MyApp> {
 
   Widget _wrapApplication(BuildContext context, Widget? child) {
     final content = child ?? const SizedBox.shrink();
-    final app = widget.pushFirebaseEnabled
+    final app = serviceLocator<WorkspaceCapabilities>().push
         ? FcmForegroundNotificationListener(
             onNotificationOpened: _openNotificationFromPushClick,
             onForegroundNotificationAction: _openNotification,

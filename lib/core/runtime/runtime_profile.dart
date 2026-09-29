@@ -109,11 +109,4 @@ class RuntimeProfile {
 
   bool get isCloud => kind == RuntimeKind.cloud;
   bool get isStandalone => kind == RuntimeKind.standalone;
-
-  bool get pushNotificationsEnabled => isCloud || _standalonePushEnabled;
-
-  static const _standalonePushEnabled = bool.fromEnvironment(
-    'NOVOOA_PUSH_ENABLED',
-    defaultValue: false,
-  );
 }

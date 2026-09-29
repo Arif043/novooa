@@ -103,22 +103,4 @@ void main() {
       );
     });
   });
-
-  test('pushNotificationsEnabled ist für die Cloud immer aktiv', () {
-    expect(
-      RuntimeProfile.forKind(RuntimeKind.cloud).pushNotificationsEnabled,
-      isTrue,
-    );
-  });
-
-  test(
-    'Standalone-Push bleibt ohne NOVOOA_PUSH_ENABLED aus, damit eine lokale '
-    'Runtime keine Firebase-Initialisierung erzwingt',
-    () {
-      expect(
-        RuntimeProfile.forKind(RuntimeKind.standalone).pushNotificationsEnabled,
-        isFalse,
-      );
-    },
-  );
 }

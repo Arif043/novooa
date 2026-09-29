@@ -146,13 +146,29 @@ Zwei getrennte Fragen stecken hier drin:
   `task_builder_side_panel.dart`, `knowledge_base_side_panel.dart`). Das ist
   jetzt `lib/core/runtime/workspace_capabilities.dart`: ein typisiertes
   `WorkspaceCapabilities`-Value-Object (`assistant`, `dataCollections`,
-  `modelCatalog`), einmal aus der `RuntimeKind` abgeleitet und in
+  `modelCatalog`, `push`), einmal aus der `RuntimeKind` abgeleitet und in
   `configureDependencies` als Singleton registriert. Die vier genannten
   Stellen lesen jetzt `capabilities.<feld>` statt den Container zu befragen.
 
 `assistant` steht inzwischen für beide Varianten auf `true` — der lokale
 Assistant-Endpunkt existiert (siehe Paritätslücken, Punkt 5, und
 [`../features/ki-agent.md`](../features/ki-agent.md)).
+
+`push` lag zunächst als `RuntimeProfile.pushNotificationsEnabled` an einer
+zweiten Stelle mit derselben Frage — inzwischen dieselbe
+`WorkspaceCapabilities`-Quelle, und zwar die **einzige**: `main.dart` führt
+keine eigene, zur Laufzeit ermittelte Zusatzentscheidung mehr (kein separates
+„hat `Firebase.initializeApp()` geklappt?"-Flag). Dafür fließt auch die
+Zielplattform in `forKind` ein — Firebase Cloud Messaging hat keine
+Desktop-SDKs für Windows/Linux, `firebase_options.dart` wirft dort immer
+`UnsupportedError`. Das ist eine feste, zur Kompilierzeit bekannte
+Plattformgrenze, also gehört sie in die deklarative Fähigkeit statt als
+Try/Catch-Rückfall erst beim tatsächlichen Firebase-Aufruf entdeckt zu
+werden. `main.dart` liest `forKind(kind)` vor der Firebase-Initialisierung
+als reine Funktion, weil der DI-Container dafür noch nicht steht; alles
+danach (`FcmBootstrapper`, `FcmForegroundNotificationListener`) liest
+denselben Wert über den registrierten Singleton (siehe
+[`../local-runtime.md`](../local-runtime.md) § Push-Benachrichtigungen).
 
 ### 7. Zwei unterschiedliche Identitätsmodelle
 
