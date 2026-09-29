@@ -21,7 +21,11 @@ test("sendet den aufgelösten Text als Push-Benachrichtigung an das Team", async
     body: "Fertig!",
     data: {type: "taskNotification"},
   });
-  assert.deepEqual(result.outputs.value, {type: "string", value: "Fertig!"});
+  assert.deepEqual(
+    result.outputs,
+    {},
+    "reiner Seiteneffekt ohne fachlichen Rückgabewert — kein Output",
+  );
 });
 
 test("verwendet einen Standardtitel, wenn keiner konfiguriert ist", async () => {

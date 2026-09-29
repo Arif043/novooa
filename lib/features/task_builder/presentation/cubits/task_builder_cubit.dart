@@ -336,8 +336,11 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   ) {
     // Dialogeingabe-Bausteine haben immer mehrere, eigenständig benannte
     // Outputs (siehe _collectOutputNames) und deshalb nie einen eigenen
-    // Ausgabenamen.
-    final outputName = primitive == WorkflowPrimitive.dialogInput
+    // Ausgabenamen. Reine Seiteneffekt-Bausteine ohne fachlichen
+    // Rückgabewert (siehe _primitivesWithoutOutput) haben gar keinen.
+    final outputName =
+        primitive == WorkflowPrimitive.dialogInput ||
+            _primitivesWithoutOutput.contains(primitive)
         ? ''
         : _uniqueOutputName(graph, '', _outputNameFor(primitive, number));
     return WorkflowNode(
@@ -461,10 +464,24 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     return '${candidate}_$suffix';
   }
 
+  /// Reine Seiteneffekt-Bausteine ohne fachlichen Rückgabewert — z.B. eine
+  /// Push-Benachrichtigung senden. Bekommen nie einen Ausgabenamen (siehe
+  /// `_buildNode`), damit die Kante im Graphen keinen referenzierbaren Wert
+  /// suggeriert, den es nicht gibt (siehe `docs/node-executor-outputs.md`).
+  /// Anders als `sendChannelMessage`, das über `providerMessageId`/
+  /// `channelId` echte, neue Information aus dem Versand zurückgibt.
+  static const _primitivesWithoutOutput = {
+    WorkflowPrimitive.notificationSend,
+  };
+
   String _outputNameFor(WorkflowPrimitive primitive, int number) {
     return '${_outputBaseFor(primitive)}$number';
   }
 
+  /// `notificationSend` bekommt nie einen Ausgabenamen (siehe
+  /// `_primitivesWithoutOutput`) — der Zweig unten bleibt trotzdem stehen,
+  /// weil das Switch sonst nicht mehr exhaustiv über [WorkflowPrimitive]
+  /// wäre und ein künftiges neues Primitive stillschweigend durchfiele.
   String _outputBaseFor(WorkflowPrimitive primitive) {
     return switch (primitive) {
       WorkflowPrimitive.stringInput => 'input',

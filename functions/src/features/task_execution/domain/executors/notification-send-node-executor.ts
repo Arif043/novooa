@@ -1,6 +1,5 @@
 import {
   executedNode,
-  stringOutput,
   type NodeExecutor,
   type TaskRunContext,
 } from "./node-executor.js";
@@ -44,10 +43,11 @@ export function createNotificationSendNodeExecutor(
       if (!body) throw new Error("Push-Benachrichtigung senden: Text fehlt.");
       const title = titleFrom(config.title, runContext);
       await sendNotification(runContext, title, body, observer);
-      return executedNode(node, {
-        value: stringOutput(body),
-        text: stringOutput(body),
-      });
+      // Reiner Seiteneffekt ohne fachlichen Rückgabewert: Der gesendete Text
+      // ist dem Graphen durch die eigene Konfiguration bereits bekannt —
+      // ihn als Output zu echoen suggeriert einen neuen, referenzierbaren
+      // Wert, den es nicht gibt (siehe docs/node-executor-outputs.md).
+      return executedNode(node, {});
     },
   };
 }

@@ -183,6 +183,11 @@ benötigt eine `connectorId` eines aktiven Mail-Connectors.
 alle Nutzer:innen des aktuellen Teams. Der optionale `title` wird ebenfalls
 als Template aufgelöst; ohne Wert verwendet der Baustein
 „Benachrichtigung von novooa“. Ein leerer aufgelöster Text ist ein Run-Fehler.
+Reiner Seiteneffekt ohne fachlichen Rückgabewert — der gesendete Text ist dem
+Graphen durch die eigene Konfiguration bereits bekannt, ein Echo als Output
+würde nur einen nicht vorhandenen neuen Wert suggerieren (siehe
+[`../node-executor-outputs.md`](../node-executor-outputs.md)). Der Baustein
+bekommt deshalb auch keinen Ausgabenamen im Aufgabenstudio.
 
 Der Baustein hängt am fachlichen `TeamNotificationSender`-Port. In der Cloud
 löst `FirebaseTeamNotificationSender` die Team-Mitglieder-UIDs über

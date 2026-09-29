@@ -7,10 +7,15 @@
 
 Jeder Executor liefert ein `NodeExecutionResult` mit einem `outputs`-Objekt.
 Ein Output hat einen der Typen `string`, `datetime`, `number`, `boolean`,
-`json`, `file`, `media` oder `table`. Jeder ausgefuehrte Baustein stellt seinen
-primaeren, typisierten Wert unter `value` bereit. Kanten bestimmen weiterhin
-nur Reihenfolge und Verzweigung; ein Executor erhaelt die `value`-Outputs
-seiner direkten Vorgaenger, nicht mehr den letzten Textwert eines Runs.
+`json`, `file`, `media` oder `table`. Ein ausgefuehrter Baustein mit einem
+fachlichen Rückgabewert stellt ihn unter `value` bereit. Reine
+Seiteneffekt-Bausteine ohne fachlichen Rückgabewert (aktuell:
+`notificationSend`) liefern ein leeres `outputs`-Objekt — der Baustein
+bekommt dafür clientseitig auch keinen Ausgabenamen (siehe
+`task_builder_cubit.dart`, `_primitivesWithoutOutput`). Kanten bestimmen
+weiterhin nur Reihenfolge und Verzweigung; ein Executor erhaelt die
+`value`-Outputs seiner direkten Vorgaenger, nicht mehr den letzten Textwert
+eines Runs.
 
 `media` und `file` enthalten eine fachliche Referenz mit `fileId`, `versionId`,
 `displayName`, `contentType` und `sizeBytes`. Der konkrete Speicherort bleibt
@@ -43,7 +48,7 @@ Primitives erhalten den Status `skipped` und keine Outputs.
 | `readChannelEvent` mit E-Mail | ausgefuehrt | `value`, `sender`, `subject`, `message` (je `string`), `receivedAt` (`datetime`) |
 | `readChannelEvent` mit WhatsApp/SMS | ausgefuehrt | `value`, `sender`, `message` (je `string`), `receivedAt` (`datetime`) |
 | `sendChannelMessage` | ausgefuehrt | `value`, `recipient`, `channelId`, `providerMessageId` (je `string`) |
-| `notificationSend` | ausgefuehrt | `value` (`string`: gesendeter Text) |
+| `notificationSend` | ausgefuehrt | keine — reiner Seiteneffekt ohne fachlichen Rückgabewert |
 | `humanApproval` | wartet auf Freigabe | `value` (`string`) |
 | `dialogInput` | wartet auf Formulareingabe | nach dem Absenden: ein flacher, typisierter Output pro Feld, ohne umschliessenden Knotennamen (kein `value`-Gesamtwert mehr adressierbar) |
 | `mediaInput` | wartet auf ein Bild; Nutzer wählt Kamera oder Galerie | nach dem Absenden: `value` (`media`) |
