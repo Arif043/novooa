@@ -17,9 +17,13 @@ export type TemplateExpressionContext = {
   variables: TaskVariables;
   scope: WorkflowExecutionScope;
   /**
-   * Zweitschlüssel fest vorgegebener Ausgaben (z.B. `sender`, `fileId`),
-   * genestet unter dem `outputName` des erzeugenden Bausteins — erreichbar
-   * per Dot-Pfad, z.B. `{{eingang.sender}}`.
+   * Zweitschlüssel fest vorgegebener **Neben**-Ausgaben (z.B. `sender`,
+   * `fileId`), genestet unter dem `outputName` des erzeugenden Bausteins —
+   * erreichbar per Dot-Pfad, z.B. `{{eingang.sender}}`. Enthält bewusst
+   * keinen `value`-Eintrag: Die alte, zweistufige Adressierung des
+   * Primärwerts (`{{eingang.value}}`, aus der Zeit vor eindeutigen
+   * Einzelnamen) ist abgeschafft — der Primärwert ist ausschließlich über
+   * [flatOutputs] als `{{eingang}}` erreichbar.
    */
   nodeOutputs: Record<string, Record<string, NodeOutputValue>>;
   /**
@@ -128,7 +132,7 @@ function nodeOutputContextFor(
     }
     const name = node.outputName.trim() || node.id.replace(/[^\w]/g, "");
     if (name.length === 0) continue;
-    nodeOutputs[name] = result.outputs;
+    nodeOutputs[name] = secondaryOutputsOf(result.outputs);
     if (result.outputs.value !== undefined) flatOutputs[name] = result.outputs.value;
   }
   return {nodeOutputs, flatOutputs};
@@ -144,9 +148,22 @@ function mergeFlatFieldOutputs(
   outputs: Record<string, NodeOutputValue>,
 ): void {
   for (const [key, value] of Object.entries(outputs)) {
-    if (key === "value" || key === "text") continue;
+    if (key === "value") continue;
     flatOutputs[key] = value;
   }
+}
+
+/**
+ * Nur die Nebenoutputs eines Bausteins (z.B. `sender`, `fileId`) für die
+ * Dot-Pfad-Adressierung unter seinem `outputName` — ohne `value`. Die alte
+ * `{{outputName.value}}`-Form ist damit nicht mehr auflösbar, nur noch die
+ * flache Kurzform `{{outputName}}` (siehe [flatOutputs]).
+ */
+function secondaryOutputsOf(
+  outputs: Record<string, NodeOutputValue>,
+): Record<string, NodeOutputValue> {
+  const {value: _primary, ...secondary} = outputs;
+  return secondary;
 }
 
 function valueAtPath(value: unknown, path: string[]): unknown {

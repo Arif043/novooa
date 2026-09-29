@@ -81,13 +81,23 @@ class TaskDocumentMapper {
     };
   }
 
+  /// Erzwingt [WorkflowPrimitive.hasNoOutput] auch für Bestandsdaten: Wurde
+  /// ein Knoten angelegt, bevor diese Regel für seine Primitive galt (oder
+  /// per „Aufgabe duplizieren" aus einem solchen Knoten kopiert), trägt er
+  /// sonst dauerhaft einen veralteten Ausgabenamen — ohne dass ihn je
+  /// jemand explizit vergeben hätte. Selbstheilend beim nächsten Laden,
+  /// statt eine einmalige Migration über den gesamten Datenbestand zu
+  /// brauchen.
   WorkflowNode _nodeFromDocument(Map<String, Object?> data) {
     final config = _configFrom(data['config']);
+    final outputName = config.primitive.hasNoOutput
+        ? ''
+        : data['outputName'] as String? ?? '';
     return WorkflowNode(
       id: NodeId(data['id'] as String? ?? ''),
       title: data['title'] as String? ?? '',
       description: data['description'] as String? ?? '',
-      outputName: data['outputName'] as String? ?? '',
+      outputName: outputName,
       config: config,
     );
   }

@@ -47,9 +47,9 @@ benannte `outputs`. Der primäre Output heisst `value` und ist typisiert.
 Kanten bestimmen ausschliesslich Reihenfolge und Verzweigungen. Ein Knoten
 erhält keine Werte seiner direkten Vorgänger. Benannte Werte werden
 ausschliesslich über einen expliziten Template-Ausdruck eingebunden — entweder
-flach über den Ausgabenamen eines Bausteins (der primäre Wert braucht kein
-`.value`-Suffix) oder per Dot-Pfad für seine benannten Nebenoutputs, zum
-Beispiel:
+flach über den Ausgabenamen eines Bausteins (der primäre Wert ist
+ausschliesslich so erreichbar, ein `.value`-Suffix löst nicht mehr auf) oder
+per Dot-Pfad für seine benannten Nebenoutputs, zum Beispiel:
 
 ```text
 {{kunde}}

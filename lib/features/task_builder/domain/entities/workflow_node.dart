@@ -33,6 +33,20 @@ enum WorkflowPrimitive {
   validation,
 }
 
+/// Ob eine Primitive einen fachlichen Rückgabewert hat.
+///
+/// Domain-Regel statt Presentation-Detail, weil sie an zwei unabhängigen
+/// Stellen dieselbe Antwort braucht: `TaskBuilderCubit` beim Anlegen eines
+/// Knotens und `TaskDocumentMapper` beim Laden gespeicherter Aufgaben (siehe
+/// dort — Bausteine, die vor dieser Regel angelegt wurden, können noch einen
+/// veralteten `outputName` tragen; der Mapper korrigiert das beim Laden statt
+/// dass jede Aufgabe einzeln nachgepflegt werden müsste).
+extension WorkflowPrimitiveOutput on WorkflowPrimitive {
+  /// Reine Seiteneffekt-Bausteine ohne fachlichen Rückgabewert — aktuell nur
+  /// `notificationSend` (siehe `docs/node-executor-outputs.md`).
+  bool get hasNoOutput => this == WorkflowPrimitive.notificationSend;
+}
+
 /// Value Object für Knoten-Identifier.
 ///
 /// Wrappt einen [String], damit Aufrufer `NodeId` nicht versehentlich mit

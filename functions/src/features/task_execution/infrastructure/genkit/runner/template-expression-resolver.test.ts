@@ -49,6 +49,20 @@ test("resolves a node's primary output flat under its outputName", () => {
   assert.equal(resolver.resolveValue("{{eingang}}"), "Hallo");
 });
 
+test(
+  "löst die alte {{outputName.value}}-Form nicht mehr auf — nur noch die "
+  + "flache Kurzform {{outputName}}",
+  () => {
+    const resolver = graphResolverFor(
+      [stringInputNode("n1", "eingang")],
+      [result("n1", "stringInput", {value: {type: "string", value: "Hallo"}})],
+    );
+
+    assert.equal(resolver.resolveValue("{{eingang}}"), "Hallo");
+    assert.equal(resolver.resolveValue("{{eingang.value}}"), undefined);
+  },
+);
+
 test("resolves a node's fixed secondary output via dot-path under its outputName", () => {
   const resolver = graphResolverFor(
     [{...stringInputNode("n1", "eingang"), primitive: "readEmail", config: {primitive: "readEmail"}}],

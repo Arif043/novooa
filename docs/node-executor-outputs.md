@@ -20,13 +20,16 @@ eines Runs.
 `media` und `file` enthalten eine fachliche Referenz mit `fileId`, `versionId`,
 `displayName`, `contentType` und `sizeBytes`. Der konkrete Speicherort bleibt
 innerhalb der Dateiinfrastruktur; erst der konsumierende Executor liest die
-referenzierte Version. Der primäre Wert eines benannten Bausteins ist direkt
-per `{{ausgabename}}` erreichbar (kein `.value`-Suffix nötig); benannte
-Nebenoutputs bleiben per Dot-Pfad erreichbar, etwa `{{eingang.sender}}` oder
-`{{bericht.fileId}}`. Bausteine mit mehreren fachlichen Ausgabewerten
-(strukturierte Prompt-Ausgabe, Dialogeingabe) haben keinen eigenen
-Ausgabenamen — hier ist jedes Feld direkt und flach unter seinem eigenen,
-graph-weit eindeutigen Namen erreichbar, z.B. `{{Name}}`.
+referenzierte Version. Der primäre Wert eines benannten Bausteins ist
+ausschließlich per `{{ausgabename}}` erreichbar — die ältere, zweistufige
+Form `{{ausgabename.value}}` aus der Zeit vor eindeutigen Einzelnamen löst
+seit `template-expression-resolver.ts` (`nodeOutputContextFor`/
+`secondaryOutputsOf`) nicht mehr auf. Benannte Nebenoutputs bleiben per
+Dot-Pfad erreichbar, etwa `{{eingang.sender}}` oder `{{bericht.fileId}}`.
+Bausteine mit mehreren fachlichen Ausgabewerten (strukturierte
+Prompt-Ausgabe, Dialogeingabe) haben keinen eigenen Ausgabenamen — hier ist
+jedes Feld direkt und flach unter seinem eigenen, graph-weit eindeutigen
+Namen erreichbar, z.B. `{{Name}}`.
 
 Ein leerer Text erzeugt keinen `value`-Output. `humanApproval`, `dialogInput`
 und `mediaInput` liefern den Status `waitingForApproval`; nicht registrierte
