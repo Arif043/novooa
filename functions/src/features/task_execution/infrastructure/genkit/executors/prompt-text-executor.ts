@@ -88,7 +88,6 @@ export async function executeStructuredPrompt(
   const answer = JSON.stringify(response.output);
   return {answer, outputs: {
     value: {type: "json", value: response.output},
-    text: {type: "string", value: answer},
     ...fieldOutputsFor(response.output),
   }};
 }
@@ -186,6 +185,5 @@ export function fieldOutputsFor(output: Record<string, StructuredFieldValue>) {
 }
 
 function textOutputs(text: string) {
-  const value = {type: "string" as const, value: text};
-  return {value, text: value};
+  return {value: {type: "string" as const, value: text}};
 }

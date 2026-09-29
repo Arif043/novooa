@@ -33,7 +33,7 @@ jedes Feld als benannten Output ab; jedes Feld trägt einen eigenen Typ
 (`string`/`number`/`boolean`), der das Zod-Schema pro Feld steuert (inkl.
 Koerzion bei `number`/`boolean`) und den resultierenden Workflow-Ausgabewert
 entsprechend taggt, statt wie zuvor immer `string`. Die Gesamtstruktur wird
-zusätzlich als JSON in `text` geschrieben.
+zusätzlich als `json`-`value` bereitgestellt.
 Bild-Prompts verwenden Google GenAI mit `gemini-2.5-flash-image` (optional
 ueber `GOOGLE_IMAGE_MODEL` konfigurierbar). Ein vorangehender `media`-Wert
 wird aus Object Storage geladen und als Genkit-Medienteil an Gemini übergeben.
@@ -107,7 +107,7 @@ Vergleich ad-hoc koerziert. Der Baukasten-Editor
 "Wenn"-Freitexteingabe.
 
 In beiden Faellen wird der Branch-Graph durch denselben Graph-Runner
-ausgefuehrt; dessen finale Ausgabe wird `text` des Conditional-Knotens.
+ausgefuehrt; dessen finale Ausgabe wird `value` des Conditional-Knotens.
 Ausgehende Top-Level-Kanten sind nur ein Legacy-Fallback.
 
 ## Iterative Verfeinerung

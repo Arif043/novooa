@@ -28,9 +28,13 @@ Nebenoutputs bleiben per Dot-Pfad erreichbar, etwa `{{eingang.sender}}` oder
 Ausgabenamen — hier ist jedes Feld direkt und flach unter seinem eigenen,
 graph-weit eindeutigen Namen erreichbar, z.B. `{{Name}}`.
 
-Ein leerer Text erzeugt keinen `text`-Output. `humanApproval`, `dialogInput`
+Ein leerer Text erzeugt keinen `value`-Output. `humanApproval`, `dialogInput`
 und `mediaInput` liefern den Status `waitingForApproval`; nicht registrierte
 Primitives erhalten den Status `skipped` und keine Outputs.
+
+Executoren mit rein textuellem Ergebnis setzten früher zusätzlich zu `value`
+einen identischen `text`-Output — ungenutzte Redundanz, inzwischen entfernt.
+`value` ist der einzige primäre Ausgabeschlüssel.
 
 ## Registrierte Executor
 

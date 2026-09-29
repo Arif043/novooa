@@ -13,7 +13,6 @@ test("maps a dialog submission to typed node outputs", async () => {
 
   assert.deepEqual(outputs, {
     value: {type: "json", value: {name: "Mila", age: 27, active: true, channel: "E-Mail"}},
-    text: {type: "string", value: '{"name":"Mila","age":27,"active":true,"channel":"E-Mail"}'},
     name: {type: "string", value: "Mila"},
     age: {type: "number", value: 27},
     active: {type: "boolean", value: true},

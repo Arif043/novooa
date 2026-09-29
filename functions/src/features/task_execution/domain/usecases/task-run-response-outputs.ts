@@ -33,8 +33,7 @@ function waitingResultFor(resumeState: TaskResumeState) {
 }
 
 function textOutput(output: string): Record<string, NodeOutputValue> {
-  const value = {type: "string" as const, value: output};
-  return {value, text: value};
+  return {value: {type: "string" as const, value: output}};
 }
 
 function interactionFor(
@@ -61,7 +60,6 @@ function dialogInputOutputs(
   );
   return {
     value: {type: "json", value: values},
-    text: {type: "string", value: JSON.stringify(values)},
     ...outputs,
   };
 }

@@ -125,8 +125,7 @@ export function datetimeOutput(value: string): NodeOutputValue {
 
 export function textOutputs(text: string): Record<string, NodeOutputValue> {
   if (text.trim().length === 0) return {};
-  const value = stringOutput(text);
-  return {value, text: value};
+  return {value: stringOutput(text)};
 }
 
 export function textOutputFromResult(result: NodeExecutionResult): string {

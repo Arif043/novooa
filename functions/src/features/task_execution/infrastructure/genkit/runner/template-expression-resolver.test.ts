@@ -87,7 +87,6 @@ test("flattens structured prompt fields directly without a node name", () => {
     }],
     [result("n1", "prompt", {
       value: {type: "json", value: {Name: "Anna", Alter: 30}},
-      text: {type: "string", value: "{\"Name\":\"Anna\",\"Alter\":30}"},
       Name: {type: "string", value: "Anna"},
       Alter: {type: "number", value: 30},
     })],
@@ -112,7 +111,6 @@ test("flattens dialog input fields directly without a node name", () => {
     }],
     [result("n1", "dialogInput", {
       value: {type: "json", value: {Kundennummer: "K-1"}},
-      text: {type: "string", value: "{\"Kundennummer\":\"K-1\"}"},
       Kundennummer: {type: "string", value: "K-1"},
     })],
   );

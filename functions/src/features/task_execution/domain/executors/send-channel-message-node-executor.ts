@@ -73,7 +73,6 @@ export function createSendChannelMessageNodeExecutor(
       observer.sent({...started, ...sent});
       return executedNode(node, {
         value: stringOutput(body),
-        text: stringOutput(body),
         recipient: stringOutput(recipient),
         channelId: stringOutput(sent.channelId),
         providerMessageId: stringOutput(sent.providerMessageId),
