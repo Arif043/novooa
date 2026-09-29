@@ -24,7 +24,7 @@ const rawCommandSchema = z.object({
   message: z.string().optional(),
 });
 
-const rawOutputSchema = z.object({
+export const rawOutputSchema = z.object({
   answer: z.string(),
   commands: z.array(z.unknown()).optional(),
   knowledgeCommands: z.array(z.unknown()).optional(),
@@ -40,22 +40,24 @@ export const taskBuilderAssistantOutputSchema = z.object({
 
 type RawCommand = z.infer<typeof rawCommandSchema>;
 
-export function taskBuilderOutputFromText(text: string): TaskBuilderAssistantResponse {
-  const output = rawOutputFrom(text);
-  if (!output) return emptyOutput(text);
+/**
+ * `output` stammt aus Genkits strukturiertem Ausgabe-Pfad (`ai.generate`
+ * mit `output: {schema: rawOutputSchema}`), der ```json-Codezäune und
+ * ähnliche Formatierungen schwacher (z. B. lokaler) Modelle bereits robust
+ * herausgelöst hat. `text` dient nur noch als Fallback, falls die
+ * Modellantwort gar keine gültige JSON-Struktur enthielt.
+ */
+export function taskBuilderOutputFromModelOutput(
+  output: unknown,
+  text: string,
+): TaskBuilderAssistantResponse {
+  const parsed = rawOutputSchema.safeParse(output);
+  if (!parsed.success) return emptyOutput(text);
   return {
-    answer: output.answer,
-    commands: (output.commands ?? []).map(commandFrom).filter(isCommand),
+    answer: parsed.data.answer,
+    commands: (parsed.data.commands ?? []).map(commandFrom).filter(isCommand),
     knowledgeCommands: [],
   };
-}
-
-function rawOutputFrom(text: string) {
-  try {
-    return rawOutputSchema.parse(JSON.parse(text));
-  } catch (_) {
-    return null;
-  }
 }
 
 function emptyOutput(text: string): TaskBuilderAssistantResponse {

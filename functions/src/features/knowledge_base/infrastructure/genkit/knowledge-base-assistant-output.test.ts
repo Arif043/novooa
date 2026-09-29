@@ -1,16 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {assistantOutputFromText} from "./knowledge-base-assistant-output.js";
+import {assistantOutputFromModelOutput} from "./knowledge-base-assistant-output.js";
 
 test("normalizes a valid create suggestion without a label", () => {
-  const output = assistantOutputFromText(JSON.stringify({
+  const output = assistantOutputFromModelOutput({
     answer: "Ich kann die Notiz anlegen.",
     knowledgeCommands: [{
       type: "createKnowledgeNote",
       title: "LaraEvent",
       content: "Eventdekoration.",
     }],
-  }));
+  }, "irrelevant, da bereits strukturiert ausgewertet");
 
   assert.deepEqual(output.knowledgeCommands, [{
     type: "createKnowledgeNote",
@@ -21,20 +21,20 @@ test("normalizes a valid create suggestion without a label", () => {
 });
 
 test("discards an update suggestion without a note ID", () => {
-  const output = assistantOutputFromText(JSON.stringify({
+  const output = assistantOutputFromModelOutput({
     answer: "Ich bereite die Änderung vor.",
     knowledgeCommands: [{
       type: "updateKnowledgeNote",
       title: "LaraEvent",
       content: "Eventdekoration.",
     }],
-  }));
+  }, "irrelevant, da bereits strukturiert ausgewertet");
 
   assert.deepEqual(output.knowledgeCommands, []);
 });
 
-test("keeps a plain answer when the model does not return JSON", () => {
-  const output = assistantOutputFromText("Die Notiz kann erstellt werden.");
+test("keeps a plain answer when the model does not return structured output", () => {
+  const output = assistantOutputFromModelOutput(undefined, "Die Notiz kann erstellt werden.");
 
   assert.deepEqual(output, {
     answer: "Die Notiz kann erstellt werden.",

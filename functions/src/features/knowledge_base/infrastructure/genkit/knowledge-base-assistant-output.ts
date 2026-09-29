@@ -18,7 +18,7 @@ const rawKnowledgeCommandSchema = z.object({
   content: z.string().optional(),
 });
 
-const rawAssistantOutputSchema = z.object({
+export const rawAssistantOutputSchema = z.object({
   answer: z.string(),
   commands: z.array(z.unknown()).optional(),
   knowledgeCommands: z.array(z.unknown()).optional(),
@@ -37,26 +37,26 @@ export const knowledgeBaseAssistantOutputSchema = z.object({
 type KnowledgeCommand = KnowledgeBaseAssistantCommand;
 type RawKnowledgeCommand = z.infer<typeof rawKnowledgeCommandSchema>;
 
-export function assistantOutputFromText(
+/**
+ * `output` stammt aus Genkits strukturiertem Ausgabe-Pfad (`ai.generate`
+ * mit `output: {schema: rawAssistantOutputSchema}`), der ```json-Codezäune
+ * und ähnliche Formatierungen schwacher (z. B. lokaler) Modelle bereits
+ * robust herausgelöst hat. `text` dient nur noch als Fallback, falls die
+ * Modellantwort gar keine gültige JSON-Struktur enthielt.
+ */
+export function assistantOutputFromModelOutput(
+  output: unknown,
   text: string,
 ): KnowledgeBaseAssistantResponse {
-  const rawOutput = rawOutputFrom(text);
-  if (!rawOutput) return emptyOutput(text);
+  const parsed = rawAssistantOutputSchema.safeParse(output);
+  if (!parsed.success) return emptyOutput(text);
   return {
-    answer: rawOutput.answer,
+    answer: parsed.data.answer,
     commands: [],
-    knowledgeCommands: (rawOutput.knowledgeCommands ?? [])
+    knowledgeCommands: (parsed.data.knowledgeCommands ?? [])
         .map(knowledgeCommandFrom)
         .filter(isKnowledgeCommand),
   };
-}
-
-function rawOutputFrom(text: string) {
-  try {
-    return rawAssistantOutputSchema.parse(JSON.parse(text));
-  } catch (_) {
-    return null;
-  }
 }
 
 function emptyOutput(text: string): KnowledgeBaseAssistantResponse {

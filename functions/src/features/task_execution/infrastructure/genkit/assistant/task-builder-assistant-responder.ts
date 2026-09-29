@@ -5,7 +5,7 @@ import {
 } from "../../../../assistant/infrastructure/genkit/genkit-assistant-responder.js";
 import {promptWithUrlContext} from "../../../../assistant/infrastructure/genkit/assistant-url-context-prompt.js";
 import {type TaskBuilderAssistantResponse} from "../../../domain/entities/task-builder-assistant-response.js";
-import {taskBuilderOutputFromText} from "./task-builder-assistant-output.js";
+import {rawOutputSchema, taskBuilderOutputFromModelOutput} from "./task-builder-assistant-output.js";
 
 export type TaskBuilderAssistantResponderDependencies = {
   ai: Genkit;
@@ -22,8 +22,9 @@ export function createTaskBuilderAssistantResponder(
     systemPrompt,
     tools: [],
     modelConfig: dependencies.modelConfig,
+    outputSchema: rawOutputSchema,
     promptFromRequest: (request) => promptWithUrlContext(request.question),
-    responseFromText: taskBuilderOutputFromText,
+    responseFromOutput: taskBuilderOutputFromModelOutput,
   });
 }
 

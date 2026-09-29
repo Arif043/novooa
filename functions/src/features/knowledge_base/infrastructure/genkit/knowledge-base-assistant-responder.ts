@@ -6,7 +6,8 @@ import {
 import {promptWithUrlContext} from "../../../assistant/infrastructure/genkit/assistant-url-context-prompt.js";
 import {type KnowledgeBaseAssistantResponse} from "../../domain/entities/knowledge-base-assistant-response.js";
 import {
-  assistantOutputFromText,
+  assistantOutputFromModelOutput,
+  rawAssistantOutputSchema,
 } from "./knowledge-base-assistant-output.js";
 import {
   defineKnowledgeBaseAssistantTools,
@@ -33,8 +34,9 @@ export function createKnowledgeBaseAssistantResponder(
     systemPrompt,
     tools: Object.values(tools),
     modelConfig: dependencies.modelConfig,
+    outputSchema: rawAssistantOutputSchema,
     promptFromRequest: (request) => promptWithUrlContext(request.question),
-    responseFromText: assistantOutputFromText,
+    responseFromOutput: assistantOutputFromModelOutput,
   });
 }
 
