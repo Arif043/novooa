@@ -5,6 +5,22 @@ Pflegen der Wissensbasis. Die gemeinsame Assistenzoberfläche läuft im Client.
 TaskBuilder und Wissensbasis-Agent nutzen jeweils eine authentifizierte
 Genkit-Callable Function.
 
+**Läuft in Cloud und Standalone.** `WorkspaceCapabilities.assistant` (siehe
+[`../architecture/betriebsvarianten.md`](../architecture/betriebsvarianten.md),
+Blocker 6) steht für beide Varianten auf `true`. Die lokale Runtime bedient
+denselben Anfrage-/Antwort-Vertrag wie die Firebase Callable Functions über
+`POST /v1/assistant/task-builder` und `POST /v1/assistant/knowledge-base`
+(`LocalAssistantHttpHandler`). Wiederverwendet werden dabei die bereits
+Firebase-entkoppelten Bausteine der Backend-Domain — `GenkitAssistantResponder`,
+die reinen `createTaskBuilderAssistant`/`createKnowledgeBaseAssistant`-
+Factories — sowie die für die Aufgaben-Ausführung ohnehin vorhandene lokale
+Infrastruktur: `SQLiteKnowledgeBaseAssistantNoteStore`,
+`SQLiteTeamContextStore` und der Standardmodell-Pfad aus `ai-models.ts`
+(dasselbe Sprachmodell, das "Standardmodell verwenden" in Prompt-Bausteinen
+nutzt). Ausgelassen ist bewusst nur das Audit-Logging der Cloud-Variante —
+das dient dort der teamübergreifenden Aufsicht, für einen einzelnen
+Standalone-Betreiber ohne Mehrwert.
+
 ## Verantwortlichkeiten
 
 - Kontextbezogene Hilfe für Aufgabenbau, Nodes, Trigger und Wissensbasis geben.

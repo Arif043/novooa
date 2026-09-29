@@ -33,6 +33,7 @@ import {conditionalBranchLogger} from "./conditional-branch-logger.js";
 import {taskMessageLogger} from "./task-message-logger.js";
 import {notificationSendLogger} from "./notification-send-logger.js";
 import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {type LanguageModelDefaultsStore} from "../../../../language_models/domain/repositories/language-model-defaults-store.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 
 function executorsFor(logger: ApplicationLogger) {
@@ -64,6 +65,7 @@ export function executorFor(
   logger: ApplicationLogger,
   workspace?: NodeAttachmentWorkspace,
   languageModelResolver?: GenkitLanguageModelResolver,
+  languageModelDefaultsStore?: LanguageModelDefaultsStore,
 ): NodeExecutor | undefined {
   if (primitive === "script") {
     return createScriptNodeExecutor(
@@ -72,7 +74,9 @@ export function executorFor(
     );
   }
   if (primitive === "prompt") {
-    return createGenkitPromptNodeExecutor(ai, workspace, languageModelResolver, logger);
+    return createGenkitPromptNodeExecutor(
+      ai, workspace, languageModelResolver, logger, languageModelDefaultsStore,
+    );
   }
   if (primitive === "iterativeRefinement") {
     return createGenkitIterativeRefinementNodeExecutor(ai, workspace, logger);

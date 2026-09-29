@@ -3,6 +3,7 @@ import {type KnowledgeBaseStore} from
   "../../../../knowledge_base/domain/repositories/knowledge-base-store.js";
 import {type ObjectStore} from "../../../../files/domain/repositories/object-store.js";
 import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {type LanguageModelDefaultsStore} from "../../../../language_models/domain/repositories/language-model-defaults-store.js";
 import {executorFor} from "./node-executor-registry.js";
 import {
   parentResultsFor,
@@ -32,6 +33,7 @@ type NodeRunInput = {
   objectStore: ObjectStore;
   knowledgeBaseStore: KnowledgeBaseStore;
   languageModelResolver?: GenkitLanguageModelResolver;
+  languageModelDefaultsStore?: LanguageModelDefaultsStore;
   logger: ApplicationLogger;
 };
 
@@ -104,6 +106,7 @@ async function executeNode(
       input.logger,
       attachmentWorkspace,
       input.languageModelResolver,
+      input.languageModelDefaultsStore,
     );
     if (!executor) return skippedNode(input.node);
     return await executor.execute(input.node, input.runContext);

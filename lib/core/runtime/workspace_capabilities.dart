@@ -23,11 +23,7 @@ class WorkspaceCapabilities {
       modelCatalog: false,
     ),
     RuntimeKind.standalone => const WorkspaceCapabilities(
-      // Absichtlich noch false: Der lokalen Runtime fehlt der
-      // Assistant-Endpunkt (siehe docs/architecture/betriebsvarianten.md).
-      // Sobald er existiert, kippt dieser eine Wert — keine Suche mehr nach
-      // verstreuten Registrierungs-Checks nötig.
-      assistant: false,
+      assistant: true,
       dataCollections: true,
       modelCatalog: true,
     ),

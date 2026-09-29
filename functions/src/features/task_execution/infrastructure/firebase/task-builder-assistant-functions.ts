@@ -3,13 +3,23 @@ import {AssistantActor} from "../../../assistant/domain/entities/assistant-actor
 import {AssistantExecutionContext} from "../../../assistant/domain/entities/assistant-execution-context.js";
 import {AssistantMessage} from "../../../assistant/domain/entities/assistant-message.js";
 import {AssistantRequest} from "../../../assistant/domain/entities/assistant-request.js";
-import {type TaskBuilderAssistant} from "../../domain/usecases/task-builder-assistant.js";
 import {geminiApiKey} from "../../../../shared/genkit/gemini-secret.js";
 import {withExceptionLogging} from "../../../../shared/logging/logger.js";
-import {createGenkitTaskBuilderAssistant} from "../genkit/task-builder-assistant.js";
+import {createTaskBuilderAssistant} from "../genkit/task-builder-assistant.js";
+import {createTaskBuilderAssistantResponder} from "../genkit/assistant/task-builder-assistant-responder.js";
 import {logTaskBuilderAssistantProposal} from "./task-builder-assistant-audit-event.js";
+import {FirestoreTeamContextStore} from "../../../teams/infrastructure/firebase/firestore-team-context-store.js";
+import {FirestoreLanguageModelCatalog} from "../../../language_models/infrastructure/firebase/firestore-language-model-catalog.js";
+import {languageModelCipher} from "../../../language_models/infrastructure/firebase/language-model-encryption.js";
+import {CatalogGenkitLanguageModelResolver} from "../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {FirestoreLanguageModelDefaultsStore} from "../../../language_models/infrastructure/firebase/firestore-language-model-defaults-store.js";
+import {resolveAssistantLanguageModel} from "../../../language_models/infrastructure/genkit/resolve-assistant-language-model.js";
 
-const taskBuilderAssistant = createGenkitTaskBuilderAssistant();
+const teamContextStore = new FirestoreTeamContextStore();
+const languageModelResolver = new CatalogGenkitLanguageModelResolver(
+  new FirestoreLanguageModelCatalog(languageModelCipher),
+);
+const languageModelDefaultsStore = new FirestoreLanguageModelDefaultsStore();
 
 export const askTaskBuilderAssistant = onCall(
   {
@@ -19,18 +29,23 @@ export const askTaskBuilderAssistant = onCall(
   },
   async (request) => withExceptionLogging(
     "task_builder_assistant.failed",
-    async () => ask(taskBuilderAssistant, request.data, request.auth),
+    async () => ask(request.data, request.auth),
     {historyLength: historyLengthFrom(request.data)},
   ),
 );
 
-async function ask(
-  assistant: TaskBuilderAssistant,
-  data: unknown,
-  auth: {uid: string} | undefined,
-) {
+async function ask(data: unknown, auth: {uid: string} | undefined) {
   const input = inputFrom(data);
   const actor = actorFrom(auth);
+  // Pro Anfrage aufgelöst (statt einmal beim Prozessstart), damit eine in
+  // den Einstellungen geänderte Vorgabe ohne Redeploy wirkt.
+  const teamId = await teamContextStore.currentTeamIdForUid(actor.uid);
+  const {ai, model} = await resolveAssistantLanguageModel(
+    teamId, languageModelResolver, languageModelDefaultsStore,
+  );
+  const assistant = createTaskBuilderAssistant(
+    createTaskBuilderAssistantResponder({ai, model, modelConfig: {}}),
+  );
   const context = new AssistantExecutionContext(new AssistantActor(actor.uid));
   const output = await assistant.ask(input.request, context);
   logTaskBuilderAssistantProposal({

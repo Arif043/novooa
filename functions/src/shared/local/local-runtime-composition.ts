@@ -1,4 +1,6 @@
 import path from "node:path";
+import {createLocalTaskBuilderAssistant} from "../../features/task_execution/infrastructure/local/local-task-builder-assistant.js";
+import {createLocalKnowledgeBaseAssistant} from "../../features/knowledge_base/infrastructure/local/local-knowledge-base-assistant.js";
 import {LocalObjectStore} from "../../features/files/infrastructure/local/local-object-store.js";
 import {LocalFileResourceHttpHandler} from "../../features/files/infrastructure/local/local-file-resource-http-handler.js";
 import {LocalTeamFileStore} from "../../features/files/infrastructure/local/local-team-file-store.js";
@@ -51,6 +53,7 @@ import {PollingTaskTriggerWorker} from "../../features/scheduling/infrastructure
 import {SQLiteTaskTriggerStore} from "../../features/scheduling/infrastructure/local/sqlite-task-trigger-store.js";
 import {createGenkitTaskWorkflow} from "../../features/task_execution/infrastructure/genkit/task-workflow.js";
 import {type LocalRuntimeRequestHandler} from "./local-runtime-http-server.js";
+import {LocalAssistantHttpHandler} from "./local-assistant-http-handler.js";
 import {LocalRuntimeRequestRouter} from "./local-runtime-request-router.js";
 import {LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
 import {LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
@@ -71,6 +74,8 @@ import {CredentialCipher} from "../../features/communication/infrastructure/secu
 import {EncryptedSQLiteLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
 import {type LocalLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/local-language-model-secret-store.js";
 import {LocalLanguageModelHttpHandler} from "../../features/language_models/infrastructure/local/local-language-model-http-handler.js";
+import {LocalLanguageModelDefaultsHttpHandler} from "../../features/language_models/infrastructure/local/local-language-model-defaults-http-handler.js";
+import {SQLiteLanguageModelDefaultsStore} from "../../features/language_models/infrastructure/local/sqlite-language-model-defaults-store.js";
 import {SQLiteLanguageModelConfigurationStore} from "../../features/language_models/infrastructure/local/sqlite-language-model-configuration-store.js";
 import {SQLiteLanguageModelCatalog} from "../../features/language_models/infrastructure/local/sqlite-language-model-catalog.js";
 import {CatalogGenkitLanguageModelResolver} from "../../features/language_models/infrastructure/genkit/genkit-language-model-resolver.js";
@@ -182,6 +187,10 @@ export function createLocalRuntimeComposition(
   });
   const sessionStore = new LocalRuntimeSessionStore(options.database);
   const credentialStore = new LocalRuntimeAccessCredentialStore(options.database);
+  const languageModelResolver = new CatalogGenkitLanguageModelResolver(
+    new SQLiteLanguageModelCatalog(options.database, languageModelSecretStore),
+  );
+  const languageModelDefaultsStore = new SQLiteLanguageModelDefaultsStore(options.database);
   const router = new LocalRuntimeRequestRouter([
     // Auf dem regulären Port ersetzt der Kopplungscode die Session — sonst
     // liesse sich das Passwort nie setzen, das man für eine Session
@@ -203,6 +212,11 @@ export function createLocalRuntimeComposition(
       realtimeNotifier,
     ),
     new LocalLanguageModelHttpHandler(languageModelStore, options.workspace.teamId, realtimeNotifier),
+    new LocalLanguageModelDefaultsHttpHandler(
+      languageModelDefaultsStore,
+      options.workspace.teamId,
+      realtimeNotifier,
+    ),
     new LocalDataHttpHandler(documentStore, options.workspace.teamId),
     new LocalModelCatalogHttpHandler(
       new SQLiteModelCatalog(options.database),
@@ -224,6 +238,15 @@ export function createLocalRuntimeComposition(
     new LocalTaskTriggerHttpHandler(options.database, options.workspace.teamId, options.workspace.userId, realtimeNotifier),
     new LocalFileResourceHttpHandler(
       options.database, teamFileStore, options.workspace.teamId, options.workspace.userId, realtimeNotifier,
+    ),
+    new LocalAssistantHttpHandler(
+      () => createLocalTaskBuilderAssistant(
+        options.workspace.teamId, languageModelResolver, languageModelDefaultsStore,
+      ),
+      () => createLocalKnowledgeBaseAssistant(
+        options.database, options.workspace.teamId, languageModelResolver, languageModelDefaultsStore,
+      ),
+      options.workspace.userId,
     ),
   ]);
   return {
@@ -345,6 +368,7 @@ function createTaskWorkflow(
       languageModelResolver: new CatalogGenkitLanguageModelResolver(
         languageModelCatalog,
       ),
+      languageModelDefaultsStore: new SQLiteLanguageModelDefaultsStore(options.database),
     },
   });
 }

@@ -7,6 +7,11 @@ import 'package:image_picker/image_picker.dart';
 import '../runtime/runtime_profile.dart';
 import '../runtime/workspace_capabilities.dart';
 import 'standalone_dependency_configuration.dart';
+import 'package:syscat2/features/language_models/domain/repositories/language_model_defaults_repository.dart';
+import 'package:syscat2/features/language_models/domain/usecases/watch_language_model_defaults.dart';
+import 'package:syscat2/features/language_models/domain/usecases/save_language_model_defaults.dart';
+import 'package:syscat2/features/language_models/infrastructure/repositories/firestore_language_model_defaults_repository.dart';
+import 'package:syscat2/features/language_models/presentation/cubits/language_model_defaults_cubit.dart';
 import 'package:syscat2/features/assistant/domain/entities/assistant_context.dart';
 import 'package:syscat2/features/assistant/domain/repositories/assistant_repository.dart';
 import 'package:syscat2/features/assistant/domain/usecases/ask_assistant.dart';
@@ -175,6 +180,11 @@ void _configureCloudDependencies() {
       () =>
           FirestoreLanguageModelRepository(serviceLocator<FirebaseFirestore>()),
     )
+    ..registerLazySingleton<LanguageModelDefaultsRepository>(
+      () => FirestoreLanguageModelDefaultsRepository(
+        serviceLocator<FirebaseFirestore>(),
+      ),
+    )
     ..registerLazySingleton<TeamFileRepository>(
       () => FirebaseTeamFileRepository(
         serviceLocator<FirebaseFirestore>(),
@@ -308,6 +318,16 @@ void _configureCloudDependencies() {
     )
     ..registerLazySingleton(
       () => SaveLanguageModel(serviceLocator<LanguageModelRepository>()),
+    )
+    ..registerLazySingleton(
+      () => WatchLanguageModelDefaults(
+        serviceLocator<LanguageModelDefaultsRepository>(),
+      ),
+    )
+    ..registerLazySingleton(
+      () => SaveLanguageModelDefaults(
+        serviceLocator<LanguageModelDefaultsRepository>(),
+      ),
     )
     ..registerLazySingleton(
       () => WatchTaskActivities(serviceLocator<TaskActivityRepository>()),
@@ -502,6 +522,15 @@ void _configureCloudDependencies() {
         serviceLocator<AuthRepository>(),
         serviceLocator<WatchLanguageModels>(),
         serviceLocator<SaveLanguageModel>(),
+        serviceLocator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerFactory(
+      () => LanguageModelDefaultsCubit(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<WatchLanguageModels>(),
+        serviceLocator<WatchLanguageModelDefaults>(),
+        serviceLocator<SaveLanguageModelDefaults>(),
         serviceLocator<GetCurrentTeamId>(),
       ),
     )

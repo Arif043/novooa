@@ -5,9 +5,11 @@ import 'package:simple_icons/simple_icons.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
+import 'package:syscat2/features/language_models/presentation/cubits/language_model_defaults_cubit.dart';
 import 'package:syscat2/features/language_models/presentation/cubits/language_models_settings_cubit.dart';
 import 'package:syscat2/features/language_models/presentation/cubits/language_models_settings_state.dart';
 
+import 'language_model_defaults_sections.dart';
 import 'settings_section.dart';
 
 /// Markenlogo je Anbieter — einheitlich einfarbig (`onSurfaceVariant`),
@@ -91,6 +93,7 @@ class _LanguageModelsSettingsContent extends StatefulWidget {
 class _LanguageModelsSettingsContentState
     extends State<_LanguageModelsSettingsContent> {
   late final LanguageModelsSettingsCubit _cubit;
+  late final LanguageModelDefaultsCubit _defaultsCubit;
   final _connectionName = TextEditingController();
   final _baseUrl = TextEditingController();
   final _name = TextEditingController();
@@ -101,6 +104,7 @@ class _LanguageModelsSettingsContentState
   void initState() {
     super.initState();
     _cubit = serviceLocator<LanguageModelsSettingsCubit>()..load();
+    _defaultsCubit = serviceLocator<LanguageModelDefaultsCubit>()..load();
   }
 
   @override
@@ -111,13 +115,17 @@ class _LanguageModelsSettingsContentState
     _modelId.dispose();
     _apiKey.dispose();
     _cubit.close();
+    _defaultsCubit.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _cubit,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _cubit),
+        BlocProvider.value(value: _defaultsCubit),
+      ],
       child:
           BlocConsumer<
             LanguageModelsSettingsCubit,
@@ -287,7 +295,11 @@ class _LanguageModelsSettingsContentState
         ],
       ),
     );
-    return widget.scrollable ? SingleChildScrollView(child: content) : content;
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [content, const LanguageModelDefaultsSections()],
+    );
+    return widget.scrollable ? SingleChildScrollView(child: body) : body;
   }
 
   void _clearInputs() {

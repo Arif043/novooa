@@ -1,11 +1,13 @@
 import '../../domain/entities/assistant_context.dart';
 import '../../domain/entities/assistant_message.dart';
 import '../../domain/repositories/assistant_repository.dart';
-import '../datasources/firebase_functions_knowledge_base_assistant_datasource.dart';
-import '../datasources/firebase_functions_task_builder_assistant_datasource.dart';
+import '../datasources/assistant_datasource.dart';
 import '../models/assistant_action_suggestion_parser.dart';
 import '../models/assistant_generated_response.dart';
 
+/// Wählt nur noch zwischen den zwei bereichsspezifischen Datasources — ob
+/// dahinter Firebase Callable Functions oder die lokale Runtime steckt, ist
+/// für das Routing irrelevant (siehe `AssistantDatasource`).
 class RoutedAssistantRepository implements AssistantRepository {
   const RoutedAssistantRepository(
     this._taskBuilderDatasource,
@@ -13,9 +15,8 @@ class RoutedAssistantRepository implements AssistantRepository {
     this.parser = const AssistantActionSuggestionParser(),
   });
 
-  final FirebaseFunctionsTaskBuilderAssistantDatasource _taskBuilderDatasource;
-  final FirebaseFunctionsKnowledgeBaseAssistantDatasource
-  _knowledgeBaseDatasource;
+  final AssistantDatasource _taskBuilderDatasource;
+  final AssistantDatasource _knowledgeBaseDatasource;
   final AssistantActionSuggestionParser parser;
 
   @override

@@ -14,6 +14,7 @@ import {type TaskRunWorkerStores} from "../genkit/runner/task-run-worker.js";
 import {FirestoreLanguageModelCatalog} from "../../../language_models/infrastructure/firebase/firestore-language-model-catalog.js";
 import {languageModelCipher} from "../../../language_models/infrastructure/firebase/language-model-encryption.js";
 import {CatalogGenkitLanguageModelResolver} from "../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {FirestoreLanguageModelDefaultsStore} from "../../../language_models/infrastructure/firebase/firestore-language-model-defaults-store.js";
 import {UnavailableDocumentStore} from "../../../data/infrastructure/unavailable-document-store.js";
 
 export type CloudTaskRuntime = {
@@ -60,5 +61,6 @@ function workerStoresFor(
     languageModelResolver: new CatalogGenkitLanguageModelResolver(
       new FirestoreLanguageModelCatalog(languageModelCipher),
     ),
+    languageModelDefaultsStore: new FirestoreLanguageModelDefaultsStore(),
   };
 }

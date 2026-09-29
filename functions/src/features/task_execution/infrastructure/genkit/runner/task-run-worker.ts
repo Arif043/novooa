@@ -20,6 +20,7 @@ import {
   type TaskRunStore,
 } from "../../../domain/repositories/task-run-store.js";
 import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {type LanguageModelDefaultsStore} from "../../../../language_models/domain/repositories/language-model-defaults-store.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 import {type DocumentStore} from "../../../../data/domain/repositories/document-store.js";
 import {type TeamNotificationSender} from "../../../../notifications/domain/repositories/team-notification-sender.js";
@@ -36,6 +37,7 @@ export type TaskRunWorkerStores = {
   modelInference: ModelInference;
   teamNotificationSender: TeamNotificationSender;
   languageModelResolver?: GenkitLanguageModelResolver;
+  languageModelDefaultsStore?: LanguageModelDefaultsStore;
 };
 
 export async function executeQueuedTaskRun(
@@ -66,6 +68,7 @@ export async function executeQueuedTaskRun(
     teamNotificationSender: stores.teamNotificationSender,
     logger,
     languageModelResolver: stores.languageModelResolver,
+    languageModelDefaultsStore: stores.languageModelDefaultsStore,
   });
   if (output.status === "waitingForApproval") {
     await stores.taskRunStore.markRunWaitingForApproval(teamId, run, output);
@@ -104,6 +107,7 @@ export async function continueApprovedTaskRun(
       teamNotificationSender: stores.teamNotificationSender,
       logger,
       languageModelResolver: stores.languageModelResolver,
+      languageModelDefaultsStore: stores.languageModelDefaultsStore,
     },
   );
   if (output.status === "waitingForApproval") {

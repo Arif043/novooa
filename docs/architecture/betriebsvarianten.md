@@ -119,24 +119,40 @@ Reverse Proxy mit Zertifikat davor — dann ist auch die App-Herkunft HTTPS.
 Kein reines Plumbing-Problem, sondern der größte Arbeitsanteil:
 
 - **Nur Cloud**: Einstellungen, Nutzerprofile, Mitarbeiter, Fähigkeiten,
-  KI-Agent, Team-Verwaltung, Kommunikations-Connectoren. Die lokale Runtime
-  hat für diese Features keine Endpunkte.
+  Team-Verwaltung, Kommunikations-Connectoren. Die lokale Runtime hat für
+  diese Features keine Endpunkte. Der KI-Agent ist keine Lücke mehr —
+  `LocalAssistantHttpHandler` bedient beide Bereiche über die lokale
+  Runtime (siehe [`../features/ki-agent.md`](../features/ki-agent.md)).
 - **Nur Standalone**: Datensammlungen (`DataRepository`), Anwendungsprotokoll,
   ML-Modellkatalog, Lizenz. Der Cloud-Task-Runner injiziert bewusst einen
   `UnavailableDocumentStore`.
 - `lib/features/user/infrastructure/repositories/local_workspace_user_repository.dart`
   ist implementiert und getestet, aber nirgends registriert.
 
-### 6. `isStandalone` ist eine Compile-Zeit-Wahrheit in der UI
+### 6. `isStandalone` ist eine Compile-Zeit-Wahrheit in der UI — **teilweise entschärft**
 
-Der Flag wird durch `root_page.dart`, `core/routing/app_router.dart`,
-`core/widgets/root_navigation.dart`, `settings_page.dart`,
-`activity_page.dart`, `ai_model_settings_tab.dart` und
-`auth_form_footer.dart` gefädelt. Zusätzlich schnüffelt
-`table_from_collection_widget.dart` am DI-Container
-(`serviceLocator.isRegistered<ListDataCollections>()`) als Ersatz für „bin
-ich standalone?“. Sobald die Variante zur Laufzeit wechselt, sind diese
-Flags keine Konstanten mehr.
+Zwei getrennte Fragen stecken hier drin:
+
+- **Welche Tabs/Routen existieren.** Weiterhin wird ein `bool isStandalone`
+  durch `root_page.dart`, `core/routing/app_router.dart`,
+  `core/widgets/root_navigation.dart`, `settings_page.dart`,
+  `activity_page.dart` und `auth_form_footer.dart` gefädelt. Unverändert,
+  nicht Teil der folgenden Änderung.
+- **Ob ein einzelnes Feature innerhalb einer Seite verfügbar ist.** Dafür
+  gab es vier Stellen, die dieselbe Frage über
+  `serviceLocator.isRegistered<T>()` erraten haben — eine zufällige
+  DI-Nebenwirkung als Ersatz für ein fachliches Flag
+  (`table_from_collection_widget.dart`, `task_builder_page.dart`,
+  `task_builder_side_panel.dart`, `knowledge_base_side_panel.dart`). Das ist
+  jetzt `lib/core/runtime/workspace_capabilities.dart`: ein typisiertes
+  `WorkspaceCapabilities`-Value-Object (`assistant`, `dataCollections`,
+  `modelCatalog`), einmal aus der `RuntimeKind` abgeleitet und in
+  `configureDependencies` als Singleton registriert. Die vier genannten
+  Stellen lesen jetzt `capabilities.<feld>` statt den Container zu befragen.
+
+`assistant` steht inzwischen für beide Varianten auf `true` — der lokale
+Assistant-Endpunkt existiert (siehe Paritätslücken, Punkt 5, und
+[`../features/ki-agent.md`](../features/ki-agent.md)).
 
 ### 7. Zwei unterschiedliche Identitätsmodelle
 
@@ -194,7 +210,8 @@ Blocker aufgeworfen wird.
    `WorkspaceCapabilities`-Value-Object ersetzt `bool isStandalone`. Das ist
    ohnehin das sauberere Design (OCP) und macht Teil-Parität erträglich: die
    Oberfläche verbirgt, was das Backend nicht kann — unabhängig davon,
-   welche Variante läuft.
+   welche Variante läuft. Für die Feature-Verfügbarkeit (nicht für die
+   Tab-/Routenstruktur) bereits umgesetzt — siehe Blocker 6.
 
 ## Umsetzung
 

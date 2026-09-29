@@ -10,6 +10,7 @@ import {
   type GenkitLanguageModelResolver,
   type ResolvedGenkitLanguageModel,
 } from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {type LanguageModelDefaultsStore} from "../../../../language_models/domain/repositories/language-model-defaults-store.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 import {FirebaseApplicationLogger} from "../../../../../shared/logging/firebase-application-logger.js";
 
@@ -28,6 +29,7 @@ export function createGenkitPromptNodeExecutor(
   workspace?: NodeAttachmentWorkspace,
   languageModelResolver?: GenkitLanguageModelResolver,
   logger: ApplicationLogger = new FirebaseApplicationLogger(),
+  defaultsStore?: LanguageModelDefaultsStore,
 ): NodeExecutor {
   return {
     primitive: "prompt",
@@ -37,6 +39,7 @@ export function createGenkitPromptNodeExecutor(
         promptInput.languageModelId,
         runContext.teamId,
         languageModelResolver,
+        defaultsStore,
       );
       validateCapabilities(promptInput, languageModel);
       const output = await executePromptNode(
@@ -73,14 +76,43 @@ export function executePromptNode(
   return executeTextPrompt(ai, input, workspace, languageModel, logger);
 }
 
-async function languageModelFor(
+// Exportiert für gezielte Tests der Vorgabe-Fallback-Kette — kein Teil des
+// öffentlichen Vertrags von `createGenkitPromptNodeExecutor`.
+export async function languageModelFor(
   languageModelId: string | undefined,
   teamId: string,
   resolver: GenkitLanguageModelResolver | undefined,
+  defaultsStore: LanguageModelDefaultsStore | undefined,
 ): Promise<ResolvedGenkitLanguageModel | undefined> {
-  if (!languageModelId || languageModelId.trim().length === 0) return undefined;
-  if (!resolver) throw new Error("Die Sprachmodell-Auswahl ist nicht konfiguriert.");
-  return resolver.resolve(teamId, languageModelId);
+  const explicitId = languageModelId?.trim();
+  if (explicitId) {
+    if (!resolver) throw new Error("Die Sprachmodell-Auswahl ist nicht konfiguriert.");
+    return resolver.resolve(teamId, explicitId);
+  }
+  return defaultLanguageModelFor(teamId, resolver, defaultsStore);
+}
+
+/**
+ * "Standardmodell verwenden" (leere languageModelId): erst die in den
+ * Einstellungen gewählte Vorgabe versuchen, sonst bleibt der bisherige
+ * umgebungsvariablen-gesteuerte Pfad (`ai-models.ts`, über die äußere `ai`-
+ * Instanz) unverändert aktiv — auch wenn die Vorgabe auf ein inzwischen
+ * gelöschtes Modell zeigt, statt die Ausführung deswegen fehlschlagen zu
+ * lassen.
+ */
+async function defaultLanguageModelFor(
+  teamId: string,
+  resolver: GenkitLanguageModelResolver | undefined,
+  defaultsStore: LanguageModelDefaultsStore | undefined,
+): Promise<ResolvedGenkitLanguageModel | undefined> {
+  if (!resolver || !defaultsStore) return undefined;
+  const defaults = await defaultsStore.loadDefaults(teamId);
+  if (!defaults.blockModelId) return undefined;
+  try {
+    return await resolver.resolve(teamId, defaults.blockModelId);
+  } catch {
+    return undefined;
+  }
 }
 
 function validateCapabilities(

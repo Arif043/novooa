@@ -18,6 +18,12 @@ import '../../features/application_logs/domain/repositories/application_log_repo
 import '../../features/application_logs/domain/usecases/watch_application_logs.dart';
 import '../../features/application_logs/infrastructure/repositories/local_application_log_repository.dart';
 import '../../features/application_logs/presentation/cubits/application_logs_cubit.dart';
+import '../../features/assistant/domain/entities/assistant_context.dart';
+import '../../features/assistant/domain/repositories/assistant_repository.dart';
+import '../../features/assistant/domain/usecases/ask_assistant.dart';
+import '../../features/assistant/infrastructure/datasources/http_runtime_assistant_datasource.dart';
+import '../../features/assistant/infrastructure/repositories/routed_assistant_repository.dart';
+import '../../features/assistant/presentation/cubits/assistant_cubit.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/infrastructure/repositories/local_workspace_auth_repository.dart';
 import '../../features/files/domain/usecases/upload_team_file.dart';
@@ -29,10 +35,15 @@ import '../../features/files/domain/usecases/watch_team_files.dart';
 import '../../features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import '../../features/language_models/domain/repositories/language_model_repository.dart';
 import '../../features/language_models/domain/repositories/language_model_connection_repository.dart';
+import '../../features/language_models/domain/repositories/language_model_defaults_repository.dart';
 import '../../features/language_models/domain/usecases/connect_language_models.dart';
 import '../../features/language_models/domain/usecases/watch_language_models.dart';
 import '../../features/language_models/domain/usecases/save_language_model.dart';
+import '../../features/language_models/domain/usecases/watch_language_model_defaults.dart';
+import '../../features/language_models/domain/usecases/save_language_model_defaults.dart';
 import '../../features/language_models/infrastructure/repositories/local_language_model_repository.dart';
+import '../../features/language_models/infrastructure/repositories/local_language_model_defaults_repository.dart';
+import '../../features/language_models/presentation/cubits/language_model_defaults_cubit.dart';
 import '../../features/language_models/presentation/cubits/language_models_settings_cubit.dart';
 import '../../features/machine_learning/domain/repositories/model_catalog_repository.dart';
 import '../../features/machine_learning/domain/usecases/import_model_catalog_entry.dart';
@@ -143,6 +154,12 @@ Future<void> configureStandaloneDependencies(
     ..registerLazySingleton<RuntimeLicenseRepository>(
       () => HttpRuntimeLicenseRepository(locator<WorkspaceApiClient>()),
     )
+    ..registerLazySingleton<AssistantRepository>(
+      () => RoutedAssistantRepository(
+        HttpRuntimeTaskBuilderAssistantDatasource(locator<WorkspaceApiClient>()),
+        HttpRuntimeKnowledgeBaseAssistantDatasource(locator<WorkspaceApiClient>()),
+      ),
+    )
     ..registerLazySingleton<TaskRunnerDatasource>(
       () => LocalHttpTaskRunnerDatasource(locator<WorkspaceApiClient>()),
     )
@@ -180,6 +197,12 @@ Future<void> configureStandaloneDependencies(
         locator<WorkspaceRealtimeChannel>(),
       ),
     )
+    ..registerLazySingleton<LanguageModelDefaultsRepository>(
+      () => LocalLanguageModelDefaultsRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceRealtimeChannel>(),
+      ),
+    )
     ..registerLazySingleton<ModelCatalogRepository>(
       () => LocalModelCatalogRepository(
         locator<WorkspaceApiClient>(),
@@ -212,6 +235,18 @@ Future<void> configureStandaloneDependencies(
     ..registerLazySingleton(() => UpdateDataRecord(locator<DataRepository>()))
     ..registerLazySingleton(() => DeleteDataRecord(locator<DataRepository>()))
     ..registerLazySingleton(() => ExecuteTask(locator<TaskRepository>()))
+    ..registerLazySingleton(
+      () => AskAssistant(locator<AssistantRepository>()),
+    )
+    ..registerFactory(
+      () => AssistantCubit(
+        askAssistant: locator<AskAssistant>(),
+        context: const AssistantContext(
+          area: AssistantArea.general,
+          route: '/',
+        ),
+      ),
+    )
     ..registerLazySingleton(() => WatchTaskRuns(locator<TaskRunRepository>()))
     ..registerLazySingleton(
       () => WatchTaskActivities(locator<TaskActivityRepository>()),
@@ -225,6 +260,16 @@ Future<void> configureStandaloneDependencies(
     )
     ..registerLazySingleton(
       () => SaveLanguageModel(locator<LanguageModelRepository>()),
+    )
+    ..registerLazySingleton(
+      () => WatchLanguageModelDefaults(
+        locator<LanguageModelDefaultsRepository>(),
+      ),
+    )
+    ..registerLazySingleton(
+      () => SaveLanguageModelDefaults(
+        locator<LanguageModelDefaultsRepository>(),
+      ),
     )
     ..registerLazySingleton(
       () => ConnectLanguageModels(locator<LanguageModelConnectionRepository>()),
@@ -316,6 +361,15 @@ Future<void> configureStandaloneDependencies(
         locator<GetCurrentTeamId>(),
         allowsKeylessLocalEndpoint: true,
         connectLanguageModels: locator<ConnectLanguageModels>(),
+      ),
+    )
+    ..registerFactory(
+      () => LanguageModelDefaultsCubit(
+        locator<AuthRepository>(),
+        locator<WatchLanguageModels>(),
+        locator<WatchLanguageModelDefaults>(),
+        locator<SaveLanguageModelDefaults>(),
+        locator<GetCurrentTeamId>(),
       ),
     )
     ..registerFactory(
