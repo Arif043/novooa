@@ -6,7 +6,6 @@
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
     "description": "novooa automatisiert wiederkehrende Wissensarbeit.",
-    "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
         {

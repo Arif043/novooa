@@ -13,28 +13,15 @@ import {reachableAddresses} from "./local-runtime-reachable-addresses.js";
 export type LocalRuntimeSetupHttpHandlerOptions = {
   credentials: LocalRuntimeAccessCredentialStore;
   setupCode: LocalRuntimeSetupCode;
-  /**
-   * Auf dem regulären Port ersetzt der Kopplungscode die fehlende
-   * Netzwerkgrenze. Auf dem host-loopback-gebundenen Setup-Port ist er
-   * nicht nötig — dort *ist* die Netzwerkgrenze der Schutz.
-   */
-  requiresCode: boolean;
 };
 
 /**
- * `GET`/`POST /v1/setup` — einmaliges Setzen des Betreiber-Passworts.
- *
- * Erreichbar auf zwei Wegen mit unterschiedlichem Schutz:
- *
- * - **Regulärer Port**: verlangt den Kopplungscode aus dem Start-Log. Damit
- *   lässt sich eine headless installierte Runtime von jedem Client aus
- *   einrichten, ohne SSH-Portweiterleitung.
- * - **Setup-Port (`127.0.0.1`)**: ohne Code. Dieser Handler prüft
- *   absichtlich NICHT die Quell-IP — Docker-NAT liefert je nach Runtime
- *   unterschiedliche, teils mit echten LAN-Bereichen überlappende
- *   Absenderadressen. Die Beschränkung passiert eine Ebene tiefer über die
- *   Port-Publizierung `127.0.0.1:<port>:<port>` des Docker-Hosts
- *   (`local-runtime-entrypoint.ts`), nicht durch App-Code.
+ * `GET`/`POST /v1/setup` — einmaliges Setzen des Betreiber-Passworts, über
+ * den regulären Port. Verlangt dafür den Kopplungscode aus dem Start-Log
+ * (`docker compose logs`) — der Vertrauensanker ist damit **Besitz eines
+ * Geheimnisses**, nicht Netzwerkposition. Das erlaubt die Einrichtung einer
+ * headless installierten Runtime (VPS, NAS, Raspberry Pi) von jedem Client
+ * aus, ohne SSH-Portweiterleitung.
  */
 export class LocalRuntimeSetupHttpHandler implements LocalRuntimeRequestHandler {
   constructor(private readonly options: LocalRuntimeSetupHttpHandlerOptions) {}
@@ -57,7 +44,6 @@ export class LocalRuntimeSetupHttpHandler implements LocalRuntimeRequestHandler 
     return {
       body: {
         needsSetup,
-        requiresCode: this.options.requiresCode,
         addresses: reachableAddresses(requestPortFrom(request.headers)),
       },
       statusCode: 200,
@@ -65,7 +51,7 @@ export class LocalRuntimeSetupHttpHandler implements LocalRuntimeRequestHandler 
   }
 
   private async setup(body: unknown): Promise<LocalRuntimeResponse> {
-    if (this.options.requiresCode && !this.options.setupCode.matches(codeFrom(body))) {
+    if (!this.options.setupCode.matches(codeFrom(body))) {
       return {
         body: {error: "Der Einrichtungscode stimmt nicht."},
         statusCode: 403,

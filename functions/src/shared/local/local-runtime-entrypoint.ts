@@ -10,10 +10,7 @@ import {FileRuntimeLicenseStore} from "../../features/licensing/infrastructure/l
 import {HttpRuntimeLicenseGatewayClient} from "../../features/licensing/infrastructure/local/local-runtime-license-gateway-client.js";
 import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {openLocalRuntimeDatabase} from "./local-runtime-database.js";
-import {
-  createLocalRuntimeHttpServer,
-  type LocalRuntimeRequestHandler,
-} from "./local-runtime-http-server.js";
+import {createLocalRuntimeHttpServer} from "./local-runtime-http-server.js";
 import {RuntimeLicenseMiddleware} from "./local-runtime-license-middleware.js";
 import {attachLocalRuntimeRealtimeServer} from "./local-runtime-realtime-server.js";
 import {localRuntimeMasterKeyFrom} from "./local-runtime-master-key.js";
@@ -57,18 +54,16 @@ async function startLocalRuntime(): Promise<void> {
       cors,
     );
     attachLocalRuntimeRealtimeServer(server, application, cors);
-    const setupServer = createLocalRuntimeHttpServer(setupHandlerFor(application));
     const port = configuredPort();
-    const setupPort = configuredSetupPort();
-    await Promise.all([listen(server, port), listen(setupServer, setupPort)]);
-    registerShutdown([server, setupServer], database, application);
+    await listen(server, port);
+    registerShutdown([server], database, application);
     // Der Code steht bewusst im Start-Log: `docker compose logs` zu lesen
-    // setzt Host-Zugriff voraus — derselbe Vertrauensanker wie die frühere
-    // Loopback-Bindung, aber von jedem Client aus bedienbar.
+    // setzt Host-Zugriff voraus — dieselbe Vertrauensbasis wie ein
+    // Container-Neustart, mit dem sich ein verlorener Code jederzeit neu
+    // erzeugen lässt.
     console.info(JSON.stringify({
       event: "local_runtime.started",
       port,
-      setupPort,
       setupCode: setupCode.current,
     }));
   } catch (error) {
@@ -87,17 +82,6 @@ function configuredPort(): number {
 }
 
 /**
- * Der Setup-Port wird ausschließlich an `127.0.0.1` des Docker-Hosts
- * veröffentlicht (siehe docker-compose.local.yaml) — das ist die eigentliche
- * Zugriffsbeschränkung für `/v1/setup`, nicht Code in diesem Prozess. Der
- * Server selbst lauscht wie gewohnt auf allen Interfaces innerhalb des
- * Containers, sonst würde Dockers Port-Weiterleitung ihn nicht erreichen.
- */
-function configuredSetupPort(): number {
-  return portFromEnvironment("SETUP_PORT", "8091", "SETUP_PORT");
-}
-
-/**
  * Das Flutter-Web-Build, das die Runtime unter ihrer eigenen Herkunft
  * ausliefert. Ohne gesetztes Verzeichnis bleibt die Runtime eine reine
  * API — bestehende Installationen verhalten sich unverändert.
@@ -112,10 +96,6 @@ function portFromEnvironment(name: string, fallback: string, label: string): num
   const port = Number(process.env[name] ?? fallback);
   if (Number.isSafeInteger(port) && port > 0 && port <= 65535) return port;
   throw new Error(`Der ${label} für die lokale Runtime ist ungültig.`);
-}
-
-function setupHandlerFor(application: LocalRuntimeApplication): LocalRuntimeRequestHandler {
-  return {handle: (request) => application.handleSetup(request)};
 }
 
 function requiredEnvironment(name: string): string {

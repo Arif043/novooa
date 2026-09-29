@@ -50,19 +50,6 @@ implements LocalRuntimeRequestHandler, LocalRuntimeRealtimeGateway {
   }
 
   /**
-   * Der Weg über den separaten, host-loopback-gebundenen Setup-Server
-   * (siehe local-runtime-entrypoint.ts). Dort genügt die Netzwerkgrenze als
-   * Schutz, ein Kopplungscode ist nicht nötig.
-   *
-   * Über den regulären Port ist `/v1/setup` ebenfalls erreichbar — dort
-   * aber über eine zweite Handler-Instanz im Router, die den Code verlangt
-   * (siehe `createLocalRuntimeComposition`).
-   */
-  async handleSetup(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
-    return this.runtime?.setupHandler.handle(request) ?? null;
-  }
-
-  /**
    * Vor der Lizenzaktivierung (kein `this.runtime`) gibt es nichts zu
    * konsumieren — ein Ticket kann dann per Definition nie gültig sein.
    */

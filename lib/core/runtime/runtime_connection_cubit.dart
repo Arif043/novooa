@@ -52,6 +52,18 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
   static Future<void> _noOp() async {}
 
   Future<void> initialize(RuntimeEndpoint defaultEndpoint) async {
+    if (_isWeb) {
+      // Im Web bestimmt die Herkunft die Adresse eindeutig (Same Origin,
+      // siehe `RuntimeProfile.webRuntimeKindForOrigin`) — eine gespeicherte
+      // Adresse aus einem früheren, möglicherweise fehlgeschlagenen Versuch
+      // (z. B. der loopback-gebundene Setup-Port `:8091`) darf sie nicht
+      // überschreiben. Sonst spricht am Ende die gesamte App dauerhaft
+      // gegen die falsche Adresse, weil `RuntimeConnectionGate` sie 1:1 als
+      // `WORKSPACE_API_URL` übernimmt. Siehe
+      // `docs/architecture/betriebsvarianten.md`, Schritt 3.
+      await connect(defaultEndpoint.displayAddress, isAutomaticProbe: true);
+      return;
+    }
     try {
       final saved = await _endpoints.load();
       final endpoint = saved ?? defaultEndpoint;

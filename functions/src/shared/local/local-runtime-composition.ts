@@ -91,7 +91,6 @@ import {type TaskWorkflow} from "../../features/task_execution/domain/usecases/t
 
 export type LocalRuntimeComposition = {
   requestHandler: LocalRuntimeRequestHandler;
-  setupHandler: LocalRuntimeRequestHandler;
   taskRunWorker: TaskRunQueueWorker;
   taskTriggerWorker: PollingTaskTriggerWorker;
   mailRelayWorker: RuntimeMailRelayWorker | undefined;
@@ -198,7 +197,6 @@ export function createLocalRuntimeComposition(
     new LocalRuntimeSetupHttpHandler({
       credentials: credentialStore,
       setupCode: options.setupCode,
-      requiresCode: true,
     }),
     new LocalRuntimeLoginHttpHandler(credentialStore, sessionStore),
     new LocalRuntimeRealtimeTicketHttpHandler(realtimeTicketStore),
@@ -251,14 +249,6 @@ export function createLocalRuntimeComposition(
   ]);
   return {
     requestHandler: new LocalRuntimeSessionAuthMiddleware(sessionStore, router),
-    // Der loopback-gebundene Setup-Port braucht keinen Code: dort ist die
-    // Netzwerkgrenze selbst der Schutz. Bleibt als Rückfallweg bestehen,
-    // falls der Code verloren geht.
-    setupHandler: new LocalRuntimeSetupHttpHandler({
-      credentials: credentialStore,
-      setupCode: options.setupCode,
-      requiresCode: false,
-    }),
     taskRunWorker,
     taskTriggerWorker: new PollingTaskTriggerWorker(
       () => runDueTaskTriggers(new Date(), {

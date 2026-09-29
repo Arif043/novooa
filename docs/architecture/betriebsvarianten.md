@@ -69,13 +69,14 @@ Die Architektur ist näher am Ziel als der Ist-Zustand vermuten lässt:
 `const String.fromEnvironment`. Betrifft alle vier Felder der Matrix, nicht
 nur Web.
 
-### 2. Die Runtime liefert die Web-App nicht aus — **der verbleibende Blocker**
+### 2. Die Runtime liefert die Web-App aus — **gelöst**
 
 Seit Schritt 1 ist Standalone im Web nicht mehr pauschal gesperrt: Die
 Herkunftsregel oben ordnet jede Nicht-Cloud-Adresse Standalone zu, und der
 Workspace-Endpunkt ist dann die **eigene Herkunft** (`Uri.base.origin`).
-Damit das trägt, muss die Runtime das Web-Build unter ihrer Adresse
-ausliefern — genau das fehlt noch (siehe Schritt 2 unten).
+Damit das trägt, musste die Runtime das Web-Build unter ihrer Adresse
+ausliefern — seit Schritt 2 unten (`LocalRuntimeStaticFileHandler`) der
+Fall.
 
 Der Nebeneffekt ist erfreulich: Same Origin lässt die beiden folgenden
 Blocker vollständig entfallen.
@@ -222,6 +223,26 @@ Blocker aufgeworfen wird.
    HTTP-Server; ihr fehlt nur das Ausliefern statischer Dateien. Nebeneffekt:
    Standalone-Nutzer bekommen „Browser auf `http://runtime-host:8090`
    öffnen“ ohne Installation.
+
+   **Entscheidung (Push-Priorisierung Windows/Linux):** `firebase_messaging`
+   hat keine nativen SDKs für Windows/Linux (Google hat dafür nie einen
+   FCM-Kanal gebaut — anders als iOS/macOS über APNs oder Android als
+   FCM-Heimatplattform; siehe `WorkspaceCapabilities._pushSupportedOnThisPlatform`).
+   Damit dort trotzdem Push im Hintergrund ankommt (auch bei geschlossenem
+   Client — für Freigabe-Benachrichtigungen zentral), ist die **installierte
+   PWA über Web Push** der priorisierte Weg für diese beiden Plattformen,
+   statt eine native Windows-App auf ein eigenes WNS-Push-Backend
+   auszubauen. Die Web-Push-Anbindung (`web/firebase-messaging-sw.js`,
+   `web/manifest.json`) existiert bereits und läuft über denselben
+   `localRuntimePushRelay` wie native Push. Offen bleibt die eigentliche
+   PWA-„Installierbar machen"-Politur (siehe `web/manifest.json`: Icons/
+   Display sind für Desktop nutzbar, `orientation: portrait-primary` ist ein
+   Mobile-Rest und sollte für ernsthafte Desktop-Nutzung entfallen) sowie
+   ein sichtbarer Install-Hinweis in der ausgelieferten App. Mobile nativ
+   (Android/iOS) und macOS nativ bleiben unverändert auf nativem FCM/APNs —
+   dort besteht keine Lücke. Native Windows/Linux-Clients bleiben als
+   Fallback ohne Push nutzbar, sind aber nicht die Zielplattform für diese
+   beiden OS.
 3. **Die UI fragt nach Fähigkeiten, nicht nach der Variante.** Ein
    `WorkspaceCapabilities`-Value-Object ersetzt `bool isStandalone`. Das ist
    ohnehin das sauberere Design (OCP) und macht Teil-Parität erträglich: die
@@ -315,9 +336,17 @@ Entschieden:
 
 - Der Code verfällt nach erfolgreicher Einrichtung (er hat dann keinen Zweck
   mehr und wäre nur noch Angriffsfläche).
-- Port `8091` bleibt als loopback-gebundener Rückfallweg bestehen — er
-  kostet nichts und rettet den Fall „Code verloren“. Dort ist weiterhin
-  **kein** Code nötig, weil die Netzwerkgrenze ihn ersetzt.
+- Der ursprünglich als Rückfallweg vorgesehene, loopback-gebundene Setup-Port
+  `8091` ist **wieder entfernt** — er kostete entgegen der ersten Annahme
+  nicht nichts: eine zweite `LocalRuntimeSetupHttpHandler`-Instanz, ein
+  zweiter Docker-Port, ein zweiter dokumentierter Einrichtungsweg. Sein
+  einziger Vorteil („Code verloren“ ohne Neustart lösbar) entfällt gegen
+  denselben Vertrauensanker: Wer `127.0.0.1:8091` erreichen könnte, hat
+  Host-Zugriff — und kann damit genauso gut `docker compose restart`
+  ausführen und den Code neu im Log lesen. Der Port war zudem eine reale
+  Verwechslungsquelle: Eine im Web-Client gespeicherte Adresse konnte auf
+  `:8091` zeigen bleiben und die ganze App fälschlich gegen diesen
+  API-losen Port sprechen lassen (siehe Schritt 3, `RuntimeConnectionCubit`).
 
 #### 2b — Static-Serving
 
@@ -387,12 +416,23 @@ bei konfigurierter Herkunft, Same Origin ohne Header, kein pauschales `*`.
 
 Mit der Herkunftsregel aus Schritt 1 ist der Client-Teil bereits erledigt:
 Der pauschale `kIsWeb`-Guard ist weg, und im Web-Standalone-Fall leitet
-`RuntimeProfile` den Workspace-Endpunkt aus `Uri.base.origin` ab. Offen
-bleibt:
+`RuntimeProfile` den Workspace-Endpunkt aus `Uri.base.origin` ab.
 
-- Den Startflow im Web prüfen: `RuntimeConnectionGate` fragt heute nach
-  einer Adresse — bei Same Origin ist sie bereits bekannt und der Schritt
-  sollte entfallen.
+**Startflow im Web — umgesetzt:** `RuntimeConnectionCubit.initialize()` lud
+bislang unabhängig von der Plattform zuerst eine gespeicherte Adresse
+(`RuntimeEndpointStore`) und fiel nur ohne sie auf die Herkunft zurück. Im
+Web ist das falsch — die Herkunft ist immer eindeutig und richtig, eine
+gespeicherte Adresse kann nur ein Überbleibsel eines früheren, unter
+Umständen fehlgeschlagenen Versuchs sein (konkret aufgetreten: eine
+gespeicherte Adresse zeigte noch auf den inzwischen entfernten
+loopback-Setup-Port `:8091`, wodurch die gesamte App dauerhaft gegen den
+falschen, API-losen Port sprach — `RuntimeConnectionGate._startApplication`
+übernimmt die Onboarding-Adresse 1:1 als `WORKSPACE_API_URL`). `initialize()`
+überspringt das Laden jetzt für `kIsWeb` vollständig und verbindet direkt zur
+Herkunft.
+
+Offen bleibt:
+
 - Entscheidung zur Token-Ablage im Browser dokumentieren (siehe Blocker 7).
 - Tests: Widget-Test, dass der Standalone-Startflow im Web ohne
   Adresseingabe lädt.

@@ -10,7 +10,7 @@ const realtimePath = "/v1/realtime";
  * `LocalRuntimeApplication` hält die aktive `LocalRuntimeComposition` (und
  * damit Notifier/Ticket-Store) hinter privaten Feldern, weil sie sich beim
  * Workspace-Wechsel austauscht und vor der Lizenzaktivierung noch gar nicht
- * existiert (siehe `handle`/`handleSetup` dort). Dieses Interface hält
+ * existiert (siehe `handle` dort). Dieses Interface hält
  * `local-runtime-realtime-server.ts` unabhängig von `LocalRuntimeComposition`
  * und erzwingt denselben "gerade aktive Instanz, live nachgeschlagen"-Zugriff
  * wie die bestehenden HTTP-Handler.

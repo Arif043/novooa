@@ -64,8 +64,8 @@ jedoch keine Python-ML-Abhängigkeiten.
 ## Clients im LAN und öffentlich
 
 Der Compose-Stack veröffentlicht den Runtime-Port `8090` auf allen
-Schnittstellen sowie den Setup-Port `8091` ausschließlich auf `127.0.0.1`;
-der Python-Sidecar bleibt im privaten Docker-Netz. Clients im LAN geben die
+Schnittstellen — auch das erstmalige Setzen des Betreiber-Passworts läuft
+darüber; der Python-Sidecar bleibt im privaten Docker-Netz. Clients im LAN geben die
 private IPv4-Adresse des Hosts ein und verbinden sich unverschlüsselt über
 HTTP.
 

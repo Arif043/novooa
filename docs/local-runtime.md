@@ -45,9 +45,9 @@ Flutter-Desktop-App
           Tensor-Transformationen und ONNX-Inferenz
 ```
 
-`novooa-runtime` ist der einzige Dienst mit veröffentlichten Host-Ports:
-`8090` auf allen Schnittstellen für die reguläre API und `127.0.0.1:8091` für
-das einmalige Setzen des Betreiber-Passworts. Clients im LAN geben die private
+`novooa-runtime` ist der einzige Dienst mit einem veröffentlichten Host-Port:
+`8090` auf allen Schnittstellen, sowohl für die reguläre API als auch für das
+einmalige Setzen des Betreiber-Passworts (siehe unten). Clients im LAN geben die private
 IPv4-Adresse des Hosts ein und sprechen die Runtime unverschlüsselt über HTTP
 an. **novooa terminiert selbst kein TLS und verwaltet keine Zertifikate** —
 das ist Infrastruktur und gehört nicht zur Fachlogik des Produkts. Wer die
@@ -157,39 +157,26 @@ wird das Port-Mapping in `docker-compose.local.yaml` auf den Host beschränkt:
 
 ### Erstmaliges Setzen des Passworts
 
-Es gibt zwei Wege mit unterschiedlichem Schutz:
-
-**Von jedem Client, über den regulären Port** — der Normalfall, auch für
-headless installierte Runtimes ohne Browser auf dem Host. Die Runtime
-erzeugt beim Start einen **Kopplungscode** und schreibt ihn in ihr Log:
+Von **jedem** Client, über den regulären Port `8090` — auch für headless
+installierte Runtimes ohne Browser auf dem Host, auch aus dem LAN oder aus
+dem Browser. Die Runtime erzeugt beim Start einen **Kopplungscode** und
+schreibt ihn in ihr Log:
 
 ```bash
 docker compose -f docker-compose.local.yaml logs runtime | grep setupCode
 ```
 
-Diesen Code fragt die Einrichtung ab. Der Vertrauensanker ist derselbe wie
-zuvor die Loopback-Bindung — `docker compose logs` zu lesen setzt
-Host-Zugriff voraus —, aber die Bedienung löst sich davon. Der Code verfällt
-nach erfolgreicher Einrichtung und bei jedem Neustart der Runtime; er wird
-nie gespeichert.
-
-**Über den loopback-gebundenen Setup-Port** — der Rückfallweg, falls der
-Code verloren ging. Dort ist kein Code nötig, weil die Netzwerkgrenze ihn
-ersetzt:
-
-Die Runtime veröffentlicht dafür einen zweiten HTTP-Port (Standard `8091`),
-der auf dem Docker-Host ausschließlich an `127.0.0.1` gebunden ist
-(`docker-compose.local.yaml`, Port-Mapping `127.0.0.1:8091:8091`) — das wird
-vom Docker-Host selbst durchgesetzt, nicht durch eine IP-Prüfung im
-Anwendungscode (die wäre hinter Docker-NAT unzuverlässig, da der Container je
-nach Docker-Implementierung nie die echte `127.0.0.1` des Hosts als
-Absenderadresse sieht). `POST /v1/setup` funktioniert genau einmal und sperrt
-sich danach dauerhaft (`409`), egal von wo aus er später aufgerufen wird.
-
-- **LAN/lokal**: direkt erreichbar unter `http://127.0.0.1:8091/v1/setup`.
-- **VPS**: nur per SSH-Portweiterleitung erreichbar, z.B.
-  `ssh -L 8091:127.0.0.1:8091 nutzer@vps-adresse`, danach lokal
-  `http://127.0.0.1:8091/v1/setup` aufrufen.
+Diesen Code fragt die Einrichtung ab. Der Vertrauensanker ist **Besitz eines
+Geheimnisses**, nicht Netzwerkposition: `docker compose logs` zu lesen setzt
+zwar Host-Zugriff voraus, aber die Bedienung des Setups selbst ist davon
+unabhängig — jeder Client, dem jemand den Code vorliest, kann einrichten.
+Der Code verfällt nach erfolgreicher Einrichtung und bei jedem Neustart der
+Runtime; er wird nie gespeichert. Ist er verloren gegangen, erzeugt ein
+`docker compose restart runtime` einen neuen — derselbe Vertrauensanker
+(Host-Zugriff), den ein separater loopback-gebundener Rückfallweg ohnehin
+vorausgesetzt hätte; ein solcher existiert deshalb bewusst nicht.
+`POST /v1/setup` funktioniert genau einmal und sperrt sich danach dauerhaft
+(`409`).
 
 Nach dem Setzen des Passworts meldet sich der Client über
 `POST /v1/auth/login` an und erhält ein Session-Token, das er fortan als
@@ -202,11 +189,6 @@ gegebenenfalls Lizenzaktivierung und anschließend das Betreiber-Passwort.
 Diese Reihenfolge ist nicht willkürlich: Vor der Aktivierung existiert der
 Setup-Handler noch gar nicht, weil er an der erst dann erzeugten Datenbank
 hängt.
-
-Das Passwort lässt sich von **jedem** Client setzen, der den Kopplungscode
-kennt — auch aus dem LAN oder aus dem Browser. Die frühere Einschränkung
-„nur auf dem Runtime-Rechner“ gilt nur noch für den Rückfallweg über den
-Setup-Port.
 
 ### Client-Voraussetzungen
 
@@ -546,8 +528,9 @@ dessen Infrastructure-Bereich.
 - `openLocalRuntimeDatabase` lädt alle versionierten SQL-Migrationen beim
   Start und schließt die Datenbank wieder, falls eine Migration fehlschlägt.
 - `docker-compose.local.yaml` startet `runtime` und `novooa-ml`. Nur
-  `runtime` veröffentlicht Host-Ports: `8090` für die API auf allen
-  Schnittstellen und den an `127.0.0.1` gebundenen Setup-Port `8091`.
+  `runtime` veröffentlicht einen Host-Port: `8090` für die API auf allen
+  Schnittstellen — auch das erstmalige Setzen des Betreiber-Passworts läuft
+  darüber (siehe [Erstmaliges Setzen des Passworts](#erstmaliges-setzen-des-passworts)).
   `novooa-ml` hat keinen Host-Port und hängt ausschließlich in
   `novooa-private`.
 - Beim Start stellt die Runtime ohne Lizenz nur `/healthz`, `GET /v1/license`

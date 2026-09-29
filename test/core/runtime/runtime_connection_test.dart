@@ -421,6 +421,31 @@ void main() {
     );
 
     test(
+      'ignoriert im Web eine gespeicherte Adresse und nutzt stattdessen die '
+      'Herkunft (Same Origin) — sonst übernimmt die ganze App am Ende eine '
+      'aus einem gescheiterten früheren Versuch übrig gebliebene Adresse '
+      '(z.B. den loopback-gebundenen Setup-Port :8091)',
+      () async {
+        final staleEndpoint = RuntimeEndpoint.fromAddress('127.0.0.1:8091');
+        final cubit = RuntimeConnectionCubit(
+          _MemoryEndpointStore(staleEndpoint),
+          _MemoryCredentialStore(),
+          const _FakeLoginClient(),
+          const _FakeAvailability(),
+          onboarding: _FakeOnboarding(),
+          kindStore: _MemoryKindStore(),
+          isWeb: true,
+        );
+
+        await cubit.initialize(RuntimeEndpoint.fromAddress('127.0.0.1'));
+
+        final state = cubit.state as RuntimeConnectionNeedsPassword;
+        expect(state.endpoint.port, 8090);
+        await cubit.close();
+      },
+    );
+
+    test(
       'unterdrückt die Fehlermeldung beim stillen ersten '
       'Verbindungsversuch ("implizit localhost testen")',
       () async {
@@ -695,7 +720,6 @@ class _FakeOnboarding implements RuntimeOnboardingClient {
   Future<RuntimeSetupStatus> setupStatus(RuntimeEndpoint endpoint) async {
     return RuntimeSetupStatus(
       needsSetup: needsSetup,
-      requiresCode: true,
       addresses: addresses,
     );
   }
@@ -723,7 +747,6 @@ class _FailingSetupOnboarding implements RuntimeOnboardingClient {
   Future<RuntimeSetupStatus> setupStatus(RuntimeEndpoint endpoint) async {
     return const RuntimeSetupStatus(
       needsSetup: true,
-      requiresCode: true,
       addresses: [],
     );
   }

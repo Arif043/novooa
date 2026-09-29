@@ -8,17 +8,18 @@ import {
 } from "./local-runtime-access-credential-store.js";
 import {type LocalRuntimeRequest} from "./local-runtime-http-server.js";
 
-// Deckt die beiden Einrichtungswege mit ihrem jeweiligen Schutz ab:
-// regulärer Port mit Kopplungscode (damit headless installierte Runtimes
-// von jedem Client aus einrichtbar sind) und loopback-gebundener Setup-Port
-// ohne Code (dort ist die Netzwerkgrenze der Schutz).
+// Einmaliges Setzen des Betreiber-Passworts über den regulären Port, mit
+// dem Kopplungscode aus dem Start-Log als Schutz. Der frühere zweite,
+// loopback-gebundene Weg ohne Code ist entfernt: Ein verlorener Code lässt
+// sich per `docker compose restart` jederzeit neu erzeugen — derselbe
+// Vertrauensanker (Host-Zugriff), den auch der Loopback-Port vorausgesetzt
+// hätte.
 
-function handlerFor(requiresCode: boolean, credentials: FakeCredentialStore) {
+function handlerFor(credentials: FakeCredentialStore) {
   const setupCode = new LocalRuntimeSetupCode(() => "abc123abc123");
   const handler = new LocalRuntimeSetupHttpHandler({
     credentials: credentials as unknown as LocalRuntimeAccessCredentialStore,
     setupCode,
-    requiresCode,
   });
   return {handler, setupCode};
 }
@@ -27,9 +28,9 @@ function postRequest(body: unknown): LocalRuntimeRequest {
   return {method: "POST", url: "/v1/setup", body} as LocalRuntimeRequest;
 }
 
-test("regulärer Port: richtiger Code setzt das Passwort", async () => {
+test("richtiger Code setzt das Passwort", async () => {
   const credentials = new FakeCredentialStore();
-  const {handler, setupCode} = handlerFor(true, credentials);
+  const {handler, setupCode} = handlerFor(credentials);
 
   const response = await handler.handle(
     postRequest({password: "geheim", code: "abc123abc123"}),
@@ -40,9 +41,9 @@ test("regulärer Port: richtiger Code setzt das Passwort", async () => {
   assert.equal(setupCode.current, null, "Code verfällt nach der Einrichtung");
 });
 
-test("regulärer Port: falscher Code setzt kein Passwort", async () => {
+test("falscher Code setzt kein Passwort", async () => {
   const credentials = new FakeCredentialStore();
-  const {handler} = handlerFor(true, credentials);
+  const {handler} = handlerFor(credentials);
 
   const response = await handler.handle(
     postRequest({password: "geheim", code: "falschfalsch"}),
@@ -52,9 +53,9 @@ test("regulärer Port: falscher Code setzt kein Passwort", async () => {
   assert.equal(credentials.password, null);
 });
 
-test("regulärer Port: fehlender Code setzt kein Passwort", async () => {
+test("fehlender Code setzt kein Passwort", async () => {
   const credentials = new FakeCredentialStore();
-  const {handler} = handlerFor(true, credentials);
+  const {handler} = handlerFor(credentials);
 
   const response = await handler.handle(postRequest({password: "geheim"}));
 
@@ -64,7 +65,7 @@ test("regulärer Port: fehlender Code setzt kein Passwort", async () => {
 
 test("der Code wird geprüft, bevor das Passwort validiert wird", async () => {
   const credentials = new FakeCredentialStore();
-  const {handler} = handlerFor(true, credentials);
+  const {handler} = handlerFor(credentials);
 
   const response = await handler.handle(postRequest({code: "falschfalsch"}));
 
@@ -73,7 +74,7 @@ test("der Code wird geprüft, bevor das Passwort validiert wird", async () => {
 
 test("ein verbrauchter Code wird abgelehnt", async () => {
   const credentials = new FakeCredentialStore();
-  const {handler, setupCode} = handlerFor(true, credentials);
+  const {handler, setupCode} = handlerFor(credentials);
   setupCode.consume();
 
   const response = await handler.handle(
@@ -84,29 +85,21 @@ test("ein verbrauchter Code wird abgelehnt", async () => {
   assert.equal(credentials.password, null);
 });
 
-test("Setup-Port: ohne Code erreichbar", async () => {
-  const credentials = new FakeCredentialStore();
-  const {handler} = handlerFor(false, credentials);
-
-  const response = await handler.handle(postRequest({password: "geheim"}));
-
-  assert.equal(response?.statusCode, 204);
-  assert.equal(credentials.password, "geheim");
-});
-
 test("ein bereits gesetztes Passwort bleibt unveränderbar", async () => {
   const credentials = new FakeCredentialStore();
   credentials.alreadySet = true;
-  const {handler} = handlerFor(false, credentials);
+  const {handler} = handlerFor(credentials);
 
-  const response = await handler.handle(postRequest({password: "neu"}));
+  const response = await handler.handle(
+    postRequest({password: "neu", code: "abc123abc123"}),
+  );
 
   assert.equal(response?.statusCode, 409);
 });
 
-test("GET meldet den Bedarf, den Schutzweg und erreichbare Adressen", async () => {
+test("GET meldet den Bedarf und erreichbare Adressen", async () => {
   const credentials = new FakeCredentialStore();
-  const {handler} = handlerFor(true, credentials);
+  const {handler} = handlerFor(credentials);
 
   const response = await handler.handle({
     method: "GET",
@@ -117,7 +110,6 @@ test("GET meldet den Bedarf, den Schutzweg und erreichbare Adressen", async () =
   const body = response?.body as Record<string, unknown>;
   assert.equal(response?.statusCode, 200);
   assert.equal(body.needsSetup, true);
-  assert.equal(body.requiresCode, true);
   assert.ok(Array.isArray(body.addresses));
   for (const address of body.addresses as string[]) {
     assert.match(address, /^http:\/\/.+:8090$/, "übernimmt den Port aus dem Host-Header");
@@ -126,7 +118,7 @@ test("GET meldet den Bedarf, den Schutzweg und erreichbare Adressen", async () =
 
 test("fremde Pfade gehen an den nächsten Handler weiter", async () => {
   const credentials = new FakeCredentialStore();
-  const {handler} = handlerFor(true, credentials);
+  const {handler} = handlerFor(credentials);
 
   const response = await handler.handle({
     method: "GET",

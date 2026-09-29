@@ -5,16 +5,10 @@ import 'runtime_endpoint.dart';
 class RuntimeSetupStatus {
   const RuntimeSetupStatus({
     required this.needsSetup,
-    required this.requiresCode,
     required this.addresses,
   });
 
   final bool needsSetup;
-
-  /// Über den regulären Port verlangt die Runtime den Kopplungscode aus
-  /// ihrem Start-Log. Nur über den host-loopback-gebundenen Setup-Port
-  /// entfällt er, weil dort die Netzwerkgrenze schützt.
-  final bool requiresCode;
 
   /// Adressen, unter denen die Runtime erreichbar ist — von ihr selbst
   /// ermittelt, damit niemand sie abtippen muss.
@@ -69,7 +63,6 @@ class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
       final response = await _clientFor(endpoint.apiUri).get('/v1/setup');
       return RuntimeSetupStatus(
         needsSetup: response['needsSetup'] == true,
-        requiresCode: response['requiresCode'] == true,
         addresses: _addressesFrom(response['addresses']),
       );
     } on WorkspaceConnectionException {

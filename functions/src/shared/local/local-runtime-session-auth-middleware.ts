@@ -9,16 +9,31 @@ import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 
 const unauthenticatedPaths = new Set(["/v1/auth/login", "/v1/setup"]);
 
+/** Jede fachliche Route liegt unter diesem Präfix — siehe die Handler in
+ * `local-runtime-composition.ts`. Alles andere (insbesondere das
+ * ausgelieferte Web-Build) ist keine Zuständigkeit dieser Middleware. */
+const apiPathPrefix = "/v1/";
+
 /**
- * Verlangt für jede Anfrage ein gültiges `Authorization: Bearer <token>`.
- * Wrapt den fertigen Composition-Router — Passwort-Pflicht gilt
- * ausnahmslos, auch im LAN (bewusster Breaking Change).
+ * Verlangt für jede `/v1/*`-Anfrage ein gültiges
+ * `Authorization: Bearer <token>`. Wrapt den fertigen Composition-Router —
+ * Passwort-Pflicht gilt für die API ausnahmslos, auch im LAN (bewusster
+ * Breaking Change).
  *
- * Zwei Ausnahmen, beide notwendig und anders geschützt:
+ * Zwei Ausnahmen innerhalb von `/v1/*`, beide notwendig und anders
+ * geschützt:
  * - `/v1/auth/login` erzeugt die Session überhaupt erst.
  * - `/v1/setup` setzt das Passwort, das man für eine Session bräuchte —
  *   Henne und Ei. Dort schützt stattdessen der Kopplungscode aus dem
  *   Start-Log (siehe `LocalRuntimeSetupHttpHandler`).
+ *
+ * Alles außerhalb von `/v1/*` (insbesondere `/`, `/main.dart.js` und der
+ * Rest des ausgelieferten Web-Builds) lässt diese Middleware unauthentifiziert
+ * durch — sonst könnte die SPA sich im Browser nie selbst laden: Ein
+ * gewöhnlicher Seitenaufruf trägt keinen `Authorization`-Header, den setzt
+ * erst der bereits laufende Dart-Client für seine eigenen API-Aufrufe (siehe
+ * `local-runtime-http-server.ts`, „Statische Dateien … liegen bewusst
+ * außerhalb der Session-Middleware").
  */
 export class LocalRuntimeSessionAuthMiddleware
 implements LocalRuntimeRequestHandler, LocalRuntimeStreamRequestHandler {
@@ -28,7 +43,7 @@ implements LocalRuntimeRequestHandler, LocalRuntimeStreamRequestHandler {
   ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
-    if (unauthenticatedPaths.has(request.url ?? "")) return this.inner.handle(request);
+    if (!requiresAuthentication(request.url)) return this.inner.handle(request);
     const unauthorized = await this.rejectionFor(bearerTokenFrom(request.headers));
     if (unauthorized) return unauthorized;
     return this.inner.handle(request);
@@ -45,6 +60,11 @@ implements LocalRuntimeRequestHandler, LocalRuntimeStreamRequestHandler {
     const valid = token !== null && await this.sessions.verifySession(token);
     return valid ? null : {body: {error: "Anmeldung erforderlich."}, statusCode: 401};
   }
+}
+
+function requiresAuthentication(url: string | undefined): boolean {
+  const path = url ?? "";
+  return path.startsWith(apiPathPrefix) && !unauthenticatedPaths.has(path);
 }
 
 function bearerTokenFrom(
