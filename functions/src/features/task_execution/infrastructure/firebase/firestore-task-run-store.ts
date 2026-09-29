@@ -200,8 +200,7 @@ function isObject(value: unknown): value is {message?: unknown} {
 function responseOutputsFromDocument(
   data: Record<string, unknown>,
 ): Record<string, NodeOutputValue> {
-  if (isObject(data.responseOutputs)) {
-    return data.responseOutputs as Record<string, NodeOutputValue>;
-  }
-  return {text: {type: "string", value: String(data.approvedOutput ?? "")}};
+  return isObject(data.responseOutputs)
+    ? data.responseOutputs as Record<string, NodeOutputValue>
+    : {};
 }

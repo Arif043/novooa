@@ -44,7 +44,6 @@ type TaskRunRow = SqlRow & {
   context: string;
   input_json: string;
   resume_state_json: string | null;
-  approved_output: string | null;
   response_outputs_json: string | null;
   status: string;
 };
@@ -214,8 +213,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function responseOutputsFromRow(
   row: TaskRunRow,
 ): Record<string, NodeOutputValue> {
-  if (row.response_outputs_json !== null) {
-    return jsonRecord(row.response_outputs_json) as Record<string, NodeOutputValue>;
-  }
-  return {text: {type: "string", value: row.approved_output ?? ""}};
+  if (row.response_outputs_json === null) return {};
+  return jsonRecord(row.response_outputs_json) as Record<string, NodeOutputValue>;
 }

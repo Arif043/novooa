@@ -32,7 +32,6 @@ export function approvedDocument(outputs: Record<string, NodeOutputValue>) {
   return {
     status: "queued",
     responseOutputs: serializable(outputs),
-    approvedOutput: FieldValue.delete(),
     updatedAt: FieldValue.serverTimestamp(),
     waitingNodeId: FieldValue.delete(),
     reviewInstruction: FieldValue.delete(),
