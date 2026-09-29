@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
+import 'package:syscat2/core/runtime/workspace_capabilities.dart';
 import 'package:syscat2/core/widgets/root_shell_scope.dart';
 import 'package:syscat2/features/assistant/domain/entities/assistant_context.dart';
 import 'package:syscat2/features/assistant/presentation/cubits/assistant_cubit.dart';
@@ -31,13 +32,18 @@ class TaskBuilderSideRail extends StatelessWidget {
       builder: (context, state) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _RailIconButton(
-            tooltip: 'KI-Agent',
-            icon: Icons.auto_awesome_outlined,
-            selected: selectedPanel == TaskBuilderSidePanelKind.assistant,
-            onPressed: () =>
-                onPanelSelected(TaskBuilderSidePanelKind.assistant),
-          ),
+          // Der KI-Agent ist (noch) ein Cloud-Feature — in Standalone ist
+          // `AssistantCubit` nicht registriert. Ohne diese Prüfung würfe
+          // `serviceLocator<AssistantCubit>()` in `_content()` einen
+          // Registrierungsfehler mitten im Seitenpanel-Aufbau.
+          if (serviceLocator<WorkspaceCapabilities>().assistant)
+            _RailIconButton(
+              tooltip: 'KI-Agent',
+              icon: Icons.auto_awesome_outlined,
+              selected: selectedPanel == TaskBuilderSidePanelKind.assistant,
+              onPressed: () =>
+                  onPanelSelected(TaskBuilderSidePanelKind.assistant),
+            ),
           _RailIconButton(
             tooltip: 'Benachrichtigungen',
             selected: selectedPanel == TaskBuilderSidePanelKind.notifications,

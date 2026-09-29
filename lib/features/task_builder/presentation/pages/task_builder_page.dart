@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/config/mvp_feature_flags.dart';
 import 'package:syscat2/core/di/service_locator.dart';
+import 'package:syscat2/core/runtime/workspace_capabilities.dart';
 import 'package:syscat2/core/widgets/root_shell_scope.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_employee_assignments_cubit.dart';
@@ -38,7 +39,7 @@ class TaskBuilderPage extends StatelessWidget {
         BlocProvider(
           create: (_) => serviceLocator<NodeLanguageModelsCubit>()..load(),
         ),
-        if (serviceLocator.isRegistered<ModelCatalogCubit>())
+        if (serviceLocator<WorkspaceCapabilities>().modelCatalog)
           BlocProvider(
             create: (_) => serviceLocator<ModelCatalogCubit>()..load(),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/runtime/workspace_capabilities.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/syscat_theme.dart';
 import '../../../data/domain/entities/data_collection.dart';
@@ -46,10 +47,10 @@ class TableFromCollectionWidget extends StatelessWidget {
   }
 }
 
-/// Echtes Dropdown mit vorhandenen Collections, wenn `ListDataCollections`
-/// im aktuellen Laufzeitprofil registriert ist (Standalone-Profil) — sonst
-/// ein einfaches Textfeld, wie es `documentLookup`/`saveDocument` bereits
-/// verwenden (Cloud-Profil hat noch keinen Firestore-`DataRepository`).
+/// Echtes Dropdown mit vorhandenen Collections, wenn die aktuelle Variante
+/// Datensammlungen unterstützt (Standalone) — sonst ein einfaches Textfeld,
+/// wie es `documentLookup`/`saveDocument` bereits verwenden (Cloud hat noch
+/// keinen Firestore-`DataRepository` dafür).
 class _CollectionField extends StatelessWidget {
   const _CollectionField({required this.value, required this.onChanged});
 
@@ -58,7 +59,7 @@ class _CollectionField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!serviceLocator.isRegistered<ListDataCollections>()) {
+    if (!serviceLocator<WorkspaceCapabilities>().dataCollections) {
       return TemplateExpressionTextField(
         value: value,
         suggestions: TemplateExpressionScope.suggestionsOf(context),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
+import 'package:syscat2/core/di/service_locator.dart';
+import 'package:syscat2/core/runtime/workspace_capabilities.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_run_failure.dart';
@@ -92,6 +94,18 @@ void main() {
     'zeigt ein Freitextfeld für die Sammlung ohne registriertes '
     'DataRepository (Cloud-Profil)',
     (tester) async {
+      // `TableFromCollectionWidget` liest `WorkspaceCapabilities` aus dem
+      // globalen serviceLocator — ohne eigene Registrierung hier würde ein
+      // Wert aus einem anderen Test leaken oder das Auflösen schlicht
+      // fehlschlagen.
+      serviceLocator.registerSingleton(
+        const WorkspaceCapabilities(
+          assistant: true,
+          dataCollections: false,
+          modelCatalog: false,
+        ),
+      );
+      addTearDown(() => serviceLocator.unregister<WorkspaceCapabilities>());
       final cubit = await _cubitFor(_tableTask());
       await tester.pumpWidget(
         _host(
@@ -101,8 +115,8 @@ void main() {
       );
 
       expect(find.text('Sammlung als Tabelle'), findsOneWidget);
-      expect(find.byType(TextFormField), findsOneWidget);
-      await tester.enterText(find.byType(TextFormField), 'bestellungen');
+      expect(find.byType(TextField), findsOneWidget);
+      await tester.enterText(find.byType(TextField), 'bestellungen');
       await tester.pump();
 
       final config =
