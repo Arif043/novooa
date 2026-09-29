@@ -45,17 +45,13 @@ class TaskBuilderHeader extends StatelessWidget {
                           Container(
                             width: 36,
                             height: 36,
-                            decoration: BoxDecoration(
-                              color: colors.primaryContainer.withValues(
-                                alpha: .12,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.account_tree_outlined,
-                              size: 20,
-                              color: colors.primary,
-                            ),
+                            // decoration: BoxDecoration(
+                            //   color: colors.primaryContainer.withValues(
+                            //     alpha: .12,
+                            //   ),
+                            //   borderRadius: BorderRadius.circular(12),
+                            // ),
+                            child: Image.asset("assets/icons/icon.png"),
                           ),
                           const SizedBox(width: 12),
                           Expanded(

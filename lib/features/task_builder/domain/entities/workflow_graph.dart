@@ -23,6 +23,13 @@ class WorkflowGraph extends Equatable {
     return null;
   }
 
+  /// Fügt [node] direkt nach [selectedNodeId] ein.
+  ///
+  /// Hatte [selectedNodeId] bereits Nachfolger (z.B. durch manuelles
+  /// Verbinden mehrerer Ziele), werden diese zu Nachfolgern von [node]
+  /// gespleißt, statt als zusätzliche parallele Zweige neben [node] stehen
+  /// zu bleiben — [node] wird dadurch immer der eine direkte Nachfolger,
+  /// nie einer von mehreren.
   WorkflowGraph addNode(WorkflowNode node, NodeId selectedNodeId) {
     if (nodeOrNull(node.id) != null) {
       throw ArgumentError.value(
@@ -31,12 +38,21 @@ class WorkflowGraph extends Equatable {
         'Knoten-ID ist bereits belegt.',
       );
     }
-    final newEdges = nodes.isEmpty
-        ? edges
-        : <WorkflowEdge>[
-            ...edges,
-            WorkflowEdge(from: selectedNodeId, to: node.id),
-          ];
+    if (nodes.isEmpty) {
+      return copyWith(nodes: [...nodes, node]);
+    }
+    final newEdges = <WorkflowEdge>[
+      for (final edge in edges)
+        if (edge.from == selectedNodeId)
+          WorkflowEdge(
+            from: node.id,
+            to: edge.to,
+            conditionLabel: edge.conditionLabel,
+          )
+        else
+          edge,
+      WorkflowEdge(from: selectedNodeId, to: node.id),
+    ];
     return copyWith(nodes: [...nodes, node], edges: newEdges);
   }
 

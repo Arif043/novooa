@@ -403,9 +403,16 @@ void main() {
         afterId: const NodeId('text'),
       );
       final updated = (cubit.state as TaskBuilderLoaded).editingTask;
+      final insertedId = updated.nodes.last.id;
+      // "text" bekommt genau einen direkten Nachfolger — den neuen Baustein
+      // —, dessen vorige Kante zu "decision" wird auf den neuen Baustein
+      // gespleißt, statt als zusätzlicher paralleler Zweig neben ihm stehen
+      // zu bleiben (siehe WorkflowGraph.addNode).
       expect(updated.edges.last.from, const NodeId('text'));
-      expect(updated.edges.last.to, updated.nodes.last.id);
-      expect(updated.edges.first, _task.edges.first);
+      expect(updated.edges.last.to, insertedId);
+      expect(updated.edges.first.from, insertedId);
+      expect(updated.edges.first.to, const NodeId('decision'));
+      expect(updated.edges, isNot(contains(_task.edges.first)));
     },
   );
 

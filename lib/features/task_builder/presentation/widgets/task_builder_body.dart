@@ -97,10 +97,19 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
                 ? TaskBuilderTheme.paletteWidth
                 : math.min(280.0, constraints.maxWidth - 48);
             final palette = BausteinPalette(
+              // Ohne explizit gewählten Einfügepunkt (`_insertion`, ein
+              // Klick auf "+ Baustein hier verbinden") fügt das Menü links
+              // immer in den Hauptfluss ein — direkt nach dem fokussierten
+              // Baustein, unabhängig davon, ob der gerade fokussierte
+              // Baustein selbst in einem Zweig oder einer Schleife liegt
+              // (`task.selectedNodeOrNull` findet dort nichts, dann wird an
+              // das Ende des Hauptflusses angehängt). `selected?.insertion`
+              // bewusst NICHT hier: Das würde bei einem in einem Zweig
+              // fokussierten Baustein dessen `owner`/`branchId` übernehmen
+              // und dort statt im Hauptfluss einfügen.
               onAdd: (choice) => _add(
                 choice,
                 _insertion ??
-                    selected?.insertion ??
                     BausteinInsertion(after: task.selectedNodeOrNull?.id),
               ),
             );
