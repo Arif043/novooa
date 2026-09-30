@@ -1,3 +1,4 @@
+import {testingRoutes} from "./local-runtime-http-test-support.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {LocalRuntimeSetupHttpHandler} from "./local-runtime-setup-http-handler.js";
@@ -6,7 +7,7 @@ import {
   type LocalRuntimeAccessCredentialStore,
   RuntimeAccessCredentialAlreadySetError,
 } from "./local-runtime-access-credential-store.js";
-import {type LocalRuntimeRequest} from "./local-runtime-http-server.js";
+import {type TestRequest as LocalRuntimeRequest} from "./local-runtime-http-test-support.js";
 
 // Einmaliges Setzen des Betreiber-Passworts über den regulären Port, mit
 // dem Kopplungscode aus dem Start-Log als Schutz. Der frühere zweite,
@@ -17,10 +18,10 @@ import {type LocalRuntimeRequest} from "./local-runtime-http-server.js";
 
 function handlerFor(credentials: FakeCredentialStore) {
   const setupCode = new LocalRuntimeSetupCode(() => "abc123abc123");
-  const handler = new LocalRuntimeSetupHttpHandler({
+  const handler = testingRoutes(new LocalRuntimeSetupHttpHandler({
     credentials: credentials as unknown as LocalRuntimeAccessCredentialStore,
     setupCode,
-  });
+  }));
   return {handler, setupCode};
 }
 

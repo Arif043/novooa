@@ -1,45 +1,29 @@
-import {randomUUID} from "node:crypto";
-import {
-  type LocalRuntimeRequest,
-  type LocalRuntimeRequestHandler,
-  type LocalRuntimeResponse,
-} from "../../../../shared/local/local-runtime-http-server.js";
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
-import {
-  enabledFrom,
-  invalidResponse,
-  LocalTaskTriggerError,
-  triggerFromRequest,
-  triggerFromRow,
-  type TriggerRow,
-} from "./local-task-trigger-http-support.js";
-import {routeMatch} from "../../../../shared/local/local-runtime-route.js";
-import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
-
-export class LocalTaskTriggerHttpHandler implements LocalRuntimeRequestHandler {
-  constructor(
-    private readonly database: LocalSqlDatabase,
-    private readonly teamId: string,
-    private readonly userId: string,
-    private readonly notifier: LocalRuntimeRealtimeNotifier,
-  ) {}
-
-  async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
-    if (routeMatch(request, "GET", "/v1/task-triggers")) return this.list();
-    if (routeMatch(request, "POST", "/v1/task-triggers")) return this.create(request.body);
-    const enabled = routeMatch(request, "PUT", "/v1/task-triggers/:triggerId/enabled");
-    if (enabled) return this.setEnabled(enabled.params.triggerId, request.body);
-    const trigger = routeMatch(request, "DELETE", "/v1/task-triggers/:triggerId");
-    if (trigger) return this.delete(trigger.params.triggerId);
-    return null;
+import { type FastifyInstance, type FastifyReply } from "fastify";
+import { randomUUID } from "node:crypto";
+import { type LocalSqlDatabase, type SqlRow } from "../../../../shared/local/local-sql-database.js";
+import { enabledFrom, invalidResponse, LocalTaskTriggerError, triggerFromRequest, triggerFromRow, type TriggerRow, } from "./local-task-trigger-http-support.js";
+import { type LocalRuntimeRealtimeNotifier } from "../../../../shared/local/local-runtime-realtime-notifier.js";
+export class LocalTaskTriggerHttpHandler {
+  static registerRoutes(http: FastifyInstance, current: () => LocalTaskTriggerHttpHandler): void {
+    http.get("/v1/task-triggers", (request, reply) => current().list(reply));
+    http.post("/v1/task-triggers", (request, reply) => current().create(request.body, reply));
+    http.put<{
+      Params: {
+        triggerId: string;
+      };
+    }>("/v1/task-triggers/:triggerId/enabled", (request, reply) => current().setEnabled(request.params.triggerId, request.body, reply));
+    http.delete<{
+      Params: {
+        triggerId: string;
+      };
+    }>("/v1/task-triggers/:triggerId", (request, reply) => current().delete(request.params.triggerId, reply));
   }
-
-  private async list(): Promise<LocalRuntimeResponse> {
+  constructor(private readonly database: LocalSqlDatabase, private readonly teamId: string, private readonly userId: string, private readonly notifier: LocalRuntimeRealtimeNotifier) { }
+  private async list(reply: FastifyReply): Promise<FastifyReply> {
     const rows = await this.database.all<TriggerRow>(listSql(), [this.teamId]);
-    return {body: {items: rows.map(triggerFromRow)}, statusCode: 200};
+    return reply.code(200).send({ items: rows.map(triggerFromRow) });
   }
-
-  private async create(body: unknown): Promise<LocalRuntimeResponse> {
+  private async create(body: unknown, reply: FastifyReply): Promise<FastifyReply> {
     try {
       const input = triggerFromRequest(body);
       await this.ensureTask(input.taskId);
@@ -50,62 +34,55 @@ export class LocalTaskTriggerHttpHandler implements LocalRuntimeRequestHandler {
         input.nextRunAt?.toISOString() ?? null, this.userId,
       ]);
       this.notifier.publish("task-triggers");
-      return this.byId(id, 201);
-    } catch (error) {
-      return invalidResponse(error);
+      return this.byId(id, 201, reply);
+    }
+    catch (error) {
+      return invalidResponse(error, reply);
     }
   }
-
-  private async setEnabled(id: string, body: unknown): Promise<LocalRuntimeResponse> {
+  private async setEnabled(id: string, body: unknown, reply: FastifyReply): Promise<FastifyReply> {
     try {
       await this.database.run(updateEnabledSql(), [enabledFrom(body) ? 1 : 0, this.teamId, id]);
       this.notifier.publish("task-triggers");
-      return this.byId(id, 200);
-    } catch (error) {
-      return invalidResponse(error);
+      return this.byId(id, 200, reply);
+    }
+    catch (error) {
+      return invalidResponse(error, reply);
     }
   }
-
-  private async delete(id: string): Promise<LocalRuntimeResponse> {
+  private async delete(id: string, reply: FastifyReply): Promise<FastifyReply> {
     await this.database.run("DELETE FROM task_triggers WHERE team_id = ? AND id = ?", [this.teamId, id]);
     this.notifier.publish("task-triggers");
-    return {body: {}, statusCode: 204};
+    return reply.code(204).send();
   }
-
   private async ensureTask(taskId: string): Promise<void> {
     const task = await this.database.get<SqlRow>("SELECT id FROM tasks WHERE team_id = ? AND id = ?", [this.teamId, taskId]);
-    if (task === null) throw new LocalTaskTriggerError("Die Aufgabe existiert nicht.");
+    if (task === null)
+      throw new LocalTaskTriggerError("Die Aufgabe existiert nicht.");
   }
-
-  private async byId(id: string, statusCode: number): Promise<LocalRuntimeResponse> {
+  private async byId(id: string, statusCode: number, reply: FastifyReply): Promise<FastifyReply> {
     const row = await this.database.get<TriggerRow>(byIdSql(), [this.teamId, id]);
     return row === null
-      ? {body: {error: "Zeitplan nicht gefunden."}, statusCode: 404}
-      : {body: triggerFromRow(row), statusCode};
+      ? reply.code(404).send({ error: "Zeitplan nicht gefunden." }) : reply.code(statusCode).send(triggerFromRow(row));
   }
 }
-
 function selectSql(): string {
   return `SELECT triggers.id, triggers.team_id, triggers.task_id, tasks.title AS task_title,
-    triggers.type, triggers.enabled, triggers.config_json, triggers.event_config_json,
-    triggers.policy_json, triggers.next_run_at, triggers.last_run_at, triggers.last_run_id
-    FROM task_triggers AS triggers JOIN tasks ON tasks.id = triggers.task_id`;
+ triggers.type, triggers.enabled, triggers.config_json, triggers.event_config_json,
+ triggers.policy_json, triggers.next_run_at, triggers.last_run_at, triggers.last_run_id
+ FROM task_triggers AS triggers JOIN tasks ON tasks.id = triggers.task_id`;
 }
-
 function listSql(): string {
   return `${selectSql()} WHERE triggers.team_id = ? ORDER BY triggers.next_run_at IS NULL, triggers.next_run_at`;
 }
-
 function byIdSql(): string {
   return `${selectSql()} WHERE triggers.team_id = ? AND triggers.id = ?`;
 }
-
 function insertSql(): string {
   return `INSERT INTO task_triggers(id, team_id, task_id, type, enabled, config_json,
-    event_config_json, policy_json, next_run_at, created_by_uid)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+ event_config_json, policy_json, next_run_at, created_by_uid)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 }
-
 function updateEnabledSql(): string {
   return "UPDATE task_triggers SET enabled = ?, updated_at = CURRENT_TIMESTAMP WHERE team_id = ? AND id = ?";
 }

@@ -37,17 +37,4 @@ export class LocalRuntimeCorsPolicy {
     return this.allowedOrigins.has(origin);
   }
 
-  /** Nur für ausdrücklich erlaubte Fremd-Herkünfte nötig. */
-  headersFor(origin: string | undefined): Record<string, string> | null {
-    if (origin === undefined || !this.allowedOrigins.has(origin)) return null;
-    return {
-      "access-control-allow-origin": origin,
-      "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "access-control-allow-headers": "authorization, content-type",
-      "access-control-max-age": "600",
-      // Die Antwort hängt von der Herkunft ab — sonst könnte ein Cache die
-      // Freigabe einer Origin an eine andere ausliefern.
-      vary: "Origin",
-    };
-  }
 }

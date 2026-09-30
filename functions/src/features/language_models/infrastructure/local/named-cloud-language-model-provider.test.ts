@@ -1,3 +1,4 @@
+import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import assert from "node:assert/strict";
 import {randomBytes} from "node:crypto";
 import test from "node:test";
@@ -15,12 +16,12 @@ test("connects Mistral with its fixed endpoint and the customer API key", async 
   const secrets = new EncryptedSQLiteLanguageModelSecretStore(
     database, new CredentialCipher(randomBytes(32).toString("base64")),
   );
-  const handler = new LocalLanguageModelHttpHandler(
+  const handler = testingRoutes(new LocalLanguageModelHttpHandler(
     new SQLiteLanguageModelConfigurationStore(database, secrets),
     "team-1",
     new LocalRuntimeRealtimeNotifier(),
     {discover: async () => [discoveredModel()]},
-  );
+  ));
 
   const response = await handler.handle({
     body: {provider: "mistral", apiKey: "customer-api-key"},

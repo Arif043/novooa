@@ -5,12 +5,8 @@ import {verifiesRuntimeLicense} from "../license-lease-crypto.js";
 import {type RuntimeLicenseStore} from "./file-local-runtime-license-store.js";
 import {type RuntimeLicenseGatewayClient} from "./local-runtime-license-gateway-client.js";
 
-export type RuntimeLicenseContext = {
-  licenseId: string;
-  licenseName: string;
-  workspaceId: string;
-  expiresAt: string;
-};
+import {type RuntimeLicenseContext} from "../../domain/entities/runtime-license-context.js";
+export {type RuntimeLicenseContext} from "../../domain/entities/runtime-license-context.js";
 export type RuntimeLicenseStatus = {state: "active" | "expired" | "notActivated"; expiresAt?: string; name?: string;};
 export type RuntimeLicenseActivationInput = {activationToken: string;};
 

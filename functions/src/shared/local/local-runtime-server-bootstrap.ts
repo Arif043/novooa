@@ -1,13 +1,16 @@
 import {type Server} from "node:http";
+import {type FastifyInstance, type FastifyPluginAsync} from "fastify";
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
-import {createLocalRuntimeAccessPipeline} from "./local-runtime-access-pipeline.js";
+import {registerLocalRuntimeAccessHooks} from "./local-runtime-access-hooks.js";
+import {registerRuntimeLicenseRoutes} from "./local-runtime-license-routes.js";
+import {registerLocalRuntimeRoutes} from "./local-runtime-composition.js";
+import {ActivateRuntime} from "../../features/licensing/domain/usecases/activate-runtime.js";
 import {LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 import {createLocalRuntimeHttpServer} from "./local-runtime-http-server.js";
 import {attachLocalRuntimeRealtimeServer} from "./local-runtime-realtime-server.js";
 import {type LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
-import {type LocalRuntimeStaticFiles} from "./local-runtime-static-files.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
 import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 
@@ -17,12 +20,12 @@ type BootstrapOptions = {
   fieldCipher: SensitiveFieldCipher;
   licenses: RuntimeLicenseService;
   cors: LocalRuntimeCorsPolicy;
-  webFiles: LocalRuntimeStaticFiles | undefined;
+  webDirectory: string | undefined;
   port: number;
 };
 
 export async function bootstrapLocalRuntime(options: BootstrapOptions): Promise<{
-  server: Server; application: LocalRuntimeApplication;
+  server: Server; application: LocalRuntimeApplication; closeHttp: () => Promise<void>;
 }> {
   const setupCode = new LocalRuntimeSetupCode();
   const sessions = new LocalRuntimeSessionStore(options.database);
@@ -30,9 +33,9 @@ export async function bootstrapLocalRuntime(options: BootstrapOptions): Promise<
   try {
     const restored = await options.licenses.restore();
     if (restored !== null) await application.activate(restored);
-    const server = await listenForRequests(options, application, sessions);
+    const http = await listenForRequests(options, application, sessions);
     reportStarted(options.port, setupCode);
-    return {server, application};
+    return {server: http.server, application, closeHttp: () => http.close()};
   } catch (error) {
     await application.stop();
     throw error;
@@ -53,16 +56,41 @@ function applicationFor(
 
 async function listenForRequests(
   options: BootstrapOptions, application: LocalRuntimeApplication, sessions: LocalRuntimeSessionStore,
-): Promise<Server> {
-  const server = createLocalRuntimeHttpServer(
-    createLocalRuntimeAccessPipeline(options.licenses, sessions, application), options.webFiles, options.cors,
+): Promise<FastifyInstance> {
+  const http = createLocalRuntimeHttpServer(
+    runtimeRoutes(options, application, sessions), options.webDirectory, options.cors,
   );
-  attachLocalRuntimeRealtimeServer(server, application, options.cors);
-  await new Promise<void>((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(options.port, "0.0.0.0", resolve);
+  attachRealtimeLifecycle(http, application, options.cors);
+  try {
+    await http.listen({port: options.port, host: "0.0.0.0"});
+    return http;
+  } catch (error) {
+    await http.close();
+    throw error;
+  }
+}
+
+function runtimeRoutes(
+  options: BootstrapOptions, application: LocalRuntimeApplication, sessions: LocalRuntimeSessionStore,
+): FastifyPluginAsync {
+  return async (routes) => {
+    const activate = new ActivateRuntime(options.licenses, (context) => application.activate(context));
+    registerRuntimeLicenseRoutes(routes, options.licenses, activate);
+    routes.register(async (api) => {
+      registerLocalRuntimeAccessHooks(api, options.licenses, sessions);
+      registerLocalRuntimeRoutes(api, () => application.controllers());
+    });
+  };
+}
+
+function attachRealtimeLifecycle(
+  http: FastifyInstance, application: LocalRuntimeApplication, cors: LocalRuntimeCorsPolicy,
+): void {
+  const realtime = attachLocalRuntimeRealtimeServer(http.server, application, cors);
+  http.addHook("preClose", async () => {
+    for (const client of realtime.clients) client.terminate();
+    await new Promise<void>((resolve) => realtime.close(() => resolve()));
   });
-  return server;
 }
 
 function reportStarted(port: number, setupCode: LocalRuntimeSetupCode): void {

@@ -1,3 +1,4 @@
+import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {type SignedRuntimeLicense} from
@@ -7,7 +8,7 @@ import {type RuntimePushRelayClient} from "./runtime-push-relay-client.js";
 
 test("forwards a local FCM token with the signed license to the relay", async () => {
   const relay = new RelayFake();
-  const handler = new LocalPushDeviceHttpHandler(() => license, relay);
+  const handler = testingRoutes(new LocalPushDeviceHttpHandler(() => license, relay));
 
   const response = await handler.handle({
     method: "POST",
@@ -20,7 +21,7 @@ test("forwards a local FCM token with the signed license to the relay", async ()
 });
 
 test("rejects push registration without a signed local license", async () => {
-  const handler = new LocalPushDeviceHttpHandler(() => null, new RelayFake());
+  const handler = testingRoutes(new LocalPushDeviceHttpHandler(() => null, new RelayFake()));
 
   const response = await handler.handle({
     method: "POST",

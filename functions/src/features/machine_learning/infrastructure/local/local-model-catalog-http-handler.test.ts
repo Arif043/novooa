@@ -1,3 +1,4 @@
+import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import assert from "node:assert/strict";
 import {mkdtemp, readFile, rm} from "node:fs/promises";
 import os from "node:os";
@@ -19,7 +20,7 @@ import {type RuntimeSystemModel, type RuntimeSystemModelCatalog} from "./runtime
 test("installs a team-scoped ONNX model from a manifest and lists it", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-model-import-"));
   const catalog = new Catalog();
-  const handler = new LocalModelCatalogHttpHandler(
+  const handler = testingRoutes(new LocalModelCatalogHttpHandler(
     catalog,
     new LocalModelArtifactPublisher(directory),
     new LocalModelArtifactUploadStore(directory),
@@ -27,7 +28,7 @@ test("installs a team-scoped ONNX model from a manifest and lists it", async () 
     new Validator(),
     new Logger(),
     new LocalRuntimeRealtimeNotifier(),
-  );
+  ));
 
   try {
     const importRequest = await handler.handle({
@@ -51,7 +52,7 @@ test("lists global models without their distribution and installs one locally", 
   const catalog = new Catalog();
   const model = globalModel();
   const downloader = new Downloader();
-  const handler = new LocalModelCatalogHttpHandler(
+  const handler = testingRoutes(new LocalModelCatalogHttpHandler(
     catalog,
     new LocalModelArtifactPublisher(directory),
     new LocalModelArtifactUploadStore(directory),
@@ -61,7 +62,7 @@ test("lists global models without their distribution and installs one locally", 
     new LocalRuntimeRealtimeNotifier(),
     new GlobalCatalog(model),
     downloader,
-  );
+  ));
 
   try {
     const listed = await handler.handle({method: "GET", url: "/v1/ml-models/catalog", body: {}});
@@ -83,7 +84,7 @@ test("lists global models without their distribution and installs one locally", 
 
 test("rejects a manifest whose transformation is not supported by the Python runtime", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-model-import-"));
-  const handler = new LocalModelCatalogHttpHandler(
+  const handler = testingRoutes(new LocalModelCatalogHttpHandler(
     new Catalog(),
     new LocalModelArtifactPublisher(directory),
     new LocalModelArtifactUploadStore(directory),
@@ -91,7 +92,7 @@ test("rejects a manifest whose transformation is not supported by the Python run
     new RejectingValidator(),
     new Logger(),
     new LocalRuntimeRealtimeNotifier(),
-  );
+  ));
 
   try {
     const importRequest = await handler.handle({
@@ -109,7 +110,7 @@ test("rejects a manifest whose transformation is not supported by the Python run
 });
 
 test("does not remove a model owned by another team", async () => {
-  const handler = new LocalModelCatalogHttpHandler(
+  const handler = testingRoutes(new LocalModelCatalogHttpHandler(
     new Catalog(),
     new LocalModelArtifactPublisher("/tmp/novooa-unused"),
     new LocalModelArtifactUploadStore("/tmp/novooa-unused"),
@@ -117,7 +118,7 @@ test("does not remove a model owned by another team", async () => {
     new Validator(),
     new Logger(),
     new LocalRuntimeRealtimeNotifier(),
-  );
+  ));
 
   const response = await handler.handle({
     method: "DELETE",
@@ -131,7 +132,7 @@ test("does not remove a model owned by another team", async () => {
 test("removes the ONNX artifact with the local catalog entry", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-model-import-"));
   const catalog = new Catalog();
-  const handler = new LocalModelCatalogHttpHandler(
+  const handler = testingRoutes(new LocalModelCatalogHttpHandler(
     catalog,
     new LocalModelArtifactPublisher(directory),
     new LocalModelArtifactUploadStore(directory),
@@ -139,7 +140,7 @@ test("removes the ONNX artifact with the local catalog entry", async () => {
     new Validator(),
     new Logger(),
     new LocalRuntimeRealtimeNotifier(),
-  );
+  ));
 
   try {
     const importRequest = await handler.handle({
@@ -160,7 +161,7 @@ test("removes the ONNX artifact with the local catalog entry", async () => {
 test("recovers an interrupted import with an existing local artifact", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-model-import-"));
   const catalog = new Catalog();
-  const handler = new LocalModelCatalogHttpHandler(
+  const handler = testingRoutes(new LocalModelCatalogHttpHandler(
     catalog,
     new LocalModelArtifactPublisher(directory),
     new LocalModelArtifactUploadStore(directory),
@@ -168,7 +169,7 @@ test("recovers an interrupted import with an existing local artifact", async () 
     new Validator(),
     new Logger(),
     new LocalRuntimeRealtimeNotifier(),
-  );
+  ));
   const request = {
     method: "POST" as const,
     url: "/v1/ml-models/imports",
@@ -189,7 +190,7 @@ test("recovers an interrupted import with an existing local artifact", async () 
 });
 
 async function upload(
-  handler: LocalModelCatalogHttpHandler,
+  handler: ReturnType<typeof testingRoutes>,
   importRequest: {body: unknown} | null,
 ) {
   const importId = (importRequest?.body as {importId?: unknown}).importId;

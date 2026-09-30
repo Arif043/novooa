@@ -1,3 +1,4 @@
+import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import assert from "node:assert/strict";
 import {randomBytes} from "node:crypto";
 import test from "node:test";
@@ -17,11 +18,11 @@ test("stores a local model configuration without exposing its API key", async ()
     database,
     new CredentialCipher(randomBytes(32).toString("base64")),
   );
-  const handler = new LocalLanguageModelHttpHandler(
+  const handler = testingRoutes(new LocalLanguageModelHttpHandler(
     new SQLiteLanguageModelConfigurationStore(database, secretStore),
     "team-1",
     new LocalRuntimeRealtimeNotifier(),
-  );
+  ));
 
   const saved = await handler.handle({body: requestBody(), method: "POST", url: "/v1/language-models"});
   const listed = await handler.handle({body: {}, method: "GET", url: "/v1/language-models"});
@@ -45,11 +46,11 @@ test("uses an internal credential for a keyless local endpoint", async () => {
     database,
     new CredentialCipher(randomBytes(32).toString("base64")),
   );
-  const handler = new LocalLanguageModelHttpHandler(
+  const handler = testingRoutes(new LocalLanguageModelHttpHandler(
     new SQLiteLanguageModelConfigurationStore(database, secretStore),
     "team-1",
     new LocalRuntimeRealtimeNotifier(),
-  );
+  ));
 
   const response = await handler.handle({
     body: {...requestBody(), baseUrl: "http://host.docker.internal:11434/v1", apiKey: ""},
@@ -68,14 +69,14 @@ test("uses an internal credential for a keyless local endpoint", async () => {
 test("connects all models discovered for one provider connection", async () => {
   const database = new SqliteLocalSqlDatabase(":memory:");
   await createTables(database);
-  const handler = new LocalLanguageModelHttpHandler(
+  const handler = testingRoutes(new LocalLanguageModelHttpHandler(
     new SQLiteLanguageModelConfigurationStore(database, new EncryptedSQLiteLanguageModelSecretStore(
       database, new CredentialCipher(randomBytes(32).toString("base64")),
     )),
     "team-1",
     new LocalRuntimeRealtimeNotifier(),
     {discover: async () => discoveredModels()},
-  );
+  ));
 
   const response = await handler.handle({
     body: {provider: "googleAi", apiKey: "provider-api-key"},
@@ -94,12 +95,12 @@ test("connects Ollama with its local default endpoint and no API key", async () 
   const secrets = new EncryptedSQLiteLanguageModelSecretStore(
     database, new CredentialCipher(randomBytes(32).toString("base64")),
   );
-  const handler = new LocalLanguageModelHttpHandler(
+  const handler = testingRoutes(new LocalLanguageModelHttpHandler(
     new SQLiteLanguageModelConfigurationStore(database, secrets),
     "team-1",
     new LocalRuntimeRealtimeNotifier(),
     {discover: async () => discoveredModels()},
-  );
+  ));
 
   const response = await handler.handle({
     body: {provider: "ollama"},
@@ -133,14 +134,14 @@ test("reads model names from Ollama's native tags response", async () => {
 test("lists connected providers", async () => {
   const database = new SqliteLocalSqlDatabase(":memory:");
   await createTables(database);
-  const handler = new LocalLanguageModelHttpHandler(
+  const handler = testingRoutes(new LocalLanguageModelHttpHandler(
     new SQLiteLanguageModelConfigurationStore(database, new EncryptedSQLiteLanguageModelSecretStore(
       database, new CredentialCipher(randomBytes(32).toString("base64")),
     )),
     "team-1",
     new LocalRuntimeRealtimeNotifier(),
     {discover: async () => discoveredModels()},
-  );
+  ));
   await handler.handle({
     body: {provider: "googleAi", apiKey: "provider-api-key"},
     method: "POST",
@@ -168,12 +169,12 @@ test("removes a connection together with its models and their secret", async () 
   const notifier = new LocalRuntimeRealtimeNotifier();
   const events: string[] = [];
   notifier.subscribe("language-models", {send: () => events.push("language-models")});
-  const handler = new LocalLanguageModelHttpHandler(
+  const handler = testingRoutes(new LocalLanguageModelHttpHandler(
     new SQLiteLanguageModelConfigurationStore(database, secrets),
     "team-1",
     notifier,
     {discover: async () => discoveredModels()},
-  );
+  ));
   const connected = await handler.handle({
     body: {provider: "googleAi", apiKey: "provider-api-key"},
     method: "POST",

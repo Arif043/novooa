@@ -52,9 +52,8 @@ import {LocalTaskTriggerHttpHandler} from "../../features/scheduling/infrastruct
 import {PollingTaskTriggerWorker} from "../../features/scheduling/infrastructure/local/polling-task-trigger-worker.js";
 import {SQLiteTaskTriggerStore} from "../../features/scheduling/infrastructure/local/sqlite-task-trigger-store.js";
 import {createGenkitTaskWorkflow} from "../../features/task_execution/infrastructure/genkit/task-workflow.js";
-import {type LocalRuntimeRequestHandler} from "./local-runtime-http-server.js";
+import {type FastifyInstance} from "fastify";
 import {LocalAssistantHttpHandler} from "./local-assistant-http-handler.js";
-import {LocalRuntimeRequestRouter} from "./local-runtime-request-router.js";
 import {LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
 import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 import {LocalRuntimeLoginHttpHandler} from "./local-runtime-login-http-handler.js";
@@ -89,7 +88,7 @@ import {type RuntimeLicenseActivation} from "../../features/licensing/domain/ent
 import {type TaskWorkflow} from "../../features/task_execution/domain/usecases/task-workflow.js";
 
 export type LocalRuntimeComposition = {
-  requestHandler: LocalRuntimeRequestHandler;
+  controllers: LocalRuntimeControllers;
   taskRunWorker: TaskRunQueueWorker;
   taskTriggerWorker: PollingTaskTriggerWorker;
   mailRelayWorker: RuntimeMailRelayWorker | undefined;
@@ -189,33 +188,30 @@ export function createLocalRuntimeComposition(
     new SQLiteLanguageModelCatalog(options.database, languageModelSecretStore),
   );
   const languageModelDefaultsStore = new SQLiteLanguageModelDefaultsStore(options.database);
-  const router = new LocalRuntimeRequestRouter([
-    // Auf dem regulären Port ersetzt der Kopplungscode die Session — sonst
-    // liesse sich das Passwort nie setzen, das man für eine Session
-    // bräuchte. Steht deshalb auch in `unauthenticatedPaths` der Session-Middleware.
-    new LocalRuntimeSetupHttpHandler({
+  const controllers = {
+    setup: new LocalRuntimeSetupHttpHandler({
       credentials: credentialStore,
       setupCode: options.setupCode,
     }),
-    new LocalRuntimeLoginHttpHandler(credentialStore, options.sessions),
-    new LocalRuntimeRealtimeTicketHttpHandler(realtimeTicketStore),
-    new LocalTaskRunHttpHandler(taskWorkflow, options.workspace.userId, applicationLogger, realtimeNotifier),
-    new LocalPushDeviceHttpHandler(options.signedLicense, pushRelay),
-    new LocalMailRelayHttpHandler(options.signedLicense, mailRelay),
-    new LocalTaskDefinitionHttpHandler(
+    login: new LocalRuntimeLoginHttpHandler(credentialStore, options.sessions),
+    realtimeTickets: new LocalRuntimeRealtimeTicketHttpHandler(realtimeTicketStore),
+    taskRuns: new LocalTaskRunHttpHandler(taskWorkflow, options.workspace.userId, applicationLogger, realtimeNotifier),
+    pushDevices: new LocalPushDeviceHttpHandler(options.signedLicense, pushRelay),
+    mailRelay: new LocalMailRelayHttpHandler(options.signedLicense, mailRelay),
+    tasks: new LocalTaskDefinitionHttpHandler(
       taskDefinitionStore,
       options.workspace.teamId,
       options.workspace.userId,
       realtimeNotifier,
     ),
-    new LocalLanguageModelHttpHandler(languageModelStore, options.workspace.teamId, realtimeNotifier),
-    new LocalLanguageModelDefaultsHttpHandler(
+    languageModels: new LocalLanguageModelHttpHandler(languageModelStore, options.workspace.teamId, realtimeNotifier),
+    languageModelDefaults: new LocalLanguageModelDefaultsHttpHandler(
       languageModelDefaultsStore,
       options.workspace.teamId,
       realtimeNotifier,
     ),
-    new LocalDataHttpHandler(documentStore, options.workspace.teamId),
-    new LocalModelCatalogHttpHandler(
+    data: new LocalDataHttpHandler(documentStore, options.workspace.teamId),
+    modelCatalog: new LocalModelCatalogHttpHandler(
       new SQLiteModelCatalog(options.database),
       new LocalModelArtifactPublisher(options.runtimeRoot),
       new LocalModelArtifactUploadStore(options.runtimeRoot),
@@ -229,14 +225,14 @@ export function createLocalRuntimeComposition(
         process.env.HF_TOKEN?.trim() || undefined,
       ),
     ),
-    new LocalTaskActivityHttpHandler(options.database, options.workspace.teamId),
-    new LocalApplicationLogHttpHandler(applicationLogStore, options.workspace.teamId, realtimeNotifier),
-    new LocalKnowledgeNoteHttpHandler(options.database, options.workspace.teamId, realtimeNotifier),
-    new LocalTaskTriggerHttpHandler(options.database, options.workspace.teamId, options.workspace.userId, realtimeNotifier),
-    new LocalFileResourceHttpHandler(
+    activities: new LocalTaskActivityHttpHandler(options.database, options.workspace.teamId),
+    logs: new LocalApplicationLogHttpHandler(applicationLogStore, options.workspace.teamId, realtimeNotifier),
+    knowledge: new LocalKnowledgeNoteHttpHandler(options.database, options.workspace.teamId, realtimeNotifier),
+    triggers: new LocalTaskTriggerHttpHandler(options.database, options.workspace.teamId, options.workspace.userId, realtimeNotifier),
+    files: new LocalFileResourceHttpHandler(
       options.database, teamFileStore, options.workspace.teamId, options.workspace.userId, realtimeNotifier,
     ),
-    new LocalAssistantHttpHandler(
+    assistants: new LocalAssistantHttpHandler(
       () => createLocalTaskBuilderAssistant(
         options.workspace.teamId, languageModelResolver, languageModelDefaultsStore,
       ),
@@ -245,9 +241,9 @@ export function createLocalRuntimeComposition(
       ),
       options.workspace.userId,
     ),
-  ]);
+  };
   return {
-    requestHandler: router,
+    controllers,
     taskRunWorker,
     taskTriggerWorker: new PollingTaskTriggerWorker(
       () => runDueTaskTriggers(new Date(), {
@@ -379,4 +375,44 @@ function modelInferenceFor(options: LocalRuntimeCompositionOptions) {
     );
   }
   return new UnavailableLocalModelInference();
+}
+
+export type LocalRuntimeControllers = {
+  setup: LocalRuntimeSetupHttpHandler;
+  login: LocalRuntimeLoginHttpHandler;
+  realtimeTickets: LocalRuntimeRealtimeTicketHttpHandler;
+  taskRuns: LocalTaskRunHttpHandler;
+  pushDevices: LocalPushDeviceHttpHandler;
+  mailRelay: LocalMailRelayHttpHandler;
+  tasks: LocalTaskDefinitionHttpHandler;
+  languageModels: LocalLanguageModelHttpHandler;
+  languageModelDefaults: LocalLanguageModelDefaultsHttpHandler;
+  data: LocalDataHttpHandler;
+  modelCatalog: LocalModelCatalogHttpHandler;
+  activities: LocalTaskActivityHttpHandler;
+  logs: LocalApplicationLogHttpHandler;
+  knowledge: LocalKnowledgeNoteHttpHandler;
+  triggers: LocalTaskTriggerHttpHandler;
+  files: LocalFileResourceHttpHandler;
+  assistants: LocalAssistantHttpHandler;
+};
+
+export function registerLocalRuntimeRoutes(http: FastifyInstance, current: () => LocalRuntimeControllers): void {
+  LocalRuntimeSetupHttpHandler.registerRoutes(http, () => current().setup);
+  LocalRuntimeLoginHttpHandler.registerRoutes(http, () => current().login);
+  LocalRuntimeRealtimeTicketHttpHandler.registerRoutes(http, () => current().realtimeTickets);
+  LocalTaskRunHttpHandler.registerRoutes(http, () => current().taskRuns);
+  LocalPushDeviceHttpHandler.registerRoutes(http, () => current().pushDevices);
+  LocalMailRelayHttpHandler.registerRoutes(http, () => current().mailRelay);
+  LocalTaskDefinitionHttpHandler.registerRoutes(http, () => current().tasks);
+  LocalLanguageModelHttpHandler.registerRoutes(http, () => current().languageModels);
+  LocalLanguageModelDefaultsHttpHandler.registerRoutes(http, () => current().languageModelDefaults);
+  LocalDataHttpHandler.registerRoutes(http, () => current().data);
+  LocalModelCatalogHttpHandler.registerRoutes(http, () => current().modelCatalog);
+  LocalTaskActivityHttpHandler.registerRoutes(http, () => current().activities);
+  LocalApplicationLogHttpHandler.registerRoutes(http, () => current().logs);
+  LocalKnowledgeNoteHttpHandler.registerRoutes(http, () => current().knowledge);
+  LocalTaskTriggerHttpHandler.registerRoutes(http, () => current().triggers);
+  LocalFileResourceHttpHandler.registerRoutes(http, () => current().files);
+  LocalAssistantHttpHandler.registerRoutes(http, () => current().assistants);
 }

@@ -1,4 +1,3 @@
-import {type Server} from "node:http";
 import {readFileSync} from "node:fs";
 import {join, resolve} from "node:path";
 import {
@@ -11,7 +10,6 @@ import {HttpRuntimeLicenseGatewayClient} from "../../features/licensing/infrastr
 import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {openLocalRuntimeDatabase} from "./local-runtime-database.js";
 import {localRuntimeMasterKeyFrom} from "./local-runtime-master-key.js";
-import {LocalRuntimeStaticFiles} from "./local-runtime-static-files.js";
 import {LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
 import {LocalRuntimeSecurity} from "./local-runtime-security.js";
@@ -39,12 +37,12 @@ async function startLockedRuntime(runtimeRoot: string, release: () => Promise<vo
   const database = await preparedRuntimeDatabase(runtimeRoot, localKeyring);
   const security = new LocalRuntimeSecurity(requiredEnvironment("LOCAL_RUNTIME_MASTER_KEY_FILE"), localKeyring, database, runtimeRoot);
   try {
-    const {server, application} = await bootstrapLocalRuntime({
+    const {closeHttp, application} = await bootstrapLocalRuntime({
       database, runtimeRoot, fieldCipher: security.cipher, licenses: licenseServiceFor(runtimeRoot, security),
-      cors: LocalRuntimeCorsPolicy.fromEnvironment(), webFiles: webApplicationFiles(), port: configuredPort(),
+      cors: LocalRuntimeCorsPolicy.fromEnvironment(), webDirectory: webApplicationDirectory(), port: configuredPort(),
     });
     security.start();
-    registerShutdown([server], database, application, security, release);
+    registerShutdown(closeHttp, database, application, security, release);
   } catch (error) {
     database.close();
     throw error;
@@ -82,10 +80,10 @@ function configuredPort(): number {
  * ausliefert. Ohne gesetztes Verzeichnis bleibt die Runtime eine reine
  * API — bestehende Installationen verhalten sich unverändert.
  */
-function webApplicationFiles(): LocalRuntimeStaticFiles | undefined {
+function webApplicationDirectory(): string | undefined {
   const directory = process.env.LOCAL_RUNTIME_WEB_DIRECTORY;
   if (directory === undefined || directory.trim().length === 0) return undefined;
-  return new LocalRuntimeStaticFiles(directory);
+  return directory;
 }
 
 function portFromEnvironment(name: string, fallback: string, label: string): number {
@@ -136,7 +134,7 @@ function optionalEnvironment(name: string): string | undefined {
 }
 
 function registerShutdown(
-  servers: Server[],
+  closeHttp: () => Promise<void>,
   database: SqliteLocalSqlDatabase,
   application: LocalRuntimeApplication,
   security: LocalRuntimeSecurity,
@@ -146,7 +144,7 @@ function registerShutdown(
   const shutdown = () => {
     if (closing) return;
     closing = true;
-    Promise.all(servers.map((server) => new Promise<void>((resolve) => server.close(() => resolve()))))
+    closeHttp()
       .then(() => closeRuntime(database, application, security, release))
       .catch(reportStartupFailure);
   };

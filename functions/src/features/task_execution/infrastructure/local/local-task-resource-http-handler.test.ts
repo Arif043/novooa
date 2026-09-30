@@ -1,3 +1,4 @@
+import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {type TaskDefinition} from "../../domain/entities/task.js";
@@ -10,7 +11,7 @@ import {SQLiteTaskDefinitionStore} from "./sqlite-task-definition-store.js";
 
 test("stores and lists a local task definition", async () => {
   const database = await databaseWithTaskTables();
-  const handler = new LocalTaskDefinitionHttpHandler(new SQLiteTaskDefinitionStore(database), "team-1", "user-1", new LocalRuntimeRealtimeNotifier());
+  const handler = testingRoutes(new LocalTaskDefinitionHttpHandler(new SQLiteTaskDefinitionStore(database), "team-1", "user-1", new LocalRuntimeRealtimeNotifier()));
 
   const saved = await handler.handle({body: taskBody(), method: "PUT", url: "/v1/tasks/task-1"});
   const listed = await handler.handle({body: {}, method: "GET", url: "/v1/tasks"});
@@ -22,7 +23,7 @@ test("stores and lists a local task definition", async () => {
 
 test("stores an empty local task definition", async () => {
   const database = await databaseWithTaskTables();
-  const handler = new LocalTaskDefinitionHttpHandler(new SQLiteTaskDefinitionStore(database), "team-1", "user-1", new LocalRuntimeRealtimeNotifier());
+  const handler = testingRoutes(new LocalTaskDefinitionHttpHandler(new SQLiteTaskDefinitionStore(database), "team-1", "user-1", new LocalRuntimeRealtimeNotifier()));
   const draft = {
     id: "draft-1",
     title: "Neue Aufgabe",
@@ -39,7 +40,7 @@ test("stores an empty local task definition", async () => {
 
 test("uses the task definition store without a SQL dependency", async () => {
   const store = new MemoryTaskDefinitionStore();
-  const handler = new LocalTaskDefinitionHttpHandler(store, "team-1", "user-1", new LocalRuntimeRealtimeNotifier());
+  const handler = testingRoutes(new LocalTaskDefinitionHttpHandler(store, "team-1", "user-1", new LocalRuntimeRealtimeNotifier()));
 
   const saved = await handler.handle({body: taskBody(), method: "PUT", url: "/v1/tasks/task-1"});
   const listed = await handler.handle({body: {}, method: "GET", url: "/v1/tasks"});
@@ -58,7 +59,7 @@ test("lists local task runs and activities", async () => {
     "INSERT INTO activities(id, team_id, run_id, task_id, target, title, status, outputs_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     ["activity-1", "team-1", "run-1", "task-1", "task", "Aufgabe", "succeeded", "{}", "2026-09-08 10:01:00"],
   );
-  const handler = new LocalTaskActivityHttpHandler(database, "team-1");
+  const handler = testingRoutes(new LocalTaskActivityHttpHandler(database, "team-1"));
 
   const runs = await handler.handle({body: {}, method: "GET", url: "/v1/task-runs"});
   const activities = await handler.handle({body: {}, method: "GET", url: "/v1/activities"});

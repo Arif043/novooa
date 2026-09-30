@@ -1,8 +1,7 @@
-import {type RuntimeLicenseContext} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
+import {type RuntimeLicenseContext} from "../../features/licensing/domain/entities/runtime-license-context.js";
 import {type SignedRuntimeLicense} from "../../features/licensing/domain/entities/runtime-license-lease.js";
 import {type RuntimeLicenseActivation} from "../../features/licensing/domain/entities/runtime-license-activation.js";
-import {createLocalRuntimeComposition, type LocalRuntimeComposition} from "./local-runtime-composition.js";
-import {type LocalRuntimeRequest, type LocalRuntimeRequestHandler, type LocalRuntimeResponse} from "./local-runtime-http-server.js";
+import {createLocalRuntimeComposition, type LocalRuntimeComposition, type LocalRuntimeControllers} from "./local-runtime-composition.js";
 import {type LocalRuntimeRealtimeGateway} from "./local-runtime-realtime-server.js";
 import {type LocalRuntimeRealtimeSubscriber} from "./local-runtime-realtime-notifier.js";
 import {ensureLocalRuntimeWorkspace, type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
@@ -23,7 +22,7 @@ export type LocalRuntimeApplicationOptions = {
 };
 
 export class LocalRuntimeApplication
-implements LocalRuntimeRequestHandler, LocalRuntimeRealtimeGateway {
+implements LocalRuntimeRealtimeGateway {
   private runtime: LocalRuntimeComposition | undefined;
   private workspace: LocalRuntimeWorkspace | undefined;
 
@@ -48,8 +47,9 @@ implements LocalRuntimeRequestHandler, LocalRuntimeRealtimeGateway {
     await this.startFirebaseWakeups();
   }
 
-  async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
-    return this.runtime?.requestHandler.handle(request) ?? null;
+  controllers(): LocalRuntimeControllers {
+    if (this.runtime === undefined) throw new Error("Der Arbeitsbereich ist nicht aktiviert.");
+    return this.runtime.controllers;
   }
 
   /**

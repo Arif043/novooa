@@ -1,4 +1,5 @@
 import {nextRunAfter, type ScheduleConfig} from "../../domain/usecases/schedule-next-run.js";
+import {type FastifyReply} from "fastify";
 
 export type TriggerRow = {
   config_json: string;
@@ -57,9 +58,9 @@ export function enabledFrom(value: unknown): boolean {
   return enabled;
 }
 
-export function invalidResponse(error: unknown): {body: {error: string}; statusCode: number} {
+export function invalidResponse(error: unknown, reply: FastifyReply): FastifyReply {
   if (error instanceof LocalTaskTriggerError || error instanceof RangeError) {
-    return {body: {error: error instanceof Error ? error.message : "Ungültiger Zeitplan."}, statusCode: 400};
+    return reply.code(400).send({error: error instanceof Error ? error.message : "Ungültiger Zeitplan."});
   }
   throw error;
 }

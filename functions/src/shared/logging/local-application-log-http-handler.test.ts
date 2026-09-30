@@ -1,3 +1,4 @@
+import {testingRoutes} from "../local/local-runtime-http-test-support.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {LocalApplicationLogHttpHandler} from "./local-application-log-http-handler.js";
@@ -5,7 +6,7 @@ import {LocalRuntimeRealtimeNotifier} from "../local/local-runtime-realtime-noti
 import {type LocalApplicationLog, type LocalApplicationLogStore} from "./local-application-log-store.js";
 
 test("lists recent local application logs through the loopback API", async () => {
-  const handler = new LocalApplicationLogHttpHandler(new StubLogStore(), "team-1", new LocalRuntimeRealtimeNotifier());
+  const handler = testingRoutes(new LocalApplicationLogHttpHandler(new StubLogStore(), "team-1", new LocalRuntimeRealtimeNotifier()));
 
   const response = await handler.handle({
     body: {}, method: "GET", url: "/v1/application-logs",
@@ -27,7 +28,7 @@ test("lists recent local application logs through the loopback API", async () =>
 
 test("accepts client logs and assigns trusted fields in the runtime", async () => {
   const store = new StubLogStore();
-  const handler = new LocalApplicationLogHttpHandler(store, "team-1", new LocalRuntimeRealtimeNotifier());
+  const handler = testingRoutes(new LocalApplicationLogHttpHandler(store, "team-1", new LocalRuntimeRealtimeNotifier()));
 
   const response = await handler.handle({
     body: {

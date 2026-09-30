@@ -1,37 +1,28 @@
-import {
-  type LocalRuntimeRequest,
-  type LocalRuntimeRequestHandler,
-  type LocalRuntimeResponse,
-} from "./local-runtime-http-server.js";
-import {type LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
-import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
-
+import { type FastifyInstance, type FastifyReply } from "fastify";
+import { type LocalRuntimeAccessCredentialStore } from "./local-runtime-access-credential-store.js";
+import { type LocalRuntimeSessionStore } from "./local-runtime-session-store.js";
 /**
  * `POST /v1/auth/login` — tauscht das Betreiber-Passwort gegen ein
  * Session-Token. Bleibt bewusst außerhalb des
- * `LocalRuntimeSessionAuthMiddleware` (sonst käme niemand an ein Token).
- * Läuft auf dem regulären, öffentlich erreichbaren API-Port — im
- * Unterschied zu `/v1/setup`, das ausschließlich über den separaten,
- * host-loopback-gebundenen Port erreichbar ist.
+ * Session-Hooks (sonst käme niemand an ein Token).
+ * Login und Setup verwenden den regulären API-Port; Setup verlangt
+ * zusätzlich den prozessgebundenen Pairing-Code.
  */
-export class LocalRuntimeLoginHttpHandler implements LocalRuntimeRequestHandler {
-  constructor(
-    private readonly credentials: Pick<LocalRuntimeAccessCredentialStore, "verifyPassword">,
-    private readonly sessions: Pick<LocalRuntimeSessionStore, "createSession">,
-  ) {}
-
-  async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
-    if (request.url !== "/v1/auth/login" || request.method !== "POST") return null;
-    const password = passwordFromOrNull(request.body);
+export class LocalRuntimeLoginHttpHandler {
+  static registerRoutes(http: FastifyInstance, current: () => LocalRuntimeLoginHttpHandler): void { http.post("/v1/auth/login", (request, reply) => current().login(request.body, reply)); }
+  constructor(private readonly credentials: Pick<LocalRuntimeAccessCredentialStore, "verifyPassword">, private readonly sessions: Pick<LocalRuntimeSessionStore, "createSession">) { }
+  private async login(body: unknown, reply: FastifyReply): Promise<FastifyReply> {
+    const password = passwordFromOrNull(body);
     const valid = password !== null && await this.credentials.verifyPassword(password);
-    if (!valid) return {body: {error: "Passwort ist ungültig."}, statusCode: 401};
+    if (!valid)
+      return reply.code(401).send({ error: "Passwort ist ungültig." });
     const token = await this.sessions.createSession();
-    return {body: {token}, statusCode: 200};
+    return reply.code(200).send({ token });
   }
 }
-
 function passwordFromOrNull(value: unknown): string | null {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+  if (value === null || typeof value !== "object" || Array.isArray(value))
+    return null;
   const password = (value as Record<string, unknown>).password;
   return typeof password === "string" && password.length > 0 ? password : null;
 }

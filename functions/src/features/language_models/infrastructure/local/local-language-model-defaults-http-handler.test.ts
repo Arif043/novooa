@@ -1,7 +1,9 @@
+import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import assert from "node:assert/strict";
 import test from "node:test";
+import Fastify from "fastify";
 import {LocalLanguageModelDefaultsHttpHandler} from "./local-language-model-defaults-http-handler.js";
-import {type LocalRuntimeRequest} from "../../../../shared/local/local-runtime-http-server.js";
+import {type TestRequest as LocalRuntimeRequest} from "../../../../shared/local/local-runtime-http-test-support.js";
 import {
   emptyLanguageModelDefaults,
   type LanguageModelDefaults,
@@ -30,13 +32,28 @@ class FakeNotifier {
   }
 }
 
+test("registrierte Routen verwenden nach einem Workspace-Wechsel den aktuellen Controller", async (t) => {
+  const http = Fastify();
+  t.after(() => http.close());
+  const notifier = new FakeNotifier() as never;
+  let current = new LocalLanguageModelDefaultsHttpHandler(
+    new FakeDefaultsStore({blockModelId: "first", assistantModelId: null}), "team-1", notifier,
+  );
+  LocalLanguageModelDefaultsHttpHandler.registerRoutes(http, () => current);
+  assert.equal((await http.inject("/v1/language-model-defaults")).json().blockModelId, "first");
+  current = new LocalLanguageModelDefaultsHttpHandler(
+    new FakeDefaultsStore({blockModelId: "second", assistantModelId: null}), "team-2", notifier,
+  );
+  assert.equal((await http.inject("/v1/language-model-defaults")).json().blockModelId, "second");
+});
+
 function request(method: string, body: unknown = {}): LocalRuntimeRequest {
   return {method, url: "/v1/language-model-defaults", body} as LocalRuntimeRequest;
 }
 
 test("liefert die gespeicherten Vorgaben", async () => {
   const store = new FakeDefaultsStore({blockModelId: "model-1", assistantModelId: null});
-  const handler = new LocalLanguageModelDefaultsHttpHandler(store, "team-1", new FakeNotifier() as never);
+  const handler = testingRoutes(new LocalLanguageModelDefaultsHttpHandler(store, "team-1", new FakeNotifier() as never));
 
   const response = await handler.handle(request("GET"));
 
@@ -47,7 +64,7 @@ test("liefert die gespeicherten Vorgaben", async () => {
 test("speichert neue Vorgaben und benachrichtigt Echtzeit-Abonnenten", async () => {
   const store = new FakeDefaultsStore();
   const notifier = new FakeNotifier();
-  const handler = new LocalLanguageModelDefaultsHttpHandler(store, "team-1", notifier as never);
+  const handler = testingRoutes(new LocalLanguageModelDefaultsHttpHandler(store, "team-1", notifier as never));
 
   const response = await handler.handle(
     request("PUT", {blockModelId: "model-1", assistantModelId: "model-2"}),
@@ -63,7 +80,7 @@ test("speichert neue Vorgaben und benachrichtigt Echtzeit-Abonnenten", async () 
 
 test("behandelt ein fehlendes Feld als kein Vorgabemodell", async () => {
   const store = new FakeDefaultsStore();
-  const handler = new LocalLanguageModelDefaultsHttpHandler(store, "team-1", new FakeNotifier() as never);
+  const handler = testingRoutes(new LocalLanguageModelDefaultsHttpHandler(store, "team-1", new FakeNotifier() as never));
 
   await handler.handle(request("PUT", {blockModelId: "model-1"}));
 
@@ -71,9 +88,9 @@ test("behandelt ein fehlendes Feld als kein Vorgabemodell", async () => {
 });
 
 test("weist einen ungültigen Vorgabewert zurück", async () => {
-  const handler = new LocalLanguageModelDefaultsHttpHandler(
+  const handler = testingRoutes(new LocalLanguageModelDefaultsHttpHandler(
     new FakeDefaultsStore(), "team-1", new FakeNotifier() as never,
-  );
+  ));
 
   const response = await handler.handle(request("PUT", {blockModelId: 42}));
 
@@ -81,9 +98,9 @@ test("weist einen ungültigen Vorgabewert zurück", async () => {
 });
 
 test("lässt unbeteiligte Pfade für andere Handler übrig", async () => {
-  const handler = new LocalLanguageModelDefaultsHttpHandler(
+  const handler = testingRoutes(new LocalLanguageModelDefaultsHttpHandler(
     new FakeDefaultsStore(), "team-1", new FakeNotifier() as never,
-  );
+  ));
 
   const response = await handler.handle(
     {method: "GET", url: "/v1/language-models", body: {}} as LocalRuntimeRequest,

@@ -184,15 +184,35 @@ Nach dem Setzen des Passworts meldet sich der Client über
 bleiben unverändert außerhalb dieser Passwort-Pflicht — die Lizenzaktivierung
 ist bereits durch den Lizenz-Token selbst geschützt.
 
-Lizenz- und Session-Prüfung werden gemeinsam am HTTP-Server-Einstieg in
-`createLocalRuntimeAccessPipeline` verdrahtet: **Lizenz → Session → Anwendung**.
-Die fachliche Composition enthält nur die API-Handler, keine versteckte
-Auth-Middleware. Login und Auth-Prüfung erhalten denselben prozessweiten
+Der HTTP-Server verwendet native Fastify-5-Routen: Routing, Pfadparameter,
+JSON-Parsing und Body-Limit (1 MiB), Schema-Validierung und Fehlerantworten
+liegen bei Fastify. Es gibt keinen eigenen Request-Router, Pfad-Matcher oder
+HTTP-Transportadapter mehr. Die Controller registrieren einzelne Routen und
+verwenden `request` und `reply`; fachliche Use-Cases und SQLite-Repositories
+bleiben unabhängig davon. Eine spätere SQL-Umstellung auf Drizzle ist separat.
+`@fastify/cors` erzeugt CORS-Header und Preflight-Antworten;
+`@fastify/static` liefert das Web-Build mit SPA-Fallback aus, ohne API-Pfade
+zu überdecken. ONNX-Uploads verwenden einen nativen Streaming-Content-Parser.
+JSON-Anfragen benötigen `Content-Type: application/json`; erfolgreiche
+`204`-Antworten enthalten entsprechend dem HTTP-Standard keinen Body.
+Healthcheck und statisches Web-Build haben eigene Routen außerhalb der
+API-Zugriffsprüfung. Fremde Browser-Herkünfte werden auch bei Preflight-Anfragen
+abgewiesen. JSON-Fehler und zu große Bodies behalten den bisherigen deutschen
+`400`-Antwortvertrag. Beim Shutdown werden offene WebSocket-Verbindungen
+beendet und Fastify vollständig geschlossen, bevor Worker und Datenbank stoppen.
+
+Lizenz- und Session-Prüfung sind native `onRequest`-Hooks in einem gekapselten
+Fastify-API-Plugin: **Lizenz → Session → Controller**. Es gibt keine eigene
+Middleware-Kette. Die fachliche Composition liefert die Controller; deren
+aktuelle Instanz wird pro Anfrage aufgelöst, damit eine Aktivierung oder ein
+Workspace-Wechsel keine alten Abhängigkeiten zurücklässt.
+Login und Auth-Prüfung erhalten denselben prozessweiten
 Session-Store per Dependency Injection, aber nur mit der jeweils benötigten
 Fähigkeit: Login erhält `createSession`, Auth erhält `verifySession`.
-Die Lizenz-Middleware kennt die Anwendung nicht, sondern nur einen
-Aktivierungs-Callback und den nächsten Request-Handler. Die Lizenz-Middleware behandelt
-Status, Aktivierung und Freigabe vor der Session-Prüfung; Login und Setup
+Status, Aktivierung und Freigabe sind eigene öffentliche Fastify-Routen.
+Die Aktivierung wird per JSON-Schema validiert und anschließend durch den
+frameworkfreien `ActivateRuntime`-Use-Case ausgeführt; dieser aktiviert
+Lizenz und Workspace. Login und Setup
 überspringen nur die Session-Prüfung, nicht die Lizenzprüfung. Healthcheck,
 CORS und statische Dateien bleiben im HTTP-Server, WebSockets sind separat
 durch Einmaltickets geschützt.

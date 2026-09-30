@@ -1,10 +1,5 @@
-import {
-  type LocalRuntimeRequest,
-  type LocalRuntimeRequestHandler,
-  type LocalRuntimeResponse,
-} from "../../../../shared/local/local-runtime-http-server.js";
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
-
+import { type FastifyInstance, type FastifyReply } from "fastify";
+import { type LocalSqlDatabase, type SqlRow } from "../../../../shared/local/local-sql-database.js";
 type TaskRunRow = SqlRow & {
   created_at: string;
   error_json: string | null;
@@ -18,7 +13,6 @@ type TaskRunRow = SqlRow & {
   updated_at: string;
   waiting_node_id: string | null;
 };
-
 type ActivityRow = SqlRow & {
   created_at: string;
   id: string;
@@ -34,32 +28,22 @@ type ActivityRow = SqlRow & {
   task_id: string;
   title: string;
 };
-
-export class LocalTaskActivityHttpHandler implements LocalRuntimeRequestHandler {
-  constructor(
-    private readonly database: LocalSqlDatabase,
-    private readonly teamId: string,
-  ) {}
-
-  async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
-    const path = pathFrom(request.url);
-    if (request.method === "GET" && path === "/v1/task-runs") return this.runs();
-    if (request.method === "GET" && path === "/v1/activities") return this.activities();
-    if (request.method === "POST" && path === "/v1/activities") return this.add(request.body);
-    return null;
+export class LocalTaskActivityHttpHandler {
+  static registerRoutes(http: FastifyInstance, current: () => LocalTaskActivityHttpHandler): void {
+    http.get("/v1/task-runs", (request, reply) => current().runs(reply));
+    http.get("/v1/activities", (request, reply) => current().activities(reply));
+    http.post("/v1/activities", (request, reply) => current().add(request.body, reply));
   }
-
-  private async runs(): Promise<LocalRuntimeResponse> {
+  constructor(private readonly database: LocalSqlDatabase, private readonly teamId: string) { }
+  private async runs(reply: FastifyReply): Promise<FastifyReply> {
     const rows = await this.database.all<TaskRunRow>(runsSql(), [this.teamId]);
-    return {body: {items: rows.map(runFromRow)}, statusCode: 200};
+    return reply.code(200).send({ items: rows.map(runFromRow) });
   }
-
-  private async activities(): Promise<LocalRuntimeResponse> {
+  private async activities(reply: FastifyReply): Promise<FastifyReply> {
     const rows = await this.database.all<ActivityRow>(activitiesSql(), [this.teamId]);
-    return {body: {items: rows.map(activityFromRow)}, statusCode: 200};
+    return reply.code(200).send({ items: rows.map(activityFromRow) });
   }
-
-  private async add(body: unknown): Promise<LocalRuntimeResponse> {
+  private async add(body: unknown, reply: FastifyReply): Promise<FastifyReply> {
     try {
       const activity = activityFromRequest(body);
       await this.database.run(insertActivitySql(), [
@@ -68,32 +52,30 @@ export class LocalTaskActivityHttpHandler implements LocalRuntimeRequestHandler 
         activity.input, activity.output, JSON.stringify(activity.outputs), activity.message,
         activity.occurredAt,
       ]);
-      return {body: activity, statusCode: 201};
-    } catch (error) {
-      if (error instanceof LocalActivityRequestError) return {body: {error: error.message}, statusCode: 400};
+      return reply.code(201).send(activity);
+    }
+    catch (error) {
+      if (error instanceof LocalActivityRequestError)
+        return reply.code(400).send({ error: error.message });
       throw error;
     }
   }
 }
-
 function runsSql(): string {
   return `SELECT id, task_id, task_title, status, waiting_node_id, final_output,
-    review_output, interaction_json, error_json, created_at, updated_at FROM task_runs
-    WHERE team_id = ? ORDER BY updated_at DESC LIMIT 100`;
+ review_output, interaction_json, error_json, created_at, updated_at FROM task_runs
+ WHERE team_id = ? ORDER BY updated_at DESC LIMIT 100`;
 }
-
 function activitiesSql(): string {
   return `SELECT id, run_id, task_id, node_id, target, primitive, title, status,
-    input, output, outputs_json, message, created_at FROM activities
-    WHERE team_id = ? ORDER BY created_at DESC LIMIT 100`;
+ input, output, outputs_json, message, created_at FROM activities
+ WHERE team_id = ? ORDER BY created_at DESC LIMIT 100`;
 }
-
 function insertActivitySql(): string {
   return `INSERT INTO activities(id, team_id, run_id, task_id, node_id, target, primitive,
-    title, status, input, output, outputs_json, message, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+ title, status, input, output, outputs_json, message, created_at)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 }
-
 function runFromRow(row: TaskRunRow): Record<string, unknown> {
   return {
     runId: row.id, taskId: row.task_id, taskTitle: row.task_title, status: row.status,
@@ -103,7 +85,6 @@ function runFromRow(row: TaskRunRow): Record<string, unknown> {
     updatedAt: isoTimestamp(row.updated_at),
   };
 }
-
 function activityFromRow(row: ActivityRow): Record<string, unknown> {
   return {
     id: row.id, runId: row.run_id, taskId: row.task_id, taskTitle: row.title,
@@ -112,7 +93,6 @@ function activityFromRow(row: ActivityRow): Record<string, unknown> {
     outputs: jsonRecord(row.outputs_json), message: row.message,
   };
 }
-
 function activityFromRequest(value: unknown): LocalActivityDocument {
   const input = recordFrom(value, "Die lokale Aktivität erwartet ein Objekt.");
   return {
@@ -125,52 +105,43 @@ function activityFromRequest(value: unknown): LocalActivityDocument {
     message: optionalString(input.message),
   };
 }
-
-function pathFrom(url: string | undefined): string {
-  return new URL(url ?? "/", "http://local-runtime").pathname;
-}
-
 function isoTimestamp(value: string): string {
   return value.includes("T") ? value : `${value.replace(" ", "T")}Z`;
 }
-
 function jsonValue(value: string | null): unknown {
-  if (value === null) return null;
+  if (value === null)
+    return null;
   try {
     return JSON.parse(value) as unknown;
-  } catch {
+  }
+  catch {
     return null;
   }
 }
-
 function jsonRecord(value: string): Record<string, unknown> {
   const parsed = jsonValue(value);
   return parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)
     ? parsed as Record<string, unknown> : {};
 }
-
 function recordFrom(value: unknown, message: string): Record<string, unknown> {
   if (value !== null && typeof value === "object" && !Array.isArray(value)) {
     return value as Record<string, unknown>;
   }
   throw new LocalActivityRequestError(message);
 }
-
 function requiredString(value: unknown, name: string): string {
-  if (typeof value === "string" && value.trim().length > 0) return value;
+  if (typeof value === "string" && value.trim().length > 0)
+    return value;
   throw new LocalActivityRequestError(`${name} muss ein nicht leerer String sein.`);
 }
-
 function nullableString(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
-
 function optionalString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
-
-class LocalActivityRequestError extends Error {}
-
+class LocalActivityRequestError extends Error {
+}
 type LocalActivityDocument = {
   id: string;
   input: string;

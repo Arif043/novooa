@@ -1,13 +1,7 @@
-import {randomUUID} from "node:crypto";
-import {
-  type LocalRuntimeRequest,
-  type LocalRuntimeRequestHandler,
-  type LocalRuntimeResponse,
-} from "../../../../shared/local/local-runtime-http-server.js";
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
-import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
-import {routeMatch} from "../../../../shared/local/local-runtime-route.js";
-
+import { type FastifyInstance, type FastifyReply } from "fastify";
+import { randomUUID } from "node:crypto";
+import { type LocalSqlDatabase, type SqlRow } from "../../../../shared/local/local-sql-database.js";
+import { type LocalRuntimeRealtimeNotifier } from "../../../../shared/local/local-runtime-realtime-notifier.js";
 type NoteRow = SqlRow & {
   content: string;
   id: string;
@@ -17,30 +11,27 @@ type NoteRow = SqlRow & {
   title: string;
   updated_at: string;
 };
-
-export class LocalKnowledgeNoteHttpHandler implements LocalRuntimeRequestHandler {
-  constructor(
-    private readonly database: LocalSqlDatabase,
-    private readonly teamId: string,
-    private readonly notifier: LocalRuntimeRealtimeNotifier,
-  ) {}
-
-  async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
-    if (routeMatch(request, "GET", "/v1/knowledge-notes")) return this.list();
-    if (routeMatch(request, "POST", "/v1/knowledge-notes")) return this.create(request.body);
-    const update = routeMatch(request, "PUT", "/v1/knowledge-notes/:noteId");
-    if (update) return this.update(update.params.noteId, request.body);
-    const remove = routeMatch(request, "DELETE", "/v1/knowledge-notes/:noteId");
-    if (remove) return this.delete(remove.params.noteId);
-    return null;
+export class LocalKnowledgeNoteHttpHandler {
+  static registerRoutes(http: FastifyInstance, current: () => LocalKnowledgeNoteHttpHandler): void {
+    http.get("/v1/knowledge-notes", (request, reply) => current().list(reply));
+    http.post("/v1/knowledge-notes", (request, reply) => current().create(request.body, reply));
+    http.put<{
+      Params: {
+        noteId: string;
+      };
+    }>("/v1/knowledge-notes/:noteId", (request, reply) => current().update(request.params.noteId, request.body, reply));
+    http.delete<{
+      Params: {
+        noteId: string;
+      };
+    }>("/v1/knowledge-notes/:noteId", (request, reply) => current().delete(request.params.noteId, reply));
   }
-
-  private async list(): Promise<LocalRuntimeResponse> {
+  constructor(private readonly database: LocalSqlDatabase, private readonly teamId: string, private readonly notifier: LocalRuntimeRealtimeNotifier) { }
+  private async list(reply: FastifyReply): Promise<FastifyReply> {
     const rows = await this.database.all<NoteRow>(listSql(), [this.teamId]);
-    return {body: {items: rows.map(noteFromRow)}, statusCode: 200};
+    return reply.code(200).send({ items: rows.map(noteFromRow) });
   }
-
-  private async create(body: unknown): Promise<LocalRuntimeResponse> {
+  private async create(body: unknown, reply: FastifyReply): Promise<FastifyReply> {
     try {
       const note = noteFromRequest(body);
       const id = randomUUID();
@@ -49,13 +40,13 @@ export class LocalKnowledgeNoteHttpHandler implements LocalRuntimeRequestHandler
         note.content, JSON.stringify(note.outgoingLinks),
       ]);
       this.notifier.publish("knowledge-notes");
-      return this.byId(id, 201);
-    } catch (error) {
-      return invalidResponse(error);
+      return this.byId(id, 201, reply);
+    }
+    catch (error) {
+      return invalidResponse(error, reply);
     }
   }
-
-  private async update(id: string, body: unknown): Promise<LocalRuntimeResponse> {
+  private async update(id: string, body: unknown, reply: FastifyReply): Promise<FastifyReply> {
     try {
       const note = noteFromRequest(body);
       await this.database.run(updateSql(), [
@@ -63,45 +54,40 @@ export class LocalKnowledgeNoteHttpHandler implements LocalRuntimeRequestHandler
         this.teamId, id,
       ]);
       this.notifier.publish("knowledge-notes");
-      return this.byId(id, 200);
-    } catch (error) {
-      return invalidResponse(error);
+      return this.byId(id, 200, reply);
+    }
+    catch (error) {
+      return invalidResponse(error, reply);
     }
   }
-
-  private async delete(id: string): Promise<LocalRuntimeResponse> {
+  private async delete(id: string, reply: FastifyReply): Promise<FastifyReply> {
     await this.database.run("DELETE FROM knowledge_notes WHERE team_id = ? AND id = ?", [this.teamId, id]);
     this.notifier.publish("knowledge-notes");
-    return {body: {}, statusCode: 204};
+    return reply.code(204).send();
   }
-
-  private async byId(id: string, statusCode: number): Promise<LocalRuntimeResponse> {
+  private async byId(id: string, statusCode: number, reply: FastifyReply): Promise<FastifyReply> {
     const row = await this.database.get<NoteRow>(byIdSql(), [this.teamId, id]);
-    if (row === null) return {body: {error: "Notiz nicht gefunden."}, statusCode: 404};
-    return {body: noteFromRow(row), statusCode};
+    if (row === null)
+      return reply.code(404).send({ error: "Notiz nicht gefunden." });
+    return reply.code(statusCode).send(noteFromRow(row));
   }
 }
-
 function listSql(): string {
   return `SELECT id, knowledge_base_id, title, path, content, outgoing_links_json, updated_at
-    FROM knowledge_notes WHERE team_id = ? ORDER BY title COLLATE NOCASE`;
+ FROM knowledge_notes WHERE team_id = ? ORDER BY title COLLATE NOCASE`;
 }
-
 function byIdSql(): string {
   return `SELECT id, knowledge_base_id, title, path, content, outgoing_links_json, updated_at
-    FROM knowledge_notes WHERE team_id = ? AND id = ?`;
+ FROM knowledge_notes WHERE team_id = ? AND id = ?`;
 }
-
 function insertSql(): string {
   return `INSERT INTO knowledge_notes(id, team_id, knowledge_base_id, title, path, content, outgoing_links_json)
-    VALUES (?, ?, ?, ?, ?, ?, ?)`;
+ VALUES (?, ?, ?, ?, ?, ?, ?)`;
 }
-
 function updateSql(): string {
   return `UPDATE knowledge_notes SET title = ?, path = ?, content = ?, outgoing_links_json = ?,
-    updated_at = CURRENT_TIMESTAMP WHERE team_id = ? AND id = ?`;
+ updated_at = CURRENT_TIMESTAMP WHERE team_id = ? AND id = ?`;
 }
-
 function noteFromRow(row: NoteRow): Record<string, unknown> {
   return {
     id: row.id, knowledgeBaseId: row.knowledge_base_id, title: row.title,
@@ -109,61 +95,54 @@ function noteFromRow(row: NoteRow): Record<string, unknown> {
     updatedAt: isoTimestamp(row.updated_at),
   };
 }
-
 function noteFromRequest(value: unknown): NoteInput {
   const input = recordFrom(value);
   const title = stringFrom(input.title, "title").trim();
-  if (!title) throw new LocalKnowledgeNoteError("title muss ein nicht leerer String sein.");
+  if (!title)
+    throw new LocalKnowledgeNoteError("title muss ein nicht leerer String sein.");
   return {
     knowledgeBaseId: optionalString(input.knowledgeBaseId) || "default",
     title, path: optionalString(input.path), content: optionalString(input.content),
     outgoingLinks: stringListValue(input.outgoingLinks),
   };
 }
-
-
-
 function recordFrom(value: unknown): Record<string, unknown> {
   if (value !== null && typeof value === "object" && !Array.isArray(value)) {
     return value as Record<string, unknown>;
   }
   throw new LocalKnowledgeNoteError("Die lokale Notiz erwartet ein Objekt.");
 }
-
 function stringFrom(value: unknown, name: string): string {
-  if (typeof value === "string") return value;
+  if (typeof value === "string")
+    return value;
   throw new LocalKnowledgeNoteError(`${name} muss ein String sein.`);
 }
-
 function optionalString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
-
 function stringListValue(value: unknown): string[] {
   if (!Array.isArray(value) || !value.every((item) => typeof item === "string")) {
     throw new LocalKnowledgeNoteError("outgoingLinks muss eine String-Liste sein.");
   }
   return value;
 }
-
 function stringList(value: string): string[] {
   try {
     const parsed: unknown = JSON.parse(value);
     return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
-  } catch {
+  }
+  catch {
     return [];
   }
 }
-
 function isoTimestamp(value: string): string {
   return value.includes("T") ? value : `${value.replace(" ", "T")}Z`;
 }
-
-function invalidResponse(error: unknown): LocalRuntimeResponse {
-  if (error instanceof LocalKnowledgeNoteError) return {body: {error: error.message}, statusCode: 400};
+function invalidResponse(error: unknown, reply: FastifyReply): FastifyReply {
+  if (error instanceof LocalKnowledgeNoteError)
+    return reply.code(400).send({ error: error.message });
   throw error;
 }
-
 type NoteInput = {
   content: string;
   knowledgeBaseId: string;
@@ -171,5 +150,5 @@ type NoteInput = {
   path: string;
   title: string;
 };
-
-class LocalKnowledgeNoteError extends Error {}
+class LocalKnowledgeNoteError extends Error {
+}

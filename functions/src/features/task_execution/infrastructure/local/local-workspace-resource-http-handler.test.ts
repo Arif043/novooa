@@ -1,3 +1,4 @@
+import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import assert from "node:assert/strict";
 import {mkdtemp, rm} from "node:fs/promises";
 import os from "node:os";
@@ -12,8 +13,8 @@ import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runti
 
 test("persists local knowledge notes and task triggers", async () => {
   const database = await databaseForResources();
-  const notes = new LocalKnowledgeNoteHttpHandler(database, "team-1", new LocalRuntimeRealtimeNotifier());
-  const triggers = new LocalTaskTriggerHttpHandler(database, "team-1", "user-1", new LocalRuntimeRealtimeNotifier());
+  const notes = testingRoutes(new LocalKnowledgeNoteHttpHandler(database, "team-1", new LocalRuntimeRealtimeNotifier()));
+  const triggers = testingRoutes(new LocalTaskTriggerHttpHandler(database, "team-1", "user-1", new LocalRuntimeRealtimeNotifier()));
 
   const createdNote = await notes.handle({
     method: "POST", url: "/v1/knowledge-notes",
@@ -41,13 +42,13 @@ test("persists local knowledge notes and task triggers", async () => {
 test("stores, versions, and reads local files", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "novooa-local-files-"));
   const database = await databaseForResources();
-  const handler = new LocalFileResourceHttpHandler(
+  const handler = testingRoutes(new LocalFileResourceHttpHandler(
     database,
     new LocalTeamFileStore(database, root),
     "team-1",
     "user-1",
     new LocalRuntimeRealtimeNotifier(),
-  );
+  ));
 
   try {
     const folder = await handler.handle({

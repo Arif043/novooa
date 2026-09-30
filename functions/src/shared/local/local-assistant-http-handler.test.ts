@@ -1,7 +1,8 @@
+import {testingRoutes} from "./local-runtime-http-test-support.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {LocalAssistantHttpHandler} from "./local-assistant-http-handler.js";
-import {type LocalRuntimeRequest} from "./local-runtime-http-server.js";
+import {type TestRequest as LocalRuntimeRequest} from "./local-runtime-http-test-support.js";
 import {type AssistantExecutionContext} from "../../features/assistant/domain/entities/assistant-execution-context.js";
 import {type AssistantRequest} from "../../features/assistant/domain/entities/assistant-request.js";
 import {type TaskBuilderAssistant} from "../../features/task_execution/domain/usecases/task-builder-assistant.js";
@@ -39,11 +40,11 @@ function handlerFor(
   taskBuilderAssistant: TaskBuilderAssistant,
   knowledgeBaseAssistant: KnowledgeBaseAssistant,
 ) {
-  return new LocalAssistantHttpHandler(
+  return testingRoutes(new LocalAssistantHttpHandler(
     async () => taskBuilderAssistant,
     async () => knowledgeBaseAssistant,
     "local-user",
-  );
+  ));
 }
 
 function postRequest(url: string, body: unknown): LocalRuntimeRequest {
