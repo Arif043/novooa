@@ -3,6 +3,7 @@ import {mkdtemp, readFile} from "node:fs/promises";
 import test from "node:test";
 import {join} from "node:path";
 import {tmpdir} from "node:os";
+import {parseRuntimeKeyring} from "../../features/runtime_security/infrastructure/runtime-keyring.js";
 import {
   localRuntimeMasterKeyFrom,
   prepareLocalRuntimeMasterKey,
@@ -14,7 +15,8 @@ test("creates one stable local runtime master key", async () => {
 
   assert.equal(await prepareLocalRuntimeMasterKey(secretFile), true);
   const firstKey = await localRuntimeMasterKeyFrom(secretFile);
-  assert.equal(Buffer.from(firstKey, "base64").length, 32);
+  const keyring = parseRuntimeKeyring(firstKey);
+  assert.equal(Buffer.from(keyring.keys[keyring.activeKeyId], "base64").length, 32);
 
   assert.equal(await prepareLocalRuntimeMasterKey(secretFile), false);
   assert.equal(await localRuntimeMasterKeyFrom(secretFile), firstKey);

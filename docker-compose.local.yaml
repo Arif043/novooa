@@ -17,7 +17,7 @@ services:
       LOCAL_RUNTIME_ALLOWED_ORIGINS: ${LOCAL_RUNTIME_ALLOWED_ORIGINS:-}
       NOVOOA_LOCAL_DEVELOPMENT: ${NOVOOA_LOCAL_DEVELOPMENT:-false}
       PYTHON_INFERENCE_SIDECAR_URL: http://novooa-ml:8081
-      LOCAL_RUNTIME_MASTER_KEY_FILE: /run/secrets/novooa_runtime_master_key
+      LOCAL_RUNTIME_MASTER_KEY_FILE: /var/lib/novooa-keys/runtime-master-key
       LOCAL_RUNTIME_LICENSE_PUBLIC_KEY_FILE: /run/secrets/novooa_runtime_license_public_key
       LOCAL_RUNTIME_LICENSE_GATEWAY_URL: ${LOCAL_RUNTIME_LICENSE_GATEWAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/issueLocalRuntimeLicense}
       LOCAL_RUNTIME_PUSH_RELAY_URL: ${LOCAL_RUNTIME_PUSH_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimePushRelay}
@@ -26,6 +26,8 @@ services:
       LOCAL_RUNTIME_FIREBASE_PROJECT_ID: ${LOCAL_RUNTIME_FIREBASE_PROJECT_ID:-syscat-90bff}
       LOCAL_RUNTIME_FIREBASE_TOKEN_URL: ${LOCAL_RUNTIME_FIREBASE_TOKEN_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/issueLocalRuntimeFirebaseToken}
     depends_on:
+      key-init:
+        condition: service_completed_successfully
       novooa-ml:
         condition: service_healthy
     ports:
@@ -37,13 +39,13 @@ services:
       - "8090:8080"
     volumes:
       - novooa-data:/var/lib/novooa
+      - novooa-keys:/var/lib/novooa-keys
       # Als Bind-Mount statt COPY ins Image: So lässt sich die Web-App mit
       # `flutter build web` neu bauen, ohne das Image anzufassen. Vor dem
       # ersten Start einmal ausführen — fehlt das Verzeichnis, liefert die
       # Runtime nur die API aus und antwortet auf App-Pfade mit 404.
       - ./build/web:/app/web:ro
     secrets:
-      - novooa_runtime_master_key
       - novooa_runtime_license_public_key
     networks:
       - novooa-public
@@ -75,6 +77,39 @@ services:
       timeout: 2s
       retries: 12
 
+  key-init:
+    build:
+      context: .
+      dockerfile: functions/Dockerfile.local-runtime
+    user: "0:0"
+    network_mode: none
+    command: [node, lib/shared/local/local-runtime-keyring-seed-cli.js]
+    environment:
+      LOCAL_RUNTIME_MASTER_KEY_FILE: /var/lib/novooa-keys/runtime-master-key
+      LOCAL_RUNTIME_MASTER_KEY_SEED_FILE: /run/secrets/novooa_runtime_master_key
+    volumes:
+      - novooa-keys:/var/lib/novooa-keys
+    secrets:
+      - novooa_runtime_master_key
+
+  key-rotation:
+    profiles: [maintenance]
+    build:
+      context: .
+      dockerfile: functions/Dockerfile.local-runtime
+    user: "0:0"
+    network_mode: none
+    command: [node, lib/shared/local/local-runtime-key-rotation-cli.js]
+    environment:
+      LOCAL_RUNTIME_ROOT: /var/lib/novooa
+      LOCAL_RUNTIME_MASTER_KEY_FILE: /var/lib/novooa-keys/runtime-master-key
+    depends_on:
+      key-init:
+        condition: service_completed_successfully
+    volumes:
+      - novooa-data:/var/lib/novooa
+      - novooa-keys:/var/lib/novooa-keys
+
 networks:
   novooa-public:
   novooa-private:
@@ -82,6 +117,7 @@ networks:
 
 volumes:
   novooa-data:
+  novooa-keys:
 
 secrets:
   novooa_runtime_master_key:

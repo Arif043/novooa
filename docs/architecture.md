@@ -147,7 +147,9 @@ Arbeitsbereich-ID, Ablaufdatum sowie `inUse`. Die Aktivierung setzt in einer
 Firestore-Transaktion `inUse`, eine zufällige `activationId` und nur den Hash
 eines zufälligen Aktivierungsgeheimnisses. Das Lizenz-Gateway liefert der Runtime
 eine Ed25519-signierte Lizenz plus Geheimnis. Die Runtime speichert das Geheimnis
-verschlüsselt mit ihrem lokalen Master-Key; der Token verbleibt weder dort noch in
+per Envelope Encryption mit einem eigenen Datenschlüssel; der lokale Master-Key
+schützt diesen ausschließlich über einen per HKDF abgeleiteten Schlüssel.
+Der Token verbleibt weder dort noch in
 Firestore. Eine Freigabe weist `activationId` und Geheimnis nach, setzt
 `inUse` zurück und macht den Token für genau eine neue Aktivierung frei. Das
 Push-Relay prüft zusätzlich die aktive `activationId`, sodass freigegebene

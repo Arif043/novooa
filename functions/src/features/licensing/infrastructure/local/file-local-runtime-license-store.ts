@@ -1,7 +1,10 @@
-import {mkdir, readFile, rename, rm, writeFile} from "node:fs/promises";
-import {dirname, join} from "node:path";
+import {readFile, rm} from "node:fs/promises";
+import {join} from "node:path";
+import {writeDurableSecretFile} from "../../../runtime_security/infrastructure/durable-secret-file.js";
 import {type RuntimeLicenseActivation} from "../../domain/entities/runtime-license-activation.js";
-import {CredentialCipher} from "../../../communication/infrastructure/security/credential-cipher.js";
+import {type SensitiveFieldCipher} from "../../../runtime_security/domain/repositories/runtime-field-cipher.js";
+import {licenseSecretContext} from "../../../runtime_security/infrastructure/runtime-secret-context.js";
+import {RuntimeSecretFileAccess} from "../../../runtime_security/infrastructure/runtime-secret-file-access.js";
 
 export interface RuntimeLicenseStore {
   load(): Promise<RuntimeLicenseActivation | null>;
@@ -12,17 +15,25 @@ export interface RuntimeLicenseStore {
 export class FileRuntimeLicenseStore implements RuntimeLicenseStore {
   private readonly path: string;
 
-  constructor(runtimeRoot: string, private readonly cipher: CredentialCipher) {
+  constructor(
+    runtimeRoot: string,
+    private readonly cipher: SensitiveFieldCipher,
+    private readonly access = new RuntimeSecretFileAccess(),
+  ) {
     this.path = join(runtimeRoot, "credentials", "license-state.json");
   }
 
   async load(): Promise<RuntimeLicenseActivation | null> {
+    return this.access.run(() => this.loadUnlocked());
+  }
+
+  private async loadUnlocked(): Promise<RuntimeLicenseActivation | null> {
     try {
       return stateFromJson(await readFile(this.path, "utf8"), this.cipher);
     } catch (error) {
       if (isMissingFile(error)) return null;
       if (error instanceof StoredRuntimeLicenseStateError) {
-        await this.clear();
+        await rm(this.path, {force: true});
         return null;
       }
       throw error;
@@ -30,45 +41,54 @@ export class FileRuntimeLicenseStore implements RuntimeLicenseStore {
   }
 
   async save(state: RuntimeLicenseActivation): Promise<void> {
-    await mkdir(dirname(this.path), {recursive: true, mode: 0o700});
-    const temporaryPath = this.path + ".new";
+    await this.access.run(() => this.saveUnlocked(state));
+  }
+
+  private async saveUnlocked(state: RuntimeLicenseActivation): Promise<void> {
     const value = JSON.stringify({
       license: state.license,
-      encryptedActivationSecret: this.cipher.encrypt(state.activationSecret),
+      encryptedActivationSecret: this.cipher.encrypt(
+        state.activationSecret, licenseSecretContext({...state.license.payload}),
+      ),
     });
-    await writeFile(temporaryPath, value, {encoding: "utf8", mode: 0o600});
-    await rename(temporaryPath, this.path);
+    await writeDurableSecretFile(this.path, value);
   }
 
   async clear(): Promise<void> {
-    await rm(this.path, {force: true});
+    await this.access.run(() => rm(this.path, {force: true}));
   }
 }
 
 class StoredRuntimeLicenseStateError extends Error {}
 
-function stateFromJson(value: string, cipher: CredentialCipher): RuntimeLicenseActivation {
+function stateFromJson(value: string, cipher: SensitiveFieldCipher): RuntimeLicenseActivation {
+  const state = validatedState(value);
+  return {
+    license: state.license,
+    activationSecret: cipher.decrypt(state.encryptedActivationSecret, licenseSecretContext({...state.license.payload})),
+  };
+}
+
+function validatedState(value: string): {license: RuntimeLicenseActivation["license"]; encryptedActivationSecret: string} {
   try {
     const parsed = record(JSON.parse(value));
     const license = record(parsed.license);
     const payload = record(license.payload);
     return {
-      activationSecret: cipher.decrypt(requiredString(parsed.encryptedActivationSecret)),
-      license: {
-        signature: requiredString(license.signature),
-        payload: {
-          licenseId: requiredString(payload.licenseId),
-          licenseName: requiredString(payload.licenseName),
-          activationId: requiredString(payload.activationId),
-          workspaceId: requiredString(payload.workspaceId),
-          issuedAt: requiredString(payload.issuedAt),
-          expiresAt: requiredString(payload.expiresAt),
-        },
-      },
+      encryptedActivationSecret: requiredString(parsed.encryptedActivationSecret),
+      license: {signature: requiredString(license.signature), payload: licensePayload(payload)},
     };
   } catch {
     throw new StoredRuntimeLicenseStateError();
   }
+}
+
+function licensePayload(payload: Record<string, unknown>): RuntimeLicenseActivation["license"]["payload"] {
+  return {
+    licenseId: requiredString(payload.licenseId), licenseName: requiredString(payload.licenseName),
+    activationId: requiredString(payload.activationId), workspaceId: requiredString(payload.workspaceId),
+    issuedAt: requiredString(payload.issuedAt), expiresAt: requiredString(payload.expiresAt),
+  };
 }
 
 function isMissingFile(error: unknown): boolean {

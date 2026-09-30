@@ -58,7 +58,7 @@ export class SQLiteLanguageModelConfigurationStore
   ): Promise<LanguageModel[]> {
     const connectionId = randomUUID();
     const models = input.models.map((model) => ({id: randomUUID(), ...model}));
-    const secretRef = `language-model/${connectionId}`;
+    const secretRef = `language-model/${input.teamId}/${connectionId}`;
     await this.database.transaction(async () => {
       await this.database.run(connectionSql(), connectionValues(input, connectionId, secretRef));
       await this.secrets.write(secretRef, input.apiKey);

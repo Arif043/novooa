@@ -10,66 +10,62 @@ import {FileRuntimeLicenseStore} from "../../features/licensing/infrastructure/l
 import {HttpRuntimeLicenseGatewayClient} from "../../features/licensing/infrastructure/local/local-runtime-license-gateway-client.js";
 import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {openLocalRuntimeDatabase} from "./local-runtime-database.js";
-import {createLocalRuntimeHttpServer} from "./local-runtime-http-server.js";
-import {RuntimeLicenseMiddleware} from "./local-runtime-license-middleware.js";
-import {attachLocalRuntimeRealtimeServer} from "./local-runtime-realtime-server.js";
 import {localRuntimeMasterKeyFrom} from "./local-runtime-master-key.js";
-import {LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
 import {LocalRuntimeStaticFiles} from "./local-runtime-static-files.js";
 import {LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
-import {CredentialCipher} from "../../features/communication/infrastructure/security/credential-cipher.js";
+import {LocalRuntimeSecurity} from "./local-runtime-security.js";
+import {acquireLocalRuntimeProcessLock} from "./local-runtime-process-lock.js";
+import {bootstrapLocalRuntime} from "./local-runtime-server-bootstrap.js";
+import {UpgradeRuntimeSecretFormat} from "../../features/runtime_security/infrastructure/upgrade-runtime-secret-format.js";
 
 void startLocalRuntime().catch(reportStartupFailure);
 
 async function startLocalRuntime(): Promise<void> {
   const runtimeRoot = requiredEnvironment("LOCAL_RUNTIME_ROOT");
-  const localMasterKey = await localRuntimeMasterKeyFrom(
+  const release = await acquireLocalRuntimeProcessLock(runtimeRoot);
+  try {
+    await startLockedRuntime(runtimeRoot, release);
+  } catch (error) {
+    await release();
+    throw error;
+  }
+}
+
+async function startLockedRuntime(runtimeRoot: string, release: () => Promise<void>): Promise<void> {
+  const localKeyring = await localRuntimeMasterKeyFrom(
     requiredEnvironment("LOCAL_RUNTIME_MASTER_KEY_FILE"),
   );
-  const database = await openLocalRuntimeDatabase({
-    databasePath: join(runtimeRoot, "novooa.sqlite"),
-    migrationsDirectory: migrationsDirectory(),
-  });
+  const database = await preparedRuntimeDatabase(runtimeRoot, localKeyring);
+  const security = new LocalRuntimeSecurity(requiredEnvironment("LOCAL_RUNTIME_MASTER_KEY_FILE"), localKeyring, database, runtimeRoot);
   try {
-    const licenses = licenseServiceFor(runtimeRoot, localMasterKey);
-    // Prozessweit: beide Setup-Wege teilen denselben Code, und er verfällt
-    // mit dem Prozess — es gibt kein Geheimnis at rest.
-    const setupCode = new LocalRuntimeSetupCode();
-    const application = new LocalRuntimeApplication({
-      database,
-      runtimeRoot,
-      localMasterKey,
-      setupCode,
-      isLicenseActive: () => licenses.activeContext() !== null,
-      signedLicense: () => licenses.signedActiveLicense(),
-      activeLicenseActivation: () => licenses.activeActivation(),
+    const {server, application} = await bootstrapLocalRuntime({
+      database, runtimeRoot, fieldCipher: security.cipher, licenses: licenseServiceFor(runtimeRoot, security),
+      cors: LocalRuntimeCorsPolicy.fromEnvironment(), webFiles: webApplicationFiles(), port: configuredPort(),
     });
-    const restored = await licenses.restore();
-    if (restored !== null) await application.activate(restored);
-    const cors = LocalRuntimeCorsPolicy.fromEnvironment();
-    const server = createLocalRuntimeHttpServer(
-      new RuntimeLicenseMiddleware(licenses, application),
-      webApplicationFiles(),
-      cors,
-    );
-    attachLocalRuntimeRealtimeServer(server, application, cors);
-    const port = configuredPort();
-    await listen(server, port);
-    registerShutdown([server], database, application);
-    // Der Code steht bewusst im Start-Log: `docker compose logs` zu lesen
-    // setzt Host-Zugriff voraus — dieselbe Vertrauensbasis wie ein
-    // Container-Neustart, mit dem sich ein verlorener Code jederzeit neu
-    // erzeugen lässt.
-    console.info(JSON.stringify({
-      event: "local_runtime.started",
-      port,
-      setupCode: setupCode.current,
-    }));
+    security.start();
+    registerShutdown([server], database, application, security, release);
   } catch (error) {
     database.close();
     throw error;
   }
+}
+
+async function preparedRuntimeDatabase(runtimeRoot: string, keyring: string): Promise<SqliteLocalSqlDatabase> {
+  const database = await runtimeDatabase(runtimeRoot);
+  try {
+    await new UpgradeRuntimeSecretFormat(database, runtimeRoot, keyring).execute();
+    return database;
+  } catch (error) {
+    database.close();
+    throw error;
+  }
+}
+
+function runtimeDatabase(runtimeRoot: string): Promise<SqliteLocalSqlDatabase> {
+  return openLocalRuntimeDatabase({
+    databasePath: join(runtimeRoot, "novooa.sqlite"), migrationsDirectory: migrationsDirectory(),
+  });
 }
 
 function migrationsDirectory(): string {
@@ -104,25 +100,28 @@ function requiredEnvironment(name: string): string {
   throw new Error(`${name} fehlt.`);
 }
 
-function licenseServiceFor(runtimeRoot: string, localMasterKey: string): RuntimeLicenseService {
+function licenseServiceFor(runtimeRoot: string, security: LocalRuntimeSecurity): RuntimeLicenseService {
   if (process.env.NOVOOA_LOCAL_DEVELOPMENT === "true") {
-    return new DevelopmentRuntimeLicenseService({
-      licenseId: "development-license",
-      licenseName: "Entwicklungsumgebung",
-      workspaceId: optionalEnvironment("LOCAL_RUNTIME_TEAM_ID") ?? "local-team",
-      expiresAt: "2099-01-01T00:00:00.000Z",
-    });
+    return developmentLicenseService();
   }
   return new GatewayRuntimeLicenseService(
     new FileRuntimeLicenseStore(
       runtimeRoot,
-      new CredentialCipher(localMasterKey, "LOCAL_RUNTIME_MASTER_KEY"),
+      security.cipher, security.licenseAccess,
     ),
     new HttpRuntimeLicenseGatewayClient(
       requiredEnvironment("LOCAL_RUNTIME_LICENSE_GATEWAY_URL"),
     ),
     licensePublicKey(),
   );
+}
+
+function developmentLicenseService(): RuntimeLicenseService {
+  return new DevelopmentRuntimeLicenseService({
+    licenseId: "development-license", licenseName: "Entwicklungsumgebung",
+    workspaceId: optionalEnvironment("LOCAL_RUNTIME_TEAM_ID") ?? "local-team",
+    expiresAt: "2099-01-01T00:00:00.000Z",
+  });
 }
 
 function licensePublicKey(): string {
@@ -136,25 +135,20 @@ function optionalEnvironment(name: string): string | undefined {
   return value && value.length > 0 ? value : undefined;
 }
 
-function listen(server: Server, port: number): Promise<void> {
-  return new Promise((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(port, "0.0.0.0", resolve);
-  });
-}
-
 function registerShutdown(
   servers: Server[],
   database: SqliteLocalSqlDatabase,
   application: LocalRuntimeApplication,
+  security: LocalRuntimeSecurity,
+  release: () => Promise<void>,
 ): void {
   let closing = false;
   const shutdown = () => {
     if (closing) return;
     closing = true;
     Promise.all(servers.map((server) => new Promise<void>((resolve) => server.close(() => resolve()))))
-      .then(() => closeRuntime(database, application))
-      .catch(() => closeRuntime(database, application));
+      .then(() => closeRuntime(database, application, security, release))
+      .catch(reportStartupFailure);
   };
   process.once("SIGINT", shutdown);
   process.once("SIGTERM", shutdown);
@@ -163,9 +157,13 @@ function registerShutdown(
 async function closeRuntime(
   database: SqliteLocalSqlDatabase,
   application: LocalRuntimeApplication,
+  security: LocalRuntimeSecurity,
+  release: () => Promise<void>,
 ): Promise<void> {
+  await security.stop();
   await application.stop();
   database.close();
+  await release();
   process.exit(0);
 }
 

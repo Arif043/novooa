@@ -8,11 +8,12 @@ import {type LocalRuntimeRealtimeSubscriber} from "./local-runtime-realtime-noti
 import {ensureLocalRuntimeWorkspace, type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
 import {type LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
+import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 
 export type LocalRuntimeApplicationOptions = {
   database: SqliteLocalSqlDatabase;
   runtimeRoot: string;
-  localMasterKey: string;
+  fieldCipher: SensitiveFieldCipher;
   setupCode: LocalRuntimeSetupCode;
   isLicenseActive: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;

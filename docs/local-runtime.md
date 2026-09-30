@@ -279,8 +279,9 @@ ergänzt den ONNX-Modellkatalog in der Tabelle `model_catalog`.
 ergänzt Provider-Verbindungen und Sprachmodellprofile. Lokale API-Keys liegen
 nicht im Klartext in SQLite. Die Migration
 [`011_language_model_secrets.sql`](../local-runtime/migrations/011_language_model_secrets.sql)
-speichert sie AES-256-GCM-verschlüsselt; `secret_ref` verweist auf den
-jeweiligen Eintrag. Der Master-Key liegt separat außerhalb des Daten-Volumes.
+speichert sie als AES-256-GCM-Envelope mit eigenem Datenschlüssel; `secret_ref`
+verweist auf den jeweiligen Eintrag. Der Master-Key-Schlüsselbund liegt separat
+außerhalb des Daten-Volumes.
 Die Flutter-Einstellungen bieten **Google AI**, **xAI (Grok)**, **Mistral AI**,
 **OpenRouter**, **Ollama (lokal)** und frei konfigurierbare
 OpenAI-kompatible Anbieter an und verbinden sie über `POST
@@ -339,7 +340,8 @@ Hash, setzt `inUse` auf true und liefert der Runtime eine Ed25519-signierte Lize
 plus Aktivierungsgeheimnis.
 
 Die Runtime prüft die Signatur mit ihrem öffentlichen Verifikationsschlüssel und
-speichert Lizenz und Geheimnis verschlüsselt mit ihrem lokalen Master-Key. Damit
+speichert die signierte Lizenz und ihr Aktivierungsgeheimnis. Nur das Geheimnis
+wird per Envelope Encryption mit eigenem Datenschlüssel verschlüsselt. Damit
 kann eine Lizenz immer nur durch diese konkrete Aktivierung verwendet werden, ohne
 einen Gerätefingerabdruck zu benötigen. Fachliche Runtime-Endpunkte liefern ohne
 gültige Lizenz `423`; Task- und Trigger-Worker starten dann keine Jobs. Bis zum
@@ -580,16 +582,148 @@ Vor dem ersten fachlichen Zugriff muss einmalig ein Betreiber-Passwort
 gesetzt werden (siehe
 [Erstmaliges Setzen des Passworts](#erstmaliges-setzen-des-passworts)).
 
-Der Stack legt das benannte Volume `novooa-local_novooa-data` an. Ein
-`docker compose down` entfernt weder dieses Volume noch SQLite, Dateien oder
-Modellartefakte. Beim ersten Befehl entsteht ein zufälliger 32-Byte-Master-Key
-in `.novooa/runtime-master-key`; das Verzeichnis ist ignoriert. Compose bindet
-ihn nur für den Node-Dienst als `/run/secrets/novooa_runtime_master_key` ein.
+Der Stack legt die benannten Volumes `novooa-local_novooa-data` und
+`novooa-local_novooa-keys` an. Ein `docker compose down` entfernt weder diese
+Volumes noch SQLite, Dateien, Modellartefakte oder Schlüssel. Beim ersten Befehl entsteht ein versionierter JSON-Schlüsselbund
+mit einem zufälligen 32-Byte-Master-Key in `.novooa/runtime-master-key`;
+das Verzeichnis ist ignoriert. Der netzwerklose Init-Dienst übernimmt ihn einmalig
+in das separate Schlüssel-Volume. Dort liegt der maßgebliche, automatisch rotierende
+Schlüsselbund unter `/var/lib/novooa-keys/runtime-master-key`, mit Datei-Rechten
+`0600`, Verzeichnis-Rechten `0700` und Eigentümer `node` (UID/GID 1000).
+Spätere Starts übernehmen die Setup-Datei nicht erneut. Sie ist nach Rotationen
+kein aktuelles Backup des Schlüsselbunds. Beim vollständigen Neuaufsetzen müssen
+beide Volumes und die Setup-Datei gemeinsam berücksichtigt werden.
 Eine auslieferbare Desktop-App erzeugt dieselbe Datei bei der Installation im
 betriebssystemspezifischen Novooa-Datenverzeichnis und setzt
 `NOVOOA_LOCAL_SECRETS_DIRECTORY` darauf. Der Master-Key darf weder im Docker-
 Image noch im SQLite-Volume liegen. Bei dessen Verlust müssen gespeicherte
 Provider-Keys erneut hinterlegt werden.
+
+## Feldverschlüsselung und Master-Key-Rotation
+
+Standalone verschlüsselt ausschließlich sensible Feldwerte, derzeit Provider-API-Keys
+und das Lizenz-Aktivierungsgeheimnis. SQLite, allgemeine Dokumente und Dateien werden
+nicht vollständig verschlüsselt. Eine zukünftige Enterprise-Vollverschlüsselung
+ist eine zusätzliche Speicherebene mit eigenem Schlüssel und Rotationsprozess;
+sie ist hier noch nicht implementiert.
+
+Jeder gespeicherte sensible Wert erhält einen zufälligen 256-Bit-Datenschlüssel.
+AES-256-GCM verschlüsselt den Wert mit diesem Schlüssel. HKDF-SHA-256 leitet
+aus dem aktiven Master-Key, einem zufälligen 32-Byte-Salt und einem eindeutig
+JSON-kodierten Feldkontext einen separaten Schlüssel ab, der den Datenschlüssel
+mit AES-256-GCM schützt. Der Master-Key wird niemals direkt als AES-Schlüssel verwendet.
+Beide Verschlüsselungen verwenden eigene zufällige 12-Byte-IVs und 16-Byte-Tags.
+AAD bindet sie an Formatversion, Zweck und erwarteten Feldkontext. Der Kontext
+enthält für Provider-Keys die Secret-Referenz einschließlich Workspace und
+Verbindungs-ID; für die Lizenz Workspace-, Lizenz- und Aktivierungs-ID.
+
+Die Envelope enthält Version, Master-Key-ID, Salt, verschlüsselten Datenschlüssel
+und verschlüsselten Feldwert mit ihren jeweiligen IVs und Tags. Datenschlüssel
+werden nicht im Klartext persistiert. Die Kryptografie verwendet `node:crypto`.
+Cloud-Credentials behalten ihre separate bestehende Verschlüsselung.
+Der Init-Dienst kann eine bestehende 32-Byte-Base64-Setup-Datei übernehmen und
+behält dabei das vorhandene Schlüsselmaterial. Beim Start übernimmt die Runtime
+vorhandene Geheimnisse im bisherigen AES-GCM-Feldformat einmalig in Envelopes.
+Sie authentifiziert dafür die alten Werte mit den verfügbaren Master-Keys und
+speichert ausschließlich erfolgreich entschlüsselte Werte im neuen Format.
+Ein fehlender oder falscher Schlüssel führt zu einem Startfehler und keiner Löschung.
+
+### Automatische monatliche Rotation
+
+Die Runtime rotiert den Master-Key automatisch im laufenden Betrieb, einen
+Kalendermonat nach der Einrichtung bzw. der letzten erfolgreichen Rotation.
+Der Schlüsselbund speichert diesen Zeitpunkt als `lastRotatedAt`. Die Berechnung
+erfolgt in UTC, mit gleicher Uhrzeit; fehlt der Tag im Folgemonat, wird dessen
+letzter Tag verwendet, beispielsweise 31. Januar → 28. Februar.
+
+Beim Start prüft die Runtime sofort, ob eine Rotation fällig oder unterbrochen ist.
+Nach längerer Abschaltung wird eine fällige Rotation einmal nachgeholt; ausgefallene
+Monate erzeugen keine unnötigen Zwischen-Keys. Ein Timer prüft spätestens nach
+24 Stunden erneut und plant die nächste Fälligkeit innerhalb dieses Zeitfensters
+genau ein. Der Zeitpunkt bleibt über Neustarts erhalten.
+
+Die Runtime sichert den neuen Key, bevor der gemeinsame Cipher ihn für neue
+Schreibvorgänge übernimmt. Bestehende Verbraucher lesen weiterhin ältere Werte
+und verwenden sofort den neuen aktiven Key für neue Verschlüsselungen.
+SQL-Schreibvorgänge wählen ihren Schlüssel innerhalb der Transaktion; die
+Lizenzdatei wird über einen gemeinsamen seriellen Zugriff gespeichert und
+umgeschlüsselt, damit parallele Aktivierungen erhalten bleiben.
+Ein Neustart oder eine Nutzeraktion ist für die monatliche Rotation nicht erforderlich.
+
+Fehler werden als `local_runtime.master_key_rotation_failed` protokolliert und
+nach fünf Minuten erneut versucht. Eine unterbrochene Rotation verwendet den
+bereits gesicherten neuen Key weiter. Erfolg wird als
+`local_runtime.master_key_rotated` mit der Anzahl umgeschlüsselter Datenschlüssel
+protokolliert. Beim Herunterfahren wartet die Runtime auf die laufende Prüfung,
+bevor sie die Datenbank schließt. Automatische Rotationen entfernen keine alten
+Master-Keys, damit bestehende Backups nutzbar bleiben.
+
+### Zusätzliche manuelle Rotation mit Docker Compose
+
+Vorher Daten- und Schlüssel-Volume gemeinsam sichern. Für eine zusätzliche
+manuelle Wartungsrotation muss die Runtime gestoppt sein:
+
+```bash
+docker compose -f docker-compose.local.yaml stop runtime
+docker compose -f docker-compose.local.yaml --profile maintenance run --rm --build key-rotation
+docker compose -f docker-compose.local.yaml up --detach runtime
+```
+
+Der Wartungscontainer hat kein Netzwerk und bindet den Schlüsselbund beschreibbar
+ein. Er läuft als root, um das geschützte Schlüssel-Volume und das Datenvolume
+bearbeiten zu können; beim atomaren Dateiaustausch bleibt der bestehende Eigentümer
+erhalten. Der normale Runtime-Container läuft weiterhin als `node` und kann das
+separate persistente Schlüssel-Volume selbst beschreiben. Weil ein Verzeichnis
+statt einer einzelnen Schlüsseldatei eingebunden ist, bleiben atomar ersetzte
+Schlüsseldateien sichtbar.
+
+Für eine Installation ohne Docker:
+
+```bash
+npm --prefix functions run local-runtime:rotate-key -- \
+  --secret-file /pfad/secrets/runtime-master-key \
+  --runtime-root /pfad/runtime-daten
+```
+
+Runtime und Wartungsbefehl halten denselben Prozess-Lock im Datenverzeichnis
+über `proper-lockfile`. Nach einem harten Abbruch verfällt der Lock nach
+30 Sekunden. Jede Runtime benötigt ihren eigenen Schlüsselbund; derselbe
+Schlüsselbund darf nicht zwischen unabhängigen Runtime-Datenverzeichnissen geteilt werden.
+
+Die Rotation sichert zuerst den neuen aktiven Master-Key zusammen mit allen alten
+Keys und `rotationPending: true`. Erst anschließend werden Datenschlüssel in
+SQLite in Batches und das Aktivierungsgeheimnis in der Lizenzdatei umgeschlüsselt.
+Der Feld-Ciphertext bleibt erhalten. Einzelne SQLite-Updates sind atomar und
+prüfen den bisherigen Wert; Dateien werden mit restriktiven Rechten, Dateisynchronisation
+und atomarem Rename ersetzt. Unter Unix wird zusätzlich das Verzeichnis synchronisiert.
+Während einer unterbrochenen Rotation darf die Runtime mit beiden Keys lesen und
+mit dem neuen Key schreiben. Die Fortsetzung verarbeitet auch solche neuen Werte.
+
+Bei einem Fehler bleibt der neue Key bereits gesichert und alle alten Keys bleiben
+verfügbar. Die automatische Rotation oder derselbe Wartungsbefehl setzt die
+begonnene Rotation fort, ohne einen weiteren Master-Key zu erzeugen.
+Vor Abschluss werden alle aktuellen Feldwerte
+authentifiziert und ihre aktive Master-Key-ID geprüft.
+
+### Alte Schlüssel und Backups
+
+Standardmäßig bleiben alte Master-Keys im Schlüsselbund, damit frühere Backups
+wiederherstellbar sind. Wenn die betreffenden Backups abgelaufen sind oder ihr
+Schlüsselbund separat sicher archiviert wurde, kann eine Rotation die alten Keys
+nach erfolgreicher Prüfung entfernen:
+
+```bash
+docker compose -f docker-compose.local.yaml stop runtime
+docker compose -f docker-compose.local.yaml --profile maintenance run --rm key-rotation \
+  node lib/shared/local/local-runtime-key-rotation-cli.js --retire-old-keys
+docker compose -f docker-compose.local.yaml up --detach runtime
+```
+
+`--retire-old-keys` entfernt alle inaktiven Keys aus dem aktuellen Schlüsselbund.
+Alte Backups sind danach nur noch mit einem passenden archivierten Schlüsselbund
+entschlüsselbar. Dieser Befehl ist eine reguläre Rotation, keine Sanierung nach
+einem kompromittierten Master-Key: Dafür müssen zusätzlich neue Datenschlüssel
+erzeugt und die Feldwerte erneut verschlüsselt werden.
 
 ## Nächste Schritte
 

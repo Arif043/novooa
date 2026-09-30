@@ -70,7 +70,7 @@ import {type SignedRuntimeLicense} from "../../features/licensing/domain/entitie
 import {LocalApplicationLogHttpHandler} from "../logging/local-application-log-http-handler.js";
 import {LocalApplicationLogger} from "../logging/local-application-logger.js";
 import {SQLiteLocalApplicationLogStore} from "../logging/sqlite-local-application-log-store.js";
-import {CredentialCipher} from "../../features/communication/infrastructure/security/credential-cipher.js";
+import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
 import {type LocalLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/local-language-model-secret-store.js";
 import {LocalLanguageModelHttpHandler} from "../../features/language_models/infrastructure/local/local-language-model-http-handler.js";
@@ -106,7 +106,7 @@ export type LocalRuntimeCompositionOptions = {
   database: SqliteLocalSqlDatabase;
   runtimeRoot: string;
   workspace: LocalRuntimeWorkspace;
-  localMasterKey: string;
+  fieldCipher: SensitiveFieldCipher;
   /** Prozessweit, im Entrypoint erzeugt — beide Setup-Wege teilen ihn. */
   setupCode: LocalRuntimeSetupCode;
   isLicenseActive?: () => boolean;
@@ -139,7 +139,7 @@ export function createLocalRuntimeComposition(
   const taskDefinitionStore = new SQLiteTaskDefinitionStore(options.database);
   const languageModelSecretStore = new EncryptedSQLiteLanguageModelSecretStore(
     options.database,
-    new CredentialCipher(options.localMasterKey, "LOCAL_RUNTIME_MASTER_KEY"),
+    options.fieldCipher,
   );
   const languageModelStore = new SQLiteLanguageModelConfigurationStore(
     options.database,

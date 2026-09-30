@@ -103,10 +103,9 @@ cd cli && npm install && npm run build && node dist/index.js
    ```powershell
    mkdir C:\Development\.novooa
 
-   # runtime-master-key: 32 Bytes Base64
-   [System.Convert]::ToBase64String(
-     [System.Security.Cryptography.RNGCryptoServiceProvider]::new().GetBytes(32)
-   ) | Out-File -NoNewline C:\Development\.novooa\runtime-master-key
+   # Versionierten Runtime-Schlüsselbund mit zufälligem Master-Key erstellen
+   # Im Projektverzeichnis (Node.js 24 erforderlich):
+   npm --prefix functions run local-runtime:prepare -- --secret-file C:\Development\.novooa\runtime-master-key
 
    # runtime-license-public-key: von Produktion kopieren
    # (wird vom Lizenz-Gateway bereitgestellt)
@@ -183,7 +182,7 @@ Windows-Rechner:
 ### Runtime-Daten
 
 ```
-Docker Volume: novooa-local_novooa-data
+Docker Volumes: novooa-local_novooa-data (Daten), novooa-local_novooa-keys (aktueller Schlüsselbund)
   └─ SQLite: task_runs, activities, etc.
   └─ Dateien: files/{teamId}/{fileId}/...
   └─ Modelle: model-artifacts/...

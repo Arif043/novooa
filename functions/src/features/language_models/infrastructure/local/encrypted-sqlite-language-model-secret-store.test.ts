@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import {randomBytes} from "node:crypto";
 import test from "node:test";
-import {CredentialCipher} from "../../../communication/infrastructure/security/credential-cipher.js";
+import {EnvelopeRuntimeFieldCipher} from "../../../runtime_security/infrastructure/envelope-runtime-field-cipher.js";
+import {createRuntimeKeyring} from "../../../runtime_security/infrastructure/runtime-keyring.js";
 import {SqliteLocalSqlDatabase} from "../../../../shared/local/sqlite-local-sql-database.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "./encrypted-sqlite-language-model-secret-store.js";
 
@@ -25,6 +25,6 @@ test("encrypts API keys before storing them in SQLite", async () => {
   database.close();
 });
 
-function testCipher(): CredentialCipher {
-  return new CredentialCipher(randomBytes(32).toString("base64"));
+function testCipher(): EnvelopeRuntimeFieldCipher {
+  return new EnvelopeRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring()));
 }

@@ -1,19 +1,12 @@
-import {randomBytes} from "node:crypto";
 import {chmod, mkdir, open, readFile} from "node:fs/promises";
 import {dirname} from "node:path";
-import {CredentialCipher} from "../../features/communication/infrastructure/security/credential-cipher.js";
-
-const masterKeyBytes = 32;
+import {createRuntimeKeyring, parseRuntimeKeyring} from "../../features/runtime_security/infrastructure/runtime-keyring.js";
+import {syncSecretDirectory} from "../../features/runtime_security/infrastructure/durable-secret-file.js";
 
 export async function prepareLocalRuntimeMasterKey(filePath: string): Promise<boolean> {
   await mkdir(dirname(filePath), {recursive: true, mode: 0o700});
   try {
-    const file = await open(filePath, "wx", 0o600);
-    try {
-      await file.writeFile(`${randomBytes(masterKeyBytes).toString("base64")}\n`, "utf8");
-    } finally {
-      await file.close();
-    }
+    await createMasterKeyFile(filePath);
     return true;
   } catch (error) {
     if (isExistingFile(error)) {
@@ -24,9 +17,20 @@ export async function prepareLocalRuntimeMasterKey(filePath: string): Promise<bo
   }
 }
 
+async function createMasterKeyFile(filePath: string): Promise<void> {
+  const file = await open(filePath, "wx", 0o600);
+  try {
+    await file.writeFile(`${JSON.stringify(createRuntimeKeyring())}\n`, "utf8");
+    await file.sync();
+  } finally {
+    await file.close();
+  }
+  await syncSecretDirectory(dirname(filePath));
+}
+
 export async function localRuntimeMasterKeyFrom(filePath: string): Promise<string> {
   const key = (await readFile(filePath, "utf8")).trim();
-  new CredentialCipher(key, "LOCAL_RUNTIME_MASTER_KEY");
+  parseRuntimeKeyring(key);
   return key;
 }
 

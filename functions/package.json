@@ -2,7 +2,8 @@
   "name": "functions",
   "scripts": {
     "build": "tsc",
-    "test": "npm run build && node --test lib/shared/local/*.test.js lib/shared/logging/*.test.js lib/features/assistant/domain/usecases/*.test.js lib/features/assistant/infrastructure/genkit/*.test.js lib/features/data/infrastructure/*.test.js lib/features/data/infrastructure/local/*.test.js lib/features/notifications/infrastructure/firebase/*.test.js lib/features/communication/domain/usecases/*.test.js lib/features/knowledge_base/infrastructure/genkit/*.test.js lib/features/knowledge_base/infrastructure/local/*.test.js lib/features/language_models/infrastructure/genkit/*.test.js lib/features/language_models/infrastructure/local/*.test.js lib/features/licensing/domain/entities/*.test.js lib/features/licensing/infrastructure/local/*.test.js lib/features/machine_learning/domain/entities/*.test.js lib/features/machine_learning/domain/usecases/*.test.js lib/features/machine_learning/infrastructure/*.test.js lib/features/machine_learning/infrastructure/cli/*.test.js lib/features/machine_learning/infrastructure/cloud_run/*.test.js lib/features/machine_learning/infrastructure/firebase/*.test.js lib/features/machine_learning/infrastructure/local/*.test.js lib/features/teams/infrastructure/local/*.test.js lib/features/task_execution/domain/usecases/*.test.js lib/features/task_execution/domain/executors/*.test.js lib/features/task_execution/infrastructure/firebase/*.test.js lib/features/task_execution/infrastructure/genkit/*.test.js lib/features/task_execution/infrastructure/genkit/assistant/*.test.js lib/features/task_execution/infrastructure/genkit/executors/*.test.js lib/features/task_execution/infrastructure/genkit/runner/*.test.js lib/features/task_execution/infrastructure/local/*.test.js",
+    "test:runtime-security": "npm run build && node --test lib/features/runtime_security/infrastructure/*.test.js lib/shared/local/local-runtime-master-key.test.js lib/shared/local/local-runtime-process-lock.test.js lib/features/language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.test.js lib/features/licensing/infrastructure/local/file-local-runtime-license-store.test.js",
+    "test": "npm run build && node --test lib/features/runtime_security/infrastructure/*.test.js lib/shared/local/*.test.js lib/shared/logging/*.test.js lib/features/assistant/domain/usecases/*.test.js lib/features/assistant/infrastructure/genkit/*.test.js lib/features/data/infrastructure/*.test.js lib/features/data/infrastructure/local/*.test.js lib/features/notifications/infrastructure/firebase/*.test.js lib/features/communication/domain/usecases/*.test.js lib/features/knowledge_base/infrastructure/genkit/*.test.js lib/features/knowledge_base/infrastructure/local/*.test.js lib/features/language_models/infrastructure/genkit/*.test.js lib/features/language_models/infrastructure/local/*.test.js lib/features/licensing/domain/entities/*.test.js lib/features/licensing/infrastructure/local/*.test.js lib/features/machine_learning/domain/entities/*.test.js lib/features/machine_learning/domain/usecases/*.test.js lib/features/machine_learning/infrastructure/*.test.js lib/features/machine_learning/infrastructure/cli/*.test.js lib/features/machine_learning/infrastructure/cloud_run/*.test.js lib/features/machine_learning/infrastructure/firebase/*.test.js lib/features/machine_learning/infrastructure/local/*.test.js lib/features/teams/infrastructure/local/*.test.js lib/features/task_execution/domain/usecases/*.test.js lib/features/task_execution/domain/executors/*.test.js lib/features/task_execution/infrastructure/firebase/*.test.js lib/features/task_execution/infrastructure/genkit/*.test.js lib/features/task_execution/infrastructure/genkit/assistant/*.test.js lib/features/task_execution/infrastructure/genkit/executors/*.test.js lib/features/task_execution/infrastructure/genkit/runner/*.test.js lib/features/task_execution/infrastructure/local/*.test.js",
     "build:watch": "tsc --watch",
     "serve": "npm run build && npx -y firebase-tools@latest emulators:start",
     "shell": "npm run build && npx -y firebase-tools@latest functions:shell",
@@ -11,6 +12,7 @@
     "logs": "npx -y firebase-tools@latest functions:log",
     "local-runtime:serve": "npm run build && node lib/shared/local/local-runtime-entrypoint.js",
     "local-runtime:prepare": "npm run build && node lib/shared/local/local-runtime-master-key-setup-cli.js",
+    "local-runtime:rotate-key": "npm run build && node lib/shared/local/local-runtime-key-rotation-cli.js",
     "local-runtime:docker:down": "docker compose -f ../docker-compose.local.yaml down",
     "local-runtime:docker:up": "docker compose -f ../docker-compose.local.yaml up --build --detach",
     "local-runtime:docker:wait-healthy": "i=0; until curl -sf http://localhost:8090/healthz >/dev/null; do i=$((i+1)); if [ $i -ge 12 ]; then echo 'Runtime healthz nach 60s nicht erreichbar.' >&2; exit 1; fi; sleep 5; done; echo 'Runtime laeuft: http://localhost:8090'",
@@ -37,12 +39,14 @@
     "firebase-functions": "^7.0.0",
     "genkit": "^1.37.0",
     "google-auth-library": "^10.9.1",
+    "proper-lockfile": "^4.1.2",
     "twilio": "^6.0.2",
     "undici": "^7.29.0",
     "write-excel-file": "^4.1.1",
     "ws": "^8.21.3"
   },
   "devDependencies": {
+    "@types/proper-lockfile": "^4.1.4",
     "@types/ws": "^8.18.1",
     "firebase-functions-test": "^3.4.1",
     "typescript": "^6.0.3"
