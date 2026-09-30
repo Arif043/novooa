@@ -97,6 +97,13 @@ Die vollstaendigen Output-Slots dokumentiert
   Provider-Kontext. Alle bisherigen Editoren, Anhänge, Ausgabenamen und
   Workflow-Ausgabewerte bleiben dort verfügbar. Änderungen aktualisieren das
   Overlay unmittelbar. Schließen ist per Schaltfläche oder Escape möglich.
+- Der `script`-Baustein zeigt im Konfigurations-Overlay nur eine kompakte
+  Vorschau des Codes (wenige Zeilen, Zeilenumbruch an, moderates Wachstum
+  bis zum internen Scrollen). Für ernsthaftes Schreiben reicht das
+  schmale Panel nicht — ein „Vollbild bearbeiten"-Knopf öffnet denselben
+  `CodeController` in einem `Dialog.fullscreen` (`ScriptCodeEditor`,
+  `showScriptFullscreenEditor`). Beide Ansichten teilen dieselbe
+  Controller-Instanz, es gibt keinen separaten Speicherzustand.
 - Auf schmalen Fenstern wird die linke Palette über „Bausteine“ eingeblendet.
 - `TaskBuilderCubit.addConnectedNode` verbindet einen neuen Baustein mit
   `afterId` im Hauptgraphen oder mit `ownerId`/`branchId` im Unterplan;

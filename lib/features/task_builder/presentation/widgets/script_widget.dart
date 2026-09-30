@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
-import 'package:flutter_highlight/themes/atom-one-dark.dart';
-import 'package:flutter_highlight/themes/atom-one-light.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:highlight/languages/python.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
@@ -13,6 +10,8 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_file_attachment_section.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/python_analyzer.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/script_code_editor.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/script_fullscreen_editor_dialog.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_scope.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_text_field.dart';
 
@@ -62,7 +61,7 @@ class _ScriptWidgetState extends State<ScriptWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Script', style: SyscatTheme.taskBody),
+          _header(context),
           const SizedBox(height: AppSpacing.xs),
           TemplateExpressionTextField(
             value: _config.inputTemplate,
@@ -74,34 +73,11 @@ class _ScriptWidgetState extends State<ScriptWidget> {
             onChanged: _updateInput,
           ),
           const SizedBox(height: AppSpacing.md),
-          CodeTheme(
-            data: CodeThemeData(
-              styles: Theme.of(context).brightness == Brightness.dark
-                  ? atomOneDarkTheme
-                  : atomOneLightTheme,
-            ),
-            child: CodeField(
-              controller: _controller,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: Theme.of(context).colorScheme.secondary,
-              ),
-              minLines: 6,
-              expands: false,
-              wrap: false,
-              textStyle: GoogleFonts.jetBrainsMono(),
-              gutterStyle: GutterStyle(
-                margin: 0,
-                textStyle: GoogleFonts.jetBrainsMono(
-                  color: ColorScheme.of(context).onSecondary,
-                ),
-                showErrors: true,
-                showLineNumbers: true,
-                showFoldingHandles: true,
-                background: Theme.of(context).colorScheme.surfaceContainerLow,
-              ),
-              onChanged: _updateScript,
-            ),
+          ScriptCodeEditor(
+            controller: _controller,
+            onChanged: _updateScript,
+            minLines: 6,
+            maxLines: 20,
           ),
           const SizedBox(height: AppSpacing.md),
           NodeFileAttachmentSection(
@@ -111,6 +87,23 @@ class _ScriptWidgetState extends State<ScriptWidget> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _header(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: Text('Script', style: SyscatTheme.taskBody)),
+        IconButton(
+          tooltip: 'Vollbild bearbeiten',
+          onPressed: () => showScriptFullscreenEditor(
+            context,
+            controller: _controller,
+            onChanged: _updateScript,
+          ),
+          icon: const Icon(Icons.open_in_full),
+        ),
+      ],
     );
   }
 
