@@ -4,9 +4,10 @@ import {type LocalRuntimeRequest, type LocalRuntimeRequestHandler, type LocalRun
 export class RuntimeLicenseMiddleware implements LocalRuntimeRequestHandler {
   constructor(
     private readonly licenseService: RuntimeLicenseService,
-    private readonly application: LocalRuntimeRequestHandler & {
+    private readonly application: {
       activate(context: Awaited<ReturnType<RuntimeLicenseService["activate"]>>): Promise<void>;
     },
+    private readonly inner: LocalRuntimeRequestHandler,
   ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {
@@ -14,7 +15,7 @@ export class RuntimeLicenseMiddleware implements LocalRuntimeRequestHandler {
     if (isActivationRequest(request)) return this.activate(request.body);
     if (isReleaseRequest(request)) return this.release();
     if (this.licenseService.activeContext() === null) return blockedResponse(this.licenseService.status());
-    return this.application.handle(request);
+    return this.inner.handle(request);
   }
 
   private async activate(body: unknown): Promise<LocalRuntimeResponse> {

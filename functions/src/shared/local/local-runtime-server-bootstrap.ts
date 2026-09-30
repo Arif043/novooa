@@ -2,7 +2,8 @@ import {type Server} from "node:http";
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
-import {RuntimeLicenseMiddleware} from "./local-runtime-license-middleware.js";
+import {createLocalRuntimeAccessPipeline} from "./local-runtime-access-pipeline.js";
+import {LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 import {createLocalRuntimeHttpServer} from "./local-runtime-http-server.js";
 import {attachLocalRuntimeRealtimeServer} from "./local-runtime-realtime-server.js";
 import {type LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
@@ -24,11 +25,12 @@ export async function bootstrapLocalRuntime(options: BootstrapOptions): Promise<
   server: Server; application: LocalRuntimeApplication;
 }> {
   const setupCode = new LocalRuntimeSetupCode();
-  const application = applicationFor(options, setupCode);
+  const sessions = new LocalRuntimeSessionStore(options.database);
+  const application = applicationFor(options, setupCode, sessions);
   try {
     const restored = await options.licenses.restore();
     if (restored !== null) await application.activate(restored);
-    const server = await listenForRequests(options, application);
+    const server = await listenForRequests(options, application, sessions);
     reportStarted(options.port, setupCode);
     return {server, application};
   } catch (error) {
@@ -37,19 +39,23 @@ export async function bootstrapLocalRuntime(options: BootstrapOptions): Promise<
   }
 }
 
-function applicationFor(options: BootstrapOptions, setupCode: LocalRuntimeSetupCode): LocalRuntimeApplication {
+function applicationFor(
+  options: BootstrapOptions, setupCode: LocalRuntimeSetupCode, sessions: LocalRuntimeSessionStore,
+): LocalRuntimeApplication {
   const {database, runtimeRoot, fieldCipher, licenses} = options;
   return new LocalRuntimeApplication({
-    database, runtimeRoot, fieldCipher, setupCode,
+    database, runtimeRoot, fieldCipher, setupCode, sessions,
     isLicenseActive: () => licenses.activeContext() !== null,
     signedLicense: () => licenses.signedActiveLicense(),
     activeLicenseActivation: () => licenses.activeActivation(),
   });
 }
 
-async function listenForRequests(options: BootstrapOptions, application: LocalRuntimeApplication): Promise<Server> {
+async function listenForRequests(
+  options: BootstrapOptions, application: LocalRuntimeApplication, sessions: LocalRuntimeSessionStore,
+): Promise<Server> {
   const server = createLocalRuntimeHttpServer(
-    new RuntimeLicenseMiddleware(options.licenses, application), options.webFiles, options.cors,
+    createLocalRuntimeAccessPipeline(options.licenses, sessions, application), options.webFiles, options.cors,
   );
   attachLocalRuntimeRealtimeServer(server, application, options.cors);
   await new Promise<void>((resolve, reject) => {

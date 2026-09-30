@@ -8,6 +8,7 @@ import {type LocalRuntimeRealtimeSubscriber} from "./local-runtime-realtime-noti
 import {ensureLocalRuntimeWorkspace, type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
 import {type LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
+import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 
 export type LocalRuntimeApplicationOptions = {
@@ -15,6 +16,7 @@ export type LocalRuntimeApplicationOptions = {
   runtimeRoot: string;
   fieldCipher: SensitiveFieldCipher;
   setupCode: LocalRuntimeSetupCode;
+  sessions: LocalRuntimeSessionStore;
   isLicenseActive: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;
   activeLicenseActivation: () => RuntimeLicenseActivation | null;

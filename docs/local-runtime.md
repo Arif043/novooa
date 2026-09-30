@@ -184,6 +184,16 @@ Nach dem Setzen des Passworts meldet sich der Client über
 bleiben unverändert außerhalb dieser Passwort-Pflicht — die Lizenzaktivierung
 ist bereits durch den Lizenz-Token selbst geschützt.
 
+Lizenz- und Session-Prüfung werden gemeinsam am HTTP-Server-Einstieg in
+`createLocalRuntimeAccessPipeline` verdrahtet: **Lizenz → Session → Anwendung**.
+Die fachliche Composition enthält nur die API-Handler, keine versteckte
+Auth-Middleware. Login und Auth-Prüfung erhalten denselben prozessweiten
+Session-Store per Dependency Injection. Die Lizenz-Middleware behandelt
+Status, Aktivierung und Freigabe vor der Session-Prüfung; Login und Setup
+überspringen nur die Session-Prüfung, nicht die Lizenzprüfung. Healthcheck,
+CORS und statische Dateien bleiben im HTTP-Server, WebSockets sind separat
+durch Einmaltickets geschützt.
+
 Der Client führt die Einrichtung in dieser Reihenfolge: Runtime-Adresse,
 gegebenenfalls Lizenzaktivierung und anschließend das Betreiber-Passwort.
 Diese Reihenfolge ist nicht willkürlich: Vor der Aktivierung existiert der
@@ -215,6 +225,22 @@ Credential-Speicher (`flutter_secure_storage`), nicht in `SharedPreferences`.
      Capabilities → „Automatically manage signing“ aktivieren und das Team
      auswählen. Dadurch wird `DEVELOPMENT_TEAM` in `project.pbxproj`
      gesetzt.
+
+  Fehlt beim Flutter-Start trotzdem das Profil (`No profiles for
+  'de.novooa.desktop' were found`), das Profil einmal aus dem Projektverzeichnis
+  mit Xcode erzeugen lassen. Der macOS-Build von Flutter übergibt selbst kein
+  `-allowProvisioningUpdates`:
+
+  ```bash
+  xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner \
+    -configuration Debug -derivedDataPath build/macos \
+    -destination 'platform=macOS' -allowProvisioningUpdates build
+  flutter run -d macos
+  ```
+
+  Dafür muss der ausgewählte Account in Xcode angemeldet sein und ein gültiges
+  Development-Zertifikat besitzen. Die Keychain-Entitlements nicht entfernen
+  und die Signierung nicht deaktivieren: Sonst scheitert die Token-Speicherung.
 
   Dieser Schritt ist **pro Entwicklungsrechner** nötig: Die beiden
   `.entitlements`-Dateien sind versioniert, das Xcode-Projekt selbst ist es

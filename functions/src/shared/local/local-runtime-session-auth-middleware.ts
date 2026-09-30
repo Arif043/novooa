@@ -16,7 +16,7 @@ const apiPathPrefix = "/v1/";
 
 /**
  * Verlangt für jede `/v1/*`-Anfrage ein gültiges
- * `Authorization: Bearer <token>`. Wrapt den fertigen Composition-Router —
+ * `Authorization: Bearer <token>`. Wrapt die Anwendung am Server-Einstieg —
  * Passwort-Pflicht gilt für die API ausnahmslos, auch im LAN (bewusster
  * Breaking Change).
  *
@@ -38,7 +38,7 @@ const apiPathPrefix = "/v1/";
 export class LocalRuntimeSessionAuthMiddleware
 implements LocalRuntimeRequestHandler, LocalRuntimeStreamRequestHandler {
   constructor(
-    private readonly sessions: LocalRuntimeSessionStore,
+    private readonly sessions: Pick<LocalRuntimeSessionStore, "verifySession">,
     private readonly inner: LocalRuntimeRequestHandler,
   ) {}
 

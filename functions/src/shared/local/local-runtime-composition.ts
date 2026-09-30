@@ -56,11 +56,10 @@ import {type LocalRuntimeRequestHandler} from "./local-runtime-http-server.js";
 import {LocalAssistantHttpHandler} from "./local-assistant-http-handler.js";
 import {LocalRuntimeRequestRouter} from "./local-runtime-request-router.js";
 import {LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
-import {LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
+import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 import {LocalRuntimeLoginHttpHandler} from "./local-runtime-login-http-handler.js";
 import {LocalRuntimeSetupHttpHandler} from "./local-runtime-setup-http-handler.js";
 import {type LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
-import {LocalRuntimeSessionAuthMiddleware} from "./local-runtime-session-auth-middleware.js";
 import {LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
 import {LocalRuntimeRealtimeTicketStore} from "./local-runtime-realtime-ticket-store.js";
 import {LocalRuntimeRealtimeTicketHttpHandler} from "./local-runtime-realtime-ticket-http-handler.js";
@@ -109,6 +108,7 @@ export type LocalRuntimeCompositionOptions = {
   fieldCipher: SensitiveFieldCipher;
   /** Prozessweit, im Entrypoint erzeugt — beide Setup-Wege teilen ihn. */
   setupCode: LocalRuntimeSetupCode;
+  sessions: LocalRuntimeSessionStore;
   isLicenseActive?: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;
   activeLicenseActivation: () => RuntimeLicenseActivation | null;
@@ -184,7 +184,6 @@ export function createLocalRuntimeComposition(
   applicationLogger.info("local_runtime.workspace_activated", {
     teamId: options.workspace.teamId,
   });
-  const sessionStore = new LocalRuntimeSessionStore(options.database);
   const credentialStore = new LocalRuntimeAccessCredentialStore(options.database);
   const languageModelResolver = new CatalogGenkitLanguageModelResolver(
     new SQLiteLanguageModelCatalog(options.database, languageModelSecretStore),
@@ -198,7 +197,7 @@ export function createLocalRuntimeComposition(
       credentials: credentialStore,
       setupCode: options.setupCode,
     }),
-    new LocalRuntimeLoginHttpHandler(credentialStore, sessionStore),
+    new LocalRuntimeLoginHttpHandler(credentialStore, options.sessions),
     new LocalRuntimeRealtimeTicketHttpHandler(realtimeTicketStore),
     new LocalTaskRunHttpHandler(taskWorkflow, options.workspace.userId, applicationLogger, realtimeNotifier),
     new LocalPushDeviceHttpHandler(options.signedLicense, pushRelay),
@@ -248,7 +247,7 @@ export function createLocalRuntimeComposition(
     ),
   ]);
   return {
-    requestHandler: new LocalRuntimeSessionAuthMiddleware(sessionStore, router),
+    requestHandler: router,
     taskRunWorker,
     taskTriggerWorker: new PollingTaskTriggerWorker(
       () => runDueTaskTriggers(new Date(), {
