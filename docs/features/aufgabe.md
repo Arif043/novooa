@@ -51,6 +51,7 @@ referenzieren.
 | `readEmail` | E-Mail lesen | Liest Absender, Betreff und Inhalt eines Events | Microsoft Graph implementiert |
 | `readChannelEvent` | Nachricht lesen | Liest E-Mail-, WhatsApp- oder SMS-Events | Implementiert |
 | `sendChannelMessage` | Nachricht senden | Sendet E-Mail, WhatsApp oder SMS | Microsoft-Graph-Antworten implementiert |
+| `notificationSend` | Push-Benachrichtigung senden | Sendet einen aufgelösten Text als Push-Benachrichtigung an alle Team-Mitglieder | Implementiert |
 | `humanApproval` | Freigabe | Haltet den Run bis zur menschlichen Entscheidung an | Implementiert |
 | `dialogInput` | Formulareingabe | Pausiert den Run und fragt typisierte Eingaben per Formular ab | Implementiert |
 | `mediaInput` | Bild anfordern | Pausiert den Run und fordert ein Bild an; Quelle wird während der Ausführung gewählt | Implementiert |
@@ -105,7 +106,20 @@ Die vollstaendigen Output-Slots dokumentiert
   Labels dar. Mit `#` öffnet sich eine Suche nach Workflow-Ausgabewerten und
   statisch erkennbaren Script-Variablen aus dem erreichbaren Vorgängerpfad.
   Persistiert bleibt der unveränderte Ausdruck `{{name}}`; die Label-
-  Darstellung ist reine UI.
+  Darstellung ist reine UI. Feste Nebenoutputs eines Bausteins (z.B.
+  `speichern4.created`) sind dort standardmäßig ausgeblendet und erst über
+  den Filter „Feste Felder" einblendbar — die Suche bleibt für den
+  Normalfall (primäre Ausgabenamen, Variablen) einfach.
+- Feste Nebenoutputs sind auch im rechten Konfigurations-Overlay bewusst
+  anders gestaltet als der editierbare Ausgabename: outlined statt gefüllt,
+  gedämpfte statt Akzentfarbe, kein Stift-Icon — sie beschreiben feste
+  Argumente des Baustein-Typs, keine vom Nutzer gewählten Namen. Antippen
+  kopiert die fertige Referenz (`{{ausgabename.feld}}`) in die
+  Zwischenablage, statt eine Umbenennung anzubieten. Sie erscheinen nie auf
+  der Arbeitsfläche selbst, nur im Overlay (`NodeOutputChips`). Einzige
+  Quelle dafür, welche Felder ein Baustein-Typ hat:
+  `domain/entities/workflow_node_outputs.dart` — genutzt von diesem Overlay
+  und von der `#`-Suche gleichermaßen.
 - Anlass statt technischer Konfiguration.
 - Inline-Vorschau, wo sie den naechsten Schritt verstaendlicher macht.
 - Sofortiges Feedback bei Mutationen.

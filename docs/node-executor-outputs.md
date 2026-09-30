@@ -12,10 +12,11 @@ fachlichen Rückgabewert stellt ihn unter `value` bereit. Reine
 Seiteneffekt-Bausteine ohne fachlichen Rückgabewert (aktuell:
 `notificationSend`) liefern ein leeres `outputs`-Objekt — der Baustein
 bekommt dafür clientseitig auch keinen Ausgabenamen (siehe
-`task_builder_cubit.dart`, `_primitivesWithoutOutput`). Kanten bestimmen
-weiterhin nur Reihenfolge und Verzweigung; ein Executor erhaelt die
-`value`-Outputs seiner direkten Vorgaenger, nicht mehr den letzten Textwert
-eines Runs.
+`WorkflowPrimitive.hasNoOutput` in `workflow_node.dart`, angewendet sowohl
+beim Anlegen in `task_builder_cubit.dart` als auch selbstheilend beim Laden
+in `task_document_mapper.dart`). Kanten bestimmen weiterhin nur Reihenfolge
+und Verzweigung; ein Executor erhaelt die `value`-Outputs seiner direkten
+Vorgaenger, nicht mehr den letzten Textwert eines Runs.
 
 `media` und `file` enthalten eine fachliche Referenz mit `fileId`, `versionId`,
 `displayName`, `contentType` und `sizeBytes`. Der konkrete Speicherort bleibt
@@ -107,6 +108,15 @@ Hat der Knoten den Ausgabenamen `bericht`, koennen Templates beispielsweise
 `toolCall` und `validation` sind im Frontend und im Workflow-Enum vorhanden,
 aber nicht im Executor-Registry registriert. Sie werden deshalb derzeit
 uebersprungen und liefern keine Outputs.
+
+Der Flutter-Client kennt dieselben Nebenoutput-Namen clientseitig noch einmal
+— nicht dupliziert, sondern aus einer einzigen Quelle:
+`lib/features/task_builder/domain/entities/workflow_node_outputs.dart`.
+Sowohl die Anzeige im Konfigurations-Overlay (`NodeOutputChips`) als auch die
+`#`-Suche (`templateExpressionSuggestions`) fragen dort ab, welche Felder ein
+Baustein-Typ hat — ändert sich diese Tabelle hier, muss diese Datei
+mitgezogen werden (siehe [`features/aufgabe.md`](./features/aufgabe.md)
+§ UI-Prinzipien).
 
 ## Verwandt
 
