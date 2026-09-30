@@ -1,7 +1,15 @@
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
+import '../../domain/entities/workflow_node_outputs.dart';
 import 'condition_value_sources.dart';
+
+/// Ob ein Vorschlag ein primärer Ausgabename/eine Script-Variable ist
+/// (immer sichtbar) oder ein fester Nebenoutput (z.B. `speichern4.created`)
+/// — standardmäßig ausgeblendet, über den Filter „Feste Felder" in
+/// `_TemplateExpressionPicker` einblendbar. Hält die #-Suche standardmäßig
+/// einfach, ohne die Nebenoutputs unerreichbar zu machen.
+enum TemplateExpressionSuggestionKind { primary, variable, secondary }
 
 /// Ein im Editor auswählbarer Verweis. Gespeichert wird ausschließlich
 /// [expression]; [label] dient nur der Darstellung.
@@ -9,10 +17,12 @@ class TemplateExpressionSuggestion {
   const TemplateExpressionSuggestion({
     required this.expression,
     required this.label,
+    this.kind = TemplateExpressionSuggestionKind.primary,
   });
 
   final String expression;
   final String label;
+  final TemplateExpressionSuggestionKind kind;
 }
 
 List<TemplateExpressionSuggestion> templateExpressionSuggestions({
@@ -32,16 +42,39 @@ List<TemplateExpressionSuggestion> templateExpressionSuggestions({
           TemplateExpressionSuggestion(
             expression: '{{$variable}}',
             label: '${node.title} · Variable $variable',
+            kind: TemplateExpressionSuggestionKind.variable,
           ),
         );
       }
     }
+    suggestions.addAll(_secondaryOutputSuggestions(node));
   }
   final unique = <String, TemplateExpressionSuggestion>{};
   for (final suggestion in suggestions) {
     unique.putIfAbsent(suggestion.expression, () => suggestion);
   }
   return unique.values.toList(growable: false);
+}
+
+/// Feste Nebenoutputs eines Bausteins (z.B. `speichern4.created`) als
+/// eigene, per Filter ausblendbare Vorschläge. Bausteine mit flachen
+/// Outputs (strukturierte Prompt-Ausgabe, Dialogeingabe) haben keine —
+/// ihre Felder sind bereits primäre Vorschläge über [conditionValueSources].
+Iterable<TemplateExpressionSuggestion> _secondaryOutputSuggestions(
+  WorkflowNode node,
+) {
+  final config = node.config;
+  if (hasFlatOutputFields(config)) return const [];
+  final outputName = node.outputName.trim();
+  if (outputName.isEmpty) return const [];
+  return [
+    for (final field in secondaryOutputFieldsOf(config))
+      TemplateExpressionSuggestion(
+        expression: '{{$outputName.$field}}',
+        label: '${node.title} · $outputName.$field',
+        kind: TemplateExpressionSuggestionKind.secondary,
+      ),
+  ];
 }
 
 Iterable<String> _scriptVariables(String script) sync* {

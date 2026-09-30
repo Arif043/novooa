@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 
 import '../../../../core/theme/app_spacing.dart';
-import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
+import '../../domain/entities/workflow_node_outputs.dart';
 
 /// Zeigt die **festen Nebenoutputs** eines Bausteins (z.B. `sender`,
 /// `created`) — bewusst anders gestaltet als der editierbare Ausgabename
@@ -16,7 +16,10 @@ import '../../domain/entities/workflow_node.dart';
 ///
 /// `value` wird hier nie angezeigt: Der primäre Wert ist bereits über den
 /// Ausgabenamen-Chip darüber sichtbar (`{{ausgabename}}`); ihn hier erneut
-/// als Nebenoutput zu listen wäre reine Redundanz.
+/// als Nebenoutput zu listen wäre reine Redundanz. Die fachliche Frage
+/// „welche Felder hat dieser Baustein-Typ" beantwortet ausschließlich
+/// `workflow_node_outputs.dart` (Domain) — dieselbe Quelle, die auch die
+/// #-Suche (`templateExpressionSuggestions`) nutzt.
 class NodeOutputChips extends StatelessWidget {
   const NodeOutputChips({super.key, required this.node});
 
@@ -24,7 +27,7 @@ class NodeOutputChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fields = _secondaryFields(node);
+    final fields = _displayFields();
     if (fields.isEmpty) return const SizedBox.shrink();
     final colors = Theme.of(context).colorScheme;
     return Padding(
@@ -35,18 +38,14 @@ class NodeOutputChips extends StatelessWidget {
           spacing: AppSpacing.xs,
           runSpacing: AppSpacing.xs,
           children: [
-            for (final field in fields) _secondaryFieldChip(context, colors, field),
+            for (final field in fields) _fieldChip(context, colors, field),
           ],
         ),
       ),
     );
   }
 
-  Widget _secondaryFieldChip(
-    BuildContext context,
-    ColorScheme colors,
-    String field,
-  ) {
+  Widget _fieldChip(BuildContext context, ColorScheme colors, String field) {
     final expression = _expressionFor(field);
     return Tooltip(
       message: 'Antippen, um $expression zu kopieren',
@@ -72,113 +71,23 @@ class NodeOutputChips extends StatelessWidget {
     ).showSnackBar(SnackBar(content: Text('$expression kopiert.')));
   }
 
-  /// Feste Nebenoutputs ohne `value` — der primäre Wert ist bereits über
-  /// den Ausgabenamen-Chip erreichbar (siehe Klassendoku).
-  List<String> _secondaryFields(WorkflowNode node) {
-    return _outputNames(node).where((name) => name != 'value').toList();
+  /// Flache Felder (strukturierte Prompt-Ausgabe, Dialogeingabe) sind schon
+  /// primäre Outputs; alle anderen Bausteine zeigen ihre festen
+  /// Nebenoutputs (ohne `value`, siehe Klassendoku).
+  List<String> _displayFields() {
+    final config = node.config;
+    return hasFlatOutputFields(config)
+        ? flatOutputFieldsOf(config)
+        : secondaryOutputFieldsOf(config);
   }
 
-  /// Flache Felder (strukturierte Prompt-Ausgabe, Dialogeingabe) sind direkt
-  /// ohne Knotennamen erreichbar (`{{feld}}`); alle anderen Bausteine hängen
-  /// ihre Nebenoutputs unter ihrem Ausgabenamen ein (`{{ausgabename.feld}}`,
-  /// siehe `template-expression-resolver.ts`).
+  /// Flache Felder sind direkt ohne Knotennamen erreichbar (`{{feld}}`);
+  /// alle anderen Bausteine hängen ihre Nebenoutputs unter ihrem
+  /// Ausgabenamen ein (`{{ausgabename.feld}}`, siehe
+  /// `template-expression-resolver.ts`).
   String _expressionFor(String field) {
-    if (_hasFlatOutputs(node)) return '{{$field}}';
+    if (hasFlatOutputFields(node.config)) return '{{$field}}';
     final outputName = node.outputName.trim();
     return outputName.isEmpty ? '{{$field}}' : '{{$outputName.$field}}';
   }
-
-  bool _hasFlatOutputs(WorkflowNode node) {
-    final config = node.config;
-    if (config is DialogInputNodeConfig) return true;
-    return config is PromptNodeConfig &&
-        config.outputType == PromptOutputType.structured;
-  }
-
-  List<String> _outputNames(WorkflowNode node) {
-    final config = node.config;
-    return switch (config) {
-      PromptNodeConfig() => _promptOutputs(config),
-      ReadChannelEventNodeConfig() => _eventOutputs(config),
-      ReadEmailNodeConfig() => _emailOutputs,
-      WriteFileNodeConfig() => _writeFileOutputs,
-      SendChannelMessageNodeConfig() => _sendMessageOutputs,
-      StringInputNodeConfig() ||
-      ScriptNodeConfig() ||
-      ConditionalNodeConfig() ||
-      IterativeRefinementNodeConfig() ||
-      ReadFileNodeConfig() ||
-      HumanApprovalNodeConfig() => const ['value'],
-      DialogInputNodeConfig() => _dialogInputOutputNames(config),
-      MediaInputNodeConfig() => _mediaInputOutputs,
-      ModelInferenceNodeConfig() => const ['value', 'modelId'],
-      ForEachNodeConfig() => const ['value'],
-      DocumentLookupNodeConfig() => const [
-        'value',
-        'found',
-        'record',
-        'message',
-      ],
-      SaveDocumentNodeConfig() => const [
-        'value',
-        'created',
-        'count',
-        'records',
-      ],
-      _ => const [],
-    };
-  }
-
-  List<String> _promptOutputs(PromptNodeConfig config) {
-    return switch (config.outputType) {
-      PromptOutputType.text => const ['value'],
-      PromptOutputType.decision => const ['value'],
-      // Jedes Feld ist ein eigenständiger, flacher Output ohne
-      // umschließenden Knotennamen — kein gemeinsamer `value`-Gesamtwert
-      // mehr adressierbar (siehe workflow_canvas_layout.dart).
-      PromptOutputType.structured => _structuredNames(config.structuredFields),
-      PromptOutputType.image => const ['value'],
-    };
-  }
-
-  List<String> _eventOutputs(ReadChannelEventNodeConfig config) {
-    if (config.kind == ChannelEventKind.email) return _emailOutputs;
-    return const ['value', 'sender', 'message', 'receivedAt'];
-  }
-
-  List<String> _structuredNames(List<StructuredOutputField> fields) {
-    return [
-      for (final field in fields)
-        if (field.name.trim().isNotEmpty) field.name.trim(),
-    ];
-  }
-
-  // Jedes Feld ist ein eigenständiger, flacher Output ohne umschließenden
-  // Knotennamen — kein gemeinsamer `value`-Gesamtwert mehr adressierbar
-  // (siehe workflow_canvas_layout.dart).
-  List<String> _dialogInputOutputNames(DialogInputNodeConfig config) {
-    return [
-      for (final field in config.fields)
-        if (field.name.trim().isNotEmpty) field.name.trim(),
-    ];
-  }
 }
-
-const _emailOutputs = ['value', 'sender', 'subject', 'message', 'receivedAt'];
-const _sendMessageOutputs = [
-  'value',
-  'recipient',
-  'channelId',
-  'providerMessageId',
-];
-const _writeFileOutputs = [
-  'value',
-  'fileId',
-  'versionId',
-  'displayName',
-  'contentType',
-  'sizeBytes',
-  'folderId',
-  'isNewFile',
-];
-const _mediaInputOutputs = ['value'];

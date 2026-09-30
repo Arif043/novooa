@@ -34,6 +34,61 @@ void main() {
       '{{anzahl}}',
     ]);
   });
+
+  test(
+    'bietet feste Nebenoutputs als eigene, als "secondary" markierte '
+    'Vorschläge unter dem Ausgabenamen an',
+    () {
+      final graph = WorkflowGraph(
+        nodes: [_saveDocumentNode(), _node('nachfolger')],
+        edges: [_edge('speichern', 'nachfolger')],
+      );
+
+      final suggestions = templateExpressionSuggestions(
+        graph: graph,
+        targetNodeId: const NodeId('nachfolger'),
+      );
+
+      final secondary = suggestions.where(
+        (s) => s.kind == TemplateExpressionSuggestionKind.secondary,
+      );
+      expect(secondary.map((s) => s.expression), [
+        '{{speichern.created}}',
+        '{{speichern.count}}',
+        '{{speichern.records}}',
+      ]);
+      expect(
+        suggestions
+            .firstWhere((s) => s.expression == '{{speichern}}')
+            .kind,
+        TemplateExpressionSuggestionKind.primary,
+      );
+    },
+  );
+
+  test(
+    'strukturierte Prompt-Felder erzeugen keine zusätzlichen '
+    'Nebenoutput-Vorschläge — sie sind schon primär',
+    () {
+      final graph = WorkflowGraph(
+        nodes: [_structuredPromptNode(), _node('nachfolger')],
+        edges: [_edge('prompt', 'nachfolger')],
+      );
+
+      final suggestions = templateExpressionSuggestions(
+        graph: graph,
+        targetNodeId: const NodeId('nachfolger'),
+      );
+
+      expect(
+        suggestions.where(
+          (s) => s.kind == TemplateExpressionSuggestionKind.secondary,
+        ),
+        isEmpty,
+      );
+      expect(suggestions.map((s) => s.expression), contains('{{titel}}'));
+    },
+  );
 }
 
 WorkflowNode _node(String id) => WorkflowNode(
@@ -54,3 +109,27 @@ WorkflowNode _scriptNode() => const WorkflowNode(
 
 WorkflowEdge _edge(String from, String to) =>
     WorkflowEdge(from: NodeId(from), to: NodeId(to));
+
+WorkflowNode _saveDocumentNode() => const WorkflowNode(
+  id: NodeId('speichern'),
+  title: 'Datensatz speichern',
+  description: '',
+  outputName: 'speichern',
+  config: SaveDocumentNodeConfig(
+    collectionName: 'kunden',
+    filters: [],
+    fields: [DocumentFieldAssignment(field: 'name', value: '')],
+  ),
+);
+
+WorkflowNode _structuredPromptNode() => const WorkflowNode(
+  id: NodeId('prompt'),
+  title: 'Prompt',
+  description: '',
+  config: PromptNodeConfig(
+    instruction: '',
+    outputType: PromptOutputType.structured,
+    choices: [],
+    structuredFields: [StructuredOutputField(name: 'titel', description: '')],
+  ),
+);
