@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
@@ -25,30 +26,92 @@ void main() {
     expect(find.text('isNewFile'), findsOneWidget);
   });
 
-  testWidgets('zeigt für Entscheidungen den primären Output', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_host(_decisionPromptNode()));
+  testWidgets(
+    'zeigt für Entscheidungen keine Nebenoutputs — value ist bereits über '
+    'den Ausgabenamen erreichbar',
+    (tester) async {
+      await tester.pumpWidget(_host(_decisionPromptNode()));
 
-    expect(find.text('value'), findsOneWidget);
-    expect(find.text('text'), findsNothing);
-  });
+      expect(find.text('value'), findsNothing);
+      expect(find.byType(ActionChip), findsNothing);
+    },
+  );
 
-  testWidgets('zeigt für Bild-Prompts ausschließlich den primären Output', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_host(_imagePromptNode()));
+  testWidgets(
+    'zeigt für Bild-Prompts keine Nebenoutputs — value ist bereits über '
+    'den Ausgabenamen erreichbar',
+    (tester) async {
+      await tester.pumpWidget(_host(_imagePromptNode()));
 
-    expect(find.text('value'), findsOneWidget);
-    expect(find.text('text'), findsNothing);
-  });
+      expect(find.text('value'), findsNothing);
+      expect(find.byType(ActionChip), findsNothing);
+    },
+  );
 
-  testWidgets('zeigt die Modell-Inferenz-Ausgaben', (tester) async {
-    await tester.pumpWidget(_host(_modelInferenceNode()));
+  testWidgets(
+    'zeigt bei der Modell-Inferenz nur den Nebenoutput modelId, nicht value',
+    (tester) async {
+      await tester.pumpWidget(_host(_modelInferenceNode()));
 
-    expect(find.text('value'), findsOneWidget);
-    expect(find.text('modelId'), findsOneWidget);
-  });
+      expect(find.text('value'), findsNothing);
+      expect(find.text('modelId'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'kopiert die Dot-Pfad-Referenz eines Nebenoutputs beim Antippen',
+    (tester) async {
+      final copied = <String>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied.add((call.arguments as Map)['text'] as String);
+          }
+          return null;
+        },
+      );
+      addTearDown(() {
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        );
+      });
+
+      await tester.pumpWidget(_host(_saveDocumentNode(outputName: 'speichern1')));
+      await tester.tap(find.text('created'));
+
+      expect(copied, ['{{speichern1.created}}']);
+    },
+  );
+
+  testWidgets(
+    'kopiert die flache Referenz eines strukturierten Feldes ohne '
+    'Knotennamen beim Antippen',
+    (tester) async {
+      final copied = <String>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copied.add((call.arguments as Map)['text'] as String);
+          }
+          return null;
+        },
+      );
+      addTearDown(() {
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        );
+      });
+
+      await tester.pumpWidget(_host(_structuredPromptNode()));
+      await tester.tap(find.text('titel'));
+
+      expect(copied, ['{{titel}}']);
+    },
+  );
 }
 
 Widget _host(WorkflowNode node) {
@@ -116,5 +179,19 @@ WorkflowNode _modelInferenceNode() {
     title: 'Modell ausführen',
     description: '',
     config: const ModelInferenceNodeConfig(modelId: 'mobilenet-v3'),
+  );
+}
+
+WorkflowNode _saveDocumentNode({required String outputName}) {
+  return WorkflowNode(
+    id: const NodeId('save'),
+    title: 'Datensatz speichern',
+    description: '',
+    outputName: outputName,
+    config: const SaveDocumentNodeConfig(
+      collectionName: 'kunden',
+      filters: [],
+      fields: [DocumentFieldAssignment(field: 'name', value: '')],
+    ),
   );
 }
