@@ -5,6 +5,8 @@ import 'package:syscat2/features/language_models/domain/entities/language_model.
 import 'package:syscat2/features/language_models/domain/entities/language_model_connection.dart';
 import 'package:syscat2/features/language_models/presentation/cubits/language_model_connections_cubit.dart';
 
+import 'language_model_provider_logo.dart';
+
 /// Vollseite (Slide-in via `CupertinoPageRoute`) mit den Modellen eines
 /// verbundenen Anbieters, inkl. Möglichkeit die Verbindung zu entfernen.
 /// Nutzt ein normales Material-`Scaffold` statt `CupertinoPageScaffold`, um
@@ -36,7 +38,7 @@ class LanguageModelConnectionDetailPage extends StatelessWidget {
           ),
         ],
       ),
-      body: models.isEmpty ? _emptyState(context) : _modelList(),
+      body: models.isEmpty ? _emptyState(context) : _modelList(context),
     );
   }
 
@@ -53,7 +55,7 @@ class LanguageModelConnectionDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _modelList() {
+  Widget _modelList(BuildContext context) {
     return ListView.builder(
       padding: const EdgeInsets.all(AppSpacing.lg),
       itemCount: models.length,
@@ -61,7 +63,11 @@ class LanguageModelConnectionDetailPage extends StatelessWidget {
         final model = models[index];
         return ListTile(
           contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.memory_outlined),
+          leading: providerLogo(
+            context,
+            provider: connection.provider,
+            size: AppSpacing.lg,
+          ),
           title: Text(model.name),
           subtitle: Text(model.modelId),
         );
