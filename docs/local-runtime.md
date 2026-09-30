@@ -203,7 +203,8 @@ beendet und Fastify vollständig geschlossen, bevor Worker und Datenbank stoppen
 
 Lizenz- und Session-Prüfung sind native `onRequest`-Hooks in einem gekapselten
 Fastify-API-Plugin: **Lizenz → Session → Controller**. Es gibt keine eigene
-Middleware-Kette. Die fachliche Composition liefert die Controller; deren
+Middleware-Kette. Der Server-Bootstrap registriert die Routen und Hooks;
+die fachliche Composition erzeugt und verdrahtet die Controller. Deren
 aktuelle Instanz wird pro Anfrage aufgelöst, damit eine Aktivierung oder ein
 Workspace-Wechsel keine alten Abhängigkeiten zurücklässt.
 Login und Auth-Prüfung erhalten denselben prozessweiten

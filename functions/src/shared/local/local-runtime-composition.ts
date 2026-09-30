@@ -52,7 +52,6 @@ import {LocalTaskTriggerHttpHandler} from "../../features/scheduling/infrastruct
 import {PollingTaskTriggerWorker} from "../../features/scheduling/infrastructure/local/polling-task-trigger-worker.js";
 import {SQLiteTaskTriggerStore} from "../../features/scheduling/infrastructure/local/sqlite-task-trigger-store.js";
 import {createGenkitTaskWorkflow} from "../../features/task_execution/infrastructure/genkit/task-workflow.js";
-import {type FastifyInstance} from "fastify";
 import {LocalAssistantHttpHandler} from "./local-assistant-http-handler.js";
 import {LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
 import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
@@ -396,23 +395,3 @@ export type LocalRuntimeControllers = {
   files: LocalFileResourceHttpHandler;
   assistants: LocalAssistantHttpHandler;
 };
-
-export function registerLocalRuntimeRoutes(http: FastifyInstance, current: () => LocalRuntimeControllers): void {
-  LocalRuntimeSetupHttpHandler.registerRoutes(http, () => current().setup);
-  LocalRuntimeLoginHttpHandler.registerRoutes(http, () => current().login);
-  LocalRuntimeRealtimeTicketHttpHandler.registerRoutes(http, () => current().realtimeTickets);
-  LocalTaskRunHttpHandler.registerRoutes(http, () => current().taskRuns);
-  LocalPushDeviceHttpHandler.registerRoutes(http, () => current().pushDevices);
-  LocalMailRelayHttpHandler.registerRoutes(http, () => current().mailRelay);
-  LocalTaskDefinitionHttpHandler.registerRoutes(http, () => current().tasks);
-  LocalLanguageModelHttpHandler.registerRoutes(http, () => current().languageModels);
-  LocalLanguageModelDefaultsHttpHandler.registerRoutes(http, () => current().languageModelDefaults);
-  LocalDataHttpHandler.registerRoutes(http, () => current().data);
-  LocalModelCatalogHttpHandler.registerRoutes(http, () => current().modelCatalog);
-  LocalTaskActivityHttpHandler.registerRoutes(http, () => current().activities);
-  LocalApplicationLogHttpHandler.registerRoutes(http, () => current().logs);
-  LocalKnowledgeNoteHttpHandler.registerRoutes(http, () => current().knowledge);
-  LocalTaskTriggerHttpHandler.registerRoutes(http, () => current().triggers);
-  LocalFileResourceHttpHandler.registerRoutes(http, () => current().files);
-  LocalAssistantHttpHandler.registerRoutes(http, () => current().assistants);
-}
