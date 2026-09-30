@@ -108,7 +108,7 @@ export type LocalRuntimeCompositionOptions = {
   fieldCipher: SensitiveFieldCipher;
   /** Prozessweit, im Entrypoint erzeugt — beide Setup-Wege teilen ihn. */
   setupCode: LocalRuntimeSetupCode;
-  sessions: LocalRuntimeSessionStore;
+  sessions: Pick<LocalRuntimeSessionStore, "createSession">;
   isLicenseActive?: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;
   activeLicenseActivation: () => RuntimeLicenseActivation | null;

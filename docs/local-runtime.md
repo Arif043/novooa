@@ -188,7 +188,10 @@ Lizenz- und Session-Prüfung werden gemeinsam am HTTP-Server-Einstieg in
 `createLocalRuntimeAccessPipeline` verdrahtet: **Lizenz → Session → Anwendung**.
 Die fachliche Composition enthält nur die API-Handler, keine versteckte
 Auth-Middleware. Login und Auth-Prüfung erhalten denselben prozessweiten
-Session-Store per Dependency Injection. Die Lizenz-Middleware behandelt
+Session-Store per Dependency Injection, aber nur mit der jeweils benötigten
+Fähigkeit: Login erhält `createSession`, Auth erhält `verifySession`.
+Die Lizenz-Middleware kennt die Anwendung nicht, sondern nur einen
+Aktivierungs-Callback und den nächsten Request-Handler. Die Lizenz-Middleware behandelt
 Status, Aktivierung und Freigabe vor der Session-Prüfung; Login und Setup
 überspringen nur die Session-Prüfung, nicht die Lizenzprüfung. Healthcheck,
 CORS und statische Dateien bleiben im HTTP-Server, WebSockets sind separat

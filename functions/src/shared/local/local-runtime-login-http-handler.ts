@@ -16,8 +16,8 @@ import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
  */
 export class LocalRuntimeLoginHttpHandler implements LocalRuntimeRequestHandler {
   constructor(
-    private readonly credentials: LocalRuntimeAccessCredentialStore,
-    private readonly sessions: LocalRuntimeSessionStore,
+    private readonly credentials: Pick<LocalRuntimeAccessCredentialStore, "verifyPassword">,
+    private readonly sessions: Pick<LocalRuntimeSessionStore, "createSession">,
   ) {}
 
   async handle(request: LocalRuntimeRequest): Promise<LocalRuntimeResponse | null> {

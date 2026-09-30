@@ -16,7 +16,7 @@ export type LocalRuntimeApplicationOptions = {
   runtimeRoot: string;
   fieldCipher: SensitiveFieldCipher;
   setupCode: LocalRuntimeSetupCode;
-  sessions: LocalRuntimeSessionStore;
+  sessions: Pick<LocalRuntimeSessionStore, "createSession">;
   isLicenseActive: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;
   activeLicenseActivation: () => RuntimeLicenseActivation | null;

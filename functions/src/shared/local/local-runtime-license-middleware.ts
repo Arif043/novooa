@@ -4,9 +4,9 @@ import {type LocalRuntimeRequest, type LocalRuntimeRequestHandler, type LocalRun
 export class RuntimeLicenseMiddleware implements LocalRuntimeRequestHandler {
   constructor(
     private readonly licenseService: RuntimeLicenseService,
-    private readonly application: {
-      activate(context: Awaited<ReturnType<RuntimeLicenseService["activate"]>>): Promise<void>;
-    },
+    private readonly activateApplication: (
+      context: Awaited<ReturnType<RuntimeLicenseService["activate"]>>,
+    ) => Promise<void>,
     private readonly inner: LocalRuntimeRequestHandler,
   ) {}
 
@@ -21,7 +21,7 @@ export class RuntimeLicenseMiddleware implements LocalRuntimeRequestHandler {
   private async activate(body: unknown): Promise<LocalRuntimeResponse> {
     try {
       const context = await this.licenseService.activate(activationFrom(body));
-      await this.application.activate(context);
+      await this.activateApplication(context);
       return {body: {status: "active", expiresAt: context.expiresAt, name: context.licenseName}, statusCode: 200};
     } catch { return {body: {error: "Die Runtime konnte nicht aktiviert werden."}, statusCode: 401}; }
   }

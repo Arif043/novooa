@@ -21,5 +21,7 @@ export function createLocalRuntimeAccessPipeline(
   application: RuntimeApplication,
 ): LocalRuntimeRequestHandler {
   const authenticatedApplication = new LocalRuntimeSessionAuthMiddleware(sessions, application);
-  return new RuntimeLicenseMiddleware(licenses, application, authenticatedApplication);
+  return new RuntimeLicenseMiddleware(
+    licenses, (context) => application.activate(context), authenticatedApplication,
+  );
 }
