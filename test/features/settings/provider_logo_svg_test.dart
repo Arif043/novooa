@@ -3,8 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // Deckt genau die reale Rendering-Kette ab, die
-// `ai_model_settings_tab.dart`s `_providerLogo` für `xAi`/`openAiCompatible`
-// nutzt: `SvgPicture.asset` gegen die tatsächlich gebündelten Dateien, mit
+// `language_model_provider_logo.dart`s `providerLogo` für
+// `xAi`/`openAiCompatible` nutzt: `SvgPicture.asset` gegen die tatsächlich
+// gebündelten Dateien, mit
 // eingefärbtem `currentColor` und einem `errorBuilder`-Fallback. Prüft
 // direkt, dass die Assets echte, gültige SVGs sind — nicht der historische
 // 14-Byte-„404: Not Found"-Platzhalter.

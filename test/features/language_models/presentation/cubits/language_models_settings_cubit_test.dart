@@ -6,6 +6,7 @@ import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
+import 'package:syscat2/features/language_models/domain/entities/language_model_connection.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_connection_draft.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
@@ -93,6 +94,11 @@ class _Connections implements LanguageModelConnectionRepository {
   Future<void> connectLanguageModels(
     LanguageModelConnectionDraft value,
   ) async => draft = value;
+  @override
+  Stream<List<LanguageModelConnection>> watchConnections(TeamId teamId) =>
+      const Stream.empty();
+  @override
+  Future<void> removeConnection(TeamId teamId, String connectionId) async {}
 }
 
 class _Models implements LanguageModelRepository {

@@ -17,6 +17,18 @@ enum LanguageModelProvider {
   final String? defaultBaseUrl;
 
   bool get requiresCustomBaseUrl => this == openAiCompatible;
+
+  /// Anbieter mit genau einem festen Endpunkt — im Gegensatz zu
+  /// [openAiCompatible], das mehrfach mit unterschiedlichen Endpunkten
+  /// verbunden werden kann und daher im Dropdown immer wählbar bleibt.
+  bool get isDirectProvider => this != openAiCompatible;
+
+  static LanguageModelProvider fromId(String id) {
+    return LanguageModelProvider.values.firstWhere(
+      (provider) => provider.id == id,
+      orElse: () => throw FormatException('Unbekannter Anbieter: $id'),
+    );
+  }
 }
 
 class LanguageModelDraft {

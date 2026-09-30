@@ -14,6 +14,7 @@ import {
   type LocalRuntimeResponse,
 } from "../../../../shared/local/local-runtime-http-server.js";
 import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
+import {routeMatch} from "../../../../shared/local/local-runtime-route.js";
 
 export class LocalLanguageModelHttpHandler implements LocalRuntimeRequestHandler {
   constructor(
@@ -27,6 +28,11 @@ export class LocalLanguageModelHttpHandler implements LocalRuntimeRequestHandler
     if (request.url === "/v1/language-model-connections" && request.method === "POST") {
       return this.connect(request.body);
     }
+    if (request.url === "/v1/language-model-connections" && request.method === "GET") {
+      return {body: {items: await this.store.listConnections(this.teamId)}, statusCode: 200};
+    }
+    const removeConnection = routeMatch(request, "DELETE", "/v1/language-model-connections/:connectionId");
+    if (removeConnection) return this.deleteConnection(removeConnection.params.connectionId);
     if (request.url !== "/v1/language-models") return null;
     if (request.method === "GET") return {body: {items: await this.store.list(this.teamId)}, statusCode: 200};
     if (request.method !== "POST") return null;
@@ -40,6 +46,12 @@ export class LocalLanguageModelHttpHandler implements LocalRuntimeRequestHandler
       }
       throw error;
     }
+  }
+
+  private async deleteConnection(connectionId: string): Promise<LocalRuntimeResponse> {
+    await this.store.deleteConnection(this.teamId, connectionId);
+    this.notifier.publish("language-models");
+    return {body: {}, statusCode: 200};
   }
 
   private async connect(body: unknown): Promise<LocalRuntimeResponse> {

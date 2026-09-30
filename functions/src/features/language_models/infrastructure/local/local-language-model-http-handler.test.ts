@@ -130,6 +130,74 @@ test("reads model names from Ollama's native tags response", async () => {
   assert.deepEqual(models.map((model) => model.modelId), ["gemma4:e2b"]);
 });
 
+test("lists connected providers", async () => {
+  const database = new SqliteLocalSqlDatabase(":memory:");
+  await createTables(database);
+  const handler = new LocalLanguageModelHttpHandler(
+    new SQLiteLanguageModelConfigurationStore(database, new EncryptedSQLiteLanguageModelSecretStore(
+      database, new CredentialCipher(randomBytes(32).toString("base64")),
+    )),
+    "team-1",
+    new LocalRuntimeRealtimeNotifier(),
+    {discover: async () => discoveredModels()},
+  );
+  await handler.handle({
+    body: {provider: "googleAi", apiKey: "provider-api-key"},
+    method: "POST",
+    url: "/v1/language-model-connections",
+  });
+
+  const response = await handler.handle({body: {}, method: "GET", url: "/v1/language-model-connections"});
+
+  assert.equal(response?.statusCode, 200);
+  assert.deepEqual(
+    (response?.body as {items: Array<{name: string; provider: string}>}).items.map(
+      (connection) => ({name: connection.name, provider: connection.provider}),
+    ),
+    [{name: "Google AI", provider: "googleAi"}],
+  );
+  database.close();
+});
+
+test("removes a connection together with its models and their secret", async () => {
+  const database = new SqliteLocalSqlDatabase(":memory:");
+  await createTables(database);
+  const secrets = new EncryptedSQLiteLanguageModelSecretStore(
+    database, new CredentialCipher(randomBytes(32).toString("base64")),
+  );
+  const notifier = new LocalRuntimeRealtimeNotifier();
+  const events: string[] = [];
+  notifier.subscribe("language-models", {send: () => events.push("language-models")});
+  const handler = new LocalLanguageModelHttpHandler(
+    new SQLiteLanguageModelConfigurationStore(database, secrets),
+    "team-1",
+    notifier,
+    {discover: async () => discoveredModels()},
+  );
+  const connected = await handler.handle({
+    body: {provider: "googleAi", apiKey: "provider-api-key"},
+    method: "POST",
+    url: "/v1/language-model-connections",
+  });
+  const connectionId = (connected?.body as {items: Array<{connectionId: string}>}).items[0].connectionId;
+  const secretRef = (await database.get<{secret_ref: string}>(
+    "SELECT secret_ref FROM language_model_connections WHERE id = ?", [connectionId],
+  ))?.secret_ref ?? "";
+
+  const response = await handler.handle({
+    body: {}, method: "DELETE", url: `/v1/language-model-connections/${connectionId}`,
+  });
+  const remainingConnections = await database.all("SELECT id FROM language_model_connections");
+  const remainingModels = await database.all("SELECT id FROM language_models");
+
+  assert.equal(response?.statusCode, 200);
+  assert.deepEqual(remainingConnections, []);
+  assert.deepEqual(remainingModels, []);
+  assert.equal(await secrets.read(secretRef), null);
+  assert.ok(events.includes("language-models"));
+  database.close();
+});
+
 function discoveredModels(): DiscoveredLanguageModel[] {
   const capabilities = {textGeneration: true, imageInput: false, structuredOutput: true, toolCalling: false, imageGeneration: false};
   return [

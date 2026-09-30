@@ -3,6 +3,8 @@ import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local
 import {
   type LanguageModel,
   type LanguageModelCapabilities,
+  type LanguageModelConnection,
+  type LanguageModelProvider,
 } from "../../domain/entities/language-model.js";
 import {
   type LanguageModelConfigurationStore,
@@ -17,6 +19,17 @@ type ModelRow = SqlRow & {
   id: string;
   model_id: string;
   name: string;
+};
+
+type ConnectionRow = SqlRow & {
+  base_url: string | null;
+  id: string;
+  name: string;
+  provider: string;
+};
+
+type SecretRefRow = SqlRow & {
+  secret_ref: string;
 };
 
 export class SQLiteLanguageModelConfigurationStore
@@ -62,6 +75,39 @@ export class SQLiteLanguageModelConfigurationStore
       capabilities: model.capabilities,
     }));
   }
+
+  async listConnections(teamId: string): Promise<LanguageModelConnection[]> {
+    const rows = await this.database.all<ConnectionRow>(
+      `SELECT id, name, provider, base_url
+       FROM language_model_connections WHERE team_id = ? ORDER BY name COLLATE NOCASE`,
+      [teamId],
+    );
+    return rows.map((row) => connectionFromRow(teamId, row));
+  }
+
+  async deleteConnection(teamId: string, connectionId: string): Promise<void> {
+    const secretRef = await this.secretRefFor(teamId, connectionId);
+    if (secretRef === null) return;
+    await this.database.transaction(async () => {
+      await this.database.run(
+        `DELETE FROM language_models WHERE connection_id = ?`,
+        [connectionId],
+      );
+      await this.database.run(
+        `DELETE FROM language_model_connections WHERE id = ? AND team_id = ?`,
+        [connectionId, teamId],
+      );
+    });
+    await this.secrets.delete(secretRef);
+  }
+
+  private async secretRefFor(teamId: string, connectionId: string): Promise<string | null> {
+    const row = await this.database.get<SecretRefRow>(
+      `SELECT secret_ref FROM language_model_connections WHERE id = ? AND team_id = ?`,
+      [connectionId, teamId],
+    );
+    return row?.secret_ref ?? null;
+  }
 }
 
 function connectionSql(): string {
@@ -101,6 +147,16 @@ function modelFromRow(teamId: string, row: ModelRow): LanguageModel {
     name: row.name,
     modelId: row.model_id,
     capabilities: capabilitiesFrom(row.capabilities_json),
+  };
+}
+
+function connectionFromRow(teamId: string, row: ConnectionRow): LanguageModelConnection {
+  return {
+    id: row.id,
+    teamId,
+    name: row.name,
+    provider: row.provider as LanguageModelProvider,
+    baseUrl: row.base_url ?? undefined,
   };
 }
 

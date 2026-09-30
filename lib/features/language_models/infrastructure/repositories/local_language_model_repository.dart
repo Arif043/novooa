@@ -3,6 +3,7 @@ import 'package:syscat2/core/network/workspace_realtime_channel.dart';
 
 import '../../../files/domain/entities/team_id.dart';
 import '../../domain/entities/language_model.dart';
+import '../../domain/entities/language_model_connection.dart';
 import '../../domain/entities/language_model_connection_draft.dart';
 import '../../domain/entities/language_model_draft.dart';
 import '../../domain/repositories/language_model_connection_repository.dart';
@@ -43,6 +44,20 @@ class LocalLanguageModelRepository
     return watchWorkspaceChannel('language-models', _load, _channel);
   }
 
+  @override
+  Stream<List<LanguageModelConnection>> watchConnections(TeamId teamId) {
+    return watchWorkspaceChannel(
+      'language-models',
+      _loadConnections,
+      _channel,
+    );
+  }
+
+  @override
+  Future<void> removeConnection(TeamId teamId, String connectionId) async {
+    await _client.delete('/v1/language-model-connections/$connectionId');
+  }
+
   Future<List<LanguageModel>> _load() async {
     final response = await _client.get('/v1/language-models');
     final items = response['items'];
@@ -54,13 +69,19 @@ class LocalLanguageModelRepository
     return items.map(_modelFrom).toList(growable: false);
   }
 
-  LanguageModel _modelFrom(Object? value) {
-    if (value is! Map) {
-      throw const FormatException('Sprachmodell ist ungültig.');
+  Future<List<LanguageModelConnection>> _loadConnections() async {
+    final response = await _client.get('/v1/language-model-connections');
+    final items = response['items'];
+    if (items is! List) {
+      throw const FormatException(
+        'Anbieter-Verbindungen konnten nicht gelesen werden.',
+      );
     }
-    final model = {
-      for (final entry in value.entries) entry.key.toString(): entry.value,
-    };
+    return items.map(_connectionFrom).toList(growable: false);
+  }
+
+  LanguageModel _modelFrom(Object? value) {
+    final model = _asRecord(value, 'Sprachmodell');
     final capabilities = model['capabilities'];
     if (capabilities is! Map) {
       throw const FormatException('Sprachmodell ist ungültig.');
@@ -69,10 +90,26 @@ class LocalLanguageModelRepository
       id: _text(model, 'id'),
       name: _text(model, 'name'),
       modelId: _text(model, 'modelId'),
+      connectionId: model['connectionId'] as String?,
       supportsImageInput: capabilities['imageInput'] == true,
       supportsStructuredOutput: capabilities['structuredOutput'] == true,
       supportsImageGeneration: capabilities['imageGeneration'] == true,
     );
+  }
+
+  LanguageModelConnection _connectionFrom(Object? value) {
+    final connection = _asRecord(value, 'Anbieter-Verbindung');
+    return LanguageModelConnection(
+      id: _text(connection, 'id'),
+      name: _text(connection, 'name'),
+      provider: LanguageModelProvider.fromId(_text(connection, 'provider')),
+      baseUrl: connection['baseUrl'] as String?,
+    );
+  }
+
+  Map<String, Object?> _asRecord(Object? value, String label) {
+    if (value is! Map) throw FormatException('$label ist ungültig.');
+    return {for (final entry in value.entries) entry.key.toString(): entry.value};
   }
 
   String _text(Map<String, Object?> model, String field) {

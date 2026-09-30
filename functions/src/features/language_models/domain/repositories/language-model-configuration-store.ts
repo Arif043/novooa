@@ -21,4 +21,6 @@ export interface LanguageModelConfigurationStore {
   list(teamId: string): Promise<LanguageModel[]>;
   save(input: SaveLanguageModelConfiguration): Promise<LanguageModel>;
   saveConnection(input: SaveLanguageModelConnectionConfiguration): Promise<LanguageModel[]>;
+  listConnections(teamId: string): Promise<LanguageModelConnection[]>;
+  deleteConnection(teamId: string, connectionId: string): Promise<void>;
 }

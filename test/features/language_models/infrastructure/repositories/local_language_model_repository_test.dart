@@ -43,8 +43,34 @@ void main() {
       expect(client.postBody?['apiKey'], 'provider-api-key');
       expect(models.single.modelId, 'gpt-4.1-mini');
       expect(models.single.supportsStructuredOutput, isTrue);
+      expect(models.single.connectionId, 'connection-1');
     },
   );
+
+  test('lists connected providers through the runtime API', () async {
+    final client = _RecordingClient();
+    final repository = LocalLanguageModelRepository(client, _fakeChannel());
+
+    final connections = await repository
+        .watchConnections(const TeamId('team-1'))
+        .first;
+
+    expect(connections.single.id, 'connection-1');
+    expect(connections.single.name, 'Google AI');
+    expect(connections.single.provider, LanguageModelProvider.googleAi);
+  });
+
+  test('removes a connection through the runtime API', () async {
+    final client = _RecordingClient();
+    final repository = LocalLanguageModelRepository(client, _fakeChannel());
+
+    await repository.removeConnection(
+      const TeamId('team-1'),
+      'connection-1',
+    );
+
+    expect(client.deletePath, '/v1/language-model-connections/connection-1');
+  });
 
   test('connects a provider without selecting a model', () async {
     final client = _RecordingClient();
@@ -89,25 +115,39 @@ void main() {
 class _RecordingClient extends WorkspaceApiClient {
   String? postPath;
   Map<String, Object?>? postBody;
+  String? deletePath;
 
   @override
-  Future<Map<String, Object?>> delete(String path) async => const {};
+  Future<Map<String, Object?>> delete(String path) async {
+    deletePath = path;
+    return const {};
+  }
 
   @override
-  Future<Map<String, Object?>> get(String path) async => {
-    'items': [
-      {
-        'id': 'model-1',
-        'name': 'Schnelles Modell',
-        'modelId': 'gpt-4.1-mini',
-        'capabilities': {
-          'imageInput': false,
-          'structuredOutput': true,
-          'imageGeneration': false,
+  Future<Map<String, Object?>> get(String path) async {
+    if (path == '/v1/language-model-connections') {
+      return {
+        'items': [
+          {'id': 'connection-1', 'name': 'Google AI', 'provider': 'googleAi'},
+        ],
+      };
+    }
+    return {
+      'items': [
+        {
+          'id': 'model-1',
+          'connectionId': 'connection-1',
+          'name': 'Schnelles Modell',
+          'modelId': 'gpt-4.1-mini',
+          'capabilities': {
+            'imageInput': false,
+            'structuredOutput': true,
+            'imageGeneration': false,
+          },
         },
-      },
-    ],
-  };
+      ],
+    };
+  }
 
   @override
   Future<Map<String, Object?>> post(

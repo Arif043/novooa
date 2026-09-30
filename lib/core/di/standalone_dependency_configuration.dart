@@ -37,12 +37,15 @@ import '../../features/language_models/domain/repositories/language_model_reposi
 import '../../features/language_models/domain/repositories/language_model_connection_repository.dart';
 import '../../features/language_models/domain/repositories/language_model_defaults_repository.dart';
 import '../../features/language_models/domain/usecases/connect_language_models.dart';
+import '../../features/language_models/domain/usecases/remove_language_model_connection.dart';
+import '../../features/language_models/domain/usecases/watch_language_model_connections.dart';
 import '../../features/language_models/domain/usecases/watch_language_models.dart';
 import '../../features/language_models/domain/usecases/save_language_model.dart';
 import '../../features/language_models/domain/usecases/watch_language_model_defaults.dart';
 import '../../features/language_models/domain/usecases/save_language_model_defaults.dart';
 import '../../features/language_models/infrastructure/repositories/local_language_model_repository.dart';
 import '../../features/language_models/infrastructure/repositories/local_language_model_defaults_repository.dart';
+import '../../features/language_models/presentation/cubits/language_model_connections_cubit.dart';
 import '../../features/language_models/presentation/cubits/language_model_defaults_cubit.dart';
 import '../../features/language_models/presentation/cubits/language_models_settings_cubit.dart';
 import '../../features/machine_learning/domain/repositories/model_catalog_repository.dart';
@@ -275,6 +278,16 @@ Future<void> configureStandaloneDependencies(
       () => ConnectLanguageModels(locator<LanguageModelConnectionRepository>()),
     )
     ..registerLazySingleton(
+      () => WatchLanguageModelConnections(
+        locator<LanguageModelConnectionRepository>(),
+      ),
+    )
+    ..registerLazySingleton(
+      () => RemoveLanguageModelConnection(
+        locator<LanguageModelConnectionRepository>(),
+      ),
+    )
+    ..registerLazySingleton(
       () => WatchModelCatalogEntries(locator<ModelCatalogRepository>()),
     )
     ..registerLazySingleton(
@@ -361,6 +374,14 @@ Future<void> configureStandaloneDependencies(
         locator<GetCurrentTeamId>(),
         allowsKeylessLocalEndpoint: true,
         connectLanguageModels: locator<ConnectLanguageModels>(),
+      ),
+    )
+    ..registerFactory(
+      () => LanguageModelConnectionsCubit(
+        locator<AuthRepository>(),
+        locator<WatchLanguageModelConnections>(),
+        locator<RemoveLanguageModelConnection>(),
+        locator<GetCurrentTeamId>(),
       ),
     )
     ..registerFactory(
