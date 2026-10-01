@@ -17,18 +17,15 @@ void main() {
       expect(kind, RuntimeKind.standalone);
     });
 
-    test(
-      'ohne gespeicherte Wahl fällt der Start auf Cloud zurück — die '
-      'eigene Runtime bleibt über den Wechsel-Hinweis im Login-Formular '
-      'erreichbar',
-      () async {
-        final kind = await resolveStartupRuntimeKind(
-          store: _MemoryKindStore(null),
-        );
+    test('ohne gespeicherte Wahl fällt der Start auf Cloud zurück — die '
+        'eigene Runtime bleibt über den Wechsel-Hinweis im Login-Formular '
+        'erreichbar', () async {
+      final kind = await resolveStartupRuntimeKind(
+        store: _MemoryKindStore(null),
+      );
 
-        expect(kind, RuntimeKind.cloud);
-      },
-    );
+      expect(kind, RuntimeKind.cloud);
+    });
   });
 }
 

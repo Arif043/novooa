@@ -159,24 +159,39 @@ wird das Port-Mapping in `docker-compose.local.yaml` auf den Host beschränkt:
 
 Von **jedem** Client, über den regulären Port `8090` — auch für headless
 installierte Runtimes ohne Browser auf dem Host, auch aus dem LAN oder aus
-dem Browser. Die Runtime erzeugt beim Start einen **Kopplungscode** und
-schreibt ihn in ihr Log:
+dem Browser. Die Einrichtung hat zwei Schritte:
 
-```bash
-docker compose -f docker-compose.local.yaml logs runtime | grep setupCode
-```
+1. **Lizenz:** `POST /v1/license/activate {activationToken}` löst den
+   16-stelligen Lizenz-Token beim Lizenz-Gateway ein. Die Runtime speichert
+   dabei zusätzlich den SHA-256-Hash des Tokens in
+   `credentials/license-state.json`.
+2. **Passwort:** `POST /v1/setup {activationToken, password}` setzt das
+   Betreiber-Passwort — nur wenn der Token zum gespeicherten Hash passt
+   (sonst `403`). Die App schickt dafür den Token aus Schritt 1 mit; kennt
+   sie ihn nicht mehr (etwa nach einem Neustart zwischen den Schritten),
+   fragt das Passwort-Formular ihn zusätzlich ab.
 
-Diesen Code fragt die Einrichtung ab. Der Vertrauensanker ist **Besitz eines
-Geheimnisses**, nicht Netzwerkposition: `docker compose logs` zu lesen setzt
-zwar Host-Zugriff voraus, aber die Bedienung des Setups selbst ist davon
-unabhängig — jeder Client, dem jemand den Code vorliest, kann einrichten.
-Der Code verfällt nach erfolgreicher Einrichtung und bei jedem Neustart der
-Runtime; er wird nie gespeichert. Ist er verloren gegangen, erzeugt ein
-`docker compose restart runtime` einen neuen — derselbe Vertrauensanker
-(Host-Zugriff), den ein separater loopback-gebundener Rückfallweg ohnehin
-vorausgesetzt hätte; ein solcher existiert deshalb bewusst nicht.
+Der Vertrauensanker ist **Besitz des Lizenz-Tokens**, nicht Netzwerkposition:
+Wer die Runtime zufällig zuerst erreicht, kann ohne Token kein Passwort
+setzen. Ein zusätzlicher Code aus dem Start-Log ist deshalb nicht nötig.
+`GET /v1/setup` meldet `needsSetup`, `requiresLicenseToken` (nur im
+Entwicklungsmodus ohne echte Lizenz `false`) und die erreichbaren Adressen.
 `POST /v1/setup` funktioniert genau einmal und sperrt sich danach dauerhaft
 (`409`).
+
+Ein Token ist beim Gateway nur einmal einlösbar. Gibt man ihn auf einer
+bereits lizenzierten Runtime erneut ein — etwa weil die Antwort der ersten
+Aktivierung den Client nicht erreicht hat —, bestätigt die Runtime die
+bestehende Lizenz ohne Gateway-Anfrage; ein fremder Token wird mit `409`
+(`already_activated`) abgewiesen. Lizenzen, die vor Einführung des
+Token-Nachweises aktiviert wurden, haben keinen gespeicherten Hash: Für die
+Ersteinrichtung muss die Lizenz dann über `POST /v1/license/release`
+freigegeben und mit demselben Token erneut aktiviert werden.
+
+Fehlgeschlagene Aktivierungen meldet die Runtime unterscheidbar
+(`400 invalid_token`, `401 license_rejected`, `409 already_activated`,
+`502 gateway_unavailable`, `500 activation_failed`) und protokolliert sie als
+`local_runtime.license_activation_failed` im Container-Log.
 
 Nach dem Setzen des Passworts meldet sich der Client über
 `POST /v1/auth/login` an und erhält ein Session-Token, das er fortan als

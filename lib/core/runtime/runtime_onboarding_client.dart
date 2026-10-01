@@ -5,9 +5,16 @@ import 'runtime_endpoint.dart';
 
 /// Der Einrichtungsstand einer Runtime, gelesen über `GET /v1/setup`.
 class RuntimeSetupStatus {
-  const RuntimeSetupStatus({required this.needsSetup, required this.addresses});
+  const RuntimeSetupStatus({
+    required this.needsSetup,
+    required this.addresses,
+    this.requiresLicenseToken = true,
+  });
 
   final bool needsSetup;
+
+  /// Ob `/v1/setup` den Lizenz-Token als Nachweis verlangt.
+  final bool requiresLicenseToken;
 
   /// Adressen, unter denen die Runtime erreichbar ist — von ihr selbst
   /// ermittelt, damit niemand sie abtippen muss.
@@ -21,17 +28,17 @@ abstract interface class RuntimeOnboardingClient {
   Future<void> setPassword(
     RuntimeEndpoint endpoint,
     String password, {
-    String code,
+    String? activationToken,
   });
 }
 
-/// Spricht die Einrichtung über den **regulären** Runtime-Endpunkt an, nicht
-/// mehr über den loopback-gebundenen Setup-Port. Dadurch lässt sich auch
-/// eine headless installierte Runtime (VPS, NAS, Raspberry Pi) von jedem
-/// Client aus einrichten; abgesichert ist sie dort über den Kopplungscode
-/// aus dem Start-Log (siehe `docs/architecture/betriebsvarianten.md`).
 const _activationTimeout = Duration(seconds: 30);
 
+/// Spricht die Einrichtung über den regulären Runtime-Endpunkt an. Dadurch
+/// lässt sich auch eine headless installierte Runtime (VPS, NAS, Raspberry
+/// Pi) von jedem Client aus einrichten; das Betreiber-Passwort ist dabei
+/// über den Lizenz-Token abgesichert, mit dem die Runtime aktiviert wurde
+/// (siehe `docs/architecture/betriebsvarianten.md`).
 class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
   const HttpRuntimeOnboardingClient();
 
@@ -73,6 +80,7 @@ class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
       final response = await _clientFor(endpoint.apiUri).get('/v1/setup');
       return RuntimeSetupStatus(
         needsSetup: response['needsSetup'] == true,
+        requiresLicenseToken: response['requiresLicenseToken'] != false,
         addresses: _addressesFrom(response['addresses']),
       );
     } on WorkspaceConnectionException {
@@ -84,12 +92,12 @@ class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
   Future<void> setPassword(
     RuntimeEndpoint endpoint,
     String password, {
-    String code = '',
+    String? activationToken,
   }) async {
     try {
       await _clientFor(endpoint.apiUri).post('/v1/setup', {
         'password': password,
-        if (code.trim().isNotEmpty) 'code': code.trim(),
+        'activationToken': ?activationToken?.trim().toUpperCase(),
       });
     } on WorkspaceHttpException catch (error) {
       throw RuntimeOnboardingFailure(_setupFailureFor(error.statusCode));
@@ -100,9 +108,7 @@ class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
 
   String _setupFailureFor(int statusCode) {
     return switch (statusCode) {
-      403 =>
-        'Der Einrichtungscode stimmt nicht. Du findest ihn im Start-Log der '
-            'Runtime (docker compose logs).',
+      403 => 'Der Lizenz-Token passt nicht zu dieser Runtime.',
       409 => 'Für diese Runtime ist bereits ein Passwort gesetzt.',
       _ => 'Das Passwort konnte nicht gesetzt werden.',
     };

@@ -75,13 +75,16 @@ test("activation failures are reported with distinguishable status codes", async
   }
 });
 
-test("re-submitting a token on a licensed runtime confirms the active license", async (t) => {
+test("re-submitting the redeemed token confirms the license, a foreign token is refused", async (t) => {
   const fixture = accessFixture();
   t.after(() => fixture.http.close());
   await fixture.http.inject({method: "POST", url: "/v1/license/activate", payload: {activationToken: "valid"}});
-  const again = await fixture.http.inject({method: "POST", url: "/v1/license/activate", payload: {activationToken: "invalid"}});
+  const again = await fixture.http.inject({method: "POST", url: "/v1/license/activate", payload: {activationToken: "valid"}});
   assert.equal(again.statusCode, 200);
   assert.equal(again.json<{status: string}>().status, "active");
+  const foreign = await fixture.http.inject({method: "POST", url: "/v1/license/activate", payload: {activationToken: "invalid"}});
+  assert.equal(foreign.statusCode, 409);
+  assert.equal(foreign.json<{code: string}>().code, "already_activated");
 });
 
 function accessFixture() {
@@ -99,6 +102,8 @@ function accessFixture() {
     activeContext: () => active ? context : null,
     status: () => active ? {state: "active"} : {state: "notActivated"},
     signedActiveLicense: () => null, activeActivation: () => null,
+    matchesActivationToken: (token) => active && token === "valid",
+    requiresActivationTokenForSetup: () => true,
   };
   const verifiedTokens: string[] = [];
   const http = accessHttp(licenses, verifiedTokens, async () => { activatedWorkspaces += 1; });

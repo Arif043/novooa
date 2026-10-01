@@ -29,7 +29,6 @@ import {LocalRuntimeLoginHttpHandler} from "./local-runtime-login-http-handler.j
 import {attachLocalRuntimeRealtimeServer} from "./local-runtime-realtime-server.js";
 import {LocalRuntimeRealtimeTicketHttpHandler} from "./local-runtime-realtime-ticket-http-handler.js";
 import {LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
-import {LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
 import {LocalRuntimeSetupHttpHandler} from "./local-runtime-setup-http-handler.js";
 
 type BootstrapOptions = {
@@ -45,14 +44,13 @@ type BootstrapOptions = {
 export async function bootstrapLocalRuntime(options: BootstrapOptions): Promise<{
   server: Server; application: LocalRuntimeApplication; closeHttp: () => Promise<void>;
 }> {
-  const setupCode = new LocalRuntimeSetupCode();
   const sessions = new LocalRuntimeSessionStore(options.database);
-  const application = applicationFor(options, setupCode, sessions);
+  const application = applicationFor(options, sessions);
   try {
     const restored = await options.licenses.restore();
     if (restored !== null) await application.activate(restored);
     const http = await listenForRequests(options, application, sessions);
-    reportStarted(options.port, setupCode);
+    reportStarted(options.port);
     return {server: http.server, application, closeHttp: () => http.close()};
   } catch (error) {
     await application.stop();
@@ -61,11 +59,11 @@ export async function bootstrapLocalRuntime(options: BootstrapOptions): Promise<
 }
 
 function applicationFor(
-  options: BootstrapOptions, setupCode: LocalRuntimeSetupCode, sessions: LocalRuntimeSessionStore,
+  options: BootstrapOptions, sessions: LocalRuntimeSessionStore,
 ): LocalRuntimeApplication {
   const {database, runtimeRoot, fieldCipher, licenses} = options;
   return new LocalRuntimeApplication({
-    database, runtimeRoot, fieldCipher, setupCode, sessions,
+    database, runtimeRoot, fieldCipher, sessions, setupAuthorization: licenses,
     isLicenseActive: () => licenses.activeContext() !== null,
     signedLicense: () => licenses.signedActiveLicense(),
     activeLicenseActivation: () => licenses.activeActivation(),
@@ -132,8 +130,6 @@ function registerLocalRuntimeRoutes(http: FastifyInstance, current: () => LocalR
   LocalWorkspaceTransferHttpHandler.registerRoutes(http, () => current().transfer);
 }
 
-function reportStarted(port: number, setupCode: LocalRuntimeSetupCode): void {
-  // Host-Zugriff auf die Logs ist dieselbe Vertrauensbasis wie ein Neustart,
-  // der den prozessgebundenen Setup-Code ebenfalls neu erzeugt.
-  console.info(JSON.stringify({event: "local_runtime.started", port, setupCode: setupCode.current}));
+function reportStarted(port: number): void {
+  console.info(JSON.stringify({event: "local_runtime.started", port}));
 }

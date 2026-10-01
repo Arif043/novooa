@@ -50,6 +50,7 @@ export class FileRuntimeLicenseStore implements RuntimeLicenseStore {
       encryptedActivationSecret: this.cipher.encrypt(
         state.activationSecret, licenseSecretContext({...state.license.payload}),
       ),
+      activationTokenHash: state.activationTokenHash,
     });
     await writeDurableSecretFile(this.path, value);
   }
@@ -66,10 +67,17 @@ function stateFromJson(value: string, cipher: SensitiveFieldCipher): RuntimeLice
   return {
     license: state.license,
     activationSecret: cipher.decrypt(state.encryptedActivationSecret, licenseSecretContext({...state.license.payload})),
+    ...(state.activationTokenHash === undefined ? {} : {activationTokenHash: state.activationTokenHash}),
   };
 }
 
-function validatedState(value: string): {license: RuntimeLicenseActivation["license"]; encryptedActivationSecret: string} {
+type StoredLicenseState = {
+  license: RuntimeLicenseActivation["license"];
+  encryptedActivationSecret: string;
+  activationTokenHash?: string;
+};
+
+function validatedState(value: string): StoredLicenseState {
   try {
     const parsed = record(JSON.parse(value));
     const license = record(parsed.license);
@@ -77,6 +85,7 @@ function validatedState(value: string): {license: RuntimeLicenseActivation["lice
     return {
       encryptedActivationSecret: requiredString(parsed.encryptedActivationSecret),
       license: {signature: requiredString(license.signature), payload: licensePayload(payload)},
+      activationTokenHash: optionalHash(parsed.activationTokenHash),
     };
   } catch {
     throw new StoredRuntimeLicenseStateError();
@@ -104,5 +113,12 @@ function record(value: unknown): Record<string, unknown> {
 
 function requiredString(value: unknown): string {
   if (typeof value === "string" && value.trim().length > 0 && value.length <= 4000) return value;
+  throw new Error("Der lokale Lizenzstatus ist ungültig.");
+}
+
+/** Fehlt bei Lizenzen, die vor Einführung des Token-Nachweises aktiviert wurden. */
+function optionalHash(value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value === "string" && /^[0-9a-f]{64}$/.test(value)) return value;
   throw new Error("Der lokale Lizenzstatus ist ungültig.");
 }

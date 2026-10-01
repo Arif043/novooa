@@ -1,18 +1,22 @@
 import { type FastifyInstance, type FastifyReply, type FastifyRequest } from "fastify";
 import { LocalRuntimeAccessCredentialStore, RuntimeAccessCredentialAlreadySetError, } from "./local-runtime-access-credential-store.js";
-import { type LocalRuntimeSetupCode } from "./local-runtime-setup-code.js";
 import { reachableAddresses } from "./local-runtime-reachable-addresses.js";
+/** Nachweis für die Ersteinrichtung — bedient vom Lizenz-Service. */
+export interface SetupAuthorization {
+  requiresActivationTokenForSetup(): boolean;
+  matchesActivationToken(token: unknown): boolean;
+}
 export type LocalRuntimeSetupHttpHandlerOptions = {
   credentials: LocalRuntimeAccessCredentialStore;
-  setupCode: LocalRuntimeSetupCode;
+  authorization: SetupAuthorization;
 };
 /**
  * `GET`/`POST /v1/setup` — einmaliges Setzen des Betreiber-Passworts, über
- * den regulären Port. Verlangt dafür den Kopplungscode aus dem Start-Log
- * (`docker compose logs`) — der Vertrauensanker ist damit **Besitz eines
- * Geheimnisses**, nicht Netzwerkposition. Das erlaubt die Einrichtung einer
- * headless installierten Runtime (VPS, NAS, Raspberry Pi) von jedem Client
- * aus, ohne SSH-Portweiterleitung.
+ * den regulären Port. Verlangt dafür den Lizenz-Token, mit dem die Runtime
+ * aktiviert wurde: Der Vertrauensanker ist **Besitz eines Geheimnisses**,
+ * nicht Netzwerkposition. So kann niemand, der die Runtime zufällig zuerst
+ * erreicht, das Passwort setzen — und die Einrichtung einer headless
+ * installierten Runtime (VPS, NAS, Raspberry Pi) klappt von jedem Client aus.
  */
 export class LocalRuntimeSetupHttpHandler {
   static registerRoutes(http: FastifyInstance, current: () => LocalRuntimeSetupHttpHandler): void {
@@ -30,18 +34,16 @@ export class LocalRuntimeSetupHttpHandler {
     const needsSetup = !(await this.options.credentials.hasCredential());
     return reply.code(200).send({
       needsSetup,
+      requiresLicenseToken: this.options.authorization.requiresActivationTokenForSetup(),
       addresses: reachableAddresses(requestPortFrom(request.headers)),
     });
   }
   private async setup(body: unknown, reply: FastifyReply): Promise<FastifyReply> {
-    if (!this.options.setupCode.matches(codeFrom(body))) {
-      return reply.code(403).send({ error: "Der Einrichtungscode stimmt nicht." });
+    if (!this.isAuthorized(body)) {
+      return reply.code(403).send({ error: "Der Lizenz-Token passt nicht zu dieser Runtime." });
     }
     try {
       await this.options.credentials.setPassword(passwordFrom(body));
-      // Nach erfolgreicher Einrichtung hat der Code keinen Zweck mehr und
-      // wäre nur noch Angriffsfläche.
-      this.options.setupCode.consume();
       return reply.code(204).send();
     }
     catch (error) {
@@ -50,6 +52,11 @@ export class LocalRuntimeSetupHttpHandler {
       }
       return reply.code(400).send({ error: messageFrom(error) });
     }
+  }
+  private isAuthorized(body: unknown): boolean {
+    const authorization = this.options.authorization;
+    return !authorization.requiresActivationTokenForSetup() ||
+      authorization.matchesActivationToken(activationTokenFrom(body));
   }
 }
 /** Fällt auf den veröffentlichten Standardport zurück, wenn kein Port im
@@ -61,9 +68,9 @@ function requestPortFrom(headers: Readonly<Record<string, string | readonly stri
   return Number.isSafeInteger(port) && port > 0 ? port : defaultPublishedPort;
 }
 const defaultPublishedPort = 8090;
-function codeFrom(value: unknown): unknown {
+function activationTokenFrom(value: unknown): unknown {
   if (value !== null && typeof value === "object" && !Array.isArray(value)) {
-    return (value as Record<string, unknown>).code;
+    return (value as Record<string, unknown>).activationToken;
   }
   return undefined;
 }

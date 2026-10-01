@@ -7,7 +7,6 @@ import 'runtime_connection_state.dart';
 import 'runtime_endpoint.dart';
 import 'runtime_license_form.dart';
 import 'runtime_password_setup_form.dart';
-import 'runtime_setup_code_form.dart';
 
 class RuntimeConnectionPage extends StatelessWidget {
   const RuntimeConnectionPage({super.key});
@@ -46,33 +45,21 @@ class RuntimeConnectionPage extends StatelessWidget {
                       RuntimeConnectionNeedsLicense(
                         :final endpoint,
                         :final errorMessage,
-                      ) => RuntimeLicenseForm(
-                        endpoint: endpoint,
-                        errorMessage: errorMessage,
-                      ),
-                      RuntimeConnectionNeedsSetupCode(
-                        :final endpoint,
-                        :final errorMessage,
-                        :final addresses,
-                      ) => RuntimeSetupCodeForm(
-                        endpoint: endpoint,
-                        errorMessage: errorMessage,
-                        addresses: addresses,
-                      ),
-                      RuntimeConnectionNeedsPasswordSetup(
-                        :final endpoint,
-                        :final errorMessage,
-                      ) => RuntimePasswordSetupForm(
-                        endpoint: endpoint,
-                        errorMessage: errorMessage,
-                      ),
+                      ) =>
+                        RuntimeLicenseForm(
+                          endpoint: endpoint,
+                          errorMessage: errorMessage,
+                        ),
+                      RuntimeConnectionNeedsPasswordSetup() =>
+                        RuntimePasswordSetupForm(setup: state),
                       RuntimeConnectionUnreachable(
                         :final endpoint,
                         :final errorMessage,
-                      ) => _UnreachableNotice(
-                        endpoint: endpoint,
-                        errorMessage: errorMessage,
-                      ),
+                      ) =>
+                        _UnreachableNotice(
+                          endpoint: endpoint,
+                          errorMessage: errorMessage,
+                        ),
                       RuntimeConnectionReady() => const _ConnectionLoading(),
                     },
                   ),
@@ -288,7 +275,11 @@ class _PasswordFormState extends State<_PasswordForm> {
             errorText: widget.errorMessage,
             prefixIcon: const Icon(Icons.password_outlined),
             suffixIcon: IconButton(
-              icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+              icon: Icon(
+                _obscure
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+              ),
               onPressed: () => setState(() => _obscure = !_obscure),
             ),
           ),

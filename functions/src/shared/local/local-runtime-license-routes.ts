@@ -3,6 +3,7 @@ import {
   InvalidActivationTokenError,
   LicenseActivationRejectedError,
   LicenseGatewayUnavailableError,
+  RuntimeAlreadyActivatedError,
 } from "../../features/licensing/domain/entities/runtime-license-errors.js";
 import {type ActivateRuntime} from "../../features/licensing/domain/usecases/activate-runtime.js";
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
@@ -44,20 +45,20 @@ function rejectActivation(error: unknown, reply: FastifyReply): FastifyReply {
   return reply.code(failure.status).send({error: failure.error, code: failure.code});
 }
 
+const activationFailures: ReadonlyArray<[new (...args: never[]) => Error, ActivationFailure]> = [
+  [InvalidActivationTokenError, {status: 400, code: "invalid_token",
+    error: "Der Lizenz-Token hat ein ungültiges Format. Er besteht aus 16 Zeichen (A–Z ohne I und O, 2–9)."}],
+  [LicenseActivationRejectedError, {status: 401, code: "license_rejected",
+    error: "Der Lizenz-Token ist unbekannt, abgelaufen oder wurde bereits verwendet."}],
+  [LicenseGatewayUnavailableError, {status: 502, code: "gateway_unavailable",
+    error: "Das Lizenz-Gateway ist nicht erreichbar. Bitte prüfe die Internetverbindung der Runtime."}],
+  [RuntimeAlreadyActivatedError, {status: 409, code: "already_activated",
+    error: "Diese Runtime ist bereits mit einer anderen Lizenz aktiviert."}],
+];
+
 function activationFailureFor(error: unknown): ActivationFailure {
-  if (error instanceof InvalidActivationTokenError) {
-    return {status: 400, code: "invalid_token",
-      error: "Der Lizenz-Token hat ein ungültiges Format. Er besteht aus 16 Zeichen (A–Z ohne I und O, 2–9)."};
-  }
-  if (error instanceof LicenseActivationRejectedError) {
-    return {status: 401, code: "license_rejected",
-      error: "Der Lizenz-Token ist unbekannt, abgelaufen oder wurde bereits verwendet."};
-  }
-  if (error instanceof LicenseGatewayUnavailableError) {
-    return {status: 502, code: "gateway_unavailable",
-      error: "Das Lizenz-Gateway ist nicht erreichbar. Bitte prüfe die Internetverbindung der Runtime."};
-  }
-  return {status: 500, code: "activation_failed", error: "Die Runtime konnte nicht aktiviert werden."};
+  const match = activationFailures.find(([errorType]) => error instanceof errorType);
+  return match?.[1] ?? {status: 500, code: "activation_failed", error: "Die Runtime konnte nicht aktiviert werden."};
 }
 
 /** Vor der Aktivierung gibt es noch keinen team-gebundenen Logger — daher direkt nach Stdout. */

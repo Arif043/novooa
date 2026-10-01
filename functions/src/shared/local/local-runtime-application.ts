@@ -7,14 +7,14 @@ import {createLocalRuntimeComposition, type LocalRuntimeComposition, type LocalR
 import {type LocalRuntimeRealtimeSubscriber} from "./local-runtime-realtime-notifier.js";
 import {type LocalRuntimeRealtimeGateway} from "./local-runtime-realtime-server.js";
 import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
-import {type LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
+import {type SetupAuthorization} from "./local-runtime-setup-http-handler.js";
 import {ensureLocalRuntimeWorkspace, type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 
 export type LocalRuntimeApplicationOptions = {
   database: RuntimeDatabase;
   runtimeRoot: string;
   fieldCipher: SensitiveFieldCipher;
-  setupCode: LocalRuntimeSetupCode;
+  setupAuthorization: SetupAuthorization;
   sessions: Pick<LocalRuntimeSessionStore, "createSession">;
   isLicenseActive: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;

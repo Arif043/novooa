@@ -164,7 +164,9 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
       await _endpoints.save(endpoint);
       emit(RuntimeConnectionReady(endpoint));
     } on RuntimeLoginFailure catch (error) {
-      emit(RuntimeConnectionNeedsPassword(endpoint, errorMessage: error.message));
+      emit(
+        RuntimeConnectionNeedsPassword(endpoint, errorMessage: error.message),
+      );
     } on Object catch (error, stackTrace) {
       _reportFailure('login', error, stackTrace);
       emit(
@@ -180,9 +182,11 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     emit(RuntimeConnectionConnecting(endpoint.displayAddress));
     try {
       await onboarding.activateLicense(endpoint, token);
-      await _continueAfterLicense(endpoint);
+      await _continueAfterLicense(endpoint, activationToken: token.trim());
     } on RuntimeOnboardingFailure catch (error) {
-      emit(RuntimeConnectionNeedsLicense(endpoint, errorMessage: error.message));
+      emit(
+        RuntimeConnectionNeedsLicense(endpoint, errorMessage: error.message),
+      );
     } on Object catch (error, stackTrace) {
       _reportFailure('activate-license', error, stackTrace);
       emit(
@@ -194,55 +198,38 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     }
   }
 
-  /// Schließt den Kopplungscode-Schritt lokal ab — der Code wird erst beim
-  /// finalen [setPassword] zusammen mit dem Passwort an die Runtime
-  /// geschickt, es gibt hier also keinen eigenen Netzwerk-Aufruf.
-  void submitSetupCode(RuntimeEndpoint endpoint, String code) {
-    final trimmed = code.trim();
-    if (trimmed.isEmpty) {
-      emit(
-        RuntimeConnectionNeedsSetupCode(
-          endpoint,
-          errorMessage:
-              'Bitte gib den Einrichtungscode aus dem Start-Log der Runtime ein.',
-        ),
-      );
-      return;
-    }
-    emit(RuntimeConnectionNeedsPasswordSetup(endpoint, code: trimmed));
-  }
-
-  /// Zurück zum Kopplungscode-Schritt — etwa wenn sich beim Passwort
-  /// herausstellt, dass der zuvor eingegebene Code falsch war.
-  void changeSetupCode(RuntimeEndpoint endpoint) {
-    emit(RuntimeConnectionNeedsSetupCode(endpoint));
-  }
-
-  Future<void> setPassword(RuntimeEndpoint endpoint, String password) async {
-    final current = state;
-    final code = current is RuntimeConnectionNeedsPasswordSetup ? current.code : '';
+  /// Zweiter Einrichtungsschritt: setzt das Betreiber-Passwort. Als Nachweis
+  /// dient der Lizenz-Token aus Schritt 1 — oder, falls die App ihn nicht
+  /// mehr kennt, der im Formular eingegebene.
+  Future<void> setPassword(
+    RuntimeEndpoint endpoint,
+    String password, {
+    String? activationToken,
+  }) async {
+    final setup = _passwordSetupState(endpoint);
     emit(RuntimeConnectionConnecting(endpoint.displayAddress));
     try {
-      await onboarding.setPassword(endpoint, password, code: code);
+      await onboarding.setPassword(
+        endpoint,
+        password,
+        activationToken: activationToken ?? setup.activationToken,
+      );
       await login(endpoint, password);
     } on RuntimeOnboardingFailure catch (error) {
-      emit(
-        RuntimeConnectionNeedsPasswordSetup(
-          endpoint,
-          code: code,
-          errorMessage: error.message,
-        ),
-      );
+      emit(setup.withError(error.message));
     } on Object catch (error, stackTrace) {
       _reportFailure('setup-password', error, stackTrace);
-      emit(
-        RuntimeConnectionNeedsPasswordSetup(
-          endpoint,
-          code: code,
-          errorMessage: 'Das Passwort konnte nicht gesetzt werden.',
-        ),
-      );
+      emit(setup.withError('Das Passwort konnte nicht gesetzt werden.'));
     }
+  }
+
+  RuntimeConnectionNeedsPasswordSetup _passwordSetupState(
+    RuntimeEndpoint endpoint,
+  ) {
+    final current = state;
+    return current is RuntimeConnectionNeedsPasswordSetup
+        ? current
+        : RuntimeConnectionNeedsPasswordSetup(endpoint);
   }
 
   /// Vollständiger Reset — Sitzung, gespeicherte Adresse und Varianten-Wahl
@@ -280,11 +267,19 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     emit(RuntimeConnectionReady(endpoint));
   }
 
-  Future<void> _continueAfterLicense(RuntimeEndpoint endpoint) async {
+  Future<void> _continueAfterLicense(
+    RuntimeEndpoint endpoint, {
+    String? activationToken,
+  }) async {
     final status = await onboarding.setupStatus(endpoint);
     if (status.needsSetup) {
       emit(
-        RuntimeConnectionNeedsSetupCode(endpoint, addresses: status.addresses),
+        RuntimeConnectionNeedsPasswordSetup(
+          endpoint,
+          activationToken: activationToken,
+          requiresLicenseToken: status.requiresLicenseToken,
+          addresses: status.addresses,
+        ),
       );
       return;
     }

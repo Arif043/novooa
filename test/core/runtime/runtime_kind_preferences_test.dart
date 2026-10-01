@@ -45,12 +45,15 @@ void main() {
     expect(await storedValue(), 'standalone');
   });
 
-  test('verwirft einen unbekannten gespeicherten Wert und räumt ihn weg', () async {
-    await store('irgendwas-altes');
+  test(
+    'verwirft einen unbekannten gespeicherten Wert und räumt ihn weg',
+    () async {
+      await store('irgendwas-altes');
 
-    expect(await preferences.load(), isNull);
-    expect(await storedValue(), isNull);
-  });
+      expect(await preferences.load(), isNull);
+      expect(await storedValue(), isNull);
+    },
+  );
 
   test('überschreibt eine frühere Wahl', () async {
     await preferences.save(RuntimeKind.standalone);

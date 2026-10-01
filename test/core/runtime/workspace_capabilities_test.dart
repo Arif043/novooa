@@ -11,27 +11,25 @@ import 'package:syscat2/core/runtime/workspace_capabilities.dart';
 // Plattformgrenze (kein FCM auf Windows/Linux) ist jetzt Teil von `forKind`
 // selbst, nicht mehr ein zur Laufzeit entdeckter Sonderfall.
 void main() {
-  test('die Cloud bekommt alle bekannten Fähigkeiten außer Standalone-only', () {
-    final capabilities = WorkspaceCapabilities.forKind(RuntimeKind.cloud);
-
-    expect(capabilities.assistant, isTrue);
-    expect(capabilities.dataCollections, isFalse);
-    expect(capabilities.modelCatalog, isFalse);
-    expect(capabilities.push, isTrue);
-  });
-
   test(
-    'Standalone-Push bleibt ohne NOVOOA_PUSH_ENABLED aus, damit eine lokale '
-    'Runtime keine Firebase-Initialisierung erzwingt',
+    'die Cloud bekommt alle bekannten Fähigkeiten außer Standalone-only',
     () {
-      final capabilities = WorkspaceCapabilities.forKind(
-        RuntimeKind.standalone,
-      );
+      final capabilities = WorkspaceCapabilities.forKind(RuntimeKind.cloud);
 
       expect(capabilities.assistant, isTrue);
-      expect(capabilities.dataCollections, isTrue);
-      expect(capabilities.modelCatalog, isTrue);
-      expect(capabilities.push, isFalse);
+      expect(capabilities.dataCollections, isFalse);
+      expect(capabilities.modelCatalog, isFalse);
+      expect(capabilities.push, isTrue);
     },
   );
+
+  test('Standalone-Push bleibt ohne NOVOOA_PUSH_ENABLED aus, damit eine lokale '
+      'Runtime keine Firebase-Initialisierung erzwingt', () {
+    final capabilities = WorkspaceCapabilities.forKind(RuntimeKind.standalone);
+
+    expect(capabilities.assistant, isTrue);
+    expect(capabilities.dataCollections, isTrue);
+    expect(capabilities.modelCatalog, isTrue);
+    expect(capabilities.push, isFalse);
+  });
 }

@@ -18,3 +18,10 @@ export class LicenseGatewayUnavailableError extends Error {
     super("Das Lizenz-Gateway ist nicht erreichbar.");
   }
 }
+
+/** Die Runtime ist bereits mit einer Lizenz aktiviert, zu der der Token nicht gehört. */
+export class RuntimeAlreadyActivatedError extends Error {
+  constructor() {
+    super("Diese Runtime ist bereits mit einer anderen Lizenz aktiviert.");
+  }
+}

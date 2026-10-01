@@ -25,7 +25,9 @@ class HttpRuntimeLoginClient implements RuntimeLoginClient {
       }
       return token;
     } on WorkspaceHttpException catch (error) {
-      throw RuntimeLoginFailure(runtimeLoginFailureMessageFor(error.statusCode));
+      throw RuntimeLoginFailure(
+        runtimeLoginFailureMessageFor(error.statusCode),
+      );
     }
   }
 }

@@ -3,32 +3,31 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../theme/app_spacing.dart';
 import 'runtime_connection_cubit.dart';
-import 'runtime_endpoint.dart';
+import 'runtime_connection_state.dart';
+import 'runtime_reachable_addresses.dart';
 
-/// Zweiter und letzter Einrichtungsschritt (siehe
-/// `RuntimeSetupCodeForm`) — der zuvor eingegebene Kopplungscode reist im
-/// State mit und wird erst hier zusammen mit dem Passwort verschickt.
+/// Zweiter Einrichtungsschritt nach der Lizenz ([RuntimeLicenseForm]). Der
+/// Lizenz-Token aus Schritt 1 reist im State mit; nur wenn die App ihn nicht
+/// mehr kennt, wird er hier zusätzlich abgefragt.
 class RuntimePasswordSetupForm extends StatefulWidget {
-  const RuntimePasswordSetupForm({
-    required this.endpoint,
-    this.errorMessage,
-    super.key,
-  });
+  const RuntimePasswordSetupForm({required this.setup, super.key});
 
-  final RuntimeEndpoint endpoint;
-  final String? errorMessage;
+  final RuntimeConnectionNeedsPasswordSetup setup;
 
   @override
-  State<RuntimePasswordSetupForm> createState() => _RuntimePasswordSetupFormState();
+  State<RuntimePasswordSetupForm> createState() =>
+      _RuntimePasswordSetupFormState();
 }
 
 class _RuntimePasswordSetupFormState extends State<RuntimePasswordSetupForm> {
+  final _tokenController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmationController = TextEditingController();
   String? _validationMessage;
 
   @override
   void dispose() {
+    _tokenController.dispose();
     _passwordController.dispose();
     _confirmationController.dispose();
     super.dispose();
@@ -36,71 +35,111 @@ class _RuntimePasswordSetupFormState extends State<RuntimePasswordSetupForm> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final errorMessage = _validationMessage ?? widget.errorMessage;
+    final setup = widget.setup;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(Icons.lock_outline, size: 48, color: colorScheme.primary),
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          'Zugriffs-Passwort festlegen',
-          style: Theme.of(context).textTheme.headlineSmall,
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          'Dieses Passwort schützt den Zugriff auf die lokale Runtime.',
-          style: Theme.of(context).textTheme.bodyMedium,
-          textAlign: TextAlign.center,
-        ),
+        const _PasswordSetupHeader(),
         const SizedBox(height: AppSpacing.xl),
-        TextField(
-          controller: _passwordController,
-          obscureText: true,
-          decoration: const InputDecoration(
-            labelText: 'Passwort',
-            prefixIcon: Icon(Icons.password_outlined),
+        if (setup.needsTokenInput) ...[
+          TextField(
+            controller: _tokenController,
+            autocorrect: false,
+            textCapitalization: TextCapitalization.characters,
+            decoration: const InputDecoration(
+              labelText: 'Lizenz-Token',
+              helperText: 'Der Token, mit dem diese Runtime aktiviert wurde.',
+              prefixIcon: Icon(Icons.key_outlined),
+            ),
           ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        TextField(
-          controller: _confirmationController,
-          obscureText: true,
-          decoration: InputDecoration(
-            labelText: 'Passwort wiederholen',
-            errorText: errorMessage,
-            prefixIcon: const Icon(Icons.password_outlined),
-          ),
-          onSubmitted: (_) => _setPassword(),
-        ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+        ..._passwordFields(_validationMessage ?? setup.errorMessage),
         const SizedBox(height: AppSpacing.md),
         FilledButton.icon(
           onPressed: _setPassword,
           icon: const Icon(Icons.lock_open_outlined),
           label: const Text('Passwort festlegen'),
         ),
-        const SizedBox(height: AppSpacing.md),
-        TextButton(
-          onPressed: _changeCode,
-          child: const Text('Einrichtungscode ändern'),
-        ),
+        if (setup.addresses.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xl),
+          RuntimeReachableAddresses(addresses: setup.addresses),
+        ],
       ],
     );
   }
 
+  List<Widget> _passwordFields(String? errorMessage) => [
+    TextField(
+      controller: _passwordController,
+      obscureText: true,
+      decoration: const InputDecoration(
+        labelText: 'Passwort',
+        prefixIcon: Icon(Icons.password_outlined),
+      ),
+    ),
+    const SizedBox(height: AppSpacing.md),
+    TextField(
+      controller: _confirmationController,
+      obscureText: true,
+      decoration: InputDecoration(
+        labelText: 'Passwort wiederholen',
+        errorText: errorMessage,
+        prefixIcon: const Icon(Icons.password_outlined),
+      ),
+      onSubmitted: (_) => _setPassword(),
+    ),
+  ];
+
   void _setPassword() {
-    final password = _passwordController.text;
-    if (password.isEmpty || password != _confirmationController.text) {
-      setState(() => _validationMessage = 'Die Passwörter stimmen nicht überein.');
-      return;
-    }
-    setState(() => _validationMessage = null);
-    context.read<RuntimeConnectionCubit>().setPassword(widget.endpoint, password);
+    final validationMessage = _validationMessageFor();
+    setState(() => _validationMessage = validationMessage);
+    if (validationMessage != null) return;
+    context.read<RuntimeConnectionCubit>().setPassword(
+      widget.setup.endpoint,
+      _passwordController.text,
+      activationToken: widget.setup.needsTokenInput
+          ? _tokenController.text
+          : null,
+    );
   }
 
-  void _changeCode() {
-    context.read<RuntimeConnectionCubit>().changeSetupCode(widget.endpoint);
+  String? _validationMessageFor() {
+    if (widget.setup.needsTokenInput && _tokenController.text.trim().isEmpty) {
+      return 'Bitte gib den Lizenz-Token dieser Runtime ein.';
+    }
+    final password = _passwordController.text;
+    if (password.isEmpty || password != _confirmationController.text) {
+      return 'Die Passwörter stimmen nicht überein.';
+    }
+    return null;
+  }
+}
+
+class _PasswordSetupHeader extends StatelessWidget {
+  const _PasswordSetupHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Icon(Icons.lock_outline, size: 48, color: theme.colorScheme.primary),
+        const SizedBox(height: AppSpacing.lg),
+        Text(
+          'Zugriffs-Passwort festlegen',
+          style: theme.textTheme.headlineSmall,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          'Dieses Passwort schützt den Zugriff auf die lokale Runtime.',
+          style: theme.textTheme.bodyMedium,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
   }
 }

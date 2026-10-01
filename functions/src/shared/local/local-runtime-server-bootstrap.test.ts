@@ -14,12 +14,13 @@ import {openLocalRuntimeDatabase} from "./local-runtime-database.js";
 import {bootstrapLocalRuntime} from "./local-runtime-server-bootstrap.js";
 
 test("native routes support activation, setup, login and protected workspace access", async (t) => {
-  const {base, setupCode} = await activatedRuntimeFixture(t);
+  const {base} = await activatedRuntimeFixture(t);
   assert.equal((await fetch(`${base}/v1/tasks`)).status, 423);
   assert.equal((await postJson(base, "/v1/license/activate", {activationToken: "test-license"})).status, 200);
   assert.equal((await fetch(`${base}/v1/tasks`)).status, 401);
   assert.equal((await fetch(`${base}/v1/setup`)).status, 200);
-  const setup = await postJson(base, "/v1/setup", {code: setupCode(), password: "test-password"});
+  assert.equal((await postJson(base, "/v1/setup", {activationToken: "foreign", password: "x"})).status, 403);
+  const setup = await postJson(base, "/v1/setup", {activationToken: "test-license", password: "test-password"});
   assert.equal(setup.status, 204);
   assert.equal(await setup.text(), "");
   const login = await postJson(base, "/v1/auth/login", {password: "test-password"});
@@ -37,23 +38,19 @@ async function activatedRuntimeFixture(t: TestContext) {
   t.after(() => rm(runtimeRoot, {recursive: true, force: true}));
   const database = await openLocalRuntimeDatabase({databasePath: ":memory:",
     migrationsDirectory: resolve(__dirname, "../../../drizzle")});
-  let code = "";
-  t.mock.method(console, "info", (message: string) => {
-    const log = JSON.parse(message) as {setupCode?: string};
-    if (log.setupCode) code = log.setupCode;
-  });
   const runtime = await bootstrapLocalRuntime({database, runtimeRoot,
     fieldCipher: new CurrentRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring())), licenses: activatableLicenses(),
     cors: LocalRuntimeCorsPolicy.fromEnvironment(), webDirectory: undefined, port: 0});
   t.after(async () => {await runtime.closeHttp(); await runtime.application.stop(); database.$client.close();});
   const address = runtime.server.address();
   assert.ok(address && typeof address !== "string");
-  return {base: `http://127.0.0.1:${address.port}`, setupCode: () => code};
+  return {base: `http://127.0.0.1:${address.port}`};
 }
 
 function activatableLicenses(): RuntimeLicenseService {
   let active: RuntimeLicenseContext | null = null;
   return {...inactiveLicenses(), activeContext: () => active,
+    matchesActivationToken: (token) => active !== null && token === "test-license",
     activate: async () => {
       active = {licenseId: "test-license", licenseName: "Standalone", workspaceId: "test-workspace", expiresAt: "2030-01-01"};
       return active;
@@ -108,5 +105,6 @@ function inactiveLicenses(): RuntimeLicenseService {
     release: async () => {}, activeContext: () => null,
     signedActiveLicense: () => null, activeActivation: () => null,
     status: () => ({state: "notActivated"}),
+    matchesActivationToken: () => false, requiresActivationTokenForSetup: () => true,
   };
 }

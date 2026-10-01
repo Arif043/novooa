@@ -65,3 +65,25 @@ test("removes a legacy license without an expiry date", async () => {
 function cipher(): EnvelopeRuntimeFieldCipher {
   return new EnvelopeRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring()));
 }
+
+test("keeps the activation token proof for the first-time setup", async () => {
+  const runtimeRoot = await mkdtemp(join(tmpdir(), "novooa-license-"));
+  const store = new FileRuntimeLicenseStore(runtimeRoot, cipher());
+  const state = {
+    license: {
+      signature: "signature",
+      payload: {
+        licenseId: "license-1", licenseName: "Beispiel GmbH", activationId: "activation-1",
+        workspaceId: "workspace-1", issuedAt: "2026-09-15T10:00:00.000Z", expiresAt: "2026-12-31T23:59:59.000Z",
+      },
+    },
+    activationSecret: "activation-secret",
+    activationTokenHash: "a".repeat(64),
+  };
+  try {
+    await store.save(state);
+    assert.deepEqual(await store.load(), state);
+  } finally {
+    await rm(runtimeRoot, {recursive: true, force: true});
+  }
+});

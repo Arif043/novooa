@@ -35,7 +35,11 @@ class _RuntimeLicenseFormState extends State<RuntimeLicenseForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(Icons.workspace_premium_outlined, size: 48, color: colorScheme.primary),
+        Icon(
+          Icons.workspace_premium_outlined,
+          size: 48,
+          color: colorScheme.primary,
+        ),
         const SizedBox(height: AppSpacing.lg),
         Text(
           'Lizenz aktivieren',

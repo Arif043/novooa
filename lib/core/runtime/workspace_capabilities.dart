@@ -76,8 +76,9 @@ class WorkspaceCapabilities {
       TargetPlatform.android ||
       TargetPlatform.iOS ||
       TargetPlatform.macOS => true,
-      TargetPlatform.windows || TargetPlatform.linux || TargetPlatform.fuchsia =>
-        false,
+      TargetPlatform.windows ||
+      TargetPlatform.linux ||
+      TargetPlatform.fuchsia => false,
     };
   }
 }

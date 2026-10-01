@@ -1,6 +1,7 @@
 import {type RuntimeLicenseActivation} from "../../domain/entities/runtime-license-activation.js";
 import {isActiveRuntimeLicense, type SignedRuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
 import {runtimeActivationTokenFrom} from "../../domain/entities/activation-token.js";
+import {activationTokenProofFor, matchesActivationTokenProof} from "../activation-token-proof.js";
 import {verifiesRuntimeLicense} from "../license-lease-crypto.js";
 import {type RuntimeLicenseStore} from "./file-local-runtime-license-store.js";
 import {type RuntimeLicenseGatewayClient} from "./local-runtime-license-gateway-client.js";
@@ -18,6 +19,10 @@ export interface RuntimeLicenseService {
   signedActiveLicense(): SignedRuntimeLicense | null;
   activeActivation(): RuntimeLicenseActivation | null;
   status(): RuntimeLicenseStatus;
+  /** Gehört `token` zur aktiven Lizenz? Nachweis für Ersteinrichtung und erneute Aktivierung. */
+  matchesActivationToken(token: unknown): boolean;
+  /** `false` nur im Entwicklungsmodus ohne echte Lizenz. */
+  requiresActivationTokenForSetup(): boolean;
 }
 
 export class GatewayRuntimeLicenseService implements RuntimeLicenseService {
@@ -38,7 +43,16 @@ export class GatewayRuntimeLicenseService implements RuntimeLicenseService {
   async activate(input: RuntimeLicenseActivationInput): Promise<RuntimeLicenseContext> {
     const token = runtimeActivationTokenFrom(input.activationToken);
     const activation = await this.gateway.activate(token);
-    return this.saveAndActivate(activation);
+    return this.saveAndActivate({...activation, activationTokenHash: activationTokenProofFor(token)});
+  }
+
+  matchesActivationToken(token: unknown): boolean {
+    const activation = this.activeActivation();
+    return activation !== null && matchesActivationTokenProof(activation.activationTokenHash, token);
+  }
+
+  requiresActivationTokenForSetup(): boolean {
+    return true;
   }
 
   async release(): Promise<void> {
@@ -91,4 +105,6 @@ export class DevelopmentRuntimeLicenseService implements RuntimeLicenseService {
   signedActiveLicense(): SignedRuntimeLicense | null { return null; }
   activeActivation(): RuntimeLicenseActivation | null { return null; }
   status(): RuntimeLicenseStatus { return {state: "active", name: this.context.licenseName, expiresAt: this.context.expiresAt}; }
+  matchesActivationToken(): boolean { return true; }
+  requiresActivationTokenForSetup(): boolean { return false; }
 }

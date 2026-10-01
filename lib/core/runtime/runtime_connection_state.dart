@@ -29,38 +29,42 @@ final class RuntimeConnectionNeedsLicense extends RuntimeConnectionState {
   final String? errorMessage;
 }
 
-/// Eigener Schritt vor dem Passwort — über den regulären Port verlangt die
-/// Runtime immer den Kopplungscode aus ihrem Start-Log (der code-freie
-/// Loopback-Weg ist ein dokumentierter Operator-Fallback außerhalb der
-/// App, siehe `docs/local-runtime.md`).
-final class RuntimeConnectionNeedsSetupCode extends RuntimeConnectionState {
-  const RuntimeConnectionNeedsSetupCode(
+/// Zweiter Einrichtungsschritt nach der Lizenz: das Betreiber-Passwort.
+/// Die Runtime verlangt als Nachweis den Lizenz-Token, mit dem sie
+/// aktiviert wurde.
+final class RuntimeConnectionNeedsPasswordSetup extends RuntimeConnectionState {
+  const RuntimeConnectionNeedsPasswordSetup(
     this.endpoint, {
-    this.errorMessage,
+    this.activationToken,
+    this.requiresLicenseToken = true,
     this.addresses = const [],
+    this.errorMessage,
   });
 
   final RuntimeEndpoint endpoint;
   final String? errorMessage;
+
+  /// Der im Lizenz-Schritt eingegebene Token — nur im Speicher. Fehlt er
+  /// (z.B. nach einem App-Neustart), fragt das Formular ihn erneut ab.
+  final String? activationToken;
+
+  /// `false` nur bei einer Runtime im Entwicklungsmodus ohne echte Lizenz.
+  final bool requiresLicenseToken;
 
   /// Von der Runtime selbst ermittelte Adressen, unter denen andere Geräte
   /// sie erreichen. Werden angezeigt, nicht abgefragt.
   final List<String> addresses;
-}
 
-final class RuntimeConnectionNeedsPasswordSetup extends RuntimeConnectionState {
-  const RuntimeConnectionNeedsPasswordSetup(
-    this.endpoint, {
-    required this.code,
-    this.errorMessage,
-  });
+  bool get needsTokenInput => requiresLicenseToken && activationToken == null;
 
-  final RuntimeEndpoint endpoint;
-  final String? errorMessage;
-
-  /// Im vorherigen Schritt eingegebener Kopplungscode — wird zusammen mit
-  /// dem Passwort in einem einzigen `/v1/setup`-Aufruf verschickt.
-  final String code;
+  RuntimeConnectionNeedsPasswordSetup withError(String errorMessage) =>
+      RuntimeConnectionNeedsPasswordSetup(
+        endpoint,
+        activationToken: activationToken,
+        requiresLicenseToken: requiresLicenseToken,
+        addresses: addresses,
+        errorMessage: errorMessage,
+      );
 }
 
 /// Web-Pendant zu `RuntimeConnectionNeedsAddress`: Es gibt nichts

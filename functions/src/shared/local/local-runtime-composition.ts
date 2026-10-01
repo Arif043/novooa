@@ -84,8 +84,7 @@ import {LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js
 import {LocalRuntimeRealtimeTicketHttpHandler} from "./local-runtime-realtime-ticket-http-handler.js";
 import {LocalRuntimeRealtimeTicketStore} from "./local-runtime-realtime-ticket-store.js";
 import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
-import {type LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
-import {LocalRuntimeSetupHttpHandler} from "./local-runtime-setup-http-handler.js";
+import {LocalRuntimeSetupHttpHandler, type SetupAuthorization} from "./local-runtime-setup-http-handler.js";
 import {type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 
 export type LocalRuntimeComposition = {
@@ -107,7 +106,7 @@ export type LocalRuntimeCompositionOptions = {
   workspace: LocalRuntimeWorkspace;
   fieldCipher: SensitiveFieldCipher;
   /** Prozessweit, im Entrypoint erzeugt — beide Setup-Wege teilen ihn. */
-  setupCode: LocalRuntimeSetupCode;
+  setupAuthorization: SetupAuthorization;
   sessions: Pick<LocalRuntimeSessionStore, "createSession">;
   isLicenseActive?: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;
@@ -192,7 +191,7 @@ export function createLocalRuntimeComposition(
   const controllers = {
     setup: new LocalRuntimeSetupHttpHandler({
       credentials: credentialStore,
-      setupCode: options.setupCode,
+      authorization: options.setupAuthorization,
     }),
     login: new LocalRuntimeLoginHttpHandler(credentialStore, options.sessions),
     realtimeTickets: new LocalRuntimeRealtimeTicketHttpHandler(realtimeTicketStore),

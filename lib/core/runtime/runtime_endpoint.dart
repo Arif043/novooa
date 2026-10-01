@@ -81,7 +81,10 @@ class RuntimeEndpointValidationFailure implements Exception {
 /// Liefert `true` für `https://`, `false` für `http://` und `null`, wenn kein
 /// Schema angegeben wurde.
 (bool?, String) _splitScheme(String value) {
-  for (final (prefix, isSecure) in const [('https://', true), ('http://', false)]) {
+  for (final (prefix, isSecure) in const [
+    ('https://', true),
+    ('http://', false),
+  ]) {
     if (value.toLowerCase().startsWith(prefix)) {
       return (isSecure, value.substring(prefix.length));
     }

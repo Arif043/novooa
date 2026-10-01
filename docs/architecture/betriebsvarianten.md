@@ -314,39 +314,33 @@ Neue Umgebungsvariablen:
 Ziel: Eine nackt installierte Runtime ist **ohne nativen Client und ohne
 SSH** einzurichten — auch headless auf VPS, NAS oder Raspberry Pi.
 
-#### 2a — Kopplungscode statt Netzwerkgrenze
+#### 2a — Lizenz-Token statt Netzwerkgrenze
 
-Heute ist `/v1/setup` dadurch geschützt, dass der Setup-Port nur an
-`127.0.0.1` des Docker-Hosts veröffentlicht wird. Der Vertrauensanker lautet
-also „wer Zugriff auf den Host hat, besitzt die Runtime“ — richtig, aber es
-schliesst headless-Installationen von der Einrichtung aus.
+Ursprünglich war `/v1/setup` dadurch geschützt, dass der Setup-Port nur an
+`127.0.0.1` des Docker-Hosts veröffentlicht wurde („wer Zugriff auf den Host
+hat, besitzt die Runtime“) — das schloss headless-Installationen von der
+Einrichtung aus.
 
-Stattdessen erzeugt die Runtime beim ersten Start ein zufälliges
-**Setup-Geheimnis** und schreibt es in ihr Log (die Stelle existiert bereits:
-`local_runtime.started` in `local-runtime-entrypoint.ts`). `/v1/setup` wird
-damit auch auf dem regulären Port erreichbar, verlangt dort aber diesen Code.
-
-Der Vertrauensanker bleibt derselbe — `docker compose logs` setzt
-Host-Zugriff voraus —, aber die *Bedienung* löst sich davon: Jeder Client
-kann einrichten, solange jemand den Code vorliest. Es ist dasselbe Modell,
-das `/v1/license/*` hier schon verwendet: geschützt durch **Besitz eines
-Geheimnisses**, nicht durch **Netzwerkposition**.
+`/v1/setup` ist deshalb auf dem regulären Port erreichbar und verlangt als
+Nachweis den **Lizenz-Token**, mit dem die Runtime aktiviert wurde. Die
+Runtime speichert bei der Aktivierung dessen SHA-256-Hash; `POST /v1/setup`
+setzt das Passwort nur, wenn der mitgeschickte Token dazu passt. Es ist
+dasselbe Modell wie bei `/v1/license/*`: geschützt durch **Besitz eines
+Geheimnisses**, nicht durch **Netzwerkposition**. Wer die Runtime zufällig
+zuerst erreicht, kann ohne Token kein Passwort setzen.
 
 Entschieden:
 
-- Der Code verfällt nach erfolgreicher Einrichtung (er hat dann keinen Zweck
-  mehr und wäre nur noch Angriffsfläche).
+- Die Oberfläche bleibt zweistufig (Lizenz, dann Passwort). Die App reicht
+  den Token aus Schritt 1 im Speicher an Schritt 2 weiter und fragt ihn nur
+  erneut ab, wenn sie ihn nicht mehr kennt.
+- Ein zuvor eingesetzter Kopplungscode aus dem Start-Log ist **entfernt**:
+  Er war ein zusätzlicher Bedienschritt, ohne mehr Sicherheit als der
+  Lizenz-Token zu bieten.
 - Der ursprünglich als Rückfallweg vorgesehene, loopback-gebundene Setup-Port
-  `8091` ist **wieder entfernt** — er kostete entgegen der ersten Annahme
-  nicht nichts: eine zweite `LocalRuntimeSetupHttpHandler`-Instanz, ein
-  zweiter Docker-Port, ein zweiter dokumentierter Einrichtungsweg. Sein
-  einziger Vorteil („Code verloren“ ohne Neustart lösbar) entfällt gegen
-  denselben Vertrauensanker: Wer `127.0.0.1:8091` erreichen könnte, hat
-  Host-Zugriff — und kann damit genauso gut `docker compose restart`
-  ausführen und den Code neu im Log lesen. Der Port war zudem eine reale
-  Verwechslungsquelle: Eine im Web-Client gespeicherte Adresse konnte auf
-  `:8091` zeigen bleiben und die ganze App fälschlich gegen diesen
-  API-losen Port sprechen lassen (siehe Schritt 3, `RuntimeConnectionCubit`).
+  `8091` ist ebenfalls **entfernt** — eine zweite Handler-Instanz, ein
+  zweiter Docker-Port und eine reale Verwechslungsquelle (eine im Web-Client
+  gespeicherte Adresse konnte auf den API-losen Port zeigen).
 
 #### 2b — Static-Serving
 
@@ -387,12 +381,12 @@ selbstkonfigurierend.
 
 #### Umsetzungsdetails
 
-- `local-runtime-setup-code.ts`: Der Code lebt **nur im Prozessspeicher** —
-  kein Geheimnis at rest, keine Migration, und er verfällt zusätzlich bei
-  jedem Neustart.
-- `/v1/setup` steht in `unauthenticatedPaths` der Session-Middleware: Man braucht
-  das Passwort, um eine Session zu bekommen — Henne und Ei. Dort schützt
-  stattdessen der Code.
+- `local-runtime-setup-http-handler.ts` prüft den Token über den Port
+  `SetupAuthorization`, den der Lizenz-Service bedient
+  (`matchesActivationToken`, Vergleich in konstanter Zeit).
+- `/v1/setup` ist von der Session-Pflicht ausgenommen: Man braucht das
+  Passwort, um eine Session zu bekommen — Henne und Ei. Dort schützt
+  stattdessen der Lizenz-Token.
 - Die Reihenfolge bleibt Lizenz → Passwort: Vor der Aktivierung existiert
   der Setup-Handler noch gar nicht (er hängt an der erst dann erzeugten
   Datenbank), und die Lizenz-Middleware blockiert den regulären Port ohnehin.
@@ -406,9 +400,9 @@ selbstkonfigurierend.
 
 #### Tests
 
-38 neue Tests: Kopplungscode (Erzeugung, Normalisierung beim Abtippen,
-Verfall); Setup mit gültigem, fehlendem, falschem und verbrauchtem Code;
-loopback-Weg ohne Code; Static-Auslieferung mit SPA-Fallback,
+Setup mit passendem, fehlendem und fremdem Lizenz-Token sowie im
+Entwicklungsmodus ohne Lizenz; Token-Vergleich mit Normalisierung beim
+Abtippen; Static-Auslieferung mit SPA-Fallback,
 Content-Types, Pfad-Traversal und Endpunkt-Abschattung; CORS-Freigabe nur
 bei konfigurierter Herkunft, Same Origin ohne Header, kein pauschales `*`.
 
