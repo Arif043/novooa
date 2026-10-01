@@ -13,6 +13,7 @@ export function createLocalRuntimeHttpServer(
   configureErrors(http);
   configureCors(http, cors);
   http.addContentTypeParser("application/onnx", (_request, payload, done) => done(null, payload));
+  http.addContentTypeParser("application/zip", (_request, payload, done) => done(null, payload));
   http.get("/healthz", async () => ({status: "ok"}));
   if (routes !== undefined) http.register(routes);
   if (webDirectory !== undefined) configureWebFiles(http, webDirectory);

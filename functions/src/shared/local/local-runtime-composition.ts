@@ -72,6 +72,8 @@ import {SQLiteTaskRunStore} from "../../features/task_execution/infrastructure/l
 import {SQLiteTaskStore} from "../../features/task_execution/infrastructure/local/sqlite-task-store.js";
 import {TaskRunQueueWorker} from "../../features/task_execution/infrastructure/local/task-run-queue-worker.js";
 import {SQLiteTeamContextStore} from "../../features/teams/infrastructure/local/sqlite-team-context-store.js";
+import {type LocalWorkspaceTransferHttpHandler} from "../../features/workspace_transfer/infrastructure/local/local-workspace-transfer-http-handler.js";
+import {createLocalWorkspaceTransferHttpHandler} from "../../features/workspace_transfer/infrastructure/local/workspace-transfer-composition.js";
 import {LocalApplicationLogHttpHandler} from "../logging/local-application-log-http-handler.js";
 import {LocalApplicationLogger} from "../logging/local-application-logger.js";
 import {SQLiteLocalApplicationLogStore} from "../logging/sqlite-local-application-log-store.js";
@@ -240,6 +242,13 @@ export function createLocalRuntimeComposition(
       ),
       options.workspace.userId,
     ),
+    transfer: createLocalWorkspaceTransferHttpHandler({
+      database: options.database,
+      runtimeRoot: options.runtimeRoot,
+      teamId: options.workspace.teamId,
+      notifier: realtimeNotifier,
+      logger: applicationLogger,
+    }),
   };
   return {
     controllers,
@@ -394,4 +403,5 @@ export type LocalRuntimeControllers = {
   triggers: LocalTaskTriggerHttpHandler;
   files: LocalFileResourceHttpHandler;
   assistants: LocalAssistantHttpHandler;
+  transfer: LocalWorkspaceTransferHttpHandler;
 };

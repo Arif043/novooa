@@ -11,6 +11,7 @@ import 'ai_model_settings_tab.dart';
 import 'runtime_license_status.dart';
 import 'runtime_variant_section.dart';
 import '../../../machine_learning/presentation/widgets/machine_learning_settings_tab.dart';
+import '../../../workspace_transfer/presentation/widgets/import_export_settings_tab.dart';
 
 class RuntimeSettingsContent extends StatelessWidget {
   const RuntimeSettingsContent({super.key});
@@ -18,7 +19,7 @@ class RuntimeSettingsContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Column(
         children: [
           const _RuntimeSettingsTabs(),
@@ -43,6 +44,7 @@ class RuntimeSettingsContent extends StatelessWidget {
                   ),
                 ),
                 const MachineLearningSettingsTab(),
+                const ImportExportSettingsTab(),
               ],
             ),
           ),
@@ -80,6 +82,10 @@ class _RuntimeSettingsTabs extends StatelessWidget {
             2: _RuntimeSettingsTabLabel(
               icon: Icons.memory_outlined,
               label: 'Machine Learning',
+            ),
+            3: _RuntimeSettingsTabLabel(
+              icon: Icons.import_export,
+              label: 'Import/Export',
             ),
           },
         ),

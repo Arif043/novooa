@@ -13,6 +13,7 @@ export function testingRoutes(controller: object) {
     const http = Fastify({exposeHeadRoutes: false, routerOptions: {ignoreTrailingSlash: true}});
     (controller.constructor as unknown as RegisteredController).registerRoutes(http, () => controller);
     http.addContentTypeParser("application/onnx", (_request, stream, done) => done(null, stream));
+    http.addContentTypeParser("application/zip", (_request, stream, done) => done(null, stream));
     http.setNotFoundHandler((_request, reply) => reply.code(404).send({testRouteMissing: true}));
     try {
       const response = await http.inject({

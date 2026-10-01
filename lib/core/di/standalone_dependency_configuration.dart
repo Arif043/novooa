@@ -89,9 +89,11 @@ import '../runtime/runtime_credential_store.dart';
 import '../runtime/runtime_endpoint.dart';
 import '../runtime/runtime_profile.dart';
 import '../network/workspace_api_client.dart';
+import '../network/workspace_binary_client.dart';
 import '../network/workspace_realtime_channel.dart';
 import '../routing/app_router.dart';
 import 'standalone_workspace_dependency_configuration.dart';
+import 'standalone_workspace_transfer_dependency_configuration.dart';
 
 Future<void> configureStandaloneDependencies(
   GetIt locator,
@@ -101,6 +103,15 @@ Future<void> configureStandaloneDependencies(
   final endpoint = RuntimeEndpoint.fromUri(profile.workspaceApiUri);
   locator.registerLazySingleton<WorkspaceApiClient>(
     () => HttpWorkspaceApiClient(
+      baseUri: profile.workspaceApiUri,
+      authHeaderProvider: () async {
+        final token = await credentials.sessionToken(endpoint.address);
+        return token == null ? null : 'Bearer $token';
+      },
+    ),
+  );
+  locator.registerLazySingleton<WorkspaceBinaryClient>(
+    () => HttpWorkspaceBinaryClient(
       baseUri: profile.workspaceApiUri,
       authHeaderProvider: () async {
         final token = await credentials.sessionToken(endpoint.address);
@@ -153,6 +164,7 @@ Future<void> configureStandaloneDependencies(
       dispose: (bootstrapper) => bootstrapper.dispose(),
     );
   configureStandaloneWorkspaceDependencies(locator);
+  configureStandaloneWorkspaceTransferDependencies(locator);
   locator
     ..registerLazySingleton<RuntimeLicenseRepository>(
       () => HttpRuntimeLicenseRepository(locator<WorkspaceApiClient>()),

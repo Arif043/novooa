@@ -1,18 +1,17 @@
 import {and, eq, isNull, sql} from "drizzle-orm";
 import {randomUUID} from "node:crypto";
-import {mkdir, readFile, writeFile} from "node:fs/promises";
-import path from "node:path";
+import {readFile} from "node:fs/promises";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {files, fileVersions, type Files} from "../../../../db/schema.js";
 import {type NodeAttachment} from "../../../task_execution/domain/entities/attachments.js";
 import {storagePathFor} from "../../domain/entities/file-storage-path.js";
+import {localFilePath, writeLocalFile} from "./local-file-path.js";
 import {
   type TeamFileContent,
   type TeamFileContentReader,
 } from "../../domain/repositories/team-file-content-reader.js";
 import {
   contentSizeBytes,
-  type FileContent,
   type StoredTeamFile,
   type TeamFileStore,
   type WriteTeamFileInput,
@@ -42,7 +41,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
 
   async readTextFile(teamId: string, file: NodeAttachment): Promise<string> {
     ensureTeamFile(file, teamId);
-    return readFile(localPath(this.rootDirectory, file.storagePath), "utf8");
+    return readFile(localFilePath(this.rootDirectory, file.storagePath), "utf8");
   }
 
   async loadTeamFile(
@@ -69,7 +68,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
     const file = (await this.database.select({display_name: fileVersions.display_name, content_type: fileVersions.content_type, size_bytes: fileVersions.size_bytes, storage_path: fileVersions.storage_path}).from(fileVersions).where(and(eq(fileVersions.team_id, teamId), eq(fileVersions.file_id, fileId), eq(fileVersions.id, versionId))).get()) ?? null;
     if (file === null) throw new Error(`Dateiversion nicht gefunden: ${versionId}`);
     return {
-      content: await readFile(localPath(this.rootDirectory, file.storage_path)),
+      content: await readFile(localFilePath(this.rootDirectory, file.storage_path)),
       displayName: file.display_name,
       contentType: file.content_type,
       sizeBytes: file.size_bytes,
@@ -167,20 +166,6 @@ async function insertVersion(
   file: WrittenFile,
 ) {
   await database.insert(fileVersions).values({id: file.versionId, team_id: teamId, file_id: file.fileId, created_by_uid: "system", display_name: file.displayName, storage_path: file.storagePath, content_type: file.contentType, size_bytes: file.sizeBytes});
-}
-
-async function writeLocalFile(
-  rootDirectory: string,
-  storagePath: string,
-  content: FileContent,
-) {
-  const destination = localPath(rootDirectory, storagePath);
-  await mkdir(path.dirname(destination), {recursive: true});
-  await writeFile(destination, content);
-}
-
-function localPath(rootDirectory: string, storagePath: string): string {
-  return path.join(rootDirectory, storagePath);
 }
 
 function ensureTeamFile(file: NodeAttachment, teamId: string): void {

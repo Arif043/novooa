@@ -16,6 +16,7 @@ import {LocalTaskTriggerHttpHandler} from "../../features/scheduling/infrastruct
 import {LocalTaskActivityHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-activity-http-handler.js";
 import {LocalTaskDefinitionHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-definition-http-handler.js";
 import {LocalTaskRunHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-run-http-handler.js";
+import {LocalWorkspaceTransferHttpHandler} from "../../features/workspace_transfer/infrastructure/local/local-workspace-transfer-http-handler.js";
 import {LocalApplicationLogHttpHandler} from "../logging/local-application-log-http-handler.js";
 import {LocalAssistantHttpHandler} from "./local-assistant-http-handler.js";
 import {registerLocalRuntimeAccessHooks} from "./local-runtime-access-hooks.js";
@@ -128,6 +129,7 @@ function registerLocalRuntimeRoutes(http: FastifyInstance, current: () => LocalR
   LocalTaskTriggerHttpHandler.registerRoutes(http, () => current().triggers);
   LocalFileResourceHttpHandler.registerRoutes(http, () => current().files);
   LocalAssistantHttpHandler.registerRoutes(http, () => current().assistants);
+  LocalWorkspaceTransferHttpHandler.registerRoutes(http, () => current().transfer);
 }
 
 function reportStarted(port: number, setupCode: LocalRuntimeSetupCode): void {

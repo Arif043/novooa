@@ -291,6 +291,12 @@ SQLite ist der Default für strukturierte lokale Daten. Es braucht keinen Server
 ist transaktional und eignet sich für Aufgaben, Runs, Aktivitäten, Trigger,
 Teams, Kanäle, Wissensbasis-Metadaten und Modellkataloge.
 
+Dateien, Daten-Collections, Wissensbasis und Aufgaben lassen sich in den
+Runtime-Einstellungen unter **Import/Export** als ZIP-Datei sichern und wieder
+einspielen (Zusammenführen per ID, Trigger ausgenommen). Gestagte Importe
+liegen bis zu 30 Minuten unter `transfer-imports/` im Runtime-Verzeichnis.
+Details: [`features/import-export.md`](./features/import-export.md).
+
 Anwendungsprotokolle liegen getrennt von Workflow-Aktivitäten in
 `application_logs`. Der lokale `ApplicationLogger` speichert strukturierte
 Info- und Fehlerereignisse dort und gibt sie zusätzlich als JSON nach Docker-

@@ -31,7 +31,7 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
     http.Client? client,
     this.timeout = const Duration(seconds: 15),
     AuthHeaderProvider? authHeaderProvider,
-  }) : _baseUri = _validatedBaseUri(baseUri),
+  }) : _baseUri = validatedWorkspaceBaseUri(baseUri),
        _client = client ?? http.Client(),
        _authHeaderProvider = authHeaderProvider;
 
@@ -121,7 +121,7 @@ Future<Map<String, Object?>> _responseFor(
 ) async {
   final text = await response.stream.bytesToString();
   if (response.statusCode < 200 || response.statusCode >= 300) {
-    throw WorkspaceHttpException(response.statusCode, _errorFrom(text));
+    throw WorkspaceHttpException(response.statusCode, workspaceApiErrorFrom(text));
   }
   if (text.trim().isEmpty) return const {};
   return _objectFrom(jsonDecode(text));
@@ -192,7 +192,7 @@ Stream<T> pollWorkspace<T>(
 /// Netz) oder `https` (Domain hinter einem Reverse Proxy mit Zertifikat)
 /// angesprochen wird, entscheidet `RuntimeEndpoint`. Hier wird nur
 /// sichergestellt, dass überhaupt ein HTTP-Schema vorliegt.
-Uri _validatedBaseUri(Uri value) {
+Uri validatedWorkspaceBaseUri(Uri value) {
   if (value.scheme != 'http' && value.scheme != 'https') {
     throw ArgumentError.value(
       value,
@@ -219,7 +219,7 @@ class WorkspaceApiError {
   final String? code;
 }
 
-WorkspaceApiError _errorFrom(String response) {
+WorkspaceApiError workspaceApiErrorFrom(String response) {
   try {
     final json = _objectFrom(jsonDecode(response));
     final failure = json['failure'];
