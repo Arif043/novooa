@@ -4,7 +4,7 @@ import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../files/domain/entities/team_id.dart';
 import '../../../teams/domain/repositories/team_repository.dart';
 import '../../domain/entities/create_task_trigger_input.dart';
-import '../../domain/entities/event_trigger_config.dart';
+import '../models/event_trigger_config_mapper.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../../domain/repositories/task_trigger_repository.dart';
 import '../../domain/entities/task_trigger.dart';
@@ -84,7 +84,8 @@ class FirestoreTaskTriggerRepository implements TaskTriggerRepository {
       'type': input.type.name,
       'enabled': input.enabled,
       if (input.schedule != null) 'config': _scheduleDocument(input.schedule!),
-      if (input.event != null) 'eventConfig': _eventDocument(input.event!),
+      if (input.event != null)
+        'eventConfig': EventTriggerConfigMapper.toDocument(input.event!),
       'policy': {'ifRunning': input.policy.name},
       'nextRunAt': nextRunAt == null ? null : Timestamp.fromDate(nextRunAt),
       'createdAt': FieldValue.serverTimestamp(),
@@ -112,14 +113,6 @@ class FirestoreTaskTriggerRepository implements TaskTriggerRepository {
 
   Map<String, Object?> _slotDocument(WeeklyTimeSlot slot) {
     return {'weekday': slot.weekday, 'timeOfDay': slot.timeOfDay};
-  }
-
-  Map<String, Object?> _eventDocument(EventTriggerConfig config) {
-    return {
-      'source': config.source.name,
-      'filter': config.filter.trim(),
-      if (config.channelId != null) 'channelId': config.channelId,
-    };
   }
 
   List<TaskTrigger> _toTriggers(QuerySnapshot<Map<String, dynamic>> snapshot) {

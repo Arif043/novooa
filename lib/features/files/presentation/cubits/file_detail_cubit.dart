@@ -40,11 +40,7 @@ class FileDetailCubit extends Cubit<FileDetailState> {
 
   Future<void> selectVersion(FileVersion version) async {
     emit(
-      state.copyWith(
-        selectedVersion: version,
-        clearBytes: true,
-        message: null,
-      ),
+      state.copyWith(selectedVersion: version, clearBytes: true, message: null),
     );
     final bytesOrFailure = await _downloadFileVersion(version);
     if (isClosed) return;

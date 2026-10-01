@@ -21,8 +21,7 @@ class ImageContentView extends StatelessWidget {
           bytes,
           fit: BoxFit.contain,
           semanticLabel: 'Vorschau von ${file.displayName}',
-          errorBuilder: (context, error, stackTrace) =>
-              const _ImageLoadError(),
+          errorBuilder: (context, error, stackTrace) => const _ImageLoadError(),
         ),
       ),
     );

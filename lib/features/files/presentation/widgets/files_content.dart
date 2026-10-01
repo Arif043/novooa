@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../cubits/files_cubit.dart';
 import '../cubits/files_state.dart';
+import '../../domain/entities/team_file.dart';
+import 'delete_file_dialog.dart';
 import 'file_tile.dart';
 import '../pages/file_detail_page.dart';
 import 'files_breadcrumbs.dart';
@@ -82,6 +84,7 @@ class _FileList extends StatelessWidget {
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(builder: (_) => FileDetailPage(file: file)),
       ),
+      onDelete: () => _confirmDelete(context, file),
     );
   }
 }
@@ -117,4 +120,10 @@ class _FailureState extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _confirmDelete(BuildContext context, TeamFile file) async {
+  final confirmed = await DeleteFileDialog.show(context, file.displayName);
+  if (confirmed != true || !context.mounted) return;
+  await context.read<FilesCubit>().deleteFile(file.id);
 }

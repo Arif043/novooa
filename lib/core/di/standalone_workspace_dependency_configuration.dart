@@ -4,6 +4,7 @@ import '../../features/files/domain/repositories/file_version_repository.dart';
 import '../../features/files/domain/repositories/team_file_repository.dart';
 import '../../features/files/domain/usecases/create_file_version.dart';
 import '../../features/files/domain/usecases/create_team_folder.dart';
+import '../../features/files/domain/usecases/delete_team_file.dart';
 import '../../features/files/domain/usecases/download_file_version.dart';
 import '../../features/files/domain/usecases/upload_team_file.dart';
 import '../../features/files/domain/usecases/watch_file_versions.dart';
@@ -20,6 +21,7 @@ import '../../features/knowledge_base/domain/usecases/update_knowledge_note.dart
 import '../../features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import '../../features/knowledge_base/infrastructure/repositories/local_knowledge_base_repository.dart';
 import '../../features/knowledge_base/presentation/cubits/knowledge_base_cubit.dart';
+import '../../features/schedule/presentation/cubits/event_target_options_cubit.dart';
 import '../../features/schedule/domain/repositories/task_trigger_repository.dart';
 import '../../features/schedule/domain/usecases/create_task_trigger.dart';
 import '../../features/schedule/domain/usecases/delete_task_trigger.dart';
@@ -72,6 +74,7 @@ void configureStandaloneWorkspaceDependencies(GetIt locator) {
     ..registerLazySingleton(
       () => CreateTeamFolder(locator<TeamFileRepository>()),
     )
+    ..registerLazySingleton(() => DeleteTeamFile(locator<TeamFileRepository>()))
     ..registerLazySingleton(
       () => WatchFileVersions(locator<FileVersionRepository>()),
     )
@@ -115,6 +118,7 @@ void configureStandaloneWorkspaceDependencies(GetIt locator) {
         locator<WatchTeamFolders>(),
         locator<UploadTeamFile>(),
         locator<CreateTeamFolder>(),
+        locator<DeleteTeamFile>(),
         locator<GetCurrentTeamId>(),
       ),
     )
@@ -144,6 +148,14 @@ void configureStandaloneWorkspaceDependencies(GetIt locator) {
         setTaskTriggerEnabled: locator<SetTaskTriggerEnabled>(),
         deleteTaskTrigger: locator<DeleteTaskTrigger>(),
         taskRepository: locator<TaskRepository>(),
+      ),
+    )
+    ..registerFactory(
+      () => EventTargetOptionsCubit(
+        locator<WatchTeamFiles>(),
+        locator<WatchTeamFolders>(),
+        null,
+        locator<GetCurrentTeamId>(),
       ),
     );
 }

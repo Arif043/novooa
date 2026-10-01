@@ -1,3 +1,4 @@
+import {eventTriggerConfigFrom, isEventTriggerSource} from "../../domain/entities/event-trigger-config.js";
 import {nextRunAfter, type ScheduleConfig} from "../../domain/usecases/schedule-next-run.js";
 import {type FastifyReply} from "fastify";
 
@@ -63,9 +64,13 @@ export function invalidResponse(error: unknown, reply: FastifyReply): FastifyRep
 }
 
 function eventTriggerFrom(input: Record<string, unknown>): TriggerInput {
+  const eventConfig = eventTriggerConfigFrom(recordFrom(input.eventConfig ?? {}));
+  if (!isEventTriggerSource(eventConfig.source)) {
+    throw new LocalTaskTriggerError("eventConfig.source ist ungültig.");
+  }
   return {
     taskId: stringFrom(input.taskId, "taskId"), type: "event", config: {},
-    eventConfig: recordFrom(input.eventConfig ?? {}), policy: policyFrom(input.policy),
+    eventConfig, policy: policyFrom(input.policy),
     enabled: input.enabled !== false, nextRunAt: null,
   };
 }

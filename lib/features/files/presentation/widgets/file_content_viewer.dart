@@ -34,7 +34,9 @@ class FileContentViewer extends StatelessWidget {
         children: [
           _ContentTypeLabel(file: file),
           const SizedBox(height: AppSpacing.md),
-          Expanded(child: _Body(file: file, state: state, classifier: classifier)),
+          Expanded(
+            child: _Body(file: file, state: state, classifier: classifier),
+          ),
         ],
       ),
     );
@@ -42,7 +44,11 @@ class FileContentViewer extends StatelessWidget {
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.file, required this.state, required this.classifier});
+  const _Body({
+    required this.file,
+    required this.state,
+    required this.classifier,
+  });
 
   final TeamFile file;
   final FileDetailState state;

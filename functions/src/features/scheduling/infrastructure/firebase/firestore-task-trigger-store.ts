@@ -1,3 +1,4 @@
+import {eventTriggerConfigFrom} from "../../domain/entities/event-trigger-config.js";
 import {
   FieldValue,
   Timestamp,
@@ -97,12 +98,7 @@ function eventTriggerFrom(
     teamId,
     taskId: String(document.get("taskId") ?? ""),
     type: String(document.get("type") ?? ""),
-    eventConfig: {
-      source: String(document.get("eventConfig.source") ?? ""),
-      channelId: String(document.get("eventConfig.channelId") ?? ""),
-      connectorId: String(document.get("eventConfig.connectorId") ?? ""),
-      filter: String(document.get("eventConfig.filter") ?? ""),
-    },
+    eventConfig: eventTriggerConfigFrom(document.get("eventConfig")),
   };
 }
 

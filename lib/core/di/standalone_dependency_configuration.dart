@@ -179,8 +179,12 @@ Future<void> configureStandaloneDependencies(
     )
     ..registerLazySingleton<AssistantRepository>(
       () => RoutedAssistantRepository(
-        HttpRuntimeTaskBuilderAssistantDatasource(locator<WorkspaceApiClient>()),
-        HttpRuntimeKnowledgeBaseAssistantDatasource(locator<WorkspaceApiClient>()),
+        HttpRuntimeTaskBuilderAssistantDatasource(
+          locator<WorkspaceApiClient>(),
+        ),
+        HttpRuntimeKnowledgeBaseAssistantDatasource(
+          locator<WorkspaceApiClient>(),
+        ),
       ),
     )
     ..registerLazySingleton<TaskRunnerDatasource>(
@@ -264,9 +268,7 @@ Future<void> configureStandaloneDependencies(
     ..registerLazySingleton(() => UpdateDataRecord(locator<DataRepository>()))
     ..registerLazySingleton(() => DeleteDataRecord(locator<DataRepository>()))
     ..registerLazySingleton(() => ExecuteTask(locator<TaskRepository>()))
-    ..registerLazySingleton(
-      () => AskAssistant(locator<AssistantRepository>()),
-    )
+    ..registerLazySingleton(() => AskAssistant(locator<AssistantRepository>()))
     ..registerFactory(
       () => AssistantCubit(
         askAssistant: locator<AskAssistant>(),
@@ -302,9 +304,8 @@ Future<void> configureStandaloneDependencies(
       ),
     )
     ..registerLazySingleton(
-      () => SaveLanguageModelDefaults(
-        locator<LanguageModelDefaultsRepository>(),
-      ),
+      () =>
+          SaveLanguageModelDefaults(locator<LanguageModelDefaultsRepository>()),
     )
     ..registerLazySingleton(
       () => ConnectLanguageModels(locator<LanguageModelConnectionRepository>()),

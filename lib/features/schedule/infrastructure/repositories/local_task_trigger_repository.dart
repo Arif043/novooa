@@ -1,7 +1,7 @@
 import '../../../../core/network/workspace_api_client.dart';
 import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../domain/entities/create_task_trigger_input.dart';
-import '../../domain/entities/event_trigger_config.dart';
+import '../models/event_trigger_config_mapper.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../../domain/entities/task_trigger.dart';
 import '../../domain/repositories/task_trigger_repository.dart';
@@ -24,7 +24,7 @@ class LocalTaskTriggerRepository implements TaskTriggerRepository {
           : _schedule(input.schedule!),
       'eventConfig': input.event == null
           ? <String, Object?>{}
-          : _event(input.event!),
+          : EventTriggerConfigMapper.toDocument(input.event!),
       'policy': {'ifRunning': input.policy.name},
     });
   }
@@ -61,12 +61,6 @@ class LocalTaskTriggerRepository implements TaskTriggerRepository {
         .toList(growable: false),
   };
 
-  Map<String, Object?> _event(EventTriggerConfig value) => {
-    'source': value.source.name,
-    'filter': value.filter,
-    'channelId': value.channelId,
-  };
-
   TaskTrigger _triggerFrom(Map<dynamic, dynamic> value) {
     final data = {
       for (final entry in value.entries) entry.key.toString(): entry.value,
@@ -79,7 +73,7 @@ class LocalTaskTriggerRepository implements TaskTriggerRepository {
       type: _type(data['type']),
       enabled: data['enabled'] is bool ? data['enabled'] as bool : false,
       schedule: _scheduleFrom(data['config']),
-      event: _eventFrom(data['eventConfig']),
+      event: EventTriggerConfigMapper.fromDocument(data['eventConfig']),
       policy: _policy(data['policy']),
       nextRunAt: _dateOrNull(data['nextRunAt']),
       lastRunAt: _dateOrNull(data['lastRunAt']),
@@ -108,21 +102,6 @@ class LocalTaskTriggerRepository implements TaskTriggerRepository {
       timeOfDay: _nullableString(config['timeOfDay']),
       weekdays: _integers(config['weekdays']),
       slots: _slots(config['slots']),
-    );
-  }
-
-  EventTriggerConfig? _eventFrom(Object? value) {
-    if (value is! Map || value.isEmpty) return null;
-    final config = {
-      for (final entry in value.entries) entry.key.toString(): entry.value,
-    };
-    return EventTriggerConfig(
-      source: EventTriggerSource.values.firstWhere(
-        (source) => source.name == config['source'],
-        orElse: () => EventTriggerSource.webhookReceived,
-      ),
-      filter: _string(config['filter']),
-      channelId: _nullableString(config['channelId']),
     );
   }
 

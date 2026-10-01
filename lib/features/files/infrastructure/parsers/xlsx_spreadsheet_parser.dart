@@ -27,8 +27,7 @@ class XlsxSpreadsheetParser {
 
   SpreadsheetSheet _sheetFrom(String name, excel_lib.Sheet sheet) {
     final rows = [
-      for (final row in sheet.rows)
-        [for (final cell in row) _cellFrom(cell)],
+      for (final row in sheet.rows) [for (final cell in row) _cellFrom(cell)],
     ];
     return SpreadsheetSheet(name: name, rows: _trimTrailingEmpty(rows));
   }
@@ -86,8 +85,7 @@ class XlsxSpreadsheetParser {
   ) {
     if (rows.isEmpty) return rows;
     var columnCount = rows.first.length;
-    while (
-        columnCount > 0 &&
+    while (columnCount > 0 &&
         rows.every((row) => row[columnCount - 1].value == null)) {
       columnCount--;
     }

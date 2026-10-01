@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../domain/entities/event_trigger_config.dart';
+import 'event_trigger_config_mapper.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../../domain/entities/task_trigger.dart';
 
@@ -84,22 +85,8 @@ class TaskTriggerModel {
     );
   }
 
-  static EventTriggerConfig? _eventFrom(Object? value) {
-    if (value is! Map) return null;
-    final data = _objectMapFrom(value);
-    return EventTriggerConfig(
-      source: _eventSourceFrom(data['source']),
-      filter: data['filter'] as String? ?? '',
-      channelId: data['channelId'] as String?,
-    );
-  }
-
-  static EventTriggerSource _eventSourceFrom(Object? value) {
-    return EventTriggerSource.values.firstWhere(
-      (source) => source.name == value,
-      orElse: () => EventTriggerSource.webhookReceived,
-    );
-  }
+  static EventTriggerConfig? _eventFrom(Object? value) =>
+      EventTriggerConfigMapper.fromDocument(value);
 
   static ScheduleConfig? _scheduleFrom(Object? value) {
     if (value is! Map) return null;

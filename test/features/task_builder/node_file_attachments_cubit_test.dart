@@ -86,6 +86,14 @@ class _FakeTeamFileRepository implements TeamFileRepository {
   Future<void> close() => _controller.close();
 
   @override
+  Future<Result<Unit, FileFailure>> deleteFile({
+    required TeamId teamId,
+    required String fileId,
+  }) async {
+    return const Result.error(FileFailure(FileFailureKind.deleteFailed));
+  }
+
+  @override
   Future<Result<TeamFile, FileFailure>> uploadFile({
     required TeamId teamId,
     required String ownerUid,

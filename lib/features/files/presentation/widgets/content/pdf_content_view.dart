@@ -52,9 +52,8 @@ class _PdfContentViewState extends State<PdfContentView> {
         options: const DefaultBuilderOptions(),
         documentLoaderBuilder: (context) =>
             const Center(child: CircularProgressIndicator()),
-        errorBuilder: (context, error) => Center(
-          child: Text('PDF konnte nicht angezeigt werden: $error'),
-        ),
+        errorBuilder: (context, error) =>
+            Center(child: Text('PDF konnte nicht angezeigt werden: $error')),
       ),
     );
   }

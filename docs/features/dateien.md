@@ -135,6 +135,12 @@ Node-Executor. Prompt-Nodes erhalten ihn über die Genkit-Filesystem-Middleware
 (`@genkit-ai/middleware`) als read-only Workspace. Script-Nodes erhalten
 stattdessen Python-Hilfsfunktionen wie `list_files()` und `read_file(name)`.
 
+Dateien lassen sich über `DELETE /v1/files/:fileId` löschen (lokale Runtime):
+Metadaten, alle Versionen und Dateiinhalte werden entfernt. Im Client gibt es
+dafür die Aktion „Löschen" mit Bestätigung am Dateieintrag. Schreiben, neue
+Versionen und Löschen lösen Datei-Ereignisse für Event-Trigger aus
+(siehe [`zeitplan.md`](./zeitplan.md) § Datei-Ereignisse).
+
 Der Baustein **Datei schreiben** ist kein Attachment-Input, sondern ein
 Persistenz-Output. Er schreibt den String-Output des Vorgänger-Nodes als neue
 Datei in ein wählbares Verzeichnis des Team-Dateibereichs (`folderId` in der

@@ -190,6 +190,8 @@ IconData _iconFor(TaskTrigger trigger) {
     EventTriggerSource.smsMessageReceived => CupertinoIcons.chat_bubble,
     EventTriggerSource.whatsappMessageReceived => CupertinoIcons.chat_bubble_2,
     EventTriggerSource.fileCreated => CupertinoIcons.doc,
+    EventTriggerSource.fileVersionCreated => CupertinoIcons.doc_on_doc,
+    EventTriggerSource.fileDeleted => CupertinoIcons.trash,
     EventTriggerSource.webhookReceived => CupertinoIcons.link,
     null => CupertinoIcons.bolt,
   };

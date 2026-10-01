@@ -32,6 +32,7 @@ import 'package:syscat2/features/files/domain/repositories/team_file_repository.
 import 'package:syscat2/features/files/domain/repositories/file_version_repository.dart';
 import 'package:syscat2/features/files/domain/usecases/create_file_version.dart';
 import 'package:syscat2/features/files/domain/usecases/create_team_folder.dart';
+import 'package:syscat2/features/files/domain/usecases/delete_team_file.dart';
 import 'package:syscat2/features/files/domain/usecases/download_file_version.dart';
 import 'package:syscat2/features/files/domain/usecases/upload_team_file.dart';
 import 'package:syscat2/features/files/domain/usecases/watch_file_versions.dart';
@@ -120,6 +121,7 @@ import '../../features/task_builder/infrastructure/datasources/task_runner_datas
 import '../../features/task_builder/infrastructure/repositories/firebase_task_repository.dart';
 import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_employee_assignments_cubit.dart';
+import '../../features/schedule/presentation/cubits/event_target_options_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/write_file_folders_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
@@ -408,6 +410,9 @@ void _configureCloudDependencies() {
       () => CreateTeamFolder(serviceLocator<TeamFileRepository>()),
     )
     ..registerLazySingleton(
+      () => DeleteTeamFile(serviceLocator<TeamFileRepository>()),
+    )
+    ..registerLazySingleton(
       () => WatchTaskTriggers(serviceLocator<TaskTriggerRepository>()),
     )
     ..registerLazySingleton(
@@ -644,6 +649,7 @@ void _configureCloudDependencies() {
         serviceLocator<WatchTeamFolders>(),
         serviceLocator<UploadTeamFile>(),
         serviceLocator<CreateTeamFolder>(),
+        serviceLocator<DeleteTeamFile>(),
         serviceLocator<GetCurrentTeamId>(),
       ),
     )
@@ -662,6 +668,14 @@ void _configureCloudDependencies() {
         setTaskTriggerEnabled: serviceLocator<SetTaskTriggerEnabled>(),
         deleteTaskTrigger: serviceLocator<DeleteTaskTrigger>(),
         taskRepository: serviceLocator<TaskRepository>(),
+      ),
+    )
+    ..registerFactory(
+      () => EventTargetOptionsCubit(
+        serviceLocator<WatchTeamFiles>(),
+        serviceLocator<WatchTeamFolders>(),
+        serviceLocator<WatchCommunicationChannels>(),
+        serviceLocator<GetCurrentTeamId>(),
       ),
     )
     ..registerFactory(

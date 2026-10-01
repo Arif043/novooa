@@ -1,3 +1,6 @@
+import {type FileEventPublisher, noFileEventPublisher} from "../../features/files/domain/repositories/file-event-publisher.js";
+import {SQLiteFolderAncestry} from "../../features/files/infrastructure/local/sqlite-folder-ancestry.js";
+import {DispatchFileEvent} from "../../features/scheduling/domain/usecases/dispatch-file-event.js";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {LocalMailRelayEventProcessor} from "../../features/communication/infrastructure/local/local-mail-relay-event-processor.js";
 import {RuntimeMailRelayWorker} from "../../features/communication/infrastructure/local/polling-runtime-mail-relay-worker.js";
@@ -75,8 +78,10 @@ export function createLocalRuntimeComposition(
     activityStore,
     new LocalTaskRunApprovalPushNotifier(options.signedLicense, pushRelay, applicationLogger),
   );
+  let fileEventDispatcher: FileEventPublisher = noFileEventPublisher;
+  const fileEvents: FileEventPublisher = {publish: (event) => fileEventDispatcher.publish(event)};
   const teamFileStore = new LocalTeamFileStore(
-    options.database, options.runtimeRoot, new SQLiteFileSettingsStore(options.database),
+    options.database, options.runtimeRoot, new SQLiteFileSettingsStore(options.database), fileEvents,
   );
   const jobStore = new SQLiteTaskRunJobStore(options.database);
   const taskStore = new SQLiteTaskStore(options.database);
@@ -106,6 +111,13 @@ export function createLocalRuntimeComposition(
     },
   );
   const taskRunDispatcher = new SQLiteTaskRunDispatcher(jobStore, taskRunWorker);
+  fileEventDispatcher = new DispatchFileEvent({
+    triggerStore: new SQLiteTaskTriggerStore(options.database), taskStore, taskRunStore, taskRunDispatcher,
+    folders: new SQLiteFolderAncestry(options.database),
+    onFailure: (error, trigger) => applicationLogger.exception(
+      "file_event_trigger.failed", error, {teamId: options.workspace.teamId, triggerId: trigger?.id},
+    ),
+  });
   taskWorkflow = createLocalTaskWorkflow({
     database: options.database, runtimeRoot: options.runtimeRoot, signedLicense: options.signedLicense,
     taskRunStore, teamFileStore, taskRunDispatcher, logger: applicationLogger,
@@ -123,6 +135,7 @@ export function createLocalRuntimeComposition(
     userId: options.workspace.userId,
     logger: applicationLogger,
     taskWorkflow,
+    fileEvents,
     systemModelCatalog: firebaseSession === undefined ? undefined : new FirebaseRuntimeModelCatalog(firebaseSession),
   };
   return {

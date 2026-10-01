@@ -6,6 +6,8 @@ import {files, fileVersions, type Files} from "../../../../db/schema.js";
 import {type NodeAttachment} from "../../../task_execution/domain/entities/attachments.js";
 import {storagePathFor} from "../../domain/entities/file-storage-path.js";
 import {versionsToRotateOut} from "../../domain/entities/file-version-rotation.js";
+import {type FileEvent} from "../../domain/entities/file-event.js";
+import {noFileEventPublisher, type FileEventPublisher} from "../../domain/repositories/file-event-publisher.js";
 import {type FileSettingsStore} from "../../domain/repositories/file-settings-store.js";
 import {localFilePath, writeLocalFile} from "./local-file-path.js";
 import {
@@ -33,6 +35,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
     private readonly database: RuntimeExecutor,
     private readonly rootDirectory: string,
     private readonly settings: FileSettingsStore,
+    private readonly events: FileEventPublisher = noFileEventPublisher,
   ) {}
 
   async writeTeamFile(input: WriteTeamFileInput): Promise<WrittenFile> {
@@ -40,7 +43,30 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
     await writeLocalFile(this.rootDirectory, file.storagePath, input.content);
     await this.writeMetadata(input.teamId, file);
     await this.rotateVersions(input.teamId, file);
+    await this.events.publish(writtenEventFrom(input.teamId, file));
     return file;
+  }
+
+  /** Entfernt die Datei samt aller Versionen. `false`, wenn sie nicht existiert. */
+  async deleteTeamFile(teamId: string, fileId: string): Promise<boolean> {
+    const file = await this.fileRowFor(teamId, fileId);
+    if (file === null) return false;
+    const versions = await this.database.select({storage_path: fileVersions.storage_path}).from(fileVersions)
+      .where(and(eq(fileVersions.team_id, teamId), eq(fileVersions.file_id, fileId)));
+    await this.database.transaction(async (tx) => {
+      await tx.delete(fileVersions).where(and(eq(fileVersions.team_id, teamId), eq(fileVersions.file_id, fileId)));
+      await tx.delete(files).where(and(eq(files.team_id, teamId), eq(files.id, fileId)));
+    });
+    await Promise.all(versions.map((version) =>
+      rm(localFilePath(this.rootDirectory, version.storage_path), {force: true})));
+    await this.events.publish(deletedEventFrom(teamId, file));
+    return true;
+  }
+
+  private async fileRowFor(teamId: string, fileId: string) {
+    const row = await this.database.select({id: files.id, display_name: files.display_name, folder_id: files.folder_id, content_type: files.content_type, size_bytes: files.size_bytes})
+      .from(files).where(and(eq(files.team_id, teamId), eq(files.id, fileId))).get();
+    return row ?? null;
   }
 
   async readTextFile(teamId: string, file: NodeAttachment): Promise<string> {
@@ -136,6 +162,26 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
       await insertVersion(tx, teamId, file);
     });
   }
+}
+
+function writtenEventFrom(teamId: string, file: WrittenFile): FileEvent {
+  return {
+    type: file.isNewFile ? "fileCreated" : "fileVersionCreated",
+    teamId, fileId: file.fileId, versionId: file.versionId, displayName: file.displayName,
+    contentType: file.contentType, sizeBytes: file.sizeBytes, folderId: file.folderId,
+    occurredAt: new Date().toISOString(),
+  };
+}
+
+function deletedEventFrom(
+  teamId: string,
+  file: {id: string; display_name: string; folder_id: string | null; content_type: string; size_bytes: number},
+): FileEvent {
+  return {
+    type: "fileDeleted", teamId, fileId: file.id, versionId: null, displayName: file.display_name,
+    contentType: file.content_type, sizeBytes: file.size_bytes, folderId: file.folder_id,
+    occurredAt: new Date().toISOString(),
+  };
 }
 
 function newFileFrom(input: WriteTeamFileInput): WrittenFile {

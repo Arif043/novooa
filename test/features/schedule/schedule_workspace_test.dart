@@ -116,7 +116,10 @@ void main() {
     expect(find.text('Mo 09:00'), findsOneWidget);
     await tester.tap(find.text('Ereignis'));
     await tester.pumpAndSettle();
-    expect(find.text('Filter (optional)'), findsOneWidget);
+    expect(find.text('Welches Postfach?'), findsOneWidget);
+    await tester.tap(find.text('Weitere Optionen'));
+    await tester.pumpAndSettle();
+    expect(find.text('Textfilter (optional)'), findsOneWidget);
     await tester.enterText(find.byType(TextField), 'rechnung');
     await tester.tap(find.text('Auslöser erstellen'));
     await tester.pumpAndSettle();

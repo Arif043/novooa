@@ -1,3 +1,4 @@
+import {type LocalRuntimeWorkspaceContext} from "./local-runtime-workspace-context.js";
 import path from "node:path";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {SQLiteDocumentStore} from "../../features/data/infrastructure/local/sqlite-document-store.js";
@@ -36,6 +37,7 @@ export function createLocalRuntimeRouteServices(options: {
   runtimeRoot: string;
   fieldCipher: SensitiveFieldCipher;
   notifier: LocalRuntimeRealtimeNotifier;
+  workspaceContext: () => LocalRuntimeWorkspaceContext;
 }) {
   const {database, runtimeRoot} = options;
   const languageModelSecrets = new EncryptedSQLiteLanguageModelSecretStore(database, options.fieldCipher);
@@ -44,7 +46,9 @@ export function createLocalRuntimeRouteServices(options: {
     credentials: new LocalRuntimeAccessCredentialStore(database),
     documents: new SQLiteDocumentStore(database),
     fileSettings,
-    teamFiles: new LocalTeamFileStore(database, runtimeRoot, fileSettings),
+    teamFiles: new LocalTeamFileStore(database, runtimeRoot, fileSettings, {
+      publish: (event) => options.workspaceContext().fileEvents.publish(event),
+    }),
     taskDefinitions: new SQLiteTaskDefinitionStore(database),
     applicationLogs: new SQLiteLocalApplicationLogStore(database),
     languageModels: new SQLiteLanguageModelConfigurationStore(database, languageModelSecrets),

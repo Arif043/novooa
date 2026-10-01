@@ -1,4 +1,5 @@
 import '../../domain/entities/event_trigger_config.dart';
+import 'event_target_labels.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../../domain/entities/task_trigger.dart';
 
@@ -20,8 +21,14 @@ String scheduleLabel(ScheduleConfig? config) {
 
 String eventLabel(EventTriggerConfig? config) {
   if (config == null) return 'Ereignis nicht konfiguriert';
-  if (config.filter.trim().isEmpty) return config.source.label;
-  return '${config.source.label} · ${config.filter}';
+  final parts = [
+    config.source.label,
+    if (config.target is! AnywhereTarget) eventTargetLabel(config.target),
+    if (config.fileKinds.isNotEmpty && config.target is! FileTarget)
+      config.fileKinds.map((kind) => kind.label).join(', '),
+    if (config.filter.trim().isNotEmpty) '„${config.filter.trim()}“',
+  ];
+  return parts.join(' · ');
 }
 
 String triggerStatusLabel(TaskTrigger trigger) {

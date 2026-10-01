@@ -115,6 +115,18 @@ class FirebaseTeamFileRepository
     }
   }
 
+  /// Löschen ist bisher nur in der lokalen Runtime umgesetzt: Dort entfernt
+  /// der Server Metadaten und Dateiinhalt gemeinsam und löst das Ereignis
+  /// „Datei gelöscht" aus. Ein clientseitiges Löschen in Firestore würde die
+  /// Inhalte im Storage zurücklassen.
+  @override
+  Future<Result<Unit, FileFailure>> deleteFile({
+    required TeamId teamId,
+    required String fileId,
+  }) async {
+    return const Error(FileFailure(FileFailureKind.deleteFailed));
+  }
+
   @override
   Future<Result<TeamFolder, FileFailure>> createFolder({
     required TeamId teamId,

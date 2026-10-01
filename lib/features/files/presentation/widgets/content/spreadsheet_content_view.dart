@@ -23,8 +23,7 @@ class SpreadsheetContentView extends StatefulWidget {
   final Uint8List bytes;
 
   @override
-  State<SpreadsheetContentView> createState() =>
-      _SpreadsheetContentViewState();
+  State<SpreadsheetContentView> createState() => _SpreadsheetContentViewState();
 }
 
 class _SpreadsheetContentViewState extends State<SpreadsheetContentView> {

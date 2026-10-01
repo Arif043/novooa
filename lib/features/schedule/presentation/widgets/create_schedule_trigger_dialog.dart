@@ -1,11 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/ios_overlays.dart';
 import '../../../task_builder/domain/entities/task.dart';
 import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/schedule_config.dart';
+import '../cubits/event_target_options_cubit.dart';
 import '../cubits/schedule_cubit.dart';
 import 'event_trigger_form_controls.dart';
 import 'schedule_form_values.dart';
@@ -35,6 +38,8 @@ class _CreateScheduleTriggerDialogState
   String? _error;
   TriggerFormMode _mode = TriggerFormMode.schedule;
   EventTriggerSource _eventSource = EventTriggerSource.emailReceived;
+  EventTriggerTarget _eventTarget = EventTriggerTarget.anywhere;
+  Set<EventFileKind> _eventFileKinds = const {};
   final TextEditingController _eventFilterController = TextEditingController();
   ScheduleKind _kind = ScheduleKind.daily;
   TimeOfDay _time = const TimeOfDay(hour: 9, minute: 0);
@@ -60,108 +65,112 @@ class _CreateScheduleTriggerDialogState
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: ScheduleTheme.from(Theme.of(context)),
-      child: Builder(
-        builder: (context) => PopScope(
-          canPop: !_saving,
-          child: Dialog(
-            insetPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 24,
-            ),
-            backgroundColor: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerLowest,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Auslöser hinzufügen',
-                            style: Theme.of(context).textTheme.titleLarge,
+    return BlocProvider(
+      // Lazy: Die Optionen werden erst geladen, wenn die Zielwahl geöffnet wird.
+      create: (_) => serviceLocator<EventTargetOptionsCubit>()..load(),
+      child: Theme(
+        data: ScheduleTheme.from(Theme.of(context)),
+        child: Builder(
+          builder: (context) => PopScope(
+            canPop: !_saving,
+            child: Dialog(
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 24,
+              ),
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerLowest,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Auslöser hinzufügen',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
                           ),
+                          IconButton(
+                            tooltip: 'Schließen',
+                            onPressed: _saving
+                                ? null
+                                : () => Navigator.of(context).pop(),
+                            icon: const Icon(CupertinoIcons.xmark, size: 20),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Lege fest, wann deine Aufgabe automatisch startet.',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      const SizedBox(height: 24),
+                      ScheduleSection(
+                        title: 'Aufgabe',
+                        child: ScheduleTaskDropdown(
+                          tasks: widget.tasks,
+                          value: _task,
+                          onChanged: _setTask,
                         ),
-                        IconButton(
-                          tooltip: 'Schließen',
-                          onPressed: _saving
-                              ? null
-                              : () => Navigator.of(context).pop(),
-                          icon: const Icon(CupertinoIcons.xmark, size: 20),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      TriggerModeSelector(value: _mode, onChanged: _setMode),
+                      const SizedBox(height: AppSpacing.lg),
+                      ScheduleSection(
+                        title: _mode == TriggerFormMode.schedule
+                            ? 'Wann soll die Aufgabe starten?'
+                            : 'Was soll die Aufgabe auslösen?',
+                        child: _mode == TriggerFormMode.schedule
+                            ? _scheduleControls()
+                            : _eventControls(),
+                      ),
+                      if (_mode == TriggerFormMode.schedule) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          'Zeitzone: Europe/Berlin',
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Lege fest, wann deine Aufgabe automatisch startet.',
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                    const SizedBox(height: 24),
-                    ScheduleSection(
-                      title: 'Aufgabe',
-                      child: ScheduleTaskDropdown(
-                        tasks: widget.tasks,
-                        value: _task,
-                        onChanged: _setTask,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    TriggerModeSelector(value: _mode, onChanged: _setMode),
-                    const SizedBox(height: AppSpacing.lg),
-                    ScheduleSection(
-                      title: _mode == TriggerFormMode.schedule
-                          ? 'Wann soll die Aufgabe starten?'
-                          : 'Was soll die Aufgabe auslösen?',
-                      child: _mode == TriggerFormMode.schedule
-                          ? _scheduleControls()
-                          : _eventControls(),
-                    ),
-                    if (_mode == TriggerFormMode.schedule) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        'Zeitzone: Europe/Berlin',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                    if (_error != null) ...[
-                      const SizedBox(height: 16),
-                      Semantics(
-                        liveRegion: true,
-                        child: Text(
-                          _error!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+                      if (_error != null) ...[
+                        const SizedBox(height: 16),
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            _error!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                           ),
                         ),
+                      ],
+                      const SizedBox(height: 24),
+                      FilledButton(
+                        onPressed: _canSubmit && !_saving ? _submit : null,
+                        child: _saving
+                            ? const Padding(
+                                padding: EdgeInsets.all(8),
+                                child: CupertinoActivityIndicator(),
+                              )
+                            : const Text('Auslöser erstellen'),
+                      ),
+                      TextButton(
+                        onPressed: _saving
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                        child: const Text('Abbrechen'),
                       ),
                     ],
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _canSubmit && !_saving ? _submit : null,
-                      child: _saving
-                          ? const Padding(
-                              padding: EdgeInsets.all(8),
-                              child: CupertinoActivityIndicator(),
-                            )
-                          : const Text('Auslöser erstellen'),
-                    ),
-                    TextButton(
-                      onPressed: _saving
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                      child: const Text('Abbrechen'),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -207,9 +216,27 @@ class _CreateScheduleTriggerDialogState
   Widget _eventControls() {
     return EventTriggerControls(
       source: _eventSource,
+      target: _eventTarget,
+      fileKinds: _eventFileKinds,
       filterController: _eventFilterController,
-      onSourceChanged: (source) => setState(() => _eventSource = source),
+      onSourceChanged: _setEventSource,
+      onTargetChanged: (target) => setState(() => _eventTarget = target),
+      onFileKindsChanged: (kinds) => setState(() => _eventFileKinds = kinds),
     );
+  }
+
+  /// Ein Ziel gilt nur für die Art von Ereignis, für die es gewählt wurde.
+  void _setEventSource(EventTriggerSource source) {
+    final sameScope = source.targetScope == _eventSource.targetScope;
+    setState(() {
+      if (!sameScope || source.targetScope == EventTargetScope.channel) {
+        _eventTarget = EventTriggerTarget.anywhere;
+      }
+      if (source.targetScope != EventTargetScope.files) {
+        _eventFileKinds = const {};
+      }
+      _eventSource = source;
+    });
   }
 
   Future<void> _pickDate() async {
@@ -294,6 +321,8 @@ class _CreateScheduleTriggerDialogState
 
   EventTriggerConfig _eventConfig() => EventTriggerConfig(
     source: _eventSource,
+    target: _eventTarget,
+    fileKinds: _eventFileKinds,
     filter: _eventFilterController.text.trim(),
   );
 

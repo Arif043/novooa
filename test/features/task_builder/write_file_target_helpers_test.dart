@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/files/domain/entities/team_folder.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/write_file_folder_tree.dart';
+import 'package:syscat2/features/files/domain/entities/team_folder_tree.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/write_file_kind_filter.dart';
 
 void main() {

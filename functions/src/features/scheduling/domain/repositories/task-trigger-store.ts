@@ -12,12 +12,8 @@ export type DueScheduleTrigger = {
   policy: TriggerPolicy;
 };
 
-export type EventTriggerConfig = {
-  source: string;
-  channelId: string;
-  connectorId: string;
-  filter: string;
-};
+export type {EventTriggerConfig} from "../entities/event-trigger-config.js";
+import {type EventTriggerConfig} from "../entities/event-trigger-config.js";
 
 export type EventTaskTrigger = {
   id: string;

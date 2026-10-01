@@ -5,6 +5,7 @@ enum FileFailureKind {
   uploadFailed,
   downloadFailed,
   createFolderFailed,
+  deleteFailed,
   invalidFolderName,
 }
 
@@ -24,6 +25,7 @@ class FileFailure {
         'Dateiinhalt konnte nicht geladen werden.',
       FileFailureKind.createFolderFailed =>
         'Verzeichnis konnte nicht erstellt werden.',
+      FileFailureKind.deleteFailed => 'Datei konnte nicht gelöscht werden.',
       FileFailureKind.invalidFolderName =>
         'Gib einen Namen für das Verzeichnis ein.',
     };

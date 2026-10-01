@@ -9,6 +9,7 @@ import '../../domain/entities/team_folder.dart';
 import '../../domain/entities/team_id.dart';
 import '../../domain/entities/upload_file_input.dart';
 import '../../domain/usecases/create_team_folder.dart';
+import '../../domain/usecases/delete_team_file.dart';
 import '../../domain/usecases/upload_team_file.dart';
 import '../../domain/usecases/watch_team_files.dart';
 import '../../domain/usecases/watch_team_folders.dart';
@@ -22,6 +23,7 @@ class FilesCubit extends Cubit<FilesState> {
     this._watchTeamFolders,
     this._uploadTeamFile,
     this._createTeamFolder,
+    this._deleteTeamFile,
     this._getCurrentTeamId,
   ) : super(const FilesState());
 
@@ -30,6 +32,7 @@ class FilesCubit extends Cubit<FilesState> {
   final WatchTeamFolders _watchTeamFolders;
   final UploadTeamFile _uploadTeamFile;
   final CreateTeamFolder _createTeamFolder;
+  final DeleteTeamFile _deleteTeamFile;
   final GetCurrentTeamId _getCurrentTeamId;
   StreamSubscription<List<TeamFile>>? _filesSubscription;
   StreamSubscription<List<TeamFolder>>? _foldersSubscription;
@@ -98,6 +101,20 @@ class FilesCubit extends Cubit<FilesState> {
       (failure) => emit(
         state.copyWith(isCreatingFolder: false, message: failure.message),
       ),
+    );
+  }
+
+  Future<void> deleteFile(String fileId) async {
+    final teamId = await _teamIdOrFailure();
+    if (teamId == null) return;
+    final deletedOrFailure = await _deleteTeamFile(
+      teamId: teamId,
+      fileId: fileId,
+    );
+    if (isClosed) return;
+    deletedOrFailure.when(
+      (_) => emit(state.copyWith(message: 'Datei gelöscht.')),
+      (failure) => emit(state.copyWith(message: failure.message)),
     );
   }
 

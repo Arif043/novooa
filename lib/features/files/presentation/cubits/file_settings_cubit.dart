@@ -22,7 +22,11 @@ class FileSettingsCubit extends Cubit<FileSettingsState> {
     _subscription = _watchVersionLimit().listen(
       (limit) => emit(FileSettingsReady(versionLimit: limit)),
       onError: (Object error, StackTrace stackTrace) {
-        _log('Dateieinstellungen konnten nicht geladen werden.', error, stackTrace);
+        _log(
+          'Dateieinstellungen konnten nicht geladen werden.',
+          error,
+          stackTrace,
+        );
         emit(
           const FileSettingsFailure(
             'Dateieinstellungen konnten nicht geladen werden.',

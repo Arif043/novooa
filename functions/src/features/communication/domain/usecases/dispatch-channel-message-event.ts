@@ -4,6 +4,7 @@ import {
   recipientFromEvent,
   senderFromEvent,
 } from "../entities/channel-message-event.js";
+import {messageTargetMatches} from "../../../scheduling/domain/usecases/event-trigger-matching.js";
 import {type TaskTriggerStore, type EventTaskTrigger} from
   "../../../scheduling/domain/repositories/task-trigger-store.js";
 import {type TaskStore} from
@@ -59,12 +60,7 @@ function matchesSource(
   input: {channelId: string; event: ChannelMessageEvent},
 ): boolean {
   const connectorId = input.event.type === "emailReceived" ? input.event.connectorId : undefined;
-  if (!connectorId) return optionalMatch(trigger.eventConfig.channelId, input.channelId);
-  return optionalMatch(trigger.eventConfig.connectorId, connectorId);
-}
-
-function optionalMatch(configured: string, actual: string): boolean {
-  return configured.trim().length === 0 || configured === actual;
+  return messageTargetMatches(trigger.eventConfig.target, {channelId: input.channelId, connectorId});
 }
 
 function matchesFilter(filter: string, event: ChannelMessageEvent): boolean {

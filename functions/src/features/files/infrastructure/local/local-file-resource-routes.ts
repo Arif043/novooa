@@ -14,7 +14,7 @@ import {type LocalTeamFileStore} from "./local-team-file-store.js";
 
 export type FileResourceRoutesOptions = {
   database: RuntimeExecutor;
-  fileStore: Pick<LocalTeamFileStore, "writeTeamFile" | "readTeamFileContent">;
+  fileStore: Pick<LocalTeamFileStore, "writeTeamFile" | "readTeamFileContent" | "deleteTeamFile">;
   notifier: {publish(topic: string): void};
 };
 
@@ -58,6 +58,15 @@ export const fileResourceRoutes: FastifyPluginAsyncTypebox<FileResourceRoutesOpt
 
   app.post("/v1/files/:fileId/versions", {schema: {params: FileParams, body: FileUpload, response: fileResponses}},
     async (request, reply) => writeFile(options, request.workspace, request.body, request.params.fileId, reply));
+
+  app.delete("/v1/files/:fileId", {
+    schema: {params: FileParams, response: {204: Type.Null(), 404: ErrorResponse}},
+  }, async (request, reply) => {
+    const deleted = await fileStore.deleteTeamFile(request.workspace.teamId, request.params.fileId);
+    if (!deleted) return reply.code(404).send({error: "Datei nicht gefunden."});
+    notifier.publish("files");
+    return reply.code(204).send(null);
+  });
 
   app.get("/v1/files/:fileId/versions", {schema: {params: FileParams, response: {200: ItemsOf(FileVersionDto)}}},
     async (request) => {

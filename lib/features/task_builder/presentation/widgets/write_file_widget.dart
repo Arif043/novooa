@@ -5,7 +5,7 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/write_file_folders_cubit.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/write_file_folder_tree.dart';
+import 'package:syscat2/features/files/domain/entities/team_folder_tree.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/write_file_target_dialog.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_scope.dart';

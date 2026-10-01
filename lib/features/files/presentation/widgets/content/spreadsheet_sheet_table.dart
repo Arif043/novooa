@@ -168,10 +168,7 @@ class _CellLink extends StatelessWidget {
   }
 
   Future<void> _open(BuildContext context) async {
-    final opened = await launchUrl(
-      link,
-      mode: LaunchMode.externalApplication,
-    );
+    final opened = await launchUrl(link, mode: LaunchMode.externalApplication);
     if (!opened && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Link konnte nicht geöffnet werden.')),

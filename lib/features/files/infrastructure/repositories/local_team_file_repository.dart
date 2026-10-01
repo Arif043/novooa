@@ -22,6 +22,19 @@ class LocalTeamFileRepository
   final WorkspaceRealtimeChannel _channel;
 
   @override
+  Future<Result<Unit, FileFailure>> deleteFile({
+    required TeamId teamId,
+    required String fileId,
+  }) async {
+    try {
+      await _client.delete('/v1/files/$fileId');
+      return const Success(unit);
+    } on Object {
+      return const Error(FileFailure(FileFailureKind.deleteFailed));
+    }
+  }
+
+  @override
   Future<Result<TeamFolder, FileFailure>> createFolder({
     required TeamId teamId,
     required String ownerUid,

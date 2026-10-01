@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/write_file_folders_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/write_file_folders_state.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/write_file_folder_tree.dart';
+import 'package:syscat2/features/files/domain/entities/team_folder_tree.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/write_file_new_folder_row.dart';
 
 /// Zielverzeichnis für eine neue Datei: oberste Ebene oder ein bestehendes

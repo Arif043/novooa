@@ -18,6 +18,12 @@ abstract interface class TeamFileRepository {
     required String? folderId,
   });
 
+  /// Entfernt die Datei samt aller Versionen.
+  Future<Result<Unit, FileFailure>> deleteFile({
+    required TeamId teamId,
+    required String fileId,
+  });
+
   Future<Result<TeamFolder, FileFailure>> createFolder({
     required TeamId teamId,
     required String ownerUid,

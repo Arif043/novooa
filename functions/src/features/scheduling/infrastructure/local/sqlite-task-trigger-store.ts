@@ -6,6 +6,7 @@ import {
   type EventTaskTrigger,
   type TaskTriggerStore,
 } from "../../domain/repositories/task-trigger-store.js";
+import {eventTriggerConfigFrom} from "../../domain/entities/event-trigger-config.js";
 import {type ScheduleConfig} from "../../domain/usecases/schedule-next-run.js";
 
 type ScheduleTriggerRow = {
@@ -72,18 +73,12 @@ function scheduleTriggerFromRow(row: ScheduleTriggerRow): DueScheduleTrigger {
 }
 
 function eventTriggerFromRow(row: EventTriggerRow): EventTaskTrigger {
-  const eventConfig = jsonObject(row.event_config_json);
   return {
     id: row.id,
     teamId: row.team_id,
     taskId: row.task_id,
     type: row.type,
-    eventConfig: {
-      source: stringFrom(eventConfig.source, ""),
-      channelId: stringFrom(eventConfig.channelId, ""),
-      connectorId: stringFrom(eventConfig.connectorId, ""),
-      filter: stringFrom(eventConfig.filter, ""),
-    },
+    eventConfig: eventTriggerConfigFrom(jsonObject(row.event_config_json)),
   };
 }
 

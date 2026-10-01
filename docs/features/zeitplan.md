@@ -45,10 +45,15 @@ Dokument:
     }>
   },
   eventConfig?: {
-    source: "emailReceived" | "smsMessageReceived" | "whatsappMessageReceived" | "fileCreated" | "webhookReceived",
-    filter: string,
-    channelId?: string,
-    connectorId?: string
+    source: "emailReceived" | "smsMessageReceived" | "whatsappMessageReceived"
+      | "fileCreated" | "fileVersionCreated" | "fileDeleted" | "webhookReceived",
+    target: { kind: "any" }                                          // überall (Standard)
+      | { kind: "folder", id: string, includeSubfolders: boolean }   // Datei-Ereignisse
+      | { kind: "file", id: string }                                 // Datei-Ereignisse
+      | { kind: "channel", id: string }                              // SMS, WhatsApp
+      | { kind: "connector", id: string },                           // E-Mail
+    fileKinds: Array<"text" | "image" | "video" | "audio" | "pdf" | "spreadsheet" | "other">,
+    filter: string
   },
   policy: {
     ifRunning: "skipIfRunning" | "startParallel"
@@ -60,6 +65,15 @@ Dokument:
   updatedAt: Timestamp
 }
 ```
+
+Alle Ereignisquellen teilen dieselbe Zielstruktur (`target`): Datei-Ereignisse
+zielen auf ein Verzeichnis (optional samt Unterordnern) oder eine einzelne
+Datei, Nachrichten auf einen Kanal bzw. Mail-Connector. Fehlt `target` oder ist
+es unvollständig, gilt „überall". `fileKinds` schränkt Datei-Ereignisse auf
+Kategorien ein (leer = alle), `filter` ist ein optionaler Textfilter — bei
+Nachrichten gegen den Nachrichtentext, bei Dateien gegen den Dateinamen.
+Das Matching liegt als reine Funktion in
+`scheduling/domain/usecases/event-trigger-matching.ts`.
 
 `nextRunAt` ist für Zeitplan-Trigger bewusst materialisiert, damit der
 Backend-Worker fällige Trigger effizient per Query finden kann. Event-Trigger
@@ -142,7 +156,20 @@ Der Kopfbereich zeigt die Anzahl aktiver und pausierter Auslöser. Jede Karte en
 Der Dialog „Auslöser hinzufügen“ bietet gruppierte Einstellungen, native
 Datums-/Zeitpicker und folgende Optionen:
 
-- Ereignis: E-Mail, SMS, WhatsApp, Datei erstellt, Webhook
+- Ereignis: E-Mail, SMS, WhatsApp, Datei erstellt, Neue Dateiversion, Datei
+  gelöscht, Webhook. Zu jedem Ereignis gibt es ein Feld für das Ziel
+  („Wo?", „Welcher Kanal?", „Welches Postfach?", Standard: Überall), das ein
+  Auswahl-Sheet öffnet:
+  - Datei-Ereignisse: Verzeichnisbaum (mit Schalter „Unterordner einbeziehen")
+    oder einzelne Datei mit Suche. Darunter Chips für Dateitypen (Text, Bilder,
+    Video, Audio, PDF, Tabellen, Sonstige; ohne Auswahl: alle). Bei einer
+    einzelnen Datei entfallen die Dateitypen.
+  - SMS/WhatsApp: aktive Kanäle des passenden Typs. E-Mail: verbundene
+    Postfächer. In Betriebsvarianten ohne Kommunikationskanäle bleibt „Überall".
+  - Der Textfilter liegt eingeklappt unter „Weitere Optionen".
+  Die Trigger-Karte fasst das zusammen, z. B. „Datei erstellt · Berichte / 2026
+  (mit Unterordnern) · Bilder". Der Name des Ziels wird als `label` mitgespeichert
+  und dient nur der Anzeige.
 - einmalig
 - täglich
 - wöchentlich mit frei wählbaren Wochenzeitpunkten wie „Mo 09:00“,
@@ -186,6 +213,20 @@ Der erzeugte `taskRun` enthält zusätzlich:
   triggerType: "schedule" | "event"
 }
 ```
+
+### Datei-Ereignisse
+
+Der Dateispeicher meldet jede Schreib- und Löschoperation als `FileEvent`
+(`fileCreated`, `fileVersionCreated`, `fileDeleted`). Der Use Case
+`DispatchFileEvent` lädt die aktiven Event-Trigger, löst die Verzeichniskette
+der Datei auf und startet jede Aufgabe, deren Quelle, Ziel, Dateikategorie und
+Filter passen. Die Aufgabe erhält das Ereignis als `input.event`. Fehler eines
+Triggers stoppen weder die Dateioperation noch andere Trigger.
+
+Aktuell ist das nur in der lokalen Runtime verdrahtet (Upload, Baustein
+„Datei schreiben" und Löschen). Ein Schutz gegen Schleifen — eine Aufgabe, die
+auf Dateien in einem Verzeichnis reagiert und dorthin schreibt — ist noch nicht
+umgesetzt.
 
 ### Channel-Nachrichten
 

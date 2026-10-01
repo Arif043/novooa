@@ -1,4 +1,5 @@
 import {type FastifyInstance} from "fastify";
+import {type FileEventPublisher} from "../../features/files/domain/repositories/file-event-publisher.js";
 import {type RuntimeSystemModelCatalog} from "../../features/machine_learning/infrastructure/local/runtime-system-model-catalog.js";
 import {type TaskWorkflow} from "../../features/task_execution/domain/usecases/task-workflow.js";
 import {type ApplicationLogger} from "../logging/application-logger.js";
@@ -14,6 +15,8 @@ export type LocalRuntimeWorkspaceContext = {
   userId: string;
   logger: ApplicationLogger;
   taskWorkflow: TaskWorkflow;
+  /** Meldet Datei-Ereignisse an die Event-Trigger des Arbeitsbereichs. */
+  fileEvents: FileEventPublisher;
   /** Nur vorhanden, wenn die Runtime eine Firebase-Sitzung hat. */
   systemModelCatalog: RuntimeSystemModelCatalog | undefined;
 };

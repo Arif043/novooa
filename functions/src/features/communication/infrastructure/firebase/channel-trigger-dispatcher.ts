@@ -1,3 +1,4 @@
+import {messageTargetMatches} from "../../../scheduling/domain/usecases/event-trigger-matching.js";
 import {type TaskRunStore} from "../../../task_execution/domain/repositories/task-run-store.js";
 import {type TaskRunDispatcher} from
   "../../../task_execution/domain/repositories/task-run-dispatcher.js";
@@ -61,8 +62,7 @@ export async function dispatchChannelMessageTriggers(input: {
       reason: decision.reason,
       triggerType: trigger.type,
       source: trigger.eventConfig.source,
-      channelId: trigger.eventConfig.channelId,
-      connectorId: trigger.eventConfig.connectorId,
+      target: trigger.eventConfig.target,
       filterLength: trigger.eventConfig.filter.trim().length,
     });
     if (decision.matched) {
@@ -130,18 +130,7 @@ function matchesSource(
   input: {channelId: string; event: ChannelMessageEvent},
 ): boolean {
   const connectorId = input.event.type === "emailReceived" ? input.event.connectorId : undefined;
-  if (!connectorId) return matchesChannel(trigger, input.channelId);
-  const configuredConnectorId = trigger.eventConfig.connectorId;
-  return configuredConnectorId.trim().length === 0 || configuredConnectorId === connectorId;
-}
-
-function matchesChannel(
-  trigger: EventTaskTrigger,
-  channelId: string,
-): boolean {
-  const configuredChannelId = trigger.eventConfig.channelId;
-  return configuredChannelId.trim().length === 0 ||
-    configuredChannelId === channelId;
+  return messageTargetMatches(trigger.eventConfig.target, {channelId: input.channelId, connectorId});
 }
 
 function matchesFilter(

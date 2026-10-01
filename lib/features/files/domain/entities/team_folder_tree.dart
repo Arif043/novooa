@@ -1,4 +1,4 @@
-import 'package:syscat2/features/files/domain/entities/team_folder.dart';
+import 'team_folder.dart';
 
 typedef FolderTreeEntry = ({TeamFolder folder, int depth});
 

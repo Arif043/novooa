@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test, {type TestContext} from "node:test";
 import {eq} from "drizzle-orm";
+import {type FileEvent} from "../../../files/domain/entities/file-event.js";
 import {runtimeTestDatabase} from "../../../../db/runtime-database-test-support.js";
 import {fileVersions, tasks} from "../../../../db/schema.js";
 import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
@@ -100,6 +101,37 @@ test("rotates local file versions beyond the configured limit", async (t) => {
     assert.ok(rows.some((row) => row.id === third.versionId), "aktuelle Version bleibt erhalten");
     await assert.rejects(access(path.join(root, first.storagePath)), "Datei der rotierten Version ist entfernt");
     await access(path.join(root, third.storagePath));
+  } finally {
+    database.$client.close();
+    await rm(root, {force: true, recursive: true});
+  }
+});
+
+test("publishes file events and deletes a file with all versions", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "novooa-local-file-events-"));
+  const database = await databaseForResources(t);
+  const events: FileEvent[] = [];
+  const store = new LocalTeamFileStore(database, root, new SQLiteFileSettingsStore(database), {
+    publish: async (event) => {events.push(event);},
+  });
+
+  try {
+    const first = await store.writeTeamFile({
+      teamId: "team-1", fileName: "notiz.txt", contentType: "text/plain", content: "1", targetFileId: null,
+    });
+    await store.writeTeamFile({
+      teamId: "team-1", fileName: "notiz.txt", contentType: "text/plain", content: "2", targetFileId: first.fileId,
+    });
+    const deleted = await store.deleteTeamFile("team-1", first.fileId);
+    const missing = await store.deleteTeamFile("team-1", first.fileId);
+
+    assert.deepEqual(events.map((event) => event.type), ["fileCreated", "fileVersionCreated", "fileDeleted"]);
+    assert.equal(events[2].displayName, "notiz.txt");
+    assert.equal(events[2].versionId, null);
+    assert.equal(deleted, true);
+    assert.equal(missing, false);
+    assert.equal((await database.select().from(fileVersions).where(eq(fileVersions.file_id, first.fileId))).length, 0);
+    await assert.rejects(access(path.join(root, first.storagePath)));
   } finally {
     database.$client.close();
     await rm(root, {force: true, recursive: true});

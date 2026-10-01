@@ -4,10 +4,16 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/team_file.dart';
 
 class FileTile extends StatelessWidget {
-  const FileTile({super.key, required this.file, required this.onTap});
+  const FileTile({
+    super.key,
+    required this.file,
+    required this.onTap,
+    required this.onDelete,
+  });
 
   final TeamFile file;
   final VoidCallback onTap;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +35,7 @@ class FileTile extends StatelessWidget {
           style: textTheme.bodySmall,
         ),
       ),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: _FileMenu(fileName: file.displayName, onDelete: onDelete),
     );
   }
 
@@ -38,5 +44,29 @@ class FileTile extends StatelessWidget {
     final kib = bytes / 1024;
     if (kib < 1024) return '${kib.toStringAsFixed(1)} KB';
     return '${(kib / 1024).toStringAsFixed(1)} MB';
+  }
+}
+
+class _FileMenu extends StatelessWidget {
+  const _FileMenu({required this.fileName, required this.onDelete});
+
+  final String fileName;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<void>(
+      tooltip: 'Aktionen für $fileName',
+      itemBuilder: (_) => [
+        PopupMenuItem<void>(
+          onTap: onDelete,
+          child: const ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(Icons.delete_outline),
+            title: Text('Löschen'),
+          ),
+        ),
+      ],
+    );
   }
 }
