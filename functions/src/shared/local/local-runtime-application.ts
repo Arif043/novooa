@@ -3,26 +3,28 @@ import {type RuntimeLicenseActivation} from "../../features/licensing/domain/ent
 import {type RuntimeLicenseContext} from "../../features/licensing/domain/entities/runtime-license-context.js";
 import {type SignedRuntimeLicense} from "../../features/licensing/domain/entities/runtime-license-lease.js";
 import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
-import {createLocalRuntimeComposition, type LocalRuntimeComposition, type LocalRuntimeControllers} from "./local-runtime-composition.js";
-import {type LocalRuntimeRealtimeSubscriber} from "./local-runtime-realtime-notifier.js";
-import {type LocalRuntimeRealtimeGateway} from "./local-runtime-realtime-server.js";
-import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
-import {type SetupAuthorization} from "./local-runtime-setup-http-handler.js";
+import {createLocalRuntimeComposition, type LocalRuntimeComposition} from "./local-runtime-composition.js";
+import {type LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
+import {type LocalRuntimeWorkspaceContext} from "./local-runtime-workspace-context.js";
 import {ensureLocalRuntimeWorkspace, type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 
 export type LocalRuntimeApplicationOptions = {
   database: RuntimeDatabase;
   runtimeRoot: string;
   fieldCipher: SensitiveFieldCipher;
-  setupAuthorization: SetupAuthorization;
-  sessions: Pick<LocalRuntimeSessionStore, "createSession">;
+  realtimeNotifier: LocalRuntimeRealtimeNotifier;
   isLicenseActive: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;
   activeLicenseActivation: () => RuntimeLicenseActivation | null;
 };
 
-export class LocalRuntimeApplication
-implements LocalRuntimeRealtimeGateway {
+/**
+ * Lebenszyklus des aktiven Arbeitsbereichs: Worker und team-gebundene
+ * Dienste entstehen bei der Lizenzaktivierung und werden bei einem
+ * Arbeitsbereichswechsel ersetzt. Die HTTP-Routen bleiben davon unberührt
+ * und lesen den aktuellen Stand über `workspaceContext()`.
+ */
+export class LocalRuntimeApplication {
   private runtime: LocalRuntimeComposition | undefined;
   private workspace: LocalRuntimeWorkspace | undefined;
 
@@ -47,25 +49,9 @@ implements LocalRuntimeRealtimeGateway {
     await this.startFirebaseWakeups();
   }
 
-  controllers(): LocalRuntimeControllers {
+  workspaceContext(): LocalRuntimeWorkspaceContext {
     if (this.runtime === undefined) throw new Error("Der Arbeitsbereich ist nicht aktiviert.");
-    return this.runtime.controllers;
-  }
-
-  /**
-   * Vor der Lizenzaktivierung (kein `this.runtime`) gibt es nichts zu
-   * konsumieren — ein Ticket kann dann per Definition nie gültig sein.
-   */
-  consumeRealtimeTicket(ticket: string): boolean {
-    return this.runtime?.realtimeTicketStore.consume(ticket) ?? false;
-  }
-
-  subscribeRealtime(topic: string, subscriber: LocalRuntimeRealtimeSubscriber): void {
-    this.runtime?.realtimeNotifier.subscribe(topic, subscriber);
-  }
-
-  unsubscribeRealtime(topic: string, subscriber: LocalRuntimeRealtimeSubscriber): void {
-    this.runtime?.realtimeNotifier.unsubscribe(topic, subscriber);
+    return this.runtime.workspaceContext;
   }
 
   async stop(): Promise<void> {

@@ -101,6 +101,12 @@ nur öffentliche Trigger und enthält keine Logik.
 - Callable-, Scheduler- und Webhook-Handler gehören in
   `infrastructure/functions/`. Sie validieren Eingaben, rufen Use Cases auf und
   übersetzen Fehler, enthalten aber keine Geschäftsregeln.
+- HTTP-Routen der lokalen Runtime sind Fastify-Plugins in
+  `infrastructure/local/local-<feature>-routes.ts`. Sie erhalten ihre stabilen
+  Abhängigkeiten als Plugin-Optionen, lesen arbeitsbereichsabhängige Dienste aus
+  `request.workspace` und deklarieren für jede Route ein TypeBox-Schema
+  (Params, Body, Response). Die Schemas prüfen Struktur und Typen;
+  Geschäftsregeln bleiben in Domain bzw. Use Cases.
 - Jeder öffentliche Handler protokolliert Fehler über `withExceptionLogging`
   bzw. `logException` aus `shared/logging`, bevor er sie weiterwirft oder in
   einen transport-spezifischen Fehler übersetzt.

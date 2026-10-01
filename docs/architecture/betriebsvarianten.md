@@ -122,7 +122,7 @@ Kein reines Plumbing-Problem, sondern der größte Arbeitsanteil:
 - **Nur Cloud**: Einstellungen, Nutzerprofile, Mitarbeiter, Fähigkeiten,
   Team-Verwaltung, Kommunikations-Connectoren. Die lokale Runtime hat für
   diese Features keine Endpunkte. Der KI-Agent ist keine Lücke mehr —
-  `LocalAssistantHttpHandler` bedient beide Bereiche über die lokale
+  `assistantRoutes` (`local-assistant-routes.ts`) bedient beide Bereiche über die lokale
   Runtime (siehe [`../features/ki-agent.md`](../features/ki-agent.md)).
 - **Nur Standalone**: Datensammlungen (`DataRepository`), Anwendungsprotokoll,
   ML-Modellkatalog, Lizenz. Der Cloud-Task-Runner injiziert bewusst einen
@@ -381,7 +381,7 @@ selbstkonfigurierend.
 
 #### Umsetzungsdetails
 
-- `local-runtime-setup-http-handler.ts` prüft den Token über den Port
+- `local-runtime-setup-routes.ts` prüft den Token über den Port
   `SetupAuthorization`, den der Lizenz-Service bedient
   (`matchesActivationToken`, Vergleich in konstanter Zeit).
 - `/v1/setup` ist von der Session-Pflicht ausgenommen: Man braucht das

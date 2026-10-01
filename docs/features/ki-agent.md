@@ -10,7 +10,7 @@ Genkit-Callable Function.
 Blocker 6) steht für beide Varianten auf `true`. Die lokale Runtime bedient
 denselben Anfrage-/Antwort-Vertrag wie die Firebase Callable Functions über
 `POST /v1/assistant/task-builder` und `POST /v1/assistant/knowledge-base`
-(`LocalAssistantHttpHandler`). Wiederverwendet werden dabei die bereits
+(`assistantRoutes`). Wiederverwendet werden dabei die bereits
 Firebase-entkoppelten Bausteine der Backend-Domain — `GenkitAssistantResponder`,
 die reinen `createTaskBuilderAssistant`/`createKnowledgeBaseAssistant`-
 Factories — sowie die für die Aufgaben-Ausführung ohnehin vorhandene lokale

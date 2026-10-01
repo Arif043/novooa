@@ -41,10 +41,12 @@ async function activatedRuntimeFixture(t: TestContext) {
   const runtime = await bootstrapLocalRuntime({database, runtimeRoot,
     fieldCipher: new CurrentRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring())), licenses: activatableLicenses(),
     cors: LocalRuntimeCorsPolicy.fromEnvironment(), webDirectory: undefined, port: 0});
-  t.after(async () => {await runtime.closeHttp(); await runtime.application.stop(); database.$client.close();});
+  let closed = false;
+  const closeHttp = async () => { if (!closed) { closed = true; await runtime.closeHttp(); } };
+  t.after(async () => {await closeHttp(); await runtime.application.stop(); database.$client.close();});
   const address = runtime.server.address();
   assert.ok(address && typeof address !== "string");
-  return {base: `http://127.0.0.1:${address.port}`};
+  return {base: `http://127.0.0.1:${address.port}`, port: address.port, closeHttp};
 }
 
 function activatableLicenses(): RuntimeLicenseService {
@@ -80,16 +82,13 @@ test("starts the runtime HTTP server with the new keyring configuration", async 
 });
 
 test("Fastify shutdown terminates active realtime connections", async (t) => {
-  const database = connectRuntimeDatabase(":memory:");
-  const {server, application, closeHttp} = await bootstrapLocalRuntime({
-    database, runtimeRoot: "/unused", fieldCipher: new CurrentRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring())),
-    licenses: inactiveLicenses(), cors: LocalRuntimeCorsPolicy.fromEnvironment(), webDirectory: undefined, port: 0,
-  });
-  t.after(async () => { await closeHttp(); await application.stop(); database.$client.close(); });
-  application.consumeRealtimeTicket = (ticket) => ticket === "test-ticket";
-  const address = server.address();
-  assert.ok(address && typeof address !== "string");
-  const socket = new WebSocket(`ws://127.0.0.1:${address.port}/v1/realtime?ticket=test-ticket`);
+  const {base, port, closeHttp} = await activatedRuntimeFixture(t);
+  await postJson(base, "/v1/license/activate", {activationToken: "test-license"});
+  await postJson(base, "/v1/setup", {activationToken: "test-license", password: "test-password"});
+  const {token} = await (await postJson(base, "/v1/auth/login", {password: "test-password"})).json() as {token: string};
+  const ticketResponse = await fetch(`${base}/v1/realtime/ticket`, {method: "POST", headers: {authorization: `Bearer ${token}`}});
+  const {ticket} = await ticketResponse.json() as {ticket: string};
+  const socket = new WebSocket(`ws://127.0.0.1:${port}/v1/realtime?ticket=${ticket}`);
   t.after(() => socket.terminate());
   await new Promise<void>((resolve, reject) => { socket.once("open", resolve); socket.once("error", reject); });
   const closed = new Promise<void>((resolve) => socket.once("close", () => resolve()));

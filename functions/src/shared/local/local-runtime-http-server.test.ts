@@ -36,7 +36,7 @@ test("native body parsing rejects invalid, oversized and poisoned JSON", async (
   for (const payload of ["{bad", JSON.stringify({text: "x".repeat(1024 * 1024)}), '{"__proto__":{"admin":true}}']) {
     const response = await http.inject({method: "POST", url: "/v1/action", payload, headers: {"content-type": "application/json"}});
     assert.equal(response.statusCode, 400);
-    assert.deepEqual(response.json(), {error: "Ungültige lokale Anfrage."});
+    assert.deepEqual(response.json(), {error: "Ungültige Anfrage.", code: "invalid_request"});
   }
   assert.equal(calls, 0);
 });
@@ -48,7 +48,9 @@ test("Fastify schemas validate input before invoking controller logic", async (t
       async () => { calls += 1; return {}; });
   });
   t.after(() => http.close());
-  assert.equal((await http.inject({method: "POST", url: "/v1/action", payload: {}})).statusCode, 400);
+  const response = await http.inject({method: "POST", url: "/v1/action", payload: {}});
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(response.json(), {error: "Ungültige Anfrage.", code: "invalid_request", field: "body"});
   assert.equal(calls, 0);
 });
 

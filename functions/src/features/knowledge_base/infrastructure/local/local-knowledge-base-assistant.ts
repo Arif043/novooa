@@ -13,7 +13,7 @@ import {SQLiteKnowledgeBaseAssistantNoteStore} from "./sqlite-knowledge-base-ass
 /**
  * Alle drei Tool-Abhängigkeiten existieren bereits lokal:
  * `SQLiteKnowledgeBaseAssistantNoteStore` liest dieselbe `knowledge_notes`-
- * Tabelle wie `LocalKnowledgeNoteHttpHandler`, `SQLiteTeamContextStore` wird
+ * Tabelle wie `knowledgeNoteRoutes`, `SQLiteTeamContextStore` wird
  * schon von der Aufgaben-Ausführung genutzt, und der Seiten-Fetcher ist nie
  * Firebase-gebunden gewesen. Das Sprachmodell wird — wie beim
  * Aufgabenstudio-Assistenten — pro Anfrage aufgelöst, damit eine geänderte

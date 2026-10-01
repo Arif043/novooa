@@ -8,7 +8,7 @@ import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runti
 import {CredentialCipher} from "../../../communication/infrastructure/security/credential-cipher.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "./encrypted-sqlite-language-model-secret-store.js";
 import {LocalLanguageModelDiscovery} from "./local-language-model-discovery.js";
-import {LocalLanguageModelHttpHandler} from "./local-language-model-http-handler.js";
+import {languageModelRoutes} from "./local-language-model-routes.js";
 import {SQLiteLanguageModelConfigurationStore} from "./sqlite-language-model-configuration-store.js";
 
 test("connects Mistral with its fixed endpoint and the customer API key", async () => {
@@ -17,12 +17,7 @@ test("connects Mistral with its fixed endpoint and the customer API key", async 
   const secrets = new EncryptedSQLiteLanguageModelSecretStore(
     database, new CredentialCipher(randomBytes(32).toString("base64")),
   );
-  const handler = testingRoutes(new LocalLanguageModelHttpHandler(
-    new SQLiteLanguageModelConfigurationStore(database, secrets),
-    "team-1",
-    new LocalRuntimeRealtimeNotifier(),
-    {discover: async () => [discoveredModel()]},
-  ));
+  const handler = testingRoutes(languageModelRoutes, {store: new SQLiteLanguageModelConfigurationStore(database, secrets), notifier: new LocalRuntimeRealtimeNotifier(), discovery: {discover: async () => [discoveredModel()]}});
 
   const response = await handler.handle({
     body: {provider: "mistral", apiKey: "customer-api-key"},

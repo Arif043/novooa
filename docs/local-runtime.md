@@ -201,28 +201,45 @@ ist bereits durch den Lizenz-Token selbst geschützt.
 
 Der HTTP-Server verwendet native Fastify-5-Routen: Routing, Pfadparameter,
 JSON-Parsing und Body-Limit (1 MiB), Schema-Validierung und Fehlerantworten
-liegen bei Fastify. Es gibt keinen eigenen Request-Router, Pfad-Matcher oder
-HTTP-Transportadapter mehr. Die Controller registrieren einzelne Routen und
-verwenden `request` und `reply`; fachliche Use-Cases bleiben unabhängig davon.
+liegen bei Fastify. Jedes Feature ist ein **Fastify-Plugin**
+(`local-<feature>-routes.ts`, z. B. `dataRoutes`, `fileResourceRoutes`), das
+beim Start einmal mit seinen stabilen Abhängigkeiten (Stores, Relay-Clients)
+als Plugin-Optionen registriert wird (`local-runtime-routes.ts`,
+`local-runtime-route-services.ts`). Fachliche Use-Cases bleiben unabhängig davon.
 Die lokalen SQLite-Repositories verwenden Drizzle ORM für typisierte CRUD-
 Abfragen und gebundene SQL-Templates für komplexere SQLite-Abfragen.
+
+**Route-Schemas:** Jede Route deklariert `params`, `querystring`, `body` und
+`response` als TypeBox-Schema (`@fastify/type-provider-typebox`); die
+Request-Typen ergeben sich daraus. Fastify validiert mit Ajv und serialisiert
+mit fast-json-stringify — nicht deklarierte Felder erscheinen deshalb nie in
+einer Antwort (z. B. kein API-Key). Pfad-, Query- und Header-Werte werden in
+den Schema-Typ umgewandelt, JSON-Bodies bewusst nicht (`local-runtime-validation.ts`):
+`{"blockModelId": 42}` ist ein Fehler, keine Zeichenkette. Schema-Verletzungen
+ergeben `400 {error: "Ungültige Anfrage.", code: "invalid_request", field}`;
+fachliche Prüfungen (z. B. gültiger Zeitplan, Anbieter-URL) liefern weiterhin
+eigene deutsche Meldungen. Task-Runs behalten ihren mit der Cloud geteilten
+Vertrag `{failure: {code, message}}` (`attachValidation`).
+
 `@fastify/cors` erzeugt CORS-Header und Preflight-Antworten;
 `@fastify/static` liefert das Web-Build mit SPA-Fallback aus, ohne API-Pfade
-zu überdecken. ONNX-Uploads verwenden einen nativen Streaming-Content-Parser.
+zu überdecken. ONNX- und ZIP-Uploads verwenden native Streaming-Content-Parser.
 JSON-Anfragen benötigen `Content-Type: application/json`; erfolgreiche
 `204`-Antworten enthalten entsprechend dem HTTP-Standard keinen Body.
 Healthcheck und statisches Web-Build haben eigene Routen außerhalb der
 API-Zugriffsprüfung. Fremde Browser-Herkünfte werden auch bei Preflight-Anfragen
-abgewiesen. JSON-Fehler und zu große Bodies behalten den bisherigen deutschen
-`400`-Antwortvertrag. Beim Shutdown werden offene WebSocket-Verbindungen
+abgewiesen. Beim Shutdown werden offene WebSocket-Verbindungen
 beendet und Fastify vollständig geschlossen, bevor Worker und Datenbank stoppen.
 
 Lizenz- und Session-Prüfung sind native `onRequest`-Hooks in einem gekapselten
-Fastify-API-Plugin: **Lizenz → Session → Controller**. Es gibt keine eigene
-Middleware-Kette. Der Server-Bootstrap registriert die Routen und Hooks;
-die fachliche Composition erzeugt und verdrahtet die Controller. Deren
-aktuelle Instanz wird pro Anfrage aufgelöst, damit eine Aktivierung oder ein
-Workspace-Wechsel keine alten Abhängigkeiten zurücklässt.
+Fastify-API-Plugin: **Lizenz → Session → Route**. Es gibt keine eigene
+Middleware-Kette. Alles, was vom aktiven Arbeitsbereich abhängt (Team, Nutzer,
+team-gebundener Logger, Task-Workflow, globaler Modellkatalog), lesen die Routen
+pro Anfrage aus `request.workspace` — einem Getter-Decorator
+(`local-runtime-workspace-context.ts`), den `LocalRuntimeApplication` bedient.
+Ein Arbeitsbereichswechsel ersetzt nur Worker und diesen Kontext; Routen und
+Plugins bleiben unverändert. Realtime-Notifier und Ticket-Store sind
+prozessweit, damit Abonnements einen Wechsel überdauern.
 Login und Auth-Prüfung erhalten denselben prozessweiten
 Session-Store per Dependency Injection, aber nur mit der jeweils benötigten
 Fähigkeit: Login erhält `createSession`, Auth erhält `verifySession`.

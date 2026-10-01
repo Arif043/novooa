@@ -6,7 +6,7 @@ import {type LanguageModelDefaultsStore} from "../../../language_models/domain/r
 import {resolveAssistantLanguageModel} from "../../../language_models/infrastructure/genkit/resolve-assistant-language-model.js";
 
 /**
- * Wird pro Anfrage aufgerufen (siehe `LocalAssistantHttpHandler`), damit
+ * Wird pro Anfrage aufgerufen (siehe `assistantRoutes`), damit
  * eine in den Einstellungen geänderte Vorgabe sofort wirkt, statt einen
  * Neustart der Runtime zu brauchen — die Konstruktion selbst ist reine
  * Verdrahtung ohne I/O.

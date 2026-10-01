@@ -40,19 +40,19 @@ export function triggerFromRequest(value: unknown): TriggerInput {
   };
 }
 
-export function triggerFromRow(row: TriggerRow): Record<string, unknown> {
+export type TaskTriggerDto = {
+  id: string; teamId: string; taskId: string; taskTitle: string; type: string; enabled: boolean;
+  config: Record<string, unknown>; eventConfig: Record<string, unknown>; policy: Record<string, unknown>;
+  nextRunAt: string | null; lastRunAt: string | null; lastRunId: string | null;
+};
+
+export function triggerFromRow(row: TriggerRow): TaskTriggerDto {
   return {
     id: row.id, teamId: row.team_id, taskId: row.task_id, taskTitle: row.task_title,
     type: row.type, enabled: row.enabled === 1, config: jsonObject(row.config_json),
     eventConfig: jsonObject(row.event_config_json), policy: jsonObject(row.policy_json),
     nextRunAt: isoOrNull(row.next_run_at), lastRunAt: isoOrNull(row.last_run_at), lastRunId: row.last_run_id,
   };
-}
-
-export function enabledFrom(value: unknown): boolean {
-  const enabled = recordFrom(value).enabled;
-  if (typeof enabled !== "boolean") throw new LocalTaskTriggerError("enabled muss boolesch sein.");
-  return enabled;
 }
 
 export function invalidResponse(error: unknown, reply: FastifyReply): FastifyReply {

@@ -3,6 +3,7 @@ import fastifyCors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import {extname, resolve} from "node:path";
 import {LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
+import {configureValidation} from "./local-runtime-validation.js";
 
 export function createLocalRuntimeHttpServer(
   routes?: FastifyPluginAsync,
@@ -11,6 +12,7 @@ export function createLocalRuntimeHttpServer(
 ): FastifyInstance {
   const http = Fastify({bodyLimit: 1024 * 1024, exposeHeadRoutes: false, routerOptions: {ignoreTrailingSlash: true}});
   configureErrors(http);
+  configureValidation(http);
   configureCors(http, cors);
   http.addContentTypeParser("application/onnx", (_request, payload, done) => done(null, payload));
   http.addContentTypeParser("application/zip", (_request, payload, done) => done(null, payload));
@@ -36,15 +38,29 @@ function configureCors(http: FastifyInstance, cors: LocalRuntimeCorsPolicy): voi
   });
 }
 
-function configureErrors(http: FastifyInstance): void {
+type HttpFailure = Error & {
+  code?: string;
+  validation?: ReadonlyArray<{instancePath?: string}>;
+  validationContext?: string;
+};
+
+/** Auch von Tests genutzt, damit Schema-Fehler dort wie im Betrieb aussehen. */
+export function configureErrors(http: FastifyInstance): void {
   http.setErrorHandler((error, _request, reply) => {
-    const failure = error as Error & {code?: string; validation?: unknown};
-    if (failure.validation || failure.code?.startsWith("FST_ERR_CTP_")) {
-      return reply.code(400).send({error: "Ungültige lokale Anfrage."});
+    const failure = error as HttpFailure;
+    if (failure.validation) {
+      return reply.code(400).send({error: "Ungültige Anfrage.", code: "invalid_request", field: invalidField(failure)});
+    }
+    if (failure.code?.startsWith("FST_ERR_CTP_")) {
+      return reply.code(400).send({error: "Ungültige Anfrage.", code: "invalid_request"});
     }
     console.error(JSON.stringify({event: "local_runtime.http_failed", error: failure.message}));
     return reply.code(500).send({error: "Die lokale Runtime konnte die Anfrage nicht verarbeiten."});
   });
+}
+
+function invalidField(failure: HttpFailure): string {
+  return `${failure.validationContext ?? ""}${failure.validation?.[0]?.instancePath ?? ""}`;
 }
 
 function configureWebFiles(http: FastifyInstance, directory: string): void {
