@@ -1,12 +1,13 @@
-import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
+import {sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import test from "node:test";
+import {connectRuntimeDatabase, RuntimeDatabase} from "../../../../db/database.js";
+import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
+import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 import {type TaskDefinition} from "../../domain/entities/task.js";
 import {type TaskDefinitionStore} from "../../domain/repositories/task-definition-store.js";
-import {SqliteLocalSqlDatabase} from "../../../../shared/local/sqlite-local-sql-database.js";
 import {LocalTaskActivityHttpHandler} from "./local-task-activity-http-handler.js";
 import {LocalTaskDefinitionHttpHandler} from "./local-task-definition-http-handler.js";
-import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 import {SQLiteTaskDefinitionStore} from "./sqlite-task-definition-store.js";
 
 test("stores and lists a local task definition", async () => {
@@ -18,7 +19,7 @@ test("stores and lists a local task definition", async () => {
 
   assert.equal(saved?.statusCode, 200);
   assert.deepEqual(listed, {body: {items: [taskBody()]}, statusCode: 200});
-  database.close();
+  database.$client.close();
 });
 
 test("stores an empty local task definition", async () => {
@@ -35,7 +36,7 @@ test("stores an empty local task definition", async () => {
   const response = await handler.handle({body: draft, method: "PUT", url: "/v1/tasks/draft-1"});
 
   assert.deepEqual(response, {body: draft, statusCode: 200});
-  database.close();
+  database.$client.close();
 });
 
 test("uses the task definition store without a SQL dependency", async () => {
@@ -51,14 +52,8 @@ test("uses the task definition store without a SQL dependency", async () => {
 
 test("lists local task runs and activities", async () => {
   const database = await databaseWithTaskTables();
-  await database.run(
-    "INSERT INTO task_runs(id, team_id, task_id, task_title, status, final_output, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    ["run-1", "team-1", "task-1", "Aufgabe", "succeeded", "Fertig", "2026-09-08 10:00:00", "2026-09-08 10:01:00"],
-  );
-  await database.run(
-    "INSERT INTO activities(id, team_id, run_id, task_id, target, title, status, outputs_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    ["activity-1", "team-1", "run-1", "task-1", "task", "Aufgabe", "succeeded", "{}", "2026-09-08 10:01:00"],
-  );
+  await database.run(sql`INSERT INTO task_runs(id, team_id, task_id, task_title, status, final_output, created_at, updated_at) VALUES (${"run-1"}, ${"team-1"}, ${"task-1"}, ${"Aufgabe"}, ${"succeeded"}, ${"Fertig"}, ${"2026-09-08 10:00:00"}, ${"2026-09-08 10:01:00"})`);
+  await database.run(sql`INSERT INTO activities(id, team_id, run_id, task_id, target, title, status, outputs_json, created_at) VALUES (${"activity-1"}, ${"team-1"}, ${"run-1"}, ${"task-1"}, ${"task"}, ${"Aufgabe"}, ${"succeeded"}, ${"{}"}, ${"2026-09-08 10:01:00"})`);
   const handler = testingRoutes(new LocalTaskActivityHttpHandler(database, "team-1"));
 
   const runs = await handler.handle({body: {}, method: "GET", url: "/v1/task-runs"});
@@ -66,23 +61,23 @@ test("lists local task runs and activities", async () => {
 
   assert.equal((runs?.body as {items: Array<{runId: string}>}).items[0]?.runId, "run-1");
   assert.equal((activities?.body as {items: Array<{id: string}>}).items[0]?.id, "activity-1");
-  database.close();
+  database.$client.close();
 });
 
-async function databaseWithTaskTables(): Promise<SqliteLocalSqlDatabase> {
-  const database = new SqliteLocalSqlDatabase(":memory:");
-  await database.run(`CREATE TABLE tasks (
+async function databaseWithTaskTables(): Promise<RuntimeDatabase> {
+  const database = connectRuntimeDatabase(":memory:");
+  await database.run(sql`CREATE TABLE tasks (
     id TEXT PRIMARY KEY, team_id TEXT NOT NULL, title TEXT NOT NULL, objective TEXT NOT NULL,
     graph_json TEXT NOT NULL, selected_node_id TEXT NOT NULL, created_by_uid TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`);
-  await database.run(`CREATE TABLE task_runs (
+  await database.run(sql`CREATE TABLE task_runs (
     id TEXT PRIMARY KEY, team_id TEXT NOT NULL, task_id TEXT NOT NULL, task_title TEXT NOT NULL,
     status TEXT NOT NULL, waiting_node_id TEXT, final_output TEXT NOT NULL DEFAULT '', review_output TEXT,
     interaction_json TEXT, error_json TEXT, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`);
-  await database.run(`CREATE TABLE activities (
+  await database.run(sql`CREATE TABLE activities (
     id TEXT PRIMARY KEY, team_id TEXT NOT NULL, run_id TEXT NOT NULL, task_id TEXT NOT NULL,
     node_id TEXT, target TEXT NOT NULL, primitive TEXT, title TEXT NOT NULL, status TEXT NOT NULL,
     input TEXT NOT NULL DEFAULT '', output TEXT NOT NULL DEFAULT '', outputs_json TEXT NOT NULL DEFAULT '{}',

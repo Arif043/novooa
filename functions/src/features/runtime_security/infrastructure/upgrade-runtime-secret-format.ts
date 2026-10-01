@@ -1,18 +1,20 @@
+import {eq} from "drizzle-orm";
 import {readFile} from "node:fs/promises";
 import {join} from "node:path";
+import {type RuntimeExecutor} from "../../../db/database.js";
+import {languageModelSecrets} from "../../../db/schema.js";
 import {CredentialCipher} from "../../communication/infrastructure/security/credential-cipher.js";
-import {type LocalSqlDatabase} from "../../../shared/local/local-sql-database.js";
+import {writeDurableSecretFile} from "./durable-secret-file.js";
 import {EnvelopeRuntimeFieldCipher} from "./envelope-runtime-field-cipher.js";
 import {parseRuntimeKeyring} from "./runtime-keyring.js";
 import {languageModelSecretContext, licenseSecretContext} from "./runtime-secret-context.js";
-import {writeDurableSecretFile} from "./durable-secret-file.js";
 
 export class UpgradeRuntimeSecretFormat {
   private readonly cipher: EnvelopeRuntimeFieldCipher;
   private readonly legacyCiphers: CredentialCipher[];
 
   constructor(
-    private readonly database: LocalSqlDatabase,
+    private readonly database: RuntimeExecutor,
     private readonly root: string,
     keyring: string,
   ) {
@@ -21,20 +23,16 @@ export class UpgradeRuntimeSecretFormat {
   }
 
   async execute(): Promise<void> {
-    await this.database.transaction(() => this.upgradeModelSecrets());
+    await this.database.transaction((tx) => this.upgradeModelSecrets(tx));
     await this.upgradeLicenseSecret();
   }
 
-  private async upgradeModelSecrets(): Promise<void> {
-    const rows = await this.database.all<{secret_ref: string; encrypted_value: string}>(
-      "SELECT secret_ref, encrypted_value FROM language_model_secrets");
+  private async upgradeModelSecrets(database: RuntimeExecutor): Promise<void> {
+    const rows = await database.select({secret_ref: languageModelSecrets.secret_ref, encrypted_value: languageModelSecrets.encrypted_value}).from(languageModelSecrets);
     for (const row of rows) {
       if (isEnvelope(row.encrypted_value)) continue;
       const encrypted = this.upgrade(row.encrypted_value, languageModelSecretContext(row.secret_ref));
-      await this.database.run(
-        "UPDATE language_model_secrets SET encrypted_value = ? WHERE secret_ref = ?",
-        [encrypted, row.secret_ref],
-      );
+      await database.update(languageModelSecrets).set({encrypted_value: encrypted}).where(eq(languageModelSecrets.secret_ref, row.secret_ref));
     }
   }
 

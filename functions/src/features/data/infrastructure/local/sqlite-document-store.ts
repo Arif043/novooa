@@ -1,59 +1,45 @@
+import {and, asc, count, desc, eq, sql} from "drizzle-orm";
 import {randomUUID} from "node:crypto";
+import {type RuntimeExecutor} from "../../../../db/database.js";
+import {documentCollections, documents} from "../../../../db/schema.js";
 import {
-  type CreateDocumentCollectionInput,
-  type DocumentCollection,
-  type DocumentCollectionNameInput,
-  validateDocumentCollectionInput,
-  validateDocumentCollectionNameInput,
+  type CreateDocumentCollectionInput, type DocumentCollection, type DocumentCollectionNameInput,
+  validateDocumentCollectionInput, validateDocumentCollectionNameInput
 } from "../../domain/entities/document-collection.js";
+import {type FindDocumentsInput, validateFindDocumentsInput} from "../../domain/entities/document-filter.js";
 import {
-  type CreateDocumentInput,
-  cloneDocumentData,
-  type DocumentRecord,
-  type FindDocumentByIdInput,
-  type UpdateDocumentInput,
-  type UpsertDocumentInput,
-  validateCreateDocumentInput,
-  validateFindDocumentByIdInput,
-  validateUpdateDocumentInput,
+  type CreateDocumentInput, type DocumentRecord, type FindDocumentByIdInput, type UpdateDocumentInput,
+  type UpsertDocumentInput, cloneDocumentData, validateCreateDocumentInput, validateFindDocumentByIdInput,
+  validateUpdateDocumentInput
 } from "../../domain/entities/document.js";
-import {
-  type FindDocumentsInput,
-  validateFindDocumentsInput,
-} from "../../domain/entities/document-filter.js";
 import {type DocumentStore} from "../../domain/repositories/document-store.js";
-import {type LocalSqlDatabase} from "../../../../shared/local/local-sql-database.js";
 import {sqlFilterFor} from "./sqlite-document-filter.js";
-import {
-  type DocumentCollectionRow,
-  type DocumentRow,
-  documentDataJson,
-  documentFromRow,
-} from "./sqlite-document-row.js";
+import {documentCollectionFromRow, documentDataJson, documentFromRow} from "./sqlite-document-row.js";
 
 export class SQLiteDocumentStore implements DocumentStore {
-  constructor(private readonly database: LocalSqlDatabase) {}
+  constructor(private readonly database: RuntimeExecutor) {}
 
   async createCollection(input: CreateDocumentCollectionInput): Promise<DocumentCollection> {
     validateDocumentCollectionInput(input);
-    return this.database.transaction(async () => {
-      if (await this.collectionExists(input.teamId, input.id)) throw new Error("Die Datensammlung existiert bereits.");
+    return this.database.transaction(async (tx) => {
+      if (await new SQLiteDocumentStore(tx).collectionExists(input.teamId, input.id)) throw new Error("Die Datensammlung existiert bereits.");
       const timestamp = new Date().toISOString();
-      await this.database.run(insertCollectionSql(), [input.id, input.teamId, input.displayName, timestamp, timestamp]);
-      return {...input, createdAt: new Date(timestamp), updatedAt: new Date(timestamp)};
+      const values = {id: input.id, team_id: input.teamId, display_name: input.displayName, created_at: timestamp, updated_at: timestamp};
+      await tx.insert(documentCollections).values(values);
+      return documentCollectionFromRow(values);
     });
   }
 
   async ensureCollection(input: DocumentCollectionNameInput): Promise<DocumentCollection> {
     validateDocumentCollectionNameInput(input);
-    return this.database.transaction(async () => {
-      const existing = await this.findCollectionByName(input);
+    return this.database.transaction(async (tx) => {
+      const store = new SQLiteDocumentStore(tx);
+      const existing = await store.findCollectionByName(input);
       if (existing !== null) return existing;
       const timestamp = new Date().toISOString();
-      await this.database.run(insertCollectionIfMissingSql(), [
-        randomUUID(), input.teamId, input.displayName, timestamp, timestamp,
-      ]);
-      const collection = await this.findCollectionByName(input);
+      await tx.insert(documentCollections).values({id: randomUUID(), team_id: input.teamId,
+        display_name: input.displayName, created_at: timestamp, updated_at: timestamp}).onConflictDoNothing();
+      const collection = await store.findCollectionByName(input);
       if (collection === null) throw new Error("Die Datensammlung konnte nicht angelegt werden.");
       return collection;
     });
@@ -61,42 +47,33 @@ export class SQLiteDocumentStore implements DocumentStore {
 
   async findCollectionByName(input: DocumentCollectionNameInput): Promise<DocumentCollection | null> {
     validateDocumentCollectionNameInput(input);
-    const row = await this.database.get<DocumentCollectionRow>(
-      "SELECT id, team_id, display_name, created_at, updated_at FROM document_collections WHERE team_id = ? AND display_name = ? COLLATE BINARY",
-      [input.teamId, input.displayName],
-    );
-    return row === null ? null : collectionFromRow(row);
+    const row = await this.database.select().from(documentCollections)
+      .where(and(eq(documentCollections.team_id, input.teamId), eq(documentCollections.display_name, input.displayName))).get();
+    return row ? documentCollectionFromRow(row) : null;
   }
 
   async listCollections(teamId: string): Promise<DocumentCollection[]> {
-    const rows = await this.database.all<DocumentCollectionRow>(
-      "SELECT id, team_id, display_name, created_at, updated_at FROM document_collections WHERE team_id = ? ORDER BY display_name COLLATE BINARY",
-      [teamId],
-    );
-    return rows.map(collectionFromRow);
+    const rows = await this.database.select().from(documentCollections).where(eq(documentCollections.team_id, teamId))
+      .orderBy(sql`${documentCollections.display_name} COLLATE BINARY`);
+    return rows.map(documentCollectionFromRow);
   }
 
   async countDocuments(input: FindDocumentsInput): Promise<number> {
     validateFindDocumentsInput(input);
-    const filters = (input.filters ?? []).map(sqlFilterFor);
-    const query = countQueryFor(input, filters);
-    const row = await this.database.get<{count: number}>(query.sql, query.parameters);
+    const row = await this.database.select({count: count()}).from(documents).where(documentScope(input)).get();
     return row?.count ?? 0;
   }
 
   async delete(input: FindDocumentByIdInput): Promise<boolean> {
     validateFindDocumentByIdInput(input);
-    const existing = await this.documentById(input.teamId, input.collectionId, input.documentId);
-    if (existing === null) return false;
-    await this.database.run(
-      "DELETE FROM documents WHERE team_id = ? AND collection_id = ? AND id = ?",
-      [input.teamId, input.collectionId, input.documentId],
-    );
-    return true;
+    const removed = await this.database.delete(documents).where(and(
+      eq(documents.team_id, input.teamId), eq(documents.collection_id, input.collectionId), eq(documents.id, input.documentId),
+    )).returning({id: documents.id});
+    return removed.length > 0;
   }
+
   async findOne(input: FindDocumentsInput): Promise<DocumentRecord | null> {
-    const documents = await this.findMany({...input, limit: 1});
-    return documents[0] ?? null;
+    return (await this.findMany({...input, limit: 1}))[0] ?? null;
   }
 
   async findById(input: FindDocumentByIdInput): Promise<DocumentRecord | null> {
@@ -106,41 +83,38 @@ export class SQLiteDocumentStore implements DocumentStore {
 
   async findMany(input: FindDocumentsInput): Promise<DocumentRecord[]> {
     validateFindDocumentsInput(input);
-    const filters = (input.filters ?? []).map(sqlFilterFor);
-    const query = queryFor(input, filters);
-    const rows = await this.database.all<DocumentRow>(query.sql, query.parameters);
+    const rows = await this.database.select().from(documents).where(documentScope(input))
+      .orderBy(desc(documents.updated_at), asc(documents.id)).limit(input.limit ?? 100);
     return rows.map(documentFromRow);
   }
 
   async create(input: CreateDocumentInput): Promise<DocumentRecord> {
     validateCreateDocumentInput(input);
-    return this.database.transaction(() => this.insertDocument(input, input.documentId ?? randomUUID()));
+    return this.database.transaction((tx) => new SQLiteDocumentStore(tx).insertDocument(input, input.documentId ?? randomUUID()));
   }
 
   async update(input: UpdateDocumentInput): Promise<DocumentRecord> {
     validateUpdateDocumentInput(input);
-    return this.database.transaction(() => this.updateDocument(input));
+    return this.database.transaction((tx) => new SQLiteDocumentStore(tx).updateDocument(input));
   }
 
   async upsert(input: UpsertDocumentInput): Promise<DocumentRecord> {
     validateUpdateDocumentInput(input);
-    return this.database.transaction(async () => {
-      const current = await this.documentById(input.teamId, input.collectionId, input.documentId);
-      if (current === null) return this.insertDocument(input, input.documentId);
-      return this.updateExistingDocument(input, current);
+    return this.database.transaction(async (tx) => {
+      const store = new SQLiteDocumentStore(tx);
+      const current = await store.documentById(input.teamId, input.collectionId, input.documentId);
+      return current === null ? store.insertDocument(input, input.documentId) : store.updateExistingDocument(input, current);
     });
   }
 
   private async insertDocument(input: CreateDocumentInput, documentId: string): Promise<DocumentRecord> {
-    await this.requireCollection(input.teamId, input.collectionId);
-    const existing = await this.documentById(input.teamId, input.collectionId, documentId);
-    if (existing !== null) throw new Error("Die Datensatz-ID existiert bereits.");
+    if (!await this.collectionExists(input.teamId, input.collectionId)) throw new Error("Die Datensammlung wurde nicht gefunden.");
+    if (await this.documentById(input.teamId, input.collectionId, documentId)) throw new Error("Die Datensatz-ID existiert bereits.");
     const timestamp = new Date().toISOString();
-    const data = cloneDocumentData(input.data);
-    await this.database.run(insertDocumentSql(), [
-      documentId, input.teamId, input.collectionId, documentDataJson(data), timestamp, timestamp,
-    ]);
-    return documentFromInput(input, documentId, data, 1, timestamp, timestamp);
+    const values = {id: documentId, team_id: input.teamId, collection_id: input.collectionId,
+      data_json: documentDataJson(cloneDocumentData(input.data)), version: 1, created_at: timestamp, updated_at: timestamp};
+    await this.database.insert(documents).values(values);
+    return documentFromRow(values);
   }
 
   private async updateDocument(input: UpdateDocumentInput): Promise<DocumentRecord> {
@@ -149,113 +123,32 @@ export class SQLiteDocumentStore implements DocumentStore {
     return this.updateExistingDocument(input, current);
   }
 
-  private async updateExistingDocument(
-    input: UpdateDocumentInput,
-    current: DocumentRecord,
-  ): Promise<DocumentRecord> {
+  private async updateExistingDocument(input: UpdateDocumentInput, current: DocumentRecord): Promise<DocumentRecord> {
     if (input.expectedVersion !== undefined && input.expectedVersion !== current.version) {
       throw new Error("Der Datensatz wurde inzwischen geändert.");
     }
     const timestamp = new Date().toISOString();
     const version = current.version + 1;
     const data = cloneDocumentData(input.data);
-    await this.database.run(updateDocumentSql(), [
-      documentDataJson(data), version, timestamp, input.teamId, input.collectionId, input.documentId,
-    ]);
+    await this.database.update(documents).set({data_json: documentDataJson(data), version, updated_at: timestamp})
+      .where(and(eq(documents.team_id, input.teamId), eq(documents.collection_id, input.collectionId), eq(documents.id, input.documentId)));
     return {...current, data, version, updatedAt: new Date(timestamp)};
   }
 
-  private async requireCollection(teamId: string, collectionId: string): Promise<void> {
-    if (!await this.collectionExists(teamId, collectionId)) {
-      throw new Error("Die Datensammlung wurde nicht gefunden.");
-    }
-  }
-
   private async collectionExists(teamId: string, collectionId: string): Promise<boolean> {
-    return (await this.collectionFor(teamId, collectionId)) !== null;
+    const row = await this.database.select({id: documentCollections.id}).from(documentCollections)
+      .where(and(eq(documentCollections.team_id, teamId), eq(documentCollections.id, collectionId))).get();
+    return row !== undefined;
   }
 
-  private async collectionFor(teamId: string, collectionId: string): Promise<DocumentCollection | null> {
-    const row = await this.database.get<DocumentCollectionRow>(
-      "SELECT id, team_id, display_name, created_at, updated_at FROM document_collections WHERE team_id = ? AND id = ?",
-      [teamId, collectionId],
-    );
-    if (row === null) return null;
-    return {
-      id: row.id, teamId: row.team_id, displayName: row.display_name,
-      createdAt: new Date(row.created_at), updatedAt: new Date(row.updated_at),
-    };
-  }
-
-  private async documentById(
-    teamId: string,
-    collectionId: string,
-    documentId: string,
-  ): Promise<DocumentRecord | null> {
-    const row = await this.database.get<DocumentRow>(selectDocumentByIdSql(), [teamId, collectionId, documentId]);
-    return row === null ? null : documentFromRow(row);
+  private async documentById(teamId: string, collectionId: string, documentId: string): Promise<DocumentRecord | null> {
+    const row = await this.database.select().from(documents).where(and(eq(documents.team_id, teamId),
+      eq(documents.collection_id, collectionId), eq(documents.id, documentId))).get();
+    return row ? documentFromRow(row) : null;
   }
 }
 
-function collectionFromRow(row: DocumentCollectionRow): DocumentCollection {
-  return {
-    id: row.id, teamId: row.team_id, displayName: row.display_name,
-    createdAt: new Date(row.created_at), updatedAt: new Date(row.updated_at),
-  };
-}
-
-function documentFromInput(
-  input: CreateDocumentInput,
-  id: string,
-  data: DocumentRecord["data"],
-  version: number,
-  createdAt: string,
-  updatedAt: string,
-): DocumentRecord {
-  return {
-    id, teamId: input.teamId, collectionId: input.collectionId, data, version,
-    createdAt: new Date(createdAt), updatedAt: new Date(updatedAt),
-  };
-}
-
-function queryFor(input: FindDocumentsInput, filters: ReturnType<typeof sqlFilterFor>[]) {
-  const predicates = ["team_id = ?", "collection_id = ?", ...filters.map((filter) => filter.sql)];
-  const parameters = [input.teamId, input.collectionId, ...filters.flatMap((filter) => filter.parameters), input.limit ?? 100];
-  return {
-    sql: `SELECT id, team_id, collection_id, data_json, version, created_at, updated_at
-      FROM documents WHERE ${predicates.join(" AND ")} ORDER BY updated_at DESC, id ASC LIMIT ?`,
-    parameters,
-  };
-}
-
-function countQueryFor(input: FindDocumentsInput, filters: ReturnType<typeof sqlFilterFor>[]) {
-  const predicates = ["team_id = ?", "collection_id = ?", ...filters.map((filter) => filter.sql)];
-  return {
-    sql: "SELECT COUNT(*) AS count FROM documents WHERE " + predicates.join(" AND "),
-    parameters: [input.teamId, input.collectionId, ...filters.flatMap((filter) => filter.parameters)],
-  };
-}
-function insertCollectionSql(): string {
-  return `INSERT INTO document_collections(id, team_id, display_name, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?)`;
-}
-
-function insertCollectionIfMissingSql(): string {
-  return `INSERT OR IGNORE INTO document_collections(id, team_id, display_name, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?)`;
-}
-
-function insertDocumentSql(): string {
-  return `INSERT INTO documents(id, team_id, collection_id, data_json, version, created_at, updated_at)
-    VALUES (?, ?, ?, ?, 1, ?, ?)`;
-}
-
-function selectDocumentByIdSql(): string {
-  return `SELECT id, team_id, collection_id, data_json, version, created_at, updated_at
-    FROM documents WHERE team_id = ? AND collection_id = ? AND id = ?`;
-}
-
-function updateDocumentSql(): string {
-  return `UPDATE documents SET data_json = ?, version = ?, updated_at = ?
-    WHERE team_id = ? AND collection_id = ? AND id = ?`;
+function documentScope(input: FindDocumentsInput) {
+  return and(eq(documents.team_id, input.teamId), eq(documents.collection_id, input.collectionId),
+    ...(input.filters ?? []).map(sqlFilterFor));
 }

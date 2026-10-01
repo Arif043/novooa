@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "f1a89bbb-1a0c-4371-b2af-3aa5f18ad777",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/arif/Projects/syscat2/.archify/architecture-novooa-komponenten-20261001-011413/candidate.json",
+  "output": "/Users/arif/Projects/syscat2/.archify/architecture-novooa-komponenten-20261001-011413/novooa-komponenten.html",
+  "specification": {
+    "sha256": "27d46c219d3c87b36a5ee541da433c0e4bcad19b966c01105515e37740947141",
+    "bytes": 7874
+  },
+  "artifact": {
+    "sha256": "81afbfcea9e2cbaff43a4da47372a82eb738854d735c5225af10127fe2acd520",
+    "bytes": 780100
+  }
+}

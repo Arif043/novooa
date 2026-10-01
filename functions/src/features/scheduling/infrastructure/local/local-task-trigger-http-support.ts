@@ -49,9 +49,6 @@ export function triggerFromRow(row: TriggerRow): Record<string, unknown> {
   };
 }
 
-
-
-
 export function enabledFrom(value: unknown): boolean {
   const enabled = recordFrom(value).enabled;
   if (typeof enabled !== "boolean") throw new LocalTaskTriggerError("enabled muss boolesch sein.");

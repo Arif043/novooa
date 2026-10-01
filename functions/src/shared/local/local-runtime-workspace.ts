@@ -1,4 +1,5 @@
-import {type LocalSqlDatabase} from "./local-sql-database.js";
+import {type RuntimeExecutor} from "../../db/database.js";
+import {teamMembers, teams} from "../../db/schema.js";
 
 export type LocalRuntimeWorkspace = {
   teamId: string;
@@ -7,22 +8,13 @@ export type LocalRuntimeWorkspace = {
 };
 
 export async function ensureLocalRuntimeWorkspace(
-  database: LocalSqlDatabase,
+  database: RuntimeExecutor,
   workspace: LocalRuntimeWorkspace,
 ): Promise<void> {
-  await database.transaction(async () => {
-    await database.run(insertTeamSql, [
-      workspace.teamId, workspace.teamName, workspace.userId,
-    ]);
-    await database.run(insertMembershipSql, [
-      workspace.teamId, workspace.userId, "Lokaler Benutzer", "owner",
-    ]);
+  await database.transaction(async (tx) => {
+    await tx.insert(teams).values({id: workspace.teamId, name: workspace.teamName, owner_uid: workspace.userId})
+      .onConflictDoNothing();
+    await tx.insert(teamMembers).values({team_id: workspace.teamId, uid: workspace.userId,
+      display_name: "Lokaler Benutzer", role: "owner"}).onConflictDoNothing();
   });
 }
-
-const insertTeamSql = `INSERT OR IGNORE INTO teams(id, name, owner_uid)
-  VALUES (?, ?, ?)`;
-
-const insertMembershipSql = `INSERT OR IGNORE INTO team_members(
-  team_id, uid, display_name, role
-) VALUES (?, ?, ?, ?)`;

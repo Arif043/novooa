@@ -1,16 +1,16 @@
+import {sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import {readFile, stat} from "node:fs/promises";
 import {join} from "node:path";
 import test from "node:test";
-import {RotateRuntimeMasterKey} from "../domain/usecases/rotate-runtime-master-key.js";
-import {FileRuntimeKeyRepository} from "./file-runtime-key-repository.js";
-import {LocalRuntimeSecretRotationStore} from "./local-runtime-secret-rotation-store.js";
-import {EnvelopeRuntimeFieldCipher} from "./envelope-runtime-field-cipher.js";
-import {parseRuntimeKeyring} from "./runtime-keyring.js";
-import {rotationFixture} from "./runtime-rotation-test-fixture.js";
-import {type SqlRow} from "../../../shared/local/local-sql-database.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "../../language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
 import {FileRuntimeLicenseStore} from "../../licensing/infrastructure/local/file-local-runtime-license-store.js";
+import {RotateRuntimeMasterKey} from "../domain/usecases/rotate-runtime-master-key.js";
+import {EnvelopeRuntimeFieldCipher} from "./envelope-runtime-field-cipher.js";
+import {FileRuntimeKeyRepository} from "./file-runtime-key-repository.js";
+import {LocalRuntimeSecretRotationStore} from "./local-runtime-secret-rotation-store.js";
+import {parseRuntimeKeyring} from "./runtime-keyring.js";
+import {rotationFixture} from "./runtime-rotation-test-fixture.js";
 
 test("rotates SQLite secrets and license data without changing their payload ciphertext", async () => {
   const fixture = await rotationFixture();
@@ -36,8 +36,7 @@ test("resumes an interrupted rotation using the same staged master key", async (
   const keys = new FileRuntimeKeyRepository(fixture.keyFile);
   try {
     const cipher = await keys.beginRotation();
-    await fixture.database.run("UPDATE language_model_secrets SET encrypted_value = ? WHERE secret_ref = ?",
-      [cipher.rewrap((await storedValues(fixture))[0], ["language-model-secrets", "model/a", "api-key"]), "model/a"]);
+    await fixture.database.run(sql`UPDATE language_model_secrets SET encrypted_value = ${cipher.rewrap((await storedValues(fixture))[0], ["language-model-secrets", "model/a", "api-key"])} WHERE secret_ref = ${"model/a"}`);
     const staged = await readFile(fixture.keyFile, "utf8");
     assert.equal(parseRuntimeKeyring(staged).rotationPending, true);
     assert.equal(await rotationWorkflow(fixture).execute(true), 2);
@@ -54,8 +53,7 @@ test("does not retire any keys when a persisted secret fails authentication", as
   const fixture = await rotationFixture();
   try {
     const values = await storedValues(fixture);
-    await fixture.database.run("UPDATE language_model_secrets SET encrypted_value = ? WHERE secret_ref = ?",
-      [values[0], "model/b"]);
+    await fixture.database.run(sql`UPDATE language_model_secrets SET encrypted_value = ${values[0]} WHERE secret_ref = ${"model/b"}`);
     await assert.rejects(rotationWorkflow(fixture).execute(true));
     const keyring = parseRuntimeKeyring(await readFile(fixture.keyFile, "utf8"));
     assert.equal(keyring.rotationPending, true);
@@ -88,8 +86,7 @@ function rotationWorkflow(fixture: Fixture): RotateRuntimeMasterKey {
 }
 
 async function storedValues(fixture: Fixture): Promise<string[]> {
-  const rows = await fixture.database.all<SqlRow & {encrypted_value: string}>(
-    "SELECT encrypted_value FROM language_model_secrets ORDER BY secret_ref");
+  const rows = await fixture.database.all <{encrypted_value: string}>(sql`SELECT encrypted_value FROM language_model_secrets ORDER BY secret_ref`);
   const license = JSON.parse(await readFile(join(fixture.root, "credentials", "license-state.json"), "utf8"));
   return [...rows.map((row) => row.encrypted_value), license.encryptedActivationSecret];
 }

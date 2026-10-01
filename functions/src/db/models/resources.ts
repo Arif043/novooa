@@ -1,0 +1,98 @@
+import {desc, sql} from "drizzle-orm";
+import {check, foreignKey, index, integer, primaryKey, sqliteTable, text, uniqueIndex, type AnySQLiteColumn} from "drizzle-orm/sqlite-core";
+import {teams} from "./core.js";
+
+export const documentCollections = sqliteTable("document_collections", {
+  id: text("id").notNull(),
+  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
+  display_name: text("display_name").notNull(),
+  created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  primaryKey({columns: [table.team_id, table.id]}),
+  uniqueIndex("idx_document_collections_team_display_name").on(table.team_id, table.display_name),
+]);
+
+export const documents = sqliteTable("documents", {
+  id: text("id").notNull(),
+  team_id: text("team_id").notNull(),
+  collection_id: text("collection_id").notNull(),
+  data_json: text("data_json").notNull(),
+  version: integer("version").notNull().default(1),
+  created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  primaryKey({columns: [table.team_id, table.collection_id, table.id]}),
+  index("idx_documents_team_collection_updated").on(table.team_id, table.collection_id, desc(table.updated_at), table.id),
+  check("documents_json_object", sql`json_valid(${table.data_json}) AND json_type(${table.data_json}) = 'object'`),
+  check("documents_positive_version", sql`${table.version} > 0`),
+  foreignKey({columns: [table.team_id, table.collection_id], foreignColumns: [documentCollections.team_id, documentCollections.id]}).onDelete("cascade"),
+]);
+
+export const fileFolders = sqliteTable("file_folders", {
+  id: text("id").primaryKey(),
+  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
+  owner_uid: text("owner_uid").notNull(),
+  name: text("name").notNull(),
+  parent_folder_id: text("parent_folder_id").references((): AnySQLiteColumn => fileFolders.id, {onDelete: "cascade"}),
+  created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index("idx_file_folders_team_parent").on(table.team_id, table.parent_folder_id),
+]);
+
+export const fileVersions = sqliteTable("file_versions", {
+  id: text("id").primaryKey(),
+  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
+  file_id: text("file_id").notNull().references((): AnySQLiteColumn => files.id, {onDelete: "cascade"}),
+  created_by_uid: text("created_by_uid").notNull(),
+  display_name: text("display_name").notNull(),
+  storage_path: text("storage_path").notNull(),
+  content_type: text("content_type").notNull().default("application/octet-stream"),
+  size_bytes: integer("size_bytes").notNull().default(0),
+  created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const files = sqliteTable("files", {
+  id: text("id").primaryKey(),
+  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
+  owner_uid: text("owner_uid").notNull(),
+  display_name: text("display_name").notNull(),
+  folder_id: text("folder_id"),
+  current_version_id: text("current_version_id"),
+  content_type: text("content_type").notNull().default("application/octet-stream"),
+  size_bytes: integer("size_bytes").notNull().default(0),
+  storage_path: text("storage_path").notNull(),
+  created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index("idx_files_team_folder").on(table.team_id, table.folder_id),
+]);
+
+export const knowledgeNotes = sqliteTable("knowledge_notes", {
+  id: text("id").primaryKey(),
+  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
+  knowledge_base_id: text("knowledge_base_id").notNull().default("default"),
+  title: text("title").notNull(),
+  path: text("path").notNull().default(""),
+  type: text("type").notNull().default("unknown"),
+  content: text("content").notNull().default(""),
+  outgoing_links_json: text("outgoing_links_json").notNull().default("[]"),
+  created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index("idx_notes_team_base").on(table.team_id, table.knowledge_base_id),
+]);
+
+export type DocumentCollections = typeof documentCollections.$inferSelect;
+export type NewDocumentCollections = typeof documentCollections.$inferInsert;
+export type Documents = typeof documents.$inferSelect;
+export type NewDocuments = typeof documents.$inferInsert;
+export type FileFolders = typeof fileFolders.$inferSelect;
+export type NewFileFolders = typeof fileFolders.$inferInsert;
+export type FileVersions = typeof fileVersions.$inferSelect;
+export type NewFileVersions = typeof fileVersions.$inferInsert;
+export type Files = typeof files.$inferSelect;
+export type NewFiles = typeof files.$inferInsert;
+export type KnowledgeNotes = typeof knowledgeNotes.$inferSelect;
+export type NewKnowledgeNotes = typeof knowledgeNotes.$inferInsert;

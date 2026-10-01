@@ -1,41 +1,25 @@
-import {type LocalSqlDatabase, type SqlRow} from "../local/local-sql-database.js";
+import {desc, eq} from "drizzle-orm";
+import {type RuntimeExecutor} from "../../db/database.js";
+import {applicationLogs, type ApplicationLogs} from "../../db/schema.js";
 import {
   type LocalApplicationLog,
   type LocalApplicationLogStore,
 } from "./local-application-log-store.js";
 
-type ApplicationLogRow = SqlRow & {
-  created_at: string;
-  data_json: string;
-  event: string;
-  id: string;
-  level: "info" | "error";
-  source: "client" | "runtime";
-  message: string | null;
-};
+type ApplicationLogRow = Pick<ApplicationLogs, "created_at" | "data_json" | "event" | "id" | "level" | "source" | "message">;
 
 export class SQLiteLocalApplicationLogStore implements LocalApplicationLogStore {
-  constructor(private readonly database: LocalSqlDatabase) {}
+  constructor(private readonly database: RuntimeExecutor) {}
 
   async append(log: LocalApplicationLog): Promise<void> {
-    await this.database.run(insertSql, [
-      log.id, log.teamId, log.source, log.level, log.event, log.message,
-      JSON.stringify(log.data), log.occurredAt,
-    ]);
+    await this.database.insert(applicationLogs).values({id: log.id, team_id: log.teamId, source: log.source, level: log.level, event: log.event, message: log.message, data_json: JSON.stringify(log.data), created_at: log.occurredAt});
   }
 
   async recent(teamId: string, limit: number): Promise<LocalApplicationLog[]> {
-    const rows = await this.database.all<ApplicationLogRow>(recentSql, [teamId, limit]);
+    const rows = await this.database.select({id: applicationLogs.id, source: applicationLogs.source, level: applicationLogs.level, event: applicationLogs.event, message: applicationLogs.message, data_json: applicationLogs.data_json, created_at: applicationLogs.created_at}).from(applicationLogs).where(eq(applicationLogs.team_id, teamId)).orderBy(desc(applicationLogs.created_at), desc(applicationLogs.id)).limit(limit);
     return rows.map((row) => logFrom(row, teamId));
   }
 }
-
-const insertSql = `INSERT INTO application_logs(
-  id, team_id, source, level, event, message, data_json, created_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-
-const recentSql = `SELECT id, source, level, event, message, data_json, created_at
-  FROM application_logs WHERE team_id = ? ORDER BY created_at DESC, id DESC LIMIT ?`;
 
 function logFrom(row: ApplicationLogRow, teamId: string): LocalApplicationLog {
   return {

@@ -1,3 +1,4 @@
+import {sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {readFile} from "node:fs/promises";
@@ -94,7 +95,7 @@ test("worker retains pending rotation and retries failures after five minutes", 
     return {cancel: () => {}};
   }, (event) => { events.push(event); }, () => fixture.clock.value);
   try {
-    await fixture.database.run("UPDATE language_model_secrets SET encrypted_value = 'corrupt'");
+    await fixture.database.run(sql`UPDATE language_model_secrets SET encrypted_value = 'corrupt'`);
     worker.start(); await settleUntil(() => retryDelay > 0); await worker.stop();
     assert.equal(retryDelay, 5 * 60 * 1000);
     assert.deepEqual(events, ["local_runtime.master_key_rotation_failed"]);

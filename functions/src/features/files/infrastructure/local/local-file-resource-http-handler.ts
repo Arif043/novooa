@@ -1,9 +1,11 @@
-import { type FastifyInstance, type FastifyReply } from "fastify";
-import { randomUUID } from "node:crypto";
-import { type LocalSqlDatabase, type SqlRow } from "../../../../shared/local/local-sql-database.js";
-import { type LocalTeamFileStore } from "./local-team-file-store.js";
-import { type LocalRuntimeRealtimeNotifier } from "../../../../shared/local/local-runtime-realtime-notifier.js";
-import { fileByIdSql, fileFromRow, filesSql, folderByIdSql, folderFromRow, foldersSql, insertFolderSql, type FileRow, type FolderRow, type VersionRow, versionFromRow, versionsSql, } from "./local-file-resource-http-models.js";
+import {and, desc, eq, getTableColumns, sql} from "drizzle-orm";
+import {type FastifyInstance, type FastifyReply} from "fastify";
+import {randomUUID} from "node:crypto";
+import {type RuntimeExecutor} from "../../../../db/database.js";
+import {fileFolders, files, fileVersions} from "../../../../db/schema.js";
+import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
+import {fileFromRow, folderFromRow, versionFromRow, } from "./local-file-resource-http-models.js";
+import {type LocalTeamFileStore} from "./local-team-file-store.js";
 export class LocalFileResourceHttpHandler {
   static registerRoutes(http: FastifyInstance, current: () => LocalFileResourceHttpHandler): void {
     http.get("/v1/files", (request, reply) => current().listFiles(reply));
@@ -14,13 +16,13 @@ export class LocalFileResourceHttpHandler {
     http.get<{Params: {fileId: string}}>("/v1/files/:fileId/versions", (request, reply) => current().listVersions(request.params.fileId, reply));
     http.post<{Params: {fileId: string}}>("/v1/files/:fileId/versions", (request, reply) => current().write(request.body, request.params.fileId, reply));
   }
-  constructor(private readonly database: LocalSqlDatabase, private readonly fileStore: LocalTeamFileStore, private readonly teamId: string, private readonly userId: string, private readonly notifier: LocalRuntimeRealtimeNotifier) { }
+  constructor(private readonly database: RuntimeExecutor, private readonly fileStore: LocalTeamFileStore, private readonly teamId: string, private readonly userId: string, private readonly notifier: LocalRuntimeRealtimeNotifier) { }
   private async listFiles(reply: FastifyReply): Promise<FastifyReply> {
-    const rows = await this.database.all<FileRow>(filesSql(), [this.teamId]);
+    const rows = await fileQuery(this.database).where(eq(files.team_id, this.teamId)).orderBy(desc(files.updated_at));
     return reply.code(200).send({ items: rows.map(fileFromRow) });
   }
   private async listFolders(reply: FastifyReply): Promise<FastifyReply> {
-    const rows = await this.database.all<FolderRow>(foldersSql(), [this.teamId]);
+    const rows = await this.database.select({id: fileFolders.id, team_id: fileFolders.team_id, owner_uid: fileFolders.owner_uid, name: fileFolders.name, parent_folder_id: fileFolders.parent_folder_id, created_at: fileFolders.created_at, updated_at: fileFolders.updated_at}).from(fileFolders).where(eq(fileFolders.team_id, this.teamId)).orderBy(sql`${fileFolders.name} COLLATE NOCASE`);
     return reply.code(200).send({ items: rows.map(folderFromRow) });
   }
   private async createFolder(body: unknown, reply: FastifyReply): Promise<FastifyReply> {
@@ -28,7 +30,7 @@ export class LocalFileResourceHttpHandler {
       const input = folderFromRequest(body);
       await ensureFolder(this.database, this.teamId, input.parentFolderId);
       const id = randomUUID();
-      await this.database.run(insertFolderSql(), [id, this.teamId, this.userId, input.name, input.parentFolderId]);
+      await this.database.insert(fileFolders).values({id: id, team_id: this.teamId, owner_uid: this.userId, name: input.name, parent_folder_id: input.parentFolderId});
       this.notifier.publish("folders");
       return this.folderById(id, 201, reply);
     }
@@ -54,7 +56,7 @@ export class LocalFileResourceHttpHandler {
     }
   }
   private async listVersions(fileId: string, reply: FastifyReply): Promise<FastifyReply> {
-    const rows = await this.database.all<VersionRow>(versionsSql(), [this.teamId, fileId]);
+    const rows = await this.database.select({id: fileVersions.id, file_id: fileVersions.file_id, team_id: fileVersions.team_id, created_by_uid: fileVersions.created_by_uid, display_name: fileVersions.display_name, storage_path: fileVersions.storage_path, content_type: fileVersions.content_type, size_bytes: fileVersions.size_bytes, created_at: fileVersions.created_at}).from(fileVersions).where(and(eq(fileVersions.team_id, this.teamId), eq(fileVersions.file_id, fileId))).orderBy(desc(fileVersions.created_at));
     return reply.code(200).send({ items: rows.map(versionFromRow) });
   }
   private async content(input: {
@@ -70,14 +72,19 @@ export class LocalFileResourceHttpHandler {
     }
   }
   private async fileById(id: string, statusCode: number, reply: FastifyReply): Promise<FastifyReply> {
-    const row = await this.database.get<FileRow>(fileByIdSql(), [this.teamId, id]);
-    return row === null ? reply.code(404).send({ error: "Datei nicht gefunden." }) : reply.code(statusCode).send(fileFromRow(row));
+    const row = await fileQuery(this.database).where(and(eq(files.team_id, this.teamId), eq(files.id, id))).get();
+    return row === undefined ? reply.code(404).send({ error: "Datei nicht gefunden." }) : reply.code(statusCode).send(fileFromRow(row));
   }
   private async folderById(id: string, statusCode: number, reply: FastifyReply): Promise<FastifyReply> {
-    const row = await this.database.get<FolderRow>(folderByIdSql(), [this.teamId, id]);
+    const row = (await this.database.select({id: fileFolders.id, team_id: fileFolders.team_id, owner_uid: fileFolders.owner_uid, name: fileFolders.name, parent_folder_id: fileFolders.parent_folder_id, created_at: fileFolders.created_at, updated_at: fileFolders.updated_at}).from(fileFolders).where(and(eq(fileFolders.team_id, this.teamId), eq(fileFolders.id, id))).get()) ?? null;
     return row === null ? reply.code(404).send({ error: "Verzeichnis nicht gefunden." }) : reply.code(statusCode).send(folderFromRow(row));
   }
 }
+function fileQuery(database: RuntimeExecutor) {
+  return database.select({...getTableColumns(files), current_version_created_at: fileVersions.created_at})
+    .from(files).innerJoin(fileVersions, eq(fileVersions.id, files.current_version_id));
+}
+
 function fileFromRequest(value: unknown): FileInput {
   const input = recordFrom(value);
   const name = stringFrom(input.name, "name");
@@ -98,10 +105,10 @@ function folderFromRequest(value: unknown): {
     throw new LocalFileRequestError("name muss ein nicht leerer String sein.");
   return { name, parentFolderId: nullableString(input.parentFolderId) };
 }
-async function ensureFolder(database: LocalSqlDatabase, teamId: string, folderId: string | null): Promise<void> {
+async function ensureFolder(database: RuntimeExecutor, teamId: string, folderId: string | null): Promise<void> {
   if (folderId === null)
     return;
-  const folder = await database.get<SqlRow>("SELECT id FROM file_folders WHERE team_id = ? AND id = ?", [teamId, folderId]);
+  const folder = (await database.select({id: fileFolders.id}).from(fileFolders).where(and(eq(fileFolders.team_id, teamId), eq(fileFolders.id, folderId))).get()) ?? null;
   if (folder === null)
     throw new LocalFileRequestError("Das Verzeichnis existiert nicht.");
 }

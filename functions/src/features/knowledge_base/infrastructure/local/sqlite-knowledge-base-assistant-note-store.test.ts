@@ -1,36 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import {runtimeTestDatabase} from "../../../../db/runtime-database-test-support.js";
+import {knowledgeNotes} from "../../../../db/schema.js";
 import {SQLiteKnowledgeBaseAssistantNoteStore} from "./sqlite-knowledge-base-assistant-note-store.js";
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
 
-test("lists local assistant notes for the active team", async () => {
-  const store = new SQLiteKnowledgeBaseAssistantNoteStore(
-    databaseWithRows([{id: "note-1", title: "Plan", path: "plan.md", content: "Inhalt"}]),
-  );
-
-  const notes = await store.listNotes("team-1");
-
-  assert.deepEqual(notes, [{
-    id: "note-1",
-    title: "Plan",
-    path: "plan.md",
-    content: "Inhalt",
-  }]);
+test("lists local assistant notes for the active team", async (t) => {
+  const database = await runtimeTestDatabase(t);
+  await database.insert(knowledgeNotes).values({id: "note-1", team_id: "team-1", title: "Plan", path: "plan.md", content: "Inhalt"});
+  const notes = await new SQLiteKnowledgeBaseAssistantNoteStore(database).listNotes("team-1");
+  assert.deepEqual(notes, [{id: "note-1", title: "Plan", path: "plan.md", content: "Inhalt"}]);
+  assert.deepEqual(await new SQLiteKnowledgeBaseAssistantNoteStore(database).listNotes("other-team"), []);
 });
 
-test("returns no local assistant note when it is absent", async () => {
-  const store = new SQLiteKnowledgeBaseAssistantNoteStore(databaseWithRows([]));
-
-  const note = await store.findNote("team-1", "missing");
-
-  assert.equal(note, null);
+test("returns no local assistant note when it is absent", async (t) => {
+  const database = await runtimeTestDatabase(t);
+  assert.equal(await new SQLiteKnowledgeBaseAssistantNoteStore(database).findNote("team-1", "missing"), null);
 });
-
-function databaseWithRows(rows: SqlRow[]): LocalSqlDatabase {
-  return {
-    get: async <T extends SqlRow>() => rows[0] as T | undefined ?? null,
-    all: async <T extends SqlRow>() => rows as T[],
-    run: async () => undefined,
-    transaction: async <T>(operation: () => Promise<T>) => operation(),
-  };
-}

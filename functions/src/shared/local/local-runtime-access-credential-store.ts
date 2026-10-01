@@ -1,5 +1,7 @@
+import {eq} from "drizzle-orm";
 import {randomBytes, scryptSync, timingSafeEqual} from "node:crypto";
-import {type LocalSqlDatabase, type SqlRow} from "./local-sql-database.js";
+import {type RuntimeExecutor} from "../../db/database.js";
+import {runtimeAccessCredential} from "../../db/schema.js";
 
 const scryptKeyLength = 64;
 const saltBytes = 16;
@@ -12,21 +14,18 @@ const saltBytes = 16;
 // Kosten fallen praktisch nicht ins Gewicht.
 const scryptOptions = {N: 131072, r: 8, p: 1, maxmem: 256 * 1024 * 1024};
 
-type CredentialRow = SqlRow & {password_hash: string; salt: string};
-
 /**
  * Verwaltet das eine Betreiber-Passwort der lokalen Runtime (Singleton-Row,
  * id = 1 — ein Arbeitsbereich hat genau ein Zugriffs-Passwort). Speichert
  * ausschließlich einen scrypt-Hash, nie das Klartext-Passwort.
  */
 export class LocalRuntimeAccessCredentialStore {
-  constructor(private readonly database: LocalSqlDatabase) {}
+  constructor(private readonly database: RuntimeExecutor) {}
 
   async hasCredential(): Promise<boolean> {
-    const row = await this.database.get<SqlRow>(
-      "SELECT id FROM runtime_access_credential WHERE id = 1",
-    );
-    return row !== null;
+    const row = await this.database.select({id: runtimeAccessCredential.id}).from(runtimeAccessCredential)
+      .where(eq(runtimeAccessCredential.id, 1)).get();
+    return row !== undefined;
   }
 
   /**
@@ -39,17 +38,13 @@ export class LocalRuntimeAccessCredentialStore {
     }
     const salt = randomBytes(saltBytes).toString("hex");
     const hash = hashFor(password, salt);
-    await this.database.run(
-      "INSERT INTO runtime_access_credential (id, password_hash, salt) VALUES (1, ?, ?)",
-      [hash, salt],
-    );
+    await this.database.insert(runtimeAccessCredential).values({id: 1, password_hash: hash, salt});
   }
 
   async verifyPassword(password: string): Promise<boolean> {
-    const row = await this.database.get<CredentialRow>(
-      "SELECT password_hash, salt FROM runtime_access_credential WHERE id = 1",
-    );
-    if (row === null) return false;
+    const row = await this.database.select({password_hash: runtimeAccessCredential.password_hash, salt: runtimeAccessCredential.salt})
+      .from(runtimeAccessCredential).where(eq(runtimeAccessCredential.id, 1)).get();
+    if (!row) return false;
     const candidate = Buffer.from(hashFor(password, row.salt), "hex");
     const stored = Buffer.from(row.password_hash, "hex");
     return candidate.length === stored.length && timingSafeEqual(candidate, stored);

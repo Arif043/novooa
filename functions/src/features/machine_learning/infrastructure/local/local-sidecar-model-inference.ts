@@ -1,15 +1,15 @@
+import {type RuntimeExecutor} from "../../../../db/database.js";
 import {PrepareModelInputs} from "../../domain/usecases/prepare-model-inputs.js";
-import {RunModelInference} from "../../domain/usecases/run-model-inference.js";
 import {RunModelInferenceWithSources} from "../../domain/usecases/run-model-inference-with-sources.js";
+import {RunModelInference} from "../../domain/usecases/run-model-inference.js";
 import {CachingModelArtifactReader} from "../caching-model-artifact-reader.js";
 import {HttpPythonInferenceSidecar, SidecarOnnxInferenceRuntime} from "../python-inference-sidecar.js";
-import {type LocalSqlDatabase} from "../../../../shared/local/local-sql-database.js";
 import {HttpPythonModelInputTransformer} from "./http-python-model-input-transformer.js";
 import {LocalModelArtifactReader} from "./local-model-artifact-reader.js";
 import {SQLiteModelCatalog} from "./sqlite-model-catalog.js";
 
 export function createLocalSidecarModelInference(
-  database: LocalSqlDatabase,
+  database: RuntimeExecutor,
   runtimeRoot: string,
   sidecarUrl: string,
 ): RunModelInferenceWithSources {

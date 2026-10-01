@@ -1,31 +1,22 @@
+import {and, eq} from "drizzle-orm";
+import {type RuntimeExecutor} from "../../../../db/database.js";
+import {knowledgeNotes, type KnowledgeNotes} from "../../../../db/schema.js";
 import {type KnowledgeAttachment} from "../../../task_execution/domain/entities/attachments.js";
 import {
   type KnowledgeBaseStore,
   type KnowledgeNoteDocument,
 } from "../../domain/repositories/knowledge-base-store.js";
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
 
-type KnowledgeNoteRow = SqlRow & {
-  id: string;
-  title: string;
-  path: string;
-  content: string;
-  outgoing_links_json: string;
-};
+type KnowledgeNoteRow = Pick<KnowledgeNotes, "id" | "title" | "path" | "content" | "outgoing_links_json">;
 
 export class SQLiteKnowledgeBaseStore implements KnowledgeBaseStore {
-  constructor(private readonly database: LocalSqlDatabase) {}
+  constructor(private readonly database: RuntimeExecutor) {}
 
   async loadNote(
     teamId: string,
     attachment: KnowledgeAttachment,
   ): Promise<KnowledgeNoteDocument> {
-    const noteOrNull = await this.database.get<KnowledgeNoteRow>(
-      `SELECT id, title, path, content, outgoing_links_json
-       FROM knowledge_notes
-       WHERE team_id = ? AND knowledge_base_id = ? AND id = ?`,
-      [teamId, attachment.knowledgeBaseId, attachment.noteId],
-    );
+    const noteOrNull = (await this.database.select({id: knowledgeNotes.id, title: knowledgeNotes.title, path: knowledgeNotes.path, content: knowledgeNotes.content, outgoing_links_json: knowledgeNotes.outgoing_links_json}).from(knowledgeNotes).where(and(eq(knowledgeNotes.team_id, teamId), eq(knowledgeNotes.knowledge_base_id, attachment.knowledgeBaseId), eq(knowledgeNotes.id, attachment.noteId))).get()) ?? null;
     if (noteOrNull === null) throw new Error(`Wissensnotiz fehlt: ${attachment.noteId}`);
     return noteFromRow(attachment, noteOrNull);
   }

@@ -1,23 +1,14 @@
+import {and, eq, inArray, lte, or, sql} from "drizzle-orm";
 import {randomUUID} from "node:crypto";
+import {
+  type RuntimeExecutor,
+} from "../../../../db/database.js";
+import {taskRunJobs, type TaskRunJobs} from "../../../../db/schema.js";
 import {
   type TaskRunDispatch,
 } from "../../domain/usecases/task-workflow.js";
-import {
-  type LocalSqlDatabase,
-  type SqlRow,
-} from "../../../../shared/local/local-sql-database.js";
 
-type TaskRunJobRow = SqlRow & {
-  id: string;
-  team_id: string;
-  run_id: string;
-  mode: "start" | "resume";
-  attempts: number;
-};
-
-type NextClaimableDelayRow = SqlRow & {
-  delay_ms: number | null;
-};
+type TaskRunJobRow = Pick<TaskRunJobs, "id" | "team_id" | "run_id" | "mode" | "attempts">;
 
 export type LeasedTaskRunJob = TaskRunDispatch & {
   jobId: string;
@@ -26,88 +17,45 @@ export type LeasedTaskRunJob = TaskRunDispatch & {
 
 export class SQLiteTaskRunJobStore {
   constructor(
-    private readonly database: LocalSqlDatabase,
+    private readonly database: RuntimeExecutor,
     private readonly leaseSeconds = 60,
   ) {}
 
   async enqueue(input: TaskRunDispatch): Promise<void> {
-    await this.database.run(enqueueSql, [
-      randomUUID(), input.teamId, input.runId, input.mode,
-    ]);
+    await this.database.insert(taskRunJobs).values({id: randomUUID(), team_id: input.teamId, run_id: input.runId, mode: input.mode, status: "queued", attempts: 0, available_at: sql`CURRENT_TIMESTAMP`}).onConflictDoUpdate({target: [taskRunJobs.team_id, taskRunJobs.run_id], set: {mode: input.mode, status: "queued", attempts: 0, available_at: sql`CURRENT_TIMESTAMP`, lease_expires_at: null, updated_at: sql`CURRENT_TIMESTAMP`}});
   }
 
   async claimNext(): Promise<LeasedTaskRunJob | null> {
-    return this.database.transaction(async () => {
-      const job = await this.database.get<TaskRunJobRow>(nextJobSql);
-      if (job === null) return null;
-      await this.database.run(leaseJobSql(this.leaseSeconds), [job.id]);
-      return leasedJobFrom(job);
-    });
+    const nextJob = this.database.select({id: taskRunJobs.id}).from(taskRunJobs).where(or(
+      and(eq(taskRunJobs.status, "queued"), lte(taskRunJobs.available_at, sql`CURRENT_TIMESTAMP`)),
+      and(eq(taskRunJobs.status, "leased"), lte(taskRunJobs.lease_expires_at, sql`CURRENT_TIMESTAMP`)),
+    )).orderBy(taskRunJobs.available_at, taskRunJobs.created_at).limit(1);
+    const [job] = await this.database.update(taskRunJobs).set({status: "leased",
+      attempts: sql`${taskRunJobs.attempts} + 1`, updated_at: sql`CURRENT_TIMESTAMP`,
+      lease_expires_at: sql`datetime('now', ${`+${this.leaseSeconds} seconds`})`,
+    }).where(eq(taskRunJobs.id, nextJob)).returning();
+    return job ? leasedJobFrom(job) : null;
   }
 
   async complete(job: LeasedTaskRunJob): Promise<void> {
-    await this.database.run(completeJobSql, [job.jobId]);
+    await this.database.update(taskRunJobs).set({status: "completed", lease_expires_at: null, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRunJobs.id, job.jobId), eq(taskRunJobs.status, "leased")));
   }
 
   async retryOrFail(job: LeasedTaskRunJob, maximumAttempts: number): Promise<void> {
     if (job.attempt >= maximumAttempts) {
-      await this.database.run(failJobSql, [job.jobId]);
+      await this.database.update(taskRunJobs).set({status: "failed", lease_expires_at: null, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRunJobs.id, job.jobId), eq(taskRunJobs.status, "leased")));
       return;
     }
-    await this.database.run(retryJobSql(backoffSecondsFor(job.attempt)), [job.jobId]);
+    await this.database.update(taskRunJobs).set({status: "queued", available_at: sql`datetime('now', ${`+${backoffSecondsFor(job.attempt)} seconds`})`, lease_expires_at: null, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRunJobs.id, job.jobId), eq(taskRunJobs.status, "leased")));
   }
 
   async nextClaimableDelayMs(): Promise<number | null> {
-    const row = await this.database.get<NextClaimableDelayRow>(nextClaimableDelaySql);
+    const row = await this.database.select({delay_ms: sql<number | null>`MAX(0,
+      (unixepoch(MIN(CASE WHEN ${taskRunJobs.status} = 'queued'
+        THEN ${taskRunJobs.available_at} ELSE ${taskRunJobs.lease_expires_at} END)) - unixepoch('now')) * 1000)`})
+      .from(taskRunJobs).where(inArray(taskRunJobs.status, ["queued", "leased"])).get();
     return row?.delay_ms ?? null;
   }
-}
-
-const enqueueSql = `INSERT INTO task_run_jobs(
-  id, team_id, run_id, mode, status, attempts, available_at
-) VALUES (?, ?, ?, ?, 'queued', 0, CURRENT_TIMESTAMP)
-ON CONFLICT(team_id, run_id) DO UPDATE SET
-  mode = excluded.mode,
-  status = 'queued',
-  attempts = 0,
-  available_at = CURRENT_TIMESTAMP,
-  lease_expires_at = NULL,
-  updated_at = CURRENT_TIMESTAMP`;
-
-const nextJobSql = `SELECT id, team_id, run_id, mode, attempts
-  FROM task_run_jobs
-  WHERE (status = 'queued' AND available_at <= CURRENT_TIMESTAMP)
-    OR (status = 'leased' AND lease_expires_at <= CURRENT_TIMESTAMP)
-  ORDER BY available_at, created_at
-  LIMIT 1`;
-
-const completeJobSql = `UPDATE task_run_jobs SET status = 'completed',
-  lease_expires_at = NULL, updated_at = CURRENT_TIMESTAMP
-  WHERE id = ? AND status = 'leased'`;
-
-const failJobSql = `UPDATE task_run_jobs SET status = 'failed',
-  lease_expires_at = NULL, updated_at = CURRENT_TIMESTAMP
-  WHERE id = ? AND status = 'leased'`;
-
-const nextClaimableDelaySql = `SELECT MAX(0,
-  (unixepoch(next_at) - unixepoch('now')) * 1000
-) AS delay_ms FROM (
-  SELECT available_at AS next_at FROM task_run_jobs WHERE status = 'queued'
-  UNION ALL
-  SELECT lease_expires_at AS next_at FROM task_run_jobs WHERE status = 'leased'
-)`;
-
-function leaseJobSql(leaseSeconds: number): string {
-  return `UPDATE task_run_jobs SET status = 'leased', attempts = attempts + 1,
-    lease_expires_at = datetime('now', '+${leaseSeconds} seconds'),
-    updated_at = CURRENT_TIMESTAMP WHERE id = ?`;
-}
-
-function retryJobSql(backoffSeconds: number): string {
-  return `UPDATE task_run_jobs SET status = 'queued',
-    available_at = datetime('now', '+${backoffSeconds} seconds'),
-    lease_expires_at = NULL, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ? AND status = 'leased'`;
 }
 
 function leasedJobFrom(row: TaskRunJobRow): LeasedTaskRunJob {
@@ -116,7 +64,7 @@ function leasedJobFrom(row: TaskRunJobRow): LeasedTaskRunJob {
     teamId: row.team_id,
     runId: row.run_id,
     mode: row.mode,
-    attempt: row.attempts + 1,
+    attempt: row.attempts,
   };
 }
 

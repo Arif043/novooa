@@ -1,7 +1,8 @@
+import {sql} from "drizzle-orm";
 import {mkdtemp, readFile, rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {SqliteLocalSqlDatabase} from "../../../shared/local/sqlite-local-sql-database.js";
+import {connectRuntimeDatabase} from "../../../db/database.js";
 import {prepareLocalRuntimeMasterKey} from "../../../shared/local/local-runtime-master-key.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "../../language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
 import {FileRuntimeLicenseStore} from "../../licensing/infrastructure/local/file-local-runtime-license-store.js";
@@ -12,14 +13,14 @@ export async function rotationFixture() {
   const keyFile = join(root, "secrets", "runtime-master-key");
   await prepareLocalRuntimeMasterKey(keyFile);
   const cipher = new EnvelopeRuntimeFieldCipher(await readFile(keyFile, "utf8"));
-  const database = new SqliteLocalSqlDatabase(join(root, "novooa.sqlite"));
-  await database.run("CREATE TABLE language_model_secrets (secret_ref TEXT PRIMARY KEY, encrypted_value TEXT NOT NULL)");
+  const database = connectRuntimeDatabase(join(root, "novooa.sqlite"));
+  await database.run(sql`CREATE TABLE language_model_secrets (secret_ref TEXT PRIMARY KEY, encrypted_value TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`);
   const secrets = new EncryptedSQLiteLanguageModelSecretStore(database, cipher);
   await secrets.write("model/a", "key-a");
   await secrets.write("model/b", "key-b");
   await new FileRuntimeLicenseStore(root, cipher).save(licenseActivation());
   return {root, keyFile, database, cipher, cleanup: async () => {
-    database.close();
+    database.$client.close();
     await rm(root, {recursive: true, force: true});
   }};
 }

@@ -1,16 +1,10 @@
-import { type FastifyInstance, type FastifyReply } from "fastify";
-import { randomUUID } from "node:crypto";
-import { type LocalSqlDatabase, type SqlRow } from "../../../../shared/local/local-sql-database.js";
-import { type LocalRuntimeRealtimeNotifier } from "../../../../shared/local/local-runtime-realtime-notifier.js";
-type NoteRow = SqlRow & {
-  content: string;
-  id: string;
-  knowledge_base_id: string;
-  outgoing_links_json: string;
-  path: string;
-  title: string;
-  updated_at: string;
-};
+import {and, eq, sql} from "drizzle-orm";
+import {type FastifyInstance, type FastifyReply} from "fastify";
+import {randomUUID} from "node:crypto";
+import {type RuntimeExecutor} from "../../../../db/database.js";
+import {knowledgeNotes, type KnowledgeNotes} from "../../../../db/schema.js";
+import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
+type NoteRow = Pick<KnowledgeNotes, "content" | "id" | "knowledge_base_id" | "outgoing_links_json" | "path" | "title" | "updated_at">;
 export class LocalKnowledgeNoteHttpHandler {
   static registerRoutes(http: FastifyInstance, current: () => LocalKnowledgeNoteHttpHandler): void {
     http.get("/v1/knowledge-notes", (request, reply) => current().list(reply));
@@ -26,19 +20,16 @@ export class LocalKnowledgeNoteHttpHandler {
       };
     }>("/v1/knowledge-notes/:noteId", (request, reply) => current().delete(request.params.noteId, reply));
   }
-  constructor(private readonly database: LocalSqlDatabase, private readonly teamId: string, private readonly notifier: LocalRuntimeRealtimeNotifier) { }
+  constructor(private readonly database: RuntimeExecutor, private readonly teamId: string, private readonly notifier: LocalRuntimeRealtimeNotifier) { }
   private async list(reply: FastifyReply): Promise<FastifyReply> {
-    const rows = await this.database.all<NoteRow>(listSql(), [this.teamId]);
+    const rows = await this.database.select({id: knowledgeNotes.id, knowledge_base_id: knowledgeNotes.knowledge_base_id, title: knowledgeNotes.title, path: knowledgeNotes.path, content: knowledgeNotes.content, outgoing_links_json: knowledgeNotes.outgoing_links_json, updated_at: knowledgeNotes.updated_at}).from(knowledgeNotes).where(eq(knowledgeNotes.team_id, this.teamId)).orderBy(sql`${knowledgeNotes.title} COLLATE NOCASE`);
     return reply.code(200).send({ items: rows.map(noteFromRow) });
   }
   private async create(body: unknown, reply: FastifyReply): Promise<FastifyReply> {
     try {
       const note = noteFromRequest(body);
       const id = randomUUID();
-      await this.database.run(insertSql(), [
-        id, this.teamId, note.knowledgeBaseId, note.title, note.path,
-        note.content, JSON.stringify(note.outgoingLinks),
-      ]);
+      await this.database.insert(knowledgeNotes).values({id: id, team_id: this.teamId, knowledge_base_id: note.knowledgeBaseId, title: note.title, path: note.path, content: note.content, outgoing_links_json: JSON.stringify(note.outgoingLinks)});
       this.notifier.publish("knowledge-notes");
       return this.byId(id, 201, reply);
     }
@@ -49,10 +40,7 @@ export class LocalKnowledgeNoteHttpHandler {
   private async update(id: string, body: unknown, reply: FastifyReply): Promise<FastifyReply> {
     try {
       const note = noteFromRequest(body);
-      await this.database.run(updateSql(), [
-        note.title, note.path, note.content, JSON.stringify(note.outgoingLinks),
-        this.teamId, id,
-      ]);
+      await this.database.update(knowledgeNotes).set({title: note.title, path: note.path, content: note.content, outgoing_links_json: JSON.stringify(note.outgoingLinks), updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(knowledgeNotes.team_id, this.teamId), eq(knowledgeNotes.id, id)));
       this.notifier.publish("knowledge-notes");
       return this.byId(id, 200, reply);
     }
@@ -61,32 +49,16 @@ export class LocalKnowledgeNoteHttpHandler {
     }
   }
   private async delete(id: string, reply: FastifyReply): Promise<FastifyReply> {
-    await this.database.run("DELETE FROM knowledge_notes WHERE team_id = ? AND id = ?", [this.teamId, id]);
+    await this.database.delete(knowledgeNotes).where(and(eq(knowledgeNotes.team_id, this.teamId), eq(knowledgeNotes.id, id)));
     this.notifier.publish("knowledge-notes");
     return reply.code(204).send();
   }
   private async byId(id: string, statusCode: number, reply: FastifyReply): Promise<FastifyReply> {
-    const row = await this.database.get<NoteRow>(byIdSql(), [this.teamId, id]);
+    const row = (await this.database.select({id: knowledgeNotes.id, knowledge_base_id: knowledgeNotes.knowledge_base_id, title: knowledgeNotes.title, path: knowledgeNotes.path, content: knowledgeNotes.content, outgoing_links_json: knowledgeNotes.outgoing_links_json, updated_at: knowledgeNotes.updated_at}).from(knowledgeNotes).where(and(eq(knowledgeNotes.team_id, this.teamId), eq(knowledgeNotes.id, id))).get()) ?? null;
     if (row === null)
       return reply.code(404).send({ error: "Notiz nicht gefunden." });
     return reply.code(statusCode).send(noteFromRow(row));
   }
-}
-function listSql(): string {
-  return `SELECT id, knowledge_base_id, title, path, content, outgoing_links_json, updated_at
- FROM knowledge_notes WHERE team_id = ? ORDER BY title COLLATE NOCASE`;
-}
-function byIdSql(): string {
-  return `SELECT id, knowledge_base_id, title, path, content, outgoing_links_json, updated_at
- FROM knowledge_notes WHERE team_id = ? AND id = ?`;
-}
-function insertSql(): string {
-  return `INSERT INTO knowledge_notes(id, team_id, knowledge_base_id, title, path, content, outgoing_links_json)
- VALUES (?, ?, ?, ?, ?, ?, ?)`;
-}
-function updateSql(): string {
-  return `UPDATE knowledge_notes SET title = ?, path = ?, content = ?, outgoing_links_json = ?,
- updated_at = CURRENT_TIMESTAMP WHERE team_id = ? AND id = ?`;
 }
 function noteFromRow(row: NoteRow): Record<string, unknown> {
   return {

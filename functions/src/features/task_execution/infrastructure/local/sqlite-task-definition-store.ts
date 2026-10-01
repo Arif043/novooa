@@ -1,27 +1,20 @@
+import {and, desc, eq, sql} from "drizzle-orm";
+import {type RuntimeExecutor} from "../../../../db/database.js";
+import {tasks, type Tasks} from "../../../../db/schema.js";
 import {type TaskDefinition} from "../../domain/entities/task.js";
 import {type TaskDefinitionStore} from "../../domain/repositories/task-definition-store.js";
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
 
-type TaskDefinitionRow = SqlRow & {
-  graph_json: string;
-  id: string;
-  objective: string;
-  selected_node_id: string;
-  title: string;
-};
+type TaskDefinitionRow = Pick<Tasks, "graph_json" | "id" | "objective" | "selected_node_id" | "title">;
 
 export class SQLiteTaskDefinitionStore implements TaskDefinitionStore {
-  constructor(private readonly database: LocalSqlDatabase) {}
+  constructor(private readonly database: RuntimeExecutor) {}
 
   async delete(teamId: string, taskId: string): Promise<void> {
-    await this.database.run("DELETE FROM tasks WHERE team_id = ? AND id = ?", [teamId, taskId]);
+    await this.database.delete(tasks).where(and(eq(tasks.team_id, teamId), eq(tasks.id, taskId)));
   }
 
   async list(teamId: string): Promise<TaskDefinition[]> {
-    const rows = await this.database.all<TaskDefinitionRow>(
-      "SELECT id, title, objective, graph_json, selected_node_id FROM tasks WHERE team_id = ? ORDER BY updated_at DESC",
-      [teamId],
-    );
+    const rows = await this.database.select({id: tasks.id, title: tasks.title, objective: tasks.objective, graph_json: tasks.graph_json, selected_node_id: tasks.selected_node_id}).from(tasks).where(eq(tasks.team_id, teamId)).orderBy(desc(tasks.updated_at));
     return rows.map(definitionFromRow);
   }
 
@@ -31,17 +24,11 @@ export class SQLiteTaskDefinitionStore implements TaskDefinitionStore {
     definition: TaskDefinition,
     selectedNodeId: string,
   ): Promise<void> {
-    await this.database.run(upsertTaskDefinitionSql(), [
-      definition.id, teamId, definition.title, definition.objective,
-      JSON.stringify({nodes: definition.nodes, edges: definition.edges}), selectedNodeId, userId,
-    ]);
+    await this.database.insert(tasks).values({id: definition.id, team_id: teamId, title: definition.title, objective: definition.objective, graph_json: JSON.stringify({nodes: definition.nodes, edges: definition.edges}), selected_node_id: selectedNodeId, created_by_uid: userId}).onConflictDoUpdate({target: tasks.id, set: {title: definition.title, objective: definition.objective, graph_json: JSON.stringify({nodes: definition.nodes, edges: definition.edges}), selected_node_id: selectedNodeId, updated_at: sql`CURRENT_TIMESTAMP`}, setWhere: eq(tasks.team_id, teamId)});
   }
 
   async selectedNodeId(teamId: string, taskId: string): Promise<string> {
-    const row = await this.database.get<{selected_node_id: string}>(
-      "SELECT selected_node_id FROM tasks WHERE team_id = ? AND id = ?",
-      [teamId, taskId],
-    );
+    const row = (await this.database.select({selected_node_id: tasks.selected_node_id}).from(tasks).where(and(eq(tasks.team_id, teamId), eq(tasks.id, taskId))).get()) ?? null;
     return row?.selected_node_id ?? "";
   }
 }
@@ -63,12 +50,4 @@ function jsonList<T>(value: string, key: string): T[] {
     }
   } catch {}
   return [];
-}
-
-function upsertTaskDefinitionSql(): string {
-  return `INSERT INTO tasks(id, team_id, title, objective, graph_json, selected_node_id, created_by_uid)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET title = excluded.title, objective = excluded.objective,
-      graph_json = excluded.graph_json, selected_node_id = excluded.selected_node_id,
-      updated_at = CURRENT_TIMESTAMP WHERE tasks.team_id = excluded.team_id`;
 }

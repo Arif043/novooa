@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "novooa – Komponenten",
+    "output": ".archify/architecture-novooa-komponenten-20261001-011413/novooa-komponenten.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/Arif043/syscat2.git",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "11925b338e2f3340ef27d6884d8db22a00d72f84"
+    }
+  },
+  "components": [
+    { "id": "user", "type": "external", "label": "Nutzer:in", "sublabel": "Desktop · Web · Mobil", "pos": [40, 360], "size": [150, 64] },
+    { "id": "client", "type": "frontend", "label": "Flutter-Client", "sublabel": "Cubits · Repositories", "pos": [250, 360], "size": [170, 64],
+      "sources": [
+        { "path": "lib/main.dart", "line": 60 },
+        { "path": "lib/core/di/service_locator.dart", "line": 166, "end_line": 169 },
+        { "path": "lib/core/di/standalone_dependency_configuration.dart", "line": 102, "end_line": 103 }
+      ] },
+    { "id": "firebase-data", "type": "database", "label": "Firebase-Daten", "sublabel": "Firestore · Storage · Auth", "pos": [620, 50], "size": [190, 64],
+      "sources": [ { "path": "lib/core/di/service_locator.dart", "line": 166, "end_line": 169 } ] },
+    { "id": "functions", "type": "backend", "label": "Firebase Functions", "sublabel": "Callables · Webhooks · Scheduler", "pos": [620, 210], "size": [190, 64],
+      "sources": [
+        { "path": "functions/src/index.ts", "line": 32, "end_line": 36 },
+        { "path": "functions/src/features/task_execution/infrastructure/firebase/task-workflow-functions.ts", "line": 48, "end_line": 64 },
+        { "path": "functions/src/features/scheduling/infrastructure/firebase/schedule-functions.ts", "line": 5 }
+      ] },
+    { "id": "cloud-tasks", "type": "messagebus", "label": "Cloud Tasks", "sublabel": "Run-Warteschlange", "pos": [900, 210], "size": [150, 64],
+      "sources": [ { "path": "functions/src/features/task_execution/infrastructure/firebase/firebase-task-run-dispatcher.ts", "line": 10, "end_line": 13 } ] },
+    { "id": "comm-providers", "type": "external", "label": "Kommunikationsanbieter", "sublabel": "Twilio · MS Graph · SendGrid", "pos": [1180, 50], "size": [200, 64],
+      "sources": [
+        { "path": "functions/src/features/communication/infrastructure/twilio/twilio-webhook.ts", "line": 19 },
+        { "path": "functions/src/features/communication/infrastructure/microsoft_graph/microsoft-graph-http.ts", "line": 35 },
+        { "path": "functions/src/features/communication/infrastructure/sendgrid/sendgrid-email-sender.ts", "line": 3 }
+      ] },
+    { "id": "runner", "type": "backend", "label": "Genkit Task-Runner", "sublabel": "Graph · Executoren", "pos": [900, 360], "size": [170, 64],
+      "sources": [
+        { "path": "functions/src/features/task_execution/infrastructure/genkit/task-workflow.ts", "line": 34 },
+        { "path": "functions/src/features/task_execution/infrastructure/genkit/runner/task-graph-runner.ts", "line": 36 },
+        { "path": "functions/src/features/task_execution/infrastructure/genkit/runner/node-executor-registry.ts", "line": 62 }
+      ] },
+    { "id": "llm", "type": "external", "label": "Sprachmodelle", "sublabel": "Gemini · OpenAI-kompatibel", "pos": [1180, 360], "size": [190, 64],
+      "sources": [ { "path": "functions/src/features/language_models/infrastructure/genkit/genkit-language-model-resolver.ts", "line": 1, "end_line": 2 } ] },
+    { "id": "runtime", "type": "backend", "label": "novooa-runtime", "sublabel": "Fastify-API · Worker", "pos": [620, 480], "size": [170, 64],
+      "sources": [
+        { "path": "functions/src/shared/local/local-runtime-http-server.ts", "line": 12 },
+        { "path": "functions/src/shared/local/local-runtime-access-hooks.ts", "line": 6, "end_line": 23 },
+        { "path": "docker-compose.local.yaml", "line": 39 }
+      ] },
+    { "id": "sqlite", "type": "database", "label": "SQLite + Dateien", "sublabel": "Volume novooa-data", "pos": [620, 640], "size": [170, 64],
+      "sources": [
+        { "path": "docker-compose.local.yaml", "line": 41 },
+        { "path": "functions/src/features/files/infrastructure/local/local-object-store.ts", "line": 5 }
+      ] },
+    { "id": "ml", "type": "backend", "label": "novooa-ml", "sublabel": "Python · ONNX · intern", "pos": [900, 640], "size": [170, 64],
+      "sources": [
+        { "path": "local-runtime/python/novooa_ml/inference_server.py", "line": 6 },
+        { "path": "functions/src/features/machine_learning/infrastructure/python-inference-sidecar.ts", "line": 109, "end_line": 131 },
+        { "path": "docker-compose.local.yaml", "line": 69, "end_line": 72 }
+      ] },
+    { "id": "cli", "type": "external", "label": "novooa-deploy-cli", "sublabel": "Node-CLI", "pos": [360, 640], "size": [170, 64],
+      "sources": [
+        { "path": "cli/src/commands/deploy-runtime.ts", "line": 24, "end_line": 25 },
+        { "path": "cli/src/ssh-helper.ts", "line": 23 }
+      ] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Cloud-Variante · Firebase (europe-west3)", "wraps": ["firebase-data", "functions", "cloud-tasks"] },
+    { "kind": "region", "label": "Lokale Variante · Docker Compose", "wraps": ["runtime", "sqlite", "ml"] }
+  ],
+  "connections": [
+    { "id": "user-client", "from": "user", "to": "client", "variant": "emphasis" },
+    { "id": "client-firebase", "from": "client", "to": "firebase-data", "label": "Firebase SDK", "fromSide": "top", "toSide": "left" },
+    { "id": "client-functions", "from": "client", "to": "functions", "label": "Callable (HTTPS)" },
+    { "id": "functions-data", "from": "functions", "to": "firebase-data", "label": "liest/schreibt", "fromSide": "top", "toSide": "bottom" },
+    { "id": "functions-queue", "from": "functions", "to": "cloud-tasks", "label": "enqueue", "variant": "dashed" },
+    { "id": "queue-runner", "from": "cloud-tasks", "to": "runner", "label": "runTaskRunTask", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "functions-comm", "from": "functions", "to": "comm-providers", "label": "Webhooks · Senden", "fromSide": "right", "toSide": "left" },
+    { "id": "client-runtime", "from": "client", "to": "runtime", "label": "HTTP + WebSocket (Session)", "variant": "emphasis", "fromSide": "bottom", "toSide": "left" },
+    { "id": "runtime-runner", "from": "runtime", "to": "runner", "label": "Worker startet Runs", "fromSide": "right", "toSide": "bottom" },
+    { "id": "runtime-sqlite", "from": "runtime", "to": "sqlite", "label": "liest/schreibt", "fromSide": "bottom", "toSide": "top" },
+    { "id": "runtime-ml", "from": "runtime", "to": "ml", "label": "Inferenz (HTTP)", "variant": "dashed", "fromSide": "right", "toSide": "left" },
+    { "id": "runtime-relay", "from": "runtime", "to": "functions", "label": "Lizenz · Push · Mail-Relay", "variant": "security", "fromSide": "top", "toSide": "bottom" },
+    { "id": "runner-llm", "from": "runner", "to": "llm", "label": "Prompts" },
+    { "id": "cli-runtime", "from": "cli", "to": "runtime", "label": "SSH · docker compose", "variant": "dashed", "fromSide": "top", "toSide": "left" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Zwei Betriebsvarianten", "items": ["Cloud: Client nutzt Firebase-SDK und Callables", "Lokal: Client spricht nur die Runtime-API an", "Der Task-Runner ist in beiden Varianten derselbe"] },
+    { "dot": "emerald", "title": "Trigger", "items": ["Cloud: onSchedule-Worker in Functions", "Lokal: PollingTaskTriggerWorker in der Runtime"] },
+    { "dot": "rose", "title": "Zugriff", "items": ["Runtime verlangt gültige Lizenz und Bearer-Session", "novooa-ml ist nur im internen Netz erreichbar"] },
+    { "dot": "slate", "title": "Nicht als Kanten gezeigt", "items": ["Cloud-Run-Modellinferenz, FCM-Push, Modellkatalog"] }
+  ]
+}

@@ -1,4 +1,6 @@
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
+import {and, eq, or, sql} from "drizzle-orm";
+import {type RuntimeExecutor} from "../../../../db/database.js";
+import {modelCatalog} from "../../../../db/schema.js";
 import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
 import {type TeamModelCatalog} from "../../domain/repositories/model-catalog.js";
 import {
@@ -6,7 +8,7 @@ import {
   modelCatalogEntryFromData,
 } from "../model-catalog-entry-codec.js";
 
-type ModelCatalogRow = SqlRow & {
+type ModelCatalogRow = {
   id: string;
   title: string;
   description: string;
@@ -19,15 +21,20 @@ type ModelCatalogRow = SqlRow & {
 };
 
 export class SQLiteModelCatalog implements TeamModelCatalog {
-  constructor(private readonly database: LocalSqlDatabase) {}
+  constructor(private readonly database: RuntimeExecutor) {}
 
   async save(entry: ModelCatalogEntry): Promise<void> {
     const data = modelCatalogEntryData(entry);
-    await this.database.run(saveEntrySql, saveParameters(data));
+    const values = {id: data.id, title: data.title, description: data.description, tags_json: JSON.stringify(data.tags),
+      scope: data.scope, team_id: data.teamId, runtime: data.runtime,
+      artifact_reference_json: JSON.stringify(data.artifactReference), contract_json: JSON.stringify(data.contract)};
+    await this.database.insert(modelCatalog).values(values)
+      .onConflictDoUpdate({target: modelCatalog.id, set: {...values, updated_at: sql`CURRENT_TIMESTAMP`}});
   }
 
   async listAvailableFor(teamId: string): Promise<readonly ModelCatalogEntry[]> {
-    const rows = await this.database.all<ModelCatalogRow>(listAvailableSql, [teamId]);
+    const rows = await this.database.select().from(modelCatalog).where(availableFor(teamId))
+      .orderBy(sql`${modelCatalog.title} COLLATE NOCASE`, modelCatalog.id);
     return rows.map(entryFromRow);
   }
 
@@ -35,56 +42,20 @@ export class SQLiteModelCatalog implements TeamModelCatalog {
     teamId: string,
     modelId: string,
   ): Promise<ModelCatalogEntry | null> {
-    const row = await this.database.get<ModelCatalogRow>(findAvailableSql, [modelId, teamId]);
-    return row === null ? null : entryFromRow(row);
+    const row = await this.database.select().from(modelCatalog).where(and(eq(modelCatalog.id, modelId), availableFor(teamId))).get();
+    return row === undefined ? null : entryFromRow(row);
   }
 
   async removeTeamEntry(teamId: string, modelId: string): Promise<boolean> {
-    const entry = await this.database.get<SqlRow>(teamEntrySql, [modelId, teamId]);
-    if (entry === null) return false;
-    await this.database.run(removeTeamEntrySql, [modelId, teamId]);
-    return true;
+    const removed = await this.database.delete(modelCatalog)
+      .where(and(eq(modelCatalog.id, modelId), eq(modelCatalog.scope, "team"), eq(modelCatalog.team_id, teamId)))
+      .returning({id: modelCatalog.id});
+    return removed.length > 0;
   }
 }
 
-const saveEntrySql = `INSERT INTO model_catalog(
-  id, title, description, tags_json, scope, team_id, runtime, artifact_reference_json, contract_json
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-ON CONFLICT(id) DO UPDATE SET
-  title = excluded.title,
-  description = excluded.description,
-  tags_json = excluded.tags_json,
-  scope = excluded.scope,
-  team_id = excluded.team_id,
-  runtime = excluded.runtime,
-  artifact_reference_json = excluded.artifact_reference_json,
-  contract_json = excluded.contract_json,
-  updated_at = CURRENT_TIMESTAMP`;
-
-const listAvailableSql = `SELECT id, title, description, tags_json, scope, team_id,
-  runtime, artifact_reference_json, contract_json FROM model_catalog
-  WHERE scope = 'system' OR (scope = 'team' AND team_id = ?)
-  ORDER BY title COLLATE NOCASE, id`;
-
-const findAvailableSql = `SELECT id, title, description, tags_json, scope, team_id,
-  runtime, artifact_reference_json, contract_json FROM model_catalog
-  WHERE id = ? AND (scope = 'system' OR (scope = 'team' AND team_id = ?))`;
-
-const teamEntrySql = "SELECT id FROM model_catalog WHERE id = ? AND scope = 'team' AND team_id = ?";
-const removeTeamEntrySql = "DELETE FROM model_catalog WHERE id = ? AND scope = 'team' AND team_id = ?";
-
-function saveParameters(data: ReturnType<typeof modelCatalogEntryData>) {
-  return [
-    data.id,
-    data.title,
-    data.description,
-    JSON.stringify(data.tags),
-    data.scope,
-    data.teamId,
-    data.runtime,
-    JSON.stringify(data.artifactReference),
-    JSON.stringify(data.contract),
-  ];
+function availableFor(teamId: string) {
+  return or(eq(modelCatalog.scope, "system"), and(eq(modelCatalog.scope, "team"), eq(modelCatalog.team_id, teamId)));
 }
 
 function entryFromRow(row: ModelCatalogRow): ModelCatalogEntry {

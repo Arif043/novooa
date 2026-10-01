@@ -2,6 +2,8 @@
   "name": "functions",
   "scripts": {
     "build": "tsc",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
     "test:runtime-security": "npm run build && node --test lib/features/runtime_security/infrastructure/*.test.js lib/shared/local/local-runtime-master-key.test.js lib/shared/local/local-runtime-process-lock.test.js lib/features/language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.test.js lib/features/licensing/infrastructure/local/file-local-runtime-license-store.test.js",
     "test": "npm run build && node --test lib/features/runtime_security/infrastructure/*.test.js lib/shared/local/*.test.js lib/shared/logging/*.test.js lib/features/assistant/domain/usecases/*.test.js lib/features/assistant/infrastructure/genkit/*.test.js lib/features/data/infrastructure/*.test.js lib/features/data/infrastructure/local/*.test.js lib/features/notifications/infrastructure/firebase/*.test.js lib/features/communication/domain/usecases/*.test.js lib/features/knowledge_base/infrastructure/genkit/*.test.js lib/features/knowledge_base/infrastructure/local/*.test.js lib/features/language_models/infrastructure/genkit/*.test.js lib/features/language_models/infrastructure/local/*.test.js lib/features/licensing/domain/entities/*.test.js lib/features/licensing/domain/usecases/*.test.js lib/features/licensing/infrastructure/local/*.test.js lib/features/machine_learning/domain/entities/*.test.js lib/features/machine_learning/domain/usecases/*.test.js lib/features/machine_learning/infrastructure/*.test.js lib/features/machine_learning/infrastructure/cli/*.test.js lib/features/machine_learning/infrastructure/cloud_run/*.test.js lib/features/machine_learning/infrastructure/firebase/*.test.js lib/features/machine_learning/infrastructure/local/*.test.js lib/features/teams/infrastructure/local/*.test.js lib/features/task_execution/domain/usecases/*.test.js lib/features/task_execution/domain/executors/*.test.js lib/features/task_execution/infrastructure/firebase/*.test.js lib/features/task_execution/infrastructure/genkit/*.test.js lib/features/task_execution/infrastructure/genkit/assistant/*.test.js lib/features/task_execution/infrastructure/genkit/executors/*.test.js lib/features/task_execution/infrastructure/genkit/runner/*.test.js lib/features/task_execution/infrastructure/local/*.test.js",
     "build:watch": "tsc --watch",
@@ -35,7 +37,9 @@
     "@genkit-ai/google-genai": "^1.37.0",
     "@genkit-ai/middleware": "^0.7.0",
     "@huggingface/hub": "^2.17.5",
+    "@libsql/client": "^0.18.0",
     "cheerio": "^1.2.0",
+    "drizzle-orm": "^0.45.3",
     "fastify": "^5.12.5",
     "firebase": "^12.8.0",
     "firebase-admin": "^13.6.0",
@@ -51,6 +55,7 @@
   "devDependencies": {
     "@types/proper-lockfile": "^4.1.4",
     "@types/ws": "^8.18.1",
+    "drizzle-kit": "^0.31.11",
     "firebase-functions-test": "^3.4.1",
     "typescript": "^6.0.3"
   },

@@ -1,3 +1,4 @@
+import {sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {join} from "node:path";
@@ -27,12 +28,10 @@ test("upgrades existing model and license secrets without changing their plainte
 test("refuses a corrupt legacy value and leaves existing model values intact", async () => {
   const fixture = await legacyFixture();
   try {
-    await fixture.database.run("UPDATE language_model_secrets SET encrypted_value = 'corrupt' WHERE secret_ref = 'model/b'");
-    const before = await fixture.database.get<{encrypted_value: string}>(
-      "SELECT encrypted_value FROM language_model_secrets WHERE secret_ref = 'model/a'");
+    await fixture.database.run(sql`UPDATE language_model_secrets SET encrypted_value = 'corrupt' WHERE secret_ref = 'model/b'`);
+    const before = await fixture.database.get <{encrypted_value: string}>(sql`SELECT encrypted_value FROM language_model_secrets WHERE secret_ref = 'model/a'`);
     await assert.rejects(new UpgradeRuntimeSecretFormat(fixture.database, fixture.root, fixture.keyring).execute(), /nicht entschlüsselt/);
-    const after = await fixture.database.get<{encrypted_value: string}>(
-      "SELECT encrypted_value FROM language_model_secrets WHERE secret_ref = 'model/a'");
+    const after = await fixture.database.get <{encrypted_value: string}>(sql`SELECT encrypted_value FROM language_model_secrets WHERE secret_ref = 'model/a'`);
     assert.deepEqual(after, before);
   } finally { await fixture.cleanup(); }
 });
@@ -45,6 +44,6 @@ async function legacyFixture() {
   const licensePath = join(fixture.root, "credentials", "license-state.json");
   const document = JSON.parse(await readFile(licensePath, "utf8"));
   await writeDurableSecretFile(licensePath, JSON.stringify({...document, encryptedActivationSecret: legacy.encrypt("activation-secret")}));
-  await fixture.database.run("UPDATE language_model_secrets SET encrypted_value = ? WHERE secret_ref = 'model/a'", [legacy.encrypt("key-a")]);
+  await fixture.database.run(sql`UPDATE language_model_secrets SET encrypted_value = ${legacy.encrypt("key-a")} WHERE secret_ref = 'model/a'`);
   return {...fixture, keyring, licensePath};
 }

@@ -1,9 +1,10 @@
+import {sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import test from "node:test";
+import {connectRuntimeDatabase} from "../../../db/database.js";
 import {type DocumentStore} from "../domain/repositories/document-store.js";
 import {InMemoryDocumentStore} from "./in-memory/in-memory-document-store.js";
 import {SQLiteDocumentStore} from "./local/sqlite-document-store.js";
-import {SqliteLocalSqlDatabase} from "../../../shared/local/sqlite-local-sql-database.js";
 
 type StoreFixture = {
   store: DocumentStore;
@@ -146,10 +147,10 @@ async function createInMemoryFixture(): Promise<StoreFixture> {
 }
 
 async function createSqliteFixture(): Promise<StoreFixture> {
-  const database = new SqliteLocalSqlDatabase(":memory:");
-  await database.run("CREATE TABLE document_collections (id TEXT, team_id TEXT, display_name TEXT, created_at TEXT, updated_at TEXT, PRIMARY KEY (team_id, id), UNIQUE(team_id, display_name))");
-  await database.run("CREATE TABLE documents (id TEXT, team_id TEXT, collection_id TEXT, data_json TEXT, version INTEGER, created_at TEXT, updated_at TEXT, PRIMARY KEY (team_id, collection_id, id))");
-  return {store: new SQLiteDocumentStore(database), dispose: () => database.close()};
+  const database = connectRuntimeDatabase(":memory:");
+  await database.run(sql`CREATE TABLE document_collections (id TEXT, team_id TEXT, display_name TEXT, created_at TEXT, updated_at TEXT, PRIMARY KEY (team_id, id), UNIQUE(team_id, display_name))`);
+  await database.run(sql`CREATE TABLE documents (id TEXT, team_id TEXT, collection_id TEXT, data_json TEXT, version INTEGER, created_at TEXT, updated_at TEXT, PRIMARY KEY (team_id, collection_id, id))`);
+  return {store: new SQLiteDocumentStore(database), dispose: () => database.$client.close()};
 }
 
 async function prepareOrders(store: DocumentStore): Promise<void> {

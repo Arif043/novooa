@@ -1,64 +1,26 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
+import {runtimeTestDatabase} from "../../../../db/runtime-database-test-support.js";
+import {modelCatalog, type NewModelCatalog} from "../../../../db/schema.js";
 import {SQLiteModelCatalog} from "./sqlite-model-catalog.js";
 
-test("lists system and team models available to a team", async () => {
-  const database = databaseWith([modelRow("system", null), modelRow("team", "team-1")]);
+test("lists only system and active-team models", async (t) => {
+  const database = await runtimeTestDatabase(t);
+  await database.insert(modelCatalog).values([modelRow("system", null), modelRow("team", "team-1")]);
   const catalog = new SQLiteModelCatalog(database);
-
-  const entries = await catalog.listAvailableFor("team-1");
-
-  assert.deepEqual(entries.map((entry) => entry.scope.type), ["system", "team"]);
-  assert.deepEqual(database.parameters, [["team-1"]]);
+  assert.deepEqual((await catalog.listAvailableFor("team-1")).map(entry => entry.scope.type), ["system", "team"]);
+  assert.deepEqual((await catalog.listAvailableFor("other-team")).map(entry => entry.scope.type), ["system"]);
 });
 
-test("writes logical artifacts instead of physical storage paths", async () => {
-  const database = databaseWith([]);
-  const catalog = new SQLiteModelCatalog(database);
-
-  await catalog.save(modelEntry());
-
-  const serializedArtifact = database.writeParameters[0]?.[7] ?? "";
-  assert.equal(String(serializedArtifact).includes("artifact-1"), true);
-  assert.equal(String(serializedArtifact).includes("storagePath"), false);
+test("writes logical artifacts instead of physical storage paths", async (t) => {
+  const database = await runtimeTestDatabase(t);
+  await new SQLiteModelCatalog(database).save(modelEntry());
+  const row = await database.select().from(modelCatalog).get();
+  assert.ok(row?.artifact_reference_json.includes("artifact-1"));
+  assert.equal(row?.artifact_reference_json.includes("storagePath"), false);
 });
 
-function databaseWith(rows: SqlRow[]): RecordingDatabase {
-  return new RecordingDatabase(rows);
-}
-
-class RecordingDatabase implements LocalSqlDatabase {
-  parameters: ReadonlyArray<readonly (string | number | null)[]> = [];
-  writeParameters: ReadonlyArray<readonly (string | number | null)[]> = [];
-
-  constructor(private readonly rows: SqlRow[]) {}
-
-  async get<T extends SqlRow>(): Promise<T | null> {
-    return null;
-  }
-
-  async all<T extends SqlRow>(
-    _sql: string,
-    parameters: readonly (string | number | null)[] = [],
-  ): Promise<T[]> {
-    this.parameters = [...this.parameters, parameters];
-    return this.rows as T[];
-  }
-
-  async run(
-    _sql: string,
-    parameters: readonly (string | number | null)[] = [],
-  ): Promise<void> {
-    this.writeParameters = [...this.writeParameters, parameters];
-  }
-
-  async transaction<T>(operation: () => Promise<T>): Promise<T> {
-    return operation();
-  }
-}
-
-function modelRow(scope: "system" | "team", teamId: string | null): SqlRow {
+function modelRow(scope: "system" | "team", teamId: string | null): NewModelCatalog {
   return {
     id: `${scope}-model`,
     title: `${scope} model`,

@@ -1,10 +1,11 @@
+import {sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import {mkdtemp, rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join, resolve} from "node:path";
 import test from "node:test";
+import {type RuntimeDatabase} from "../../../../db/database.js";
 import {openLocalRuntimeDatabase} from "../../../../shared/local/local-runtime-database.js";
-import {type SqliteLocalSqlDatabase} from "../../../../shared/local/sqlite-local-sql-database.js";
 import {SQLiteTaskRunDispatcher} from "./sqlite-task-run-dispatcher.js";
 import {SQLiteTaskRunJobStore} from "./sqlite-task-run-job-store.js";
 import {TaskRunQueueWorker} from "./task-run-queue-worker.js";
@@ -107,14 +108,12 @@ async function waitFor(isReady: () => boolean): Promise<void> {
   assert.fail("Die erwartete Queue-Verarbeitung ist nicht abgeschlossen.");
 }
 
-async function jobStatus(database: SqliteLocalSqlDatabase, runId: string) {
-  return database.get<{status: string}>(
-    "SELECT status FROM task_run_jobs WHERE run_id = ?", [runId],
-  );
+async function jobStatus(database: RuntimeDatabase, runId: string) {
+  return database.get <{status: string}>(sql`SELECT status FROM task_run_jobs WHERE run_id = ${runId}`);
 }
 
 async function withJobStore(
-  operation: (input: {jobStore: SQLiteTaskRunJobStore; database: SqliteLocalSqlDatabase}) => Promise<void>,
+  operation: (input: {jobStore: SQLiteTaskRunJobStore; database: RuntimeDatabase}) => Promise<void>,
 ): Promise<void> {
   const directory = await mkdtemp(join(tmpdir(), "novooa-task-run-worker-"));
   const database = await openLocalRuntimeDatabase({
@@ -125,21 +124,21 @@ async function withJobStore(
     await insertRun(database, "run-1");
     await operation({jobStore: new SQLiteTaskRunJobStore(database), database});
   } finally {
-    database.close();
+    database.$client.close();
     await rm(directory, {force: true, recursive: true});
   }
 }
 
-async function insertRun(database: SqliteLocalSqlDatabase, runId: string): Promise<void> {
+async function insertRun(database: RuntimeDatabase, runId: string): Promise<void> {
   if (runId === "run-1") {
-    await database.run("INSERT INTO teams(id, name, owner_uid) VALUES (?, ?, ?)", ["team-1", "Team", "user-1"]);
+    await database.run(sql`INSERT INTO teams(id, name, owner_uid) VALUES (${"team-1"}, ${"Team"}, ${"user-1"})`);
   }
-  await database.run(`INSERT INTO task_runs(
+  await database.run(sql`INSERT INTO task_runs(
     id, team_id, task_id, task_title, status
-  ) VALUES (?, ?, ?, ?, ?)`, [runId, "team-1", "task-1", "Aufgabe", "queued"]);
+  ) VALUES (${runId}, ${"team-1"}, ${"task-1"}, ${"Aufgabe"}, ${"queued"})`);
 }
 
 const migrationsDirectory = resolve(
   __dirname,
-  "../../../../../../local-runtime/migrations",
+  "../../../../../drizzle",
 );

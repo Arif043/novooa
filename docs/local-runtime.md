@@ -188,8 +188,9 @@ Der HTTP-Server verwendet native Fastify-5-Routen: Routing, Pfadparameter,
 JSON-Parsing und Body-Limit (1 MiB), Schema-Validierung und Fehlerantworten
 liegen bei Fastify. Es gibt keinen eigenen Request-Router, Pfad-Matcher oder
 HTTP-Transportadapter mehr. Die Controller registrieren einzelne Routen und
-verwenden `request` und `reply`; fachliche Use-Cases und SQLite-Repositories
-bleiben unabhängig davon. Eine spätere SQL-Umstellung auf Drizzle ist separat.
+verwenden `request` und `reply`; fachliche Use-Cases bleiben unabhängig davon.
+Die lokalen SQLite-Repositories verwenden Drizzle ORM für typisierte CRUD-
+Abfragen und gebundene SQL-Templates für komplexere SQLite-Abfragen.
 `@fastify/cors` erzeugt CORS-Header und Preflight-Antworten;
 `@fastify/static` liefert das Web-Build mit SPA-Fallback aus, ohne API-Pfade
 zu überdecken. ONNX-Uploads verwenden einen nativen Streaming-Content-Parser.
@@ -300,9 +301,11 @@ liefert die jüngsten Einträge an den Client; dieser zeigt sie im Tab
 **Aktivitäten → Protokoll**. Der gleiche Port wird in der Cloud durch den
 `FirebaseApplicationLogger` auf Firebase/Cloud Logging abgebildet.
 
-Die erste Migration liegt in
-[`local-runtime/migrations/001_initial.sql`](../local-runtime/migrations/001_initial.sql).
-Sie legt diese Tabellen an:
+Die Tabellen-Models liegen unter [`functions/src/db/models`](../functions/src/db/models)
+und werden über [`schema.ts`](../functions/src/db/schema.ts) exportiert. Die von
+Drizzle Kit erzeugte Initialmigration liegt in
+[`functions/drizzle/0000_initial_runtime.sql`](../functions/drizzle/0000_initial_runtime.sql).
+Sie legt unter anderem diese Tabellen an:
 
 ```text
 teams
@@ -321,14 +324,9 @@ document_collections
 documents
 ```
 
-Die Migration
-[`004_model_catalog.sql`](../local-runtime/migrations/004_model_catalog.sql)
-ergänzt den ONNX-Modellkatalog in der Tabelle `model_catalog`.
-
-[`005_language_models.sql`](../local-runtime/migrations/005_language_models.sql)
-ergänzt Provider-Verbindungen und Sprachmodellprofile. Lokale API-Keys liegen
-nicht im Klartext in SQLite. Die Migration
-[`011_language_model_secrets.sql`](../local-runtime/migrations/011_language_model_secrets.sql)
+Die Initialmigration enthält außerdem den ONNX-Modellkatalog `model_catalog`,
+Provider-Verbindungen, Sprachmodellprofile und `language_model_secrets`.
+Lokale API-Keys liegen nicht im Klartext in SQLite. Das Secret-Repository
 speichert sie als AES-256-GCM-Envelope mit eigenem Datenschlüssel; `secret_ref`
 verweist auf den jeweiligen Eintrag. Der Master-Key-Schlüsselbund liegt separat
 außerhalb des Daten-Volumes.
@@ -548,7 +546,7 @@ dessen Infrastructure-Bereich.
 - Task-Ausführung erhält Dateien, Wissensbasis und Nachrichten ausschließlich
   über injizierte Ports; Function-Handler verdrahten die konkreten Adapter.
 - Lokale SQL-Adapter für Tasks, Runs, Aktivitäten, Trigger, Wissensbasis und
-  Dateiordner hängen nur an `LocalSqlDatabase`.
+  Dateiordner erhalten die native Drizzle-Datenbank per Dependency Injection.
 - Alle Backend-Assistenten verwenden denselben `GenkitAssistantResponder` und
   denselben Laufzeitkontext für Cloud und lokal. Ein lokaler Composition Root
   kann den Wissensbasis-Agenten mit `SQLiteKnowledgeBaseAssistantNoteStore`,
@@ -556,7 +554,7 @@ dessen Infrastructure-Bereich.
   der TaskBuilder-Agent benötigt außer Modell und Prompt keinen Fachadapter.
   Firebase verwendet für den Wissensbasis-Adapter Firestore und Firebase Auth.
 - `LocalTeamFileStore` schreibt Dateien in ein lokales Root-Verzeichnis und
-  persistiert Datei-/Versions-Metadaten über `LocalSqlDatabase`.
+  persistiert Datei-/Versions-Metadaten mit nativen Drizzle-Abfragen.
 - `SQLiteDocumentStore` kapselt lokale, team-scoped Datensammlungen hinter dem
   fachlichen `DocumentStore`-Port. Dokumentfelder liegen intern als JSON, ohne
   diesen Speichermechanismus an Arbeitspläne weiterzugeben. Der lokale
@@ -571,14 +569,29 @@ dessen Infrastructure-Bereich.
   Tensorquellen sind bereits implementiert; weitere Quelltypen folgen als
   Strategien. Die Cloud erhält später einen alternativen Adapter für denselben
   `ModelInputTransformer`-Port.
-- `SqlMigrationRunner` wendet Migrationen treiberneutral über
-  `LocalSqlDatabase` an.
-- `SqliteLocalSqlDatabase` verwendet die Node-24-Standardbibliothek
-  `node:sqlite`, aktiviert Fremdschlüssel, WAL und einen Busy-Timeout. Es
-  serialisiert lokale Datenbankzugriffe und normalisiert Zeilen in gewöhnliche
-  Records für die lokalen Adapter.
-- `openLocalRuntimeDatabase` lädt alle versionierten SQL-Migrationen beim
-  Start und schließt die Datenbank wieder, falls eine Migration fehlschlägt.
+- `functions/src/db/models/{core,integration,resources}.ts` definiert die
+  23 fachlichen Tabellen mit `sqliteTable`, Constraints, Indizes und aus den
+  Tabellen abgeleiteten Lese-/Schreib-Models (`$inferSelect`/`$inferInsert`).
+  Fachliche Repository-Verträge bleiben frameworkfrei.
+- Die Anbindung folgt der offiziellen
+  [Drizzle-SQLite-Anleitung](https://orm.drizzle.team/docs/get-started/sqlite-new):
+  `@libsql/client` öffnet eine lokale SQLite-Datei, `drizzle({client, schema})`
+  erzeugt die native Drizzle-Datenbank. Es gibt keinen eigenen SQL-Treiber,
+  SQLite-Proxy oder `get/all/run`-Wrapper mehr.
+- Repositories verwenden `select`, `insert`, `update`, `delete`, Joins und
+  Upserts direkt. `sql` wird nur für SQLite-Ausdrücke eingesetzt. Transaktionen
+  verwenden explizit `tx`; verschachtelte Transaktionen nutzen Savepoints.
+  Job-Leases werden atomar mit `UPDATE … RETURNING` beansprucht.
+- `drizzle.config.ts` konfiguriert Schema und Ausgabeordner. Nach einer
+  Model-Änderung erzeugt `npm --prefix functions run db:generate` die nächste
+  Migration samt Snapshot. `DB_FILE_NAME=file:/absoluter/pfad/novooa.sqlite`
+  bestimmt die Datenbank für `npm --prefix functions run db:migrate`.
+- `openLocalRuntimeDatabase` aktiviert Fremdschlüssel, WAL und Busy-Timeout
+  und führt den nativen Drizzle-Migrator beim Start aus. Drizzle verwaltet die
+  Historie in `__drizzle_migrations`; es gibt keinen automatischen Schema-Push.
+- Die alten Migrationen und `schema_migrations` sind abgelöst. Diese neue
+  Initialmigration ist für eine frisch aufgesetzte Runtime vorgesehen; eine
+  bestehende Datenbank wird weder automatisch gelöscht noch zurückgesetzt.
 - `docker-compose.local.yaml` startet `runtime` und `novooa-ml`. Nur
   `runtime` veröffentlicht einen Host-Port: `8090` für die API auf allen
   Schnittstellen — auch das erstmalige Setzen des Betreiber-Passworts läuft

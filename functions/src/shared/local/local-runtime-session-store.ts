@@ -1,10 +1,10 @@
+import {eq} from "drizzle-orm";
 import {createHash, randomBytes} from "node:crypto";
-import {type LocalSqlDatabase, type SqlRow} from "./local-sql-database.js";
+import {type RuntimeExecutor} from "../../db/database.js";
+import {runtimeSessions} from "../../db/schema.js";
 
 const tokenBytes = 32;
 const sessionLifetimeMs = 30 * 24 * 60 * 60 * 1000; // 30 Tage
-
-type SessionRow = SqlRow & {expires_at: string};
 
 /**
  * Verwaltet Session-Tokens für den authentifizierten Fernzugriff. Es wird
@@ -13,25 +13,20 @@ type SessionRow = SqlRow & {expires_at: string};
  * (32 Zufallsbytes), daher genügt hier ein schneller Hash statt scrypt.
  */
 export class LocalRuntimeSessionStore {
-  constructor(private readonly database: LocalSqlDatabase) {}
+  constructor(private readonly database: RuntimeExecutor) {}
 
   /** Erzeugt eine neue Session und liefert das Klartext-Token einmalig zurück. */
   async createSession(): Promise<string> {
     const token = randomBytes(tokenBytes).toString("hex");
     const expiresAt = new Date(Date.now() + sessionLifetimeMs).toISOString();
-    await this.database.run(
-      "INSERT INTO runtime_sessions (token_hash, expires_at) VALUES (?, ?)",
-      [hashOf(token), expiresAt],
-    );
+    await this.database.insert(runtimeSessions).values({token_hash: hashOf(token), expires_at: expiresAt});
     return token;
   }
 
   async verifySession(token: string): Promise<boolean> {
-    const row = await this.database.get<SessionRow>(
-      "SELECT expires_at FROM runtime_sessions WHERE token_hash = ?",
-      [hashOf(token)],
-    );
-    if (row === null) return false;
+    const row = await this.database.select({expires_at: runtimeSessions.expires_at}).from(runtimeSessions)
+      .where(eq(runtimeSessions.token_hash, hashOf(token))).get();
+    if (!row) return false;
     return new Date(row.expires_at).getTime() > Date.now();
   }
 }

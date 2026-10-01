@@ -1,3 +1,4 @@
+import {sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import {mkdtemp, rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
@@ -129,13 +130,13 @@ async function withDocumentStore(operation: (store: DocumentStore) => Promise<vo
     migrationsDirectory,
   });
   try {
-    await database.run("INSERT INTO teams(id, name, owner_uid) VALUES (?, ?, ?)", ["team-1", "Team eins", "user-1"]);
-    await database.run("INSERT INTO teams(id, name, owner_uid) VALUES (?, ?, ?)", ["team-2", "Team zwei", "user-2"]);
+    await database.run(sql`INSERT INTO teams(id, name, owner_uid) VALUES (${"team-1"}, ${"Team eins"}, ${"user-1"})`);
+    await database.run(sql`INSERT INTO teams(id, name, owner_uid) VALUES (${"team-2"}, ${"Team zwei"}, ${"user-2"})`);
     await operation(new SQLiteDocumentStore(database));
   } finally {
-    database.close();
+    database.$client.close();
     await rm(directory, {force: true, recursive: true});
   }
 }
 
-const migrationsDirectory = resolve(__dirname, "../../../../../../local-runtime/migrations");
+const migrationsDirectory = resolve(__dirname, "../../../../../drizzle");

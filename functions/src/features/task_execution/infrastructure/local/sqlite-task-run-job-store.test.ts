@@ -1,10 +1,11 @@
+import {sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import {mkdtemp, rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join, resolve} from "node:path";
 import test from "node:test";
+import {type RuntimeDatabase} from "../../../../db/database.js";
 import {openLocalRuntimeDatabase} from "../../../../shared/local/local-runtime-database.js";
-import {type SqliteLocalSqlDatabase} from "../../../../shared/local/sqlite-local-sql-database.js";
 import {SQLiteTaskRunJobStore} from "./sqlite-task-run-job-store.js";
 
 test("persists and leases a dispatched task run", async () => {
@@ -44,9 +45,7 @@ test("marks a failed dispatch as terminal after the final attempt", async () => 
 
     await jobStore.retryOrFail(job, 1);
 
-    const row = await database.get<{status: string; attempts: number}>(
-      "SELECT status, attempts FROM task_run_jobs",
-    );
+    const row = await database.get <{status: string; attempts: number}>(sql`SELECT status, attempts FROM task_run_jobs`);
     assert.deepEqual(row, {status: "failed", attempts: 1});
   });
 });
@@ -55,8 +54,30 @@ function dispatch(mode: "start" | "resume") {
   return {teamId: "team-1", runId: "run-1", mode};
 }
 
+test("concurrent workers cannot lease the same job twice", async () => {
+  await withJobStore(async ({jobStore}) => {
+    await jobStore.enqueue(dispatch("start"));
+    const claims = await Promise.all([jobStore.claimNext(), jobStore.claimNext()]);
+    assert.equal(claims.filter((job) => job !== null).length, 1);
+    assert.equal(claims.find((job) => job !== null)?.attempt, 1);
+  });
+});
+
+test("calculates delay from the earliest queued or leased job", async () => {
+  await withJobStore(async ({jobStore, database}) => {
+    await jobStore.enqueue(dispatch("start"));
+    await database.run(sql`UPDATE task_run_jobs SET available_at = datetime('now', '+30 seconds')`);
+    const delay = await jobStore.nextClaimableDelayMs();
+    assert.ok(delay !== null && delay >= 29_000 && delay <= 30_000);
+    await database.run(sql`INSERT INTO task_runs(id, team_id, task_id, task_title, status)
+      VALUES ('run-2', 'team-1', 'task-1', 'Aufgabe', 'queued')`);
+    await jobStore.enqueue({teamId: "team-1", runId: "run-2", mode: "start"});
+    assert.equal(await jobStore.nextClaimableDelayMs(), 0);
+  });
+});
+
 async function withJobStore(
-  operation: (input: {jobStore: SQLiteTaskRunJobStore; database: SqliteLocalSqlDatabase}) => Promise<void>,
+  operation: (input: {jobStore: SQLiteTaskRunJobStore; database: RuntimeDatabase}) => Promise<void>,
 ): Promise<void> {
   const directory = await mkdtemp(join(tmpdir(), "novooa-task-run-job-"));
   const database = await openLocalRuntimeDatabase({
@@ -67,19 +88,19 @@ async function withJobStore(
     await insertRun(database);
     await operation({jobStore: new SQLiteTaskRunJobStore(database), database});
   } finally {
-    database.close();
+    database.$client.close();
     await rm(directory, {force: true, recursive: true});
   }
 }
 
-async function insertRun(database: SqliteLocalSqlDatabase): Promise<void> {
-  await database.run("INSERT INTO teams(id, name, owner_uid) VALUES (?, ?, ?)", ["team-1", "Team", "user-1"]);
-  await database.run(`INSERT INTO task_runs(
+async function insertRun(database: RuntimeDatabase): Promise<void> {
+  await database.run(sql`INSERT INTO teams(id, name, owner_uid) VALUES (${"team-1"}, ${"Team"}, ${"user-1"})`);
+  await database.run(sql`INSERT INTO task_runs(
     id, team_id, task_id, task_title, status
-  ) VALUES (?, ?, ?, ?, ?)`, ["run-1", "team-1", "task-1", "Aufgabe", "queued"]);
+  ) VALUES (${"run-1"}, ${"team-1"}, ${"task-1"}, ${"Aufgabe"}, ${"queued"})`);
 }
 
 const migrationsDirectory = resolve(
   __dirname,
-  "../../../../../../local-runtime/migrations",
+  "../../../../../drizzle",
 );

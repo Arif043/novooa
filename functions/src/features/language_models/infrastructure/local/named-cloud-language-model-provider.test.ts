@@ -1,17 +1,18 @@
-import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
+import {sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import {randomBytes} from "node:crypto";
 import test from "node:test";
-import {CredentialCipher} from "../../../communication/infrastructure/security/credential-cipher.js";
-import {SqliteLocalSqlDatabase} from "../../../../shared/local/sqlite-local-sql-database.js";
+import {connectRuntimeDatabase, RuntimeDatabase} from "../../../../db/database.js";
+import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
+import {CredentialCipher} from "../../../communication/infrastructure/security/credential-cipher.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "./encrypted-sqlite-language-model-secret-store.js";
-import {LocalLanguageModelHttpHandler} from "./local-language-model-http-handler.js";
 import {LocalLanguageModelDiscovery} from "./local-language-model-discovery.js";
+import {LocalLanguageModelHttpHandler} from "./local-language-model-http-handler.js";
 import {SQLiteLanguageModelConfigurationStore} from "./sqlite-language-model-configuration-store.js";
 
 test("connects Mistral with its fixed endpoint and the customer API key", async () => {
-  const database = new SqliteLocalSqlDatabase(":memory:");
+  const database = connectRuntimeDatabase(":memory:");
   await createTables(database);
   const secrets = new EncryptedSQLiteLanguageModelSecretStore(
     database, new CredentialCipher(randomBytes(32).toString("base64")),
@@ -28,17 +29,17 @@ test("connects Mistral with its fixed endpoint and the customer API key", async 
     method: "POST",
     url: "/v1/language-model-connections",
   });
-  const connection = await database.get<{
+  const connection = await database.get <{
     base_url: string;
     name: string;
     secret_ref: string;
-  }>("SELECT name, base_url, secret_ref FROM language_model_connections");
+  }>(sql`SELECT name, base_url, secret_ref FROM language_model_connections`);
 
   assert.equal(response?.statusCode, 201);
   assert.equal(connection?.name, "Mistral AI");
   assert.equal(connection?.base_url, "https://api.mistral.ai/v1");
   assert.equal(await secrets.read(connection?.secret_ref ?? ""), "customer-api-key");
-  database.close();
+  database.$client.close();
 });
 
 test("discovers xAI models through its fixed OpenAI-compatible endpoint", async () => {
@@ -74,16 +75,18 @@ function discoveredModel() {
   };
 }
 
-async function createTables(database: SqliteLocalSqlDatabase): Promise<void> {
-  await database.run(`CREATE TABLE language_model_connections (
+async function createTables(database: RuntimeDatabase): Promise<void> {
+  await database.run(sql`CREATE TABLE language_model_connections (
     id TEXT PRIMARY KEY, team_id TEXT NOT NULL, name TEXT NOT NULL,
-    provider TEXT NOT NULL, base_url TEXT, secret_ref TEXT NOT NULL
+    provider TEXT NOT NULL, base_url TEXT, secret_ref TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`);
-  await database.run(`CREATE TABLE language_models (
+  await database.run(sql`CREATE TABLE language_models (
     id TEXT PRIMARY KEY, team_id TEXT NOT NULL, connection_id TEXT NOT NULL,
-    name TEXT NOT NULL, model_id TEXT NOT NULL, capabilities_json TEXT NOT NULL
+    name TEXT NOT NULL, model_id TEXT NOT NULL, capabilities_json TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`);
-  await database.run(`CREATE TABLE language_model_secrets (
-    secret_ref TEXT PRIMARY KEY, encrypted_value TEXT NOT NULL
+  await database.run(sql`CREATE TABLE language_model_secrets (
+    secret_ref TEXT PRIMARY KEY, encrypted_value TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`);
 }

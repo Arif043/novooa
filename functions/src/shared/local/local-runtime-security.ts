@@ -1,11 +1,11 @@
+import {type RuntimeExecutor} from "../../db/database.js";
+import {RotateRuntimeMasterKeyIfDue} from "../../features/runtime_security/domain/usecases/rotate-runtime-master-key-if-due.js";
+import {RotateRuntimeMasterKey} from "../../features/runtime_security/domain/usecases/rotate-runtime-master-key.js";
+import {AutomaticRuntimeKeyRotation, type RotationTimer} from "../../features/runtime_security/infrastructure/automatic-runtime-key-rotation.js";
 import {CurrentRuntimeFieldCipher} from "../../features/runtime_security/infrastructure/current-runtime-field-cipher.js";
-import {RuntimeSecretFileAccess} from "../../features/runtime_security/infrastructure/runtime-secret-file-access.js";
 import {FileRuntimeKeyRepository} from "../../features/runtime_security/infrastructure/file-runtime-key-repository.js";
 import {LocalRuntimeSecretRotationStore} from "../../features/runtime_security/infrastructure/local-runtime-secret-rotation-store.js";
-import {RotateRuntimeMasterKey} from "../../features/runtime_security/domain/usecases/rotate-runtime-master-key.js";
-import {RotateRuntimeMasterKeyIfDue} from "../../features/runtime_security/domain/usecases/rotate-runtime-master-key-if-due.js";
-import {AutomaticRuntimeKeyRotation, type RotationTimer} from "../../features/runtime_security/infrastructure/automatic-runtime-key-rotation.js";
-import {type LocalSqlDatabase} from "./local-sql-database.js";
+import {RuntimeSecretFileAccess} from "../../features/runtime_security/infrastructure/runtime-secret-file-access.js";
 
 export class LocalRuntimeSecurity {
   readonly cipher: CurrentRuntimeFieldCipher;
@@ -15,7 +15,7 @@ export class LocalRuntimeSecurity {
   constructor(
     private readonly keyFile: string,
     keyring: string,
-    private readonly database: LocalSqlDatabase,
+    private readonly database: RuntimeExecutor,
     private readonly runtimeRoot: string,
     private readonly now: () => Date = () => new Date(),
   ) {

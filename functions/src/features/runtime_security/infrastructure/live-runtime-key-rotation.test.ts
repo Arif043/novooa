@@ -1,3 +1,4 @@
+import {sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {join} from "node:path";
@@ -29,18 +30,19 @@ test("existing consumers adopt the active master key while concurrent updates su
   } finally { await fixture.cleanup(); }
 });
 
-test("queued SQL writes encrypt with the key active when their transaction executes", async () => {
+test("transaction-bound secret writes encrypt with the key active when they execute", async () => {
   const fixture = await liveFixture();
   try {
     let unblock: () => void = () => {};
     const blocked = new Promise<void>((resolve) => { unblock = resolve; });
-    const transaction = fixture.database.transaction(async () => { await blocked; });
-    const queued = fixture.models.write("model/a", "queued-api-key");
+    const transaction = fixture.database.transaction(async (tx) => {
+      await blocked;
+      await fixture.models.withDatabase(tx).write("model/a", "queued-api-key");
+    });
     const keys = new FileRuntimeKeyRepository(fixture.keyFile, (keyring) => fixture.current.update(keyring));
     await keys.beginRotation();
-    unblock(); await transaction; await queued;
-    const row = await fixture.database.get<{encrypted_value: string}>(
-      "SELECT encrypted_value FROM language_model_secrets WHERE secret_ref = 'model/a'");
+    unblock(); await transaction;
+    const row = await fixture.database.get <{encrypted_value: string}>(sql`SELECT encrypted_value FROM language_model_secrets WHERE secret_ref = 'model/a'`);
     assert.ok(row && fixture.current.usesActiveKey(row.encrypted_value));
     assert.equal(await fixture.models.read("model/a"), "queued-api-key");
   } finally { await fixture.cleanup(); }

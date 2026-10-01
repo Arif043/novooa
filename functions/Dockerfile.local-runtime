@@ -21,12 +21,12 @@ COPY functions/package.json functions/package-lock.json ./
 RUN npm ci --omit=dev
 
 COPY --from=build /app/functions/lib ./lib
-COPY local-runtime/migrations /app/local-runtime/migrations
+COPY functions/drizzle /app/functions/drizzle
 
 RUN mkdir -p /var/lib/novooa && chown -R node:node /var/lib/novooa
 
 ENV LOCAL_RUNTIME_ROOT=/var/lib/novooa \
-    LOCAL_RUNTIME_MIGRATIONS_DIRECTORY=/app/local-runtime/migrations \
+    LOCAL_RUNTIME_MIGRATIONS_DIRECTORY=/app/functions/drizzle \
     PORT=8080
 
 USER node

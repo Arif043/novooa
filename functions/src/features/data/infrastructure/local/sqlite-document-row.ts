@@ -1,29 +1,15 @@
+import {type DocumentCollections, type Documents} from "../../../../db/schema.js";
+import {type DocumentCollection} from "../../domain/entities/document-collection.js";
 import {
   cloneDocumentData,
   type DocumentData,
   type DocumentRecord,
   validateDocumentData,
 } from "../../domain/entities/document.js";
-import {type DocumentCollection} from "../../domain/entities/document-collection.js";
-import {type SqlRow} from "../../../../shared/local/local-sql-database.js";
 
-export type DocumentRow = SqlRow & {
-  id: string;
-  team_id: string;
-  collection_id: string;
-  data_json: string;
-  version: number;
-  created_at: string;
-  updated_at: string;
-};
+export type DocumentRow = Documents;
 
-export type DocumentCollectionRow = SqlRow & {
-  id: string;
-  team_id: string;
-  display_name: string;
-  created_at: string;
-  updated_at: string;
-};
+export type DocumentCollectionRow = DocumentCollections;
 
 export function documentFromRow(row: DocumentRow): DocumentRecord {
   return {

@@ -1,25 +1,22 @@
-import {loadSqlMigrations} from "./sql-migration-loader.js";
-import {SqlMigrationRunner} from "./sql-migration-runner.js";
-import {
-  SqliteLocalSqlDatabase,
-  type SqliteLocalSqlDatabaseOptions,
-} from "./sqlite-local-sql-database.js";
+import {sql} from "drizzle-orm";
+import {migrate} from "drizzle-orm/libsql/migrator";
+import {mkdir} from "node:fs/promises";
+import {dirname} from "node:path";
+import {connectRuntimeDatabase, type RuntimeDatabase} from "../../db/database.js";
 
-export type LocalRuntimeDatabaseOptions = SqliteLocalSqlDatabaseOptions & {
-  databasePath: string;
-  migrationsDirectory: string;
-};
+export type LocalRuntimeDatabaseOptions = {databasePath: string; migrationsDirectory: string};
 
-export async function openLocalRuntimeDatabase(
-  options: LocalRuntimeDatabaseOptions,
-): Promise<SqliteLocalSqlDatabase> {
-  const database = new SqliteLocalSqlDatabase(options.databasePath, options);
+export async function openLocalRuntimeDatabase(options: LocalRuntimeDatabaseOptions): Promise<RuntimeDatabase> {
+  await mkdir(dirname(options.databasePath), {recursive: true});
+  const database = connectRuntimeDatabase(options.databasePath);
   try {
-    const migrations = await loadSqlMigrations(options.migrationsDirectory);
-    await new SqlMigrationRunner(database).run(migrations);
+    await database.run(sql`PRAGMA foreign_keys = ON`);
+    await database.run(sql`PRAGMA busy_timeout = 5000`);
+    await database.run(sql`PRAGMA journal_mode = WAL`);
+    await migrate(database, {migrationsFolder: options.migrationsDirectory});
     return database;
   } catch (error) {
-    database.close();
+    database.$client.close();
     throw error;
   }
 }

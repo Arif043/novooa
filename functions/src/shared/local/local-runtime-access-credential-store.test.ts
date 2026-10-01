@@ -1,6 +1,7 @@
+import {sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import test from "node:test";
-import {SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
+import {connectRuntimeDatabase, RuntimeDatabase} from "../../db/database.js";
 import {
   LocalRuntimeAccessCredentialStore,
   RuntimeAccessCredentialAlreadySetError,
@@ -12,18 +13,16 @@ test("hasCredential is false before a password is set", async () => {
 });
 
 test("stores a scrypt hash, never the plaintext password", async () => {
-  const database = new SqliteLocalSqlDatabase(":memory:");
+  const database = connectRuntimeDatabase(":memory:");
   await createSchema(database);
   const store = new LocalRuntimeAccessCredentialStore(database);
 
   await store.setPassword("correct-horse-battery-staple");
-  const row = await database.get<{password_hash: string}>(
-    "SELECT password_hash FROM runtime_access_credential WHERE id = 1",
-  );
+  const row = await database.get <{password_hash: string}>(sql`SELECT password_hash FROM runtime_access_credential WHERE id = 1`);
 
   assert.equal(await store.hasCredential(), true);
   assert.notEqual(row?.password_hash, "correct-horse-battery-staple");
-  database.close();
+  database.$client.close();
 });
 
 test("verifyPassword accepts the correct password and rejects a wrong one", async () => {
@@ -52,13 +51,13 @@ test("setPassword throws and does not overwrite an existing password", async () 
 });
 
 async function storeWithSchema(): Promise<LocalRuntimeAccessCredentialStore> {
-  const database = new SqliteLocalSqlDatabase(":memory:");
+  const database = connectRuntimeDatabase(":memory:");
   await createSchema(database);
   return new LocalRuntimeAccessCredentialStore(database);
 }
 
-async function createSchema(database: SqliteLocalSqlDatabase): Promise<void> {
-  await database.run(`
+async function createSchema(database: RuntimeDatabase): Promise<void> {
+  await database.run(sql`
     CREATE TABLE runtime_access_credential (
       id INTEGER PRIMARY KEY CHECK (id = 1),
       password_hash TEXT NOT NULL,

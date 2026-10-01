@@ -1,8 +1,11 @@
+import {and, eq, isNull, sql} from "drizzle-orm";
 import {randomUUID} from "node:crypto";
 import {mkdir, readFile, writeFile} from "node:fs/promises";
 import path from "node:path";
-import {storagePathFor} from "../../domain/entities/file-storage-path.js";
+import {type RuntimeExecutor} from "../../../../db/database.js";
+import {files, fileVersions, type Files} from "../../../../db/schema.js";
 import {type NodeAttachment} from "../../../task_execution/domain/entities/attachments.js";
+import {storagePathFor} from "../../domain/entities/file-storage-path.js";
 import {
   type TeamFileContent,
   type TeamFileContentReader,
@@ -15,7 +18,6 @@ import {
   type WriteTeamFileInput,
   type WrittenFile,
 } from "../../domain/repositories/team-file-store.js";
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
 
 type ExistingFile = {
   fileId: string;
@@ -23,30 +25,11 @@ type ExistingFile = {
   folderId: string | null;
 };
 
-type FileRow = SqlRow & {
-  id: string;
-  owner_uid: string;
-  folder_id: string | null;
-};
-
-type StoredFileRow = FileRow & {
-  current_version_id: string;
-  display_name: string;
-  content_type: string;
-  size_bytes: number;
-  storage_path: string;
-};
-
-type StoredFileVersionRow = SqlRow & {
-  display_name: string;
-  content_type: string;
-  size_bytes: number;
-  storage_path: string;
-};
+type FileRow = Pick<Files, "id" | "owner_uid" | "folder_id">;
 
 export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader {
   constructor(
-    private readonly database: LocalSqlDatabase,
+    private readonly database: RuntimeExecutor,
     private readonly rootDirectory: string,
   ) {}
 
@@ -66,11 +49,8 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
     teamId: string,
     fileId: string,
   ): Promise<StoredTeamFile> {
-    const row = await this.database.get<StoredFileRow>(loadFileSql(), [
-      teamId,
-      fileId,
-    ]);
-    if (row === null) throw new Error(`Datei nicht gefunden: ${fileId}`);
+    const row = (await this.database.select({id: files.id, owner_uid: files.owner_uid, folder_id: files.folder_id, current_version_id: files.current_version_id, display_name: files.display_name, content_type: files.content_type, size_bytes: files.size_bytes, storage_path: files.storage_path}).from(files).where(and(eq(files.team_id, teamId), eq(files.id, fileId))).get()) ?? null;
+    if (row === null || row.current_version_id === null) throw new Error(`Datei nicht gefunden: ${fileId}`);
     return {
       fileId: row.id,
       versionId: row.current_version_id,
@@ -86,10 +66,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
     fileId: string,
     versionId: string,
   ): Promise<TeamFileContent> {
-    const file = await this.database.get<StoredFileVersionRow>(
-      loadFileVersionSql(),
-      [teamId, fileId, versionId],
-    );
+    const file = (await this.database.select({display_name: fileVersions.display_name, content_type: fileVersions.content_type, size_bytes: fileVersions.size_bytes, storage_path: fileVersions.storage_path}).from(fileVersions).where(and(eq(fileVersions.team_id, teamId), eq(fileVersions.file_id, fileId), eq(fileVersions.id, versionId))).get()) ?? null;
     if (file === null) throw new Error(`Dateiversion nicht gefunden: ${versionId}`);
     return {
       content: await readFile(localPath(this.rootDirectory, file.storage_path)),
@@ -113,10 +90,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
 
   private async existingFileFor(input: WriteTeamFileInput): Promise<ExistingFile> {
     if (input.targetFileId === null) throw new Error("Datei-ID fehlt.");
-    const row = await this.database.get<FileRow>(
-      "SELECT id, owner_uid, folder_id FROM files WHERE team_id = ? AND id = ?",
-      [input.teamId, input.targetFileId],
-    );
+    const row = (await this.database.select({id: files.id, owner_uid: files.owner_uid, folder_id: files.folder_id}).from(files).where(and(eq(files.team_id, input.teamId), eq(files.id, input.targetFileId))).get()) ?? null;
     if (row === null) throw new Error(`Datei nicht gefunden: ${input.targetFileId}`);
     return existingFileFrom(row);
   }
@@ -124,17 +98,16 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
   private async existingFileByNameFor(
     input: WriteTeamFileInput,
   ): Promise<ExistingFile | null> {
-    const row = await this.database.get<FileRow>(findFileByNameSql(), [
-      input.teamId,
-      input.fileName,
-    ]);
-    return row === null ? null : existingFileFrom(row);
+    const row = await this.database.select({id: files.id, owner_uid: files.owner_uid, folder_id: files.folder_id})
+      .from(files).where(and(eq(files.team_id, input.teamId), eq(files.display_name, input.fileName), isNull(files.folder_id)))
+      .limit(1).get();
+    return row ? existingFileFrom(row) : null;
   }
 
   private async writeMetadata(teamId: string, file: WrittenFile) {
-    await this.database.transaction(async () => {
-      await upsertFile(this.database, teamId, file);
-      await insertVersion(this.database, teamId, file);
+    await this.database.transaction(async (tx) => {
+      await upsertFile(tx, teamId, file);
+      await insertVersion(tx, teamId, file);
     });
   }
 }
@@ -181,38 +154,19 @@ function writtenFile(
 }
 
 async function upsertFile(
-  database: LocalSqlDatabase,
+  database: RuntimeExecutor,
   teamId: string,
   file: WrittenFile,
 ) {
-  await database.run(upsertFileSql(), [
-    file.fileId,
-    teamId,
-    file.ownerUid,
-    file.displayName,
-    file.folderId,
-    file.versionId,
-    file.contentType,
-    file.sizeBytes,
-    file.storagePath,
-  ]);
+  await database.insert(files).values({id: file.fileId, team_id: teamId, owner_uid: file.ownerUid, display_name: file.displayName, folder_id: file.folderId, current_version_id: file.versionId, content_type: file.contentType, size_bytes: file.sizeBytes, storage_path: file.storagePath}).onConflictDoUpdate({target: files.id, set: {current_version_id: file.versionId, content_type: file.contentType, size_bytes: file.sizeBytes, storage_path: file.storagePath, updated_at: sql`CURRENT_TIMESTAMP`}});
 }
 
 async function insertVersion(
-  database: LocalSqlDatabase,
+  database: RuntimeExecutor,
   teamId: string,
   file: WrittenFile,
 ) {
-  await database.run(insertVersionSql(), [
-    file.versionId,
-    teamId,
-    file.fileId,
-    "system",
-    file.displayName,
-    file.storagePath,
-    file.contentType,
-    file.sizeBytes,
-  ]);
+  await database.insert(fileVersions).values({id: file.versionId, team_id: teamId, file_id: file.fileId, created_by_uid: "system", display_name: file.displayName, storage_path: file.storagePath, content_type: file.contentType, size_bytes: file.sizeBytes});
 }
 
 async function writeLocalFile(
@@ -236,35 +190,4 @@ function ensureTeamFile(file: NodeAttachment, teamId: string): void {
 
 function existingFileFrom(row: FileRow): ExistingFile {
   return {fileId: row.id, ownerUid: row.owner_uid, folderId: row.folder_id};
-}
-
-function findFileByNameSql() {
-  return `SELECT id, owner_uid, folder_id FROM files
-    WHERE team_id = ? AND display_name = ? AND folder_id IS NULL LIMIT 1`;
-}
-
-function loadFileSql() {
-  return `SELECT id, owner_uid, folder_id, current_version_id, display_name,
-    content_type, size_bytes, storage_path FROM files
-    WHERE team_id = ? AND id = ?`;
-}
-
-function loadFileVersionSql() {
-  return `SELECT display_name, content_type, size_bytes, storage_path
-    FROM file_versions WHERE team_id = ? AND file_id = ? AND id = ?`;
-}
-
-function upsertFileSql() {
-  return `INSERT INTO files(id, team_id, owner_uid, display_name, folder_id,
-    current_version_id, content_type, size_bytes, storage_path)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET current_version_id = excluded.current_version_id,
-    content_type = excluded.content_type, size_bytes = excluded.size_bytes,
-    storage_path = excluded.storage_path, updated_at = CURRENT_TIMESTAMP`;
-}
-
-function insertVersionSql() {
-  return `INSERT INTO file_versions(id, team_id, file_id, created_by_uid,
-    display_name, storage_path, content_type, size_bytes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 }

@@ -1,24 +1,18 @@
+import {and, eq} from "drizzle-orm";
 import {UserFacingError} from "genkit";
+import {type RuntimeExecutor} from "../../../../db/database.js";
+import {tasks, type Tasks} from "../../../../db/schema.js";
 import {type TaskDefinition} from "../../domain/entities/task.js";
-import {taskDefinitionSchema} from "../genkit/runner/task-definition.js";
 import {type TaskStore} from "../../domain/repositories/task-store.js";
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
+import {taskDefinitionSchema} from "../genkit/runner/task-definition.js";
 
-type TaskRow = SqlRow & {
-  id: string;
-  title: string;
-  objective: string;
-  graph_json: string;
-};
+type TaskRow = Pick<Tasks, "id" | "title" | "objective" | "graph_json">;
 
 export class SQLiteTaskStore implements TaskStore {
-  constructor(private readonly database: LocalSqlDatabase) {}
+  constructor(private readonly database: RuntimeExecutor) {}
 
   async loadTask(teamId: string, taskId: string): Promise<TaskDefinition> {
-    const taskOrNull = await this.database.get<TaskRow>(
-      "SELECT id, title, objective, graph_json FROM tasks WHERE team_id = ? AND id = ?",
-      [teamId, taskId],
-    );
+    const taskOrNull = (await this.database.select({id: tasks.id, title: tasks.title, objective: tasks.objective, graph_json: tasks.graph_json}).from(tasks).where(and(eq(tasks.team_id, teamId), eq(tasks.id, taskId))).get()) ?? null;
     if (taskOrNull === null) throw taskNotFound();
     return taskFromRow(taskOrNull);
   }

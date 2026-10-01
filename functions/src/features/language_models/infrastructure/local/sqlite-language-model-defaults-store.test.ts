@@ -59,9 +59,9 @@ async function withStore(
   try {
     await operation(new SQLiteLanguageModelDefaultsStore(database));
   } finally {
-    database.close();
+    database.$client.close();
     await rm(directory, {force: true, recursive: true});
   }
 }
 
-const migrationsDirectory = resolve(__dirname, "../../../../../../local-runtime/migrations");
+const migrationsDirectory = resolve(__dirname, "../../../../../drizzle");

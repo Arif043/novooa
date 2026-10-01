@@ -1,17 +1,17 @@
+import {type RuntimeDatabase} from "../../db/database.js";
+import {type RuntimeLicenseActivation} from "../../features/licensing/domain/entities/runtime-license-activation.js";
 import {type RuntimeLicenseContext} from "../../features/licensing/domain/entities/runtime-license-context.js";
 import {type SignedRuntimeLicense} from "../../features/licensing/domain/entities/runtime-license-lease.js";
-import {type RuntimeLicenseActivation} from "../../features/licensing/domain/entities/runtime-license-activation.js";
-import {createLocalRuntimeComposition, type LocalRuntimeComposition, type LocalRuntimeControllers} from "./local-runtime-composition.js";
-import {type LocalRuntimeRealtimeGateway} from "./local-runtime-realtime-server.js";
-import {type LocalRuntimeRealtimeSubscriber} from "./local-runtime-realtime-notifier.js";
-import {ensureLocalRuntimeWorkspace, type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
-import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
-import {type LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
-import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
+import {createLocalRuntimeComposition, type LocalRuntimeComposition, type LocalRuntimeControllers} from "./local-runtime-composition.js";
+import {type LocalRuntimeRealtimeSubscriber} from "./local-runtime-realtime-notifier.js";
+import {type LocalRuntimeRealtimeGateway} from "./local-runtime-realtime-server.js";
+import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
+import {type LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
+import {ensureLocalRuntimeWorkspace, type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 
 export type LocalRuntimeApplicationOptions = {
-  database: SqliteLocalSqlDatabase;
+  database: RuntimeDatabase;
   runtimeRoot: string;
   fieldCipher: SensitiveFieldCipher;
   setupCode: LocalRuntimeSetupCode;

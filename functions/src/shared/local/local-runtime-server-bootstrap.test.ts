@@ -1,17 +1,17 @@
 import assert from "node:assert/strict";
-import test, {type TestContext} from "node:test";
 import {mkdtemp, rm} from "node:fs/promises";
-import {join, resolve} from "node:path";
 import {tmpdir} from "node:os";
+import {join, resolve} from "node:path";
+import test, {type TestContext} from "node:test";
 import {WebSocket} from "ws";
-import {bootstrapLocalRuntime} from "./local-runtime-server-bootstrap.js";
-import {LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
-import {SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
-import {createRuntimeKeyring} from "../../features/runtime_security/infrastructure/runtime-keyring.js";
-import {CurrentRuntimeFieldCipher} from "../../features/runtime_security/infrastructure/current-runtime-field-cipher.js";
-import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
+import {connectRuntimeDatabase} from "../../db/database.js";
 import {type RuntimeLicenseContext} from "../../features/licensing/domain/entities/runtime-license-context.js";
+import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
+import {CurrentRuntimeFieldCipher} from "../../features/runtime_security/infrastructure/current-runtime-field-cipher.js";
+import {createRuntimeKeyring} from "../../features/runtime_security/infrastructure/runtime-keyring.js";
+import {LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
 import {openLocalRuntimeDatabase} from "./local-runtime-database.js";
+import {bootstrapLocalRuntime} from "./local-runtime-server-bootstrap.js";
 
 test("native routes support activation, setup, login and protected workspace access", async (t) => {
   const {base, setupCode} = await activatedRuntimeFixture(t);
@@ -36,7 +36,7 @@ async function activatedRuntimeFixture(t: TestContext) {
   const runtimeRoot = await mkdtemp(join(tmpdir(), "novooa-fastify-runtime-"));
   t.after(() => rm(runtimeRoot, {recursive: true, force: true}));
   const database = await openLocalRuntimeDatabase({databasePath: ":memory:",
-    migrationsDirectory: resolve(__dirname, "../../../../local-runtime/migrations")});
+    migrationsDirectory: resolve(__dirname, "../../../drizzle")});
   let code = "";
   t.mock.method(console, "info", (message: string) => {
     const log = JSON.parse(message) as {setupCode?: string};
@@ -45,7 +45,7 @@ async function activatedRuntimeFixture(t: TestContext) {
   const runtime = await bootstrapLocalRuntime({database, runtimeRoot,
     fieldCipher: new CurrentRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring())), licenses: activatableLicenses(),
     cors: LocalRuntimeCorsPolicy.fromEnvironment(), webDirectory: undefined, port: 0});
-  t.after(async () => {await runtime.closeHttp(); await runtime.application.stop(); database.close();});
+  t.after(async () => {await runtime.closeHttp(); await runtime.application.stop(); database.$client.close();});
   const address = runtime.server.address();
   assert.ok(address && typeof address !== "string");
   return {base: `http://127.0.0.1:${address.port}`, setupCode: () => code};
@@ -65,7 +65,7 @@ function postJson(base: string, path: string, body: unknown): Promise<Response> 
 }
 
 test("starts the runtime HTTP server with the new keyring configuration", async () => {
-  const database = new SqliteLocalSqlDatabase(":memory:");
+  const database = connectRuntimeDatabase(":memory:");
   const {server, application, closeHttp} = await bootstrapLocalRuntime({
     database, runtimeRoot: "/unused", fieldCipher: new CurrentRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring())),
     licenses: inactiveLicenses(), cors: LocalRuntimeCorsPolicy.fromEnvironment(), webDirectory: undefined, port: 0,
@@ -78,17 +78,17 @@ test("starts the runtime HTTP server with the new keyring configuration", async 
   } finally {
     await closeHttp();
     await application.stop();
-    database.close();
+    database.$client.close();
   }
 });
 
 test("Fastify shutdown terminates active realtime connections", async (t) => {
-  const database = new SqliteLocalSqlDatabase(":memory:");
+  const database = connectRuntimeDatabase(":memory:");
   const {server, application, closeHttp} = await bootstrapLocalRuntime({
     database, runtimeRoot: "/unused", fieldCipher: new CurrentRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring())),
     licenses: inactiveLicenses(), cors: LocalRuntimeCorsPolicy.fromEnvironment(), webDirectory: undefined, port: 0,
   });
-  t.after(async () => { await closeHttp(); await application.stop(); database.close(); });
+  t.after(async () => { await closeHttp(); await application.stop(); database.$client.close(); });
   application.consumeRealtimeTicket = (ticket) => ticket === "test-ticket";
   const address = server.address();
   assert.ok(address && typeof address !== "string");

@@ -1,1 +1,0 @@
-ALTER TABLE tasks ADD COLUMN selected_node_id TEXT NOT NULL DEFAULT '';

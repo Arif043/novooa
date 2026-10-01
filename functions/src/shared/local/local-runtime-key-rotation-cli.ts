@@ -1,10 +1,10 @@
+import {access} from "node:fs/promises";
 import {join, resolve} from "node:path";
+import {connectRuntimeDatabase} from "../../db/database.js";
 import {RotateRuntimeMasterKey} from "../../features/runtime_security/domain/usecases/rotate-runtime-master-key.js";
 import {FileRuntimeKeyRepository} from "../../features/runtime_security/infrastructure/file-runtime-key-repository.js";
 import {LocalRuntimeSecretRotationStore} from "../../features/runtime_security/infrastructure/local-runtime-secret-rotation-store.js";
-import {SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
 import {acquireLocalRuntimeProcessLock} from "./local-runtime-process-lock.js";
-import {access} from "node:fs/promises";
 
 void rotate().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : "Master-Key-Rotation fehlgeschlagen.");
@@ -26,7 +26,7 @@ async function rotate(): Promise<void> {
 }
 
 async function rotateDatabase(path: string, root: string, secretFile: string, retire: boolean): Promise<void> {
-  const database = new SqliteLocalSqlDatabase(path);
+  const database = connectRuntimeDatabase(path);
   try {
     const workflow = new RotateRuntimeMasterKey(
       new FileRuntimeKeyRepository(secretFile), new LocalRuntimeSecretRotationStore(database, root),
@@ -35,7 +35,7 @@ async function rotateDatabase(path: string, root: string, secretFile: string, re
     console.info(`Master-Key-Rotation abgeschlossen. ${count} Datenschlüssel umgeschlüsselt.`);
     console.info(retire ? "Alte Master-Keys entfernt." : "Alte Master-Keys für Backups beibehalten.");
   } finally {
-    database.close();
+    database.$client.close();
   }
 }
 

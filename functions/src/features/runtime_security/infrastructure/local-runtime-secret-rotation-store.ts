@@ -1,18 +1,20 @@
+import {and, eq, gt} from "drizzle-orm";
 import {readFile} from "node:fs/promises";
 import {join} from "node:path";
+import {type RuntimeExecutor} from "../../../db/database.js";
+import {languageModelSecrets, type LanguageModelSecrets} from "../../../db/schema.js";
 import {type RuntimeFieldCipher} from "../domain/repositories/runtime-field-cipher.js";
 import {type RuntimeSecretRotationStore} from "../domain/repositories/runtime-secret-rotation-store.js";
-import {type LocalSqlDatabase, type SqlRow} from "../../../shared/local/local-sql-database.js";
-import {languageModelSecretContext, licenseSecretContext} from "./runtime-secret-context.js";
 import {writeDurableSecretFile} from "./durable-secret-file.js";
+import {languageModelSecretContext, licenseSecretContext} from "./runtime-secret-context.js";
 import {RuntimeSecretFileAccess} from "./runtime-secret-file-access.js";
 
-type SecretRow = SqlRow & {secret_ref: string; encrypted_value: string};
+type SecretRow = Pick<LanguageModelSecrets, "secret_ref" | "encrypted_value">;
 type LicenseDocument = {license: {payload: Record<string, unknown>}; encryptedActivationSecret: string};
 
 export class LocalRuntimeSecretRotationStore implements RuntimeSecretRotationStore {
   constructor(
-    private readonly database: LocalSqlDatabase,
+    private readonly database: RuntimeExecutor,
     private readonly runtimeRoot: string,
     private readonly licenseAccess = new RuntimeSecretFileAccess(),
   ) {}
@@ -22,10 +24,7 @@ export class LocalRuntimeSecretRotationStore implements RuntimeSecretRotationSto
     await this.forEachSecret(async (row) => {
       const encrypted = cipher.rewrap(row.encrypted_value, languageModelSecretContext(row.secret_ref));
       if (encrypted === row.encrypted_value) return;
-      await this.database.run(
-        "UPDATE language_model_secrets SET encrypted_value = ? WHERE secret_ref = ? AND encrypted_value = ?",
-        [encrypted, row.secret_ref, row.encrypted_value],
-      );
+      await this.database.update(languageModelSecrets).set({encrypted_value: encrypted}).where(and(eq(languageModelSecrets.secret_ref, row.secret_ref), eq(languageModelSecrets.encrypted_value, row.encrypted_value)));
       count++;
     });
     return count + await this.licenseAccess.run(() => this.rewrapLicense(cipher));
@@ -55,10 +54,9 @@ export class LocalRuntimeSecretRotationStore implements RuntimeSecretRotationSto
   private async forEachSecret(operation: (row: SecretRow) => Promise<void>): Promise<void> {
     let cursor: string | null = null;
     while (true) {
-      const rows: SecretRow[] = await this.database.all<SecretRow>(
-        "SELECT secret_ref, encrypted_value FROM language_model_secrets WHERE (? IS NULL OR secret_ref > ?) ORDER BY secret_ref LIMIT 100",
-        [cursor, cursor],
-      );
+      const rows: SecretRow[] = await this.database.select({secret_ref: languageModelSecrets.secret_ref, encrypted_value: languageModelSecrets.encrypted_value})
+        .from(languageModelSecrets).where(cursor === null ? undefined : gt(languageModelSecrets.secret_ref, cursor))
+        .orderBy(languageModelSecrets.secret_ref).limit(100);
       if (rows.length === 0) return;
       for (const row of rows) await operation(row);
       cursor = rows[rows.length - 1].secret_ref;

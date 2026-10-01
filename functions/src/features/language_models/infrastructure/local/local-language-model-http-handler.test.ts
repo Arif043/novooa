@@ -1,18 +1,18 @@
-import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
+import {sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import {randomBytes} from "node:crypto";
 import test from "node:test";
-import {CredentialCipher} from "../../../communication/infrastructure/security/credential-cipher.js";
-import {SqliteLocalSqlDatabase} from "../../../../shared/local/sqlite-local-sql-database.js";
+import {connectRuntimeDatabase, RuntimeDatabase} from "../../../../db/database.js";
+import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
+import {CredentialCipher} from "../../../communication/infrastructure/security/credential-cipher.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "./encrypted-sqlite-language-model-secret-store.js";
+import {LocalLanguageModelDiscovery, type DiscoveredLanguageModel} from "./local-language-model-discovery.js";
 import {LocalLanguageModelHttpHandler} from "./local-language-model-http-handler.js";
-import {type DiscoveredLanguageModel} from "./local-language-model-discovery.js";
-import {LocalLanguageModelDiscovery} from "./local-language-model-discovery.js";
 import {SQLiteLanguageModelConfigurationStore} from "./sqlite-language-model-configuration-store.js";
 
 test("stores a local model configuration without exposing its API key", async () => {
-  const database = new SqliteLocalSqlDatabase(":memory:");
+  const database = connectRuntimeDatabase(":memory:");
   await createTables(database);
   const secretStore = new EncryptedSQLiteLanguageModelSecretStore(
     database,
@@ -36,11 +36,11 @@ test("stores a local model configuration without exposing its API key", async ()
         toolCalling: false, imageGeneration: false,
       }},
   ]);
-  database.close();
+  database.$client.close();
 });
 
 test("uses an internal credential for a keyless local endpoint", async () => {
-  const database = new SqliteLocalSqlDatabase(":memory:");
+  const database = connectRuntimeDatabase(":memory:");
   await createTables(database);
   const secretStore = new EncryptedSQLiteLanguageModelSecretStore(
     database,
@@ -57,17 +57,15 @@ test("uses an internal credential for a keyless local endpoint", async () => {
     method: "POST",
     url: "/v1/language-models",
   });
-  const secretRef = await database.get<{secret_ref: string}>(
-    "SELECT secret_ref FROM language_model_connections",
-  );
+  const secretRef = await database.get <{secret_ref: string}>(sql`SELECT secret_ref FROM language_model_connections`);
 
   assert.equal(response?.statusCode, 201);
   assert.equal(await secretStore.read(secretRef?.secret_ref ?? ""), "local");
-  database.close();
+  database.$client.close();
 });
 
 test("connects all models discovered for one provider connection", async () => {
-  const database = new SqliteLocalSqlDatabase(":memory:");
+  const database = connectRuntimeDatabase(":memory:");
   await createTables(database);
   const handler = testingRoutes(new LocalLanguageModelHttpHandler(
     new SQLiteLanguageModelConfigurationStore(database, new EncryptedSQLiteLanguageModelSecretStore(
@@ -86,11 +84,11 @@ test("connects all models discovered for one provider connection", async () => {
 
   assert.equal(response?.statusCode, 201);
   assert.deepEqual((response?.body as {items: Array<{modelId: string}>}).items.map((model) => model.modelId), ["gemini-2.5-flash", "gemini-2.5-pro"]);
-  database.close();
+  database.$client.close();
 });
 
 test("connects Ollama with its local default endpoint and no API key", async () => {
-  const database = new SqliteLocalSqlDatabase(":memory:");
+  const database = connectRuntimeDatabase(":memory:");
   await createTables(database);
   const secrets = new EncryptedSQLiteLanguageModelSecretStore(
     database, new CredentialCipher(randomBytes(32).toString("base64")),
@@ -107,15 +105,13 @@ test("connects Ollama with its local default endpoint and no API key", async () 
     method: "POST",
     url: "/v1/language-model-connections",
   });
-  const connection = await database.get<{provider: string; base_url: string; secret_ref: string}>(
-    "SELECT provider, base_url, secret_ref FROM language_model_connections",
-  );
+  const connection = await database.get <{provider: string; base_url: string; secret_ref: string}>(sql`SELECT provider, base_url, secret_ref FROM language_model_connections`);
 
   assert.equal(response?.statusCode, 201);
   assert.equal(connection?.provider, "ollama");
   assert.equal(connection?.base_url, "http://host.docker.internal:11434/v1");
   assert.equal(await secrets.read(connection?.secret_ref ?? ""), "local");
-  database.close();
+  database.$client.close();
 });
 
 test("reads model names from Ollama's native tags response", async () => {
@@ -132,7 +128,7 @@ test("reads model names from Ollama's native tags response", async () => {
 });
 
 test("lists connected providers", async () => {
-  const database = new SqliteLocalSqlDatabase(":memory:");
+  const database = connectRuntimeDatabase(":memory:");
   await createTables(database);
   const handler = testingRoutes(new LocalLanguageModelHttpHandler(
     new SQLiteLanguageModelConfigurationStore(database, new EncryptedSQLiteLanguageModelSecretStore(
@@ -157,11 +153,11 @@ test("lists connected providers", async () => {
     ),
     [{name: "Google AI", provider: "googleAi"}],
   );
-  database.close();
+  database.$client.close();
 });
 
 test("removes a connection together with its models and their secret", async () => {
-  const database = new SqliteLocalSqlDatabase(":memory:");
+  const database = connectRuntimeDatabase(":memory:");
   await createTables(database);
   const secrets = new EncryptedSQLiteLanguageModelSecretStore(
     database, new CredentialCipher(randomBytes(32).toString("base64")),
@@ -181,22 +177,20 @@ test("removes a connection together with its models and their secret", async () 
     url: "/v1/language-model-connections",
   });
   const connectionId = (connected?.body as {items: Array<{connectionId: string}>}).items[0].connectionId;
-  const secretRef = (await database.get<{secret_ref: string}>(
-    "SELECT secret_ref FROM language_model_connections WHERE id = ?", [connectionId],
-  ))?.secret_ref ?? "";
+  const secretRef = (await database.get <{secret_ref: string}>(sql`SELECT secret_ref FROM language_model_connections WHERE id = ${connectionId}`))?.secret_ref ?? "";
 
   const response = await handler.handle({
     body: {}, method: "DELETE", url: `/v1/language-model-connections/${connectionId}`,
   });
-  const remainingConnections = await database.all("SELECT id FROM language_model_connections");
-  const remainingModels = await database.all("SELECT id FROM language_models");
+  const remainingConnections = await database.all(sql`SELECT id FROM language_model_connections`);
+  const remainingModels = await database.all(sql`SELECT id FROM language_models`);
 
   assert.equal(response?.statusCode, 200);
   assert.deepEqual(remainingConnections, []);
   assert.deepEqual(remainingModels, []);
   assert.equal(await secrets.read(secretRef), null);
   assert.ok(events.includes("language-models"));
-  database.close();
+  database.$client.close();
 });
 
 function discoveredModels(): DiscoveredLanguageModel[] {
@@ -215,16 +209,18 @@ function requestBody() {
   };
 }
 
-async function createTables(database: SqliteLocalSqlDatabase): Promise<void> {
-  await database.run(`CREATE TABLE language_model_connections (
+async function createTables(database: RuntimeDatabase): Promise<void> {
+  await database.run(sql`CREATE TABLE language_model_connections (
     id TEXT PRIMARY KEY, team_id TEXT NOT NULL, name TEXT NOT NULL,
-    provider TEXT NOT NULL, base_url TEXT, secret_ref TEXT NOT NULL
+    provider TEXT NOT NULL, base_url TEXT, secret_ref TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`);
-  await database.run(`CREATE TABLE language_models (
+  await database.run(sql`CREATE TABLE language_models (
     id TEXT PRIMARY KEY, team_id TEXT NOT NULL, connection_id TEXT NOT NULL,
-    name TEXT NOT NULL, model_id TEXT NOT NULL, capabilities_json TEXT NOT NULL
+    name TEXT NOT NULL, model_id TEXT NOT NULL, capabilities_json TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`);
-  await database.run(`CREATE TABLE language_model_secrets (
-    secret_ref TEXT PRIMARY KEY, encrypted_value TEXT NOT NULL
+  await database.run(sql`CREATE TABLE language_model_secrets (
+    secret_ref TEXT PRIMARY KEY, encrypted_value TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`);
 }

@@ -1,57 +1,28 @@
-import { type FastifyInstance, type FastifyReply } from "fastify";
-import { type LocalSqlDatabase, type SqlRow } from "../../../../shared/local/local-sql-database.js";
-type TaskRunRow = SqlRow & {
-  created_at: string;
-  error_json: string | null;
-  final_output: string;
-  id: string;
-  interaction_json: string | null;
-  review_output: string | null;
-  status: string;
-  task_id: string;
-  task_title: string;
-  updated_at: string;
-  waiting_node_id: string | null;
-};
-type ActivityRow = SqlRow & {
-  created_at: string;
-  id: string;
-  input: string;
-  message: string;
-  node_id: string | null;
-  output: string;
-  outputs_json: string;
-  primitive: string | null;
-  run_id: string;
-  status: string;
-  target: string;
-  task_id: string;
-  title: string;
-};
+import {desc, eq} from "drizzle-orm";
+import {type FastifyInstance, type FastifyReply} from "fastify";
+import {type RuntimeExecutor} from "../../../../db/database.js";
+import {activities, taskRuns, type Activities, type TaskRuns} from "../../../../db/schema.js";
+type TaskRunRow = Pick<TaskRuns, "created_at" | "error_json" | "final_output" | "id" | "interaction_json" | "review_output" | "status" | "task_id" | "task_title" | "updated_at" | "waiting_node_id">;
+type ActivityRow = Pick<Activities, "created_at" | "id" | "input" | "message" | "node_id" | "output" | "outputs_json" | "primitive" | "run_id" | "status" | "target" | "task_id" | "title">;
 export class LocalTaskActivityHttpHandler {
   static registerRoutes(http: FastifyInstance, current: () => LocalTaskActivityHttpHandler): void {
     http.get("/v1/task-runs", (request, reply) => current().runs(reply));
     http.get("/v1/activities", (request, reply) => current().activities(reply));
     http.post("/v1/activities", (request, reply) => current().add(request.body, reply));
   }
-  constructor(private readonly database: LocalSqlDatabase, private readonly teamId: string) { }
+  constructor(private readonly database: RuntimeExecutor, private readonly teamId: string) { }
   private async runs(reply: FastifyReply): Promise<FastifyReply> {
-    const rows = await this.database.all<TaskRunRow>(runsSql(), [this.teamId]);
+    const rows = await this.database.select({id: taskRuns.id, task_id: taskRuns.task_id, task_title: taskRuns.task_title, status: taskRuns.status, waiting_node_id: taskRuns.waiting_node_id, final_output: taskRuns.final_output, review_output: taskRuns.review_output, interaction_json: taskRuns.interaction_json, error_json: taskRuns.error_json, created_at: taskRuns.created_at, updated_at: taskRuns.updated_at}).from(taskRuns).where(eq(taskRuns.team_id, this.teamId)).orderBy(desc(taskRuns.updated_at)).limit(100);
     return reply.code(200).send({ items: rows.map(runFromRow) });
   }
   private async activities(reply: FastifyReply): Promise<FastifyReply> {
-    const rows = await this.database.all<ActivityRow>(activitiesSql(), [this.teamId]);
+    const rows = await this.database.select({id: activities.id, run_id: activities.run_id, task_id: activities.task_id, node_id: activities.node_id, target: activities.target, primitive: activities.primitive, title: activities.title, status: activities.status, input: activities.input, output: activities.output, outputs_json: activities.outputs_json, message: activities.message, created_at: activities.created_at}).from(activities).where(eq(activities.team_id, this.teamId)).orderBy(desc(activities.created_at)).limit(100);
     return reply.code(200).send({ items: rows.map(activityFromRow) });
   }
   private async add(body: unknown, reply: FastifyReply): Promise<FastifyReply> {
     try {
       const activity = activityFromRequest(body);
-      await this.database.run(insertActivitySql(), [
-        activity.id, this.teamId, activity.runId, activity.taskId, activity.nodeId,
-        activity.target, activity.primitive, activity.taskTitle, activity.status,
-        activity.input, activity.output, JSON.stringify(activity.outputs), activity.message,
-        activity.occurredAt,
-      ]);
+      await this.database.insert(activities).values({id: activity.id, team_id: this.teamId, run_id: activity.runId, task_id: activity.taskId, node_id: activity.nodeId, target: activity.target, primitive: activity.primitive, title: activity.taskTitle, status: activity.status, input: activity.input, output: activity.output, outputs_json: JSON.stringify(activity.outputs), message: activity.message, created_at: activity.occurredAt});
       return reply.code(201).send(activity);
     }
     catch (error) {
@@ -60,21 +31,6 @@ export class LocalTaskActivityHttpHandler {
       throw error;
     }
   }
-}
-function runsSql(): string {
-  return `SELECT id, task_id, task_title, status, waiting_node_id, final_output,
- review_output, interaction_json, error_json, created_at, updated_at FROM task_runs
- WHERE team_id = ? ORDER BY updated_at DESC LIMIT 100`;
-}
-function activitiesSql(): string {
-  return `SELECT id, run_id, task_id, node_id, target, primitive, title, status,
- input, output, outputs_json, message, created_at FROM activities
- WHERE team_id = ? ORDER BY created_at DESC LIMIT 100`;
-}
-function insertActivitySql(): string {
-  return `INSERT INTO activities(id, team_id, run_id, task_id, node_id, target, primitive,
- title, status, input, output, outputs_json, message, created_at)
- VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 }
 function runFromRow(row: TaskRunRow): Record<string, unknown> {
   return {

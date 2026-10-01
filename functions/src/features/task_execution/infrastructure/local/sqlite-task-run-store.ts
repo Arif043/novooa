@@ -1,22 +1,14 @@
+import {and, eq, sql} from "drizzle-orm";
+import {type RuntimeExecutor} from "../../../../db/database.js";
+import {type TaskRuns, taskRuns} from "../../../../db/schema.js";
+import {type TaskRunApprovalNotificationStore} from "../../../notifications/domain/repositories/task-run-approval-notification-store.js";
 import {
   type CompletedTaskGraphOutput,
   type NodeOutputValue,
   type TaskResumeState,
   type WaitingTaskGraphOutput,
 } from "../../domain/entities/task.js";
-import {
-  taskResumeStateSchema,
-} from "../genkit/runner/task-definition.js";
-import {errorDetails} from "../genkit/runner/structured-logger.js";
-import {reviewFieldsFrom} from "../genkit/runner/task-run-review-fields.js";
-import {
-  invalidReviewState,
-  invalidResumeState,
-  runNotFound,
-} from "../genkit/runner/task-run-store-errors.js";
 import {type ActivityStore} from "../../domain/repositories/activity-store.js";
-import {type TaskRunApprovalNotificationStore} from
-  "../../../notifications/domain/repositories/task-run-approval-notification-store.js";
 import {
   type EnqueueTaskRunInput,
   newTaskRunDocument,
@@ -25,32 +17,22 @@ import {
   type TaskRunDocument,
   type TaskRunStore,
 } from "../../domain/repositories/task-run-store.js";
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
+import {errorDetails} from "../genkit/runner/structured-logger.js";
 import {
-  approveSql,
-  failedSql,
-  insertRunSql,
-  loadRunSql,
-  rejectSql,
-  statusSql,
-  successSql,
-  waitingSql,
-} from "./sqlite-task-run-sql.js";
+  taskResumeStateSchema,
+} from "../genkit/runner/task-definition.js";
+import {reviewFieldsFrom} from "../genkit/runner/task-run-review-fields.js";
+import {
+  invalidResumeState,
+  invalidReviewState,
+  runNotFound,
+} from "../genkit/runner/task-run-store-errors.js";
 
-type TaskRunRow = SqlRow & {
-  id: string;
-  task_id: string;
-  task_title: string;
-  context: string;
-  input_json: string;
-  resume_state_json: string | null;
-  response_outputs_json: string | null;
-  status: string;
-};
+type TaskRunRow = Pick<TaskRuns, "id" | "task_id" | "task_title" | "context" | "input_json" | "resume_state_json" | "response_outputs_json" | "status">;
 
 export class SQLiteTaskRunStore implements TaskRunStore {
   constructor(
-    private readonly database: LocalSqlDatabase,
+    private readonly database: RuntimeExecutor,
     private readonly activityStore: ActivityStore,
     private readonly approvalNotifications: TaskRunApprovalNotificationStore,
   ) {}
@@ -67,7 +49,7 @@ export class SQLiteTaskRunStore implements TaskRunStore {
   }
 
   async markRunStarted(teamId: string, runId: string) {
-    await this.updateStatus(teamId, runId, "running", "started_at");
+    await this.updateStatus(teamId, runId, "running");
   }
 
   async loadTaskRun(teamId: string, runId: string): Promise<TaskRunDocument> {
@@ -94,7 +76,7 @@ export class SQLiteTaskRunStore implements TaskRunStore {
   ) {
     await this.activityStore.writeNodeActivities(teamId, run, output.nodeResults);
     await this.activityStore.writeTaskActivity(teamId, {run, status: "succeeded", output});
-    await this.database.run(successSql(), [output.finalOutput, teamId, run.runId]);
+    await this.database.update(taskRuns).set({status: "succeeded", final_output: output.finalOutput, completed_at: sql`CURRENT_TIMESTAMP`, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRuns.team_id, teamId), eq(taskRuns.id, run.runId)));
   }
 
   async markRunWaitingForApproval(
@@ -104,16 +86,7 @@ export class SQLiteTaskRunStore implements TaskRunStore {
   ) {
     const review = reviewFieldsFrom(output);
     await this.activityStore.writeNodeActivities(teamId, run, output.nodeResults);
-    await this.database.run(waitingSql(), [
-      output.finalOutput,
-      output.resumeState.waitingNodeId ?? "",
-      review.instruction,
-      review.output,
-      json(review.interaction),
-      json(output.resumeState),
-      teamId,
-      run.runId,
-    ]);
+    await this.database.update(taskRuns).set({status: "waitingForApproval", final_output: output.finalOutput, waiting_node_id: output.resumeState.waitingNodeId ?? "", review_instruction: review.instruction, review_output: review.output, interaction_json: json(review.interaction), resume_state_json: json(output.resumeState), paused_at: sql`CURRENT_TIMESTAMP`, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRuns.team_id, teamId), eq(taskRuns.id, run.runId)));
     await this.approvalNotifications.notifyApprovalRequired({teamId, run, output, review});
   }
 
@@ -123,7 +96,7 @@ export class SQLiteTaskRunStore implements TaskRunStore {
       status: "failed",
       message: errorMessage(error),
     });
-    await this.database.run(failedSql(), [json(errorDetails(error)), teamId, run.runId]);
+    await this.database.update(taskRuns).set({status: "failed", error_json: json(errorDetails(error)), completed_at: sql`CURRENT_TIMESTAMP`, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRuns.team_id, teamId), eq(taskRuns.id, run.runId)));
   }
 
   async loadReviewableRun(
@@ -136,7 +109,7 @@ export class SQLiteTaskRunStore implements TaskRunStore {
   }
 
   async rejectTaskRun(teamId: string, runId: string) {
-    await this.database.run(rejectSql(), [teamId, runId]);
+    await this.database.update(taskRuns).set({status: "rejected", reviewed_at: sql`CURRENT_TIMESTAMP`, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRuns.team_id, teamId), eq(taskRuns.id, runId)));
     await this.approvalNotifications.markApprovalNotifications({teamId, runId, status: "rejected"});
   }
 
@@ -145,31 +118,21 @@ export class SQLiteTaskRunStore implements TaskRunStore {
     runId: string,
     outputs: Record<string, NodeOutputValue>,
   ) {
-    await this.database.run(approveSql(), [json(outputs), teamId, runId]);
+    await this.database.update(taskRuns).set({status: "queued", response_outputs_json: json(outputs), reviewed_at: sql`CURRENT_TIMESTAMP`, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRuns.team_id, teamId), eq(taskRuns.id, runId)));
     await this.approvalNotifications.markApprovalNotifications({teamId, runId, status: "accepted"});
   }
 
   private async insertRun(teamId: string, run: TaskRunDocument) {
-    await this.database.run(insertRunSql(), [
-      run.runId,
-      teamId,
-      run.taskId,
-      run.taskTitle,
-      "queued",
-      run.context,
-      json(run.input ?? {}),
-      run.source ?? null,
-      run.triggerId ?? null,
-      run.triggerType ?? null,
-    ]);
+    await this.database.insert(taskRuns).values({id: run.runId, team_id: teamId, task_id: run.taskId, task_title: run.taskTitle, status: "queued", context: run.context, input_json: json(run.input ?? {}), source: run.source ?? null, trigger_id: run.triggerId ?? null, trigger_type: run.triggerType ?? null});
   }
 
-  private async updateStatus(teamId: string, runId: string, status: string, field: string) {
-    await this.database.run(statusSql(field), [status, teamId, runId]);
+  private async updateStatus(teamId: string, runId: string, status: string) {
+    await this.database.update(taskRuns).set({status, started_at: sql`CURRENT_TIMESTAMP`, updated_at: sql`CURRENT_TIMESTAMP`})
+      .where(and(eq(taskRuns.team_id, teamId), eq(taskRuns.id, runId)));
   }
 
   private async loadRunRow(teamId: string, runId: string): Promise<TaskRunRow> {
-    const row = await this.database.get<TaskRunRow>(loadRunSql(), [teamId, runId]);
+    const row = (await this.database.select({id: taskRuns.id, task_id: taskRuns.task_id, task_title: taskRuns.task_title, context: taskRuns.context, input_json: taskRuns.input_json, resume_state_json: taskRuns.resume_state_json, response_outputs_json: taskRuns.response_outputs_json, status: taskRuns.status}).from(taskRuns).where(and(eq(taskRuns.team_id, teamId), eq(taskRuns.id, runId))).get()) ?? null;
     if (row === null) throw runNotFound();
     return row;
   }

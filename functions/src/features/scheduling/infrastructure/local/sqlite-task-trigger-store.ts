@@ -1,12 +1,14 @@
-import {type ScheduleConfig} from "../../domain/usecases/schedule-next-run.js";
+import {and, eq, inArray, isNotNull, lte, sql} from "drizzle-orm";
+import {type RuntimeExecutor} from "../../../../db/database.js";
+import {taskRuns, taskTriggers} from "../../../../db/schema.js";
 import {
   type DueScheduleTrigger,
   type EventTaskTrigger,
   type TaskTriggerStore,
 } from "../../domain/repositories/task-trigger-store.js";
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
+import {type ScheduleConfig} from "../../domain/usecases/schedule-next-run.js";
 
-type ScheduleTriggerRow = SqlRow & {
+type ScheduleTriggerRow = {
   id: string;
   team_id: string;
   task_id: string;
@@ -20,28 +22,24 @@ type EventTriggerRow = ScheduleTriggerRow & {
 };
 
 export class SQLiteTaskTriggerStore implements TaskTriggerStore {
-  constructor(private readonly database: LocalSqlDatabase) {}
+  constructor(private readonly database: RuntimeExecutor) {}
 
   async listDueScheduleTriggers(now: Date, limit: number) {
-    const rows = await this.database.all<ScheduleTriggerRow>(dueSql(), [
-      now.toISOString(),
-      limit,
-    ]);
+    const rows = await this.database.select({id: taskTriggers.id, team_id: taskTriggers.team_id, task_id: taskTriggers.task_id, config_json: taskTriggers.config_json, policy_json: taskTriggers.policy_json})
+      .from(taskTriggers).where(and(eq(taskTriggers.enabled, 1), isNotNull(taskTriggers.next_run_at), lte(taskTriggers.next_run_at, now.toISOString())))
+      .orderBy(taskTriggers.next_run_at).limit(limit);
     return rows.map(scheduleTriggerFromRow);
   }
 
   async hasActiveRun(teamId: string, taskId: string): Promise<boolean> {
-    const row = await this.database.get<SqlRow>(activeRunSql(), [teamId, taskId]);
-    return row !== null;
+    const row = await this.database.select({id: taskRuns.id}).from(taskRuns)
+      .where(and(eq(taskRuns.team_id, teamId), eq(taskRuns.task_id, taskId), inArray(taskRuns.status, ["queued", "running", "waitingForApproval"])))
+      .limit(1).get();
+    return row !== undefined;
   }
 
   async advanceScheduleTrigger(trigger: DueScheduleTrigger, nextRunAt: Date | null) {
-    await this.database.run(advanceSql(), [
-      enabledValue(nextRunAt),
-      dateOrNull(nextRunAt),
-      trigger.teamId,
-      trigger.id,
-    ]);
+    await this.database.update(taskTriggers).set({enabled: enabledValue(nextRunAt), next_run_at: dateOrNull(nextRunAt), updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskTriggers.team_id, trigger.teamId), eq(taskTriggers.id, trigger.id)));
   }
 
   async markScheduleTriggerRan(
@@ -50,23 +48,16 @@ export class SQLiteTaskTriggerStore implements TaskTriggerStore {
     nextRunAt: Date | null,
     runId: string,
   ) {
-    await this.database.run(ranSql(), [
-      enabledValue(nextRunAt),
-      dateOrNull(nextRunAt),
-      now.toISOString(),
-      runId,
-      trigger.teamId,
-      trigger.id,
-    ]);
+    await this.database.update(taskTriggers).set({enabled: enabledValue(nextRunAt), next_run_at: dateOrNull(nextRunAt), last_run_at: now.toISOString(), last_run_id: runId, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskTriggers.team_id, trigger.teamId), eq(taskTriggers.id, trigger.id)));
   }
 
   async listEnabledEventTriggers(teamId: string): Promise<EventTaskTrigger[]> {
-    const rows = await this.database.all<EventTriggerRow>(eventsSql(), [teamId]);
+    const rows = await this.database.select({id: taskTriggers.id, team_id: taskTriggers.team_id, task_id: taskTriggers.task_id, type: taskTriggers.type, config_json: taskTriggers.config_json, policy_json: taskTriggers.policy_json, event_config_json: taskTriggers.event_config_json}).from(taskTriggers).where(and(eq(taskTriggers.team_id, teamId), eq(taskTriggers.enabled, 1)));
     return rows.map(eventTriggerFromRow);
   }
 
   async markEventTriggerRan(trigger: EventTaskTrigger, runId: string) {
-    await this.database.run(eventRanSql(), [runId, trigger.teamId, trigger.id]);
+    await this.database.update(taskTriggers).set({last_run_id: runId, last_run_at: sql`CURRENT_TIMESTAMP`, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskTriggers.team_id, trigger.teamId), eq(taskTriggers.id, trigger.id)));
   }
 }
 
@@ -111,37 +102,6 @@ function scheduleConfigFromJson(value: string): ScheduleConfig {
 function slotFrom(value: unknown) {
   const data = isRecord(value) ? value : {};
   return {weekday: Number(data.weekday ?? 0), timeOfDay: stringFrom(data.timeOfDay, "")};
-}
-
-function dueSql() {
-  return `SELECT id, team_id, task_id, config_json, policy_json FROM task_triggers
-    WHERE enabled = 1 AND next_run_at IS NOT NULL AND next_run_at <= ?
-    ORDER BY next_run_at ASC LIMIT ?`;
-}
-
-function activeRunSql() {
-  return `SELECT id FROM task_runs WHERE team_id = ? AND task_id = ?
-    AND status IN ('queued', 'running', 'waitingForApproval') LIMIT 1`;
-}
-
-function advanceSql() {
-  return `UPDATE task_triggers SET enabled = ?, next_run_at = ?,
-    updated_at = CURRENT_TIMESTAMP WHERE team_id = ? AND id = ?`;
-}
-
-function ranSql() {
-  return `UPDATE task_triggers SET enabled = ?, next_run_at = ?, last_run_at = ?,
-    last_run_id = ?, updated_at = CURRENT_TIMESTAMP WHERE team_id = ? AND id = ?`;
-}
-
-function eventsSql() {
-  return `SELECT id, team_id, task_id, type, config_json, policy_json,
-    event_config_json FROM task_triggers WHERE team_id = ? AND enabled = 1`;
-}
-
-function eventRanSql() {
-  return `UPDATE task_triggers SET last_run_id = ?, last_run_at = CURRENT_TIMESTAMP,
-    updated_at = CURRENT_TIMESTAMP WHERE team_id = ? AND id = ?`;
 }
 
 function scheduleKindFrom(value: unknown): ScheduleConfig["kind"] {

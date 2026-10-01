@@ -1,27 +1,7 @@
 import path from "node:path";
-import {createLocalTaskBuilderAssistant} from "../../features/task_execution/infrastructure/local/local-task-builder-assistant.js";
-import {createLocalKnowledgeBaseAssistant} from "../../features/knowledge_base/infrastructure/local/local-knowledge-base-assistant.js";
-import {LocalObjectStore} from "../../features/files/infrastructure/local/local-object-store.js";
-import {LocalFileResourceHttpHandler} from "../../features/files/infrastructure/local/local-file-resource-http-handler.js";
-import {LocalTeamFileStore} from "../../features/files/infrastructure/local/local-team-file-store.js";
-import {LocalKnowledgeNoteHttpHandler} from "../../features/knowledge_base/infrastructure/local/local-knowledge-note-http-handler.js";
-import {SQLiteKnowledgeBaseStore} from "../../features/knowledge_base/infrastructure/local/sqlite-knowledge-base-store.js";
-import {createLocalSidecarModelInference} from "../../features/machine_learning/infrastructure/local/local-sidecar-model-inference.js";
-import {LocalModelArtifactPublisher} from "../../features/machine_learning/infrastructure/local/local-model-artifact-publisher.js";
-import {LocalModelArtifactUploadStore} from "../../features/machine_learning/infrastructure/local/local-model-artifact-upload-store.js";
-import {LocalModelCatalogHttpHandler} from "../../features/machine_learning/infrastructure/local/local-model-catalog-http-handler.js";
-import {FirebaseRuntimeModelCatalog} from "../../features/machine_learning/infrastructure/local/firebase-runtime-model-catalog.js";
-import {HuggingFaceModelArtifactDownloader} from "../../features/machine_learning/infrastructure/local/hugging-face-model-artifact-downloader.js";
-import {SQLiteModelCatalog} from "../../features/machine_learning/infrastructure/local/sqlite-model-catalog.js";
-import {
-  PythonModelContractValidator,
-  UnavailablePythonModelContractValidator,
-} from "../../features/machine_learning/infrastructure/local/python-model-contract-validator.js";
-import {UnavailableLocalModelInference} from "../../features/machine_learning/infrastructure/local/unavailable-local-model-inference.js";
-import {SQLiteTeamContextStore} from "../../features/teams/infrastructure/local/sqlite-team-context-store.js";
-import {LocalTaskMessageSender} from "../../features/task_execution/infrastructure/local/local-task-message-sender.js";
-import {LocalMailRelayHttpHandler} from "../../features/communication/infrastructure/local/local-mail-relay-http-handler.js";
+import {type RuntimeDatabase} from "../../db/database.js";
 import {LocalMailRelayEventProcessor} from "../../features/communication/infrastructure/local/local-mail-relay-event-processor.js";
+import {LocalMailRelayHttpHandler} from "../../features/communication/infrastructure/local/local-mail-relay-http-handler.js";
 import {RuntimeMailRelayWorker} from "../../features/communication/infrastructure/local/polling-runtime-mail-relay-worker.js";
 import {
   HttpRuntimeMailRelayClient,
@@ -29,62 +9,82 @@ import {
   UnavailableRuntimeMailRelayClient,
 } from "../../features/communication/infrastructure/local/runtime-mail-relay-client.js";
 import {SQLiteInboundChannelMessageStore} from "../../features/communication/infrastructure/local/sqlite-inbound-channel-message-store.js";
+import {type DocumentStore} from "../../features/data/domain/repositories/document-store.js";
+import {LocalDataHttpHandler} from "../../features/data/infrastructure/local/local-data-http-handler.js";
+import {SQLiteDocumentStore} from "../../features/data/infrastructure/local/sqlite-document-store.js";
+import {LocalFileResourceHttpHandler} from "../../features/files/infrastructure/local/local-file-resource-http-handler.js";
+import {LocalObjectStore} from "../../features/files/infrastructure/local/local-object-store.js";
+import {LocalTeamFileStore} from "../../features/files/infrastructure/local/local-team-file-store.js";
+import {createLocalKnowledgeBaseAssistant} from "../../features/knowledge_base/infrastructure/local/local-knowledge-base-assistant.js";
+import {LocalKnowledgeNoteHttpHandler} from "../../features/knowledge_base/infrastructure/local/local-knowledge-note-http-handler.js";
+import {SQLiteKnowledgeBaseStore} from "../../features/knowledge_base/infrastructure/local/sqlite-knowledge-base-store.js";
+import {CatalogGenkitLanguageModelResolver} from "../../features/language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {EncryptedSQLiteLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
+import {LocalLanguageModelDefaultsHttpHandler} from "../../features/language_models/infrastructure/local/local-language-model-defaults-http-handler.js";
+import {LocalLanguageModelHttpHandler} from "../../features/language_models/infrastructure/local/local-language-model-http-handler.js";
+import {type LocalLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/local-language-model-secret-store.js";
+import {SQLiteLanguageModelCatalog} from "../../features/language_models/infrastructure/local/sqlite-language-model-catalog.js";
+import {SQLiteLanguageModelConfigurationStore} from "../../features/language_models/infrastructure/local/sqlite-language-model-configuration-store.js";
+import {SQLiteLanguageModelDefaultsStore} from "../../features/language_models/infrastructure/local/sqlite-language-model-defaults-store.js";
+import {type RuntimeLicenseActivation} from "../../features/licensing/domain/entities/runtime-license-activation.js";
+import {type SignedRuntimeLicense} from "../../features/licensing/domain/entities/runtime-license-lease.js";
+import {
+  RuntimeFirebaseSession,
+  runtimeFirebaseConfigurationFromEnvironment,
+} from "../../features/licensing/infrastructure/local/runtime-firebase-session.js";
+import {FirebaseRuntimeModelCatalog} from "../../features/machine_learning/infrastructure/local/firebase-runtime-model-catalog.js";
+import {HuggingFaceModelArtifactDownloader} from "../../features/machine_learning/infrastructure/local/hugging-face-model-artifact-downloader.js";
+import {LocalModelArtifactPublisher} from "../../features/machine_learning/infrastructure/local/local-model-artifact-publisher.js";
+import {LocalModelArtifactUploadStore} from "../../features/machine_learning/infrastructure/local/local-model-artifact-upload-store.js";
+import {LocalModelCatalogHttpHandler} from "../../features/machine_learning/infrastructure/local/local-model-catalog-http-handler.js";
+import {createLocalSidecarModelInference} from "../../features/machine_learning/infrastructure/local/local-sidecar-model-inference.js";
+import {
+  PythonModelContractValidator,
+  UnavailablePythonModelContractValidator,
+} from "../../features/machine_learning/infrastructure/local/python-model-contract-validator.js";
+import {SQLiteModelCatalog} from "../../features/machine_learning/infrastructure/local/sqlite-model-catalog.js";
+import {UnavailableLocalModelInference} from "../../features/machine_learning/infrastructure/local/unavailable-local-model-inference.js";
 import {LocalPushDeviceHttpHandler} from "../../features/notifications/infrastructure/local/local-push-device-http-handler.js";
+import {LocalTaskRunApprovalPushNotifier} from "../../features/notifications/infrastructure/local/local-task-run-approval-push-notifier.js";
+import {LocalTeamNotificationSender} from "../../features/notifications/infrastructure/local/local-team-notification-sender.js";
 import {
   HttpRuntimePushRelayClient,
   type RuntimePushRelayClient,
   UnavailableRuntimePushRelayClient,
 } from "../../features/notifications/infrastructure/local/runtime-push-relay-client.js";
-import {LocalTaskRunApprovalPushNotifier} from "../../features/notifications/infrastructure/local/local-task-run-approval-push-notifier.js";
-import {LocalTeamNotificationSender} from "../../features/notifications/infrastructure/local/local-team-notification-sender.js";
-import {LocalTaskActivityHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-activity-http-handler.js";
-import {LocalTaskDefinitionHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-definition-http-handler.js";
-import {LocalTaskRunHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-run-http-handler.js";
-import {TaskRunQueueWorker} from "../../features/task_execution/infrastructure/local/task-run-queue-worker.js";
-import {SQLiteActivityStore} from "../../features/task_execution/infrastructure/local/sqlite-activity-store.js";
-import {SQLiteTaskRunDispatcher} from "../../features/task_execution/infrastructure/local/sqlite-task-run-dispatcher.js";
-import {SQLiteTaskRunJobStore} from "../../features/task_execution/infrastructure/local/sqlite-task-run-job-store.js";
-import {SQLiteTaskRunStore} from "../../features/task_execution/infrastructure/local/sqlite-task-run-store.js";
-import {SQLiteTaskStore} from "../../features/task_execution/infrastructure/local/sqlite-task-store.js";
-import {SQLiteTaskDefinitionStore} from "../../features/task_execution/infrastructure/local/sqlite-task-definition-store.js";
+import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 import {runDueTaskTriggers} from "../../features/scheduling/domain/usecases/run-due-task-triggers.js";
 import {LocalTaskTriggerHttpHandler} from "../../features/scheduling/infrastructure/local/local-task-trigger-http-handler.js";
 import {PollingTaskTriggerWorker} from "../../features/scheduling/infrastructure/local/polling-task-trigger-worker.js";
 import {SQLiteTaskTriggerStore} from "../../features/scheduling/infrastructure/local/sqlite-task-trigger-store.js";
+import {type TaskWorkflow} from "../../features/task_execution/domain/usecases/task-workflow.js";
 import {createGenkitTaskWorkflow} from "../../features/task_execution/infrastructure/genkit/task-workflow.js";
-import {LocalAssistantHttpHandler} from "./local-assistant-http-handler.js";
-import {LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
-import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
-import {LocalRuntimeLoginHttpHandler} from "./local-runtime-login-http-handler.js";
-import {LocalRuntimeSetupHttpHandler} from "./local-runtime-setup-http-handler.js";
-import {type LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
-import {LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
-import {LocalRuntimeRealtimeTicketStore} from "./local-runtime-realtime-ticket-store.js";
-import {LocalRuntimeRealtimeTicketHttpHandler} from "./local-runtime-realtime-ticket-http-handler.js";
-import {type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
-import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
-import {type SignedRuntimeLicense} from "../../features/licensing/domain/entities/runtime-license-lease.js";
+import {LocalTaskActivityHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-activity-http-handler.js";
+import {createLocalTaskBuilderAssistant} from "../../features/task_execution/infrastructure/local/local-task-builder-assistant.js";
+import {LocalTaskDefinitionHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-definition-http-handler.js";
+import {LocalTaskMessageSender} from "../../features/task_execution/infrastructure/local/local-task-message-sender.js";
+import {LocalTaskRunHttpHandler} from "../../features/task_execution/infrastructure/local/local-task-run-http-handler.js";
+import {SQLiteActivityStore} from "../../features/task_execution/infrastructure/local/sqlite-activity-store.js";
+import {SQLiteTaskDefinitionStore} from "../../features/task_execution/infrastructure/local/sqlite-task-definition-store.js";
+import {SQLiteTaskRunDispatcher} from "../../features/task_execution/infrastructure/local/sqlite-task-run-dispatcher.js";
+import {SQLiteTaskRunJobStore} from "../../features/task_execution/infrastructure/local/sqlite-task-run-job-store.js";
+import {SQLiteTaskRunStore} from "../../features/task_execution/infrastructure/local/sqlite-task-run-store.js";
+import {SQLiteTaskStore} from "../../features/task_execution/infrastructure/local/sqlite-task-store.js";
+import {TaskRunQueueWorker} from "../../features/task_execution/infrastructure/local/task-run-queue-worker.js";
+import {SQLiteTeamContextStore} from "../../features/teams/infrastructure/local/sqlite-team-context-store.js";
 import {LocalApplicationLogHttpHandler} from "../logging/local-application-log-http-handler.js";
 import {LocalApplicationLogger} from "../logging/local-application-logger.js";
 import {SQLiteLocalApplicationLogStore} from "../logging/sqlite-local-application-log-store.js";
-import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
-import {EncryptedSQLiteLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
-import {type LocalLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/local-language-model-secret-store.js";
-import {LocalLanguageModelHttpHandler} from "../../features/language_models/infrastructure/local/local-language-model-http-handler.js";
-import {LocalLanguageModelDefaultsHttpHandler} from "../../features/language_models/infrastructure/local/local-language-model-defaults-http-handler.js";
-import {SQLiteLanguageModelDefaultsStore} from "../../features/language_models/infrastructure/local/sqlite-language-model-defaults-store.js";
-import {SQLiteLanguageModelConfigurationStore} from "../../features/language_models/infrastructure/local/sqlite-language-model-configuration-store.js";
-import {SQLiteLanguageModelCatalog} from "../../features/language_models/infrastructure/local/sqlite-language-model-catalog.js";
-import {CatalogGenkitLanguageModelResolver} from "../../features/language_models/infrastructure/genkit/genkit-language-model-resolver.js";
-import {type DocumentStore} from "../../features/data/domain/repositories/document-store.js";
-import {SQLiteDocumentStore} from "../../features/data/infrastructure/local/sqlite-document-store.js";
-import {LocalDataHttpHandler} from "../../features/data/infrastructure/local/local-data-http-handler.js";
-import {
-  RuntimeFirebaseSession,
-  runtimeFirebaseConfigurationFromEnvironment,
-} from "../../features/licensing/infrastructure/local/runtime-firebase-session.js";
-import {type RuntimeLicenseActivation} from "../../features/licensing/domain/entities/runtime-license-activation.js";
-import {type TaskWorkflow} from "../../features/task_execution/domain/usecases/task-workflow.js";
+import {LocalAssistantHttpHandler} from "./local-assistant-http-handler.js";
+import {LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
+import {LocalRuntimeLoginHttpHandler} from "./local-runtime-login-http-handler.js";
+import {LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
+import {LocalRuntimeRealtimeTicketHttpHandler} from "./local-runtime-realtime-ticket-http-handler.js";
+import {LocalRuntimeRealtimeTicketStore} from "./local-runtime-realtime-ticket-store.js";
+import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
+import {type LocalRuntimeSetupCode} from "./local-runtime-setup-code.js";
+import {LocalRuntimeSetupHttpHandler} from "./local-runtime-setup-http-handler.js";
+import {type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 
 export type LocalRuntimeComposition = {
   controllers: LocalRuntimeControllers;
@@ -100,7 +100,7 @@ export type LocalRuntimeComposition = {
 };
 
 export type LocalRuntimeCompositionOptions = {
-  database: SqliteLocalSqlDatabase;
+  database: RuntimeDatabase;
   runtimeRoot: string;
   workspace: LocalRuntimeWorkspace;
   fieldCipher: SensitiveFieldCipher;

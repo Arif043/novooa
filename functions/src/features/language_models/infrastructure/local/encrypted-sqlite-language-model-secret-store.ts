@@ -1,37 +1,35 @@
+import {eq} from "drizzle-orm";
+import {type RuntimeExecutor} from "../../../../db/database.js";
+import {languageModelSecrets} from "../../../../db/schema.js";
 import {type SensitiveFieldCipher} from "../../../runtime_security/domain/repositories/runtime-field-cipher.js";
 import {languageModelSecretContext} from "../../../runtime_security/infrastructure/runtime-secret-context.js";
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
-import {type LocalLanguageModelSecretStore} from "./local-language-model-secret-store.js";
+import {type TransactionalLanguageModelSecretStore} from "./local-language-model-secret-store.js";
 
-type SecretRow = SqlRow & {encrypted_value: string};
-
-export class EncryptedSQLiteLanguageModelSecretStore implements LocalLanguageModelSecretStore {
+export class EncryptedSQLiteLanguageModelSecretStore implements TransactionalLanguageModelSecretStore {
   constructor(
-    private readonly database: LocalSqlDatabase,
+    private readonly database: RuntimeExecutor,
     private readonly cipher: SensitiveFieldCipher,
   ) {}
 
+  withDatabase(database: RuntimeExecutor): EncryptedSQLiteLanguageModelSecretStore {
+    return new EncryptedSQLiteLanguageModelSecretStore(database, this.cipher);
+  }
+
   async read(secretRef: string): Promise<string | null> {
-    const secret = await this.database.get<SecretRow>(
-      "SELECT encrypted_value FROM language_model_secrets WHERE secret_ref = ?",
-      [secretRef],
-    );
+    const secret = await this.database.select({encrypted_value: languageModelSecrets.encrypted_value}).from(languageModelSecrets)
+      .where(eq(languageModelSecrets.secret_ref, secretRef)).get();
     return secret ? this.cipher.decrypt(secret.encrypted_value, languageModelSecretContext(secretRef)) : null;
   }
 
   async write(secretRef: string, value: string): Promise<void> {
-    await this.database.transaction(() => this.database.run(
-      `INSERT INTO language_model_secrets (secret_ref, encrypted_value)
-       VALUES (?, ?)
-       ON CONFLICT(secret_ref) DO UPDATE SET encrypted_value = excluded.encrypted_value`,
-      [secretRef, this.cipher.encrypt(value, languageModelSecretContext(secretRef))],
-    ));
+    await this.database.transaction(async (tx) => {
+      const encrypted_value = this.cipher.encrypt(value, languageModelSecretContext(secretRef));
+      await tx.insert(languageModelSecrets).values({secret_ref: secretRef, encrypted_value})
+        .onConflictDoUpdate({target: languageModelSecrets.secret_ref, set: {encrypted_value}});
+    });
   }
 
   async delete(secretRef: string): Promise<void> {
-    await this.database.run(
-      "DELETE FROM language_model_secrets WHERE secret_ref = ?",
-      [secretRef],
-    );
+    await this.database.delete(languageModelSecrets).where(eq(languageModelSecrets.secret_ref, secretRef));
   }
 }

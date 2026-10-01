@@ -1,18 +1,19 @@
-import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import assert from "node:assert/strict";
 import {mkdtemp, rm} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import test from "node:test";
-import {LocalTeamFileStore} from "../../../files/infrastructure/local/local-team-file-store.js";
+import test, {type TestContext} from "node:test";
+import {runtimeTestDatabase} from "../../../../db/runtime-database-test-support.js";
+import {tasks} from "../../../../db/schema.js";
+import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
+import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 import {LocalFileResourceHttpHandler} from "../../../files/infrastructure/local/local-file-resource-http-handler.js";
+import {LocalTeamFileStore} from "../../../files/infrastructure/local/local-team-file-store.js";
 import {LocalKnowledgeNoteHttpHandler} from "../../../knowledge_base/infrastructure/local/local-knowledge-note-http-handler.js";
 import {LocalTaskTriggerHttpHandler} from "../../../scheduling/infrastructure/local/local-task-trigger-http-handler.js";
-import {SqliteLocalSqlDatabase} from "../../../../shared/local/sqlite-local-sql-database.js";
-import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 
-test("persists local knowledge notes and task triggers", async () => {
-  const database = await databaseForResources();
+test("persists local knowledge notes and task triggers", async (t) => {
+  const database = await databaseForResources(t);
   const notes = testingRoutes(new LocalKnowledgeNoteHttpHandler(database, "team-1", new LocalRuntimeRealtimeNotifier()));
   const triggers = testingRoutes(new LocalTaskTriggerHttpHandler(database, "team-1", "user-1", new LocalRuntimeRealtimeNotifier()));
 
@@ -36,12 +37,12 @@ test("persists local knowledge notes and task triggers", async () => {
   assert.equal(createdTrigger?.statusCode, 201);
   assert.equal((listedNotes?.body as {items: unknown[]}).items.length, 1);
   assert.equal((listedTriggers?.body as {items: Array<{taskTitle: string}>}).items[0]?.taskTitle, "Aufgabe");
-  database.close();
+  database.$client.close();
 });
 
-test("stores, versions, and reads local files", async () => {
+test("stores, versions, and reads local files", async (t) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "novooa-local-files-"));
-  const database = await databaseForResources();
+  const database = await databaseForResources(t);
   const handler = testingRoutes(new LocalFileResourceHttpHandler(
     database,
     new LocalTeamFileStore(database, root),
@@ -68,37 +69,13 @@ test("stores, versions, and reads local files", async () => {
     assert.equal(uploaded?.statusCode, 201);
     assert.deepEqual(content, {body: {contentBase64: "SGFsbG8="}, statusCode: 200});
   } finally {
-    database.close();
+    database.$client.close();
     await rm(root, {force: true, recursive: true});
   }
 });
 
-async function databaseForResources(): Promise<SqliteLocalSqlDatabase> {
-  const database = new SqliteLocalSqlDatabase(":memory:");
-  await database.run("CREATE TABLE tasks (id TEXT PRIMARY KEY, team_id TEXT, title TEXT)");
-  await database.run(`CREATE TABLE task_triggers (
-    id TEXT PRIMARY KEY, team_id TEXT, task_id TEXT, type TEXT, enabled INTEGER,
-    config_json TEXT, event_config_json TEXT, policy_json TEXT, next_run_at TEXT,
-    last_run_at TEXT, last_run_id TEXT, created_by_uid TEXT, updated_at TEXT
-  )`);
-  await database.run(`CREATE TABLE knowledge_notes (
-    id TEXT PRIMARY KEY, team_id TEXT, knowledge_base_id TEXT, title TEXT, path TEXT,
-    content TEXT, outgoing_links_json TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-  )`);
-  await database.run(`CREATE TABLE file_folders (
-    id TEXT PRIMARY KEY, team_id TEXT, owner_uid TEXT, name TEXT, parent_folder_id TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-  )`);
-  await database.run(`CREATE TABLE files (
-    id TEXT PRIMARY KEY, team_id TEXT, owner_uid TEXT, display_name TEXT, folder_id TEXT,
-    current_version_id TEXT, content_type TEXT, size_bytes INTEGER, storage_path TEXT,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-  )`);
-  await database.run(`CREATE TABLE file_versions (
-    id TEXT PRIMARY KEY, team_id TEXT, file_id TEXT, created_by_uid TEXT, display_name TEXT,
-    storage_path TEXT, content_type TEXT, size_bytes INTEGER, created_at TEXT DEFAULT CURRENT_TIMESTAMP
-  )`);
-  await database.run("INSERT INTO tasks(id, team_id, title) VALUES (?, ?, ?)", ["task-1", "team-1", "Aufgabe"]);
+async function databaseForResources(t: TestContext) {
+  const database = await runtimeTestDatabase(t);
+  await database.insert(tasks).values({id: "task-1", team_id: "team-1", title: "Aufgabe", graph_json: "{}", created_by_uid: "user-1"});
   return database;
 }

@@ -1,21 +1,21 @@
 import {readFileSync} from "node:fs";
 import {join, resolve} from "node:path";
+import {type RuntimeDatabase} from "../../db/database.js";
+import {FileRuntimeLicenseStore} from "../../features/licensing/infrastructure/local/file-local-runtime-license-store.js";
+import {HttpRuntimeLicenseGatewayClient} from "../../features/licensing/infrastructure/local/local-runtime-license-gateway-client.js";
 import {
   DevelopmentRuntimeLicenseService,
   GatewayRuntimeLicenseService,
   type RuntimeLicenseService,
 } from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
-import {FileRuntimeLicenseStore} from "../../features/licensing/infrastructure/local/file-local-runtime-license-store.js";
-import {HttpRuntimeLicenseGatewayClient} from "../../features/licensing/infrastructure/local/local-runtime-license-gateway-client.js";
+import {UpgradeRuntimeSecretFormat} from "../../features/runtime_security/infrastructure/upgrade-runtime-secret-format.js";
 import {LocalRuntimeApplication} from "./local-runtime-application.js";
+import {LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
 import {openLocalRuntimeDatabase} from "./local-runtime-database.js";
 import {localRuntimeMasterKeyFrom} from "./local-runtime-master-key.js";
-import {LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
-import {type SqliteLocalSqlDatabase} from "./sqlite-local-sql-database.js";
-import {LocalRuntimeSecurity} from "./local-runtime-security.js";
 import {acquireLocalRuntimeProcessLock} from "./local-runtime-process-lock.js";
+import {LocalRuntimeSecurity} from "./local-runtime-security.js";
 import {bootstrapLocalRuntime} from "./local-runtime-server-bootstrap.js";
-import {UpgradeRuntimeSecretFormat} from "../../features/runtime_security/infrastructure/upgrade-runtime-secret-format.js";
 
 void startLocalRuntime().catch(reportStartupFailure);
 
@@ -44,23 +44,23 @@ async function startLockedRuntime(runtimeRoot: string, release: () => Promise<vo
     security.start();
     registerShutdown(closeHttp, database, application, security, release);
   } catch (error) {
-    database.close();
+    database.$client.close();
     throw error;
   }
 }
 
-async function preparedRuntimeDatabase(runtimeRoot: string, keyring: string): Promise<SqliteLocalSqlDatabase> {
+async function preparedRuntimeDatabase(runtimeRoot: string, keyring: string): Promise<RuntimeDatabase> {
   const database = await runtimeDatabase(runtimeRoot);
   try {
     await new UpgradeRuntimeSecretFormat(database, runtimeRoot, keyring).execute();
     return database;
   } catch (error) {
-    database.close();
+    database.$client.close();
     throw error;
   }
 }
 
-function runtimeDatabase(runtimeRoot: string): Promise<SqliteLocalSqlDatabase> {
+function runtimeDatabase(runtimeRoot: string): Promise<RuntimeDatabase> {
   return openLocalRuntimeDatabase({
     databasePath: join(runtimeRoot, "novooa.sqlite"), migrationsDirectory: migrationsDirectory(),
   });
@@ -68,7 +68,7 @@ function runtimeDatabase(runtimeRoot: string): Promise<SqliteLocalSqlDatabase> {
 
 function migrationsDirectory(): string {
   return process.env.LOCAL_RUNTIME_MIGRATIONS_DIRECTORY
-    ?? resolve(__dirname, "../../../../local-runtime/migrations");
+    ?? resolve(__dirname, "../../../drizzle");
 }
 
 function configuredPort(): number {
@@ -135,7 +135,7 @@ function optionalEnvironment(name: string): string | undefined {
 
 function registerShutdown(
   closeHttp: () => Promise<void>,
-  database: SqliteLocalSqlDatabase,
+  database: RuntimeDatabase,
   application: LocalRuntimeApplication,
   security: LocalRuntimeSecurity,
   release: () => Promise<void>,
@@ -153,14 +153,14 @@ function registerShutdown(
 }
 
 async function closeRuntime(
-  database: SqliteLocalSqlDatabase,
+  database: RuntimeDatabase,
   application: LocalRuntimeApplication,
   security: LocalRuntimeSecurity,
   release: () => Promise<void>,
 ): Promise<void> {
   await security.stop();
   await application.stop();
-  database.close();
+  database.$client.close();
   await release();
   process.exit(0);
 }

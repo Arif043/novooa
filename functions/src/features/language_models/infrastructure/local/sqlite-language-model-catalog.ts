@@ -1,4 +1,6 @@
-import {type LocalSqlDatabase, type SqlRow} from "../../../../shared/local/local-sql-database.js";
+import {and, eq} from "drizzle-orm";
+import {type RuntimeExecutor} from "../../../../db/database.js";
+import {languageModelConnections, languageModels} from "../../../../db/schema.js";
 import {
   defaultLanguageModelCapabilities,
   languageModelProviders,
@@ -12,16 +14,12 @@ import {type LocalLanguageModelSecretStore} from "./local-language-model-secret-
 
 export class SQLiteLanguageModelCatalog implements LanguageModelCatalog {
   constructor(
-    private readonly database: LocalSqlDatabase,
+    private readonly database: RuntimeExecutor,
     private readonly secretStore: LocalLanguageModelSecretStore,
   ) {}
 
   async loadModel(teamId: string, modelId: string): Promise<LanguageModel> {
-    const row = await this.database.get<SqlRow>(
-      `SELECT id, connection_id, name, model_id, capabilities_json
-         FROM language_models WHERE team_id = ? AND id = ?`,
-      [teamId, modelId],
-    );
+    const row = (await this.database.select({id: languageModels.id, connection_id: languageModels.connection_id, name: languageModels.name, model_id: languageModels.model_id, capabilities_json: languageModels.capabilities_json}).from(languageModels).where(and(eq(languageModels.team_id, teamId), eq(languageModels.id, modelId))).get()) ?? null;
     if (!row) throw new Error("Das Sprachmodell wurde nicht gefunden.");
     return {
       id: requiredString(row.id, "Sprachmodell"),
@@ -61,12 +59,8 @@ export class SQLiteLanguageModelCatalog implements LanguageModelCatalog {
     return apiKey;
   }
 
-  private async connectionRow(teamId: string, connectionId: string): Promise<SqlRow> {
-    const row = await this.database.get<SqlRow>(
-      `SELECT id, name, provider, base_url, secret_ref
-         FROM language_model_connections WHERE team_id = ? AND id = ?`,
-      [teamId, connectionId],
-    );
+  private async connectionRow(teamId: string, connectionId: string): Promise<Record<string, unknown>> {
+    const row = (await this.database.select({id: languageModelConnections.id, name: languageModelConnections.name, provider: languageModelConnections.provider, base_url: languageModelConnections.base_url, secret_ref: languageModelConnections.secret_ref}).from(languageModelConnections).where(and(eq(languageModelConnections.team_id, teamId), eq(languageModelConnections.id, connectionId))).get()) ?? null;
     if (!row) throw new Error("Die Sprachmodell-Verbindung wurde nicht gefunden.");
     return row;
   }
