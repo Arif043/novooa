@@ -76,6 +76,10 @@ Die vollstaendigen Output-Slots dokumentiert
   Die gemeinsame Kopfzeile richtet Navigation über der Palette, den
   editierbaren Aufgabentitel über der Arbeitsfläche und KI-Agent sowie
   Benachrichtigungen rechts nebeneinander aus.
+- Ausgabe-Labels (Ausgabename und feste Felder) zeigen Farbe und Icon ihres
+  `NodeOutputType` (`NodeOutputTypeStyle`, Farben in `OutputTypeColors`).
+  Welcher Typ zu welchem Baustein bzw. Feld gehört, steht ausschließlich in
+  `workflow_output_types.dart` und spiegelt `docs/node-executor-outputs.md`.
 - Links steht eine durchsuchbare, nach Kategorien gruppierte Baustein-Palette.
   Ein Klick fügt den Baustein ein; Drag-and-Drop oder die Plus-Aktion einer Karte
   wählt eine konkrete Anschlussstelle, auch in Verzweigungen und Schleifen.

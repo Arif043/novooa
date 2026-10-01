@@ -7,7 +7,9 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/ios_overlays.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
+import '../../domain/entities/workflow_output_types.dart';
 import '../cubits/task_builder_cubit.dart';
+import 'node_output_type_style.dart';
 
 /// Zeigt und bearbeitet den fachlichen Ausgabenamen eines Bausteins mit
 /// genau einem Output — direkt als Template-Ausdruck nutzbar (`{{name}}`).
@@ -28,17 +30,13 @@ class NodeOutputNameField extends StatelessWidget {
     }
     final outputName = node.outputName.trim();
     if (outputName.isEmpty) return const SizedBox.shrink();
-    final colors = Theme.of(context).colorScheme;
+    final style = NodeOutputTypeStyle.of(primaryOutputTypeOf(node.config));
     return Tooltip(
-      message: 'Ausgabename bearbeiten',
+      message: '${style.label} · Ausgabename bearbeiten',
       child: InputChip(
-        avatar: Icon(
-          CupertinoIcons.pen,
-          size: AppSpacing.md,
-          color: Colors.white,
-        ),
+        avatar: Icon(style.icon, size: AppSpacing.md, color: Colors.white),
         label: Text(outputName),
-        backgroundColor: colors.primaryContainer,
+        backgroundColor: style.color,
         side: BorderSide.none,
         shape: const StadiumBorder(),
         labelStyle: Theme.of(context).textTheme.labelMedium?.copyWith(

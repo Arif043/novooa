@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:syscat2/core/theme/syscat_theme.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../../domain/entities/workflow_node_outputs.dart';
+import '../../domain/entities/workflow_output_types.dart';
+import 'node_output_type_style.dart';
 
 /// Zeigt die **festen Nebenoutputs** eines Bausteins (z.B. `sender`,
 /// `created`) — bewusst anders gestaltet als der editierbare Ausgabename
@@ -33,7 +34,7 @@ class NodeOutputChips extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.sm),
       child: Semantics(
-        label: 'Feste Felder: ${fields.join(', ')}',
+        label: 'Feste Felder: ${fields.map(_semanticLabel).join(', ')}',
         child: Wrap(
           spacing: AppSpacing.xs,
           runSpacing: AppSpacing.xs,
@@ -45,17 +46,27 @@ class NodeOutputChips extends StatelessWidget {
     );
   }
 
-  Widget _fieldChip(BuildContext context, ColorScheme colors, String field) {
-    final expression = _expressionFor(field);
+  String _semanticLabel(TypedOutputField field) {
+    return '${field.name} (${NodeOutputTypeStyle.of(field.type).label})';
+  }
+
+  Widget _fieldChip(
+    BuildContext context,
+    ColorScheme colors,
+    TypedOutputField field,
+  ) {
+    final expression = _expressionFor(field.name);
+    final style = NodeOutputTypeStyle.of(field.type);
     return Tooltip(
-      message: 'Antippen, um $expression zu kopieren',
+      message: '${style.label} · Antippen, um $expression zu kopieren',
       child: ActionChip(
-        label: Text(field),
+        avatar: Icon(style.icon, size: AppSpacing.md, color: style.color),
+        label: Text(field.name),
         labelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: colors.onSurfaceVariant,
+          color: colors.onSurface,
         ),
-        backgroundColor: SyscatTheme.primaryOrangeLightest,
-        side: BorderSide(color: colors.outlineVariant),
+        backgroundColor: style.color.withValues(alpha: 0.12),
+        side: BorderSide(color: style.color.withValues(alpha: 0.4)),
         shape: const StadiumBorder(),
         visualDensity: VisualDensity.compact,
         onPressed: () => _copyExpression(context, expression),
@@ -74,11 +85,13 @@ class NodeOutputChips extends StatelessWidget {
   /// Flache Felder (strukturierte Prompt-Ausgabe, Dialogeingabe) sind schon
   /// primäre Outputs; alle anderen Bausteine zeigen ihre festen
   /// Nebenoutputs (ohne `value`, siehe Klassendoku).
-  List<String> _displayFields() {
+  List<TypedOutputField> _displayFields() {
     final config = node.config;
-    return hasFlatOutputFields(config)
-        ? flatOutputFieldsOf(config)
-        : secondaryOutputFieldsOf(config);
+    if (hasFlatOutputFields(config)) return typedFlatOutputFieldsOf(config);
+    return [
+      for (final name in secondaryOutputFieldsOf(config))
+        (name: name, type: secondaryOutputTypeOf(name)),
+    ];
   }
 
   /// Flache Felder sind direkt ohne Knotennamen erreichbar (`{{feld}}`);
