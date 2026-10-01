@@ -7,6 +7,7 @@ import 'package:syscat2/core/widgets/root_shell_scope.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_employee_assignments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/write_file_folders_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_language_models_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_skill_attachments_cubit.dart';
@@ -31,6 +32,9 @@ class TaskBuilderPage extends StatelessWidget {
         ),
         BlocProvider(
           create: (_) => serviceLocator<NodeFileAttachmentsCubit>()..load(),
+        ),
+        BlocProvider(
+          create: (_) => serviceLocator<WriteFileFoldersCubit>()..load(),
         ),
         BlocProvider(
           create: (_) =>

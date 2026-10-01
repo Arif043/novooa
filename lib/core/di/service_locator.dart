@@ -121,6 +121,7 @@ import '../../features/task_builder/infrastructure/repositories/firebase_task_re
 import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_employee_assignments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
+import '../../features/task_builder/presentation/cubits/write_file_folders_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_language_models_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_skill_attachments_cubit.dart';
@@ -556,6 +557,14 @@ void _configureCloudDependencies() {
       () => NodeFileAttachmentsCubit(
         serviceLocator<AuthRepository>(),
         serviceLocator<WatchTeamFiles>(),
+        serviceLocator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerFactory(
+      () => WriteFileFoldersCubit(
+        serviceLocator<AuthRepository>(),
+        serviceLocator<WatchTeamFolders>(),
+        serviceLocator<CreateTeamFolder>(),
         serviceLocator<GetCurrentTeamId>(),
       ),
     )

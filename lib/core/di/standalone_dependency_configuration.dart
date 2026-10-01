@@ -34,7 +34,9 @@ import '../../features/data/presentation/cubits/database_cubit.dart';
 import '../../features/files/domain/repositories/file_settings_repository.dart';
 import '../../features/files/domain/usecases/save_file_version_limit.dart';
 import '../../features/files/domain/usecases/watch_file_version_limit.dart';
+import '../../features/files/domain/usecases/create_team_folder.dart';
 import '../../features/files/domain/usecases/watch_team_files.dart';
+import '../../features/files/domain/usecases/watch_team_folders.dart';
 import '../../features/files/infrastructure/repositories/local_file_settings_repository.dart';
 import '../../features/files/presentation/cubits/file_settings_cubit.dart';
 import '../../features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
@@ -69,6 +71,7 @@ import '../../features/task_builder/infrastructure/repositories/local_task_repos
 import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import '../../features/task_builder/presentation/cubits/task_homepage_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
+import '../../features/task_builder/presentation/cubits/write_file_folders_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_language_models_cubit.dart';
 import '../../features/teams/domain/usecases/get_current_team_id.dart';
@@ -378,6 +381,14 @@ Future<void> configureStandaloneDependencies(
       () => NodeFileAttachmentsCubit(
         locator<AuthRepository>(),
         locator<WatchTeamFiles>(),
+        locator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerFactory(
+      () => WriteFileFoldersCubit(
+        locator<AuthRepository>(),
+        locator<WatchTeamFolders>(),
+        locator<CreateTeamFolder>(),
         locator<GetCurrentTeamId>(),
       ),
     )

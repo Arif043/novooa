@@ -4,6 +4,8 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/write_file_folders_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/write_file_folder_tree.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/write_file_target_dialog.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_scope.dart';
@@ -90,6 +92,14 @@ class _TargetText extends StatelessWidget {
 
   final WriteFileNodeConfig config;
 
+  /// Nur für neue Dateien: Eine bestehende Datei bleibt in ihrem Ordner.
+  String? _folderLabel(BuildContext context) {
+    final folderId = config.folderId;
+    if (config.fileId != null || folderId == null) return null;
+    final folders = context.watch<WriteFileFoldersCubit>().state.folders;
+    return folderPathLabel(folderId, folders);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (config.fileName.trim().isEmpty) {
@@ -103,10 +113,12 @@ class _TargetText extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('$prefix: ${config.fileName}', overflow: TextOverflow.ellipsis),
-        Text(
-          config.contentType.trim().isEmpty ? 'text/plain' : config.contentType,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        if (_folderLabel(context) case final String folderLabel)
+          Text(
+            'Verzeichnis: $folderLabel',
+            style: Theme.of(context).textTheme.bodySmall,
+            overflow: TextOverflow.ellipsis,
+          ),
       ],
     );
   }

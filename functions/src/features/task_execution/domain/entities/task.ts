@@ -215,6 +215,7 @@ export type WriteFileNodeConfig = {
   fileName: string;
   contentType: string;
   fileId?: string;
+  folderId?: string;
 };
 export type ReadFileNodeConfig = {
   primitive: "readFile";

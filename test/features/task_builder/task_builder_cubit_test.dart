@@ -649,7 +649,7 @@ void main() {
     await cubit.selectNewWriteFile(
       nodeId: const NodeId('node.file'),
       fileName: 'report.md',
-      contentType: '',
+      folderId: 'ordner.1',
     );
 
     final state = cubit.state as TaskBuilderLoaded;
@@ -658,6 +658,7 @@ void main() {
     expect(config.fileName, 'report.md');
     expect(config.contentType, 'text/plain');
     expect(config.fileId, isNull);
+    expect(config.folderId, 'ordner.1');
 
     await cubit.close();
   });

@@ -29,6 +29,7 @@ void main() {
       'fileName': 'bericht.md',
       'contentType': 'text/markdown',
       'fileId': 'file.1',
+      'folderId': 'ordner.1',
     });
 
     expect(config, isA<WriteFileNodeConfig>());
@@ -36,6 +37,7 @@ void main() {
     expect(writeFileConfig.fileName, 'bericht.md');
     expect(writeFileConfig.contentType, 'text/markdown');
     expect(writeFileConfig.fileId, 'file.1');
+    expect(writeFileConfig.folderId, 'ordner.1');
     expect(writeFileConfig.contentTemplate, '');
   });
 

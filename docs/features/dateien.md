@@ -137,8 +137,9 @@ stattdessen Python-Hilfsfunktionen wie `list_files()` und `read_file(name)`.
 
 Der Baustein **Datei schreiben** ist kein Attachment-Input, sondern ein
 Persistenz-Output. Er schreibt den String-Output des Vorgänger-Nodes als neue
-Datei ins Root-Verzeichnis des Team-Dateibereichs oder als neue Version einer
-bestehenden Datei. Wenn im Root-Dateibereich bereits eine Datei mit demselben
+Datei in ein wählbares Verzeichnis des Team-Dateibereichs (`folderId` in der
+Node-Config, ohne Angabe: oberste Ebene) oder als neue Version einer
+bestehenden Datei, die in ihrem Verzeichnis bleibt. Wenn im Root-Dateibereich bereits eine Datei mit demselben
 Namen existiert, wird keine zweite Datei mit identischem Namen erzeugt, sondern
 eine neue Version unter der bestehenden `fileId` geschrieben. Bei neuen
 Versionen bleibt `fileId` stabil; nur `currentVersionId`, `storagePath`,
@@ -151,7 +152,12 @@ aus der Data-URL abgeleitet; eine zuvor konfigurierte Text-Endung wird ersetzt.
 
 In der Task-Builder-UI wird dafür kein technisches Datei-ID-Feld angezeigt.
 Nutzer:innen wählen im Dialog entweder eine bestehende Datei oder definieren
-eine neue Datei über Dateiname und optionalen Content-Type.
+eine neue Datei über Dateiname und Zielverzeichnis. Bestehende Dateien lassen
+sich über Chips nach Kategorie filtern (Text, Bilder, Video, Audio, PDF,
+Tabellen; angeboten werden nur Kategorien mit Dateien). Unter „Neu" kann das
+Zielverzeichnis gewählt und über „Neuer Ordner" direkt angelegt werden — im
+jeweils gewählten Verzeichnis. Den Content-Type bestimmt der Executor selbst
+(`text/plain`, bei Bildern und Tabellen aus dem Quellwert).
 
 Der Baustein **Datei lesen** ist das Gegenstück dazu. Er verwendet dieselbe
 Dateiauswahl wie Attachments, speichert aber genau eine konkrete Version als

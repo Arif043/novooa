@@ -233,6 +233,7 @@ class NodeConfigDocumentMapper {
       'fileName': config.fileName,
       'contentType': config.contentType,
       if (config.fileId != null) 'fileId': config.fileId,
+      if (config.folderId != null) 'folderId': config.folderId,
     };
   }
 
@@ -498,6 +499,7 @@ class NodeConfigDocumentMapper {
       contentType: data['contentType'] as String? ?? '',
       contentTemplate: data['contentTemplate'] as String? ?? '',
       fileId: data['fileId'] as String?,
+      folderId: data['folderId'] as String?,
     );
   }
 

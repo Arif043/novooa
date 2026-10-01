@@ -31,6 +31,7 @@ extension TaskBuilderWriteFileMutations on TaskBuilderCubit {
         fileName: attachment.displayName,
         contentType: attachment.contentType,
         fileId: _fileIdFromAttachment(attachment),
+        clearFolderId: true,
       );
     });
   }
@@ -38,13 +39,16 @@ extension TaskBuilderWriteFileMutations on TaskBuilderCubit {
   Future<void> selectNewWriteFile({
     required NodeId nodeId,
     required String fileName,
-    required String contentType,
+    String? folderId,
+    String contentType = 'text/plain',
   }) {
     return _updateWriteFileConfig(nodeId, (config) {
       return config.copyWith(
         fileName: fileName,
         contentType: contentType.trim().isEmpty ? 'text/plain' : contentType,
         clearFileId: true,
+        folderId: folderId,
+        clearFolderId: folderId == null,
       );
     });
   }

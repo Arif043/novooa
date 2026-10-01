@@ -40,7 +40,27 @@ function tableValue() {
   return {columns: ["name", "status"], rows: [["Lea", "aktiv"], ["Tom", null]]};
 }
 
-function writeFileNode() {
+test("writes a new file into the configured folder", async () => {
+  const writtenFiles: Array<Record<string, unknown>> = [];
+  const node = writeFileNode(" ordner-1 ");
+
+  await writeFileNodeExecutor.execute(node as never, runContextFor(writtenFiles) as never);
+
+  assert.equal(writtenFiles[0].folderId, "ordner-1");
+});
+
+test("writes into the root folder when no folder is configured", async () => {
+  const writtenFiles: Array<Record<string, unknown>> = [];
+
+  await writeFileNodeExecutor.execute(
+    writeFileNode() as never,
+    runContextFor(writtenFiles) as never,
+  );
+
+  assert.equal(writtenFiles[0].folderId, null);
+});
+
+function writeFileNode(folderId?: string) {
   return {
     id: "write",
     primitive: "writeFile",
@@ -49,6 +69,7 @@ function writeFileNode() {
       contentTemplate: "{{bild.value}}",
       fileName: "entwurf.txt",
       contentType: "text/plain",
+      ...(folderId === undefined ? {} : {folderId}),
     },
   };
 }

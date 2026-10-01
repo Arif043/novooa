@@ -16,6 +16,12 @@ export function targetFileIdFor(node: WorkflowNode): string | null {
   return fileId && fileId.length > 0 ? fileId : null;
 }
 
+export function targetFolderIdFor(node: WorkflowNode): string | null {
+  if (node.config.primitive !== "writeFile") return null;
+  const folderId = node.config.folderId?.trim();
+  return folderId && folderId.length > 0 ? folderId : null;
+}
+
 function sanitizedName(value: string): string {
   return value.trim().replace(/[\\/]/g, "_");
 }

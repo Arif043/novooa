@@ -11,6 +11,7 @@ import {
   contentTypeFor,
   fileNameFor,
   targetFileIdFor,
+  targetFolderIdFor,
 } from "../services/write-file-node-config.js";
 import {
   fileMetadataOutputs,
@@ -35,6 +36,7 @@ export const writeFileNodeExecutor: NodeExecutor = {
       fileName: runContext.templateExpressionResolver.resolveText(fileNameFor(node)),
       contentType: runContext.templateExpressionResolver.resolveText(contentTypeFor(node)),
       targetFileId: targetFileIdFor(node),
+      folderId: targetFolderIdFor(node),
     };
     const file = await writeNodeFile(
       runContext.teamFileStore,
@@ -114,6 +116,7 @@ type WriteNodeFileInput = {
   fileName: string;
   contentType: string;
   targetFileId: string | null;
+  folderId: string | null;
 };
 
 type SourceContent = {

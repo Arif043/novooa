@@ -246,6 +246,7 @@ export const writeFileNodeConfigSchema = z.object({
   fileName: z.string().max(240).default(""),
   contentType: z.string().max(120).default(""),
   fileId: z.string().optional(),
+  folderId: z.string().optional(),
 });
 
 export const readFileNodeConfigSchema = z.object({
