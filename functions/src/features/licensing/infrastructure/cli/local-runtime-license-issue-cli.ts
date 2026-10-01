@@ -36,4 +36,4 @@ function optionalArgument(name: string): string | undefined {
   if (value === undefined) return undefined; if (value.length === 0 || value.length > 200) throw new Error(`--${name} ist ungültig.`); return value;
 }
 function requiredExpiration(): Timestamp { const value = requiredArgument("expires-at"); const parsed = Date.parse(value); if (Number.isNaN(parsed)) throw new Error("--expires-at ist ungültig."); return Timestamp.fromMillis(parsed); }
-function randomActivationToken(): string { const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; return [...randomBytes(12)].map((byte) => alphabet[byte & 31]).join(""); }
+function randomActivationToken(): string { const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; return [...randomBytes(16)].map((byte) => alphabet[byte & 31]).join(""); }

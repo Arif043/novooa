@@ -5,7 +5,7 @@ class RuntimeLicenseKey {
 
   static RuntimeLicenseKey? tryCreate(String value) {
     final normalized = value.replaceAll(RegExp(r'[\s-]'), '').toUpperCase();
-    if (!RegExp(r'^[A-HJ-NP-Z2-9]{12}$').hasMatch(normalized)) return null;
+    if (!RegExp(r'^[A-HJ-NP-Z2-9]{16}$').hasMatch(normalized)) return null;
     return RuntimeLicenseKey._(normalized);
   }
 }
@@ -36,7 +36,7 @@ class RuntimeLicenseFailure {
 
   String get message => switch (kind) {
     RuntimeLicenseFailureKind.invalidLicenseKey =>
-      'Bitte gib den zwölfstelligen Lizenzschlüssel ein.',
+      'Bitte gib den sechzehnstelligen Lizenzschlüssel ein.',
     RuntimeLicenseFailureKind.runtimeUnavailable =>
       'Die Runtime ist nicht erreichbar.',
     RuntimeLicenseFailureKind.activationRejected =>

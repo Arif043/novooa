@@ -25,7 +25,7 @@ void main() {
     final cubit = _cubit(_LicenseRepositoryFake());
     await cubit.load();
 
-    await cubit.activate('A3K9N7P2Q4R6');
+    await cubit.activate('A3K9N7P2Q4R6T8W5');
 
     expect(cubit.state, isA<RuntimeLicenseActive>());
     await cubit.close();

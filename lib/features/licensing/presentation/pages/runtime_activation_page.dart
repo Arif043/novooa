@@ -56,14 +56,14 @@ class _RuntimeActivationPageState extends State<RuntimeActivationPage> {
         Text('Runtime aktivieren', style: theme.textTheme.headlineSmall),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Gib den zwölfstelligen Lizenzschlüssel für diesen Arbeitsbereich ein.',
+          'Gib den sechzehnstelligen Lizenzschlüssel für diesen Arbeitsbereich ein.',
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: AppSpacing.lg),
         TextField(
           autocorrect: false,
           enableSuggestions: false,
-          maxLength: 14,
+          maxLength: 19,
           onChanged: (value) => _licenseKey = value,
           onSubmitted: (_) => _activate(context),
           textCapitalization: TextCapitalization.characters,

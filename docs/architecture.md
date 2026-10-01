@@ -141,7 +141,7 @@ Backend nach einer fehlgeschlagenen Zustellung. Identische Tokens werden vor
 dem Versand dedupliziert.
 
 Lokale Lizenzen liegen als backend-only Dokumente unter `licenses/{tokenHash}`
-in Firestore. Der Hash ist SHA-256 eines zwölfstelligen Aktivierungstokens; der
+in Firestore. Der Hash ist SHA-256 eines sechzehnstelligen Aktivierungstokens; der
 Roh-Token wird nie gespeichert. Jedes Dokument enthält Name, Lizenz- und
 Arbeitsbereich-ID, Ablaufdatum sowie `inUse`. Die Aktivierung setzt in einer
 Firestore-Transaktion `inUse`, eine zufällige `activationId` und nur den Hash

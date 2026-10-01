@@ -10,7 +10,7 @@ import {
 import {type RuntimeLicenseGatewayClient} from "./local-runtime-license-gateway-client.js";
 import {GatewayRuntimeLicenseService} from "./local-runtime-license-manager.js";
 
-const activationToken = "A3K9N7P2Q4R6";
+const activationToken = "A3K9N7P2Q4R6T8W5";
 
 test("stores a signed activation without persisting the customer token", async () => {
   const keys = ed25519Keys();

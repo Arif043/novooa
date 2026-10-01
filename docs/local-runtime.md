@@ -374,7 +374,7 @@ Modell-Baustein sind an Firebase Storage oder Bilder gekoppelt.
 ## Lizenz und lokale Identität
 
 Die Runtime ist ohne gültigen Lizenzschlüssel nicht nutzbar. Beim Kauf stellt
-novooa einen zwölfstelligen Token aus dem Alphabet `A-H`, `J-N`, `P-Z` und
+novooa einen sechzehnstelligen Token aus dem Alphabet `A-H`, `J-N`, `P-Z` und
 `2-9` aus. Der Kunde gibt ihn auf der nativen Aktivierungsseite ein. Der Client
 sendet ihn ausschließlich an `POST /v1/license/activate`; die Runtime löst ihn
 per HTTPS am novooa-Lizenz-Gateway ein.
@@ -455,7 +455,7 @@ Zielprojekt:
 Token und den gehashten Firestore-Eintrag mit
 `npm --prefix functions run licenses:issue-local -- --name "Kunde GmbH" --expires-at 2027-09-16T00:00:00Z`.
 Optional sind `--license-id` und `--workspace-id`; `--expires-at` ist verpflichtend.
-Die Ausgabe ist der einmalig an den Kunden zu übergebende zwölfstellige Token. Der
+Die Ausgabe ist der einmalig an den Kunden zu übergebende sechzehnstellige Token. Der
 Prozess benötigt Firebase-Admin-Zugang, aber keinen Signaturschlüssel.
 
 Der lokale SQLite-Arbeitsbereich wird deterministisch aus der signierten
