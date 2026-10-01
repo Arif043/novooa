@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
-import {mkdtemp, rm} from "node:fs/promises";
+import {access, mkdtemp, rm} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test, {type TestContext} from "node:test";
+import {eq} from "drizzle-orm";
 import {runtimeTestDatabase} from "../../../../db/runtime-database-test-support.js";
-import {tasks} from "../../../../db/schema.js";
+import {fileVersions, tasks} from "../../../../db/schema.js";
 import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 import {fileResourceRoutes} from "../../../files/infrastructure/local/local-file-resource-routes.js";
@@ -69,6 +70,33 @@ test("stores, versions, and reads local files", async (t) => {
     assert.equal(uploaded?.statusCode, 201);
     assert.deepEqual(content, {body: {contentBase64: "SGFsbG8="}, statusCode: 200});
     assert.equal(traversal?.statusCode, 400, "Dateinamen mit Pfadanteil lehnt das Schema ab");
+  } finally {
+    database.$client.close();
+    await rm(root, {force: true, recursive: true});
+  }
+});
+
+test("rotates local file versions beyond the configured limit", async (t) => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "novooa-local-rotation-"));
+  const database = await databaseForResources(t);
+  const store = new LocalTeamFileStore(database, root, 2);
+
+  try {
+    const first = await store.writeTeamFile({
+      teamId: "team-1", fileName: "notiz.txt", contentType: "text/plain", content: "1", targetFileId: null,
+    });
+    await store.writeTeamFile({
+      teamId: "team-1", fileName: "notiz.txt", contentType: "text/plain", content: "2", targetFileId: first.fileId,
+    });
+    const third = await store.writeTeamFile({
+      teamId: "team-1", fileName: "notiz.txt", contentType: "text/plain", content: "3", targetFileId: first.fileId,
+    });
+
+    const rows = await database.select().from(fileVersions).where(eq(fileVersions.file_id, first.fileId));
+    assert.equal(rows.length, 2);
+    assert.ok(rows.some((row) => row.id === third.versionId), "aktuelle Version bleibt erhalten");
+    await assert.rejects(access(path.join(root, first.storagePath)), "Datei der rotierten Version ist entfernt");
+    await access(path.join(root, third.storagePath));
   } finally {
     database.$client.close();
     await rm(root, {force: true, recursive: true});

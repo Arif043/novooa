@@ -1,10 +1,14 @@
-import {and, eq, isNull, sql} from "drizzle-orm";
+import {and, eq, inArray, isNull, sql} from "drizzle-orm";
 import {randomUUID} from "node:crypto";
-import {readFile} from "node:fs/promises";
+import {readFile, rm} from "node:fs/promises";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {files, fileVersions, type Files} from "../../../../db/schema.js";
 import {type NodeAttachment} from "../../../task_execution/domain/entities/attachments.js";
 import {storagePathFor} from "../../domain/entities/file-storage-path.js";
+import {
+  DEFAULT_FILE_VERSION_LIMIT,
+  versionsToRotateOut,
+} from "../../domain/entities/file-version-rotation.js";
 import {localFilePath, writeLocalFile} from "./local-file-path.js";
 import {
   type TeamFileContent,
@@ -30,12 +34,14 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
   constructor(
     private readonly database: RuntimeExecutor,
     private readonly rootDirectory: string,
+    private readonly versionLimit: number = DEFAULT_FILE_VERSION_LIMIT,
   ) {}
 
   async writeTeamFile(input: WriteTeamFileInput): Promise<WrittenFile> {
     const file = await this.writtenFileFrom(input);
     await writeLocalFile(this.rootDirectory, file.storagePath, input.content);
     await this.writeMetadata(input.teamId, file);
+    await this.rotateVersions(input.teamId, file);
     return file;
   }
 
@@ -101,6 +107,29 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
       .from(files).where(and(eq(files.team_id, input.teamId), eq(files.display_name, input.fileName), isNull(files.folder_id)))
       .limit(1).get();
     return row ? existingFileFrom(row) : null;
+  }
+
+  private async rotateVersions(teamId: string, file: WrittenFile) {
+    const rows = await this.database.select({
+      id: fileVersions.id,
+      storage_path: fileVersions.storage_path,
+      created_at: fileVersions.created_at,
+    }).from(fileVersions)
+      .where(and(eq(fileVersions.team_id, teamId), eq(fileVersions.file_id, file.fileId)))
+      // created_at hat Sekundenauflösung; rowid-Reihenfolge entscheidet bei Gleichstand.
+      .orderBy(sql`rowid DESC`);
+    const stale = versionsToRotateOut(
+      rows.map((row) => ({...row, createdAt: Date.parse(`${row.created_at.replace(" ", "T")}Z`)})),
+      this.versionLimit,
+      file.versionId,
+    );
+    if (stale.length === 0) return;
+    await this.database.delete(fileVersions).where(and(
+      eq(fileVersions.team_id, teamId),
+      inArray(fileVersions.id, stale.map((version) => version.id)),
+    ));
+    await Promise.all(stale.map((version) =>
+      rm(localFilePath(this.rootDirectory, version.storage_path), {force: true})));
   }
 
   private async writeMetadata(teamId: string, file: WrittenFile) {

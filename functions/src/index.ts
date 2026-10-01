@@ -58,3 +58,4 @@ export {
   rejectTeamInvitationFlow,
   removeTeamMemberFlow,
 } from "./features/teams/infrastructure/firebase/team-functions.js";
+export {rotateFileVersions} from "./features/files/infrastructure/firebase/file-version-rotation-function.js";

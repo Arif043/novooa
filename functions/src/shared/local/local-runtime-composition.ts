@@ -4,6 +4,7 @@ import {RuntimeMailRelayWorker} from "../../features/communication/infrastructur
 import {type RuntimeMailRelayClient} from "../../features/communication/infrastructure/local/runtime-mail-relay-client.js";
 import {SQLiteInboundChannelMessageStore} from "../../features/communication/infrastructure/local/sqlite-inbound-channel-message-store.js";
 import {SQLiteDocumentStore} from "../../features/data/infrastructure/local/sqlite-document-store.js";
+import {fileVersionLimitFromEnvironment} from "../../features/files/infrastructure/local/local-file-version-limit.js";
 import {LocalTeamFileStore} from "../../features/files/infrastructure/local/local-team-file-store.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
 import {SQLiteLanguageModelCatalog} from "../../features/language_models/infrastructure/local/sqlite-language-model-catalog.js";
@@ -74,7 +75,9 @@ export function createLocalRuntimeComposition(
     activityStore,
     new LocalTaskRunApprovalPushNotifier(options.signedLicense, pushRelay, applicationLogger),
   );
-  const teamFileStore = new LocalTeamFileStore(options.database, options.runtimeRoot);
+  const teamFileStore = new LocalTeamFileStore(
+    options.database, options.runtimeRoot, fileVersionLimitFromEnvironment(),
+  );
   const jobStore = new SQLiteTaskRunJobStore(options.database);
   const taskStore = new SQLiteTaskStore(options.database);
   const languageModelSecretStore = new EncryptedSQLiteLanguageModelSecretStore(

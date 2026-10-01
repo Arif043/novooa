@@ -103,6 +103,22 @@ wird übernommen, Zellen mit E-Mail-Adressen oder Web-URLs erscheinen als
 anklickbare Links; PDF-Dateien werden über `package:pdfx` mit
 Seitennavigation und Zoom dargestellt.
 
+### Versionsrotation
+
+Pro Datei werden nur die letzten N Versionen behalten; die aktuelle Version
+bleibt immer erhalten. Ältere Versionen werden samt Storage-Objekt gelöscht.
+Referenzen auf rotierte Versionen (z. B. `NodeAttachment` mit konkreter
+`versionId`) lassen sich danach nicht mehr laden.
+
+- **novooa Cloud:** festes Limit von 10. Der Firestore-Trigger
+  `rotateFileVersions` (`onDocumentCreated` auf `…/versions/{versionId}`)
+  rotiert nach jeder neuen Version — auch bei direkten Client-Uploads. Er
+  löscht über das Admin-SDK; die Storage-Regeln (nur `create`) bleiben
+  unverändert.
+- **Standalone:** `LocalTeamFileStore` rotiert nach jedem Schreiben. Das Limit
+  ist über `LOCAL_RUNTIME_FILE_VERSION_LIMIT` (ganze Zahl ≥ 1) konfigurierbar,
+  Standard 10.
+
 ## Nutzung in Aufgaben
 
 Unterstützende Node-Configs implementieren `FileAttachmentSupport` und speichern
@@ -152,7 +168,7 @@ Bausteins weiter.
 
 - Wie wird der aktive Team-Kontext global gewählt und gespeichert?
 - Welche Rollenrechte brauchen Team-Mitglieder für Upload, Lesen und Löschen?
-- Wann werden alte Dateiversionen aufgeräumt oder archiviert?
+- Soll das Standalone-Limit zusätzlich in der UI einstellbar sein?
 - Wie werden hochgeladene Dateien in Prompt-Bausteinen ausgewählt?
 
 ## Verwandt
