@@ -6,6 +6,7 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/licensing/presentation/cubits/runtime_license_cubit.dart';
 import 'package:syscat2/features/licensing/presentation/cubits/runtime_license_state.dart';
 
+import 'file_version_limit_section.dart';
 import 'settings_section.dart';
 import 'ai_model_settings_tab.dart';
 import 'runtime_license_status.dart';
@@ -32,6 +33,8 @@ class RuntimeSettingsContent extends StatelessWidget {
                     _RuntimeSection(),
                     SizedBox(height: AppSpacing.lg),
                     _DeviceDataSection(),
+                    SizedBox(height: AppSpacing.lg),
+                    FileVersionLimitSection(),
                     SizedBox(height: AppSpacing.lg),
                     RuntimeVariantSection(currentKind: RuntimeKind.standalone),
                   ],

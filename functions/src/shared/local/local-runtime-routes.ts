@@ -2,6 +2,7 @@ import {type FastifyInstance, type FastifyPluginAsync} from "fastify";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {mailRelayRoutes} from "../../features/communication/infrastructure/local/local-mail-relay-routes.js";
 import {dataRoutes} from "../../features/data/infrastructure/local/local-data-routes.js";
+import {fileSettingsRoutes} from "../../features/files/infrastructure/local/local-file-settings-routes.js";
 import {fileResourceRoutes} from "../../features/files/infrastructure/local/local-file-resource-routes.js";
 import {knowledgeNoteRoutes} from "../../features/knowledge_base/infrastructure/local/local-knowledge-note-routes.js";
 import {languageModelDefaultsRoutes} from "../../features/language_models/infrastructure/local/local-language-model-defaults-routes.js";
@@ -74,6 +75,7 @@ async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRu
   await api.register(mailRelayRoutes, {signedLicense, relay: mailRelayFromEnvironment()});
   await api.register(languageModelRoutes, {store: services.languageModels, notifier});
   await api.register(languageModelDefaultsRoutes, {store: services.languageModelDefaults, notifier});
+  await api.register(fileSettingsRoutes, {store: services.fileSettings, notifier});
   await api.register(dataRoutes, {store: services.documents});
   await api.register(modelCatalogRoutes, services.modelCatalog);
   await api.register(applicationLogRoutes, {store: services.applicationLogs, notifier});

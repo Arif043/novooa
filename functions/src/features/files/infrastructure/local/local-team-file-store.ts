@@ -5,10 +5,8 @@ import {type RuntimeExecutor} from "../../../../db/database.js";
 import {files, fileVersions, type Files} from "../../../../db/schema.js";
 import {type NodeAttachment} from "../../../task_execution/domain/entities/attachments.js";
 import {storagePathFor} from "../../domain/entities/file-storage-path.js";
-import {
-  DEFAULT_FILE_VERSION_LIMIT,
-  versionsToRotateOut,
-} from "../../domain/entities/file-version-rotation.js";
+import {versionsToRotateOut} from "../../domain/entities/file-version-rotation.js";
+import {type FileSettingsStore} from "../../domain/repositories/file-settings-store.js";
 import {localFilePath, writeLocalFile} from "./local-file-path.js";
 import {
   type TeamFileContent,
@@ -34,7 +32,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
   constructor(
     private readonly database: RuntimeExecutor,
     private readonly rootDirectory: string,
-    private readonly versionLimit: number = DEFAULT_FILE_VERSION_LIMIT,
+    private readonly settings: FileSettingsStore,
   ) {}
 
   async writeTeamFile(input: WriteTeamFileInput): Promise<WrittenFile> {
@@ -120,7 +118,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
       .orderBy(sql`rowid DESC`);
     const stale = versionsToRotateOut(
       rows.map((row) => ({...row, createdAt: Date.parse(`${row.created_at.replace(" ", "T")}Z`)})),
-      this.versionLimit,
+      await this.settings.loadVersionLimit(teamId),
       file.versionId,
     );
     if (stale.length === 0) return;

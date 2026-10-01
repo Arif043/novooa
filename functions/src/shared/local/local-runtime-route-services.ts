@@ -1,7 +1,7 @@
 import path from "node:path";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {SQLiteDocumentStore} from "../../features/data/infrastructure/local/sqlite-document-store.js";
-import {fileVersionLimitFromEnvironment} from "../../features/files/infrastructure/local/local-file-version-limit.js";
+import {SQLiteFileSettingsStore} from "../../features/files/infrastructure/local/sqlite-file-settings-store.js";
 import {LocalTeamFileStore} from "../../features/files/infrastructure/local/local-team-file-store.js";
 import {createLocalKnowledgeBaseAssistant} from "../../features/knowledge_base/infrastructure/local/local-knowledge-base-assistant.js";
 import {CatalogGenkitLanguageModelResolver} from "../../features/language_models/infrastructure/genkit/genkit-language-model-resolver.js";
@@ -39,10 +39,12 @@ export function createLocalRuntimeRouteServices(options: {
 }) {
   const {database, runtimeRoot} = options;
   const languageModelSecrets = new EncryptedSQLiteLanguageModelSecretStore(database, options.fieldCipher);
+  const fileSettings = new SQLiteFileSettingsStore(database);
   return {
     credentials: new LocalRuntimeAccessCredentialStore(database),
     documents: new SQLiteDocumentStore(database),
-    teamFiles: new LocalTeamFileStore(database, runtimeRoot, fileVersionLimitFromEnvironment()),
+    fileSettings,
+    teamFiles: new LocalTeamFileStore(database, runtimeRoot, fileSettings),
     taskDefinitions: new SQLiteTaskDefinitionStore(database),
     applicationLogs: new SQLiteLocalApplicationLogStore(database),
     languageModels: new SQLiteLanguageModelConfigurationStore(database, languageModelSecrets),

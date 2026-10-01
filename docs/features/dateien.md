@@ -116,8 +116,11 @@ Referenzen auf rotierte Versionen (z. B. `NodeAttachment` mit konkreter
   löscht über das Admin-SDK; die Storage-Regeln (nur `create`) bleiben
   unverändert.
 - **Standalone:** `LocalTeamFileStore` rotiert nach jedem Schreiben. Das Limit
-  ist über `LOCAL_RUNTIME_FILE_VERSION_LIMIT` (ganze Zahl ≥ 1) konfigurierbar,
-  Standard 10.
+  (1–1000, Standard 10) wird pro Arbeitsbereich in `workspace_file_settings`
+  gespeichert und in der UI unter „Einstellungen" → „Allgemein" →
+  „Dateiversionen" festgelegt (`GET`/`PUT /v1/file-settings`). Eine Änderung
+  greift beim nächsten Schreiben einer Version; bereits vorhandene
+  Überhangversionen werden dann mit entfernt.
 
 ## Nutzung in Aufgaben
 
@@ -168,7 +171,6 @@ Bausteins weiter.
 
 - Wie wird der aktive Team-Kontext global gewählt und gespeichert?
 - Welche Rollenrechte brauchen Team-Mitglieder für Upload, Lesen und Löschen?
-- Soll das Standalone-Limit zusätzlich in der UI einstellbar sein?
 - Wie werden hochgeladene Dateien in Prompt-Bausteinen ausgewählt?
 
 ## Verwandt

@@ -41,6 +41,11 @@ export const fileFolders = sqliteTable("file_folders", {
   index("idx_file_folders_team_parent").on(table.team_id, table.parent_folder_id),
 ]);
 
+export const workspaceFileSettings = sqliteTable("workspace_file_settings", {
+  team_id: text("team_id").primaryKey().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
+  version_limit: integer("version_limit").notNull(),
+});
+
 export const fileVersions = sqliteTable("file_versions", {
   id: text("id").primaryKey(),
   team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),

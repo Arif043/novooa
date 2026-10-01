@@ -31,7 +31,12 @@ import '../../features/data/domain/repositories/data_repository.dart';
 import '../../features/data/domain/usecases/data_records.dart';
 import '../../features/data/infrastructure/repositories/local_data_repository.dart';
 import '../../features/data/presentation/cubits/database_cubit.dart';
+import '../../features/files/domain/repositories/file_settings_repository.dart';
+import '../../features/files/domain/usecases/save_file_version_limit.dart';
+import '../../features/files/domain/usecases/watch_file_version_limit.dart';
 import '../../features/files/domain/usecases/watch_team_files.dart';
+import '../../features/files/infrastructure/repositories/local_file_settings_repository.dart';
+import '../../features/files/presentation/cubits/file_settings_cubit.dart';
 import '../../features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import '../../features/language_models/domain/repositories/language_model_repository.dart';
 import '../../features/language_models/domain/repositories/language_model_connection_repository.dart';
@@ -212,6 +217,12 @@ Future<void> configureStandaloneDependencies(
         locator<WorkspaceRealtimeChannel>(),
       ),
     )
+    ..registerLazySingleton<FileSettingsRepository>(
+      () => LocalFileSettingsRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceRealtimeChannel>(),
+      ),
+    )
     ..registerLazySingleton<LanguageModelDefaultsRepository>(
       () => LocalLanguageModelDefaultsRepository(
         locator<WorkspaceApiClient>(),
@@ -275,6 +286,12 @@ Future<void> configureStandaloneDependencies(
     )
     ..registerLazySingleton(
       () => SaveLanguageModel(locator<LanguageModelRepository>()),
+    )
+    ..registerLazySingleton(
+      () => WatchFileVersionLimit(locator<FileSettingsRepository>()),
+    )
+    ..registerLazySingleton(
+      () => SaveFileVersionLimit(locator<FileSettingsRepository>()),
     )
     ..registerLazySingleton(
       () => WatchLanguageModelDefaults(
@@ -394,6 +411,12 @@ Future<void> configureStandaloneDependencies(
         locator<WatchLanguageModelConnections>(),
         locator<RemoveLanguageModelConnection>(),
         locator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerFactory(
+      () => FileSettingsCubit(
+        locator<WatchFileVersionLimit>(),
+        locator<SaveFileVersionLimit>(),
       ),
     )
     ..registerFactory(

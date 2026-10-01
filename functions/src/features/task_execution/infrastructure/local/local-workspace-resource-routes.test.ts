@@ -9,6 +9,7 @@ import {fileVersions, tasks} from "../../../../db/schema.js";
 import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 import {fileResourceRoutes} from "../../../files/infrastructure/local/local-file-resource-routes.js";
+import {SQLiteFileSettingsStore} from "../../../files/infrastructure/local/sqlite-file-settings-store.js";
 import {LocalTeamFileStore} from "../../../files/infrastructure/local/local-team-file-store.js";
 import {knowledgeNoteRoutes} from "../../../knowledge_base/infrastructure/local/local-knowledge-note-routes.js";
 import {taskTriggerRoutes} from "../../../scheduling/infrastructure/local/local-task-trigger-routes.js";
@@ -45,7 +46,7 @@ test("stores, versions, and reads local files", async (t) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "novooa-local-files-"));
   const database = await databaseForResources(t);
   const handler = testingRoutes(fileResourceRoutes, {
-    database, fileStore: new LocalTeamFileStore(database, root), notifier: new LocalRuntimeRealtimeNotifier(),
+    database, fileStore: new LocalTeamFileStore(database, root, new SQLiteFileSettingsStore(database)), notifier: new LocalRuntimeRealtimeNotifier(),
   });
 
   try {
@@ -79,7 +80,9 @@ test("stores, versions, and reads local files", async (t) => {
 test("rotates local file versions beyond the configured limit", async (t) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "novooa-local-rotation-"));
   const database = await databaseForResources(t);
-  const store = new LocalTeamFileStore(database, root, 2);
+  const settings = new SQLiteFileSettingsStore(database);
+  await settings.saveVersionLimit("team-1", 2);
+  const store = new LocalTeamFileStore(database, root, settings);
 
   try {
     const first = await store.writeTeamFile({
