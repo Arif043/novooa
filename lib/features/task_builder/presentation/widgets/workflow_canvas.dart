@@ -7,6 +7,7 @@ import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 import '../cubits/workflow_primitive_labels.dart';
 import 'baustein_palette.dart';
+import 'node_output_type_style.dart';
 import 'workflow_canvas_layout.dart';
 import 'workflow_canvas_options.dart';
 
@@ -132,7 +133,8 @@ class _WorkflowCanvasState extends State<WorkflowCanvas>
                         if (link.labels.isNotEmpty &&
                             (!link.isReturn ||
                                 WorkflowCanvasOptions.showReturnEdges))
-                          if (_labelAnchor(layout, link) case final Offset anchor)
+                          if (_labelAnchor(layout, link)
+                              case final Offset anchor)
                             Positioned(
                               left: anchor.dx,
                               top: anchor.dy,
@@ -432,11 +434,11 @@ class CompactWorkflowNode extends StatelessWidget {
                 // Das Anhängen des ersten Nachfolgers bleibt über den
                 // separaten "+ Baustein hier verbinden"-Platzhalter möglich.
                 // if (onAdd != null)
-                  // IconButton(
-                  //   tooltip: 'Baustein verbinden',
-                  //   onPressed: onAdd,
-                  //   icon: const Icon(Icons.add, size: 20),
-                  // ),
+                // IconButton(
+                //   tooltip: 'Baustein verbinden',
+                //   onPressed: onAdd,
+                //   icon: const Icon(Icons.add, size: 20),
+                // ),
               ],
             ),
           ),
@@ -641,7 +643,10 @@ class _CanvasLabelChipState extends State<_CanvasLabelChip> {
     switch (target) {
       case OutputNameEditTarget(:final nodeId):
         cubit.updateNodeOutputName(nodeId, value);
-      case ConditionalBranchEditTarget(:final conditionalNodeId, :final branchId):
+      case ConditionalBranchEditTarget(
+        :final conditionalNodeId,
+        :final branchId,
+      ):
         cubit.updateConditionalBranchLabel(
           conditionalNodeId: conditionalNodeId,
           branchId: branchId,
@@ -672,38 +677,71 @@ class _CanvasLabelChipState extends State<_CanvasLabelChip> {
     );
     final editable = widget.label.editTarget != null;
     final editing = _controller != null;
+    final labelType = widget.label.type;
+    final typeStyle = labelType == null
+        ? null
+        : NodeOutputTypeStyle.of(labelType);
     final chip = Container(
       constraints: const BoxConstraints(minWidth: 32),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: widget.background,
+        color: typeStyle?.color ?? widget.background,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: editing
-          ? IntrinsicWidth(
-              child: TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                autofocus: true,
-                style: textStyle,
-                textAlign: TextAlign.center,
-                decoration: const InputDecoration(
-                  isDense: true,
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
-                  focusedBorder: UnderlineInputBorder(borderSide: .new(color: SyscatTheme.primaryOrange)),
+      child: _withTypeIcon(
+        typeStyle,
+        editing
+            ? IntrinsicWidth(
+                child: TextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  autofocus: true,
+                  style: textStyle,
+                  textAlign: TextAlign.center,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: .new(color: SyscatTheme.primaryOrange),
+                    ),
+                  ),
+                  onSubmitted: (_) => _submit(context),
+                  onTapOutside: (_) => _submit(context),
                 ),
-                onSubmitted: (_) => _submit(context),
-                onTapOutside: (_) => _submit(context),
-              ),
-            )
-          : Text(widget.label.text, style: textStyle),
+              )
+            : Text(widget.label.text, style: textStyle),
+      ),
     );
-    if (!editable) return chip;
+    if (!editable) return _typeSemantics(typeStyle, chip);
     return Semantics(
       button: true,
-      label: 'Label "${widget.label.text}" bearbeiten, Doppelklick',
+      label:
+          'Label "${widget.label.text}"${_typeSuffix(typeStyle)} bearbeiten, Doppelklick',
       child: GestureDetector(onDoubleTap: _startEditing, child: chip),
     );
   }
+
+  Widget _withTypeIcon(NodeOutputTypeStyle? style, Widget content) {
+    if (style == null) return content;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(style.icon, size: 14, color: Colors.white),
+        const SizedBox(width: 6),
+        Flexible(child: content),
+      ],
+    );
+  }
+
+  Widget _typeSemantics(NodeOutputTypeStyle? style, Widget chip) {
+    if (style == null) return chip;
+    return Semantics(
+      label: '${widget.label.text}${_typeSuffix(style)}',
+      child: chip,
+    );
+  }
+
+  String _typeSuffix(NodeOutputTypeStyle? style) =>
+      style == null ? '' : ' (${style.label})';
 }

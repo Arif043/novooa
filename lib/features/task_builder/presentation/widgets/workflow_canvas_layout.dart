@@ -2,7 +2,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_graph.dart';
+import '../../domain/entities/task_execution_result.dart';
 import '../../domain/entities/workflow_node.dart';
+import '../../domain/entities/workflow_output_types.dart';
 
 class BausteinInsertion {
   const BausteinInsertion({this.owner, this.branchId, this.after});
@@ -53,9 +55,13 @@ class ConditionalBranchEditTarget extends CanvasLabelEditTarget {
 /// Ein einzelner Chip-Text auf einem Leinwand-Pfeil, optional editierbar
 /// (siehe [CanvasLabelEditTarget]).
 class CanvasLabel {
-  const CanvasLabel(this.text, [this.editTarget]);
+  const CanvasLabel(this.text, [this.editTarget, this.type]);
   final String text;
   final CanvasLabelEditTarget? editTarget;
+
+  /// Typ des Ausgabewerts, den das Label benennt — steuert Farbe und Icon.
+  /// `null` bei Bedingungs- und strukturellen Labels.
+  final NodeOutputType? type;
 }
 
 class CanvasEntry {
@@ -284,19 +290,27 @@ class WorkflowCanvasLayout {
       :final structuredFields,
     )) {
       return _fieldLabels(
-        structuredFields.map((field) => field.name),
+        structuredFields.map(
+          (field) => (
+            name: field.name,
+            type: structuredFieldOutputType(field.type),
+          ),
+        ),
         (index) => StructuredFieldEditTarget(node.id, index),
       );
     }
     if (node.config case DialogInputNodeConfig(:final fields)) {
       return _fieldLabels(
-        fields.map((field) => field.name),
+        fields.map(
+          (field) => (name: field.name, type: dialogFieldOutputType(field.type)),
+        ),
         (index) => DialogFieldEditTarget(node.id, index),
       );
     }
     return _labelList(
       node.outputName.isEmpty ? null : node.outputName,
       OutputNameEditTarget(node.id),
+      primaryOutputTypeOf(node.config),
     );
   }
 
@@ -305,23 +319,26 @@ class WorkflowCanvasLayout {
   /// weiterhin den echten Original-Index in `names` (nicht den Index in der
   /// gefilterten Ergebnisliste).
   List<CanvasLabel> _fieldLabels(
-    Iterable<String> names,
+    Iterable<TypedOutputField> fields,
     CanvasLabelEditTarget Function(int fieldIndex) editTargetFor,
   ) {
     final labels = <CanvasLabel>[];
     var index = 0;
-    for (final name in names) {
-      final trimmed = name.trim();
+    for (final field in fields) {
+      final trimmed = field.name.trim();
       if (trimmed.isNotEmpty) {
-        labels.add(CanvasLabel(trimmed, editTargetFor(index)));
+        labels.add(CanvasLabel(trimmed, editTargetFor(index), field.type));
       }
       index++;
     }
     return labels;
   }
 
-  List<CanvasLabel> _labelList(String? label, [CanvasLabelEditTarget? target]) =>
-      label == null ? const [] : [CanvasLabel(label, target)];
+  List<CanvasLabel> _labelList(
+    String? label, [
+    CanvasLabelEditTarget? target,
+    NodeOutputType? type,
+  ]) => label == null ? const [] : [CanvasLabel(label, target, type)];
 
   void _arrange() {
     final remaining = entries.keys.toSet();

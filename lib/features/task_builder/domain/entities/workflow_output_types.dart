@@ -38,11 +38,11 @@ List<TypedOutputField> typedFlatOutputFieldsOf(NodeConfig config) {
   final fields = switch (config) {
     DialogInputNodeConfig() => [
       for (final field in config.fields)
-        (name: field.name.trim(), type: _dialogFieldType(field.type)),
+        (name: field.name.trim(), type: dialogFieldOutputType(field.type)),
     ],
     PromptNodeConfig(outputType: PromptOutputType.structured) => [
       for (final field in config.structuredFields)
-        (name: field.name.trim(), type: _structuredFieldType(field.type)),
+        (name: field.name.trim(), type: structuredFieldOutputType(field.type)),
     ],
     _ => const <TypedOutputField>[],
   };
@@ -52,7 +52,8 @@ List<TypedOutputField> typedFlatOutputFieldsOf(NodeConfig config) {
   ];
 }
 
-NodeOutputType _dialogFieldType(DialogInputFieldType type) {
+/// Werttyp, den ein Dialogfeld nach dem Absenden liefert.
+NodeOutputType dialogFieldOutputType(DialogInputFieldType type) {
   return switch (type) {
     DialogInputFieldType.number ||
     DialogInputFieldType.integer ||
@@ -62,7 +63,8 @@ NodeOutputType _dialogFieldType(DialogInputFieldType type) {
   };
 }
 
-NodeOutputType _structuredFieldType(StructuredFieldType type) {
+/// Werttyp, den ein strukturiertes Prompt-Feld liefert.
+NodeOutputType structuredFieldOutputType(StructuredFieldType type) {
   return switch (type) {
     StructuredFieldType.string => NodeOutputType.string,
     StructuredFieldType.number => NodeOutputType.number,
