@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
+import {
+  InvalidActivationTokenError,
+  LicenseGatewayUnavailableError,
+  LicenseActivationRejectedError,
+} from "../../features/licensing/domain/entities/runtime-license-errors.js";
 import {ActivateRuntime} from "../../features/licensing/domain/usecases/activate-runtime.js";
 import {registerRuntimeLicenseRoutes} from "./local-runtime-license-routes.js";
 import {registerLocalRuntimeAccessHooks} from "./local-runtime-access-hooks.js";
@@ -52,13 +57,42 @@ test("activation schemas and use-case failures do not start a workspace", async 
   assert.equal(fixture.workspaceActivations(), 0);
 });
 
+const activationFailures: Record<string, () => Error> = {
+  malformed: () => new InvalidActivationTokenError(),
+  offline: () => new LicenseGatewayUnavailableError("ECONNREFUSED"),
+  broken: () => new Error("Signatur passt nicht"),
+};
+
+test("activation failures are reported with distinguishable status codes", async (t) => {
+  const fixture = accessFixture();
+  t.after(() => fixture.http.close());
+  const expected = [["malformed", 400, "invalid_token"], ["invalid", 401, "license_rejected"],
+    ["offline", 502, "gateway_unavailable"], ["broken", 500, "activation_failed"]] as const;
+  for (const [activationToken, statusCode, code] of expected) {
+    const response = await fixture.http.inject({method: "POST", url: "/v1/license/activate", payload: {activationToken}});
+    assert.equal(response.statusCode, statusCode);
+    assert.equal(response.json<{code: string}>().code, code);
+  }
+});
+
+test("re-submitting a token on a licensed runtime confirms the active license", async (t) => {
+  const fixture = accessFixture();
+  t.after(() => fixture.http.close());
+  await fixture.http.inject({method: "POST", url: "/v1/license/activate", payload: {activationToken: "valid"}});
+  const again = await fixture.http.inject({method: "POST", url: "/v1/license/activate", payload: {activationToken: "invalid"}});
+  assert.equal(again.statusCode, 200);
+  assert.equal(again.json<{status: string}>().status, "active");
+});
+
 function accessFixture() {
   let active = false;
   let activatedWorkspaces = 0;
   const licenses: RuntimeLicenseService = {
     restore: async () => null,
     activate: async ({activationToken}) => {
-      if (activationToken !== "valid") throw new Error("Invalid token");
+      const failure = activationFailures[activationToken];
+      if (failure !== undefined) throw failure();
+      if (activationToken !== "valid") throw new LicenseActivationRejectedError();
       active = true; return context;
     },
     release: async () => { active = false; },

@@ -1,46 +1,23 @@
 # Lokale Runtime
 
-Dieser Ordner enthält Migrationen und Python-Code für die Docker-basierte
-lokale novooa-Runtime.
+Dieser Ordner enthält Python-Code, Systemmodelle und Build-Skripte für die
+Docker-basierte lokale novooa-Runtime.
 
-## Migrationen
+## Datenbank und Migrationen
 
-Migrationen liegen unter `migrations/` und werden in aufsteigender Reihenfolge
-ausgeführt. Die Migrationen bilden die bestehenden Cloud-Konzepte lokal ab:
+Schema und Migrationen der lokalen SQLite-Datenbank liegen nicht hier, sondern
+im Functions-Paket:
 
-- Teams und Mitglieder
-- Aufgaben und TaskRuns
-- Aktivitäten
-- Zeit- und Event-Trigger
-- Kommunikationskanäle
-- Wissensbasis
-- Dateien und Dateiversionen
+- Schema (Drizzle-Modelle): `functions/src/db/models/`
+- Migrationen: `functions/drizzle/` — aktuell eine zusammengefasste
+  Initialmigration `0000_initial_runtime.sql`
+- Neue Migration nach einer Modelländerung:
+  `npm --prefix functions run db:generate`
 
-`004_model_catalog.sql` ergänzt den ML-Modellkatalog und ONNX-Modellverträge.
-`006_task_run_jobs.sql` ergänzt die persistente Jobqueue für lokale Runs.
-
-Die Cloud Functions nutzen diese Dateien noch nicht direkt. Sie dienen als
-Vertrag für die späteren SQLite-Adapter:
-
-- `SQLiteTaskStore`
-- `SQLiteTaskRunStore`
-- `SQLiteActivityStore`
-- `SQLiteTaskTriggerStore`
-- `LocalTeamFileStore`
-- `SQLiteKnowledgeBaseStore`
-- `SQLiteModelCatalog`
-- `LocalModelArtifactReader`
-- `SQLiteTaskRunJobStore`
-- `HttpPythonModelInputTransformer`
-- `SidecarOnnxInferenceRuntime`
-
-`SqliteLocalSqlDatabase` verwendet Node 24 `node:sqlite`. Die Feature-Adapter
-bleiben über `LocalSqlDatabase` an die Datenbank gebunden und nicht an diesen
-konkreten Treiber.
-
-Migrationen werden über `SqlMigrationRunner` angewendet. Der Runner erwartet
-bereits aufbereitete Statements; ein lokaler CLI kann die Dateien aus
-`migrations/` lesen und mit `migrationFromSqlFile` in Migrationen umwandeln.
+Die Runtime führt beim Start den Drizzle-Migrator aus
+(`openLocalRuntimeDatabase`). Die Feature-Adapter (z. B. `SQLiteTaskStore`,
+`LocalTeamFileStore`, `SQLiteModelCatalog`) arbeiten über `RuntimeDatabase`
+(Drizzle auf libsql). Details: [`../docs/local-runtime.md`](../docs/local-runtime.md).
 
 ## Python-ONNX-Runtime
 

@@ -24,6 +24,7 @@ class RuntimeLicenseStatus {
 enum RuntimeLicenseFailureKind {
   invalidLicenseKey,
   runtimeUnavailable,
+  gatewayUnavailable,
   activationRejected,
   releaseRejected,
   unexpected,
@@ -39,8 +40,12 @@ class RuntimeLicenseFailure {
       'Bitte gib den sechzehnstelligen Lizenzschlüssel ein.',
     RuntimeLicenseFailureKind.runtimeUnavailable =>
       'Die Runtime ist nicht erreichbar.',
+    RuntimeLicenseFailureKind.gatewayUnavailable =>
+      'Das Lizenz-Gateway ist nicht erreichbar. Bitte prüfe die '
+          'Internetverbindung der Runtime.',
     RuntimeLicenseFailureKind.activationRejected =>
-      'Der Lizenzschlüssel konnte nicht aktiviert werden.',
+      'Der Lizenzschlüssel ist unbekannt, abgelaufen oder wurde bereits '
+          'verwendet.',
     RuntimeLicenseFailureKind.releaseRejected =>
       'Die Lizenz konnte nicht freigegeben werden.',
     RuntimeLicenseFailureKind.unexpected =>

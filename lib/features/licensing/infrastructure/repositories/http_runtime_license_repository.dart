@@ -35,9 +35,7 @@ class HttpRuntimeLicenseRepository implements RuntimeLicenseRepository {
     } on WorkspaceConnectionException {
       return _runtimeUnavailable();
     } on WorkspaceHttpException catch (error) {
-      return error.statusCode == 401
-          ? _activationRejected()
-          : _unexpectedFailure();
+      return _activationFailureFor(error.statusCode);
     } on Object {
       return _unexpectedFailure();
     }
@@ -75,10 +73,18 @@ class HttpRuntimeLicenseRepository implements RuntimeLicenseRepository {
     return value is String ? DateTime.tryParse(value) : null;
   }
 
-  Result<RuntimeLicenseStatus, RuntimeLicenseFailure> _activationRejected() {
-    return const Error(
-      RuntimeLicenseFailure(RuntimeLicenseFailureKind.activationRejected),
-    );
+  /// Status-Codes von `POST /v1/license/activate` (siehe
+  /// `local-runtime-license-routes.ts`).
+  Result<RuntimeLicenseStatus, RuntimeLicenseFailure> _activationFailureFor(
+    int statusCode,
+  ) {
+    final kind = switch (statusCode) {
+      400 => RuntimeLicenseFailureKind.invalidLicenseKey,
+      401 => RuntimeLicenseFailureKind.activationRejected,
+      502 => RuntimeLicenseFailureKind.gatewayUnavailable,
+      _ => RuntimeLicenseFailureKind.unexpected,
+    };
+    return Error(RuntimeLicenseFailure(kind));
   }
 
   Result<RuntimeLicenseStatus, RuntimeLicenseFailure> _releaseRejected() {

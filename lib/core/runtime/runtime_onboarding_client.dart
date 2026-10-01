@@ -1,12 +1,11 @@
+import 'dart:async';
+
 import '../network/workspace_api_client.dart';
 import 'runtime_endpoint.dart';
 
 /// Der Einrichtungsstand einer Runtime, gelesen über `GET /v1/setup`.
 class RuntimeSetupStatus {
-  const RuntimeSetupStatus({
-    required this.needsSetup,
-    required this.addresses,
-  });
+  const RuntimeSetupStatus({required this.needsSetup, required this.addresses});
 
   final bool needsSetup;
 
@@ -31,6 +30,8 @@ abstract interface class RuntimeOnboardingClient {
 /// eine headless installierte Runtime (VPS, NAS, Raspberry Pi) von jedem
 /// Client aus einrichten; abgesichert ist sie dort über den Kopplungscode
 /// aus dem Start-Log (siehe `docs/architecture/betriebsvarianten.md`).
+const _activationTimeout = Duration(seconds: 30);
+
 class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
   const HttpRuntimeOnboardingClient();
 
@@ -43,17 +44,26 @@ class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
   @override
   Future<void> activateLicense(RuntimeEndpoint endpoint, String token) async {
     try {
-      final response = await _clientFor(endpoint.apiUri).post('/v1/license/activate', {
+      // Die Runtime fragt dabei das Lizenz-Gateway in der Cloud an, das nach
+      // einem Kaltstart einige Sekunden brauchen kann.
+      final client = _clientFor(endpoint.apiUri, timeout: _activationTimeout);
+      final response = await client.post('/v1/license/activate', {
         'activationToken': token.trim().toUpperCase(),
       });
       if (response['state'] != 'active' && response['status'] != 'active') {
-        throw const RuntimeOnboardingFailure('Die Lizenz konnte nicht aktiviert werden.');
+        throw const RuntimeOnboardingFailure(
+          'Die Lizenz konnte nicht aktiviert werden.',
+        );
       }
     } on WorkspaceHttpException catch (error) {
-      if (error.statusCode == 401) {
-        throw const RuntimeOnboardingFailure('Der Lizenz-Token ist ungültig.');
-      }
-      throw const RuntimeOnboardingFailure('Die Lizenz konnte nicht aktiviert werden.');
+      // Die Runtime liefert eine deutsche, nach Ursache unterschiedene Meldung.
+      throw RuntimeOnboardingFailure(error.message);
+    } on WorkspaceConnectionException {
+      throw const RuntimeOnboardingFailure('Die Runtime ist nicht erreichbar.');
+    } on TimeoutException {
+      throw const RuntimeOnboardingFailure(
+        'Die Aktivierung dauert zu lange. Bitte versuche es erneut.',
+      );
     }
   }
 
@@ -66,9 +76,7 @@ class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
         addresses: _addressesFrom(response['addresses']),
       );
     } on WorkspaceConnectionException {
-      throw const RuntimeOnboardingFailure(
-        'Die Runtime ist nicht erreichbar.',
-      );
+      throw const RuntimeOnboardingFailure('Die Runtime ist nicht erreichbar.');
     }
   }
 
@@ -105,10 +113,10 @@ class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
     return value.whereType<String>().toList(growable: false);
   }
 
-  HttpWorkspaceApiClient _clientFor(Uri baseUri) => HttpWorkspaceApiClient(
-    baseUri: baseUri,
-    timeout: const Duration(seconds: 8),
-  );
+  HttpWorkspaceApiClient _clientFor(
+    Uri baseUri, {
+    Duration timeout = const Duration(seconds: 8),
+  }) => HttpWorkspaceApiClient(baseUri: baseUri, timeout: timeout);
 }
 
 class RuntimeOnboardingFailure implements Exception {

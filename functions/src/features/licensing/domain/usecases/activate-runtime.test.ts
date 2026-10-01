@@ -6,7 +6,7 @@ const context = {licenseId: "license", licenseName: "Standalone", workspaceId: "
 
 test("activation starts the licensed workspace only after license validation", async () => {
   const calls: string[] = [];
-  const activate = new ActivateRuntime({activate: async ({activationToken}) => {
+  const activate = new ActivateRuntime({activeContext: () => null, activate: async ({activationToken}) => {
     calls.push(activationToken);
     return context;
   }}, async (licensedWorkspace) => {
@@ -19,14 +19,26 @@ test("activation starts the licensed workspace only after license validation", a
 
 test("a rejected license never starts a workspace", async () => {
   let started = false;
-  const activate = new ActivateRuntime({activate: async () => {throw new Error("Invalid license");}},
+  const activate = new ActivateRuntime({activeContext: () => null, activate: async () => {throw new Error("Invalid license");}},
     async () => {started = true;});
   await assert.rejects(activate.execute("invalid"), /Invalid license/);
   assert.equal(started, false);
 });
 
 test("a failed workspace startup does not report activation success", async () => {
-  const activate = new ActivateRuntime({activate: async () => context},
+  const activate = new ActivateRuntime({activeContext: () => null, activate: async () => context},
     async () => {throw new Error("Workspace unavailable");});
   await assert.rejects(activate.execute("token"), /Workspace unavailable/);
+});
+
+test("an already licensed runtime confirms its license without redeeming the token again", async () => {
+  let redeemed = false;
+  let startedWorkspace: unknown;
+  const activate = new ActivateRuntime({activeContext: () => context, activate: async () => {
+    redeemed = true;
+    throw new Error("Token already used");
+  }}, async (licensedWorkspace) => {startedWorkspace = licensedWorkspace;});
+  assert.equal(await activate.execute("any-token"), context);
+  assert.equal(redeemed, false);
+  assert.equal(startedWorkspace, context);
 });

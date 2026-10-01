@@ -1,4 +1,5 @@
 import {type RuntimeLicenseActivation} from "../../domain/entities/runtime-license-activation.js";
+import {LicenseActivationRejectedError, LicenseGatewayUnavailableError} from "../../domain/entities/runtime-license-errors.js";
 import {type SignedRuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
 
 export interface RuntimeLicenseGatewayClient {
@@ -28,13 +29,22 @@ export class HttpRuntimeLicenseGatewayClient implements RuntimeLicenseGatewayCli
   }
 
   private async request(body: object): Promise<Response> {
-    const response = await fetch(this.endpoint, {
-      method: "POST",
-      headers: {"content-type": "application/json"},
-      body: JSON.stringify(body),
-    });
-    if (!response.ok) throw new Error("Die Lizenzanfrage wurde abgelehnt.");
-    return response;
+    const response = await this.send(body);
+    if (response.ok) return response;
+    if (response.status >= 400 && response.status < 500) throw new LicenseActivationRejectedError();
+    throw new LicenseGatewayUnavailableError(`HTTP ${response.status}`);
+  }
+
+  private async send(body: object): Promise<Response> {
+    try {
+      return await fetch(this.endpoint, {
+        method: "POST",
+        headers: {"content-type": "application/json"},
+        body: JSON.stringify(body),
+      });
+    } catch (error) {
+      throw new LicenseGatewayUnavailableError(error instanceof Error ? error.message : String(error));
+    }
   }
 }
 
