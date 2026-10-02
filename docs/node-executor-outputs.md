@@ -7,7 +7,7 @@
 
 Jeder Executor liefert ein `NodeExecutionResult` mit einem `outputs`-Objekt.
 Ein Output hat einen der Typen `string`, `datetime`, `number`, `boolean`,
-`json`, `file`, `media` oder `table`. Ein ausgefuehrter Baustein mit einem
+`json`, `file`, `media`, `audio` oder `table`. Ein ausgefuehrter Baustein mit einem
 fachlichen Rückgabewert stellt ihn unter `value` bereit. Reine
 Seiteneffekt-Bausteine ohne fachlichen Rückgabewert (aktuell:
 `notificationSend`) liefern ein leeres `outputs`-Objekt — der Baustein
@@ -18,7 +18,7 @@ in `task_document_mapper.dart`). Kanten bestimmen weiterhin nur Reihenfolge
 und Verzweigung; ein Executor erhaelt die `value`-Outputs seiner direkten
 Vorgaenger, nicht mehr den letzten Textwert eines Runs.
 
-`media` und `file` enthalten eine fachliche Referenz mit `fileId`, `versionId`,
+`media`, `audio` und `file` enthalten eine fachliche Referenz mit `fileId`, `versionId`,
 `displayName`, `contentType` und `sizeBytes`. Der konkrete Speicherort bleibt
 innerhalb der Dateiinfrastruktur; erst der konsumierende Executor liest die
 referenzierte Version. Der primäre Wert eines benannten Bausteins ist
@@ -122,3 +122,5 @@ mitgezogen werden (siehe [`features/aufgabe.md`](./features/aufgabe.md)
 
 - [`backend-struktur.md`](./backend-struktur.md)
 - [`features/aufgabe.md`](./features/aufgabe.md)
+
+`textToSpeech` liefert `value` (`audio`): die gesprochene Aufnahme als Team-Datei, sowohl mit einem Sprachmodell als auch mit einem ONNX-Modell. Die Oberfläche zeigt ihn mit Lautsprecher-Symbol und eigener Farbe.

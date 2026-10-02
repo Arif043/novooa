@@ -11,4 +11,5 @@ class OutputTypeColors {
   static const Color file = Color(0xFF546E7A);
   static const Color media = Color(0xFFC2185B);
   static const Color table = Color(0xFF3949AB);
+  static const Color audio = Color(0xFFD84315);
 }

@@ -13,6 +13,7 @@ NodeOutputType primaryOutputTypeOf(NodeConfig config) {
     PromptNodeConfig(outputType: PromptOutputType.image) =>
       NodeOutputType.media,
     MediaInputNodeConfig() => NodeOutputType.media,
+    TextToSpeechNodeConfig() => NodeOutputType.audio,
     ModelInferenceNodeConfig() => NodeOutputType.json,
     WriteFileNodeConfig() => NodeOutputType.file,
     TableFromCollectionNodeConfig() => NodeOutputType.table,

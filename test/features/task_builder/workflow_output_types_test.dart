@@ -53,4 +53,16 @@ void main() {
       (name: 'preis', type: NodeOutputType.number),
     ]);
   });
+
+  test('Text vorlesen liefert Audio, Modell ausführen strukturierte Daten', () {
+    expect(
+      primaryOutputTypeOf(TextToSpeechNodeConfig.initial()),
+      NodeOutputType.audio,
+    );
+    expect(
+      primaryOutputTypeOf(ModelInferenceNodeConfig.initial()),
+      NodeOutputType.json,
+    );
+    expect(NodeOutputType.fromName('audio'), NodeOutputType.audio);
+  });
 }

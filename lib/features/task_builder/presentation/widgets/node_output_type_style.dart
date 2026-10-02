@@ -49,6 +49,11 @@ class NodeOutputTypeStyle {
         CupertinoIcons.photo,
         'Medium',
       ),
+      NodeOutputType.audio => const NodeOutputTypeStyle._(
+        OutputTypeColors.audio,
+        CupertinoIcons.speaker_2,
+        'Audio',
+      ),
       NodeOutputType.table => const NodeOutputTypeStyle._(
         OutputTypeColors.table,
         CupertinoIcons.table,

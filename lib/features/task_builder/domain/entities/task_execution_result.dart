@@ -41,6 +41,7 @@ enum NodeOutputType {
   json,
   file,
   media,
+  audio,
   table;
 
   static NodeOutputType fromName(String name) {
