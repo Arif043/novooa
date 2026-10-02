@@ -159,7 +159,7 @@ class _PromptWidgetState extends State<PromptWidget> {
     return BlocBuilder<NodeLanguageModelsCubit, NodeLanguageModelsState>(
       builder: (context, state) => LanguageModelPickerField(
         models: state.models
-            .where((model) => model.supportsTextGeneration)
+            .where((model) => !model.isSpeechModel)
             .toList(growable: false),
         selectedModelId: config.languageModelId,
         enabled: state.status == NodeLanguageModelsStatus.ready,

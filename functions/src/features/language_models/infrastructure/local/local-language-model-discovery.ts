@@ -1,7 +1,6 @@
 import {
   defaultLanguageModelCapabilities,
   isSpeechModelId,
-  speechOnlyLanguageModelCapabilities,
   type LanguageModelProvider,
 } from "../../domain/entities/language-model.js";
 import {sdkElevenLabsApi, type ElevenLabsApiFactory} from "../elevenlabs/elevenlabs-api.js";
@@ -113,10 +112,7 @@ function stringValue(value: unknown): string | undefined {
 }
 
 function discovered(modelId: string, name: string): DiscoveredLanguageModel {
-  return {
-    modelId, name,
-    capabilities: isSpeechModelId(modelId) ? speechOnlyLanguageModelCapabilities : defaultLanguageModelCapabilities,
-  };
+  return {modelId, name, capabilities: defaultLanguageModelCapabilities};
 }
 
 function supportsGeneration(model: Record<string, unknown>): boolean {

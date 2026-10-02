@@ -1,4 +1,4 @@
-import {speechOnlyLanguageModelCapabilities} from "../../domain/entities/language-model.js";
+import {defaultLanguageModelCapabilities} from "../../domain/entities/language-model.js";
 import {type DiscoveredOpenAiCompatibleLanguageModel} from "../openai-compatible/named-language-model-provider.js";
 import {type ElevenLabsApi} from "./elevenlabs-api.js";
 
@@ -13,6 +13,6 @@ export async function discoverElevenLabsModels(api: ElevenLabsApi): Promise<Disc
   return models.map((model) => ({
     modelId: model.modelId,
     name: model.name,
-    capabilities: speechOnlyLanguageModelCapabilities,
+    capabilities: defaultLanguageModelCapabilities,
   }));
 }

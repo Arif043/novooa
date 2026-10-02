@@ -9,8 +9,8 @@ const voicePageSize = 1000;
 const maximumVoicePages = 3;
 
 /**
- * Die 30 vorgefertigten Studiostimmen von Gemini (dokumentiert). Sie bleiben auch dann
- * auswählbar, wenn die Abfrage der Stimmenbibliothek fehlschlägt, und stehen in der Liste vorn.
+ * Die 30 vorgefertigten Stimmen von Gemini (dokumentiert) — nur der Notbehelf, wenn die
+ * Abfrage der Stimmenbibliothek fehlschlägt oder leer bleibt.
  */
 export const googlePrebuiltVoices: readonly SpeechVoice[] = [
   ["Zephyr", "Hell"], ["Puck", "Lebhaft"], ["Charon", "Informativ"], ["Kore", "Bestimmt"], ["Fenrir", "Begeistert"],
@@ -24,7 +24,7 @@ export const googlePrebuiltVoices: readonly SpeechVoice[] = [
 /**
  * Gemini-TTS über die Interactions-API (`POST /v1beta/interactions`). Die Antwort ist
  * standardmäßig eine fertige WAV-Datei (24 kHz, mono, 16 Bit). Stimmen kommen aus
- * `GET /v1beta/voices`, die Studiostimmen stehen vorn.
+ * `GET /v1beta/voices`.
  */
 export class GoogleSpeechProvider implements SpeechProvider {
   readonly maximumTextLength = 8000;
@@ -49,8 +49,9 @@ export class GoogleSpeechProvider implements SpeechProvider {
   }
 
   async listVoices(context: SpeechProviderContext): Promise<SpeechVoiceList> {
-    const library = await this.libraryVoices(context.apiKey).catch(() => []);
-    return {voices: withStudioVoicesFirst(library), defaultVoiceId, allowsCustomVoice: false};
+    const fetched = await this.libraryVoices(context.apiKey).catch(() => []);
+    const voices = fetched.length > 0 ? sortedByName(fetched) : [...googlePrebuiltVoices];
+    return {voices, defaultVoiceId: voices.some((voice) => voice.id === defaultVoiceId) ? defaultVoiceId : voices[0].id, allowsCustomVoice: false};
   }
 
   private async libraryVoices(apiKey: string): Promise<SpeechVoice[]> {
@@ -122,16 +123,8 @@ function voiceFrom(value: unknown): SpeechVoice[] {
   }];
 }
 
-/** Studiostimmen zuerst (in der dokumentierten Reihenfolge), danach die übrigen alphabetisch; ohne Dubletten. */
-function withStudioVoicesFirst(library: SpeechVoice[]): SpeechVoice[] {
-  const studioIds = new Set(googlePrebuiltVoices.map((voice) => voice.id));
-  const rest = new Map<string, SpeechVoice>();
-  for (const voice of library) if (!studioIds.has(voice.id)) rest.set(voice.id, voice);
-  const studio = googlePrebuiltVoices.map((voice) => {
-    const fromLibrary = library.find((candidate) => candidate.id === voice.id);
-    return {...voice, ...(fromLibrary?.language ? {language: fromLibrary.language} : {})};
-  });
-  return [...studio, ...[...rest.values()].sort((a, b) => a.name.localeCompare(b.name, "de"))];
+function sortedByName(voices: SpeechVoice[]): SpeechVoice[] {
+  return [...new Map(voices.map((voice) => [voice.id, voice])).values()].sort((a, b) => a.name.localeCompare(b.name, "de"));
 }
 
 async function rejection(provider: string, response: Response): Promise<SpeechSynthesisError> {

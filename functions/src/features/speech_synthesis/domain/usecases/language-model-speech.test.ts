@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {type LanguageModelCatalog} from "../../../language_models/domain/repositories/language-model-catalog.js";
-import {speechOnlyLanguageModelCapabilities, type LanguageModelProvider} from "../../../language_models/domain/entities/language-model.js";
+import {defaultLanguageModelCapabilities, type LanguageModelProvider} from "../../../language_models/domain/entities/language-model.js";
 import {SpeechSynthesisError} from "../entities/speech.js";
 import {type SpeechProvider} from "../repositories/speech-provider.js";
 import {LanguageModelSpeech} from "./language-model-speech.js";
@@ -9,7 +9,7 @@ import {LanguageModelSpeech} from "./language-model-speech.js";
 function catalogFor(provider: LanguageModelProvider): LanguageModelCatalog {
   return {
     loadModel: async () => ({
-      id: "m1", teamId: "t", connectionId: "c1", name: "TTS", modelId: "tts-model", capabilities: speechOnlyLanguageModelCapabilities,
+      id: "m1", teamId: "t", connectionId: "c1", name: "TTS", modelId: "tts-model", capabilities: defaultLanguageModelCapabilities,
     }),
     loadConnection: async () => ({id: "c1", teamId: "t", name: "Verbindung", provider}),
     loadConnectionApiKey: async () => "secret",

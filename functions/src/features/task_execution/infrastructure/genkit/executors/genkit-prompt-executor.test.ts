@@ -106,7 +106,7 @@ function fakeResolver(options: {throwsForModelId?: string} = {}) {
           imageInput: false,
           structuredOutput: false,
           toolCalling: false,
-          imageGeneration: false, speechSynthesis: false,
+          imageGeneration: false,
         },
         logContext: {},
       };

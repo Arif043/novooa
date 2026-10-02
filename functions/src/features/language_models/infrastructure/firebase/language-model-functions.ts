@@ -3,9 +3,7 @@ import {currentTeamIdForUid} from "../../../teams/infrastructure/firebase/fireba
 import {
   capabilitiesFromRecord,
   defaultLanguageModelCapabilities,
-  isSpeechModelId,
   languageModelProviders,
-  speechOnlyLanguageModelCapabilities,
   type LanguageModelCapabilities,
   type LanguageModelProvider,
 } from "../../domain/entities/language-model.js";
@@ -60,7 +58,7 @@ function inputFrom(data: unknown): {
     model: {
       name: boundedString(input.name, "name", 120),
       modelId: boundedString(input.languageModelId, "languageModelId", 200),
-      capabilities: capabilitiesForModel(provider, boundedString(input.languageModelId, "languageModelId", 200), input.capabilities),
+      capabilities: capabilitiesFrom(input.capabilities),
     },
     apiKey: boundedString(input.apiKey, "apiKey", 4096, 8),
   };
@@ -115,16 +113,6 @@ function capabilitiesFrom(value: unknown): LanguageModelCapabilities {
   if (value === undefined) return defaultLanguageModelCapabilities;
   const capabilities = record(value, "capabilities muss ein Objekt sein.");
   return capabilitiesFromRecord(capabilities);
-}
-
-/** Reine Sprachmodelle (ElevenLabs, `*-tts`) erkennt der Server selbst; der Client kennt sie nicht. */
-function capabilitiesForModel(
-  provider: LanguageModelProvider,
-  modelId: string,
-  value: unknown,
-): LanguageModelCapabilities {
-  if (provider === "elevenLabs" || isSpeechModelId(modelId)) return speechOnlyLanguageModelCapabilities;
-  return capabilitiesFrom(value);
 }
 
 function optionalId(value: unknown): string | undefined {

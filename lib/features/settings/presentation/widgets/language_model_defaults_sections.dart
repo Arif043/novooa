@@ -84,7 +84,7 @@ class _LanguageModelDefaultSection extends StatelessWidget {
       description: description,
       child: LanguageModelPickerField(
         models: models
-            .where((model) => model.supportsTextGeneration)
+            .where((model) => !model.isSpeechModel)
             .toList(growable: false),
         selectedModelId: selectedModelId ?? defaultLanguageModelId,
         enabled: !isSaving,

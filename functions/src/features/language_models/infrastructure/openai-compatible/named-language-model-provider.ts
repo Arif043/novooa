@@ -1,7 +1,5 @@
 import {
   defaultLanguageModelCapabilities,
-  isSpeechModelId,
-  speechOnlyLanguageModelCapabilities,
   type LanguageModelCapabilities,
   type LanguageModelProvider,
 } from "../../domain/entities/language-model.js";
@@ -39,7 +37,7 @@ function openAiCompatibleModel(
   const modelId = stringValue(value.id) ?? stringValue(value.model);
   if (!modelId) return [];
   return [{
-    capabilities: isSpeechModelId(modelId) ? speechOnlyLanguageModelCapabilities : defaultLanguageModelCapabilities,
+    capabilities: defaultLanguageModelCapabilities,
     modelId,
     name: stringValue(value.name) ?? modelId,
   }];

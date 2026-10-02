@@ -80,8 +80,6 @@ class FirestoreLanguageModelRepository implements LanguageModelRepository {
       supportsImageInput: capabilities['imageInput'] == true,
       supportsStructuredOutput: capabilities['structuredOutput'] == true,
       supportsImageGeneration: capabilities['imageGeneration'] == true,
-      supportsTextGeneration: capabilities['textGeneration'] != false,
-      supportsSpeechSynthesis: capabilities['speechSynthesis'] == true,
       provider: providers[data['connectionId']],
     );
   }

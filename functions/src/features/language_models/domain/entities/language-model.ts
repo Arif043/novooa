@@ -18,8 +18,6 @@ export type LanguageModelCapabilities = {
   structuredOutput: boolean;
   toolCalling: boolean;
   imageGeneration: boolean;
-  /** Kann Text als Sprache ausgeben (Text-to-Speech). Fehlt in älteren Einträgen und gilt dann als `false`. */
-  speechSynthesis: boolean;
 };
 
 export type LanguageModelConnection = {
@@ -45,17 +43,6 @@ export const defaultLanguageModelCapabilities: LanguageModelCapabilities = {
   structuredOutput: true,
   toolCalling: false,
   imageGeneration: false,
-  speechSynthesis: false,
-};
-
-/** Modelle, die ausschließlich sprechen (z. B. ElevenLabs, Gemini-TTS): Sie können keinen Text beantworten. */
-export const speechOnlyLanguageModelCapabilities: LanguageModelCapabilities = {
-  textGeneration: false,
-  imageInput: false,
-  structuredOutput: false,
-  toolCalling: false,
-  imageGeneration: false,
-  speechSynthesis: true,
 };
 
 /** Liest Fähigkeiten aus gespeicherten Daten; unbekannte oder fehlende Felder gelten als `false`. */
@@ -66,13 +53,13 @@ export function capabilitiesFromRecord(value: Record<string, unknown>): Language
     structuredOutput: value.structuredOutput === true,
     toolCalling: value.toolCalling === true,
     imageGeneration: value.imageGeneration === true,
-    speechSynthesis: value.speechSynthesis === true,
   };
 }
 
 /**
- * Erkennt reine Sprachmodelle an ihrer ID (`gemini-3.8-flash-tts`, `gpt-4o-mini-tts`,
+ * Erkennt Sprachmodelle an ihrer ID (`gemini-3.8-flash-tts`, `gpt-4o-mini-tts`,
  * `tts-1`): `tts` muss ein eigenes Wortteil sein, damit Namen wie `settings` nicht treffen.
+ * Nur für die Entdeckung: Google meldet sie nicht immer mit `generateContent`.
  */
 export function isSpeechModelId(modelId: string): boolean {
   return /(^|[-_./:])tts($|[-_./:])|text-to-speech/i.test(modelId);

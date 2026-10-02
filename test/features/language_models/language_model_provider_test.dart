@@ -123,18 +123,32 @@ void main() {
       expect(LanguageModelProvider.openAiCompatible.hasEndpoint, isTrue);
     });
 
-    test('Sprachmodelle gelten standardmäßig als Textmodelle ohne Stimme', () {
-      const model = LanguageModel(
-        id: 'm',
-        name: 'M',
-        modelId: 'm',
-        supportsImageInput: false,
-        supportsStructuredOutput: false,
-        supportsImageGeneration: false,
-      );
+    test('Sprachmodelle werden am Namen oder am Anbieter erkannt', () {
+      LanguageModel model(String modelId, [LanguageModelProvider? provider]) =>
+          LanguageModel(
+            id: modelId,
+            name: modelId,
+            modelId: modelId,
+            provider: provider,
+            supportsImageInput: false,
+            supportsStructuredOutput: false,
+            supportsImageGeneration: false,
+          );
 
-      expect(model.supportsTextGeneration, isTrue);
-      expect(model.supportsSpeechSynthesis, isFalse);
+      for (final id in [
+        'gemini-2.5-flash-preview-tts',
+        'tts-1',
+        'gpt-4o-mini-tts',
+      ]) {
+        expect(model(id).isSpeechModel, isTrue, reason: id);
+      }
+      for (final id in ['gpt-4o', 'gemini-2.5-flash', 'settings-model']) {
+        expect(model(id).isSpeechModel, isFalse, reason: id);
+      }
+      expect(
+        model('eleven_v3', LanguageModelProvider.elevenLabs).isSpeechModel,
+        isTrue,
+      );
     });
   });
 }

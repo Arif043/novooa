@@ -2,10 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   capabilitiesFromRecord,
-  defaultLanguageModelCapabilities,
   isSpeechModelId,
   languageModelProviders,
-  speechOnlyLanguageModelCapabilities,
 } from "./language-model.js";
 
 test("erkennt reine Sprachmodelle an ihrer ID", () => {
@@ -20,27 +18,12 @@ test("normale Textmodelle gelten nicht als Sprachmodelle", () => {
   }
 });
 
-test("Fähigkeiten aus älteren Einträgen ohne speechSynthesis gelten als nicht sprechend", () => {
-  const legacy = capabilitiesFromRecord({
-    textGeneration: true, imageInput: false, structuredOutput: true, toolCalling: false, imageGeneration: false,
-  });
-
-  assert.equal(legacy.speechSynthesis, false);
-  assert.deepEqual(legacy, defaultLanguageModelCapabilities);
-});
-
 test("Fähigkeiten werden nur bei echtem true übernommen", () => {
-  const parsed = capabilitiesFromRecord({speechSynthesis: "true", textGeneration: 1, imageInput: true});
+  const parsed = capabilitiesFromRecord({structuredOutput: "true", textGeneration: 1, imageInput: true});
 
-  assert.equal(parsed.speechSynthesis, false);
+  assert.equal(parsed.structuredOutput, false);
   assert.equal(parsed.textGeneration, false);
   assert.equal(parsed.imageInput, true);
-});
-
-test("reine Sprachmodelle können keinen Text erzeugen", () => {
-  assert.equal(speechOnlyLanguageModelCapabilities.speechSynthesis, true);
-  assert.equal(speechOnlyLanguageModelCapabilities.textGeneration, false);
-  assert.equal(speechOnlyLanguageModelCapabilities.structuredOutput, false);
 });
 
 test("ElevenLabs ist ein eigener Anbieter", () => {

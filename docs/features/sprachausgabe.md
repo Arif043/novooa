@@ -31,26 +31,27 @@ einem Fehler, den die Meldung weitergibt.
 
 **ElevenLabs** ist ein eigener Anbieter (`elevenLabs`) und kennt nur Sprache:
 Die Verbindung braucht nur den API-Key, ihre Modelle (`models.list`, nur
-`canDoTextToSpeech`) tragen die Fähigkeit `speechSynthesis` und können keinen
-Text beantworten. Sie erscheinen daher nicht in der Modellauswahl für Prompt-
-Bausteine und nicht bei den Standardmodellen.
+`canDoTextToSpeech`) werden als Sprachmodelle angeboten.
 
-## Fähigkeit `speechSynthesis`
+## Keine Fähigkeitskataloge
 
-`LanguageModelCapabilities.speechSynthesis` markiert Modelle, die Sprache
-ausgeben. Reine Sprachmodelle (`textGeneration: false`) erkennt die Entdeckung
-an ihrer ID (`*-tts`, `text-to-speech`, siehe `isSpeechModelId`) oder am Anbieter
-ElevenLabs. Ältere Einträge ohne das Feld gelten als `false`. Die Cloud-Funktion
-`saveLanguageModel` setzt die Fähigkeiten für solche Modelle selbst.
+Wir pflegen keinen Katalog, welches Modell sprechen kann. „Text vorlesen" zeigt
+alle Sprachmodelle und geht optimistisch davon aus, dass die Wahl passt; sonst
+steht der Fehler des Anbieters in der Aktivität. Als einziger Komfort blendet der
+Client in den Auswahlen für Prompt-Bausteine und Standardmodelle Modelle aus,
+deren ID `tts` als eigenes Wortteil enthält (`LanguageModel.isSpeechModel`),
+sowie alle ElevenLabs-Modelle. Dieser Filter ist rein clientseitig und gilt auch
+für bereits gespeicherte Modelle. Die Entdeckung nimmt `*-tts`-Modelle bei
+Google auch dann auf, wenn sie `generateContent` nicht melden.
 
 ## Stimmen
 
 Eine Stimme muss nicht gewählt werden. Die Oberfläche holt die Stimmen beim
 Anbieter und zeigt sie in einem durchsuchbaren Sheet:
 
-- **Google AI:** die 30 Studiostimmen (Standard `Kore`) zuerst, dazu die
-  Stimmenbibliothek `GET /v1beta/voices`. Schlägt die Abfrage fehl, bleiben die
-  Studiostimmen.
+- **Google AI:** die Stimmen der Stimmenbibliothek `GET /v1beta/voices` (Standard `Kore`, falls vorhanden); nur wenn
+  die Abfrage fehlschlägt oder leer ist, gelten die 30 fest eingebauten
+  Gemini-Stimmen.
 - **ElevenLabs:** Stimmen des Kontos (`voices.search`, bis 500), Standard ist die
   erste.
 - **OpenAI-kompatibel:** feste Liste der OpenAI-Stimmen (Standard `alloy`); der

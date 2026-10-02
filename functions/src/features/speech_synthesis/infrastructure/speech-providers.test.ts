@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {speechOnlyLanguageModelCapabilities, type LanguageModelProvider} from "../../language_models/domain/entities/language-model.js";
+import {defaultLanguageModelCapabilities, type LanguageModelProvider} from "../../language_models/domain/entities/language-model.js";
 import {type ElevenLabsApi} from "../../language_models/infrastructure/elevenlabs/elevenlabs-api.js";
 import {type SpeechProviderContext} from "../domain/repositories/speech-provider.js";
 import {ElevenLabsSpeechProvider} from "./elevenlabs/elevenlabs-speech-provider.js";
@@ -11,7 +11,7 @@ import {defaultSpeechProviders} from "./default-speech-providers.js";
 function contextFor(provider: LanguageModelProvider, baseUrl?: string): SpeechProviderContext {
   return {
     connection: {id: "c", teamId: "t", name: "Dienst", provider, baseUrl},
-    model: {id: "m", teamId: "t", connectionId: "c", name: "TTS", modelId: "tts-model", capabilities: speechOnlyLanguageModelCapabilities},
+    model: {id: "m", teamId: "t", connectionId: "c", name: "TTS", modelId: "tts-model", capabilities: defaultLanguageModelCapabilities},
     apiKey: "key",
   } as SpeechProviderContext;
 }
@@ -59,19 +59,17 @@ test("Google reports a missing audio part and API errors readably", async () => 
   await assert.rejects(denied.synthesize(contextFor("googleAi"), {text: "x", voiceId: "Kore"}), /400.*API key not valid/);
 });
 
-test("Google lists studio voices first and merges library voices without duplicates", async () => {
+test("Google lists the fetched voices sorted by name without duplicates", async () => {
   const provider = new GoogleSpeechProvider((async () => json({voices: [
     {id: "Zeta", display_name: "Zeta", language_code: "de-DE"},
-    {id: "Kore", display_name: "Kore", language_code: "de-DE"},
+    {id: "Alpha", display_name: "Alpha"},
+    {id: "Zeta", display_name: "Zeta"},
   ]})) as unknown as typeof fetch);
 
   const list = await provider.listVoices(contextFor("googleAi"));
 
-  assert.equal(list.defaultVoiceId, "Kore");
-  assert.equal(list.voices.length, googlePrebuiltVoices.length + 1);
-  assert.equal(list.voices[0].id, "Zephyr");
-  assert.equal(list.voices.find((voice) => voice.id === "Kore")?.language, "de-DE");
-  assert.equal(list.voices[list.voices.length - 1].id, "Zeta");
+  assert.deepEqual(list.voices.map((voice) => voice.id), ["Alpha", "Zeta"]);
+  assert.equal(list.defaultVoiceId, "Alpha");
 });
 
 test("Google falls back to the studio voices when the voice library fails", async () => {
@@ -80,6 +78,7 @@ test("Google falls back to the studio voices when the voice library fails", asyn
   const list = await provider.listVoices(contextFor("googleAi"));
 
   assert.equal(list.voices.length, googlePrebuiltVoices.length);
+  assert.equal(list.defaultVoiceId, "Kore");
 });
 
 test("OpenAI-compatible posts to /audio/speech of the connection and returns mp3", async () => {
