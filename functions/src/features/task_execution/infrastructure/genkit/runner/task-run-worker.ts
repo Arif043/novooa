@@ -1,8 +1,5 @@
-import {type SpeechTranscriber} from "../../../../speech_transcription/domain/repositories/speech-transcriber.js";
-import {type SpeechSynthesizer} from "../../../../speech_synthesis/domain/repositories/speech-synthesizer.js";
+import {type TaskGraphRuntime} from "./task-graph-runtime.js";
 import {type GenkitBeta} from "genkit/beta";
-import {type KnowledgeBaseStore} from
-  "../../../../knowledge_base/domain/repositories/knowledge-base-store.js";
 import {
   executeTaskGraph,
   resumeTaskGraph,
@@ -12,37 +9,23 @@ import {
   type NodeOutputValue,
 } from "./task-definition.js";
 import {type TaskStore} from "../../../domain/repositories/task-store.js";
-import {type ObjectStore} from "../../../../files/domain/repositories/object-store.js";
-import {type TeamFileStore} from "../../../../files/domain/repositories/team-file-store.js";
-import {type TeamFileContentReader} from "../../../../files/domain/repositories/team-file-content-reader.js";
-import {type TaskMessageSender} from "../../../domain/repositories/task-message-sender.js";
-import {type ModelInference} from "../../../../machine_learning/domain/repositories/model-inference.js";
 import {
   type TaskRunDocument,
   type TaskRunStore,
 } from "../../../domain/repositories/task-run-store.js";
-import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
-import {type LanguageModelDefaultsStore} from "../../../../language_models/domain/repositories/language-model-defaults-store.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
-import {type DocumentStore} from "../../../../data/domain/repositories/document-store.js";
-import {type TeamNotificationSender} from "../../../../notifications/domain/repositories/team-notification-sender.js";
 
-export type TaskRunWorkerStores = {
+/** Alles, was ein Worker braucht: die Laufzeit des Graphen (ohne Logger, den bringt der Aufrufer) plus die Stores für Aufgaben und Läufe. */
+export type TaskRunWorkerStores = Omit<TaskGraphRuntime, "logger"> & {
   taskStore: TaskStore;
   taskRunStore: TaskRunStore;
-  objectStore: ObjectStore;
-  knowledgeBaseStore: KnowledgeBaseStore;
-  teamFileStore: TeamFileStore;
-  fileContentReader: TeamFileContentReader;
-  messageSender: TaskMessageSender;
-  documentStore: DocumentStore;
-  modelInference: ModelInference;
-  speechSynthesizer?: SpeechSynthesizer;
-  speechTranscriber?: SpeechTranscriber;
-  teamNotificationSender: TeamNotificationSender;
-  languageModelResolver?: GenkitLanguageModelResolver;
-  languageModelDefaultsStore?: LanguageModelDefaultsStore;
 };
+
+/** Trennt die Graph-Laufzeit von den Worker-eigenen Stores, damit neue Laufzeit-Felder nur in `TaskGraphRuntime` stehen. */
+function runtimeFrom(stores: TaskRunWorkerStores, logger: ApplicationLogger): TaskGraphRuntime {
+  const {taskStore: _taskStore, taskRunStore: _taskRunStore, ...runtime} = stores;
+  return {...runtime, logger};
+}
 
 export async function executeQueuedTaskRun(
   ai: GenkitBeta,
@@ -61,21 +44,7 @@ export async function executeQueuedTaskRun(
     context: run.context,
     teamId,
     input: run.input,
-  }, {
-    objectStore: stores.objectStore,
-    knowledgeBaseStore: stores.knowledgeBaseStore,
-    teamFileStore: stores.teamFileStore,
-    fileContentReader: stores.fileContentReader,
-    messageSender: stores.messageSender,
-    documentStore: stores.documentStore,
-    modelInference: stores.modelInference,
-    speechSynthesizer: stores.speechSynthesizer,
-    speechTranscriber: stores.speechTranscriber,
-    teamNotificationSender: stores.teamNotificationSender,
-    logger,
-    languageModelResolver: stores.languageModelResolver,
-    languageModelDefaultsStore: stores.languageModelDefaultsStore,
-  });
+  }, runtimeFrom(stores, logger));
   if (output.status === "waitingForApproval") {
     await stores.taskRunStore.markRunWaitingForApproval(teamId, run, output);
     return;
@@ -102,21 +71,7 @@ export async function continueApprovedTaskRun(
     {taskDefinition, context: run.context, teamId, input: run.input},
     input.resumeState,
     input.responseOutputs,
-    {
-      objectStore: stores.objectStore,
-      knowledgeBaseStore: stores.knowledgeBaseStore,
-      teamFileStore: stores.teamFileStore,
-      fileContentReader: stores.fileContentReader,
-      messageSender: stores.messageSender,
-      documentStore: stores.documentStore,
-      modelInference: stores.modelInference,
-      speechSynthesizer: stores.speechSynthesizer,
-      speechTranscriber: stores.speechTranscriber,
-      teamNotificationSender: stores.teamNotificationSender,
-      logger,
-      languageModelResolver: stores.languageModelResolver,
-      languageModelDefaultsStore: stores.languageModelDefaultsStore,
-    },
+    runtimeFrom(stores, logger),
   );
   if (output.status === "waitingForApproval") {
     await stores.taskRunStore.markRunWaitingForApproval(teamId, run, output);

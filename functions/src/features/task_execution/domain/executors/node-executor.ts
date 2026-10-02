@@ -41,7 +41,23 @@ export type WorkflowGraphRunner = (
   input?: WorkflowGraphInput,
 ) => Promise<NodeExecutionResult[]>;
 
-export type TaskRunContext = {
+/**
+ * Dienste, die ein Lauf unverändert an jeden Baustein durchreicht. Wer einen neuen
+ * Dienst für Executoren braucht, ergänzt ihn nur hier: Laufzeit und Kontext
+ * übernehmen ihn automatisch.
+ */
+export type TaskRunServices = {
+  fileContentReader: TeamFileContentReader;
+  messageSender: TaskMessageSender;
+  documentStore: DocumentStore;
+  modelInference: ModelInference;
+  /** Sprachausgabe über verbundene Sprachmodelle; fehlt in Umgebungen ohne Sprachmodell-Katalog. */
+  speechSynthesizer?: SpeechSynthesizer;
+  speechTranscriber?: SpeechTranscriber;
+  teamNotificationSender: TeamNotificationSender;
+};
+
+export type TaskRunContext = TaskRunServices & {
   context: string;
   variables: TaskVariables;
   rootTask: TaskDefinition;
@@ -53,14 +69,6 @@ export type TaskRunContext = {
   runGraph: WorkflowGraphRunner;
   templateExpressionResolver: TemplateExpressionResolver;
   teamFileStore: TeamFileStore;
-  fileContentReader: TeamFileContentReader;
-  messageSender: TaskMessageSender;
-  documentStore: DocumentStore;
-  modelInference: ModelInference;
-  /** Sprachausgabe über verbundene Sprachmodelle; fehlt in Umgebungen ohne Sprachmodell-Katalog. */
-  speechSynthesizer?: SpeechSynthesizer;
-  speechTranscriber?: SpeechTranscriber;
-  teamNotificationSender: TeamNotificationSender;
 };
 
 export type NodeExecutor = {

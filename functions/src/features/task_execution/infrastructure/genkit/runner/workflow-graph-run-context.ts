@@ -41,7 +41,9 @@ export function createTaskRunContext(
   options: TaskRunContextOptions,
 ): TaskRunContext {
   const templateResolver = new TemplateExpressionResolver(() => templateContextFor(options));
+  const {teamFileStore, ...services} = passedThroughServices(options.runtime);
   return {
+    ...services,
     context: options.context,
     rootTask: options.input.taskDefinition,
     currentGraph: options.currentGraph,
@@ -51,19 +53,22 @@ export function createTaskRunContext(
     results: options.results,
     variables: options.variables,
     teamFileStore: new TriggerChainTeamFileStore(
-      options.runtime.teamFileStore,
+      teamFileStore,
       triggerChainFrom(options.input.input),
     ),
-    fileContentReader: options.runtime.fileContentReader,
-    messageSender: options.runtime.messageSender,
-    documentStore: options.runtime.documentStore,
-    modelInference: options.runtime.modelInference,
-    speechSynthesizer: options.runtime.speechSynthesizer,
-    speechTranscriber: options.runtime.speechTranscriber,
-    teamNotificationSender: options.runtime.teamNotificationSender,
     runGraph: graphRunnerFor(options),
     templateExpressionResolver: templateResolver,
   };
+}
+
+/** Alles aus der Laufzeit, was der Kontext nicht selbst ersetzt, wird unverändert weitergereicht. */
+function passedThroughServices(runtime: TaskGraphRuntime) {
+  const {
+    objectStore: _objectStore, knowledgeBaseStore: _knowledgeBaseStore, logger: _logger,
+    languageModelResolver: _languageModelResolver, languageModelDefaultsStore: _languageModelDefaultsStore,
+    ...services
+  } = runtime;
+  return services;
 }
 
 function templateContextFor(options: TaskRunContextOptions) {
