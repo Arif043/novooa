@@ -15,17 +15,28 @@ enum AdaptiveSheetStyle {
   bool get isWindow => this == AdaptiveSheetStyle.window;
 }
 
-/// Desktop-Betriebssysteme zeigen Sheets wie macOS: eine Karte, die über dem
-/// Fenster schwebt. Mobile Betriebssysteme behalten das Bottom Sheet.
-AdaptiveSheetStyle adaptiveSheetStyle() {
-  return switch (defaultTargetPlatform) {
+/// Ab dieser Fensterbreite gilt das Layout als Desktop (Material „compact"
+/// endet bei 600 dp). Darunter bleibt es beim Bottom Sheet — auch auf dem
+/// Desktop, etwa in einem schmalen Browserfenster oder in der Geräteemulation,
+/// die weiterhin „macOS" meldet.
+const desktopSheetMinWidth = 600.0;
+
+/// Fenster-Sheet nur auf einem Desktop-Betriebssystem *und* in einem
+/// ausreichend breiten Fenster; sonst Bottom Sheet. Die Breite entscheidet,
+/// weil das Muster zur Layoutgröße passen muss, nicht zum Betriebssystem.
+AdaptiveSheetStyle adaptiveSheetStyle(BuildContext context) {
+  final isDesktopPlatform = switch (defaultTargetPlatform) {
     TargetPlatform.macOS ||
     TargetPlatform.windows ||
-    TargetPlatform.linux => AdaptiveSheetStyle.window,
+    TargetPlatform.linux => true,
     TargetPlatform.iOS ||
     TargetPlatform.android ||
-    TargetPlatform.fuchsia => AdaptiveSheetStyle.bottom,
+    TargetPlatform.fuchsia => false,
   };
+  final isWide = MediaQuery.sizeOf(context).width >= desktopSheetMinWidth;
+  return isDesktopPlatform && isWide
+      ? AdaptiveSheetStyle.window
+      : AdaptiveSheetStyle.bottom;
 }
 
 /// Zeigt [builder] als Sheet in der Form der Plattform. Der Inhalt bekommt den
@@ -36,7 +47,7 @@ Future<T?> showAdaptiveSheet<T>({
   required Widget Function(BuildContext context, AdaptiveSheetStyle style)
   builder,
 }) {
-  final style = adaptiveSheetStyle();
+  final style = adaptiveSheetStyle(context);
   if (style.isWindow) return _showWindowSheet<T>(context, builder);
   return showModalBottomSheet<T>(
     context: context,

@@ -3,6 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/core/widgets/adaptive_sheet.dart';
 
+/// Logische Fenstergröße; `setSurfaceSize` wirkt auf die MediaQuery nicht.
+void _useWindowSize(WidgetTester tester, Size size) {
+  tester.view.devicePixelRatio = 1;
+  tester.view.physicalSize = size;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+}
+
 Future<BuildContext> _pumpHost(WidgetTester tester) async {
   late BuildContext captured;
   await tester.pumpWidget(
@@ -114,6 +122,67 @@ void main() {
       expect(find.byType(BottomSheet), findsNothing);
       expect(find.text('Inhalt'), findsOneWidget);
     }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+  });
+
+  group('Breite entscheidet', () {
+    testWidgets('schmales Fenster auf einem Desktop-System: Bottom Sheet', (
+      tester,
+    ) async {
+      _useWindowSize(tester, const Size(425, 876));
+      final context = await _pumpHost(tester);
+      final styles = <AdaptiveSheetStyle>[];
+
+      showAdaptiveSheet<void>(
+        context: context,
+        builder: (_, style) {
+          styles.add(style);
+          return const Text('Inhalt');
+        },
+      );
+      await tester.pumpAndSettle();
+
+      expect(styles.last, AdaptiveSheetStyle.bottom);
+      expect(find.byType(BottomSheet), findsOneWidget);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
+    for (final (width, expected) in [
+      (599.0, AdaptiveSheetStyle.bottom),
+      (600.0, AdaptiveSheetStyle.window),
+    ]) {
+      testWidgets('Grenze: $width px ergibt $expected', (tester) async {
+        _useWindowSize(tester, Size(width, 800));
+        final context = await _pumpHost(tester);
+        final styles = <AdaptiveSheetStyle>[];
+
+        showAdaptiveSheet<void>(
+          context: context,
+          builder: (_, style) {
+            styles.add(style);
+            return const Text('Inhalt');
+          },
+        );
+        await tester.pumpAndSettle();
+
+        expect(styles.last, expected);
+      }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+    }
+
+    testWidgets(
+      'breites Fenster auf einem Handy-System bleibt beim Bottom Sheet',
+      (tester) async {
+        _useWindowSize(tester, const Size(1000, 800));
+        final context = await _pumpHost(tester);
+
+        showAdaptiveSheet<void>(
+          context: context,
+          builder: (_, _) => const Text('Inhalt'),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(BottomSheet), findsOneWidget);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    );
   });
 
   group('SheetFooter', () {
