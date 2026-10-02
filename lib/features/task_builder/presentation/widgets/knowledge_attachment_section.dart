@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
-import 'package:syscat2/core/widgets/ios_overlays.dart';
 
 import '../../domain/entities/knowledge_attachment.dart';
+import 'attachment_picker_sheet.dart';
 
 class KnowledgeAttachmentSection extends StatelessWidget {
   const KnowledgeAttachmentSection({
@@ -36,17 +36,24 @@ class KnowledgeAttachmentSection extends StatelessWidget {
     );
   }
 
-  void _showPicker(BuildContext context) {
-    showIosSheet<void>(
-      context: context,
-      builder: (_) {
-        return _PickerSheet(
-          notes: availableNotes,
-          selectedIds: attachments.map((note) => note.id).toSet(),
-          onAttach: onAttach,
-        );
-      },
+  Future<void> _showPicker(BuildContext context) async {
+    final pickedId = await AttachmentPickerSheet.show(
+      context,
+      title: 'Notiz anhängen',
+      emptyMessage: 'Noch keine Notizen in der Wissensbasis.',
+      selectedIds: attachments.map((note) => note.id).toSet(),
+      items: [
+        for (final note in availableNotes)
+          AttachmentPickerItem(
+            id: note.id,
+            title: note.title,
+            subtitle: _metadataFor(note),
+            icon: Icons.note_outlined,
+          ),
+      ],
     );
+    if (pickedId == null) return;
+    onAttach(availableNotes.firstWhere((note) => note.id == pickedId));
   }
 }
 
@@ -128,45 +135,6 @@ class _AttachmentTile extends StatelessWidget {
         icon: const Icon(Icons.close),
       ),
     );
-  }
-}
-
-class _PickerSheet extends StatelessWidget {
-  const _PickerSheet({
-    required this.notes,
-    required this.selectedIds,
-    required this.onAttach,
-  });
-
-  final List<KnowledgeAttachment> notes;
-  final Set<String> selectedIds;
-  final ValueChanged<KnowledgeAttachment> onAttach;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView.separated(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        itemCount: notes.length,
-        separatorBuilder: (_, _) => const Divider(height: AppSpacing.md),
-        itemBuilder: (context, index) {
-          final note = notes[index];
-          final selected = selectedIds.contains(note.id);
-          return ListTile(
-            enabled: !selected,
-            leading: Icon(selected ? Icons.check_circle : Icons.note_outlined),
-            title: Text(note.title),
-            subtitle: Text(_metadataFor(note)),
-            onTap: selected ? null : () => _select(context, note),
-          );
-        },
-      ),
-    );
-  }
-
-  void _select(BuildContext context, KnowledgeAttachment note) {
-    onAttach(note);
-    Navigator.of(context).pop();
   }
 }
 

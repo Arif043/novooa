@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
-import 'package:syscat2/core/widgets/ios_overlays.dart';
 import '../../domain/entities/node_attachment.dart';
+import 'attachment_picker_sheet.dart';
 
 class FileAttachmentSection extends StatelessWidget {
   const FileAttachmentSection({
@@ -37,17 +37,24 @@ class FileAttachmentSection extends StatelessWidget {
     );
   }
 
-  void _showFilePicker(BuildContext context) {
-    showIosSheet<void>(
-      context: context,
-      builder: (context) {
-        return _AttachmentPickerSheet(
-          files: availableFiles,
-          selectedIds: attachments.map((file) => file.id).toSet(),
-          onAttach: onAttach,
-        );
-      },
+  Future<void> _showFilePicker(BuildContext context) async {
+    final pickedId = await AttachmentPickerSheet.show(
+      context,
+      title: 'Datei anhängen',
+      emptyMessage: 'Noch keine Dateien hochgeladen.',
+      selectedIds: attachments.map((file) => file.id).toSet(),
+      items: [
+        for (final file in availableFiles)
+          AttachmentPickerItem(
+            id: file.id,
+            title: file.displayName,
+            subtitle: _metadataFor(context, file),
+            icon: Icons.insert_drive_file,
+          ),
+      ],
     );
+    if (pickedId == null) return;
+    onAttach(availableFiles.firstWhere((file) => file.id == pickedId));
   }
 }
 
@@ -129,47 +136,6 @@ class _AttachmentTile extends StatelessWidget {
         icon: const Icon(Icons.close),
       ),
     );
-  }
-}
-
-class _AttachmentPickerSheet extends StatelessWidget {
-  const _AttachmentPickerSheet({
-    required this.files,
-    required this.selectedIds,
-    required this.onAttach,
-  });
-
-  final List<NodeAttachment> files;
-  final Set<String> selectedIds;
-  final ValueChanged<NodeAttachment> onAttach;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView.separated(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        itemCount: files.length,
-        separatorBuilder: (_, _) => const Divider(height: AppSpacing.md),
-        itemBuilder: (context, index) {
-          final file = files[index];
-          final selected = selectedIds.contains(file.id);
-          return ListTile(
-            enabled: !selected,
-            leading: Icon(
-              selected ? Icons.check_circle : Icons.insert_drive_file,
-            ),
-            title: Text(file.displayName),
-            subtitle: Text(_metadataFor(context, file)),
-            onTap: selected ? null : () => _select(context, file),
-          );
-        },
-      ),
-    );
-  }
-
-  void _select(BuildContext context, NodeAttachment file) {
-    onAttach(file);
-    Navigator.of(context).pop();
   }
 }
 
