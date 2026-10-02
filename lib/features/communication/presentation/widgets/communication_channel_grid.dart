@@ -11,44 +11,51 @@ class CommunicationChannelGrid extends StatelessWidget {
     required this.onFakeMessage,
     required this.onSendMessage,
     required this.onDelete,
+    required this.onReconnect,
   });
 
   final List<CommunicationChannel> channels;
   final ValueChanged<CommunicationChannel> onFakeMessage;
   final ValueChanged<CommunicationChannel> onSendMessage;
   final ValueChanged<CommunicationChannel> onDelete;
+  final ValueChanged<CommunicationChannel> onReconnect;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (context, constraints) => GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: channels.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: _columnsFor(constraints.maxWidth),
-          crossAxisSpacing: AppSpacing.md,
-          mainAxisSpacing: AppSpacing.md,
-          childAspectRatio: 1.55,
-        ),
-        itemBuilder: (context, index) {
-          final channel = channels[index];
-          final hasChannelActions = !channel.isConnectorBacked;
-          return CommunicationChannelTile(
-            channel: channel,
-            onFakeMessage: hasChannelActions && channel.isActive
-                ? () => onFakeMessage(channel)
-                : null,
-            onSendMessage:
-                hasChannelActions &&
-                    channel.isActive &&
-                    channel.capabilities.outbound
-                ? () => onSendMessage(channel)
-                : null,
-            onDelete: hasChannelActions ? () => onDelete(channel) : null,
-          );
-        },
-      ),
+      builder: (context, constraints) {
+        final columns = _columnsFor(constraints.maxWidth);
+        final tileWidth =
+            (constraints.maxWidth - AppSpacing.md * (columns - 1)) / columns;
+        // Die Höhe richtet sich nach dem Inhalt der Kachel (Chips, Hinweise),
+        // statt nach einem festen Seitenverhältnis, das bei schmalen Karten überläuft.
+        return Wrap(
+          spacing: AppSpacing.md,
+          runSpacing: AppSpacing.md,
+          children: [
+            for (final channel in channels)
+              SizedBox(width: tileWidth, child: _tileFor(channel)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _tileFor(CommunicationChannel channel) {
+    final hasChannelActions = !channel.isConnectorBacked;
+    return CommunicationChannelTile(
+      channel: channel,
+      onFakeMessage: hasChannelActions && channel.isActive
+          ? () => onFakeMessage(channel)
+          : null,
+      onSendMessage:
+          hasChannelActions && channel.isActive && channel.capabilities.outbound
+          ? () => onSendMessage(channel)
+          : null,
+      onDelete: hasChannelActions ? () => onDelete(channel) : null,
+      onReconnect: channel.needsReconnection
+          ? () => onReconnect(channel)
+          : null,
     );
   }
 

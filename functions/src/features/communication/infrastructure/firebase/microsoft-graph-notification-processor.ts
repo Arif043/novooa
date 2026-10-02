@@ -12,8 +12,14 @@ import {FirestoreMailConnectorRepository} from
   "../firebase/firestore-mail-connector-repository.js";
 import {
   mailConnectorCipher,
+  mailTokenService,
   microsoftGraphProvider,
 } from "../microsoft_graph/microsoft-graph-config.js";
+import {
+  type MailConnectorTokenService,
+  MailReauthorizationRequiredError,
+} from "../../domain/services/mail-connector-token-service.js";
+import {handleMailSubscriptionLifecycle} from "../../domain/usecases/handle-mail-subscription-lifecycle.js";
 import {FirestoreRuntimeMailRelayEventStore} from
   "./firestore-runtime-mail-relay-event-store.js";
 
@@ -28,28 +34,52 @@ export type GraphNotification = {
 export async function processMicrosoftGraphNotification(
   notification: GraphNotification,
 ): Promise<void> {
-  if (notification.lifecycleEvent || notification.changeType !== "created") return;
   const repository = new FirestoreMailConnectorRepository(mailConnectorCipher());
   const connection = await repository.loadConnectorBySubscription(notification.subscriptionId);
-  if (!connection || !notification.messageId) return;
+  if (!connection) return;
   const provider = microsoftGraphProvider();
-  const accessToken = await refreshToken(connection, repository, provider);
-  const message = await provider.loadMessage({accessToken, messageId: notification.messageId});
-  await storeMessage(message, connection.connector, notification.messageId);
+  const tokens = mailTokenService(repository, provider);
+  if (notification.lifecycleEvent) {
+    return processLifecycle(notification, connection, {repository, provider, tokens});
+  }
+  if (notification.changeType !== "created" || !notification.messageId) return;
+  if (connection.connector.status !== "active") return;
+  await processNewMessage(notification, connection, tokens, provider);
 }
 
-async function refreshToken(
-  connection: NonNullable<Awaited<ReturnType<FirestoreMailConnectorRepository["loadConnectorBySubscription"]>>>,
-  repository: FirestoreMailConnectorRepository,
-  provider: ReturnType<typeof microsoftGraphProvider>,
-): Promise<string> {
-  const token = await provider.refreshAccessToken(connection.credentials.refreshToken);
-  await repository.updateCredentials({
-    teamId: connection.connector.teamId,
-    connectorId: connection.connector.id,
-    credentials: {...connection.credentials, refreshToken: token.refreshToken},
+type Connection = NonNullable<Awaited<ReturnType<FirestoreMailConnectorRepository["loadConnectorBySubscription"]>>>;
+
+async function processLifecycle(
+  notification: GraphNotification,
+  connection: Connection,
+  services: {repository: FirestoreMailConnectorRepository; provider: ReturnType<typeof microsoftGraphProvider>; tokens: MailConnectorTokenService},
+): Promise<void> {
+  const outcome = await handleMailSubscriptionLifecycle({
+    event: notification.lifecycleEvent, ...connection, ...services,
   });
-  return token.accessToken;
+  logInfo("microsoft_graph.lifecycle_handled", {
+    teamId: connection.connector.teamId, connectorId: connection.connector.id,
+    event: notification.lifecycleEvent, outcome,
+  });
+}
+
+async function processNewMessage(
+  notification: GraphNotification,
+  connection: Connection,
+  tokens: MailConnectorTokenService,
+  provider: ReturnType<typeof microsoftGraphProvider>,
+): Promise<void> {
+  try {
+    const message = await tokens.withAccessToken(connection, (accessToken) =>
+      provider.loadMessage({accessToken, messageId: notification.messageId}));
+    await storeMessage(message, connection.connector, notification.messageId);
+  } catch (error) {
+    // Die Anmeldung ist ungültig (Status schon gesetzt) — Wiederholen der Aufgabe wäre sinnlos.
+    if (!(error instanceof MailReauthorizationRequiredError)) throw error;
+    logInfo("microsoft_graph.connector_needs_reauthorization", {
+      teamId: connection.connector.teamId, connectorId: connection.connector.id,
+    });
+  }
 }
 
 async function storeMessage(

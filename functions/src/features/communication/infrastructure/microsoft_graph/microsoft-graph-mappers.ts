@@ -5,7 +5,8 @@ export function tokenFrom(data: Record<string, unknown>): MailProviderToken {
   const accessToken = stringFrom(data.access_token);
   const refreshToken = stringFrom(data.refresh_token);
   if (!accessToken || !refreshToken) throw new Error("Microsoft token response is incomplete.");
-  return {accessToken, refreshToken};
+  const expiresIn = Number(data.expires_in);
+  return Number.isFinite(expiresIn) && expiresIn > 0 ? {accessToken, refreshToken, expiresInSeconds: expiresIn} : {accessToken, refreshToken};
 }
 
 export function messageFrom(data: Record<string, unknown>): ConnectorMailMessage {

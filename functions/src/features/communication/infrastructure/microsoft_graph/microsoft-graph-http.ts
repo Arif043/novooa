@@ -1,4 +1,8 @@
-import {type MailProviderToken} from "../../domain/repositories/mail-provider.js";
+import {
+  MailProviderAuthorizationError,
+  MailProviderRequestError,
+  type MailProviderToken,
+} from "../../domain/repositories/mail-provider.js";
 import {tokenFrom} from "./microsoft-graph-mappers.js";
 
 export async function tokenFromForm(
@@ -9,8 +13,8 @@ export async function tokenFromForm(
     headers: {"Content-Type": "application/x-www-form-urlencoded"},
     body: parameters,
   });
-  const data = await response.json() as Record<string, unknown>;
-  if (!response.ok) throw new Error(`Microsoft token request failed: ${errorFrom(data)}.`);
+  const data = await response.json().catch(() => ({})) as Record<string, unknown>;
+  if (!response.ok) throw tokenFailure(data, response.status);
   return tokenFrom(data);
 }
 
@@ -37,7 +41,9 @@ export async function graphRequest(
     headers: requestHeaders(accessToken, body, headers),
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!response.ok) throw new Error(`Microsoft Graph request failed: ${await errorText(response)}.`);
+  if (!response.ok) {
+    throw new MailProviderRequestError(`Microsoft Graph request failed: ${await errorText(response)}.`, response.status);
+  }
   return response;
 }
 
@@ -51,6 +57,17 @@ function requestHeaders(
     ...headers,
     ...(body ? {"Content-Type": "application/json"} : {}),
   };
+}
+
+/** Fehlercodes des Token-Endpunkts, bei denen nur eine neue Anmeldung des Nutzers hilft. */
+const reauthorizationCodes = new Set(["invalid_grant", "interaction_required", "consent_required", "login_required"]);
+
+function tokenFailure(data: Record<string, unknown>, status: number): Error {
+  const code = typeof data.error === "string" ? data.error : "";
+  const description = typeof data.error_description === "string" ? data.error_description.split("\n")[0] : errorFrom(data);
+  const message = `Microsoft token request failed: ${code || description}.`;
+  if (reauthorizationCodes.has(code)) return new MailProviderAuthorizationError(message, code);
+  return new MailProviderRequestError(message, status);
 }
 
 async function errorText(response: Response): Promise<string> {

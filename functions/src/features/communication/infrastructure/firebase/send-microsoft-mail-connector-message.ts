@@ -10,6 +10,7 @@ import {
   mailConnectorEncryptionKey,
   microsoftGraphClientSecret,
 } from "../microsoft_graph/microsoft-graph-config.js";
+import {MailReauthorizationRequiredError} from "../../domain/services/mail-connector-token-service.js";
 import {sendTeamMicrosoftGraphEmail} from
   "../microsoft_graph/team-microsoft-graph-email-sender.js";
 
@@ -43,6 +44,10 @@ async function sendMessage(
     logInfo("mail_connector.message_sent", {teamId, connectorId: input.connectorId});
     return {messageId: sent.outboundId, status: "sent"};
   } catch (error) {
+    if (error instanceof MailReauthorizationRequiredError) {
+      logInfo("mail_connector.reauthorization_required", {teamId, connectorId: input.connectorId});
+      throw new HttpsError("failed-precondition", "Das Postfach muss neu verbunden werden. Öffne die Kommunikationseinstellungen und melde dich erneut an.");
+    }
     logException("mail_connector.message_send_failed", error, {teamId, connectorId: input.connectorId});
     throw new HttpsError("failed-precondition", "E-Mail konnte nicht gesendet werden.");
   }

@@ -51,4 +51,9 @@ class CommunicationChannel {
   bool get isActive => status == CommunicationChannelStatus.active;
 
   bool get isConnectorBacked => connectorId != null;
+
+  /// Ein Postfach mit abgelaufener Anmeldung; nur erneutes Verbinden hilft.
+  bool get needsReconnection =>
+      isConnectorBacked &&
+      status == CommunicationChannelStatus.reauthorizationRequired;
 }

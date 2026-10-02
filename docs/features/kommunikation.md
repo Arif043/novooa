@@ -54,6 +54,38 @@ Berechtigungen `Mail.Read`, `Mail.Send`, `User.Read` und `offline_access`.
 Neue E-Mails treffen per Graph-Webhook ein; ein Scheduler erneuert die
 kurzlebigen Subscriptions rechtzeitig.
 
+### Token- und Subscription-Pflege (Microsoft Graph)
+
+Alle Zugriffe auf Microsoft laufen über `MailConnectorTokenService`
+(`communication/domain/services/`):
+
+- **Zugriffstoken** werden pro Connector bis kurz vor ihrem Ablauf gemerkt
+  (`AccessTokenCache`, pro Funktionsinstanz). Gleichzeitige Aufrufe desselben
+  Connectors teilen sich einen Refresh. Lehnt Graph ein Token mit 401 ab, wird
+  einmal mit einem frischen wiederholt.
+- **Refresh Token:** Microsoft rotiert es bei jedem Refresh; das neue wird
+  verschlüsselt gespeichert. Lehnt Microsoft ein Token ab, lädt der Dienst das
+  gespeicherte neu — hat eine andere Instanz es inzwischen rotiert, wird einmal
+  mit dem neuen wiederholt.
+- **Ungültige Anmeldung** (`invalid_grant`, `interaction_required`,
+  `consent_required`, `login_required`; z. B. Passwortwechsel, widerrufene
+  Einwilligung, gesperrte App, abgelaufenes Token) setzt den Connector auf
+  `reauthorizationRequired`. Die App zeigt „Erneute Anmeldung erforderlich" und
+  bietet „Postfach neu verbinden" an; Senden meldet, dass das Postfach neu
+  verbunden werden muss. Vorübergehende Fehler (Netz, 5xx) ändern den Status
+  nicht und werden von der Aufgabenwarteschlange wiederholt.
+- **Subscriptions** (2 Tage Laufzeit) verlängert der Scheduler alle 6 Stunden,
+  sobald sie innerhalb von 12 Stunden ablaufen. Ist sie abgelaufen, fehlt sie oder
+  kennt Graph sie nicht mehr (404), wird eine neue angelegt statt dauerhaft an der
+  Verlängerung zu scheitern.
+- **Lifecycle-Benachrichtigungen** des Anbieters verarbeitet der Task-Prozessor:
+  `reauthorizationRequired` verlängert die Subscription, `subscriptionRemoved`
+  legt eine neue an, `missed` wird ignoriert. Verpasste Mails werden nicht
+  nachgeholt.
+- **Erneutes Verbinden** desselben Postfachs behält die Connector-ID, damit
+  Verweise (Kanäle, Auslöser) gültig bleiben; Zugangsdaten und Subscription werden
+  ersetzt, der Status ist wieder `active`.
+
 In der Oberfläche erscheinen verbundene E-Mail-Adressen gemeinsam mit
 WhatsApp- und SMS-Verbindungen als Kommunikationskanäle. Der technische
 Mail-Connector bleibt dabei bewusst im Backend: Er kapselt OAuth,

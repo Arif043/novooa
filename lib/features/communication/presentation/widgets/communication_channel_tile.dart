@@ -10,12 +10,16 @@ class CommunicationChannelTile extends StatelessWidget {
     this.onFakeMessage,
     this.onSendMessage,
     this.onDelete,
+    this.onReconnect,
   });
 
   final CommunicationChannel channel;
   final VoidCallback? onFakeMessage;
   final VoidCallback? onSendMessage;
   final VoidCallback? onDelete;
+
+  /// Nur gesetzt, wenn die Anmeldung des Postfachs abgelaufen ist.
+  final VoidCallback? onReconnect;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +28,7 @@ class CommunicationChannelTile extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -37,6 +42,12 @@ class CommunicationChannelTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (onReconnect != null)
+                  IconButton(
+                    tooltip: 'Postfach neu verbinden',
+                    onPressed: onReconnect,
+                    icon: const Icon(Icons.link),
+                  ),
                 if (onFakeMessage != null)
                   IconButton(
                     tooltip: 'Testnachricht auslösen',
@@ -59,7 +70,19 @@ class CommunicationChannelTile extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(channel.address, overflow: TextOverflow.ellipsis),
-            const Spacer(),
+            if (onReconnect != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Die Anmeldung ist abgelaufen. Verbinde das Postfach neu, '
+                'damit wieder E-Mails ankommen.',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: colorScheme.error),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            const SizedBox(height: AppSpacing.md),
             Wrap(
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,

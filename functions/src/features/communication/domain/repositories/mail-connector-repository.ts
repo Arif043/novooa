@@ -1,6 +1,7 @@
 import {
   type MailConnector,
   type MailConnectorCredentials,
+  type MailConnectorStatus,
 } from "../entities/mail-connector.js";
 import {type MailConnectorAuthorization} from
   "../entities/mail-connector-authorization.js";
@@ -19,6 +20,12 @@ export interface MailConnectorRepository {
     subscriptionId: string,
   ): Promise<{connector: MailConnector; credentials: MailConnectorCredentials} | null>;
 
+  /** Findet den Connector, der dieses Postfach im Team schon verbindet (zum erneuten Verbinden). */
+  findConnectorByEmailAddress(input: {
+    teamId: string;
+    emailAddress: string;
+  }): Promise<MailConnector | null>;
+
   loadConnector(input: {
     teamId: string;
     connectorId: string;
@@ -33,6 +40,12 @@ export interface MailConnectorRepository {
     teamId: string;
     subscriptionId: string;
     subscriptionExpiresAt: Date;
+  }): Promise<void>;
+
+  updateStatus(input: {
+    connectorId: string;
+    teamId: string;
+    status: MailConnectorStatus;
   }): Promise<void>;
 
   updateCredentials(input: {

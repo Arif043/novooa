@@ -2,6 +2,7 @@ import {Timestamp, type DocumentData} from "firebase-admin/firestore";
 import {
   type MailConnector,
   type MailConnectorCredentials,
+  type MailConnectorStatus,
 } from "../../domain/entities/mail-connector.js";
 import {type MailConnectorAuthorization} from
   "../../domain/entities/mail-connector-authorization.js";
@@ -53,6 +54,14 @@ export class FirestoreMailConnectorRepository implements MailConnectorRepository
     return this.#connectorWithCredentials(snapshot.docs[0]);
   }
 
+  async findConnectorByEmailAddress(input: {teamId: string; emailAddress: string}) {
+    const snapshot = await getDatabase().collection("teams").doc(input.teamId)
+      .collection("mailConnectors")
+      .where("emailAddress", "==", input.emailAddress).limit(1).get();
+    if (snapshot.empty) return null;
+    return connectorFrom(snapshot.docs[0].data(), snapshot.docs[0].id);
+  }
+
   async loadConnector(input: {teamId: string; connectorId: string}) {
     const snapshot = await connectorReferenceById(input.teamId, input.connectorId).get();
     if (!snapshot.exists) return null;
@@ -79,6 +88,17 @@ export class FirestoreMailConnectorRepository implements MailConnectorRepository
     await connectorReferenceById(input.teamId, input.connectorId).update({
       subscriptionId: input.subscriptionId,
       subscriptionExpiresAt: Timestamp.fromDate(input.subscriptionExpiresAt),
+      updatedAt: Timestamp.now(),
+    });
+  }
+
+  async updateStatus(input: {
+    connectorId: string;
+    teamId: string;
+    status: MailConnectorStatus;
+  }): Promise<void> {
+    await connectorReferenceById(input.teamId, input.connectorId).update({
+      status: input.status,
       updatedAt: Timestamp.now(),
     });
   }

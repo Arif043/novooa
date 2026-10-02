@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -10,6 +9,7 @@ import '../../domain/entities/communication_channel.dart';
 import '../cubits/communication_cubit.dart';
 import '../cubits/communication_state.dart';
 import 'communication_channel_content.dart';
+import 'microsoft_connection_launcher.dart';
 import 'create_communication_channel_dialog.dart';
 
 class CommunicationSettingsTab extends StatelessWidget {
@@ -119,28 +119,10 @@ class _CommunicationHeader extends StatelessWidget {
     );
     if (channelKind == null || !context.mounted) return;
     if (channelKind == CommunicationChannelKind.email) {
-      await _connectMicrosoft(context);
+      await startMicrosoftConnection(context);
       return;
     }
     await _createChannel(context, channelKind);
-  }
-
-  Future<void> _connectMicrosoft(BuildContext context) async {
-    final authorizationUrl = await context
-        .read<CommunicationCubit>()
-        .beginMicrosoftConnection();
-    if (authorizationUrl == null || !context.mounted) return;
-    final opened = await launchUrl(
-      Uri.parse(authorizationUrl),
-      mode: LaunchMode.externalApplication,
-    );
-    if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Microsoft-Anmeldung konnte nicht geöffnet werden.'),
-        ),
-      );
-    }
   }
 
   Future<void> _createChannel(

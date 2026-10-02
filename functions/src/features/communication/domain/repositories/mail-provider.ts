@@ -8,7 +8,33 @@ export type MailProviderAuthorization = {
 export type MailProviderToken = {
   accessToken: string;
   refreshToken: string;
+  /** Gültigkeit des Zugriffstokens ab Ausstellung; fehlt sie, gilt eine vorsichtige Standarddauer. */
+  expiresInSeconds?: number;
 };
+
+/**
+ * Die Anmeldung des Nutzers ist nicht mehr gültig (Passwortwechsel, widerrufene
+ * Einwilligung, gesperrte App, abgelaufenes Refresh Token). Nur der Nutzer kann
+ * das durch erneutes Verbinden beheben — Wiederholen hilft nicht.
+ */
+export class MailProviderAuthorizationError extends Error {
+  constructor(message: string, readonly code: string) {
+    super(message);
+    this.name = "MailProviderAuthorizationError";
+  }
+}
+
+/** Eine Anfrage an die API des Anbieters ist gescheitert; [status] erlaubt zwischen "nicht gefunden" und Störung zu unterscheiden. */
+export class MailProviderRequestError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = "MailProviderRequestError";
+  }
+
+  get isNotFound(): boolean {
+    return this.status === 404;
+  }
+}
 
 export type MailProviderProfile = {
   emailAddress: string;

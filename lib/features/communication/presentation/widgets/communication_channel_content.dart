@@ -8,6 +8,7 @@ import '../cubits/communication_cubit.dart';
 import '../cubits/communication_state.dart';
 import '../../domain/entities/communication_channel.dart';
 import 'communication_channel_grid.dart';
+import 'microsoft_connection_launcher.dart';
 import 'send_channel_message_dialog.dart';
 
 class CommunicationChannelContent extends StatelessWidget {
@@ -33,6 +34,7 @@ class CommunicationChannelContent extends StatelessWidget {
           onFakeMessage: (channel) => _dispatchFakeMessage(context, channel),
           onSendMessage: (channel) => _sendMessage(context, channel),
           onDelete: (channel) => _deleteChannel(context, channel),
+          onReconnect: (_) => startMicrosoftConnection(context),
         ),
       ],
     );

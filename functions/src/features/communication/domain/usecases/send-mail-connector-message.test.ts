@@ -62,3 +62,50 @@ function sendingProvider(): MailProvider & {sent: Array<Record<string, string>>}
   };
   return provider as unknown as MailProvider & {sent: Array<Record<string, string>>};
 }
+
+test("a connector that needs reauthorization is rejected with a dedicated error", async () => {
+  const { MemoryMailConnectorRepository, ScriptedMailProvider } = await import("../services/mail-connector-test-support.js");
+  const { MailReauthorizationRequiredError } = await import("../services/mail-connector-token-service.js");
+  const repository = new MemoryMailConnectorRepository({status: "reauthorizationRequired"});
+  const provider = new ScriptedMailProvider();
+
+  await assert.rejects(
+    sendMailConnectorMessage({
+      teamId: "team-1", connectorId: "connector-1", recipient: "a@example.com", subject: "S", body: "B",
+      repository: repository.asRepository(), provider: provider.asProvider(),
+    }),
+    MailReauthorizationRequiredError,
+  );
+  assert.equal(provider.refreshCalls.length, 0);
+});
+
+test("an expired token during sending marks the connector and fails without sending", async () => {
+  const { MemoryMailConnectorRepository, ScriptedMailProvider, invalidGrant } = await import("../services/mail-connector-test-support.js");
+  const { MailReauthorizationRequiredError } = await import("../services/mail-connector-token-service.js");
+  const repository = new MemoryMailConnectorRepository();
+  const provider = new ScriptedMailProvider(() => invalidGrant());
+
+  await assert.rejects(
+    sendMailConnectorMessage({
+      teamId: "team-1", connectorId: "connector-1", recipient: "a@example.com", subject: "S", body: "B",
+      repository: repository.asRepository(), provider: provider.asProvider(),
+    }),
+    MailReauthorizationRequiredError,
+  );
+  assert.equal(repository.status, "reauthorizationRequired");
+  assert.equal(provider.sent.length, 0);
+});
+
+test("a rejected access token is refreshed once and the message is still sent", async () => {
+  const { MemoryMailConnectorRepository, ScriptedMailProvider, unauthorized } = await import("../services/mail-connector-test-support.js");
+  const repository = new MemoryMailConnectorRepository();
+  const provider = new ScriptedMailProvider();
+  provider.sendFailures.push(unauthorized());
+
+  await sendMailConnectorMessage({
+    teamId: "team-1", connectorId: "connector-1", recipient: "a@example.com", subject: "S", body: "B",
+    repository: repository.asRepository(), provider: provider.asProvider(),
+  });
+
+  assert.deepEqual(provider.sent.map((message) => message.accessToken), ["access-2"]);
+});

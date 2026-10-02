@@ -37,7 +37,11 @@ async function createConnector(
     accessToken: token.accessToken,
     clientState: input.subscriptionClientState,
   });
-  const connector = connectorFrom(input, authorization, profile, subscription);
+  const existing = await input.repository.findConnectorByEmailAddress({
+    teamId: authorization.teamId,
+    emailAddress: profile.emailAddress,
+  });
+  const connector = connectorFrom(input, authorization, profile, subscription, existing);
   await input.repository.createConnector({connector, credentials: credentialsFrom(token, input)});
   return connector;
 }
@@ -47,14 +51,18 @@ function connectorFrom(
   authorization: NonNullable<Awaited<ReturnType<MailConnectorRepository["consumeAuthorization"]>>>,
   profile: {emailAddress: string; displayName: string},
   subscription: {id: string; expiresAt: Date},
+  existing: MailConnector | null,
 ): MailConnector {
+  // Wer ein Postfach erneut verbindet, behält die ID des Connectors: Verweise darauf
+  // (Kanäle, Auslöser) bleiben gültig, statt ins Leere zu laufen.
   return {
-    id: input.connectorId, teamId: authorization.teamId, createdByUid: authorization.uid, provider: input.provider.provider,
+    id: existing?.id ?? input.connectorId, teamId: authorization.teamId,
+    createdByUid: existing?.createdByUid ?? authorization.uid, provider: input.provider.provider,
     deliveryTarget: authorization.deliveryTarget,
     runtimeLicenseId: authorization.runtimeLicenseId,
     emailAddress: profile.emailAddress, displayName: profile.displayName, status: "active",
     subscriptionId: subscription.id, subscriptionExpiresAt: subscription.expiresAt,
-    createdAt: input.now, updatedAt: input.now,
+    createdAt: existing?.createdAt ?? input.now, updatedAt: input.now,
   };
 }
 

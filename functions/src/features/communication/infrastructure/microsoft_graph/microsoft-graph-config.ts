@@ -1,4 +1,8 @@
 import {defineSecret, defineString} from "firebase-functions/params";
+import {AccessTokenCache} from "../../domain/services/access-token-cache.js";
+import {MailConnectorTokenService} from "../../domain/services/mail-connector-token-service.js";
+import {type MailConnectorRepository} from "../../domain/repositories/mail-connector-repository.js";
+import {type MailProvider} from "../../domain/repositories/mail-provider.js";
 import {CredentialCipher} from "../security/credential-cipher.js";
 import {MicrosoftGraphProvider} from "./microsoft-graph-provider.js";
 
@@ -14,6 +18,16 @@ export function microsoftGraphAuthorizationProvider(): MicrosoftGraphProvider {
 
 export function microsoftGraphProvider(): MicrosoftGraphProvider {
   return providerFrom(microsoftGraphClientSecret.value());
+}
+
+/** Pro Funktionsinstanz geteilt: Aufeinanderfolgende Aufrufe auf einer warmen Instanz holen kein neues Zugriffstoken. */
+const mailAccessTokenCache = new AccessTokenCache();
+
+export function mailTokenService(
+  repository: MailConnectorRepository,
+  provider: MailProvider = microsoftGraphProvider(),
+): MailConnectorTokenService {
+  return new MailConnectorTokenService(repository, provider, mailAccessTokenCache);
 }
 
 export function mailConnectorCipher(): CredentialCipher {

@@ -3,9 +3,10 @@ import {
   markOutboundFailed,
   markOutboundSent,
 } from "../firebase/send-channel-message-store.js";
+import {MailReauthorizationRequiredError} from "../../domain/services/mail-connector-token-service.js";
 import {sendMailConnectorMessage} from "../../domain/usecases/send-mail-connector-message.js";
 import {FirestoreMailConnectorRepository} from "../firebase/firestore-mail-connector-repository.js";
-import {microsoftGraphProvider} from "./microsoft-graph-config.js";
+import {mailTokenService, microsoftGraphProvider} from "./microsoft-graph-config.js";
 
 export async function sendTeamMicrosoftGraphEmail(input: {
   teamId: string;
@@ -19,7 +20,11 @@ export async function sendTeamMicrosoftGraphEmail(input: {
   const outboundInput = {channelId: channel.id, to: input.recipient, body: input.body};
   const outboundId = await createOutboundMessage({channel, recipient: input.recipient, input: outboundInput});
   try {
-    await sendMailConnectorMessage({...input, repository: input.repository, provider: microsoftGraphProvider()});
+    const provider = microsoftGraphProvider();
+    await sendMailConnectorMessage({
+      ...input, repository: input.repository, provider,
+      tokens: mailTokenService(input.repository, provider),
+    });
     await markOutboundSent({channel, outboundId, sid: outboundId, recipient: input.recipient, input: outboundInput});
     return {outboundId, providerMessageId: outboundId, channelId: channel.id};
   } catch (error) {
@@ -34,6 +39,9 @@ async function channelFrom(input: {
   repository: FirestoreMailConnectorRepository;
 }) {
   const connection = await input.repository.loadConnector(input);
+  if (connection?.connector.status === "reauthorizationRequired") {
+    throw new MailReauthorizationRequiredError(input.connectorId);
+  }
   if (!connection || connection.connector.status !== "active") {
     throw new Error("Mail connector was not found or is inactive.");
   }
