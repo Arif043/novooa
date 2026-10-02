@@ -150,6 +150,7 @@ class _PromptWidgetState extends State<PromptWidget> {
     final available = _hasLanguageModelsProvider(context);
     if (!available) {
       return DropdownButtonFormField<String>(
+        isExpanded: true,
         initialValue: '',
         decoration: InputDecoration(labelText: 'Sprachmodell'),
         items: [
@@ -160,6 +161,9 @@ class _PromptWidgetState extends State<PromptWidget> {
     }
     return BlocBuilder<NodeLanguageModelsCubit, NodeLanguageModelsState>(
       builder: (context, state) => DropdownButtonFormField<String>(
+        // Ohne isExpanded ist das Feld so breit wie der längste Modellname
+        // und läuft in schmalen Panels über.
+        isExpanded: true,
         initialValue:
             state.models.any((model) => model.id == config.languageModelId)
             ? config.languageModelId
@@ -173,7 +177,11 @@ class _PromptWidgetState extends State<PromptWidget> {
           ...state.models.map(
             (model) => DropdownMenuItem(
               value: model.id,
-              child: Text('${model.name} (${model.modelId})'),
+              child: Text(
+                '${model.name} (${model.modelId})',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
         ],
