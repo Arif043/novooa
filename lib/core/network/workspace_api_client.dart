@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import 'secure_transport/secure_workspace_transport.dart';
+
 abstract class WorkspaceApiClient {
   Future<Map<String, Object?>> delete(String path);
   Future<Map<String, Object?>> get(String path);
@@ -31,11 +33,23 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
     http.Client? client,
     this.timeout = const Duration(seconds: 15),
     AuthHeaderProvider? authHeaderProvider,
+    SecureWorkspaceTransport? secureTransport,
+    bool encryptPlainHttp = true,
   }) : _baseUri = validatedWorkspaceBaseUri(baseUri),
        _client = client ?? http.Client(),
-       _authHeaderProvider = authHeaderProvider;
+       _authHeaderProvider = authHeaderProvider,
+       _secureTransport =
+           secureTransport ??
+           (encryptPlainHttp && baseUri.scheme == 'http'
+               ? SecureWorkspaceTransport(
+                   baseUri: validatedWorkspaceBaseUri(baseUri),
+                   client: client,
+                   timeout: timeout,
+                 )
+               : null);
 
   final Uri _baseUri;
+  final SecureWorkspaceTransport? _secureTransport;
   final http.Client _client;
   final Duration timeout;
   final AuthHeaderProvider? _authHeaderProvider;
@@ -91,6 +105,10 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
     String path, {
     Map<String, Object?>? body,
   }) async {
+    final secureUrl = _secureUrlFor(path);
+    if (secureUrl != null) {
+      return _secureRequest(method, secureUrl, body);
+    }
     try {
       final request = http.Request(method, _baseUri.resolve(path));
       request.headers['accept'] = 'application/json';
@@ -110,6 +128,47 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
     }
   }
 
+  /// Pfad (mit Query) einer API-Anfrage, die durch den verschlüsselten Tunnel
+  /// gehen soll; `null` für alles andere (z. B. `/healthz`), das im Klartext bleibt.
+  String? _secureUrlFor(String path) {
+    if (_secureTransport == null) return null;
+    final resolved = _baseUri.resolve(path);
+    if (!resolved.path.startsWith('/v1/')) return null;
+    return resolved.hasQuery
+        ? '${resolved.path}?${resolved.query}'
+        : resolved.path;
+  }
+
+  Future<Map<String, Object?>> _secureRequest(
+    String method,
+    String url,
+    Map<String, Object?>? body,
+  ) async {
+    try {
+      final headers = {
+        'accept': 'application/json',
+        if (body != null) 'content-type': 'application/json',
+      };
+      final authorization = await _authHeaderProvider?.call();
+      if (authorization != null) headers['authorization'] = authorization;
+      final response = await _secureTransport!.send(
+        method: method,
+        url: url,
+        headers: headers,
+        body: body == null ? null : jsonEncode(body),
+      );
+      return _resultFor(response.statusCode, response.body);
+    } on TimeoutException {
+      rethrow;
+    } on WorkspaceHttpException {
+      rethrow;
+    } on SecureTransportException catch (error) {
+      throw WorkspaceConnectionException(error.message);
+    } on Object catch (error) {
+      throw WorkspaceConnectionException(error);
+    }
+  }
+
   Future<void> _applyAuthHeader(http.BaseRequest request) async {
     final header = await _authHeaderProvider?.call();
     if (header != null) request.headers['authorization'] = header;
@@ -119,12 +178,12 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
 Future<Map<String, Object?>> _responseFor(
   http.StreamedResponse response,
 ) async {
-  final text = await response.stream.bytesToString();
-  if (response.statusCode < 200 || response.statusCode >= 300) {
-    throw WorkspaceHttpException(
-      response.statusCode,
-      workspaceApiErrorFrom(text),
-    );
+  return _resultFor(response.statusCode, await response.stream.bytesToString());
+}
+
+Map<String, Object?> _resultFor(int statusCode, String text) {
+  if (statusCode < 200 || statusCode >= 300) {
+    throw WorkspaceHttpException(statusCode, workspaceApiErrorFrom(text));
   }
   if (text.trim().isEmpty) return const {};
   return _objectFrom(jsonDecode(text));

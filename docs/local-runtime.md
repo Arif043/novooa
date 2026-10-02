@@ -125,13 +125,55 @@ gültiges Zertifikat (abgelaufen, selbstsigniert, auf einen anderen Namen
 ausgestellt), meldet der Client das ausdrücklich als Zertifikatsproblem und
 nicht als Netzwerkfehler.
 
-> **Sicherheitsgrenze:** Über eine IP-Adresse läuft der Verkehr
-> unverschlüsselt — Passwort und Session-Token gehen im Klartext über das
-> Netz. Das ist innerhalb eines vertrauenswürdigen LAN vertretbar, aber
-> **niemals aus dem Internet**. Port `8090` darf nicht per Portweiterleitung
-> oder Firewallregel öffentlich erreichbar gemacht werden. Für externen
-> Zugriff gehört zwingend ein Reverse Proxy mit Domain und Zertifikat davor;
-> der Client verwendet dann automatisch HTTPS.
+> **Sicherheitsgrenze:** Über `http` (IP-Adresse oder interner Hostname)
+> ist die **JSON-API** seit dem verschlüsselten Transport gegen passives
+> Mitlesen geschützt (siehe unten): Passwort, Session-Token, Pfade und Inhalte
+> sind für Beobachter im LAN nicht lesbar. Nicht geschützt bleiben ein aktiver
+> Man-in-the-Middle, Datei-Uploads/-Downloads außerhalb der JSON-API, der
+> WebSocket-Kanal und die ausgelieferte Web-App selbst. Der Port `8090` darf
+> deshalb **niemals aus dem Internet** erreichbar sein. Für externen Zugriff
+> gehört zwingend ein Reverse Proxy mit Domain und Zertifikat davor; der
+> Client verwendet dann automatisch HTTPS und braucht den Tunnel nicht.
+
+### Verschlüsselter Transport (JSON-API über http)
+
+Der Client schickt über `http` jede Anfrage an `/v1/…` verschlüsselt durch
+einen Tunnel; die Routen der Runtime bleiben unverändert.
+
+1. **Handshake** `POST /v1/secure/handshake`: Client und Runtime tauschen
+   ephemere X25519-Schlüssel und je eine 16-Byte-Nonce aus. Beide leiten
+   daraus per HKDF-SHA256 (Salt = Client-Nonce ‖ Server-Nonce, Info
+   `novooa-transport-v1`) zwei Schlüssel ab, je Richtung einen. Die Runtime
+   hält den Kanal im Speicher (Leerlauf 12 h, höchstens 512 Kanäle); nach einem
+   Neustart handelt der Client automatisch neu aus.
+2. **Austausch** `POST /v1/secure/exchange`: Methode, Pfad samt Query,
+   `Authorization`, `Content-Type` und Body werden als JSON mit AES-256-GCM
+   verschlüsselt (Umschlag = Base64(IV ‖ Chiffretext ‖ Tag), Zusatzdaten
+   `novooa/1|<Kanal>|<req|res>|<Zähler>`). Die Runtime entschlüsselt, führt die
+   Anfrage intern gegen die normalen Routen aus (inklusive Lizenz- und
+   Session-Prüfung) und verschlüsselt die Antwort.
+3. **Wiedereinspielen:** Jede Anfrage trägt einen Zähler; er wird nur einmal
+   akzeptiert und muss in einem Fenster der letzten 128 Zähler liegen, damit
+   parallele Anfragen sich überholen dürfen. Ein Zähler wird erst nach
+   erfolgreicher Entschlüsselung verbraucht.
+4. **Erreichbar** sind nur `GET/POST/PUT/DELETE` auf `/v1/…` (nicht
+   `/v1/secure/…`) mit JSON-Antwort. Alles andere, etwa `/healthz`, läuft im
+   Klartext.
+
+Es gibt **keinen stillen Rückfall auf Klartext**: Unterstützt die Runtime den
+Handshake nicht (zu alte Version), meldet der Client eine Verbindungsstörung
+mit dem Hinweis, die Runtime zu aktualisieren. Der Client nutzt den Tunnel nur
+bei `http`; bei `https` entfällt er. Die Gegenstücke liegen in
+`functions/src/shared/local/secure-transport-*.ts` und
+`lib/core/network/secure_transport/`; ein gemeinsamer Testvektor und
+gegenseitig erzeugte Umschläge sichern die Kompatibilität beider Seiten.
+
+**Bekannte Grenzen:** Der Handshake ist nicht authentifiziert — ein aktiver
+Man-in-the-Middle, der ihn manipuliert, kann mitlesen. Abhilfe wäre ein
+Server-Schlüssel, den der Client beim ersten Kontakt merkt (Trust on First
+Use), oder TLS. Außerdem akzeptiert die Runtime weiterhin unverschlüsselte
+Anfragen und kann so einen im Klartext mitgeschnittenen Token (etwa aus einem
+Datei-Upload) nicht von einem Tunnel-Token unterscheiden.
 
 Für den externen Zugriff terminiert der eigene Proxy TLS und leitet an
 `127.0.0.1:8090` weiter. Ein minimales nginx-Beispiel:

@@ -4,6 +4,8 @@ import fastifyStatic from "@fastify/static";
 import {extname, resolve} from "node:path";
 import {LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
 import {configureValidation} from "./local-runtime-validation.js";
+import {SecureChannelStore} from "./secure-channel-store.js";
+import {secureTransportRoutes} from "./secure-transport-routes.js";
 
 export function createLocalRuntimeHttpServer(
   routes?: FastifyPluginAsync,
@@ -16,6 +18,7 @@ export function createLocalRuntimeHttpServer(
   configureCors(http, cors);
   http.addContentTypeParser("application/onnx", (_request, payload, done) => done(null, payload));
   http.addContentTypeParser("application/zip", (_request, payload, done) => done(null, payload));
+  http.register(secureTransportRoutes, {store: new SecureChannelStore(), target: http});
   http.get("/healthz", async () => ({status: "ok"}));
   if (routes !== undefined) http.register(routes);
   if (webDirectory !== undefined) configureWebFiles(http, webDirectory);
