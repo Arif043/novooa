@@ -14,12 +14,16 @@ class LanguageModelPickerField extends StatelessWidget {
     required this.selectedModelId,
     required this.onChanged,
     this.enabled = true,
+    this.defaultOptionLabel = defaultLanguageModelLabel,
   });
 
   final List<LanguageModel> models;
   final String selectedModelId;
   final ValueChanged<String> onChanged;
   final bool enabled;
+
+  /// Beschriftung der Option ohne bestimmtes Modell (leere ID).
+  final String defaultOptionLabel;
 
   LanguageModel? get _selected {
     for (final model in models) {
@@ -67,7 +71,7 @@ class LanguageModelPickerField extends StatelessWidget {
 
   String _valueLabel() {
     final model = _selected;
-    if (model == null) return 'Standardmodell verwenden';
+    if (model == null) return defaultOptionLabel;
     final provider = model.provider;
     return provider == null ? model.name : '${model.name} · ${provider.label}';
   }
@@ -77,6 +81,7 @@ class LanguageModelPickerField extends StatelessWidget {
       context,
       models: models,
       selectedModelId: _selected?.id ?? defaultLanguageModelId,
+      defaultOptionLabel: defaultOptionLabel,
     );
     if (picked != null && picked != _selected?.id) onChanged(picked);
   }

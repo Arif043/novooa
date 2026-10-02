@@ -7,8 +7,10 @@ import 'package:syscat2/features/language_models/presentation/widgets/language_m
 
 import 'language_model_provider_groups.dart';
 
-/// Ergebnis der Auswahl: `''` steht für das Standardmodell.
+/// Ergebnis der Auswahl: `''` steht für kein bestimmtes Modell.
 const defaultLanguageModelId = '';
+
+const defaultLanguageModelLabel = 'Standardmodell verwenden';
 
 /// Bottom Sheet in zwei Schritten: erst der Anbieter, dann das konkrete
 /// Modell. Liefert die Modell-ID, [defaultLanguageModelId] für das
@@ -20,6 +22,7 @@ class LanguageModelPickerSheet {
     BuildContext context, {
     required List<LanguageModel> models,
     required String selectedModelId,
+    String defaultOptionLabel = defaultLanguageModelLabel,
   }) {
     final groups = groupModelsByProvider(models);
     return showAdaptiveSheet<String>(
@@ -28,6 +31,7 @@ class LanguageModelPickerSheet {
         style: style,
         groups: groups,
         selectedModelId: selectedModelId,
+        defaultOptionLabel: defaultOptionLabel,
       ),
     );
   }
@@ -38,11 +42,13 @@ class _PickerContent extends StatefulWidget {
     required this.style,
     required this.groups,
     required this.selectedModelId,
+    required this.defaultOptionLabel,
   });
 
   final AdaptiveSheetStyle style;
   final List<LanguageModelProviderGroup> groups;
   final String selectedModelId;
+  final String defaultOptionLabel;
 
   @override
   State<_PickerContent> createState() => _PickerContentState();
@@ -106,6 +112,7 @@ class _PickerContentState extends State<_PickerContent> {
               key: const ValueKey('providers'),
               groups: widget.groups,
               selectedModelId: widget.selectedModelId,
+              defaultOptionLabel: widget.defaultOptionLabel,
               onProvider: (selected) => setState(() => _group = selected),
             )
           : _ModelList(
@@ -151,11 +158,13 @@ class _ProviderList extends StatelessWidget {
     super.key,
     required this.groups,
     required this.selectedModelId,
+    required this.defaultOptionLabel,
     required this.onProvider,
   });
 
   final List<LanguageModelProviderGroup> groups;
   final String selectedModelId;
+  final String defaultOptionLabel;
   final ValueChanged<LanguageModelProviderGroup> onProvider;
 
   @override
@@ -164,7 +173,7 @@ class _ProviderList extends StatelessWidget {
       children: [
         ListTile(
           leading: const Icon(Icons.auto_awesome_outlined),
-          title: const Text('Standardmodell verwenden'),
+          title: Text(defaultOptionLabel),
           trailing: selectedModelId == defaultLanguageModelId
               ? const _SelectedMark()
               : null,

@@ -5,6 +5,9 @@ import 'package:syscat2/features/language_models/domain/entities/language_model.
 import 'package:syscat2/features/language_models/presentation/cubits/language_model_defaults_cubit.dart';
 import 'package:syscat2/features/language_models/presentation/cubits/language_model_defaults_state.dart';
 
+import 'package:syscat2/features/language_models/presentation/widgets/language_model_picker_field.dart';
+import 'package:syscat2/features/language_models/presentation/widgets/language_model_picker_sheet.dart';
+
 import 'settings_section.dart';
 
 /// Zwei Vorgabe-Auswahlen unter „Sprachmodelle" — welches bereits
@@ -75,25 +78,17 @@ class _LanguageModelDefaultSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final value = models.any((model) => model.id == selectedModelId)
-        ? selectedModelId
-        : null;
     return SettingsSection(
       icon: icon,
       title: title,
       description: description,
-      child: DropdownButtonFormField<String?>(
-        initialValue: value,
-        decoration: const InputDecoration(labelText: 'Sprachmodell'),
-        items: [
-          const DropdownMenuItem(
-            value: null,
-            child: Text('Systemvorgabe verwenden'),
-          ),
-          for (final model in models)
-            DropdownMenuItem(value: model.id, child: Text(model.name)),
-        ],
-        onChanged: isSaving ? null : onChanged,
+      child: LanguageModelPickerField(
+        models: models,
+        selectedModelId: selectedModelId ?? defaultLanguageModelId,
+        enabled: !isSaving,
+        defaultOptionLabel: 'Systemvorgabe verwenden',
+        onChanged: (modelId) =>
+            onChanged(modelId == defaultLanguageModelId ? null : modelId),
       ),
     );
   }

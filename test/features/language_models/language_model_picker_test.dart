@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:simple_icons/simple_icons.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/language_model_picker_field.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/language_model_provider_groups.dart';
+import 'package:syscat2/features/language_models/presentation/widgets/language_model_picker_field.dart';
+import 'package:syscat2/features/language_models/presentation/widgets/language_model_provider_groups.dart';
 
 void main() {
   final models = [
@@ -184,6 +184,35 @@ void main() {
       expect(picked, isNull);
       expect(find.text('Anbieter'), findsNothing);
     }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+  });
+
+  testWidgets('die Beschriftung der Standard-Option ist anpassbar', (
+    tester,
+  ) async {
+    String? picked;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LanguageModelPickerField(
+            models: models,
+            selectedModelId: '',
+            defaultOptionLabel: 'Systemvorgabe verwenden',
+            onChanged: (value) => picked = value,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Systemvorgabe verwenden'), findsOneWidget);
+    await tester.tap(find.text('Sprachmodell'));
+    await tester.pumpAndSettle();
+    expect(find.text('Standardmodell verwenden'), findsNothing);
+    await tester.tap(find.text('Google AI'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Gemini Flash'));
+    await tester.pumpAndSettle();
+
+    expect(picked, 'm1');
   });
 
   testWidgets('ein deaktiviertes Feld öffnet kein Sheet', (tester) async {
