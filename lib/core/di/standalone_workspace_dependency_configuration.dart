@@ -22,6 +22,15 @@ import '../../features/knowledge_base/domain/usecases/watch_knowledge_notes.dart
 import '../../features/knowledge_base/infrastructure/repositories/local_knowledge_base_repository.dart';
 import '../../features/knowledge_base/presentation/cubits/knowledge_base_cubit.dart';
 import '../../features/schedule/presentation/cubits/event_target_options_cubit.dart';
+import '../../features/communication/domain/repositories/communication_channel_repository.dart';
+import '../../features/communication/domain/usecases/begin_microsoft_connection.dart';
+import '../../features/communication/domain/usecases/create_communication_channel.dart';
+import '../../features/communication/domain/usecases/delete_communication_channel.dart';
+import '../../features/communication/domain/usecases/dispatch_fake_channel_message.dart';
+import '../../features/communication/domain/usecases/send_channel_message.dart';
+import '../../features/communication/domain/usecases/watch_communication_channels.dart';
+import '../../features/communication/infrastructure/repositories/local_communication_channel_repository.dart';
+import '../../features/communication/presentation/cubits/communication_cubit.dart';
 import '../../features/schedule/domain/repositories/task_trigger_repository.dart';
 import '../../features/schedule/domain/usecases/create_task_trigger.dart';
 import '../../features/schedule/domain/usecases/analyze_task_trigger.dart';
@@ -64,6 +73,41 @@ void configureStandaloneWorkspaceDependencies(GetIt locator) {
       () => LocalTaskTriggerRepository(
         locator<WorkspaceApiClient>(),
         locator<WorkspaceRealtimeChannel>(),
+      ),
+    )
+    ..registerLazySingleton<CommunicationChannelRepository>(
+      () => LocalCommunicationChannelRepository(locator<WorkspaceApiClient>()),
+    )
+    ..registerLazySingleton(
+      () =>
+          WatchCommunicationChannels(locator<CommunicationChannelRepository>()),
+    )
+    ..registerLazySingleton(
+      () => BeginMicrosoftConnection(locator<CommunicationChannelRepository>()),
+    )
+    ..registerLazySingleton(
+      () =>
+          CreateCommunicationChannel(locator<CommunicationChannelRepository>()),
+    )
+    ..registerLazySingleton(
+      () =>
+          DeleteCommunicationChannel(locator<CommunicationChannelRepository>()),
+    )
+    ..registerLazySingleton(
+      () =>
+          DispatchFakeChannelMessage(locator<CommunicationChannelRepository>()),
+    )
+    ..registerLazySingleton(
+      () => SendChannelMessage(locator<CommunicationChannelRepository>()),
+    )
+    ..registerFactory(
+      () => CommunicationCubit(
+        locator<WatchCommunicationChannels>(),
+        locator<CreateCommunicationChannel>(),
+        locator<DeleteCommunicationChannel>(),
+        locator<DispatchFakeChannelMessage>(),
+        locator<SendChannelMessage>(),
+        locator<BeginMicrosoftConnection>(),
       ),
     )
     ..registerLazySingleton(() => GetCurrentTeamId(locator<TeamRepository>()))
@@ -159,7 +203,7 @@ void configureStandaloneWorkspaceDependencies(GetIt locator) {
       () => EventTargetOptionsCubit(
         locator<WatchTeamFiles>(),
         locator<WatchTeamFolders>(),
-        null,
+        locator<WatchCommunicationChannels>(),
         locator<GetCurrentTeamId>(),
       ),
     );

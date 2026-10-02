@@ -5,6 +5,7 @@ import {FirebaseRuntimeRelayLicenseVerifier} from
   "../../../licensing/infrastructure/firebase/firebase-runtime-relay-license-verifier.js";
 import {localRuntimeLicenseSigningKey} from
   "../../../licensing/infrastructure/firebase/local-runtime-license-signing-key.js";
+import {mailConnectorSummaryFrom} from "../../domain/entities/mail-connector-summary.js";
 import {RuntimeMailRelay} from "../../domain/usecases/runtime-mail-relay.js";
 import {beginMailConnectorAuthorization} from
   "../../domain/usecases/begin-mail-connector-authorization.js";
@@ -49,7 +50,8 @@ type RelayCommand =
   | {type: "listDeadLetters"; license: SignedRuntimeLicense}
   | {type: "replayDeadLetter"; license: SignedRuntimeLicense; eventId: string}
   | {type: "sendEmail"; license: SignedRuntimeLicense; connectorId: string; recipient: string; subject: string; body: string}
-  | {type: "beginMicrosoftAuthorization"; license: SignedRuntimeLicense};
+  | {type: "beginMicrosoftAuthorization"; license: SignedRuntimeLicense}
+  | {type: "listMailConnectors"; license: SignedRuntimeLicense};
 
 async function execute(command: RelayCommand): Promise<object> {
   switch (command.type) {
@@ -60,6 +62,7 @@ async function execute(command: RelayCommand): Promise<object> {
     case "replayDeadLetter": await relay.replay(command); return {status: "ok"};
     case "sendEmail": return sendEmail(command);
     case "beginMicrosoftAuthorization": return beginAuthorization(command.license);
+    case "listMailConnectors": return listConnectors(command.license);
   }
 }
 
@@ -88,6 +91,15 @@ async function assertLocalRuntimeConnector(
   }
 }
 
+async function listConnectors(license: SignedRuntimeLicense) {
+  const active = await verifier.verify(license);
+  const repository = new FirestoreMailConnectorRepository(mailConnectorCipher());
+  const connectors = await repository.listConnectorsForRuntimeLicense({
+    teamId: active.workspaceId, runtimeLicenseId: active.licenseId,
+  });
+  return {items: connectors.map(mailConnectorSummaryFrom)};
+}
+
 async function beginAuthorization(license: SignedRuntimeLicense) {
   const active = await verifier.verify(license);
   const codeVerifier = authorizationCodeVerifier();
@@ -113,7 +125,7 @@ function commandFrom(value: unknown): RelayCommand {
   if (type === "listDeadLetters") return {type, license};
   if (type === "replayDeadLetter") return {type, license, eventId: text(input.eventId, "eventId", 120)};
   if (type === "sendEmail") return emailCommand(type, license, input);
-  if (type === "beginMicrosoftAuthorization") return {type, license};
+  if (type === "beginMicrosoftAuthorization" || type === "listMailConnectors") return {type, license};
   throw new Error("Unbekannte Mail-Relay-Anfrage.");
 }
 

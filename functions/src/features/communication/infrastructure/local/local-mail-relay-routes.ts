@@ -5,13 +5,18 @@ import {type RuntimeMailRelayClient} from "./runtime-mail-relay-client.js";
 
 export type MailRelayRoutesOptions = {
   signedLicense: () => SignedRuntimeLicense | null;
-  relay: Pick<RuntimeMailRelayClient, "beginMicrosoftAuthorization" | "listDeadLetters" | "replayDeadLetter">;
+  relay: Pick<RuntimeMailRelayClient, "beginMicrosoftAuthorization" | "listConnectors" | "listDeadLetters" | "replayDeadLetter">;
 };
 
 const DeadLetter = Type.Object({
   eventId: Type.String(), connectorId: Type.String(), event: Type.Unknown(), createdAt: Type.String(),
   attempts: Type.Integer(), failedAt: Type.String(), lastError: Type.String(),
   replayedAt: Type.Union([Type.String(), Type.Null()]),
+});
+
+const MailConnector = Type.Object({
+  id: Type.String(), teamId: Type.String(), emailAddress: Type.String(), displayName: Type.String(),
+  status: Type.Union([Type.Literal("active"), Type.Literal("reauthorizationRequired"), Type.Literal("disconnected")]),
 });
 
 export const mailRelayRoutes: FastifyPluginAsyncTypebox<MailRelayRoutesOptions> = async (app, {signedLicense, relay}) => {
@@ -24,6 +29,10 @@ export const mailRelayRoutes: FastifyPluginAsyncTypebox<MailRelayRoutesOptions> 
   app.post("/v1/mail-connectors/microsoft/authorization", {
     schema: {response: {200: Type.Object({authorizationUrl: Type.String()})}},
   }, async () => relay.beginMicrosoftAuthorization(activeLicense()));
+
+  app.get("/v1/mail-connectors", {
+    schema: {response: {200: ItemsOf(MailConnector)}},
+  }, async () => ({items: await relay.listConnectors(activeLicense())}));
 
   app.get("/v1/mail-relay/dead-letters", {
     schema: {response: {200: ItemsOf(DeadLetter)}},

@@ -20,6 +20,12 @@ export interface MailConnectorRepository {
     subscriptionId: string,
   ): Promise<{connector: MailConnector; credentials: MailConnectorCredentials} | null>;
 
+  /** Alle Postfächer, die diese lokale Runtime (Lizenz) über das Relay nutzt. */
+  listConnectorsForRuntimeLicense(input: {
+    teamId: string;
+    runtimeLicenseId: string;
+  }): Promise<MailConnector[]>;
+
   /** Findet den Connector, der dieses Postfach im Team schon verbindet (zum erneuten Verbinden). */
   findConnectorByEmailAddress(input: {
     teamId: string;

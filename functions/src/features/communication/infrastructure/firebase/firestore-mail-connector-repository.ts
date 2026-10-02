@@ -54,6 +54,15 @@ export class FirestoreMailConnectorRepository implements MailConnectorRepository
     return this.#connectorWithCredentials(snapshot.docs[0]);
   }
 
+  async listConnectorsForRuntimeLicense(input: {teamId: string; runtimeLicenseId: string}) {
+    const snapshot = await getDatabase().collection("teams").doc(input.teamId)
+      .collection("mailConnectors")
+      .where("runtimeLicenseId", "==", input.runtimeLicenseId).get();
+    return snapshot.docs
+      .map((document) => connectorFrom(document.data(), document.id))
+      .filter((connector) => connector.deliveryTarget === "localRuntime");
+  }
+
   async findConnectorByEmailAddress(input: {teamId: string; emailAddress: string}) {
     const snapshot = await getDatabase().collection("teams").doc(input.teamId)
       .collection("mailConnectors")

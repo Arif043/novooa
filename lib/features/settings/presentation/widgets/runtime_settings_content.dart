@@ -6,6 +6,8 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/licensing/presentation/cubits/runtime_license_cubit.dart';
 import 'package:syscat2/features/licensing/presentation/cubits/runtime_license_state.dart';
 
+import 'package:syscat2/features/communication/presentation/widgets/communication_settings_tab.dart';
+
 import 'file_version_limit_section.dart';
 import 'settings_section.dart';
 import 'ai_model_settings_tab.dart';
@@ -20,7 +22,7 @@ class RuntimeSettingsContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Column(
         children: [
           const _RuntimeSettingsTabs(),
@@ -46,6 +48,7 @@ class RuntimeSettingsContent extends StatelessWidget {
                     isStandalone: true,
                   ),
                 ),
+                const CommunicationSettingsTab(),
                 const MachineLearningSettingsTab(),
                 const ImportExportSettingsTab(),
               ],
@@ -83,10 +86,14 @@ class _RuntimeSettingsTabs extends StatelessWidget {
               label: 'Sprachmodelle',
             ),
             2: _RuntimeSettingsTabLabel(
+              icon: CupertinoIcons.chat_bubble_2,
+              label: 'Kommunikation',
+            ),
+            3: _RuntimeSettingsTabLabel(
               icon: Icons.memory_outlined,
               label: 'Machine Learning',
             ),
-            3: _RuntimeSettingsTabLabel(
+            4: _RuntimeSettingsTabLabel(
               icon: Icons.import_export,
               label: 'Import/Export',
             ),

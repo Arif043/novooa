@@ -23,9 +23,16 @@ class MailConnectorModel {
   factory MailConnectorModel.fromDocument(
     DocumentSnapshot<Map<String, dynamic>> document,
   ) {
-    final data = document.data() ?? const {};
+    return MailConnectorModel.fromData(
+      document.id,
+      document.data() ?? const {},
+    );
+  }
+
+  /// Aus einer JSON-Antwort der lokalen Runtime oder einem Firestore-Dokument.
+  factory MailConnectorModel.fromData(String id, Map<String, Object?> data) {
     return MailConnectorModel(
-      id: document.id,
+      id: id,
       teamId: data['teamId'] as String? ?? '',
       createdByUid: data['createdByUid'] as String? ?? '',
       emailAddress: data['emailAddress'] as String? ?? '',

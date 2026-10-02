@@ -108,6 +108,13 @@ Nach maximal fünf fehlgeschlagenen Zustellversuchen bewahrt der Relay das
 Ereignis in einer lizenzgebundenen Dead-Letter-Queue auf, die die lokale Runtime
 anzeigen und gezielt erneut zustellen lassen kann.
 
+### Oberfläche je Variante
+
+Cloud: Der Tab **Kommunikation** unter Einstellungen verwaltet E-Mail, WhatsApp
+und SMS. Lokale Runtime: Derselbe Tab zeigt nur die Outlook-Postfächer dieser
+Runtime („Postfach verbinden"); siehe
+[`../local-runtime.md`](../local-runtime.md) § Mail-Relay.
+
 ## Ereignisse
 
 Ein Connector normalisiert neue E-Mails in ein `EmailReceivedEvent`. Dieses

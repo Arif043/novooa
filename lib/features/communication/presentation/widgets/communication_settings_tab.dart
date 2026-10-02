@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/runtime/workspace_capabilities.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/ios_overlays.dart';
 import '../../domain/entities/communication_channel.dart';
@@ -99,12 +100,24 @@ class _CommunicationHeader extends StatelessWidget {
       children: [
         Text('Kommunikation', style: Theme.of(context).textTheme.displayMedium),
         FilledButton.icon(
-          onPressed: isBusy ? null : () => _showConnectionActions(context),
+          onPressed: isBusy ? null : () => _connect(context),
           icon: const Icon(CupertinoIcons.add_circled),
-          label: const Text('Kanal verbinden'),
+          label: Text(
+            _supportsMessaging ? 'Kanal verbinden' : 'Postfach verbinden',
+          ),
         ),
       ],
     );
+  }
+
+  /// WhatsApp und SMS gibt es nur in der Cloud; in der lokalen Runtime bleibt
+  /// einzig das Outlook-Postfach, das ohne Zwischenfrage verbunden wird.
+  bool get _supportsMessaging =>
+      serviceLocator<WorkspaceCapabilities>().messagingChannels;
+
+  Future<void> _connect(BuildContext context) {
+    if (_supportsMessaging) return _showConnectionActions(context);
+    return startMicrosoftConnection(context);
   }
 
   Future<void> _showConnectionActions(BuildContext context) async {

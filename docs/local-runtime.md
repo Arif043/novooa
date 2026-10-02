@@ -612,6 +612,21 @@ ein Ereignis über `POST /v1/mail-relay/dead-letters/{eventId}/replay` erneut
 einstellen. Damit gehen E-Mails bei einer längeren Offline-Phase nicht verloren,
 ohne dass die Cloud die lokale Runtime direkt erreichen muss.
 
+### Postfächer im Einstellungs-Tab „Kommunikation"
+
+Der Tab **Kommunikation** erscheint auch in den Einstellungen der lokalen
+Runtime, zeigt dort aber ausschließlich E-Mail-Postfächer (Microsoft Outlook):
+WhatsApp und SMS laufen über Team-Konten in der Cloud und gibt es hier nicht
+(`WorkspaceCapabilities.messagingChannels`). Die Runtime kennt ihre Postfächer
+nur über das Cloud Relay: Der Relay-Befehl `listMailConnectors` liefert die
+Connectoren dieser Lizenz — nur Anzeigedaten wie ID, Adresse, Name und Status,
+nie Zugangsdaten —, die Runtime reicht sie über `GET /v1/mail-connectors` weiter.
+Die App fragt dort alle 15 Sekunden nach, solange der Tab offen ist, weil die
+Cloud keine Änderungen meldet. „Postfach verbinden" startet die Anmeldung über
+`POST /v1/mail-connectors/microsoft/authorization`; ein Postfach mit abgelaufener
+Anmeldung bietet „Postfach neu verbinden" an. Dieselbe Liste steht dem Ziel-Sheet
+für E-Mail-Auslöser zur Verfügung.
+
 ## Aktueller Implementierungsstand
 
 Die Runtime folgt vollständig der Feature-First-Struktur aus

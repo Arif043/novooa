@@ -102,6 +102,7 @@ void main() {
         dataCollections: false,
         modelCatalog: false,
         push: false,
+        messagingChannels: false,
       ),
     );
     addTearDown(() => serviceLocator.unregister<WorkspaceCapabilities>());

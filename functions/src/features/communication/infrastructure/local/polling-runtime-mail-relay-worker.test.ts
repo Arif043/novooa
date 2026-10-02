@@ -53,6 +53,7 @@ class RelayFake {
   async reject() { this.rejected += 1; }
   async beginMicrosoftAuthorization() { return {authorizationUrl: "https://example.test/authorize"}; }
   async sendEmail() { return {outboundId: "outbound-1", providerMessageId: "message-1", channelId: "connector-1"}; }
+  async listConnectors() { return []; }
   async listDeadLetters() { return []; }
   async replayDeadLetter() {}
 }

@@ -1,5 +1,6 @@
 import {type SignedRuntimeLicense} from
   "../../../licensing/domain/entities/runtime-license-lease.js";
+import {type MailConnectorSummary} from "../../domain/entities/mail-connector-summary.js";
 import {
   type RuntimeMailRelayDeadLetter,
   type RuntimeMailRelayDelivery,
@@ -24,6 +25,7 @@ export interface RuntimeMailRelayClient {
   acknowledge(license: SignedRuntimeLicense, delivery: RuntimeMailRelayDelivery): Promise<void>;
   reject(license: SignedRuntimeLicense, delivery: RuntimeMailRelayDelivery, error: string): Promise<void>;
   sendEmail(license: SignedRuntimeLicense, message: RelayedMailMessage): Promise<RelayedMailMessageReceipt>;
+  listConnectors(license: SignedRuntimeLicense): Promise<MailConnectorSummary[]>;
   listDeadLetters(license: SignedRuntimeLicense): Promise<RuntimeMailRelayDeadLetter[]>;
   replayDeadLetter(license: SignedRuntimeLicense, eventId: string): Promise<void>;
 }
@@ -56,6 +58,10 @@ export class HttpRuntimeMailRelayClient implements RuntimeMailRelayClient {
     return receiptFrom(await this.request({type: "sendEmail", license, ...message}));
   }
 
+  async listConnectors(license: SignedRuntimeLicense) {
+    return connectorsFrom(await this.request({type: "listMailConnectors", license}));
+  }
+
   async listDeadLetters(license: SignedRuntimeLicense) {
     return deadLettersFrom(await this.request({type: "listDeadLetters", license}));
   }
@@ -80,6 +86,7 @@ export class UnavailableRuntimeMailRelayClient implements RuntimeMailRelayClient
   async acknowledge(): Promise<void> { throw unavailable(); }
   async reject(): Promise<void> { throw unavailable(); }
   async sendEmail(): Promise<RelayedMailMessageReceipt> { throw unavailable(); }
+  async listConnectors(): Promise<MailConnectorSummary[]> { throw unavailable(); }
   async listDeadLetters(): Promise<RuntimeMailRelayDeadLetter[]> { throw unavailable(); }
   async replayDeadLetter(): Promise<void> { throw unavailable(); }
 }
@@ -102,6 +109,22 @@ function deliveryFrom(value: unknown): RuntimeMailRelayDelivery {
 function receiptFrom(value: Record<string, unknown>): RelayedMailMessageReceipt {
   const sent = record(value.sent);
   return {outboundId: text(sent.outboundId, "outboundId"), providerMessageId: text(sent.providerMessageId, "providerMessageId"), channelId: text(sent.channelId, "channelId")};
+}
+
+function connectorsFrom(value: Record<string, unknown>): MailConnectorSummary[] {
+  if (!Array.isArray(value.items)) throw new Error("Der Mail-Relay hat ungültige Postfächer geliefert.");
+  return value.items.map((item) => {
+    const entry = record(item);
+    return {
+      id: text(entry.id, "id"), teamId: text(entry.teamId, "teamId"),
+      emailAddress: text(entry.emailAddress, "emailAddress"), displayName: text(entry.displayName, "displayName"),
+      status: statusFrom(entry.status),
+    };
+  });
+}
+
+function statusFrom(value: unknown): MailConnectorSummary["status"] {
+  return value === "active" || value === "reauthorizationRequired" ? value : "disconnected";
 }
 
 function deadLettersFrom(value: Record<string, unknown>): RuntimeMailRelayDeadLetter[] {

@@ -24,6 +24,7 @@ class WorkspaceCapabilities {
     required this.dataCollections,
     required this.modelCatalog,
     required this.push,
+    required this.messagingChannels,
   });
 
   factory WorkspaceCapabilities.forKind(RuntimeKind kind) => switch (kind) {
@@ -32,12 +33,14 @@ class WorkspaceCapabilities {
       dataCollections: false,
       modelCatalog: false,
       push: true,
+      messagingChannels: true,
     ),
     RuntimeKind.standalone => WorkspaceCapabilities(
       assistant: true,
       dataCollections: true,
       modelCatalog: true,
       push: _standalonePushEnabled && _pushSupportedOnThisPlatform,
+      messagingChannels: false,
     ),
   };
 
@@ -50,6 +53,10 @@ class WorkspaceCapabilities {
 
   /// ONNX-Modellkatalog (`ModelCatalogCubit`).
   final bool modelCatalog;
+
+  /// WhatsApp- und SMS-Kanäle (Twilio über Team-Konten in der Cloud). In der
+  /// lokalen Runtime gibt es nur E-Mail-Postfächer.
+  final bool messagingChannels;
 
   /// Firebase-Push (FCM/APNs). Für Standalone bewusst standardmäßig aus,
   /// damit sich der macOS-Client ohne Apple-Entwicklungszertifikat bauen
