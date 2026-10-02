@@ -175,6 +175,13 @@ Datums-/Zeitpicker und folgende Optionen:
 - wöchentlich mit frei wählbaren Wochenzeitpunkten wie „Mo 09:00“,
   „Mi 14:30“ oder „Fr 08:15“
 
+Die Aufgabe wählt man über ein Dropdown. Datum und Uhrzeit
+folgen der Sheet-Regel der App (`showAdaptiveSheet`): Auf dem Handy bzw. in
+Fenstern unter 600 px öffnet sich ein Bottom Sheet mit Drehrad („Abbrechen" /
+„Fertig"), am Desktop (macOS, Windows, Linux ab 600 px) der übliche
+Kalender- bzw. Uhrzeit-Dialog von Material. Die App ist dafür auf Deutsch
+lokalisiert (`flutter_localizations`).
+
 Auf kleinen Displays und bei großer Systemschrift werden Segmentauswahlen
 durch beschriftete Auswahlfelder ersetzt. Der Dialog bleibt scrollbar.
 Speichern verhindert doppelte Übermittlung und erhält bei Fehlern die Eingaben.

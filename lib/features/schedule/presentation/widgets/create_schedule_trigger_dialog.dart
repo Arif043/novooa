@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/widgets/ios_overlays.dart';
+import '../../../../core/widgets/adaptive_pickers.dart';
 import '../../../task_builder/domain/entities/task.dart';
 import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/schedule_config.dart';
@@ -241,7 +241,7 @@ class _CreateScheduleTriggerDialogState
   }
 
   Future<void> _pickDate() async {
-    final selected = await showIosDatePicker(
+    final selected = await showAdaptiveDatePicker(
       context: context,
       initialDate: _date,
       minimumDate: DateTime.now(),
@@ -252,7 +252,7 @@ class _CreateScheduleTriggerDialogState
   }
 
   Future<void> _pickTime() async {
-    final selected = await showIosTimePicker(
+    final selected = await showAdaptiveTimePicker(
       context: context,
       initialTime: _time,
     );
@@ -263,7 +263,7 @@ class _CreateScheduleTriggerDialogState
   void _setSlotWeekday(int weekday) => setState(() => _slotWeekday = weekday);
 
   Future<void> _pickSlotTime() async {
-    final selected = await showIosTimePicker(
+    final selected = await showAdaptiveTimePicker(
       context: context,
       initialTime: _slotTime,
     );

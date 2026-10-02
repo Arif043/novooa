@@ -45,7 +45,11 @@ class _RootPageState extends State<RootPage> {
     context.go(tabs[index].path);
   }
 
-  Widget _sideMenu(BuildContext context, List<RootTab> tabs, int selectedTabIndex) {
+  Widget _sideMenu(
+    BuildContext context,
+    List<RootTab> tabs,
+    int selectedTabIndex,
+  ) {
     final menu = RootSideMenu(
       tabs: tabs,
       selectedIndex: selectedTabIndex,
@@ -63,7 +67,10 @@ class _RootPageState extends State<RootPage> {
     );
   }
 
-  bool _isNewSignOutFailure(AuthSessionState previous, AuthSessionState current) {
+  bool _isNewSignOutFailure(
+    AuthSessionState previous,
+    AuthSessionState current,
+  ) {
     return current.status == AuthSessionStatus.failure &&
         previous.message != current.message;
   }

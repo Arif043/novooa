@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/di/service_locator.dart';
@@ -225,6 +226,10 @@ class _MyAppState extends State<MyApp> {
       theme: SyscatTheme.lightTheme,
       // darkTheme: SyscatTheme.darkTheme,
       themeMode: ThemeMode.system,
+      // Deutsch: Datums- und Zeitauswahl, Tooltips und Fehlertexte der Material-Widgets.
+      locale: const Locale('de'),
+      supportedLocales: const [Locale('de')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       routerConfig: serviceLocator<AppRouter>().router,
       builder: _wrapApplication,
     );

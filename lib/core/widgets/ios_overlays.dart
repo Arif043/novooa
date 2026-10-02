@@ -62,56 +62,6 @@ Future<T?> showIosSheet<T>({
   );
 }
 
-Future<DateTime?> showIosDatePicker({
-  required BuildContext context,
-  required DateTime initialDate,
-  required DateTime minimumDate,
-  required DateTime maximumDate,
-}) {
-  var selectedDate = initialDate;
-  return showCupertinoModalPopup<DateTime>(
-    context: context,
-    builder: (popupContext) => _IosPickerSheet(
-      onCancel: () => Navigator.of(popupContext).pop(),
-      onConfirm: () => Navigator.of(popupContext).pop(selectedDate),
-      child: CupertinoDatePicker(
-        mode: CupertinoDatePickerMode.date,
-        initialDateTime: initialDate,
-        minimumDate: minimumDate,
-        maximumDate: maximumDate,
-        onDateTimeChanged: (value) => selectedDate = value,
-      ),
-    ),
-  );
-}
-
-Future<TimeOfDay?> showIosTimePicker({
-  required BuildContext context,
-  required TimeOfDay initialTime,
-}) {
-  var selectedTime = initialTime;
-  return showCupertinoModalPopup<TimeOfDay>(
-    context: context,
-    builder: (popupContext) => _IosPickerSheet(
-      onCancel: () => Navigator.of(popupContext).pop(),
-      onConfirm: () => Navigator.of(popupContext).pop(selectedTime),
-      child: CupertinoDatePicker(
-        mode: CupertinoDatePickerMode.time,
-        initialDateTime: DateTime(
-          2000,
-          1,
-          1,
-          initialTime.hour,
-          initialTime.minute,
-        ),
-        onDateTimeChanged: (value) {
-          selectedTime = TimeOfDay(hour: value.hour, minute: value.minute);
-        },
-      ),
-    ),
-  );
-}
-
 class IosAction<T> {
   const IosAction({
     required this.label,
@@ -122,44 +72,4 @@ class IosAction<T> {
   final String label;
   final T value;
   final bool isDestructive;
-}
-
-class _IosPickerSheet extends StatelessWidget {
-  const _IosPickerSheet({
-    required this.child,
-    required this.onCancel,
-    required this.onConfirm,
-  });
-
-  final Widget child;
-  final VoidCallback onCancel;
-  final VoidCallback onConfirm;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: CupertinoPopupSurface(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                CupertinoButton(
-                  onPressed: onCancel,
-                  child: const Text('Abbrechen'),
-                ),
-                CupertinoButton(
-                  onPressed: onConfirm,
-                  child: const Text('Fertig'),
-                ),
-              ],
-            ),
-            SizedBox(height: 216, child: child),
-          ],
-        ),
-      ),
-    );
-  }
 }
