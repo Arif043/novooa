@@ -1,35 +1,56 @@
 # skills.sh-Proxy
 
 Die skills.sh-API (`https://skills.sh/api/v1`) verlangt für **jeden** Aufruf ein Vercel-OIDC-Token
-(600 Anfragen/Minute je Projekt). Dieses Token gibt es nur innerhalb eines Vercel-Projekts. Die lokale
-Runtime holt es deshalb nicht selbst, sondern fragt diesen kleinen Proxy; er setzt das Token ein und reicht
-Status, `X-RateLimit-*`, `Retry-After` und `Cache-Control` unverändert zurück. Das Rate-Limit hält die
-Runtime selbst ein (siehe `docs/features/skills.md`).
+(600 Anfragen/Minute je Projekt). Dieses Token gibt es nur innerhalb eines Vercel-Projekts. Dieser kleine Proxy
+setzt es ein und reicht Status, `X-RateLimit-*`, `Retry-After` und `Cache-Control` unverändert zurück.
+
+## Aufrufweg
+
+```text
+Runtime ──(signierte Lizenz)──▶ Firebase-Funktion localRuntimeSkillsRelay ──(HMAC)──▶ dieser Proxy ──(OIDC)──▶ skills.sh
+```
+
+- Die **Runtime** kennt weder den Proxy noch ein Geheimnis. Sie schickt ihre signierte Lizenz an die Firebase-Funktion.
+- Die **Firebase-Funktion** prüft Lizenz (Signatur, aktiv, Registry) und Anfrage (nur lesende `/skills…`-Pfade und
+  bekannte Parameter) und signiert den Aufruf des Proxys.
+- Dieser **Proxy** akzeptiert nur Aufrufe mit gültiger HMAC-Signatur. Die Signatur gilt über
+  `{zeitstempel}\n{METHODE}\n{pfad+query}` (HMAC-SHA256, hex) in den Headern `x-novooa-timestamp` (Unix-ms) und
+  `x-novooa-signature`; der Zeitstempel darf höchstens 60 Sekunden abweichen. Das Geheimnis kennen nur Firebase und
+  Vercel. Innerhalb des Zeitfensters ist ein abgefangener Aufruf wiederholbar — das ist bei reinen GET-Abfragen
+  unkritisch.
 
 ## Bereitstellen
 
-1. Vercel-Projekt aus diesem Ordner anlegen (`relay/skills-sh-proxy` als Root Directory).
-2. Im Projekt unter *Settings → OIDC Federation* die Föderation aktivieren (Voraussetzung für `VERCEL_OIDC_TOKEN`).
-3. Umgebungsvariable `SKILLS_PROXY_KEY` setzen: ein langer Zufallswert, der den Zugriff auf den Proxy schützt.
-4. Deployen. Die Adresse lautet `https://<projekt>.vercel.app/api/v1`.
+1. Vercel-Projekt anlegen, **ohne** Git-Anbindung, aus diesem Ordner:
+   ```bash
+   cd relay/skills-sh-proxy
+   npm install
+   npx vercel                      # Git-Repository verbinden? → N
+   ```
+2. Im Projekt unter *Settings → Security → OIDC Federation* die Föderation aktivieren (sonst gibt es kein
+   `VERCEL_OIDC_TOKEN`).
+3. Geheimnis erzeugen und in **beiden** Umgebungen setzen (derselbe Wert):
+   ```bash
+   SECRET=$(openssl rand -hex 32)
+   printf %s "$SECRET" | npx vercel env add SKILLS_PROXY_HMAC_KEY production
+   printf %s "$SECRET" | firebase functions:secrets:set SKILLS_PROXY_HMAC_KEY
+   ```
+4. Proxy deployen: `npx vercel --prod`. Die Adresse lautet `https://<projekt>.vercel.app`.
+5. Firebase-Funktion mit der Proxy-Adresse deployen (Parameter `SKILLS_PROXY_URL`, z. B. in `functions/.env`):
+   ```text
+   SKILLS_PROXY_URL=https://<projekt>.vercel.app
+   ```
+   ```bash
+   firebase deploy --only functions:localRuntimeSkillsRelay
+   ```
 
-## An der Runtime einrichten
-
-In der Umgebung der lokalen Runtime (z. B. `.env` neben `docker-compose.local.yaml`, an den Dienst `runtime`
-durchreichen):
-
-```text
-SKILLS_SH_BASE_URL=https://<projekt>.vercel.app/api/v1
-SKILLS_SH_TOKEN=<Wert von SKILLS_PROXY_KEY>
-```
-
-Ohne diese Werte bleibt der Katalog-Tab der App deaktiviert („Der Katalog ist nicht eingerichtet“); der Import
-über GitHub, ZIP und Ordner funktioniert unabhängig davon.
+Die Runtime braucht keine Einstellung: `docker-compose.local.yaml` verweist standardmäßig auf die Funktion. Mit
+`SKILLS_SH_RELAY_URL=` (leer) ist der Katalog abgeschaltet.
 
 ## Entwicklung
 
 ```bash
-npm test   # prüft Pfadfilter und Schlüsselvergleich
+npm test   # Pfadfilter und HMAC-Prüfung inkl. gemeinsamem Testvektor mit der Firebase-Funktion
 ```
 
-Der Proxy gibt nur lesende Abfragen unter `/skills…` weiter; alles andere antwortet mit 400.
+Der Proxy gibt nur lesende Abfragen unter `/api/v1/skills…` weiter; alles andere antwortet mit 400.

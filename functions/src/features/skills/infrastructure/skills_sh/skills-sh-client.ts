@@ -1,14 +1,7 @@
 import {SkillCatalogError} from "../../domain/entities/skill-catalog.js";
-
-export type SkillsShConfig = {
-  /** Basis-Adresse der API oder des Proxys, z. B. `https://skills.sh/api/v1`. */
-  baseUrl: string;
-  /** Bearer-Token (Vercel OIDC); beim Proxy nicht nötig. */
-  token?: string;
-};
+import {type SkillsShTransport} from "./skills-sh-transport.js";
 
 export type SkillsShClientDependencies = {
-  request?: typeof fetch;
   now?: () => number;
   sleep?: (milliseconds: number) => Promise<void>;
 };
@@ -17,7 +10,6 @@ const maximumWaitMilliseconds = 30_000;
 const maximumRetries = 2;
 const defaultRetryAfterSeconds = 5;
 const maximumCacheEntries = 200;
-const requestTimeoutMilliseconds = 30_000;
 
 type CacheEntry = {value: unknown; expiresAt: number};
 
@@ -28,7 +20,6 @@ type CacheEntry = {value: unknown; expiresAt: number};
  * fasst gleiche gleichzeitige Anfragen zusammen.
  */
 export class SkillsShClient {
-  private readonly request: typeof fetch;
   private readonly now: () => number;
   private readonly sleep: (milliseconds: number) => Promise<void>;
   private readonly cache = new Map<string, CacheEntry>();
@@ -36,29 +27,29 @@ export class SkillsShClient {
   private remaining: number | null = null;
   private resetAt = 0;
 
-  constructor(private readonly config: SkillsShConfig, dependencies: SkillsShClientDependencies = {}) {
-    this.request = dependencies.request ?? fetch;
+  constructor(private readonly transport: SkillsShTransport, dependencies: SkillsShClientDependencies = {}) {
     this.now = dependencies.now ?? Date.now;
     this.sleep = dependencies.sleep ?? ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
   }
 
   async get<Body>(path: string, query: Record<string, string | number | undefined> = {}, defaultTtlSeconds = 60): Promise<Body> {
-    const url = this.urlFor(path, query);
-    const cached = this.cache.get(url);
+    const parameters = parametersOf(query);
+    const key = `${path}?${parameters}`;
+    const cached = this.cache.get(key);
     if (cached !== undefined && cached.expiresAt > this.now()) return cached.value as Body;
-    const pending = this.inFlight.get(url);
+    const pending = this.inFlight.get(key);
     if (pending !== undefined) return pending as Promise<Body>;
-    const started = this.fetchWithRetries<Body>(url, defaultTtlSeconds).finally(() => this.inFlight.delete(url));
-    this.inFlight.set(url, started);
+    const started = this.fetchWithRetries<Body>(key, path, parameters, defaultTtlSeconds).finally(() => this.inFlight.delete(key));
+    this.inFlight.set(key, started);
     return started;
   }
 
-  private async fetchWithRetries<Body>(url: string, defaultTtlSeconds: number): Promise<Body> {
+  private async fetchWithRetries<Body>(key: string, path: string, parameters: URLSearchParams, defaultTtlSeconds: number): Promise<Body> {
     for (let attempt = 0; ; attempt++) {
       await this.waitForQuota();
-      const response = await this.send(url);
+      const response = await this.send(path, parameters);
       this.learnQuota(response);
-      if (response.ok) return this.remember(url, await response.json() as Body, response, defaultTtlSeconds);
+      if (response.ok) return this.remember(key, await response.json() as Body, response, defaultTtlSeconds);
       if (attempt < maximumRetries) {
         const wait = this.retryDelay(response, attempt);
         if (wait !== null && wait <= maximumWaitMilliseconds) {
@@ -70,13 +61,11 @@ export class SkillsShClient {
     }
   }
 
-  private async send(url: string): Promise<Response> {
+  private async send(path: string, parameters: URLSearchParams): Promise<Response> {
     try {
-      return await this.request(url, {
-        headers: {accept: "application/json", ...(this.config.token ? {authorization: `Bearer ${this.config.token}`} : {})},
-        signal: AbortSignal.timeout(requestTimeoutMilliseconds),
-      });
-    } catch {
+      return await this.transport.send(path, parameters);
+    } catch (error) {
+      if (error instanceof SkillCatalogError) throw error;
       throw new SkillCatalogError("skills.sh ist nicht erreichbar. Bitte später erneut versuchen.", "unavailable");
     }
   }
@@ -108,11 +97,11 @@ export class SkillsShClient {
     return null;
   }
 
-  private remember<Body>(url: string, value: Body, response: Response, defaultTtlSeconds: number): Body {
+  private remember<Body>(key: string, value: Body, response: Response, defaultTtlSeconds: number): Body {
     const ttl = maxAgeSeconds(response) ?? defaultTtlSeconds;
     if (ttl > 0) {
       if (this.cache.size >= maximumCacheEntries) this.cache.delete(this.cache.keys().next().value!);
-      this.cache.set(url, {value, expiresAt: this.now() + ttl * 1000});
+      this.cache.set(key, {value, expiresAt: this.now() + ttl * 1000});
     }
     return value;
   }
@@ -121,19 +110,12 @@ export class SkillsShClient {
     if (response.status === 429) return rateLimited(retryAfterSeconds(response, this.now()) ?? defaultRetryAfterSeconds);
     if (response.status === 404) return new SkillCatalogError("Der Skill wurde im Katalog nicht gefunden.", "not_found");
     if (response.status === 401) {
-      return new SkillCatalogError("Der Zugang zu skills.sh ist nicht gültig (Token fehlt oder ist abgelaufen).", "unauthorized");
+      return new SkillCatalogError("Der Zugang zum Skill-Katalog wurde abgelehnt (Lizenz oder Zugangsdaten ungültig).", "unauthorized");
     }
     const body = await response.json().catch(() => ({})) as {message?: unknown};
     const detail = typeof body.message === "string" ? ` ${body.message}` : "";
     if (response.status === 400) return new SkillCatalogError(`skills.sh hat die Anfrage abgelehnt.${detail}`, "invalid");
     return new SkillCatalogError(`skills.sh ist vorübergehend nicht verfügbar (${response.status}).`, "unavailable");
-  }
-
-  private urlFor(path: string, query: Record<string, string | number | undefined>): string {
-    const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(query)) if (value !== undefined) params.set(key, String(value));
-    const search = params.toString();
-    return `${this.config.baseUrl.replace(/\/$/, "")}${path}${search ? `?${search}` : ""}`;
   }
 }
 
@@ -161,4 +143,10 @@ function maxAgeSeconds(response: Response): number | null {
   if (header !== null && /no-store|no-cache/.test(header)) return 0;
   const match = header === null ? null : /(?:s-maxage|max-age)=(\d+)/.exec(header);
   return match === null ? null : Number(match[1]);
+}
+
+function parametersOf(query: Record<string, string | number | undefined>): URLSearchParams {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) if (value !== undefined) params.set(key, String(value));
+  return params;
 }

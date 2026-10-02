@@ -64,3 +64,6 @@ macos/Runner/*
 /android/
 # Skills-Ordner der lokalen Runtime (Nutzerdaten, Bind-Mount von docker-compose.local.yaml).
 /novooa-skills/
+
+# Lokale Vercel-Projektverknüpfung (relay/skills-sh-proxy).
+.vercel/

@@ -77,16 +77,34 @@ Adapter für die [skills.sh-API](https://www.skills.sh/docs/api) (`GET /skills`,
 Dateien als Text liefert — GitHub wird nicht gebraucht (Binärdateien fehlen; die Vorschau warnt davor). Bei Katalog-
 Skills zeigt die Vorschau die **Sicherheitsprüfungen** der Partner (Socket, Snyk, …).
 
-**Zugang:** Die API verlangt für jeden Aufruf ein Vercel-OIDC-Token. Deshalb läuft der Katalog über einen eigenen
-Proxy ([`relay/skills-sh-proxy`](../../relay/skills-sh-proxy/README.md)), der das Token einsetzt. Konfiguration der
-Runtime:
+**Zugang:** Die API verlangt für jeden Aufruf ein Vercel-OIDC-Token. Deshalb läuft der Katalog über zwei
+Server-Stufen, damit bei den Kunden kein Geheimnis liegt:
 
-| Variable             | Bedeutung                                                                          |
-| -------------------- | ---------------------------------------------------------------------------------- |
-| `SKILLS_SH_BASE_URL` | Adresse des Proxys, z. B. `https://<projekt>.vercel.app/api/v1`                    |
-| `SKILLS_SH_TOKEN`    | Zugangsschlüssel des Proxys; **ohne** `SKILLS_SH_BASE_URL` direkt ein OIDC-Token gegen `https://skills.sh/api/v1` |
+```text
+Runtime ──(signierte Lizenz)──▶ Firebase-Funktion localRuntimeSkillsRelay ──(HMAC)──▶ Vercel-Proxy ──(OIDC)──▶ skills.sh
+```
 
-Ohne beides ist der Katalog-Tab deaktiviert („nicht eingerichtet“); GitHub/ZIP/Ordner funktionieren trotzdem.
+- **Firebase-Funktion** (`functions/src/features/skills/infrastructure/firebase/`): prüft die Lizenz der Runtime
+  (`FirebaseRuntimeRelayLicenseVerifier`, wie Push- und Mail-Relay), erst danach die Anfrage (nur lesende
+  `/skills…`-Pfade, bekannte Parameter, keine `..`/kodierten Trenner) und ruft den Proxy auf. Status und Rate-Limit-Header
+  des Katalogs kommen unverändert zurück. Eine Rate-Begrenzung je Lizenz (Token Bucket) kommt später an dieselbe Stelle
+  (`RelaySkillsCatalogRequest`, nach der Lizenzprüfung).
+- **HMAC zwischen den Servern:** HMAC-SHA256 über `{zeitstempel}\n{METHODE}\n{pfad+query}`, Header
+  `x-novooa-timestamp` / `x-novooa-signature`, Fenster ±60 s. Das Geheimnis (`SKILLS_PROXY_HMAC_KEY`) kennen nur
+  Firebase und Vercel. Beide Seiten testen denselben Vektor.
+- **Vercel-Proxy** ([`relay/skills-sh-proxy`](../../relay/skills-sh-proxy/README.md)): prüft die Signatur und setzt das
+  OIDC-Token ein.
+
+Konfiguration der Runtime (Vorrang von oben nach unten):
+
+| Variable                           | Bedeutung                                                                          |
+| ---------------------------------- | ---------------------------------------------------------------------------------- |
+| `SKILLS_SH_RELAY_URL`              | Firebase-Relay (Normalfall; in `docker-compose.local.yaml` voreingestellt, leer = Katalog aus) |
+| `SKILLS_SH_BASE_URL` (+ `SKILLS_SH_TOKEN`) | direkter Zugang zu einer API-Adresse, z. B. Test-Server                    |
+| nur `SKILLS_SH_TOKEN`              | direkt gegen `https://skills.sh/api/v1` mit eigenem Vercel-OIDC-Token (Entwicklung) |
+
+Der Katalog braucht eine **aktive Lizenz** der Runtime; ohne sie meldet die App „Für den Katalog ist eine aktive Lizenz
+nötig“. Ohne Katalog-Zugang ist der Tab deaktiviert; GitHub/ZIP/Ordner funktionieren trotzdem.
 
 **Rate-Limits (600 Anfragen/Minute je Projekt):** Der Client (`SkillsShClient`) hält sie ein, statt sie auszureizen:
 

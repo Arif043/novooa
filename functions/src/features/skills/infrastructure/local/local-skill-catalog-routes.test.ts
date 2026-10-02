@@ -67,17 +67,18 @@ test("catalog errors become matching statuses, rate limits carry Retry-After", a
   assert.equal(down.statusCode, 503);
 });
 
-test("the configuration comes from the environment: proxy URL, or token for the direct API, or nothing", () => {
+test("the configuration comes from the environment: relay first, then base URL, then token, else nothing", () => {
   assert.equal(skillsShConfigFrom({}), undefined);
-  assert.deepEqual(skillsShConfigFrom({SKILLS_SH_BASE_URL: "https://proxy.example/api/v1"}), {baseUrl: "https://proxy.example/api/v1"});
-  assert.deepEqual(skillsShConfigFrom({SKILLS_SH_BASE_URL: "https://p/api/v1", SKILLS_SH_TOKEN: "t"}), {baseUrl: "https://p/api/v1", token: "t"});
-  assert.deepEqual(skillsShConfigFrom({SKILLS_SH_TOKEN: "t"}), {baseUrl: "https://skills.sh/api/v1", token: "t"});
-  assert.equal(skillsShConfigFrom({SKILLS_SH_TOKEN: "  "}), undefined);
+  assert.deepEqual(skillsShConfigFrom({SKILLS_SH_RELAY_URL: "https://relay.example/fn", SKILLS_SH_BASE_URL: "https://x", SKILLS_SH_TOKEN: "t"}), {kind: "relay", relayUrl: "https://relay.example/fn"});
+  assert.deepEqual(skillsShConfigFrom({SKILLS_SH_BASE_URL: "https://test.example/api/v1"}), {kind: "direct", baseUrl: "https://test.example/api/v1"});
+  assert.deepEqual(skillsShConfigFrom({SKILLS_SH_BASE_URL: "https://p/api/v1", SKILLS_SH_TOKEN: "t"}), {kind: "direct", baseUrl: "https://p/api/v1", token: "t"});
+  assert.deepEqual(skillsShConfigFrom({SKILLS_SH_TOKEN: "t"}), {kind: "direct", baseUrl: "https://skills.sh/api/v1", token: "t"});
+  assert.equal(skillsShConfigFrom({SKILLS_SH_TOKEN: "  ", SKILLS_SH_RELAY_URL: " "}), undefined);
 });
 
 test("importing from the catalog requires a configured catalog; with one it downloads the file tree", async () => {
   const notifier = {publish: () => undefined};
-  const without = testingRoutes(skillRoutes, createSkillsModule("/tmp/ungenutzt", notifier, null).routes);
+  const without = testingRoutes(skillRoutes, createSkillsModule("/tmp/ungenutzt", notifier, () => null, null).routes);
   const missing = await without.handle({method: "POST", url: "/v1/skills/imports", body: {skillsSh: {id: "a/b/c"}}});
   assert.equal(missing?.statusCode, 400);
   assert.match((missing?.body as {error: string}).error, /nicht eingerichtet/);
@@ -89,7 +90,7 @@ test("importing from the catalog requires a configured catalog; with one it down
     return new Response(JSON.stringify({slug: "c", files: [{path: "SKILL.md", contents: "---\nname: c\ndescription: Katalog-Skill\n---\nText"}]}));
   }) as unknown as typeof fetch;
   try {
-    const module = createSkillsModule("/tmp/ungenutzt-2", notifier, {baseUrl: "https://proxy.example/api/v1"});
+    const module = createSkillsModule("/tmp/ungenutzt-2", notifier, () => null, {kind: "direct", baseUrl: "https://proxy.example/api/v1"});
     const preview = await testingRoutes(skillRoutes, module.routes).handle({method: "POST", url: "/v1/skills/imports", body: {skillsSh: {id: "a/b/c"}}});
     assert.equal(preview?.statusCode, 201);
     assert.deepEqual((preview?.body as {candidates: Array<{name: string}>}).candidates.map((candidate) => candidate.name), ["c"]);

@@ -22,8 +22,11 @@ services:
       LOCAL_RUNTIME_LICENSE_GATEWAY_URL: ${LOCAL_RUNTIME_LICENSE_GATEWAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/issueLocalRuntimeLicense}
       LOCAL_RUNTIME_PUSH_RELAY_URL: ${LOCAL_RUNTIME_PUSH_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimePushRelay}
       LOCAL_RUNTIME_MAIL_RELAY_URL: ${LOCAL_RUNTIME_MAIL_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeMailRelay}
-      # Skill-Katalog (skills.sh) über den Proxy aus relay/skills-sh-proxy;
-      # leer = Katalog nicht eingerichtet (Import per GitHub/ZIP/Ordner geht trotzdem).
+      # Skill-Katalog (skills.sh) über das Relay in Firebase: Die Runtime weist sich mit ihrer Lizenz aus, das Relay
+      # prüft sie und ruft den Vercel-Proxy (relay/skills-sh-proxy) auf. Leer setzen (SKILLS_SH_RELAY_URL=) schaltet
+      # den Katalog ab; Import per GitHub/ZIP/Ordner geht immer. SKILLS_SH_BASE_URL / SKILLS_SH_TOKEN sind nur für
+      # den direkten Zugang in der Entwicklung (siehe docs/features/skills.md).
+      SKILLS_SH_RELAY_URL: ${SKILLS_SH_RELAY_URL-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeSkillsRelay}
       SKILLS_SH_BASE_URL: ${SKILLS_SH_BASE_URL:-}
       SKILLS_SH_TOKEN: ${SKILLS_SH_TOKEN:-}
       LOCAL_RUNTIME_FIREBASE_API_KEY: ${LOCAL_RUNTIME_FIREBASE_API_KEY:-AIzaSyCqT815piSitiqbdyIt_r5V57p0_95tGaI}

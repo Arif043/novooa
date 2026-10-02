@@ -1,3 +1,4 @@
+import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {createSkillsModule} from "../../features/skills/infrastructure/local/skills-composition.js";
 import {LanguageModelSpeech} from "../../features/speech_synthesis/domain/usecases/language-model-speech.js";
 import {defaultSpeechProviders} from "../../features/speech_synthesis/infrastructure/default-speech-providers.js";
@@ -43,6 +44,7 @@ export function createLocalRuntimeRouteServices(options: {
   runtimeRoot: string;
   fieldCipher: SensitiveFieldCipher;
   notifier: LocalRuntimeRealtimeNotifier;
+  licenses: Pick<RuntimeLicenseService, "signedActiveLicense">;
   workspaceContext: () => LocalRuntimeWorkspaceContext;
 }) {
   const {database, runtimeRoot} = options;
@@ -63,7 +65,7 @@ export function createLocalRuntimeRouteServices(options: {
     applicationLogs: new SQLiteLocalApplicationLogStore(database),
     languageModels: new SQLiteLanguageModelConfigurationStore(database, languageModelSecrets),
     languageModelDefaults: new SQLiteLanguageModelDefaultsStore(database),
-    skills: createSkillsModule(runtimeRoot, options.notifier),
+    skills: createSkillsModule(runtimeRoot, options.notifier, () => options.licenses.signedActiveLicense()),
     speechVoices: new LanguageModelSpeech(new SQLiteLanguageModelCatalog(database, languageModelSecrets), defaultSpeechProviders()),
     assistants: assistantFactories(database, languageModelSecrets),
     modelCatalog: modelCatalogOptions(runtimeRoot, database, options.notifier),

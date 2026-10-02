@@ -4,6 +4,7 @@ import {SkillCatalogError} from "../../domain/entities/skill-catalog.js";
 import {SkillImportError} from "../../domain/entities/skill-import-error.js";
 import {SkillsShCatalog, catalogPath} from "./skills-sh-catalog.js";
 import {SkillsShClient} from "./skills-sh-client.js";
+import {DirectSkillsShTransport, LicenseRelaySkillsShTransport} from "./skills-sh-transport.js";
 import {SkillsShSkillSource} from "./skills-sh-skill-source.js";
 
 type Reply = {status?: number; body?: unknown; headers?: Record<string, string>} | Error;
@@ -20,8 +21,8 @@ function harness(replies: Reply[], config = {baseUrl: "https://proxy.example/api
     if (reply instanceof Error) throw reply;
     return new Response(JSON.stringify(reply.body ?? {}), {status: reply.status ?? 200, headers: reply.headers});
   }) as unknown as typeof fetch;
-  const client = new SkillsShClient(config, {
-    request, now: () => now, sleep: async (milliseconds) => { sleeps.push(milliseconds); now += milliseconds; },
+  const client = new SkillsShClient(new DirectSkillsShTransport(config, request), {
+    now: () => now, sleep: async (milliseconds) => { sleeps.push(milliseconds); now += milliseconds; },
   });
   return {client, urls, headers, sleeps, advance: (milliseconds: number) => { now += milliseconds; }};
 }
@@ -189,4 +190,34 @@ test("the skills.sh source explains missing snapshots and catalog errors", async
   await assert.rejects(new SkillsShSkillSource(noFiles.client).resolve({id: "a/b/x"}), /kein Dateiabzug/);
   await assert.rejects(new SkillsShSkillSource(missing.client).resolve({id: "a/b/x"}), (error: unknown) =>
     error instanceof SkillImportError && /nicht gefunden/.test(error.message));
+});
+
+test("the relay transport posts the license with path and query and needs an active license", async () => {
+  const sent: Array<{url: string; body: Record<string, unknown>}> = [];
+  const license = {signature: "s", payload: {licenseId: "l"}} as never;
+  const request = (async (url: string, init: RequestInit) => {
+    sent.push({url, body: JSON.parse(String(init.body))});
+    return new Response(JSON.stringify({data: []}), {status: 200});
+  }) as unknown as typeof fetch;
+  const client = new SkillsShClient(new LicenseRelaySkillsShTransport("https://relay.example/fn", () => license, request));
+
+  await new SkillsShCatalog(client).search("react", 5);
+
+  assert.deepEqual(sent, [{url: "https://relay.example/fn", body: {license, path: "/skills/search", query: {q: "react", limit: "5"}}}]);
+
+  const unlicensed = new SkillsShClient(new LicenseRelaySkillsShTransport("https://relay.example/fn", () => null, request));
+  await assert.rejects(new SkillsShCatalog(unlicensed).search("react"), (error: unknown) =>
+    error instanceof SkillCatalogError && error.kind === "unauthorized" && /aktive Lizenz/.test(error.message));
+  assert.equal(sent.length, 1);
+});
+
+test("the relay transport requires HTTPS and passes relay rate limits through", async () => {
+  assert.throws(() => new LicenseRelaySkillsShTransport("http://relay.example/fn", () => null), /HTTPS/);
+  const limited = new SkillsShClient(new LicenseRelaySkillsShTransport(
+    "https://relay.example/fn", () => ({}) as never,
+    (async () => new Response("{}", {status: 429, headers: {"retry-after": "90"}})) as unknown as typeof fetch,
+  ));
+
+  await assert.rejects(limited.get("/skills"), (error: unknown) =>
+    error instanceof SkillCatalogError && error.kind === "rate_limited" && error.retryAfterSeconds === 90);
 });

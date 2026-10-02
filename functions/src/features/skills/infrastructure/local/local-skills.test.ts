@@ -122,7 +122,7 @@ test("the skills folder defaults to the runtime root and can be overridden", () 
 async function handler(t: TestContext) {
   const root = await temporaryDirectory(t);
   const published: string[] = [];
-  const options = createSkillsModule(root, {publish: (topic) => published.push(topic)}, null).routes;
+  const options = createSkillsModule(root, {publish: (topic) => published.push(topic)}, () => null, null).routes;
   return {root, published, options, routes: testingRoutes(skillRoutes, options)};
 }
 

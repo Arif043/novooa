@@ -470,8 +470,8 @@ Der Pfad lässt sich mit `NOVOOA_SKILLS_DIR` ändern. `docker-compose.local.yaml
 ihn dem Benutzer `node`, damit Importe schreiben können. Ordner, die der Nutzer dort anlegt, sind sofort Fähigkeiten.
 
 Der Import (GitHub, ZIP, Ordner, skills.sh) läuft über `POST /v1/skills/imports…` als Vorschau mit anschließendem
-`commit`; der skills.sh-Katalog braucht `SKILLS_SH_BASE_URL` (Proxy, siehe `relay/skills-sh-proxy`) und
-`SKILLS_SH_TOKEN`. Routen, Grenzen, Rate-Limits und Sicherheit stehen in
+`commit`; der skills.sh-Katalog läuft über das Relay `localRuntimeSkillsRelay` in Firebase (Lizenzprüfung, dann HMAC zum
+Vercel-Proxy `relay/skills-sh-proxy`); `SKILLS_SH_RELAY_URL` ist in der Compose-Datei voreingestellt. Routen, Grenzen, Rate-Limits und Sicherheit stehen in
 [`features/skills.md`](features/skills.md). Das Thema `skills` des Realtime-Kanals meldet Änderungen.
 
 ## Lizenz und lokale Identität

@@ -8,7 +8,9 @@ import {GitHubSkillSource} from "../github/github-skill-source.js";
 import {DirectorySkillStore} from "./directory-skill-store.js";
 import {InMemoryStagedSkillImports} from "./in-memory-staged-skill-imports.js";
 import {SkillsShCatalog} from "../skills_sh/skills-sh-catalog.js";
-import {SkillsShClient, type SkillsShConfig} from "../skills_sh/skills-sh-client.js";
+import {SkillsShClient} from "../skills_sh/skills-sh-client.js";
+import {DirectSkillsShTransport, LicenseRelaySkillsShTransport, type DirectSkillsShConfig, type SkillsShTransport} from "../skills_sh/skills-sh-transport.js";
+import {type SignedRuntimeLicense} from "../../../licensing/domain/entities/runtime-license-lease.js";
 import {SkillsShSkillSource} from "../skills_sh/skills-sh-skill-source.js";
 import {type SkillCatalogRoutesOptions} from "./local-skill-catalog-routes.js";
 import {type SkillRoutesOptions} from "./local-skill-routes.js";
@@ -23,26 +25,44 @@ export function createDirectorySkillStore(runtimeRoot: string): DirectorySkillSt
   return new DirectorySkillStore(skillsDirectoryFor(runtimeRoot));
 }
 
+export type SkillsShConfig =
+  | {kind: "relay"; relayUrl: string}
+  | ({kind: "direct"} & DirectSkillsShConfig);
+
 /**
- * Zugang zu skills.sh: `SKILLS_SH_BASE_URL` (Proxy) mit optionalem `SKILLS_SH_TOKEN`; nur mit Token direkt gegen
- * `https://skills.sh/api/v1`. Ohne beides gibt es keinen Katalog (GitHub/ZIP/Ordner funktionieren trotzdem).
+ * Zugang zum Katalog (skills.sh), nach Vorrang:
+ * 1. `SKILLS_SH_RELAY_URL` — Relay in Firebase; die Runtime weist sich mit ihrer Lizenz aus (Normalfall).
+ * 2. `SKILLS_SH_BASE_URL` (+ optional `SKILLS_SH_TOKEN`) — direkter Zugang, z. B. zu einem Test-Server.
+ * 3. nur `SKILLS_SH_TOKEN` — direkt gegen `https://skills.sh/api/v1` mit eigenem Vercel-OIDC-Token (Entwicklung).
+ * Ohne eines davon gibt es keinen Katalog (GitHub/ZIP/Ordner funktionieren trotzdem).
  */
 export function skillsShConfigFrom(environment: NodeJS.ProcessEnv = process.env): SkillsShConfig | undefined {
+  const relayUrl = environment.SKILLS_SH_RELAY_URL?.trim();
   const baseUrl = environment.SKILLS_SH_BASE_URL?.trim();
   const token = environment.SKILLS_SH_TOKEN?.trim();
-  if (baseUrl) return {baseUrl, ...(token ? {token} : {})};
-  return token ? {baseUrl: "https://skills.sh/api/v1", token} : undefined;
+  if (relayUrl) return {kind: "relay", relayUrl};
+  if (baseUrl) return {kind: "direct", baseUrl, ...(token ? {token} : {})};
+  return token ? {kind: "direct", baseUrl: "https://skills.sh/api/v1", token} : undefined;
+}
+
+function transportFor(config: SkillsShConfig, license: () => SignedRuntimeLicense | null): SkillsShTransport {
+  return config.kind === "relay"
+    ? new LicenseRelaySkillsShTransport(config.relayUrl, license)
+    : new DirectSkillsShTransport(config);
 }
 
 export type SkillsModule = {routes: SkillRoutesOptions; catalog: SkillCatalogRoutesOptions};
 
 /** Baut Skills-Routen und Katalog-Routen um **einen** skills.sh-Client, damit Rate-Limit und Cache gemeinsam gelten. */
 export function createSkillsModule(
-  runtimeRoot: string, notifier: SkillRoutesOptions["notifier"], config: SkillsShConfig | null = skillsShConfigFrom() ?? null,
+  runtimeRoot: string,
+  notifier: SkillRoutesOptions["notifier"],
+  license: () => SignedRuntimeLicense | null,
+  config: SkillsShConfig | null = skillsShConfigFrom() ?? null,
 ): SkillsModule {
   const store = createDirectorySkillStore(runtimeRoot);
   const staged = new InMemoryStagedSkillImports();
-  const client = config === null ? undefined : new SkillsShClient(config);
+  const client = config === null ? undefined : new SkillsShClient(transportFor(config, license));
   return {
     routes: {
       store,

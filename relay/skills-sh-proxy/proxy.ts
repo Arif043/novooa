@@ -1,4 +1,4 @@
-import {timingSafeEqual} from "node:crypto";
+import {createHmac, timingSafeEqual} from "node:crypto";
 
 export const upstreamBase = "https://skills.sh/api/v1";
 
@@ -17,10 +17,33 @@ export function upstreamUrlFor(requestUrl: string): string | null {
   return `${upstreamBase}${path}${url.search}`;
 }
 
-/** Prüft den Zugangsschlüssel der Runtime (`Authorization: Bearer <schlüssel>`) zeitkonstant. */
-export function isAuthorized(authorization: string | undefined, expectedKey: string | undefined): boolean {
-  if (!expectedKey || !authorization?.startsWith("Bearer ")) return false;
-  const given = Buffer.from(authorization.slice("Bearer ".length));
-  const expected = Buffer.from(expectedKey);
+export const timestampHeader = "x-novooa-timestamp";
+export const signatureHeader = "x-novooa-signature";
+
+/** Zeitfenster, in dem eine signierte Anfrage gilt (Replay-Schutz); Uhren dürfen so weit abweichen. */
+export const signatureWindowMilliseconds = 60_000;
+
+/**
+ * HMAC-SHA256 über `{zeitstempel}\n{methode}\n{pfad+query}` (hex) — dieselbe Festlegung wie
+ * `functions/src/features/skills/infrastructure/firebase/skills-relay-signature.ts`; beide Tests prüfen
+ * denselben Vektor. Das Geheimnis teilen nur die Firebase-Funktion und dieser Proxy.
+ */
+export function sign(secret: string, timestamp: number, method: string, pathAndQuery: string): string {
+  return createHmac("sha256", secret).update(`${timestamp}\n${method.toUpperCase()}\n${pathAndQuery}`).digest("hex");
+}
+
+/** Prüft Zeitstempel (innerhalb des Fensters) und Signatur zeitkonstant; ohne Geheimnis gilt jede Anfrage als ungültig. */
+export function isValidSignature(
+  secret: string | undefined,
+  headers: {timestamp?: string; signature?: string},
+  method: string,
+  pathAndQuery: string,
+  now: number,
+): boolean {
+  if (!secret || !headers.timestamp || !headers.signature) return false;
+  const timestamp = Number(headers.timestamp);
+  if (!Number.isFinite(timestamp) || Math.abs(now - timestamp) > signatureWindowMilliseconds) return false;
+  const expected = Buffer.from(sign(secret, timestamp, method, pathAndQuery));
+  const given = Buffer.from(headers.signature);
   return given.length === expected.length && timingSafeEqual(given, expected);
 }

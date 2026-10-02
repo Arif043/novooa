@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {isAuthorized, upstreamUrlFor} from "./proxy.ts";
+import {isValidSignature, sign, signatureWindowMilliseconds, upstreamUrlFor} from "./proxy.ts";
 
 test("only read-only catalog paths are forwarded, with their query", () => {
   assert.equal(upstreamUrlFor("/api/v1/skills/search?q=react"), "https://skills.sh/api/v1/skills/search?q=react");
@@ -23,12 +23,28 @@ test("other paths and traversal attempts are rejected", () => {
   assert.equal(upstreamUrlFor("/"), null);
 });
 
-test("the access key must match exactly", () => {
-  assert.equal(isAuthorized("Bearer geheim", "geheim"), true);
-  assert.equal(isAuthorized("Bearer falsch", "geheim"), false);
-  assert.equal(isAuthorized("Bearer geheim-und-mehr", "geheim"), false);
-  assert.equal(isAuthorized("geheim", "geheim"), false);
-  assert.equal(isAuthorized(undefined, "geheim"), false);
-  assert.equal(isAuthorized("Bearer x", undefined), false);
-  assert.equal(isAuthorized("Bearer ", ""), false);
+const vector = "f09c1c1f90def0417b5dd51ac394c93458fce17ab25c5d25fec109199e78f43b";
+
+test("the signature matches the shared test vector of the Firebase function", () => {
+  assert.equal(sign("geheim", 1000, "get", "/api/v1/skills/search?q=a"), vector);
+});
+
+test("a request is valid only with exact signature and inside the time window", () => {
+  const headers = {timestamp: "1000", signature: vector};
+  const valid = (override = {}, secret: string | undefined = "geheim", path = "/api/v1/skills/search?q=a", now = 1000) =>
+    isValidSignature(secret, {...headers, ...override}, "GET", path, now);
+
+  assert.equal(valid(), true);
+  assert.equal(valid({}, "geheim", "/api/v1/skills/search?q=a", 1000 + signatureWindowMilliseconds), true);
+  assert.equal(valid({}, "geheim", "/api/v1/skills/search?q=a", 1000 + signatureWindowMilliseconds + 1), false);
+  assert.equal(valid({}, "geheim", "/api/v1/skills/search?q=a", 1000 - signatureWindowMilliseconds - 1), false);
+  assert.equal(valid({}, "falsch"), false);
+  assert.equal(valid({}, "geheim", "/api/v1/skills/search?q=b"), false);
+  assert.equal(valid({signature: vector.replace(/.$/, "0")}), false);
+  assert.equal(valid({signature: "kurz"}), false);
+  assert.equal(valid({timestamp: "kein-wert"}), false);
+  assert.equal(valid({timestamp: undefined}), false);
+  assert.equal(valid({signature: undefined}), false);
+  assert.equal(isValidSignature(undefined, headers, "GET", "/api/v1/skills/search?q=a", 1000), false);
+  assert.equal(valid({}, ""), false);
 });
