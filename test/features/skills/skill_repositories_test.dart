@@ -158,14 +158,11 @@ void main() {
             },
           ],
         },
-        '/v1/skills/location': {'path': '/data/skills'},
       });
       final repository = LocalSkillRepository(client, _FakeChannel());
 
-      final location = await repository.loadLocation();
       final deleted = await repository.deleteSkill('mein skill');
 
-      expect(location.tryGetSuccess(), '/data/skills');
       expect(deleted.isSuccess(), isTrue);
       expect(client.deletes.single, '/v1/skills/mein%20skill');
     },

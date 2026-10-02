@@ -24,16 +24,6 @@ class LocalSkillRepository implements SkillRepository {
       skillsFromJson(await _client.get('/v1/skills'));
 
   @override
-  Future<Result<String, SkillFailure>> loadLocation() async {
-    try {
-      final json = await _client.get('/v1/skills/location');
-      return Success(json['path'] as String? ?? '');
-    } on Object {
-      return const Error(SkillFailure.loadFailed);
-    }
-  }
-
-  @override
   Future<Result<Unit, SkillFailure>> deleteSkill(String name) async {
     try {
       await _client.delete('/v1/skills/${Uri.encodeComponent(name)}');

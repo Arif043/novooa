@@ -17,10 +17,6 @@ class UnavailableSkillRepository implements SkillRepository {
   Stream<List<Skill>> watchSkills(TeamId teamId) => Stream.value(const []);
 
   @override
-  Future<Result<String, SkillFailure>> loadLocation() async =>
-      const Error(_failure);
-
-  @override
   Future<Result<Unit, SkillFailure>> deleteSkill(String name) async =>
       const Error(_failure);
 }

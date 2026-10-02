@@ -11,7 +11,7 @@ import {type SkillStore} from "../../domain/repositories/skill-store.js";
  * Er ist die einzige Quelle der Wahrheit — Ordner, die der Nutzer von Hand hineinlegt, sind sofort Skills.
  */
 export class DirectorySkillStore implements SkillStore {
-  constructor(readonly location: string) {}
+  constructor(private readonly location: string) {}
 
   async list(): Promise<StoredSkill[]> {
     const entries = await readdir(this.location, {withFileTypes: true}).catch(ignoreMissing([]));

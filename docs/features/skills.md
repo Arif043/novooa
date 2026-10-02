@@ -28,14 +28,14 @@ Jeder Nutzer hat einen **Skills-Basisordner**; jeder Skill ist ein Unterordner:
 ```
 
 Es gibt keine Datenbanktabelle. Name, Beschreibung, Lizenz und Kompatibilität liest die App aus dem Kopf der
-`SKILL.md`; **Kennung ist der Ordnername**. Ordner, die der Nutzer von Hand hineinlegt, sind sofort Skills
-(„Neu einlesen“ in der App genügt). Ordner ohne `SKILL.md` und versteckte Ordner (`.…`) werden ignoriert; Skills mit
-Problemen (fehlende Beschreibung, abweichender Name im Kopf) erscheinen mit Warnung statt zu verschwinden.
+`SKILL.md`; **Kennung ist der Ordnername**. Ordner ohne `SKILL.md` und versteckte Ordner (`.…`) werden ignoriert; Skills
+mit Problemen (fehlende Beschreibung, abweichender Name im Kopf) erscheinen mit Warnung statt zu verschwinden.
 
-Pfad: `NOVOOA_SKILLS_DIR`, sonst `<Runtime-Verzeichnis>/skills`. Mit `docker-compose.local.yaml` ist es ein
-Bind-Mount auf dem Host (`${NOVOOA_SKILLS_DIR:-./novooa-skills}`); der Dienst `skills-init` übergibt den Ordner
-dem Benutzer der Runtime, damit Importe schreiben können. Die App zeigt den Pfad oben auf der Seite
-**Fähigkeiten**.
+Das Verzeichnis `skills` gehört zur **Anwendung**: Es liegt im Datenverzeichnis der Runtime
+(`<Runtime-Verzeichnis>/skills`, mit Docker im Volumen `novooa-data`) und wird nicht zum Host freigegeben. Skills
+kommen über den Import in die App und werden dort gelöscht; es gibt keine Bearbeitung von außen. `NOVOOA_SKILLS_DIR`
+verlegt das Verzeichnis (nur für Sonderfälle wie Tests). Die App zeigt den Pfad oben auf der Seite **Fähigkeiten**;
+„Neu einlesen“ liest das Verzeichnis erneut.
 
 ## Standard (agentskills.io)
 
@@ -183,7 +183,6 @@ gespeichert, aber **nie ausgeführt** — das Modell hat nur lesende Werkzeuge (
 | Route                                         | Zweck                                                                     |
 | --------------------------------------------- | ------------------------------------------------------------------------- |
 | `GET /v1/skills`                              | liest den Skills-Ordner                                                   |
-| `GET /v1/skills/location`                     | Pfad des Skills-Ordners                                                   |
 | `DELETE /v1/skills/:name`                     | löscht den Skill-Ordner                                                   |
 | `POST /v1/skills/imports`                     | Vorschau aus `{github:{url}}`, `{folder:{name,files}}` oder `{skillsSh:{id}}` |
 | `POST /v1/skills/imports/archive?name=`       | Vorschau aus einem ZIP (`application/zip`)                                |
@@ -210,7 +209,7 @@ Route `/skills`, Drawer-Label **Fähigkeiten** (nur in Standalone). Die Seite ze
 ## Definition of Done
 
 - [x] Skills lassen sich per GitHub, ZIP und Ordner importieren; der Katalog (skills.sh) ist angebunden.
-- [x] Skills liegen als Ordner im Skills-Ordner; von Hand hinzugefügte Ordner werden erkannt.
+- [x] Skills liegen als Ordner im Skills-Verzeichnis der Anwendung (im Datenvolumen, nicht auf dem Host).
 - [x] Angehängte Skills erscheinen als Ordner im Node-Workspace; die Genkit-Skill-Middleware bietet sie unter ihrem
       Ordnernamen an.
 - [x] Rate-Limits von skills.sh werden eingehalten (Header, `Retry-After`, Cache, Backoff).

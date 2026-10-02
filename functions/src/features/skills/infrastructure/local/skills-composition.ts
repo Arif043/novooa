@@ -65,7 +65,6 @@ export function createSkillsModule(
   const client = config === null ? undefined : new SkillsShClient(transportFor(config, license));
   return {
     routes: {
-      store,
       list: new ListSkills(store),
       remove: new DeleteSkill(store),
       preview: new PreviewSkillImport(store, staged),

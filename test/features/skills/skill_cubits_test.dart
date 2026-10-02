@@ -13,7 +13,6 @@ import 'package:syscat2/features/skills/domain/repositories/skill_import_reposit
 import 'package:syscat2/features/skills/domain/repositories/skill_repository.dart';
 import 'package:syscat2/features/skills/domain/repositories/skill_source_gateway.dart';
 import 'package:syscat2/features/skills/domain/usecases/delete_skill.dart';
-import 'package:syscat2/features/skills/domain/usecases/load_skills_location.dart';
 import 'package:syscat2/features/skills/domain/usecases/skill_catalog_use_cases.dart';
 import 'package:syscat2/features/skills/domain/usecases/skill_import_use_cases.dart';
 import 'package:syscat2/features/skills/domain/usecases/watch_skills.dart';
@@ -259,7 +258,7 @@ void main() {
   });
 
   group('SkillsCubit', () {
-    test('lädt Skills und Ordnerpfad', () async {
+    test('lädt die Skills', () async {
       final repository = _SkillRepository();
       final cubit = _skillsCubit(repository);
 
@@ -268,7 +267,6 @@ void main() {
 
       expect(cubit.state.status, SkillsStatus.ready);
       expect(cubit.state.skills.single.name, 'pdf');
-      expect(cubit.state.location, '/data/skills');
     });
 
     test('Löschen meldet Erfolg und Fehler als Nachricht', () async {
@@ -325,7 +323,6 @@ SkillCatalogCubit _catalogCubit(_Catalog catalog) => SkillCatalogCubit(
 SkillsCubit _skillsCubit(_SkillRepository repository) => SkillsCubit(
   WatchSkills(repository),
   DeleteSkill(repository),
-  LoadSkillsLocation(repository),
   GetCurrentTeamId(_Teams()),
 );
 
@@ -453,10 +450,6 @@ class _SkillRepository implements SkillRepository {
       Skill(name: 'pdf', description: 'D', fileCount: 2),
     ]);
   }
-
-  @override
-  Future<Result<String, SkillFailure>> loadLocation() async =>
-      const Success('/data/skills');
 
   @override
   Future<Result<Unit, SkillFailure>> deleteSkill(String name) async {

@@ -88,7 +88,6 @@ import 'package:syscat2/features/employees/presentation/cubits/employees_cubit.d
 import 'package:syscat2/features/skills/domain/repositories/skill_repository.dart';
 import 'package:syscat2/features/skills/domain/usecases/delete_skill.dart';
 import 'package:syscat2/features/skills/domain/usecases/watch_skills.dart';
-import 'package:syscat2/features/skills/domain/usecases/load_skills_location.dart';
 import 'package:syscat2/features/skills/infrastructure/repositories/unavailable_skill_repository.dart';
 import 'package:syscat2/features/skills/presentation/cubits/skills_cubit.dart';
 import 'package:syscat2/features/user/domain/usecases/get_current_user_profile.dart';
@@ -367,9 +366,6 @@ void _configureCloudDependencies() {
       () => WatchSkills(serviceLocator<SkillRepository>()),
     )
     ..registerLazySingleton(
-      () => LoadSkillsLocation(serviceLocator<SkillRepository>()),
-    )
-    ..registerLazySingleton(
       () => DeleteSkill(serviceLocator<SkillRepository>()),
     )
     ..registerLazySingleton(
@@ -605,7 +601,6 @@ void _configureCloudDependencies() {
       () => SkillsCubit(
         serviceLocator<WatchSkills>(),
         serviceLocator<DeleteSkill>(),
-        serviceLocator<LoadSkillsLocation>(),
         serviceLocator<GetCurrentTeamId>(),
       ),
     )

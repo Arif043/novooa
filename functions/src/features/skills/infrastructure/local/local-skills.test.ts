@@ -181,16 +181,14 @@ test("imports need exactly one source and a zip content type", async (t) => {
   assert.match((broken?.body as {error: string}).error, /kein gültiges ZIP/);
 });
 
-test("skills are deleted by name and report the folder location", async (t) => {
+test("skills are deleted by name", async (t) => {
   const {routes, root, published} = await handler(t);
   await writeSkill(path.join(root, "skills"), "pdf", {"SKILL.md": skillMd("pdf")});
 
-  const location = await routes.handle({method: "GET", url: "/v1/skills/location", body: {}});
   const missing = await routes.handle({method: "DELETE", url: "/v1/skills/gibt-es-nicht", body: {}});
   const removed = await routes.handle({method: "DELETE", url: "/v1/skills/pdf", body: {}});
   const listed = await routes.handle({method: "GET", url: "/v1/skills", body: {}});
 
-  assert.deepEqual(location?.body, {path: path.join(root, "skills")});
   assert.equal(missing?.statusCode, 404);
   assert.equal(removed?.statusCode, 200);
   assert.deepEqual((listed?.body as {items: unknown[]}).items, []);

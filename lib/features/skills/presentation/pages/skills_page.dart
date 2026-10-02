@@ -8,11 +8,10 @@ import '../cubits/skills_cubit.dart';
 import '../cubits/skills_state.dart';
 import '../widgets/skill_import_sheet.dart';
 import '../widgets/skill_list_tile.dart';
-import '../widgets/skills_folder_hint.dart';
 
-/// Übersicht der Fähigkeiten (Skills). Der Skills-Ordner des Nutzers ist die
-/// Quelle der Wahrheit: Die Seite zeigt, was darin liegt, und bietet den Import
-/// (GitHub, ZIP, Ordner, Katalog) an.
+/// Übersicht der Fähigkeiten (Skills). Das Skills-Verzeichnis der Anwendung ist
+/// die Quelle der Wahrheit: Die Seite zeigt, was darin liegt, und bietet den
+/// Import (GitHub, ZIP, Ordner, Katalog) an.
 class SkillsPage extends StatelessWidget {
   const SkillsPage({super.key});
 
@@ -45,11 +44,6 @@ class _SkillsView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _Header(onImport: () => SkillImportSheet.show(context)),
-            const SizedBox(height: AppSpacing.md),
-            SkillsFolderHint(
-              location: state.location,
-              onRescan: context.read<SkillsCubit>().load,
-            ),
             const SizedBox(height: AppSpacing.md),
             Expanded(child: _Body(state: state)),
           ],
@@ -111,8 +105,7 @@ class _EmptyState extends StatelessWidget {
         children: [
           Text(
             'Noch keine Fähigkeiten. Importiere welche von GitHub, aus einem '
-            'ZIP oder dem Katalog – oder lege einen Skill-Ordner mit einer '
-            'SKILL.md in den Skills-Ordner.',
+            'ZIP, einem Ordner oder dem Katalog.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium,
           ),

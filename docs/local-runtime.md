@@ -465,9 +465,9 @@ Modell-Baustein sind an Firebase Storage oder Bilder gekoppelt.
 
 Fähigkeiten nach [agentskills.io](https://agentskills.io/specification) liegen **nicht** in SQLite, sondern als
 Ordner im Dateisystem: `<Runtime-Verzeichnis>/skills/<skill-name>/SKILL.md` (+ `scripts/`, `references/`, `assets/`).
-Der Pfad lässt sich mit `NOVOOA_SKILLS_DIR` ändern. `docker-compose.local.yaml` bindet ihn als
-`${NOVOOA_SKILLS_DIR:-./novooa-skills}` auf den Host; der Einmal-Dienst `skills-init` legt den Ordner an und übergibt
-ihn dem Benutzer `node`, damit Importe schreiben können. Ordner, die der Nutzer dort anlegt, sind sofort Fähigkeiten.
+Das Verzeichnis gehört zur Anwendung und liegt im Datenvolumen `novooa-data` (`/var/lib/novooa/skills`), es wird
+nicht zum Host freigegeben. Skills werden über die App importiert und gelöscht. Der Pfad lässt sich für Sonderfälle mit
+`NOVOOA_SKILLS_DIR` ändern.
 
 Der Import (GitHub, ZIP, Ordner, skills.sh) läuft über `POST /v1/skills/imports…` als Vorschau mit anschließendem
 `commit`; der skills.sh-Katalog läuft über das Relay `localRuntimeSkillsRelay` in Firebase (Lizenzprüfung, dann HMAC zum

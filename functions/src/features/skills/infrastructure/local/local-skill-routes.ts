@@ -7,7 +7,6 @@ import {type SkillImportOrigin} from "../../domain/entities/skill-import-preview
 import {SkillPackageError} from "../../domain/entities/skill-package.js";
 import {SkillAlreadyExistsError, SkillNotFoundError, SkillStorageError} from "../../domain/entities/stored-skill.js";
 import {type SkillSource} from "../../domain/repositories/skill-source.js";
-import {type SkillStore} from "../../domain/repositories/skill-store.js";
 import {type CommitSkillImport} from "../../domain/usecases/commit-skill-import.js";
 import {type PreviewSkillImport} from "../../domain/usecases/preview-skill-import.js";
 import {type DeleteSkill, type ListSkills} from "../../domain/usecases/skill-library.js";
@@ -17,7 +16,6 @@ import {type GitHubSkillReference} from "../github/github-skill-source.js";
 import {type SkillsShSkillReference} from "../skills_sh/skills-sh-skill-source.js";
 
 export type SkillRoutesOptions = {
-  store: SkillStore;
   list: ListSkills;
   remove: DeleteSkill;
   preview: PreviewSkillImport;
@@ -61,9 +59,6 @@ const ImportBody = Type.Object({
 export const skillRoutes: FastifyPluginAsyncTypebox<SkillRoutesOptions> = async (app, options) => {
   app.get("/v1/skills", {schema: {response: {200: Type.Object({items: Type.Array(Skill)})}}},
     async () => ({items: await options.list.execute()}));
-
-  app.get("/v1/skills/location", {schema: {response: {200: Type.Object({path: Type.String()})}}},
-    async () => ({path: options.store.location}));
 
   app.delete("/v1/skills/:name", {
     schema: {params: Type.Object({name: Type.String({minLength: 1, maxLength: 255})}), response: {...failures, 200: Type.Object({})}},

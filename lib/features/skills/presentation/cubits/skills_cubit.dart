@@ -8,24 +8,17 @@ import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart'
 import '../../domain/entities/skill.dart';
 import '../../domain/entities/skill_failure.dart';
 import '../../domain/usecases/delete_skill.dart';
-import '../../domain/usecases/load_skills_location.dart';
 import '../../domain/usecases/watch_skills.dart';
 import 'skills_state.dart';
 
-/// Zeigt den Skills-Ordner des Nutzers: die gefundenen Skills, den Pfad des
-/// Ordners und das Löschen. Neue Skills kommen über den Import oder von Hand
-/// in den Ordner; „Neu einlesen" ([load]) liest ihn erneut.
+/// Zeigt die Skills der Anwendung und löscht sie. Neue Skills kommen über den
+/// Import ([SkillImportCubit]); Änderungen meldet die Runtime per Realtime-Kanal.
 class SkillsCubit extends Cubit<SkillsState> {
-  SkillsCubit(
-    this._watchSkills,
-    this._deleteSkill,
-    this._loadLocation,
-    this._getCurrentTeamId,
-  ) : super(const SkillsState());
+  SkillsCubit(this._watchSkills, this._deleteSkill, this._getCurrentTeamId)
+    : super(const SkillsState());
 
   final WatchSkills _watchSkills;
   final DeleteSkill _deleteSkill;
-  final LoadSkillsLocation _loadLocation;
   final GetCurrentTeamId _getCurrentTeamId;
   StreamSubscription<List<Skill>>? _subscription;
 
@@ -46,7 +39,6 @@ class SkillsCubit extends Cubit<SkillsState> {
         _emitFailure(SkillFailure.loadFailed.message);
       },
     );
-    await _loadFolderLocation();
   }
 
   Future<void> delete(String name) async {
@@ -73,12 +65,6 @@ class SkillsCubit extends Cubit<SkillsState> {
       _emitFailure('Team konnte nicht geladen werden.');
       return null;
     }
-  }
-
-  Future<void> _loadFolderLocation() async {
-    final result = await _loadLocation();
-    if (isClosed) return;
-    result.when((path) => emit(state.copyWith(location: path)), (_) {});
   }
 
   void _emitSkills(List<Skill> skills) {

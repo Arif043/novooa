@@ -35,8 +35,6 @@ services:
     depends_on:
       key-init:
         condition: service_completed_successfully
-      skills-init:
-        condition: service_completed_successfully
       novooa-ml:
         condition: service_healthy
     ports:
@@ -54,11 +52,6 @@ services:
       # ersten Start einmal ausführen — fehlt das Verzeichnis, liefert die
       # Runtime nur die API aus und antwortet auf App-Pfade mit 404.
       - ./build/web:/app/web:ro
-      # Skills-Ordner (Fähigkeiten): Jeder Skill ist ein Unterordner mit einer
-      # SKILL.md. Als Bind-Mount liegt er auf dem Host und lässt sich dort mit
-      # dem eigenen Editor befüllen; Ordner, die dort angelegt werden, sind
-      # sofort Fähigkeiten. Pfad per NOVOOA_SKILLS_DIR änderbar.
-      - ${NOVOOA_SKILLS_DIR:-./novooa-skills}:/var/lib/novooa/skills
     secrets:
       - novooa_runtime_license_public_key
     networks:
@@ -105,19 +98,6 @@ services:
       - novooa-keys:/var/lib/novooa-keys
     secrets:
       - novooa_runtime_master_key
-
-  # Legt den Skills-Ordner an und übergibt ihn dem Benutzer der Runtime. Docker
-  # erzeugt fehlende Bind-Mount-Ordner als root; ohne diesen Schritt könnte die
-  # Runtime dort keine Skills importieren.
-  skills-init:
-    build:
-      context: .
-      dockerfile: functions/Dockerfile.local-runtime
-    user: "0:0"
-    network_mode: none
-    entrypoint: [sh, -c, "chown node:node /skills"]
-    volumes:
-      - ${NOVOOA_SKILLS_DIR:-./novooa-skills}:/skills
 
   key-rotation:
     profiles: [maintenance]

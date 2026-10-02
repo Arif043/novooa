@@ -3,7 +3,6 @@ import '../../features/skills/domain/repositories/skill_import_repository.dart';
 import '../../features/skills/domain/repositories/skill_repository.dart';
 import '../../features/skills/domain/repositories/skill_source_gateway.dart';
 import '../../features/skills/domain/usecases/delete_skill.dart';
-import '../../features/skills/domain/usecases/load_skills_location.dart';
 import '../../features/skills/domain/usecases/skill_catalog_use_cases.dart';
 import '../../features/skills/domain/usecases/skill_import_use_cases.dart';
 import '../../features/skills/domain/usecases/watch_skills.dart';
@@ -272,9 +271,6 @@ Future<void> configureStandaloneDependencies(
     ..registerLazySingleton(() => WatchSkills(locator<SkillRepository>()))
     ..registerLazySingleton(() => DeleteSkill(locator<SkillRepository>()))
     ..registerLazySingleton(
-      () => LoadSkillsLocation(locator<SkillRepository>()),
-    )
-    ..registerLazySingleton(
       () => PreviewSkillImport(locator<SkillImportRepository>()),
     )
     ..registerLazySingleton(
@@ -296,7 +292,6 @@ Future<void> configureStandaloneDependencies(
       () => SkillsCubit(
         locator<WatchSkills>(),
         locator<DeleteSkill>(),
-        locator<LoadSkillsLocation>(),
         locator<GetCurrentTeamId>(),
       ),
     )
