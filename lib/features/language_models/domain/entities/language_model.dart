@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'language_model_draft.dart';
+
 class LanguageModel extends Equatable {
   const LanguageModel({
     required this.id,
@@ -9,6 +11,7 @@ class LanguageModel extends Equatable {
     required this.supportsStructuredOutput,
     required this.supportsImageGeneration,
     this.connectionId,
+    this.provider,
   });
 
   final String id;
@@ -23,6 +26,9 @@ class LanguageModel extends Equatable {
   /// Konzept, daher optional statt eines erfundenen Platzhalterwerts.
   final String? connectionId;
 
+  /// Anbieter des Modells, soweit bekannt — Grundlage der Anbieter-Auswahl.
+  final LanguageModelProvider? provider;
+
   @override
   List<Object?> get props => [
     id,
@@ -32,5 +38,6 @@ class LanguageModel extends Equatable {
     supportsStructuredOutput,
     supportsImageGeneration,
     connectionId,
+    provider,
   ];
 }

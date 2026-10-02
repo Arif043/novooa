@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/adaptive_sheet.dart';
 import '../../domain/entities/event_trigger_config.dart';
 import '../cubits/event_target_options_cubit.dart';
 import '../cubits/event_target_options_state.dart';
@@ -16,6 +17,7 @@ class EventTargetSheet extends StatefulWidget {
     super.key,
     required this.source,
     required this.initial,
+    required this.style,
   });
 
   final EventTriggerSource source;
@@ -27,17 +29,16 @@ class EventTargetSheet extends StatefulWidget {
     required EventTriggerTarget initial,
     required EventTargetOptionsCubit options,
   }) {
-    return showModalBottomSheet<EventTriggerTarget>(
+    return showAdaptiveSheet<EventTriggerTarget>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      constraints: const BoxConstraints(maxWidth: 560),
-      builder: (_) => BlocProvider.value(
+      builder: (_, style) => BlocProvider.value(
         value: options,
-        child: EventTargetSheet(source: source, initial: initial),
+        child: EventTargetSheet(source: source, initial: initial, style: style),
       ),
     );
   }
+
+  final AdaptiveSheetStyle style;
 
   @override
   State<EventTargetSheet> createState() => _EventTargetSheetState();
@@ -46,34 +47,56 @@ class EventTargetSheet extends StatefulWidget {
 class _EventTargetSheetState extends State<EventTargetSheet> {
   late EventTriggerTarget _selected = widget.initial;
 
+  /// Standardhöhe des Fenster-Sheets; bei kleinen Fenstern begrenzt es die Karte.
+  static const _windowSheetHeight = 520.0;
+
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.sizeOf(context).height * 0.8;
+    final isWindow = widget.style.isWindow;
     return SizedBox(
-      height: height,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
+      height: isWindow
+          ? _windowSheetHeight
+          : MediaQuery.sizeOf(context).height * 0.8,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.md,
+            ),
+            child: Text(
               eventTargetFieldLabel(widget.source.targetScope),
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: AppSpacing.md),
-            Expanded(
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child:
                   BlocBuilder<EventTargetOptionsCubit, EventTargetOptionsState>(
                     builder: (context, options) => _body(context, options),
                   ),
             ),
-            const SizedBox(height: AppSpacing.md),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(_selected),
-              child: const Text('Übernehmen'),
+          ),
+          if (isWindow) ...[
+            const Divider(height: 1),
+            SheetFooter(
+              onCancel: () => Navigator.of(context).pop(),
+              confirmLabel: 'Übernehmen',
+              onConfirm: () => Navigator.of(context).pop(_selected),
             ),
-          ],
-        ),
+          ] else
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: FilledButton(
+                onPressed: () => Navigator.of(context).pop(_selected),
+                child: const Text('Übernehmen'),
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -46,11 +46,7 @@ class LocalLanguageModelRepository
 
   @override
   Stream<List<LanguageModelConnection>> watchConnections(TeamId teamId) {
-    return watchWorkspaceChannel(
-      'language-models',
-      _loadConnections,
-      _channel,
-    );
+    return watchWorkspaceChannel('language-models', _loadConnections, _channel);
   }
 
   @override
@@ -66,7 +62,18 @@ class LocalLanguageModelRepository
         'Sprachmodelle konnten nicht gelesen werden.',
       );
     }
-    return items.map(_modelFrom).toList(growable: false);
+    final providers = await _providersByConnection();
+    return items
+        .map((item) => _modelFrom(item, providers))
+        .toList(growable: false);
+  }
+
+  /// Der Anbieter hängt an der Verbindung, nicht am Modell selbst.
+  Future<Map<String, LanguageModelProvider>> _providersByConnection() async {
+    final connections = await _loadConnections();
+    return {
+      for (final connection in connections) connection.id: connection.provider,
+    };
   }
 
   Future<List<LanguageModelConnection>> _loadConnections() async {
@@ -80,7 +87,10 @@ class LocalLanguageModelRepository
     return items.map(_connectionFrom).toList(growable: false);
   }
 
-  LanguageModel _modelFrom(Object? value) {
+  LanguageModel _modelFrom(
+    Object? value,
+    Map<String, LanguageModelProvider> providers,
+  ) {
     final model = _asRecord(value, 'Sprachmodell');
     final capabilities = model['capabilities'];
     if (capabilities is! Map) {
@@ -91,6 +101,7 @@ class LocalLanguageModelRepository
       name: _text(model, 'name'),
       modelId: _text(model, 'modelId'),
       connectionId: model['connectionId'] as String?,
+      provider: providers[model['connectionId']],
       supportsImageInput: capabilities['imageInput'] == true,
       supportsStructuredOutput: capabilities['structuredOutput'] == true,
       supportsImageGeneration: capabilities['imageGeneration'] == true,
@@ -109,7 +120,9 @@ class LocalLanguageModelRepository
 
   Map<String, Object?> _asRecord(Object? value, String label) {
     if (value is! Map) throw FormatException('$label ist ungültig.');
-    return {for (final entry in value.entries) entry.key.toString(): entry.value};
+    return {
+      for (final entry in value.entries) entry.key.toString(): entry.value,
+    };
   }
 
   String _text(Map<String, Object?> model, String field) {

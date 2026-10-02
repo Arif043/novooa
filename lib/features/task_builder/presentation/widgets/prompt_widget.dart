@@ -1,3 +1,4 @@
+import 'package:syscat2/features/task_builder/presentation/widgets/language_model_picker_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -147,49 +148,22 @@ class _PromptWidgetState extends State<PromptWidget> {
   }
 
   Widget _languageModelField(BuildContext context, PromptNodeConfig config) {
-    final available = _hasLanguageModelsProvider(context);
-    if (!available) {
-      return DropdownButtonFormField<String>(
-        isExpanded: true,
-        initialValue: '',
-        decoration: InputDecoration(labelText: 'Sprachmodell'),
-        items: [
-          DropdownMenuItem(value: '', child: Text('Standardmodell verwenden')),
-        ],
-        onChanged: null,
+    if (!_hasLanguageModelsProvider(context)) {
+      return LanguageModelPickerField(
+        models: const [],
+        selectedModelId: '',
+        enabled: false,
+        onChanged: (_) {},
       );
     }
     return BlocBuilder<NodeLanguageModelsCubit, NodeLanguageModelsState>(
-      builder: (context, state) => DropdownButtonFormField<String>(
-        // Ohne isExpanded ist das Feld so breit wie der längste Modellname
-        // und läuft in schmalen Panels über.
-        isExpanded: true,
-        initialValue:
-            state.models.any((model) => model.id == config.languageModelId)
-            ? config.languageModelId
-            : '',
-        decoration: const InputDecoration(labelText: 'Sprachmodell'),
-        items: [
-          const DropdownMenuItem(
-            value: '',
-            child: Text('Standardmodell verwenden'),
-          ),
-          ...state.models.map(
-            (model) => DropdownMenuItem(
-              value: model.id,
-              child: Text(
-                '${model.name} (${model.modelId})',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-        ],
-        onChanged: state.status == NodeLanguageModelsStatus.ready
-            ? (modelId) => context
-                  .read<TaskBuilderCubit>()
-                  .updatePromptLanguageModel(widget.node.id, modelId ?? '')
-            : null,
+      builder: (context, state) => LanguageModelPickerField(
+        models: state.models,
+        selectedModelId: config.languageModelId,
+        enabled: state.status == NodeLanguageModelsStatus.ready,
+        onChanged: (modelId) => context
+            .read<TaskBuilderCubit>()
+            .updatePromptLanguageModel(widget.node.id, modelId),
       ),
     );
   }

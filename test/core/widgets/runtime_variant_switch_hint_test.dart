@@ -48,20 +48,17 @@ void main() {
     expect(find.text('Zur Cloud wechseln'), findsOneWidget);
   });
 
-  testWidgets(
-    'ruft beim Tippen switchTo auf und zeigt währenddessen den '
-    'Wechsel-Hinweis statt des Neustart-Hinweises',
-    (tester) async {
-      final switcher = await pumpHint(tester, currentKind: RuntimeKind.cloud);
+  testWidgets('ruft beim Tippen switchTo auf und zeigt währenddessen den '
+      'Wechsel-Hinweis statt des Neustart-Hinweises', (tester) async {
+    final switcher = await pumpHint(tester, currentKind: RuntimeKind.cloud);
 
-      await tester.tap(find.text('Zur eigenen Runtime wechseln'));
-      await tester.pump();
+    await tester.tap(find.text('Zur eigenen Runtime wechseln'));
+    await tester.pump();
 
-      expect(switcher.requested, [RuntimeKind.standalone]);
-      expect(find.text(runtimeVariantSwitchingHint), findsOneWidget);
-      expect(find.text('Zur eigenen Runtime wechseln'), findsNothing);
-    },
-  );
+    expect(switcher.requested, [RuntimeKind.standalone]);
+    expect(find.text(runtimeVariantSwitchingHint), findsOneWidget);
+    expect(find.text('Zur eigenen Runtime wechseln'), findsNothing);
+  });
 
   testWidgets('während des Absendens ist der Wechsel gesperrt', (tester) async {
     final switcher = await pumpHint(

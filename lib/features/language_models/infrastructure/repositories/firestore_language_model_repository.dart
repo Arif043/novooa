@@ -26,9 +26,26 @@ class FirestoreLanguageModelRepository implements LanguageModelRepository {
         .collection('languageModels')
         .orderBy('name')
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs.map(_modelFrom).toList(growable: false),
-        );
+        .asyncMap((snapshot) => _modelsWithProviders(teamId, snapshot));
+  }
+
+  /// Der Anbieter steht an der Verbindung, nicht am Modell-Dokument.
+  Future<List<LanguageModel>> _modelsWithProviders(
+    TeamId teamId,
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) async {
+    final connections = await _firestore
+        .collection('teams')
+        .doc(teamId.value)
+        .collection('languageModelConnections')
+        .get();
+    final providers = {
+      for (final doc in connections.docs)
+        doc.id: LanguageModelProvider.tryFromId(doc.data()['provider']),
+    };
+    return snapshot.docs
+        .map((doc) => _modelFrom(doc, providers))
+        .toList(growable: false);
   }
 
   @override
@@ -51,7 +68,10 @@ class FirestoreLanguageModelRepository implements LanguageModelRepository {
     });
   }
 
-  LanguageModel _modelFrom(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+  LanguageModel _modelFrom(
+    QueryDocumentSnapshot<Map<String, dynamic>> doc,
+    Map<String, LanguageModelProvider?> providers,
+  ) {
     final data = doc.data();
     final capabilities = data['capabilities'] as Map<String, dynamic>? ?? {};
     return LanguageModel(
@@ -61,6 +81,7 @@ class FirestoreLanguageModelRepository implements LanguageModelRepository {
       supportsImageInput: capabilities['imageInput'] == true,
       supportsStructuredOutput: capabilities['structuredOutput'] == true,
       supportsImageGeneration: capabilities['imageGeneration'] == true,
+      provider: providers[data['connectionId']],
     );
   }
 }

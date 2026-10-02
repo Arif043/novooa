@@ -7,7 +7,9 @@ import 'package:equatable/equatable.dart';
 class LanguageModelDefaults extends Equatable {
   const LanguageModelDefaults({this.blockModelId, this.assistantModelId});
 
-  const LanguageModelDefaults.empty() : blockModelId = null, assistantModelId = null;
+  const LanguageModelDefaults.empty()
+    : blockModelId = null,
+      assistantModelId = null;
 
   final String? blockModelId;
   final String? assistantModelId;

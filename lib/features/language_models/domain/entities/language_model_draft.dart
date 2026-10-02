@@ -23,6 +23,15 @@ enum LanguageModelProvider {
   /// verbunden werden kann und daher im Dropdown immer wählbar bleibt.
   bool get isDirectProvider => this != openAiCompatible;
 
+  /// Wie [fromId], aber `null` statt Fehler — für Daten, in denen der Anbieter
+  /// fehlen darf (ältere Modelle, Cloud-Dokumente ohne Anbieterangabe).
+  static LanguageModelProvider? tryFromId(Object? id) {
+    for (final provider in LanguageModelProvider.values) {
+      if (provider.id == id) return provider;
+    }
+    return null;
+  }
+
   static LanguageModelProvider fromId(String id) {
     return LanguageModelProvider.values.firstWhere(
       (provider) => provider.id == id,

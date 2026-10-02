@@ -31,9 +31,7 @@ void main() {
     expect(signedOut, isTrue);
   });
 
-  testWidgets('blendet Abmelden aus, wenn onSignOut null ist', (
-    tester,
-  ) async {
+  testWidgets('blendet Abmelden aus, wenn onSignOut null ist', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(

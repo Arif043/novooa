@@ -29,10 +29,7 @@ void main() {
       final values = <int>[];
       final errors = <Object>[];
       final done = Completer<void>();
-      final subscription = stream.listen(
-        values.add,
-        onError: errors.add,
-      );
+      final subscription = stream.listen(values.add, onError: errors.add);
       Timer(const Duration(milliseconds: 60), () {
         subscription.cancel();
         done.complete();

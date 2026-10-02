@@ -50,18 +50,32 @@ class LanguageModelDefaultsCubit extends Cubit<LanguageModelDefaultsState> {
     _teamId = teamId;
     _modelsSubscription = _watchLanguageModels(teamId).listen(
       (models) => emit(
-        state.copyWith(status: LanguageModelDefaultsStatus.ready, models: models),
+        state.copyWith(
+          status: LanguageModelDefaultsStatus.ready,
+          models: models,
+        ),
       ),
       onError: (Object error, StackTrace stackTrace) {
-        _logAndEmitFailure('Sprachmodelle konnten nicht geladen werden.', error, stackTrace);
+        _logAndEmitFailure(
+          'Sprachmodelle konnten nicht geladen werden.',
+          error,
+          stackTrace,
+        );
       },
     );
     _defaultsSubscription = _watchLanguageModelDefaults(teamId).listen(
       (defaults) => emit(
-        state.copyWith(status: LanguageModelDefaultsStatus.ready, defaults: defaults),
+        state.copyWith(
+          status: LanguageModelDefaultsStatus.ready,
+          defaults: defaults,
+        ),
       ),
       onError: (Object error, StackTrace stackTrace) {
-        _logAndEmitFailure('Vorgaben konnten nicht geladen werden.', error, stackTrace);
+        _logAndEmitFailure(
+          'Vorgaben konnten nicht geladen werden.',
+          error,
+          stackTrace,
+        );
       },
     );
   }
@@ -102,10 +116,19 @@ class LanguageModelDefaultsCubit extends Cubit<LanguageModelDefaultsState> {
     try {
       await _saveLanguageModelDefaults(teamId, defaults);
     } catch (error, stackTrace) {
-      _logAndEmitFailure('Vorgabe konnte nicht gespeichert werden.', error, stackTrace);
+      _logAndEmitFailure(
+        'Vorgabe konnte nicht gespeichert werden.',
+        error,
+        stackTrace,
+      );
     } finally {
       if (!isClosed) {
-        emit(state.copyWith(isSavingBlockDefault: false, isSavingAssistantDefault: false));
+        emit(
+          state.copyWith(
+            isSavingBlockDefault: false,
+            isSavingAssistantDefault: false,
+          ),
+        );
       }
     }
   }
@@ -114,7 +137,11 @@ class LanguageModelDefaultsCubit extends Cubit<LanguageModelDefaultsState> {
     try {
       return await _getCurrentTeamId();
     } catch (error, stackTrace) {
-      _logAndEmitFailure('Team konnte nicht geladen werden.', error, stackTrace);
+      _logAndEmitFailure(
+        'Team konnte nicht geladen werden.',
+        error,
+        stackTrace,
+      );
       return null;
     }
   }
@@ -122,7 +149,10 @@ class LanguageModelDefaultsCubit extends Cubit<LanguageModelDefaultsState> {
   void _emitFailure(String message) {
     if (isClosed) return;
     emit(
-      state.copyWith(status: LanguageModelDefaultsStatus.failure, message: message),
+      state.copyWith(
+        status: LanguageModelDefaultsStatus.failure,
+        message: message,
+      ),
     );
   }
 

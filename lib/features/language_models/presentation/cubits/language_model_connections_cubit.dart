@@ -14,7 +14,8 @@ import 'language_model_connections_state.dart';
 /// von [LanguageModelsSettingsCubit], das die Modell-Liste sowie das
 /// Verbinden/Speichern-Formular verantwortet (SRP: unterschiedliche Gründe
 /// für Änderungen).
-class LanguageModelConnectionsCubit extends Cubit<LanguageModelConnectionsState> {
+class LanguageModelConnectionsCubit
+    extends Cubit<LanguageModelConnectionsState> {
   LanguageModelConnectionsCubit(
     this._authRepository,
     this._watchLanguageModelConnections,
@@ -57,9 +58,7 @@ class LanguageModelConnectionsCubit extends Cubit<LanguageModelConnectionsState>
     } catch (_) {
       if (!isClosed) {
         emit(
-          state.copyWith(
-            message: 'Verbindung konnte nicht entfernt werden.',
-          ),
+          state.copyWith(message: 'Verbindung konnte nicht entfernt werden.'),
         );
       }
     }
