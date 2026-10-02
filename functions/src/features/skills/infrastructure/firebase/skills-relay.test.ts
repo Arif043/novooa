@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {type RuntimeLicense, type SignedRuntimeLicense} from "../../../licensing/domain/entities/runtime-license-lease.js";
 import {type RuntimeRelayLicenseVerifier} from "../../../licensing/domain/repositories/runtime-relay-license-verifier.js";
-import {SkillRelayRequestError} from "../../domain/entities/skill-relay-request.js";
+import {SkillRelayRateLimitedError, SkillRelayRequestError} from "../../domain/entities/skill-relay-request.js";
+import {type RelayRateLimiter} from "../../domain/repositories/relay-rate-limiter.js";
 import {type SkillsCatalogUpstream} from "../../domain/repositories/skills-catalog-upstream.js";
 import {RelaySkillsCatalogRequest} from "../../domain/usecases/relay-skills-catalog-request.js";
 import {HttpSkillsCatalogUpstream} from "./http-skills-catalog-upstream.js";
@@ -10,11 +11,13 @@ import {isValidSkillsRelaySignature, signSkillsRelayRequest, signatureHeader, si
 
 const license = {signature: "s", payload: {licenseId: "l"}} as unknown as SignedRuntimeLicense;
 
-function relayWith(verify: RuntimeRelayLicenseVerifier["verify"], calls: string[]) {
+const allowAll: RelayRateLimiter = {take: async () => ({allowed: true, retryAfterSeconds: 0})};
+
+function relayWith(verify: RuntimeRelayLicenseVerifier["verify"], calls: string[], limiter: RelayRateLimiter = allowAll) {
   const upstream: SkillsCatalogUpstream = {
     get: async (pathAndQuery) => { calls.push(pathAndQuery); return {status: 200, body: "{}", headers: {}}; },
   };
-  return new RelaySkillsCatalogRequest({verify}, upstream);
+  return new RelaySkillsCatalogRequest({verify}, limiter, upstream);
 }
 
 test("a valid license lets the request through to the upstream", async () => {
@@ -41,6 +44,32 @@ test("a licensed but forbidden request is rejected without calling the upstream"
   const relay = relayWith(async () => ({licenseId: "l"}) as RuntimeLicense, calls);
 
   await assert.rejects(relay.execute(license, "/skills/../admin", {}), SkillRelayRequestError);
+  assert.deepEqual(calls, []);
+});
+
+test("tokens are taken per license, only after license and request are valid", async () => {
+  const taken: string[] = [];
+  const limiter: RelayRateLimiter = {take: async (key) => { taken.push(key); return {allowed: true, retryAfterSeconds: 0}; }};
+  const calls: string[] = [];
+  const relay = relayWith(async () => ({licenseId: "lizenz-1"}) as RuntimeLicense, calls, limiter);
+  const rejecting = relayWith(async () => { throw new Error("Die Lizenz ist ungültig."); }, calls, limiter);
+
+  await relay.execute(license, "/skills", {});
+  await assert.rejects(relay.execute(license, "/admin", {}), SkillRelayRequestError);
+  await assert.rejects(relay.execute(license, "/skills", {geheim: "x"}), SkillRelayRequestError);
+  await assert.rejects(rejecting.execute(license, "/skills", {}), /Lizenz/);
+
+  assert.deepEqual(taken, ["lizenz-1"], "failed attempts cost nothing");
+  assert.equal(calls.length, 1);
+});
+
+test("an empty bucket answers with the wait time and never reaches the upstream", async () => {
+  const calls: string[] = [];
+  const limiter: RelayRateLimiter = {take: async () => ({allowed: false, retryAfterSeconds: 3})};
+  const relay = relayWith(async () => ({licenseId: "l"}) as RuntimeLicense, calls, limiter);
+
+  await assert.rejects(relay.execute(license, "/skills", {}), (error: unknown) =>
+    error instanceof SkillRelayRateLimitedError && error.retryAfterSeconds === 3 && /3 Sekunden/.test(error.message));
   assert.deepEqual(calls, []);
 });
 

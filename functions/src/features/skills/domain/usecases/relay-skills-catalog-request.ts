@@ -1,21 +1,30 @@
 import {type SignedRuntimeLicense} from "../../../licensing/domain/entities/runtime-license-lease.js";
 import {type RuntimeRelayLicenseVerifier} from "../../../licensing/domain/repositories/runtime-relay-license-verifier.js";
-import {pathAndQueryOf, skillRelayRequestFrom} from "../entities/skill-relay-request.js";
+import {pathAndQueryOf, SkillRelayRateLimitedError, skillRelayRequestFrom} from "../entities/skill-relay-request.js";
+import {type RelayRateLimiter} from "../repositories/relay-rate-limiter.js";
 import {type SkillsCatalogResponse, type SkillsCatalogUpstream} from "../repositories/skills-catalog-upstream.js";
 
 /**
- * Nimmt eine Katalog-Anfrage einer Runtime entgegen: Zuerst wird die Lizenz geprüft (Signatur, aktiv, in der
- * Registry), erst danach die Anfrage selbst; nur dann geht sie an den Upstream. Eine Rate-Begrenzung je Lizenz
- * (Token Bucket) kommt später an dieselbe Stelle, nach der Prüfung der Lizenz.
+ * Nimmt eine Katalog-Anfrage einer Runtime entgegen. Reihenfolge:
+ * 1. Lizenz prüfen (Signatur, aktiv, Registry),
+ * 2. Anfrage prüfen (nur lesende Katalogpfade, bekannte Parameter),
+ * 3. erst dann ein Token der Lizenz entnehmen (Token Bucket),
+ * 4. an den Upstream weiterreichen.
+ * Fehlversuche mit ungültiger Lizenz oder verbotener Anfrage kosten also kein Token und erreichen weder den Eimer
+ * noch den Upstream.
  */
 export class RelaySkillsCatalogRequest {
   constructor(
     private readonly licenses: RuntimeRelayLicenseVerifier,
+    private readonly limiter: RelayRateLimiter,
     private readonly upstream: SkillsCatalogUpstream,
   ) {}
 
   async execute(license: SignedRuntimeLicense, path: unknown, query: unknown): Promise<SkillsCatalogResponse> {
-    await this.licenses.verify(license);
-    return this.upstream.get(pathAndQueryOf(skillRelayRequestFrom(path, query)));
+    const active = await this.licenses.verify(license);
+    const pathAndQuery = pathAndQueryOf(skillRelayRequestFrom(path, query));
+    const decision = await this.limiter.take(active.licenseId);
+    if (!decision.allowed) throw new SkillRelayRateLimitedError(decision.retryAfterSeconds);
+    return this.upstream.get(pathAndQuery);
   }
 }

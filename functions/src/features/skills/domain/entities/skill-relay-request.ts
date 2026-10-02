@@ -13,6 +13,14 @@ export class SkillRelayRequestError extends Error {
   }
 }
 
+/** Die Lizenz hat ihr Kontingent verbraucht; `retryAfterSeconds` sagt, wann wieder ein Token frei ist. */
+export class SkillRelayRateLimitedError extends Error {
+  constructor(readonly retryAfterSeconds: number) {
+    super(`Zu viele Anfragen. Bitte in ${retryAfterSeconds} Sekunden erneut versuchen.`);
+    this.name = "SkillRelayRateLimitedError";
+  }
+}
+
 const allowedQueryParameters: ReadonlySet<string> = new Set(["q", "limit", "owner", "view", "page", "per_page"]);
 const segmentPattern = /^[A-Za-z0-9._~%-]+$/;
 const maximumSegments = 8;

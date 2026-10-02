@@ -5,7 +5,10 @@ import {type SignedRuntimeLicense} from "../../../licensing/domain/entities/runt
 import {FirebaseRuntimeRelayLicenseVerifier} from "../../../licensing/infrastructure/firebase/firebase-runtime-relay-license-verifier.js";
 import {localRuntimeLicenseSigningKey} from "../../../licensing/infrastructure/firebase/local-runtime-license-signing-key.js";
 import {logException} from "../../../../shared/logging/logger.js";
-import {SkillRelayRequestError} from "../../domain/entities/skill-relay-request.js";
+import {SkillRelayRateLimitedError, SkillRelayRequestError} from "../../domain/entities/skill-relay-request.js";
+import {TokenBucketRateLimiter} from "../../domain/usecases/token-bucket-rate-limiter.js";
+import {FirestoreBucketStateStore} from "./firestore-bucket-state-store.js";
+import {RemoteConfigBucketSettings} from "./remote-config-bucket-settings.js";
 import {RelaySkillsCatalogRequest} from "../../domain/usecases/relay-skills-catalog-request.js";
 import {HttpSkillsCatalogUpstream} from "./http-skills-catalog-upstream.js";
 
@@ -14,12 +17,14 @@ const skillsProxyHmacKey = defineSecret("SKILLS_PROXY_HMAC_KEY");
 
 const relay = new RelaySkillsCatalogRequest(
   new FirebaseRuntimeRelayLicenseVerifier(),
+  new TokenBucketRateLimiter(new FirestoreBucketStateStore(), new RemoteConfigBucketSettings()),
   new HttpSkillsCatalogUpstream(() => skillsProxyUrl.value(), () => skillsProxyHmacKey.value()),
 );
 
 /**
- * Katalog-Relay für lokale Runtimes: prüft die signierte Lizenz und reicht lesende skills.sh-Abfragen an den
- * Vercel-Proxy weiter (HMAC zwischen den Servern). Status, `Retry-After` und `X-RateLimit-*` kommen unverändert
+ * Katalog-Relay für lokale Runtimes: prüft die signierte Lizenz und die Anfrage, begrenzt je Lizenz per Token Bucket
+ * (Werte aus Firebase Remote Config) und reicht lesende skills.sh-Abfragen an den Vercel-Proxy weiter (HMAC zwischen
+ * den Servern). Status, `Retry-After` und `X-RateLimit-*` kommen unverändert
  * zurück, damit der Client der Runtime das Limit selbst einhalten kann.
  */
 export const localRuntimeSkillsRelay = onRequest(
@@ -41,6 +46,11 @@ export const localRuntimeSkillsRelay = onRequest(
 );
 
 function reject(response: Response, error: unknown): void {
+  if (error instanceof SkillRelayRateLimitedError) {
+    response.setHeader("retry-after", String(error.retryAfterSeconds));
+    response.status(429).json({error: "rate_limited", message: error.message});
+    return;
+  }
   if (error instanceof SkillRelayRequestError) {
     response.status(400).json({error: "invalid_request", message: error.message});
     return;

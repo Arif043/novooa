@@ -87,8 +87,27 @@ Runtime ──(signierte Lizenz)──▶ Firebase-Funktion localRuntimeSkillsRe
 - **Firebase-Funktion** (`functions/src/features/skills/infrastructure/firebase/`): prüft die Lizenz der Runtime
   (`FirebaseRuntimeRelayLicenseVerifier`, wie Push- und Mail-Relay), erst danach die Anfrage (nur lesende
   `/skills…`-Pfade, bekannte Parameter, keine `..`/kodierten Trenner) und ruft den Proxy auf. Status und Rate-Limit-Header
-  des Katalogs kommen unverändert zurück. Eine Rate-Begrenzung je Lizenz (Token Bucket) kommt später an dieselbe Stelle
-  (`RelaySkillsCatalogRequest`, nach der Lizenzprüfung).
+  des Katalogs kommen unverändert zurück. Reihenfolge im Use Case `RelaySkillsCatalogRequest`: Lizenz → Anfrage →
+  Token Bucket → Upstream; Fehlversuche mit ungültiger Lizenz oder verbotener Anfrage kosten also kein Token.
+- **Token Bucket je Lizenz:** schützt das gemeinsame Kontingent von 600 Anfragen/Minute davor, dass eine einzelne
+  Installation es aufbraucht.
+
+  | Parameter (Remote Config, Server-Template)   | Standard | Bedeutung                                   |
+  | -------------------------------------------- | -------- | ------------------------------------------- |
+  | `skills_relay_bucket_capacity`               | 20       | Stoß (Größe des Eimers)                     |
+  | `skills_relay_bucket_refill_per_second`      | 0,5      | Dauerrate (= 30 Anfragen pro Minute)        |
+
+  Jede Anfrage kostet ein Token; ein neuer Eimer ist voll. Ist er leer, antwortet das Relay mit 429 und
+  `Retry-After` = `ceil((1 − Token) / Rate)` (meist 1–2 s); der Client der Runtime wartet bis 30 s selbst und wiederholt.
+  Der Zustand liegt je Lizenz in Firestore (`skillsRelayRateLimits/{sha256(licenseId)}`, Transaktion; die
+  TTL-Richtlinie auf `expiresAt` in `firestore.indexes.json` räumt auf). Es gibt bewusst **keinen globalen Eimer** —
+  ein gemeinsames Dokument wäre mit etwa einem Schreibvorgang pro Sekunde der Engpass. Das globale Limit sichern Cache
+  und die weitergereichten 429-Antworten von skills.sh.
+- **Werte ändern ohne Deploy:** In der Firebase-Konsole unter *Remote Config* im **Server**-Template die beiden Parameter
+  anlegen (Typ Zahl) und veröffentlichen. Die Funktion liest sie höchstens alle 5 Minuten neu; fehlen sie oder sind
+  ungültig (≤ 0), gelten die Standardwerte, bei Fehlern der zuletzt bekannte Stand (Neuversuch nach 30 s). Voraussetzung:
+  Die Remote-Config-API ist aktiviert und das Dienstkonto der Funktionen darf Remote Config lesen
+  (*Firebase Remote Config Viewer*).
 - **HMAC zwischen den Servern:** HMAC-SHA256 über `{zeitstempel}\n{METHODE}\n{pfad+query}`, Header
   `x-novooa-timestamp` / `x-novooa-signature`, Fenster ±60 s. Das Geheimnis (`SKILLS_PROXY_HMAC_KEY`) kennen nur
   Firebase und Vercel. Beide Seiten testen denselben Vektor.
