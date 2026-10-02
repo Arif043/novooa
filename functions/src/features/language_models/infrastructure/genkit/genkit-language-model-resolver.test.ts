@@ -16,7 +16,7 @@ test("resolves an OpenAI-compatible team model with its own endpoint", async () 
           imageInput: false,
           structuredOutput: true,
           toolCalling: false,
-          imageGeneration: false,
+          imageGeneration: false, speechSynthesis: false,
         },
       };
     },
@@ -83,7 +83,7 @@ function modelFor(connectionId: string) {
       imageInput: false,
       structuredOutput: true,
       toolCalling: false,
-      imageGeneration: false,
+      imageGeneration: false, speechSynthesis: false,
     },
   };
 }

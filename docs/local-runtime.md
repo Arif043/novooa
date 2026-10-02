@@ -411,8 +411,9 @@ speichert sie als AES-256-GCM-Envelope mit eigenem Datenschlüssel; `secret_ref`
 verweist auf den jeweiligen Eintrag. Der Master-Key-Schlüsselbund liegt separat
 außerhalb des Daten-Volumes.
 Die Flutter-Einstellungen bieten **Google AI**, **xAI (Grok)**, **Mistral AI**,
-**OpenRouter**, **Abacus.AI (RouteLLM)**, **Hugging Face**, **Ollama (lokal)**
-und frei konfigurierbare
+**OpenRouter**, **Abacus.AI (RouteLLM)**, **Hugging Face**, **ElevenLabs**
+(nur Sprachausgabe, API-Key genügt, `GET /v1/language-models/:id/voices` liefert
+die Stimmen), **Ollama (lokal)** und frei konfigurierbare
 OpenAI-kompatible Anbieter an und verbinden sie über `POST
 /v1/language-model-connections`. Die Runtime lädt dessen Modellkatalog und
 speichert alle verfügbaren Textmodelle unter einer gemeinsamen Verbindung. Die

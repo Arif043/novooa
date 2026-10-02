@@ -39,6 +39,9 @@ export class CatalogGenkitLanguageModelResolver
   ): Promise<ResolvedGenkitLanguageModel> {
     const model = await this.#catalog.loadModel(teamId, languageModelId);
     const connection = await this.#catalog.loadConnection(teamId, model.connectionId);
+    if (connection.provider === "elevenLabs") {
+      throw new Error("ElevenLabs-Modelle können nur Sprache ausgeben und keine Texte erzeugen.");
+    }
     const apiKey = await this.#catalog.loadConnectionApiKey(teamId, connection.id);
     if (connection.provider === "googleAi") {
       return {

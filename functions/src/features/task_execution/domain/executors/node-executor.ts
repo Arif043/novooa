@@ -1,3 +1,4 @@
+import {type SpeechSynthesizer} from "../../../speech_synthesis/domain/repositories/speech-synthesizer.js";
 import {
   type NodeExecutionResult,
   type NodeOutputValue,
@@ -55,6 +56,8 @@ export type TaskRunContext = {
   messageSender: TaskMessageSender;
   documentStore: DocumentStore;
   modelInference: ModelInference;
+  /** Sprachausgabe über verbundene Sprachmodelle; fehlt in Umgebungen ohne Sprachmodell-Katalog. */
+  speechSynthesizer?: SpeechSynthesizer;
   teamNotificationSender: TeamNotificationSender;
 };
 

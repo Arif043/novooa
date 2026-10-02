@@ -87,7 +87,9 @@ Text-zu-Sprache-Manifeste deklarieren einen Workflow-Ausgang vom Typ `audio`.
 Die Runtime speichert diesen Ausgang als Team-Datei. Der Baustein
 `textToSpeech` und `speechToText` verwenden denselben Vertrag wie
 `modelInference`. Ihre Oberflächen filtern den Modellkatalog jeweils auf
-Audio-Ausgänge beziehungsweise Audio-Eingänge.
+Audio-Ausgänge beziehungsweise Audio-Eingänge. `textToSpeech` kann stattdessen
+ein verbundenes Sprachmodell verwenden, siehe
+[`sprachausgabe.md`](./sprachausgabe.md).
 
 Ein Eingang ist standardmäßig eine feste Workflow-Eingabe des Bausteins. Seine
 Zuordnung wird im Arbeitsplan gespeichert und kann ein Template enthalten.

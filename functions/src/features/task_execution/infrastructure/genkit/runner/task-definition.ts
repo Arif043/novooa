@@ -227,6 +227,11 @@ export const modelInferenceNodeConfigSchema = z.object({
 
 export const textToSpeechNodeConfigSchema = modelInferenceNodeConfigSchema.extend({
   primitive: z.literal("textToSpeech").default("textToSpeech"),
+  /** Gesetzt: Sprachausgabe über ein verbundenes Sprachmodell statt über ein ONNX-Modell. */
+  languageModelId: z.string().default(""),
+  speechText: z.string().default(""),
+  /** Leer = Standardstimme des Anbieters. */
+  voiceId: z.string().default(""),
 });
 
 export const speechToTextNodeConfigSchema = modelInferenceNodeConfigSchema.extend({

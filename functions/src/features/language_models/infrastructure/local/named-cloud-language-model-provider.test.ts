@@ -65,7 +65,7 @@ function discoveredModel() {
       imageInput: false,
       structuredOutput: true,
       toolCalling: false,
-      imageGeneration: false,
+      imageGeneration: false, speechSynthesis: false,
     },
   };
 }

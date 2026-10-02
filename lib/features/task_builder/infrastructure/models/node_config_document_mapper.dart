@@ -28,7 +28,7 @@ class NodeConfigDocumentMapper {
       HumanApprovalNodeConfig() => _approvalToDocument(config),
       DialogInputNodeConfig() => _dialogInputToDocument(config),
       MediaInputNodeConfig() => _mediaInputToDocument(config),
-      TextToSpeechNodeConfig() => _modelInferenceToDocument(config),
+      TextToSpeechNodeConfig() => _textToSpeechToDocument(config),
       SpeechToTextNodeConfig() => _modelInferenceToDocument(config),
       ModelInferenceNodeConfig() => _modelInferenceToDocument(config),
       ForEachNodeConfig() => _forEachToDocument(config),
@@ -425,7 +425,19 @@ class NodeConfigDocumentMapper {
       inputMappings: config.inputMappings,
       outputParameters: config.outputParameters,
       settings: config.settings,
+      languageModelId: data['languageModelId'] as String? ?? '',
+      speechText: data['speechText'] as String? ?? '',
+      voiceId: data['voiceId'] as String? ?? '',
     );
+  }
+
+  Map<String, Object?> _textToSpeechToDocument(TextToSpeechNodeConfig config) {
+    return {
+      ..._modelInferenceToDocument(config),
+      'languageModelId': config.languageModelId,
+      'speechText': config.speechText,
+      'voiceId': config.voiceId,
+    };
   }
 
   SpeechToTextNodeConfig _speechToTextFrom(Map<String, Object?> data) {

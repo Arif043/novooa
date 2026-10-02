@@ -1,12 +1,14 @@
 import {
   defaultLanguageModelCapabilities,
+  isSpeechModelId,
+  speechOnlyLanguageModelCapabilities,
   type LanguageModelCapabilities,
   type LanguageModelProvider,
 } from "../../domain/entities/language-model.js";
 
 export type NamedOpenAiCompatibleLanguageModelProvider = Exclude<
   LanguageModelProvider,
-  "googleAi" | "ollama" | "openAiCompatible"
+  "googleAi" | "ollama" | "openAiCompatible" | "elevenLabs"
 >;
 
 export type DiscoveredOpenAiCompatibleLanguageModel = {
@@ -37,7 +39,7 @@ function openAiCompatibleModel(
   const modelId = stringValue(value.id) ?? stringValue(value.model);
   if (!modelId) return [];
   return [{
-    capabilities: defaultLanguageModelCapabilities,
+    capabilities: isSpeechModelId(modelId) ? speechOnlyLanguageModelCapabilities : defaultLanguageModelCapabilities,
     modelId,
     name: stringValue(value.name) ?? modelId,
   }];

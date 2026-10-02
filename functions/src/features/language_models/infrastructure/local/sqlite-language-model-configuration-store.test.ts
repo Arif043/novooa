@@ -14,7 +14,7 @@ test("rolls back the connection and encrypted secret when saving a model fails",
   await assert.rejects(store.saveConnection({teamId: "team-1", apiKey: "secret",
     connection: {name: "Provider", provider: "openAiCompatible"},
     models: [{name: null as unknown as string, modelId: "model-1", capabilities: {
-      textGeneration: true, imageInput: false, structuredOutput: false, toolCalling: false, imageGeneration: false,
+      textGeneration: true, imageInput: false, structuredOutput: false, toolCalling: false, imageGeneration: false, speechSynthesis: false,
     }}],
   }));
   assert.deepEqual(await database.select().from(languageModelConnections), []);

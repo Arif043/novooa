@@ -183,6 +183,9 @@ type SpeechModelNodeConfig = {
 };
 export type TextToSpeechNodeConfig = SpeechModelNodeConfig & {
   primitive: "textToSpeech";
+  languageModelId?: string;
+  speechText?: string;
+  voiceId?: string;
 };
 export type SpeechToTextNodeConfig = SpeechModelNodeConfig & {
   primitive: "speechToText";

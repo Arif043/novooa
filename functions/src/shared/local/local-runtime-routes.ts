@@ -1,3 +1,4 @@
+import {speechVoiceRoutes} from "../../features/speech_synthesis/infrastructure/local/speech-voice-routes.js";
 import {type FastifyInstance, type FastifyPluginAsync} from "fastify";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {mailRelayRoutes} from "../../features/communication/infrastructure/local/local-mail-relay-routes.js";
@@ -74,6 +75,7 @@ async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRu
   await api.register(pushDeviceRoutes, {signedLicense, relay: pushRelayFromEnvironment()});
   await api.register(mailRelayRoutes, {signedLicense, relay: mailRelayFromEnvironment()});
   await api.register(languageModelRoutes, {store: services.languageModels, notifier});
+  await api.register(speechVoiceRoutes, {voices: services.speechVoices});
   await api.register(languageModelDefaultsRoutes, {store: services.languageModelDefaults, notifier});
   await api.register(fileSettingsRoutes, {store: services.fileSettings, notifier});
   await api.register(dataRoutes, {store: services.documents});

@@ -1,8 +1,11 @@
 import {HttpsError, onCall} from "firebase-functions/v2/https";
 import {currentTeamIdForUid} from "../../../teams/infrastructure/firebase/firebase-team-context.js";
 import {
+  capabilitiesFromRecord,
   defaultLanguageModelCapabilities,
+  isSpeechModelId,
   languageModelProviders,
+  speechOnlyLanguageModelCapabilities,
   type LanguageModelCapabilities,
   type LanguageModelProvider,
 } from "../../domain/entities/language-model.js";
@@ -57,7 +60,7 @@ function inputFrom(data: unknown): {
     model: {
       name: boundedString(input.name, "name", 120),
       modelId: boundedString(input.languageModelId, "languageModelId", 200),
-      capabilities: capabilitiesFrom(input.capabilities),
+      capabilities: capabilitiesForModel(provider, boundedString(input.languageModelId, "languageModelId", 200), input.capabilities),
     },
     apiKey: boundedString(input.apiKey, "apiKey", 4096, 8),
   };
@@ -75,7 +78,7 @@ function baseUrlFrom(
   value: unknown,
   provider: LanguageModelProvider,
 ): string | undefined {
-  if (provider === "googleAi") return undefined;
+  if (provider === "googleAi" || provider === "elevenLabs") return undefined;
   const namedProvider = namedLanguageModelProviderFor(provider);
   if (namedProvider) return namedProviderBaseUrl(value, namedProvider.baseUrl);
   const url = boundedString(value, "baseUrl", 2048);
@@ -111,13 +114,17 @@ function normalizedUrlOrNull(value: string): string | null {
 function capabilitiesFrom(value: unknown): LanguageModelCapabilities {
   if (value === undefined) return defaultLanguageModelCapabilities;
   const capabilities = record(value, "capabilities muss ein Objekt sein.");
-  return {
-    textGeneration: capabilities.textGeneration === true,
-    imageInput: capabilities.imageInput === true,
-    structuredOutput: capabilities.structuredOutput === true,
-    toolCalling: capabilities.toolCalling === true,
-    imageGeneration: capabilities.imageGeneration === true,
-  };
+  return capabilitiesFromRecord(capabilities);
+}
+
+/** Reine Sprachmodelle (ElevenLabs, `*-tts`) erkennt der Server selbst; der Client kennt sie nicht. */
+function capabilitiesForModel(
+  provider: LanguageModelProvider,
+  modelId: string,
+  value: unknown,
+): LanguageModelCapabilities {
+  if (provider === "elevenLabs" || isSpeechModelId(modelId)) return speechOnlyLanguageModelCapabilities;
+  return capabilitiesFrom(value);
 }
 
 function optionalId(value: unknown): string | undefined {

@@ -1,3 +1,7 @@
+import '../../features/speech_synthesis/domain/repositories/speech_voice_repository.dart';
+import '../../features/speech_synthesis/domain/usecases/list_speech_voices.dart';
+import '../../features/speech_synthesis/infrastructure/repositories/local_speech_voice_repository.dart';
+import '../../features/speech_synthesis/presentation/cubits/speech_voices_cubit.dart';
 import 'package:get_it/get_it.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:image_picker/image_picker.dart';
@@ -227,6 +231,9 @@ Future<void> configureStandaloneDependencies(
         locator<WorkspaceRealtimeChannel>(),
       ),
     )
+    ..registerLazySingleton<SpeechVoiceRepository>(
+      () => LocalSpeechVoiceRepository(locator<WorkspaceApiClient>()),
+    )
     ..registerLazySingleton<FileSettingsRepository>(
       () => LocalFileSettingsRepository(
         locator<WorkspaceApiClient>(),
@@ -405,6 +412,13 @@ Future<void> configureStandaloneDependencies(
         locator<WatchKnowledgeNotes>(),
         locator<GetCurrentTeamId>(),
       ),
+    )
+    ..registerLazySingleton(
+      () => ListSpeechVoices(locator<SpeechVoiceRepository>()),
+    )
+    ..registerFactoryParam<SpeechVoicesCubit, String, void>(
+      (languageModelId, _) =>
+          SpeechVoicesCubit(locator<ListSpeechVoices>(), languageModelId),
     )
     ..registerFactory(
       () => NodeLanguageModelsCubit(

@@ -10,6 +10,8 @@ class LanguageModel extends Equatable {
     required this.supportsImageInput,
     required this.supportsStructuredOutput,
     required this.supportsImageGeneration,
+    this.supportsTextGeneration = true,
+    this.supportsSpeechSynthesis = false,
     this.connectionId,
     this.provider,
   });
@@ -20,6 +22,13 @@ class LanguageModel extends Equatable {
   final bool supportsImageInput;
   final bool supportsStructuredOutput;
   final bool supportsImageGeneration;
+
+  /// Kann Texte beantworten. Reine Sprachmodelle (z. B. ElevenLabs, Gemini-TTS)
+  /// erscheinen deshalb nicht in der Auswahl für Prompt-Bausteine.
+  final bool supportsTextGeneration;
+
+  /// Kann Text als Sprache ausgeben — Grundlage für „Text vorlesen".
+  final bool supportsSpeechSynthesis;
 
   /// Nur in Standalone gesetzt — verweist auf die [LanguageModelConnection],
   /// über die dieses Modell verbunden wurde. Cloud kennt kein Connection-
@@ -37,6 +46,8 @@ class LanguageModel extends Equatable {
     supportsImageInput,
     supportsStructuredOutput,
     supportsImageGeneration,
+    supportsTextGeneration,
+    supportsSpeechSynthesis,
     connectionId,
     provider,
   ];

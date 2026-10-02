@@ -46,7 +46,8 @@ IconData providerIconData(LanguageModelProvider provider) {
     // Im Icon-Paket gibt es kein Markenlogo; ein neutrales Symbol statt eines
     // nachgezeichneten Logos.
     LanguageModelProvider.abacus => Icons.alt_route,
-    LanguageModelProvider.huggingFace => Icons.hub_outlined,
+    LanguageModelProvider.huggingFace => SimpleIcons.huggingface,
+    LanguageModelProvider.elevenLabs => SimpleIcons.elevenlabs,
     LanguageModelProvider.xAi ||
     LanguageModelProvider.openAiCompatible => Icons.smart_toy_outlined,
   };

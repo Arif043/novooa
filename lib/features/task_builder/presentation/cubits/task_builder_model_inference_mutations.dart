@@ -119,4 +119,48 @@ extension TaskBuilderModelInferenceMutations on TaskBuilderCubit {
       return node;
     });
   }
+
+  /// Wählt das Sprachmodell für „Text vorlesen". Eine leere ID schaltet auf das
+  /// lokale ONNX-Modell zurück; die Stimme gilt nur für ein Sprachmodell und
+  /// wird beim Wechsel zurückgesetzt.
+  Future<void> updateTextToSpeechLanguageModel(
+    NodeId nodeId,
+    String languageModelId,
+  ) {
+    return _updateTextToSpeech(
+      nodeId,
+      (config) => config.copyWith(
+        languageModelId: languageModelId,
+        voiceId: languageModelId == config.languageModelId
+            ? config.voiceId
+            : '',
+      ),
+    );
+  }
+
+  Future<void> updateTextToSpeechText(NodeId nodeId, String speechText) {
+    return _updateTextToSpeech(
+      nodeId,
+      (config) => config.copyWith(speechText: speechText),
+    );
+  }
+
+  Future<void> updateTextToSpeechVoice(NodeId nodeId, String voiceId) {
+    return _updateTextToSpeech(
+      nodeId,
+      (config) => config.copyWith(voiceId: voiceId),
+    );
+  }
+
+  Future<void> _updateTextToSpeech(
+    NodeId nodeId,
+    TextToSpeechNodeConfig Function(TextToSpeechNodeConfig config) update,
+  ) {
+    return _updateNode(nodeId, (node) {
+      if (node.config case TextToSpeechNodeConfig config) {
+        return node.copyWith(config: update(config));
+      }
+      return node;
+    });
+  }
 }

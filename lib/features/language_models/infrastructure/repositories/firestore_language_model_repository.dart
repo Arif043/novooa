@@ -53,8 +53,7 @@ class FirestoreLanguageModelRepository implements LanguageModelRepository {
     await _functions.httpsCallable('saveLanguageModel').call({
       'connectionName': draft.connectionName,
       'provider': draft.provider.id,
-      if (draft.provider != LanguageModelProvider.googleAi)
-        'baseUrl': draft.baseUrl,
+      if (draft.provider.hasEndpoint) 'baseUrl': draft.baseUrl,
       'name': draft.name,
       'languageModelId': draft.modelId,
       'apiKey': draft.apiKey,
@@ -81,6 +80,8 @@ class FirestoreLanguageModelRepository implements LanguageModelRepository {
       supportsImageInput: capabilities['imageInput'] == true,
       supportsStructuredOutput: capabilities['structuredOutput'] == true,
       supportsImageGeneration: capabilities['imageGeneration'] == true,
+      supportsTextGeneration: capabilities['textGeneration'] != false,
+      supportsSpeechSynthesis: capabilities['speechSynthesis'] == true,
       provider: providers[data['connectionId']],
     );
   }

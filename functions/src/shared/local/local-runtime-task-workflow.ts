@@ -1,3 +1,5 @@
+import {LanguageModelSpeech} from "../../features/speech_synthesis/domain/usecases/language-model-speech.js";
+import {defaultSpeechProviders} from "../../features/speech_synthesis/infrastructure/default-speech-providers.js";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {type RuntimeMailRelayClient} from "../../features/communication/infrastructure/local/runtime-mail-relay-client.js";
 import {type DocumentStore} from "../../features/data/domain/repositories/document-store.js";
@@ -56,6 +58,7 @@ export function createLocalTaskWorkflow(dependencies: LocalTaskWorkflowDependenc
       modelInference: modelInferenceFor(database, dependencies.runtimeRoot),
       teamNotificationSender: new LocalTeamNotificationSender(dependencies.signedLicense, dependencies.pushRelay, logger),
       languageModelResolver: new CatalogGenkitLanguageModelResolver(dependencies.languageModelCatalog),
+      speechSynthesizer: new LanguageModelSpeech(dependencies.languageModelCatalog, defaultSpeechProviders()),
       languageModelDefaultsStore: new SQLiteLanguageModelDefaultsStore(database),
     },
   });

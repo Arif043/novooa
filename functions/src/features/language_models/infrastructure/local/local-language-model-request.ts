@@ -3,6 +3,7 @@ import {
   languageModelProviders,
   type LanguageModelProvider,
 } from "../../domain/entities/language-model.js";
+import {elevenLabsDisplayName} from "../elevenlabs/elevenlabs-language-model-provider.js";
 import {namedLanguageModelProviderFor} from "../openai-compatible/named-language-model-provider-registry.js";
 
 /**
@@ -25,6 +26,8 @@ export function connectionFrom(value: unknown, teamId: string) {
 function connectionName(provider: LanguageModelProvider, baseUrl: string | undefined): string {
   if (provider === "googleAi")
     return "Google AI";
+  if (provider === "elevenLabs")
+    return elevenLabsDisplayName;
   if (provider === "ollama")
     return "Ollama";
   const namedProvider = namedLanguageModelProviderFor(provider);
@@ -60,7 +63,7 @@ function providerFrom(value: unknown): LanguageModelProvider {
   throw new LocalLanguageModelRequestError("provider wird nicht unterstützt.");
 }
 function baseUrlFrom(value: unknown, provider: LanguageModelProvider): string | undefined {
-  if (provider === "googleAi")
+  if (provider === "googleAi" || provider === "elevenLabs")
     return undefined;
   if (provider === "ollama" && value === undefined)
     return "http://host.docker.internal:11434/v1";

@@ -1,3 +1,5 @@
+import 'package:syscat2/features/language_models/domain/entities/language_model.dart';
+import 'package:simple_icons/simple_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
@@ -99,7 +101,7 @@ void main() {
       );
 
       expect(find.byIcon(Icons.alt_route), findsOneWidget);
-      expect(find.byIcon(Icons.hub_outlined), findsOneWidget);
+      expect(find.byIcon(SimpleIcons.huggingface), findsOneWidget);
     });
   });
 
@@ -107,5 +109,32 @@ void main() {
     for (final provider in LanguageModelProvider.values) {
       expect(providerIconData(provider), isA<IconData>(), reason: provider.id);
     }
+  });
+
+  group('ElevenLabs', () {
+    test('ist ein reiner Sprachanbieter ohne eigene API-Adresse', () {
+      const provider = LanguageModelProvider.elevenLabs;
+
+      expect(provider.label, 'ElevenLabs');
+      expect(provider.isSpeechOnly, isTrue);
+      expect(provider.hasEndpoint, isFalse);
+      expect(provider.requiresCustomBaseUrl, isFalse);
+      expect(LanguageModelProvider.googleAi.hasEndpoint, isFalse);
+      expect(LanguageModelProvider.openAiCompatible.hasEndpoint, isTrue);
+    });
+
+    test('Sprachmodelle gelten standardmäßig als Textmodelle ohne Stimme', () {
+      const model = LanguageModel(
+        id: 'm',
+        name: 'M',
+        modelId: 'm',
+        supportsImageInput: false,
+        supportsStructuredOutput: false,
+        supportsImageGeneration: false,
+      );
+
+      expect(model.supportsTextGeneration, isTrue);
+      expect(model.supportsSpeechSynthesis, isFalse);
+    });
   });
 }

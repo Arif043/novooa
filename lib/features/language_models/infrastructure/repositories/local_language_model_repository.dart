@@ -20,8 +20,7 @@ class LocalLanguageModelRepository
   Future<void> connectLanguageModels(LanguageModelConnectionDraft draft) async {
     await _client.post('/v1/language-model-connections', {
       'provider': draft.provider.id,
-      if (draft.provider != LanguageModelProvider.googleAi)
-        'baseUrl': draft.baseUrl,
+      if (draft.provider.hasEndpoint) 'baseUrl': draft.baseUrl,
       'apiKey': draft.apiKey,
     });
   }
@@ -31,8 +30,7 @@ class LocalLanguageModelRepository
     await _client.post('/v1/language-models', {
       'connectionName': draft.connectionName,
       'provider': draft.provider.id,
-      if (draft.provider != LanguageModelProvider.googleAi)
-        'baseUrl': draft.baseUrl,
+      if (draft.provider.hasEndpoint) 'baseUrl': draft.baseUrl,
       'name': draft.name,
       'languageModelId': draft.modelId,
       'apiKey': draft.apiKey,
@@ -105,6 +103,8 @@ class LocalLanguageModelRepository
       supportsImageInput: capabilities['imageInput'] == true,
       supportsStructuredOutput: capabilities['structuredOutput'] == true,
       supportsImageGeneration: capabilities['imageGeneration'] == true,
+      supportsTextGeneration: capabilities['textGeneration'] != false,
+      supportsSpeechSynthesis: capabilities['speechSynthesis'] == true,
     );
   }
 

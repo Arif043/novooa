@@ -1,3 +1,7 @@
+import '../../features/speech_synthesis/domain/repositories/speech_voice_repository.dart';
+import '../../features/speech_synthesis/domain/usecases/list_speech_voices.dart';
+import '../../features/speech_synthesis/infrastructure/repositories/cloud_speech_voice_repository.dart';
+import '../../features/speech_synthesis/presentation/cubits/speech_voices_cubit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -183,6 +187,9 @@ void _configureCloudDependencies() {
     ..registerLazySingleton<LanguageModelRepository>(
       () =>
           FirestoreLanguageModelRepository(serviceLocator<FirebaseFirestore>()),
+    )
+    ..registerLazySingleton<SpeechVoiceRepository>(
+      CloudSpeechVoiceRepository.new,
     )
     ..registerLazySingleton<LanguageModelDefaultsRepository>(
       () => FirestoreLanguageModelDefaultsRepository(
@@ -582,6 +589,15 @@ void _configureCloudDependencies() {
         serviceLocator<AuthRepository>(),
         serviceLocator<WatchKnowledgeNotes>(),
         serviceLocator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerLazySingleton(
+      () => ListSpeechVoices(serviceLocator<SpeechVoiceRepository>()),
+    )
+    ..registerFactoryParam<SpeechVoicesCubit, String, void>(
+      (languageModelId, _) => SpeechVoicesCubit(
+        serviceLocator<ListSpeechVoices>(),
+        languageModelId,
       ),
     )
     ..registerFactory(

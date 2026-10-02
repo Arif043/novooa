@@ -15,6 +15,8 @@ import {FirestoreLanguageModelCatalog} from "../../../language_models/infrastruc
 import {languageModelCipher} from "../../../language_models/infrastructure/firebase/language-model-encryption.js";
 import {CatalogGenkitLanguageModelResolver} from "../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {FirestoreLanguageModelDefaultsStore} from "../../../language_models/infrastructure/firebase/firestore-language-model-defaults-store.js";
+import {LanguageModelSpeech} from "../../../speech_synthesis/domain/usecases/language-model-speech.js";
+import {defaultSpeechProviders} from "../../../speech_synthesis/infrastructure/default-speech-providers.js";
 import {UnavailableDocumentStore} from "../../../data/infrastructure/unavailable-document-store.js";
 
 export type CloudTaskRuntime = {
@@ -47,6 +49,7 @@ function workerStoresFor(
   taskRunStore: TaskRunStore,
   teamFileStore: FirestoreTeamFileStore,
 ): TaskRunWorkerStores {
+  const languageModelCatalog = new FirestoreLanguageModelCatalog(languageModelCipher);
   return {
     taskStore,
     taskRunStore,
@@ -58,9 +61,8 @@ function workerStoresFor(
     knowledgeBaseStore: new FirestoreKnowledgeBaseStore(),
     modelInference: modelInference(),
     teamNotificationSender: new FirebaseTeamNotificationSender(),
-    languageModelResolver: new CatalogGenkitLanguageModelResolver(
-      new FirestoreLanguageModelCatalog(languageModelCipher),
-    ),
+    languageModelResolver: new CatalogGenkitLanguageModelResolver(languageModelCatalog),
+    speechSynthesizer: new LanguageModelSpeech(languageModelCatalog, defaultSpeechProviders()),
     languageModelDefaultsStore: new FirestoreLanguageModelDefaultsStore(),
   };
 }

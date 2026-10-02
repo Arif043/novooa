@@ -1,3 +1,4 @@
+import {capabilitiesFromRecord} from "../../domain/entities/language-model.js";
 import {and, eq, sql} from "drizzle-orm";
 import {randomUUID} from "node:crypto";
 import {type RuntimeExecutor, type RuntimeTransaction} from "../../../../db/database.js";
@@ -105,11 +106,5 @@ function capabilitiesFrom(value: string): LanguageModelCapabilities {
     throw new Error("Das Sprachmodell ist ungültig.");
   }
   const capabilities = parsed as Record<string, unknown>;
-  return {
-    textGeneration: capabilities.textGeneration === true,
-    imageInput: capabilities.imageInput === true,
-    structuredOutput: capabilities.structuredOutput === true,
-    toolCalling: capabilities.toolCalling === true,
-    imageGeneration: capabilities.imageGeneration === true,
-  };
+  return capabilitiesFromRecord(capabilities);
 }

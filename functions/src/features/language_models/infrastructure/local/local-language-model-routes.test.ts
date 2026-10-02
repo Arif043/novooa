@@ -29,7 +29,7 @@ test("stores a local model configuration without exposing its API key", async ()
     {id: (saved?.body as {id: string}).id, teamId: "team-1", connectionId: (saved?.body as {connectionId: string}).connectionId,
       name: "Mein Modell", modelId: "gpt-4.1-mini", capabilities: {
         textGeneration: true, imageInput: false, structuredOutput: true,
-        toolCalling: false, imageGeneration: false,
+        toolCalling: false, imageGeneration: false, speechSynthesis: false,
       }},
   ]);
   database.$client.close();
@@ -166,7 +166,7 @@ test("removes a connection together with its models and their secret", async () 
 });
 
 function discoveredModels(): DiscoveredLanguageModel[] {
-  const capabilities = {textGeneration: true, imageInput: false, structuredOutput: true, toolCalling: false, imageGeneration: false};
+  const capabilities = {textGeneration: true, imageInput: false, structuredOutput: true, toolCalling: false, imageGeneration: false, speechSynthesis: false};
   return [
     {modelId: "gemini-2.5-flash", name: "Gemini 2.5 Flash", capabilities},
     {modelId: "gemini-2.5-pro", name: "Gemini 2.5 Pro", capabilities},
@@ -260,5 +260,90 @@ test("discovery asks the fixed Abacus and Hugging Face endpoints with the API ke
   assert.deepEqual(requests, [
     {url: "https://routellm.abacus.ai/v1/models", authorization: "Bearer abacus-key"},
     {url: "https://router.huggingface.co/v1/models", authorization: "Bearer hf-key"},
+  ]);
+});
+
+test("connects ElevenLabs through its own SDK discovery and stores speech-only models", async () => {
+  const database = connectRuntimeDatabase(":memory:");
+  await createTables(database);
+  const requestedKeys: string[] = [];
+  const discovery = new LocalLanguageModelDiscovery(fetch, (apiKey) => {
+    requestedKeys.push(apiKey);
+    return {
+      listSpeechModels: async () => [{modelId: "eleven_multilingual_v2", name: "Eleven Multilingual v2"}],
+      listVoices: async () => [],
+      synthesize: async () => new Uint8Array(),
+    };
+  });
+  const handler = testingRoutes(languageModelRoutes, {
+    store: new SQLiteLanguageModelConfigurationStore(database, new EncryptedSQLiteLanguageModelSecretStore(
+      database, new CredentialCipher(randomBytes(32).toString("base64")),
+    )),
+    notifier: new LocalRuntimeRealtimeNotifier(),
+    discovery,
+  });
+
+  const created = await handler.handle({
+    body: {provider: "elevenLabs", apiKey: "eleven-api-key"}, method: "POST", url: "/v1/language-model-connections",
+  });
+  const connections = await handler.handle({body: {}, method: "GET", url: "/v1/language-model-connections"});
+  const models = await handler.handle({body: {}, method: "GET", url: "/v1/language-models"});
+
+  assert.equal(created?.statusCode, 201);
+  assert.deepEqual(requestedKeys, ["eleven-api-key"]);
+  assert.deepEqual(
+    (connections?.body as {items: Array<{name: string; provider: string; baseUrl?: string}>}).items
+      .map(({name, provider, baseUrl}) => ({name, provider, baseUrl})),
+    [{name: "ElevenLabs", provider: "elevenLabs", baseUrl: undefined}],
+  );
+  const stored = (models?.body as {items: Array<{modelId: string; capabilities: Record<string, boolean>}>}).items;
+  assert.equal(stored[0].modelId, "eleven_multilingual_v2");
+  assert.equal(stored[0].capabilities.speechSynthesis, true);
+  assert.equal(stored[0].capabilities.textGeneration, false);
+  database.$client.close();
+});
+
+test("ignores a custom API address for ElevenLabs instead of storing it", async () => {
+  const database = connectRuntimeDatabase(":memory:");
+  await createTables(database);
+  const handler = testingRoutes(languageModelRoutes, {
+    store: new SQLiteLanguageModelConfigurationStore(database, new EncryptedSQLiteLanguageModelSecretStore(
+      database, new CredentialCipher(randomBytes(32).toString("base64")),
+    )),
+    notifier: new LocalRuntimeRealtimeNotifier(),
+    discovery: {discover: async () => discoveredModels()},
+  });
+
+  const response = await handler.handle({
+    body: {provider: "elevenLabs", apiKey: "eleven-api-key", baseUrl: "https://evil.example/v1"},
+    method: "POST", url: "/v1/language-model-connections",
+  });
+  const connections = await handler.handle({body: {}, method: "GET", url: "/v1/language-model-connections"});
+
+  assert.equal(response?.statusCode, 201);
+  assert.equal((connections?.body as {items: Array<{baseUrl?: string}>}).items[0].baseUrl, undefined);
+  database.$client.close();
+});
+
+test("discovery marks text-to-speech models of OpenAI-compatible and Google providers as speech-only", async () => {
+  const discovery = new LocalLanguageModelDiscovery((async (url: URL) => {
+    const body = String(url).includes("googleapis")
+      ? {models: [
+        {name: "models/gemini-3.8-flash-tts", displayName: "Gemini 3.8 Flash TTS", supportedGenerationMethods: ["createInteraction"]},
+        {name: "models/gemini-2.5-flash", displayName: "Gemini 2.5 Flash", supportedGenerationMethods: ["generateContent"]},
+      ]}
+      : {data: [{id: "gpt-4o-mini-tts"}, {id: "gpt-4o"}]};
+    return new Response(JSON.stringify(body), {status: 200});
+  }) as typeof fetch);
+
+  const google = await discovery.discover({provider: "googleAi", apiKey: "key"});
+  const openAi = await discovery.discover({provider: "openAiCompatible", apiKey: "key", baseUrl: "https://api.openai.com/v1"});
+
+  assert.deepEqual(google.map((model) => [model.modelId, model.capabilities.speechSynthesis]), [
+    ["gemini-3.8-flash-tts", true], ["gemini-2.5-flash", false],
+  ]);
+  assert.equal(google[0].capabilities.textGeneration, false);
+  assert.deepEqual(openAi.map((model) => [model.modelId, model.capabilities.speechSynthesis]), [
+    ["gpt-4o-mini-tts", true], ["gpt-4o", false],
   ]);
 });

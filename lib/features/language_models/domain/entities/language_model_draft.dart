@@ -17,6 +17,7 @@ enum LanguageModelProvider {
     'Hugging Face',
     defaultBaseUrl: 'https://router.huggingface.co/v1',
   ),
+  elevenLabs('elevenLabs', 'ElevenLabs'),
   ollama('ollama', 'Ollama (lokal)'),
   openAiCompatible('openAiCompatible', 'OpenAI-kompatibel');
 
@@ -27,6 +28,13 @@ enum LanguageModelProvider {
   final String? defaultBaseUrl;
 
   bool get requiresCustomBaseUrl => this == openAiCompatible;
+
+  /// Google AI und ElevenLabs sprechen über ihr SDK; eine API-Adresse wird
+  /// weder abgefragt noch gesendet.
+  bool get hasEndpoint => this != googleAi && this != elevenLabs;
+
+  /// Der Anbieter bietet nur Sprachausgabe und keine Chat-Modelle.
+  bool get isSpeechOnly => this == elevenLabs;
 
   /// Anbieter mit genau einem festen Endpunkt — im Gegensatz zu
   /// [openAiCompatible], das mehrfach mit unterschiedlichen Endpunkten

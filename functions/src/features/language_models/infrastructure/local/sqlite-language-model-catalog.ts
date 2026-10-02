@@ -2,6 +2,7 @@ import {and, eq} from "drizzle-orm";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {languageModelConnections, languageModels} from "../../../../db/schema.js";
 import {
+  capabilitiesFromRecord,
   defaultLanguageModelCapabilities,
   languageModelProviders,
   type LanguageModel,
@@ -74,13 +75,7 @@ function capabilitiesFrom(value: unknown): LanguageModelCapabilities {
       return defaultLanguageModelCapabilities;
     }
     const capabilities = parsed as Record<string, unknown>;
-    return {
-      textGeneration: capabilities.textGeneration === true,
-      imageInput: capabilities.imageInput === true,
-      structuredOutput: capabilities.structuredOutput === true,
-      toolCalling: capabilities.toolCalling === true,
-      imageGeneration: capabilities.imageGeneration === true,
-    };
+    return capabilitiesFromRecord(capabilities);
   } catch (_) {
     return defaultLanguageModelCapabilities;
   }

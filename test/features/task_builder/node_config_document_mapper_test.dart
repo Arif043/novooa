@@ -488,6 +488,35 @@ void main() {
       expect(config.branches.single.condition, isNull);
     },
   );
+
+  test('speichert und liest die Sprachmodell-Felder von Text vorlesen', () {
+    final mapper = _mapper();
+    const config = TextToSpeechNodeConfig(
+      modelId: '',
+      languageModelId: 'lm-1',
+      speechText: 'Hallo {{name.value}}',
+      voiceId: 'Puck',
+    );
+
+    final document = mapper.toDocument(config);
+    final restored = mapper.fromDocument(document) as TextToSpeechNodeConfig;
+
+    expect(document['languageModelId'], 'lm-1');
+    expect(document['speechText'], 'Hallo {{name.value}}');
+    expect(document['voiceId'], 'Puck');
+    expect(restored, config);
+    expect(restored.usesLanguageModel, isTrue);
+  });
+
+  test('Text vorlesen ohne Sprachmodell bleibt ein lokales ONNX-Modell', () {
+    final restored =
+        _mapper().fromDocument({'primitive': 'textToSpeech', 'modelId': 'tts'})
+            as TextToSpeechNodeConfig;
+
+    expect(restored.usesLanguageModel, isFalse);
+    expect(restored.speechText, '');
+    expect(restored.voiceId, '');
+  });
 }
 
 const _attachment = NodeAttachment(

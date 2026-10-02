@@ -16,7 +16,7 @@ const LanguageModelDto = Type.Object({
   id: Type.String(), teamId: Type.String(), connectionId: Type.String(), name: Type.String(), modelId: Type.String(),
   capabilities: Type.Object({
     textGeneration: Type.Boolean(), imageInput: Type.Boolean(), structuredOutput: Type.Boolean(),
-    toolCalling: Type.Boolean(), imageGeneration: Type.Boolean(),
+    toolCalling: Type.Boolean(), imageGeneration: Type.Boolean(), speechSynthesis: Type.Boolean(),
   }),
 });
 const ConnectionDto = Type.Object({

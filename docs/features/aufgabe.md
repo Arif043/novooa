@@ -56,7 +56,7 @@ referenzieren.
 | `dialogInput` | Formulareingabe | Pausiert den Run und fragt typisierte Eingaben per Formular ab | Implementiert |
 | `mediaInput` | Bild anfordern | Pausiert den Run und fordert ein Bild an; Quelle wird während der Ausführung gewählt | Implementiert |
 | `modelInference` | Modell ausführen | Prüft explizite Workflow-Zuordnungen gegen das Manifest und führt ein ONNX-Modell aus | Backend-Pipeline implementiert; Runtime-Composition ausstehend |
-| `textToSpeech` | Text vorlesen | Vereinfachte Modellinferenz für Text-zu-Sprache; zeigt ausschließlich Modelle mit Audio-Ausgabe | Implementiert; erste Audio-Modelle und -Transformationen folgen |
+| `textToSpeech` | Text vorlesen | Text-zu-Sprache über ein verbundenes Sprachmodell (Google AI, ElevenLabs, OpenAI-kompatibel, siehe [`sprachausgabe.md`](./sprachausgabe.md)) oder ein lokales ONNX-Modell mit Audio-Ausgabe | Implementiert; erste Audio-Modelle und -Transformationen folgen |
 | `speechToText` | Audio transkribieren | Vereinfachte Modellinferenz für Sprach-zu-Text; zeigt ausschließlich Modelle mit Audio-Eingang | Implementiert; erste Audio-Modelle und -Transformationen folgen |
 | `forEach` | Für jedes Element | Führt einen eingebetteten Arbeitsplan seriell für jedes Element eines JSON-Arrays aus | Implementiert |
 | `documentLookup` | Datensatz suchen | Findet genau einen Datensatz über sichtbare Feldbedingungen | Lokale Runtime implementiert |

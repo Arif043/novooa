@@ -33,6 +33,7 @@ pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
 | Wissensbasis    | [`features/wissensbasis.md`](./features/wissensbasis.md)  | In Entwicklung |
 | KI-Agent        | [`features/ki-agent.md`](./features/ki-agent.md)          | In Entwicklung |
 | ML-Modelle      | [`features/ml-modelle.md`](./features/ml-modelle.md)      | Katalog und Vertrag |
+| Sprachausgabe   | [`features/sprachausgabe.md`](./features/sprachausgabe.md) | Text vorlesen über Sprachmodelle, Stimmen |
 | Import/Export   | [`features/import-export.md`](./features/import-export.md) | Standalone: Sicherung und Übertragung |
 
 ## Konvention: Neue Feature-Doc anlegen

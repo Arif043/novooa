@@ -58,6 +58,7 @@ export function createTaskRunContext(
     messageSender: options.runtime.messageSender,
     documentStore: options.runtime.documentStore,
     modelInference: options.runtime.modelInference,
+    speechSynthesizer: options.runtime.speechSynthesizer,
     teamNotificationSender: options.runtime.teamNotificationSender,
     runGraph: graphRunnerFor(options),
     templateExpressionResolver: templateResolver,

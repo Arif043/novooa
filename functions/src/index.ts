@@ -39,6 +39,7 @@ export {runDueTaskTriggersWorker} from "./features/scheduling/infrastructure/fir
 export {askKnowledgeBaseAssistant} from "./features/knowledge_base/infrastructure/firebase/knowledge-base-assistant-functions.js";
 export {askTaskBuilderAssistant} from "./features/task_execution/infrastructure/firebase/task-builder-assistant-functions.js";
 export {saveLanguageModel} from "./features/language_models/infrastructure/firebase/language-model-functions.js";
+export {listSpeechVoices} from "./features/speech_synthesis/infrastructure/firebase/list-speech-voices-function.js";
 export {issueLocalRuntimeLicense} from "./features/licensing/infrastructure/firebase/local-runtime-license-functions.js";
 export {issueLocalRuntimeFirebaseToken} from "./features/licensing/infrastructure/firebase/issue-local-runtime-firebase-token.js";
 export {localRuntimePushRelay} from "./features/notifications/infrastructure/firebase/runtime-push-relay-function.js";

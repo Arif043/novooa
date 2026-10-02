@@ -488,6 +488,28 @@ void main() {
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
+  test('Text vorlesen: Sprachmodell wählen setzt die Stimme zurück', () async {
+    final repository = _InMemoryTaskRepository(_taskWithTextToSpeechNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+    const nodeId = NodeId('node.speech');
+
+    await cubit.load(repository.savedTask);
+    await cubit.updateTextToSpeechLanguageModel(nodeId, 'lm-google');
+    await cubit.updateTextToSpeechText(nodeId, 'Hallo');
+    await cubit.updateTextToSpeechVoice(nodeId, 'Puck');
+    await cubit.updateTextToSpeechLanguageModel(nodeId, 'lm-google');
+    final sameModel = _speechConfig(cubit);
+    await cubit.updateTextToSpeechLanguageModel(nodeId, 'lm-eleven');
+    final otherModel = _speechConfig(cubit);
+    await cubit.updateTextToSpeechLanguageModel(nodeId, '');
+    final backToOnnx = _speechConfig(cubit);
+
+    expect(sameModel.voiceId, 'Puck');
+    expect(otherModel.voiceId, '');
+    expect(otherModel.speechText, 'Hallo');
+    expect(backToOnnx.usesLanguageModel, isFalse);
+  });
+
   test('updateModelInference speichert die Modell-ID', () async {
     final repository = _InMemoryTaskRepository(_taskWithModelInferenceNode());
     final cubit = TaskBuilderCubit(repository: repository);
@@ -901,6 +923,31 @@ Task _taskWithMediaInputNode() {
           config: MediaInputNodeConfig(
             instruction: 'Bitte füge ein Bild hinzu.',
           ),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+TextToSpeechNodeConfig _speechConfig(TaskBuilderCubit cubit) {
+  final state = cubit.state as TaskBuilderLoaded;
+  return state.editingTask.nodes.first.config as TextToSpeechNodeConfig;
+}
+
+Task _taskWithTextToSpeechNode() {
+  return const Task(
+    id: 'task.speech',
+    title: 'Aufgabe',
+    objective: 'Ziel',
+    selectedNodeId: NodeId('node.speech'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.speech'),
+          title: 'Text vorlesen',
+          description: 'Beschreibung',
+          config: TextToSpeechNodeConfig(modelId: ''),
         ),
       ],
       edges: [],

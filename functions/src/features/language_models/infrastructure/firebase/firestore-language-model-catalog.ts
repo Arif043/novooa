@@ -1,5 +1,6 @@
 import {FieldValue} from "firebase-admin/firestore";
 import {
+  capabilitiesFromRecord,
   defaultLanguageModelCapabilities,
   languageModelProviders,
   type LanguageModel,
@@ -155,13 +156,7 @@ function capabilitiesFrom(value: unknown): LanguageModelCapabilities {
     return defaultLanguageModelCapabilities;
   }
   const capabilities = value as Record<string, unknown>;
-  return {
-    textGeneration: capabilities.textGeneration === true,
-    imageInput: capabilities.imageInput === true,
-    structuredOutput: capabilities.structuredOutput === true,
-    toolCalling: capabilities.toolCalling === true,
-    imageGeneration: capabilities.imageGeneration === true,
-  };
+  return capabilitiesFromRecord(capabilities);
 }
 
 function isProvider(value: unknown): value is LanguageModelProvider {

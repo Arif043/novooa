@@ -1,7 +1,11 @@
 import {
   defaultLanguageModelCapabilities,
+  isSpeechModelId,
+  speechOnlyLanguageModelCapabilities,
   type LanguageModelProvider,
 } from "../../domain/entities/language-model.js";
+import {sdkElevenLabsApi, type ElevenLabsApiFactory} from "../elevenlabs/elevenlabs-api.js";
+import {discoverElevenLabsModels} from "../elevenlabs/elevenlabs-language-model-provider.js";
 import {
   namedLanguageModelProviderFor,
 } from "../openai-compatible/named-language-model-provider-registry.js";
@@ -23,13 +27,28 @@ export interface LanguageModelDiscovery {
 }
 
 export class LocalLanguageModelDiscovery implements LanguageModelDiscovery {
-  constructor(private readonly request = fetch) {}
+  constructor(
+    private readonly request = fetch,
+    private readonly elevenLabs: ElevenLabsApiFactory = sdkElevenLabsApi,
+  ) {}
 
   async discover(input: LocalLanguageModelConnectionInput): Promise<DiscoveredLanguageModel[]> {
+    if (input.provider === "elevenLabs") return this.discoverElevenLabs(input.apiKey);
     const response = await this.fetchModels(input);
     if (!response.ok) throw new LocalLanguageModelDiscoveryError();
     const models = modelsFor(input.provider, await response.json());
     if (models.length === 0) throw new LocalLanguageModelDiscoveryError("Der Anbieter stellt keine Textmodelle bereit.");
+    return models;
+  }
+
+  private async discoverElevenLabs(apiKey: string): Promise<DiscoveredLanguageModel[]> {
+    let models: DiscoveredLanguageModel[];
+    try {
+      models = await discoverElevenLabsModels(this.elevenLabs(apiKey));
+    } catch {
+      throw new LocalLanguageModelDiscoveryError();
+    }
+    if (models.length === 0) throw new LocalLanguageModelDiscoveryError("Das Konto stellt keine Sprachmodelle bereit.");
     return models;
   }
 
@@ -58,8 +77,11 @@ function openAiModelsUrl(baseUrl: string): URL {
 function googleModels(value: unknown): DiscoveredLanguageModel[] {
   if (!isRecord(value) || !Array.isArray(value.models)) return [];
   return value.models.flatMap((model) => {
-    if (!isRecord(model) || typeof model.name !== "string" || !supportsGeneration(model)) return [];
-    return [discovered(model.name.replace(/^models\//, ""), stringOr(model.displayName, model.name))];
+    if (!isRecord(model) || typeof model.name !== "string") return [];
+    const modelId = model.name.replace(/^models\//, "");
+    // Sprachmodelle melden nicht überall `generateContent`; die Kennung `tts` genügt.
+    if (!supportsGeneration(model) && !isSpeechModelId(modelId)) return [];
+    return [discovered(modelId, stringOr(model.displayName, model.name))];
   });
 }
 
@@ -91,7 +113,10 @@ function stringValue(value: unknown): string | undefined {
 }
 
 function discovered(modelId: string, name: string): DiscoveredLanguageModel {
-  return {modelId, name, capabilities: defaultLanguageModelCapabilities};
+  return {
+    modelId, name,
+    capabilities: isSpeechModelId(modelId) ? speechOnlyLanguageModelCapabilities : defaultLanguageModelCapabilities,
+  };
 }
 
 function supportsGeneration(model: Record<string, unknown>): boolean {

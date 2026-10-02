@@ -1,3 +1,5 @@
+import {LanguageModelSpeech} from "../../features/speech_synthesis/domain/usecases/language-model-speech.js";
+import {defaultSpeechProviders} from "../../features/speech_synthesis/infrastructure/default-speech-providers.js";
 import {SQLiteFolderAncestry} from "../../features/files/infrastructure/local/sqlite-folder-ancestry.js";
 import {TriggerCycleGuard} from "../../features/scheduling/domain/usecases/trigger-cycle-guard.js";
 import {SQLiteTaskTriggerStore} from "../../features/scheduling/infrastructure/local/sqlite-task-trigger-store.js";
@@ -60,6 +62,7 @@ export function createLocalRuntimeRouteServices(options: {
     applicationLogs: new SQLiteLocalApplicationLogStore(database),
     languageModels: new SQLiteLanguageModelConfigurationStore(database, languageModelSecrets),
     languageModelDefaults: new SQLiteLanguageModelDefaultsStore(database),
+    speechVoices: new LanguageModelSpeech(new SQLiteLanguageModelCatalog(database, languageModelSecrets), defaultSpeechProviders()),
     assistants: assistantFactories(database, languageModelSecrets),
     modelCatalog: modelCatalogOptions(runtimeRoot, database, options.notifier),
   };
