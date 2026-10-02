@@ -11,6 +11,7 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/schedule/domain/entities/schedule_config.dart';
 import 'package:syscat2/features/schedule/domain/entities/task_trigger.dart';
 import 'package:syscat2/features/schedule/domain/entities/event_trigger_config.dart';
+import 'package:syscat2/features/schedule/presentation/widgets/trigger_dialog_actions.dart';
 import 'package:syscat2/features/schedule/domain/entities/trigger_cycle_analysis.dart';
 import 'package:syscat2/features/schedule/presentation/cubits/schedule_cubit.dart';
 import 'package:syscat2/features/schedule/presentation/cubits/schedule_state.dart';
@@ -113,8 +114,8 @@ void main() {
     expect(find.text('Noch kein Zeitpunkt ausgewählt.'), findsOneWidget);
     expect(
       tester
-          .widget<FilledButton>(
-            find.widgetWithText(FilledButton, 'Auslöser erstellen'),
+          .widget<TriggerDialogAction>(
+            find.widgetWithText(TriggerDialogAction, 'Auslöser erstellen'),
           )
           .onPressed,
       isNull,
@@ -333,14 +334,17 @@ void main() {
     await tester.tap(find.text('Auslöser erstellen'));
     await tester.pump();
     expect(cubit.creates, 1);
-    final button = tester.widget<FilledButton>(
+    final button = tester.widget<TriggerDialogAction>(
       find.descendant(
         of: find.byType(CreateScheduleTriggerDialog),
-        matching: find.byType(FilledButton),
+        matching: find.byWidgetPredicate(
+          (widget) => widget is TriggerDialogAction && widget.isDefaultAction,
+        ),
       ),
     );
     // The label is replaced by a spinner during the request.
     expect(button.onPressed, isNull);
+    expect(find.byType(CupertinoActivityIndicator), findsOneWidget);
     cubit.pending!.complete();
     await tester.pumpAndSettle();
     expect(
