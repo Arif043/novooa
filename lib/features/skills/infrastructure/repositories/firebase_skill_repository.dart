@@ -27,10 +27,9 @@ class FirebaseSkillRepository implements SkillRepository {
 
   @override
   Stream<List<Skill>> watchSkills(TeamId teamId) {
-    return _skillsReference(teamId)
-        .orderBy('title')
-        .snapshots()
-        .map(_skillsFrom);
+    return _skillsReference(
+      teamId,
+    ).orderBy('title').snapshots().map(_skillsFrom);
   }
 
   @override
@@ -61,9 +60,9 @@ class FirebaseSkillRepository implements SkillRepository {
       final skillId = UniqueId.random().value;
       final storagePath = _storagePathFor(teamId, skillId);
       await _uploadContent(storagePath, draft.content);
-      await _skillsReference(teamId).doc(skillId).set(
-        _createDocument(draft: draft, storagePath: storagePath),
-      );
+      await _skillsReference(teamId)
+          .doc(skillId)
+          .set(_createDocument(draft: draft, storagePath: storagePath));
       return _loadMetadata(teamId, skillId, draft.content);
     } catch (_) {
       return const Error(SkillFailure(SkillFailureKind.saveFailed));
@@ -80,9 +79,9 @@ class FirebaseSkillRepository implements SkillRepository {
     try {
       final storagePath = _storagePathFor(teamId, skillId);
       await _uploadContent(storagePath, draft.content);
-      await _skillsReference(teamId).doc(skillId).update(
-        _updateDocument(draft: draft, storagePath: storagePath),
-      );
+      await _skillsReference(teamId)
+          .doc(skillId)
+          .update(_updateDocument(draft: draft, storagePath: storagePath));
       return _loadMetadata(teamId, skillId, draft.content);
     } catch (_) {
       return const Error(SkillFailure(SkillFailureKind.saveFailed));
@@ -120,11 +119,16 @@ class FirebaseSkillRepository implements SkillRepository {
     if (!snapshot.exists || snapshot.data() == null) {
       return const Error(SkillFailure(SkillFailureKind.loadFailed));
     }
-    return Success(SkillModel.fromDocument(snapshot).toDomain(content: content));
+    return Success(
+      SkillModel.fromDocument(snapshot).toDomain(content: content),
+    );
   }
 
   CollectionReference<Map<String, dynamic>> _skillsReference(TeamId teamId) {
-    return _firestore.collection('teams').doc(teamId.value).collection('skills');
+    return _firestore
+        .collection('teams')
+        .doc(teamId.value)
+        .collection('skills');
   }
 
   Map<String, Object?> _createDocument({

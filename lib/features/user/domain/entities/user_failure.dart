@@ -1,4 +1,10 @@
-enum UserFailureKind { invalidEmail, invalidName, notFound, unknown, unauthenticated }
+enum UserFailureKind {
+  invalidEmail,
+  invalidName,
+  notFound,
+  unknown,
+  unauthenticated,
+}
 
 class UserFailure {
   const UserFailure(this.kind);

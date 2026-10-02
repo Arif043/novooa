@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model.dart';
+import 'package:syscat2/features/language_models/presentation/widgets/language_model_provider_logo.dart';
 
 import 'language_model_picker_sheet.dart';
 
@@ -45,6 +46,10 @@ class LanguageModelPickerField extends StatelessWidget {
           ),
           child: Row(
             children: [
+              if (_selected?.provider case final provider?) ...[
+                providerLogo(context, provider: provider, size: AppSpacing.md),
+                const SizedBox(width: AppSpacing.sm),
+              ],
               Expanded(
                 child: Text(
                   label,

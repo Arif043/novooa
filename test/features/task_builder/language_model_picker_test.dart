@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:simple_icons/simple_icons.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/language_model_picker_field.dart';
@@ -71,6 +72,30 @@ void main() {
       findsNothing,
       reason: 'Sheet ist geschlossen',
     );
+  });
+
+  testWidgets('zeigt in der Anbieterauswahl das Logo je Anbieter', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_host(models, '', (_) {}));
+
+    expect(find.byIcon(SimpleIcons.googlegemini), findsNothing);
+    await tester.tap(find.text('Sprachmodell'));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(SimpleIcons.googlegemini), findsOneWidget);
+    expect(find.byIcon(SimpleIcons.mistralai), findsOneWidget);
+    expect(find.byIcon(Icons.layers_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.auto_awesome_outlined), findsOneWidget);
+  });
+
+  testWidgets('das Feld zeigt das Logo des gewählten Anbieters', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_host(models, 'm3', (_) {}));
+
+    expect(find.byIcon(SimpleIcons.mistralai), findsOneWidget);
+    expect(find.byIcon(SimpleIcons.googlegemini), findsNothing);
   });
 
   testWidgets(

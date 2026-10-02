@@ -51,10 +51,7 @@ class AuthSessionCubit extends Cubit<AuthSessionState> implements Listenable {
   Future<void> signOut() async {
     if (state.status == AuthSessionStatus.signingOut) return;
     _emitSession(
-      state.copyWith(
-        status: AuthSessionStatus.signingOut,
-        clearMessage: true,
-      ),
+      state.copyWith(status: AuthSessionStatus.signingOut, clearMessage: true),
     );
     final signOutOrFailure = await signOutUseCase();
     if (isClosed) return;

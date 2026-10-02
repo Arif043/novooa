@@ -31,7 +31,9 @@ class LanguageModelDefaultsSections extends StatelessWidget {
               models: state.models,
               selectedModelId: state.defaults.blockModelId,
               isSaving: state.isSavingBlockDefault,
-              onChanged: context.read<LanguageModelDefaultsCubit>().saveBlockDefault,
+              onChanged: context
+                  .read<LanguageModelDefaultsCubit>()
+                  .saveBlockDefault,
             ),
             const SizedBox(height: AppSpacing.lg),
             _LanguageModelDefaultSection(
@@ -41,8 +43,9 @@ class LanguageModelDefaultsSections extends StatelessWidget {
               models: state.models,
               selectedModelId: state.defaults.assistantModelId,
               isSaving: state.isSavingAssistantDefault,
-              onChanged:
-                  context.read<LanguageModelDefaultsCubit>().saveAssistantDefault,
+              onChanged: context
+                  .read<LanguageModelDefaultsCubit>()
+                  .saveAssistantDefault,
             ),
           ],
         );
@@ -83,7 +86,10 @@ class _LanguageModelDefaultSection extends StatelessWidget {
         initialValue: value,
         decoration: const InputDecoration(labelText: 'Sprachmodell'),
         items: [
-          const DropdownMenuItem(value: null, child: Text('Systemvorgabe verwenden')),
+          const DropdownMenuItem(
+            value: null,
+            child: Text('Systemvorgabe verwenden'),
+          ),
           for (final model in models)
             DropdownMenuItem(value: model.id, child: Text(model.name)),
         ],

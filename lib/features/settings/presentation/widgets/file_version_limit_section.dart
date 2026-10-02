@@ -105,9 +105,8 @@ class _VersionLimitFormState extends State<_VersionLimitForm> {
         FilledButton(
           onPressed: state.isSaving || !_isValid
               ? null
-              : () => context.read<FileSettingsCubit>().saveVersionLimit(
-                  _value!,
-                ),
+              : () =>
+                    context.read<FileSettingsCubit>().saveVersionLimit(_value!),
           child: const Text('Speichern'),
         ),
       ],

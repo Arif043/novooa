@@ -123,7 +123,10 @@ class SyscatTheme {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return BoxDecoration(
       color: isDark ? darkColor : lightColor,
-      borderRadius: BorderRadius.only(bottomRight: Radius.circular(radius), topRight: Radius.circular(radius)),
+      borderRadius: BorderRadius.only(
+        bottomRight: Radius.circular(radius),
+        topRight: Radius.circular(radius),
+      ),
       border: Border.all(color: isDark ? borderDark : borderLight),
       boxShadow: isDark ? darkShadows : glassShadows,
     );

@@ -41,13 +41,19 @@ class FirestoreUserRepository implements UserRepository {
         updatedAt: now,
       );
       if (current.exists) {
-        await reference.update(model.toDocument(includeCreatedAt: false, useServerTimestamps: true));
+        await reference.update(
+          model.toDocument(includeCreatedAt: false, useServerTimestamps: true),
+        );
       } else {
         await reference.set(model.toDocument(useServerTimestamps: true));
       }
       return Success(model.toDomain());
     } catch (error, stackTrace) {
-      _logProfileFailure('Nutzerprofil konnte nicht synchronisiert werden.', error, stackTrace);
+      _logProfileFailure(
+        'Nutzerprofil konnte nicht synchronisiert werden.',
+        error,
+        stackTrace,
+      );
       return Error(UserFailure(UserFailureKind.unknown));
     }
   }
@@ -59,13 +65,22 @@ class FirestoreUserRepository implements UserRepository {
       if (!snapshot.exists) return Error(UserFailure(UserFailureKind.notFound));
       return _profileFrom(snapshot);
     } catch (error, stackTrace) {
-      _logProfileFailure('Nutzerprofil konnte nicht geladen werden.', error, stackTrace);
+      _logProfileFailure(
+        'Nutzerprofil konnte nicht geladen werden.',
+        error,
+        stackTrace,
+      );
       return Error(UserFailure(UserFailureKind.unknown));
     }
   }
 
   void _logProfileFailure(String message, Object error, StackTrace stackTrace) {
-    logException(message: message, error: error, stackTrace: stackTrace, name: 'user_profile');
+    logException(
+      message: message,
+      error: error,
+      stackTrace: stackTrace,
+      name: 'user_profile',
+    );
   }
 
   Result<UserProfile, UserFailure> _profileFrom(DocumentSnapshot snapshot) {

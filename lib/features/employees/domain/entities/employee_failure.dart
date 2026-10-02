@@ -21,7 +21,8 @@ class EmployeeFailure {
         'Mitarbeiter konnte nicht gespeichert werden.',
       EmployeeFailureKind.deleteFailed =>
         'Mitarbeiter konnte nicht gelöscht werden.',
-      EmployeeFailureKind.invalidName => 'Gib einen Namen für den Mitarbeiter ein.',
+      EmployeeFailureKind.invalidName =>
+        'Gib einen Namen für den Mitarbeiter ein.',
     };
   }
 }

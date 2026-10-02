@@ -47,17 +47,20 @@ class EmployeeModel {
 
   static List<SkillAttachment> _skillsFrom(Object? value) {
     if (value is! List) return const [];
-    return value.whereType<Map>().map((raw) {
-      final entry = raw.map(
-        (key, dynamic v) => MapEntry(key.toString(), v),
-      );
-      return SkillAttachment(
-        skillId: entry['skillId'] as String? ?? '',
-        title: entry['title'] as String? ?? '',
-        description: entry['description'] as String? ?? '',
-        storagePath: entry['storagePath'] as String? ?? '',
-      );
-    }).toList(growable: false);
+    return value
+        .whereType<Map>()
+        .map((raw) {
+          final entry = raw.map(
+            (key, dynamic v) => MapEntry(key.toString(), v),
+          );
+          return SkillAttachment(
+            skillId: entry['skillId'] as String? ?? '',
+            title: entry['title'] as String? ?? '',
+            description: entry['description'] as String? ?? '',
+            storagePath: entry['storagePath'] as String? ?? '',
+          );
+        })
+        .toList(growable: false);
   }
 
   static DateTime _dateFrom(Object? value) {

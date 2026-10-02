@@ -112,10 +112,7 @@ class AuthFormCubit extends Cubit<AuthFormState> {
     if (isClosed) return;
     userProfileOrFailure.when(
       (_) => _emitState(
-        AuthFormState(
-          mode: state.mode,
-          status: AuthFormStatus.success,
-        ),
+        AuthFormState(mode: state.mode, status: AuthFormStatus.success),
       ),
       (_) => _handleProfileFailure(),
     );

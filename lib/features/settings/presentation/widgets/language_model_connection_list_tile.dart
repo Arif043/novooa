@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_connection.dart';
 
-import 'language_model_provider_logo.dart';
+import 'package:syscat2/features/language_models/presentation/widgets/language_model_provider_logo.dart';
 
 /// Ein verbundener Anbieter in der Sprachmodelle-Übersicht. Tap öffnet die
 /// Detailseite mit den Modellen dieses Anbieters (siehe

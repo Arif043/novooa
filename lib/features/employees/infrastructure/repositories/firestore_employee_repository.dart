@@ -17,10 +17,9 @@ class FirestoreEmployeeRepository implements EmployeeRepository {
 
   @override
   Stream<List<Employee>> watchEmployees(TeamId teamId) {
-    return _employeesReference(teamId)
-        .orderBy('name')
-        .snapshots()
-        .map(_employeesFrom);
+    return _employeesReference(
+      teamId,
+    ).orderBy('name').snapshots().map(_employeesFrom);
   }
 
   @override
@@ -31,9 +30,9 @@ class FirestoreEmployeeRepository implements EmployeeRepository {
     if (draft.name.trim().isEmpty) return _invalidName();
     try {
       final employeeId = UniqueId.random().value;
-      await _employeesReference(teamId).doc(employeeId).set(
-        _createDocument(draft),
-      );
+      await _employeesReference(
+        teamId,
+      ).doc(employeeId).set(_createDocument(draft));
       return _loadEmployee(teamId, employeeId);
     } catch (_) {
       return const Error(EmployeeFailure(EmployeeFailureKind.saveFailed));
@@ -48,9 +47,9 @@ class FirestoreEmployeeRepository implements EmployeeRepository {
   }) async {
     if (draft.name.trim().isEmpty) return _invalidName();
     try {
-      await _employeesReference(teamId).doc(employeeId).update(
-        _updateDocument(draft),
-      );
+      await _employeesReference(
+        teamId,
+      ).doc(employeeId).update(_updateDocument(draft));
       return _loadEmployee(teamId, employeeId);
     } catch (_) {
       return const Error(EmployeeFailure(EmployeeFailureKind.saveFailed));

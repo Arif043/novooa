@@ -197,7 +197,7 @@ SnackBarThemeData _snackBarTheme(_ThemeTokens tokens) {
     backgroundColor: Colors.black,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     behavior: SnackBarBehavior.floating,
-    
+
     //actionTextColor: tokens.primaryOrange,
   );
 }

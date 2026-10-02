@@ -121,7 +121,10 @@ Future<Map<String, Object?>> _responseFor(
 ) async {
   final text = await response.stream.bytesToString();
   if (response.statusCode < 200 || response.statusCode >= 300) {
-    throw WorkspaceHttpException(response.statusCode, workspaceApiErrorFrom(text));
+    throw WorkspaceHttpException(
+      response.statusCode,
+      workspaceApiErrorFrom(text),
+    );
   }
   if (text.trim().isEmpty) return const {};
   return _objectFrom(jsonDecode(text));

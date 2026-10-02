@@ -5,7 +5,7 @@ import 'package:syscat2/features/language_models/domain/entities/language_model_
 import 'package:syscat2/features/language_models/presentation/cubits/language_models_settings_cubit.dart';
 import 'package:syscat2/features/language_models/presentation/cubits/language_models_settings_state.dart';
 
-import 'language_model_provider_logo.dart';
+import 'package:syscat2/features/language_models/presentation/widgets/language_model_provider_logo.dart';
 
 /// Formular „Anbieter verbinden" (Standalone) / „Sprachmodell verbinden"
 /// (Cloud). Blendet im Dropdown bereits verbundene „direkte" Anbieter aus
@@ -91,7 +91,11 @@ class LanguageModelConnectForm extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  providerLogo(context, provider: provider, size: AppSpacing.md),
+                  providerLogo(
+                    context,
+                    provider: provider,
+                    size: AppSpacing.md,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(provider.label),
                 ],
@@ -134,9 +138,7 @@ class LanguageModelConnectForm extends StatelessWidget {
       TextFormField(
         controller: name,
         enabled: !state.isSaving,
-        decoration: const InputDecoration(
-          labelText: 'Anzeigename des Modells',
-        ),
+        decoration: const InputDecoration(labelText: 'Anzeigename des Modells'),
         onChanged: cubit.updateName,
       ),
       const SizedBox(height: AppSpacing.md),
@@ -157,7 +159,8 @@ class LanguageModelConnectForm extends StatelessWidget {
       obscureText: true,
       decoration: InputDecoration(
         labelText:
-            isStandalone && state.provider == LanguageModelProvider.openAiCompatible
+            isStandalone &&
+                state.provider == LanguageModelProvider.openAiCompatible
             ? 'API-Key (bei Ollama leer lassen)'
             : 'API-Key',
       ),
@@ -178,16 +181,22 @@ class LanguageModelConnectForm extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.add_link),
-        label: Text(isStandalone ? 'Anbieter verbinden' : 'Sprachmodell verbinden'),
+        label: Text(
+          isStandalone ? 'Anbieter verbinden' : 'Sprachmodell verbinden',
+        ),
       ),
     );
   }
 
   List<LanguageModelProvider> _selectableProviders() {
-    return LanguageModelProvider.values.where((provider) {
-      if (!isStandalone) return provider != LanguageModelProvider.ollama;
-      if (!provider.isDirectProvider) return true;
-      return !connections.any((connection) => connection.provider == provider);
-    }).toList(growable: false);
+    return LanguageModelProvider.values
+        .where((provider) {
+          if (!isStandalone) return provider != LanguageModelProvider.ollama;
+          if (!provider.isDirectProvider) return true;
+          return !connections.any(
+            (connection) => connection.provider == provider,
+          );
+        })
+        .toList(growable: false);
   }
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/widgets/adaptive_sheet.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model.dart';
+import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
+import 'package:syscat2/features/language_models/presentation/widgets/language_model_provider_logo.dart';
 
 import 'language_model_provider_groups.dart';
 
@@ -161,6 +163,7 @@ class _ProviderList extends StatelessWidget {
     return ListView(
       children: [
         ListTile(
+          leading: const Icon(Icons.auto_awesome_outlined),
           title: const Text('Standardmodell verwenden'),
           trailing: selectedModelId == defaultLanguageModelId
               ? const _SelectedMark()
@@ -171,6 +174,7 @@ class _ProviderList extends StatelessWidget {
         if (groups.isEmpty) const _EmptyHint(),
         for (final group in groups)
           ListTile(
+            leading: _ProviderIcon(provider: group.provider),
             title: Text(group.label),
             subtitle: Text(_countLabel(group.models.length)),
             trailing: Row(
@@ -187,6 +191,28 @@ class _ProviderList extends StatelessWidget {
   }
 
   String _countLabel(int count) => count == 1 ? '1 Modell' : '$count Modelle';
+}
+
+/// Markenlogo des Anbieters; Modelle ohne bekannten Anbieter bekommen ein
+/// neutrales Symbol.
+class _ProviderIcon extends StatelessWidget {
+  const _ProviderIcon({required this.provider});
+
+  final LanguageModelProvider? provider;
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = this.provider;
+    return SizedBox.square(
+      dimension: AppSpacing.lg,
+      child: provider == null
+          ? Icon(
+              Icons.layers_outlined,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            )
+          : providerLogo(context, provider: provider, size: AppSpacing.lg),
+    );
+  }
 }
 
 class _ModelList extends StatelessWidget {
