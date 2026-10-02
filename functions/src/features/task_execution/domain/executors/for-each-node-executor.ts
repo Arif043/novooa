@@ -13,10 +13,10 @@ export const forEachNodeExecutor: NodeExecutor = {
       items: runContext.templateExpressionResolver.resolveValue(
         config.itemsTemplate ?? "",
       ),
-      runGraph: (graph, graphInput) => runContext.runGraph(
+      runGraph: (graph, scope) => runContext.runGraph(
         graph,
         runContext.context,
-        graphInput,
+        scope,
       ),
     });
     return executedNode(node, {value: {type: "json", value: results}});

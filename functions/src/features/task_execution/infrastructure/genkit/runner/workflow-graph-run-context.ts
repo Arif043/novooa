@@ -2,7 +2,6 @@ import {
   type TaskRunContext,
   type TaskVariables,
   type WorkflowExecutionScope,
-  type WorkflowGraphInput,
   type WorkflowGraphRunner,
 } from "../../../domain/executors/node-executor.js";
 import {
@@ -22,7 +21,6 @@ import {validateGraph} from "../../../domain/services/task-graph-utils.js";
 export type ExecuteWorkflowGraph = (
   graph: WorkflowGraph,
   context: string,
-  input: WorkflowGraphInput,
   scope: WorkflowExecutionScope,
 ) => Promise<NodeExecutionResult[]>;
 
@@ -81,18 +79,18 @@ function templateContextFor(options: TaskRunContextOptions) {
 }
 
 function graphRunnerFor(options: TaskRunContextOptions): WorkflowGraphRunner {
-  return async (graph, context, input = {}) => {
+  return async (graph, context, scope = {}) => {
     validateGraph(graph);
-    return options.executeGraph(graph, context, input, scopeFor(options, input));
+    return options.executeGraph(graph, context, scopeFor(options, scope));
   };
 }
 
 function scopeFor(
   options: TaskRunContextOptions,
-  input: WorkflowGraphInput,
+  scope: WorkflowExecutionScope,
 ): WorkflowExecutionScope {
   return {
-    ...input.scope,
+    ...scope,
     global: {
       ...options.scope.global,
       ...globalContextFor(options),

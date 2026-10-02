@@ -117,7 +117,7 @@ async function runNodes(
         results,
         variables,
         scope,
-        executeGraph: async (embeddedGraph, embeddedContext, graphInput, embeddedScope) => {
+        executeGraph: async (embeddedGraph, embeddedContext, embeddedScope) => {
           const state = await runNodes(
             ai,
             input,

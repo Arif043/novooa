@@ -4,14 +4,14 @@ import {
   type WorkflowGraph,
 } from "../entities/task.js";
 import {valueAtJsonPointer} from "../services/json-pointer.js";
-import {type WorkflowGraphInput} from "./node-executor.js";
+import {type WorkflowExecutionScope} from "./node-executor.js";
 
 export type ForEachExecutionRequest = {
   config: ForEachNodeConfig;
   items: unknown;
   runGraph: (
     graph: WorkflowGraph,
-    input: WorkflowGraphInput,
+    scope: WorkflowExecutionScope,
   ) => Promise<NodeExecutionResult[]>;
 };
 
@@ -25,9 +25,7 @@ export async function executeForEach(
     try {
       const graphResults = await request.runGraph(
         graphFor(request.config.graph),
-        {
-          scope: {iteration: {index, value: item}},
-        },
+        {iteration: {index, value: item}},
       );
       results.push(outputsOf(graphResults, request.config.graph.nodes));
     } catch (error) {

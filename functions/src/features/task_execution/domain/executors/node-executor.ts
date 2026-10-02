@@ -33,12 +33,11 @@ export type WorkflowExecutionScope = {
   };
 };
 
-export type WorkflowGraphInput = {scope?: WorkflowExecutionScope};
-
 export type WorkflowGraphRunner = (
   graph: WorkflowGraph,
   context: string,
-  input?: WorkflowGraphInput,
+  /** Zusätzlicher Geltungsbereich des Teilgraphen, z. B. das aktuelle Element einer Schleife. */
+  scope?: WorkflowExecutionScope,
 ) => Promise<NodeExecutionResult[]>;
 
 /**

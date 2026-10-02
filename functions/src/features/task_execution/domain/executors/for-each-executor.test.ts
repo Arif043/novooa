@@ -8,8 +8,8 @@ test("executes every item serially and preserves its result order", async () => 
   const result = await executeForEach({
     config: config(),
     items: {items: ["first", "second"]},
-    async runGraph(_task, input) {
-      const value = input.scope?.iteration?.value;
+    async runGraph(_task, scope) {
+      const value = scope?.iteration?.value;
       values.push(value);
       return [resultFor(`${value}-done`)];
     },
@@ -27,9 +27,9 @@ test("uses the complete predecessor value for an empty pointer", async () => {
   await executeForEach({
     config: {...config(), itemsPointer: ""},
     items: ["first", "second"],
-    async runGraph(_task, input) {
-      values.push(input.scope?.iteration?.value);
-      return [resultFor(input.scope?.iteration?.value)];
+    async runGraph(_task, scope) {
+      values.push(scope?.iteration?.value);
+      return [resultFor(scope?.iteration?.value)];
     },
   });
   assert.deepEqual(values, ["first", "second"]);
@@ -41,8 +41,8 @@ test("fails fast and includes the failing item index", async () => {
     executeForEach({
         config: config(),
       items: {items: ["first", "second", "third"]},
-      async runGraph(_task, input) {
-        const value = input.scope?.iteration?.value;
+      async runGraph(_task, scope) {
+        const value = scope?.iteration?.value;
         calls.push(value);
         if (value === "second") throw new Error("ungültiger Wert");
         return [resultFor(value)];
