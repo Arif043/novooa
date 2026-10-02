@@ -196,3 +196,69 @@ async function createTables(database: RuntimeDatabase): Promise<void> {
     secret_ref TEXT PRIMARY KEY, encrypted_value TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`);
 }
+
+for (const [provider, displayName, baseUrl] of [
+  ["abacus", "Abacus.AI (RouteLLM)", "https://routellm.abacus.ai/v1"],
+  ["huggingFace", "Hugging Face", "https://router.huggingface.co/v1"],
+] as const) {
+  test(`connects ${provider} as its own provider with a fixed endpoint`, async () => {
+    const database = connectRuntimeDatabase(":memory:");
+    await createTables(database);
+    const handler = testingRoutes(languageModelRoutes, {
+      store: new SQLiteLanguageModelConfigurationStore(database, new EncryptedSQLiteLanguageModelSecretStore(
+        database, new CredentialCipher(randomBytes(32).toString("base64")),
+      )),
+      notifier: new LocalRuntimeRealtimeNotifier(),
+      discovery: {discover: async () => discoveredModels()},
+    });
+
+    const created = await handler.handle({
+      body: {provider, apiKey: "provider-api-key"}, method: "POST", url: "/v1/language-model-connections",
+    });
+    const connections = await handler.handle({body: {}, method: "GET", url: "/v1/language-model-connections"});
+
+    assert.equal(created?.statusCode, 201);
+    assert.deepEqual(
+      (connections?.body as {items: Array<{name: string; provider: string; baseUrl: string}>}).items
+        .map(({name, provider: stored, baseUrl: url}) => ({name, provider: stored, baseUrl: url})),
+      [{name: displayName, provider, baseUrl}],
+    );
+    database.$client.close();
+  });
+
+  test(`rejects another API address for ${provider}`, async () => {
+    const database = connectRuntimeDatabase(":memory:");
+    await createTables(database);
+    const handler = testingRoutes(languageModelRoutes, {
+      store: new SQLiteLanguageModelConfigurationStore(database, new EncryptedSQLiteLanguageModelSecretStore(
+        database, new CredentialCipher(randomBytes(32).toString("base64")),
+      )),
+      notifier: new LocalRuntimeRealtimeNotifier(),
+      discovery: {discover: async () => discoveredModels()},
+    });
+
+    const response = await handler.handle({
+      body: {provider, apiKey: "provider-api-key", baseUrl: "https://evil.example/v1"},
+      method: "POST", url: "/v1/language-model-connections",
+    });
+
+    assert.equal(response?.statusCode, 400);
+    database.$client.close();
+  });
+}
+
+test("discovery asks the fixed Abacus and Hugging Face endpoints with the API key", async () => {
+  const requests: Array<{url: string; authorization: string | undefined}> = [];
+  const discovery = new LocalLanguageModelDiscovery((async (url: URL, init?: {headers?: Record<string, string>}) => {
+    requests.push({url: String(url), authorization: init?.headers?.Authorization});
+    return new Response(JSON.stringify({data: [{id: "org/model"}]}), {status: 200});
+  }) as typeof fetch);
+
+  await discovery.discover({provider: "abacus", apiKey: "abacus-key"});
+  await discovery.discover({provider: "huggingFace", apiKey: "hf-key"});
+
+  assert.deepEqual(requests, [
+    {url: "https://routellm.abacus.ai/v1/models", authorization: "Bearer abacus-key"},
+    {url: "https://router.huggingface.co/v1/models", authorization: "Bearer hf-key"},
+  ]);
+});

@@ -9,13 +9,24 @@ test("defines fixed OpenAI-compatible endpoints for supported cloud providers", 
     ["xAi", "https://api.x.ai/v1"],
     ["mistral", "https://api.mistral.ai/v1"],
     ["openRouter", "https://openrouter.ai/api/v1"],
+    ["abacus", "https://routellm.abacus.ai/v1"],
+    ["huggingFace", "https://router.huggingface.co/v1"],
   ] as const;
 
   for (const [provider, baseUrl] of expectedProviders) {
     const configuration = namedLanguageModelProviderFor(provider);
     assert.equal(configuration?.baseUrl, baseUrl);
-    assert.deepEqual(configuration?.discoverModels({
-      data: [{id: "provider/model", name: "Anzeigename"}],
-    }).map((model) => model.modelId), ["provider/model"]);
+    assert.ok(
+      configuration?.discoverModels({
+        data: [{id: "provider/model", name: "Anzeigename"}],
+      }).some((model) => model.modelId === "provider/model"),
+      provider,
+    );
   }
+});
+
+test("Abacus und Hugging Face erscheinen getrennt von generischen OpenAI-kompatiblen Anbietern", () => {
+  assert.equal(namedLanguageModelProviderFor("abacus")?.displayName, "Abacus.AI (RouteLLM)");
+  assert.equal(namedLanguageModelProviderFor("huggingFace")?.displayName, "Hugging Face");
+  assert.equal(namedLanguageModelProviderFor("openAiCompatible"), undefined);
 });

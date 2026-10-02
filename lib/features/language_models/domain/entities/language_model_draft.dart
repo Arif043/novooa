@@ -7,6 +7,16 @@ enum LanguageModelProvider {
     'OpenRouter',
     defaultBaseUrl: 'https://openrouter.ai/api/v1',
   ),
+  abacus(
+    'abacus',
+    'Abacus.AI (RouteLLM)',
+    defaultBaseUrl: 'https://routellm.abacus.ai/v1',
+  ),
+  huggingFace(
+    'huggingFace',
+    'Hugging Face',
+    defaultBaseUrl: 'https://router.huggingface.co/v1',
+  ),
   ollama('ollama', 'Ollama (lokal)'),
   openAiCompatible('openAiCompatible', 'OpenAI-kompatibel');
 

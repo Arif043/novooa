@@ -93,8 +93,8 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md).
   `teamId`, `graph`, `createdAt` und `updatedAt`.
 - Sprachmodelle sind team-scoped. `languageModelConnections` enthalten
   Anbieter-Metadaten und den zugehörigen Endpunkt. Google AI bleibt nativ;
-  xAI (Grok), Mistral AI und OpenRouter verwenden festgelegte
-  OpenAI-kompatible Endpunkte. Nur der generische OpenAI-kompatible Anbieter
+  xAI (Grok), Mistral AI, OpenRouter, Abacus.AI (RouteLLM) und Hugging Face
+  verwenden festgelegte OpenAI-kompatible Endpunkte. Nur der generische OpenAI-kompatible Anbieter
   erlaubt eine frei gewählte HTTPS-Adresse;
   `languageModels` referenzieren eine Verbindung und eine konkrete Modell-ID.
   API-Keys werden ausschließlich durch Callable Functions verschlüsselt unter

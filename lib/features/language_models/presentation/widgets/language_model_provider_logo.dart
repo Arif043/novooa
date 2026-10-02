@@ -43,6 +43,10 @@ IconData providerIconData(LanguageModelProvider provider) {
     LanguageModelProvider.mistral => SimpleIcons.mistralai,
     LanguageModelProvider.openRouter => SimpleIcons.openrouter,
     LanguageModelProvider.ollama => SimpleIcons.ollama,
+    // Im Icon-Paket gibt es kein Markenlogo; ein neutrales Symbol statt eines
+    // nachgezeichneten Logos.
+    LanguageModelProvider.abacus => Icons.alt_route,
+    LanguageModelProvider.huggingFace => Icons.hub_outlined,
     LanguageModelProvider.xAi ||
     LanguageModelProvider.openAiCompatible => Icons.smart_toy_outlined,
   };

@@ -411,15 +411,24 @@ speichert sie als AES-256-GCM-Envelope mit eigenem Datenschlüssel; `secret_ref`
 verweist auf den jeweiligen Eintrag. Der Master-Key-Schlüsselbund liegt separat
 außerhalb des Daten-Volumes.
 Die Flutter-Einstellungen bieten **Google AI**, **xAI (Grok)**, **Mistral AI**,
-**OpenRouter**, **Ollama (lokal)** und frei konfigurierbare
+**OpenRouter**, **Abacus.AI (RouteLLM)**, **Hugging Face**, **Ollama (lokal)**
+und frei konfigurierbare
 OpenAI-kompatible Anbieter an und verbinden sie über `POST
 /v1/language-model-connections`. Die Runtime lädt dessen Modellkatalog und
 speichert alle verfügbaren Textmodelle unter einer gemeinsamen Verbindung. Die
 Modellauswahl findet anschließend im TaskBuilder statt; dort liest der Client
 den Katalog über `GET /v1/language-models`. API-Keys werden in keiner Antwort
 ausgegeben und ausschließlich im verschlüsselten lokalen Secret Store abgelegt.
-xAI, Mistral und OpenRouter verwenden festgelegte HTTPS-Endpunkte und jeweils
-den API-Key der Kundschaft; ihre API-Adresse ist nicht frei überschreibbar.
+xAI, Mistral, OpenRouter, Abacus.AI und Hugging Face verwenden festgelegte
+HTTPS-Endpunkte und jeweils den API-Key der Kundschaft; ihre API-Adresse ist
+nicht frei überschreibbar. Abacus.AI und Hugging Face sprechen zwar das
+OpenAI-Protokoll, erscheinen aber bewusst als eigene Anbieter (Abacus:
+`https://routellm.abacus.ai/v1`, dazu das Pseudo-Modell `route-llm` für die
+automatische Modellwahl; Hugging Face: `https://router.huggingface.co/v1`,
+Modelle und deren Fähigkeiten — Werkzeugaufrufe, strukturierte Ausgabe,
+Bildeingabe — aus `GET /v1/models` der Inference Providers). Abacus-Enterprise-
+Arbeitsbereiche mit eigener Adresse (`https://<arbeitsbereich>.abacus.ai/v1`)
+verbindet man über den generischen OpenAI-kompatiblen Anbieter.
 Ollama verwendet ohne weitere Eingabe
 `http://host.docker.internal:11434/v1`. Die Runtime registriert Ollama als lokales Genkit-Modell. Genkit steuert Prompt-Bausteine fuer Text, Bildanalyse und strukturierte Ausgabe und delegiert den Provider-Transport an die native `/api/chat`-API; JSON-Schemas werden dabei als Ollama-`format` uebergeben.
 Für einen abweichenden OpenAI-kompatiblen Dienst wird als Base-URL

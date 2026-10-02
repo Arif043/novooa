@@ -3,6 +3,8 @@ export const languageModelProviders = [
   "xAi",
   "mistral",
   "openRouter",
+  "abacus",
+  "huggingFace",
   "ollama",
   "openAiCompatible",
 ] as const;
