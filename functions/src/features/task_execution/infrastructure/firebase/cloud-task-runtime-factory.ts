@@ -17,6 +17,8 @@ import {CatalogGenkitLanguageModelResolver} from "../../../language_models/infra
 import {FirestoreLanguageModelDefaultsStore} from "../../../language_models/infrastructure/firebase/firestore-language-model-defaults-store.js";
 import {LanguageModelSpeech} from "../../../speech_synthesis/domain/usecases/language-model-speech.js";
 import {defaultSpeechProviders} from "../../../speech_synthesis/infrastructure/default-speech-providers.js";
+import {LanguageModelTranscription} from "../../../speech_transcription/domain/usecases/language-model-transcription.js";
+import {defaultTranscriptionProviders} from "../../../speech_transcription/infrastructure/default-transcription-providers.js";
 import {UnavailableDocumentStore} from "../../../data/infrastructure/unavailable-document-store.js";
 
 export type CloudTaskRuntime = {
@@ -63,6 +65,7 @@ function workerStoresFor(
     teamNotificationSender: new FirebaseTeamNotificationSender(),
     languageModelResolver: new CatalogGenkitLanguageModelResolver(languageModelCatalog),
     speechSynthesizer: new LanguageModelSpeech(languageModelCatalog, defaultSpeechProviders()),
+    speechTranscriber: new LanguageModelTranscription(languageModelCatalog, defaultTranscriptionProviders()),
     languageModelDefaultsStore: new FirestoreLanguageModelDefaultsStore(),
   };
 }

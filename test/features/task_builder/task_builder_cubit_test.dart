@@ -510,6 +510,22 @@ void main() {
     expect(backToOnnx.usesLanguageModel, isFalse);
   });
 
+  test('Sprache zu Text speichert Sprachmodell und Audioquelle', () async {
+    final repository = _InMemoryTaskRepository(_taskWithSpeechToTextNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+    const nodeId = NodeId('node.stt');
+
+    await cubit.load(repository.savedTask);
+    await cubit.updateSpeechToTextLanguageModel(nodeId, 'lm-1');
+    await cubit.updateSpeechToTextAudio(nodeId, '{{aufnahme.value}}');
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final config =
+        state.editingTask.nodes.first.config as SpeechToTextNodeConfig;
+    expect(config.languageModelId, 'lm-1');
+    expect(config.audioTemplate, '{{aufnahme.value}}');
+  });
+
   test('updateModelInference speichert die Modell-ID', () async {
     final repository = _InMemoryTaskRepository(_taskWithModelInferenceNode());
     final cubit = TaskBuilderCubit(repository: repository);
@@ -948,6 +964,26 @@ Task _taskWithTextToSpeechNode() {
           title: 'Text vorlesen',
           description: 'Beschreibung',
           config: TextToSpeechNodeConfig(modelId: ''),
+        ),
+      ],
+      edges: [],
+    ),
+  );
+}
+
+Task _taskWithSpeechToTextNode() {
+  return const Task(
+    id: 'task.stt',
+    title: 'Aufgabe',
+    objective: 'Ziel',
+    selectedNodeId: NodeId('node.stt'),
+    graph: WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: NodeId('node.stt'),
+          title: 'Sprache zu Text',
+          description: 'Beschreibung',
+          config: SpeechToTextNodeConfig(modelId: ''),
         ),
       ],
       edges: [],

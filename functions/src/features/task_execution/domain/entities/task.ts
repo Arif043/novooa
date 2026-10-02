@@ -189,6 +189,8 @@ export type TextToSpeechNodeConfig = SpeechModelNodeConfig & {
 };
 export type SpeechToTextNodeConfig = SpeechModelNodeConfig & {
   primitive: "speechToText";
+  languageModelId?: string;
+  audioTemplate?: string;
 };
 export type ModelInferenceInputMapping = {
   modelInputName: string;

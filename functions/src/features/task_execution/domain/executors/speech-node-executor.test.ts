@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {textToSpeechNodeExecutor} from "./speech-node-executor.js";
+import {speechToTextNodeExecutor, textToSpeechNodeExecutor} from "./speech-node-executor.js";
 
 type SpeechCall = {teamId: string; languageModelId: string; text: string; voiceId?: string};
 
@@ -79,4 +79,53 @@ test("without a language model the ONNX inference path is used", async () => {
 
   assert.deepEqual(requests.map((request) => request.modelId), ["onnx-tts"]);
   assert.deepEqual(result.outputs, {});
+});
+
+function sttNode(config: Record<string, unknown>) {
+  return {
+    id: "stt", primitive: "speechToText",
+    config: {primitive: "speechToText", modelId: "", inputMappings: [], outputParameters: [], ...config},
+  } as never;
+}
+
+function sttContext(transcribed: Array<Record<string, unknown>>, reference: unknown = {fileId: "f1", versionId: "v1"}) {
+  return {
+    teamId: "team-1",
+    templateExpressionResolver: {resolveValue: () => reference},
+    fileContentReader: {
+      readTeamFileContent: async () => ({content: new Uint8Array([1]), displayName: "a.wav", contentType: "audio/wav", sizeBytes: 1}),
+    },
+    speechTranscriber: {transcribe: async (request: Record<string, unknown>) => { transcribed.push(request); return "Hallo Welt"; }},
+  } as never;
+}
+
+test("transcribes the referenced audio file with the chosen language model", async () => {
+  const transcribed: Array<Record<string, unknown>> = [];
+
+  const result = await speechToTextNodeExecutor.execute(
+    sttNode({languageModelId: "lm-1", audioTemplate: "{{aufnahme.value}}"}), sttContext(transcribed),
+  );
+
+  assert.deepEqual(result.outputs.value, {type: "string", value: "Hallo Welt"});
+  assert.equal(transcribed[0].languageModelId, "lm-1");
+  assert.equal(transcribed[0].teamId, "team-1");
+});
+
+test("transcription without an audio reference fails readably", async () => {
+  await assert.rejects(
+    speechToTextNodeExecutor.execute(sttNode({languageModelId: "lm-1"}), sttContext([], "")),
+    /keine Audiodatei zugeordnet/,
+  );
+});
+
+test("speech to text without a language model keeps the ONNX path", async () => {
+  const requests: string[] = [];
+  const context = {
+    ...(sttContext([]) as object),
+    modelInference: {execute: async (request: {modelId: string}) => { requests.push(request.modelId); return {modelId: request.modelId, outputs: []}; }},
+  } as never;
+
+  await speechToTextNodeExecutor.execute(sttNode({modelId: "whisper"}), context);
+
+  assert.deepEqual(requests, ["whisper"]);
 });

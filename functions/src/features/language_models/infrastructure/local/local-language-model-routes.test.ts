@@ -272,7 +272,7 @@ test("connects ElevenLabs through its own SDK discovery", async () => {
     return {
       listSpeechModels: async () => [{modelId: "eleven_multilingual_v2", name: "Eleven Multilingual v2"}],
       listVoices: async () => [],
-      synthesize: async () => new Uint8Array(),
+      synthesize: async () => new Uint8Array(), transcribe: async () => "",
     };
   });
   const handler = testingRoutes(languageModelRoutes, {

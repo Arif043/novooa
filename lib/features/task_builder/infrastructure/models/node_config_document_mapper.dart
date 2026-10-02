@@ -29,7 +29,7 @@ class NodeConfigDocumentMapper {
       DialogInputNodeConfig() => _dialogInputToDocument(config),
       MediaInputNodeConfig() => _mediaInputToDocument(config),
       TextToSpeechNodeConfig() => _textToSpeechToDocument(config),
-      SpeechToTextNodeConfig() => _modelInferenceToDocument(config),
+      SpeechToTextNodeConfig() => _speechToTextToDocument(config),
       ModelInferenceNodeConfig() => _modelInferenceToDocument(config),
       ForEachNodeConfig() => _forEachToDocument(config),
       WriteFileNodeConfig() => _writeFileToDocument(config),
@@ -447,7 +447,17 @@ class NodeConfigDocumentMapper {
       inputMappings: config.inputMappings,
       outputParameters: config.outputParameters,
       settings: config.settings,
+      languageModelId: data['languageModelId'] as String? ?? '',
+      audioTemplate: data['audioTemplate'] as String? ?? '',
     );
+  }
+
+  Map<String, Object?> _speechToTextToDocument(SpeechToTextNodeConfig config) {
+    return {
+      ..._modelInferenceToDocument(config),
+      'languageModelId': config.languageModelId,
+      'audioTemplate': config.audioTemplate,
+    };
   }
 
   List<ModelInferenceOutputParameter> _modelInferenceOutputParametersFrom(

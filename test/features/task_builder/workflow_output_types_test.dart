@@ -63,6 +63,10 @@ void main() {
       primaryOutputTypeOf(ModelInferenceNodeConfig.initial()),
       NodeOutputType.json,
     );
+    expect(
+      primaryOutputTypeOf(SpeechToTextNodeConfig.initial()),
+      NodeOutputType.string,
+    );
     expect(NodeOutputType.fromName('audio'), NodeOutputType.audio);
   });
 }

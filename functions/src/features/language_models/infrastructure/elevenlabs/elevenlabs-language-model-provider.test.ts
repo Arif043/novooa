@@ -7,7 +7,7 @@ function apiWith(models: Array<{modelId: string; name: string}>): ElevenLabsApi 
   return {
     listSpeechModels: async () => models,
     listVoices: async () => [],
-    synthesize: async () => new Uint8Array(),
+    synthesize: async () => new Uint8Array(), transcribe: async () => "",
   };
 }
 
@@ -20,9 +20,12 @@ test("alle Sprachmodelle des Kontos werden angeboten", async () => {
   assert.deepEqual(models.map((model) => [model.modelId, model.name]), [
     ["eleven_multilingual_v2", "Eleven Multilingual v2"],
     ["eleven_flash_v2_5", "Eleven Flash v2.5"],
+    ["scribe_v2", "Scribe v2"],
+    ["scribe_v1", "Scribe v1"],
   ]);
 });
 
-test("ein Konto ohne Sprachmodelle liefert eine leere Liste", async () => {
-  assert.deepEqual(await discoverElevenLabsModels(apiWith([])), []);
+test("auch ohne Sprachausgabe-Modelle bietet ElevenLabs die Scribe-Modelle an", async () => {
+  const models = await discoverElevenLabsModels(apiWith([]));
+  assert.deepEqual(models.map((model) => model.modelId), ["scribe_v2", "scribe_v1"]);
 });

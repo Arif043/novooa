@@ -123,4 +123,4 @@ mitgezogen werden (siehe [`features/aufgabe.md`](./features/aufgabe.md)
 - [`backend-struktur.md`](./backend-struktur.md)
 - [`features/aufgabe.md`](./features/aufgabe.md)
 
-`textToSpeech` liefert `value` (`audio`): die gesprochene Aufnahme als Team-Datei, sowohl mit einem Sprachmodell als auch mit einem ONNX-Modell. Die Oberfläche zeigt ihn mit Lautsprecher-Symbol und eigener Farbe.
+`textToSpeech` liefert `value` (`audio`): die gesprochene Aufnahme als Team-Datei, sowohl mit einem Sprachmodell als auch mit einem ONNX-Modell. Die Oberfläche zeigt ihn mit Lautsprecher-Symbol und eigener Farbe. `speechToText` liefert `value` (`string`) mit dem Transkript.

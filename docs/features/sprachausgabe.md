@@ -1,4 +1,4 @@
-# Feature „Sprachausgabe" (Text vorlesen über Sprachmodelle)
+# Feature „Sprachausgabe und Transkription“ (Sprachbausteine über Sprachmodelle)
 
 Der Baustein **Text vorlesen** (`textToSpeech`) spricht Text entweder mit einem
 lokalen ONNX-Modell (siehe [`ml-modelle.md`](./ml-modelle.md)) oder mit einem
@@ -65,15 +65,40 @@ Endpunkte:
 Antwort: `{voices: [{id, name, description?, language?}], defaultVoiceId,
 allowsCustomVoice}`. API-Keys verlassen den Server nie.
 
+## Sprache zu Text (`speechToText`)
+
+Der Baustein transkribiert eine Audiodatei mit einem verbundenen Sprachmodell.
+Die Modellauswahl ist wie bei „Text vorlesen" ungefiltert; „Lokales Modell (ONNX)"
+bleibt die Option ohne Sprachmodell.
+
+| Feld              | Bedeutung                                                         |
+| ----------------- | ----------------------------------------------------------------- |
+| `languageModelId` | Gesetzt → Sprachmodell. Leer → ONNX-Modell.                       |
+| `audioTemplate`   | Verweis auf die Audiodatei, z. B. `{{aufnahme.value}}`.           |
+
+Ausgabe: `value` (Typ `string`) mit dem Transkript.
+
+| Verbindung       | Protokoll                                                                   | Grenze |
+| ---------------- | --------------------------------------------------------------------------- | ------ |
+| Google AI        | jedes Gemini-Modell, Audio inline an `models/{id}:generateContent`          | 14 MB  |
+| ElevenLabs       | SDK `speechToText.convert` mit Scribe (`scribe_v2`, `scribe_v1`)            | 1 GB   |
+| OpenAI-kompatibel | `POST {Basis-URL}/audio/transcriptions` (multipart), z. B. `whisper-1`     | 25 MB  |
+
+Google bietet keine eigenen Transkriptionsmodelle; jedes Gemini-Modell versteht
+Audio, deshalb gibt es dort nichts zu filtern. `models.list` von ElevenLabs nennt
+nur Sprachausgabe-Modelle, die Scribe-Modelle ergänzt die Entdeckung fest — das
+ist die einzige feste Modellliste. Ollama bietet keine Transkription.
+
 ## Grenzen
 
 Maximale Textlänge pro Aufruf: Google 8000, OpenAI-kompatibel 4096,
 ElevenLabs 5000 Zeichen; längere Texte brechen mit Hinweis ab (Aufteilung ist
-nicht Teil dieser Version). Sprache-zu-Text über Sprachmodelle folgt später.
+nicht Teil dieser Version). Audio wird nicht gestückelt: Dateien über der Grenze des
+Anbieters brechen mit Hinweis ab.
 
 ## Code
 
-- Backend: `functions/src/features/speech_synthesis/` (Domain: `SpeechProvider`,
+- Backend: `functions/src/features/speech_synthesis/` und `speech_transcription/` (Domain: `SpeechProvider`,
   `LanguageModelSpeech`; Adapter je Protokoll), ElevenLabs-Fassade in
   `language_models/infrastructure/elevenlabs/`.
 - Client: `lib/features/speech_synthesis/` und

@@ -120,7 +120,7 @@ test("the speech provider order maps each connection kind to exactly one adapter
 
 function elevenLabsApi(overrides: Partial<ElevenLabsApi>): () => ElevenLabsApi {
   return () => ({
-    listSpeechModels: async () => [], listVoices: async () => [], synthesize: async () => new Uint8Array([9]), ...overrides,
+    listSpeechModels: async () => [], listVoices: async () => [], synthesize: async () => new Uint8Array([9]), transcribe: async () => "", ...overrides,
   });
 }
 

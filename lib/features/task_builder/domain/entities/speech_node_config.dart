@@ -74,10 +74,21 @@ class SpeechToTextNodeConfig extends SpeechNodeConfig {
     super.inputMappings,
     super.outputParameters,
     super.settings,
+    this.languageModelId = '',
+    this.audioTemplate = '',
   });
 
   factory SpeechToTextNodeConfig.initial() =>
       const SpeechToTextNodeConfig(modelId: '');
+
+  /// Gesetzt: Die Transkription läuft über ein verbundenes Sprachmodell
+  /// (Google AI, ElevenLabs Scribe, OpenAI-kompatibel). Leer: lokales ONNX-Modell.
+  final String languageModelId;
+
+  /// Verweis auf die Audiodatei, z. B. `{{aufnahme.value}}`.
+  final String audioTemplate;
+
+  bool get usesLanguageModel => languageModelId.isNotEmpty;
 
   @override
   WorkflowPrimitive get primitive => WorkflowPrimitive.speechToText;
@@ -88,12 +99,19 @@ class SpeechToTextNodeConfig extends SpeechNodeConfig {
     List<ModelInferenceInputMapping>? inputMappings,
     List<ModelInferenceOutputParameter>? outputParameters,
     List<ModelInferenceSetting>? settings,
+    String? languageModelId,
+    String? audioTemplate,
   }) {
     return SpeechToTextNodeConfig(
       modelId: modelId ?? this.modelId,
       inputMappings: inputMappings ?? this.inputMappings,
       outputParameters: outputParameters ?? this.outputParameters,
       settings: settings ?? this.settings,
+      languageModelId: languageModelId ?? this.languageModelId,
+      audioTemplate: audioTemplate ?? this.audioTemplate,
     );
   }
+
+  @override
+  List<Object?> get props => [...super.props, languageModelId, audioTemplate];
 }

@@ -34,7 +34,35 @@ export const textToSpeechNodeExecutor: NodeExecutor = {
   },
 };
 
+/**
+ * Sprache zu Text: Mit gewähltem Sprachmodell (`languageModelId`) transkribiert ein
+ * verbundener Anbieter die Audiodatei aus `audioTemplate`; sonst läuft das ONNX-Modell.
+ */
 export const speechToTextNodeExecutor: NodeExecutor = {
   primitive: "speechToText",
-  execute: executeModelInferenceNode,
+  execute: async (node, runContext) => {
+    const config = node.config;
+    if (config.primitive !== "speechToText" || !config.languageModelId?.trim()) {
+      return executeModelInferenceNode(node, runContext);
+    }
+    if (!runContext.speechTranscriber) {
+      throw new Error("Transkription über Sprachmodelle ist in dieser Umgebung nicht verfügbar.");
+    }
+    const reference = runContext.templateExpressionResolver.resolveValue(config.audioTemplate ?? "");
+    if (!isFileReference(reference)) {
+      throw new Error("Für die Transkription wurde keine Audiodatei zugeordnet.");
+    }
+    const file = await runContext.fileContentReader.readTeamFileContent(runContext.teamId, reference.fileId, reference.versionId);
+    const text = await runContext.speechTranscriber.transcribe({
+      teamId: runContext.teamId,
+      languageModelId: config.languageModelId.trim(),
+      audio: {bytes: file.content, contentType: file.contentType, displayName: file.displayName},
+    });
+    return executedNode(node, {value: {type: "string", value: text}});
+  },
 };
+
+function isFileReference(value: unknown): value is {fileId: string; versionId: string} {
+  const candidate = value as {fileId?: unknown; versionId?: unknown} | null;
+  return typeof candidate?.fileId === "string" && typeof candidate.versionId === "string";
+}

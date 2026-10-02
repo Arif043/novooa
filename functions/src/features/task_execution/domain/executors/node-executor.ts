@@ -1,3 +1,4 @@
+import {type SpeechTranscriber} from "../../../speech_transcription/domain/repositories/speech-transcriber.js";
 import {type SpeechSynthesizer} from "../../../speech_synthesis/domain/repositories/speech-synthesizer.js";
 import {
   type NodeExecutionResult,
@@ -58,6 +59,7 @@ export type TaskRunContext = {
   modelInference: ModelInference;
   /** Sprachausgabe über verbundene Sprachmodelle; fehlt in Umgebungen ohne Sprachmodell-Katalog. */
   speechSynthesizer?: SpeechSynthesizer;
+  speechTranscriber?: SpeechTranscriber;
   teamNotificationSender: TeamNotificationSender;
 };
 

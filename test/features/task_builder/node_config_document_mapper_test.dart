@@ -517,6 +517,22 @@ void main() {
     expect(restored.speechText, '');
     expect(restored.voiceId, '');
   });
+
+  test('speichert und liest die Sprachmodell-Felder von Sprache zu Text', () {
+    final mapper = _mapper();
+    const config = SpeechToTextNodeConfig(
+      modelId: '',
+      languageModelId: 'lm-2',
+      audioTemplate: '{{aufnahme.value}}',
+    );
+
+    final restored =
+        mapper.fromDocument(mapper.toDocument(config))
+            as SpeechToTextNodeConfig;
+
+    expect(restored, config);
+    expect(restored.usesLanguageModel, isTrue);
+  });
 }
 
 const _attachment = NodeAttachment(

@@ -1,3 +1,4 @@
+import {type SpeechTranscriber} from "../../../../speech_transcription/domain/repositories/speech-transcriber.js";
 import {type SpeechSynthesizer} from "../../../../speech_synthesis/domain/repositories/speech-synthesizer.js";
 import {type GenkitBeta} from "genkit/beta";
 import {type KnowledgeBaseStore} from
@@ -37,6 +38,7 @@ export type TaskRunWorkerStores = {
   documentStore: DocumentStore;
   modelInference: ModelInference;
   speechSynthesizer?: SpeechSynthesizer;
+  speechTranscriber?: SpeechTranscriber;
   teamNotificationSender: TeamNotificationSender;
   languageModelResolver?: GenkitLanguageModelResolver;
   languageModelDefaultsStore?: LanguageModelDefaultsStore;
@@ -68,6 +70,7 @@ export async function executeQueuedTaskRun(
     documentStore: stores.documentStore,
     modelInference: stores.modelInference,
     speechSynthesizer: stores.speechSynthesizer,
+    speechTranscriber: stores.speechTranscriber,
     teamNotificationSender: stores.teamNotificationSender,
     logger,
     languageModelResolver: stores.languageModelResolver,
@@ -108,6 +111,7 @@ export async function continueApprovedTaskRun(
       documentStore: stores.documentStore,
       modelInference: stores.modelInference,
       speechSynthesizer: stores.speechSynthesizer,
+      speechTranscriber: stores.speechTranscriber,
       teamNotificationSender: stores.teamNotificationSender,
       logger,
       languageModelResolver: stores.languageModelResolver,

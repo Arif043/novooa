@@ -163,4 +163,35 @@ extension TaskBuilderModelInferenceMutations on TaskBuilderCubit {
       return node;
     });
   }
+
+  /// Wählt das Sprachmodell für „Sprache zu Text". Eine leere ID schaltet auf
+  /// das lokale ONNX-Modell zurück.
+  Future<void> updateSpeechToTextLanguageModel(
+    NodeId nodeId,
+    String languageModelId,
+  ) {
+    return _updateSpeechToText(
+      nodeId,
+      (config) => config.copyWith(languageModelId: languageModelId),
+    );
+  }
+
+  Future<void> updateSpeechToTextAudio(NodeId nodeId, String audioTemplate) {
+    return _updateSpeechToText(
+      nodeId,
+      (config) => config.copyWith(audioTemplate: audioTemplate),
+    );
+  }
+
+  Future<void> _updateSpeechToText(
+    NodeId nodeId,
+    SpeechToTextNodeConfig Function(SpeechToTextNodeConfig config) update,
+  ) {
+    return _updateNode(nodeId, (node) {
+      if (node.config case SpeechToTextNodeConfig config) {
+        return node.copyWith(config: update(config));
+      }
+      return node;
+    });
+  }
 }

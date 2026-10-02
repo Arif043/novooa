@@ -14,6 +14,7 @@ NodeOutputType primaryOutputTypeOf(NodeConfig config) {
       NodeOutputType.media,
     MediaInputNodeConfig() => NodeOutputType.media,
     TextToSpeechNodeConfig() => NodeOutputType.audio,
+    SpeechToTextNodeConfig() => NodeOutputType.string,
     ModelInferenceNodeConfig() => NodeOutputType.json,
     WriteFileNodeConfig() => NodeOutputType.file,
     TableFromCollectionNodeConfig() => NodeOutputType.table,

@@ -1,3 +1,4 @@
+import {type SpeechTranscriber} from "../../../../speech_transcription/domain/repositories/speech-transcriber.js";
 import {type SpeechSynthesizer} from "../../../../speech_synthesis/domain/repositories/speech-synthesizer.js";
 import {type KnowledgeBaseStore} from "../../../../knowledge_base/domain/repositories/knowledge-base-store.js";
 import {type ObjectStore} from "../../../../files/domain/repositories/object-store.js";
@@ -20,6 +21,7 @@ export type TaskGraphRuntime = {
   documentStore: DocumentStore;
   modelInference: ModelInference;
   speechSynthesizer?: SpeechSynthesizer;
+  speechTranscriber?: SpeechTranscriber;
   teamNotificationSender: TeamNotificationSender;
   logger: ApplicationLogger;
   languageModelResolver?: GenkitLanguageModelResolver;

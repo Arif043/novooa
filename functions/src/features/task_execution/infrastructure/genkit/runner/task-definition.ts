@@ -236,6 +236,10 @@ export const textToSpeechNodeConfigSchema = modelInferenceNodeConfigSchema.exten
 
 export const speechToTextNodeConfigSchema = modelInferenceNodeConfigSchema.extend({
   primitive: z.literal("speechToText").default("speechToText"),
+  /** Gesetzt: Transkription über ein verbundenes Sprachmodell statt über ein ONNX-Modell. */
+  languageModelId: z.string().default(""),
+  /** Verweis auf die Audiodatei, z. B. `{{aufnahme.value}}`. */
+  audioTemplate: z.string().default(""),
 });
 
 export const forEachNodeConfigSchema = z.object({

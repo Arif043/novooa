@@ -18,6 +18,7 @@ export interface ElevenLabsApi {
   listSpeechModels(): Promise<ElevenLabsSpeechModel[]>;
   listVoices(): Promise<ElevenLabsVoice[]>;
   synthesize(input: {voiceId: string; modelId: string; text: string}): Promise<Uint8Array>;
+  transcribe(input: {modelId: string; bytes: Uint8Array; contentType: string}): Promise<string>;
 }
 
 export type ElevenLabsApiFactory = (apiKey: string) => ElevenLabsApi;
@@ -53,6 +54,17 @@ export class SdkElevenLabsApi implements ElevenLabsApi {
       nextPageToken = response.nextPageToken;
     }
     return voices;
+  }
+
+  async transcribe(input: {modelId: string; bytes: Uint8Array; contentType: string}): Promise<string> {
+    const response = await this.client.speechToText.convert({
+      modelId: input.modelId,
+      file: new Blob([Uint8Array.from(input.bytes)], {type: input.contentType}),
+    });
+    if (!("text" in response) || typeof response.text !== "string") {
+      throw new Error("ElevenLabs hat keinen Text geliefert.");
+    }
+    return response.text.trim();
   }
 
   async synthesize(input: {voiceId: string; modelId: string; text: string}): Promise<Uint8Array> {

@@ -1,3 +1,5 @@
+import {LanguageModelTranscription} from "../../features/speech_transcription/domain/usecases/language-model-transcription.js";
+import {defaultTranscriptionProviders} from "../../features/speech_transcription/infrastructure/default-transcription-providers.js";
 import {LanguageModelSpeech} from "../../features/speech_synthesis/domain/usecases/language-model-speech.js";
 import {defaultSpeechProviders} from "../../features/speech_synthesis/infrastructure/default-speech-providers.js";
 import {type RuntimeDatabase} from "../../db/database.js";
@@ -59,6 +61,7 @@ export function createLocalTaskWorkflow(dependencies: LocalTaskWorkflowDependenc
       teamNotificationSender: new LocalTeamNotificationSender(dependencies.signedLicense, dependencies.pushRelay, logger),
       languageModelResolver: new CatalogGenkitLanguageModelResolver(dependencies.languageModelCatalog),
       speechSynthesizer: new LanguageModelSpeech(dependencies.languageModelCatalog, defaultSpeechProviders()),
+      speechTranscriber: new LanguageModelTranscription(dependencies.languageModelCatalog, defaultTranscriptionProviders()),
       languageModelDefaultsStore: new SQLiteLanguageModelDefaultsStore(database),
     },
   });
