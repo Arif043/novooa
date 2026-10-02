@@ -69,12 +69,7 @@ class NodeSkillAttachmentsCubit extends Cubit<NodeSkillAttachmentsState> {
   }
 
   SkillAttachment _toAttachment(Skill skill) {
-    return SkillAttachment(
-      skillId: skill.id,
-      title: skill.title,
-      description: skill.description,
-      storagePath: skill.storagePath,
-    );
+    return SkillAttachment(name: skill.name, description: skill.description);
   }
 
   void _emitFailure(String message) {

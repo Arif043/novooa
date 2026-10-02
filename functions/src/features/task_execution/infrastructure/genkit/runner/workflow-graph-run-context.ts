@@ -64,7 +64,7 @@ export function createTaskRunContext(
 /** Alles aus der Laufzeit, was der Kontext nicht selbst ersetzt, wird unverändert weitergereicht. */
 function passedThroughServices(runtime: TaskGraphRuntime) {
   const {
-    objectStore: _objectStore, knowledgeBaseStore: _knowledgeBaseStore, logger: _logger,
+    objectStore: _objectStore, knowledgeBaseStore: _knowledgeBaseStore, logger: _logger, skillContentReader: _skillContentReader,
     languageModelResolver: _languageModelResolver, languageModelDefaultsStore: _languageModelDefaultsStore,
     ...services
   } = runtime;

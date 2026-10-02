@@ -137,6 +137,7 @@ async function runNodes(
       skipNode,
       startedAt,
       objectStore: runtime.objectStore,
+      skillContentReader: runtime.skillContentReader,
       knowledgeBaseStore: runtime.knowledgeBaseStore,
       languageModelResolver: runtime.languageModelResolver,
       languageModelDefaultsStore: runtime.languageModelDefaultsStore,

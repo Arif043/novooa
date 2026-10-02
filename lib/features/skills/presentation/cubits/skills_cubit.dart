@@ -1,167 +1,99 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
-import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
+import 'package:syscat2/core/logging/logger.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
 
 import '../../domain/entities/skill.dart';
-import '../../domain/entities/skill_draft.dart';
 import '../../domain/entities/skill_failure.dart';
-import '../../domain/usecases/create_skill.dart';
 import '../../domain/usecases/delete_skill.dart';
-import '../../domain/usecases/load_skill_content.dart';
-import '../../domain/usecases/update_skill.dart';
+import '../../domain/usecases/load_skills_location.dart';
 import '../../domain/usecases/watch_skills.dart';
 import 'skills_state.dart';
 
-/// Verwaltet die Fähigkeiten-Seite. CRUD läuft über Dialoge — die Seite
-/// selbst zeigt nur eine Liste + Aktionen. Für das Bearbeiten wird der
-/// SKILL.md-Inhalt aus Storage nachgeladen.
+/// Zeigt den Skills-Ordner des Nutzers: die gefundenen Skills, den Pfad des
+/// Ordners und das Löschen. Neue Skills kommen über den Import oder von Hand
+/// in den Ordner; „Neu einlesen" ([load]) liest ihn erneut.
 class SkillsCubit extends Cubit<SkillsState> {
   SkillsCubit(
-    this._authRepository,
     this._watchSkills,
-    this._loadSkillContent,
-    this._createSkill,
-    this._updateSkill,
     this._deleteSkill,
+    this._loadLocation,
     this._getCurrentTeamId,
   ) : super(const SkillsState());
 
-  final AuthRepository _authRepository;
   final WatchSkills _watchSkills;
-  final LoadSkillContent _loadSkillContent;
-  final CreateSkill _createSkill;
-  final UpdateSkill _updateSkill;
   final DeleteSkill _deleteSkill;
+  final LoadSkillsLocation _loadLocation;
   final GetCurrentTeamId _getCurrentTeamId;
   StreamSubscription<List<Skill>>? _subscription;
 
   Future<void> load() async {
-    final teamId = await _teamIdOrNull();
-    if (teamId == null) {
-      return _emitFailure(SkillFailureKind.unauthenticated);
-    }
     emit(const SkillsState());
-    _subscription?.cancel();
+    await _subscription?.cancel();
+    final teamId = await _teamIdOrNull();
+    if (teamId == null) return;
     _subscription = _watchSkills(teamId).listen(
       _emitSkills,
-      onError: (_) => _emitFailure(SkillFailureKind.loadFailed),
+      onError: (Object error, StackTrace stackTrace) {
+        logException(
+          message: 'Fähigkeiten konnten nicht geladen werden.',
+          error: error,
+          stackTrace: stackTrace,
+          name: 'skills',
+        );
+        _emitFailure(SkillFailure.loadFailed.message);
+      },
+    );
+    await _loadFolderLocation();
+  }
+
+  Future<void> delete(String name) async {
+    final result = await _deleteSkill(name);
+    if (isClosed) return;
+    result.when(
+      (_) => emit(state.copyWith(message: 'Fähigkeit „$name“ gelöscht.')),
+      (failure) => emit(state.copyWith(message: failure.message)),
     );
   }
 
-  Future<Skill?> loadContent(String skillId) async {
-    final teamId = await _teamIdOrNull();
-    if (teamId == null) {
-      _emitFailure(SkillFailureKind.unauthenticated);
+  void messageShown() => emit(state.copyWith(clearMessage: true));
+
+  Future<TeamId?> _teamIdOrNull() async {
+    try {
+      return await _getCurrentTeamId();
+    } catch (error, stackTrace) {
+      logException(
+        message: 'Team konnte nicht geladen werden.',
+        error: error,
+        stackTrace: stackTrace,
+        name: 'skills',
+      );
+      _emitFailure('Team konnte nicht geladen werden.');
       return null;
     }
-    final result = await _loadSkillContent(teamId: teamId, skillId: skillId);
-    return result.when((skill) => skill, (failure) {
-      _emitFailure(failure.kind);
-      return null;
-    });
   }
 
-  Future<Skill?> createSkill(SkillDraft draft) async {
-    final teamId = await _teamIdOrNull();
-    if (teamId == null) {
-      _emitFailure(SkillFailureKind.unauthenticated);
-      return null;
-    }
-    final result = await _createSkill(teamId: teamId, draft: draft);
-    return result.when(
-      (skill) {
-        emit(state.copyWith(message: 'Fähigkeit gespeichert.'));
-        return skill;
-      },
-      (failure) {
-        _emitFailure(failure.kind);
-        return null;
-      },
-    );
-  }
-
-  Future<Skill?> updateSkill({
-    required String skillId,
-    required SkillDraft draft,
-  }) async {
-    final teamId = await _teamIdOrNull();
-    if (teamId == null) {
-      _emitFailure(SkillFailureKind.unauthenticated);
-      return null;
-    }
-    final result = await _updateSkill(
-      teamId: teamId,
-      skillId: skillId,
-      draft: draft,
-    );
-    return result.when(
-      (skill) {
-        emit(state.copyWith(message: 'Fähigkeit gespeichert.'));
-        return skill;
-      },
-      (failure) {
-        _emitFailure(failure.kind);
-        return null;
-      },
-    );
-  }
-
-  Future<bool> deleteSkill(String skillId) async {
-    final teamId = await _teamIdOrNull();
-    if (teamId == null) {
-      _emitFailure(SkillFailureKind.unauthenticated);
-      return false;
-    }
-    final result = await _deleteSkill(teamId: teamId, skillId: skillId);
-    return result.when(
-      (_) {
-        emit(state.copyWith(message: 'Fähigkeit gelöscht.'));
-        return true;
-      },
-      (failure) {
-        _emitFailure(failure.kind);
-        return false;
-      },
-    );
+  Future<void> _loadFolderLocation() async {
+    final result = await _loadLocation();
+    if (isClosed) return;
+    result.when((path) => emit(state.copyWith(location: path)), (_) {});
   }
 
   void _emitSkills(List<Skill> skills) {
     if (isClosed) return;
-    emit(
-      state.copyWith(
-        status: SkillsStatus.ready,
-        skills: skills,
-        clearMessage: true,
-      ),
-    );
+    emit(state.copyWith(status: SkillsStatus.ready, skills: skills));
   }
 
-  Future<TeamId?> _teamIdOrNull() async {
-    final user = _authRepository.currentUser();
-    if (user == null) return null;
-    try {
-      return await _getCurrentTeamId();
-    } catch (_) {
-      return null;
-    }
-  }
-
-  void _emitFailure(SkillFailureKind kind) {
+  void _emitFailure(String message) {
     if (isClosed) return;
-    emit(
-      state.copyWith(
-        status: SkillsStatus.failure,
-        message: SkillFailure(kind).message,
-      ),
-    );
+    emit(state.copyWith(status: SkillsStatus.failure, message: message));
   }
 
   @override
-  Future<void> close() {
-    _subscription?.cancel();
+  Future<void> close() async {
+    await _subscription?.cancel();
     return super.close();
   }
 }

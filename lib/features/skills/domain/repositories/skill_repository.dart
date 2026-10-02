@@ -2,33 +2,15 @@ import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 
 import '../entities/skill.dart';
-import '../entities/skill_draft.dart';
 import '../entities/skill_failure.dart';
 
-/// Persistiert Fähigkeiten team-scoped: Metadaten in Firestore, SKILL.md in
-/// Firebase Storage. `watchSkills` liefert nur Metadaten — der Inhalt wird
-/// beim Öffnen einer Skill gezielt aus Storage geladen.
+/// Der Skills-Ordner des Nutzers. `watchSkills` liest den Ordner neu, wenn
+/// sich dort etwas ändert (Import, Löschen) oder der Nutzer „Neu einlesen" wählt.
 abstract class SkillRepository {
   Stream<List<Skill>> watchSkills(TeamId teamId);
 
-  Future<Result<Skill, SkillFailure>> loadSkillContent({
-    required TeamId teamId,
-    required String skillId,
-  });
+  /// Pfad des Skills-Ordners, wie ihn die Runtime sieht.
+  Future<Result<String, SkillFailure>> loadLocation();
 
-  Future<Result<Skill, SkillFailure>> createSkill({
-    required TeamId teamId,
-    required SkillDraft draft,
-  });
-
-  Future<Result<Skill, SkillFailure>> updateSkill({
-    required TeamId teamId,
-    required String skillId,
-    required SkillDraft draft,
-  });
-
-  Future<Result<Unit, SkillFailure>> deleteSkill({
-    required TeamId teamId,
-    required String skillId,
-  });
+  Future<Result<Unit, SkillFailure>> deleteSkill(String name);
 }

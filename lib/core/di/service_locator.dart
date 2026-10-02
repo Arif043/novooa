@@ -86,12 +86,10 @@ import 'package:syscat2/features/employees/domain/usecases/watch_employees.dart'
 import 'package:syscat2/features/employees/infrastructure/repositories/firestore_employee_repository.dart';
 import 'package:syscat2/features/employees/presentation/cubits/employees_cubit.dart';
 import 'package:syscat2/features/skills/domain/repositories/skill_repository.dart';
-import 'package:syscat2/features/skills/domain/usecases/create_skill.dart';
 import 'package:syscat2/features/skills/domain/usecases/delete_skill.dart';
-import 'package:syscat2/features/skills/domain/usecases/load_skill_content.dart';
-import 'package:syscat2/features/skills/domain/usecases/update_skill.dart';
 import 'package:syscat2/features/skills/domain/usecases/watch_skills.dart';
-import 'package:syscat2/features/skills/infrastructure/repositories/firebase_skill_repository.dart';
+import 'package:syscat2/features/skills/domain/usecases/load_skills_location.dart';
+import 'package:syscat2/features/skills/infrastructure/repositories/unavailable_skill_repository.dart';
 import 'package:syscat2/features/skills/presentation/cubits/skills_cubit.dart';
 import 'package:syscat2/features/user/domain/usecases/get_current_user_profile.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
@@ -219,12 +217,7 @@ void _configureCloudDependencies() {
       () =>
           FirestoreKnowledgeBaseRepository(serviceLocator<FirebaseFirestore>()),
     )
-    ..registerLazySingleton<SkillRepository>(
-      () => FirebaseSkillRepository(
-        serviceLocator<FirebaseFirestore>(),
-        serviceLocator<FirebaseStorage>(),
-      ),
-    )
+    ..registerLazySingleton<SkillRepository>(UnavailableSkillRepository.new)
     ..registerLazySingleton<EmployeeRepository>(
       () => FirestoreEmployeeRepository(serviceLocator<FirebaseFirestore>()),
     )
@@ -374,13 +367,7 @@ void _configureCloudDependencies() {
       () => WatchSkills(serviceLocator<SkillRepository>()),
     )
     ..registerLazySingleton(
-      () => LoadSkillContent(serviceLocator<SkillRepository>()),
-    )
-    ..registerLazySingleton(
-      () => CreateSkill(serviceLocator<SkillRepository>()),
-    )
-    ..registerLazySingleton(
-      () => UpdateSkill(serviceLocator<SkillRepository>()),
+      () => LoadSkillsLocation(serviceLocator<SkillRepository>()),
     )
     ..registerLazySingleton(
       () => DeleteSkill(serviceLocator<SkillRepository>()),
@@ -616,12 +603,9 @@ void _configureCloudDependencies() {
     )
     ..registerFactory(
       () => SkillsCubit(
-        serviceLocator<AuthRepository>(),
         serviceLocator<WatchSkills>(),
-        serviceLocator<LoadSkillContent>(),
-        serviceLocator<CreateSkill>(),
-        serviceLocator<UpdateSkill>(),
         serviceLocator<DeleteSkill>(),
+        serviceLocator<LoadSkillsLocation>(),
         serviceLocator<GetCurrentTeamId>(),
       ),
     )

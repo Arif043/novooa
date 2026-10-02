@@ -461,6 +461,19 @@ erweiterbare Registry für Dekodierung, Skalierung, Layout und Normalisierung.
 Weitere Quelltypen erhalten eigene Strategien; weder die Pipeline noch der
 Modell-Baustein sind an Firebase Storage oder Bilder gekoppelt.
 
+## Skills-Ordner (Fähigkeiten)
+
+Fähigkeiten nach [agentskills.io](https://agentskills.io/specification) liegen **nicht** in SQLite, sondern als
+Ordner im Dateisystem: `<Runtime-Verzeichnis>/skills/<skill-name>/SKILL.md` (+ `scripts/`, `references/`, `assets/`).
+Der Pfad lässt sich mit `NOVOOA_SKILLS_DIR` ändern. `docker-compose.local.yaml` bindet ihn als
+`${NOVOOA_SKILLS_DIR:-./novooa-skills}` auf den Host; der Einmal-Dienst `skills-init` legt den Ordner an und übergibt
+ihn dem Benutzer `node`, damit Importe schreiben können. Ordner, die der Nutzer dort anlegt, sind sofort Fähigkeiten.
+
+Der Import (GitHub, ZIP, Ordner, skills.sh) läuft über `POST /v1/skills/imports…` als Vorschau mit anschließendem
+`commit`; der skills.sh-Katalog braucht `SKILLS_SH_BASE_URL` (Proxy, siehe `relay/skills-sh-proxy`) und
+`SKILLS_SH_TOKEN`. Routen, Grenzen, Rate-Limits und Sicherheit stehen in
+[`features/skills.md`](features/skills.md). Das Thema `skills` des Realtime-Kanals meldet Änderungen.
+
 ## Lizenz und lokale Identität
 
 Die Runtime ist ohne gültigen Lizenzschlüssel nicht nutzbar. Beim Kauf stellt

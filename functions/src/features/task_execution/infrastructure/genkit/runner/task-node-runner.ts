@@ -1,3 +1,4 @@
+import {type SkillContentReader} from "../../../../skills/domain/repositories/skill-content-reader.js";
 import {type GenkitBeta} from "genkit/beta";
 import {type KnowledgeBaseStore} from
   "../../../../knowledge_base/domain/repositories/knowledge-base-store.js";
@@ -31,6 +32,7 @@ type NodeRunInput = {
   skipNode: boolean;
   startedAt: number;
   objectStore: ObjectStore;
+  skillContentReader?: SkillContentReader;
   knowledgeBaseStore: KnowledgeBaseStore;
   languageModelResolver?: GenkitLanguageModelResolver;
   languageModelDefaultsStore?: LanguageModelDefaultsStore;
@@ -98,6 +100,7 @@ async function executeNode(
     input.runContext.teamId,
     input.objectStore,
     input.knowledgeBaseStore,
+    input.skillContentReader,
   );
   try {
     const executor = executorFor(

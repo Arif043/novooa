@@ -1,3 +1,20 @@
+import '../../features/skills/domain/repositories/skill_catalog_repository.dart';
+import '../../features/skills/domain/repositories/skill_import_repository.dart';
+import '../../features/skills/domain/repositories/skill_repository.dart';
+import '../../features/skills/domain/repositories/skill_source_gateway.dart';
+import '../../features/skills/domain/usecases/delete_skill.dart';
+import '../../features/skills/domain/usecases/load_skills_location.dart';
+import '../../features/skills/domain/usecases/skill_catalog_use_cases.dart';
+import '../../features/skills/domain/usecases/skill_import_use_cases.dart';
+import '../../features/skills/domain/usecases/watch_skills.dart';
+import '../../features/skills/infrastructure/datasources/file_picker_skill_source_gateway.dart';
+import '../../features/skills/infrastructure/repositories/local_skill_catalog_repository.dart';
+import '../../features/skills/infrastructure/repositories/local_skill_import_repository.dart';
+import '../../features/skills/infrastructure/repositories/local_skill_repository.dart';
+import '../../features/skills/presentation/cubits/skill_catalog_cubit.dart';
+import '../../features/skills/presentation/cubits/skill_import_cubit.dart';
+import '../../features/skills/presentation/cubits/skills_cubit.dart';
+import '../../features/task_builder/presentation/cubits/node_skill_attachments_cubit.dart';
 import '../../features/speech_synthesis/domain/repositories/speech_voice_repository.dart';
 import '../../features/speech_synthesis/domain/usecases/list_speech_voices.dart';
 import '../../features/speech_synthesis/infrastructure/repositories/local_speech_voice_repository.dart';
@@ -233,6 +250,77 @@ Future<void> configureStandaloneDependencies(
     )
     ..registerLazySingleton<SpeechVoiceRepository>(
       () => LocalSpeechVoiceRepository(locator<WorkspaceApiClient>()),
+    )
+    ..registerLazySingleton<SkillRepository>(
+      () => LocalSkillRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceRealtimeChannel>(),
+      ),
+    )
+    ..registerLazySingleton<SkillImportRepository>(
+      () => LocalSkillImportRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceBinaryClient>(),
+      ),
+    )
+    ..registerLazySingleton<SkillCatalogRepository>(
+      () => LocalSkillCatalogRepository(locator<WorkspaceApiClient>()),
+    )
+    ..registerLazySingleton<SkillSourceGateway>(
+      FilePickerSkillSourceGateway.new,
+    )
+    ..registerLazySingleton(() => WatchSkills(locator<SkillRepository>()))
+    ..registerLazySingleton(() => DeleteSkill(locator<SkillRepository>()))
+    ..registerLazySingleton(
+      () => LoadSkillsLocation(locator<SkillRepository>()),
+    )
+    ..registerLazySingleton(
+      () => PreviewSkillImport(locator<SkillImportRepository>()),
+    )
+    ..registerLazySingleton(
+      () => CommitSkillImport(locator<SkillImportRepository>()),
+    )
+    ..registerLazySingleton(
+      () => IsSkillCatalogAvailable(locator<SkillCatalogRepository>()),
+    )
+    ..registerLazySingleton(
+      () => SearchSkillCatalog(locator<SkillCatalogRepository>()),
+    )
+    ..registerLazySingleton(
+      () => BrowseSkillCatalog(locator<SkillCatalogRepository>()),
+    )
+    ..registerLazySingleton(
+      () => LoadSkillAudits(locator<SkillCatalogRepository>()),
+    )
+    ..registerFactory(
+      () => SkillsCubit(
+        locator<WatchSkills>(),
+        locator<DeleteSkill>(),
+        locator<LoadSkillsLocation>(),
+        locator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerFactory(
+      () => SkillImportCubit(
+        locator<PreviewSkillImport>(),
+        locator<CommitSkillImport>(),
+        locator<LoadSkillAudits>(),
+        locator<SkillSourceGateway>(),
+      ),
+    )
+    ..registerFactory(
+      () => SkillCatalogCubit(
+        locator<IsSkillCatalogAvailable>(),
+        locator<SearchSkillCatalog>(),
+        locator<BrowseSkillCatalog>(),
+      ),
+    )
+    ..registerFactory(
+      () => NodeSkillAttachmentsCubit(
+        locator<AuthRepository>(),
+        locator<WatchSkills>(),
+        locator<GetCurrentTeamId>(),
+      ),
     )
     ..registerLazySingleton<FileSettingsRepository>(
       () => LocalFileSettingsRepository(

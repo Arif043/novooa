@@ -766,12 +766,7 @@ class NodeConfigDocumentMapper {
   }
 
   Map<String, Object?> _skillAttachmentToDocument(SkillAttachment attachment) {
-    return {
-      'skillId': attachment.skillId,
-      'title': attachment.title,
-      'description': attachment.description,
-      'storagePath': attachment.storagePath,
-    };
+    return {'name': attachment.name, 'description': attachment.description};
   }
 
   List<SkillAttachment> _skillAttachmentsFrom(Object? value) {
@@ -782,10 +777,8 @@ class NodeConfigDocumentMapper {
 
   SkillAttachment _skillAttachmentFrom(Map<String, Object?> data) {
     return SkillAttachment(
-      skillId: data['skillId'] as String? ?? '',
-      title: data['title'] as String? ?? '',
+      name: data['name'] as String? ?? '',
       description: data['description'] as String? ?? '',
-      storagePath: data['storagePath'] as String? ?? '',
     );
   }
 

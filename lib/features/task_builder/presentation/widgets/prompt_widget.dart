@@ -1,3 +1,4 @@
+import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:syscat2/features/language_models/presentation/widgets/language_model_picker_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -125,7 +126,7 @@ class _PromptWidgetState extends State<PromptWidget> {
             onAttach: _attachKnowledge,
             onDetach: _detachKnowledge,
           ),
-          if (MvpFeatureFlags.promptDelegationEnabled) ...[
+          if ((skillsAvailable() || MvpFeatureFlags.employeesEnabled)) ...[
             const SizedBox(height: AppSpacing.md),
             PromptResourceSelection(
               config: config,

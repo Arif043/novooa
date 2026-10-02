@@ -1,3 +1,4 @@
+import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../../features/assistant/domain/entities/assistant_context.dart';
@@ -19,7 +20,7 @@ List<RootTab> rootTabs({required bool isStandalone}) => [
     icon: CupertinoIcons.book,
     path: '/knowledge-base',
   ),
-  if (MvpFeatureFlags.skillsEnabled)
+  if (skillsAvailable())
     RootTab(
       title: 'Fähigkeiten',
       icon: CupertinoIcons.sparkles,

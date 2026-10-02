@@ -735,10 +735,8 @@ const _knowledgeAttachment = KnowledgeAttachment(
 );
 
 const _skillAttachment = SkillAttachment(
-  skillId: 'skill.1',
-  title: 'E-Mails freundlich beantworten',
+  name: 'mails-freundlich-beantworten',
   description: 'Nutze diese Fähigkeit für Kundenmails.',
-  storagePath: 'teams/team.1/skills/skill.1/SKILL.md',
 );
 
 const _employeeAttachment = EmployeeAttachment(

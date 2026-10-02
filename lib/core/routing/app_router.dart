@@ -1,3 +1,4 @@
+import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:syscat2/core/config/mvp_feature_flags.dart';
@@ -115,8 +116,7 @@ class AppRouter {
           ),
           GoRoute(
             path: skills,
-            redirect: (context, state) =>
-                MvpFeatureFlags.skillsEnabled ? null : home,
+            redirect: (context, state) => skillsAvailable() ? null : home,
             pageBuilder: (context, state) =>
                 _shellPage(state, const SkillsPage()),
           ),

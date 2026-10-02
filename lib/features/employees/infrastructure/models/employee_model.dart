@@ -54,10 +54,8 @@ class EmployeeModel {
             (key, dynamic v) => MapEntry(key.toString(), v),
           );
           return SkillAttachment(
-            skillId: entry['skillId'] as String? ?? '',
-            title: entry['title'] as String? ?? '',
+            name: entry['name'] as String? ?? '',
             description: entry['description'] as String? ?? '',
-            storagePath: entry['storagePath'] as String? ?? '',
           );
         })
         .toList(growable: false);

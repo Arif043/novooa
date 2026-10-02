@@ -1,3 +1,4 @@
+import {type SkillContentReader} from "../../../../skills/domain/repositories/skill-content-reader.js";
 import {mkdir, mkdtemp, rm} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -35,6 +36,7 @@ export async function prepareNodeAttachmentWorkspace(
   teamId: string,
   objectStore: ObjectStore,
   knowledgeBaseStore: KnowledgeBaseStore,
+  skillContentReader?: SkillContentReader,
 ): Promise<NodeAttachmentWorkspace | undefined> {
   const attachments = attachmentsFor(node);
   const knowledgeAttachments = knowledgeAttachmentsFor(node);
@@ -64,14 +66,14 @@ export async function prepareNodeAttachmentWorkspace(
   const skillsDirectory = await prepareSkillDirectory(
     rootDirectory,
     skillAttachments,
-    objectStore,
+    skillContentReader,
   );
   return {
     rootDirectory,
     files,
     knowledgeFiles,
     skillsDirectory,
-    skillCount: skillAttachments.length,
+    skillCount: new Set(skillAttachments.map((skill) => skill.name)).size,
     cleanup: () => rm(rootDirectory, {recursive: true, force: true}),
   };
 }

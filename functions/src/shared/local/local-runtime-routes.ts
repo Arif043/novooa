@@ -1,3 +1,5 @@
+import {skillCatalogRoutes} from "../../features/skills/infrastructure/local/local-skill-catalog-routes.js";
+import {skillRoutes} from "../../features/skills/infrastructure/local/local-skill-routes.js";
 import {speechVoiceRoutes} from "../../features/speech_synthesis/infrastructure/local/speech-voice-routes.js";
 import {type FastifyInstance, type FastifyPluginAsync} from "fastify";
 import {type RuntimeDatabase} from "../../db/database.js";
@@ -75,6 +77,8 @@ async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRu
   await api.register(pushDeviceRoutes, {signedLicense, relay: pushRelayFromEnvironment()});
   await api.register(mailRelayRoutes, {signedLicense, relay: mailRelayFromEnvironment()});
   await api.register(languageModelRoutes, {store: services.languageModels, notifier});
+  await api.register(skillCatalogRoutes, services.skills.catalog);
+  await api.register(skillRoutes, services.skills.routes);
   await api.register(speechVoiceRoutes, {voices: services.speechVoices});
   await api.register(languageModelDefaultsRoutes, {store: services.languageModelDefaults, notifier});
   await api.register(fileSettingsRoutes, {store: services.fileSettings, notifier});

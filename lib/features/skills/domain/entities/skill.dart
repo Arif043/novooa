@@ -1,42 +1,38 @@
 import 'package:equatable/equatable.dart';
 
-/// Eine Fähigkeit (Skill) — wiederverwendbare Anweisung mit Progressive
-/// Disclosure. Wird als SKILL.md-Datei in Firebase Storage abgelegt und bei
-/// Bedarf über die Genkit-Skills-Middleware in einen Modell-Turn geladen.
-///
-/// Metadaten (Titel, Beschreibung, Storage-Pfad) liegen als Firestore-Dokument
-/// unter `teams/{teamId}/skills/{skillId}`. Die eigentliche Anleitung liegt
-/// unter `teams/{teamId}/skills/{skillId}/SKILL.md` in Storage.
+/// Eine Fähigkeit (Skill) nach dem Standard agentskills.io: ein Ordner mit
+/// `SKILL.md` (+ `scripts/`, `references/`, `assets/`) im Skills-Ordner des
+/// Nutzers. Der Ordner ist die Quelle der Wahrheit; Name und Beschreibung
+/// stammen aus dem Kopf der `SKILL.md`.
 class Skill extends Equatable {
   const Skill({
-    required this.id,
-    required this.title,
+    required this.name,
     required this.description,
-    required this.storagePath,
-    required this.content,
-    required this.updatedAt,
+    required this.fileCount,
+    this.license,
+    this.compatibility,
+    this.warnings = const [],
   });
 
-  /// Firestore-Dokument-ID des Skills.
-  final String id;
-
-  /// Anzeigename der Fähigkeit — wird an das Modell als Skill-Name gereicht.
-  final String title;
-
-  /// Kurzbeschreibung, wann diese Fähigkeit einzusetzen ist. Erscheint im
-  /// Skill-Manifest, das die Middleware als System-Prompt einbindet.
+  /// Ordnername — zugleich der Name, unter dem das Modell den Skill kennt.
+  final String name;
   final String description;
+  final String? license;
+  final String? compatibility;
+  final int fileCount;
 
-  /// Storage-Pfad des Skill-Ordners in Firebase Storage.
-  /// Muster: `teams/{teamId}/skills/{skillId}`.
-  final String storagePath;
+  /// Probleme, die der Nutzer beheben sollte (fehlende Beschreibung, …).
+  final List<String> warnings;
 
-  /// Aktueller SKILL.md-Inhalt. Wird bei Save nach Storage geschrieben und
-  /// nicht in Firestore gespiegelt — nur beim Bearbeiten im Client gehalten.
-  final String content;
-
-  final DateTime updatedAt;
+  String get id => name;
 
   @override
-  List<Object?> get props => [id, title, description, storagePath, updatedAt];
+  List<Object?> get props => [
+    name,
+    description,
+    license,
+    compatibility,
+    fileCount,
+    warnings,
+  ];
 }

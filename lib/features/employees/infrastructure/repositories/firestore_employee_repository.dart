@@ -116,12 +116,7 @@ class FirestoreEmployeeRepository implements EmployeeRepository {
   }
 
   Map<String, Object?> _skillToDocument(SkillAttachment skill) {
-    return {
-      'skillId': skill.skillId,
-      'title': skill.title,
-      'description': skill.description,
-      'storagePath': skill.storagePath,
-    };
+    return {'name': skill.name, 'description': skill.description};
   }
 
   Result<Employee, EmployeeFailure> _invalidName() {

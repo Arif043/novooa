@@ -1,3 +1,4 @@
+import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -85,7 +86,7 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
             'Verfeinert den angegebenen Entwurf.',
             style: SyscatTheme.taskBodySmall,
           ),
-          if (MvpFeatureFlags.skillsEnabled) ...[
+          if (skillsAvailable()) ...[
             const SizedBox(height: AppSpacing.md),
             NodeSkillAttachmentSection(
               attachments: _config.skillAttachments,

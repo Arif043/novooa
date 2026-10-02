@@ -25,6 +25,7 @@ class WorkspaceCapabilities {
     required this.modelCatalog,
     required this.push,
     required this.messagingChannels,
+    required this.skills,
   });
 
   factory WorkspaceCapabilities.forKind(RuntimeKind kind) => switch (kind) {
@@ -34,6 +35,7 @@ class WorkspaceCapabilities {
       modelCatalog: false,
       push: true,
       messagingChannels: true,
+      skills: false,
     ),
     RuntimeKind.standalone => WorkspaceCapabilities(
       assistant: true,
@@ -41,6 +43,7 @@ class WorkspaceCapabilities {
       modelCatalog: true,
       push: _standalonePushEnabled && _pushSupportedOnThisPlatform,
       messagingChannels: false,
+      skills: true,
     ),
   };
 
@@ -57,6 +60,10 @@ class WorkspaceCapabilities {
   /// WhatsApp- und SMS-Kanäle (Twilio über Team-Konten in der Cloud). In der
   /// lokalen Runtime gibt es nur E-Mail-Postfächer.
   final bool messagingChannels;
+
+  /// Fähigkeiten (Skills) nach agentskills.io: Ordner im Skills-Ordner der
+  /// lokalen Runtime. Die Cloud hat dafür noch keinen Speicher.
+  final bool skills;
 
   /// Firebase-Push (FCM/APNs). Für Standalone bewusst standardmäßig aus,
   /// damit sich der macOS-Client ohne Apple-Entwicklungszertifikat bauen

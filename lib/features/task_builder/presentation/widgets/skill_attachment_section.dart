@@ -123,7 +123,7 @@ class _AttachmentTile extends StatelessWidget {
       dense: true,
       contentPadding: EdgeInsets.zero,
       leading: const Icon(Icons.auto_awesome_outlined),
-      title: Text(attachment.title, overflow: TextOverflow.ellipsis),
+      title: Text(attachment.name, overflow: TextOverflow.ellipsis),
       subtitle: attachment.description.isEmpty
           ? null
           : Text(
@@ -166,7 +166,7 @@ class _PickerSheet extends StatelessWidget {
             leading: Icon(
               selected ? Icons.check_circle : Icons.auto_awesome_outlined,
             ),
-            title: Text(skill.title),
+            title: Text(skill.name),
             subtitle: skill.description.isEmpty
                 ? null
                 : Text(

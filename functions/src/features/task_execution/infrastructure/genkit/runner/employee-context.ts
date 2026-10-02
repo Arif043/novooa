@@ -16,7 +16,7 @@ export function employeeFor(
 /**
  * Mergt die Skills, die einem Baustein zur Verfügung stehen sollen: node-
  * spezifisch attachte Skills + Default-Skills des zugewiesenen Mitarbeiters.
- * Duplikate (gleiche `skillId`) werden entfernt; node-spezifische Skills
+ * Duplikate (gleicher `name`) werden entfernt; node-spezifische Skills
  * gewinnen.
  */
 export function mergeNodeAndEmployeeSkills(
@@ -24,11 +24,11 @@ export function mergeNodeAndEmployeeSkills(
   employee?: EmployeeAttachment,
 ): SkillAttachment[] {
   if (!employee || employee.defaultSkills.length === 0) return nodeSkills;
-  const seen = new Set(nodeSkills.map((skill) => skill.skillId));
+  const seen = new Set(nodeSkills.map((skill) => skill.name));
   const merged: SkillAttachment[] = [...nodeSkills];
   for (const skill of employee.defaultSkills) {
-    if (seen.has(skill.skillId)) continue;
-    seen.add(skill.skillId);
+    if (seen.has(skill.name)) continue;
+    seen.add(skill.name);
     merged.push(skill);
   }
   return merged;

@@ -1,0 +1,18 @@
+{
+  "name": "novooa-skills-sh-proxy",
+  "private": true,
+  "type": "module",
+  "description": "Reicht Katalog-Abfragen der novooa-Runtime mit einem Vercel-OIDC-Token an die skills.sh-API weiter.",
+  "scripts": {
+    "test": "node --test proxy.test.ts"
+  },
+  "dependencies": {
+    "@vercel/oidc": "^3.0.0"
+  },
+  "devDependencies": {
+    "@vercel/node": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

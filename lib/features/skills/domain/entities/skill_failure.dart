@@ -1,27 +1,20 @@
-enum SkillFailureKind {
-  unauthenticated,
-  loadFailed,
-  saveFailed,
-  deleteFailed,
-  invalidTitle,
-}
-
+/// Ein Fehler im Umgang mit Fähigkeiten, mit einer Meldung für den Nutzer
+/// (vom Server bereits auf Deutsch formuliert).
 class SkillFailure {
-  const SkillFailure(this.kind);
+  const SkillFailure(this.message);
 
-  final SkillFailureKind kind;
+  static const loadFailed = SkillFailure(
+    'Fähigkeiten konnten nicht geladen werden.',
+  );
+  static const deleteFailed = SkillFailure(
+    'Fähigkeit konnte nicht gelöscht werden.',
+  );
 
-  String get message {
-    return switch (kind) {
-      SkillFailureKind.unauthenticated =>
-        'Du musst angemeldet sein, um Fähigkeiten zu verwalten.',
-      SkillFailureKind.loadFailed =>
-        'Fähigkeiten konnten nicht geladen werden.',
-      SkillFailureKind.saveFailed =>
-        'Fähigkeit konnte nicht gespeichert werden.',
-      SkillFailureKind.deleteFailed =>
-        'Fähigkeit konnte nicht gelöscht werden.',
-      SkillFailureKind.invalidTitle => 'Gib einen Namen für die Fähigkeit ein.',
-    };
-  }
+  /// Der Nutzer hat die Auswahl abgebrochen — kein Fehler, nur kein Ergebnis.
+  static const cancelled = SkillFailure('');
+  static const importFailed = SkillFailure('Der Import ist fehlgeschlagen.');
+
+  final String message;
+
+  bool get isCancelled => message.isEmpty;
 }

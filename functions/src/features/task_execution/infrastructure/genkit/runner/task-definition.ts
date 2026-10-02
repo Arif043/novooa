@@ -42,11 +42,10 @@ export const knowledgeAttachmentSchema = z.object({
   path: z.string().default(""),
 });
 
+/** Verweis auf einen Skill im Skills-Ordner; `name` ist der Ordnername, `description` nur zur Anzeige. */
 export const skillAttachmentSchema = z.object({
-  skillId: z.string().min(1),
-  title: z.string().default(""),
+  name: z.string().min(1),
   description: z.string().default(""),
-  storagePath: z.string().min(1),
 });
 
 export const employeeAttachmentSchema = z.object({

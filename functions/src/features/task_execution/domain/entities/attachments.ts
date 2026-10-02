@@ -15,11 +15,10 @@ export type KnowledgeAttachment = {
   path: string;
 };
 
+/** Verweis auf einen Skill im Skills-Ordner; `name` ist der Ordnername, `description` nur zur Anzeige. */
 export type SkillAttachment = {
-  skillId: string;
-  title: string;
+  name: string;
   description: string;
-  storagePath: string;
 };
 
 export type EmployeeAttachment = {

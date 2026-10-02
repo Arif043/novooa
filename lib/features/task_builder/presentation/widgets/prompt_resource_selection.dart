@@ -1,3 +1,4 @@
+import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:syscat2/core/config/mvp_feature_flags.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -64,7 +65,7 @@ class _PromptResourceSelectionState extends State<PromptResourceSelection> {
             backgroundColor: SyscatTheme.surfaceContainer,
             thumbColor: SyscatTheme.glassSurface,
             children: {
-              if (MvpFeatureFlags.skillsEnabled)
+              if (skillsAvailable())
                 _PromptResourceType.skills: const Text('Fähigkeiten'),
               if (MvpFeatureFlags.employeesEnabled)
                 _PromptResourceType.employee: const Text('Mitarbeiter'),
@@ -89,14 +90,14 @@ class _PromptResourceSelectionState extends State<PromptResourceSelection> {
 
   List<_PromptResourceType> get _enabledTypes {
     return [
-      if (MvpFeatureFlags.skillsEnabled) .skills,
+      if (skillsAvailable()) .skills,
       if (MvpFeatureFlags.employeesEnabled) .employee,
     ];
   }
 
   bool _isEnabled(_PromptResourceType type) {
     return switch (type) {
-      .skills => MvpFeatureFlags.skillsEnabled,
+      .skills => skillsAvailable(),
       .employee => MvpFeatureFlags.employeesEnabled,
     };
   }

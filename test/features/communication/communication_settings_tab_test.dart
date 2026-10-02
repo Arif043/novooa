@@ -69,6 +69,7 @@ WorkspaceCapabilities _capabilities({required bool messaging}) {
     modelCatalog: true,
     push: false,
     messagingChannels: messaging,
+    skills: false,
   );
 }
 

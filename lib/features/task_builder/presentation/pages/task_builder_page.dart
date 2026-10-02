@@ -1,3 +1,4 @@
+import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/config/mvp_feature_flags.dart';
@@ -48,7 +49,7 @@ class TaskBuilderPage extends StatelessWidget {
           BlocProvider(
             create: (_) => serviceLocator<ModelCatalogCubit>()..load(),
           ),
-        if (MvpFeatureFlags.skillsEnabled)
+        if (skillsAvailable())
           BlocProvider(
             create: (_) => serviceLocator<NodeSkillAttachmentsCubit>()..load(),
           ),
