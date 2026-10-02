@@ -1,6 +1,6 @@
 import {getVercelOidcToken} from "@vercel/oidc";
 import type {VercelRequest, VercelResponse} from "@vercel/node";
-import {forwardedHeaders, isValidSignature, signatureHeader, timestampHeader, upstreamUrlFor} from "../proxy.ts";
+import {forwardedHeaders, isValidSignature, signatureHeader, timestampHeader, upstreamUrlFor} from "../proxy.js";
 
 /**
  * Reicht lesende Katalog-Abfragen an die skills.sh-API weiter. Aufrufer ist ausschließlich die Firebase-Funktion

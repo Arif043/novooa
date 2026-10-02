@@ -1,14 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {pathAndQueryOf, skillRelayRequestFrom, SkillRelayRequestError} from "./skill-relay-request.js";
+import {skillRelayRequestFrom, SkillRelayRequestError} from "./skill-relay-request.js";
 
 test("read-only catalog paths and known parameters are accepted", () => {
   for (const path of ["/skills", "/skills/search", "/skills/curated", "/skills/vercel-labs/skills/find-skills", "/skills/audit/a/b/c", "/skills/a/b/find%20skills"]) {
     assert.equal(skillRelayRequestFrom(path, {}).path, path, path);
   }
-  const request = skillRelayRequestFrom("/skills/search", {q: "react native", limit: "10"});
-  assert.equal(pathAndQueryOf(request), "/api/v1/skills/search?q=react+native&limit=10");
-  assert.equal(pathAndQueryOf(skillRelayRequestFrom("/skills", undefined)), "/api/v1/skills");
+  assert.deepEqual(skillRelayRequestFrom("/skills/search", {q: "react native", limit: "10"}), {path: "/skills/search", query: {q: "react native", limit: "10"}});
+  assert.deepEqual(skillRelayRequestFrom("/skills", undefined), {path: "/skills", query: {}});
 });
 
 test("other paths, traversal and encoded separators are rejected", () => {

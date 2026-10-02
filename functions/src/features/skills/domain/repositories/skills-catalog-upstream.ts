@@ -1,3 +1,5 @@
+import {type SkillRelayRequest} from "../entities/skill-relay-request.js";
+
 export type SkillsCatalogResponse = {
   status: number;
   body: string;
@@ -7,6 +9,5 @@ export type SkillsCatalogResponse = {
 
 /** Der Weg zum Katalog hinter dem Relay (der signierende Vercel-Proxy). */
 export interface SkillsCatalogUpstream {
-  /** `pathAndQuery` beginnt mit `/api/v1/skills`. */
-  get(pathAndQuery: string): Promise<SkillsCatalogResponse>;
+  get(request: SkillRelayRequest): Promise<SkillsCatalogResponse>;
 }

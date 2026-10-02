@@ -36,11 +36,6 @@ export function skillRelayRequestFrom(path: unknown, query: unknown): SkillRelay
   return {path: validPath(path), query: validQuery(query)};
 }
 
-export function pathAndQueryOf(request: SkillRelayRequest): string {
-  const search = new URLSearchParams(request.query).toString();
-  return `/api/v1${request.path}${search ? `?${search}` : ""}`;
-}
-
 function validPath(value: unknown): string {
   if (typeof value !== "string" || value.length > maximumPathLength) throw invalid("Der Pfad ist ungültig.");
   const segments = value.split("/");

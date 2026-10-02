@@ -109,7 +109,9 @@ Runtime ──(signierte Lizenz)──▶ Firebase-Funktion localRuntimeSkillsRe
   Die Remote-Config-API ist aktiviert und das Dienstkonto der Funktionen darf Remote Config lesen
   (*Firebase Remote Config Viewer*).
 - **HMAC zwischen den Servern:** HMAC-SHA256 über `{zeitstempel}\n{METHODE}\n{pfad+query}`, Header
-  `x-novooa-timestamp` / `x-novooa-signature`, Fenster ±60 s. Das Geheimnis (`SKILLS_PROXY_HMAC_KEY`) kennen nur
+  `x-novooa-timestamp` / `x-novooa-signature`, Fenster ±60 s. Signiert wird die Anfrage-URL des Proxys
+  (`/api/relay?p=%2Fskills%2Fsearch&q=…`): Vercel routet in Projekten ohne Framework nur ein Pfadsegment, deshalb
+  steht der Katalogpfad im Parameter `p`. Das Geheimnis (`SKILLS_PROXY_HMAC_KEY`) kennen nur
   Firebase und Vercel. Beide Seiten testen denselben Vektor.
 - **Vercel-Proxy** ([`relay/skills-sh-proxy`](../../relay/skills-sh-proxy/README.md)): prüft die Signatur und setzt das
   OIDC-Token ein.

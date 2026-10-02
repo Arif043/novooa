@@ -15,7 +15,7 @@ const allowAll: RelayRateLimiter = {take: async () => ({allowed: true, retryAfte
 
 function relayWith(verify: RuntimeRelayLicenseVerifier["verify"], calls: string[], limiter: RelayRateLimiter = allowAll) {
   const upstream: SkillsCatalogUpstream = {
-    get: async (pathAndQuery) => { calls.push(pathAndQuery); return {status: 200, body: "{}", headers: {}}; },
+    get: async (request) => { calls.push(`${request.path}?${new URLSearchParams(request.query)}`); return {status: 200, body: "{}", headers: {}}; },
   };
   return new RelaySkillsCatalogRequest({verify}, limiter, upstream);
 }
@@ -27,7 +27,7 @@ test("a valid license lets the request through to the upstream", async () => {
   const response = await relay.execute(license, "/skills/search", {q: "react"});
 
   assert.equal(response.status, 200);
-  assert.deepEqual(calls, ["/api/v1/skills/search?q=react"]);
+  assert.deepEqual(calls, ["/skills/search?q=react"]);
 });
 
 test("an invalid license never reaches validation or the upstream", async () => {
@@ -74,29 +74,29 @@ test("an empty bucket answers with the wait time and never reaches the upstream"
 });
 
 test("the HMAC covers timestamp, method and path with query", () => {
-  const signature = signSkillsRelayRequest("geheim", 1000, "get", "/api/v1/skills?q=a");
+  const signature = signSkillsRelayRequest("geheim", 1000, "get", "/api/relay?p=%2Fskills&q=a");
 
   assert.match(signature, /^[0-9a-f]{64}$/);
-  assert.equal(signature, signSkillsRelayRequest("geheim", 1000, "GET", "/api/v1/skills?q=a"));
+  assert.equal(signature, signSkillsRelayRequest("geheim", 1000, "GET", "/api/relay?p=%2Fskills&q=a"));
   for (const changed of [
-    signSkillsRelayRequest("anderes", 1000, "GET", "/api/v1/skills?q=a"),
-    signSkillsRelayRequest("geheim", 1001, "GET", "/api/v1/skills?q=a"),
-    signSkillsRelayRequest("geheim", 1000, "POST", "/api/v1/skills?q=a"),
-    signSkillsRelayRequest("geheim", 1000, "GET", "/api/v1/skills?q=b"),
+    signSkillsRelayRequest("anderes", 1000, "GET", "/api/relay?p=%2Fskills&q=a"),
+    signSkillsRelayRequest("geheim", 1001, "GET", "/api/relay?p=%2Fskills&q=a"),
+    signSkillsRelayRequest("geheim", 1000, "POST", "/api/relay?p=%2Fskills&q=a"),
+    signSkillsRelayRequest("geheim", 1000, "GET", "/api/relay?p=%2Fskills&q=b"),
   ]) assert.notEqual(changed, signature);
 });
 
 test("the signature matches the shared test vector of the Vercel proxy", () => {
   assert.equal(
-    signSkillsRelayRequest("geheim", 1000, "get", "/api/v1/skills/search?q=a"),
-    "f09c1c1f90def0417b5dd51ac394c93458fce17ab25c5d25fec109199e78f43b",
+    signSkillsRelayRequest("geheim", 1000, "get", "/api/relay?p=%2Fskills%2Fsearch&q=a"),
+    "bbc2548f9c30d647cd144e35b718c50289966e3208055d96c99e2455e6f11b62",
   );
 });
 
 test("a signature is valid only inside the time window and for the exact request", () => {
   const now = 1_000_000;
-  const signature = signSkillsRelayRequest("geheim", now, "GET", "/api/v1/skills");
-  const valid = (offset: number, secret = "geheim", path = "/api/v1/skills", given = signature) =>
+  const signature = signSkillsRelayRequest("geheim", now, "GET", "/api/relay?p=%2Fskills");
+  const valid = (offset: number, secret = "geheim", path = "/api/relay?p=%2Fskills", given = signature) =>
     isValidSkillsRelaySignature(secret, now, "GET", path, given, now + offset);
 
   assert.equal(valid(0), true);
@@ -104,8 +104,8 @@ test("a signature is valid only inside the time window and for the exact request
   assert.equal(valid(signatureWindowMilliseconds + 1), false);
   assert.equal(valid(-signatureWindowMilliseconds - 1), false);
   assert.equal(valid(0, "falsch"), false);
-  assert.equal(valid(0, "geheim", "/api/v1/skills/search"), false);
-  assert.equal(valid(0, "geheim", "/api/v1/skills", "abc"), false);
+  assert.equal(valid(0, "geheim", "/api/relay?p=%2Fskills%2Fsearch"), false);
+  assert.equal(valid(0, "geheim", "/api/relay?p=%2Fskills", "abc"), false);
   assert.equal(isValidSkillsRelaySignature("geheim", Number.NaN, "GET", "/x", signature, now), false);
 });
 
@@ -121,11 +121,11 @@ test("the upstream client signs each call and forwards only the whitelisted head
     () => 5_000,
   );
 
-  const response = await upstream.get("/api/v1/skills/search?q=a");
+  const response = await upstream.get({path: "/skills/search", query: {q: "a"}});
 
-  assert.equal(sent!.url, "https://proxy.example/api/v1/skills/search?q=a");
+  assert.equal(sent!.url, "https://proxy.example/api/relay?p=%2Fskills%2Fsearch&q=a");
   assert.equal(sent!.headers[timestampHeader], "5000");
-  assert.equal(sent!.headers[signatureHeader], signSkillsRelayRequest("geheim", 5000, "GET", "/api/v1/skills/search?q=a"));
+  assert.equal(sent!.headers[signatureHeader], signSkillsRelayRequest("geheim", 5000, "GET", "/api/relay?p=%2Fskills%2Fsearch&q=a"));
   assert.equal(response.status, 429);
   assert.equal(response.body, "{\"x\":1}");
   assert.equal(response.headers["retry-after"], "7");

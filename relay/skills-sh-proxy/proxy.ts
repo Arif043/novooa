@@ -6,15 +6,22 @@ export const upstreamBase = "https://skills.sh/api/v1";
 export const forwardedHeaders = ["content-type", "cache-control", "retry-after", "x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset"] as const;
 
 /**
- * Nur lesende Katalog-Abfragen werden weitergegeben: `/skills`, `/skills/search`, `/skills/curated`,
- * `/skills/{quelle}/{skill}` und `/skills/audit/…`. Pfade mit `..` oder Doppel-Schrägstrichen werden abgelehnt.
+ * Die Adresse des Proxys ist fest `/api/relay` (Vercel routet `api/[...x]` in Projekten ohne Framework nur auf ein
+ * Pfadsegment). Der Katalogpfad steht im Parameter `p` (z. B. `p=/skills/search`), alle übrigen Parameter gehören
+ * zur Katalog-Abfrage. Weitergegeben werden nur lesende Abfragen: `/skills`, `/skills/search`, `/skills/curated`,
+ * `/skills/{quelle}/{skill}` und `/skills/audit/…`. Pfade mit `..`, Doppel-Schrägstrichen oder Backslashes werden
+ * abgelehnt.
  */
 export function upstreamUrlFor(requestUrl: string): string | null {
   const url = new URL(requestUrl, "https://proxy.invalid");
-  const path = url.pathname.replace(/^\/api\/v1/, "");
-  if (path !== "/skills" && !path.startsWith("/skills/")) return null;
+  if (url.pathname !== "/api/relay") return null;
+  const path = url.searchParams.get("p");
+  if (path === null || (path !== "/skills" && !path.startsWith("/skills/"))) return null;
   if (path.includes("..") || path.includes("//") || path.includes("\\")) return null;
-  return `${upstreamBase}${path}${url.search}`;
+  const query = new URLSearchParams(url.searchParams);
+  query.delete("p");
+  const search = query.toString();
+  return `${upstreamBase}${path}${search ? `?${search}` : ""}`;
 }
 
 export const timestampHeader = "x-novooa-timestamp";
@@ -45,5 +52,5 @@ export function isValidSignature(
   if (!Number.isFinite(timestamp) || Math.abs(now - timestamp) > signatureWindowMilliseconds) return false;
   const expected = Buffer.from(sign(secret, timestamp, method, pathAndQuery));
   const given = Buffer.from(headers.signature);
-  return given.length === expected.length && timingSafeEqual(given, expected);
+  return given.length === expected.length && timingSafeEqual(Uint8Array.from(given), Uint8Array.from(expected));
 }
