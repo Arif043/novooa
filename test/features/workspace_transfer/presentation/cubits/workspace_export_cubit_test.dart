@@ -34,6 +34,7 @@ void main() {
     expect(repository.exportedCategories, {
       TransferCategory.data,
       TransferCategory.knowledge,
+      TransferCategory.skills,
       TransferCategory.tasks,
     });
     expect(files.saved, sampleArchive);

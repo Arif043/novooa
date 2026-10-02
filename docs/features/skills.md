@@ -171,6 +171,12 @@ Fehlt ein angehängter Skill (Ordner gelöscht), bricht der Baustein mit „Der 
 Fehler steht in der Aktivität. Der Dienst `skillContentReader` gehört zur `TaskGraphRuntime` (nicht zu
 `TaskRunServices`), weil nur der Runner ihn nutzt.
 
+## Sicherung und Umzug
+
+Der Workspace-Transfer ([`import-export.md`](./import-export.md)) kennt den Bereich **Fähigkeiten**: Export und Import
+nehmen alle Skill-Ordner mit allen Dateien mit. Da das Skills-Verzeichnis im Datenvolumen der Runtime liegt, ist das der
+Weg, Skills zu sichern oder auf eine andere Installation zu übertragen.
+
 ## Sicherheit
 
 Skills sind **Anweisungen von Dritten** und damit ein Weg für Prompt-Injection. Deshalb: Vorschau vor dem Speichern

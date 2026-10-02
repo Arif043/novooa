@@ -25,7 +25,7 @@ export type WorkspaceTransferRoutesOptions = {
 };
 
 const realtimeTopics: Record<TransferCategory, readonly string[]> = {
-  files: ["files", "folders"], data: [], knowledge: ["knowledge-notes"], tasks: ["tasks"],
+  files: ["files", "folders"], data: [], knowledge: ["knowledge-notes"], skills: ["skills"], tasks: ["tasks"],
 };
 const Category = Type.Enum(transferCategories);
 const Selection = Type.Object({categories: Type.Array(Category, {minItems: 1})});

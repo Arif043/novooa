@@ -1,10 +1,10 @@
 import {InvalidTransferRequestError} from "./transfer-errors.js";
 
 /**
- * Reihenfolge ist zugleich Import-Reihenfolge: Aufgaben können auf Dateien
- * und Notizen verweisen, deshalb kommen sie zuletzt.
+ * Reihenfolge ist zugleich Import-Reihenfolge: Aufgaben können auf Dateien,
+ * Notizen und Fähigkeiten verweisen, deshalb kommen sie zuletzt.
  */
-export const transferCategories = ["files", "data", "knowledge", "tasks"] as const;
+export const transferCategories = ["files", "data", "knowledge", "skills", "tasks"] as const;
 
 export type TransferCategory = typeof transferCategories[number];
 

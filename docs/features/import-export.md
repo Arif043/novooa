@@ -26,6 +26,7 @@ Firebase-Variante hat dieses Feature nicht.
 | `files` – Dateien & Ordner | Ordner, Dateien, alle Versionen samt Bytes | Dateien |
 | `data` – Daten-Collections | Datensammlungen und Datensätze | Datensätze |
 | `knowledge` – Wissensbasis | Notizen inkl. Links | Notizen |
+| `skills` – Fähigkeiten | Skill-Ordner mit allen Dateien (`SKILL.md`, `scripts/`, `references/`, `assets/`) | Skills |
 | `tasks` – Aufgaben | Aufgabendefinitionen (Graph) | Aufgaben |
 
 **Nie enthalten:** Trigger (können an OAuth-Connectoren gebunden sein),
@@ -40,8 +41,10 @@ manifest.json         { format: "novooa-export", version: 1, exportedAt,
 data/files.json       { folders, files, versions }
 data/data.json        { collections, documents }
 data/knowledge.json   { notes }
+data/skills.json      { skills: [{ name, files: [{ path }] }] }
 data/tasks.json       { tasks }
 blobs/<storagePath>   Bytes je Dateiversion
+blobs/skills/<name>/<pfad>   Bytes je Datei eines Skills
 ```
 
 Zeilen werden als camelCase-DTOs ohne `teamId` geschrieben. Beim Import prüft
@@ -62,6 +65,12 @@ mit `..` werden abgelehnt.
   SQLite-Transaktion geschrieben. Schlägt ein Bereich fehl, bleibt der
   Datenbestand unverändert und neu kopierte Dateien werden entfernt.
 - **Verwerfen:** `DELETE /v1/transfer/imports/{id}`.
+- **Fähigkeiten:** Der Skills-Ordner gehört der Anwendung und ist nicht team-gebunden. Ein gleichnamiger Skill im
+  Ziel wird **vollständig ersetzt** (auch Dateien, die es im Export nicht gibt, entfallen); andere Skills bleiben
+  unberührt, nichts wird gelöscht. Scheitert der Import in einem späteren Bereich, wird der alte Stand der ersetzten
+  Skills wiederhergestellt und neu angelegte werden entfernt. Pfade mit `..`, absolute Pfade, fehlende `SKILL.md`,
+  doppelte Namen und Überschreitungen der Skill-Grenzen (200 Dateien, 10 MB) machen den Export ungültig. Blob-Einträge
+  beginnen mit `blobs/`, damit `.json`-Dateien innerhalb eines Skills nicht als Archiv-JSON gelesen werden.
 - Gleichnamige Datensammlung im Ziel: Die Datensätze landen in der vorhandenen
   Sammlung (Namen sind pro Team eindeutig).
 

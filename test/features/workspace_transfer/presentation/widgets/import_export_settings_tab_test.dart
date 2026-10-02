@@ -37,7 +37,7 @@ void main() {
     const MaterialApp(home: Scaffold(body: ImportExportSettingsTab())),
   );
 
-  testWidgets('offers all four categories for export without triggers', (
+  testWidgets('offers all five categories for export without triggers', (
     tester,
   ) async {
     await pumpTab(tester);
@@ -46,6 +46,7 @@ void main() {
       'Dateien & Ordner',
       'Daten-Collections',
       'Wissensbasis',
+      'Fähigkeiten',
       'Aufgaben',
     ]) {
       expect(find.widgetWithText(CheckboxListTile, label), findsOneWidget);

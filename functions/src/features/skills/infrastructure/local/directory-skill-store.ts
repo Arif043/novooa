@@ -2,7 +2,7 @@ import {randomUUID} from "node:crypto";
 import {cp, mkdir, readdir, readFile, rename, rm, stat, writeFile} from "node:fs/promises";
 import path from "node:path";
 import {canonicalSkillMarkdown, parseSkillManifest} from "../../domain/entities/skill-manifest.js";
-import {skillEntryFile, type SkillPackage} from "../../domain/entities/skill-package.js";
+import {skillEntryFile, type SkillFile, type SkillPackage} from "../../domain/entities/skill-package.js";
 import {SkillAlreadyExistsError, SkillNotFoundError, SkillStorageError, type StoredSkill} from "../../domain/entities/stored-skill.js";
 import {type SkillStore} from "../../domain/repositories/skill-store.js";
 
@@ -41,6 +41,12 @@ export class DirectorySkillStore implements SkillStore {
     const folder = this.folderOf(name);
     if (!(await exists(folder))) throw new SkillNotFoundError(name);
     await rm(folder, {recursive: true, force: true});
+  }
+
+  async readFiles(name: string): Promise<SkillFile[]> {
+    const folder = this.folderOf(name);
+    if (!(await exists(path.join(folder, skillEntryFile)))) throw new SkillNotFoundError(name);
+    return readTree(folder, "");
   }
 
   async copyTo(name: string, directory: string): Promise<void> {
@@ -92,6 +98,18 @@ async function writeInside(root: string, relativePath: string, bytes: Uint8Array
   if (!destination.startsWith(path.resolve(root) + path.sep)) throw new Error(`Ungültiger Dateipfad: ${relativePath}`);
   await mkdir(path.dirname(destination), {recursive: true});
   await writeFile(destination, bytes);
+}
+
+/** Liest alle regulären Dateien; Symlinks werden übersprungen, damit nichts außerhalb des Ordners gelesen wird. */
+async function readTree(root: string, relative: string): Promise<SkillFile[]> {
+  const entries = await readdir(path.join(root, relative), {withFileTypes: true});
+  const files = await Promise.all(entries.map(async (entry): Promise<SkillFile[]> => {
+    const entryPath = relative === "" ? entry.name : `${relative}/${entry.name}`;
+    if (entry.isDirectory()) return readTree(root, entryPath);
+    if (!entry.isFile()) return [];
+    return [{path: entryPath, bytes: new Uint8Array(await readFile(path.join(root, entryPath)))}];
+  }));
+  return files.flat();
 }
 
 async function countFiles(folder: string): Promise<number> {

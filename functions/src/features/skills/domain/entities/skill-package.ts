@@ -74,6 +74,20 @@ export function skillPackageFrom(files: readonly SkillFile[], fallbackName: stri
   };
 }
 
+/**
+ * Für Transfer und Wiederherstellung: die Dateien eines **bestehenden** Skill-Ordners unter seinem Ordnernamen.
+ * Prüft nur, was die Sicherheit braucht (Pfade, Grenzen, vorhandene `SKILL.md`); Name und Beschreibung werden
+ * weder korrigiert noch verlangt, damit ein Skill mit Warnung (z. B. ohne Beschreibung) mitgesichert werden kann.
+ */
+export function existingSkillFolder(name: string, files: readonly SkillFile[]): SkillPackage {
+  const kept = keptFiles(files);
+  const entry = kept.find((file) => file.path === skillEntryFile);
+  if (entry === undefined) throw new SkillPackageError(`Im Skill „${name}“ fehlt die Datei ${skillEntryFile}.`);
+  enforceLimits(kept, name);
+  const manifest = parseSkillManifest(new TextDecoder().decode(entry.bytes));
+  return {name, description: manifest.description ?? "", files: kept, warnings: []};
+}
+
 function keptFiles(files: readonly SkillFile[]): SkillFile[] {
   const byPath = new Map<string, SkillFile>();
   for (const file of files) {

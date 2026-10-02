@@ -4,6 +4,7 @@ enum TransferCategory {
   files('files', 'Dateien & Ordner', 'Dateien'),
   data('data', 'Daten-Collections', 'Datensätze'),
   knowledge('knowledge', 'Wissensbasis', 'Notizen'),
+  skills('skills', 'Fähigkeiten', 'Fähigkeiten'),
   tasks('tasks', 'Aufgaben', 'Aufgaben');
 
   const TransferCategory(this.apiName, this.label, this.countLabel);
