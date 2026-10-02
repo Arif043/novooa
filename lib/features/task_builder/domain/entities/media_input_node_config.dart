@@ -26,7 +26,10 @@ class MediaInputNodeConfig extends NodeConfig {
   @override
   List<Object?> get props => [instruction, documentScanEnabled];
 
-  MediaInputNodeConfig copyWith({String? instruction, bool? documentScanEnabled}) {
+  MediaInputNodeConfig copyWith({
+    String? instruction,
+    bool? documentScanEnabled,
+  }) {
     return MediaInputNodeConfig(
       instruction: instruction ?? this.instruction,
       documentScanEnabled: documentScanEnabled ?? this.documentScanEnabled,

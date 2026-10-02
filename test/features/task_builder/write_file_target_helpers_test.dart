@@ -70,7 +70,10 @@ void main() {
     });
 
     test('überlebt zyklische Eltern-Beziehungen', () {
-      final cyclic = [_folder('x', 'X', parent: 'y'), _folder('y', 'Y', parent: 'x')];
+      final cyclic = [
+        _folder('x', 'X', parent: 'y'),
+        _folder('y', 'Y', parent: 'x'),
+      ];
 
       expect(flattenFolderTree(cyclic), isEmpty);
       expect(folderPathLabel('x', cyclic), isNotNull);

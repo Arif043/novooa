@@ -15,6 +15,8 @@ import {
   type WorkflowGraph,
 } from "./task-definition.js";
 import {type TaskGraphRuntime} from "./task-graph-runtime.js";
+import {triggerChainFrom} from "../../../../scheduling/domain/entities/trigger-chain.js";
+import {TriggerChainTeamFileStore} from "../../../domain/services/trigger-chain-file-store.js";
 import {validateGraph} from "../../../domain/services/task-graph-utils.js";
 
 export type ExecuteWorkflowGraph = (
@@ -48,7 +50,10 @@ export function createTaskRunContext(
     scope: options.scope,
     results: options.results,
     variables: options.variables,
-    teamFileStore: options.runtime.teamFileStore,
+    teamFileStore: new TriggerChainTeamFileStore(
+      options.runtime.teamFileStore,
+      triggerChainFrom(options.input.input),
+    ),
     fileContentReader: options.runtime.fileContentReader,
     messageSender: options.runtime.messageSender,
     documentStore: options.runtime.documentStore,

@@ -224,9 +224,46 @@ Filter passen. Die Aufgabe erhält das Ereignis als `input.event`. Fehler eines
 Triggers stoppen weder die Dateioperation noch andere Trigger.
 
 Aktuell ist das nur in der lokalen Runtime verdrahtet (Upload, Baustein
-„Datei schreiben" und Löschen). Ein Schutz gegen Schleifen — eine Aufgabe, die
-auf Dateien in einem Verzeichnis reagiert und dorthin schreibt — ist noch nicht
-umgesetzt.
+„Datei schreiben" und Löschen).
+
+### Schleifenschutz
+
+Aufgaben können sich über Datei-Trigger gegenseitig oder selbst starten. Der
+Schutz hat zwei Ebenen, analog zu Vermeidung und Erkennung beim Deadlock:
+
+**Laufzeit (streng).** Jeder Lauf trägt seine Ursachenkette (`triggerChain`,
+die IDs aller Event-Trigger, die ihn mittelbar ausgelöst haben) im Lauf-Input.
+`TriggerChainTeamFileStore` (Decorator) hängt sie an jede Schreiboperation des
+Laufs; sie steht dann im `FileEvent`. `DispatchFileEvent` startet einen Trigger
+nicht, wenn seine ID schon in der Kette steht — schon die erste Wiederholung
+wird verhindert. Das Ereignis erscheint als „Schleife verhindert" im Anwendungs-
+protokoll. Das gilt für alle Datei-Quellen, auch für Läufe, die ein Nachrichten-
+Trigger gestartet hat.
+
+**Entwurfszeit (statisch).** `findTriggerCycles` bildet den Graphen nach dem
+Muster des Betriebsmittelbelegungsgraphen: Aufgabe → Trigger („schreibt etwas,
+das den Trigger auslöst", Matrix `W`) und Trigger → Aufgabe („startet", Matrix
+`T`). Die Reduktion auf einen Graphen über Aufgaben ist das Boolesche
+Matrixprodukt `E = W ⊗ T`; ein Zyklus liegt vor, wo die transitive Hülle `E⁺`
+(Warshall) auf der Diagonale eine 1 hat. Die Schreibstellen einer Aufgabe
+(`fileWriteSitesOf`: Datei schreiben, Bild-Prompt, Sprachausgabe — auch in
+Verzweigungen und Schleifen) werden gegen Quelle, Ziel, Dateityp und Filter der
+Trigger geprüft (`writeMatch`). Zur Entwurfszeit sind Laufzeitwerte unbekannt,
+deshalb kennt jede Kante die Sicherheit `certain` oder `possible`.
+
+- **Selbstschleife mit sicherer Kante:** wird hart abgelehnt (HTTP 400) — beim
+  Anlegen und Aktivieren eines Triggers und beim Speichern einer Aufgabe.
+- **Alle anderen Zyklen:** nur Warnung. Beim Anlegen eines Triggers liefert
+  `POST /v1/task-triggers/analysis` Selbstschleife (`blocked`) und Warnungen
+  vorab; der Dialog fordert dann eine bewusste Bestätigung. Beim Speichern einer
+  Aufgabe steht die Warnung in `warnings` der Antwort und erscheint im
+  Task-Builder als Hinweis; eine Ablehnung als „Nicht gespeichert: …".
+
+Die Prüfung ist eine Überapproximation: Sie kennt keine Laufzeitwerte und keine
+Verzweigungsentscheidungen. Deshalb ist nur die Selbstschleife mit sicherer
+Kante ein Fehler; ein bedingter Zweig, der nie läuft, lässt sich statisch nicht
+vom Normalfall unterscheiden. Die Laufzeitebene fängt alles ab, was die
+statische übersieht.
 
 ### Channel-Nachrichten
 

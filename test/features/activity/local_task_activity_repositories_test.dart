@@ -18,7 +18,10 @@ void main() {
   test('maps local runs, activities and a review command', () async {
     final client = RecordingWorkspaceApiClient();
     final runs = LocalTaskRunRepository(client, _fakeChannel(client));
-    final activities = LocalTaskActivityRepository(client, _fakeChannel(client));
+    final activities = LocalTaskActivityRepository(
+      client,
+      _fakeChannel(client),
+    );
 
     final run = (await runs.watchRecent().first).single;
     final activity = (await activities.watchRecent().first).single;
@@ -41,11 +44,10 @@ void main() {
         'documentScanEnabled': true,
       },
     );
-    final run =
-        (await LocalTaskRunRepository(
-          client,
-          _fakeChannel(client),
-        ).watchRecent().first).single;
+    final run = (await LocalTaskRunRepository(
+      client,
+      _fakeChannel(client),
+    ).watchRecent().first).single;
 
     expect(run.interaction?.type, TaskRunInteractionType.mediaInput);
     expect(run.mediaInput?.documentScanEnabled, isTrue);
@@ -58,11 +60,10 @@ void main() {
         'instruction': 'Beleg fotografieren.',
       },
     );
-    final run =
-        (await LocalTaskRunRepository(
-          client,
-          _fakeChannel(client),
-        ).watchRecent().first).single;
+    final run = (await LocalTaskRunRepository(
+      client,
+      _fakeChannel(client),
+    ).watchRecent().first).single;
 
     expect(run.mediaInput?.documentScanEnabled, isFalse);
   });

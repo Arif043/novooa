@@ -15,4 +15,6 @@ export type FileEvent = {
   sizeBytes: number;
   folderId: string | null;
   occurredAt: string;
+  /** Event-Trigger, die den Lauf ausgelöst haben, der das Ereignis erzeugt hat (leer bei Nutzeraktionen). */
+  triggerChain: readonly string[];
 };

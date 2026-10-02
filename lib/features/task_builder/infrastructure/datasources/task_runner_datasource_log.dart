@@ -1,7 +1,16 @@
 import '../../../../core/logging/logger.dart';
 
-void logTaskRunnerDatasourceException({required String message, required Object error, StackTrace? stackTrace}) {
-  logException(message: message, name: _loggerName, error: error, stackTrace: stackTrace);
+void logTaskRunnerDatasourceException({
+  required String message,
+  required Object error,
+  StackTrace? stackTrace,
+}) {
+  logException(
+    message: message,
+    name: _loggerName,
+    error: error,
+    stackTrace: stackTrace,
+  );
 }
 
 void logTaskRunnerDatasourceInfo(String message) {

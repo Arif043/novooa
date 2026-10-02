@@ -21,50 +21,49 @@ import 'package:syscat2/features/teams/domain/repositories/team_repository.dart'
 import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
 
 void main() {
-  testWidgets(
-    'blendet bereits verbundene direkte Anbieter im Dropdown aus, '
-    'lässt OpenAI-kompatibel aber immer wählbar',
-    (tester) async {
-      final cubit = LanguageModelsSettingsCubit(
-        _Auth(),
-        WatchLanguageModels(_Models()),
-        SaveLanguageModel(_Models()),
-        GetCurrentTeamId(_Teams()),
-      );
-      addTearDown(cubit.close);
+  testWidgets('blendet bereits verbundene direkte Anbieter im Dropdown aus, '
+      'lässt OpenAI-kompatibel aber immer wählbar', (tester) async {
+    final cubit = LanguageModelsSettingsCubit(
+      _Auth(),
+      WatchLanguageModels(_Models()),
+      SaveLanguageModel(_Models()),
+      GetCurrentTeamId(_Teams()),
+    );
+    addTearDown(cubit.close);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: LanguageModelConnectForm(
-              cubit: cubit,
-              state: cubit.state,
-              isStandalone: true,
-              connections: const [
-                LanguageModelConnection(
-                  id: 'connection-1',
-                  name: 'Google AI',
-                  provider: LanguageModelProvider.googleAi,
-                ),
-              ],
-              connectionName: TextEditingController(),
-              baseUrl: TextEditingController(),
-              name: TextEditingController(),
-              modelId: TextEditingController(),
-              apiKey: TextEditingController(),
-            ),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: LanguageModelConnectForm(
+            cubit: cubit,
+            state: cubit.state,
+            isStandalone: true,
+            connections: const [
+              LanguageModelConnection(
+                id: 'connection-1',
+                name: 'Google AI',
+                provider: LanguageModelProvider.googleAi,
+              ),
+            ],
+            connectionName: TextEditingController(),
+            baseUrl: TextEditingController(),
+            name: TextEditingController(),
+            modelId: TextEditingController(),
+            apiKey: TextEditingController(),
           ),
         ),
-      );
+      ),
+    );
 
-      await tester.tap(find.byType(DropdownButtonFormField<LanguageModelProvider>));
-      await tester.pumpAndSettle();
+    await tester.tap(
+      find.byType(DropdownButtonFormField<LanguageModelProvider>),
+    );
+    await tester.pumpAndSettle();
 
-      expect(find.text('Google AI'), findsNothing);
-      expect(find.text('OpenAI-kompatibel'), findsOneWidget);
-      expect(find.text('Ollama (lokal)'), findsOneWidget);
-    },
-  );
+    expect(find.text('Google AI'), findsNothing);
+    expect(find.text('OpenAI-kompatibel'), findsOneWidget);
+    expect(find.text('Ollama (lokal)'), findsOneWidget);
+  });
 }
 
 class _Models implements LanguageModelRepository {

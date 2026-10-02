@@ -17,92 +17,77 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_s
 // dafür, dass `ConditionalWidget` seine manuelle „Wenn"-Eingabe für diesen
 // Fall ausblenden darf, ohne die Ausführung zu brechen.
 void main() {
-  test(
-    'aktualisiert Branch-Labels und valueTemplate, wenn eine '
-    'Entscheidungs-Choice bearbeitet wird',
-    () async {
-      final cubit = await _cubitFor(_taskWithDecisionPromptAndConditional());
+  test('aktualisiert Branch-Labels und valueTemplate, wenn eine '
+      'Entscheidungs-Choice bearbeitet wird', () async {
+    final cubit = await _cubitFor(_taskWithDecisionPromptAndConditional());
 
-      await cubit.updatePromptChoice(
-        nodeId: const NodeId('prompt.1'),
-        choiceIndex: 0,
-        value: 'Doch',
-      );
+    await cubit.updatePromptChoice(
+      nodeId: const NodeId('prompt.1'),
+      choiceIndex: 0,
+      value: 'Doch',
+    );
 
-      final config = _conditionalConfigOf(cubit);
-      expect(config.choices, ['Doch', 'Nein']);
-      expect(config.valueTemplate, '{{entscheidung}}');
-      await cubit.close();
-    },
-  );
+    final config = _conditionalConfigOf(cubit);
+    expect(config.choices, ['Doch', 'Nein']);
+    expect(config.valueTemplate, '{{entscheidung}}');
+    await cubit.close();
+  });
 
-  test(
-    'übernimmt Choices und valueTemplate sofort, wenn ein neuer '
-    'Bedingter-Ablauf-Baustein direkt nach einem Entscheidungs-Prompt '
-    'angelegt wird',
-    () async {
-      final cubit = await _cubitFor(_taskWithSelectedDecisionPrompt());
+  test('übernimmt Choices und valueTemplate sofort, wenn ein neuer '
+      'Bedingter-Ablauf-Baustein direkt nach einem Entscheidungs-Prompt '
+      'angelegt wird', () async {
+    final cubit = await _cubitFor(_taskWithSelectedDecisionPrompt());
 
-      await cubit.addNodeToMainGraph(WorkflowPrimitive.conditional);
+    await cubit.addNodeToMainGraph(WorkflowPrimitive.conditional);
 
-      final config = _conditionalConfigOf(cubit);
-      expect(config.choices, ['Ja', 'Nein', 'Vielleicht']);
-      expect(config.valueTemplate, '{{entscheidung}}');
-      await cubit.close();
-    },
-  );
+    final config = _conditionalConfigOf(cubit);
+    expect(config.choices, ['Ja', 'Nein', 'Vielleicht']);
+    expect(config.valueTemplate, '{{entscheidung}}');
+    await cubit.close();
+  });
 
-  test(
-    'lässt einen Bedingter-Ablauf-Nachfolger unverändert, wenn der '
-    'Vorgänger-Prompt kein Entscheidungs-Output ist',
-    () async {
-      final cubit = await _cubitFor(_taskWithTextPromptAndConditional());
+  test('lässt einen Bedingter-Ablauf-Nachfolger unverändert, wenn der '
+      'Vorgänger-Prompt kein Entscheidungs-Output ist', () async {
+    final cubit = await _cubitFor(_taskWithTextPromptAndConditional());
 
-      // `updatePromptChoice` löst intern immer `_syncConditionalSuccessors`
-      // aus — hier wird geprüft, dass der Guard auf `outputType == decision`
-      // greift, auch wenn diese Methode (UI-seitig eigentlich nur für
-      // Entscheidungs-Prompts erreichbar) trotzdem aufgerufen wird.
-      await cubit.updatePromptChoice(
-        nodeId: const NodeId('prompt.1'),
-        choiceIndex: 0,
-        value: 'Sollte ignoriert werden',
-      );
+    // `updatePromptChoice` löst intern immer `_syncConditionalSuccessors`
+    // aus — hier wird geprüft, dass der Guard auf `outputType == decision`
+    // greift, auch wenn diese Methode (UI-seitig eigentlich nur für
+    // Entscheidungs-Prompts erreichbar) trotzdem aufgerufen wird.
+    await cubit.updatePromptChoice(
+      nodeId: const NodeId('prompt.1'),
+      choiceIndex: 0,
+      value: 'Sollte ignoriert werden',
+    );
 
-      final config = _conditionalConfigOf(cubit);
-      expect(config.choices, ['Ja', 'Nein']);
-      expect(config.valueTemplate, '');
-      await cubit.close();
-    },
-  );
+    final config = _conditionalConfigOf(cubit);
+    expect(config.choices, ['Ja', 'Nein']);
+    expect(config.valueTemplate, '');
+    await cubit.close();
+  });
 
-  test(
-    'fügt einen neuen Bedingter-Ablauf-Baustein branchfrei ein, wenn der '
-    'Vorgänger kein Entscheidungs-Prompt ist — kein automatisches '
-    '"Ja"/"Nein"',
-    () async {
-      final cubit = await _cubitFor(_taskWithSelectedStringInput());
+  test('fügt einen neuen Bedingter-Ablauf-Baustein branchfrei ein, wenn der '
+      'Vorgänger kein Entscheidungs-Prompt ist — kein automatisches '
+      '"Ja"/"Nein"', () async {
+    final cubit = await _cubitFor(_taskWithSelectedStringInput());
 
-      await cubit.addNodeToMainGraph(WorkflowPrimitive.conditional);
+    await cubit.addNodeToMainGraph(WorkflowPrimitive.conditional);
 
-      final config = _conditionalConfigOf(cubit);
-      expect(config.branches, isEmpty);
-      await cubit.close();
-    },
-  );
+    final config = _conditionalConfigOf(cubit);
+    expect(config.branches, isEmpty);
+    await cubit.close();
+  });
 
-  test(
-    'fügt den allerersten Baustein eines leeren Arbeitsplans branchfrei '
-    'ein, wenn es ein Bedingter-Ablauf-Baustein ist',
-    () async {
-      final cubit = await _cubitFor(Task.empty());
+  test('fügt den allerersten Baustein eines leeren Arbeitsplans branchfrei '
+      'ein, wenn es ein Bedingter-Ablauf-Baustein ist', () async {
+    final cubit = await _cubitFor(Task.empty());
 
-      await cubit.addNodeToMainGraph(WorkflowPrimitive.conditional);
+    await cubit.addNodeToMainGraph(WorkflowPrimitive.conditional);
 
-      final config = _conditionalConfigOf(cubit);
-      expect(config.branches, isEmpty);
-      await cubit.close();
-    },
-  );
+    final config = _conditionalConfigOf(cubit);
+    expect(config.branches, isEmpty);
+    await cubit.close();
+  });
 
   test(
     'bleibt auch über `addConnectedNode` (Leinwand-Einfügepunkt) branchfrei, '
@@ -121,23 +106,20 @@ void main() {
     },
   );
 
-  test(
-    'übernimmt Choices sofort über `addConnectedNode`, wenn direkt nach '
-    'einem Entscheidungs-Prompt eingefügt wird',
-    () async {
-      final cubit = await _cubitFor(_taskWithSelectedDecisionPrompt());
+  test('übernimmt Choices sofort über `addConnectedNode`, wenn direkt nach '
+      'einem Entscheidungs-Prompt eingefügt wird', () async {
+    final cubit = await _cubitFor(_taskWithSelectedDecisionPrompt());
 
-      await cubit.addConnectedNode(
-        primitive: WorkflowPrimitive.conditional,
-        afterId: const NodeId('prompt.1'),
-      );
+    await cubit.addConnectedNode(
+      primitive: WorkflowPrimitive.conditional,
+      afterId: const NodeId('prompt.1'),
+    );
 
-      final config = _conditionalConfigOf(cubit);
-      expect(config.choices, ['Ja', 'Nein', 'Vielleicht']);
-      expect(config.valueTemplate, '{{entscheidung}}');
-      await cubit.close();
-    },
-  );
+    final config = _conditionalConfigOf(cubit);
+    expect(config.choices, ['Ja', 'Nein', 'Vielleicht']);
+    expect(config.valueTemplate, '{{entscheidung}}');
+    await cubit.close();
+  });
 }
 
 Future<TaskBuilderCubit> _cubitFor(Task task) async {

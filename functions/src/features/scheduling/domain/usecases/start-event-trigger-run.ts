@@ -1,3 +1,4 @@
+import {triggerChainInputKey} from "../entities/trigger-chain.js";
 import {type EventTaskTrigger, type TaskTriggerStore} from "../repositories/task-trigger-store.js";
 import {type TaskStore} from "../../../task_execution/domain/repositories/task-store.js";
 import {type TaskRunStore} from "../../../task_execution/domain/repositories/task-run-store.js";
@@ -16,13 +17,14 @@ export type EventTriggerRunPorts = {
  */
 export async function startEventTriggerRun(
   trigger: EventTaskTrigger,
-  run: {context: string; event: unknown},
+  run: {context: string; event: unknown; chain?: readonly string[]},
   ports: EventTriggerRunPorts,
 ): Promise<void> {
   const task = await ports.taskStore.loadTask(trigger.teamId, trigger.taskId);
   const queued = await ports.taskRunStore.enqueueTaskRun({
     teamId: trigger.teamId, task, context: run.context,
-    input: {event: run.event}, trigger: {id: trigger.id, type: "event"},
+    input: {event: run.event, [triggerChainInputKey]: [...(run.chain ?? []), trigger.id]},
+    trigger: {id: trigger.id, type: "event"},
   });
   await ports.taskRunDispatcher.dispatchTaskRun({teamId: trigger.teamId, runId: queued.runId, mode: "start"});
   await ports.triggerStore.markEventTriggerRan(trigger, queued.runId);

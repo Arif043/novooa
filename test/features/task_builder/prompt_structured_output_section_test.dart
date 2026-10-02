@@ -32,9 +32,41 @@ void main() {
     expect(find.text('Zahl'), findsOneWidget);
   });
 
+  testWidgets('Bearbeiten des Namens behält den zuvor gewählten Typ bei '
+      '(Regression: _emit setzte den Typ zuvor still auf string zurück)', (
+    tester,
+  ) async {
+    StructuredOutputField? changed;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PromptStructuredOutputSection(
+            fields: const [
+              StructuredOutputField(
+                name: 'summe',
+                description: '',
+                type: StructuredFieldType.boolean,
+              ),
+            ],
+            onChanged: (_, updated) => changed = updated,
+            onAdd: () {},
+            onRemove: (_) {},
+          ),
+        ),
+      ),
+    );
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Feldname'),
+      'bezahlt',
+    );
+
+    expect(changed?.name, 'bezahlt');
+    expect(changed?.type, StructuredFieldType.boolean);
+  });
+
   testWidgets(
-    'Bearbeiten des Namens behält den zuvor gewählten Typ bei '
-    '(Regression: _emit setzte den Typ zuvor still auf string zurück)',
+    'Auswahl eines neuen Typs im Dropdown meldet ihn über onChanged',
     (tester) async {
       StructuredOutputField? changed;
       await tester.pumpWidget(
@@ -42,11 +74,7 @@ void main() {
           home: Scaffold(
             body: PromptStructuredOutputSection(
               fields: const [
-                StructuredOutputField(
-                  name: 'summe',
-                  description: '',
-                  type: StructuredFieldType.boolean,
-                ),
+                StructuredOutputField(name: 'wert', description: ''),
               ],
               onChanged: (_, updated) => changed = updated,
               onAdd: () {},
@@ -56,39 +84,15 @@ void main() {
         ),
       );
 
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Feldname'),
-        'bezahlt',
+      await tester.tap(
+        find.byType(DropdownButtonFormField<StructuredFieldType>),
       );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Zahl').last);
+      await tester.pumpAndSettle();
 
-      expect(changed?.name, 'bezahlt');
-      expect(changed?.type, StructuredFieldType.boolean);
+      expect(changed?.type, StructuredFieldType.number);
+      expect(changed?.name, 'wert');
     },
   );
-
-  testWidgets('Auswahl eines neuen Typs im Dropdown meldet ihn über onChanged', (
-    tester,
-  ) async {
-    StructuredOutputField? changed;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: PromptStructuredOutputSection(
-            fields: const [StructuredOutputField(name: 'wert', description: '')],
-            onChanged: (_, updated) => changed = updated,
-            onAdd: () {},
-            onRemove: (_) {},
-          ),
-        ),
-      ),
-    );
-
-    await tester.tap(find.byType(DropdownButtonFormField<StructuredFieldType>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Zahl').last);
-    await tester.pumpAndSettle();
-
-    expect(changed?.type, StructuredFieldType.number);
-    expect(changed?.name, 'wert');
-  });
 }

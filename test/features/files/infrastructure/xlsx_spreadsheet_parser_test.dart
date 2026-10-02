@@ -8,54 +8,48 @@ import 'package:syscat2/features/files/infrastructure/parsers/xlsx_spreadsheet_p
 void main() {
   const parser = XlsxSpreadsheetParser();
 
-  test(
-    'liest Text-, Zahl-, Bool-Zellen und Fettformatierung aus einer echten '
-    'XLSX-Struktur',
-    () {
-      final workbook = excel_lib.Excel.createExcel();
-      final sheet = workbook['Sheet1'];
-      sheet.cell(_at(0, 0))
-        ..value = excel_lib.TextCellValue('Name')
-        ..cellStyle = excel_lib.CellStyle(bold: true);
-      sheet.cell(_at(1, 0)).value = excel_lib.IntCellValue(42);
-      sheet.cell(_at(2, 0)).value = excel_lib.BoolCellValue(true);
-      final bytes = Uint8List.fromList(workbook.encode()!);
+  test('liest Text-, Zahl-, Bool-Zellen und Fettformatierung aus einer echten '
+      'XLSX-Struktur', () {
+    final workbook = excel_lib.Excel.createExcel();
+    final sheet = workbook['Sheet1'];
+    sheet.cell(_at(0, 0))
+      ..value = excel_lib.TextCellValue('Name')
+      ..cellStyle = excel_lib.CellStyle(bold: true);
+    sheet.cell(_at(1, 0)).value = excel_lib.IntCellValue(42);
+    sheet.cell(_at(2, 0)).value = excel_lib.BoolCellValue(true);
+    final bytes = Uint8List.fromList(workbook.encode()!);
 
-      final document = parser.parse(bytes);
+    final document = parser.parse(bytes);
 
-      expect(document.sheets, hasLength(1));
-      final resultSheet = document.sheets.single;
-      expect(resultSheet.name, 'Sheet1');
-      final row = resultSheet.rows.single;
-      expect(row.map((cell) => cell.value), ['Name', 42, true]);
-      expect(row.map((cell) => cell.isBold), [true, false, false]);
-    },
-  );
+    expect(document.sheets, hasLength(1));
+    final resultSheet = document.sheets.single;
+    expect(resultSheet.name, 'Sheet1');
+    final row = resultSheet.rows.single;
+    expect(row.map((cell) => cell.value), ['Name', 42, true]);
+    expect(row.map((cell) => cell.isBold), [true, false, false]);
+  });
 
-  test(
-    'liest Schrift- und Hintergrundfarbe, aber ignoriert Default-Schwarz '
-    'und leere Füllung',
-    () {
-      final workbook = excel_lib.Excel.createExcel();
-      final sheet = workbook['Sheet1'];
-      sheet.cell(_at(0, 0))
-        ..value = excel_lib.TextCellValue('Wichtig')
-        ..cellStyle = excel_lib.CellStyle(
-          fontColorHex: excel_lib.ExcelColor.red,
-          backgroundColorHex: excel_lib.ExcelColor.yellow,
-        );
-      sheet.cell(_at(1, 0)).value = excel_lib.TextCellValue('Normal');
-      final bytes = Uint8List.fromList(workbook.encode()!);
+  test('liest Schrift- und Hintergrundfarbe, aber ignoriert Default-Schwarz '
+      'und leere Füllung', () {
+    final workbook = excel_lib.Excel.createExcel();
+    final sheet = workbook['Sheet1'];
+    sheet.cell(_at(0, 0))
+      ..value = excel_lib.TextCellValue('Wichtig')
+      ..cellStyle = excel_lib.CellStyle(
+        fontColorHex: excel_lib.ExcelColor.red,
+        backgroundColorHex: excel_lib.ExcelColor.yellow,
+      );
+    sheet.cell(_at(1, 0)).value = excel_lib.TextCellValue('Normal');
+    final bytes = Uint8List.fromList(workbook.encode()!);
 
-      final document = parser.parse(bytes);
+    final document = parser.parse(bytes);
 
-      final row = document.sheets.single.rows.single;
-      expect(row[0].fontColor?.argb, excel_lib.ExcelColor.red.colorInt);
-      expect(row[0].backgroundColor?.argb, excel_lib.ExcelColor.yellow.colorInt);
-      expect(row[1].fontColor, isNull);
-      expect(row[1].backgroundColor, isNull);
-    },
-  );
+    final row = document.sheets.single.rows.single;
+    expect(row[0].fontColor?.argb, excel_lib.ExcelColor.red.colorInt);
+    expect(row[0].backgroundColor?.argb, excel_lib.ExcelColor.yellow.colorInt);
+    expect(row[1].fontColor, isNull);
+    expect(row[1].backgroundColor, isNull);
+  });
 
   test(
     'schneidet nachgestellte, nur gestylte, ansonsten leere Zeilen/Spalten ab',

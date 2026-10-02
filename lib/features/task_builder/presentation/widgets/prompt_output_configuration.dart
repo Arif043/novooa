@@ -121,8 +121,11 @@ class _DecisionConfiguration extends StatelessWidget {
         const SizedBox(height: AppSpacing.xs),
         TextButton.icon(
           onPressed: onAdd,
-          icon: const Icon(Icons.add, color: SyscatTheme.primaryOrange,),
-          label: Text('Antwort hinzufügen', style: TextStyle(color: SyscatTheme.primaryOrange),),
+          icon: const Icon(Icons.add, color: SyscatTheme.primaryOrange),
+          label: Text(
+            'Antwort hinzufügen',
+            style: TextStyle(color: SyscatTheme.primaryOrange),
+          ),
         ),
       ],
     );

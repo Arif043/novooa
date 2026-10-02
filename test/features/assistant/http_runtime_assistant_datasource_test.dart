@@ -24,49 +24,55 @@ void main() {
       final client = _FakeApiClient();
       final datasource = HttpRuntimeKnowledgeBaseAssistantDatasource(client);
 
-      await datasource.ask(history: const [], question: 'Was steht in der Notiz?');
+      await datasource.ask(
+        history: const [],
+        question: 'Was steht in der Notiz?',
+      );
 
       expect(client.lastPath, '/v1/assistant/knowledge-base');
     });
   });
 
+  test('schickt die Frage getrennt und den bisherigen Verlauf ohne die '
+      'gerade gestellte Frage', () async {
+    final client = _FakeApiClient();
+    final datasource = HttpRuntimeTaskBuilderAssistantDatasource(client);
+    final history = [
+      AssistantMessage.user('Erste Frage'),
+      AssistantMessage.agent('Erste Antwort'),
+      AssistantMessage.user('Zweite Frage'),
+    ];
+
+    await datasource.ask(history: history, question: 'Zweite Frage');
+
+    final body = client.lastBody!;
+    expect(body['question'], 'Zweite Frage');
+    expect(body['history'], [
+      {'role': 'user', 'text': 'Erste Frage'},
+      {'role': 'agent', 'text': 'Erste Antwort'},
+    ]);
+  });
+
   test(
-    'schickt die Frage getrennt und den bisherigen Verlauf ohne die '
-    'gerade gestellte Frage',
+    'gibt die Antwort als JSON-Text weiter, den der Parser lesen kann',
     () async {
-      final client = _FakeApiClient();
+      final client = _FakeApiClient(
+        response: const {
+          'answer': 'Hallo',
+          'commands': <Object?>[],
+          'knowledgeCommands': <Object?>[],
+        },
+      );
       final datasource = HttpRuntimeTaskBuilderAssistantDatasource(client);
-      final history = [
-        AssistantMessage.user('Erste Frage'),
-        AssistantMessage.agent('Erste Antwort'),
-        AssistantMessage.user('Zweite Frage'),
-      ];
 
-      await datasource.ask(history: history, question: 'Zweite Frage');
+      final response = await datasource.ask(
+        history: const [],
+        question: 'Frage',
+      );
 
-      final body = client.lastBody!;
-      expect(body['question'], 'Zweite Frage');
-      expect(body['history'], [
-        {'role': 'user', 'text': 'Erste Frage'},
-        {'role': 'agent', 'text': 'Erste Antwort'},
-      ]);
+      expect((jsonDecode(response.text) as Map)['answer'], 'Hallo');
     },
   );
-
-  test('gibt die Antwort als JSON-Text weiter, den der Parser lesen kann', () async {
-    final client = _FakeApiClient(
-      response: const {
-        'answer': 'Hallo',
-        'commands': <Object?>[],
-        'knowledgeCommands': <Object?>[],
-      },
-    );
-    final datasource = HttpRuntimeTaskBuilderAssistantDatasource(client);
-
-    final response = await datasource.ask(history: const [], question: 'Frage');
-
-    expect((jsonDecode(response.text) as Map)['answer'], 'Hallo');
-  });
 
   test('weist eine Antwort ohne answer-Feld zurück', () async {
     final client = _FakeApiClient(response: const {'unerwartet': true});
@@ -93,7 +99,10 @@ class _FakeApiClient implements WorkspaceApiClient {
   Map<String, Object?>? lastBody;
 
   @override
-  Future<Map<String, Object?>> post(String path, Map<String, Object?> body) async {
+  Future<Map<String, Object?>> post(
+    String path,
+    Map<String, Object?> body,
+  ) async {
     lastPath = path;
     lastBody = body;
     return response;
@@ -103,8 +112,10 @@ class _FakeApiClient implements WorkspaceApiClient {
   Future<Map<String, Object?>> get(String path) async => const {};
 
   @override
-  Future<Map<String, Object?>> put(String path, Map<String, Object?> body) async =>
-      const {};
+  Future<Map<String, Object?>> put(
+    String path,
+    Map<String, Object?> body,
+  ) async => const {};
 
   @override
   Future<Map<String, Object?>> delete(String path) async => const {};

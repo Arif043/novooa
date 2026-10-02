@@ -87,9 +87,9 @@ class WorkflowGraph extends Equatable {
           if (edge.from == from && edge.to == to) {
             changed = true;
             return WorkflowEdge(
-            from: edge.from,
-            to: edge.to,
-            conditionLabel: conditionLabel,
+              from: edge.from,
+              to: edge.to,
+              conditionLabel: conditionLabel,
             );
           }
           return edge;

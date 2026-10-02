@@ -58,7 +58,10 @@ class _SessionAuthRepository implements AuthRepository {
 
 /// Antwortet konfigurierbar: erst n-mal `notFound`, danach Success.
 class _ScriptedUserRepository implements UserRepository {
-  _ScriptedUserRepository({this.notFoundCount = 0, this.failPermanently = false});
+  _ScriptedUserRepository({
+    this.notFoundCount = 0,
+    this.failPermanently = false,
+  });
 
   int notFoundCount;
   bool failPermanently;
@@ -114,10 +117,7 @@ void main() {
           .toList();
       repository.controller.add(_user());
       final observed = await statuses;
-      expect(observed, [
-        AuthSessionStatus.verifying,
-        AuthSessionStatus.ready,
-      ]);
+      expect(observed, [AuthSessionStatus.verifying, AuthSessionStatus.ready]);
       expect(cubit.state.currentUser?.email, 'ada@example.com');
       await cubit.close();
       await repository.close();
@@ -129,8 +129,9 @@ void main() {
         final repository = _SessionAuthRepository(null);
         final userRepository = _ScriptedUserRepository(notFoundCount: 2);
         final cubit = _cubitWith(repository, userRepository);
-        final readyState = cubit.stream
-            .firstWhere((state) => state.status == AuthSessionStatus.ready);
+        final readyState = cubit.stream.firstWhere(
+          (state) => state.status == AuthSessionStatus.ready,
+        );
         repository.controller.add(_user());
         await readyState;
         expect(userRepository.getProfileCalls, greaterThanOrEqualTo(3));
@@ -168,8 +169,9 @@ void main() {
       final userRepository = _ScriptedUserRepository();
       final cubit = _cubitWith(repository, userRepository);
       // Warte, bis der initiale Verify-Cycle durchgelaufen ist.
-      await cubit.stream
-          .firstWhere((state) => state.status == AuthSessionStatus.ready);
+      await cubit.stream.firstWhere(
+        (state) => state.status == AuthSessionStatus.ready,
+      );
       final nextState = cubit.stream.first;
       repository.controller.add(null);
       final observed = await nextState;
@@ -183,8 +185,9 @@ void main() {
       final repository = _SessionAuthRepository(_user());
       final userRepository = _ScriptedUserRepository();
       final cubit = _cubitWith(repository, userRepository);
-      await cubit.stream
-          .firstWhere((state) => state.status == AuthSessionStatus.ready);
+      await cubit.stream.firstWhere(
+        (state) => state.status == AuthSessionStatus.ready,
+      );
       await cubit.signOut();
       expect(repository.signOutCalls, 1);
       expect(cubit.state.currentUser, isNull);

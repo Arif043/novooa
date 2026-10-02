@@ -62,9 +62,9 @@ class NodeOutputChips extends StatelessWidget {
       child: ActionChip(
         avatar: Icon(style.icon, size: AppSpacing.md, color: style.color),
         label: Text(field.name),
-        labelStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: colors.onSurface,
-        ),
+        labelStyle: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: colors.onSurface),
         backgroundColor: style.color.withValues(alpha: 0.12),
         side: BorderSide(color: style.color.withValues(alpha: 0.4)),
         shape: const StadiumBorder(),

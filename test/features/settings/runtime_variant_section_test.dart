@@ -41,27 +41,22 @@ void main() {
     expect(find.text(runtimeVariantSwitchingHint), findsNothing);
     expect(
       tester
-          .widget<RadioGroup<RuntimeKind>>(
-            find.byType(RadioGroup<RuntimeKind>),
-          )
+          .widget<RadioGroup<RuntimeKind>>(find.byType(RadioGroup<RuntimeKind>))
           .groupValue,
       RuntimeKind.cloud,
     );
   });
 
-  testWidgets(
-    'ruft beim Wechsel switchTo auf und zeigt währenddessen den '
-    'Wechsel-Hinweis',
-    (tester) async {
-      final switcher = await pumpSection(tester, currentKind: RuntimeKind.cloud);
+  testWidgets('ruft beim Wechsel switchTo auf und zeigt währenddessen den '
+      'Wechsel-Hinweis', (tester) async {
+    final switcher = await pumpSection(tester, currentKind: RuntimeKind.cloud);
 
-      await tester.tap(find.text('Eigene Runtime'));
-      await tester.pump();
+    await tester.tap(find.text('Eigene Runtime'));
+    await tester.pump();
 
-      expect(switcher.requested, [RuntimeKind.standalone]);
-      expect(find.text(runtimeVariantSwitchingHint), findsOneWidget);
-    },
-  );
+    expect(switcher.requested, [RuntimeKind.standalone]);
+    expect(find.text(runtimeVariantSwitchingHint), findsOneWidget);
+  });
 
   testWidgets('aus der Standalone-Variante führt der Weg zurück zur Cloud', (
     tester,
@@ -80,7 +75,10 @@ void main() {
   testWidgets(
     'ein Tipp auf die bereits laufende Variante ruft switchTo nicht auf',
     (tester) async {
-      final switcher = await pumpSection(tester, currentKind: RuntimeKind.cloud);
+      final switcher = await pumpSection(
+        tester,
+        currentKind: RuntimeKind.cloud,
+      );
 
       await tester.tap(find.text('Cloud'));
       await tester.pump();
@@ -93,7 +91,10 @@ void main() {
   testWidgets(
     'ein zweiter Tipp während eines laufenden Wechsels wird ignoriert',
     (tester) async {
-      final switcher = await pumpSection(tester, currentKind: RuntimeKind.cloud);
+      final switcher = await pumpSection(
+        tester,
+        currentKind: RuntimeKind.cloud,
+      );
 
       await tester.tap(find.text('Eigene Runtime'));
       await tester.pump();

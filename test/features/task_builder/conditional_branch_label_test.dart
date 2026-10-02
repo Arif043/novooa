@@ -17,25 +17,22 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_s
 const conditionalId = NodeId('conditional.1');
 
 void main() {
-  test(
-    'benennt genau den angesprochenen Zweig um und lässt andere Zweige '
-    'sowie valueTemplate unverändert',
-    () async {
-      final cubit = await _cubitFor(_taskWithConditional());
+  test('benennt genau den angesprochenen Zweig um und lässt andere Zweige '
+      'sowie valueTemplate unverändert', () async {
+    final cubit = await _cubitFor(_taskWithConditional());
 
-      await cubit.updateConditionalBranchLabel(
-        conditionalNodeId: conditionalId,
-        branchId: 'branch.1',
-        label: 'Vielleicht',
-      );
+    await cubit.updateConditionalBranchLabel(
+      conditionalNodeId: conditionalId,
+      branchId: 'branch.1',
+      label: 'Vielleicht',
+    );
 
-      final config = _conditionalConfigOf(cubit);
-      expect(config.branches[0].label, 'Vielleicht');
-      expect(config.branches[1].label, 'Nein');
-      expect(config.valueTemplate, '{{entscheidung}}');
-      await cubit.close();
-    },
-  );
+    final config = _conditionalConfigOf(cubit);
+    expect(config.branches[0].label, 'Vielleicht');
+    expect(config.branches[1].label, 'Nein');
+    expect(config.valueTemplate, '{{entscheidung}}');
+    await cubit.close();
+  });
 
   test('entfernt umschließende Leerzeichen aus dem neuen Label', () async {
     final cubit = await _cubitFor(_taskWithConditional());
@@ -65,76 +62,73 @@ void main() {
     await cubit.close();
   });
 
-  test('lässt den Graphen unverändert, wenn die branchId nicht existiert', () async {
-    final cubit = await _cubitFor(_taskWithConditional());
+  test(
+    'lässt den Graphen unverändert, wenn die branchId nicht existiert',
+    () async {
+      final cubit = await _cubitFor(_taskWithConditional());
+
+      await cubit.updateConditionalBranchLabel(
+        conditionalNodeId: conditionalId,
+        branchId: 'branch.unbekannt',
+        label: 'Egal',
+      );
+
+      final config = _conditionalConfigOf(cubit);
+      expect(config.branches[0].label, 'Ja');
+      expect(config.branches[1].label, 'Nein');
+      await cubit.close();
+    },
+  );
+
+  test('synchronisiert die Antwort (Choice) des vorgeschalteten '
+      'Entscheidungs-Prompts, wenn ein Branch-Label direkt auf der Leinwand '
+      'umbenannt wird — sonst generiert der Prompt weiterhin die alte, nicht '
+      'mehr passende Option', () async {
+    final cubit = await _cubitFor(_taskWithDecisionPromptAndConditional());
 
     await cubit.updateConditionalBranchLabel(
       conditionalNodeId: conditionalId,
-      branchId: 'branch.unbekannt',
-      label: 'Egal',
+      branchId: 'branch.1',
+      label: 'Doch',
     );
 
+    final state = cubit.state as TaskBuilderLoaded;
+    final promptConfig =
+        state.editingTask.nodes
+                .firstWhere((node) => node.id == const NodeId('prompt.1'))
+                .config
+            as PromptNodeConfig;
+    expect(promptConfig.choices, ['Doch', 'Nein']);
     final config = _conditionalConfigOf(cubit);
-    expect(config.branches[0].label, 'Ja');
+    expect(config.branches[0].label, 'Doch');
     expect(config.branches[1].label, 'Nein');
+    expect(config.valueTemplate, '{{entscheidung}}');
     await cubit.close();
   });
 
-  test(
-    'synchronisiert die Antwort (Choice) des vorgeschalteten '
-    'Entscheidungs-Prompts, wenn ein Branch-Label direkt auf der Leinwand '
-    'umbenannt wird — sonst generiert der Prompt weiterhin die alte, nicht '
-    'mehr passende Option',
-    () async {
-      final cubit = await _cubitFor(_taskWithDecisionPromptAndConditional());
+  test('lässt einen Bedingungs-Baustein ohne Entscheidungs-Prompt-Vorgänger '
+      'weiterhin direkt umbenennbar (kein Sync-Ziel vorhanden)', () async {
+    final cubit = await _cubitFor(_taskWithTextPromptAndConditional());
 
-      await cubit.updateConditionalBranchLabel(
-        conditionalNodeId: conditionalId,
-        branchId: 'branch.1',
-        label: 'Doch',
-      );
+    await cubit.updateConditionalBranchLabel(
+      conditionalNodeId: conditionalId,
+      branchId: 'branch.1',
+      label: 'Doch',
+    );
 
-      final state = cubit.state as TaskBuilderLoaded;
-      final promptConfig =
-          state.editingTask.nodes
-                  .firstWhere((node) => node.id == const NodeId('prompt.1'))
-                  .config
-              as PromptNodeConfig;
-      expect(promptConfig.choices, ['Doch', 'Nein']);
-      final config = _conditionalConfigOf(cubit);
-      expect(config.branches[0].label, 'Doch');
-      expect(config.branches[1].label, 'Nein');
-      expect(config.valueTemplate, '{{entscheidung}}');
-      await cubit.close();
-    },
-  );
-
-  test(
-    'lässt einen Bedingungs-Baustein ohne Entscheidungs-Prompt-Vorgänger '
-    'weiterhin direkt umbenennbar (kein Sync-Ziel vorhanden)',
-    () async {
-      final cubit = await _cubitFor(_taskWithTextPromptAndConditional());
-
-      await cubit.updateConditionalBranchLabel(
-        conditionalNodeId: conditionalId,
-        branchId: 'branch.1',
-        label: 'Doch',
-      );
-
-      final state = cubit.state as TaskBuilderLoaded;
-      final promptConfig =
-          state.editingTask.nodes
-                  .firstWhere((node) => node.id == const NodeId('prompt.1'))
-                  .config
-              as PromptNodeConfig;
-      // Kein Entscheidungs-Prompt (outputType text) — dessen Inhalt bleibt
-      // unangetastet, die Branch wird stattdessen direkt umbenannt.
-      expect(promptConfig.instruction, 'Alte Anweisung');
-      final config = _conditionalConfigOf(cubit);
-      expect(config.branches[0].label, 'Doch');
-      await cubit.close();
-    },
-  );
+    final state = cubit.state as TaskBuilderLoaded;
+    final promptConfig =
+        state.editingTask.nodes
+                .firstWhere((node) => node.id == const NodeId('prompt.1'))
+                .config
+            as PromptNodeConfig;
+    // Kein Entscheidungs-Prompt (outputType text) — dessen Inhalt bleibt
+    // unangetastet, die Branch wird stattdessen direkt umbenannt.
+    expect(promptConfig.instruction, 'Alte Anweisung');
+    final config = _conditionalConfigOf(cubit);
+    expect(config.branches[0].label, 'Doch');
+    await cubit.close();
+  });
 }
 
 Future<TaskBuilderCubit> _cubitFor(Task task) async {
@@ -164,9 +158,10 @@ Task _taskWithConditional() {
           id: conditionalId,
           title: 'Bedingter Ablauf',
           description: '',
-          config: ConditionalNodeConfig.fromChoices(
-            const ['Ja', 'Nein'],
-          ).copyWith(valueTemplate: '{{entscheidung}}'),
+          config: ConditionalNodeConfig.fromChoices(const [
+            'Ja',
+            'Nein',
+          ]).copyWith(valueTemplate: '{{entscheidung}}'),
         ),
       ],
       edges: const [],

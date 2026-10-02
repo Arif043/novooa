@@ -6,21 +6,30 @@ import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 // immer nur string). Optional mit Default `StructuredFieldType.string`,
 // damit bestehende Konstruktionsaufrufe unverändert bleiben.
 void main() {
-  test('StructuredOutputField ist ohne expliziten Typ standardmäßig string', () {
-    const field = StructuredOutputField(name: 'titel', description: '');
+  test(
+    'StructuredOutputField ist ohne expliziten Typ standardmäßig string',
+    () {
+      const field = StructuredOutputField(name: 'titel', description: '');
 
-    expect(field.type, StructuredFieldType.string);
-  });
+      expect(field.type, StructuredFieldType.string);
+    },
+  );
 
-  test('copyWith ändert nur den Typ und lässt Name/Beschreibung unangetastet', () {
-    const field = StructuredOutputField(name: 'summe', description: 'in Euro');
+  test(
+    'copyWith ändert nur den Typ und lässt Name/Beschreibung unangetastet',
+    () {
+      const field = StructuredOutputField(
+        name: 'summe',
+        description: 'in Euro',
+      );
 
-    final updated = field.copyWith(type: StructuredFieldType.number);
+      final updated = field.copyWith(type: StructuredFieldType.number);
 
-    expect(updated.name, 'summe');
-    expect(updated.description, 'in Euro');
-    expect(updated.type, StructuredFieldType.number);
-  });
+      expect(updated.name, 'summe');
+      expect(updated.description, 'in Euro');
+      expect(updated.type, StructuredFieldType.number);
+    },
+  );
 
   test('copyWith ohne Argumente behält den bestehenden Typ bei', () {
     const field = StructuredOutputField(
@@ -34,14 +43,17 @@ void main() {
     expect(updated.type, StructuredFieldType.boolean);
   });
 
-  test('zwei Felder mit unterschiedlichem Typ sind nicht gleich (Equatable)', () {
-    const asString = StructuredOutputField(name: 'wert', description: '');
-    const asNumber = StructuredOutputField(
-      name: 'wert',
-      description: '',
-      type: StructuredFieldType.number,
-    );
+  test(
+    'zwei Felder mit unterschiedlichem Typ sind nicht gleich (Equatable)',
+    () {
+      const asString = StructuredOutputField(name: 'wert', description: '');
+      const asNumber = StructuredOutputField(
+        name: 'wert',
+        description: '',
+        type: StructuredFieldType.number,
+      );
 
-    expect(asString, isNot(asNumber));
-  });
+      expect(asString, isNot(asNumber));
+    },
+  );
 }

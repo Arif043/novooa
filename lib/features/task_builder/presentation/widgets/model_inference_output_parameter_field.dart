@@ -26,7 +26,9 @@ class ModelInferenceOutputParameterField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: TextFormField(
-        key: ValueKey('${nodeId.value}-${output.tensorName}-${descriptor.name}'),
+        key: ValueKey(
+          '${nodeId.value}-${output.tensorName}-${descriptor.name}',
+        ),
         initialValue: value.value.toString(),
         keyboardType: TextInputType.number,
         decoration: InputDecoration(

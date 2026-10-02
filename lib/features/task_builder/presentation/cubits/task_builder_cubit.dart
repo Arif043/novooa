@@ -1,3 +1,4 @@
+import '../../domain/entities/task_save_notice.dart';
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/widgets.dart';
@@ -49,8 +50,14 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   Task? _pendingSaveTask;
   Future<void> _saveQueue = Future.value();
 
-  TaskBuilderCubit({required this.repository})
-    : super(const TaskBuilderLoading());
+  TaskBuilderCubit({
+    required this.repository,
+    Stream<TaskSaveNotice>? saveNotices,
+  }) : saveNotices = saveNotices ?? const Stream.empty(),
+       super(const TaskBuilderLoading());
+
+  /// Rückmeldungen der Runtime beim Speichern (Hinweise, Ablehnungen).
+  final Stream<TaskSaveNotice> saveNotices;
 
   Future<void> load(Task? taskFromNavigation) async {
     emit(const TaskBuilderLoading());

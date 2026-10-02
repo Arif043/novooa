@@ -6,7 +6,7 @@ import {fileEventMatches, messageTargetMatches} from "./event-trigger-matching.j
 
 const created: FileEvent = {
   type: "fileCreated", teamId: "t", fileId: "f1", versionId: "v1", displayName: "Bericht.png",
-  contentType: "image/png", sizeBytes: 1, folderId: "unterordner", occurredAt: "2026-10-02T10:00:00Z",
+  contentType: "image/png", sizeBytes: 1, folderId: "unterordner", occurredAt: "2026-10-02T10:00:00Z", triggerChain: [],
 };
 const chain = ["unterordner", "berichte"];
 

@@ -117,6 +117,15 @@ export function createLocalRuntimeComposition(
     onFailure: (error, trigger) => applicationLogger.exception(
       "file_event_trigger.failed", error, {teamId: options.workspace.teamId, triggerId: trigger?.id},
     ),
+    onLoopPrevented: (trigger, event) => {
+      applicationLogger.info("file_event_trigger.loop_prevented", {
+        teamId: options.workspace.teamId, triggerId: trigger.id, fileId: event.fileId, triggerChain: event.triggerChain,
+      });
+      applicationLogger.readableError(
+        `Schleife verhindert: Ein Auslöser wurde nicht gestartet, weil die Datei „${event.displayName}“ `
+        + "von einer Aufgabe stammt, die durch denselben Auslöser gestartet wurde.",
+      );
+    },
   });
   taskWorkflow = createLocalTaskWorkflow({
     database: options.database, runtimeRoot: options.runtimeRoot, signedLicense: options.signedLicense,

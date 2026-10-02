@@ -20,88 +20,94 @@ void main() {
     config: const StringInputNodeConfig(value: ''),
   );
 
-  test(
-    'entfernt man den mittleren Knoten einer Kette, wird der Vorgänger '
-    'direkt mit dem Nachfolger verbunden — keine zwei Teilgraphen',
-    () {
-      final graph = WorkflowGraph(
-        nodes: [node(a), node(b), node(c)],
-        edges: const [WorkflowEdge(from: a, to: b), WorkflowEdge(from: b, to: c)],
-      );
-
-      final result = graph.removeNode(b);
-
-      expect(result.nodes.map((n) => n.id), [a, c]);
-      expect(result.edges, [const WorkflowEdge(from: a, to: c)]);
-    },
-  );
-
-  test('entfernt man den Kopf einer Kette, bleibt der Rest unverändert verbunden', () {
+  test('entfernt man den mittleren Knoten einer Kette, wird der Vorgänger '
+      'direkt mit dem Nachfolger verbunden — keine zwei Teilgraphen', () {
     final graph = WorkflowGraph(
       nodes: [node(a), node(b), node(c)],
-      edges: const [WorkflowEdge(from: a, to: b), WorkflowEdge(from: b, to: c)],
+      edges: const [
+        WorkflowEdge(from: a, to: b),
+        WorkflowEdge(from: b, to: c),
+      ],
     );
 
-    final result = graph.removeNode(a);
+    final result = graph.removeNode(b);
 
-    expect(result.nodes.map((n) => n.id), [b, c]);
-    expect(result.edges, [const WorkflowEdge(from: b, to: c)]);
-  });
-
-  test('entfernt man das Ende einer Kette, bleibt der Rest unverändert verbunden', () {
-    final graph = WorkflowGraph(
-      nodes: [node(a), node(b), node(c)],
-      edges: const [WorkflowEdge(from: a, to: b), WorkflowEdge(from: b, to: c)],
-    );
-
-    final result = graph.removeNode(c);
-
-    expect(result.nodes.map((n) => n.id), [a, b]);
-    expect(result.edges, [const WorkflowEdge(from: a, to: b)]);
+    expect(result.nodes.map((n) => n.id), [a, c]);
+    expect(result.edges, [const WorkflowEdge(from: a, to: c)]);
   });
 
   test(
-    'erzeugt keine doppelte Kante, wenn Vorgänger und Nachfolger bereits '
-    'direkt verbunden sind',
+    'entfernt man den Kopf einer Kette, bleibt der Rest unverändert verbunden',
     () {
       final graph = WorkflowGraph(
         nodes: [node(a), node(b), node(c)],
         edges: const [
           WorkflowEdge(from: a, to: b),
           WorkflowEdge(from: b, to: c),
-          WorkflowEdge(from: a, to: c),
         ],
       );
 
-      final result = graph.removeNode(b);
+      final result = graph.removeNode(a);
 
-      expect(result.edges, [const WorkflowEdge(from: a, to: c)]);
+      expect(result.nodes.map((n) => n.id), [b, c]);
+      expect(result.edges, [const WorkflowEdge(from: b, to: c)]);
     },
   );
 
   test(
-    'verbindet bei mehreren Vorgängern/Nachfolgern jeden Vorgänger mit '
-    'jedem Nachfolger (Kreuzprodukt)',
+    'entfernt man das Ende einer Kette, bleibt der Rest unverändert verbunden',
     () {
-      const d = NodeId('d');
       final graph = WorkflowGraph(
-        nodes: [node(a), node(b), node(c), node(d)],
+        nodes: [node(a), node(b), node(c)],
         edges: const [
-          WorkflowEdge(from: a, to: c),
+          WorkflowEdge(from: a, to: b),
           WorkflowEdge(from: b, to: c),
-          WorkflowEdge(from: c, to: d),
         ],
       );
 
       final result = graph.removeNode(c);
 
-      expect(result.nodes.map((n) => n.id), [a, b, d]);
-      expect(result.edges.toSet(), {
-        const WorkflowEdge(from: a, to: d),
-        const WorkflowEdge(from: b, to: d),
-      });
+      expect(result.nodes.map((n) => n.id), [a, b]);
+      expect(result.edges, [const WorkflowEdge(from: a, to: b)]);
     },
   );
+
+  test('erzeugt keine doppelte Kante, wenn Vorgänger und Nachfolger bereits '
+      'direkt verbunden sind', () {
+    final graph = WorkflowGraph(
+      nodes: [node(a), node(b), node(c)],
+      edges: const [
+        WorkflowEdge(from: a, to: b),
+        WorkflowEdge(from: b, to: c),
+        WorkflowEdge(from: a, to: c),
+      ],
+    );
+
+    final result = graph.removeNode(b);
+
+    expect(result.edges, [const WorkflowEdge(from: a, to: c)]);
+  });
+
+  test('verbindet bei mehreren Vorgängern/Nachfolgern jeden Vorgänger mit '
+      'jedem Nachfolger (Kreuzprodukt)', () {
+    const d = NodeId('d');
+    final graph = WorkflowGraph(
+      nodes: [node(a), node(b), node(c), node(d)],
+      edges: const [
+        WorkflowEdge(from: a, to: c),
+        WorkflowEdge(from: b, to: c),
+        WorkflowEdge(from: c, to: d),
+      ],
+    );
+
+    final result = graph.removeNode(c);
+
+    expect(result.nodes.map((n) => n.id), [a, b, d]);
+    expect(result.edges.toSet(), {
+      const WorkflowEdge(from: a, to: d),
+      const WorkflowEdge(from: b, to: d),
+    });
+  });
 
   test('entfernt einen isolierten Knoten ohne Kanten unverändert', () {
     final graph = WorkflowGraph(nodes: [node(a)], edges: const []);

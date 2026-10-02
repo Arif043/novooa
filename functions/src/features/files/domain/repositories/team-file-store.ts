@@ -9,6 +9,8 @@ export type WriteTeamFileInput = {
   contentType: string;
   folderId?: string | null;
   targetFileId: string | null;
+  /** Gesetzt, wenn ein Lauf schreibt, der selbst durch Event-Trigger ausgelöst wurde. */
+  triggerChain?: readonly string[];
 };
 
 export type WrittenFile = {

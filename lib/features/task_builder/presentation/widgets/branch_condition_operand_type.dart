@@ -51,7 +51,9 @@ OperandTypeHint operandTypeHintFor(String expression, WorkflowGraph graph) {
   if (match == null) return _literalTypeHint(expression.trim());
   final segments = match.group(1)!.split('.');
   return _fieldTypeHintFor(segments.first, graph) ??
-      (segments.length == 1 ? _decisionTypeHintFor(segments.first, graph) : null) ??
+      (segments.length == 1
+          ? _decisionTypeHintFor(segments.first, graph)
+          : null) ??
       const UnknownTypeHint();
 }
 
@@ -101,7 +103,8 @@ OperandTypeHint? _fieldTypeHintFor(String name, WorkflowGraph graph) {
         :final structuredFields,
       ):
         for (final field in structuredFields) {
-          if (field.name.trim() == name) return _structuredFieldHint(field.type);
+          if (field.name.trim() == name)
+            return _structuredFieldHint(field.type);
         }
       case DialogInputNodeConfig(:final fields):
         for (final field in fields) {

@@ -32,76 +32,63 @@ void main() {
     expect(result.edges, isEmpty);
   });
 
-  test(
-    'fügt nach einem Blatt-Knoten (ohne Nachfolger) einfach eine neue Kante '
-    'an',
-    () {
-      final graph = WorkflowGraph(nodes: [node(a)], edges: const []);
+  test('fügt nach einem Blatt-Knoten (ohne Nachfolger) einfach eine neue Kante '
+      'an', () {
+    final graph = WorkflowGraph(nodes: [node(a)], edges: const []);
 
-      final result = graph.addNode(node(b), a);
+    final result = graph.addNode(node(b), a);
 
-      expect(result.nodes.map((node) => node.id), [a, b]);
-      expect(result.edges, [const WorkflowEdge(from: a, to: b)]);
-    },
-  );
+    expect(result.nodes.map((node) => node.id), [a, b]);
+    expect(result.edges, [const WorkflowEdge(from: a, to: b)]);
+  });
 
-  test(
-    'spleißt einen bestehenden Nachfolger auf den neuen Knoten, statt einen '
-    'zweiten parallelen Zweig anzulegen',
-    () {
-      final graph = WorkflowGraph(
-        nodes: [node(a), node(b)],
-        edges: const [WorkflowEdge(from: a, to: b)],
-      );
+  test('spleißt einen bestehenden Nachfolger auf den neuen Knoten, statt einen '
+      'zweiten parallelen Zweig anzulegen', () {
+    final graph = WorkflowGraph(
+      nodes: [node(a), node(b)],
+      edges: const [WorkflowEdge(from: a, to: b)],
+    );
 
-      final result = graph.addNode(node(n), a);
+    final result = graph.addNode(node(n), a);
 
-      expect(result.nodes.map((node) => node.id), [a, b, n]);
-      expect(result.edges.toSet(), {
-        const WorkflowEdge(from: a, to: n),
-        const WorkflowEdge(from: n, to: b),
-      });
-    },
-  );
+    expect(result.nodes.map((node) => node.id), [a, b, n]);
+    expect(result.edges.toSet(), {
+      const WorkflowEdge(from: a, to: n),
+      const WorkflowEdge(from: n, to: b),
+    });
+  });
 
-  test(
-    'spleißt alle bestehenden Nachfolger auf den neuen Knoten, wenn der '
-    'fokussierte Baustein bereits mehrfach verzweigt',
-    () {
-      final graph = WorkflowGraph(
-        nodes: [node(a), node(b), node(c)],
-        edges: const [
-          WorkflowEdge(from: a, to: b),
-          WorkflowEdge(from: a, to: c),
-        ],
-      );
+  test('spleißt alle bestehenden Nachfolger auf den neuen Knoten, wenn der '
+      'fokussierte Baustein bereits mehrfach verzweigt', () {
+    final graph = WorkflowGraph(
+      nodes: [node(a), node(b), node(c)],
+      edges: const [
+        WorkflowEdge(from: a, to: b),
+        WorkflowEdge(from: a, to: c),
+      ],
+    );
 
-      final result = graph.addNode(node(n), a);
+    final result = graph.addNode(node(n), a);
 
-      expect(result.nodes.map((node) => node.id), [a, b, c, n]);
-      expect(result.edges.toSet(), {
-        const WorkflowEdge(from: a, to: n),
-        const WorkflowEdge(from: n, to: b),
-        const WorkflowEdge(from: n, to: c),
-      });
-    },
-  );
+    expect(result.nodes.map((node) => node.id), [a, b, c, n]);
+    expect(result.edges.toSet(), {
+      const WorkflowEdge(from: a, to: n),
+      const WorkflowEdge(from: n, to: b),
+      const WorkflowEdge(from: n, to: c),
+    });
+  });
 
   test('erhält das Bedingungs-Label einer gespleißten Kante', () {
     final graph = WorkflowGraph(
       nodes: [node(a), node(b)],
-      edges: const [
-        WorkflowEdge(from: a, to: b, conditionLabel: 'Ja'),
-      ],
+      edges: const [WorkflowEdge(from: a, to: b, conditionLabel: 'Ja')],
     );
 
     final result = graph.addNode(node(n), a);
 
     expect(
       result.edges,
-      containsAll(const [
-        WorkflowEdge(from: n, to: b, conditionLabel: 'Ja'),
-      ]),
+      containsAll(const [WorkflowEdge(from: n, to: b, conditionLabel: 'Ja')]),
     );
   });
 

@@ -1,3 +1,6 @@
+import {SQLiteFolderAncestry} from "../../features/files/infrastructure/local/sqlite-folder-ancestry.js";
+import {TriggerCycleGuard} from "../../features/scheduling/domain/usecases/trigger-cycle-guard.js";
+import {SQLiteTaskTriggerStore} from "../../features/scheduling/infrastructure/local/sqlite-task-trigger-store.js";
 import {type LocalRuntimeWorkspaceContext} from "./local-runtime-workspace-context.js";
 import path from "node:path";
 import {type RuntimeDatabase} from "../../db/database.js";
@@ -42,6 +45,7 @@ export function createLocalRuntimeRouteServices(options: {
   const {database, runtimeRoot} = options;
   const languageModelSecrets = new EncryptedSQLiteLanguageModelSecretStore(database, options.fieldCipher);
   const fileSettings = new SQLiteFileSettingsStore(database);
+  const taskDefinitions = new SQLiteTaskDefinitionStore(database);
   return {
     credentials: new LocalRuntimeAccessCredentialStore(database),
     documents: new SQLiteDocumentStore(database),
@@ -49,7 +53,10 @@ export function createLocalRuntimeRouteServices(options: {
     teamFiles: new LocalTeamFileStore(database, runtimeRoot, fileSettings, {
       publish: (event) => options.workspaceContext().fileEvents.publish(event),
     }),
-    taskDefinitions: new SQLiteTaskDefinitionStore(database),
+    taskDefinitions,
+    cycleGuard: new TriggerCycleGuard({
+      tasks: taskDefinitions, triggers: new SQLiteTaskTriggerStore(database), folders: new SQLiteFolderAncestry(database),
+    }),
     applicationLogs: new SQLiteLocalApplicationLogStore(database),
     languageModels: new SQLiteLanguageModelConfigurationStore(database, languageModelSecrets),
     languageModelDefaults: new SQLiteLanguageModelDefaultsStore(database),

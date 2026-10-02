@@ -9,16 +9,13 @@ void main() {
     expect(sheet.columnCount, 0);
   });
 
-  test(
-    'ein Blatt mit Zeilen, aber null Spalten gilt ebenfalls als leer '
-    '(z.B. wenn jede Zeile ohne eine einzige Zelle vorliegt)',
-    () {
-      const sheet = SpreadsheetSheet(name: 'Tabelle2', rows: [[], []]);
+  test('ein Blatt mit Zeilen, aber null Spalten gilt ebenfalls als leer '
+      '(z.B. wenn jede Zeile ohne eine einzige Zelle vorliegt)', () {
+    const sheet = SpreadsheetSheet(name: 'Tabelle2', rows: [[], []]);
 
-      expect(sheet.isEmpty, isTrue);
-      expect(sheet.columnCount, 0);
-    },
-  );
+    expect(sheet.isEmpty, isTrue);
+    expect(sheet.columnCount, 0);
+  });
 
   test('ein Blatt mit tatsächlichen Zellen gilt nicht als leer', () {
     const sheet = SpreadsheetSheet(

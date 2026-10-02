@@ -24,6 +24,7 @@ import '../../features/knowledge_base/presentation/cubits/knowledge_base_cubit.d
 import '../../features/schedule/presentation/cubits/event_target_options_cubit.dart';
 import '../../features/schedule/domain/repositories/task_trigger_repository.dart';
 import '../../features/schedule/domain/usecases/create_task_trigger.dart';
+import '../../features/schedule/domain/usecases/analyze_task_trigger.dart';
 import '../../features/schedule/domain/usecases/delete_task_trigger.dart';
 import '../../features/schedule/domain/usecases/set_task_trigger_enabled.dart';
 import '../../features/schedule/domain/usecases/watch_task_triggers.dart';
@@ -111,6 +112,9 @@ void configureStandaloneWorkspaceDependencies(GetIt locator) {
     ..registerLazySingleton(
       () => DeleteTaskTrigger(locator<TaskTriggerRepository>()),
     )
+    ..registerLazySingleton(
+      () => AnalyzeTaskTrigger(locator<TaskTriggerRepository>()),
+    )
     ..registerFactory(
       () => FilesCubit(
         locator<AuthRepository>(),
@@ -148,6 +152,7 @@ void configureStandaloneWorkspaceDependencies(GetIt locator) {
         setTaskTriggerEnabled: locator<SetTaskTriggerEnabled>(),
         deleteTaskTrigger: locator<DeleteTaskTrigger>(),
         taskRepository: locator<TaskRepository>(),
+        analyzeTaskTrigger: locator<AnalyzeTaskTrigger>(),
       ),
     )
     ..registerFactory(

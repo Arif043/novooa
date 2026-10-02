@@ -26,7 +26,13 @@ class WriteFileNodeConfig extends NodeConfig {
   WorkflowPrimitive get primitive => .writeFile;
 
   @override
-  List<Object?> get props => [fileName, contentType, fileId, folderId, contentTemplate];
+  List<Object?> get props => [
+    fileName,
+    contentType,
+    fileId,
+    folderId,
+    contentTemplate,
+  ];
 
   WriteFileNodeConfig copyWith({
     String? fileName,

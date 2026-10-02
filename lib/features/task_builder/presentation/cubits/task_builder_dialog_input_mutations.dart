@@ -63,6 +63,8 @@ extension TaskBuilderDialogInputMutations on TaskBuilderCubit {
   ) {
     final normalized = _normalizedOutputName(field.name);
     if (normalized.isEmpty) return field.copyWith(name: '');
-    return field.copyWith(name: _uniqueOutputName(graph, previousName, normalized));
+    return field.copyWith(
+      name: _uniqueOutputName(graph, previousName, normalized),
+    );
   }
 }

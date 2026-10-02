@@ -8,6 +8,8 @@ import '../../domain/entities/create_task_trigger_input.dart';
 import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../../domain/entities/task_trigger.dart';
+import '../../domain/entities/trigger_cycle_analysis.dart';
+import '../../domain/usecases/analyze_task_trigger.dart';
 import '../../domain/usecases/create_task_trigger.dart';
 import '../../domain/usecases/delete_task_trigger.dart';
 import '../../domain/usecases/set_task_trigger_enabled.dart';
@@ -21,12 +23,14 @@ class ScheduleCubit extends Cubit<ScheduleState> {
     required SetTaskTriggerEnabled setTaskTriggerEnabled,
     required DeleteTaskTrigger deleteTaskTrigger,
     required TaskRepository taskRepository,
+    AnalyzeTaskTrigger? analyzeTaskTrigger,
   }) : this._(
          watchTaskTriggers,
          createTaskTrigger,
          setTaskTriggerEnabled,
          deleteTaskTrigger,
          taskRepository,
+         analyzeTaskTrigger,
        );
 
   ScheduleCubit._(
@@ -35,6 +39,7 @@ class ScheduleCubit extends Cubit<ScheduleState> {
     this._setTaskTriggerEnabled,
     this._deleteTaskTrigger,
     this._taskRepository,
+    this._analyzeTaskTrigger,
   ) : super(const ScheduleState());
 
   final WatchTaskTriggers _watchTaskTriggers;
@@ -42,6 +47,7 @@ class ScheduleCubit extends Cubit<ScheduleState> {
   final SetTaskTriggerEnabled _setTaskTriggerEnabled;
   final DeleteTaskTrigger _deleteTaskTrigger;
   final TaskRepository _taskRepository;
+  final AnalyzeTaskTrigger? _analyzeTaskTrigger;
   StreamSubscription<List<TaskTrigger>>? _triggersSubscription;
   StreamSubscription<List<Task>>? _tasksSubscription;
   List<Task> _tasks = const [];
@@ -68,6 +74,24 @@ class ScheduleCubit extends Cubit<ScheduleState> {
         taskTitle: task.title,
         type: TriggerType.schedule,
         schedule: schedule,
+      ),
+    );
+  }
+
+  /// Prüft vorab auf Schleifen. Ohne Analyse (z. B. in der Cloud-Variante)
+  /// gibt es nichts zu melden.
+  Future<TriggerCycleAnalysis> analyzeEventTrigger(
+    Task task,
+    EventTriggerConfig event,
+  ) async {
+    final analyze = _analyzeTaskTrigger;
+    if (analyze == null) return TriggerCycleAnalysis.none;
+    return analyze(
+      CreateTaskTriggerInput(
+        taskId: task.id,
+        taskTitle: task.title,
+        type: TriggerType.event,
+        event: event,
       ),
     );
   }

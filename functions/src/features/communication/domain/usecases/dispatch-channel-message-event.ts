@@ -4,6 +4,7 @@ import {
   recipientFromEvent,
   senderFromEvent,
 } from "../entities/channel-message-event.js";
+import {startEventTriggerRun} from "../../../scheduling/domain/usecases/start-event-trigger-run.js";
 import {messageTargetMatches} from "../../../scheduling/domain/usecases/event-trigger-matching.js";
 import {type TaskTriggerStore, type EventTaskTrigger} from
   "../../../scheduling/domain/repositories/task-trigger-store.js";
@@ -38,13 +39,7 @@ async function dispatchTrigger(
 ): Promise<void> {
   if (!matches(trigger, input)) return;
   try {
-    const task = await ports.taskStore.loadTask(trigger.teamId, trigger.taskId);
-    const run = await ports.taskRunStore.enqueueTaskRun({
-      teamId: trigger.teamId, task, context: contextFrom(input.event),
-      input: {event: input.event}, trigger: {id: trigger.id, type: "event"},
-    });
-    await ports.taskRunDispatcher.dispatchTaskRun({teamId: trigger.teamId, runId: run.runId, mode: "start"});
-    await ports.triggerStore.markEventTriggerRan(trigger, run.runId);
+    await startEventTriggerRun(trigger, {context: contextFrom(input.event), event: input.event}, ports);
   } catch (error) {
     ports.onTriggerFailure?.(trigger, error);
   }

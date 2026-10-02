@@ -71,7 +71,11 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
         return config;
       }
       final previousName = config.structuredFields[fieldIndex].name;
-      final uniqueField = _uniqueStructuredField(task.graph, previousName, field);
+      final uniqueField = _uniqueStructuredField(
+        task.graph,
+        previousName,
+        field,
+      );
       return config.updateStructuredField(fieldIndex, uniqueField);
     });
   }
@@ -107,7 +111,9 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
   ) {
     final normalized = _normalizedOutputName(field.name);
     if (normalized.isEmpty) return field.copyWith(name: '');
-    return field.copyWith(name: _uniqueOutputName(graph, previousName, normalized));
+    return field.copyWith(
+      name: _uniqueOutputName(graph, previousName, normalized),
+    );
   }
 
   Future<void> addPromptStructuredField(NodeId nodeId) {

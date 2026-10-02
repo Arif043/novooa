@@ -15,6 +15,8 @@ export type FileEventDispatcherPorts = EventTriggerRunPorts & {
   folders: FolderAncestry;
   /** Ein fehlgeschlagener Trigger darf weder die Dateioperation noch andere Trigger stoppen. */
   onFailure?: (error: unknown, trigger?: EventTaskTrigger) => void;
+  /** Der Trigger steht schon in der Ursachenkette des Ereignisses: Er würde einen Zyklus schließen. */
+  onLoopPrevented?: (trigger: EventTaskTrigger, event: FileEvent) => void;
 };
 
 /** Startet alle aktiven Event-Trigger, die zu einem Datei-Ereignis passen. */
@@ -28,8 +30,8 @@ export class DispatchFileEvent implements FileEventPublisher {
         (trigger) => trigger.type === "event" && trigger.eventConfig.source === event.type,
       );
       if (candidates.length === 0) return;
-      const chain = await this.folderChainOf(event);
-      for (const trigger of candidates) await this.dispatch(trigger, event, chain);
+      const folderChain = await this.folderChainOf(event);
+      for (const trigger of candidates) await this.dispatch(trigger, event, folderChain);
     } catch (error) {
       this.ports.onFailure?.(error);
     }
@@ -40,10 +42,16 @@ export class DispatchFileEvent implements FileEventPublisher {
     return this.ports.folders.chainOf(event.teamId, event.folderId);
   }
 
-  private async dispatch(trigger: EventTaskTrigger, event: FileEvent, chain: string[]): Promise<void> {
-    if (!fileEventMatches(trigger.eventConfig, event, chain)) return;
+  private async dispatch(trigger: EventTaskTrigger, event: FileEvent, folderChain: string[]): Promise<void> {
+    if (!fileEventMatches(trigger.eventConfig, event, folderChain)) return;
+    if (event.triggerChain.includes(trigger.id)) {
+      this.ports.onLoopPrevented?.(trigger, event);
+      return;
+    }
     try {
-      await startEventTriggerRun(trigger, {context: contextFrom(event), event}, this.ports);
+      await startEventTriggerRun(
+        trigger, {context: contextFrom(event), event, chain: event.triggerChain}, this.ports,
+      );
     } catch (error) {
       this.ports.onFailure?.(error, trigger);
     }

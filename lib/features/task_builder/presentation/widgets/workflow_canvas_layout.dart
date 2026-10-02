@@ -291,10 +291,8 @@ class WorkflowCanvasLayout {
     )) {
       return _fieldLabels(
         structuredFields.map(
-          (field) => (
-            name: field.name,
-            type: structuredFieldOutputType(field.type),
-          ),
+          (field) =>
+              (name: field.name, type: structuredFieldOutputType(field.type)),
         ),
         (index) => StructuredFieldEditTarget(node.id, index),
       );
@@ -302,7 +300,8 @@ class WorkflowCanvasLayout {
     if (node.config case DialogInputNodeConfig(:final fields)) {
       return _fieldLabels(
         fields.map(
-          (field) => (name: field.name, type: dialogFieldOutputType(field.type)),
+          (field) =>
+              (name: field.name, type: dialogFieldOutputType(field.type)),
         ),
         (index) => DialogFieldEditTarget(node.id, index),
       );

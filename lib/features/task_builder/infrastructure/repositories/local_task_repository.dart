@@ -6,6 +6,7 @@ import '../../domain/entities/task.dart';
 import '../../domain/entities/task_run_failure.dart';
 import '../../domain/entities/task_run_start.dart';
 import '../../domain/repositories/task_repository.dart';
+import '../../domain/services/task_save_notice_bus.dart';
 import '../datasources/task_runner_datasource.dart';
 import '../datasources/task_runner_datasource_log.dart';
 import '../errors/task_runner_datasource_exception.dart';
@@ -14,11 +15,17 @@ import '../models/task_document_mapper.dart';
 import '../models/task_run_start_model.dart';
 
 class LocalTaskRepository implements TaskRepository {
-  LocalTaskRepository(this._client, this._runnerDatasource, this._channel);
+  LocalTaskRepository(
+    this._client,
+    this._runnerDatasource,
+    this._channel, [
+    this._notices,
+  ]);
 
   final WorkspaceApiClient _client;
   final TaskRunnerDatasource _runnerDatasource;
   final WorkspaceRealtimeChannel _channel;
+  final TaskSaveNoticeBus? _notices;
   final TaskDocumentMapper _mapper = TaskDocumentMapper();
 
   @override
@@ -26,11 +33,25 @@ class LocalTaskRepository implements TaskRepository {
       watchWorkspaceChannel('tasks', _loadTasks, _channel);
 
   @override
-  Future<void> saveTask(Task task) {
-    return _client.put(
-      '/v1/tasks/${Uri.encodeComponent(task.id)}',
-      _mapper.toDocument(task),
-    );
+  Future<void> saveTask(Task task) async {
+    try {
+      final response = await _client.put(
+        '/v1/tasks/${Uri.encodeComponent(task.id)}',
+        _mapper.toDocument(task),
+      );
+      _announceOutcome(task.id, response);
+    } on WorkspaceHttpException catch (error) {
+      if (error.statusCode == 400) {
+        _notices?.announceRejection(task.id, error.message);
+      }
+      rethrow;
+    }
+  }
+
+  void _announceOutcome(String taskId, Map<String, Object?> response) {
+    final warnings = response['warnings'];
+    if (warnings is! List || warnings.isEmpty) return _notices?.clear(taskId);
+    _notices?.announceWarnings(taskId, warnings.whereType<String>().toList());
   }
 
   @override

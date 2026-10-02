@@ -187,22 +187,61 @@ void main() {
     },
   );
 
-  test(
-    'zeigt für strukturierte Prompt-Ausgaben einen Chip pro Feld',
-    () {
-      const promptNode = WorkflowNode(
-        id: NodeId('prompt2'),
+  test('zeigt für strukturierte Prompt-Ausgaben einen Chip pro Feld', () {
+    const promptNode = WorkflowNode(
+      id: NodeId('prompt2'),
+      title: '',
+      description: '',
+      outputName: 'prompt2',
+      config: PromptNodeConfig(
+        instruction: '',
+        outputType: PromptOutputType.structured,
+        choices: [],
+        structuredFields: [
+          StructuredOutputField(name: 'Name', description: ''),
+          StructuredOutputField(name: 'Alter', description: ''),
+        ],
+      ),
+    );
+    const successor = WorkflowNode(
+      id: NodeId('next'),
+      title: '',
+      description: '',
+      config: StringInputNodeConfig(value: ''),
+    );
+    final layout = WorkflowCanvasLayout(
+      const WorkflowGraph(
+        nodes: [promptNode, successor],
+        edges: [WorkflowEdge(from: NodeId('prompt2'), to: NodeId('next'))],
+      ),
+    );
+    expect(
+      _texts(
+        layout.links
+            .firstWhere((link) => link.from == 'prompt2' && link.to == 'next')
+            .labels,
+      ),
+      ['Name', 'Alter'],
+    );
+  });
+
+  test('verlängert den Pfeil, je mehr Chips darauf gestapelt werden', () {
+    double gapFor(List<String> fieldNames) {
+      final promptNode = WorkflowNode(
+        id: const NodeId('prompt'),
         title: '',
         description: '',
-        outputName: 'prompt2',
+        outputName: 'prompt',
         config: PromptNodeConfig(
           instruction: '',
           outputType: PromptOutputType.structured,
-          choices: [],
-          structuredFields: [
-            StructuredOutputField(name: 'Name', description: ''),
-            StructuredOutputField(name: 'Alter', description: ''),
-          ],
+          choices: const [],
+          structuredFields: fieldNames.isEmpty
+              ? const [StructuredOutputField(name: '', description: '')]
+              : [
+                  for (final name in fieldNames)
+                    StructuredOutputField(name: name, description: ''),
+                ],
         ),
       );
       const successor = WorkflowNode(
@@ -212,70 +251,23 @@ void main() {
         config: StringInputNodeConfig(value: ''),
       );
       final layout = WorkflowCanvasLayout(
-        const WorkflowGraph(
+        WorkflowGraph(
           nodes: [promptNode, successor],
-          edges: [WorkflowEdge(from: NodeId('prompt2'), to: NodeId('next'))],
+          edges: const [
+            WorkflowEdge(from: NodeId('prompt'), to: NodeId('next')),
+          ],
         ),
       );
-      expect(
-        _texts(
-          layout.links
-              .firstWhere(
-                (link) => link.from == 'prompt2' && link.to == 'next',
-              )
-              .labels,
-        ),
-        ['Name', 'Alter'],
-      );
-    },
-  );
+      return layout.rectangles['next']!.top -
+          layout.rectangles['prompt']!.bottom;
+    }
 
-  test(
-    'verlängert den Pfeil, je mehr Chips darauf gestapelt werden',
-    () {
-      double gapFor(List<String> fieldNames) {
-        final promptNode = WorkflowNode(
-          id: const NodeId('prompt'),
-          title: '',
-          description: '',
-          outputName: 'prompt',
-          config: PromptNodeConfig(
-            instruction: '',
-            outputType: PromptOutputType.structured,
-            choices: const [],
-            structuredFields: fieldNames.isEmpty
-                ? const [StructuredOutputField(name: '', description: '')]
-                : [
-                    for (final name in fieldNames)
-                      StructuredOutputField(name: name, description: ''),
-                  ],
-          ),
-        );
-        const successor = WorkflowNode(
-          id: NodeId('next'),
-          title: '',
-          description: '',
-          config: StringInputNodeConfig(value: ''),
-        );
-        final layout = WorkflowCanvasLayout(
-          WorkflowGraph(
-            nodes: [promptNode, successor],
-            edges: const [
-              WorkflowEdge(from: NodeId('prompt'), to: NodeId('next')),
-            ],
-          ),
-        );
-        return layout.rectangles['next']!.top -
-            layout.rectangles['prompt']!.bottom;
-      }
-
-      final oneLabelGap = gapFor([]);
-      final twoLabelGap = gapFor(['Name', 'Alter']);
-      final threeLabelGap = gapFor(['Name', 'Alter', 'Beruf']);
-      expect(twoLabelGap, greaterThan(oneLabelGap));
-      expect(threeLabelGap, greaterThan(twoLabelGap));
-    },
-  );
+    final oneLabelGap = gapFor([]);
+    final twoLabelGap = gapFor(['Name', 'Alter']);
+    final threeLabelGap = gapFor(['Name', 'Alter', 'Beruf']);
+    expect(twoLabelGap, greaterThan(oneLabelGap));
+    expect(threeLabelGap, greaterThan(twoLabelGap));
+  });
 
   test(
     'every branch ends with an insertion and continuation follows the longest nested branch',

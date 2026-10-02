@@ -78,40 +78,39 @@ void main() {
         );
       });
 
-      await tester.pumpWidget(_host(_saveDocumentNode(outputName: 'speichern1')));
+      await tester.pumpWidget(
+        _host(_saveDocumentNode(outputName: 'speichern1')),
+      );
       await tester.tap(find.text('created'));
 
       expect(copied, ['{{speichern1.created}}']);
     },
   );
 
-  testWidgets(
-    'kopiert die flache Referenz eines strukturierten Feldes ohne '
-    'Knotennamen beim Antippen',
-    (tester) async {
-      final copied = <String>[];
+  testWidgets('kopiert die flache Referenz eines strukturierten Feldes ohne '
+      'Knotennamen beim Antippen', (tester) async {
+    final copied = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied.add((call.arguments as Map)['text'] as String);
+        }
+        return null;
+      },
+    );
+    addTearDown(() {
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
         SystemChannels.platform,
-        (call) async {
-          if (call.method == 'Clipboard.setData') {
-            copied.add((call.arguments as Map)['text'] as String);
-          }
-          return null;
-        },
+        null,
       );
-      addTearDown(() {
-        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-          SystemChannels.platform,
-          null,
-        );
-      });
+    });
 
-      await tester.pumpWidget(_host(_structuredPromptNode()));
-      await tester.tap(find.text('titel'));
+    await tester.pumpWidget(_host(_structuredPromptNode()));
+    await tester.tap(find.text('titel'));
 
-      expect(copied, ['{{titel}}']);
-    },
-  );
+    expect(copied, ['{{titel}}']);
+  });
 }
 
 Widget _host(WorkflowNode node) {

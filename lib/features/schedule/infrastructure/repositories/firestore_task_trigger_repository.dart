@@ -8,6 +8,7 @@ import '../models/event_trigger_config_mapper.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../../domain/repositories/task_trigger_repository.dart';
 import '../../domain/entities/task_trigger.dart';
+import '../../domain/entities/trigger_cycle_analysis.dart';
 import '../models/task_trigger_model.dart';
 import 'schedule_next_run_calculator.dart';
 
@@ -23,6 +24,14 @@ class FirestoreTaskTriggerRepository implements TaskTriggerRepository {
   final TeamRepository _teamRepository;
   final ScheduleNextRunCalculator _nextRunCalculator =
       const ScheduleNextRunCalculator();
+
+  /// Datei-Ereignisse und damit Schleifen gibt es nur in der lokalen Runtime.
+  @override
+  Future<TriggerCycleAnalysis> analyzeTrigger(
+    CreateTaskTriggerInput input,
+  ) async {
+    return TriggerCycleAnalysis.none;
+  }
 
   @override
   Stream<List<TaskTrigger>> watchTriggers() {

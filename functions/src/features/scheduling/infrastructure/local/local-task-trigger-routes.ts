@@ -5,11 +5,14 @@ import {randomUUID} from "node:crypto";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {tasks, taskTriggers} from "../../../../db/schema.js";
 import {ErrorResponse, IdParams, ItemsOf, JsonObject, NonEmptyString} from "../../../../shared/local/local-runtime-http-schemas.js";
-import {invalidResponse, LocalTaskTriggerError, triggerFromRequest, triggerFromRow} from "./local-task-trigger-http-support.js";
+import {eventTriggerConfigFrom} from "../../domain/entities/event-trigger-config.js";
+import {type TriggerCycleGuard} from "../../domain/usecases/trigger-cycle-guard.js";
+import {invalidResponse, LocalTaskTriggerError, triggerFromRequest, triggerFromRow, type TriggerInput} from "./local-task-trigger-http-support.js";
 
 export type TaskTriggerRoutesOptions = {
   database: RuntimeExecutor;
   notifier: {publish(topic: string): void};
+  cycleGuard: TriggerCycleGuard;
 };
 
 const Timestamp = Type.Union([Type.String(), Type.Null()]);
@@ -28,7 +31,7 @@ const CreateTrigger = Type.Object({
 const TriggerParams = IdParams("triggerId");
 const TriggerResponses = {200: TaskTrigger, 400: ErrorResponse, 404: ErrorResponse};
 
-export const taskTriggerRoutes: FastifyPluginAsyncTypebox<TaskTriggerRoutesOptions> = async (app, {database, notifier}) => {
+export const taskTriggerRoutes: FastifyPluginAsyncTypebox<TaskTriggerRoutesOptions> = async (app, {database, notifier, cycleGuard}) => {
   app.get("/v1/task-triggers", {schema: {response: {200: ItemsOf(TaskTrigger)}}}, async (request) => {
     const rows = await triggerQuery(database).where(eq(taskTriggers.team_id, request.workspace.teamId))
       .orderBy(sql`${taskTriggers.next_run_at} IS NULL`, taskTriggers.next_run_at);
@@ -42,6 +45,8 @@ export const taskTriggerRoutes: FastifyPluginAsyncTypebox<TaskTriggerRoutesOptio
         const input = triggerFromRequest(request.body);
         await ensureTask(database, teamId, input.taskId);
         const id = randomUUID();
+        const blocked = input.enabled ? await blockedReason(cycleGuard, teamId, id, input) : null;
+        if (blocked !== null) return reply.code(400).send({error: blocked});
         await database.insert(taskTriggers).values({id, team_id: teamId, task_id: input.taskId, type: input.type,
           enabled: input.enabled ? 1 : 0, config_json: JSON.stringify(input.config),
           event_config_json: JSON.stringify(input.eventConfig), policy_json: JSON.stringify(input.policy),
@@ -53,10 +58,27 @@ export const taskTriggerRoutes: FastifyPluginAsyncTypebox<TaskTriggerRoutesOptio
       }
     });
 
+  /** Vorabprüfung für das UI: meldet Schleifen, ohne den Trigger anzulegen. */
+  app.post("/v1/task-triggers/analysis", {schema: {body: CreateTrigger, response: {200: CycleAnalysis, 400: ErrorResponse}}},
+    async (request, reply) => {
+      try {
+        const input = triggerFromRequest(request.body);
+        await ensureTask(database, request.workspace.teamId, input.taskId);
+        if (input.type !== "event") return {blocked: null, warnings: []};
+        return await cycleGuard.checkTrigger(request.workspace.teamId, candidateFrom("preview", input));
+      } catch (error) {
+        return invalidResponse(error, reply);
+      }
+    });
+
   app.put("/v1/task-triggers/:triggerId/enabled", {
     schema: {params: TriggerParams, body: Type.Object({enabled: Type.Boolean()}), response: TriggerResponses},
   }, async (request, reply) => {
     const {teamId} = request.workspace;
+    if (request.body.enabled) {
+      const blocked = await blockedReasonForStored(database, cycleGuard, teamId, request.params.triggerId);
+      if (blocked !== null) return reply.code(400).send({error: blocked});
+    }
     await database.update(taskTriggers).set({enabled: request.body.enabled ? 1 : 0, updated_at: sql`CURRENT_TIMESTAMP`})
       .where(and(eq(taskTriggers.team_id, teamId), eq(taskTriggers.id, request.params.triggerId)));
     notifier.publish("task-triggers");
@@ -71,6 +93,27 @@ export const taskTriggerRoutes: FastifyPluginAsyncTypebox<TaskTriggerRoutesOptio
       return reply.code(204).send();
     });
 };
+
+const CycleAnalysis = Type.Object({blocked: Type.Union([Type.String(), Type.Null()]), warnings: Type.Array(Type.String())});
+
+function candidateFrom(id: string, input: TriggerInput) {
+  return {id, taskId: input.taskId, config: eventTriggerConfigFrom(input.eventConfig)};
+}
+
+async function blockedReason(guard: TriggerCycleGuard, teamId: string, id: string, input: TriggerInput) {
+  if (input.type !== "event") return null;
+  return (await guard.checkTrigger(teamId, candidateFrom(id, input))).blocked;
+}
+
+async function blockedReasonForStored(
+  database: RuntimeExecutor, guard: TriggerCycleGuard, teamId: string, triggerId: string,
+): Promise<string | null> {
+  const row = await database.select({task_id: taskTriggers.task_id, type: taskTriggers.type, event_config_json: taskTriggers.event_config_json})
+    .from(taskTriggers).where(and(eq(taskTriggers.team_id, teamId), eq(taskTriggers.id, triggerId))).get();
+  if (row === undefined || row.type !== "event") return null;
+  const config = eventTriggerConfigFrom(JSON.parse(row.event_config_json));
+  return (await guard.checkTrigger(teamId, {id: triggerId, taskId: row.task_id, config})).blocked;
+}
 
 async function ensureTask(database: RuntimeExecutor, teamId: string, taskId: string): Promise<void> {
   const task = await database.select({id: tasks.id}).from(tasks).where(and(eq(tasks.team_id, teamId), eq(tasks.id, taskId))).get();

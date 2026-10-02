@@ -346,8 +346,7 @@ class _TemplateExpressionPickerState extends State<_TemplateExpressionPicker> {
                   label: const Text('Feste Felder'),
                   avatar: const Icon(Icons.tune, size: 16),
                   selected: _showSecondary,
-                  onSelected: (value) =>
-                      setState(() => _showSecondary = value),
+                  onSelected: (value) => setState(() => _showSecondary = value),
                 ),
               ),
               const SizedBox(height: 8),

@@ -77,29 +77,32 @@ void main() {
       expect(predecessor?.id, promptId);
     });
 
-    test('findet den Vorgänger innerhalb eines "Für jedes Element"-Graphen', () {
-      const promptId = NodeId('prompt.1');
-      const conditionalId = NodeId('conditional.2');
-      final nestedGraph = WorkflowGraph(
-        nodes: [_promptNode(promptId), _conditionalNode(conditionalId)],
-        edges: [WorkflowEdge(from: promptId, to: conditionalId)],
-      );
-      final rootGraph = WorkflowGraph(
-        nodes: [
-          WorkflowNode(
-            id: const NodeId('root.foreach'),
-            title: '',
-            description: '',
-            config: ForEachNodeConfig(itemsPointer: '', graph: nestedGraph),
-          ),
-        ],
-        edges: const [],
-      );
+    test(
+      'findet den Vorgänger innerhalb eines "Für jedes Element"-Graphen',
+      () {
+        const promptId = NodeId('prompt.1');
+        const conditionalId = NodeId('conditional.2');
+        final nestedGraph = WorkflowGraph(
+          nodes: [_promptNode(promptId), _conditionalNode(conditionalId)],
+          edges: [WorkflowEdge(from: promptId, to: conditionalId)],
+        );
+        final rootGraph = WorkflowGraph(
+          nodes: [
+            WorkflowNode(
+              id: const NodeId('root.foreach'),
+              title: '',
+              description: '',
+              config: ForEachNodeConfig(itemsPointer: '', graph: nestedGraph),
+            ),
+          ],
+          edges: const [],
+        );
 
-      final predecessor = directPredecessorOf(rootGraph, conditionalId);
+        final predecessor = directPredecessorOf(rootGraph, conditionalId);
 
-      expect(predecessor?.id, promptId);
-    });
+        expect(predecessor?.id, promptId);
+      },
+    );
   });
 }
 

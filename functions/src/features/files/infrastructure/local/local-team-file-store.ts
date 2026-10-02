@@ -43,7 +43,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
     await writeLocalFile(this.rootDirectory, file.storagePath, input.content);
     await this.writeMetadata(input.teamId, file);
     await this.rotateVersions(input.teamId, file);
-    await this.events.publish(writtenEventFrom(input.teamId, file));
+    await this.events.publish(writtenEventFrom(input.teamId, file, input.triggerChain ?? []));
     return file;
   }
 
@@ -164,12 +164,12 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
   }
 }
 
-function writtenEventFrom(teamId: string, file: WrittenFile): FileEvent {
+function writtenEventFrom(teamId: string, file: WrittenFile, triggerChain: readonly string[]): FileEvent {
   return {
     type: file.isNewFile ? "fileCreated" : "fileVersionCreated",
     teamId, fileId: file.fileId, versionId: file.versionId, displayName: file.displayName,
     contentType: file.contentType, sizeBytes: file.sizeBytes, folderId: file.folderId,
-    occurredAt: new Date().toISOString(),
+    occurredAt: new Date().toISOString(), triggerChain,
   };
 }
 
@@ -180,7 +180,7 @@ function deletedEventFrom(
   return {
     type: "fileDeleted", teamId, fileId: file.id, versionId: null, displayName: file.display_name,
     contentType: file.content_type, sizeBytes: file.size_bytes, folderId: file.folder_id,
-    occurredAt: new Date().toISOString(),
+    occurredAt: new Date().toISOString(), triggerChain: [],
   };
 }
 

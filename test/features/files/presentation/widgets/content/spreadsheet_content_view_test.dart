@@ -9,7 +9,9 @@ import 'package:syscat2/features/files/presentation/widgets/content/spreadsheet_
 void main() {
   Future<void> pump(WidgetTester tester, Uint8List bytes) async {
     await tester.pumpWidget(
-      MaterialApp(home: Scaffold(body: SpreadsheetContentView(bytes: bytes))),
+      MaterialApp(
+        home: Scaffold(body: SpreadsheetContentView(bytes: bytes)),
+      ),
     );
     // Parsing now runs on a real background isolate (`compute`) — a plain
     // `pump()`/`pumpAndSettle()` can't drive that (they only advance
@@ -50,13 +52,9 @@ void main() {
     },
   );
 
-  testWidgets('zeigt Zellinhalte einer gültigen XLSX-Tabelle', (
-    tester,
-  ) async {
+  testWidgets('zeigt Zellinhalte einer gültigen XLSX-Tabelle', (tester) async {
     final workbook = excel_lib.Excel.createExcel();
-    workbook['Sheet1'].cell(_at(0, 0)).value = excel_lib.TextCellValue(
-      'Kunde',
-    );
+    workbook['Sheet1'].cell(_at(0, 0)).value = excel_lib.TextCellValue('Kunde');
 
     await pump(tester, _encode(workbook));
 

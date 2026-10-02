@@ -1,3 +1,4 @@
+import {triggerChainInputKey} from "../../../scheduling/domain/entities/trigger-chain.js";
 import {messageTargetMatches} from "../../../scheduling/domain/usecases/event-trigger-matching.js";
 import {type TaskRunStore} from "../../../task_execution/domain/repositories/task-run-store.js";
 import {type TaskRunDispatcher} from
@@ -87,6 +88,7 @@ async function enqueueTriggerRun(
       context: contextFrom(input.event),
       input: {
         event: input.event,
+        [triggerChainInputKey]: [trigger.id],
       },
       trigger: {id: trigger.id, type: "event"},
     });

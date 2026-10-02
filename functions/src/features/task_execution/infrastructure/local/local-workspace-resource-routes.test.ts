@@ -13,12 +13,13 @@ import {fileResourceRoutes} from "../../../files/infrastructure/local/local-file
 import {SQLiteFileSettingsStore} from "../../../files/infrastructure/local/sqlite-file-settings-store.js";
 import {LocalTeamFileStore} from "../../../files/infrastructure/local/local-team-file-store.js";
 import {knowledgeNoteRoutes} from "../../../knowledge_base/infrastructure/local/local-knowledge-note-routes.js";
+import {cycleGuardFor} from "../../../scheduling/domain/usecases/trigger-cycle-guard-test-support.js";
 import {taskTriggerRoutes} from "../../../scheduling/infrastructure/local/local-task-trigger-routes.js";
 
 test("persists local knowledge notes and task triggers", async (t) => {
   const database = await databaseForResources(t);
   const notes = testingRoutes(knowledgeNoteRoutes, {database, notifier: new LocalRuntimeRealtimeNotifier()});
-  const triggers = testingRoutes(taskTriggerRoutes, {database, notifier: new LocalRuntimeRealtimeNotifier()});
+  const triggers = testingRoutes(taskTriggerRoutes, {database, notifier: new LocalRuntimeRealtimeNotifier(), cycleGuard: cycleGuardFor(database)});
 
   const createdNote = await notes.handle({
     method: "POST", url: "/v1/knowledge-notes",
@@ -118,6 +119,7 @@ test("publishes file events and deletes a file with all versions", async (t) => 
   try {
     const first = await store.writeTeamFile({
       teamId: "team-1", fileName: "notiz.txt", contentType: "text/plain", content: "1", targetFileId: null,
+      triggerChain: ["trigger-a"],
     });
     await store.writeTeamFile({
       teamId: "team-1", fileName: "notiz.txt", contentType: "text/plain", content: "2", targetFileId: first.fileId,
@@ -126,6 +128,8 @@ test("publishes file events and deletes a file with all versions", async (t) => 
     const missing = await store.deleteTeamFile("team-1", first.fileId);
 
     assert.deepEqual(events.map((event) => event.type), ["fileCreated", "fileVersionCreated", "fileDeleted"]);
+    assert.deepEqual(events[0].triggerChain, ["trigger-a"]);
+    assert.deepEqual(events[1].triggerChain, []);
     assert.equal(events[2].displayName, "notiz.txt");
     assert.equal(events[2].versionId, null);
     assert.equal(deleted, true);

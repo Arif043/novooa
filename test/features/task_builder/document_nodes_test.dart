@@ -90,42 +90,39 @@ void main() {
     await cubit.close();
   });
 
-  testWidgets(
-    'zeigt ein Freitextfeld für die Sammlung ohne registriertes '
-    'DataRepository (Cloud-Profil)',
-    (tester) async {
-      // `TableFromCollectionWidget` liest `WorkspaceCapabilities` aus dem
-      // globalen serviceLocator — ohne eigene Registrierung hier würde ein
-      // Wert aus einem anderen Test leaken oder das Auflösen schlicht
-      // fehlschlagen.
-      serviceLocator.registerSingleton(
-        const WorkspaceCapabilities(
-          assistant: true,
-          dataCollections: false,
-          modelCatalog: false,
-          push: false,
-        ),
-      );
-      addTearDown(() => serviceLocator.unregister<WorkspaceCapabilities>());
-      final cubit = await _cubitFor(_tableTask());
-      await tester.pumpWidget(
-        _host(
-          cubit,
-          (task) => TableFromCollectionWidget(node: task.nodes.single),
-        ),
-      );
+  testWidgets('zeigt ein Freitextfeld für die Sammlung ohne registriertes '
+      'DataRepository (Cloud-Profil)', (tester) async {
+    // `TableFromCollectionWidget` liest `WorkspaceCapabilities` aus dem
+    // globalen serviceLocator — ohne eigene Registrierung hier würde ein
+    // Wert aus einem anderen Test leaken oder das Auflösen schlicht
+    // fehlschlagen.
+    serviceLocator.registerSingleton(
+      const WorkspaceCapabilities(
+        assistant: true,
+        dataCollections: false,
+        modelCatalog: false,
+        push: false,
+      ),
+    );
+    addTearDown(() => serviceLocator.unregister<WorkspaceCapabilities>());
+    final cubit = await _cubitFor(_tableTask());
+    await tester.pumpWidget(
+      _host(
+        cubit,
+        (task) => TableFromCollectionWidget(node: task.nodes.single),
+      ),
+    );
 
-      expect(find.text('Sammlung als Tabelle'), findsOneWidget);
-      expect(find.byType(TextField), findsOneWidget);
-      await tester.enterText(find.byType(TextField), 'bestellungen');
-      await tester.pump();
+    expect(find.text('Sammlung als Tabelle'), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'bestellungen');
+    await tester.pump();
 
-      final config =
-          _taskOf(cubit).nodes.single.config as TableFromCollectionNodeConfig;
-      expect(config.collectionName, 'bestellungen');
-      await cubit.close();
-    },
-  );
+    final config =
+        _taskOf(cubit).nodes.single.config as TableFromCollectionNodeConfig;
+    expect(config.collectionName, 'bestellungen');
+    await cubit.close();
+  });
 
   testWidgets('zeigt und erweitert Suchbedingungen', (tester) async {
     final cubit = await _cubitFor(_lookupTask());

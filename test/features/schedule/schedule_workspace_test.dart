@@ -11,6 +11,7 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/schedule/domain/entities/schedule_config.dart';
 import 'package:syscat2/features/schedule/domain/entities/task_trigger.dart';
 import 'package:syscat2/features/schedule/domain/entities/event_trigger_config.dart';
+import 'package:syscat2/features/schedule/domain/entities/trigger_cycle_analysis.dart';
 import 'package:syscat2/features/schedule/presentation/cubits/schedule_cubit.dart';
 import 'package:syscat2/features/schedule/presentation/cubits/schedule_state.dart';
 import 'package:syscat2/features/schedule/presentation/pages/schedule_page.dart';
@@ -28,6 +29,7 @@ class _Cubit extends Fake implements ScheduleCubit {
   bool deleted = false;
   bool fail = false;
   int creates = 0;
+  TriggerCycleAnalysis analysis = TriggerCycleAnalysis.none;
   Completer<void>? pending;
   @override
   Future<void> setEnabled(TaskTrigger trigger, bool value) async {
@@ -45,6 +47,12 @@ class _Cubit extends Fake implements ScheduleCubit {
     if (pending != null) await pending!.future;
     if (fail) throw StateError('offline');
   }
+
+  @override
+  Future<TriggerCycleAnalysis> analyzeEventTrigger(
+    Task task,
+    EventTriggerConfig event,
+  ) async => analysis;
 
   @override
   Future<void> createEventTrigger(Task task, EventTriggerConfig event) async {
@@ -244,6 +252,69 @@ void main() {
     await tester.tap(find.text('Löschen'));
     await tester.pumpAndSettle();
     expect(cubit.deleted, true);
+  });
+
+  Future<_Cubit> openEventForm(
+    WidgetTester tester,
+    TriggerCycleAnalysis analysis,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final cubit = _Cubit(
+      ScheduleState(status: ScheduleStatus.ready, tasks: [Task.empty()]),
+    )..analysis = analysis;
+    await tester.pumpWidget(_app(cubit));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Auslöser hinzufügen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ereignis'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Auslöser erstellen'));
+    return cubit;
+  }
+
+  testWidgets('eine Selbstschleife verhindert das Erstellen und wird erklärt', (
+    tester,
+  ) async {
+    final cubit = await openEventForm(
+      tester,
+      const TriggerCycleAnalysis(
+        blocked: 'Die Aufgabe würde sich selbst starten.',
+      ),
+    );
+
+    await tester.tap(find.text('Auslöser erstellen'));
+    await tester.pumpAndSettle();
+
+    expect(cubit.creates, 0);
+    expect(find.text('Die Aufgabe würde sich selbst starten.'), findsOneWidget);
+    expect(find.byType(CreateScheduleTriggerDialog), findsOneWidget);
+  });
+
+  testWidgets('eine mögliche Schleife muss bewusst bestätigt werden', (
+    tester,
+  ) async {
+    final cubit = await openEventForm(
+      tester,
+      const TriggerCycleAnalysis(warnings: ['Mögliche Schleife: A → B → A.']),
+    );
+
+    await tester.tap(find.text('Auslöser erstellen'));
+    await tester.pumpAndSettle();
+    expect(find.text('Mögliche Schleife: A → B → A.'), findsOneWidget);
+    await tester.tap(find.text('Zurück'));
+    await tester.pumpAndSettle();
+    expect(cubit.creates, 0);
+    expect(find.byType(CreateScheduleTriggerDialog), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Auslöser erstellen'));
+    await tester.tap(find.text('Auslöser erstellen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Trotzdem erstellen'));
+    await tester.pumpAndSettle();
+
+    expect(cubit.creates, 1);
+    expect(find.byType(CreateScheduleTriggerDialog), findsNothing);
   });
 
   testWidgets('form prevents double submission and preserves failed input', (

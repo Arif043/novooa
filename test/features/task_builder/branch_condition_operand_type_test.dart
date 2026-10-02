@@ -131,18 +131,15 @@ void main() {
     },
   );
 
-  test(
-    'gemischter Text mit eingebettetem Ausdruck (nicht isoliert) wird wie '
-    'ein Literal behandelt (StringTypeHint), da der Rohwert des '
-    'eingebetteten Ausdrucks zur Bauzeit nicht erhalten bleibt',
-    () {
-      final graph = _graphWith(_structuredPromptNode());
+  test('gemischter Text mit eingebettetem Ausdruck (nicht isoliert) wird wie '
+      'ein Literal behandelt (StringTypeHint), da der Rohwert des '
+      'eingebetteten Ausdrucks zur Bauzeit nicht erhalten bleibt', () {
+    final graph = _graphWith(_structuredPromptNode());
 
-      final hint = operandTypeHintFor('Summe: {{summe}} Euro', graph);
+    final hint = operandTypeHintFor('Summe: {{summe}} Euro', graph);
 
-      expect(hint, isA<StringTypeHint>());
-    },
-  );
+    expect(hint, isA<StringTypeHint>());
+  });
 
   test('ein leerer Operand liefert UnknownTypeHint', () {
     final hint = operandTypeHintFor('', WorkflowGraph.empty());

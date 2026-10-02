@@ -63,30 +63,27 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets(
-    'Doppelklick auf den Ausgabenamen-Chip macht ihn editierbar und '
-    'übernimmt den neuen Namen via updateNodeOutputName',
-    (tester) async {
-      final cubit = await pumpCanvas(tester, _taskWithOutputNameEdge());
+  testWidgets('Doppelklick auf den Ausgabenamen-Chip macht ihn editierbar und '
+      'übernimmt den neuen Namen via updateNodeOutputName', (tester) async {
+    final cubit = await pumpCanvas(tester, _taskWithOutputNameEdge());
 
-      expect(find.text('ausgabe'), findsOneWidget);
-      expect(find.byType(TextField), findsNothing);
+    expect(find.text('ausgabe'), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
 
-      await doubleTap(tester, find.text('ausgabe'));
+    await doubleTap(tester, find.text('ausgabe'));
 
-      expect(find.byType(TextField), findsOneWidget);
-      await tester.enterText(find.byType(TextField), 'umbenannt');
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsOneWidget);
+    await tester.enterText(find.byType(TextField), 'umbenannt');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
 
-      final updated = (cubit.state as TaskBuilderLoaded).editingTask.nodes
-          .firstWhere((node) => node.id == const NodeId('quelle'));
-      expect(updated.outputName, 'umbenannt');
-      expect(find.byType(TextField), findsNothing);
-      expect(find.text('umbenannt'), findsOneWidget);
-      await cubit.close();
-    },
-  );
+    final updated = (cubit.state as TaskBuilderLoaded).editingTask.nodes
+        .firstWhere((node) => node.id == const NodeId('quelle'));
+    expect(updated.outputName, 'umbenannt');
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text('umbenannt'), findsOneWidget);
+    await cubit.close();
+  });
 
   testWidgets(
     'Doppelklick auf ein Bedingungs-Branch-Label ("Ja") benennt genau '

@@ -150,7 +150,11 @@ class _DialogActions extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _DialogAction(label: 'Abbrechen', isDestructive: true, onPressed: onCancel),
+            child: _DialogAction(
+              label: 'Abbrechen',
+              isDestructive: true,
+              onPressed: onCancel,
+            ),
           ),
           Container(
             width: 1,

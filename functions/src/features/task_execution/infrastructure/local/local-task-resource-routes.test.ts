@@ -6,13 +6,14 @@ import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-su
 import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 import {type TaskDefinition} from "../../domain/entities/task.js";
 import {type TaskDefinitionStore} from "../../domain/repositories/task-definition-store.js";
+import {permissiveCycleGuard} from "../../../scheduling/domain/usecases/trigger-cycle-guard-test-support.js";
 import {taskActivityRoutes} from "./local-task-activity-routes.js";
 import {taskDefinitionRoutes} from "./local-task-definition-routes.js";
 import {SQLiteTaskDefinitionStore} from "./sqlite-task-definition-store.js";
 
 test("stores and lists a local task definition", async () => {
   const database = await databaseWithTaskTables();
-  const handler = testingRoutes(taskDefinitionRoutes, {store: new SQLiteTaskDefinitionStore(database), notifier: new LocalRuntimeRealtimeNotifier()});
+  const handler = testingRoutes(taskDefinitionRoutes, {store: new SQLiteTaskDefinitionStore(database), notifier: new LocalRuntimeRealtimeNotifier(), cycleGuard: permissiveCycleGuard});
 
   const saved = await handler.handle({body: taskBody(), method: "PUT", url: "/v1/tasks/task-1"});
   const listed = await handler.handle({body: {}, method: "GET", url: "/v1/tasks"});
@@ -24,7 +25,7 @@ test("stores and lists a local task definition", async () => {
 
 test("stores an empty local task definition", async () => {
   const database = await databaseWithTaskTables();
-  const handler = testingRoutes(taskDefinitionRoutes, {store: new SQLiteTaskDefinitionStore(database), notifier: new LocalRuntimeRealtimeNotifier()});
+  const handler = testingRoutes(taskDefinitionRoutes, {store: new SQLiteTaskDefinitionStore(database), notifier: new LocalRuntimeRealtimeNotifier(), cycleGuard: permissiveCycleGuard});
   const draft = {
     id: "draft-1",
     title: "Neue Aufgabe",
@@ -41,7 +42,7 @@ test("stores an empty local task definition", async () => {
 
 test("uses the task definition store without a SQL dependency", async () => {
   const store = new MemoryTaskDefinitionStore();
-  const handler = testingRoutes(taskDefinitionRoutes, {store: store, notifier: new LocalRuntimeRealtimeNotifier()});
+  const handler = testingRoutes(taskDefinitionRoutes, {store: store, notifier: new LocalRuntimeRealtimeNotifier(), cycleGuard: permissiveCycleGuard});
 
   const saved = await handler.handle({body: taskBody(), method: "PUT", url: "/v1/tasks/task-1"});
   const listed = await handler.handle({body: {}, method: "GET", url: "/v1/tasks"});

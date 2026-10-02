@@ -68,6 +68,7 @@ import 'package:syscat2/features/notifications/infrastructure/services/fcm_boots
 import 'package:syscat2/features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import 'package:syscat2/features/schedule/domain/repositories/task_trigger_repository.dart';
 import 'package:syscat2/features/schedule/domain/usecases/create_task_trigger.dart';
+import 'package:syscat2/features/schedule/domain/usecases/analyze_task_trigger.dart';
 import 'package:syscat2/features/schedule/domain/usecases/delete_task_trigger.dart';
 import 'package:syscat2/features/schedule/domain/usecases/set_task_trigger_enabled.dart';
 import 'package:syscat2/features/schedule/domain/usecases/watch_task_triggers.dart';
@@ -425,6 +426,9 @@ void _configureCloudDependencies() {
       () => DeleteTaskTrigger(serviceLocator<TaskTriggerRepository>()),
     )
     ..registerLazySingleton(
+      () => AnalyzeTaskTrigger(serviceLocator<TaskTriggerRepository>()),
+    )
+    ..registerLazySingleton(
       () => WatchCommunicationChannels(
         serviceLocator<CommunicationChannelRepository>(),
       ),
@@ -668,6 +672,7 @@ void _configureCloudDependencies() {
         setTaskTriggerEnabled: serviceLocator<SetTaskTriggerEnabled>(),
         deleteTaskTrigger: serviceLocator<DeleteTaskTrigger>(),
         taskRepository: serviceLocator<TaskRepository>(),
+        analyzeTaskTrigger: serviceLocator<AnalyzeTaskTrigger>(),
       ),
     )
     ..registerFactory(

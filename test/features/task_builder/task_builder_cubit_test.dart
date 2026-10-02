@@ -151,21 +151,18 @@ void main() {
     },
   );
 
-  test(
-    'addNode vergibt notificationSend keinen Ausgabenamen — reiner '
-    'Seiteneffekt ohne fachlichen Rückgabewert',
-    () async {
-      final repository = _InMemoryTaskRepository(_taskWithTwoPromptNodes());
-      final cubit = TaskBuilderCubit(repository: repository);
+  test('addNode vergibt notificationSend keinen Ausgabenamen — reiner '
+      'Seiteneffekt ohne fachlichen Rückgabewert', () async {
+    final repository = _InMemoryTaskRepository(_taskWithTwoPromptNodes());
+    final cubit = TaskBuilderCubit(repository: repository);
 
-      await cubit.load(repository.savedTask);
-      await cubit.addNodeToMainGraph(WorkflowPrimitive.notificationSend);
+    await cubit.load(repository.savedTask);
+    await cubit.addNodeToMainGraph(WorkflowPrimitive.notificationSend);
 
-      final state = cubit.state as TaskBuilderLoaded;
-      expect(state.editingTask.nodes.last.outputName, isEmpty);
-      await _closeAndExpectSaved(cubit, repository, state.editingTask);
-    },
-  );
+    final state = cubit.state as TaskBuilderLoaded;
+    expect(state.editingTask.nodes.last.outputName, isEmpty);
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
+  });
 
   test(
     'attachNodeFile speichert Storage-Dateiversion am Prompt-Node',

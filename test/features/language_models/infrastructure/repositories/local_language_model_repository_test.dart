@@ -20,10 +20,7 @@ void main() {
     'saves and maps local language models through the runtime API',
     () async {
       final client = _RecordingClient();
-      final repository = LocalLanguageModelRepository(
-        client,
-        _fakeChannel(),
-      );
+      final repository = LocalLanguageModelRepository(client, _fakeChannel());
 
       await repository.saveLanguageModel(
         const LanguageModelDraft(
@@ -64,20 +61,14 @@ void main() {
     final client = _RecordingClient();
     final repository = LocalLanguageModelRepository(client, _fakeChannel());
 
-    await repository.removeConnection(
-      const TeamId('team-1'),
-      'connection-1',
-    );
+    await repository.removeConnection(const TeamId('team-1'), 'connection-1');
 
     expect(client.deletePath, '/v1/language-model-connections/connection-1');
   });
 
   test('connects a provider without selecting a model', () async {
     final client = _RecordingClient();
-    final repository = LocalLanguageModelRepository(
-      client,
-      _fakeChannel(),
-    );
+    final repository = LocalLanguageModelRepository(client, _fakeChannel());
     await repository.connectLanguageModels(
       const LanguageModelConnectionDraft(
         provider: LanguageModelProvider.googleAi,
@@ -93,10 +84,7 @@ void main() {
 
   test('sends the fixed Mistral endpoint with the customer API key', () async {
     final client = _RecordingClient();
-    final repository = LocalLanguageModelRepository(
-      client,
-      _fakeChannel(),
-    );
+    final repository = LocalLanguageModelRepository(client, _fakeChannel());
 
     await repository.connectLanguageModels(
       const LanguageModelConnectionDraft(

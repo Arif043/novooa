@@ -14,6 +14,7 @@ import 'event_trigger_form_controls.dart';
 import 'schedule_form_values.dart';
 import 'schedule_trigger_form_controls.dart';
 import 'time_trigger_controls.dart';
+import 'trigger_cycle_warning_dialog.dart';
 import 'schedule_theme.dart';
 
 class CreateScheduleTriggerDialog extends StatefulWidget {
@@ -301,8 +302,8 @@ class _CreateScheduleTriggerDialogState
     try {
       if (_mode == TriggerFormMode.schedule) {
         await widget.cubit.createTrigger(task, _config());
-      } else {
-        await widget.cubit.createEventTrigger(task, _eventConfig());
+      } else if (!await _createEventTrigger(task)) {
+        return;
       }
       if (mounted) {
         setState(() => _saving = false);
@@ -317,6 +318,40 @@ class _CreateScheduleTriggerDialogState
         });
       }
     }
+  }
+
+  /// Prüft vorab auf Schleifen: Eine Selbstschleife stoppt hier, mögliche
+  /// Schleifen muss der Nutzer bestätigen. Liefert `false`, wenn nicht
+  /// erstellt wurde.
+  Future<bool> _createEventTrigger(Task task) async {
+    final event = _eventConfig();
+    final analysis = await widget.cubit.analyzeEventTrigger(task, event);
+    if (!mounted) return false;
+    if (analysis.isBlocked) return _stop(analysis.blocked);
+    if (analysis.hasWarnings && !await _confirmWarnings(analysis.warnings)) {
+      return _stop(null);
+    }
+    await widget.cubit.createEventTrigger(task, event);
+    return true;
+  }
+
+  /// Während der Rückfrage läuft nichts im Hintergrund: Der Dialog zeigt keinen
+  /// Ladezustand und der Button bleibt bedienbar.
+  Future<bool> _confirmWarnings(List<String> warnings) async {
+    setState(() => _saving = false);
+    final confirmed = await TriggerCycleWarningDialog.show(context, warnings);
+    if (confirmed && mounted) setState(() => _saving = true);
+    return confirmed;
+  }
+
+  bool _stop(String? message) {
+    if (mounted) {
+      setState(() {
+        _saving = false;
+        _error = message;
+      });
+    }
+    return false;
   }
 
   EventTriggerConfig _eventConfig() => EventTriggerConfig(

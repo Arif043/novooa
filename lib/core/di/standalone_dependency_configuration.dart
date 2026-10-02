@@ -71,6 +71,7 @@ import '../../features/task_builder/infrastructure/repositories/local_task_repos
 import '../../features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import '../../features/task_builder/presentation/cubits/task_homepage_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
+import '../../features/task_builder/domain/services/task_save_notice_bus.dart';
 import '../../features/task_builder/presentation/cubits/write_file_folders_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_language_models_cubit.dart';
@@ -190,11 +191,13 @@ Future<void> configureStandaloneDependencies(
     ..registerLazySingleton<TaskRunnerDatasource>(
       () => LocalHttpTaskRunnerDatasource(locator<WorkspaceApiClient>()),
     )
+    ..registerLazySingleton(TaskSaveNoticeBus.new)
     ..registerLazySingleton<TaskRepository>(
       () => LocalTaskRepository(
         locator<WorkspaceApiClient>(),
         locator<TaskRunnerDatasource>(),
         locator<WorkspaceRealtimeChannel>(),
+        locator<TaskSaveNoticeBus>(),
       ),
     )
     ..registerLazySingleton<TaskRunRepository>(
@@ -376,7 +379,10 @@ Future<void> configureStandaloneDependencies(
           TaskHomepageCubit(locator<TaskRepository>(), locator<ExecuteTask>()),
     )
     ..registerFactory(
-      () => TaskBuilderCubit(repository: locator<TaskRepository>()),
+      () => TaskBuilderCubit(
+        repository: locator<TaskRepository>(),
+        saveNotices: locator<TaskSaveNoticeBus>().notices,
+      ),
     )
     ..registerFactory(
       () => NodeFileAttachmentsCubit(

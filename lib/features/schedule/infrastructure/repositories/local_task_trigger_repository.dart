@@ -4,6 +4,7 @@ import '../../domain/entities/create_task_trigger_input.dart';
 import '../models/event_trigger_config_mapper.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../../domain/entities/task_trigger.dart';
+import '../../domain/entities/trigger_cycle_analysis.dart';
 import '../../domain/repositories/task_trigger_repository.dart';
 
 class LocalTaskTriggerRepository implements TaskTriggerRepository {
@@ -13,21 +14,43 @@ class LocalTaskTriggerRepository implements TaskTriggerRepository {
   final WorkspaceRealtimeChannel _channel;
 
   @override
+  Future<TriggerCycleAnalysis> analyzeTrigger(
+    CreateTaskTriggerInput input,
+  ) async {
+    if (input.type != TriggerType.event || !input.isValid) {
+      return TriggerCycleAnalysis.none;
+    }
+    final response = await _client.post(
+      '/v1/task-triggers/analysis',
+      _body(input),
+    );
+    final warnings = response['warnings'];
+    return TriggerCycleAnalysis(
+      blocked: response['blocked'] as String?,
+      warnings: warnings is List
+          ? warnings.whereType<String>().toList(growable: false)
+          : const [],
+    );
+  }
+
+  @override
   Future<void> createTrigger(CreateTaskTriggerInput input) async {
     if (!input.isValid) return;
-    await _client.post('/v1/task-triggers', {
-      'taskId': input.taskId,
-      'type': input.type.name,
-      'enabled': input.enabled,
-      'config': input.schedule == null
-          ? <String, Object?>{}
-          : _schedule(input.schedule!),
-      'eventConfig': input.event == null
-          ? <String, Object?>{}
-          : EventTriggerConfigMapper.toDocument(input.event!),
-      'policy': {'ifRunning': input.policy.name},
-    });
+    await _client.post('/v1/task-triggers', _body(input));
   }
+
+  Map<String, Object?> _body(CreateTaskTriggerInput input) => {
+    'taskId': input.taskId,
+    'type': input.type.name,
+    'enabled': input.enabled,
+    'config': input.schedule == null
+        ? <String, Object?>{}
+        : _schedule(input.schedule!),
+    'eventConfig': input.event == null
+        ? <String, Object?>{}
+        : EventTriggerConfigMapper.toDocument(input.event!),
+    'policy': {'ifRunning': input.policy.name},
+  };
 
   @override
   Future<void> deleteTrigger(String triggerId) =>

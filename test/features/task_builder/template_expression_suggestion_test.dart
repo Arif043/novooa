@@ -35,60 +35,52 @@ void main() {
     ]);
   });
 
-  test(
-    'bietet feste Nebenoutputs als eigene, als "secondary" markierte '
-    'Vorschläge unter dem Ausgabenamen an',
-    () {
-      final graph = WorkflowGraph(
-        nodes: [_saveDocumentNode(), _node('nachfolger')],
-        edges: [_edge('speichern', 'nachfolger')],
-      );
+  test('bietet feste Nebenoutputs als eigene, als "secondary" markierte '
+      'Vorschläge unter dem Ausgabenamen an', () {
+    final graph = WorkflowGraph(
+      nodes: [_saveDocumentNode(), _node('nachfolger')],
+      edges: [_edge('speichern', 'nachfolger')],
+    );
 
-      final suggestions = templateExpressionSuggestions(
-        graph: graph,
-        targetNodeId: const NodeId('nachfolger'),
-      );
+    final suggestions = templateExpressionSuggestions(
+      graph: graph,
+      targetNodeId: const NodeId('nachfolger'),
+    );
 
-      final secondary = suggestions.where(
+    final secondary = suggestions.where(
+      (s) => s.kind == TemplateExpressionSuggestionKind.secondary,
+    );
+    expect(secondary.map((s) => s.expression), [
+      '{{speichern.created}}',
+      '{{speichern.count}}',
+      '{{speichern.records}}',
+    ]);
+    expect(
+      suggestions.firstWhere((s) => s.expression == '{{speichern}}').kind,
+      TemplateExpressionSuggestionKind.primary,
+    );
+  });
+
+  test('strukturierte Prompt-Felder erzeugen keine zusätzlichen '
+      'Nebenoutput-Vorschläge — sie sind schon primär', () {
+    final graph = WorkflowGraph(
+      nodes: [_structuredPromptNode(), _node('nachfolger')],
+      edges: [_edge('prompt', 'nachfolger')],
+    );
+
+    final suggestions = templateExpressionSuggestions(
+      graph: graph,
+      targetNodeId: const NodeId('nachfolger'),
+    );
+
+    expect(
+      suggestions.where(
         (s) => s.kind == TemplateExpressionSuggestionKind.secondary,
-      );
-      expect(secondary.map((s) => s.expression), [
-        '{{speichern.created}}',
-        '{{speichern.count}}',
-        '{{speichern.records}}',
-      ]);
-      expect(
-        suggestions
-            .firstWhere((s) => s.expression == '{{speichern}}')
-            .kind,
-        TemplateExpressionSuggestionKind.primary,
-      );
-    },
-  );
-
-  test(
-    'strukturierte Prompt-Felder erzeugen keine zusätzlichen '
-    'Nebenoutput-Vorschläge — sie sind schon primär',
-    () {
-      final graph = WorkflowGraph(
-        nodes: [_structuredPromptNode(), _node('nachfolger')],
-        edges: [_edge('prompt', 'nachfolger')],
-      );
-
-      final suggestions = templateExpressionSuggestions(
-        graph: graph,
-        targetNodeId: const NodeId('nachfolger'),
-      );
-
-      expect(
-        suggestions.where(
-          (s) => s.kind == TemplateExpressionSuggestionKind.secondary,
-        ),
-        isEmpty,
-      );
-      expect(suggestions.map((s) => s.expression), contains('{{titel}}'));
-    },
-  );
+      ),
+      isEmpty,
+    );
+    expect(suggestions.map((s) => s.expression), contains('{{titel}}'));
+  });
 }
 
 WorkflowNode _node(String id) => WorkflowNode(
