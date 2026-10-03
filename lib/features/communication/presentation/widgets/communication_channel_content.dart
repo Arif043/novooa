@@ -1,16 +1,17 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/ios_overlays.dart';
+import '../../domain/entities/communication_channel.dart';
 import '../cubits/communication_cubit.dart';
 import '../cubits/communication_state.dart';
-import '../../domain/entities/communication_channel.dart';
 import 'communication_channel_grid.dart';
-import 'microsoft_connection_launcher.dart';
+import 'communication_connect_actions.dart';
+import 'communication_states.dart';
 import 'send_channel_message_dialog.dart';
 
+/// Die vier Zustände der Kanalliste: Laden, Fehler, Leer, Erfolg.
 class CommunicationChannelContent extends StatelessWidget {
   const CommunicationChannelContent({super.key, required this.channelState});
 
@@ -18,51 +19,41 @@ class CommunicationChannelContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
-    if (_hasNoData) {
-      return _hasFailure
-          ? _PartialFailureState(onRetry: _retry)
-          : const _EmptyState();
+    final channels = channelState.channels;
+    final failed = channelState.status == CommunicationLoadStatus.failure;
+    if (channelState.status == CommunicationLoadStatus.loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (channels.isEmpty) {
+      return failed
+          ? CommunicationFailureState(onRetry: () => _retry(context))
+          : CommunicationEmptyState(onConnect: () => connectChannel(context));
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (_hasFailure) _PartialFailureState(onRetry: _retry),
-        if (_hasFailure) const SizedBox(height: AppSpacing.md),
-        CommunicationChannelGrid(
-          channels: _channels,
-          onFakeMessage: (channel) => _dispatchFakeMessage(context, channel),
-          onSendMessage: (channel) => _sendMessage(context, channel),
-          onDelete: (channel) => _deleteChannel(context, channel),
-          onReconnect: (_) => startMicrosoftConnection(context),
-        ),
+        if (failed) ...[
+          CommunicationFailureBanner(onRetry: () => _retry(context)),
+          const SizedBox(height: AppSpacing.md),
+        ],
+        Expanded(child: _grid(context, channels)),
       ],
     );
   }
 
-  bool get _isLoading {
-    return channelState.status == CommunicationLoadStatus.loading;
-  }
-
-  bool get _hasFailure {
-    return channelState.status == CommunicationLoadStatus.failure;
-  }
-
-  bool get _hasNoData => _channels.isEmpty;
-
-  List<CommunicationChannel> get _channels {
-    return [...channelState.channels];
+  Widget _grid(BuildContext context, List<CommunicationChannel> channels) {
+    final cubit = context.read<CommunicationCubit>();
+    return CommunicationChannelGrid(
+      channels: channels,
+      onFakeMessage: cubit.dispatchFake,
+      onSendMessage: (channel) => _sendMessage(context, channel),
+      onDelete: cubit.delete,
+      onReconnect: (_) => connectChannel(context),
+    );
   }
 
   void _retry(BuildContext context) {
     context.read<CommunicationCubit>().load();
-  }
-
-  void _dispatchFakeMessage(
-    BuildContext context,
-    CommunicationChannel channel,
-  ) {
-    context.read<CommunicationCubit>().dispatchFake(channel);
   }
 
   Future<void> _sendMessage(
@@ -78,61 +69,6 @@ class CommunicationChannelContent extends StatelessWidget {
       channel: channel,
       to: message.to,
       body: message.body,
-    );
-  }
-
-  void _deleteChannel(BuildContext context, CommunicationChannel channel) {
-    context.read<CommunicationCubit>().delete(channel);
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            CupertinoIcons.bubble_left_bubble_right,
-            size: AppSpacing.xxl,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Noch keine Verbindungen',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          const Text('Verbinde E-Mail, WhatsApp oder SMS mit novooa.'),
-        ],
-      ),
-    );
-  }
-}
-
-class _PartialFailureState extends StatelessWidget {
-  const _PartialFailureState({required this.onRetry});
-
-  final ValueChanged<BuildContext> onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Icon(CupertinoIcons.exclamationmark_triangle),
-        const SizedBox(width: AppSpacing.sm),
-        const Expanded(
-          child: Text('Kanäle konnten nicht vollständig geladen werden.'),
-        ),
-        IconButton(
-          tooltip: 'Erneut versuchen',
-          onPressed: () => onRetry(context),
-          icon: const Icon(CupertinoIcons.arrow_clockwise),
-        ),
-      ],
     );
   }
 }

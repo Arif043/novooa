@@ -115,6 +115,22 @@ und SMS. Lokale Runtime: Derselbe Tab zeigt nur die Outlook-Postfächer dieser
 Runtime („Postfach verbinden"); siehe
 [`../local-runtime.md`](../local-runtime.md) § Mail-Relay.
 
+Aufbau des Tabs (anbieterneutral):
+
+- Kopfzeile mit Titel, Erklärung und der Verbinden-Aktion („Postfach verbinden“
+  lokal, „Kanal verbinden“ in der Cloud). Im Leerzustand übernimmt dessen eigene
+  Aktion; die Kopfzeile zeigt sie dann nicht doppelt.
+- Kanäle erscheinen als Karten im gemeinsamen `ResponsiveCardGrid` (wie
+  Aufgaben, Fähigkeiten und Mitarbeiter): Icon, Name, Adresse, Metazeile
+  „Anbieter · Richtung“, Status als Punkt plus Text, weitere Aktionen im
+  Kanalmenü. Eine abgelaufene Anmeldung zeigt einen Hinweis mit „Neu verbinden“.
+- Zustände: Laden, Leer (mit Aktion), Fehler ohne Daten (mit „Erneut
+  versuchen“), Fehler mit Daten (Hinweis über den Karten) und Erfolg.
+- Anbieter stehen in `mail_provider_option.dart` (`mailProviderOptions`). Ein
+  neuer Anbieter wie Gmail ist ein zusätzlicher Eintrag; die Auswahl erscheint
+  erst, sobald es mehr als einen gibt. Anbieternamen für die Anzeige liefert
+  `communication_labels.dart`.
+
 ## Ereignisse
 
 Ein Connector normalisiert neue E-Mails in ein `EmailReceivedEvent`. Dieses

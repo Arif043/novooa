@@ -17,13 +17,15 @@ import 'package:syscat2/features/communication/presentation/widgets/communicatio
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 
 class _FakeRepository implements CommunicationChannelRepository {
-  _FakeRepository(this.channels);
+  _FakeRepository(this.channels, {this.failing = false});
 
   final List<CommunicationChannel> channels;
+  final bool failing;
   int connections = 0;
 
   @override
-  Stream<List<CommunicationChannel>> watchChannels() => Stream.value(channels);
+  Stream<List<CommunicationChannel>> watchChannels() =>
+      failing ? Stream.error(StateError('offline')) : Stream.value(channels);
 
   @override
   Future<String> beginMicrosoftConnection() async {
@@ -78,8 +80,9 @@ Future<_FakeRepository> _pump(
   WidgetTester tester, {
   required bool messaging,
   List<CommunicationChannel> channels = const [],
+  bool failing = false,
 }) async {
-  final repository = _FakeRepository(channels);
+  final repository = _FakeRepository(channels, failing: failing);
   serviceLocator
     ..registerSingleton(_capabilities(messaging: messaging))
     ..registerFactory(
@@ -169,5 +172,29 @@ void main() {
 
     expect(find.text('Team Postfach'), findsNothing);
     expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('die Karte nennt Anbieter, Richtung und Status', (tester) async {
+    await _pump(tester, messaging: false, channels: [_mailbox()]);
+
+    expect(
+      find.text('Microsoft Outlook · Empfangen und senden'),
+      findsOneWidget,
+    );
+    expect(find.text('Aktiv'), findsOneWidget);
+  });
+
+  testWidgets('Leerzustand bietet die Verbindung selbst an', (tester) async {
+    await _pump(tester, messaging: false);
+
+    expect(find.text('Noch keine Verbindungen'), findsOneWidget);
+    expect(find.text('Postfach verbinden'), findsOneWidget);
+  });
+
+  testWidgets('Fehler ohne Daten zeigt Erneut versuchen', (tester) async {
+    await _pump(tester, messaging: false, failing: true);
+
+    expect(find.text('Postfächer nicht erreichbar'), findsOneWidget);
+    expect(find.text('Erneut versuchen'), findsOneWidget);
   });
 }

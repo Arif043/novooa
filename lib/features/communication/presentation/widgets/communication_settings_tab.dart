@@ -1,17 +1,12 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
-import '../../../../core/runtime/workspace_capabilities.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/widgets/ios_overlays.dart';
-import '../../domain/entities/communication_channel.dart';
 import '../cubits/communication_cubit.dart';
 import '../cubits/communication_state.dart';
 import 'communication_channel_content.dart';
-import 'microsoft_connection_launcher.dart';
-import 'create_communication_channel_dialog.dart';
+import 'communication_connect_actions.dart';
 
 class CommunicationSettingsTab extends StatelessWidget {
   const CommunicationSettingsTab({super.key});
@@ -68,85 +63,67 @@ class _CommunicationBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _CommunicationHeader(
-          isBusy: channelState.isCreating || channelState.isConnecting,
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        Expanded(
-          child: ListView(
-            children: [CommunicationChannelContent(channelState: channelState)],
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _CommunicationHeader(
+            isBusy: channelState.isCreating || channelState.isConnecting,
+            showAction: _showHeaderAction,
           ),
-        ),
-      ],
+          const SizedBox(height: AppSpacing.lg),
+          Expanded(
+            child: CommunicationChannelContent(channelState: channelState),
+          ),
+        ],
+      ),
     );
+  }
+
+  /// Im Leerzustand trägt dessen eigene Aktion; zwei gleiche Knöpfe wären
+  /// nur Rauschen.
+  bool get _showHeaderAction {
+    final isEmpty = channelState.channels.isEmpty;
+    return !(isEmpty && channelState.status == CommunicationLoadStatus.ready);
   }
 }
 
 class _CommunicationHeader extends StatelessWidget {
-  const _CommunicationHeader({required this.isBusy});
+  const _CommunicationHeader({required this.isBusy, required this.showAction});
 
   final bool isBusy;
+  final bool showAction;
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      alignment: WrapAlignment.spaceBetween,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: AppSpacing.md,
-      runSpacing: AppSpacing.sm,
+    final textTheme = Theme.of(context).textTheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Kommunikation', style: Theme.of(context).textTheme.displayMedium),
-        FilledButton.icon(
-          onPressed: isBusy ? null : () => _connect(context),
-          icon: const Icon(CupertinoIcons.add_circled),
-          label: Text(
-            _supportsMessaging ? 'Kanal verbinden' : 'Postfach verbinden',
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Kommunikation', style: textTheme.headlineSmall),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Verbundene Postfächer, über die Aufgaben Nachrichten '
+                'empfangen und senden.',
+                style: textTheme.bodyMedium,
+              ),
+            ],
           ),
         ),
+        if (showAction) ...[
+          const SizedBox(width: AppSpacing.md),
+          FilledButton.icon(
+            onPressed: isBusy ? null : () => connectChannel(context),
+            icon: const Icon(Icons.add),
+            label: Text(connectActionLabel),
+          ),
+        ],
       ],
     );
-  }
-
-  /// WhatsApp und SMS gibt es nur in der Cloud; in der lokalen Runtime bleibt
-  /// einzig das Outlook-Postfach, das ohne Zwischenfrage verbunden wird.
-  bool get _supportsMessaging =>
-      serviceLocator<WorkspaceCapabilities>().messagingChannels;
-
-  Future<void> _connect(BuildContext context) {
-    if (_supportsMessaging) return _showConnectionActions(context);
-    return startMicrosoftConnection(context);
-  }
-
-  Future<void> _showConnectionActions(BuildContext context) async {
-    final channelKind = await showIosActionSheet<CommunicationChannelKind>(
-      context: context,
-      title: 'Kanal verbinden',
-      actions: const [
-        IosAction(label: 'E-Mail mit Microsoft Outlook', value: .email),
-        IosAction(label: 'WhatsApp', value: .whatsapp),
-        IosAction(label: 'SMS', value: .sms),
-      ],
-    );
-    if (channelKind == null || !context.mounted) return;
-    if (channelKind == CommunicationChannelKind.email) {
-      await startMicrosoftConnection(context);
-      return;
-    }
-    await _createChannel(context, channelKind);
-  }
-
-  Future<void> _createChannel(
-    BuildContext context,
-    CommunicationChannelKind kind,
-  ) async {
-    final input = await showIosDialog(
-      context: context,
-      builder: (_) => CreateCommunicationChannelDialog(initialKind: kind),
-    );
-    if (input == null || !context.mounted) return;
-    await context.read<CommunicationCubit>().create(input);
   }
 }

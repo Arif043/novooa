@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/responsive_card_grid.dart';
 import '../../domain/entities/communication_channel.dart';
 import 'communication_channel_tile.dart';
 
+/// Kanäle als Karten im gemeinsamen Raster. Die Aktionen einer Karte hängen
+/// davon ab, ob ein Connector (Postfach) oder ein Team-Kanal dahintersteht.
 class CommunicationChannelGrid extends StatelessWidget {
   const CommunicationChannelGrid({
     super.key,
@@ -22,28 +24,15 @@ class CommunicationChannelGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = _columnsFor(constraints.maxWidth);
-        final tileWidth =
-            (constraints.maxWidth - AppSpacing.md * (columns - 1)) / columns;
-        // Die Höhe richtet sich nach dem Inhalt der Kachel (Chips, Hinweise),
-        // statt nach einem festen Seitenverhältnis, das bei schmalen Karten überläuft.
-        return Wrap(
-          spacing: AppSpacing.md,
-          runSpacing: AppSpacing.md,
-          children: [
-            for (final channel in channels)
-              SizedBox(width: tileWidth, child: _tileFor(channel)),
-          ],
-        );
-      },
+    return ResponsiveCardGrid(
+      children: [for (final channel in channels) _tileFor(channel)],
     );
   }
 
   Widget _tileFor(CommunicationChannel channel) {
     final hasChannelActions = !channel.isConnectorBacked;
     return CommunicationChannelTile(
+      key: ValueKey(channel.id),
       channel: channel,
       onFakeMessage: hasChannelActions && channel.isActive
           ? () => onFakeMessage(channel)
@@ -57,12 +46,5 @@ class CommunicationChannelGrid extends StatelessWidget {
           ? () => onReconnect(channel)
           : null,
     );
-  }
-
-  int _columnsFor(double width) {
-    if (width >= 1100) return 4;
-    if (width >= 760) return 3;
-    if (width >= 520) return 2;
-    return 1;
   }
 }

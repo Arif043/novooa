@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:syscat2/core/theme/app_spacing.dart';
 
-import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/communication_channel.dart';
+import 'communication_channel_menu.dart';
+import 'communication_labels.dart';
+import 'communication_reconnect_notice.dart';
+import 'communication_status_pill.dart';
 
 class CommunicationChannelTile extends StatelessWidget {
   const CommunicationChannelTile({
@@ -23,7 +27,6 @@ class CommunicationChannelTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -31,109 +34,81 @@ class CommunicationChannelTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(_icon, color: colorScheme.primary),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    channel.label,
-                    style: Theme.of(context).textTheme.titleMedium,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (onReconnect != null)
-                  IconButton(
-                    tooltip: 'Postfach neu verbinden',
-                    onPressed: onReconnect,
-                    icon: const Icon(Icons.link),
-                  ),
-                if (onFakeMessage != null)
-                  IconButton(
-                    tooltip: 'Testnachricht auslösen',
-                    onPressed: onFakeMessage,
-                    icon: const Icon(Icons.bolt_outlined),
-                  ),
-                if (onSendMessage != null)
-                  IconButton(
-                    tooltip: 'Nachricht senden',
-                    onPressed: onSendMessage,
-                    icon: const Icon(Icons.send_outlined),
-                  ),
-                if (onDelete != null)
-                  IconButton(
-                    tooltip: 'Kanal entfernen',
-                    onPressed: onDelete,
-                    icon: const Icon(Icons.delete_outline),
-                  ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(channel.address, overflow: TextOverflow.ellipsis),
-            if (onReconnect != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Die Anmeldung ist abgelaufen. Verbinde das Postfach neu, '
-                'damit wieder E-Mails ankommen.',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colorScheme.error),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+            _Header(channel: channel, menu: _menu),
             const SizedBox(height: AppSpacing.md),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children: [
-                _InfoChip(label: _kindLabel),
-                _InfoChip(label: _statusLabel),
-                if (channel.capabilities.inbound)
-                  const _InfoChip(label: 'Eingang'),
-                if (channel.capabilities.outbound)
-                  const _InfoChip(label: 'Ausgang'),
-              ],
-            ),
+            _Details(channel: channel),
+            if (onReconnect != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              CommunicationReconnectNotice(onReconnect: onReconnect!),
+            ],
           ],
         ),
       ),
     );
   }
 
-  IconData get _icon => switch (channel.kind) {
-    CommunicationChannelKind.email => Icons.mail_outline,
-    CommunicationChannelKind.whatsapp => Icons.chat_outlined,
-    CommunicationChannelKind.sms => Icons.sms_outlined,
-  };
-
-  String get _kindLabel => switch (channel.kind) {
-    CommunicationChannelKind.email => 'E-Mail',
-    CommunicationChannelKind.whatsapp => 'WhatsApp',
-    CommunicationChannelKind.sms => 'SMS',
-  };
-
-  String get _statusLabel => switch (channel.status) {
-    CommunicationChannelStatus.setupRequired => 'Einrichtung nötig',
-    CommunicationChannelStatus.pendingVerification => 'Verifizierung läuft',
-    CommunicationChannelStatus.active => 'Aktiv',
-    CommunicationChannelStatus.reauthorizationRequired =>
-      'Erneute Anmeldung erforderlich',
-    CommunicationChannelStatus.disabled => 'Deaktiviert',
-  };
+  Widget get _menu => CommunicationChannelMenu(
+    onFakeMessage: onFakeMessage,
+    onSendMessage: onSendMessage,
+    onDelete: onDelete,
+  );
 }
 
-class _InfoChip extends StatelessWidget {
-  const _InfoChip({required this.label});
+class _Header extends StatelessWidget {
+  const _Header({required this.channel, required this.menu});
 
-  final String label;
+  final CommunicationChannel channel;
+  final Widget menu;
 
   @override
   Widget build(BuildContext context) {
-    return Chip(
-      label: Text(label),
-      visualDensity: VisualDensity.compact,
-      side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+    final colors = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: colors.primaryContainer.withValues(alpha: .12),
+            borderRadius: BorderRadius.circular(AppSpacing.md),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Icon(channel.icon, color: colors.primary),
+          ),
+        ),
+        const Spacer(),
+        menu,
+      ],
+    );
+  }
+}
+
+class _Details extends StatelessWidget {
+  const _Details({required this.channel});
+
+  final CommunicationChannel channel;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          channel.label,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: textTheme.titleMedium,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(channel.address, overflow: TextOverflow.ellipsis),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          '${channel.providerLabel} · ${channel.directionLabel}',
+          style: textTheme.bodySmall,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        CommunicationStatusPill(channel: channel),
+      ],
     );
   }
 }
