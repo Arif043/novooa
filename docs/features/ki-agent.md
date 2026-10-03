@@ -5,63 +5,54 @@ Pflegen der Wissensbasis. Die gemeinsame Assistenzoberfläche läuft im Client.
 TaskBuilder und Wissensbasis-Agent nutzen jeweils eine authentifizierte
 Genkit-Callable Function.
 
-**Läuft in Cloud und Standalone.** `WorkspaceCapabilities.assistant` (siehe
+**Läuft in Cloud und Standalone — aber die beiden Agenten an verschiedenen
+Orten.** `WorkspaceCapabilities.assistant` (siehe
 [`../architecture/betriebsvarianten.md`](../architecture/betriebsvarianten.md),
-Blocker 6) steht für beide Varianten auf `true`. Die lokale Runtime bedient
-denselben Anfrage-/Antwort-Vertrag wie die Firebase Callable Functions über
-`POST /v1/assistant/task-builder` und `POST /v1/assistant/knowledge-base`
-(`assistantRoutes`). Wiederverwendet werden dabei die bereits
-Firebase-entkoppelten Bausteine der Backend-Domain — `GenkitAssistantResponder`,
-die reinen `createTaskBuilderAssistant`/`createKnowledgeBaseAssistant`-
-Factories — sowie die für die Aufgaben-Ausführung ohnehin vorhandene lokale
-Infrastruktur: `SQLiteKnowledgeBaseAssistantNoteStore`,
-`SQLiteTeamContextStore` und der Standardmodell-Pfad aus `ai-models.ts`
-(`resolveAssistantLanguageModel`). Das Sprachmodell des Agenten legt die
-Cloud fest; Nutzer:innen wählen es nicht, und es gibt keine Auswahl pro Team
-mehr (siehe „Sprachmodell des Agenten“). Ausgelassen ist bewusst nur das Audit-Logging der Cloud-Variante —
-das dient dort der teamübergreifenden Aufsicht, für einen einzelnen
-Standalone-Betreiber ohne Mehrwert.
+Blocker 6) steht für beide Varianten auf `true`; die App spricht in Standalone
+weiter mit der Runtime (`POST /v1/assistant/task-builder` und
+`/v1/assistant/knowledge-base`, `assistantRoutes`).
 
-## Sprachmodell des Agenten
+| Agent | Cloud-Variante | Standalone (lokale Runtime) |
+| --- | --- | --- |
+| **Aufgabenstudio** | Callable `askTaskBuilderAssistant`, Modell aus Remote Config | Die Runtime reicht Frage und Verlauf über das Relay `localRuntimeTaskBuilderRelay` an den Agenten in der Cloud; Modell aus Remote Config |
+| **Wissensbasis** | Callable `askKnowledgeBaseAssistant`, Notizen aus Firestore, Modell aus Remote Config | Läuft **in der Runtime** mit den Notizen aus SQLite und dem **Sprachmodell des Nutzers** |
+
+Gründe: Der Aufgabenstudio-Agent braucht keine lokalen Daten und läuft deshalb
+mit dem Modell des Betreibers. Der Wissensbasis-Agent liest die Notizen des
+Nutzers; sie sollen das Gerät nicht verlassen. Er nutzt darum das Modell, das
+der Nutzer unter „Sprachmodelle“ als **Standardmodell** gewählt hat
+(`resolveDefaultLanguageModel`). Ohne gewähltes Standardmodell bekommt er den
+Hinweis, eines zu verbinden und zu wählen; es gibt keinen Rückfall auf ein Modell
+des Betreibers. Ausgelassen ist bewusst nur das Audit-Logging der Cloud-Variante
+in der Runtime — es dient dort der teamübergreifenden Aufsicht.
+
+## Sprachmodell des Agenten in der Cloud
 
 Den Modellnamen legt die Cloud fest. Er steht als String im Firebase-Remote-
 Config-Parameter **`assistant_model`** (Server-Template), zum Beispiel
 `gemini-2.5-flash`; es sind Google-Modelle (Gemini API). Nutzer:innen wählen ihn
-nicht, und es gibt keine Auswahl pro Team.
-
-**Ereignisgesteuert, ohne Abfragen im Takt:**
-
-1. Jede Veröffentlichung in Remote Config löst die Cloud-Funktion
-   `syncAssistantModelConfigOnUpdate` aus (`onConfigUpdated`). Sie liest den
-   Parameter frisch und schreibt ihn in das Firestore-Dokument
-   `localRuntimeConfig/assistant` (`assistantModel`, `revision`, `updatedAt`) —
-   nur bei einer echten Änderung, damit der Abgleich bei fremden Parametern
-   niemanden weckt (`syncAssistantModelConfig`).
-2. Die Cloud-Funktionen `askTaskBuilderAssistant` und
-   `askKnowledgeBaseAssistant` lesen bei jeder Anfrage dieses Dokument
-   (`ConfigDocumentAssistantModel`, kein Cache). Existiert es noch nicht, lesen
-   sie ersatzweise Remote Config (`RemoteConfigAssistantModel`, 5 Minuten
-   gecacht).
-3. Die lokale Runtime hört über ihre Firebase-Sitzung per Firestore-Listener auf
-   dasselbe Dokument (`RuntimeFirebaseSession.listenForAssistantModel`) und hält
-   den Namen in `RuntimeAssistantModel`. Die Firestore-Regel erlaubt dem
-   Runtime-User nur das Lesen dieses Dokuments.
-
-**Regeln:**
+nicht, und es gibt keine Auswahl pro Team. Die Cloud-Funktionen
+(`runTaskBuilderAssistant`, `askKnowledgeBaseAssistant`) lesen ihn über
+`RemoteConfigAssistantModel` und cachen ihn fünf Minuten
+(`CachedAssistantModelSettings`); eine Änderung in der Console wirkt also
+spätestens nach fünf Minuten, ohne Deploy.
 
 - Leer, nicht vorhanden oder ungültig (erlaubt sind Kleinbuchstaben, Ziffern,
   `.`, `-`, `_`): Es gilt das Standardmodell aus `ai-models.ts`
   (`GOOGLE_TEXT_MODEL` bzw. der eingebaute Standardwert).
 - Ein unbekannter, aber gültig geschriebener Name wird nicht vorab geprüft; die
   Anfrage scheitert dann bei Google mit einer Fehlermeldung.
-- Bricht der Listener der Runtime ab, bleibt der letzte Name stehen; Firestore
-  verbindet selbst neu und liefert den aktuellen Stand erneut.
+- Remote Config nicht erreichbar: Der zuletzt bekannte Wert bleibt, zuerst
+  keiner; nach 30 Sekunden wird erneut versucht.
 
-**Einrichtung (Reihenfolge):** Zuerst `syncAssistantModelConfigOnUpdate` und die
-Firestore-Regeln deployen, danach den Parameter `assistant_model` in Remote
-Config veröffentlichen. Ein Wert, der schon vor dem Deploy der Funktion
-veröffentlicht wurde, erreicht die Runtimes erst mit der nächsten
-Veröffentlichung.
+### Relay für lokale Runtimes
+
+`localRuntimeTaskBuilderRelay` (`onRequest`, 120 s) prüft die signierte Lizenz
+der Runtime (`FirebaseRuntimeRelayLicenseVerifier`), führt denselben Agenten
+wie die App aus (`runTaskBuilderAssistant`) und liefert dieselbe Antwort
+(`answer`, `commands`, `knowledgeCommands`). Die Runtime kennt die URL über
+`LOCAL_RUNTIME_TASK_BUILDER_RELAY_URL` (im Compose-Betrieb vorbelegt). Ohne URL
+oder Lizenz meldet sie einen lesbaren Fehler.
 
 ## Verantwortlichkeiten
 

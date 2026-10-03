@@ -461,13 +461,15 @@ erweiterbare Registry für Dekodierung, Skalierung, Layout und Normalisierung.
 Weitere Quelltypen erhalten eigene Strategien; weder die Pipeline noch der
 Modell-Baustein sind an Firebase Storage oder Bilder gekoppelt.
 
-## Sprachmodell des KI-Agenten
+## KI-Agenten
 
-Der KI-Agent der Runtime nutzt das Modell, das die Cloud in Remote Config
-(`assistant_model`) festlegt. Die Cloud spiegelt es bei jeder Änderung in das
-Firestore-Dokument `localRuntimeConfig/assistant`; die Runtime hört darauf über
-ihre Firebase-Sitzung, wie auf die Wake-ups für Mails. Es gibt kein Relay und
-kein Nachfragen. Einzelheiten in [`features/ki-agent.md`](features/ki-agent.md).
+Der **Aufgabenstudio-Agent** läuft in der Cloud: Die Runtime reicht Frage und
+Verlauf über das Relay `localRuntimeTaskBuilderRelay`
+(`LOCAL_RUNTIME_TASK_BUILDER_RELAY_URL`) mit ihrer Lizenz weiter; das Modell
+legt die Cloud in Remote Config fest. Der **Wissensbasis-Agent** läuft in der
+Runtime, damit die Notizen das Gerät nicht verlassen, und nutzt das
+Standardmodell, das der Nutzer unter „Sprachmodelle“ gewählt hat. Einzelheiten
+in [`features/ki-agent.md`](features/ki-agent.md).
 
 ## Mitarbeiter
 

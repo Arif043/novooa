@@ -16,8 +16,6 @@ import {PublicPageHtmlFetcher} from "../genkit/public-page-html-fetcher.js";
 import {PublicPageHttpClient} from "../genkit/public-page-http-client.js";
 import {FirestoreKnowledgeBaseAssistantNoteStore} from "./firestore-knowledge-base-assistant-note-store.js";
 import {logKnowledgeBaseAssistantProposal} from "./knowledge-base-assistant-audit-event.js";
-import {readAssistantModelConfigDocument} from "../../../language_models/infrastructure/firebase/assistant-model-config-document.js";
-import {ConfigDocumentAssistantModel} from "../../../language_models/domain/usecases/config-document-assistant-model.js";
 import {RemoteConfigAssistantModel} from "../../../language_models/infrastructure/firebase/remote-config-assistant-model.js";
 import {resolveAssistantLanguageModel} from "../../../language_models/infrastructure/genkit/resolve-assistant-language-model.js";
 
@@ -25,9 +23,7 @@ const teamContextStore = new FirestoreTeamContextStore();
 const noteStore = new FirestoreKnowledgeBaseAssistantNoteStore();
 const pageFetcher = new PublicPageHtmlFetcher(new PublicPageHttpClient());
 
-const assistantModel = new ConfigDocumentAssistantModel(
-  readAssistantModelConfigDocument, new RemoteConfigAssistantModel(),
-);
+const assistantModel = new RemoteConfigAssistantModel();
 
 export const askKnowledgeBaseAssistant = onCall(
   {

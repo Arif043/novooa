@@ -21,6 +21,7 @@ services:
       LOCAL_RUNTIME_LICENSE_PUBLIC_KEY_FILE: /run/secrets/novooa_runtime_license_public_key
       LOCAL_RUNTIME_LICENSE_GATEWAY_URL: ${LOCAL_RUNTIME_LICENSE_GATEWAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/issueLocalRuntimeLicense}
       LOCAL_RUNTIME_PUSH_RELAY_URL: ${LOCAL_RUNTIME_PUSH_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimePushRelay}
+      LOCAL_RUNTIME_TASK_BUILDER_RELAY_URL: ${LOCAL_RUNTIME_TASK_BUILDER_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeTaskBuilderRelay}
       LOCAL_RUNTIME_MAIL_RELAY_URL: ${LOCAL_RUNTIME_MAIL_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeMailRelay}
       # Skill-Katalog (skills.sh) über das Relay in Firebase: Die Runtime weist sich mit ihrer Lizenz aus, das Relay
       # prüft sie und ruft den Vercel-Proxy (relay/skills-sh-proxy) auf. Leer setzen (SKILLS_SH_RELAY_URL=) schaltet

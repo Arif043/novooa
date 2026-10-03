@@ -1,4 +1,6 @@
-import {type AssistantModelSettings} from "../../features/language_models/domain/repositories/assistant-model-settings.js";
+import {CatalogGenkitLanguageModelResolver} from "../../features/language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {type SignedRuntimeLicense} from "../../features/licensing/domain/entities/runtime-license-lease.js";
+import {taskBuilderRelayFromEnvironment} from "./local-runtime-relays.js";
 import {createEmployeeRoutesOptions} from "../../features/employees/infrastructure/local/employees-composition.js";
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {createSkillsModule} from "../../features/skills/infrastructure/local/skills-composition.js";
@@ -46,7 +48,6 @@ export function createLocalRuntimeRouteServices(options: {
   fieldCipher: SensitiveFieldCipher;
   notifier: LocalRuntimeRealtimeNotifier;
   licenses: Pick<RuntimeLicenseService, "signedActiveLicense">;
-  assistantModel: AssistantModelSettings;
   workspaceContext: () => LocalRuntimeWorkspaceContext;
 }) {
   const {database, runtimeRoot} = options;
@@ -70,17 +71,27 @@ export function createLocalRuntimeRouteServices(options: {
     employees: createEmployeeRoutesOptions(database, options.notifier),
     skills: createSkillsModule(runtimeRoot, options.notifier, () => options.licenses.signedActiveLicense()),
     speechVoices: new LanguageModelSpeech(new SQLiteLanguageModelCatalog(database, languageModelSecrets), defaultSpeechProviders()),
-    assistants: assistantFactories(database, options.assistantModel),
+    assistants: assistantFactories(database, languageModelSecrets, () => options.licenses.signedActiveLicense()),
     modelCatalog: modelCatalogOptions(runtimeRoot, database, options.notifier),
   };
 }
 
+/**
+ * Aufgabenstudio-Agent: in der Cloud, über das Relay. Wissensbasis-Agent: in
+ * der Runtime mit dem Sprachmodell des Nutzers, damit die Notizen das Gerät
+ * nicht verlassen.
+ */
 function assistantFactories(
-  database: RuntimeDatabase, modelSettings: AssistantModelSettings,
+  database: RuntimeDatabase,
+  secrets: EncryptedSQLiteLanguageModelSecretStore,
+  signedLicense: () => SignedRuntimeLicense | null,
 ): AssistantRoutesOptions {
+  const resolver = new CatalogGenkitLanguageModelResolver(new SQLiteLanguageModelCatalog(database, secrets));
+  const defaults = new SQLiteLanguageModelDefaultsStore(database);
+  const taskBuilder = createLocalTaskBuilderAssistant(signedLicense, taskBuilderRelayFromEnvironment());
   return {
-    taskBuilderAssistant: () => createLocalTaskBuilderAssistant(modelSettings),
-    knowledgeBaseAssistant: () => createLocalKnowledgeBaseAssistant(database, modelSettings),
+    taskBuilderAssistant: async () => taskBuilder,
+    knowledgeBaseAssistant: (teamId) => createLocalKnowledgeBaseAssistant(database, teamId, resolver, defaults),
   };
 }
 

@@ -13,9 +13,16 @@ import 'settings_section.dart';
 /// Vorgabe-Auswahl unter „Sprachmodelle" — welches bereits verbundene Modell
 /// als Standardmodell für Sprachmodell-Bausteine ("Standardmodell verwenden")
 /// gilt. Blendet sich aus, solange kein Modell verbunden ist — dann gibt es
-/// nichts zu wählen.
+/// nichts zu wählen. In der lokalen Runtime ([usedByKnowledgeAssistant]) ist
+/// es zugleich das Modell des KI-Agenten der Wissensbasis, der dort mit dem
+/// Modell des Nutzers läuft.
 class LanguageModelDefaultsSections extends StatelessWidget {
-  const LanguageModelDefaultsSections({super.key});
+  const LanguageModelDefaultsSections({
+    super.key,
+    this.usedByKnowledgeAssistant = false,
+  });
+
+  final bool usedByKnowledgeAssistant;
 
   @override
   Widget build(BuildContext context) {
@@ -28,9 +35,13 @@ class LanguageModelDefaultsSections extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             _LanguageModelDefaultSection(
               icon: Icons.smart_toy_outlined,
-              title: 'Standardmodell für Sprachmodell-Bausteine',
-              description:
-                  'Gilt, wenn ein Baustein "Standardmodell verwenden" nutzt.',
+              title: usedByKnowledgeAssistant
+                  ? 'Standardmodell'
+                  : 'Standardmodell für Sprachmodell-Bausteine',
+              description: usedByKnowledgeAssistant
+                  ? 'Gilt, wenn ein Baustein "Standardmodell verwenden" nutzt, '
+                        'und für den KI-Agenten der Wissensbasis.'
+                  : 'Gilt, wenn ein Baustein "Standardmodell verwenden" nutzt.',
               models: state.models,
               selectedModelId: state.defaults.blockModelId,
               isSaving: state.isSavingBlockDefault,

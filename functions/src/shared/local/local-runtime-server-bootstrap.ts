@@ -1,4 +1,3 @@
-import {RuntimeAssistantModel} from "../../features/language_models/infrastructure/local/runtime-assistant-model.js";
 import {MailConnectorListCache} from "../../features/communication/infrastructure/local/mail-connector-list-cache.js";
 import {type FastifyInstance, type FastifyPluginAsync} from "fastify";
 import {type Server} from "node:http";
@@ -32,7 +31,6 @@ type RuntimeShared = {
   notifier: LocalRuntimeRealtimeNotifier;
   tickets: LocalRuntimeRealtimeTicketStore;
   mailConnectors: MailConnectorListCache;
-  assistantModel: RuntimeAssistantModel;
   application: LocalRuntimeApplication;
 };
 
@@ -56,15 +54,14 @@ function sharedFor(options: BootstrapOptions): RuntimeShared {
   const {database, runtimeRoot, fieldCipher, licenses} = options;
   const notifier = new LocalRuntimeRealtimeNotifier();
   const mailConnectors = new MailConnectorListCache();
-  const assistantModel = new RuntimeAssistantModel();
   const application = new LocalRuntimeApplication({
-    database, runtimeRoot, fieldCipher, realtimeNotifier: notifier, mailConnectors, assistantModel,
+    database, runtimeRoot, fieldCipher, realtimeNotifier: notifier, mailConnectors,
     isLicenseActive: () => licenses.activeContext() !== null,
     signedLicense: () => licenses.signedActiveLicense(),
     activeLicenseActivation: () => licenses.activeActivation(),
   });
   return {
-    sessions: new LocalRuntimeSessionStore(database), notifier, mailConnectors, assistantModel,
+    sessions: new LocalRuntimeSessionStore(database), notifier, mailConnectors,
     tickets: new LocalRuntimeRealtimeTicketStore(), application,
   };
 }
@@ -88,7 +85,7 @@ function runtimeRoutes(options: BootstrapOptions, shared: RuntimeShared): Fastif
     await routes.register(localRuntimeApi({
       database: options.database, runtimeRoot: options.runtimeRoot, fieldCipher: options.fieldCipher,
       licenses: options.licenses, sessions: shared.sessions, notifier: shared.notifier, tickets: shared.tickets,
-      mailConnectors: shared.mailConnectors, assistantModel: shared.assistantModel,
+      mailConnectors: shared.mailConnectors,
       workspaceContext: () => shared.application.workspaceContext(),
     }));
   };

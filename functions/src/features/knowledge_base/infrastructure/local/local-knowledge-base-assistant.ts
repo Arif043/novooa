@@ -1,6 +1,7 @@
 import {type RuntimeExecutor} from "../../../../db/database.js";
-import {type AssistantModelSettings} from "../../../language_models/domain/repositories/assistant-model-settings.js";
-import {resolveAssistantLanguageModel} from "../../../language_models/infrastructure/genkit/resolve-assistant-language-model.js";
+import {type LanguageModelDefaultsStore} from "../../../language_models/domain/repositories/language-model-defaults-store.js";
+import {type GenkitLanguageModelResolver} from "../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {resolveDefaultLanguageModel} from "../../../language_models/infrastructure/genkit/resolve-default-language-model.js";
 import {SQLiteTeamContextStore} from "../../../teams/infrastructure/local/sqlite-team-context-store.js";
 import {type KnowledgeBaseAssistant} from "../../domain/usecases/knowledge-base-assistant.js";
 import {createKnowledgeBaseAssistantResponder} from "../genkit/knowledge-base-assistant-responder.js";
@@ -10,19 +11,18 @@ import {PublicPageHttpClient} from "../genkit/public-page-http-client.js";
 import {SQLiteKnowledgeBaseAssistantNoteStore} from "./sqlite-knowledge-base-assistant-note-store.js";
 
 /**
- * Alle drei Tool-Abhängigkeiten existieren bereits lokal:
- * `SQLiteKnowledgeBaseAssistantNoteStore` liest dieselbe `knowledge_notes`-
- * Tabelle wie `knowledgeNoteRoutes`, `SQLiteTeamContextStore` wird
- * schon von der Aufgaben-Ausführung genutzt, und der Seiten-Fetcher ist nie
- * Firebase-gebunden gewesen. Das Modell legt die Cloud fest; die
- * Runtime erfährt es per Firestore-Listener (siehe `RuntimeAssistantModel`).
- * Ohne Wert gilt das Standardmodell (siehe `resolveAssistantLanguageModel`).
+ * Der Wissensbasis-Agent läuft in der Runtime, damit die Notizen das Gerät
+ * nie verlassen. Er nutzt das Sprachmodell des Nutzers (Standardmodell, siehe
+ * `resolveDefaultLanguageModel`), nicht das der Cloud. Wird pro Anfrage
+ * gebaut, damit ein geändertes Standardmodell sofort wirkt.
  */
 export async function createLocalKnowledgeBaseAssistant(
   database: RuntimeExecutor,
-  modelSettings: AssistantModelSettings,
+  teamId: string,
+  resolver: GenkitLanguageModelResolver,
+  defaultsStore: LanguageModelDefaultsStore,
 ): Promise<KnowledgeBaseAssistant> {
-  const {ai, model} = await resolveAssistantLanguageModel(modelSettings);
+  const {ai, model} = await resolveDefaultLanguageModel(teamId, resolver, defaultsStore);
   const responder = createKnowledgeBaseAssistantResponder({
     ai,
     model,

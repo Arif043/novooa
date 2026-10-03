@@ -155,13 +155,6 @@ rules_version = '2';
 //   - communicationRevision: number (required) - monotonically advances on mail
 //   - updatedAt: timestamp (required) - last relay wake-up
 //
-// Collection: localRuntimeConfig
-// Document ID: assistant
-// Fields (written only by Cloud Functions, mirrored from Remote Config):
-//   - assistantModel: string | null - Google model name of the AI agent
-//   - revision: number - advances on every publish
-//   - updatedAt: timestamp
-//
 // Collection: modelCatalog
 // Document ID: public model id
 // Fields contain curated metadata and immutable Hugging Face source references.
@@ -999,13 +992,6 @@ service cloud.firestore {
     // Contains only a communication wake-up revision, never message contents.
     match /localRuntimeWakeups/{licenseId} {
       allow get: if isLocalRuntimeForLicense(licenseId);
-      allow list, create, update, delete: if false;
-    }
-
-    // The AI agent's model name, mirrored from Remote Config. Local runtimes
-    // listen to it; it contains no secrets.
-    match /localRuntimeConfig/{configId} {
-      allow get: if isAuthenticated() && request.auth.token.localRuntime == true;
       allow list, create, update, delete: if false;
     }
 

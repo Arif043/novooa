@@ -1,22 +1,10 @@
 import {HttpsError, isSignedIn, onCall} from "firebase-functions/v2/https";
-import {AssistantActor} from "../../../assistant/domain/entities/assistant-actor.js";
-import {AssistantExecutionContext} from "../../../assistant/domain/entities/assistant-execution-context.js";
 import {AssistantMessage} from "../../../assistant/domain/entities/assistant-message.js";
 import {AssistantRequest} from "../../../assistant/domain/entities/assistant-request.js";
 import {geminiApiKey} from "../../../../shared/genkit/gemini-secret.js";
 import {withExceptionLogging} from "../../../../shared/logging/logger.js";
-import {createTaskBuilderAssistant} from "../genkit/task-builder-assistant.js";
-import {createTaskBuilderAssistantResponder} from "../genkit/assistant/task-builder-assistant-responder.js";
-import {logTaskBuilderAssistantProposal} from "./task-builder-assistant-audit-event.js";
-import {readAssistantModelConfigDocument} from "../../../language_models/infrastructure/firebase/assistant-model-config-document.js";
-import {ConfigDocumentAssistantModel} from "../../../language_models/domain/usecases/config-document-assistant-model.js";
-import {RemoteConfigAssistantModel} from "../../../language_models/infrastructure/firebase/remote-config-assistant-model.js";
-import {resolveAssistantLanguageModel} from "../../../language_models/infrastructure/genkit/resolve-assistant-language-model.js";
+import {runTaskBuilderAssistant} from "./run-task-builder-assistant.js";
 
-
-const assistantModel = new ConfigDocumentAssistantModel(
-  readAssistantModelConfigDocument, new RemoteConfigAssistantModel(),
-);
 
 export const askTaskBuilderAssistant = onCall(
   {
@@ -33,19 +21,7 @@ export const askTaskBuilderAssistant = onCall(
 
 async function ask(data: unknown, auth: {uid: string} | undefined) {
   const input = inputFrom(data);
-  const actor = actorFrom(auth);
-  const {ai, model} = await resolveAssistantLanguageModel(assistantModel);
-  const assistant = createTaskBuilderAssistant(
-    createTaskBuilderAssistantResponder({ai, model, modelConfig: {}}),
-  );
-  const context = new AssistantExecutionContext(new AssistantActor(actor.uid));
-  const output = await assistant.ask(input.request, context);
-  logTaskBuilderAssistantProposal({
-    uid: actor.uid,
-    historyLength: input.historyLength,
-    commands: output.commands,
-  });
-  return output;
+  return runTaskBuilderAssistant({request: input.request, actorId: actorFrom(auth).uid});
 }
 
 function inputFrom(data: unknown): {

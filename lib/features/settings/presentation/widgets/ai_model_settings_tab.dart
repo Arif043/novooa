@@ -171,7 +171,12 @@ class _LanguageModelsSettingsContentState
     );
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [content, const LanguageModelDefaultsSections()],
+      children: [
+        content,
+        LanguageModelDefaultsSections(
+          usedByKnowledgeAssistant: widget.isStandalone,
+        ),
+      ],
     );
     return widget.scrollable ? SingleChildScrollView(child: body) : body;
   }

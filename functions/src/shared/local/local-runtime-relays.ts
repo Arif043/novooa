@@ -4,6 +4,11 @@ import {
   UnavailableRuntimeMailRelayClient,
 } from "../../features/communication/infrastructure/local/runtime-mail-relay-client.js";
 import {
+  HttpRuntimeTaskBuilderRelayClient,
+  type RuntimeTaskBuilderRelayClient,
+  UnavailableRuntimeTaskBuilderRelayClient,
+} from "../../features/task_execution/infrastructure/local/runtime-task-builder-relay-client.js";
+import {
   HttpRuntimePushRelayClient,
   type RuntimePushRelayClient,
   UnavailableRuntimePushRelayClient,
@@ -13,6 +18,11 @@ import {
 export function pushRelayFromEnvironment(): RuntimePushRelayClient {
   const endpoint = process.env.LOCAL_RUNTIME_PUSH_RELAY_URL?.trim();
   return endpoint ? new HttpRuntimePushRelayClient(endpoint) : new UnavailableRuntimePushRelayClient();
+}
+
+export function taskBuilderRelayFromEnvironment(): RuntimeTaskBuilderRelayClient {
+  const endpoint = process.env.LOCAL_RUNTIME_TASK_BUILDER_RELAY_URL?.trim();
+  return endpoint ? new HttpRuntimeTaskBuilderRelayClient(endpoint) : new UnavailableRuntimeTaskBuilderRelayClient();
 }
 
 export function mailRelayFromEnvironment(): RuntimeMailRelayClient {
