@@ -40,11 +40,11 @@ async function workspaceWith(files: {displayName: string; bytes: Buffer; content
 const executor = (workspace?: ScriptWorkspace) => createContainerScriptExecutorFactory("http://script:8091")(workspace);
 
 test("schickt Script, Eingabe und Variablen an /run und liefert die Antwort des Dienstes", async () => {
-  const sent = respondWith(200, {outputDefined: true, output: "ERGEBNIS", printed: "hallo\n", variables: {zaehler: 2}});
+  const sent = respondWith(200, {outputDefined: true, output: "ERGEBNIS", printed: "hallo\n", stderr: "warnung\n", variables: {zaehler: 2}});
 
   const result = await executor().execute(request);
 
-  assert.deepEqual(result, {output: "ERGEBNIS", printed: "hallo\n", variables: {zaehler: 2}});
+  assert.deepEqual(result, {output: "ERGEBNIS", printed: "hallo\n", errorOutput: "warnung\n", variables: {zaehler: 2}});
   assert.equal(sent[0].url, "http://script:8091/run");
   const body = JSON.parse(await (sent[0].form.get("request") as Blob).text());
   assert.deepEqual(body, {script: "output = input", input: "eingabe", variables: {zaehler: 1}, files: []});
@@ -72,12 +72,13 @@ test("setzt das Script keinen output, bleibt die Eingabe", async () => {
 });
 
 test("ein gescheitertes Script liefert die lesbare Meldung des Dienstes samt Ausgabe", async () => {
-  respondWith(422, {error: "Zeile 2: ZeroDivisionError: division by zero", printed: "vorher\n"});
+  respondWith(422, {error: "Zeile 2: ZeroDivisionError: division by zero", printed: "vorher\n", stderr: "warnung\n"});
 
   await assert.rejects(executor().execute(request), (error: unknown) => {
     assert.ok(error instanceof ScriptExecutionError);
     assert.match(error.message, /Zeile 2: ZeroDivisionError/);
     assert.equal(error.printed, "vorher\n");
+    assert.equal(error.errorOutput, "warnung\n");
     return true;
   });
 });

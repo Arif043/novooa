@@ -4,8 +4,9 @@ export interface ApplicationLogger {
   info(event: string, data?: LogData): void;
   error(event: string, data?: LogData): void;
   exception(event: string, error: unknown, data?: LogData): void;
-  readableInfo(message: string): void;
-  readableError(message: string): void;
+  /** Ein Eintrag für Menschen; [event] erlaubt der Oberfläche, bestimmte Arten (etwa Script-Ausgabe) besonders darzustellen. */
+  readableInfo(message: string, event?: string): void;
+  readableError(message: string, event?: string): void;
 }
 
 export async function withExceptionLogging<T>(

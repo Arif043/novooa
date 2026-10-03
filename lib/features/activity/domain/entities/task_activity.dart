@@ -19,6 +19,8 @@ class TaskActivity {
     this.output,
     this.message,
     this.outputs = const {},
+    this.stdout = '',
+    this.stderr = '',
   });
 
   final UniqueId id;
@@ -34,4 +36,10 @@ class TaskActivity {
   final String? output;
   final String? message;
   final Map<String, Object?> outputs;
+
+  /// Was der Baustein auf stdout und stderr ausgegeben hat (Script-Baustein); leer, wenn nichts.
+  final String stdout;
+  final String stderr;
+
+  bool get hasConsoleOutput => stdout.isNotEmpty || stderr.isNotEmpty;
 }

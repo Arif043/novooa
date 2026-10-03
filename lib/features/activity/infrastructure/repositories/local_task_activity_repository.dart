@@ -63,7 +63,15 @@ class LocalTaskActivityRepository implements TaskActivityRepository {
       output: _nullableString(data['output']),
       message: _nullableString(data['message']),
       outputs: _outputsFrom(data['outputs']),
+      stdout: _consoleText(data['console'], 'stdout'),
+      stderr: _consoleText(data['console'], 'stderr'),
     );
+  }
+
+  String _consoleText(Object? console, String stream) {
+    if (console is! Map) return '';
+    final text = console[stream];
+    return text is String ? text : '';
   }
 
   TaskActivityTarget _targetFrom(Object? value) =>

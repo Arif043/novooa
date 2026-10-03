@@ -324,9 +324,12 @@ export type NodeExecutionResult = {
   selectedBranchId?: string | null;
   selectedBranchLabel?: string | null;
   message?: string;
+  /** Was der Baustein auf stdout und stderr ausgegeben hat (Script-Baustein); fehlt, wenn nichts. */
+  console?: ConsoleOutput;
   interaction?: TaskRunInteraction;
   dialogInput?: DialogInputDefinition;
 };
+export type ConsoleOutput = {stdout: string; stderr: string};
 export type TaskResumeState = {
   nodeResults: NodeExecutionResult[];
   variables: Record<string, unknown>;

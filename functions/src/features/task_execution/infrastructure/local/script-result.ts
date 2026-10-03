@@ -6,6 +6,7 @@ export function scriptResultFrom(parsed: Record<string, unknown>, fallbackInput:
     output: outputFrom(parsed, fallbackInput),
     variables: variablesFrom(parsed.variables),
     printed: typeof parsed.printed === "string" ? parsed.printed : "",
+    errorOutput: typeof parsed.stderr === "string" ? parsed.stderr : "",
   };
 }
 

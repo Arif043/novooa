@@ -1,0 +1,1 @@
+ALTER TABLE `activities` ADD `console_json` text DEFAULT '{}' NOT NULL;

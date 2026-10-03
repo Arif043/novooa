@@ -51,6 +51,20 @@ test("uses the task definition store without a SQL dependency", async () => {
   assert.deepEqual(listed, {body: {items: [taskBody()]}, statusCode: 200});
 });
 
+test("a node activity carries what the script printed to stdout and stderr", async () => {
+  const database = await databaseWithTaskTables();
+  await database.run(sql`INSERT INTO activities(id, team_id, run_id, task_id, node_id, target, title, status, console_json, created_at) VALUES (${"a-1"}, ${"team-1"}, ${"run-1"}, ${"task-1"}, ${"node.1"}, ${"node"}, ${"node.1"}, ${"succeeded"}, ${'{"stdout":"hallo\\n","stderr":"warnung\\n"}'}, ${"2026-09-08 10:01:00"})`);
+  await database.run(sql`INSERT INTO activities(id, team_id, run_id, task_id, target, title, status, created_at) VALUES (${"a-2"}, ${"team-1"}, ${"run-1"}, ${"task-1"}, ${"task"}, ${"Aufgabe"}, ${"succeeded"}, ${"2026-09-08 10:02:00"})`);
+  const handler = testingRoutes(taskActivityRoutes, {database});
+
+  const response = await handler.handle({body: {}, method: "GET", url: "/v1/activities"});
+
+  const items = (response?.body as {items: Array<{id: string; console: unknown}>}).items;
+  assert.deepEqual(items.find((item) => item.id === "a-1")?.console, {stdout: "hallo\n", stderr: "warnung\n"});
+  assert.deepEqual(items.find((item) => item.id === "a-2")?.console, {stdout: "", stderr: ""});
+  database.$client.close();
+});
+
 test("lists local task runs and activities", async () => {
   const database = await databaseWithTaskTables();
   await database.run(sql`INSERT INTO task_runs(id, team_id, task_id, task_title, status, final_output, created_at, updated_at) VALUES (${"run-1"}, ${"team-1"}, ${"task-1"}, ${"Aufgabe"}, ${"succeeded"}, ${"Fertig"}, ${"2026-09-08 10:00:00"}, ${"2026-09-08 10:01:00"})`);
@@ -82,7 +96,8 @@ async function databaseWithTaskTables(): Promise<RuntimeDatabase> {
     id TEXT PRIMARY KEY, team_id TEXT NOT NULL, run_id TEXT NOT NULL, task_id TEXT NOT NULL,
     node_id TEXT, target TEXT NOT NULL, primitive TEXT, title TEXT NOT NULL, status TEXT NOT NULL,
     input TEXT NOT NULL DEFAULT '', output TEXT NOT NULL DEFAULT '', outputs_json TEXT NOT NULL DEFAULT '{}',
-    message TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    message TEXT NOT NULL DEFAULT '', console_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`);
   return database;
 }

@@ -1,6 +1,7 @@
 import {type SpeechTranscriber} from "../../../speech_transcription/domain/repositories/speech-transcriber.js";
 import {type SpeechSynthesizer} from "../../../speech_synthesis/domain/repositories/speech-synthesizer.js";
 import {
+  type ConsoleOutput,
   type NodeExecutionResult,
   type NodeOutputValue,
   type FileReference,
@@ -88,6 +89,7 @@ export function executedNode(
       selectedBranchLabel?: string | null;
     };
     variables?: TaskVariables;
+    console?: ConsoleOutput;
   } = {},
 ): NodeExecutionResult {
   return {
@@ -96,6 +98,7 @@ export function executedNode(
     status: "executed",
     outputs,
     variables: options.variables,
+    console: options.console,
     selectedNodeId: options.selectedNodeId,
     selectedBranchId: options.selection?.selectedBranchId,
     selectedBranchLabel: options.selection?.selectedBranchLabel,

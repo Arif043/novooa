@@ -3,7 +3,7 @@ import {type Activities, type TaskRuns} from "../../../../db/schema.js";
 export type TaskRunRow = Pick<TaskRuns, "created_at" | "error_json" | "final_output" | "id" | "interaction_json" |
   "review_output" | "status" | "task_id" | "task_title" | "updated_at" | "waiting_node_id">;
 export type ActivityRow = Pick<Activities, "created_at" | "id" | "input" | "message" | "node_id" | "output" |
-  "outputs_json" | "primitive" | "run_id" | "status" | "target" | "task_id" | "title">;
+  "outputs_json" | "console_json" | "primitive" | "run_id" | "status" | "target" | "task_id" | "title">;
 
 export type TaskRunDto = {
   runId: string; taskId: string; taskTitle: string; status: string; waitingNodeId: string | null;
@@ -14,7 +14,7 @@ export type TaskRunDto = {
 export type ActivityDto = {
   id: string; runId: string; taskId: string; taskTitle: string; target: string; status: string; occurredAt: string;
   nodeId: string | null; primitive: string | null; input: string; output: string;
-  outputs: Record<string, unknown>; message: string;
+  outputs: Record<string, unknown>; message: string; console: {stdout: string; stderr: string};
 };
 
 export function runFromRow(row: TaskRunRow): TaskRunDto {
@@ -31,7 +31,15 @@ export function activityFromRow(row: ActivityRow): ActivityDto {
     id: row.id, runId: row.run_id, taskId: row.task_id, taskTitle: row.title,
     target: row.target, status: row.status, occurredAt: isoTimestamp(row.created_at),
     nodeId: row.node_id, primitive: row.primitive, input: row.input, output: row.output,
-    outputs: jsonRecord(row.outputs_json), message: row.message,
+    outputs: jsonRecord(row.outputs_json), message: row.message, console: consoleFrom(row.console_json),
+  };
+}
+
+function consoleFrom(value: string): {stdout: string; stderr: string} {
+  const parsed = jsonRecord(value);
+  return {
+    stdout: typeof parsed.stdout === "string" ? parsed.stdout : "",
+    stderr: typeof parsed.stderr === "string" ? parsed.stderr : "",
   };
 }
 

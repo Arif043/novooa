@@ -479,7 +479,9 @@ auf zusammen 25 MB begrenzt (`maximumAttachmentBytes`).
 
 **Ausführung:** Pro Lauf startet der Dienst einen frischen `python -I`-Prozess
 mit eigenem, temporärem Arbeitsverzeichnis, das danach gelöscht wird. Das Script
-hat **volles Python** (Imports, `open`, eigene Module der Standardbibliothek);
+hat **volles Python** (Imports, `open`, eigene Module der Standardbibliothek) und
+läuft wie eine gestartete Datei (`__name__ == "__main__"`, ein
+`if __name__ == "__main__":`-Block wird also ausgeführt);
 `input`, die Variablen aus früheren Bausteinen, `files`, `list_files()` und
 `read_file()` stehen wie bisher bereit. Grenzen je Lauf: 10 s Laufzeit
 (`SCRIPT_TIMEOUT_SECONDS`), 64 MB
@@ -490,17 +492,33 @@ aus, beendet der Kernel zuerst die Scripts, nie den Server: Die Script-Prozesse
 laufen mit `oom_score_adj=1000`. Der Lauf scheitert dann mit „Das Script wurde
 beendet (Signal 9), etwa wegen zu hohem Speicher- oder Zeitverbrauch.“
 
-**Ausgabe im Aktivitäten-Protokoll:** Alles, was ein Script auf stdout schreibt,
-erscheint als „[Script-Log]“ im Protokoll des Laufs — auch wenn es scheitert oder
-abgebrochen wird (Timeout, Speicher-Kill). Der Dienst fängt dafür den echten
-Dateideskriptor 1 in einer Datei ab, nicht nur `sys.stdout`; damit sind auch
-`subprocess`-Ausgaben und `os.write(1, …)` dabei, und `python -u` sorgt dafür,
-dass nichts im Puffer hängen bleibt. Bei Fehlern kommt die Ausgabe in der
-`422`-Antwort als `printed` mit zurück; der Script-Baustein protokolliert sie vor
-der Fehlermeldung (`ScriptExecutionError`). Die Ausgabe ist auf 256 KB begrenzt
-(„[Ausgabe gekürzt]“) und erscheint erst, wenn der Lauf beendet ist, nicht live.
-stderr (Warnungen, Tracebacks) gehört nicht dazu; ein Fehler des Scripts
-erscheint als Meldung mit Zeilenangabe.
+**Ausgabe im Aktivitäten-Protokoll:** Alles, was ein Script auf stdout **und
+stderr** schreibt, erscheint im Tab „Protokoll“ unter „Aktivitäten“ — auch wenn
+es scheitert oder abgebrochen wird (Timeout, Speicher-Kill). Der Dienst fängt
+dafür die echten Dateideskriptoren 1 und 2 in Dateien ab, nicht nur `sys.stdout`;
+damit sind auch `subprocess`-Ausgaben, `os.write(1, …)` und Python-Warnungen
+dabei, und `python -u` sorgt dafür, dass nichts im Puffer hängen bleibt. Antwort
+des Dienstes: `printed` (stdout) und `stderr`, bei Fehlern in der `422`-Antwort;
+der Script-Baustein protokolliert sie vor der Fehlermeldung
+(`ScriptExecutionError`).
+
+- stdout: Information, Ereignis `script_node.stdout`, Text „[Script-Log] …“.
+- stderr: Fehlereintrag, Ereignis `script_node.stderr`, Text
+  „[Script-Fehlerausgabe] …“. Die Oberfläche (`LogMessage`) zeigt ihn in
+  Festbreitenschrift und **rötlich** (Fehlerfarbe auf rötlicher Fläche), die
+  stdout-Ausgabe ebenfalls in Festbreitenschrift auf neutraler Fläche. Gibt es
+  keine Fehlerausgabe, erscheint kein Eintrag.
+- **Aktivität des Bausteins:** In der Detailansicht eines Laufs („Aktivitäten“ →
+  Verlauf → Aufgabe) zeigt der Eintrag „Baustein ausgeführt“ zusätzlich die
+  Abschnitte „Script-Ausgabe (stdout)“ und „Fehlerausgabe (stderr)“, letzteres
+  rötlich. Dazu trägt das Ergebnis des Bausteins `console: {stdout, stderr}`; es
+  liegt in der Spalte `activities.console_json` und kommt als `console` aus
+  `GET /v1/activities`. Ohne Ausgabe erscheint kein Abschnitt. Schlägt ein Script
+  fehl, gibt es keinen Eintrag für den Baustein; dessen Ausgabe steht dann nur im
+  Protokoll.
+- Beide sind auf 256 KB begrenzt („[Ausgabe gekürzt]“) und erscheinen erst, wenn
+  der Lauf beendet ist, nicht live. Der Fehler des Scripts selbst steht als
+  Meldung mit Zeilenangabe im Lauf und ist keine stderr-Ausgabe.
 
 **Abschottung (docker-compose.local.yaml):** internes Netz (`internal: true`, kein
 Zugang nach außen und kein DNS, nur die Runtime erreicht den Dienst),

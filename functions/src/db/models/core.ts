@@ -17,6 +17,7 @@ export const activities = sqliteTable("activities", {
   message: text("message").notNull().default(""),
   duration_ms: integer("duration_ms"),
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  console_json: text("console_json").notNull().default("{}"),
 }, (table) => [
   index("idx_activities_team_run").on(table.team_id, table.run_id),
 ]);

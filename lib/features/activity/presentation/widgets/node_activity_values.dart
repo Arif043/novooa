@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/console_output_block.dart';
 import '../../domain/entities/task_activity.dart';
 import 'node_output_formatter.dart';
 
@@ -12,13 +13,26 @@ class NodeActivityValues extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final outputs = _outputs;
-    if (outputs.isEmpty) return const SizedBox.shrink();
+    if (outputs.isEmpty && !activity.hasConsoleOutput) {
+      return const SizedBox.shrink();
+    }
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final output in outputs) _NodeActivityValue(output: output),
+          if (activity.stdout.isNotEmpty)
+            _ConsoleValue(
+              label: 'Script-Ausgabe (stdout)',
+              text: activity.stdout,
+            ),
+          if (activity.stderr.isNotEmpty)
+            _ConsoleValue(
+              label: 'Fehlerausgabe (stderr)',
+              text: activity.stderr,
+              isError: true,
+            ),
         ],
       ),
     );
@@ -38,6 +52,34 @@ class NodeActivityValues extends StatelessWidget {
   }
 
   bool _hasText(String? value) => value?.trim().isNotEmpty ?? false;
+}
+
+class _ConsoleValue extends StatelessWidget {
+  const _ConsoleValue({
+    required this.label,
+    required this.text,
+    this.isError = false,
+  });
+
+  final String label;
+  final String text;
+  final bool isError;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: textTheme.labelSmall),
+          const SizedBox(height: AppSpacing.xs),
+          ConsoleOutputBlock(text: text.trimRight(), isError: isError),
+        ],
+      ),
+    );
+  }
 }
 
 class _NodeActivityValue extends StatelessWidget {

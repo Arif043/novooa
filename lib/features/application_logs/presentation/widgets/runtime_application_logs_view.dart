@@ -8,6 +8,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/application_log.dart';
 import '../cubits/application_logs_cubit.dart';
 import '../cubits/application_logs_state.dart';
+import 'log_message.dart';
 
 class RuntimeApplicationLogsView extends StatelessWidget {
   const RuntimeApplicationLogsView({super.key});
@@ -82,10 +83,7 @@ class _LogItem extends StatelessWidget {
           isError ? Icons.error_outline : Icons.info_outline,
           color: color,
         ),
-        title: Text(
-          log.message ?? log.event,
-          style: theme.textTheme.titleSmall,
-        ),
+        title: LogMessage(log: log),
         subtitle: _LogSummary(log: log),
       ),
     );

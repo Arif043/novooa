@@ -47,7 +47,8 @@ def namespace_for(payload, attachments):
             return handle.read()
 
     return {
-        "__name__": "__script__",
+        # Wie beim Start einer Datei: Scripts mit `if __name__ == "__main__":` sollen diesen Block ausführen.
+        "__name__": "__main__",
         "input": payload["input"],
         "files": files,
         "list_files": list_files,

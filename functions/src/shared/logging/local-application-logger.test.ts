@@ -24,6 +24,20 @@ test("persists structured local application logs", async () => {
   assert.deepEqual(store.items.map((log) => log.source), ["runtime", "runtime", "runtime"]);
 });
 
+test("readable entries can carry their own event name and keep their level", async () => {
+  const store = new MemoryApplicationLogStore();
+  const logger = new LocalApplicationLogger(store, "team-1", {writeToConsole: false});
+
+  logger.readableInfo("[Script-Log]\nhallo", "script_node.stdout");
+  logger.readableError("[Script-Fehlerausgabe]\nwarnung", "script_node.stderr");
+  logger.readableError("Fehler ohne Ereignis");
+  await logger.flush();
+
+  assert.deepEqual(store.items.map((log) => [log.level, log.event]), [
+    ["info", "script_node.stdout"], ["error", "script_node.stderr"], ["error", "application.message"],
+  ]);
+});
+
 class MemoryApplicationLogStore implements LocalApplicationLogStore {
   readonly items: LocalApplicationLog[] = [];
 

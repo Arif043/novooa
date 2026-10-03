@@ -17,6 +17,7 @@ const Activity = Type.Object({
   id: Type.String(), runId: Type.String(), taskId: Type.String(), taskTitle: Type.String(), target: Type.String(),
   status: Type.String(), occurredAt: Type.String(), nodeId: NullableString, primitive: NullableString,
   input: Type.String(), output: Type.String(), outputs: JsonObject, message: Type.String(),
+  console: Type.Object({stdout: Type.String(), stderr: Type.String()}),
 });
 const NewActivity = Type.Object({
   id: NonEmptyString(), runId: NonEmptyString(), taskId: NonEmptyString(), taskTitle: NonEmptyString(),
@@ -40,7 +41,7 @@ export const taskActivityRoutes: FastifyPluginAsyncTypebox<TaskActivityRoutesOpt
     const rows = await database.select({id: activities.id, run_id: activities.run_id, task_id: activities.task_id,
       node_id: activities.node_id, target: activities.target, primitive: activities.primitive, title: activities.title,
       status: activities.status, input: activities.input, output: activities.output, outputs_json: activities.outputs_json,
-      message: activities.message, created_at: activities.created_at}).from(activities)
+      message: activities.message, console_json: activities.console_json, created_at: activities.created_at}).from(activities)
       .where(eq(activities.team_id, request.workspace.teamId)).orderBy(desc(activities.created_at)).limit(100);
     return {items: rows.map(activityFromRow)};
   });
@@ -48,7 +49,7 @@ export const taskActivityRoutes: FastifyPluginAsyncTypebox<TaskActivityRoutesOpt
   app.post("/v1/activities", {schema: {body: NewActivity, response: {201: Activity}}}, async (request, reply) => {
     const activity = {...request.body, nodeId: request.body.nodeId ?? null, primitive: request.body.primitive ?? null,
       input: request.body.input ?? "", output: request.body.output ?? "", outputs: request.body.outputs ?? {},
-      message: request.body.message ?? ""};
+      message: request.body.message ?? "", console: {stdout: "", stderr: ""}};
     await database.insert(activities).values({id: activity.id, team_id: request.workspace.teamId, run_id: activity.runId,
       task_id: activity.taskId, node_id: activity.nodeId, target: activity.target, primitive: activity.primitive,
       title: activity.taskTitle, status: activity.status, input: activity.input, output: activity.output,

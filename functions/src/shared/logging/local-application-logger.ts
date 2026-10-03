@@ -41,12 +41,12 @@ export class LocalApplicationLogger implements ApplicationLogger {
     this.write("error", event, null, {...data, error: errorDetails(error)});
   }
 
-  readableInfo(message: string): void {
-    this.write("info", "application.message", message);
+  readableInfo(message: string, event = "application.message"): void {
+    this.write("info", event, message);
   }
 
-  readableError(message: string): void {
-    this.write("error", "application.message", message);
+  readableError(message: string, event = "application.message"): void {
+    this.write("error", event, message);
   }
 
   async flush(): Promise<void> {

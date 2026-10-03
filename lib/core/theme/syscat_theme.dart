@@ -9,6 +9,14 @@ class SyscatTheme {
   static const String titleFontFamily = 'Space Grotesk';
   static const String bodyFontFamily = 'Inter';
 
+  /// Festbreitenschrift für Code und Ausgaben von Scripts; die erste verfügbare der Plattform gewinnt.
+  static const List<String> codeFontFamilyFallback = [
+    'Menlo',
+    'Consolas',
+    'DejaVu Sans Mono',
+    'monospace',
+  ];
+
   static TextStyle taskBody = const TextStyle(
     fontFamily: bodyFontFamily,
     fontSize: 17,

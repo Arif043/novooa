@@ -33,6 +33,8 @@ void main() {
 
     expect(run.status, TaskRunStatus.waitingForApproval);
     expect(activity.taskTitle, 'Lokale Aufgabe');
+    expect(activity.stdout, 'hallo\n');
+    expect(activity.stderr, 'Warnung\n');
     expect(client.reviewedRunId, 'run-1');
   });
 
@@ -134,4 +136,5 @@ Map<String, Object?> activityJson() => {
   'status': 'waiting',
   'occurredAt': '2026-09-08T10:01:00Z',
   'outputs': <String, Object?>{},
+  'console': {'stdout': 'hallo\n', 'stderr': 'Warnung\n'},
 };

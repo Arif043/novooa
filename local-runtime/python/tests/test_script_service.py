@@ -160,6 +160,42 @@ class ExecutionTest(unittest.TestCase):
         self.assertTrue(result["printed"].endswith("[Ausgabe gekürzt]"))
         self.assertLess(len(result["printed"]), 257 * 1024)
 
+    def test_returns_stderr_separately_from_stdout(self):
+        script = (
+            "import sys, warnings\n"
+            "print('normal')\n"
+            "print('warnung', file=sys.stderr)\n"
+            "warnings.warn('veraltet')\n"
+            "output = 'x'"
+        )
+
+        result = run(script)
+
+        self.assertEqual(result["printed"], "normal\n")
+        self.assertIn("warnung", result["stderr"])
+        self.assertIn("UserWarning: veraltet", result["stderr"])
+
+    def test_failed_runs_keep_stderr_too(self):
+        with self.assertRaises(execution.ScriptFailed) as raised:
+            run("import sys\nprint('aus', file=sys.stderr)\nraise ValueError('kaputt')")
+
+        self.assertEqual(raised.exception.error_output, "aus\n")
+
+    def test_stderr_is_empty_when_nothing_was_written(self):
+        self.assertEqual(run("output = 'x'")["stderr"], "")
+
+    def test_runs_the_main_block_like_a_started_file(self):
+        script = (
+            "class Gen:\n"
+            "    def hallo(self):\n"
+            "        return 'hallo'\n"
+            "\n"
+            "if __name__ == '__main__':\n"
+            "    print(Gen().hallo())\n"
+        )
+
+        self.assertEqual(run(script)["printed"], "hallo\n")
+
     def test_does_not_leave_run_directories_behind(self):
         before = set(Path(execution.WORK_ROOT).glob("run-*"))
         run("output = 'x'", files=[("a.txt", b"x")])

@@ -32,7 +32,7 @@ export class SQLiteActivityStore implements ActivityStore {
     run: TaskRunDocument,
     result: NodeExecutionResult,
   ) {
-    await this.database.insert(activities).values({id: randomUUID(), team_id: teamId, run_id: run.runId, task_id: run.taskId, node_id: result.nodeId, target: "node", primitive: result.primitive, title: result.nodeId, status: nodeStatus(result.status), input: "", output: "", outputs_json: JSON.stringify(result.outputs), message: result.message ?? "", duration_ms: null});
+    await this.database.insert(activities).values({id: randomUUID(), team_id: teamId, run_id: run.runId, task_id: run.taskId, node_id: result.nodeId, target: "node", primitive: result.primitive, title: result.nodeId, status: nodeStatus(result.status), input: "", output: "", outputs_json: JSON.stringify(result.outputs), message: result.message ?? "", console_json: JSON.stringify(result.console ?? {}), duration_ms: null});
   }
 }
 

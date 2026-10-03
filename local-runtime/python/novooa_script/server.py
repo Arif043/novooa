@@ -39,7 +39,7 @@ class ScriptHandler(BaseHTTPRequestHandler):
         try:
             self.reply(200, execute(request, files))
         except ScriptFailed as error:
-            self.reply(422, {"error": str(error), "printed": error.printed})
+            self.reply(422, {"error": str(error), "printed": error.printed, "stderr": error.error_output})
         except Exception:  # noqa: BLE001 - nie die Verbindung kappen, sondern sauber antworten
             self.reply(500, {"error": "Im Script-Dienst ist ein interner Fehler aufgetreten."})
         finally:

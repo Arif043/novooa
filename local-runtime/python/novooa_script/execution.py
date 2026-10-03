@@ -20,9 +20,10 @@ WORK_ROOT = os.environ.get("SCRIPT_WORK_DIRECTORY", tempfile.gettempdir())
 class ScriptFailed(Exception):
     """Das Script ist gescheitert; die Meldung ist für den Nutzer bestimmt."""
 
-    def __init__(self, message, printed=""):
+    def __init__(self, message, printed="", error_output=""):
         super().__init__(message)
         self.printed = printed
+        self.error_output = error_output
 
 
 def execute(request, file_bytes):
@@ -35,8 +36,9 @@ def execute(request, file_bytes):
         except ScriptFailed as failure:
             # Was das Script bis zum Fehler ausgegeben hat, ist gerade dann wertvoll.
             failure.printed = printed_of(run_directory)
+            failure.error_output = error_output_of(run_directory)
             raise
-        return {**result, "printed": printed_of(run_directory)}
+        return {**result, "printed": printed_of(run_directory), "stderr": error_output_of(run_directory)}
     finally:
         shutil.rmtree(run_directory, ignore_errors=True)
 
@@ -86,8 +88,7 @@ def prefer_script_in_oom():
 def run_child(payload, run_directory):
     # Fehlerausgabe in eine Datei statt in eine Pipe: Prozesse, die das Script startet,
     # erben sonst die Pipe, und der Lauf hinge, bis auch sie enden.
-    stderr_path = os.path.join(run_directory, "stderr.txt")
-    with open(stderr_path, "wb") as stderr_file, open(stdout_path(run_directory), "wb") as stdout_file:
+    with open(stderr_path(run_directory), "wb") as stderr_file, open(stdout_path(run_directory), "wb") as stdout_file:
         process = subprocess.Popen(
             # -u: stdout ohne Puffer, damit auch bei Timeout oder Kill alles Bisherige erhalten bleibt.
             [sys.executable, "-u", "-I", CHILD, run_directory],
@@ -97,7 +98,7 @@ def run_child(payload, run_directory):
         )
         wait_for(process, payload)
     if process.returncode != 0:
-        raise ScriptFailed(failure_message(process.returncode, stderr_path))
+        raise ScriptFailed(failure_message(process.returncode, stderr_path(run_directory)))
     return run_directory
 
 
@@ -125,10 +126,23 @@ def stdout_path(run_directory):
     return os.path.join(run_directory, "stdout.txt")
 
 
+def stderr_path(run_directory):
+    return os.path.join(run_directory, "stderr.txt")
+
+
 def printed_of(run_directory):
     """Die komplette stdout des Laufs; bei sehr viel Ausgabe die ersten Bytes samt Hinweis."""
+    return output_of(stdout_path(run_directory))
+
+
+def error_output_of(run_directory):
+    """Die komplette stderr des Laufs (Warnungen, Ausgabe von Unterprozessen), ebenso begrenzt."""
+    return output_of(stderr_path(run_directory))
+
+
+def output_of(path):
     try:
-        with open(stdout_path(run_directory), "rb") as handle:
+        with open(path, "rb") as handle:
             data = handle.read(MAX_PRINTED_BYTES + 1)
     except OSError:
         return ""

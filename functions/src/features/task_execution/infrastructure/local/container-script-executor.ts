@@ -71,6 +71,7 @@ async function post(url: URL, body: FormData): Promise<Record<string, unknown>> 
     throw new ScriptExecutionError(
       typeof parsed.error === "string" ? parsed.error : "Der Script-Dienst hat die Anfrage abgelehnt.",
       typeof parsed.printed === "string" ? parsed.printed : "",
+      typeof parsed.stderr === "string" ? parsed.stderr : "",
     );
   }
   return parsed;
