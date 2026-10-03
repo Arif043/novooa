@@ -113,20 +113,20 @@ class _PromptWidgetState extends State<PromptWidget> {
             onStructuredFieldAdded: _addStructuredField,
             onStructuredFieldRemoved: _removeStructuredField,
           ),
-          const SizedBox(height: AppSpacing.md),
+          const Divider(height: AppSpacing.lg * 2),
           NodeFileAttachmentSection(
             attachments: config.attachments,
             onAttach: _attachFile,
             onDetach: _detachFile,
           ),
-          const SizedBox(height: AppSpacing.md),
+          const Divider(height: AppSpacing.lg * 2),
           NodeKnowledgeAttachmentSection(
             attachments: config.knowledgeAttachments,
             onAttach: _attachKnowledge,
             onDetach: _detachKnowledge,
           ),
           if ((skillsAvailable() || employeesAvailable())) ...[
-            const SizedBox(height: AppSpacing.md),
+            const Divider(height: AppSpacing.lg * 2),
             PromptResourceSelection(
               employeeId: config.employeeId,
               skillAttachments: config.skillAttachments,
