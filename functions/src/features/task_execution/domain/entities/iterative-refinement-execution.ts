@@ -1,4 +1,4 @@
-import {type EmployeeAttachment} from "./task.js";
+import {type ResolvedEmployee} from "./task.js";
 
 export type IterativeRefinementRequest = {
   objective: string;
@@ -6,7 +6,7 @@ export type IterativeRefinementRequest = {
   optimizerPrompt: string;
   critiquePrompt: string;
   maxIterations: number;
-  employee?: EmployeeAttachment;
+  employee?: ResolvedEmployee;
 };
 
 export type IterativeRefinementResult = {

@@ -8,7 +8,6 @@ import 'package:syscat2/features/employees/domain/usecases/watch_employees.dart'
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
 
-import '../../domain/entities/employee_attachment.dart';
 import 'node_employee_assignments_state.dart';
 
 /// Beobachtet die Team-Mitarbeiter und stellt sie dem NodeInspector als
@@ -63,18 +62,8 @@ class NodeEmployeeAssignmentsCubit extends Cubit<NodeEmployeeAssignmentsState> {
     emit(
       NodeEmployeeAssignmentsState(
         status: NodeEmployeeAssignmentsStatus.ready,
-        employees: employees.map(_toAttachment).toList(growable: false),
+        employees: employees,
       ),
-    );
-  }
-
-  EmployeeAttachment _toAttachment(Employee employee) {
-    return EmployeeAttachment(
-      employeeId: employee.id,
-      name: employee.name,
-      role: employee.role,
-      promptTemplate: employee.promptTemplate,
-      defaultSkills: employee.defaultSkills,
     );
   }
 

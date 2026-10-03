@@ -1,18 +1,17 @@
 import {type TaskRunContext} from "../../../domain/executors/node-executor.js";
 import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
 import {attachmentInstructions} from "../runner/node-attachment-genkit.js";
-import {employeeFor, renderEmployeePrompt} from "../runner/employee-context.js";
 import {mediaDataUrlFor} from "../runner/media-value-loader.js";
-import {type WorkflowNode} from "../runner/task-definition.js";
+import {type ResolvedEmployee, type WorkflowNode} from "../runner/task-definition.js";
 import {type PromptContent, type PromptNodeInput, type StructuredOutputField} from "./prompt-node-types.js";
 
 export async function promptInputFor(
   node: WorkflowNode,
   runContext: TaskRunContext,
+  employee?: ResolvedEmployee,
 ): Promise<PromptNodeInput> {
   const config = promptConfigFor(node);
-  const employee = employeeFor(node);
-  const instruction = await resolvedInstructionFor(node, employee, runContext);
+  const instruction = await resolvedInstructionFor(node, runContext);
   return {
     instruction: instruction.text,
     context: runContext.context,
@@ -36,17 +35,13 @@ export function promptContentFor(
 
 async function resolvedInstructionFor(
   node: WorkflowNode,
-  employee: PromptNodeInput["employee"],
   runContext: TaskRunContext,
 ): Promise<ResolvedPromptInstruction> {
   const instruction = rawInstructionFor(node);
-  const rendered = employee
-    ? renderEmployeePrompt(employee.promptTemplate, instruction)
-    : instruction;
   return {
     text: runContext.templateExpressionResolver
-      .resolveTextWithoutMediaReferences(rendered).trim(),
-    mediaUrls: await mediaUrlsFor(rendered, runContext),
+      .resolveTextWithoutMediaReferences(instruction).trim(),
+    mediaUrls: await mediaUrlsFor(instruction, runContext),
   };
 }
 

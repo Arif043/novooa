@@ -1,7 +1,7 @@
+import 'package:syscat2/core/runtime/employees_availability.dart';
 import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:syscat2/core/config/mvp_feature_flags.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_session_cubit.dart';
 import 'package:syscat2/features/auth/presentation/cubits/auth_session_state.dart';
 import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
@@ -122,8 +122,7 @@ class AppRouter {
           ),
           GoRoute(
             path: employees,
-            redirect: (context, state) =>
-                MvpFeatureFlags.employeesEnabled ? null : home,
+            redirect: (context, state) => employeesAvailable() ? null : home,
             pageBuilder: (context, state) =>
                 _shellPage(state, const EmployeesPage()),
           ),

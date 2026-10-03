@@ -79,11 +79,9 @@ import 'package:syscat2/features/schedule/domain/usecases/watch_task_triggers.da
 import 'package:syscat2/features/schedule/infrastructure/repositories/firestore_task_trigger_repository.dart';
 import 'package:syscat2/features/schedule/presentation/cubits/schedule_cubit.dart';
 import 'package:syscat2/features/employees/domain/repositories/employee_repository.dart';
-import 'package:syscat2/features/employees/domain/usecases/create_employee.dart';
-import 'package:syscat2/features/employees/domain/usecases/delete_employee.dart';
-import 'package:syscat2/features/employees/domain/usecases/update_employee.dart';
 import 'package:syscat2/features/employees/domain/usecases/watch_employees.dart';
-import 'package:syscat2/features/employees/infrastructure/repositories/firestore_employee_repository.dart';
+import 'package:syscat2/features/employees/domain/usecases/employee_use_cases.dart';
+import 'package:syscat2/features/employees/infrastructure/repositories/unavailable_employee_repository.dart';
 import 'package:syscat2/features/employees/presentation/cubits/employees_cubit.dart';
 import 'package:syscat2/features/skills/domain/repositories/skill_repository.dart';
 import 'package:syscat2/features/skills/domain/usecases/delete_skill.dart';
@@ -218,7 +216,7 @@ void _configureCloudDependencies() {
     )
     ..registerLazySingleton<SkillRepository>(UnavailableSkillRepository.new)
     ..registerLazySingleton<EmployeeRepository>(
-      () => FirestoreEmployeeRepository(serviceLocator<FirebaseFirestore>()),
+      UnavailableEmployeeRepository.new,
     )
     ..registerLazySingleton(FirebaseFunctionsTaskBuilderAssistantDatasource.new)
     ..registerLazySingleton(
@@ -613,7 +611,6 @@ void _configureCloudDependencies() {
     )
     ..registerFactory(
       () => EmployeesCubit(
-        serviceLocator<AuthRepository>(),
         serviceLocator<WatchEmployees>(),
         serviceLocator<CreateEmployee>(),
         serviceLocator<UpdateEmployee>(),

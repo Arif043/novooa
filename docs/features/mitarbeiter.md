@@ -1,145 +1,117 @@
-# Feature: Mitarbeiter (Subagents)
+# Feature: Mitarbeiter (Subagenten)
 
-Verwandt: [`aufgabe.md`](./aufgabe.md) · [`skills.md`](./skills.md)
+Verwandt: [`aufgabe.md`](./aufgabe.md) · [`skills.md`](./skills.md) · [`import-export.md`](./import-export.md)
 
 ## Zweck
 
-Ein Mitarbeiter ist ein wiederverwendbarer Subagent: eine feste Rolle mit
-Prompt-Vorlage und einer Menge Default-Fähigkeiten. Konzeptionell entspricht
-er einem `ai.definePrompt`-Bauplan in Genkit — der Executor rendert die
-Vorlage mit der node-spezifischen Anweisung, setzt die Rolle als
-System-Prompt und ruft das Modell mit den gemergten Skills als Middleware
-auf.
+Ein Mitarbeiter ist ein wiederverwendbarer Subagent: eine **Rahmenbedingung** plus eine Menge **Fähigkeiten**
+([Skills](./skills.md)). Die Rahmenbedingung ist unter der Haube der **System-Prompt** des LLM-Calls; die Fähigkeiten
+erhält der Agent implizit. Ausgeführt wird er mit der Genkit-Agent-API
+([`ai.defineAgent`](https://genkit.dev/docs/js/agents/overview/), Beta).
 
-Mitarbeiter sind **kein eigener Baustein**, sondern werden 0..1 an einen
-Baustein zugewiesen — heute an `Prompt` und `Iterative Verfeinerung`.
+Mitarbeiter sind **kein eigener Baustein**, sondern werden 0..1 an einen Baustein zugewiesen — heute an `Prompt` und
+`Iterative Verfeinerung`.
 
-## Verantwortlichkeiten
+**Mitarbeiter und Fähigkeiten schließen sich aus:** Ein Baustein hat entweder einen Mitarbeiter (dessen Fähigkeiten er
+dann bekommt) oder selbst gewählte Fähigkeiten, nie beides.
 
-- Team-scoped Modellierung eines Mitarbeiters mit Rolle, Vorlage und
-  Default-Skills.
-- Verwaltungs-UI unter `/employees` mit Anlegen, Bearbeiten und Löschen.
-- Node-Assignment-UI im `PromptWidget` und `IterativeRefinementWidget`.
-- Serverseitig die Rolle als `system`-Prompt setzen, die Vorlage mit
-  `{{instruction}}` rendern und die Default-Skills mit den Node-Skills
-  mergen, bevor die Genkit-Skill-Middleware sie ausrollt.
+**Verfügbarkeit:** Standalone (lokale Runtime, `WorkspaceCapabilities.employees`). In der Cloud ist das Feature aus,
+weil es dort keine Fähigkeiten gibt.
 
 ## Datenmodell
 
-Firestore:
+SQLite-Tabelle `employees` (Migration `0002_employees.sql`), je Team:
 
-```text
-teams/{teamId}/employees/{employeeId}
-```
+| Feld              | Bedeutung                                                                      |
+| ----------------- | ------------------------------------------------------------------------------ |
+| `id`              | UUID                                                                           |
+| `name`            | Anzeigename, 1–80 Zeichen, je Team eindeutig (ohne Groß-/Kleinschreibung)       |
+| `constraint_text` | Rahmenbedingung (System-Prompt), höchstens 8000 Zeichen, darf leer sein         |
+| `skills_json`     | Namen der Fähigkeiten (Ordnernamen im Skills-Verzeichnis), höchstens 50          |
+| `created_at`, `updated_at` | ISO-Zeitstempel                                                       |
 
-Feldübersicht:
+Es gibt **keine Prompt-Vorlage**: Die Anweisung des Bausteins geht unverändert als Nutzer-Nachricht an den Agenten.
 
-| Feld             | Typ         | Bedeutung                                              |
-| ---------------- | ----------- | ------------------------------------------------------ |
-| `name`           | `string`    | Anzeigename                                            |
-| `role`           | `string`    | System-Prompt-Text                                     |
-| `promptTemplate` | `string`    | User-Prompt-Vorlage mit `{{instruction}}`              |
-| `defaultSkills`  | `list<map>` | Eingebettete `SkillAttachment`-Referenzen              |
-| `createdAt`      | `timestamp` | Anlagezeitpunkt                                        |
-| `updatedAt`      | `timestamp` | Letzte Änderung                                        |
+## HTTP-API (lokale Runtime)
 
-`defaultSkills` sind eingebettete Referenzen — die eigentlichen SKILL.md
-liegen weiterhin in Firebase Storage (siehe
-[`skills.md`](./skills.md)).
+| Route                        | Zweck                                                          |
+| ---------------------------- | -------------------------------------------------------------- |
+| `GET /v1/employees`          | Liste, alphabetisch                                            |
+| `POST /v1/employees`         | anlegen `{name, constraint, skills}`                           |
+| `PUT /v1/employees/:id`      | ändern                                                         |
+| `DELETE /v1/employees/:id`   | löschen                                                        |
 
-## Node-Zuweisung
+Fehler sind lesbar: 400 bei ungültiger Eingabe, 409 bei doppeltem Namen, 404 bei unbekannter ID. Änderungen meldet das
+Realtime-Thema `employees`.
 
-`PromptNodeConfig` und `IterativeRefinementNodeConfig` implementieren das
-neue `EmployeeAssignmentSupport`-Mixin und halten ein optionales
-`employee: EmployeeAttachment?`. Ein Assignment enthält die Daten, die der
-Executor braucht, ohne zur Laufzeit noch einmal Firestore anzufragen:
+## Zuweisung an einen Baustein
+
+`PromptNodeConfig` und `IterativeRefinementNodeConfig` halten **nur die ID**:
 
 ```json
-{
-  "employeeId": "employee.1",
-  "name": "Rezeption",
-  "role": "Du bist die Rezeption von novooa. Antworte freundlich, klar…",
-  "promptTemplate": "{{instruction}}",
-  "defaultSkills": [
-    {
-      "skillId": "skill.1",
-      "title": "E-Mails freundlich beantworten",
-      "description": "…",
-      "storagePath": "teams/{teamId}/skills/skill.1/SKILL.md"
-    }
-  ]
-}
+{"primitive": "prompt", "employeeId": "3f1c…", "skillAttachments": []}
 ```
+
+Rahmenbedingung und Fähigkeiten werden **beim Lauf frisch geladen**: Änderungen am Mitarbeiter gelten sofort für alle
+Bausteine, die ihn verwenden. Gibt es ihn nicht mehr, bricht der Baustein mit „Der zugewiesene Mitarbeiter wurde nicht
+gefunden. Wurde er gelöscht? …“ ab; die Meldung steht in der Aktivität. Im Baustein zeigt die Oberfläche dann
+„Mitarbeiter nicht mehr vorhanden“.
+
+### Ausschließlichkeit
+
+Die Regel gilt an drei Stellen:
+- **Config (Flutter):** `resolveNodeDelegation` — wer zuletzt etwas Konkretes setzt, gewinnt. `assignEmployee` leert die
+  Fähigkeiten, `attachSkill` entfernt den Mitarbeiter; eine leere Fähigkeitenliste lässt den Mitarbeiter bestehen.
+  Der Mapper bereinigt Dokumente, die beides tragen (der Mitarbeiter gewinnt).
+- **Oberfläche:** Das gemeinsame Auswahlfeld (Segmente *Fähigkeiten | Mitarbeiter*, in `Prompt` und
+  `Iterative Verfeinerung`) räumt beim Wechsel die andere Seite auf und weist darauf hin.
+- **Ausführung (Backend):** `assertExclusiveDelegation` lehnt Bausteine mit beidem ab („Ein Baustein kann nicht zugleich
+  einen Mitarbeiter und Fähigkeiten haben …“), bevor irgendetwas angelegt wird.
 
 ## Ausführung im TaskRun
 
-Vor dem Modell-Turn ermittelt
-[`employee-context.ts`](../../functions/src/features/task_execution/infrastructure/genkit/runner/employee-context.ts)
-den zugewiesenen Mitarbeiter und mergt seine Default-Skills mit den
-node-lokalen Skills. Duplikate (gleiche `skillId`) werden entfernt;
-node-spezifische Skills gewinnen. Der gemergte Satz wandert durch den
-bestehenden Skill-Workspace nach `<workspace>/skills/…/SKILL.md` und wird
-automatisch von der `skills`-Middleware angeboten.
+1. [`prepareNodeAttachmentWorkspace`](../../functions/src/features/task_execution/infrastructure/genkit/runner/node-attachment-workspace.ts)
+   lädt den Mitarbeiter über den `EmployeeStore` (Teil der `TaskGraphRuntime`, nicht der `TaskRunServices`) und legt
+   `workspace.employee = {id, name, constraint}` ab. **Seine Fähigkeiten ersetzen die des Bausteins** und werden als
+   Ordner nach `<workspace>/skills/<name>/` kopiert. Ein Mitarbeiter ohne Fähigkeiten erzeugt trotzdem einen
+   Workspace, damit die Rahmenbedingung ankommt.
+2. [`employee-agent.ts`](../../functions/src/features/task_execution/infrastructure/genkit/runner/employee-agent.ts)
+   definiert einen Agenten `defineAgent({name, system: constraint, model, use, output, config})` und führt einen Turn
+   mit `chat().send(anweisung)` aus. `use` reicht die Retry-, Dateisystem- und Skill-Middleware durch; die Fähigkeiten
+   des Mitarbeiters bietet `use_skill` dem Modell an. Eine leere Rahmenbedingung sendet keinen System-Prompt.
+3. **Kind-Registry:** `defineAgent` registriert fünf Actions je Agent. Auf der Registry der langlebigen Runtime würden sie
+   nie wieder verschwinden (Messung: 2 → 17 Actions nach drei Agenten). Der Agent liegt deshalb in
+   `Registry.withParent(ai.registry)`; Modelle und Plugins löst das Kind über seine Eltern auf, es wird mit dem Turn
+   geräumt. Ein Test belegt, dass die Registry nach fünf Turns unverändert groß ist. Der Name bleibt mit einer UUID
+   eindeutig.
+4. Es gibt keinen Session-Store: pro Turn ein frischer Chat ohne gespeicherten Verlauf.
 
-Wenn ein Mitarbeiter am Baustein hängt, verwendet der Executor die
-Genkit-Agent-API (Beta) statt `ai.generate(…)`:
-
-1. [`employee-agent.ts`](../../functions/src/features/task_execution/infrastructure/genkit/runner/employee-agent.ts)
-   ruft `ai.defineAgent({ name, description, system, model, output?, use })`
-   auf. `system` ist die Mitarbeiter-Rolle, `use` reicht die Retry-,
-   Filesystem- und Skill-Middleware durch, `output` trägt bei Decision-
-   und Structured-Prompts das passende Zod-Schema.
-2. Der Agent-Registry-Name wird pro Aufruf mit einer UUID eindeutig
-   gemacht (`employee-<slug>-<uuid>`), damit dieselbe Function-Instanz
-   parallele Turns ohne Namenskonflikt verarbeiten kann.
-3. Der Turn läuft über `agent.chat().send(prompt)`. Für Text nutzt der
-   Executor `response.text`; bei Decision und Structured wird das
-   strukturierte Ergebnis über `response.data` gelesen.
-
-Die Prompt-Vorlage wird davor gerendert: enthält sie `{{instruction}}`,
-wird die Baustein-Anweisung dort eingesetzt; sonst wird sie an die Vorlage
-angehängt.
-
-Ohne zugewiesenen Mitarbeiter bleibt der Executor beim bewährten
-`ai.generate(…)`-Pfad. So ist die Agent-API nur dort im Spiel, wo der
-User eine Delegation an einen Subagent tatsächlich beabsichtigt hat.
-
-Da die Agent-API als Beta ausgewiesen ist, wird `ai` in
-[`task-workflows.ts`](../../functions/src/task-workflows.ts) über
-`genkit/beta` initialisiert und in den Task-Runner als `GenkitBeta`
-weitergereicht.
+Bausteine mit Bildern im Prompt gehen unverändert über den bewährten `generate`-Pfad, ohne Agent.
 
 ## UI
 
-Route: `/employees`, Drawer-Label: **Mitarbeiter**.
+Route `/employees`, Drawer-Label **Mitarbeiter** (nur Standalone). Liste mit Name, gekürzter Rahmenbedingung und Anzahl
+der Fähigkeiten; Löschen mit Bestätigung (Hinweis auf betroffene Bausteine). Der Editor ist ein adaptives Sheet mit
+*Name*, *Rahmenbedingung* (Hinweis „Gilt als System-Prompt für jeden Aufruf.“) und *Fähigkeiten* (Auswahl aus den
+vorhandenen Skills; Namen, die es nicht mehr gibt, bleiben als „Nicht mehr vorhanden“ sichtbar und lassen sich
+entfernen). Alle Texte deutsch, Zustände Laden/Fehler/Leer/Erfolg.
 
-Die Verwaltungsseite zeigt eine Liste vorhandener Mitarbeiter mit Aktionen
-zum Bearbeiten und Löschen. Der Editor bietet:
+## Sicherung und Umzug
 
-- Name
-- Rolle (System-Prompt)
-- Prompt-Vorlage (mit `{{instruction}}`)
-- Auswahl der Default-Fähigkeiten aus den vorhandenen Team-Skills.
+Der Workspace-Transfer kennt den Bereich **Mitarbeiter** (zwischen Fähigkeiten und Aufgaben). Gleiche IDs werden
+überschrieben; ein gleicher Name unter anderer ID bekommt ein „ (2)“. Fehlende Fähigkeiten im Ziel meldet der spätere
+Lauf klar (siehe [`import-export.md`](./import-export.md)).
 
-Im NodeInspector der Bausteine `Prompt` und `Iterative Verfeinerung`
-erscheint eine neue Sektion „Mitarbeiter" mit einem 0..1-Slot — inklusive
-Anzeige, wie viele Default-Skills der Mitarbeiter mitbringt.
+## Offen
 
-## Firestore-Regeln
-
-`teams/{teamId}/employees/{employeeId}` ist für Team-Mitglieder les- und
-schreibbar; `updatedAt == request.time` wird beim Create und Update
-erzwungen.
+- Cloud-Variante (Firestore) — zusammen mit einem Cloud-Speicher für Skills.
+- Weitere LLM-Bausteine als Ziel einer Zuweisung; Agent-Sitzungen mit Verlauf.
 
 ## Definition of Done
 
-- [ ] Mitarbeiter kann in der UI angelegt, bearbeitet und gelöscht werden.
-- [ ] Default-Skills werden aus vorhandenen Team-Skills gewählt und
-      gespeichert.
-- [ ] Zugewiesener Mitarbeiter erscheint im NodeInspector des Prompt- und
-      Iterative-Verfeinerungs-Bausteins.
-- [ ] Backend nutzt `ai.defineAgent` + `chat().send`, wenn ein Mitarbeiter
-      am Baustein hängt; sonst weiterhin `ai.generate`.
-- [ ] Backend merget Node- und Default-Skills und rollt sie über die
-      Genkit-Skill-Middleware aus.
-- [ ] `flutter analyze` und `npm --prefix functions run build` sind sauber.
+- [x] Mitarbeiter lassen sich anlegen, bearbeiten und löschen (Name, Rahmenbedingung, Fähigkeiten).
+- [x] Zuweisung an Prompt und Iterative Verfeinerung per ID; Mitarbeiter und Fähigkeiten schließen sich aus.
+- [x] Backend nutzt `ai.defineAgent` + `chat().send` mit der Rahmenbedingung als System-Prompt und den Fähigkeiten des
+      Mitarbeiters über die Genkit-Skill-Middleware.
+- [x] Mitarbeiter sind Teil von Export und Import.
+- [x] `flutter analyze` und `npm --prefix functions run build` sind sauber.

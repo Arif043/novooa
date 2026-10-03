@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
-import '../../domain/entities/employee_attachment.dart';
 import '../cubits/node_employee_assignments_cubit.dart';
 import '../cubits/node_employee_assignments_state.dart';
 import 'employee_assignment_picker.dart';
@@ -10,13 +9,13 @@ import 'employee_assignment_picker.dart';
 class NodeEmployeeSection extends StatelessWidget {
   const NodeEmployeeSection({
     super.key,
-    required this.assigned,
+    required this.assignedId,
     required this.onAssign,
     required this.onUnassign,
   });
 
-  final EmployeeAttachment? assigned;
-  final ValueChanged<EmployeeAttachment> onAssign;
+  final String? assignedId;
+  final ValueChanged<String> onAssign;
   final VoidCallback onUnassign;
 
   @override
@@ -29,7 +28,7 @@ class NodeEmployeeSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           EmployeeAssignmentPicker(
-            assigned: assigned,
+            assignedId: assignedId,
             employees: state.employees,
             enabled: state.status == NodeEmployeeAssignmentsStatus.ready,
             onAssign: onAssign,

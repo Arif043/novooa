@@ -1,3 +1,4 @@
+import {SqliteEmployeeStore} from "../../features/employees/infrastructure/local/sqlite-employee-store.js";
 import {createDirectorySkillStore} from "../../features/skills/infrastructure/local/skills-composition.js";
 import {LanguageModelTranscription} from "../../features/speech_transcription/domain/usecases/language-model-transcription.js";
 import {defaultTranscriptionProviders} from "../../features/speech_transcription/infrastructure/default-transcription-providers.js";
@@ -62,6 +63,7 @@ export function createLocalTaskWorkflow(dependencies: LocalTaskWorkflowDependenc
       teamNotificationSender: new LocalTeamNotificationSender(dependencies.signedLicense, dependencies.pushRelay, logger),
       languageModelResolver: new CatalogGenkitLanguageModelResolver(dependencies.languageModelCatalog),
       skillContentReader: createDirectorySkillStore(dependencies.runtimeRoot),
+      employeeStore: new SqliteEmployeeStore(database),
       speechSynthesizer: new LanguageModelSpeech(dependencies.languageModelCatalog, defaultSpeechProviders()),
       speechTranscriber: new LanguageModelTranscription(dependencies.languageModelCatalog, defaultTranscriptionProviders()),
       languageModelDefaultsStore: new SQLiteLanguageModelDefaultsStore(database),

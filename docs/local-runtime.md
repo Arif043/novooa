@@ -461,6 +461,12 @@ erweiterbare Registry für Dekodierung, Skalierung, Layout und Normalisierung.
 Weitere Quelltypen erhalten eigene Strategien; weder die Pipeline noch der
 Modell-Baustein sind an Firebase Storage oder Bilder gekoppelt.
 
+## Mitarbeiter
+
+Mitarbeiter (Subagenten: Rahmenbedingung + Fähigkeiten) liegen in der SQLite-Tabelle `employees`
+(`GET/POST /v1/employees`, `PUT/DELETE /v1/employees/:id`, Realtime-Thema `employees`). Ein Baustein verweist nur per ID;
+Rahmenbedingung und Fähigkeiten lädt der Lauf frisch. Einzelheiten in [`features/mitarbeiter.md`](features/mitarbeiter.md).
+
 ## Skills-Ordner (Fähigkeiten)
 
 Fähigkeiten nach [agentskills.io](https://agentskills.io/specification) liegen **nicht** in SQLite, sondern als

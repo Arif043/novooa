@@ -1,3 +1,4 @@
+import {type EmployeeStore} from "../../../../employees/domain/repositories/employee-store.js";
 import {type SkillContentReader} from "../../../../skills/domain/repositories/skill-content-reader.js";
 import {type TaskRunServices} from "../../../domain/executors/node-executor.js";
 import {type KnowledgeBaseStore} from "../../../../knowledge_base/domain/repositories/knowledge-base-store.js";
@@ -14,6 +15,8 @@ export type TaskGraphRuntime = TaskRunServices & {
   teamFileStore: TeamFileStore;
   /** Skills-Ordner für angehängte Fähigkeiten; fehlt in Umgebungen ohne Skills (Cloud, bis dort umgesetzt). */
   skillContentReader?: SkillContentReader;
+  /** Mitarbeiter der Bausteine; fehlt in Umgebungen ohne Mitarbeiter (Cloud). */
+  employeeStore?: EmployeeStore;
   logger: ApplicationLogger;
   languageModelResolver?: GenkitLanguageModelResolver;
   languageModelDefaultsStore?: LanguageModelDefaultsStore;

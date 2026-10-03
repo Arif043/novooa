@@ -26,6 +26,7 @@ class WorkspaceCapabilities {
     required this.push,
     required this.messagingChannels,
     required this.skills,
+    required this.employees,
   });
 
   factory WorkspaceCapabilities.forKind(RuntimeKind kind) => switch (kind) {
@@ -36,6 +37,7 @@ class WorkspaceCapabilities {
       push: true,
       messagingChannels: true,
       skills: false,
+      employees: false,
     ),
     RuntimeKind.standalone => WorkspaceCapabilities(
       assistant: true,
@@ -44,6 +46,7 @@ class WorkspaceCapabilities {
       push: _standalonePushEnabled && _pushSupportedOnThisPlatform,
       messagingChannels: false,
       skills: true,
+      employees: true,
     ),
   };
 
@@ -64,6 +67,10 @@ class WorkspaceCapabilities {
   /// Fähigkeiten (Skills) nach agentskills.io: Ordner im Skills-Ordner der
   /// lokalen Runtime. Die Cloud hat dafür noch keinen Speicher.
   final bool skills;
+
+  /// Mitarbeiter (Subagenten) mit Rahmenbedingung und Fähigkeiten. Sie
+  /// brauchen Fähigkeiten und einen Speicher in der lokalen Runtime.
+  final bool employees;
 
   /// Firebase-Push (FCM/APNs). Für Standalone bewusst standardmäßig aus,
   /// damit sich der macOS-Client ohne Apple-Entwicklungszertifikat bauen

@@ -1,3 +1,4 @@
+import {createEmployeeRoutesOptions} from "../../features/employees/infrastructure/local/employees-composition.js";
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {createSkillsModule} from "../../features/skills/infrastructure/local/skills-composition.js";
 import {LanguageModelSpeech} from "../../features/speech_synthesis/domain/usecases/language-model-speech.js";
@@ -65,6 +66,7 @@ export function createLocalRuntimeRouteServices(options: {
     applicationLogs: new SQLiteLocalApplicationLogStore(database),
     languageModels: new SQLiteLanguageModelConfigurationStore(database, languageModelSecrets),
     languageModelDefaults: new SQLiteLanguageModelDefaultsStore(database),
+    employees: createEmployeeRoutesOptions(database, options.notifier),
     skills: createSkillsModule(runtimeRoot, options.notifier, () => options.licenses.signedActiveLicense()),
     speechVoices: new LanguageModelSpeech(new SQLiteLanguageModelCatalog(database, languageModelSecrets), defaultSpeechProviders()),
     assistants: assistantFactories(database, languageModelSecrets),

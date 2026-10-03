@@ -1,52 +1,26 @@
-import type {
-  EmployeeAttachment,
-  SkillAttachment,
-  WorkflowNode,
-} from "./task-definition.js";
+import type {SkillAttachment, WorkflowNode} from "./task-definition.js";
 
-/** Mitarbeiter, der einem Baustein zugewiesen wurde, oder undefined. */
-export function employeeFor(
-  node: WorkflowNode,
-): EmployeeAttachment | undefined {
-  if (node.config.primitive === "prompt") return node.config.employee;
-  if (node.config.primitive === "iterativeRefinement") return node.config.employee;
+/** Mitarbeiter, der einem Baustein zugewiesen wurde (nur die ID), oder undefined. */
+export function employeeIdFor(node: WorkflowNode): string | undefined {
+  if (node.config.primitive === "prompt") return node.config.employeeId;
+  if (node.config.primitive === "iterativeRefinement") return node.config.employeeId;
   return undefined;
 }
 
-/**
- * Mergt die Skills, die einem Baustein zur Verfügung stehen sollen: node-
- * spezifisch attachte Skills + Default-Skills des zugewiesenen Mitarbeiters.
- * Duplikate (gleicher `name`) werden entfernt; node-spezifische Skills
- * gewinnen.
- */
-export function mergeNodeAndEmployeeSkills(
-  nodeSkills: SkillAttachment[],
-  employee?: EmployeeAttachment,
-): SkillAttachment[] {
-  if (!employee || employee.defaultSkills.length === 0) return nodeSkills;
-  const seen = new Set(nodeSkills.map((skill) => skill.name));
-  const merged: SkillAttachment[] = [...nodeSkills];
-  for (const skill of employee.defaultSkills) {
-    if (seen.has(skill.name)) continue;
-    seen.add(skill.name);
-    merged.push(skill);
-  }
-  return merged;
+/** Fähigkeiten, die der Nutzer dem Baustein selbst zugewiesen hat (nicht die eines Mitarbeiters). */
+export function ownSkillAttachmentsFor(node: WorkflowNode): SkillAttachment[] {
+  if (node.config.primitive === "prompt") return node.config.skillAttachments;
+  if (node.config.primitive === "iterativeRefinement") return node.config.skillAttachments;
+  return [];
 }
 
 /**
- * Baut aus einer Prompt-Vorlage und der node-spezifischen Anweisung den
- * User-Prompt. Enthält die Vorlage `{{instruction}}`, wird nur ersetzt;
- * sonst wird die Anweisung an die Vorlage angehängt.
+ * Ein Baustein hat entweder einen Mitarbeiter (dessen Fähigkeiten er dann implizit erhält) oder selbst gewählte
+ * Fähigkeiten — nie beides. Die Oberfläche räumt beim Umschalten auf; diese Prüfung fängt Altdaten und Aufgaben
+ * ab, die auf anderem Weg entstanden sind.
  */
-export function renderEmployeePrompt(
-  template: string,
-  instruction: string,
-): string {
-  const trimmedTemplate = template.trim();
-  if (trimmedTemplate.length === 0) return instruction;
-  if (trimmedTemplate.includes("{{instruction}}")) {
-    return trimmedTemplate.replace(/\{\{instruction\}\}/g, instruction);
+export function assertExclusiveDelegation(node: WorkflowNode): void {
+  if (employeeIdFor(node) !== undefined && ownSkillAttachmentsFor(node).length > 0) {
+    throw new Error("Ein Baustein kann nicht zugleich einen Mitarbeiter und Fähigkeiten haben. Entferne eines von beiden.");
   }
-  return `${trimmedTemplate}\n\n${instruction}`.trim();
 }

@@ -1,28 +1,17 @@
-enum EmployeeFailureKind {
-  unauthenticated,
-  loadFailed,
-  saveFailed,
-  deleteFailed,
-  invalidName,
-}
-
+/// Ein Fehler im Umgang mit Mitarbeitern, mit einer Meldung für den Nutzer
+/// (vom Server bereits auf Deutsch formuliert).
 class EmployeeFailure {
-  const EmployeeFailure(this.kind);
+  const EmployeeFailure(this.message);
 
-  final EmployeeFailureKind kind;
+  static const loadFailed = EmployeeFailure(
+    'Mitarbeiter konnten nicht geladen werden.',
+  );
+  static const saveFailed = EmployeeFailure(
+    'Mitarbeiter konnte nicht gespeichert werden.',
+  );
+  static const deleteFailed = EmployeeFailure(
+    'Mitarbeiter konnte nicht gelöscht werden.',
+  );
 
-  String get message {
-    return switch (kind) {
-      EmployeeFailureKind.unauthenticated =>
-        'Du musst angemeldet sein, um Mitarbeiter zu verwalten.',
-      EmployeeFailureKind.loadFailed =>
-        'Mitarbeiter konnten nicht geladen werden.',
-      EmployeeFailureKind.saveFailed =>
-        'Mitarbeiter konnte nicht gespeichert werden.',
-      EmployeeFailureKind.deleteFailed =>
-        'Mitarbeiter konnte nicht gelöscht werden.',
-      EmployeeFailureKind.invalidName =>
-        'Gib einen Namen für den Mitarbeiter ein.',
-    };
-  }
+  final String message;
 }

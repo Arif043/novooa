@@ -1,7 +1,7 @@
 import {
-  type EmployeeAttachment,
   type NodeOutputValue,
   type PromptOutputType,
+  type ResolvedEmployee,
   type StructuredOutputField,
 } from "./task.js";
 
@@ -13,7 +13,7 @@ export type PromptExecutionRequest = {
   choices: string[];
   structuredFields: StructuredOutputField[];
   mediaUrls: string[];
-  employee?: EmployeeAttachment;
+  employee?: ResolvedEmployee;
 };
 
 export type PromptExecutionResult = {

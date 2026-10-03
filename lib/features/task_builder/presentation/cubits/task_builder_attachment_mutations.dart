@@ -63,11 +63,11 @@ extension TaskBuilderAttachmentMutations on TaskBuilderCubit {
 
   Future<void> assignNodeEmployee({
     required NodeId nodeId,
-    required EmployeeAttachment attachment,
+    required String employeeId,
   }) {
     return _updateEmployeeConfig(
       nodeId,
-      (config) => config.assignEmployee(attachment),
+      (config) => config.assignEmployee(employeeId),
     );
   }
 

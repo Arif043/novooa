@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-import 'package:syscat2/features/task_builder/domain/entities/employee_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/knowledge_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
@@ -302,19 +301,59 @@ void main() {
     await cubit.load(repository.savedTask);
     await cubit.assignNodeEmployee(
       nodeId: const NodeId('node.2'),
-      attachment: _employeeAttachment,
+      employeeId: 'employee.1',
     );
 
     var promptConfig = _branchPromptConfig(cubit);
-    expect(promptConfig.employee, _employeeAttachment);
+    expect(promptConfig.employeeId, 'employee.1');
 
     await cubit.unassignNodeEmployee(nodeId: const NodeId('node.2'));
 
     final state = cubit.state as TaskBuilderLoaded;
     promptConfig = _branchPromptConfig(cubit);
-    expect(promptConfig.employee, isNull);
+    expect(promptConfig.employeeId, isNull);
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
+
+  test('ein Mitarbeiter ersetzt eigene Fähigkeiten und umgekehrt', () async {
+    final repository = _InMemoryTaskRepository(_taskWithBranchPrompt());
+    final cubit = TaskBuilderCubit(repository: repository);
+    const nodeId = NodeId('node.2');
+
+    await cubit.load(repository.savedTask);
+    await cubit.attachNodeSkill(nodeId: nodeId, attachment: _skillAttachment);
+    await cubit.assignNodeEmployee(nodeId: nodeId, employeeId: 'employee.1');
+    var config = _branchPromptConfig(cubit);
+    expect(config.employeeId, 'employee.1');
+    expect(
+      config.skillAttachments,
+      isEmpty,
+      reason: 'Mitarbeiter leert Skills',
+    );
+
+    await cubit.attachNodeSkill(nodeId: nodeId, attachment: _skillAttachment);
+    config = _branchPromptConfig(cubit);
+    expect(config.employeeId, isNull, reason: 'Skill entfernt den Mitarbeiter');
+    expect(config.skillAttachments, [_skillAttachment]);
+  });
+
+  test(
+    'das Entfernen der letzten Fähigkeit lässt einen Mitarbeiter bestehen',
+    () async {
+      final repository = _InMemoryTaskRepository(_taskWithBranchPrompt());
+      final cubit = TaskBuilderCubit(repository: repository);
+      const nodeId = NodeId('node.2');
+
+      await cubit.load(repository.savedTask);
+      await cubit.assignNodeEmployee(nodeId: nodeId, employeeId: 'employee.1');
+      await cubit.detachNodeSkill(
+        nodeId: nodeId,
+        attachmentId: 'gibt-es-nicht',
+      );
+
+      expect(_branchPromptConfig(cubit).employeeId, 'employee.1');
+    },
+  );
 
   test('updateScript speichert Script-Code am Script-Node', () async {
     final repository = _InMemoryTaskRepository(_taskWithScriptNode());
@@ -737,14 +776,6 @@ const _knowledgeAttachment = KnowledgeAttachment(
 const _skillAttachment = SkillAttachment(
   name: 'mails-freundlich-beantworten',
   description: 'Nutze diese Fähigkeit für Kundenmails.',
-);
-
-const _employeeAttachment = EmployeeAttachment(
-  employeeId: 'employee.1',
-  name: 'Rezeption',
-  role: 'Du bist die Rezeption von novooa.',
-  promptTemplate: '{{instruction}}',
-  defaultSkills: [_skillAttachment],
 );
 
 PromptNodeConfig _branchPromptConfig(TaskBuilderCubit cubit) {

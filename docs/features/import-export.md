@@ -27,6 +27,7 @@ Firebase-Variante hat dieses Feature nicht.
 | `data` – Daten-Collections | Datensammlungen und Datensätze | Datensätze |
 | `knowledge` – Wissensbasis | Notizen inkl. Links | Notizen |
 | `skills` – Fähigkeiten | Skill-Ordner mit allen Dateien (`SKILL.md`, `scripts/`, `references/`, `assets/`) | Skills |
+| `employees` – Mitarbeiter | Rahmenbedingung und Skill-Namen je Mitarbeiter | Mitarbeiter |
 | `tasks` – Aufgaben | Aufgabendefinitionen (Graph) | Aufgaben |
 
 **Nie enthalten:** Trigger (können an OAuth-Connectoren gebunden sein),
@@ -42,6 +43,7 @@ data/files.json       { folders, files, versions }
 data/data.json        { collections, documents }
 data/knowledge.json   { notes }
 data/skills.json      { skills: [{ name, files: [{ path }] }] }
+data/employees.json   { employees: [{ id, name, constraint, skills, createdAt, updatedAt }] }
 data/tasks.json       { tasks }
 blobs/<storagePath>   Bytes je Dateiversion
 blobs/skills/<name>/<pfad>   Bytes je Datei eines Skills
@@ -71,6 +73,10 @@ mit `..` werden abgelehnt.
   Skills wiederhergestellt und neu angelegte werden entfernt. Pfade mit `..`, absolute Pfade, fehlende `SKILL.md`,
   doppelte Namen und Überschreitungen der Skill-Grenzen (200 Dateien, 10 MB) machen den Export ungültig. Blob-Einträge
   beginnen mit `blobs/`, damit `.json`-Dateien innerhalb eines Skills nicht als Archiv-JSON gelesen werden.
+- **Mitarbeiter:** Gleiche IDs werden überschrieben; ein gleicher Name unter anderer ID bekommt ein „ (2)“, „ (3)“ …, weil
+  Namen je Team eindeutig sind. Eine ID, die im Ziel einem anderen Team gehört, wird nie überschrieben. Ungültige
+  Namen oder Skill-Namen (`..`, Pfadtrenner) machen den Export ungültig. Die Fähigkeiten selbst gehören zum Bereich
+  „Fähigkeiten“.
 - Gleichnamige Datensammlung im Ziel: Die Datensätze landen in der vorhandenen
   Sammlung (Namen sind pro Team eindeutig).
 
@@ -86,8 +92,8 @@ mit `..` werden abgelehnt.
 
 ## Offene Fragen
 
-- Aufgaben können auf Kommunikationskanäle, Sprachmodelle oder Mitarbeiter
-  verweisen, die nicht exportiert werden. Diese Verweise bleiben unverändert
+- Aufgaben können auf Kommunikationskanäle oder Sprachmodelle verweisen, die
+  nicht exportiert werden. Diese Verweise bleiben unverändert
   und können im Ziel ins Leere zeigen.
 - Der Client hält Export und Import vollständig im Speicher. Für sehr große
   Datei-Bestände wäre Streaming im Client nötig.

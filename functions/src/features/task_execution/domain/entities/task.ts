@@ -1,5 +1,4 @@
 import {
-  type EmployeeAttachment,
   type KnowledgeAttachment,
   type NodeAttachment,
   type SkillAttachment,
@@ -31,9 +30,9 @@ export type {
 } from "./media-input.js";
 export type {TaskRunInteraction} from "./task-run-interaction.js";
 export type {
-  EmployeeAttachment,
   KnowledgeAttachment,
   NodeAttachment,
+  ResolvedEmployee,
   SkillAttachment,
 } from "./attachments.js";
 export type {
@@ -99,7 +98,8 @@ export type PromptNodeConfig = {
   attachments: NodeAttachment[];
   knowledgeAttachments: KnowledgeAttachment[];
   skillAttachments: SkillAttachment[];
-  employee?: EmployeeAttachment;
+  /** Mitarbeiter (Subagent) des Bausteins; schließt `skillAttachments` aus. */
+  employeeId?: string;
 };
 export type WorkflowEdge = {
   from: string;
@@ -155,7 +155,8 @@ export type IterativeRefinementNodeConfig = {
   critiquePrompt: string;
   maxIterations: number;
   skillAttachments: SkillAttachment[];
-  employee?: EmployeeAttachment;
+  /** Mitarbeiter (Subagent) des Bausteins; schließt `skillAttachments` aus. */
+  employeeId?: string;
 };
 export type HumanApprovalNodeConfig = {
   primitive: "humanApproval";

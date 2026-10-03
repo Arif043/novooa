@@ -1,9 +1,9 @@
+import 'package:syscat2/core/runtime/employees_availability.dart';
 import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../../features/assistant/domain/entities/assistant_context.dart';
 import '../../root_tab.dart';
-import '../config/mvp_feature_flags.dart';
 
 List<RootTab> rootTabs({required bool isStandalone}) => [
   RootTab(
@@ -26,7 +26,7 @@ List<RootTab> rootTabs({required bool isStandalone}) => [
       icon: CupertinoIcons.sparkles,
       path: '/skills',
     ),
-  if (MvpFeatureFlags.employeesEnabled)
+  if (employeesAvailable())
     RootTab(
       title: 'Mitarbeiter',
       icon: CupertinoIcons.person_2_square_stack,

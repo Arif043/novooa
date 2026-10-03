@@ -10,7 +10,7 @@ class IterativeRefinementNodeConfig extends NodeConfig
     required this.maxIterations,
     this.draftTemplate = '',
     this.skillAttachments = const [],
-    this.employee,
+    this.employeeId,
   });
 
   final String optimizerPrompt;
@@ -19,8 +19,10 @@ class IterativeRefinementNodeConfig extends NodeConfig
   final String draftTemplate;
   @override
   final List<SkillAttachment> skillAttachments;
+
+  /// Mitarbeiter des Bausteins; schließt [skillAttachments] aus.
   @override
-  final EmployeeAttachment? employee;
+  final String? employeeId;
 
   factory IterativeRefinementNodeConfig.initial() {
     return const IterativeRefinementNodeConfig(
@@ -28,7 +30,7 @@ class IterativeRefinementNodeConfig extends NodeConfig
       critiquePrompt: '',
       maxIterations: 2,
       skillAttachments: [],
-      employee: null,
+      employeeId: null,
     );
   }
 
@@ -42,7 +44,7 @@ class IterativeRefinementNodeConfig extends NodeConfig
     maxIterations,
     draftTemplate,
     skillAttachments,
-    employee,
+    employeeId,
   ];
 
   IterativeRefinementNodeConfig copyWith({
@@ -51,16 +53,23 @@ class IterativeRefinementNodeConfig extends NodeConfig
     int? maxIterations,
     String? draftTemplate,
     List<SkillAttachment>? skillAttachments,
-    EmployeeAttachment? employee,
+    String? employeeId,
     bool clearEmployee = false,
   }) {
+    final delegation = resolveNodeDelegation(
+      currentEmployeeId: this.employeeId,
+      currentSkills: this.skillAttachments,
+      employeeId: employeeId,
+      clearEmployee: clearEmployee,
+      skillAttachments: skillAttachments,
+    );
     return IterativeRefinementNodeConfig(
       optimizerPrompt: optimizerPrompt ?? this.optimizerPrompt,
       critiquePrompt: critiquePrompt ?? this.critiquePrompt,
       maxIterations: maxIterations ?? this.maxIterations,
       draftTemplate: draftTemplate ?? this.draftTemplate,
-      skillAttachments: skillAttachments ?? this.skillAttachments,
-      employee: clearEmployee ? null : employee ?? this.employee,
+      skillAttachments: delegation.skillAttachments,
+      employeeId: delegation.employeeId,
     );
   }
 
@@ -72,7 +81,7 @@ class IterativeRefinementNodeConfig extends NodeConfig
   }
 
   @override
-  IterativeRefinementNodeConfig copyWithEmployee(EmployeeAttachment? employee) {
-    return copyWith(employee: employee, clearEmployee: employee == null);
+  IterativeRefinementNodeConfig copyWithEmployeeId(String? employeeId) {
+    return copyWith(employeeId: employeeId, clearEmployee: employeeId == null);
   }
 }

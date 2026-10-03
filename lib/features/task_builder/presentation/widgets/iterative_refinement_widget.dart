@@ -1,17 +1,15 @@
+import 'package:syscat2/core/runtime/employees_availability.dart';
 import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syscat2/core/config/mvp_feature_flags.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
-import 'package:syscat2/features/task_builder/domain/entities/employee_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/skill_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
-import 'node_employee_section.dart';
-import 'node_skill_attachment_section.dart';
+import 'prompt_resource_selection.dart';
 import 'template_expression_scope.dart';
 import 'template_expression_text_field.dart';
 
@@ -86,20 +84,15 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
             'Verfeinert den angegebenen Entwurf.',
             style: SyscatTheme.taskBodySmall,
           ),
-          if (skillsAvailable()) ...[
+          if (skillsAvailable() || employeesAvailable()) ...[
             const SizedBox(height: AppSpacing.md),
-            NodeSkillAttachmentSection(
-              attachments: _config.skillAttachments,
-              onAttach: _attachSkill,
-              onDetach: _detachSkill,
-            ),
-          ],
-          if (MvpFeatureFlags.employeesEnabled) ...[
-            const SizedBox(height: AppSpacing.md),
-            NodeEmployeeSection(
-              assigned: _config.employee,
-              onAssign: _assignEmployee,
-              onUnassign: _unassignEmployee,
+            PromptResourceSelection(
+              employeeId: _config.employeeId,
+              skillAttachments: _config.skillAttachments,
+              onAttachSkill: _attachSkill,
+              onDetachSkill: _detachSkill,
+              onAssignEmployee: _assignEmployee,
+              onUnassignEmployee: _unassignEmployee,
             ),
           ],
         ],
@@ -121,10 +114,10 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
     );
   }
 
-  void _assignEmployee(EmployeeAttachment attachment) {
+  void _assignEmployee(String employeeId) {
     context.read<TaskBuilderCubit>().assignNodeEmployee(
       nodeId: widget.node.id,
-      attachment: attachment,
+      employeeId: employeeId,
     );
   }
 

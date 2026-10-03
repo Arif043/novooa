@@ -1,22 +1,17 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
-import 'package:syscat2/core/widgets/ios_overlays.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_skill_attachments_cubit.dart';
 
 import '../../domain/entities/employee.dart';
-import '../../domain/entities/employee_draft.dart';
 import '../cubits/employees_cubit.dart';
 import '../cubits/employees_state.dart';
-import '../widgets/employee_editor_dialog.dart';
+import '../widgets/employee_editor_sheet.dart';
+import '../widgets/employee_list_tile.dart';
 
-/// Verwaltungsseite für Mitarbeiter (Subagents). Bietet Erstellen, Bearbeiten
-/// und Löschen. Nutzt die Skill-Auswahl aus dem NodeSkillAttachmentsCubit,
-/// damit die Default-Skills eines Mitarbeiters aus den vorhandenen Team-
-/// Skills gewählt werden können.
+/// Verwaltung der Mitarbeiter (Subagenten): Rahmenbedingung plus Fähigkeiten.
 class EmployeesPage extends StatelessWidget {
   const EmployeesPage({super.key});
 
@@ -40,42 +35,39 @@ class _EmployeesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<EmployeesCubit, EmployeesState>(
-      listenWhen: (previous, current) => previous.message != current.message,
+      listenWhen: (previous, current) =>
+          current.message != null && previous.message != current.message,
       listener: (context, state) {
-        final message = state.message;
-        if (message == null) return;
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(message)));
+          ..showSnackBar(SnackBar(content: Text(state.message!)));
+        context.read<EmployeesCubit>().messageShown();
       },
-      builder: (context, state) {
-        return Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _Header(onCreate: () => _createEmployee(context)),
-              const SizedBox(height: AppSpacing.md),
-              Expanded(child: _Body(state: state)),
-            ],
-          ),
-        );
-      },
+      builder: (context, state) => Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Header(onCreate: () => _edit(context)),
+            const SizedBox(height: AppSpacing.md),
+            Expanded(
+              child: _Body(state: state, onEdit: (e) => _edit(context, e)),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Future<void> _createEmployee(BuildContext context) async {
-    final cubit = context.read<EmployeesCubit>();
-    final skillCubit = context.read<NodeSkillAttachmentsCubit>();
-    final draft = await showIosDialog<EmployeeDraft>(
-      context: context,
-      builder: (dialogContext) => MultiBlocProvider(
-        providers: [BlocProvider.value(value: skillCubit)],
-        child: const EmployeeEditorDialog(),
-      ),
+  Future<void> _edit(BuildContext context, [Employee? employee]) {
+    final employees = context.read<EmployeesCubit>();
+    final skills = context.read<NodeSkillAttachmentsCubit>();
+    return EmployeeEditorSheet.show(
+      context,
+      initial: employee,
+      onSave: (draft) => employees.save(draft, employeeId: employee?.id),
+      provide: (child) => BlocProvider.value(value: skills, child: child),
     );
-    if (draft == null) return;
-    await cubit.createEmployee(draft);
   }
 }
 
@@ -100,9 +92,10 @@ class _Header extends StatelessWidget {
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.state});
+  const _Body({required this.state, required this.onEdit});
 
   final EmployeesState state;
+  final ValueChanged<Employee> onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -111,133 +104,33 @@ class _Body extends StatelessWidget {
         child: CircularProgressIndicator(),
       ),
       EmployeesStatus.failure => _Failure(message: state.message),
-      EmployeesStatus.ready when state.employees.isEmpty => const _EmptyState(),
-      EmployeesStatus.ready => _EmployeeList(employees: state.employees),
+      EmployeesStatus.ready when state.employees.isEmpty => const _Empty(),
+      EmployeesStatus.ready => ListView.separated(
+        itemCount: state.employees.length,
+        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+        itemBuilder: (context, index) {
+          final employee = state.employees[index];
+          return EmployeeListTile(
+            employee: employee,
+            onEdit: () => onEdit(employee),
+            onDelete: () => context.read<EmployeesCubit>().delete(employee.id),
+          );
+        },
+      ),
     };
   }
 }
 
-class _EmployeeList extends StatelessWidget {
-  const _EmployeeList({required this.employees});
-
-  final List<Employee> employees;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      itemCount: employees.length,
-      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-      itemBuilder: (context, index) {
-        final employee = employees[index];
-        return _EmployeeTile(employee: employee);
-      },
-    );
-  }
-}
-
-class _EmployeeTile extends StatelessWidget {
-  const _EmployeeTile({required this.employee});
-
-  final Employee employee;
-
-  @override
-  Widget build(BuildContext context) {
-    final skillCount = employee.defaultSkills.length;
-    return Container(
-      decoration: SyscatTheme.nodePanelDecoration(context),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Row(
-        children: [
-          const Icon(Icons.person_outline),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(employee.name, style: SyscatTheme.taskBody),
-                if (employee.role.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    employee.role,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: SyscatTheme.taskBodySmall,
-                  ),
-                ],
-                if (skillCount > 0) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    skillCount == 1
-                        ? '1 Standard-Fähigkeit'
-                        : '$skillCount Standard-Fähigkeiten',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ],
-            ),
-          ),
-          IconButton(
-            tooltip: 'Bearbeiten',
-            onPressed: () => _edit(context),
-            icon: const Icon(Icons.edit_outlined),
-          ),
-          IconButton(
-            tooltip: 'Löschen',
-            onPressed: () => _delete(context),
-            icon: const Icon(Icons.delete_outline),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _edit(BuildContext context) async {
-    final cubit = context.read<EmployeesCubit>();
-    final skillCubit = context.read<NodeSkillAttachmentsCubit>();
-    final draft = await showIosDialog<EmployeeDraft>(
-      context: context,
-      builder: (_) => MultiBlocProvider(
-        providers: [BlocProvider.value(value: skillCubit)],
-        child: EmployeeEditorDialog(initial: employee),
-      ),
-    );
-    if (draft == null) return;
-    await cubit.updateEmployee(employeeId: employee.id, draft: draft);
-  }
-
-  Future<void> _delete(BuildContext context) async {
-    final cubit = context.read<EmployeesCubit>();
-    final confirmed = await showIosDialog<bool>(
-      context: context,
-      builder: (_) => CupertinoAlertDialog(
-        title: const Text('Mitarbeiter löschen?'),
-        content: Text('„${employee.name}" wird endgültig entfernt.'),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Abbrechen'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Löschen'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    await cubit.deleteEmployee(employee.id);
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+class _Empty extends StatelessWidget {
+  const _Empty();
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Text(
-        'Lege deinen ersten Mitarbeiter an, um Aufgaben delegieren zu können.',
+        'Noch keine Mitarbeiter. Lege einen an und weise ihn einem '
+        'Prompt-Baustein zu: Seine Rahmenbedingung wird zum System-Prompt, '
+        'seine Fähigkeiten bekommt der Baustein automatisch.',
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.bodyMedium,
       ),
@@ -262,7 +155,7 @@ class _Failure extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           TextButton(
-            onPressed: () => context.read<EmployeesCubit>().load(),
+            onPressed: context.read<EmployeesCubit>().load,
             child: const Text('Erneut versuchen'),
           ),
         ],

@@ -15,6 +15,13 @@
       "when": 1790881722841,
       "tag": "0001_file_version_limit",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790981914740,
+      "tag": "0002_employees",
+      "breakpoints": true
     }
   ]
 }

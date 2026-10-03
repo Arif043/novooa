@@ -1,5 +1,5 @@
+import 'node_delegation.dart';
 import 'package:equatable/equatable.dart';
-import 'package:syscat2/features/task_builder/domain/entities/employee_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/knowledge_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/skill_attachment.dart';

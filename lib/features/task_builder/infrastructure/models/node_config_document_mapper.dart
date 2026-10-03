@@ -1,7 +1,7 @@
-import '../../domain/entities/employee_attachment.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/knowledge_attachment.dart';
 import '../../domain/entities/node_attachment.dart';
+import '../../domain/entities/node_delegation.dart';
 import '../../domain/entities/skill_attachment.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
@@ -108,8 +108,7 @@ class NodeConfigDocumentMapper {
       'skillAttachments': config.skillAttachments
           .map(_skillAttachmentToDocument)
           .toList(),
-      if (config.employee != null)
-        'employee': _employeeAttachmentToDocument(config.employee!),
+      if (config.employeeId != null) 'employeeId': config.employeeId,
     };
   }
 
@@ -133,8 +132,7 @@ class NodeConfigDocumentMapper {
       'skillAttachments': config.skillAttachments
           .map(_skillAttachmentToDocument)
           .toList(),
-      if (config.employee != null)
-        'employee': _employeeAttachmentToDocument(config.employee!),
+      if (config.employeeId != null) 'employeeId': config.employeeId,
     };
   }
 
@@ -329,6 +327,7 @@ class NodeConfigDocumentMapper {
   }
 
   PromptNodeConfig _promptFrom(Map<String, Object?> data) {
+    final delegation = _delegationFrom(data);
     return PromptNodeConfig(
       instruction: data['instruction'] as String? ?? '',
       languageModelId: data['languageModelId'] as String? ?? '',
@@ -339,8 +338,20 @@ class NodeConfigDocumentMapper {
       knowledgeAttachments: _knowledgeAttachmentsFrom(
         data['knowledgeAttachments'],
       ),
+      skillAttachments: delegation.skillAttachments,
+      employeeId: delegation.employeeId,
+    );
+  }
+
+  /// Mitarbeiter und eigene Fähigkeiten schließen sich aus. Trägt ein Dokument
+  /// beides (Altdaten, von Hand bearbeitet), gewinnt der Mitarbeiter.
+  NodeDelegation _delegationFrom(Map<String, Object?> data) {
+    final employeeId = data['employeeId'];
+    return normalizedNodeDelegation(
+      employeeId: employeeId is String && employeeId.isNotEmpty
+          ? employeeId
+          : null,
       skillAttachments: _skillAttachmentsFrom(data['skillAttachments']),
-      employee: _employeeAttachmentFromOrNull(data['employee']),
     );
   }
 
@@ -352,13 +363,14 @@ class NodeConfigDocumentMapper {
   }
 
   IterativeRefinementNodeConfig _refinementFrom(Map<String, Object?> data) {
+    final delegation = _delegationFrom(data);
     return IterativeRefinementNodeConfig(
       optimizerPrompt: data['optimizerPrompt'] as String? ?? '',
       critiquePrompt: data['critiquePrompt'] as String? ?? '',
       maxIterations: data['maxIterations'] as int? ?? 2,
       draftTemplate: data['draftTemplate'] as String? ?? '',
-      skillAttachments: _skillAttachmentsFrom(data['skillAttachments']),
-      employee: _employeeAttachmentFromOrNull(data['employee']),
+      skillAttachments: delegation.skillAttachments,
+      employeeId: delegation.employeeId,
     );
   }
 
@@ -779,34 +791,6 @@ class NodeConfigDocumentMapper {
     return SkillAttachment(
       name: data['name'] as String? ?? '',
       description: data['description'] as String? ?? '',
-    );
-  }
-
-  Map<String, Object?> _employeeAttachmentToDocument(
-    EmployeeAttachment employee,
-  ) {
-    return {
-      'employeeId': employee.employeeId,
-      'name': employee.name,
-      'role': employee.role,
-      'promptTemplate': employee.promptTemplate,
-      'defaultSkills': employee.defaultSkills
-          .map(_skillAttachmentToDocument)
-          .toList(),
-    };
-  }
-
-  EmployeeAttachment? _employeeAttachmentFromOrNull(Object? value) {
-    if (value is! Map) return null;
-    final data = _objectMapFrom(value);
-    final employeeId = data['employeeId'] as String? ?? '';
-    if (employeeId.isEmpty) return null;
-    return EmployeeAttachment(
-      employeeId: employeeId,
-      name: data['name'] as String? ?? '',
-      role: data['role'] as String? ?? '',
-      promptTemplate: data['promptTemplate'] as String? ?? '',
-      defaultSkills: _skillAttachmentsFrom(data['defaultSkills']),
     );
   }
 

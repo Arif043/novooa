@@ -48,14 +48,6 @@ export const skillAttachmentSchema = z.object({
   description: z.string().default(""),
 });
 
-export const employeeAttachmentSchema = z.object({
-  employeeId: z.string().min(1),
-  name: z.string().default(""),
-  role: z.string().default(""),
-  promptTemplate: z.string().default(""),
-  defaultSkills: z.array(skillAttachmentSchema).default([]),
-});
-
 export const stringInputNodeConfigSchema = z.object({
   primitive: z.literal("stringInput").default("stringInput"),
   value: z.string().default(""),
@@ -84,7 +76,7 @@ export const promptNodeConfigSchema = z.object({
   attachments: z.array(nodeAttachmentSchema).default([]),
   knowledgeAttachments: z.array(knowledgeAttachmentSchema).default([]),
   skillAttachments: z.array(skillAttachmentSchema).default([]),
-  employee: employeeAttachmentSchema.optional(),
+  employeeId: z.string().min(1).optional(),
 });
 
 export const workflowEdgeSchema = z.object({
@@ -160,7 +152,7 @@ export const iterativeRefinementNodeConfigSchema = z.object({
   critiquePrompt: z.string().default(""),
   maxIterations: z.number().int().min(1).max(5).default(2),
   skillAttachments: z.array(skillAttachmentSchema).default([]),
-  employee: employeeAttachmentSchema.optional(),
+  employeeId: z.string().min(1).optional(),
 });
 
 export const humanApprovalNodeConfigSchema = z.object({
@@ -467,11 +459,11 @@ export const reviewTaskRunOutputSchema = z.object({
 
 export type {
   CompletedTaskGraphOutput,
-  EmployeeAttachment,
   KnowledgeAttachment,
   NodeAttachment,
   NodeExecutionResult,
   NodeOutputValue,
+  ResolvedEmployee,
   SkillAttachment,
   TaskDefinition,
   TaskGraphInput,

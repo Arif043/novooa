@@ -1,3 +1,9 @@
+import '../../features/employees/domain/repositories/employee_repository.dart';
+import '../../features/employees/domain/usecases/employee_use_cases.dart';
+import '../../features/employees/domain/usecases/watch_employees.dart';
+import '../../features/employees/infrastructure/repositories/local_employee_repository.dart';
+import '../../features/employees/presentation/cubits/employees_cubit.dart';
+import '../../features/task_builder/presentation/cubits/node_employee_assignments_cubit.dart';
 import '../../features/skills/domain/repositories/skill_catalog_repository.dart';
 import '../../features/skills/domain/repositories/skill_import_repository.dart';
 import '../../features/skills/domain/repositories/skill_repository.dart';
@@ -249,6 +255,32 @@ Future<void> configureStandaloneDependencies(
     )
     ..registerLazySingleton<SpeechVoiceRepository>(
       () => LocalSpeechVoiceRepository(locator<WorkspaceApiClient>()),
+    )
+    ..registerLazySingleton<EmployeeRepository>(
+      () => LocalEmployeeRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceRealtimeChannel>(),
+      ),
+    )
+    ..registerLazySingleton(() => WatchEmployees(locator<EmployeeRepository>()))
+    ..registerLazySingleton(() => CreateEmployee(locator<EmployeeRepository>()))
+    ..registerLazySingleton(() => UpdateEmployee(locator<EmployeeRepository>()))
+    ..registerLazySingleton(() => DeleteEmployee(locator<EmployeeRepository>()))
+    ..registerFactory(
+      () => EmployeesCubit(
+        locator<WatchEmployees>(),
+        locator<CreateEmployee>(),
+        locator<UpdateEmployee>(),
+        locator<DeleteEmployee>(),
+        locator<GetCurrentTeamId>(),
+      ),
+    )
+    ..registerFactory(
+      () => NodeEmployeeAssignmentsCubit(
+        locator<AuthRepository>(),
+        locator<WatchEmployees>(),
+        locator<GetCurrentTeamId>(),
+      ),
     )
     ..registerLazySingleton<SkillRepository>(
       () => LocalSkillRepository(

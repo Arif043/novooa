@@ -8,19 +8,12 @@ import '../entities/employee_failure.dart';
 abstract class EmployeeRepository {
   Stream<List<Employee>> watchEmployees(TeamId teamId);
 
-  Future<Result<Employee, EmployeeFailure>> createEmployee({
-    required TeamId teamId,
-    required EmployeeDraft draft,
-  });
+  Future<Result<Employee, EmployeeFailure>> createEmployee(EmployeeDraft draft);
 
-  Future<Result<Employee, EmployeeFailure>> updateEmployee({
-    required TeamId teamId,
-    required String employeeId,
-    required EmployeeDraft draft,
-  });
+  Future<Result<Employee, EmployeeFailure>> updateEmployee(
+    String employeeId,
+    EmployeeDraft draft,
+  );
 
-  Future<Result<Unit, EmployeeFailure>> deleteEmployee({
-    required TeamId teamId,
-    required String employeeId,
-  });
+  Future<Result<Unit, EmployeeFailure>> deleteEmployee(String employeeId);
 }

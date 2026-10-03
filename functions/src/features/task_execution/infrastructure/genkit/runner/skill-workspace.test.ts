@@ -6,7 +6,6 @@ import test, {type TestContext} from "node:test";
 import {genkit} from "genkit/beta";
 import {DirectorySkillStore} from "../../../../skills/infrastructure/local/directory-skill-store.js";
 import {aiTurnMiddleware} from "./node-attachment-genkit.js";
-import {mergeNodeAndEmployeeSkills} from "./employee-context.js";
 import {prepareSkillDirectory} from "./skill-workspace.js";
 
 async function temporaryDirectory(t: TestContext): Promise<string> {
@@ -50,15 +49,6 @@ test("without attachments nothing is prepared; without a reader or a folder the 
   assert.equal(await prepareSkillDirectory(workspace, [], undefined), undefined);
   await assert.rejects(prepareSkillDirectory(workspace, [{name: "pdf", description: ""}], undefined), /nicht verfügbar/);
   await assert.rejects(prepareSkillDirectory(workspace, [{name: "pdf", description: ""}], store), /„pdf“ wurde nicht gefunden/);
-});
-
-test("employee default skills are merged by name, node skills win", () => {
-  const merged = mergeNodeAndEmployeeSkills(
-    [{name: "a", description: "Knoten"}],
-    {employeeId: "e", name: "E", role: "", promptTemplate: "", defaultSkills: [{name: "a", description: "Standard"}, {name: "b", description: "B"}]},
-  );
-
-  assert.deepEqual(merged, [{name: "a", description: "Knoten"}, {name: "b", description: "B"}]);
 });
 
 test("the Genkit skills middleware lists the copied skills by folder name and serves SKILL.md, references via the filesystem", async (t) => {

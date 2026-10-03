@@ -1,7 +1,7 @@
+import 'package:syscat2/core/runtime/employees_availability.dart';
 import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syscat2/core/config/mvp_feature_flags.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/runtime/workspace_capabilities.dart';
 import 'package:syscat2/core/widgets/root_shell_scope.dart';
@@ -53,7 +53,7 @@ class TaskBuilderPage extends StatelessWidget {
           BlocProvider(
             create: (_) => serviceLocator<NodeSkillAttachmentsCubit>()..load(),
           ),
-        if (MvpFeatureFlags.employeesEnabled)
+        if (employeesAvailable())
           BlocProvider(
             create: (_) =>
                 serviceLocator<NodeEmployeeAssignmentsCubit>()..load(),

@@ -21,10 +21,9 @@ export type SkillAttachment = {
   description: string;
 };
 
-export type EmployeeAttachment = {
-  employeeId: string;
+/** Der Mitarbeiter eines Bausteins, beim Lauf aus dem Speicher geladen: `constraint` ist der System-Prompt. */
+export type ResolvedEmployee = {
+  id: string;
   name: string;
-  role: string;
-  promptTemplate: string;
-  defaultSkills: SkillAttachment[];
+  constraint: string;
 };

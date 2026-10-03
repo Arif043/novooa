@@ -89,6 +89,19 @@ export const knowledgeNotes = sqliteTable("knowledge_notes", {
   index("idx_notes_team_base").on(table.team_id, table.knowledge_base_id),
 ]);
 
+/** Mitarbeiter (Subagenten): Rahmenbedingung (= System-Prompt) plus Skill-Namen. */
+export const employees = sqliteTable("employees", {
+  id: text("id").primaryKey(),
+  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
+  name: text("name").notNull(),
+  constraint_text: text("constraint_text").notNull().default(""),
+  skills_json: text("skills_json").notNull().default("[]"),
+  created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index("idx_employees_team_name").on(table.team_id, table.name),
+]);
+
 export type DocumentCollections = typeof documentCollections.$inferSelect;
 export type NewDocumentCollections = typeof documentCollections.$inferInsert;
 export type Documents = typeof documents.$inferSelect;
@@ -99,5 +112,7 @@ export type FileVersions = typeof fileVersions.$inferSelect;
 export type NewFileVersions = typeof fileVersions.$inferInsert;
 export type Files = typeof files.$inferSelect;
 export type NewFiles = typeof files.$inferInsert;
+export type Employees = typeof employees.$inferSelect;
+export type NewEmployees = typeof employees.$inferInsert;
 export type KnowledgeNotes = typeof knowledgeNotes.$inferSelect;
 export type NewKnowledgeNotes = typeof knowledgeNotes.$inferInsert;

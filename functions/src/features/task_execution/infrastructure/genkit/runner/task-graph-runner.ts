@@ -138,6 +138,7 @@ async function runNodes(
       startedAt,
       objectStore: runtime.objectStore,
       skillContentReader: runtime.skillContentReader,
+      employeeStore: runtime.employeeStore,
       knowledgeBaseStore: runtime.knowledgeBaseStore,
       languageModelResolver: runtime.languageModelResolver,
       languageModelDefaultsStore: runtime.languageModelDefaultsStore,

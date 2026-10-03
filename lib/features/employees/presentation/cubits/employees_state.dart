@@ -13,6 +13,8 @@ class EmployeesState extends Equatable {
 
   final EmployeesStatus status;
   final List<Employee> employees;
+
+  /// Einmalige Rückmeldung (Fehler oder Bestätigung) für eine Snackbar.
   final String? message;
 
   EmployeesState copyWith({

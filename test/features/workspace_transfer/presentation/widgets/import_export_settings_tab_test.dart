@@ -37,7 +37,7 @@ void main() {
     const MaterialApp(home: Scaffold(body: ImportExportSettingsTab())),
   );
 
-  testWidgets('offers all five categories for export without triggers', (
+  testWidgets('offers all six categories for export without triggers', (
     tester,
   ) async {
     await pumpTab(tester);
@@ -47,6 +47,7 @@ void main() {
       'Daten-Collections',
       'Wissensbasis',
       'Fähigkeiten',
+      'Mitarbeiter',
       'Aufgaben',
     ]) {
       expect(find.widgetWithText(CheckboxListTile, label), findsOneWidget);
@@ -58,7 +59,7 @@ void main() {
   testWidgets('previews and applies an import file', (tester) async {
     await pumpTab(tester);
 
-    await tester.ensureVisible(find.text('Export-Datei auswählen'));
+    await tester.scrollUntilVisible(find.text('Export-Datei auswählen'), 200);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Export-Datei auswählen'));
     await tester.pumpAndSettle();
@@ -67,7 +68,7 @@ void main() {
     expect(find.text('3 Dateien'), findsOneWidget);
     expect(find.text('2 Aufgaben'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Importieren'));
+    await tester.scrollUntilVisible(find.text('Importieren'), 200);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Importieren'));
     await tester.pumpAndSettle();

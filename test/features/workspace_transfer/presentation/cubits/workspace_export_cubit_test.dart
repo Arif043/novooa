@@ -35,6 +35,7 @@ void main() {
       TransferCategory.data,
       TransferCategory.knowledge,
       TransferCategory.skills,
+      TransferCategory.employees,
       TransferCategory.tasks,
     });
     expect(files.saved, sampleArchive);

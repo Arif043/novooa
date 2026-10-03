@@ -147,8 +147,9 @@ verweist nur auf den Ordnernamen:
 {"name": "pdf-verarbeitung", "description": "Verarbeitet PDFs …"}
 ```
 
-`description` dient nur der Anzeige. Mitarbeiter ([`mitarbeiter.md`](./mitarbeiter.md)) tragen ihre `defaultSkills`
-im selben Format; Duplikate werden nach `name` zusammengeführt, Skills des Knotens gewinnen.
+`description` dient nur der Anzeige. Ein Baustein hat **entweder** eigene Fähigkeiten **oder** einen Mitarbeiter
+([`mitarbeiter.md`](./mitarbeiter.md)), dessen Fähigkeiten er dann implizit bekommt — nie beides. Ein Mitarbeiter
+speichert seine Fähigkeiten als Liste von Skill-Namen.
 
 ## Ausführung im TaskRun
 
@@ -210,7 +211,6 @@ Route `/skills`, Drawer-Label **Fähigkeiten** (nur in Standalone). Die Seite ze
 
 - Cloud-Variante (Firebase Storage statt Ordner) und Migration vorhandener Cloud-Skills.
 - Updates importierter Skills (Vergleich mit dem `hash` von skills.sh) und Herkunftsangabe je Skill.
-- Mitarbeiter: Standard-Skills sind auf `name` umgestellt; die Mitarbeiter-Oberfläche folgt im nächsten Schritt.
 
 ## Definition of Done
 

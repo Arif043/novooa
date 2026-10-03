@@ -4,10 +4,13 @@ import os from "node:os";
 import path from "node:path";
 import {type KnowledgeBaseStore} from
   "../../../../knowledge_base/domain/repositories/knowledge-base-store.js";
+import {type Employee} from "../../../../employees/domain/entities/employee.js";
+import {type EmployeeStore} from "../../../../employees/domain/repositories/employee-store.js";
 import {type ObjectStore} from "../../../../files/domain/repositories/object-store.js";
 import {
   type KnowledgeAttachment,
   type NodeAttachment,
+  type ResolvedEmployee,
   type SkillAttachment,
   type WorkflowNode,
 } from "./task-definition.js";
@@ -16,7 +19,7 @@ import {
   type PreparedKnowledgeAttachment,
 } from "./knowledge-note-workspace.js";
 import {prepareSkillDirectory} from "./skill-workspace.js";
-import {employeeFor, mergeNodeAndEmployeeSkills} from "./employee-context.js";
+import {assertExclusiveDelegation, employeeIdFor, ownSkillAttachmentsFor} from "./employee-context.js";
 
 export type PreparedNodeAttachment = NodeAttachment & {
   filename: string;
@@ -24,6 +27,8 @@ export type PreparedNodeAttachment = NodeAttachment & {
 
 export type NodeAttachmentWorkspace = {
   rootDirectory: string;
+  /** Der Mitarbeiter des Bausteins (System-Prompt), falls einer zugewiesen ist. */
+  employee?: ResolvedEmployee;
   files: PreparedNodeAttachment[];
   knowledgeFiles: PreparedKnowledgeAttachment[];
   skillsDirectory?: string;
@@ -31,51 +36,83 @@ export type NodeAttachmentWorkspace = {
   cleanup(): Promise<void>;
 };
 
+/** Woher der Workspace eines Bausteins seine Inhalte holt. */
+export type NodeAttachmentSources = {
+  objectStore: ObjectStore;
+  knowledgeBaseStore: KnowledgeBaseStore;
+  skillContentReader?: SkillContentReader;
+  employeeStore?: EmployeeStore;
+};
+
 export async function prepareNodeAttachmentWorkspace(
   node: WorkflowNode,
   teamId: string,
-  objectStore: ObjectStore,
-  knowledgeBaseStore: KnowledgeBaseStore,
-  skillContentReader?: SkillContentReader,
+  sources: NodeAttachmentSources,
 ): Promise<NodeAttachmentWorkspace | undefined> {
+  assertExclusiveDelegation(node);
+  const employee = await employeeFor(node, teamId, sources.employeeStore);
   const attachments = attachmentsFor(node);
   const knowledgeAttachments = knowledgeAttachmentsFor(node);
-  const nodeSkills = skillAttachmentsFor(node);
-  const skillAttachments = mergeNodeAndEmployeeSkills(
-    nodeSkills,
-    employeeFor(node),
-  );
+  // Mit Mitarbeiter gelten dessen Fähigkeiten, sonst die des Bausteins.
+  const skillAttachments = employee === undefined
+    ? ownSkillAttachmentsFor(node)
+    : employee.skills.map((name) => ({name, description: ""}));
   if (
+    employee === undefined &&
     attachments.length === 0 &&
     knowledgeAttachments.length === 0 &&
     skillAttachments.length === 0
   ) {
     return undefined;
   }
-  const rootDirectory = await mkdtemp(
-    path.join(os.tmpdir(), "syscat-node-files-"),
-  );
+  const rootDirectory = await mkdtemp(path.join(os.tmpdir(), "syscat-node-files-"));
+  try {
+    return await buildWorkspace({
+      rootDirectory, teamId, sources, attachments, knowledgeAttachments, skillAttachments, employee,
+    });
+  } catch (error) {
+    await rm(rootDirectory, {recursive: true, force: true});
+    throw error;
+  }
+}
+
+async function buildWorkspace(input: {
+  rootDirectory: string;
+  teamId: string;
+  sources: NodeAttachmentSources;
+  attachments: NodeAttachment[];
+  knowledgeAttachments: KnowledgeAttachment[];
+  skillAttachments: SkillAttachment[];
+  employee: Employee | undefined;
+}): Promise<NodeAttachmentWorkspace> {
+  const {rootDirectory, sources} = input;
   await mkdir(rootDirectory, {recursive: true});
-  const files = await downloadAttachments(rootDirectory, attachments, objectStore);
+  const files = await downloadAttachments(rootDirectory, input.attachments, sources.objectStore);
   const knowledgeFiles = await prepareKnowledgeFiles(
-    rootDirectory,
-    teamId,
-    knowledgeAttachments,
-    knowledgeBaseStore,
+    rootDirectory, input.teamId, input.knowledgeAttachments, sources.knowledgeBaseStore,
   );
-  const skillsDirectory = await prepareSkillDirectory(
-    rootDirectory,
-    skillAttachments,
-    skillContentReader,
-  );
+  const skillsDirectory = await prepareSkillDirectory(rootDirectory, input.skillAttachments, sources.skillContentReader);
   return {
     rootDirectory,
+    ...(input.employee ? {employee: {id: input.employee.id, name: input.employee.name, constraint: input.employee.constraint}} : {}),
     files,
     knowledgeFiles,
     skillsDirectory,
-    skillCount: new Set(skillAttachments.map((skill) => skill.name)).size,
+    skillCount: new Set(input.skillAttachments.map((skill) => skill.name)).size,
     cleanup: () => rm(rootDirectory, {recursive: true, force: true}),
   };
+}
+
+/** Lädt den Mitarbeiter des Bausteins frisch aus dem Speicher; ein gelöschter Mitarbeiter bricht den Lauf lesbar ab. */
+async function employeeFor(node: WorkflowNode, teamId: string, store?: EmployeeStore): Promise<Employee | undefined> {
+  const employeeId = employeeIdFor(node);
+  if (employeeId === undefined) return undefined;
+  if (store === undefined) throw new Error("Mitarbeiter sind in dieser Umgebung nicht verfügbar.");
+  const employee = await store.find(teamId, employeeId);
+  if (employee === null) {
+    throw new Error("Der zugewiesene Mitarbeiter wurde nicht gefunden. Wurde er gelöscht? Wähle im Baustein einen anderen Mitarbeiter.");
+  }
+  return employee;
 }
 
 function attachmentsFor(node: WorkflowNode): NodeAttachment[] {
@@ -87,16 +124,6 @@ function attachmentsFor(node: WorkflowNode): NodeAttachment[] {
 function knowledgeAttachmentsFor(node: WorkflowNode): KnowledgeAttachment[] {
   if (node.config.primitive === "prompt") {
     return node.config.knowledgeAttachments;
-  }
-  return [];
-}
-
-function skillAttachmentsFor(node: WorkflowNode): SkillAttachment[] {
-  if (node.config.primitive === "prompt") {
-    return node.config.skillAttachments;
-  }
-  if (node.config.primitive === "iterativeRefinement") {
-    return node.config.skillAttachments;
   }
   return [];
 }

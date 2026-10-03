@@ -1,3 +1,4 @@
+import {type EmployeeStore} from "../../../../employees/domain/repositories/employee-store.js";
 import {type SkillContentReader} from "../../../../skills/domain/repositories/skill-content-reader.js";
 import {type GenkitBeta} from "genkit/beta";
 import {type KnowledgeBaseStore} from
@@ -33,6 +34,7 @@ type NodeRunInput = {
   startedAt: number;
   objectStore: ObjectStore;
   skillContentReader?: SkillContentReader;
+  employeeStore?: EmployeeStore;
   knowledgeBaseStore: KnowledgeBaseStore;
   languageModelResolver?: GenkitLanguageModelResolver;
   languageModelDefaultsStore?: LanguageModelDefaultsStore;
@@ -98,9 +100,12 @@ async function executeNode(
   const attachmentWorkspace = await prepareNodeAttachmentWorkspace(
     input.node,
     input.runContext.teamId,
-    input.objectStore,
-    input.knowledgeBaseStore,
-    input.skillContentReader,
+    {
+      objectStore: input.objectStore,
+      knowledgeBaseStore: input.knowledgeBaseStore,
+      skillContentReader: input.skillContentReader,
+      employeeStore: input.employeeStore,
+    },
   );
   try {
     const executor = executorFor(

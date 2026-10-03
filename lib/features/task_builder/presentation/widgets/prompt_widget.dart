@@ -1,13 +1,12 @@
+import 'package:syscat2/core/runtime/employees_availability.dart';
 import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:syscat2/features/language_models/presentation/widgets/language_model_picker_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syscat2/core/config/mvp_feature_flags.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
-import '../../domain/entities/employee_attachment.dart';
 import '../../domain/entities/node_attachment.dart';
 import '../../domain/entities/knowledge_attachment.dart';
 import '../../domain/entities/skill_attachment.dart';
@@ -126,10 +125,11 @@ class _PromptWidgetState extends State<PromptWidget> {
             onAttach: _attachKnowledge,
             onDetach: _detachKnowledge,
           ),
-          if ((skillsAvailable() || MvpFeatureFlags.employeesEnabled)) ...[
+          if ((skillsAvailable() || employeesAvailable())) ...[
             const SizedBox(height: AppSpacing.md),
             PromptResourceSelection(
-              config: config,
+              employeeId: config.employeeId,
+              skillAttachments: config.skillAttachments,
               onAttachSkill: _attachSkill,
               onDetachSkill: _detachSkill,
               onAssignEmployee: _assignEmployee,
@@ -275,10 +275,10 @@ class _PromptWidgetState extends State<PromptWidget> {
     );
   }
 
-  void _assignEmployee(EmployeeAttachment attachment) {
+  void _assignEmployee(String employeeId) {
     context.read<TaskBuilderCubit>().assignNodeEmployee(
       nodeId: widget.node.id,
-      attachment: attachment,
+      employeeId: employeeId,
     );
   }
 

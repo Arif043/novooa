@@ -1,22 +1,21 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
-import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
+import 'package:syscat2/core/logging/logger.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
 
 import '../../domain/entities/employee.dart';
 import '../../domain/entities/employee_draft.dart';
 import '../../domain/entities/employee_failure.dart';
-import '../../domain/usecases/create_employee.dart';
-import '../../domain/usecases/delete_employee.dart';
-import '../../domain/usecases/update_employee.dart';
+import '../../domain/usecases/employee_use_cases.dart';
 import '../../domain/usecases/watch_employees.dart';
 import 'employees_state.dart';
 
+/// Verwaltet die Mitarbeiter: Liste, Anlegen, Ändern, Löschen. Änderungen
+/// meldet die Runtime per Realtime-Kanal, die Liste aktualisiert sich selbst.
 class EmployeesCubit extends Cubit<EmployeesState> {
   EmployeesCubit(
-    this._authRepository,
     this._watchEmployees,
     this._createEmployee,
     this._updateEmployee,
@@ -24,7 +23,6 @@ class EmployeesCubit extends Cubit<EmployeesState> {
     this._getCurrentTeamId,
   ) : super(const EmployeesState());
 
-  final AuthRepository _authRepository;
   final WatchEmployees _watchEmployees;
   final CreateEmployee _createEmployee;
   final UpdateEmployee _updateEmployee;
@@ -33,119 +31,82 @@ class EmployeesCubit extends Cubit<EmployeesState> {
   StreamSubscription<List<Employee>>? _subscription;
 
   Future<void> load() async {
-    final teamId = await _teamIdOrNull();
-    if (teamId == null) {
-      return _emitFailure(EmployeeFailureKind.unauthenticated);
-    }
     emit(const EmployeesState());
-    _subscription?.cancel();
+    await _subscription?.cancel();
+    final teamId = await _teamIdOrNull();
+    if (teamId == null) return;
     _subscription = _watchEmployees(teamId).listen(
       _emitEmployees,
-      onError: (_) => _emitFailure(EmployeeFailureKind.loadFailed),
-    );
-  }
-
-  Future<Employee?> createEmployee(EmployeeDraft draft) async {
-    final teamId = await _teamIdOrNull();
-    if (teamId == null) {
-      _emitFailure(EmployeeFailureKind.unauthenticated);
-      return null;
-    }
-    final result = await _createEmployee(teamId: teamId, draft: draft);
-    return result.when(
-      (employee) {
-        emit(state.copyWith(message: 'Mitarbeiter gespeichert.'));
-        return employee;
-      },
-      (failure) {
-        _emitFailure(failure.kind);
-        return null;
+      onError: (Object error, StackTrace stackTrace) {
+        logException(
+          message: 'Mitarbeiter konnten nicht geladen werden.',
+          error: error,
+          stackTrace: stackTrace,
+          name: 'employees',
+        );
+        _emitFailure(EmployeeFailure.loadFailed.message);
       },
     );
   }
 
-  Future<Employee?> updateEmployee({
-    required String employeeId,
-    required EmployeeDraft draft,
-  }) async {
-    final teamId = await _teamIdOrNull();
-    if (teamId == null) {
-      _emitFailure(EmployeeFailureKind.unauthenticated);
-      return null;
-    }
-    final result = await _updateEmployee(
-      teamId: teamId,
-      employeeId: employeeId,
-      draft: draft,
-    );
-    return result.when(
-      (employee) {
-        emit(state.copyWith(message: 'Mitarbeiter gespeichert.'));
-        return employee;
-      },
-      (failure) {
-        _emitFailure(failure.kind);
-        return null;
-      },
-    );
-  }
-
-  Future<bool> deleteEmployee(String employeeId) async {
-    final teamId = await _teamIdOrNull();
-    if (teamId == null) {
-      _emitFailure(EmployeeFailureKind.unauthenticated);
-      return false;
-    }
-    final result = await _deleteEmployee(
-      teamId: teamId,
-      employeeId: employeeId,
-    );
+  /// `true`, wenn gespeichert wurde; bei einem Fehler bleibt der Editor offen
+  /// und die Meldung erscheint als Snackbar.
+  Future<bool> save(EmployeeDraft draft, {String? employeeId}) async {
+    final result = employeeId == null
+        ? await _createEmployee(draft)
+        : await _updateEmployee(employeeId, draft);
+    if (isClosed) return false;
     return result.when(
       (_) {
-        emit(state.copyWith(message: 'Mitarbeiter gelöscht.'));
+        emit(state.copyWith(message: 'Mitarbeiter gespeichert.'));
         return true;
       },
       (failure) {
-        _emitFailure(failure.kind);
+        emit(state.copyWith(message: failure.message));
         return false;
       },
     );
   }
 
-  void _emitEmployees(List<Employee> employees) {
+  Future<void> delete(String employeeId) async {
+    final result = await _deleteEmployee(employeeId);
     if (isClosed) return;
-    emit(
-      state.copyWith(
-        status: EmployeesStatus.ready,
-        employees: employees,
-        clearMessage: true,
-      ),
+    result.when(
+      (_) => emit(state.copyWith(message: 'Mitarbeiter gelöscht.')),
+      (failure) => emit(state.copyWith(message: failure.message)),
     );
   }
 
+  void messageShown() => emit(state.copyWith(clearMessage: true));
+
   Future<TeamId?> _teamIdOrNull() async {
-    final user = _authRepository.currentUser();
-    if (user == null) return null;
     try {
       return await _getCurrentTeamId();
-    } catch (_) {
+    } catch (error, stackTrace) {
+      logException(
+        message: 'Team konnte nicht geladen werden.',
+        error: error,
+        stackTrace: stackTrace,
+        name: 'employees',
+      );
+      _emitFailure('Team konnte nicht geladen werden.');
       return null;
     }
   }
 
-  void _emitFailure(EmployeeFailureKind kind) {
+  void _emitEmployees(List<Employee> employees) {
     if (isClosed) return;
-    emit(
-      state.copyWith(
-        status: EmployeesStatus.failure,
-        message: EmployeeFailure(kind).message,
-      ),
-    );
+    emit(state.copyWith(status: EmployeesStatus.ready, employees: employees));
+  }
+
+  void _emitFailure(String message) {
+    if (isClosed) return;
+    emit(state.copyWith(status: EmployeesStatus.failure, message: message));
   }
 
   @override
-  Future<void> close() {
-    _subscription?.cancel();
+  Future<void> close() async {
+    await _subscription?.cancel();
     return super.close();
   }
 }

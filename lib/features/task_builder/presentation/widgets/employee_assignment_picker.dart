@@ -1,25 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
-import 'package:syscat2/core/widgets/ios_overlays.dart';
+import 'package:syscat2/features/employees/domain/entities/employee.dart';
+import 'attachment_picker_sheet.dart';
 
-import '../../domain/entities/employee_attachment.dart';
-
+/// Zuweisung eines Mitarbeiters an einen Baustein (0..1). Der Baustein kennt
+/// nur die ID; Name und Fähigkeiten stammen aus der Live-Liste. Gibt es den
+/// Mitarbeiter nicht mehr, steht das da — der Lauf bräche sonst ab.
 class EmployeeAssignmentPicker extends StatelessWidget {
   const EmployeeAssignmentPicker({
     super.key,
-    required this.assigned,
+    required this.assignedId,
     required this.employees,
     required this.enabled,
     required this.onAssign,
     required this.onUnassign,
   });
 
-  final EmployeeAttachment? assigned;
-  final List<EmployeeAttachment> employees;
+  final String? assignedId;
+  final List<Employee> employees;
   final bool enabled;
-  final ValueChanged<EmployeeAttachment> onAssign;
+  final ValueChanged<String> onAssign;
   final VoidCallback onUnassign;
+
+  Employee? get _assigned {
+    for (final employee in employees) {
+      if (employee.id == assignedId) return employee;
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,28 +41,44 @@ class EmployeeAssignmentPicker extends StatelessWidget {
               : null,
         ),
         const SizedBox(height: AppSpacing.sm),
-        if (assigned == null)
+        if (assignedId == null)
           const _EmptyState()
         else
-          _AssignedTile(employee: assigned!, onUnassign: onUnassign),
+          _AssignedTile(
+            employee: _assigned,
+            lookupReady: enabled,
+            onUnassign: onUnassign,
+          ),
       ],
     );
   }
 
-  void _showPicker(BuildContext context) {
-    showIosSheet<void>(
-      context: context,
-      builder: (_) => _PickerSheet(
-        employees: employees,
-        selectedId: assigned?.id,
-        onSelect: (employee) => _select(context, employee),
-      ),
+  Future<void> _showPicker(BuildContext context) async {
+    final pickedId = await AttachmentPickerSheet.show(
+      context,
+      title: 'Mitarbeiter zuweisen',
+      emptyMessage: 'Noch keine Mitarbeiter angelegt.',
+      selectedIds: {?assignedId},
+      items: [
+        for (final employee in employees)
+          AttachmentPickerItem(
+            id: employee.id,
+            title: employee.name,
+            subtitle: _subtitleFor(employee),
+            icon: Icons.person_outline,
+          ),
+      ],
     );
+    if (pickedId != null) onAssign(pickedId);
   }
 
-  void _select(BuildContext context, EmployeeAttachment employee) {
-    onAssign(employee);
-    Navigator.of(context).pop();
+  String _subtitleFor(Employee employee) {
+    final count = employee.skillNames.length;
+    return switch (count) {
+      0 => 'Rahmenbedingung · keine Fähigkeiten',
+      1 => 'Rahmenbedingung · 1 Fähigkeit',
+      _ => 'Rahmenbedingung · $count Fähigkeiten',
+    };
   }
 }
 
@@ -90,20 +115,45 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _AssignedTile extends StatelessWidget {
-  const _AssignedTile({required this.employee, required this.onUnassign});
+  const _AssignedTile({
+    required this.employee,
+    required this.lookupReady,
+    required this.onUnassign,
+  });
 
-  final EmployeeAttachment employee;
+  final Employee? employee;
+
+  /// Die Liste ist geladen; vorher wäre „nicht mehr vorhanden" voreilig.
+  final bool lookupReady;
   final VoidCallback onUnassign;
 
   @override
   Widget build(BuildContext context) {
-    final skillCount = employee.defaultSkills.length;
+    final employee = this.employee;
+    final missing = employee == null && lookupReady;
+    // Das Panel malt eine gefärbte DecoratedBox; ohne eigenes Material
+    // meldet ListTile im Debug-Modus einen Fehler beim Bauen.
+    return Material(
+      type: MaterialType.transparency,
+      child: _tile(context, employee, missing),
+    );
+  }
+
+  Widget _tile(BuildContext context, Employee? employee, bool missing) {
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
-      leading: const Icon(Icons.person_outline),
-      title: Text(employee.name, overflow: TextOverflow.ellipsis),
-      subtitle: Text(_skillDescription(skillCount)),
+      leading: Icon(
+        missing ? Icons.warning_amber_rounded : Icons.person_outline,
+        color: missing ? Theme.of(context).colorScheme.error : null,
+      ),
+      title: Text(
+        employee?.name ?? (missing ? 'Mitarbeiter nicht mehr vorhanden' : '…'),
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: employee == null
+          ? (missing ? const Text('Wähle einen anderen Mitarbeiter.') : null)
+          : Text(_skillDescription(employee.skillNames.length)),
       trailing: IconButton(
         tooltip: 'Mitarbeiter entfernen',
         onPressed: onUnassign,
@@ -114,45 +164,9 @@ class _AssignedTile extends StatelessWidget {
 
   String _skillDescription(int skillCount) {
     return switch (skillCount) {
-      0 => 'Rolle · keine Standard-Fähigkeiten',
-      1 => 'Rolle · 1 Standard-Fähigkeit',
-      _ => 'Rolle · $skillCount Standard-Fähigkeiten',
+      0 => 'Rahmenbedingung · keine Fähigkeiten',
+      1 => 'Rahmenbedingung · 1 Fähigkeit',
+      _ => 'Rahmenbedingung · $skillCount Fähigkeiten',
     };
-  }
-}
-
-class _PickerSheet extends StatelessWidget {
-  const _PickerSheet({
-    required this.employees,
-    required this.selectedId,
-    required this.onSelect,
-  });
-
-  final List<EmployeeAttachment> employees;
-  final String? selectedId;
-  final ValueChanged<EmployeeAttachment> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView.separated(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        itemCount: employees.length,
-        separatorBuilder: (_, _) => const Divider(height: AppSpacing.md),
-        itemBuilder: (context, index) => _itemFor(employees[index]),
-      ),
-    );
-  }
-
-  Widget _itemFor(EmployeeAttachment employee) {
-    final selected = employee.id == selectedId;
-    return ListTile(
-      leading: Icon(selected ? Icons.check_circle : Icons.person_outline),
-      title: Text(employee.name),
-      subtitle: employee.role.isEmpty
-          ? null
-          : Text(employee.role, maxLines: 2, overflow: TextOverflow.ellipsis),
-      onTap: () => onSelect(employee),
-    );
   }
 }

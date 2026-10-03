@@ -1,31 +1,35 @@
-import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:syscat2/core/config/mvp_feature_flags.dart';
+import 'package:syscat2/core/runtime/employees_availability.dart';
+import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 
-import '../../domain/entities/employee_attachment.dart';
-import '../../domain/entities/node_config.dart';
 import '../../domain/entities/skill_attachment.dart';
 import 'node_employee_section.dart';
 import 'node_skill_attachment_section.dart';
 
-enum _PromptResourceType { skills, employee }
+enum _ResourceType { skills, employee }
 
+/// Zuweisung für Bausteine mit LLM-Aufruf: **entweder** ein Mitarbeiter
+/// (Rahmenbedingung + dessen Fähigkeiten) **oder** selbst gewählte
+/// Fähigkeiten — nie beides. Der Wechsel räumt die andere Seite auf; die
+/// Config selbst hält die Regel ebenfalls ein (`resolveNodeDelegation`).
 class PromptResourceSelection extends StatefulWidget {
   const PromptResourceSelection({
     super.key,
-    required this.config,
+    required this.employeeId,
+    required this.skillAttachments,
     required this.onAttachSkill,
     required this.onDetachSkill,
     required this.onAssignEmployee,
     required this.onUnassignEmployee,
   });
 
-  final PromptNodeConfig config;
+  final String? employeeId;
+  final List<SkillAttachment> skillAttachments;
   final ValueChanged<SkillAttachment> onAttachSkill;
   final ValueChanged<String> onDetachSkill;
-  final ValueChanged<EmployeeAttachment> onAssignEmployee;
+  final ValueChanged<String> onAssignEmployee;
   final VoidCallback onUnassignEmployee;
 
   @override
@@ -34,18 +38,12 @@ class PromptResourceSelection extends StatefulWidget {
 }
 
 class _PromptResourceSelectionState extends State<PromptResourceSelection> {
-  late _PromptResourceType _selectedType;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedType = _typeForConfig();
-  }
+  late _ResourceType _selectedType = _typeForConfig();
 
   @override
   void didUpdateWidget(PromptResourceSelection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_isEnabled(.employee) && widget.config.employee != null) {
+    if (_isEnabled(.employee) && widget.employeeId != null) {
       _selectedType = .employee;
     }
     if (!_isEnabled(_selectedType)) _selectedType = _typeForConfig();
@@ -53,24 +51,33 @@ class _PromptResourceSelectionState extends State<PromptResourceSelection> {
 
   @override
   Widget build(BuildContext context) {
-    if (_enabledTypes.isEmpty) return const SizedBox.shrink();
+    final types = _enabledTypes;
+    if (types.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Zuweisung', style: SyscatTheme.taskBody),
         const SizedBox(height: AppSpacing.xs),
-        if (_enabledTypes.length > 1) ...[
-          CupertinoSlidingSegmentedControl<_PromptResourceType>(
-            groupValue: _selectedType,
-            backgroundColor: SyscatTheme.surfaceContainer,
-            thumbColor: SyscatTheme.glassSurface,
-            children: {
-              if (skillsAvailable())
-                _PromptResourceType.skills: const Text('Fähigkeiten'),
-              if (MvpFeatureFlags.employeesEnabled)
-                _PromptResourceType.employee: const Text('Mitarbeiter'),
-            },
-            onValueChanged: _selectType,
+        if (types.length > 1) ...[
+          SizedBox(
+            width: double.infinity,
+            child: CupertinoSlidingSegmentedControl<_ResourceType>(
+              groupValue: _selectedType,
+              backgroundColor: SyscatTheme.surfaceContainer,
+              thumbColor: SyscatTheme.glassSurface,
+              children: {
+                if (types.contains(_ResourceType.skills))
+                  _ResourceType.skills: const Text('Fähigkeiten'),
+                if (types.contains(_ResourceType.employee))
+                  _ResourceType.employee: const Text('Mitarbeiter'),
+              },
+              onValueChanged: _selectType,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Entweder ein Mitarbeiter oder eigene Fähigkeiten.',
+            style: SyscatTheme.taskBodySmall,
           ),
           const SizedBox(height: AppSpacing.md),
         ],
@@ -79,55 +86,48 @@ class _PromptResourceSelectionState extends State<PromptResourceSelection> {
     );
   }
 
-  _PromptResourceType _typeForConfig() {
-    if (_isEnabled(.employee) && widget.config.employee != null) {
-      return .employee;
-    }
-    final enabledTypes = _enabledTypes;
-    if (enabledTypes.isEmpty) return .skills;
-    return enabledTypes.first;
+  _ResourceType _typeForConfig() {
+    if (_isEnabled(.employee) && widget.employeeId != null) return .employee;
+    final types = _enabledTypes;
+    return types.isEmpty ? .skills : types.first;
   }
 
-  List<_PromptResourceType> get _enabledTypes {
-    return [
-      if (skillsAvailable()) .skills,
-      if (MvpFeatureFlags.employeesEnabled) .employee,
-    ];
-  }
+  List<_ResourceType> get _enabledTypes => [
+    if (skillsAvailable()) .skills,
+    if (employeesAvailable()) .employee,
+  ];
 
-  bool _isEnabled(_PromptResourceType type) {
-    return switch (type) {
-      .skills => skillsAvailable(),
-      .employee => MvpFeatureFlags.employeesEnabled,
-    };
-  }
+  bool _isEnabled(_ResourceType type) => switch (type) {
+    .skills => skillsAvailable(),
+    .employee => employeesAvailable(),
+  };
 
   Widget _selection() {
     return switch (_selectedType) {
       .skills => NodeSkillAttachmentSection(
-        attachments: widget.config.skillAttachments,
+        attachments: widget.skillAttachments,
         onAttach: widget.onAttachSkill,
         onDetach: widget.onDetachSkill,
       ),
       .employee => NodeEmployeeSection(
-        assigned: widget.config.employee,
+        assignedId: widget.employeeId,
         onAssign: widget.onAssignEmployee,
         onUnassign: widget.onUnassignEmployee,
       ),
     };
   }
 
-  void _selectType(_PromptResourceType? type) {
+  void _selectType(_ResourceType? type) {
     if (type == null || type == _selectedType) return;
     setState(() => _selectedType = type);
-    if (type == .skills && widget.config.employee != null) {
+    if (type == .skills && widget.employeeId != null) {
       widget.onUnassignEmployee();
     }
     if (type == .employee) _detachSkills();
   }
 
   void _detachSkills() {
-    for (final attachment in widget.config.skillAttachments) {
+    for (final attachment in widget.skillAttachments) {
       widget.onDetachSkill(attachment.id);
     }
   }

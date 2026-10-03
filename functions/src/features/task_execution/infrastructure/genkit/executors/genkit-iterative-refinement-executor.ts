@@ -33,7 +33,6 @@ import {
 } from "../runner/structured-logger.js";
 import {aiTurnMiddleware} from "../runner/node-attachment-genkit.js";
 import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
-import {employeeFor} from "../runner/employee-context.js";
 import {runEmployeeAgentTurn} from "../runner/employee-agent.js";
 import {
   errorDetails,
@@ -54,7 +53,7 @@ export function createGenkitIterativeRefinementNodeExecutor(
     async execute(node, runContext) {
       const config = refinementConfigFor(node);
       const draft = config?.draftTemplate ?? "";
-      const employee = employeeFor(node);
+      const employee = workspace?.employee;
       const output = await createGenkitIterativeRefinementExecutor(
         ai,
         workspace,

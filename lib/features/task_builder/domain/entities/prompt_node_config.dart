@@ -70,7 +70,7 @@ class PromptNodeConfig extends NodeConfig
     this.attachments = const [],
     this.knowledgeAttachments = const [],
     this.skillAttachments = const [],
-    this.employee,
+    this.employeeId,
   });
 
   final String instruction;
@@ -84,8 +84,11 @@ class PromptNodeConfig extends NodeConfig
   final List<KnowledgeAttachment> knowledgeAttachments;
   @override
   final List<SkillAttachment> skillAttachments;
+
+  /// Mitarbeiter (Subagent) des Bausteins. Schließt [skillAttachments] aus:
+  /// `copyWith` hält die Regel ein (siehe `resolveNodeDelegation`).
   @override
-  final EmployeeAttachment? employee;
+  final String? employeeId;
 
   factory PromptNodeConfig.initial() {
     return const PromptNodeConfig(
@@ -97,7 +100,7 @@ class PromptNodeConfig extends NodeConfig
       attachments: [],
       knowledgeAttachments: [],
       skillAttachments: [],
-      employee: null,
+      employeeId: null,
     );
   }
 
@@ -112,7 +115,7 @@ class PromptNodeConfig extends NodeConfig
       attachments,
       knowledgeAttachments,
       skillAttachments,
-      employee,
+      employeeId,
     ];
   }
 
@@ -125,9 +128,16 @@ class PromptNodeConfig extends NodeConfig
     List<NodeAttachment>? attachments,
     List<KnowledgeAttachment>? knowledgeAttachments,
     List<SkillAttachment>? skillAttachments,
-    EmployeeAttachment? employee,
+    String? employeeId,
     bool clearEmployee = false,
   }) {
+    final delegation = resolveNodeDelegation(
+      currentEmployeeId: this.employeeId,
+      currentSkills: this.skillAttachments,
+      employeeId: employeeId,
+      clearEmployee: clearEmployee,
+      skillAttachments: skillAttachments,
+    );
     return PromptNodeConfig(
       instruction: instruction ?? this.instruction,
       languageModelId: languageModelId ?? this.languageModelId,
@@ -136,8 +146,8 @@ class PromptNodeConfig extends NodeConfig
       structuredFields: structuredFields ?? this.structuredFields,
       attachments: attachments ?? this.attachments,
       knowledgeAttachments: knowledgeAttachments ?? this.knowledgeAttachments,
-      skillAttachments: skillAttachments ?? this.skillAttachments,
-      employee: clearEmployee ? null : employee ?? this.employee,
+      skillAttachments: delegation.skillAttachments,
+      employeeId: delegation.employeeId,
     );
   }
 
@@ -201,8 +211,8 @@ class PromptNodeConfig extends NodeConfig
   }
 
   @override
-  PromptNodeConfig copyWithEmployee(EmployeeAttachment? employee) {
-    return copyWith(employee: employee, clearEmployee: employee == null);
+  PromptNodeConfig copyWithEmployeeId(String? employeeId) {
+    return copyWith(employeeId: employeeId, clearEmployee: employeeId == null);
   }
 
   @override

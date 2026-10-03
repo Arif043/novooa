@@ -1,15 +1,12 @@
-import 'package:syscat2/features/task_builder/domain/entities/skill_attachment.dart';
-
+/// Eingabe beim Anlegen und Ändern eines Mitarbeiters.
 class EmployeeDraft {
   const EmployeeDraft({
     required this.name,
-    required this.role,
-    required this.promptTemplate,
-    required this.defaultSkills,
+    required this.constraint,
+    this.skillNames = const [],
   });
 
   final String name;
-  final String role;
-  final String promptTemplate;
-  final List<SkillAttachment> defaultSkills;
+  final String constraint;
+  final List<String> skillNames;
 }
