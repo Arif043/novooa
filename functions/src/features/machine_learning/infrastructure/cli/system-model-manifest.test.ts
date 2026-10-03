@@ -10,6 +10,30 @@ test("maps an operator manifest to a system catalog entry", () => {
   assert.equal(entry.artifactReference.sha256, "0".repeat(64));
 });
 
+test("carries manifest translations into the catalog entry", () => {
+  const data = manifestData();
+  data.translations = {en: {title: "Model", description: "Description"}, "pt-BR": {title: "Modelo", description: "Descrição"}};
+  const entry = systemModelEntry(systemModelManifestFromUnknown(data), reference());
+
+  assert.deepEqual(entry.translations?.en, {title: "Model", description: "Description"});
+  assert.equal(entry.translations?.["pt-BR"]?.title, "Modelo");
+});
+
+test("keeps manifests without translations valid", () => {
+  const entry = systemModelEntry(systemModelManifestFromUnknown(manifestData()), reference());
+  assert.equal(entry.translations, undefined);
+});
+
+test("rejects an invalid translation locale or an empty translated title", () => {
+  const badLocale = manifestData();
+  badLocale.translations = {"not a locale": {title: "A", description: "B"}};
+  assert.throws(() => systemModelEntry(systemModelManifestFromUnknown(badLocale), reference()), /Sprachcode/);
+
+  const emptyTitle = manifestData();
+  emptyTitle.translations = {en: {title: " ", description: "B"}};
+  assert.throws(() => systemModelManifestFromUnknown(emptyTitle), /übersetzte Modellname/);
+});
+
 test("rejects a manifest without an artifact version", () => {
   const data = manifestData();
   data.artifact = {artifactId: "model"};

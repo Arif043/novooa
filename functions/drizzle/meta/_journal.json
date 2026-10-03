@@ -43,6 +43,13 @@
       "when": 1791057105127,
       "tag": "0005_activity_console_output",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1791070587153,
+      "tag": "0006_model_translations",
+      "breakpoints": true
     }
   ]
 }

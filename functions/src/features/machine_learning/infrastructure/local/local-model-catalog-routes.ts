@@ -25,7 +25,7 @@ export type ModelCatalogRoutesOptions = {
 };
 
 const ModelEntry = Type.Object({
-  id: Type.String(), title: Type.String(), description: Type.String(), tags: Type.Array(Type.String()),
+  id: Type.String(), title: Type.String(), description: Type.String(), translations: Type.Optional(Type.Unknown()), tags: Type.Array(Type.String()),
   scope: Type.Unknown(), runtime: Type.String(), artifactReference: Type.Unknown(), contract: Type.Unknown(),
 });
 const failures = {400: ErrorResponse, 404: ErrorResponse, 415: ErrorResponse, 500: ErrorResponse, 503: ErrorResponse};

@@ -9,6 +9,7 @@ class ModelCatalogEntry extends Equatable {
     required this.id,
     required this.title,
     required this.description,
+    this.translations = const {},
     required this.tags,
     required this.inputs,
     this.settings = const [],
@@ -21,6 +22,9 @@ class ModelCatalogEntry extends Equatable {
   final String id;
   final String title;
   final String description;
+
+  /// Sprachcode (z. B. `en`, `pt-BR`) → Anzeigetexte; `title`/`description` sind die Rückfallsprache.
+  final Map<String, ModelTranslation> translations;
   final List<String> tags;
   final List<ModelManifestInput> inputs;
   final List<ModelManifestSetting> settings;
@@ -34,6 +38,7 @@ class ModelCatalogEntry extends Equatable {
     id,
     title,
     description,
+    translations,
     tags,
     inputs,
     settings,
@@ -44,6 +49,28 @@ class ModelCatalogEntry extends Equatable {
   ];
 
   int get inputCount => inputs.length;
+
+  String titleFor(String languageTag) =>
+      _translationFor(languageTag)?.title ?? title;
+
+  String descriptionFor(String languageTag) =>
+      _translationFor(languageTag)?.description ?? description;
+
+  /// Exakter Treffer (`pt-BR`), danach nur die Sprache (`pt`), sonst keine Übersetzung.
+  ModelTranslation? _translationFor(String languageTag) {
+    final normalized = languageTag.replaceAll('_', '-');
+    return translations[normalized] ?? translations[normalized.split('-').first];
+  }
+}
+
+class ModelTranslation extends Equatable {
+  const ModelTranslation({required this.title, required this.description});
+
+  final String title;
+  final String description;
+
+  @override
+  List<Object?> get props => [title, description];
 }
 
 class ModelManifestOutput extends Equatable {

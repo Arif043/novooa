@@ -86,6 +86,7 @@ export const modelCatalog = sqliteTable("model_catalog", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description").notNull(),
+  translations_json: text("translations_json").notNull().default("{}"),
   tags_json: text("tags_json").notNull().default("[]"),
   scope: text("scope").notNull(),
   team_id: text("team_id").references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
