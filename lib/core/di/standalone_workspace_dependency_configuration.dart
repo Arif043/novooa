@@ -76,7 +76,10 @@ void configureStandaloneWorkspaceDependencies(GetIt locator) {
       ),
     )
     ..registerLazySingleton<CommunicationChannelRepository>(
-      () => LocalCommunicationChannelRepository(locator<WorkspaceApiClient>()),
+      () => LocalCommunicationChannelRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceRealtimeChannel>(),
+      ),
     )
     ..registerLazySingleton(
       () =>

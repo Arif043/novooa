@@ -1,6 +1,8 @@
-import 'package:fake_async/fake_async.dart';
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/core/network/workspace_api_client.dart';
+import 'package:syscat2/core/network/workspace_realtime_channel.dart';
 import 'package:syscat2/features/communication/domain/entities/communication_channel.dart';
 import 'package:syscat2/features/communication/infrastructure/repositories/local_communication_channel_repository.dart';
 
@@ -39,6 +41,22 @@ class _FakeClient extends WorkspaceApiClient {
       throw UnimplementedError();
 }
 
+class _FakeChannel implements WorkspaceRealtimeChannel {
+  final _changes = StreamController<void>.broadcast();
+  final topics = <String>[];
+
+  void signal() => _changes.add(null);
+
+  @override
+  Stream<void> watch(String topic) {
+    topics.add(topic);
+    return _changes.stream;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
 const _active = {
   'id': 'c1',
   'teamId': 'workspace-1',
@@ -55,6 +73,7 @@ void main() {
         {..._active, 'id': 'c2', 'status': 'reauthorizationRequired'},
         {..._active, 'id': 'c3', 'status': 'disconnected'},
       ]),
+      _FakeChannel(),
     );
 
     final channels = await repository.watchChannels().first;
@@ -73,45 +92,50 @@ void main() {
   });
 
   test('ohne Postfächer ist die Liste leer', () async {
-    final repository = LocalCommunicationChannelRepository(_FakeClient([]));
+    final repository = LocalCommunicationChannelRepository(
+      _FakeClient([]),
+      _FakeChannel(),
+    );
 
     expect(await repository.watchChannels().first, isEmpty);
   });
 
-  test('fragt regelmäßig nach, solange jemand zuhört', () {
-    fakeAsync((async) {
+  test(
+    'lädt beim Abonnieren und danach nur auf ein Signal der Runtime',
+    () async {
       final client = _FakeClient([_active]);
-      final repository = LocalCommunicationChannelRepository(
-        client,
-        pollInterval: const Duration(seconds: 15),
-      );
+      final channel = _FakeChannel();
+      final repository = LocalCommunicationChannelRepository(client, channel);
       final emissions = <int>[];
       final subscription = repository.watchChannels().listen(
         (channels) => emissions.add(channels.length),
       );
 
-      async.elapse(const Duration(seconds: 1));
+      await pumpEventQueue();
       expect(client.gets, 1, reason: 'sofort beim Abonnieren');
+      expect(channel.topics, ['mail-connectors']);
+
+      await pumpEventQueue(times: 50);
+      expect(client.gets, 1, reason: 'ohne Signal keine weitere Anfrage');
+
       client.items = [
         _active,
         {..._active, 'id': 'c2'},
       ];
-      async.elapse(const Duration(seconds: 15));
+      channel.signal();
+      await pumpEventQueue();
       expect(emissions, [1, 2]);
 
-      subscription.cancel();
-      async.elapse(const Duration(minutes: 5));
-      expect(
-        client.gets,
-        2,
-        reason: 'nach dem Abbestellen keine Anfragen mehr',
-      );
-    });
-  });
+      await subscription.cancel();
+    },
+  );
 
   test('Fehler der Runtime erreichen den Abonnenten', () async {
     final client = _FakeClient([])..failure = StateError('offline');
-    final repository = LocalCommunicationChannelRepository(client);
+    final repository = LocalCommunicationChannelRepository(
+      client,
+      _FakeChannel(),
+    );
 
     await expectLater(repository.watchChannels().first, throwsStateError);
   });
@@ -119,6 +143,7 @@ void main() {
   test('eine ungültige Antwort wird als Fehler gemeldet', () async {
     final repository = LocalCommunicationChannelRepository(
       _FakeClient('kaputt'),
+      _FakeChannel(),
     );
 
     await expectLater(
@@ -130,7 +155,10 @@ void main() {
   test('startet die Microsoft-Anmeldung über die Runtime', () async {
     final client = _FakeClient([])
       ..postResponse = {'authorizationUrl': 'https://login.example/auth'};
-    final repository = LocalCommunicationChannelRepository(client);
+    final repository = LocalCommunicationChannelRepository(
+      client,
+      _FakeChannel(),
+    );
 
     expect(
       await repository.beginMicrosoftConnection(),
@@ -140,13 +168,19 @@ void main() {
   });
 
   test('eine Antwort ohne Anmelde-Adresse ist ein Fehler', () async {
-    final repository = LocalCommunicationChannelRepository(_FakeClient([]));
+    final repository = LocalCommunicationChannelRepository(
+      _FakeClient([]),
+      _FakeChannel(),
+    );
 
     await expectLater(repository.beginMicrosoftConnection(), throwsStateError);
   });
 
   test('WhatsApp, SMS und Testnachrichten gibt es lokal nicht', () async {
-    final repository = LocalCommunicationChannelRepository(_FakeClient([]));
+    final repository = LocalCommunicationChannelRepository(
+      _FakeClient([]),
+      _FakeChannel(),
+    );
 
     await expectLater(repository.deleteChannel('x'), throwsUnsupportedError);
     await expectLater(

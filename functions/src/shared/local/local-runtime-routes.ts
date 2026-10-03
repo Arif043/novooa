@@ -4,6 +4,7 @@ import {skillRoutes} from "../../features/skills/infrastructure/local/local-skil
 import {speechVoiceRoutes} from "../../features/speech_synthesis/infrastructure/local/speech-voice-routes.js";
 import {type FastifyInstance, type FastifyPluginAsync} from "fastify";
 import {type RuntimeDatabase} from "../../db/database.js";
+import {type MailConnectorListCache} from "../../features/communication/infrastructure/local/mail-connector-list-cache.js";
 import {mailRelayRoutes} from "../../features/communication/infrastructure/local/local-mail-relay-routes.js";
 import {dataRoutes} from "../../features/data/infrastructure/local/local-data-routes.js";
 import {fileSettingsRoutes} from "../../features/files/infrastructure/local/local-file-settings-routes.js";
@@ -42,6 +43,7 @@ export type LocalRuntimeApiDependencies = {
   sessions: LocalRuntimeSessionStore;
   notifier: LocalRuntimeRealtimeNotifier;
   tickets: LocalRuntimeRealtimeTicketStore;
+  mailConnectors: MailConnectorListCache;
   workspaceContext: () => LocalRuntimeWorkspaceContext;
 };
 
@@ -76,7 +78,9 @@ async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRu
   await api.register(taskActivityRoutes, {database});
   await api.register(taskTriggerRoutes, {database, notifier, cycleGuard: services.cycleGuard});
   await api.register(pushDeviceRoutes, {signedLicense, relay: pushRelayFromEnvironment()});
-  await api.register(mailRelayRoutes, {signedLicense, relay: mailRelayFromEnvironment()});
+  await api.register(mailRelayRoutes, {
+    signedLicense, relay: mailRelayFromEnvironment(), connectorCache: dependencies.mailConnectors,
+  });
   await api.register(languageModelRoutes, {store: services.languageModels, notifier});
   await api.register(employeeRoutes, services.employees);
   await api.register(skillCatalogRoutes, services.skills.catalog);

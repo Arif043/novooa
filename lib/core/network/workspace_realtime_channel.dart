@@ -180,9 +180,8 @@ class WorkspaceRealtimeChannel {
   }
 }
 
-/// Ersetzt `pollWorkspace` für die neun Watch-Endpunkte, die einen
-/// Realtime-Kanal haben: Statt alle 2 Sekunden zu fragen, wird nur nach
-/// einem `changed`-Signal von [channel] (oder einmalig beim ersten Listener)
+/// Watch-Endpunkte mit Realtime-Kanal: Es wird nicht im Takt gefragt, sondern
+/// nur nach einem `changed`-Signal von [channel] (oder einmalig beim ersten Listener)
 /// [load] erneut aufgerufen. Ein während eines laufenden `load()` erneut
 /// eintreffendes Signal wird nicht verworfen, sondern nach dessen Ende genau
 /// einmal nachgeholt — so bleibt am Ende immer der aktuellste Stand geladen,

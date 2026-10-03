@@ -211,45 +211,6 @@ class WorkspaceHttpException implements Exception {
   String toString() => 'Runtime antwortete mit $statusCode: $message';
 }
 
-/// Fragt [load] alle [interval] erneut ab. Ein einzelner fehlgeschlagener
-/// Tick beendet den Stream bewusst nicht dauerhaft — sonst würde z.B. ein
-/// abgelaufenes Runtime-Passwort (401, etwa direkt nach `signOut()`) oder ein
-/// kurzer Netzwerkaussetzer jede weitere Aktualisierung für die Lebensdauer
-/// dieses Streams verhindern, obwohl der nächste Tick (nach erneuter
-/// Anmeldung bzw. wiederhergestellter Verbindung) wieder funktionieren
-/// würde. Der Fehler wird trotzdem als Stream-Error weitergereicht — an
-/// [StreamSubscription.onError] hängende Cubits (z.B. `ActivityCubit`)
-/// zeigen ihn also weiterhin an, statt ihn stillschweigend zu verschlucken.
-Stream<T> pollWorkspace<T>(
-  Future<T> Function() load, {
-  Duration interval = const Duration(seconds: 2),
-}) {
-  late final StreamController<T> controller;
-  Timer? timer;
-  var isTicking = false;
-
-  Future<void> tick() async {
-    if (isTicking) return;
-    isTicking = true;
-    try {
-      controller.add(await load());
-    } on Object catch (error, stackTrace) {
-      controller.addError(error, stackTrace);
-    } finally {
-      isTicking = false;
-    }
-  }
-
-  controller = StreamController<T>(
-    onListen: () {
-      unawaited(tick());
-      timer = Timer.periodic(interval, (_) => unawaited(tick()));
-    },
-    onCancel: () => timer?.cancel(),
-  );
-  return controller.stream;
-}
-
 /// Welche Adresse gültig ist und ob sie über `http` (IP im vertrauenswürdigen
 /// Netz) oder `https` (Domain hinter einem Reverse Proxy mit Zertifikat)
 /// angesprochen wird, entscheidet `RuntimeEndpoint`. Hier wird nur

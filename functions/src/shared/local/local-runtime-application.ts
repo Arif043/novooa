@@ -1,3 +1,5 @@
+import {type MailConnectorListCache} from "../../features/communication/infrastructure/local/mail-connector-list-cache.js";
+import {RuntimeWakeupHandler} from "../../features/communication/infrastructure/local/runtime-wakeup-handler.js";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {type RuntimeLicenseActivation} from "../../features/licensing/domain/entities/runtime-license-activation.js";
 import {type RuntimeLicenseContext} from "../../features/licensing/domain/entities/runtime-license-context.js";
@@ -13,6 +15,7 @@ export type LocalRuntimeApplicationOptions = {
   runtimeRoot: string;
   fieldCipher: SensitiveFieldCipher;
   realtimeNotifier: LocalRuntimeRealtimeNotifier;
+  mailConnectors: MailConnectorListCache;
   isLicenseActive: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;
   activeLicenseActivation: () => RuntimeLicenseActivation | null;
@@ -34,6 +37,7 @@ export class LocalRuntimeApplication {
     const workspace = workspaceFrom(context);
     if (sameWorkspace(this.workspace, workspace)) return;
     await this.stopRuntime();
+    this.options.mailConnectors.invalidate();
     await ensureLocalRuntimeWorkspace(this.options.database, workspace);
     this.workspace = workspace;
     this.runtime = createLocalRuntimeComposition({
@@ -68,22 +72,29 @@ export class LocalRuntimeApplication {
     this.runtime = undefined;
   }
 
+  private wakeupHandlerFor(runtime: LocalRuntimeComposition, licenseId: string): RuntimeWakeupHandler {
+    return new RuntimeWakeupHandler(
+      () => void runtime.mailRelayWorker?.processOnce().catch((error) =>
+        runtime.applicationLogger.exception(
+          "local_runtime.firebase_wakeup_processing_failed", error, {licenseId},
+        )),
+      this.options.mailConnectors,
+      (topic) => this.options.realtimeNotifier.publish(topic),
+    );
+  }
+
   private async startFirebaseWakeups(): Promise<void> {
     const runtime = this.runtime;
     const activation = this.options.activeLicenseActivation();
     if (runtime?.firebaseSession === undefined || activation === null) return;
     try {
       await runtime.firebaseSession.start(activation);
+      const wakeups = this.wakeupHandlerFor(runtime, activation.license.payload.licenseId);
       runtime.firebaseSession.listenForWakeups(
         activation.license.payload.licenseId,
-        () => {
-          void runtime.mailRelayWorker?.processOnce().catch((error) =>
-            runtime.applicationLogger.exception(
-              "local_runtime.firebase_wakeup_processing_failed", error,
-              {licenseId: activation.license.payload.licenseId},
-            ));
-        },
+        (data) => wakeups.handle(data),
         (error) => {
+          wakeups.handleFailure();
           runtime.applicationLogger.exception(
             "local_runtime.firebase_wakeup_listener_failed", error,
             {licenseId: activation.license.payload.licenseId},

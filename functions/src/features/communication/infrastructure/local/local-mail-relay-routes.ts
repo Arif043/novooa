@@ -1,11 +1,13 @@
 import {type FastifyPluginAsyncTypebox, Type} from "@fastify/type-provider-typebox";
 import {IdParams, ItemsOf, StatusResponse} from "../../../../shared/local/local-runtime-http-schemas.js";
 import {type SignedRuntimeLicense} from "../../../licensing/domain/entities/runtime-license-lease.js";
+import {type MailConnectorListCache} from "./mail-connector-list-cache.js";
 import {type RuntimeMailRelayClient} from "./runtime-mail-relay-client.js";
 
 export type MailRelayRoutesOptions = {
   signedLicense: () => SignedRuntimeLicense | null;
   relay: Pick<RuntimeMailRelayClient, "beginMicrosoftAuthorization" | "listConnectors" | "listDeadLetters" | "replayDeadLetter">;
+  connectorCache: MailConnectorListCache;
 };
 
 const DeadLetter = Type.Object({
@@ -19,7 +21,7 @@ const MailConnector = Type.Object({
   status: Type.Union([Type.Literal("active"), Type.Literal("reauthorizationRequired"), Type.Literal("disconnected")]),
 });
 
-export const mailRelayRoutes: FastifyPluginAsyncTypebox<MailRelayRoutesOptions> = async (app, {signedLicense, relay}) => {
+export const mailRelayRoutes: FastifyPluginAsyncTypebox<MailRelayRoutesOptions> = async (app, {signedLicense, relay, connectorCache}) => {
   const activeLicense = (): SignedRuntimeLicense => {
     const license = signedLicense();
     if (license === null) throw new Error("Die lokale Runtime hat keine aktive Lizenz.");
@@ -32,7 +34,10 @@ export const mailRelayRoutes: FastifyPluginAsyncTypebox<MailRelayRoutesOptions> 
 
   app.get("/v1/mail-connectors", {
     schema: {response: {200: ItemsOf(MailConnector)}},
-  }, async () => ({items: await relay.listConnectors(activeLicense())}));
+  }, async () => {
+    const license = activeLicense();
+    return {items: await connectorCache.list(license, () => relay.listConnectors(license))};
+  });
 
   app.get("/v1/mail-relay/dead-letters", {
     schema: {response: {200: ItemsOf(DeadLetter)}},

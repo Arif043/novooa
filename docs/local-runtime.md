@@ -650,8 +650,15 @@ WhatsApp und SMS laufen über Team-Konten in der Cloud und gibt es hier nicht
 nur über das Cloud Relay: Der Relay-Befehl `listMailConnectors` liefert die
 Connectoren dieser Lizenz — nur Anzeigedaten wie ID, Adresse, Name und Status,
 nie Zugangsdaten —, die Runtime reicht sie über `GET /v1/mail-connectors` weiter.
-Die App fragt dort alle 15 Sekunden nach, solange der Tab offen ist, weil die
-Cloud keine Änderungen meldet. „Postfach verbinden" startet die Anmeldung über
+Die Cloud bleibt die Quelle der Wahrheit; die Runtime hält die Liste nur
+zwischen (`MailConnectorListCache`) und verwirft sie nie nach Zeit. Ändert sich
+ein Postfach in der Cloud (verbunden, Status gewechselt), erhöht sie im
+Wake-up-Dokument `localRuntimeWakeups/{licenseId}` die Revision
+`connectorsRevision` (neue Mails zählen weiter `communicationRevision`). Der
+`RuntimeWakeupHandler` der Runtime leert darauf den Cache und meldet das
+Realtime-Thema `mail-connectors`; die App lädt erst dann neu. Reißt der
+Firestore-Listener ab, wird der Cache ebenfalls geleert, weil Ereignisse
+fehlen könnten. Es gibt kein Nachfragen im Takt. „Postfach verbinden" startet die Anmeldung über
 `POST /v1/mail-connectors/microsoft/authorization`; ein Postfach mit abgelaufener
 Anmeldung bietet „Postfach neu verbinden" an. Dieselbe Liste steht dem Ziel-Sheet
 für E-Mail-Auslöser zur Verfügung.

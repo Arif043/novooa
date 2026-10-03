@@ -1,3 +1,4 @@
+import {MailConnectorListCache} from "../../features/communication/infrastructure/local/mail-connector-list-cache.js";
 import {type FastifyInstance, type FastifyPluginAsync} from "fastify";
 import {type Server} from "node:http";
 import {type RuntimeDatabase} from "../../db/database.js";
@@ -29,6 +30,7 @@ type RuntimeShared = {
   sessions: LocalRuntimeSessionStore;
   notifier: LocalRuntimeRealtimeNotifier;
   tickets: LocalRuntimeRealtimeTicketStore;
+  mailConnectors: MailConnectorListCache;
   application: LocalRuntimeApplication;
 };
 
@@ -51,13 +53,17 @@ export async function bootstrapLocalRuntime(options: BootstrapOptions): Promise<
 function sharedFor(options: BootstrapOptions): RuntimeShared {
   const {database, runtimeRoot, fieldCipher, licenses} = options;
   const notifier = new LocalRuntimeRealtimeNotifier();
+  const mailConnectors = new MailConnectorListCache();
   const application = new LocalRuntimeApplication({
-    database, runtimeRoot, fieldCipher, realtimeNotifier: notifier,
+    database, runtimeRoot, fieldCipher, realtimeNotifier: notifier, mailConnectors,
     isLicenseActive: () => licenses.activeContext() !== null,
     signedLicense: () => licenses.signedActiveLicense(),
     activeLicenseActivation: () => licenses.activeActivation(),
   });
-  return {sessions: new LocalRuntimeSessionStore(database), notifier, tickets: new LocalRuntimeRealtimeTicketStore(), application};
+  return {
+    sessions: new LocalRuntimeSessionStore(database), notifier, mailConnectors,
+    tickets: new LocalRuntimeRealtimeTicketStore(), application,
+  };
 }
 
 async function listenForRequests(options: BootstrapOptions, shared: RuntimeShared): Promise<FastifyInstance> {
@@ -79,6 +85,7 @@ function runtimeRoutes(options: BootstrapOptions, shared: RuntimeShared): Fastif
     await routes.register(localRuntimeApi({
       database: options.database, runtimeRoot: options.runtimeRoot, fieldCipher: options.fieldCipher,
       licenses: options.licenses, sessions: shared.sessions, notifier: shared.notifier, tickets: shared.tickets,
+      mailConnectors: shared.mailConnectors,
       workspaceContext: () => shared.application.workspaceContext(),
     }));
   };

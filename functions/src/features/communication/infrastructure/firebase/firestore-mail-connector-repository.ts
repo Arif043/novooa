@@ -9,6 +9,7 @@ import {type MailConnectorAuthorization} from
 import {type MailConnectorRepository} from
   "../../domain/repositories/mail-connector-repository.js";
 import {getDatabase} from "../../../../shared/firebase/firestore-db.js";
+import {signalRuntimeConnectorsChanged} from "./runtime-connectors-signal.js";
 import {CredentialCipher} from "../security/credential-cipher.js";
 import {
   authorizationDocument,
@@ -45,6 +46,7 @@ export class FirestoreMailConnectorRepository implements MailConnectorRepository
     batch.set(connectorReference(input.connector), connectorDocument(input.connector));
     batch.set(credentialsReference(input.connector), credentialsDocument(input.credentials, this.#cipher));
     await batch.commit();
+    await signalLocalRuntime(input.connector);
   }
 
   async loadConnectorBySubscription(subscriptionId: string) {
@@ -106,10 +108,10 @@ export class FirestoreMailConnectorRepository implements MailConnectorRepository
     teamId: string;
     status: MailConnectorStatus;
   }): Promise<void> {
-    await connectorReferenceById(input.teamId, input.connectorId).update({
-      status: input.status,
-      updatedAt: Timestamp.now(),
-    });
+    const reference = connectorReferenceById(input.teamId, input.connectorId);
+    await reference.update({status: input.status, updatedAt: Timestamp.now()});
+    const snapshot = await reference.get();
+    if (snapshot.exists) await signalLocalRuntime(connectorFrom(snapshot.data() ?? {}, snapshot.id));
   }
 
   async updateCredentials(input: {
@@ -143,6 +145,12 @@ export class FirestoreMailConnectorRepository implements MailConnectorRepository
     if (!snapshot.exists) return null;
     return {connector, credentials: credentialsFrom(snapshot.data() ?? {}, this.#cipher)};
   }
+}
+
+/** Nur Postfächer einer lokalen Runtime haben jemanden, der die Änderung wissen muss. */
+async function signalLocalRuntime(connector: MailConnector): Promise<void> {
+  if (connector.deliveryTarget !== "localRuntime" || connector.runtimeLicenseId === null) return;
+  await signalRuntimeConnectorsChanged(connector.runtimeLicenseId);
 }
 
 function authorizationReference(teamId: string, id: string) {

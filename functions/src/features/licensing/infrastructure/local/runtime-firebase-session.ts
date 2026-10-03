@@ -44,14 +44,14 @@ export class  RuntimeFirebaseSession {
 
   listenForWakeups(
     licenseId: string,
-    onWakeup: () => void,
+    onWakeup: (data: DocumentData | undefined) => void,
     onFailure: (error: unknown) => void,
   ): void {
     if (this.database === undefined) throw new Error("Die Firebase-Sitzung wurde nicht gestartet.");
     this.wakeupUnsubscribe?.();
     this.wakeupUnsubscribe = onSnapshot(
       doc(this.database, "localRuntimeWakeups", licenseId),
-      () => onWakeup(),
+      (snapshot) => onWakeup(snapshot.data()),
       onFailure,
     );
   }

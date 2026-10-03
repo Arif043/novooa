@@ -126,6 +126,11 @@ Aufbau des Tabs (anbieterneutral):
   Kanalmenü. Eine abgelaufene Anmeldung zeigt einen Hinweis mit „Neu verbinden“.
 - Zustände: Laden, Leer (mit Aktion), Fehler ohne Daten (mit „Erneut
   versuchen“), Fehler mit Daten (Hinweis über den Karten) und Erfolg.
+- Die Liste kommt ereignisgesteuert: `watchWorkspaceChannel('mail-connectors')`
+  lädt beim Öffnen und danach nur nach einem Signal der Runtime (siehe
+  [`../local-runtime.md`](../local-runtime.md) § Mail-Relay). Die Cloud erhöht
+  dafür beim Verbinden oder bei einem Statuswechsel `connectorsRevision` im
+  Wake-up-Dokument der Lizenz.
 - Anbieter stehen in `mail_provider_option.dart` (`mailProviderOptions`). Ein
   neuer Anbieter wie Gmail ist ein zusätzlicher Eintrag; die Auswahl erscheint
   erst, sobald es mehr als einen gibt. Anbieternamen für die Anzeige liefert

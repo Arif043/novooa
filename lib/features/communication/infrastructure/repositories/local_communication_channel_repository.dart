@@ -1,4 +1,5 @@
 import '../../../../core/network/workspace_api_client.dart';
+import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../domain/entities/communication_channel.dart';
 import '../../domain/entities/create_communication_channel_input.dart';
 import '../../domain/entities/send_channel_message_input.dart';
@@ -12,20 +13,18 @@ import '../models/mail_connector_model.dart';
 /// verfügbar.
 class LocalCommunicationChannelRepository
     implements CommunicationChannelRepository {
-  const LocalCommunicationChannelRepository(
-    this._client, {
-    this.pollInterval = const Duration(seconds: 15),
-  });
+  const LocalCommunicationChannelRepository(this._client, this._channel);
 
   final WorkspaceApiClient _client;
+  final WorkspaceRealtimeChannel _channel;
 
-  /// Die Postfächer liegen in der Cloud; die Runtime bekommt kein Signal bei
-  /// Änderungen, deshalb wird regelmäßig nachgefragt, solange der Tab offen ist.
-  final Duration pollInterval;
-
+  /// Die Postfächer liegen in der Cloud, die Runtime hält sie nur zwischen.
+  /// Ändert die Cloud etwas, leert die Runtime ihren Cache und meldet das auf
+  /// diesem Kanal; erst dann wird neu geladen — es gibt kein Nachfragen im
+  /// Takt.
   @override
   Stream<List<CommunicationChannel>> watchChannels() =>
-      pollWorkspace(_load, interval: pollInterval);
+      watchWorkspaceChannel('mail-connectors', _load, _channel);
 
   @override
   Future<String> beginMicrosoftConnection() async {
