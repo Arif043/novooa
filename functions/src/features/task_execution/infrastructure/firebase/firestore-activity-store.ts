@@ -8,6 +8,7 @@ import {
   type TaskActivityInput,
 } from "../../domain/repositories/activity-store.js";
 import {getDatabase} from "../../../../shared/firebase/firestore-db.js";
+import {type FailedNode} from "../../domain/services/run-failure-details.js";
 import {type TaskRunDocument} from "../../domain/repositories/task-run-store.js";
 
 export class FirestoreActivityStore implements ActivityStore {
@@ -19,6 +20,17 @@ export class FirestoreActivityStore implements ActivityStore {
     for (const result of results) {
       await this.writeNodeActivity(teamId, run, result);
     }
+  }
+
+  async writeFailedNodeActivity(teamId: string, run: TaskRunDocument, failedNode: FailedNode) {
+    const reference = activitiesReference(teamId).doc();
+    await reference.set({
+      ...baseActivity(reference.id, run, "node", "failed"),
+      nodeId: failedNode.nodeId,
+      primitive: failedNode.primitive,
+      outputs: {},
+      message: failedNode.message,
+    });
   }
 
   async writeTaskActivity(teamId: string, input: TaskActivityInput) {

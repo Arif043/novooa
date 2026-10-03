@@ -1,4 +1,5 @@
 import {randomUUID} from "crypto";
+import {type RunFailureDetails} from "../services/run-failure-details.js";
 import {
   type CompletedTaskGraphOutput,
   type NodeOutputValue,
@@ -53,10 +54,15 @@ export interface TaskRunStore {
     run: TaskRunDocument,
     output: WaitingTaskGraphOutput,
   ): Promise<void>;
+  /**
+   * Der Lauf schlägt fehl; die Bausteine davor und der fehlgeschlagene Baustein ([details]) werden
+   * trotzdem als Baustein-Aktivitäten an ihrer Position festgehalten.
+   */
   markRunFailed(
     teamId: string,
     run: TaskRunDocument,
     error: unknown,
+    details?: RunFailureDetails,
   ): Promise<void>;
   loadReviewableRun(teamId: string, runId: string): Promise<ReviewableTaskRun>;
   rejectTaskRun(teamId: string, runId: string): Promise<void>;

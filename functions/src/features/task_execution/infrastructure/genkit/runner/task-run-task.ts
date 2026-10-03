@@ -1,3 +1,4 @@
+import {runFailureDetailsOf} from "../../../domain/services/run-failure-details.js";
 import {type GenkitBeta} from "genkit/beta";
 import {z} from "zod";
 import {
@@ -45,7 +46,7 @@ async function startTaskRun(
     await executeQueuedTaskRun(ai, {teamId, run, stores}, logger);
   } catch (error) {
     logRunError(logger, "task_run_task.failed", teamId, run.runId, run.taskId, error);
-    await stores.taskRunStore.markRunFailed(teamId, run, error);
+    await stores.taskRunStore.markRunFailed(teamId, run, error, runFailureDetailsOf(error));
     throw error;
   }
 }
@@ -63,7 +64,7 @@ async function resumeTaskRun(
   } catch (error) {
     const run = resumableRun.run;
     logRunError(logger, "task_run_task.failed", teamId, run.runId, run.taskId, error);
-    await stores.taskRunStore.markRunFailed(teamId, run, error);
+    await stores.taskRunStore.markRunFailed(teamId, run, error, runFailureDetailsOf(error));
     throw error;
   }
 }

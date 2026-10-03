@@ -1,7 +1,9 @@
 import { type GenkitBeta } from "genkit/beta";
 import {type WorkflowExecutionScope} from "../../../domain/executors/node-executor.js";
 import {
+  type NodeExecutionResult,
   type NodeOutputValue,
+  type WorkflowNode,
   type TaskGraphInput,
   type TaskGraphOutput,
   type WorkflowGraph,
@@ -24,6 +26,8 @@ import {
   skipInactiveBranches,
   validateGraph,
 } from "../../../domain/services/task-graph-utils.js";
+import {consoleOutputOf} from "../../../domain/entities/script-execution.js";
+import {attachRunFailureDetails, type RunFailureDetails} from "../../../domain/services/run-failure-details.js";
 import {formatTaskFinished, formatTaskStarted} from "./structured-logger.js";
 import {
   logNodeHeaderLine,
@@ -106,7 +110,7 @@ async function runNodes(
     );
     const startedAt = Date.now();
     logNodeHeaderLine(runtime.logger, node, input.taskDefinition.id, graph, context, skipNode, results);
-    const result = await runNodeWithTrail(ai, {
+    const result = await withFailureDetails(() => runNodeWithTrail(ai, {
       node,
       context,
       runContext: createTaskRunContext({
@@ -144,7 +148,7 @@ async function runNodes(
       languageModelDefaultsStore: runtime.languageModelDefaultsStore,
       scriptExecutorFactory: runtime.scriptExecutorFactory,
       logger: runtime.logger,
-    });
+    }), (error) => failureDetails(node, error, newResults(graph, results, initialState)));
     updateTaskVariables(variables, result);
     results.set(node.id, result);
     skipInactiveBranches(node, graph, result, skippedNodeIds);
@@ -164,5 +168,36 @@ async function runNodes(
   return {
     status: "completed",
     nodeResults: orderedResults(graph, results),
+  };
+}
+
+/** Die Ergebnisse, die dieser Lauf selbst erzeugt hat; was aus einer früheren Freigabe stammt, steht schon in den Aktivitäten. */
+function newResults(
+  graph: WorkflowGraph,
+  results: Map<string, NodeExecutionResult>,
+  initialState?: InitialNodeRunState,
+): NodeExecutionResult[] {
+  const alreadyRecorded = new Set((initialState?.nodeResults ?? []).map((result) => result.nodeId));
+  return orderedResults(graph, results).filter((result) => !alreadyRecorded.has(result.nodeId));
+}
+
+/** Scheitert der Baustein, hängt der Fehler die Einzelheiten für die Aktivitäten an (siehe `run-failure-details.ts`). */
+async function withFailureDetails<T>(run: () => Promise<T>, details: (error: unknown) => RunFailureDetails): Promise<T> {
+  try {
+    return await run();
+  } catch (error) {
+    throw attachRunFailureDetails(error, details(error));
+  }
+}
+
+function failureDetails(node: WorkflowNode, error: unknown, completed: NodeExecutionResult[]): RunFailureDetails {
+  return {
+    completedNodeResults: completed,
+    failedNode: {
+      nodeId: node.id,
+      primitive: node.primitive,
+      message: error instanceof Error ? error.message : String(error),
+      console: consoleOutputOf(error),
+    },
   };
 }

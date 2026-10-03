@@ -13,7 +13,7 @@ class NodeActivityValues extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final outputs = _outputs;
-    if (outputs.isEmpty && !activity.hasConsoleOutput) {
+    if (outputs.isEmpty && !activity.hasConsoleOutput && !_hasFailureMessage) {
       return const SizedBox.shrink();
     }
     return Padding(
@@ -22,6 +22,12 @@ class NodeActivityValues extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final output in outputs) _NodeActivityValue(output: output),
+          if (_hasFailureMessage)
+            _ConsoleValue(
+              label: 'Fehler',
+              text: activity.message!,
+              isError: true,
+            ),
           if (activity.stdout.isNotEmpty)
             _ConsoleValue(
               label: 'Script-Ausgabe (stdout)',
@@ -46,10 +52,14 @@ class NodeActivityValues extends StatelessWidget {
         NodeOutput(name: 'output', label: 'Ausgabe', value: activity.output),
       if (_hasText(activity.input))
         NodeOutput(name: 'input', label: 'Eingabe', value: activity.input),
-      if (_hasText(activity.message))
+      if (_hasText(activity.message) && !_isFailure)
         NodeOutput(name: 'message', label: 'Hinweis', value: activity.message),
     ];
   }
+
+  bool get _isFailure => activity.status == TaskActivityStatus.failed;
+
+  bool get _hasFailureMessage => _isFailure && _hasText(activity.message);
 
   bool _hasText(String? value) => value?.trim().isNotEmpty ?? false;
 }

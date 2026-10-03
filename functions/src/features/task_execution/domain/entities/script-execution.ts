@@ -1,3 +1,5 @@
+import {type ConsoleOutput} from "./task.js";
+
 export type ScriptExecutionRequest = {
   input: string;
   script: string;
@@ -31,6 +33,12 @@ export type ScriptWorkspaceFile = {
  * Script bis dahin auf stdout ausgegeben hat, [errorOutput] das auf stderr — gerade beim Fehlersuchen
  * das Wichtigste.
  */
+export function consoleOutputOf(error: unknown): ConsoleOutput | undefined {
+  if (!(error instanceof ScriptExecutionError)) return undefined;
+  if (error.printed.length === 0 && error.errorOutput.length === 0) return undefined;
+  return {stdout: error.printed, stderr: error.errorOutput};
+}
+
 export class ScriptExecutionError extends Error {
   constructor(message: string, readonly printed: string = "", readonly errorOutput: string = "") {
     super(message);

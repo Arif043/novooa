@@ -45,3 +45,32 @@ test("ein Baustein ohne Ausgabe speichert eine leere Konsole", async () => {
   assert.deepEqual(JSON.parse(row.console_json), {});
   database.$client.close();
 });
+
+test("ein fehlgeschlagener Baustein steht mit Meldung und Ausgabe an seiner Position nach den erfolgreichen", async () => {
+  const {database, store} = await storeOverActivities();
+
+  await store.writeNodeActivities("team-1", run, [result({nodeId: "eins"}), result({nodeId: "zwei"})]);
+  await store.writeFailedNodeActivity("team-1", run, {
+    nodeId: "drei", primitive: "script", message: "Zeile 1: NameError", console: {stdout: "davor\n", stderr: "warnung\n"},
+  });
+  await store.writeTaskActivity("team-1", {run, status: "failed", message: "Zeile 1: NameError"});
+
+  const rows = await database.select().from(activities).orderBy(activities.created_at);
+  assert.deepEqual(rows.map((row) => [row.target, row.node_id, row.status]), [
+    ["node", "eins", "succeeded"], ["node", "zwei", "succeeded"], ["node", "drei", "failed"], ["task", null, "failed"],
+  ]);
+  assert.equal(rows[2]?.message, "Zeile 1: NameError");
+  assert.deepEqual(JSON.parse(rows[2]?.console_json ?? "{}"), {stdout: "davor\n", stderr: "warnung\n"});
+  database.$client.close();
+});
+
+test("die Zeitstempel einer Reihe von Aktivitäten steigen streng, auch im selben Moment", async () => {
+  const {database, store} = await storeOverActivities();
+
+  await store.writeNodeActivities("team-1", run, Array.from({length: 25}, (_, index) => result({nodeId: `n${index}`})));
+
+  const stamps = (await database.select().from(activities)).map((row) => row.created_at);
+  assert.equal(new Set(stamps).size, 25);
+  assert.deepEqual([...stamps].sort(), stamps);
+  database.$client.close();
+});

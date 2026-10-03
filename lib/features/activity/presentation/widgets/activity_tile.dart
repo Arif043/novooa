@@ -68,7 +68,11 @@ class _ActivityText extends StatelessWidget {
 
   String get _title {
     if (activity.target == TaskActivityTarget.task) return activity.taskTitle;
-    return '${_primitiveLabel(activity.primitive)} ausgeführt';
+    final label = _primitiveLabel(activity.primitive);
+    if (activity.status == TaskActivityStatus.failed) {
+      return '$label fehlgeschlagen';
+    }
+    return '$label ausgeführt';
   }
 
   String get _subtitle {
@@ -96,6 +100,7 @@ class _ActivityText extends StatelessWidget {
   String _primitiveLabel(String? primitive) {
     return switch (primitive) {
       'stringInput' => 'Texteingabe',
+      'script' => 'Script',
       'prompt' => 'Prompt',
       'conditionalFlow' => 'Bedingter Ablauf',
       'iterativeRefinement' => 'Iterative Verfeinerung',
