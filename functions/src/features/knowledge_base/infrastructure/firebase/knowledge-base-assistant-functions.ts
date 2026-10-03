@@ -29,6 +29,8 @@ export const askKnowledgeBaseAssistant = onCall(
   {
     authPolicy: isSignedIn(),
     invoker: "public",
+    // Modell, Tools und Notizinhalte brauchen mehr als die 256 MiB der Vorgabe.
+    memory: "512MiB",
     secrets: [geminiApiKey],
   },
   async (request) => withExceptionLogging(

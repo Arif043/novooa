@@ -21,7 +21,7 @@ const verifier = new FirebaseRuntimeRelayLicenseVerifier();
  */
 export const localRuntimeTaskBuilderRelay = onRequest(
   {
-    cors: false, invoker: "public", timeoutSeconds: 120,
+    cors: false, invoker: "public", timeoutSeconds: 120, memory: "512MiB",
     secrets: [localRuntimeLicenseSigningKey, geminiApiKey],
   },
   async (request, response) => {

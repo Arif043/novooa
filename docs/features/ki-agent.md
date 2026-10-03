@@ -30,7 +30,10 @@ in der Runtime — es dient dort der teamübergreifenden Aufsicht.
 
 Den Modellnamen legt die Cloud fest. Er steht als String im Firebase-Remote-
 Config-Parameter **`assistant_model`** (Server-Template), zum Beispiel
-`gemini-2.5-flash`; es sind Google-Modelle (Gemini API). Nutzer:innen wählen ihn
+`gemini-3.1-flash-lite` (der Standard im Code); es sind Google-Modelle (Gemini
+API). Ältere Modelle werden von Google abgeschaltet und für neue Projekte
+abgelehnt — dann scheitert jede Anfrage des Agenten mit einem 404; der Name in
+Remote Config muss ein aktuell verfügbares Modell sein. Nutzer:innen wählen ihn
 nicht, und es gibt keine Auswahl pro Team. Die Cloud-Funktionen
 (`runTaskBuilderAssistant`, `askKnowledgeBaseAssistant`) lesen ihn über
 `RemoteConfigAssistantModel` und cachen ihn fünf Minuten

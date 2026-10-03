@@ -10,6 +10,7 @@ export const askTaskBuilderAssistant = onCall(
   {
     authPolicy: isSignedIn(),
     invoker: "public",
+    memory: "512MiB",
     secrets: [geminiApiKey],
   },
   async (request) => withExceptionLogging(

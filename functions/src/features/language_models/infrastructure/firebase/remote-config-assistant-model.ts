@@ -1,4 +1,5 @@
 import {getRemoteConfig, type ServerTemplate} from "firebase-admin/remote-config";
+import {initializeAdminApp} from "../../../../shared/firebase/firestore-db.js";
 import {logException, logInfo} from "../../../../shared/logging/logger.js";
 import {assistantModelNameFrom} from "../../domain/entities/assistant-model-name.js";
 import {type AssistantModelSettings} from "../../domain/repositories/assistant-model-settings.js";
@@ -18,9 +19,11 @@ export class RemoteConfigAssistantModel implements AssistantModelSettings {
   private readonly cached: CachedAssistantModelSettings;
 
   constructor(
-    private readonly createTemplate: () => ServerTemplate = () => getRemoteConfig().initServerTemplate({
-      defaultConfig: {[assistantModelKey]: ""},
-    }),
+    private readonly createTemplate: () => ServerTemplate = () => {
+      // Remote Config braucht die Admin-App; sie wird sonst erst beim ersten Firestore-Zugriff angelegt.
+      initializeAdminApp();
+      return getRemoteConfig().initServerTemplate({defaultConfig: {[assistantModelKey]: ""}});
+    },
     now: () => number = Date.now,
   ) {
     this.cached = new CachedAssistantModelSettings(
