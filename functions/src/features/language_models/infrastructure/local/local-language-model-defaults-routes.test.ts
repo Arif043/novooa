@@ -41,7 +41,7 @@ test("liest und speichert die Vorgaben des Teams aus dem Request-Kontext", async
 });
 
 function request(method: string, body: unknown = {}): LocalRuntimeRequest {
-  return {method, url: "/v1/language-model-defaults", body} as LocalRuntimeRequest;
+  return {method, url: "/v1/language-model-defaults", body};
 }
 
 test("liefert die gespeicherten Vorgaben", async () => {
@@ -92,7 +92,7 @@ test("lässt unbeteiligte Pfade für andere Handler übrig", async () => {
   const handler = testingRoutes(languageModelDefaultsRoutes, {store: new FakeDefaultsStore(), notifier: new FakeNotifier()});
 
   const response = await handler.handle(
-    {method: "GET", url: "/v1/language-models", body: {}} as LocalRuntimeRequest,
+    {method: "GET", url: "/v1/language-models", body: {}},
   );
 
   assert.equal(response, null);

@@ -47,7 +47,7 @@ function handlerFor(
 }
 
 function postRequest(url: string, body: unknown): LocalRuntimeRequest {
-  return {method: "POST", url, body} as LocalRuntimeRequest;
+  return {method: "POST", url, body};
 }
 
 test("beantwortet eine Aufgabenstudio-Frage und übergibt den lokalen Actor", async () => {
@@ -139,7 +139,7 @@ test("lässt unbeteiligte Pfade für andere Handler übrig", async () => {
   const handler = handlerFor(new FakeTaskBuilderAssistant(), new FakeKnowledgeBaseAssistant());
 
   const response = await handler.handle(
-    {method: "GET", url: "/v1/tasks", body: {}} as LocalRuntimeRequest,
+    {method: "GET", url: "/v1/tasks", body: {}},
   );
 
   assert.equal(response, null);

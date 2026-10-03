@@ -28,7 +28,7 @@ test("delegates output transformation support to the Python runtime", () => {
   const changed: ModelContract = {
     ...value,
     outputs: [{
-      ...value.outputs[0]!,
+      ...value.outputs[0],
       transformations: [{type: "custom.output", parameters: {}}],
     }],
   };
@@ -40,7 +40,7 @@ test("accepts a configured generic top-k output transformation", () => {
   const changed: ModelContract = {
     ...value,
     outputs: [{
-      ...value.outputs[0]!,
+      ...value.outputs[0],
       shape: [3],
       transformations: [{
         type: "tensor.topK",

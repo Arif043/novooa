@@ -327,7 +327,7 @@ test("discovery lists Google text-to-speech models even without generateContent"
   const discovery = new LocalLanguageModelDiscovery((async () => new Response(JSON.stringify({models: [
     {name: "models/gemini-3.8-flash-tts", displayName: "Gemini 3.8 Flash TTS", supportedGenerationMethods: ["createInteraction"]},
     {name: "models/embedding-001", displayName: "Embedding", supportedGenerationMethods: ["embedContent"]},
-  ]}), {status: 200})) as typeof fetch);
+  ]}), {status: 200})));
 
   const google = await discovery.discover({provider: "googleAi", apiKey: "key"});
 

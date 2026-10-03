@@ -9,7 +9,7 @@ afterEach(() => {
 });
 
 function respondWith(status: number, body: unknown) {
-  globalThis.fetch = (async () => new Response(JSON.stringify(body), {status, headers: {"Content-Type": "application/json"}})) as typeof fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify(body), {status, headers: {"Content-Type": "application/json"}}));
 }
 
 test("ein ungültiges Refresh Token wird als Anmeldeproblem erkannt", async () => {

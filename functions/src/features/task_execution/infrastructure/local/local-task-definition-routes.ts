@@ -29,7 +29,7 @@ export const taskDefinitionRoutes: FastifyPluginAsyncTypebox<TaskDefinitionRoute
   const documentFrom = async (teamId: string, definition: TaskDefinition): Promise<Static<typeof TaskDocument>> => ({
     id: definition.id, title: definition.title, objective: definition.objective,
     selectedNodeId: await store.selectedNodeId(teamId, definition.id),
-    graph: {nodes: definition.nodes as never, edges: definition.edges as never},
+    graph: {nodes: definition.nodes, edges: definition.edges},
   });
 
   app.get("/v1/tasks", {schema: {response: {200: ItemsOf(TaskDocument)}}}, async (request) => {

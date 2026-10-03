@@ -60,7 +60,7 @@ test("der Relay-Client fragt die Postfächer mit der Lizenz an und prüft die An
 });
 
 test("der Relay-Client lehnt eine ungültige Antwort ab", async () => {
-  globalThis.fetch = (async () => new Response(JSON.stringify({items: "kaputt"}), {status: 200})) as typeof fetch;
+  globalThis.fetch = (async () => new Response(JSON.stringify({items: "kaputt"}), {status: 200}));
   const client = new HttpRuntimeMailRelayClient("https://relay.example/mail");
 
   await assert.rejects(client.listConnectors(license), /ungültige Postfächer/);

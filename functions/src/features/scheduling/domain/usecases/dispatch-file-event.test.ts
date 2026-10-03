@@ -43,7 +43,7 @@ function dispatcherFor(
         return {runId: `run-${input.task.id}`};
       },
     } as never,
-    taskRunDispatcher: {dispatchTaskRun: async () => undefined} as never,
+    taskRunDispatcher: {dispatchTaskRun: async () => undefined},
     folders: {chainOf: async () => ["ordner", "wurzel"], parentsOf: async () => new Map()},
     onFailure: (error) => failures.push(error),
     onLoopPrevented: (item) => prevented.push(item.id),

@@ -8,7 +8,7 @@ import {HttpRuntimeLicenseGatewayClient} from "./local-runtime-license-gateway-c
 
 function stubFetch(t: TestContext, respond: () => Promise<Response>): void {
   const original = globalThis.fetch;
-  globalThis.fetch = respond as typeof fetch;
+  globalThis.fetch = respond;
   t.after(() => {globalThis.fetch = original;});
 }
 

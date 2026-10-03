@@ -18,7 +18,7 @@ function contextFor(provider: LanguageModelProvider, baseUrl?: string): Transcri
     connection: {id: "c", teamId: "t", name: "Dienst", provider, baseUrl},
     model: {id: "m", teamId: "t", connectionId: "c", name: "M", modelId: "stt-model", capabilities: defaultLanguageModelCapabilities},
     apiKey: "key",
-  } as TranscriptionProviderContext;
+  };
 }
 
 test("Google sends the audio inline to generateContent and joins the text parts", async () => {
@@ -37,8 +37,8 @@ test("Google sends the audio inline to generateContent and joins the text parts"
 });
 
 test("Google reports empty answers and API errors readably", async () => {
-  const empty = new GoogleTranscriptionProvider((async () => json({candidates: []})) as unknown as typeof fetch);
-  const denied = new GoogleTranscriptionProvider((async () => json({error: {message: "quota"}}, 429)) as unknown as typeof fetch);
+  const empty = new GoogleTranscriptionProvider(async () => json({candidates: []}));
+  const denied = new GoogleTranscriptionProvider(async () => json({error: {message: "quota"}}, 429));
 
   await assert.rejects(empty.transcribe(contextFor("googleAi"), audio), /keinen Text/);
   await assert.rejects(denied.transcribe(contextFor("googleAi"), audio), /429.*quota/);
@@ -61,7 +61,7 @@ test("OpenAI-compatible posts multipart to /audio/transcriptions", async () => {
 });
 
 test("OpenAI-compatible explains rejections", async () => {
-  const provider = new OpenAiCompatibleTranscriptionProvider((async () => json({error: {message: "no endpoint"}}, 404)) as unknown as typeof fetch);
+  const provider = new OpenAiCompatibleTranscriptionProvider(async () => json({error: {message: "no endpoint"}}, 404));
 
   await assert.rejects(provider.transcribe(contextFor("openAiCompatible", "https://x.test/v1"), audio), /404.*no endpoint/);
 });

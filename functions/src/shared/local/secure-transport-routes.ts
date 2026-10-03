@@ -41,7 +41,7 @@ export const secureTransportRoutes: FastifyPluginAsyncTypebox<SecureTransportOpt
     const clientPublicKey = Buffer.from(request.body.clientPublicKey, "base64");
     const clientNonce = Buffer.from(request.body.clientNonce, "base64");
     if (clientPublicKey.length !== 32 || clientNonce.length !== nonceLength) {
-      return reply.code(400).send({error: "Ungültiger Schlüsselaustausch.", code: "secure_invalid"} as never);
+      return reply.code(400).send({error: "Ungültiger Schlüsselaustausch.", code: "secure_invalid"});
     }
     const result = store.open(clientPublicKey, clientNonce);
     return {
@@ -86,7 +86,7 @@ function innerRequestFrom(value: unknown): InnerRequest | null {
   if (typeof input.method !== "string" || typeof input.url !== "string") return null;
   if (typeof headers !== "object" || headers === null) return null;
   if (input.body !== null && typeof input.body !== "string") return null;
-  return {method: input.method.toUpperCase(), url: input.url, headers: headers as Record<string, string>, body: input.body as string | null};
+  return {method: input.method.toUpperCase(), url: input.url, headers: headers as Record<string, string>, body: input.body};
 }
 
 function isForwardable(inner: InnerRequest): boolean {

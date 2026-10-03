@@ -96,7 +96,7 @@ function runContext(templateValues: Record<string, unknown> = {}): TaskRunContex
       resolveValue: (value: string) => templateValues[value] ?? value,
       resolveText: (value: string) =>
         typeof templateValues[value] === "string"
-          ? (templateValues[value] as string)
+          ? (templateValues[value])
           : value,
     },
     runGraph: async () => [],

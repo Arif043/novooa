@@ -27,7 +27,7 @@ function mappedArray(value: TransformationParameter, values: ReadonlyMap<string,
   }
   const source = values.get(value.from);
   if (!Array.isArray(source)) throw new Error(`Das Transformations-Ergebnis ${value.from} ist keine Liste.`);
-  return source.map((item) => mappedValue(value.item!, values, item));
+  return source.map((item) => mappedValue(value.item, values, item));
 }
 
 function lookupValue(
@@ -42,21 +42,21 @@ function lookupValue(
   if (typeof index !== "number" || !Number.isSafeInteger(index) || index < 0 || index >= value.values.length) {
     throw new Error("$lookup erhielt keinen gültigen Index.");
   }
-  return mappedValue(value.values[index]!, values, item);
+  return mappedValue(value.values[index], values, item);
 }
 
 function referenceValue(value: string, values: ReadonlyMap<string, ModelOutputValue>, item?: ModelOutputValue): ModelOutputValue {
   if (!value.startsWith("$")) return value;
   const [name, ...path] = value.slice(1).split(".");
-  return valueAtPath(name === "item" ? item : values.get(name!), path);
+  return valueAtPath(name === "item" ? item : values.get(name), path);
 }
 
 function valueAtPath(value: ModelOutputValue | undefined, path: readonly string[]): ModelOutputValue {
   if (value === undefined) throw new Error("Die Referenz im Workflow-Mapping ist unbekannt.");
   if (path.length === 0) return value;
   const [segment, ...remaining] = path;
-  if (Array.isArray(value) && /^\d+$/.test(segment!)) return valueAtPath(value[Number(segment)], remaining);
-  if (isRecord(value) && segment! in value) return valueAtPath(value[segment!]!, remaining);
+  if (Array.isArray(value) && /^\d+$/.test(segment)) return valueAtPath(value[Number(segment)], remaining);
+  if (isRecord(value) && segment in value) return valueAtPath(value[segment], remaining);
   throw new Error("Die Referenz im Workflow-Mapping ist ungültig.");
 }
 

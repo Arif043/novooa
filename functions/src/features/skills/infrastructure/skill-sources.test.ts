@@ -72,13 +72,13 @@ test("the GitHub source limits the search to a sub path and retries branches wit
 });
 
 test("the GitHub source explains missing repositories, rate limits and oversized downloads", async () => {
-  const respond = (response: () => Response) => new GitHubSkillSource((async () => response()) as unknown as typeof fetch);
+  const respond = (response: () => Response) => new GitHubSkillSource(async () => response());
 
   await assert.rejects(respond(() => new Response("", {status: 404})).resolve({url: "o/r"}), /nicht gefunden.*privat/i);
   await assert.rejects(respond(() => new Response("", {status: 429})).resolve({url: "o/r"}), /begrenzt/);
   await assert.rejects(respond(() => new Response("x", {headers: {"content-length": String(26 * 1024 * 1024)}})).resolve({url: "o/r"}), /zu groß/);
   await assert.rejects(respond(() => new Response(zip({"r/README.md": "x"}))).resolve({url: "o/r"}), /kein Skill gefunden/);
-  await assert.rejects(new GitHubSkillSource((async () => { throw new Error("offline"); }) as unknown as typeof fetch).resolve({url: "o/r"}), /nicht erreichbar/);
+  await assert.rejects(new GitHubSkillSource(async () => { throw new Error("offline"); }).resolve({url: "o/r"}), /nicht erreichbar/);
 });
 
 test("the ZIP source strips a common root folder and names a root skill after it", async () => {

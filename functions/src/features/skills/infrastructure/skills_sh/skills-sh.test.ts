@@ -215,7 +215,7 @@ test("the relay transport requires HTTPS and passes relay rate limits through", 
   assert.throws(() => new LicenseRelaySkillsShTransport("http://relay.example/fn", () => null), /HTTPS/);
   const limited = new SkillsShClient(new LicenseRelaySkillsShTransport(
     "https://relay.example/fn", () => ({}) as never,
-    (async () => new Response("{}", {status: 429, headers: {"retry-after": "90"}})) as unknown as typeof fetch,
+    async () => new Response("{}", {status: 429, headers: {"retry-after": "90"}}),
   ));
 
   await assert.rejects(limited.get("/skills"), (error: unknown) =>

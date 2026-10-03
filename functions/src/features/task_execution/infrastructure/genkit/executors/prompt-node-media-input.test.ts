@@ -70,7 +70,7 @@ test("rejects a selected model that cannot receive the supplied image", async ()
           ai: fakeAi([]), model: "team-model" as never,
           capabilities: {...capabilities(), imageInput: false},
           logContext: {provider: "test", model: "team-model"},
-        } as never;
+        };
       }},
     ).execute({
         ...executorInput().node,

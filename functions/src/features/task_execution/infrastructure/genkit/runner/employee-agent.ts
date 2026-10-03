@@ -48,7 +48,7 @@ export async function runEmployeeAgentTurn<O extends z.ZodTypeAny = z.ZodTypeAny
     output,
     config,
   });
-  return agent.chat().send(options.prompt) as Promise<AgentResponse<unknown, z.infer<O>>>;
+  return agent.chat().send(options.prompt);
 }
 
 function agentNameFor(employee: ResolvedEmployee): string {

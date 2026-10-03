@@ -12,7 +12,7 @@ function licenseOf(licenseId: string): SignedRuntimeLicense {
 }
 
 function summary(id: string): MailConnectorSummary {
-  return {id, teamId: "w", emailAddress: `${id}@example.com`, displayName: id, status: "active"} as MailConnectorSummary;
+  return {id, teamId: "w", emailAddress: `${id}@example.com`, displayName: id, status: "active"};
 }
 
 function countingLoader(...lists: MailConnectorSummary[][]) {

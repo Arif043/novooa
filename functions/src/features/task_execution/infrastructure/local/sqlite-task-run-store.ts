@@ -7,7 +7,6 @@ import {type TaskRunApprovalNotificationStore} from "../../../notifications/doma
 import {
   type CompletedTaskGraphOutput,
   type NodeOutputValue,
-  type TaskResumeState,
   type WaitingTaskGraphOutput,
 } from "../../domain/entities/task.js";
 import {type ActivityStore} from "../../domain/repositories/activity-store.js";
@@ -159,7 +158,7 @@ function runFromRow(row: TaskRunRow): TaskRunDocument {
 function resumeStateFromRow(row: TaskRunRow) {
   return taskResumeStateSchema.parse(
     jsonRecord(row.resume_state_json ?? "{}"),
-  ) as TaskResumeState;
+  );
 }
 
 function errorMessage(error: unknown): string {

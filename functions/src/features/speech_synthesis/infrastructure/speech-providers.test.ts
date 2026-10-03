@@ -13,7 +13,7 @@ function contextFor(provider: LanguageModelProvider, baseUrl?: string): SpeechPr
     connection: {id: "c", teamId: "t", name: "Dienst", provider, baseUrl},
     model: {id: "m", teamId: "t", connectionId: "c", name: "TTS", modelId: "tts-model", capabilities: defaultLanguageModelCapabilities},
     apiKey: "key",
-  } as SpeechProviderContext;
+  };
 }
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {status});
@@ -52,19 +52,19 @@ test("Google wraps raw PCM answers of older TTS models into a playable WAV and s
 });
 
 test("Google reports a missing audio part and API errors readably", async () => {
-  const empty = new GoogleSpeechProvider((async () => json({steps: []})) as unknown as typeof fetch);
-  const denied = new GoogleSpeechProvider((async () => json({error: {message: "API key not valid"}}, 400)) as unknown as typeof fetch);
+  const empty = new GoogleSpeechProvider(async () => json({steps: []}));
+  const denied = new GoogleSpeechProvider(async () => json({error: {message: "API key not valid"}}, 400));
 
   await assert.rejects(empty.synthesize(contextFor("googleAi"), {text: "x", voiceId: "Kore"}), /keine Audiodaten/);
   await assert.rejects(denied.synthesize(contextFor("googleAi"), {text: "x", voiceId: "Kore"}), /400.*API key not valid/);
 });
 
 test("Google lists the fetched voices sorted by name without duplicates", async () => {
-  const provider = new GoogleSpeechProvider((async () => json({voices: [
+  const provider = new GoogleSpeechProvider(async () => json({voices: [
     {id: "Zeta", display_name: "Zeta", language_code: "de-DE"},
     {id: "Alpha", display_name: "Alpha"},
     {id: "Zeta", display_name: "Zeta"},
-  ]})) as unknown as typeof fetch);
+  ]}));
 
   const list = await provider.listVoices(contextFor("googleAi"));
 
@@ -73,7 +73,7 @@ test("Google lists the fetched voices sorted by name without duplicates", async 
 });
 
 test("Google falls back to the studio voices when the voice library fails", async () => {
-  const provider = new GoogleSpeechProvider((async () => { throw new Error("offline"); }) as unknown as typeof fetch);
+  const provider = new GoogleSpeechProvider(async () => { throw new Error("offline"); });
 
   const list = await provider.listVoices(contextFor("googleAi"));
 
@@ -98,7 +98,7 @@ test("OpenAI-compatible posts to /audio/speech of the connection and returns mp3
 });
 
 test("OpenAI-compatible explains rejections and offers custom voices", async () => {
-  const provider = new OpenAiCompatibleSpeechProvider((async () => json({error: {message: "no such endpoint"}}, 404)) as unknown as typeof fetch);
+  const provider = new OpenAiCompatibleSpeechProvider(async () => json({error: {message: "no such endpoint"}}, 404));
 
   await assert.rejects(provider.synthesize(contextFor("openAiCompatible", "https://x.test/v1"), {text: "x", voiceId: "alloy"}), /404.*no such endpoint/);
   const list = await provider.listVoices();

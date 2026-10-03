@@ -84,7 +84,7 @@ test("ein gescheitertes Script liefert die lesbare Meldung des Dienstes samt Aus
 });
 
 test("ein nicht erreichbarer Dienst wird verständlich gemeldet", async () => {
-  globalThis.fetch = (async () => { throw new TypeError("fetch failed"); }) as typeof fetch;
+  globalThis.fetch = (async () => { throw new TypeError("fetch failed"); });
 
   await assert.rejects(executor().execute(request), /Script-Dienst ist nicht erreichbar/);
 });

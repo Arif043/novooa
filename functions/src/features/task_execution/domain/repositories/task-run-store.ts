@@ -101,7 +101,7 @@ export function runFromDocument(data: Record<string, unknown>) {
 }
 
 function inputFromDocument(value: unknown): Record<string, unknown> {
-  return isRecord(value) ? value as Record<string, unknown> : {};
+  return isRecord(value) ? value : {};
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

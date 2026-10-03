@@ -37,9 +37,9 @@ test("attached skills are copied as whole folders under their folder name", asyn
   const skillsDirectory = await prepareSkillDirectory(workspace, [{name: "pdf", description: ""}, {name: "pdf", description: ""}], store);
 
   assert.equal(skillsDirectory, path.join(workspace, "skills"));
-  assert.deepEqual(await readdir(skillsDirectory!), ["pdf"]);
-  assert.equal(await readFile(path.join(skillsDirectory!, "pdf", "references", "REFERENCE.md"), "utf8"), "Details");
-  assert.equal(await readFile(path.join(skillsDirectory!, "pdf", "scripts", "run.py"), "utf8"), "print()");
+  assert.deepEqual(await readdir(skillsDirectory), ["pdf"]);
+  assert.equal(await readFile(path.join(skillsDirectory, "pdf", "references", "REFERENCE.md"), "utf8"), "Details");
+  assert.equal(await readFile(path.join(skillsDirectory, "pdf", "scripts", "run.py"), "utf8"), "print()");
 });
 
 test("without attachments nothing is prepared; without a reader or a folder the run fails readably", async (t) => {

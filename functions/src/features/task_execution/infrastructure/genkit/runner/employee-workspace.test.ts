@@ -57,7 +57,7 @@ test("the employee is loaded fresh and its skills are the only skills of the nod
 
   assert.deepEqual(workspace?.employee, {id: employee.id, name: "Rezeption", constraint: "Sei freundlich."});
   assert.equal(workspace?.skillCount, 2);
-  assert.deepEqual((await readdir(workspace!.skillsDirectory!)).sort(), ["mails", "pdf"]);
+  assert.deepEqual((await readdir(workspace.skillsDirectory!)).sort(), ["mails", "pdf"]);
 });
 
 test("changes to the employee apply to the next run without touching the node", async (t) => {
@@ -70,7 +70,7 @@ test("changes to the employee apply to the next run without touching the node", 
   t.after(() => workspace?.cleanup());
 
   assert.equal(workspace?.employee?.constraint, "Neu");
-  assert.deepEqual(await readdir(workspace!.skillsDirectory!), ["mails"]);
+  assert.deepEqual(await readdir(workspace.skillsDirectory!), ["mails"]);
 });
 
 test("an employee without skills still produces a workspace carrying the constraint", async (t) => {

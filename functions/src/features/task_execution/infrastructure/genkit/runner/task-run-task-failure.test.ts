@@ -26,7 +26,7 @@ test("a failing node is recorded exactly once and does not make the job fail, so
   const failures: unknown[] = [];
   const stores = storesWith(failures, async () => { throw new ScriptExecutionError("Zeile 1: NameError", ""); });
 
-  await handleTaskRunDispatch({} as never, {teamId: "team-1", runId: "run-1", mode: "start"}, stores, silentLogger as never);
+  await handleTaskRunDispatch({} as never, {teamId: "team-1", runId: "run-1", mode: "start"}, stores, silentLogger);
 
   assert.equal(failures.length, 1, "ein Eintrag je Lauf, nicht zwei");
   assert.match((failures[0] as Error).message, /NameError/);
@@ -38,7 +38,7 @@ test("an unexpected error is recorded once and still fails the job so it may be 
   (stores as {taskStore: {loadTask: () => Promise<never>}}).taskStore.loadTask = async () => { throw new Error("Aufgabe nicht ladbar"); };
 
   await assert.rejects(
-    handleTaskRunDispatch({} as never, {teamId: "team-1", runId: "run-1", mode: "start"}, stores, silentLogger as never),
+    handleTaskRunDispatch({} as never, {teamId: "team-1", runId: "run-1", mode: "start"}, stores, silentLogger),
     /Aufgabe nicht ladbar/,
   );
   assert.equal(failures.length, 1);

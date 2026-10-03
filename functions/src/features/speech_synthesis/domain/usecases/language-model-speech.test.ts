@@ -13,7 +13,7 @@ function catalogFor(provider: LanguageModelProvider): LanguageModelCatalog {
     }),
     loadConnection: async () => ({id: "c1", teamId: "t", name: "Verbindung", provider}),
     loadConnectionApiKey: async () => "secret",
-  } as unknown as LanguageModelCatalog;
+  };
 }
 
 function providerFor(kind: LanguageModelProvider, calls: Array<{text: string; voiceId: string}>): SpeechProvider {

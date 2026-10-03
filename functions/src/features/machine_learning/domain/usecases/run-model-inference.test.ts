@@ -21,7 +21,7 @@ test("executes a loaded model and returns validated outputs", async () => {
 
   assert.deepEqual(outputs[0].shape, [1]);
   assert.equal(runtime.request?.model.id, "identity");
-  assert.deepEqual([...runtime.request!.artifact], [1, 2, 3, 4]);
+  assert.deepEqual([...runtime.request.artifact], [1, 2, 3, 4]);
 });
 
 test("rejects a tensor that violates the model contract before execution", async () => {

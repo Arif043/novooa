@@ -15,7 +15,7 @@ test("rejects duplicate input tensor names", () => {
 
 test("requires a workflow output per tensor output", () => {
   const contract = imageClassificationContract();
-  const output = {...contract.outputs[0]!, workflowOutput: {...contract.outputs[0]!.workflowOutput, name: ""}};
+  const output = {...contract.outputs[0], workflowOutput: {...contract.outputs[0].workflowOutput, name: ""}};
 
   assert.throws(
     () => validateModelContract({...contract, outputs: [output]}),
@@ -26,7 +26,7 @@ test("requires a workflow output per tensor output", () => {
 test("rejects duplicate transformation result names", () => {
   const contract = imageClassificationContract();
   const output: ModelContract["outputs"][number] = {
-    ...contract.outputs[0]!,
+    ...contract.outputs[0],
     transformations: [
       {type: "tensor.softmax", result: "scores", parameters: {axis: -1}},
       {type: "tensor.softmax", result: "scores", parameters: {axis: -1}},

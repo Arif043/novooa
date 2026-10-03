@@ -54,7 +54,7 @@ export class PublicPageHttpClient implements PageHttpClient {
 }
 
 function pageResponseFrom(response: Response): PageResponse {
-  return response as unknown as PageResponse;
+  return response;
 }
 
 function publicDnsDispatcher(): Dispatcher.ComposedDispatcher {
