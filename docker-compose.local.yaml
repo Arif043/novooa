@@ -102,6 +102,7 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: "8091"
+      SCRIPT_MAX_PROCESSES: "64"
     expose:
       - "8091"
     networks:
@@ -117,9 +118,14 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
+    # Speicher und Prozessgrenze gehören zusammen: Ein leerer Python-Prozess belegt rund 8 MB, ein
+    # Thread kaum etwas. 64 Prozesse brauchen so etwa 512 MB; dazu kommen ~64 MB für Server und Init
+    # und Platz für die Daten der Scripts. Wer SCRIPT_MAX_PROCESSES anhebt, hebt mem_limit mit an
+    # (Faustregel: 64 MB + Prozesse x 8 MB, plus gut ein Drittel Reserve) und pids_limit auf Prozesse + 32.
     mem_limit: 768m
     cpus: 1.0
-    pids_limit: 64
+    # 64 Prozesse/Threads für Scripts (SCRIPT_MAX_PROCESSES) plus 32 Reserve für Server, Init und Healthcheck.
+    pids_limit: 96
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8091/healthz')"]

@@ -1,5 +1,6 @@
 import json
 import sys
+import tempfile
 import threading
 import time
 import unittest
@@ -94,10 +95,6 @@ class ExecutionTest(unittest.TestCase):
         finally:
             execution.TIMEOUT_SECONDS = original
 
-    def test_limits_memory(self):
-        with self.assertRaisesRegex(execution.ScriptFailed, "Speicher|beendet"):
-            run("data = bytearray(2 * 1024 * 1024 * 1024)")
-
     def test_ends_processes_the_script_started(self):
         marker = f"novooa-test-{uuid.uuid4().hex}"
         run(f"import subprocess, sys\nsubprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)', '{marker}'])\noutput = 'x'")
@@ -105,6 +102,29 @@ class ExecutionTest(unittest.TestCase):
         time.sleep(0.3)
         survivors = [p for p in Path("/proc").iterdir() if p.name.isdigit() and marker.encode() in (p / "cmdline").read_bytes()]
         self.assertEqual(survivors, [])
+
+    def test_allows_many_threads_within_the_process_limit(self):
+        result = run("import concurrent.futures as f\nwith f.ThreadPoolExecutor(max_workers=100) as ex:\n    total = sum(ex.map(lambda i: i, range(1000)))\noutput = str(total)")
+
+        self.assertEqual(result["output"], "499500")
+
+    def test_scripts_are_the_first_victims_when_memory_runs_out(self):
+        result = run("output = open('/proc/self/oom_score_adj').read().strip()")
+
+        self.assertEqual(result["output"], "1000")
+
+    def test_forked_copies_do_not_corrupt_the_result(self):
+        script = "import os\nfor _ in range(6):\n    os.fork()\noutput = 'fertig'"
+
+        for _ in range(5):
+            self.assertEqual(run(script)["output"], "fertig")
+
+    def test_an_unreadable_result_is_a_script_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            Path(directory, "result.json").write_text("{kaputt")
+
+            with self.assertRaisesRegex(execution.ScriptFailed, "ungültig"):
+                execution.result_of(directory)
 
     def test_does_not_leave_run_directories_behind(self):
         before = set(Path(execution.WORK_ROOT).glob("run-*"))

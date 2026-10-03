@@ -11,9 +11,8 @@ from pathlib import Path
 
 CHILD = str(Path(__file__).with_name("child.py"))
 TIMEOUT_SECONDS = float(os.environ.get("SCRIPT_TIMEOUT_SECONDS", "10"))
-MEMORY_LIMIT_BYTES = int(os.environ.get("SCRIPT_MEMORY_LIMIT_MB", "512")) * 1024 * 1024
 MAX_RESULT_BYTES = 2 * 1024 * 1024
-MAX_SCRIPT_PROCESSES = 32
+MAX_SCRIPT_PROCESSES = int(os.environ.get("SCRIPT_MAX_PROCESSES", "64"))
 WORK_ROOT = os.environ.get("SCRIPT_WORK_DIRECTORY", tempfile.gettempdir())
 
 
@@ -53,14 +52,24 @@ def safe_name(display_name):
 
 def limit_child():
     os.setsid()
-    resource.setrlimit(resource.RLIMIT_AS, (MEMORY_LIMIT_BYTES, MEMORY_LIMIT_BYTES))
     resource.setrlimit(resource.RLIMIT_CPU, (int(TIMEOUT_SECONDS) + 2, int(TIMEOUT_SECONDS) + 2))
     resource.setrlimit(resource.RLIMIT_FSIZE, (64 * 1024 * 1024, 64 * 1024 * 1024))
     resource.setrlimit(resource.RLIMIT_NOFILE, (128, 128))
     # Zählt alle Prozesse des Benutzers im Container, auch die Threads des Servers: Ein Script
-    # kann die 64 Plätze von pids_limit nie ganz belegen, dem Server bleibt Platz für neue Anfragen.
+    # kann die Plätze von pids_limit nie ganz belegen, dem Server bleibt Platz für neue Anfragen.
+    # Die Zahl ist auf den Speicher des Containers abgestimmt (siehe docker-compose.local.yaml).
     resource.setrlimit(resource.RLIMIT_NPROC, (MAX_SCRIPT_PROCESSES, MAX_SCRIPT_PROCESSES))
     resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+    prefer_script_in_oom()
+
+
+def prefer_script_in_oom():
+    """Geht dem Container der Speicher aus, soll der Kernel zuerst das Script beenden, nie den Server."""
+    try:
+        with open("/proc/self/oom_score_adj", "w") as handle:
+            handle.write("1000")
+    except OSError:
+        pass
 
 
 def run_child(payload, run_directory):
@@ -112,8 +121,11 @@ def result_of(run_directory):
     path = os.path.join(run_directory, "result.json")
     if not os.path.exists(path) or os.path.getsize(path) > MAX_RESULT_BYTES:
         raise ScriptFailed("Das Ergebnis des Scripts ist zu groß oder fehlt.")
-    with open(path, "r", encoding="utf-8") as handle:
-        result = json.load(handle)
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            result = json.load(handle)
+    except ValueError:
+        raise ScriptFailed("Das Ergebnis des Scripts ist ungültig.")
     if "error" in result:
         raise ScriptFailed(result["error"])
     return result

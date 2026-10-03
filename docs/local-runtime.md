@@ -482,15 +482,40 @@ mit eigenem, temporärem Arbeitsverzeichnis, das danach gelöscht wird. Das Scri
 hat **volles Python** (Imports, `open`, eigene Module der Standardbibliothek);
 `input`, die Variablen aus früheren Bausteinen, `files`, `list_files()` und
 `read_file()` stehen wie bisher bereit. Grenzen je Lauf: 10 s Laufzeit
-(`SCRIPT_TIMEOUT_SECONDS`), 512 MB Speicher (`SCRIPT_MEMORY_LIMIT_MB`), 64 MB
-Dateigröße, 128 offene Dateien. Höchstens vier Läufe gleichzeitig.
+(`SCRIPT_TIMEOUT_SECONDS`), 64 MB
+Dateigröße, 128 offene Dateien, 64 Prozesse/Threads. Höchstens vier Läufe
+gleichzeitig. Es gibt **kein Speicherlimit je Prozess** (kein `RLIMIT_AS`): Das
+Script darf so viel Speicher nutzen, wie der Container hat. Geht ihm der Speicher
+aus, beendet der Kernel zuerst die Scripts, nie den Server: Die Script-Prozesse
+laufen mit `oom_score_adj=1000`. Der Lauf scheitert dann mit „Das Script wurde
+beendet (Signal 9), etwa wegen zu hohem Speicher- oder Zeitverbrauch.“
 
 **Abschottung (docker-compose.local.yaml):** internes Netz (`internal: true`, kein
 Zugang nach außen und kein DNS, nur die Runtime erreicht den Dienst),
 schreibgeschütztes Dateisystem mit `tmpfs` für `/tmp` (`noexec`, `nosuid`), kein
 Root (UID 65532), `cap_drop: ALL`, `no-new-privileges`, 768 MB Speicher, 1 CPU,
-64 Prozesse. Der Container enthält keine Schlüssel und keine Modelle; das Script
+96 Prozesse. Der Container enthält keine Schlüssel und keine Modelle; das Script
 sieht nur eine minimale Umgebung (`PATH`).
+
+**Läufe sind nicht voreinander versteckt (gewollt):** Jeder Lauf hat sein eigenes
+Arbeitsverzeichnis und einen frischen Prozess, alle Läufe laufen aber unter
+derselben Benutzer-ID im selben Container. Ein gleichzeitiger Lauf kann deshalb
+die Ordner und Anhänge eines anderen lesen und dessen Prozesse beenden. Das ist
+akzeptiert, weil auf einer Runtime nur der Betreiber Scripts schreibt und
+ausführt; eine Trennung per Benutzer-ID je Lauf wäre möglich (der Server liefe
+dann als Root mit nur `CHOWN`, `SETUID`, `SETGID`), wurde aber zurückgestellt.
+Ein Script darf höchstens `SCRIPT_MAX_PROCESSES` (64) Prozesse und Threads des
+Containers belegen (`RLIMIT_NPROC`; die Threads des Servers zählen mit, weil er
+dieselbe Benutzer-ID hat). Mit `pids_limit: 96` bleiben dem Server mindestens
+32 Plätze für Anfrage-Threads, Init und Healthcheck.
+
+**Prozessgrenze und Speicher sind aufeinander abgestimmt:** Ein leerer
+Python-Prozess belegt rund 8 MB, ein schlafender Thread nur rund 0,04 MB
+(gemessen). 64 Prozesse brauchen so etwa 512 MB; dazu kommen rund 64 MB für Server
+und Init und Platz für die Daten der Scripts. Daraus folgt `mem_limit: 768m`.
+Faustregel: `mem_limit ≈ 64 MB + Prozesse × 8 MB`, plus gut ein Drittel Reserve;
+`pids_limit = Prozesse + 32`. Wer `SCRIPT_MAX_PROCESSES` anhebt, hebt beide
+Grenzen in `docker-compose.local.yaml` mit an.
 
 **Cloud:** unverändert. Die Cloud-Functions führen Scripts weiter über das
 bisherige `python3` im eigenen Prozess mit eingeschränkten Builtins

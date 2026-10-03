@@ -16,9 +16,13 @@ MAX_PRINTED_CHARACTERS = 256 * 1024
 
 
 def main():
+    owner = os.getpid()
     run_directory = sys.argv[1]
     payload = json.loads(sys.stdin.read())
     result = run(payload)
+    if os.getpid() != owner:
+        # Eine Kopie, die das Script per fork erzeugt hat: Das Ergebnis gehört allein dem Ursprungsprozess.
+        os._exit(0)
     with open(os.path.join(run_directory, "result.json"), "w", encoding="utf-8") as handle:
         json.dump(result, handle)
 
