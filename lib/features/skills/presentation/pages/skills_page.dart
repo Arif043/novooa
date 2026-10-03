@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:syscat2/core/widgets/responsive_card_grid.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -84,11 +85,11 @@ class _Body extends StatelessWidget {
       SkillsStatus.loading => const Center(child: CircularProgressIndicator()),
       SkillsStatus.failure => _Failure(message: state.message),
       SkillsStatus.ready when state.skills.isEmpty => const _EmptyState(),
-      SkillsStatus.ready => ListView.separated(
-        itemCount: state.skills.length,
-        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-        itemBuilder: (context, index) =>
-            SkillListTile(skill: state.skills[index]),
+      SkillsStatus.ready => ResponsiveCardGrid(
+        children: [
+          for (final skill in state.skills)
+            SkillListTile(key: ValueKey(skill.name), skill: skill),
+        ],
       ),
     };
   }

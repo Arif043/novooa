@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/core/widgets/responsive_card_grid.dart';
 
 import '../../domain/entities/task.dart';
 import '../cubits/task_homepage_cubit.dart';
@@ -100,41 +101,11 @@ class _TaskGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columnCount = _columnCountFor(constraints.maxWidth);
-        final tileWidth = _tileWidthFor(constraints.maxWidth, columnCount);
-        return SingleChildScrollView(
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: Wrap(
-              spacing: AppSpacing.md,
-              runSpacing: AppSpacing.md,
-              children: [
-                for (final task in tasks)
-                  SizedBox(
-                    key: ValueKey(task.id),
-                    width: tileWidth,
-                    child: TaskTile(task: task),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
+    return ResponsiveCardGrid(
+      children: [
+        for (final task in tasks) TaskTile(key: ValueKey(task.id), task: task),
+      ],
     );
-  }
-
-  int _columnCountFor(double width) {
-    if (width >= 1100) return 4;
-    if (width >= 760) return 3;
-    if (width >= 520) return 2;
-    return 1;
-  }
-
-  double _tileWidthFor(double width, int columnCount) {
-    final spacing = AppSpacing.md * (columnCount - 1);
-    return (width - spacing) / columnCount;
   }
 }
 

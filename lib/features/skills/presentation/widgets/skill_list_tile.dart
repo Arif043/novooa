@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
-import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/core/widgets/ios_overlays.dart';
 
 import '../../domain/entities/skill.dart';
@@ -15,27 +14,41 @@ class SkillListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: SyscatTheme.nodePanelDecoration(context),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(top: AppSpacing.xs),
-            child: Icon(Icons.auto_awesome_outlined),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(child: _Details(skill: skill)),
-          IconButton(
-            tooltip: 'Fähigkeit „${skill.name}“ löschen',
-            onPressed: () => _confirmDelete(context),
-            icon: const Icon(Icons.delete_outline),
-          ),
-        ],
+    final textTheme = Theme.of(context).textTheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _Header(skill: skill, onDelete: () => _confirmDelete(context)),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              skill.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: textTheme.titleMedium,
+            ),
+            if (skill.description.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                skill.description,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            const SizedBox(height: AppSpacing.sm),
+            Text(_fileCountLabel, style: textTheme.bodySmall),
+            for (final warning in skill.warnings) _Warning(text: warning),
+          ],
+        ),
       ),
     );
   }
+
+  String get _fileCountLabel =>
+      skill.fileCount == 1 ? '1 Datei' : '${skill.fileCount} Dateien';
 
   Future<void> _confirmDelete(BuildContext context) async {
     final cubit = context.read<SkillsCubit>();
@@ -63,33 +76,26 @@ class SkillListTile extends StatelessWidget {
   }
 }
 
-class _Details extends StatelessWidget {
-  const _Details({required this.skill});
+class _Header extends StatelessWidget {
+  const _Header({required this.skill, required this.onDelete});
 
   final Skill skill;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Text(skill.name, style: SyscatTheme.taskBody),
-        if (skill.description.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            skill.description,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: SyscatTheme.taskBodySmall,
-          ),
-        ],
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          skill.fileCount == 1 ? '1 Datei' : '${skill.fileCount} Dateien',
-          style: textTheme.bodySmall,
+        Icon(
+          Icons.auto_awesome_outlined,
+          color: Theme.of(context).colorScheme.primary,
         ),
-        for (final warning in skill.warnings) _Warning(text: warning),
+        const Spacer(),
+        IconButton(
+          tooltip: 'Fähigkeit „${skill.name}“ löschen',
+          onPressed: onDelete,
+          icon: const Icon(Icons.delete_outline),
+        ),
       ],
     );
   }

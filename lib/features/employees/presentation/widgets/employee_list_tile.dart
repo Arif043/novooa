@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
-import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/core/widgets/ios_overlays.dart';
 
 import '../../domain/entities/employee.dart';
@@ -20,55 +19,50 @@ class EmployeeListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final skillCount = employee.skillNames.length;
-    return Container(
-      decoration: SyscatTheme.nodePanelDecoration(context),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(top: AppSpacing.xs),
-            child: Icon(Icons.badge_outlined),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(employee.name, style: SyscatTheme.taskBody),
-                if (employee.constraint.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    employee.constraint,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: SyscatTheme.taskBodySmall,
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.xs),
-                Text(switch (skillCount) {
-                  0 => 'Keine Fähigkeiten',
-                  1 => '1 Fähigkeit',
-                  _ => '$skillCount Fähigkeiten',
-                }, style: Theme.of(context).textTheme.bodySmall),
+    final textTheme = Theme.of(context).textTheme;
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSpacing.md),
+        onTap: onEdit,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _Header(
+                employee: employee,
+                onDelete: () => _confirmDelete(context),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                employee.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.titleMedium,
+              ),
+              if (employee.constraint.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  employee.constraint,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
-            ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(_skillCountLabel, style: textTheme.bodySmall),
+            ],
           ),
-          IconButton(
-            tooltip: 'Mitarbeiter „${employee.name}“ bearbeiten',
-            onPressed: onEdit,
-            icon: const Icon(Icons.edit_outlined),
-          ),
-          IconButton(
-            tooltip: 'Mitarbeiter „${employee.name}“ löschen',
-            onPressed: () => _confirmDelete(context),
-            icon: const Icon(Icons.delete_outline),
-          ),
-        ],
+        ),
       ),
     );
   }
+
+  String get _skillCountLabel => switch (employee.skillNames.length) {
+    0 => 'Keine Fähigkeiten',
+    1 => '1 Fähigkeit',
+    final count => '$count Fähigkeiten',
+  };
 
   Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showIosDialog<bool>(
@@ -94,5 +88,30 @@ class EmployeeListTile extends StatelessWidget {
       ),
     );
     if (confirmed == true) onDelete();
+  }
+}
+
+class _Header extends StatelessWidget {
+  const _Header({required this.employee, required this.onDelete});
+
+  final Employee employee;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(
+          Icons.badge_outlined,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        const Spacer(),
+        IconButton(
+          tooltip: 'Mitarbeiter „${employee.name}“ löschen',
+          onPressed: onDelete,
+          icon: const Icon(Icons.delete_outline),
+        ),
+      ],
+    );
   }
 }

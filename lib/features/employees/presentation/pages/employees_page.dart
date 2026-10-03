@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:syscat2/core/widgets/responsive_card_grid.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -105,17 +106,17 @@ class _Body extends StatelessWidget {
       ),
       EmployeesStatus.failure => _Failure(message: state.message),
       EmployeesStatus.ready when state.employees.isEmpty => const _Empty(),
-      EmployeesStatus.ready => ListView.separated(
-        itemCount: state.employees.length,
-        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-        itemBuilder: (context, index) {
-          final employee = state.employees[index];
-          return EmployeeListTile(
-            employee: employee,
-            onEdit: () => onEdit(employee),
-            onDelete: () => context.read<EmployeesCubit>().delete(employee.id),
-          );
-        },
+      EmployeesStatus.ready => ResponsiveCardGrid(
+        children: [
+          for (final employee in state.employees)
+            EmployeeListTile(
+              key: ValueKey(employee.id),
+              employee: employee,
+              onEdit: () => onEdit(employee),
+              onDelete: () =>
+                  context.read<EmployeesCubit>().delete(employee.id),
+            ),
+        ],
       ),
     };
   }
