@@ -4,6 +4,7 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import '../../domain/entities/communication_channel.dart';
 import 'communication_channel_menu.dart';
 import 'communication_labels.dart';
+import 'communication_provider_logo.dart';
 import 'communication_reconnect_notice.dart';
 import 'communication_status_pill.dart';
 
@@ -72,7 +73,10 @@ class _Header extends StatelessWidget {
           ),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.sm),
-            child: Icon(channel.icon, color: colors.primary),
+            child: CommunicationProviderLogo(
+              provider: channel.provider,
+              fallbackIcon: channel.icon,
+            ),
           ),
         ),
         const Spacer(),

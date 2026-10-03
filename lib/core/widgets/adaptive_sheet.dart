@@ -146,6 +146,7 @@ class SheetFooter extends StatelessWidget {
     super.key,
     required this.onCancel,
     this.onBack,
+    this.cancelLabel = 'Abbrechen',
     this.confirmLabel,
     this.onConfirm,
   }) : assert(
@@ -155,6 +156,7 @@ class SheetFooter extends StatelessWidget {
 
   final VoidCallback onCancel;
   final VoidCallback? onBack;
+  final String cancelLabel;
   final String? confirmLabel;
   final VoidCallback? onConfirm;
 
@@ -166,7 +168,7 @@ class SheetFooter extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final actions = [
       if (onBack != null) _FooterAction(label: 'Zurück', onPressed: onBack),
-      _FooterAction(label: 'Abbrechen', onPressed: onCancel, muted: true),
+      _FooterAction(label: cancelLabel, onPressed: onCancel, muted: true),
       if (onConfirm != null)
         _FooterAction(
           label: confirmLabel ?? 'Fertig',

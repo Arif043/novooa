@@ -48,7 +48,7 @@ class CommunicationChannelContent extends StatelessWidget {
       onFakeMessage: cubit.dispatchFake,
       onSendMessage: (channel) => _sendMessage(context, channel),
       onDelete: cubit.delete,
-      onReconnect: (_) => connectChannel(context),
+      onReconnect: (channel) => reconnectMailbox(context, channel),
     );
   }
 

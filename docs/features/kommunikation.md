@@ -131,10 +131,19 @@ Aufbau des Tabs (anbieterneutral):
   [`../local-runtime.md`](../local-runtime.md) § Mail-Relay). Die Cloud erhöht
   dafür beim Verbinden oder bei einem Statuswechsel `connectorsRevision` im
   Wake-up-Dokument der Lizenz.
-- Anbieter stehen in `mail_provider_option.dart` (`mailProviderOptions`). Ein
-  neuer Anbieter wie Gmail ist ein zusätzlicher Eintrag; die Auswahl erscheint
-  erst, sobald es mehr als einen gibt. Anbieternamen für die Anzeige liefert
-  `communication_labels.dart`.
+- „Postfach verbinden“ öffnet lokal einen Dialog (`CommunicationMailboxesSheet`,
+  Fenster am Desktop, Bottom Sheet auf dem Handy). Seite 1 listet die
+  verbundenen Postfächer mit Status (abgelaufene bieten „Neu verbinden“), der
+  letzte Eintrag „Weiteres Postfach verbinden“ gleitet zu Seite 2 mit allen
+  Anbietern. Ohne Postfach beginnt der Dialog direkt bei den Anbietern. Zurück
+  (Pfeil, Fußleiste, System-Zurück) führt zu Seite 1; mit reduzierter Bewegung
+  entfällt die Animation. Der Dialog liefert den gewählten Anbieter, die
+  Anmeldung startet der Aufrufer. In der Cloud bleibt die Auswahl der
+  Kanalart (E-Mail, WhatsApp, SMS) als Aktionsliste.
+- Anbieter stehen in `mail_provider_option.dart` (`mailProviderOptions`: Name,
+  Beschreibung, Icon, Verbinden-Aktion). Ein neuer Anbieter wie Gmail ist ein
+  zusätzlicher Eintrag; er erscheint automatisch auf Seite 2. Anbieternamen für
+  die Anzeige liefert `communication_labels.dart`.
 
 ## Ereignisse
 

@@ -7,6 +7,7 @@ import '../../../../core/widgets/ios_overlays.dart';
 import '../../domain/entities/communication_channel.dart';
 import '../cubits/communication_cubit.dart';
 import 'create_communication_channel_dialog.dart';
+import 'communication_mailboxes_sheet.dart';
 import 'mail_provider_option.dart';
 
 /// WhatsApp und SMS gibt es nur in der Cloud; lokal bleiben die Postfächer.
@@ -23,20 +24,26 @@ Future<void> connectChannel(BuildContext context) {
   return _chooseMailProvider(context);
 }
 
+/// Lokal: Der Dialog zeigt die verbundenen Postfächer und führt über
+/// „Weiteres Postfach verbinden“ zur Wahl des Anbieters.
 Future<void> _chooseMailProvider(BuildContext context) async {
-  if (mailProviderOptions.length == 1) {
-    return mailProviderOptions.single.connect(context);
-  }
-  final provider = await showIosActionSheet<MailProviderOption>(
-    context: context,
-    title: 'Postfach verbinden',
-    actions: [
-      for (final option in mailProviderOptions)
-        IosAction(label: option.label, value: option),
-    ],
+  final cubit = context.read<CommunicationCubit>();
+  final option = await CommunicationMailboxesSheet.show(
+    context,
+    cubit: cubit,
+    startWithProviders: cubit.state.channels.every((c) => !c.isConnectorBacked),
   );
-  if (provider == null || !context.mounted) return;
-  await provider.connect(context);
+  if (option == null || !context.mounted) return;
+  await option.connect(context);
+}
+
+/// Ein Postfach mit abgelaufener Anmeldung über seinen eigenen Anbieter
+/// neu verbinden.
+Future<void> reconnectMailbox(
+  BuildContext context,
+  CommunicationChannel channel,
+) async {
+  await mailProviderFor(channel.provider)?.connect(context);
 }
 
 Future<void> _chooseChannel(BuildContext context) async {

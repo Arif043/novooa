@@ -121,16 +121,68 @@ void main() {
   );
 
   testWidgets(
-    'lokale Variante: startet die Microsoft-Anmeldung ohne Zwischenfrage',
+    'lokale Variante ohne Postfach: der Dialog beginnt bei den Anbietern',
     (tester) async {
       final repository = await _pump(tester, messaging: false);
 
       await tester.tap(find.text('Postfach verbinden'));
       await tester.pumpAndSettle();
 
-      expect(repository.connections, 1);
+      expect(find.text('Anbieter wählen'), findsOneWidget);
+      expect(find.text('Microsoft Outlook'), findsOneWidget);
       expect(find.text('WhatsApp'), findsNothing);
-      expect(find.text('SMS'), findsNothing);
+
+      await tester.tap(find.text('Microsoft Outlook'));
+      await tester.pumpAndSettle();
+
+      expect(repository.connections, 1);
+    },
+  );
+
+  testWidgets(
+    'lokale Variante mit Postfach: der Dialog listet die Postfächer und führt über den letzten Eintrag zu den Anbietern',
+    (tester) async {
+      final repository = await _pump(
+        tester,
+        messaging: false,
+        channels: [_mailbox()],
+      );
+
+      await tester.tap(find.text('Postfach verbinden'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Postfächer'), findsOneWidget);
+      expect(find.text('Weiteres Postfach verbinden'), findsOneWidget);
+      expect(find.text('Anbieter wählen'), findsNothing);
+
+      await tester.tap(find.text('Weiteres Postfach verbinden'));
+      await tester.pumpAndSettle();
+      expect(find.text('Anbieter wählen'), findsOneWidget);
+      expect(repository.connections, 0);
+
+      await tester.tap(find.byTooltip('Zurück'));
+      await tester.pumpAndSettle();
+      expect(find.text('Postfächer'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'lokale Variante: im Dialog lässt sich ein abgelaufenes Postfach neu verbinden',
+    (tester) async {
+      final repository = await _pump(
+        tester,
+        messaging: false,
+        channels: [
+          _mailbox(status: CommunicationChannelStatus.reauthorizationRequired),
+        ],
+      );
+
+      await tester.tap(find.text('Postfach verbinden'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Neu verbinden').last);
+      await tester.pumpAndSettle();
+
+      expect(repository.connections, 1);
     },
   );
 
