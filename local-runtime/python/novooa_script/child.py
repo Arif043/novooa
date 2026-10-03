@@ -1,18 +1,17 @@
 """Führt ein einzelnes Script aus. Läuft als eigener Prozess pro Lauf.
 
-Aufruf: python -I child.py <Laufverzeichnis>. Die Anfrage kommt über stdin, das
-Ergebnis steht in <Laufverzeichnis>/result.json. Das Script bekommt volles
+Aufruf: python -u -I child.py <Laufverzeichnis>. Die Anfrage kommt über stdin, das
+Ergebnis steht in <Laufverzeichnis>/result.json. Alles, was das Script auf stdout
+schreibt (print, Unterprozesse, Low-Level-Schreibzugriffe), landet in der Datei, die der
+Server als stdout übergibt; er liest sie nach dem Lauf. Das Script bekommt volles
 Python; die Grenzen setzen der Container und die Limits des Elternprozesses.
 """
-import contextlib
-import io
 import json
 import os
 import sys
 import traceback
 
 RESERVED = {"input", "output", "files", "list_files", "read_file"}
-MAX_PRINTED_CHARACTERS = 256 * 1024
 
 
 def main():
@@ -30,13 +29,11 @@ def main():
 def run(payload):
     attachments = payload.get("files", [])
     namespace = namespace_for(payload, attachments)
-    printed = io.StringIO()
     try:
-        with contextlib.redirect_stdout(printed):
-            exec(compile(payload["script"], "<script>", "exec"), namespace)
-        return success(namespace, printed)
+        exec(compile(payload["script"], "<script>", "exec"), namespace)
+        return success(namespace)
     except BaseException as error:  # noqa: BLE001 - jeder Fehler gehört dem Nutzer
-        return {"error": describe(error), "printed": clipped(printed)}
+        return {"error": describe(error)}
 
 
 def namespace_for(payload, attachments):
@@ -72,7 +69,7 @@ def path_of(attachments, display_name):
     raise FileNotFoundError(f"Angehängte Datei nicht gefunden: {display_name}")
 
 
-def success(namespace, printed):
+def success(namespace):
     output_defined = "output" in namespace
     output = namespace.get("output")
     if output_defined and not isinstance(output, str):
@@ -80,7 +77,6 @@ def success(namespace, printed):
     return {
         "outputDefined": output_defined,
         "output": output,
-        "printed": clipped(printed),
         "variables": serializable_variables(namespace),
     }
 
@@ -96,13 +92,6 @@ def serializable_variables(namespace):
             continue
         variables[key] = value
     return variables
-
-
-def clipped(printed):
-    text = printed.getvalue()
-    if len(text) <= MAX_PRINTED_CHARACTERS:
-        return text
-    return text[:MAX_PRINTED_CHARACTERS] + "\n[Ausgabe gekürzt]"
 
 
 def describe(error):

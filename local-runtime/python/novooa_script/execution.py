@@ -12,6 +12,7 @@ from pathlib import Path
 CHILD = str(Path(__file__).with_name("child.py"))
 TIMEOUT_SECONDS = float(os.environ.get("SCRIPT_TIMEOUT_SECONDS", "10"))
 MAX_RESULT_BYTES = 2 * 1024 * 1024
+MAX_PRINTED_BYTES = 256 * 1024
 MAX_SCRIPT_PROCESSES = int(os.environ.get("SCRIPT_MAX_PROCESSES", "64"))
 WORK_ROOT = os.environ.get("SCRIPT_WORK_DIRECTORY", tempfile.gettempdir())
 
@@ -19,13 +20,23 @@ WORK_ROOT = os.environ.get("SCRIPT_WORK_DIRECTORY", tempfile.gettempdir())
 class ScriptFailed(Exception):
     """Das Script ist gescheitert; die Meldung ist für den Nutzer bestimmt."""
 
+    def __init__(self, message, printed=""):
+        super().__init__(message)
+        self.printed = printed
+
 
 def execute(request, file_bytes):
     """Führt ein Script in einem frischen Prozess aus und liefert das Ergebnis."""
     run_directory = tempfile.mkdtemp(prefix="run-", dir=WORK_ROOT)
     try:
         payload = payload_for(request, file_bytes, run_directory)
-        return result_of(run_child(payload, run_directory))
+        try:
+            result = result_of(run_child(payload, run_directory))
+        except ScriptFailed as failure:
+            # Was das Script bis zum Fehler ausgegeben hat, ist gerade dann wertvoll.
+            failure.printed = printed_of(run_directory)
+            raise
+        return {**result, "printed": printed_of(run_directory)}
     finally:
         shutil.rmtree(run_directory, ignore_errors=True)
 
@@ -76,10 +87,11 @@ def run_child(payload, run_directory):
     # Fehlerausgabe in eine Datei statt in eine Pipe: Prozesse, die das Script startet,
     # erben sonst die Pipe, und der Lauf hinge, bis auch sie enden.
     stderr_path = os.path.join(run_directory, "stderr.txt")
-    with open(stderr_path, "wb") as stderr_file:
+    with open(stderr_path, "wb") as stderr_file, open(stdout_path(run_directory), "wb") as stdout_file:
         process = subprocess.Popen(
-            [sys.executable, "-I", CHILD, run_directory],
-            stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=stderr_file,
+            # -u: stdout ohne Puffer, damit auch bei Timeout oder Kill alles Bisherige erhalten bleibt.
+            [sys.executable, "-u", "-I", CHILD, run_directory],
+            stdin=subprocess.PIPE, stdout=stdout_file, stderr=stderr_file,
             cwd=run_directory, env={"PATH": os.environ.get("PATH", ""), "PYTHONIOENCODING": "utf-8"},
             preexec_fn=limit_child,
         )
@@ -107,6 +119,22 @@ def kill_group(process):
         os.killpg(process.pid, signal.SIGKILL)
     except ProcessLookupError:
         pass
+
+
+def stdout_path(run_directory):
+    return os.path.join(run_directory, "stdout.txt")
+
+
+def printed_of(run_directory):
+    """Die komplette stdout des Laufs; bei sehr viel Ausgabe die ersten Bytes samt Hinweis."""
+    try:
+        with open(stdout_path(run_directory), "rb") as handle:
+            data = handle.read(MAX_PRINTED_BYTES + 1)
+    except OSError:
+        return ""
+    clipped = len(data) > MAX_PRINTED_BYTES
+    text = data[:MAX_PRINTED_BYTES].decode("utf-8", "replace")
+    return text + ("\n[Ausgabe gekürzt]" if clipped else "")
 
 
 def failure_message(returncode, stderr_path):

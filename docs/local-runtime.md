@@ -490,6 +490,18 @@ aus, beendet der Kernel zuerst die Scripts, nie den Server: Die Script-Prozesse
 laufen mit `oom_score_adj=1000`. Der Lauf scheitert dann mit „Das Script wurde
 beendet (Signal 9), etwa wegen zu hohem Speicher- oder Zeitverbrauch.“
 
+**Ausgabe im Aktivitäten-Protokoll:** Alles, was ein Script auf stdout schreibt,
+erscheint als „[Script-Log]“ im Protokoll des Laufs — auch wenn es scheitert oder
+abgebrochen wird (Timeout, Speicher-Kill). Der Dienst fängt dafür den echten
+Dateideskriptor 1 in einer Datei ab, nicht nur `sys.stdout`; damit sind auch
+`subprocess`-Ausgaben und `os.write(1, …)` dabei, und `python -u` sorgt dafür,
+dass nichts im Puffer hängen bleibt. Bei Fehlern kommt die Ausgabe in der
+`422`-Antwort als `printed` mit zurück; der Script-Baustein protokolliert sie vor
+der Fehlermeldung (`ScriptExecutionError`). Die Ausgabe ist auf 256 KB begrenzt
+(„[Ausgabe gekürzt]“) und erscheint erst, wenn der Lauf beendet ist, nicht live.
+stderr (Warnungen, Tracebacks) gehört nicht dazu; ein Fehler des Scripts
+erscheint als Meldung mit Zeilenangabe.
+
 **Abschottung (docker-compose.local.yaml):** internes Netz (`internal: true`, kein
 Zugang nach außen und kein DNS, nur die Runtime erreicht den Dienst),
 schreibgeschütztes Dateisystem mit `tmpfs` für `/tmp` (`noexec`, `nosuid`), kein

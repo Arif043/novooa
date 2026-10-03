@@ -23,3 +23,14 @@ export type ScriptWorkspaceFile = {
   versionCreatedAt?: number;
   filename: string;
 };
+
+/**
+ * Ein Script ist gescheitert. Die Meldung ist für den Nutzer bestimmt; [printed] ist alles, was das
+ * Script bis dahin auf stdout ausgegeben hat — gerade beim Fehlersuchen das Wichtigste.
+ */
+export class ScriptExecutionError extends Error {
+  constructor(message: string, readonly printed: string = "") {
+    super(message);
+    this.name = "ScriptExecutionError";
+  }
+}

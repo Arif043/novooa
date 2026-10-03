@@ -3,7 +3,7 @@ import {mkdtemp, rm, writeFile} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test, {afterEach} from "node:test";
-import {type ScriptWorkspace} from "../../domain/entities/script-execution.js";
+import {ScriptExecutionError, type ScriptWorkspace} from "../../domain/entities/script-execution.js";
 import {
   createContainerScriptExecutorFactory,
   maximumAttachmentBytes,
@@ -71,10 +71,15 @@ test("setzt das Script keinen output, bleibt die Eingabe", async () => {
   assert.equal((await executor().execute(request)).output, "eingabe");
 });
 
-test("ein gescheitertes Script liefert die lesbare Meldung des Dienstes", async () => {
-  respondWith(422, {error: "Zeile 2: ZeroDivisionError: division by zero"});
+test("ein gescheitertes Script liefert die lesbare Meldung des Dienstes samt Ausgabe", async () => {
+  respondWith(422, {error: "Zeile 2: ZeroDivisionError: division by zero", printed: "vorher\n"});
 
-  await assert.rejects(executor().execute(request), /Zeile 2: ZeroDivisionError/);
+  await assert.rejects(executor().execute(request), (error: unknown) => {
+    assert.ok(error instanceof ScriptExecutionError);
+    assert.match(error.message, /Zeile 2: ZeroDivisionError/);
+    assert.equal(error.printed, "vorher\n");
+    return true;
+  });
 });
 
 test("ein nicht erreichbarer Dienst wird verständlich gemeldet", async () => {

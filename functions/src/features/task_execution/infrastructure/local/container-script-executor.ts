@@ -1,6 +1,6 @@
 import {readFile} from "node:fs/promises";
 import path from "node:path";
-import {type ScriptExecutionRequest, type ScriptExecutionResult, type ScriptWorkspace} from "../../domain/entities/script-execution.js";
+import {ScriptExecutionError, type ScriptExecutionRequest, type ScriptExecutionResult, type ScriptWorkspace} from "../../domain/entities/script-execution.js";
 import {type ScriptExecutorFactory} from "../../domain/executors/script-executor.js";
 import {scriptResultFrom} from "./script-result.js";
 
@@ -68,7 +68,10 @@ async function post(url: URL, body: FormData): Promise<Record<string, unknown>> 
   }
   const parsed = await response.json().catch(() => ({})) as Record<string, unknown>;
   if (!response.ok) {
-    throw new Error(typeof parsed.error === "string" ? parsed.error : "Der Script-Dienst hat die Anfrage abgelehnt.");
+    throw new ScriptExecutionError(
+      typeof parsed.error === "string" ? parsed.error : "Der Script-Dienst hat die Anfrage abgelehnt.",
+      typeof parsed.printed === "string" ? parsed.printed : "",
+    );
   }
   return parsed;
 }

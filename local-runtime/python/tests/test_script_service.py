@@ -126,6 +126,40 @@ class ExecutionTest(unittest.TestCase):
             with self.assertRaisesRegex(execution.ScriptFailed, "ungültig"):
                 execution.result_of(directory)
 
+    def test_failed_runs_keep_what_the_script_printed_before_the_error(self):
+        with self.assertRaises(execution.ScriptFailed) as raised:
+            run("print('Schritt 1')\nprint('Schritt 2')\nraise ValueError('kaputt')")
+
+        self.assertEqual(raised.exception.printed, "Schritt 1\nSchritt 2\n")
+
+    def test_captures_output_of_subprocesses_and_low_level_writes(self):
+        script = (
+            "import os, subprocess, sys\n"
+            "print('vorher')\n"
+            "subprocess.run([sys.executable, '-c', 'print(\"kind\")'])\n"
+            "os.write(1, b'roh\\n')\n"
+            "print('nachher')"
+        )
+
+        self.assertEqual(run(script)["printed"], "vorher\nkind\nroh\nnachher\n")
+
+    def test_keeps_the_output_when_the_script_is_stopped(self):
+        original = execution.TIMEOUT_SECONDS
+        execution.TIMEOUT_SECONDS = 1
+        try:
+            with self.assertRaises(execution.ScriptFailed) as raised:
+                run("print('läuft')\nwhile True:\n    pass")
+        finally:
+            execution.TIMEOUT_SECONDS = original
+
+        self.assertEqual(raised.exception.printed, "läuft\n")
+
+    def test_clips_extremely_long_output(self):
+        result = run("print('x' * (300 * 1024))")
+
+        self.assertTrue(result["printed"].endswith("[Ausgabe gekürzt]"))
+        self.assertLess(len(result["printed"]), 257 * 1024)
+
     def test_does_not_leave_run_directories_behind(self):
         before = set(Path(execution.WORK_ROOT).glob("run-*"))
         run("output = 'x'", files=[("a.txt", b"x")])
