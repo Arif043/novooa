@@ -25,10 +25,10 @@ void main() {
       ),
     );
 
-    expect(entries.single.title, 'Beispielmodell');
-    expect(entries.single.titleFor('en-US'), 'Sample model');
-    expect(entries.single.descriptionFor('en'), 'Classifies test data.');
-    expect(entries.single.titleFor('fr'), 'Beispielmodell');
+    expect(entries.single.title, 'Sample model');
+    expect(entries.single.titleFor('de-DE'), 'Beispielmodell');
+    expect(entries.single.descriptionFor('de'), 'Klassifiziert Testdaten.');
+    expect(entries.single.titleFor('fr'), 'Sample model');
     expect(entries.single.inputs.single.name, 'image');
     expect(entries.single.outputs.single.workflowName, 'classifications');
     expect(entries.single.outputs.single.workflowType, 'json');
@@ -72,10 +72,10 @@ class _Client extends WorkspaceApiClient {
     'items': [
       {
         'id': 'model-1',
-        'title': 'Beispielmodell',
-        'description': 'Klassifiziert Testdaten.',
+        'title': 'Sample model',
+        'description': 'Classifies test data.',
         'translations': {
-          'en': {'title': 'Sample model', 'description': 'Classifies test data.'},
+          'de': {'title': 'Beispielmodell', 'description': 'Klassifiziert Testdaten.'},
         },
         'tags': ['test'],
         'scope': {'type': 'team', 'teamId': 'local-team'},

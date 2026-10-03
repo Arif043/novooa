@@ -23,7 +23,7 @@ class ModelCatalogEntry extends Equatable {
   final String title;
   final String description;
 
-  /// Sprachcode (z. B. `en`, `pt-BR`) → Anzeigetexte; `title`/`description` sind die Rückfallsprache.
+  /// Sprachcode (z. B. `en`, `pt-BR`) → Anzeigetexte; `title`/`description` sind die englische Rückfallsprache.
   final Map<String, ModelTranslation> translations;
   final List<String> tags;
   final List<ModelManifestInput> inputs;

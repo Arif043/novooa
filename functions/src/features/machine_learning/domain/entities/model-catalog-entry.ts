@@ -17,7 +17,7 @@ export type ModelCatalogEntry = {
   id: string;
   title: string;
   description: string;
-  /** Optional; `title` und `description` bleiben die Rückfallsprache (Deutsch). */
+  /** Optional; `title` und `description` bleiben die Rückfallsprache (Englisch). */
   translations?: ModelTranslations;
   tags: readonly string[];
   scope: ModelScope;

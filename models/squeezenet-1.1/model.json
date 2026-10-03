@@ -1,9 +1,9 @@
 {
   "id": "squeezenet-1-1",
   "title": "SqueezeNet 1.1",
-  "description": "Klassifiziert ein Bild in eine von 1.000 ImageNet-Kategorien.",
+  "description": "Classifies an image into one of 1,000 ImageNet categories.",
   "translations": {
-    "en": {"title": "SqueezeNet 1.1", "description": "Classifies an image into one of 1,000 ImageNet categories."}
+    "de": {"title": "SqueezeNet 1.1", "description": "Klassifiziert ein Bild in eine von 1.000 ImageNet-Kategorien."}
   },
   "tags": [
     "bild",

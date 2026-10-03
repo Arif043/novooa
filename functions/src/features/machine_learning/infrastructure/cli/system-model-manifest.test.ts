@@ -12,10 +12,10 @@ test("maps an operator manifest to a system catalog entry", () => {
 
 test("carries manifest translations into the catalog entry", () => {
   const data = manifestData();
-  data.translations = {en: {title: "Model", description: "Description"}, "pt-BR": {title: "Modelo", description: "Descrição"}};
+  data.translations = {de: {title: "Modell", description: "Beschreibung"}, "pt-BR": {title: "Modelo", description: "Descrição"}};
   const entry = systemModelEntry(systemModelManifestFromUnknown(data), reference());
 
-  assert.deepEqual(entry.translations?.en, {title: "Model", description: "Description"});
+  assert.deepEqual(entry.translations?.de, {title: "Modell", description: "Beschreibung"});
   assert.equal(entry.translations?.["pt-BR"]?.title, "Modelo");
 });
 
@@ -30,7 +30,7 @@ test("rejects an invalid translation locale or an empty translated title", () =>
   assert.throws(() => systemModelEntry(systemModelManifestFromUnknown(badLocale), reference()), /Sprachcode/);
 
   const emptyTitle = manifestData();
-  emptyTitle.translations = {en: {title: " ", description: "B"}};
+  emptyTitle.translations = {de: {title: " ", description: "B"}};
   assert.throws(() => systemModelManifestFromUnknown(emptyTitle), /übersetzte Modellname/);
 });
 
