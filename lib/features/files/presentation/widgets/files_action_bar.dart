@@ -18,7 +18,7 @@ class FilesActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      alignment: WrapAlignment.end,
+      alignment: WrapAlignment.start,
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.sm,
       children: [
@@ -27,7 +27,9 @@ class FilesActionBar extends StatelessWidget {
               ? null
               : () => _createFolder(context),
           icon: const Icon(Icons.create_new_folder_outlined),
-          label: const Text('Verzeichnis'),
+          label: Text(
+            state.isCreatingFolder ? 'Wird erstellt …' : 'Neuer Ordner',
+          ),
         ),
         FilledButton.icon(
           onPressed: state.isUploading ? null : () => _pickAndUpload(context),
@@ -55,8 +57,8 @@ class FilesActionBar extends StatelessWidget {
   }
 
   Future<UploadFileInput?> _pickFile() async {
-    final result = await FilePicker.pickFiles(withData: true);
-    final file = result?.files.firstOrNull;
+    final pickedFileOrFailure = await FilePicker.pickFiles(withData: true);
+    final file = pickedFileOrFailure?.files.firstOrNull;
     final bytes = file?.bytes;
     if (file == null || bytes == null) return null;
     return UploadFileInput(
@@ -88,7 +90,7 @@ class _ButtonSpinner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const SizedBox.square(
-      dimension: 18,
+      dimension: AppSpacing.md,
       child: CircularProgressIndicator(strokeWidth: 2),
     );
   }

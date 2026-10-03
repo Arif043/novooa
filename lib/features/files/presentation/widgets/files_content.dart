@@ -10,6 +10,7 @@ import 'file_tile.dart';
 import '../pages/file_detail_page.dart';
 import 'files_breadcrumbs.dart';
 import 'folder_tile.dart';
+import 'files_empty_state.dart';
 
 class FilesContent extends StatelessWidget {
   const FilesContent({super.key, required this.state});
@@ -43,8 +44,12 @@ class _ReadyFilesContent extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         Expanded(
           child: itemCount == 0
-              ? const _EmptyState()
-              : _FileList(state: state, itemCount: itemCount),
+              ? const FilesEmptyState()
+              : Card(
+                  margin: EdgeInsets.zero,
+                  clipBehavior: Clip.antiAlias,
+                  child: _FileList(state: state, itemCount: itemCount),
+                ),
         ),
       ],
     );
@@ -62,8 +67,13 @@ class _FileList extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: () async => context.read<FilesCubit>().load(),
       child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount: itemCount,
-        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+        separatorBuilder: (_, _) => const Divider(
+          height: AppSpacing.xs,
+          indent: AppSpacing.md,
+          endIndent: AppSpacing.md,
+        ),
         itemBuilder: (context, index) => _itemFor(context, index),
       ),
     );
@@ -86,15 +96,6 @@ class _FileList extends StatelessWidget {
       ),
       onDelete: () => _confirmDelete(context, file),
     );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('Dieses Verzeichnis ist leer.'));
   }
 }
 

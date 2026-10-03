@@ -17,15 +17,20 @@ class FilesBreadcrumbs extends StatelessWidget {
       runSpacing: AppSpacing.xs,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        ActionChip(
-          avatar: const Icon(Icons.home_outlined),
-          label: const Text('Dateien'),
+        TextButton(
+          style: TextButton.styleFrom(
+            minimumSize: const Size(AppSpacing.xxl, AppSpacing.xxl),
+          ),
+          child: const Text('Alle Dateien'),
           onPressed: context.read<FilesCubit>().openRoot,
         ),
         for (final folder in state.breadcrumbs) ...[
-          const Icon(Icons.chevron_right, size: 18),
-          ActionChip(
-            label: Text(folder.name),
+          const Icon(Icons.chevron_right, size: AppSpacing.md),
+          TextButton(
+            style: TextButton.styleFrom(
+              minimumSize: const Size(AppSpacing.xxl, AppSpacing.xxl),
+            ),
+            child: Text(folder.name, overflow: TextOverflow.ellipsis),
             onPressed: () => context.read<FilesCubit>().openFolder(folder.id),
           ),
         ],

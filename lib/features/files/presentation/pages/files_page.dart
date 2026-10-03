@@ -5,7 +5,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../cubits/files_cubit.dart';
 import '../cubits/files_state.dart';
-import '../widgets/files_action_bar.dart';
+import '../widgets/files_header.dart';
 import '../widgets/files_content.dart';
 
 class FilesPage extends StatelessWidget {
@@ -49,14 +49,13 @@ class _FilesBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          FilesActionBar(state: state),
-          const SizedBox(height: AppSpacing.lg),
-          Expanded(child: FilesContent(state: state)),
+      padding: const EdgeInsets.all(AppSpacing.pageMobile),
+      child: NestedScrollView(
+        headerSliverBuilder: (_, _) => [
+          SliverToBoxAdapter(child: FilesHeader(state: state)),
+          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
         ],
+        body: FilesContent(state: state),
       ),
     );
   }

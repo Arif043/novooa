@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/team_file.dart';
+import '../../domain/entities/file_content_kind.dart';
+import 'file_kind_badge.dart';
 
 class FileTile extends StatelessWidget {
   const FileTile({
@@ -19,8 +21,12 @@ class FileTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return ListTile(
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       onTap: onTap,
-      leading: const Icon(Icons.insert_drive_file_outlined),
+      leading: FileKindBadge(kind: _kind),
       title: Text(
         file.displayName,
         maxLines: 1,
@@ -29,7 +35,7 @@ class FileTile extends StatelessWidget {
       subtitle: Padding(
         padding: const EdgeInsets.only(top: AppSpacing.xs),
         child: Text(
-          '${_formatBytes(file.sizeBytes)} · ${file.contentType}',
+          '${fileKindLabel(_kind)} · ${_formatBytes(file.sizeBytes)}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: textTheme.bodySmall,
@@ -38,6 +44,11 @@ class FileTile extends StatelessWidget {
       trailing: _FileMenu(fileName: file.displayName, onDelete: onDelete),
     );
   }
+
+  FileContentKind get _kind => const FileContentKindClassifier().classify(
+    file.contentType,
+    fileName: file.displayName,
+  );
 
   String _formatBytes(int bytes) {
     if (bytes < 1024) return '$bytes B';
