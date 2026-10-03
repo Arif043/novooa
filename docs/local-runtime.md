@@ -524,6 +524,10 @@ der Script-Baustein protokolliert sie vor der Fehlermeldung
   `Result<TaskGraphOutput, NodeExecutionFailure>` zurück. `markRunFailed` schreibt die
   Bausteine über `recordNodeExecutionFailure`, bevor es den fehlgeschlagenen Lauf
   festhält. `TaskRunFailure` bleibt den Eingabefehlern der HTTP-Routen vorbehalten.
+  Ein gescheiterter Baustein lässt den Auftrag der Warteschlange nicht scheitern:
+  Der Lauf ist festgehalten, und eine Wiederholung würde die Bausteine nur erneut
+  ausführen. Nur unerwartete Fehler (Laden, Speichern, ungültiger Plan) werfen weiter
+  und werden bis zu dreimal wiederholt.
   Die Reihenfolge sichern streng steigende
   Zeitstempel (Millisekunden) im SQLite-Aktivitäts-Store. Die Detailansicht zeigt
   die Lauf-Meldung nur dann als eigenen Eintrag oben, wenn kein Baustein die

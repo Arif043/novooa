@@ -1,5 +1,6 @@
 import {type GenkitBeta} from "genkit/beta";
 import {type NodeExecutionFailure} from "../../../domain/entities/node-execution-failure.js";
+import {type Result} from "../../../../../shared/result.js";
 import {type TaskRunDocument} from "../../../domain/repositories/task-run-store.js";
 import {z} from "zod";
 import {
@@ -43,12 +44,14 @@ async function startTaskRun(
   logger: ApplicationLogger,
 ) {
   const run = await stores.taskRunStore.loadTaskRun(teamId, runId);
+  let runOrFailure: Result<void, NodeExecutionFailure>;
   try {
-    const runOrFailure = await executeQueuedTaskRun(ai, {teamId, run, stores}, logger);
-    if (!runOrFailure.ok) await failRun(logger, stores, teamId, run, runOrFailure.failure);
+    runOrFailure = await executeQueuedTaskRun(ai, {teamId, run, stores}, logger);
   } catch (error) {
-    await failRunUnexpectedly(logger, stores, teamId, run, error);
+    await failRunAfterUnexpectedError(logger, stores, teamId, run, error);
+    throw error;
   }
+  if (!runOrFailure.ok) await failRunAfterNodeFailure(logger, stores, teamId, run, runOrFailure.failure);
 }
 
 async function resumeTaskRun(
@@ -60,41 +63,42 @@ async function resumeTaskRun(
 ) {
   const resumableRun = await stores.taskRunStore.loadResumableRun(teamId, runId);
   const run = resumableRun.run;
+  let runOrFailure: Result<void, NodeExecutionFailure>;
   try {
-    const runOrFailure = await continueApprovedTaskRun(ai, {...resumableRun, teamId, stores}, logger);
-    if (!runOrFailure.ok) await failRun(logger, stores, teamId, run, runOrFailure.failure);
+    runOrFailure = await continueApprovedTaskRun(ai, {...resumableRun, teamId, stores}, logger);
   } catch (error) {
-    await failRunUnexpectedly(logger, stores, teamId, run, error);
+    await failRunAfterUnexpectedError(logger, stores, teamId, run, error);
+    throw error;
   }
+  if (!runOrFailure.ok) await failRunAfterNodeFailure(logger, stores, teamId, run, runOrFailure.failure);
 }
 
 /**
  * Ein Baustein ist gescheitert: Der Lauf wird als fehlgeschlagen festgehalten, samt der Bausteine
- * davor. Geworfen wird nur noch, weil die Warteschlange das Scheitern des Auftrags erfahren muss.
+ * davor. Es wird nicht geworfen, denn der Auftrag selbst ist erledigt; eine Wiederholung würde die
+ * Bausteine erneut ausführen und denselben Fehler nur doppelt in die Aktivitäten schreiben.
  */
-async function failRun(
+async function failRunAfterNodeFailure(
   logger: ApplicationLogger,
   stores: TaskRunWorkerStores,
   teamId: string,
   run: TaskRunDocument,
   failure: NodeExecutionFailure,
-): Promise<never> {
+) {
   logRunError(logger, "task_run_task.failed", teamId, run.runId, run.taskId, failure.cause);
   await stores.taskRunStore.markRunFailed(teamId, run, failure.cause, failure);
-  throw failure.cause;
 }
 
-/** Ein Fehler außerhalb der Bausteine (Laden, Speichern, ungültiger Plan): Der Lauf scheitert ohne Baustein-Einzelheiten. */
-async function failRunUnexpectedly(
+/** Ein Fehler außerhalb der Bausteine (Laden, Speichern, ungültiger Plan): Der Lauf scheitert ohne Baustein-Einzelheiten, der Auftrag darf wiederholt werden. */
+async function failRunAfterUnexpectedError(
   logger: ApplicationLogger,
   stores: TaskRunWorkerStores,
   teamId: string,
   run: TaskRunDocument,
   error: unknown,
-): Promise<never> {
+) {
   logRunError(logger, "task_run_task.failed", teamId, run.runId, run.taskId, error);
   await stores.taskRunStore.markRunFailed(teamId, run, error);
-  throw error;
 }
 
 function logRunError(
