@@ -13,15 +13,10 @@ class _FakeCubit extends Cubit<LanguageModelDefaultsState>
   _FakeCubit(super.state);
 
   final List<String?> savedBlock = [];
-  final List<String?> savedAssistant = [];
 
   @override
   Future<void> saveBlockDefault(String? modelId) async =>
       savedBlock.add(modelId);
-
-  @override
-  Future<void> saveAssistantDefault(String? modelId) async =>
-      savedAssistant.add(modelId);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -75,7 +70,7 @@ void main() {
     await tester.pumpWidget(_host(cubitWith(block: 'g1')));
 
     expect(find.text('Gemini Flash · Google AI'), findsOneWidget);
-    expect(find.text('Systemvorgabe verwenden'), findsOneWidget);
+    expect(find.text('Sprachmodell des KI-Agenten'), findsNothing);
     expect(find.byType(DropdownButtonFormField<String?>), findsNothing);
   });
 
@@ -94,7 +89,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(cubit.savedBlock, ['m1']);
-    expect(cubit.savedAssistant, isEmpty);
   });
 
   testWidgets('die Systemvorgabe wird als null gespeichert', (tester) async {

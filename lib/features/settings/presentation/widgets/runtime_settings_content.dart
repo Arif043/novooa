@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syscat2/core/runtime/runtime_profile.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/licensing/presentation/cubits/runtime_license_cubit.dart';
 import 'package:syscat2/features/licensing/presentation/cubits/runtime_license_state.dart';
@@ -12,7 +11,6 @@ import 'file_version_limit_section.dart';
 import 'settings_section.dart';
 import 'ai_model_settings_tab.dart';
 import 'runtime_license_status.dart';
-import 'runtime_variant_section.dart';
 import '../../../machine_learning/presentation/widgets/machine_learning_settings_tab.dart';
 import '../../../workspace_transfer/presentation/widgets/import_export_settings_tab.dart';
 
@@ -34,11 +32,7 @@ class RuntimeSettingsContent extends StatelessWidget {
                   children: const [
                     _RuntimeSection(),
                     SizedBox(height: AppSpacing.lg),
-                    _DeviceDataSection(),
-                    SizedBox(height: AppSpacing.lg),
                     FileVersionLimitSection(),
-                    SizedBox(height: AppSpacing.lg),
-                    RuntimeVariantSection(currentKind: RuntimeKind.standalone),
                   ],
                 ),
                 const SingleChildScrollView(
@@ -143,23 +137,6 @@ class _RuntimeSection extends StatelessWidget {
           RuntimeLicenseNeedsActivation() || RuntimeLicenseFailureState() =>
             const Text('Die Runtime ist nicht aktiviert.'),
         },
-      ),
-    );
-  }
-}
-
-class _DeviceDataSection extends StatelessWidget {
-  const _DeviceDataSection();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SettingsSection(
-      icon: Icons.storage_outlined,
-      title: 'Gerätedaten',
-      description:
-          'Daten und Anwendungsprotokolle werden auf diesem Gerät verwaltet.',
-      child: Text(
-        'Daten und Protokolle liegen in einer SQLite-Datenbank auf diesem Gerät.',
       ),
     );
   }

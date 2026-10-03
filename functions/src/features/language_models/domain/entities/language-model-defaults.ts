@@ -1,16 +1,14 @@
 /**
- * Welches bereits verbundene Sprachmodell als Vorgabe gilt — für
- * Sprachmodell-Bausteine ("Standardmodell verwenden",
- * `languageModelId === ""`) und für den KI-Agenten. `null` heißt: kein
- * Vorgabemodell gewählt, der bisherige umgebungsvariablen-gesteuerte
- * Standardmodell-Pfad (`ai-models.ts`) bleibt aktiv.
+ * Welches bereits verbundene Sprachmodell als Vorgabe für Sprachmodell-
+ * Bausteine gilt ("Standardmodell verwenden", `languageModelId === ""`). `null`
+ * heißt: kein Vorgabemodell gewählt, der bisherige umgebungsvariablen-
+ * gesteuerte Standardmodell-Pfad (`ai-models.ts`) bleibt aktiv. Das Modell des
+ * KI-Agenten legt die Cloud fest, nicht der Nutzer.
  */
 export type LanguageModelDefaults = {
   blockModelId: string | null;
-  assistantModelId: string | null;
 };
 
 export const emptyLanguageModelDefaults: LanguageModelDefaults = {
   blockModelId: null,
-  assistantModelId: null,
 };

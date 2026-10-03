@@ -1,5 +1,6 @@
 import {type MailConnectorListCache} from "../../features/communication/infrastructure/local/mail-connector-list-cache.js";
 import {RuntimeWakeupHandler} from "../../features/communication/infrastructure/local/runtime-wakeup-handler.js";
+import {type RuntimeAssistantModel} from "../../features/language_models/infrastructure/local/runtime-assistant-model.js";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {type RuntimeLicenseActivation} from "../../features/licensing/domain/entities/runtime-license-activation.js";
 import {type RuntimeLicenseContext} from "../../features/licensing/domain/entities/runtime-license-context.js";
@@ -16,6 +17,7 @@ export type LocalRuntimeApplicationOptions = {
   fieldCipher: SensitiveFieldCipher;
   realtimeNotifier: LocalRuntimeRealtimeNotifier;
   mailConnectors: MailConnectorListCache;
+  assistantModel: RuntimeAssistantModel;
   isLicenseActive: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;
   activeLicenseActivation: () => RuntimeLicenseActivation | null;
@@ -90,6 +92,13 @@ export class LocalRuntimeApplication {
     try {
       await runtime.firebaseSession.start(activation);
       const wakeups = this.wakeupHandlerFor(runtime, activation.license.payload.licenseId);
+      runtime.firebaseSession.listenForAssistantModel(
+        (data) => this.options.assistantModel.update(data),
+        (error) => runtime.applicationLogger.exception(
+          "local_runtime.assistant_model_listener_failed", error,
+          {licenseId: activation.license.payload.licenseId},
+        ),
+      );
       runtime.firebaseSession.listenForWakeups(
         activation.license.payload.licenseId,
         (data) => wakeups.handle(data),

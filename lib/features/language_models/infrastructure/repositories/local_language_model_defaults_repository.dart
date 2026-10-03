@@ -24,7 +24,6 @@ class LocalLanguageModelDefaultsRepository
   ) async {
     await _client.put('/v1/language-model-defaults', {
       'blockModelId': defaults.blockModelId,
-      'assistantModelId': defaults.assistantModelId,
     });
   }
 
@@ -32,7 +31,6 @@ class LocalLanguageModelDefaultsRepository
     final response = await _client.get('/v1/language-model-defaults');
     return LanguageModelDefaults(
       blockModelId: response['blockModelId'] as String?,
-      assistantModelId: response['assistantModelId'] as String?,
     );
   }
 }

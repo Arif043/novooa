@@ -10,10 +10,10 @@ import 'package:syscat2/features/language_models/presentation/widgets/language_m
 
 import 'settings_section.dart';
 
-/// Zwei Vorgabe-Auswahlen unter „Sprachmodelle" — welches bereits
-/// verbundene Modell als Standardmodell für Sprachmodell-Bausteine
-/// ("Standardmodell verwenden") bzw. für den KI-Agenten gilt. Blendet sich
-/// aus, solange kein Modell verbunden ist — dann gibt es nichts zu wählen.
+/// Vorgabe-Auswahl unter „Sprachmodelle" — welches bereits verbundene Modell
+/// als Standardmodell für Sprachmodell-Bausteine ("Standardmodell verwenden")
+/// gilt. Blendet sich aus, solange kein Modell verbunden ist — dann gibt es
+/// nichts zu wählen.
 class LanguageModelDefaultsSections extends StatelessWidget {
   const LanguageModelDefaultsSections({super.key});
 
@@ -37,18 +37,6 @@ class LanguageModelDefaultsSections extends StatelessWidget {
               onChanged: context
                   .read<LanguageModelDefaultsCubit>()
                   .saveBlockDefault,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            _LanguageModelDefaultSection(
-              icon: Icons.auto_awesome,
-              title: 'Sprachmodell des KI-Agenten',
-              description: 'Gilt für Fragen an den KI-Agenten in diesem Team.',
-              models: state.models,
-              selectedModelId: state.defaults.assistantModelId,
-              isSaving: state.isSavingAssistantDefault,
-              onChanged: context
-                  .read<LanguageModelDefaultsCubit>()
-                  .saveAssistantDefault,
             ),
           ],
         );

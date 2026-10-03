@@ -23,10 +23,7 @@ import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart'
 void main() {
   test('lädt Modelle und gespeicherte Vorgaben zusammen', () async {
     final defaultsRepo = _Defaults(
-      const LanguageModelDefaults(
-        blockModelId: 'model-1',
-        assistantModelId: null,
-      ),
+      const LanguageModelDefaults(blockModelId: 'model-1'),
     );
     final cubit = _cubit(
       models: [_model('model-1'), _model('model-2')],
@@ -42,53 +39,20 @@ void main() {
     await cubit.close();
   });
 
-  test(
-    'saveBlockDefault behält die bestehende Assistenten-Vorgabe bei',
-    () async {
-      final defaultsRepo = _Defaults(
-        const LanguageModelDefaults(
-          blockModelId: null,
-          assistantModelId: 'model-2',
-        ),
-      );
-      final cubit = _cubit(
-        models: [_model('model-1'), _model('model-2')],
-        defaultsRepo: defaultsRepo,
-      );
-      await cubit.load();
-      await pumpEventQueue();
+  test('saveBlockDefault speichert die Baustein-Vorgabe', () async {
+    final defaultsRepo = _Defaults(const LanguageModelDefaults.empty());
+    final cubit = _cubit(
+      models: [_model('model-1'), _model('model-2')],
+      defaultsRepo: defaultsRepo,
+    );
+    await cubit.load();
+    await pumpEventQueue();
 
-      await cubit.saveBlockDefault('model-1');
+    await cubit.saveBlockDefault('model-1');
 
-      expect(defaultsRepo.saved?.blockModelId, 'model-1');
-      expect(defaultsRepo.saved?.assistantModelId, 'model-2');
-      await cubit.close();
-    },
-  );
-
-  test(
-    'saveAssistantDefault behält die bestehende Baustein-Vorgabe bei',
-    () async {
-      final defaultsRepo = _Defaults(
-        const LanguageModelDefaults(
-          blockModelId: 'model-1',
-          assistantModelId: null,
-        ),
-      );
-      final cubit = _cubit(
-        models: [_model('model-1'), _model('model-2')],
-        defaultsRepo: defaultsRepo,
-      );
-      await cubit.load();
-      await pumpEventQueue();
-
-      await cubit.saveAssistantDefault('model-2');
-
-      expect(defaultsRepo.saved?.blockModelId, 'model-1');
-      expect(defaultsRepo.saved?.assistantModelId, 'model-2');
-      await cubit.close();
-    },
-  );
+    expect(defaultsRepo.saved?.blockModelId, 'model-1');
+    await cubit.close();
+  });
 
   test('meldet einen Fehler, wenn niemand angemeldet ist', () async {
     final cubit = LanguageModelDefaultsCubit(

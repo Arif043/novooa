@@ -16,19 +16,18 @@ import {PublicPageHtmlFetcher} from "../genkit/public-page-html-fetcher.js";
 import {PublicPageHttpClient} from "../genkit/public-page-http-client.js";
 import {FirestoreKnowledgeBaseAssistantNoteStore} from "./firestore-knowledge-base-assistant-note-store.js";
 import {logKnowledgeBaseAssistantProposal} from "./knowledge-base-assistant-audit-event.js";
-import {FirestoreLanguageModelCatalog} from "../../../language_models/infrastructure/firebase/firestore-language-model-catalog.js";
-import {languageModelCipher} from "../../../language_models/infrastructure/firebase/language-model-encryption.js";
-import {CatalogGenkitLanguageModelResolver} from "../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
-import {FirestoreLanguageModelDefaultsStore} from "../../../language_models/infrastructure/firebase/firestore-language-model-defaults-store.js";
+import {readAssistantModelConfigDocument} from "../../../language_models/infrastructure/firebase/assistant-model-config-document.js";
+import {ConfigDocumentAssistantModel} from "../../../language_models/domain/usecases/config-document-assistant-model.js";
+import {RemoteConfigAssistantModel} from "../../../language_models/infrastructure/firebase/remote-config-assistant-model.js";
 import {resolveAssistantLanguageModel} from "../../../language_models/infrastructure/genkit/resolve-assistant-language-model.js";
 
 const teamContextStore = new FirestoreTeamContextStore();
 const noteStore = new FirestoreKnowledgeBaseAssistantNoteStore();
 const pageFetcher = new PublicPageHtmlFetcher(new PublicPageHttpClient());
-const languageModelResolver = new CatalogGenkitLanguageModelResolver(
-  new FirestoreLanguageModelCatalog(languageModelCipher),
+
+const assistantModel = new ConfigDocumentAssistantModel(
+  readAssistantModelConfigDocument, new RemoteConfigAssistantModel(),
 );
-const languageModelDefaultsStore = new FirestoreLanguageModelDefaultsStore();
 
 export const askKnowledgeBaseAssistant = onCall(
   {
@@ -46,12 +45,7 @@ export const askKnowledgeBaseAssistant = onCall(
 async function ask(data: unknown, auth: {uid: string} | undefined) {
   const input = inputFrom(data);
   const context = assistantExecutionContextFrom({auth});
-  // Pro Anfrage aufgelöst (statt einmal beim Prozessstart), damit eine in
-  // den Einstellungen geänderte Vorgabe ohne Redeploy wirkt.
-  const teamId = await teamContextStore.currentTeamIdForUid(context.actor.id);
-  const {ai, model} = await resolveAssistantLanguageModel(
-    teamId, languageModelResolver, languageModelDefaultsStore,
-  );
+  const {ai, model} = await resolveAssistantLanguageModel(assistantModel);
   const assistant = createKnowledgeBaseAssistant(
     createKnowledgeBaseAssistantResponder({
       ai,

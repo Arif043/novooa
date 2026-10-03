@@ -4,6 +4,7 @@ import {skillRoutes} from "../../features/skills/infrastructure/local/local-skil
 import {speechVoiceRoutes} from "../../features/speech_synthesis/infrastructure/local/speech-voice-routes.js";
 import {type FastifyInstance, type FastifyPluginAsync} from "fastify";
 import {type RuntimeDatabase} from "../../db/database.js";
+import {type AssistantModelSettings} from "../../features/language_models/domain/repositories/assistant-model-settings.js";
 import {type MailConnectorListCache} from "../../features/communication/infrastructure/local/mail-connector-list-cache.js";
 import {mailRelayRoutes} from "../../features/communication/infrastructure/local/local-mail-relay-routes.js";
 import {dataRoutes} from "../../features/data/infrastructure/local/local-data-routes.js";
@@ -44,6 +45,7 @@ export type LocalRuntimeApiDependencies = {
   notifier: LocalRuntimeRealtimeNotifier;
   tickets: LocalRuntimeRealtimeTicketStore;
   mailConnectors: MailConnectorListCache;
+  assistantModel: AssistantModelSettings;
   workspaceContext: () => LocalRuntimeWorkspaceContext;
 };
 

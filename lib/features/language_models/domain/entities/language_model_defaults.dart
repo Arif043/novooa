@@ -1,19 +1,16 @@
 import 'package:equatable/equatable.dart';
 
-/// Welches bereits verbundene Sprachmodell als Vorgabe gilt — für
-/// Sprachmodell-Bausteine ("Standardmodell verwenden") und für den
-/// KI-Agenten. `null` heißt: kein Vorgabemodell gewählt, die bisherige
-/// systemseitige Vorgabe bleibt aktiv.
+/// Welches bereits verbundene Sprachmodell als Vorgabe für Sprachmodell-
+/// Bausteine gilt ("Standardmodell verwenden"). `null` heißt: kein
+/// Vorgabemodell gewählt, die bisherige systemseitige Vorgabe bleibt aktiv.
+/// Das Modell des KI-Agenten legt die Cloud fest, nicht der Nutzer.
 class LanguageModelDefaults extends Equatable {
-  const LanguageModelDefaults({this.blockModelId, this.assistantModelId});
+  const LanguageModelDefaults({this.blockModelId});
 
-  const LanguageModelDefaults.empty()
-    : blockModelId = null,
-      assistantModelId = null;
+  const LanguageModelDefaults.empty() : blockModelId = null;
 
   final String? blockModelId;
-  final String? assistantModelId;
 
   @override
-  List<Object?> get props => [blockModelId, assistantModelId];
+  List<Object?> get props => [blockModelId];
 }

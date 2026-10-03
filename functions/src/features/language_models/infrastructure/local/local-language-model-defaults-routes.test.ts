@@ -32,7 +32,7 @@ class FakeNotifier {
 }
 
 test("liest und speichert die Vorgaben des Teams aus dem Request-Kontext", async () => {
-  const store = new FakeDefaultsStore({blockModelId: "first", assistantModelId: null});
+  const store = new FakeDefaultsStore({blockModelId: "first"});
   const handler = testingRoutes(languageModelDefaultsRoutes, {store, notifier: new FakeNotifier()}, {teamId: "team-2"});
 
   await handler.handle(request("PUT", {blockModelId: "model-9"}));
@@ -45,13 +45,13 @@ function request(method: string, body: unknown = {}): LocalRuntimeRequest {
 }
 
 test("liefert die gespeicherten Vorgaben", async () => {
-  const store = new FakeDefaultsStore({blockModelId: "model-1", assistantModelId: null});
+  const store = new FakeDefaultsStore({blockModelId: "model-1"});
   const handler = testingRoutes(languageModelDefaultsRoutes, {store: store, notifier: new FakeNotifier()});
 
   const response = await handler.handle(request("GET"));
 
   assert.equal(response?.statusCode, 200);
-  assert.deepEqual(response?.body, {blockModelId: "model-1", assistantModelId: null});
+  assert.deepEqual(response?.body, {blockModelId: "model-1"});
 });
 
 test("speichert neue Vorgaben und benachrichtigt Echtzeit-Abonnenten", async () => {
@@ -60,13 +60,13 @@ test("speichert neue Vorgaben und benachrichtigt Echtzeit-Abonnenten", async () 
   const handler = testingRoutes(languageModelDefaultsRoutes, {store: store, notifier: notifier});
 
   const response = await handler.handle(
-    request("PUT", {blockModelId: "model-1", assistantModelId: "model-2"}),
+    request("PUT", {blockModelId: "model-1"}),
   );
 
   assert.equal(response?.statusCode, 200);
   assert.deepEqual(store.saved, {
     teamId: "team-1",
-    defaults: {blockModelId: "model-1", assistantModelId: "model-2"},
+    defaults: {blockModelId: "model-1"},
   });
   assert.deepEqual(notifier.published, ["language-model-defaults"]);
 });
@@ -77,7 +77,7 @@ test("behandelt ein fehlendes Feld als kein Vorgabemodell", async () => {
 
   await handler.handle(request("PUT", {blockModelId: "model-1"}));
 
-  assert.deepEqual(store.saved?.defaults, {blockModelId: "model-1", assistantModelId: null});
+  assert.deepEqual(store.saved?.defaults, {blockModelId: "model-1"});
 });
 
 test("weist einen ungültigen Vorgabewert zurück", async () => {

@@ -1,6 +1,5 @@
 import {type RuntimeExecutor} from "../../../../db/database.js";
-import {type LanguageModelDefaultsStore} from "../../../language_models/domain/repositories/language-model-defaults-store.js";
-import {type GenkitLanguageModelResolver} from "../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {type AssistantModelSettings} from "../../../language_models/domain/repositories/assistant-model-settings.js";
 import {resolveAssistantLanguageModel} from "../../../language_models/infrastructure/genkit/resolve-assistant-language-model.js";
 import {SQLiteTeamContextStore} from "../../../teams/infrastructure/local/sqlite-team-context-store.js";
 import {type KnowledgeBaseAssistant} from "../../domain/usecases/knowledge-base-assistant.js";
@@ -15,17 +14,15 @@ import {SQLiteKnowledgeBaseAssistantNoteStore} from "./sqlite-knowledge-base-ass
  * `SQLiteKnowledgeBaseAssistantNoteStore` liest dieselbe `knowledge_notes`-
  * Tabelle wie `knowledgeNoteRoutes`, `SQLiteTeamContextStore` wird
  * schon von der Aufgaben-Ausführung genutzt, und der Seiten-Fetcher ist nie
- * Firebase-gebunden gewesen. Das Sprachmodell wird — wie beim
- * Aufgabenstudio-Assistenten — pro Anfrage aufgelöst, damit eine geänderte
- * Vorgabe sofort wirkt (siehe `resolveAssistantLanguageModel`).
+ * Firebase-gebunden gewesen. Das Modell legt die Cloud fest; die
+ * Runtime erfährt es per Firestore-Listener (siehe `RuntimeAssistantModel`).
+ * Ohne Wert gilt das Standardmodell (siehe `resolveAssistantLanguageModel`).
  */
 export async function createLocalKnowledgeBaseAssistant(
   database: RuntimeExecutor,
-  teamId: string,
-  resolver: GenkitLanguageModelResolver,
-  defaultsStore: LanguageModelDefaultsStore,
+  modelSettings: AssistantModelSettings,
 ): Promise<KnowledgeBaseAssistant> {
-  const {ai, model} = await resolveAssistantLanguageModel(teamId, resolver, defaultsStore);
+  const {ai, model} = await resolveAssistantLanguageModel(modelSettings);
   const responder = createKnowledgeBaseAssistantResponder({
     ai,
     model,

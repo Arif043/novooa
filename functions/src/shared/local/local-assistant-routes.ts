@@ -31,9 +31,7 @@ const schema = {body: AssistantQuestion, response: {200: AssistantAnswer, 400: E
  * teamübergreifenden Aufsicht, für einen einzelnen Standalone-Betreiber
  * ohne Mehrwert.
  *
- * Die Assistenten kommen als Factories: Sie lösen das konfigurierte
- * Sprachmodell bei jedem Aufruf neu auf, damit eine in den Einstellungen
- * geänderte Vorgabe ohne Neustart der Runtime wirkt.
+ * Die Assistenten kommen als Factories und werden pro Anfrage gebaut.
  */
 export const assistantRoutes: FastifyPluginAsyncTypebox<AssistantRoutesOptions> = async (app, options) => {
   app.post("/v1/assistant/task-builder", {schema}, async (request, reply) =>

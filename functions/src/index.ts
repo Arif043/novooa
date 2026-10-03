@@ -42,6 +42,7 @@ export {saveLanguageModel} from "./features/language_models/infrastructure/fireb
 export {listSpeechVoices} from "./features/speech_synthesis/infrastructure/firebase/list-speech-voices-function.js";
 export {issueLocalRuntimeLicense} from "./features/licensing/infrastructure/firebase/local-runtime-license-functions.js";
 export {issueLocalRuntimeFirebaseToken} from "./features/licensing/infrastructure/firebase/issue-local-runtime-firebase-token.js";
+export {syncAssistantModelConfigOnUpdate} from "./features/language_models/infrastructure/firebase/sync-assistant-model-config-function.js";
 export {localRuntimePushRelay} from "./features/notifications/infrastructure/firebase/runtime-push-relay-function.js";
 export {localRuntimeMailRelay} from "./features/communication/infrastructure/firebase/local-runtime-mail-relay-function.js";
 export {localRuntimeSkillsRelay} from "./features/skills/infrastructure/firebase/local-runtime-skills-relay-function.js";

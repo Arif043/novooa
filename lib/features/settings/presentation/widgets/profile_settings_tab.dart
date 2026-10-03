@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syscat2/core/runtime/runtime_profile.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
 import '../../../user/domain/entities/user_profile.dart';
 import '../cubits/settings_cubit.dart';
 import '../cubits/settings_state.dart';
-import 'runtime_variant_section.dart';
 import 'settings_section.dart';
 
 class ProfileSettingsTab extends StatelessWidget {
@@ -19,11 +17,7 @@ class ProfileSettingsTab extends StatelessWidget {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _ProfileSection(state: state, profile: state.profile!),
-          const SizedBox(height: AppSpacing.lg),
-          const RuntimeVariantSection(currentKind: RuntimeKind.cloud),
-        ],
+        children: [_ProfileSection(state: state, profile: state.profile!)],
       ),
     );
   }

@@ -28,6 +28,7 @@ export class  RuntimeFirebaseSession {
   private auth: Auth | undefined;
   private database: Firestore | undefined;
   private wakeupUnsubscribe: Unsubscribe | undefined;
+  private assistantModelUnsubscribe: Unsubscribe | undefined;
 
   constructor(private readonly configuration: RuntimeFirebaseConfiguration) {}
 
@@ -56,6 +57,20 @@ export class  RuntimeFirebaseSession {
     );
   }
 
+  /** Hört auf das Dokument, in dem die Cloud das Modell des KI-Agenten nachführt. */
+  listenForAssistantModel(
+    onChange: (data: DocumentData | undefined) => void,
+    onFailure: (error: unknown) => void,
+  ): void {
+    if (this.database === undefined) throw new Error("Die Firebase-Sitzung wurde nicht gestartet.");
+    this.assistantModelUnsubscribe?.();
+    this.assistantModelUnsubscribe = onSnapshot(
+      doc(this.database, "localRuntimeConfig", "assistant"),
+      (snapshot) => onChange(snapshot.data()),
+      onFailure,
+    );
+  }
+
   async listCollection(collectionName: string): Promise<readonly {id: string; data: DocumentData}[]> {
     if (this.database === undefined) throw new Error("Die Firebase-Sitzung wurde nicht gestartet.");
     const snapshot = await getDocs(collection(this.database, collectionName));
@@ -65,6 +80,8 @@ export class  RuntimeFirebaseSession {
   async stop(): Promise<void> {
     this.wakeupUnsubscribe?.();
     this.wakeupUnsubscribe = undefined;
+    this.assistantModelUnsubscribe?.();
+    this.assistantModelUnsubscribe = undefined;
     this.auth = undefined;
     this.database = undefined;
     if (this.app !== undefined) await deleteApp(this.app);

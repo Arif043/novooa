@@ -7,7 +7,7 @@ export type LanguageModelDefaultsRoutesOptions = {
 };
 
 const OptionalModelId = Type.Union([Type.String({maxLength: 200}), Type.Null()]);
-const LanguageModelDefaultsSchema = Type.Object({blockModelId: OptionalModelId, assistantModelId: OptionalModelId});
+const LanguageModelDefaultsSchema = Type.Object({blockModelId: OptionalModelId});
 
 /**
  * Eigenes Plugin statt Teil von `local-language-model-routes.ts`: Hier geht
@@ -21,16 +21,11 @@ export const languageModelDefaultsRoutes: FastifyPluginAsyncTypebox<LanguageMode
 
   app.put("/v1/language-model-defaults", {
     schema: {
-      body: Type.Object({
-        blockModelId: Type.Optional(OptionalModelId), assistantModelId: Type.Optional(OptionalModelId),
-      }),
+      body: Type.Object({blockModelId: Type.Optional(OptionalModelId)}),
       response: {200: LanguageModelDefaultsSchema},
     },
   }, async (request) => {
-    const defaults = {
-      blockModelId: request.body.blockModelId || null,
-      assistantModelId: request.body.assistantModelId || null,
-    };
+    const defaults = {blockModelId: request.body.blockModelId || null};
     await store.saveDefaults(request.workspace.teamId, defaults);
     notifier.publish("language-model-defaults");
     return defaults;

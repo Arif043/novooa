@@ -25,10 +25,7 @@ class FirestoreLanguageModelDefaultsRepository
     LanguageModelDefaults defaults,
   ) {
     return _teamDoc(teamId).set({
-      'languageModelDefaults': {
-        'blockModelId': defaults.blockModelId,
-        'assistantModelId': defaults.assistantModelId,
-      },
+      'languageModelDefaults': {'blockModelId': defaults.blockModelId},
     }, SetOptions(merge: true));
   }
 
@@ -43,7 +40,6 @@ class FirestoreLanguageModelDefaultsRepository
     if (value is! Map) return const LanguageModelDefaults.empty();
     return LanguageModelDefaults(
       blockModelId: value['blockModelId'] as String?,
-      assistantModelId: value['assistantModelId'] as String?,
     );
   }
 }

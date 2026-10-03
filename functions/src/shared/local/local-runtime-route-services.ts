@@ -1,3 +1,4 @@
+import {type AssistantModelSettings} from "../../features/language_models/domain/repositories/assistant-model-settings.js";
 import {createEmployeeRoutesOptions} from "../../features/employees/infrastructure/local/employees-composition.js";
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {createSkillsModule} from "../../features/skills/infrastructure/local/skills-composition.js";
@@ -13,7 +14,6 @@ import {SQLiteDocumentStore} from "../../features/data/infrastructure/local/sqli
 import {SQLiteFileSettingsStore} from "../../features/files/infrastructure/local/sqlite-file-settings-store.js";
 import {LocalTeamFileStore} from "../../features/files/infrastructure/local/local-team-file-store.js";
 import {createLocalKnowledgeBaseAssistant} from "../../features/knowledge_base/infrastructure/local/local-knowledge-base-assistant.js";
-import {CatalogGenkitLanguageModelResolver} from "../../features/language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
 import {SQLiteLanguageModelCatalog} from "../../features/language_models/infrastructure/local/sqlite-language-model-catalog.js";
 import {SQLiteLanguageModelConfigurationStore} from "../../features/language_models/infrastructure/local/sqlite-language-model-configuration-store.js";
@@ -46,6 +46,7 @@ export function createLocalRuntimeRouteServices(options: {
   fieldCipher: SensitiveFieldCipher;
   notifier: LocalRuntimeRealtimeNotifier;
   licenses: Pick<RuntimeLicenseService, "signedActiveLicense">;
+  assistantModel: AssistantModelSettings;
   workspaceContext: () => LocalRuntimeWorkspaceContext;
 }) {
   const {database, runtimeRoot} = options;
@@ -69,19 +70,17 @@ export function createLocalRuntimeRouteServices(options: {
     employees: createEmployeeRoutesOptions(database, options.notifier),
     skills: createSkillsModule(runtimeRoot, options.notifier, () => options.licenses.signedActiveLicense()),
     speechVoices: new LanguageModelSpeech(new SQLiteLanguageModelCatalog(database, languageModelSecrets), defaultSpeechProviders()),
-    assistants: assistantFactories(database, languageModelSecrets),
+    assistants: assistantFactories(database, options.assistantModel),
     modelCatalog: modelCatalogOptions(runtimeRoot, database, options.notifier),
   };
 }
 
 function assistantFactories(
-  database: RuntimeDatabase, secrets: EncryptedSQLiteLanguageModelSecretStore,
+  database: RuntimeDatabase, modelSettings: AssistantModelSettings,
 ): AssistantRoutesOptions {
-  const resolver = new CatalogGenkitLanguageModelResolver(new SQLiteLanguageModelCatalog(database, secrets));
-  const defaults = new SQLiteLanguageModelDefaultsStore(database);
   return {
-    taskBuilderAssistant: (teamId) => createLocalTaskBuilderAssistant(teamId, resolver, defaults),
-    knowledgeBaseAssistant: (teamId) => createLocalKnowledgeBaseAssistant(database, teamId, resolver, defaults),
+    taskBuilderAssistant: () => createLocalTaskBuilderAssistant(modelSettings),
+    knowledgeBaseAssistant: () => createLocalKnowledgeBaseAssistant(database, modelSettings),
   };
 }
 

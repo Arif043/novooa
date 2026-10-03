@@ -1,0 +1,1 @@
+ALTER TABLE `language_model_defaults` DROP COLUMN `assistant_model_id`;

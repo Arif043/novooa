@@ -28,10 +28,9 @@ void main() {
 
     expect(client.getPath, '/v1/language-model-defaults');
     expect(defaults.blockModelId, 'model-1');
-    expect(defaults.assistantModelId, isNull);
   });
 
-  test('speichert beide Vorgaben über PUT', () async {
+  test('speichert die Vorgabe über PUT', () async {
     final client = _RecordingClient();
     final repository = LocalLanguageModelDefaultsRepository(
       client,
@@ -40,17 +39,11 @@ void main() {
 
     await repository.saveLanguageModelDefaults(
       const TeamId('team-1'),
-      const LanguageModelDefaults(
-        blockModelId: 'model-1',
-        assistantModelId: 'model-2',
-      ),
+      const LanguageModelDefaults(blockModelId: 'model-1'),
     );
 
     expect(client.putPath, '/v1/language-model-defaults');
-    expect(client.putBody, {
-      'blockModelId': 'model-1',
-      'assistantModelId': 'model-2',
-    });
+    expect(client.putBody, {'blockModelId': 'model-1'});
   });
 }
 
@@ -65,7 +58,7 @@ class _RecordingClient extends WorkspaceApiClient {
   @override
   Future<Map<String, Object?>> get(String path) async {
     getPath = path;
-    return {'blockModelId': 'model-1', 'assistantModelId': null};
+    return {'blockModelId': 'model-1'};
   }
 
   @override

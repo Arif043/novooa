@@ -277,9 +277,9 @@ Paritätslücken; das bleibt Schritt 5.
 - `lib/core/di/service_locator.dart`: `resetDependencies()` mit
   `serviceLocator.reset()`, damit beide Graphen in einem Prozess (und in
   Tests) nacheinander aufgebaut werden können.
-- `runtime_variant_section.dart`: Auswahl in **beiden**
-  Einstellungs-Oberflächen (Cloud: Profil-Tab, Standalone: Allgemein-Tab),
-  damit der Rückweg aus jeder Variante erreichbar ist.
+- Der Wechsel steht **nicht mehr in den Einstellungen** (der Abschnitt
+  „Betriebsvariante“ wurde entfernt); erreichbar bleibt er nur vor der
+  Anmeldung über den Hinweis im Auth-Formular.
 - `core/widgets/runtime_variant_switch_hint.dart`: derselbe Wechsel
   **vor** der Anmeldung im Auth-Formular. Ohne ihn käme man nie zur eigenen
   Runtime, wenn man kein Cloud-Konto hat — die Einstellungen liegen hinter
@@ -287,8 +287,8 @@ Paritätslücken; das bleibt Schritt 5.
   „Du nutzt novooa Standalone?“ war fest verdrahtet, löste aber nur den
   Wechsel zwischen Registrieren und Login aus; der passende `_prefix`-Text
   war toter Code (und als `unused_element` in der Analyse sichtbar).
-- Beide Oberflächen blenden sich aus, wenn es nur eine unterstützte
-  Variante gibt — im Web also **immer**, weil dort die Herkunft entscheidet.
+- Der Hinweis blendet sich aus, wenn es nur eine unterstützte Variante gibt —
+  im Web also **immer**, weil dort die Herkunft entscheidet.
 
 **Bewusste Entscheidung:** Kein Wechsel im laufenden Prozess. Die Wahl wird
 gespeichert und beim nächsten Start übernommen, angezeigt über einen

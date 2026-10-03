@@ -13,14 +13,11 @@ export class SQLiteLanguageModelDefaultsStore implements LanguageModelDefaultsSt
   async loadDefaults(teamId: string): Promise<LanguageModelDefaults> {
     const row = await this.database.select().from(languageModelDefaults).where(eq(languageModelDefaults.team_id, teamId)).get();
     if (!row) return emptyLanguageModelDefaults;
-    return {
-      blockModelId: row.block_model_id,
-      assistantModelId: row.assistant_model_id,
-    };
+    return {blockModelId: row.block_model_id};
   }
 
   async saveDefaults(teamId: string, defaults: LanguageModelDefaults): Promise<void> {
-    const values = {team_id: teamId, block_model_id: defaults.blockModelId, assistant_model_id: defaults.assistantModelId};
+    const values = {team_id: teamId, block_model_id: defaults.blockModelId};
     await this.database.insert(languageModelDefaults).values(values)
       .onConflictDoUpdate({target: languageModelDefaults.team_id, set: values});
   }
