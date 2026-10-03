@@ -106,6 +106,9 @@ services:
       - "8091"
     networks:
       - novooa-script
+    # Ein Init-Prozess als PID 1 sammelt beendete Kindprozesse ein. Sonst bleiben die
+    # Nachkommen eines Scripts (fork) als Zombies stehen und füllen pids_limit.
+    init: true
     user: "65532:65532"
     read_only: true
     tmpfs:

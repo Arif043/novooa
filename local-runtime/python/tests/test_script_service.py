@@ -1,6 +1,7 @@
 import json
 import sys
 import threading
+import time
 import unittest
 import urllib.request
 import uuid
@@ -96,6 +97,14 @@ class ExecutionTest(unittest.TestCase):
     def test_limits_memory(self):
         with self.assertRaisesRegex(execution.ScriptFailed, "Speicher|beendet"):
             run("data = bytearray(2 * 1024 * 1024 * 1024)")
+
+    def test_ends_processes_the_script_started(self):
+        marker = f"novooa-test-{uuid.uuid4().hex}"
+        run(f"import subprocess, sys\nsubprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)', '{marker}'])\noutput = 'x'")
+
+        time.sleep(0.3)
+        survivors = [p for p in Path("/proc").iterdir() if p.name.isdigit() and marker.encode() in (p / "cmdline").read_bytes()]
+        self.assertEqual(survivors, [])
 
     def test_does_not_leave_run_directories_behind(self):
         before = set(Path(execution.WORK_ROOT).glob("run-*"))
