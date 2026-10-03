@@ -1,5 +1,6 @@
 import {FieldValue} from "firebase-admin/firestore";
-import {type RunFailureDetails} from "../../domain/services/run-failure-details.js";
+import {recordNodeExecutionFailure} from "../../domain/services/record-node-execution-failure.js";
+import {type NodeExecutionFailure} from "../../domain/entities/node-execution-failure.js";
 import {
   type CompletedTaskGraphOutput,
   type WaitingTaskGraphOutput,
@@ -126,11 +127,10 @@ export class FirestoreTaskRunStore implements TaskRunStore {
     teamId: string,
     run: TaskRunDocument,
     error: unknown,
-    failure: RunFailureDetails = {completedNodeResults: []},
+    failure?: NodeExecutionFailure,
   ) {
     const details = errorDetails(error);
-    await this.activityStore.writeNodeActivities(teamId, run, failure.completedNodeResults);
-    if (failure.failedNode) await this.activityStore.writeFailedNodeActivity(teamId, run, failure.failedNode);
+    await recordNodeExecutionFailure(this.activityStore, teamId, run, failure);
     await this.activityStore.writeTaskActivity(teamId, {
       run,
       status: "failed",

@@ -517,10 +517,14 @@ der Script-Baustein protokolliert sie vor der Fehlermeldung
 - **Schlägt ein Baustein fehl,** schlägt der Lauf fehl, wie immer. In den
   Aktivitäten stehen trotzdem alle Bausteine in der Reihenfolge des Plans: die
   erfolgreichen davor und der fehlgeschlagene an seiner Stelle, mit Fehlermeldung
-  und seiner Ausgabe (stdout/stderr) bis zum Fehler. Der Runner hängt dem Fehler
-  dafür `RunFailureDetails` an (`domain/services/run-failure-details.js`:
-  abgeschlossene Ergebnisse + `failedNode`); `markRunFailed` schreibt sie, bevor es
-  den fehlgeschlagenen Lauf festhält. Die Reihenfolge sichern streng steigende
+  und seiner Ausgabe (stdout/stderr) bis zum Fehler. Der Runner fängt die Exception des Bausteins an der
+  Infrastrukturgrenze ab und liefert statt ihrer eine `NodeExecutionFailure`
+  (`domain/entities/node-execution-failure.ts`: gescheiterter Baustein, abgeschlossene
+  Ergebnisse, `cause`) als `Result`; `executeTaskGraph`/`resumeTaskGraph` geben
+  `Result<TaskGraphOutput, NodeExecutionFailure>` zurück. `markRunFailed` schreibt die
+  Bausteine über `recordNodeExecutionFailure`, bevor es den fehlgeschlagenen Lauf
+  festhält. `TaskRunFailure` bleibt den Eingabefehlern der HTTP-Routen vorbehalten.
+  Die Reihenfolge sichern streng steigende
   Zeitstempel (Millisekunden) im SQLite-Aktivitäts-Store. Die Detailansicht zeigt
   die Lauf-Meldung nur dann als eigenen Eintrag oben, wenn kein Baustein die
   Ursache war (etwa ein ungültiger Plan). Nach einer Freigabe werden nur die neu

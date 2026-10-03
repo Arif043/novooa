@@ -4,7 +4,7 @@ import test from "node:test";
 import {connectRuntimeDatabase} from "../../../../db/database.js";
 import {type NodeExecutionResult} from "../../domain/entities/task.js";
 import {type ActivityStore, type TaskActivityInput} from "../../domain/repositories/activity-store.js";
-import {type FailedNode} from "../../domain/services/run-failure-details.js";
+import {type FailedNode, NodeExecutionFailure} from "../../domain/entities/node-execution-failure.js";
 import {SQLiteTaskRunStore} from "./sqlite-task-run-store.js";
 
 const run = {runId: "run-1", taskId: "task-1", taskTitle: "Aufgabe", context: ""};
@@ -47,10 +47,13 @@ test("a failed run keeps the results of the nodes that succeeded before the fail
   const activities = new RecordingActivityStore();
   const {database, store} = await storeWith(activities);
 
-  await store.markRunFailed("team-1", run, new Error("Zeile 2: ValueError: kaputt"), {
-    completedNodeResults: [succeeded("eins"), succeeded("zwei")],
-    failedNode: {nodeId: "drei", primitive: "script", message: "Zeile 2: ValueError: kaputt", console: {stdout: "vorher\n", stderr: ""}},
-  });
+  const cause = new Error("Zeile 2: ValueError: kaputt");
+  const failure = new NodeExecutionFailure(
+    {nodeId: "drei", primitive: "script", message: cause.message, console: {stdout: "vorher\n", stderr: ""}},
+    [succeeded("eins"), succeeded("zwei")],
+    cause,
+  );
+  await store.markRunFailed("team-1", run, cause, failure);
 
   assert.deepEqual(activities.nodeResults.map((result) => result.nodeId), ["eins", "zwei"]);
   assert.equal(activities.failedNode?.nodeId, "drei");

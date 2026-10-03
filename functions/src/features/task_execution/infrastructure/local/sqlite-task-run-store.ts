@@ -1,7 +1,8 @@
 import {and, eq, sql} from "drizzle-orm";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {type TaskRuns, taskRuns} from "../../../../db/schema.js";
-import {type RunFailureDetails} from "../../domain/services/run-failure-details.js";
+import {recordNodeExecutionFailure} from "../../domain/services/record-node-execution-failure.js";
+import {type NodeExecutionFailure} from "../../domain/entities/node-execution-failure.js";
 import {type TaskRunApprovalNotificationStore} from "../../../notifications/domain/repositories/task-run-approval-notification-store.js";
 import {
   type CompletedTaskGraphOutput,
@@ -95,10 +96,9 @@ export class SQLiteTaskRunStore implements TaskRunStore {
     teamId: string,
     run: TaskRunDocument,
     error: unknown,
-    details: RunFailureDetails = {completedNodeResults: []},
+    failure?: NodeExecutionFailure,
   ) {
-    await this.activityStore.writeNodeActivities(teamId, run, details.completedNodeResults);
-    if (details.failedNode) await this.activityStore.writeFailedNodeActivity(teamId, run, details.failedNode);
+    await recordNodeExecutionFailure(this.activityStore, teamId, run, failure);
     await this.activityStore.writeTaskActivity(teamId, {
       run,
       status: "failed",

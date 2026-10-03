@@ -27,7 +27,8 @@ import {
   validateGraph,
 } from "../../../domain/services/task-graph-utils.js";
 import {consoleOutputOf} from "../../../domain/entities/script-execution.js";
-import {attachRunFailureDetails, type RunFailureDetails} from "../../../domain/services/run-failure-details.js";
+import {NodeExecutionFailure} from "../../../domain/entities/node-execution-failure.js";
+import {failure, type Result, success} from "../../../../../shared/result.js";
 import {formatTaskFinished, formatTaskStarted} from "./structured-logger.js";
 import {
   logNodeHeaderLine,
@@ -41,12 +42,14 @@ export async function executeTaskGraph(
   ai: GenkitBeta,
   input: TaskGraphInput,
   runtime: TaskGraphRuntime,
-): Promise<TaskGraphOutput> {
+): Promise<Result<TaskGraphOutput, NodeExecutionFailure>> {
   runtime.logger.readableInfo(formatTaskStarted(input.taskDefinition, input.context));
   validateGraph(input.taskDefinition);
-  const runState = await runNodes(ai, input, runtime);
+  const runStateOrFailure = await runNodes(ai, input, runtime);
+  if (!runStateOrFailure.ok) return runStateOrFailure;
+  const runState = runStateOrFailure.value;
   if (runState.status === "waitingForApproval") {
-    return pausedOutput(input, runState);
+    return success(pausedOutput(input, runState));
   }
   const results = runState.nodeResults;
   const output = completedOutput(input, results);
@@ -56,7 +59,7 @@ export async function executeTaskGraph(
     results.filter((result) => result.status === "skipped").length,
     output.finalOutput.length,
   ));
-  return output;
+  return success(output);
 }
 
 export async function resumeTaskGraph(
@@ -65,19 +68,21 @@ export async function resumeTaskGraph(
   resumeState: TaskResumeState,
   responseOutputs: Record<string, NodeOutputValue>,
   runtime: TaskGraphRuntime,
-): Promise<TaskGraphOutput> {
+): Promise<Result<TaskGraphOutput, NodeExecutionFailure>> {
   runtime.logger.readableInfo(formatTaskStarted(input.taskDefinition, input.context));
   validateGraph(input.taskDefinition);
-  const runState = await runNodes(
+  const runStateOrFailure = await runNodes(
     ai,
     input,
     runtime,
     resumedState(resumeState, responseOutputs),
   );
+  if (!runStateOrFailure.ok) return runStateOrFailure;
+  const runState = runStateOrFailure.value;
   if (runState.status === "waitingForApproval") {
-    return pausedOutput(input, runState);
+    return success(pausedOutput(input, runState));
   }
-  return completedOutput(input, runState.nodeResults);
+  return success(completedOutput(input, runState.nodeResults));
 }
 
 async function runNodes(
@@ -87,7 +92,7 @@ async function runNodes(
   initialState?: InitialNodeRunState,
   scope: WorkflowExecutionScope = {},
   graph: WorkflowGraph = input.taskDefinition,
-): Promise<NodeRunState> {
+): Promise<Result<NodeRunState, NodeExecutionFailure>> {
   const remaining = remainingNodes(graph, initialState);
   const results = resultsMapFrom(initialState?.nodeResults ?? []);
   const skippedNodeIds = new Set(initialState?.skippedNodeIds ?? []);
@@ -110,7 +115,7 @@ async function runNodes(
     );
     const startedAt = Date.now();
     logNodeHeaderLine(runtime.logger, node, input.taskDefinition.id, graph, context, skipNode, results);
-    const result = await withFailureDetails(() => runNodeWithTrail(ai, {
+    const resultOrFailure = await attemptNode(() => runNodeWithTrail(ai, {
       node,
       context,
       runContext: createTaskRunContext({
@@ -122,7 +127,7 @@ async function runNodes(
         variables,
         scope,
         executeGraph: async (embeddedGraph, embeddedContext, embeddedScope) => {
-          const state = await runNodes(
+          const stateOrFailure = await runNodes(
             ai,
             input,
             runtime,
@@ -135,7 +140,9 @@ async function runNodes(
             embeddedScope,
             embeddedGraph,
           );
-          return state.nodeResults;
+          // Die Executoren erwarten für einen verschachtelten Plan eine Exception; der äußere Baustein scheitert dann.
+          if (!stateOrFailure.ok) throw stateOrFailure.failure.cause;
+          return stateOrFailure.value.nodeResults;
         },
       }),
       skipNode,
@@ -148,27 +155,29 @@ async function runNodes(
       languageModelDefaultsStore: runtime.languageModelDefaultsStore,
       scriptExecutorFactory: runtime.scriptExecutorFactory,
       logger: runtime.logger,
-    }), (error) => failureDetails(node, error, newResults(graph, results, initialState)));
+    }), (error) => nodeExecutionFailure(node, error, newResults(graph, results, initialState)));
+    if (!resultOrFailure.ok) return resultOrFailure;
+    const result = resultOrFailure.value;
     updateTaskVariables(variables, result);
     results.set(node.id, result);
     skipInactiveBranches(node, graph, result, skippedNodeIds);
     logSkippedBranches(runtime.logger, node, input.taskDefinition.id, result, skippedNodeIds);
     if (result.status === "waitingForApproval") {
-      return {
+      return success({
         status: "waitingForApproval",
         nodeResults: orderedResults(graph, results),
         variables: {...variables},
         remainingNodeIds: remaining.map((item) => item.id),
         skippedNodeIds: Array.from(skippedNodeIds),
         waitingNodeId: node.id,
-      };
+      });
     }
   }
 
-  return {
+  return success({
     status: "completed",
     nodeResults: orderedResults(graph, results),
-  };
+  });
 }
 
 /** Die Ergebnisse, die dieser Lauf selbst erzeugt hat; was aus einer früheren Freigabe stammt, steht schon in den Aktivitäten. */
@@ -181,23 +190,23 @@ function newResults(
   return orderedResults(graph, results).filter((result) => !alreadyRecorded.has(result.nodeId));
 }
 
-/** Scheitert der Baustein, hängt der Fehler die Einzelheiten für die Aktivitäten an (siehe `run-failure-details.ts`). */
-async function withFailureDetails<T>(run: () => Promise<T>, details: (error: unknown) => RunFailureDetails): Promise<T> {
+/**
+ * Die Executoren der Bausteine melden Fehler als Exception. Hier, an der Grenze zur Infrastruktur,
+ * wird daraus ein Failure-Wert; ab hier läuft nichts mehr über Exceptions.
+ */
+async function attemptNode(
+  run: () => Promise<NodeExecutionResult>,
+  failureOf: (error: unknown) => NodeExecutionFailure,
+): Promise<Result<NodeExecutionResult, NodeExecutionFailure>> {
   try {
-    return await run();
+    return success(await run());
   } catch (error) {
-    throw attachRunFailureDetails(error, details(error));
+    return failure(failureOf(error));
   }
 }
 
-function failureDetails(node: WorkflowNode, error: unknown, completed: NodeExecutionResult[]): RunFailureDetails {
-  return {
-    completedNodeResults: completed,
-    failedNode: {
-      nodeId: node.id,
-      primitive: node.primitive,
-      message: error instanceof Error ? error.message : String(error),
-      console: consoleOutputOf(error),
-    },
-  };
+function nodeExecutionFailure(node: WorkflowNode, error: unknown, completed: NodeExecutionResult[]): NodeExecutionFailure {
+  const message = error instanceof Error ? error.message : String(error);
+  const failedNode = {nodeId: node.id, primitive: node.primitive, message, console: consoleOutputOf(error)};
+  return new NodeExecutionFailure(failedNode, completed, error);
 }

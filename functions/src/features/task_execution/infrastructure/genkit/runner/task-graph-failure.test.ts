@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {genkit} from "genkit/beta";
 import {ScriptExecutionError} from "../../../domain/entities/script-execution.js";
-import {runFailureDetailsOf} from "../../../domain/services/run-failure-details.js";
 import {executeTaskGraph} from "./task-graph-runner.js";
 
 const silentLogger = {info() {}, error() {}, exception() {}, readableInfo() {}, readableError() {}};
@@ -27,24 +26,24 @@ function taskWith(nodes: unknown[], edges: {from: string; to: string}[]) {
   return {taskDefinition: {id: "task-1", title: "Aufgabe", objective: "", nodes, edges}, context: "", teamId: "team-1"} as never;
 }
 
-test("a failing node fails the run and the error carries the results of the nodes before it", async () => {
+test("a failing node returns a failure with the results of the nodes before it", async () => {
   const ai = genkit({});
   const task = taskWith(
     [textNode("eins", "Hallo"), textNode("zwei", "Welt"), scriptNode("drei")],
     [{from: "eins", to: "zwei"}, {from: "zwei", to: "drei"}],
   );
-  const failure = new ScriptExecutionError("Zeile 2: ValueError: kaputt", "vorher\n");
+  const scriptError = new ScriptExecutionError("Zeile 2: ValueError: kaputt", "vorher\n");
 
-  const error = await executeTaskGraph(ai, task, runtimeWithScript(async () => { throw failure; })).then(
-    () => undefined, (caught: unknown) => caught,
-  );
+  const outputOrFailure = await executeTaskGraph(ai, task, runtimeWithScript(async () => { throw scriptError; }));
 
-  assert.equal(error, failure, "der Fehler bleibt derselbe: gleiche Meldung, gleicher Typ");
-  const details = runFailureDetailsOf(error);
-  assert.deepEqual(details.completedNodeResults.map((result) => [result.nodeId, result.status]), [
+  assert.equal(outputOrFailure.ok, false);
+  if (outputOrFailure.ok) return;
+  const {failure} = outputOrFailure;
+  assert.equal(failure.cause, scriptError, "der ursprüngliche Fehler bleibt als Ursache erhalten");
+  assert.deepEqual(failure.completedNodeResults.map((result) => [result.nodeId, result.status]), [
     ["eins", "executed"], ["zwei", "executed"],
   ]);
-  assert.deepEqual(details.failedNode, {
+  assert.deepEqual(failure.failedNode, {
     nodeId: "drei", primitive: "script", message: "Zeile 2: ValueError: kaputt",
     console: {stdout: "vorher\n", stderr: ""},
   });
@@ -54,18 +53,21 @@ test("fails at the first node: nothing before it, but the failed node is named",
   const ai = genkit({});
   const task = taskWith([scriptNode("eins")], []);
 
-  const error = await executeTaskGraph(ai, task, runtimeWithScript(async () => { throw new Error("sofort"); })).then(
-    () => undefined, (caught: unknown) => caught,
-  );
+  const outputOrFailure = await executeTaskGraph(ai, task, runtimeWithScript(async () => { throw new Error("sofort"); }));
 
-  assert.match((error as Error).message, /sofort/);
-  const details = runFailureDetailsOf(error);
-  assert.deepEqual(details.completedNodeResults, []);
-  assert.equal(details.failedNode?.nodeId, "eins");
-  assert.equal(details.failedNode?.console, undefined, "ein Fehler ohne Script-Ausgabe hat keine Konsole");
+  assert.equal(outputOrFailure.ok, false);
+  if (outputOrFailure.ok) return;
+  assert.deepEqual(outputOrFailure.failure.completedNodeResults, []);
+  assert.equal(outputOrFailure.failure.failedNode.nodeId, "eins");
+  assert.equal(outputOrFailure.failure.failedNode.message, "sofort");
+  assert.equal(outputOrFailure.failure.failedNode.console, undefined, "ein Fehler ohne Script-Ausgabe hat keine Konsole");
 });
 
-test("non-object failures do not break the run handling", () => {
-  assert.deepEqual(runFailureDetailsOf("Text"), {completedNodeResults: []});
-  assert.deepEqual(runFailureDetailsOf(undefined), {completedNodeResults: []});
+test("a run without failure returns its output as a value", async () => {
+  const ai = genkit({});
+  const task = taskWith([textNode("eins", "Hallo")], []);
+
+  const outputOrFailure = await executeTaskGraph(ai, task, runtimeWithScript(async () => { throw new Error("nicht aufgerufen"); }));
+
+  assert.equal(outputOrFailure.ok, true);
 });

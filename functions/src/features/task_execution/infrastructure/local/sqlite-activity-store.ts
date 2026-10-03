@@ -8,7 +8,7 @@ import {
   type ActivityStore,
   type TaskActivityInput,
 } from "../../domain/repositories/activity-store.js";
-import {type FailedNode} from "../../domain/services/run-failure-details.js";
+import {type FailedNode} from "../../domain/entities/node-execution-failure.js";
 import {type TaskRunDocument} from "../../domain/repositories/task-run-store.js";
 
 export class SQLiteActivityStore implements ActivityStore {
