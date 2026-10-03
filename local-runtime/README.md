@@ -34,8 +34,10 @@ python3 -m venv .novooa/python
 ```
 
 Die Node-Runtime verbindet sich mit diesem Sidecar über `novooa-private`. Sie
-enthält einen minimalen Python-Interpreter für isolierte Script-Bausteine,
-jedoch keine Python-ML-Abhängigkeiten.
+enthält kein Python. Script-Bausteine laufen im eigenen, abgeschotteten Container `novooa-script`
+(internes Netz `novooa-script`, siehe
+[`../docs/local-runtime.md`](../docs/local-runtime.md) § Script-Dienst).
+Seine Tests: `docker run --rm -v "$PWD/local-runtime/python:/app/python" -w /app/python python:3.12-slim python -m unittest tests.test_script_service`.
 
 
 ## Clients im LAN und öffentlich
@@ -80,11 +82,11 @@ sollen.
 
 ## Images für einen Ziel-Rechner bauen
 
-`build-images.sh` baut die beiden Runtime-Images (`novooa-runtime`,
-`novooa-ml`) eigenständig auf diesem Rechner für `linux/amd64` — unabhängig
+`build-images.sh` baut die drei Runtime-Images (`novooa-runtime`,
+`novooa-ml`, `novooa-script`) eigenständig auf diesem Rechner für `linux/amd64` — unabhängig
 von der eigenen Host-Architektur (Cross-Compile via Docker Buildx/QEMU) und
 ohne SSH oder eine Deployment-CLI. Das Ergebnis ist eine einzelne `.tar`-Datei
-mit beiden Images, die auf jedem Docker-Host ohne Registry-Zugriff eingespielt
+mit allen Images, die auf jedem Docker-Host ohne Registry-Zugriff eingespielt
 werden kann:
 
 ```bash
@@ -105,7 +107,8 @@ docker load -i novooa-images-0.1.0.tar
 ```
 
 Anschließend referenziert eine Compose-Datei die geladenen Images per
-`image: novooa-runtime:0.1.0` / `image: novooa-ml:0.1.0` statt sie per
+`image: novooa-runtime:0.1.0` / `image: novooa-ml:0.1.0` /
+`image: novooa-script:0.1.0` statt sie per
 `build:` aus dem Quellcode zu bauen — genau das, was
 [`deployment.md`](../docs/deployment.md) für auslieferbare, versionierte
 Images fordert ("niemals `latest`, immer eine konkrete Version").

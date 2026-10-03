@@ -11,10 +11,6 @@ RUN npm run build
 
 FROM node:24-bookworm-slim AS runtime
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends python3 \
-  && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app/functions
 
 COPY functions/package.json functions/package-lock.json ./

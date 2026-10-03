@@ -452,14 +452,49 @@ Speicherpfade, sondern verifizierte Modellbytes und Tensoren über das
 standardisierte HTTP-Protokoll. Die Abhängigkeiten liegen in
 [`local-runtime/python/requirements.txt`](../local-runtime/python/requirements.txt);
 die Compose-Definition startet daraus den `novooa-ml`-Container. Der
-Node-Container enthält einen minimalen Python-Interpreter für isolierte
-Script-Bausteine, aber keine Python-ML-Abhängigkeiten.
+Node-Container enthält **kein Python**; Script-Bausteine laufen im eigenen
+Container `novooa-script` (siehe „Script-Dienst“).
 
 Workflow-Werte werden vor der lokalen Inferenz gemäß Manifest in Tensoren
 transformiert. `input_transform_worker.py` verwendet für Bildquellen eine
 erweiterbare Registry für Dekodierung, Skalierung, Layout und Normalisierung.
 Weitere Quelltypen erhalten eigene Strategien; weder die Pipeline noch der
 Modell-Baustein sind an Firebase Storage oder Bilder gekoppelt.
+
+## Script-Dienst
+
+Das Python eines Script-Bausteins läuft in der lokalen Runtime **nicht** im
+Prozess der Runtime, sondern im Container `novooa-script`
+(`functions/Dockerfile.script-runner`, Code in `local-runtime/python/novooa_script/`).
+Die Runtime erreicht ihn über `SCRIPT_RUNNER_URL` (im Compose-Betrieb
+`http://novooa-script:8091`). Ohne diese Adresse läuft **kein** Script — es gibt
+keinen Rückfall auf Python in der Runtime.
+
+**Schnittstelle:** `POST /run` als `multipart/form-data`. Der Teil `request`
+trägt als JSON Script, Eingabe, Variablen und die Metadaten der Dateien; jede
+angehängte Datei folgt als Teil `file-<n>` mit den **rohen Bytes** (keine Base64-
+Kodierung). Antwort: `200` mit `output`, `printed`, `variables` oder `422` mit
+einer lesbaren Fehlermeldung, die die Zeile des Scripts nennt. Die Anhänge sind
+auf zusammen 25 MB begrenzt (`maximumAttachmentBytes`).
+
+**Ausführung:** Pro Lauf startet der Dienst einen frischen `python -I`-Prozess
+mit eigenem, temporärem Arbeitsverzeichnis, das danach gelöscht wird. Das Script
+hat **volles Python** (Imports, `open`, eigene Module der Standardbibliothek);
+`input`, die Variablen aus früheren Bausteinen, `files`, `list_files()` und
+`read_file()` stehen wie bisher bereit. Grenzen je Lauf: 10 s Laufzeit
+(`SCRIPT_TIMEOUT_SECONDS`), 512 MB Speicher (`SCRIPT_MEMORY_LIMIT_MB`), 64 MB
+Dateigröße, 128 offene Dateien. Höchstens vier Läufe gleichzeitig.
+
+**Abschottung (docker-compose.local.yaml):** internes Netz (`internal: true`, kein
+Zugang nach außen und kein DNS, nur die Runtime erreicht den Dienst),
+schreibgeschütztes Dateisystem mit `tmpfs` für `/tmp` (`noexec`, `nosuid`), kein
+Root (UID 65532), `cap_drop: ALL`, `no-new-privileges`, 768 MB Speicher, 1 CPU,
+64 Prozesse. Der Container enthält keine Schlüssel und keine Modelle; das Script
+sieht nur eine minimale Umgebung (`PATH`).
+
+**Cloud:** unverändert. Die Cloud-Functions führen Scripts weiter über das
+bisherige `python3` im eigenen Prozess mit eingeschränkten Builtins
+(`createPythonScriptExecutor`), bis dort eine eigene Lösung steht.
 
 ## KI-Agenten
 

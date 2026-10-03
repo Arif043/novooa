@@ -142,6 +142,7 @@ async function runNodes(
       knowledgeBaseStore: runtime.knowledgeBaseStore,
       languageModelResolver: runtime.languageModelResolver,
       languageModelDefaultsStore: runtime.languageModelDefaultsStore,
+      scriptExecutorFactory: runtime.scriptExecutorFactory,
       logger: runtime.logger,
     });
     updateTaskVariables(variables, result);

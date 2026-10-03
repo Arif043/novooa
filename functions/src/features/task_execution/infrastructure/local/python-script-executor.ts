@@ -1,24 +1,12 @@
 import {spawn} from "node:child_process";
 import path from "node:path";
 import {type ScriptExecutor} from "../../domain/executors/script-executor.js";
-import {type ScriptExecutionRequest, type ScriptExecutionResult} from "../../domain/entities/script-execution.js";
+import {type ScriptExecutionRequest, type ScriptExecutionResult, type ScriptWorkspace} from "../../domain/entities/script-execution.js";
+import {scriptResultFrom} from "./script-result.js";
 import {scriptPythonSource} from "./script-python-runtime.js";
 
 const timeoutMs = 5000;
 const maxOutputBytes = 10 * 1024;
-
-type ScriptWorkspace = {
-  rootDirectory: string;
-  files: readonly ScriptWorkspaceFile[];
-};
-
-type ScriptWorkspaceFile = {
-  displayName: string;
-  contentType: string;
-  sizeBytes: number;
-  versionCreatedAt?: number;
-  filename: string;
-};
 
 export function createPythonScriptExecutor(workspace?: ScriptWorkspace): ScriptExecutor {
   return {execute: (request) => executePythonScript(request, workspace)};
@@ -29,11 +17,7 @@ async function executePythonScript(
   workspace?: ScriptWorkspace,
 ): Promise<ScriptExecutionResult> {
   const parsed = parseResponse(await runPython(request, workspace));
-  return {
-    output: outputFrom(parsed, request.input),
-    variables: variablesFrom(parsed.variables),
-    printed: typeof parsed.printed === "string" ? parsed.printed : "",
-  };
+  return scriptResultFrom(parsed, request.input);
 }
 
 function runPython(request: ScriptExecutionRequest, workspace?: ScriptWorkspace): Promise<string> {
@@ -83,17 +67,6 @@ function parseResponse(value: string): Record<string, unknown> {
     throw new Error("Script lieferte eine ungültige Antwort.");
   }
   return parsed as Record<string, unknown>;
-}
-
-function outputFrom(parsed: Record<string, unknown>, fallback: string): string {
-  if (parsed.outputDefined === false) return fallback;
-  if (typeof parsed.output === "string") return parsed.output;
-  throw new Error("Script hat keinen String-Output geliefert.");
-}
-
-function variablesFrom(value: unknown): Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value)
-    ? value as Record<string, unknown> : {};
 }
 
 function finish(timer: NodeJS.Timeout, callback: () => void): void {

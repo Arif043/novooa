@@ -3,6 +3,11 @@ import {
   type RuntimeMailRelayClient,
   UnavailableRuntimeMailRelayClient,
 } from "../../features/communication/infrastructure/local/runtime-mail-relay-client.js";
+import {type ScriptExecutorFactory} from "../../features/task_execution/domain/executors/script-executor.js";
+import {
+  createContainerScriptExecutorFactory,
+  unavailableScriptExecutorFactory,
+} from "../../features/task_execution/infrastructure/local/container-script-executor.js";
 import {
   HttpRuntimeTaskBuilderRelayClient,
   type RuntimeTaskBuilderRelayClient,
@@ -18,6 +23,12 @@ import {
 export function pushRelayFromEnvironment(): RuntimePushRelayClient {
   const endpoint = process.env.LOCAL_RUNTIME_PUSH_RELAY_URL?.trim();
   return endpoint ? new HttpRuntimePushRelayClient(endpoint) : new UnavailableRuntimePushRelayClient();
+}
+
+/** Scripts laufen im abgeschotteten Container; ohne Adresse läuft keines, statt ungeschützt in der Runtime. */
+export function scriptExecutorFactoryFromEnvironment(): ScriptExecutorFactory {
+  const endpoint = process.env.SCRIPT_RUNNER_URL?.trim();
+  return endpoint ? createContainerScriptExecutorFactory(endpoint) : unavailableScriptExecutorFactory();
 }
 
 export function taskBuilderRelayFromEnvironment(): RuntimeTaskBuilderRelayClient {

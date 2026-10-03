@@ -1,0 +1,17 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY local-runtime/python/novooa_script /app/python/novooa_script
+
+# Nur die Standardbibliothek: Der Dienst führt Scripts von Nutzern aus und
+# soll so wenig wie möglich enthalten. Das Dateisystem ist zur Laufzeit
+# schreibgeschützt (siehe docker-compose.local.yaml), Bytecode wird deshalb
+# nicht geschrieben.
+ENV PORT=8091 \
+  PYTHONPATH=/app/python \
+  PYTHONDONTWRITEBYTECODE=1
+
+USER 65532
+
+CMD ["python", "-m", "novooa_script.server"]

@@ -1,5 +1,6 @@
 import {type EmployeeStore} from "../../../../employees/domain/repositories/employee-store.js";
 import {type SkillContentReader} from "../../../../skills/domain/repositories/skill-content-reader.js";
+import {type ScriptExecutorFactory} from "../../../domain/executors/script-executor.js";
 import {type TaskRunServices} from "../../../domain/executors/node-executor.js";
 import {type KnowledgeBaseStore} from "../../../../knowledge_base/domain/repositories/knowledge-base-store.js";
 import {type ObjectStore} from "../../../../files/domain/repositories/object-store.js";
@@ -20,4 +21,6 @@ export type TaskGraphRuntime = TaskRunServices & {
   logger: ApplicationLogger;
   languageModelResolver?: GenkitLanguageModelResolver;
   languageModelDefaultsStore?: LanguageModelDefaultsStore;
+  /** Führt Scripts aus; fehlt (Cloud), läuft das bisherige Python im eigenen Prozess. */
+  scriptExecutorFactory?: ScriptExecutorFactory;
 };

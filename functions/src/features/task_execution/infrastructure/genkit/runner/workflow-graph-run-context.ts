@@ -63,7 +63,7 @@ export function createTaskRunContext(
 function passedThroughServices(runtime: TaskGraphRuntime) {
   const {
     objectStore: _objectStore, knowledgeBaseStore: _knowledgeBaseStore, logger: _logger, skillContentReader: _skillContentReader, employeeStore: _employeeStore,
-    languageModelResolver: _languageModelResolver, languageModelDefaultsStore: _languageModelDefaultsStore,
+    languageModelResolver: _languageModelResolver, languageModelDefaultsStore: _languageModelDefaultsStore, scriptExecutorFactory: _scriptExecutorFactory,
     ...services
   } = runtime;
   return services;

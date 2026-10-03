@@ -27,6 +27,7 @@ import {type WorkflowNode} from "./task-definition.js";
 import {type NodeExecutor} from "../../../domain/executors/node-executor.js";
 import {type GenkitBeta} from "genkit/beta";
 import {type NodeAttachmentWorkspace} from "./node-attachment-workspace.js";
+import {type ScriptExecutorFactory} from "../../../domain/executors/script-executor.js";
 import {createPythonScriptExecutor} from "../../local/python-script-executor.js";
 import {scriptOutputLogger} from "./script-output-logger.js";
 import {conditionalBranchLogger} from "./conditional-branch-logger.js";
@@ -66,10 +67,11 @@ export function executorFor(
   workspace?: NodeAttachmentWorkspace,
   languageModelResolver?: GenkitLanguageModelResolver,
   languageModelDefaultsStore?: LanguageModelDefaultsStore,
+  scriptExecutorFactory: ScriptExecutorFactory = createPythonScriptExecutor,
 ): NodeExecutor | undefined {
   if (primitive === "script") {
     return createScriptNodeExecutor(
-      createPythonScriptExecutor(workspace),
+      scriptExecutorFactory(workspace),
       scriptOutputLogger(logger),
     );
   }
