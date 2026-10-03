@@ -56,7 +56,7 @@ test("wirft, wenn ein Sprachmodell explizit gewählt ist, aber kein Resolver kon
 
 test("löst ohne explizite Wahl die konfigurierte Vorgabe auf", async () => {
   const resolver = fakeResolver();
-  const defaultsStore = fakeDefaultsStore({blockModelId: "default-model"});
+  const defaultsStore = fakeDefaultsStore({blockModelId: "default-model", knowledgeAssistantModelId: null});
 
   const result = await languageModelFor(undefined, "team-1", resolver, defaultsStore);
 
@@ -76,7 +76,7 @@ test("ohne gesetzte Vorgabe bleibt der bisherige Standardmodell-Pfad aktiv", asy
 
 test("eine Vorgabe auf ein gelöschtes Modell fällt zurück, statt zu scheitern", async () => {
   const resolver = fakeResolver({throwsForModelId: "deleted-model"});
-  const defaultsStore = fakeDefaultsStore({blockModelId: "deleted-model"});
+  const defaultsStore = fakeDefaultsStore({blockModelId: "deleted-model", knowledgeAssistantModelId: null});
 
   const result = await languageModelFor(undefined, "team-1", resolver, defaultsStore);
 

@@ -54,6 +54,30 @@ void main() {
     await cubit.close();
   });
 
+  test('die beiden Vorgaben überschreiben einander nicht', () async {
+    final defaultsRepo = _Defaults(
+      const LanguageModelDefaults(
+        blockModelId: 'model-1',
+        knowledgeAssistantModelId: 'model-2',
+      ),
+    );
+    final cubit = _cubit(
+      models: [_model('model-1'), _model('model-2'), _model('model-3')],
+      defaultsRepo: defaultsRepo,
+    );
+    await cubit.load();
+    await pumpEventQueue();
+
+    await cubit.saveBlockDefault('model-3');
+    expect(defaultsRepo.saved?.blockModelId, 'model-3');
+    expect(defaultsRepo.saved?.knowledgeAssistantModelId, 'model-2');
+
+    await cubit.saveKnowledgeAssistantDefault(null);
+    expect(defaultsRepo.saved?.blockModelId, 'model-1');
+    expect(defaultsRepo.saved?.knowledgeAssistantModelId, isNull);
+    await cubit.close();
+  });
+
   test('meldet einen Fehler, wenn niemand angemeldet ist', () async {
     final cubit = LanguageModelDefaultsCubit(
       _Auth(signedIn: false),

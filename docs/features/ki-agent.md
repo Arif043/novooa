@@ -19,11 +19,13 @@ weiter mit der Runtime (`POST /v1/assistant/task-builder` und
 
 Gründe: Der Aufgabenstudio-Agent braucht keine lokalen Daten und läuft deshalb
 mit dem Modell des Betreibers. Der Wissensbasis-Agent liest die Notizen des
-Nutzers; sie sollen das Gerät nicht verlassen. Er nutzt darum das Modell, das
-der Nutzer unter „Sprachmodelle“ als **Standardmodell** gewählt hat
-(`resolveDefaultLanguageModel`). Ohne gewähltes Standardmodell bekommt er den
-Hinweis, eines zu verbinden und zu wählen; es gibt keinen Rückfall auf ein Modell
-des Betreibers. Ausgelassen ist bewusst nur das Audit-Logging der Cloud-Variante
+Nutzers; sie sollen das Gerät nicht verlassen. Er nutzt darum ein Modell des Nutzers
+(`resolveDefaultLanguageModel`): das, was dieser unter Einstellungen →
+„Sprachmodelle“ als **Sprachmodell des Wissensbasis-Agenten** gewählt hat
+(`LanguageModelDefaults.knowledgeAssistantModelId`, nur in der Runtime sichtbar),
+sonst sein **Standardmodell**. Ohne beides — oder wenn das Modell gelöscht
+wurde — bekommt er den Hinweis, eines zu verbinden und zu wählen; es gibt keinen
+Rückfall auf ein Modell des Betreibers. Ausgelassen ist bewusst nur das Audit-Logging der Cloud-Variante
 in der Runtime — es dient dort der teamübergreifenden Aufsicht.
 
 ## Sprachmodell des Agenten in der Cloud

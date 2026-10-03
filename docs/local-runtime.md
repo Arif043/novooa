@@ -468,7 +468,8 @@ Verlauf über das Relay `localRuntimeTaskBuilderRelay`
 (`LOCAL_RUNTIME_TASK_BUILDER_RELAY_URL`) mit ihrer Lizenz weiter; das Modell
 legt die Cloud in Remote Config fest. Der **Wissensbasis-Agent** läuft in der
 Runtime, damit die Notizen das Gerät nicht verlassen, und nutzt das
-Standardmodell, das der Nutzer unter „Sprachmodelle“ gewählt hat. Einzelheiten
+Modell, das der Nutzer unter „Sprachmodelle“ für den Wissensbasis-Agenten
+gewählt hat (sonst sein Standardmodell). Einzelheiten
 in [`features/ki-agent.md`](features/ki-agent.md).
 
 ## Mitarbeiter

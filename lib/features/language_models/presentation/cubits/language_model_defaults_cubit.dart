@@ -81,13 +81,32 @@ class LanguageModelDefaultsCubit extends Cubit<LanguageModelDefaultsState> {
   }
 
   Future<void> saveBlockDefault(String? modelId) {
-    return _saveDefaults(LanguageModelDefaults(blockModelId: modelId));
+    return _saveDefaults(
+      LanguageModelDefaults(
+        blockModelId: modelId,
+        knowledgeAssistantModelId: state.defaults.knowledgeAssistantModelId,
+      ),
+      isBlock: true,
+    );
   }
 
-  Future<void> _saveDefaults(LanguageModelDefaults defaults) async {
+  Future<void> saveKnowledgeAssistantDefault(String? modelId) {
+    return _saveDefaults(
+      LanguageModelDefaults(
+        blockModelId: state.defaults.blockModelId,
+        knowledgeAssistantModelId: modelId,
+      ),
+      isBlock: false,
+    );
+  }
+
+  Future<void> _saveDefaults(
+    LanguageModelDefaults defaults, {
+    required bool isBlock,
+  }) async {
     final teamId = _teamId;
     if (teamId == null) return;
-    emit(state.copyWith(isSavingBlockDefault: true));
+    emit(_savingState(isBlock: isBlock, saving: true));
     try {
       await _saveLanguageModelDefaults(teamId, defaults);
     } catch (error, stackTrace) {
@@ -97,10 +116,17 @@ class LanguageModelDefaultsCubit extends Cubit<LanguageModelDefaultsState> {
         stackTrace,
       );
     } finally {
-      if (!isClosed) {
-        emit(state.copyWith(isSavingBlockDefault: false));
-      }
+      if (!isClosed) emit(_savingState(isBlock: isBlock, saving: false));
     }
+  }
+
+  LanguageModelDefaultsState _savingState({
+    required bool isBlock,
+    required bool saving,
+  }) {
+    return isBlock
+        ? state.copyWith(isSavingBlockDefault: saving)
+        : state.copyWith(isSavingKnowledgeAssistantDefault: saving);
   }
 
   Future<TeamId?> _teamIdOrNull() async {

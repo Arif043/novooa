@@ -13,10 +13,15 @@ class _FakeCubit extends Cubit<LanguageModelDefaultsState>
   _FakeCubit(super.state);
 
   final List<String?> savedBlock = [];
+  final List<String?> savedKnowledgeAssistant = [];
 
   @override
   Future<void> saveBlockDefault(String? modelId) async =>
       savedBlock.add(modelId);
+
+  @override
+  Future<void> saveKnowledgeAssistantDefault(String? modelId) async =>
+      savedKnowledgeAssistant.add(modelId);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -34,13 +39,15 @@ LanguageModel _model(String id, String name, LanguageModelProvider provider) {
   );
 }
 
-Widget _host(_FakeCubit cubit) {
+Widget _host(_FakeCubit cubit, {bool standalone = false}) {
   return MaterialApp(
     home: Scaffold(
       body: SingleChildScrollView(
         child: BlocProvider<LanguageModelDefaultsCubit>.value(
           value: cubit,
-          child: const LanguageModelDefaultsSections(),
+          child: LanguageModelDefaultsSections(
+            usedByKnowledgeAssistant: standalone,
+          ),
         ),
       ),
     ),
@@ -70,7 +77,7 @@ void main() {
     await tester.pumpWidget(_host(cubitWith(block: 'g1')));
 
     expect(find.text('Gemini Flash · Google AI'), findsOneWidget);
-    expect(find.text('Sprachmodell des KI-Agenten'), findsNothing);
+    expect(find.text('Sprachmodell des Wissensbasis-Agenten'), findsNothing);
     expect(find.byType(DropdownButtonFormField<String?>), findsNothing);
   });
 
@@ -101,6 +108,37 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(cubit.savedBlock, [null]);
+  });
+
+  testWidgets(
+    'in der Runtime gibt es zusätzlich das Modell des Wissensbasis-Agenten',
+    (tester) async {
+      await tester.pumpWidget(_host(cubitWith(block: 'g1'), standalone: true));
+
+      expect(
+        find.text('Sprachmodell des Wissensbasis-Agenten'),
+        findsOneWidget,
+      );
+      expect(find.byType(InputDecorator), findsNWidgets(2));
+    },
+  );
+
+  testWidgets('das Modell des Wissensbasis-Agenten wird getrennt gespeichert', (
+    tester,
+  ) async {
+    final cubit = cubitWith(block: 'g1');
+    await tester.pumpWidget(_host(cubit, standalone: true));
+
+    await tester.tap(find.byType(InputDecorator).last);
+    await tester.pumpAndSettle();
+    expect(find.text('Standardmodell verwenden'), findsWidgets);
+    await tester.tap(find.text('Mistral AI'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mistral Small'));
+    await tester.pumpAndSettle();
+
+    expect(cubit.savedKnowledgeAssistant, ['m1']);
+    expect(cubit.savedBlock, isEmpty);
   });
 
   testWidgets('beim Speichern ist die Auswahl gesperrt', (tester) async {

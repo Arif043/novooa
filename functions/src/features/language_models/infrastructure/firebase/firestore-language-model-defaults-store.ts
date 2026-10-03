@@ -16,7 +16,10 @@ export class FirestoreLanguageModelDefaultsStore
     const snapshot = await teamDoc(teamId).get();
     const value = snapshot.data()?.languageModelDefaults;
     if (!value || typeof value !== "object") return emptyLanguageModelDefaults;
-    return {blockModelId: stringOrNull(value.blockModelId)};
+    return {
+      blockModelId: stringOrNull(value.blockModelId),
+      knowledgeAssistantModelId: stringOrNull(value.knowledgeAssistantModelId),
+    };
   }
 
   async saveDefaults(teamId: string, defaults: LanguageModelDefaults): Promise<void> {

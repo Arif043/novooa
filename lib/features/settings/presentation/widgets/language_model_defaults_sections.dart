@@ -13,9 +13,9 @@ import 'settings_section.dart';
 /// Vorgabe-Auswahl unter „Sprachmodelle" — welches bereits verbundene Modell
 /// als Standardmodell für Sprachmodell-Bausteine ("Standardmodell verwenden")
 /// gilt. Blendet sich aus, solange kein Modell verbunden ist — dann gibt es
-/// nichts zu wählen. In der lokalen Runtime ([usedByKnowledgeAssistant]) ist
-/// es zugleich das Modell des KI-Agenten der Wissensbasis, der dort mit dem
-/// Modell des Nutzers läuft.
+/// nichts zu wählen. In der lokalen Runtime ([usedByKnowledgeAssistant]) gibt es
+/// zusätzlich die Wahl für den KI-Agenten der Wissensbasis, der dort mit dem
+/// Modell des Nutzers läuft; ohne Wahl gilt das Standardmodell.
 class LanguageModelDefaultsSections extends StatelessWidget {
   const LanguageModelDefaultsSections({
     super.key,
@@ -35,13 +35,10 @@ class LanguageModelDefaultsSections extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             _LanguageModelDefaultSection(
               icon: Icons.smart_toy_outlined,
-              title: usedByKnowledgeAssistant
-                  ? 'Standardmodell'
-                  : 'Standardmodell für Sprachmodell-Bausteine',
-              description: usedByKnowledgeAssistant
-                  ? 'Gilt, wenn ein Baustein "Standardmodell verwenden" nutzt, '
-                        'und für den KI-Agenten der Wissensbasis.'
-                  : 'Gilt, wenn ein Baustein "Standardmodell verwenden" nutzt.',
+              title: 'Standardmodell für Sprachmodell-Bausteine',
+              description:
+                  'Gilt, wenn ein Baustein "Standardmodell verwenden" nutzt.',
+              defaultOptionLabel: 'Systemvorgabe verwenden',
               models: state.models,
               selectedModelId: state.defaults.blockModelId,
               isSaving: state.isSavingBlockDefault,
@@ -49,6 +46,23 @@ class LanguageModelDefaultsSections extends StatelessWidget {
                   .read<LanguageModelDefaultsCubit>()
                   .saveBlockDefault,
             ),
+            if (usedByKnowledgeAssistant) ...[
+              const SizedBox(height: AppSpacing.lg),
+              _LanguageModelDefaultSection(
+                icon: Icons.auto_awesome,
+                title: 'Sprachmodell des Wissensbasis-Agenten',
+                description:
+                    'Gilt für Fragen an den KI-Agenten der Wissensbasis. '
+                    'Ohne Auswahl gilt das Standardmodell.',
+                defaultOptionLabel: 'Standardmodell verwenden',
+                models: state.models,
+                selectedModelId: state.defaults.knowledgeAssistantModelId,
+                isSaving: state.isSavingKnowledgeAssistantDefault,
+                onChanged: context
+                    .read<LanguageModelDefaultsCubit>()
+                    .saveKnowledgeAssistantDefault,
+              ),
+            ],
           ],
         );
       },
@@ -61,6 +75,7 @@ class _LanguageModelDefaultSection extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.description,
+    required this.defaultOptionLabel,
     required this.models,
     required this.selectedModelId,
     required this.isSaving,
@@ -70,6 +85,7 @@ class _LanguageModelDefaultSection extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
+  final String defaultOptionLabel;
   final List<LanguageModel> models;
   final String? selectedModelId;
   final bool isSaving;
@@ -87,7 +103,7 @@ class _LanguageModelDefaultSection extends StatelessWidget {
             .toList(growable: false),
         selectedModelId: selectedModelId ?? defaultLanguageModelId,
         enabled: !isSaving,
-        defaultOptionLabel: 'Systemvorgabe verwenden',
+        defaultOptionLabel: defaultOptionLabel,
         onChanged: (modelId) =>
             onChanged(modelId == defaultLanguageModelId ? null : modelId),
       ),

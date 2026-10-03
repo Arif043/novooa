@@ -60,6 +60,7 @@ export const languageModelConnections = sqliteTable("language_model_connections"
 export const languageModelDefaults = sqliteTable("language_model_defaults", {
   team_id: text("team_id").primaryKey(),
   block_model_id: text("block_model_id"),
+  knowledge_assistant_model_id: text("knowledge_assistant_model_id"),
 });
 
 export const languageModelSecrets = sqliteTable("language_model_secrets", {

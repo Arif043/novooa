@@ -10,7 +10,7 @@ test("liefert leere Vorgaben, solange nichts gespeichert wurde", async () => {
   await withStore(async (store) => {
     const defaults = await store.loadDefaults("team-1");
 
-    assert.deepEqual(defaults, {blockModelId: null});
+    assert.deepEqual(defaults, {blockModelId: null, knowledgeAssistantModelId: null});
   });
 });
 
@@ -18,29 +18,30 @@ test("speichert und liest die Vorgabe", async () => {
   await withStore(async (store) => {
     await store.saveDefaults("team-1", {
       blockModelId: "model-1",
+      knowledgeAssistantModelId: "model-2",
     });
 
     const defaults = await store.loadDefaults("team-1");
 
-    assert.deepEqual(defaults, {blockModelId: "model-1"});
+    assert.deepEqual(defaults, {blockModelId: "model-1", knowledgeAssistantModelId: "model-2"});
   });
 });
 
 test("ein erneutes Speichern überschreibt statt eine zweite Zeile anzulegen", async () => {
   await withStore(async (store) => {
-    await store.saveDefaults("team-1", {blockModelId: "model-1"});
-    await store.saveDefaults("team-1", {blockModelId: "model-2"});
+    await store.saveDefaults("team-1", {blockModelId: "model-1", knowledgeAssistantModelId: null});
+    await store.saveDefaults("team-1", {blockModelId: "model-2", knowledgeAssistantModelId: null});
 
     const defaults = await store.loadDefaults("team-1");
 
-    assert.deepEqual(defaults, {blockModelId: "model-2"});
+    assert.deepEqual(defaults, {blockModelId: "model-2", knowledgeAssistantModelId: null});
   });
 });
 
 test("hält Vorgaben verschiedener Teams getrennt", async () => {
   await withStore(async (store) => {
-    await store.saveDefaults("team-1", {blockModelId: "model-1"});
-    await store.saveDefaults("team-2", {blockModelId: "model-2"});
+    await store.saveDefaults("team-1", {blockModelId: "model-1", knowledgeAssistantModelId: null});
+    await store.saveDefaults("team-2", {blockModelId: "model-2", knowledgeAssistantModelId: null});
 
     assert.equal((await store.loadDefaults("team-1")).blockModelId, "model-1");
     assert.equal((await store.loadDefaults("team-2")).blockModelId, "model-2");

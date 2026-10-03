@@ -2,23 +2,25 @@ import {type GenkitLanguageModelResolver, type ResolvedGenkitLanguageModel} from
 import {type LanguageModelDefaultsStore} from "../../domain/repositories/language-model-defaults-store.js";
 
 export const noDefaultLanguageModelMessage =
-  "Für den KI-Agenten fehlt ein Sprachmodell. Verbinde unter Einstellungen → Sprachmodelle ein Modell und wähle es als Standardmodell.";
+  "Für den KI-Agenten fehlt ein Sprachmodell. Verbinde unter Einstellungen → Sprachmodelle ein Modell und wähle es als Sprachmodell des Wissensbasis-Agenten oder als Standardmodell.";
 
 /**
  * Das Sprachmodell des Nutzers für den lokalen KI-Agenten der Wissensbasis:
- * das Standardmodell, das er unter „Sprachmodelle“ gewählt hat. Es gibt keinen
- * Rückfall auf ein Modell des Betreibers — ohne gewähltes (oder mit gelöschtem)
- * Standardmodell bekommt der Nutzer einen Hinweis, was zu tun ist.
+ * das Modell, das er dafür unter „Sprachmodelle“ gewählt hat, sonst sein
+ * Standardmodell. Es gibt keinen Rückfall auf ein Modell des Betreibers — ohne
+ * gewähltes (oder mit gelöschtem) Modell bekommt der Nutzer einen Hinweis, was
+ * zu tun ist.
  */
 export async function resolveDefaultLanguageModel(
   teamId: string,
   resolver: GenkitLanguageModelResolver,
   defaultsStore: LanguageModelDefaultsStore,
 ): Promise<ResolvedGenkitLanguageModel> {
-  const {blockModelId} = await defaultsStore.loadDefaults(teamId);
-  if (!blockModelId) throw new Error(noDefaultLanguageModelMessage);
+  const defaults = await defaultsStore.loadDefaults(teamId);
+  const modelId = defaults.knowledgeAssistantModelId ?? defaults.blockModelId;
+  if (!modelId) throw new Error(noDefaultLanguageModelMessage);
   try {
-    return await resolver.resolve(teamId, blockModelId);
+    return await resolver.resolve(teamId, modelId);
   } catch {
     throw new Error(noDefaultLanguageModelMessage);
   }

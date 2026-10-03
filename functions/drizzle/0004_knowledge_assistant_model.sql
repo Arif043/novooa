@@ -1,0 +1,1 @@
+ALTER TABLE `language_model_defaults` ADD `knowledge_assistant_model_id` text;
