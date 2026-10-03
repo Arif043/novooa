@@ -34,11 +34,9 @@ test("a failing node returns a failure with the results of the nodes before it",
   );
   const scriptError = new ScriptExecutionError("Zeile 2: ValueError: kaputt", "vorher\n");
 
-  const outputOrFailure = await executeTaskGraph(ai, task, runtimeWithScript(async () => { throw scriptError; }));
+  const failure = (await executeTaskGraph(ai, task, runtimeWithScript(async () => { throw scriptError; })))
+    ._unsafeUnwrapErr();
 
-  assert.equal(outputOrFailure.ok, false);
-  if (outputOrFailure.ok) return;
-  const {failure} = outputOrFailure;
   assert.equal(failure.cause, scriptError, "der ursprüngliche Fehler bleibt als Ursache erhalten");
   assert.deepEqual(failure.completedNodeResults.map((result) => [result.nodeId, result.status]), [
     ["eins", "executed"], ["zwei", "executed"],
@@ -53,14 +51,13 @@ test("fails at the first node: nothing before it, but the failed node is named",
   const ai = genkit({});
   const task = taskWith([scriptNode("eins")], []);
 
-  const outputOrFailure = await executeTaskGraph(ai, task, runtimeWithScript(async () => { throw new Error("sofort"); }));
+  const failure = (await executeTaskGraph(ai, task, runtimeWithScript(async () => { throw new Error("sofort"); })))
+    ._unsafeUnwrapErr();
 
-  assert.equal(outputOrFailure.ok, false);
-  if (outputOrFailure.ok) return;
-  assert.deepEqual(outputOrFailure.failure.completedNodeResults, []);
-  assert.equal(outputOrFailure.failure.failedNode.nodeId, "eins");
-  assert.equal(outputOrFailure.failure.failedNode.message, "sofort");
-  assert.equal(outputOrFailure.failure.failedNode.console, undefined, "ein Fehler ohne Script-Ausgabe hat keine Konsole");
+  assert.deepEqual(failure.completedNodeResults, []);
+  assert.equal(failure.failedNode.nodeId, "eins");
+  assert.equal(failure.failedNode.message, "sofort");
+  assert.equal(failure.failedNode.console, undefined, "ein Fehler ohne Script-Ausgabe hat keine Konsole");
 });
 
 test("a run without failure returns its output as a value", async () => {
@@ -69,5 +66,5 @@ test("a run without failure returns its output as a value", async () => {
 
   const outputOrFailure = await executeTaskGraph(ai, task, runtimeWithScript(async () => { throw new Error("nicht aufgerufen"); }));
 
-  assert.equal(outputOrFailure.ok, true);
+  assert.equal(outputOrFailure.isOk(), true);
 });

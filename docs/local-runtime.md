@@ -520,8 +520,9 @@ der Script-Baustein protokolliert sie vor der Fehlermeldung
   und seiner Ausgabe (stdout/stderr) bis zum Fehler. Der Runner fängt die Exception des Bausteins an der
   Infrastrukturgrenze ab und liefert statt ihrer eine `NodeExecutionFailure`
   (`domain/entities/node-execution-failure.ts`: gescheiterter Baustein, abgeschlossene
-  Ergebnisse, `cause`) als `Result`; `executeTaskGraph`/`resumeTaskGraph` geben
-  `Result<TaskGraphOutput, NodeExecutionFailure>` zurück. `markRunFailed` schreibt die
+  Ergebnisse, `cause`) als `Result` von `neverthrow`; `executeTaskGraph`/`resumeTaskGraph`
+  geben `ResultAsync<TaskGraphOutput, NodeExecutionFailure>` zurück und werden mit
+  `map`/`match` weiterverarbeitet. `markRunFailed` schreibt die
   Bausteine über `recordNodeExecutionFailure`, bevor es den fehlgeschlagenen Lauf
   festhält. `TaskRunFailure` bleibt den Eingabefehlern der HTTP-Routen vorbehalten.
   Ein gescheiterter Baustein lässt den Auftrag der Warteschlange nicht scheitern:

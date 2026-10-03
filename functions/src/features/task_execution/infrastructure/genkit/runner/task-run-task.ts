@@ -1,6 +1,5 @@
 import {type GenkitBeta} from "genkit/beta";
 import {type NodeExecutionFailure} from "../../../domain/entities/node-execution-failure.js";
-import {type Result} from "../../../../../shared/result.js";
 import {type TaskRunDocument} from "../../../domain/repositories/task-run-store.js";
 import {z} from "zod";
 import {
@@ -44,14 +43,14 @@ async function startTaskRun(
   logger: ApplicationLogger,
 ) {
   const run = await stores.taskRunStore.loadTaskRun(teamId, runId);
-  let runOrFailure: Result<void, NodeExecutionFailure>;
-  try {
-    runOrFailure = await executeQueuedTaskRun(ai, {teamId, run, stores}, logger);
-  } catch (error) {
-    await failRunAfterUnexpectedError(logger, stores, teamId, run, error);
-    throw error;
-  }
-  if (!runOrFailure.ok) await failRunAfterNodeFailure(logger, stores, teamId, run, runOrFailure.failure);
+  const runOrFailure = await rethrowingUnexpected(
+    () => executeQueuedTaskRun(ai, {teamId, run, stores}, logger),
+    (error) => failRunAfterUnexpectedError(logger, stores, teamId, run, error),
+  );
+  await runOrFailure.match(
+    async () => undefined,
+    (failure) => failRunAfterNodeFailure(logger, stores, teamId, run, failure),
+  );
 }
 
 async function resumeTaskRun(
@@ -63,14 +62,30 @@ async function resumeTaskRun(
 ) {
   const resumableRun = await stores.taskRunStore.loadResumableRun(teamId, runId);
   const run = resumableRun.run;
-  let runOrFailure: Result<void, NodeExecutionFailure>;
+  const runOrFailure = await rethrowingUnexpected(
+    () => continueApprovedTaskRun(ai, {...resumableRun, teamId, stores}, logger),
+    (error) => failRunAfterUnexpectedError(logger, stores, teamId, run, error),
+  );
+  await runOrFailure.match(
+    async () => undefined,
+    (failure) => failRunAfterNodeFailure(logger, stores, teamId, run, failure),
+  );
+}
+
+/**
+ * Fehler außerhalb der Bausteine (Laden, Speichern, ungültiger Plan) bleiben Exceptions: Der Lauf
+ * wird festgehalten, dann scheitert der Auftrag, damit die Warteschlange ihn wiederholen darf.
+ */
+async function rethrowingUnexpected<T>(
+  work: () => Promise<T>,
+  onUnexpected: (error: unknown) => Promise<void>,
+): Promise<T> {
   try {
-    runOrFailure = await continueApprovedTaskRun(ai, {...resumableRun, teamId, stores}, logger);
+    return await work();
   } catch (error) {
-    await failRunAfterUnexpectedError(logger, stores, teamId, run, error);
+    await onUnexpected(error);
     throw error;
   }
-  if (!runOrFailure.ok) await failRunAfterNodeFailure(logger, stores, teamId, run, runOrFailure.failure);
 }
 
 /**

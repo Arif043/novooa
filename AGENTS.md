@@ -85,6 +85,7 @@ Detailtiefe zu Datenmodell, Auth, Persistenz und Trigger →
 - `genkit: ^1.37.0`, `@genkit-ai/google-genai: ^1.37.0`
 - `@genkit-ai/firebase: ^1.37.0`
 - `firebase-functions: ^7.0.0`, `firebase-admin: ^13.6.0`
+- `neverthrow: ^8.2.0` — Rückgabetypen als `Result`/`ResultAsync` (`…OrFailure`), Gegenstück zu `multiple_result` im Client
 - Modell: `gemini-2.5-flash`
 
 ### Kommandos

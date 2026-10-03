@@ -16,7 +16,7 @@ import {
   type TaskRunStore,
 } from "../../../domain/repositories/task-run-store.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
-import {type Result, success} from "../../../../../shared/result.js";
+import {type Result} from "neverthrow";
 
 /** Alles, was ein Worker braucht: die Laufzeit des Graphen (ohne Logger, den bringt der Aufrufer) plus die Stores für Aufgaben und Läufe. */
 export type TaskRunWorkerStores = Omit<TaskGraphRuntime, "logger"> & {
@@ -42,15 +42,13 @@ export async function executeQueuedTaskRun(
   const {teamId, run, stores} = input;
   await stores.taskRunStore.markRunStarted(teamId, run.runId);
   const taskDefinition = await stores.taskStore.loadTask(teamId, run.taskId);
-  const outputOrFailure = await executeTaskGraph(ai, {
+  return executeTaskGraph(ai, {
     taskDefinition,
     context: run.context,
     teamId,
     input: run.input,
-  }, runtimeFrom(stores, logger));
-  if (!outputOrFailure.ok) return outputOrFailure;
-  await recordOutput(stores, teamId, run, outputOrFailure.value);
-  return success(undefined);
+  }, runtimeFrom(stores, logger))
+    .map((output) => recordOutput(stores, teamId, run, output));
 }
 
 export async function continueApprovedTaskRun(
@@ -67,16 +65,14 @@ export async function continueApprovedTaskRun(
   const {teamId, run, stores} = input;
   await stores.taskRunStore.markRunStarted(teamId, run.runId);
   const taskDefinition = await stores.taskStore.loadTask(teamId, run.taskId);
-  const outputOrFailure = await resumeTaskGraph(
+  return resumeTaskGraph(
     ai,
     {taskDefinition, context: run.context, teamId, input: run.input},
     input.resumeState,
     input.responseOutputs,
     runtimeFrom(stores, logger),
-  );
-  if (!outputOrFailure.ok) return outputOrFailure;
-  await recordOutput(stores, teamId, run, outputOrFailure.value);
-  return success(undefined);
+  )
+    .map((output) => recordOutput(stores, teamId, run, output));
 }
 
 async function recordOutput(

@@ -28,7 +28,7 @@ import {
 } from "../../../domain/services/task-graph-utils.js";
 import {consoleOutputOf} from "../../../domain/entities/script-execution.js";
 import {NodeExecutionFailure} from "../../../domain/entities/node-execution-failure.js";
-import {failure, type Result, success} from "../../../../../shared/result.js";
+import {err, ok, type Result, ResultAsync} from "neverthrow";
 import {formatTaskFinished, formatTaskStarted} from "./structured-logger.js";
 import {
   logNodeHeaderLine,
@@ -38,19 +38,34 @@ import {
 import {type TaskGraphRuntime} from "./task-graph-runtime.js";
 import {updateTaskVariables} from "./task-run-variables.js";
 import {createTaskRunContext} from "./workflow-graph-run-context.js";
-export async function executeTaskGraph(
+export function executeTaskGraph(
   ai: GenkitBeta,
   input: TaskGraphInput,
   runtime: TaskGraphRuntime,
-): Promise<Result<TaskGraphOutput, NodeExecutionFailure>> {
+): ResultAsync<TaskGraphOutput, NodeExecutionFailure> {
   runtime.logger.readableInfo(formatTaskStarted(input.taskDefinition, input.context));
   validateGraph(input.taskDefinition);
-  const runStateOrFailure = await runNodes(ai, input, runtime);
-  if (!runStateOrFailure.ok) return runStateOrFailure;
-  const runState = runStateOrFailure.value;
-  if (runState.status === "waitingForApproval") {
-    return success(pausedOutput(input, runState));
-  }
+  return new ResultAsync(runNodes(ai, input, runtime))
+    .map((runState) => finishedOutput(input, runState, runtime));
+}
+
+export function resumeTaskGraph(
+  ai: GenkitBeta,
+  input: TaskGraphInput,
+  resumeState: TaskResumeState,
+  responseOutputs: Record<string, NodeOutputValue>,
+  runtime: TaskGraphRuntime,
+): ResultAsync<TaskGraphOutput, NodeExecutionFailure> {
+  runtime.logger.readableInfo(formatTaskStarted(input.taskDefinition, input.context));
+  validateGraph(input.taskDefinition);
+  return new ResultAsync(runNodes(ai, input, runtime, resumedState(resumeState, responseOutputs)))
+    .map((runState) => runState.status === "waitingForApproval"
+      ? pausedOutput(input, runState)
+      : completedOutput(input, runState.nodeResults));
+}
+
+function finishedOutput(input: TaskGraphInput, runState: NodeRunState, runtime: TaskGraphRuntime): TaskGraphOutput {
+  if (runState.status === "waitingForApproval") return pausedOutput(input, runState);
   const results = runState.nodeResults;
   const output = completedOutput(input, results);
   runtime.logger.readableInfo(formatTaskFinished(
@@ -59,30 +74,7 @@ export async function executeTaskGraph(
     results.filter((result) => result.status === "skipped").length,
     output.finalOutput.length,
   ));
-  return success(output);
-}
-
-export async function resumeTaskGraph(
-  ai: GenkitBeta,
-  input: TaskGraphInput,
-  resumeState: TaskResumeState,
-  responseOutputs: Record<string, NodeOutputValue>,
-  runtime: TaskGraphRuntime,
-): Promise<Result<TaskGraphOutput, NodeExecutionFailure>> {
-  runtime.logger.readableInfo(formatTaskStarted(input.taskDefinition, input.context));
-  validateGraph(input.taskDefinition);
-  const runStateOrFailure = await runNodes(
-    ai,
-    input,
-    runtime,
-    resumedState(resumeState, responseOutputs),
-  );
-  if (!runStateOrFailure.ok) return runStateOrFailure;
-  const runState = runStateOrFailure.value;
-  if (runState.status === "waitingForApproval") {
-    return success(pausedOutput(input, runState));
-  }
-  return success(completedOutput(input, runState.nodeResults));
+  return output;
 }
 
 async function runNodes(
@@ -115,7 +107,8 @@ async function runNodes(
     );
     const startedAt = Date.now();
     logNodeHeaderLine(runtime.logger, node, input.taskDefinition.id, graph, context, skipNode, results);
-    const resultOrFailure = await attemptNode(() => runNodeWithTrail(ai, {
+    // Die Executoren melden Fehler als Exception; hier, an der Grenze, wird daraus ein Failure-Wert.
+    const resultOrFailure = await ResultAsync.fromPromise(runNodeWithTrail(ai, {
       node,
       context,
       runContext: createTaskRunContext({
@@ -141,8 +134,10 @@ async function runNodes(
             embeddedGraph,
           );
           // Die Executoren erwarten für einen verschachtelten Plan eine Exception; der äußere Baustein scheitert dann.
-          if (!stateOrFailure.ok) throw stateOrFailure.failure.cause;
-          return stateOrFailure.value.nodeResults;
+          return stateOrFailure.match(
+            (state) => state.nodeResults,
+            (failure) => { throw failure.cause; },
+          );
         },
       }),
       skipNode,
@@ -156,14 +151,14 @@ async function runNodes(
       scriptExecutorFactory: runtime.scriptExecutorFactory,
       logger: runtime.logger,
     }), (error) => nodeExecutionFailure(node, error, newResults(graph, results, initialState)));
-    if (!resultOrFailure.ok) return resultOrFailure;
+    if (resultOrFailure.isErr()) return err(resultOrFailure.error);
     const result = resultOrFailure.value;
     updateTaskVariables(variables, result);
     results.set(node.id, result);
     skipInactiveBranches(node, graph, result, skippedNodeIds);
     logSkippedBranches(runtime.logger, node, input.taskDefinition.id, result, skippedNodeIds);
     if (result.status === "waitingForApproval") {
-      return success({
+      return ok({
         status: "waitingForApproval",
         nodeResults: orderedResults(graph, results),
         variables: {...variables},
@@ -174,7 +169,7 @@ async function runNodes(
     }
   }
 
-  return success({
+  return ok({
     status: "completed",
     nodeResults: orderedResults(graph, results),
   });
@@ -188,21 +183,6 @@ function newResults(
 ): NodeExecutionResult[] {
   const alreadyRecorded = new Set((initialState?.nodeResults ?? []).map((result) => result.nodeId));
   return orderedResults(graph, results).filter((result) => !alreadyRecorded.has(result.nodeId));
-}
-
-/**
- * Die Executoren der Bausteine melden Fehler als Exception. Hier, an der Grenze zur Infrastruktur,
- * wird daraus ein Failure-Wert; ab hier läuft nichts mehr über Exceptions.
- */
-async function attemptNode(
-  run: () => Promise<NodeExecutionResult>,
-  failureOf: (error: unknown) => NodeExecutionFailure,
-): Promise<Result<NodeExecutionResult, NodeExecutionFailure>> {
-  try {
-    return success(await run());
-  } catch (error) {
-    return failure(failureOf(error));
-  }
 }
 
 function nodeExecutionFailure(node: WorkflowNode, error: unknown, completed: NodeExecutionResult[]): NodeExecutionFailure {
