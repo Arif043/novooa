@@ -101,6 +101,7 @@ flutter test
 cd functions
 npm install
 npm run build          # tsc → functions/lib
+npm run lint           # ESLint (typbasiert, Konfiguration: functions/eslint.config.mjs)
 npm run serve          # lokal mit Emulator
 npm run deploy         # firebase deploy --only functions
 ```
@@ -122,6 +123,8 @@ npm run deploy         # firebase deploy --only functions
 - Flow-Stil: `ai.defineFlow({...}, async (input) => { ... })`.
 - Secrets via `defineSecret`, niemals hardcoden.
 - Logging: `logger.info` Lifecycle, `logger.error` Fehler.
+- ESLint: `npm --prefix functions run lint` (Flat Config mit `typescript-eslint`, typbasiert).
+  `require-await` ist aus, weil Adapter asynchrone Ports ohne eigenes `await` erfüllen dürfen.
 
 ### Git
 - Branch: `feat/aufgabe-<slug>`, `fix/<slug>`, `chore/<slug>`.
