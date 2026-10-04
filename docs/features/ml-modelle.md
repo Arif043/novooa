@@ -57,6 +57,26 @@ weder über Firestore noch über novooa-Functions proxied.
 }
 ```
 
+## Mehrsprachige Manifeste
+
+`title` und `description` sind englisch und gelten als Rückfallsprache. Ein Manifest
+kann optional `translations` mit weiteren Sprachen angeben; der Schlüssel ist ein
+BCP-47-Sprachcode (`de`, `pt-BR`), der Wert enthält `title`, `description` und
+optional `tags`. Ohne `tags` gelten die Tags der Rückfallsprache; übersetzte Tags
+folgen denselben Regeln (nicht leer, eindeutig):
+
+```json
+"translations": {
+  "de": {"title": "SqueezeNet 1.1", "description": "Klassifiziert ein Bild.", "tags": ["bild"]}
+}
+```
+
+Fehlt eine Sprache, zeigt der Client den englischen Text. Die App ist deutsch und nutzt daher die Übersetzung `de`, sofern vorhanden. Die Auflösung versucht
+zuerst den exakten Code, dann die reine Sprache (`pt-BR` → `pt`). Die
+Übersetzungen werden mit dem Katalogeintrag in Firestore, SQLite
+(`model_catalog.translations_json`) und den lokalen Dateien persistiert. Labels
+von Einstellungen und Ausgangsparametern sind noch nicht übersetzbar.
+
 ## Manifest
 
 ### Typen an den drei Grenzen

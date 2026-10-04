@@ -105,6 +105,7 @@ class LocalModelCatalogRepository
       id: _text(entry, 'id'),
       title: _text(entry, 'title'),
       description: _text(entry, 'description'),
+      translations: _translationsFrom(entry['translations']),
       tags: _strings(entry['tags']),
       inputs: inputs,
       settings: settings,
@@ -113,6 +114,20 @@ class LocalModelCatalogRepository
       sizeBytes: _positiveInt(artifact['sizeBytes']),
       isManagedLocally: _object(entry['scope'])['type'] == 'team',
     );
+  }
+
+  Map<String, ModelTranslation> _translationsFrom(Object? value) {
+    if (value == null) return const {};
+    return {
+      for (final entry in _object(value).entries)
+        entry.key: ModelTranslation(
+          title: _text(_object(entry.value), 'title'),
+          description: _text(_object(entry.value), 'description'),
+          tags: _object(entry.value)['tags'] == null
+              ? null
+              : _strings(_object(entry.value)['tags']),
+        ),
+    };
   }
 
   ModelManifestOutput _manifestOutputFrom(Object? value) {

@@ -52,6 +52,7 @@ function documentToEntry(
     id: document.id,
     title: data.title,
     description: data.description,
+    translations: data.translations,
     tags: data.tags,
     scope: data.scope,
     teamId: data.teamId,

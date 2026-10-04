@@ -1,0 +1,1 @@
+ALTER TABLE `model_catalog` ADD `translations_json` text DEFAULT '{}' NOT NULL;

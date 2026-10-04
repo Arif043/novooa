@@ -1,12 +1,19 @@
 {
   "id": "squeezenet-1-1",
   "title": "SqueezeNet 1.1",
-  "description": "Klassifiziert ein Bild in eine von 1.000 ImageNet-Kategorien.",
+  "description": "Classifies an image into one of 1,000 ImageNet categories.",
+  "translations": {
+    "de": {
+      "title": "SqueezeNet 1.1",
+      "description": "Klassifiziert ein Bild in eine von 1.000 ImageNet-Kategorien.",
+      "tags": ["bild", "klassifikation", "imagenet", "leichtgewichtig"]
+    }
+  },
   "tags": [
-    "bild",
-    "klassifikation",
+    "image",
+    "classification",
     "imagenet",
-    "leichtgewichtig"
+    "lightweight"
   ],
   "artifact": {
     "artifactId": "squeezenet-1-1",

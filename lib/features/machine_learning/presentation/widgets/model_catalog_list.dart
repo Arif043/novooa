@@ -48,11 +48,12 @@ class _ModelEntryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final detail =
         '${entry.inputCount} Eingänge, ${entry.outputCount} Ausgänge, ${_sizeLabel(entry.sizeBytes)}';
+    final languageTag = Localizations.localeOf(context).toLanguageTag();
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: const Icon(Icons.memory_outlined),
-      title: Text(entry.title),
-      subtitle: Text('${entry.description}\n$detail'),
+      title: Text(entry.titleFor(languageTag)),
+      subtitle: Text('${entry.descriptionFor(languageTag)}\n$detail'),
       isThreeLine: true,
       trailing: entry.isManagedLocally
           ? _DeleteButton(entry: entry, isSaving: isSaving)

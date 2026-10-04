@@ -5,6 +5,7 @@ import {
 import {
   type ModelCatalogEntry,
   type ModelScope,
+  type ModelTranslations,
   validateModelCatalogEntry,
 } from "../domain/entities/model-catalog-entry.js";
 import {modelContractFromUnknown} from "./model-contract-codec.js";
@@ -13,6 +14,7 @@ export type ModelCatalogEntryData = {
   id: string;
   title: string;
   description: string;
+  translations?: unknown;
   tags: unknown;
   scope: unknown;
   teamId: unknown;
@@ -24,10 +26,12 @@ export type ModelCatalogEntryData = {
 export function modelCatalogEntryFromData(
   data: ModelCatalogEntryData,
 ): ModelCatalogEntry {
+  const translations = modelTranslationsFromUnknown(data.translations);
   const entry = {
     id: text(data.id, "Die Modell-ID fehlt."),
     title: text(data.title, "Der Modellname fehlt."),
     description: text(data.description, "Die Modellbeschreibung fehlt."),
+    ...(translations === undefined ? {} : {translations}),
     tags: tagsFrom(data.tags),
     scope: scopeFrom(data.scope, data.teamId),
     runtime: runtimeFrom(data.runtime),
@@ -43,6 +47,7 @@ export function modelCatalogEntryData(entry: ModelCatalogEntry) {
     id: entry.id,
     title: entry.title,
     description: entry.description,
+    translations: entry.translations ?? {},
     tags: [...entry.tags],
     scope: entry.scope.type,
     teamId: entry.scope.type === "team" ? entry.scope.teamId : null,
@@ -50,6 +55,20 @@ export function modelCatalogEntryData(entry: ModelCatalogEntry) {
     artifactReference: {...entry.artifactReference},
     contract: entry.contract,
   };
+}
+
+/** `undefined`/`null` (ältere Einträge ohne Übersetzungen) ergibt keine Übersetzungen. */
+export function modelTranslationsFromUnknown(value: unknown): ModelTranslations | undefined {
+  if (value === undefined || value === null) return undefined;
+  const data = record(value, "Die Modellübersetzungen sind ungültig.");
+  return Object.fromEntries(Object.entries(data).map(([locale, item]) => {
+    const translation = record(item, `Die Modellübersetzung (${locale}) ist ungültig.`);
+    return [locale, {
+      title: text(translation.title, `Der übersetzte Modellname (${locale}) fehlt.`),
+      description: text(translation.description, `Die übersetzte Modellbeschreibung (${locale}) fehlt.`),
+      ...(translation.tags === undefined ? {} : {tags: tagsFrom(translation.tags)}),
+    }];
+  }));
 }
 
 function tagsFrom(value: unknown): readonly string[] {

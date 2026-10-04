@@ -265,7 +265,9 @@ class _ModelSelection extends StatelessWidget {
     return DropdownButtonFormField<String>(
       initialValue: selectedModel?.id,
       decoration: const InputDecoration(labelText: 'Modell'),
-      items: models.map(_itemFor).toList(growable: false),
+      items: models
+          .map((model) => _itemFor(context, model))
+          .toList(growable: false),
       onChanged: (modelId) => _select(context, modelId),
     );
   }
@@ -281,8 +283,15 @@ class _ModelSelection extends StatelessWidget {
     );
   }
 
-  DropdownMenuItem<String> _itemFor(ModelCatalogEntry model) {
-    return DropdownMenuItem(value: model.id, child: Text(model.title));
+  DropdownMenuItem<String> _itemFor(
+    BuildContext context,
+    ModelCatalogEntry model,
+  ) {
+    final languageTag = Localizations.localeOf(context).toLanguageTag();
+    return DropdownMenuItem(
+      value: model.id,
+      child: Text(model.titleFor(languageTag)),
+    );
   }
 
   void _select(BuildContext context, String? modelId) {

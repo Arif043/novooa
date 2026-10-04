@@ -69,6 +69,7 @@ class _GlobalModelTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final languageTag = Localizations.localeOf(context).toLanguageTag();
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Icon(
@@ -76,8 +77,8 @@ class _GlobalModelTile extends StatelessWidget {
             ? Icons.download_done_outlined
             : Icons.cloud_download_outlined,
       ),
-      title: Text(entry.title),
-      subtitle: Text(entry.description),
+      title: Text(entry.titleFor(languageTag)),
+      subtitle: Text(entry.descriptionFor(languageTag)),
       trailing: IconButton(
         tooltip: isInstalled
             ? 'Modell ist installiert'

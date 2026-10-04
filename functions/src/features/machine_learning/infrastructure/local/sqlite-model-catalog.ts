@@ -12,6 +12,7 @@ type ModelCatalogRow = {
   id: string;
   title: string;
   description: string;
+  translations_json: string;
   tags_json: string;
   scope: string;
   team_id: string | null;
@@ -25,7 +26,8 @@ export class SQLiteModelCatalog implements TeamModelCatalog {
 
   async save(entry: ModelCatalogEntry): Promise<void> {
     const data = modelCatalogEntryData(entry);
-    const values = {id: data.id, title: data.title, description: data.description, tags_json: JSON.stringify(data.tags),
+    const values = {id: data.id, title: data.title, description: data.description,
+      translations_json: JSON.stringify(data.translations), tags_json: JSON.stringify(data.tags),
       scope: data.scope, team_id: data.teamId, runtime: data.runtime,
       artifact_reference_json: JSON.stringify(data.artifactReference), contract_json: JSON.stringify(data.contract)};
     await this.database.insert(modelCatalog).values(values)
@@ -63,6 +65,7 @@ function entryFromRow(row: ModelCatalogRow): ModelCatalogEntry {
     id: row.id,
     title: row.title,
     description: row.description,
+    translations: parseJson(row.translations_json, "Die gespeicherten Modellübersetzungen sind ungültig."),
     tags: parseJson(row.tags_json, "Die gespeicherten Modell-Tags sind ungültig."),
     scope: row.scope,
     teamId: row.team_id,
