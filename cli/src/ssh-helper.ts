@@ -200,6 +200,8 @@ if (Test-Path "${targetPath}") {
 
 /**
  * Startet den Flutter Windows-Build auf dem Remote-Rechner.
+ * Obfuskiert Dart-Symbole, damit das ausgelieferte Binary schwerer
+ * rückzuentwickeln ist; die Symboltabellen bleiben für Stacktraces lokal.
  */
 export async function buildFlutterWindows(
   options: SshOptions,
@@ -208,7 +210,7 @@ export async function buildFlutterWindows(
 ): Promise<void> {
   const script = `
 Set-Location "${repoPath}"
-flutter build windows --dart-define=NOVOOA_RUNTIME=standalone --dart-define=WORKSPACE_API_URL=http://${apiUrl}:8090 --release
+flutter build windows --dart-define=NOVOOA_RUNTIME=standalone --dart-define=WORKSPACE_API_URL=http://${apiUrl}:8090 --release --obfuscate --split-debug-info=build\\symbols
 `;
 
   await executeSshCommand(options, script);

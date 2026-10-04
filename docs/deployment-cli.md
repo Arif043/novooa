@@ -288,8 +288,15 @@ cd C:\Development\syscat2
 flutter build windows `
   --dart-define=NOVOOA_RUNTIME=standalone `
   --dart-define=WORKSPACE_API_URL=http://192.168.1.100:8090 `
-  --release
+  --release `
+  --obfuscate `
+  --split-debug-info=build\symbols
 ```
+
+Das CLI baut immer mit `--obfuscate`, damit das ausgelieferte Binary schwerer
+rückzuentwickeln ist. Die Symboltabellen unter `build\symbols` nicht
+ausliefern, aber aufbewahren: Nur damit lassen sich Stacktraces mit
+`flutter symbolize` wieder lesbar machen.
 
 ### Ohne Docker (zukünftig)
 
