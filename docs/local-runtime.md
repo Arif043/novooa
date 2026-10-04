@@ -879,7 +879,7 @@ dessen Infrastructure-Bereich.
 ```bash
 npm --prefix functions run local-runtime:prepare -- \
   --secret-file ../.novooa/runtime-master-key
-flutter build web            # die Runtime liefert dieses Build selbst aus
+flutter build web --release --no-source-maps   # die Runtime liefert dieses Build selbst aus
 docker compose -f docker-compose.local.yaml up --build --detach
 curl http://127.0.0.1:8090/healthz
 docker compose -f docker-compose.local.yaml ps
@@ -890,6 +890,11 @@ flutter run -d macos --dart-define=NOVOOA_RUNTIME=standalone
 eine reine API und antwortet auf App-Pfade mit 404. Mit dem Build ist die
 Oberfläche unter derselben Adresse erreichbar wie die API — im Browser
 genügt dann `http://<adresse>:8090`, ohne installierten Client.
+
+`--release --no-source-maps` sorgt dafür, dass der ausgelieferte Web-Build
+minifiziert ist (dart2js) und keine `.map`-Dateien enthält, die den Code
+wieder lesbar machen würden. Zum Schutz der Images und des Web-Builds siehe
+[`docs/local-runtime-schutz.md`](./local-runtime-schutz.md).
 
 Vor dem ersten fachlichen Zugriff muss einmalig ein Betreiber-Passwort
 gesetzt werden (siehe
