@@ -1,8 +1,23 @@
+# Härtungs-Stage: kompiliert die Python-Module mit Nuitka zu nativen .so
+# (child.py → sourceless .pyc), siehe local-runtime/python/harden_python.py.
+FROM python:3.12-slim AS harden
+
+RUN apt-get update \
+  && apt-get install --yes --no-install-recommends build-essential \
+  && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir nuitka
+
+WORKDIR /src
+COPY local-runtime/python/novooa_script ./novooa_script
+COPY local-runtime/python/harden_python.py ./harden_python.py
+RUN python harden_python.py /src && rm -f harden_python.py
+
 FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY local-runtime/python/novooa_script /app/python/novooa_script
+# Nur die gehärteten Module (native .so + child.pyc, kein Quelltext).
+COPY --from=harden /src/novooa_script /app/python/novooa_script
 
 # Nur die Standardbibliothek: Der Dienst führt Scripts von Nutzern aus und
 # soll so wenig wie möglich enthalten. Das Dateisystem ist zur Laufzeit
@@ -14,4 +29,6 @@ ENV PORT=8091 \
 
 USER 65532
 
-CMD ["python", "-m", "novooa_script.server"]
+# -m novooa_script startet den gehärteten Launcher (novooa_script/__main__.py),
+# der die kompilierte server.so aufruft.
+CMD ["python", "-m", "novooa_script"]

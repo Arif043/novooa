@@ -14,6 +14,20 @@ RUN npm run build
 COPY functions/scripts ./scripts
 RUN npm run harden:node
 
+# Härtungs-Stage für Python: Module mit Nuitka zu nativen .so kompilieren.
+# Bewusst dieselbe Basis (bookworm python3) wie die Runtime-Stage, damit die
+# .so ABI-kompatibel zur ausführenden Python-Version sind.
+FROM node:24-bookworm-slim AS harden-py
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 python3-pip python3-dev build-essential \
+  && rm -rf /var/lib/apt/lists/*
+RUN pip3 install --no-cache-dir --break-system-packages nuitka
+
+WORKDIR /src
+COPY local-runtime/python ./
+RUN rm -rf tests && python3 harden_python.py /src && rm -f harden_python.py
+
 FROM node:24-bookworm-slim AS runtime
 
 RUN apt-get update \
@@ -28,7 +42,9 @@ COPY --from=build /app/functions/package.json /app/functions/package-lock.json .
 COPY --from=build /app/functions/node_modules ./node_modules
 # Nur das gehärtete Bündel statt des lesbaren lib/-Baums (CMD-Pfad bleibt gleich).
 COPY --from=build /app/functions/dist-protected ./lib
-COPY local-runtime/python /app/local-runtime/python
+# Nur die gehärteten Python-Module (native .so + Launcher) statt des Quelltexts.
+# Die von Node per Pfad gestarteten Worker bleiben am selben Pfad (Launcher).
+COPY --from=harden-py /src /app/local-runtime/python
 
 ENV NODE_ENV=production \
   PYTHON_EXECUTABLE=python3 \
