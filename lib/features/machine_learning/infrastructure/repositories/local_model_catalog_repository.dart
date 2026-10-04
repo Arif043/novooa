@@ -123,6 +123,9 @@ class LocalModelCatalogRepository
         entry.key: ModelTranslation(
           title: _text(_object(entry.value), 'title'),
           description: _text(_object(entry.value), 'description'),
+          tags: _object(entry.value)['tags'] == null
+              ? null
+              : _strings(_object(entry.value)['tags']),
         ),
     };
   }

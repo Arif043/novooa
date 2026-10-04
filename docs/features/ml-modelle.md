@@ -61,11 +61,13 @@ weder über Firestore noch über novooa-Functions proxied.
 
 `title` und `description` sind englisch und gelten als Rückfallsprache. Ein Manifest
 kann optional `translations` mit weiteren Sprachen angeben; der Schlüssel ist ein
-BCP-47-Sprachcode (`en`, `pt-BR`), der Wert enthält `title` und `description`:
+BCP-47-Sprachcode (`de`, `pt-BR`), der Wert enthält `title`, `description` und
+optional `tags`. Ohne `tags` gelten die Tags der Rückfallsprache; übersetzte Tags
+folgen denselben Regeln (nicht leer, eindeutig):
 
 ```json
 "translations": {
-  "de": {"title": "SqueezeNet 1.1", "description": "Klassifiziert ein Bild."}
+  "de": {"title": "SqueezeNet 1.1", "description": "Klassifiziert ein Bild.", "tags": ["bild"]}
 }
 ```
 

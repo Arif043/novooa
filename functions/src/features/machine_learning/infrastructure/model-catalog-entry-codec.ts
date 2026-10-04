@@ -66,6 +66,7 @@ export function modelTranslationsFromUnknown(value: unknown): ModelTranslations 
     return [locale, {
       title: text(translation.title, `Der übersetzte Modellname (${locale}) fehlt.`),
       description: text(translation.description, `Die übersetzte Modellbeschreibung (${locale}) fehlt.`),
+      ...(translation.tags === undefined ? {} : {tags: tagsFrom(translation.tags)}),
     }];
   }));
 }

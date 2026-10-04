@@ -11,7 +11,8 @@ export type ModelScope =
 /** Sprachcode (BCP 47, z. B. `en` oder `pt-BR`) → übersetzte Anzeigetexte. */
 export type ModelTranslations = Readonly<Record<string, ModelTranslation>>;
 
-export type ModelTranslation = {title: string; description: string};
+/** Ohne `tags` gelten die Tags der Rückfallsprache. */
+export type ModelTranslation = {title: string; description: string; tags?: readonly string[]};
 
 export type ModelCatalogEntry = {
   id: string;
@@ -48,6 +49,7 @@ function validTranslations(translations: ModelTranslations): void {
     if (!localePattern.test(locale)) throw new Error(`Der Sprachcode „${locale}“ der Modellübersetzung ist ungültig.`);
     required(translation.title, `Der übersetzte Modellname (${locale}) fehlt.`);
     required(translation.description, `Die übersetzte Modellbeschreibung (${locale}) fehlt.`);
+    if (translation.tags !== undefined) validTags(translation.tags);
   }
 }
 

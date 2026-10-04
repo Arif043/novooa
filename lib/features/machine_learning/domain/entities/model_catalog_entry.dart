@@ -56,6 +56,9 @@ class ModelCatalogEntry extends Equatable {
   String descriptionFor(String languageTag) =>
       _translationFor(languageTag)?.description ?? description;
 
+  List<String> tagsFor(String languageTag) =>
+      _translationFor(languageTag)?.tags ?? tags;
+
   /// Exakter Treffer (`pt-BR`), danach nur die Sprache (`pt`), sonst keine Übersetzung.
   ModelTranslation? _translationFor(String languageTag) {
     final normalized = languageTag.replaceAll('_', '-');
@@ -64,13 +67,20 @@ class ModelCatalogEntry extends Equatable {
 }
 
 class ModelTranslation extends Equatable {
-  const ModelTranslation({required this.title, required this.description});
+  const ModelTranslation({
+    required this.title,
+    required this.description,
+    this.tags,
+  });
 
   final String title;
   final String description;
 
+  /// `null` übernimmt die Tags der Rückfallsprache.
+  final List<String>? tags;
+
   @override
-  List<Object?> get props => [title, description];
+  List<Object?> get props => [title, description, tags];
 }
 
 class ModelManifestOutput extends Equatable {
