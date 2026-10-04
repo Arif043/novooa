@@ -40,13 +40,46 @@ Browser-JS und erzeugen serverseitig nur Absturzrisiko).
 `functions/scripts/harden-node.mjs` bündelt jeden Container-Entrypoint mit
 esbuild zu **einer** Datei (eigener Code inline, `node_modules` bleiben extern —
 die Abhängigkeiten sind nicht das Schützenswerte) und verschleiert sie danach
-mit `javascript-obfuscator` (Control-Flow-Flattening, String-Array mit
-Base64-Encoding, Dead-Code, umbenannte Bezeichner). Nur diese Bündel landen im
-Laufzeit-Image; der lesbare `lib/`-Baum bleibt im Build-Stage.
+mit `javascript-obfuscator`. Nur diese Bündel landen im Laufzeit-Image; der
+lesbare `lib/`-Baum bleibt im Build-Stage.
 
-Server-sichere Einstellungen: `selfDefending`/`debugProtection` aus,
-Konsolen-Logging bleibt erhalten, Base64 statt RC4 (gleicher Schutz gegen
-simples Mitlesen, geringere Laufzeitkosten).
+Aktive Optionen:
+
+- `controlFlowFlattening` (Threshold 0.75) — Kontrollfluss zerlegt
+- `deadCodeInjection` (Threshold 0.2) — toter Täuschungscode
+- `splitStrings` / `splitStringsChunkLength: 8` — Strings zerschnitten
+- `stringArray` mit `stringArrayEncoding: ['rc4']` — Strings (inkl.
+  eingebettetem Public Key) verschlüsselt im String-Array
+- `transformObjectKeys`, `numbersToExpressions`, umbenannte Bezeichner
+- `selfDefending` — bricht bei Beautify-Versuchen
+- `debugProtection` — erschwert das Anhängen eines Debuggers (ohne
+  Dauer-Intervall, damit der Event-Loop nicht belastet wird)
+
+Konsolen-Logging bleibt an (`disableConsoleOutput: false`). Hinweis zu rc4 und
+dem Public Key: Ein Public Key ist nicht geheim — die Verschlüsselung
+erschwert nur das Mitlesen im Code und ersetzt nicht die Signaturprüfung.
+`selfDefending`/`debugProtection` zielen auf manuelle Analyse; auf einem
+Server, den die Kundschaft kontrolliert, ist ihr Nutzen begrenzt, der
+Laufzeitpfad bleibt aber unberührt (im Build per Lasttest geprüft).
+
+#### Single Executable Application (SEA) — bewusst nicht eingesetzt
+
+Node.js SEA (ein in die `node`-Binary eingebetteter Blob) passt hier nicht:
+
+- Die Dienste nutzen **native Module** (z. B. `@libsql/client` für lokales
+  SQLite). Die lassen sich nicht in den Blob bündeln; `node_modules` müsste
+  ohnehin auf der Platte liegen, und die `require`-Auflösung externer Pakete
+  unter SEA ist fragil.
+- Der Gewinn ist gering: Der Code liegt bereits als **ein obfuskiertes Bündel**
+  vor, und zwar **innerhalb eines nicht-öffentlichen Images**. SEA würde daraus
+  nur eine Binary im selben Image machen — ohne das Bedrohungsmodell
+  (Image-Diebstahl) zu ändern.
+- Das Risiko (gebrochene DB-/Genkit-Pfade) überwiegt, und es lässt sich nicht
+  ohne vollständigen Integrationstest der Datenbank-/Modell-Pfade absichern.
+
+SEA ist sinnvoll für eine **einzeln verteilte CLI-Binary**, nicht für einen
+containerisierten Server-Dienst. Falls künftig ein Node-Tool als eigenständige
+`.exe`/Binary an Kundschaft ausgeliefert wird, ist SEA dort der richtige Ort.
 
 ### Python (Script-Runner, ML-Sidecar, ML-Gateway-Worker)
 

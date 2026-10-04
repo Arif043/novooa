@@ -53,14 +53,24 @@ const obfuscatorOptions = {
   splitStringsChunkLength: 8,
   stringArray: true,
   stringArrayCallsTransform: true,
-  stringArrayEncoding: ["base64"],
+  // rc4 statt base64: Strings (inkl. eingebettetem Public Key) werden
+  // verschlüsselt statt nur base64-kodiert abgelegt. Hinweis: Ein Public Key
+  // ist nicht geheim — das erschwert nur das Mitlesen, es ist kein Ersatz für
+  // die Signaturprüfung. rc4 kostet etwas mehr Laufzeit als base64.
+  stringArrayEncoding: ["rc4"],
   stringArrayRotate: true,
   stringArrayShuffle: true,
   stringArrayThreshold: 0.8,
   transformObjectKeys: true,
   identifierNamesGenerator: "mangled-shuffled",
-  selfDefending: false,
-  debugProtection: false,
+  // selfDefending: bricht bei Formatierungs-/Beautify-Versuchen.
+  // debugProtection: erschwert das Anhängen eines Debuggers. Ohne
+  // debugProtectionInterval (Standard aus), damit kein Dauer-Timer den
+  // Event-Loop belastet. Beide zielen primär auf manuelle Analyse; auf einem
+  // Server, den die Kundschaft selbst kontrolliert, ist der Nutzen begrenzt,
+  // der Laufzeitpfad bleibt aber unberührt (siehe Lasttest im Build).
+  selfDefending: true,
+  debugProtection: true,
   disableConsoleOutput: false,
 };
 
