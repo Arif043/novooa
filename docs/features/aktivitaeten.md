@@ -66,7 +66,7 @@ den benannten Ausgabewerten. Werte werden entsprechend ihres Output-Typs
 lesbar formatiert.
 Interaktionen werden als Kacheln dargestellt. Ein Klick öffnet einen iOS-Dialog:
 bei Freigaben mit editierbarem Output, bei `dialogInput` mit den definierten
-Feldtypen und bei `mediaInput` mit einer Auswahl zwischen Galerie und Kamera. Bestätigung ruft `reviewTaskRunFlow` mit `decision: "approve"` auf,
+Feldtypen und bei `mediaInput` mit einer Auswahl zwischen Galerie und Kamera (auf Android und iOS bei aktiver Option als Dokumentenscanner). Bestätigung ruft `reviewTaskRunFlow` mit `decision: "approve"` auf,
 setzt den Run auf `queued` und startet die Fortsetzung per Cloud Task. Ablehnung
 ruft denselben Flow mit `decision: "reject"` auf und verwirft den Zwischenzustand.
 

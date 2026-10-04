@@ -59,7 +59,7 @@ einen identischen `text`-Output — ungenutzte Redundanz, inzwischen entfernt.
 | `notificationSend` | ausgefuehrt | keine — reiner Seiteneffekt ohne fachlichen Rückgabewert |
 | `humanApproval` | wartet auf Freigabe | `value` (`string`) |
 | `dialogInput` | wartet auf Formulareingabe | nach dem Absenden: ein flacher, typisierter Output pro Feld, ohne umschliessenden Knotennamen (kein `value`-Gesamtwert mehr adressierbar) |
-| `mediaInput` | wartet auf ein Bild; Nutzer wählt Kamera oder Galerie | nach dem Absenden: `value` (`media`) |
+| `mediaInput` | wartet auf ein Bild; Nutzer wählt Kamera (optional als Dokumentenscan) oder Galerie | nach dem Absenden: `value` (`media`) |
 | `modelInference` | ausgefuehrt | `value` (`json`: Modell-ID und Tensoren mit Semantik, Form, Typ und Base64-Daten), `modelId` (`string`) |
 | `writeFile` | ausgefuehrt | siehe nächster Abschnitt |
 | `documentLookup` | ausgefuehrt | `value` (`string`: verständliches Suchergebnis), `found` (`boolean`), `record` (`json` mit Fachfeldern oder `null`), `message` (`string`) |
