@@ -12,6 +12,16 @@ functions/.env
 functions/.env.*
 functions/.secret.local
 functions/firestore-debug.log
+functions/dist-protected
 .env
 .env.*
 *.log
+
+# Niemals in den Build-Kontext: lokale Runtime-Secrets (Master-Key, Lizenz-Keys)
+.novooa
+# Source-Maps und Debug-Symbole würden die Verschleierung wieder aufheben
+**/*.map
+build/symbols
+# Kompiliertes Python aus lokalen Läufen
+**/__pycache__
+**/*.pyc

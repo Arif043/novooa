@@ -9,6 +9,11 @@ COPY functions/tsconfig.json ./
 COPY functions/src ./src
 RUN npm run build
 
+# Härtung: Node-Entrypoint gebündelt + obfuskiert (siehe
+# functions/scripts/harden-node.mjs).
+COPY functions/scripts ./scripts
+RUN npm run harden:node
+
 FROM node:24-bookworm-slim AS runtime
 
 RUN apt-get update \
@@ -21,7 +26,8 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages -r /tmp/requir
 WORKDIR /app/functions
 COPY --from=build /app/functions/package.json /app/functions/package-lock.json ./
 COPY --from=build /app/functions/node_modules ./node_modules
-COPY --from=build /app/functions/lib ./lib
+# Nur das gehärtete Bündel statt des lesbaren lib/-Baums (CMD-Pfad bleibt gleich).
+COPY --from=build /app/functions/dist-protected ./lib
 COPY local-runtime/python /app/local-runtime/python
 
 ENV NODE_ENV=production \

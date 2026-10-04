@@ -9,6 +9,12 @@ COPY functions/tsconfig.json ./
 COPY functions/src ./src
 RUN npm run build
 
+# Härtung: eigene Entrypoints zu je einem gebündelten, obfuskierten File
+# zusammenziehen (siehe functions/scripts/harden-node.mjs). Nur diese Bündel
+# landen im Laufzeit-Image, der lesbare lib/-Baum bleibt im Build-Stage.
+COPY functions/scripts ./scripts
+RUN npm run harden:node
+
 FROM node:24-bookworm-slim AS runtime
 
 WORKDIR /app/functions
@@ -16,7 +22,9 @@ WORKDIR /app/functions
 COPY functions/package.json functions/package-lock.json ./
 RUN npm ci --omit=dev
 
-COPY --from=build /app/functions/lib ./lib
+# Statt des lesbaren lib/ nur die gehärteten Bündel, am selben Pfad (CMD und
+# die key-init/key-rotation-Kommandos bleiben unverändert, __dirname stimmt).
+COPY --from=build /app/functions/dist-protected ./lib
 COPY functions/drizzle /app/functions/drizzle
 
 RUN mkdir -p /var/lib/novooa && chown -R node:node /var/lib/novooa
