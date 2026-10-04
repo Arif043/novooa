@@ -37,51 +37,86 @@ import {type GenkitLanguageModelResolver} from "../../../../language_models/infr
 import {type LanguageModelDefaultsStore} from "../../../../language_models/domain/repositories/language-model-defaults-store.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 
-function executorsFor(logger: ApplicationLogger) {
-  return new Map<WorkflowNode["primitive"], NodeExecutor>([
-    stringInputNodeExecutor,
-    createConditionalFlowNodeExecutor(conditionalBranchLogger(logger)),
-    writeFileNodeExecutor,
-    readFileNodeExecutor,
-    readEmailNodeExecutor,
-    readChannelEventNodeExecutor,
-    createSendChannelMessageNodeExecutor(taskMessageLogger(logger)),
-    createNotificationSendNodeExecutor(notificationSendLogger(logger)),
-    humanApprovalNodeExecutor,
-    dialogInputNodeExecutor,
-    mediaInputNodeExecutor,
-    modelInferenceNodeExecutor,
-    textToSpeechNodeExecutor,
-    speechToTextNodeExecutor,
-    forEachNodeExecutor,
-    documentLookupNodeExecutor,
-    saveDocumentNodeExecutor,
-    tableFromCollectionNodeExecutor,
-  ].map((executor) => [executor.primitive, executor]));
+type Primitive = WorkflowNode["primitive"];
+
+/** Alles, was ein Executor beim Aufbau pro Baustein-Lauf brauchen kann. */
+export type NodeExecutorDependencies = {
+  ai: GenkitBeta;
+  logger: ApplicationLogger;
+  workspace?: NodeAttachmentWorkspace;
+  languageModelResolver?: GenkitLanguageModelResolver;
+  languageModelDefaultsStore?: LanguageModelDefaultsStore;
+  scriptExecutorFactory: ScriptExecutorFactory;
+};
+
+export type NodeExecutorFactory = (dependencies: NodeExecutorDependencies) => NodeExecutor;
+
+/**
+ * Offen für Erweiterung (Plugins, neue Bausteine), geschlossen für Änderungen am Dispatch:
+ * Wer einen Executor beisteuert, registriert ihn hier, ohne `task-node-runner.ts` anzufassen.
+ */
+export class NodeExecutorRegistry {
+  private readonly factories = new Map<Primitive, NodeExecutorFactory>();
+
+  /** Für Executoren, die Abhängigkeiten pro Lauf brauchen (Workspace, Modell-Resolver, …). */
+  registerFactory(primitive: Primitive, factory: NodeExecutorFactory): this {
+    this.factories.set(primitive, factory);
+    return this;
+  }
+
+  register(executor: NodeExecutor): this {
+    return this.registerFactory(executor.primitive, () => executor);
+  }
+
+  resolve(primitive: Primitive, dependencies: NodeExecutorDependencies): NodeExecutor | undefined {
+    return this.factories.get(primitive)?.(dependencies);
+  }
 }
 
+export function createDefaultNodeExecutorRegistry(): NodeExecutorRegistry {
+  return new NodeExecutorRegistry()
+    .registerFactory("script", ({scriptExecutorFactory, workspace, logger}) =>
+      createScriptNodeExecutor(scriptExecutorFactory(workspace), scriptOutputLogger(logger)))
+    .registerFactory("prompt", ({ai, workspace, languageModelResolver, logger, languageModelDefaultsStore}) =>
+      createGenkitPromptNodeExecutor(ai, workspace, languageModelResolver, logger, languageModelDefaultsStore))
+    .registerFactory("iterativeRefinement", ({ai, workspace, logger}) =>
+      createGenkitIterativeRefinementNodeExecutor(ai, workspace, logger))
+    .registerFactory("conditionalFlow", ({logger}) =>
+      createConditionalFlowNodeExecutor(conditionalBranchLogger(logger)))
+    .registerFactory("sendChannelMessage", ({logger}) =>
+      createSendChannelMessageNodeExecutor(taskMessageLogger(logger)))
+    .registerFactory("notificationSend", ({logger}) =>
+      createNotificationSendNodeExecutor(notificationSendLogger(logger)))
+    .register(stringInputNodeExecutor)
+    .register(writeFileNodeExecutor)
+    .register(readFileNodeExecutor)
+    .register(readEmailNodeExecutor)
+    .register(readChannelEventNodeExecutor)
+    .register(humanApprovalNodeExecutor)
+    .register(dialogInputNodeExecutor)
+    .register(mediaInputNodeExecutor)
+    .register(modelInferenceNodeExecutor)
+    .register(textToSpeechNodeExecutor)
+    .register(speechToTextNodeExecutor)
+    .register(forEachNodeExecutor)
+    .register(documentLookupNodeExecutor)
+    .register(saveDocumentNodeExecutor)
+    .register(tableFromCollectionNodeExecutor);
+}
+
+const defaultRegistry = createDefaultNodeExecutorRegistry();
+
 export function executorFor(
-  primitive: WorkflowNode["primitive"],
+  primitive: Primitive,
   ai: GenkitBeta,
   logger: ApplicationLogger,
   workspace?: NodeAttachmentWorkspace,
   languageModelResolver?: GenkitLanguageModelResolver,
   languageModelDefaultsStore?: LanguageModelDefaultsStore,
   scriptExecutorFactory: ScriptExecutorFactory = createPythonScriptExecutor,
+  registry: NodeExecutorRegistry = defaultRegistry,
 ): NodeExecutor | undefined {
-  if (primitive === "script") {
-    return createScriptNodeExecutor(
-      scriptExecutorFactory(workspace),
-      scriptOutputLogger(logger),
-    );
-  }
-  if (primitive === "prompt") {
-    return createGenkitPromptNodeExecutor(
-      ai, workspace, languageModelResolver, logger, languageModelDefaultsStore,
-    );
-  }
-  if (primitive === "iterativeRefinement") {
-    return createGenkitIterativeRefinementNodeExecutor(ai, workspace, logger);
-  }
-  return executorsFor(logger).get(primitive);
+  return registry.resolve(primitive, {
+    ai, logger, workspace, languageModelResolver, languageModelDefaultsStore, scriptExecutorFactory,
+  });
 }
