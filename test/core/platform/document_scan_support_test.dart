@@ -5,23 +5,20 @@ import 'package:syscat2/core/platform/document_scan_support.dart';
 void main() {
   tearDown(() => debugDefaultTargetPlatformOverride = null);
 
-  test('unterstützt Android', () {
-    debugDefaultTargetPlatformOverride = TargetPlatform.android;
-    expect(documentScanSupportedOnThisPlatform(), isTrue);
+  test('Android und iOS scannen nativ', () {
+    for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
+      debugDefaultTargetPlatformOverride = platform;
+      expect(nativeDocumentScanSupportedOnThisPlatform(), isTrue);
+      expect(documentScanSupportedOnThisPlatform(), isTrue);
+    }
   });
 
-  test('unterstützt iOS', () {
-    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-    expect(documentScanSupportedOnThisPlatform(), isTrue);
-  });
-
-  test('unterstützt macOS nicht', () {
-    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
-    expect(documentScanSupportedOnThisPlatform(), isFalse);
-  });
-
-  test('unterstützt Windows nicht', () {
-    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
-    expect(documentScanSupportedOnThisPlatform(), isFalse);
+  test('macOS und Windows scannen weder nativ noch im Browser', () {
+    for (final platform in [TargetPlatform.macOS, TargetPlatform.windows]) {
+      debugDefaultTargetPlatformOverride = platform;
+      expect(nativeDocumentScanSupportedOnThisPlatform(), isFalse);
+      expect(webDocumentScanSupportedOnThisPlatform(), isFalse);
+      expect(documentScanSupportedOnThisPlatform(), isFalse);
+    }
   });
 }

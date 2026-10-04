@@ -62,7 +62,8 @@ class ModelCatalogEntry extends Equatable {
   /// Exakter Treffer (`pt-BR`), danach nur die Sprache (`pt`), sonst keine Übersetzung.
   ModelTranslation? _translationFor(String languageTag) {
     final normalized = languageTag.replaceAll('_', '-');
-    return translations[normalized] ?? translations[normalized.split('-').first];
+    return translations[normalized] ??
+        translations[normalized.split('-').first];
   }
 }
 

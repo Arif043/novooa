@@ -28,6 +28,9 @@ import 'package:get_it/get_it.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../features/activity/domain/repositories/media_input_picker.dart';
+import '../../features/document_scan/domain/repositories/document_scanner.dart';
+import '../../features/document_scan/domain/usecases/open_document_scan_session.dart';
+import '../../features/document_scan/infrastructure/document_scanner_platform.dart';
 import '../../features/activity/domain/repositories/task_activity_repository.dart';
 import '../../features/activity/domain/repositories/task_run_media_input_repository.dart';
 import '../../features/activity/domain/repositories/task_run_repository.dart';
@@ -384,6 +387,10 @@ Future<void> configureStandaloneDependencies(
     )
     ..registerLazySingleton<MediaInputPicker>(
       () => ImagePickerMediaInputPicker(ImagePicker()),
+    )
+    ..registerLazySingleton<DocumentScanner>(createDocumentScanner)
+    ..registerLazySingleton(
+      () => OpenDocumentScanSession(locator<DocumentScanner>()),
     )
     ..registerLazySingleton(
       () => ListDataCollections(locator<DataRepository>()),

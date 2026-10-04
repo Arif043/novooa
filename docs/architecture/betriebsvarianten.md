@@ -196,6 +196,11 @@ Das sieht nach einem Web-Build-Bruch aus, ist aber keiner:
 Hier ist also nichts zu tun. Festgehalten, damit die Stelle nicht erneut als
 Blocker aufgeworfen wird.
 
+Für den Web-Dokumentenscanner liegen JS-Brücke und Bibliotheken unter
+`web/document_scanner/` und werden mit dem Web-Build ausgeliefert (rund 9 MB
+`opencv.js`, erst beim ersten Scan geladen). Siehe
+[`docs/features/dokumentscanner.md`](../features/dokumentscanner.md).
+
 ## Zielbild
 
 1. **Nativ ist die Variante eine Laufzeitentscheidung** der Nutzer:innen,

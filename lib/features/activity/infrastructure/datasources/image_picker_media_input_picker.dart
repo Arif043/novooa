@@ -21,7 +21,7 @@ class ImagePickerMediaInputPicker implements MediaInputPicker {
   }) {
     if (source == TaskRunMediaInputSource.camera &&
         documentScanEnabled &&
-        documentScanSupportedOnThisPlatform()) {
+        nativeDocumentScanSupportedOnThisPlatform()) {
       return _pickWithDocumentScanner();
     }
     return _pickWithImagePicker(source);

@@ -104,6 +104,9 @@ import '../../features/settings/presentation/cubits/settings_cubit.dart';
 import '../../features/activity/domain/repositories/task_activity_repository.dart';
 import '../../features/activity/domain/repositories/task_run_repository.dart';
 import '../../features/activity/domain/repositories/media_input_picker.dart';
+import '../../features/document_scan/domain/repositories/document_scanner.dart';
+import '../../features/document_scan/domain/usecases/open_document_scan_session.dart';
+import '../../features/document_scan/infrastructure/document_scanner_platform.dart';
 import '../../features/activity/domain/repositories/task_run_media_input_repository.dart';
 import '../../features/activity/domain/usecases/review_task_run.dart';
 import '../../features/activity/domain/usecases/upload_task_run_media_input.dart';
@@ -202,6 +205,10 @@ void _configureCloudDependencies() {
     )
     ..registerLazySingleton<MediaInputPicker>(
       () => ImagePickerMediaInputPicker(ImagePicker()),
+    )
+    ..registerLazySingleton<DocumentScanner>(createDocumentScanner)
+    ..registerLazySingleton(
+      () => OpenDocumentScanSession(serviceLocator<DocumentScanner>()),
     )
     ..registerLazySingleton<TaskRunMediaInputRepository>(
       () => TeamFileTaskRunMediaInputRepository(

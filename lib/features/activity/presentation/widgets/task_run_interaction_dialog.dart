@@ -10,6 +10,7 @@ import '../cubits/activity_cubit.dart';
 import 'task_run_dialog_input_submission.dart';
 import 'task_run_interaction_content.dart';
 import 'task_run_interaction_form_state.dart';
+import 'task_run_media_picking.dart';
 import 'task_run_submitting_indicator.dart';
 
 class TaskRunInteractionDialog extends StatefulWidget {
@@ -145,10 +146,7 @@ class _TaskRunInteractionDialogState extends State<TaskRunInteractionDialog> {
   Future<void> _pickMedia(TaskRunMediaInputSource source) async {
     setState(() => _isPicking = true);
     try {
-      final submission = await context.read<ActivityCubit>().pickMediaInput(
-        widget.run,
-        source,
-      );
+      final submission = await pickMediaSubmission(context, widget.run, source);
       if (mounted && submission != null) {
         setState(() => _mediaSubmission = submission);
       }

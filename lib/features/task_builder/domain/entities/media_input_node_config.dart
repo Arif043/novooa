@@ -10,8 +10,9 @@ class MediaInputNodeConfig extends NodeConfig {
 
   /// Öffnet bei der Kameraaufnahme einen Dokumentenscanner (automatische
   /// Kantenerkennung, perspektivische Entzerrung, Freistellung) statt der
-  /// normalen Kamera. Nur auf Android/iOS wirksam — siehe
-  /// `ImagePickerMediaInputPicker`.
+  /// normalen Kamera. Wirksam auf Android/iOS (natives Plugin, siehe
+  /// `ImagePickerMediaInputPicker`) und im Browser (eigener Scanner, siehe
+  /// `pickMediaSubmission`).
   final bool documentScanEnabled;
 
   factory MediaInputNodeConfig.initial() {

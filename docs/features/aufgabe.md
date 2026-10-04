@@ -54,7 +54,7 @@ referenzieren.
 | `notificationSend` | Push-Benachrichtigung senden | Sendet einen aufgelösten Text als Push-Benachrichtigung an alle Team-Mitglieder | Implementiert |
 | `humanApproval` | Freigabe | Haltet den Run bis zur menschlichen Entscheidung an | Implementiert |
 | `dialogInput` | Formulareingabe | Pausiert den Run und fragt typisierte Eingaben per Formular ab | Implementiert |
-| `mediaInput` | Bild anfordern | Pausiert den Run und fordert ein Bild an; Quelle wird während der Ausführung gewählt; optional Dokumentenscanner (Android/iOS) | Implementiert |
+| `mediaInput` | Bild anfordern | Pausiert den Run und fordert ein Bild an; Quelle wird während der Ausführung gewählt; optional Dokumentenscanner (Android, iOS, Web) | Implementiert |
 | `modelInference` | Modell ausführen | Prüft explizite Workflow-Zuordnungen gegen das Manifest und führt ein ONNX-Modell aus | Backend-Pipeline implementiert; Runtime-Composition ausstehend |
 | `textToSpeech` | Text vorlesen | Text-zu-Sprache über ein verbundenes Sprachmodell (Google AI, ElevenLabs, OpenAI-kompatibel, siehe [`sprachausgabe.md`](./sprachausgabe.md)) oder ein lokales ONNX-Modell mit Audio-Ausgabe | Implementiert; erste Audio-Modelle und -Transformationen folgen |
 | `speechToText` | Audio transkribieren | Sprache-zu-Text über ein verbundenes Sprachmodell (Google AI, ElevenLabs Scribe, OpenAI-kompatibel, siehe [`sprachausgabe.md`](./sprachausgabe.md)) oder ein lokales ONNX-Modell mit Audio-Eingang | Implementiert; erste Audio-Modelle und -Transformationen folgen |

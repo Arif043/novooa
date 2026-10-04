@@ -153,6 +153,7 @@ npm run deploy         # firebase deploy --only functions
 | Feature „Mitarbeiter" | [`docs/features/mitarbeiter.md`](./docs/features/mitarbeiter.md)   | Subagents: Rahmenbedingung (System-Prompt) + Skills     |
 | Feature „KI-Agent"    | [`docs/features/ki-agent.md`](./docs/features/ki-agent.md)         | In-App Assistenz für Aufgabenbau und Wissensbasis       |
 | Feature „ML-Modelle"  | [`docs/features/ml-modelle.md`](./docs/features/ml-modelle.md)     | ONNX-Modellkatalog und Modellverträge                   |
+| Feature „Dokumentenscanner" | [`docs/features/dokumentscanner.md`](./docs/features/dokumentscanner.md) | Bild anfordern als Scan: Android/iOS nativ, Web mit eigener Erkennung |
 | Feature „Sprachausgabe" | [`docs/features/sprachausgabe.md`](./docs/features/sprachausgabe.md) | Text vorlesen über Sprachmodelle, Stimmenliste        |
 | Feature „Import/Export" | [`docs/features/import-export.md`](./docs/features/import-export.md) | Standalone: Export/Import von Dateien, Daten, Wissensbasis, Aufgaben |
 

@@ -130,22 +130,12 @@ Dateiinfrastruktur.
 
 **Dokumentenscanner.** Der Baustein hat die Option `documentScanEnabled`
 (Schalter „Als Dokument scannen“ im Task-Builder, Standard aus). Ist sie an und
-wählt der Nutzer die Kamera, öffnet der Client statt der normalen Kamera den
-nativen Dokumentenscanner (Paket `cunning_document_scanner`: Android ML Kit,
-iOS VisionKit) mit Randerkennung und Perspektivkorrektur. Ergebnis ist ein
-JPEG, das wie jedes andere Bild hochgeladen wird; Backend und Vertrag ändern sich
-dadurch nicht, das Backend reicht die Option nur durch.
-
-- **Plattformen:** nur Android und iOS. Auf Web, macOS, Windows und Linux gibt es
-  keine Plugin-Implementierung; `documentScanSupportedOnThisPlatform()` ist dort
-  `false`, der Schalter erscheint im Task-Builder nicht, und die Aufnahme nutzt
-  `image_picker`.
-- **Einschränkungen:** Es wird genau eine Seite gescannt (`noOfPages: 1`), die
-  Datei heißt immer `scan.jpg`. Eine eigene Fehlermeldung für verweigerte
-  Kamera-Berechtigung oder Scanfehler gibt es noch nicht, und die Aufnahme selbst
-  ist nicht automatisiert getestet (nur Plattformerkennung, Mapper und Cubit).
-- **Voraussetzungen:** Android `minSdk 24` und `CAMERA`-Berechtigung, iOS 13.0 und
-  `NSCameraUsageDescription`.
+wählt der Nutzer die Kamera, scannt der Client das Dokument mit automatischer
+Randerkennung und Perspektivkorrektur statt eines normalen Fotos: auf Android und
+iOS mit einem nativen Plugin, im Browser mit einer eigenen Scanner-Seite. Ergebnis
+ist ein JPEG, das wie jedes andere Bild hochgeladen wird; Backend und Vertrag
+ändern sich dadurch nicht, das Backend reicht die Option nur durch. Einzelheiten,
+Plattformen und Grenzen: [`dokumentscanner.md`](./dokumentscanner.md).
 
 ## Aktivitaeten
 
