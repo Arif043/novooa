@@ -34,6 +34,10 @@ import {LocalApplicationLogger} from "../logging/local-application-logger.js";
 import {SQLiteLocalApplicationLogStore} from "../logging/sqlite-local-application-log-store.js";
 import {type LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
 import {mailRelayFromEnvironment, pushRelayFromEnvironment} from "./local-runtime-relays.js";
+import {ConnectionHttpClient} from "../../features/connections/infrastructure/local/connection-http-client.js";
+import {OAuthTokenProvider} from "../../features/connections/infrastructure/local/oauth-token-provider.js";
+import {SQLiteConnectionStore} from "../../features/connections/infrastructure/local/sqlite-connection-store.js";
+import {StoredConnectionAuthorizer} from "../../features/connections/infrastructure/local/stored-connection-authorizer.js";
 import {createLocalTaskWorkflow} from "./local-runtime-task-workflow.js";
 import {type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 import {type LocalRuntimeWorkspaceContext} from "./local-runtime-workspace-context.js";
@@ -132,6 +136,9 @@ export function createLocalRuntimeComposition(
     taskRunStore, teamFileStore, taskRunDispatcher, logger: applicationLogger,
     languageModelCatalog: new SQLiteLanguageModelCatalog(options.database, languageModelSecretStore),
     documentStore, mailRelay, pushRelay,
+    outboundHttpClient: new ConnectionHttpClient(new StoredConnectionAuthorizer(
+      new SQLiteConnectionStore(options.database, languageModelSecretStore), new OAuthTokenProvider(),
+    )),
   });
   const mailRelayWorker = mailRelayWorkerFor(
     options, mailRelay, taskStore, taskRunStore, taskRunDispatcher, applicationLogger,

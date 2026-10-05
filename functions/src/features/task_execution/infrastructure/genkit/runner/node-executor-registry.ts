@@ -1,4 +1,5 @@
 import {createConditionalFlowNodeExecutor} from "../../../domain/executors/conditional-node-executor.js";
+import {httpRequestNodeExecutor} from "../../../domain/executors/http-request-node-executor.js";
 import {humanApprovalNodeExecutor} from "../../../domain/executors/human-approval-node-executor.js";
 import {dialogInputNodeExecutor} from "../../../domain/executors/dialog-input-node-executor.js";
 import {mediaInputNodeExecutor} from "../../../domain/executors/media-input-node-executor.js";
@@ -87,6 +88,7 @@ export function createDefaultNodeExecutorRegistry(): NodeExecutorRegistry {
       createSendChannelMessageNodeExecutor(taskMessageLogger(logger)))
     .registerFactory("notificationSend", ({logger}) =>
       createNotificationSendNodeExecutor(notificationSendLogger(logger)))
+    .register(httpRequestNodeExecutor)
     .register(stringInputNodeExecutor)
     .register(writeFileNodeExecutor)
     .register(readFileNodeExecutor)

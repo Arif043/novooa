@@ -83,7 +83,7 @@ async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRu
     signedLicense, relay: mailRelayFromEnvironment(), connectorCache: dependencies.mailConnectors,
   });
   await api.register(languageModelRoutes, {store: services.languageModels, notifier});
-  await api.register(connectionRoutes, {store: services.connections, notifier});
+  await api.register(connectionRoutes, {store: services.connections, client: services.connectionClient, notifier});
   await api.register(employeeRoutes, services.employees);
   await api.register(skillCatalogRoutes, services.skills.catalog);
   await api.register(skillRoutes, services.skills.routes);

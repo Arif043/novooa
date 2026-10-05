@@ -1,3 +1,4 @@
+import {type OutboundHttpClient} from "../../features/connections/domain/repositories/outbound-http-client.js";
 import {scriptExecutorFactoryFromEnvironment} from "./local-runtime-relays.js";
 import {SqliteEmployeeStore} from "../../features/employees/infrastructure/local/sqlite-employee-store.js";
 import {createDirectorySkillStore} from "../../features/skills/infrastructure/local/skills-composition.js";
@@ -39,6 +40,7 @@ export type LocalTaskWorkflowDependencies = {
   documentStore: DocumentStore;
   mailRelay: RuntimeMailRelayClient;
   pushRelay: RuntimePushRelayClient;
+  outboundHttpClient: OutboundHttpClient;
 };
 
 /** Genkit-Task-Workflow der lokalen Runtime mit SQLite- und Dateisystem-Adaptern. */
@@ -65,6 +67,7 @@ export function createLocalTaskWorkflow(dependencies: LocalTaskWorkflowDependenc
       languageModelResolver: new CatalogGenkitLanguageModelResolver(dependencies.languageModelCatalog),
       skillContentReader: createDirectorySkillStore(dependencies.runtimeRoot),
       scriptExecutorFactory: scriptExecutorFactoryFromEnvironment(),
+      outboundHttpClient: dependencies.outboundHttpClient,
       employeeStore: new SqliteEmployeeStore(database),
       speechSynthesizer: new LanguageModelSpeech(dependencies.languageModelCatalog, defaultSpeechProviders()),
       speechTranscriber: new LanguageModelTranscription(dependencies.languageModelCatalog, defaultTranscriptionProviders()),

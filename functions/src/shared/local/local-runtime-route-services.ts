@@ -1,3 +1,6 @@
+import {ConnectionHttpClient} from "../../features/connections/infrastructure/local/connection-http-client.js";
+import {OAuthTokenProvider} from "../../features/connections/infrastructure/local/oauth-token-provider.js";
+import {StoredConnectionAuthorizer} from "../../features/connections/infrastructure/local/stored-connection-authorizer.js";
 import {SQLiteConnectionStore} from "../../features/connections/infrastructure/local/sqlite-connection-store.js";
 import {CatalogGenkitLanguageModelResolver} from "../../features/language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {type SignedRuntimeLicense} from "../../features/licensing/domain/entities/runtime-license-lease.js";
@@ -55,6 +58,7 @@ export function createLocalRuntimeRouteServices(options: {
   const languageModelSecrets = new EncryptedSQLiteLanguageModelSecretStore(database, options.fieldCipher);
   const fileSettings = new SQLiteFileSettingsStore(database);
   const taskDefinitions = new SQLiteTaskDefinitionStore(database);
+  const connectionStore = new SQLiteConnectionStore(database, languageModelSecrets);
   return {
     credentials: new LocalRuntimeAccessCredentialStore(database),
     documents: new SQLiteDocumentStore(database),
@@ -68,7 +72,8 @@ export function createLocalRuntimeRouteServices(options: {
     }),
     applicationLogs: new SQLiteLocalApplicationLogStore(database),
     languageModels: new SQLiteLanguageModelConfigurationStore(database, languageModelSecrets),
-    connections: new SQLiteConnectionStore(database, languageModelSecrets),
+    connections: connectionStore,
+    connectionClient: new ConnectionHttpClient(new StoredConnectionAuthorizer(connectionStore, new OAuthTokenProvider())),
     languageModelDefaults: new SQLiteLanguageModelDefaultsStore(database),
     employees: createEmployeeRoutesOptions(database, options.notifier),
     skills: createSkillsModule(runtimeRoot, options.notifier, () => options.licenses.signedActiveLicense()),

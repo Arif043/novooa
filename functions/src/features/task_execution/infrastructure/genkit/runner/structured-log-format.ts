@@ -11,6 +11,7 @@ import {
   formatInline,
   indent,
   preview,
+  redactedConfig,
   selectedTargetFor,
   stackLine,
   statusLabel,
@@ -42,7 +43,7 @@ export function nodeAttributes(node: WorkflowNode): LogData {
     primitive: node.primitive,
     title: node.title,
     description: node.description,
-    config: node.config,
+    config: redactedConfig(node.config),
   };
 }
 

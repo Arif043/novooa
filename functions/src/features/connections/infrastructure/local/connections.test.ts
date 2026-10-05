@@ -167,7 +167,7 @@ test("Routen: nie ein Geheimnis in Antworten, Fehler als 400/404, Änderungen we
   using _ = closing(database);
   const topics: string[] = [];
   const notifier = Object.assign(new LocalRuntimeRealtimeNotifier(), {publish: (topic: string) => { topics.push(topic); }});
-  const routes = testingRoutes(connectionRoutes, {store, notifier}, {teamId: "team-1"});
+  const routes = testingRoutes(connectionRoutes, {store, notifier, client: {send: () => Promise.reject(new Error("nicht erwartet"))}}, {teamId: "team-1"});
   const body = {name: "Shop", baseUrl: "https://shop.example.com/api/", auth: {kind: "apiKey", headerName: "X-API-Key"}, secret: "supergeheim"};
 
   const created = await routes.handle({method: "POST", url: "/v1/connections", body});
@@ -191,4 +191,32 @@ test("Routen: nie ein Geheimnis in Antworten, Fehler als 400/404, Änderungen we
   assert.equal((await routes.handle({method: "DELETE", url: `/v1/connections/${id}`, body: {}}))?.statusCode, 200);
   assert.deepEqual((await routes.handle({url: "/v1/connections", body: {}}))?.body, {items: []});
   assert.deepEqual(topics, ["connections", "connections", "connections"]);
+});
+
+test("Verbindung testen: meldet Erfolg, Fehlerstatus mit Hinweis und Anmeldefehler — immer mit 200", async () => {
+  const {database, store} = await setup();
+  using _ = closing(database);
+  const created = await store.create("team-1", bearer, "geheim");
+  const sent: Array<{connectionId?: string; url: string; method: string}> = [];
+  const respond = (behaviour: () => Promise<{status: number; headers: Record<string, string>; body: string}>) => testingRoutes(connectionRoutes, {
+    store, notifier: new LocalRuntimeRealtimeNotifier(),
+    client: {send: (request) => { sent.push(request); return behaviour(); }},
+  }, {teamId: "team-1"});
+  const call = (routes: ReturnType<typeof respond>, id: string, body: object = {}) =>
+    routes.handle({method: "POST", url: `/v1/connections/${id}/test`, body});
+
+  const ok = await call(respond(() => Promise.resolve({status: 200, headers: {}, body: ""})), created.id, {path: "/ping"});
+  assert.deepEqual(ok?.body, {ok: true, status: 200, message: "Verbindung funktioniert (Status 200)."});
+  assert.deepEqual(sent[0], {...sent[0], connectionId: created.id, url: "/ping", method: "GET"});
+
+  const denied = await call(respond(() => Promise.resolve({status: 401, headers: {}, body: ""})), created.id);
+  assert.equal(denied?.statusCode, 200);
+  assert.match((denied?.body as {message: string}).message, /Status 401.*Zugangsdaten/);
+  const missing = await call(respond(() => Promise.resolve({status: 404, headers: {}, body: ""})), created.id);
+  assert.match((missing?.body as {message: string}).message, /Test-Pfad/);
+
+  const failing = await call(respond(() => Promise.reject(new ConnectionAuthError("Die Anmeldung bei „Shop“ ist fehlgeschlagen."))), created.id);
+  assert.deepEqual(failing?.body, {ok: false, message: "Die Anmeldung bei „Shop“ ist fehlgeschlagen."});
+
+  assert.equal((await call(respond(() => Promise.reject(new Error("nie"))), "gibts-nicht"))?.statusCode, 404);
 });

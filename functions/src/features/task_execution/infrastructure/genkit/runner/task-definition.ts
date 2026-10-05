@@ -307,6 +307,21 @@ export const notificationSendNodeConfigSchema = z.object({
   message: z.string().default(""),
 });
 
+const httpNameValueSchema = z.object({name: z.string().max(200).default(""), value: z.string().max(5000).default("")});
+
+export const httpRequestNodeConfigSchema = z.object({
+  primitive: z.literal("httpRequest").default("httpRequest"),
+  connectionId: z.string().max(200).optional(),
+  method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]).default("GET"),
+  url: z.string().max(4000).default(""),
+  query: z.array(httpNameValueSchema).max(50).default([]),
+  headers: z.array(httpNameValueSchema).max(50).default([]),
+  bodyType: z.enum(["none", "json", "text"]).default("none"),
+  body: z.string().max(1_000_000).default(""),
+  timeoutSeconds: z.number().int().min(1).max(120).default(30),
+  failOnHttpError: z.boolean().default(true),
+});
+
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   stringInputNodeConfigSchema,
   scriptNodeConfigSchema,
@@ -329,6 +344,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   readChannelEventNodeConfigSchema,
   sendChannelMessageNodeConfigSchema,
   notificationSendNodeConfigSchema,
+  httpRequestNodeConfigSchema,
 ]);
 
 export const workflowNodeSchema = z.object({

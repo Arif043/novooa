@@ -65,6 +65,7 @@ export const workflowPrimitives = [
   "saveDocument",
   "tableFromCollection",
   "validation",
+  "httpRequest",
 ] as const;
 
 export type WorkflowPrimitive = (typeof workflowPrimitives)[number];
@@ -274,6 +275,21 @@ export type NotificationSendNodeConfig = {
   title?: string;
   message: string;
 };
+export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+export type HttpNameValue = {name: string; value: string};
+export type HttpRequestNodeConfig = {
+  primitive: "httpRequest";
+  /** Fehlt sie, muss `url` vollständig sein und es wird ohne Anmeldung gesendet. */
+  connectionId?: string;
+  method: HttpMethod;
+  url: string;
+  query: HttpNameValue[];
+  headers: HttpNameValue[];
+  bodyType: "none" | "json" | "text";
+  body: string;
+  timeoutSeconds: number;
+  failOnHttpError: boolean;
+};
 export type NodeConfig =
   | StringInputNodeConfig
   | ScriptNodeConfig
@@ -295,7 +311,8 @@ export type NodeConfig =
   | ReadEmailNodeConfig
   | ReadChannelEventNodeConfig
   | SendChannelMessageNodeConfig
-  | NotificationSendNodeConfig;
+  | NotificationSendNodeConfig
+  | HttpRequestNodeConfig;
 export type WorkflowNode = {
   id: string;
   primitive: WorkflowPrimitive;
