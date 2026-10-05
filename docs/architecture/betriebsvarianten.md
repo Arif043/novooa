@@ -126,7 +126,8 @@ Kein reines Plumbing-Problem, sondern der größte Arbeitsanteil:
   Runtime (siehe [`../features/ki-agent.md`](../features/ki-agent.md)).
 - **Nur Standalone**: Datensammlungen (`DataRepository`), Anwendungsprotokoll,
   ML-Modellkatalog, Lizenz, [Verbindungen und HTTP-Anfrage](../features/verbindungen.md)
-  (`WorkspaceCapabilities.connections`). Der Cloud-Task-Runner injiziert bewusst einen
+  (`WorkspaceCapabilities.connections`), [Webhooks](../features/webhooks.md)
+  (`WorkspaceCapabilities.webhooks`). Der Cloud-Task-Runner injiziert bewusst einen
   `UnavailableDocumentStore`.
 - `lib/features/user/infrastructure/repositories/local_workspace_user_repository.dart`
   ist implementiert und getestet, aber nirgends registriert.

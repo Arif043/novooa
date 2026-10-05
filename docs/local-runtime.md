@@ -237,8 +237,8 @@ Fehlgeschlagene Aktivierungen meldet die Runtime unterscheidbar
 
 Nach dem Setzen des Passworts meldet sich der Client über
 `POST /v1/auth/login` an und erhält ein Session-Token, das er fortan als
-`Authorization: Bearer <token>` mitschickt. `/healthz` und `/v1/license/*`
-bleiben unverändert außerhalb dieser Passwort-Pflicht — die Lizenzaktivierung
+`Authorization: Bearer <token>` mitschickt. `/healthz`, `/v1/license/*` und
+`/hooks/*` ([Webhooks](features/webhooks.md)) bleiben unverändert außerhalb dieser Passwort-Pflicht — die Lizenzaktivierung
 ist bereits durch den Lizenz-Token selbst geschützt.
 
 Der HTTP-Server verwendet native Fastify-5-Routen: Routing, Pfadparameter,
@@ -605,6 +605,14 @@ Gespeicherte Zugänge zu externen HTTP-APIs (`/v1/connections…`, Thema `connec
 „HTTP-Anfrage“. Die Geheimnisse liegen verschlüsselt in `language_model_secrets` (`secret_ref` mit Präfix `connection/`)
 und werden bei der Schlüsselrotation mit umgeschlüsselt. Ausgehende Anfragen unterliegen **keiner** Sperre für interne
 Adressen — Details und Grenzen in [`features/verbindungen.md`](features/verbindungen.md) § Sicherheit.
+
+## Webhooks
+
+Eingehende Aufrufe externer Systeme (`POST|PUT /hooks/:triggerId/:token`). Das ist die **Ausnahme von der
+Sitzungspflicht**: Das Routen-Plugin liegt neben der API (`webhookRoutes`), prüft selbst die Lizenz (`423`) und
+authentifiziert über das Token der Adresse, optional zusätzlich über eine Signatur (HMAC). Es begrenzt Fehlversuche und
+Aufrufe je Auslöser. Der Tunnel `/v1/secure/…` leitet diese Pfade nicht weiter. Die Runtime muss dafür öffentlich
+erreichbar sein (Reverse-Proxy mit `https`). Details und Grenzen in [`features/webhooks.md`](features/webhooks.md).
 
 ## Lizenz und lokale Identität
 

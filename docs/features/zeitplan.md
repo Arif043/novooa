@@ -75,6 +75,11 @@ Nachrichten gegen den Nachrichtentext, bei Dateien gegen den Dateinamen.
 Das Matching liegt als reine Funktion in
 `scheduling/domain/usecases/event-trigger-matching.ts`.
 
+Die Quelle `webhookReceived` (nur lokale Runtime) hat keine Ziele und keinen Filter, sondern ein zusätzliches Feld
+`eventConfig.webhook` (`token`, `verification`, `validationParameter`); Geheimnis, Aufruf und Grenzen stehen in
+[`webhooks.md`](./webhooks.md). Neue Ereignisquellen melden sich in der `EventTriggerSourceRegistry`
+(`scheduling/domain/entities/event-trigger-source-registry.ts`) an.
+
 `nextRunAt` ist für Zeitplan-Trigger bewusst materialisiert, damit der
 Backend-Worker fällige Trigger effizient per Query finden kann. Event-Trigger
 haben `nextRunAt = null` und warten auf externe Ereignisse.

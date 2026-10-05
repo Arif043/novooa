@@ -13,7 +13,7 @@ Code entsteht. Dafür gibt es zwei allgemeine Bausteine:
    als typisierte Ausgabewerte weiter.
 
 Systeme mit Besonderheiten (Handshake, Abonnements, eigene Token-Wege) bekommen später einen dünnen Adapter auf dieser
-Schicht. Eingehende Webhooks sind der nächste Schritt (siehe [Nicht umgesetzt](#nicht-umgesetzt)).
+Schicht. Eingehende Aufrufe regeln [Webhooks](./webhooks.md).
 
 **Verfügbarkeit:** Standalone (`WorkspaceCapabilities.connections`). In der Cloud gibt es dafür keinen Speicher und keinen
 Dienst; dort fehlt der Baustein in der Palette, und eine importierte Aufgabe bricht an dieser Stelle mit einer
@@ -111,7 +111,6 @@ Gerät zeigt der Baustein „Verbindung nicht gefunden“, bis dort eine Verbind
 
 ## Nicht umgesetzt
 
-- **Eingehende Webhooks** (Schritt 2): Empfänger-Route in der Runtime mit Token, Signaturprüfung (HMAC) und Handshake-Antworten.
 - **Basic Auth** und **delegiertes OAuth** (Nutzer verbindet sein eigenes Konto; braucht eine Redirect-URL der Runtime).
 - Ob ein System die OAuth-Token-Anfrage im Format `application/x-www-form-urlencoded` annimmt, ist je System zu prüfen;
   ein JSON-Format ist nicht vorgesehen.
