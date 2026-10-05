@@ -33,7 +33,11 @@ part 'save_document_node_config.dart';
 part 'table_from_collection_node_config.dart';
 part 'http_request_node_config.dart';
 
-sealed class NodeConfig extends Equatable {
+/// Bewusst nicht `sealed`: Konfigurationen von Plugins liegen in ihrem eigenen
+/// Ordner (`features/integrations/<plugin>/`) statt als `part` hier. Verdrahtet
+/// bleiben sie zentral (Enum, Mapper, Palette, Widget); dafür prüft der Compiler
+/// Switches über [NodeConfig] nicht mehr auf Vollständigkeit.
+abstract class NodeConfig extends Equatable {
   const NodeConfig();
 
   WorkflowPrimitive get primitive;
