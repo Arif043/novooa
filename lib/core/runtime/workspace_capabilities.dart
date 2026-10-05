@@ -28,6 +28,7 @@ class WorkspaceCapabilities {
     required this.skills,
     required this.employees,
     required this.connections,
+    required this.webhooks,
   });
 
   factory WorkspaceCapabilities.forKind(RuntimeKind kind) => switch (kind) {
@@ -40,6 +41,7 @@ class WorkspaceCapabilities {
       skills: false,
       employees: false,
       connections: false,
+      webhooks: false,
     ),
     RuntimeKind.standalone => WorkspaceCapabilities(
       assistant: true,
@@ -50,6 +52,7 @@ class WorkspaceCapabilities {
       skills: true,
       employees: true,
       connections: true,
+      webhooks: true,
     ),
   };
 
@@ -78,6 +81,10 @@ class WorkspaceCapabilities {
   /// Verbindungen zu externen HTTP-Systemen (Zugangsdaten im Backend, Baustein
   /// „HTTP-Anfrage“). Die Cloud hat dafür noch keinen Speicher.
   final bool connections;
+
+  /// Webhook-Auslöser: externe Systeme rufen die öffentlich erreichbare
+  /// lokale Runtime auf. Die Cloud hat dafür keinen Empfänger.
+  final bool webhooks;
 
   /// Firebase-Push (FCM/APNs). Für Standalone bewusst standardmäßig aus,
   /// damit sich der macOS-Client ohne Apple-Entwicklungszertifikat bauen

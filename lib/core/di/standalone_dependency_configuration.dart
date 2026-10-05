@@ -203,7 +203,10 @@ Future<void> configureStandaloneDependencies(
       ),
       dispose: (bootstrapper) => bootstrapper.dispose(),
     );
-  configureStandaloneWorkspaceDependencies(locator);
+  configureStandaloneWorkspaceDependencies(
+    locator,
+    runtimeUri: profile.workspaceApiUri,
+  );
   configureStandaloneWorkspaceTransferDependencies(locator);
   locator
     ..registerLazySingleton<RuntimeLicenseRepository>(

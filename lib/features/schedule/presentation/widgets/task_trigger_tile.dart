@@ -1,11 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/theme/syscat_theme.dart';
 import '../../../../core/widgets/ios_overlays.dart';
 import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/task_trigger.dart';
 import '../cubits/schedule_cubit.dart';
 import 'schedule_formatters.dart';
+import 'webhook_address.dart';
 
 class TaskTriggerTile extends StatefulWidget {
   const TaskTriggerTile({
@@ -67,6 +69,41 @@ class _TaskTriggerTileState extends State<TaskTriggerTile> {
     }
   }
 
+  Future<void> _copyAddress(String address) async {
+    await Clipboard.setData(ClipboardData(text: address));
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Adresse kopiert.')));
+  }
+
+  Future<void> _rotateAddress() async {
+    final confirmed = await showIosDialog<bool>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Neue Adresse erzeugen?'),
+        content: const Text(
+          'Die bisherige Adresse funktioniert danach nicht mehr. Trage die '
+          'neue Adresse beim externen System ein.',
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Abbrechen'),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Neue Adresse'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      await _perform(() => widget.cubit.rotateWebhookToken(widget.trigger));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final trigger = widget.trigger;
@@ -119,6 +156,18 @@ class _TaskTriggerTileState extends State<TaskTriggerTile> {
                 ),
               ],
             ),
+            if (trigger.webhookUrl case final address?) ...[
+              const SizedBox(height: 16),
+              WebhookAddress(
+                address: address,
+                verified:
+                    trigger.event?.webhook?.verification
+                        is HmacWebhookVerification,
+                busy: _busy,
+                onCopy: () => _copyAddress(address),
+                onRotate: _rotateAddress,
+              ),
+            ],
             const SizedBox(height: 20),
             Divider(height: 1, color: colors.outlineVariant),
             const SizedBox(height: 12),

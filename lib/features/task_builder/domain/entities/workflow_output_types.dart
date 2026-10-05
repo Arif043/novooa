@@ -19,6 +19,7 @@ NodeOutputType primaryOutputTypeOf(NodeConfig config) {
     WriteFileNodeConfig() => NodeOutputType.file,
     TableFromCollectionNodeConfig() => NodeOutputType.table,
     HttpRequestNodeConfig() => NodeOutputType.json,
+    ReadWebhookNodeConfig() => NodeOutputType.json,
     _ => NodeOutputType.string,
   };
 }
@@ -30,7 +31,11 @@ NodeOutputType secondaryOutputTypeOf(String field) {
     'receivedAt' => NodeOutputType.datetime,
     'found' || 'created' || 'isNewFile' || 'ok' => NodeOutputType.boolean,
     'count' || 'sizeBytes' || 'rowCount' || 'status' => NodeOutputType.number,
-    'record' || 'records' || 'folderId' || 'headers' => NodeOutputType.json,
+    'record' ||
+    'records' ||
+    'folderId' ||
+    'headers' ||
+    'query' => NodeOutputType.json,
     _ => NodeOutputType.string,
   };
 }

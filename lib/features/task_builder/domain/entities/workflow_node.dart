@@ -17,6 +17,7 @@ enum WorkflowPrimitive {
   readFile,
   readEmail,
   readChannelEvent,
+  readWebhook,
   sendChannelMessage,
   notificationSend,
   toolCall,

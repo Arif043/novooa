@@ -42,6 +42,7 @@ List<String> secondaryOutputFieldsOf(NodeConfig config) {
     DocumentLookupNodeConfig() => const ['found', 'record', 'message'],
     SaveDocumentNodeConfig() => const ['created', 'count', 'records'],
     HttpRequestNodeConfig() => const ['status', 'ok', 'headers'],
+    ReadWebhookNodeConfig() => const ['method', 'query', 'headers', 'receivedAt'],
     _ => const [],
   };
 }

@@ -85,12 +85,84 @@ class ConnectorTarget extends EventTriggerTarget {
   final String name;
 }
 
+enum WebhookSignatureAlgorithm {
+  sha256('SHA-256'),
+  sha512('SHA-512');
+
+  const WebhookSignatureAlgorithm(this.label);
+
+  final String label;
+}
+
+enum WebhookSignatureEncoding {
+  hex('Hex'),
+  base64('Base64');
+
+  const WebhookSignatureEncoding(this.label);
+
+  final String label;
+}
+
+/// Wie die Runtime prüft, dass ein Aufruf vom erwarteten Absender stammt.
+sealed class WebhookVerification {
+  const WebhookVerification();
+
+  static const none = NoWebhookVerification();
+}
+
+class NoWebhookVerification extends WebhookVerification {
+  const NoWebhookVerification();
+}
+
+/// Signatur (HMAC) über den Body in einer Kopfzeile, z. B.
+/// `X-Signature: sha256=` plus Hex-Wert.
+class HmacWebhookVerification extends WebhookVerification {
+  const HmacWebhookVerification({
+    required this.header,
+    this.algorithm = WebhookSignatureAlgorithm.sha256,
+    this.encoding = WebhookSignatureEncoding.hex,
+    this.prefix = '',
+  });
+
+  final String header;
+  final WebhookSignatureAlgorithm algorithm;
+  final WebhookSignatureEncoding encoding;
+  final String prefix;
+}
+
+/// Einstellungen eines Webhook-Auslösers. Das Token vergibt die Runtime;
+/// [secret] ist nur beim Anlegen gesetzt und wird nie zurückgeliefert.
+class WebhookConfig {
+  const WebhookConfig({
+    this.token = '',
+    this.verification = WebhookVerification.none,
+    this.validationParameter = '',
+    this.secret = '',
+  });
+
+  final String token;
+  final WebhookVerification verification;
+
+  /// Query-Parameter, den der Absender beim Einrichten zurückerwartet
+  /// (Microsoft Graph: `validationToken`). Leer: keine Einrichtungsprüfung.
+  final String validationParameter;
+  final String secret;
+
+  /// Eine Signaturprüfung braucht Kopfzeile und Geheimnis.
+  bool get isComplete => switch (verification) {
+    NoWebhookVerification() => true,
+    HmacWebhookVerification(:final header) =>
+      header.trim().isNotEmpty && secret.isNotEmpty,
+  };
+}
+
 class EventTriggerConfig {
   const EventTriggerConfig({
     required this.source,
     this.target = EventTriggerTarget.anywhere,
     this.fileKinds = const {},
     this.filter = '',
+    this.webhook,
   });
 
   final EventTriggerSource source;
@@ -100,5 +172,8 @@ class EventTriggerConfig {
   final Set<EventFileKind> fileKinds;
   final String filter;
 
-  bool get isValid => true;
+  /// Nur bei [EventTriggerSource.webhookReceived].
+  final WebhookConfig? webhook;
+
+  bool get isValid => webhook?.isComplete ?? true;
 }

@@ -47,6 +47,7 @@ void main() {
     final triggers = await LocalTaskTriggerRepository(
       _LocalClient(),
       _fakeChannel(),
+      Uri.parse('http://runtime.test'),
     ).watchTriggers().first;
 
     expect(triggers.single.taskTitle, 'Tägliche Aufgabe');

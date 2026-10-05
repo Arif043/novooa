@@ -35,6 +35,7 @@ import '../../features/schedule/domain/repositories/task_trigger_repository.dart
 import '../../features/schedule/domain/usecases/create_task_trigger.dart';
 import '../../features/schedule/domain/usecases/analyze_task_trigger.dart';
 import '../../features/schedule/domain/usecases/delete_task_trigger.dart';
+import '../../features/schedule/domain/usecases/rotate_webhook_token.dart';
 import '../../features/schedule/domain/usecases/set_task_trigger_enabled.dart';
 import '../../features/schedule/domain/usecases/watch_task_triggers.dart';
 import '../../features/schedule/infrastructure/repositories/local_task_trigger_repository.dart';
@@ -46,7 +47,10 @@ import '../../features/teams/infrastructure/repositories/local_workspace_team_re
 import '../network/workspace_api_client.dart';
 import '../network/workspace_realtime_channel.dart';
 
-void configureStandaloneWorkspaceDependencies(GetIt locator) {
+void configureStandaloneWorkspaceDependencies(
+  GetIt locator, {
+  required Uri runtimeUri,
+}) {
   locator
     ..registerLazySingleton<TeamRepository>(
       () => const LocalWorkspaceTeamRepository(
@@ -73,6 +77,7 @@ void configureStandaloneWorkspaceDependencies(GetIt locator) {
       () => LocalTaskTriggerRepository(
         locator<WorkspaceApiClient>(),
         locator<WorkspaceRealtimeChannel>(),
+        runtimeUri,
       ),
     )
     ..registerLazySingleton<CommunicationChannelRepository>(
@@ -162,6 +167,9 @@ void configureStandaloneWorkspaceDependencies(GetIt locator) {
     ..registerLazySingleton(
       () => AnalyzeTaskTrigger(locator<TaskTriggerRepository>()),
     )
+    ..registerLazySingleton(
+      () => RotateWebhookToken(locator<TaskTriggerRepository>()),
+    )
     ..registerFactory(
       () => FilesCubit(
         locator<AuthRepository>(),
@@ -200,6 +208,7 @@ void configureStandaloneWorkspaceDependencies(GetIt locator) {
         deleteTaskTrigger: locator<DeleteTaskTrigger>(),
         taskRepository: locator<TaskRepository>(),
         analyzeTaskTrigger: locator<AnalyzeTaskTrigger>(),
+        rotateWebhookToken: locator<RotateWebhookToken>(),
       ),
     )
     ..registerFactory(

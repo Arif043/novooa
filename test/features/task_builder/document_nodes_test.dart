@@ -106,6 +106,7 @@ void main() {
         skills: false,
         employees: false,
         connections: false,
+        webhooks: false,
       ),
     );
     addTearDown(() => serviceLocator.unregister<WorkspaceCapabilities>());

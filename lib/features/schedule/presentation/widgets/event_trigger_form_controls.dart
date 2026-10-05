@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/runtime/webhooks_availability.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/event_trigger_config.dart';
 import '../cubits/event_target_options_cubit.dart';
@@ -8,6 +9,7 @@ import 'event_file_kind_chips.dart';
 import 'event_target_field.dart';
 import 'event_target_sheet.dart';
 import 'schedule_choice_control.dart';
+import 'webhook_controls.dart';
 
 enum TriggerFormMode { schedule, event }
 
@@ -45,6 +47,8 @@ class EventTriggerControls extends StatelessWidget {
     required this.onSourceChanged,
     required this.onTargetChanged,
     required this.onFileKindsChanged,
+    required this.webhook,
+    required this.onWebhookChanged,
   });
 
   final EventTriggerSource source;
@@ -54,6 +58,10 @@ class EventTriggerControls extends StatelessWidget {
   final ValueChanged<EventTriggerSource> onSourceChanged;
   final ValueChanged<EventTriggerTarget> onTargetChanged;
   final ValueChanged<Set<EventFileKind>> onFileKindsChanged;
+  final WebhookConfig webhook;
+  final ValueChanged<WebhookConfig> onWebhookChanged;
+
+  bool get _isWebhook => source == EventTriggerSource.webhookReceived;
 
   bool get _hasTarget => source.targetScope != EventTargetScope.none;
 
@@ -71,7 +79,12 @@ class EventTriggerControls extends StatelessWidget {
           isExpanded: true,
           initialValue: source,
           decoration: const InputDecoration(labelText: 'Ereignis'),
-          items: EventTriggerSource.values.map(_itemFor).toList(),
+          items: [
+            for (final item in EventTriggerSource.values)
+              if (item != EventTriggerSource.webhookReceived ||
+                  webhooksAvailable())
+                _itemFor(item),
+          ],
           onChanged: (value) {
             if (value != null) onSourceChanged(value);
           },
@@ -93,8 +106,13 @@ class EventTriggerControls extends StatelessWidget {
             onChanged: onFileKindsChanged,
           ),
         ],
-        const SizedBox(height: AppSpacing.sm),
-        _MoreOptions(source: source, filterController: filterController),
+        if (_isWebhook) ...[
+          const SizedBox(height: AppSpacing.md),
+          WebhookControls(value: webhook, onChanged: onWebhookChanged),
+        ] else ...[
+          const SizedBox(height: AppSpacing.sm),
+          _MoreOptions(source: source, filterController: filterController),
+        ],
       ],
     );
   }

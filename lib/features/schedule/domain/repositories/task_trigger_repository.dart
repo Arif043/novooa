@@ -14,4 +14,7 @@ abstract interface class TaskTriggerRepository {
   Future<void> setTriggerEnabled(String triggerId, bool enabled);
 
   Future<void> deleteTrigger(String triggerId);
+
+  /// Macht die bisherige Webhook-Adresse ungültig und vergibt eine neue.
+  Future<void> rotateWebhookToken(String triggerId);
 }

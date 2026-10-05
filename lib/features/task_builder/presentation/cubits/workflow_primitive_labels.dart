@@ -12,6 +12,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.readFile => 'Datei lesen',
       WorkflowPrimitive.readEmail => 'E-Mail lesen',
       WorkflowPrimitive.readChannelEvent => 'Nachricht lesen',
+      WorkflowPrimitive.readWebhook => 'Webhook-Ereignis',
       WorkflowPrimitive.sendChannelMessage => 'Nachricht senden',
       WorkflowPrimitive.notificationSend => 'Push-Benachrichtigung senden',
       WorkflowPrimitive.toolCall => 'Werkzeug-Aufruf',
@@ -48,6 +49,8 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         'Liest Absender, Betreff, Nachricht und Ankunftszeit aus einem E-Mail-Trigger.',
       WorkflowPrimitive.readChannelEvent =>
         'Liest ein eingehendes E-Mail-, WhatsApp- oder SMS-Event.',
+      WorkflowPrimitive.readWebhook =>
+        'Liest Inhalt, Methode, Query und Kopfzeilen eines Webhook-Aufrufs, der die Aufgabe gestartet hat.',
       WorkflowPrimitive.sendChannelMessage =>
         'Sendet eine Nachricht über einen verbundenen Kanal.',
       WorkflowPrimitive.notificationSend =>

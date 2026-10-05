@@ -20,6 +20,7 @@ void main() {
       expect(capabilities.dataCollections, isFalse);
       expect(capabilities.modelCatalog, isFalse);
       expect(capabilities.push, isTrue);
+      expect(capabilities.webhooks, isFalse);
     },
   );
 
@@ -31,5 +32,6 @@ void main() {
     expect(capabilities.dataCollections, isTrue);
     expect(capabilities.modelCatalog, isTrue);
     expect(capabilities.push, isFalse);
+    expect(capabilities.webhooks, isTrue);
   });
 }

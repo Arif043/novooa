@@ -25,6 +25,7 @@ part 'for_each_node_config.dart';
 part 'write_file_node_config.dart';
 part 'read_file_node_config.dart';
 part 'read_email_node_config.dart';
+part 'read_webhook_node_config.dart';
 part 'send_channel_message_node_config.dart';
 part 'notification_send_node_config.dart';
 part 'document_lookup_node_config.dart';
@@ -58,6 +59,7 @@ sealed class NodeConfig extends Equatable {
       .tableFromCollection => TableFromCollectionNodeConfig.initial(),
       .readEmail => ReadEmailNodeConfig.initial(),
       .readChannelEvent => ReadChannelEventNodeConfig.initial(),
+      .readWebhook => ReadWebhookNodeConfig.initial(),
       .sendChannelMessage => SendChannelMessageNodeConfig.initial(),
       .notificationSend => NotificationSendNodeConfig.initial(),
       .httpRequest => HttpRequestNodeConfig.initial(),

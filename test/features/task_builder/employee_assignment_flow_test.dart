@@ -51,6 +51,7 @@ void main() {
         skills: false,
         employees: true,
         connections: false,
+        webhooks: false,
       ),
     );
   });

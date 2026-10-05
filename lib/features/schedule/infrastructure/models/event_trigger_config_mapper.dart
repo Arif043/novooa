@@ -11,6 +11,8 @@ class EventTriggerConfigMapper {
       'target': _targetToDocument(config.target),
       'fileKinds': [for (final kind in config.fileKinds) kind.name],
       'filter': config.filter.trim(),
+      if (config.webhook case final webhook?)
+        'webhook': _webhookToDocument(webhook),
     };
   }
 
@@ -24,6 +26,59 @@ class EventTriggerConfigMapper {
       target: _targetFromDocument(data['target']),
       fileKinds: _fileKindsFrom(data['fileKinds']),
       filter: data['filter'] as String? ?? '',
+      webhook: _webhookFromDocument(data['webhook']),
+    );
+  }
+
+  /// Das Token vergibt die Runtime und wird deshalb nie mitgeschickt. Das
+  /// Geheimnis geht nur beim Anlegen hinaus und kommt nie zurück.
+  static Map<String, Object?> _webhookToDocument(WebhookConfig webhook) {
+    return {
+      'verification': switch (webhook.verification) {
+        NoWebhookVerification() => {'kind': 'none'},
+        HmacWebhookVerification(
+          :final header,
+          :final algorithm,
+          :final encoding,
+          :final prefix,
+        ) =>
+          {
+            'kind': 'hmac',
+            'header': header.trim(),
+            'algorithm': algorithm.name,
+            'encoding': encoding.name,
+            'prefix': prefix,
+          },
+      },
+      'validationParameter': webhook.validationParameter.trim(),
+      if (webhook.secret.isNotEmpty) 'secret': webhook.secret,
+    };
+  }
+
+  static WebhookConfig? _webhookFromDocument(Object? value) {
+    if (value is! Map) return null;
+    return WebhookConfig(
+      token: value['token'] as String? ?? '',
+      verification: _verificationFrom(value['verification']),
+      validationParameter: value['validationParameter'] as String? ?? '',
+    );
+  }
+
+  static WebhookVerification _verificationFrom(Object? value) {
+    if (value is! Map || value['kind'] != 'hmac') {
+      return WebhookVerification.none;
+    }
+    return HmacWebhookVerification(
+      header: value['header'] as String? ?? '',
+      algorithm: WebhookSignatureAlgorithm.values.firstWhere(
+        (item) => item.name == value['algorithm'],
+        orElse: () => WebhookSignatureAlgorithm.sha256,
+      ),
+      encoding: WebhookSignatureEncoding.values.firstWhere(
+        (item) => item.name == value['encoding'],
+        orElse: () => WebhookSignatureEncoding.hex,
+      ),
+      prefix: value['prefix'] as String? ?? '',
     );
   }
 

@@ -489,6 +489,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       WorkflowPrimitive.readFile => 'readFile',
       WorkflowPrimitive.readEmail => 'email',
       WorkflowPrimitive.readChannelEvent => 'message',
+      WorkflowPrimitive.readWebhook => 'ereignis',
       WorkflowPrimitive.sendChannelMessage => 'send',
       WorkflowPrimitive.notificationSend => 'notification',
       WorkflowPrimitive.toolCall => 'tool',

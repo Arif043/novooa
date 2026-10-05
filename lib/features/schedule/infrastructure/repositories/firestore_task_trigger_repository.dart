@@ -77,6 +77,13 @@ class FirestoreTaskTriggerRepository implements TaskTriggerRepository {
     await _triggersReference(teamId).doc(triggerId).delete();
   }
 
+  @override
+  Future<void> rotateWebhookToken(String triggerId) {
+    throw UnsupportedError(
+      'Webhook-Auslöser gibt es nur in der lokalen Runtime.',
+    );
+  }
+
   Map<String, Object?> _triggerDocument(
     String triggerId,
     TeamId teamId,

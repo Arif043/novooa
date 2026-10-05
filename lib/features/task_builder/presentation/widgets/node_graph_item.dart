@@ -18,6 +18,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/node_output_n
 import 'package:syscat2/features/task_builder/presentation/widgets/node_output_chips.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_email_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/read_webhook_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_file_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/send_message_widget.dart';
@@ -217,6 +218,7 @@ class NodeGraphItem extends StatelessWidget {
       .writeFile => WriteFileWidget(node: node),
       .readFile => ReadFileWidget(node: node),
       .readEmail || .readChannelEvent => ReadEventWidget(node: node),
+      .readWebhook => ReadWebhookWidget(node: node),
       .sendChannelMessage => SendMessageWidget(node: node),
       .notificationSend => NotificationSendWidget(node: node),
       .humanApproval => HumanApprovalWidget(node: node),

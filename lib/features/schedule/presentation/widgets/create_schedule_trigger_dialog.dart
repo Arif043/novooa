@@ -42,6 +42,7 @@ class _CreateScheduleTriggerDialogState
   EventTriggerSource _eventSource = EventTriggerSource.emailReceived;
   EventTriggerTarget _eventTarget = EventTriggerTarget.anywhere;
   Set<EventFileKind> _eventFileKinds = const {};
+  WebhookConfig _webhook = const WebhookConfig();
   final TextEditingController _eventFilterController = TextEditingController();
   ScheduleKind _kind = ScheduleKind.daily;
   TimeOfDay _time = const TimeOfDay(hour: 9, minute: 0);
@@ -192,10 +193,9 @@ class _CreateScheduleTriggerDialogState
   }
 
   bool get _canSubmit {
-    return _task != null &&
-        (_mode == TriggerFormMode.event ||
-            _kind != ScheduleKind.weekly ||
-            _slots.isNotEmpty);
+    if (_task == null) return false;
+    if (_mode == TriggerFormMode.event) return _eventConfig().isValid;
+    return _kind != ScheduleKind.weekly || _slots.isNotEmpty;
   }
 
   void _setTask(Task? task) => setState(() => _task = task);
@@ -233,6 +233,8 @@ class _CreateScheduleTriggerDialogState
       onSourceChanged: _setEventSource,
       onTargetChanged: (target) => setState(() => _eventTarget = target),
       onFileKindsChanged: (kinds) => setState(() => _eventFileKinds = kinds),
+      webhook: _webhook,
+      onWebhookChanged: (webhook) => setState(() => _webhook = webhook),
     );
   }
 
@@ -369,6 +371,9 @@ class _CreateScheduleTriggerDialogState
     target: _eventTarget,
     fileKinds: _eventFileKinds,
     filter: _eventFilterController.text.trim(),
+    webhook: _eventSource == EventTriggerSource.webhookReceived
+        ? _webhook
+        : null,
   );
 
   ScheduleConfig _config() =>

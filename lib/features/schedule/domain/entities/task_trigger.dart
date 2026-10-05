@@ -16,6 +16,7 @@ class TaskTrigger {
     required this.policy,
     this.schedule,
     this.event,
+    this.webhookUrl,
     this.nextRunAt,
     this.lastRunAt,
     this.lastRunId,
@@ -29,6 +30,9 @@ class TaskTrigger {
   final bool enabled;
   final ScheduleConfig? schedule;
   final EventTriggerConfig? event;
+
+  /// Adresse, die ein externes System aufruft (nur Webhook-Auslöser).
+  final String? webhookUrl;
   final TriggerRunPolicy policy;
   final DateTime? nextRunAt;
   final DateTime? lastRunAt;
@@ -49,6 +53,7 @@ class TaskTrigger {
       enabled: enabled ?? this.enabled,
       schedule: schedule,
       event: event,
+      webhookUrl: webhookUrl,
       policy: policy,
       nextRunAt: nextRunAt ?? this.nextRunAt,
       lastRunAt: lastRunAt ?? this.lastRunAt,

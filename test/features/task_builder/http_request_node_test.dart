@@ -320,6 +320,7 @@ WorkspaceCapabilities _capabilities({required bool connections}) => WorkspaceCap
   skills: false,
   employees: false,
   connections: connections,
+  webhooks: false,
 );
 
 class _Teams implements TeamRepository {

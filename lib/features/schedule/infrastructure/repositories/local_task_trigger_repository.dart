@@ -1,6 +1,7 @@
 import '../../../../core/network/workspace_api_client.dart';
 import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../domain/entities/create_task_trigger_input.dart';
+import '../../domain/entities/event_trigger_config.dart';
 import '../models/event_trigger_config_mapper.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../../domain/entities/task_trigger.dart';
@@ -8,10 +9,13 @@ import '../../domain/entities/trigger_cycle_analysis.dart';
 import '../../domain/repositories/task_trigger_repository.dart';
 
 class LocalTaskTriggerRepository implements TaskTriggerRepository {
-  const LocalTaskTriggerRepository(this._client, this._channel);
+  const LocalTaskTriggerRepository(this._client, this._channel, this._baseUri);
 
   final WorkspaceApiClient _client;
   final WorkspaceRealtimeChannel _channel;
+
+  /// Adresse der Runtime, unter der externe Systeme Webhooks aufrufen.
+  final Uri _baseUri;
 
   @override
   Future<TriggerCycleAnalysis> analyzeTrigger(
@@ -57,6 +61,10 @@ class LocalTaskTriggerRepository implements TaskTriggerRepository {
       _client.delete('/v1/task-triggers/$triggerId');
 
   @override
+  Future<void> rotateWebhookToken(String triggerId) =>
+      _client.post('/v1/task-triggers/$triggerId/webhook-token', const {});
+
+  @override
   Future<void> setTriggerEnabled(String triggerId, bool enabled) =>
       _client.put('/v1/task-triggers/$triggerId/enabled', {'enabled': enabled});
 
@@ -88,6 +96,7 @@ class LocalTaskTriggerRepository implements TaskTriggerRepository {
     final data = {
       for (final entry in value.entries) entry.key.toString(): entry.value,
     };
+    final event = EventTriggerConfigMapper.fromDocument(data['eventConfig']);
     return TaskTrigger(
       id: _string(data['id']),
       teamId: _string(data['teamId']),
@@ -96,12 +105,30 @@ class LocalTaskTriggerRepository implements TaskTriggerRepository {
       type: _type(data['type']),
       enabled: data['enabled'] is bool ? data['enabled'] as bool : false,
       schedule: _scheduleFrom(data['config']),
-      event: EventTriggerConfigMapper.fromDocument(data['eventConfig']),
+      event: event,
+      webhookUrl: _webhookUrl(_string(data['id']), event),
       policy: _policy(data['policy']),
       nextRunAt: _dateOrNull(data['nextRunAt']),
       lastRunAt: _dateOrNull(data['lastRunAt']),
       lastRunId: _nullableString(data['lastRunId']),
     );
+  }
+
+  String? _webhookUrl(String triggerId, EventTriggerConfig? event) {
+    final token = event?.webhook?.token ?? '';
+    if (token.isEmpty) return null;
+    return _baseUri
+        .replace(
+          pathSegments: [
+            ..._baseUri.pathSegments.where((segment) => segment.isNotEmpty),
+            'hooks',
+            triggerId,
+            token,
+          ],
+          query: null,
+          fragment: null,
+        )
+        .toString();
   }
 
   TriggerType _type(Object? value) => TriggerType.values.firstWhere(

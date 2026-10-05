@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/runtime/connections_availability.dart';
+import 'package:syscat2/core/runtime/webhooks_availability.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/workflow_primitive_labels.dart';
@@ -45,7 +46,7 @@ const bausteinGroups = <String, List<BausteinChoice>>{
     BausteinChoice(.dialogInput),
     BausteinChoice(.mediaInput),
   ],
-  'Externe Systeme': [BausteinChoice(.httpRequest)],
+  'Externe Systeme': [BausteinChoice(.httpRequest), BausteinChoice(.readWebhook)],
   'Kommunikation': [
     BausteinChoice(.readChannelEvent, kind: ChannelEventKind.email),
     BausteinChoice(.readChannelEvent, kind: ChannelEventKind.whatsapp),
@@ -81,6 +82,7 @@ IconData bausteinIcon(WorkflowPrimitive primitive) => switch (primitive) {
   .toolCall => Icons.build_outlined,
   .validation => Icons.fact_check_outlined,
   .httpRequest => Icons.http,
+  .readWebhook => Icons.webhook,
 };
 
 class BausteinPalette extends StatefulWidget {
@@ -96,6 +98,7 @@ class _BausteinPaletteState extends State<BausteinPalette> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final httpAvailable = connectionsAvailable();
+    final webhookAvailable = webhooksAvailable();
     final groups = {
       for (final group in bausteinGroups.entries)
         group.key: group.value
@@ -104,6 +107,10 @@ class _BausteinPaletteState extends State<BausteinPalette> {
             .where(
               (choice) =>
                   httpAvailable || choice.primitive != WorkflowPrimitive.httpRequest,
+            )
+            .where(
+              (choice) =>
+                  webhookAvailable || choice.primitive != WorkflowPrimitive.readWebhook,
             )
             .toList(),
     };
