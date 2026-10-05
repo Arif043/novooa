@@ -1,6 +1,7 @@
 import {employeeRoutes} from "../../features/employees/infrastructure/local/local-employee-routes.js";
 import {skillCatalogRoutes} from "../../features/skills/infrastructure/local/local-skill-catalog-routes.js";
 import {skillRoutes} from "../../features/skills/infrastructure/local/local-skill-routes.js";
+import {pluginRoutes} from "../../features/plugins/infrastructure/local/local-plugin-routes.js";
 import {speechVoiceRoutes} from "../../features/speech_synthesis/infrastructure/local/speech-voice-routes.js";
 import {type FastifyInstance, type FastifyPluginAsync} from "fastify";
 import {type RuntimeDatabase} from "../../db/database.js";
@@ -85,6 +86,7 @@ async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRu
   await api.register(employeeRoutes, services.employees);
   await api.register(skillCatalogRoutes, services.skills.catalog);
   await api.register(skillRoutes, services.skills.routes);
+  await api.register(pluginRoutes, services.plugins);
   await api.register(speechVoiceRoutes, {voices: services.speechVoices});
   await api.register(languageModelDefaultsRoutes, {store: services.languageModelDefaults, notifier});
   await api.register(fileSettingsRoutes, {store: services.fileSettings, notifier});
