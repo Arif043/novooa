@@ -3,7 +3,15 @@ import path from "node:path";
 import {pathToFileURL} from "node:url";
 import {type PluginPrimitiveDefinition} from "../../domain/entities/plugin-manifest.js";
 import {PluginNotFoundError} from "../../domain/entities/stored-plugin.js";
-import {PluginRunError, type PluginPrimitiveRun, type PluginRunner} from "../../domain/repositories/plugin-runner.js";
+import {
+  PluginRunError,
+  type PluginPrimitiveRun,
+  type PluginRunner,
+  type PluginTriggerEvent,
+  type PluginTriggerPoll,
+  type PluginTriggerPollResult,
+  type PluginTriggerRunner,
+} from "../../domain/repositories/plugin-runner.js";
 import {type PluginSettingsStore} from "../../domain/repositories/plugin-settings-store.js";
 import {type PluginStore} from "../../domain/repositories/plugin-store.js";
 import {type NodeOutputValue} from "../../../task_execution/domain/entities/workflow-value.js";
@@ -31,7 +39,7 @@ const defaults: ProcessPluginRunnerOptions = {
  * Zeit- und Speicherlimit. Netzwerkzugriffe lassen sich mit Node nicht einschränken; die Vertrauensgrenze ist deshalb
  * die Signatur des Herausgebers.
  */
-export class ProcessPluginRunner implements PluginRunner {
+export class ProcessPluginRunner implements PluginRunner, PluginTriggerRunner {
   private readonly options: ProcessPluginRunnerOptions;
 
   constructor(
@@ -57,6 +65,24 @@ export class ProcessPluginRunner implements PluginRunner {
       panel: await this.settings.read(plugin.id),
     }, plugin.name);
     return typedOutputs(definition, raw, plugin.name);
+  }
+
+  async pollTrigger(poll: PluginTriggerPoll): Promise<PluginTriggerPollResult> {
+    const plugin = await this.store.find(poll.pluginId);
+    if (plugin === undefined) throw new PluginNotFoundError(poll.pluginId);
+    if (!plugin.manifest.triggers.some((trigger) => trigger.type === poll.triggerType)) {
+      throw new PluginRunError(`Das Plugin „${plugin.name}“ kennt den Trigger „${poll.triggerType}“ nicht.`);
+    }
+    const pluginDirectory = path.join(this.pluginsDirectory, plugin.id);
+    const raw = await this.execute(pluginDirectory, {
+      entryUrl: pathToFileURL(path.join(pluginDirectory, plugin.manifest.entry)).href,
+      kind: "trigger",
+      type: poll.triggerType,
+      settings: poll.settings,
+      panel: await this.settings.read(plugin.id),
+      state: poll.state,
+    }, plugin.name);
+    return triggerResult(raw, poll.state, plugin.name);
   }
 
   private execute(pluginDirectory: string, request: unknown, pluginName: string): Promise<unknown> {
@@ -136,4 +162,41 @@ function typed(type: "string" | "number" | "boolean" | "datetime" | "json", valu
   case "json":
     return {type, value};
   }
+}
+
+const maximumEventsPerPoll = 50;
+const maximumStateBytes = 100 * 1024;
+
+/** Prüft die Antwort eines Triggers: `{events: [{context?, data?}], state?}`. */
+export function triggerResult(raw: unknown, previousState: unknown, pluginName: string): PluginTriggerPollResult {
+  if (raw === null || raw === undefined) return {events: [], state: previousState};
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    throw new PluginRunError(`Der Trigger von „${pluginName}“ muss ein Objekt mit events und state zurückgeben.`);
+  }
+  const {events, state} = raw as {events?: unknown; state?: unknown};
+  if (events !== undefined && !Array.isArray(events)) {
+    throw new PluginRunError(`Der Trigger von „${pluginName}“ muss events als Liste zurückgeben.`);
+  }
+  if (events !== undefined && events.length > maximumEventsPerPoll) {
+    throw new PluginRunError(`Der Trigger von „${pluginName}“ meldet mehr als ${maximumEventsPerPoll} Ereignisse auf einmal.`);
+  }
+  const nextState = state === undefined ? previousState : state;
+  if (JSON.stringify(nextState ?? null).length > maximumStateBytes) {
+    throw new PluginRunError(`Der Zustand des Triggers von „${pluginName}“ ist zu groß.`);
+  }
+  return {events: (events ?? []).map((event) => triggerEvent(event, pluginName)), state: nextState};
+}
+
+function triggerEvent(value: unknown, pluginName: string): PluginTriggerEvent {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new PluginRunError(`Ein Ereignis von „${pluginName}“ muss ein Objekt sein.`);
+  }
+  const {context, data} = value as {context?: unknown; data?: unknown};
+  if (data !== undefined && (data === null || typeof data !== "object" || Array.isArray(data))) {
+    throw new PluginRunError(`Die Daten eines Ereignisses von „${pluginName}“ müssen ein Objekt sein.`);
+  }
+  return {
+    context: typeof context === "string" && context.trim().length > 0 ? context.trim().slice(0, 500) : `Ereignis von ${pluginName}`,
+    data: (data ?? {}) as Record<string, unknown>,
+  };
 }

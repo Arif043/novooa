@@ -8,7 +8,7 @@ import {PluginRunError} from "../../domain/repositories/plugin-runner.js";
 import {pluginPackageFrom} from "../../domain/entities/plugin-package.js";
 import {DirectoryPluginStore} from "./directory-plugin-store.js";
 import {FilePluginSettingsStore} from "./file-plugin-settings-store.js";
-import {ProcessPluginRunner} from "./process-plugin-runner.js";
+import {ProcessPluginRunner, triggerResult} from "./process-plugin-runner.js";
 
 const manifest = {
   schemaVersion: 1, id: "hallo", version: "1.0.0", name: "Hallo", description: "x",
@@ -16,12 +16,16 @@ const manifest = {
     type, label: type, description: "", settings: [{key: "name", label: "Name", kind: "text"}],
     outputs: [{name: "text", label: "Text", type: "string"}],
   })),
+  triggers: [{type: "tick", label: "Tick", description: "", settings: []}, {type: "boom", label: "Boom", description: "", settings: []}],
   settingsPanels: [{id: "main", title: "Hallo", fields: [{key: "greeting", label: "Gruß", kind: "text"}]}],
 };
 
 const entry = `
 import {readFileSync} from "node:fs";
-export default {primitives: {
+export default {triggers: {
+  tick: ({state}) => ({events: [{context: "Tick " + ((state ?? 0) + 1), data: {n: (state ?? 0) + 1}}], state: (state ?? 0) + 1}),
+  boom: () => ({events: "keine Liste"}),
+}, primitives: {
   greet: ({settings, panel}) => ({text: panel.greeting + ", " + settings.name}),
   slow: () => new Promise(() => setInterval(() => {}, 1000)),
   boom: () => { throw new Error("kaputt"); },
@@ -88,4 +92,38 @@ test("der Plugin-Prozess darf weder schreiben noch Prozesse starten noch die Umg
   } finally {
     await rm(root, {recursive: true, force: true});
   }
+});
+
+test("ein Trigger meldet Ereignisse und übergibt seinen Zustand an den nächsten Aufruf", async () => {
+  const {root, runner} = await setup();
+  try {
+    const first = await runner.pollTrigger({pluginId: "hallo", triggerType: "tick", settings: {}, state: undefined});
+    assert.deepEqual(first, {events: [{context: "Tick 1", data: {n: 1}}], state: 1});
+
+    const second = await runner.pollTrigger({pluginId: "hallo", triggerType: "tick", settings: {}, state: first.state});
+    assert.deepEqual(second.events, [{context: "Tick 2", data: {n: 2}}]);
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
+});
+
+test("Trigger mit ungültiger Antwort, unbekannte Trigger und fehlende Plugins werden gemeldet", async () => {
+  const {root, runner} = await setup();
+  try {
+    await assert.rejects(() => runner.pollTrigger({pluginId: "hallo", triggerType: "boom", settings: {}, state: undefined}), /events als Liste/);
+    await assert.rejects(() => runner.pollTrigger({pluginId: "hallo", triggerType: "unbekannt", settings: {}, state: undefined}), /kennt den Trigger/);
+    await assert.rejects(() => runner.pollTrigger({pluginId: "fehlt", triggerType: "tick", settings: {}, state: undefined}), PluginNotFoundError);
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
+});
+
+test("die Antwort eines Triggers wird geprüft und begrenzt", () => {
+  assert.deepEqual(triggerResult(undefined, 7, "X"), {events: [], state: 7});
+  assert.deepEqual(triggerResult({events: [{}]}, 7, "X"), {events: [{context: "Ereignis von X", data: {}}], state: 7});
+  assert.throws(() => triggerResult("text", 0, "X"), /Objekt/);
+  assert.throws(() => triggerResult({events: ["x"]}, 0, "X"), /muss ein Objekt sein/);
+  assert.throws(() => triggerResult({events: [{data: []}]}, 0, "X"), /müssen ein Objekt sein/);
+  assert.throws(() => triggerResult({events: Array.from({length: 51}, () => ({}))}, 0, "X"), /mehr als 50/);
+  assert.throws(() => triggerResult({events: [], state: "x".repeat(200_000)}, 0, "X"), /zu groß/);
 });

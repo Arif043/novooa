@@ -7,6 +7,7 @@ import {type PluginCatalog} from "../../domain/repositories/plugin-catalog.js";
 import {LicenseRelayPluginCatalog} from "./license-relay-plugin-catalog.js";
 import {DirectoryPluginStore} from "./directory-plugin-store.js";
 import {pluginSignatureVerifierFrom} from "./ed25519-plugin-signature-verifier.js";
+import {FilePluginTriggerStateStore} from "./file-plugin-trigger-state-store.js";
 import {FilePluginSettingsStore} from "./file-plugin-settings-store.js";
 import {InMemoryStagedPluginInstalls} from "./in-memory-staged-plugin-installs.js";
 import {ProcessPluginRunner} from "./process-plugin-runner.js";
@@ -24,6 +25,10 @@ export function createPluginStore(runtimeRoot: string): DirectoryPluginStore {
 
 export function createPluginSettingsStore(runtimeRoot: string): FilePluginSettingsStore {
   return new FilePluginSettingsStore(path.join(runtimeRoot, "plugin-settings"));
+}
+
+export function createPluginTriggerStateStore(runtimeRoot: string): FilePluginTriggerStateStore {
+  return new FilePluginTriggerStateStore(path.join(runtimeRoot, "plugin-trigger-state"));
 }
 
 export function createPluginRunner(runtimeRoot: string): ProcessPluginRunner {

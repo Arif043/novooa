@@ -11,6 +11,8 @@ export const eventTriggerSources = [
   "fileVersionCreated",
   "fileDeleted",
   "webhookReceived",
+  /** Ereignisse, die ein installiertes Plugin liefert (siehe `eventConfig.plugin`). */
+  "plugin",
 ] as const;
 
 /**
@@ -25,21 +27,45 @@ export type EventTriggerTarget =
   | {kind: "channel"; id: string; label: string}
   | {kind: "connector"; id: string; label: string};
 
+/** Welcher Trigger eines Plugins mit welchen Einstellungen gemeint ist. */
+export type PluginTriggerReference = {
+  pluginId: string;
+  type: string;
+  settings: Record<string, string | number | boolean>;
+};
+
 export type EventTriggerConfig = {
   source: string;
   target: EventTriggerTarget;
   fileKinds: FileContentKind[];
   filter: string;
+  plugin?: PluginTriggerReference;
 };
 
 export function eventTriggerConfigFrom(value: unknown): EventTriggerConfig {
   const data = isRecord(value) ? value : {};
+  const plugin = pluginReferenceFrom(data.plugin);
   return {
     source: stringOr(data.source, ""),
     target: eventTriggerTargetFrom(data.target),
     fileKinds: fileKindsFrom(data.fileKinds),
     filter: stringOr(data.filter, ""),
+    ...(plugin === undefined ? {} : {plugin}),
   };
+}
+
+export function pluginReferenceFrom(value: unknown): PluginTriggerReference | undefined {
+  if (!isRecord(value)) return undefined;
+  const pluginId = stringOr(value.pluginId, "").trim();
+  const type = stringOr(value.type, "").trim();
+  if (pluginId.length === 0 || type.length === 0) return undefined;
+  const settings: PluginTriggerReference["settings"] = {};
+  if (isRecord(value.settings)) {
+    for (const [key, setting] of Object.entries(value.settings)) {
+      if (typeof setting === "string" || typeof setting === "number" || typeof setting === "boolean") settings[key] = setting;
+    }
+  }
+  return {pluginId, type, settings};
 }
 
 export function eventTriggerTargetFrom(value: unknown): EventTriggerTarget {

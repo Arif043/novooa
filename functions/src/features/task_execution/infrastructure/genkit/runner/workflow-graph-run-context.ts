@@ -75,8 +75,23 @@ function templateContextFor(options: TaskRunContextOptions) {
     options.currentGraph,
     options.results,
     options.variables,
-    options.scope,
+    withEventData(options.scope, options.input.input),
   );
+}
+
+/**
+ * Die Daten eines Plugin-Ereignisses, das die Aufgabe gestartet hat, als `{{ereignis.feld}}`.
+ * Ein gleichnamiger Eintrag im Geltungsbereich (Schleife, Teilgraph) behält Vorrang.
+ */
+function pluginEventDataOf(input: unknown): Record<string, unknown> | undefined {
+  const event = (input as {event?: {source?: unknown; data?: unknown}} | undefined)?.event;
+  if (event?.source !== "plugin" || typeof event.data !== "object" || event.data === null) return undefined;
+  return event.data as Record<string, unknown>;
+}
+
+function withEventData(scope: WorkflowExecutionScope, input: unknown): WorkflowExecutionScope {
+  const data = pluginEventDataOf(input);
+  return data === undefined ? scope : {...scope, global: {ereignis: data, ...scope.global}};
 }
 
 function graphRunnerFor(options: TaskRunContextOptions): WorkflowGraphRunner {
@@ -108,6 +123,7 @@ function globalContextFor(
     options.variables,
   );
   return {
+    ...(pluginEventDataOf(options.input.input) === undefined ? {} : {ereignis: pluginEventDataOf(options.input.input)}),
     input: options.input.input ?? {},
     variables: options.variables,
     ...Object.fromEntries(Object.entries(context.nodeOutputs).map(([name, outputs]) => [

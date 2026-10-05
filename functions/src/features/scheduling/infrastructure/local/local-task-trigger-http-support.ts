@@ -68,6 +68,9 @@ function eventTriggerFrom(input: Record<string, unknown>): TriggerInput {
   if (!isEventTriggerSource(eventConfig.source)) {
     throw new LocalTaskTriggerError("eventConfig.source ist ungültig.");
   }
+  if (eventConfig.source === "plugin" && eventConfig.plugin === undefined) {
+    throw new LocalTaskTriggerError("Für Plugin-Trigger fehlen pluginId und type in eventConfig.plugin.");
+  }
   return {
     taskId: stringFrom(input.taskId, "taskId"), type: "event", config: {},
     eventConfig, policy: policyFrom(input.policy),

@@ -21,6 +21,8 @@ import {FirebaseRuntimeModelCatalog} from "../../features/machine_learning/infra
 import {LocalTaskRunApprovalPushNotifier} from "../../features/notifications/infrastructure/local/local-task-run-approval-push-notifier.js";
 import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 import {runDueTaskTriggers} from "../../features/scheduling/domain/usecases/run-due-task-triggers.js";
+import {pollPluginTriggers} from "../../features/plugins/domain/usecases/poll-plugin-triggers.js";
+import {createPluginRunner, createPluginTriggerStateStore} from "../../features/plugins/infrastructure/local/plugins-composition.js";
 import {PollingTaskTriggerWorker} from "../../features/scheduling/infrastructure/local/polling-task-trigger-worker.js";
 import {SQLiteTaskTriggerStore} from "../../features/scheduling/infrastructure/local/sqlite-task-trigger-store.js";
 import {type TaskWorkflow} from "../../features/task_execution/domain/usecases/task-workflow.js";
@@ -151,12 +153,24 @@ export function createLocalRuntimeComposition(
     workspaceContext,
     taskRunWorker,
     taskTriggerWorker: new PollingTaskTriggerWorker(
-      () => runDueTaskTriggers(new Date(), {
-        triggerStore: new SQLiteTaskTriggerStore(options.database),
-        taskStore,
-        taskRunStore,
-        taskRunDispatcher,
-      }),
+      async () => {
+        const triggerPorts = {
+          triggerStore: new SQLiteTaskTriggerStore(options.database),
+          taskStore,
+          taskRunStore,
+          taskRunDispatcher,
+        };
+        await runDueTaskTriggers(new Date(), triggerPorts);
+        await pollPluginTriggers({
+          ...triggerPorts,
+          runner: createPluginRunner(options.runtimeRoot),
+          states: createPluginTriggerStateStore(options.runtimeRoot),
+          teamId: options.workspace.teamId,
+          onFailure: ({triggerId, pluginId, error}) => applicationLogger.exception(
+            "plugin_trigger.failed", error, {teamId: options.workspace.teamId, triggerId, pluginId},
+          ),
+        });
+      },
       {
         canProcess: options.isLicenseActive,
         onFailure: (error) => applicationLogger.exception(

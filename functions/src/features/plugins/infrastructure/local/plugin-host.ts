@@ -6,13 +6,16 @@
  */
 type HostRequest = {
   entryUrl: string;
-  kind: "primitive";
+  kind: "primitive" | "trigger";
   type: string;
   settings: Record<string, unknown>;
   panel: Record<string, unknown>;
+  /** Nur für Trigger: der zuletzt zurückgegebene Zustand. */
+  state?: unknown;
 };
 
-type Handler = (context: {settings: Record<string, unknown>; panel: Record<string, unknown>}) => unknown;
+type Handler = (context: {settings: Record<string, unknown>; panel: Record<string, unknown>; state?: unknown}) => unknown;
+type PluginModule = {default?: {primitives?: Record<string, Handler>; triggers?: Record<string, Handler>}};
 
 async function readRequest(): Promise<HostRequest> {
   const chunks: Buffer[] = [];
@@ -22,10 +25,13 @@ async function readRequest(): Promise<HostRequest> {
 
 async function main(): Promise<void> {
   const request = await readRequest();
-  const module = await import(request.entryUrl) as {default?: {primitives?: Record<string, Handler>}};
-  const handler = module.default?.primitives?.[request.type];
-  if (typeof handler !== "function") throw new Error(`Das Plugin liefert keinen Handler für den Baustein „${request.type}“.`);
-  const outputs = await handler({settings: request.settings, panel: request.panel});
+  const module = await import(request.entryUrl) as PluginModule;
+  const handlers = request.kind === "trigger" ? module.default?.triggers : module.default?.primitives;
+  const handler = handlers?.[request.type];
+  if (typeof handler !== "function") {
+    throw new Error(`Das Plugin liefert keinen Handler für ${request.kind === "trigger" ? "den Trigger" : "den Baustein"} „${request.type}“.`);
+  }
+  const outputs = await handler({settings: request.settings, panel: request.panel, state: request.state});
   process.stdout.write(JSON.stringify({ok: true, outputs}));
 }
 
