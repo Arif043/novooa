@@ -18,6 +18,7 @@ ConnectionAuth authFromJson(Object? value) {
       tokenUrl: _string(json['tokenUrl']),
       clientId: _string(json['clientId']),
       scope: _string(json['scope']),
+      sendsJson: json['tokenRequestFormat'] == 'json',
     ),
     _ => throw const FormatException('Die Anmeldeart ist unbekannt.'),
   };
@@ -30,12 +31,18 @@ Map<String, Object?> authToJson(ConnectionAuth auth) {
       'headerName': headerName,
     },
     BearerAuth() => {'kind': 'bearer'},
-    OAuthClientCredentialsAuth(:final tokenUrl, :final clientId, :final scope) =>
+    OAuthClientCredentialsAuth(
+      :final tokenUrl,
+      :final clientId,
+      :final scope,
+      :final sendsJson,
+    ) =>
       {
         'kind': 'oauthClientCredentials',
         'tokenUrl': tokenUrl,
         'clientId': clientId,
         if (scope.trim().isNotEmpty) 'scope': scope.trim(),
+        if (sendsJson) 'tokenRequestFormat': 'json',
       },
   };
 }

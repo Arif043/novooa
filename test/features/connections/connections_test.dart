@@ -25,6 +25,23 @@ const _shop = Connection(
 
 void main() {
   group('JSON-Abbildung', () {
+    test('das Token-Format json wird gesendet und gelesen, form bleibt ohne Angabe', () {
+      const json = OAuthClientCredentialsAuth(
+        tokenUrl: 'https://shop.example.com/api/oauth/token',
+        clientId: 'key',
+        sendsJson: true,
+      );
+      const form = OAuthClientCredentialsAuth(
+        tokenUrl: 'https://shop.example.com/api/oauth/token',
+        clientId: 'key',
+      );
+
+      expect(authToJson(json)['tokenRequestFormat'], 'json');
+      expect(authToJson(form).containsKey('tokenRequestFormat'), isFalse);
+      expect(authFromJson(authToJson(json)), json);
+      expect(authFromJson(authToJson(form)), form);
+    });
+
     test('alle Anmeldearten laufen verlustfrei hin und zurück', () {
       for (final auth in const <ConnectionAuth>[
         ApiKeyAuth(headerName: 'X-API-Key'),
@@ -257,6 +274,80 @@ void main() {
         secret: 'k-123',
       ));
       expect(find.byType(ConnectionEditorDialog), findsNothing);
+    });
+
+    testWidgets('die Vorlage Shopware füllt OAuth mit JSON und leitet die Token-URL aus der Shop-Adresse ab',
+        (tester) async {
+      final repository = await open(tester);
+
+      await tester.tap(find.byKey(const ValueKey('connection-template-shopware')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('connection-template-shopware')), findsNothing);
+      expect(
+        tester.widget<SwitchListTile>(find.byKey(const ValueKey('connection-token-json'))).value,
+        isTrue,
+      );
+
+      await enter(tester, 'Basis-URL', 'https://shop.example.com/');
+      expect(
+        tester.widget<TextField>(find.widgetWithText(TextField, 'Token-URL')).controller!.text,
+        'https://shop.example.com/api/oauth/token',
+      );
+      await enter(tester, 'Zugriffsschlüssel-ID', 'SWIA123');
+      await enter(tester, 'Geheimer Zugriffsschlüssel', 'geheim');
+      await tester.tap(find.text('Speichern'));
+      await tester.pumpAndSettle();
+
+      expect(repository.created.single, const ConnectionDraft(
+        name: 'Shopware',
+        baseUrl: 'https://shop.example.com/',
+        auth: OAuthClientCredentialsAuth(
+          tokenUrl: 'https://shop.example.com/api/oauth/token',
+          clientId: 'SWIA123',
+          sendsJson: true,
+        ),
+        secret: 'geheim',
+      ));
+    });
+
+    testWidgets('eine von Hand geänderte Token-URL bleibt bei weiteren Eingaben der Shop-Adresse erhalten',
+        (tester) async {
+      await open(tester);
+      await tester.tap(find.byKey(const ValueKey('connection-template-shopware')));
+      await tester.pumpAndSettle();
+      await enter(tester, 'Basis-URL', 'https://shop.example.com');
+
+      await enter(tester, 'Token-URL', 'https://auth.example.com/token');
+      await enter(tester, 'Basis-URL', 'https://shop2.example.com');
+
+      expect(
+        tester.widget<TextField>(find.widgetWithText(TextField, 'Token-URL')).controller!.text,
+        'https://auth.example.com/token',
+      );
+    });
+
+    testWidgets('eine bestehende Verbindung zeigt ihr Token-Format und bietet keine Vorlage an',
+        (tester) async {
+      await open(
+        tester,
+        existing: const Connection(
+          id: 'c1',
+          name: 'Shop',
+          baseUrl: 'https://shop.example.com',
+          auth: OAuthClientCredentialsAuth(
+            tokenUrl: 'https://shop.example.com/api/oauth/token',
+            clientId: 'key',
+            sendsJson: true,
+          ),
+          updatedAt: 'x',
+        ),
+      );
+
+      expect(find.byKey(const ValueKey('connection-template-shopware')), findsNothing);
+      expect(
+        tester.widget<SwitchListTile>(find.byKey(const ValueKey('connection-token-json'))).value,
+        isTrue,
+      );
     });
 
     testWidgets('OAuth zeigt Token-URL, Client-ID und Scope und verlangt das Client-Secret',

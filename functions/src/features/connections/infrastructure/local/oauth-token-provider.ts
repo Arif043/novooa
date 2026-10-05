@@ -35,14 +35,15 @@ export class OAuthTokenProvider {
   private async fetchToken(connection: Connection, clientSecret: string, key: string): Promise<string> {
     const auth = connection.auth;
     if (auth.kind !== "oauthClientCredentials") throw new Error("Die Verbindung nutzt kein OAuth.");
-    const form = new URLSearchParams({grant_type: "client_credentials", client_id: auth.clientId, client_secret: clientSecret});
-    if (auth.scope !== undefined) form.set("scope", auth.scope);
+    const fields: Record<string, string> = {grant_type: "client_credentials", client_id: auth.clientId, client_secret: clientSecret};
+    if (auth.scope !== undefined) fields.scope = auth.scope;
+    const asJson = auth.tokenRequestFormat === "json";
     let response: Response;
     try {
       response = await this.request(auth.tokenUrl, {
         method: "POST",
-        headers: {"content-type": "application/x-www-form-urlencoded", accept: "application/json"},
-        body: form,
+        headers: {"content-type": asJson ? "application/json" : "application/x-www-form-urlencoded", accept: "application/json"},
+        body: asJson ? JSON.stringify(fields) : new URLSearchParams(fields),
         signal: AbortSignal.timeout(requestTimeoutMilliseconds),
       });
     } catch {

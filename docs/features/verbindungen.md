@@ -28,12 +28,18 @@ verständlichen Meldung ab.
 | Anmeldeart | siehe unten |
 | Geheimnis | API-Key, Token oder Client-Secret (1–4096 Zeichen); Pflicht beim Anlegen |
 
+**Vorlage „Shopware“:** Beim Anlegen einer Verbindung füllt die Chip-Vorlage „Shopware“ Name, OAuth und das JSON-Format
+vor und leitet die Token-URL aus der Shop-Adresse ab (`<Shop>/api/oauth/token`, solange man sie nicht selbst ändert).
+Basis-URL ist die Shop-Adresse ohne `/api`; Zugriffsschlüssel-ID und Geheimer Zugriffsschlüssel einer Shopware-Integration
+sind Client-ID und Client-Secret. Als Test-Pfad dient `/api/_info/version`.
+
 **Anmeldearten**
 
 - **API-Key im Header:** `<Header-Name>: <Key>`; der Name besteht aus Buchstaben, Ziffern und `-` (z. B. `X-API-Key`).
 - **Bearer-Token:** `Authorization: Bearer <Token>`.
 - **OAuth client credentials:** Die Runtime holt das Token selbst per POST an die Token-URL
-  (`application/x-www-form-urlencoded`: `grant_type`, `client_id`, `client_secret`, optional `scope`) und sendet es als
+  (`application/x-www-form-urlencoded`: `grant_type`, `client_id`, `client_secret`, optional `scope`; mit
+  **„Token-Anfrage als JSON senden“** (`tokenRequestFormat: "json"`) dieselben Felder als JSON-Body) und sendet es als
   Bearer. Das Token liegt im Speicher bis 60 s vor Ablauf (`expires_in`; fehlt es, gilt es 300 s). Gleichzeitige Aufrufe
   teilen sich eine Token-Anfrage. Wird die Verbindung bearbeitet, gilt ein neues Token. Fehlermeldungen nennen Status
   und Grund des Servers, nie das Geheimnis.
@@ -112,8 +118,8 @@ Gerät zeigt der Baustein „Verbindung nicht gefunden“, bis dort eine Verbind
 ## Nicht umgesetzt
 
 - **Basic Auth** und **delegiertes OAuth** (Nutzer verbindet sein eigenes Konto; braucht eine Redirect-URL der Runtime).
-- Ob ein System die OAuth-Token-Anfrage im Format `application/x-www-form-urlencoded` annimmt, ist je System zu prüfen;
-  ein JSON-Format ist nicht vorgesehen.
+- Ob ein System die Token-Anfrage als Formular oder als JSON erwartet, ist je System zu prüfen (Schalter an der
+  Verbindung); andere Formate (z. B. HTTP-Basic am Token-Endpunkt) gibt es nicht.
 - Seitenweises Abrufen, Wiederholungen und Rate-Limit-Behandlung (derzeit über „Für jedes Element“ zu lösen).
 - Der KI-Agent im Aufgabenstudio kennt den Baustein nicht und legt ihn nicht an.
 - Keine Vorlagen für bekannte Systeme (z. B. „Shopware: Bestellungen abrufen“).

@@ -19,6 +19,7 @@ const Auth = Type.Object({
   tokenUrl: Type.Optional(Type.String({maxLength: 2048})),
   clientId: Type.Optional(Type.String({maxLength: 500})),
   scope: Type.Optional(Type.String({maxLength: 500})),
+  tokenRequestFormat: Type.Optional(Type.String({maxLength: 20})),
 });
 const ConnectionDto = Type.Object({
   id: Type.String(), name: Type.String(), baseUrl: Type.String(), auth: Auth, updatedAt: Type.String(),

@@ -2,7 +2,11 @@
 export type ConnectionAuth =
   | {kind: "apiKey"; headerName: string}
   | {kind: "bearer"}
-  | {kind: "oauthClientCredentials"; tokenUrl: string; clientId: string; scope?: string};
+  | {
+    kind: "oauthClientCredentials"; tokenUrl: string; clientId: string; scope?: string;
+    /** Wie die Token-Anfrage gesendet wird; fehlt die Angabe, gilt `form` (RFC 6749). Shopware erwartet `json`. */
+    tokenRequestFormat?: "json";
+  };
 
 export type Connection = {
   id: string;

@@ -46,6 +46,7 @@ class OAuthClientCredentialsAuth extends ConnectionAuth {
     required this.tokenUrl,
     required this.clientId,
     this.scope = '',
+    this.sendsJson = false,
   });
 
   final String tokenUrl;
@@ -54,6 +55,9 @@ class OAuthClientCredentialsAuth extends ConnectionAuth {
   /// Leer heißt: kein Scope anfordern.
   final String scope;
 
+  /// Ob die Token-Anfrage als JSON statt als Formular gesendet wird (Shopware).
+  final bool sendsJson;
+
   @override
   String get label => 'OAuth (Client Credentials)';
 
@@ -61,7 +65,7 @@ class OAuthClientCredentialsAuth extends ConnectionAuth {
   String get secretLabel => 'Client-Secret';
 
   @override
-  List<Object?> get props => [tokenUrl, clientId, scope];
+  List<Object?> get props => [tokenUrl, clientId, scope, sendsJson];
 }
 
 class Connection extends Equatable {

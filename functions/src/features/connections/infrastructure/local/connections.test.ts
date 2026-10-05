@@ -135,6 +135,27 @@ test("OAuth: Token holen, zwischenspeichern, kurz vor Ablauf erneuern, nach Bear
   assert.equal((await authorizer.authorize("team-1", created.id)).headers.authorization, "Bearer tok-3", "eine Bearbeitung verwirft das alte Token");
 });
 
+test("OAuth: das Format json sendet die Token-Anfrage als JSON (Shopware) und überlebt das Speichern", async () => {
+  const {database, store} = await setup();
+  using _ = closing(database);
+  const sent: Array<{body: unknown; contentType: string | null}> = [];
+  const request = ((_url: string, init: RequestInit) => {
+    sent.push({body: JSON.parse(init.body as string), contentType: new Headers(init.headers).get("content-type")});
+    return Promise.resolve(new Response(JSON.stringify({access_token: "tok", expires_in: 600}), {status: 200}));
+  }) as unknown as typeof fetch;
+  const created = await store.create("team-1", {...oauth, auth: {...oauth.auth, tokenRequestFormat: "json"} as ConnectionInput["auth"]}, "client-secret");
+
+  const authorizer = new StoredConnectionAuthorizer(store, new OAuthTokenProvider(request));
+  assert.equal((await authorizer.authorize("team-1", created.id)).headers.authorization, "Bearer tok");
+
+  assert.deepEqual(sent, [{
+    body: {grant_type: "client_credentials", client_id: "client-1", client_secret: "client-secret", scope: "write"},
+    contentType: "application/json",
+  }]);
+  const stored = (await store.find("team-1", created.id))?.auth;
+  assert.equal(stored?.kind === "oauthClientCredentials" ? stored.tokenRequestFormat : undefined, "json");
+});
+
 test("OAuth: gleichzeitige Aufrufe teilen sich eine Token-Anfrage", async () => {
   const {database, store} = await setup();
   using _ = closing(database);

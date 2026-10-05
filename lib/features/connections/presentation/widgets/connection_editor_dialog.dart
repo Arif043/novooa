@@ -70,6 +70,15 @@ class _ConnectionEditorDialogState extends State<ConnectionEditorDialog> {
     OAuthClientCredentialsAuth() => _AuthKind.oauth,
     _ => _AuthKind.apiKey,
   };
+  late bool _tokenJson = switch (widget.existing?.auth) {
+    OAuthClientCredentialsAuth(:final sendsJson) => sendsJson,
+    _ => false,
+  };
+
+  /// Zuletzt aus der Basis-URL abgeleitete Token-URL der Vorlage; nur eine
+  /// unveränderte Ableitung wird bei weiteren Eingaben nachgezogen.
+  String? _derivedTokenUrl;
+  bool _shopware = false;
   String? _error;
   bool _saving = false;
   bool _testing = false;
@@ -101,14 +110,38 @@ class _ConnectionEditorDialogState extends State<ConnectionEditorDialog> {
       tokenUrl: _tokenUrl.text.trim(),
       clientId: _clientId.text.trim(),
       scope: _scope.text.trim(),
+      sendsJson: _tokenJson,
     ),
   };
 
   String get _secretLabel => switch (_kind) {
     _AuthKind.apiKey => 'API-Key',
     _AuthKind.bearer => 'Token',
-    _AuthKind.oauth => 'Client-Secret',
+    _AuthKind.oauth =>
+      _shopware ? 'Geheimer Zugriffsschlüssel' : 'Client-Secret',
   };
+
+  /// Vorlage für Shopware 6: OAuth mit dem Zugriffsschlüssel einer Integration;
+  /// die Token-Anfrage geht als JSON, die Token-URL folgt der Shop-Adresse.
+  void _applyShopware() {
+    setState(() {
+      _shopware = true;
+      _kind = _AuthKind.oauth;
+      _tokenJson = true;
+      if (_name.text.trim().isEmpty) _name.text = 'Shopware';
+      _deriveTokenUrl();
+      _testPath.text = '/api/_info/version';
+    });
+  }
+
+  void _deriveTokenUrl() {
+    if (!_shopware) return;
+    final current = _tokenUrl.text.trim();
+    if (current.isNotEmpty && current != _derivedTokenUrl) return;
+    final base = _baseUrl.text.trim().replaceFirst(RegExp(r'/+$'), '');
+    _derivedTokenUrl = base.isEmpty ? '' : '$base/api/oauth/token';
+    _tokenUrl.text = _derivedTokenUrl!;
+  }
 
   String get _kindLabel => switch (_kind) {
     _AuthKind.apiKey => 'API-Key im Header',
@@ -197,6 +230,18 @@ class _ConnectionEditorDialogState extends State<ConnectionEditorDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (_isNew && !_shopware) ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: ActionChip(
+                    key: const ValueKey('connection-template-shopware'),
+                    avatar: const Icon(Icons.storefront_outlined, size: 18),
+                    label: const Text('Vorlage: Shopware'),
+                    onPressed: _applyShopware,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
               TextField(
                 controller: _name,
                 decoration: const InputDecoration(
@@ -208,10 +253,12 @@ class _ConnectionEditorDialogState extends State<ConnectionEditorDialog> {
               TextField(
                 controller: _baseUrl,
                 keyboardType: TextInputType.url,
-                onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(
+                onChanged: (_) => setState(_deriveTokenUrl),
+                decoration: InputDecoration(
                   labelText: 'Basis-URL',
-                  hintText: 'https://shop.example.com/api',
+                  hintText: _shopware
+                      ? 'https://shop.example.com'
+                      : 'https://shop.example.com/api',
                 ),
               ),
               if (_baseUrl.text.trim().toLowerCase().startsWith('http://'))
@@ -262,7 +309,13 @@ class _ConnectionEditorDialogState extends State<ConnectionEditorDialog> {
                 const SizedBox(height: AppSpacing.md),
                 TextField(
                   controller: _clientId,
-                  decoration: const InputDecoration(labelText: 'Client-ID'),
+                  decoration: InputDecoration(
+                    labelText: _shopware ? 'Zugriffsschlüssel-ID' : 'Client-ID',
+                    helperText: _shopware
+                        ? 'In Shopware: Einstellungen → System → Integrationen.'
+                        : null,
+                    helperMaxLines: 2,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 TextField(
@@ -271,7 +324,20 @@ class _ConnectionEditorDialogState extends State<ConnectionEditorDialog> {
                     labelText: 'Scope (optional)',
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                Material(
+                  type: MaterialType.transparency,
+                  child: SwitchListTile(
+                    key: const ValueKey('connection-token-json'),
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Token-Anfrage als JSON senden'),
+                    subtitle: const Text(
+                      'Manche Systeme (z. B. Shopware) erwarten JSON statt eines Formulars.',
+                    ),
+                    value: _tokenJson,
+                    onChanged: (value) => setState(() => _tokenJson = value),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
               ],
               TextField(
                 controller: _secret,

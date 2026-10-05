@@ -1,6 +1,6 @@
 import {ConnectionRequestError, type ConnectionAuth, type ConnectionInput} from "./connection.js";
 
-type AuthBody = {kind?: string; headerName?: string; tokenUrl?: string; clientId?: string; scope?: string};
+type AuthBody = {kind?: string; headerName?: string; tokenUrl?: string; clientId?: string; scope?: string; tokenRequestFormat?: string};
 export type ConnectionBody = {name?: string; baseUrl?: string; auth?: AuthBody};
 
 const headerNamePattern = /^[A-Za-z0-9-]{1,64}$/;
@@ -35,11 +35,15 @@ function authFrom(auth: AuthBody): ConnectionAuth {
     const clientId = (auth.clientId ?? "").trim();
     if (clientId.length === 0 || clientId.length > 500) throw new ConnectionRequestError("Bitte gib die Client-ID an.");
     const scope = (auth.scope ?? "").trim();
+    const format = (auth.tokenRequestFormat ?? "form").trim() || "form";
+    if (format !== "form" && format !== "json") throw new ConnectionRequestError("Das Format der Token-Anfrage ist ungültig.");
     return {
       kind: "oauthClientCredentials",
       tokenUrl: httpUrlFrom(auth.tokenUrl, "Die Token-URL", false),
       clientId,
       ...(scope.length === 0 ? {} : {scope: scope.slice(0, 500)}),
+      // Nur die Abweichung wird gespeichert: Verbindungen ohne Angabe bleiben unverändert.
+      ...(format === "json" ? {tokenRequestFormat: "json" as const} : {}),
     };
   }
   default:

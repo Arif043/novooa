@@ -19,6 +19,15 @@ test("alle Anmeldearten werden mit ihren Feldern übernommen", () => {
   assert.equal("scope" in connectionInputFrom({...valid, auth: {kind: "oauthClientCredentials", tokenUrl: "https://t.example/token", clientId: "abc"}}).auth, false);
 });
 
+test("das Token-Format json wird gespeichert, form ist der unausgesprochene Standard", () => {
+  const oauth = {kind: "oauthClientCredentials", tokenUrl: "https://shop.example.com/api/oauth/token", clientId: "abc"};
+  assert.deepEqual(connectionInputFrom({...valid, auth: {...oauth, tokenRequestFormat: "json"}}).auth, {...oauth, tokenRequestFormat: "json"});
+  for (const format of [undefined, "", "form", " form "]) {
+    assert.equal("tokenRequestFormat" in connectionInputFrom({...valid, auth: {...oauth, tokenRequestFormat: format}}).auth, false, String(format));
+  }
+  assert.throws(() => connectionInputFrom({...valid, auth: {...oauth, tokenRequestFormat: "xml"}}), /Format der Token-Anfrage/);
+});
+
 test("ungültige Eingaben nennen den Grund auf Deutsch", () => {
   const rejects = (body: Parameters<typeof connectionInputFrom>[0], pattern: RegExp) =>
     assert.throws(() => connectionInputFrom(body), (error: unknown) => error instanceof ConnectionRequestError && pattern.test(error.message));
