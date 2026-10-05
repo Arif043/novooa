@@ -4,6 +4,8 @@ import '../../features/employees/domain/usecases/watch_employees.dart';
 import '../../features/employees/infrastructure/repositories/local_employee_repository.dart';
 import '../../features/employees/presentation/cubits/employees_cubit.dart';
 import '../../features/task_builder/presentation/cubits/node_employee_assignments_cubit.dart';
+import '../../features/connections/domain/repositories/connection_repository.dart';
+import '../../features/connections/infrastructure/repositories/local_connection_repository.dart';
 import '../../features/skills/domain/repositories/skill_catalog_repository.dart';
 import '../../features/skills/domain/repositories/skill_import_repository.dart';
 import '../../features/skills/domain/repositories/skill_repository.dart';
@@ -299,6 +301,12 @@ Future<void> configureStandaloneDependencies(
     )
     ..registerLazySingleton<SkillCatalogRepository>(
       () => LocalSkillCatalogRepository(locator<WorkspaceApiClient>()),
+    )
+    ..registerLazySingleton<ConnectionRepository>(
+      () => LocalConnectionRepository(
+        locator<WorkspaceApiClient>(),
+        locator<WorkspaceRealtimeChannel>(),
+      ),
     )
     ..registerLazySingleton<SkillSourceGateway>(
       FilePickerSkillSourceGateway.new,

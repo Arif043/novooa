@@ -27,6 +27,7 @@ class WorkspaceCapabilities {
     required this.messagingChannels,
     required this.skills,
     required this.employees,
+    required this.connections,
   });
 
   factory WorkspaceCapabilities.forKind(RuntimeKind kind) => switch (kind) {
@@ -38,6 +39,7 @@ class WorkspaceCapabilities {
       messagingChannels: true,
       skills: false,
       employees: false,
+      connections: false,
     ),
     RuntimeKind.standalone => WorkspaceCapabilities(
       assistant: true,
@@ -47,6 +49,7 @@ class WorkspaceCapabilities {
       messagingChannels: false,
       skills: true,
       employees: true,
+      connections: true,
     ),
   };
 
@@ -71,6 +74,10 @@ class WorkspaceCapabilities {
   /// Mitarbeiter (Subagenten) mit Rahmenbedingung und Fähigkeiten. Sie
   /// brauchen Fähigkeiten und einen Speicher in der lokalen Runtime.
   final bool employees;
+
+  /// Verbindungen zu externen HTTP-Systemen (Zugangsdaten im Backend, Baustein
+  /// „HTTP-Anfrage“). Die Cloud hat dafür noch keinen Speicher.
+  final bool connections;
 
   /// Firebase-Push (FCM/APNs). Für Standalone bewusst standardmäßig aus,
   /// damit sich der macOS-Client ohne Apple-Entwicklungszertifikat bauen

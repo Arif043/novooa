@@ -83,6 +83,9 @@ import 'package:syscat2/features/employees/domain/usecases/watch_employees.dart'
 import 'package:syscat2/features/employees/domain/usecases/employee_use_cases.dart';
 import 'package:syscat2/features/employees/infrastructure/repositories/unavailable_employee_repository.dart';
 import 'package:syscat2/features/employees/presentation/cubits/employees_cubit.dart';
+import 'package:syscat2/core/di/connection_dependency_registration.dart';
+import 'package:syscat2/features/connections/domain/repositories/connection_repository.dart';
+import 'package:syscat2/features/connections/infrastructure/repositories/unavailable_connection_repository.dart';
 import 'package:syscat2/features/skills/domain/repositories/skill_repository.dart';
 import 'package:syscat2/features/skills/domain/usecases/delete_skill.dart';
 import 'package:syscat2/features/skills/domain/usecases/watch_skills.dart';
@@ -157,9 +160,10 @@ Future<void> configureDependencies({RuntimeProfile? runtimeProfile}) async {
   );
   if (profile.isStandalone) {
     await configureStandaloneDependencies(serviceLocator, profile);
-    return;
+  } else {
+    _configureCloudDependencies();
   }
-  _configureCloudDependencies();
+  registerConnectionDependencies(serviceLocator);
 }
 
 /// Leert den Container, damit [configureDependencies] mit einer anderen
@@ -222,6 +226,9 @@ void _configureCloudDependencies() {
           FirestoreKnowledgeBaseRepository(serviceLocator<FirebaseFirestore>()),
     )
     ..registerLazySingleton<SkillRepository>(UnavailableSkillRepository.new)
+    ..registerLazySingleton<ConnectionRepository>(
+      () => const UnavailableConnectionRepository(),
+    )
     ..registerLazySingleton<EmployeeRepository>(
       UnavailableEmployeeRepository.new,
     )

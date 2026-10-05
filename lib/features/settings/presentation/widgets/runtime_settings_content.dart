@@ -12,6 +12,7 @@ import 'settings_section.dart';
 import 'ai_model_settings_tab.dart';
 import 'runtime_license_status.dart';
 import '../../../machine_learning/presentation/widgets/machine_learning_settings_tab.dart';
+import '../../../connections/presentation/widgets/connections_settings_tab.dart';
 import '../../../workspace_transfer/presentation/widgets/import_export_settings_tab.dart';
 
 class RuntimeSettingsContent extends StatelessWidget {
@@ -20,7 +21,7 @@ class RuntimeSettingsContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: Column(
         children: [
           const _RuntimeSettingsTabs(),
@@ -43,6 +44,7 @@ class RuntimeSettingsContent extends StatelessWidget {
                   ),
                 ),
                 const CommunicationSettingsTab(),
+                const ConnectionsSettingsTab(),
                 const MachineLearningSettingsTab(),
                 const ImportExportSettingsTab(),
               ],
@@ -84,10 +86,14 @@ class _RuntimeSettingsTabs extends StatelessWidget {
               label: 'Kommunikation',
             ),
             3: _RuntimeSettingsTabLabel(
+              icon: Icons.link,
+              label: 'Verbindungen',
+            ),
+            4: _RuntimeSettingsTabLabel(
               icon: Icons.memory_outlined,
               label: 'Machine Learning',
             ),
-            4: _RuntimeSettingsTabLabel(
+            5: _RuntimeSettingsTabLabel(
               icon: Icons.import_export,
               label: 'Import/Export',
             ),

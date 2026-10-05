@@ -50,6 +50,7 @@ void main() {
         messagingChannels: false,
         skills: false,
         employees: true,
+        connections: false,
       ),
     );
   });
