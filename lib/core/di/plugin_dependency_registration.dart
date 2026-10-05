@@ -4,6 +4,7 @@ import 'package:syscat2/features/plugins/domain/repositories/plugin_install_repo
 import 'package:syscat2/features/plugins/domain/repositories/plugin_repository.dart';
 import 'package:syscat2/features/plugins/domain/usecases/plugin_use_cases.dart';
 import 'package:syscat2/features/plugins/infrastructure/datasources/file_picker_plugin_archive_gateway.dart';
+import 'package:syscat2/features/plugins/presentation/cubits/plugin_catalog_cubit.dart';
 import 'package:syscat2/features/plugins/presentation/cubits/plugin_install_cubit.dart';
 import 'package:syscat2/features/plugins/presentation/cubits/plugin_registry_cubit.dart';
 import 'package:syscat2/features/plugins/presentation/cubits/plugins_cubit.dart';
@@ -43,6 +44,7 @@ void registerPluginDependencies(GetIt locator) {
         locator<GetCurrentTeamId>(),
       ),
     )
+    ..registerFactory(() => PluginCatalogCubit(locator<LoadPluginCatalog>()))
     ..registerFactory(
       () => PluginInstallCubit(
         locator<PreviewPluginFromCatalog>(),
