@@ -9,7 +9,8 @@ enum EventTriggerSource {
   fileCreated('Datei erstellt', EventTargetScope.files),
   fileVersionCreated('Neue Dateiversion', EventTargetScope.files),
   fileDeleted('Datei gelöscht', EventTargetScope.files),
-  webhookReceived('Webhook empfangen', EventTargetScope.none);
+  webhookReceived('Webhook empfangen', EventTargetScope.none),
+  plugin('Ereignis eines Plugins', EventTargetScope.none);
 
   const EventTriggerSource(this.label, this.targetScope);
 
@@ -85,12 +86,38 @@ class ConnectorTarget extends EventTriggerTarget {
   final String name;
 }
 
+/// Welcher Trigger welches Plugins gemeint ist, samt seinen Einstellungen.
+/// [label] ist nur Anzeigetext für die Trigger-Karte.
+class PluginTriggerSelection {
+  const PluginTriggerSelection({
+    required this.pluginId,
+    required this.type,
+    required this.label,
+    this.settings = const {},
+  });
+
+  final String pluginId;
+  final String type;
+  final String label;
+  final Map<String, Object> settings;
+
+  PluginTriggerSelection withSetting(String key, Object value) {
+    return PluginTriggerSelection(
+      pluginId: pluginId,
+      type: type,
+      label: label,
+      settings: {...settings, key: value},
+    );
+  }
+}
+
 class EventTriggerConfig {
   const EventTriggerConfig({
     required this.source,
     this.target = EventTriggerTarget.anywhere,
     this.fileKinds = const {},
     this.filter = '',
+    this.plugin,
   });
 
   final EventTriggerSource source;
@@ -100,5 +127,8 @@ class EventTriggerConfig {
   final Set<EventFileKind> fileKinds;
   final String filter;
 
-  bool get isValid => true;
+  /// Nur bei [EventTriggerSource.plugin].
+  final PluginTriggerSelection? plugin;
+
+  bool get isValid => source != EventTriggerSource.plugin || plugin != null;
 }

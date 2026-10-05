@@ -7,6 +7,7 @@ import '../cubits/event_target_options_cubit.dart';
 import 'event_file_kind_chips.dart';
 import 'event_target_field.dart';
 import 'event_target_sheet.dart';
+import 'plugin_trigger_picker.dart';
 import 'schedule_choice_control.dart';
 
 enum TriggerFormMode { schedule, event }
@@ -45,6 +46,9 @@ class EventTriggerControls extends StatelessWidget {
     required this.onSourceChanged,
     required this.onTargetChanged,
     required this.onFileKindsChanged,
+    this.pluginOptions = const [],
+    this.plugin,
+    required this.onPluginChanged,
   });
 
   final EventTriggerSource source;
@@ -54,6 +58,13 @@ class EventTriggerControls extends StatelessWidget {
   final ValueChanged<EventTriggerSource> onSourceChanged;
   final ValueChanged<EventTriggerTarget> onTargetChanged;
   final ValueChanged<Set<EventFileKind>> onFileKindsChanged;
+
+  /// Trigger installierter Plugins; ohne sie fehlt die Quelle „Plugin“.
+  final List<PluginTriggerOption> pluginOptions;
+  final PluginTriggerSelection? plugin;
+  final ValueChanged<PluginTriggerSelection> onPluginChanged;
+
+  bool get _isPlugin => source == EventTriggerSource.plugin;
 
   bool get _hasTarget => source.targetScope != EventTargetScope.none;
 
@@ -71,11 +82,25 @@ class EventTriggerControls extends StatelessWidget {
           isExpanded: true,
           initialValue: source,
           decoration: const InputDecoration(labelText: 'Ereignis'),
-          items: EventTriggerSource.values.map(_itemFor).toList(),
+          items: [
+            for (final value in EventTriggerSource.values)
+              if (value != EventTriggerSource.plugin ||
+                  pluginOptions.isNotEmpty ||
+                  _isPlugin)
+                _itemFor(value),
+          ],
           onChanged: (value) {
             if (value != null) onSourceChanged(value);
           },
         ),
+        if (_isPlugin) ...[
+          const SizedBox(height: AppSpacing.md),
+          PluginTriggerPicker(
+            options: pluginOptions,
+            selection: plugin,
+            onChanged: onPluginChanged,
+          ),
+        ],
         if (_hasTarget) ...[
           const SizedBox(height: AppSpacing.md),
           EventTargetField(
@@ -93,8 +118,10 @@ class EventTriggerControls extends StatelessWidget {
             onChanged: onFileKindsChanged,
           ),
         ],
-        const SizedBox(height: AppSpacing.sm),
-        _MoreOptions(source: source, filterController: filterController),
+        if (!_isPlugin) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _MoreOptions(source: source, filterController: filterController),
+        ],
       ],
     );
   }

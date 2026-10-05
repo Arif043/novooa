@@ -3,14 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/runtime/plugins_availability.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/adaptive_pickers.dart';
+import '../../../plugins/domain/entities/plugin_manifest.dart';
+import '../../../plugins/presentation/cubits/plugin_registry_cubit.dart';
 import '../../../task_builder/domain/entities/task.dart';
 import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../cubits/event_target_options_cubit.dart';
 import '../cubits/schedule_cubit.dart';
 import 'event_trigger_form_controls.dart';
+import 'plugin_trigger_picker.dart';
 import 'schedule_form_values.dart';
 import 'schedule_trigger_form_controls.dart';
 import 'time_trigger_controls.dart';
@@ -42,6 +46,10 @@ class _CreateScheduleTriggerDialogState
   EventTriggerSource _eventSource = EventTriggerSource.emailReceived;
   EventTriggerTarget _eventTarget = EventTriggerTarget.anywhere;
   Set<EventFileKind> _eventFileKinds = const {};
+  PluginTriggerSelection? _eventPlugin;
+  final PluginRegistryCubit? _plugins = pluginsAvailable()
+      ? (serviceLocator<PluginRegistryCubit>()..ensureLoaded())
+      : null;
   final TextEditingController _eventFilterController = TextEditingController();
   ScheduleKind _kind = ScheduleKind.daily;
   TimeOfDay _time = const TimeOfDay(hour: 9, minute: 0);
@@ -192,10 +200,9 @@ class _CreateScheduleTriggerDialogState
   }
 
   bool get _canSubmit {
-    return _task != null &&
-        (_mode == TriggerFormMode.event ||
-            _kind != ScheduleKind.weekly ||
-            _slots.isNotEmpty);
+    if (_task == null) return false;
+    if (_mode == TriggerFormMode.event) return _eventConfig().isValid;
+    return _kind != ScheduleKind.weekly || _slots.isNotEmpty;
   }
 
   void _setTask(Task? task) => setState(() => _task = task);
@@ -225,7 +232,7 @@ class _CreateScheduleTriggerDialogState
   }
 
   Widget _eventControls() {
-    return EventTriggerControls(
+    Widget controls(List<PluginManifest> manifests) => EventTriggerControls(
       source: _eventSource,
       target: _eventTarget,
       fileKinds: _eventFileKinds,
@@ -233,6 +240,15 @@ class _CreateScheduleTriggerDialogState
       onSourceChanged: _setEventSource,
       onTargetChanged: (target) => setState(() => _eventTarget = target),
       onFileKindsChanged: (kinds) => setState(() => _eventFileKinds = kinds),
+      pluginOptions: pluginTriggerOptions(manifests),
+      plugin: _eventPlugin,
+      onPluginChanged: (plugin) => setState(() => _eventPlugin = plugin),
+    );
+    final registry = _plugins;
+    if (registry == null) return controls(const []);
+    return BlocBuilder<PluginRegistryCubit, List<PluginManifest>>(
+      bloc: registry,
+      builder: (context, manifests) => controls(manifests),
     );
   }
 
@@ -369,6 +385,7 @@ class _CreateScheduleTriggerDialogState
     target: _eventTarget,
     fileKinds: _eventFileKinds,
     filter: _eventFilterController.text.trim(),
+    plugin: _eventSource == EventTriggerSource.plugin ? _eventPlugin : null,
   );
 
   ScheduleConfig _config() =>

@@ -11,6 +11,13 @@ class EventTriggerConfigMapper {
       'target': _targetToDocument(config.target),
       'fileKinds': [for (final kind in config.fileKinds) kind.name],
       'filter': config.filter.trim(),
+      if (config.plugin case final plugin?)
+        'plugin': {
+          'pluginId': plugin.pluginId,
+          'type': plugin.type,
+          'label': plugin.label,
+          'settings': plugin.settings,
+        },
     };
   }
 
@@ -24,6 +31,29 @@ class EventTriggerConfigMapper {
       target: _targetFromDocument(data['target']),
       fileKinds: _fileKindsFrom(data['fileKinds']),
       filter: data['filter'] as String? ?? '',
+      plugin: _pluginFrom(data['plugin']),
+    );
+  }
+
+  static PluginTriggerSelection? _pluginFrom(Object? value) {
+    if (value is! Map) return null;
+    final pluginId = value['pluginId'];
+    final type = value['type'];
+    if (pluginId is! String || type is! String) return null;
+    final settings = value['settings'];
+    return PluginTriggerSelection(
+      pluginId: pluginId,
+      type: type,
+      label: value['label'] as String? ?? '$pluginId · $type',
+      settings: {
+        if (settings is Map)
+          for (final entry in settings.entries)
+            if (entry.key is String &&
+                (entry.value is String ||
+                    entry.value is num ||
+                    entry.value is bool))
+              entry.key as String: entry.value as Object,
+      },
     );
   }
 

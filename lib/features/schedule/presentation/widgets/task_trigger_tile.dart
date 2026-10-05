@@ -193,6 +193,7 @@ IconData _iconFor(TaskTrigger trigger) {
     EventTriggerSource.fileVersionCreated => CupertinoIcons.doc_on_doc,
     EventTriggerSource.fileDeleted => CupertinoIcons.trash,
     EventTriggerSource.webhookReceived => CupertinoIcons.link,
+    EventTriggerSource.plugin => Icons.extension_outlined,
     null => CupertinoIcons.bolt,
   };
 }
