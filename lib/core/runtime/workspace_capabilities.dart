@@ -27,6 +27,7 @@ class WorkspaceCapabilities {
     required this.messagingChannels,
     required this.skills,
     required this.employees,
+    required this.plugins,
   });
 
   factory WorkspaceCapabilities.forKind(RuntimeKind kind) => switch (kind) {
@@ -38,6 +39,7 @@ class WorkspaceCapabilities {
       messagingChannels: true,
       skills: false,
       employees: false,
+      plugins: false,
     ),
     RuntimeKind.standalone => WorkspaceCapabilities(
       assistant: true,
@@ -47,6 +49,7 @@ class WorkspaceCapabilities {
       messagingChannels: false,
       skills: true,
       employees: true,
+      plugins: true,
     ),
   };
 
@@ -71,6 +74,12 @@ class WorkspaceCapabilities {
   /// Mitarbeiter (Subagenten) mit Rahmenbedingung und Fähigkeiten. Sie
   /// brauchen Fähigkeiten und einen Speicher in der lokalen Runtime.
   final bool employees;
+
+  /// Plugins: signierte Pakete mit Bausteinen, Triggern und
+  /// Einstellungs-Panels, die der Admin in Firebase veröffentlicht und ein Team
+  /// installiert. Der Plugin-Code läuft in der lokalen Runtime; die Cloud hat
+  /// dafür noch keine Ausführungsumgebung.
+  final bool plugins;
 
   /// Firebase-Push (FCM/APNs). Für Standalone bewusst standardmäßig aus,
   /// damit sich der macOS-Client ohne Apple-Entwicklungszertifikat bauen

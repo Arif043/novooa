@@ -73,6 +73,7 @@ WorkspaceCapabilities _capabilities({required bool messaging}) {
     messagingChannels: messaging,
     skills: false,
     employees: false,
+    plugins: false,
   );
 }
 

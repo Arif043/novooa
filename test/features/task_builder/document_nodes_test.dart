@@ -105,6 +105,7 @@ void main() {
         messagingChannels: false,
         skills: false,
         employees: false,
+        plugins: false,
       ),
     );
     addTearDown(() => serviceLocator.unregister<WorkspaceCapabilities>());
