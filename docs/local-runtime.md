@@ -599,6 +599,13 @@ Der Import (GitHub, ZIP, Ordner, skills.sh) läuft über `POST /v1/skills/import
 Vercel-Proxy `relay/skills-sh-proxy`); `SKILLS_SH_RELAY_URL` ist in der Compose-Datei voreingestellt. Routen, Grenzen, Rate-Limits und Sicherheit stehen in
 [`features/skills.md`](features/skills.md). Das Thema `skills` des Realtime-Kanals meldet Änderungen.
 
+## Verbindungen und HTTP-Anfragen
+
+Gespeicherte Zugänge zu externen HTTP-APIs (`/v1/connections…`, Thema `connections` des Realtime-Kanals) und der Baustein
+„HTTP-Anfrage“. Die Geheimnisse liegen verschlüsselt in `language_model_secrets` (`secret_ref` mit Präfix `connection/`)
+und werden bei der Schlüsselrotation mit umgeschlüsselt. Ausgehende Anfragen unterliegen **keiner** Sperre für interne
+Adressen — Details und Grenzen in [`features/verbindungen.md`](features/verbindungen.md) § Sicherheit.
+
 ## Lizenz und lokale Identität
 
 Die Runtime ist ohne gültigen Lizenzschlüssel nicht nutzbar. Beim Kauf stellt
