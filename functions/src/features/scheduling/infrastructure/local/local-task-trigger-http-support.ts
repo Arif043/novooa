@@ -73,6 +73,8 @@ function eventTriggerFrom(input: Record<string, unknown>): TriggerInput {
   if (!isEventTriggerSource(parsed.source)) {
     throw new LocalTaskTriggerError("eventConfig.source ist ungültig.");
   }
+  const sourceProblem = defaultEventTriggerSources.problem(parsed);
+  if (sourceProblem !== null) throw new LocalTaskTriggerError(sourceProblem);
   const eventConfig = defaultEventTriggerSources.prepare(parsed);
   const webhookSecret = webhookSecretFrom(rawConfig);
   if (eventConfig.webhook !== undefined) {

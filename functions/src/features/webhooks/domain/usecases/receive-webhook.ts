@@ -3,6 +3,7 @@ import {type RelayRateLimiter} from "../../../skills/domain/repositories/relay-r
 import {webhookSecretRef, type WebhookSecretStore} from "../../../scheduling/domain/repositories/webhook-secret-store.js";
 import {type EventTaskTrigger} from "../../../scheduling/domain/repositories/task-trigger-store.js";
 import {startEventTriggerRun, type EventTriggerRunPorts} from "../../../scheduling/domain/usecases/start-event-trigger-run.js";
+import {maximumRunsPerWebhook, type WebhookInterpreter} from "../entities/webhook-interpreter.js";
 import {webhookContextText, webhookEventFrom, type WebhookRequest} from "../entities/webhook-event.js";
 import {webhookSignatureMatches} from "./verify-webhook-signature.js";
 
@@ -32,6 +33,8 @@ export type ReceiveWebhookPorts = EventTriggerRunPorts & {
   failures: RelayRateLimiter;
   /** Je Auslöser: schützt die Aufgabe vor einer Flut gültiger Aufrufe. */
   triggers: RelayRateLimiter;
+  /** Auslöser anderer Quellen als `webhookReceived` lassen den Aufruf von ihrem Interpreter auswerten. */
+  interpreters?: ReadonlyMap<string, WebhookInterpreter>;
   now?: () => Date;
 };
 
@@ -71,6 +74,12 @@ export class ReceiveWebhook implements WebhookReceiver {
     if (request.method === "GET") return this.rejectedAttempt({kind: "notFound"});
     const signatureHeader = await this.verifiedSignatureHeader(trigger, request);
     if (signatureHeader === null) return {kind: "unauthorized"};
+    const interpreter = this.ports.interpreters?.get(trigger.eventConfig.source);
+    if (interpreter !== undefined) {
+      const runs = await interpreter.interpret(trigger, request);
+      for (const run of runs.slice(0, maximumRunsPerWebhook)) await startEventTriggerRun(trigger, run, this.ports);
+      return {kind: "accepted"};
+    }
     const event = webhookEventFrom(request, signatureHeader, (this.ports.now ?? (() => new Date()))());
     await startEventTriggerRun(trigger, {context: webhookContextText(event, request.rawBody.length), event}, this.ports);
     return {kind: "accepted"};

@@ -5,6 +5,10 @@ export type EventTriggerSourceDefinition = {
   id: string;
   /** Ergänzt serverseitig, was der Client nicht vorgeben darf (z. B. ein Webhook-Token). */
   prepare?: (config: EventTriggerConfig) => EventTriggerConfig;
+  /** Der Auslöser wird über eine Adresse mit Token aufgerufen (Webhook-Empfänger). */
+  usesWebhook?: boolean;
+  /** Meldung für unbrauchbare Einstellungen, sonst `null`; geprüft vor `prepare`. */
+  problem?: (config: EventTriggerConfig) => string | null;
 };
 
 /**
@@ -21,6 +25,14 @@ export class EventTriggerSourceRegistry {
 
   has(id: string): boolean {
     return this.definitions.has(id);
+  }
+
+  usesWebhook(id: string): boolean {
+    return this.definitions.get(id)?.usesWebhook === true;
+  }
+
+  problem(config: EventTriggerConfig): string | null {
+    return this.definitions.get(config.source)?.problem?.(config) ?? null;
   }
 
   prepare(config: EventTriggerConfig): EventTriggerConfig {
@@ -42,6 +54,7 @@ export function createDefaultEventTriggerSourceRegistry(): EventTriggerSourceReg
     // Das Token vergibt immer der Server, nie der Client.
     .register({
       id: "webhookReceived",
+      usesWebhook: true,
       prepare: (config) => ({...config, webhook: {...webhookConfigFrom(config.webhook), token: generateWebhookToken()}}),
     });
 }

@@ -26,7 +26,7 @@ export function fakeShopware(routes: Record<string, Route | Route[]>) {
     },
   };
   const bodies = (key: string) => sent.filter((request) => `${request.method} ${request.url}` === key).map((request) => JSON.parse(request.body ?? "{}") as Record<string, unknown>);
-  return {client: new ShopwareClient(http, "team-1", "conn-1"), sent, bodies};
+  return {client: new ShopwareClient(http, "team-1", "conn-1"), http, sent, bodies};
 }
 
 export const resolveTemplates = (text: string): string => text.replace("{{nummer}}", "10001");

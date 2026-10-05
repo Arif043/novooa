@@ -22,8 +22,10 @@ export type EventTriggerConfig = {
   target: EventTriggerTarget;
   fileKinds: FileContentKind[];
   filter: string;
-  /** Nur bei der Quelle `webhookReceived`. */
+  /** Nur bei Quellen, die über einen Webhook auslösen. */
   webhook?: WebhookConfig;
+  /** Einstellungen einer Quelle, die ein Plugin mitbringt; es prüft und liest sie selbst. */
+  params?: Record<string, unknown>;
 };
 
 export function eventTriggerConfigFrom(value: unknown): EventTriggerConfig {
@@ -34,7 +36,8 @@ export function eventTriggerConfigFrom(value: unknown): EventTriggerConfig {
     target: eventTriggerTargetFrom(data.target),
     fileKinds: fileKindsFrom(data.fileKinds),
     filter: stringOr(data.filter, ""),
-    ...(source === "webhookReceived" ? {webhook: webhookConfigFrom(data.webhook)} : {}),
+    ...(defaultEventTriggerSources.usesWebhook(source) ? {webhook: webhookConfigFrom(data.webhook)} : {}),
+    ...(isRecord(data.params) ? {params: data.params} : {}),
   };
 }
 

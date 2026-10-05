@@ -41,7 +41,7 @@ import {ConnectionHttpClient} from "../../features/connections/infrastructure/lo
 import {OAuthTokenProvider} from "../../features/connections/infrastructure/local/oauth-token-provider.js";
 import {SQLiteConnectionStore} from "../../features/connections/infrastructure/local/sqlite-connection-store.js";
 import {StoredConnectionAuthorizer} from "../../features/connections/infrastructure/local/stored-connection-authorizer.js";
-import {registerIntegrationPlugins} from "../../features/integrations/index.js";
+import {integrationWebhookInterpreters, registerIntegrationPlugins} from "../../features/integrations/index.js";
 import {createDefaultNodeExecutorRegistry} from "../../features/task_execution/infrastructure/genkit/runner/node-executor-registry.js";
 import {createLocalTaskWorkflow} from "./local-runtime-task-workflow.js";
 import {type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
@@ -136,21 +136,23 @@ export function createLocalRuntimeComposition(
       );
     },
   });
+  const outboundHttpClient = new ConnectionHttpClient(new StoredConnectionAuthorizer(
+    new SQLiteConnectionStore(options.database, languageModelSecretStore), new OAuthTokenProvider(),
+  ));
   taskWorkflow = createLocalTaskWorkflow({
     database: options.database, runtimeRoot: options.runtimeRoot, signedLicense: options.signedLicense,
     taskRunStore, teamFileStore, taskRunDispatcher, logger: applicationLogger,
     languageModelCatalog: new SQLiteLanguageModelCatalog(options.database, languageModelSecretStore),
     documentStore, mailRelay, pushRelay,
     executorRegistry: registerIntegrationPlugins(createDefaultNodeExecutorRegistry()),
-    outboundHttpClient: new ConnectionHttpClient(new StoredConnectionAuthorizer(
-      new SQLiteConnectionStore(options.database, languageModelSecretStore), new OAuthTokenProvider(),
-    )),
+    outboundHttpClient,
   });
   const webhookBuckets = new InMemoryBucketStateStore();
   const webhooks = new ReceiveWebhook({
     teamId: options.workspace.teamId,
     triggerStore: new SQLiteTaskTriggerStore(options.database), taskStore, taskRunStore, taskRunDispatcher,
     secrets: languageModelSecretStore,
+    interpreters: integrationWebhookInterpreters(outboundHttpClient),
     // Fehlversuche: kleiner Eimer. Gültige Aufrufe je Auslöser: im Schnitt 5 pro Sekunde, Stöße bis 20.
     failures: new TokenBucketRateLimiter(webhookBuckets, {current: async () => ({capacity: 30, refillPerSecond: 1})}),
     triggers: new TokenBucketRateLimiter(webhookBuckets, {current: async () => ({capacity: 20, refillPerSecond: 5})}),

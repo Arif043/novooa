@@ -6,6 +6,7 @@ import {type EventTaskTrigger} from "../../../scheduling/domain/repositories/tas
 import {TokenBucketRateLimiter} from "../../../skills/domain/usecases/token-bucket-rate-limiter.js";
 import {InMemoryBucketStateStore} from "../../infrastructure/local/in-memory-bucket-state-store.js";
 import {type WebhookRequest} from "../entities/webhook-event.js";
+import {type WebhookInterpreter} from "../entities/webhook-interpreter.js";
 import {ReceiveWebhook} from "./receive-webhook.js";
 
 const token = "t".repeat(43);
@@ -18,7 +19,7 @@ function triggerWith(webhook: Record<string, unknown> = {}, enabled = true): Eve
   };
 }
 
-function setup(options: {trigger?: EventTaskTrigger & {enabled: boolean}; secret?: string | null; failures?: number; perTrigger?: number} = {}) {
+function setup(options: {trigger?: EventTaskTrigger & {enabled: boolean}; secret?: string | null; failures?: number; perTrigger?: number; interpreters?: ReadonlyMap<string, WebhookInterpreter>} = {}) {
   const trigger = options.trigger ?? triggerWith();
   const runs: Array<{input: Record<string, unknown>; context: string}> = [];
   const ran: string[] = [];
@@ -36,6 +37,7 @@ function setup(options: {trigger?: EventTaskTrigger & {enabled: boolean}; secret
     secrets: {read: async () => options.secret === undefined ? "geheim" : options.secret},
     failures: limiter(options.failures ?? 100),
     triggers: limiter(options.perTrigger ?? 100),
+    ...(options.interpreters === undefined ? {} : {interpreters: options.interpreters}),
     now: () => new Date("2026-10-05T10:00:00Z"),
   });
   return {receiver, runs, ran};
@@ -194,4 +196,53 @@ test("Inhalte: Formular als Objekt, anderes und ungültiges JSON als Text", asyn
   await receiver.receive(request({headers: {"content-type": "application/json"}}, "{kaputt"));
   const bodies = runs.map((run) => (run.input.event as {body: unknown}).body);
   assert.deepEqual(bodies, [{a: "1", b: "zwei drei"}, "Hallo", "{kaputt"]);
+});
+
+function interpretedTrigger(webhook: Record<string, unknown> = {}) {
+  const trigger = triggerWith(webhook);
+  return {...trigger, eventConfig: {...trigger.eventConfig, source: "fremd"}};
+}
+
+test("Auslöser einer anderen Quelle lassen den Aufruf von ihrem Interpreter auswerten", async () => {
+  const seen: string[] = [];
+  const interpreter: WebhookInterpreter = {
+    interpret: async (_trigger, received) => {
+      seen.push(received.rawBody.toString());
+      return [{context: "Fremd: eins", event: {type: "fremd", n: 1}}, {context: "Fremd: zwei", event: {type: "fremd", n: 2}}];
+    },
+  };
+  const {receiver, runs, ran} = setup({trigger: interpretedTrigger(), interpreters: new Map([["fremd", interpreter]])});
+
+  const result = await receiver.receive(request({}, '{"a":1}'));
+
+  assert.deepEqual(result, {kind: "accepted"});
+  assert.deepEqual(seen, ['{"a":1}']);
+  assert.deepEqual(runs.map((run) => run.context), ["Fremd: eins", "Fremd: zwei"]);
+  assert.deepEqual(runs[1]?.input.event, {type: "fremd", n: 2});
+  assert.equal(ran.length, 2);
+});
+
+test("ohne Treffer des Interpreters startet nichts, der Aufruf gilt trotzdem als angenommen", async () => {
+  const {receiver, runs} = setup({trigger: interpretedTrigger(), interpreters: new Map([["fremd", {interpret: async () => []}]])});
+
+  assert.deepEqual(await receiver.receive(request()), {kind: "accepted"});
+  assert.equal(runs.length, 0);
+});
+
+test("ein Aufruf startet höchstens zehn Läufe", async () => {
+  const many = Array.from({length: 25}, (_, n) => ({context: `Lauf ${n}`, event: {n}}));
+  const {receiver, runs} = setup({trigger: interpretedTrigger(), interpreters: new Map([["fremd", {interpret: async () => many}]])});
+
+  await receiver.receive(request());
+
+  assert.equal(runs.length, 10);
+});
+
+test("der Interpreter sieht nur Aufrufe mit gültiger Signatur", async () => {
+  let called = false;
+  const interpreter: WebhookInterpreter = {interpret: async () => {called = true; return [];}};
+  const {receiver} = setup({trigger: interpretedTrigger({verification: hmac}), interpreters: new Map([["fremd", interpreter]])});
+
+  assert.deepEqual(await receiver.receive(request({headers: {"x-signature": "sha256=00"}})), {kind: "unauthorized"});
+  assert.equal(called, false);
 });

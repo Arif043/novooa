@@ -7,11 +7,15 @@ export type ShopwareActionContext = {
   params: Record<string, unknown>;
   /** Setzt `{{…}}`-Ausdrücke aus vorherigen Bausteinen ein. */
   resolveText: (template: string) => string;
+  /** Das Ereignis, das den Lauf gestartet hat (`input.event`), falls es eines gab. */
+  event?: unknown;
 };
 
 /** Eine Aktion des Shopware-Bausteins (z. B. „Bestellungen suchen“). Sie prüft ihre `params` selbst. */
 export type ShopwareAction = {
   id: string;
+  /** `false`: die Aktion arbeitet nur mit dem Ereignis des Laufs und braucht keine Verbindung (Standard: `true`). */
+  usesConnection?: boolean;
   execute(context: ShopwareActionContext): Promise<Record<string, NodeOutputValue>>;
 };
 
