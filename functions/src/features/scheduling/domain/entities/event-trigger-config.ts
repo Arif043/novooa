@@ -2,16 +2,7 @@ import {
   fileContentKinds,
   type FileContentKind,
 } from "../../../files/domain/entities/file-content-kind.js";
-
-export const eventTriggerSources = [
-  "emailReceived",
-  "smsMessageReceived",
-  "whatsappMessageReceived",
-  "fileCreated",
-  "fileVersionCreated",
-  "fileDeleted",
-  "webhookReceived",
-] as const;
+import {defaultEventTriggerSources} from "./event-trigger-source-registry.js";
 
 /**
  * Worauf sich ein Event-Trigger bezieht. Dieselbe Struktur gilt für alle
@@ -58,7 +49,7 @@ export function eventTriggerTargetFrom(value: unknown): EventTriggerTarget {
 }
 
 export function isEventTriggerSource(value: unknown): boolean {
-  return typeof value === "string" && (eventTriggerSources as readonly string[]).includes(value);
+  return typeof value === "string" && defaultEventTriggerSources.has(value);
 }
 
 function fileKindsFrom(value: unknown): FileContentKind[] {

@@ -15,39 +15,77 @@ import '../../../machine_learning/presentation/widgets/machine_learning_settings
 import '../../../connections/presentation/widgets/connections_settings_tab.dart';
 import '../../../workspace_transfer/presentation/widgets/import_export_settings_tab.dart';
 
+/// Ein Reiter der Runtime-Einstellungen. Neue Module melden sich hier an,
+/// ohne dass Leiste und Inhalt einzeln angepasst werden müssen.
+class SettingsTabContribution {
+  const SettingsTabContribution({
+    required this.icon,
+    required this.label,
+    required this.builder,
+  });
+
+  final IconData icon;
+  final String label;
+  final WidgetBuilder builder;
+}
+
+final List<SettingsTabContribution> runtimeSettingsTabs = [
+  SettingsTabContribution(
+    icon: Icons.settings_outlined,
+    label: 'Allgemein',
+    builder: (_) => ListView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      children: const [
+        _RuntimeSection(),
+        SizedBox(height: AppSpacing.lg),
+        FileVersionLimitSection(),
+      ],
+    ),
+  ),
+  SettingsTabContribution(
+    icon: Icons.auto_awesome,
+    label: 'Sprachmodelle',
+    builder: (_) => const SingleChildScrollView(
+      padding: EdgeInsets.all(AppSpacing.lg),
+      child: AiModelSettingsTab(scrollable: false, isStandalone: true),
+    ),
+  ),
+  SettingsTabContribution(
+    icon: CupertinoIcons.chat_bubble_2,
+    label: 'Kommunikation',
+    builder: (_) => const CommunicationSettingsTab(),
+  ),
+  SettingsTabContribution(
+    icon: Icons.link,
+    label: 'Verbindungen',
+    builder: (_) => const ConnectionsSettingsTab(),
+  ),
+  SettingsTabContribution(
+    icon: Icons.memory_outlined,
+    label: 'Machine Learning',
+    builder: (_) => const MachineLearningSettingsTab(),
+  ),
+  SettingsTabContribution(
+    icon: Icons.import_export,
+    label: 'Import/Export',
+    builder: (_) => const ImportExportSettingsTab(),
+  ),
+];
+
 class RuntimeSettingsContent extends StatelessWidget {
   const RuntimeSettingsContent({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final tabs = runtimeSettingsTabs;
     return DefaultTabController(
-      length: 6,
+      length: tabs.length,
       child: Column(
         children: [
-          const _RuntimeSettingsTabs(),
+          _RuntimeSettingsTabs(tabs: tabs),
           Expanded(
             child: TabBarView(
-              children: [
-                ListView(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  children: const [
-                    _RuntimeSection(),
-                    SizedBox(height: AppSpacing.lg),
-                    FileVersionLimitSection(),
-                  ],
-                ),
-                const SingleChildScrollView(
-                  padding: EdgeInsets.all(AppSpacing.lg),
-                  child: AiModelSettingsTab(
-                    scrollable: false,
-                    isStandalone: true,
-                  ),
-                ),
-                const CommunicationSettingsTab(),
-                const ConnectionsSettingsTab(),
-                const MachineLearningSettingsTab(),
-                const ImportExportSettingsTab(),
-              ],
+              children: [for (final tab in tabs) tab.builder(context)],
             ),
           ),
         ],
@@ -57,7 +95,9 @@ class RuntimeSettingsContent extends StatelessWidget {
 }
 
 class _RuntimeSettingsTabs extends StatelessWidget {
-  const _RuntimeSettingsTabs();
+  const _RuntimeSettingsTabs({required this.tabs});
+
+  final List<SettingsTabContribution> tabs;
 
   @override
   Widget build(BuildContext context) {
@@ -72,31 +112,9 @@ class _RuntimeSettingsTabs extends StatelessWidget {
           onValueChanged: (selection) {
             if (selection != null) controller.animateTo(selection);
           },
-          children: const {
-            0: _RuntimeSettingsTabLabel(
-              icon: Icons.settings_outlined,
-              label: 'Allgemein',
-            ),
-            1: _RuntimeSettingsTabLabel(
-              icon: Icons.auto_awesome,
-              label: 'Sprachmodelle',
-            ),
-            2: _RuntimeSettingsTabLabel(
-              icon: CupertinoIcons.chat_bubble_2,
-              label: 'Kommunikation',
-            ),
-            3: _RuntimeSettingsTabLabel(
-              icon: Icons.link,
-              label: 'Verbindungen',
-            ),
-            4: _RuntimeSettingsTabLabel(
-              icon: Icons.memory_outlined,
-              label: 'Machine Learning',
-            ),
-            5: _RuntimeSettingsTabLabel(
-              icon: Icons.import_export,
-              label: 'Import/Export',
-            ),
+          children: {
+            for (final (index, tab) in tabs.indexed)
+              index: _RuntimeSettingsTabLabel(icon: tab.icon, label: tab.label),
           },
         ),
       ),
