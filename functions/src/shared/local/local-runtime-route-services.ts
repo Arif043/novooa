@@ -70,7 +70,7 @@ export function createLocalRuntimeRouteServices(options: {
     languageModels: new SQLiteLanguageModelConfigurationStore(database, languageModelSecrets),
     languageModelDefaults: new SQLiteLanguageModelDefaultsStore(database),
     employees: createEmployeeRoutesOptions(database, options.notifier),
-    plugins: createPluginsModule(runtimeRoot, options.notifier),
+    plugins: createPluginsModule(runtimeRoot, options.notifier, () => options.licenses.signedActiveLicense()),
     skills: createSkillsModule(runtimeRoot, options.notifier, () => options.licenses.signedActiveLicense()),
     speechVoices: new LanguageModelSpeech(new SQLiteLanguageModelCatalog(database, languageModelSecrets), defaultSpeechProviders()),
     assistants: assistantFactories(database, languageModelSecrets, () => options.licenses.signedActiveLicense()),

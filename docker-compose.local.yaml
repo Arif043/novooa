@@ -32,6 +32,10 @@ services:
       SKILLS_SH_RELAY_URL: ${SKILLS_SH_RELAY_URL-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeSkillsRelay}
       SKILLS_SH_BASE_URL: ${SKILLS_SH_BASE_URL:-}
       SKILLS_SH_TOKEN: ${SKILLS_SH_TOKEN:-}
+      # Plugin-Katalog: Relay in Firebase (Lizenzprüfung, Rate-Limit). Leer setzen (PLUGINS_RELAY_URL=) schaltet den Katalog ab;
+      # ZIP-Installation bleibt möglich. Ohne NOVOOA_PLUGIN_PUBLIC_KEY wird kein Plugin installiert.
+      PLUGINS_RELAY_URL: ${PLUGINS_RELAY_URL-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimePluginsRelay}
+      NOVOOA_PLUGIN_PUBLIC_KEY: ${NOVOOA_PLUGIN_PUBLIC_KEY-}
       LOCAL_RUNTIME_FIREBASE_API_KEY: ${LOCAL_RUNTIME_FIREBASE_API_KEY:-AIzaSyCqT815piSitiqbdyIt_r5V57p0_95tGaI}
       LOCAL_RUNTIME_FIREBASE_PROJECT_ID: ${LOCAL_RUNTIME_FIREBASE_PROJECT_ID:-syscat-90bff}
       LOCAL_RUNTIME_FIREBASE_TOKEN_URL: ${LOCAL_RUNTIME_FIREBASE_TOKEN_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/issueLocalRuntimeFirebaseToken}

@@ -46,6 +46,7 @@ export {localRuntimeTaskBuilderRelay} from "./features/task_execution/infrastruc
 export {localRuntimePushRelay} from "./features/notifications/infrastructure/firebase/runtime-push-relay-function.js";
 export {localRuntimeMailRelay} from "./features/communication/infrastructure/firebase/local-runtime-mail-relay-function.js";
 export {localRuntimeSkillsRelay} from "./features/skills/infrastructure/firebase/local-runtime-skills-relay-function.js";
+export {localRuntimePluginsRelay} from "./features/plugins/infrastructure/firebase/local-runtime-plugins-relay-function.js";
 export {twilioWebhook} from "./features/communication/infrastructure/twilio/twilio-webhook.js";
 export {dispatchFakeChannelMessage} from "./features/communication/infrastructure/firebase/fake-channel-message.js";
 export {sendChannelMessage} from "./features/communication/infrastructure/firebase/send-channel-message.js";

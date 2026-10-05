@@ -3,6 +3,8 @@ import {type FastifyReply} from "fastify";
 import {ErrorResponse} from "../../../../shared/local/local-runtime-http-schemas.js";
 import {SkillImportError} from "../../../skills/domain/entities/skill-import-error.js";
 import {readZipFiles, withoutCommonRoot} from "../../../skills/infrastructure/archive/zip-reader.js";
+import {PluginCatalogError} from "../../domain/entities/plugin-catalog.js";
+import {type PluginCatalog} from "../../domain/repositories/plugin-catalog.js";
 import {PluginPackageError} from "../../domain/entities/plugin-package-error.js";
 import {PluginNotFoundError, PluginStorageError} from "../../domain/entities/stored-plugin.js";
 import {type CommitPluginInstall, type PreviewPluginInstall} from "../../domain/usecases/plugin-install.js";
@@ -16,11 +18,13 @@ export type PluginRoutesOptions = {
   commit: CommitPluginInstall;
   getSettings: GetPluginSettings;
   setSettings: SetPluginSettings;
+  /** Fehlt, wenn kein Relay eingerichtet ist (`PLUGINS_RELAY_URL`); Installieren aus ZIP geht trotzdem. */
+  catalog?: PluginCatalog;
   notifier: {publish(topic: string): void};
 };
 
 const maximumArchiveBytes = 15 * 1024 * 1024;
-const failures = {400: ErrorResponse, 404: ErrorResponse, 413: ErrorResponse, 415: ErrorResponse, 500: ErrorResponse};
+const failures = {400: ErrorResponse, 401: ErrorResponse, 404: ErrorResponse, 413: ErrorResponse, 415: ErrorResponse, 429: ErrorResponse, 500: ErrorResponse, 503: ErrorResponse};
 // Das Manifest wird im Domain-Teil geprüft; die Route reicht es unverändert an den Client durch.
 const Json = Type.Unsafe<Record<string, unknown>>(Type.Object({}, {additionalProperties: true}));
 const Plugin = Type.Object({id: Type.String(), version: Type.String(), name: Type.String(), description: Type.String(), manifest: Json});
@@ -55,6 +59,38 @@ export const pluginRoutes: FastifyPluginAsyncTypebox<PluginRoutesOptions> = asyn
     }
     try {
       const bytes = await readBounded(request.raw);
+      const files = withoutCommonRoot(readZipFiles(bytes)).files;
+      return reply.code(201).send(await options.preview.execute(files));
+    } catch (error) {
+      return failure(error, reply);
+    }
+  });
+
+  app.get("/v1/plugins/catalog", {
+    schema: {
+      response: {
+        ...failures,
+        200: Type.Object({items: Type.Array(Type.Object({
+          id: Type.String(), name: Type.String(), description: Type.String(), version: Type.String(), sizeBytes: Type.Integer(),
+        }))}),
+      },
+    },
+  }, async (request, reply) => {
+    try {
+      return {items: await catalogOf(options).list()};
+    } catch (error) {
+      return failure(error, reply);
+    }
+  });
+
+  app.post("/v1/plugins/installs/catalog", {
+    schema: {
+      body: Type.Object({id: Type.String({minLength: 1, maxLength: 60}), version: Type.Optional(Type.String({maxLength: 20}))}),
+      response: {...failures, 201: Type.Object({installId: Type.String(), manifest: Json, installedVersion: Type.Optional(Type.String())})},
+    },
+  }, async (request, reply) => {
+    try {
+      const bytes = await catalogOf(options).download(request.body.id, request.body.version);
       const files = withoutCommonRoot(readZipFiles(bytes)).files;
       return reply.code(201).send(await options.preview.execute(files));
     } catch (error) {
@@ -105,6 +141,11 @@ export const pluginRoutes: FastifyPluginAsyncTypebox<PluginRoutesOptions> = asyn
   });
 };
 
+function catalogOf(options: PluginRoutesOptions): PluginCatalog {
+  if (options.catalog === undefined) throw new PluginCatalogError("Der Plugin-Katalog ist nicht eingerichtet.", "unavailable");
+  return options.catalog;
+}
+
 async function readBounded(stream: AsyncIterable<Uint8Array>): Promise<Uint8Array> {
   const chunks: Uint8Array[] = [];
   let size = 0;
@@ -117,6 +158,10 @@ async function readBounded(stream: AsyncIterable<Uint8Array>): Promise<Uint8Arra
 }
 
 function failure(error: unknown, reply: FastifyReply): FastifyReply {
+  if (error instanceof PluginCatalogError) {
+    const status = {unauthorized: 401, rate_limited: 429, not_found: 404, unavailable: 503, invalid: 400}[error.kind] as 401 | 429 | 404 | 503 | 400;
+    return reply.code(status).send({error: error.message});
+  }
   if (error instanceof PluginNotFoundError) return reply.code(404).send({error: error.message});
   if (error instanceof PluginStorageError) return reply.code(500).send({error: error.message});
   if (error instanceof PluginPackageError || error instanceof SkillImportError) return reply.code(400).send({error: error.message});
