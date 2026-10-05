@@ -1,3 +1,4 @@
+import {connectionRoutes} from "../../features/connections/infrastructure/local/local-connection-routes.js";
 import {employeeRoutes} from "../../features/employees/infrastructure/local/local-employee-routes.js";
 import {skillCatalogRoutes} from "../../features/skills/infrastructure/local/local-skill-catalog-routes.js";
 import {skillRoutes} from "../../features/skills/infrastructure/local/local-skill-routes.js";
@@ -82,6 +83,7 @@ async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRu
     signedLicense, relay: mailRelayFromEnvironment(), connectorCache: dependencies.mailConnectors,
   });
   await api.register(languageModelRoutes, {store: services.languageModels, notifier});
+  await api.register(connectionRoutes, {store: services.connections, notifier});
   await api.register(employeeRoutes, services.employees);
   await api.register(skillCatalogRoutes, services.skills.catalog);
   await api.register(skillRoutes, services.skills.routes);

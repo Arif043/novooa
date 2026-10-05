@@ -17,6 +17,19 @@ export const applicationLogs = sqliteTable("application_logs", {
   check("application_logs_source", sql`${table.source} IN ('client', 'runtime')`),
 ]);
 
+export const connections = sqliteTable("connections", {
+  id: text("id").primaryKey(),
+  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
+  name: text("name").notNull(),
+  base_url: text("base_url").notNull(),
+  auth_json: text("auth_json").notNull(),
+  secret_ref: text("secret_ref").notNull(),
+  created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+  index("idx_connections_team").on(table.team_id),
+]);
+
 export const communicationChannels = sqliteTable("communication_channels", {
   id: text("id").primaryKey(),
   team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
@@ -121,6 +134,7 @@ export type CommunicationChannels = typeof communicationChannels.$inferSelect;
 export type NewCommunicationChannels = typeof communicationChannels.$inferInsert;
 export type InboundChannelEvents = typeof inboundChannelEvents.$inferSelect;
 export type NewInboundChannelEvents = typeof inboundChannelEvents.$inferInsert;
+export type Connections = typeof connections.$inferSelect;
 export type LanguageModelConnections = typeof languageModelConnections.$inferSelect;
 export type NewLanguageModelConnections = typeof languageModelConnections.$inferInsert;
 export type LanguageModelDefaults = typeof languageModelDefaults.$inferSelect;
