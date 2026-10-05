@@ -161,6 +161,24 @@ fachlich ungueltigen Anfrage `400` mit einem stabilen Failure-Vertrag:
 { failure: { code: "invalidTaskId", message: "taskId muss ein nicht leerer String sein." } }
 ```
 
+### Warteschlange und Wiederholungen
+
+Die lokale Runtime führt Runs seriell aus: Ein einzelner `TaskRunQueueWorker`
+holt Jobs aus `task_run_jobs` und startet den nächsten erst, wenn der aktuelle
+beendet ist.
+
+- **Fehler werden nicht wiederholt.** Scheitert ein Baustein oder wirft die
+  Ausführung eine Exception, ist der Run `failed` und der Job endgültig
+  `failed`. Eine Wiederholung würde Bausteine mit Nebenwirkungen (E-Mail,
+  HTTP-Anfrage, Shopware-Aktion) erneut ausführen.
+- **Abstürze werden wiederholt.** Beim Abholen erhält ein Job einen Lease von
+  60 Sekunden. Stirbt der Prozess während des Jobs, läuft der Lease ab und der
+  Job wird erneut abgeholt: ein Start beginnt von vorn, eine Fortsetzung setzt
+  wieder bei der Freigabe an.
+- **Begrenzt auf drei Versuche.** Hat ein Job nach Abstürzen alle Versuche
+  verbraucht, wird er aufgegeben und der Run mit einer Fehlermeldung als
+  `failed` markiert (`failAbandonedTaskRun`).
+
 Die Failure-Codes (`invalidRequest`, `invalidTaskId`,
 `invalidReviewDecision`, `invalidFormValues`) liegen in der Domain. HTTP- und
 Datasource-Exceptions bleiben Infrastrukturdetails und werden im Client in

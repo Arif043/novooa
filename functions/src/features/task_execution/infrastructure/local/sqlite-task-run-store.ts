@@ -62,7 +62,8 @@ export class SQLiteTaskRunStore implements TaskRunStore {
     runId: string,
   ): Promise<ResumableTaskRun> {
     const row = await this.loadRunRow(teamId, runId);
-    if (row.status !== "queued") throw invalidResumeState();
+    // "running": Die Runtime ist während der Fortsetzung abgestürzt; die Queue wiederholt sie ab der Freigabe.
+    if (row.status !== "queued" && row.status !== "running") throw invalidResumeState();
     return {
       run: runFromRow(row),
       resumeState: resumeStateFromRow(row),

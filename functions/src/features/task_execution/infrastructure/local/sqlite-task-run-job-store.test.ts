@@ -37,18 +37,66 @@ test("resets a completed job when an approval resumes its run", async () => {
   });
 });
 
-test("marks a failed dispatch as terminal after the final attempt", async () => {
+test("marks a failed dispatch as terminal on the first attempt", async () => {
   await withJobStore(async ({jobStore, database}) => {
     await jobStore.enqueue(dispatch("start"));
     const job = await jobStore.claimNext();
     if (job === null) throw new Error("Der erwartete Job fehlt.");
 
-    await jobStore.retryOrFail(job, 1);
+    await jobStore.fail(job);
 
-    const row = await database.get <{status: string; attempts: number}>(sql`SELECT status, attempts FROM task_run_jobs`);
-    assert.deepEqual(row, {status: "failed", attempts: 1});
+    assert.deepEqual(await jobRow(database), {status: "failed", attempts: 1});
+    assert.equal(await jobStore.claimNext(), null);
   });
 });
+
+test("reclaims a job whose lease expired after a crash", async () => {
+  await withJobStore(async ({jobStore, database}) => {
+    await jobStore.enqueue(dispatch("start"));
+    await jobStore.claimNext();
+    await expireLeases(database);
+
+    const reclaimedJob = await jobStore.claimNext();
+
+    assert.equal(reclaimedJob?.runId, "run-1");
+    assert.equal(reclaimedJob?.attempt, 2);
+  });
+});
+
+test("abandons a crashed job once its attempts are exhausted", async () => {
+  await withJobStore(async ({jobStore, database}) => {
+    await jobStore.enqueue(dispatch("start"));
+    await jobStore.claimNext();
+    await expireLeases(database);
+
+    assert.deepEqual(await jobStore.abandonExhaustedLeases(2), []);
+    await jobStore.claimNext();
+    await expireLeases(database);
+    const abandonedJobs = await jobStore.abandonExhaustedLeases(2);
+
+    assert.deepEqual(abandonedJobs.map((job) => job.runId), ["run-1"]);
+    assert.deepEqual(await jobRow(database), {status: "failed", attempts: 2});
+    assert.equal(await jobStore.claimNext(), null);
+  });
+});
+
+test("keeps an active lease when abandoning exhausted jobs", async () => {
+  await withJobStore(async ({jobStore, database}) => {
+    await jobStore.enqueue(dispatch("start"));
+    await jobStore.claimNext();
+
+    assert.deepEqual(await jobStore.abandonExhaustedLeases(1), []);
+    assert.deepEqual(await jobRow(database), {status: "leased", attempts: 1});
+  });
+});
+
+async function jobRow(database: RuntimeDatabase) {
+  return database.get <{status: string; attempts: number}>(sql`SELECT status, attempts FROM task_run_jobs`);
+}
+
+async function expireLeases(database: RuntimeDatabase): Promise<void> {
+  await database.run(sql`UPDATE task_run_jobs SET lease_expires_at = datetime('now', '-1 seconds')`);
+}
 
 function dispatch(mode: "start" | "resume") {
   return {teamId: "team-1", runId: "run-1", mode};

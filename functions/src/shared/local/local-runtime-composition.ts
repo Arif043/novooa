@@ -33,6 +33,7 @@ import {SQLiteTaskRunJobStore} from "../../features/task_execution/infrastructur
 import {SQLiteTaskRunStore} from "../../features/task_execution/infrastructure/local/sqlite-task-run-store.js";
 import {SQLiteTaskStore} from "../../features/task_execution/infrastructure/local/sqlite-task-store.js";
 import {TaskRunQueueWorker} from "../../features/task_execution/infrastructure/local/task-run-queue-worker.js";
+import {failAbandonedTaskRun} from "../../features/task_execution/infrastructure/local/fail-abandoned-task-run.js";
 import {LocalApplicationLogger} from "../logging/local-application-logger.js";
 import {SQLiteLocalApplicationLogStore} from "../logging/sqlite-local-application-log-store.js";
 import {type LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
@@ -113,6 +114,7 @@ export function createLocalRuntimeComposition(
         error,
         {jobId: job.jobId, runId: job.runId, teamId: job.teamId},
       ),
+      onAbandoned: (job) => failAbandonedTaskRun(taskRunStore, job),
       onDrainFailure: (error) => applicationLogger.exception(
         "task_run_worker.drain_failed", error, {teamId: options.workspace.teamId},
       ),

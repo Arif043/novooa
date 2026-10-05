@@ -8,9 +8,12 @@ import {
 import {type LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 
 export type TaskRunQueueWorkerOptions = {
+  /** Wie oft ein Job insgesamt gestartet werden darf; weitere Versuche gibt es nur nach einem Absturz. */
   maximumAttempts?: number;
   canProcess?: () => boolean;
   onFailure?: (job: LeasedTaskRunJob, error: unknown) => void;
+  /** Wird für Jobs aufgerufen, deren Versuche nach wiederholten Abstürzen aufgebraucht sind. */
+  onAbandoned?: (job: LeasedTaskRunJob) => Promise<void>;
   onDrainFailure?: (error: unknown) => void;
   /**
    * Optional, damit bestehende Tests den Worker ohne Realtime-Infrastruktur
@@ -25,6 +28,7 @@ export class TaskRunQueueWorker {
   private readonly maximumAttempts: number;
   private readonly canProcess: () => boolean;
   private readonly onFailure: (job: LeasedTaskRunJob, error: unknown) => void;
+  private readonly onAbandoned: (job: LeasedTaskRunJob) => Promise<void>;
   private readonly onDrainFailure: (error: unknown) => void;
   private readonly notifier: LocalRuntimeRealtimeNotifier | undefined;
   private started = false;
@@ -41,6 +45,7 @@ export class TaskRunQueueWorker {
     this.maximumAttempts = options.maximumAttempts ?? 3;
     this.canProcess = options.canProcess ?? (() => true);
     this.onFailure = options.onFailure ?? (() => undefined);
+    this.onAbandoned = options.onAbandoned ?? (async () => undefined);
     this.onDrainFailure = options.onDrainFailure ?? (() => undefined);
     this.notifier = options.notifier;
   }
@@ -88,9 +93,23 @@ export class TaskRunQueueWorker {
   private async drainAvailableJobs(): Promise<void> {
     if (!this.canProcess()) return;
     while (!this.stopping) {
+      await this.abandonExhaustedJobs();
       const job = await this.jobStore.claimNext();
       if (job === null) return;
       await this.process(job);
+    }
+  }
+
+  private async abandonExhaustedJobs(): Promise<void> {
+    const abandonedJobs = await this.jobStore.abandonExhaustedLeases(this.maximumAttempts);
+    for (const job of abandonedJobs) {
+      try {
+        await this.onAbandoned(job);
+      } catch (error) {
+        this.onFailure(job, error);
+      } finally {
+        this.publishRunChanges();
+      }
     }
   }
 
@@ -100,11 +119,15 @@ export class TaskRunQueueWorker {
       await this.jobStore.complete(job);
     } catch (error) {
       this.onFailure(job, error);
-      await this.jobStore.retryOrFail(job, this.maximumAttempts);
+      await this.jobStore.fail(job);
     } finally {
-      this.notifier?.publish("task-runs");
-      this.notifier?.publish("task-activities");
+      this.publishRunChanges();
     }
+  }
+
+  private publishRunChanges(): void {
+    this.notifier?.publish("task-runs");
+    this.notifier?.publish("task-activities");
   }
 
   private async scheduleNextDrain(): Promise<void> {

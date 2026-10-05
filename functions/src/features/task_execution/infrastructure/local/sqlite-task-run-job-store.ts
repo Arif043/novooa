@@ -1,4 +1,4 @@
-import {and, eq, inArray, lte, or, sql} from "drizzle-orm";
+import {and, eq, gte, inArray, lte, or, sql} from "drizzle-orm";
 import {randomUUID} from "node:crypto";
 import {
   type RuntimeExecutor,
@@ -41,12 +41,23 @@ export class SQLiteTaskRunJobStore {
     await this.database.update(taskRunJobs).set({status: "completed", lease_expires_at: null, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRunJobs.id, job.jobId), eq(taskRunJobs.status, "leased")));
   }
 
-  async retryOrFail(job: LeasedTaskRunJob, maximumAttempts: number): Promise<void> {
-    if (job.attempt >= maximumAttempts) {
-      await this.database.update(taskRunJobs).set({status: "failed", lease_expires_at: null, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRunJobs.id, job.jobId), eq(taskRunJobs.status, "leased")));
-      return;
-    }
-    await this.database.update(taskRunJobs).set({status: "queued", available_at: sql`datetime('now', ${`+${backoffSecondsFor(job.attempt)} seconds`})`, lease_expires_at: null, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRunJobs.id, job.jobId), eq(taskRunJobs.status, "leased")));
+  /** Ein geworfener Fehler beendet den Job endgültig: Eine Wiederholung würde Bausteine mit Nebenwirkungen erneut ausführen. */
+  async fail(job: LeasedTaskRunJob): Promise<void> {
+    await this.database.update(taskRunJobs).set({status: "failed", lease_expires_at: null, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRunJobs.id, job.jobId), eq(taskRunJobs.status, "leased")));
+  }
+
+  /**
+   * Ein abgelaufener Lease bedeutet, dass der Prozess während des Jobs abgestürzt ist; `claimNext`
+   * holt solche Jobs erneut ab. Hat ein Job alle Versuche verbraucht, wird er hier aufgegeben,
+   * damit ein Run, der die Runtime jedes Mal abstürzen lässt, nicht endlos neu startet.
+   */
+  async abandonExhaustedLeases(maximumAttempts: number): Promise<LeasedTaskRunJob[]> {
+    const abandonedJobs = await this.database.update(taskRunJobs).set({status: "failed", lease_expires_at: null, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(
+      eq(taskRunJobs.status, "leased"),
+      lte(taskRunJobs.lease_expires_at, sql`CURRENT_TIMESTAMP`),
+      gte(taskRunJobs.attempts, maximumAttempts),
+    )).returning();
+    return abandonedJobs.map(leasedJobFrom);
   }
 
   async nextClaimableDelayMs(): Promise<number | null> {
@@ -66,8 +77,4 @@ function leasedJobFrom(row: TaskRunJobRow): LeasedTaskRunJob {
     mode: row.mode,
     attempt: row.attempts,
   };
-}
-
-function backoffSecondsFor(attempt: number): number {
-  return Math.min(30 * 2 ** (attempt - 1), 300);
 }
