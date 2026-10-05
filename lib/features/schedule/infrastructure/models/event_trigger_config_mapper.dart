@@ -13,6 +13,7 @@ class EventTriggerConfigMapper {
       'filter': config.filter.trim(),
       if (config.webhook case final webhook?)
         'webhook': _webhookToDocument(webhook),
+      if (config.params.isNotEmpty) 'params': config.params,
     };
   }
 
@@ -27,6 +28,7 @@ class EventTriggerConfigMapper {
       fileKinds: _fileKindsFrom(data['fileKinds']),
       filter: data['filter'] as String? ?? '',
       webhook: _webhookFromDocument(data['webhook']),
+      params: _paramsFrom(data['params']),
     );
   }
 
@@ -120,6 +122,13 @@ class EventTriggerConfigMapper {
       'channel' => ChannelTarget(id: id, name: name),
       'connector' => ConnectorTarget(id: id, name: name),
       _ => EventTriggerTarget.anywhere,
+    };
+  }
+
+  static Map<String, Object?> _paramsFrom(Object? value) {
+    if (value is! Map) return const {};
+    return {
+      for (final entry in value.entries) entry.key.toString(): entry.value,
     };
   }
 

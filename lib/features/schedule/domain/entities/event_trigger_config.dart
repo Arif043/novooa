@@ -1,3 +1,5 @@
+import '../../../integrations/shopware/domain/shopware_trigger_params.dart';
+
 /// Worauf sich die Auswahl des Ziels bezieht — bestimmt, welche Optionen die
 /// UI anbietet.
 enum EventTargetScope { none, files, channel, mailConnector }
@@ -9,7 +11,8 @@ enum EventTriggerSource {
   fileCreated('Datei erstellt', EventTargetScope.files),
   fileVersionCreated('Neue Dateiversion', EventTargetScope.files),
   fileDeleted('Datei gelöscht', EventTargetScope.files),
-  webhookReceived('Webhook empfangen', EventTargetScope.none);
+  webhookReceived('Webhook empfangen', EventTargetScope.none),
+  shopware('Shopware-Ereignis', EventTargetScope.none);
 
   const EventTriggerSource(this.label, this.targetScope);
 
@@ -163,6 +166,7 @@ class EventTriggerConfig {
     this.fileKinds = const {},
     this.filter = '',
     this.webhook,
+    this.params = const {},
   });
 
   final EventTriggerSource source;
@@ -175,5 +179,13 @@ class EventTriggerConfig {
   /// Nur bei [EventTriggerSource.webhookReceived].
   final WebhookConfig? webhook;
 
-  bool get isValid => webhook?.isComplete ?? true;
+  /// Einstellungen einer Quelle, die ein Plugin mitbringt; bei
+  /// [EventTriggerSource.shopware] die [ShopwareTriggerParams].
+  final Map<String, Object?> params;
+
+  ShopwareTriggerParams get shopware => ShopwareTriggerParams.fromMap(params);
+
+  bool get isValid =>
+      (webhook?.isComplete ?? true) &&
+      (source != EventTriggerSource.shopware || shopware.isComplete);
 }

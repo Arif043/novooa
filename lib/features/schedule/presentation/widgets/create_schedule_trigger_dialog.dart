@@ -5,6 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/adaptive_pickers.dart';
+import '../../../connections/presentation/cubits/connections_cubit.dart';
+import '../../../integrations/shopware/domain/shopware_trigger_params.dart';
 import '../../../task_builder/domain/entities/task.dart';
 import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/schedule_config.dart';
@@ -43,6 +45,7 @@ class _CreateScheduleTriggerDialogState
   EventTriggerTarget _eventTarget = EventTriggerTarget.anywhere;
   Set<EventFileKind> _eventFileKinds = const {};
   WebhookConfig _webhook = const WebhookConfig();
+  ShopwareTriggerParams _shopware = const ShopwareTriggerParams();
   final TextEditingController _eventFilterController = TextEditingController();
   ScheduleKind _kind = ScheduleKind.daily;
   TimeOfDay _time = const TimeOfDay(hour: 9, minute: 0);
@@ -68,9 +71,15 @@ class _CreateScheduleTriggerDialogState
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      // Lazy: Die Optionen werden erst geladen, wenn die Zielwahl geöffnet wird.
-      create: (_) => serviceLocator<EventTargetOptionsCubit>()..load(),
+    return MultiBlocProvider(
+      providers: [
+        // Lazy: Die Optionen werden erst geladen, wenn die Zielwahl geöffnet wird.
+        BlocProvider(
+          create: (_) => serviceLocator<EventTargetOptionsCubit>()..load(),
+        ),
+        // Lazy: nur für Shopware-Auslöser.
+        BlocProvider(create: (_) => serviceLocator<ConnectionsCubit>()..load()),
+      ],
       child: Theme(
         data: ScheduleTheme.from(Theme.of(context)),
         child: Builder(
@@ -235,6 +244,8 @@ class _CreateScheduleTriggerDialogState
       onFileKindsChanged: (kinds) => setState(() => _eventFileKinds = kinds),
       webhook: _webhook,
       onWebhookChanged: (webhook) => setState(() => _webhook = webhook),
+      shopware: _shopware,
+      onShopwareChanged: (value) => setState(() => _shopware = value),
     );
   }
 
@@ -374,6 +385,9 @@ class _CreateScheduleTriggerDialogState
     webhook: _eventSource == EventTriggerSource.webhookReceived
         ? _webhook
         : null,
+    params: _eventSource == EventTriggerSource.shopware
+        ? _shopware.toMap()
+        : const {},
   );
 
   ScheduleConfig _config() =>

@@ -30,8 +30,10 @@ lib/features/integrations/<system>/   Client: Konfiguration, Widget, Einstellung
   `registerIntegrationPlugins(createDefaultNodeExecutorRegistry())` auf und reicht die Registry über
   `TaskGraphRuntime.executorRegistry` an den Runner).
 - Ein neues Plugin wird in `integrationPlugins` (`integrations/index.ts`) eingetragen, sonst nirgends im Backend.
-- Der Vertrag `IntegrationPlugin` ist klein (`id`, `executors`) und wächst mit dem, was das nächste Plugin braucht
-  (Auslöser-Quellen, Routen, Worker).
+- Der Vertrag `IntegrationPlugin` ist klein (`id`, `executors`, optional `eventTriggers`) und wächst mit dem, was das
+  nächste Plugin braucht (Routen, Worker). `eventTriggers` bringen eine Ereignisquelle samt Interpreter mit; die
+  Komposition reicht die Interpreter an den Webhook-Empfänger (`integrationWebhookInterpreters`). Im Client ist
+  `EventTriggerSource` noch ein geschlossenes Enum: der Wert `shopware` steht dort fest, das Formular liegt im Plugin.
 
 ## Bausteine eines Plugins
 

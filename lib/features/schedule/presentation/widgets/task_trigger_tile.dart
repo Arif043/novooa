@@ -7,6 +7,7 @@ import '../../domain/entities/event_trigger_config.dart';
 import '../../domain/entities/task_trigger.dart';
 import '../cubits/schedule_cubit.dart';
 import 'schedule_formatters.dart';
+import '../../../integrations/shopware/presentation/widgets/shopware_app_dialog.dart';
 import 'webhook_address.dart';
 
 class TaskTriggerTile extends StatefulWidget {
@@ -156,7 +157,11 @@ class _TaskTriggerTileState extends State<TaskTriggerTile> {
                 ),
               ],
             ),
-            if (trigger.webhookUrl case final address?) ...[
+            if (trigger.event?.source == EventTriggerSource.shopware &&
+                trigger.webhookUrl != null) ...[
+              const SizedBox(height: 16),
+              _ShopwareAppPanel(trigger: trigger),
+            ] else if (trigger.webhookUrl case final address?) ...[
               const SizedBox(height: 16),
               WebhookAddress(
                 address: address,
@@ -242,6 +247,51 @@ IconData _iconFor(TaskTrigger trigger) {
     EventTriggerSource.fileVersionCreated => CupertinoIcons.doc_on_doc,
     EventTriggerSource.fileDeleted => CupertinoIcons.trash,
     EventTriggerSource.webhookReceived => CupertinoIcons.link,
+    EventTriggerSource.shopware => CupertinoIcons.cart,
     null => CupertinoIcons.bolt,
   };
+}
+
+/// Statt der Adresse (sie steckt in der App): der Weg, die Shopware-App
+/// einzurichten.
+class _ShopwareAppPanel extends StatelessWidget {
+  const _ShopwareAppPanel({required this.trigger});
+
+  final TaskTrigger trigger;
+
+  @override
+  Widget build(BuildContext context) {
+    final event = trigger.event;
+    final address = Uri.tryParse(trigger.webhookUrl ?? '');
+    if (event == null || address == null) return const SizedBox.shrink();
+    // Der Pfad endet auf /hooks/<id>/<token>; davor liegt die Adresse von novooa.
+    final prefix = address.pathSegments.length >= 3
+        ? address.pathSegments.sublist(0, address.pathSegments.length - 3)
+        : const <String>[];
+    final base = address
+        .replace(pathSegments: prefix, query: null, fragment: null)
+        .toString();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Shopware meldet dieses Ereignis über eine kleine App. Ohne sie '
+          'startet der Auslöser nie.',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        TextButton.icon(
+          key: const Key('shopware-app-open'),
+          onPressed: () => ShopwareAppDialog.show(
+            context,
+            triggerId: trigger.id,
+            token: event.webhook?.token ?? '',
+            params: event.shopware,
+            initialAddress: base,
+          ),
+          icon: const Icon(Icons.storefront_outlined, size: 18),
+          label: const Text('Shopware-App einrichten'),
+        ),
+      ],
+    );
+  }
 }

@@ -46,7 +46,7 @@ Dokument:
   },
   eventConfig?: {
     source: "emailReceived" | "smsMessageReceived" | "whatsappMessageReceived"
-      | "fileCreated" | "fileVersionCreated" | "fileDeleted" | "webhookReceived",
+      | "fileCreated" | "fileVersionCreated" | "fileDeleted" | "webhookReceived" | "shopware",
     target: { kind: "any" }                                          // überall (Standard)
       | { kind: "folder", id: string, includeSubfolders: boolean }   // Datei-Ereignisse
       | { kind: "file", id: string }                                 // Datei-Ereignisse
@@ -78,7 +78,9 @@ Das Matching liegt als reine Funktion in
 Die Quelle `webhookReceived` (nur lokale Runtime) hat keine Ziele und keinen Filter, sondern ein zusätzliches Feld
 `eventConfig.webhook` (`token`, `verification`, `validationParameter`); Geheimnis, Aufruf und Grenzen stehen in
 [`webhooks.md`](./webhooks.md). Neue Ereignisquellen melden sich in der `EventTriggerSourceRegistry`
-(`scheduling/domain/entities/event-trigger-source-registry.ts`) an.
+(`scheduling/domain/entities/event-trigger-source-registry.ts`) an; Plugins bringen sie mit. Die Quelle `shopware` (Plugin,
+nur lokale Runtime) arbeitet über den Webhook-Empfänger und trägt ihre Einstellungen in `eventConfig.params`
+(Ereignis, Verbindung, Status, Bestandsgrenze); siehe [`shopware.md`](./shopware.md#auslöser-app-webhooks).
 
 `nextRunAt` ist für Zeitplan-Trigger bewusst materialisiert, damit der
 Backend-Worker fällige Trigger effizient per Query finden kann. Event-Trigger

@@ -332,6 +332,22 @@ class ShopwareActions {
     ],
   );
 
+  static const readEvent = ShopwareActionSpec(
+    id: 'readEvent',
+    title: 'Shopware-Ereignis lesen',
+    description:
+        'Macht Bestellung, Kunde, Produkt oder Anmeldung eines Shopware-Auslösers nutzbar.',
+    outputBase: 'ereignis',
+    primaryOutput: NodeOutputType.json,
+    secondaryOutputs: {
+      'event': NodeOutputType.string,
+      'id': NodeOutputType.string,
+      'receivedAt': NodeOutputType.datetime,
+    },
+    usesConnection: false,
+    fields: [],
+  );
+
   static const all = [
     searchOrders,
     getOrder,
@@ -340,6 +356,7 @@ class ShopwareActions {
     updateProduct,
     searchCustomers,
     query,
+    readEvent,
   ];
 
   static ShopwareActionSpec? byId(String id) {

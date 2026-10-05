@@ -189,6 +189,7 @@ void main() {
           'shopware.updateProduct',
           'shopware.searchCustomers',
           'shopware.query',
+          'shopware.readEvent',
         });
         expect(modules.map((m) => m.title), [
           'Bestellungen suchen',
@@ -198,10 +199,11 @@ void main() {
           'Produkt ändern',
           'Kunden suchen',
           'Shopware-Abfrage',
+          'Shopware-Ereignis lesen',
         ]);
         expect(modules.every((m) => m.group == 'Shopware'), isTrue);
         expect(modules.every((m) => m.documentPrimitive == 'shopware'), isTrue);
-        expect(modules.map((m) => m.outputBase).toSet().length, 7);
+        expect(modules.map((m) => m.outputBase).toSet().length, 8);
       },
     );
 

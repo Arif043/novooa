@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/runtime/connections_availability.dart';
 import '../../../../core/runtime/webhooks_availability.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../integrations/shopware/domain/shopware_trigger_params.dart';
+import '../../../integrations/shopware/presentation/widgets/shopware_trigger_controls.dart';
 import '../../domain/entities/event_trigger_config.dart';
 import '../cubits/event_target_options_cubit.dart';
 import 'event_file_kind_chips.dart';
@@ -49,6 +52,8 @@ class EventTriggerControls extends StatelessWidget {
     required this.onFileKindsChanged,
     required this.webhook,
     required this.onWebhookChanged,
+    required this.shopware,
+    required this.onShopwareChanged,
   });
 
   final EventTriggerSource source;
@@ -60,6 +65,10 @@ class EventTriggerControls extends StatelessWidget {
   final ValueChanged<Set<EventFileKind>> onFileKindsChanged;
   final WebhookConfig webhook;
   final ValueChanged<WebhookConfig> onWebhookChanged;
+  final ShopwareTriggerParams shopware;
+  final ValueChanged<ShopwareTriggerParams> onShopwareChanged;
+
+  bool get _isShopware => source == EventTriggerSource.shopware;
 
   bool get _isWebhook => source == EventTriggerSource.webhookReceived;
 
@@ -81,9 +90,7 @@ class EventTriggerControls extends StatelessWidget {
           decoration: const InputDecoration(labelText: 'Ereignis'),
           items: [
             for (final item in EventTriggerSource.values)
-              if (item != EventTriggerSource.webhookReceived ||
-                  webhooksAvailable())
-                _itemFor(item),
+              if (_offered(item)) _itemFor(item),
           ],
           onChanged: (value) {
             if (value != null) onSourceChanged(value);
@@ -106,7 +113,13 @@ class EventTriggerControls extends StatelessWidget {
             onChanged: onFileKindsChanged,
           ),
         ],
-        if (_isWebhook) ...[
+        if (_isShopware) ...[
+          const SizedBox(height: AppSpacing.md),
+          ShopwareTriggerControls(
+            value: shopware,
+            onChanged: onShopwareChanged,
+          ),
+        ] else if (_isWebhook) ...[
           const SizedBox(height: AppSpacing.md),
           WebhookControls(value: webhook, onChanged: onWebhookChanged),
         ] else ...[
@@ -116,6 +129,15 @@ class EventTriggerControls extends StatelessWidget {
       ],
     );
   }
+
+  /// Webhook-Quellen gibt es nur, wo externe Systeme die Runtime aufrufen
+  /// können; Shopware braucht zusätzlich Verbindungen.
+  bool _offered(EventTriggerSource item) => switch (item) {
+    EventTriggerSource.webhookReceived => webhooksAvailable(),
+    EventTriggerSource.shopware =>
+      webhooksAvailable() && connectionsAvailable(),
+    _ => true,
+  };
 
   Future<void> _pickTarget(BuildContext context) async {
     final picked = await EventTargetSheet.show(

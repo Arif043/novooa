@@ -29,7 +29,8 @@ class ShopwareActionWidget extends StatelessWidget {
     final config = _config;
     final spec = ShopwareActions.byId(config.action);
     // Eine unbekannte Aktion braucht keine Verbindungen und damit keinen Cubit.
-    final connections = spec != null && connectionsAvailable()
+    final needsConnection = spec != null && spec.usesConnection;
+    final connections = needsConnection && connectionsAvailable()
         ? context.watch<ConnectionsCubit>().state.connections
         : const <Connection>[];
     return Container(
@@ -46,16 +47,23 @@ class ShopwareActionWidget extends StatelessWidget {
               'nicht.',
             )
           else ...[
-            ConnectionPickerField(
-              selectedId: config.connectionId,
-              connections: connections,
-              helperText: connections.isEmpty
-                  ? 'Lege unter Einstellungen → Verbindungen mit der Vorlage '
-                        '„Shopware“ eine Verbindung an.'
-                  : null,
-              onChanged: (id) =>
-                  _update(context, (c) => c.copyWith(connectionId: id)),
-            ),
+            if (!spec.usesConnection)
+              const Text(
+                'Liefert Bestellung, Kunde, Produkt oder Anmeldung des '
+                'Auslösers „Shopware-Ereignis“. Der Baustein funktioniert nur '
+                'in Aufgaben mit diesem Auslöser.',
+              )
+            else
+              ConnectionPickerField(
+                selectedId: config.connectionId,
+                connections: connections,
+                helperText: connections.isEmpty
+                    ? 'Lege unter Einstellungen → Verbindungen mit der Vorlage '
+                          '„Shopware“ eine Verbindung an.'
+                    : null,
+                onChanged: (id) =>
+                    _update(context, (c) => c.copyWith(connectionId: id)),
+              ),
             for (final field in spec.fields) ...[
               const SizedBox(height: AppSpacing.sm),
               _FieldInput(

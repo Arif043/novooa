@@ -168,6 +168,59 @@ Templates erlaubt), Seite und Höchstanzahl. `limit`, `page` und `total-count-mo
 Ausgaben: `{{abfrage}}` (die rohen Datensätze), `.count`, `.total`, `.found`. Für Schreibzugriffe gibt es die eigenen
 Aktionen oder die [HTTP-Anfrage](./verbindungen.md).
 
+### Shopware-Ereignis lesen (`readEvent`)
+
+Der Gegenpart zu den Auslösern (nächster Abschnitt): gibt Datensatz und Art des Ereignisses aus, das den Lauf gestartet
+hat. Braucht **keine Verbindung** und funktioniert nur in Aufgaben mit einem Shopware-Auslöser (sonst Fehlermeldung).
+Ausgaben: `{{ereignis}}` (der Datensatz im einfachen Modell: Bestellung, Kunde, Produkt oder Newsletter-Anmeldung, je
+nach Auslöser), `.event` (`orderPlaced`, `orderStatus`, `customerRegistered`, `stockLow`, `newsletterSubscribed`), `.id`,
+`.receivedAt`. Felder des Datensatzes: `{{ereignis.orderNumber}}`, `{{ereignis.email}}` usw. (Modelle wie bei den Aktionen).
+
+## Auslöser (App-Webhooks)
+
+Quelle **„Shopware-Ereignis“** unter Zeitplan → Auslöser → Ereignis. Shopware meldet das Ereignis über eine **kleine
+Shopware-App**, die novooa je Auslöser als `manifest.xml` erzeugt; novooa lädt den Datensatz über die gewählte Verbindung
+nach und startet die Aufgabe mit dem Datensatz im einfachen Modell. Technisch ist es der [Webhook-Empfänger](./webhooks.md)
+mit einem Interpreter für diese Quelle.
+
+| Ereignis                  | Shopware-Ereignis                                | Einstellungen                                          |
+| ------------------------- | ------------------------------------------------ | ------------------------------------------------------ |
+| **Neue Bestellung**       | `checkout.order.placed`                          | –                                                      |
+| **Bestellstatus erreicht**| `state_enter.<order\|order_transaction\|order_delivery>.state.<status>` | Bereich (Bestellung, Zahlung, Lieferung), Zielstatus |
+| **Neuer Kunde**           | `checkout.customer.register`                     | –                                                      |
+| **Bestand unterschritten**| `product.written`                                | Bestand höchstens N                                    |
+| **Newsletter-Anmeldung**  | `newsletter.confirmed` oder `newsletter.register`| Erst nach Bestätigung (Standard an)                    |
+
+**Einrichten:**
+
+1. Auslöser anlegen (Verbindung wählen, Ereignis, Einstellungen). Die Karte des Auslösers zeigt „Shopware-App einrichten“.
+2. Im Dialog die Adresse von novooa **aus Sicht von Shopware** eintragen (laufen beide in Docker: der Containername, z. B.
+   `http://novooa:8090`; `localhost` meint im Shopware-Container Shopware selbst). `manifest.xml` erscheint zum Kopieren.
+3. In der Shopware-Installation `custom/apps/<AppName>/manifest.xml` anlegen und `bin/console app:install --activate
+   <AppName>` ausführen (der Dialog nennt Name und Befehl).
+4. Die Integration der Verbindung braucht Leserechte auf die Entität des Ereignisses (der Dialog nennt sie), weil novooa die
+   Daten darüber nachlädt.
+
+Die App ist je Auslöser eigen (Name `NovooaAusloeser<Kürzel>`), enthält genau einen Webhook und keine Geheimnisse außer dem
+**Token in der Adresse** (derselbe wie bei jedem Webhook-Auslöser). Das Manifest lässt sich jederzeit neu anzeigen.
+
+**Verhalten:**
+- Aufrufe, deren Ereignisname nicht zum Auslöser passt, starten nichts (Antwort 202).
+- **Bestand unterschritten** wird bei jeder Änderung des Bestands gemeldet, solange er an oder unter der Grenze liegt (nicht
+  nur beim Überschreiten; Shopware nennt den vorherigen Bestand nicht). Änderungen ohne das Feld `stock`, Löschungen und
+  Nicht-Produkte werden übersprungen; je Aufruf werden höchstens 50 Produkte nachgeladen.
+- Ein Aufruf startet höchstens 10 Läufe. Schlägt das Nachladen fehl (Shop nicht erreichbar, Recht fehlt), antwortet novooa
+  mit einem Fehler, damit Shopware es erneut versucht.
+- Es gilt die Begrenzung der Webhooks (je Auslöser im Schnitt 5 Aufrufe pro Sekunde).
+
+**Nicht geprüft** (aus der Shopware-Dokumentation übernommen, nicht gegen einen Shop): ob eine App **ohne `<setup>`** ihre
+Webhooks sendet, `manifest-2.0.xsd` in 6.6, die Form der Nutzlast (der Code liest tolerant und braucht je Ereignis nur die
+Kennung: `order.id`, `orderTransaction.orderId`, `customer.id`, `newsletterRecipient.id`, bei `product.written` die Einträge
+mit `primaryKey` und `updatedFields`) sowie `newsletter.confirmed` bei abgeschaltetem Double-Opt-in. Die Aufrufe sind **nicht
+signiert** (Schutz ist das Token in der Adresse); eine Signaturprüfung mit App-Geheimnis folgt, wenn sie am echten Shop
+geprüft ist. Schlägt etwas fehl, hilft das Protokoll der Webhooks in Shopware (Einstellungen → System → Webhooks) und
+`bin/console messenger:consume` (Zustellung läuft über die Warteschlange).
+
 ## Fehler
 
 Shopware-Fehler erscheinen als verständliche Meldung am Baustein: abgelehnte Anmeldung (401), fehlende Berechtigung der
@@ -176,5 +229,5 @@ werden geprüft, bevor etwas gesendet wird (unbekannter Status, ungültiges Datu
 
 ## Nicht umgesetzt
 
-Der Auslöser „Neue Bestellung“, Dokumente (Rechnung, Lieferschein; braucht Binärantworten im HTTP-Client), Sprachwahl,
+Signierte App-Aufrufe (App-Geheimnis), Auslöser per Abfrage im Takt (ohne App und öffentliche Adresse), Dokumente (Rechnung, Lieferschein; braucht Binärantworten im HTTP-Client), Sprachwahl,
 Anlegen von Datensätzen, Schreibzugriffe über die Experten-Abfrage. Der KI-Agent kennt die Bausteine nicht.

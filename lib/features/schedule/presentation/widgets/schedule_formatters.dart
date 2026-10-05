@@ -22,7 +22,10 @@ String scheduleLabel(ScheduleConfig? config) {
 String eventLabel(EventTriggerConfig? config) {
   if (config == null) return 'Ereignis nicht konfiguriert';
   final parts = [
-    config.source.label,
+    if (config.source == EventTriggerSource.shopware)
+      'Shopware: ${config.shopware.summary}'
+    else
+      config.source.label,
     if (config.target is! AnywhereTarget) eventTargetLabel(config.target),
     if (config.fileKinds.isNotEmpty && config.target is! FileTarget)
       config.fileKinds.map((kind) => kind.label).join(', '),

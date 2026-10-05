@@ -76,6 +76,7 @@ class ShopwareActionSpec {
     required this.secondaryOutputs,
     required this.fields,
     this.initialParams = const {},
+    this.usesConnection = true,
   });
 
   /// Entspricht `action` im Backend (`integrations/shopware/actions`).
@@ -87,4 +88,8 @@ class ShopwareActionSpec {
   final Map<String, NodeOutputType> secondaryOutputs;
   final List<ShopwareField> fields;
   final Map<String, Object?> initialParams;
+
+  /// `false`: der Baustein liest nur das Ereignis des Auslösers und braucht
+  /// keine Verbindung.
+  final bool usesConnection;
 }
