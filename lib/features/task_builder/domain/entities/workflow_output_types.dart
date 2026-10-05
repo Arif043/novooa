@@ -18,6 +18,7 @@ NodeOutputType primaryOutputTypeOf(NodeConfig config) {
     ModelInferenceNodeConfig() => NodeOutputType.json,
     WriteFileNodeConfig() => NodeOutputType.file,
     TableFromCollectionNodeConfig() => NodeOutputType.table,
+    HttpRequestNodeConfig() => NodeOutputType.json,
     _ => NodeOutputType.string,
   };
 }
@@ -27,9 +28,9 @@ NodeOutputType primaryOutputTypeOf(NodeConfig config) {
 NodeOutputType secondaryOutputTypeOf(String field) {
   return switch (field) {
     'receivedAt' => NodeOutputType.datetime,
-    'found' || 'created' || 'isNewFile' => NodeOutputType.boolean,
-    'count' || 'sizeBytes' || 'rowCount' => NodeOutputType.number,
-    'record' || 'records' || 'folderId' => NodeOutputType.json,
+    'found' || 'created' || 'isNewFile' || 'ok' => NodeOutputType.boolean,
+    'count' || 'sizeBytes' || 'rowCount' || 'status' => NodeOutputType.number,
+    'record' || 'records' || 'folderId' || 'headers' => NodeOutputType.json,
     _ => NodeOutputType.string,
   };
 }

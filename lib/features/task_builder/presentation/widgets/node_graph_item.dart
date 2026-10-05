@@ -11,6 +11,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/model_inferen
 import 'package:syscat2/features/task_builder/presentation/widgets/speech_to_text_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/text_to_speech_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/for_each_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/http_request_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_output_name_field.dart';
@@ -228,6 +229,7 @@ class NodeGraphItem extends StatelessWidget {
       .documentLookup => DocumentLookupWidget(node: node),
       .saveDocument => SaveDocumentWidget(node: node),
       .tableFromCollection => TableFromCollectionWidget(node: node),
+      .httpRequest => HttpRequestWidget(node: node),
       _ => const SizedBox.shrink(),
     };
     return FocusScope(

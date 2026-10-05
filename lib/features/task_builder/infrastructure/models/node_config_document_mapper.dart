@@ -44,6 +44,7 @@ class NodeConfigDocumentMapper {
       },
       SendChannelMessageNodeConfig() => _sendMessageToDocument(config),
       NotificationSendNodeConfig() => _notificationSendToDocument(config),
+      HttpRequestNodeConfig() => _httpRequestToDocument(config),
       _ => {'primitive': config.primitive.name},
     };
   }
@@ -74,6 +75,7 @@ class NodeConfigDocumentMapper {
       ),
       WorkflowPrimitive.sendChannelMessage => _sendMessageFrom(data),
       WorkflowPrimitive.notificationSend => _notificationSendFrom(data),
+      WorkflowPrimitive.httpRequest => _httpRequestFrom(data),
       _ => NodeConfig.initial(primitive),
     };
   }
@@ -305,6 +307,48 @@ class NodeConfigDocumentMapper {
       'title': config.title,
       'message': config.message,
     };
+  }
+
+  Map<String, Object?> _httpRequestToDocument(HttpRequestNodeConfig config) {
+    List<Map<String, Object?>> pairs(List<HttpNameValue> items) => [
+      for (final item in items) {'name': item.name, 'value': item.value},
+    ];
+    return {
+      'primitive': config.primitive.name,
+      if (config.connectionId.isNotEmpty) 'connectionId': config.connectionId,
+      'method': config.method.wire,
+      'url': config.url,
+      'query': pairs(config.query),
+      'headers': pairs(config.headers),
+      'bodyType': config.bodyType.name,
+      'body': config.body,
+      'timeoutSeconds': config.timeoutSeconds,
+      'failOnHttpError': config.failOnHttpError,
+    };
+  }
+
+  HttpRequestNodeConfig _httpRequestFrom(Map<String, Object?> data) {
+    List<HttpNameValue> pairs(Object? value) => [
+      if (value is List)
+        for (final item in value)
+          if (item is Map)
+            HttpNameValue(
+              name: item['name'] as String? ?? '',
+              value: item['value'] as String? ?? '',
+            ),
+    ];
+    final timeout = data['timeoutSeconds'];
+    return HttpRequestNodeConfig(
+      connectionId: data['connectionId'] as String? ?? '',
+      method: HttpRequestMethod.fromWire(data['method']),
+      url: data['url'] as String? ?? '',
+      query: pairs(data['query']),
+      headers: pairs(data['headers']),
+      bodyType: HttpBodyType.fromName(data['bodyType']),
+      body: data['body'] as String? ?? '',
+      timeoutSeconds: timeout is num ? timeout.toInt() : 30,
+      failOnHttpError: data['failOnHttpError'] as bool? ?? true,
+    );
   }
 
   NotificationSendNodeConfig _notificationSendFrom(Map<String, Object?> data) {

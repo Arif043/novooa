@@ -41,6 +41,7 @@ List<String> secondaryOutputFieldsOf(NodeConfig config) {
     ModelInferenceNodeConfig() => const ['modelId'],
     DocumentLookupNodeConfig() => const ['found', 'record', 'message'],
     SaveDocumentNodeConfig() => const ['created', 'count', 'records'],
+    HttpRequestNodeConfig() => const ['status', 'ok', 'headers'],
     _ => const [],
   };
 }

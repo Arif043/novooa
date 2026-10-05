@@ -26,6 +26,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.saveDocument => 'Datensatz speichern',
       WorkflowPrimitive.tableFromCollection => 'Sammlung als Tabelle',
       WorkflowPrimitive.validation => 'Validierung',
+      WorkflowPrimitive.httpRequest => 'HTTP-Anfrage',
     };
   }
 
@@ -72,6 +73,8 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         'Liest eine Datensammlung vollständig ein und gibt sie als Tabellen-Wert weiter.',
       WorkflowPrimitive.validation =>
         'Prüft Ergebnis, Schema oder Qualitätskriterien.',
+      WorkflowPrimitive.httpRequest =>
+        'Ruft die API eines externen Systems auf und gibt die Antwort weiter.',
     };
   }
 }

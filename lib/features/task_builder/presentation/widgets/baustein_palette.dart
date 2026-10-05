@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:syscat2/core/runtime/connections_availability.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/workflow_primitive_labels.dart';
@@ -44,6 +45,7 @@ const bausteinGroups = <String, List<BausteinChoice>>{
     BausteinChoice(.dialogInput),
     BausteinChoice(.mediaInput),
   ],
+  'Externe Systeme': [BausteinChoice(.httpRequest)],
   'Kommunikation': [
     BausteinChoice(.readChannelEvent, kind: ChannelEventKind.email),
     BausteinChoice(.readChannelEvent, kind: ChannelEventKind.whatsapp),
@@ -78,6 +80,7 @@ IconData bausteinIcon(WorkflowPrimitive primitive) => switch (primitive) {
   .tableFromCollection => CupertinoIcons.table,
   .toolCall => Icons.build_outlined,
   .validation => Icons.fact_check_outlined,
+  .httpRequest => Icons.http,
 };
 
 class BausteinPalette extends StatefulWidget {
@@ -92,10 +95,16 @@ class _BausteinPaletteState extends State<BausteinPalette> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final httpAvailable = connectionsAvailable();
     final groups = {
       for (final group in bausteinGroups.entries)
         group.key: group.value
             .where((choice) => choice.label.toLowerCase().contains(_query))
+            // Ohne Verbindungs-Dienst (Cloud) gäbe es den Baustein, aber keine Ausführung.
+            .where(
+              (choice) =>
+                  httpAvailable || choice.primitive != WorkflowPrimitive.httpRequest,
+            )
             .toList(),
     };
     return Material(

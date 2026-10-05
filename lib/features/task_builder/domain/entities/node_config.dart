@@ -30,6 +30,7 @@ part 'notification_send_node_config.dart';
 part 'document_lookup_node_config.dart';
 part 'save_document_node_config.dart';
 part 'table_from_collection_node_config.dart';
+part 'http_request_node_config.dart';
 
 sealed class NodeConfig extends Equatable {
   const NodeConfig();
@@ -59,6 +60,7 @@ sealed class NodeConfig extends Equatable {
       .readChannelEvent => ReadChannelEventNodeConfig.initial(),
       .sendChannelMessage => SendChannelMessageNodeConfig.initial(),
       .notificationSend => NotificationSendNodeConfig.initial(),
+      .httpRequest => HttpRequestNodeConfig.initial(),
       _ => throw UnimplementedError(),
     };
   }

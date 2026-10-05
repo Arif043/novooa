@@ -31,6 +31,7 @@ enum WorkflowPrimitive {
   saveDocument,
   tableFromCollection,
   validation,
+  httpRequest,
 }
 
 /// Ob eine Primitive einen fachlichen Rückgabewert hat.

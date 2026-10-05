@@ -1,4 +1,6 @@
+import 'package:syscat2/core/runtime/connections_availability.dart';
 import 'package:syscat2/core/runtime/employees_availability.dart';
+import 'package:syscat2/features/connections/presentation/cubits/connections_cubit.dart';
 import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -48,6 +50,10 @@ class TaskBuilderPage extends StatelessWidget {
         if (serviceLocator<WorkspaceCapabilities>().modelCatalog)
           BlocProvider(
             create: (_) => serviceLocator<ModelCatalogCubit>()..load(),
+          ),
+        if (connectionsAvailable())
+          BlocProvider(
+            create: (_) => serviceLocator<ConnectionsCubit>()..load(),
           ),
         if (skillsAvailable())
           BlocProvider(

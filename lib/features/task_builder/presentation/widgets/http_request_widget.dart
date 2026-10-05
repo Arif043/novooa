@@ -1,0 +1,308 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/runtime/connections_availability.dart';
+import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/core/theme/syscat_theme.dart';
+import 'package:syscat2/features/connections/domain/entities/connection.dart';
+import 'package:syscat2/features/connections/presentation/cubits/connections_cubit.dart';
+
+import '../../domain/entities/node_config.dart';
+import '../../domain/entities/workflow_node.dart';
+import '../cubits/task_builder_cubit.dart';
+import 'template_expression_scope.dart';
+import 'template_expression_suggestion.dart';
+import 'template_expression_text_field.dart';
+
+/// Konfiguration der HTTP-Anfrage: Verbindung, Methode, Adresse, Parameter,
+/// Header und Body. Zugangsdaten gibt es hier nicht — sie gehören zur
+/// Verbindung und bleiben in der Runtime.
+class HttpRequestWidget extends StatelessWidget {
+  const HttpRequestWidget({super.key, required this.node});
+
+  final WorkflowNode node;
+
+  HttpRequestNodeConfig get _config => node.config as HttpRequestNodeConfig;
+
+  @override
+  Widget build(BuildContext context) {
+    final connections = connectionsAvailable()
+        ? context.watch<ConnectionsCubit>().state.connections
+        : const <Connection>[];
+    final suggestions = TemplateExpressionScope.suggestionsOf(context);
+    final config = _config;
+    final hasConnection = config.connectionId.isNotEmpty;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: SyscatTheme.nodePanelDecoration(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('HTTP-Anfrage', style: SyscatTheme.taskBody),
+          const SizedBox(height: AppSpacing.sm),
+          _ConnectionPicker(
+            selectedId: config.connectionId,
+            connections: connections,
+            onChanged: (id) => _update(context, (c) => c.copyWith(connectionId: id)),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 140,
+                child: DropdownButtonFormField<HttpRequestMethod>(
+                  key: ValueKey('${node.id.value}.method'),
+                  isExpanded: true,
+                  initialValue: config.method,
+                  decoration: const InputDecoration(labelText: 'Methode'),
+                  items: [
+                    for (final method in HttpRequestMethod.values)
+                      DropdownMenuItem(value: method, child: Text(method.wire)),
+                  ],
+                  onChanged: (method) {
+                    if (method != null) {
+                      _update(context, (c) => c.copyWith(method: method));
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: TemplateExpressionTextField(
+                  value: config.url,
+                  suggestions: suggestions,
+                  decoration: InputDecoration(
+                    labelText: hasConnection ? 'Pfad' : 'URL',
+                    hintText: hasConnection
+                        ? '/search/order'
+                        : 'https://api.example.com/orders',
+                    helperText: hasConnection
+                        ? 'Relativ zur Basis-URL der Verbindung.'
+                        : 'Ohne Verbindung wird ohne Anmeldung gesendet.',
+                  ),
+                  onChanged: (value) =>
+                      _update(context, (c) => c.copyWith(url: value)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _NameValueList(
+            title: 'Query-Parameter',
+            addLabel: 'Parameter hinzufügen',
+            items: config.query,
+            suggestions: suggestions,
+            onChanged: (items) =>
+                _update(context, (c) => c.copyWith(query: items)),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _NameValueList(
+            title: 'Header',
+            addLabel: 'Header hinzufügen',
+            items: config.headers,
+            suggestions: suggestions,
+            onChanged: (items) =>
+                _update(context, (c) => c.copyWith(headers: items)),
+          ),
+          if (config.method.sendsBody) ...[
+            const SizedBox(height: AppSpacing.md),
+            SegmentedButton<HttpBodyType>(
+              segments: const [
+                ButtonSegment(value: HttpBodyType.none, label: Text('Kein Body')),
+                ButtonSegment(value: HttpBodyType.json, label: Text('JSON')),
+                ButtonSegment(value: HttpBodyType.text, label: Text('Text')),
+              ],
+              selected: {config.bodyType},
+              onSelectionChanged: (selection) => _update(
+                context,
+                (c) => c.copyWith(bodyType: selection.first),
+              ),
+            ),
+            if (config.bodyType != HttpBodyType.none) ...[
+              const SizedBox(height: AppSpacing.sm),
+              TemplateExpressionTextField(
+                value: config.body,
+                suggestions: suggestions,
+                minLines: 3,
+                maxLines: 10,
+                decoration: InputDecoration(
+                  labelText: 'Body',
+                  hintText: config.bodyType == HttpBodyType.json
+                      ? '{"kunde": "{{kunde}}"}'
+                      : null,
+                ),
+                onChanged: (value) =>
+                    _update(context, (c) => c.copyWith(body: value)),
+              ),
+            ],
+          ],
+          const SizedBox(height: AppSpacing.md),
+          // Eigenes Material, damit die Berührungseffekte der Kachel im
+          // dekorierten Panel sichtbar bleiben.
+          Material(
+            type: MaterialType.transparency,
+            child: SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Bei Fehlerstatus abbrechen'),
+              subtitle: const Text(
+                'Ausgeschaltet liefert der Baustein „status“ und „ok“, '
+                'z. B. für eine Verzweigung.',
+              ),
+              value: config.failOnHttpError,
+              onChanged: (value) =>
+                  _update(context, (c) => c.copyWith(failOnHttpError: value)),
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: SizedBox(
+              width: 200,
+              child: TextFormField(
+                key: ValueKey('${node.id.value}.timeout'),
+                initialValue: '${config.timeoutSeconds}',
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Zeitlimit (Sekunden)',
+                  helperText: '1 bis 120',
+                ),
+                onChanged: (text) {
+                  final seconds = int.tryParse(text.trim());
+                  if (seconds == null) return;
+                  _update(
+                    context,
+                    (c) => c.copyWith(timeoutSeconds: seconds.clamp(1, 120)),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _update(
+    BuildContext context,
+    HttpRequestNodeConfig Function(HttpRequestNodeConfig config) update,
+  ) {
+    context.read<TaskBuilderCubit>().updateHttpRequest(node.id, update);
+  }
+}
+
+class _ConnectionPicker extends StatelessWidget {
+  const _ConnectionPicker({
+    required this.selectedId,
+    required this.connections,
+    required this.onChanged,
+  });
+
+  final String selectedId;
+  final List<Connection> connections;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final known = connections.any((connection) => connection.id == selectedId);
+    return DropdownButtonFormField<String>(
+      key: ValueKey('connection-picker-$selectedId-${connections.length}'),
+      initialValue: selectedId,
+      isExpanded: true,
+      decoration: const InputDecoration(labelText: 'Verbindung'),
+      items: [
+        const DropdownMenuItem(
+          value: '',
+          child: Text('Keine (vollständige URL angeben)'),
+        ),
+        for (final connection in connections)
+          DropdownMenuItem(value: connection.id, child: Text(connection.name)),
+        // Eine gelöschte Verbindung bleibt sichtbar, statt den Baustein
+        // stillschweigend auf „keine“ zu setzen.
+        if (selectedId.isNotEmpty && !known)
+          DropdownMenuItem(
+            value: selectedId,
+            child: const Text('Verbindung nicht gefunden'),
+          ),
+      ],
+      onChanged: (id) {
+        if (id != null) onChanged(id);
+      },
+    );
+  }
+}
+
+class _NameValueList extends StatelessWidget {
+  const _NameValueList({
+    required this.title,
+    required this.addLabel,
+    required this.items,
+    required this.suggestions,
+    required this.onChanged,
+  });
+
+  final String title;
+  final String addLabel;
+  final List<HttpNameValue> items;
+  final List<TemplateExpressionSuggestion> suggestions;
+  final ValueChanged<List<HttpNameValue>> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: Theme.of(context).textTheme.titleSmall),
+        for (var index = 0; index < items.length; index++)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.sm),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TemplateExpressionTextField(
+                    value: items[index].name,
+                    suggestions: suggestions,
+                    decoration: const InputDecoration(labelText: 'Name'),
+                    onChanged: (name) => _replace(index, items[index].copyWith(name: name)),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  flex: 3,
+                  child: TemplateExpressionTextField(
+                    value: items[index].value,
+                    suggestions: suggestions,
+                    decoration: const InputDecoration(labelText: 'Wert'),
+                    onChanged: (value) => _replace(index, items[index].copyWith(value: value)),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Entfernen',
+                  icon: const Icon(Icons.close),
+                  onPressed: () => onChanged([
+                    for (var other = 0; other < items.length; other++)
+                      if (other != index) items[other],
+                  ]),
+                ),
+              ],
+            ),
+          ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            icon: const Icon(Icons.add),
+            label: Text(addLabel),
+            onPressed: () => onChanged([...items, const HttpNameValue()]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _replace(int index, HttpNameValue item) {
+    onChanged([
+      for (var other = 0; other < items.length; other++)
+        if (other == index) item else items[other],
+    ]);
+  }
+}
