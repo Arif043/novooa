@@ -166,6 +166,17 @@ services:
       - novooa-data:/var/lib/novooa
       - novooa-keys:/var/lib/novooa-keys
 
+  shopware:
+    image: dockware/play:latest
+    container_name: shopware_app
+    networks:
+      - novooa-public
+      - novooa-private
+    ports:
+      - "8000:80"     # Shopware Storefront & Admin
+      - "8888:8888"   # Adminer (Datenbank-GUI)
+      - "9999:9999"   # Mailcatcher (E-Mail-Testumgebung)
+
 networks:
   novooa-public:
   novooa-private:

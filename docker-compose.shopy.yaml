@@ -1,0 +1,8 @@
+services:
+  shopware:
+    image: dockware/play:latest
+    container_name: shopware_app
+    ports:
+      - "8000:80"     # Shopware Storefront & Admin
+      - "8888:8888"   # Adminer (Datenbank-GUI)
+      - "9999:9999"   # Mailcatcher (E-Mail-Testumgebung)
