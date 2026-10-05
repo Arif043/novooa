@@ -101,6 +101,8 @@ class _FieldInput extends StatelessWidget {
       ShopwareFieldKind.text => TemplateExpressionTextField(
         value: value is String ? value as String : '',
         suggestions: TemplateExpressionScope.suggestionsOf(context),
+        minLines: field.lines,
+        maxLines: field.lines > 1 ? field.lines + 6 : 1,
         decoration: InputDecoration(
           labelText: field.label,
           hintText: field.hint,
@@ -138,11 +140,25 @@ class _FieldInput extends StatelessWidget {
               helperText: field.helper,
             ),
             onChanged: (text) {
+              if (text.trim().isEmpty) return onChanged(null);
               final number = int.tryParse(text.trim());
               if (number == null) return;
               onChanged(number.clamp(field.min, field.max));
             },
           ),
+        ),
+      ),
+      // Eigenes Material, damit die Berührungseffekte der Kachel im dekorierten
+      // Panel sichtbar bleiben.
+      ShopwareFieldKind.toggle => Material(
+        type: MaterialType.transparency,
+        child: SwitchListTile(
+          key: ValueKey('${nodeId.value}.${field.key}'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(field.label),
+          subtitle: field.helper == null ? null : Text(field.helper!),
+          value: value == true,
+          onChanged: (on) => onChanged(on ? true : null),
         ),
       ),
     };

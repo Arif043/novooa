@@ -80,6 +80,94 @@ Zahlungs- und Lieferstatus stammen von der **jüngsten Zahlung** bzw. der **erst
 für Adressen). Der Filter auf Zahlungs- oder Lieferstatus trifft eine Bestellung, sobald **irgendeine** Zahlung bzw.
 Lieferung den Status hat, `paymentStatus` zeigt dagegen nur die jüngste.
 
+### Bestellung lesen (`getOrder`)
+
+Eingaben: Bestellnummer **oder** Bestell-ID (32 Zeichen; sie hat Vorrang). Eine unbekannte Bestellung ist ein **Fehler**;
+wer verzweigen will, nutzt „Bestellungen suchen“ mit Bestellnummer und `found`.
+
+| Ausgabe | Typ | Inhalt |
+| --- | --- | --- |
+| `{{bestellung}}` | `json` | die Bestellung im Modell oben |
+| `.orderNumber`, `.status`, `.paymentStatus`, `.deliveryStatus`, `.customerEmail` | `string` | die wichtigsten Felder direkt |
+| `.total` | `number` | Gesamtbetrag (brutto) |
+
+### Bestellstatus ändern (`changeOrderStatus`)
+
+Eingaben: Bestellung (Nummer oder ID), **Statuswechsel** und „Mail an den Kunden senden“ (Vorgabe **aus**; Shopware
+verschickt sonst die Mail der Vorlage).
+
+| Bereich | Wechsel |
+| --- | --- |
+| Bestellung | In Bearbeitung setzen (`process`), Abschließen (`complete`), Stornieren (`cancel`), Wieder öffnen (`reopen`) |
+| Zahlung (jüngste) | Als bezahlt markieren (`paid`), Teilweise bezahlt, Erstatten, Teilweise erstatten, Abbrechen, Wieder öffnen, Erinnern, Als fehlgeschlagen markieren, Autorisieren, Rückbuchung |
+| Lieferung (erste) | Als versandt markieren (`ship`), Teilweise versandt, Retoure, Abbrechen, Wieder öffnen |
+
+Aufruf: `POST /api/_action/{order|order_transaction|order_delivery}/{id}/state/{wechsel}` mit `{"sendMail": …}`; danach
+liest die Aktion die Bestellung neu. Ist der Wechsel im aktuellen Status nicht erlaubt (400), nennt die Meldung den
+aktuellen Status und die **möglichen Wechsel** (`GET /api/_action/state-machine/<entität>/<id>/state`).
+
+| Ausgabe | Typ | Inhalt |
+| --- | --- | --- |
+| `{{statuswechsel}}` | `json` | die Bestellung nach dem Wechsel |
+| `.previousStatus`, `.newStatus` | `string` | technischer Status des betroffenen Bereichs davor und danach |
+| `.changed` | `boolean` | ob sich der Status geändert hat |
+
+**Achtung:** Statuswechsel sind in Shopware nicht ohne Weiteres umkehrbar (z. B. Stornierung) und lösen je nach Shop
+Mails und Lagerbuchungen aus.
+
+### Produkte suchen (`searchProducts`)
+
+Eingaben: Name enthält, Artikelnummer, Aktiv (beliebig/ja/nein), Bestand ab/bis (jeweils leer = offen), Reihenfolge
+(Name, neueste, geringster Bestand zuerst), Höchstanzahl (1–500, Vorgabe 50). Ausgaben wie „Bestellungen suchen“
+(`{{produkte}}`, `.count`, `.total`, `.found`).
+
+**Produktmodell:**
+
+```json
+{
+  "id": "…", "productNumber": "SW1000", "name": "T-Shirt", "active": true,
+  "stock": 12, "availableStock": 10, "price": {"gross": 119, "net": 100},
+  "ean": "…", "manufacturer": "Muster GmbH", "parentId": "", "raw": {"…": "…"}
+}
+```
+
+`price` ist der erste Preis (Standardwährung) und `null`, wenn eine Variante den Preis erbt. `name` kommt aus der
+übersetzten Fassung. Gesucht werden Hauptprodukte **und** Varianten.
+
+### Produkt ändern (`updateProduct`)
+
+Eingaben: Produkt (Artikelnummer oder ID), Neuer Bestand, Neuer Preis (brutto), Aktiv (nicht ändern/aktiv/inaktiv).
+Geändert wird **nur, was eingetragen ist**; mindestens ein Wert ist Pflicht. Der Preis steht als Zahl (Komma oder Punkt)
+und wird mit `linked: true` gesetzt; den **Nettopreis berechnet die Aktion** aus dem Steuersatz des Produkts (bei
+Varianten ohne eigenen Satz aus dem Hauptprodukt; ist er nicht bestimmbar, wird nichts geändert). Preise anderer
+Währungen bleiben erhalten; hat das Produkt noch keinen Preis, gilt die Standardwährung des Shops.
+
+Ausgaben: `{{produkt}}` (Produkt nach der Änderung, neu gelesen) und `.changed` (`boolean`: Bestand, Aktiv oder
+Bruttopreis haben sich tatsächlich geändert).
+
+### Kunden suchen (`searchCustomers`)
+
+Eingaben: E-Mail enthält, Name enthält (Vorname, Nachname **oder** Firma), Kundennummer, Aktiv, Reihenfolge (neueste,
+Nachname A–Z), Höchstanzahl. Ausgaben `{{kunden}}`, `.count`, `.total`, `.found`.
+
+**Kundenmodell:**
+
+```json
+{
+  "id": "…", "customerNumber": "K1", "email": "…", "firstName": "…", "lastName": "…", "company": "",
+  "active": true, "guest": false, "group": "Standard-Kundengruppe", "createdAt": "…",
+  "billingAddress": {"street": "…", "zip": "…", "city": "…", "country": "…"}, "raw": {"…": "…"}
+}
+```
+
+### Shopware-Abfrage (`query`, Experte)
+
+Fragt **lesend** eine beliebige Entität ab (`POST /api/search/<entität>`). Eingaben: Entität (z. B. `order`, `product`,
+`customer`, `tax`), **Kriterien als JSON** (Shopware-Suchkriterien: `filter`, `sort`, `associations`, `includes`, …;
+Templates erlaubt), Seite und Höchstanzahl. `limit`, `page` und `total-count-mode` gehören **nicht** in die Kriterien.
+Ausgaben: `{{abfrage}}` (die rohen Datensätze), `.count`, `.total`, `.found`. Für Schreibzugriffe gibt es die eigenen
+Aktionen oder die [HTTP-Anfrage](./verbindungen.md).
+
 ## Fehler
 
 Shopware-Fehler erscheinen als verständliche Meldung am Baustein: abgelehnte Anmeldung (401), fehlende Berechtigung der
@@ -88,6 +176,5 @@ werden geprüft, bevor etwas gesendet wird (unbekannter Status, ungültiges Datu
 
 ## Nicht umgesetzt
 
-Weitere Aktionen (Bestellung lesen, Bestellstatus ändern, Produkte suchen/ändern, Kunden suchen, Experten-Abfrage), der
-Auslöser „Neue Bestellung“, Dokumente (Rechnung, Lieferschein; braucht Binärantworten im HTTP-Client), Sprachwahl,
-Anlegen von Datensätzen. Der KI-Agent kennt die Bausteine nicht.
+Der Auslöser „Neue Bestellung“, Dokumente (Rechnung, Lieferschein; braucht Binärantworten im HTTP-Client), Sprachwahl,
+Anlegen von Datensätzen, Schreibzugriffe über die Experten-Abfrage. Der KI-Agent kennt die Bausteine nicht.

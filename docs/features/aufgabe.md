@@ -63,7 +63,7 @@ referenzieren.
 | `saveDocument` | Datensatz speichern | Legt ohne Bedingungen einen neuen Datensatz an; mit Feldbedingungen aktualisiert er alle Treffer oder legt bei keinem Treffer einen neuen an | Lokale Runtime implementiert |
 | `tableFromCollection` | Sammlung als Tabelle | Liest eine Datensammlung vollständig und gibt sie als fachlichen Tabellen-Wert weiter; „Datei schreiben" speichert einen solchen Wert als `.xlsx` | Lokale Runtime implementiert |
 | `readWebhook` | Webhook-Ereignis | Liest den Aufruf, der die Aufgabe über einen [Webhook](./webhooks.md) gestartet hat; liefert `value` (Inhalt), `method`, `query`, `headers`, `receivedAt` | Lokale Runtime implementiert |
-| `shopware` | Shopware-Aktion | Eine Aktion eines Shopware-Shops (`config.action`, `connectionId`, `params`); jede Aktion erscheint als eigener Baustein, siehe [Integrationen](./integrationen.md) | Lokale Runtime; Aktionen: Bestellungen suchen, siehe [Shopware](./shopware.md) |
+| `shopware` | Shopware-Aktion | Eine Aktion eines Shopware-Shops (`config.action`, `connectionId`, `params`); jede Aktion erscheint als eigener Baustein, siehe [Integrationen](./integrationen.md) | Lokale Runtime; Aktionen: Bestellungen suchen/lesen, Bestellstatus ändern, Produkte suchen/ändern, Kunden suchen, Abfrage; siehe [Shopware](./shopware.md) |
 | `httpRequest` | HTTP-Anfrage | Ruft die HTTP-API eines externen Systems auf, optional über eine gespeicherte [Verbindung](./verbindungen.md); liefert `value`, `status`, `ok`, `headers` | Lokale Runtime implementiert |
 | `toolCall` | Werkzeug-Aufruf | Strukturierter Aufruf eines Werkzeugs | Geplant |
 | `validation` | Validierung | Prueft Output gegen Schema oder Regeln | Geplant |

@@ -12,6 +12,7 @@ import 'package:syscat2/features/connections/domain/repositories/connection_repo
 import 'package:syscat2/features/connections/domain/usecases/connection_use_cases.dart';
 import 'package:syscat2/features/connections/presentation/cubits/connections_cubit.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
+import 'package:syscat2/features/integrations/shopware/domain/shopware_action_spec.dart';
 import 'package:syscat2/features/integrations/shopware/domain/shopware_actions.dart';
 import 'package:syscat2/features/integrations/shopware/domain/shopware_node_config.dart';
 import 'package:syscat2/features/integrations/shopware/presentation/widgets/shopware_action_widget.dart';
@@ -46,7 +47,11 @@ const _searchOrders = 'shopware.searchOrders';
 void main() {
   setUp(registerShopwarePlugin);
   tearDown(() async {
-    PluginNodeModules.unregister(_searchOrders);
+    for (final module in PluginNodeModules.all) {
+      if (module.typeId.startsWith('shopware.')) {
+        PluginNodeModules.unregister(module.typeId);
+      }
+    }
     await serviceLocator.reset();
   });
 
@@ -168,6 +173,155 @@ void main() {
     },
   );
 
+  group('Alle Aktionen', () {
+    test(
+      'jede Aktion ist ein eigener Baustein der Gruppe Shopware mit gemeinsamem Primitive',
+      () {
+        final modules = PluginNodeModules.all.where(
+          (m) => m.typeId.startsWith('shopware.'),
+        );
+
+        expect(modules.map((m) => m.typeId).toSet(), {
+          'shopware.searchOrders',
+          'shopware.getOrder',
+          'shopware.changeOrderStatus',
+          'shopware.searchProducts',
+          'shopware.updateProduct',
+          'shopware.searchCustomers',
+          'shopware.query',
+        });
+        expect(modules.map((m) => m.title), [
+          'Bestellungen suchen',
+          'Bestellung lesen',
+          'Bestellstatus ändern',
+          'Produkte suchen',
+          'Produkt ändern',
+          'Kunden suchen',
+          'Shopware-Abfrage',
+        ]);
+        expect(modules.every((m) => m.group == 'Shopware'), isTrue);
+        expect(modules.every((m) => m.documentPrimitive == 'shopware'), isTrue);
+        expect(modules.map((m) => m.outputBase).toSet().length, 7);
+      },
+    );
+
+    test('die Beschreibungen der Felder sind in sich stimmig', () {
+      for (final action in ShopwareActions.all) {
+        final keys = action.fields.map((f) => f.key).toList();
+        expect(
+          keys.toSet().length,
+          keys.length,
+          reason: '${action.id}: Schlüssel eindeutig',
+        );
+        for (final key in action.initialParams.keys) {
+          expect(
+            keys,
+            contains(key),
+            reason: '${action.id}: Voreinstellung $key hat ein Feld',
+          );
+        }
+        for (final field in action.fields) {
+          final values = field.options.map((o) => o.value).toList();
+          expect(
+            values.toSet().length,
+            values.length,
+            reason: '${action.id}.${field.key}',
+          );
+          if (field.kind == ShopwareFieldKind.select) {
+            expect(field.options, isNotEmpty);
+          }
+          if (field.kind == ShopwareFieldKind.number) {
+            expect(
+              field.min,
+              lessThanOrEqualTo(field.max),
+              reason: '${action.id}.${field.key}',
+            );
+          }
+        }
+        for (final entry in action.initialParams.entries) {
+          final field = action.fields.firstWhere((f) => f.key == entry.key);
+          if (field.kind == ShopwareFieldKind.select) {
+            expect(
+              field.options.map((o) => o.value),
+              contains(entry.value),
+              reason: '${action.id}.${entry.key}',
+            );
+          }
+        }
+      }
+    });
+
+    test('jede Aktion wird verlustfrei gespeichert und gelesen', () {
+      for (final action in ShopwareActions.all) {
+        final config = ShopwareNodeConfig.initial(
+          action.id,
+        ).copyWith(connectionId: 'c1');
+        final document = mapper.toDocument(config);
+
+        expect(document['primitive'], 'shopware', reason: action.id);
+        expect(document['action'], action.id);
+        expect(mapper.fromDocument(document), config, reason: action.id);
+      }
+    });
+
+    test('Ausgaben je Aktion mit Typen', () {
+      Map<String, NodeOutputType> outputs(String id) => {
+        for (final name in secondaryOutputFieldsOf(
+          ShopwareNodeConfig.initial(id),
+        ))
+          name: secondaryOutputTypeFor(ShopwareNodeConfig.initial(id), name),
+      };
+      const list = {
+        'count': NodeOutputType.number,
+        'total': NodeOutputType.number,
+        'found': NodeOutputType.boolean,
+      };
+
+      expect(outputs('searchOrders'), list);
+      expect(outputs('searchProducts'), list);
+      expect(outputs('searchCustomers'), list);
+      expect(outputs('query'), list);
+      expect(outputs('getOrder'), {
+        'orderNumber': NodeOutputType.string,
+        'status': NodeOutputType.string,
+        'paymentStatus': NodeOutputType.string,
+        'deliveryStatus': NodeOutputType.string,
+        'total': NodeOutputType.number,
+        'customerEmail': NodeOutputType.string,
+      });
+      expect(outputs('changeOrderStatus'), {
+        'previousStatus': NodeOutputType.string,
+        'newStatus': NodeOutputType.string,
+        'changed': NodeOutputType.boolean,
+      });
+      expect(outputs('updateProduct'), {'changed': NodeOutputType.boolean});
+      for (final action in ShopwareActions.all) {
+        expect(
+          primaryOutputTypeOf(ShopwareNodeConfig.initial(action.id)),
+          NodeOutputType.json,
+          reason: action.id,
+        );
+      }
+    });
+
+    test('Voreinstellungen der Aktionen', () {
+      expect(ShopwareNodeConfig.initial('searchProducts').params, {
+        'sort': 'name',
+        'limit': 50,
+      });
+      expect(ShopwareNodeConfig.initial('searchCustomers').params, {
+        'sort': 'newest',
+        'limit': 50,
+      });
+      expect(ShopwareNodeConfig.initial('query').params, {
+        'limit': 50,
+        'page': 1,
+      });
+      expect(ShopwareNodeConfig.initial('getOrder').params, isEmpty);
+      expect(ShopwareNodeConfig.initial('changeOrderStatus').params, isEmpty);
+    });
+  });
+
   group('Palette', () {
     Future<List<BausteinChoice>> pump(WidgetTester tester) async {
       final added = <BausteinChoice>[];
@@ -221,11 +375,12 @@ void main() {
       WidgetTester tester, {
       List<Connection> connections = const [_shop],
       ShopwareNodeConfig? config,
+      String action = 'searchOrders',
     }) async {
       await builder.load(_task);
       await builder.addConnectedNode(
         primitive: WorkflowPrimitive.plugin,
-        pluginTypeId: _searchOrders,
+        pluginTypeId: 'shopware.$action',
       );
       final id =
           (builder.state as TaskBuilderLoaded).editingTask.nodes.single.id;
@@ -301,6 +456,145 @@ void main() {
       }
       expect(find.text('Neueste zuerst'), findsOneWidget);
     });
+
+    widgetTest('jede Aktion zeigt Titel und alle ihre Felder', (tester) async {
+      for (final action in ShopwareActions.all) {
+        await pumpNode(tester, action: action.id);
+
+        expect(find.text(action.title), findsOneWidget, reason: action.id);
+        for (final field in action.fields) {
+          expect(
+            find.text(field.label),
+            findsWidgets,
+            reason: '${action.id}: ${field.label}',
+          );
+        }
+      }
+    });
+
+    widgetTest(
+      'der Statuswechsel ist eine Auswahl, „Mail senden“ ein Schalter, der bei Aus entfällt',
+      (tester) async {
+        await pumpNode(tester, action: 'changeOrderStatus');
+        expect(find.text('Bitte wählen'), findsOneWidget);
+
+        await tester.tap(find.text('Bitte wählen'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Zahlung: Als bezahlt markieren').last);
+        await tester.pump();
+        expect(current().params['transition'], 'payment.paid');
+
+        await tester.ensureVisible(find.byType(Switch));
+        await tester.tap(find.byType(Switch));
+        await tester.pump();
+        expect(current().params['sendMail'], true);
+        await tester.tap(find.byType(Switch));
+        await tester.pump();
+        expect(current().params.containsKey('sendMail'), isFalse);
+      },
+    );
+
+    widgetTest('Nummer und Kennung der Bestellung landen in params', (
+      tester,
+    ) async {
+      await pumpNode(tester, action: 'getOrder');
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Bestellnummer'),
+        '10001',
+      );
+      await tester.pump();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Bestell-ID (optional)'),
+        'a' * 32,
+      );
+      await tester.pump();
+
+      expect(current().params, {'orderNumber': '10001', 'orderId': 'a' * 32});
+    });
+
+    widgetTest(
+      'ein leeres Zahlenfeld entfernt den Wert, damit „nicht ändern“ gilt',
+      (tester) async {
+        await pumpNode(tester, action: 'updateProduct');
+
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Neuer Bestand'),
+          '7',
+        );
+        await tester.pump();
+        expect(current().params['stock'], 7);
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Neuer Bestand'),
+          '',
+        );
+        await tester.pump();
+        expect(current().params.containsKey('stock'), isFalse);
+
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Neuer Preis (brutto)'),
+          '19,99',
+        );
+        await tester.pump();
+        expect(current().params['price'], '19,99');
+      },
+    );
+
+    widgetTest('Bestand ab/bis erlauben leere Grenzen und begrenzen Eingaben', (
+      tester,
+    ) async {
+      await pumpNode(tester, action: 'searchProducts');
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Bestand bis'),
+        '5',
+      );
+      await tester.pump();
+      expect(current().params['stockMax'], 5);
+      expect(current().params.containsKey('stockMin'), isFalse);
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Bestand ab'),
+        '-9999999',
+      );
+      await tester.pump();
+      expect(current().params['stockMin'], -1000000);
+    });
+
+    widgetTest(
+      'die Experten-Abfrage hat ein mehrzeiliges JSON-Feld, Seite und Höchstanzahl',
+      (tester) async {
+        await pumpNode(tester, action: 'query');
+        final criteria = find.widgetWithText(TextField, 'Kriterien (JSON)');
+        expect(
+          tester.getSize(criteria).height,
+          greaterThan(
+            tester.getSize(find.widgetWithText(TextField, 'Entität')).height *
+                3,
+          ),
+          reason: 'sechs Zeilen statt einer',
+        );
+
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Entität'),
+          'tax',
+        );
+        await tester.pump();
+        await tester.enterText(criteria, '{"filter": []}');
+        await tester.pump();
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Seite'),
+          '3',
+        );
+        await tester.pump();
+
+        expect(current().params, {
+          'limit': 50,
+          'page': 3,
+          'entity': 'tax',
+          'criteria': '{"filter": []}',
+        });
+      },
+    );
 
     widgetTest(
       'ohne Verbindungen weist ein Hinweis auf die Vorlage Shopware hin',
