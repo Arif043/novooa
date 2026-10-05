@@ -33,6 +33,11 @@ enum WorkflowPrimitive {
   tableFromCollection,
   validation,
   httpRequest,
+
+  /// Sammelwert für Bausteine von Plugins (siehe `PluginNodeConfig`): Welcher
+  /// Baustein es ist, steht in `PluginNodeConfig.typeId`. Neue Plugin-Bausteine
+  /// brauchen deshalb keinen neuen Enum-Wert.
+  plugin,
 }
 
 /// Ob eine Primitive einen fachlichen Rückgabewert hat.

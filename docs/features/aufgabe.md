@@ -70,6 +70,25 @@ referenzieren.
 Die vollstaendigen Output-Slots dokumentiert
 [`../node-executor-outputs.md`](../node-executor-outputs.md).
 
+### Bausteine von Plugins
+
+Ein Plugin bringt Bausteine mit, ohne den Kern zu ändern. Backend und Client haben je eine Seite:
+
+- **Backend:** ein `NodeExecutor`, angemeldet an der `NodeExecutorRegistry`
+  (`createDefaultNodeExecutorRegistry`). Die Konfiguration steht noch in `workflowPrimitives` und
+  `nodeConfigSchema` (`task-definition.ts`); das ist je Primitive eine Zeile.
+- **Client:** Die Konfiguration erbt von `PluginNodeConfig` (`task_builder/domain/entities/plugin_node_config.dart`)
+  und liegt im Ordner des Plugins (`NodeConfig` ist bewusst nicht `sealed`). Sie liefert `typeId` (Name im Backend und
+  im Dokument), `toDocument()`, `primaryOutputType` und `secondaryOutputs` (Name → Typ). Ein `PluginNodeModule`
+  (`task_builder/presentation/plugin_node_module.dart`) bündelt Titel, Beschreibung, Gruppe und Icon der Palette,
+  Anfangskonfiguration, `fromDocument`, das Widget und optional `isAvailable`; `PluginNodeModules.register` meldet es
+  beim Start an. Mapper, Palette, Canvas und Ausgaben-Anzeige brauchen dafür keine Änderung.
+
+Der Kern kennt Plugin-Bausteine über den einen Enum-Wert `WorkflowPrimitive.plugin`. Ein gespeicherter Baustein, dessen
+Plugin nicht (mehr) angemeldet ist, wird beim Laden zur Texteingabe; auf der Leinwand erscheint für Plugin-Bausteine
+ohne Modul der Hinweis „Dieser Baustein ist nicht verfügbar“. Ein Beispiel liefert
+`test/features/task_builder/plugin_node_test.dart`.
+
 ## UI-Prinzipien
 
 - Das Aufgabenstudio übernimmt die Inter-Typografie und die abgestuften

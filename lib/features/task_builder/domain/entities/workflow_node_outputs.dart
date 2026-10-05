@@ -1,4 +1,5 @@
 import 'node_config.dart';
+import 'plugin_node_config.dart';
 
 /// Ob ein Baustein seine fachlichen Ausgabewerte flach, ohne umschließenden
 /// Ausgabenamen anbietet (strukturierte Prompt-Ausgabe, Dialogeingabe) —
@@ -42,6 +43,7 @@ List<String> secondaryOutputFieldsOf(NodeConfig config) {
     DocumentLookupNodeConfig() => const ['found', 'record', 'message'],
     SaveDocumentNodeConfig() => const ['created', 'count', 'records'],
     HttpRequestNodeConfig() => const ['status', 'ok', 'headers'],
+    PluginNodeConfig() => config.secondaryOutputs.keys.toList(growable: false),
     ReadWebhookNodeConfig() => const ['method', 'query', 'headers', 'receivedAt'],
     _ => const [],
   };

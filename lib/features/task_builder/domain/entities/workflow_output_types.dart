@@ -1,4 +1,5 @@
 import 'node_config.dart';
+import 'plugin_node_config.dart';
 import 'task_execution_result.dart';
 
 /// Ein flaches Ausgabefeld (strukturierte Prompt-Ausgabe, Dialogeingabe)
@@ -20,8 +21,18 @@ NodeOutputType primaryOutputTypeOf(NodeConfig config) {
     TableFromCollectionNodeConfig() => NodeOutputType.table,
     HttpRequestNodeConfig() => NodeOutputType.json,
     ReadWebhookNodeConfig() => NodeOutputType.json,
+    PluginNodeConfig() => config.primaryOutputType,
     _ => NodeOutputType.string,
   };
+}
+
+/// Typ eines festen Nebenoutputs von [config]; Plugins legen ihn selbst fest,
+/// alle anderen Bausteine folgen [secondaryOutputTypeOf].
+NodeOutputType secondaryOutputTypeFor(NodeConfig config, String field) {
+  if (config is PluginNodeConfig) {
+    return config.secondaryOutputs[field] ?? secondaryOutputTypeOf(field);
+  }
+  return secondaryOutputTypeOf(field);
 }
 
 /// Typ eines festen Nebenoutputs — unabhängig vom Baustein, weil gleich

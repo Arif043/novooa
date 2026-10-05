@@ -67,6 +67,7 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
       branchId: insertion.branchId,
       afterId: insertion.after,
       channelKind: choice.kind,
+      pluginTypeId: choice.pluginTypeId,
     );
     if (!mounted) return;
     setState(() {

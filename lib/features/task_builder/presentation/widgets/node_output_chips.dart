@@ -90,7 +90,7 @@ class NodeOutputChips extends StatelessWidget {
     if (hasFlatOutputFields(config)) return typedFlatOutputFieldsOf(config);
     return [
       for (final name in secondaryOutputFieldsOf(config))
-        (name: name, type: secondaryOutputTypeOf(name)),
+        (name: name, type: secondaryOutputTypeFor(config, name)),
     ];
   }
 

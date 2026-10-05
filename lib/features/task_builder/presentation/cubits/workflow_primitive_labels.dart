@@ -28,6 +28,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.tableFromCollection => 'Sammlung als Tabelle',
       WorkflowPrimitive.validation => 'Validierung',
       WorkflowPrimitive.httpRequest => 'HTTP-Anfrage',
+      WorkflowPrimitive.plugin => 'Baustein',
     };
   }
 
@@ -78,6 +79,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         'Prüft Ergebnis, Schema oder Qualitätskriterien.',
       WorkflowPrimitive.httpRequest =>
         'Ruft die API eines externen Systems auf und gibt die Antwort weiter.',
+      WorkflowPrimitive.plugin => '',
     };
   }
 }

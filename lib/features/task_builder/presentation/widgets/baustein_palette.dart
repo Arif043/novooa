@@ -5,13 +5,29 @@ import 'package:syscat2/core/runtime/webhooks_availability.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/workflow_primitive_labels.dart';
+import '../plugin_node_module.dart';
 
 class BausteinChoice {
-  const BausteinChoice(this.primitive, {this.kind});
+  const BausteinChoice(this.primitive, {this.kind}) : pluginTypeId = null;
+
+  /// Eintrag für einen Baustein, den ein Plugin mitbringt.
+  BausteinChoice.plugin(PluginNodeModule module)
+    : primitive = WorkflowPrimitive.plugin,
+      kind = null,
+      pluginTypeId = module.typeId;
+
   final WorkflowPrimitive primitive;
   final ChannelEventKind? kind;
+  final String? pluginTypeId;
 
-  String get label => kind == null
+  PluginNodeModule? get _module =>
+      pluginTypeId == null ? null : PluginNodeModules.byTypeId(pluginTypeId!);
+
+  IconData get icon => _module?.icon ?? bausteinIcon(primitive);
+
+  String get label => _module != null
+      ? _module!.title
+      : kind == null
       ? primitive.label
       : '${switch (kind!) {
           ChannelEventKind.email => 'E-Mail',
@@ -83,6 +99,7 @@ IconData bausteinIcon(WorkflowPrimitive primitive) => switch (primitive) {
   .validation => Icons.fact_check_outlined,
   .httpRequest => Icons.http,
   .readWebhook => Icons.webhook,
+  .plugin => Icons.extension_outlined,
 };
 
 class BausteinPalette extends StatefulWidget {
@@ -114,6 +131,13 @@ class _BausteinPaletteState extends State<BausteinPalette> {
             )
             .toList(),
     };
+    for (final module in PluginNodeModules.all) {
+      if (!module.isAvailable() ||
+          !module.title.toLowerCase().contains(_query)) {
+        continue;
+      }
+      (groups[module.group] ??= []).add(BausteinChoice.plugin(module));
+    }
     return Material(
       color: colors.surface,
       child: DecoratedBox(
@@ -191,7 +215,7 @@ class _BausteinPaletteState extends State<BausteinPalette> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
-                                bausteinIcon(choice.primitive),
+                                choice.icon,
                                 size: 20,
                                 color: colors.onSurfaceVariant,
                               ),

@@ -12,6 +12,7 @@ import '../../domain/entities/task.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
 import 'task_builder_state.dart';
+import '../plugin_node_module.dart';
 import 'workflow_primitive_labels.dart';
 part 'task_builder_branch_mutations.dart';
 part 'task_builder_condition_branch_mutations.dart';
@@ -339,8 +340,22 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   WorkflowNode _buildNode(
     WorkflowPrimitive primitive,
     int number,
-    WorkflowGraph graph,
-  ) {
+    WorkflowGraph graph, {
+    PluginNodeModule? plugin,
+  }) {
+    if (plugin != null) {
+      return WorkflowNode(
+        id: NodeId('node.$number'),
+        config: plugin.initial(),
+        title: plugin.title,
+        description: plugin.description,
+        outputName: _uniqueOutputName(
+          graph,
+          '',
+          '${plugin.outputBase}$number',
+        ),
+      );
+    }
     // Dialogeingabe-Bausteine haben immer mehrere, eigenständig benannte
     // Outputs (siehe _collectOutputNames) und deshalb nie einen eigenen
     // Ausgabenamen. Reine Seiteneffekt-Bausteine ohne fachlichen
@@ -504,6 +519,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       WorkflowPrimitive.saveDocument => 'speichern',
       WorkflowPrimitive.tableFromCollection => 'tabelle',
       WorkflowPrimitive.validation => 'validation',
+      WorkflowPrimitive.plugin => 'plugin',
       WorkflowPrimitive.httpRequest => 'antwort',
     };
   }

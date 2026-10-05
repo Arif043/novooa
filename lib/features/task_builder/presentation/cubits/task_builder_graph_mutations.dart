@@ -7,10 +7,18 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
     String? branchId,
     NodeId? afterId,
     ChannelEventKind? channelKind,
+    String? pluginTypeId,
   }) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
-    var node = _buildNode(primitive, _nextNodeNumber(task.graph), task.graph);
+    var node = _buildNode(
+      primitive,
+      _nextNodeNumber(task.graph),
+      task.graph,
+      plugin: pluginTypeId == null
+          ? null
+          : PluginNodeModules.byTypeId(pluginTypeId),
+    );
     if (channelKind != null) {
       node = switch (node.config) {
         ReadChannelEventNodeConfig() => node.copyWith(

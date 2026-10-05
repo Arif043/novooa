@@ -1,4 +1,5 @@
 import '../../domain/entities/node_config.dart';
+import '../../domain/entities/plugin_node_config.dart';
 import '../../domain/entities/knowledge_attachment.dart';
 import '../../domain/entities/node_attachment.dart';
 import '../../domain/entities/node_delegation.dart';
@@ -45,6 +46,7 @@ class NodeConfigDocumentMapper {
       SendChannelMessageNodeConfig() => _sendMessageToDocument(config),
       NotificationSendNodeConfig() => _notificationSendToDocument(config),
       HttpRequestNodeConfig() => _httpRequestToDocument(config),
+      PluginNodeConfig() => {...config.toDocument(), 'primitive': config.typeId},
       _ => {'primitive': config.primitive.name},
     };
   }
@@ -76,6 +78,9 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.sendChannelMessage => _sendMessageFrom(data),
       WorkflowPrimitive.notificationSend => _notificationSendFrom(data),
       WorkflowPrimitive.httpRequest => _httpRequestFrom(data),
+      WorkflowPrimitive.plugin =>
+        PluginNodeCodecs.fromDocument(data['primitive'], data) ??
+            NodeConfig.initial(WorkflowPrimitive.stringInput),
       _ => NodeConfig.initial(primitive),
     };
   }
@@ -839,6 +844,7 @@ class NodeConfigDocumentMapper {
   }
 
   WorkflowPrimitive _primitiveFrom(Object? value) {
+    if (PluginNodeCodecs.contains(value)) return WorkflowPrimitive.plugin;
     final name = value == 'conditionalFlow' ? 'conditional' : value;
     return WorkflowPrimitive.values.firstWhere(
       (primitive) => primitive.name == name,

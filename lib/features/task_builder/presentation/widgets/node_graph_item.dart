@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/features/task_builder/domain/entities/plugin_node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
+import 'package:syscat2/features/task_builder/presentation/plugin_node_module.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_widget.dart';
@@ -208,6 +210,15 @@ class NodeGraphItem extends StatelessWidget {
     );
   }
 
+  Widget _pluginWidget() {
+    final config = node.config;
+    final module = config is PluginNodeConfig
+        ? PluginNodeModules.byTypeId(config.typeId)
+        : null;
+    return module?.builder(node) ??
+        const Text('Dieser Baustein ist nicht verfügbar.');
+  }
+
   Widget _nodeWidget() {
     final child = switch (node.config.primitive) {
       .stringInput => StringInputWidget(node: node),
@@ -232,6 +243,7 @@ class NodeGraphItem extends StatelessWidget {
       .saveDocument => SaveDocumentWidget(node: node),
       .tableFromCollection => TableFromCollectionWidget(node: node),
       .httpRequest => HttpRequestWidget(node: node),
+      .plugin => _pluginWidget(),
       _ => const SizedBox.shrink(),
     };
     return FocusScope(
