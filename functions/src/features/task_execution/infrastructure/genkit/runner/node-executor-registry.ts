@@ -11,6 +11,7 @@ import {
 import {forEachNodeExecutor} from "../../../domain/executors/for-each-node-executor.js";
 import {createGenkitIterativeRefinementNodeExecutor} from "../executors/genkit-iterative-refinement-executor.js";
 import {createGenkitPromptNodeExecutor} from "../executors/genkit-prompt-executor.js";
+import {readWebhookNodeExecutor} from "../../../domain/executors/read-webhook-node-executor.js";
 import {readFileNodeExecutor} from "../../../domain/executors/read-file-node-executor.js";
 import {
   readChannelEventNodeExecutor,
@@ -94,6 +95,7 @@ export function createDefaultNodeExecutorRegistry(): NodeExecutorRegistry {
     .register(readFileNodeExecutor)
     .register(readEmailNodeExecutor)
     .register(readChannelEventNodeExecutor)
+    .register(readWebhookNodeExecutor)
     .register(humanApprovalNodeExecutor)
     .register(dialogInputNodeExecutor)
     .register(mediaInputNodeExecutor)

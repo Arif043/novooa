@@ -287,6 +287,10 @@ export const readEmailNodeConfigSchema = z.object({
   primitive: z.literal("readEmail").default("readEmail"),
 });
 
+export const readWebhookNodeConfigSchema = z.object({
+  primitive: z.literal("readWebhook").default("readWebhook"),
+});
+
 export const readChannelEventNodeConfigSchema = z.object({
   primitive: z.literal("readChannelEvent").default("readChannelEvent"),
   kind: z.enum(["email", "whatsapp", "sms"]).default("whatsapp"),
@@ -342,6 +346,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   tableFromCollectionNodeConfigSchema,
   readEmailNodeConfigSchema,
   readChannelEventNodeConfigSchema,
+  readWebhookNodeConfigSchema,
   sendChannelMessageNodeConfigSchema,
   notificationSendNodeConfigSchema,
   httpRequestNodeConfigSchema,

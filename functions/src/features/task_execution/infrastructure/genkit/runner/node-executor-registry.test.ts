@@ -15,7 +15,7 @@ const dependencies = {
 
 test("die Standard-Registry kennt jeden eingebauten Executor", () => {
   const registry = createDefaultNodeExecutorRegistry();
-  for (const primitive of ["stringInput", "script", "prompt", "conditionalFlow", "forEach", "sendChannelMessage", "httpRequest"] as const) {
+  for (const primitive of ["stringInput", "script", "prompt", "conditionalFlow", "forEach", "sendChannelMessage", "httpRequest", "readWebhook"] as const) {
     assert.equal(registry.resolve(primitive, dependencies)?.primitive, primitive);
   }
 });

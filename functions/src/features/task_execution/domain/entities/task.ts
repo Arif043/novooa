@@ -51,6 +51,7 @@ export const workflowPrimitives = [
   "readFile",
   "readEmail",
   "readChannelEvent",
+  "readWebhook",
   "sendChannelMessage",
   "notificationSend",
   "toolCall",
@@ -258,6 +259,9 @@ export type TableFromCollectionNodeConfig = {
 export type ReadEmailNodeConfig = {
   primitive: "readEmail";
 };
+export type ReadWebhookNodeConfig = {
+  primitive: "readWebhook";
+};
 export type ReadChannelEventNodeConfig = {
   primitive: "readChannelEvent";
   kind: ChannelMessageKind;
@@ -309,6 +313,7 @@ export type NodeConfig =
   | SaveDocumentNodeConfig
   | TableFromCollectionNodeConfig
   | ReadEmailNodeConfig
+  | ReadWebhookNodeConfig
   | ReadChannelEventNodeConfig
   | SendChannelMessageNodeConfig
   | NotificationSendNodeConfig
