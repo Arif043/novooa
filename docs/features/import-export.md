@@ -80,6 +80,13 @@ mit `..` werden abgelehnt.
 - Gleichnamige Datensammlung im Ziel: Die Datensätze landen in der vorhandenen
   Sammlung (Namen sind pro Team eindeutig).
 
+## Plugins
+
+Aufgaben mit Plugin-Bausteinen werden exportiert wie alle anderen: gespeichert sind nur `pluginId`, `nodeType` und die
+Feldwerte. Das Plugin selbst, seine Einstellungen und der Trigger-Zustand gehören **nicht** zum Export — auf dem
+Zielgerät wird das Plugin neu installiert (siehe [`plugins.md`](./plugins.md)); bis dahin überspringt die Aufgabe die
+Bausteine mit einem Hinweis.
+
 ## Architektur
 
 - Backend: `functions/src/features/workspace_transfer/`. `TransferSection` ist

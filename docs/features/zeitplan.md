@@ -46,14 +46,19 @@ Dokument:
   },
   eventConfig?: {
     source: "emailReceived" | "smsMessageReceived" | "whatsappMessageReceived"
-      | "fileCreated" | "fileVersionCreated" | "fileDeleted" | "webhookReceived",
+      | "fileCreated" | "fileVersionCreated" | "fileDeleted" | "webhookReceived"
+      | "plugin",                                                    // siehe plugins.md
     target: { kind: "any" }                                          // überall (Standard)
       | { kind: "folder", id: string, includeSubfolders: boolean }   // Datei-Ereignisse
       | { kind: "file", id: string }                                 // Datei-Ereignisse
       | { kind: "channel", id: string }                              // SMS, WhatsApp
       | { kind: "connector", id: string },                           // E-Mail
     fileKinds: Array<"text" | "image" | "video" | "audio" | "pdf" | "spreadsheet" | "other">,
-    filter: string
+    filter: string,
+    plugin?: {                                                       // nur bei source "plugin"
+      pluginId: string, type: string, label: string,
+      settings: Record<string, string | number | boolean>
+    }
   },
   policy: {
     ifRunning: "skipIfRunning" | "startParallel"

@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "id": "hallo",
+  "version": "1.0.0",
+  "name": "Hallo-Plugin",
+  "description": "Beispiel-Plugin: grüßt.",
+  "primitives": [
+    {
+      "type": "greet",
+      "label": "Begrüßen",
+      "description": "Erzeugt einen Gruß.",
+      "group": "Beispiele",
+      "icon": "waving_hand",
+      "settings": [
+        {
+          "key": "name",
+          "label": "Name",
+          "kind": "template"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "value",
+          "label": "Gruß",
+          "type": "string"
+        },
+        {
+          "name": "length",
+          "label": "Länge",
+          "type": "number"
+        }
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "type": "tick",
+      "label": "Jede Minute",
+      "description": "Löst jede Minute aus.",
+      "settings": []
+    }
+  ],
+  "settingsPanels": [
+    {
+      "id": "main",
+      "title": "Hallo-Plugin",
+      "fields": [
+        {
+          "key": "greeting",
+          "label": "Gruß",
+          "kind": "text",
+          "defaultValue": "Hallo"
+        },
+        {
+          "key": "apiKey",
+          "label": "API-Schlüssel",
+          "kind": "text",
+          "secret": true
+        }
+      ]
+    }
+  ]
+}

@@ -599,6 +599,16 @@ Der Import (GitHub, ZIP, Ordner, skills.sh) läuft über `POST /v1/skills/import
 Vercel-Proxy `relay/skills-sh-proxy`); `SKILLS_SH_RELAY_URL` ist in der Compose-Datei voreingestellt. Routen, Grenzen, Rate-Limits und Sicherheit stehen in
 [`features/skills.md`](features/skills.md). Das Thema `skills` des Realtime-Kanals meldet Änderungen.
 
+## Plugins
+
+Signierte Plugins erweitern die Runtime um Bausteine, Trigger und Einstellungs-Panels. Der Katalog läuft über das Relay
+`localRuntimePluginsRelay` in Firebase (Lizenzprüfung, Rate-Limit); `PLUGINS_RELAY_URL` ist in der Compose-Datei
+voreingestellt, `NOVOOA_PLUGIN_PUBLIC_KEY` muss der Betreiber setzen — ohne ihn wird kein Plugin installiert. Das
+Verzeichnis `plugins` liegt wie `skills` im Datenverzeichnis (`NOVOOA_PLUGINS_DIR` verlegt es). Plugin-Code läuft pro
+Aufruf in einem eigenen Node-Prozess mit Permission-Modell (siehe [`features/plugins.md`](features/plugins.md)
+§ Sicherheit); die Runtime braucht dafür Node 22.13 oder neuer (das Image nutzt Node 24). Routen: `/v1/plugins…`,
+Thema `plugins` des Realtime-Kanals.
+
 ## Lizenz und lokale Identität
 
 Die Runtime ist ohne gültigen Lizenzschlüssel nicht nutzbar. Beim Kauf stellt

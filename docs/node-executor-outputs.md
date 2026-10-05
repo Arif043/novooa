@@ -65,6 +65,7 @@ einen identischen `text`-Output — ungenutzte Redundanz, inzwischen entfernt.
 | `documentLookup` | ausgefuehrt | `value` (`string`: verständliches Suchergebnis), `found` (`boolean`), `record` (`json` mit Fachfeldern oder `null`), `message` (`string`) |
 | `saveDocument` | ausgefuehrt | `value` (`string`: „Datensätze gespeichert“), `created` (`boolean`), `count` (`number`), `records` (`json`: gespeicherte Fachfelder) |
 | `tableFromCollection` | ausgefuehrt | siehe „Sammlung als Tabelle" |
+| `plugin` | ausgefuehrt (lokale Runtime); ohne Plugin oder Laufzeit uebersprungen | die im Manifest des Plugins deklarierten Ausgaben (`string`, `number`, `boolean`, `datetime`, `json`); `value` ist der primaere Wert, alle anderen erscheinen als feste Felder (siehe [`features/plugins.md`](./features/plugins.md)) |
 
 ## Sammlung als Tabelle
 
