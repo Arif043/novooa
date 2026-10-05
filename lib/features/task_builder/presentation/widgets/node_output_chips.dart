@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/runtime/plugins_availability.dart';
+import 'package:syscat2/features/plugins/presentation/cubits/plugin_registry_cubit.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../../domain/entities/workflow_node_outputs.dart';
 import '../../domain/entities/workflow_output_types.dart';
 import 'node_output_type_style.dart';
+import 'plugin_baustein_choices.dart';
 
 /// Zeigt die **festen Nebenoutputs** eines Bausteins (z.B. `sender`,
 /// `created`) — bewusst anders gestaltet als der editierbare Ausgabename
@@ -28,7 +33,7 @@ class NodeOutputChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fields = _displayFields();
+    final fields = _displayFields(context);
     if (fields.isEmpty) return const SizedBox.shrink();
     final colors = Theme.of(context).colorScheme;
     return Padding(
@@ -85,8 +90,16 @@ class NodeOutputChips extends StatelessWidget {
   /// Flache Felder (strukturierte Prompt-Ausgabe, Dialogeingabe) sind schon
   /// primäre Outputs; alle anderen Bausteine zeigen ihre festen
   /// Nebenoutputs (ohne `value`, siehe Klassendoku).
-  List<TypedOutputField> _displayFields() {
+  List<TypedOutputField> _displayFields(BuildContext context) {
     final config = node.config;
+    if (config is PluginNodeConfig) {
+      return pluginSecondaryFields(
+        pluginsAvailable()
+            ? context.watch<PluginRegistryCubit>().state
+            : const [],
+        config,
+      );
+    }
     if (hasFlatOutputFields(config)) return typedFlatOutputFieldsOf(config);
     return [
       for (final name in secondaryOutputFieldsOf(config))

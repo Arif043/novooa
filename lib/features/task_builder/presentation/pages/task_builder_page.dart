@@ -1,5 +1,7 @@
 import 'package:syscat2/core/runtime/employees_availability.dart';
+import 'package:syscat2/core/runtime/plugins_availability.dart';
 import 'package:syscat2/core/runtime/skills_availability.dart';
+import 'package:syscat2/features/plugins/presentation/cubits/plugin_registry_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
@@ -48,6 +50,11 @@ class TaskBuilderPage extends StatelessWidget {
         if (serviceLocator<WorkspaceCapabilities>().modelCatalog)
           BlocProvider(
             create: (_) => serviceLocator<ModelCatalogCubit>()..load(),
+          ),
+        if (pluginsAvailable())
+          // Das Register gehört der ganzen App und wird hier nur bereitgestellt.
+          BlocProvider.value(
+            value: serviceLocator<PluginRegistryCubit>()..ensureLoaded(),
           ),
         if (skillsAvailable())
           BlocProvider(

@@ -26,6 +26,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
       WorkflowPrimitive.saveDocument => 'Datensatz speichern',
       WorkflowPrimitive.tableFromCollection => 'Sammlung als Tabelle',
       WorkflowPrimitive.validation => 'Validierung',
+      WorkflowPrimitive.plugin => 'Plugin-Baustein',
     };
   }
 
@@ -72,6 +73,7 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         'Liest eine Datensammlung vollständig ein und gibt sie als Tabellen-Wert weiter.',
       WorkflowPrimitive.validation =>
         'Prüft Ergebnis, Schema oder Qualitätskriterien.',
+      WorkflowPrimitive.plugin => 'Führt einen Baustein eines Plugins aus.',
     };
   }
 }

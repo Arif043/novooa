@@ -7,6 +7,7 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
     String? branchId,
     NodeId? afterId,
     ChannelEventKind? channelKind,
+    PluginNodeSeed? plugin,
   }) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
@@ -21,6 +22,18 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
         ),
         _ => node,
       };
+    }
+    if (plugin != null) {
+      node = node.copyWith(
+        title: plugin.title,
+        description: plugin.description,
+        outputName: _uniqueOutputName(
+          task.graph,
+          '',
+          '${plugin.nodeType}${_nextNodeNumber(task.graph)}',
+        ),
+        config: plugin.config,
+      );
     }
     NodeId? insertedAfter;
     WorkflowGraph insert(WorkflowGraph graph) {

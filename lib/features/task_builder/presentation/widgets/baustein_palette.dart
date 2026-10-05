@@ -1,15 +1,31 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/runtime/plugins_availability.dart';
+import 'package:syscat2/features/plugins/domain/entities/plugin_manifest.dart';
+import 'package:syscat2/features/plugins/presentation/cubits/plugin_registry_cubit.dart';
+import 'package:syscat2/features/plugins/presentation/widgets/plugin_icons.dart';
+import 'plugin_baustein_choices.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/workflow_primitive_labels.dart';
 
 class BausteinChoice {
-  const BausteinChoice(this.primitive, {this.kind});
+  const BausteinChoice(this.primitive, {this.kind, this.plugin, this.pluginIcon});
   final WorkflowPrimitive primitive;
   final ChannelEventKind? kind;
 
-  String get label => kind == null
+  /// Gesetzt bei Bausteinen, die ein Plugin liefert.
+  final PluginNodeSeed? plugin;
+  final String? pluginIcon;
+
+  IconData get icon => plugin == null
+      ? bausteinIcon(primitive)
+      : pluginIconFor(pluginIcon);
+
+  String get label => plugin != null
+      ? plugin!.title
+      : kind == null
       ? primitive.label
       : '${switch (kind!) {
           ChannelEventKind.email => 'E-Mail',
@@ -78,6 +94,7 @@ IconData bausteinIcon(WorkflowPrimitive primitive) => switch (primitive) {
   .tableFromCollection => CupertinoIcons.table,
   .toolCall => Icons.build_outlined,
   .validation => Icons.fact_check_outlined,
+  .plugin => Icons.extension_outlined,
 };
 
 class BausteinPalette extends StatefulWidget {
@@ -92,8 +109,14 @@ class _BausteinPaletteState extends State<BausteinPalette> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final manifests = pluginsAvailable()
+        ? context.watch<PluginRegistryCubit>().state
+        : const <PluginManifest>[];
     final groups = {
-      for (final group in bausteinGroups.entries)
+      for (final group in {
+        ...bausteinGroups,
+        ...pluginBausteinGroups(manifests),
+      }.entries)
         group.key: group.value
             .where((choice) => choice.label.toLowerCase().contains(_query))
             .toList(),
@@ -175,7 +198,7 @@ class _BausteinPaletteState extends State<BausteinPalette> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
-                                bausteinIcon(choice.primitive),
+                                choice.icon,
                                 size: 20,
                                 color: colors.onSurfaceVariant,
                               ),

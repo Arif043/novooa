@@ -44,6 +44,7 @@ class NodeConfigDocumentMapper {
       },
       SendChannelMessageNodeConfig() => _sendMessageToDocument(config),
       NotificationSendNodeConfig() => _notificationSendToDocument(config),
+      PluginNodeConfig() => _pluginToDocument(config),
       _ => {'primitive': config.primitive.name},
     };
   }
@@ -74,6 +75,7 @@ class NodeConfigDocumentMapper {
       ),
       WorkflowPrimitive.sendChannelMessage => _sendMessageFrom(data),
       WorkflowPrimitive.notificationSend => _notificationSendFrom(data),
+      WorkflowPrimitive.plugin => _pluginFrom(data),
       _ => NodeConfig.initial(primitive),
     };
   }
@@ -305,6 +307,32 @@ class NodeConfigDocumentMapper {
       'title': config.title,
       'message': config.message,
     };
+  }
+
+  Map<String, Object?> _pluginToDocument(PluginNodeConfig config) {
+    return {
+      'primitive': config.primitive.name,
+      'pluginId': config.pluginId,
+      'nodeType': config.nodeType,
+      'settings': config.settings,
+    };
+  }
+
+  PluginNodeConfig _pluginFrom(Map<String, Object?> data) {
+    final settings = data['settings'];
+    return PluginNodeConfig(
+      pluginId: data['pluginId'] as String? ?? '',
+      nodeType: data['nodeType'] as String? ?? '',
+      settings: {
+        if (settings is Map)
+          for (final entry in settings.entries)
+            if (entry.key is String &&
+                (entry.value is String ||
+                    entry.value is num ||
+                    entry.value is bool))
+              entry.key as String: entry.value as Object,
+      },
+    );
   }
 
   NotificationSendNodeConfig _notificationSendFrom(Map<String, Object?> data) {

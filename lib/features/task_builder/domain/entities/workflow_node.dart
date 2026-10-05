@@ -31,6 +31,9 @@ enum WorkflowPrimitive {
   saveDocument,
   tableFromCollection,
   validation,
+
+  /// Generischer Baustein, den ein installiertes Plugin liefert.
+  plugin,
 }
 
 /// Ob eine Primitive einen fachlichen Rückgabewert hat.

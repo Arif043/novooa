@@ -1,8 +1,11 @@
+import 'package:syscat2/features/plugins/domain/entities/plugin_manifest.dart';
+
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../../domain/entities/workflow_node_outputs.dart';
 import 'condition_value_sources.dart';
+import 'plugin_baustein_choices.dart';
 
 /// Ob ein Vorschlag ein primärer Ausgabename/eine Script-Variable ist
 /// (immer sichtbar) oder ein fester Nebenoutput (z.B. `speichern4.created`)
@@ -28,6 +31,7 @@ class TemplateExpressionSuggestion {
 List<TemplateExpressionSuggestion> templateExpressionSuggestions({
   required WorkflowGraph graph,
   required NodeId targetNodeId,
+  List<PluginManifest> pluginManifests = const [],
 }) {
   final sourceGraph = conditionSourceGraph(graph, targetNodeId);
   final outputSources = conditionValueSources(sourceGraph);
@@ -47,7 +51,7 @@ List<TemplateExpressionSuggestion> templateExpressionSuggestions({
         );
       }
     }
-    suggestions.addAll(_secondaryOutputSuggestions(node));
+    suggestions.addAll(_secondaryOutputSuggestions(node, pluginManifests));
   }
   final unique = <String, TemplateExpressionSuggestion>{};
   for (final suggestion in suggestions) {
@@ -62,13 +66,17 @@ List<TemplateExpressionSuggestion> templateExpressionSuggestions({
 /// ihre Felder sind bereits primäre Vorschläge über [conditionValueSources].
 Iterable<TemplateExpressionSuggestion> _secondaryOutputSuggestions(
   WorkflowNode node,
+  List<PluginManifest> pluginManifests,
 ) {
   final config = node.config;
   if (hasFlatOutputFields(config)) return const [];
   final outputName = node.outputName.trim();
   if (outputName.isEmpty) return const [];
+  final fields = config is PluginNodeConfig
+      ? [for (final field in pluginSecondaryFields(pluginManifests, config)) field.name]
+      : secondaryOutputFieldsOf(config);
   return [
-    for (final field in secondaryOutputFieldsOf(config))
+    for (final field in fields)
       TemplateExpressionSuggestion(
         expression: '{{$outputName.$field}}',
         label: '${node.title} · $outputName.$field',

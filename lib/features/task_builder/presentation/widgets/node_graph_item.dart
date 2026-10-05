@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/runtime/plugins_availability.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/features/plugins/domain/entities/plugin_manifest.dart';
+import 'package:syscat2/features/plugins/presentation/cubits/plugin_registry_cubit.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
@@ -15,6 +18,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/human_approva
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_output_name_field.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_output_chips.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/plugin_node_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_email_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_file_widget.dart';
@@ -228,6 +232,7 @@ class NodeGraphItem extends StatelessWidget {
       .documentLookup => DocumentLookupWidget(node: node),
       .saveDocument => SaveDocumentWidget(node: node),
       .tableFromCollection => TableFromCollectionWidget(node: node),
+      .plugin => PluginNodeWidget(node: node),
       _ => const SizedBox.shrink(),
     };
     return FocusScope(
@@ -243,6 +248,9 @@ class NodeGraphItem extends StatelessWidget {
   }
 
   Widget _templateAwareNodeWidget(BuildContext context) {
+    final pluginManifests = pluginsAvailable()
+        ? context.watch<PluginRegistryCubit>().state
+        : const <PluginManifest>[];
     final suggestions = context
         .select<TaskBuilderCubit, List<TemplateExpressionSuggestion>>(
           (cubit) => switch (cubit.state) {
@@ -250,6 +258,7 @@ class NodeGraphItem extends StatelessWidget {
               templateExpressionSuggestions(
                 graph: editingTask.graph,
                 targetNodeId: node.id,
+                pluginManifests: pluginManifests,
               ),
             _ => const [],
           },
