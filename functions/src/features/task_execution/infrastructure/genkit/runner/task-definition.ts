@@ -307,6 +307,13 @@ export const notificationSendNodeConfigSchema = z.object({
   message: z.string().default(""),
 });
 
+export const pluginNodeConfigSchema = z.object({
+  primitive: z.literal("plugin").default("plugin"),
+  pluginId: z.string().min(1).max(60),
+  nodeType: z.string().min(1).max(60),
+  settings: z.record(z.string().max(40), z.union([z.string().max(5000), z.number(), z.boolean()])).default({}),
+});
+
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   stringInputNodeConfigSchema,
   scriptNodeConfigSchema,
@@ -329,6 +336,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   readChannelEventNodeConfigSchema,
   sendChannelMessageNodeConfigSchema,
   notificationSendNodeConfigSchema,
+  pluginNodeConfigSchema,
 ]);
 
 export const workflowNodeSchema = z.object({

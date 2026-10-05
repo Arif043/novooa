@@ -23,7 +23,7 @@ test("die Standard-Registry kennt jeden eingebauten Executor", () => {
 test("ein registrierter Executor ersetzt den eingebauten, ohne den Dispatch zu ändern", () => {
   const replacement = {primitive: "stringInput", execute: () => Promise.reject(new Error("ersetzt"))} as NodeExecutor;
   const registry = createDefaultNodeExecutorRegistry().register(replacement);
-  assert.equal(executorFor("stringInput", dependencies.ai, silentLogger, undefined, undefined, undefined, undefined, registry), replacement);
+  assert.equal(executorFor("stringInput", dependencies, registry), replacement);
 });
 
 test("unbekannte Bausteine liefern keinen Executor", () => {

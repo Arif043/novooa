@@ -23,12 +23,13 @@ import {writeFileNodeExecutor} from "../../../domain/executors/write-file-node-e
 import {documentLookupNodeExecutor} from "../../../domain/executors/document-lookup-node-executor.js";
 import {saveDocumentNodeExecutor} from "../../../domain/executors/save-document-node-executor.js";
 import {tableFromCollectionNodeExecutor} from "../../../domain/executors/table-from-collection-node-executor.js";
+import {createPluginNodeExecutor} from "../../../domain/executors/plugin-node-executor.js";
+import {type PluginRunner} from "../../../../plugins/domain/repositories/plugin-runner.js";
 import {type WorkflowNode} from "./task-definition.js";
 import {type NodeExecutor} from "../../../domain/executors/node-executor.js";
 import {type GenkitBeta} from "genkit/beta";
 import {type NodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 import {type ScriptExecutorFactory} from "../../../domain/executors/script-executor.js";
-import {createPythonScriptExecutor} from "../../local/python-script-executor.js";
 import {scriptOutputLogger} from "./script-output-logger.js";
 import {conditionalBranchLogger} from "./conditional-branch-logger.js";
 import {taskMessageLogger} from "./task-message-logger.js";
@@ -47,6 +48,7 @@ export type NodeExecutorDependencies = {
   languageModelResolver?: GenkitLanguageModelResolver;
   languageModelDefaultsStore?: LanguageModelDefaultsStore;
   scriptExecutorFactory: ScriptExecutorFactory;
+  pluginRunner?: PluginRunner;
 };
 
 export type NodeExecutorFactory = (dependencies: NodeExecutorDependencies) => NodeExecutor;
@@ -87,6 +89,7 @@ export function createDefaultNodeExecutorRegistry(): NodeExecutorRegistry {
       createSendChannelMessageNodeExecutor(taskMessageLogger(logger)))
     .registerFactory("notificationSend", ({logger}) =>
       createNotificationSendNodeExecutor(notificationSendLogger(logger)))
+    .registerFactory("plugin", ({pluginRunner}) => createPluginNodeExecutor(pluginRunner))
     .register(stringInputNodeExecutor)
     .register(writeFileNodeExecutor)
     .register(readFileNodeExecutor)
@@ -108,15 +111,8 @@ const defaultRegistry = createDefaultNodeExecutorRegistry();
 
 export function executorFor(
   primitive: Primitive,
-  ai: GenkitBeta,
-  logger: ApplicationLogger,
-  workspace?: NodeAttachmentWorkspace,
-  languageModelResolver?: GenkitLanguageModelResolver,
-  languageModelDefaultsStore?: LanguageModelDefaultsStore,
-  scriptExecutorFactory: ScriptExecutorFactory = createPythonScriptExecutor,
+  dependencies: NodeExecutorDependencies,
   registry: NodeExecutorRegistry = defaultRegistry,
 ): NodeExecutor | undefined {
-  return registry.resolve(primitive, {
-    ai, logger, workspace, languageModelResolver, languageModelDefaultsStore, scriptExecutorFactory,
-  });
+  return registry.resolve(primitive, dependencies);
 }

@@ -6,6 +6,7 @@ import {DirectoryPluginStore} from "./directory-plugin-store.js";
 import {pluginSignatureVerifierFrom} from "./ed25519-plugin-signature-verifier.js";
 import {FilePluginSettingsStore} from "./file-plugin-settings-store.js";
 import {InMemoryStagedPluginInstalls} from "./in-memory-staged-plugin-installs.js";
+import {ProcessPluginRunner} from "./process-plugin-runner.js";
 import {type PluginRoutesOptions} from "./local-plugin-routes.js";
 
 /** Der Plugin-Ordner: `NOVOOA_PLUGINS_DIR` oder `<runtimeRoot>/plugins`. */
@@ -20,6 +21,10 @@ export function createPluginStore(runtimeRoot: string): DirectoryPluginStore {
 
 export function createPluginSettingsStore(runtimeRoot: string): FilePluginSettingsStore {
   return new FilePluginSettingsStore(path.join(runtimeRoot, "plugin-settings"));
+}
+
+export function createPluginRunner(runtimeRoot: string): ProcessPluginRunner {
+  return new ProcessPluginRunner(createPluginStore(runtimeRoot), createPluginSettingsStore(runtimeRoot), pluginsDirectoryFor(runtimeRoot));
 }
 
 export function createPluginsModule(runtimeRoot: string, notifier: PluginRoutesOptions["notifier"]): PluginRoutesOptions {

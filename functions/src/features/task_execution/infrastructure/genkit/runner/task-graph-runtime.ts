@@ -1,3 +1,4 @@
+import {type PluginRunner} from "../../../../plugins/domain/repositories/plugin-runner.js";
 import {type EmployeeStore} from "../../../../employees/domain/repositories/employee-store.js";
 import {type SkillContentReader} from "../../../../skills/domain/repositories/skill-content-reader.js";
 import {type ScriptExecutorFactory} from "../../../domain/executors/script-executor.js";
@@ -23,4 +24,6 @@ export type TaskGraphRuntime = TaskRunServices & {
   languageModelDefaultsStore?: LanguageModelDefaultsStore;
   /** Führt Scripts aus; fehlt (Cloud), läuft das bisherige Python im eigenen Prozess. */
   scriptExecutorFactory?: ScriptExecutorFactory;
+  /** Führt Plugin-Bausteine aus; fehlt in Umgebungen ohne Plugins (Cloud). */
+  pluginRunner?: PluginRunner;
 };

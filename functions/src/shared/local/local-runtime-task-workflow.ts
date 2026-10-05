@@ -1,3 +1,4 @@
+import {createPluginRunner} from "../../features/plugins/infrastructure/local/plugins-composition.js";
 import {scriptExecutorFactoryFromEnvironment} from "./local-runtime-relays.js";
 import {SqliteEmployeeStore} from "../../features/employees/infrastructure/local/sqlite-employee-store.js";
 import {createDirectorySkillStore} from "../../features/skills/infrastructure/local/skills-composition.js";
@@ -65,6 +66,7 @@ export function createLocalTaskWorkflow(dependencies: LocalTaskWorkflowDependenc
       languageModelResolver: new CatalogGenkitLanguageModelResolver(dependencies.languageModelCatalog),
       skillContentReader: createDirectorySkillStore(dependencies.runtimeRoot),
       scriptExecutorFactory: scriptExecutorFactoryFromEnvironment(),
+      pluginRunner: createPluginRunner(dependencies.runtimeRoot),
       employeeStore: new SqliteEmployeeStore(database),
       speechSynthesizer: new LanguageModelSpeech(dependencies.languageModelCatalog, defaultSpeechProviders()),
       speechTranscriber: new LanguageModelTranscription(dependencies.languageModelCatalog, defaultTranscriptionProviders()),

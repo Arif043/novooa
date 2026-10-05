@@ -65,6 +65,7 @@ export const workflowPrimitives = [
   "saveDocument",
   "tableFromCollection",
   "validation",
+  "plugin",
 ] as const;
 
 export type WorkflowPrimitive = (typeof workflowPrimitives)[number];
@@ -274,6 +275,13 @@ export type NotificationSendNodeConfig = {
   title?: string;
   message: string;
 };
+/** Generischer Baustein, dessen Darstellung und Ausführung ein installiertes Plugin liefert. */
+export type PluginNodeConfig = {
+  primitive: "plugin";
+  pluginId: string;
+  nodeType: string;
+  settings: Record<string, string | number | boolean>;
+};
 export type NodeConfig =
   | StringInputNodeConfig
   | ScriptNodeConfig
@@ -295,7 +303,8 @@ export type NodeConfig =
   | ReadEmailNodeConfig
   | ReadChannelEventNodeConfig
   | SendChannelMessageNodeConfig
-  | NotificationSendNodeConfig;
+  | NotificationSendNodeConfig
+  | PluginNodeConfig;
 export type WorkflowNode = {
   id: string;
   primitive: WorkflowPrimitive;

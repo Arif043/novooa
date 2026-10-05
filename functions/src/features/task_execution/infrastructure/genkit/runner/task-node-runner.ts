@@ -7,6 +7,8 @@ import {type ObjectStore} from "../../../../files/domain/repositories/object-sto
 import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {type LanguageModelDefaultsStore} from "../../../../language_models/domain/repositories/language-model-defaults-store.js";
 import {type ScriptExecutorFactory} from "../../../domain/executors/script-executor.js";
+import {type PluginRunner} from "../../../../plugins/domain/repositories/plugin-runner.js";
+import {createPythonScriptExecutor} from "../../local/python-script-executor.js";
 import {executorFor} from "./node-executor-registry.js";
 import {
   parentResultsFor,
@@ -40,6 +42,7 @@ type NodeRunInput = {
   languageModelResolver?: GenkitLanguageModelResolver;
   languageModelDefaultsStore?: LanguageModelDefaultsStore;
   scriptExecutorFactory?: ScriptExecutorFactory;
+  pluginRunner?: PluginRunner;
   logger: ApplicationLogger;
 };
 
@@ -110,15 +113,15 @@ async function executeNode(
     },
   );
   try {
-    const executor = executorFor(
-      input.node.primitive,
+    const executor = executorFor(input.node.primitive, {
       ai,
-      input.logger,
-      attachmentWorkspace,
-      input.languageModelResolver,
-      input.languageModelDefaultsStore,
-      input.scriptExecutorFactory,
-    );
+      logger: input.logger,
+      workspace: attachmentWorkspace,
+      languageModelResolver: input.languageModelResolver,
+      languageModelDefaultsStore: input.languageModelDefaultsStore,
+      scriptExecutorFactory: input.scriptExecutorFactory ?? createPythonScriptExecutor,
+      pluginRunner: input.pluginRunner,
+    });
     if (!executor) return skippedNode(input.node);
     return await executor.execute(input.node, input.runContext);
   } finally {
