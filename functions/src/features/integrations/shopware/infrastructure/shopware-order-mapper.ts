@@ -1,6 +1,5 @@
 import {type ShopwareAddress, type ShopwareOrder, type ShopwareOrderLineItem} from "../domain/shopware-order.js";
-
-type Raw = Record<string, unknown>;
+import {first, label, list, number, record, text, type Raw} from "./shopware-record.js";
 
 /** Die Assoziationen, die die Suche für das Modell braucht (Shopware lädt sie nicht von selbst). */
 export const orderAssociations = {
@@ -59,34 +58,4 @@ function address(value: unknown): ShopwareAddress | null {
     firstName: text(raw.firstName), lastName: text(raw.lastName), company: text(raw.company),
     street: text(raw.street), zip: text(raw.zipcode), city: text(raw.city), country: label(raw.country),
   };
-}
-
-/** Der Anzeigename in der Sprache des Shops (`translated.name`), sonst `name`. */
-function label(value: unknown): string {
-  const raw = record(value);
-  return text(record(raw.translated).name) || text(raw.name);
-}
-
-function first(value: unknown): Raw {
-  return list(value)[0] ?? {};
-}
-
-function list(value: unknown): Raw[] {
-  return Array.isArray(value) ? value.filter(isRecord) : [];
-}
-
-function record(value: unknown): Raw {
-  return isRecord(value) ? value : {};
-}
-
-function isRecord(value: unknown): value is Raw {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function text(value: unknown): string {
-  return typeof value === "string" ? value : typeof value === "number" ? String(value) : "";
-}
-
-function number(value: unknown): number {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }

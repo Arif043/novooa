@@ -48,4 +48,50 @@ export class ShopwareParams {
     if (Number.isNaN(date.getTime())) throw new ShopwareError(`„${label}“: „${value}“ ist kein gültiges Datum.`);
     return date.toISOString();
   }
+
+  /** Wahrheitswert; ohne Eingabe `false`. Akzeptiert auch „true“/„false“ als Text. */
+  boolean(key: string, label: string): boolean {
+    const raw = this.params[key];
+    if (raw === undefined || raw === null || raw === "") return false;
+    const value = typeof raw === "string" ? this.resolveText(raw).trim().toLowerCase() : raw;
+    if (value === true || value === "true") return true;
+    if (value === false || value === "false" || value === "") return false;
+    throw new ShopwareError(`„${label}“ muss ein/aus sein.`);
+  }
+
+  /** Ganze Zahl im Bereich oder `undefined`, wenn nichts eingetragen ist. */
+  optionalInteger(key: string, label: string, range: {min: number; max: number}): number | undefined {
+    const raw = this.params[key];
+    if (raw === undefined || raw === null || raw === "") return undefined;
+    return this.integer(key, label, {...range, fallback: range.min});
+  }
+
+  /** Dezimalzahl (Komma oder Punkt) im Bereich oder `undefined`, wenn nichts eingetragen ist. */
+  optionalDecimal(key: string, label: string, range: {min: number; max: number}): number | undefined {
+    const raw = this.params[key];
+    if (raw === undefined || raw === null || raw === "") return undefined;
+    const text = typeof raw === "string" ? this.resolveText(raw).trim().replace(",", ".") : raw;
+    if (text === "") return undefined;
+    const value = typeof text === "number" ? text : Number(text);
+    if (!Number.isFinite(value) || value < range.min || value > range.max) {
+      throw new ShopwareError(`„${label}“ muss eine Zahl von ${range.min} bis ${range.max} sein.`);
+    }
+    return value;
+  }
+
+  /** Ein JSON-Objekt aus einem Textfeld; leer ergibt `{}`. */
+  jsonObject(key: string, label: string, maxLength = 20_000): Record<string, unknown> {
+    const text = this.text(key, maxLength);
+    if (text === "") return {};
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      throw new ShopwareError(`„${label}“ ist kein gültiges JSON.`);
+    }
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      throw new ShopwareError(`„${label}“ muss ein JSON-Objekt sein.`);
+    }
+    return parsed as Record<string, unknown>;
+  }
 }
