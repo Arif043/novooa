@@ -150,6 +150,7 @@ npm run deploy         # firebase deploy --only functions
 | Feature „Daten"       | [`docs/features/daten.md`](./docs/features/daten.md)               | Dokumentorientierte Daten und lokale Speicherung         |
 | Feature „Wissensbasis" | [`docs/features/wissensbasis.md`](./docs/features/wissensbasis.md) | Markdown-Zettelkasten für Node-Anhänge                  |
 | Feature „Fähigkeiten" | [`docs/features/skills.md`](./docs/features/skills.md)             | SKILL.md-Fähigkeiten: Skills-Ordner, Import, skills.sh      |
+| Feature „Integrationen" | [`docs/features/integrationen.md`](./docs/features/integrationen.md) | Plugins für externe Systeme: Ablage, Vertrag, Importregel, Bausteine |
 | Feature „Webhooks"   | [`docs/features/webhooks.md`](./docs/features/webhooks.md)         | Eingehende Aufrufe externer Systeme: Auslöser, Adresse, Signatur, Baustein „Webhook-Ereignis“ |
 | Feature „Verbindungen" | [`docs/features/verbindungen.md`](./docs/features/verbindungen.md) | Zugänge zu externen HTTP-APIs und der Baustein „HTTP-Anfrage“ |
 | Feature „Mitarbeiter" | [`docs/features/mitarbeiter.md`](./docs/features/mitarbeiter.md)   | Subagents: Rahmenbedingung (System-Prompt) + Skills     |

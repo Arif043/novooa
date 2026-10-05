@@ -149,6 +149,7 @@ async function runNodes(
       languageModelResolver: runtime.languageModelResolver,
       languageModelDefaultsStore: runtime.languageModelDefaultsStore,
       scriptExecutorFactory: runtime.scriptExecutorFactory,
+      executorRegistry: runtime.executorRegistry,
       logger: runtime.logger,
     }), (error) => nodeExecutionFailure(node, error, newResults(graph, results, initialState)));
     if (resultOrFailure.isErr()) return err(resultOrFailure.error);

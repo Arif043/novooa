@@ -7,6 +7,7 @@ import {type ObjectStore} from "../../../../files/domain/repositories/object-sto
 import {type TeamFileStore} from "../../../../files/domain/repositories/team-file-store.js";
 import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {type LanguageModelDefaultsStore} from "../../../../language_models/domain/repositories/language-model-defaults-store.js";
+import {type NodeExecutorRegistry} from "./node-executor-registry.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 
 /** Was ein Graph-Lauf braucht: die durchgereichten Dienste ([TaskRunServices]) plus Stores und Modelle, die nur der Runner nutzt. */
@@ -23,4 +24,6 @@ export type TaskGraphRuntime = TaskRunServices & {
   languageModelDefaultsStore?: LanguageModelDefaultsStore;
   /** Führt Scripts aus; fehlt (Cloud), läuft das bisherige Python im eigenen Prozess. */
   scriptExecutorFactory?: ScriptExecutorFactory;
+  /** Executoren dieser Laufzeit; ohne Angabe gelten die eingebauten (Cloud). Die lokale Runtime ergänzt die der Plugins. */
+  executorRegistry?: NodeExecutorRegistry;
 };

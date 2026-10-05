@@ -67,6 +67,7 @@ export const workflowPrimitives = [
   "tableFromCollection",
   "validation",
   "httpRequest",
+  "shopware",
 ] as const;
 
 export type WorkflowPrimitive = (typeof workflowPrimitives)[number];
@@ -281,6 +282,13 @@ export type NotificationSendNodeConfig = {
 };
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type HttpNameValue = {name: string; value: string};
+/** Aktion eines Shopware-Shops (Plugin `integrations/shopware`); `params` hängen von der Aktion ab. */
+export type ShopwareNodeConfig = {
+  primitive: "shopware";
+  action: string;
+  connectionId?: string;
+  params: Record<string, unknown>;
+};
 export type HttpRequestNodeConfig = {
   primitive: "httpRequest";
   /** Fehlt sie, muss `url` vollständig sein und es wird ohne Anmeldung gesendet. */
@@ -317,7 +325,8 @@ export type NodeConfig =
   | ReadChannelEventNodeConfig
   | SendChannelMessageNodeConfig
   | NotificationSendNodeConfig
-  | HttpRequestNodeConfig;
+  | HttpRequestNodeConfig
+  | ShopwareNodeConfig;
 export type WorkflowNode = {
   id: string;
   primitive: WorkflowPrimitive;

@@ -41,6 +41,8 @@ import {ConnectionHttpClient} from "../../features/connections/infrastructure/lo
 import {OAuthTokenProvider} from "../../features/connections/infrastructure/local/oauth-token-provider.js";
 import {SQLiteConnectionStore} from "../../features/connections/infrastructure/local/sqlite-connection-store.js";
 import {StoredConnectionAuthorizer} from "../../features/connections/infrastructure/local/stored-connection-authorizer.js";
+import {registerIntegrationPlugins} from "../../features/integrations/index.js";
+import {createDefaultNodeExecutorRegistry} from "../../features/task_execution/infrastructure/genkit/runner/node-executor-registry.js";
 import {createLocalTaskWorkflow} from "./local-runtime-task-workflow.js";
 import {type LocalRuntimeWorkspace} from "./local-runtime-workspace.js";
 import {type LocalRuntimeWorkspaceContext} from "./local-runtime-workspace-context.js";
@@ -139,6 +141,7 @@ export function createLocalRuntimeComposition(
     taskRunStore, teamFileStore, taskRunDispatcher, logger: applicationLogger,
     languageModelCatalog: new SQLiteLanguageModelCatalog(options.database, languageModelSecretStore),
     documentStore, mailRelay, pushRelay,
+    executorRegistry: registerIntegrationPlugins(createDefaultNodeExecutorRegistry()),
     outboundHttpClient: new ConnectionHttpClient(new StoredConnectionAuthorizer(
       new SQLiteConnectionStore(options.database, languageModelSecretStore), new OAuthTokenProvider(),
     )),

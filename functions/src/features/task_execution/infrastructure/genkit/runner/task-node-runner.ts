@@ -7,7 +7,7 @@ import {type ObjectStore} from "../../../../files/domain/repositories/object-sto
 import {type GenkitLanguageModelResolver} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {type LanguageModelDefaultsStore} from "../../../../language_models/domain/repositories/language-model-defaults-store.js";
 import {type ScriptExecutorFactory} from "../../../domain/executors/script-executor.js";
-import {executorFor} from "./node-executor-registry.js";
+import {executorFor, type NodeExecutorRegistry} from "./node-executor-registry.js";
 import {
   parentResultsFor,
   skippedNode,
@@ -39,6 +39,7 @@ type NodeRunInput = {
   knowledgeBaseStore: KnowledgeBaseStore;
   languageModelResolver?: GenkitLanguageModelResolver;
   languageModelDefaultsStore?: LanguageModelDefaultsStore;
+  executorRegistry?: NodeExecutorRegistry;
   scriptExecutorFactory?: ScriptExecutorFactory;
   logger: ApplicationLogger;
 };
@@ -118,6 +119,7 @@ async function executeNode(
       input.languageModelResolver,
       input.languageModelDefaultsStore,
       input.scriptExecutorFactory,
+      input.executorRegistry,
     );
     if (!executor) return skippedNode(input.node);
     return await executor.execute(input.node, input.runContext);

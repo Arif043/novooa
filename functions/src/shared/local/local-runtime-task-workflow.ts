@@ -1,4 +1,5 @@
 import {type OutboundHttpClient} from "../../features/connections/domain/repositories/outbound-http-client.js";
+import {type NodeExecutorRegistry} from "../../features/task_execution/infrastructure/genkit/runner/node-executor-registry.js";
 import {scriptExecutorFactoryFromEnvironment} from "./local-runtime-relays.js";
 import {SqliteEmployeeStore} from "../../features/employees/infrastructure/local/sqlite-employee-store.js";
 import {createDirectorySkillStore} from "../../features/skills/infrastructure/local/skills-composition.js";
@@ -41,6 +42,8 @@ export type LocalTaskWorkflowDependencies = {
   mailRelay: RuntimeMailRelayClient;
   pushRelay: RuntimePushRelayClient;
   outboundHttpClient: OutboundHttpClient;
+  /** Eingebaute Executoren plus die der Plugins. */
+  executorRegistry: NodeExecutorRegistry;
 };
 
 /** Genkit-Task-Workflow der lokalen Runtime mit SQLite- und Dateisystem-Adaptern. */
@@ -68,6 +71,7 @@ export function createLocalTaskWorkflow(dependencies: LocalTaskWorkflowDependenc
       skillContentReader: createDirectorySkillStore(dependencies.runtimeRoot),
       scriptExecutorFactory: scriptExecutorFactoryFromEnvironment(),
       outboundHttpClient: dependencies.outboundHttpClient,
+      executorRegistry: dependencies.executorRegistry,
       employeeStore: new SqliteEmployeeStore(database),
       speechSynthesizer: new LanguageModelSpeech(dependencies.languageModelCatalog, defaultSpeechProviders()),
       speechTranscriber: new LanguageModelTranscription(dependencies.languageModelCatalog, defaultTranscriptionProviders()),

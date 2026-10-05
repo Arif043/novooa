@@ -32,4 +32,18 @@ export default defineConfig(
       }],
     },
   },
+  {
+    // Plugins hängen vom Kern ab, nie umgekehrt: Der Kern importiert nichts aus features/integrations
+    // (verdrahtet wird nur in src/shared/local).
+    files: ["src/features/**/*.ts"],
+    ignores: ["src/features/integrations/**"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: [{
+          group: ["**/integrations", "**/integrations/**"],
+          message: "Features importieren nichts aus features/integrations; Plugins werden in src/shared/local verdrahtet.",
+        }],
+      }],
+    },
+  },
 );

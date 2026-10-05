@@ -326,6 +326,14 @@ export const httpRequestNodeConfigSchema = z.object({
   failOnHttpError: z.boolean().default(true),
 });
 
+/** Die Parameter prüft die Aktion selbst (`integrations/shopware`); hier nur Form und Größe. */
+export const shopwareNodeConfigSchema = z.object({
+  primitive: z.literal("shopware").default("shopware"),
+  action: z.string().min(1).max(100),
+  connectionId: z.string().max(200).optional(),
+  params: z.record(z.string(), z.unknown()).default({}),
+});
+
 export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   stringInputNodeConfigSchema,
   scriptNodeConfigSchema,
@@ -350,6 +358,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   sendChannelMessageNodeConfigSchema,
   notificationSendNodeConfigSchema,
   httpRequestNodeConfigSchema,
+  shopwareNodeConfigSchema,
 ]);
 
 export const workflowNodeSchema = z.object({

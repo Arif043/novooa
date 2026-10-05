@@ -64,6 +64,7 @@ function passedThroughServices(runtime: TaskGraphRuntime) {
   const {
     objectStore: _objectStore, knowledgeBaseStore: _knowledgeBaseStore, logger: _logger, skillContentReader: _skillContentReader, employeeStore: _employeeStore,
     languageModelResolver: _languageModelResolver, languageModelDefaultsStore: _languageModelDefaultsStore, scriptExecutorFactory: _scriptExecutorFactory,
+    executorRegistry: _executorRegistry,
     ...services
   } = runtime;
   return services;
