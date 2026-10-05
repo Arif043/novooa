@@ -1,6 +1,7 @@
 import Fastify, {type FastifyInstance, type FastifyPluginAsync} from "fastify";
 import {type ApplicationLogger} from "../logging/application-logger.js";
 import {noFileEventPublisher} from "../../features/files/domain/repositories/file-event-publisher.js";
+import {unavailableWebhookReceiver} from "../../features/webhooks/domain/usecases/receive-webhook.js";
 import {configureErrors} from "./local-runtime-http-server.js";
 import {configureValidation} from "./local-runtime-validation.js";
 import {registerWorkspaceContext, type LocalRuntimeWorkspaceContext} from "./local-runtime-workspace-context.js";
@@ -21,7 +22,7 @@ export function testWorkspace(overrides: Partial<LocalRuntimeWorkspaceContext> =
   return {
     teamId: "team-1", userId: "user-1", logger: silentLogger, systemModelCatalog: undefined,
     taskWorkflow: new Proxy({}, {get: () => () => {throw new Error("Kein Task-Workflow im Test.");}}) as never,
-    fileEvents: noFileEventPublisher,
+    fileEvents: noFileEventPublisher, webhooks: unavailableWebhookReceiver,
     ...overrides,
   };
 }

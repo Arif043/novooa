@@ -1,5 +1,8 @@
 import {type FileEventPublisher, noFileEventPublisher} from "../../features/files/domain/repositories/file-event-publisher.js";
 import {SQLiteFolderAncestry} from "../../features/files/infrastructure/local/sqlite-folder-ancestry.js";
+import {TokenBucketRateLimiter} from "../../features/skills/domain/usecases/token-bucket-rate-limiter.js";
+import {ReceiveWebhook} from "../../features/webhooks/domain/usecases/receive-webhook.js";
+import {InMemoryBucketStateStore} from "../../features/webhooks/infrastructure/local/in-memory-bucket-state-store.js";
 import {DispatchFileEvent} from "../../features/scheduling/domain/usecases/dispatch-file-event.js";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {LocalMailRelayEventProcessor} from "../../features/communication/infrastructure/local/local-mail-relay-event-processor.js";
@@ -140,6 +143,15 @@ export function createLocalRuntimeComposition(
       new SQLiteConnectionStore(options.database, languageModelSecretStore), new OAuthTokenProvider(),
     )),
   });
+  const webhookBuckets = new InMemoryBucketStateStore();
+  const webhooks = new ReceiveWebhook({
+    teamId: options.workspace.teamId,
+    triggerStore: new SQLiteTaskTriggerStore(options.database), taskStore, taskRunStore, taskRunDispatcher,
+    secrets: languageModelSecretStore,
+    // Fehlversuche: kleiner Eimer. Gültige Aufrufe je Auslöser: im Schnitt 5 pro Sekunde, Stöße bis 20.
+    failures: new TokenBucketRateLimiter(webhookBuckets, {current: async () => ({capacity: 30, refillPerSecond: 1})}),
+    triggers: new TokenBucketRateLimiter(webhookBuckets, {current: async () => ({capacity: 20, refillPerSecond: 5})}),
+  });
   const mailRelayWorker = mailRelayWorkerFor(
     options, mailRelay, taskStore, taskRunStore, taskRunDispatcher, applicationLogger,
   );
@@ -152,6 +164,7 @@ export function createLocalRuntimeComposition(
     logger: applicationLogger,
     taskWorkflow,
     fileEvents,
+    webhooks,
     systemModelCatalog: firebaseSession === undefined ? undefined : new FirebaseRuntimeModelCatalog(firebaseSession),
   };
   return {

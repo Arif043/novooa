@@ -12,6 +12,7 @@ import {registerRuntimeLicenseRoutes} from "./local-runtime-license-routes.js";
 import {LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
 import {attachLocalRuntimeRealtimeServer, type LocalRuntimeRealtimeGateway} from "./local-runtime-realtime-server.js";
 import {LocalRuntimeRealtimeTicketStore} from "./local-runtime-realtime-ticket-store.js";
+import {webhookRoutes} from "../../features/webhooks/infrastructure/local/local-webhook-routes.js";
 import {localRuntimeApi} from "./local-runtime-routes.js";
 import {LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 
@@ -88,6 +89,10 @@ function runtimeRoutes(options: BootstrapOptions, shared: RuntimeShared): Fastif
       mailConnectors: shared.mailConnectors,
       workspaceContext: () => shared.application.workspaceContext(),
     }));
+    // Neben der API, nicht darin: Externe Systeme haben keine Sitzung (siehe docs/features/webhooks.md).
+    await routes.register(webhookRoutes, {
+      licenses: options.licenses, workspaceContext: () => shared.application.workspaceContext(),
+    });
   };
 }
 
