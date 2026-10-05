@@ -9,6 +9,7 @@ import '../domain/entities/workflow_node.dart';
 class PluginNodeModule {
   const PluginNodeModule({
     required this.typeId,
+    String? documentPrimitive,
     required this.title,
     required this.description,
     required this.group,
@@ -18,10 +19,14 @@ class PluginNodeModule {
     required this.fromDocument,
     required this.builder,
     this.isAvailable = _always,
-  });
+  }) : documentPrimitive = documentPrimitive ?? typeId;
 
-  /// Name im Backend und im Dokument (`primitive`), z. B. `shopwareSearchOrders`.
+  /// Kennung in der Palette und in der Registry, z. B. `shopware.searchOrders`.
   final String typeId;
+
+  /// Name im Backend und im Dokument (`primitive`), z. B. `shopware`. Teilen sich
+  /// mehrere Module ein Primitive, ist `fromDocument` bei allen dasselbe.
+  final String documentPrimitive;
   final String title;
   final String description;
 
@@ -49,12 +54,16 @@ class PluginNodeModules {
 
   static void register(PluginNodeModule module) {
     _byTypeId[module.typeId] = module;
-    PluginNodeCodecs.register(module.typeId, module.fromDocument);
+    PluginNodeCodecs.register(module.documentPrimitive, module.fromDocument);
   }
 
   static void unregister(String typeId) {
-    _byTypeId.remove(typeId);
-    PluginNodeCodecs.unregister(typeId);
+    final module = _byTypeId.remove(typeId);
+    if (module == null) return;
+    final sharedByOthers = _byTypeId.values.any(
+      (other) => other.documentPrimitive == module.documentPrimitive,
+    );
+    if (!sharedByOthers) PluginNodeCodecs.unregister(module.documentPrimitive);
   }
 
   static PluginNodeModule? byTypeId(String typeId) => _byTypeId[typeId];

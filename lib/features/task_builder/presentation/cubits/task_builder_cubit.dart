@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:syscat2/core/logging/logger.dart';
 import 'package:syscat2/features/task_builder/domain/entities/knowledge_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
+import 'package:syscat2/features/task_builder/domain/entities/plugin_node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/skill_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
@@ -35,6 +36,7 @@ part 'task_builder_document_lookup_mutations.dart';
 part 'task_builder_save_document_mutations.dart';
 part 'task_builder_table_from_collection_mutations.dart';
 part 'task_builder_http_request_mutations.dart';
+part 'task_builder_plugin_mutations.dart';
 
 /// Zustandsverwaltung für den Aufgaben-Builder.
 ///

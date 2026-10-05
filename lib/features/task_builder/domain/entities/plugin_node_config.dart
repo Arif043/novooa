@@ -8,8 +8,12 @@ import 'workflow_node.dart';
 abstract class PluginNodeConfig extends NodeConfig {
   const PluginNodeConfig();
 
-  /// Name des Bausteins im Backend und im gespeicherten Dokument.
+  /// Kennung dieses Bausteins in der Palette und in `PluginNodeModules`.
   String get typeId;
+
+  /// Name im Backend und im gespeicherten Dokument (`primitive`). Mehrere
+  /// Bausteine (z. B. die Aktionen eines Plugins) können sich ein Primitive teilen.
+  String get documentPrimitive => typeId;
 
   @override
   WorkflowPrimitive get primitive => WorkflowPrimitive.plugin;

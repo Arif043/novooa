@@ -46,7 +46,10 @@ class NodeConfigDocumentMapper {
       SendChannelMessageNodeConfig() => _sendMessageToDocument(config),
       NotificationSendNodeConfig() => _notificationSendToDocument(config),
       HttpRequestNodeConfig() => _httpRequestToDocument(config),
-      PluginNodeConfig() => {...config.toDocument(), 'primitive': config.typeId},
+      PluginNodeConfig() => {
+        ...config.toDocument(),
+        'primitive': config.documentPrimitive,
+      },
       _ => {'primitive': config.primitive.name},
     };
   }

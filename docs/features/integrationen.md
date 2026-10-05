@@ -38,7 +38,8 @@ lib/features/integrations/<system>/   Client: Konfiguration, Widget, Einstellung
 - **Backend:** ein `NodeExecutor`. Das Primitive steht in `workflowPrimitives` (`task.ts`) und sein Konfigurationsschema
   in `nodeConfigSchema` (`task-definition.ts`); das ist je Primitive eine Zeile (siehe
   [`aufgabe.md`](./aufgabe.md) § Bausteine von Plugins).
-- **Client:** `PluginNodeConfig` und `PluginNodeModule` im Ordner des Plugins.
+- **Client:** `PluginNodeConfig` und `PluginNodeModule` im Ordner des Plugins; `registerIntegrationNodes`
+  (`lib/features/integrations/integration_nodes.dart`) meldet sie beim Start an.
 - Ein Primitive kann mehrere **Aktionen** tragen (`config.action`). Für Nutzer:innen ist jede Aktion ein eigener Baustein
   (Titel, Beschreibung, Formular, Ausgaben, Palette-Eintrag); im Backend gibt es einen Executor, der an die Aktion
   weiterreicht. So kostet eine neue Aktion eine Datei im Plugin und keine Änderung am Kern.

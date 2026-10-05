@@ -5,6 +5,7 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/connections/domain/entities/connection.dart';
 import 'package:syscat2/features/connections/presentation/cubits/connections_cubit.dart';
+import 'package:syscat2/features/connections/presentation/widgets/connection_picker_field.dart';
 
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
@@ -39,9 +40,10 @@ class HttpRequestWidget extends StatelessWidget {
         children: [
           Text('HTTP-Anfrage', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
-          _ConnectionPicker(
+          ConnectionPickerField(
             selectedId: config.connectionId,
             connections: connections,
+            noneLabel: 'Keine (vollständige URL angeben)',
             onChanged: (id) => _update(context, (c) => c.copyWith(connectionId: id)),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -186,47 +188,6 @@ class HttpRequestWidget extends StatelessWidget {
     HttpRequestNodeConfig Function(HttpRequestNodeConfig config) update,
   ) {
     context.read<TaskBuilderCubit>().updateHttpRequest(node.id, update);
-  }
-}
-
-class _ConnectionPicker extends StatelessWidget {
-  const _ConnectionPicker({
-    required this.selectedId,
-    required this.connections,
-    required this.onChanged,
-  });
-
-  final String selectedId;
-  final List<Connection> connections;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final known = connections.any((connection) => connection.id == selectedId);
-    return DropdownButtonFormField<String>(
-      key: ValueKey('connection-picker-$selectedId-${connections.length}'),
-      initialValue: selectedId,
-      isExpanded: true,
-      decoration: const InputDecoration(labelText: 'Verbindung'),
-      items: [
-        const DropdownMenuItem(
-          value: '',
-          child: Text('Keine (vollständige URL angeben)'),
-        ),
-        for (final connection in connections)
-          DropdownMenuItem(value: connection.id, child: Text(connection.name)),
-        // Eine gelöschte Verbindung bleibt sichtbar, statt den Baustein
-        // stillschweigend auf „keine“ zu setzen.
-        if (selectedId.isNotEmpty && !known)
-          DropdownMenuItem(
-            value: selectedId,
-            child: const Text('Verbindung nicht gefunden'),
-          ),
-      ],
-      onChanged: (id) {
-        if (id != null) onChanged(id);
-      },
-    );
   }
 }
 

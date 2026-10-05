@@ -63,7 +63,7 @@ referenzieren.
 | `saveDocument` | Datensatz speichern | Legt ohne Bedingungen einen neuen Datensatz an; mit Feldbedingungen aktualisiert er alle Treffer oder legt bei keinem Treffer einen neuen an | Lokale Runtime implementiert |
 | `tableFromCollection` | Sammlung als Tabelle | Liest eine Datensammlung vollständig und gibt sie als fachlichen Tabellen-Wert weiter; „Datei schreiben" speichert einen solchen Wert als `.xlsx` | Lokale Runtime implementiert |
 | `readWebhook` | Webhook-Ereignis | Liest den Aufruf, der die Aufgabe über einen [Webhook](./webhooks.md) gestartet hat; liefert `value` (Inhalt), `method`, `query`, `headers`, `receivedAt` | Lokale Runtime implementiert |
-| `shopware` | Shopware-Aktion | Eine Aktion eines Shopware-Shops (`config.action`, `connectionId`, `params`); jede Aktion erscheint als eigener Baustein, siehe [Integrationen](./integrationen.md) | Lokale Runtime; Aktionen folgen |
+| `shopware` | Shopware-Aktion | Eine Aktion eines Shopware-Shops (`config.action`, `connectionId`, `params`); jede Aktion erscheint als eigener Baustein, siehe [Integrationen](./integrationen.md) | Lokale Runtime; Aktionen: Bestellungen suchen, siehe [Shopware](./shopware.md) |
 | `httpRequest` | HTTP-Anfrage | Ruft die HTTP-API eines externen Systems auf, optional über eine gespeicherte [Verbindung](./verbindungen.md); liefert `value`, `status`, `ok`, `headers` | Lokale Runtime implementiert |
 | `toolCall` | Werkzeug-Aufruf | Strukturierter Aufruf eines Werkzeugs | Geplant |
 | `validation` | Validierung | Prueft Output gegen Schema oder Regeln | Geplant |
@@ -79,8 +79,10 @@ Ein Plugin bringt Bausteine mit, ohne den Kern zu ändern. Backend und Client ha
   (`createDefaultNodeExecutorRegistry`). Die Konfiguration steht noch in `workflowPrimitives` und
   `nodeConfigSchema` (`task-definition.ts`); das ist je Primitive eine Zeile.
 - **Client:** Die Konfiguration erbt von `PluginNodeConfig` (`task_builder/domain/entities/plugin_node_config.dart`)
-  und liegt im Ordner des Plugins (`NodeConfig` ist bewusst nicht `sealed`). Sie liefert `typeId` (Name im Backend und
-  im Dokument), `toDocument()`, `primaryOutputType` und `secondaryOutputs` (Name → Typ). Ein `PluginNodeModule`
+  und liegt im Ordner des Plugins (`NodeConfig` ist bewusst nicht `sealed`). Sie liefert `typeId` (Kennung in Palette und
+  Registry), `documentPrimitive` (Name im Backend und im Dokument; Vorgabe `typeId`, mehrere Aktionen können sich eines
+  teilen), `toDocument()`, `primaryOutputType` und `secondaryOutputs` (Name → Typ). `TaskBuilderCubit.updatePluginNode`
+  ändert sie ohne eigene Mutation. Ein `PluginNodeModule`
   (`task_builder/presentation/plugin_node_module.dart`) bündelt Titel, Beschreibung, Gruppe und Icon der Palette,
   Anfangskonfiguration, `fromDocument`, das Widget und optional `isAvailable`; `PluginNodeModules.register` meldet es
   beim Start an. Mapper, Palette, Canvas und Ausgaben-Anzeige brauchen dafür keine Änderung.

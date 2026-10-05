@@ -1,3 +1,4 @@
+import '../../features/integrations/integration_nodes.dart';
 import '../../features/speech_synthesis/domain/repositories/speech_voice_repository.dart';
 import '../../features/speech_synthesis/domain/usecases/list_speech_voices.dart';
 import '../../features/speech_synthesis/infrastructure/repositories/cloud_speech_voice_repository.dart';
@@ -164,6 +165,7 @@ Future<void> configureDependencies({RuntimeProfile? runtimeProfile}) async {
     _configureCloudDependencies();
   }
   registerConnectionDependencies(serviceLocator);
+  registerIntegrationNodes();
 }
 
 /// Leert den Container, damit [configureDependencies] mit einer anderen
