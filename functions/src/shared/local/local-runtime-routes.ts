@@ -77,7 +77,7 @@ async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRu
   await api.register(taskRunRoutes, {notifier});
   await api.register(taskDefinitionRoutes, {store: services.taskDefinitions, notifier, cycleGuard: services.cycleGuard});
   await api.register(taskActivityRoutes, {database});
-  await api.register(taskTriggerRoutes, {database, notifier, cycleGuard: services.cycleGuard});
+  await api.register(taskTriggerRoutes, {database, notifier, cycleGuard: services.cycleGuard, webhookSecrets: services.languageModelSecrets});
   await api.register(pushDeviceRoutes, {signedLicense, relay: pushRelayFromEnvironment()});
   await api.register(mailRelayRoutes, {
     signedLicense, relay: mailRelayFromEnvironment(), connectorCache: dependencies.mailConnectors,

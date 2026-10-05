@@ -14,12 +14,13 @@ import {SQLiteFileSettingsStore} from "../../../files/infrastructure/local/sqlit
 import {LocalTeamFileStore} from "../../../files/infrastructure/local/local-team-file-store.js";
 import {knowledgeNoteRoutes} from "../../../knowledge_base/infrastructure/local/local-knowledge-note-routes.js";
 import {cycleGuardFor} from "../../../scheduling/domain/usecases/trigger-cycle-guard-test-support.js";
+import {webhookSecretsFor} from "../../../scheduling/infrastructure/local/webhook-secrets-test-support.js";
 import {taskTriggerRoutes} from "../../../scheduling/infrastructure/local/local-task-trigger-routes.js";
 
 test("persists local knowledge notes and task triggers", async (t) => {
   const database = await databaseForResources(t);
   const notes = testingRoutes(knowledgeNoteRoutes, {database, notifier: new LocalRuntimeRealtimeNotifier()});
-  const triggers = testingRoutes(taskTriggerRoutes, {database, notifier: new LocalRuntimeRealtimeNotifier(), cycleGuard: cycleGuardFor(database)});
+  const triggers = testingRoutes(taskTriggerRoutes, {database, notifier: new LocalRuntimeRealtimeNotifier(), cycleGuard: cycleGuardFor(database), webhookSecrets: webhookSecretsFor(database)});
 
   const createdNote = await notes.handle({
     method: "POST", url: "/v1/knowledge-notes",

@@ -3,6 +3,7 @@ import {
   type FileContentKind,
 } from "../../../files/domain/entities/file-content-kind.js";
 import {defaultEventTriggerSources} from "./event-trigger-source-registry.js";
+import {webhookConfigFrom, type WebhookConfig} from "./webhook-config.js";
 
 /**
  * Worauf sich ein Event-Trigger bezieht. Dieselbe Struktur gilt für alle
@@ -21,15 +22,19 @@ export type EventTriggerConfig = {
   target: EventTriggerTarget;
   fileKinds: FileContentKind[];
   filter: string;
+  /** Nur bei der Quelle `webhookReceived`. */
+  webhook?: WebhookConfig;
 };
 
 export function eventTriggerConfigFrom(value: unknown): EventTriggerConfig {
   const data = isRecord(value) ? value : {};
+  const source = stringOr(data.source, "");
   return {
-    source: stringOr(data.source, ""),
+    source,
     target: eventTriggerTargetFrom(data.target),
     fileKinds: fileKindsFrom(data.fileKinds),
     filter: stringOr(data.filter, ""),
+    ...(source === "webhookReceived" ? {webhook: webhookConfigFrom(data.webhook)} : {}),
   };
 }
 

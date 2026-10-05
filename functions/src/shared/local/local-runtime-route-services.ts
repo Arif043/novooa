@@ -72,6 +72,7 @@ export function createLocalRuntimeRouteServices(options: {
     }),
     applicationLogs: new SQLiteLocalApplicationLogStore(database),
     languageModels: new SQLiteLanguageModelConfigurationStore(database, languageModelSecrets),
+    languageModelSecrets,
     connections: connectionStore,
     connectionClient: new ConnectionHttpClient(new StoredConnectionAuthorizer(connectionStore, new OAuthTokenProvider())),
     languageModelDefaults: new SQLiteLanguageModelDefaultsStore(database),

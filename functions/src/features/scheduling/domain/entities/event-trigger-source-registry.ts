@@ -1,4 +1,5 @@
 import {type EventTriggerConfig} from "./event-trigger-config.js";
+import {generateWebhookToken, webhookConfigFrom} from "./webhook-config.js";
 
 export type EventTriggerSourceDefinition = {
   id: string;
@@ -38,7 +39,11 @@ export function createDefaultEventTriggerSourceRegistry(): EventTriggerSourceReg
     .register({id: "fileVersionCreated"})
     .register({id: "fileDeleted"})
     // Webhooks
-    .register({id: "webhookReceived"});
+    // Das Token vergibt immer der Server, nie der Client.
+    .register({
+      id: "webhookReceived",
+      prepare: (config) => ({...config, webhook: {...webhookConfigFrom(config.webhook), token: generateWebhookToken()}}),
+    });
 }
 
 export const defaultEventTriggerSources = createDefaultEventTriggerSourceRegistry();

@@ -7,6 +7,7 @@ import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runti
 import {taskDefinitionRoutes} from "../../../task_execution/infrastructure/local/local-task-definition-routes.js";
 import {SQLiteTaskDefinitionStore} from "../../../task_execution/infrastructure/local/sqlite-task-definition-store.js";
 import {cycleGuardFor} from "../../domain/usecases/trigger-cycle-guard-test-support.js";
+import {webhookSecretsFor} from "./webhook-secrets-test-support.js";
 import {taskTriggerRoutes} from "./local-task-trigger-routes.js";
 
 type Body = {error?: string; warnings?: string[]; blocked?: string | null; id?: string};
@@ -19,8 +20,8 @@ async function setup(t: TestContext) {
   ]);
   const guard = cycleGuardFor(database);
   const notifier = new LocalRuntimeRealtimeNotifier();
-  const tasks = testingRoutes(taskDefinitionRoutes, {store: new SQLiteTaskDefinitionStore(database), notifier, cycleGuard: guard});
-  const triggers = testingRoutes(taskTriggerRoutes, {database, notifier, cycleGuard: guard});
+  const tasks = testingRoutes(taskDefinitionRoutes, {store: new SQLiteTaskDefinitionStore(database), notifier, cycleGuard: guard, webhookSecrets: webhookSecretsFor(database)});
+  const triggers = testingRoutes(taskTriggerRoutes, {database, notifier, cycleGuard: guard, webhookSecrets: webhookSecretsFor(database)});
   return {tasks, triggers};
 }
 

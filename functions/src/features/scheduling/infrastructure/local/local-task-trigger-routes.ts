@@ -6,6 +6,8 @@ import {type RuntimeExecutor} from "../../../../db/database.js";
 import {tasks, taskTriggers} from "../../../../db/schema.js";
 import {ErrorResponse, IdParams, ItemsOf, JsonObject, NonEmptyString} from "../../../../shared/local/local-runtime-http-schemas.js";
 import {eventTriggerConfigFrom} from "../../domain/entities/event-trigger-config.js";
+import {generateWebhookToken, webhookConfigFrom} from "../../domain/entities/webhook-config.js";
+import {webhookSecretRef, type WebhookSecretStore} from "../../domain/repositories/webhook-secret-store.js";
 import {type TriggerCycleGuard} from "../../domain/usecases/trigger-cycle-guard.js";
 import {invalidResponse, LocalTaskTriggerError, triggerFromRequest, triggerFromRow, type TriggerInput} from "./local-task-trigger-http-support.js";
 
@@ -13,6 +15,7 @@ export type TaskTriggerRoutesOptions = {
   database: RuntimeExecutor;
   notifier: {publish(topic: string): void};
   cycleGuard: TriggerCycleGuard;
+  webhookSecrets: WebhookSecretStore;
 };
 
 const Timestamp = Type.Union([Type.String(), Type.Null()]);
@@ -31,7 +34,7 @@ const CreateTrigger = Type.Object({
 const TriggerParams = IdParams("triggerId");
 const TriggerResponses = {200: TaskTrigger, 400: ErrorResponse, 404: ErrorResponse};
 
-export const taskTriggerRoutes: FastifyPluginAsyncTypebox<TaskTriggerRoutesOptions> = async (app, {database, notifier, cycleGuard}) => {
+export const taskTriggerRoutes: FastifyPluginAsyncTypebox<TaskTriggerRoutesOptions> = async (app, {database, notifier, cycleGuard, webhookSecrets}) => {
   app.get("/v1/task-triggers", {schema: {response: {200: ItemsOf(TaskTrigger)}}}, async (request) => {
     const rows = await triggerQuery(database).where(eq(taskTriggers.team_id, request.workspace.teamId))
       .orderBy(sql`${taskTriggers.next_run_at} IS NULL`, taskTriggers.next_run_at);
@@ -47,10 +50,15 @@ export const taskTriggerRoutes: FastifyPluginAsyncTypebox<TaskTriggerRoutesOptio
         const id = randomUUID();
         const blocked = input.enabled ? await blockedReason(cycleGuard, teamId, id, input) : null;
         if (blocked !== null) return reply.code(400).send({error: blocked});
-        await database.insert(taskTriggers).values({id, team_id: teamId, task_id: input.taskId, type: input.type,
-          enabled: input.enabled ? 1 : 0, config_json: JSON.stringify(input.config),
-          event_config_json: JSON.stringify(input.eventConfig), policy_json: JSON.stringify(input.policy),
-          next_run_at: input.nextRunAt?.toISOString() ?? null, created_by_uid: userId});
+        await database.transaction(async (tx) => {
+          await tx.insert(taskTriggers).values({id, team_id: teamId, task_id: input.taskId, type: input.type,
+            enabled: input.enabled ? 1 : 0, config_json: JSON.stringify(input.config),
+            event_config_json: JSON.stringify(input.eventConfig), policy_json: JSON.stringify(input.policy),
+            next_run_at: input.nextRunAt?.toISOString() ?? null, created_by_uid: userId});
+          if (input.webhookSecret !== undefined) {
+            await webhookSecrets.withDatabase(tx).write(webhookSecretRef(teamId, id), input.webhookSecret);
+          }
+        });
         notifier.publish("task-triggers");
         return triggerById(database, teamId, id, 201, reply);
       } catch (error) {
@@ -85,10 +93,27 @@ export const taskTriggerRoutes: FastifyPluginAsyncTypebox<TaskTriggerRoutesOptio
     return triggerById(database, teamId, request.params.triggerId, 200, reply);
   });
 
+  /** Macht die bisherige Webhook-Adresse ungültig, z. B. nach einem Verdacht auf Missbrauch. */
+  app.post("/v1/task-triggers/:triggerId/webhook-token", {schema: {params: TriggerParams, response: TriggerResponses}},
+    async (request, reply) => {
+      const {teamId} = request.workspace;
+      const row = await database.select({type: taskTriggers.type, event_config_json: taskTriggers.event_config_json})
+        .from(taskTriggers).where(and(eq(taskTriggers.team_id, teamId), eq(taskTriggers.id, request.params.triggerId))).get();
+      const config = row === undefined || row.type !== "event" ? undefined : eventTriggerConfigFrom(JSON.parse(row.event_config_json));
+      if (config?.webhook === undefined) return reply.code(404).send({error: "Webhook-Auslöser nicht gefunden."});
+      const next = {...config, webhook: {...webhookConfigFrom(config.webhook), token: generateWebhookToken()}};
+      await database.update(taskTriggers).set({event_config_json: JSON.stringify(next), updated_at: sql`CURRENT_TIMESTAMP`})
+        .where(and(eq(taskTriggers.team_id, teamId), eq(taskTriggers.id, request.params.triggerId)));
+      notifier.publish("task-triggers");
+      return triggerById(database, teamId, request.params.triggerId, 200, reply);
+    });
+
   app.delete("/v1/task-triggers/:triggerId", {schema: {params: TriggerParams}},
     async (request, reply) => {
+      const {teamId} = request.workspace;
       await database.delete(taskTriggers)
-        .where(and(eq(taskTriggers.team_id, request.workspace.teamId), eq(taskTriggers.id, request.params.triggerId)));
+        .where(and(eq(taskTriggers.team_id, teamId), eq(taskTriggers.id, request.params.triggerId)));
+      await webhookSecrets.delete(webhookSecretRef(teamId, request.params.triggerId));
       notifier.publish("task-triggers");
       return reply.code(204).send();
     });

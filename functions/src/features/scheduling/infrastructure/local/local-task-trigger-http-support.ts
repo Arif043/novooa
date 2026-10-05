@@ -1,4 +1,6 @@
 import {eventTriggerConfigFrom, isEventTriggerSource} from "../../domain/entities/event-trigger-config.js";
+import {defaultEventTriggerSources} from "../../domain/entities/event-trigger-source-registry.js";
+import {webhookConfigProblem} from "../../domain/entities/webhook-config.js";
 import {nextRunAfter, type ScheduleConfig} from "../../domain/usecases/schedule-next-run.js";
 import {type FastifyReply} from "fastify";
 
@@ -25,6 +27,8 @@ export type TriggerInput = {
   policy: Record<string, unknown>;
   taskId: string;
   type: "schedule" | "event";
+  /** Nur beim Anlegen eines Webhook-Triggers mit Signaturprüfung; steht nie in `eventConfig`. */
+  webhookSecret?: string;
 };
 
 export function triggerFromRequest(value: unknown): TriggerInput {
@@ -64,15 +68,32 @@ export function invalidResponse(error: unknown, reply: FastifyReply): FastifyRep
 }
 
 function eventTriggerFrom(input: Record<string, unknown>): TriggerInput {
-  const eventConfig = eventTriggerConfigFrom(recordFrom(input.eventConfig ?? {}));
-  if (!isEventTriggerSource(eventConfig.source)) {
+  const rawConfig = recordFrom(input.eventConfig ?? {});
+  const parsed = eventTriggerConfigFrom(rawConfig);
+  if (!isEventTriggerSource(parsed.source)) {
     throw new LocalTaskTriggerError("eventConfig.source ist ungültig.");
+  }
+  const eventConfig = defaultEventTriggerSources.prepare(parsed);
+  const webhookSecret = webhookSecretFrom(rawConfig);
+  if (eventConfig.webhook !== undefined) {
+    const problem = webhookConfigProblem(eventConfig.webhook, webhookSecret !== undefined);
+    if (problem !== null) throw new LocalTaskTriggerError(problem);
   }
   return {
     taskId: stringFrom(input.taskId, "taskId"), type: "event", config: {},
     eventConfig, policy: policyFrom(input.policy),
     enabled: input.enabled !== false, nextRunAt: null,
+    ...(eventConfig.webhook?.verification.kind === "hmac" && webhookSecret !== undefined ? {webhookSecret} : {}),
   };
+}
+
+function webhookSecretFrom(eventConfig: Record<string, unknown>): string | undefined {
+  const webhook = eventConfig.webhook;
+  if (typeof webhook !== "object" || webhook === null) return undefined;
+  const secret = (webhook as Record<string, unknown>).secret;
+  if (typeof secret !== "string" || secret.length === 0) return undefined;
+  if (secret.length > 500) throw new LocalTaskTriggerError("Das Geheimnis ist zu lang.");
+  return secret;
 }
 
 function scheduleFrom(value: unknown): ScheduleConfig {
