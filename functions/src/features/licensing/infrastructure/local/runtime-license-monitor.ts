@@ -10,6 +10,7 @@ export type RuntimeLicenseMonitorOptions = {
   intervalMs?: number;
   /** Zufällige Streuung je Prüfung, damit nicht alle Runtimes gleichzeitig anfragen. */
   jitterMs?: number;
+  random?: () => number;
   schedule?: CheckScheduler;
 };
 
@@ -25,6 +26,7 @@ const defaultJitterMs = 15 * 60 * 1000;
 export class RuntimeLicenseMonitor {
   private readonly intervalMs: number;
   private readonly jitterMs: number;
+  private readonly random: () => number;
   private readonly schedule: CheckScheduler;
   private next: ScheduledCheck | undefined;
   private running: Promise<void> | undefined;
@@ -34,7 +36,8 @@ export class RuntimeLicenseMonitor {
   constructor(private readonly options: RuntimeLicenseMonitorOptions) {
     this.intervalMs = options.intervalMs ?? defaultIntervalMs;
     this.jitterMs = options.jitterMs ?? defaultJitterMs;
-    this.schedule = unrefTimeout;
+    this.random = options.random ?? Math.random;
+    this.schedule = options.schedule ?? unrefTimeout;
   }
 
   start(): void {
@@ -74,7 +77,7 @@ export class RuntimeLicenseMonitor {
   }
 
   private jitter(): number {
-    return Math.floor(Math.random() * this.jitterMs);
+    return Math.floor(this.random() * this.jitterMs);
   }
 }
 
