@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../domain/entities/knowledge_note.dart';
 import '../../domain/services/knowledge_note_resolver.dart';
+import 'knowledge_footnotes.dart';
 import 'knowledge_wiki_link_syntax.dart';
 
 typedef ExternalLinkOpener = Future<bool> Function(Uri uri);
@@ -14,16 +15,25 @@ class KnowledgeMarkdownLinkHandler {
     required this.notes,
     required this.onNoteSelected,
     this.openExternal = launchExternalLink,
+    this.onFootnoteSelected,
     this.resolver = const KnowledgeNoteResolver(),
   });
 
   final List<KnowledgeNote> notes;
   final ValueChanged<String> onNoteSelected;
   final ExternalLinkOpener openExternal;
+
+  /// Springt zur Fußnote mit dem übergebenen Label.
+  final ValueChanged<String>? onFootnoteSelected;
   final KnowledgeNoteResolver resolver;
 
   void call(String text, String? href, String title) {
     if (href == null || href.trim().isEmpty) return;
+    final footnoteLabel = knowledgeFootnoteLabelOf(href);
+    if (footnoteLabel != null) {
+      onFootnoteSelected?.call(footnoteLabel);
+      return;
+    }
     final noteId = _noteIdFor(href);
     if (noteId != null) {
       onNoteSelected(noteId);

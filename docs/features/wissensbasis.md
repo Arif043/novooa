@@ -68,6 +68,20 @@ Autolinks und Emoji-Kürzel (`:smile:`). Der Text ist markierbar.
   `MarkdownLinkExtractor` für Graph und Backlinks nutzt.
 - `http`, `https` und `mailto` öffnen sich extern
   (`KnowledgeMarkdownLinkHandler`), andere Schemata werden ignoriert.
+- **Fußnoten** (`Text[^1]` und `[^1]: Fußnotentext`): Die Definitionen werden
+  aus dem Fließtext gelöst (`KnowledgeFootnotes`) und unter der Notiz als
+  eigener Abschnitt gerendert, nummeriert in Definitionsreihenfolge. Die
+  hochgestellte Nummer springt zur Fußnote, „Zurück zur Textstelle“ zurück an
+  die vorherige Leseposition. Definitionen in Codeblöcken und Verweise ohne
+  Definition bleiben Text.
+- **Formeln** (LaTeX über `flutter_math_fork`): `$…$` im Fließtext,
+  `$$…$$` sowie `$$`-Blöcke über mehrere Zeilen und `\[…\]` als abgesetzte
+  Formel. Wie in Obsidian/Pandoc darf direkt innerhalb der `$` kein Leerzeichen
+  stehen und auf das schließende `$` keine Ziffer folgen — Beträge wie
+  „5 $ bis 10 $“ bleiben Text. Fehlerhafte Formeln erscheinen als roter
+  Quelltext.
+- **Markierung** (`==Text==`) hinterlegt den Text mit dem Akzent des Themes.
+  Formatierung innerhalb der Markierung wird nicht zusätzlich gerendert.
 - Gestaltung kommt vollständig aus dem Theme (`KnowledgeMarkdownStyleSheet`).
 - Leere Notizen zeigen einen Hinweis auf „Schreiben“.
 
