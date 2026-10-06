@@ -56,3 +56,25 @@ test("starts a run through domain ports for the authenticated team", async () =>
   assert.deepEqual(dispatches, [{teamId: "team-1", runId: "run-1", mode: "start"}]);
   assert.deepEqual(output, {runId: "run-1", taskId: "task-1", status: "queued"});
 });
+
+test("rejecting an approval clears the step journal of the run", async () => {
+  const rejectedRuns: string[] = [];
+  const clearedJournals: string[] = [];
+  const workflow = createGenkitTaskWorkflowWithAi({} as never, {
+    taskRunStore: {
+      async loadReviewableRun() { return {run: {runId: "run-1"}, resumeState: {}}; },
+      async rejectTaskRun(_teamId: string, runId: string) { rejectedRuns.push(runId); },
+    },
+    teamContextStore: {async currentTeamIdForUid() { return "team-1"; }},
+    workerStores: {
+      stepJournal: {async clear(teamId: string, runId: string) { clearedJournals.push(`${teamId}/${runId}`); }},
+    },
+    logger: {info() {}, error() {}, exception() {}, readableInfo() {}, readableError() {}},
+  } as never);
+
+  const output = await workflow.review({runId: "run-1", decision: "reject"} as never, {uid: "user-1"});
+
+  assert.deepEqual(output, {runId: "run-1", status: "rejected"});
+  assert.deepEqual(rejectedRuns, ["run-1"]);
+  assert.deepEqual(clearedJournals, ["team-1/run-1"]);
+});

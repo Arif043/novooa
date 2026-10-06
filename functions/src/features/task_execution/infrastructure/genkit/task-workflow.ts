@@ -99,6 +99,8 @@ async function reviewTaskWorkflow(
     );
     if (input.decision === "reject") {
       await dependencies.taskRunStore.rejectTaskRun(teamId, reviewableRun.run.runId);
+      // Ein abgelehnter Run ist beendet und wird nie fortgesetzt; seine Schritte braucht niemand mehr.
+      await dependencies.workerStores.stepJournal?.clear(teamId, reviewableRun.run.runId);
       return {runId: input.runId, status: "rejected"};
     }
     const responseOutputs = await responseOutputsForTaskRun(

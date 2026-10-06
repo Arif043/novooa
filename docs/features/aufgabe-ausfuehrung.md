@@ -195,8 +195,8 @@ dieses übernommen statt ihn erneut auszuführen. Variablen, Verzweigungen und
   wiederholt bereits abgeschlossene Iterationen nicht.
 - Gespeichert werden nur ausgeführte Bausteine. Übersprungene ergeben sich neu,
   wartende Freigaben setzen über den Resume-Zustand fort.
-- Nach Erfolg oder Fehler wird das Journal des Runs gelöscht, beim Löschen des
-  Runs per Cascade ebenfalls.
+- Nach Erfolg, Fehler oder abgelehnter Freigabe wird das Journal des Runs
+  gelöscht, beim Löschen des Runs per Cascade ebenfalls.
 - **Verbleibendes Fenster:** Stürzt der Prozess ab, nachdem ein Baustein seinen
   Effekt ausgelöst hat, aber bevor das Ergebnis gespeichert ist, läuft genau
   dieser Baustein erneut.
