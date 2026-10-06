@@ -122,7 +122,10 @@ Unterstützte NodeConfigs speichern `knowledgeAttachments` zusätzlich zu
 ```
 
 Beim TaskRun lädt das Backend jede angehängte Notiz sowie ihre direkten und
-indirekten Links rekursiv unter `knowledge/` in den Genkit-Workspace. Der Prompt
+indirekten ausgehenden Links unter `knowledge/` in den Genkit-Workspace. Die
+Suche läuft Ebene für Ebene (Breitensuche): erst alle direkten Anhänge, dann
+deren Links, dann die Links der Links. Sie endet nach 5 Ebenen bzw. 50 Notizen;
+beim Limit fallen also die am weitesten entfernten Notizen weg. Der Prompt
 nennt ausschließlich die direkt angehängte Notiz. Verlinkte Notizen werden nicht
 als Prompt-Anhang aufgezählt; die KI entdeckt sie über die Links im Markdown und
 bei Bedarf über `knowledge/manifest.json`.

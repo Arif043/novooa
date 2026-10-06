@@ -36,6 +36,18 @@ export async function prepareKnowledgeFiles(
   return preparedNotes;
 }
 
+type PendingKnowledgeNote = {
+  attachment: KnowledgeAttachment;
+  depth: number;
+  isDirectAttachment: boolean;
+};
+
+/**
+ * Sammelt die angehängten Notizen und alle ausgehend erreichbaren Notizen
+ * Ebene für Ebene (Breitensuche): Erst alle direkten Anhänge, dann deren Links,
+ * dann die Links der Links. So verdrängt ein tiefer Zweig bei erreichtem Limit
+ * keine näher liegenden Notizen.
+ */
 class KnowledgeNoteResolver {
   constructor(
     private readonly teamId: string,
@@ -46,49 +58,41 @@ class KnowledgeNoteResolver {
     attachments: KnowledgeAttachment[],
   ): Promise<ResolvedKnowledgeNote[]> {
     const notes: ResolvedKnowledgeNote[] = [];
-    const visited = new Set<string>();
+    const queued = new Set<string>();
+    const queue: PendingKnowledgeNote[] = [];
     for (const attachment of attachments) {
-      await this.resolveAttachment(attachment, notes, visited, 0, true);
+      this.enqueue(queue, queued, {attachment, depth: 0, isDirectAttachment: true});
     }
-    return notes.slice(0, maxNotes);
+    for (let next = queue.shift(); next !== undefined && notes.length < maxNotes; next = queue.shift()) {
+      const note = await this.store.loadNote(this.teamId, next.attachment);
+      notes.push({...note, isDirectAttachment: next.isDirectAttachment});
+      this.enqueueLinks(queue, queued, note, next.depth + 1);
+    }
+    return notes;
   }
 
-  private async resolveAttachment(
-    attachment: KnowledgeAttachment,
-    notes: ResolvedKnowledgeNote[],
-    visited: Set<string>,
+  private enqueueLinks(
+    queue: PendingKnowledgeNote[],
+    queued: Set<string>,
+    note: KnowledgeNoteDocument,
     depth: number,
-    isDirectAttachment: boolean,
-  ): Promise<void> {
-    const key = `${attachment.knowledgeBaseId}/${attachment.noteId}`;
-    if (visited.has(key)) {
-      return this.markDirectAttachment(notes, key, isDirectAttachment);
-    }
-    if (depth > maxDepth || notes.length >= maxNotes) return;
-    visited.add(key);
-    const note = await this.store.loadNote(this.teamId, attachment);
-    notes.push({...note, isDirectAttachment});
+  ): void {
+    if (depth > maxDepth) return;
     for (const noteId of note.outgoingLinks) {
-      await this.resolveAttachment(
-        {...note, noteId},
-        notes,
-        visited,
-        depth + 1,
-        false,
-      );
+      this.enqueue(queue, queued, {attachment: {...note, noteId}, depth, isDirectAttachment: false});
     }
   }
 
-  private markDirectAttachment(
-    notes: ResolvedKnowledgeNote[],
-    key: string,
-    isDirectAttachment: boolean,
+  /** Jede Notiz wird nur einmal eingereiht; direkte Anhänge stehen zuerst in der Schlange und behalten so ihre Markierung. */
+  private enqueue(
+    queue: PendingKnowledgeNote[],
+    queued: Set<string>,
+    pending: PendingKnowledgeNote,
   ): void {
-    if (!isDirectAttachment) return;
-    const note = notes.find(
-      (item) => `${item.knowledgeBaseId}/${item.noteId}` === key,
-    );
-    if (note) note.isDirectAttachment = true;
+    const key = `${pending.attachment.knowledgeBaseId}/${pending.attachment.noteId}`;
+    if (queued.has(key)) return;
+    queued.add(key);
+    queue.push(pending);
   }
 }
 
