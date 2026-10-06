@@ -47,6 +47,7 @@ export async function executeQueuedTaskRun(
     context: run.context,
     teamId,
     input: run.input,
+    runId: run.runId,
   }, runtimeFrom(stores, logger))
     .map((output) => recordOutput(stores, teamId, run, output));
 }
@@ -67,7 +68,7 @@ export async function continueApprovedTaskRun(
   const taskDefinition = await stores.taskStore.loadTask(teamId, run.taskId);
   return resumeTaskGraph(
     ai,
-    {taskDefinition, context: run.context, teamId, input: run.input},
+    {taskDefinition, context: run.context, teamId, input: run.input, runId: run.runId},
     input.resumeState,
     input.responseOutputs,
     runtimeFrom(stores, logger),
@@ -86,4 +87,5 @@ async function recordOutput(
     return;
   }
   await stores.taskRunStore.markRunSucceeded(teamId, run, output);
+  await stores.stepJournal?.clear(teamId, run.runId);
 }

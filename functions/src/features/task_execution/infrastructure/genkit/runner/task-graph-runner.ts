@@ -1,9 +1,9 @@
 import { type GenkitBeta } from "genkit/beta";
-import {type WorkflowExecutionScope} from "../../../domain/executors/node-executor.js";
+import {type TaskVariables, type WorkflowExecutionScope} from "../../../domain/executors/node-executor.js";
+import {type TaskRunStepScope} from "../../../domain/entities/task-run-step-key.js";
+import {type JournaledStep, journaledStep, rootStepScope, runJournaledNode} from "./journaled-node-run.js";
 import {
-  type NodeExecutionResult,
   type NodeOutputValue,
-  type WorkflowNode,
   type TaskGraphInput,
   type TaskGraphOutput,
   type WorkflowGraph,
@@ -12,6 +12,8 @@ import {
 import {
   completedOutput,
   type InitialNodeRunState,
+  newResults,
+  nodeExecutionFailure,
   type NodeRunState,
   orderedResults,
   pausedOutput,
@@ -26,8 +28,7 @@ import {
   skipInactiveBranches,
   validateGraph,
 } from "../../../domain/services/task-graph-utils.js";
-import {consoleOutputOf} from "../../../domain/entities/script-execution.js";
-import {NodeExecutionFailure} from "../../../domain/entities/node-execution-failure.js";
+import {type NodeExecutionFailure} from "../../../domain/entities/node-execution-failure.js";
 import {err, ok, type Result, ResultAsync} from "neverthrow";
 import {formatTaskFinished, formatTaskStarted} from "./structured-logger.js";
 import {
@@ -37,7 +38,7 @@ import {
 } from "./task-node-runner.js";
 import {type TaskGraphRuntime} from "./task-graph-runtime.js";
 import {updateTaskVariables} from "./task-run-variables.js";
-import {createTaskRunContext} from "./workflow-graph-run-context.js";
+import {createTaskRunContext, type ExecuteWorkflowGraph} from "./workflow-graph-run-context.js";
 export function executeTaskGraph(
   ai: GenkitBeta,
   input: TaskGraphInput,
@@ -45,7 +46,7 @@ export function executeTaskGraph(
 ): ResultAsync<TaskGraphOutput, NodeExecutionFailure> {
   runtime.logger.readableInfo(formatTaskStarted(input.taskDefinition, input.context));
   validateGraph(input.taskDefinition);
-  return new ResultAsync(runNodes(ai, input, runtime))
+  return new ResultAsync(runNodes(ai, input, runtime, {stepScope: rootStepScope(input, runtime.stepJournal)}))
     .map((runState) => finishedOutput(input, runState, runtime));
 }
 
@@ -58,7 +59,10 @@ export function resumeTaskGraph(
 ): ResultAsync<TaskGraphOutput, NodeExecutionFailure> {
   runtime.logger.readableInfo(formatTaskStarted(input.taskDefinition, input.context));
   validateGraph(input.taskDefinition);
-  return new ResultAsync(runNodes(ai, input, runtime, resumedState(resumeState, responseOutputs)))
+  return new ResultAsync(runNodes(ai, input, runtime, {
+    initialState: resumedState(resumeState, responseOutputs),
+    stepScope: rootStepScope(input, runtime.stepJournal),
+  }))
     .map((runState) => runState.status === "waitingForApproval"
       ? pausedOutput(input, runState)
       : completedOutput(input, runState.nodeResults));
@@ -77,14 +81,21 @@ function finishedOutput(input: TaskGraphInput, runState: NodeRunState, runtime: 
   return output;
 }
 
+type GraphRunOptions = {
+  initialState?: InitialNodeRunState;
+  scope?: WorkflowExecutionScope;
+  graph?: WorkflowGraph;
+  /** Wo die Schritte dieses Graphen im Journal stehen; fehlt, wenn nicht journalisiert wird. */
+  stepScope?: TaskRunStepScope;
+};
+
 async function runNodes(
   ai: GenkitBeta,
   input: TaskGraphInput,
   runtime: TaskGraphRuntime,
-  initialState?: InitialNodeRunState,
-  scope: WorkflowExecutionScope = {},
-  graph: WorkflowGraph = input.taskDefinition,
+  options: GraphRunOptions = {},
 ): Promise<Result<NodeRunState, NodeExecutionFailure>> {
+  const {initialState, scope = {}, graph = input.taskDefinition} = options;
   const remaining = remainingNodes(graph, initialState);
   const results = resultsMapFrom(initialState?.nodeResults ?? []);
   const skippedNodeIds = new Set(initialState?.skippedNodeIds ?? []);
@@ -107,8 +118,9 @@ async function runNodes(
     );
     const startedAt = Date.now();
     logNodeHeaderLine(runtime.logger, node, input.taskDefinition.id, graph, context, skipNode, results);
+    const step = journaledStep(runtime.stepJournal, options.stepScope, node.id);
     // Die Executoren melden Fehler als Exception; hier, an der Grenze, wird daraus ein Failure-Wert.
-    const resultOrFailure = await ResultAsync.fromPromise(runNodeWithTrail(ai, {
+    const resultOrFailure = await ResultAsync.fromPromise(runJournaledNode(step, () => runNodeWithTrail(ai, {
       node,
       context,
       runContext: createTaskRunContext({
@@ -119,26 +131,7 @@ async function runNodes(
         results,
         variables,
         scope,
-        executeGraph: async (embeddedGraph, embeddedContext, embeddedScope) => {
-          const stateOrFailure = await runNodes(
-            ai,
-            input,
-            runtime,
-            {
-              nodeResults: [],
-              variables,
-              remainingNodeIds: embeddedGraph.nodes.map((item) => item.id),
-              skippedNodeIds: [],
-            },
-            embeddedScope,
-            embeddedGraph,
-          );
-          // Die Executoren erwarten für einen verschachtelten Plan eine Exception; der äußere Baustein scheitert dann.
-          return stateOrFailure.match(
-            (state) => state.nodeResults,
-            (failure) => { throw failure.cause; },
-          );
-        },
+        executeGraph: embeddedGraphRunner(ai, input, runtime, variables, step),
       }),
       skipNode,
       startedAt,
@@ -151,7 +144,7 @@ async function runNodes(
       scriptExecutorFactory: runtime.scriptExecutorFactory,
       executorRegistry: runtime.executorRegistry,
       logger: runtime.logger,
-    }), (error) => nodeExecutionFailure(node, error, newResults(graph, results, initialState)));
+    }), runtime.logger), (error) => nodeExecutionFailure(node, error, newResults(graph, results, initialState)));
     if (resultOrFailure.isErr()) return err(resultOrFailure.error);
     const result = resultOrFailure.value;
     updateTaskVariables(variables, result);
@@ -176,18 +169,23 @@ async function runNodes(
   });
 }
 
-/** Die Ergebnisse, die dieser Lauf selbst erzeugt hat; was aus einer früheren Freigabe stammt, steht schon in den Aktivitäten. */
-function newResults(
-  graph: WorkflowGraph,
-  results: Map<string, NodeExecutionResult>,
-  initialState?: InitialNodeRunState,
-): NodeExecutionResult[] {
-  const alreadyRecorded = new Set((initialState?.nodeResults ?? []).map((result) => result.nodeId));
-  return orderedResults(graph, results).filter((result) => !alreadyRecorded.has(result.nodeId));
-}
-
-function nodeExecutionFailure(node: WorkflowNode, error: unknown, completed: NodeExecutionResult[]): NodeExecutionFailure {
-  const message = error instanceof Error ? error.message : String(error);
-  const failedNode = {nodeId: node.id, primitive: node.primitive, message, console: consoleOutputOf(error)};
-  return new NodeExecutionFailure(failedNode, completed, error);
+/** Jeder Aufruf eines Container-Bausteins (z. B. eine Schleifen-Iteration) erhält einen eigenen Journal-Bereich. */
+function embeddedGraphRunner(
+  ai: GenkitBeta,
+  input: TaskGraphInput,
+  runtime: TaskGraphRuntime,
+  variables: TaskVariables,
+  containerStep: JournaledStep | undefined,
+): ExecuteWorkflowGraph {
+  let callIndex = 0;
+  return async (embeddedGraph, _embeddedContext, embeddedScope) => {
+    const stepScope = containerStep?.key.nested(callIndex++);
+    const initialState = {nodeResults: [], variables, remainingNodeIds: embeddedGraph.nodes.map((item) => item.id), skippedNodeIds: []};
+    const stateOrFailure = await runNodes(ai, input, runtime, {initialState, scope: embeddedScope, graph: embeddedGraph, stepScope});
+    // Die Executoren erwarten für einen verschachtelten Plan eine Exception; der äußere Baustein scheitert dann.
+    return stateOrFailure.match(
+      (state) => state.nodeResults,
+      (failure) => { throw failure.cause; },
+    );
+  };
 }

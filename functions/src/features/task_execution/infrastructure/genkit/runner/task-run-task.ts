@@ -102,6 +102,7 @@ async function failRunAfterNodeFailure(
 ) {
   logRunError(logger, "task_run_task.failed", teamId, run.runId, run.taskId, failure.cause);
   await stores.taskRunStore.markRunFailed(teamId, run, failure.cause, failure);
+  await stores.stepJournal?.clear(teamId, run.runId);
 }
 
 /** Ein Fehler außerhalb der Bausteine (Laden, Speichern, ungültiger Plan): Der Lauf scheitert ohne Baustein-Einzelheiten, der Auftrag darf wiederholt werden. */
@@ -114,6 +115,7 @@ async function failRunAfterUnexpectedError(
 ) {
   logRunError(logger, "task_run_task.failed", teamId, run.runId, run.taskId, error);
   await stores.taskRunStore.markRunFailed(teamId, run, error);
+  await stores.stepJournal?.clear(teamId, run.runId);
 }
 
 function logRunError(

@@ -9,6 +9,8 @@ import {
 } from "./task-definition.js";
 import {finalOutputOf} from "../../../domain/services/task-graph-utils.js";
 import {type TaskVariables} from "../../../domain/executors/node-executor.js";
+import {consoleOutputOf} from "../../../domain/entities/script-execution.js";
+import {NodeExecutionFailure} from "../../../domain/entities/node-execution-failure.js";
 
 export type InitialNodeRunState = {
   nodeResults: NodeExecutionResult[];
@@ -103,4 +105,20 @@ function resumeStateFrom(
     skippedNodeIds: state.skippedNodeIds,
     waitingNodeId: state.waitingNodeId,
   };
+}
+
+/** Die Ergebnisse, die dieser Lauf selbst erzeugt hat; was aus einer früheren Freigabe stammt, steht schon in den Aktivitäten. */
+export function newResults(
+  graph: WorkflowGraph,
+  results: Map<string, NodeExecutionResult>,
+  initialState?: InitialNodeRunState,
+): NodeExecutionResult[] {
+  const alreadyRecorded = new Set((initialState?.nodeResults ?? []).map((result) => result.nodeId));
+  return orderedResults(graph, results).filter((result) => !alreadyRecorded.has(result.nodeId));
+}
+
+export function nodeExecutionFailure(node: WorkflowNode, error: unknown, completed: NodeExecutionResult[]): NodeExecutionFailure {
+  const message = error instanceof Error ? error.message : String(error);
+  const failedNode = {nodeId: node.id, primitive: node.primitive, message, console: consoleOutputOf(error)};
+  return new NodeExecutionFailure(failedNode, completed, error);
 }

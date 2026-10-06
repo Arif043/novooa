@@ -430,6 +430,7 @@ export const nodeExecutionResultSchema = z.object({
   selectedBranchId: z.string().nullable().optional(),
   selectedBranchLabel: z.string().nullable().optional(),
   message: z.string().optional(),
+  console: z.object({stdout: z.string(), stderr: z.string()}).optional(),
   interaction: z.discriminatedUnion("kind", [
     z.object({
       kind: z.literal("approval"),

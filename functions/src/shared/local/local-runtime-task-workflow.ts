@@ -26,6 +26,7 @@ import {LocalTaskMessageSender} from "../../features/task_execution/infrastructu
 import {type SQLiteTaskRunDispatcher} from "../../features/task_execution/infrastructure/local/sqlite-task-run-dispatcher.js";
 import {type SQLiteTaskRunStore} from "../../features/task_execution/infrastructure/local/sqlite-task-run-store.js";
 import {SQLiteTaskStore} from "../../features/task_execution/infrastructure/local/sqlite-task-store.js";
+import {SQLiteTaskRunStepJournal} from "../../features/task_execution/infrastructure/local/sqlite-task-run-step-journal.js";
 import {SQLiteTeamContextStore} from "../../features/teams/infrastructure/local/sqlite-team-context-store.js";
 import {type LocalApplicationLogger} from "../logging/local-application-logger.js";
 
@@ -76,6 +77,7 @@ export function createLocalTaskWorkflow(dependencies: LocalTaskWorkflowDependenc
       speechSynthesizer: new LanguageModelSpeech(dependencies.languageModelCatalog, defaultSpeechProviders()),
       speechTranscriber: new LanguageModelTranscription(dependencies.languageModelCatalog, defaultTranscriptionProviders()),
       languageModelDefaultsStore: new SQLiteLanguageModelDefaultsStore(database),
+      stepJournal: new SQLiteTaskRunStepJournal(database),
     },
   });
 }

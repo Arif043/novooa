@@ -373,6 +373,8 @@ export type TaskGraphInput = {
   context: string;
   teamId: string;
   input?: Record<string, unknown>;
+  /** Ohne Run (z. B. Testlauf im Builder) werden keine Schritte journalisiert. */
+  runId?: string;
 };
 export type CompletedTaskGraphOutput = {
   status: "completed";

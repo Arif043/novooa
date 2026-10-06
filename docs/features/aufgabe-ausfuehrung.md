@@ -173,11 +173,34 @@ beendet ist.
   HTTP-Anfrage, Shopware-Aktion) erneut ausführen.
 - **Abstürze werden wiederholt.** Beim Abholen erhält ein Job einen Lease von
   60 Sekunden. Stirbt der Prozess während des Jobs, läuft der Lease ab und der
-  Job wird erneut abgeholt: ein Start beginnt von vorn, eine Fortsetzung setzt
-  wieder bei der Freigabe an.
+  Job wird erneut abgeholt. Der Run setzt dann beim letzten abgeschlossenen
+  Baustein fort (siehe Schritt-Journal).
 - **Begrenzt auf drei Versuche.** Hat ein Job nach Abstürzen alle Versuche
   verbraucht, wird er aufgegeben und der Run mit einer Fehlermeldung als
   `failed` markiert (`failAbandonedTaskRun`).
+
+### Schritt-Journal (Checkpointing)
+
+Die lokale Runtime hält das Ergebnis jedes ausgeführten Bausteins in
+`task_run_steps` fest (`TaskRunStepJournal`, SQLite-Adapter
+`SQLiteTaskRunStepJournal`). Wird ein Run nach einem Absturz wiederholt, läuft
+der Graph wie gewohnt; für jeden Baustein mit gespeichertem Ergebnis wird
+dieses übernommen statt ihn erneut auszuführen. Variablen, Verzweigungen und
+übersprungene Zweige ergeben sich daraus neu.
+
+- **Schritt-Key = Idempotency-Key:** `runId` plus Schritt-Pfad
+  (`TaskRunStepKey`). Top-level ist der Pfad die Node-ID, in Teilgraphen
+  kommen Container-Baustein und Aufrufindex dazu, z. B. `schleife:3/mail`
+  für die vierte Iteration einer Schleife. Ein Absturz in einer Schleife
+  wiederholt bereits abgeschlossene Iterationen nicht.
+- Gespeichert werden nur ausgeführte Bausteine. Übersprungene ergeben sich neu,
+  wartende Freigaben setzen über den Resume-Zustand fort.
+- Nach Erfolg oder Fehler wird das Journal des Runs gelöscht, beim Löschen des
+  Runs per Cascade ebenfalls.
+- **Verbleibendes Fenster:** Stürzt der Prozess ab, nachdem ein Baustein seinen
+  Effekt ausgelöst hat, aber bevor das Ergebnis gespeichert ist, läuft genau
+  dieser Baustein erneut.
+- Die Cloud verdrahtet kein Journal und verhält sich unverändert.
 
 Die Failure-Codes (`invalidRequest`, `invalidTaskId`,
 `invalidReviewDecision`, `invalidFormValues`) liegen in der Domain. HTTP- und
