@@ -103,6 +103,7 @@ function accessFixture() {
     status: () => active ? {state: "active"} : {state: "notActivated"},
     signedActiveLicense: () => null, activeActivation: () => null,
     matchesActivationToken: (token) => active && token === "valid",
+    verifyActivation: async () => active ? "active" : "notActivated",
     requiresActivationTokenForSetup: () => true,
   };
   const verifiedTokens: string[] = [];

@@ -4,6 +4,7 @@ import {type Server} from "node:http";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {ActivateRuntime} from "../../features/licensing/domain/usecases/activate-runtime.js";
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
+import {RuntimeLicenseMonitor} from "../../features/licensing/infrastructure/local/runtime-license-monitor.js";
 import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {type LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
@@ -43,8 +44,14 @@ export async function bootstrapLocalRuntime(options: BootstrapOptions): Promise<
     const restored = await options.licenses.restore();
     if (restored !== null) await shared.application.activate(restored);
     const http = await listenForRequests(options, shared);
+    const licenseMonitor = licenseMonitorFor(options.licenses);
+    licenseMonitor.start();
     reportStarted(options.port);
-    return {server: http.server, application: shared.application, closeHttp: () => http.close()};
+    const closeHttp = async () => {
+      await licenseMonitor.stop();
+      await http.close();
+    };
+    return {server: http.server, application: shared.application, closeHttp};
   } catch (error) {
     await shared.application.stop();
     throw error;
@@ -112,6 +119,14 @@ function attachRealtimeLifecycle(
   http.addHook("preClose", async () => {
     for (const client of realtime.clients) client.terminate();
     await new Promise<void>((resolve) => realtime.close(() => resolve()));
+  });
+}
+
+/** Vor der Aktivierung gibt es keinen team-gebundenen Logger — Lizenzereignisse gehen daher nach Stdout. */
+function licenseMonitorFor(licenses: RuntimeLicenseService): RuntimeLicenseMonitor {
+  return new RuntimeLicenseMonitor({
+    check: () => licenses.verifyActivation(),
+    report: (event, details) => console.info(JSON.stringify({event, ...details})),
   });
 }
 

@@ -1,6 +1,7 @@
 import {type RuntimeLicenseActivation} from "../../domain/entities/runtime-license-activation.js";
 import {isActiveRuntimeLicense, type SignedRuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
 import {runtimeActivationTokenFrom} from "../../domain/entities/activation-token.js";
+import {type RuntimeLicenseCheck} from "../../domain/entities/runtime-license-verification.js";
 import {activationTokenProofFor, matchesActivationTokenProof} from "../activation-token-proof.js";
 import {verifiesRuntimeLicense} from "../license-lease-crypto.js";
 import {type RuntimeLicenseStore} from "./file-local-runtime-license-store.js";
@@ -23,6 +24,11 @@ export interface RuntimeLicenseService {
   matchesActivationToken(token: unknown): boolean;
   /** `false` nur im Entwicklungsmodus ohne echte Lizenz. */
   requiresActivationTokenForSetup(): boolean;
+  /**
+   * Fragt das Gateway, ob die Aktivierung noch gilt, und sperrt die Runtime bei
+   * `revoked`. Wirft, wenn das Gateway kein eindeutiges Urteil liefert.
+   */
+  verifyActivation(): Promise<RuntimeLicenseCheck>;
 }
 
 export class GatewayRuntimeLicenseService implements RuntimeLicenseService {
@@ -58,6 +64,19 @@ export class GatewayRuntimeLicenseService implements RuntimeLicenseService {
   async release(): Promise<void> {
     if (this.state === undefined || !this.isValid(this.state)) throw new Error("Keine aktive Lizenz.");
     await this.gateway.release(this.state);
+    await this.forget();
+  }
+
+  async verifyActivation(): Promise<RuntimeLicenseCheck> {
+    const activation = this.activeActivation();
+    if (activation === null) return "notActivated";
+    const verdict = await this.gateway.verify(activation);
+    // Nur sperren, wenn zwischenzeitlich nicht freigegeben oder neu aktiviert wurde.
+    if (verdict === "revoked" && this.state === activation) await this.forget();
+    return verdict;
+  }
+
+  private async forget(): Promise<void> {
     await this.store.clear();
     this.state = undefined;
   }
@@ -107,4 +126,5 @@ export class DevelopmentRuntimeLicenseService implements RuntimeLicenseService {
   status(): RuntimeLicenseStatus { return {state: "active", name: this.context.licenseName, expiresAt: this.context.expiresAt}; }
   matchesActivationToken(): boolean { return true; }
   requiresActivationTokenForSetup(): boolean { return false; }
+  async verifyActivation(): Promise<RuntimeLicenseCheck> { return "active"; }
 }

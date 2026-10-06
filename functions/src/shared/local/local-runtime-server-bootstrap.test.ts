@@ -105,5 +105,6 @@ function inactiveLicenses(): RuntimeLicenseService {
     signedActiveLicense: () => null, activeActivation: () => null,
     status: () => ({state: "notActivated"}),
     matchesActivationToken: () => false, requiresActivationTokenForSetup: () => true,
+    verifyActivation: async () => "notActivated",
   };
 }

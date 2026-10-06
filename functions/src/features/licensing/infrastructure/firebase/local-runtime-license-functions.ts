@@ -4,6 +4,7 @@ import {type SignedRuntimeLicense} from "../../domain/entities/runtime-license-l
 import {signRuntimeLicense} from "../license-lease-crypto.js";
 import {FirestoreRuntimeLicenseRegistry} from "./firestore-runtime-license-registry.js";
 import {localRuntimeLicenseSigningKey} from "./local-runtime-license-signing-key.js";
+import {runtimeActivationVerdict} from "./runtime-activation-verification.js";
 
 const licenseRegistry = new FirestoreRuntimeLicenseRegistry();
 
@@ -26,6 +27,13 @@ async function respondToLicenseRequest(
   body: Record<string, unknown>,
   response: {status(code: number): {json(body: unknown): void}},
 ): Promise<void> {
+  if (body.action === "verify") {
+    const verdict = await runtimeActivationVerdict(
+      licenseRegistry, signedLicenseFrom(body.license), requiredString(body.activationSecret), new Date(),
+    );
+    response.status(200).json({status: verdict});
+    return;
+  }
   if (body.action === "release") {
     await licenseRegistry.release(
       signedLicenseFrom(body.license).payload,

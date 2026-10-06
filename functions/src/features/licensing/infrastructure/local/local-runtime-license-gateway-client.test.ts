@@ -29,3 +29,27 @@ test("a network failure means the gateway is unavailable", async (t) => {
   await assert.rejects(gateway().activate("A3K9N7P2Q4R6T8W5"), (error) =>
     error instanceof LicenseGatewayUnavailableError && error.causeDetail === "fetch failed");
 });
+
+const activation = {
+  activationSecret: "secret",
+  license: {signature: "sig", payload: {licenseId: "l", licenseName: "n", activationId: "a",
+    workspaceId: "w", issuedAt: "2026-01-01T00:00:00.000Z", expiresAt: "2027-01-01T00:00:00.000Z"}},
+};
+
+test("verify returns the verdict of the gateway", async (t) => {
+  stubFetch(t, async () => new Response(JSON.stringify({status: "revoked"}), {status: 200}));
+  assert.equal(await gateway().verify(activation), "revoked");
+});
+
+test("verify treats every other answer as an unavailable gateway", async (t) => {
+  // Ein älteres Gateway ohne `verify` antwortet mit 401 — das darf die Runtime nicht sperren.
+  for (const response of [
+    () => new Response(JSON.stringify({error: "abgelehnt"}), {status: 401}),
+    () => new Response("", {status: 503}),
+    () => new Response(JSON.stringify({status: "unbekannt"}), {status: 200}),
+    () => new Response("kein json", {status: 200}),
+  ]) {
+    stubFetch(t, async () => response());
+    await assert.rejects(gateway().verify(activation), LicenseGatewayUnavailableError);
+  }
+});

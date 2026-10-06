@@ -645,6 +645,28 @@ Hash, setzt `inUse` atomar auf false und löscht die lokale Aktivierung. Danach
 kann derselbe Token eine andere Runtime aktivieren. Eine alte signierte Lizenz
 wird vom Push-Relay über ihre nicht mehr aktive `activationId` abgelehnt.
 
+### Regelmäßige Lizenzprüfung
+
+Damit eine in der Cloud gelöschte, freigegebene oder abgelaufene Lizenz eine
+laufende Runtime sperrt, fragt `RuntimeLicenseMonitor` das Gateway regelmäßig
+mit `{action: "verify", license, activationSecret}`. Die erste Prüfung folgt
+zufällig innerhalb von 15 Minuten nach dem Start, danach jeweils nach 60 Minuten
+plus zufällig bis zu 15 Minuten — so fragen nicht alle Runtimes gleichzeitig an.
+
+- `200 {status: "active"}`: Die Runtime läuft weiter.
+- `200 {status: "revoked"}`: Die Registry hat die Aktivierung fachlich abgelehnt
+  (`RuntimeLicenseError`: Dokument fehlt, `inUse` ist false, abgelaufen oder
+  fremde `activationId`/falsches Geheimnis). Die Runtime löscht ihre lokale
+  Aktivierung wie bei einer Freigabe, ohne das Gateway erneut anzurufen; danach
+  liefern die Endpunkte `423`, und die Worker verarbeiten nichts mehr.
+- Alles andere — Netzwerkfehler, Zeitüberschreitung nach 15 Sekunden,
+  Serverfehler, jede andere Antwort (auch das `401` eines älteren Gateways ohne
+  `verify`) — ist **kein Urteil**: Die Runtime läuft weiter und prüft beim
+  nächsten Mal erneut. Eine Störung in der Cloud sperrt damit keine Runtime.
+
+Beide Ergebnisse landen als `local_runtime.license_revoked` bzw.
+`local_runtime.license_check_failed` im Container-Log.
+
 Der Produktiv-Container benötigt diese Variablen:
 
 ```text

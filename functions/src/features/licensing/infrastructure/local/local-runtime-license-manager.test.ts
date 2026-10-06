@@ -3,6 +3,8 @@ import {generateKeyPairSync} from "node:crypto";
 import test from "node:test";
 import {type RuntimeLicenseActivation} from "../../domain/entities/runtime-license-activation.js";
 import {type SignedRuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
+import {LicenseGatewayUnavailableError} from "../../domain/entities/runtime-license-errors.js";
+import {type RuntimeLicenseVerdict} from "../../domain/entities/runtime-license-verification.js";
 import {signRuntimeLicense} from "../license-lease-crypto.js";
 import {
   type RuntimeLicenseStore,
@@ -40,6 +42,46 @@ test("releases the exact active installation and clears local state", async () =
   assert.equal(gateway.releases[0].activationSecret, "activation-secret");
   assert.deepEqual(runtime.status(), {state: "notActivated"});
 });
+
+test("a revoked activation locks the runtime and clears local state", async () => {
+  const {runtime, store, gateway} = await activatedRuntime();
+  gateway.verdict = "revoked";
+
+  assert.equal(await runtime.verifyActivation(), "revoked");
+
+  assert.equal(store.state, undefined);
+  assert.equal(runtime.activeContext(), null);
+  assert.equal(gateway.releases.length, 0, "eine widerrufene Lizenz wird nicht zusätzlich freigegeben");
+});
+
+test("an unreachable gateway keeps the runtime active", async () => {
+  const {runtime, store, gateway} = await activatedRuntime();
+  gateway.verdict = new LicenseGatewayUnavailableError("HTTP 503");
+
+  await assert.rejects(runtime.verifyActivation(), LicenseGatewayUnavailableError);
+
+  assert.notEqual(store.state, undefined);
+  assert.notEqual(runtime.activeContext(), null);
+});
+
+test("an active verdict keeps the license and a runtime without license skips the check", async () => {
+  const {runtime} = await activatedRuntime();
+  assert.equal(await runtime.verifyActivation(), "active");
+  assert.notEqual(runtime.activeContext(), null);
+
+  const keys = ed25519Keys();
+  const fresh = service(new MemoryStore(), new GatewayFake(signedLicense(keys.privateKey, futureDate())), keys.publicKey);
+  assert.equal(await fresh.verifyActivation(), "notActivated");
+});
+
+async function activatedRuntime() {
+  const keys = ed25519Keys();
+  const store = new MemoryStore();
+  const gateway = new GatewayFake(signedLicense(keys.privateKey, futureDate()));
+  const runtime = service(store, gateway, keys.publicKey);
+  await runtime.activate({activationToken});
+  return {runtime, store, gateway};
+}
 
 test("keeps an expired signed license locked after restart", async () => {
   const keys = ed25519Keys();
@@ -107,6 +149,12 @@ class GatewayFake implements RuntimeLicenseGatewayClient {
 
   async release(activation: RuntimeLicenseActivation): Promise<void> {
     this.releases.push(activation);
+  }
+
+  verdict: RuntimeLicenseVerdict | Error = "active";
+  async verify(): Promise<RuntimeLicenseVerdict> {
+    if (this.verdict instanceof Error) throw this.verdict;
+    return this.verdict;
   }
 }
 
