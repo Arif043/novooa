@@ -1,9 +1,9 @@
 import {takeToken} from "../entities/token-bucket.js";
 import {type BucketSettings, type BucketStateStore} from "../repositories/bucket-ports.js";
-import {type RateLimitDecision, type RelayRateLimiter} from "../repositories/relay-rate-limiter.js";
+import {type RateLimitDecision, type RateLimiter} from "../repositories/rate-limiter.js";
 
 /** Token-Bucket-Begrenzung je Schlüssel. Kapazität und Rate kommen bei jedem Aufruf aus den [BucketSettings]. */
-export class TokenBucketRateLimiter implements RelayRateLimiter {
+export class TokenBucketRateLimiter implements RateLimiter {
   constructor(
     private readonly store: BucketStateStore,
     private readonly settings: BucketSettings,

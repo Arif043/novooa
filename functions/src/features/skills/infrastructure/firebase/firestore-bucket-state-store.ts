@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto";
 import {Timestamp} from "firebase-admin/firestore";
-import {type BucketState} from "../../domain/entities/token-bucket.js";
-import {type BucketStateStore} from "../../domain/repositories/bucket-ports.js";
+import {type BucketState} from "../../../../shared/rate_limiting/domain/entities/token-bucket.js";
+import {type BucketStateStore} from "../../../../shared/rate_limiting/domain/repositories/bucket-ports.js";
 import {getDatabase} from "../../../../shared/firebase/firestore-db.js";
 
 export const rateLimitCollection = "skillsRelayRateLimits";

@@ -81,11 +81,20 @@ functions/src/
     genkit/
     local/
     logging/
+    rate_limiting/
+      domain/
+      infrastructure/
+        local/
 ```
 
 `shared/` enthält ausschließlich echte Querschnittsthemen ohne fachliche
 Zuständigkeit, beispielsweise strukturiertes Logging über
-`firebase-functions/logger`. Der Firebase-Export-Root `index.ts` re-exportiert
+`firebase-functions/logger` oder die Token-Bucket-Ratenbegrenzung
+(`shared/rate_limiting`: `RateLimiter`, `TokenBucketRateLimiter`, Ports für
+Eimer-Speicher und -Einstellungen, `InMemoryBucketStateStore`). Sie wird vom
+Skills-Relay, von Webhooks und vom Runtime-Login genutzt; deren konkrete
+Speicher und Einstellungen (etwa Firestore-Collection und Remote-Config-Keys
+des Skills-Relays) bleiben im jeweiligen Feature. Der Firebase-Export-Root `index.ts` re-exportiert
 nur öffentliche Trigger und enthält keine Logik.
 
 ## Schichtregeln

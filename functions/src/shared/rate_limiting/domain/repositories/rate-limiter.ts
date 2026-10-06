@@ -4,7 +4,7 @@ export type RateLimitDecision = {
   retryAfterSeconds: number;
 };
 
-/** Begrenzt Anfragen je Schlüssel (hier: je Lizenz). */
-export interface RelayRateLimiter {
+/** Begrenzt Anfragen je Schlüssel (etwa je Lizenz, je Auslöser oder je Client-Adresse). */
+export interface RateLimiter {
   take(key: string): Promise<RateLimitDecision>;
 }

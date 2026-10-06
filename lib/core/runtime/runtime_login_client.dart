@@ -41,6 +41,9 @@ String runtimeLoginFailureMessageFor(int statusCode) {
     423 =>
       'Die Runtime ist noch nicht lizenziert. Aktiviere zuerst die Lizenz '
           'auf dem Runtime-Rechner.',
+    429 =>
+      'Zu viele Anmeldeversuche. Bitte warte eine Minute und versuche es '
+          'dann erneut.',
     _ => 'Anmeldung fehlgeschlagen (HTTP $statusCode).',
   };
 }

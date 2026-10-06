@@ -1,5 +1,5 @@
 import {createHash, timingSafeEqual} from "node:crypto";
-import {type RelayRateLimiter} from "../../../skills/domain/repositories/relay-rate-limiter.js";
+import {type RateLimiter} from "../../../../shared/rate_limiting/domain/repositories/rate-limiter.js";
 import {webhookSecretRef, type WebhookSecretStore} from "../../../scheduling/domain/repositories/webhook-secret-store.js";
 import {type EventTaskTrigger} from "../../../scheduling/domain/repositories/task-trigger-store.js";
 import {startEventTriggerRun, type EventTriggerRunPorts} from "../../../scheduling/domain/usecases/start-event-trigger-run.js";
@@ -30,9 +30,9 @@ export type ReceiveWebhookPorts = EventTriggerRunPorts & {
   teamId: string;
   secrets: Pick<WebhookSecretStore, "read">;
   /** Wird nur bei Fehlversuchen belastet: schützt vor dem Durchprobieren von Adressen. */
-  failures: RelayRateLimiter;
+  failures: RateLimiter;
   /** Je Auslöser: schützt die Aufgabe vor einer Flut gültiger Aufrufe. */
-  triggers: RelayRateLimiter;
+  triggers: RateLimiter;
   /** Auslöser anderer Quellen als `webhookReceived` lassen den Aufruf von ihrem Interpreter auswerten. */
   interpreters?: ReadonlyMap<string, WebhookInterpreter>;
   now?: () => Date;

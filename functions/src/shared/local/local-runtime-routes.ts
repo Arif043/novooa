@@ -26,6 +26,7 @@ import {workspaceTransferRoutes} from "../../features/workspace_transfer/infrast
 import {applicationLogRoutes} from "../logging/local-application-log-routes.js";
 import {assistantRoutes} from "./local-assistant-routes.js";
 import {registerLocalRuntimeAccessHooks} from "./local-runtime-access-hooks.js";
+import {createLoginAttemptLimiter} from "./local-runtime-login-rate-limiter.js";
 import {loginRoutes} from "./local-runtime-login-routes.js";
 import {type LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
 import {realtimeTicketRoutes} from "./local-runtime-realtime-ticket-routes.js";
@@ -67,7 +68,9 @@ type RouteServices = ReturnType<typeof createLocalRuntimeRouteServices>;
 /** Einrichtung, Anmeldung und Realtime-Tickets — ohne Session erreichbar (siehe Access-Hooks). */
 async function registerAccessRoutes(api: FastifyInstance, dependencies: LocalRuntimeApiDependencies, services: RouteServices) {
   await api.register(setupRoutes, {credentials: services.credentials, authorization: dependencies.licenses});
-  await api.register(loginRoutes, {credentials: services.credentials, sessions: dependencies.sessions});
+  await api.register(loginRoutes, {
+    credentials: services.credentials, sessions: dependencies.sessions, limiter: createLoginAttemptLimiter(),
+  });
   await api.register(realtimeTicketRoutes, {tickets: dependencies.tickets});
 }
 

@@ -3,7 +3,7 @@ import test from "node:test";
 import {type RuntimeLicense, type SignedRuntimeLicense} from "../../../licensing/domain/entities/runtime-license-lease.js";
 import {type RuntimeRelayLicenseVerifier} from "../../../licensing/domain/repositories/runtime-relay-license-verifier.js";
 import {SkillRelayRateLimitedError, SkillRelayRequestError} from "../../domain/entities/skill-relay-request.js";
-import {type RelayRateLimiter} from "../../domain/repositories/relay-rate-limiter.js";
+import {type RateLimiter} from "../../../../shared/rate_limiting/domain/repositories/rate-limiter.js";
 import {type SkillsCatalogUpstream} from "../../domain/repositories/skills-catalog-upstream.js";
 import {RelaySkillsCatalogRequest} from "../../domain/usecases/relay-skills-catalog-request.js";
 import {HttpSkillsCatalogUpstream} from "./http-skills-catalog-upstream.js";
@@ -11,9 +11,9 @@ import {isValidSkillsRelaySignature, signSkillsRelayRequest, signatureHeader, si
 
 const license = {signature: "s", payload: {licenseId: "l"}} as unknown as SignedRuntimeLicense;
 
-const allowAll: RelayRateLimiter = {take: async () => ({allowed: true, retryAfterSeconds: 0})};
+const allowAll: RateLimiter = {take: async () => ({allowed: true, retryAfterSeconds: 0})};
 
-function relayWith(verify: RuntimeRelayLicenseVerifier["verify"], calls: string[], limiter: RelayRateLimiter = allowAll) {
+function relayWith(verify: RuntimeRelayLicenseVerifier["verify"], calls: string[], limiter: RateLimiter = allowAll) {
   const upstream: SkillsCatalogUpstream = {
     get: async (request) => { calls.push(`${request.path}?${new URLSearchParams(request.query)}`); return {status: 200, body: "{}", headers: {}}; },
   };
@@ -49,7 +49,7 @@ test("a licensed but forbidden request is rejected without calling the upstream"
 
 test("tokens are taken per license, only after license and request are valid", async () => {
   const taken: string[] = [];
-  const limiter: RelayRateLimiter = {take: async (key) => { taken.push(key); return {allowed: true, retryAfterSeconds: 0}; }};
+  const limiter: RateLimiter = {take: async (key) => { taken.push(key); return {allowed: true, retryAfterSeconds: 0}; }};
   const calls: string[] = [];
   const relay = relayWith(async () => ({licenseId: "lizenz-1"}) as RuntimeLicense, calls, limiter);
   const rejecting = relayWith(async () => { throw new Error("Die Lizenz ist ungültig."); }, calls, limiter);
@@ -65,7 +65,7 @@ test("tokens are taken per license, only after license and request are valid", a
 
 test("an empty bucket answers with the wait time and never reaches the upstream", async () => {
   const calls: string[] = [];
-  const limiter: RelayRateLimiter = {take: async () => ({allowed: false, retryAfterSeconds: 3})};
+  const limiter: RateLimiter = {take: async () => ({allowed: false, retryAfterSeconds: 3})};
   const relay = relayWith(async () => ({licenseId: "l"}) as RuntimeLicense, calls, limiter);
 
   await assert.rejects(relay.execute(license, "/skills", {}), (error: unknown) =>

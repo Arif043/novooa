@@ -1,6 +1,6 @@
 import {getRemoteConfig, type ServerTemplate} from "firebase-admin/remote-config";
-import {defaultBucketConfig, normalizedBucketConfig, type BucketConfig} from "../../domain/entities/token-bucket.js";
-import {type BucketSettings} from "../../domain/repositories/bucket-ports.js";
+import {defaultBucketConfig, normalizedBucketConfig, type BucketConfig} from "../../../../shared/rate_limiting/domain/entities/token-bucket.js";
+import {type BucketSettings} from "../../../../shared/rate_limiting/domain/repositories/bucket-ports.js";
 import {logException} from "../../../../shared/logging/logger.js";
 
 export const capacityKey = "skills_relay_bucket_capacity";

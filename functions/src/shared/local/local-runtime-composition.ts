@@ -1,8 +1,8 @@
 import {type FileEventPublisher, noFileEventPublisher} from "../../features/files/domain/repositories/file-event-publisher.js";
 import {SQLiteFolderAncestry} from "../../features/files/infrastructure/local/sqlite-folder-ancestry.js";
-import {TokenBucketRateLimiter} from "../../features/skills/domain/usecases/token-bucket-rate-limiter.js";
+import {TokenBucketRateLimiter} from "../rate_limiting/domain/usecases/token-bucket-rate-limiter.js";
 import {ReceiveWebhook} from "../../features/webhooks/domain/usecases/receive-webhook.js";
-import {InMemoryBucketStateStore} from "../../features/webhooks/infrastructure/local/in-memory-bucket-state-store.js";
+import {InMemoryBucketStateStore} from "../rate_limiting/infrastructure/local/in-memory-bucket-state-store.js";
 import {DispatchFileEvent} from "../../features/scheduling/domain/usecases/dispatch-file-event.js";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {LocalMailRelayEventProcessor} from "../../features/communication/infrastructure/local/local-mail-relay-event-processor.js";

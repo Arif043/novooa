@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {type ServerTemplate} from "firebase-admin/remote-config";
-import {type BucketState} from "../../domain/entities/token-bucket.js";
-import {type BucketSettings, type BucketStateStore} from "../../domain/repositories/bucket-ports.js";
-import {TokenBucketRateLimiter} from "../../domain/usecases/token-bucket-rate-limiter.js";
+import {type BucketState} from "../../../../shared/rate_limiting/domain/entities/token-bucket.js";
+import {type BucketSettings, type BucketStateStore} from "../../../../shared/rate_limiting/domain/repositories/bucket-ports.js";
+import {TokenBucketRateLimiter} from "../../../../shared/rate_limiting/domain/usecases/token-bucket-rate-limiter.js";
 import {capacityKey, refillPerSecondKey, RemoteConfigBucketSettings} from "./remote-config-bucket-settings.js";
 
 class MemoryStore implements BucketStateStore {

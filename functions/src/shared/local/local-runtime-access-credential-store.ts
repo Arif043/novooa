@@ -1,5 +1,5 @@
 import {eq} from "drizzle-orm";
-import {randomBytes, scryptSync, timingSafeEqual} from "node:crypto";
+import {randomBytes, scrypt, timingSafeEqual} from "node:crypto";
 import {type RuntimeExecutor} from "../../db/database.js";
 import {runtimeAccessCredential} from "../../db/schema.js";
 
@@ -11,7 +11,9 @@ const saltBytes = 16;
 // Parameter nicht mit dem Default-Speicherlimit (32 MiB) — scrypt braucht
 // hier grob 128 * N * r Bytes (~128 MiB), maxmem muss also explizit erhöht
 // werden. Login passiert selten (einmal pro Gerät/30 Tage), die höheren
-// Kosten fallen praktisch nicht ins Gewicht.
+// Kosten fallen praktisch nicht ins Gewicht. Gehasht wird asynchron im
+// libuv-Threadpool und immer nur ein Passwort gleichzeitig, damit weder der
+// Event-Loop blockiert noch parallele Anfragen je ~128 MiB belegen.
 const scryptOptions = {N: 131072, r: 8, p: 1, maxmem: 256 * 1024 * 1024};
 
 /**
@@ -20,6 +22,8 @@ const scryptOptions = {N: 131072, r: 8, p: 1, maxmem: 256 * 1024 * 1024};
  * ausschließlich einen scrypt-Hash, nie das Klartext-Passwort.
  */
 export class LocalRuntimeAccessCredentialStore {
+  private hashing: Promise<unknown> = Promise.resolve();
+
   constructor(private readonly database: RuntimeExecutor) {}
 
   async hasCredential(): Promise<boolean> {
@@ -37,7 +41,7 @@ export class LocalRuntimeAccessCredentialStore {
       throw new RuntimeAccessCredentialAlreadySetError();
     }
     const salt = randomBytes(saltBytes).toString("hex");
-    const hash = hashFor(password, salt);
+    const hash = await this.hash(password, salt);
     await this.database.insert(runtimeAccessCredential).values({id: 1, password_hash: hash, salt});
   }
 
@@ -45,9 +49,16 @@ export class LocalRuntimeAccessCredentialStore {
     const row = await this.database.select({password_hash: runtimeAccessCredential.password_hash, salt: runtimeAccessCredential.salt})
       .from(runtimeAccessCredential).where(eq(runtimeAccessCredential.id, 1)).get();
     if (!row) return false;
-    const candidate = Buffer.from(hashFor(password, row.salt), "hex");
+    const candidate = Buffer.from(await this.hash(password, row.salt), "hex");
     const stored = Buffer.from(row.password_hash, "hex");
     return candidate.length === stored.length && timingSafeEqual(candidate, stored);
+  }
+
+  /** Reiht den Hash hinter den laufenden ein; ein Fehler blockiert die Schlange nicht. */
+  private hash(password: string, salt: string): Promise<string> {
+    const hashed = this.hashing.then(() => hashFor(password, salt));
+    this.hashing = hashed.catch(() => undefined);
+    return hashed;
   }
 }
 
@@ -57,6 +68,11 @@ export class RuntimeAccessCredentialAlreadySetError extends Error {
   }
 }
 
-function hashFor(password: string, salt: string): string {
-  return scryptSync(password, salt, scryptKeyLength, scryptOptions).toString("hex");
+function hashFor(password: string, salt: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    scrypt(password, salt, scryptKeyLength, scryptOptions, (error, key) => {
+      if (error) reject(error);
+      else resolve(key.toString("hex"));
+    });
+  });
 }

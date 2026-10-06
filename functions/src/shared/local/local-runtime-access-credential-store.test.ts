@@ -66,3 +66,22 @@ async function createSchema(database: RuntimeDatabase): Promise<void> {
     )
   `);
 }
+
+test("hashing does not block the event loop and concurrent checks stay correct", async () => {
+  const database = connectRuntimeDatabase(":memory:");
+  await createSchema(database);
+  const store = new LocalRuntimeAccessCredentialStore(database);
+  await store.setPassword("correct-horse-battery-staple");
+  let eventLoopTicked = false;
+  const checks = Promise.all([
+    store.verifyPassword("correct-horse-battery-staple"),
+    store.verifyPassword("wrong-password"),
+  ]).then((results) => ({results, ticked: eventLoopTicked}));
+  setImmediate(() => { eventLoopTicked = true; });
+
+  const {results, ticked} = await checks;
+
+  assert.deepEqual(results, [true, false]);
+  assert.equal(ticked, true, "der Event-Loop lief weiter, während gehasht wurde");
+  database.$client.close();
+});

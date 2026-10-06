@@ -1,7 +1,7 @@
 import {type SignedRuntimeLicense} from "../../../licensing/domain/entities/runtime-license-lease.js";
 import {type RuntimeRelayLicenseVerifier} from "../../../licensing/domain/repositories/runtime-relay-license-verifier.js";
 import {SkillRelayRateLimitedError, skillRelayRequestFrom} from "../entities/skill-relay-request.js";
-import {type RelayRateLimiter} from "../repositories/relay-rate-limiter.js";
+import {type RateLimiter} from "../../../../shared/rate_limiting/domain/repositories/rate-limiter.js";
 import {type SkillsCatalogResponse, type SkillsCatalogUpstream} from "../repositories/skills-catalog-upstream.js";
 
 /**
@@ -16,7 +16,7 @@ import {type SkillsCatalogResponse, type SkillsCatalogUpstream} from "../reposit
 export class RelaySkillsCatalogRequest {
   constructor(
     private readonly licenses: RuntimeRelayLicenseVerifier,
-    private readonly limiter: RelayRateLimiter,
+    private readonly limiter: RateLimiter,
     private readonly upstream: SkillsCatalogUpstream,
   ) {}
 

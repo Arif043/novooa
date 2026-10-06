@@ -354,9 +354,26 @@ Credential-Speicher (`flutter_secure_storage`), nicht in `SharedPreferences`.
 - **Windows**: `flutter_secure_storage` benötigt die C++-ATL-Bibliotheken der
   Visual Studio Build Tools.
 
+### Schutz der Anmeldung
+
+`POST /v1/auth/login` begrenzt Versuche, **bevor** das Passwort geprüft wird
+(`createLoginAttemptLimiter`, Token-Bucket im Arbeitsspeicher):
+
+- je Client-Adresse 5 Versuche, danach 1 pro Minute;
+- über alle Clients 10 Versuche, danach 1 alle 5 Sekunden — höchstens etwa
+  12 Passwortprüfungen pro Minute, auch bei vielen Angreifer-Adressen.
+
+Darüber antwortet die Runtime mit `429` und `Retry-After`. Gemerkt werden
+höchstens 10 000 Client-Adressen; die am längsten ungenutzte fällt zuerst weg.
+Hinter einem Reverse Proxy ist die Client-Adresse die des Proxys, dann gilt die
+Client-Stufe für alle gemeinsam.
+
+Die Passwortprüfung (scrypt, N=2^17, ~128 MiB) läuft asynchron im
+libuv-Threadpool und immer nur eine gleichzeitig. Der Event-Loop bleibt frei,
+und parallele Anmeldeversuche belegen nicht je eigenen Speicher.
+
 ### Nicht Teil dieser Erweiterung
 
-- Kein Rate-Limiting/Brute-Force-Schutz auf `POST /v1/auth/login`.
 - Keine mitgelieferte Reverse-Proxy-Konfiguration. novooa prüft nicht, ob vor
   der Runtime tatsächlich TLS terminiert wird — die Zusicherung „nicht
   unverschlüsselt aus dem Internet erreichbar“ liegt beim Betreiber.

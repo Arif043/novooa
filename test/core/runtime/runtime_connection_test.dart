@@ -184,6 +184,12 @@ void main() {
       expect(message, isNot(contains('Passwort')));
     });
 
+    test('meldet zu viele Versuche bei 429 nicht als Passwortfehler', () {
+      final message = runtimeLoginFailureMessageFor(429);
+      expect(message, contains('Zu viele Anmeldeversuche'));
+      expect(message, isNot(contains('ungültig')));
+    });
+
     test('nennt bei unbekannten Fehlern den Statuscode', () {
       expect(runtimeLoginFailureMessageFor(500), contains('500'));
     });

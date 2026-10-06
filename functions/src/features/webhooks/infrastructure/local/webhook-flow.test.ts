@@ -10,9 +10,9 @@ import {cycleGuardFor} from "../../../scheduling/domain/usecases/trigger-cycle-g
 import {taskTriggerRoutes} from "../../../scheduling/infrastructure/local/local-task-trigger-routes.js";
 import {SQLiteTaskTriggerStore} from "../../../scheduling/infrastructure/local/sqlite-task-trigger-store.js";
 import {webhookSecretsFor} from "../../../scheduling/infrastructure/local/webhook-secrets-test-support.js";
-import {TokenBucketRateLimiter} from "../../../skills/domain/usecases/token-bucket-rate-limiter.js";
+import {TokenBucketRateLimiter} from "../../../../shared/rate_limiting/domain/usecases/token-bucket-rate-limiter.js";
 import {ReceiveWebhook} from "../../domain/usecases/receive-webhook.js";
-import {InMemoryBucketStateStore} from "./in-memory-bucket-state-store.js";
+import {InMemoryBucketStateStore} from "../../../../shared/rate_limiting/infrastructure/local/in-memory-bucket-state-store.js";
 import {webhookRoutes} from "./local-webhook-routes.js";
 
 type Created = {id: string; eventConfig: {webhook: {token: string}}};

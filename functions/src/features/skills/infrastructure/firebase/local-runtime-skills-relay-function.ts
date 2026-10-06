@@ -6,7 +6,7 @@ import {FirebaseRuntimeRelayLicenseVerifier} from "../../../licensing/infrastruc
 import {localRuntimeLicenseSigningKey} from "../../../licensing/infrastructure/firebase/local-runtime-license-signing-key.js";
 import {logException} from "../../../../shared/logging/logger.js";
 import {SkillRelayRateLimitedError, SkillRelayRequestError} from "../../domain/entities/skill-relay-request.js";
-import {TokenBucketRateLimiter} from "../../domain/usecases/token-bucket-rate-limiter.js";
+import {TokenBucketRateLimiter} from "../../../../shared/rate_limiting/domain/usecases/token-bucket-rate-limiter.js";
 import {FirestoreBucketStateStore} from "./firestore-bucket-state-store.js";
 import {RemoteConfigBucketSettings} from "./remote-config-bucket-settings.js";
 import {RelaySkillsCatalogRequest} from "../../domain/usecases/relay-skills-catalog-request.js";
