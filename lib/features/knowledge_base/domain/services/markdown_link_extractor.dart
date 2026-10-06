@@ -1,10 +1,15 @@
 import '../entities/knowledge_note.dart';
+import 'knowledge_note_resolver.dart';
 import 'wiki_link_parser.dart';
 
 class MarkdownLinkExtractor {
-  const MarkdownLinkExtractor([this._wikiLinkParser = const WikiLinkParser()]);
+  const MarkdownLinkExtractor([
+    this._wikiLinkParser = const WikiLinkParser(),
+    this._noteResolver = const KnowledgeNoteResolver(),
+  ]);
 
   final WikiLinkParser _wikiLinkParser;
+  final KnowledgeNoteResolver _noteResolver;
 
   List<String> call({
     required String content,
@@ -18,7 +23,7 @@ class MarkdownLinkExtractor {
   }
 
   bool _referencesNote(String content, KnowledgeNote note) {
-    final aliases = _aliasesFor(note);
+    final aliases = _noteResolver.aliasesFor(note);
     final normalizedContent = content.toLowerCase();
     final wikiTargets = _wikiLinkParser(
       content,
@@ -28,21 +33,5 @@ class MarkdownLinkExtractor {
           normalizedContent.contains('](${Uri.encodeComponent(alias)})') ||
           wikiTargets.contains(alias);
     });
-  }
-
-  Set<String> _aliasesFor(KnowledgeNote note) {
-    return {
-          note.id,
-          note.title,
-          note.path,
-          _withoutMarkdownExtension(note.path),
-        }
-        .map((value) => value.trim().toLowerCase())
-        .where((value) => value.isNotEmpty)
-        .toSet();
-  }
-
-  String _withoutMarkdownExtension(String path) {
-    return path.endsWith('.md') ? path.substring(0, path.length - 3) : path;
   }
 }

@@ -51,6 +51,26 @@ Die Seite kombiniert einen Obsidian-artigen Notiz-Workflow mit dem Designsystem
 - Mitte: Dokumentfläche mit „Schreiben“, „Lesen“ und „Graph“ sowie sichtbarem Speicherstatus.
 - Rechts: Eigenschaften, Speicherstatus, verlinkte Notizen und Backlinks.
 
+### Lesen-Ansicht (Markdown-Rendering)
+
+„Lesen“ rendert die Notiz mit `flutter_markdown_plus` als GitHub-Flavored
+Markdown (`KnowledgeMarkdownPreview`): Überschriften `#`–`######`, **fett**,
+*kursiv*, ~~durchgestrichen~~, ungeordnete, nummerierte und Aufgabenlisten,
+Tabellen, Zitate, Inline-Code und Codeblöcke, horizontale Linien, Bilder,
+Autolinks und Emoji-Kürzel (`:smile:`). Der Text ist markierbar.
+
+- `[[Ziel]]` und `[[Ziel|Anzeigetext]]` werden über `KnowledgeWikiLinkSyntax`
+  zu Links auf die Notiz. Ohne passende Notiz bleibt der Wiki-Link als Text
+  stehen.
+- Markdown-Links auf eine Notiz (`[Text](leitfaden.md)`) öffnen ebenfalls die
+  Notiz. Die Zuordnung „Linkziel → Notiz“ (ID, Titel, Pfad mit/ohne `.md`)
+  liegt im Domain-Service `KnowledgeNoteResolver`, den auch
+  `MarkdownLinkExtractor` für Graph und Backlinks nutzt.
+- `http`, `https` und `mailto` öffnen sich extern
+  (`KnowledgeMarkdownLinkHandler`), andere Schemata werden ignoriert.
+- Gestaltung kommt vollständig aus dem Theme (`KnowledgeMarkdownStyleSheet`).
+- Leere Notizen zeigen einen Hinweis auf „Schreiben“.
+
 Auf kleinen Displays bzw. bei großer Schrift wechseln Notizliste und Dokument
 in eine Einspaltenansicht mit „Alle Notizen“-Navigation. Kompakte Auswahlfelder
 ersetzen bei Platzmangel die Segmentauswahl. Löschen erfordert eine Bestätigung.
