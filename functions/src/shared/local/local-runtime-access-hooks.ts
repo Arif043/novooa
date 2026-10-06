@@ -1,4 +1,4 @@
-import {type FastifyInstance} from "fastify";
+import {type FastifyInstance, type FastifyRequest} from "fastify";
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 
@@ -16,9 +16,16 @@ export function registerLocalRuntimeAccessHooks(
   });
   http.addHook("onRequest", async (request, reply) => {
     if (["/v1/auth/login", "/v1/setup"].includes(request.routeOptions.url ?? "")) return;
-    const authorization = request.headers.authorization;
-    const token = authorization?.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
-    if (token.length > 0 && await sessions.verifySession(token)) return;
+    if (await hasValidSession(request, sessions)) return;
     return reply.code(401).send({error: "Anmeldung erforderlich."});
   });
+}
+
+/** Trägt die Anfrage ein gültiges `Authorization: Bearer <token>`? */
+export async function hasValidSession(
+  request: FastifyRequest, sessions: Pick<LocalRuntimeSessionStore, "verifySession">,
+): Promise<boolean> {
+  const authorization = request.headers.authorization;
+  const token = authorization?.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
+  return token.length > 0 && await sessions.verifySession(token);
 }

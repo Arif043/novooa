@@ -29,7 +29,11 @@ test("native routes support activation, setup, login and protected workspace acc
   const response = await fetch(`${base}/v1/tasks`, {headers: {authorization: `Bearer ${token}`}});
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), {items: []});
-  assert.equal((await postJson(base, "/v1/license/release", {})).status, 200);
+  assert.equal((await postJson(base, "/v1/license/release", {})).status, 401);
+  const release = await fetch(`${base}/v1/license/release`, {
+    method: "POST", headers: {"content-type": "application/json", authorization: `Bearer ${token}`}, body: "{}",
+  });
+  assert.equal(release.status, 200);
   assert.equal((await fetch(`${base}/v1/tasks`, {headers: {authorization: `Bearer ${token}`}})).status, 423);
 });
 

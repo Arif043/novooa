@@ -39,12 +39,28 @@ test("login and setup bypass only session authentication, including query string
   assert.deepEqual(fixture.verifiedTokens, []);
 });
 
-test("release remains session-free and locks subsequent business requests", async (t) => {
+test("release requires an operator session once a password is set", async (t) => {
   const fixture = accessFixture();
   t.after(() => fixture.http.close());
   await fixture.licenses.activate({activationToken: "valid"});
-  assert.equal((await fixture.http.inject({method: "POST", url: "/v1/license/release"})).statusCode, 200);
+
+  assert.equal((await fixture.http.inject({method: "POST", url: "/v1/license/release"})).statusCode, 401);
+  const forged = await fixture.http.inject({method: "POST", url: "/v1/license/release", headers: {authorization: "Bearer falsch"}});
+  assert.equal(forged.statusCode, 401);
+  assert.equal((await fixture.http.inject({url: "/v1/tasks", headers: {authorization: "Bearer valid"}})).statusCode, 200);
+
+  const released = await fixture.http.inject({method: "POST", url: "/v1/license/release", headers: {authorization: "Bearer valid"}});
+  assert.equal(released.statusCode, 200);
   assert.equal((await fixture.http.inject({url: "/v1/tasks", headers: {authorization: "Bearer valid"}})).statusCode, 423);
+});
+
+test("release stays open before the first password is set", async (t) => {
+  const fixture = accessFixture({hasPassword: false});
+  t.after(() => fixture.http.close());
+  await fixture.licenses.activate({activationToken: "valid"});
+
+  assert.equal((await fixture.http.inject({method: "POST", url: "/v1/license/release"})).statusCode, 200);
+  assert.equal(fixture.licenses.activeContext(), null);
 });
 
 test("activation schemas and use-case failures do not start a workspace", async (t) => {
@@ -87,7 +103,7 @@ test("re-submitting the redeemed token confirms the license, a foreign token is 
   assert.equal(foreign.json<{code: string}>().code, "already_activated");
 });
 
-function accessFixture() {
+function accessFixture({hasPassword = true}: {hasPassword?: boolean} = {}) {
   let active = false;
   let activatedWorkspaces = 0;
   const licenses: RuntimeLicenseService = {
@@ -107,17 +123,22 @@ function accessFixture() {
     requiresActivationTokenForSetup: () => true,
   };
   const verifiedTokens: string[] = [];
-  const http = accessHttp(licenses, verifiedTokens, async () => { activatedWorkspaces += 1; });
+  const http = accessHttp(licenses, verifiedTokens, async () => { activatedWorkspaces += 1; }, hasPassword);
   return {http, licenses, verifiedTokens, workspaceActivations: () => activatedWorkspaces};
 }
 
-function accessHttp(licenses: RuntimeLicenseService, verifiedTokens: string[], activate: () => Promise<void>) {
+function accessHttp(
+  licenses: RuntimeLicenseService, verifiedTokens: string[], activate: () => Promise<void>, hasPassword: boolean,
+) {
+  const sessions = {verifySession: async (token: string) => {
+    verifiedTokens.push(token); return token === "valid";
+  }};
   return createLocalRuntimeHttpServer(async (routes) => {
-    registerRuntimeLicenseRoutes(routes, licenses, new ActivateRuntime(licenses, activate));
+    registerRuntimeLicenseRoutes(routes, licenses, new ActivateRuntime(licenses, activate), {
+      credentials: {hasCredential: async () => hasPassword}, sessions,
+    });
     routes.register(async (api) => {
-      registerLocalRuntimeAccessHooks(api, licenses, {verifySession: async (token) => {
-        verifiedTokens.push(token); return token === "valid";
-      }});
+      registerLocalRuntimeAccessHooks(api, licenses, sessions);
       api.get("/v1/tasks", async () => ({ok: true}));
       api.post("/v1/auth/login", async () => ({token: "valid"}));
       api.post("/v1/setup", async () => ({ok: true}));

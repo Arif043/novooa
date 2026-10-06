@@ -6,6 +6,7 @@ import {ActivateRuntime} from "../../features/licensing/domain/usecases/activate
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {RuntimeLicenseMonitor} from "../../features/licensing/infrastructure/local/runtime-license-monitor.js";
 import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
+import {LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
 import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {type LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
 import {createLocalRuntimeHttpServer} from "./local-runtime-http-server.js";
@@ -89,7 +90,9 @@ async function listenForRequests(options: BootstrapOptions, shared: RuntimeShare
 function runtimeRoutes(options: BootstrapOptions, shared: RuntimeShared): FastifyPluginAsync {
   return async (routes) => {
     const activate = new ActivateRuntime(options.licenses, (context) => shared.application.activate(context));
-    registerRuntimeLicenseRoutes(routes, options.licenses, activate);
+    registerRuntimeLicenseRoutes(routes, options.licenses, activate, {
+      credentials: new LocalRuntimeAccessCredentialStore(options.database), sessions: shared.sessions,
+    });
     await routes.register(localRuntimeApi({
       database: options.database, runtimeRoot: options.runtimeRoot, fieldCipher: options.fieldCipher,
       licenses: options.licenses, sessions: shared.sessions, notifier: shared.notifier, tickets: shared.tickets,

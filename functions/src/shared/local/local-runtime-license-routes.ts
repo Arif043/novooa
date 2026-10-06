@@ -1,4 +1,7 @@
-import {type FastifyInstance, type FastifyReply} from "fastify";
+import {type FastifyInstance, type FastifyReply, type FastifyRequest} from "fastify";
+import {type LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
+import {hasValidSession} from "./local-runtime-access-hooks.js";
+import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 import {
   InvalidActivationTokenError,
   LicenseActivationRejectedError,
@@ -10,18 +13,42 @@ import {type RuntimeLicenseService} from "../../features/licensing/infrastructur
 
 type ActivationFailure = {status: number; code: string; error: string};
 
+/** Wer die Lizenz freigeben darf: angemeldete Betreiber, vor der Ersteinrichtung jeder. */
+export type ReleaseAuthorization = {
+  credentials: Pick<LocalRuntimeAccessCredentialStore, "hasCredential">;
+  sessions: Pick<LocalRuntimeSessionStore, "verifySession">;
+};
+
 export function registerRuntimeLicenseRoutes(
   http: FastifyInstance, licenses: RuntimeLicenseService, activateRuntime: ActivateRuntime,
+  releaseAuthorization: ReleaseAuthorization,
 ): void {
   http.get("/v1/license", async () => licenses.status());
   registerActivationRoute(http, activateRuntime);
-  http.post("/v1/license/release", async (_request, reply) => {
+  http.post("/v1/license/release", {
+    preHandler: async (request, reply) => {
+      if (await mayRelease(request, releaseAuthorization)) return;
+      return reply.code(401).send({error: "Anmeldung erforderlich."});
+    },
+  }, async (_request, reply) => {
     try { await licenses.release(); return {status: "notActivated"}; }
     catch (error) {
       reportLicenseEvent("local_runtime.license_release_failed", error);
       return reply.code(409).send({error: "Die Lizenz konnte nicht freigegeben werden."});
     }
   });
+}
+
+/**
+ * Das Freigeben sperrt die Runtime und gibt die Lizenz beim Gateway frei — das
+ * darf nur ein angemeldeter Betreiber. Solange noch kein Passwort gesetzt ist,
+ * kann sich niemand anmelden; dann bleibt die Freigabe offen, weil Lizenzen
+ * ohne gespeicherten Token-Nachweis nur über Freigeben und erneutes Aktivieren
+ * eingerichtet werden können (siehe docs/local-runtime.md).
+ */
+async function mayRelease(request: FastifyRequest, {credentials, sessions}: ReleaseAuthorization): Promise<boolean> {
+  if (!await credentials.hasCredential()) return true;
+  return hasValidSession(request, sessions);
 }
 
 function registerActivationRoute(http: FastifyInstance, activateRuntime: ActivateRuntime): void {

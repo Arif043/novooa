@@ -237,9 +237,14 @@ Fehlgeschlagene Aktivierungen meldet die Runtime unterscheidbar
 
 Nach dem Setzen des Passworts meldet sich der Client über
 `POST /v1/auth/login` an und erhält ein Session-Token, das er fortan als
-`Authorization: Bearer <token>` mitschickt. `/healthz`, `/v1/license/*` und
-`/hooks/*` ([Webhooks](features/webhooks.md)) bleiben unverändert außerhalb dieser Passwort-Pflicht — die Lizenzaktivierung
-ist bereits durch den Lizenz-Token selbst geschützt.
+`Authorization: Bearer <token>` mitschickt. `/healthz`, `GET /v1/license`,
+`POST /v1/license/activate` und `/hooks/*` ([Webhooks](features/webhooks.md))
+bleiben außerhalb dieser Passwort-Pflicht — die Lizenzaktivierung ist bereits
+durch den Lizenz-Token selbst geschützt. `POST /v1/license/release` sperrt die
+Runtime und gibt die Lizenz frei; es verlangt deshalb eine gültige Sitzung,
+sobald ein Betreiber-Passwort gesetzt ist (sonst `401`). Nur vor der
+Ersteinrichtung bleibt es offen, weil Lizenzen ohne Token-Nachweis (siehe oben)
+nur über Freigeben und erneutes Aktivieren einzurichten sind.
 
 Der HTTP-Server verwendet native Fastify-5-Routen: Routing, Pfadparameter,
 JSON-Parsing und Body-Limit (1 MiB), Schema-Validierung und Fehlerantworten
@@ -639,7 +644,7 @@ gültige Lizenz `423`; Task- und Trigger-Worker starten dann keine Jobs. Bis zum
 signierten Ablaufdatum ist keine ständige Internetverbindung nötig.
 
 In den Runtime-Einstellungen kann der Kunde die Lizenz entfernen. Dies ruft
-`POST /v1/license/release` auf. Die Runtime übergibt die signierte
+`POST /v1/license/release` mit der Sitzung des angemeldeten Betreibers auf. Die Runtime übergibt die signierte
 `activationId` sowie ihr Aktivierungsgeheimnis; das Gateway vergleicht dessen
 Hash, setzt `inUse` atomar auf false und löscht die lokale Aktivierung. Danach
 kann derselbe Token eine andere Runtime aktivieren. Eine alte signierte Lizenz
