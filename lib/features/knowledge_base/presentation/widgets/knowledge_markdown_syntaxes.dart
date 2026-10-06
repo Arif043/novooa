@@ -2,7 +2,6 @@ import 'package:flutter_markdown_plus_latex/flutter_markdown_plus_latex.dart';
 import 'package:markdown/markdown.dart' as md;
 
 import '../../domain/entities/knowledge_note.dart';
-import 'knowledge_footnotes.dart';
 import 'knowledge_wiki_link_syntax.dart';
 
 const knowledgeHighlightTag = 'mark';
@@ -43,27 +42,13 @@ class KnowledgeInlineMathSyntax extends md.InlineSyntax {
   }
 }
 
-/// Block-Syntaxen ohne Fußnoten-Definitionen; diese löst
-/// [KnowledgeFootnoteDefinitionSyntax] aus dem Text.
-List<md.BlockSyntax> knowledgeBlockSyntaxes() {
-  return [
-    LatexBlockSyntax(),
-    ...md.ExtensionSet.gitHubFlavored.blockSyntaxes
-        .where((syntax) => syntax is! md.FootnoteDefSyntax),
-  ];
-}
-
-/// GitHub-Flavored-Markdown plus Wiki-Links, Fußnoten, Formeln, Markierung und
+/// GitHub-Flavored-Markdown plus Wiki-Links, Formeln, Markierung und
 /// Emoji-Kürzel.
-md.ExtensionSet knowledgeExtensionSet({
-  required List<KnowledgeNote> notes,
-  required KnowledgeFootnotes footnotes,
-}) {
+md.ExtensionSet knowledgeExtensionSet({required List<KnowledgeNote> notes}) {
   return md.ExtensionSet(
-    [KnowledgeFootnoteDefinitionSyntax(), ...knowledgeBlockSyntaxes()],
+    [LatexBlockSyntax(), ...md.ExtensionSet.gitHubFlavored.blockSyntaxes],
     [
       KnowledgeWikiLinkSyntax(notes: notes),
-      KnowledgeFootnoteReferenceSyntax(footnotes),
       KnowledgeInlineMathSyntax(),
       KnowledgeHighlightSyntax(),
       md.EmojiSyntax(),
