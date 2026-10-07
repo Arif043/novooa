@@ -20,7 +20,7 @@ export const silentLogger: ApplicationLogger = {
 
 export function testWorkspace(overrides: Partial<LocalRuntimeWorkspaceContext> = {}): LocalRuntimeWorkspaceContext {
   return {
-    teamId: "team-1", userId: "user-1", logger: silentLogger, systemModelCatalog: undefined,
+    teamId: "team-1", userId: "user-1", logger: silentLogger, systemModelCatalog: undefined, modelCache: undefined,
     taskWorkflow: new Proxy({}, {get: () => () => {throw new Error("Kein Task-Workflow im Test.");}}) as never,
     fileEvents: noFileEventPublisher, webhooks: unavailableWebhookReceiver,
     ...overrides,

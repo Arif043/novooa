@@ -352,11 +352,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
         config: plugin.initial(),
         title: plugin.title,
         description: plugin.description,
-        outputName: _uniqueOutputName(
-          graph,
-          '',
-          '${plugin.outputBase}$number',
-        ),
+        outputName: _uniqueOutputName(graph, '', '${plugin.outputBase}$number'),
       );
     }
     // Dialogeingabe-Bausteine haben immer mehrere, eigenständig benannte

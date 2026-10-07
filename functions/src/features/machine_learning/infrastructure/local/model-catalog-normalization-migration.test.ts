@@ -1,4 +1,4 @@
-import {sql} from "drizzle-orm";
+import {getTableColumns, sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {resolve} from "node:path";
@@ -40,11 +40,13 @@ test("migration preserves model payloads, ownership, timestamps and team cascade
   await database.run(sql`INSERT INTO model_catalog SELECT 'system-model', title, description,
     translations_json, tags_json, 'system', NULL, runtime, artifact_reference_json, contract_json, created_at, updated_at FROM model_catalog`);
   await migrateCatalog(database);
-  const rows = await database.select().from(modelCatalog).orderBy(modelCatalog.id);
+  // Nur die Spalten nach 0015; spätere Migrationen (z. B. `origin`) laufen hier nicht.
+  const {origin: _origin, ...columnsAfter0015} = getTableColumns(modelCatalog);
+  const rows = await database.select(columnsAfter0015).from(modelCatalog).orderBy(modelCatalog.id);
   assert.deepEqual(rows, [originalModel, {...originalModel, id: "system-model", team_id: null}]);
   assert.deepEqual(await database.all(sql`PRAGMA foreign_key_check`), []);
   await database.run(sql`DELETE FROM teams WHERE id = 'team-1'`);
-  assert.deepEqual((await database.select().from(modelCatalog)).map((row) => row.id), ["system-model"]);
+  assert.deepEqual((await database.select({id: modelCatalog.id}).from(modelCatalog)).map((row) => row.id), ["system-model"]);
 });
 
 for (const invalidValue of ["scope = 'system'", "team_id = NULL", "runtime = 'unsupported'"]) {

@@ -103,6 +103,8 @@ export const modelCatalog = sqliteTable("model_catalog", {
   team_id: text("team_id").references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
   artifact_reference_json: text("artifact_reference_json").notNull(),
   contract_json: text("contract_json").notNull(),
+  /** `catalog`: aus dem globalen Katalog gecacht, `import`: selbst importiert. */
+  origin: text("origin", {enum: ["catalog", "import"]}).notNull().default("import"),
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [

@@ -239,31 +239,56 @@ Cloud: `modelCatalog/{modelId}` in Firestore. Lokal: SQLite-Tabelle
 `model_catalog` aus Migration `004_model_catalog.sql`. Beide Adapter
 implementieren den Domain-Port `ModelCatalog`.
 
-Die lokale Runtime liest den globalen Firestore-Katalog nach der Firebase-
-Anmeldung über `GET /v1/ml-models/catalog`. Eine Installation erfolgt über
-`POST /v1/ml-models/catalog/:modelId/install`; dabei wird die technische
-Distribution geladen, die Prüfsumme verifiziert und der Eintrag in den lokalen
-Teamkatalog übernommen. Öffentliche Hugging-Face-Modelle benötigen kein
-Betreiber-Token. Ein optionales `HF_TOKEN` dient ausschließlich lokalen,
-zugriffsbeschränkten Quellen und wird nicht ausgeliefert.
+Der globale Firestore-Katalog ist die **primäre Quelle** für ONNX-Modelle. Die
+lokale Runtime liest ihn nach der Firebase-Anmeldung über
+`GET /v1/ml-models/catalog` (ohne Firebase-Sitzung: `503`). Sie installiert
+Katalogmodelle nicht vorab, sondern **cacht** sie, sobald sie gebraucht werden:
+
+- **Auswahl im Aufgabenstudio:** Wählt man in einem ML-Baustein ein Modell aus dem
+  Katalog, startet `POST /v1/ml-models/catalog/:modelId/cache` den Download im
+  Hintergrund (`202`; `200`, wenn es schon lokal ist). Der Fortschritt steht unter
+  `GET /v1/ml-models/cache-status` (`downloading` oder `failed` mit Meldung);
+  Änderungen meldet das Realtime-Thema `model-cache`, das fertige Modell
+  zusätzlich `model-catalog`.
+- **Beim Lauf:** Fehlt ein Modell lokal, etwa nach dem Import einer Aufgabe oder
+  nachdem es aus dem Cache entfernt wurde, lädt der Lauf es vor der Inferenz nach
+  (`SelfCachingModelCatalog`). Gleichzeitige Anfragen für dasselbe Modell teilen
+  sich einen Download (`CacheSystemModel`).
+
+Beim Cachen werden die technische Distribution geladen, Größe und SHA-256 geprüft,
+der Modellvertrag gegen den Python-Sidecar validiert und der Eintrag als
+teamgebundener Eintrag mit `origin = catalog` gespeichert. Gecachte Modelle bleiben,
+bis sie manuell entfernt werden; es gibt keine automatische Bereinigung. Der
+Download-Status lebt nur im Speicher; nach einem Neustart zählt, was im Katalog
+steht. Öffentliche Hugging-Face-Modelle benötigen kein Betreiber-Token. Ein
+optionales `HF_TOKEN` dient ausschließlich lokalen, zugriffsbeschränkten Quellen
+und wird nicht ausgeliefert.
 
 ### Lokale Verwaltung
 
-In den lokalen Einstellungen ist der Tab **Machine Learning** verfügbar. Er
-zeigt alle für den lokalen Workspace verfügbaren ONNX-Katalogeinträge. Ein
-Import besteht genau aus zwei Dateien: einer Manifest-JSON und der dazugehörigen
-ONNX-Datei. Die Runtime erzeugt daraus die Artefakt-Prüfsumme, legt das Artefakt
-unter ihrem lokalen Runtime-Root ab und speichert einen teamgebundenen
-Katalogeintrag in SQLite. Der Tab und die Endpunkte existieren nicht in der
-Cloud-Variante.
+In den lokalen Einstellungen ist der Tab **Machine Learning** verfügbar. Er zeigt
+zwei Abschnitte: **Gecachte Modelle** (`origin = catalog`, mit Größe, laufenden
+oder gescheiterten Downloads und „Aus dem Cache entfernen“) und **Eigene Modelle**
+(`origin = import`). Den Katalog selbst durchsucht man im Aufgabenstudio, nicht in
+den Einstellungen. Die SQLite-Spalte `model_catalog.origin` (Migration
+`0020_model_catalog_origin.sql`) unterscheidet beide Herkünfte; ältere Einträge
+gelten als Import.
+
+Ein eigener Import besteht genau aus zwei Dateien: einer Manifest-JSON und der
+dazugehörigen ONNX-Datei. Die Runtime erzeugt daraus die Artefakt-Prüfsumme, legt
+das Artefakt unter ihrem lokalen Runtime-Root ab und speichert einen
+teamgebundenen Katalogeintrag in SQLite. Eigene Modelle erscheinen auch in der
+Modellsuche des Aufgabenstudios. Der Tab und die Endpunkte existieren nicht in
+der Cloud-Variante.
 
 ```text
-GET    /v1/ml-models
-GET    /v1/ml-models/catalog
-POST   /v1/ml-models/catalog/:modelId/install
-POST   /v1/ml-models/imports              { manifest }
-PUT    /v1/ml-models/imports/:id/artifact  application/onnx (Binärstream)
-DELETE /v1/ml-models/:id
+GET    /v1/ml-models                         gecachte und eigene Modelle (mit origin)
+GET    /v1/ml-models/catalog                 globaler Katalog (503 ohne Firebase-Sitzung)
+POST   /v1/ml-models/catalog/:modelId/cache  Hintergrund-Download starten
+GET    /v1/ml-models/cache-status            laufende und gescheiterte Downloads
+POST   /v1/ml-models/imports                 { manifest }
+PUT    /v1/ml-models/imports/:id/artifact    application/onnx (Binärstream)
+DELETE /v1/ml-models/:id                     aus dem Cache entfernen / Import löschen
 ```
 
 Der Client sendet zuerst das kleine Manifest und erhält eine kurzlebige Import-ID. Anschließend überträgt er das ONNX-Artefakt als einzelnen Binärstream per `PUT`. Die Runtime schreibt den Stream direkt in eine temporäre Datei, begrenzt ihn auf 2 GiB und berechnet Größe sowie SHA-256 beim Empfang. Erst wenn der gesamte Stream vorliegt und Manifest und Modellvertrag validiert sind, wird das Artefakt in den Katalog übernommen; die temporäre Datei wird danach entfernt. JSON-Anfragen der Runtime bleiben auf 1 MiB begrenzt.
@@ -273,10 +298,11 @@ Node-Gateway den privaten Python-Sidecar nach dessen registrierten Ein- und
 Ausgabetransformationen. Enthält das Manifest einen unbekannten Typ, lehnt die
 Runtime den Import mit einer verständlichen Validierungsmeldung ab. Der
 Python-Sidecar bleibt damit die verbindliche Quelle der unterstützten
-Transformationen. Importierte Modelle lassen sich aus dem Katalog entfernen;
-das unveränderliche Artefakt bleibt bis zu einer späteren Bereinigung im lokalen
-Runtime-Speicher erhalten. Systemmodelle sind in der Ansicht erkennbar, aber
-dort nicht löschbar.
+Transformationen. Beim Entfernen eines gecachten oder eigenen Modells löscht die
+Runtime auch dessen Artefaktdateien, sofern kein anderer Eintrag dieselbe
+Artefaktversion nutzt. Aufgaben mit einem entfernten Katalogmodell laden es beim
+nächsten Lauf erneut; ein entferntes eigenes Modell steht nicht mehr zur
+Verfügung.
 
 Artefakte liegen ausschließlich in der Infrastructure unter dem technischen
 Pfad `model-artifacts/{artifactId}/versions/{versionId}/model.onnx`. Dieser

@@ -14,6 +14,10 @@ import {type ModelArtifactDistribution} from "../model-artifact-distribution.js"
 import {LocalModelArtifactPublisher} from "./local-model-artifact-publisher.js";
 import {LocalModelArtifactUploadStore} from "./local-model-artifact-upload-store.js";
 import {modelCatalogRoutes} from "./local-model-catalog-routes.js";
+import {CacheSystemModel} from "../../domain/usecases/cache-system-model.js";
+import {InstallTeamModel} from "../../domain/usecases/install-team-model.js";
+import {CatalogSystemModelSource} from "./catalog-system-model-source.js";
+import {ModelCacheJobs} from "./model-cache-jobs.js";
 import {type ModelArtifactDownloader} from "./local-model-catalog-support.js";
 import {type ModelContractValidator} from "./python-model-contract-validator.js";
 import {type RuntimeSystemModel, type RuntimeSystemModelCatalog} from "./runtime-system-model-catalog.js";
@@ -46,37 +50,69 @@ test("installs a team-scoped ONNX model from a manifest and lists it", async () 
   }
 });
 
-test("lists global models without their distribution and installs one locally", async () => {
+test("lists global models without their distribution and caches one in the background", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-global-model-"));
   const catalog = new Catalog();
   const model = globalModel();
   const downloader = new Downloader();
+  const systemModelCatalog = new GlobalCatalog(model);
+  const cacheSystemModel = new CacheSystemModel(
+    catalog, new CatalogSystemModelSource(systemModelCatalog, downloader), new Validator(),
+    new InstallTeamModel(new LocalModelArtifactPublisher(directory), catalog),
+  );
+  const modelCache = {cacheSystemModel, jobs: new ModelCacheJobs("team-1", cacheSystemModel, new LocalRuntimeRealtimeNotifier(), new Logger())};
   const handler = testingRoutes(modelCatalogRoutes, {
     catalog: catalog,
     artifactPublisher: new LocalModelArtifactPublisher(directory),
     uploadStore: new LocalModelArtifactUploadStore(directory),
     contractValidator: new Validator(),
     notifier: new LocalRuntimeRealtimeNotifier(),
-    artifactDownloader: downloader,
-  }, {teamId: "team-1", logger: new Logger(), systemModelCatalog: new GlobalCatalog(model)});
+  }, {teamId: "team-1", logger: new Logger(), systemModelCatalog, modelCache});
 
   try {
     const listed = await handler.handle({method: "GET", url: "/v1/ml-models/catalog", body: {}});
-    const installed = await handler.handle({
-      method: "POST",
-      url: "/v1/ml-models/catalog/example-model/install",
-      body: {},
-    });
+    const started = await handler.handle({method: "POST", url: "/v1/ml-models/catalog/example-model/cache", body: {}});
+    const missing = await handler.handle({method: "POST", url: "/v1/ml-models/catalog/unknown/cache", body: {}});
+    await waitFor(() => catalog.entries.length === 1);
+    const again = await handler.handle({method: "POST", url: "/v1/ml-models/catalog/example-model/cache", body: {}});
+    const status = await handler.handle({method: "GET", url: "/v1/ml-models/cache-status", body: {}});
+    const local = await handler.handle({method: "GET", url: "/v1/ml-models", body: {}});
 
     assert.deepEqual(listed?.body, {items: [model.entry]});
     assert.equal(JSON.stringify(listed?.body).includes("huggingFace"), false);
-    assert.equal(installed?.statusCode, 201);
+    assert.deepEqual(started, {statusCode: 202, body: {modelId: "example-model", state: "downloading"}});
+    assert.equal(missing?.statusCode, 404);
+    assert.deepEqual(again, {statusCode: 200, body: {modelId: "example-model", state: "cached"}});
+    assert.deepEqual(status?.body, {items: []});
     assert.deepEqual(catalog.entries[0]?.scope, {type: "team", teamId: "team-1"});
+    assert.equal(catalog.entries[0]?.origin, "catalog");
+    assert.equal((local?.body as {items: {origin?: string}[]}).items[0]?.origin, "catalog");
     assert.equal(downloader.downloaded, true);
   } finally {
     await rm(directory, {recursive: true, force: true});
   }
 });
+
+test("caching needs the global catalog", async () => {
+  const handler = testingRoutes(modelCatalogRoutes, {
+    catalog: new Catalog(),
+    artifactPublisher: new LocalModelArtifactPublisher("/tmp/novooa-unused"),
+    uploadStore: new LocalModelArtifactUploadStore("/tmp/novooa-unused"),
+    contractValidator: new Validator(),
+    notifier: new LocalRuntimeRealtimeNotifier(),
+  }, {teamId: "team-1", logger: new Logger()});
+
+  const response = await handler.handle({method: "POST", url: "/v1/ml-models/catalog/example-model/cache", body: {}});
+
+  assert.equal(response?.statusCode, 503);
+});
+
+async function waitFor(condition: () => boolean): Promise<void> {
+  for (let attempt = 0; attempt < 100 && !condition(); attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  assert.ok(condition(), "Der Hintergrund-Download ist nicht fertig geworden.");
+}
 
 test("rejects a manifest whose transformation is not supported by the Python runtime", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-model-import-"));

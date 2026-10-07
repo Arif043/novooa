@@ -14,6 +14,12 @@ export type ModelTranslations = Readonly<Record<string, ModelTranslation>>;
 /** Ohne `tags` gelten die Tags der Rückfallsprache. */
 export type ModelTranslation = {title: string; description: string; tags?: readonly string[]};
 
+/**
+ * Woher ein lokaler Eintrag stammt: aus dem globalen Katalog gecacht oder selbst importiert
+ * (Manifest + ONNX-Datei). Fehlt bei Einträgen des globalen Katalogs selbst.
+ */
+export type ModelOrigin = "catalog" | "import";
+
 export type ModelCatalogEntry = {
   id: string;
   title: string;
@@ -22,6 +28,7 @@ export type ModelCatalogEntry = {
   translations?: ModelTranslations;
   tags: readonly string[];
   scope: ModelScope;
+  origin?: ModelOrigin;
   runtime: "onnx";
   artifactReference: ModelArtifactReference;
   contract: ModelContract;

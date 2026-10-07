@@ -141,6 +141,13 @@
       "when": 1791352806594,
       "tag": "0019_normalize_knowledge_links",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1791387065076,
+      "tag": "0020_model_catalog_origin",
+      "breakpoints": true
     }
   ]
 }

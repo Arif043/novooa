@@ -10,8 +10,7 @@ import {systemModelEntry, systemModelManifestFromUnknown} from "../cli/system-mo
 import {type LocalModelArtifactPublisher} from "./local-model-artifact-publisher.js";
 import {type LocalModelArtifactUploadStore, type StagedModelArtifact} from "./local-model-artifact-upload-store.js";
 import {
-  artifactReferenceFor, contentLength, isRequestError, type ModelArtifactDownloader, type SystemModelManifest,
-  validateContract,
+  artifactReferenceFor, contentLength, isRequestError, type SystemModelManifest, validateContract,
 } from "./local-model-catalog-support.js";
 import {type ModelContractValidator} from "./python-model-contract-validator.js";
 
@@ -21,12 +20,15 @@ export type ModelCatalogRoutesOptions = {
   uploadStore: LocalModelArtifactUploadStore;
   contractValidator: ModelContractValidator;
   notifier: {publish(topic: string): void};
-  artifactDownloader?: ModelArtifactDownloader;
 };
 
 const ModelEntry = Type.Object({
   id: Type.String(), title: Type.String(), description: Type.String(), translations: Type.Optional(Type.Unknown()), tags: Type.Array(Type.String()),
   scope: Type.Unknown(), runtime: Type.String(), artifactReference: Type.Unknown(), contract: Type.Unknown(),
+  origin: Type.Optional(Type.String()),
+});
+const CacheStatus = Type.Object({
+  modelId: Type.String(), state: Type.String(), message: Type.Optional(Type.String()),
 });
 const failures = {400: ErrorResponse, 404: ErrorResponse, 415: ErrorResponse, 500: ErrorResponse, 503: ErrorResponse};
 const ModelParams = IdParams("modelId");
@@ -52,22 +54,33 @@ export const modelCatalogRoutes: FastifyPluginAsyncTypebox<ModelCatalogRoutesOpt
       ({items: (await systemModelCatalog.list()).map((model) => entryDto(model.entry))}));
   });
 
-  app.post("/v1/ml-models/catalog/:modelId/install", {schema: {params: ModelParams, response: {...failures, 201: ModelEntry}}},
+  /**
+   * Lädt ein Katalogmodell im Hintergrund in den Cache. 200, wenn es schon gecacht ist; sonst 202 —
+   * der Fortschritt kommt über `/cache-status` und das Realtime-Thema `model-cache`.
+   */
+  app.post("/v1/ml-models/catalog/:modelId/cache", {schema: {params: ModelParams, response: {...failures, 200: CacheStatus, 202: CacheStatus}}},
     async (request, reply) => {
       const {workspace} = request;
-      const downloader = options.artifactDownloader;
-      if (workspace.systemModelCatalog === undefined || downloader === undefined) return reply.code(503).send(unavailableCatalog);
+      const {modelId} = request.params;
+      if (workspace.modelCache === undefined || workspace.systemModelCatalog === undefined) {
+        return reply.code(503).send(unavailableCatalog);
+      }
+      const modelCache = workspace.modelCache;
       const systemCatalog = workspace.systemModelCatalog;
-      return guarded(workspace, "catalog_install_failed", reply, async () => {
-        const model = await systemCatalog.find(request.params.modelId);
-        if (model === null || model.entry.scope.type !== "system") {
+      return guarded(workspace, "cache_failed", reply, async () => {
+        if (await options.catalog.findAvailableFor(workspace.teamId, modelId) !== null) {
+          return reply.code(200).send({modelId, state: "cached"});
+        }
+        if (await systemCatalog.find(modelId) === null) {
           return reply.code(404).send({error: "Der globale Katalogeintrag wurde nicht gefunden."});
         }
-        const artifact = await downloader.download(model.entry.artifactReference, model.distribution);
-        workspace.logger.info("local_model_catalog.installed_from_catalog", {modelId: model.entry.id, teamId: workspace.teamId});
-        return reply.code(201).send(entryDto(await install(workspace, model.entry, artifact)));
+        modelCache.jobs.start(modelId);
+        return reply.code(202).send({modelId, state: "downloading"});
       });
     });
+
+  app.get("/v1/ml-models/cache-status", {schema: {response: {200: ItemsOf(CacheStatus)}}},
+    async (request) => ({items: request.workspace.modelCache?.jobs.list() ?? []}));
 
   app.post("/v1/ml-models/imports", {
     schema: {body: Type.Object({manifest: Type.Unknown()}), response: {...failures, 201: Type.Object({importId: Type.String()})}},
@@ -100,13 +113,20 @@ export const modelCatalogRoutes: FastifyPluginAsyncTypebox<ModelCatalogRoutesOpt
       const {teamId} = request.workspace;
       const entry = await options.catalog.findAvailableFor(teamId, request.params.modelId);
       if (entry === null || entry.scope.type !== "team" || entry.scope.teamId !== teamId) return reply.code(404).send(missingEntry);
-      await options.artifactPublisher.remove(entry.artifactReference);
       if (!await options.catalog.removeTeamEntry(teamId, request.params.modelId)) return reply.code(404).send(missingEntry);
+      // Gibt Speicher frei, solange kein anderer Eintrag dieselbe Artefaktversion nutzt.
+      const remaining = await options.catalog.listAvailableFor(teamId);
+      if (!remaining.some((other) => sameArtifact(other, entry))) await options.artifactPublisher.remove(entry.artifactReference);
       request.workspace.logger.info("local_model_catalog.removed", {modelId: request.params.modelId, teamId});
       options.notifier.publish("model-catalog");
       return reply.code(204).send(null);
     }));
 };
+
+function sameArtifact(left: ModelCatalogEntry, right: ModelCatalogEntry): boolean {
+  return left.artifactReference.artifactId === right.artifactReference.artifactId &&
+    left.artifactReference.versionId === right.artifactReference.versionId;
+}
 
 function entryDto(entry: ModelCatalogEntry) {
   return {...entry, tags: [...entry.tags]};

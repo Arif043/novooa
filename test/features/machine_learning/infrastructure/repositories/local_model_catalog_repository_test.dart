@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/core/network/workspace_api_client.dart';
 import 'package:syscat2/core/network/workspace_realtime_channel.dart';
+import 'package:syscat2/features/machine_learning/domain/entities/model_cache_status.dart';
+import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_entry.dart';
 import 'package:syscat2/features/machine_learning/domain/entities/model_catalog_import.dart';
 import 'package:syscat2/features/machine_learning/infrastructure/repositories/local_model_catalog_repository.dart';
 
@@ -36,6 +38,8 @@ void main() {
     expect(entries.single.outputs.single.workflowType, 'json');
     expect(entries.single.outputs.single.parameters.single.defaultValue, 3);
     expect(entries.single.isManagedLocally, isTrue);
+    // Ohne `origin` (ältere Runtime) gilt ein Teameintrag als eigener Import.
+    expect(entries.single.origin, ModelOrigin.import);
     expect(client.postPath, '/v1/ml-models/imports');
     expect(client.postBody, {
       'manifest': {'id': 'model', 'title': 'Modell'},
@@ -52,7 +56,36 @@ void main() {
     final entries = await repository.loadGlobalEntries();
 
     expect(entries.single.outputs.single.workflowType, 'audio');
+    expect(entries.single.origin, isNull);
   });
+
+  test('starts a background download and maps the cache status', () async {
+    final client = _CacheClient();
+    final repository = LocalModelCatalogRepository(client, _channel());
+
+    await repository.cacheGlobalEntry('whisper base');
+    final statuses = await repository.watchCacheStatuses().first;
+
+    expect(client.postPath, '/v1/ml-models/catalog/whisper%20base/cache');
+    expect(statuses, const [
+      ModelCacheStatus(modelId: 'a', state: ModelCacheState.downloading),
+      ModelCacheStatus(
+        modelId: 'b',
+        state: ModelCacheState.failed,
+        message: 'Netzwerkfehler.',
+      ),
+    ]);
+  });
+}
+
+class _CacheClient extends _Client {
+  @override
+  Future<Map<String, Object?>> get(String path) async => {
+    'items': [
+      {'modelId': 'a', 'state': 'downloading'},
+      {'modelId': 'b', 'state': 'failed', 'message': 'Netzwerkfehler.'},
+    ],
+  };
 }
 
 WorkspaceRealtimeChannel _channel() =>

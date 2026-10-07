@@ -9,12 +9,13 @@ import '../../../machine_learning/presentation/cubits/model_catalog_state.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
-import 'model_inference_input_mapping_field.dart';
+import 'model_inference/model_inference_input_section.dart';
+import 'model_inference/model_picker_field.dart';
+import 'model_inference/model_search_filter.dart';
 import 'model_input_parameter_configuration.dart';
 import 'model_inference_output_configuration.dart';
-import 'speech_text_mapping_field.dart';
 
-enum SpeechModelDirection { textToSpeech, speechToText }
+export 'model_inference/model_search_filter.dart' show SpeechModelDirection;
 
 class ModelInferenceWidget extends StatelessWidget {
   const ModelInferenceWidget({
@@ -46,14 +47,14 @@ class _ModelInferenceCatalog extends StatelessWidget {
     if (!_hasCatalog(context)) {
       return _ModelInferenceContent(
         node: node,
-        models: const [],
+        state: null,
         speechDirection: speechDirection,
       );
     }
     return BlocBuilder<ModelCatalogCubit, ModelCatalogState>(
       builder: (context, state) => _ModelInferenceContent(
         node: node,
-        models: state.entries,
+        state: state,
         speechDirection: speechDirection,
       ),
     );
@@ -72,29 +73,20 @@ class _ModelInferenceCatalog extends StatelessWidget {
 class _ModelInferenceContent extends StatelessWidget {
   const _ModelInferenceContent({
     required this.node,
-    required this.models,
+    required this.state,
     required this.speechDirection,
   });
 
   final WorkflowNode node;
-  final List<ModelCatalogEntry> models;
+  final ModelCatalogState? state;
   final SpeechModelDirection? speechDirection;
 
   ModelInferenceNodeConfig get _config =>
       node.config as ModelInferenceNodeConfig;
 
-  List<ModelCatalogEntry> get _availableModels => switch (speechDirection) {
-    SpeechModelDirection.textToSpeech =>
-      models.where(_isTextToSpeechModel).toList(growable: false),
-    SpeechModelDirection.speechToText =>
-      models.where(_isSpeechToTextModel).toList(growable: false),
-    null => models,
-  };
-
   @override
   Widget build(BuildContext context) {
-    final availableModels = _availableModels;
-    final model = _modelFor(_config.modelId, availableModels);
+    final model = state?.entryById(_config.modelId);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: SyscatTheme.nodePanelDecoration(context),
@@ -105,12 +97,12 @@ class _ModelInferenceContent extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           _ModelSelection(
             node: node,
-            models: availableModels,
-            selectedModel: model,
+            state: state,
+            speechDirection: speechDirection,
           ),
           if (model != null) ...[
             const SizedBox(height: AppSpacing.md),
-            _InputSection(
+            ModelInferenceInputSection(
               node: node,
               model: model,
               speechDirection: speechDirection,
@@ -136,28 +128,11 @@ class _ModelInferenceContent extends StatelessWidget {
     );
   }
 
-  ModelCatalogEntry? _modelFor(
-    String modelId,
-    List<ModelCatalogEntry> availableModels,
-  ) {
-    for (final model in availableModels) {
-      if (model.id == modelId) return model;
-    }
-    return null;
-  }
-
   String get _title => switch (speechDirection) {
     SpeechModelDirection.textToSpeech => 'Text vorlesen',
     SpeechModelDirection.speechToText => 'Audio transkribieren',
     null => 'Modell ausführen',
   };
-
-  bool _isTextToSpeechModel(ModelCatalogEntry model) =>
-      model.inputs.any((input) => input.source == ModelInputSource.text) &&
-      model.outputs.any((output) => output.workflowType == 'audio');
-
-  bool _isSpeechToTextModel(ModelCatalogEntry model) =>
-      model.inputs.any((input) => input.source == ModelInputSource.audio);
 
   ModelInferenceInputMapping _mappingFor(ModelManifestInput input) {
     for (final mapping in _config.inputMappings) {
@@ -181,159 +156,36 @@ class _ModelInferenceContent extends StatelessWidget {
   }
 }
 
-class _InputSection extends StatelessWidget {
-  const _InputSection({
-    required this.node,
-    required this.model,
-    required this.speechDirection,
-    required this.mappings,
-    required this.mappingFor,
-  });
-
-  final WorkflowNode node;
-  final ModelCatalogEntry model;
-  final SpeechModelDirection? speechDirection;
-  final List<ModelInferenceInputMapping> mappings;
-  final ModelInferenceInputMapping Function(ModelManifestInput) mappingFor;
-
-  @override
-  Widget build(BuildContext context) {
-    if (speechDirection == SpeechModelDirection.textToSpeech) {
-      return SpeechTextMappingField(
-        nodeId: node.id.value,
-        value: _textMapping().workflowMapping,
-        onChanged: (value) => _updateTextMappings(context, value),
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Modelleingaben', style: Theme.of(context).textTheme.titleSmall),
-        const SizedBox(height: AppSpacing.sm),
-        for (final input in model.inputs.where(
-          (input) => input.requiresWorkflowMapping,
-        ))
-          ModelInferenceInputMappingField(
-            nodeId: node.id,
-            input: input,
-            mapping: mappingFor(input),
-          ),
-      ],
-    );
-  }
-
-  ModelInferenceInputMapping _textMapping() {
-    final input = model.inputs.firstWhere(
-      (input) =>
-          input.requiresWorkflowMapping &&
-          input.source == ModelInputSource.text,
-    );
-    return mappingFor(input);
-  }
-
-  void _updateTextMappings(BuildContext context, String value) {
-    final updated = model.inputs
-        .where((input) => input.requiresWorkflowMapping)
-        .map((input) {
-          final mapping = mappingFor(input);
-          return input.source == ModelInputSource.text
-              ? mapping.copyWith(workflowMapping: value)
-              : mapping;
-        })
-        .toList(growable: false);
-    context.read<TaskBuilderCubit>().updateModelInferenceWorkflowMappings(
-      node.id,
-      updated,
-    );
-  }
-}
-
 class _ModelSelection extends StatelessWidget {
   const _ModelSelection({
     required this.node,
-    required this.models,
-    required this.selectedModel,
+    required this.state,
+    required this.speechDirection,
   });
 
   final WorkflowNode node;
-  final List<ModelCatalogEntry> models;
-  final ModelCatalogEntry? selectedModel;
+  final ModelCatalogState? state;
+  final SpeechModelDirection? speechDirection;
 
   @override
   Widget build(BuildContext context) {
-    if (models.isEmpty) return _manualModelIdField(context);
-    return DropdownButtonFormField<String>(
-      initialValue: selectedModel?.id,
-      decoration: const InputDecoration(labelText: 'Modell'),
-      items: models
-          .map((model) => _itemFor(context, model))
-          .toList(growable: false),
-      onChanged: (modelId) => _select(context, modelId),
-    );
-  }
-
-  Widget _manualModelIdField(BuildContext context) {
     final config = node.config as ModelInferenceNodeConfig;
+    final catalog = state;
+    if (catalog != null) {
+      return ModelPickerField(
+        node: node,
+        modelId: config.modelId,
+        state: catalog,
+        speechDirection: speechDirection,
+      );
+    }
+    // Ohne Modellkatalog (z. B. Cloud) bleibt nur die Eingabe der Modell-ID.
     return TextFormField(
       initialValue: config.modelId,
       decoration: const InputDecoration(hintText: 'Modell-ID'),
       onChanged: (modelId) => context
           .read<TaskBuilderCubit>()
           .updateModelInference(node.id, modelId),
-    );
-  }
-
-  DropdownMenuItem<String> _itemFor(
-    BuildContext context,
-    ModelCatalogEntry model,
-  ) {
-    final languageTag = Localizations.localeOf(context).toLanguageTag();
-    return DropdownMenuItem(
-      value: model.id,
-      child: Text(model.titleFor(languageTag)),
-    );
-  }
-
-  void _select(BuildContext context, String? modelId) {
-    if (modelId == null) return;
-    final model = models.firstWhere((entry) => entry.id == modelId);
-    final mappings = model.inputs
-        .where((input) => input.requiresWorkflowMapping)
-        .map(
-          (input) => ModelInferenceInputMapping(
-            modelInputName: input.name,
-            workflowMapping: '',
-            sourceType: input.source.name,
-            dataType: input.dataType,
-            shape: input.shape,
-          ),
-        )
-        .toList(growable: false);
-    final outputParameters = model.outputs
-        .expand(
-          (output) => output.parameters.map(
-            (parameter) => ModelInferenceOutputParameter(
-              outputName: output.tensorName,
-              name: parameter.name,
-              value: parameter.defaultValue,
-            ),
-          ),
-        )
-        .toList(growable: false);
-    final settings = model.settings
-        .map(
-          (parameter) => ModelInferenceSetting(
-            name: parameter.name,
-            valueTemplate: '${parameter.control.initialValue()}',
-          ),
-        )
-        .toList(growable: false);
-    context.read<TaskBuilderCubit>().selectModelInference(
-      node.id,
-      model.id,
-      mappings,
-      outputParameters,
-      settings,
     );
   }
 }

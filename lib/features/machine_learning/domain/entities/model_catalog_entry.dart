@@ -4,6 +4,15 @@ import 'model_manifest_input_parameter.dart';
 
 export 'model_manifest_input_parameter.dart';
 
+/// Herkunft eines lokal vorliegenden Modells.
+enum ModelOrigin {
+  /// Aus dem globalen Modellkatalog gecacht.
+  catalog,
+
+  /// Selbst importiert (Manifest + ONNX-Datei).
+  import,
+}
+
 class ModelCatalogEntry extends Equatable {
   const ModelCatalogEntry({
     required this.id,
@@ -16,7 +25,7 @@ class ModelCatalogEntry extends Equatable {
     required this.outputs,
     required this.outputCount,
     required this.sizeBytes,
-    required this.isManagedLocally,
+    this.origin,
   });
 
   final String id;
@@ -31,7 +40,14 @@ class ModelCatalogEntry extends Equatable {
   final List<ModelManifestOutput> outputs;
   final int outputCount;
   final int sizeBytes;
-  final bool isManagedLocally;
+
+  /// `null`: Eintrag des globalen Katalogs, der lokal (noch) nicht vorliegt.
+  final ModelOrigin? origin;
+
+  /// Liegt in der Runtime vor — gecacht oder selbst importiert.
+  bool get isManagedLocally => origin != null;
+  bool get isCached => origin == ModelOrigin.catalog;
+  bool get isImported => origin == ModelOrigin.import;
 
   @override
   List<Object?> get props => [
@@ -45,7 +61,7 @@ class ModelCatalogEntry extends Equatable {
     outputs,
     outputCount,
     sizeBytes,
-    isManagedLocally,
+    origin,
   ];
 
   int get inputCount => inputs.length;

@@ -91,7 +91,8 @@ import '../../features/machine_learning/domain/usecases/import_model_catalog_ent
 import '../../features/machine_learning/domain/usecases/remove_model_catalog_entry.dart';
 import '../../features/machine_learning/domain/usecases/watch_model_catalog_entries.dart';
 import '../../features/machine_learning/domain/usecases/load_global_model_catalog.dart';
-import '../../features/machine_learning/domain/usecases/install_global_model.dart';
+import '../../features/machine_learning/domain/usecases/cache_global_model.dart';
+import '../../features/machine_learning/domain/usecases/watch_model_cache_statuses.dart';
 import '../../features/machine_learning/infrastructure/repositories/local_model_catalog_repository.dart';
 import '../../features/machine_learning/presentation/cubits/model_catalog_cubit.dart';
 import '../../features/task_builder/domain/repositories/task_repository.dart';
@@ -488,7 +489,10 @@ Future<void> configureStandaloneDependencies(
       () => LoadGlobalModelCatalog(locator<GlobalModelCatalogRepository>()),
     )
     ..registerLazySingleton(
-      () => InstallGlobalModel(locator<GlobalModelCatalogRepository>()),
+      () => CacheGlobalModel(locator<GlobalModelCatalogRepository>()),
+    )
+    ..registerLazySingleton(
+      () => WatchModelCacheStatuses(locator<GlobalModelCatalogRepository>()),
     )
     ..registerLazySingleton(
       () => LoadRuntimeLicenseStatus(locator<RuntimeLicenseRepository>()),
@@ -617,7 +621,8 @@ Future<void> configureStandaloneDependencies(
         locator<ImportModelCatalogEntry>(),
         locator<RemoveModelCatalogEntry>(),
         locator<LoadGlobalModelCatalog>(),
-        locator<InstallGlobalModel>(),
+        locator<CacheGlobalModel>(),
+        locator<WatchModelCacheStatuses>(),
       ),
     )
     ..registerFactory(

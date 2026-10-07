@@ -17,6 +17,7 @@ type ModelCatalogRow = {
   team_id: string | null;
   artifact_reference_json: string;
   contract_json: string;
+  origin: "catalog" | "import";
 };
 
 export class SQLiteModelCatalog implements TeamModelCatalog {
@@ -28,7 +29,8 @@ export class SQLiteModelCatalog implements TeamModelCatalog {
     const values = {id: data.id, title: data.title, description: data.description,
       translations_json: JSON.stringify(data.translations), tags_json: JSON.stringify(data.tags),
       team_id: data.teamId,
-      artifact_reference_json: JSON.stringify(data.artifactReference), contract_json: JSON.stringify(data.contract)};
+      artifact_reference_json: JSON.stringify(data.artifactReference), contract_json: JSON.stringify(data.contract),
+      origin: data.origin ?? "import"};
     await this.database.insert(modelCatalog).values(values)
       .onConflictDoUpdate({target: modelCatalog.id, set: {...values, updated_at: sql`CURRENT_TIMESTAMP`}});
   }
@@ -74,6 +76,8 @@ function entryFromRow(row: ModelCatalogRow): ModelCatalogEntry {
       "Die gespeicherte Modell-Artefakt-Referenz ist ungültig.",
     ),
     contract: parseJson(row.contract_json, "Der gespeicherte Modellvertrag ist ungültig."),
+    // Systemeinträge ohne Team haben keine lokale Herkunft.
+    ...(row.team_id === null ? {} : {origin: row.origin}),
   });
 }
 

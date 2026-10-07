@@ -62,7 +62,10 @@ const bausteinGroups = <String, List<BausteinChoice>>{
     BausteinChoice(.dialogInput),
     BausteinChoice(.mediaInput),
   ],
-  'Externe Systeme': [BausteinChoice(.httpRequest), BausteinChoice(.readWebhook)],
+  'Externe Systeme': [
+    BausteinChoice(.httpRequest),
+    BausteinChoice(.readWebhook),
+  ],
   'Kommunikation': [
     BausteinChoice(.readChannelEvent, kind: ChannelEventKind.email),
     BausteinChoice(.readChannelEvent, kind: ChannelEventKind.whatsapp),
@@ -123,11 +126,13 @@ class _BausteinPaletteState extends State<BausteinPalette> {
             // Ohne Verbindungs-Dienst (Cloud) gäbe es den Baustein, aber keine Ausführung.
             .where(
               (choice) =>
-                  httpAvailable || choice.primitive != WorkflowPrimitive.httpRequest,
+                  httpAvailable ||
+                  choice.primitive != WorkflowPrimitive.httpRequest,
             )
             .where(
               (choice) =>
-                  webhookAvailable || choice.primitive != WorkflowPrimitive.readWebhook,
+                  webhookAvailable ||
+                  choice.primitive != WorkflowPrimitive.readWebhook,
             )
             .toList(),
     };

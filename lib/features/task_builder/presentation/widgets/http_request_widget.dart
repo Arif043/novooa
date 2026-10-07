@@ -44,7 +44,8 @@ class HttpRequestWidget extends StatelessWidget {
             selectedId: config.connectionId,
             connections: connections,
             noneLabel: 'Keine (vollständige URL angeben)',
-            onChanged: (id) => _update(context, (c) => c.copyWith(connectionId: id)),
+            onChanged: (id) =>
+                _update(context, (c) => c.copyWith(connectionId: id)),
           ),
           const SizedBox(height: AppSpacing.sm),
           Row(
@@ -110,7 +111,10 @@ class HttpRequestWidget extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             SegmentedButton<HttpBodyType>(
               segments: const [
-                ButtonSegment(value: HttpBodyType.none, label: Text('Kein Body')),
+                ButtonSegment(
+                  value: HttpBodyType.none,
+                  label: Text('Kein Body'),
+                ),
                 ButtonSegment(value: HttpBodyType.json, label: Text('JSON')),
                 ButtonSegment(value: HttpBodyType.text, label: Text('Text')),
               ],
@@ -224,7 +228,8 @@ class _NameValueList extends StatelessWidget {
                     value: items[index].name,
                     suggestions: suggestions,
                     decoration: const InputDecoration(labelText: 'Name'),
-                    onChanged: (name) => _replace(index, items[index].copyWith(name: name)),
+                    onChanged: (name) =>
+                        _replace(index, items[index].copyWith(name: name)),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -234,7 +239,8 @@ class _NameValueList extends StatelessWidget {
                     value: items[index].value,
                     suggestions: suggestions,
                     decoration: const InputDecoration(labelText: 'Wert'),
-                    onChanged: (value) => _replace(index, items[index].copyWith(value: value)),
+                    onChanged: (value) =>
+                        _replace(index, items[index].copyWith(value: value)),
                   ),
                 ),
                 IconButton(

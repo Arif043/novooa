@@ -7,7 +7,7 @@ import '../../domain/entities/model_catalog_import.dart';
 import '../cubits/model_catalog_cubit.dart';
 import '../cubits/model_catalog_state.dart';
 import 'model_catalog_list.dart';
-import 'global_model_catalog_list.dart';
+import 'model_download_list.dart';
 import 'model_import_picker.dart';
 import '../../../settings/presentation/widgets/settings_section.dart';
 
@@ -53,6 +53,20 @@ class _MachineLearningSettingsTabState
   }
 }
 
+class _Heading extends StatelessWidget {
+  const _Heading(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+    );
+  }
+}
+
 class _Content extends StatelessWidget {
   const _Content({required this.state});
 
@@ -65,19 +79,30 @@ class _Content extends StatelessWidget {
       child: SettingsSection(
         icon: Icons.memory_outlined,
         title: 'Machine Learning',
-        description: 'Verwalte lokale ONNX-Modelle und ihre Manifeste.',
+        description:
+            'Modelle aus dem Katalog, die diese Runtime gecacht hat, und '
+            'eigene ONNX-Modelle.',
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ModelCatalogList(state: state),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'Globale Modelle',
-              style: Theme.of(context).textTheme.titleMedium,
+            const _Heading('Gecachte Modelle'),
+            ModelDownloadList(state: state),
+            ModelCatalogList(
+              state: state,
+              entries: state.cachedEntries,
+              emptyText:
+                  'Noch keine Modelle gecacht. Wähle im Aufgabenstudio in einem '
+                  'ML-Baustein ein Modell aus dem Katalog, dann lädt die '
+                  'Runtime es herunter.',
             ),
-            const SizedBox(height: AppSpacing.sm),
-            GlobalModelCatalogList(state: state),
             const SizedBox(height: AppSpacing.lg),
+            const _Heading('Eigene Modelle'),
+            ModelCatalogList(
+              state: state,
+              entries: state.importedEntries,
+              emptyText: 'Noch keine eigenen ONNX-Modelle importiert.',
+            ),
+            const SizedBox(height: AppSpacing.md),
             Align(
               alignment: Alignment.centerRight,
               child: FilledButton.icon(

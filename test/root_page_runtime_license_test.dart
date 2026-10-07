@@ -29,7 +29,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Runtime aktivieren'), findsOneWidget);
+    expect(find.text('Lizenz aktivieren'), findsWidgets);
     expect(tester.takeException(), isNull);
     await cubit.close();
   });

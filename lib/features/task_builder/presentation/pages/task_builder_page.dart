@@ -49,7 +49,9 @@ class TaskBuilderPage extends StatelessWidget {
         ),
         if (serviceLocator<WorkspaceCapabilities>().modelCatalog)
           BlocProvider(
-            create: (_) => serviceLocator<ModelCatalogCubit>()..load(),
+            create: (_) => serviceLocator<ModelCatalogCubit>()
+              ..load()
+              ..loadGlobal(),
           ),
         if (connectionsAvailable())
           BlocProvider(

@@ -4,6 +4,7 @@ import {
 } from "../domain/entities/model-artifact-reference.js";
 import {
   type ModelCatalogEntry,
+  type ModelOrigin,
   type ModelScope,
   type ModelTranslations,
   validateModelCatalogEntry,
@@ -21,6 +22,7 @@ export type ModelCatalogEntryData = {
   runtime: unknown;
   artifactReference: unknown;
   contract: unknown;
+  origin?: unknown;
 };
 
 export function modelCatalogEntryFromData(
@@ -37,6 +39,7 @@ export function modelCatalogEntryFromData(
     runtime: runtimeFrom(data.runtime),
     artifactReference: artifactFrom(data.artifactReference),
     contract: modelContractFromUnknown(data.contract),
+    ...originFrom(data.origin),
   };
   validateModelCatalogEntry(entry);
   return entry;
@@ -54,7 +57,14 @@ export function modelCatalogEntryData(entry: ModelCatalogEntry) {
     runtime: entry.runtime,
     artifactReference: {...entry.artifactReference},
     contract: entry.contract,
+    ...(entry.origin === undefined ? {} : {origin: entry.origin}),
   };
+}
+
+function originFrom(value: unknown): {origin?: ModelOrigin} {
+  if (value === undefined || value === null) return {};
+  if (value === "catalog" || value === "import") return {origin: value};
+  throw new Error("Die Herkunft des Modells ist ungültig.");
 }
 
 /** `undefined`/`null` (ältere Einträge ohne Übersetzungen) ergibt keine Übersetzungen. */

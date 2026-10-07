@@ -15,10 +15,8 @@ enum HttpRequestMethod {
   /// Nur diese Methoden senden einen Body.
   bool get sendsBody => this != get;
 
-  static HttpRequestMethod fromWire(Object? value) => values.firstWhere(
-    (method) => method.wire == value,
-    orElse: () => get,
-  );
+  static HttpRequestMethod fromWire(Object? value) =>
+      values.firstWhere((method) => method.wire == value, orElse: () => get);
 }
 
 enum HttpBodyType {
@@ -26,10 +24,8 @@ enum HttpBodyType {
   json,
   text;
 
-  static HttpBodyType fromName(Object? value) => values.firstWhere(
-    (type) => type.name == value,
-    orElse: () => none,
-  );
+  static HttpBodyType fromName(Object? value) =>
+      values.firstWhere((type) => type.name == value, orElse: () => none);
 }
 
 /// Ein Name-Wert-Paar (Query-Parameter oder Header); der Wert darf

@@ -1,5 +1,6 @@
 import {type FastifyInstance} from "fastify";
 import {type FileEventPublisher} from "../../features/files/domain/repositories/file-event-publisher.js";
+import {type LocalModelCache} from "../../features/machine_learning/infrastructure/local/local-model-cache.js";
 import {type RuntimeSystemModelCatalog} from "../../features/machine_learning/infrastructure/local/runtime-system-model-catalog.js";
 import {type WebhookReceiver} from "../../features/webhooks/domain/usecases/receive-webhook.js";
 import {type TaskWorkflow} from "../../features/task_execution/domain/usecases/task-workflow.js";
@@ -22,6 +23,8 @@ export type LocalRuntimeWorkspaceContext = {
   webhooks: WebhookReceiver;
   /** Nur vorhanden, wenn die Runtime eine Firebase-Sitzung hat. */
   systemModelCatalog: RuntimeSystemModelCatalog | undefined;
+  /** Lädt Katalogmodelle in den lokalen Cache; wie der Katalog nur mit Firebase-Sitzung. */
+  modelCache: LocalModelCache | undefined;
 };
 
 declare module "fastify" {

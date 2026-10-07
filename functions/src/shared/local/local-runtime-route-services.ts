@@ -14,7 +14,6 @@ import {SQLiteFolderAncestry} from "../../features/files/infrastructure/local/sq
 import {TriggerCycleGuard} from "../../features/scheduling/domain/usecases/trigger-cycle-guard.js";
 import {SQLiteTaskTriggerStore} from "../../features/scheduling/infrastructure/local/sqlite-task-trigger-store.js";
 import {type LocalRuntimeWorkspaceContext} from "./local-runtime-workspace-context.js";
-import path from "node:path";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {SQLiteDocumentStore} from "../../features/data/infrastructure/local/sqlite-document-store.js";
 import {SQLiteFileSettingsStore} from "../../features/files/infrastructure/local/sqlite-file-settings-store.js";
@@ -24,7 +23,6 @@ import {EncryptedSQLiteLanguageModelSecretStore} from "../../features/language_m
 import {SQLiteLanguageModelCatalog} from "../../features/language_models/infrastructure/local/sqlite-language-model-catalog.js";
 import {SQLiteLanguageModelConfigurationStore} from "../../features/language_models/infrastructure/local/sqlite-language-model-configuration-store.js";
 import {SQLiteLanguageModelDefaultsStore} from "../../features/language_models/infrastructure/local/sqlite-language-model-defaults-store.js";
-import {HuggingFaceModelArtifactDownloader} from "../../features/machine_learning/infrastructure/local/hugging-face-model-artifact-downloader.js";
 import {LocalModelArtifactPublisher} from "../../features/machine_learning/infrastructure/local/local-model-artifact-publisher.js";
 import {LocalModelArtifactUploadStore} from "../../features/machine_learning/infrastructure/local/local-model-artifact-upload-store.js";
 import {type ModelCatalogRoutesOptions} from "../../features/machine_learning/infrastructure/local/local-model-catalog-routes.js";
@@ -113,8 +111,5 @@ function modelCatalogOptions(
     uploadStore: new LocalModelArtifactUploadStore(runtimeRoot),
     contractValidator: sidecarUrl ? new PythonModelContractValidator(sidecarUrl) : new UnavailablePythonModelContractValidator(),
     notifier,
-    artifactDownloader: new HuggingFaceModelArtifactDownloader(
-      path.join(runtimeRoot, "model-cache"), process.env.HF_TOKEN?.trim() || undefined,
-    ),
   };
 }

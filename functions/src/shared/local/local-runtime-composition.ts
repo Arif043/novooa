@@ -1,3 +1,4 @@
+import {createLocalModelCache} from "../../features/machine_learning/infrastructure/local/local-model-cache.js";
 import {type FileEventPublisher, noFileEventPublisher} from "../../features/files/domain/repositories/file-event-publisher.js";
 import {SQLiteFolderAncestry} from "../../features/files/infrastructure/local/sqlite-folder-ancestry.js";
 import {TokenBucketRateLimiter} from "../rate_limiting/domain/usecases/token-bucket-rate-limiter.js";
@@ -141,6 +142,11 @@ export function createLocalRuntimeComposition(
   const outboundHttpClient = new ConnectionHttpClient(new StoredConnectionAuthorizer(
     new SQLiteConnectionStore(options.database, languageModelSecretStore), new OAuthTokenProvider(),
   ));
+  const systemModelCatalog = firebaseSession === undefined ? undefined : new FirebaseRuntimeModelCatalog(firebaseSession);
+  const modelCache = systemModelCatalog === undefined ? undefined : createLocalModelCache({
+    database: options.database, runtimeRoot: options.runtimeRoot, teamId: options.workspace.teamId,
+    systemModelCatalog, notifier: realtimeNotifier, logger: applicationLogger,
+  });
   taskWorkflow = createLocalTaskWorkflow({
     database: options.database, runtimeRoot: options.runtimeRoot, signedLicense: options.signedLicense,
     taskRunStore, teamFileStore, taskRunDispatcher, logger: applicationLogger,
@@ -148,6 +154,7 @@ export function createLocalRuntimeComposition(
     documentStore, mailRelay, pushRelay,
     executorRegistry: registerIntegrationPlugins(createDefaultNodeExecutorRegistry()),
     outboundHttpClient,
+    modelCache,
   });
   const webhookBuckets = new InMemoryBucketStateStore();
   const webhooks = new ReceiveWebhook({
@@ -172,7 +179,8 @@ export function createLocalRuntimeComposition(
     taskWorkflow,
     fileEvents,
     webhooks,
-    systemModelCatalog: firebaseSession === undefined ? undefined : new FirebaseRuntimeModelCatalog(firebaseSession),
+    systemModelCatalog,
+    modelCache,
   };
   return {
     workspaceContext,

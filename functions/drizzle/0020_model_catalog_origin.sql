@@ -1,0 +1,1 @@
+ALTER TABLE `model_catalog` ADD `origin` text DEFAULT 'import' NOT NULL;
