@@ -948,6 +948,20 @@ dessen Infrastructure-Bereich.
   Upserts direkt. `sql` wird nur für SQLite-Ausdrücke eingesetzt. Transaktionen
   verwenden explizit `tx`; verschachtelte Transaktionen nutzen Savepoints.
   Job-Leases werden atomar mit `UPDATE … RETURNING` beansprucht.
+- Seit `0012_normalize_run_dependents.sql` speichern `task_run_jobs` und
+  `task_run_steps` keine eigene `team_id` mehr. Das Team ergibt sich über den
+  Fremdschlüssel `run_id` aus `task_runs`. Pro Run gibt es einen Queue-Job;
+  ein Schrittergebnis wird durch `run_id` + `step_path` identifiziert.
+  Die SQLite-Adapter prüfen bei Schreibzugriffen innerhalb einer Transaktion
+  die Teamzugehörigkeit des Runs. Lesen, Löschen und Job-Abschluss filtern
+  ebenfalls über dessen Team. Beim Beanspruchen oder Aufgeben eines Jobs liefert
+  `UPDATE … RETURNING` die Team-ID aus dem Run im selben SQL-Statement.
+  Das Löschen eines Runs entfernt seine Jobs und Schrittergebnisse per Kaskade.
+  Die Migration erhält Lease-Zustand, Versuchszähler, Zeitpunkte und
+  `result_json`; widersprüchliche Teamzuordnungen lassen sie atomar scheitern.
+  Workflow-Konfigurationen und Schrittergebnisse bleiben JSON, historische
+  Titel in `task_runs` bleiben Snapshots. Domain-Verträge und Firestore-Adapter
+  behalten ihre eigene Struktur.
 - Die Dateiablage speichert Versionsmetadaten ausschließlich in
   `file_versions`; das Team wird über `files` aufgelöst. Die aktuelle Version
   wird durch einen zusammengesetzten Fremdschlüssel ihrer Datei zugeordnet.
@@ -981,12 +995,14 @@ dessen Infrastructure-Bereich.
   `/v1/folders`. Dateien werden als Base64-kodierte JSON-Payloads bis zur
   lokalen Runtime übertragen und dort im Volume abgelegt. Diese Endpunkte sind
   Runtime-APIs im lokalen Netzwerk und kein Cloud-HTTP-Vertrag.
-- `006_task_run_jobs.sql` ergänzt eine haltbare SQLite-Jobqueue. Der
+- Die Initialmigration enthält eine haltbare SQLite-Jobqueue. Der
   `TaskRunQueueWorker` wird nach einem erfolgreichen Enqueue unmittelbar
   benachrichtigt, drainiert verfügbare Jobs seriell und bestätigt erfolgreiche
   Ausführungen. Persistierte Jobs werden beim Runtime-Start einmal drainiert;
-  fehlgeschlagene Jobs werden mit 30 bis 300 Sekunden Backoff höchstens dreimal
-  erneut versucht. Dazu setzt der Worker ausschließlich einen einmaligen Timer
+  nach einem Prozessabsturz werden abgelaufene Leases mit insgesamt höchstens
+  drei Versuchen erneut beansprucht. Ein Ausführungsfehler beendet den Job
+  endgültig, damit Nebenwirkungen nicht automatisch wiederholt werden.
+  Dazu setzt der Worker ausschließlich einen einmaligen Timer
   auf den gespeicherten Fälligkeitszeitpunkt, kein Intervall-Polling.
 - Der `PollingTaskTriggerWorker` wertet fällige Zeitpläne alle 30 Sekunden
   aus, erzeugt Runs über den gemeinsamen Scheduling-Use-Case und schreibt den

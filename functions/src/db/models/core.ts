@@ -24,7 +24,6 @@ export const activities = sqliteTable("activities", {
 
 export const taskRunJobs = sqliteTable("task_run_jobs", {
   id: text("id").primaryKey(),
-  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
   run_id: text("run_id").notNull().references((): AnySQLiteColumn => taskRuns.id, {onDelete: "cascade"}),
   mode: text("mode", {enum: ["start", "resume"]}).notNull(),
   status: text("status").notNull(),
@@ -37,7 +36,7 @@ export const taskRunJobs = sqliteTable("task_run_jobs", {
   index("idx_task_run_jobs_next").on(table.status, table.available_at, table.lease_expires_at),
   check("task_run_jobs_mode", sql`${table.mode} IN ('start', 'resume')`),
   check("task_run_jobs_status", sql`${table.status} IN ('queued', 'leased', 'completed', 'failed')`),
-  unique().on(table.team_id, table.run_id),
+  unique().on(table.run_id),
 ]);
 
 export const taskRuns = sqliteTable("task_runs", {
@@ -73,13 +72,12 @@ export const taskRuns = sqliteTable("task_runs", {
 
 /** Ergebnisse abgeschlossener Baustein-Schritte; ein nach einem Absturz wiederholter Run übernimmt sie. */
 export const taskRunSteps = sqliteTable("task_run_steps", {
-  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
   run_id: text("run_id").notNull().references((): AnySQLiteColumn => taskRuns.id, {onDelete: "cascade"}),
   step_path: text("step_path").notNull(),
   result_json: text("result_json").notNull(),
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
-  primaryKey({columns: [table.team_id, table.run_id, table.step_path]}),
+  primaryKey({columns: [table.run_id, table.step_path]}),
 ]);
 
 export const taskTriggers = sqliteTable("task_triggers", {

@@ -85,6 +85,13 @@
       "when": 1791347775626,
       "tag": "0011_normalize_team_members",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1791348231911,
+      "tag": "0012_normalize_run_dependents",
+      "breakpoints": true
     }
   ]
 }

@@ -152,6 +152,11 @@ einen eigenen Vertrag einschließlich Konfliktregeln.
 
 ### Teams und Dateien
 
+In der lokalen Ausführung bestimmen Runs die Teamzugehörigkeit ihrer Queue-Jobs
+und Schrittergebnisse. Diese Tabellen speichern nur `run_id`; die SQLite-Adapter
+lösen das Team über `task_runs` auf und sichern Zugriffe entsprechend ab.
+Schrittergebnisse bleiben flexible JSON-Snapshots.
+
 SQLite trennt Benutzerprofile (`user_profiles`, Schlüssel `uid`) von
 Teammitgliedschaften (`team_members`, Schlüssel `team_id` + `uid`). E-Mail und
 Anzeigename gehören zum Benutzerprofil; Rolle und Mitgliedschaftszeitpunkte
