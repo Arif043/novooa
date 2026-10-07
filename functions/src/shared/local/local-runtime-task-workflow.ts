@@ -1,7 +1,7 @@
 import {type OutboundHttpClient} from "../../features/connections/domain/repositories/outbound-http-client.js";
 import {type NodeExecutorRegistry} from "../../features/task_execution/infrastructure/genkit/runner/node-executor-registry.js";
 import {scriptExecutorFactoryFromEnvironment} from "./local-runtime-relays.js";
-import {SqliteEmployeeStore} from "../../features/employees/infrastructure/local/sqlite-employee-store.js";
+import {SQLiteEmployeeStore} from "../../features/employees/infrastructure/local/sqlite-employee-store.js";
 import {createDirectorySkillStore} from "../../features/skills/infrastructure/local/skills-composition.js";
 import {LanguageModelTranscription} from "../../features/speech_transcription/domain/usecases/language-model-transcription.js";
 import {defaultTranscriptionProviders} from "../../features/speech_transcription/infrastructure/default-transcription-providers.js";
@@ -11,7 +11,7 @@ import {type RuntimeDatabase} from "../../db/database.js";
 import {type RuntimeMailRelayClient} from "../../features/communication/infrastructure/local/runtime-mail-relay-client.js";
 import {type DocumentStore} from "../../features/data/domain/repositories/document-store.js";
 import {LocalObjectStore} from "../../features/files/infrastructure/local/local-object-store.js";
-import {type LocalTeamFileStore} from "../../features/files/infrastructure/local/local-team-file-store.js";
+import {type SQLiteTeamFileStore} from "../../features/files/infrastructure/local/sqlite-team-file-store.js";
 import {SQLiteKnowledgeBaseStore} from "../../features/knowledge_base/infrastructure/local/sqlite-knowledge-base-store.js";
 import {CatalogGenkitLanguageModelResolver} from "../../features/language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {type SQLiteLanguageModelCatalog} from "../../features/language_models/infrastructure/local/sqlite-language-model-catalog.js";
@@ -35,7 +35,7 @@ export type LocalTaskWorkflowDependencies = {
   runtimeRoot: string;
   signedLicense: () => SignedRuntimeLicense | null;
   taskRunStore: SQLiteTaskRunStore;
-  teamFileStore: LocalTeamFileStore;
+  teamFileStore: SQLiteTeamFileStore;
   taskRunDispatcher: SQLiteTaskRunDispatcher;
   logger: LocalApplicationLogger;
   languageModelCatalog: SQLiteLanguageModelCatalog;
@@ -73,7 +73,7 @@ export function createLocalTaskWorkflow(dependencies: LocalTaskWorkflowDependenc
       scriptExecutorFactory: scriptExecutorFactoryFromEnvironment(),
       outboundHttpClient: dependencies.outboundHttpClient,
       executorRegistry: dependencies.executorRegistry,
-      employeeStore: new SqliteEmployeeStore(database),
+      employeeStore: new SQLiteEmployeeStore(database),
       speechSynthesizer: new LanguageModelSpeech(dependencies.languageModelCatalog, defaultSpeechProviders()),
       speechTranscriber: new LanguageModelTranscription(dependencies.languageModelCatalog, defaultTranscriptionProviders()),
       languageModelDefaultsStore: new SQLiteLanguageModelDefaultsStore(database),

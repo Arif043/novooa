@@ -5,7 +5,7 @@ import {employees, type Employees} from "../../../../db/schema.js";
 import {type Employee, type EmployeeInput} from "../../domain/entities/employee.js";
 import {type EmployeeStore} from "../../domain/repositories/employee-store.js";
 
-export class SqliteEmployeeStore implements EmployeeStore {
+export class SQLiteEmployeeStore implements EmployeeStore {
   constructor(private readonly database: RuntimeExecutor, private readonly now: () => Date = () => new Date()) {}
 
   async list(teamId: string): Promise<Employee[]> {

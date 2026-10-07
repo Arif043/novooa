@@ -5,7 +5,7 @@ import {runtimeTestDatabase} from "../../../../db/runtime-database-test-support.
 import {knowledgeNotes, teams} from "../../../../db/schema.js";
 import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import {knowledgeNoteRoutes} from "./local-knowledge-note-routes.js";
-import {knowledgeNotesWithLinks} from "./local-knowledge-link-projection.js";
+import {knowledgeNotesWithLinks} from "./sqlite-knowledge-link-projection.js";
 import {SQLiteKnowledgeBaseStore} from "./sqlite-knowledge-base-store.js";
 
 async function fixture(t: TestContext) {

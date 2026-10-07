@@ -1,7 +1,7 @@
 import {and, eq} from "drizzle-orm";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {fileFolders} from "../../../../db/schema.js";
-import {folderTeamId} from "./local-folder-team.js";
+import {folderTeamId} from "./sqlite-folder-team.js";
 
 export async function folderExists(database: RuntimeExecutor, teamId: string, folderId: string | null): Promise<boolean> {
   if (folderId === null) return true;

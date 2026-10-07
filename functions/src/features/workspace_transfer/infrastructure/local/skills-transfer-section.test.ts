@@ -14,8 +14,8 @@ import {InspectWorkspaceImport} from "../../domain/usecases/inspect-workspace-im
 import {FflateTransferArchiveReader} from "../zip/fflate-transfer-archive-reader.js";
 import {FflateTransferArchiveWriter} from "../zip/fflate-transfer-archive-writer.js";
 import {SkillsTransferSection} from "./skills-transfer-section.js";
-import {SqliteTransferImportStore} from "./sqlite-transfer-import-store.js";
-import {type SqliteTransferSectionImporter} from "./sqlite-transfer-section-importer.js";
+import {SQLiteTransferImportStore} from "./sqlite-transfer-import-store.js";
+import {type SQLiteTransferSectionImporter} from "./sqlite-transfer-section-importer.js";
 import {temporaryDirectory} from "./workspace-transfer-test-support.js";
 
 const skillMd = (name: string, text = "Anleitung") => `---\nname: ${name}\ndescription: Beschreibung von ${name}\n---\n${text}\n`;
@@ -43,8 +43,8 @@ async function exportSkills(t: TestContext, store: DirectorySkillStore, categori
   return archivePath;
 }
 
-async function importSkills(t: TestContext, target: DirectorySkillStore, archivePath: string, extra: SqliteTransferSectionImporter[] = [], categories: TransferCategory[] = ["skills"]) {
-  const store = new SqliteTransferImportStore(await runtimeTestDatabase(t), [new SkillsTransferSection(target), ...extra]);
+async function importSkills(t: TestContext, target: DirectorySkillStore, archivePath: string, extra: SQLiteTransferSectionImporter[] = [], categories: TransferCategory[] = ["skills"]) {
+  const store = new SQLiteTransferImportStore(await runtimeTestDatabase(t), [new SkillsTransferSection(target), ...extra]);
   return new ImportWorkspace(new InspectWorkspaceImport(), store).execute({
     teamId: "team-2", selection: TransferCategorySelection.from(categories), reader: new FflateTransferArchiveReader(archivePath),
   });
@@ -123,7 +123,7 @@ test("a failure in a later category restores replaced skills and removes new one
     pdf: {"SKILL.md": skillMd("pdf", "Neu"), "references/neu.md": "x"}, frisch: {"SKILL.md": skillMd("frisch")},
   }));
   const target = await skillStore(t, {pdf: {"SKILL.md": skillMd("pdf", "Alt"), "references/alt.md": "behalten"}});
-  const failing: SqliteTransferSectionImporter = {
+  const failing: SQLiteTransferSectionImporter = {
     category: "tasks",
     stage: async () => ({count: 1, commit: async () => { throw new Error("Aufgaben kaputt"); }, rollback: async () => undefined}),
   };

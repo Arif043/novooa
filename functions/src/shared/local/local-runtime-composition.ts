@@ -11,7 +11,7 @@ import {type RuntimeMailRelayClient} from "../../features/communication/infrastr
 import {SQLiteInboundChannelMessageStore} from "../../features/communication/infrastructure/local/sqlite-inbound-channel-message-store.js";
 import {SQLiteDocumentStore} from "../../features/data/infrastructure/local/sqlite-document-store.js";
 import {SQLiteFileSettingsStore} from "../../features/files/infrastructure/local/sqlite-file-settings-store.js";
-import {LocalTeamFileStore} from "../../features/files/infrastructure/local/local-team-file-store.js";
+import {SQLiteTeamFileStore} from "../../features/files/infrastructure/local/sqlite-team-file-store.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
 import {SQLiteLanguageModelCatalog} from "../../features/language_models/infrastructure/local/sqlite-language-model-catalog.js";
 import {type RuntimeLicenseActivation} from "../../features/licensing/domain/entities/runtime-license-activation.js";
@@ -90,7 +90,7 @@ export function createLocalRuntimeComposition(
   );
   let fileEventDispatcher: FileEventPublisher = noFileEventPublisher;
   const fileEvents: FileEventPublisher = {publish: (event) => fileEventDispatcher.publish(event)};
-  const teamFileStore = new LocalTeamFileStore(
+  const teamFileStore = new SQLiteTeamFileStore(
     options.database, options.runtimeRoot, new SQLiteFileSettingsStore(options.database), fileEvents,
   );
   const jobStore = new SQLiteTaskRunJobStore(options.database);

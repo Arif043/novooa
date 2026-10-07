@@ -1,6 +1,6 @@
 import {sql} from "drizzle-orm";
 import {files} from "../../../../db/schema.js";
-import {folderTeamOf} from "./local-folder-team.js";
+import {folderTeamOf} from "./sqlite-folder-team.js";
 
 /** Nur Wurzeldateien besitzen eine Teamzuordnung; abgelegte Dateien erben sie vom Ordner. */
 export const fileTeamId = sql<string>`coalesce(${files.root_team_id}, ${folderTeamOf(files.folder_id)})`;

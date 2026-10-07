@@ -5,7 +5,7 @@ import {documentCollections, documents} from "../../../../db/schema.js";
 import {type TransferTeamMapping} from "../../domain/entities/transfer-team-mapping.js";
 import {transferDataEntry, type TransferArchiveReader, type TransferArchiveWriter} from "../../domain/repositories/transfer-archive.js";
 import {type TransferSection} from "../../domain/repositories/transfer-section.js";
-import {sectionPayload, stagedRows, type SqliteTransferSectionImporter, type StagedSectionImport} from "./sqlite-transfer-section-importer.js";
+import {sectionPayload, stagedRows, type SQLiteTransferSectionImporter, type StagedSectionImport} from "./sqlite-transfer-section-importer.js";
 
 const id = z.string().min(1).max(200);
 const timestamp = z.string().min(1).max(64);
@@ -21,7 +21,7 @@ const dataTransferPayload = z.object({
 type DataTransferPayload = z.infer<typeof dataTransferPayload>;
 type DocumentDto = DataTransferPayload["documents"][number];
 
-export class SqliteDataTransferSection implements TransferSection, SqliteTransferSectionImporter {
+export class SQLiteDataTransferSection implements TransferSection, SQLiteTransferSectionImporter {
   readonly category = "data" as const;
 
   constructor(private readonly database: RuntimeExecutor) {}

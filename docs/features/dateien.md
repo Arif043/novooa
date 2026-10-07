@@ -152,7 +152,7 @@ Referenzen auf rotierte Versionen (z. B. `NodeAttachment` mit konkreter
   rotiert nach jeder neuen Version — auch bei direkten Client-Uploads. Er
   löscht über das Admin-SDK; die Storage-Regeln (nur `create`) bleiben
   unverändert.
-- **Standalone:** `LocalTeamFileStore` rotiert nach jedem Schreiben. Das Limit
+- **Standalone:** `SQLiteTeamFileStore` rotiert nach jedem Schreiben. Das Limit
   (1–1000, Standard 10) wird pro Arbeitsbereich in `workspace_file_settings`
   gespeichert und in der UI unter „Einstellungen" → „Allgemein" →
   „Dateiversionen" festgelegt (`GET`/`PUT /v1/file-settings`). Eine Änderung

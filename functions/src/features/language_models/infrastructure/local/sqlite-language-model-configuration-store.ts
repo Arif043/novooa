@@ -1,4 +1,4 @@
-import {languageModelsQuery} from "./local-language-model-queries.js";
+import {languageModelsQuery} from "./sqlite-language-model-queries.js";
 import {capabilitiesFromRecord} from "../../domain/entities/language-model.js";
 import {and, eq, sql} from "drizzle-orm";
 import {randomUUID} from "node:crypto";

@@ -11,7 +11,7 @@ import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-su
 import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 import {fileResourceRoutes} from "../../../files/infrastructure/local/local-file-resource-routes.js";
 import {SQLiteFileSettingsStore} from "../../../files/infrastructure/local/sqlite-file-settings-store.js";
-import {LocalTeamFileStore} from "../../../files/infrastructure/local/local-team-file-store.js";
+import {SQLiteTeamFileStore} from "../../../files/infrastructure/local/sqlite-team-file-store.js";
 import {knowledgeNoteRoutes} from "../../../knowledge_base/infrastructure/local/local-knowledge-note-routes.js";
 import {cycleGuardFor} from "../../../scheduling/domain/usecases/trigger-cycle-guard-test-support.js";
 import {webhookSecretsFor} from "../../../scheduling/infrastructure/local/webhook-secrets-test-support.js";
@@ -49,7 +49,7 @@ test("stores, versions, and reads local files", async (t) => {
   const root = await mkdtemp(path.join(os.tmpdir(), "novooa-local-files-"));
   const database = await databaseForResources(t);
   const handler = testingRoutes(fileResourceRoutes, {
-    database, fileStore: new LocalTeamFileStore(database, root, new SQLiteFileSettingsStore(database)), notifier: new LocalRuntimeRealtimeNotifier(),
+    database, fileStore: new SQLiteTeamFileStore(database, root, new SQLiteFileSettingsStore(database)), notifier: new LocalRuntimeRealtimeNotifier(),
   });
 
   try {
@@ -85,7 +85,7 @@ test("rotates local file versions beyond the configured limit", async (t) => {
   const database = await databaseForResources(t);
   const settings = new SQLiteFileSettingsStore(database);
   await settings.saveVersionLimit("team-1", 2);
-  const store = new LocalTeamFileStore(database, root, settings);
+  const store = new SQLiteTeamFileStore(database, root, settings);
 
   try {
     const first = await store.writeTeamFile({
@@ -113,7 +113,7 @@ test("publishes file events and deletes a file with all versions", async (t) => 
   const root = await mkdtemp(path.join(os.tmpdir(), "novooa-local-file-events-"));
   const database = await databaseForResources(t);
   const events: FileEvent[] = [];
-  const store = new LocalTeamFileStore(database, root, new SQLiteFileSettingsStore(database), {
+  const store = new SQLiteTeamFileStore(database, root, new SQLiteFileSettingsStore(database), {
     publish: async (event) => {events.push(event);},
   });
 

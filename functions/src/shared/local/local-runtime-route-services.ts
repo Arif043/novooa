@@ -18,7 +18,7 @@ import path from "node:path";
 import {type RuntimeDatabase} from "../../db/database.js";
 import {SQLiteDocumentStore} from "../../features/data/infrastructure/local/sqlite-document-store.js";
 import {SQLiteFileSettingsStore} from "../../features/files/infrastructure/local/sqlite-file-settings-store.js";
-import {LocalTeamFileStore} from "../../features/files/infrastructure/local/local-team-file-store.js";
+import {SQLiteTeamFileStore} from "../../features/files/infrastructure/local/sqlite-team-file-store.js";
 import {createLocalKnowledgeBaseAssistant} from "../../features/knowledge_base/infrastructure/local/local-knowledge-base-assistant.js";
 import {EncryptedSQLiteLanguageModelSecretStore} from "../../features/language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
 import {SQLiteLanguageModelCatalog} from "../../features/language_models/infrastructure/local/sqlite-language-model-catalog.js";
@@ -63,7 +63,7 @@ export function createLocalRuntimeRouteServices(options: {
     credentials: new LocalRuntimeAccessCredentialStore(database),
     documents: new SQLiteDocumentStore(database),
     fileSettings,
-    teamFiles: new LocalTeamFileStore(database, runtimeRoot, fileSettings, {
+    teamFiles: new SQLiteTeamFileStore(database, runtimeRoot, fileSettings, {
       publish: (event) => options.workspaceContext().fileEvents.publish(event),
     }),
     taskDefinitions,

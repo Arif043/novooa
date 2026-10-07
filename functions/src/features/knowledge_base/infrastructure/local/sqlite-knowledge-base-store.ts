@@ -1,6 +1,6 @@
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {type KnowledgeNotes} from "../../../../db/schema.js";
-import {knowledgeNoteWithLinks} from "./local-knowledge-link-projection.js";
+import {knowledgeNoteWithLinks} from "./sqlite-knowledge-link-projection.js";
 import {type KnowledgeAttachment} from "../../../task_execution/domain/entities/attachments.js";
 import {
   type KnowledgeBaseStore,

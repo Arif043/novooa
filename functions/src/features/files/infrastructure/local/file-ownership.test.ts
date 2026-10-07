@@ -8,8 +8,8 @@ import {runtimeTestDatabase} from "../../../../db/runtime-database-test-support.
 import {fileFolders, files, fileVersions, teams} from "../../../../db/schema.js";
 import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import {fileResourceRoutes} from "./local-file-resource-routes.js";
-import {fileLocation, fileTeamId} from "./local-file-team.js";
-import {LocalTeamFileStore} from "./local-team-file-store.js";
+import {fileLocation, fileTeamId} from "./sqlite-file-team.js";
+import {SQLiteTeamFileStore} from "./sqlite-team-file-store.js";
 import {SQLiteFileSettingsStore} from "./sqlite-file-settings-store.js";
 
 async function fixture(t: TestContext) {
@@ -71,7 +71,7 @@ test("folder files retain API ownership, version access and deletion isolation",
   const database = await fixture(t);
   const directory = await mkdtemp(join(tmpdir(), "novooa-file-ownership-"));
   t.after(() => rm(directory, {recursive: true, force: true}));
-  const store = new LocalTeamFileStore(database, directory, new SQLiteFileSettingsStore(database));
+  const store = new SQLiteTeamFileStore(database, directory, new SQLiteFileSettingsStore(database));
   const options = {database, fileStore: store, notifier: {publish: () => undefined}};
   const routes = testingRoutes(fileResourceRoutes, options);
   const otherRoutes = testingRoutes(fileResourceRoutes, options, {teamId: "team-2"});

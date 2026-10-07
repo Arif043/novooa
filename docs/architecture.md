@@ -66,7 +66,12 @@ Für beide Backends gelten die folgenden fünf Regeln:
    beide Darstellungen in dieselben fachlichen Objekte. Flexible
    Workflow-Konfigurationen, Snapshots und frei definierbare Dokumente dürfen
    in SQLite weiterhin als JSON gespeichert werden; ein identisches
-   physisches Schema ist kein Ziel.
+   physisches Schema ist kein Ziel. Konkrete SQLite-Adapter tragen das Präfix
+   `SQLite` im Klassennamen und `sqlite-` im Dateinamen, beispielsweise
+   `SQLiteTeamFileStore` in `sqlite-team-file-store.ts`. SQLite-spezifische
+   Abfragen, Mapper und Projektionen verwenden ebenfalls `sqlite-`.
+   `Local` bezeichnet die lokale Runtime beziehungsweise ihre HTTP-Clients
+   und Dateisystemdienste; `Firestore` bezeichnet Firestore-Adapter.
 3. **Eine maßgebliche Quelle je Information.** Dateigröße und Speicherpfad
    gehören beispielsweise zur Dateiversion. Zusätzliche Kopien für schnelle
    Listenansichten sind ausdrücklich abgeleitete Daten. Für solche Kopien

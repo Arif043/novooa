@@ -10,7 +10,7 @@ import {transferDataEntry, type TransferArchiveReader} from "../../domain/reposi
  * Datenbank-Transaktion (inkl. Datei-Bytes), `commit` schreibt die Zeilen
  * innerhalb der gemeinsamen Transaktion aller Bereiche.
  */
-export interface SqliteTransferSectionImporter {
+export interface SQLiteTransferSectionImporter {
   readonly category: TransferCategory;
   stage(reader: TransferArchiveReader, mapping: TransferTeamMapping): Promise<StagedSectionImport>;
 }

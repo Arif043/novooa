@@ -6,7 +6,7 @@ import {join} from "node:path";
 import test, {type TestContext} from "node:test";
 import {runtimeTestDatabase} from "../../../../db/runtime-database-test-support.js";
 import {fileFolders, files, fileVersions, teams} from "../../../../db/schema.js";
-import {LocalTeamFileStore} from "./local-team-file-store.js";
+import {SQLiteTeamFileStore} from "./sqlite-team-file-store.js";
 import {SQLiteFileSettingsStore} from "./sqlite-file-settings-store.js";
 
 async function fixture(t: TestContext) {
@@ -91,7 +91,7 @@ test("file store rejects foreign folders before writing and cleans blobs after m
   const database = await fixture(t);
   const directory = await mkdtemp(join(tmpdir(), "novooa-folder-test-"));
   t.after(() => rm(directory, {recursive: true, force: true}));
-  const store = new LocalTeamFileStore(database, directory, new SQLiteFileSettingsStore(database));
+  const store = new SQLiteTeamFileStore(database, directory, new SQLiteFileSettingsStore(database));
   const input = {teamId: "team-1", fileName: "Datei", contentType: "text/plain", content: "Inhalt", targetFileId: null};
   await assert.rejects(store.writeTeamFile({...input, folderId: "root-2"}));
   assert.deepEqual(await readdir(directory), []);

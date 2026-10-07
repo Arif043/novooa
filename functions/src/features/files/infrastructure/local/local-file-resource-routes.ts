@@ -4,21 +4,21 @@ import {type FastifyReply} from "fastify";
 import {randomUUID} from "node:crypto";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {fileFolders, files, fileVersions} from "../../../../db/schema.js";
-import {folderTeamId, folderLocation} from "./local-folder-team.js";
+import {folderTeamId, folderLocation} from "./sqlite-folder-team.js";
 import {ErrorResponse, ItemsOf} from "../../../../shared/local/local-runtime-http-schemas.js";
 import {type LocalRuntimeWorkspaceContext} from "../../../../shared/local/local-runtime-workspace-context.js";
 import {
   FileParams, FileUpload, FileVersionDto, FolderDto, NewFolder, TeamFileDto, VersionParams,
   fileFromRow, folderFromRow, versionFromRow,
 } from "./local-file-schemas.js";
-import {currentFilesQuery, fileVersionsQuery} from "./local-file-queries.js";
-import {type LocalTeamFileStore} from "./local-team-file-store.js";
-import {fileTeamId} from "./local-file-team.js";
-import {folderExists} from "./local-folder-reference.js";
+import {currentFilesQuery, fileVersionsQuery} from "./sqlite-file-queries.js";
+import {type SQLiteTeamFileStore} from "./sqlite-team-file-store.js";
+import {fileTeamId} from "./sqlite-file-team.js";
+import {folderExists} from "./sqlite-folder-reference.js";
 
 export type FileResourceRoutesOptions = {
   database: RuntimeExecutor;
-  fileStore: Pick<LocalTeamFileStore, "writeTeamFile" | "readTeamFileContent" | "deleteTeamFile">;
+  fileStore: Pick<SQLiteTeamFileStore, "writeTeamFile" | "readTeamFileContent" | "deleteTeamFile">;
   notifier: {publish(topic: string): void};
 };
 

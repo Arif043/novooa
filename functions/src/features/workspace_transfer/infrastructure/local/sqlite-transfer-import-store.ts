@@ -3,14 +3,14 @@ import {type TransferCategory, type TransferCategorySelection, type TransferCoun
 import {type TransferTeamMapping} from "../../domain/entities/transfer-team-mapping.js";
 import {type TransferArchiveReader} from "../../domain/repositories/transfer-archive.js";
 import {type TransferImportStore} from "../../domain/repositories/transfer-import-store.js";
-import {type SqliteTransferSectionImporter, type StagedSectionImport} from "./sqlite-transfer-section-importer.js";
+import {type SQLiteTransferSectionImporter, type StagedSectionImport} from "./sqlite-transfer-section-importer.js";
 
 type StagedCategory = {category: TransferCategory; staged: StagedSectionImport};
 
-export class SqliteTransferImportStore implements TransferImportStore {
+export class SQLiteTransferImportStore implements TransferImportStore {
   constructor(
     private readonly database: RuntimeDatabase,
-    private readonly importers: readonly SqliteTransferSectionImporter[],
+    private readonly importers: readonly SQLiteTransferSectionImporter[],
   ) {}
 
   async importCategories(input: {
@@ -44,7 +44,7 @@ export class SqliteTransferImportStore implements TransferImportStore {
     }
   }
 
-  private importerFor(category: TransferCategory): SqliteTransferSectionImporter {
+  private importerFor(category: TransferCategory): SQLiteTransferSectionImporter {
     const importer = this.importers.find((candidate) => candidate.category === category);
     if (importer === undefined) throw new Error(`Kein Import für Bereich ${category} registriert.`);
     return importer;

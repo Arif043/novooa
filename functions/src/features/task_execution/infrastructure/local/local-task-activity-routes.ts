@@ -4,7 +4,7 @@ import {type RuntimeExecutor} from "../../../../db/database.js";
 import {activities, taskRuns} from "../../../../db/schema.js";
 import {ErrorResponse, ItemsOf, JsonObject, NonEmptyString} from "../../../../shared/local/local-runtime-http-schemas.js";
 import {ActivityRunMismatchError, writeActivity} from "./sqlite-activity-write.js";
-import {activityFromRow, runFromRow} from "./local-task-activity-mapping.js";
+import {activityFromRow, runFromRow} from "./sqlite-task-activity-mapping.js";
 
 export type TaskActivityRoutesOptions = {database: RuntimeExecutor};
 

@@ -2,8 +2,8 @@ import {and, eq, sql} from "drizzle-orm";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {files, fileVersions} from "../../../../db/schema.js";
 import {type WrittenFile} from "../../domain/repositories/team-file-store.js";
-import {fileTeamId, fileLocation} from "./local-file-team.js";
-import {ensureFolder} from "./local-folder-reference.js";
+import {fileTeamId, fileLocation} from "./sqlite-file-team.js";
+import {ensureFolder} from "./sqlite-folder-reference.js";
 
 export async function writeFileMetadata(database: RuntimeExecutor, teamId: string, file: WrittenFile): Promise<void> {
   await database.transaction(async (tx) => {

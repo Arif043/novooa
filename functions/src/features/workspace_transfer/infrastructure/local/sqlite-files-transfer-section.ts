@@ -3,9 +3,9 @@ import {createReadStream} from "node:fs";
 import {access} from "node:fs/promises";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {fileFolders, type FileVersions} from "../../../../db/schema.js";
-import {folderTeamId} from "../../../files/infrastructure/local/local-folder-team.js";
-import {currentFilesQuery, fileVersionsQuery} from "../../../files/infrastructure/local/local-file-queries.js";
-import {fileTeamId} from "../../../files/infrastructure/local/local-file-team.js";
+import {folderTeamId} from "../../../files/infrastructure/local/sqlite-folder-team.js";
+import {currentFilesQuery, fileVersionsQuery} from "../../../files/infrastructure/local/sqlite-file-queries.js";
+import {fileTeamId} from "../../../files/infrastructure/local/sqlite-file-team.js";
 import {localFilePath} from "../../../files/infrastructure/local/local-file-path.js";
 import {isTeamStoragePath} from "../../domain/entities/transfer-team-mapping.js";
 import {
@@ -16,7 +16,7 @@ import {
 import {type TransferSection} from "../../domain/repositories/transfer-section.js";
 import {fileDtoFrom, folderDtoFrom, versionDtoFrom, type FilesTransferPayload} from "./files-transfer-payload.js";
 
-export class SqliteFilesTransferSection implements TransferSection {
+export class SQLiteFilesTransferSection implements TransferSection {
   readonly category = "files" as const;
 
   constructor(

@@ -11,10 +11,10 @@ import {writeLocalFile} from "../../../files/infrastructure/local/local-file-pat
 import {TransferCategorySelection, type TransferCategory} from "../../domain/entities/transfer-category.js";
 import {ExportWorkspace} from "../../domain/usecases/export-workspace.js";
 import {FflateTransferArchiveWriter} from "../zip/fflate-transfer-archive-writer.js";
-import {SqliteDataTransferSection} from "./sqlite-data-transfer-section.js";
-import {SqliteFilesTransferSection} from "./sqlite-files-transfer-section.js";
-import {SqliteKnowledgeTransferSection} from "./sqlite-knowledge-transfer-section.js";
-import {SqliteTasksTransferSection} from "./sqlite-tasks-transfer-section.js";
+import {SQLiteDataTransferSection} from "./sqlite-data-transfer-section.js";
+import {SQLiteFilesTransferSection} from "./sqlite-files-transfer-section.js";
+import {SQLiteKnowledgeTransferSection} from "./sqlite-knowledge-transfer-section.js";
+import {SQLiteTasksTransferSection} from "./sqlite-tasks-transfer-section.js";
 
 /** Nur Tests. */
 export async function temporaryDirectory(t: TestContext): Promise<string> {
@@ -52,8 +52,8 @@ export async function exportArchive(
   const writer = new FflateTransferArchiveWriter();
   const written = finished(writer.output.pipe(createWriteStream(archivePath)));
   const exportWorkspace = new ExportWorkspace([
-    new SqliteFilesTransferSection(database, runtimeRoot), new SqliteDataTransferSection(database),
-    new SqliteKnowledgeTransferSection(database), new SqliteTasksTransferSection(database),
+    new SQLiteFilesTransferSection(database, runtimeRoot), new SQLiteDataTransferSection(database),
+    new SQLiteKnowledgeTransferSection(database), new SQLiteTasksTransferSection(database),
   ]);
   await exportWorkspace.execute({teamId: "team-1", selection: TransferCategorySelection.from(categories), writer});
   writer.finish();

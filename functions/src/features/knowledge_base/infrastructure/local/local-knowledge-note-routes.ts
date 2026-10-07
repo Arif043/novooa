@@ -4,7 +4,7 @@ import {type FastifyReply} from "fastify";
 import {randomUUID} from "node:crypto";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {knowledgeNotes, type KnowledgeNotes} from "../../../../db/schema.js";
-import {knowledgeNotesWithLinks} from "./local-knowledge-link-projection.js";
+import {knowledgeNotesWithLinks} from "./sqlite-knowledge-link-projection.js";
 import {ErrorResponse, IdParams, ItemsOf} from "../../../../shared/local/local-runtime-http-schemas.js";
 
 export type KnowledgeNoteRoutesOptions = {

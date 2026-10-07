@@ -1,4 +1,4 @@
-import {languageModelsQuery} from "./local-language-model-queries.js";
+import {languageModelsQuery} from "./sqlite-language-model-queries.js";
 import {and, eq} from "drizzle-orm";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {languageModelConnections, languageModels} from "../../../../db/schema.js";

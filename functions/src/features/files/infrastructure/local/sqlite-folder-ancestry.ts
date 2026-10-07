@@ -1,7 +1,7 @@
 import {and, eq} from "drizzle-orm";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {fileFolders} from "../../../../db/schema.js";
-import {folderTeamId} from "./local-folder-team.js";
+import {folderTeamId} from "./sqlite-folder-team.js";
 import {type FolderAncestry} from "../../domain/repositories/folder-ancestry.js";
 
 export class SQLiteFolderAncestry implements FolderAncestry {

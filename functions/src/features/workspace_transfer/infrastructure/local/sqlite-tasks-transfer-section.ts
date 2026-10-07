@@ -5,7 +5,7 @@ import {tasks} from "../../../../db/schema.js";
 import {type TransferTeamMapping} from "../../domain/entities/transfer-team-mapping.js";
 import {transferDataEntry, type TransferArchiveReader, type TransferArchiveWriter} from "../../domain/repositories/transfer-archive.js";
 import {type TransferSection} from "../../domain/repositories/transfer-section.js";
-import {sectionPayload, stagedRows, type SqliteTransferSectionImporter, type StagedSectionImport} from "./sqlite-transfer-section-importer.js";
+import {sectionPayload, stagedRows, type SQLiteTransferSectionImporter, type StagedSectionImport} from "./sqlite-transfer-section-importer.js";
 
 const timestamp = z.string().min(1).max(64);
 
@@ -20,7 +20,7 @@ const tasksTransferPayload = z.object({
 type TasksTransferPayload = z.infer<typeof tasksTransferPayload>;
 
 /** Trigger gehören bewusst nicht dazu: Sie können an OAuth-Connectoren gebunden sein. */
-export class SqliteTasksTransferSection implements TransferSection, SqliteTransferSectionImporter {
+export class SQLiteTasksTransferSection implements TransferSection, SQLiteTransferSectionImporter {
   readonly category = "tasks" as const;
 
   constructor(private readonly database: RuntimeExecutor) {}

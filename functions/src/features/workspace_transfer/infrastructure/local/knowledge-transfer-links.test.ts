@@ -8,8 +8,8 @@ import {TransferCategorySelection} from "../../domain/entities/transfer-category
 import {ImportWorkspace} from "../../domain/usecases/import-workspace.js";
 import {InspectWorkspaceImport} from "../../domain/usecases/inspect-workspace-import.js";
 import {FflateTransferArchiveReader} from "../zip/fflate-transfer-archive-reader.js";
-import {SqliteKnowledgeTransferSection} from "./sqlite-knowledge-transfer-section.js";
-import {SqliteTransferImportStore} from "./sqlite-transfer-import-store.js";
+import {SQLiteKnowledgeTransferSection} from "./sqlite-knowledge-transfer-section.js";
+import {SQLiteTransferImportStore} from "./sqlite-transfer-import-store.js";
 import {exportArchive, temporaryDirectory} from "./workspace-transfer-test-support.js";
 
 async function exportedKnowledge(t: TestContext) {
@@ -31,7 +31,7 @@ test("knowledge exports contain only authoritative fields and derive links after
   assert.ok(payload.notes.every((note) => !("outgoingLinks" in note)));
   const target = await runtimeTestDatabase(t);
   await target.insert(teams).values({id: "team-2", name: "Ziel", owner_uid: "u"});
-  const store = new SqliteTransferImportStore(target, [new SqliteKnowledgeTransferSection(target)]);
+  const store = new SQLiteTransferImportStore(target, [new SQLiteKnowledgeTransferSection(target)]);
   await new ImportWorkspace(new InspectWorkspaceImport(), store).execute({teamId: "team-2",
     selection: TransferCategorySelection.from(["knowledge"]), reader});
   const attachment = {knowledgeBaseId: "default", noteId: "source", title: "Index", path: ""};

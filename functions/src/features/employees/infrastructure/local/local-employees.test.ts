@@ -6,7 +6,7 @@ import {employees, teams} from "../../../../db/schema.js";
 import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import {createEmployeeRoutesOptions} from "./employees-composition.js";
 import {employeeRoutes} from "./local-employee-routes.js";
-import {SqliteEmployeeStore} from "./sqlite-employee-store.js";
+import {SQLiteEmployeeStore} from "./sqlite-employee-store.js";
 
 async function harness(t: TestContext) {
   const database = await runtimeTestDatabase(t);
@@ -83,7 +83,7 @@ test("unknown employees answer 404", async (t) => {
 test("employees belong to their team and are removed with it", async (t) => {
   const {database} = await harness(t);
   await database.insert(teams).values({id: "team-2", name: "Anderes Team", owner_uid: "user-2"});
-  const store = new SqliteEmployeeStore(database);
+  const store = new SQLiteEmployeeStore(database);
 
   const mine = await store.create("team-1", {name: "Eins", constraint: "", skills: []});
 
@@ -96,7 +96,7 @@ test("employees belong to their team and are removed with it", async (t) => {
 
 test("stored skills survive a round trip in order and broken JSON reads as no skills", async (t) => {
   const {database} = await harness(t);
-  const store = new SqliteEmployeeStore(database);
+  const store = new SQLiteEmployeeStore(database);
   const created = await store.create("team-1", {name: "Eins", constraint: "Regel", skills: ["b", "a"]});
 
   assert.deepEqual((await store.find("team-1", created.id))?.skills, ["b", "a"]);
@@ -107,7 +107,7 @@ test("stored skills survive a round trip in order and broken JSON reads as no sk
 test("created and updated timestamps are set and updatedAt moves on change", async (t) => {
   const {database} = await harness(t);
   let now = new Date("2026-01-01T10:00:00.000Z");
-  const store = new SqliteEmployeeStore(database, () => now);
+  const store = new SQLiteEmployeeStore(database, () => now);
 
   const created = await store.create("team-1", {name: "Eins", constraint: "", skills: []});
   now = new Date("2026-01-02T10:00:00.000Z");

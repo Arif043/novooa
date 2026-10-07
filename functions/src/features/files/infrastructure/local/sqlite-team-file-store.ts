@@ -7,11 +7,11 @@ import {versionsToRotateOut} from "../../domain/entities/file-version-rotation.j
 import {noFileEventPublisher, type FileEventPublisher} from "../../domain/repositories/file-event-publisher.js";
 import {type FileSettingsStore} from "../../domain/repositories/file-settings-store.js";
 import {writtenEventFrom, deletedEventFrom, newFileFrom, versionFromExisting} from "./local-file-mappers.js";
-import {currentFilesQuery, fileVersionsQuery} from "./local-file-queries.js";
+import {currentFilesQuery, fileVersionsQuery} from "./sqlite-file-queries.js";
 import {localFilePath, writeLocalFile} from "./local-file-path.js";
-import {fileTeamId} from "./local-file-team.js";
-import {ensureFolder} from "./local-folder-reference.js";
-import {writeFileMetadata} from "./local-file-metadata-write.js";
+import {fileTeamId} from "./sqlite-file-team.js";
+import {ensureFolder} from "./sqlite-folder-reference.js";
+import {writeFileMetadata} from "./sqlite-file-metadata-write.js";
 import {
   type TeamFileContent,
   type TeamFileContentReader,
@@ -31,7 +31,7 @@ type ExistingFile = {
 
 type FileRow = Pick<Files, "id" | "owner_uid" | "folder_id">;
 
-export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader {
+export class SQLiteTeamFileStore implements TeamFileStore, TeamFileContentReader {
   constructor(
     private readonly database: RuntimeExecutor,
     private readonly rootDirectory: string,

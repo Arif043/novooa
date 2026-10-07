@@ -1,7 +1,7 @@
 import {and, eq, getTableColumns} from "drizzle-orm";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {files, fileVersions} from "../../../../db/schema.js";
-import {fileTeamId} from "./local-file-team.js";
+import {fileTeamId} from "./sqlite-file-team.js";
 
 /** Fachliche Dateiansicht; Versionsmetadaten werden ausschließlich aus der Version gelesen. */
 export function currentFilesQuery(database: RuntimeExecutor) {

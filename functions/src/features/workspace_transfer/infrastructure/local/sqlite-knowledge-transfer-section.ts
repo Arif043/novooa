@@ -5,7 +5,7 @@ import {knowledgeNotes} from "../../../../db/schema.js";
 import {type TransferTeamMapping} from "../../domain/entities/transfer-team-mapping.js";
 import {transferDataEntry, type TransferArchiveReader, type TransferArchiveWriter} from "../../domain/repositories/transfer-archive.js";
 import {type TransferSection} from "../../domain/repositories/transfer-section.js";
-import {sectionPayload, stagedRows, type SqliteTransferSectionImporter, type StagedSectionImport} from "./sqlite-transfer-section-importer.js";
+import {sectionPayload, stagedRows, type SQLiteTransferSectionImporter, type StagedSectionImport} from "./sqlite-transfer-section-importer.js";
 
 const timestamp = z.string().min(1).max(64);
 
@@ -19,7 +19,7 @@ const knowledgeTransferPayload = z.object({
 
 type KnowledgeTransferPayload = z.infer<typeof knowledgeTransferPayload>;
 
-export class SqliteKnowledgeTransferSection implements TransferSection, SqliteTransferSectionImporter {
+export class SQLiteKnowledgeTransferSection implements TransferSection, SQLiteTransferSectionImporter {
   readonly category = "knowledge" as const;
 
   constructor(private readonly database: RuntimeExecutor) {}

@@ -5,9 +5,9 @@ import {runtimeTestDatabase} from "../../../../db/runtime-database-test-support.
 import {fileFolders, files, teams} from "../../../../db/schema.js";
 import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import {fileResourceRoutes} from "./local-file-resource-routes.js";
-import {fileLocation, fileTeamId} from "./local-file-team.js";
-import {folderExists} from "./local-folder-reference.js";
-import {folderLocation, folderTeamId} from "./local-folder-team.js";
+import {fileLocation, fileTeamId} from "./sqlite-file-team.js";
+import {folderExists} from "./sqlite-folder-reference.js";
+import {folderLocation, folderTeamId} from "./sqlite-folder-team.js";
 import {SQLiteFolderAncestry} from "./sqlite-folder-ancestry.js";
 
 async function fixture(t: TestContext) {

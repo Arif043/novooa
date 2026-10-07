@@ -8,7 +8,7 @@ import {runtimeTestDatabase} from "../../../../db/runtime-database-test-support.
 import {files, fileVersions, teams} from "../../../../db/schema.js";
 import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import {fileResourceRoutes} from "./local-file-resource-routes.js";
-import {LocalTeamFileStore} from "./local-team-file-store.js";
+import {SQLiteTeamFileStore} from "./sqlite-team-file-store.js";
 import {SQLiteFileSettingsStore} from "./sqlite-file-settings-store.js";
 
 async function fixture(t: TestContext) {
@@ -16,14 +16,14 @@ async function fixture(t: TestContext) {
   const root = await mkdtemp(join(tmpdir(), "novooa-normalized-files-"));
   t.after(() => rm(root, {recursive: true, force: true}));
   await database.insert(teams).values({id: "team-2", name: "Andere", owner_uid: "user-2"});
-  const store = new LocalTeamFileStore(database, root, new SQLiteFileSettingsStore(database));
+  const store = new SQLiteTeamFileStore(database, root, new SQLiteFileSettingsStore(database));
   const options = {database, fileStore: store, notifier: {publish: () => undefined}};
   const routes = testingRoutes(fileResourceRoutes, options);
   const otherRoutes = testingRoutes(fileResourceRoutes, options, {teamId: "team-2"});
   return {database, store, routes, otherRoutes};
 }
 
-function write(store: LocalTeamFileStore, content = "Hallo", targetFileId: string | null = null,
+function write(store: SQLiteTeamFileStore, content = "Hallo", targetFileId: string | null = null,
   contentType = "text/plain", teamId = "team-1") {
   return store.writeTeamFile({teamId, fileName: "notiz.txt", contentType, content, targetFileId});
 }

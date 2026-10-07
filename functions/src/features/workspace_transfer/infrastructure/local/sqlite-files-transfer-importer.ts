@@ -2,10 +2,10 @@ import {and, eq} from "drizzle-orm";
 import {access, rm} from "node:fs/promises";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {fileFolders, files, fileVersions} from "../../../../db/schema.js";
-import {folderTeamId, folderLocation} from "../../../files/infrastructure/local/local-folder-team.js";
-import {fileTeamId, fileLocation} from "../../../files/infrastructure/local/local-file-team.js";
+import {folderTeamId, folderLocation} from "../../../files/infrastructure/local/sqlite-folder-team.js";
+import {fileTeamId, fileLocation} from "../../../files/infrastructure/local/sqlite-file-team.js";
 import {localFilePath, writeLocalFile} from "../../../files/infrastructure/local/local-file-path.js";
-import {folderExists} from "../../../files/infrastructure/local/local-folder-reference.js";
+import {folderExists} from "../../../files/infrastructure/local/sqlite-folder-reference.js";
 import {InvalidTransferArchiveError} from "../../domain/entities/transfer-errors.js";
 import {type TransferTeamMapping} from "../../domain/entities/transfer-team-mapping.js";
 import {transferBlobEntry, type TransferArchiveReader} from "../../domain/repositories/transfer-archive.js";
@@ -17,9 +17,9 @@ import {
   type FolderDto,
   type VersionDto,
 } from "./files-transfer-payload.js";
-import {sectionPayload, type SqliteTransferSectionImporter, type StagedSectionImport} from "./sqlite-transfer-section-importer.js";
+import {sectionPayload, type SQLiteTransferSectionImporter, type StagedSectionImport} from "./sqlite-transfer-section-importer.js";
 
-export class SqliteFilesTransferImporter implements SqliteTransferSectionImporter {
+export class SQLiteFilesTransferImporter implements SQLiteTransferSectionImporter {
   readonly category = "files" as const;
 
   constructor(private readonly rootDirectory: string) {}

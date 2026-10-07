@@ -7,8 +7,8 @@ import {finished} from "node:stream/promises";
 import test, {type TestContext} from "node:test";
 import {runtimeTestDatabase} from "../../../../db/runtime-database-test-support.js";
 import {documentCollections, documents, fileFolders, files, fileVersions, knowledgeNotes, tasks, teams} from "../../../../db/schema.js";
-import {currentFilesQuery} from "../../../files/infrastructure/local/local-file-queries.js";
-import {LocalTeamFileStore} from "../../../files/infrastructure/local/local-team-file-store.js";
+import {currentFilesQuery} from "../../../files/infrastructure/local/sqlite-file-queries.js";
+import {SQLiteTeamFileStore} from "../../../files/infrastructure/local/sqlite-team-file-store.js";
 import {SQLiteFileSettingsStore} from "../../../files/infrastructure/local/sqlite-file-settings-store.js";
 import {TransferCategorySelection, type TransferCategory} from "../../domain/entities/transfer-category.js";
 import {InvalidTransferArchiveError} from "../../domain/entities/transfer-errors.js";
@@ -16,11 +16,11 @@ import {ImportWorkspace} from "../../domain/usecases/import-workspace.js";
 import {InspectWorkspaceImport} from "../../domain/usecases/inspect-workspace-import.js";
 import {FflateTransferArchiveReader} from "../zip/fflate-transfer-archive-reader.js";
 import {FflateTransferArchiveWriter} from "../zip/fflate-transfer-archive-writer.js";
-import {SqliteDataTransferSection} from "./sqlite-data-transfer-section.js";
-import {SqliteFilesTransferImporter} from "./sqlite-files-transfer-importer.js";
-import {SqliteKnowledgeTransferSection} from "./sqlite-knowledge-transfer-section.js";
-import {SqliteTasksTransferSection} from "./sqlite-tasks-transfer-section.js";
-import {SqliteTransferImportStore} from "./sqlite-transfer-import-store.js";
+import {SQLiteDataTransferSection} from "./sqlite-data-transfer-section.js";
+import {SQLiteFilesTransferImporter} from "./sqlite-files-transfer-importer.js";
+import {SQLiteKnowledgeTransferSection} from "./sqlite-knowledge-transfer-section.js";
+import {SQLiteTasksTransferSection} from "./sqlite-tasks-transfer-section.js";
+import {SQLiteTransferImportStore} from "./sqlite-transfer-import-store.js";
 import {exportArchive, sampleStoragePath, seedWorkspace, temporaryDirectory} from "./workspace-transfer-test-support.js";
 
 const allCategories: TransferCategory[] = ["files", "data", "knowledge", "tasks"];
@@ -46,9 +46,9 @@ async function targetWorkspace(t: TestContext) {
 
 async function importInto(target: Awaited<ReturnType<typeof targetWorkspace>>, archivePath: string,
   teamId: string, categories = allCategories) {
-  const sections = [new SqliteDataTransferSection(target.database), new SqliteKnowledgeTransferSection(target.database),
-    new SqliteTasksTransferSection(target.database)];
-  const store = new SqliteTransferImportStore(target.database, [new SqliteFilesTransferImporter(target.runtimeRoot), ...sections]);
+  const sections = [new SQLiteDataTransferSection(target.database), new SQLiteKnowledgeTransferSection(target.database),
+    new SQLiteTasksTransferSection(target.database)];
+  const store = new SQLiteTransferImportStore(target.database, [new SQLiteFilesTransferImporter(target.runtimeRoot), ...sections]);
   return new ImportWorkspace(new InspectWorkspaceImport(), store).execute({
     teamId, selection: TransferCategorySelection.from(categories), reader: new FflateTransferArchiveReader(archivePath),
   });
@@ -163,7 +163,7 @@ test("file imports reject ownership conflicts without modifying another team's f
 test("root files roundtrip with explicit root ownership and reject foreign ID collisions", async (t) => {
   const source = await runtimeTestDatabase(t);
   const sourceRoot = await temporaryDirectory(t);
-  const store = new LocalTeamFileStore(source, sourceRoot, new SQLiteFileSettingsStore(source));
+  const store = new SQLiteTeamFileStore(source, sourceRoot, new SQLiteFileSettingsStore(source));
   const file = await store.writeTeamFile({teamId: "team-1", fileName: "Wurzel.txt", content: "Inhalt",
     contentType: "text/plain", folderId: null, targetFileId: null});
   const archivePath = path.join(await temporaryDirectory(t), "root.zip");

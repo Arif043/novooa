@@ -5,14 +5,14 @@ import {ImportWorkspace} from "../../domain/usecases/import-workspace.js";
 import {InspectWorkspaceImport} from "../../domain/usecases/inspect-workspace-import.js";
 import {LocalTransferUploadStore} from "./local-transfer-upload-store.js";
 import {type WorkspaceTransferRoutesOptions} from "./local-workspace-transfer-routes.js";
-import {SqliteDataTransferSection} from "./sqlite-data-transfer-section.js";
-import {SqliteFilesTransferImporter} from "./sqlite-files-transfer-importer.js";
-import {SqliteFilesTransferSection} from "./sqlite-files-transfer-section.js";
-import {SqliteKnowledgeTransferSection} from "./sqlite-knowledge-transfer-section.js";
-import {SqliteEmployeesTransferSection} from "./employees-transfer-section.js";
+import {SQLiteDataTransferSection} from "./sqlite-data-transfer-section.js";
+import {SQLiteFilesTransferImporter} from "./sqlite-files-transfer-importer.js";
+import {SQLiteFilesTransferSection} from "./sqlite-files-transfer-section.js";
+import {SQLiteKnowledgeTransferSection} from "./sqlite-knowledge-transfer-section.js";
+import {SQLiteEmployeesTransferSection} from "./sqlite-employees-transfer-section.js";
 import {SkillsTransferSection} from "./skills-transfer-section.js";
-import {SqliteTasksTransferSection} from "./sqlite-tasks-transfer-section.js";
-import {SqliteTransferImportStore} from "./sqlite-transfer-import-store.js";
+import {SQLiteTasksTransferSection} from "./sqlite-tasks-transfer-section.js";
+import {SQLiteTransferImportStore} from "./sqlite-transfer-import-store.js";
 
 /** Baut die stabilen Abhängigkeiten des Import/Export-Plugins einmal beim Start. */
 export function workspaceTransferRoutesOptions(options: {
@@ -20,18 +20,18 @@ export function workspaceTransferRoutesOptions(options: {
   runtimeRoot: string;
   notifier: {publish(topic: string): void};
 }): WorkspaceTransferRoutesOptions {
-  const data = new SqliteDataTransferSection(options.database);
-  const knowledge = new SqliteKnowledgeTransferSection(options.database);
-  const employees = new SqliteEmployeesTransferSection(options.database);
+  const data = new SQLiteDataTransferSection(options.database);
+  const knowledge = new SQLiteKnowledgeTransferSection(options.database);
+  const employees = new SQLiteEmployeesTransferSection(options.database);
   const skills = new SkillsTransferSection(createDirectorySkillStore(options.runtimeRoot));
-  const tasks = new SqliteTasksTransferSection(options.database);
+  const tasks = new SQLiteTasksTransferSection(options.database);
   const inspectImport = new InspectWorkspaceImport();
-  const importStore = new SqliteTransferImportStore(options.database, [
-    new SqliteFilesTransferImporter(options.runtimeRoot), data, knowledge, skills, employees, tasks,
+  const importStore = new SQLiteTransferImportStore(options.database, [
+    new SQLiteFilesTransferImporter(options.runtimeRoot), data, knowledge, skills, employees, tasks,
   ]);
   return {
     exportWorkspace: new ExportWorkspace([
-      new SqliteFilesTransferSection(options.database, options.runtimeRoot), data, knowledge, skills, employees, tasks,
+      new SQLiteFilesTransferSection(options.database, options.runtimeRoot), data, knowledge, skills, employees, tasks,
     ]),
     inspectImport,
     importWorkspace: new ImportWorkspace(inspectImport, importStore),

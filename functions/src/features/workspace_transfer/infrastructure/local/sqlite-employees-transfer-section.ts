@@ -12,7 +12,7 @@ import {InvalidTransferArchiveError} from "../../domain/entities/transfer-errors
 import {type TransferTeamMapping} from "../../domain/entities/transfer-team-mapping.js";
 import {transferDataEntry, type TransferArchiveReader, type TransferArchiveWriter} from "../../domain/repositories/transfer-archive.js";
 import {type TransferSection} from "../../domain/repositories/transfer-section.js";
-import {sectionPayload, stagedRows, type SqliteTransferSectionImporter, type StagedSectionImport} from "./sqlite-transfer-section-importer.js";
+import {sectionPayload, stagedRows, type SQLiteTransferSectionImporter, type StagedSectionImport} from "./sqlite-transfer-section-importer.js";
 
 const timestamp = z.string().min(1).max(64);
 
@@ -34,7 +34,7 @@ type EmployeesTransferPayload = z.infer<typeof employeesTransferPayload>;
  * sie im Ziel, meldet der Lauf es später klar. Gleiche IDs werden überschrieben; ein gleicher Name unter anderer ID
  * bekommt ein „ (2)“, weil Namen je Team eindeutig sind und die Auswahl im Baustein sonst nicht eindeutig wäre.
  */
-export class SqliteEmployeesTransferSection implements TransferSection, SqliteTransferSectionImporter {
+export class SQLiteEmployeesTransferSection implements TransferSection, SQLiteTransferSectionImporter {
   readonly category = "employees" as const;
 
   constructor(private readonly database: RuntimeExecutor) {}

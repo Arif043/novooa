@@ -16,7 +16,7 @@ import {
   type TransferArchiveWriter,
 } from "../../domain/repositories/transfer-archive.js";
 import {type TransferSection} from "../../domain/repositories/transfer-section.js";
-import {sectionPayload, type SqliteTransferSectionImporter, type StagedSectionImport} from "./sqlite-transfer-section-importer.js";
+import {sectionPayload, type SQLiteTransferSectionImporter, type StagedSectionImport} from "./sqlite-transfer-section-importer.js";
 
 const skillsTransferPayload = z.object({
   skills: z.array(z.object({
@@ -37,7 +37,7 @@ type AppliedSkill = {name: string; backup?: SkillFile[]};
  * team-gebunden, deshalb braucht der Import kein Team-Mapping. Gleichnamige Skills werden ersetzt (wie gleiche IDs
  * bei den anderen Bereichen), andere bleiben unberührt; scheitert der Import, wird der alte Stand wiederhergestellt.
  */
-export class SkillsTransferSection implements TransferSection, SqliteTransferSectionImporter {
+export class SkillsTransferSection implements TransferSection, SQLiteTransferSectionImporter {
   readonly category = "skills" as const;
 
   constructor(private readonly skills: SkillStore) {}

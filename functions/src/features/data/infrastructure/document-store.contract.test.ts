@@ -18,7 +18,7 @@ type StoreAdapter = {
 
 const adapters: readonly StoreAdapter[] = [
   {name: "InMemoryDocumentStore", create: createInMemoryFixture},
-  {name: "SQLiteDocumentStore", create: createSqliteFixture},
+  {name: "SQLiteDocumentStore", create: createSQLiteFixture},
 ];
 
 for (const adapter of adapters) {
@@ -146,7 +146,7 @@ async function createInMemoryFixture(): Promise<StoreFixture> {
   return {store: new InMemoryDocumentStore(), dispose: () => undefined};
 }
 
-async function createSqliteFixture(): Promise<StoreFixture> {
+async function createSQLiteFixture(): Promise<StoreFixture> {
   const database = connectRuntimeDatabase(":memory:");
   await database.run(sql`CREATE TABLE document_collections (id TEXT, team_id TEXT, display_name TEXT, created_at TEXT, updated_at TEXT, PRIMARY KEY (team_id, id), UNIQUE(team_id, display_name))`);
   await database.run(sql`CREATE TABLE documents (id TEXT, team_id TEXT, collection_id TEXT, data_json TEXT, version INTEGER, created_at TEXT, updated_at TEXT, PRIMARY KEY (team_id, collection_id, id))`);

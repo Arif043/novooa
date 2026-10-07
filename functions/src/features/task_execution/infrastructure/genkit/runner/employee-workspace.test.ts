@@ -5,7 +5,7 @@ import path from "node:path";
 import test, {type TestContext} from "node:test";
 import {genkit} from "genkit/beta";
 import {runtimeTestDatabase} from "../../../../../db/runtime-database-test-support.js";
-import {SqliteEmployeeStore} from "../../../../employees/infrastructure/local/sqlite-employee-store.js";
+import {SQLiteEmployeeStore} from "../../../../employees/infrastructure/local/sqlite-employee-store.js";
 import {DirectorySkillStore} from "../../../../skills/infrastructure/local/directory-skill-store.js";
 import {runEmployeeAgentTurn} from "./employee-agent.js";
 import {assertExclusiveDelegation} from "./employee-context.js";
@@ -28,7 +28,7 @@ async function setup(t: TestContext) {
     await mkdir(path.join(root, name), {recursive: true});
     await writeFile(path.join(root, name, "SKILL.md"), skillMd(name));
   }
-  const employees = new SqliteEmployeeStore(database);
+  const employees = new SQLiteEmployeeStore(database);
   const sources: NodeAttachmentSources = {
     objectStore: {downloadToFile: async () => undefined},
     knowledgeBaseStore: {} as never,

@@ -919,7 +919,7 @@ dessen Infrastructure-Bereich.
   `SQLiteTeamContextStore` und dem öffentlichen HTTP/HTML-Adapter verdrahten;
   der TaskBuilder-Agent benötigt außer Modell und Prompt keinen Fachadapter.
   Firebase verwendet für den Wissensbasis-Adapter Firestore und Firebase Auth.
-- `LocalTeamFileStore` schreibt Dateien in ein lokales Root-Verzeichnis und
+- `SQLiteTeamFileStore` schreibt Dateien in ein lokales Root-Verzeichnis und
   persistiert Datei-/Versions-Metadaten mit nativen Drizzle-Abfragen.
 - `SQLiteDocumentStore` kapselt lokale, team-scoped Datensammlungen hinter dem
   fachlichen `DocumentStore`-Port. Dokumentfelder liegen intern als JSON, ohne
