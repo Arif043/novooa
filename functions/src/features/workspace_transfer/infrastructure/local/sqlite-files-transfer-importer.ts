@@ -2,7 +2,9 @@ import {and, eq} from "drizzle-orm";
 import {access, rm} from "node:fs/promises";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {fileFolders, files, fileVersions} from "../../../../db/schema.js";
+import {fileTeamId, fileLocation} from "../../../files/infrastructure/local/local-file-team.js";
 import {localFilePath, writeLocalFile} from "../../../files/infrastructure/local/local-file-path.js";
+import {folderExists} from "../../../files/infrastructure/local/local-folder-reference.js";
 import {InvalidTransferArchiveError} from "../../domain/entities/transfer-errors.js";
 import {type TransferTeamMapping} from "../../domain/entities/transfer-team-mapping.js";
 import {transferBlobEntry, type TransferArchiveReader} from "../../domain/repositories/transfer-archive.js";
@@ -71,7 +73,7 @@ async function commitFiles(
   }
   for (const file of payload.files) {
     await executor.update(files).set({current_version_id: file.currentVersionId})
-      .where(and(eq(files.id, file.id), eq(files.team_id, teamId)));
+      .where(and(eq(files.id, file.id), eq(fileTeamId, teamId)));
   }
 }
 
@@ -83,16 +85,23 @@ async function upsertFolder(executor: RuntimeExecutor, teamId: string, folder: F
 }
 
 async function upsertFile(executor: RuntimeExecutor, teamId: string, file: FileDto): Promise<void> {
-  const values = {owner_uid: file.ownerUid, display_name: file.displayName, folder_id: file.folderId,
+  if (!await folderExists(executor, teamId, file.folderId)) {
+    throw new InvalidTransferArchiveError("Der Dateiordner gehört nicht zum importierten Team.");
+  }
+  const existing = await executor.select({team_id: fileTeamId}).from(files).where(eq(files.id, file.id)).get();
+  if (existing && existing.team_id !== teamId) {
+    throw new InvalidTransferArchiveError("Die Datei gehört nicht zum importierten Team.");
+  }
+  const values = {owner_uid: file.ownerUid, display_name: file.displayName, ...fileLocation(teamId, file.folderId),
     current_version_id: null, updated_at: file.updatedAt};
-  await executor.insert(files).values({id: file.id, team_id: teamId, created_at: file.createdAt, ...values})
-    .onConflictDoUpdate({target: files.id, set: values, setWhere: eq(files.team_id, teamId)});
+  await executor.insert(files).values({id: file.id, created_at: file.createdAt, ...values})
+    .onConflictDoUpdate({target: files.id, set: values, setWhere: eq(fileTeamId, teamId)});
 }
 
 async function upsertVersion(
   executor: RuntimeExecutor, teamId: string, version: VersionDto, storagePath: string,
 ): Promise<void> {
-  const owner = await executor.select({team_id: files.team_id}).from(files)
+  const owner = await executor.select({team_id: fileTeamId}).from(files)
     .where(eq(files.id, version.fileId)).get();
   const existing = await executor.select({file_id: fileVersions.file_id}).from(fileVersions)
     .where(eq(fileVersions.id, version.id)).get();

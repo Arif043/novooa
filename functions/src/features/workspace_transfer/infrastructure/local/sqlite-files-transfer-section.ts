@@ -2,8 +2,9 @@ import {eq} from "drizzle-orm";
 import {createReadStream} from "node:fs";
 import {access} from "node:fs/promises";
 import {type RuntimeExecutor} from "../../../../db/database.js";
-import {fileFolders, files, type FileVersions} from "../../../../db/schema.js";
+import {fileFolders, type FileVersions} from "../../../../db/schema.js";
 import {currentFilesQuery, fileVersionsQuery} from "../../../files/infrastructure/local/local-file-queries.js";
+import {fileTeamId} from "../../../files/infrastructure/local/local-file-team.js";
 import {localFilePath} from "../../../files/infrastructure/local/local-file-path.js";
 import {isTeamStoragePath} from "../../domain/entities/transfer-team-mapping.js";
 import {
@@ -34,7 +35,7 @@ export class SqliteFilesTransferSection implements TransferSection {
 
   private async payloadFor(teamId: string): Promise<FilesTransferPayload> {
     const folders = await this.database.select().from(fileFolders).where(eq(fileFolders.team_id, teamId));
-    const fileRows = await currentFilesQuery(this.database).where(eq(files.team_id, teamId));
+    const fileRows = await currentFilesQuery(this.database).where(eq(fileTeamId, teamId));
     return {
       folders: folders.map(folderDtoFrom),
       files: fileRows.filter((row) => isTeamStoragePath(teamId, row.storage_path)).map(fileDtoFrom),
@@ -44,7 +45,7 @@ export class SqliteFilesTransferSection implements TransferSection {
 
   /** Versionen ohne Datei auf der Platte würden den späteren Import blockieren. */
   private async exportableVersions(teamId: string): Promise<FileVersions[]> {
-    const rows = await fileVersionsQuery(this.database).where(eq(files.team_id, teamId));
+    const rows = await fileVersionsQuery(this.database).where(eq(fileTeamId, teamId));
     const exportable: FileVersions[] = [];
     for (const row of rows) {
       if (isTeamStoragePath(teamId, row.storage_path) && await this.exists(row.storage_path)) exportable.push(row);

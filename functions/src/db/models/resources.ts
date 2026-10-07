@@ -66,7 +66,7 @@ export const fileVersions = sqliteTable("file_versions", {
 
 export const files = sqliteTable("files", {
   id: text("id").primaryKey(),
-  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
+  root_team_id: text("root_team_id").references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
   owner_uid: text("owner_uid").notNull(),
   display_name: text("display_name").notNull(),
   folder_id: text("folder_id"),
@@ -74,9 +74,11 @@ export const files = sqliteTable("files", {
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
-  index("idx_files_team_folder").on(table.team_id, table.folder_id),
-  foreignKey({columns: [table.team_id, table.folder_id],
-    foreignColumns: [fileFolders.team_id, fileFolders.id]}),
+  index("idx_files_root_team").on(table.root_team_id),
+  index("idx_files_folder").on(table.folder_id),
+  check("files_one_location", sql`(${table.folder_id} IS NULL AND ${table.root_team_id} IS NOT NULL) OR
+    (${table.folder_id} IS NOT NULL AND ${table.root_team_id} IS NULL)`),
+  foreignKey({columns: [table.folder_id], foreignColumns: [fileFolders.id]}),
   foreignKey(() => ({columns: [table.id, table.current_version_id],
     foreignColumns: [fileVersions.file_id, fileVersions.id]})),
 ]);

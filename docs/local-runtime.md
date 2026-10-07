@@ -1005,9 +1005,12 @@ dessen Infrastructure-Bereich.
   Der vollständige Prüfstand aller 28 Tabellen ist in
   [`architecture/sqlite-normalisierung.md`](./architecture/sqlite-normalisierung.md)
   dokumentiert; eine vollständige strenge 3NF wird weiterhin nicht behauptet.
-- Seit `0016_secure_folder_relationships.sql` verweisen Elternordner und
-  Dateiablage über zusammengesetzte Fremdschlüssel auf `(team_id, id)` des
-  Zielordners. Wurzelordner und Dateien ohne Ordner bleiben möglich.
+- Seit `0016_secure_folder_relationships.sql` verweisen Elternordner über
+  zusammengesetzte Fremdschlüssel auf `(team_id, id)` des Zielordners.
+  Seit `0017_normalize_file_ownership.sql` speichern Dateien genau eine Ablage:
+  `folder_id` mit abgeleitetem Team oder `root_team_id` ohne Ordner. SQL-Trigger
+  verhindern Teamwechsel vorhandener Dateien und die Teamänderung gefüllter
+  Ordner. Wurzelordner und Dateien ohne Ordner bleiben möglich.
   Ein Check verhindert Selbstbezüge; rekursive SQL-Trigger verhindern Zyklen
   beim Anlegen und Ändern der Hierarchie, auch bei Mehrfach-Inserts.
   Ein Ordnerbaum mit enthaltenen Dateien kann nicht direkt gelöscht werden;

@@ -30,14 +30,14 @@ test("folder references enforce team ownership on inserts and moves", async (t) 
   assert.equal((await database.select().from(fileFolders).where(eq(fileFolders.id, "child")))[0].parent_folder_id, null);
 });
 
-test("files accept root placement and reject missing or foreign folders on insert and update", async (t) => {
+test("files enforce exclusive root placement and team-preserving folder moves", async (t) => {
   const database = await fixture(t);
-  const file = {id: "file-1", team_id: "team-1", owner_uid: "u", display_name: "Datei"};
+  const file = {id: "file-1", root_team_id: "team-1", owner_uid: "u", display_name: "Datei"};
   for (const folder_id of ["missing", "root-2"]) {
     await assert.rejects(database.insert(files).values({...file, folder_id}));
   }
   await database.insert(files).values(file);
-  await database.update(files).set({folder_id: "child"}).where(eq(files.id, file.id));
+  await database.update(files).set({folder_id: "child", root_team_id: null}).where(eq(files.id, file.id));
   await assert.rejects(database.update(files).set({folder_id: "root-2"}).where(eq(files.id, file.id)));
   assert.equal((await database.select().from(files))[0].folder_id, "child");
 });
@@ -56,7 +56,7 @@ test("self references, descendant moves and multi-row cycle insertion are reject
 
 test("a populated folder tree cannot be deleted; empty trees cascade", async (t) => {
   const database = await fixture(t);
-  await database.insert(files).values({id: "file-1", team_id: "team-1", owner_uid: "u", display_name: "Datei", folder_id: "child"});
+  await database.insert(files).values({id: "file-1", owner_uid: "u", display_name: "Datei", folder_id: "child"});
   await assert.rejects(database.delete(fileFolders).where(eq(fileFolders.id, "root-1")));
   assert.equal((await database.select().from(fileFolders)).length, 3);
   assert.equal((await database.select().from(files)).length, 1);
@@ -78,7 +78,7 @@ test("renaming an ID cannot close a cycle with deferred foreign keys", async (t)
 
 test("team deletion still cascades folders, files and versions together", async (t) => {
   const database = await fixture(t);
-  await database.insert(files).values({id: "file-1", team_id: "team-1", owner_uid: "u", display_name: "Datei", folder_id: "child"});
+  await database.insert(files).values({id: "file-1", owner_uid: "u", display_name: "Datei", folder_id: "child"});
   await database.insert(fileVersions).values({id: "version-1", file_id: "file-1", created_by_uid: "u", display_name: "Datei", storage_path: "blob"});
   await database.update(files).set({current_version_id: "version-1"}).where(eq(files.id, "file-1"));
   await database.delete(teams).where(eq(teams.id, "team-1"));

@@ -34,7 +34,7 @@ test("normalization migration preserves files and versions with foreign keys ena
   await database.transaction(async (tx) => {
     for (const statement of migration.split("--> statement-breakpoint")) await tx.run(sql.raw(statement.trim()));
   });
-  const file = await database.select().from(files).where(eq(files.id, "file-1")).get();
+  const file = await database.select({current_version_id: files.current_version_id}).from(files).where(eq(files.id, "file-1")).get();
   assert.equal(file?.current_version_id, "version-2");
   const versions = await database.select().from(fileVersions).orderBy(fileVersions.id);
   assert.deepEqual(versions.map((row) => [row.id, row.size_bytes, row.storage_path]),

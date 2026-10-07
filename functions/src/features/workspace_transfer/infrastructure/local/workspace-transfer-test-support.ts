@@ -30,7 +30,7 @@ export async function seedWorkspace(database: RuntimeDatabase, runtimeRoot: stri
     {id: "folder-child", team_id: "team-1", owner_uid: "user-1", name: "Kind", parent_folder_id: "folder-root"},
     {id: "folder-root", team_id: "team-1", owner_uid: "user-1", name: "Wurzel", parent_folder_id: null},
   ].reverse());
-  await database.insert(files).values({id: "file-1", team_id: "team-1", owner_uid: "user-1", display_name: "angebot.txt",
+  await database.insert(files).values({id: "file-1", owner_uid: "user-1", display_name: "angebot.txt",
     folder_id: "folder-child"});
   await database.insert(fileVersions).values({id: "version-1", file_id: "file-1",
     created_by_uid: "user-1", display_name: "angebot.txt", storage_path: sampleStoragePath, content_type: "text/plain",

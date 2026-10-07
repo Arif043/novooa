@@ -8,6 +8,8 @@ import test, {type TestContext} from "node:test";
 import {runtimeTestDatabase} from "../../../../db/runtime-database-test-support.js";
 import {documentCollections, documents, fileFolders, files, fileVersions, knowledgeNotes, tasks, teams} from "../../../../db/schema.js";
 import {currentFilesQuery} from "../../../files/infrastructure/local/local-file-queries.js";
+import {LocalTeamFileStore} from "../../../files/infrastructure/local/local-team-file-store.js";
+import {SQLiteFileSettingsStore} from "../../../files/infrastructure/local/sqlite-file-settings-store.js";
 import {TransferCategorySelection, type TransferCategory} from "../../domain/entities/transfer-category.js";
 import {InvalidTransferArchiveError} from "../../domain/entities/transfer-errors.js";
 import {ImportWorkspace} from "../../domain/usecases/import-workspace.js";
@@ -154,4 +156,23 @@ test("file imports reject ownership conflicts without modifying another team's f
   assert.equal(file?.team_id, "team-1");
   assert.equal(file?.current_version_id, "version-1");
   assert.equal(file?.size_bytes, 5);
+});
+
+test("root files roundtrip with explicit root ownership and reject foreign ID collisions", async (t) => {
+  const source = await runtimeTestDatabase(t);
+  const sourceRoot = await temporaryDirectory(t);
+  const store = new LocalTeamFileStore(source, sourceRoot, new SQLiteFileSettingsStore(source));
+  const file = await store.writeTeamFile({teamId: "team-1", fileName: "Wurzel.txt", content: "Inhalt",
+    contentType: "text/plain", folderId: null, targetFileId: null});
+  const archivePath = path.join(await temporaryDirectory(t), "root.zip");
+  await exportArchive(source, sourceRoot, ["files"], archivePath);
+  const target = await targetWorkspace(t);
+  await importInto(target, archivePath, "team-2", ["files"]);
+  const row = await target.database.select().from(files).where(eq(files.id, file.fileId)).get();
+  assert.equal(row?.root_team_id, "team-2");
+  assert.equal(row?.folder_id, null);
+  await source.insert(teams).values({id: "team-2", name: "Andere", owner_uid: "user-2"});
+  await assert.rejects(importInto({database: source, runtimeRoot: sourceRoot}, archivePath, "team-2", ["files"]),
+    InvalidTransferArchiveError);
+  assert.equal((await store.loadTeamFile("team-1", file.fileId)).versionId, file.versionId);
 });

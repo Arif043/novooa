@@ -9,6 +9,7 @@ import {type FileSettingsStore} from "../../domain/repositories/file-settings-st
 import {writtenEventFrom, deletedEventFrom, newFileFrom, versionFromExisting} from "./local-file-mappers.js";
 import {currentFilesQuery, fileVersionsQuery} from "./local-file-queries.js";
 import {localFilePath, writeLocalFile} from "./local-file-path.js";
+import {fileTeamId} from "./local-file-team.js";
 import {ensureFolder} from "./local-folder-reference.js";
 import {writeFileMetadata} from "./local-file-metadata-write.js";
 import {
@@ -58,9 +59,9 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
     const file = await this.fileRowFor(teamId, fileId);
     if (file === null) return false;
     const versions = await fileVersionsQuery(this.database)
-      .where(and(eq(files.team_id, teamId), eq(fileVersions.file_id, fileId)));
+      .where(and(eq(fileTeamId, teamId), eq(fileVersions.file_id, fileId)));
     await this.database.transaction(async (tx) => {
-      await tx.delete(files).where(and(eq(files.team_id, teamId), eq(files.id, fileId)));
+      await tx.delete(files).where(and(eq(fileTeamId, teamId), eq(files.id, fileId)));
     });
     await Promise.all(versions.map((version) =>
       rm(localFilePath(this.rootDirectory, version.storage_path), {force: true})));
@@ -69,7 +70,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
   }
 
   private async fileRowFor(teamId: string, fileId: string) {
-    const row = await currentFilesQuery(this.database).where(and(eq(files.team_id, teamId), eq(files.id, fileId))).get();
+    const row = await currentFilesQuery(this.database).where(and(eq(fileTeamId, teamId), eq(files.id, fileId))).get();
     return row ?? null;
   }
 
@@ -82,7 +83,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
     teamId: string,
     fileId: string,
   ): Promise<StoredTeamFile> {
-    const row = (await currentFilesQuery(this.database).where(and(eq(files.team_id, teamId), eq(files.id, fileId))).get()) ?? null;
+    const row = (await currentFilesQuery(this.database).where(and(eq(fileTeamId, teamId), eq(files.id, fileId))).get()) ?? null;
     if (row === null || row.current_version_id === null) throw new Error(`Datei nicht gefunden: ${fileId}`);
     return {
       fileId: row.id,
@@ -99,7 +100,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
     fileId: string,
     versionId: string,
   ): Promise<TeamFileContent> {
-    const file = (await fileVersionsQuery(this.database).where(and(eq(files.team_id, teamId), eq(fileVersions.file_id, fileId), eq(fileVersions.id, versionId))).get()) ?? null;
+    const file = (await fileVersionsQuery(this.database).where(and(eq(fileTeamId, teamId), eq(fileVersions.file_id, fileId), eq(fileVersions.id, versionId))).get()) ?? null;
     if (file === null) throw new Error(`Dateiversion nicht gefunden: ${versionId}`);
     return {
       content: await readFile(localFilePath(this.rootDirectory, file.storage_path)),
@@ -123,7 +124,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
 
   private async existingFileFor(input: WriteTeamFileInput): Promise<ExistingFile> {
     if (input.targetFileId === null) throw new Error("Datei-ID fehlt.");
-    const row = (await this.database.select({id: files.id, owner_uid: files.owner_uid, folder_id: files.folder_id}).from(files).where(and(eq(files.team_id, input.teamId), eq(files.id, input.targetFileId))).get()) ?? null;
+    const row = (await this.database.select({id: files.id, owner_uid: files.owner_uid, folder_id: files.folder_id}).from(files).where(and(eq(fileTeamId, input.teamId), eq(files.id, input.targetFileId))).get()) ?? null;
     if (row === null) throw new Error(`Datei nicht gefunden: ${input.targetFileId}`);
     return existingFileFrom(row);
   }
@@ -132,7 +133,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
     input: WriteTeamFileInput,
   ): Promise<ExistingFile | null> {
     const row = await this.database.select({id: files.id, owner_uid: files.owner_uid, folder_id: files.folder_id})
-      .from(files).where(and(eq(files.team_id, input.teamId), eq(files.display_name, input.fileName), isNull(files.folder_id)))
+      .from(files).where(and(eq(fileTeamId, input.teamId), eq(files.display_name, input.fileName), isNull(files.folder_id)))
       .limit(1).get();
     return row ? existingFileFrom(row) : null;
   }
@@ -150,7 +151,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
 
   private async staleVersions(teamId: string, file: WrittenFile) {
     const rows = await fileVersionsQuery(this.database)
-      .where(and(eq(files.team_id, teamId), eq(fileVersions.file_id, file.fileId)))
+      .where(and(eq(fileTeamId, teamId), eq(fileVersions.file_id, file.fileId)))
       // created_at hat Sekundenauflösung; rowid-Reihenfolge entscheidet bei Gleichstand.
       .orderBy(sql`${fileVersions}.rowid DESC`);
     return versionsToRotateOut(

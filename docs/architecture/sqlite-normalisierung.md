@@ -1,6 +1,6 @@
 # SQLite: Normalisierung und verbleibende Prüfungen
 
-Stand: Migration `0016_secure_folder_relationships`, 28 Anwendungstabellen.
+Stand: Migration `0017_normalize_file_ownership`, 28 Anwendungstabellen.
 Die Drizzle-Historie `__drizzle_migrations` gehört nicht zum Fachmodell.
 
 ## Bewertungsgrundlage
@@ -63,7 +63,7 @@ Schlüssel ab. Die Spalte „Bewertung“ ergänzt Ausnahmen und Prüfpunkte.
 | `file_folders` | `id → Rest` | Seit `0016` Elternbezug auf dasselbe Team und azyklische Hierarchie abgesichert. Strenge Normalisierung bleibt offen: Elternordner bestimmen das Team von Unterordnern, Wurzeln benötigen eine eigene Zuordnung. |
 | `workspace_file_settings` | `team_id → version_limit` | 3NF-Basis. |
 | `file_versions` | `id → Versionsattribute` | 3NF-Basis seit `0009`; Team über Datei. Dateiname ist der Name dieser Version, nicht der aktuelle Dateiname. |
-| `files` | `id → Dateiattribute` | Versionsmetadaten seit `0009` entdoppelt; Ordnerbezug seit `0016` teamgebunden abgesichert. Strenge Normalisierung bleibt offen: Ordner bestimmen das Team abgelegter Dateien, Dateien ohne Ordner benötigen eine eigene Zuordnung. |
+| `files` | `id → Dateiattribute` | 3NF-Basis seit `0017`: genau ein Ablagebezug, entweder `folder_id` oder `root_team_id`. Team abgelegter Dateien wird aus dem Ordner abgeleitet; keine doppelte Teamzuordnung. Versionsmetadaten seit `0009` entdoppelt. |
 | `knowledge_notes` | `id → Notizattribute` | Offen: `outgoing_links_json` ist eine vom Client extrahierte Linkprojektion. Abhängigkeit von Inhalt und Wissensbasis, Neuberechnung bei Umbenennung und relationale Linkablage prüfen. |
 | `employees` | `id → Mitarbeiterkonfiguration` | 3NF-Basis der Hülle; `skills_json` ist eine konfigurierte Liste externer Fähigkeitsnamen, keine Beziehung auf eine vorhandene SQL-Skilltabelle. |
 
@@ -86,14 +86,19 @@ Schlüssel ab. Die Spalte „Bewertung“ ergänzt Ausnahmen und Prüfpunkte.
   Migration erhält Metadaten, Versionen und deren `rowid`-Reihenfolge.
   Dies ist eine Integritätsverbesserung, keine Auflösung der verbleibenden
   Teamredundanz bei zugeordneten Dateien und Unterordnern.
+- `0017`: Dateien speichern entweder einen Ordnerbezug oder eine Teamzuordnung
+  für das Wurzelverzeichnis. CHECK und Fremdschlüssel erzwingen genau eine
+  Quelle; Teamfilter, Versionen und Import nutzen die abgeleitete Zugehörigkeit.
+  SQL-Trigger verhindern Teamwechsel und erhalten die Bereinigung bei
+  Teamlöschung. Die Migration erhält aktuelle Versionsreferenzen, Metadaten
+  und die `rowid`-Reihenfolge der Versionen.
 
 ## Verbleibende Arbeit
 
-1. Datei-/Ordnerzugehörigkeit einschließlich Wurzeln als einheitliches Modell
-   festlegen. Die Integritätslücken bei Fremdschlüsseln, Teamgrenzen und Zyklen
-   sind seit `0016` geschlossen. Für strenge Normalisierung braucht es noch
-   eine Entscheidung, wie die Teamzugehörigkeit von Wurzelobjekten gegenüber
-   der abgeleiteten Zugehörigkeit zugeordneter Objekte modelliert wird.
+1. Ordnerzugehörigkeit einschließlich Wurzeln normalisieren. Die Integritätslücken
+   bei Teamgrenzen und Zyklen sind seit `0016` geschlossen. Dateien trennen
+   Wurzelzuordnung und abgeleitete Zugehörigkeit seit `0017`; Unterordner
+   speichern das bereits über ihren Elternordner bestimmbare Team weiterhin.
 2. Wissenslinks als abgeleitete Projektion mit definiertem Aktualisierungsweg
    oder als eigenständige relationale Beziehung modellieren.
 3. Wiederholte Bausteinmetadaten in Aktivitäten und die Herkunftsredundanz

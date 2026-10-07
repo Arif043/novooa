@@ -29,8 +29,12 @@ gespeichert, Metadaten und Versionen in Firestore.
 
 ### Standalone: normalisierte Versionsmetadaten
 
-In SQLite enthält `files` die Dateiidentität, Teamzuordnung, Besitzer, Namen,
-Ordner, Zeitstempel und `current_version_id`. `file_versions` enthält die
+In SQLite enthält `files` die Dateiidentität, Besitzer, Namen, Ablage,
+Zeitstempel und `current_version_id`. Seit `0017` bezeichnet die Ablage entweder
+einen Ordner (`folder_id`) oder ein Team-Wurzelverzeichnis (`root_team_id`).
+Ein CHECK erzwingt genau eine dieser Quellen. Dateien in Ordnern speichern
+kein zusätzliches Team; API und Zugriffsprüfung leiten es aus dem Ordner ab.
+`file_versions` enthält die
 Versionen mit ihrem jeweiligen Namen, Ersteller, Speicherpfad, Dateityp,
 Dateigröße und Erstellungszeitpunkt. `content_type`, `size_bytes` und
 `storage_path` werden nicht zusätzlich in `files` gespeichert. Die Version
@@ -225,15 +229,23 @@ Bausteins weiter.
 
 ## Standalone: Ordnerbeziehungen
 
-Seit Migration `0016` sichern zusammengesetzte SQLite-Fremdschlüssel ab,
-dass Elternordner und Dateiablage zum selben Team gehören. Wurzelordner und
-Dateien ohne Ordner bleiben möglich. Selbstbezüge und Zyklen werden auch
-bei direkten SQL-Schreibzugriffen abgelehnt.
+Seit Migration `0016` sichert ein zusammengesetzter SQLite-Fremdschlüssel ab,
+dass Elternordner zum selben Team gehören. Selbstbezüge und Zyklen werden auch
+bei direkten SQL-Schreibzugriffen abgelehnt. Seit `0017` verweist eine Datei
+direkt auf ihren Ordner und übernimmt dessen Team. Ohne Ordner wird nur
+`root_team_id` gespeichert. Wurzelordner und Dateien ohne Ordner bleiben möglich.
+
+SQL-Trigger verhindern den Wechsel einer vorhandenen Datei in ein anderes
+Team und die Teamänderung eines Ordners mit direkt enthaltenen Dateien.
+Ein Wechsel zwischen Wurzelverzeichnis und Ordnern desselben Teams ist erlaubt.
+Import und Datei-Adapter prüfen die abgeleitete Zugehörigkeit in ihrer Transaktion.
 
 Ein Ordnerbaum mit enthaltenen Dateien kann nicht direkt gelöscht werden.
 Dateien müssen vorher über den Datei-Adapter gelöscht oder gültig umgeordnet
 werden; die SQLite-Löschkaskade selbst entfernt keine Dateiinhalte auf dem
 Dateisystem. Für leere Ordnerbäume bleibt die Unterordnerkaskade erhalten.
+Beim Löschen eines Teams entfernt ein Trigger zuerst dessen Dateien in Ordnern;
+Wurzeldateien, Ordner und Versionen werden über Fremdschlüssel bereinigt.
 
 Der lokale Datei-Adapter prüft den Ordner innerhalb seiner Schreibtransaktion
 und bereinigt neue Dateiinhalte bei fehlgeschlagener Metadatenanlage. Migration
