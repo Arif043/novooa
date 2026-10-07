@@ -9,6 +9,8 @@ import {type FileSettingsStore} from "../../domain/repositories/file-settings-st
 import {writtenEventFrom, deletedEventFrom, newFileFrom, versionFromExisting} from "./local-file-mappers.js";
 import {currentFilesQuery, fileVersionsQuery} from "./local-file-queries.js";
 import {localFilePath, writeLocalFile} from "./local-file-path.js";
+import {ensureFolder} from "./local-folder-reference.js";
+import {writeFileMetadata} from "./local-file-metadata-write.js";
 import {
   type TeamFileContent,
   type TeamFileContentReader,
@@ -38,8 +40,14 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
 
   async writeTeamFile(input: WriteTeamFileInput): Promise<WrittenFile> {
     const file = await this.writtenFileFrom(input);
+    await ensureFolder(this.database, input.teamId, file.folderId);
     await writeLocalFile(this.rootDirectory, file.storagePath, input.content);
-    await this.writeMetadata(input.teamId, file);
+    try {
+      await writeFileMetadata(this.database, input.teamId, file);
+    } catch (error) {
+      await rm(localFilePath(this.rootDirectory, file.storagePath), {force: true});
+      throw error;
+    }
     await this.rotateVersions(input.teamId, file);
     await this.events.publish(writtenEventFrom(input.teamId, file, input.triggerChain ?? []));
     return file;
@@ -151,30 +159,6 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
     );
   }
 
-  private async writeMetadata(teamId: string, file: WrittenFile) {
-    await this.database.transaction(async (tx) => {
-      await upsertFile(tx, teamId, file);
-      await insertVersion(tx, file);
-      await tx.update(files).set({current_version_id: file.versionId, updated_at: sql`CURRENT_TIMESTAMP`})
-        .where(and(eq(files.id, file.fileId), eq(files.team_id, teamId)));
-    });
-  }
-}
-
-async function upsertFile(
-  database: RuntimeExecutor,
-  teamId: string,
-  file: WrittenFile,
-) {
-  await database.insert(files).values({id: file.fileId, team_id: teamId, owner_uid: file.ownerUid,
-    display_name: file.displayName, folder_id: file.folderId})
-    .onConflictDoNothing({target: files.id});
-}
-
-async function insertVersion(database: RuntimeExecutor, file: WrittenFile) {
-  await database.insert(fileVersions).values({id: file.versionId, file_id: file.fileId,
-    created_by_uid: "system", display_name: file.displayName, storage_path: file.storagePath,
-    content_type: file.contentType, size_bytes: file.sizeBytes});
 }
 
 function ensureTeamFile(file: NodeAttachment, teamId: string): void {

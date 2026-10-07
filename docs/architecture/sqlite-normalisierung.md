@@ -1,6 +1,6 @@
 # SQLite: Normalisierung und verbleibende Prüfungen
 
-Stand: Migration `0015_normalize_model_catalog`, 28 Anwendungstabellen.
+Stand: Migration `0016_secure_folder_relationships`, 28 Anwendungstabellen.
 Die Drizzle-Historie `__drizzle_migrations` gehört nicht zum Fachmodell.
 
 ## Bewertungsgrundlage
@@ -60,10 +60,10 @@ Schlüssel ab. Die Spalte „Bewertung“ ergänzt Ausnahmen und Prüfpunkte.
 | `runtime_sessions` | `token_hash → Anlage- und Ablaufzeit` | 3NF-Basis. |
 | `document_collections` | `(team_id, id)` und `(team_id, display_name) → Rest` | 3NF-Basis; Collection-ID ist teamlokal. |
 | `documents` | `(team_id, collection_id, id) → Dokument, Version, Zeitpunkte` | 3NF-Basis der Hülle; Inhalt bleibt frei definierbares JSON. `collection_id` allein bestimmt kein Team. |
-| `file_folders` | `id → Rest` | Offen: gültiger Elternordner legt das Team eines Unterordners fest; Wurzeln besitzen keine Eltern-ID. Teamzuordnung und Hierarchie gemeinsam prüfen, einschließlich teamübergreifender Bezüge und Zyklen. |
+| `file_folders` | `id → Rest` | Seit `0016` Elternbezug auf dasselbe Team und azyklische Hierarchie abgesichert. Strenge Normalisierung bleibt offen: Elternordner bestimmen das Team von Unterordnern, Wurzeln benötigen eine eigene Zuordnung. |
 | `workspace_file_settings` | `team_id → version_limit` | 3NF-Basis. |
 | `file_versions` | `id → Versionsattribute` | 3NF-Basis seit `0009`; Team über Datei. Dateiname ist der Name dieser Version, nicht der aktuelle Dateiname. |
-| `files` | `id → Dateiattribute` | Versionsmetadaten seit `0009` entdoppelt. Offen: ein zugeordneter Ordner legt das Team fest; Dateien ohne Ordner besitzen eigenes Team. Ablagebeziehung gemeinsam mit Ordnerhierarchie prüfen. |
+| `files` | `id → Dateiattribute` | Versionsmetadaten seit `0009` entdoppelt; Ordnerbezug seit `0016` teamgebunden abgesichert. Strenge Normalisierung bleibt offen: Ordner bestimmen das Team abgelegter Dateien, Dateien ohne Ordner benötigen eine eigene Zuordnung. |
 | `knowledge_notes` | `id → Notizattribute` | Offen: `outgoing_links_json` ist eine vom Client extrahierte Linkprojektion. Abhängigkeit von Inhalt und Wissensbasis, Neuberechnung bei Umbenennung und relationale Linkablage prüfen. |
 | `employees` | `id → Mitarbeiterkonfiguration` | 3NF-Basis der Hülle; `skills_json` ist eine konfigurierte Liste externer Fähigkeitsnamen, keine Beziehung auf eine vorhandene SQL-Skilltabelle. |
 
@@ -81,12 +81,19 @@ Schlüssel ab. Die Spalte „Bewertung“ ergänzt Ausnahmen und Prüfpunkte.
   SQL entfernt und im Adapter ergänzt. Ungültige Eingaben werden vor dem
   Schreiben über den gemeinsamen Katalog-Codec abgelehnt.
 
+- `0016`: zusammengesetzte Fremdschlüssel für Elternordner und Dateiablage,
+  Zyklusprüfung durch SQL-Trigger und Transaktionsprüfung beim Schreiben.
+  Migration erhält Metadaten, Versionen und deren `rowid`-Reihenfolge.
+  Dies ist eine Integritätsverbesserung, keine Auflösung der verbleibenden
+  Teamredundanz bei zugeordneten Dateien und Unterordnern.
+
 ## Verbleibende Arbeit
 
 1. Datei-/Ordnerzugehörigkeit einschließlich Wurzeln als einheitliches Modell
-   festlegen. `files.folder_id` besitzt noch keinen Fremdschlüssel;
-   `file_folders.parent_folder_id` sichert noch nicht dasselbe Team ab.
-   Diese Integritätslücken sind zusätzlich zur Normalisierungsfrage zu lösen.
+   festlegen. Die Integritätslücken bei Fremdschlüsseln, Teamgrenzen und Zyklen
+   sind seit `0016` geschlossen. Für strenge Normalisierung braucht es noch
+   eine Entscheidung, wie die Teamzugehörigkeit von Wurzelobjekten gegenüber
+   der abgeleiteten Zugehörigkeit zugeordneter Objekte modelliert wird.
 2. Wissenslinks als abgeleitete Projektion mit definiertem Aktualisierungsweg
    oder als eigenständige relationale Beziehung modellieren.
 3. Wiederholte Bausteinmetadaten in Aktivitäten und die Herkunftsredundanz

@@ -1005,6 +1005,21 @@ dessen Infrastructure-Bereich.
   Der vollständige Prüfstand aller 28 Tabellen ist in
   [`architecture/sqlite-normalisierung.md`](./architecture/sqlite-normalisierung.md)
   dokumentiert; eine vollständige strenge 3NF wird weiterhin nicht behauptet.
+- Seit `0016_secure_folder_relationships.sql` verweisen Elternordner und
+  Dateiablage über zusammengesetzte Fremdschlüssel auf `(team_id, id)` des
+  Zielordners. Wurzelordner und Dateien ohne Ordner bleiben möglich.
+  Ein Check verhindert Selbstbezüge; rekursive SQL-Trigger verhindern Zyklen
+  beim Anlegen und Ändern der Hierarchie, auch bei Mehrfach-Inserts.
+  Ein Ordnerbaum mit enthaltenen Dateien kann nicht direkt gelöscht werden;
+  leere Unterordner werden per Kaskade entfernt. Die Team-Löschkaskade für
+  Ordner-, Datei- und Versionsmetadaten bleibt erhalten.
+  Ordneranlage prüft den Elternbezug in einer Transaktion. Der Datei-Adapter
+  prüft die Ablage vor dem Schreiben des Inhalts und erneut in der
+  Metadatentransaktion; bei deren Scheitern entfernt er den neuen Inhalt.
+  Die Migration erhält alle Metadaten einschließlich aktueller Version und
+  Versionsreihenfolge und bricht bei ungültigen Ablagebezügen oder Zyklen
+  atomar ab. Eigene Team-IDs bleiben für Wurzelobjekte erhalten; dieser
+  Integritätsschritt bestätigt keine vollständige strenge 3NF.
 - Die Dateiablage speichert Versionsmetadaten ausschließlich in
   `file_versions`; das Team wird über `files` aufgelöst. Die aktuelle Version
   wird durch einen zusammengesetzten Fremdschlüssel ihrer Datei zugeordnet.

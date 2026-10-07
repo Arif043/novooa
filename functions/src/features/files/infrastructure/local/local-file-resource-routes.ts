@@ -12,6 +12,7 @@ import {
 } from "./local-file-schemas.js";
 import {currentFilesQuery, fileVersionsQuery} from "./local-file-queries.js";
 import {type LocalTeamFileStore} from "./local-team-file-store.js";
+import {folderExists} from "./local-folder-reference.js";
 
 export type FileResourceRoutesOptions = {
   database: RuntimeExecutor;
@@ -44,10 +45,14 @@ export const fileResourceRoutes: FastifyPluginAsyncTypebox<FileResourceRoutesOpt
   }, async (request, reply) => {
     const {teamId, userId} = request.workspace;
     const parentFolderId = request.body.parentFolderId || null;
-    if (!await folderExists(database, teamId, parentFolderId)) return reply.code(400).send(missingFolder);
     const id = randomUUID();
-    await database.insert(fileFolders).values({id, team_id: teamId, owner_uid: userId, name: request.body.name.trim(),
-      parent_folder_id: parentFolderId});
+    const created = await database.transaction(async (tx) => {
+      if (!await folderExists(tx, teamId, parentFolderId)) return false;
+      await tx.insert(fileFolders).values({id, team_id: teamId, owner_uid: userId, name: request.body.name.trim(),
+        parent_folder_id: parentFolderId});
+      return true;
+    });
+    if (!created) return reply.code(400).send(missingFolder);
     notifier.publish("folders");
     const row = await database.select(folderColumns).from(fileFolders)
       .where(and(eq(fileFolders.team_id, teamId), eq(fileFolders.id, id))).get();
@@ -110,11 +115,4 @@ async function writeFile(
   return row === undefined
     ? reply.code(404).send({error: "Datei nicht gefunden."})
     : reply.code(targetFileId === null ? 201 : 200).send(fileFromRow(row));
-}
-
-async function folderExists(database: RuntimeExecutor, teamId: string, folderId: string | null): Promise<boolean> {
-  if (folderId === null) return true;
-  const folder = await database.select({id: fileFolders.id}).from(fileFolders)
-    .where(and(eq(fileFolders.team_id, teamId), eq(fileFolders.id, folderId))).get();
-  return folder !== undefined;
 }

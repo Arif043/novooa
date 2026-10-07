@@ -222,3 +222,23 @@ Bausteins weiter.
 
 - [`../architecture.md`](../architecture.md)
 - [`aufgabe.md`](./aufgabe.md)
+
+## Standalone: Ordnerbeziehungen
+
+Seit Migration `0016` sichern zusammengesetzte SQLite-Fremdschlüssel ab,
+dass Elternordner und Dateiablage zum selben Team gehören. Wurzelordner und
+Dateien ohne Ordner bleiben möglich. Selbstbezüge und Zyklen werden auch
+bei direkten SQL-Schreibzugriffen abgelehnt.
+
+Ein Ordnerbaum mit enthaltenen Dateien kann nicht direkt gelöscht werden.
+Dateien müssen vorher über den Datei-Adapter gelöscht oder gültig umgeordnet
+werden; die SQLite-Löschkaskade selbst entfernt keine Dateiinhalte auf dem
+Dateisystem. Für leere Ordnerbäume bleibt die Unterordnerkaskade erhalten.
+
+Der lokale Datei-Adapter prüft den Ordner innerhalb seiner Schreibtransaktion
+und bereinigt neue Dateiinhalte bei fehlgeschlagener Metadatenanlage. Migration
+und Import/Export erhalten Versionen einschließlich ihrer Rotationsreihenfolge.
+Firestore verwendet weiterhin seinen eigenen Adapter.
+
+Die SQL-Zyklusprüfung verwendet rekursive Abfragen innerhalb der Trigger-
+Unterabfrage, entsprechend der [SQLite-Trigger-Dokumentation](https://www.sqlite.org/lang_createtrigger.html).
