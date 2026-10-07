@@ -3,6 +3,7 @@ import {type RuntimeExecutor} from "../../../../db/database.js";
 import {tasks, type Tasks} from "../../../../db/schema.js";
 import {type TaskDefinition} from "../../domain/entities/task.js";
 import {type TaskDefinitionStore} from "../../domain/repositories/task-definition-store.js";
+import {deleteTaskTriggerSecrets} from "../../../scheduling/infrastructure/local/sqlite-task-trigger-secrets.js";
 
 type TaskDefinitionRow = Pick<Tasks, "graph_json" | "id" | "objective" | "selected_node_id" | "title">;
 
@@ -10,7 +11,10 @@ export class SQLiteTaskDefinitionStore implements TaskDefinitionStore {
   constructor(private readonly database: RuntimeExecutor) {}
 
   async delete(teamId: string, taskId: string): Promise<void> {
-    await this.database.delete(tasks).where(and(eq(tasks.team_id, teamId), eq(tasks.id, taskId)));
+    await this.database.transaction(async (tx) => {
+      await deleteTaskTriggerSecrets(tx, teamId, taskId);
+      await tx.delete(tasks).where(and(eq(tasks.team_id, teamId), eq(tasks.id, taskId)));
+    });
   }
 
   async list(teamId: string): Promise<TaskDefinition[]> {
@@ -48,6 +52,6 @@ function jsonList<T>(value: string, key: string): T[] {
       const item = (parsed as Record<string, unknown>)[key];
       if (Array.isArray(item)) return item as T[];
     }
-  } catch {}
+  } catch { return []; }
   return [];
 }

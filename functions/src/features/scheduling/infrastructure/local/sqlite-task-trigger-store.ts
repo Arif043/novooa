@@ -1,11 +1,12 @@
 import {and, eq, inArray, isNotNull, lte, sql} from "drizzle-orm";
 import {type RuntimeExecutor} from "../../../../db/database.js";
-import {taskRuns, taskTriggers} from "../../../../db/schema.js";
+import {tasks, taskRuns, taskTriggers} from "../../../../db/schema.js";
 import {
   type DueScheduleTrigger,
   type EventTaskTrigger,
   type TaskTriggerStore,
 } from "../../domain/repositories/task-trigger-store.js";
+import {triggerQuery, triggerMatching} from "./sqlite-task-trigger-queries.js";
 import {eventTriggerConfigFrom} from "../../domain/entities/event-trigger-config.js";
 import {type ScheduleConfig} from "../../domain/usecases/schedule-next-run.js";
 
@@ -26,8 +27,9 @@ export class SQLiteTaskTriggerStore implements TaskTriggerStore {
   constructor(private readonly database: RuntimeExecutor) {}
 
   async listDueScheduleTriggers(now: Date, limit: number) {
-    const rows = await this.database.select({id: taskTriggers.id, team_id: taskTriggers.team_id, task_id: taskTriggers.task_id, config_json: taskTriggers.config_json, policy_json: taskTriggers.policy_json})
-      .from(taskTriggers).where(and(eq(taskTriggers.enabled, 1), isNotNull(taskTriggers.next_run_at), lte(taskTriggers.next_run_at, now.toISOString())))
+    const rows = await triggerQuery(this.database)
+      .where(and(eq(taskTriggers.type, "schedule"), eq(taskTriggers.enabled, 1), isNotNull(taskTriggers.next_run_at),
+        lte(taskTriggers.next_run_at, now.toISOString())))
       .orderBy(taskTriggers.next_run_at).limit(limit);
     return rows.map(scheduleTriggerFromRow);
   }
@@ -40,7 +42,7 @@ export class SQLiteTaskTriggerStore implements TaskTriggerStore {
   }
 
   async advanceScheduleTrigger(trigger: DueScheduleTrigger, nextRunAt: Date | null) {
-    await this.database.update(taskTriggers).set({enabled: enabledValue(nextRunAt), next_run_at: dateOrNull(nextRunAt), updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskTriggers.team_id, trigger.teamId), eq(taskTriggers.id, trigger.id)));
+    await this.database.update(taskTriggers).set({enabled: enabledValue(nextRunAt), next_run_at: dateOrNull(nextRunAt), updated_at: sql`CURRENT_TIMESTAMP`}).where(triggerMatching(this.database, trigger.teamId, trigger.id));
   }
 
   async markScheduleTriggerRan(
@@ -49,16 +51,17 @@ export class SQLiteTaskTriggerStore implements TaskTriggerStore {
     nextRunAt: Date | null,
     runId: string,
   ) {
-    await this.database.update(taskTriggers).set({enabled: enabledValue(nextRunAt), next_run_at: dateOrNull(nextRunAt), last_run_at: now.toISOString(), last_run_id: runId, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskTriggers.team_id, trigger.teamId), eq(taskTriggers.id, trigger.id)));
+    await this.database.update(taskTriggers).set({enabled: enabledValue(nextRunAt), next_run_at: dateOrNull(nextRunAt), last_run_at: now.toISOString(), last_run_id: runId, updated_at: sql`CURRENT_TIMESTAMP`}).where(triggerMatching(this.database, trigger.teamId, trigger.id));
   }
 
   async listEnabledEventTriggers(teamId: string): Promise<EventTaskTrigger[]> {
-    const rows = await this.database.select({id: taskTriggers.id, team_id: taskTriggers.team_id, task_id: taskTriggers.task_id, type: taskTriggers.type, config_json: taskTriggers.config_json, policy_json: taskTriggers.policy_json, event_config_json: taskTriggers.event_config_json}).from(taskTriggers).where(and(eq(taskTriggers.team_id, teamId), eq(taskTriggers.enabled, 1)));
+    const rows = await triggerQuery(this.database).where(and(eq(tasks.team_id, teamId),
+      eq(taskTriggers.type, "event"), eq(taskTriggers.enabled, 1)));
     return rows.map(eventTriggerFromRow);
   }
 
   async markEventTriggerRan(trigger: EventTaskTrigger, runId: string) {
-    await this.database.update(taskTriggers).set({last_run_id: runId, last_run_at: sql`CURRENT_TIMESTAMP`, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskTriggers.team_id, trigger.teamId), eq(taskTriggers.id, trigger.id)));
+    await this.database.update(taskTriggers).set({last_run_id: runId, last_run_at: sql`CURRENT_TIMESTAMP`, updated_at: sql`CURRENT_TIMESTAMP`}).where(triggerMatching(this.database, trigger.teamId, trigger.id));
   }
 }
 

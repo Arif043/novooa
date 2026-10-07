@@ -375,3 +375,15 @@ enabled ASC, nextRunAt ASC
 - Nummern-/WhatsApp-Provisionierung innerhalb des Team-Subaccounts ergänzen.
 - E-Mail-Connectoren und ihre Provider-Ereignisse an `taskRuns` anbinden.
 - Team-Rollen später auf Trigger-Verwaltung anwenden.
+
+## Standalone: Aufgabenbezug
+
+SQLite speichert die Teamzugehörigkeit eines Auslösers seit Migration `0013`
+über dessen Aufgabe. `task_id` ist ein Fremdschlüssel; ein Auslöser kann nicht
+ohne bestehende Aufgabe angelegt werden. Teamgrenzen gelten für Listen,
+Aktivieren, Webhook-Token und Worker-Updates. Zeitplan-, Ereignis- und
+Policy-Konfigurationen bleiben flexible JSON-Daten.
+
+Wird eine Aufgabe im Aufgabenrepository gelöscht, werden ihre Auslöser und
+Webhook-Geheimnisse atomar entfernt. Historische Runs bleiben erhalten. Der
+Firestore-Adapter behält sein eigenes Speichermodell.

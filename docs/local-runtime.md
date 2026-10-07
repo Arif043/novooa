@@ -962,6 +962,23 @@ dessen Infrastructure-Bereich.
   Workflow-Konfigurationen und Schrittergebnisse bleiben JSON, historische
   Titel in `task_runs` bleiben Snapshots. Domain-Verträge und Firestore-Adapter
   behalten ihre eigene Struktur.
+- Seit `0013_normalize_task_triggers.sql` wird die Teamzugehörigkeit eines
+  Auslösers über seine Aufgabe aufgelöst. `task_triggers.task_id` ist ein
+  Fremdschlüssel auf `tasks.id`; die doppelte `team_id` entfällt. Der Index auf
+  `task_id` und `enabled` unterstützt Aufgabenbezüge, der Fälligkeitsindex bleibt
+  erhalten. HTTP-Routen und Worker filtern Teamzugriffe über die Aufgabe.
+  Beim Anlegen wird deren Teamzugehörigkeit innerhalb der Schreibtransaktion
+  erneut geprüft. Konfigurationen und Policies bleiben JSON; Referenzen auf
+  vergangene Runs bleiben historische Angaben.
+  Das Aufgabenrepository entfernt beim Löschen einer Aufgabe deren
+  Webhook-Geheimnisse und die Aufgabe in einer Transaktion; die Auslöser werden
+  per Kaskade gelöscht. Vergangene Runs mit ihren Titelsnapshots bleiben
+  erhalten. Die API benachrichtigt anschließend beide Ressourcen (`tasks` und
+  `task-triggers`). Auch das direkte Löschen eines Auslösers und seines
+  Geheimnisses erfolgt atomar. Die Migration erhält Konfiguration, Status und
+  Zeitpunkte und bricht bei verwaisten Aufgabenbezügen oder widersprüchlichen
+  Teamzuordnungen vollständig ab. Firestore-Adapter und fachliche Verträge
+  bleiben getrennt von diesem SQLite-Speichermodell.
 - Die Dateiablage speichert Versionsmetadaten ausschließlich in
   `file_versions`; das Team wird über `files` aufgelöst. Die aktuelle Version
   wird durch einen zusammengesetzten Fremdschlüssel ihrer Datei zugeordnet.

@@ -82,8 +82,7 @@ export const taskRunSteps = sqliteTable("task_run_steps", {
 
 export const taskTriggers = sqliteTable("task_triggers", {
   id: text("id").primaryKey(),
-  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
-  task_id: text("task_id").notNull(),
+  task_id: text("task_id").notNull().references((): AnySQLiteColumn => tasks.id, {onDelete: "cascade"}),
   type: text("type").notNull(),
   enabled: integer("enabled").notNull().default(1),
   config_json: text("config_json").notNull().default("{}"),
@@ -96,7 +95,7 @@ export const taskTriggers = sqliteTable("task_triggers", {
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
-  index("idx_task_triggers_team").on(table.team_id, table.enabled),
+  index("idx_task_triggers_task").on(table.task_id, table.enabled),
   index("idx_task_triggers_due").on(table.enabled, table.next_run_at),
 ]);
 

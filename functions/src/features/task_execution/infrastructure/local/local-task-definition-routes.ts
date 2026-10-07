@@ -56,6 +56,7 @@ export const taskDefinitionRoutes: FastifyPluginAsyncTypebox<TaskDefinitionRoute
   app.delete("/v1/tasks/:taskId", {schema: {params: TaskParams}}, async (request, reply) => {
     await store.delete(request.workspace.teamId, request.params.taskId);
     notifier.publish("tasks");
+    notifier.publish("task-triggers");
     return reply.code(204).send();
   });
 };
