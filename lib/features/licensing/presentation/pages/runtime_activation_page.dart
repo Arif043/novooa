@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/runtime/license_token_field.dart';
+import '../../../../core/runtime/runtime_form_header.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/syscat_auth_layout.dart';
 import '../cubits/runtime_license_cubit.dart';
 import '../cubits/runtime_license_state.dart';
 
+/// Erscheint in der App, sobald die Lizenz der Runtime fehlt oder abgelaufen
+/// ist — im selben Rahmen wie Anmeldung und Einrichtung.
 class RuntimeActivationPage extends StatefulWidget {
   const RuntimeActivationPage({super.key});
 
@@ -13,86 +18,60 @@ class RuntimeActivationPage extends StatefulWidget {
 }
 
 class _RuntimeActivationPageState extends State<RuntimeActivationPage> {
-  String _licenseKey = '';
+  String _token = '';
+
+  bool get _isComplete => _token.length == LicenseTokenField.length;
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<RuntimeLicenseCubit, RuntimeLicenseCubitState>(
-      builder: (context, state) => Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: _contentFor(context, state),
+    return SyscatAuthLayout(
+      maxCardWidth: SyscatAuthLayout.runtimeCardWidth,
+      child: BlocBuilder<RuntimeLicenseCubit, RuntimeLicenseCubitState>(
+        builder: (context, state) => switch (state) {
+          RuntimeLicenseLoading() || RuntimeLicenseReleasing() => const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+            child: Center(child: CircularProgressIndicator()),
           ),
-        ),
+          RuntimeLicenseActive() => const SizedBox.shrink(),
+          RuntimeLicenseActivating() => _activationForm(isBusy: true),
+          RuntimeLicenseNeedsActivation() => _activationForm(),
+          RuntimeLicenseFailureState(:final failure) => _activationForm(
+            errorText: failure.message,
+          ),
+        },
       ),
     );
   }
 
-  Widget _contentFor(BuildContext context, RuntimeLicenseCubitState state) {
-    return switch (state) {
-      RuntimeLicenseLoading() => const Center(
-        child: CircularProgressIndicator(),
-      ),
-      RuntimeLicenseActivating() || RuntimeLicenseReleasing() => const Center(
-        child: CircularProgressIndicator(),
-      ),
-      RuntimeLicenseActive() => const SizedBox.shrink(),
-      RuntimeLicenseNeedsActivation() => _activationForm(context),
-      RuntimeLicenseFailureState(:final failure) => _activationForm(
-        context,
-        message: failure.message,
-      ),
-    };
-  }
-
-  Widget _activationForm(BuildContext context, {String? message}) {
-    final theme = Theme.of(context);
+  Widget _activationForm({String? errorText, bool isBusy = false}) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Runtime aktivieren', style: theme.textTheme.headlineSmall),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          'Gib den sechzehnstelligen Lizenzschlüssel für diesen Arbeitsbereich ein.',
-          style: theme.textTheme.bodyMedium,
+        const RuntimeFormHeader(
+          title: 'Lizenz aktivieren',
+          description:
+              'Die Lizenz dieser Runtime ist nicht aktiv. Gib den Lizenz-Token '
+              'für diesen Arbeitsbereich ein.',
+        ),
+        LicenseTokenField(
+          enabled: !isBusy,
+          errorText: errorText,
+          onChanged: (token) => setState(() => _token = token),
+          onSubmitted: _activate,
         ),
         const SizedBox(height: AppSpacing.lg),
-        TextField(
-          autocorrect: false,
-          enableSuggestions: false,
-          maxLength: 19,
-          onChanged: (value) => _licenseKey = value,
-          onSubmitted: (_) => _activate(context),
-          textCapitalization: TextCapitalization.characters,
-          textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(
-            counterText: '',
-            labelText: 'Lizenzschlüssel',
-          ),
-        ),
-        if (message != null) ...[
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            message,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.error,
-            ),
-          ),
-        ],
-        const SizedBox(height: AppSpacing.lg),
-        FilledButton.icon(
-          onPressed: () => _activate(context),
-          icon: const Icon(Icons.verified_outlined),
-          label: const Text('Aktivieren'),
+        RuntimeFormButton(
+          label: 'Aktivieren',
+          isBusy: isBusy,
+          onPressed: _isComplete ? _activate : null,
         ),
       ],
     );
   }
 
-  void _activate(BuildContext context) {
-    context.read<RuntimeLicenseCubit>().activate(_licenseKey);
+  void _activate() {
+    if (!_isComplete) return;
+    context.read<RuntimeLicenseCubit>().activate(_token);
   }
 }

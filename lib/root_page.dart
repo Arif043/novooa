@@ -99,7 +99,7 @@ class _RootPageState extends State<RootPage> {
     return BlocBuilder<RuntimeLicenseCubit, RuntimeLicenseCubitState>(
       builder: (context, state) {
         if (state is RuntimeLicenseActive) return _shell(widget.child);
-        return const Scaffold(body: SafeArea(child: RuntimeActivationPage()));
+        return const RuntimeActivationPage();
       },
     );
   }

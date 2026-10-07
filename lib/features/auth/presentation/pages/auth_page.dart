@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
-import 'package:syscat2/core/theme/syscat_theme.dart';
-import 'package:syscat2/core/widgets/syscat_background.dart';
-import 'package:syscat2/generated/assets.dart';
+import 'package:syscat2/core/widgets/syscat_auth_layout.dart';
 
 import '../cubits/auth_form_cubit.dart';
 import '../cubits/auth_form_state.dart';
@@ -27,50 +25,11 @@ class _AuthView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SyscatBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.pageMobile),
-              child: const _AuthPanel(),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AuthPanel extends StatelessWidget {
-  const _AuthPanel();
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 416),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: SyscatTheme.shadowMedium,
-              blurRadius: 32,
-              offset: const Offset(0, 18),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: BlocListener<AuthFormCubit, AuthFormState>(
-            listenWhen: _isNewFailure,
-            listener: _showFailure,
-            child: const _AuthPanelContent(),
-          ),
-        ),
+    return SyscatAuthLayout(
+      child: BlocListener<AuthFormCubit, AuthFormState>(
+        listenWhen: _isNewFailure,
+        listener: _showFailure,
+        child: const _AuthPanelContent(),
       ),
     );
   }
@@ -94,34 +53,16 @@ class _AuthPanelContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _AuthHeader(),
-        SizedBox(height: AppSpacing.xl),
-        AuthForm(),
-      ],
-    );
-  }
-}
-
-class _AuthHeader extends StatelessWidget {
-  const _AuthHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Text('novooa', style: textTheme.headlineLarge),
-        Image.asset(Assets.iconsFullv2Transparent),
-        const SizedBox(height: AppSpacing.md),
         Text(
           'Erstelle dein Konto oder logge dich ein.',
-          style: textTheme.bodyMedium,
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
+        const SizedBox(height: AppSpacing.xl),
+        const AuthForm(),
       ],
     );
   }

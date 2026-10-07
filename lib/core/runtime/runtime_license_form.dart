@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../theme/app_spacing.dart';
+import 'license_token_field.dart';
 import 'runtime_connection_cubit.dart';
 import 'runtime_endpoint.dart';
+import 'runtime_form_header.dart';
 
 class RuntimeLicenseForm extends StatefulWidget {
   const RuntimeLicenseForm({
@@ -20,64 +22,41 @@ class RuntimeLicenseForm extends StatefulWidget {
 }
 
 class _RuntimeLicenseFormState extends State<RuntimeLicenseForm> {
-  final _tokenController = TextEditingController();
+  String _token = '';
 
-  @override
-  void dispose() {
-    _tokenController.dispose();
-    super.dispose();
-  }
+  bool get _isComplete => _token.length == LicenseTokenField.length;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(
-          Icons.workspace_premium_outlined,
-          size: 48,
-          color: colorScheme.primary,
+        const RuntimeFormHeader(
+          title: 'Lizenz aktivieren',
+          description:
+              'Für diese Runtime ist noch keine Lizenz aktiviert. Gib den '
+              'Lizenz-Token ein, den du beim Kauf erhalten hast.',
+        ),
+        LicenseTokenField(
+          errorText: widget.errorMessage,
+          onChanged: (token) => setState(() => _token = token),
+          onSubmitted: _activate,
         ),
         const SizedBox(height: AppSpacing.lg),
-        Text(
-          'Lizenz aktivieren',
-          style: Theme.of(context).textTheme.headlineSmall,
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          'Für diese Runtime ist keine gültige Lizenz aktiviert.',
-          style: Theme.of(context).textTheme.bodyMedium,
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        TextField(
-          controller: _tokenController,
-          autocorrect: false,
-          textCapitalization: TextCapitalization.characters,
-          decoration: InputDecoration(
-            labelText: 'Lizenz-Token',
-            errorText: widget.errorMessage,
-            prefixIcon: const Icon(Icons.key_outlined),
-          ),
-          onSubmitted: (_) => _activate(),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        FilledButton.icon(
-          onPressed: _activate,
-          icon: const Icon(Icons.verified_outlined),
-          label: const Text('Lizenz aktivieren'),
+        RuntimeFormButton(
+          label: 'Lizenz aktivieren',
+          onPressed: _isComplete ? _activate : null,
         ),
       ],
     );
   }
 
   void _activate() {
+    if (!_isComplete) return;
     context.read<RuntimeConnectionCubit>().activateLicense(
       widget.endpoint,
-      _tokenController.text,
+      _token,
     );
   }
 }
