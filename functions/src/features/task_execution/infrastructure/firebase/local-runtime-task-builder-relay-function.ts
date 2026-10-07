@@ -32,6 +32,7 @@ export const localRuntimeTaskBuilderRelay = onRequest(
       const input = assistantCallableInputSchema.parse(request.body);
       response.status(200).json(await runTaskBuilderAssistant({
         request: assistantRequestFromInput(input), actorId: `license-${license.licenseId}`,
+        teamIdForActor: async () => null,
       }));
     } catch (error) {
       logException("local_runtime_task_builder_relay.failed", error);

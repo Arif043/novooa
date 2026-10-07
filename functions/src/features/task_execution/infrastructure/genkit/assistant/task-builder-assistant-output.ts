@@ -1,14 +1,12 @@
 import {z} from "genkit";
 import {
   type TaskBuilderAssistantCommand,
+  taskBuilderAssistantPrimitives,
   type TaskBuilderAssistantResponse,
 } from "../../../domain/entities/task-builder-assistant-response.js";
 
 const commandTypeSchema = z.enum(["renameTask", "addNode"]);
-const primitiveSchema = z.enum([
-  "stringInput", "prompt", "readChannelEvent", "sendChannelMessage",
-  "humanApproval", "dialogInput", "mediaInput", "modelInference", "script",
-]);
+const primitiveSchema = z.enum(taskBuilderAssistantPrimitives);
 const rawCommandSchema = z.object({
   type: commandTypeSchema,
   label: z.string().optional(),
@@ -22,6 +20,8 @@ const rawCommandSchema = z.object({
   modelId: z.string().optional(),
   recipient: z.string().optional(),
   message: z.string().optional(),
+  script: z.string().max(20000).optional(),
+  inputTemplate: z.string().max(2000).optional(),
 });
 
 export const rawOutputSchema = z.object({

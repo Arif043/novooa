@@ -3,7 +3,10 @@ import {AssistantMessage} from "../../../assistant/domain/entities/assistant-mes
 import {AssistantRequest} from "../../../assistant/domain/entities/assistant-request.js";
 import {geminiApiKey} from "../../../../shared/genkit/gemini-secret.js";
 import {withExceptionLogging} from "../../../../shared/logging/logger.js";
+import {FirestoreTeamContextStore} from "../../../teams/infrastructure/firebase/firestore-team-context-store.js";
 import {runTaskBuilderAssistant} from "./run-task-builder-assistant.js";
+
+const teamContextStore = new FirestoreTeamContextStore();
 
 
 export const askTaskBuilderAssistant = onCall(
@@ -11,6 +14,7 @@ export const askTaskBuilderAssistant = onCall(
     authPolicy: isSignedIn(),
     invoker: "public",
     memory: "512MiB",
+    timeoutSeconds: 120,
     secrets: [geminiApiKey],
   },
   async (request) => withExceptionLogging(
@@ -22,7 +26,16 @@ export const askTaskBuilderAssistant = onCall(
 
 async function ask(data: unknown, auth: {uid: string} | undefined) {
   const input = inputFrom(data);
-  return runTaskBuilderAssistant({request: input.request, actorId: actorFrom(auth).uid});
+  return runTaskBuilderAssistant({request: input.request, actorId: actorFrom(auth).uid, teamIdForActor});
+}
+
+/** Ohne aktives Team sucht der Agent nur im globalen Modellkatalog statt abzubrechen. */
+async function teamIdForActor(uid: string): Promise<string | null> {
+  try {
+    return await teamContextStore.currentTeamIdForUid(uid);
+  } catch {
+    return null;
+  }
 }
 
 function inputFrom(data: unknown): {

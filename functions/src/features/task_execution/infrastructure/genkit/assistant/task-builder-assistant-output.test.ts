@@ -40,3 +40,19 @@ test("falls back to the raw text when structured output validation failed", () =
     knowledgeCommands: [],
   });
 });
+
+test("keeps the python script and input template of a script node", () => {
+  const output = taskBuilderOutputFromModelOutput({
+    answer: "Ich habe ein Script vorbereitet.",
+    commands: [{
+      type: "addNode",
+      primitive: "script",
+      script: "output = input.upper()",
+      inputTemplate: "{{kundenmail.betreff}}",
+    }],
+    knowledgeCommands: [],
+  }, "irrelevant");
+
+  assert.equal(output.commands[0]?.script, "output = input.upper()");
+  assert.equal(output.commands[0]?.inputTemplate, "{{kundenmail.betreff}}");
+});

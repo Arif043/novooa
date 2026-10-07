@@ -39,6 +39,11 @@ referenzieren.
 
 ## Primitives
 
+> Neuer oder geänderter Baustein: Auch das Produktwissen des KI-Agenten in
+> `functions/src/features/task_execution/infrastructure/genkit/assistant/subagents/novooa-product-knowledge.ts`
+> pflegen. Darf der Agent ihn per `addNode` anlegen, gehört er zusätzlich in
+> `taskBuilderAssistantPrimitives` und in die Client-Factory.
+
 | Enum-Wert | UI-Label | Beschreibung | Status |
 | --- | --- | --- | --- |
 | `stringInput` | Texteingabe | Gibt festen Text weiter | Implementiert |

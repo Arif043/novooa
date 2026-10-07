@@ -56,6 +56,8 @@ class TaskBuilderAgentCommandFactory {
       modelId: suggestion.stringArgument('modelId'),
       recipient: suggestion.stringArgument('recipient'),
       message: suggestion.stringArgument('message'),
+      script: suggestion.stringArgument('script'),
+      inputTemplate: suggestion.stringArgument('inputTemplate'),
     );
   }
 }

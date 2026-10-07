@@ -19,6 +19,8 @@ export type GenkitAssistantResponderDependencies<TResponse> = {
    */
   outputSchema: z.ZodTypeAny;
   promptFromRequest?: (request: AssistantRequest) => string;
+  /** Obergrenze der Tool-Runden; Orchestratoren mit Subagenten setzen sie niedriger. */
+  maxTurns?: number;
   responseFromOutput: (output: unknown, text: string) => TResponse;
 };
 
@@ -39,7 +41,7 @@ export class GenkitAssistantResponder<TResponse>
       prompt: this.promptFor(request),
       tools: this.dependencies.tools,
       context: genkitContextFrom(context),
-      maxTurns: 20,
+      maxTurns: this.dependencies.maxTurns ?? 20,
       config: this.dependencies.modelConfig,
       output: {schema: this.dependencies.outputSchema},
     });

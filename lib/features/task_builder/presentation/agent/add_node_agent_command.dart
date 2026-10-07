@@ -16,6 +16,8 @@ final class AddNodeAgentCommand extends TaskBuilderAgentCommand {
     this.modelId,
     this.recipient,
     this.message,
+    this.script,
+    this.inputTemplate,
   }) : super(label);
 
   final WorkflowPrimitive primitive;
@@ -28,6 +30,8 @@ final class AddNodeAgentCommand extends TaskBuilderAgentCommand {
   final String? modelId;
   final String? recipient;
   final String? message;
+  final String? script;
+  final String? inputTemplate;
 
   @override
   Future<void> perform(TaskBuilderCubit cubit) async {
@@ -50,6 +54,17 @@ final class AddNodeAgentCommand extends TaskBuilderAgentCommand {
   Future<void> _configureNode(TaskBuilderCubit cubit, NodeId nodeId) async {
     await _setNodeTextFields(cubit, nodeId);
     await _setNodeConfigFields(cubit, nodeId);
+    await _setScriptFields(cubit, nodeId);
+  }
+
+  Future<void> _setScriptFields(TaskBuilderCubit cubit, NodeId nodeId) async {
+    if (primitive != WorkflowPrimitive.script) return;
+    if (script case final code?) {
+      await cubit.updateScript(nodeId, code);
+    }
+    if (inputTemplate case final template?) {
+      await cubit.updateScriptInput(nodeId, template);
+    }
   }
 
   Future<void> _setNodeTextFields(TaskBuilderCubit cubit, NodeId nodeId) async {

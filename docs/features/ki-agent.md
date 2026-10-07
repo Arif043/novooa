@@ -86,6 +86,8 @@ oder Lizenz meldet sie einen lesbaren Fehler.
   dieselbe Modellkonfiguration und denselben serverseitigen Laufzeitkontext.
 - Der TaskBuilder-Agent generiert nur Vorschläge für `renameTask` und
   `addNode`; die bestehende interaktive Ausführung im Client bleibt unverändert.
+  Er ist ein Orchestrator mit Subagenten, siehe
+  [Multiagenten-Architektur](#multiagenten-architektur-aufgabenstudio).
 - Die Wissensbasis kombiniert URL Context mit `searchKnowledgeNotes`,
   `readKnowledgeNote` und `extractPageLinks`; die Notiz-Tools ermitteln den
   Team-Scope serverseitig aus dem Laufzeitkontext.
@@ -96,6 +98,46 @@ oder Lizenz meldet sie einen lesbaren Fehler.
 - Presentation: `AssistantCubit` steuert Verlauf, Ladezustand und Fehler.
 - Einstieg: Die Root-AppBar öffnet den Agenten und übergibt den aktuellen
   Bereich als Kontext.
+
+## Multiagenten-Architektur (Aufgabenstudio)
+
+Der Aufgabenstudio-Agent ist ein **Orchestrator**. Er führt das Gespräch und
+liefert als Einziger `answer` und `commands`. Facharbeit delegiert er an drei
+Subagenten. Jeder Subagent ist für ihn ein Tool („Agents as Tools“) mit eigenem
+System-Prompt, eigenen Tools und einem Zod-Ausgabeschema.
+
+| Subagent (Tool) | Aufgabe | Tools | Ausgabe |
+| --- | --- | --- | --- |
+| `anforderungsanalyse` | Zerlegt einen Automatisierungswunsch in Bausteine und kennt dafür das Produktwissen (`novooa-product-knowledge.ts`) | keine | Ziel, Auslöser, Schritte (mit `umsetzbar`), offene Fragen, `benoetigtModell`, `benoetigtScript` |
+| `modellkatalog_suche` | Findet passende ONNX-Modelle für `modelInference` | `sucheModelle` (lesend, `SearchModelCatalog`) | bis zu drei Vorschläge mit `modelId`, Begründung, Ein- und Ausgaben |
+| `python_entwicklung` | Schreibt Code für den Script-Baustein (`input`, `output`, `workflow_output`) | keine | `script`, `inputTemplate`, `workflowOutputs`, `hinweise` |
+
+- **Ablauf:** Bei einem Automatisierungswunsch ruft der Orchestrator zuerst die
+  Anforderungsanalyse auf. Je nach Profil folgen Modellsuche und
+  Python-Entwicklung, unabhängige Aufrufe parallel. Offene Fragen stellt er in
+  `answer`, statt zu raten.
+- **Nur Vorschläge:** Subagenten haben keine verändernden Tools. Änderungen
+  bleiben `commands` und werden erst nach **Ausführen** angewendet.
+  `addNode` mit `primitive: script` trägt `script` und `inputTemplate`.
+- **Kein Ausführen von Code:** Der Python-Subagent führt nichts aus.
+  `scriptDraftProblems` (Domain) prüft den Entwurf statisch (Ausgabenamen,
+  Typen, deklarierte `workflow_output`-Aufrufe). Funde erscheinen als
+  `Prüfung: …` in `hinweise`.
+- **Grenzen:** Pro Anfrage gibt es höchstens fünf Delegationen
+  (`DelegationBudget`). Subagenten haben 1–4 Tool-Runden, der Orchestrator 8.
+  Callable und Relay laufen höchstens 120 s.
+- **Fehler:** Ein fehlgeschlagener Subagent liefert `{ok: false, grund}` als
+  Tool-Antwort. Der Orchestrator arbeitet ohne ihn weiter und sagt, was fehlt.
+- **Team-Bezug:** Der Callable löst das aktive Team auf; die Modellsuche umfasst
+  dann System- und Team-Modelle. Das Relay kennt kein Team (`teamIdForActor`
+  liefert `null`) und sucht nur im globalen Katalog.
+- **Umsetzung:** `defineSubagentTool` (`assistant/infrastructure/genkit/subagents`)
+  erzeugt pro Anfrage ein `ai.dynamicTool`. Modell und Budget gelten so nur für
+  diese Anfrage. Die Specs liegen im jeweiligen Feature:
+  `machine_learning/infrastructure/genkit/model-catalog-subagent.ts` und
+  `task_execution/infrastructure/genkit/assistant/subagents/`. Alle Subagenten
+  nutzen das Modell aus `assistant_model`. Delegationen erscheinen als
+  verschachtelte Spans im Genkit-Trace.
 
 ## Änderungspläne
 
@@ -155,7 +197,9 @@ das relevante Produktwissen direkt und unterstützen aktuell zwei Bereiche:
 
 Die Wissensbasis wird als verbindliche Produktinformation in den jeweiligen
 Systemprompt eingefügt. Dadurch bleibt der Agent einfach, schnell änderbar und
-ohne zusätzliche Persistenz.
+ohne zusätzliche Persistenz. Das Baustein-Wissen der Anforderungsanalyse steht
+in `novooa-product-knowledge.ts` und muss mit
+[`aufgabe.md`](./aufgabe.md#primitives) § Primitives übereinstimmen.
 
 ## URL Context
 

@@ -8,6 +8,10 @@ type ScriptWorkflowOutputType = typeof scriptWorkflowOutputTypes[number];
 /** Gleiche Regel wie `str.isidentifier()` im Script-Dienst: Buchstabe oder _, dann Buchstaben, Ziffern, _. */
 const namePattern = /^[\p{L}_][\p{L}\p{N}_]*$/u;
 
+export function isValidScriptWorkflowOutputName(name: unknown): name is string {
+  return typeof name === "string" && namePattern.test(name) && name !== "value";
+}
+
 /** Eine Ausgabe ist ungültig; die Meldung ist für den Nutzer bestimmt. */
 export class ScriptWorkflowOutputError extends Error {
   constructor(message: string) {
@@ -35,7 +39,7 @@ export function workflowOutputsFrom(raw: readonly unknown[]): Record<string, Nod
 function entryFrom(entry: unknown): {name: string; type: ScriptWorkflowOutputType; value: unknown} {
   if (entry === null || typeof entry !== "object") throw new ScriptWorkflowOutputError("workflow_output: Ungültige Ausgabe.");
   const {name, type, value} = entry as Record<string, unknown>;
-  if (typeof name !== "string" || !namePattern.test(name) || name === "value") {
+  if (!isValidScriptWorkflowOutputName(name)) {
     throw new ScriptWorkflowOutputError(`workflow_output: Der Name ${JSON.stringify(name)} ist ungültig.`);
   }
   if (!scriptWorkflowOutputTypes.includes(type as ScriptWorkflowOutputType)) {

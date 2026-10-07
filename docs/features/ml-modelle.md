@@ -271,6 +271,15 @@ Cloud: `modelCatalog/{modelId}` in Firestore. Lokal: SQLite-Tabelle
 `model_catalog` aus Migration `004_model_catalog.sql`. Beide Adapter
 implementieren den Domain-Port `ModelCatalog`.
 
+`FirestoreModelCatalog` implementiert zusätzlich den Port `SystemModelCatalog`
+(`listSystemEntries`), für Aufrufer ohne Team-Bezug. Der Use Case
+`SearchModelCatalog` sucht mit `ModelSearchCriteria` (Aufgabe, Sprachen,
+Suchbegriffe, Limit ≤ 20). Ohne Team sucht er nur im globalen Katalog, sonst in
+System- und Team-Modellen. Sprachunabhängige Modelle passen zu jeder Sprache.
+Treffer werden nach der Zahl passender Suchbegriffe in ID, Titel, Beschreibung,
+Aufgabe, Tags und Übersetzungen sortiert. Ihn nutzt das Tool `sucheModelle` des
+[KI-Agenten](./ki-agent.md#multiagenten-architektur-aufgabenstudio).
+
 Der globale Firestore-Katalog ist die **primäre Quelle** für ONNX-Modelle. Die
 lokale Runtime liest ihn nach der Firebase-Anmeldung über
 `GET /v1/ml-models/catalog` (ohne Firebase-Sitzung: `503`). Sie installiert

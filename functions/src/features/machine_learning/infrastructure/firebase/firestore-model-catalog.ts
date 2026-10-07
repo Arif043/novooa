@@ -2,12 +2,13 @@ import {FieldValue, type DocumentData} from "firebase-admin/firestore";
 import {getDatabase} from "../../../../shared/firebase/firestore-db.js";
 import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
 import {type ModelCatalog} from "../../domain/repositories/model-catalog.js";
+import {type SystemModelCatalog} from "../../domain/repositories/system-model-catalog.js";
 import {
   modelCatalogEntryData,
   modelCatalogEntryFromData,
 } from "../model-catalog-entry-codec.js";
 
-export class FirestoreModelCatalog implements ModelCatalog {
+export class FirestoreModelCatalog implements ModelCatalog, SystemModelCatalog {
   async save(entry: ModelCatalogEntry): Promise<void> {
     const reference = modelsReference().doc(entry.id);
     await getDatabase().runTransaction(async (transaction) => {
@@ -17,12 +18,16 @@ export class FirestoreModelCatalog implements ModelCatalog {
   }
 
   async listAvailableFor(teamId: string): Promise<readonly ModelCatalogEntry[]> {
-    const snapshots = await Promise.all([
-      modelsReference().where("scope", "==", "system").get(),
+    const [systemEntries, teamSnapshot] = await Promise.all([
+      this.listSystemEntries(),
       modelsReference().where("scope", "==", "team").where("teamId", "==", teamId).get(),
     ]);
-    return snapshots.flatMap((snapshot) => snapshot.docs.map(documentToEntry))
-      .sort(compareEntries);
+    return [...systemEntries, ...teamSnapshot.docs.map(documentToEntry)].sort(compareEntries);
+  }
+
+  async listSystemEntries(): Promise<readonly ModelCatalogEntry[]> {
+    const snapshot = await modelsReference().where("scope", "==", "system").get();
+    return snapshot.docs.map(documentToEntry).sort(compareEntries);
   }
 
   async findAvailableFor(
