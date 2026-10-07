@@ -37,7 +37,7 @@ export type FileRow = {
   display_name: string; folder_id: string | null; id: string; owner_uid: string; size_bytes: number;
   storage_path: string; team_id: string; updated_at: string;
 };
-type FolderRow = Pick<FileFolders, "created_at" | "id" | "name" | "owner_uid" | "parent_folder_id" | "team_id" | "updated_at">;
+type FolderRow = Pick<FileFolders, "created_at" | "id" | "name" | "owner_uid" | "parent_folder_id" | "updated_at"> & {team_id: string};
 type VersionRow = Pick<FileVersions, "content_type" | "created_at" | "created_by_uid" | "display_name" | "file_id" | "id" |
   "size_bytes" | "storage_path"> & {team_id: string};
 

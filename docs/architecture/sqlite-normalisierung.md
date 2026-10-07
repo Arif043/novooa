@@ -1,6 +1,6 @@
 # SQLite: Normalisierung und verbleibende Prüfungen
 
-Stand: Migration `0017_normalize_file_ownership`, 28 Anwendungstabellen.
+Stand: Migration `0018_normalize_folder_ownership`, 28 Anwendungstabellen.
 Die Drizzle-Historie `__drizzle_migrations` gehört nicht zum Fachmodell.
 
 ## Bewertungsgrundlage
@@ -60,7 +60,7 @@ Schlüssel ab. Die Spalte „Bewertung“ ergänzt Ausnahmen und Prüfpunkte.
 | `runtime_sessions` | `token_hash → Anlage- und Ablaufzeit` | 3NF-Basis. |
 | `document_collections` | `(team_id, id)` und `(team_id, display_name) → Rest` | 3NF-Basis; Collection-ID ist teamlokal. |
 | `documents` | `(team_id, collection_id, id) → Dokument, Version, Zeitpunkte` | 3NF-Basis der Hülle; Inhalt bleibt frei definierbares JSON. `collection_id` allein bestimmt kein Team. |
-| `file_folders` | `id → Rest` | Seit `0016` Elternbezug auf dasselbe Team und azyklische Hierarchie abgesichert. Strenge Normalisierung bleibt offen: Elternordner bestimmen das Team von Unterordnern, Wurzeln benötigen eine eigene Zuordnung. |
+| `file_folders` | `id → Rest` | 3NF-Basis seit `0018`: genau ein Ablagebezug, entweder `parent_folder_id` oder `root_team_id`. Unterordner leiten ihr Team über die Elternkette ab. Fremdschlüssel und Trigger sichern Wurzeln, Teamgrenzen und Zyklen. |
 | `workspace_file_settings` | `team_id → version_limit` | 3NF-Basis. |
 | `file_versions` | `id → Versionsattribute` | 3NF-Basis seit `0009`; Team über Datei. Dateiname ist der Name dieser Version, nicht der aktuelle Dateiname. |
 | `files` | `id → Dateiattribute` | 3NF-Basis seit `0017`: genau ein Ablagebezug, entweder `folder_id` oder `root_team_id`. Team abgelegter Dateien wird aus dem Ordner abgeleitet; keine doppelte Teamzuordnung. Versionsmetadaten seit `0009` entdoppelt. |
@@ -92,20 +92,23 @@ Schlüssel ab. Die Spalte „Bewertung“ ergänzt Ausnahmen und Prüfpunkte.
   SQL-Trigger verhindern Teamwechsel und erhalten die Bereinigung bei
   Teamlöschung. Die Migration erhält aktuelle Versionsreferenzen, Metadaten
   und die `rowid`-Reihenfolge der Versionen.
+- `0018`: Unterordner speichern nur ihren Elternbezug. Das Team wird entlang
+  der Elternkette bis zur Wurzel aufgelöst; nur Wurzelordner besitzen
+  `root_team_id`. Datei- und Ordneradapter, Import/Export und Auslöserprüfung
+  nutzen dieselbe Auflösung. SQL-Trigger verhindern Teamwechsel vorhandener
+  Ordner und Dateien sowie Zyklen. Teamlöschung bereinigt auch Dateien in
+  tiefen Unterordnern. Die Migration erhält Hierarchie, Metadaten,
+  Versionsreferenzen und Versionsreihenfolge bei aktiven Fremdschlüsseln.
 
 ## Verbleibende Arbeit
 
-1. Ordnerzugehörigkeit einschließlich Wurzeln normalisieren. Die Integritätslücken
-   bei Teamgrenzen und Zyklen sind seit `0016` geschlossen. Dateien trennen
-   Wurzelzuordnung und abgeleitete Zugehörigkeit seit `0017`; Unterordner
-   speichern das bereits über ihren Elternordner bestimmbare Team weiterhin.
-2. Wissenslinks als abgeleitete Projektion mit definiertem Aktualisierungsweg
+1. Wissenslinks als abgeleitete Projektion mit definiertem Aktualisierungsweg
    oder als eigenständige relationale Beziehung modellieren.
-3. Wiederholte Bausteinmetadaten in Aktivitäten und die Herkunftsredundanz
+2. Wiederholte Bausteinmetadaten in Aktivitäten und die Herkunftsredundanz
    in Runs auf eine sinnvolle historische Zerlegung prüfen. Historie darf
    weder durch Änderungen aktueller Aufgaben verfälscht noch beim Löschen
    aktueller Aufgaben entfernt werden.
-4. Fehlende referentielle Absicherung der Modellvorgaben und Eigentümerbezüge
+3. Fehlende referentielle Absicherung der Modellvorgaben und Eigentümerbezüge
    getrennt von der Normalform prüfen. Eine zusätzliche Referenz ist nicht
    automatisch ein Normalisierungsschritt.
 

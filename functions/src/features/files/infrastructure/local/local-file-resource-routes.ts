@@ -4,6 +4,7 @@ import {type FastifyReply} from "fastify";
 import {randomUUID} from "node:crypto";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {fileFolders, files, fileVersions} from "../../../../db/schema.js";
+import {folderTeamId, folderLocation} from "./local-folder-team.js";
 import {ErrorResponse, ItemsOf} from "../../../../shared/local/local-runtime-http-schemas.js";
 import {type LocalRuntimeWorkspaceContext} from "../../../../shared/local/local-runtime-workspace-context.js";
 import {
@@ -22,7 +23,7 @@ export type FileResourceRoutesOptions = {
 };
 
 const folderColumns = {
-  id: fileFolders.id, team_id: fileFolders.team_id, owner_uid: fileFolders.owner_uid, name: fileFolders.name,
+  id: fileFolders.id, team_id: folderTeamId, owner_uid: fileFolders.owner_uid, name: fileFolders.name,
   parent_folder_id: fileFolders.parent_folder_id, created_at: fileFolders.created_at, updated_at: fileFolders.updated_at,
 };
 const fileResponses = {200: TeamFileDto, 201: TeamFileDto, 400: ErrorResponse, 404: ErrorResponse};
@@ -37,7 +38,7 @@ export const fileResourceRoutes: FastifyPluginAsyncTypebox<FileResourceRoutesOpt
 
   app.get("/v1/folders", {schema: {response: {200: ItemsOf(FolderDto)}}}, async (request) => {
     const rows = await database.select(folderColumns).from(fileFolders)
-      .where(eq(fileFolders.team_id, request.workspace.teamId)).orderBy(sql`${fileFolders.name} COLLATE NOCASE`);
+      .where(eq(folderTeamId, request.workspace.teamId)).orderBy(sql`${fileFolders.name} COLLATE NOCASE`);
     return {items: rows.map(folderFromRow)};
   });
 
@@ -49,14 +50,13 @@ export const fileResourceRoutes: FastifyPluginAsyncTypebox<FileResourceRoutesOpt
     const id = randomUUID();
     const created = await database.transaction(async (tx) => {
       if (!await folderExists(tx, teamId, parentFolderId)) return false;
-      await tx.insert(fileFolders).values({id, team_id: teamId, owner_uid: userId, name: request.body.name.trim(),
-        parent_folder_id: parentFolderId});
+      await tx.insert(fileFolders).values({id, ...folderLocation(teamId, parentFolderId), owner_uid: userId, name: request.body.name.trim()});
       return true;
     });
     if (!created) return reply.code(400).send(missingFolder);
     notifier.publish("folders");
     const row = await database.select(folderColumns).from(fileFolders)
-      .where(and(eq(fileFolders.team_id, teamId), eq(fileFolders.id, id))).get();
+      .where(and(eq(folderTeamId, teamId), eq(fileFolders.id, id))).get();
     return row === undefined ? reply.code(404).send({error: "Verzeichnis nicht gefunden."}) : reply.code(201).send(folderFromRow(row));
   });
 

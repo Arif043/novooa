@@ -13,20 +13,20 @@ async function fixture(t: TestContext) {
   const database = await runtimeTestDatabase(t);
   await database.insert(teams).values({id: "team-2", name: "Zweites Team", owner_uid: "u"});
   await database.insert(fileFolders).values([
-    {id: "root-1", team_id: "team-1", owner_uid: "u", name: "Wurzel"},
-    {id: "root-2", team_id: "team-2", owner_uid: "u", name: "Andere Wurzel"},
-    {id: "child", team_id: "team-1", owner_uid: "u", name: "Kind", parent_folder_id: "root-1"},
+    {id: "root-1", root_team_id: "team-1", owner_uid: "u", name: "Wurzel"},
+    {id: "root-2", root_team_id: "team-2", owner_uid: "u", name: "Andere Wurzel"},
+    {id: "child", owner_uid: "u", name: "Kind", parent_folder_id: "root-1"},
   ]);
   return database;
 }
 
 test("folder references enforce team ownership on inserts and moves", async (t) => {
   const database = await fixture(t);
-  await assert.rejects(database.insert(fileFolders).values({id: "invalid", team_id: "team-1",
+  await assert.rejects(database.insert(fileFolders).values({id: "invalid", root_team_id: "team-1",
     owner_uid: "u", name: "Ungültig", parent_folder_id: "root-2"}));
   await assert.rejects(database.update(fileFolders).set({parent_folder_id: "root-2"}).where(eq(fileFolders.id, "child")));
   await assert.rejects(database.update(fileFolders).set({parent_folder_id: "missing"}).where(eq(fileFolders.id, "child")));
-  await database.update(fileFolders).set({parent_folder_id: null}).where(eq(fileFolders.id, "child"));
+  await database.update(fileFolders).set({parent_folder_id: null, root_team_id: "team-1"}).where(eq(fileFolders.id, "child"));
   assert.equal((await database.select().from(fileFolders).where(eq(fileFolders.id, "child")))[0].parent_folder_id, null);
 });
 
@@ -44,12 +44,12 @@ test("files enforce exclusive root placement and team-preserving folder moves", 
 
 test("self references, descendant moves and multi-row cycle insertion are rejected", async (t) => {
   const database = await fixture(t);
-  await assert.rejects(database.insert(fileFolders).values({id: "self", team_id: "team-1", owner_uid: "u", name: "Selbst", parent_folder_id: "self"}));
-  await database.insert(fileFolders).values({id: "grandchild", team_id: "team-1", owner_uid: "u", name: "Enkel", parent_folder_id: "child"});
+  await assert.rejects(database.insert(fileFolders).values({id: "self", owner_uid: "u", name: "Selbst", parent_folder_id: "self"}));
+  await database.insert(fileFolders).values({id: "grandchild", owner_uid: "u", name: "Enkel", parent_folder_id: "child"});
   await assert.rejects(database.update(fileFolders).set({parent_folder_id: "grandchild"}).where(eq(fileFolders.id, "root-1")));
   await assert.rejects(database.insert(fileFolders).values([
-    {id: "cycle-a", team_id: "team-1", owner_uid: "u", name: "A", parent_folder_id: "cycle-b"},
-    {id: "cycle-b", team_id: "team-1", owner_uid: "u", name: "B", parent_folder_id: "cycle-a"},
+    {id: "cycle-a", owner_uid: "u", name: "A", parent_folder_id: "cycle-b"},
+    {id: "cycle-b", owner_uid: "u", name: "B", parent_folder_id: "cycle-a"},
   ]));
   assert.equal((await database.select().from(fileFolders).where(eq(fileFolders.id, "root-1")))[0].parent_folder_id, null);
 });
@@ -69,8 +69,8 @@ test("renaming an ID cannot close a cycle with deferred foreign keys", async (t)
   const database = await fixture(t);
   await assert.rejects(database.transaction(async (tx) => {
     await tx.run(sql`PRAGMA defer_foreign_keys = ON`);
-    await tx.insert(fileFolders).values({id: "pending-a", team_id: "team-1", owner_uid: "u", name: "A", parent_folder_id: "pending-b"});
-    await tx.insert(fileFolders).values({id: "pending-c", team_id: "team-1", owner_uid: "u", name: "C", parent_folder_id: "pending-a"});
+    await tx.insert(fileFolders).values({id: "pending-a", owner_uid: "u", name: "A", parent_folder_id: "pending-b"});
+    await tx.insert(fileFolders).values({id: "pending-c", owner_uid: "u", name: "C", parent_folder_id: "pending-a"});
     await tx.update(fileFolders).set({id: "pending-b"}).where(eq(fileFolders.id, "pending-c"));
   }));
   assert.equal((await database.select().from(fileFolders)).length, 3);

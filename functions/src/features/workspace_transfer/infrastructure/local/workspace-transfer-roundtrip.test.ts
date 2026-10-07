@@ -74,6 +74,8 @@ test("imports all categories into another team and rewrites file paths", async (
   const task = await target.database.select().from(tasks).where(eq(tasks.id, "task-1")).get();
   assert.match(task?.graph_json ?? "", /teams\/team-2\/files\/file-1/);
   assert.equal((await target.database.select().from(fileFolders)).length, 2);
+  assert.equal((await target.database.select().from(fileFolders).where(eq(fileFolders.id, "folder-child")).get())?.root_team_id, null);
+  assert.equal((await target.database.select().from(fileFolders).where(eq(fileFolders.id, "folder-root")).get())?.root_team_id, "team-2");
   assert.equal((await target.database.select().from(knowledgeNotes)).length, 1);
 });
 

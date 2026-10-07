@@ -3,6 +3,7 @@ import {createReadStream} from "node:fs";
 import {access} from "node:fs/promises";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {fileFolders, type FileVersions} from "../../../../db/schema.js";
+import {folderTeamId} from "../../../files/infrastructure/local/local-folder-team.js";
 import {currentFilesQuery, fileVersionsQuery} from "../../../files/infrastructure/local/local-file-queries.js";
 import {fileTeamId} from "../../../files/infrastructure/local/local-file-team.js";
 import {localFilePath} from "../../../files/infrastructure/local/local-file-path.js";
@@ -34,7 +35,7 @@ export class SqliteFilesTransferSection implements TransferSection {
   }
 
   private async payloadFor(teamId: string): Promise<FilesTransferPayload> {
-    const folders = await this.database.select().from(fileFolders).where(eq(fileFolders.team_id, teamId));
+    const folders = await this.database.select().from(fileFolders).where(eq(folderTeamId, teamId));
     const fileRows = await currentFilesQuery(this.database).where(eq(fileTeamId, teamId));
     return {
       folders: folders.map(folderDtoFrom),

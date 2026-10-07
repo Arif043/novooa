@@ -31,18 +31,20 @@ export const documents = sqliteTable("documents", {
 
 export const fileFolders = sqliteTable("file_folders", {
   id: text("id").primaryKey(),
-  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
+  root_team_id: text("root_team_id").references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
   owner_uid: text("owner_uid").notNull(),
   name: text("name").notNull(),
   parent_folder_id: text("parent_folder_id"),
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
-  index("idx_file_folders_team_parent").on(table.team_id, table.parent_folder_id),
-  uniqueIndex("idx_file_folders_team_id_id").on(table.team_id, table.id),
+  index("idx_file_folders_root_team").on(table.root_team_id),
+  index("idx_file_folders_parent").on(table.parent_folder_id),
+  check("file_folders_one_location", sql`(${table.parent_folder_id} IS NULL AND ${table.root_team_id} IS NOT NULL) OR
+    (${table.parent_folder_id} IS NOT NULL AND ${table.root_team_id} IS NULL)`),
   check("file_folders_not_self_parent", sql`${table.parent_folder_id} IS NULL OR ${table.parent_folder_id} <> ${table.id}`),
-  foreignKey((): {columns: [AnySQLiteColumn, AnySQLiteColumn]; foreignColumns: [AnySQLiteColumn, AnySQLiteColumn]} => ({columns: [table.team_id, table.parent_folder_id],
-    foreignColumns: [fileFolders.team_id, fileFolders.id]})).onDelete("cascade"),
+  foreignKey((): {columns: [AnySQLiteColumn]; foreignColumns: [AnySQLiteColumn]} => ({columns: [table.parent_folder_id],
+    foreignColumns: [fileFolders.id]})).onDelete("cascade"),
 ]);
 
 export const workspaceFileSettings = sqliteTable("workspace_file_settings", {

@@ -15,8 +15,8 @@ type Body = {error?: string; warnings?: string[]; blocked?: string | null; id?: 
 async function setup(t: TestContext) {
   const database = await runtimeTestDatabase(t);
   await database.insert(fileFolders).values([
-    {id: "eingang", team_id: "team-1", owner_uid: "u", name: "Eingang"},
-    {id: "ausgang", team_id: "team-1", owner_uid: "u", name: "Ausgang"},
+    {id: "eingang", root_team_id: "team-1", owner_uid: "u", name: "Eingang"},
+    {id: "ausgang", root_team_id: "team-1", owner_uid: "u", name: "Ausgang"},
   ]);
   const guard = cycleGuardFor(database);
   const notifier = new LocalRuntimeRealtimeNotifier();

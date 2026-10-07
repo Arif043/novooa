@@ -27,8 +27,8 @@ export const sampleStoragePath = "teams/team-1/files/file-1/versions/version-1/a
 
 export async function seedWorkspace(database: RuntimeDatabase, runtimeRoot: string): Promise<void> {
   await database.insert(fileFolders).values([
-    {id: "folder-child", team_id: "team-1", owner_uid: "user-1", name: "Kind", parent_folder_id: "folder-root"},
-    {id: "folder-root", team_id: "team-1", owner_uid: "user-1", name: "Wurzel", parent_folder_id: null},
+    {id: "folder-child", owner_uid: "user-1", name: "Kind", parent_folder_id: "folder-root"},
+    {id: "folder-root", root_team_id: "team-1", owner_uid: "user-1", name: "Wurzel", parent_folder_id: null},
   ].reverse());
   await database.insert(files).values({id: "file-1", owner_uid: "user-1", display_name: "angebot.txt",
     folder_id: "folder-child"});

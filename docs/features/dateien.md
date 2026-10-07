@@ -229,23 +229,28 @@ Bausteins weiter.
 
 ## Standalone: Ordnerbeziehungen
 
-Seit Migration `0016` sichert ein zusammengesetzter SQLite-Fremdschlüssel ab,
-dass Elternordner zum selben Team gehören. Selbstbezüge und Zyklen werden auch
-bei direkten SQL-Schreibzugriffen abgelehnt. Seit `0017` verweist eine Datei
-direkt auf ihren Ordner und übernimmt dessen Team. Ohne Ordner wird nur
+Seit Migration `0018` speichern Ordner entweder `parent_folder_id` für einen
+Unterordner oder `root_team_id` für eine Wurzel. Ein CHECK erzwingt genau einen
+Ablagebezug; Fremdschlüssel sichern Eltern und Teamwurzeln. Das Team eines
+Unterordners wird entlang der Elternkette abgeleitet. Selbstbezüge und Zyklen
+werden auch bei direkten SQL-Schreibzugriffen abgelehnt. Seit `0017` verweist
+eine Datei direkt auf ihren Ordner und übernimmt dessen Team. Ohne Ordner wird nur
 `root_team_id` gespeichert. Wurzelordner und Dateien ohne Ordner bleiben möglich.
 
-SQL-Trigger verhindern den Wechsel einer vorhandenen Datei in ein anderes
-Team und die Teamänderung eines Ordners mit direkt enthaltenen Dateien.
+SQL-Trigger verhindern den Wechsel einer vorhandenen Datei oder eines
+Ordners in ein anderes Team, einschließlich des Umhängens ganzer Unterbäume.
 Ein Wechsel zwischen Wurzelverzeichnis und Ordnern desselben Teams ist erlaubt.
-Import und Datei-Adapter prüfen die abgeleitete Zugehörigkeit in ihrer Transaktion.
+Import, Ordneranlage und Datei-Adapter prüfen die abgeleitete Zugehörigkeit
+in ihrer Transaktion. Die API liefert weiterhin Team- und Eltern-/Ordnerreferenzen.
+Der Export ordnet das Team über sein Manifest zu; interne Wurzelzuordnungen
+bleiben im Adapter.
 
 Ein Ordnerbaum mit enthaltenen Dateien kann nicht direkt gelöscht werden.
 Dateien müssen vorher über den Datei-Adapter gelöscht oder gültig umgeordnet
 werden; die SQLite-Löschkaskade selbst entfernt keine Dateiinhalte auf dem
 Dateisystem. Für leere Ordnerbäume bleibt die Unterordnerkaskade erhalten.
-Beim Löschen eines Teams entfernt ein Trigger zuerst dessen Dateien in Ordnern;
-Wurzeldateien, Ordner und Versionen werden über Fremdschlüssel bereinigt.
+Beim Löschen eines Teams entfernt ein Trigger zuerst dessen Dateien in allen
+Ordnerebenen; Wurzeldateien, Ordner und Versionen werden über Fremdschlüssel bereinigt.
 
 Der lokale Datei-Adapter prüft den Ordner innerhalb seiner Schreibtransaktion
 und bereinigt neue Dateiinhalte bei fehlgeschlagener Metadatenanlage. Migration

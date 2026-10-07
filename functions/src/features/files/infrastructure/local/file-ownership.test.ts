@@ -16,8 +16,8 @@ async function fixture(t: TestContext) {
   const database = await runtimeTestDatabase(t);
   await database.insert(teams).values({id: "team-2", name: "Andere", owner_uid: "u"});
   await database.insert(fileFolders).values([
-    {id: "folder-1", team_id: "team-1", owner_uid: "u", name: "Ordner"},
-    {id: "folder-2", team_id: "team-2", owner_uid: "u", name: "Anderer Ordner"},
+    {id: "folder-1", root_team_id: "team-1", owner_uid: "u", name: "Ordner"},
+    {id: "folder-2", root_team_id: "team-2", owner_uid: "u", name: "Anderer Ordner"},
   ]);
   return database;
 }
@@ -44,7 +44,7 @@ test("same-team root and folder moves succeed, cross-team moves and folder reass
   await database.insert(files).values({id: "file", owner_uid: "u", display_name: "Datei", ...fileLocation("team-1", null)});
   await database.update(files).set(fileLocation("team-1", "folder-1")).where(eq(files.id, "file"));
   await assert.rejects(database.update(files).set(fileLocation("team-2", "folder-2")).where(eq(files.id, "file")));
-  await assert.rejects(database.update(fileFolders).set({team_id: "team-2"}).where(eq(fileFolders.id, "folder-1")));
+  await assert.rejects(database.update(fileFolders).set({root_team_id: "team-2"}).where(eq(fileFolders.id, "folder-1")));
   await database.update(files).set(fileLocation("team-1", null)).where(eq(files.id, "file"));
   await assert.rejects(database.update(files).set(fileLocation("team-2", null)).where(eq(files.id, "file")));
   assert.deepEqual(await database.all(sql`PRAGMA foreign_key_check`), []);

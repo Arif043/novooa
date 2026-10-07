@@ -2,6 +2,7 @@ import {and, eq} from "drizzle-orm";
 import {access, rm} from "node:fs/promises";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {fileFolders, files, fileVersions} from "../../../../db/schema.js";
+import {folderTeamId, folderLocation} from "../../../files/infrastructure/local/local-folder-team.js";
 import {fileTeamId, fileLocation} from "../../../files/infrastructure/local/local-file-team.js";
 import {localFilePath, writeLocalFile} from "../../../files/infrastructure/local/local-file-path.js";
 import {folderExists} from "../../../files/infrastructure/local/local-folder-reference.js";
@@ -78,10 +79,17 @@ async function commitFiles(
 }
 
 async function upsertFolder(executor: RuntimeExecutor, teamId: string, folder: FolderDto): Promise<void> {
-  const values = {owner_uid: folder.ownerUid, name: folder.name, parent_folder_id: folder.parentFolderId,
+  if (!await folderExists(executor, teamId, folder.parentFolderId)) {
+    throw new InvalidTransferArchiveError("Der Elternordner gehört nicht zum importierten Team.");
+  }
+  const existing = await executor.select({team_id: folderTeamId}).from(fileFolders).where(eq(fileFolders.id, folder.id)).get();
+  if (existing && existing.team_id !== teamId) {
+    throw new InvalidTransferArchiveError("Der Ordner gehört nicht zum importierten Team.");
+  }
+  const values = {owner_uid: folder.ownerUid, name: folder.name, ...folderLocation(teamId, folder.parentFolderId),
     updated_at: folder.updatedAt};
-  await executor.insert(fileFolders).values({id: folder.id, team_id: teamId, created_at: folder.createdAt, ...values})
-    .onConflictDoUpdate({target: fileFolders.id, set: values, setWhere: eq(fileFolders.team_id, teamId)});
+  await executor.insert(fileFolders).values({id: folder.id, created_at: folder.createdAt, ...values})
+    .onConflictDoUpdate({target: fileFolders.id, set: values, setWhere: eq(folderTeamId, teamId)});
 }
 
 async function upsertFile(executor: RuntimeExecutor, teamId: string, file: FileDto): Promise<void> {
