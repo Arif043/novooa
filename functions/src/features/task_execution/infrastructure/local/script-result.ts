@@ -7,6 +7,7 @@ export function scriptResultFrom(parsed: Record<string, unknown>, fallbackInput:
     variables: variablesFrom(parsed.variables),
     printed: typeof parsed.printed === "string" ? parsed.printed : "",
     errorOutput: typeof parsed.stderr === "string" ? parsed.stderr : "",
+    workflowOutputs: Array.isArray(parsed.workflowOutputs) ? parsed.workflowOutputs as unknown[] : [],
   };
 }
 

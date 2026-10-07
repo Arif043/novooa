@@ -1,5 +1,7 @@
+import '../services/script_workflow_output_parser.dart';
 import 'node_config.dart';
 import 'plugin_node_config.dart';
+import 'workflow_output_types.dart';
 
 /// Ob ein Baustein seine fachlichen Ausgabewerte flach, ohne umschließenden
 /// Ausgabenamen anbietet (strukturierte Prompt-Ausgabe, Dialogeingabe) —
@@ -7,8 +9,18 @@ import 'plugin_node_config.dart';
 /// statt eines gemeinsamen `outputName` (siehe `docs/node-executor-outputs.md`).
 bool hasFlatOutputFields(NodeConfig config) {
   if (config is DialogInputNodeConfig) return true;
+  if (config is ScriptNodeConfig) {
+    return scriptWorkflowOutputsOf(config).isNotEmpty;
+  }
   return config is PromptNodeConfig &&
       config.outputType == PromptOutputType.structured;
+}
+
+/// Die per `workflow_output(…)` im Code definierten Ausgaben eines Scripts.
+/// Ein Script mit solchen Ausgaben ist flach wie eine strukturierte
+/// Prompt-Ausgabe; sein Text-`output` ist dann nicht mehr adressierbar.
+List<TypedOutputField> scriptWorkflowOutputsOf(ScriptNodeConfig config) {
+  return const ScriptWorkflowOutputParser()(config.script);
 }
 
 /// Die eigenständig benannten Felder eines flachen Bausteins (siehe
@@ -21,6 +33,9 @@ List<String> flatOutputFieldsOf(NodeConfig config) {
   if (config is PromptNodeConfig &&
       config.outputType == PromptOutputType.structured) {
     return _nonEmptyNames(config.structuredFields.map((field) => field.name));
+  }
+  if (config is ScriptNodeConfig) {
+    return [for (final output in scriptWorkflowOutputsOf(config)) output.name];
   }
   return const [];
 }
@@ -44,7 +59,12 @@ List<String> secondaryOutputFieldsOf(NodeConfig config) {
     SaveDocumentNodeConfig() => const ['created', 'count', 'records'],
     HttpRequestNodeConfig() => const ['status', 'ok', 'headers'],
     PluginNodeConfig() => config.secondaryOutputs.keys.toList(growable: false),
-    ReadWebhookNodeConfig() => const ['method', 'query', 'headers', 'receivedAt'],
+    ReadWebhookNodeConfig() => const [
+      'method',
+      'query',
+      'headers',
+      'receivedAt',
+    ],
     _ => const [],
   };
 }

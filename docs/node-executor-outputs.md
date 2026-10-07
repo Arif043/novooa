@@ -28,7 +28,7 @@ seit `template-expression-resolver.ts` (`nodeOutputContextFor`/
 `secondaryOutputsOf`) nicht mehr auf. Benannte Nebenoutputs bleiben per
 Dot-Pfad erreichbar, etwa `{{eingang.sender}}` oder `{{bericht.fileId}}`.
 Bausteine mit mehreren fachlichen Ausgabewerten (strukturierte
-Prompt-Ausgabe, Dialogeingabe) haben keinen eigenen Ausgabenamen — hier ist
+Prompt-Ausgabe, Dialogeingabe, Script mit `workflow_output`) haben keinen eigenen Ausgabenamen — hier ist
 jedes Feld direkt und flach unter seinem eigenen, graph-weit eindeutigen
 Namen erreichbar, z.B. `{{Name}}`.
 
@@ -45,7 +45,7 @@ einen identischen `text`-Output — ungenutzte Redundanz, inzwischen entfernt.
 | Primitive | Status | Outputs |
 | --- | --- | --- |
 | `stringInput` | ausgefuehrt | `value` (`string`) |
-| `script` | ausgefuehrt | `value` (`string`); interne Laufzeitvariablen stehen nachfolgenden Templates zur Verfuegung |
+| `script` | ausgefuehrt | `value` (`string`); interne Laufzeitvariablen stehen nachfolgenden Templates zur Verfuegung. Mit `workflow_output(name, type, value)` (nur Script-Container) stattdessen ein flacher Output je Aufruf (`string`, `number`, `boolean`, `datetime`, `json`), ohne `value` |
 | `prompt` mit Text oder Entscheidung | ausgefuehrt | `value` (`string`) |
 | `prompt` strukturiert | ausgefuehrt | ein flacher `string`-Output je konfiguriertem Feld, ohne umschliessenden Knotennamen (kein `value`-Gesamtwert mehr adressierbar) |
 | `prompt` mit Bild | ausgefuehrt | `value` (`media`); das generierte Bild wird als Team-Datei referenziert |

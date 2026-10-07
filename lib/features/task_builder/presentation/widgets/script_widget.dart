@@ -79,6 +79,8 @@ class _ScriptWidgetState extends State<ScriptWidget> {
             minLines: 6,
             maxLines: 20,
           ),
+          const SizedBox(height: AppSpacing.xs),
+          const _WorkflowOutputHint(),
           const SizedBox(height: AppSpacing.md),
           NodeFileAttachmentSection(
             attachments: _config.attachments,
@@ -137,6 +139,24 @@ class _ScriptWidgetState extends State<ScriptWidget> {
     context.read<TaskBuilderCubit>().detachNodeFile(
       nodeId: widget.node.id,
       attachmentId: attachmentId,
+    );
+  }
+}
+
+/// Kurzreferenz für fachliche Ausgaben; Name und Typ müssen feste Texte sein,
+/// damit der Builder sie erkennt.
+class _WorkflowOutputHint extends StatelessWidget {
+  const _WorkflowOutputHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'Fachliche Ausgaben: workflow_output("summe", "number", wert) — '
+      'Typen: string, number, boolean, datetime, json. '
+      'Nachfolgende Bausteine nutzen sie als {{summe}}.',
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
     );
   }
 }

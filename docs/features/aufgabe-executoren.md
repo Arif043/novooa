@@ -67,6 +67,42 @@ Das Limit betraegt fuenf Sekunden und 10 KB Output. Script-Variablen bleiben
 innerhalb desselben Runs erhalten und stehen spaeteren Scripts wieder zur
 Verfuegung.
 
+### Workflow-Ausgabewerte (`workflow_output`)
+
+Im Script-Container (Standalone) steht `workflow_output(name, type, value)`
+bereit. Jeder Aufruf legt einen fachlichen, typisierten Ausgabewert an, den
+nachfolgende Bausteine flach als `{{name}}` lesen — wie die Felder einer
+strukturierten Prompt-Ausgabe.
+
+```python
+from datetime import datetime, timedelta
+
+summe = sum(p["betrag"] for p in positionen)
+workflow_output("summe", "number", summe)
+workflow_output("faellig", "datetime", datetime.now() + timedelta(days=14))
+workflow_output("rechnung", "json", {"nr": "R-1", "positionen": positionen})
+```
+
+- **Typen:** `string`, `number` (endlich, kein `bool`), `boolean`, `datetime`
+  (`datetime`/`date` oder ISO-Text, gespeichert als ISO-Text), `json`
+  (alles, was sich als JSON speichern lässt).
+- **Namen:** wie Python-Bezeichner (Buchstaben, Ziffern, `_`, nicht mit Ziffer
+  beginnend), nicht `value`, je Script nur einmal.
+- **Prüfung:** Der Script-Dienst prüft jeden Aufruf sofort; ein Fehler bricht
+  den Lauf mit Zeilenangabe ab (`Zeile 3: TypeError: workflow_output("summe"):
+  erwartet number, erhalten str.`). Der Executor prüft die gelieferten Werte
+  erneut (`script-workflow-outputs.ts`) und lässt den Baustein bei Fehlern
+  scheitern, samt Konsolenausgabe.
+- **Flach statt Text:** Ruft ein Script `workflow_output` auf, liefert es keinen
+  `value` mehr, und `output` wird ignoriert; ohne Aufruf bleibt alles wie bisher.
+- **Builder:** erkennt die Ausgaben aus Aufrufen, deren Name und Typ feste Texte
+  sind (`ScriptWorkflowOutputParser`), zeigt sie als Chips auf dem Pfeil und
+  bietet sie als `{{name}}` an. Graph-weit eindeutig hält der Builder nur die
+  Namen, die er selbst vergibt; ein im Code gewählter Name, den schon ein
+  anderer Baustein trägt, überdeckt diesen.
+- **Nur im Container:** Der eingebettete Python-Pfad (`scriptPythonSource`,
+  Cloud) kennt die Funktion nicht; dort endet ein Aufruf mit `NameError`.
+
 Im Web-Editor prüft Tree-sitter mit einer lokal ausgelieferten Python-Wasm-
 Grammatik die Syntax und zeigt Fehler im Gutter. Diese Prüfung läuft vollständig
 im Browser, führt keinen Code aus und ersetzt keine Laufzeitprüfung des

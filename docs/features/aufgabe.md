@@ -42,7 +42,7 @@ referenzieren.
 | Enum-Wert | UI-Label | Beschreibung | Status |
 | --- | --- | --- | --- |
 | `stringInput` | Texteingabe | Gibt festen Text weiter | Implementiert |
-| `script` | Script | Fuehrt Python mit einer explizit konfigurierten Eingabe aus; in der lokalen Runtime im abgeschotteten Container `novooa-script` mit vollem Python (siehe [`../local-runtime.md`](../local-runtime.md) § Script-Dienst) | Implementiert |
+| `script` | Script | Fuehrt Python mit einer explizit konfigurierten Eingabe aus; in der lokalen Runtime im abgeschotteten Container `novooa-script` mit vollem Python (siehe [`../local-runtime.md`](../local-runtime.md) § Script-Dienst). Dort definiert `workflow_output(name, type, value)` flache, typisierte Workflow-Ausgabewerte (siehe [`aufgabe-executoren.md`](./aufgabe-executoren.md) § Script) | Implementiert |
 | `prompt` | Prompt | LLM-Aufruf mit Vorlage und Variablen; optional ein [Mitarbeiter](./mitarbeiter.md) (System-Prompt + Fähigkeiten) **oder** eigene [Fähigkeiten](./skills.md), nie beides | Implementiert |
 | `conditionalFlow` | Bedingter Ablauf | Verzweigt anhand eines Labels (Entscheidungs-Prompt-Vorgänger) oder anhand eigener boolescher Branch-Bedingungen (geführte Wertauswahl, Vergleiche, alle/mindestens eine/genau eine Bedingung, verschachtelt). Bei eigenen Bedingungen lässt sich der Sonst-Pfad im rechten Panel per Checkbox hinzufügen/entfernen; gefüllte Pfade werden nur nach Bestätigung entfernt. Weitere Bedingungen aktivieren einen ausgeschalteten Sonst-Pfad nicht erneut. | Implementiert |
 | `iterativeRefinement` | Iterative Verfeinerung | Bewertet und verbessert einen Entwurf; Mitarbeiter oder Fähigkeiten wie beim Prompt | Implementiert |

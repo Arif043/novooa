@@ -1,6 +1,7 @@
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
+import '../../domain/entities/workflow_node_outputs.dart';
 
 /// Only offer outputs from preceding nodes in this path (including outer scopes).
 WorkflowGraph conditionSourceGraph(WorkflowGraph graph, NodeId target) {
@@ -43,15 +44,11 @@ WorkflowGraph conditionSourceGraph(WorkflowGraph graph, NodeId target) {
 Map<String, String> conditionValueSources(WorkflowGraph graph) {
   final result = <String, String>{};
   for (final node in graph.nodes) {
-    final names = switch (node.config) {
-      PromptNodeConfig(
-        outputType: PromptOutputType.structured,
-        :final structuredFields,
-      ) =>
-        structuredFields.map((f) => f.name),
-      DialogInputNodeConfig(:final fields) => fields.map((f) => f.name),
-      _ => [node.outputName],
-    };
+    // Flache Bausteine (strukturierter Prompt, Dialogeingabe, Script mit
+    // workflow_output) bieten ihre Felder an, alle anderen ihren Ausgabenamen.
+    final names = hasFlatOutputFields(node.config)
+        ? flatOutputFieldsOf(node.config)
+        : [node.outputName];
     for (final name in names.map((n) => n.trim()).where((n) => n.isNotEmpty)) {
       result['{{$name}}'] = '${node.title} · $name';
     }

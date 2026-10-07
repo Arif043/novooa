@@ -4,6 +4,7 @@ import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/task_execution_result.dart';
 import '../../domain/entities/workflow_node.dart';
+import '../../domain/entities/workflow_node_outputs.dart';
 import '../../domain/entities/workflow_output_types.dart';
 
 class BausteinInsertion {
@@ -296,6 +297,15 @@ class WorkflowCanvasLayout {
         ),
         (index) => StructuredFieldEditTarget(node.id, index),
       );
+    }
+    if (node.config case final ScriptNodeConfig config
+        when hasFlatOutputFields(config)) {
+      // Die Namen stehen im Code (`workflow_output(…)`) — auf der Leinwand
+      // nur anzeigen, nicht umbenennen.
+      return [
+        for (final output in scriptWorkflowOutputsOf(config))
+          CanvasLabel(output.name, null, output.type),
+      ];
     }
     if (node.config case DialogInputNodeConfig(:final fields)) {
       return _fieldLabels(

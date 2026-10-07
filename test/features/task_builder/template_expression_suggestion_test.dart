@@ -81,6 +81,33 @@ void main() {
     );
     expect(suggestions.map((s) => s.expression), contains('{{titel}}'));
   });
+
+  test('ein Script mit workflow_output bietet seine Ausgaben flach an statt '
+      'seines Text-Outputs', () {
+    final graph = WorkflowGraph(
+      nodes: [
+        const WorkflowNode(
+          id: NodeId('script'),
+          title: 'Berechnung',
+          description: '',
+          outputName: 'script',
+          config: ScriptNodeConfig(
+            script: 'workflow_output("summe", "number", 42)',
+          ),
+        ),
+        _node('nachfolger'),
+      ],
+      edges: [_edge('script', 'nachfolger')],
+    );
+
+    final expressions = templateExpressionSuggestions(
+      graph: graph,
+      targetNodeId: const NodeId('nachfolger'),
+    ).map((s) => s.expression);
+
+    expect(expressions, contains('{{summe}}'));
+    expect(expressions, isNot(contains('{{script}}')));
+  });
 }
 
 WorkflowNode _node(String id) => WorkflowNode(

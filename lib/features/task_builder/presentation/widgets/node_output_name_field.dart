@@ -5,8 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/ios_overlays.dart';
-import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
+import '../../domain/entities/workflow_node_outputs.dart';
 import '../../domain/entities/workflow_output_types.dart';
 import '../cubits/task_builder_cubit.dart';
 import 'node_output_type_style.dart';
@@ -25,7 +25,7 @@ class NodeOutputNameField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (_hasIndependentlyNamedOutputs(node.config)) {
+    if (hasFlatOutputFields(node.config)) {
       return const SizedBox.shrink();
     }
     final outputName = node.outputName.trim();
@@ -46,12 +46,6 @@ class NodeOutputNameField extends StatelessWidget {
         onPressed: () => _showEditor(context),
       ),
     );
-  }
-
-  bool _hasIndependentlyNamedOutputs(NodeConfig config) {
-    if (config is DialogInputNodeConfig) return true;
-    return config is PromptNodeConfig &&
-        config.outputType == PromptOutputType.structured;
   }
 
   Future<void> _showEditor(BuildContext context) async {

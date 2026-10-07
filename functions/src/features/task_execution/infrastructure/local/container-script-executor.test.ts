@@ -40,11 +40,16 @@ async function workspaceWith(files: {displayName: string; bytes: Buffer; content
 const executor = (workspace?: ScriptWorkspace) => createContainerScriptExecutorFactory("http://script:8091")(workspace);
 
 test("schickt Script, Eingabe und Variablen an /run und liefert die Antwort des Dienstes", async () => {
-  const sent = respondWith(200, {outputDefined: true, output: "ERGEBNIS", printed: "hallo\n", stderr: "warnung\n", variables: {zaehler: 2}});
+  const workflowOutputs = [{name: "summe", type: "number", value: 42.5}];
+  const sent = respondWith(200, {
+    outputDefined: true, output: "ERGEBNIS", printed: "hallo\n", stderr: "warnung\n", variables: {zaehler: 2}, workflowOutputs,
+  });
 
   const result = await executor().execute(request);
 
-  assert.deepEqual(result, {output: "ERGEBNIS", printed: "hallo\n", errorOutput: "warnung\n", variables: {zaehler: 2}});
+  assert.deepEqual(result, {
+    output: "ERGEBNIS", printed: "hallo\n", errorOutput: "warnung\n", variables: {zaehler: 2}, workflowOutputs,
+  });
   assert.equal(sent[0].url, "http://script:8091/run");
   const body = JSON.parse(await (sent[0].form.get("request") as Blob).text());
   assert.deepEqual(body, {script: "output = input", input: "eingabe", variables: {zaehler: 1}, files: []});

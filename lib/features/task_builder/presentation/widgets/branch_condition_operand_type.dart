@@ -1,6 +1,8 @@
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_graph.dart';
+import '../../domain/entities/task_execution_result.dart';
 import '../../domain/entities/workflow_node.dart';
+import '../../domain/entities/workflow_node_outputs.dart';
 
 /// Grobe, rein UI-seitige Typ-Einschätzung eines Operanden (Template-
 /// Ausdruck oder Literal) innerhalb einer [ComparisonCondition] — steuert
@@ -110,11 +112,24 @@ OperandTypeHint? _fieldTypeHintFor(String name, WorkflowGraph graph) {
         for (final field in fields) {
           if (field.name.trim() == name) return _dialogFieldHint(field);
         }
+      case final ScriptNodeConfig config:
+        for (final output in scriptWorkflowOutputsOf(config)) {
+          if (output.name == name) return _scriptOutputHint(output.type);
+        }
       default:
         break;
     }
   }
   return null;
+}
+
+OperandTypeHint _scriptOutputHint(NodeOutputType type) {
+  return switch (type) {
+    NodeOutputType.string => const StringTypeHint(),
+    NodeOutputType.number => const NumberTypeHint(),
+    NodeOutputType.boolean => const BooleanTypeHint(),
+    _ => const UnknownTypeHint(),
+  };
 }
 
 OperandTypeHint _structuredFieldHint(StructuredFieldType type) {

@@ -132,6 +132,24 @@ test("flattens dialog input fields directly without a node name", () => {
   assert.equal(resolver.resolveValue("{{Kundennummer}}"), "K-1");
 });
 
+test("flattens script workflow outputs, but keeps a script without them under its output name", () => {
+  const scriptNode = (id: string, outputName: string): WorkflowNode => ({
+    id, primitive: "script", title: "", description: "", outputName,
+    config: {primitive: "script", script: "", inputTemplate: "", attachments: []},
+  });
+  const resolver = graphResolverFor(
+    [scriptNode("n1", ""), scriptNode("n2", "text")],
+    [
+      result("n1", "script", {summe: {type: "number", value: 42.5}, faellig: {type: "datetime", value: "2026-10-01"}}),
+      result("n2", "script", {value: {type: "string", value: "Hallo"}}),
+    ],
+  );
+
+  assert.equal(resolver.resolveValue("{{summe}}"), 42.5);
+  assert.equal(resolver.resolveValue("{{faellig}}"), "2026-10-01");
+  assert.equal(resolver.resolveValue("{{text}}"), "Hallo");
+});
+
 function resolverFor(scope: WorkflowExecutionScope): TemplateExpressionResolver {
   return new TemplateExpressionResolver(() => variableTemplateContextFor(
     {nodes: [], edges: []}, new Map(), {}, scope,

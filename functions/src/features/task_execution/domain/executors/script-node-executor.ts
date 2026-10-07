@@ -1,5 +1,7 @@
-import {ScriptExecutionError} from "../entities/script-execution.js";
+import {ScriptExecutionError, type ScriptExecutionResult} from "../entities/script-execution.js";
 import {type ConsoleOutput} from "../entities/task.js";
+import {type NodeOutputValue} from "../entities/workflow-value.js";
+import {ScriptWorkflowOutputError, workflowOutputsFrom} from "../services/script-workflow-outputs.js";
 import {type ScriptExecutor} from "./script-executor.js";
 import {
   type NodeExecutor,
@@ -26,11 +28,27 @@ export function createScriptNodeExecutor(
       });
       const consoleOutput = {stdout: output.printed, stderr: output.errorOutput ?? ""};
       observeOutput({printed: consoleOutput.stdout, errorOutput: consoleOutput.stderr});
-      return executedNode(node, textOutputs(output.output), {
+      return executedNode(node, nodeOutputsOf(output, consoleOutput), {
         variables: output.variables, console: hasOutput(consoleOutput) ? consoleOutput : undefined,
       });
     },
   };
+}
+
+/**
+ * Definiert das Script Workflow-Ausgaben, sind sie seine fachlichen Werte — flach unter ihrem Namen, ohne
+ * `value`; `output` gilt dann nicht. Sonst bleibt es beim Text-Output wie bisher.
+ */
+function nodeOutputsOf(output: ScriptExecutionResult, consoleOutput: ConsoleOutput): Record<string, NodeOutputValue> {
+  const workflowOutputs = output.workflowOutputs ?? [];
+  if (workflowOutputs.length === 0) return textOutputs(output.output);
+  try {
+    return workflowOutputsFrom(workflowOutputs);
+  } catch (error) {
+    if (!(error instanceof ScriptWorkflowOutputError)) throw error;
+    // Wie ein Fehler im Script selbst: mit dessen Ausgabe, damit sie in den Aktivitäten steht.
+    throw new ScriptExecutionError(error.message, consoleOutput.stdout, consoleOutput.stderr);
+  }
 }
 
 function hasOutput(output: ConsoleOutput): boolean {

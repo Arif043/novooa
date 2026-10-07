@@ -12,6 +12,8 @@ export type ScriptExecutionResult = {
   printed: string;
   /** Alles, was das Script auf stderr geschrieben hat (Warnungen, Unterprozesse); leer oder fehlend, wenn nichts. */
   errorOutput?: string;
+  /** Per `workflow_output(name, type, value)` definierte Ausgaben, ungeprüft wie vom Script-Dienst geliefert. */
+  workflowOutputs?: unknown[];
 };
 
 /** Die angehängten Dateien eines Script-Bausteins, wie sie auf der Platte der Runtime liegen. */

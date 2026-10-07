@@ -11,7 +11,13 @@ import os
 import sys
 import traceback
 
-RESERVED = {"input", "output", "files", "list_files", "read_file"}
+# Mit -I steht das eigene Verzeichnis nicht im Importpfad. Nur für diesen Import aufnehmen,
+# damit der Importpfad, den das Script sieht, unverändert bleibt.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from workflow_outputs import WorkflowOutputs  # noqa: E402
+sys.path.pop(0)
+
+RESERVED = {"input", "output", "files", "list_files", "read_file", "workflow_output"}
 
 
 def main():
@@ -28,15 +34,16 @@ def main():
 
 def run(payload):
     attachments = payload.get("files", [])
-    namespace = namespace_for(payload, attachments)
+    outputs = WorkflowOutputs()
+    namespace = namespace_for(payload, attachments, outputs)
     try:
         exec(compile(payload["script"], "<script>", "exec"), namespace)
-        return success(namespace)
+        return success(namespace, outputs)
     except BaseException as error:  # noqa: BLE001 - jeder Fehler gehört dem Nutzer
         return {"error": describe(error)}
 
 
-def namespace_for(payload, attachments):
+def namespace_for(payload, attachments, outputs):
     files = [public_file(file) for file in attachments]
 
     def list_files():
@@ -54,6 +61,8 @@ def namespace_for(payload, attachments):
         "list_files": list_files,
         "read_file": read_file,
         **payload["variables"],
+        # Nach den Variablen, damit eine gleichnamige Variable die Funktion nicht verdeckt.
+        "workflow_output": outputs.define,
     }
 
 
@@ -70,7 +79,7 @@ def path_of(attachments, display_name):
     raise FileNotFoundError(f"Angehängte Datei nicht gefunden: {display_name}")
 
 
-def success(namespace):
+def success(namespace, outputs):
     output_defined = "output" in namespace
     output = namespace.get("output")
     if output_defined and not isinstance(output, str):
@@ -79,6 +88,7 @@ def success(namespace):
         "outputDefined": output_defined,
         "output": output,
         "variables": serializable_variables(namespace),
+        "workflowOutputs": outputs.as_list(),
     }
 
 

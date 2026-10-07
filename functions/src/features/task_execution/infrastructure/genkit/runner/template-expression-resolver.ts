@@ -126,7 +126,7 @@ function nodeOutputContextFor(
   for (const node of nodes) {
     const result = results.get(node.id);
     if (!result) continue;
-    if (hasFlatOutputs(node)) {
+    if (hasFlatOutputs(node, result)) {
       mergeFlatFieldOutputs(flatOutputs, result.outputs);
       continue;
     }
@@ -138,9 +138,15 @@ function nodeOutputContextFor(
   return {nodeOutputs, flatOutputs};
 }
 
-function hasFlatOutputs(node: WorkflowNode): boolean {
+function hasFlatOutputs(node: WorkflowNode, result: NodeExecutionResult): boolean {
   if (node.config.primitive === "dialogInput") return true;
+  // Ein Script ist flach, sobald es per `workflow_output` eigene Ausgaben statt eines `value` liefert.
+  if (node.config.primitive === "script") return isScriptWithWorkflowOutputs(result);
   return node.config.primitive === "prompt" && node.config.outputType === "structured";
+}
+
+function isScriptWithWorkflowOutputs(result: NodeExecutionResult): boolean {
+  return result.outputs.value === undefined && Object.keys(result.outputs).length > 0;
 }
 
 function mergeFlatFieldOutputs(

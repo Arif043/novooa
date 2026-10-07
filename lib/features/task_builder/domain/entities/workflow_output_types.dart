@@ -1,6 +1,7 @@
 import 'node_config.dart';
 import 'plugin_node_config.dart';
 import 'task_execution_result.dart';
+import 'workflow_node_outputs.dart';
 
 /// Ein flaches Ausgabefeld (strukturierte Prompt-Ausgabe, Dialogeingabe)
 /// samt Werttyp — Name und Typ stammen aus derselben Konfiguration.
@@ -63,6 +64,7 @@ List<TypedOutputField> typedFlatOutputFieldsOf(NodeConfig config) {
       for (final field in config.structuredFields)
         (name: field.name.trim(), type: structuredFieldOutputType(field.type)),
     ],
+    ScriptNodeConfig() => scriptWorkflowOutputsOf(config),
     _ => const <TypedOutputField>[],
   };
   return [

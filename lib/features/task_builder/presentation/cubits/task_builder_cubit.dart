@@ -12,6 +12,7 @@ import 'package:syscat2/features/task_builder/domain/repositories/task_repositor
 import '../../domain/entities/task.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
+import '../../domain/entities/workflow_node_outputs.dart';
 import 'task_builder_state.dart';
 import '../plugin_node_module.dart';
 import 'workflow_primitive_labels.dart';
@@ -442,19 +443,8 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
 
   void _collectOutputNames(WorkflowGraph graph, Set<String> names) {
     for (final node in graph.nodes) {
-      if (node.config case PromptNodeConfig(
-        outputType: PromptOutputType.structured,
-        :final structuredFields,
-      )) {
-        for (final field in structuredFields) {
-          final name = field.name.trim();
-          if (name.isNotEmpty) names.add(name);
-        }
-      } else if (node.config case DialogInputNodeConfig(:final fields)) {
-        for (final field in fields) {
-          final name = field.name.trim();
-          if (name.isNotEmpty) names.add(name);
-        }
+      if (hasFlatOutputFields(node.config)) {
+        names.addAll(flatOutputFieldsOf(node.config));
       } else {
         final name = node.outputName.trim();
         if (name.isNotEmpty) names.add(name);
