@@ -258,6 +258,23 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     }
   }
 
+  /// Die Runtime erkennt die Sitzung nicht mehr an (abgelaufen, von einem
+  /// anderen Gerät abgemeldet). Adresse und Varianten-Wahl bleiben — nur das
+  /// Passwort ist neu einzugeben.
+  Future<void> handleSessionEnded() async {
+    final current = state;
+    if (current is! RuntimeConnectionReady) return;
+    await _credentials.clearSessionToken(current.endpoint.address);
+    emit(
+      RuntimeConnectionNeedsPassword(
+        current.endpoint,
+        errorMessage:
+            'Deine Sitzung ist abgelaufen oder wurde auf einem anderen Gerät '
+            'beendet. Bitte melde dich erneut an.',
+      ),
+    );
+  }
+
   /// Beendet die Sitzung auch auf der Runtime. Ist sie nicht erreichbar,
   /// meldet sich die App trotzdem ab; das Token läuft dann nach einer Woche
   /// ohne Nutzung von selbst ab.

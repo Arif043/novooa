@@ -580,6 +580,33 @@ void main() {
       },
     );
 
+    test(
+      'ein Sitzungsende verlangt das Passwort neu und behält die Adresse',
+      () async {
+        final endpoints = _MemoryEndpointStore(null);
+        final credentials = _MemoryCredentialStore();
+        final cubit = RuntimeConnectionCubit(
+          endpoints,
+          credentials,
+          _FakeLoginClient(token: 'fresh-token'),
+          const _FakeAvailability(),
+          onboarding: _FakeOnboarding(),
+          kindStore: _MemoryKindStore(),
+        );
+        final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
+        await cubit.login(endpoint, 'correct-horse-battery-staple');
+
+        await cubit.handleSessionEnded();
+
+        final state = cubit.state as RuntimeConnectionNeedsPassword;
+        expect(state.endpoint.address, '192.168.1.20');
+        expect(state.errorMessage, contains('Sitzung ist abgelaufen'));
+        expect(credentials.sessions, isEmpty);
+        expect(endpoints.wasCleared, isFalse);
+        await cubit.close();
+      },
+    );
+
     test('signOut vor einer bestehenden Verbindung ist wirkungslos', () async {
       final cubit = RuntimeConnectionCubit(
         _MemoryEndpointStore(null),

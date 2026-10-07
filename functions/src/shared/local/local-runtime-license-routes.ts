@@ -1,6 +1,6 @@
 import {type FastifyInstance, type FastifyReply, type FastifyRequest} from "fastify";
 import {type LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
-import {hasValidSession} from "./local-runtime-access-hooks.js";
+import {hasValidSession, sendSessionRequired} from "./local-runtime-access-hooks.js";
 import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 import {
   InvalidActivationTokenError,
@@ -28,7 +28,7 @@ export function registerRuntimeLicenseRoutes(
   http.post("/v1/license/release", {
     preHandler: async (request, reply) => {
       if (await mayRelease(request, releaseAuthorization)) return;
-      return reply.code(401).send({error: "Anmeldung erforderlich."});
+      return sendSessionRequired(reply);
     },
   }, async (_request, reply) => {
     try { await licenses.release(); return {status: "notActivated"}; }

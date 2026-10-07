@@ -257,7 +257,13 @@ WorkspaceApiError workspaceApiErrorFrom(String response) {
       }
     }
     final message = json['error'];
-    if (message is String) return WorkspaceApiError(message: message);
+    final code = json['code'];
+    if (message is String) {
+      return WorkspaceApiError(
+        message: message,
+        code: code is String ? code : null,
+      );
+    }
   } catch (_) {
     // The HTTP status remains available to callers.
   }

@@ -1,5 +1,5 @@
 import {type FastifyPluginAsyncTypebox, Type} from "@fastify/type-provider-typebox";
-import {bearerTokenOf} from "./local-runtime-access-hooks.js";
+import {sendSessionRequired, bearerTokenOf} from "./local-runtime-access-hooks.js";
 import {ErrorResponse} from "./local-runtime-http-schemas.js";
 import {type LocalRuntimeRealtimeTicketStore} from "./local-runtime-realtime-ticket-store.js";
 
@@ -15,7 +15,7 @@ export const realtimeTicketRoutes: FastifyPluginAsyncTypebox<RealtimeTicketRoute
   }, async (request, reply) => {
     // Die Session-Prüfung der API lief schon; ohne Token kommt die Anfrage nur in Tests hierher.
     const sessionToken = bearerTokenOf(request);
-    if (sessionToken === null) return reply.code(401).send({error: "Anmeldung erforderlich."});
+    if (sessionToken === null) return sendSessionRequired(reply);
     return {ticket: tickets.issue(sessionToken)};
   });
 };

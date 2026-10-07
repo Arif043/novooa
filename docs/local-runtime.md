@@ -258,6 +258,12 @@ nur über Freigeben und erneutes Aktivieren einzurichten sind.
 - **Andere Geräte abmelden:** `POST /v1/auth/sessions/revoke-others` beendet
   alle Sitzungen außer der eigenen und liefert `{revoked: <Anzahl>}`. In der App
   unter Einstellungen → Allgemein → „Angemeldete Geräte“.
+- **Sitzung beendet:** Fehlt die Sitzung, ist sie abgelaufen oder beendet,
+  antwortet die Runtime mit `401 {code: "session_required"}`. Nur auf diesen
+  Code hin (nicht auf andere `401` wie `license_rejected`) meldet
+  `SessionAwareWorkspaceApiClient` ein Sitzungsende; die App schließt den
+  Realtime-Kanal, löscht das Token und zeigt die Anmeldung mit einem Hinweis.
+  Adresse und Varianten-Wahl bleiben erhalten.
 - **Realtime:** Das WebSocket-Ticket ist an die Sitzung gebunden, die es
   anfordert. Beim Abmelden und beim Abmelden anderer Geräte schließt die
   Runtime deren offene Verbindungen sofort mit Code `4401`. Zusätzlich prüft

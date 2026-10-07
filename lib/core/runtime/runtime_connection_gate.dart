@@ -18,6 +18,7 @@ import 'runtime_endpoint_preferences.dart';
 import 'runtime_kind_preferences.dart';
 import 'runtime_login_client.dart';
 import 'runtime_onboarding_client.dart';
+import 'runtime_session_events.dart';
 
 class RuntimeConnectionGate extends StatefulWidget {
   const RuntimeConnectionGate({
@@ -43,6 +44,8 @@ class RuntimeConnectionGate extends StatefulWidget {
 
 class _RuntimeConnectionGateState extends State<RuntimeConnectionGate> {
   late final RuntimeConnectionCubit _cubit;
+  final RuntimeSessionEvents _sessionEvents = RuntimeSessionEvents();
+  late final StreamSubscription<void> _sessionEndedSubscription;
 
   /// Wird genau einmal pro Prozesslaufzeit gebaut (siehe [_startApplication])
   /// — die Dependency-Injection registriert Singletons und verträgt kein
@@ -70,6 +73,9 @@ class _RuntimeConnectionGateState extends State<RuntimeConnectionGate> {
         await widget.onFullReset();
       },
     );
+    _sessionEndedSubscription = _sessionEvents.sessionEnded.listen(
+      (_) => unawaited(_onSessionEnded()),
+    );
     unawaited(
       _cubit.initialize(
         RuntimeEndpoint.fromUri(widget.runtimeProfile.workspaceApiUri),
@@ -79,8 +85,18 @@ class _RuntimeConnectionGateState extends State<RuntimeConnectionGate> {
 
   @override
   void dispose() {
+    unawaited(_sessionEndedSubscription.cancel());
+    unawaited(_sessionEvents.close());
     _cubit.close();
     super.dispose();
+  }
+
+  /// Der Realtime-Kanal würde sonst mit dem ungültigen Token immer wieder ein
+  /// Ticket anfordern; nach der erneuten Anmeldung baut ihn `watch()` neu auf.
+  Future<void> _onSessionEnded() async {
+    if (_cubit.state is! RuntimeConnectionReady) return;
+    await serviceLocator<WorkspaceRealtimeChannel>().close();
+    await _cubit.handleSessionEnded();
   }
 
   @override
@@ -126,6 +142,9 @@ class _RuntimeConnectionGateState extends State<RuntimeConnectionGate> {
       return;
     }
     final profile = widget.runtimeProfile.withWorkspaceApiUri(endpoint.apiUri);
+    if (!serviceLocator.isRegistered<RuntimeSessionEvents>()) {
+      serviceLocator.registerSingleton<RuntimeSessionEvents>(_sessionEvents);
+    }
     await widget.configureApplication(profile);
     if (!mounted) return;
     setState(() => _application = widget.createApplication(profile));

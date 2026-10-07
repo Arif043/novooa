@@ -1,4 +1,4 @@
-import {type FastifyInstance, type FastifyRequest} from "fastify";
+import {type FastifyInstance, type FastifyReply, type FastifyRequest} from "fastify";
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 
@@ -17,8 +17,17 @@ export function registerLocalRuntimeAccessHooks(
   http.addHook("onRequest", async (request, reply) => {
     if (["/v1/auth/login", "/v1/setup"].includes(request.routeOptions.url ?? "")) return;
     if (await hasValidSession(request, sessions)) return;
-    return reply.code(401).send({error: "Anmeldung erforderlich."});
+    return sendSessionRequired(reply);
   });
+}
+
+/**
+ * Einheitliche Antwort, wenn eine Sitzung fehlt, abgelaufen oder beendet ist. Der Code `session_required`
+ * unterscheidet sie von anderen `401` (falsches Passwort, abgelehnter Lizenz-Token); die App kehrt nur
+ * darauf hin zur Anmeldung zurück.
+ */
+export function sendSessionRequired(reply: FastifyReply): FastifyReply {
+  return reply.code(401).send({error: "Anmeldung erforderlich.", code: "session_required"});
 }
 
 /** Trägt die Anfrage ein gültiges `Authorization: Bearer <token>`? */

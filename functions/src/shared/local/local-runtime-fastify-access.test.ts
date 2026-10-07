@@ -39,6 +39,20 @@ test("login and setup bypass only session authentication, including query string
   assert.deepEqual(fixture.verifiedTokens, []);
 });
 
+test("a missing or invalid session is reported as session_required", async (t) => {
+  const fixture = accessFixture();
+  t.after(() => fixture.http.close());
+  await fixture.licenses.activate({activationToken: "valid"});
+
+  for (const headers of [{}, {authorization: "Bearer abgelaufen"}]) {
+    const response = await fixture.http.inject({url: "/v1/tasks", headers});
+    assert.equal(response.statusCode, 401);
+    assert.equal(response.json<{code: string}>().code, "session_required");
+  }
+  const release = await fixture.http.inject({method: "POST", url: "/v1/license/release"});
+  assert.equal(release.json<{code: string}>().code, "session_required");
+});
+
 test("release requires an operator session once a password is set", async (t) => {
   const fixture = accessFixture();
   t.after(() => fixture.http.close());
