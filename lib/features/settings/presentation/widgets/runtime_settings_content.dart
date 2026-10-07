@@ -11,6 +11,7 @@ import 'package:syscat2/features/runtime_sessions/presentation/widgets/runtime_s
 import 'package:syscat2/features/communication/presentation/widgets/communication_settings_tab.dart';
 
 import 'file_version_limit_section.dart';
+import 'password_settings_section.dart';
 import 'settings_section.dart';
 import 'ai_model_settings_tab.dart';
 import 'runtime_license_status.dart';
@@ -42,6 +43,8 @@ final List<SettingsTabContribution> runtimeSettingsTabs = [
         _RuntimeSection(),
         SizedBox(height: AppSpacing.lg),
         _SessionsSection(),
+        SizedBox(height: AppSpacing.lg),
+        PasswordSettingsSection(isStandalone: true),
         SizedBox(height: AppSpacing.lg),
         FileVersionLimitSection(),
       ],

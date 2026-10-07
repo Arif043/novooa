@@ -28,6 +28,7 @@ import {assistantRoutes} from "./local-assistant-routes.js";
 import {registerLocalRuntimeAccessHooks} from "./local-runtime-access-hooks.js";
 import {createLoginAttemptLimiter} from "./local-runtime-login-rate-limiter.js";
 import {loginRoutes} from "./local-runtime-login-routes.js";
+import {passwordRoutes} from "./local-runtime-password-routes.js";
 import {type LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
 import {type LocalRuntimeRealtimeConnections} from "./local-runtime-realtime-connections.js";
 import {realtimeTicketRoutes} from "./local-runtime-realtime-ticket-routes.js";
@@ -71,6 +72,7 @@ type RouteServices = ReturnType<typeof createLocalRuntimeRouteServices>;
 /** Einrichtung und Anmeldung (ohne Session, siehe Access-Hooks), Realtime-Tickets, Abmelden und Widerrufen. */
 async function registerAccessRoutes(api: FastifyInstance, dependencies: LocalRuntimeApiDependencies, services: RouteServices) {
   await api.register(setupRoutes, {credentials: services.credentials, authorization: dependencies.licenses});
+  await api.register(passwordRoutes, {credentials: services.credentials});
   await api.register(loginRoutes, {
     credentials: services.credentials, sessions: dependencies.sessions, limiter: createLoginAttemptLimiter(),
   });

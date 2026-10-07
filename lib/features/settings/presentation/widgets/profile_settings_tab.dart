@@ -6,6 +6,7 @@ import '../../../user/domain/entities/user_profile.dart';
 import '../cubits/settings_cubit.dart';
 import '../cubits/settings_state.dart';
 import 'settings_section.dart';
+import 'password_settings_section.dart';
 
 class ProfileSettingsTab extends StatelessWidget {
   const ProfileSettingsTab({super.key, required this.state});
@@ -17,7 +18,11 @@ class ProfileSettingsTab extends StatelessWidget {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [_ProfileSection(state: state, profile: state.profile!)],
+        children: [
+          _ProfileSection(state: state, profile: state.profile!),
+          const SizedBox(height: AppSpacing.lg),
+          const PasswordSettingsSection(),
+        ],
       ),
     );
   }

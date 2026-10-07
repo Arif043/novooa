@@ -151,6 +151,7 @@ import '../../features/user/domain/usecases/ensure_user_profile.dart';
 import '../../features/user/domain/usecases/get_user_profile.dart';
 import '../../features/user/infrastructure/repositories/firestore_user_repository.dart';
 import '../routing/app_router.dart';
+import 'password_settings_dependencies.dart';
 
 final serviceLocator = GetIt.instance;
 
@@ -165,6 +166,10 @@ Future<void> configureDependencies({RuntimeProfile? runtimeProfile}) async {
     _configureCloudDependencies();
   }
   registerConnectionDependencies(serviceLocator);
+  registerPasswordSettingsDependencies(
+    serviceLocator,
+    isStandalone: profile.isStandalone,
+  );
   registerIntegrationNodes();
 }
 

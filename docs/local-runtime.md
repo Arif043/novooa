@@ -228,6 +228,7 @@ der Endpunkt bewusst nicht aus, weil er ohne Anmeldung erreichbar ist.
 `POST /v1/setup` funktioniert genau einmal und sperrt sich danach dauerhaft
 (`409`).
 
+
 Ein Token ist beim Gateway nur einmal einlösbar. Gibt man ihn auf einer
 bereits lizenzierten Runtime erneut ein — etwa weil die Antwort der ersten
 Aktivierung den Client nicht erreicht hat —, bestätigt die Runtime die
@@ -252,6 +253,19 @@ Runtime und gibt die Lizenz frei; es verlangt deshalb eine gültige Sitzung,
 sobald ein Betreiber-Passwort gesetzt ist (sonst `401`). Nur vor der
 Ersteinrichtung bleibt es offen, weil Lizenzen ohne Token-Nachweis (siehe oben)
 nur über Freigeben und erneutes Aktivieren einzurichten sind.
+
+### Passwort ändern
+
+Unter **Einstellungen → Allgemein → Passwort neu setzen** setzt ein angemeldeter
+Betreiber das Zugriffs-Passwort über `PUT /v1/auth/password {password}` neu (`204`).
+Die Route verlangt eine aktive Lizenz und eine gültige Sitzung (`423` bzw. `401
+session_required`). Sie verlangt weder das bisherige Passwort noch den Lizenz-Token.
+Das einzelne Eingabefeld hat eine Klartext-Umschaltung, kein Bestätigungsfeld.
+Neue Passwörter müssen 6–1000 Zeichen lang sein; Leerzeichen bleiben erhalten.
+SQLite speichert einen neuen scrypt-Hash mit frischem Salt. Das bisherige Passwort
+funktioniert danach nicht mehr. Bestehende Gerätesitzungen bleiben angemeldet;
+über **Angemeldete Geräte** lassen sie sich separat beenden. Nach erfolgreichem
+Speichern leert die App das Passwortfeld und verbirgt es wieder.
 
 ### Sitzungen
 

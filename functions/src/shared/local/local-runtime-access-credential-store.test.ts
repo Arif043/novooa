@@ -56,6 +56,29 @@ async function storeWithSchema(): Promise<LocalRuntimeAccessCredentialStore> {
   return new LocalRuntimeAccessCredentialStore(database);
 }
 
+test("password changes replace the hash and salt and invalidate the old password", async () => {
+  const database = connectRuntimeDatabase(":memory:");
+  await createSchema(database);
+  const store = new LocalRuntimeAccessCredentialStore(database);
+  await store.setPassword("old-password");
+  const before = await database.get<{salt: string; password_hash: string}>(sql`SELECT salt, password_hash FROM runtime_access_credential`);
+  await store.updatePassword("  new-password  ");
+  const after = await database.get<{salt: string; password_hash: string}>(sql`SELECT salt, password_hash FROM runtime_access_credential`);
+  assert.notEqual(after?.salt, before?.salt);
+  assert.notEqual(after?.password_hash, before?.password_hash);
+  assert.notEqual(after?.password_hash, "  new-password  ");
+  assert.equal(await store.verifyPassword("old-password"), false);
+  assert.equal(await store.verifyPassword("  new-password  "), true);
+  await assert.rejects(() => store.setPassword("setup-password"), RuntimeAccessCredentialAlreadySetError);
+  database.$client.close();
+});
+
+test("password changes do not replace the initial setup", async () => {
+  const store = await storeWithSchema();
+  await assert.rejects(() => store.updatePassword("new-password"));
+  assert.equal(await store.hasCredential(), false);
+});
+
 async function createSchema(database: RuntimeDatabase): Promise<void> {
   await database.run(sql`
     CREATE TABLE runtime_access_credential (

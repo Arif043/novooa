@@ -33,8 +33,8 @@ export class LocalRuntimeAccessCredentialStore {
   }
 
   /**
-   * Setzt das Passwort. Wirft, falls bereits eines gesetzt ist — die
-   * Sperre ist absichtlich permanent und nicht per API zurücksetzbar.
+   * Ersteinrichtung. Ein vorhandenes Passwort wird nur über die authentifizierte
+   * Passwortänderung ersetzt, niemals über den öffentlichen Setup-Endpunkt.
    */
   async setPassword(password: string): Promise<void> {
     if (await this.hasCredential()) {
@@ -52,6 +52,15 @@ export class LocalRuntimeAccessCredentialStore {
     const candidate = Buffer.from(await this.hash(password, row.salt), "hex");
     const stored = Buffer.from(row.password_hash, "hex");
     return candidate.length === stored.length && timingSafeEqual(candidate, stored);
+  }
+
+  async updatePassword(password: string): Promise<void> {
+    const salt = randomBytes(saltBytes).toString("hex");
+    const hash = await this.hash(password, salt);
+    const updated = await this.database.update(runtimeAccessCredential)
+      .set({password_hash: hash, salt}).where(eq(runtimeAccessCredential.id, 1))
+      .returning({id: runtimeAccessCredential.id});
+    if (updated.length === 0) throw new Error("Das Zugriffs-Passwort wurde noch nicht eingerichtet.");
   }
 
   /** Reiht den Hash hinter den laufenden ein; ein Fehler blockiert die Schlange nicht. */

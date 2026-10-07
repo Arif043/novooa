@@ -316,6 +316,16 @@ Detailtiefe in [`features/wissensbasis.md`](./features/wissensbasis.md).
 
 ## Auth & AppCheck
 
+Die Section **Passwort neu setzen** in den allgemeinen Einstellungen verwendet
+`SetNewPassword` und einen separaten `PasswordRepository`-Port. Der Cloud-Adapter
+ändert das Passwort des angemeldeten Firebase-Nutzers über `User.updatePassword`;
+der Standalone-HTTP-Adapter nutzt die authentifizierte Runtime-Route
+`PUT /v1/auth/password` (siehe [Runtime-Dokumentation](local-runtime.md#passwort-ändern)).
+Das Formular enthält ein neues Passwortfeld mit Klartext-Umschaltung, ohne
+aktuelles Passwort oder Wiederholung. Firebase kann `requires-recent-login`
+melden; dann zeigt die App einen Hinweis auf erneute Anmeldung. Der Cubit hält
+keine Passwörter im State und schützt vor parallelem Speichern.
+
 - Auth-Source: Firebase Auth (anzubinden).
 - `onCallGenkit` unterstützt `authPolicy` (`hasClaim`, `isSignedIn`).
 - `enforceAppCheck: true` aktivieren, sobald das erste Feature produktiv geht.
