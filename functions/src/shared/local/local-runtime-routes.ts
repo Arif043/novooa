@@ -29,11 +29,13 @@ import {registerLocalRuntimeAccessHooks} from "./local-runtime-access-hooks.js";
 import {createLoginAttemptLimiter} from "./local-runtime-login-rate-limiter.js";
 import {loginRoutes} from "./local-runtime-login-routes.js";
 import {type LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
+import {type LocalRuntimeRealtimeConnections} from "./local-runtime-realtime-connections.js";
 import {realtimeTicketRoutes} from "./local-runtime-realtime-ticket-routes.js";
 import {type LocalRuntimeRealtimeTicketStore} from "./local-runtime-realtime-ticket-store.js";
 import {mailRelayFromEnvironment, pushRelayFromEnvironment} from "./local-runtime-relays.js";
 import {createLocalRuntimeRouteServices} from "./local-runtime-route-services.js";
 import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
+import {sessionRoutes} from "./local-runtime-session-routes.js";
 import {setupRoutes} from "./local-runtime-setup-routes.js";
 import {registerWorkspaceContext, type LocalRuntimeWorkspaceContext} from "./local-runtime-workspace-context.js";
 
@@ -45,6 +47,7 @@ export type LocalRuntimeApiDependencies = {
   sessions: LocalRuntimeSessionStore;
   notifier: LocalRuntimeRealtimeNotifier;
   tickets: LocalRuntimeRealtimeTicketStore;
+  realtimeConnections: LocalRuntimeRealtimeConnections;
   mailConnectors: MailConnectorListCache;
   workspaceContext: () => LocalRuntimeWorkspaceContext;
 };
@@ -65,13 +68,14 @@ export function localRuntimeApi(dependencies: LocalRuntimeApiDependencies): Fast
 
 type RouteServices = ReturnType<typeof createLocalRuntimeRouteServices>;
 
-/** Einrichtung, Anmeldung und Realtime-Tickets — ohne Session erreichbar (siehe Access-Hooks). */
+/** Einrichtung und Anmeldung (ohne Session, siehe Access-Hooks), Realtime-Tickets, Abmelden und Widerrufen. */
 async function registerAccessRoutes(api: FastifyInstance, dependencies: LocalRuntimeApiDependencies, services: RouteServices) {
   await api.register(setupRoutes, {credentials: services.credentials, authorization: dependencies.licenses});
   await api.register(loginRoutes, {
     credentials: services.credentials, sessions: dependencies.sessions, limiter: createLoginAttemptLimiter(),
   });
   await api.register(realtimeTicketRoutes, {tickets: dependencies.tickets});
+  await api.register(sessionRoutes, {sessions: dependencies.sessions, connections: dependencies.realtimeConnections});
 }
 
 async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRuntimeApiDependencies, services: RouteServices) {

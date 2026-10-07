@@ -205,7 +205,7 @@ void main() {
         final cubit = RuntimeConnectionCubit(
           endpoints,
           _MemoryCredentialStore(),
-          const _FakeLoginClient(),
+          _FakeLoginClient(),
           const _FakeAvailability(),
           onboarding: _FakeOnboarding(),
           kindStore: _MemoryKindStore(),
@@ -231,7 +231,7 @@ void main() {
       final cubit = RuntimeConnectionCubit(
         endpoints,
         credentials,
-        const _FakeLoginClient(),
+        _FakeLoginClient(),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
         kindStore: _MemoryKindStore(),
@@ -248,7 +248,7 @@ void main() {
       final cubit = RuntimeConnectionCubit(
         _MemoryEndpointStore(null),
         _MemoryCredentialStore(),
-        const _FakeLoginClient(),
+        _FakeLoginClient(),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(hasLicense: false),
         kindStore: _MemoryKindStore(),
@@ -266,7 +266,7 @@ void main() {
         final cubit = RuntimeConnectionCubit(
           _MemoryEndpointStore(null),
           _MemoryCredentialStore(),
-          const _FakeLoginClient(),
+          _FakeLoginClient(),
           const _FakeAvailability(),
           onboarding: _FakeOnboarding(
             hasLicense: false,
@@ -296,7 +296,7 @@ void main() {
         final cubit = RuntimeConnectionCubit(
           _MemoryEndpointStore(null),
           _MemoryCredentialStore(),
-          const _FakeLoginClient(),
+          _FakeLoginClient(),
           const _FakeAvailability(),
           onboarding: onboarding,
           kindStore: _MemoryKindStore(),
@@ -321,7 +321,7 @@ void main() {
         final cubit = RuntimeConnectionCubit(
           _MemoryEndpointStore(null),
           _MemoryCredentialStore(),
-          const _FakeLoginClient(),
+          _FakeLoginClient(),
           const _FakeAvailability(),
           onboarding: onboarding,
           kindStore: _MemoryKindStore(),
@@ -347,7 +347,7 @@ void main() {
         final cubit = RuntimeConnectionCubit(
           _MemoryEndpointStore(null),
           _MemoryCredentialStore(),
-          const _FakeLoginClient(),
+          _FakeLoginClient(),
           const _FakeAvailability(),
           onboarding: _FailingSetupOnboarding(),
           kindStore: _MemoryKindStore(),
@@ -371,7 +371,7 @@ void main() {
         final cubit = RuntimeConnectionCubit(
           _MemoryEndpointStore(null),
           _MemoryCredentialStore(),
-          const _FakeLoginClient(),
+          _FakeLoginClient(),
           const _FakeAvailability(isReachable: false),
           onboarding: _FakeOnboarding(),
           kindStore: _MemoryKindStore(),
@@ -391,7 +391,7 @@ void main() {
         final cubit = RuntimeConnectionCubit(
           _MemoryEndpointStore(null),
           _MemoryCredentialStore(),
-          const _FakeLoginClient(),
+          _FakeLoginClient(),
           const _FakeAvailability(isReachable: false),
           onboarding: _FakeOnboarding(),
           kindStore: _MemoryKindStore(),
@@ -414,7 +414,7 @@ void main() {
       final cubit = RuntimeConnectionCubit(
         _MemoryEndpointStore(staleEndpoint),
         _MemoryCredentialStore(),
-        const _FakeLoginClient(),
+        _FakeLoginClient(),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
         kindStore: _MemoryKindStore(),
@@ -433,7 +433,7 @@ void main() {
       final cubit = RuntimeConnectionCubit(
         _MemoryEndpointStore(null),
         _MemoryCredentialStore(),
-        const _FakeLoginClient(),
+        _FakeLoginClient(),
         const _FakeAvailability(isReachable: false),
         onboarding: _FakeOnboarding(),
         kindStore: _MemoryKindStore(),
@@ -451,7 +451,7 @@ void main() {
       final cubit = RuntimeConnectionCubit(
         _MemoryEndpointStore(null),
         _MemoryCredentialStore(),
-        const _FakeLoginClient(),
+        _FakeLoginClient(),
         const _FakeAvailability(isReachable: false),
         onboarding: _FakeOnboarding(),
         kindStore: _MemoryKindStore(),
@@ -470,7 +470,7 @@ void main() {
       final cubit = RuntimeConnectionCubit(
         endpoints,
         credentials,
-        const _FakeLoginClient(token: 'fresh-token'),
+        _FakeLoginClient(token: 'fresh-token'),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
         kindStore: _MemoryKindStore(),
@@ -492,7 +492,7 @@ void main() {
       final cubit = RuntimeConnectionCubit(
         endpoints,
         credentials,
-        const _FakeLoginClient(token: 'fresh-token'),
+        _FakeLoginClient(token: 'fresh-token'),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
         kindStore: kindStore,
@@ -515,7 +515,7 @@ void main() {
       final cubit = RuntimeConnectionCubit(
         _MemoryEndpointStore(null),
         _MemoryCredentialStore(),
-        const _FakeLoginClient(token: 'fresh-token'),
+        _FakeLoginClient(token: 'fresh-token'),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
         kindStore: _MemoryKindStore(),
@@ -531,11 +531,60 @@ void main() {
       await cubit.close();
     });
 
+    test('signOut beendet die Sitzung auch auf der Runtime', () async {
+      final loginClient = _FakeLoginClient(token: 'fresh-token');
+      final cubit = RuntimeConnectionCubit(
+        _MemoryEndpointStore(null),
+        _MemoryCredentialStore(),
+        loginClient,
+        const _FakeAvailability(),
+        onboarding: _FakeOnboarding(),
+        kindStore: _MemoryKindStore(),
+      );
+      await cubit.login(
+        RuntimeEndpoint.fromAddress('192.168.1.20'),
+        'correct-horse-battery-staple',
+      );
+
+      await cubit.signOut();
+
+      expect(loginClient.loggedOutTokens, ['fresh-token']);
+      await cubit.close();
+    });
+
+    test(
+      'signOut meldet ab, auch wenn die Runtime nicht erreichbar ist',
+      () async {
+        final credentials = _MemoryCredentialStore();
+        final cubit = RuntimeConnectionCubit(
+          _MemoryEndpointStore(null),
+          credentials,
+          _FakeLoginClient(
+            token: 'fresh-token',
+            logoutFailure: Exception('nicht erreichbar'),
+          ),
+          const _FakeAvailability(),
+          onboarding: _FakeOnboarding(),
+          kindStore: _MemoryKindStore(),
+        );
+        await cubit.login(
+          RuntimeEndpoint.fromAddress('192.168.1.20'),
+          'correct-horse-battery-staple',
+        );
+
+        await cubit.signOut();
+
+        expect(credentials.sessions, isEmpty);
+        expect(cubit.state, isA<RuntimeConnectionLoading>());
+        await cubit.close();
+      },
+    );
+
     test('signOut vor einer bestehenden Verbindung ist wirkungslos', () async {
       final cubit = RuntimeConnectionCubit(
         _MemoryEndpointStore(null),
         _MemoryCredentialStore(),
-        const _FakeLoginClient(),
+        _FakeLoginClient(),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
         kindStore: _MemoryKindStore(),
@@ -551,7 +600,7 @@ void main() {
       final cubit = RuntimeConnectionCubit(
         _MemoryEndpointStore(null),
         _MemoryCredentialStore(),
-        const _FakeLoginClient(
+        _FakeLoginClient(
           failure: RuntimeLoginFailure('Passwort ist ungültig.'),
         ),
         const _FakeAvailability(),
@@ -571,7 +620,7 @@ void main() {
       final cubit = RuntimeConnectionCubit(
         _MemoryEndpointStore(null),
         _MemoryCredentialStore(),
-        const _FakeLoginClient(),
+        _FakeLoginClient(),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
         kindStore: _MemoryKindStore(),
@@ -646,15 +695,23 @@ class _MemoryCredentialStore implements RuntimeCredentialStore {
 }
 
 class _FakeLoginClient implements RuntimeLoginClient {
-  const _FakeLoginClient({this.token = 'token', this.failure});
+  _FakeLoginClient({this.token = 'token', this.failure, this.logoutFailure});
 
   final String token;
   final RuntimeLoginFailure? failure;
+  final Object? logoutFailure;
+  final List<String> loggedOutTokens = [];
 
   @override
   Future<String> login(RuntimeEndpoint endpoint, String password) async {
     if (failure != null) throw failure!;
     return token;
+  }
+
+  @override
+  Future<void> logout(RuntimeEndpoint endpoint, String sessionToken) async {
+    if (logoutFailure != null) throw logoutFailure!;
+    loggedOutTokens.add(sessionToken);
   }
 }
 

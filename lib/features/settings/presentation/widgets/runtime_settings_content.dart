@@ -1,9 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/licensing/presentation/cubits/runtime_license_cubit.dart';
 import 'package:syscat2/features/licensing/presentation/cubits/runtime_license_state.dart';
+import 'package:syscat2/features/runtime_sessions/presentation/cubits/runtime_sessions_cubit.dart';
+import 'package:syscat2/features/runtime_sessions/presentation/widgets/runtime_sessions_section.dart';
 
 import 'package:syscat2/features/communication/presentation/widgets/communication_settings_tab.dart';
 
@@ -37,6 +40,8 @@ final List<SettingsTabContribution> runtimeSettingsTabs = [
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: const [
         _RuntimeSection(),
+        SizedBox(height: AppSpacing.lg),
+        _SessionsSection(),
         SizedBox(height: AppSpacing.lg),
         FileVersionLimitSection(),
       ],
@@ -161,6 +166,24 @@ class _RuntimeSection extends StatelessWidget {
           RuntimeLicenseNeedsActivation() || RuntimeLicenseFailureState() =>
             const Text('Die Runtime ist nicht aktiviert.'),
         },
+      ),
+    );
+  }
+}
+
+class _SessionsSection extends StatelessWidget {
+  const _SessionsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingsSection(
+      icon: Icons.devices_outlined,
+      title: 'Angemeldete Geräte',
+      description:
+          'Geräte bleiben angemeldet, solange sie mindestens einmal pro Woche genutzt werden.',
+      child: BlocProvider(
+        create: (_) => serviceLocator<RuntimeSessionsCubit>(),
+        child: const RuntimeSessionsSection(),
       ),
     );
   }

@@ -113,6 +113,10 @@ import '../../features/licensing/domain/usecases/load_runtime_license_status.dar
 import '../../features/licensing/domain/usecases/release_runtime_license.dart';
 import '../../features/licensing/infrastructure/repositories/http_runtime_license_repository.dart';
 import '../../features/licensing/presentation/cubits/runtime_license_cubit.dart';
+import '../../features/runtime_sessions/domain/repositories/runtime_session_repository.dart';
+import '../../features/runtime_sessions/domain/usecases/revoke_other_runtime_sessions.dart';
+import '../../features/runtime_sessions/infrastructure/repositories/http_runtime_session_repository.dart';
+import '../../features/runtime_sessions/presentation/cubits/runtime_sessions_cubit.dart';
 import '../../features/notifications/domain/repositories/app_notification_repository.dart';
 import '../../features/notifications/domain/repositories/push_device_repository.dart';
 import '../../features/notifications/domain/usecases/accept_team_invitation.dart';
@@ -211,6 +215,9 @@ Future<void> configureStandaloneDependencies(
   locator
     ..registerLazySingleton<RuntimeLicenseRepository>(
       () => HttpRuntimeLicenseRepository(locator<WorkspaceApiClient>()),
+    )
+    ..registerLazySingleton<RuntimeSessionRepository>(
+      () => HttpRuntimeSessionRepository(locator<WorkspaceApiClient>()),
     )
     ..registerLazySingleton<AssistantRepository>(
       () => RoutedAssistantRepository(
@@ -486,6 +493,12 @@ Future<void> configureStandaloneDependencies(
     )
     ..registerLazySingleton(
       () => ReleaseRuntimeLicense(locator<RuntimeLicenseRepository>()),
+    )
+    ..registerLazySingleton(
+      () => RevokeOtherRuntimeSessions(locator<RuntimeSessionRepository>()),
+    )
+    ..registerFactory(
+      () => RuntimeSessionsCubit(locator<RevokeOtherRuntimeSessions>()),
     )
     ..registerLazySingleton(
       () => RuntimeLicenseCubit(

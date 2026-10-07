@@ -241,6 +241,7 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     final current = state;
     if (current is! RuntimeConnectionReady) return;
     try {
+      await _endSessionOnRuntime(current.endpoint);
       await _credentials.clearSessionToken(current.endpoint.address);
       await _endpoints.clear();
       await kindStore.clear();
@@ -254,6 +255,19 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
           errorMessage: 'Abmelden fehlgeschlagen.',
         ),
       );
+    }
+  }
+
+  /// Beendet die Sitzung auch auf der Runtime. Ist sie nicht erreichbar,
+  /// meldet sich die App trotzdem ab; das Token läuft dann nach einer Woche
+  /// ohne Nutzung von selbst ab.
+  Future<void> _endSessionOnRuntime(RuntimeEndpoint endpoint) async {
+    final token = await _credentials.sessionToken(endpoint.address);
+    if (token == null) return;
+    try {
+      await _loginClient.logout(endpoint, token);
+    } on Object catch (error, stackTrace) {
+      _reportFailure('logout', error, stackTrace);
     }
   }
 

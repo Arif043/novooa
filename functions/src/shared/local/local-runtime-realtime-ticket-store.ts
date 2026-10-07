@@ -18,26 +18,27 @@ const ticketLifetimeMs = 10 * 1000; // 10 Sekunden
  * Tickets ohnehin ungültig (die Verbindung bräche dann sowieso ab).
  */
 export class LocalRuntimeRealtimeTicketStore {
-  private readonly expiresAtByTicket = new Map<string, number>();
+  private readonly ticketsByValue = new Map<string, {expiresAt: number; sessionToken: string}>();
 
-  issue(): string {
+  /** Stellt ein Ticket für die Sitzung aus, die es anfordert — die Verbindung bleibt an sie gebunden. */
+  issue(sessionToken: string): string {
     this.dropExpired();
     const ticket = randomBytes(ticketBytes).toString("hex");
-    this.expiresAtByTicket.set(ticket, Date.now() + ticketLifetimeMs);
+    this.ticketsByValue.set(ticket, {expiresAt: Date.now() + ticketLifetimeMs, sessionToken});
     return ticket;
   }
 
-  /** Prüft das Ticket und verbraucht es dabei sofort (Einmalgebrauch). */
-  consume(ticket: string): boolean {
-    const expiresAt = this.expiresAtByTicket.get(ticket);
-    this.expiresAtByTicket.delete(ticket);
-    return expiresAt !== undefined && expiresAt > Date.now();
+  /** Prüft das Ticket, verbraucht es sofort (Einmalgebrauch) und liefert die Sitzung dazu. */
+  consume(ticket: string): string | null {
+    const issued = this.ticketsByValue.get(ticket);
+    this.ticketsByValue.delete(ticket);
+    return issued !== undefined && issued.expiresAt > Date.now() ? issued.sessionToken : null;
   }
 
   private dropExpired(): void {
     const now = Date.now();
-    for (const [ticket, expiresAt] of this.expiresAtByTicket) {
-      if (expiresAt <= now) this.expiresAtByTicket.delete(ticket);
+    for (const [ticket, issued] of this.ticketsByValue) {
+      if (issued.expiresAt <= now) this.ticketsByValue.delete(ticket);
     }
   }
 }

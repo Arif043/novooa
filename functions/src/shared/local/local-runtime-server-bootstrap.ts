@@ -11,6 +11,7 @@ import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {type LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
 import {createLocalRuntimeHttpServer} from "./local-runtime-http-server.js";
 import {registerRuntimeLicenseRoutes} from "./local-runtime-license-routes.js";
+import {LocalRuntimeRealtimeConnections, RealtimeSessionGuard} from "./local-runtime-realtime-connections.js";
 import {LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
 import {attachLocalRuntimeRealtimeServer, type LocalRuntimeRealtimeGateway} from "./local-runtime-realtime-server.js";
 import {LocalRuntimeRealtimeTicketStore} from "./local-runtime-realtime-ticket-store.js";
@@ -33,6 +34,7 @@ type RuntimeShared = {
   sessions: LocalRuntimeSessionStore;
   notifier: LocalRuntimeRealtimeNotifier;
   tickets: LocalRuntimeRealtimeTicketStore;
+  realtimeConnections: LocalRuntimeRealtimeConnections;
   mailConnectors: MailConnectorListCache;
   application: LocalRuntimeApplication;
 };
@@ -47,8 +49,11 @@ export async function bootstrapLocalRuntime(options: BootstrapOptions): Promise<
     const http = await listenForRequests(options, shared);
     const licenseMonitor = licenseMonitorFor(options.licenses);
     licenseMonitor.start();
+    const realtimeGuard = realtimeGuardFor(options.licenses, shared);
+    realtimeGuard.start();
     reportStarted(options.port);
     const closeHttp = async () => {
+      realtimeGuard.stop();
       await licenseMonitor.stop();
       await http.close();
     };
@@ -71,7 +76,7 @@ function sharedFor(options: BootstrapOptions): RuntimeShared {
   });
   return {
     sessions: new LocalRuntimeSessionStore(database), notifier, mailConnectors,
-    tickets: new LocalRuntimeRealtimeTicketStore(), application,
+    tickets: new LocalRuntimeRealtimeTicketStore(), realtimeConnections: new LocalRuntimeRealtimeConnections(), application,
   };
 }
 
@@ -96,7 +101,7 @@ function runtimeRoutes(options: BootstrapOptions, shared: RuntimeShared): Fastif
     await routes.register(localRuntimeApi({
       database: options.database, runtimeRoot: options.runtimeRoot, fieldCipher: options.fieldCipher,
       licenses: options.licenses, sessions: shared.sessions, notifier: shared.notifier, tickets: shared.tickets,
-      mailConnectors: shared.mailConnectors,
+      realtimeConnections: shared.realtimeConnections, mailConnectors: shared.mailConnectors,
       workspaceContext: () => shared.application.workspaceContext(),
     }));
     // Neben der API, nicht darin: Externe Systeme haben keine Sitzung (siehe docs/features/webhooks.md).
@@ -107,9 +112,11 @@ function runtimeRoutes(options: BootstrapOptions, shared: RuntimeShared): Fastif
 }
 
 /** Tickets gibt es erst nach der Lizenzaktivierung (die Ticket-Route liegt hinter den Lizenz-Hooks). */
-function realtimeGatewayFor({tickets, notifier}: RuntimeShared): LocalRuntimeRealtimeGateway {
+function realtimeGatewayFor({tickets, notifier, realtimeConnections}: RuntimeShared): LocalRuntimeRealtimeGateway {
   return {
     consumeRealtimeTicket: (ticket) => tickets.consume(ticket),
+    realtimeConnected: (connection, sessionToken) => realtimeConnections.add(connection, sessionToken),
+    realtimeDisconnected: (connection) => realtimeConnections.remove(connection),
     subscribeRealtime: (topic, subscriber) => notifier.subscribe(topic, subscriber),
     unsubscribeRealtime: (topic, subscriber) => notifier.unsubscribe(topic, subscriber),
   };
@@ -130,6 +137,18 @@ function licenseMonitorFor(licenses: RuntimeLicenseService): RuntimeLicenseMonit
   return new RuntimeLicenseMonitor({
     check: () => licenses.verifyActivation(),
     report: (event, details) => console.info(JSON.stringify({event, ...details})),
+  });
+}
+
+/** Schließt Realtime-Verbindungen, deren Sitzung abgelaufen ist oder deren Lizenz weggefallen ist. */
+function realtimeGuardFor(licenses: RuntimeLicenseService, shared: RuntimeShared): RealtimeSessionGuard {
+  return new RealtimeSessionGuard({
+    connections: shared.realtimeConnections,
+    isSessionActive: (token) => shared.sessions.isActive(token),
+    isLicenseActive: () => licenses.activeContext() !== null,
+    onFailure: (error) => console.error(JSON.stringify({
+      event: "local_runtime.realtime_guard_failed", message: error instanceof Error ? error.message : String(error),
+    })),
   });
 }
 

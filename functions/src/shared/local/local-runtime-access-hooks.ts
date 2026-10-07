@@ -25,7 +25,13 @@ export function registerLocalRuntimeAccessHooks(
 export async function hasValidSession(
   request: FastifyRequest, sessions: Pick<LocalRuntimeSessionStore, "verifySession">,
 ): Promise<boolean> {
+  const token = bearerTokenOf(request);
+  return token !== null && await sessions.verifySession(token);
+}
+
+/** Das Session-Token aus `Authorization: Bearer <token>`, sonst `null`. */
+export function bearerTokenOf(request: FastifyRequest): string | null {
   const authorization = request.headers.authorization;
   const token = authorization?.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
-  return token.length > 0 && await sessions.verifySession(token);
+  return token.length > 0 ? token : null;
 }

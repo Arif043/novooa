@@ -1,9 +1,13 @@
 import '../network/workspace_api_client.dart';
 import 'runtime_endpoint.dart';
 
-/// Tauscht das Betreiber-Passwort einer Runtime gegen ein Session-Token.
+/// Tauscht das Betreiber-Passwort einer Runtime gegen ein Session-Token und
+/// beendet es beim Abmelden wieder.
 abstract interface class RuntimeLoginClient {
   Future<String> login(RuntimeEndpoint endpoint, String password);
+
+  /// Beendet die Sitzung auf der Runtime, damit das Token nicht weiter gilt.
+  Future<void> logout(RuntimeEndpoint endpoint, String sessionToken);
 }
 
 class HttpRuntimeLoginClient implements RuntimeLoginClient {
@@ -29,6 +33,16 @@ class HttpRuntimeLoginClient implements RuntimeLoginClient {
         runtimeLoginFailureMessageFor(error.statusCode),
       );
     }
+  }
+
+  @override
+  Future<void> logout(RuntimeEndpoint endpoint, String sessionToken) async {
+    final client = HttpWorkspaceApiClient(
+      baseUri: endpoint.apiUri,
+      timeout: const Duration(seconds: 8),
+      authHeaderProvider: () async => 'Bearer $sessionToken',
+    );
+    await client.post('/v1/auth/logout', const {});
   }
 }
 

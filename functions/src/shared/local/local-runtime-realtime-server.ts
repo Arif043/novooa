@@ -16,7 +16,11 @@ const realtimePath = "/v1/realtime";
  * wie die bestehenden HTTP-Handler.
  */
 export interface LocalRuntimeRealtimeGateway {
-  consumeRealtimeTicket(ticket: string): boolean;
+  /** Verbraucht das Ticket und liefert die Sitzung, die es ausgestellt hat — `null`, wenn ungültig. */
+  consumeRealtimeTicket(ticket: string): string | null;
+  /** Bindet die Verbindung an ihre Sitzung, damit sie mit ihr endet. */
+  realtimeConnected(connection: WebSocket, sessionToken: string): void;
+  realtimeDisconnected(connection: WebSocket): void;
   subscribeRealtime(topic: string, subscriber: LocalRuntimeRealtimeSubscriber): void;
   unsubscribeRealtime(topic: string, subscriber: LocalRuntimeRealtimeSubscriber): void;
 }
@@ -46,11 +50,13 @@ export function attachLocalRuntimeRealtimeServer(
       socket.destroy();
       return;
     }
-    if (url.pathname !== realtimePath || ticket === null || !gateway.consumeRealtimeTicket(ticket)) {
+    const sessionToken = url.pathname === realtimePath && ticket !== null ? gateway.consumeRealtimeTicket(ticket) : null;
+    if (sessionToken === null) {
       socket.destroy();
       return;
     }
     wss.handleUpgrade(request, socket, head, (ws) => {
+      gateway.realtimeConnected(ws, sessionToken);
       wss.emit("connection", ws, request);
     });
   });
@@ -64,6 +70,7 @@ export function attachLocalRuntimeRealtimeServer(
       gateway.subscribeRealtime(topic, ws);
     });
     ws.on("close", () => {
+      gateway.realtimeDisconnected(ws);
       for (const topic of subscribedTopics) gateway.unsubscribeRealtime(topic, ws);
     });
   });

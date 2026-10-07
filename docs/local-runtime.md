@@ -246,6 +246,24 @@ sobald ein Betreiber-Passwort gesetzt ist (sonst `401`). Nur vor der
 Ersteinrichtung bleibt es offen, weil Lizenzen ohne Token-Nachweis (siehe oben)
 nur über Freigeben und erneutes Aktivieren einzurichten sind.
 
+### Sitzungen
+
+- **Laufzeit:** Eine Sitzung läuft nach **7 Tagen ohne Nutzung** ab. Jede
+  Anfrage mit dem Token verlängert sie wieder auf 7 Tage; geschrieben wird
+  dabei höchstens einmal pro Stunde. Abgelaufene Sitzungen räumt die Runtime
+  beim nächsten Login weg. Gespeichert wird nur der SHA-256-Hash des Tokens.
+- **Abmelden:** `POST /v1/auth/logout` beendet die Sitzung der Anfrage (`204`).
+  Die App ruft das beim Abmelden auf; ist die Runtime nicht erreichbar, meldet
+  sie sich trotzdem ab, und das Token verfällt nach 7 Tagen von selbst.
+- **Andere Geräte abmelden:** `POST /v1/auth/sessions/revoke-others` beendet
+  alle Sitzungen außer der eigenen und liefert `{revoked: <Anzahl>}`. In der App
+  unter Einstellungen → Allgemein → „Angemeldete Geräte“.
+- **Realtime:** Das WebSocket-Ticket ist an die Sitzung gebunden, die es
+  anfordert. Beim Abmelden und beim Abmelden anderer Geräte schließt die
+  Runtime deren offene Verbindungen sofort mit Code `4401`. Zusätzlich prüft
+  sie jede Minute, ob die Sitzungen offener Verbindungen noch gelten und die
+  Lizenz aktiv ist, und schließt sonst ebenfalls mit `4401`.
+
 Der HTTP-Server verwendet native Fastify-5-Routen: Routing, Pfadparameter,
 JSON-Parsing und Body-Limit (1 MiB), Schema-Validierung und Fehlerantworten
 liegen bei Fastify. Jedes Feature ist ein **Fastify-Plugin**
