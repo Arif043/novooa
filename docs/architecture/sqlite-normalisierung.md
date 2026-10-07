@@ -1,6 +1,6 @@
 # SQLite: Normalisierung und verbleibende Prüfungen
 
-Stand: Migration `0018_normalize_folder_ownership`, 28 Anwendungstabellen.
+Stand: Migration `0019_normalize_knowledge_links`, 28 Anwendungstabellen.
 Die Drizzle-Historie `__drizzle_migrations` gehört nicht zum Fachmodell.
 
 ## Bewertungsgrundlage
@@ -64,7 +64,7 @@ Schlüssel ab. Die Spalte „Bewertung“ ergänzt Ausnahmen und Prüfpunkte.
 | `workspace_file_settings` | `team_id → version_limit` | 3NF-Basis. |
 | `file_versions` | `id → Versionsattribute` | 3NF-Basis seit `0009`; Team über Datei. Dateiname ist der Name dieser Version, nicht der aktuelle Dateiname. |
 | `files` | `id → Dateiattribute` | 3NF-Basis seit `0017`: genau ein Ablagebezug, entweder `folder_id` oder `root_team_id`. Team abgelegter Dateien wird aus dem Ordner abgeleitet; keine doppelte Teamzuordnung. Versionsmetadaten seit `0009` entdoppelt. |
-| `knowledge_notes` | `id → Notizattribute` | Offen: `outgoing_links_json` ist eine vom Client extrahierte Linkprojektion. Abhängigkeit von Inhalt und Wissensbasis, Neuberechnung bei Umbenennung und relationale Linkablage prüfen. |
+| `knowledge_notes` | `id → Notizattribute` | 3NF-Basis seit `0019`: ausgehende Links werden aus Inhalt und aktuellem Notizbestand innerhalb von Team und Wissensbasis abgeleitet. Keine separat gespeicherte Linkprojektion; Markdown bleibt maßgeblicher Dokumentinhalt. |
 | `employees` | `id → Mitarbeiterkonfiguration` | 3NF-Basis der Hülle; `skills_json` ist eine konfigurierte Liste externer Fähigkeitsnamen, keine Beziehung auf eine vorhandene SQL-Skilltabelle. |
 
 ## Bereits umgesetzt
@@ -99,16 +99,19 @@ Schlüssel ab. Die Spalte „Bewertung“ ergänzt Ausnahmen und Prüfpunkte.
   Ordner und Dateien sowie Zyklen. Teamlöschung bereinigt auch Dateien in
   tiefen Unterordnern. Die Migration erhält Hierarchie, Metadaten,
   Versionsreferenzen und Versionsreihenfolge bei aktiven Fremdschlüsseln.
+- `0019`: abgeleitete Wissenslinks aus SQL entfernt. API und Workflow-Adapter
+  berechnen sie aus Markdown und aktuellem Notizbestand innerhalb von Team
+  und Wissensbasis. Zieländerungen benötigen keine Aktualisierung gespeicherter
+  Quellen. Import/Export enthält nur maßgebliche Notizfelder. Die Migration
+  erhält Inhalt, Metadaten, Indizes und Fremdschlüssel.
 
 ## Verbleibende Arbeit
 
-1. Wissenslinks als abgeleitete Projektion mit definiertem Aktualisierungsweg
-   oder als eigenständige relationale Beziehung modellieren.
-2. Wiederholte Bausteinmetadaten in Aktivitäten und die Herkunftsredundanz
+1. Wiederholte Bausteinmetadaten in Aktivitäten und die Herkunftsredundanz
    in Runs auf eine sinnvolle historische Zerlegung prüfen. Historie darf
    weder durch Änderungen aktueller Aufgaben verfälscht noch beim Löschen
    aktueller Aufgaben entfernt werden.
-3. Fehlende referentielle Absicherung der Modellvorgaben und Eigentümerbezüge
+2. Fehlende referentielle Absicherung der Modellvorgaben und Eigentümerbezüge
    getrennt von der Normalform prüfen. Eine zusätzliche Referenz ist nicht
    automatisch ein Normalisierungsschritt.
 

@@ -12,7 +12,7 @@ const timestamp = z.string().min(1).max(64);
 const knowledgeTransferPayload = z.object({
   notes: z.array(z.object({
     id: z.string().min(1).max(200), knowledgeBaseId: z.string().min(1), title: z.string(), path: z.string(),
-    type: z.string(), content: z.string(), outgoingLinks: z.array(z.unknown()),
+    type: z.string(), content: z.string(),
     createdAt: timestamp, updatedAt: timestamp,
   })),
 });
@@ -28,7 +28,7 @@ export class SqliteKnowledgeTransferSection implements TransferSection, SqliteTr
     const rows = await this.database.select().from(knowledgeNotes).where(eq(knowledgeNotes.team_id, teamId));
     const payload: KnowledgeTransferPayload = {
       notes: rows.map((row) => ({id: row.id, knowledgeBaseId: row.knowledge_base_id, title: row.title, path: row.path,
-        type: row.type, content: row.content, outgoingLinks: JSON.parse(row.outgoing_links_json) as unknown[],
+        type: row.type, content: row.content,
         createdAt: row.created_at, updatedAt: row.updated_at})),
     };
     await writer.addJson(transferDataEntry("knowledge"), payload);
@@ -47,7 +47,7 @@ async function commitNotes(
   const teamId = mapping.targetTeamId;
   for (const note of payload.notes) {
     const values = {knowledge_base_id: note.knowledgeBaseId, title: note.title, path: note.path, type: note.type,
-      content: mapping.references(note.content), outgoing_links_json: JSON.stringify(note.outgoingLinks),
+      content: mapping.references(note.content),
       updated_at: note.updatedAt};
     await executor.insert(knowledgeNotes).values({id: note.id, team_id: teamId, created_at: note.createdAt, ...values})
       .onConflictDoUpdate({target: knowledgeNotes.id, set: values, setWhere: eq(knowledgeNotes.team_id, teamId)});

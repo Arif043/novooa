@@ -25,7 +25,7 @@ Firebase-Variante hat dieses Feature nicht.
 | --- | --- | --- |
 | `files` – Dateien & Ordner | Ordner, Dateien, alle Versionen samt Bytes | Dateien |
 | `data` – Daten-Collections | Datensammlungen und Datensätze | Datensätze |
-| `knowledge` – Wissensbasis | Notizen inkl. Links | Notizen |
+| `knowledge` – Wissensbasis | Markdown-Notizen und Metadaten; Links nach Import abgeleitet | Notizen |
 | `skills` – Fähigkeiten | Skill-Ordner mit allen Dateien (`SKILL.md`, `scripts/`, `references/`, `assets/`) | Skills |
 | `employees` – Mitarbeiter | Rahmenbedingung und Skill-Namen je Mitarbeiter | Mitarbeiter |
 | `tasks` – Aufgaben | Aufgabendefinitionen (Graph) | Aufgaben |

@@ -134,6 +134,13 @@
       "when": 1791352115142,
       "tag": "0018_normalize_folder_ownership",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1791352806594,
+      "tag": "0019_normalize_knowledge_links",
+      "breakpoints": true
     }
   ]
 }

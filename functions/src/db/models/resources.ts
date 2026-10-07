@@ -93,7 +93,6 @@ export const knowledgeNotes = sqliteTable("knowledge_notes", {
   path: text("path").notNull().default(""),
   type: text("type").notNull().default("unknown"),
   content: text("content").notNull().default(""),
-  outgoing_links_json: text("outgoing_links_json").notNull().default("[]"),
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [

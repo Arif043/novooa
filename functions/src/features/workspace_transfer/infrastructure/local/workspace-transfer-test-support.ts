@@ -41,7 +41,7 @@ export async function seedWorkspace(database: RuntimeDatabase, runtimeRoot: stri
   await database.insert(documents).values({id: "doc-1", team_id: "team-1", collection_id: "collection-1",
     data_json: JSON.stringify({name: "ACME"})});
   await database.insert(knowledgeNotes).values({id: "note-1", team_id: "team-1", title: "Leitfaden",
-    content: "# Leitfaden", outgoing_links_json: "[]"});
+    content: "# Leitfaden"});
   await database.insert(tasks).values({id: "task-1", team_id: "team-1", title: "Angebot prüfen",
     graph_json: JSON.stringify({nodes: [{attachments: [{storagePath: sampleStoragePath}]}]}), created_by_uid: "user-1"});
 }

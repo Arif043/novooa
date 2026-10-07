@@ -90,7 +90,6 @@ class LocalKnowledgeBaseRepository implements KnowledgeBaseRepository {
     'title': draft.title.trim(),
     'path': draft.path.trim(),
     'content': draft.content,
-    'outgoingLinks': draft.outgoingLinks,
   };
 
   Map<String, Object?> _bodyFromNote(KnowledgeNote note) => {
@@ -98,7 +97,6 @@ class LocalKnowledgeBaseRepository implements KnowledgeBaseRepository {
     'title': note.title,
     'path': note.path,
     'content': note.content,
-    'outgoingLinks': note.outgoingLinks,
   };
 
   KnowledgeNote _noteFrom(Map<dynamic, dynamic> value) {

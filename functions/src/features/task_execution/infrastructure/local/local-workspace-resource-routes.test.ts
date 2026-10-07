@@ -24,7 +24,7 @@ test("persists local knowledge notes and task triggers", async (t) => {
 
   const createdNote = await notes.handle({
     method: "POST", url: "/v1/knowledge-notes",
-    body: {title: "Index", path: "index.md", content: "# Index", outgoingLinks: []},
+    body: {title: "Index", path: "index.md", content: "# Index"},
   });
   const createdTrigger = await triggers.handle({
     method: "POST", url: "/v1/task-triggers",

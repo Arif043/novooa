@@ -1,0 +1,1 @@
+ALTER TABLE `knowledge_notes` DROP COLUMN `outgoing_links_json`;

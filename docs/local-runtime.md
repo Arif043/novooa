@@ -1005,6 +1005,12 @@ dessen Infrastructure-Bereich.
   Der vollständige Prüfstand aller 28 Tabellen ist in
   [`architecture/sqlite-normalisierung.md`](./architecture/sqlite-normalisierung.md)
   dokumentiert; eine vollständige strenge 3NF wird weiterhin nicht behauptet.
+- Seit `0019_normalize_knowledge_links.sql` speichert `knowledge_notes` keine
+  Linkprojektion mehr. API und Workflow-Store berechnen ausgehende Links aus
+  Markdown und den aktuellen IDs, Titeln und Pfaden derselben Wissensbasis
+  im selben Team. Umbenennungen und Löschungen werden beim Lesen berücksichtigt.
+  Wissensexporte enthalten nur maßgebliche Notizfelder; nach dem Import werden
+  die Links gegen den vollständigen Zielbestand aufgelöst.
 - Seit `0018_normalize_folder_ownership.sql` speichern Unterordner nur ihren
   Elternbezug, Wurzelordner nur `root_team_id`. Die Teamzuordnung wird entlang
   der Elternkette aufgelöst. Seit `0017_normalize_file_ownership.sql` speichern

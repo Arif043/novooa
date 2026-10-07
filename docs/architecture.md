@@ -299,7 +299,10 @@ teams/{teamId}/knowledgeBases/default/notes/{noteId}
 ```
 
 Eine Notiz enthält Markdown-Content, Metadaten (`title`, `path`) und
-`outgoingLinks` als Liste verlinkter Notiz-IDs. Eine angehängte Notiz stellt
+`outgoingLinks` als Liste verlinkter Notiz-IDs. SQLite berechnet diese Liste
+seit `0019` beim Lesen aus Markdown und dem aktuellen Notizbestand desselben
+Teams und derselben Wissensbasis; Firestore speichert sie über seinen eigenen
+Adapter als Client-Projektion. Eine angehängte Notiz stellt
 immer sich selbst plus rekursiv verlinkte
 Notizen bereit. Anhänge werden an unterstützten Bausteinen gespeichert; aktuell
 ist nur der Prompt-Baustein angebunden.

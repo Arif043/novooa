@@ -40,6 +40,29 @@ Notizfelder:
 Die Wissensbasis wird bewusst nicht versioniert. Normale Dateien behalten ihre
 Copy-on-Write-Versionierung unter `teams/{teamId}/files/{fileId}/versions`.
 
+### Standalone: abgeleitete Links
+
+Seit Migration `0019_normalize_knowledge_links` speichert SQLite keine
+`outgoing_links_json`-Spalte mehr. Markdown-Inhalt sowie IDs, Titel und Pfade
+des aktuellen Notizbestands sind die maßgeblichen Quellen. Der reine Domain-
+Service `knowledgeLinksFrom` berechnet daraus die ausgehenden Notiz-IDs.
+API und Workflow-Ausführung nutzen dieselbe Berechnung innerhalb des Teams
+und der jeweiligen Wissensbasis. Der lokale Client sendet Titel, Pfad und
+Inhalt; `outgoingLinks` ist ein berechnetes Antwortfeld.
+
+Anlage, Umbenennung, Pfadänderung oder Löschung einer Zielnotiz wirkt dadurch
+beim nächsten Lesen auf alle Quellen, ohne deren Inhalt neu zu speichern.
+ID-Links überstehen eine Umbenennung; Titel-/Pfadlinks lösen nur gegen die
+aktuellen Aliase auf. Unbekannte Ziele erzeugen keine Notiz-ID. Mehrfachlinks
+auf dieselbe Notiz werden zusammengefasst. Gleiche Titel sind weiterhin erlaubt
+und können mehrere Notizen adressieren, wie beim bisherigen Client-Extractor.
+
+Import/Export überträgt nur die maßgeblichen Notizfelder. Links werden nach
+dem Import aus dem vollständig gespeicherten Zielbestand berechnet. Die
+Migration erhält Notizinhalte und Metadaten einschließlich der Zeitstempel,
+Indizes und Fremdschlüssel. Firestore verwendet seinen separaten Adapter und
+speichert weiterhin die vom Client erzeugte Linkprojektion.
+
 ## UI
 
 Route: `/knowledge-base`, Drawer-Label: **Wissensbasis**.
@@ -141,8 +164,9 @@ bei Bedarf über `knowledge/manifest.json`.
 ## Aktueller Scope
 
 - Notizen können erstellt, bearbeitet und gelöscht werden.
-- `outgoingLinks` werden clientseitig aus `[[Wiki Links]]`,
-  `[[Ziel|Anzeigetext]]` und Markdown-Links auf bekannte Notizen abgeleitet.
+- `outgoingLinks` werden aus `[[Wiki Links]]`, `[[Ziel|Anzeigetext]]` und
+  Markdown-Links auf bekannte Notizen abgeleitet: im Client für Firestore
+  und die Bearbeitungsvorschau, in SQLite-Adaptern beim Lesen für API und Runs.
 - `[[Ziel#Abschnitt]]` löst wie in Obsidian die Notiz `Ziel` auf; der
   Abschnitt ist für die aktuelle Einzelnotiz-Ansicht noch ohne Wirkung.
 - Notizen können über Titel, ID, Pfad oder den Pfad ohne `.md` verlinkt werden.
@@ -156,7 +180,8 @@ bei Bedarf über `knowledge/manifest.json`.
 
 - Wie wird eine Legacy-Wissensbasis importiert und in stabile Notiz-IDs
   übersetzt?
-- Werden Markdownlinks zusätzlich zu `outgoingLinks` serverseitig geparst?
+- Soll Firestore seine gespeicherte Linkprojektion ebenfalls serverseitig aus
+  dem jeweils aktuellen Notizbestand auflösen?
 - Welche Limits gelten pro Run für Anzahl Notizen, Rekursionstiefe und Bytes?
 
 ## Verwandt
