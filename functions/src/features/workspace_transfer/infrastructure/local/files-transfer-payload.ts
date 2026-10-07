@@ -12,7 +12,7 @@ const folderDto = z.object({
 
 const fileDto = z.object({
   id, ownerUid: z.string(), displayName: z.string().min(1), folderId: id.nullable(),
-  currentVersionId: id.nullable(), contentType: z.string(), sizeBytes, storagePath: z.string().min(1),
+  currentVersionId: id.nullable(),
   createdAt: timestamp, updatedAt: timestamp,
 });
 
@@ -37,8 +37,7 @@ export function folderDtoFrom(row: FileFolders): FolderDto {
 
 export function fileDtoFrom(row: Files): FileDto {
   return {id: row.id, ownerUid: row.owner_uid, displayName: row.display_name, folderId: row.folder_id,
-    currentVersionId: row.current_version_id, contentType: row.content_type, sizeBytes: row.size_bytes,
-    storagePath: row.storage_path, createdAt: row.created_at, updatedAt: row.updated_at};
+    currentVersionId: row.current_version_id, createdAt: row.created_at, updatedAt: row.updated_at};
 }
 
 export function versionDtoFrom(row: FileVersions): VersionDto {

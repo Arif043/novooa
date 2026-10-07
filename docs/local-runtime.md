@@ -8,6 +8,12 @@ Provider wie Twilio bleiben optional über einen dünnen novooa-Relay nutzbar.
 
 ## Runtime-Schichten
 
+SQLite bleibt die Datenbank für Standalone; Firebase mit Firestore bleibt
+für den Cloud-Betrieb unterstützt. Die verbindlichen fünf Regeln für
+gemeinsame fachliche Modelle, getrennte Speicheradapter, maßgebliche
+Datenquellen, Konsistenz und Vertragstests stehen in
+[`architecture.md`](./architecture.md#architekturentscheidung-sqlite-und-firebase-unterstützen).
+
 ```text
 Feature Domain
   Entities, Repository-Ports und Use Cases
@@ -916,6 +922,11 @@ dessen Infrastructure-Bereich.
   Upserts direkt. `sql` wird nur für SQLite-Ausdrücke eingesetzt. Transaktionen
   verwenden explizit `tx`; verschachtelte Transaktionen nutzen Savepoints.
   Job-Leases werden atomar mit `UPDATE … RETURNING` beansprucht.
+- Die Dateiablage speichert Versionsmetadaten ausschließlich in
+  `file_versions`; das Team wird über `files` aufgelöst. Die aktuelle Version
+  wird durch einen zusammengesetzten Fremdschlüssel ihrer Datei zugeordnet.
+  Details zum ersten Normalisierungsschritt stehen in
+  [`features/dateien.md`](./features/dateien.md#standalone-normalisierte-versionsmetadaten).
 - `drizzle.config.ts` konfiguriert Schema und Ausgabeordner. Nach einer
   Model-Änderung erzeugt `npm --prefix functions run db:generate` die nächste
   Migration samt Snapshot. `DB_FILE_NAME=file:/absoluter/pfad/novooa.sqlite`

@@ -48,7 +48,6 @@ export const workspaceFileSettings = sqliteTable("workspace_file_settings", {
 
 export const fileVersions = sqliteTable("file_versions", {
   id: text("id").primaryKey(),
-  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
   file_id: text("file_id").notNull().references((): AnySQLiteColumn => files.id, {onDelete: "cascade"}),
   created_by_uid: text("created_by_uid").notNull(),
   display_name: text("display_name").notNull(),
@@ -56,7 +55,10 @@ export const fileVersions = sqliteTable("file_versions", {
   content_type: text("content_type").notNull().default("application/octet-stream"),
   size_bytes: integer("size_bytes").notNull().default(0),
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+}, (table) => [
+  uniqueIndex("idx_file_versions_file_id_id").on(table.file_id, table.id),
+  check("file_versions_nonnegative_size", sql`${table.size_bytes} >= 0`),
+]);
 
 export const files = sqliteTable("files", {
   id: text("id").primaryKey(),
@@ -65,13 +67,12 @@ export const files = sqliteTable("files", {
   display_name: text("display_name").notNull(),
   folder_id: text("folder_id"),
   current_version_id: text("current_version_id"),
-  content_type: text("content_type").notNull().default("application/octet-stream"),
-  size_bytes: integer("size_bytes").notNull().default(0),
-  storage_path: text("storage_path").notNull(),
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
   index("idx_files_team_folder").on(table.team_id, table.folder_id),
+  foreignKey(() => ({columns: [table.id, table.current_version_id],
+    foreignColumns: [fileVersions.file_id, fileVersions.id]})),
 ]);
 
 export const knowledgeNotes = sqliteTable("knowledge_notes", {

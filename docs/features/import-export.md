@@ -34,10 +34,10 @@ Firebase-Variante hat dieses Feature nicht.
 Ausführungen/Runs, Aktivitäten, Anwendungsprotokolle, API-Schlüssel,
 Zugangsdaten und Sessions.
 
-## Archivformat (Version 1)
+## Archivformat (Version 2)
 
 ```text
-manifest.json         { format: "novooa-export", version: 1, exportedAt,
+manifest.json         { format: "novooa-export", version: 2, exportedAt,
                         sourceTeamId, categories, counts }
 data/files.json       { folders, files, versions }
 data/data.json        { collections, documents }
@@ -52,6 +52,14 @@ blobs/skills/<name>/<pfad>   Bytes je Datei eines Skills
 Zeilen werden als camelCase-DTOs ohne `teamId` geschrieben. Beim Import prüft
 die Runtime jede Datei per Schema (zod); Pfade außerhalb des Quellteams oder
 mit `..` werden abgelehnt.
+
+Datei-Einträge enthalten Identität, Besitzer, Namen, Ordner, Zeitstempel und
+`currentVersionId`. Speicherpfad, Dateityp und Dateigröße stehen ausschließlich
+an den Versionen. Beim Import werden zuerst Dateien ohne Versionsreferenz,
+dann ihre Versionen und anschließend die aktuellen Versionsreferenzen innerhalb
+derselben Transaktion geschrieben. Versions-IDs dürfen nicht einer anderen
+Datei zugeordnet werden. Archivversion 1 wird nicht mehr unterstützt; es gibt
+keine Übersetzung älterer Dateiformate.
 
 ## Ablauf und Garantien
 

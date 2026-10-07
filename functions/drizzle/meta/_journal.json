@@ -64,6 +64,13 @@
       "when": 1791245132716,
       "tag": "0008_task_run_steps",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1791345528851,
+      "tag": "0009_normalize_file_versions",
+      "breakpoints": true
     }
   ]
 }

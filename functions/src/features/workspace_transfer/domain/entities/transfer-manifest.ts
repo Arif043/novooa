@@ -2,7 +2,7 @@ import {isTransferCategory, type TransferCategory, type TransferCounts} from "./
 import {InvalidTransferArchiveError} from "./transfer-errors.js";
 
 export const transferFormat = "novooa-export";
-export const transferFormatVersion = 1;
+export const transferFormatVersion = 2;
 export const transferManifestEntry = "manifest.json";
 
 export type TransferManifest = {

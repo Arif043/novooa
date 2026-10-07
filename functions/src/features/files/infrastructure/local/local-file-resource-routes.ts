@@ -1,5 +1,5 @@
 import {type FastifyPluginAsyncTypebox, type Static, Type} from "@fastify/type-provider-typebox";
-import {and, desc, eq, getTableColumns, sql} from "drizzle-orm";
+import {and, desc, eq, sql} from "drizzle-orm";
 import {type FastifyReply} from "fastify";
 import {randomUUID} from "node:crypto";
 import {type RuntimeExecutor} from "../../../../db/database.js";
@@ -10,6 +10,7 @@ import {
   FileParams, FileUpload, FileVersionDto, FolderDto, NewFolder, TeamFileDto, VersionParams,
   fileFromRow, folderFromRow, versionFromRow,
 } from "./local-file-schemas.js";
+import {currentFilesQuery, fileVersionsQuery} from "./local-file-queries.js";
 import {type LocalTeamFileStore} from "./local-team-file-store.js";
 
 export type FileResourceRoutesOptions = {
@@ -28,7 +29,7 @@ export const fileResourceRoutes: FastifyPluginAsyncTypebox<FileResourceRoutesOpt
   const {database, fileStore, notifier} = options;
 
   app.get("/v1/files", {schema: {response: {200: ItemsOf(TeamFileDto)}}}, async (request) => {
-    const rows = await fileQuery(database).where(eq(files.team_id, request.workspace.teamId)).orderBy(desc(files.updated_at));
+    const rows = await currentFilesQuery(database).where(eq(files.team_id, request.workspace.teamId)).orderBy(desc(files.updated_at));
     return {items: rows.map(fileFromRow)};
   });
 
@@ -70,8 +71,8 @@ export const fileResourceRoutes: FastifyPluginAsyncTypebox<FileResourceRoutesOpt
 
   app.get("/v1/files/:fileId/versions", {schema: {params: FileParams, response: {200: ItemsOf(FileVersionDto)}}},
     async (request) => {
-      const rows = await database.select().from(fileVersions)
-        .where(and(eq(fileVersions.team_id, request.workspace.teamId), eq(fileVersions.file_id, request.params.fileId)))
+      const rows = await fileVersionsQuery(database)
+        .where(and(eq(files.team_id, request.workspace.teamId), eq(fileVersions.file_id, request.params.fileId)))
         .orderBy(desc(fileVersions.created_at));
       return {items: rows.map(versionFromRow)};
     });
@@ -105,7 +106,7 @@ async function writeFile(
   });
   notifier.publish("files");
   notifier.publish(`file-versions:${written.fileId}`);
-  const row = await fileQuery(database).where(and(eq(files.team_id, workspace.teamId), eq(files.id, written.fileId))).get();
+  const row = await currentFilesQuery(database).where(and(eq(files.team_id, workspace.teamId), eq(files.id, written.fileId))).get();
   return row === undefined
     ? reply.code(404).send({error: "Datei nicht gefunden."})
     : reply.code(targetFileId === null ? 201 : 200).send(fileFromRow(row));
@@ -116,9 +117,4 @@ async function folderExists(database: RuntimeExecutor, teamId: string, folderId:
   const folder = await database.select({id: fileFolders.id}).from(fileFolders)
     .where(and(eq(fileFolders.team_id, teamId), eq(fileFolders.id, folderId))).get();
   return folder !== undefined;
-}
-
-function fileQuery(database: RuntimeExecutor) {
-  return database.select({...getTableColumns(files), current_version_created_at: fileVersions.created_at})
-    .from(files).innerJoin(fileVersions, eq(fileVersions.id, files.current_version_id));
 }

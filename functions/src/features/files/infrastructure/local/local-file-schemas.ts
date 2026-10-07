@@ -39,7 +39,7 @@ export type FileRow = {
 };
 type FolderRow = Pick<FileFolders, "created_at" | "id" | "name" | "owner_uid" | "parent_folder_id" | "team_id" | "updated_at">;
 type VersionRow = Pick<FileVersions, "content_type" | "created_at" | "created_by_uid" | "display_name" | "file_id" | "id" |
-  "size_bytes" | "storage_path" | "team_id">;
+  "size_bytes" | "storage_path"> & {team_id: string};
 
 export function fileFromRow(row: FileRow): Static<typeof TeamFileDto> {
   return {

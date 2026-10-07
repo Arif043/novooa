@@ -1,3 +1,4 @@
+import {eq} from "drizzle-orm";
 import {createWriteStream} from "node:fs";
 import {mkdtemp, rm} from "node:fs/promises";
 import os from "node:os";
@@ -30,11 +31,11 @@ export async function seedWorkspace(database: RuntimeDatabase, runtimeRoot: stri
     {id: "folder-root", team_id: "team-1", owner_uid: "user-1", name: "Wurzel", parent_folder_id: null},
   ].reverse());
   await database.insert(files).values({id: "file-1", team_id: "team-1", owner_uid: "user-1", display_name: "angebot.txt",
-    folder_id: "folder-child", current_version_id: "version-1", content_type: "text/plain", size_bytes: 5,
-    storage_path: sampleStoragePath});
-  await database.insert(fileVersions).values({id: "version-1", team_id: "team-1", file_id: "file-1",
+    folder_id: "folder-child"});
+  await database.insert(fileVersions).values({id: "version-1", file_id: "file-1",
     created_by_uid: "user-1", display_name: "angebot.txt", storage_path: sampleStoragePath, content_type: "text/plain",
     size_bytes: 5});
+  await database.update(files).set({current_version_id: "version-1"}).where(eq(files.id, "file-1"));
   await writeLocalFile(runtimeRoot, sampleStoragePath, "Hallo");
   await database.insert(documentCollections).values({id: "collection-1", team_id: "team-1", display_name: "Kunden"});
   await database.insert(documents).values({id: "doc-1", team_id: "team-1", collection_id: "collection-1",

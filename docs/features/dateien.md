@@ -27,6 +27,39 @@ gespeichert, Metadaten und Versionen in Firestore.
 
 ## Datenmodell
 
+### Standalone: normalisierte Versionsmetadaten
+
+In SQLite enthält `files` die Dateiidentität, Teamzuordnung, Besitzer, Namen,
+Ordner, Zeitstempel und `current_version_id`. `file_versions` enthält die
+Versionen mit ihrem jeweiligen Namen, Ersteller, Speicherpfad, Dateityp,
+Dateigröße und Erstellungszeitpunkt. `content_type`, `size_bytes` und
+`storage_path` werden nicht zusätzlich in `files` gespeichert. Die Version
+verweist über `file_id` auf ihre Datei; eine eigene `team_id` ist nicht nötig.
+
+Ein zusammengesetzter Fremdschlüssel von
+`files(id, current_version_id)` auf `file_versions(file_id, id)` verhindert
+die Auswahl einer Version einer anderen Datei. Der Versions-Fremdschlüssel
+löscht beim Entfernen einer Datei ihre Versionen mit. Negative Dateigrößen
+werden durch einen CHECK-Constraint abgelehnt.
+
+Neue Dateien werden innerhalb einer Transaktion zunächst ohne aktuelle
+Version angelegt; anschließend werden Version und Versionsreferenz geschrieben.
+Der lokale Adapter setzt Listenansichten und fachliche Rückgaben über Joins
+zusammen. Team-scoped Versionsabfragen lösen das Team über `files` auf.
+Die HTTP-DTOs und Domain-Verträge bleiben unabhängig von dieser SQL-Struktur.
+
+Die Schemaänderung liegt in `0009_normalize_file_versions.sql` samt
+Drizzle-Snapshot. Ein temporärer Sicherungsbestand während des Tabellenumbaus
+verhindert, dass die vorhandene Löschkaskade die Versionen entfernt.
+
+### Cloud: separater Firestore-Adapter
+
+Der Cloud-Adapter verwendet weiterhin die folgenden Dokumentpfade. Die
+normalisierte SQLite-Struktur erfordert keine Änderung der Firestore-Dokumente.
+Die dort zusätzlich gespeicherten aktuellen Versionsmetadaten sind eine
+abgeleitete Darstellung für Lesezugriffe; neue Version und aktuelle
+Versionsmetadaten werden gemeinsam geschrieben.
+
 Firestore:
 
 ```text

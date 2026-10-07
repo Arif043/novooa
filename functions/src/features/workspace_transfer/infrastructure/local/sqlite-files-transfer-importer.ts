@@ -1,4 +1,4 @@
-import {eq} from "drizzle-orm";
+import {and, eq} from "drizzle-orm";
 import {access, rm} from "node:fs/promises";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {fileFolders, files, fileVersions} from "../../../../db/schema.js";
@@ -65,9 +65,13 @@ async function commitFiles(
 ): Promise<void> {
   const teamId = mapping.targetTeamId;
   for (const folder of parentsFirst(payload.folders)) await upsertFolder(executor, teamId, folder);
-  for (const file of payload.files) await upsertFile(executor, teamId, file, mapping.storagePath(file.storagePath));
+  for (const file of payload.files) await upsertFile(executor, teamId, file);
   for (const version of payload.versions) {
     await upsertVersion(executor, teamId, version, mapping.storagePath(version.storagePath));
+  }
+  for (const file of payload.files) {
+    await executor.update(files).set({current_version_id: file.currentVersionId})
+      .where(and(eq(files.id, file.id), eq(files.team_id, teamId)));
   }
 }
 
@@ -78,10 +82,9 @@ async function upsertFolder(executor: RuntimeExecutor, teamId: string, folder: F
     .onConflictDoUpdate({target: fileFolders.id, set: values, setWhere: eq(fileFolders.team_id, teamId)});
 }
 
-async function upsertFile(executor: RuntimeExecutor, teamId: string, file: FileDto, storagePath: string): Promise<void> {
+async function upsertFile(executor: RuntimeExecutor, teamId: string, file: FileDto): Promise<void> {
   const values = {owner_uid: file.ownerUid, display_name: file.displayName, folder_id: file.folderId,
-    current_version_id: file.currentVersionId, content_type: file.contentType, size_bytes: file.sizeBytes,
-    storage_path: storagePath, updated_at: file.updatedAt};
+    current_version_id: null, updated_at: file.updatedAt};
   await executor.insert(files).values({id: file.id, team_id: teamId, created_at: file.createdAt, ...values})
     .onConflictDoUpdate({target: files.id, set: values, setWhere: eq(files.team_id, teamId)});
 }
@@ -89,10 +92,17 @@ async function upsertFile(executor: RuntimeExecutor, teamId: string, file: FileD
 async function upsertVersion(
   executor: RuntimeExecutor, teamId: string, version: VersionDto, storagePath: string,
 ): Promise<void> {
+  const owner = await executor.select({team_id: files.team_id}).from(files)
+    .where(eq(files.id, version.fileId)).get();
+  const existing = await executor.select({file_id: fileVersions.file_id}).from(fileVersions)
+    .where(eq(fileVersions.id, version.id)).get();
+  if (owner?.team_id !== teamId || existing && existing.file_id !== version.fileId) {
+    throw new InvalidTransferArchiveError("Die Dateiversion gehört nicht zur importierten Datei.");
+  }
   const values = {file_id: version.fileId, created_by_uid: version.createdByUid, display_name: version.displayName,
     storage_path: storagePath, content_type: version.contentType, size_bytes: version.sizeBytes};
-  await executor.insert(fileVersions).values({id: version.id, team_id: teamId, created_at: version.createdAt, ...values})
-    .onConflictDoUpdate({target: fileVersions.id, set: values, setWhere: eq(fileVersions.team_id, teamId)});
+  await executor.insert(fileVersions).values({id: version.id, created_at: version.createdAt, ...values})
+    .onConflictDoUpdate({target: fileVersions.id, set: values, setWhere: eq(fileVersions.file_id, version.fileId)});
 }
 
 async function removeAll(paths: readonly string[]): Promise<void> {

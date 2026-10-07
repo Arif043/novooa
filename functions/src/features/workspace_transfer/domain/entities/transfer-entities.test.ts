@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {TransferCategorySelection} from "./transfer-category.js";
 import {InvalidTransferArchiveError, InvalidTransferRequestError} from "./transfer-errors.js";
-import {createTransferManifest, transferManifestFrom} from "./transfer-manifest.js";
+import {createTransferManifest, transferManifestFrom, transferFormatVersion} from "./transfer-manifest.js";
 import {isTeamStoragePath, TransferTeamMapping} from "./transfer-team-mapping.js";
 
 test("orders a selection in import order and removes duplicates", () => {
@@ -32,8 +32,8 @@ test("round-trips a manifest", () => {
 test("rejects foreign or incompatible manifests", () => {
   assert.throws(() => transferManifestFrom(undefined), InvalidTransferArchiveError);
   assert.throws(() => transferManifestFrom({format: "other"}), InvalidTransferArchiveError);
-  assert.throws(() => transferManifestFrom({format: "novooa-export", version: 2}), InvalidTransferArchiveError);
-  assert.throws(() => transferManifestFrom({format: "novooa-export", version: 1, exportedAt: "x",
+  assert.throws(() => transferManifestFrom({format: "novooa-export", version: 1}), /Export-Version wird nicht unterstützt/);
+  assert.throws(() => transferManifestFrom({format: "novooa-export", version: transferFormatVersion, exportedAt: "x",
     sourceTeamId: "t", categories: ["triggers"], counts: {}}), InvalidTransferArchiveError);
 });
 

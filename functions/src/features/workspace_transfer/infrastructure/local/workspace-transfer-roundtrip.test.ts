@@ -6,7 +6,8 @@ import path from "node:path";
 import {finished} from "node:stream/promises";
 import test, {type TestContext} from "node:test";
 import {runtimeTestDatabase} from "../../../../db/runtime-database-test-support.js";
-import {documentCollections, documents, fileFolders, files, knowledgeNotes, tasks, teams} from "../../../../db/schema.js";
+import {documentCollections, documents, fileFolders, files, fileVersions, knowledgeNotes, tasks, teams} from "../../../../db/schema.js";
+import {currentFilesQuery} from "../../../files/infrastructure/local/local-file-queries.js";
 import {TransferCategorySelection, type TransferCategory} from "../../domain/entities/transfer-category.js";
 import {InvalidTransferArchiveError} from "../../domain/entities/transfer-errors.js";
 import {ImportWorkspace} from "../../domain/usecases/import-workspace.js";
@@ -64,7 +65,7 @@ test("imports all categories into another team and rewrites file paths", async (
   const target = await targetWorkspace(t);
   const imported = await importInto(target, archivePath, "team-2");
   assert.deepEqual(imported, {files: 1, data: 1, knowledge: 1, tasks: 1});
-  const file = await target.database.select().from(files).where(eq(files.id, "file-1")).get();
+  const file = await currentFilesQuery(target.database).where(eq(files.id, "file-1")).get();
   assert.equal(file?.team_id, "team-2");
   assert.equal(file?.storage_path, "teams/team-2/files/file-1/versions/version-1/angebot.txt");
   assert.equal(await readFile(path.join(target.runtimeRoot, file?.storage_path ?? ""), "utf8"), "Hallo");
@@ -125,4 +126,32 @@ test("rejects files that are not a novooa export", async (t) => {
   await writeFile(archivePath, "kein zip");
   const inspect = new InspectWorkspaceImport().execute(new FflateTransferArchiveReader(archivePath));
   await assert.rejects(inspect, InvalidTransferArchiveError);
+});
+
+
+test("file exports contain metadata only in versions and can be imported repeatedly", async (t) => {
+  const {archivePath} = await exportedSample(t, ["files"]);
+  const payload = await new FflateTransferArchiveReader(archivePath).json("data/files.json") as {
+    files: Array<Record<string, unknown>>; versions: Array<Record<string, unknown>>;
+  };
+  for (const name of ["contentType", "sizeBytes", "storagePath"]) {
+    assert.ok(!(name in payload.files[0]));
+    assert.ok(name in payload.versions[0]);
+  }
+  const target = await targetWorkspace(t);
+  await importInto(target, archivePath, "team-2", ["files"]);
+  await importInto(target, archivePath, "team-2", ["files"]);
+  assert.equal((await target.database.select().from(files)).length, 1);
+  assert.equal((await target.database.select().from(fileVersions)).length, 1);
+});
+
+test("file imports reject ownership conflicts without modifying another team's file", async (t) => {
+  const {source, sourceRoot, archivePath} = await exportedSample(t, ["files"]);
+  await source.insert(teams).values({id: "team-2", name: "Andere", owner_uid: "user-2"});
+  await assert.rejects(importInto({database: source, runtimeRoot: sourceRoot}, archivePath, "team-2", ["files"]),
+    InvalidTransferArchiveError);
+  const file = await currentFilesQuery(source).where(eq(files.id, "file-1")).get();
+  assert.equal(file?.team_id, "team-1");
+  assert.equal(file?.current_version_id, "version-1");
+  assert.equal(file?.size_bytes, 5);
 });

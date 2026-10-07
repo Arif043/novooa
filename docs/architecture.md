@@ -23,7 +23,7 @@ referenzieren, Domain kennt weder Presentation noch Infrastructure, und
 Infrastructure implementiert ausschließlich Domain-Interfaces.
 
 Die lokale Runtime folgt demselben Prinzip auf Backend-Seite: Task Runner,
-NodeExecutors und Worker hängen an Store-Ports; Firestore und spätere SQLite-
+NodeExecutors und Worker hängen an Store-Ports; Firestore und SQLite-
 Adapter sind austauschbare Implementierungen. Details stehen in
 [`local-runtime.md`](./local-runtime.md).
 
@@ -41,6 +41,53 @@ Adapter sind austauschbare Implementierungen. Details stehen in
 Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md).
 
 ## Persistenz
+
+### Architekturentscheidung: SQLite und Firebase unterstützen
+
+Standalone verwendet weiterhin SQLite. Der Cloud-Betrieb verwendet weiterhin
+Firebase mit Firestore. Beide Betriebsarten teilen fachliche Modelle und
+Verträge; ihre physischen Speicherstrukturen dürfen sich unterscheiden.
+Ein Wechsel zu MongoDB ist nicht vorgesehen.
+
+Für beide Backends gelten die folgenden fünf Regeln:
+
+1. **Ein gemeinsames fachliches Modell.** Dateien, Dateiversionen, Mitarbeiter
+   und Aufgaben haben in beiden Betriebsarten dieselbe Bedeutung. Domain-
+   Entitäten, Use Cases und Repository-/Store-Schnittstellen bleiben unabhängig
+   von Datenbank und Framework. SQL-Zeilen und Firestore-Snapshots gehören
+   ausschließlich in die Infrastructure.
+2. **Eigene Speichermodelle je Backend.** SQLite darf stabile Beziehungen
+   normalisiert in Tabellen speichern. Firestore darf Daten in Dokumenten
+   einbetten oder auf Collections verteilen. Adapter und Mapper übersetzen
+   beide Darstellungen in dieselben fachlichen Objekte. Flexible
+   Workflow-Konfigurationen, Snapshots und frei definierbare Dokumente dürfen
+   in SQLite weiterhin als JSON gespeichert werden; ein identisches
+   physisches Schema ist kein Ziel.
+3. **Eine maßgebliche Quelle je Information.** Dateigröße und Speicherpfad
+   gehören beispielsweise zur Dateiversion. Zusätzliche Kopien für schnelle
+   Listenansichten sind ausdrücklich abgeleitete Daten. Für solche Kopien
+   müssen Aktualisierung, Konsistenz und Wiederherstellung definiert sein.
+   Historische Snapshots sind eigenständige Fakten und werden von Kopien
+   aktueller Werte unterschieden.
+4. **Dieselben Konsistenzregeln.** Fachlich zusammengehörige Änderungen wie
+   „Dateiversion anlegen und aktuelle Version umstellen“ bilden eine atomare
+   Operation im Repository-/Store-Vertrag. Der SQLite-Adapter verwendet eine
+   SQL-Transaktion; der Firestore-Adapter verwendet eine Transaktion oder,
+   wenn keine vorausgehenden Leseprüfungen nötig sind, einen atomaren Batch.
+   Teamgrenzen und fachliche Invarianten gelten in beiden Backends und werden
+   zusätzlich durch die jeweils verfügbaren Schutzmechanismen abgesichert.
+5. **Gemeinsame Vertragstests.** Beide Adapter werden gegen dieselben
+   fachlichen Erwartungen geprüft: Teamgrenzen, Versionierung, Löschverhalten,
+   Sortierung, Fehlerfälle und konkurrierende Änderungen. Backend-spezifische
+   Tests ergänzen diese Prüfungen für Constraints, Indizes und Transaktionen.
+
+Diese Regeln sind die Zielvorgaben für weitere Änderungen; sie behaupten
+nicht, dass alle bestehenden Adapter bereits vollständig danach umgesetzt
+sind. Die Unterstützung beider Betriebsarten beinhaltet keine automatische
+Synchronisierung zwischen Cloud und Standalone. Eine solche Funktion benötigt
+einen eigenen Vertrag einschließlich Konfliktregeln.
+
+### Bestehendes Persistenzverhalten
 
 - Sichtbarer, veränderlicher Firestore-Zustand wird im Client über
   Repository-Streams (`watch*`) bezogen. Cubits halten ihre Subscription nur

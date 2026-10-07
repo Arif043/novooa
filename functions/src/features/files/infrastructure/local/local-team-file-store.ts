@@ -1,21 +1,19 @@
 import {and, eq, inArray, isNull, sql} from "drizzle-orm";
-import {randomUUID} from "node:crypto";
 import {readFile, rm} from "node:fs/promises";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {files, fileVersions, type Files} from "../../../../db/schema.js";
 import {type NodeAttachment} from "../../../task_execution/domain/entities/attachments.js";
-import {storagePathFor} from "../../domain/entities/file-storage-path.js";
 import {versionsToRotateOut} from "../../domain/entities/file-version-rotation.js";
-import {type FileEvent} from "../../domain/entities/file-event.js";
 import {noFileEventPublisher, type FileEventPublisher} from "../../domain/repositories/file-event-publisher.js";
 import {type FileSettingsStore} from "../../domain/repositories/file-settings-store.js";
+import {writtenEventFrom, deletedEventFrom, newFileFrom, versionFromExisting} from "./local-file-mappers.js";
+import {currentFilesQuery, fileVersionsQuery} from "./local-file-queries.js";
 import {localFilePath, writeLocalFile} from "./local-file-path.js";
 import {
   type TeamFileContent,
   type TeamFileContentReader,
 } from "../../domain/repositories/team-file-content-reader.js";
 import {
-  contentSizeBytes,
   type StoredTeamFile,
   type TeamFileStore,
   type WriteTeamFileInput,
@@ -51,10 +49,9 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
   async deleteTeamFile(teamId: string, fileId: string): Promise<boolean> {
     const file = await this.fileRowFor(teamId, fileId);
     if (file === null) return false;
-    const versions = await this.database.select({storage_path: fileVersions.storage_path}).from(fileVersions)
-      .where(and(eq(fileVersions.team_id, teamId), eq(fileVersions.file_id, fileId)));
+    const versions = await fileVersionsQuery(this.database)
+      .where(and(eq(files.team_id, teamId), eq(fileVersions.file_id, fileId)));
     await this.database.transaction(async (tx) => {
-      await tx.delete(fileVersions).where(and(eq(fileVersions.team_id, teamId), eq(fileVersions.file_id, fileId)));
       await tx.delete(files).where(and(eq(files.team_id, teamId), eq(files.id, fileId)));
     });
     await Promise.all(versions.map((version) =>
@@ -64,8 +61,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
   }
 
   private async fileRowFor(teamId: string, fileId: string) {
-    const row = await this.database.select({id: files.id, display_name: files.display_name, folder_id: files.folder_id, content_type: files.content_type, size_bytes: files.size_bytes})
-      .from(files).where(and(eq(files.team_id, teamId), eq(files.id, fileId))).get();
+    const row = await currentFilesQuery(this.database).where(and(eq(files.team_id, teamId), eq(files.id, fileId))).get();
     return row ?? null;
   }
 
@@ -78,7 +74,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
     teamId: string,
     fileId: string,
   ): Promise<StoredTeamFile> {
-    const row = (await this.database.select({id: files.id, owner_uid: files.owner_uid, folder_id: files.folder_id, current_version_id: files.current_version_id, display_name: files.display_name, content_type: files.content_type, size_bytes: files.size_bytes, storage_path: files.storage_path}).from(files).where(and(eq(files.team_id, teamId), eq(files.id, fileId))).get()) ?? null;
+    const row = (await currentFilesQuery(this.database).where(and(eq(files.team_id, teamId), eq(files.id, fileId))).get()) ?? null;
     if (row === null || row.current_version_id === null) throw new Error(`Datei nicht gefunden: ${fileId}`);
     return {
       fileId: row.id,
@@ -95,7 +91,7 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
     fileId: string,
     versionId: string,
   ): Promise<TeamFileContent> {
-    const file = (await this.database.select({display_name: fileVersions.display_name, content_type: fileVersions.content_type, size_bytes: fileVersions.size_bytes, storage_path: fileVersions.storage_path}).from(fileVersions).where(and(eq(fileVersions.team_id, teamId), eq(fileVersions.file_id, fileId), eq(fileVersions.id, versionId))).get()) ?? null;
+    const file = (await fileVersionsQuery(this.database).where(and(eq(files.team_id, teamId), eq(fileVersions.file_id, fileId), eq(fileVersions.id, versionId))).get()) ?? null;
     if (file === null) throw new Error(`Dateiversion nicht gefunden: ${versionId}`);
     return {
       content: await readFile(localFilePath(this.rootDirectory, file.storage_path)),
@@ -134,95 +130,35 @@ export class LocalTeamFileStore implements TeamFileStore, TeamFileContentReader 
   }
 
   private async rotateVersions(teamId: string, file: WrittenFile) {
-    const rows = await this.database.select({
-      id: fileVersions.id,
-      storage_path: fileVersions.storage_path,
-      created_at: fileVersions.created_at,
-    }).from(fileVersions)
-      .where(and(eq(fileVersions.team_id, teamId), eq(fileVersions.file_id, file.fileId)))
-      // created_at hat Sekundenauflösung; rowid-Reihenfolge entscheidet bei Gleichstand.
-      .orderBy(sql`rowid DESC`);
-    const stale = versionsToRotateOut(
-      rows.map((row) => ({...row, createdAt: Date.parse(`${row.created_at.replace(" ", "T")}Z`)})),
-      await this.settings.loadVersionLimit(teamId),
-      file.versionId,
-    );
+    const stale = await this.staleVersions(teamId, file);
     if (stale.length === 0) return;
     await this.database.delete(fileVersions).where(and(
-      eq(fileVersions.team_id, teamId),
+      eq(fileVersions.file_id, file.fileId),
       inArray(fileVersions.id, stale.map((version) => version.id)),
     ));
     await Promise.all(stale.map((version) =>
       rm(localFilePath(this.rootDirectory, version.storage_path), {force: true})));
   }
 
+  private async staleVersions(teamId: string, file: WrittenFile) {
+    const rows = await fileVersionsQuery(this.database)
+      .where(and(eq(files.team_id, teamId), eq(fileVersions.file_id, file.fileId)))
+      // created_at hat Sekundenauflösung; rowid-Reihenfolge entscheidet bei Gleichstand.
+      .orderBy(sql`${fileVersions}.rowid DESC`);
+    return versionsToRotateOut(
+      rows.map((row) => ({...row, createdAt: Date.parse(`${row.created_at.replace(" ", "T")}Z`)})),
+      await this.settings.loadVersionLimit(teamId), file.versionId,
+    );
+  }
+
   private async writeMetadata(teamId: string, file: WrittenFile) {
     await this.database.transaction(async (tx) => {
       await upsertFile(tx, teamId, file);
-      await insertVersion(tx, teamId, file);
+      await insertVersion(tx, file);
+      await tx.update(files).set({current_version_id: file.versionId, updated_at: sql`CURRENT_TIMESTAMP`})
+        .where(and(eq(files.id, file.fileId), eq(files.team_id, teamId)));
     });
   }
-}
-
-function writtenEventFrom(teamId: string, file: WrittenFile, triggerChain: readonly string[]): FileEvent {
-  return {
-    type: file.isNewFile ? "fileCreated" : "fileVersionCreated",
-    teamId, fileId: file.fileId, versionId: file.versionId, displayName: file.displayName,
-    contentType: file.contentType, sizeBytes: file.sizeBytes, folderId: file.folderId,
-    occurredAt: new Date().toISOString(), triggerChain,
-  };
-}
-
-function deletedEventFrom(
-  teamId: string,
-  file: {id: string; display_name: string; folder_id: string | null; content_type: string; size_bytes: number},
-): FileEvent {
-  return {
-    type: "fileDeleted", teamId, fileId: file.id, versionId: null, displayName: file.display_name,
-    contentType: file.content_type, sizeBytes: file.size_bytes, folderId: file.folder_id,
-    occurredAt: new Date().toISOString(), triggerChain: [],
-  };
-}
-
-function newFileFrom(input: WriteTeamFileInput): WrittenFile {
-  const fileId = randomUUID();
-  const versionId = randomUUID();
-  return writtenFile(input, fileId, versionId, input.folderId ?? null, "system", true);
-}
-
-function versionFromExisting(
-  input: WriteTeamFileInput,
-  existingFile: ExistingFile,
-): WrittenFile {
-  return writtenFile(
-    input,
-    existingFile.fileId,
-    randomUUID(),
-    existingFile.folderId,
-    existingFile.ownerUid,
-    false,
-  );
-}
-
-function writtenFile(
-  input: WriteTeamFileInput,
-  fileId: string,
-  versionId: string,
-  folderId: string | null,
-  ownerUid: string,
-  isNewFile: boolean,
-): WrittenFile {
-  return {
-    fileId,
-    versionId,
-    displayName: input.fileName,
-    contentType: input.contentType,
-    sizeBytes: contentSizeBytes(input.content),
-    folderId,
-    ownerUid,
-    isNewFile,
-    storagePath: storagePathFor(input.teamId, fileId, versionId, input.fileName),
-  };
 }
 
 async function upsertFile(
@@ -230,15 +166,15 @@ async function upsertFile(
   teamId: string,
   file: WrittenFile,
 ) {
-  await database.insert(files).values({id: file.fileId, team_id: teamId, owner_uid: file.ownerUid, display_name: file.displayName, folder_id: file.folderId, current_version_id: file.versionId, content_type: file.contentType, size_bytes: file.sizeBytes, storage_path: file.storagePath}).onConflictDoUpdate({target: files.id, set: {current_version_id: file.versionId, content_type: file.contentType, size_bytes: file.sizeBytes, storage_path: file.storagePath, updated_at: sql`CURRENT_TIMESTAMP`}});
+  await database.insert(files).values({id: file.fileId, team_id: teamId, owner_uid: file.ownerUid,
+    display_name: file.displayName, folder_id: file.folderId})
+    .onConflictDoNothing({target: files.id});
 }
 
-async function insertVersion(
-  database: RuntimeExecutor,
-  teamId: string,
-  file: WrittenFile,
-) {
-  await database.insert(fileVersions).values({id: file.versionId, team_id: teamId, file_id: file.fileId, created_by_uid: "system", display_name: file.displayName, storage_path: file.storagePath, content_type: file.contentType, size_bytes: file.sizeBytes});
+async function insertVersion(database: RuntimeExecutor, file: WrittenFile) {
+  await database.insert(fileVersions).values({id: file.versionId, file_id: file.fileId,
+    created_by_uid: "system", display_name: file.displayName, storage_path: file.storagePath,
+    content_type: file.contentType, size_bytes: file.sizeBytes});
 }
 
 function ensureTeamFile(file: NodeAttachment, teamId: string): void {

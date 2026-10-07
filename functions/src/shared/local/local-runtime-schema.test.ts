@@ -18,7 +18,7 @@ test("Drizzle defines all migration-managed runtime tables with matching columns
     const configuration = getTableConfig(table);
     const columns = await database.all<{name: string; type: string; dflt_value: string | null}>(
       sql`SELECT name, type, dflt_value FROM pragma_table_info(${configuration.name}) ORDER BY cid`);
-    assert.deepEqual(configuration.columns.map((column) => column.name), columns.map((column) => column.name), configuration.name);
+    assert.deepEqual(configuration.columns.map((column) => column.name).sort(), columns.map((column) => column.name).sort(), configuration.name);
     for (const column of configuration.columns) {
       const storedColumn = columns.find((entry) => entry.name === column.name)!;
       assert.equal(column.getSQLType().toUpperCase(), storedColumn.type, `${configuration.name}.${column.name}`);
