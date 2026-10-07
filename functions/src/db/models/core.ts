@@ -116,16 +116,23 @@ export const tasks = sqliteTable("tasks", {
   index("idx_tasks_team_id").on(table.team_id),
 ]);
 
-export const teamMembers = sqliteTable("team_members", {
-  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
-  uid: text("uid").notNull(),
+export const userProfiles = sqliteTable("user_profiles", {
+  uid: text("uid").primaryKey(),
   email: text("email").notNull().default(""),
   display_name: text("display_name").notNull().default(""),
+  created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const teamMembers = sqliteTable("team_members", {
+  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
+  uid: text("uid").notNull().references((): AnySQLiteColumn => userProfiles.uid, {onDelete: "cascade"}),
   role: text("role").notNull().default("member"),
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
   primaryKey({columns: [table.team_id, table.uid]}),
+  index("idx_team_members_uid_created").on(table.uid, table.created_at),
 ]);
 
 export const teams = sqliteTable("teams", {
@@ -150,3 +157,6 @@ export type TeamMembers = typeof teamMembers.$inferSelect;
 export type NewTeamMembers = typeof teamMembers.$inferInsert;
 export type Teams = typeof teams.$inferSelect;
 export type NewTeams = typeof teams.$inferInsert;
+
+export type UserProfiles = typeof userProfiles.$inferSelect;
+export type NewUserProfiles = typeof userProfiles.$inferInsert;

@@ -152,6 +152,14 @@ einen eigenen Vertrag einschließlich Konfliktregeln.
 
 ### Teams und Dateien
 
+SQLite trennt Benutzerprofile (`user_profiles`, Schlüssel `uid`) von
+Teammitgliedschaften (`team_members`, Schlüssel `team_id` + `uid`). E-Mail und
+Anzeigename gehören zum Benutzerprofil; Rolle und Mitgliedschaftszeitpunkte
+gehören zur jeweiligen Teamzuordnung. Fremdschlüssel sichern beide Beziehungen
+ab. Die Initialisierung des lokalen Arbeitsbereichs legt Profil, Team und
+Mitgliedschaft gemeinsam in einer Transaktion an. Firestore behält seinen
+separaten Adapter und seine eigene Speicherstruktur.
+
 Dateien sind von Beginn an team-scoped modelliert, auch wenn aktuell nur ein
 persönlicher Arbeitsbereich verwendet wird.
 

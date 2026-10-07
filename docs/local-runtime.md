@@ -459,6 +459,22 @@ documents
 
 Die Initialmigration enthält außerdem den ONNX-Modellkatalog `model_catalog`,
 Provider-Verbindungen, Sprachmodellprofile und `language_model_secrets`.
+
+Seit `0011_normalize_team_members.sql` enthält `user_profiles` pro `uid` genau
+ein Benutzerprofil mit E-Mail, Anzeigename und Profilzeitpunkten.
+`team_members` speichert nur die Teamzuordnung, Rolle und
+Mitgliedschaftszeitpunkte; sein zusammengesetzter Schlüssel ist `team_id` +
+`uid`. Fremdschlüssel verweisen auf `teams` und `user_profiles`. Das Löschen
+eines Teams entfernt dessen Mitgliedschaften und erhält das Benutzerprofil;
+das Löschen eines Profils entfernt dessen Mitgliedschaften. Der Index auf
+`uid` und `created_at` unterstützt die Arbeitsbereichsauswahl.
+Die Migration übernimmt das vollständige Profil aus der zuletzt aktualisierten
+Mitgliedschaft; bei gleichem Zeitpunkt entscheidet die kleinste Team-ID.
+Als Profilanlagezeit gilt der früheste Mitgliedschaftszeitpunkt.
+Mitgliedschaftsrollen und ihre Zeitpunkte bleiben erhalten.
+Die Initialisierung des lokalen Arbeitsbereichs erstellt Profil, Team und
+Mitgliedschaft atomar und erhält vorhandene Profile und Rollen.
+
 Seit `0010_normalize_language_models.sql` speichern Sprachmodellprofile keine
 eigene `team_id` mehr. Das Team wird bei Listen- und Katalogabfragen über
 `language_model_connections` aufgelöst. `connection_id` ist indiziert und als
@@ -920,7 +936,7 @@ dessen Infrastructure-Bereich.
   Strategien. Die Cloud erhält später einen alternativen Adapter für denselben
   `ModelInputTransformer`-Port.
 - `functions/src/db/models/{core,integration,resources}.ts` definiert die
-  23 fachlichen Tabellen mit `sqliteTable`, Constraints, Indizes und aus den
+  28 Tabellen mit `sqliteTable`, Constraints, Indizes und aus den
   Tabellen abgeleiteten Lese-/Schreib-Models (`$inferSelect`/`$inferInsert`).
   Fachliche Repository-Verträge bleiben frameworkfrei.
 - Die Anbindung folgt der offiziellen

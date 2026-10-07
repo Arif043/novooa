@@ -78,6 +78,13 @@
       "when": 1791347522626,
       "tag": "0010_normalize_language_models",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1791347775626,
+      "tag": "0011_normalize_team_members",
+      "breakpoints": true
     }
   ]
 }
