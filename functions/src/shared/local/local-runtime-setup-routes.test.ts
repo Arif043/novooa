@@ -65,18 +65,12 @@ test("ein bereits gesetztes Passwort bleibt unveränderbar", async () => {
   assert.equal(response?.statusCode, 409);
 });
 
-test("GET meldet den Bedarf, den Token-Nachweis und erreichbare Adressen", async () => {
+test("GET meldet nur den Bedarf und den Token-Nachweis, keine Netzwerkadressen", async () => {
   const response = await handlerFor(new FakeCredentialStore()).handle({
     method: "GET", url: "/v1/setup", body: undefined, headers: {host: "192.168.1.42:8090"},
   });
 
-  const body = response?.body as {needsSetup: boolean; requiresLicenseToken: boolean; addresses: string[]};
-  assert.equal(response?.statusCode, 200);
-  assert.equal(body.needsSetup, true);
-  assert.equal(body.requiresLicenseToken, true);
-  for (const address of body.addresses) {
-    assert.match(address, /^http:\/\/.+:8090$/, "übernimmt den Port aus dem Host-Header");
-  }
+  assert.deepEqual(response, {statusCode: 200, body: {needsSetup: true, requiresLicenseToken: true}});
 });
 
 test("fremde Pfade gehen an den nächsten Handler weiter", async () => {

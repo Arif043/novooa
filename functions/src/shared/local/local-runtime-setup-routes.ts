@@ -1,11 +1,9 @@
 import {type FastifyPluginAsyncTypebox, Type} from "@fastify/type-provider-typebox";
-import {type IncomingHttpHeaders} from "node:http";
 import {
   type LocalRuntimeAccessCredentialStore,
   RuntimeAccessCredentialAlreadySetError,
 } from "./local-runtime-access-credential-store.js";
 import {ErrorResponse} from "./local-runtime-http-schemas.js";
-import {reachableAddresses} from "./local-runtime-reachable-addresses.js";
 
 /** Nachweis für die Ersteinrichtung — bedient vom Lizenz-Service. */
 export interface SetupAuthorization {
@@ -18,8 +16,6 @@ export type SetupRoutesOptions = {
   authorization: SetupAuthorization;
 };
 
-const defaultPublishedPort = 8090;
-
 /**
  * `GET`/`POST /v1/setup` — einmaliges Setzen des Betreiber-Passworts, über
  * den regulären Port. Verlangt dafür den Lizenz-Token, mit dem die Runtime
@@ -31,12 +27,11 @@ const defaultPublishedPort = 8090;
 export const setupRoutes: FastifyPluginAsyncTypebox<SetupRoutesOptions> = async (app, {credentials, authorization}) => {
   app.get("/v1/setup", {
     schema: {response: {200: Type.Object({
-      needsSetup: Type.Boolean(), requiresLicenseToken: Type.Boolean(), addresses: Type.Array(Type.String()),
+      needsSetup: Type.Boolean(), requiresLicenseToken: Type.Boolean(),
     })}},
-  }, async (request) => ({
+  }, async () => ({
     needsSetup: !await credentials.hasCredential(),
     requiresLicenseToken: authorization.requiresActivationTokenForSetup(),
-    addresses: reachableAddresses(requestPortFrom(request.headers)),
   }));
 
   app.post("/v1/setup", {
@@ -61,14 +56,3 @@ export const setupRoutes: FastifyPluginAsyncTypebox<SetupRoutesOptions> = async 
     }
   });
 };
-
-/**
- * Der Port kommt aus dem `Host`-Header der Anfrage, nicht aus der
- * Konfiguration: Im Container lauscht die Runtime auf 8080, Clients sprechen
- * aber den vom Docker-Host veröffentlichten 8090 an. Fällt ohne Port (etwa
- * hinter einem Reverse Proxy auf 443) auf den Standardport zurück.
- */
-function requestPortFrom(headers: IncomingHttpHeaders): number {
-  const port = Number(headers.host?.split(":")[1]);
-  return Number.isSafeInteger(port) && port > 0 ? port : defaultPublishedPort;
-}

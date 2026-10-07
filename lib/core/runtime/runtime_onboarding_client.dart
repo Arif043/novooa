@@ -7,7 +7,6 @@ import 'runtime_endpoint.dart';
 class RuntimeSetupStatus {
   const RuntimeSetupStatus({
     required this.needsSetup,
-    required this.addresses,
     this.requiresLicenseToken = true,
   });
 
@@ -15,10 +14,6 @@ class RuntimeSetupStatus {
 
   /// Ob `/v1/setup` den Lizenz-Token als Nachweis verlangt.
   final bool requiresLicenseToken;
-
-  /// Adressen, unter denen die Runtime erreichbar ist — von ihr selbst
-  /// ermittelt, damit niemand sie abtippen muss.
-  final List<String> addresses;
 }
 
 abstract interface class RuntimeOnboardingClient {
@@ -81,7 +76,6 @@ class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
       return RuntimeSetupStatus(
         needsSetup: response['needsSetup'] == true,
         requiresLicenseToken: response['requiresLicenseToken'] != false,
-        addresses: _addressesFrom(response['addresses']),
       );
     } on WorkspaceConnectionException {
       throw const RuntimeOnboardingFailure('Die Runtime ist nicht erreichbar.');
@@ -112,11 +106,6 @@ class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
       409 => 'Für diese Runtime ist bereits ein Passwort gesetzt.',
       _ => 'Das Passwort konnte nicht gesetzt werden.',
     };
-  }
-
-  List<String> _addressesFrom(Object? value) {
-    if (value is! List) return const [];
-    return value.whereType<String>().toList(growable: false);
   }
 
   HttpWorkspaceApiClient _clientFor(

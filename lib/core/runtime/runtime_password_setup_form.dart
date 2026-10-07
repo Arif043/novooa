@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../theme/app_spacing.dart';
 import 'runtime_connection_cubit.dart';
 import 'runtime_connection_state.dart';
-import 'runtime_reachable_addresses.dart';
 
 /// Zweiter Einrichtungsschritt nach der Lizenz ([RuntimeLicenseForm]). Der
 /// Lizenz-Token aus Schritt 1 reist im State mit; nur wenn die App ihn nicht
@@ -62,10 +61,6 @@ class _RuntimePasswordSetupFormState extends State<RuntimePasswordSetupForm> {
           icon: const Icon(Icons.lock_open_outlined),
           label: const Text('Passwort festlegen'),
         ),
-        if (setup.addresses.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.xl),
-          RuntimeReachableAddresses(addresses: setup.addresses),
-        ],
       ],
     );
   }

@@ -216,8 +216,9 @@ dem Browser. Die Einrichtung hat zwei Schritte:
 Der Vertrauensanker ist **Besitz des Lizenz-Tokens**, nicht Netzwerkposition:
 Wer die Runtime zufällig zuerst erreicht, kann ohne Token kein Passwort
 setzen. Ein zusätzlicher Code aus dem Start-Log ist deshalb nicht nötig.
-`GET /v1/setup` meldet `needsSetup`, `requiresLicenseToken` (nur im
-Entwicklungsmodus ohne echte Lizenz `false`) und die erreichbaren Adressen.
+`GET /v1/setup` meldet nur `needsSetup` und `requiresLicenseToken` (nur im
+Entwicklungsmodus ohne echte Lizenz `false`). Netzwerkadressen der Runtime gibt
+der Endpunkt bewusst nicht aus, weil er ohne Anmeldung erreichbar ist.
 `POST /v1/setup` funktioniert genau einmal und sperrt sich danach dauerhaft
 (`409`).
 

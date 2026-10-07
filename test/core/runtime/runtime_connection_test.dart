@@ -268,11 +268,7 @@ void main() {
           _MemoryCredentialStore(),
           _FakeLoginClient(),
           const _FakeAvailability(),
-          onboarding: _FakeOnboarding(
-            hasLicense: false,
-            needsSetup: true,
-            addresses: const ['http://192.168.1.20:8090'],
-          ),
+          onboarding: _FakeOnboarding(hasLicense: false, needsSetup: true),
           kindStore: _MemoryKindStore(),
         );
         await cubit.connect('192.168.1.20');
@@ -284,7 +280,6 @@ void main() {
         final state = cubit.state as RuntimeConnectionNeedsPasswordSetup;
         expect(state.activationToken, 'A3K9-N7P2-Q4R6-T8W5');
         expect(state.needsTokenInput, isFalse);
-        expect(state.addresses, ['http://192.168.1.20:8090']);
         await cubit.close();
       },
     );
@@ -754,15 +749,10 @@ class _FakeAvailability implements RuntimeAvailability {
 }
 
 class _FakeOnboarding implements RuntimeOnboardingClient {
-  _FakeOnboarding({
-    this.hasLicense = true,
-    this.needsSetup = false,
-    this.addresses = const [],
-  });
+  _FakeOnboarding({this.hasLicense = true, this.needsSetup = false});
 
   final bool hasLicense;
   final bool needsSetup;
-  final List<String> addresses;
 
   /// Was der letzte `setPassword`-Aufruf mitgeschickt hat.
   String? submittedToken;
@@ -776,7 +766,7 @@ class _FakeOnboarding implements RuntimeOnboardingClient {
 
   @override
   Future<RuntimeSetupStatus> setupStatus(RuntimeEndpoint endpoint) async {
-    return RuntimeSetupStatus(needsSetup: needsSetup, addresses: addresses);
+    return RuntimeSetupStatus(needsSetup: needsSetup);
   }
 
   @override
@@ -800,7 +790,7 @@ class _FailingSetupOnboarding implements RuntimeOnboardingClient {
 
   @override
   Future<RuntimeSetupStatus> setupStatus(RuntimeEndpoint endpoint) async {
-    return const RuntimeSetupStatus(needsSetup: true, addresses: []);
+    return const RuntimeSetupStatus(needsSetup: true);
   }
 
   @override

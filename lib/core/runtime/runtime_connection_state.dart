@@ -37,7 +37,6 @@ final class RuntimeConnectionNeedsPasswordSetup extends RuntimeConnectionState {
     this.endpoint, {
     this.activationToken,
     this.requiresLicenseToken = true,
-    this.addresses = const [],
     this.errorMessage,
   });
 
@@ -51,10 +50,6 @@ final class RuntimeConnectionNeedsPasswordSetup extends RuntimeConnectionState {
   /// `false` nur bei einer Runtime im Entwicklungsmodus ohne echte Lizenz.
   final bool requiresLicenseToken;
 
-  /// Von der Runtime selbst ermittelte Adressen, unter denen andere Geräte
-  /// sie erreichen. Werden angezeigt, nicht abgefragt.
-  final List<String> addresses;
-
   bool get needsTokenInput => requiresLicenseToken && activationToken == null;
 
   RuntimeConnectionNeedsPasswordSetup withError(String errorMessage) =>
@@ -62,7 +57,6 @@ final class RuntimeConnectionNeedsPasswordSetup extends RuntimeConnectionState {
         endpoint,
         activationToken: activationToken,
         requiresLicenseToken: requiresLicenseToken,
-        addresses: addresses,
         errorMessage: errorMessage,
       );
 }

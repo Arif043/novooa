@@ -309,7 +309,6 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
           endpoint,
           activationToken: activationToken,
           requiresLicenseToken: status.requiresLicenseToken,
-          addresses: status.addresses,
         ),
       );
       return;
