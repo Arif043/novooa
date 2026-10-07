@@ -100,18 +100,13 @@ export const modelCatalog = sqliteTable("model_catalog", {
   description: text("description").notNull(),
   translations_json: text("translations_json").notNull().default("{}"),
   tags_json: text("tags_json").notNull().default("[]"),
-  scope: text("scope").notNull(),
   team_id: text("team_id").references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
-  runtime: text("runtime").notNull(),
   artifact_reference_json: text("artifact_reference_json").notNull(),
   contract_json: text("contract_json").notNull(),
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
-  index("idx_model_catalog_scope_team").on(table.scope, table.team_id),
-  check("model_catalog_scope", sql`${table.scope} IN ('system', 'team')`),
-  check("model_catalog_runtime", sql`${table.runtime} = 'onnx'`),
-  check("model_catalog_team_scope", sql`(${table.scope} = 'system' AND ${table.team_id} IS NULL) OR (${table.scope} = 'team' AND ${table.team_id} IS NOT NULL)`),
+  index("idx_model_catalog_team").on(table.team_id),
 ]);
 
 export const runtimeAccessCredential = sqliteTable("runtime_access_credential", {

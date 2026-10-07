@@ -10,6 +10,7 @@ pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
 | -------------- | ---------------------------------- | ------------------------------------------------------- |
 | Überblick      | [`../AGENTS.md`](../AGENTS.md)     | Projekt-Definition, Stack, Conventions, Agent-Regeln    |
 | Cross-cutting  | [`architecture.md`](./architecture.md) | Datenmodell, Auth, Persistenz, Trigger, Telemetrie   |
+| SQLite-Normalisierung | [`architecture/sqlite-normalisierung.md`](./architecture/sqlite-normalisierung.md) | Prüfung aller Tabellen, Migrationen und verbleibende Abhängigkeiten |
 | Deployment | [`deployment.md`](./deployment.md) | Staging/Produktion, Firebase-Projekte und CI/CD |
 | Backend        | [`backend-struktur.md`](./backend-struktur.md) | Functions-Struktur, Ports, Cloud-/Local-Trennung |
 | Executor-Outputs | [`node-executor-outputs.md`](./node-executor-outputs.md) | Output-Vertraege der Workflow-Executoren |

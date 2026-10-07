@@ -994,6 +994,17 @@ dessen Infrastructure-Bereich.
   oder widersprüchlichen Team-/Aufgabenbezügen atomar ab. HTTP- und Domain-
   Objekte enthalten weiterhin die abgeleitete Aufgaben-ID; der Firestore-
   Adapter behält sein eigenes Speichermodell.
+- Seit `0015_normalize_model_catalog.sql` enthält der Modellkatalog keine
+  eigenen Spalten `scope` und `runtime` mehr. `team_id = NULL` bedeutet
+  Systemmodell, eine gesetzte Team-ID ein Teammodell; der SQLite-Adapter
+  ergänzt die vom aktuellen Fachmodell festgelegte Runtime `onnx`.
+  Schreibzugriffe validieren den Eintrag über den gemeinsamen Katalog-Codec,
+  bevor sie Daten verändern. Sichtbarkeit und Löschen von Teammodellen werden
+  direkt über `team_id` gefiltert. Migration und Fremdschlüssel erhalten
+  Teamzuordnung, JSON-Aggregate, Zeitpunkte und Löschkaskaden.
+  Der vollständige Prüfstand aller 28 Tabellen ist in
+  [`architecture/sqlite-normalisierung.md`](./architecture/sqlite-normalisierung.md)
+  dokumentiert; eine vollständige strenge 3NF wird weiterhin nicht behauptet.
 - Die Dateiablage speichert Versionsmetadaten ausschließlich in
   `file_versions`; das Team wird über `files` aufgelöst. Die aktuelle Version
   wird durch einen zusammengesetzten Fremdschlüssel ihrer Datei zugeordnet.

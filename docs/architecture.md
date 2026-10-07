@@ -44,6 +44,10 @@ Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md).
 
 ### Architekturentscheidung: SQLite und Firebase unterstützen
 
+Der Stand aller 28 SQLite-Tabellen, bekannte funktionale Abhängigkeiten und
+verbleibende Arbeiten stehen in der
+[Normalisierungsprüfung](./architecture/sqlite-normalisierung.md).
+
 Standalone verwendet weiterhin SQLite. Der Cloud-Betrieb verwendet weiterhin
 Firebase mit Firestore. Beide Betriebsarten teilen fachliche Modelle und
 Verträge; ihre physischen Speicherstrukturen dürfen sich unterscheiden.
