@@ -56,6 +56,21 @@ for (const override of [{runtime: "unsupported"}, {scope: {type: "organization"}
   });
 }
 
+test("stores task and languages and reads older rows as language independent „other“", async (t) => {
+  const database = await runtimeTestDatabase(t);
+  await database.insert(modelCatalog).values(modelRow("team", "team-1"));
+  const catalog = new SQLiteModelCatalog(database);
+  await catalog.save({...modelEntry(), task: "text-to-speech", languages: ["de"]});
+
+  const saved = await catalog.findAvailableFor("team-1", "system-model");
+  const older = await catalog.findAvailableFor("team-1", "team-model");
+
+  assert.equal(saved?.task, "text-to-speech");
+  assert.deepEqual(saved?.languages, ["de"]);
+  assert.equal(older?.task, "other");
+  assert.deepEqual(older?.languages, []);
+});
+
 function modelRow(scope: "system" | "team", teamId: string | null): NewModelCatalog {
   return {
     id: `${scope}-model`,
@@ -73,6 +88,8 @@ function modelEntry() {
     id: "system-model",
     title: "Systemmodell",
     description: "Ein Testmodell.",
+    task: "image-classification" as const,
+    languages: [],
     tags: ["bild"],
     scope: {type: "system" as const},
     runtime: "onnx" as const,

@@ -15,7 +15,12 @@ void main() {
   );
 
   test('findet eine Notiz über ID, Titel und Pfad mit und ohne .md', () {
-    for (final target in ['note.details', ' details ', 'ordner/details.md', 'Ordner/Details']) {
+    for (final target in [
+      'note.details',
+      ' details ',
+      'ordner/details.md',
+      'Ordner/Details',
+    ]) {
       expect(resolver.resolve(target, [note]), note, reason: target);
     }
   });

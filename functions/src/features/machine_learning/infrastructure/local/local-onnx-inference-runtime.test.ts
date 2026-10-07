@@ -33,7 +33,7 @@ function tensor(name = "input"): ModelTensor {
 
 function entry(): ModelCatalogEntry {
   return {
-    id: "model", title: "Modell", description: "Testmodell", tags: ["test"],
+    id: "model", title: "Modell", description: "Testmodell", task: "image-classification", languages: [], tags: ["test"],
     scope: {type: "system"}, runtime: "onnx",
     artifactReference: {
       artifactId: "artifact", versionId: "1", format: "onnx", contentType: "application/onnx",

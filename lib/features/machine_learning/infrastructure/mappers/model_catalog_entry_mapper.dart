@@ -29,6 +29,10 @@ class ModelCatalogEntryMapper {
       title: jsonText(entry, 'title'),
       description: jsonText(entry, 'description'),
       translations: _translationsFrom(entry['translations']),
+      task: ModelTask.fromKey(entry['task']),
+      languages: entry['languages'] == null
+          ? const []
+          : jsonStrings(entry['languages']),
       tags: jsonStrings(entry['tags']),
       inputs: inputs,
       settings: settings,

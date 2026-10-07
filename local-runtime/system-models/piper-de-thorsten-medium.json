@@ -2,7 +2,9 @@
   "id": "piper-de-thorsten-medium",
   "title": "Piper Deutsch - Thorsten (mittel)",
   "description": "Erzeugt natürlichere gesprochene deutsche Sprache lokal aus Text.",
-  "tags": ["sprache", "text-zu-sprache", "deutsch", "offline", "hohe-qualitaet"],
+  "task": "text-to-speech",
+  "languages": ["de"],
+  "tags": ["hohe-qualitaet"],
   "artifact": {
     "artifactId": "piper-de-thorsten-medium",
     "versionId": "c10ece1aade47bb51c153c893d14e5bf8e5b7117"

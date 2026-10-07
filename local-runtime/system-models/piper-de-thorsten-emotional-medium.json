@@ -2,13 +2,9 @@
   "id": "piper-de-thorsten-emotional-medium",
   "title": "Piper Deutsch - Thorsten Emotional",
   "description": "Erzeugt deutsche Sprachausgabe mit auswählbarer Stimmung lokal aus Text.",
-  "tags": [
-    "sprache",
-    "text-zu-sprache",
-    "deutsch",
-    "offline",
-    "emotionen"
-  ],
+  "task": "text-to-speech",
+  "languages": ["de"],
+  "tags": ["emotionen"],
   "artifact": {
     "artifactId": "piper-de-thorsten-emotional-medium",
     "versionId": "375a0fe641dea077c2a47b4e9a056d6da521eed3"

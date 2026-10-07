@@ -52,7 +52,9 @@ abstract final class KnowledgeMarkdownStyleSheet {
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs,
       ),
-      tableHeadCellsDecoration: BoxDecoration(color: colors.surfaceContainerLow),
+      tableHeadCellsDecoration: BoxDecoration(
+        color: colors.surfaceContainerLow,
+      ),
     );
   }
 
@@ -75,7 +77,9 @@ abstract final class KnowledgeMarkdownStyleSheet {
   static BoxDecoration _quote(ColorScheme colors) {
     return BoxDecoration(
       color: colors.primary.withValues(alpha: 0.06),
-      border: Border(left: BorderSide(color: colors.primary, width: AppSpacing.xs)),
+      border: Border(
+        left: BorderSide(color: colors.primary, width: AppSpacing.xs),
+      ),
     );
   }
 }

@@ -26,14 +26,13 @@ class LocalConnectionRepository implements ConnectionRepository {
       connectionsFromJson(await _client.get('/v1/connections'));
 
   @override
-  Future<Result<Connection, ConnectionFailure>> create(
-    ConnectionDraft draft,
-  ) => _attempt(
-    ConnectionFailure.saveFailed,
-    () async => connectionFromJson(
-      await _client.post('/v1/connections', draftToJson(draft)),
-    ),
-  );
+  Future<Result<Connection, ConnectionFailure>> create(ConnectionDraft draft) =>
+      _attempt(
+        ConnectionFailure.saveFailed,
+        () async => connectionFromJson(
+          await _client.post('/v1/connections', draftToJson(draft)),
+        ),
+      );
 
   @override
   Future<Result<Connection, ConnectionFailure>> update(
@@ -50,13 +49,11 @@ class LocalConnectionRepository implements ConnectionRepository {
   );
 
   @override
-  Future<Result<Unit, ConnectionFailure>> delete(String id) => _attempt(
-    ConnectionFailure.deleteFailed,
-    () async {
-      await _client.delete('/v1/connections/${Uri.encodeComponent(id)}');
-      return unit;
-    },
-  );
+  Future<Result<Unit, ConnectionFailure>> delete(String id) =>
+      _attempt(ConnectionFailure.deleteFailed, () async {
+        await _client.delete('/v1/connections/${Uri.encodeComponent(id)}');
+        return unit;
+      });
 
   @override
   Future<Result<ConnectionTestResult, ConnectionFailure>> test(

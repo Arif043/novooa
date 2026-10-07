@@ -2,6 +2,7 @@ import {readFile} from "node:fs/promises";
 import {type ModelCatalogEntry, type ModelTranslations, validateModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
 import {type ModelArtifactReference} from "../../domain/entities/model-artifact-reference.js";
 import {type ModelContract} from "../../domain/entities/model-contract.js";
+import {isModelTask, modelTasks, type ModelTask} from "../../domain/entities/model-task.js";
 import {modelContractFromUnknown} from "../model-contract-codec.js";
 import {modelTranslationsFromUnknown} from "../model-catalog-entry-codec.js";
 import {
@@ -14,6 +15,8 @@ export type SystemModelManifest = {
   title: string;
   description: string;
   translations?: ModelTranslations;
+  task: ModelTask;
+  languages: readonly string[];
   tags: readonly string[];
   artifact: {artifactId: string; versionId: string};
   distribution?: ModelArtifactDistribution;
@@ -33,6 +36,7 @@ export function systemModelManifestFromUnknown(value: unknown): SystemModelManif
     title: text(data.title, "Der Modellname fehlt."),
     description: text(data.description, "Die Modellbeschreibung fehlt."),
     ...(translations === undefined ? {} : {translations}),
+    task: task(data.task), languages: languages(data.languages),
     tags: tags(data.tags), artifact: artifact(data.artifact), distribution: distribution(data.distribution),
     contract: modelContractFromUnknown(data.contract),
   };
@@ -50,7 +54,8 @@ export function systemModelEntry(
 ): ModelCatalogEntry {
   const entry: ModelCatalogEntry = {
     id: manifest.id, title: manifest.title, description: manifest.description,
-    ...(manifest.translations === undefined ? {} : {translations: manifest.translations}), tags: manifest.tags,
+    ...(manifest.translations === undefined ? {} : {translations: manifest.translations}),
+    task: manifest.task, languages: manifest.languages, tags: manifest.tags,
     scope: {type: "system"}, runtime: "onnx", artifactReference, contract: manifest.contract,
   };
   validateModelCatalogEntry(entry);
@@ -63,6 +68,20 @@ function artifact(value: unknown): {artifactId: string; versionId: string} {
     artifactId: text(data.artifactId, "Die Modell-Artefakt-ID fehlt."),
     versionId: text(data.versionId, "Die Modell-Artefakt-Version fehlt."),
   };
+}
+
+/** Pflicht im Manifest: Ohne Aufgabe ließe sich das Modell in der Suche nicht einordnen. */
+function task(value: unknown): ModelTask {
+  if (isModelTask(value)) return value;
+  throw new Error(`Die Modellaufgabe („task“) fehlt oder ist unbekannt. Erlaubt sind: ${modelTasks.join(", ")}.`);
+}
+
+function languages(value: unknown): readonly string[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || !value.every((language) => typeof language === "string")) {
+    throw new Error("Die Modellsprachen sind ungültig.");
+  }
+  return value;
 }
 
 function tags(value: unknown): readonly string[] {

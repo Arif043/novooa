@@ -1,8 +1,10 @@
 import 'package:equatable/equatable.dart';
 
 import 'model_manifest_input_parameter.dart';
+import 'model_task.dart';
 
 export 'model_manifest_input_parameter.dart';
+export 'model_task.dart';
 
 /// Herkunft eines lokal vorliegenden Modells.
 enum ModelOrigin {
@@ -19,6 +21,8 @@ class ModelCatalogEntry extends Equatable {
     required this.title,
     required this.description,
     this.translations = const {},
+    this.task = ModelTask.other,
+    this.languages = const [],
     required this.tags,
     required this.inputs,
     this.settings = const [],
@@ -34,6 +38,12 @@ class ModelCatalogEntry extends Equatable {
 
   /// Sprachcode (z. B. `en`, `pt-BR`) → Anzeigetexte; `title`/`description` sind die englische Rückfallsprache.
   final Map<String, ModelTranslation> translations;
+
+  /// Das Problem, das das Modell löst; Grundlage der Filter-Chips in der Modellsuche.
+  final ModelTask task;
+
+  /// BCP-47-Codes; leer bei sprachunabhängigen Modellen.
+  final List<String> languages;
   final List<String> tags;
   final List<ModelManifestInput> inputs;
   final List<ModelManifestSetting> settings;
@@ -55,6 +65,8 @@ class ModelCatalogEntry extends Equatable {
     title,
     description,
     translations,
+    task,
+    languages,
     tags,
     inputs,
     settings,

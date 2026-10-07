@@ -9,6 +9,7 @@ import {
   type ModelTranslations,
   validateModelCatalogEntry,
 } from "../domain/entities/model-catalog-entry.js";
+import {isModelTask, type ModelTask} from "../domain/entities/model-task.js";
 import {modelContractFromUnknown} from "./model-contract-codec.js";
 
 export type ModelCatalogEntryData = {
@@ -16,6 +17,8 @@ export type ModelCatalogEntryData = {
   title: string;
   description: string;
   translations?: unknown;
+  task?: unknown;
+  languages?: unknown;
   tags: unknown;
   scope: unknown;
   teamId: unknown;
@@ -34,6 +37,8 @@ export function modelCatalogEntryFromData(
     title: text(data.title, "Der Modellname fehlt."),
     description: text(data.description, "Die Modellbeschreibung fehlt."),
     ...(translations === undefined ? {} : {translations}),
+    task: taskFrom(data.task),
+    languages: languagesFrom(data.languages),
     tags: tagsFrom(data.tags),
     scope: scopeFrom(data.scope, data.teamId),
     runtime: runtimeFrom(data.runtime),
@@ -51,6 +56,8 @@ export function modelCatalogEntryData(entry: ModelCatalogEntry) {
     title: entry.title,
     description: entry.description,
     translations: entry.translations ?? {},
+    task: entry.task,
+    languages: [...entry.languages],
     tags: [...entry.tags],
     scope: entry.scope.type,
     teamId: entry.scope.type === "team" ? entry.scope.teamId : null,
@@ -59,6 +66,19 @@ export function modelCatalogEntryData(entry: ModelCatalogEntry) {
     contract: entry.contract,
     ...(entry.origin === undefined ? {} : {origin: entry.origin}),
   };
+}
+
+/** Einträge von vor der Aufgabe als Pflichtfeld gelten als „Sonstige“. */
+function taskFrom(value: unknown): ModelTask {
+  if (value === undefined || value === null) return "other";
+  if (isModelTask(value)) return value;
+  throw new Error("Die Modellaufgabe ist ungültig.");
+}
+
+function languagesFrom(value: unknown): readonly string[] {
+  if (value === undefined || value === null) return [];
+  if (Array.isArray(value) && value.every((language) => typeof language === "string")) return value;
+  throw new Error("Die Modellsprachen sind ungültig.");
 }
 
 function originFrom(value: unknown): {origin?: ModelOrigin} {

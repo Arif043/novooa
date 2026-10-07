@@ -59,7 +59,9 @@ class ConnectionsCubit extends Cubit<ConnectionsState> {
         : await _updateConnection(id, draft);
     if (isClosed) return null;
     return result.when((connection) {
-      emit(state.copyWith(message: 'Verbindung „${connection.name}“ gespeichert.'));
+      emit(
+        state.copyWith(message: 'Verbindung „${connection.name}“ gespeichert.'),
+      );
       return null;
     }, (failure) => failure.message);
   }
@@ -72,9 +74,8 @@ class ConnectionsCubit extends Cubit<ConnectionsState> {
     final result = await _deleteConnection(id);
     if (isClosed) return;
     result.when(
-      (_) => emit(
-        state.copyWith(message: 'Verbindung „${name ?? id}“ gelöscht.'),
-      ),
+      (_) =>
+          emit(state.copyWith(message: 'Verbindung „${name ?? id}“ gelöscht.')),
       (failure) => emit(state.copyWith(message: failure.message)),
     );
   }
@@ -109,10 +110,7 @@ class ConnectionsCubit extends Cubit<ConnectionsState> {
   void _emitConnections(List<Connection> connections) {
     if (isClosed) return;
     emit(
-      state.copyWith(
-        status: ConnectionsStatus.ready,
-        connections: connections,
-      ),
+      state.copyWith(status: ConnectionsStatus.ready, connections: connections),
     );
   }
 

@@ -11,13 +11,13 @@ const knowledgeMathStyleAttribute = 'MathStyle';
 /// `==markiert==` wie in Obsidian.
 class KnowledgeHighlightSyntax extends md.DelimiterSyntax {
   KnowledgeHighlightSyntax()
-      : super(
-          '=+',
-          requiresDelimiterRun: true,
-          allowIntraWord: true,
-          startCharacter: '='.codeUnitAt(0),
-          tags: [md.DelimiterTag(knowledgeHighlightTag, 2)],
-        );
+    : super(
+        '=+',
+        requiresDelimiterRun: true,
+        allowIntraWord: true,
+        startCharacter: '='.codeUnitAt(0),
+        tags: [md.DelimiterTag(knowledgeHighlightTag, 2)],
+      );
 }
 
 /// `$$Formel$$` und `$Formel$` im Fließtext.
@@ -27,7 +27,7 @@ class KnowledgeHighlightSyntax extends md.DelimiterSyntax {
 /// keine Ziffer — so bleiben Beträge wie „5 $ bis 10 $“ normaler Text.
 class KnowledgeInlineMathSyntax extends md.InlineSyntax {
   KnowledgeInlineMathSyntax()
-      : super(_pattern, startCharacter: r'$'.codeUnitAt(0));
+    : super(_pattern, startCharacter: r'$'.codeUnitAt(0));
 
   static const _pattern =
       r'\$\$([^$\n]+?)\$\$|\$(?!\s)([^$\n]+?)(?<!\s)\$(?!\d)';
@@ -36,8 +36,12 @@ class KnowledgeInlineMathSyntax extends md.InlineSyntax {
   bool onMatch(md.InlineParser parser, Match match) {
     final display = match[1] != null;
     final tex = (match[1] ?? match[2]!).trim();
-    parser.addNode(md.Element.text(knowledgeMathTag, tex)
-      ..attributes[knowledgeMathStyleAttribute] = display ? 'display' : 'text');
+    parser.addNode(
+      md.Element.text(
+        knowledgeMathTag,
+        tex,
+      )..attributes[knowledgeMathStyleAttribute] = display ? 'display' : 'text',
+    );
     return true;
   }
 }

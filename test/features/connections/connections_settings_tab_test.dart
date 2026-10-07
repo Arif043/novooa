@@ -57,15 +57,23 @@ void main() {
     expect(find.text('Verbindung hinzufügen'), findsOneWidget);
   });
 
-  testWidgets('listet Verbindungen mit Adresse und Anmeldeart, nie mit Geheimnis', (tester) async {
-    repository.connections = const [_shop];
-    await pumpTab(tester);
+  testWidgets(
+    'listet Verbindungen mit Adresse und Anmeldeart, nie mit Geheimnis',
+    (tester) async {
+      repository.connections = const [_shop];
+      await pumpTab(tester);
 
-    expect(find.text('Shop'), findsOneWidget);
-    expect(find.text('https://shop.example.com/api · API-Key im Header'), findsOneWidget);
-  });
+      expect(find.text('Shop'), findsOneWidget);
+      expect(
+        find.text('https://shop.example.com/api · API-Key im Header'),
+        findsOneWidget,
+      );
+    },
+  );
 
-  testWidgets('Antippen öffnet den Editor mit den gespeicherten Werten', (tester) async {
+  testWidgets('Antippen öffnet den Editor mit den gespeicherten Werten', (
+    tester,
+  ) async {
     repository.connections = const [_shop];
     await pumpTab(tester);
 
@@ -106,13 +114,19 @@ class _Repository implements ConnectionRepository {
   final deleted = <String>[];
 
   @override
-  Stream<List<Connection>> watchConnections(TeamId teamId) => Stream.value(connections);
+  Stream<List<Connection>> watchConnections(TeamId teamId) =>
+      Stream.value(connections);
 
   @override
-  Future<Result<Connection, ConnectionFailure>> create(ConnectionDraft draft) async => const Success(_shop);
+  Future<Result<Connection, ConnectionFailure>> create(
+    ConnectionDraft draft,
+  ) async => const Success(_shop);
 
   @override
-  Future<Result<Connection, ConnectionFailure>> update(String id, ConnectionDraft draft) async => const Success(_shop);
+  Future<Result<Connection, ConnectionFailure>> update(
+    String id,
+    ConnectionDraft draft,
+  ) async => const Success(_shop);
 
   @override
   Future<Result<Unit, ConnectionFailure>> delete(String id) async {
@@ -121,6 +135,8 @@ class _Repository implements ConnectionRepository {
   }
 
   @override
-  Future<Result<ConnectionTestResult, ConnectionFailure>> test(String id, {String path = ''}) async =>
-      const Success(ConnectionTestResult(ok: true, message: 'ok'));
+  Future<Result<ConnectionTestResult, ConnectionFailure>> test(
+    String id, {
+    String path = '',
+  }) async => const Success(ConnectionTestResult(ok: true, message: 'ok'));
 }

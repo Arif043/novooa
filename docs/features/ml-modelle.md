@@ -36,7 +36,9 @@ weder über Firestore noch über novooa-Functions proxied.
   id: "mobilenet-v3",
   title: "MobileNet V3",
   description: "Klassifiziert ein Bild.",
-  tags: ["bild", "klassifikation"],
+  task: "image-classification",
+  languages: [],
+  tags: ["leichtgewichtig"],
   scope: {type: "system"},
   runtime: "onnx",
   artifactReference: {
@@ -56,6 +58,36 @@ weder über Firestore noch über novooa-Functions proxied.
   contract: {inputs: [...], settings: [...], outputs: [...]},
 }
 ```
+
+### Aufgabe, Sprachen und Tags
+
+Die Modellsuche filtert nach dem **Was**, nicht nach dem **Wie**: Ob ein Modell
+intern eine SVM oder ein CNN nutzt, spielt keine Rolle — entscheidend ist das
+Problem, das es löst.
+
+- **`task`** (Pflicht im Manifest): genau eine Aufgabe aus einem festen Vokabular
+  (`domain/entities/model-task.ts`, Schlüssel nach den Pipeline-Tags von Hugging
+  Face): `text-to-speech`, `automatic-speech-recognition`, `audio-classification`,
+  `image-classification`, `object-detection`, `image-segmentation`,
+  `image-to-text`, `text-classification`, `token-classification`, `translation`,
+  `feature-extraction`, `other`. Unbekannte Werte lehnen Publishing und Import ab.
+  Gespeicherte Einträge von vorher gelten als `other` („Sonstige“).
+- **`languages`** (optional): BCP-47-Codes der unterstützten Sprachen; leer bei
+  sprachunabhängigen Modellen (z. B. Bildmodelle).
+- **`tags`**: nur noch für Feinheiten (`emotionen`, `hohe-qualitaet`); Aufgabe und
+  Sprache gehören nicht in die Tags.
+
+Kann ein Modell mehrere Aufgaben (z. B. transkribieren und übersetzen), bekommt
+jede Aufgabe einen **eigenen Katalogeintrag** mit eigenem Vertrag, Titel und
+Beschreibung. Die Einträge verweisen auf dieselbe Artefaktversion; die Datei liegt
+nur einmal in der Runtime und wird erst entfernt, wenn kein Eintrag sie mehr nutzt.
+
+Der Suchdialog im Aufgabenstudio zeigt Filter-Chips für Aufgabe (Einfachauswahl)
+und Sprache (Mehrfachauswahl), jeweils nur mit Treffern und deren Anzahl. Bausteine
+mit fester Aufgabe („Text vorlesen“, „Audio transkribieren“) blenden die
+Aufgaben-Chips aus. Die Textsuche findet auch die deutschen Bezeichnungen von
+Aufgabe und Sprache. SQLite speichert beides in `model_catalog.task` und
+`model_catalog.languages_json` (Migration `0021_model_catalog_task.sql`).
 
 ## Mehrsprachige Manifeste
 

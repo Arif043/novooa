@@ -81,7 +81,7 @@ function resource(name: string, value: number): ModelRuntimeResource {
 
 function entry(): ModelCatalogEntry {
   return {
-    id: "model", title: "Modell", description: "Test", tags: ["test"],
+    id: "model", title: "Modell", description: "Test", task: "image-classification", languages: [], tags: ["test"],
     scope: {type: "system"}, runtime: "onnx", artifactReference: {
       artifactId: "model", versionId: "one", format: "onnx", contentType: "application/onnx", sizeBytes: 1,
       sha256: "0000000000000000000000000000000000000000000000000000000000000000",

@@ -297,6 +297,8 @@ function manifest() {
     id: "example-model",
     title: "Beispielmodell",
     description: "Ein lokales Testmodell.",
+    task: "image-classification",
+    languages: [],
     tags: ["test"],
     artifact: {artifactId: "example-model", versionId: "1"},
     contract: {

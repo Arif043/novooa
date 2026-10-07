@@ -79,6 +79,8 @@ function entry(): ModelCatalogEntry {
     id: "identity",
     title: "Identität",
     description: "Gibt den Eingang zurück.",
+    task: "image-classification",
+    languages: [],
     tags: ["test"],
     scope: {type: "system"},
     runtime: "onnx",

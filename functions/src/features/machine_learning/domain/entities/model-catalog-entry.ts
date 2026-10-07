@@ -3,6 +3,7 @@ import {
   validateModelArtifactReference,
 } from "./model-artifact-reference.js";
 import {type ModelContract, validateModelContract} from "./model-contract.js";
+import {isModelTask, modelTasks, type ModelTask} from "./model-task.js";
 
 export type ModelScope =
   | {type: "system"}
@@ -26,6 +27,10 @@ export type ModelCatalogEntry = {
   description: string;
   /** Optional; `title` und `description` bleiben die Rückfallsprache (Englisch). */
   translations?: ModelTranslations;
+  /** Das Problem, das das Modell löst; Grundlage der Filter in der Modellsuche. */
+  task: ModelTask;
+  /** BCP-47-Codes der unterstützten Sprachen; leer bei sprachunabhängigen Modellen. */
+  languages: readonly string[];
   tags: readonly string[];
   scope: ModelScope;
   origin?: ModelOrigin;
@@ -38,6 +43,8 @@ export function validateModelCatalogEntry(entry: ModelCatalogEntry): void {
   required(entry.id, "Die Modell-ID fehlt.");
   required(entry.title, "Der Modellname fehlt.");
   required(entry.description, "Die Modellbeschreibung fehlt.");
+  validTask(entry.task);
+  validLanguages(entry.languages);
   validTags(entry.tags);
   validTranslations(entry.translations ?? {});
   validScope(entry.scope);
@@ -49,6 +56,19 @@ function validTags(tags: readonly string[]): void {
   const normalized = tags.map((tag) => tag.trim().toLowerCase());
   if (normalized.some((tag) => tag.length === 0)) throw new Error("Modell-Tags dürfen nicht leer sein.");
   if (new Set(normalized).size !== normalized.length) throw new Error("Modell-Tags müssen eindeutig sein.");
+}
+
+function validTask(task: string): void {
+  if (!isModelTask(task)) {
+    throw new Error(`Die Modellaufgabe „${task}“ ist unbekannt. Erlaubt sind: ${modelTasks.join(", ")}.`);
+  }
+}
+
+function validLanguages(languages: readonly string[]): void {
+  for (const language of languages) {
+    if (!localePattern.test(language)) throw new Error(`Der Sprachcode „${language}“ des Modells ist ungültig.`);
+  }
+  if (new Set(languages).size !== languages.length) throw new Error("Die Modellsprachen müssen eindeutig sein.");
 }
 
 function validTranslations(translations: ModelTranslations): void {

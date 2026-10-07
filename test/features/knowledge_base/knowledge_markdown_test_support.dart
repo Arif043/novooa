@@ -26,7 +26,9 @@ Future<void> pumpPreview(
 }
 
 Iterable<TextSpan> previewSpans(WidgetTester tester) sync* {
-  for (final widget in tester.widgetList<SelectableText>(find.byType(SelectableText))) {
+  for (final widget in tester.widgetList<SelectableText>(
+    find.byType(SelectableText),
+  )) {
     final root = widget.textSpan;
     if (root == null) continue;
     final spans = <TextSpan>[];
@@ -45,11 +47,16 @@ TextSpan? previewSpan(WidgetTester tester, String text) {
   return null;
 }
 
-String previewText(WidgetTester tester) => previewSpans(tester).map((span) => span.text ?? '').join();
+String previewText(WidgetTester tester) =>
+    previewSpans(tester).map((span) => span.text ?? '').join();
 
 void tapPreviewLink(WidgetTester tester, String text) {
   final recognizer = previewSpan(tester, text)?.recognizer;
-  expect(recognizer, isA<TapGestureRecognizer>(), reason: '„$text“ ist kein Link');
+  expect(
+    recognizer,
+    isA<TapGestureRecognizer>(),
+    reason: '„$text“ ist kein Link',
+  );
   (recognizer! as TapGestureRecognizer).onTap!();
 }
 

@@ -39,6 +39,8 @@ function modelData(): Record<string, unknown> {
     id: "system-model",
     title: "Systemmodell",
     description: "Ein Modell aus dem globalen Katalog.",
+    task: "image-classification",
+    languages: [],
     tags: ["test"],
     artifact: {artifactId: "system-model", versionId: "1"},
     contract: {

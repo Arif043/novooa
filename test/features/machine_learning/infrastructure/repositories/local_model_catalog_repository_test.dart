@@ -40,6 +40,8 @@ void main() {
     expect(entries.single.isManagedLocally, isTrue);
     // Ohne `origin` (ältere Runtime) gilt ein Teameintrag als eigener Import.
     expect(entries.single.origin, ModelOrigin.import);
+    expect(entries.single.task, ModelTask.imageClassification);
+    expect(entries.single.languages, ['de', 'en']);
     expect(client.postPath, '/v1/ml-models/imports');
     expect(client.postBody, {
       'manifest': {'id': 'model', 'title': 'Modell'},
@@ -57,6 +59,9 @@ void main() {
 
     expect(entries.single.outputs.single.workflowType, 'audio');
     expect(entries.single.origin, isNull);
+    // Einträge ohne Aufgabe (ältere Kataloge) gelten als „Sonstige“.
+    expect(entries.single.task, ModelTask.other);
+    expect(entries.single.languages, isEmpty);
   });
 
   test('starts a background download and maps the cache status', () async {
@@ -116,6 +121,8 @@ class _Client extends WorkspaceApiClient {
             'tags': ['testen'],
           },
         },
+        'task': 'image-classification',
+        'languages': ['de', 'en'],
         'tags': ['test'],
         'scope': {'type': 'team', 'teamId': 'local-team'},
         'artifactReference': {'sizeBytes': 1024},

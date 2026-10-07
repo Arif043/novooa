@@ -2,7 +2,9 @@
   "id": "piper-de-eva-x-low",
   "title": "Piper Deutsch - Eva",
   "description": "Erzeugt gesprochene deutsche Sprache lokal aus Text.",
-  "tags": ["sprache", "text-zu-sprache", "deutsch", "offline"],
+  "task": "text-to-speech",
+  "languages": ["de"],
+  "tags": [],
   "artifact": {
     "artifactId": "piper-de-eva-x-low",
     "versionId": "c10ece1aade47bb51c153c893d14e5bf8e5b7117"

@@ -124,7 +124,7 @@ function contractEntry(): ModelCatalogEntry {
     transformations: [],
   }));
   return {
-    id: "classifier", title: "Klassifikation", description: "Testmodell", tags: ["test"],
+    id: "classifier", title: "Klassifikation", description: "Testmodell", task: "image-classification", languages: [], tags: ["test"],
     scope: {type: "system"}, runtime: "onnx",
     artifactReference: {artifactId: "artifact", versionId: "1", format: "onnx", contentType: "application/onnx", sizeBytes: 1, sha256: "0000000000000000000000000000000000000000000000000000000000000000"},
     contract: {inputs, outputs: [{name: "scores", dataType: "uint8", shape: [1], semantic: "classification.scores", transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}}]},

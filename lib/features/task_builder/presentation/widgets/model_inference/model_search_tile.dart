@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../core/theme/app_spacing.dart';
 import '../../../../machine_learning/domain/entities/model_catalog_entry.dart';
 import '../../../../machine_learning/presentation/widgets/model_size_label.dart';
+import '../../../../machine_learning/presentation/widgets/model_task_label.dart';
 
 class ModelSearchTile extends StatelessWidget {
   const ModelSearchTile({super.key, required this.model, required this.onTap});
@@ -12,41 +14,79 @@ class ModelSearchTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final languageTag = Localizations.localeOf(context).toLanguageTag();
-    final tags = model.tagsFor(languageTag);
+    final theme = Theme.of(context);
+    final details = [
+      modelSizeLabel(model.sizeBytes),
+      ...model.tagsFor(languageTag),
+    ].join(' · ');
     return ListTile(
       onTap: onTap,
-      leading: const Icon(Icons.memory_outlined),
+      leading: Icon(model.task.icon),
       title: Text(model.titleFor(languageTag)),
-      subtitle: Text(
-        [
-          model.descriptionFor(languageTag),
-          [
-            modelSizeLabel(model.sizeBytes),
-            if (tags.isNotEmpty) tags.join(' · '),
-          ].join(' · '),
-        ].join('\n'),
-        maxLines: 3,
-        overflow: TextOverflow.ellipsis,
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            model.descriptionFor(languageTag),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              _MetaChip(text: model.task.label),
+              for (final language in model.languages)
+                _MetaChip(text: languageLabel(language)),
+              if (model.origin case final origin?)
+                _MetaChip(
+                  text: origin == ModelOrigin.catalog
+                      ? 'Gecacht'
+                      : 'Eigenes Modell',
+                  emphasized: true,
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(details, style: theme.textTheme.bodySmall),
+        ],
       ),
-      isThreeLine: true,
-      trailing: _OriginBadge(model: model),
     );
   }
 }
 
-class _OriginBadge extends StatelessWidget {
-  const _OriginBadge({required this.model});
+class _MetaChip extends StatelessWidget {
+  const _MetaChip({required this.text, this.emphasized = false});
 
-  final ModelCatalogEntry model;
+  final String text;
+  final bool emphasized;
 
   @override
   Widget build(BuildContext context) {
-    final label = switch (model.origin) {
-      ModelOrigin.catalog => 'Gecacht',
-      ModelOrigin.import => 'Eigenes Modell',
-      null => null,
-    };
-    if (label == null) return const SizedBox.shrink();
-    return Chip(label: Text(label), visualDensity: VisualDensity.compact);
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: emphasized
+            ? colors.primaryContainer
+            : colors.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppSpacing.xs),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs / 2,
+        ),
+        child: Text(
+          text,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: emphasized
+                ? colors.onPrimaryContainer
+                : colors.onSurfaceVariant,
+          ),
+        ),
+      ),
+    );
   }
 }

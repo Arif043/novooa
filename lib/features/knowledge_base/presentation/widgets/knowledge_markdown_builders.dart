@@ -28,12 +28,18 @@ class KnowledgeMathBuilder extends MarkdownElementBuilder {
   ) {
     final tex = element.textContent;
     if (tex.isEmpty) return const SizedBox.shrink();
-    final display = element.attributes[knowledgeMathStyleAttribute] == 'display';
+    final display =
+        element.attributes[knowledgeMathStyleAttribute] == 'display';
     final formula = _formula(tex, display, parentStyle ?? preferredStyle);
     if (!display) {
-      return Text.rich(WidgetSpan(alignment: PlaceholderAlignment.middle, child: formula));
+      return Text.rich(
+        WidgetSpan(alignment: PlaceholderAlignment.middle, child: formula),
+      );
     }
-    return SingleChildScrollView(scrollDirection: Axis.horizontal, child: formula);
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: formula,
+    );
   }
 
   Widget _formula(String tex, bool display, TextStyle? style) {
@@ -43,10 +49,8 @@ class KnowledgeMathBuilder extends MarkdownElementBuilder {
         tex,
         mathStyle: display ? MathStyle.display : MathStyle.text,
         textStyle: style,
-        onErrorFallback: (error) => Text(
-          tex,
-          style: style?.copyWith(color: theme.colorScheme.error),
-        ),
+        onErrorFallback: (error) =>
+            Text(tex, style: style?.copyWith(color: theme.colorScheme.error)),
       ),
     );
   }
@@ -66,11 +70,13 @@ class KnowledgeHighlightBuilder extends MarkdownElementBuilder {
     TextStyle? parentStyle,
   ) {
     final base = parentStyle ?? preferredStyle ?? theme.textTheme.bodyLarge;
-    return Text.rich(TextSpan(
-      text: element.textContent,
-      style: base?.copyWith(
-        backgroundColor: Colors.amber.withValues(alpha: 0.9),
+    return Text.rich(
+      TextSpan(
+        text: element.textContent,
+        style: base?.copyWith(
+          backgroundColor: Colors.amber.withValues(alpha: 0.9),
+        ),
       ),
-    ));
+    );
   }
 }

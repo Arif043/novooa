@@ -23,7 +23,8 @@ export type ModelCatalogRoutesOptions = {
 };
 
 const ModelEntry = Type.Object({
-  id: Type.String(), title: Type.String(), description: Type.String(), translations: Type.Optional(Type.Unknown()), tags: Type.Array(Type.String()),
+  id: Type.String(), title: Type.String(), description: Type.String(), translations: Type.Optional(Type.Unknown()),
+  task: Type.String(), languages: Type.Array(Type.String()), tags: Type.Array(Type.String()),
   scope: Type.Unknown(), runtime: Type.String(), artifactReference: Type.Unknown(), contract: Type.Unknown(),
   origin: Type.Optional(Type.String()),
 });
@@ -129,7 +130,7 @@ function sameArtifact(left: ModelCatalogEntry, right: ModelCatalogEntry): boolea
 }
 
 function entryDto(entry: ModelCatalogEntry) {
-  return {...entry, tags: [...entry.tags]};
+  return {...entry, languages: [...entry.languages], tags: [...entry.tags]};
 }
 
 const unavailableCatalog = {error: "Der globale Modellkatalog ist nicht verfügbar."};

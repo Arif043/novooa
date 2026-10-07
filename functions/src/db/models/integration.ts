@@ -100,6 +100,9 @@ export const modelCatalog = sqliteTable("model_catalog", {
   description: text("description").notNull(),
   translations_json: text("translations_json").notNull().default("{}"),
   tags_json: text("tags_json").notNull().default("[]"),
+  /** Was das Modell löst (Vokabular in `model-task.ts`); Alt-Einträge: `other`. */
+  task: text("task").notNull().default("other"),
+  languages_json: text("languages_json").notNull().default("[]"),
   team_id: text("team_id").references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
   artifact_reference_json: text("artifact_reference_json").notNull(),
   contract_json: text("contract_json").notNull(),

@@ -115,36 +115,43 @@ void main() {
   });
 
   group('TaskBuilderCubit', () {
-    test('fügt den Baustein mit eindeutigem Ausgabenamen ein und ändert ihn', () async {
-      final repository = _TaskRepository();
-      final cubit = TaskBuilderCubit(repository: repository);
-      await cubit.load(repository.saved);
+    test(
+      'fügt den Baustein mit eindeutigem Ausgabenamen ein und ändert ihn',
+      () async {
+        final repository = _TaskRepository();
+        final cubit = TaskBuilderCubit(repository: repository);
+        await cubit.load(repository.saved);
 
-      await cubit.addConnectedNode(primitive: WorkflowPrimitive.httpRequest);
-      await cubit.addConnectedNode(primitive: WorkflowPrimitive.httpRequest);
+        await cubit.addConnectedNode(primitive: WorkflowPrimitive.httpRequest);
+        await cubit.addConnectedNode(primitive: WorkflowPrimitive.httpRequest);
 
-      final nodes = (cubit.state as TaskBuilderLoaded).editingTask.nodes;
-      expect(nodes.map((node) => node.title), ['HTTP-Anfrage', 'HTTP-Anfrage']);
-      expect(nodes.map((node) => node.outputName).toSet().length, 2);
-      expect(nodes.first.outputName, startsWith('antwort'));
-      expect(nodes.first.config, const HttpRequestNodeConfig());
+        final nodes = (cubit.state as TaskBuilderLoaded).editingTask.nodes;
+        expect(nodes.map((node) => node.title), [
+          'HTTP-Anfrage',
+          'HTTP-Anfrage',
+        ]);
+        expect(nodes.map((node) => node.outputName).toSet().length, 2);
+        expect(nodes.first.outputName, startsWith('antwort'));
+        expect(nodes.first.config, const HttpRequestNodeConfig());
 
-      await cubit.updateHttpRequest(
-        nodes.first.id,
-        (config) => config.copyWith(url: '/orders', method: HttpRequestMethod.post),
-      );
-      final changed =
-          (cubit.state as TaskBuilderLoaded).editingTask.nodes.first.config
-              as HttpRequestNodeConfig;
-      expect(changed.url, '/orders');
-      expect(changed.method, HttpRequestMethod.post);
-      expect(
-        (cubit.state as TaskBuilderLoaded).editingTask.nodes.last.config,
-        const HttpRequestNodeConfig(),
-        reason: 'der andere Baustein bleibt unverändert',
-      );
-      await cubit.close();
-    });
+        await cubit.updateHttpRequest(
+          nodes.first.id,
+          (config) =>
+              config.copyWith(url: '/orders', method: HttpRequestMethod.post),
+        );
+        final changed =
+            (cubit.state as TaskBuilderLoaded).editingTask.nodes.first.config
+                as HttpRequestNodeConfig;
+        expect(changed.url, '/orders');
+        expect(changed.method, HttpRequestMethod.post);
+        expect(
+          (cubit.state as TaskBuilderLoaded).editingTask.nodes.last.config,
+          const HttpRequestNodeConfig(),
+          reason: 'der andere Baustein bleibt unverändert',
+        );
+        await cubit.close();
+      },
+    );
   });
 
   group('Widgets', () {
@@ -169,7 +176,8 @@ void main() {
     ) async {
       await builder.load(tasks.saved);
       await builder.addConnectedNode(primitive: WorkflowPrimitive.httpRequest);
-      final id = (builder.state as TaskBuilderLoaded).editingTask.nodes.single.id;
+      final id =
+          (builder.state as TaskBuilderLoaded).editingTask.nodes.single.id;
       await builder.updateHttpRequest(id, (_) => config);
       final connectionsCubit = ConnectionsCubit(
         WatchConnections(connections),
@@ -207,7 +215,10 @@ void main() {
     }
 
     // Der Cubit speichert verzögert; vor der Prüfung auf offene Timer muss das ablaufen.
-    void widgetTest(String description, Future<void> Function(WidgetTester) body) {
+    void widgetTest(
+      String description,
+      Future<void> Function(WidgetTester) body,
+    ) {
       testWidgets(description, (tester) async {
         await body(tester);
         // Die verzögerte Speicherung (800 ms) läuft aus, sonst bliebe ein Timer offen.
@@ -221,7 +232,9 @@ void main() {
         (builder.state as TaskBuilderLoaded).editingTask.nodes.single.config
             as HttpRequestNodeConfig;
 
-    widgetTest('mit Verbindung heißt das Feld „Pfad“, ohne „URL“', (tester) async {
+    widgetTest('mit Verbindung heißt das Feld „Pfad“, ohne „URL“', (
+      tester,
+    ) async {
       await pumpNode(tester, _post);
       expect(find.widgetWithText(TextField, 'Pfad'), findsOneWidget);
       expect(find.text('Shopware'), findsOneWidget);
@@ -230,12 +243,18 @@ void main() {
       expect(find.widgetWithText(TextField, 'URL'), findsOneWidget);
     });
 
-    widgetTest('eine gelöschte Verbindung bleibt sichtbar statt zu verschwinden', (tester) async {
-      await pumpNode(tester, const HttpRequestNodeConfig(connectionId: 'weg'));
+    widgetTest(
+      'eine gelöschte Verbindung bleibt sichtbar statt zu verschwinden',
+      (tester) async {
+        await pumpNode(
+          tester,
+          const HttpRequestNodeConfig(connectionId: 'weg'),
+        );
 
-      expect(find.text('Verbindung nicht gefunden'), findsOneWidget);
-      expect(current().connectionId, 'weg');
-    });
+        expect(find.text('Verbindung nicht gefunden'), findsOneWidget);
+        expect(current().connectionId, 'weg');
+      },
+    );
 
     widgetTest('Eingaben landen in der Konfiguration', (tester) async {
       await pumpNode(tester, _post);
@@ -247,7 +266,9 @@ void main() {
       expect(current().connectionId, 'c1');
     });
 
-    widgetTest('Header und Parameter lassen sich hinzufügen und entfernen', (tester) async {
+    widgetTest('Header und Parameter lassen sich hinzufügen und entfernen', (
+      tester,
+    ) async {
       await pumpNode(tester, const HttpRequestNodeConfig());
 
       await tester.tap(find.text('Header hinzufügen'));
@@ -266,7 +287,9 @@ void main() {
       expect(current().headers.length, 1);
     });
 
-    widgetTest('der Body erscheint nur für Methoden, die einen senden', (tester) async {
+    widgetTest('der Body erscheint nur für Methoden, die einen senden', (
+      tester,
+    ) async {
       await pumpNode(tester, const HttpRequestNodeConfig());
       expect(find.text('Kein Body'), findsNothing);
 
@@ -275,32 +298,51 @@ void main() {
       expect(find.widgetWithText(TextField, 'Body'), findsOneWidget);
     });
 
-    widgetTest('Zeitlimit wird auf 1 bis 120 begrenzt, Fehlerstatus-Schalter wirkt', (tester) async {
-      await pumpNode(tester, _post);
+    widgetTest(
+      'Zeitlimit wird auf 1 bis 120 begrenzt, Fehlerstatus-Schalter wirkt',
+      (tester) async {
+        await pumpNode(tester, _post);
 
-      await tester.enterText(find.widgetWithText(TextFormField, 'Zeitlimit (Sekunden)'), '999');
-      await tester.pump();
-      expect(current().timeoutSeconds, 120);
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Zeitlimit (Sekunden)'),
+          '999',
+        );
+        await tester.pump();
+        expect(current().timeoutSeconds, 120);
 
-      await tester.ensureVisible(find.byType(Switch));
-      await tester.tap(find.byType(Switch));
-      await tester.pump();
-      expect(current().failOnHttpError, isTrue);
-    });
+        await tester.ensureVisible(find.byType(Switch));
+        await tester.tap(find.byType(Switch));
+        await tester.pump();
+        expect(current().failOnHttpError, isTrue);
+      },
+    );
   });
 
   group('Palette', () {
-    testWidgets('der Baustein erscheint nur, wo es Verbindungen gibt', (tester) async {
+    testWidgets('der Baustein erscheint nur, wo es Verbindungen gibt', (
+      tester,
+    ) async {
       Future<void> pump() async {
         await tester.pumpWidget(
-          MaterialApp(home: Scaffold(body: SizedBox(height: 700, child: BausteinPalette(onAdd: (_) {})))),
+          MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                height: 700,
+                child: BausteinPalette(onAdd: (_) {}),
+              ),
+            ),
+          ),
         );
         await tester.enterText(find.byType(TextField), 'http');
         await tester.pumpAndSettle();
       }
 
       await pump();
-      expect(find.text('HTTP-Anfrage'), findsNothing, reason: 'ohne Capability (z. B. Cloud) ausgeblendet');
+      expect(
+        find.text('HTTP-Anfrage'),
+        findsNothing,
+        reason: 'ohne Capability (z. B. Cloud) ausgeblendet',
+      );
 
       serviceLocator.registerSingleton(_capabilities(connections: true));
       addTearDown(serviceLocator.reset);
@@ -311,17 +353,18 @@ void main() {
   });
 }
 
-WorkspaceCapabilities _capabilities({required bool connections}) => WorkspaceCapabilities(
-  assistant: false,
-  dataCollections: false,
-  modelCatalog: false,
-  push: false,
-  messagingChannels: false,
-  skills: false,
-  employees: false,
-  connections: connections,
-  webhooks: false,
-);
+WorkspaceCapabilities _capabilities({required bool connections}) =>
+    WorkspaceCapabilities(
+      assistant: false,
+      dataCollections: false,
+      modelCatalog: false,
+      push: false,
+      messagingChannels: false,
+      skills: false,
+      employees: false,
+      connections: connections,
+      webhooks: false,
+    );
 
 class _Teams implements TeamRepository {
   @override
@@ -337,20 +380,29 @@ class _ConnectionRepository implements ConnectionRepository {
   final List<Connection> connections;
 
   @override
-  Stream<List<Connection>> watchConnections(TeamId teamId) => Stream.value(connections);
+  Stream<List<Connection>> watchConnections(TeamId teamId) =>
+      Stream.value(connections);
 
   @override
-  Future<Result<Connection, ConnectionFailure>> create(ConnectionDraft draft) async => const Success(_shop);
+  Future<Result<Connection, ConnectionFailure>> create(
+    ConnectionDraft draft,
+  ) async => const Success(_shop);
 
   @override
-  Future<Result<Connection, ConnectionFailure>> update(String id, ConnectionDraft draft) async => const Success(_shop);
+  Future<Result<Connection, ConnectionFailure>> update(
+    String id,
+    ConnectionDraft draft,
+  ) async => const Success(_shop);
 
   @override
-  Future<Result<Unit, ConnectionFailure>> delete(String id) async => const Success(unit);
+  Future<Result<Unit, ConnectionFailure>> delete(String id) async =>
+      const Success(unit);
 
   @override
-  Future<Result<ConnectionTestResult, ConnectionFailure>> test(String id, {String path = ''}) async =>
-      const Success(ConnectionTestResult(ok: true, message: 'ok'));
+  Future<Result<ConnectionTestResult, ConnectionFailure>> test(
+    String id, {
+    String path = '',
+  }) async => const Success(ConnectionTestResult(ok: true, message: 'ok'));
 }
 
 class _TaskRepository implements TaskRepository {

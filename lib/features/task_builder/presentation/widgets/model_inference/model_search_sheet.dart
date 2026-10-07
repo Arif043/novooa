@@ -6,7 +6,9 @@ import '../../../../machine_learning/domain/entities/model_catalog_entry.dart';
 import '../../../../machine_learning/presentation/cubits/model_catalog_cubit.dart';
 import '../../../../machine_learning/presentation/cubits/model_catalog_state.dart';
 import 'model_search_filter.dart';
+import 'model_filter_chips.dart';
 import 'model_search_results.dart';
+import 'model_search_selection.dart';
 
 /// Durchsucht globalen Katalog und eigene Modelle; liefert das gewählte Modell zurück.
 Future<ModelCatalogEntry?> showModelSearchSheet(
@@ -37,6 +39,7 @@ class _ModelSearchSheet extends StatefulWidget {
 
 class _ModelSearchSheetState extends State<_ModelSearchSheet> {
   String _query = '';
+  ModelSearchSelection _selection = const ModelSearchSelection();
 
   @override
   Widget build(BuildContext context) {
@@ -69,19 +72,64 @@ class _ModelSearchSheetState extends State<_ModelSearchSheet> {
               ),
               onChanged: (value) => setState(() => _query = value),
             ),
-            const SizedBox(height: AppSpacing.sm),
             Expanded(
               child: BlocBuilder<ModelCatalogCubit, ModelCatalogState>(
-                builder: (context, state) => ModelSearchResults(
+                builder: (context, state) => _FilteredResults(
                   state: state,
-                  models: filter.apply(state.selectableEntries, _query),
-                  hasQuery: _query.trim().isNotEmpty,
+                  filter: filter,
+                  query: _query,
+                  selection: _selection,
+                  onSelectionChanged: (value) =>
+                      setState(() => _selection = value),
                 ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _FilteredResults extends StatelessWidget {
+  const _FilteredResults({
+    required this.state,
+    required this.filter,
+    required this.query,
+    required this.selection,
+    required this.onSelectionChanged,
+  });
+
+  final ModelCatalogState state;
+  final ModelSearchFilter filter;
+  final String query;
+  final ModelSearchSelection selection;
+  final ValueChanged<ModelSearchSelection> onSelectionChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final models = state.selectableEntries;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ModelFilterChips(
+          facets: filter.facets(models, query, selection),
+          selection: selection,
+          showTasks: filter.fixedTask == null,
+          onChanged: onSelectionChanged,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Expanded(
+          child: ModelSearchResults(
+            state: state,
+            models: filter.apply(models, query, selection),
+            hasQuery: query.trim().isNotEmpty,
+            onResetFilters: selection.isActive
+                ? () => onSelectionChanged(const ModelSearchSelection())
+                : null,
+          ),
+        ),
+      ],
     );
   }
 }

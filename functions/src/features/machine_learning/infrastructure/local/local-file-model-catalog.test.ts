@@ -24,7 +24,7 @@ test("persists model entries and filters team-scoped entries", async () => {
 
 function systemEntry(): ModelCatalogEntry {
   return {
-    id: "system-model", title: "Systemmodell", description: "Testmodell", tags: ["test"],
+    id: "system-model", title: "Systemmodell", description: "Testmodell", task: "image-classification", languages: [], tags: ["test"],
     scope: {type: "system"}, runtime: "onnx",
     artifactReference: {
       artifactId: "system-model", versionId: "v1", format: "onnx",

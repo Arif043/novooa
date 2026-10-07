@@ -14,11 +14,15 @@ class ModelSearchResults extends StatelessWidget {
     required this.state,
     required this.models,
     required this.hasQuery,
+    this.onResetFilters,
   });
 
   final ModelCatalogState state;
   final List<ModelCatalogEntry> models;
   final bool hasQuery;
+
+  /// Gesetzt, wenn Filter-Chips aktiv sind; der Leerzustand bietet dann das Zurücksetzen an.
+  final VoidCallback? onResetFilters;
 
   bool get _catalogLoading =>
       state.globalStatus == ModelCatalogStatus.loading ||
@@ -36,7 +40,7 @@ class ModelSearchResults extends StatelessWidget {
           const _CatalogUnavailable(),
         Expanded(
           child: models.isEmpty
-              ? _NoResults(hasQuery: hasQuery)
+              ? _NoResults(hasQuery: hasQuery, onResetFilters: onResetFilters)
               : ListView.separated(
                   itemCount: models.length,
                   separatorBuilder: (_, _) => const Divider(height: 1),
@@ -84,9 +88,10 @@ class _CatalogUnavailable extends StatelessWidget {
 }
 
 class _NoResults extends StatelessWidget {
-  const _NoResults({required this.hasQuery});
+  const _NoResults({required this.hasQuery, required this.onResetFilters});
 
   final bool hasQuery;
+  final VoidCallback? onResetFilters;
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +111,9 @@ class _NoResults extends StatelessWidget {
             Text('Kein Modell gefunden', style: theme.textTheme.titleMedium),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              hasQuery
+              onResetFilters != null
+                  ? 'Mit den gewählten Filtern gibt es keinen Treffer.'
+                  : hasQuery
                   ? 'Versuche einen anderen Suchbegriff.'
                   : 'Für diesen Baustein steht noch kein passendes Modell '
                         'bereit. Eigene Modelle importierst du in den '
@@ -116,6 +123,14 @@ class _NoResults extends StatelessWidget {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
+            if (onResetFilters case final reset?) ...[
+              const SizedBox(height: AppSpacing.md),
+              OutlinedButton.icon(
+                onPressed: reset,
+                icon: const Icon(Icons.filter_alt_off_outlined),
+                label: const Text('Filter zurücksetzen'),
+              ),
+            ],
           ],
         ),
       ),

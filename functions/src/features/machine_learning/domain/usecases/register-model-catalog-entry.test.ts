@@ -46,6 +46,8 @@ function validEntry(): ModelCatalogEntry {
     id: "mobilenet-v3",
     title: "MobileNet V3",
     description: "Klassifiziert Bilder in vordefinierte Kategorien.",
+    task: "image-classification",
+    languages: [],
     tags: ["bild", "klassifikation"],
     scope: {type: "system"},
     runtime: "onnx",

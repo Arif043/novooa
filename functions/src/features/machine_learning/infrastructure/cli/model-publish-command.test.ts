@@ -83,7 +83,7 @@ function dependencies(publisher: Publisher, validator: Validator) {
 
 function manifest() {
   return {
-    id: "model", title: "Modell", description: "Beschreibung", tags: ["bild"],
+    id: "model", title: "Modell", description: "Beschreibung", task: "image-classification" as const, languages: [], tags: ["bild"],
     artifact: {artifactId: "model", versionId: "1"}, contract: contract(),
   };
 }

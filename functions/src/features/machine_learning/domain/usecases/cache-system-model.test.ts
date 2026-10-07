@@ -91,7 +91,7 @@ function teamEntry(): ModelCatalogEntry {
 
 function systemEntry(): ModelCatalogEntry {
   return {
-    id: "classifier", title: "Classifier", description: "Testmodell", tags: ["test"],
+    id: "classifier", title: "Classifier", description: "Testmodell", task: "image-classification", languages: [], tags: ["test"],
     scope: {type: "system"}, runtime: "onnx",
     artifactReference: {
       artifactId: "classifier", versionId: "1", format: "onnx", contentType: "application/onnx",

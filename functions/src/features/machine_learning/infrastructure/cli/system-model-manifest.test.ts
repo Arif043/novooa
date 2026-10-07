@@ -44,9 +44,33 @@ test("rejects a manifest without an artifact version", () => {
   assert.throws(() => systemModelManifestFromUnknown(data), /Version fehlt/);
 });
 
+test("carries the solved task and the supported languages into the entry", () => {
+  const data = {...manifestData(), task: "text-to-speech", languages: ["de", "en-GB"]};
+  const entry = systemModelEntry(systemModelManifestFromUnknown(data), reference());
+
+  assert.equal(entry.task, "text-to-speech");
+  assert.deepEqual(entry.languages, ["de", "en-GB"]);
+});
+
+test("requires a known task and treats missing languages as language independent", () => {
+  const {task: _task, ...withoutTask} = manifestData();
+  assert.throws(() => systemModelManifestFromUnknown(withoutTask), /Modellaufgabe.*Erlaubt sind: text-to-speech/);
+  assert.throws(() => systemModelManifestFromUnknown({...manifestData(), task: "bilderkennung"}), /Modellaufgabe/);
+
+  const {languages: _languages, ...withoutLanguages} = manifestData();
+  assert.deepEqual(systemModelManifestFromUnknown(withoutLanguages).languages, []);
+});
+
+test("rejects an invalid or duplicate language", () => {
+  const invalid = {...manifestData(), languages: ["deutsch!"]};
+  assert.throws(() => systemModelEntry(systemModelManifestFromUnknown(invalid), reference()), /Sprachcode/);
+  const duplicate = {...manifestData(), languages: ["de", "de"]};
+  assert.throws(() => systemModelEntry(systemModelManifestFromUnknown(duplicate), reference()), /eindeutig/);
+});
+
 function manifestData(): Record<string, unknown> {
   return {
-    id: "model", title: "Modell", description: "Beschreibung", tags: ["bild"],
+    id: "model", title: "Modell", description: "Beschreibung", task: "image-classification", languages: [], tags: ["bild"],
     artifact: {artifactId: "model", versionId: "1"},
     contract: {
       inputs: [{name: "input", source: "tensor", dataType: "uint8", shape: [1], transformations: []}],

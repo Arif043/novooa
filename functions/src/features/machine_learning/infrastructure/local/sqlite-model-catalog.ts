@@ -13,6 +13,8 @@ type ModelCatalogRow = {
   title: string;
   description: string;
   translations_json: string;
+  task: string;
+  languages_json: string;
   tags_json: string;
   team_id: string | null;
   artifact_reference_json: string;
@@ -28,6 +30,7 @@ export class SQLiteModelCatalog implements TeamModelCatalog {
     modelCatalogEntryFromData(data);
     const values = {id: data.id, title: data.title, description: data.description,
       translations_json: JSON.stringify(data.translations), tags_json: JSON.stringify(data.tags),
+      task: data.task, languages_json: JSON.stringify(data.languages),
       team_id: data.teamId,
       artifact_reference_json: JSON.stringify(data.artifactReference), contract_json: JSON.stringify(data.contract),
       origin: data.origin ?? "import"};
@@ -67,6 +70,8 @@ function entryFromRow(row: ModelCatalogRow): ModelCatalogEntry {
     title: row.title,
     description: row.description,
     translations: parseJson(row.translations_json, "Die gespeicherten Modellübersetzungen sind ungültig."),
+    task: row.task,
+    languages: parseJson(row.languages_json, "Die gespeicherten Modellsprachen sind ungültig."),
     tags: parseJson(row.tags_json, "Die gespeicherten Modell-Tags sind ungültig."),
     scope: row.team_id === null ? "system" : "team",
     teamId: row.team_id,

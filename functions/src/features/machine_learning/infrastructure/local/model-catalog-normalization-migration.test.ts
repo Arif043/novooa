@@ -41,7 +41,7 @@ test("migration preserves model payloads, ownership, timestamps and team cascade
     translations_json, tags_json, 'system', NULL, runtime, artifact_reference_json, contract_json, created_at, updated_at FROM model_catalog`);
   await migrateCatalog(database);
   // Nur die Spalten nach 0015; spätere Migrationen (z. B. `origin`) laufen hier nicht.
-  const {origin: _origin, ...columnsAfter0015} = getTableColumns(modelCatalog);
+  const {origin: _origin, task: _task, languages_json: _languages, ...columnsAfter0015} = getTableColumns(modelCatalog);
   const rows = await database.select(columnsAfter0015).from(modelCatalog).orderBy(modelCatalog.id);
   assert.deepEqual(rows, [originalModel, {...originalModel, id: "system-model", team_id: null}]);
   assert.deepEqual(await database.all(sql`PRAGMA foreign_key_check`), []);
