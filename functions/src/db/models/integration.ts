@@ -84,7 +84,6 @@ export const languageModelSecrets = sqliteTable("language_model_secrets", {
 
 export const languageModels = sqliteTable("language_models", {
   id: text("id").primaryKey(),
-  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
   connection_id: text("connection_id").notNull().references((): AnySQLiteColumn => languageModelConnections.id, {onDelete: "cascade"}),
   name: text("name").notNull(),
   model_id: text("model_id").notNull(),
@@ -92,7 +91,7 @@ export const languageModels = sqliteTable("language_models", {
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
-  index("language_models_team_id_idx").on(table.team_id),
+  index("language_models_connection_id_idx").on(table.connection_id),
 ]);
 
 export const modelCatalog = sqliteTable("model_catalog", {

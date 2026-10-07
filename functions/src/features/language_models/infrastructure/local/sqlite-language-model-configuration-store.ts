@@ -1,3 +1,4 @@
+import {languageModelsQuery} from "./local-language-model-queries.js";
 import {capabilitiesFromRecord} from "../../domain/entities/language-model.js";
 import {and, eq, sql} from "drizzle-orm";
 import {randomUUID} from "node:crypto";
@@ -28,7 +29,7 @@ export class SQLiteLanguageModelConfigurationStore
   ) {}
 
   async list(teamId: string): Promise<LanguageModel[]> {
-    const rows = await this.database.select({id: languageModels.id, connection_id: languageModels.connection_id, name: languageModels.name, model_id: languageModels.model_id, capabilities_json: languageModels.capabilities_json}).from(languageModels).where(eq(languageModels.team_id, teamId)).orderBy(sql`${languageModels.name} COLLATE NOCASE`);
+    const rows = await languageModelsQuery(this.database).where(eq(languageModelConnections.team_id, teamId)).orderBy(sql`${languageModels.name} COLLATE NOCASE`);
     return rows.map((row) => modelFromRow(teamId, row));
   }
 
@@ -53,7 +54,7 @@ export class SQLiteLanguageModelConfigurationStore
       name: input.connection.name, provider: input.connection.provider, base_url: input.connection.baseUrl ?? null, secret_ref: secretRef});
     await this.secrets.withDatabase(tx).write(secretRef, input.apiKey);
     for (const model of models) {
-      await tx.insert(languageModels).values({id: model.id, team_id: model.teamId, connection_id: model.connectionId,
+      await tx.insert(languageModels).values({id: model.id, connection_id: model.connectionId,
         name: model.name, model_id: model.modelId, capabilities_json: JSON.stringify(model.capabilities)});
     }
   }
@@ -64,18 +65,17 @@ export class SQLiteLanguageModelConfigurationStore
   }
 
   async deleteConnection(teamId: string, connectionId: string): Promise<void> {
-    const secretRef = await this.secretRefFor(teamId, connectionId);
-    if (secretRef === null) return;
     await this.database.transaction(async (tx) => {
-      await tx.delete(languageModels).where(eq(languageModels.connection_id, connectionId));
-      await tx.delete(languageModelConnections).where(and(eq(languageModelConnections.id, connectionId), eq(languageModelConnections.team_id, teamId)));
+      const connection = await tx.select({secret_ref: languageModelConnections.secret_ref})
+        .from(languageModelConnections).where(and(
+          eq(languageModelConnections.id, connectionId), eq(languageModelConnections.team_id, teamId),
+        )).get();
+      if (connection === undefined) return;
+      await tx.delete(languageModelConnections).where(and(
+        eq(languageModelConnections.id, connectionId), eq(languageModelConnections.team_id, teamId),
+      ));
+      await this.secrets.withDatabase(tx).delete(connection.secret_ref);
     });
-    await this.secrets.delete(secretRef);
-  }
-
-  private async secretRefFor(teamId: string, connectionId: string): Promise<string | null> {
-    const row = (await this.database.select({secret_ref: languageModelConnections.secret_ref}).from(languageModelConnections).where(and(eq(languageModelConnections.id, connectionId), eq(languageModelConnections.team_id, teamId))).get()) ?? null;
-    return row?.secret_ref ?? null;
   }
 }
 

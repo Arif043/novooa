@@ -459,6 +459,16 @@ documents
 
 Die Initialmigration enthält außerdem den ONNX-Modellkatalog `model_catalog`,
 Provider-Verbindungen, Sprachmodellprofile und `language_model_secrets`.
+Seit `0010_normalize_language_models.sql` speichern Sprachmodellprofile keine
+eigene `team_id` mehr. Das Team wird bei Listen- und Katalogabfragen über
+`language_model_connections` aufgelöst. `connection_id` ist indiziert und als
+Fremdschlüssel abgesichert; beim Löschen einer Verbindung werden ihre Modelle
+per Kaskade entfernt. Verbindung, Modelle und verschlüsseltes Geheimnis werden
+im lokalen Konfigurationsadapter innerhalb einer Transaktion gelöscht.
+`capabilities_json` bleibt eine flexible JSON-Konfiguration. Die fachlichen
+Modellobjekte enthalten weiterhin `teamId`; die HTTP- und Domain-Verträge sowie
+die getrennten Firestore-Adapter werden durch die SQL-Normalisierung nicht
+geändert.
 Lokale API-Keys liegen nicht im Klartext in SQLite. Das Secret-Repository
 speichert sie als AES-256-GCM-Envelope mit eigenem Datenschlüssel; `secret_ref`
 verweist auf den jeweiligen Eintrag. Der Master-Key-Schlüsselbund liegt separat

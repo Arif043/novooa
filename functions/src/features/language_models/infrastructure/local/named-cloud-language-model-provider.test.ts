@@ -41,7 +41,7 @@ test("discovers xAI models through its fixed OpenAI-compatible endpoint", async 
   let requestedUrl = "";
   let authorization = "";
   const discovery = new LocalLanguageModelDiscovery(async (url, init) => {
-    requestedUrl = String(url);
+    requestedUrl = url instanceof Request ? url.url : String(url);
     authorization = new Headers(init?.headers).get("Authorization") ?? "";
     return new Response(JSON.stringify({data: [{id: "grok-4", name: "Grok 4"}]}));
   });
@@ -71,15 +71,17 @@ function discoveredModel() {
 }
 
 async function createTables(database: RuntimeDatabase): Promise<void> {
+  await database.run(sql`PRAGMA foreign_keys = ON`);
   await database.run(sql`CREATE TABLE language_model_connections (
     id TEXT PRIMARY KEY, team_id TEXT NOT NULL, name TEXT NOT NULL,
     provider TEXT NOT NULL, base_url TEXT, secret_ref TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`);
   await database.run(sql`CREATE TABLE language_models (
-    id TEXT PRIMARY KEY, team_id TEXT NOT NULL, connection_id TEXT NOT NULL,
+    id TEXT PRIMARY KEY, connection_id TEXT NOT NULL,
     name TEXT NOT NULL, model_id TEXT NOT NULL, capabilities_json TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (connection_id) REFERENCES language_model_connections(id) ON DELETE CASCADE
   )`);
   await database.run(sql`CREATE TABLE language_model_secrets (
     secret_ref TEXT PRIMARY KEY, encrypted_value TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP

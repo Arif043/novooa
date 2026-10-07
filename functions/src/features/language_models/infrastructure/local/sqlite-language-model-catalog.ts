@@ -1,3 +1,4 @@
+import {languageModelsQuery} from "./local-language-model-queries.js";
 import {and, eq} from "drizzle-orm";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {languageModelConnections, languageModels} from "../../../../db/schema.js";
@@ -20,7 +21,7 @@ export class SQLiteLanguageModelCatalog implements LanguageModelCatalog {
   ) {}
 
   async loadModel(teamId: string, modelId: string): Promise<LanguageModel> {
-    const row = (await this.database.select({id: languageModels.id, connection_id: languageModels.connection_id, name: languageModels.name, model_id: languageModels.model_id, capabilities_json: languageModels.capabilities_json}).from(languageModels).where(and(eq(languageModels.team_id, teamId), eq(languageModels.id, modelId))).get()) ?? null;
+    const row = (await languageModelsQuery(this.database).where(and(eq(languageModelConnections.team_id, teamId), eq(languageModels.id, modelId))).get()) ?? null;
     if (!row) throw new Error("Das Sprachmodell wurde nicht gefunden.");
     return {
       id: requiredString(row.id, "Sprachmodell"),
@@ -70,7 +71,7 @@ export class SQLiteLanguageModelCatalog implements LanguageModelCatalog {
 function capabilitiesFrom(value: unknown): LanguageModelCapabilities {
   if (typeof value !== "string") return defaultLanguageModelCapabilities;
   try {
-    const parsed = JSON.parse(value);
+    const parsed: unknown = JSON.parse(value);
     if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
       return defaultLanguageModelCapabilities;
     }

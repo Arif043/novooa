@@ -13,6 +13,13 @@ Prompt-Bausteine können zusätzlich ein teamweites Sprachmodellprofil über
 verwendet seine eigene Provider-Verbindung; ohne Auswahl bleibt das bisherige
 Standardmodell als Legacy-Fallback aktiv.
 
+Im Standalone-Betrieb bezieht ein Sprachmodellprofil seine Teamzuordnung aus
+der Provider-Verbindung. SQLite speichert sie ausschließlich in
+`language_model_connections`; `language_models` referenziert die Verbindung
+über `connection_id`. Listen und Einzelabfragen prüfen die Teamgrenze über
+diese Beziehung. Modellfähigkeiten bleiben als JSON gespeichert. Die Domain-
+Objekte und der separate Firestore-Katalog behalten ihre bestehenden Verträge.
+
 | `AI_PROVIDER` | Zweck |
 | --- | --- |
 | `google` | Gemini ueber `@genkit-ai/google-genai` |

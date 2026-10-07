@@ -8,7 +8,7 @@ test("loads a local model profile and its API key from the local secret store", 
   const database = await runtimeTestDatabase(t);
   await database.insert(languageModelConnections).values({id: "connection-1", team_id: "team-1", name: "Ollama",
     provider: "openAiCompatible", base_url: "http://127.0.0.1:11434/v1", secret_ref: "language-model/connection-1"});
-  await database.insert(languageModels).values({id: "model-1", team_id: "team-1", connection_id: "connection-1",
+  await database.insert(languageModels).values({id: "model-1", connection_id: "connection-1",
     name: "Lokales Qwen", model_id: "qwen3", capabilities_json: JSON.stringify({textGeneration: true, structuredOutput: true})});
   const catalog = new SQLiteLanguageModelCatalog(database, {
     async read(secretRef) {assert.equal(secretRef, "language-model/connection-1"); return "local-key";},
