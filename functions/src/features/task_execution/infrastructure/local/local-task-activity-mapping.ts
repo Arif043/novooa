@@ -3,7 +3,7 @@ import {type Activities, type TaskRuns} from "../../../../db/schema.js";
 export type TaskRunRow = Pick<TaskRuns, "created_at" | "error_json" | "final_output" | "id" | "interaction_json" |
   "review_output" | "status" | "task_id" | "task_title" | "updated_at" | "waiting_node_id">;
 export type ActivityRow = Pick<Activities, "created_at" | "id" | "input" | "message" | "node_id" | "output" |
-  "outputs_json" | "console_json" | "primitive" | "run_id" | "status" | "target" | "task_id" | "title">;
+  "outputs_json" | "console_json" | "primitive" | "run_id" | "status" | "target" | "title"> & {task_id: string};
 
 export type TaskRunDto = {
   runId: string; taskId: string; taskTitle: string; status: string; waitingNodeId: string | null;

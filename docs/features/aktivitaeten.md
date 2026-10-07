@@ -24,6 +24,15 @@ warum, und können an den Stellen eingreifen, an denen das Workflow pausiert
 
 ## Aktueller Schnitt
 
+In Standalone wird seit SQLite-Migration `0014` die Team- und
+Aufgabenzuordnung einer Aktivität über ihren Run aufgelöst. Aktivitäten
+speichern dafür nur `run_id`; ein Fremdschlüssel verhindert verwaiste Einträge.
+Schreibzugriffe prüfen die angegebenen Run-, Team- und Aufgabenbezüge atomar.
+Titel, Ergebnisse und Konsolenprotokolle bleiben historische Snapshots.
+Das Löschen einer Aufgabe erhält diese Historie; das explizite Löschen eines
+Runs entfernt dessen Aktivitäten. Firestore behält die nachfolgende eigene
+Speicherstruktur.
+
 Das Feature besitzt ein Domain-Modell für `TaskActivity`. Die Firebase
 Functions schreiben pro Hintergrund-Run:
 

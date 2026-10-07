@@ -3,9 +3,7 @@ import {check, index, integer, primaryKey, sqliteTable, text, unique, type AnySQ
 
 export const activities = sqliteTable("activities", {
   id: text("id").primaryKey(),
-  team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),
-  run_id: text("run_id").notNull(),
-  task_id: text("task_id").notNull(),
+  run_id: text("run_id").notNull().references((): AnySQLiteColumn => taskRuns.id, {onDelete: "cascade"}),
   node_id: text("node_id"),
   target: text("target").notNull(),
   primitive: text("primitive"),
@@ -19,7 +17,7 @@ export const activities = sqliteTable("activities", {
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   console_json: text("console_json").notNull().default("{}"),
 }, (table) => [
-  index("idx_activities_team_run").on(table.team_id, table.run_id),
+  index("idx_activities_run_created").on(table.run_id, table.created_at),
 ]);
 
 export const taskRunJobs = sqliteTable("task_run_jobs", {

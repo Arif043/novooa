@@ -979,6 +979,21 @@ dessen Infrastructure-Bereich.
   Zeitpunkte und bricht bei verwaisten Aufgabenbezügen oder widersprüchlichen
   Teamzuordnungen vollständig ab. Firestore-Adapter und fachliche Verträge
   bleiben getrennt von diesem SQLite-Speichermodell.
+- Seit `0014_normalize_activities.sql` speichern Aktivitäten weder `team_id`
+  noch `task_id` zusätzlich zum Run. `run_id` verweist per Fremdschlüssel auf
+  `task_runs`; Team und Aufgabe werden bei der Abfrage über diesen Run
+  aufgelöst. Der Index auf `run_id` und `created_at` unterstützt die
+  chronologische Zuordnung. Schreibzugriffe des Aktivitätsadapters und der
+  HTTP-Route prüfen Run, Team und Aufgabe innerhalb derselben Transaktion.
+  Fehlende oder widersprüchliche Bezüge werden abgelehnt; die HTTP-Route
+  antwortet mit `400`. Titel, Ein-/Ausgaben, Status, Dauer, Zeitpunkte,
+  Konsolenprotokolle und flexible JSON-Ergebnisse bleiben historische Fakten.
+  Änderungen oder Löschen der Aufgabe erhalten Runs und Aktivitäten; das
+  explizite Löschen eines Runs entfernt dessen Aktivitäten per Kaskade.
+  Die Migration erhält die Historie vollständig und bricht bei fehlenden Runs
+  oder widersprüchlichen Team-/Aufgabenbezügen atomar ab. HTTP- und Domain-
+  Objekte enthalten weiterhin die abgeleitete Aufgaben-ID; der Firestore-
+  Adapter behält sein eigenes Speichermodell.
 - Die Dateiablage speichert Versionsmetadaten ausschließlich in
   `file_versions`; das Team wird über `files` aufgelöst. Die aktuelle Version
   wird durch einen zusammengesetzten Fremdschlüssel ihrer Datei zugeordnet.
