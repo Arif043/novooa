@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_spacing.dart';
 import '../../../../machine_learning/domain/entities/model_catalog_entry.dart';
 import '../../../../machine_learning/presentation/widgets/model_size_label.dart';
+import '../../../../machine_learning/presentation/widgets/model_language_label.dart';
 import '../../../../machine_learning/presentation/widgets/model_task_label.dart';
 
 class ModelSearchTile extends StatelessWidget {

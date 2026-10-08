@@ -54,8 +54,11 @@ test("carries the solved task and the supported languages into the entry", () =>
 
 test("requires a known task and treats missing languages as language independent", () => {
   const {task: _task, ...withoutTask} = manifestData();
-  assert.throws(() => systemModelManifestFromUnknown(withoutTask), /Modellaufgabe.*Erlaubt sind: text-to-speech/);
+  assert.throws(() => systemModelManifestFromUnknown(withoutTask), /Modellaufgabe.*Erlaubt sind: .*anomaly-detection/);
   assert.throws(() => systemModelManifestFromUnknown({...manifestData(), task: "bilderkennung"}), /Modellaufgabe/);
+
+  const ownTask = systemModelManifestFromUnknown({...manifestData(), task: "optical-character-recognition"});
+  assert.equal(ownTask.task, "optical-character-recognition");
 
   const {languages: _languages, ...withoutLanguages} = manifestData();
   assert.deepEqual(systemModelManifestFromUnknown(withoutLanguages).languages, []);

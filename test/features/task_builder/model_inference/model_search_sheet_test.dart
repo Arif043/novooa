@@ -138,6 +138,48 @@ void main() {
     expect(find.widgetWithText(FilterChip, 'Deutsch 1'), findsOneWidget);
     expect(find.widgetWithText(FilterChip, 'Englisch 1'), findsOneWidget);
   });
+
+  testWidgets('blendet bei vielen Aufgaben eine Bereichsebene ein', (
+    tester,
+  ) async {
+    final tasks = [
+      ModelTask.objectDetection,
+      ModelTask.opticalCharacterRecognition,
+      ModelTask.imageSegmentation,
+      ModelTask.depthEstimation,
+      ModelTask.textToSpeech,
+      ModelTask.automaticSpeechRecognition,
+      ModelTask.translation,
+    ];
+    final repository = FakeModelCatalogRepository()
+      ..globalEntries = [
+        for (final task in tasks)
+          modelEntry(task.key, title: 'Modell ${task.key}', task: task),
+      ];
+    final cubit = await loadedCatalogCubit(tester, repository);
+    await _openSheet(tester, cubit);
+
+    expect(find.widgetWithText(FilterChip, 'Bild & Video 4'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilterChip, 'Audio 2'));
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(FilterChip, 'Text vorlesen 1'), findsOneWidget);
+    expect(find.widgetWithText(FilterChip, 'Objekte erkennen 1'), findsNothing);
+    expect(find.text('Modell translation'), findsNothing);
+  });
+
+  testWidgets('zeigt bei wenigen Aufgaben keine Bereichsebene', (tester) async {
+    final repository = FakeModelCatalogRepository()
+      ..globalEntries = [
+        modelEntry('a', task: ModelTask.objectDetection),
+        modelEntry('b', task: ModelTask.textToSpeech),
+      ];
+    final cubit = await loadedCatalogCubit(tester, repository);
+    await _openSheet(tester, cubit);
+
+    expect(find.text('Bereich'), findsNothing);
+    expect(find.text('Aufgabe'), findsOneWidget);
+  });
 }
 
 Future<void> _openSheet(

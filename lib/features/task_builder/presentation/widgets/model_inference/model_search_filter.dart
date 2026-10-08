@@ -1,11 +1,12 @@
 import '../../../../machine_learning/domain/entities/model_catalog_entry.dart';
+import '../../../../machine_learning/presentation/widgets/model_language_label.dart';
 import '../../../../machine_learning/presentation/widgets/model_task_label.dart';
 import 'model_search_selection.dart';
 
 enum SpeechModelDirection { textToSpeech, speechToText }
 
 /// Welche Modelle ein Baustein anbietet und welche zu Suche und Filter-Chips passen.
-/// Aufgabe und Sprache werden UND-verknüpft, mehrere Sprachen untereinander ODER.
+/// Bereich, Aufgabe und Sprache werden UND-verknüpft, mehrere Sprachen untereinander ODER.
 class ModelSearchFilter {
   const ModelSearchFilter({required this.languageTag, this.speechDirection});
 
@@ -24,6 +25,7 @@ class ModelSearchFilter {
     String query, [
     ModelSearchSelection selection = const ModelSearchSelection(),
   ]) => _candidates(models, query)
+      .where((model) => _hasArea(model, selection))
       .where((model) => _hasTask(model, selection))
       .where((model) => _hasLanguage(model, selection))
       .toList(growable: false);
@@ -34,13 +36,19 @@ class ModelSearchFilter {
     ModelSearchSelection selection,
   ) {
     final candidates = _candidates(models, query);
+    final ofLanguage = candidates.where(
+      (model) => _hasLanguage(model, selection),
+    );
     return ModelSearchFacets(
+      areas: _count(ofLanguage, (model) => [model.task.area]),
       tasks: _count(
-        candidates.where((model) => _hasLanguage(model, selection)),
+        ofLanguage.where((model) => _hasArea(model, selection)),
         (model) => [model.task],
       ),
       languages: _count(
-        candidates.where((model) => _hasTask(model, selection)),
+        candidates
+            .where((model) => _hasArea(model, selection))
+            .where((model) => _hasTask(model, selection)),
         (model) => model.languages,
       ),
     );
@@ -69,6 +77,9 @@ class ModelSearchFilter {
         .where((model) => terms.every((term) => _matches(model, term)));
   }
 
+  bool _hasArea(ModelCatalogEntry model, ModelSearchSelection selection) =>
+      selection.area == null || model.task.area == selection.area;
+
   bool _hasTask(ModelCatalogEntry model, ModelSearchSelection selection) =>
       selection.task == null || model.task == selection.task;
 
@@ -94,6 +105,7 @@ class ModelSearchFilter {
       ...model.tagsFor(languageTag),
       // Aufgabe und Sprachen sind keine Tags mehr, sollen aber per Text auffindbar bleiben.
       model.task.label,
+      model.task.area.label,
       ...model.languages.map(languageLabel),
       model.id,
     ].join(' ').toLowerCase();

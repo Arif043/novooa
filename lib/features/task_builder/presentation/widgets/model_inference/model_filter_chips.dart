@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_spacing.dart';
+import '../../../../machine_learning/presentation/widgets/model_language_label.dart';
 import '../../../../machine_learning/presentation/widgets/model_task_label.dart';
 import 'model_search_selection.dart';
 
-/// Chips zum Eingrenzen der Modellsuche nach Aufgabe (eine) und Sprache (mehrere).
-/// Gezeigt werden nur Chips mit Treffern; eine Zeile mit nur einer Option entfällt.
+/// Chips zum Eingrenzen der Modellsuche nach Bereich, Aufgabe (je eine) und Sprache (mehrere).
+/// Gezeigt werden nur Chips mit Treffern; eine Zeile mit nur einer Option entfällt. Bei vielen
+/// Aufgaben erscheint davor eine Bereichsebene (Bild & Video, Audio, Text …).
 class ModelFilterChips extends StatelessWidget {
   const ModelFilterChips({
     super.key,
@@ -20,24 +22,46 @@ class ModelFilterChips extends StatelessWidget {
   final bool showTasks;
   final ValueChanged<ModelSearchSelection> onChanged;
 
+  /// Ab so vielen Aufgaben-Chips hilft die vorgeschaltete Bereichsebene beim Überblick.
+  static const areaThreshold = 6;
+
   @override
   Widget build(BuildContext context) {
+    final areas = _visible(facets.areas, {?selection.area});
     final tasks = _visible(facets.tasks, {?selection.task});
     final languages = _visible(facets.languages, selection.languages);
+    final showAreas =
+        showTasks &&
+        areas.length > 1 &&
+        (selection.area != null || facets.tasks.length > areaThreshold);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (showTasks && tasks.length > 1)
+        if (showAreas)
+          _ChipRow(
+            label: 'Bereich',
+            chips: [
+              for (final area in areas)
+                _CountChip(
+                  icon: area.icon,
+                  label: area.label,
+                  count: facets.areas[area] ?? 0,
+                  selected: selection.area == area,
+                  onTap: () => onChanged(selection.toggleArea(area)),
+                ),
+            ],
+          ),
+        if (showTasks && (tasks.length > 1 || selection.area != null))
           _ChipRow(
             label: 'Aufgabe',
             chips: [
               for (final task in tasks)
-                FilterChip(
-                  avatar: Icon(task.icon),
-                  label: Text('${task.label} ${facets.tasks[task] ?? 0}'),
+                _CountChip(
+                  icon: task.icon,
+                  label: task.label,
+                  count: facets.tasks[task] ?? 0,
                   selected: selection.task == task,
-                  showCheckmark: false,
-                  onSelected: (_) => onChanged(selection.toggleTask(task)),
+                  onTap: () => onChanged(selection.toggleTask(task)),
                 ),
             ],
           ),
@@ -46,14 +70,11 @@ class ModelFilterChips extends StatelessWidget {
             label: 'Sprache',
             chips: [
               for (final language in languages)
-                FilterChip(
-                  label: Text(
-                    '${languageLabel(language)} '
-                    '${facets.languages[language] ?? 0}',
-                  ),
+                _CountChip(
+                  label: languageLabel(language),
+                  count: facets.languages[language] ?? 0,
                   selected: selection.languages.contains(language),
-                  onSelected: (_) =>
-                      onChanged(selection.toggleLanguage(language)),
+                  onTap: () => onChanged(selection.toggleLanguage(language)),
                 ),
             ],
           ),
@@ -66,6 +87,33 @@ class ModelFilterChips extends StatelessWidget {
     final keys = {...counts.keys, ...selected}.toList();
     keys.sort((a, b) => (counts[b] ?? 0).compareTo(counts[a] ?? 0));
     return keys;
+  }
+}
+
+class _CountChip extends StatelessWidget {
+  const _CountChip({
+    this.icon,
+    required this.label,
+    required this.count,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData? icon;
+  final String label;
+  final int count;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilterChip(
+      avatar: icon == null ? null : Icon(icon),
+      label: Text('$label $count'),
+      selected: selected,
+      showCheckmark: icon == null,
+      onSelected: (_) => onTap(),
+    );
   }
 }
 

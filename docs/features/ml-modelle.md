@@ -66,12 +66,23 @@ intern eine SVM oder ein CNN nutzt, spielt keine Rolle — entscheidend ist das
 Problem, das es löst.
 
 - **`task`** (Pflicht im Manifest): genau eine Aufgabe aus einem festen Vokabular
-  (`domain/entities/model-task.ts`, Schlüssel nach den Pipeline-Tags von Hugging
-  Face): `text-to-speech`, `automatic-speech-recognition`, `audio-classification`,
-  `image-classification`, `object-detection`, `image-segmentation`,
-  `image-to-text`, `text-classification`, `token-classification`, `translation`,
-  `feature-extraction`, `other`. Unbekannte Werte lehnen Publishing und Import ab.
-  Gespeicherte Einträge von vorher gelten als `other` („Sonstige“).
+  (`domain/entities/model-task.ts`). Die Schlüssel folgen überwiegend den
+  Pipeline-Tags von Hugging Face; mit ★ markierte sind eigene Ergänzungen. Die App
+  ordnet jede Aufgabe fest einem Bereich zu:
+
+  | Bereich | Aufgaben (`task`) |
+  | --- | --- |
+  | Bild & Video | `image-classification`, `object-detection`, `image-segmentation`, `image-to-text` (Bilder beschreiben), `optical-character-recognition` ★, `document-question-answering` (Dokumente auslesen), `depth-estimation`, `keypoint-detection`, `zero-shot-image-classification`, `image-to-image`, `video-classification` |
+  | Audio | `text-to-speech`, `automatic-speech-recognition`, `audio-classification`, `voice-activity-detection`, `speaker-diarization` ★, `audio-to-audio` |
+  | Text | `text-classification`, `token-classification`, `translation`, `summarization`, `question-answering`, `zero-shot-classification`, `sentence-similarity`, `text-generation`, `feature-extraction` |
+  | Daten & Zeitreihen | `tabular-classification`, `tabular-regression`, `time-series-forecasting`, `anomaly-detection` ★, `clustering` ★ |
+  | Sonstige | `other` |
+
+  Unbekannte Werte lehnen Publishing und Import ab. Gespeicherte Einträge von
+  vorher gelten als `other` („Sonstige“); unbekannte Schlüssel einer neueren
+  Runtime zeigt die App ebenfalls unter „Sonstige“. Neue Aufgaben werden in
+  `model-task.ts` (Runtime) und `model_task.dart` samt deutscher Bezeichnung in
+  `model_task_label.dart` (App) ergänzt.
 - **`languages`** (optional): BCP-47-Codes der unterstützten Sprachen; leer bei
   sprachunabhängigen Modellen (z. B. Bildmodelle).
 - **`tags`**: nur noch für Feinheiten (`emotionen`, `hohe-qualitaet`); Aufgabe und
@@ -83,7 +94,10 @@ Beschreibung. Die Einträge verweisen auf dieselbe Artefaktversion; die Datei li
 nur einmal in der Runtime und wird erst entfernt, wenn kein Eintrag sie mehr nutzt.
 
 Der Suchdialog im Aufgabenstudio zeigt Filter-Chips für Aufgabe (Einfachauswahl)
-und Sprache (Mehrfachauswahl), jeweils nur mit Treffern und deren Anzahl. Bausteine
+und Sprache (Mehrfachauswahl), jeweils nur mit Treffern und deren Anzahl. Gibt es
+Treffer in mehreren Bereichen und mehr als sechs Aufgaben-Chips, erscheint davor
+eine Bereichsebene; nach Wahl eines Bereichs zeigt die Aufgabenzeile nur dessen
+Aufgaben. Bausteine
 mit fester Aufgabe („Text vorlesen“, „Audio transkribieren“) blenden die
 Aufgaben-Chips aus. Die Textsuche findet auch die deutschen Bezeichnungen von
 Aufgabe und Sprache. SQLite speichert beides in `model_catalog.task` und

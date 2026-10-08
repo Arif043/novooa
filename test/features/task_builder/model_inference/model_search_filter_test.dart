@@ -114,4 +114,52 @@ void main() {
       );
     });
   });
+
+  group('Bereiche', () {
+    final ocr = modelEntry('ocr', task: ModelTask.opticalCharacterRecognition);
+    final yolo = modelEntry('yolo', task: ModelTask.objectDetection);
+    final whisper = modelEntry(
+      'whisper',
+      task: ModelTask.automaticSpeechRecognition,
+      languages: const ['de'],
+    );
+    final models = [ocr, yolo, whisper];
+    const filter = ModelSearchFilter(languageTag: 'de');
+
+    test('ordnet jede Aufgabe genau einem Bereich zu', () {
+      for (final task in ModelTask.values) {
+        expect(ModelTaskArea.values, contains(task.area));
+      }
+      expect(ModelTask.fromKey('anomaly-detection').area, ModelTaskArea.data);
+    });
+
+    test('grenzt nach Bereich ein und zählt Aufgaben nur darin', () {
+      const selection = ModelSearchSelection(area: ModelTaskArea.imageVideo);
+
+      expect(filter.apply(models, '', selection), [ocr, yolo]);
+      final facets = filter.facets(models, '', selection);
+      expect(facets.areas, {
+        ModelTaskArea.imageVideo: 2,
+        ModelTaskArea.audio: 1,
+      });
+      expect(facets.tasks.keys, [
+        ModelTask.opticalCharacterRecognition,
+        ModelTask.objectDetection,
+      ]);
+    });
+
+    test('ein Bereichswechsel verwirft eine fremde Aufgabe', () {
+      const selection = ModelSearchSelection(task: ModelTask.objectDetection);
+
+      expect(
+        selection.toggleArea(ModelTaskArea.imageVideo).task,
+        ModelTask.objectDetection,
+      );
+      expect(selection.toggleArea(ModelTaskArea.audio).task, isNull);
+    });
+
+    test('findet Modelle über den Bereichsnamen', () {
+      expect(filter.apply(models, 'audio'), [whisper]);
+    });
+  });
 }
