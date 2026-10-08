@@ -1,5 +1,5 @@
 from importlib import import_module
-from inspect import isclass
+from inspect import isabstract, isclass
 from pkgutil import iter_modules
 
 
@@ -26,5 +26,7 @@ def module_strategies(module, strategy_type):
         if isclass(candidate)
         and candidate is not strategy_type
         and issubclass(candidate, strategy_type)
+        # Gemeinsame Basisklassen ohne eigenen Transformationstyp bleiben abstrakt.
+        and not isabstract(candidate)
         and candidate.__module__ == module.__name__
     ]

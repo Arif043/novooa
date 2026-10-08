@@ -446,8 +446,8 @@ Cloud und lokaler Runtime verarbeitet Python sowohl Eingabe- als auch
 Ausgabetransformationen. TypeScript bindet die daraus gewonnenen Werte über
 `workflowOutput.mapping` an den Workflow und führt keine Transformation aus.
 
-Aktuell enthält die lokale Runtime konkrete Strategien für Bildquellen und
-unveränderte Tensoren. Verträge mit Text-, Zahlen-, Boolean-, JSON- oder
+Aktuell enthält die lokale Runtime konkrete Strategien für Bild-, Text- und
+Zahlenquellen sowie unveränderte Tensoren. Verträge mit Text-, Zahlen-, Boolean-, JSON- oder
 Dateiquellen werden bereits korrekt gebunden und validiert; ihre technische
 Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert.
 
@@ -473,6 +473,20 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `tensor.nonMaximumSuppression` | `box`-Spalten, `scoreIndex`, optional `scoreThreshold`, `iouThreshold` | Unterdrückt überlappende Erkennungen und liefert `{index, score, box}`. |
 | `sequence.ctcGreedyDecode` | `labels`, `blankIndex`, optional `applySoftmax`, `collapseRepeated`, `allowedCharacters` | Dekodiert CTC-Logits in `{text, confidence}`; `allowedCharacters` begrenzt die Auswahl auf ein fachlich zulässiges Alphabet. |
 | `tensor.topK` | Parameterbeschreibung für `k`, optional `result` | Liefert allgemeine Paare aus Index und Wert. |
+| `image.exifTranspose` | keine | Eingang. Dreht Fotos gemäß EXIF-Ausrichtung (z. B. Handyaufnahmen); vor anderen Bildtransformationen einsetzen. |
+| `image.resizeShorterSide` | `size` | Eingang. Skaliert die kürzere Seite auf `size`, das Seitenverhältnis bleibt. |
+| `image.centerCrop` | `width`, `height` | Eingang. Schneidet einen Ausschnitt aus der Bildmitte; größer als das Bild ist ein Fehler. Mit `image.resizeShorterSide` die übliche Vorverarbeitung vieler Bildmodelle. |
+| `number.toTensor` | keine | Eingang. Macht aus einer Zahl oder Zahlenliste einen eindimensionalen `float32`-Tensor. |
+| `tensor.scale` | optional `factor` (Standard `1`), `offset` (Standard `0`) | Ein- und Ausgang. Berechnet `wert × factor + offset`, z. B. `1/255` für Pixel oder zum Zurückrechnen normierter Ausgaben. |
+| `tensor.clip` | `min` und/oder `max` | Ein- und Ausgang. Begrenzt Werte auf einen Bereich. |
+| `tensor.reshape` | `shape` (positive Zahlen, höchstens einmal `-1`) | Ein- und Ausgang. Formt den Tensor um; die Anzahl der Werte muss passen. |
+| `tensor.transpose` | `axes` (vollständige Permutation) | Ein- und Ausgang. Ordnet Achsen um. Für Farbkanäle von Bildern bleibt `tensor.layout` vorzuziehen, weil `tensor.normalize` dessen Layout kennt. |
+| `tensor.argmax` | optional `axis` (Standard `-1`) | Ausgang. Index des größten Werts, z. B. die wahrscheinlichste Klasse. |
+| `tensor.squeeze` | keine | Ausgang. Entfernt Dimensionen der Größe 1 (etwa die Batch-Dimension). |
+| `tensor.reduce` | `operation` (`mean`, `sum`, `max`, `min`), optional `axis` | Ausgang. Verdichtet eine Achse, z. B. Token-Embeddings per Mittelwert zu einem Satzvektor. |
+| `tensor.l2Normalize` | optional `axis` | Ausgang. Skaliert Vektoren auf Länge 1 für Ähnlichkeitsvergleiche; Nullvektoren bleiben unverändert. |
+| `tensor.slice` | `start`, optional `end`, `axis` | Ausgang. Wählt einen Bereich entlang einer Achse; ein leerer Bereich ist ein Fehler. |
+| `tensor.round` | optional `decimals` (Standard `0`) | Ausgang. Rundet auf Nachkommastellen. |
 | `workflowOutput.mapping.$map` | `from`, `item` | Formt ein Transformations-Ergebnis zu einer Liste. |
 | `workflowOutput.mapping.$lookup` | `values`, `key` | Liest einen Wert aus einer indizierten Tabelle. |
 
@@ -481,6 +495,16 @@ Index hinzu, wenn das Bild zunächst als `[3, 224, 224]` vorliegt. Vor der
 Rückgabe prüft er Form, Datentyp und Byte-Länge. Tensorquellen werden zunächst
 nur ohne Transformation durchgereicht; weitere Tensorstrategien ergänzen wir
 über denselben Port.
+
+Die allgemeinen Tensoroperationen (`tensor.scale`, `tensor.clip`,
+`tensor.reshape`, `tensor.transpose`) sind einmal in
+`novooa_ml/tensor_operations.py` umgesetzt und werden als Ein- und
+Ausgangsstrategie registriert; beide Richtungen haben damit dieselbe Semantik.
+Neue Strategien werden automatisch gefunden: eine Klasse im Paket
+`input_transforms` bzw. `output_transforms`, die von der jeweiligen
+Strategie-Basis erbt. Abstrakte Zwischenklassen werden übersprungen. Die
+Cloud-Runtime pflegt ihre Bildtransformationen weiterhin als feste Liste in
+`model-contract-capabilities.ts` und kennt die neuen Typen noch nicht.
 
 ### Allgemeine OCR-Pipeline
 
