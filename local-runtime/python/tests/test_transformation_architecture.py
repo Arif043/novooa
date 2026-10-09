@@ -22,7 +22,7 @@ INPUT_TYPES = [
 ]
 OUTPUT_TYPES = [
     "audio.wav", "geometry.mergeRows", "geometry.scaleBounds", "geometry.toSource", "image.encode",
-    "mask.connectedComponents", "mask.toSource",
+    "mask.connectedComponents", "mask.toSource", "resource.lookup",
     "mask.textRegions", "sequence.ctcGreedyDecode", "sequence.segments", "tensor.argmax",
     "tensor.clip", "tensor.fitLength", "tensor.l2Normalize", "tensor.nonMaximumSuppression",
     "tensor.reduce", "tensor.reshape", "tensor.round", "tensor.scale", "tensor.sigmoid",
@@ -32,7 +32,7 @@ OUTPUT_TYPES = [
 
 
 ALL_TYPES = sorted(set(INPUT_TYPES) | set(OUTPUT_TYPES))
-DOMAINS = {"image", "audio", "text", "data", "temporal", "tensor", "vision", "sequence"}
+DOMAINS = {"image", "audio", "text", "data", "temporal", "tensor", "vision", "sequence", "resources"}
 
 
 class CapabilitySnapshotTest(unittest.TestCase):

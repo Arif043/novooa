@@ -521,6 +521,7 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `geometry.toSource` | `input`, optional `clip` (Standard `true`) | Ausgang (Regionen/Erkennungen). Rechnet `bounds` bzw. `box` mit der Geometrie des Bildeingangs `input` in Koordinaten des Originalbildes zurück; `clip` begrenzt auf das Bild. |
 | `mask.toSource` | `input`, optional `layout` (`channelsFirst`, `channelsLast`), `fill` (Standard `0`) | Ausgang. Bildet eine Maske oder Karte `[H, W]`, `[C, H, W]` bzw. `[H, W, C]` per Nearest-Neighbour auf die Originalgröße ab; Rand des Modellbildes wird zu `fill`. |
 | `image.encode` | optional `format` (`png`, `jpeg`), `fileName`, `layout` (Standard `channelsLast`), `palette` (Liste von `[r, g, b]`) | Ausgang. Kodiert einen Tensor als Bilddatei (Werte auf 0…255 begrenzt); mit `palette` werden Klassenindizes eingefärbt. Workflow-Typ `image`. |
+| `resource.lookup` | `resource`, optional `format` (`lines` oder `json`), `key` (Standard `index`), `field` (Standard `label`) | Ausgang (Top-K-Treffer, Erkennungen). Ergänzt jeden Eintrag um seinen Namen aus einer Label-Datei des Modells (`artifactReference.resources`): eine Zeile je Label oder eine JSON-Liste. Große Label-Listen stehen so nicht im Manifest. |
 | `audio.wav` | `sampleRate`, optional `fileName` (Standard `sprach-ausgabe.wav`) | Ausgang. Kodiert Samples als WAV-Datei (16 Bit, mono); Werte außerhalb von -1…1 werden begrenzt. |
 | `text.toTensor` | keine | Eingang (Text). Text → String-Tensor `[1]`, z. B. für Pipelines mit eingebauter Textverarbeitung (TF-IDF). |
 | `json.features` | `features` (Liste aus `{field, kind?, mean?, std?, default?, categories?, unknown?}`) | Eingang (JSON). Datensatz → Merkmalsvektor in fester Reihenfolge; `field` als Punktpfad, `kind` `number` (standardisiert mit `mean`/`std`), `boolean` oder `category` (One-Hot, unbekannte Werte `zero` oder `error`). Eine Liste von Datensätzen ergibt eine Zeile je Datensatz. |
@@ -555,7 +556,7 @@ novooa_ml/transformations/        Katalog und Kern
   kinds.py          Wertarten
   pipeline_check.py Prüfung der Wertarten-Kette (und der Parameter beim Import)
   parameter_check.py, schema/   Parameterschemas und ihre Prüfung
-  image/ audio/ text/ data/ temporal/ tensor/ vision/ sequence/   eine Strategie je Datei
+  image/ audio/ text/ data/ temporal/ tensor/ vision/ sequence/ resources/   eine Strategie je Datei
 novooa_ml/model_input/    Grenze zum Modell: Quelle → Pipeline → Tensor (worker, sources, wav_decoder)
 novooa_ml/model_output/   Grenze zum Modell: Modellausgang → Pipeline → Ergebnisse (worker)
 ```
