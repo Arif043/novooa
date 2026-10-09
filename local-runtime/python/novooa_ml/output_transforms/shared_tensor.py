@@ -30,3 +30,8 @@ class OutputReshapeStrategy(SharedTensorOperationStrategy):
 class OutputTransposeStrategy(SharedTensorOperationStrategy):
     transformation_type = "tensor.transpose"
     operation = staticmethod(tensor_operations.transpose)
+
+
+class OutputFitLengthStrategy(SharedTensorOperationStrategy):
+    transformation_type = "tensor.fitLength"
+    operation = staticmethod(tensor_operations.fit_length)

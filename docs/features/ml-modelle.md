@@ -446,8 +446,8 @@ Cloud und lokaler Runtime verarbeitet Python sowohl Eingabe- als auch
 Ausgabetransformationen. TypeScript bindet die daraus gewonnenen Werte über
 `workflowOutput.mapping` an den Workflow und führt keine Transformation aus.
 
-Aktuell enthält die lokale Runtime konkrete Strategien für Bild-, Text- und
-Zahlenquellen sowie unveränderte Tensoren. Verträge mit Text-, Zahlen-, Boolean-, JSON- oder
+Aktuell enthält die lokale Runtime konkrete Strategien für Bild-, Audio-,
+Text-, Zahlen-, JSON- und Boolean-Quellen sowie unveränderte Tensoren. Verträge mit Text-, Zahlen-, Boolean-, JSON- oder
 Dateiquellen werden bereits korrekt gebunden und validiert; ihre technische
 Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert.
 
@@ -487,6 +487,15 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `tensor.l2Normalize` | optional `axis` | Ausgang. Skaliert Vektoren auf Länge 1 für Ähnlichkeitsvergleiche; Nullvektoren bleiben unverändert. |
 | `tensor.slice` | `start`, optional `end`, `axis` | Ausgang. Wählt einen Bereich entlang einer Achse; ein leerer Bereich ist ein Fehler. |
 | `tensor.round` | optional `decimals` (Standard `0`) | Ausgang. Rundet auf Nachkommastellen. |
+| `tensor.fitLength` | `length`, optional `axis` (Standard `-1`), `value` (Standard `0`), `keep` (`start` oder `end`) | Ein- und Ausgang. Füllt eine Achse auf oder kürzt sie; `keep: end` behält die jüngsten Werte (Zeitreihen-Fenster). |
+| `audio.mono` | keine | Eingang (Audio). Mischt alle Kanäle zu einem. |
+| `audio.resample` | `sampleRate` | Eingang (Audio). Ändert die Abtastrate per Fourier-Resampling, z. B. auf 16 kHz. |
+| `audio.normalize` | optional `mode` (`peak` oder `rms`), `target` (Standard `1` bzw. `0.1`) | Eingang (Audio). Gleicht die Lautstärke an; Stille bleibt unverändert. |
+| `audio.fitDuration` | `seconds`, optional `keep` | Eingang (Audio). Füllt mit Stille auf oder kürzt auf eine feste Dauer. |
+| `audio.melSpectrogram` | optional `frameLength` (400), `hopLength` (160), `melBins` (80), `minFrequency`, `maxFrequency`, `power` (2), `scale` (`power`, `log`, `log10`, `db`), `dynamicRange`, `melScale` (`slaney`, `htk`), `filterNormalization` (`slaney`, `none`), `center` (`true`) | Eingang (Audio). Liefert ein Mel-Spektrogramm `[melBins, Frames]` aus Mono-Audio. `db` ist relativ zum Maximum; `dynamicRange` begrenzt den Abstand zum Maximum in der gewählten Einheit. Voreinstellungen entsprechen librosa. |
+| `json.toTensor` | keine | Eingang (JSON/Boolean). Zahl, Wahrheitswert oder gleich lange Zahlenlisten → Tensor. |
+| `json.features` | `features: [{field, kind?, mean?, std?, default?, categories?, unknown?}]` | Eingang (JSON). Datensatz → Merkmalsvektor in fester Reihenfolge; `field` als Punktpfad, `kind` `number` (standardisiert mit `mean`/`std`), `boolean` oder `category` (One-Hot, unbekannte Werte `zero` oder `error`). Eine Liste von Datensätzen ergibt eine Zeile je Datensatz. |
+| `sequence.segments` | `frameDuration` oder `hopLength` + `sampleRate`, optional `threshold`, `labels`, `backgroundIndex`, `mergeGap`, `minDuration` | Ausgang. Frame-Scores → Zeitabschnitte `{start, end, score}`; Klassenscores (Frames × Klassen) → `{start, end, index, label?, score}` je wahrscheinlichster Klasse. Zeiten in Sekunden, Werte auf 6 Stellen gerundet. |
 | `workflowOutput.mapping.$map` | `from`, `item` | Formt ein Transformations-Ergebnis zu einer Liste. |
 | `workflowOutput.mapping.$lookup` | `values`, `key` | Liest einen Wert aus einer indizierten Tabelle. |
 
@@ -496,8 +505,17 @@ Rückgabe prüft er Form, Datentyp und Byte-Länge. Tensorquellen werden zunäch
 nur ohne Transformation durchgereicht; weitere Tensorstrategien ergänzen wir
 über denselben Port.
 
+**Eingangsquellen im Python-Worker:** `image` (beim Empfang mit Pillow
+geöffnet), `audio` (WAV beim Empfang dekodiert: PCM 8/16/24/32 Bit, Float 32/64
+Bit, WAVE_EXTENSIBLE; andere Formate wie MP3 werden mit Meldung abgelehnt), `text`,
+`number`, `json` und `boolean`. Audio liegt intern als Samples
+`(Frames, Kanäle)` vor; Audio-Transformationen stehen vor Tensoroperationen.
+Ohne Spektrogramm wird daraus bei Mono ein Tensor `[Samples]`, sonst
+`[Kanäle, Samples]`. `datetime` und `file` lehnt der Worker mit Nennung des
+Quelltyps ab.
+
 Die allgemeinen Tensoroperationen (`tensor.scale`, `tensor.clip`,
-`tensor.reshape`, `tensor.transpose`) sind einmal in
+`tensor.reshape`, `tensor.transpose`, `tensor.fitLength`) sind einmal in
 `novooa_ml/tensor_operations.py` umgesetzt und werden als Ein- und
 Ausgangsstrategie registriert; beide Richtungen haben damit dieselbe Semantik.
 Neue Strategien werden automatisch gefunden: eine Klasse im Paket

@@ -1,9 +1,16 @@
 import base64
 import io
 
-from .context import ImageTransformContext, NumberTransformContext, TextTransformContext
+from .context import (
+    AudioTransformContext,
+    ImageTransformContext,
+    NumberTransformContext,
+    TextTransformContext,
+    ValueTransformContext,
+)
 from .default_registry import default_transformation_registry
 from .output_tensor import tensor_for_contract
+from .wav_decoder import decode_wav
 
 
 def transform_payload(payload, resource_reader=None):
@@ -29,12 +36,23 @@ def runtime_dependencies():
 
 def transformation_context(payload, image, numpy, resource_reader=None):
     source = payload["source"]
-    if source["type"] == "text":
+    source_type = source["type"]
+    if source_type == "text":
         return TextTransformContext(source["value"], numpy, resource_reader)
-    if source["type"] == "number":
+    if source_type == "number":
         return NumberTransformContext(source["value"], numpy, resource_reader)
-    if source["type"] != "image":
-        raise ValueError("Die Eingabequelle wird von der lokalen Transformation nicht unterstützt.")
-    image_bytes = base64.b64decode(source["dataBase64"], validate=True)
-    decoded = image.open(io.BytesIO(image_bytes))
-    return ImageTransformContext(decoded, numpy, image, resource_reader)
+    if source_type in ("json", "boolean"):
+        return ValueTransformContext(source["value"], numpy, resource_reader)
+    if source_type == "image":
+        decoded = image.open(io.BytesIO(source_bytes(source)))
+        return ImageTransformContext(decoded, numpy, image, resource_reader)
+    if source_type == "audio":
+        samples, sample_rate = decode_wav(source_bytes(source), source.get("contentType", ""))
+        return AudioTransformContext(samples, sample_rate, numpy, resource_reader)
+    raise ValueError(
+        f"Die Eingabequelle {source_type} wird von der lokalen Transformation nicht unterstützt."
+    )
+
+
+def source_bytes(source):
+    return base64.b64decode(source["dataBase64"], validate=True)

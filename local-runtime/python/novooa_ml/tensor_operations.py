@@ -50,6 +50,26 @@ def transpose(numpy, tensor, parameters):
     return array.transpose(axes)
 
 
+def fit_length(numpy, tensor, parameters):
+    """Füllt eine Achse mit `value` auf oder kürzt sie auf `length`; `keep` wählt die behaltene Seite."""
+    array = numpy.asarray(tensor)
+    length = parameters.get("length")
+    if not is_integer(length) or length <= 0:
+        raise ValueError("tensor.fitLength benötigt length als positive ganze Zahl.")
+    keep = parameters.get("keep", "start")
+    if keep not in ("start", "end"):
+        raise ValueError("tensor.fitLength benötigt keep start oder end.")
+    value = number(parameters.get("value", 0), "tensor.fitLength", "value")
+    axis = axis_of(array, parameters, "tensor.fitLength") % array.ndim
+    current = array.shape[axis]
+    if current >= length:
+        start = current - length if keep == "end" else 0
+        return numpy.take(array, range(start, start + length), axis=axis)
+    padding = [(0, 0)] * array.ndim
+    padding[axis] = (length - current, 0) if keep == "end" else (0, length - current)
+    return numpy.pad(array, padding, constant_values=value)
+
+
 def axis_of(tensor, parameters, transformation_type):
     axis = parameters.get("axis", -1)
     if not is_integer(axis) or not -tensor.ndim <= axis < tensor.ndim:
