@@ -1,18 +1,35 @@
 from novooa_ml.transformations.kinds import DETECTIONS, TENSOR
-from novooa_ml.transformations.schema import Integer, Number, Record
+from novooa_ml.transformations.schema import Boolean, Integer, Number, OneOf, Record
 from novooa_ml.transformations.strategy import TransformationStrategy
+
+from .detection_rows import CENTER_KEYS, CORNER_KEYS, row_reader, suppress_overlaps
 
 
 class NonMaximumSuppressionStrategy(TransformationStrategy):
-    """Unterdrückt überlappende Erkennungen und liefert `{index, score, box}`."""
+    """Liest Erkennungen aus Zeilen `[Erkennungen, Werte]` und unterdrückt Überlappungen.
+
+    Boxen als Ecken (`left/top/right/bottom`) oder Mittelpunkt (`centerX/centerY/width/height`),
+    optional mit `boxScale` von 0…1 auf Pixel. Der Score kommt aus einer Spalte (`scoreIndex`)
+    oder aus Klassenspalten (`classScores`, dann mit `classIndex`), optional mal `objectnessIndex`.
+    Mit Klassen wird je Klasse unterdrückt (`classAware`). Ergebnis: `{index, score, box,
+    classIndex?}` nach Score sortiert, höchstens `maxDetections`.
+    """
 
     accepts = (TENSOR,)
     produces = DETECTIONS
     parameters = {
-        "box": Record({name: Integer(minimum=0) for name in ("left", "top", "right", "bottom")}),
-        "scoreIndex": Integer(minimum=0),
+        "box": OneOf(
+            Record({name: Integer(minimum=0) for name in CORNER_KEYS}),
+            Record({name: Integer(minimum=0) for name in CENTER_KEYS}),
+        ),
+        "scoreIndex": Integer(minimum=0, optional=True),
+        "classScores": Record({"start": Integer(minimum=0), "end": Integer(minimum=1, optional=True)}, optional=True),
+        "objectnessIndex": Integer(minimum=0, optional=True),
+        "classAware": Boolean(optional=True, default=True),
+        "boxScale": Record({"x": Number(minimum=0), "y": Number(minimum=0)}, optional=True),
         "scoreThreshold": Number(optional=True),
         "iouThreshold": Number(minimum=0, maximum=1, optional=True, default=0.5),
+        "maxDetections": Integer(minimum=1, optional=True),
     }
 
     @property
@@ -22,56 +39,19 @@ class NonMaximumSuppressionStrategy(TransformationStrategy):
     def transform(self, value, parameters, context):
         if value.ndim != 2:
             raise ValueError("tensor.nonMaximumSuppression erwartet [erkennungen, werte].")
-        box = parameters.get("box")
-        if not isinstance(box, dict):
-            raise ValueError("tensor.nonMaximumSuppression benötigt box.")
-        indexes = {key: required_index(box.get(key)) for key in ("left", "top", "right", "bottom")}
-        score_index = required_index(parameters.get("scoreIndex"))
-        if max(*indexes.values(), score_index) >= value.shape[1]:
-            raise ValueError("Ein Erkennungsindex liegt außerhalb der Tensorbreite.")
-        threshold = numeric_parameter(parameters.get("scoreThreshold"), float("-inf"))
-        iou_threshold = numeric_parameter(parameters.get("iouThreshold"), 0.5)
+        read = row_reader(parameters, value.shape[1])
+        threshold = number(parameters.get("scoreThreshold"), float("-inf"))
+        iou_threshold = number(parameters.get("iouThreshold"), 0.5)
         if iou_threshold < 0 or iou_threshold > 1:
             raise ValueError("iouThreshold liegt außerhalb des erlaubten Bereichs.")
-        detections = [
-            detection(row, index, indexes, score_index)
-            for index, row in enumerate(value)
-            if float(row[score_index]) >= threshold
-        ]
-        return suppress_overlaps(detections, iou_threshold)
+        detections = [{"index": index, **read(row)} for index, row in enumerate(value)]
+        candidates = [item for item in detections if item["score"] >= threshold]
+        accepted = suppress_overlaps(candidates, iou_threshold, parameters.get("classAware", True))
+        limit = parameters.get("maxDetections")
+        return accepted if limit is None else accepted[:limit]
 
 
-def detection(row, index, box_indexes, score_index):
-    box = {key: float(row[value]) for key, value in box_indexes.items()}
-    if box["right"] < box["left"] or box["bottom"] < box["top"]:
-        raise ValueError("Eine Erkennungsbox ist ungültig.")
-    return {"index": index, "score": float(row[score_index]), "box": box}
-
-
-def suppress_overlaps(detections, threshold):
-    accepted = []
-    for candidate in sorted(detections, key=lambda item: item["score"], reverse=True):
-        if all(iou(candidate["box"], item["box"]) <= threshold for item in accepted):
-            accepted.append(candidate)
-    return accepted
-
-
-def iou(left, right):
-    overlap_width = max(0, min(left["right"], right["right"]) - max(left["left"], right["left"]))
-    overlap_height = max(0, min(left["bottom"], right["bottom"]) - max(left["top"], right["top"]))
-    overlap = overlap_width * overlap_height
-    left_area = (left["right"] - left["left"]) * (left["bottom"] - left["top"])
-    right_area = (right["right"] - right["left"]) * (right["bottom"] - right["top"])
-    return overlap / (left_area + right_area - overlap or 1)
-
-
-def required_index(value):
-    if not isinstance(value, int) or value < 0:
-        raise ValueError("Ein Spaltenindex muss eine nichtnegative ganze Zahl sein.")
-    return value
-
-
-def numeric_parameter(value, fallback):
+def number(value, fallback):
     if value is None:
         return fallback
     if not isinstance(value, (int, float)):

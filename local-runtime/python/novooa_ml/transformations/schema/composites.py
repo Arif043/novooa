@@ -59,7 +59,7 @@ class Record(Schema):
                 raise ValueError(f"Der Parameter {child(path, key)} fehlt.")
 
     def expectation(self):
-        return "ein Objekt"
+        return "ein Objekt mit " + ", ".join(self.fields)
 
     def details(self):
         return {"fields": {key: schema.describe() for key, schema in self.fields.items()}}
@@ -95,14 +95,30 @@ class OneOf(Schema):
         self.alternatives = alternatives
 
     def validate_value(self, value, path, settings):
-        if not any(alternative.accepts(value) for alternative in self.alternatives):
-            raise ValueError(f"{path} erwartet {self.expectation()}, erhält {value!r}.")
+        if any(alternative.accepts(value) for alternative in self.alternatives):
+            return
+        closest = closest_record(self.alternatives, value)
+        if closest is not None:
+            # Das Objekt passt am ehesten zu dieser Form: deren genaue Meldung ist hilfreicher.
+            closest.validate_value(value, path, settings)
+        raise ValueError(f"{path} erwartet {self.expectation()}, erhält {value!r}.")
 
     def expectation(self):
         return " oder ".join(alternative.expectation() for alternative in self.alternatives)
 
     def details(self):
         return {"alternatives": [alternative.describe() for alternative in self.alternatives]}
+
+
+def closest_record(alternatives, value):
+    """Die Objekt-Form mit den meisten passenden Feldnamen, sofern es eine eindeutige gibt."""
+    if not isinstance(value, dict):
+        return None
+    scored = [(len(set(value) & set(option.fields)), option) for option in alternatives if isinstance(option, Record)]
+    scored.sort(key=lambda item: item[0], reverse=True)
+    if not scored or scored[0][0] == 0 or (len(scored) > 1 and scored[0][0] == scored[1][0]):
+        return None
+    return scored[0][1]
 
 
 def unknown_message(full_name, key, fields, path):

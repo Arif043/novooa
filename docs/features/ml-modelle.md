@@ -488,7 +488,7 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `mask.textRegions` | `threshold`, `minimumPixels`, `minimumScore`, `dilationWidth`, `dilationHeight`, `padding` | Leitet aus einer Wahrscheinlichkeitsmaske bewertete Textregionen ab. |
 | `geometry.mergeRows` | `minimumVerticalOverlap` | Fasst horizontale Textregionen mit ausreichender vertikaler Überlappung zu einer Zeile zusammen. |
 | `geometry.scaleBounds` | `scaleX`, `scaleY`, optional `offsetX`, `offsetY` | Rechnet eine Regionsliste vom Maskenraster in Bildkoordinaten zurück. |
-| `tensor.nonMaximumSuppression` | `box`-Spalten, `scoreIndex`, optional `scoreThreshold`, `iouThreshold` | Unterdrückt überlappende Erkennungen und liefert `{index, score, box}`. |
+| `tensor.nonMaximumSuppression` | `box` (Spalten als Ecken `left/top/right/bottom` oder Mittelpunkt `centerX/centerY/width/height`), `scoreIndex` oder `classScores` (`{start, end?}`), optional `objectnessIndex`, `classAware` (Standard `true`), `boxScale` (`{x, y}`, z. B. für normierte 0…1-Koordinaten), `scoreThreshold`, `iouThreshold`, `maxDetections` | Liest Erkennungen aus Zeilen und unterdrückt Überlappungen. Mit `classScores` gilt die beste Klasse (`classIndex`) und je Klasse wird unterdrückt; mit `objectnessIndex` wird deren Wert mit dem Score multipliziert (YOLOv5-Stil). Ergebnis `{index, score, box, classIndex?}`, `box` immer als Ecken. |
 | `sequence.ctcGreedyDecode` | `labels`, `blankIndex`, optional `applySoftmax`, `collapseRepeated`, `allowedCharacters` | Dekodiert CTC-Logits in `{text, confidence}`; `allowedCharacters` begrenzt die Auswahl auf ein fachlich zulässiges Alphabet. |
 | `tensor.topK` | `k` (Zahl oder Setting-Bindung wie `"$anzahl"`), optional `result`; veraltet `parameter` (wird beim Lesen zu einem Setting) | Liefert die `k` größten Werte als Paare aus Index und Wert. |
 | `datetime.features` | `features` (Liste aus `year`, `month`, `day`, `weekday`, `hour`, `minute`, `second`, `dayOfYear`, `epochSeconds`), optional `cyclic`, `timeZone` | Eingang (Datum/Uhrzeit). Zerlegt einen Zeitpunkt in Zahlenmerkmale; `weekday` zählt ab Montag = 0. Mit `cyclic: true` werden Monat, Wochentag, Stunde, Minute und Jahrestag als sin/cos-Paar kodiert, sodass z. B. 23 Uhr und 0 Uhr nah beieinander liegen. `timeZone` (IANA, z. B. `Europe/Berlin`) wählt die Zählzeitzone, Standard UTC. |
@@ -657,17 +657,26 @@ Bild. Damit ihre Ergebnisse zum Originalbild passen, zeichnet jeder Bildeingang 
 - Tensorschritte, die am Eingang die räumliche Form ändern (`tensor.reshape`, `tensor.transpose`,
   `tensor.slice`), sind in der Geometrie nicht berücksichtigt.
 
-Objekterkennung mit einem Detektor, der Zeilen `[links, oben, rechts, unten, score]` im
-640er-Raster liefert (Eingang mit `image.resizePad` auf 640×640, mittig):
+Objekterkennung mit YOLOv8 (Ausgang `[1, 4 + Klassen, 8400]` mit Mittelpunkt-Boxen im
+640er-Raster; Eingang mit `image.resizePad` auf 640×640, mittig; Klassennamen als Ressource
+`labels.txt`):
 
 ```json
 "transformations": [
   {"type": "tensor.squeeze", "parameters": {}},
+  {"type": "tensor.transpose", "parameters": {"axes": [1, 0]}},
   {"type": "tensor.nonMaximumSuppression", "parameters": {
-    "box": {"left": 0, "top": 1, "right": 2, "bottom": 3}, "scoreIndex": 4, "scoreThreshold": 0.25}},
+    "box": {"centerX": 0, "centerY": 1, "width": 2, "height": 3},
+    "classScores": {"start": 4}, "scoreThreshold": 0.25, "iouThreshold": 0.45, "maxDetections": 100}},
+  {"type": "resource.lookup", "parameters": {"resource": "labels.txt", "key": "classIndex"}},
   {"type": "geometry.toSource", "parameters": {"input": "bild"}}
 ]
 ```
+
+Ergebnis: `[{index, score, classIndex, label, box: {left, top, right, bottom}}]` in Pixeln des
+Originalbildes. YOLOv5 ergänzt `"objectnessIndex": 4` und `"classScores": {"start": 5}`;
+Detektoren mit normierten Koordinaten (0…1) nutzen `boxScale`. Die Tests spielen diesen Ablauf
+mit einem YOLOv8-förmigen Tensor durch (`tests/test_detector_formats.py`).
 
 Segmentierung als Bild (Klassen eingefärbt, in Originalgröße):
 
