@@ -132,6 +132,30 @@ test("flattens dialog input fields directly without a node name", () => {
   assert.equal(resolver.resolveValue("{{Kundennummer}}"), "K-1");
 });
 
+test("flattens read channel event outputs under their configured names", () => {
+  const resolver = graphResolverFor(
+    [{
+      id: "n1",
+      primitive: "readChannelEvent",
+      title: "",
+      description: "",
+      outputName: "",
+      config: {
+        primitive: "readChannelEvent",
+        kind: "email",
+        outputNames: {sender: "absender", subject: "betreff", message: "text", receivedAt: "eingang"},
+      },
+    }],
+    [result("n1", "readChannelEvent", {
+      absender: {type: "string", value: "kunde@example.com"},
+      betreff: {type: "string", value: "Rechnung"},
+    })],
+  );
+
+  assert.equal(resolver.resolveValue("{{absender}}"), "kunde@example.com");
+  assert.equal(resolver.resolveValue("{{betreff}}"), "Rechnung");
+});
+
 test("flattens script workflow outputs, but keeps a script without them under its output name", () => {
   const scriptNode = (id: string, outputName: string): WorkflowNode => ({
     id, primitive: "script", title: "", description: "", outputName,

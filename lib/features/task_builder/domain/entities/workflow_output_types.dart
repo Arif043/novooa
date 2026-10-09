@@ -65,12 +65,26 @@ List<TypedOutputField> typedFlatOutputFieldsOf(NodeConfig config) {
         (name: field.name.trim(), type: structuredFieldOutputType(field.type)),
     ],
     ScriptNodeConfig() => scriptWorkflowOutputsOf(config),
+    ReadChannelEventNodeConfig() => [
+      for (final field in config.outputFields)
+        (
+          name: config.outputNames.nameOf(field).trim(),
+          type: channelEventFieldOutputType(field),
+        ),
+    ],
     _ => const <TypedOutputField>[],
   };
   return [
     for (final field in fields)
       if (field.name.isNotEmpty) field,
   ];
+}
+
+/// Werttyp eines Werts von „Nachricht lesen“.
+NodeOutputType channelEventFieldOutputType(ChannelEventOutputField field) {
+  return field == ChannelEventOutputField.receivedAt
+      ? NodeOutputType.datetime
+      : NodeOutputType.string;
 }
 
 /// Werttyp, den ein Dialogfeld nach dem Absenden liefert.

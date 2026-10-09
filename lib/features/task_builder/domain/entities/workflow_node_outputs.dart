@@ -4,11 +4,13 @@ import 'plugin_node_config.dart';
 import 'workflow_output_types.dart';
 
 /// Ob ein Baustein seine fachlichen Ausgabewerte flach, ohne umschließenden
-/// Ausgabenamen anbietet (strukturierte Prompt-Ausgabe, Dialogeingabe) —
+/// Ausgabenamen anbietet (strukturierte Prompt-Ausgabe, Dialogeingabe,
+/// Nachricht lesen) —
 /// jedes Feld hat dort direkt einen eigenen, graph-weit eindeutigen Namen
 /// statt eines gemeinsamen `outputName` (siehe `docs/node-executor-outputs.md`).
 bool hasFlatOutputFields(NodeConfig config) {
   if (config is DialogInputNodeConfig) return true;
+  if (config is ReadChannelEventNodeConfig) return true;
   if (config is ScriptNodeConfig) {
     return scriptWorkflowOutputsOf(config).isNotEmpty;
   }
@@ -37,6 +39,9 @@ List<String> flatOutputFieldsOf(NodeConfig config) {
   if (config is ScriptNodeConfig) {
     return [for (final output in scriptWorkflowOutputsOf(config)) output.name];
   }
+  if (config is ReadChannelEventNodeConfig) {
+    return _nonEmptyNames(config.outputFields.map(config.outputNames.nameOf));
+  }
   return const [];
 }
 
@@ -50,7 +55,6 @@ List<String> flatOutputFieldsOf(NodeConfig config) {
 /// Nebenoutputs.
 List<String> secondaryOutputFieldsOf(NodeConfig config) {
   return switch (config) {
-    ReadChannelEventNodeConfig() => _channelEventFields(config),
     ReadEmailNodeConfig() => _emailFields,
     WriteFileNodeConfig() => _writeFileFields,
     SendChannelMessageNodeConfig() => _sendMessageFields,
@@ -67,11 +71,6 @@ List<String> secondaryOutputFieldsOf(NodeConfig config) {
     ],
     _ => const [],
   };
-}
-
-List<String> _channelEventFields(ReadChannelEventNodeConfig config) {
-  if (config.kind == ChannelEventKind.email) return _emailFields;
-  return const ['sender', 'message', 'receivedAt'];
 }
 
 List<String> _nonEmptyNames(Iterable<String> names) {

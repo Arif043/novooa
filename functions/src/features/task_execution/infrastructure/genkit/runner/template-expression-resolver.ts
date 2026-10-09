@@ -30,7 +30,7 @@ export type TemplateExpressionContext = {
    * Flacher, graph-weiter Namensraum: der primäre Wert jedes benannten
    * Bausteins (`outputName`) sowie jedes einzelne Feld eines Bausteins mit
    * mehreren fachlichen Outputs (strukturierte Prompt-Ausgabe,
-   * Dialogeingabe-Felder) — ohne umschließenden Knotennamen, z.B.
+   * Dialogeingabe-Felder, „Nachricht lesen“) — ohne umschließenden Knotennamen, z.B.
    * `{{eingang}}`, `{{Name}}`.
    */
   flatOutputs: Record<string, NodeOutputValue>;
@@ -139,7 +139,7 @@ function nodeOutputContextFor(
 }
 
 function hasFlatOutputs(node: WorkflowNode, result: NodeExecutionResult): boolean {
-  if (node.config.primitive === "dialogInput") return true;
+  if (node.config.primitive === "dialogInput" || node.config.primitive === "readChannelEvent") return true;
   // Ein Script ist flach, sobald es per `workflow_output` eigene Ausgaben statt eines `value` liefert.
   if (node.config.primitive === "script") return isScriptWithWorkflowOutputs(result);
   return node.config.primitive === "prompt" && node.config.outputType === "structured";

@@ -294,6 +294,12 @@ export const readWebhookNodeConfigSchema = z.object({
 export const readChannelEventNodeConfigSchema = z.object({
   primitive: z.literal("readChannelEvent").default("readChannelEvent"),
   kind: z.enum(["email", "whatsapp", "sms"]).default("whatsapp"),
+  outputNames: z.object({
+    sender: z.string().trim().min(1).default("sender"),
+    subject: z.string().trim().min(1).default("subject"),
+    message: z.string().trim().min(1).default("message"),
+    receivedAt: z.string().trim().min(1).default("receivedAt"),
+  }).default({}),
 });
 
 export const sendChannelMessageNodeConfigSchema = z.object({

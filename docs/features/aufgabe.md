@@ -54,7 +54,7 @@ referenzieren.
 | `writeFile` | Datei schreiben | Schreibt einen explizit konfigurierten Wert als Datei | Implementiert |
 | `readFile` | Datei lesen | Liest eine konkrete Datei-Version | Implementiert |
 | `readEmail` | E-Mail lesen | Liest Absender, Betreff und Inhalt eines Events | Microsoft Graph implementiert |
-| `readChannelEvent` | Nachricht lesen | Liest E-Mail-, WhatsApp- oder SMS-Events | Implementiert |
+| `readChannelEvent` | Nachricht lesen | Liest E-Mail-, WhatsApp- oder SMS-Events. Absender, Betreff (nur E-Mail), Nachricht und Ankunftszeit sind flache Hauptoutputs wie bei der strukturierten Prompt-Ausgabe: je ein Chip am Pfeil, per Doppelklick umbenennbar, graph-weit eindeutig (`config.outputNames`) | Implementiert |
 | `sendChannelMessage` | Nachricht senden | Sendet E-Mail, WhatsApp oder SMS | Microsoft-Graph-Antworten implementiert |
 | `notificationSend` | Push-Benachrichtigung senden | Sendet einen aufgelösten Text als Push-Benachrichtigung an alle Team-Mitglieder | Implementiert |
 | `humanApproval` | Freigabe | Haltet den Run bis zur menschlichen Entscheidung an | Implementiert |

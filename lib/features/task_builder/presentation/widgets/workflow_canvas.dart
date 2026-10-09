@@ -664,6 +664,12 @@ class _CanvasLabelChipState extends State<_CanvasLabelChip> {
           fieldIndex: fieldIndex,
           name: value,
         );
+      case ChannelEventFieldEditTarget(:final nodeId, :final field):
+        cubit.renameChannelEventOutputName(
+          nodeId: nodeId,
+          field: field,
+          name: value,
+        );
     }
   }
 

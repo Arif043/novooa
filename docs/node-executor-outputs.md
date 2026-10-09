@@ -26,9 +26,10 @@ ausschließlich per `{{ausgabename}}` erreichbar — die ältere, zweistufige
 Form `{{ausgabename.value}}` aus der Zeit vor eindeutigen Einzelnamen löst
 seit `template-expression-resolver.ts` (`nodeOutputContextFor`/
 `secondaryOutputsOf`) nicht mehr auf. Benannte Nebenoutputs bleiben per
-Dot-Pfad erreichbar, etwa `{{eingang.sender}}` oder `{{bericht.fileId}}`.
+Dot-Pfad erreichbar, etwa `{{email1.sender}}` (E-Mail lesen) oder `{{bericht.fileId}}`.
 Bausteine mit mehreren fachlichen Ausgabewerten (strukturierte
-Prompt-Ausgabe, Dialogeingabe, Script mit `workflow_output`) haben keinen eigenen Ausgabenamen — hier ist
+Prompt-Ausgabe, Dialogeingabe, Script mit `workflow_output`, Nachricht
+lesen) haben keinen eigenen Ausgabenamen — hier ist
 jedes Feld direkt und flach unter seinem eigenen, graph-weit eindeutigen
 Namen erreichbar, z.B. `{{Name}}`.
 
@@ -53,8 +54,8 @@ einen identischen `text`-Output — ungenutzte Redundanz, inzwischen entfernt.
 | `iterativeRefinement` | ausgefuehrt | `value` (`string`) |
 | `readFile` | ausgefuehrt | `value` (`string`, UTF-8-Dateiinhalt) |
 | `readEmail` | ausgefuehrt | `value`, `sender`, `subject`, `message` (je `string`), `receivedAt` (`datetime`) |
-| `readChannelEvent` mit E-Mail | ausgefuehrt | `value`, `sender`, `subject`, `message` (je `string`), `receivedAt` (`datetime`) |
-| `readChannelEvent` mit WhatsApp/SMS | ausgefuehrt | `value`, `sender`, `message` (je `string`), `receivedAt` (`datetime`) |
+| `readChannelEvent` mit E-Mail | ausgefuehrt | flach, ohne `value`: Absender, Betreff, Nachricht (je `string`) und Ankunftszeit (`datetime`) unter den Namen aus `config.outputNames` (Standard `sender`, `subject`, `message`, `receivedAt`; der Builder hält sie graph-weit eindeutig, z. B. `sender_2`) |
+| `readChannelEvent` mit WhatsApp/SMS | ausgefuehrt | wie bei E-Mail, aber ohne Betreff |
 | `sendChannelMessage` | ausgefuehrt | `value`, `recipient`, `channelId`, `providerMessageId` (je `string`) |
 | `notificationSend` | ausgefuehrt | keine — reiner Seiteneffekt ohne fachlichen Rückgabewert |
 | `humanApproval` | wartet auf Freigabe | `value` (`string`) |

@@ -25,6 +25,7 @@ part 'for_each_node_config.dart';
 part 'write_file_node_config.dart';
 part 'read_file_node_config.dart';
 part 'read_email_node_config.dart';
+part 'channel_event_output_names.dart';
 part 'read_webhook_node_config.dart';
 part 'send_channel_message_node_config.dart';
 part 'notification_send_node_config.dart';

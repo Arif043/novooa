@@ -5,6 +5,7 @@ import {
   textOutputs,
   type NodeExecutor,
 } from "./node-executor.js";
+import {type NodeOutputValue} from "../entities/task.js";
 
 export const readEmailNodeExecutor: NodeExecutor = {
   primitive: "readEmail",
@@ -20,16 +21,21 @@ export const readEmailNodeExecutor: NodeExecutor = {
   },
 };
 
+/**
+ * Liefert flache Ausgabewerte unter den im Baustein konfigurierten,
+ * graph-weit eindeutigen Namen — ohne `value`, wie eine strukturierte
+ * Prompt-Ausgabe.
+ */
 export const readChannelEventNodeExecutor: NodeExecutor = {
   primitive: "readChannelEvent",
   async execute(node, runContext) {
     const config = channelEventConfigFrom(node);
     if (config.kind === "email") {
       const event = emailEventFrom(runContext.input);
-      return executedNode(node, emailOutputs(event));
+      return executedNode(node, namedOutputs(config.outputNames, flatEmailOutputs(event)));
     }
     const event = messageEventFrom(runContext.input, eventTypeFor(config.kind));
-    return executedNode(node, messageOutputs(event));
+    return executedNode(node, namedOutputs(config.outputNames, flatMessageOutputs(event)));
   },
 };
 
@@ -50,9 +56,19 @@ type MessageEvent = {
 
 type ChannelEventKind = "email" | "whatsapp" | "sms";
 
-function emailOutputs(event: EmailEvent) {
+type ChannelEventField = "sender" | "subject" | "message" | "receivedAt";
+type ChannelEventOutputNames = Record<ChannelEventField, string>;
+type ChannelEventConfig = {kind: ChannelEventKind; outputNames: ChannelEventOutputNames};
+
+const defaultOutputNames: ChannelEventOutputNames = {
+  sender: "sender",
+  subject: "subject",
+  message: "message",
+  receivedAt: "receivedAt",
+};
+
+function flatEmailOutputs(event: EmailEvent): Partial<Record<ChannelEventField, NodeOutputValue>> {
   return {
-    ...textOutputs(event.message),
     sender: stringOutput(event.senderEmail),
     subject: stringOutput(event.subject),
     message: stringOutput(event.message),
@@ -60,21 +76,46 @@ function emailOutputs(event: EmailEvent) {
   };
 }
 
-function messageOutputs(event: MessageEvent) {
+function flatMessageOutputs(event: MessageEvent): Partial<Record<ChannelEventField, NodeOutputValue>> {
   return {
-    ...textOutputs(event.message),
     sender: stringOutput(event.senderPhoneNumber),
     message: stringOutput(event.message),
     receivedAt: datetimeOutput(event.receivedAt),
   };
 }
 
-function channelEventConfigFrom(input: {config: unknown}): {kind: ChannelEventKind} {
-  const config = input.config;
-  if (!isRecord(config)) return {kind: "whatsapp"};
-  const kind = config.kind;
-  if (kind === "email" || kind === "whatsapp" || kind === "sms") return {kind};
-  return {kind: "whatsapp"};
+function namedOutputs(
+  names: ChannelEventOutputNames,
+  outputs: Partial<Record<ChannelEventField, NodeOutputValue>>,
+): Record<string, NodeOutputValue> {
+  const named: Record<string, NodeOutputValue> = {};
+  for (const [field, output] of Object.entries(outputs) as [ChannelEventField, NodeOutputValue][]) {
+    named[names[field]] = output;
+  }
+  return named;
+}
+
+function channelEventConfigFrom(input: {config: unknown}): ChannelEventConfig {
+  const config = isRecord(input.config) ? input.config : {};
+  return {kind: channelEventKindFrom(config.kind), outputNames: outputNamesFrom(config.outputNames)};
+}
+
+function channelEventKindFrom(kind: unknown): ChannelEventKind {
+  return kind === "email" || kind === "sms" ? kind : "whatsapp";
+}
+
+function outputNamesFrom(value: unknown): ChannelEventOutputNames {
+  const names = isRecord(value) ? value : {};
+  const nameFor = (field: ChannelEventField) => {
+    const name = names[field];
+    return typeof name === "string" && name.trim().length > 0 ? name.trim() : defaultOutputNames[field];
+  };
+  return {
+    sender: nameFor("sender"),
+    subject: nameFor("subject"),
+    message: nameFor("message"),
+    receivedAt: nameFor("receivedAt"),
+  };
 }
 
 function eventTypeFor(kind: Exclude<ChannelEventKind, "email">): MessageEvent["type"] {

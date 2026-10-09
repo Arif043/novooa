@@ -263,9 +263,17 @@ export type ReadEmailNodeConfig = {
 export type ReadWebhookNodeConfig = {
   primitive: "readWebhook";
 };
+/** Graph-weit eindeutige, flache Namen der Ausgabewerte von „Nachricht lesen“. */
+export type ChannelEventOutputNames = {
+  sender: string;
+  subject: string;
+  message: string;
+  receivedAt: string;
+};
 export type ReadChannelEventNodeConfig = {
   primitive: "readChannelEvent";
   kind: ChannelMessageKind;
+  outputNames: ChannelEventOutputNames;
 };
 export type SendChannelMessageNodeConfig = {
   primitive: "sendChannelMessage";

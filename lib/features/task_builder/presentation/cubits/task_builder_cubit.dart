@@ -23,6 +23,7 @@ part 'task_builder_graph_mutations.dart';
 part 'task_builder_iterative_refinement_mutations.dart';
 part 'task_builder_human_approval_mutations.dart';
 part 'task_builder_dialog_input_mutations.dart';
+part 'task_builder_channel_event_mutations.dart';
 part 'task_builder_media_input_mutations.dart';
 part 'task_builder_model_inference_mutations.dart';
 part 'task_builder_for_each_mutations.dart';
@@ -122,15 +123,11 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       nodeNumber,
       task.graph,
     );
+    final config = node.config as ReadChannelEventNodeConfig;
     final configuredNode = node.copyWith(
       title: _channelEventTitle(kind),
       description: _channelEventDescription(kind),
-      outputName: _uniqueOutputName(
-        task.graph,
-        '',
-        _outputNameForKind(kind, nodeNumber),
-      ),
-      config: ReadChannelEventNodeConfig(kind: kind),
+      config: config.copyWith(kind: kind),
     );
     await _saveAndEmit(task.addNode(configuredNode));
   }
@@ -355,14 +352,13 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
         outputName: _uniqueOutputName(graph, '', '${plugin.outputBase}$number'),
       );
     }
-    // Dialogeingabe-Bausteine haben immer mehrere, eigenständig benannte
-    // Outputs (siehe _collectOutputNames) und deshalb nie einen eigenen
-    // Ausgabenamen. Reine Seiteneffekt-Bausteine ohne fachlichen
+    // Dialogeingabe und „Nachricht lesen“ haben immer mehrere, eigenständig
+    // benannte Outputs (siehe _collectOutputNames) und deshalb nie einen
+    // eigenen Ausgabenamen. Reine Seiteneffekt-Bausteine ohne fachlichen
     // Rückgabewert (siehe WorkflowPrimitive.hasNoOutput) haben gar keinen.
-    final outputName =
-        primitive == WorkflowPrimitive.dialogInput || primitive.hasNoOutput
-        ? ''
-        : _uniqueOutputName(graph, '', _outputNameFor(primitive, number));
+    final outputName = _hasOwnOutputName(primitive)
+        ? _uniqueOutputName(graph, '', _outputNameFor(primitive, number))
+        : '';
     return WorkflowNode(
       id: NodeId('node.$number'),
       config: _initialConfig(primitive, graph),
@@ -372,11 +368,20 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     );
   }
 
+  bool _hasOwnOutputName(WorkflowPrimitive primitive) {
+    return primitive != WorkflowPrimitive.dialogInput &&
+        primitive != WorkflowPrimitive.readChannelEvent &&
+        !primitive.hasNoOutput;
+  }
+
   /// [NodeConfig.initial] liefert für Dialogeingabe-Bausteine ein Feld mit
   /// dem festen Namen "Antwort" — ohne Korrektur würde ein zweiter
   /// Dialogeingabe-Baustein denselben, nicht mehr eindeutigen Namen tragen.
   NodeConfig _initialConfig(WorkflowPrimitive primitive, WorkflowGraph graph) {
     final config = NodeConfig.initial(primitive);
+    if (config is ReadChannelEventNodeConfig) {
+      return config.copyWith(outputNames: _uniqueChannelEventNames(graph));
+    }
     if (config is DialogInputNodeConfig && config.fields.isNotEmpty) {
       final uniqueName = _uniqueOutputName(graph, '', config.fields.first.name);
       return config.copyWith(
@@ -387,6 +392,17 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       );
     }
     return config;
+  }
+
+  /// Wie beim Dialogfeld: Die Standardnamen (`sender`, …) erhalten bei
+  /// einem zweiten Lese-Baustein ein Suffix (`sender_2`).
+  ChannelEventOutputNames _uniqueChannelEventNames(WorkflowGraph graph) {
+    var names = const ChannelEventOutputNames();
+    for (final field in ChannelEventOutputField.values) {
+      final unique = _uniqueOutputName(graph, '', names.nameOf(field));
+      names = names.rename(field, unique);
+    }
+    return names;
   }
 
   int _nextNodeNumber(WorkflowGraph graph) {
@@ -510,10 +526,6 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       WorkflowPrimitive.plugin => 'plugin',
       WorkflowPrimitive.httpRequest => 'antwort',
     };
-  }
-
-  String _outputNameForKind(ChannelEventKind kind, int number) {
-    return '${kind.name}$number';
   }
 
   String _outputNameForSendKind(ChannelEventKind kind, int number) {

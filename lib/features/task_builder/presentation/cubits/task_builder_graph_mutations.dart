@@ -21,8 +21,8 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
     );
     if (channelKind != null) {
       node = switch (node.config) {
-        ReadChannelEventNodeConfig() => node.copyWith(
-          config: ReadChannelEventNodeConfig(kind: channelKind),
+        ReadChannelEventNodeConfig config => node.copyWith(
+          config: config.copyWith(kind: channelKind),
         ),
         SendChannelMessageNodeConfig config => node.copyWith(
           config: config.copyWith(kind: channelKind),
