@@ -61,12 +61,28 @@ class _CursorMark extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return Semantics(
       label: 'KI-Agent bedient die Oberfläche',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          _Ripple(key: ValueKey(clickCount), color: colors.primary),
-          Icon(Icons.navigation, color: colors.primary, size: AppSpacing.lg),
-          _Badge(colors: colors),
+          // Der Ring liegt außerhalb des Layouts, damit der Klick den Pfeil
+          // nicht verschiebt.
+          Positioned(
+            left: -_Ripple.size / 2,
+            top: -_Ripple.size / 2,
+            child: _Ripple(key: ValueKey(clickCount), color: colors.primary),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.navigation,
+                color: colors.primary,
+                size: AppSpacing.lg,
+              ),
+              _Badge(colors: colors),
+            ],
+          ),
         ],
       ),
     );
@@ -76,25 +92,27 @@ class _CursorMark extends StatelessWidget {
 class _Ripple extends StatelessWidget {
   const _Ripple({super.key, required this.color});
 
+  static const size = AppSpacing.xl;
+
   final Color color;
 
   @override
   Widget build(BuildContext context) {
+    final isFirstBuild = key == const ValueKey(0);
     return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
+      tween: Tween(begin: isFirstBuild ? 1 : 0, end: 1),
       duration: const Duration(milliseconds: 360),
-      builder: (context, value, _) => Transform.translate(
-        offset: const Offset(-AppSpacing.md, -AppSpacing.md),
-        child: Opacity(
-          opacity: 1 - value,
-          child: Container(
-            width: AppSpacing.xl * value,
-            height: AppSpacing.xl * value,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: color, width: 2),
-            ),
-          ),
+      curve: Curves.easeOut,
+      builder: (context, value, child) => Opacity(
+        opacity: 1 - value,
+        child: Transform.scale(scale: value, child: child),
+      ),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: color, width: 2),
         ),
       ),
     );
