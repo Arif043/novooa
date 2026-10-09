@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -150,7 +152,9 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
                         _panelVisible = false;
                       }),
                       icon: const Icon(Icons.widgets_outlined),
-                      label: const Text('Bausteine'),
+                      label: Text(
+                        LocaleKeys.task_builder_body_blocks_button.tr(),
+                      ),
                     ),
                   ),
                 if (_insertion != null && desktop)
@@ -167,9 +171,10 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
                           children: [
                             const Icon(Icons.west, size: 18),
                             const SizedBox(width: 8),
-                            const Text('Baustein links auswählen'),
+                            Text(LocaleKeys.task_builder_body_pick_left.tr()),
                             IconButton(
-                              tooltip: 'Auswahl abbrechen',
+                              tooltip: LocaleKeys.task_builder_body_cancel_pick
+                                  .tr(),
                               onPressed: () =>
                                   setState(() => _insertion = null),
                               icon: const Icon(Icons.close, size: 18),

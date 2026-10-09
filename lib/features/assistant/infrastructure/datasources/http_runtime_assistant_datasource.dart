@@ -23,10 +23,15 @@ class HttpRuntimeAssistantDatasource implements AssistantDatasource {
   Future<AssistantGeneratedResponse> ask({
     required List<AssistantMessage> history,
     required String question,
+    String? languageCode,
   }) async {
     final response = await _client.postWithTimeout(
       _path,
-      assistantRequestBody(history: history, question: question),
+      assistantRequestBody(
+        history: history,
+        question: question,
+        languageCode: languageCode,
+      ),
       timeout: assistantRequestTimeout,
     );
     return AssistantGeneratedResponse(

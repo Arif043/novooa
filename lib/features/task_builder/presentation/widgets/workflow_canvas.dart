@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_anchor.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'dart:math' as math;
@@ -194,7 +196,7 @@ class _WorkflowCanvasState extends State<WorkflowCanvas>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      tooltip: 'Verkleinern',
+                      tooltip: LocaleKeys.task_builder_canvas_zoom_out.tr(),
                       onPressed: () => _zoom(.8),
                       icon: const Icon(Icons.remove),
                     ),
@@ -209,12 +211,12 @@ class _WorkflowCanvasState extends State<WorkflowCanvas>
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Vergrößern',
+                      tooltip: LocaleKeys.task_builder_canvas_zoom_in.tr(),
                       onPressed: () => _zoom(1.25),
                       icon: const Icon(Icons.add),
                     ),
                     IconButton(
-                      tooltip: 'Gesamten Arbeitsplan anzeigen',
+                      tooltip: LocaleKeys.task_builder_canvas_fit_all.tr(),
                       icon: const Icon(Icons.fit_screen),
                       onPressed: () {
                         final availableWidth = math.max(
@@ -333,7 +335,7 @@ class _PathInsertion extends StatelessWidget {
               ),
               onPressed: onPressed,
               icon: const Icon(Icons.add),
-              label: const Text('Baustein hier verbinden'),
+              label: Text(LocaleKeys.task_builder_canvas_connect_here.tr()),
             ),
           ),
       ],
@@ -397,7 +399,7 @@ class CompactWorkflowNode extends StatelessWidget {
                     ),
                   ),
                   child: Tooltip(
-                    message: 'Baustein tauschen',
+                    message: LocaleKeys.task_builder_canvas_swap_block.tr(),
                     child: CircleAvatar(
                       radius: 23,
                       backgroundColor: colors.primaryContainer.withValues(

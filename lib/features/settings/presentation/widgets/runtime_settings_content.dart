@@ -1,3 +1,4 @@
+import 'language_settings_section.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,6 +41,8 @@ final List<SettingsTabContribution> runtimeSettingsTabs = [
     builder: (_) => ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: const [
+        LanguageSettingsSection(),
+        SizedBox(height: AppSpacing.lg),
         _RuntimeSection(),
         SizedBox(height: AppSpacing.lg),
         _SessionsSection(),

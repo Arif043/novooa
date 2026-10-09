@@ -40,8 +40,16 @@ class RoutedAssistantRepository implements AssistantRepository {
     String question,
   ) {
     if (context.area == AssistantArea.knowledgeBase) {
-      return _knowledgeBaseDatasource.ask(history: history, question: question);
+      return _knowledgeBaseDatasource.ask(
+        history: history,
+        question: question,
+        languageCode: context.languageCode,
+      );
     }
-    return _taskBuilderDatasource.ask(history: history, question: question);
+    return _taskBuilderDatasource.ask(
+      history: history,
+      question: question,
+      languageCode: context.languageCode,
+    );
   }
 }

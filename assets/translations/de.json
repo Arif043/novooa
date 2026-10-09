@@ -1,0 +1,204 @@
+{
+  "task_builder": {
+    "primitives": {
+      "string_input": {
+        "label": "Texteingabe",
+        "description": "Gibt einen festen Text als Ausgabe weiter."
+      },
+      "script": {
+        "label": "Script",
+        "description": "Führt Python-Code mit der vorherigen Ausgabe als input aus."
+      },
+      "prompt": {
+        "label": "Prompt",
+        "description": "Formt Eingaben in einen Modellauftrag."
+      },
+      "conditional": {
+        "label": "Bedingter Ablauf",
+        "description": "Verzweigt den Ablauf anhand von Regeln."
+      },
+      "iterative_refinement": {
+        "label": "Iterative Verfeinerung",
+        "description": "Verbessert ein Ergebnis über mehrere Runden."
+      },
+      "write_file": {
+        "label": "Datei schreiben",
+        "description": "Schreibt die vorherige Ausgabe als Datei."
+      },
+      "read_file": {
+        "label": "Datei lesen",
+        "description": "Liest eine Datei als Text."
+      },
+      "read_email": {
+        "label": "E-Mail lesen",
+        "description": "Liest Absender, Betreff, Nachricht und Ankunftszeit aus einem E-Mail-Trigger."
+      },
+      "read_channel_event": {
+        "label": "Nachricht lesen",
+        "description": "Liest ein eingehendes E-Mail-, WhatsApp- oder SMS-Event."
+      },
+      "read_webhook": {
+        "label": "Webhook-Ereignis",
+        "description": "Liest Inhalt, Methode, Query und Kopfzeilen eines Webhook-Aufrufs, der die Aufgabe gestartet hat."
+      },
+      "send_channel_message": {
+        "label": "Nachricht senden",
+        "description": "Sendet eine Nachricht über einen verbundenen Kanal."
+      },
+      "notification_send": {
+        "label": "Push-Benachrichtigung senden",
+        "description": "Sendet einen Text als Push-Benachrichtigung an alle Team-Mitglieder."
+      },
+      "tool_call": {
+        "label": "Werkzeug-Aufruf",
+        "description": "Bindet externe Aktionen oder Datenquellen ein."
+      },
+      "human_approval": {
+        "label": "Freigabe",
+        "description": "Wartet auf menschliche Freigabe."
+      },
+      "dialog_input": {
+        "label": "Formulareingabe",
+        "description": "Pausiert die Aufgabe, bis ein Formular ausgefüllt wurde."
+      },
+      "media_input": {
+        "label": "Bild anfordern",
+        "description": "Pausiert die Aufgabe, bis ein Bild aufgenommen oder ausgewählt wurde."
+      },
+      "model_inference": {
+        "label": "Modell ausführen",
+        "description": "Bereitet ein Bild nach Modellvertrag vor und führt ein Modell aus."
+      },
+      "text_to_speech": {
+        "label": "Text vorlesen",
+        "description": "Wandelt Text in eine Audiodatei um."
+      },
+      "speech_to_text": {
+        "label": "Audio transkribieren",
+        "description": "Wandelt eine Audiodatei in Text um."
+      },
+      "for_each": {
+        "label": "Für jedes Element",
+        "description": "Führt einen Unterplan für jedes Element eines JSON-Arrays aus."
+      },
+      "document_lookup": {
+        "label": "Datensatz suchen",
+        "description": "Findet einen Datensatz über sichtbare Felder und Bedingungen."
+      },
+      "save_document": {
+        "label": "Datensatz speichern",
+        "description": "Legt einen Datensatz an oder aktualisiert seine Felder."
+      },
+      "table_from_collection": {
+        "label": "Sammlung als Tabelle",
+        "description": "Liest eine Datensammlung vollständig ein und gibt sie als Tabellen-Wert weiter."
+      },
+      "validation": {
+        "label": "Validierung",
+        "description": "Prüft Ergebnis, Schema oder Qualitätskriterien."
+      },
+      "http_request": {
+        "label": "HTTP-Anfrage",
+        "description": "Ruft die API eines externen Systems auf und gibt die Antwort weiter."
+      },
+      "plugin": {
+        "label": "Baustein",
+        "description": ""
+      }
+    },
+    "output_names": {
+      "string_input": "eingabe",
+      "script": "skript",
+      "prompt": "anweisung",
+      "conditional": "bedingung",
+      "iterative_refinement": "verfeinerung",
+      "write_file": "dateischreiben",
+      "read_file": "dateilesen",
+      "read_email": "email",
+      "read_channel_event": "nachricht",
+      "read_webhook": "ereignis",
+      "send_channel_message": "senden",
+      "notification_send": "benachrichtigung",
+      "tool_call": "werkzeug",
+      "human_approval": "freigabe",
+      "dialog_input": "dialog",
+      "media_input": "medien",
+      "model_inference": "modell",
+      "text_to_speech": "audio",
+      "speech_to_text": "transkript",
+      "for_each": "element",
+      "document_lookup": "datensatz",
+      "save_document": "speichern",
+      "table_from_collection": "tabelle",
+      "validation": "pruefung",
+      "http_request": "antwort",
+      "plugin": "plugin"
+    },
+    "send_output_names": {
+      "email": "sendenemail",
+      "whatsapp": "sendenwhatsapp",
+      "sms": "sendensms"
+    },
+    "channels": {
+      "email": {
+        "read_title": "E-Mail lesen",
+        "read_description": "Liest Absender, Betreff, Nachricht und Ankunftszeit aus einem E-Mail-Trigger.",
+        "send_title": "E-Mail senden",
+        "send_description": "Sendet eine E-Mail über novooa."
+      },
+      "whatsapp": {
+        "read_title": "WhatsApp lesen",
+        "read_description": "Liest Absender, Nachricht und Ankunftszeit aus einem WhatsApp-Trigger.",
+        "send_title": "WhatsApp senden",
+        "send_description": "Sendet eine WhatsApp-Nachricht über novooa."
+      },
+      "sms": {
+        "read_title": "SMS lesen",
+        "read_description": "Liest Absender, Nachricht und Ankunftszeit aus einem SMS-Trigger.",
+        "send_title": "SMS senden",
+        "send_description": "Sendet eine SMS über novooa."
+      }
+    },
+    "palette": {
+      "title": "Bausteine",
+      "search": "Bausteine suchen",
+      "empty": "Keine Bausteine gefunden.",
+      "groups": {
+        "data": "Daten",
+        "logic": "Logik",
+        "ai": "Künstliche Intelligenz",
+        "interaction": "Interaktion",
+        "external": "Externe Systeme",
+        "communication": "Kommunikation"
+      }
+    },
+    "header": {
+      "menu_tooltip": "Menü öffnen",
+      "title": "Aufgabenstudio",
+      "task_label": "AUFGABE"
+    },
+    "body": {
+      "blocks_button": "Bausteine",
+      "pick_left": "Baustein links auswählen",
+      "cancel_pick": "Auswahl abbrechen"
+    },
+    "canvas": {
+      "zoom_out": "Verkleinern",
+      "zoom_in": "Vergrößern",
+      "fit_all": "Gesamten Arbeitsplan anzeigen",
+      "connect_here": "Baustein hier verbinden",
+      "swap_block": "Baustein tauschen"
+    },
+    "title_field": {
+      "hint": "Name der Aufgabe"
+    }
+  },
+  "settings": {
+    "language": {
+      "title": "Sprache",
+      "description": "Sprache der Oberfläche und neuer Standardnamen.",
+      "de": "Deutsch",
+      "en": "English"
+    }
+  }
+}

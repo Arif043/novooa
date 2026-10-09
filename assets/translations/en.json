@@ -1,0 +1,204 @@
+{
+  "task_builder": {
+    "primitives": {
+      "string_input": {
+        "label": "Text input",
+        "description": "Passes a fixed text on as output."
+      },
+      "script": {
+        "label": "Script",
+        "description": "Runs Python code with the previous output as input."
+      },
+      "prompt": {
+        "label": "Prompt",
+        "description": "Turns inputs into a model request."
+      },
+      "conditional": {
+        "label": "Conditional flow",
+        "description": "Branches the flow based on rules."
+      },
+      "iterative_refinement": {
+        "label": "Iterative refinement",
+        "description": "Improves a result over several rounds."
+      },
+      "write_file": {
+        "label": "Write file",
+        "description": "Writes the previous output as a file."
+      },
+      "read_file": {
+        "label": "Read file",
+        "description": "Reads a file as text."
+      },
+      "read_email": {
+        "label": "Read email",
+        "description": "Reads sender, subject, message and arrival time from an email trigger."
+      },
+      "read_channel_event": {
+        "label": "Read message",
+        "description": "Reads an incoming email, WhatsApp or SMS event."
+      },
+      "read_webhook": {
+        "label": "Webhook event",
+        "description": "Reads the body, method, query and headers of the webhook call that started the task."
+      },
+      "send_channel_message": {
+        "label": "Send message",
+        "description": "Sends a message through a connected channel."
+      },
+      "notification_send": {
+        "label": "Send push notification",
+        "description": "Sends a text as a push notification to all team members."
+      },
+      "tool_call": {
+        "label": "Tool call",
+        "description": "Connects external actions or data sources."
+      },
+      "human_approval": {
+        "label": "Approval",
+        "description": "Waits for human approval."
+      },
+      "dialog_input": {
+        "label": "Form input",
+        "description": "Pauses the task until a form has been filled in."
+      },
+      "media_input": {
+        "label": "Request image",
+        "description": "Pauses the task until an image has been taken or selected."
+      },
+      "model_inference": {
+        "label": "Run model",
+        "description": "Prepares an image according to the model contract and runs a model."
+      },
+      "text_to_speech": {
+        "label": "Read text aloud",
+        "description": "Converts text into an audio file."
+      },
+      "speech_to_text": {
+        "label": "Transcribe audio",
+        "description": "Converts an audio file into text."
+      },
+      "for_each": {
+        "label": "For each item",
+        "description": "Runs a sub-plan for each item of a JSON array."
+      },
+      "document_lookup": {
+        "label": "Find record",
+        "description": "Finds a record by visible fields and conditions."
+      },
+      "save_document": {
+        "label": "Save record",
+        "description": "Creates a record or updates its fields."
+      },
+      "table_from_collection": {
+        "label": "Collection as table",
+        "description": "Reads a whole data collection and passes it on as a table value."
+      },
+      "validation": {
+        "label": "Validation",
+        "description": "Checks the result, schema or quality criteria."
+      },
+      "http_request": {
+        "label": "HTTP request",
+        "description": "Calls the API of an external system and passes the response on."
+      },
+      "plugin": {
+        "label": "Block",
+        "description": ""
+      }
+    },
+    "output_names": {
+      "string_input": "input",
+      "script": "script",
+      "prompt": "prompt",
+      "conditional": "condition",
+      "iterative_refinement": "refine",
+      "write_file": "writeFile",
+      "read_file": "readFile",
+      "read_email": "email",
+      "read_channel_event": "message",
+      "read_webhook": "event",
+      "send_channel_message": "send",
+      "notification_send": "notification",
+      "tool_call": "tool",
+      "human_approval": "approval",
+      "dialog_input": "dialog",
+      "media_input": "media",
+      "model_inference": "model",
+      "text_to_speech": "audio",
+      "speech_to_text": "transcript",
+      "for_each": "element",
+      "document_lookup": "record",
+      "save_document": "save",
+      "table_from_collection": "table",
+      "validation": "validation",
+      "http_request": "response",
+      "plugin": "plugin"
+    },
+    "send_output_names": {
+      "email": "sendemail",
+      "whatsapp": "sendwhatsapp",
+      "sms": "sendsms"
+    },
+    "channels": {
+      "email": {
+        "read_title": "Read Email",
+        "read_description": "Reads sender, subject, message and arrival time from an email trigger.",
+        "send_title": "Send Email",
+        "send_description": "Sends an email through novooa."
+      },
+      "whatsapp": {
+        "read_title": "Read WhatsApp",
+        "read_description": "Reads sender, message and arrival time from a WhatsApp trigger.",
+        "send_title": "Send WhatsApp",
+        "send_description": "Sends a WhatsApp message through novooa."
+      },
+      "sms": {
+        "read_title": "Read SMS",
+        "read_description": "Reads sender, message and arrival time from a SMS trigger.",
+        "send_title": "Send SMS",
+        "send_description": "Sends an SMS through novooa."
+      }
+    },
+    "palette": {
+      "title": "Blocks",
+      "search": "Search blocks",
+      "empty": "No blocks found.",
+      "groups": {
+        "data": "Data",
+        "logic": "Logic",
+        "ai": "Artificial intelligence",
+        "interaction": "Interaction",
+        "external": "External systems",
+        "communication": "Communication"
+      }
+    },
+    "header": {
+      "menu_tooltip": "Open menu",
+      "title": "Task studio",
+      "task_label": "TASK"
+    },
+    "body": {
+      "blocks_button": "Blocks",
+      "pick_left": "Choose a block on the left",
+      "cancel_pick": "Cancel selection"
+    },
+    "canvas": {
+      "zoom_out": "Zoom out",
+      "zoom_in": "Zoom in",
+      "fit_all": "Show the whole workplan",
+      "connect_here": "Connect block here",
+      "swap_block": "Swap block"
+    },
+    "title_field": {
+      "hint": "Task name"
+    }
+  },
+  "settings": {
+    "language": {
+      "title": "Language",
+      "description": "Language of the interface and of new default names.",
+      "de": "Deutsch",
+      "en": "English"
+    }
+  }
+}

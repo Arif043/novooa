@@ -1,3 +1,4 @@
+import {promptWithAnswerLanguage} from "../../../../assistant/infrastructure/genkit/assistant-answer-language.js";
 import {type Genkit, type ModelArgument} from "genkit";
 import {type AssistantResponder} from "../../../../assistant/domain/repositories/assistant-responder.js";
 import {
@@ -31,7 +32,8 @@ export function createTaskBuilderAssistantResponder(
     tools: createTaskBuilderSubagentTools(ai, model, dependencies.modelCatalogSearch),
     modelConfig: dependencies.modelConfig,
     outputSchema: rawOutputSchema,
-    promptFromRequest: (request) => promptWithUrlContext(request.question),
+    promptFromRequest: (request) =>
+      promptWithAnswerLanguage(promptWithUrlContext(request.question), request.locale),
     responseFromOutput: taskBuilderOutputFromModelOutput,
     maxTurns: 8,
   });

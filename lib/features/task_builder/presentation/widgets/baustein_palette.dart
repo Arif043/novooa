@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_anchor.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:flutter/cupertino.dart';
@@ -27,19 +29,31 @@ class BausteinChoice {
 
   IconData get icon => _module?.icon ?? bausteinIcon(primitive);
 
-  String get label => _module != null
-      ? _module!.title
-      : kind == null
-      ? primitive.label
-      : '${switch (kind!) {
-          ChannelEventKind.email => 'E-Mail',
-          ChannelEventKind.whatsapp => 'WhatsApp',
-          ChannelEventKind.sms => 'SMS',
-        }} ${primitive == WorkflowPrimitive.readChannelEvent ? 'lesen' : 'senden'}';
+  String get label {
+    final module = _module;
+    if (module != null) return module.title;
+    final channelKind = kind;
+    if (channelKind == null) return primitive.label;
+    final isRead = primitive == WorkflowPrimitive.readChannelEvent;
+    return switch (channelKind) {
+      ChannelEventKind.email =>
+        isRead
+            ? LocaleKeys.task_builder_channels_email_read_title.tr()
+            : LocaleKeys.task_builder_channels_email_send_title.tr(),
+      ChannelEventKind.whatsapp =>
+        isRead
+            ? LocaleKeys.task_builder_channels_whatsapp_read_title.tr()
+            : LocaleKeys.task_builder_channels_whatsapp_send_title.tr(),
+      ChannelEventKind.sms =>
+        isRead
+            ? LocaleKeys.task_builder_channels_sms_read_title.tr()
+            : LocaleKeys.task_builder_channels_sms_send_title.tr(),
+    };
+  }
 }
 
 const bausteinGroups = <String, List<BausteinChoice>>{
-  'Daten': [
+  LocaleKeys.task_builder_palette_groups_data: [
     BausteinChoice(.documentLookup),
     BausteinChoice(.saveDocument),
     BausteinChoice(.tableFromCollection),
@@ -47,28 +61,28 @@ const bausteinGroups = <String, List<BausteinChoice>>{
     BausteinChoice(.readFile),
     BausteinChoice(.writeFile),
   ],
-  'Logik': [
+  LocaleKeys.task_builder_palette_groups_logic: [
     BausteinChoice(.conditional),
     BausteinChoice(.forEach),
     BausteinChoice(.script),
   ],
-  'Künstliche Intelligenz': [
+  LocaleKeys.task_builder_palette_groups_ai: [
     BausteinChoice(.prompt),
     BausteinChoice(.iterativeRefinement),
     BausteinChoice(.modelInference),
     BausteinChoice(.textToSpeech),
     BausteinChoice(.speechToText),
   ],
-  'Interaktion': [
+  LocaleKeys.task_builder_palette_groups_interaction: [
     BausteinChoice(.humanApproval),
     BausteinChoice(.dialogInput),
     BausteinChoice(.mediaInput),
   ],
-  'Externe Systeme': [
+  LocaleKeys.task_builder_palette_groups_external: [
     BausteinChoice(.httpRequest),
     BausteinChoice(.readWebhook),
   ],
-  'Kommunikation': [
+  LocaleKeys.task_builder_palette_groups_communication: [
     BausteinChoice(.readChannelEvent, kind: ChannelEventKind.email),
     BausteinChoice(.readChannelEvent, kind: ChannelEventKind.whatsapp),
     BausteinChoice(.readChannelEvent, kind: ChannelEventKind.sms),
@@ -157,7 +171,7 @@ class _BausteinPaletteState extends State<BausteinPalette> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
               child: Text(
-                'Bausteine',
+                LocaleKeys.task_builder_palette_title.tr(),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
@@ -167,8 +181,8 @@ class _BausteinPaletteState extends State<BausteinPalette> {
                 style: Theme.of(context).textTheme.bodyMedium,
                 onChanged: (value) =>
                     setState(() => _query = value.trim().toLowerCase()),
-                decoration: const InputDecoration(
-                  labelText: 'Bausteine suchen',
+                decoration: InputDecoration(
+                  labelText: LocaleKeys.task_builder_palette_search.tr(),
                   floatingLabelBehavior: FloatingLabelBehavior.never,
                   prefixIcon: Icon(Icons.search, size: 20),
                   isDense: true,
@@ -181,16 +195,16 @@ class _BausteinPaletteState extends State<BausteinPalette> {
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
                 children: [
                   if (groups.values.every((items) => items.isEmpty))
-                    const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: Text('Keine Bausteine gefunden.'),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Text(LocaleKeys.task_builder_palette_empty.tr()),
                     ),
                   for (final group in groups.entries)
                     if (group.value.isNotEmpty) ...[
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 24, 8, 8),
                         child: Text(
-                          group.key.toUpperCase(),
+                          _groupTitle(group.key).toUpperCase(),
                           style: Theme.of(context).textTheme.labelSmall,
                         ),
                       ),
@@ -253,3 +267,7 @@ class _BausteinPaletteState extends State<BausteinPalette> {
     );
   }
 }
+
+/// Eingebaute Gruppen sind Übersetzungsschlüssel, Plugin-Gruppen Klartext.
+String _groupTitle(String key) =>
+    key.startsWith('task_builder.') ? key.tr() : key;

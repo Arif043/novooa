@@ -4,8 +4,8 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/di/service_locator.dart';
@@ -53,6 +53,7 @@ Future<void> main() =>
 /// mehrfach aufrufbar gemacht.
 Future<void> _startApplication() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
   final kind = await resolveStartupRuntimeKind();
   await _bootRuntimeKind(kind);
 }
@@ -85,7 +86,8 @@ Future<void> _bootRuntimeKind(RuntimeKind kind) async {
         child: RuntimeConnectionGate(
           runtimeProfile: runtimeProfile,
           configureApplication: _configureApplication,
-          createApplication: (profile) => MyApp(runtimeProfile: profile),
+          createApplication: (profile) =>
+              _localized(MyApp(runtimeProfile: profile)),
           // Abmelden vergisst Sitzung, Adresse und Varianten-Wahl
           // vollständig und ruft diesen Callback. Ein erneutes Auflösen der
           // Startentscheidung landet danach nativ korrekt wieder beim
@@ -105,8 +107,20 @@ Future<void> _bootRuntimeKind(RuntimeKind kind) async {
   runApp(
     RuntimeVariantSwitcherScope(
       switcher: const _AppRuntimeVariantSwitcher(),
-      child: MyApp(runtimeProfile: runtimeProfile),
+      child: _localized(MyApp(runtimeProfile: runtimeProfile)),
     ),
+  );
+}
+
+/// Englisch ist Standard und Rückfall; Deutsch kommt hinzu. Ohne gespeicherte
+/// Wahl gilt die Gerätesprache, sofern unterstützt.
+Widget _localized(Widget app) {
+  return EasyLocalization(
+    supportedLocales: const [Locale('en'), Locale('de')],
+    fallbackLocale: const Locale('en'),
+    path: 'assets/translations',
+    useOnlyLangCode: true,
+    child: app,
   );
 }
 
@@ -226,10 +240,10 @@ class _MyAppState extends State<MyApp> {
       theme: SyscatTheme.lightTheme,
       // darkTheme: SyscatTheme.darkTheme,
       themeMode: ThemeMode.system,
-      // Deutsch: Datums- und Zeitauswahl, Tooltips und Fehlertexte der Material-Widgets.
-      locale: const Locale('de'),
-      supportedLocales: const [Locale('de')],
-      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      // Sprache, Datums- und Zeitauswahl der Material-Widgets folgen easy_localization.
+      locale: context.locale,
+      supportedLocales: context.supportedLocales,
+      localizationsDelegates: context.localizationDelegates,
       routerConfig: serviceLocator<AppRouter>().router,
       builder: _wrapApplication,
     );

@@ -1,3 +1,5 @@
+import 'package:syscat2/features/task_builder/domain/services/node_text_defaults.dart';
+import 'package:syscat2/features/task_builder/presentation/localization/localized_node_text_defaults.dart';
 import '../../features/integrations/integration_nodes.dart';
 import '../../features/speech_synthesis/domain/repositories/speech_voice_repository.dart';
 import '../../features/speech_synthesis/domain/usecases/list_speech_voices.dart';
@@ -562,8 +564,14 @@ void _configureCloudDependencies() {
         ),
       ),
     )
+    ..registerLazySingleton<NodeTextDefaults>(
+      () => const LocalizedNodeTextDefaults(),
+    )
     ..registerFactory(
-      () => TaskBuilderCubit(repository: serviceLocator<TaskRepository>()),
+      () => TaskBuilderCubit(
+        repository: serviceLocator<TaskRepository>(),
+        nodeTextDefaults: serviceLocator<NodeTextDefaults>(),
+      ),
     )
     ..registerFactory(
       () => TaskHomepageCubit(

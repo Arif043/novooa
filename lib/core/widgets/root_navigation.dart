@@ -44,6 +44,7 @@ AssistantContext? assistantContextForRootTab({
   required RootTab selectedTab,
   required String location,
   required bool isStandalone,
+  String languageCode = 'en',
 }) {
   if (isStandalone) return null;
   final area = switch (selectedTab.path) {
@@ -51,5 +52,11 @@ AssistantContext? assistantContextForRootTab({
     '/knowledge-base' => AssistantArea.knowledgeBase,
     _ => null,
   };
-  return area == null ? null : AssistantContext(area: area, route: location);
+  return area == null
+      ? null
+      : AssistantContext(
+          area: area,
+          route: location,
+          languageCode: languageCode,
+        );
 }

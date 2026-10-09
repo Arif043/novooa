@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -43,8 +45,8 @@ class _TaskTitleFieldState extends State<TaskTitleField> {
           child: TextField(
             focusNode: _focusNode,
             controller: _controller,
-            decoration: const InputDecoration(
-              hintText: 'Name der Aufgabe',
+            decoration: InputDecoration(
+              hintText: LocaleKeys.task_builder_title_field_hint.tr(),
               filled: false,
               isDense: true,
               contentPadding: EdgeInsets.symmetric(vertical: 8),

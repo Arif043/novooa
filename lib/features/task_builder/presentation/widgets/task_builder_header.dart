@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'task_builder_theme.dart';
@@ -36,7 +38,8 @@ class TaskBuilderHeader extends StatelessWidget {
                       children: [
                         const SizedBox(width: 8),
                         IconButton(
-                          tooltip: 'Menü öffnen',
+                          tooltip: LocaleKeys.task_builder_header_menu_tooltip
+                              .tr(),
                           onPressed: onMenuPressed,
                           icon: const Icon(CupertinoIcons.sidebar_left),
                         ),
@@ -56,7 +59,7 @@ class TaskBuilderHeader extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'Aufgabenstudio',
+                              LocaleKeys.task_builder_header_title.tr(),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.titleMedium,
@@ -81,7 +84,10 @@ class TaskBuilderHeader extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (wide)
-                            Text('AUFGABE', style: theme.textTheme.labelSmall),
+                            Text(
+                              LocaleKeys.task_builder_header_task_label.tr(),
+                              style: theme.textTheme.labelSmall,
+                            ),
                           title,
                         ],
                       ),

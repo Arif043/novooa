@@ -1,7 +1,6 @@
 import '../../domain/entities/task_save_notice.dart';
 import 'dart:async';
 import 'package:bloc/bloc.dart';
-import 'package:flutter/widgets.dart';
 import 'package:syscat2/core/logging/logger.dart';
 import 'package:syscat2/features/task_builder/domain/entities/knowledge_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
@@ -15,7 +14,8 @@ import '../../domain/entities/workflow_node.dart';
 import '../../domain/entities/workflow_node_outputs.dart';
 import 'task_builder_state.dart';
 import '../plugin_node_module.dart';
-import 'workflow_primitive_labels.dart';
+import 'package:syscat2/features/task_builder/domain/services/node_text_defaults.dart';
+import 'package:syscat2/features/task_builder/presentation/localization/localized_node_text_defaults.dart';
 part 'task_builder_branch_mutations.dart';
 part 'task_builder_condition_branch_mutations.dart';
 part 'task_builder_attachment_mutations.dart';
@@ -51,6 +51,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   static const _saveDebounceDuration = Duration(milliseconds: 800);
 
   final TaskRepository repository;
+  final NodeTextDefaults nodeTextDefaults;
   Timer? _saveTimer;
   Task? _pendingSaveTask;
   Future<void> _saveQueue = Future.value();
@@ -58,6 +59,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   TaskBuilderCubit({
     required this.repository,
     Stream<TaskSaveNotice>? saveNotices,
+    this.nodeTextDefaults = const LocalizedNodeTextDefaults(),
   }) : saveNotices = saveNotices ?? const Stream.empty(),
        super(const TaskBuilderLoading());
 
@@ -125,8 +127,8 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     );
     final config = node.config as ReadChannelEventNodeConfig;
     final configuredNode = node.copyWith(
-      title: _channelEventTitle(kind),
-      description: _channelEventDescription(kind),
+      title: nodeTextDefaults.readChannelTitle(kind),
+      description: nodeTextDefaults.readChannelDescription(kind),
       config: config.copyWith(kind: kind),
     );
     await _saveAndEmit(task.addNode(configuredNode));
@@ -142,12 +144,12 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       task.graph,
     );
     final configuredNode = node.copyWith(
-      title: _sendMessageTitle(kind),
-      description: _sendMessageDescription(kind),
+      title: nodeTextDefaults.sendChannelTitle(kind),
+      description: nodeTextDefaults.sendChannelDescription(kind),
       outputName: _uniqueOutputName(
         task.graph,
         '',
-        _outputNameForSendKind(kind, nodeNumber),
+        '${nodeTextDefaults.sendOutputBase(kind)}$nodeNumber',
       ),
       config: SendChannelMessageNodeConfig.initial().copyWith(kind: kind),
     );
@@ -357,13 +359,17 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     // eigenen Ausgabenamen. Reine Seiteneffekt-Bausteine ohne fachlichen
     // Rückgabewert (siehe WorkflowPrimitive.hasNoOutput) haben gar keinen.
     final outputName = _hasOwnOutputName(primitive)
-        ? _uniqueOutputName(graph, '', _outputNameFor(primitive, number))
+        ? _uniqueOutputName(
+            graph,
+            '',
+            '${nodeTextDefaults.outputBase(primitive)}$number',
+          )
         : '';
     return WorkflowNode(
       id: NodeId('node.$number'),
       config: _initialConfig(primitive, graph),
-      title: primitive.label,
-      description: primitive.description,
+      title: nodeTextDefaults.title(primitive),
+      description: nodeTextDefaults.description(primitive),
       outputName: outputName,
     );
   }
@@ -487,84 +493,5 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       suffix += 1;
     }
     return '${candidate}_$suffix';
-  }
-
-  String _outputNameFor(WorkflowPrimitive primitive, int number) {
-    return '${_outputBaseFor(primitive)}$number';
-  }
-
-  /// `notificationSend` bekommt nie einen Ausgabenamen (siehe
-  /// `WorkflowPrimitive.hasNoOutput`) — der Zweig unten bleibt trotzdem stehen,
-  /// weil das Switch sonst nicht mehr exhaustiv über [WorkflowPrimitive]
-  /// wäre und ein künftiges neues Primitive stillschweigend durchfiele.
-  String _outputBaseFor(WorkflowPrimitive primitive) {
-    return switch (primitive) {
-      WorkflowPrimitive.stringInput => 'input',
-      WorkflowPrimitive.script => 'script',
-      WorkflowPrimitive.prompt => 'prompt',
-      WorkflowPrimitive.conditional => 'condition',
-      WorkflowPrimitive.iterativeRefinement => 'refine',
-      WorkflowPrimitive.writeFile => 'writeFile',
-      WorkflowPrimitive.readFile => 'readFile',
-      WorkflowPrimitive.readEmail => 'email',
-      WorkflowPrimitive.readChannelEvent => 'message',
-      WorkflowPrimitive.readWebhook => 'ereignis',
-      WorkflowPrimitive.sendChannelMessage => 'send',
-      WorkflowPrimitive.notificationSend => 'notification',
-      WorkflowPrimitive.toolCall => 'tool',
-      WorkflowPrimitive.humanApproval => 'approval',
-      WorkflowPrimitive.dialogInput => 'dialog',
-      WorkflowPrimitive.mediaInput => 'media',
-      WorkflowPrimitive.modelInference => 'model',
-      WorkflowPrimitive.textToSpeech => 'audio',
-      WorkflowPrimitive.speechToText => 'transkript',
-      WorkflowPrimitive.forEach => 'element',
-      WorkflowPrimitive.documentLookup => 'datensatz',
-      WorkflowPrimitive.saveDocument => 'speichern',
-      WorkflowPrimitive.tableFromCollection => 'tabelle',
-      WorkflowPrimitive.validation => 'validation',
-      WorkflowPrimitive.plugin => 'plugin',
-      WorkflowPrimitive.httpRequest => 'antwort',
-    };
-  }
-
-  String _outputNameForSendKind(ChannelEventKind kind, int number) {
-    return 'send${kind.name}$number';
-  }
-
-  String _channelEventTitle(ChannelEventKind kind) {
-    return switch (kind) {
-      ChannelEventKind.email => 'E-Mail lesen',
-      ChannelEventKind.whatsapp => 'WhatsApp lesen',
-      ChannelEventKind.sms => 'SMS lesen',
-    };
-  }
-
-  String _channelEventDescription(ChannelEventKind kind) {
-    return switch (kind) {
-      ChannelEventKind.email =>
-        'Liest Absender, Betreff, Nachricht und Ankunftszeit aus einem E-Mail-Trigger.',
-      ChannelEventKind.whatsapp =>
-        'Liest Absender, Nachricht und Ankunftszeit aus einem WhatsApp-Trigger.',
-      ChannelEventKind.sms =>
-        'Liest Absender, Nachricht und Ankunftszeit aus einem SMS-Trigger.',
-    };
-  }
-
-  String _sendMessageTitle(ChannelEventKind kind) {
-    return switch (kind) {
-      ChannelEventKind.email => 'E-Mail senden',
-      ChannelEventKind.whatsapp => 'WhatsApp senden',
-      ChannelEventKind.sms => 'SMS senden',
-    };
-  }
-
-  String _sendMessageDescription(ChannelEventKind kind) {
-    return switch (kind) {
-      ChannelEventKind.email => 'Sendet eine E-Mail über novooa.',
-      ChannelEventKind.whatsapp =>
-        'Sendet eine WhatsApp-Nachricht über novooa.',
-      ChannelEventKind.sms => 'Sendet eine SMS über novooa.',
-    };
   }
 }

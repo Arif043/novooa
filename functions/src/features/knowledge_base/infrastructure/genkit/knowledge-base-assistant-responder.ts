@@ -1,3 +1,4 @@
+import {promptWithAnswerLanguage} from "../../../assistant/infrastructure/genkit/assistant-answer-language.js";
 import {type Genkit, type ModelArgument} from "genkit";
 import {type AssistantResponder} from "../../../assistant/domain/repositories/assistant-responder.js";
 import {
@@ -35,7 +36,8 @@ export function createKnowledgeBaseAssistantResponder(
     tools: Object.values(tools),
     modelConfig: dependencies.modelConfig,
     outputSchema: rawAssistantOutputSchema,
-    promptFromRequest: (request) => promptWithUrlContext(request.question),
+    promptFromRequest: (request) =>
+      promptWithAnswerLanguage(promptWithUrlContext(request.question), request.locale),
     responseFromOutput: assistantOutputFromModelOutput,
   });
 }

@@ -1,85 +1,122 @@
-import '../../domain/entities/workflow_node.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 
 extension WorkflowPrimitiveLabels on WorkflowPrimitive {
   String get label {
     return switch (this) {
-      WorkflowPrimitive.stringInput => 'Texteingabe',
-      WorkflowPrimitive.script => 'Script',
-      WorkflowPrimitive.prompt => 'Prompt',
-      WorkflowPrimitive.conditional => 'Bedingter Ablauf',
-      WorkflowPrimitive.iterativeRefinement => 'Iterative Verfeinerung',
-      WorkflowPrimitive.writeFile => 'Datei schreiben',
-      WorkflowPrimitive.readFile => 'Datei lesen',
-      WorkflowPrimitive.readEmail => 'E-Mail lesen',
-      WorkflowPrimitive.readChannelEvent => 'Nachricht lesen',
-      WorkflowPrimitive.readWebhook => 'Webhook-Ereignis',
-      WorkflowPrimitive.sendChannelMessage => 'Nachricht senden',
-      WorkflowPrimitive.notificationSend => 'Push-Benachrichtigung senden',
-      WorkflowPrimitive.toolCall => 'Werkzeug-Aufruf',
-      WorkflowPrimitive.humanApproval => 'Freigabe',
-      WorkflowPrimitive.dialogInput => 'Formulareingabe',
-      WorkflowPrimitive.mediaInput => 'Bild anfordern',
-      WorkflowPrimitive.modelInference => 'Modell ausführen',
-      WorkflowPrimitive.textToSpeech => 'Text vorlesen',
-      WorkflowPrimitive.speechToText => 'Audio transkribieren',
-      WorkflowPrimitive.forEach => 'Für jedes Element',
-      WorkflowPrimitive.documentLookup => 'Datensatz suchen',
-      WorkflowPrimitive.saveDocument => 'Datensatz speichern',
-      WorkflowPrimitive.tableFromCollection => 'Sammlung als Tabelle',
-      WorkflowPrimitive.validation => 'Validierung',
-      WorkflowPrimitive.httpRequest => 'HTTP-Anfrage',
-      WorkflowPrimitive.plugin => 'Baustein',
+      WorkflowPrimitive.stringInput =>
+        LocaleKeys.task_builder_primitives_string_input_label.tr(),
+      WorkflowPrimitive.script =>
+        LocaleKeys.task_builder_primitives_script_label.tr(),
+      WorkflowPrimitive.prompt =>
+        LocaleKeys.task_builder_primitives_prompt_label.tr(),
+      WorkflowPrimitive.conditional =>
+        LocaleKeys.task_builder_primitives_conditional_label.tr(),
+      WorkflowPrimitive.iterativeRefinement =>
+        LocaleKeys.task_builder_primitives_iterative_refinement_label.tr(),
+      WorkflowPrimitive.writeFile =>
+        LocaleKeys.task_builder_primitives_write_file_label.tr(),
+      WorkflowPrimitive.readFile =>
+        LocaleKeys.task_builder_primitives_read_file_label.tr(),
+      WorkflowPrimitive.readEmail =>
+        LocaleKeys.task_builder_primitives_read_email_label.tr(),
+      WorkflowPrimitive.readChannelEvent =>
+        LocaleKeys.task_builder_primitives_read_channel_event_label.tr(),
+      WorkflowPrimitive.readWebhook =>
+        LocaleKeys.task_builder_primitives_read_webhook_label.tr(),
+      WorkflowPrimitive.sendChannelMessage =>
+        LocaleKeys.task_builder_primitives_send_channel_message_label.tr(),
+      WorkflowPrimitive.notificationSend =>
+        LocaleKeys.task_builder_primitives_notification_send_label.tr(),
+      WorkflowPrimitive.toolCall =>
+        LocaleKeys.task_builder_primitives_tool_call_label.tr(),
+      WorkflowPrimitive.humanApproval =>
+        LocaleKeys.task_builder_primitives_human_approval_label.tr(),
+      WorkflowPrimitive.dialogInput =>
+        LocaleKeys.task_builder_primitives_dialog_input_label.tr(),
+      WorkflowPrimitive.mediaInput =>
+        LocaleKeys.task_builder_primitives_media_input_label.tr(),
+      WorkflowPrimitive.modelInference =>
+        LocaleKeys.task_builder_primitives_model_inference_label.tr(),
+      WorkflowPrimitive.textToSpeech =>
+        LocaleKeys.task_builder_primitives_text_to_speech_label.tr(),
+      WorkflowPrimitive.speechToText =>
+        LocaleKeys.task_builder_primitives_speech_to_text_label.tr(),
+      WorkflowPrimitive.forEach =>
+        LocaleKeys.task_builder_primitives_for_each_label.tr(),
+      WorkflowPrimitive.documentLookup =>
+        LocaleKeys.task_builder_primitives_document_lookup_label.tr(),
+      WorkflowPrimitive.saveDocument =>
+        LocaleKeys.task_builder_primitives_save_document_label.tr(),
+      WorkflowPrimitive.tableFromCollection =>
+        LocaleKeys.task_builder_primitives_table_from_collection_label.tr(),
+      WorkflowPrimitive.validation =>
+        LocaleKeys.task_builder_primitives_validation_label.tr(),
+      WorkflowPrimitive.httpRequest =>
+        LocaleKeys.task_builder_primitives_http_request_label.tr(),
+      WorkflowPrimitive.plugin =>
+        LocaleKeys.task_builder_primitives_plugin_label.tr(),
     };
   }
 
   String get description {
     return switch (this) {
       WorkflowPrimitive.stringInput =>
-        'Gibt einen festen Text als Ausgabe weiter.',
+        LocaleKeys.task_builder_primitives_string_input_description.tr(),
       WorkflowPrimitive.script =>
-        'Führt Python-Code mit der vorherigen Ausgabe als input aus.',
-      WorkflowPrimitive.prompt => 'Formt Eingaben in einen Modellauftrag.',
+        LocaleKeys.task_builder_primitives_script_description.tr(),
+      WorkflowPrimitive.prompt =>
+        LocaleKeys.task_builder_primitives_prompt_description.tr(),
       WorkflowPrimitive.conditional =>
-        'Verzweigt den Ablauf anhand von Regeln.',
+        LocaleKeys.task_builder_primitives_conditional_description.tr(),
       WorkflowPrimitive.iterativeRefinement =>
-        'Verbessert ein Ergebnis über mehrere Runden.',
+        LocaleKeys.task_builder_primitives_iterative_refinement_description
+            .tr(),
       WorkflowPrimitive.writeFile =>
-        'Schreibt die vorherige Ausgabe als Datei.',
-      WorkflowPrimitive.readFile => 'Liest eine Datei als Text.',
+        LocaleKeys.task_builder_primitives_write_file_description.tr(),
+      WorkflowPrimitive.readFile =>
+        LocaleKeys.task_builder_primitives_read_file_description.tr(),
       WorkflowPrimitive.readEmail =>
-        'Liest Absender, Betreff, Nachricht und Ankunftszeit aus einem E-Mail-Trigger.',
+        LocaleKeys.task_builder_primitives_read_email_description.tr(),
       WorkflowPrimitive.readChannelEvent =>
-        'Liest ein eingehendes E-Mail-, WhatsApp- oder SMS-Event.',
+        LocaleKeys.task_builder_primitives_read_channel_event_description.tr(),
       WorkflowPrimitive.readWebhook =>
-        'Liest Inhalt, Methode, Query und Kopfzeilen eines Webhook-Aufrufs, der die Aufgabe gestartet hat.',
+        LocaleKeys.task_builder_primitives_read_webhook_description.tr(),
       WorkflowPrimitive.sendChannelMessage =>
-        'Sendet eine Nachricht über einen verbundenen Kanal.',
+        LocaleKeys.task_builder_primitives_send_channel_message_description
+            .tr(),
       WorkflowPrimitive.notificationSend =>
-        'Sendet einen Text als Push-Benachrichtigung an alle Team-Mitglieder.',
+        LocaleKeys.task_builder_primitives_notification_send_description.tr(),
       WorkflowPrimitive.toolCall =>
-        'Bindet externe Aktionen oder Datenquellen ein.',
-      WorkflowPrimitive.humanApproval => 'Wartet auf menschliche Freigabe.',
+        LocaleKeys.task_builder_primitives_tool_call_description.tr(),
+      WorkflowPrimitive.humanApproval =>
+        LocaleKeys.task_builder_primitives_human_approval_description.tr(),
       WorkflowPrimitive.dialogInput =>
-        'Pausiert die Aufgabe, bis ein Formular ausgefüllt wurde.',
+        LocaleKeys.task_builder_primitives_dialog_input_description.tr(),
       WorkflowPrimitive.mediaInput =>
-        'Pausiert die Aufgabe, bis ein Bild aufgenommen oder ausgewählt wurde.',
+        LocaleKeys.task_builder_primitives_media_input_description.tr(),
       WorkflowPrimitive.modelInference =>
-        'Bereitet ein Bild nach Modellvertrag vor und führt ein Modell aus.',
-      WorkflowPrimitive.textToSpeech => 'Wandelt Text in eine Audiodatei um.',
-      WorkflowPrimitive.speechToText => 'Wandelt eine Audiodatei in Text um.',
+        LocaleKeys.task_builder_primitives_model_inference_description.tr(),
+      WorkflowPrimitive.textToSpeech =>
+        LocaleKeys.task_builder_primitives_text_to_speech_description.tr(),
+      WorkflowPrimitive.speechToText =>
+        LocaleKeys.task_builder_primitives_speech_to_text_description.tr(),
       WorkflowPrimitive.forEach =>
-        'Führt einen Unterplan für jedes Element eines JSON-Arrays aus.',
+        LocaleKeys.task_builder_primitives_for_each_description.tr(),
       WorkflowPrimitive.documentLookup =>
-        'Findet einen Datensatz über sichtbare Felder und Bedingungen.',
+        LocaleKeys.task_builder_primitives_document_lookup_description.tr(),
       WorkflowPrimitive.saveDocument =>
-        'Legt einen Datensatz an oder aktualisiert seine Felder.',
+        LocaleKeys.task_builder_primitives_save_document_description.tr(),
       WorkflowPrimitive.tableFromCollection =>
-        'Liest eine Datensammlung vollständig ein und gibt sie als Tabellen-Wert weiter.',
+        LocaleKeys.task_builder_primitives_table_from_collection_description
+            .tr(),
       WorkflowPrimitive.validation =>
-        'Prüft Ergebnis, Schema oder Qualitätskriterien.',
+        LocaleKeys.task_builder_primitives_validation_description.tr(),
       WorkflowPrimitive.httpRequest =>
-        'Ruft die API eines externen Systems auf und gibt die Antwort weiter.',
-      WorkflowPrimitive.plugin => '',
+        LocaleKeys.task_builder_primitives_http_request_description.tr(),
+      WorkflowPrimitive.plugin =>
+        LocaleKeys.task_builder_primitives_plugin_description.tr(),
     };
   }
 }

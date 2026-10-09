@@ -24,6 +24,7 @@ class FirebaseFunctionsAssistantDatasource implements AssistantDatasource {
   Future<AssistantGeneratedResponse> ask({
     required List<AssistantMessage> history,
     required String question,
+    String? languageCode,
   }) async {
     final callable = _functions.httpsCallable(
       functionName,
@@ -31,7 +32,11 @@ class FirebaseFunctionsAssistantDatasource implements AssistantDatasource {
     );
     final response = await callable
         .call<Map<dynamic, dynamic>>(
-          assistantRequestBody(history: history, question: question),
+          assistantRequestBody(
+            history: history,
+            question: question,
+            languageCode: languageCode,
+          ),
         )
         .timeout(timeout);
     return AssistantGeneratedResponse(

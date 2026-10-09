@@ -1,3 +1,5 @@
+import 'package:syscat2/features/task_builder/domain/services/node_text_defaults.dart';
+import 'package:syscat2/features/task_builder/presentation/localization/localized_node_text_defaults.dart';
 import '../../features/employees/domain/repositories/employee_repository.dart';
 import '../../features/employees/domain/usecases/employee_use_cases.dart';
 import '../../features/employees/domain/usecases/watch_employees.dart';
@@ -540,10 +542,14 @@ Future<void> configureStandaloneDependencies(
       () =>
           TaskHomepageCubit(locator<TaskRepository>(), locator<ExecuteTask>()),
     )
+    ..registerLazySingleton<NodeTextDefaults>(
+      () => const LocalizedNodeTextDefaults(),
+    )
     ..registerFactory(
       () => TaskBuilderCubit(
         repository: locator<TaskRepository>(),
         saveNotices: locator<TaskSaveNoticeBus>().notices,
+        nodeTextDefaults: locator<NodeTextDefaults>(),
       ),
     )
     ..registerFactory(

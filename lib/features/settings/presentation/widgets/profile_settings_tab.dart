@@ -5,6 +5,7 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import '../../../user/domain/entities/user_profile.dart';
 import '../cubits/settings_cubit.dart';
 import '../cubits/settings_state.dart';
+import 'language_settings_section.dart';
 import 'settings_section.dart';
 import 'password_settings_section.dart';
 
@@ -22,6 +23,8 @@ class ProfileSettingsTab extends StatelessWidget {
           _ProfileSection(state: state, profile: state.profile!),
           const SizedBox(height: AppSpacing.lg),
           const PasswordSettingsSection(),
+          const SizedBox(height: AppSpacing.lg),
+          const LanguageSettingsSection(),
         ],
       ),
     );

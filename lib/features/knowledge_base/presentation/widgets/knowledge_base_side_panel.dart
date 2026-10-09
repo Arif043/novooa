@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
@@ -94,18 +95,19 @@ class KnowledgeBaseSideDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Theme.of(context).colorScheme.surface,
-      child: SafeArea(left: false, child: _content()),
+      child: SafeArea(left: false, child: _content(context)),
     );
   }
 
-  Widget _content() {
+  Widget _content(BuildContext context) {
     return switch (panel) {
       KnowledgeBaseSidePanelKind.assistant => BlocProvider(
         create: (_) => serviceLocator<AssistantCubit>()
           ..setContext(
-            const AssistantContext(
+            AssistantContext(
               area: AssistantArea.knowledgeBase,
               route: '/knowledge-base',
+              languageCode: context.locale.languageCode,
             ),
           ),
         child: AssistantPanel(

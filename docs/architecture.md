@@ -27,6 +27,22 @@ NodeExecutors und Worker hängen an Store-Ports; Firestore und SQLite-
 Adapter sind austauschbare Implementierungen. Details stehen in
 [`local-runtime.md`](./local-runtime.md).
 
+## Lokalisierung
+
+- Paket `easy_localization` (^3.0.8); Sprachen `en` (Standard, Rückfall) und `de`.
+  Ohne gespeicherte Wahl gilt die Gerätesprache, sofern unterstützt; Wechsel unter
+  Einstellungen (`LanguageSettingsSection`), gespeichert von easy_localization.
+- Texte: `assets/translations/{en,de}.json`; typisierte Schlüssel in
+  `lib/core/localization/locale_keys.g.dart` (nach Änderung neu generieren, Befehl
+  in `CLAUDE.md` § 4). `translations_test.dart` erzwingt gleiche Schlüsselmengen.
+- `domain/` bleibt frei von `easy_localization`. Sprachabhängige Standardtexte kommen
+  über Ports (z. B. `NodeTextDefaults`), deren `tr()`-Implementierung in `presentation/` liegt.
+- Stand der Migration: Aufgabenstudio-Rahmen (Header, Baustein-Menü, Canvas-Steuerung,
+  Namensfeld), Baustein-Labels und Standardnamen, Einstellungen → Sprache. Übrige
+  Features zeigen noch deutsche Texte und folgen feature-weise.
+- KI-Agent: Der Client sendet `locale`; das Backend hängt die Antwortsprache an den Prompt
+  (siehe [`features/ki-agent.md`](./features/ki-agent.md)).
+
 ## Datenmodell (Überblick)
 
 | Entität             | Datei                                                                  | Rolle                            |

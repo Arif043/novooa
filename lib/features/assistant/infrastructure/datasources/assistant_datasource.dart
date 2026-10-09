@@ -9,6 +9,7 @@ abstract interface class AssistantDatasource {
   Future<AssistantGeneratedResponse> ask({
     required List<AssistantMessage> history,
     required String question,
+    String? languageCode,
   });
 }
 
@@ -20,6 +21,7 @@ abstract interface class AssistantDatasource {
 Map<String, Object?> assistantRequestBody({
   required List<AssistantMessage> history,
   required String question,
+  String? languageCode,
 }) {
   final priorMessages = history.length > 1
       ? history.sublist(0, history.length - 1)
@@ -27,6 +29,7 @@ Map<String, Object?> assistantRequestBody({
   return {
     'question': question,
     'history': priorMessages.take(8).map(_messageMap).toList(growable: false),
+    'locale': ?languageCode,
   };
 }
 

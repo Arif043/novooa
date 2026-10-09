@@ -1,3 +1,4 @@
+import {assistantLocaleFrom} from "../../../assistant/domain/entities/assistant-locale.js";
 import {HttpsError, isSignedIn, onCall} from "firebase-functions/v2/https";
 import {AssistantMessage} from "../../../assistant/domain/entities/assistant-message.js";
 import {AssistantRequest} from "../../../assistant/domain/entities/assistant-request.js";
@@ -49,7 +50,7 @@ function inputFrom(data: unknown): {
   }
   const history = historyFrom(input.history);
   return {
-    request: new AssistantRequest(question, history),
+    request: new AssistantRequest(question, history, assistantLocaleFrom(input.locale)),
     historyLength: history.length,
   };
 }

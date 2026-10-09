@@ -27,10 +27,16 @@ Genkit darunter.
 
 ### Produkt-Sprache (UI)
 
-- Die App ist **deutschsprachig**. UI-Strings, Toasts, Tooltips, leere Zustände
-  und Validierungsmeldungen sind auf Deutsch.
-- Domänenbegriffe:
-  - **Aufgabe** = ein Workflow (TaskDefinition) — nicht „Task" im UI.
+- Die App ist **mehrsprachig** (`easy_localization`): **Englisch ist Standard
+  und Rückfall, Deutsch ist ergänzt.** Beim ersten Start gilt die Gerätesprache,
+  sofern unterstützt; Nutzer:innen wechseln sie unter Einstellungen. UI-Strings,
+  Toasts, Tooltips, leere Zustände und Validierungsmeldungen stehen in
+  `assets/translations/{en,de}.json` und werden über `LocaleKeys` (generiert)
+  genutzt. Die Domänenbegriffe unten sind die **deutschen** Begriffe; die
+  englischen stehen in der Tabelle.
+- Domänenbegriffe (de → en: Aufgabe = Task, Baustein = Block,
+  Arbeitsplan = Workplan, Zeitplan = Schedule, Aktivitäten = Activity):
+  - **Aufgabe** = ein Workflow (TaskDefinition) — im deutschen UI nicht „Task".
   - **Baustein** = ein WorkflowPrimitive.
   - **Arbeitsplan** = gespeicherte / veröffentlichte Aufgaben.
   - **Zeitplan** = zeit- oder event-gesteuerte Auslöser.
@@ -114,7 +120,14 @@ npm run deploy         # firebase deploy --only functions
 - `package:flutter_lints/flutter.yaml` ist aktiv.
 - Entitäten: `const` Konstruktoren, `copyWith`, Immutability.
 - States: `sealed class` mit exhaustivem `switch` in der UI.
-- UI-Strings inline auf Deutsch. Keine `.arb`/Intl-Dateien, solange mono-sprach (de).
+- UI-Strings nie inline: neuer Text → Schlüssel in `assets/translations/en.json`
+  **und** `de.json`, dann `dart run easy_localization:generate -S assets/translations -O lib/core/localization -o locale_keys.g.dart -f keys`
+  und `LocaleKeys.…tr()` verwenden. `domain/` kennt kein `easy_localization`:
+  dort Enums/Schlüssel liefern, übersetzt wird in `presentation/`.
+- Standardnamen neuer Bausteine (Ausgabenamen, Titel) kommen über den Port
+  `NodeTextDefaults`, werden beim Anlegen gespeichert und sind ASCII.
+- Tests laufen mit deutschen Texten (`test/flutter_test_config.dart`); andere
+  Sprache per `loadTestTranslations(Locale('en'))`.
 - Dateiname = primärer Klassenname in `lower_snake_case.dart`.
 - Kommentare nur für **Warum**, nicht **Was**.
 
@@ -173,7 +186,7 @@ Wie du eine neue Feature-Doc anlegst → [`docs/README.md`](./docs/README.md).
 - **Respektiere die Schichten.** Domain kennt kein Flutter, Presentation
   kennt keine Genkit-SDKs, Infrastructure implementiert nur Domain-Interfaces.
 - **Immutability ernst nehmen.** Keine „Quick-Fix"-Setter auf Entitäten.
-- **Strings sind sichtbar.** Alle neuen sichtbaren Strings auf Deutsch.
+- **Strings sind sichtbar.** Alle neuen sichtbaren Strings in `en.json` und `de.json` pflegen.
 - **Tests mitdenken.** Mindestens ein Cubit-Test pro neuer Mutation.
 - **Keine Geheimnisse im Repo.** Auch nicht in `firebase_options.dart` — wird
   zur Laufzeit von FlutterFire generiert.

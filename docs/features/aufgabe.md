@@ -97,6 +97,16 @@ Plugin nicht (mehr) angemeldet ist, wird beim Laden zur Texteingabe; auf der Lei
 ohne Modul der Hinweis „Dieser Baustein ist nicht verfügbar“. Ein Beispiel liefert
 `test/features/task_builder/plugin_node_test.dart`.
 
+## Standardnamen neuer Bausteine
+
+Ausgabename (`outputName`), Titel und Beschreibung eines neuen Bausteins kommen aus
+`NodeTextDefaults` (Port in `domain/services`, Umsetzung `LocalizedNodeTextDefaults`) und
+folgen der App-Sprache **zum Zeitpunkt des Anlegens**. Sie werden im Task gespeichert; ein
+späterer Sprachwechsel benennt nichts um, `{{…}}`-Referenzen bleiben stabil. Ausgabenamen sind
+ASCII (`pruefung`, nicht `prüfung`), weil `_normalizedOutputName` Nicht-`\w`-Zeichen entfernt.
+Beispiele: `input1` (en) / `eingabe1` (de), `prompt2` / `anweisung2`, `sendemail3` / `sendenemail3`.
+Die festen Ausgabefelder der Bausteine (z. B. `recipient`, `sender`) sind Datenvertrag und bleiben englisch.
+
 ## UI-Prinzipien
 
 - Das Aufgabenstudio übernimmt die Inter-Typografie und die abgestuften

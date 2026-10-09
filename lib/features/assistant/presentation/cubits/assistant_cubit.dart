@@ -18,7 +18,7 @@ class AssistantCubit extends Cubit<AssistantState> {
   final MockAssistantReplies mockReplies;
 
   void setContext(AssistantContext context) {
-    if (state.context.route == context.route) return;
+    if (state.context == context) return;
     emit(state.copyWith(context: context, clearError: true));
   }
 

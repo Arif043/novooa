@@ -15,6 +15,7 @@ export type AssistantRoutesOptions = {
 const AssistantText = Type.String({minLength: 1, maxLength: 12000, pattern: "\\S"});
 const AssistantQuestion = Type.Object({
   question: AssistantText,
+  locale: Type.Optional(Type.Union([Type.Literal("en"), Type.Literal("de")])),
   history: Type.Array(Type.Object({
     role: Type.Union([Type.Literal("user"), Type.Literal("agent")]), text: AssistantText,
   }), {maxItems: 8}),
@@ -51,7 +52,7 @@ async function answer(
   const history = body.history.map((message) => new AssistantMessage(message.role, message.text));
   const assistant = await assistantFor();
   return assistant.ask(
-    new AssistantRequest(body.question, history),
+    new AssistantRequest(body.question, history, body.locale),
     new AssistantExecutionContext(new AssistantActor(userId)),
   );
 }

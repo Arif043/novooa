@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cupertino_sidemenu/cupertino_sidemenu.dart';
@@ -112,6 +113,7 @@ class _RootPageState extends State<RootPage> {
       selectedTab: selectedTab,
       location: widget.location,
       isStandalone: widget.isStandalone,
+      languageCode: context.locale.languageCode,
     );
     final usesTaskBuilderSideRail = widget.location.startsWith(
       '/tasks/builder',
