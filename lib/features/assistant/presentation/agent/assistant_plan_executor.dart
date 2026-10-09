@@ -19,6 +19,7 @@ class AssistantPlanExecutor {
   }) async {
     final undoActions = <AssistantPlanUndo>[];
     try {
+      await cursor?.begin();
       for (var index = 0; index < actions.length; index++) {
         onStepChanged?.call(index);
         final undoAction = await _run(actions[index], cursor);

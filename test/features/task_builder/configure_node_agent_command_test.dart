@@ -67,6 +67,9 @@ class _RecordingCursor implements AgentCursorPerformer {
   final events = <String>[];
 
   @override
+  Future<void> begin() async => events.add('begin');
+
+  @override
   Future<void> moveTo(AgentCursorTarget target) async =>
       events.add('move ${target.key}');
 

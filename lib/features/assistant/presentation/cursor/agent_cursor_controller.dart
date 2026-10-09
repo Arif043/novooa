@@ -13,6 +13,7 @@ class AgentCursorController extends ChangeNotifier
     this.travelDuration = const Duration(milliseconds: 520),
     this.maxTypingDuration = const Duration(milliseconds: 1500),
     this.appearTimeout = const Duration(milliseconds: 1500),
+    this.sessionTransition = const Duration(milliseconds: 420),
   }) : registry = registry ?? AgentCursorRegistry();
 
   final AgentCursorRegistry registry;
@@ -22,26 +23,40 @@ class AgentCursorController extends ChangeNotifier
   /// So lange wartet der Cursor auf ein noch nicht gebautes Ziel.
   final Duration appearTimeout;
 
+  /// Zeit, die die Oberfläche nach `begin` zum Umbau (Panel zu) bekommt.
+  final Duration sessionTransition;
+
   /// Wird vom Overlay gesetzt, wenn Nutzer:innen Animationen reduzieren.
   bool reduceMotion = false;
 
   Offset? _globalPosition;
+  bool _isActive = false;
   int _clickCount = 0;
   bool _isDisposed = false;
 
   Offset? get globalPosition => _globalPosition;
   int get clickCount => _clickCount;
+
+  /// Wahr, solange ein Plan mit Cursor läuft.
+  bool get isActive => _isActive;
   bool get isVisible => _globalPosition != null;
   Duration get _flight => reduceMotion ? Duration.zero : travelDuration;
+
+  @override
+  Future<void> begin() async {
+    _isActive = true;
+    notifyListeners();
+    await Future<void>.delayed(
+      reduceMotion ? Duration.zero : sessionTransition,
+    );
+  }
 
   @override
   Future<void> moveTo(AgentCursorTarget target) async {
     final rect = await _settledRect(target);
     final context = registry.contextOf(target);
     if (rect == null || context == null || _isDisposed) return;
-    if (context.mounted) {
-      await Scrollable.ensureVisible(context, duration: _flight);
-    }
+    if (context.mounted) await _revealVertically(context);
     _globalPosition = registry.globalRectOf(target)?.center ?? rect.center;
     notifyListeners();
     await Future<void>.delayed(_flight);
@@ -55,6 +70,16 @@ class AgentCursorController extends ChangeNotifier
     notifyListeners();
     await Future<void>.delayed(const Duration(milliseconds: 180));
     registry.activate(target);
+  }
+
+  /// Scrollt nur den nächsten vertikalen Scroller. `Scrollable.ensureVisible`
+  /// würde alle Vorfahren bewegen, auch Canvas und Seitenmenü.
+  Future<void> _revealVertically(BuildContext context) async {
+    final scrollable = Scrollable.maybeOf(context);
+    final box = context.findRenderObject();
+    if (scrollable == null || box == null) return;
+    if (axisDirectionToAxis(scrollable.axisDirection) != Axis.vertical) return;
+    await scrollable.position.ensureVisible(box, duration: _flight);
   }
 
   /// Wartet, bis das Ziel gebaut ist und sich nicht mehr bewegt (z. B. weil
@@ -92,8 +117,9 @@ class AgentCursorController extends ChangeNotifier
 
   @override
   void hide() {
-    if (_isDisposed || _globalPosition == null) return;
+    if (_isDisposed || (!_isActive && _globalPosition == null)) return;
     _globalPosition = null;
+    _isActive = false;
     notifyListeners();
   }
 

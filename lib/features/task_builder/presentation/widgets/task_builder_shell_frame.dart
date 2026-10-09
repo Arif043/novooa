@@ -29,10 +29,31 @@ class _TaskBuilderShellFrameState extends State<TaskBuilderShellFrame> {
   final _controller = CupertinoSidemenuController();
   final _cursor = AgentCursorController();
   TaskBuilderSidePanelKind? _sidePanel;
+  bool _agentWasActive = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _cursor.addListener(_syncPanelWithAgentRun);
+  }
+
+  /// Klappt das Panel während eines Agent-Laufs ein, ohne es zu zerstören:
+  /// So bleiben Verlauf und „Rückgängig“ erhalten.
+  void _syncPanelWithAgentRun() {
+    if (_cursor.isActive == _agentWasActive) return;
+    _agentWasActive = _cursor.isActive;
+    if (_sidePanel == null) return;
+    if (_agentWasActive) {
+      _controller.closeMenu();
+    } else {
+      _controller.openRightMenu();
+    }
+  }
 
   @override
   void dispose() {
     _controller.dispose();
+    _cursor.removeListener(_syncPanelWithAgentRun);
     _cursor.dispose();
     super.dispose();
   }
