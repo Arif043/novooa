@@ -74,6 +74,20 @@ void main() {
     },
   );
 
+  test('wartet auf den KI-Agenten länger als die Runtime auf das Relay '
+      '(125 s)', () async {
+    final client = _FakeApiClient();
+    final datasource = HttpRuntimeTaskBuilderAssistantDatasource(client);
+
+    await datasource.ask(history: const [], question: 'Hallo');
+
+    expect(client.lastTimeout, assistantRequestTimeout);
+    expect(
+      client.lastTimeout! > const Duration(seconds: 125),
+      isTrue,
+    );
+  });
+
   test('weist eine Antwort ohne answer-Feld zurück', () async {
     final client = _FakeApiClient(response: const {'unerwartet': true});
     final datasource = HttpRuntimeTaskBuilderAssistantDatasource(client);
@@ -97,6 +111,17 @@ class _FakeApiClient implements WorkspaceApiClient {
   final Map<String, Object?> response;
   String? lastPath;
   Map<String, Object?>? lastBody;
+  Duration? lastTimeout;
+
+  @override
+  Future<Map<String, Object?>> postWithTimeout(
+    String path,
+    Map<String, Object?> body, {
+    required Duration timeout,
+  }) {
+    lastTimeout = timeout;
+    return post(path, body);
+  }
 
   @override
   Future<Map<String, Object?>> post(

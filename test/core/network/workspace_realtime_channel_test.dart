@@ -209,6 +209,13 @@ class _FakeApiClient implements WorkspaceApiClient {
   }
 
   @override
+  Future<Map<String, Object?>> postWithTimeout(
+    String path,
+    Map<String, Object?> body, {
+    required Duration timeout,
+  }) => post(path, body);
+
+  @override
   Future<Map<String, Object?>> put(
     String path,
     Map<String, Object?> body,

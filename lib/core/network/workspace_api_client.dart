@@ -9,6 +9,15 @@ abstract class WorkspaceApiClient {
   Future<Map<String, Object?>> delete(String path);
   Future<Map<String, Object?>> get(String path);
   Future<Map<String, Object?>> post(String path, Map<String, Object?> body);
+
+  /// POST mit eigenem Zeitlimit für Endpunkte, die bekanntermaßen länger als
+  /// das Standardlimit brauchen (z. B. der KI-Agent). Clients ohne eigene
+  /// Zeitsteuerung fallen auf [post] zurück.
+  Future<Map<String, Object?>> postWithTimeout(
+    String path,
+    Map<String, Object?> body, {
+    required Duration timeout,
+  }) => post(path, body);
   Future<Map<String, Object?>> put(String path, Map<String, Object?> body);
   Future<Map<String, Object?>> putStream(
     String path, {
@@ -66,6 +75,15 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
   }
 
   @override
+  Future<Map<String, Object?>> postWithTimeout(
+    String path,
+    Map<String, Object?> body, {
+    required Duration timeout,
+  }) {
+    return _request('POST', path, body: body, timeout: timeout);
+  }
+
+  @override
   Future<Map<String, Object?>> put(String path, Map<String, Object?> body) {
     return _request('PUT', path, body: body);
   }
@@ -104,10 +122,12 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
     String method,
     String path, {
     Map<String, Object?>? body,
+    Duration? timeout,
   }) async {
+    final effectiveTimeout = timeout ?? this.timeout;
     final secureUrl = _secureUrlFor(path);
     if (secureUrl != null) {
-      return _secureRequest(method, secureUrl, body);
+      return _secureRequest(method, secureUrl, body, effectiveTimeout);
     }
     try {
       final request = http.Request(method, _baseUri.resolve(path));
@@ -117,7 +137,7 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
         request.body = jsonEncode(body);
       }
       await _applyAuthHeader(request);
-      final response = await _client.send(request).timeout(timeout);
+      final response = await _client.send(request).timeout(effectiveTimeout);
       return _responseFor(response);
     } on TimeoutException {
       rethrow;
@@ -143,6 +163,7 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
     String method,
     String url,
     Map<String, Object?>? body,
+    Duration timeout,
   ) async {
     try {
       final headers = {
@@ -156,6 +177,7 @@ class HttpWorkspaceApiClient implements WorkspaceApiClient {
         url: url,
         headers: headers,
         body: body == null ? null : jsonEncode(body),
+        timeout: timeout,
       );
       return _resultFor(response.statusCode, response.body);
     } on TimeoutException {

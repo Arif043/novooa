@@ -90,6 +90,13 @@ class _FailingClient implements WorkspaceApiClient {
   ) async => throw error;
 
   @override
+  Future<Map<String, Object?>> postWithTimeout(
+    String path,
+    Map<String, Object?> body, {
+    required Duration timeout,
+  }) async => throw error;
+
+  @override
   Future<Map<String, Object?>> put(
     String path,
     Map<String, Object?> body,

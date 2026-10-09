@@ -58,6 +58,7 @@ class SecureWorkspaceTransport {
     required String url,
     required Map<String, String> headers,
     required String? body,
+    Duration? timeout,
   }) async {
     final request = jsonEncode({
       'method': method,
@@ -65,11 +66,12 @@ class SecureWorkspaceTransport {
       'headers': headers,
       'body': body,
     });
+    final exchangeTimeout = timeout ?? this.timeout;
     try {
-      return await _exchange(await _channel(), request);
+      return await _exchange(await _channel(), request, exchangeTimeout);
     } on _UnknownChannel {
       _connecting = null;
-      return _exchange(await _channel(), request);
+      return _exchange(await _channel(), request, exchangeTimeout);
     }
   }
 
@@ -106,7 +108,11 @@ class SecureWorkspaceTransport {
     return _Channel(data['channelId'] as String, keys);
   }
 
-  Future<SecureResponse> _exchange(_Channel channel, String request) async {
+  Future<SecureResponse> _exchange(
+    _Channel channel,
+    String request,
+    Duration timeout,
+  ) async {
     final counter = ++channel.counter;
     final payload = await seal(
       channel.keys.clientToServer,
@@ -117,7 +123,7 @@ class SecureWorkspaceTransport {
       'channelId': channel.id,
       'counter': counter,
       'payload': payload,
-    });
+    }, timeout: timeout);
     if (response.statusCode == 404) throw _UnknownChannel();
     final data = _json(response, 'Austausch');
     final plain = await open(
@@ -132,14 +138,19 @@ class SecureWorkspaceTransport {
     );
   }
 
-  Future<http.Response> _post(String path, Map<String, Object?> body) async {
+  /// Der Handshake bleibt beim Standardlimit; nur der Austausch darf länger.
+  Future<http.Response> _post(
+    String path,
+    Map<String, Object?> body, {
+    Duration? timeout,
+  }) async {
     final response = await _client
         .post(
           _baseUri.resolve(path.substring(1)),
           headers: {'content-type': 'application/json'},
           body: jsonEncode(body),
         )
-        .timeout(timeout);
+        .timeout(timeout ?? this.timeout);
     return response;
   }
 

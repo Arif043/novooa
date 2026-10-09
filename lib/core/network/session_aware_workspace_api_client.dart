@@ -26,6 +26,13 @@ class SessionAwareWorkspaceApiClient implements WorkspaceApiClient {
       _observe(() => _inner.post(path, body));
 
   @override
+  Future<Map<String, Object?>> postWithTimeout(
+    String path,
+    Map<String, Object?> body, {
+    required Duration timeout,
+  }) => _observe(() => _inner.postWithTimeout(path, body, timeout: timeout));
+
+  @override
   Future<Map<String, Object?>> put(String path, Map<String, Object?> body) =>
       _observe(() => _inner.put(path, body));
 
