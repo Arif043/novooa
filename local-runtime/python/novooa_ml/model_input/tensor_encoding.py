@@ -6,7 +6,7 @@ def tensor_for_contract(tensor, definition, numpy):
     expected_shape = definition["shape"]
     if len(expected_shape) == tensor.ndim + 1:
         tensor = numpy.expand_dims(tensor, axis=0)
-    validate_shape(tensor.shape, expected_shape)
+    validate_shape(definition["name"], tensor.shape, expected_shape)
     tensor = numpy.ascontiguousarray(tensor.astype(numpy_data_type(definition["dataType"], numpy)))
     return {
         "name": definition["name"],
@@ -16,15 +16,16 @@ def tensor_for_contract(tensor, definition, numpy):
     }
 
 
-def validate_shape(shape, definition):
-    if len(shape) != len(definition):
-        raise ValueError("Die Bildtransformation erzeugte eine unerwartete Tensor-Form.")
-    differs = any(
-        expected != "dynamic" and expected != actual
+def validate_shape(name, shape, definition):
+    matches = len(shape) == len(definition) and all(
+        expected == "dynamic" or expected == actual
         for actual, expected in zip(shape, definition, strict=True)
     )
-    if differs:
-        raise ValueError("Die Bildtransformation erzeugte eine unerwartete Tensor-Form.")
+    if not matches:
+        raise ValueError(
+            f"Eingang {name}: Die Transformationen erzeugten die Form {list(shape)}, "
+            f"der Vertrag erwartet {list(definition)}."
+        )
 
 
 def numpy_data_type(name, numpy):
