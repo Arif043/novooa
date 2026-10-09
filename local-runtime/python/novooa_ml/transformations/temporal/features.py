@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from novooa_ml.transformations.kinds import DATETIME, TENSOR
+from novooa_ml.transformations.schema import Boolean, Choice, ListOf, Text
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 LINEAR = {
@@ -30,6 +31,11 @@ class DatetimeFeaturesStrategy(TransformationStrategy):
 
     accepts = (DATETIME,)
     produces = TENSOR
+    parameters = {
+        "features": ListOf(Choice("year", "month", "day", "weekday", "hour", "minute", "second", "dayOfYear", "epochSeconds")),
+        "cyclic": Boolean(optional=True, default=False),
+        "timeZone": Text(optional=True),
+    }
 
     @property
     def transformation_type(self):

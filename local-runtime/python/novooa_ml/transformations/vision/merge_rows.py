@@ -1,4 +1,5 @@
 from novooa_ml.transformations.kinds import REGIONS
+from novooa_ml.transformations.schema import Number
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 
@@ -7,6 +8,7 @@ class MergeRowsStrategy(TransformationStrategy):
 
     accepts = (REGIONS,)
     produces = REGIONS
+    parameters = {"minimumVerticalOverlap": Number(minimum=0, maximum=1, optional=True, default=0.5)}
 
     @property
     def transformation_type(self):

@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import IMAGE
 from novooa_ml.transformations.parameters import positive_integer
+from novooa_ml.transformations.schema import Integer
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import require_image
 
@@ -9,6 +10,7 @@ class ImageCenterCropStrategy(TransformationStrategy):
 
     accepts = (IMAGE,)
     produces = IMAGE
+    parameters = {"width": Integer(minimum=1), "height": Integer(minimum=1)}
 
     @property
     def transformation_type(self):

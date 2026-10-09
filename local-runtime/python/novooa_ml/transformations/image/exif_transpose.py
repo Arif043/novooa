@@ -8,6 +8,7 @@ class ImageExifTransposeStrategy(TransformationStrategy):
 
     accepts = (IMAGE,)
     produces = IMAGE
+    parameters = {}
 
     @property
     def transformation_type(self):

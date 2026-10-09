@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import IMAGE
 from novooa_ml.transformations.parameters import positive_integer
+from novooa_ml.transformations.schema import Integer, ListOf, Number
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import require_image
 
@@ -9,6 +10,7 @@ class ImagePerspectiveCropStrategy(TransformationStrategy):
 
     accepts = (IMAGE,)
     produces = IMAGE
+    parameters = {"points": ListOf(Number(), length=8), "width": Integer(minimum=1), "height": Integer(minimum=1)}
 
     @property
     def transformation_type(self):

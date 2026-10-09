@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import TENSOR
 from novooa_ml.transformations.parameters import is_integer
+from novooa_ml.transformations.schema import Integer, ListOf
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import as_tensor
 
@@ -9,6 +10,7 @@ class TensorTransposeStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = TENSOR
+    parameters = {"axes": ListOf(Integer(minimum=0))}
 
     @property
     def transformation_type(self):

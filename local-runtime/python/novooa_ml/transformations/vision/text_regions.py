@@ -1,4 +1,5 @@
 from novooa_ml.transformations.kinds import REGIONS, TENSOR
+from novooa_ml.transformations.schema import Integer, Number
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 from .mask_regions import regions_from_mask
@@ -9,6 +10,14 @@ class TextRegionsStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = REGIONS
+    parameters = {
+        "threshold": Number(minimum=0, maximum=1, optional=True, default=0.3),
+        "minimumPixels": Integer(minimum=0, optional=True, default=1),
+        "minimumScore": Number(minimum=0, maximum=1, optional=True, default=0),
+        "dilationWidth": Integer(minimum=1, optional=True, default=1),
+        "dilationHeight": Integer(minimum=1, optional=True, default=1),
+        "padding": Integer(minimum=0, optional=True, default=0),
+    }
 
     @property
     def transformation_type(self):

@@ -1,4 +1,5 @@
 from novooa_ml.transformations.kinds import TENSOR
+from novooa_ml.transformations.schema import Integer, ListOf
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import as_tensor
 
@@ -8,6 +9,7 @@ class TensorChannelOrderStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = TENSOR
+    parameters = {"order": ListOf(Integer(minimum=0))}
 
     @property
     def transformation_type(self):

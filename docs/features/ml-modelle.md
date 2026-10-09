@@ -475,11 +475,11 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `image.resizeHeightPad` | `height`, optional `width` oder `widthMultiple`, optional `alignment`, `background`, `colorSpace` | Skaliert auf die Zielhöhe. Mit `width` wird bis zur festen Breite aufgefüllt bzw. abgeschnitten; ohne `width` bleibt die Breite dynamisch und kann auf ein Vielfaches aufgefüllt werden. |
 | `image.padToMultiple` | `multiple`, optional `background`, `colorSpace` | Füllt rechts und unten bis zu einem Vielfachen auf; Bildkoordinaten bleiben erhalten. |
 | `image.crop` | `left`, `top`, `width`, `height` | Schneidet einen achsenparallelen Bildbereich aus. |
-| `image.perspectiveCrop` | `points: [x1, y1, ... x4, y4]`, `width`, `height` | Richtet ein Viereck perspektivisch zu einem Bild aus. |
+| `image.perspectiveCrop` | `points` (`[x1, y1, … x4, y4]`), `width`, `height` | Richtet ein Viereck perspektivisch zu einem Bild aus. |
 | `tensor.channelOrder` | `order`, etwa `[2, 1, 0]` | Ordnet Farbkanäle über eine vollständige Indexpermutation um. |
 | `tensor.layout` | `order`: `channelsFirst`, `channelsLast` | Ordnet HWC und CHW um. |
 | `tensor.normalize` | `mean`, `std` | Normalisiert jeden Farbkanal. |
-| `tensor.softmax` | optional `axis: -1` | Normalisiert Werte entlang der letzten Tensorachse. |
+| `tensor.softmax` | optional `axis` (nur `-1`) | Normalisiert Werte entlang der letzten Tensorachse. |
 | `tensor.sigmoid` | keine | Wandelt Logits elementweise in Wahrscheinlichkeiten. |
 | `tensor.threshold` | optional `value` (Standard `0.5`) | Wandelt numerische Werte in eine boolesche Maske. |
 | `mask.connectedComponents` | optional `minimumPixels` | Liefert Regionen als `{bounds, pixelCount}`; `bounds` enthält `left`, `top`, `width`, `height`. |
@@ -488,7 +488,7 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `geometry.scaleBounds` | `scaleX`, `scaleY`, optional `offsetX`, `offsetY` | Rechnet eine Regionsliste vom Maskenraster in Bildkoordinaten zurück. |
 | `tensor.nonMaximumSuppression` | `box`-Spalten, `scoreIndex`, optional `scoreThreshold`, `iouThreshold` | Unterdrückt überlappende Erkennungen und liefert `{index, score, box}`. |
 | `sequence.ctcGreedyDecode` | `labels`, `blankIndex`, optional `applySoftmax`, `collapseRepeated`, `allowedCharacters` | Dekodiert CTC-Logits in `{text, confidence}`; `allowedCharacters` begrenzt die Auswahl auf ein fachlich zulässiges Alphabet. |
-| `tensor.topK` | `k` (Zahl oder Setting-Bindung wie `"$anzahl"`), optional `result` | Liefert die `k` größten Werte als Paare aus Index und Wert. |
+| `tensor.topK` | `k` (Zahl oder Setting-Bindung wie `"$anzahl"`), optional `result`; veraltet `parameter` (wird beim Lesen zu einem Setting) | Liefert die `k` größten Werte als Paare aus Index und Wert. |
 | `datetime.features` | `features` (Liste aus `year`, `month`, `day`, `weekday`, `hour`, `minute`, `second`, `dayOfYear`, `epochSeconds`), optional `cyclic`, `timeZone` | Eingang (Datum/Uhrzeit). Zerlegt einen Zeitpunkt in Zahlenmerkmale; `weekday` zählt ab Montag = 0. Mit `cyclic: true` werden Monat, Wochentag, Stunde, Minute und Jahrestag als sin/cos-Paar kodiert, sodass z. B. 23 Uhr und 0 Uhr nah beieinander liegen. `timeZone` (IANA, z. B. `Europe/Berlin`) wählt die Zählzeitzone, Standard UTC. |
 | `image.exifTranspose` | keine | Eingang. Dreht Fotos gemäß EXIF-Ausrichtung (z. B. Handyaufnahmen); vor anderen Bildtransformationen einsetzen. |
 | `image.resizeShorterSide` | `size` | Eingang. Skaliert die kürzere Seite auf `size`, das Seitenverhältnis bleibt. |
@@ -511,8 +511,14 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `audio.fitDuration` | `seconds`, optional `keep` | Eingang (Audio). Füllt mit Stille auf oder kürzt auf eine feste Dauer. |
 | `audio.melSpectrogram` | optional `frameLength` (400), `hopLength` (160), `melBins` (80), `minFrequency`, `maxFrequency`, `power` (2), `scale` (`power`, `log`, `log10`, `db`), `dynamicRange`, `melScale` (`slaney`, `htk`), `filterNormalization` (`slaney`, `none`), `center` (`true`) | Eingang (Audio). Liefert ein Mel-Spektrogramm `[melBins, Frames]` aus Mono-Audio. `db` ist relativ zum Maximum; `dynamicRange` begrenzt den Abstand zum Maximum in der gewählten Einheit. Voreinstellungen entsprechen librosa. |
 | `json.toTensor` | keine | Eingang (JSON/Boolean). Zahlen und Wahrheitswerte → `float32`-Tensor, Texte → String-Tensor, jeweils auch als gleich lange (verschachtelte) Listen. Gemischte Listen sind ein Fehler. |
+| `text.piperPhonemes` | `language`, `phonemeIdMap` | Eingang (Text). Text → Piper-Phonem-IDs mit Start- und Endsymbol (espeak). |
+| `text.piperPhonemeLength` | `language`, `phonemeIdMap` | Eingang (Text). Anzahl der Piper-Phonem-IDs, für den zweiten Modelleingang. |
+| `text.kokoroTokens` | `language`, `tokenIdMap` | Eingang (Text). Text → Kokoro-Token-IDs, eingerahmt von Füll-Tokens. |
+| `text.kokoroStyle` | `language`, `tokenIdMap`, `voice`, `resource` | Eingang (Text). Stilvektor der Stimme `voice` aus der Modellressource `resource`, passend zur Tokenanzahl. |
+| `tensor.constant` | `values` | Ersetzt den Wert durch einen festen Zahlentensor, z. B. für Hilfseingänge mit Inferenzparametern. |
+| `audio.wav` | `sampleRate`, optional `fileName` (Standard `sprach-ausgabe.wav`) | Ausgang. Kodiert Samples als WAV-Datei (16 Bit, mono); Werte außerhalb von -1…1 werden begrenzt. |
 | `text.toTensor` | keine | Eingang (Text). Text → String-Tensor `[1]`, z. B. für Pipelines mit eingebauter Textverarbeitung (TF-IDF). |
-| `json.features` | `features: [{field, kind?, mean?, std?, default?, categories?, unknown?}]` | Eingang (JSON). Datensatz → Merkmalsvektor in fester Reihenfolge; `field` als Punktpfad, `kind` `number` (standardisiert mit `mean`/`std`), `boolean` oder `category` (One-Hot, unbekannte Werte `zero` oder `error`). Eine Liste von Datensätzen ergibt eine Zeile je Datensatz. |
+| `json.features` | `features` (Liste aus `{field, kind?, mean?, std?, default?, categories?, unknown?}`) | Eingang (JSON). Datensatz → Merkmalsvektor in fester Reihenfolge; `field` als Punktpfad, `kind` `number` (standardisiert mit `mean`/`std`), `boolean` oder `category` (One-Hot, unbekannte Werte `zero` oder `error`). Eine Liste von Datensätzen ergibt eine Zeile je Datensatz. |
 | `sequence.segments` | `frameDuration` oder `hopLength` + `sampleRate`, optional `threshold`, `labels`, `backgroundIndex`, `mergeGap`, `minDuration` | Ausgang. Frame-Scores → Zeitabschnitte `{start, end, score}`; Klassenscores (Frames × Klassen) → `{start, end, index, label?, score}` je wahrscheinlichster Klasse. Zeiten in Sekunden, Werte auf 6 Stellen gerundet. |
 | `workflowOutput.mapping.$map` | `from`, `item` | Formt ein Transformations-Ergebnis zu einer Liste. |
 | `workflowOutput.mapping.$lookup` | `values` (Liste oder Referenz wie `"$classes"`), `key` | Liest einen Wert aus einer indizierten Tabelle. |
@@ -541,7 +547,8 @@ der Pipeline:
 novooa_ml/transformations/        Katalog und Kern
   strategy.py  registry.py  context.py  values.py  parameters.py  discovery.py
   kinds.py          Wertarten
-  pipeline_check.py Prüfung der Wertarten-Kette
+  pipeline_check.py Prüfung der Wertarten-Kette (und der Parameter beim Import)
+  parameter_check.py, schema/   Parameterschemas und ihre Prüfung
   image/ audio/ text/ data/ temporal/ tensor/ vision/ sequence/   eine Strategie je Datei
 novooa_ml/model_input/    Grenze zum Modell: Quelle → Pipeline → Tensor (worker, sources, wav_decoder)
 novooa_ml/model_output/   Grenze zum Modell: Modellausgang → Pipeline → Ergebnisse (worker)
@@ -576,18 +583,46 @@ Einsatz.
 
 **Prüfung beim Import und vor jedem Lauf.**
 - Beim Import und Cachen ruft `PythonModelContractValidator` den Endpunkt
-  `POST /v1/contract-validations` mit `{contract}` auf. Die Runtime prüft jede Kette und
-  lehnt unpassende Verträge mit Meldungen wie *„Eingang bild: audio.melSpectrogram erwartet
-  audio, erhält image.“* ab.
-- Dieselbe Prüfung läuft vor jeder Ein- und Ausgangspipeline.
-- `GET /v1/transformation-capabilities` liefert alle Typen und je Typ
-  `{accepts, produces}`.
+  `POST /v1/contract-validations` mit `{contract}` auf. Die Runtime prüft je Ein- und Ausgang:
+  1. **Kette:** Passen die Wertarten zusammen? *„Eingang bild: audio.melSpectrogram erwartet
+     audio, erhält image.“*
+  2. **Parameter** gegen das Schema der Transformation:
+     - fehlend: *„Eingang bild: image.resize: Der Parameter width fehlt.“*
+     - unbekannt, mit Vorschlag bei Tippfehlern: *„… tensor.nonMaximumSuppression: Unbekannter
+       Parameter iouTreshold — gemeint ist vermutlich iouThreshold.“*
+     - falscher Typ oder Bereich, auch verschachtelt: *„… tensor.topK: k erwartet eine ganze Zahl
+       ≥ 1, erhält 0.“*, *„… box.right erwartet …“*
+  3. **Setting-Bindungen** (`"$name"`): Das Steuerelement muss zum Parameter passen. Ein Slider
+     braucht passende Grenzen (bei ganzen Zahlen auch eine ganzzahlige Schrittweite), eine
+     Checkbox passt nur zu Wahrheitswerten, eine Auswahl nur, wenn jede Option gültig ist.
+     *„… tensor.topK: k ist an das Setting anzahl (Checkbox) gebunden, erwartet wird eine ganze
+     Zahl ≥ 1.“* Bindungen an Workflow-Werte (`$iteration.value.bounds.left`) sind erst zur
+     Laufzeit bekannt und werden nicht geprüft.
+- Vor jeder Pipeline prüfen die Worker die Kette. Die Parameter prüfen die Strategien zur
+  Laufzeit weiterhin selbst, ebenso Abhängigkeiten zwischen Parametern (z. B. `min ≤ max`).
+- `GET /v1/transformation-capabilities` liefert alle Typen und je Typ `{accepts, produces}`
+  sowie das Parameterschema (`type`, `optional`, `default`, Grenzen, Optionen, Felder).
+
+**Parameterschemas.** Jede Strategie deklariert neben `accepts`/`produces` ihre Parameter mit
+den Bausteinen aus `transformations/schema/`: `Integer`, `Number`, `Boolean`, `Text`,
+`Choice`, `ListOf`, `Record` (feste Felder, unbekannte sind ein Fehler), `MapOf` und `OneOf`.
+Beispiel:
+
+```python
+parameters = {
+    "width": Integer(minimum=1),
+    "height": Integer(minimum=1),
+    "colorSpace": Choice("rgb", "rgba", "grayscale", optional=True),
+}
+```
 
 **Weitere Regeln.**
 - Neue Strategien werden automatisch gefunden: eine nicht abstrakte Unterklasse von
   `TransformationStrategy` mit `accepts`/`produces` in einem Bereichsordner.
 - `tests/test_transformation_architecture.py` sichert die Regeln „eine Strategie je
-  Datei“ und „Ordner nach Bereich“, die Wertarten und den Typ-Snapshot ab.
+  Datei“ und „Ordner nach Bereich“, die Wertarten, den Typ-Snapshot und die Schemas ab: Jeder
+  Parameter, den eine Strategie liest, muss deklariert sein, und die Transformationstabelle
+  dieser Doku muss jeden Typ mit allen Parametern nennen.
   `tests/test_pipeline_check.py` prüft u. a. die mitgelieferten Systemmodell-Manifeste.
 - Die Cloud-Runtime pflegt ihre Bildtransformationen weiterhin als feste Liste in
   `model-contract-capabilities.ts` und kennt die neueren Typen noch nicht.

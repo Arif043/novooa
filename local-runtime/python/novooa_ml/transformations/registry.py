@@ -14,6 +14,11 @@ class TransformationRegistry:
     def supported_types(self):
         return tuple(self._strategies.keys())
 
+    def parameters_of(self, transformation_type):
+        """Parameterschema eines Typs (Name → Schema); None, wenn der Typ unbekannt ist."""
+        strategy = self._strategies.get(transformation_type)
+        return None if strategy is None else strategy.parameters
+
     def kinds_of(self, transformation_type):
         """(accepts, produces) eines Typs; None, wenn der Typ unbekannt ist."""
         strategy = self._strategies.get(transformation_type)

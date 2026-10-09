@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import IMAGE
 from novooa_ml.transformations.parameters import image_mode
+from novooa_ml.transformations.schema import Choice
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import require_image
 
@@ -9,6 +10,7 @@ class ImageDecodeStrategy(TransformationStrategy):
 
     accepts = (IMAGE,)
     produces = IMAGE
+    parameters = {"colorSpace": Choice("rgb", "rgba", "grayscale")}
 
     @property
     def transformation_type(self):

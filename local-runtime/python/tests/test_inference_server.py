@@ -115,6 +115,13 @@ class ContractValidationEndpointTest(unittest.TestCase):
         image_input = {"name": "bild", "source": "image", "transformations": [{"type": "image.resize", "parameters": {}}]}
         audio_step = {"name": "bild", "source": "image", "transformations": [{"type": "audio.melSpectrogram", "parameters": {}}]}
 
+        self.assertEqual(post({"inputs": [image_input], "outputs": []}), (422, {"error": "Eingang bild: image.resize: Der Parameter width fehlt."}))
+        image_input["transformations"][0]["parameters"] = {"width": 8, "heigth": 8}
+        self.assertEqual(
+            post({"inputs": [image_input], "outputs": []}),
+            (422, {"error": "Eingang bild: image.resize: Unbekannter Parameter heigth — gemeint ist vermutlich height."}),
+        )
+        image_input["transformations"][0]["parameters"] = {"width": 8, "height": 8}
         self.assertEqual(post({"inputs": [image_input], "outputs": []}), (200, {"status": "ok"}))
         self.assertEqual(
             post({"inputs": [audio_step], "outputs": []}),

@@ -8,6 +8,7 @@ class AudioMonoStrategy(TransformationStrategy):
 
     accepts = (AUDIO,)
     produces = AUDIO
+    parameters = {}
 
     @property
     def transformation_type(self):

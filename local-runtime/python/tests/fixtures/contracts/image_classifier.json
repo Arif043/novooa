@@ -1,0 +1,22 @@
+{
+  "inputs": [{
+    "name": "image", "source": "image", "dataType": "float32", "shape": ["dynamic", 3, 224, 224],
+    "transformations": [
+      {"type": "image.decode", "parameters": {"colorSpace": "rgb"}},
+      {"type": "image.resize", "parameters": {"width": 224, "height": 224}},
+      {"type": "tensor.layout", "parameters": {"order": "channelsFirst"}},
+      {"type": "tensor.normalize", "parameters": {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}}
+    ]
+  }],
+  "outputs": [{
+    "name": "scores", "dataType": "float32", "shape": ["dynamic", 1000], "semantic": "classification.scores",
+    "transformations": [
+      {"type": "tensor.softmax", "parameters": {"axis": -1}},
+      {"type": "tensor.topK", "result": "topClasses", "parameters": {"k": "$anzahl"}}
+    ]
+  }],
+  "settings": [{
+    "name": "anzahl", "label": "Anzahl der Ergebnisse",
+    "control": {"type": "slider", "initial": 3, "minimum": 1, "maximum": 20, "step": 1}
+  }]
+}

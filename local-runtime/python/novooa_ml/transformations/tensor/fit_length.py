@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import TENSOR
 from novooa_ml.transformations.parameters import axis_of, is_integer, number
+from novooa_ml.transformations.schema import Choice, Integer, Number
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import as_tensor
 
@@ -9,6 +10,7 @@ class TensorFitLengthStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = TENSOR
+    parameters = {"length": Integer(minimum=1), "axis": Integer(optional=True, default=-1), "value": Number(optional=True, default=0), "keep": Choice("start", "end", optional=True, default="start")}
 
     @property
     def transformation_type(self):

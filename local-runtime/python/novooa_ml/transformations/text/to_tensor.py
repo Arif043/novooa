@@ -8,6 +8,7 @@ class TextToTensorStrategy(TransformationStrategy):
 
     accepts = (TEXT,)
     produces = TENSOR
+    parameters = {}
 
     @property
     def transformation_type(self):

@@ -1,6 +1,7 @@
 import io
 
 from novooa_ml.transformations.kinds import TENSOR, TEXT
+from novooa_ml.transformations.schema import Integer, MapOf, Text
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import require_text
 
@@ -12,6 +13,7 @@ class KokoroStyleStrategy(TransformationStrategy):
 
     accepts = (TEXT,)
     produces = TENSOR
+    parameters = {"language": Text(), "tokenIdMap": MapOf(Integer()), "voice": Text(), "resource": Text()}
 
     @property
     def transformation_type(self):

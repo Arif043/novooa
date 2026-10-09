@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import AUDIO
 from novooa_ml.transformations.parameters import is_integer
+from novooa_ml.transformations.schema import Integer
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import AudioSignal, require_audio
 
@@ -9,6 +10,7 @@ class AudioResampleStrategy(TransformationStrategy):
 
     accepts = (AUDIO,)
     produces = AUDIO
+    parameters = {"sampleRate": Integer(minimum=1)}
 
     @property
     def transformation_type(self):

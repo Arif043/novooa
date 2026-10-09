@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import JSON_RESULT, TENSOR
 from novooa_ml.transformations.parameters import is_integer, number
+from novooa_ml.transformations.schema import Integer, ListOf, Number, Text
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 
@@ -13,6 +14,16 @@ class SequenceSegmentsStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = JSON_RESULT
+    parameters = {
+        "frameDuration": Number(minimum=0, optional=True),
+        "hopLength": Integer(minimum=1, optional=True),
+        "sampleRate": Integer(minimum=1, optional=True),
+        "threshold": Number(optional=True, default=0.5),
+        "labels": ListOf(Text(allow_empty=True), optional=True),
+        "backgroundIndex": Integer(minimum=0, optional=True),
+        "mergeGap": Number(minimum=0, optional=True, default=0),
+        "minDuration": Number(minimum=0, optional=True, default=0),
+    }
 
     @property
     def transformation_type(self):

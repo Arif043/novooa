@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import TENSOR
 from novooa_ml.transformations.parameters import is_integer
+from novooa_ml.transformations.schema import Integer
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 
@@ -8,6 +9,7 @@ class RoundStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = TENSOR
+    parameters = {"decimals": Integer(minimum=0, optional=True, default=0)}
 
     @property
     def transformation_type(self):

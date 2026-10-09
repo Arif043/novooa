@@ -67,10 +67,15 @@ class ContractCheckTest(unittest.TestCase):
     def test_checks_every_input_and_output(self):
         contract = {
             "inputs": [
-                {"name": "bild", "source": "image", "transformations": steps("image.resize")},
+                {"name": "bild", "source": "image", "transformations": [
+                    {"type": "image.resize", "parameters": {"width": 8, "height": 8}},
+                ]},
                 {"name": "vorbereitet", "source": "tensor", "transformations": []},
             ],
-            "outputs": [{"name": "logits", "transformations": steps("tensor.softmax", "tensor.topK")}],
+            "outputs": [{"name": "logits", "transformations": [
+                {"type": "tensor.softmax", "parameters": {}},
+                {"type": "tensor.topK", "parameters": {"k": 3}},
+            ]}],
         }
 
         check_contract(contract, REGISTRY)

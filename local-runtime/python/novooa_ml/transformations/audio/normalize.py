@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import AUDIO
 from novooa_ml.transformations.parameters import number
+from novooa_ml.transformations.schema import Choice, Number
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import AudioSignal, require_audio
 
@@ -9,6 +10,7 @@ class AudioNormalizeStrategy(TransformationStrategy):
 
     accepts = (AUDIO,)
     produces = AUDIO
+    parameters = {"mode": Choice("peak", "rms", optional=True, default="peak"), "target": Number(minimum=0, optional=True)}
 
     @property
     def transformation_type(self):

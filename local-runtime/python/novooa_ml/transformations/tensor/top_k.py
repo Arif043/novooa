@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import JSON_RESULT, TENSOR
 from novooa_ml.transformations.parameters import is_integer
+from novooa_ml.transformations.schema import Integer, Record, Text
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 
@@ -11,6 +12,14 @@ class TopKStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = JSON_RESULT
+    parameters = {
+        "k": Integer(minimum=1, optional=True),
+        # Alte Manifeste: Beschreibung eines einstellbaren k (TypeScript macht daraus ein Setting).
+        "parameter": Record({
+            "name": Text(), "label": Text(optional=True), "default": Integer(),
+            "minimum": Integer(), "maximum": Integer(),
+        }, optional=True),
+    }
 
     @property
     def transformation_type(self):

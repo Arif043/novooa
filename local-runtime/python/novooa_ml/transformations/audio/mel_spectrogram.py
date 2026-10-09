@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import AUDIO, TENSOR
 from novooa_ml.transformations.parameters import is_integer, number, optional_number
+from novooa_ml.transformations.schema import Boolean, Choice, Integer, Number
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import require_audio
 
@@ -19,6 +20,19 @@ class AudioMelSpectrogramStrategy(TransformationStrategy):
 
     accepts = (AUDIO,)
     produces = TENSOR
+    parameters = {
+        "frameLength": Integer(minimum=1, optional=True, default=400),
+        "hopLength": Integer(minimum=1, optional=True, default=160),
+        "melBins": Integer(minimum=1, optional=True, default=80),
+        "minFrequency": Number(minimum=0, optional=True, default=0),
+        "maxFrequency": Number(minimum=0, optional=True),
+        "power": Number(minimum=0, optional=True, default=2),
+        "scale": Choice("power", "log", "log10", "db", optional=True, default="power"),
+        "dynamicRange": Number(minimum=0, optional=True),
+        "melScale": Choice("slaney", "htk", optional=True, default="slaney"),
+        "filterNormalization": Choice("slaney", "none", optional=True, default="slaney"),
+        "center": Boolean(optional=True, default=True),
+    }
 
     @property
     def transformation_type(self):

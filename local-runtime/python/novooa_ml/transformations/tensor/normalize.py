@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import TENSOR
 from novooa_ml.transformations.parameters import numeric_values
+from novooa_ml.transformations.schema import ListOf, Number
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import as_tensor
 
@@ -11,6 +12,7 @@ class TensorNormalizeStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = TENSOR
+    parameters = {"mean": ListOf(Number()), "std": ListOf(Number())}
 
     @property
     def transformation_type(self):

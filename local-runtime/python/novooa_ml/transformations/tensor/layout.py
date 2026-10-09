@@ -1,4 +1,5 @@
 from novooa_ml.transformations.kinds import TENSOR
+from novooa_ml.transformations.schema import Choice
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import as_tensor
 
@@ -11,6 +12,7 @@ class TensorLayoutStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = TENSOR
+    parameters = {"order": Choice("channelsFirst", "channelsLast")}
 
     @property
     def transformation_type(self):

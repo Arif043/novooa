@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import IMAGE
 from novooa_ml.transformations.parameters import image_mode, positive_integer
+from novooa_ml.transformations.schema import Choice, Integer
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import require_image
 
@@ -9,6 +10,7 @@ class ImagePadToMultipleStrategy(TransformationStrategy):
 
     accepts = (IMAGE,)
     produces = IMAGE
+    parameters = {"multiple": Integer(minimum=1), "background": Integer(minimum=0, maximum=255, optional=True, default=0), "colorSpace": Choice("rgb", "rgba", "grayscale", optional=True)}
 
     @property
     def transformation_type(self):

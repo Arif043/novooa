@@ -7,6 +7,7 @@ class SqueezeStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = TENSOR
+    parameters = {}
 
     @property
     def transformation_type(self):

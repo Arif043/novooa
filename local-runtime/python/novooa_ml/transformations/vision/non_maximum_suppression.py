@@ -1,4 +1,5 @@
 from novooa_ml.transformations.kinds import JSON_RESULT, TENSOR
+from novooa_ml.transformations.schema import Integer, Number, Record
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 
@@ -7,6 +8,12 @@ class NonMaximumSuppressionStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = JSON_RESULT
+    parameters = {
+        "box": Record({name: Integer(minimum=0) for name in ("left", "top", "right", "bottom")}),
+        "scoreIndex": Integer(minimum=0),
+        "scoreThreshold": Number(optional=True),
+        "iouThreshold": Number(minimum=0, maximum=1, optional=True, default=0.5),
+    }
 
     @property
     def transformation_type(self):

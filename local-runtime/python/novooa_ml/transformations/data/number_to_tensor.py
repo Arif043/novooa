@@ -9,6 +9,7 @@ class NumberToTensorStrategy(TransformationStrategy):
 
     accepts = (NUMBER,)
     produces = TENSOR
+    parameters = {}
 
     @property
     def transformation_type(self):

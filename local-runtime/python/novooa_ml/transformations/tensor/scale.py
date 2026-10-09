@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import TENSOR
 from novooa_ml.transformations.parameters import number
+from novooa_ml.transformations.schema import Number
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import as_tensor
 
@@ -9,6 +10,7 @@ class TensorScaleStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = TENSOR
+    parameters = {"factor": Number(optional=True, default=1), "offset": Number(optional=True, default=0)}
 
     @property
     def transformation_type(self):

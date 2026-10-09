@@ -13,6 +13,7 @@ class JsonToTensorStrategy(TransformationStrategy):
 
     accepts = (JSON,)
     produces = TENSOR
+    parameters = {}
 
     @property
     def transformation_type(self):

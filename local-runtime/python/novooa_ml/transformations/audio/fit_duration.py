@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import AUDIO
 from novooa_ml.transformations.parameters import number
+from novooa_ml.transformations.schema import Choice, Number
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.tensor.fit_length import fit_length
 from novooa_ml.transformations.values import AudioSignal, require_audio
@@ -10,6 +11,7 @@ class AudioFitDurationStrategy(TransformationStrategy):
 
     accepts = (AUDIO,)
     produces = AUDIO
+    parameters = {"seconds": Number(minimum=0), "keep": Choice("start", "end", optional=True, default="start")}
 
     @property
     def transformation_type(self):

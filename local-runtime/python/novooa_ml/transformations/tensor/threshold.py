@@ -1,4 +1,5 @@
 from novooa_ml.transformations.kinds import TENSOR
+from novooa_ml.transformations.schema import Number
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 
@@ -7,6 +8,7 @@ class ThresholdStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = TENSOR
+    parameters = {"value": Number(optional=True, default=0.5)}
 
     @property
     def transformation_type(self):

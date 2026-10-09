@@ -1,8 +1,9 @@
 from numbers import Real
 
-from novooa_ml.transformations.parameters import number
 
 from novooa_ml.transformations.kinds import JSON, TENSOR
+from novooa_ml.transformations.parameters import number
+from novooa_ml.transformations.schema import Choice, ListOf, Number, OneOf, Record, Schema, Text
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 KINDS = ("number", "boolean", "category")
@@ -19,6 +20,15 @@ class JsonFeaturesStrategy(TransformationStrategy):
 
     accepts = (JSON,)
     produces = TENSOR
+    parameters = {"features": ListOf(Record({
+        "field": Text(),
+        "kind": Choice("number", "boolean", "category", optional=True, default="number"),
+        "mean": Number(optional=True),
+        "std": Number(optional=True),
+        "default": Schema(optional=True),
+        "categories": ListOf(OneOf(Text(allow_empty=True), Number()), optional=True),
+        "unknown": Choice("zero", "error", optional=True, default="zero"),
+    }))}
 
     @property
     def transformation_type(self):

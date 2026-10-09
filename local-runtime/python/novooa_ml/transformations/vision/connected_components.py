@@ -1,4 +1,5 @@
 from novooa_ml.transformations.kinds import REGIONS, TENSOR
+from novooa_ml.transformations.schema import Integer
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 from .mask_regions import regions_from_mask
@@ -9,6 +10,7 @@ class ConnectedComponentsStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = REGIONS
+    parameters = {"minimumPixels": Integer(minimum=0, optional=True, default=1)}
 
     @property
     def transformation_type(self):

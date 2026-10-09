@@ -12,6 +12,8 @@ class TransformationStrategy(ABC):
 
     accepts = ()
     produces = None
+    # Name → Schema (`transformations/schema`); Grundlage der Prüfung beim Import.
+    parameters = {}
 
     @property
     @abstractmethod

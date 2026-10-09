@@ -1,4 +1,5 @@
 from novooa_ml.transformations.kinds import TENSOR, TEXT
+from novooa_ml.transformations.schema import Integer, ListOf, MapOf, OneOf, Text
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import require_text
 
@@ -10,6 +11,7 @@ class PiperPhonemeLengthStrategy(TransformationStrategy):
 
     accepts = (TEXT,)
     produces = TENSOR
+    parameters = {"language": Text(), "phonemeIdMap": MapOf(OneOf(Integer(minimum=0), ListOf(Integer(minimum=0), length=1)))}
 
     @property
     def transformation_type(self):

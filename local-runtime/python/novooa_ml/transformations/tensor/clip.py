@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import TENSOR
 from novooa_ml.transformations.parameters import optional_number
+from novooa_ml.transformations.schema import Number
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import as_tensor
 
@@ -9,6 +10,7 @@ class TensorClipStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = TENSOR
+    parameters = {"min": Number(optional=True), "max": Number(optional=True)}
 
     @property
     def transformation_type(self):

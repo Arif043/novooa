@@ -1,4 +1,5 @@
 import ast
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -68,6 +69,83 @@ class StrategyLayoutTest(unittest.TestCase):
                 self.assertIn(path.parent.name, DOMAINS)
         for legacy in ("input_transforms", "output_transforms", "transformations/shared"):
             self.assertFalse((PACKAGE / legacy).exists(), legacy)
+
+
+class ParameterSchemaLayoutTest(unittest.TestCase):
+    """Jede Strategie deklariert jeden Parameter, den sie liest — sonst lehnt der Import ihn ab."""
+
+    def test_every_strategy_declares_its_parameters(self):
+        for path in strategy_files():
+            with self.subTest(path=str(path.relative_to(PACKAGE))):
+                self.assertIn("parameters", class_attributes(path))
+
+    def test_every_parameter_read_by_a_strategy_is_declared(self):
+        capabilities = transformation_capabilities()["parameters"]
+        for path in strategy_files():
+            declared = set(capabilities[transformation_type_of(path)])
+            for name in read_parameter_names(path):
+                with self.subTest(path=str(path.relative_to(PACKAGE)), parameter=name):
+                    self.assertIn(name, declared)
+
+    def test_publishes_parameter_schemas(self):
+        parameters = transformation_capabilities()["parameters"]
+
+        self.assertEqual(parameters["image.resize"]["width"], {"type": "integer", "optional": False, "minimum": 1})
+        self.assertEqual(sorted(parameters), ALL_TYPES)
+
+
+class DocumentationTest(unittest.TestCase):
+    """Die Transformationstabelle der Doku nennt jeden Typ mit allen Parametern."""
+
+    def test_documents_every_type_and_parameter(self):
+        rows = documentation_rows()
+        for transformation_type, parameters in transformation_capabilities()["parameters"].items():
+            with self.subTest(transformation_type=transformation_type):
+                self.assertIn(transformation_type, rows)
+                for name in parameters:
+                    self.assertIn(f"`{name}`", rows[transformation_type], f"{transformation_type}: {name}")
+
+
+def documentation_rows():
+    text = (PACKAGE.parents[2] / "docs" / "features" / "ml-modelle.md").read_text(encoding="utf-8")
+    rows = {}
+    for line in text.splitlines():
+        cells = [cell.strip() for cell in line.split("|")]
+        if len(cells) > 3 and cells[1].startswith("`") and cells[1].endswith("`"):
+            rows.setdefault(cells[1].strip("`"), line)
+    return rows
+
+
+def class_attributes(path):
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    return {
+        target.id
+        for node in tree.body if isinstance(node, ast.ClassDef)
+        for statement in node.body if isinstance(statement, ast.Assign)
+        for target in statement.targets if isinstance(target, ast.Name)
+    }
+
+
+def transformation_type_of(path):
+    match = re.search(r'return "([^"]+)"', path.read_text(encoding="utf-8"))
+    return match.group(1)
+
+
+def read_parameter_names(path):
+    """Schlüssel, die die Strategie-Datei und ihre lokalen Helfer aus `parameters` lesen."""
+    sources = [path.read_text(encoding="utf-8")]
+    for helper in re.findall(r"^from \.(\w+) import", sources[0], flags=re.M):
+        helper_path = path.parent / f"{helper}.py"
+        # Importiert eine Strategie Hilfsfunktionen aus einer anderen Strategie, zählen deren
+        # Parameter nicht mit.
+        if not strategy_classes(helper_path):
+            sources.append(helper_path.read_text(encoding="utf-8"))
+    names = set()
+    for source in sources:
+        names |= set(re.findall(r'parameters(?:\.get\(|\[)"(\w+)"', source))
+        if "axis_of(" in source:
+            names.add("axis")
+    return names
 
 
 def strategy_files():

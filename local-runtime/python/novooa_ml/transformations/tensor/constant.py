@@ -1,4 +1,5 @@
 from novooa_ml.transformations.kinds import ANY, TENSOR
+from novooa_ml.transformations.schema import ListOf, Number
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 
@@ -7,6 +8,7 @@ class TensorConstantStrategy(TransformationStrategy):
 
     accepts = (ANY,)
     produces = TENSOR
+    parameters = {"values": ListOf(Number())}
 
     @property
     def transformation_type(self):

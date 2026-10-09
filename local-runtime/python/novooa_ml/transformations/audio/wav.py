@@ -3,6 +3,7 @@ import io
 import wave
 
 from novooa_ml.transformations.kinds import AUDIO_FILE, TENSOR
+from novooa_ml.transformations.schema import Integer, Text
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 
@@ -11,6 +12,7 @@ class WaveAudioStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = AUDIO_FILE
+    parameters = {"sampleRate": Integer(minimum=1), "fileName": Text(optional=True, default="sprach-ausgabe.wav")}
 
     @property
     def transformation_type(self):

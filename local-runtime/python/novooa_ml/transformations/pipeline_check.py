@@ -1,6 +1,7 @@
 """Prüft, ob die Wertarten einer Pipeline zusammenpassen — beim Import und vor jedem Lauf."""
 
 from .kinds import SOURCE_KINDS, TENSOR, accepts, is_tensor_ready
+from .parameter_check import check_parameters, settings_by_name
 
 
 def check_input_pipeline(name, source_type, transformations, registry):
@@ -20,10 +21,19 @@ def check_output_pipeline(name, transformations, registry):
 
 
 def check_contract(contract, registry):
+    """Kette und Parameter aller Ein- und Ausgänge; Bindungen werden gegen die Settings geprüft."""
+    settings = settings_by_name(contract)
     for definition in contract.get("inputs", []):
         check_contract_input(definition, registry)
+        check_all_parameters(f"Eingang {definition['name']}", definition, registry, settings)
     for definition in contract.get("outputs", []):
         check_output_pipeline(definition["name"], definition.get("transformations", []), registry)
+        check_all_parameters(f"Ausgang {definition['name']}", definition, registry, settings)
+
+
+def check_all_parameters(label, definition, registry, settings):
+    for transformation in definition.get("transformations", []):
+        check_parameters(label, transformation, registry.parameters_of(transformation["type"]), settings)
 
 
 def check_contract_input(definition, registry):

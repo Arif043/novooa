@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import TENSOR
 from novooa_ml.transformations.parameters import axis_of
+from novooa_ml.transformations.schema import Choice, Integer
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 
@@ -8,6 +9,7 @@ class ReduceStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = TENSOR
+    parameters = {"operation": Choice("mean", "sum", "max", "min"), "axis": Integer(optional=True, default=-1)}
 
     @property
     def transformation_type(self):

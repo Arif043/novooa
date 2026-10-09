@@ -1,4 +1,5 @@
 from novooa_ml.transformations.kinds import REGIONS
+from novooa_ml.transformations.schema import Number
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 
@@ -7,6 +8,7 @@ class ScaleBoundsStrategy(TransformationStrategy):
 
     accepts = (REGIONS,)
     produces = REGIONS
+    parameters = {"scaleX": Number(minimum=0), "scaleY": Number(minimum=0), "offsetX": Number(optional=True, default=0), "offsetY": Number(optional=True, default=0)}
 
     @property
     def transformation_type(self):

@@ -1,4 +1,5 @@
 from novooa_ml.transformations.kinds import TENSOR
+from novooa_ml.transformations.schema import Integer
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 
@@ -7,6 +8,7 @@ class SoftmaxStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = TENSOR
+    parameters = {"axis": Integer(optional=True, default=-1)}
 
     @property
     def transformation_type(self):

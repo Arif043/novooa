@@ -1,4 +1,5 @@
 from novooa_ml.transformations.kinds import JSON_RESULT, TENSOR
+from novooa_ml.transformations.schema import Boolean, Integer, ListOf, Text
 from novooa_ml.transformations.strategy import TransformationStrategy
 
 
@@ -7,6 +8,13 @@ class CtcGreedyDecodeStrategy(TransformationStrategy):
 
     accepts = (TENSOR,)
     produces = JSON_RESULT
+    parameters = {
+        "labels": ListOf(Text(allow_empty=True)),
+        "blankIndex": Integer(minimum=0),
+        "applySoftmax": Boolean(optional=True, default=True),
+        "collapseRepeated": Boolean(optional=True, default=True),
+        "allowedCharacters": Text(optional=True),
+    }
 
     @property
     def transformation_type(self):

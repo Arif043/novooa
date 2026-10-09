@@ -17,6 +17,12 @@ def transformation_capabilities():
             transformation_type: dict(zip(("accepts", "produces"), registry.kinds_of(transformation_type)))
             for transformation_type in types
         },
+        "parameters": {
+            transformation_type: {
+                name: schema.describe() for name, schema in registry.parameters_of(transformation_type).items()
+            }
+            for transformation_type in types
+        },
     }
 
 

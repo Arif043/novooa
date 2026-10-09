@@ -1,5 +1,6 @@
 from novooa_ml.transformations.kinds import IMAGE
 from novooa_ml.transformations.parameters import image_mode, positive_integer
+from novooa_ml.transformations.schema import Choice, Integer
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import require_image
 
@@ -11,6 +12,7 @@ class ImageResizeHeightPadStrategy(TransformationStrategy):
 
     accepts = (IMAGE,)
     produces = IMAGE
+    parameters = {"height": Integer(minimum=1), "width": Integer(minimum=1, optional=True), "widthMultiple": Integer(minimum=1, optional=True), "alignment": Choice("topLeft", "center", optional=True, default="topLeft"), "background": Integer(minimum=0, maximum=255, optional=True, default=0), "colorSpace": Choice("rgb", "rgba", "grayscale", optional=True)}
 
     @property
     def transformation_type(self):
