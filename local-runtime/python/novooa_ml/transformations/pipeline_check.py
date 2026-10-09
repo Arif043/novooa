@@ -1,6 +1,6 @@
 """Prüft, ob die Wertarten einer Pipeline zusammenpassen — beim Import und vor jedem Lauf."""
 
-from .kinds import SOURCE_KINDS, TENSOR, accepts, is_tensor_ready
+from .kinds import SAME, SOURCE_KINDS, TENSOR, accepts, is_tensor_ready
 from .parameter_check import check_parameters, settings_by_name
 
 
@@ -57,5 +57,5 @@ def walk(label, kind, transformations, registry):
             raise ValueError(
                 f"{label}: {transformation_type} erwartet {' oder '.join(accepted)}, erhält {kind}."
             )
-        kind = produced
+        kind = kind if produced == SAME else produced
     return kind

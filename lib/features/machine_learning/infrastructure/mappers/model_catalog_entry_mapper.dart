@@ -90,6 +90,7 @@ class ModelCatalogEntryMapper {
           'boolean',
           'json',
           'audio',
+          'image',
         }.contains(type)) {
       throw const FormatException('Die Workflow-Ausgabe ist ungültig.');
     }

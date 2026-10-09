@@ -8,6 +8,11 @@ export type ModelTensor = {
   dataType: ModelTensorDataType;
   shape: readonly number[];
   bytes: Uint8Array;
+  /**
+   * Was die Eingangstransformation über ihre Quelle weiß, z. B. die Bildgeometrie. Die Runtime
+   * reicht es unverändert an die Inferenz weiter, damit Ausgänge ins Originalbild zurückrechnen.
+   */
+  metadata?: Readonly<Record<string, unknown>>;
 };
 
 const bytesPerElement: Readonly<Record<Exclude<ModelTensorDataType, "string">, number>> = {

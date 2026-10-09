@@ -4,7 +4,7 @@ import {
 } from "./node-executor.js";
 import {type ModelInferenceResult} from
   "../../../machine_learning/domain/repositories/model-inference.js";
-import {type NodeOutputValue} from "../entities/workflow-value.js";
+import {mediaReferenceFor, type NodeOutputValue} from "../entities/workflow-value.js";
 import {modelInputFromWorkflowMapping} from "../services/model-input-from-workflow-mapping.js";
 import {workflowValueForModelOutput} from "../services/tensor-workflow-value.js";
 
@@ -115,6 +115,9 @@ async function workflowOutputValueFor(
   if (output.workflowOutput.type === "audio") {
     return audioOutputValue(output, runContext);
   }
+  if (output.workflowOutput.type === "image") {
+    return imageOutputValue(output, runContext);
+  }
   return {type: output.workflowOutput.type, value: workflowValueForModelOutput(output.value)} as NodeOutputValue;
 }
 
@@ -133,12 +136,34 @@ async function audioOutputValue(
   return {type: "audio", value: file};
 }
 
+async function imageOutputValue(
+  output: ModelInferenceResult["outputs"][number],
+  runContext: Parameters<NodeExecutor["execute"]>[1],
+): Promise<NodeOutputValue> {
+  const image = filePayload(output.value, "image/", "Bildausgabe des Modells", "Bild-Content-Type");
+  const file = await runContext.teamFileStore.writeTeamFile({
+    teamId: runContext.teamId,
+    content: Uint8Array.from(Buffer.from(image.dataBase64, "base64")),
+    fileName: image.fileName ?? "modell-ausgabe.png",
+    contentType: image.contentType,
+    targetFileId: null,
+  });
+  return {type: "media", value: mediaReferenceFor(file)};
+}
+
 function audioPayload(value: unknown): {dataBase64: string; contentType: string; fileName?: string} {
+  return filePayload(value, "audio/", "Audioausgabe des Modells", "Audio-Content-Type");
+}
+
+/** Datei aus einer Ausgangstransformation (`audio.wav`, `image.encode`): Base64, Typ, Name. */
+function filePayload(
+  value: unknown, contentTypePrefix: string, subject: string, contentTypeLabel: string,
+): {dataBase64: string; contentType: string; fileName?: string} {
   if (!isRecord(value) || typeof value.dataBase64 !== "string" || typeof value.contentType !== "string") {
-    throw new Error("Die Audioausgabe des Modells ist ungültig.");
+    throw new Error(`Die ${subject} ist ungültig.`);
   }
-  if (!value.contentType.startsWith("audio/")) {
-    throw new Error("Die Audioausgabe des Modells hat keinen Audio-Content-Type.");
+  if (!value.contentType.startsWith(contentTypePrefix)) {
+    throw new Error(`Die ${subject} hat keinen ${contentTypeLabel}.`);
   }
   return typeof value.fileName === "string"
     ? {dataBase64: value.dataBase64, contentType: value.contentType, fileName: value.fileName}

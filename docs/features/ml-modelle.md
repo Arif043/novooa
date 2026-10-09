@@ -132,7 +132,7 @@ gleichgesetzt werden:
 
 | Ebene | Zweck | Beispiele |
 | --- | --- | --- |
-| Workflow-Werttyp | Fachlicher Wert zwischen Bausteinen | `string`, `number`, `boolean`, `json`, `audio` |
+| Workflow-Werttyp | Fachlicher Wert zwischen Bausteinen | `string`, `number`, `boolean`, `json`, `audio`, `image` (im Workflow ein Bild-`media`-Wert) |
 | Modellquelltyp | Wert, den eine Modelleingabe vor ihrer Transformation erhält | `text`, `number`, `image`, `audio`, `file`, `datetime`, `boolean`, `json`, `tensor` |
 | Tensor-Datentyp | Technische ONNX-Repräsentation an der Inferenzgrenze | `float32`, `float16`, `float64`, `int64`, `int32`, `int16`, `int8`, `uint8`, `bool`, `string`, einschließlich Tensorform. `string`-Tensoren reisen als UTF-8-JSON-Array ihrer Werte in Zeilenfolge. |
 
@@ -150,6 +150,8 @@ seine fachliche Semantik sowie eine optionale Transformationspipeline.
 `audio` ist ein fachlicher Workflow-Wert, der immer auf eine gespeicherte
 Audiodatei verweist. Sprach-zu-Text-Manifeste deklarieren einen `audio`-Eingang;
 Text-zu-Sprache-Manifeste deklarieren einen Workflow-Ausgang vom Typ `audio`.
+Analog speichert ein Workflow-Ausgang vom Typ `image` (Ergebnis von `image.encode`) eine
+Bilddatei als Team-Datei; nachfolgende Bausteine erhalten sie als Bild (`media`).
 Die Runtime speichert diesen Ausgang als Team-Datei. Der Baustein
 `textToSpeech` und `speechToText` verwenden denselben Vertrag wie
 `modelInference`. Ihre Oberflächen filtern den Modellkatalog jeweils auf
@@ -516,6 +518,9 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `text.kokoroTokens` | `language`, `tokenIdMap` | Eingang (Text). Text → Kokoro-Token-IDs, eingerahmt von Füll-Tokens. |
 | `text.kokoroStyle` | `language`, `tokenIdMap`, `voice`, `resource` | Eingang (Text). Stilvektor der Stimme `voice` aus der Modellressource `resource`, passend zur Tokenanzahl. |
 | `tensor.constant` | `values` | Ersetzt den Wert durch einen festen Zahlentensor, z. B. für Hilfseingänge mit Inferenzparametern. |
+| `geometry.toSource` | `input`, optional `clip` (Standard `true`) | Ausgang (Regionen/Erkennungen). Rechnet `bounds` bzw. `box` mit der Geometrie des Bildeingangs `input` in Koordinaten des Originalbildes zurück; `clip` begrenzt auf das Bild. |
+| `mask.toSource` | `input`, optional `layout` (`channelsFirst`, `channelsLast`), `fill` (Standard `0`) | Ausgang. Bildet eine Maske oder Karte `[H, W]`, `[C, H, W]` bzw. `[H, W, C]` per Nearest-Neighbour auf die Originalgröße ab; Rand des Modellbildes wird zu `fill`. |
+| `image.encode` | optional `format` (`png`, `jpeg`), `fileName`, `layout` (Standard `channelsLast`), `palette` (Liste von `[r, g, b]`) | Ausgang. Kodiert einen Tensor als Bilddatei (Werte auf 0…255 begrenzt); mit `palette` werden Klassenindizes eingefärbt. Workflow-Typ `image`. |
 | `audio.wav` | `sampleRate`, optional `fileName` (Standard `sprach-ausgabe.wav`) | Ausgang. Kodiert Samples als WAV-Datei (16 Bit, mono); Werte außerhalb von -1…1 werden begrenzt. |
 | `text.toTensor` | keine | Eingang (Text). Text → String-Tensor `[1]`, z. B. für Pipelines mit eingebauter Textverarbeitung (TF-IDF). |
 | `json.features` | `features` (Liste aus `{field, kind?, mean?, std?, default?, categories?, unknown?}`) | Eingang (JSON). Datensatz → Merkmalsvektor in fester Reihenfolge; `field` als Punktpfad, `kind` `number` (standardisiert mit `mean`/`std`), `boolean` oder `category` (One-Hot, unbekannte Werte `zero` oder `error`). Eine Liste von Datensätzen ergibt eine Zeile je Datensatz. |
@@ -536,7 +541,8 @@ Bit, WAVE_EXTENSIBLE; andere Formate wie MP3 werden mit Meldung abgelehnt), `tex
 `number`, `json`, `boolean` und `datetime`. Audio liegt intern als Samples
 `(Frames, Kanäle)` vor; Audio-Transformationen stehen vor Tensoroperationen.
 Ohne Spektrogramm wird daraus bei Mono ein Tensor `[Samples]`, sonst
-`[Kanäle, Samples]`. `datetime` wird als ISO-8601-Zeitpunkt gelesen (ohne Versatz
+`[Kanäle, Samples]`. Alle diese Quellen erreichen Python in Cloud und Standalone-Runtime
+gleichermaßen. `datetime` wird als ISO-8601-Zeitpunkt gelesen (ohne Versatz
 als UTC). `file` lehnt die Runtime schon beim Import mit Nennung des Quelltyps ab.
 
 **Aufbau des Python-Dienstes.** Alle Transformationen bilden **einen Katalog**, geordnet
@@ -565,7 +571,9 @@ sie liefert (`produces`):
 | `datetime` | Quelle `datetime` (ISO 8601, ohne Versatz als UTC) | `datetime.features` |
 | `number` / `json` | Quellen `number` bzw. `json`/`boolean` | `number.toTensor` bzw. `json.toTensor`, `json.features` |
 | `tensor` | Modellausgang, `audio.melSpectrogram`, `text.*`, `json.*`, `tensor.*` | alle `tensor.*`, `mask.*`, `sequence.*`, `audio.wav` |
-| `regions` | `mask.connectedComponents`, `mask.textRegions` | `geometry.mergeRows`, `geometry.scaleBounds` |
+| `regions` | `mask.connectedComponents`, `mask.textRegions` | `geometry.mergeRows`, `geometry.scaleBounds`, `geometry.toSource` |
+| `detections` | `tensor.nonMaximumSuppression` | `geometry.toSource`; sonst Ende der Kette |
+| `imageFile` | `image.encode` | Ende der Kette; Workflow-Typ `image` |
 | `json-result` | `tensor.topK`, `tensor.nonMaximumSuppression`, `sequence.*` | Ende der Kette; weiter über das Workflow-Mapping |
 | `audioFile` | `audio.wav` | Ende der Kette; Workflow-Typ `audio` |
 
@@ -626,6 +634,50 @@ parameters = {
   `tests/test_pipeline_check.py` prüft u. a. die mitgelieferten Systemmodell-Manifeste.
 - Die Cloud-Runtime pflegt ihre Bildtransformationen weiterhin als feste Liste in
   `model-contract-capabilities.ts` und kennt die neueren Typen noch nicht.
+
+### Bildausgaben und Originalkoordinaten
+
+Erkennungs-, Segmentierungs- und Tiefenmodelle rechnen auf einem skalierten oder aufgefüllten
+Bild. Damit ihre Ergebnisse zum Originalbild passen, zeichnet jeder Bildeingang seine
+**Geometrie** auf: `modell = quelle × scale + offset` je Achse, dazu die Größe des Quellbildes.
+
+| Schritt | Wirkung auf die Geometrie |
+| --- | --- |
+| `image.resize`, `image.resizeShorterSide` | skaliert |
+| `image.resizePad`, `image.resizeHeightPad` | skaliert und verschiebt (Rand) |
+| `image.crop`, `image.centerCrop` | verschiebt |
+| `image.decode`, `image.padToMultiple`, Tensorschritte | keine |
+| `image.exifTranspose` | das gedrehte Foto wird zur Quelle |
+| `image.perspectiveCrop` | nicht umkehrbar |
+
+- Die Geometrie reist im Eingangstensor (`metadata`) durch die Runtime bis zu den Ausgängen.
+- `geometry.toSource` rechnet Boxen und Regionen, `mask.toSource` Masken und Karten ins
+  Originalbild zurück; `input` nennt den Bildeingang.
+- Tensorschritte, die am Eingang die räumliche Form ändern (`tensor.reshape`, `tensor.transpose`,
+  `tensor.slice`), sind in der Geometrie nicht berücksichtigt.
+
+Objekterkennung mit einem Detektor, der Zeilen `[links, oben, rechts, unten, score]` im
+640er-Raster liefert (Eingang mit `image.resizePad` auf 640×640, mittig):
+
+```json
+"transformations": [
+  {"type": "tensor.squeeze", "parameters": {}},
+  {"type": "tensor.nonMaximumSuppression", "parameters": {
+    "box": {"left": 0, "top": 1, "right": 2, "bottom": 3}, "scoreIndex": 4, "scoreThreshold": 0.25}},
+  {"type": "geometry.toSource", "parameters": {"input": "bild"}}
+]
+```
+
+Segmentierung als Bild (Klassen eingefärbt, in Originalgröße):
+
+```json
+"transformations": [
+  {"type": "tensor.argmax", "parameters": {"axis": 1}},
+  {"type": "mask.toSource", "parameters": {"input": "bild"}},
+  {"type": "image.encode", "parameters": {"palette": [[0, 0, 0], [255, 0, 0], [0, 128, 255]]}}
+],
+"workflowOutput": {"name": "segmente", "type": "image", "mapping": "$tensor"}
+```
 
 ### Klassisches ML (scikit-learn, XGBoost, LightGBM)
 

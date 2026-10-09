@@ -1,3 +1,4 @@
+from novooa_ml.transformations.geometry import resize_geometry
 from novooa_ml.transformations.kinds import IMAGE
 from novooa_ml.transformations.parameters import image_mode, positive_integer
 from novooa_ml.transformations.schema import Choice, Integer
@@ -22,4 +23,5 @@ class ImageResizeStrategy(TransformationStrategy):
         if color_space is not None:
             image = image.convert(image_mode(color_space))
         size = (positive_integer(parameters.get("width")), positive_integer(parameters.get("height")))
+        resize_geometry(context, image.size, size)
         return image.resize(size, context.image_module.Resampling.LANCZOS)

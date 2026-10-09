@@ -1,4 +1,4 @@
-from novooa_ml.transformations.kinds import JSON_RESULT, TENSOR
+from novooa_ml.transformations.kinds import DETECTIONS, TENSOR
 from novooa_ml.transformations.schema import Integer, Number, Record
 from novooa_ml.transformations.strategy import TransformationStrategy
 
@@ -7,7 +7,7 @@ class NonMaximumSuppressionStrategy(TransformationStrategy):
     """Unterdrückt überlappende Erkennungen und liefert `{index, score, box}`."""
 
     accepts = (TENSOR,)
-    produces = JSON_RESULT
+    produces = DETECTIONS
     parameters = {
         "box": Record({name: Integer(minimum=0) for name in ("left", "top", "right", "bottom")}),
         "scoreIndex": Integer(minimum=0),

@@ -6,6 +6,8 @@ export const modelWorkflowValueTypes = [
   "boolean",
   "json",
   "audio",
+  // Bilddatei (z. B. Maske oder Tiefenkarte); im Workflow ein `media`-Wert.
+  "image",
 ] as const;
 
 export type ModelWorkflowValueType =

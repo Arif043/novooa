@@ -15,6 +15,7 @@ import {
   modelInputSourceTypes,
   validateModelContract,
 } from "../domain/entities/model-contract.js";
+import {modelWorkflowValueTypes} from "../domain/entities/model-workflow-output.js";
 import {withLegacyOutputParametersAsSettings} from "./legacy-output-parameter-settings.js";
 
 export function modelContractFromUnknown(value: unknown): ModelContract {
@@ -113,8 +114,8 @@ function workflowOutputFrom(data: Record<string, unknown>): ModelOutput["workflo
 }
 
 function workflowTypeFrom(value: unknown): ModelOutput["workflowOutput"]["type"] {
-  if (value === "string" || value === "number" || value === "boolean" || value === "json" || value === "audio") {
-    return value;
+  if (typeof value === "string" && (modelWorkflowValueTypes as readonly string[]).includes(value)) {
+    return value as ModelOutput["workflowOutput"]["type"];
   }
   throw new Error("Der Typ der Workflow-Ausgabe ist ungültig.");
 }

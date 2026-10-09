@@ -37,7 +37,9 @@ def transformed_output_tensors(payload, values, numpy, resource_reader=None):
         values,
         strict=True,
     )
-    transformed = transform_outputs(named, payload["outputs"], numpy, resource_reader)
+    # Eingänge tragen z. B. ihre Bildgeometrie, damit Ausgänge ins Originalbild zurückrechnen.
+    input_metadata = {tensor["name"]: tensor.get("metadata", {}) for tensor in payload.get("inputs", [])}
+    transformed = transform_outputs(named, payload["outputs"], numpy, resource_reader, input_metadata)
     return [
         {
             **encode_tensor(output["name"], output["tensor"], numpy),

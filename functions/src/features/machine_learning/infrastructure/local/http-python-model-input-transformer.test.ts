@@ -46,6 +46,26 @@ test("sends number transformations to the private Python sidecar", async () => {
   assert.equal(client.payload?.source.type, "number");
 });
 
+test("sends audio, json, boolean and datetime sources to the sidecar as well", async () => {
+  const sources = [
+    {name: "eingabe", type: "audio" as const, contentType: "audio/wav", bytes: Uint8Array.from([1])},
+    {name: "eingabe", type: "json" as const, value: {land: "DE"}},
+    {name: "eingabe", type: "boolean" as const, value: true},
+    {name: "eingabe", type: "datetime" as const, value: "2026-10-09T10:00:00Z"},
+  ];
+  for (const source of sources) {
+    const client = new RecordingClient();
+    const transformer = new HttpPythonModelInputTransformer("http://novooa-ml:8081", client);
+
+    await transformer.transform({
+      input: {name: "eingabe", source: source.type, dataType: "float32", shape: [1], transformations: []},
+      source,
+    });
+
+    assert.equal(client.payload?.source.type, source.type);
+  }
+});
+
 class RecordingClient implements PythonTransformHttpClient {
   url: string | undefined;
   payload: {source: {type: string; dataBase64?: string}} | undefined;

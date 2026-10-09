@@ -1,3 +1,4 @@
+from novooa_ml.transformations.geometry import shift_geometry
 from novooa_ml.transformations.kinds import IMAGE
 from novooa_ml.transformations.parameters import positive_integer
 from novooa_ml.transformations.schema import Integer
@@ -25,6 +26,7 @@ class ImageCropStrategy(TransformationStrategy):
         image_width, image_height = image.size
         if right > image_width or bottom > image_height:
             raise ValueError("image.crop liegt außerhalb des Bildes.")
+        shift_geometry(context, -left, -top)
         return image.crop((left, top, right, bottom))
 
 

@@ -1,3 +1,4 @@
+from novooa_ml.transformations.geometry import shift_geometry
 from novooa_ml.transformations.kinds import IMAGE
 from novooa_ml.transformations.parameters import positive_integer
 from novooa_ml.transformations.schema import Integer
@@ -28,4 +29,5 @@ class ImageCenterCropStrategy(TransformationStrategy):
             )
         left = (image_width - width) // 2
         top = (image_height - height) // 2
+        shift_geometry(context, -left, -top)
         return image.crop((left, top, left + width, top + height))

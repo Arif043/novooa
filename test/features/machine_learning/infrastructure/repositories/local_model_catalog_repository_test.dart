@@ -51,6 +51,15 @@ void main() {
     expect(client.uploadedBytes, [1, 2, 3]);
   });
 
+  test('maps an image workflow output and labels it as Bild', () async {
+    final repository = LocalModelCatalogRepository(_ImageClient(), _channel());
+
+    final output = (await repository.loadGlobalEntries()).single.outputs.single;
+
+    expect(output.workflowType, 'image');
+    expect(output.workflowTypeLabel, 'Bild');
+  });
+
   test('maps an audio workflow output from the global catalog', () async {
     final repository = LocalModelCatalogRepository(_AudioClient(), _channel());
 
@@ -215,6 +224,18 @@ class _NoopClient extends WorkspaceApiClient {
     String path,
     Map<String, Object?> body,
   ) async => const {};
+}
+
+class _ImageClient extends _AudioClient {
+  @override
+  Future<Map<String, Object?>> get(String path) async {
+    final body = await super.get(path);
+    final entry = (body['items']! as List).single as Map<String, Object?>;
+    final contract = entry['contract']! as Map<String, Object?>;
+    final output = (contract['outputs']! as List).single as Map<String, Object?>;
+    (output['workflowOutput']! as Map<String, Object?>)['type'] = 'image';
+    return body;
+  }
 }
 
 class _AudioClient extends _Client {

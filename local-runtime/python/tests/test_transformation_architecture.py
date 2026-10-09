@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from novooa_ml.transformation_capabilities import transformation_capabilities
-from novooa_ml.transformations.kinds import ANY, KINDS
+from novooa_ml.transformations.kinds import ANY, KINDS, SAME
 
 PACKAGE = Path(__file__).resolve().parents[1] / "novooa_ml"
 
@@ -21,7 +21,8 @@ INPUT_TYPES = [
     "text.kokoroTokens", "text.piperPhonemeLength", "text.piperPhonemes", "text.toTensor",
 ]
 OUTPUT_TYPES = [
-    "audio.wav", "geometry.mergeRows", "geometry.scaleBounds", "mask.connectedComponents",
+    "audio.wav", "geometry.mergeRows", "geometry.scaleBounds", "geometry.toSource", "image.encode",
+    "mask.connectedComponents", "mask.toSource",
     "mask.textRegions", "sequence.ctcGreedyDecode", "sequence.segments", "tensor.argmax",
     "tensor.clip", "tensor.fitLength", "tensor.l2Normalize", "tensor.nonMaximumSuppression",
     "tensor.reduce", "tensor.reshape", "tensor.round", "tensor.scale", "tensor.sigmoid",
@@ -49,7 +50,7 @@ class CapabilitySnapshotTest(unittest.TestCase):
             with self.subTest(transformation_type=transformation_type):
                 self.assertTrue(declared["accepts"])
                 self.assertTrue(set(declared["accepts"]) <= set(KINDS) | {ANY})
-                self.assertIn(declared["produces"], KINDS)
+                self.assertIn(declared["produces"], (*KINDS, SAME))
 
 
 class StrategyLayoutTest(unittest.TestCase):

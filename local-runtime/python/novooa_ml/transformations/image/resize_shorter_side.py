@@ -1,3 +1,4 @@
+from novooa_ml.transformations.geometry import resize_geometry
 from novooa_ml.transformations.kinds import IMAGE
 from novooa_ml.transformations.parameters import positive_integer
 from novooa_ml.transformations.schema import Integer
@@ -22,4 +23,5 @@ class ImageResizeShorterSideStrategy(TransformationStrategy):
         width, height = image.size
         ratio = size / min(width, height)
         target = (max(1, round(width * ratio)), max(1, round(height * ratio)))
+        resize_geometry(context, image.size, target)
         return image.resize(target, context.image_module.Resampling.LANCZOS)

@@ -87,8 +87,8 @@ class DiscoveryTest(unittest.TestCase):
         types = {strategy.transformation_type for strategy in strategy_instances("novooa_ml.transformations.vision")}
 
         self.assertEqual(types, {
-            "mask.connectedComponents", "mask.textRegions", "geometry.mergeRows",
-            "geometry.scaleBounds", "tensor.nonMaximumSuppression",
+            "mask.connectedComponents", "mask.textRegions", "mask.toSource", "geometry.mergeRows",
+            "geometry.scaleBounds", "geometry.toSource", "tensor.nonMaximumSuppression",
         })
 
 

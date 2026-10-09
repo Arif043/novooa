@@ -10,6 +10,7 @@ export function modelTensorToJson(tensor: ModelTensor) {
     dataType: tensor.dataType,
     shape: tensor.shape,
     dataBase64: Buffer.from(tensor.bytes).toString("base64"),
+    ...(tensor.metadata === undefined ? {} : {metadata: tensor.metadata}),
   };
 }
 
@@ -20,6 +21,7 @@ export function modelTensorFromJson(value: unknown): ModelTensor {
     dataType: dataTypeFrom(data.dataType),
     shape: shapeFrom(data.shape),
     bytes: bytesFrom(data.dataBase64),
+    ...metadataFrom(data.metadata, data.name),
   };
   validateModelTensor(tensor);
   return tensor;
@@ -58,4 +60,12 @@ function validDimension(value: unknown): value is number {
 function bytesFrom(value: unknown): Uint8Array {
   if (typeof value !== "string") throw new Error("Die Tensor-Daten fehlen.");
   return Uint8Array.from(Buffer.from(value, "base64"));
+}
+
+function metadataFrom(value: unknown, name: unknown): {metadata?: Record<string, unknown>} {
+  if (value === undefined) return {};
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Die Metadaten des Tensors ${String(name)} sind ungültig.`);
+  }
+  return {metadata: value as Record<string, unknown>};
 }

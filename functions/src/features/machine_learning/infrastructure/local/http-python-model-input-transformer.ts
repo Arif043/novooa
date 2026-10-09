@@ -22,13 +22,8 @@ export class HttpPythonModelInputTransformer implements ModelInputTransformer {
   async transform(request: ModelInputTransformationRequest): Promise<ModelTensor> {
     validateModelInputSource(request.source, request.input);
     if (request.source.type === "tensor") return tensorFrom(request);
-    if (
-      request.source.type !== "image"
-      && request.source.type !== "text"
-      && request.source.type !== "number"
-    ) {
-      throw unsupportedSourceType(request.source.type);
-    }
+    // Welche Quellen unterstützt werden, entscheidet der Python-Sidecar (und schon beim Import
+    // die Vertragsprüfung); eine zweite Liste hier würde nur auseinanderlaufen.
     const payload = await this.httpClient.post(
       new URL("/v1/input-transforms", this.sidecarUrl).toString(),
       pythonModelInputTransformationJson(request),
@@ -57,10 +52,6 @@ function tensorFrom(request: ModelInputTransformationRequest): ModelTensor {
     throw new Error("Der Name der Tensorquelle stimmt nicht mit dem Modellvertrag überein.");
   }
   return request.source.tensor;
-}
-
-function unsupportedSourceType(type: string): Error {
-  return new Error(`Der lokale Transformer unterstützt ${type}-Quellen noch nicht.`);
 }
 
 function errorMessage(value: unknown): string {

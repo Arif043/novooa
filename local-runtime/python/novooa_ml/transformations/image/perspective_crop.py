@@ -1,3 +1,4 @@
+from novooa_ml.transformations.geometry import lose_geometry
 from novooa_ml.transformations.kinds import IMAGE
 from novooa_ml.transformations.parameters import positive_integer
 from novooa_ml.transformations.schema import Integer, ListOf, Number
@@ -21,6 +22,7 @@ class ImagePerspectiveCropStrategy(TransformationStrategy):
         points = quadrilateral(parameters.get("points"))
         width = positive_integer(parameters.get("width"))
         height = positive_integer(parameters.get("height"))
+        lose_geometry(context)
         return image.transform(
             (width, height),
             context.image_module.Transform.QUAD,

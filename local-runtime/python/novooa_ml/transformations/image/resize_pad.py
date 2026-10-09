@@ -1,3 +1,4 @@
+from novooa_ml.transformations.geometry import resize_geometry, shift_geometry
 from novooa_ml.transformations.kinds import IMAGE
 from novooa_ml.transformations.parameters import image_mode, positive_integer
 from novooa_ml.transformations.schema import Choice, Integer
@@ -30,7 +31,10 @@ class ImageResizePadStrategy(TransformationStrategy):
         size = scaled_size(image.size, scale)
         resized = image.resize(size, context.image_module.Resampling.LANCZOS)
         canvas = context.image_module.new(image.mode, target, background)
-        canvas.paste(resized, offset_for(target, size, alignment))
+        offset = offset_for(target, size, alignment)
+        canvas.paste(resized, offset)
+        resize_geometry(context, image.size, size)
+        shift_geometry(context, *offset)
         return canvas
 
 

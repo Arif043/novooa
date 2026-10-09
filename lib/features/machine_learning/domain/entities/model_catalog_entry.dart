@@ -131,6 +131,7 @@ class ModelManifestOutput extends Equatable {
     'number' => 'Zahl',
     'boolean' => 'Ja oder Nein',
     'audio' => 'Audio',
+    'image' => 'Bild',
     _ => 'Strukturierte Daten',
   };
 }

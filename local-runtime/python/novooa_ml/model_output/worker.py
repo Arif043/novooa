@@ -3,7 +3,7 @@ from novooa_ml.transformations.default_registry import default_transformation_re
 from novooa_ml.transformations.pipeline_check import check_output_pipeline
 
 
-def transform_outputs(outputs, definitions, numpy, resource_reader=None):
+def transform_outputs(outputs, definitions, numpy, resource_reader=None, input_metadata=None):
     by_name = {definition["name"]: definition for definition in definitions}
     registry = default_transformation_registry()
     # `outputs` kann ein einmal lesbarer Iterator sein (zip im ONNX-Worker).
@@ -16,7 +16,7 @@ def transform_outputs(outputs, definitions, numpy, resource_reader=None):
             "tensor": tensor,
             "transformationValues": {**extras, **transformation_values(
                 registry, tensor, by_name[name].get("transformations", []),
-                TransformationContext(numpy, resource_reader=resource_reader),
+                TransformationContext(numpy, image_module=image_module(), resource_reader=resource_reader, inputs=input_metadata),
             )},
         }
         for name, tensor, extras in outputs
@@ -49,3 +49,12 @@ def workflow_value(value):
     if hasattr(value, "tolist"):
         return value.tolist()
     return value
+
+
+def image_module():
+    """Pillow für Bildausgaben (`image.encode`); ohne Pillow bleiben andere Ausgänge nutzbar."""
+    try:
+        from PIL import Image
+    except ImportError:
+        return None
+    return Image

@@ -1,3 +1,4 @@
+from novooa_ml.transformations.geometry import resize_geometry, shift_geometry
 from novooa_ml.transformations.kinds import IMAGE
 from novooa_ml.transformations.parameters import image_mode, positive_integer
 from novooa_ml.transformations.schema import Choice, Integer
@@ -29,6 +30,9 @@ class ImageResizeHeightPadStrategy(TransformationStrategy):
         alignment = alignment_for(parameters.get("alignment", "topLeft"))
         background = background_for(parameters.get("background", 0))
         resized = resized_to_height(image, height, context.image_module)
+        resize_geometry(context, image.size, resized.size)
+        if width is not None and alignment == "center" and resized.size[0] < width:
+            shift_geometry(context, (width - resized.size[0]) // 2, 0)
         return padded_image(resized, width, multiple, alignment, background, context.image_module)
 
 

@@ -1,3 +1,4 @@
+from novooa_ml.transformations.geometry import restart_geometry
 from novooa_ml.transformations.kinds import IMAGE
 from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.transformations.values import require_image
@@ -18,4 +19,6 @@ class ImageExifTransposeStrategy(TransformationStrategy):
         image = require_image(value, self.transformation_type, context)
         from PIL import ImageOps
 
-        return ImageOps.exif_transpose(image)
+        turned = ImageOps.exif_transpose(image)
+        restart_geometry(context, turned)
+        return turned
