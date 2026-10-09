@@ -7,20 +7,35 @@ def transform_outputs(outputs, definitions, numpy, resource_reader=None):
     by_name = {definition["name"]: definition for definition in definitions}
     registry = default_transformation_registry()
     # `outputs` kann ein einmal lesbarer Iterator sein (zip im ONNX-Worker).
-    outputs = list(outputs)
-    for name, _ in outputs:
+    outputs = [(name, *dense_output(name, value, numpy)) for name, value in outputs]
+    for name, _, _ in outputs:
         check_output_pipeline(name, by_name[name].get("transformations", []), registry)
     return [
         {
             "name": name,
             "tensor": tensor,
-            "transformationValues": transformation_values(
+            "transformationValues": {**extras, **transformation_values(
                 registry, tensor, by_name[name].get("transformations", []),
                 TransformationContext(numpy, resource_reader=resource_reader),
-            ),
+            )},
         }
-        for name, tensor in outputs
+        for name, tensor, extras in outputs
     ]
+
+
+def dense_output(name, value, numpy):
+    """Macht ZipMap-Ausgänge (Liste von {Klasse: Wahrscheinlichkeit}) zu einem dichten Tensor.
+
+    scikit-learn-Klassifikatoren liefern Wahrscheinlichkeiten über `skl2onnx` standardmäßig so.
+    Die Spalten folgen der Klassenreihenfolge; die Klassen stehen als `classes` bereit.
+    """
+    if not isinstance(value, list) or not value or not all(isinstance(row, dict) for row in value):
+        return value, {}
+    classes = list(value[0].keys())
+    if any(list(row.keys()) != classes for row in value):
+        raise ValueError(f"Ausgang {name}: Die Klassen der Einträge unterscheiden sich.")
+    dense = numpy.asarray([[row[key] for key in classes] for row in value], dtype=numpy.float32)
+    return dense, {"classes": classes}
 
 
 def transformation_values(registry, tensor, transformations, context):

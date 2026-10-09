@@ -36,7 +36,7 @@ class JsonToTensorTest(unittest.TestCase):
         numpy.testing.assert_allclose(tensor_of("json", 7, [("json.toTensor", {})]), [7])
 
     def test_rejects_ragged_or_non_numeric_values(self):
-        for value in [[[1, 2], [3]], ["a"], {"a": 1}, None, []]:
+        for value in [[[1, 2], [3]], ["a", 1], {"a": 1}, None, []]:
             with self.subTest(value=value), self.assertRaisesRegex(ValueError, "json.toTensor"):
                 tensor_of("json", value, [("json.toTensor", {})])
 

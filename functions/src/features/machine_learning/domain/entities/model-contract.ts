@@ -12,6 +12,7 @@ export type {
 
 export const modelTensorDataTypes = [
   "float32",
+  "float16",
   "float64",
   "int64",
   "int32",
@@ -19,6 +20,8 @@ export const modelTensorDataTypes = [
   "int8",
   "uint8",
   "bool",
+  // Texte, z. B. Klassen oder Kategoriespalten klassischer ML-Modelle.
+  "string",
 ] as const;
 
 export type ModelTensorDataType = (typeof modelTensorDataTypes)[number];
@@ -200,10 +203,17 @@ function validateOutputTransformations(output: ModelOutput): void {
   validateWorkflowOutput(output.workflowOutput);
 }
 
+/** Über `$outputs.<ausgang>` liest ein Workflow-Mapping die Werte anderer Ausgänge. */
+const reservedResultNames = new Set(["outputs"]);
+
 function uniqueTransformationResults(transformations: TransformationPipeline): void {
   const names = transformations
     .map((transformation) => transformation.result?.trim())
     .filter((name): name is string => name !== undefined && name.length > 0);
+  const reserved = names.find((name) => reservedResultNames.has(name));
+  if (reserved !== undefined) {
+    throw new Error(`Der Ergebnisname ${reserved} ist reserviert.`);
+  }
   if (names.length !== new Set(names).size) {
     throw new Error("Transformations-Ergebnisse müssen eindeutig sein.");
   }

@@ -56,6 +56,8 @@ function resultFor(
   runtimeOutputs: Awaited<ReturnType<RunModelInference["execute"]>>,
 ): ModelInferenceResult {
   const definitions = new Map(model.contract.outputs.map((output) => [output.name, output]));
+  // Jedes Mapping sieht über `$outputs.<ausgang>` auch die Werte der anderen Ausgänge.
+  const allOutputs = Object.fromEntries(runtimeOutputs.map((output) => [output.tensor.name, output.transformationValues]));
   return {
     modelId: model.id,
     outputs: runtimeOutputs.map(({tensor, transformationValues}) => {
@@ -64,9 +66,10 @@ function resultFor(
         ...tensor,
         semantic: output.semantic,
         workflowOutput: output.workflowOutput,
-        value: mapWorkflowOutput(output.workflowOutput.mapping, new Map(
-          Object.entries(transformationValues),
-        )),
+        value: mapWorkflowOutput(output.workflowOutput.mapping, new Map([
+          ...Object.entries(transformationValues),
+          ["outputs", allOutputs],
+        ])),
       };
     }),
   };

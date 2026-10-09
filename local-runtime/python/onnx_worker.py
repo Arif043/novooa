@@ -3,6 +3,7 @@ import json
 import sys
 
 from novooa_ml.model_output.worker import transform_outputs
+from novooa_ml.tensor_codec import decode_tensor, encode_tensor
 
 
 def runtime_dependencies():
@@ -18,58 +19,7 @@ def runtime_dependencies():
 
 
 def input_arrays(payload, numpy):
-    return {
-        tensor["name"]: array_from_tensor(tensor, numpy)
-        for tensor in payload["inputs"]
-    }
-
-
-def array_from_tensor(tensor, numpy):
-    data_type = numpy_data_type(tensor["dataType"], numpy)
-    data = base64.b64decode(tensor["dataBase64"], validate=True)
-    return numpy.frombuffer(data, dtype=data_type).reshape(tensor["shape"])
-
-
-def numpy_data_type(name, numpy):
-    data_types = {
-        "float32": numpy.float32,
-        "float64": numpy.float64,
-        "int64": numpy.int64,
-        "int32": numpy.int32,
-        "int16": numpy.int16,
-        "int8": numpy.int8,
-        "uint8": numpy.uint8,
-        "bool": numpy.bool_,
-    }
-    if name not in data_types:
-        raise ValueError(f"Nicht unterstützter Tensor-Datentyp: {name}")
-    return data_types[name]
-
-
-def tensor_for_output(name, array, numpy):
-    normalized = numpy.ascontiguousarray(array)
-    return {
-        "name": name,
-        "dataType": model_data_type(normalized.dtype, numpy),
-        "shape": list(normalized.shape),
-        "dataBase64": base64.b64encode(normalized.tobytes()).decode("ascii"),
-    }
-
-
-def model_data_type(data_type, numpy):
-    data_types = {
-        numpy.dtype(numpy.float32): "float32",
-        numpy.dtype(numpy.float64): "float64",
-        numpy.dtype(numpy.int64): "int64",
-        numpy.dtype(numpy.int32): "int32",
-        numpy.dtype(numpy.int16): "int16",
-        numpy.dtype(numpy.int8): "int8",
-        numpy.dtype(numpy.uint8): "uint8",
-        numpy.dtype(numpy.bool_): "bool",
-    }
-    if data_type not in data_types:
-        raise ValueError(f"Nicht unterstützter ONNX-Ausgabe-Datentyp: {data_type}")
-    return data_types[data_type]
+    return {tensor["name"]: decode_tensor(tensor, numpy) for tensor in payload["inputs"]}
 
 
 def execute(payload, numpy, onnxruntime):
@@ -90,7 +40,7 @@ def transformed_output_tensors(payload, values, numpy, resource_reader=None):
     transformed = transform_outputs(named, payload["outputs"], numpy, resource_reader)
     return [
         {
-            **tensor_for_output(output["name"], output["tensor"], numpy),
+            **encode_tensor(output["name"], output["tensor"], numpy),
             "transformationValues": output["transformationValues"],
         }
         for output in transformed

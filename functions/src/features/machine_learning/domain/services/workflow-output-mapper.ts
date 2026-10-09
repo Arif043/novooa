@@ -35,14 +35,18 @@ function lookupValue(
   values: ReadonlyMap<string, ModelOutputValue>,
   item: ModelOutputValue | undefined,
 ): ModelOutputValue {
-  if (!isRecord(value) || !Array.isArray(value.values) || value.key === undefined) {
+  // `values` ist eine Liste im Manifest oder eine Referenz, z. B. `"$classes"`.
+  const table = isRecord(value) && typeof value.values === "string"
+    ? referenceValue(value.values, values, item)
+    : isRecord(value) ? value.values : undefined;
+  if (!isRecord(value) || !Array.isArray(table) || value.key === undefined) {
     throw new Error("$lookup benötigt values und key.");
   }
   const index = mappedValue(value.key, values, item);
-  if (typeof index !== "number" || !Number.isSafeInteger(index) || index < 0 || index >= value.values.length) {
+  if (typeof index !== "number" || !Number.isSafeInteger(index) || index < 0 || index >= table.length) {
     throw new Error("$lookup erhielt keinen gültigen Index.");
   }
-  return mappedValue(value.values[index], values, item);
+  return mappedValue(table[index] as TransformationParameter, values, item);
 }
 
 function referenceValue(value: string, values: ReadonlyMap<string, ModelOutputValue>, item?: ModelOutputValue): ModelOutputValue {

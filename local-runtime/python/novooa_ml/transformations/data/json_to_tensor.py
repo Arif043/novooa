@@ -5,7 +5,11 @@ from novooa_ml.transformations.strategy import TransformationStrategy
 
 
 class JsonToTensorStrategy(TransformationStrategy):
-    """Wandelt eine Zahl, einen Wahrheitswert oder verschachtelte Zahlenlisten in einen Tensor."""
+    """Wandelt Zahlen, Wahrheitswerte oder Texte (auch verschachtelt) in einen Tensor.
+
+    Zahlen und Wahrheitswerte ergeben `float32`, Texte einen String-Tensor, etwa für
+    Kategoriespalten klassischer ML-Modelle. Gemischte Listen sind ein Fehler.
+    """
 
     accepts = (JSON,)
     produces = TENSOR
@@ -16,26 +20,34 @@ class JsonToTensorStrategy(TransformationStrategy):
 
     def transform(self, value, parameters, context):
         values = value if isinstance(value, list) else [value]
-        if not values or not is_rectangular(values):
+        if not values or shape_of(values) is None:
             raise ValueError(
-                "json.toTensor benötigt eine Zahl, einen Wahrheitswert oder gleich lange, "
-                "nicht leere Zahlenlisten."
+                "json.toTensor benötigt Zahlen, Wahrheitswerte oder Texte in gleich langen, "
+                "nicht leeren Listen."
             )
-        return context.numpy.asarray(values, dtype=context.numpy.float32)
-
-
-def is_rectangular(value):
-    if not isinstance(value, list):
-        return isinstance(value, Real)
-    if not value:
-        return False
-    shapes = {shape_of(item) for item in value}
-    return len(shapes) == 1 and None not in shapes
+        leaves = list(flatten(values))
+        if all(isinstance(leaf, str) for leaf in leaves):
+            return context.numpy.array(values, dtype=object)
+        if all(isinstance(leaf, Real) for leaf in leaves):
+            return context.numpy.asarray(values, dtype=context.numpy.float32)
+        raise ValueError("json.toTensor: Zahlen und Texte dürfen nicht gemischt werden.")
 
 
 def shape_of(value):
-    if isinstance(value, Real):
+    """Form einer rechteckigen Verschachtelung oder None."""
+    if isinstance(value, (Real, str)):
         return ()
-    if not isinstance(value, list) or not is_rectangular(value):
+    if not isinstance(value, list) or not value:
         return None
-    return (len(value), shape_of(value[0]))
+    shapes = {shape_of(item) for item in value}
+    if len(shapes) != 1 or None in shapes:
+        return None
+    return (len(value), *shapes.pop())
+
+
+def flatten(value):
+    if isinstance(value, list):
+        for item in value:
+            yield from flatten(item)
+    else:
+        yield value

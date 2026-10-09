@@ -17,7 +17,7 @@ INPUT_TYPES = [
     "image.resizeShorterSide", "json.features", "json.toTensor", "number.toTensor",
     "tensor.channelOrder", "tensor.clip", "tensor.constant", "tensor.fitLength", "tensor.layout",
     "tensor.normalize", "tensor.reshape", "tensor.scale", "tensor.transpose", "text.kokoroStyle",
-    "text.kokoroTokens", "text.piperPhonemeLength", "text.piperPhonemes",
+    "text.kokoroTokens", "text.piperPhonemeLength", "text.piperPhonemes", "text.toTensor",
 ]
 OUTPUT_TYPES = [
     "audio.wav", "geometry.mergeRows", "geometry.scaleBounds", "mask.connectedComponents",

@@ -42,7 +42,13 @@ class TensorEncodingTest(unittest.TestCase):
             tensor_for_contract(numpy.zeros((2, 3)), definition([1, 1, 2, 3]), numpy)
 
     def test_rejects_an_unknown_data_type(self):
-        with self.assertRaisesRegex(ValueError, "Nicht unterstützter Tensor-Datentyp: string"):
+        with self.assertRaisesRegex(ValueError, "Nicht unterstützter Tensor-Datentyp: complex64"):
+            tensor_for_contract(numpy.zeros(1), definition([1], "complex64"), numpy)
+
+    def test_names_texts_and_numbers_that_do_not_fit_the_contract(self):
+        with self.assertRaisesRegex(ValueError, "Eingang eingabe: Die Transformationen erzeugten Texte, der Vertrag erwartet float32."):
+            tensor_for_contract(numpy.array(["DE"], dtype=object), definition([1]), numpy)
+        with self.assertRaisesRegex(ValueError, "Eingang eingabe: Die Transformationen erzeugten Zahlen, der Vertrag erwartet string."):
             tensor_for_contract(numpy.zeros(1), definition([1], "string"), numpy)
 
     def test_encodes_values_without_loss(self):

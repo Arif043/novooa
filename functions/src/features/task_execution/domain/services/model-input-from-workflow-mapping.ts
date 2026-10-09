@@ -10,6 +10,7 @@ import {
 import {
   type ModelInferenceInputMapping,
 } from "../entities/task.js";
+import {bytesFor, bytesPerElement} from "./workflow-tensor-bytes.js";
 
 export async function modelInputFromWorkflowMapping(
   mapping: ModelInferenceInputMapping,
@@ -87,7 +88,8 @@ function jsonValue(value: unknown): unknown {
 function tensorFor(mapping: ModelInferenceInputMapping, value: unknown): ModelTensor {
   const serialized = serializedTensor(mapping.modelInputName, value);
   if (serialized !== undefined) return serialized;
-  const values = numericValues(jsonValue(value));
+  const raw = jsonValue(value);
+  const values = mapping.dataType === "string" ? textValues(raw) : numericValues(raw);
   const shape = shapeFor(mapping, values.length);
   if (elementCount(shape) !== values.length) {
     throw new Error(`Die Tensorwerte für ${mapping.modelInputName} passen nicht zur Tensor-Form.`);
@@ -96,7 +98,9 @@ function tensorFor(mapping: ModelInferenceInputMapping, value: unknown): ModelTe
     name: mapping.modelInputName,
     dataType: mapping.dataType,
     shape,
-    bytes: bytesFor(mapping.dataType, values),
+    bytes: mapping.dataType === "string"
+      ? new TextEncoder().encode(JSON.stringify(values))
+      : bytesFor(mapping.dataType, values as number[]),
   };
 }
 
@@ -113,7 +117,7 @@ function serializedTensor(name: string, value: unknown): ModelTensor | undefined
 }
 
 function tensorDataType(value: unknown): ModelInferenceInputMapping["dataType"] {
-  if (typeof value !== "string" || !(value in bytesPerElement)) {
+  if (typeof value !== "string" || !(value in bytesPerElement || value === "string")) {
     throw new Error("Der Tensor-Ausgang enthält keinen unterstützten Datentyp.");
   }
   return value as ModelInferenceInputMapping["dataType"];
@@ -124,6 +128,13 @@ function tensorShape(value: unknown): number[] {
     throw new Error("Der Tensor-Ausgang enthält eine ungültige Form.");
   }
   return value;
+}
+
+/** String-Tensoren tragen ihre Werte als UTF-8-JSON-Array in Zeilenfolge. */
+function textValues(value: unknown): string[] {
+  if (typeof value === "string") return [value];
+  if (!Array.isArray(value)) throw new Error("Die Modelleingabe erwartet Texte oder ein Text-Array.");
+  return value.flatMap(textValues);
 }
 
 function numericValues(value: unknown): number[] {
@@ -144,40 +155,6 @@ function shapeFor(mapping: ModelInferenceInputMapping, length: number): number[]
 
 function elementCount(shape: readonly number[]): number {
   return shape.reduce((count, dimension) => count * dimension, 1);
-}
-
-function bytesFor(
-  dataType: ModelInferenceInputMapping["dataType"],
-  values: readonly number[],
-): Uint8Array {
-  const bytes = new Uint8Array(values.length * bytesPerElement[dataType]);
-  const view = new DataView(bytes.buffer);
-  values.forEach((value, index) => writeValue(view, dataType, index, value));
-  return bytes;
-}
-
-const bytesPerElement = {
-  float32: 4, float64: 8, int64: 8, int32: 4,
-  int16: 2, int8: 1, uint8: 1, bool: 1,
-} as const;
-
-function writeValue(
-  view: DataView,
-  type: ModelInferenceInputMapping["dataType"],
-  index: number,
-  value: number,
-): void {
-  const offset = index * bytesPerElement[type];
-  switch (type) {
-    case "float32": view.setFloat32(offset, value, true); return;
-    case "float64": view.setFloat64(offset, value, true); return;
-    case "int64": view.setBigInt64(offset, BigInt(Math.trunc(value)), true); return;
-    case "int32": view.setInt32(offset, value, true); return;
-    case "int16": view.setInt16(offset, value, true); return;
-    case "int8": view.setInt8(offset, value); return;
-    case "uint8": view.setUint8(offset, value); return;
-    case "bool": view.setUint8(offset, value === 0 ? 0 : 1);
-  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

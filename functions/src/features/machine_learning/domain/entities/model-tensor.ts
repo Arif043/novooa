@@ -10,8 +10,9 @@ export type ModelTensor = {
   bytes: Uint8Array;
 };
 
-const bytesPerElement: Readonly<Record<ModelTensorDataType, number>> = {
+const bytesPerElement: Readonly<Record<Exclude<ModelTensorDataType, "string">, number>> = {
   float32: 4,
+  float16: 2,
   float64: 8,
   int64: 8,
   int32: 4,
@@ -99,10 +100,26 @@ function validDimension(dimension: number): boolean {
 }
 
 function validByteLength(tensor: ModelTensor): void {
-  const expected = elementCount(tensor.shape) * bytesPerElement[tensor.dataType];
-  if (tensor.bytes.byteLength !== expected) {
+  const valid = tensor.dataType === "string"
+    ? stringCount(tensor.bytes) === elementCount(tensor.shape)
+    : tensor.bytes.byteLength === elementCount(tensor.shape) * bytesPerElement[tensor.dataType];
+  if (!valid) {
     throw new Error(`Die Byte-Länge von Tensor ${tensor.name} ist ungültig.`);
   }
+}
+
+/** String-Tensoren tragen ein UTF-8-JSON-Array ihrer Werte in Zeilenfolge. */
+export function stringTensorValues(bytes: Uint8Array): readonly string[] | null {
+  try {
+    const values = JSON.parse(new TextDecoder().decode(bytes)) as unknown;
+    return Array.isArray(values) && values.every((value) => typeof value === "string") ? values : null;
+  } catch {
+    return null;
+  }
+}
+
+function stringCount(bytes: Uint8Array): number {
+  return stringTensorValues(bytes)?.length ?? -1;
 }
 
 function elementCount(shape: readonly number[]): number {

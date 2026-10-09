@@ -134,7 +134,7 @@ gleichgesetzt werden:
 | --- | --- | --- |
 | Workflow-Werttyp | Fachlicher Wert zwischen Bausteinen | `string`, `number`, `boolean`, `json`, `audio` |
 | Modellquelltyp | Wert, den eine Modelleingabe vor ihrer Transformation erhält | `text`, `number`, `image`, `audio`, `file`, `datetime`, `boolean`, `json`, `tensor` |
-| Tensor-Datentyp | Technische ONNX-Repräsentation an der Inferenzgrenze | `float32`, `int64`, `uint8`, einschließlich Tensorform |
+| Tensor-Datentyp | Technische ONNX-Repräsentation an der Inferenzgrenze | `float32`, `float16`, `float64`, `int64`, `int32`, `int16`, `int8`, `uint8`, `bool`, `string`, einschließlich Tensorform. `string`-Tensoren reisen als UTF-8-JSON-Array ihrer Werte in Zeilenfolge. |
 
 Ein Modellvertrag bildet Modellquelltypen über Transformationen auf
 Tensor-Datentypen ab. Ein Workflow-Wert kann dabei direkt als Quelle dienen,
@@ -510,11 +510,13 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `audio.normalize` | optional `mode` (`peak` oder `rms`), `target` (Standard `1` bzw. `0.1`) | Eingang (Audio). Gleicht die Lautstärke an; Stille bleibt unverändert. |
 | `audio.fitDuration` | `seconds`, optional `keep` | Eingang (Audio). Füllt mit Stille auf oder kürzt auf eine feste Dauer. |
 | `audio.melSpectrogram` | optional `frameLength` (400), `hopLength` (160), `melBins` (80), `minFrequency`, `maxFrequency`, `power` (2), `scale` (`power`, `log`, `log10`, `db`), `dynamicRange`, `melScale` (`slaney`, `htk`), `filterNormalization` (`slaney`, `none`), `center` (`true`) | Eingang (Audio). Liefert ein Mel-Spektrogramm `[melBins, Frames]` aus Mono-Audio. `db` ist relativ zum Maximum; `dynamicRange` begrenzt den Abstand zum Maximum in der gewählten Einheit. Voreinstellungen entsprechen librosa. |
-| `json.toTensor` | keine | Eingang (JSON/Boolean). Zahl, Wahrheitswert oder gleich lange Zahlenlisten → Tensor. |
+| `json.toTensor` | keine | Eingang (JSON/Boolean). Zahlen und Wahrheitswerte → `float32`-Tensor, Texte → String-Tensor, jeweils auch als gleich lange (verschachtelte) Listen. Gemischte Listen sind ein Fehler. |
+| `text.toTensor` | keine | Eingang (Text). Text → String-Tensor `[1]`, z. B. für Pipelines mit eingebauter Textverarbeitung (TF-IDF). |
 | `json.features` | `features: [{field, kind?, mean?, std?, default?, categories?, unknown?}]` | Eingang (JSON). Datensatz → Merkmalsvektor in fester Reihenfolge; `field` als Punktpfad, `kind` `number` (standardisiert mit `mean`/`std`), `boolean` oder `category` (One-Hot, unbekannte Werte `zero` oder `error`). Eine Liste von Datensätzen ergibt eine Zeile je Datensatz. |
 | `sequence.segments` | `frameDuration` oder `hopLength` + `sampleRate`, optional `threshold`, `labels`, `backgroundIndex`, `mergeGap`, `minDuration` | Ausgang. Frame-Scores → Zeitabschnitte `{start, end, score}`; Klassenscores (Frames × Klassen) → `{start, end, index, label?, score}` je wahrscheinlichster Klasse. Zeiten in Sekunden, Werte auf 6 Stellen gerundet. |
 | `workflowOutput.mapping.$map` | `from`, `item` | Formt ein Transformations-Ergebnis zu einer Liste. |
-| `workflowOutput.mapping.$lookup` | `values`, `key` | Liest einen Wert aus einer indizierten Tabelle. |
+| `workflowOutput.mapping.$lookup` | `values` (Liste oder Referenz wie `"$classes"`), `key` | Liest einen Wert aus einer indizierten Tabelle. |
+| `workflowOutput.mapping.$outputs` | `$outputs.<ausgang>.<wert>` | Liest den Endwert (`tensor`) oder ein benanntes Ergebnis eines anderen Ausgangs. |
 
 Der Worker fügt bei einem Manifest mit einer Eingabeform wie `["dynamic", 3, 224, 224]` den Batch-
 Index hinzu, wenn das Bild zunächst als `[3, 224, 224]` vorliegt. Vor der
@@ -589,6 +591,45 @@ Einsatz.
   `tests/test_pipeline_check.py` prüft u. a. die mitgelieferten Systemmodell-Manifeste.
 - Die Cloud-Runtime pflegt ihre Bildtransformationen weiterhin als feste Liste in
   `model-contract-capabilities.ts` und kennt die neueren Typen noch nicht.
+
+### Klassisches ML (scikit-learn, XGBoost, LightGBM)
+
+Modelle aus `skl2onnx` oder `onnxmltools` lassen sich ohne neuen Code anbinden:
+
+- **Datentypen:** Text- und Kategoriespalten sind `string`-Tensoren. Ein Datensatz
+  `{"land": "CH", "umsatz": 88}` wird z. B. mit `json.toTensor` (Textspalte als
+  `[["CH"]]`) und `json.features` (Zahlenspalten) auf die benannten Modelleingänge
+  verteilt. Passen Texte oder Zahlen nicht zum Datentyp im Vertrag, nennt die Runtime
+  Eingang und erwarteten Typ.
+- **ZipMap:** `skl2onnx` liefert Klassenwahrscheinlichkeiten standardmäßig als Liste von
+  Dictionaries. Die Runtime macht daraus einen `float32`-Tensor `[N, Klassen]` (Spalten in
+  Klassenreihenfolge) und stellt die Klassen zusätzlich als `$classes` bereit. Der Vertrag
+  deklariert den Ausgang als `float32`, z. B. mit Form `["dynamic", "dynamic"]`.
+  `zipmap=False` beim Export funktioniert ebenso.
+- **Mapping über Ausgänge:** Jedes Workflow-Mapping sieht über
+  `$outputs.<ausgang>.<wert>` die Werte der anderen Ausgänge (`tensor` oder benannte
+  Ergebnisse). `outputs` ist als Ergebnisname reserviert.
+- **`$lookup` mit Referenz:** `values` darf statt einer Liste eine Referenz sein, z. B.
+  `{"$lookup": {"values": "$classes", "key": "$index"}}`.
+
+Beispiel eines Klassifikators mit Text-Klassen (`LogisticRegression`, ZipMap):
+
+```json
+"outputs": [
+  {"name": "output_label", "dataType": "string", "shape": ["dynamic"],
+   "semantic": "classification.label", "transformations": [],
+   "workflowOutput": {"name": "klasse", "type": "string", "mapping": "$tensor.0"}},
+  {"name": "output_probability", "dataType": "float32", "shape": ["dynamic", "dynamic"],
+   "semantic": "classification.scores",
+   "transformations": [{"type": "tensor.reduce", "parameters": {"operation": "max"}, "result": "best"}],
+   "workflowOutput": {"name": "ergebnis", "type": "json",
+     "mapping": {"label": "$outputs.output_label.tensor.0", "score": "$best.0"}}}
+]
+```
+
+Die Tests prüfen das mit echten Modellen (`local-runtime/python/tests/fixtures/sklearn`,
+erzeugt mit `build_fixtures.py`): Klassifikator mit Text-Klassen und ZipMap, Regressor und
+eine Pipeline mit Textspalte (`OneHotEncoder`).
 
 ### Allgemeine OCR-Pipeline
 
