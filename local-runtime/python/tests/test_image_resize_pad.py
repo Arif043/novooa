@@ -4,7 +4,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from novooa_ml.input_transforms.image_resize_pad_strategy import ImageResizePadStrategy
+import numpy
+
+from novooa_ml.input_transforms.image.resize_pad import ImageResizePadStrategy
+from novooa_ml.transformations.context import TransformationContext
 
 
 class ImageResizePadStrategyTest(unittest.TestCase):
@@ -12,7 +15,7 @@ class ImageResizePadStrategyTest(unittest.TestCase):
         source = ImageRecorder((100, 20))
         context = ImageContext(source)
 
-        ImageResizePadStrategy().transform(context, {"width": 200, "height": 100})
+        context.image = ImageResizePadStrategy().transform(context.image, {"width": 200, "height": 100}, context)
 
         self.assertEqual(source.resize_size, (200, 40))
         self.assertEqual(context.image.size, (200, 100))
@@ -22,8 +25,8 @@ class ImageResizePadStrategyTest(unittest.TestCase):
         source = ImageRecorder((100, 20))
         context = ImageContext(source)
 
-        ImageResizePadStrategy().transform(
-            context, {"width": 200, "height": 100, "alignment": "center"}
+        context.image = ImageResizePadStrategy().transform(
+            context.image, {"width": 200, "height": 100, "alignment": "center"}, context
         )
 
         self.assertEqual(context.image.paste_offset, (0, 30))
@@ -31,18 +34,18 @@ class ImageResizePadStrategyTest(unittest.TestCase):
     def test_rejects_an_unknown_alignment(self):
         with self.assertRaisesRegex(ValueError, "topLeft oder center"):
             ImageResizePadStrategy().transform(
-                ImageContext(ImageRecorder((10, 10))),
+                ImageRecorder((10, 10)),
                 {"width": 20, "height": 20, "alignment": "bottomRight"},
+                TransformationContext(numpy, image_module=ImageModule),
             )
 
 
-class ImageContext:
-    def __init__(self, image):
-        self.image = image
-        self.image_module = ImageModule
+class ImageContext(TransformationContext):
+    """Kontext mit Fake-Bildmodul; hält das zuletzt erzeugte Bild für die Prüfung."""
 
-    def require_image(self, _):
-        return None
+    def __init__(self, image):
+        super().__init__(numpy, image_module=ImageModule)
+        self.image = image
 
 
 class ImageRecorder:

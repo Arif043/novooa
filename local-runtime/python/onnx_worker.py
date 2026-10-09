@@ -81,13 +81,15 @@ def execute(payload, numpy, onnxruntime):
     return {"outputs": transformed_output_tensors(payload, values, numpy)}
 
 
-def transformed_output_tensors(payload, values, numpy):
+def transformed_output_tensors(payload, values, numpy, resource_reader=None):
     named = zip(
         [output["name"] for output in payload["outputs"]],
         values,
         strict=True,
     )
-    transformed = transform_outputs(named, payload["outputs"], payload.get("outputParameters", []), numpy)
+    transformed = transform_outputs(
+        named, payload["outputs"], payload.get("outputParameters", []), numpy, resource_reader,
+    )
     return [
         {
             **tensor_for_output(output["name"], output["tensor"], numpy),

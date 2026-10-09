@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import numpy
 
-from novooa_ml import tensor_operations as operations
+from novooa_ml.transformations.shared.tensor_fit_length import fit_length
 from novooa_ml.input_transforms.worker import transform_payload
 
 
@@ -89,31 +89,31 @@ class JsonFeaturesTest(unittest.TestCase):
 
 class FitLengthTest(unittest.TestCase):
     def test_pads_with_a_value_at_the_end(self):
-        result = operations.fit_length(numpy, numpy.array([1, 2]), {"length": 4, "value": -1})
+        result = fit_length(numpy, numpy.array([1, 2]), {"length": 4, "value": -1})
 
         numpy.testing.assert_allclose(result, [1, 2, -1, -1])
 
     def test_keeps_the_most_recent_values_for_time_series(self):
-        result = operations.fit_length(numpy, numpy.arange(10), {"length": 3, "keep": "end"})
+        result = fit_length(numpy, numpy.arange(10), {"length": 3, "keep": "end"})
 
         numpy.testing.assert_allclose(result, [7, 8, 9])
 
     def test_pads_in_front_when_keeping_the_end(self):
-        result = operations.fit_length(numpy, numpy.array([5, 6]), {"length": 4, "keep": "end"})
+        result = fit_length(numpy, numpy.array([5, 6]), {"length": 4, "keep": "end"})
 
         numpy.testing.assert_allclose(result, [0, 0, 5, 6])
 
     def test_works_along_another_axis(self):
-        result = operations.fit_length(numpy, numpy.ones((2, 3)), {"length": 4, "axis": 0})
+        result = fit_length(numpy, numpy.ones((2, 3)), {"length": 4, "axis": 0})
 
         self.assertEqual(result.shape, (4, 3))
         numpy.testing.assert_allclose(result[2:], 0)
 
     def test_rejects_invalid_parameters(self):
         with self.assertRaisesRegex(ValueError, "length"):
-            operations.fit_length(numpy, numpy.ones(3), {"length": 0})
+            fit_length(numpy, numpy.ones(3), {"length": 0})
         with self.assertRaisesRegex(ValueError, "keep"):
-            operations.fit_length(numpy, numpy.ones(3), {"length": 2, "keep": "middle"})
+            fit_length(numpy, numpy.ones(3), {"length": 2, "keep": "middle"})
 
     def test_builds_a_time_series_window_from_a_number_list(self):
         tensor = tensor_of("number", [1, 2, 3, 4, 5], [("number.toTensor", {}), ("tensor.fitLength", {"length": 3, "keep": "end"})])

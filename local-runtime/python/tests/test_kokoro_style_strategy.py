@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import numpy
-from novooa_ml.input_transforms.kokoro_style_strategy import style_for
+from novooa_ml.input_transforms.text.kokoro_style import style_for
 
 
 class KokoroStyleStrategyTest(unittest.TestCase):

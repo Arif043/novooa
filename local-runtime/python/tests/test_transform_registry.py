@@ -5,32 +5,33 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from novooa_ml.input_transforms.registry import TransformationRegistry
-from novooa_ml.input_transforms.strategy import InputTransformStrategy
+from novooa_ml.transformations.registry import TransformationRegistry
+from novooa_ml.transformations.strategy import TransformationStrategy
 from novooa_ml.input_transforms.default_registry import default_transformation_registry
+from novooa_ml.transformations.context import TransformationContext
 
 
 class TransformRegistryTest(unittest.TestCase):
     def test_applies_independent_strategies_in_contract_order(self):
         first = RecordingStrategy("first")
         second = RecordingStrategy("second")
-        context = {"calls": []}
-
-        TransformationRegistry([first, second]).apply(
-            context,
+        result = TransformationRegistry([first, second]).run(
+            [],
             [
-                {"type": "first", "parameters": {}},
+                {"type": "first", "parameters": {}, "result": "nachErstem"},
                 {"type": "second", "parameters": {}},
             ],
+            None,
         )
 
-        self.assertEqual(context["calls"], ["first", "second"])
+        self.assertEqual(result.value, ["first", "second"])
+        self.assertEqual(result.results, {"nachErstem": ["first"]})
 
     def test_rejects_an_unregistered_transformation(self):
         registry = TransformationRegistry([])
 
         with self.assertRaisesRegex(ValueError, "Nicht unterstützte Transformation"):
-            registry.apply({}, [{"type": "unknown", "parameters": {}}])
+            registry.run(None, [{"type": "unknown", "parameters": {}}], None)
 
     def test_discovers_registered_strategy_modules(self):
         self.assertIn(
@@ -43,7 +44,7 @@ class TransformRegistryTest(unittest.TestCase):
         )
 
 
-class RecordingStrategy(InputTransformStrategy):
+class RecordingStrategy(TransformationStrategy):
     def __init__(self, name):
         self._name = name
 
@@ -51,65 +52,56 @@ class RecordingStrategy(InputTransformStrategy):
     def transformation_type(self):
         return self._name
 
-    def transform(self, context, parameters):
-        context["calls"].append(self._name)
-
-
-if __name__ == "__main__":
-    unittest.main()
+    def transform(self, value, parameters, context):
+        return [*value, self._name]
 
 
 class ImageCropStrategyTest(unittest.TestCase):
     def test_crops_a_declared_rectangle(self):
-        from novooa_ml.input_transforms.image_crop_strategy import ImageCropStrategy
+        from novooa_ml.input_transforms.image.crop import ImageCropStrategy
 
         image = ImageRecorder((20, 10))
-        context = ImageContext(image)
-
         ImageCropStrategy().transform(
-            context, {"left": 2, "top": 3, "width": 8, "height": 4}
+            image, {"left": 2, "top": 3, "width": 8, "height": 4}, image_context()
         )
 
         self.assertEqual(image.crop_box, (2, 3, 10, 7))
 
     def test_rejects_a_crop_outside_the_image(self):
-        from novooa_ml.input_transforms.image_crop_strategy import ImageCropStrategy
+        from novooa_ml.input_transforms.image.crop import ImageCropStrategy
 
         with self.assertRaisesRegex(ValueError, "außerhalb"):
             ImageCropStrategy().transform(
-                ImageContext(ImageRecorder((10, 10))),
+                ImageRecorder((10, 10)),
                 {"left": 2, "top": 3, "width": 9, "height": 4},
+                image_context(),
             )
 
 
 class ImagePerspectiveCropStrategyTest(unittest.TestCase):
     def test_transforms_a_declared_quadrilateral(self):
-        from novooa_ml.input_transforms.image_perspective_crop_strategy import (
-            ImagePerspectiveCropStrategy,
-        )
+        from novooa_ml.input_transforms.image.perspective_crop import ImagePerspectiveCropStrategy
 
         image = ImageRecorder((20, 10))
-        context = ImageContext(image)
-
         ImagePerspectiveCropStrategy().transform(
-            context,
+            image,
             {"points": [0, 0, 10, 0, 10, 8, 0, 8], "width": 10, "height": 8},
+            image_context(),
         )
 
         self.assertEqual(image.transformation[0], (10, 8))
         self.assertEqual(image.transformation[2], (0, 0, 10, 0, 10, 8, 0, 8))
 
 
-class ImageContext:
-    def __init__(self, image):
-        self.image = image
-        self.image_module = ImageModule
+def image_context():
+    import numpy
 
-    def require_image(self, _):
-        return None
+    return TransformationContext(numpy, image_module=ImageModule)
 
 
 class ImageRecorder:
+    mode = "RGB"
+
     def __init__(self, size):
         self.size = size
         self.crop_box = None
@@ -130,3 +122,7 @@ class ImageModule:
 
     class Resampling:
         BICUBIC = "bicubic"
+
+
+if __name__ == "__main__":
+    unittest.main()

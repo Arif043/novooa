@@ -1,15 +1,13 @@
 import base64
 
 
-def tensor_for_contract(context, definition):
-    tensor = context.tensor_array()
+def tensor_for_contract(tensor, definition, numpy):
+    """Fügt bei Bedarf die Batch-Dimension hinzu, prüft die Form und kodiert den Tensor."""
     expected_shape = definition["shape"]
     if len(expected_shape) == tensor.ndim + 1:
-        tensor = context.numpy.expand_dims(tensor, axis=0)
+        tensor = numpy.expand_dims(tensor, axis=0)
     validate_shape(tensor.shape, expected_shape)
-    tensor = context.numpy.ascontiguousarray(
-        tensor.astype(numpy_data_type(definition["dataType"], context.numpy))
-    )
+    tensor = numpy.ascontiguousarray(tensor.astype(numpy_data_type(definition["dataType"], numpy)))
     return {
         "name": definition["name"],
         "dataType": definition["dataType"],

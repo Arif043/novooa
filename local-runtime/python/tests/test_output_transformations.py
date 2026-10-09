@@ -5,7 +5,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from novooa_ml.output_transforms.default_registry import default_output_transformation_registry
-from novooa_ml.output_transforms.registry import OutputTransformationContext
+from novooa_ml.transformations.context import TransformationContext
+from novooa_ml.output_transforms.worker import transformation_values
 from onnx_worker import transformed_output_tensors
 
 
@@ -17,7 +18,7 @@ class OutputTransformationRegistryTest(unittest.TestCase):
         self.registry = default_output_transformation_registry()
 
     def test_converts_a_mask_into_generic_regions(self):
-        values = self.registry.process(
+        values = transformation_values(self.registry, 
             self.numpy.array([[[0, 1], [1, 1]]]),
             [
                 {"type": "tensor.threshold", "parameters": {"value": 0.5}},
@@ -33,7 +34,7 @@ class OutputTransformationRegistryTest(unittest.TestCase):
 
 
     def test_groups_mask_fragments_into_scored_text_regions(self):
-        values = self.registry.process(
+        values = transformation_values(self.registry, 
             self.numpy.array([[[[0, .9, .9, 0, 0, .8, .8, 0], [0, .9, .9, 0, 0, .8, .8, 0], [0, 0, 0, 0, 0, 0, 0, 0], [0, .7, .7, 0, 0, .7, .7, 0]]]]),
             [{
                 "type": "mask.textRegions",
@@ -56,7 +57,7 @@ class OutputTransformationRegistryTest(unittest.TestCase):
 
 
     def test_merges_regions_sharing_a_text_row(self):
-        values = self.registry.process(
+        values = transformation_values(self.registry, 
             [
                 {"bounds": {"left": 10, "top": 20, "width": 80, "height": 18}, "pixelCount": 20, "score": .9},
                 {"bounds": {"left": 200, "top": 24, "width": 30, "height": 18}, "pixelCount": 10, "score": .8},
@@ -75,7 +76,7 @@ class OutputTransformationRegistryTest(unittest.TestCase):
         self.assertEqual(values["rows"][0]["memberCount"], 2)
 
     def test_decodes_ctc_logits_with_manifest_labels(self):
-        values = self.registry.process(
+        values = transformation_values(self.registry, 
             self.numpy.array([[[0, 5, 0], [0, 5, 0], [5, 0, 0], [0, 0, 5]]]),
             [{"type": "sequence.ctcGreedyDecode", "result": "lines", "parameters": {"labels": ["", "A", "B"], "blankIndex": 0}}],
             self.context(),
@@ -84,7 +85,7 @@ class OutputTransformationRegistryTest(unittest.TestCase):
         self.assertEqual(values["lines"][0]["text"], "AB")
 
     def test_limits_ctc_decoding_to_allowed_characters(self):
-        values = self.registry.process(
+        values = transformation_values(self.registry, 
             self.numpy.array([[[0, 2, 5], [0, 4, 3]]]),
             [{"type": "sequence.ctcGreedyDecode", "result": "lines", "parameters": {"labels": ["", "A", "中"], "blankIndex": 0, "allowedCharacters": "A", "collapseRepeated": False}}],
             self.context(),
@@ -93,7 +94,7 @@ class OutputTransformationRegistryTest(unittest.TestCase):
         self.assertEqual(values["lines"][0]["text"], "AA")
 
     def test_uses_the_declared_top_k_parameter(self):
-        values = self.registry.process(
+        values = transformation_values(self.registry, 
             self.numpy.array([[1, 2, 3]]),
             [{"type": "tensor.topK", "result": "top", "parameters": {"parameter": {"name": "k", "default": 1, "minimum": 1, "maximum": 3}}}],
             self.context([{"outputName": "scores", "name": "k", "value": 2}]),
@@ -119,7 +120,7 @@ class OutputTransformationRegistryTest(unittest.TestCase):
         self.assertEqual(outputs[0]["transformationValues"]["tensor"], [[1.0, 2.0, 3.0]])
 
     def context(self, parameters=None):
-        return OutputTransformationContext("scores", parameters or [], self.numpy)
+        return TransformationContext(self.numpy, output_name="scores", output_parameters=parameters or [])
 
 
 if __name__ == "__main__":

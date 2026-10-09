@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from novooa_ml.input_transforms.kokoro_text_strategy import token_ids
+from novooa_ml.input_transforms.text.kokoro_token_ids import token_ids
 
 
 class KokoroTextStrategyTest(unittest.TestCase):

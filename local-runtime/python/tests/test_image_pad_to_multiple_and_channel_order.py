@@ -6,8 +6,9 @@ import numpy
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from novooa_ml.input_transforms.image_pad_to_multiple_strategy import ImagePadToMultipleStrategy
-from novooa_ml.input_transforms.tensor_channel_order_strategy import TensorChannelOrderStrategy
+from novooa_ml.input_transforms.image.pad_to_multiple import ImagePadToMultipleStrategy
+from novooa_ml.input_transforms.tensor.channel_order import TensorChannelOrderStrategy
+from novooa_ml.transformations.context import TransformationContext
 
 
 class ImagePadToMultipleStrategyTest(unittest.TestCase):
@@ -15,7 +16,7 @@ class ImagePadToMultipleStrategyTest(unittest.TestCase):
         source = ImageRecorder((65, 33))
         context = ImageContext(source)
 
-        ImagePadToMultipleStrategy().transform(context, {"multiple": 32})
+        context.image = ImagePadToMultipleStrategy().transform(context.image, {"multiple": 32}, context)
 
         self.assertEqual(context.image.size, (96, 64))
         self.assertEqual(context.image.paste_offset, (0, 0))
@@ -24,41 +25,32 @@ class ImagePadToMultipleStrategyTest(unittest.TestCase):
         source = ImageRecorder((64, 32))
         context = ImageContext(source)
 
-        ImagePadToMultipleStrategy().transform(context, {"multiple": 32})
+        context.image = ImagePadToMultipleStrategy().transform(context.image, {"multiple": 32}, context)
 
         self.assertIs(context.image, source)
 
 
 class TensorChannelOrderStrategyTest(unittest.TestCase):
     def test_reorders_channels_before_layout_conversion(self):
-        context = TensorContext(numpy.array([[[1, 2, 3]]]))
+        tensor = TensorChannelOrderStrategy().transform(
+            numpy.array([[[1, 2, 3]]]), {"order": [2, 1, 0]}, TransformationContext(numpy)
+        )
 
-        TensorChannelOrderStrategy().transform(context, {"order": [2, 1, 0]})
-
-        self.assertEqual(context.tensor.tolist(), [[[3, 2, 1]]])
+        self.assertEqual(tensor.tolist(), [[[3, 2, 1]]])
 
     def test_rejects_an_incomplete_permutation(self):
-        context = TensorContext(numpy.zeros((1, 1, 3)))
-
         with self.assertRaisesRegex(ValueError, "jeden Kanal genau einmal"):
-            TensorChannelOrderStrategy().transform(context, {"order": [0, 1]})
+            TensorChannelOrderStrategy().transform(
+                numpy.zeros((1, 1, 3)), {"order": [0, 1]}, TransformationContext(numpy)
+            )
 
 
-class ImageContext:
+class ImageContext(TransformationContext):
+    """Kontext mit Fake-Bildmodul; hält das zuletzt erzeugte Bild für die Prüfung."""
+
     def __init__(self, image):
+        super().__init__(numpy, image_module=ImageModule)
         self.image = image
-        self.image_module = ImageModule
-
-    def require_image(self, _):
-        return None
-
-
-class TensorContext:
-    def __init__(self, tensor):
-        self.tensor = tensor
-
-    def tensor_array(self):
-        return self.tensor
 
 
 class ImageRecorder:

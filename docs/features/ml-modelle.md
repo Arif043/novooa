@@ -514,15 +514,41 @@ Ohne Spektrogramm wird daraus bei Mono ein Tensor `[Samples]`, sonst
 `[Kanäle, Samples]`. `datetime` und `file` lehnt der Worker mit Nennung des
 Quelltyps ab.
 
-Die allgemeinen Tensoroperationen (`tensor.scale`, `tensor.clip`,
-`tensor.reshape`, `tensor.transpose`, `tensor.fitLength`) sind einmal in
-`novooa_ml/tensor_operations.py` umgesetzt und werden als Ein- und
-Ausgangsstrategie registriert; beide Richtungen haben damit dieselbe Semantik.
-Neue Strategien werden automatisch gefunden: eine Klasse im Paket
-`input_transforms` bzw. `output_transforms`, die von der jeweiligen
-Strategie-Basis erbt. Abstrakte Zwischenklassen werden übersprungen. Die
-Cloud-Runtime pflegt ihre Bildtransformationen weiterhin als feste Liste in
-`model-contract-capabilities.ts` und kennt die neuen Typen noch nicht.
+**Aufbau des Python-Dienstes.** Ein- und Ausgangstransformationen folgen derselben
+Architektur:
+
+```text
+novooa_ml/transformations/        gemeinsamer Kern
+  strategy.py     TransformationStrategy: transform(value, parameters, context) → neuer Wert
+  registry.py     TransformationRegistry.run: Pipeline, per `result` benannte Zwischenergebnisse
+  context.py      TransformationContext: numpy, Bildmodul, Modellressourcen, metadata
+  values.py       AudioSignal, as_tensor, require_image/require_audio/require_text
+  parameters.py   gemeinsame Parameterprüfung
+  discovery.py    findet Strategien rekursiv in Unterpaketen
+  shared/         Tensoroperationen für beide Richtungen (scale, clip, reshape, transpose, fitLength)
+novooa_ml/input_transforms/       image/, audio/, text/, data/, tensor/ + sources.py, worker.py
+novooa_ml/output_transforms/      tensor/, vision/, sequence/, audio/ + worker.py
+```
+
+- **Eine Strategie je Datei.** Der Dateiname ist der Typ ohne Bereichspräfix
+  (`image.resizePad` → `input_transforms/image/resize_pad.py`). Helfer, die mehrere
+  Strategien teilen, liegen in eigenen Modulen (z. B. `audio/mel_filters.py`,
+  `vision/mask_regions.py`, `text/phonemizer.py`).
+- **Funktional in beiden Richtungen.** Eine Strategie erhält einen Wert und gibt einen
+  neuen zurück. Am Eingang ist der Startwert der Quellwert (Bild, `AudioSignal`, Text,
+  Zahl, JSON). Bild- und Audioschritte stehen vor Tensorschritten, Tensorschritte holen
+  den Tensor über `as_tensor`. Wissen über Schritte hinweg (z. B. das Layout für
+  `tensor.normalize`) liegt in `context.metadata`.
+- **Gleicher Kontext für Ein- und Ausgang**, einschließlich Zugriff auf
+  Modellressourcen. `parameter_value` bedient vorerst noch die `outputParameters`
+  von `tensor.topK`.
+- **Neue Strategien werden automatisch gefunden:** eine nicht abstrakte Unterklasse von
+  `TransformationStrategy` in `input_transforms`, `output_transforms` oder
+  `transformations/shared`. Ein Strukturtest (`tests/test_transformation_architecture.py`)
+  sichert die Regel „eine Strategie je Datei“ und hält die angebotenen Typen als
+  Snapshot fest.
+- Die Cloud-Runtime pflegt ihre Bildtransformationen weiterhin als feste Liste in
+  `model-contract-capabilities.ts` und kennt die neueren Typen noch nicht.
 
 ### Allgemeine OCR-Pipeline
 

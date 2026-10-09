@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 from collections import OrderedDict
+from functools import partial
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import RLock
 
@@ -76,7 +77,9 @@ def execute(payload, cache, numpy):
     session = cache.session_for(key, None)
     definitions = required_list(payload, "outputs")
     outputs = session.run([definition["name"] for definition in definitions], input_arrays(payload, numpy))
-    return {"outputs": transformed_output_tensors(payload, outputs, numpy)}
+    # Ausgangstransformationen lesen Modellressourcen (z. B. Label-Dateien) wie der Eingang.
+    resources = partial(cache.resource_bytes_for, key)
+    return {"outputs": transformed_output_tensors(payload, outputs, numpy, resources)}
 
 
 def load(payload, cache):
