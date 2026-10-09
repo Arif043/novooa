@@ -35,7 +35,6 @@ class NodeFieldPlayer {
   }
 
   Future<void> _reveal(NodeId nodeId, AgentCursorPerformer cursor) async {
-    await _cubit.selectNode(nodeId);
     await waitForFrame();
     await cursor.click(TaskBuilderCursorTargets.node(nodeId));
     await waitForFrame();

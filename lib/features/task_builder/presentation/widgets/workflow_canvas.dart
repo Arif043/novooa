@@ -1,3 +1,5 @@
+import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_anchor.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -158,14 +160,22 @@ class _WorkflowCanvasState extends State<WorkflowCanvas>
                                     onPressed: () =>
                                         widget.onChoose(entry.insertion),
                                   )
-                                : CompactWorkflowNode(
-                                    node: entry.node!,
-                                    selected: widget.selected == entry.node!.id,
-                                    targeted: candidates.isNotEmpty,
-                                    peers: entry.peers,
-                                    onTap: () => widget.onSelect(entry.node!),
-                                    onAdd: () =>
-                                        widget.onChoose(entry.insertion),
+                                : AgentCursorAnchor(
+                                    target: TaskBuilderCursorTargets.node(
+                                      entry.node!.id,
+                                    ),
+                                    onActivate: () =>
+                                        widget.onSelect(entry.node!),
+                                    child: CompactWorkflowNode(
+                                      node: entry.node!,
+                                      selected:
+                                          widget.selected == entry.node!.id,
+                                      targeted: candidates.isNotEmpty,
+                                      peers: entry.peers,
+                                      onTap: () => widget.onSelect(entry.node!),
+                                      onAdd: () =>
+                                          widget.onChoose(entry.insertion),
+                                    ),
                                   ),
                           ),
                         ),

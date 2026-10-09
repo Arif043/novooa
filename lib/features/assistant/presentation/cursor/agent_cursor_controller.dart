@@ -12,11 +12,15 @@ class AgentCursorController extends ChangeNotifier
     AgentCursorRegistry? registry,
     this.travelDuration = const Duration(milliseconds: 520),
     this.maxTypingDuration = const Duration(milliseconds: 1500),
+    this.appearTimeout = const Duration(milliseconds: 1500),
   }) : registry = registry ?? AgentCursorRegistry();
 
   final AgentCursorRegistry registry;
   final Duration travelDuration;
   final Duration maxTypingDuration;
+
+  /// So lange wartet der Cursor auf ein noch nicht gebautes Ziel.
+  final Duration appearTimeout;
 
   /// Wird vom Overlay gesetzt, wenn Nutzer:innen Animationen reduzieren.
   bool reduceMotion = false;
@@ -32,12 +36,13 @@ class AgentCursorController extends ChangeNotifier
 
   @override
   Future<void> moveTo(AgentCursorTarget target) async {
+    final rect = await _settledRect(target);
     final context = registry.contextOf(target);
-    if (context == null || !context.mounted) return;
-    await Scrollable.ensureVisible(context, duration: _flight);
-    final rect = registry.globalRectOf(target);
-    if (rect == null || _isDisposed) return;
-    _globalPosition = rect.center;
+    if (rect == null || context == null || _isDisposed) return;
+    if (context.mounted) {
+      await Scrollable.ensureVisible(context, duration: _flight);
+    }
+    _globalPosition = registry.globalRectOf(target)?.center ?? rect.center;
     notifyListeners();
     await Future<void>.delayed(_flight);
   }
@@ -49,6 +54,22 @@ class AgentCursorController extends ChangeNotifier
     _clickCount++;
     notifyListeners();
     await Future<void>.delayed(const Duration(milliseconds: 180));
+    registry.activate(target);
+  }
+
+  /// Wartet, bis das Ziel gebaut ist und sich nicht mehr bewegt (z. B. weil
+  /// ein Panel noch einfährt). Gibt `null` zurück, wenn es nie erscheint.
+  Future<Rect?> _settledRect(AgentCursorTarget target) async {
+    const poll = Duration(milliseconds: 60);
+    Rect? previous;
+    for (var i = 0; i < appearTimeout.inMilliseconds ~/ 60; i++) {
+      final rect = registry.globalRectOf(target);
+      if (rect != null && rect == previous) return rect;
+      previous = rect;
+      await Future<void>.delayed(poll);
+      if (_isDisposed) return null;
+    }
+    return previous;
   }
 
   @override

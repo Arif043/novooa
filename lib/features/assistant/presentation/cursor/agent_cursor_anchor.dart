@@ -10,10 +10,14 @@ class AgentCursorAnchor extends StatefulWidget {
     super.key,
     required this.target,
     required this.child,
+    this.onActivate,
   });
 
   final AgentCursorTarget target;
   final Widget child;
+
+  /// Wird ausgeführt, wenn der Agent auf dieses Ziel „klickt“.
+  final VoidCallback? onActivate;
 
   @override
   State<AgentCursorAnchor> createState() => _AgentCursorAnchorState();
@@ -35,13 +39,16 @@ class _AgentCursorAnchorState extends State<AgentCursorAnchor> {
   @override
   void didUpdateWidget(AgentCursorAnchor oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.target == widget.target) return;
-    _unregister();
+    if (oldWidget.target != widget.target) _unregister();
     _register();
   }
 
   void _register() {
-    _controller?.registry.register(widget.target, _globalKey);
+    _controller?.registry.register(
+      widget.target,
+      _globalKey,
+      onActivate: widget.onActivate,
+    );
     _registered = widget.target;
   }
 

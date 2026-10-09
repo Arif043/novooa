@@ -4,41 +4,49 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import 'agent_cursor_controller.dart';
 
 /// Zeichnet den Agent-Cursor über die Oberfläche; nimmt keine Eingaben an.
-class AgentCursorOverlay extends StatelessWidget {
+class AgentCursorOverlay extends StatefulWidget {
   const AgentCursorOverlay({super.key, required this.controller});
 
   final AgentCursorController controller;
 
   @override
+  State<AgentCursorOverlay> createState() => _AgentCursorOverlayState();
+}
+
+class _AgentCursorOverlayState extends State<AgentCursorOverlay> {
+  final _areaKey = GlobalKey();
+
+  @override
   Widget build(BuildContext context) {
+    final controller = widget.controller;
     controller.reduceMotion = MediaQuery.disableAnimationsOf(context);
     return IgnorePointer(
       child: ListenableBuilder(
         listenable: controller,
-        builder: (context, _) => _cursor(context),
+        builder: (context, _) => Stack(
+          clipBehavior: Clip.none,
+          children: [
+            SizedBox.expand(key: _areaKey),
+            ?_cursor(controller),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _cursor(BuildContext context) {
+  Widget? _cursor(AgentCursorController controller) {
     final global = controller.globalPosition;
-    final box = context.findRenderObject();
-    if (global == null || box is! RenderBox || !box.hasSize) {
-      return const SizedBox.expand();
-    }
-    final local = box.globalToLocal(global);
-    return Stack(
-      children: [
-        AnimatedPositioned(
-          duration: controller.reduceMotion
-              ? Duration.zero
-              : controller.travelDuration,
-          curve: Curves.easeInOutCubic,
-          left: local.dx,
-          top: local.dy,
-          child: _CursorMark(clickCount: controller.clickCount),
-        ),
-      ],
+    final area = _areaKey.currentContext?.findRenderObject();
+    if (global == null || area is! RenderBox || !area.hasSize) return null;
+    final local = area.globalToLocal(global);
+    return AnimatedPositioned(
+      duration: controller.reduceMotion
+          ? Duration.zero
+          : controller.travelDuration,
+      curve: Curves.easeInOutCubic,
+      left: local.dx,
+      top: local.dy,
+      child: _CursorMark(clickCount: controller.clickCount),
     );
   }
 }

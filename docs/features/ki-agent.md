@@ -191,6 +191,11 @@ sind Animationen reduziert, springt der Cursor bzw. wird übersprungen; die
 Änderung hängt nie am Cursor. Der Cursor gehört zum Aufgabenstudio
 (`TaskBuilderShellFrame`), nicht zur Wissensbasis.
 
+**Cursor ohne LLM testen:** Im Debug-Modus beantwortet `AssistantCubit` die
+Eingabe `/mock` mit einem festen Plan (`MockAssistantReplies`: umbenennen, drei
+Bausteine anlegen, Prompt befüllen) und ruft kein Modell auf. Im Release-Build
+ist der Pfad inaktiv.
+
 ## Wissensbasis-Agent
 
 Im Bereich **Wissensbasis** kann der Agent zunächst nach Notizen suchen und

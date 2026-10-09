@@ -1,5 +1,3 @@
-import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_anchor.dart';
-import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -104,10 +102,7 @@ class NodeGraphItem extends StatelessWidget {
         clipBehavior: Clip.none,
         curve: Curves.easeOutCubic,
         decoration: _dropDecoration(context, candidates.isNotEmpty),
-        child: AgentCursorAnchor(
-          target: TaskBuilderCursorTargets.node(node.id),
-          child: _content(context),
-        ),
+        child: _content(context),
       ),
     );
   }

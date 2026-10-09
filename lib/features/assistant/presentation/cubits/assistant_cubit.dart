@@ -4,15 +4,18 @@ import 'package:flutter/foundation.dart';
 import '../../domain/entities/assistant_context.dart';
 import '../../domain/entities/assistant_message.dart';
 import '../../domain/usecases/ask_assistant.dart';
+import '../mock/mock_assistant_replies.dart';
 import 'assistant_state.dart';
 
 class AssistantCubit extends Cubit<AssistantState> {
   AssistantCubit({
     required this._askAssistant,
     required AssistantContext context,
+    this.mockReplies = const MockAssistantReplies(),
   }) : super(AssistantState(context: context));
 
   final AskAssistant _askAssistant;
+  final MockAssistantReplies mockReplies;
 
   void setContext(AssistantContext context) {
     if (state.context.route == context.route) return;
@@ -32,11 +35,7 @@ class AssistantCubit extends Cubit<AssistantState> {
       ),
     );
     try {
-      final answer = await _askAssistant(
-        context: state.context,
-        history: updatedMessages,
-        question: trimmedQuestion,
-      );
+      final answer = await _answerTo(trimmedQuestion, updatedMessages);
       emit(
         state.copyWith(
           status: AssistantStatus.ready,
@@ -52,6 +51,20 @@ class AssistantCubit extends Cubit<AssistantState> {
         ),
       );
     }
+  }
+
+  Future<AssistantMessage> _answerTo(
+    String question,
+    List<AssistantMessage> history,
+  ) async {
+    if (kDebugMode && mockReplies.matches(question)) {
+      return mockReplies.replyTo(question);
+    }
+    return _askAssistant(
+      context: state.context,
+      history: history,
+      question: question,
+    );
   }
 
   String _errorMessageFor(Object error) {
