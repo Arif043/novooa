@@ -56,3 +56,19 @@ test("keeps the python script and input template of a script node", () => {
   assert.equal(output.commands[0]?.script, "output = input.upper()");
   assert.equal(output.commands[0]?.inputTemplate, "{{kundenmail.betreff}}");
 });
+
+test("keeps configureNode with allowed fields only", () => {
+  const output = taskBuilderOutputFromModelOutput({
+    answer: "Ich fülle den Baustein.",
+    commands: [
+      {type: "addNode", primitive: "prompt", ref: "a"},
+      {type: "configureNode", nodeRef: "a", fields: {instruction: "Fasse zusammen", unbekannt: "x"}},
+      {type: "configureNode", nodeRef: "a", fields: {unbekannt: "x"}},
+      {type: "configureNode", fields: {instruction: "ohne Ziel"}},
+    ],
+    knowledgeCommands: [],
+  }, "");
+
+  assert.equal(output.commands.length, 2);
+  assert.deepEqual(output.commands[1]?.fields, {instruction: "Fasse zusammen"});
+});

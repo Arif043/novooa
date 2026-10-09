@@ -1,11 +1,12 @@
 import {z} from "genkit";
 import {
   type TaskBuilderAssistantCommand,
+  taskBuilderAssistantFieldKeys,
   taskBuilderAssistantPrimitives,
   type TaskBuilderAssistantResponse,
 } from "../../../domain/entities/task-builder-assistant-response.js";
 
-const commandTypeSchema = z.enum(["renameTask", "addNode"]);
+const commandTypeSchema = z.enum(["renameTask", "addNode", "configureNode"]);
 const primitiveSchema = z.enum(taskBuilderAssistantPrimitives);
 const rawCommandSchema = z.object({
   type: commandTypeSchema,
@@ -22,6 +23,9 @@ const rawCommandSchema = z.object({
   message: z.string().optional(),
   script: z.string().max(20000).optional(),
   inputTemplate: z.string().max(2000).optional(),
+  ref: z.string().max(40).optional(),
+  nodeRef: z.string().max(80).optional(),
+  fields: z.record(z.string(), z.string().max(20000)).optional(),
 });
 
 export const rawOutputSchema = z.object({
@@ -67,7 +71,11 @@ function emptyOutput(text: string): TaskBuilderAssistantResponse {
 function commandFrom(value: unknown): TaskBuilderAssistantCommand | null {
   const candidate = rawCommandSchema.safeParse(value);
   if (!candidate.success) return null;
-  return candidate.data.type === "renameTask" ? renameCommand(candidate.data) : addNodeCommand(candidate.data);
+  switch (candidate.data.type) {
+  case "renameTask": return renameCommand(candidate.data);
+  case "addNode": return addNodeCommand(candidate.data);
+  case "configureNode": return configureNodeCommand(candidate.data);
+  }
 }
 
 function renameCommand(command: RawCommand): TaskBuilderAssistantCommand | null {
@@ -78,6 +86,17 @@ function renameCommand(command: RawCommand): TaskBuilderAssistantCommand | null 
 function addNodeCommand(command: RawCommand): TaskBuilderAssistantCommand | null {
   if (!command.primitive) return null;
   return {...command, label: command.label ?? `Baustein „${command.primitive}“ hinzufügen`};
+}
+
+function configureNodeCommand(command: RawCommand): TaskBuilderAssistantCommand | null {
+  const fields = allowedFields(command.fields);
+  if (!hasText(command.nodeRef) || Object.keys(fields).length === 0) return null;
+  return {...command, fields, label: command.label ?? "Eingabemaske des Bausteins befüllen"};
+}
+
+function allowedFields(fields: Record<string, string> | undefined): Record<string, string> {
+  const allowed: readonly string[] = taskBuilderAssistantFieldKeys;
+  return Object.fromEntries(Object.entries(fields ?? {}).filter(([key]) => allowed.includes(key)));
 }
 
 function hasText(value: string | undefined): value is string {

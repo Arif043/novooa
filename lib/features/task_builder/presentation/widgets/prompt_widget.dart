@@ -1,3 +1,5 @@
+import 'package:syscat2/features/task_builder/presentation/agent/node_field_key.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:syscat2/core/runtime/employees_availability.dart';
 import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:syscat2/features/language_models/presentation/widgets/language_model_picker_field.dart';
@@ -60,6 +62,10 @@ class _PromptWidgetState extends State<PromptWidget> {
           const SizedBox(height: AppSpacing.xs),
           TemplateExpressionTextField(
             value: config.instruction,
+            cursorTarget: TaskBuilderCursorTargets.field(
+              widget.node.id,
+              NodeFieldKey.instruction,
+            ),
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 3,
             maxLines: 8,

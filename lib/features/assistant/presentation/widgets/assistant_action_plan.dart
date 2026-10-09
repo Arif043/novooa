@@ -3,6 +3,7 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/assistant/presentation/agent/assistant_plan_action.dart';
 import 'package:syscat2/features/assistant/presentation/agent/assistant_plan_execution.dart';
 import 'package:syscat2/features/assistant/presentation/agent/assistant_plan_executor.dart';
+import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_scope.dart';
 
 import 'assistant_action_plan_parts.dart';
 
@@ -101,6 +102,7 @@ class _AssistantActionPlanState extends State<AssistantActionPlan> {
       final execution = await const AssistantPlanExecutor().execute(
         widget.actions,
         onStepChanged: _setActiveIndex,
+        cursor: AgentCursorScope.maybeOf(context),
       );
       _showSuccessfulRun(execution);
     } catch (_) {

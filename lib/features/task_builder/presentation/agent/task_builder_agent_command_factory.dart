@@ -3,23 +3,30 @@ import 'package:syscat2/features/assistant/presentation/agent/assistant_plan_act
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/add_node_agent_command.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/agent_node_refs.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/configure_node_agent_command.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/node_field_key.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/node_field_player.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/rename_task_agent_command.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_agent_command.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
 class TaskBuilderAgentCommandFactory {
-  const TaskBuilderAgentCommandFactory();
+  const TaskBuilderAgentCommandFactory({this.waitForFrame = waitForNextFrame});
+
+  final FrameWaiter waitForFrame;
 
   List<AssistantPlanAction> fromSuggestions(
     List<AssistantActionSuggestion> suggestions,
     TaskBuilderCubit cubit,
   ) {
+    final refs = AgentNodeRefs();
     return suggestions
         .where(
           (suggestion) =>
               suggestion.target == AssistantActionTarget.taskBuilder,
         )
-        .map(_fromSuggestion)
+        .map((suggestion) => _fromSuggestion(suggestion, refs))
         .nonNulls
         .map((command) => TaskBuilderPlanAction(cubit: cubit, command: command))
         .toList(growable: false);
@@ -27,10 +34,12 @@ class TaskBuilderAgentCommandFactory {
 
   TaskBuilderAgentCommand? _fromSuggestion(
     AssistantActionSuggestion suggestion,
+    AgentNodeRefs refs,
   ) {
     return switch (suggestion.type) {
       'renameTask' => _renameTask(suggestion),
-      'addNode' => _addNode(suggestion),
+      'addNode' => _addNode(suggestion, refs),
+      'configureNode' => _configureNode(suggestion, refs),
       _ => null,
     };
   }
@@ -41,25 +50,62 @@ class TaskBuilderAgentCommandFactory {
     return RenameTaskAgentCommand(label: suggestion.label, title: title);
   }
 
-  TaskBuilderAgentCommand? _addNode(AssistantActionSuggestion suggestion) {
+  TaskBuilderAgentCommand? _addNode(
+    AssistantActionSuggestion suggestion,
+    AgentNodeRefs refs,
+  ) {
     final primitive = _primitiveFrom(suggestion.stringArgument('primitive'));
     if (primitive == null) return null;
     return AddNodeAgentCommand(
       label: suggestion.label,
       primitive: primitive,
       channelKind: _kindFrom(suggestion.stringArgument('kind')),
-      title: suggestion.stringArgument('title'),
-      description: suggestion.stringArgument('description'),
-      outputName: suggestion.stringArgument('outputName'),
-      value: suggestion.stringArgument('value'),
-      instruction: suggestion.stringArgument('instruction'),
-      modelId: suggestion.stringArgument('modelId'),
-      recipient: suggestion.stringArgument('recipient'),
-      message: suggestion.stringArgument('message'),
-      script: suggestion.stringArgument('script'),
-      inputTemplate: suggestion.stringArgument('inputTemplate'),
+      fields: _fieldsFrom(suggestion.arguments, primitive: primitive),
+      ref: _requiredText(suggestion.stringArgument('ref')),
+      refs: refs,
+      waitForFrame: waitForFrame,
     );
   }
+
+  TaskBuilderAgentCommand? _configureNode(
+    AssistantActionSuggestion suggestion,
+    AgentNodeRefs refs,
+  ) {
+    final nodeRef = _requiredText(suggestion.stringArgument('nodeRef'));
+    final fields = _fieldsFrom(suggestion.arguments);
+    if (nodeRef == null || fields.isEmpty) return null;
+    return ConfigureNodeAgentCommand(
+      label: suggestion.label,
+      nodeRef: nodeRef,
+      fields: fields,
+      refs: refs,
+      waitForFrame: waitForFrame,
+    );
+  }
+}
+
+/// Feldwerte stehen flach im Vorschlag (addNode) oder unter `fields`.
+Map<NodeFieldKey, String> _fieldsFrom(
+  Map<String, Object?> arguments, {
+  WorkflowPrimitive? primitive,
+}) {
+  final source = arguments['fields'] is Map
+      ? Map<String, Object?>.from(arguments['fields']! as Map)
+      : arguments;
+  final fields = <NodeFieldKey, String>{};
+  for (final key in NodeFieldKey.values) {
+    final value = source[key.name];
+    if (value is! String) continue;
+    if (primitive != null && !_isScriptField(key, primitive)) continue;
+    fields[key] = value;
+  }
+  return fields;
+}
+
+bool _isScriptField(NodeFieldKey key, WorkflowPrimitive primitive) {
+  final isScriptOnly =
+      key == NodeFieldKey.script || key == NodeFieldKey.inputTemplate;
+  return !isScriptOnly || primitive == WorkflowPrimitive.script;
 }
 
 WorkflowPrimitive? _primitiveFrom(String? value) {

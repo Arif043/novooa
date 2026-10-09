@@ -1,4 +1,5 @@
 import 'package:syscat2/features/assistant/presentation/agent/assistant_plan_action.dart';
+import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_performer.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
@@ -8,9 +9,15 @@ abstract class TaskBuilderAgentCommand {
   final String label;
 
   Future<void> perform(TaskBuilderCubit cubit);
+
+  /// Standard: ohne sichtbare Bedienung. Commands mit Eingabemasken überschreiben.
+  Future<void> performWithCursor(
+    TaskBuilderCubit cubit,
+    AgentCursorPerformer cursor,
+  ) => perform(cubit);
 }
 
-class TaskBuilderPlanAction implements AssistantPlanAction {
+class TaskBuilderPlanAction implements CursorAwarePlanAction {
   const TaskBuilderPlanAction({required this.cubit, required this.command});
 
   final TaskBuilderCubit cubit;
@@ -20,10 +27,17 @@ class TaskBuilderPlanAction implements AssistantPlanAction {
   String get label => command.label;
 
   @override
-  Future<AssistantPlanUndo?> execute() async {
+  Future<AssistantPlanUndo?> execute() => _run(() => command.perform(cubit));
+
+  @override
+  Future<AssistantPlanUndo?> executeWithCursor(AgentCursorPerformer cursor) {
+    return _run(() => command.performWithCursor(cubit, cursor));
+  }
+
+  Future<AssistantPlanUndo?> _run(Future<void> Function() perform) async {
     final task = cubit.loadedTaskOrNull();
     if (task == null) return null;
-    await command.perform(cubit);
+    await perform();
     return _TaskBuilderPlanUndo(cubit, task);
   }
 }

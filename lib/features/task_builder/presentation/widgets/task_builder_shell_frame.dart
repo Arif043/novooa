@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cupertino_sidemenu/cupertino_sidemenu.dart';
+import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_controller.dart';
+import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_overlay.dart';
+import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_scope.dart';
 import 'task_builder_header.dart';
 import 'task_builder_theme.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/task_builder_side_panel.dart';
@@ -24,11 +27,13 @@ class TaskBuilderShellFrame extends StatefulWidget {
 
 class _TaskBuilderShellFrameState extends State<TaskBuilderShellFrame> {
   final _controller = CupertinoSidemenuController();
+  final _cursor = AgentCursorController();
   TaskBuilderSidePanelKind? _sidePanel;
 
   @override
   void dispose() {
     _controller.dispose();
+    _cursor.dispose();
     super.dispose();
   }
 
@@ -36,9 +41,17 @@ class _TaskBuilderShellFrameState extends State<TaskBuilderShellFrame> {
   Widget build(BuildContext context) {
     return Theme(
       data: TaskBuilderTheme.from(Theme.of(context)),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(child: _sidemenu()),
+      child: AgentCursorScope(
+        controller: _cursor,
+        child: Stack(
+          children: [
+            Scaffold(
+              backgroundColor: Colors.transparent,
+              body: SafeArea(child: _sidemenu()),
+            ),
+            Positioned.fill(child: AgentCursorOverlay(controller: _cursor)),
+          ],
+        ),
       ),
     );
   }

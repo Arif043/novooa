@@ -8,6 +8,7 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dar
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/add_node_agent_command.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/node_field_key.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 
@@ -65,12 +66,14 @@ void main() {
     final cubit = TaskBuilderCubit(repository: repository);
     await cubit.load(repository.savedTask);
 
-    await const AddNodeAgentCommand(
+    await AddNodeAgentCommand(
       label: 'Summe berechnen',
       primitive: WorkflowPrimitive.script,
       channelKind: ChannelEventKind.email,
-      script: 'output = input.upper()',
-      inputTemplate: '{{kundenmail.betreff}}',
+      fields: {
+        NodeFieldKey.script: 'output = input.upper()',
+        NodeFieldKey.inputTemplate: '{{kundenmail.betreff}}',
+      },
     ).perform(cubit);
 
     final config = _selectedNode(cubit).config as ScriptNodeConfig;
@@ -79,21 +82,21 @@ void main() {
     await cubit.close();
   });
 
-  test('Script-Felder werden bei anderen Bausteinen ignoriert', () async {
+  test('Texteingabe-Vorschlag setzt den Wert des neuen Bausteins', () async {
     final repository = _InMemoryTaskRepository(_emptyTask);
     final cubit = TaskBuilderCubit(repository: repository);
     await cubit.load(repository.savedTask);
 
-    await const AddNodeAgentCommand(
+    await AddNodeAgentCommand(
       label: 'Text',
       primitive: WorkflowPrimitive.stringInput,
       channelKind: ChannelEventKind.email,
-      script: 'output = 1',
+      fields: {NodeFieldKey.value: 'Hallo'},
     ).perform(cubit);
 
     final node = _selectedNode(cubit);
     expect(node.id, isNot(const NodeId('node.start')));
-    expect(node.config, isNot(isA<ScriptNodeConfig>()));
+    expect((node.config as StringInputNodeConfig).value, 'Hallo');
     await cubit.close();
   });
 }

@@ -1,44 +1,53 @@
+import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_performer.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/agent_node_refs.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/node_field_key.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/node_field_player.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_agent_command.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 
 final class AddNodeAgentCommand extends TaskBuilderAgentCommand {
-  const AddNodeAgentCommand({
+  AddNodeAgentCommand({
     required String label,
     required this.primitive,
     required this.channelKind,
-    this.title,
-    this.description,
-    this.outputName,
-    this.value,
-    this.instruction,
-    this.modelId,
-    this.recipient,
-    this.message,
-    this.script,
-    this.inputTemplate,
-  }) : super(label);
+    Map<NodeFieldKey, String> fields = const {},
+    this.ref,
+    AgentNodeRefs? refs,
+    this.waitForFrame = waitForNextFrame,
+  }) : fields = Map.unmodifiable(fields),
+       refs = refs ?? AgentNodeRefs(),
+       super(label);
 
   final WorkflowPrimitive primitive;
   final ChannelEventKind channelKind;
-  final String? title;
-  final String? description;
-  final String? outputName;
-  final String? value;
-  final String? instruction;
-  final String? modelId;
-  final String? recipient;
-  final String? message;
-  final String? script;
-  final String? inputTemplate;
+  final Map<NodeFieldKey, String> fields;
+  final String? ref;
+  final AgentNodeRefs refs;
+  final FrameWaiter waitForFrame;
 
   @override
-  Future<void> perform(TaskBuilderCubit cubit) async {
+  Future<void> perform(TaskBuilderCubit cubit) => _add(cubit, null);
+
+  @override
+  Future<void> performWithCursor(
+    TaskBuilderCubit cubit,
+    AgentCursorPerformer cursor,
+  ) => _add(cubit, cursor);
+
+  Future<void> _add(
+    TaskBuilderCubit cubit,
+    AgentCursorPerformer? cursor,
+  ) async {
     await _addPrimitive(cubit);
     final nodeId = cubit.loadedTaskOrNull()?.selectedNodeOrNull?.id;
     if (nodeId == null) return;
-    await _configureNode(cubit, nodeId);
+    refs.bind(ref, nodeId);
+    await NodeFieldPlayer(
+      cubit,
+      waitForFrame: waitForFrame,
+    ).fill(nodeId, fields, cursor: cursor);
   }
 
   Future<void> _addPrimitive(TaskBuilderCubit cubit) {
@@ -49,54 +58,5 @@ final class AddNodeAgentCommand extends TaskBuilderAgentCommand {
         cubit.addSendMessageNodeToMainGraph(channelKind),
       _ => cubit.addNodeToMainGraph(primitive),
     };
-  }
-
-  Future<void> _configureNode(TaskBuilderCubit cubit, NodeId nodeId) async {
-    await _setNodeTextFields(cubit, nodeId);
-    await _setNodeConfigFields(cubit, nodeId);
-    await _setScriptFields(cubit, nodeId);
-  }
-
-  Future<void> _setScriptFields(TaskBuilderCubit cubit, NodeId nodeId) async {
-    if (primitive != WorkflowPrimitive.script) return;
-    if (script case final code?) {
-      await cubit.updateScript(nodeId, code);
-    }
-    if (inputTemplate case final template?) {
-      await cubit.updateScriptInput(nodeId, template);
-    }
-  }
-
-  Future<void> _setNodeTextFields(TaskBuilderCubit cubit, NodeId nodeId) async {
-    if (title case final text?) {
-      await cubit.updateNodeTitle(nodeId, text);
-    }
-    if (description case final text?) {
-      await cubit.updateNodeDescription(nodeId, text);
-    }
-    if (outputName case final text?) {
-      await cubit.updateNodeOutputName(nodeId, text);
-    }
-  }
-
-  Future<void> _setNodeConfigFields(
-    TaskBuilderCubit cubit,
-    NodeId nodeId,
-  ) async {
-    if (value case final text?) {
-      await cubit.updateStringInputValue(nodeId, text);
-    }
-    if (instruction case final text?) {
-      await cubit.updatePromptInstruction(nodeId, text);
-    }
-    if (modelId case final id?) {
-      await cubit.updateModelInference(nodeId, id);
-    }
-    if (recipient case final text?) {
-      await cubit.updateSendMessageRecipient(nodeId, text);
-    }
-    if (message case final text?) {
-      await cubit.updateSendMessageBody(nodeId, text);
-    }
   }
 }

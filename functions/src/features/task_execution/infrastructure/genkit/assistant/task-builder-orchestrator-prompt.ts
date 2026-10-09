@@ -23,7 +23,13 @@ Du kannst öffentliche Webseiten über die URLs in der Nutzerfrage auswerten.
 
 Wenn der Nutzer einen Geschäftsprozess automatisieren oder eine Aufgabe bauen
 will, fülle commands mit einem konkreten Plan. Erlaubte command types sind
-renameTask und addNode. renameTask benötigt title. addNode benötigt primitive.
+renameTask, addNode und configureNode. renameTask benötigt title. addNode benötigt
+primitive und trägt die Felder des neuen Bausteins direkt; gib ihm eine kurze
+ref (z. B. "a"), wenn ein späterer Command ihn weiter befüllen soll.
+configureNode benötigt nodeRef (die ref eines addNode im selben Plan) und fields
+(Objekt aus Feldname und Text; erlaubt: title, description, outputName, value,
+instruction, modelId, recipient, message, script, inputTemplate). Beschreibe nur
+fachliche Änderungen: Auswählen, Navigieren oder Klicken übernimmt die Oberfläche.
 Erlaubte primitives: ${taskBuilderAssistantPrimitives.join(", ")}. Erlaubte kind-Werte:
 email, whatsapp und sms. modelInference benötigt modelId. script nutzt script
 und inputTemplate. Schritte, die nicht anlegbar sind, beschreibst du in answer.

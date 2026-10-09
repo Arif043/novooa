@@ -1,0 +1,21 @@
+import 'agent_cursor_target.dart';
+
+typedef AgentCursorTextChanged = Future<void> Function(String text);
+
+/// Port, über den Aktionen den sichtbaren Cursor bedienen.
+///
+/// Alle Methoden sind reine Darstellung: Fehlt ein Ziel, kehren sie ohne
+/// Fehler zurück, damit die fachliche Ausführung nie am Cursor hängt.
+abstract interface class AgentCursorPerformer {
+  Future<void> moveTo(AgentCursorTarget target);
+
+  Future<void> click(AgentCursorTarget target);
+
+  Future<void> typeInto(
+    AgentCursorTarget target,
+    String text,
+    AgentCursorTextChanged onTextChanged,
+  );
+
+  void hide();
+}

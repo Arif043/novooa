@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_anchor.dart';
+import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_target.dart';
 
 import 'template_expression_suggestion.dart';
 
@@ -20,6 +22,7 @@ class TemplateExpressionTextField extends StatefulWidget {
     this.decoration = const InputDecoration(),
     this.minLines = 1,
     this.maxLines = 1,
+    this.cursorTarget,
   });
 
   final String value;
@@ -28,6 +31,9 @@ class TemplateExpressionTextField extends StatefulWidget {
   final InputDecoration decoration;
   final int? minLines;
   final int? maxLines;
+
+  /// Macht das Feld für den KI-Agent-Cursor auffindbar.
+  final AgentCursorTarget? cursorTarget;
 
   @override
   State<TemplateExpressionTextField> createState() =>
@@ -60,6 +66,13 @@ class _TemplateExpressionTextFieldState
 
   @override
   Widget build(BuildContext context) {
+    final target = widget.cursorTarget;
+    final field = _layout();
+    if (target == null) return field;
+    return AgentCursorAnchor(target: target, child: field);
+  }
+
+  Widget _layout() {
     return LayoutBuilder(
       builder: (context, constraints) {
         if (!constraints.hasBoundedWidth) return _textField();

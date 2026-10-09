@@ -1,3 +1,5 @@
+import 'package:syscat2/features/task_builder/presentation/agent/node_field_key.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
@@ -65,6 +67,10 @@ class _ScriptWidgetState extends State<ScriptWidget> {
           const SizedBox(height: AppSpacing.xs),
           TemplateExpressionTextField(
             value: _config.inputTemplate,
+            cursorTarget: TaskBuilderCursorTargets.field(
+              widget.node.id,
+              NodeFieldKey.inputTemplate,
+            ),
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: const InputDecoration(
               labelText: 'Eingabe',

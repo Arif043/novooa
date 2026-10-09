@@ -1,3 +1,5 @@
+import 'package:syscat2/features/task_builder/presentation/agent/node_field_key.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -34,6 +36,10 @@ class _StringInputWidgetState extends State<StringInputWidget> {
           const SizedBox(height: AppSpacing.xs),
           TemplateExpressionTextField(
             value: _config.value,
+            cursorTarget: TaskBuilderCursorTargets.field(
+              widget.node.id,
+              NodeFieldKey.value,
+            ),
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 2,
             maxLines: 4,

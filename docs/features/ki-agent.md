@@ -160,9 +160,36 @@ Modellprotokoll, niemals fachliche Command-Klassen.
 
 Konkrete Commands sind je Aktion getrennt gekapselt:
 
-- Aufgaben: `RenameTaskAgentCommand`, `AddNodeAgentCommand`
+- Aufgaben: `RenameTaskAgentCommand`, `AddNodeAgentCommand`,
+  `ConfigureNodeAgentCommand`
 - Wissensbasis: `CreateKnowledgeNoteAgentCommand`,
   `UpdateKnowledgeNoteAgentCommand`, `DeleteKnowledgeNoteAgentCommand`
+
+### Aufgabenstudio-Commands und Agent-Cursor
+
+| Command | Argumente | Wirkung |
+| --- | --- | --- |
+| `renameTask` | `title` | Aufgabe umbenennen |
+| `addNode` | `primitive`, `kind`, `ref`, Feldwerte (`title`, `value`, `instruction`, …) | Baustein anlegen und direkt befüllen |
+| `configureNode` | `nodeRef`, `fields` | Eingabemaske eines Bausteins befüllen |
+
+`ref` ist eine plan-lokale Kennung: Node-IDs entstehen erst beim Ausführen,
+`configureNode.nodeRef` zeigt deshalb auf das `ref` eines `addNode` im selben
+Plan. Erlaubte Feldschlüssel (`NodeFieldKey`): `title`, `description`,
+`outputName`, `value`, `instruction`, `modelId`, `recipient`, `message`,
+`script`, `inputTemplate`; andere Schlüssel verwirft das Backend.
+`configureNode` auf bereits bestehende Bausteine setzt voraus, dass der Client
+deren IDs und Werte an den Agenten übermittelt – das ist noch offen.
+
+**Der Agent liefert nur Fachliches.** Auswählen, Hinfahren, Klicken und Tippen
+erzeugt der Client selbst: Beim Ausführen reicht `AssistantActionPlan` den
+`AgentCursorPerformer` (aus `AgentCursorScope`) an den `AssistantPlanExecutor`.
+Aktionen, die `CursorAwarePlanAction` implementieren, bedienen die Oberfläche
+sichtbar; `NodeFieldPlayer` wählt den Baustein, fährt den Cursor an das Feld
+(`AgentCursorAnchor`) und tippt schrittweise in den Cubit. Fehlt ein Anker oder
+sind Animationen reduziert, springt der Cursor bzw. wird übersprungen; die
+Änderung hängt nie am Cursor. Der Cursor gehört zum Aufgabenstudio
+(`TaskBuilderShellFrame`), nicht zur Wissensbasis.
 
 ## Wissensbasis-Agent
 

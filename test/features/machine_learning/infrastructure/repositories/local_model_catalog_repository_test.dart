@@ -232,7 +232,8 @@ class _ImageClient extends _AudioClient {
     final body = await super.get(path);
     final entry = (body['items']! as List).single as Map<String, Object?>;
     final contract = entry['contract']! as Map<String, Object?>;
-    final output = (contract['outputs']! as List).single as Map<String, Object?>;
+    final output =
+        (contract['outputs']! as List).single as Map<String, Object?>;
     (output['workflowOutput']! as Map<String, Object?>)['type'] = 'image';
     return body;
   }

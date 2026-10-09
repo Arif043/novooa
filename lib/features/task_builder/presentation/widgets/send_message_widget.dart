@@ -1,3 +1,5 @@
+import 'package:syscat2/features/task_builder/presentation/agent/node_field_key.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -34,6 +36,10 @@ class _SendMessageWidgetState extends State<SendMessageWidget> {
           const SizedBox(height: AppSpacing.sm),
           TemplateExpressionTextField(
             value: _config.recipient,
+            cursorTarget: TaskBuilderCursorTargets.field(
+              widget.node.id,
+              NodeFieldKey.recipient,
+            ),
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             decoration: InputDecoration(labelText: _recipientLabel),
             onChanged: _updateRecipient,
@@ -50,6 +56,10 @@ class _SendMessageWidgetState extends State<SendMessageWidget> {
           const SizedBox(height: AppSpacing.sm),
           TemplateExpressionTextField(
             value: _config.message,
+            cursorTarget: TaskBuilderCursorTargets.field(
+              widget.node.id,
+              NodeFieldKey.message,
+            ),
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 3,
             maxLines: 6,

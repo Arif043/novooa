@@ -82,10 +82,7 @@ void main() {
     await datasource.ask(history: const [], question: 'Hallo');
 
     expect(client.lastTimeout, assistantRequestTimeout);
-    expect(
-      client.lastTimeout! > const Duration(seconds: 125),
-      isTrue,
-    );
+    expect(client.lastTimeout! > const Duration(seconds: 125), isTrue);
   });
 
   test('weist eine Antwort ohne answer-Feld zurück', () async {
