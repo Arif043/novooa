@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
 import 'agent_cursor_controller.dart';
+import 'agent_viewport_glow.dart';
 
 /// Zeichnet den Agent-Cursor über die Oberfläche; nimmt keine Eingaben an.
 class AgentCursorOverlay extends StatefulWidget {
@@ -27,6 +28,7 @@ class _AgentCursorOverlayState extends State<AgentCursorOverlay> {
           clipBehavior: Clip.none,
           children: [
             SizedBox.expand(key: _areaKey),
+            AgentViewportGlow(isActive: controller.isActive),
             ?_cursor(controller),
           ],
         ),

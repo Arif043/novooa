@@ -5,6 +5,7 @@ import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_cont
 import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_overlay.dart';
 import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_scope.dart';
 import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_target.dart';
+import 'package:syscat2/features/assistant/presentation/cursor/agent_viewport_glow.dart';
 
 const _target = AgentCursorTarget('feld');
 
@@ -79,5 +80,26 @@ void main() {
     );
 
     expect(controller.isVisible, isFalse);
+  });
+
+  testWidgets('der Rand blendet animiert ein und wieder aus', (tester) async {
+    final controller = _fastController();
+    await tester.pumpWidget(_app(controller));
+    final glow = find.descendant(
+      of: find.byType(AgentViewportGlow),
+      matching: find.byType(CustomPaint),
+    );
+
+    expect(glow, findsNothing);
+
+    await tester.runAsync(controller.begin);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    expect(glow, findsOneWidget);
+
+    controller.hide();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(glow, findsNothing);
   });
 }
