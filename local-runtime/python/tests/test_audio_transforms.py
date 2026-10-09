@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import numpy
 
 from audio_fixtures import audio_payload, dominant_frequency, pcm16_wav, sine
-from novooa_ml.input_transforms.worker import transform_payload
+from novooa_ml.model_input.worker import transform_payload
 
 
 def tensor_of(wav, transformations, shape=None):

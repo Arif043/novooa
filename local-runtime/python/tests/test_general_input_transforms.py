@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import numpy
 from PIL import Image
 
-from novooa_ml.input_transforms.default_registry import default_transformation_registry
+from novooa_ml.transformations.default_registry import default_transformation_registry
 from novooa_ml.transformations.context import TransformationContext
 
 

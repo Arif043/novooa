@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from novooa_ml.input_transforms.worker import transform_payload
+from novooa_ml.model_input.worker import transform_payload
 
 
 def main():

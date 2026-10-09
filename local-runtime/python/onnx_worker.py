@@ -2,7 +2,7 @@ import base64
 import json
 import sys
 
-from novooa_ml.output_transforms.worker import transform_outputs
+from novooa_ml.model_output.worker import transform_outputs
 
 
 def runtime_dependencies():

@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import numpy
 
 from audio_fixtures import pcm16_wav, riff_wav, sine
-from novooa_ml.input_transforms.wav_decoder import decode_wav
+from novooa_ml.model_input.wav_decoder import decode_wav
 
 
 class WavDecoderTest(unittest.TestCase):

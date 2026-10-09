@@ -6,8 +6,8 @@ import numpy
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from novooa_ml.input_transforms.image.pad_to_multiple import ImagePadToMultipleStrategy
-from novooa_ml.input_transforms.tensor.channel_order import TensorChannelOrderStrategy
+from novooa_ml.transformations.image.pad_to_multiple import ImagePadToMultipleStrategy
+from novooa_ml.transformations.tensor.channel_order import TensorChannelOrderStrategy
 from novooa_ml.transformations.context import TransformationContext
 
 

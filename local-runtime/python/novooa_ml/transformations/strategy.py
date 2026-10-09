@@ -5,8 +5,13 @@ class TransformationStrategy(ABC):
     """Gemeinsame Basis aller Ein- und Ausgangstransformationen.
 
     Eine Strategie erhält einen Wert, die Parameter aus dem Modellvertrag und den Kontext und
-    liefert einen neuen Wert; den übergebenen Wert verändert sie nicht.
+    liefert einen neuen Wert; den übergebenen Wert verändert sie nicht. `accepts` und
+    `produces` nennen die Wertarten (siehe `kinds.py`), aus denen die Pipeline-Prüfung ableitet,
+    wo die Transformation stehen darf.
     """
+
+    accepts = ()
+    produces = None
 
     @property
     @abstractmethod

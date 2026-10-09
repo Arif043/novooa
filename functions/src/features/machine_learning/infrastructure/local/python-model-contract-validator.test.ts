@@ -3,28 +3,40 @@ import test from "node:test";
 import {type ModelContract} from "../../domain/entities/model-contract.js";
 import {
   PythonModelContractValidator,
-  type PythonTransformationCapabilityClient,
+  type PythonContractValidationClient,
 } from "./python-model-contract-validator.js";
 
-test("accepts transformations exposed by the Python sidecar", async () => {
-  const validator = new PythonModelContractValidator("http://novooa-ml:8081", new Client());
+test("sends the whole contract to the Python sidecar for validation", async () => {
+  const client = new Client();
+  const validator = new PythonModelContractValidator("http://novooa-ml:8081", client);
 
   await validator.validate(contract("image.resize", "tensor.topK"));
+
+  assert.equal(client.url, "http://novooa-ml:8081/v1/contract-validations");
+  assert.deepEqual(client.body, {contract: contract("image.resize", "tensor.topK")});
 });
 
-test("rejects an unsupported transformation before installation", async () => {
-  const validator = new PythonModelContractValidator("http://novooa-ml:8081", new Client());
+test("rejects a contract with the sidecar's explanation before installation", async () => {
+  const client = new Client("Eingang image: audio.melSpectrogram erwartet audio, erhält image.");
+  const validator = new PythonModelContractValidator("http://novooa-ml:8081", client);
 
-  await assert.rejects(validator.validate(contract("image.unsupported", "tensor.topK")), /image.unsupported/);
+  await assert.rejects(
+    validator.validate(contract("audio.melSpectrogram", "tensor.topK")),
+    /audio.melSpectrogram erwartet audio, erhält image/,
+  );
 });
 
-class Client implements PythonTransformationCapabilityClient {
-  async get(url: string): Promise<unknown> {
-    assert.equal(url, "http://novooa-ml:8081/v1/transformation-capabilities");
-    return {
-      inputTransformationTypes: ["image.resize"],
-      outputTransformationTypes: ["tensor.topK"],
-    };
+class Client implements PythonContractValidationClient {
+  url?: string;
+  body?: unknown;
+
+  constructor(private readonly rejection?: string) {}
+
+  async post(url: string, body: unknown): Promise<unknown> {
+    this.url = url;
+    this.body = body;
+    if (this.rejection !== undefined) throw new Error(this.rejection);
+    return {status: "ok"};
   }
 }
 

@@ -6,13 +6,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import numpy
 
-from novooa_ml.output_transforms.default_registry import default_output_transformation_registry
+from novooa_ml.transformations.default_registry import default_transformation_registry
 from novooa_ml.transformations.context import TransformationContext
-from novooa_ml.output_transforms.worker import transformation_values
+from novooa_ml.model_output.worker import transformation_values
 
 
 def segments(scores, **parameters):
-    return transformation_values(default_output_transformation_registry(), 
+    return transformation_values(default_transformation_registry(), 
         numpy.asarray(scores),
         [{"type": "sequence.segments", "parameters": {"frameDuration": 0.5, **parameters}, "result": "segments"}],
         TransformationContext(numpy, output_name="output", output_parameters=[]),
@@ -35,7 +35,7 @@ class ScoreSegmentsTest(unittest.TestCase):
         self.assertEqual((result[0]["start"], result[0]["end"]), (0.0, 1.5))
 
     def test_accepts_a_frame_duration_from_hop_and_sample_rate(self):
-        result = transformation_values(default_output_transformation_registry(), 
+        result = transformation_values(default_transformation_registry(), 
             numpy.array([0.0, 1.0]),
             [{"type": "sequence.segments", "parameters": {"hopLength": 160, "sampleRate": 16000}, "result": "s"}],
             TransformationContext(numpy, output_name="output", output_parameters=[]),

@@ -7,11 +7,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import numpy
 
 from novooa_ml.transformations.parameters import axis_of
-from novooa_ml.transformations.shared.tensor_clip import clip
-from novooa_ml.transformations.shared.tensor_fit_length import fit_length
-from novooa_ml.transformations.shared.tensor_reshape import reshape
-from novooa_ml.transformations.shared.tensor_scale import scale
-from novooa_ml.transformations.shared.tensor_transpose import transpose
+from novooa_ml.transformations.tensor.clip import clip
+from novooa_ml.transformations.tensor.fit_length import fit_length
+from novooa_ml.transformations.tensor.reshape import reshape
+from novooa_ml.transformations.tensor.scale import scale
+from novooa_ml.transformations.tensor.transpose import transpose
 
 
 class ScaleTest(unittest.TestCase):

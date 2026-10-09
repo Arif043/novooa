@@ -6,7 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import numpy
 
-from novooa_ml.input_transforms.image.resize_pad import ImageResizePadStrategy
+from novooa_ml.transformations.image.resize_pad import ImageResizePadStrategy
 from novooa_ml.transformations.context import TransformationContext
 
 

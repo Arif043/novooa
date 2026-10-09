@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from novooa_ml.transformations.registry import TransformationRegistry
 from novooa_ml.transformations.strategy import TransformationStrategy
-from novooa_ml.input_transforms.default_registry import default_transformation_registry
+from novooa_ml.transformations.default_registry import default_transformation_registry
 from novooa_ml.transformations.context import TransformationContext
 
 
@@ -58,7 +58,7 @@ class RecordingStrategy(TransformationStrategy):
 
 class ImageCropStrategyTest(unittest.TestCase):
     def test_crops_a_declared_rectangle(self):
-        from novooa_ml.input_transforms.image.crop import ImageCropStrategy
+        from novooa_ml.transformations.image.crop import ImageCropStrategy
 
         image = ImageRecorder((20, 10))
         ImageCropStrategy().transform(
@@ -68,7 +68,7 @@ class ImageCropStrategyTest(unittest.TestCase):
         self.assertEqual(image.crop_box, (2, 3, 10, 7))
 
     def test_rejects_a_crop_outside_the_image(self):
-        from novooa_ml.input_transforms.image.crop import ImageCropStrategy
+        from novooa_ml.transformations.image.crop import ImageCropStrategy
 
         with self.assertRaisesRegex(ValueError, "außerhalb"):
             ImageCropStrategy().transform(
@@ -80,7 +80,7 @@ class ImageCropStrategyTest(unittest.TestCase):
 
 class ImagePerspectiveCropStrategyTest(unittest.TestCase):
     def test_transforms_a_declared_quadrilateral(self):
-        from novooa_ml.input_transforms.image.perspective_crop import ImagePerspectiveCropStrategy
+        from novooa_ml.transformations.image.perspective_crop import ImagePerspectiveCropStrategy
 
         image = ImageRecorder((20, 10))
         ImagePerspectiveCropStrategy().transform(

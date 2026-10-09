@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from novooa_ml.inference_server import ModelNotLoadedError, SessionCache, transformation_capabilities, transform
+from novooa_ml.inference_server import ModelNotLoadedError, SessionCache, handler_for, transformation_capabilities, transform
 
 
 class SessionCacheTest(unittest.TestCase):
@@ -83,6 +83,43 @@ class TransformationCapabilitiesTest(unittest.TestCase):
         self.assertIn("geometry.scaleBounds", capabilities["outputTransformationTypes"])
         self.assertIn("mask.textRegions", capabilities["outputTransformationTypes"])
         self.assertIn("geometry.mergeRows", capabilities["outputTransformationTypes"])
+
+
+class ContractValidationEndpointTest(unittest.TestCase):
+    def test_accepts_a_matching_contract_and_reports_a_mismatch(self):
+        import json
+        import threading
+        import urllib.error
+        import urllib.request
+        from http.server import ThreadingHTTPServer
+
+        import numpy
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), handler_for(None, numpy))
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+
+        def post(contract):
+            request = urllib.request.Request(
+                f"http://127.0.0.1:{server.server_address[1]}/v1/contract-validations",
+                data=json.dumps({"contract": contract}).encode(), method="POST",
+                headers={"content-type": "application/json"},
+            )
+            try:
+                with urllib.request.urlopen(request) as response:
+                    return response.status, json.loads(response.read())
+            except urllib.error.HTTPError as error:
+                return error.code, json.loads(error.read())
+
+        image_input = {"name": "bild", "source": "image", "transformations": [{"type": "image.resize", "parameters": {}}]}
+        audio_step = {"name": "bild", "source": "image", "transformations": [{"type": "audio.melSpectrogram", "parameters": {}}]}
+
+        self.assertEqual(post({"inputs": [image_input], "outputs": []}), (200, {"status": "ok"}))
+        self.assertEqual(
+            post({"inputs": [audio_step], "outputs": []}),
+            (422, {"error": "Eingang bild: audio.melSpectrogram erwartet audio, erhält image."}),
+        )
 
 
 class RecordingFactory:

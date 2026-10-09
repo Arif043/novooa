@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from novooa_ml.output_transforms.vision.scale_bounds import ScaleBoundsStrategy
+from novooa_ml.transformations.vision.scale_bounds import ScaleBoundsStrategy
 
 
 class ScaleBoundsStrategyTest(unittest.TestCase):

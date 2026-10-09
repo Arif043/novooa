@@ -6,13 +6,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import numpy
 
-from novooa_ml.output_transforms.default_registry import default_output_transformation_registry
+from novooa_ml.transformations.default_registry import default_transformation_registry
 from novooa_ml.transformations.context import TransformationContext
-from novooa_ml.output_transforms.worker import transformation_values
+from novooa_ml.model_output.worker import transformation_values
 
 
 def process(tensor, *transformations):
-    return transformation_values(default_output_transformation_registry(), 
+    return transformation_values(default_transformation_registry(), 
         numpy.asarray(tensor),
         [{"type": kind, "parameters": parameters, "result": "value"} for kind, parameters in transformations],
         TransformationContext(numpy, output_name="output", output_parameters=[]),

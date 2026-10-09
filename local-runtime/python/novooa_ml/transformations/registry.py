@@ -14,6 +14,11 @@ class TransformationRegistry:
     def supported_types(self):
         return tuple(self._strategies.keys())
 
+    def kinds_of(self, transformation_type):
+        """(accepts, produces) eines Typs; None, wenn der Typ unbekannt ist."""
+        strategy = self._strategies.get(transformation_type)
+        return None if strategy is None else (strategy.accepts, strategy.produces)
+
     def run(self, value, transformations, context):
         results = {}
         for transformation in transformations:

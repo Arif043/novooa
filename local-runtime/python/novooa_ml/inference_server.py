@@ -8,8 +8,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import RLock
 
 from onnx_worker import input_arrays, runtime_dependencies, transformed_output_tensors
-from novooa_ml.input_transforms.worker import transform_payload
-from novooa_ml.transformation_capabilities import transformation_capabilities
+from novooa_ml.model_input.worker import transform_payload
+from novooa_ml.transformation_capabilities import transformation_capabilities, validate_contract
 
 
 class ModelNotLoadedError(Exception):
@@ -138,6 +138,8 @@ def handler_for(cache, numpy):
                 return execute(payload, cache, numpy)
             if self.path == "/v1/input-transforms":
                 return transform(payload, cache)
+            if self.path == "/v1/contract-validations":
+                return validate_contract(payload)
             raise ValueError("Endpunkt nicht gefunden.")
 
         def _payload(self):

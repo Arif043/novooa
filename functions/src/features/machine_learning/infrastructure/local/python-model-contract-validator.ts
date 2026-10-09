@@ -1,34 +1,36 @@
-import {type ModelContract, type TransformationPipeline} from "../../domain/entities/model-contract.js";
+import {type ModelContract} from "../../domain/entities/model-contract.js";
 
 export interface ModelContractValidator {
   validate(contract: ModelContract): Promise<void>;
 }
 
-export interface PythonTransformationCapabilityClient {
-  get(url: string): Promise<unknown>;
+export interface PythonContractValidationClient {
+  post(url: string, body: unknown): Promise<unknown>;
 }
 
+/**
+ * Lässt den Python-Sidecar prüfen, ob jede Pipeline des Vertrags zusammenpasst: bekannte
+ * Transformationen und passende Wertarten (z. B. kein Audio-Schritt an einem Bildeingang).
+ * Der Sidecar bleibt damit die verbindliche Quelle der unterstützten Transformationen.
+ */
 export class PythonModelContractValidator implements ModelContractValidator {
   constructor(
     private readonly sidecarUrl: string,
-    private readonly client: PythonTransformationCapabilityClient = new FetchPythonTransformationCapabilityClient(),
+    private readonly client: PythonContractValidationClient = new FetchPythonContractValidationClient(),
   ) {}
 
   async validate(contract: ModelContract): Promise<void> {
-    const capabilities = await this.capabilities();
-    validateTransformations(contract.inputs.map((input) => input.transformations), capabilities.inputs, "Eingabe");
-    validateTransformations(contract.outputs.map((output) => output.transformations), capabilities.outputs, "Ausgabe");
-  }
-
-  private async capabilities(): Promise<TransformationCapabilities> {
-    const payload = await this.client.get(new URL("/v1/transformation-capabilities", this.sidecarUrl).toString());
-    return transformationCapabilitiesFrom(payload);
+    await this.client.post(new URL("/v1/contract-validations", this.sidecarUrl).toString(), {contract});
   }
 }
 
-export class FetchPythonTransformationCapabilityClient implements PythonTransformationCapabilityClient {
-  async get(url: string): Promise<unknown> {
-    const response = await fetch(url);
+export class FetchPythonContractValidationClient implements PythonContractValidationClient {
+  async post(url: string, body: unknown): Promise<unknown> {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {"content-type": "application/json"},
+      body: JSON.stringify(body),
+    });
     const payload = await response.json() as unknown;
     if (!response.ok) throw new Error(errorMessage(payload));
     return payload;
@@ -41,44 +43,7 @@ export class UnavailablePythonModelContractValidator implements ModelContractVal
   }
 }
 
-type TransformationCapabilities = {
-  inputs: ReadonlySet<string>;
-  outputs: ReadonlySet<string>;
-};
-
-function validateTransformations(
-  pipelines: readonly TransformationPipeline[],
-  supported: ReadonlySet<string>,
-  kind: string,
-): void {
-  for (const transformation of pipelines.flat()) {
-    if (!supported.has(transformation.type)) {
-      throw new Error(`Die ${kind}-Transformation ${transformation.type} wird von der lokalen Runtime nicht unterstützt.`);
-    }
-  }
-}
-
-function transformationCapabilitiesFrom(value: unknown): TransformationCapabilities {
-  const data = record(value);
-  return {
-    inputs: typesFrom(data.inputTransformationTypes),
-    outputs: typesFrom(data.outputTransformationTypes),
-  };
-}
-
-function typesFrom(value: unknown): ReadonlySet<string> {
-  if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || item.length === 0)) {
-    throw new Error("Der Python-Sidecar lieferte ungültige Transformationsfähigkeiten.");
-  }
-  return new Set(value);
-}
-
-function record(value: unknown): Record<string, unknown> {
-  if (value !== null && typeof value === "object" && !Array.isArray(value)) return value as Record<string, unknown>;
-  throw new Error("Der Python-Sidecar lieferte ungültige Transformationsfähigkeiten.");
-}
-
 function errorMessage(value: unknown): string {
   if (value !== null && typeof value === "object" && "error" in value && typeof value.error === "string") return value.error;
-  return "Die Transformationsfähigkeiten konnten nicht geladen werden.";
+  return "Der Modellvertrag konnte nicht geprüft werden.";
 }

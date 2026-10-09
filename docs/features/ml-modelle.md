@@ -348,10 +348,11 @@ DELETE /v1/ml-models/:id                     aus dem Cache entfernen / Import l�
 
 Der Client sendet zuerst das kleine Manifest und erhält eine kurzlebige Import-ID. Anschließend überträgt er das ONNX-Artefakt als einzelnen Binärstream per `PUT`. Die Runtime schreibt den Stream direkt in eine temporäre Datei, begrenzt ihn auf 2 GiB und berechnet Größe sowie SHA-256 beim Empfang. Erst wenn der gesamte Stream vorliegt und Manifest und Modellvertrag validiert sind, wird das Artefakt in den Katalog übernommen; die temporäre Datei wird danach entfernt. JSON-Anfragen der Runtime bleiben auf 1 MiB begrenzt.
 
-Lokale Importe gehören immer dem aktiven Team. Vor dem Speichern fragt das
-Node-Gateway den privaten Python-Sidecar nach dessen registrierten Ein- und
-Ausgabetransformationen. Enthält das Manifest einen unbekannten Typ, lehnt die
-Runtime den Import mit einer verständlichen Validierungsmeldung ab. Der
+Lokale Importe gehören immer dem aktiven Team. Vor dem Speichern lässt das
+Node-Gateway den privaten Python-Sidecar den Modellvertrag prüfen
+(`POST /v1/contract-validations`). Enthält das Manifest einen unbekannten Typ oder
+passen die Wertarten einer Pipeline nicht zusammen, lehnt die Runtime den Import mit
+einer verständlichen Validierungsmeldung ab. Der
 Python-Sidecar bleibt damit die verbindliche Quelle der unterstützten
 Transformationen. Beim Entfernen eines gecachten oder eigenen Modells löscht die
 Runtime auch dessen Artefaktdateien, sofern kein anderer Eintrag dieselbe
@@ -514,39 +515,63 @@ Ohne Spektrogramm wird daraus bei Mono ein Tensor `[Samples]`, sonst
 `[Kanäle, Samples]`. `datetime` und `file` lehnt der Worker mit Nennung des
 Quelltyps ab.
 
-**Aufbau des Python-Dienstes.** Ein- und Ausgangstransformationen folgen derselben
-Architektur:
+**Aufbau des Python-Dienstes.** Alle Transformationen bilden **einen Katalog**, geordnet
+nach Fachbereich statt nach Richtung. Die Richtung ergibt sich allein aus der Position in
+der Pipeline:
 
 ```text
-novooa_ml/transformations/        gemeinsamer Kern
-  strategy.py     TransformationStrategy: transform(value, parameters, context) → neuer Wert
-  registry.py     TransformationRegistry.run: Pipeline, per `result` benannte Zwischenergebnisse
-  context.py      TransformationContext: numpy, Bildmodul, Modellressourcen, metadata
-  values.py       AudioSignal, as_tensor, require_image/require_audio/require_text
-  parameters.py   gemeinsame Parameterprüfung
-  discovery.py    findet Strategien rekursiv in Unterpaketen
-  shared/         Tensoroperationen für beide Richtungen (scale, clip, reshape, transpose, fitLength)
-novooa_ml/input_transforms/       image/, audio/, text/, data/, tensor/ + sources.py, worker.py
-novooa_ml/output_transforms/      tensor/, vision/, sequence/, audio/ + worker.py
+novooa_ml/transformations/        Katalog und Kern
+  strategy.py  registry.py  context.py  values.py  parameters.py  discovery.py
+  kinds.py          Wertarten
+  pipeline_check.py Prüfung der Wertarten-Kette
+  image/ audio/ text/ data/ tensor/ vision/ sequence/   eine Strategie je Datei
+novooa_ml/model_input/    Grenze zum Modell: Quelle → Pipeline → Tensor (worker, sources, wav_decoder)
+novooa_ml/model_output/   Grenze zum Modell: Modellausgang → Pipeline → Ergebnisse (worker)
 ```
 
-- **Eine Strategie je Datei.** Der Dateiname ist der Typ ohne Bereichspräfix
-  (`image.resizePad` → `input_transforms/image/resize_pad.py`). Helfer, die mehrere
-  Strategien teilen, liegen in eigenen Modulen (z. B. `audio/mel_filters.py`,
-  `vision/mask_regions.py`, `text/phonemizer.py`).
-- **Funktional in beiden Richtungen.** Eine Strategie erhält einen Wert und gibt einen
-  neuen zurück. Am Eingang ist der Startwert der Quellwert (Bild, `AudioSignal`, Text,
-  Zahl, JSON). Bild- und Audioschritte stehen vor Tensorschritten, Tensorschritte holen
-  den Tensor über `as_tensor`. Wissen über Schritte hinweg (z. B. das Layout für
-  `tensor.normalize`) liegt in `context.metadata`.
-- **Gleicher Kontext für Ein- und Ausgang**, einschließlich Zugriff auf
-  Modellressourcen. `parameter_value` bedient vorerst noch die `outputParameters`
-  von `tensor.topK`.
-- **Neue Strategien werden automatisch gefunden:** eine nicht abstrakte Unterklasse von
-  `TransformationStrategy` in `input_transforms`, `output_transforms` oder
-  `transformations/shared`. Ein Strukturtest (`tests/test_transformation_architecture.py`)
-  sichert die Regel „eine Strategie je Datei“ und hält die angebotenen Typen als
-  Snapshot fest.
+**Wertarten.** Jede Strategie deklariert, welche Arten sie annimmt (`accepts`) und welche
+sie liefert (`produces`):
+
+| Wertart | Entsteht durch | Beispiele für Schritte, die sie annehmen |
+| --- | --- | --- |
+| `image` | Quelle `image`, `image.*` | `image.*`, Tensorschritte (implizit) |
+| `audio` | Quelle `audio`, `audio.mono` … | `audio.*`, Tensorschritte (implizit) |
+| `text` | Quelle `text` | `text.piper*`, `text.kokoro*` |
+| `number` / `json` | Quellen `number` bzw. `json`/`boolean` | `number.toTensor` bzw. `json.toTensor`, `json.features` |
+| `tensor` | Modellausgang, `audio.melSpectrogram`, `text.*`, `json.*`, `tensor.*` | alle `tensor.*`, `mask.*`, `sequence.*`, `audio.wav` |
+| `regions` | `mask.connectedComponents`, `mask.textRegions` | `geometry.mergeRows`, `geometry.scaleBounds` |
+| `json-result` | `tensor.topK`, `tensor.nonMaximumSuppression`, `sequence.*` | Ende der Kette; weiter über das Workflow-Mapping |
+| `audioFile` | `audio.wav` | Ende der Kette; Workflow-Typ `audio` |
+
+**Kettenregeln.**
+- Ein Eingang beginnt mit der Art seiner Quelle und muss bei `tensor` enden. `image` und
+  `audio` gelten dabei als Tensor; sie werden ohne eigenen Schritt umgewandelt.
+- Ein Ausgang beginnt bei `tensor` und darf mit jeder Art enden.
+- `tensor.constant` nimmt jede Art an.
+- Quellen vom Typ `tensor` gehen unverändert ans Modell und erlauben keine Transformationen.
+
+Jede Transformation ist damit **in beiden Richtungen** nutzbar, wenn die Wertart passt,
+z. B. `tensor.layout` und `tensor.normalize` auch am Ausgang eines Bildmodells. Die
+Bezeichnungen „Eingang“ und „Ausgang“ in der Tabelle oben nennen nur den typischen
+Einsatz.
+
+**Prüfung beim Import und vor jedem Lauf.**
+- Beim Import und Cachen ruft `PythonModelContractValidator` den Endpunkt
+  `POST /v1/contract-validations` mit `{contract}` auf. Die Runtime prüft jede Kette und
+  lehnt unpassende Verträge mit Meldungen wie *„Eingang bild: audio.melSpectrogram erwartet
+  audio, erhält image.“* ab.
+- Dieselbe Prüfung läuft vor jeder Ein- und Ausgangspipeline.
+- `GET /v1/transformation-capabilities` liefert alle Typen und je Typ
+  `{accepts, produces}`.
+
+**Weitere Regeln.**
+- Neue Strategien werden automatisch gefunden: eine nicht abstrakte Unterklasse von
+  `TransformationStrategy` mit `accepts`/`produces` in einem Bereichsordner.
+- `tests/test_transformation_architecture.py` sichert die Regeln „eine Strategie je
+  Datei“ und „Ordner nach Bereich“, die Wertarten und den Typ-Snapshot ab.
+  `tests/test_pipeline_check.py` prüft u. a. die mitgelieferten Systemmodell-Manifeste.
+- `parameter_value` im Kontext bedient vorerst noch die `outputParameters` von
+  `tensor.topK`.
 - Die Cloud-Runtime pflegt ihre Bildtransformationen weiterhin als feste Liste in
   `model-contract-capabilities.ts` und kennt die neueren Typen noch nicht.
 
