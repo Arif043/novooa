@@ -1,3 +1,5 @@
+import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_anchor.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/runtime/connections_availability.dart';
@@ -203,34 +205,42 @@ class _BausteinPaletteState extends State<BausteinPalette> {
                               child: Text(choice.label),
                             ),
                           ),
-                          child: ListTile(
-                            minTileHeight: 52,
-                            horizontalTitleGap: 12,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 8,
+                          child: AgentCursorAnchor(
+                            target: TaskBuilderCursorTargets.palette(
+                              choice.primitive,
+                              kind: choice.kind,
+                              pluginTypeId: choice.pluginTypeId,
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            leading: Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: colors.surfaceContainerLow,
-                                borderRadius: BorderRadius.circular(8),
+                            onActivate: () => widget.onAdd(choice),
+                            child: ListTile(
+                              minTileHeight: 52,
+                              horizontalTitleGap: 12,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8,
                               ),
-                              child: Icon(
-                                choice.icon,
-                                size: 20,
-                                color: colors.onSurfaceVariant,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
                               ),
+                              leading: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: colors.surfaceContainerLow,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  choice.icon,
+                                  size: 20,
+                                  color: colors.onSurfaceVariant,
+                                ),
+                              ),
+                              title: Text(
+                                choice.label,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.w500),
+                              ),
+                              onTap: () => widget.onAdd(choice),
                             ),
-                            title: Text(
-                              choice.label,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w500),
-                            ),
-                            onTap: () => widget.onAdd(choice),
                           ),
                         ),
                     ],

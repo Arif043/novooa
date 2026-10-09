@@ -12,7 +12,8 @@ abstract interface class AgentCursorPerformer {
 
   Future<void> moveTo(AgentCursorTarget target);
 
-  Future<void> click(AgentCursorTarget target);
+  /// `false`, wenn das Ziel nicht erreichbar ist (der Aufrufer weicht aus).
+  Future<bool> click(AgentCursorTarget target);
 
   Future<void> typeInto(
     AgentCursorTarget target,

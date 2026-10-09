@@ -74,8 +74,10 @@ class _RecordingCursor implements AgentCursorPerformer {
       events.add('move ${target.key}');
 
   @override
-  Future<void> click(AgentCursorTarget target) async =>
-      events.add('click ${target.key}');
+  Future<bool> click(AgentCursorTarget target) async {
+    events.add('click ${target.key}');
+    return true;
+  }
 
   @override
   Future<void> typeInto(

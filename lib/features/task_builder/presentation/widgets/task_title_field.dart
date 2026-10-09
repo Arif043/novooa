@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_anchor.dart';
+import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import '../cubits/task_builder_cubit.dart';
 import '../cubits/task_builder_state.dart';
 
@@ -13,6 +15,7 @@ class TaskTitleField extends StatefulWidget {
 
 class _TaskTitleFieldState extends State<TaskTitleField> {
   late final TextEditingController _controller;
+  final _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -23,6 +26,7 @@ class _TaskTitleFieldState extends State<TaskTitleField> {
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -33,24 +37,29 @@ class _TaskTitleFieldState extends State<TaskTitleField> {
       listener: _syncTitle,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 640),
-        child: TextField(
-          controller: _controller,
-          decoration: const InputDecoration(
-            hintText: 'Name der Aufgabe',
-            filled: false,
-            isDense: true,
-            contentPadding: EdgeInsets.symmetric(vertical: 8),
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: UnderlineInputBorder(),
-            suffixIcon: Icon(Icons.edit_outlined, size: 16),
+        child: AgentCursorAnchor(
+          target: TaskBuilderCursorTargets.taskTitle,
+          onActivate: _focusNode.requestFocus,
+          child: TextField(
+            focusNode: _focusNode,
+            controller: _controller,
+            decoration: const InputDecoration(
+              hintText: 'Name der Aufgabe',
+              filled: false,
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(vertical: 8),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: UnderlineInputBorder(),
+              suffixIcon: Icon(Icons.edit_outlined, size: 16),
+            ),
+            style: MediaQuery.sizeOf(context).width < 600
+                ? Theme.of(context).textTheme.titleMedium
+                : Theme.of(context).textTheme.titleLarge,
+            onTapOutside: (_) => FocusScope.of(context).unfocus(),
+            textInputAction: TextInputAction.done,
+            onChanged: context.read<TaskBuilderCubit>().updateTitle,
           ),
-          style: MediaQuery.sizeOf(context).width < 600
-              ? Theme.of(context).textTheme.titleMedium
-              : Theme.of(context).textTheme.titleLarge,
-          onTapOutside: (_) => FocusScope.of(context).unfocus(),
-          textInputAction: TextInputAction.done,
-          onChanged: context.read<TaskBuilderCubit>().updateTitle,
         ),
       ),
     );

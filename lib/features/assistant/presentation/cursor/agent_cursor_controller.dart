@@ -63,13 +63,18 @@ class AgentCursorController extends ChangeNotifier
   }
 
   @override
-  Future<void> click(AgentCursorTarget target) async {
-    await moveTo(target);
-    if (!isVisible || _isDisposed) return;
+  Future<bool> click(AgentCursorTarget target) async {
+    if (!await _moveToExisting(target)) return false;
     _clickCount++;
     notifyListeners();
     await Future<void>.delayed(const Duration(milliseconds: 180));
     registry.activate(target);
+    return true;
+  }
+
+  Future<bool> _moveToExisting(AgentCursorTarget target) async {
+    await moveTo(target);
+    return isVisible && !_isDisposed && registry.contextOf(target) != null;
   }
 
   /// Scrollt nur den nächsten vertikalen Scroller. `Scrollable.ensureVisible`
@@ -103,7 +108,10 @@ class AgentCursorController extends ChangeNotifier
     String text,
     AgentCursorTextChanged onTextChanged,
   ) async {
-    await click(target);
+    if (!await click(target)) {
+      await onTextChanged(text);
+      return;
+    }
     final chunk = math.max(1, (text.length / 90).ceil());
     final tick = reduceMotion || text.isEmpty
         ? Duration.zero
