@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/write_file_folder_picker.dart';
@@ -22,7 +24,7 @@ class NewWriteFileForm extends StatelessWidget {
       children: [
         TextField(
           controller: nameController,
-          decoration: const InputDecoration(labelText: 'Dateiname'),
+          decoration: InputDecoration(labelText: LocaleKeys.ui_dateiname.tr()),
         ),
         const SizedBox(height: AppSpacing.lg),
         WriteFileFolderPicker(

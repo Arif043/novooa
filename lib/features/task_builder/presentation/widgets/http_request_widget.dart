@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/runtime/connections_availability.dart';
@@ -38,12 +40,12 @@ class HttpRequestWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('HTTP-Anfrage', style: SyscatTheme.taskBody),
+          Text(LocaleKeys.ui_http_anfrage.tr(), style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
           ConnectionPickerField(
             selectedId: config.connectionId,
             connections: connections,
-            noneLabel: 'Keine (vollständige URL angeben)',
+            noneLabel: LocaleKeys.ui_none_full_url.tr(),
             onChanged: (id) =>
                 _update(context, (c) => c.copyWith(connectionId: id)),
           ),
@@ -57,7 +59,9 @@ class HttpRequestWidget extends StatelessWidget {
                   key: ValueKey('${node.id.value}.method'),
                   isExpanded: true,
                   initialValue: config.method,
-                  decoration: const InputDecoration(labelText: 'Methode'),
+                  decoration: InputDecoration(
+                    labelText: LocaleKeys.ui_methode.tr(),
+                  ),
                   items: [
                     for (final method in HttpRequestMethod.values)
                       DropdownMenuItem(value: method, child: Text(method.wire)),
@@ -80,8 +84,8 @@ class HttpRequestWidget extends StatelessWidget {
                         ? '/search/order'
                         : 'https://api.example.com/orders',
                     helperText: hasConnection
-                        ? 'Relativ zur Basis-URL der Verbindung.'
-                        : 'Ohne Verbindung wird ohne Anmeldung gesendet.',
+                        ? LocaleKeys.ui_relative_to_base_url.tr()
+                        : LocaleKeys.ui_no_connection_no_auth.tr(),
                   ),
                   onChanged: (value) =>
                       _update(context, (c) => c.copyWith(url: value)),
@@ -91,8 +95,8 @@ class HttpRequestWidget extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           _NameValueList(
-            title: 'Query-Parameter',
-            addLabel: 'Parameter hinzufügen',
+            title: LocaleKeys.ui_query_parameter.tr(),
+            addLabel: LocaleKeys.ui_add_parameter.tr(),
             items: config.query,
             suggestions: suggestions,
             onChanged: (items) =>
@@ -101,7 +105,7 @@ class HttpRequestWidget extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           _NameValueList(
             title: 'Header',
-            addLabel: 'Header hinzufügen',
+            addLabel: LocaleKeys.ui_add_header.tr(),
             items: config.headers,
             suggestions: suggestions,
             onChanged: (items) =>
@@ -110,13 +114,16 @@ class HttpRequestWidget extends StatelessWidget {
           if (config.method.sendsBody) ...[
             const SizedBox(height: AppSpacing.md),
             SegmentedButton<HttpBodyType>(
-              segments: const [
+              segments: [
                 ButtonSegment(
                   value: HttpBodyType.none,
-                  label: Text('Kein Body'),
+                  label: Text(LocaleKeys.ui_kein_body.tr()),
                 ),
                 ButtonSegment(value: HttpBodyType.json, label: Text('JSON')),
-                ButtonSegment(value: HttpBodyType.text, label: Text('Text')),
+                ButtonSegment(
+                  value: HttpBodyType.text,
+                  label: Text(LocaleKeys.ui_text.tr()),
+                ),
               ],
               selected: {config.bodyType},
               onSelectionChanged: (selection) => _update(
@@ -149,11 +156,8 @@ class HttpRequestWidget extends StatelessWidget {
             type: MaterialType.transparency,
             child: SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Bei Fehlerstatus abbrechen'),
-              subtitle: const Text(
-                'Ausgeschaltet liefert der Baustein „status“ und „ok“, '
-                'z. B. für eine Verzweigung.',
-              ),
+              title: Text(LocaleKeys.ui_bei_fehlerstatus_abbrechen.tr()),
+              subtitle: Text(LocaleKeys.ui_http_status_hint.tr()),
               value: config.failOnHttpError,
               onChanged: (value) =>
                   _update(context, (c) => c.copyWith(failOnHttpError: value)),
@@ -167,9 +171,9 @@ class HttpRequestWidget extends StatelessWidget {
                 key: ValueKey('${node.id.value}.timeout'),
                 initialValue: '${config.timeoutSeconds}',
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Zeitlimit (Sekunden)',
-                  helperText: '1 bis 120',
+                decoration: InputDecoration(
+                  labelText: LocaleKeys.ui_zeitlimit_sekunden.tr(),
+                  helperText: LocaleKeys.ui_1_bis_120.tr(),
                 ),
                 onChanged: (text) {
                   final seconds = int.tryParse(text.trim());
@@ -227,7 +231,9 @@ class _NameValueList extends StatelessWidget {
                   child: TemplateExpressionTextField(
                     value: items[index].name,
                     suggestions: suggestions,
-                    decoration: const InputDecoration(labelText: 'Name'),
+                    decoration: InputDecoration(
+                      labelText: LocaleKeys.ui_name.tr(),
+                    ),
                     onChanged: (name) =>
                         _replace(index, items[index].copyWith(name: name)),
                   ),
@@ -238,13 +244,15 @@ class _NameValueList extends StatelessWidget {
                   child: TemplateExpressionTextField(
                     value: items[index].value,
                     suggestions: suggestions,
-                    decoration: const InputDecoration(labelText: 'Wert'),
+                    decoration: InputDecoration(
+                      labelText: LocaleKeys.ui_wert.tr(),
+                    ),
                     onChanged: (value) =>
                         _replace(index, items[index].copyWith(value: value)),
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Entfernen',
+                  tooltip: LocaleKeys.ui_entfernen.tr(),
                   icon: const Icon(Icons.close),
                   onPressed: () => onChanged([
                     for (var other = 0; other < items.length; other++)

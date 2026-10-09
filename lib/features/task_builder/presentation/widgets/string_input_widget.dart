@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/node_field_key.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +34,7 @@ class _StringInputWidgetState extends State<StringInputWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Texteingabe', style: SyscatTheme.taskBody),
+          Text(LocaleKeys.ui_texteingabe.tr(), style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),
           TemplateExpressionTextField(
             value: _config.value,
@@ -43,7 +45,9 @@ class _StringInputWidgetState extends State<StringInputWidget> {
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 2,
             maxLines: 4,
-            decoration: const InputDecoration(hintText: 'Text eingeben'),
+            decoration: InputDecoration(
+              hintText: LocaleKeys.ui_text_eingeben.tr(),
+            ),
             onChanged: _updateValue,
           ),
         ],

@@ -295,4 +295,354 @@ abstract class LocaleKeys {
   static const settings_language_en = 'settings.language.en';
   static const settings_language = 'settings.language';
   static const settings = 'settings';
+  static const ui_1_bis_120 = 'ui.1_bis_120';
+  static const ui_abbrechen = 'ui.abbrechen';
+  static const ui_add_header = 'ui.add_header';
+  static const ui_add_parameter = 'ui.add_parameter';
+  static const ui_aenderungen_werden_automatisch_gespeichert =
+      'ui.aenderungen_werden_automatisch_gespeichert';
+  static const ui_after_condition = 'ui.after_condition';
+  static const ui_after_loop = 'ui.after_loop';
+  static const ui_agent_failed_details = 'ui.agent_failed_details';
+  static const ui_agent_timeout = 'ui.agent_timeout';
+  static const ui_agent_unavailable = 'ui.agent_unavailable';
+  static const ui_all_conditions_match = 'ui.all_conditions_match';
+  static const ui_als_dokument_scannen = 'ui.als_dokument_scannen';
+  static const ui_anlegen = 'ui.anlegen';
+  static const ui_answer_number = 'ui.answer_number';
+  static const ui_antwort_hinzufuegen = 'ui.antwort_hinzufuegen';
+  static const ui_any_condition_matches = 'ui.any_condition_matches';
+  static const ui_art_des_werts_waehlen = 'ui.art_des_werts_waehlen';
+  static const ui_ask_about_context = 'ui.ask_about_context';
+  static const ui_audio_transkribieren_hinzufuegen =
+      'ui.audio_transkribieren_hinzufuegen';
+  static const ui_audioaufnahme = 'ui.audioaufnahme';
+  static const ui_audiodatei = 'ui.audiodatei';
+  static const ui_aufgabe = 'ui.aufgabe';
+  static const ui_aufgabe_konnte_nicht_geaendert_werden =
+      'ui.aufgabe_konnte_nicht_geaendert_werden';
+  static const ui_aufgabe_konnte_nicht_geladen_werden =
+      'ui.aufgabe_konnte_nicht_geladen_werden';
+  static const ui_aufgabe_konnte_nicht_gespeichert_werden =
+      'ui.aufgabe_konnte_nicht_gespeichert_werden';
+  static const ui_aufgabe_loeschen = 'ui.aufgabe_loeschen';
+  static const ui_aufgabe_umbenennen = 'ui.aufgabe_umbenennen';
+  static const ui_aufgaben_konnten_nicht_geladen_werden =
+      'ui.aufgaben_konnten_nicht_geladen_werden';
+  static const ui_aufgabenmenue_oeffnen = 'ui.aufgabenmenue_oeffnen';
+  static const ui_aus_vorlage = 'ui.aus_vorlage';
+  static const ui_ausfuehren = 'ui.ausfuehren';
+  static const ui_ausgabe = 'ui.ausgabe';
+  static const ui_ausgabedatei = 'ui.ausgabedatei';
+  static const ui_ausgabedatei_waehlen = 'ui.ausgabedatei_waehlen';
+  static const ui_ausgabeformat = 'ui.ausgabeformat';
+  static const ui_ausgaben_inhalt_methode_query_kopfzeilen_zeitpun =
+      'ui.ausgaben_inhalt_methode_query_kopfzeilen_zeitpun';
+  static const ui_ausgabename = 'ui.ausgabename';
+  static const ui_baustein_loeschen = 'ui.baustein_loeschen';
+  static const ui_baustein_tauschen = 'ui.baustein_tauschen';
+  static const ui_baustein_und_wert = 'ui.baustein_und_wert';
+  static const ui_baustein_verbinden = 'ui.baustein_verbinden';
+  static const ui_bedingung_entfernen = 'ui.bedingung_entfernen';
+  static const ui_bedingung_hinzufuegen = 'ui.bedingung_hinzufuegen';
+  static const ui_bei_fehlerstatus_abbrechen = 'ui.bei_fehlerstatus_abbrechen';
+  static const ui_benachrichtigung_von_novooa =
+      'ui.benachrichtigung_von_novooa';
+  static const ui_benachrichtigungen = 'ui.benachrichtigungen';
+  static const ui_bereich = 'ui.bereich';
+  static const ui_beschreibung = 'ui.beschreibung';
+  static const ui_bestehend = 'ui.bestehend';
+  static const ui_betreff = 'ui.betreff';
+  static const ui_bild = 'ui.bild';
+  static const ui_bild_anfordern = 'ui.bild_anfordern';
+  static const ui_bild_eingabe_hinzufuegen = 'ui.bild_eingabe_hinzufuegen';
+  static const ui_branches_from_prompt = 'ui.branches_from_prompt';
+  static const ui_cached_and_ready = 'ui.cached_and_ready';
+  static const ui_catalog_unreachable = 'ui.catalog_unreachable';
+  static const ui_condition_number = 'ui.condition_number';
+  static const ui_connect_block_with_output_first =
+      'ui.connect_block_with_output_first';
+  static const ui_constraint_no_skills = 'ui.constraint_no_skills';
+  static const ui_constraint_one_skill = 'ui.constraint_one_skill';
+  static const ui_constraint_skill_count = 'ui.constraint_skill_count';
+  static const ui_date_and_time = 'ui.date_and_time';
+  static const ui_datei_anhaengen = 'ui.datei_anhaengen';
+  static const ui_datei_auswaehlen_oder_neu_anlegen =
+      'ui.datei_auswaehlen_oder_neu_anlegen';
+  static const ui_datei_entfernen = 'ui.datei_entfernen';
+  static const ui_datei_lesen = 'ui.datei_lesen';
+  static const ui_datei_lesen_hinzufuegen = 'ui.datei_lesen_hinzufuegen';
+  static const ui_datei_schreiben = 'ui.datei_schreiben';
+  static const ui_datei_schreiben_hinzufuegen =
+      'ui.datei_schreiben_hinzufuegen';
+  static const ui_dateien = 'ui.dateien';
+  static const ui_dateiname = 'ui.dateiname';
+  static const ui_datensatz_speichern = 'ui.datensatz_speichern';
+  static const ui_datensatz_speichern_hinzufuegen =
+      'ui.datensatz_speichern_hinzufuegen';
+  static const ui_datensatz_suchen = 'ui.datensatz_suchen';
+  static const ui_datensatz_suchen_hinzufuegen =
+      'ui.datensatz_suchen_hinzufuegen';
+  static const ui_datentyp = 'ui.datentyp';
+  static const ui_delete_task_body = 'ui.delete_task_body';
+  static const ui_der_pfad_waehlt_innerhalb_der_angegebenen_liste =
+      'ui.der_pfad_waehlt_innerhalb_der_angegebenen_liste';
+  static const ui_der_sonst_pfad_und_alle_darin_enthaltenen_bauste =
+      'ui.der_sonst_pfad_und_alle_darin_enthaltenen_bauste';
+  static const ui_diese_gruppe_trifft_zu_wenn =
+      'ui.diese_gruppe_trifft_zu_wenn';
+  static const ui_dieser_baustein_ist_nicht_verfuegbar =
+      'ui.dieser_baustein_ist_nicht_verfuegbar';
+  static const ui_directory_colon = 'ui.directory_colon';
+  static const ui_directory_named = 'ui.directory_named';
+  static const ui_duplizieren = 'ui.duplizieren';
+  static const ui_e_mail_lesen_hinzufuegen = 'ui.e_mail_lesen_hinzufuegen';
+  static const ui_e_mail_senden = 'ui.e_mail_senden';
+  static const ui_edit_output_name_typed = 'ui.edit_output_name_typed';
+  static const ui_eingabe = 'ui.eingabe';
+  static const ui_elemente_aus = 'ui.elemente_aus';
+  static const ui_employee_gone = 'ui.employee_gone';
+  static const ui_employees_load_failed = 'ui.employees_load_failed';
+  static const ui_entfernen = 'ui.entfernen';
+  static const ui_entscheidung = 'ui.entscheidung';
+  static const ui_entweder_ein_mitarbeiter_oder_eigene_faehigkeite =
+      'ui.entweder_ein_mitarbeiter_oder_eigene_faehigkeite';
+  static const ui_entwurf = 'ui.entwurf';
+  static const ui_ergebnis_fuer_naechste_bausteine =
+      'ui.ergebnis_fuer_naechste_bausteine';
+  static const ui_erneut_versuchen = 'ui.erneut_versuchen';
+  static const ui_erste_aufgabe_erstellen = 'ui.erste_aufgabe_erstellen';
+  static const ui_exactly_one_condition_matches =
+      'ui.exactly_one_condition_matches';
+  static const ui_existing_file = 'ui.existing_file';
+  static const ui_expression_copied = 'ui.expression_copied';
+  static const ui_faehigkeit_anhaengen = 'ui.faehigkeit_anhaengen';
+  static const ui_faehigkeit_entfernen = 'ui.faehigkeit_entfernen';
+  static const ui_faehigkeiten = 'ui.faehigkeiten';
+  static const ui_feld = 'ui.feld';
+  static const ui_feld_entfernen = 'ui.feld_entfernen';
+  static const ui_feld_hinzufuegen = 'ui.feld_hinzufuegen';
+  static const ui_felder = 'ui.felder';
+  static const ui_feldname = 'ui.feldname';
+  static const ui_feste_felder = 'ui.feste_felder';
+  static const ui_fester_wert = 'ui.fester_wert';
+  static const ui_field_mapping_number = 'ui.field_mapping_number';
+  static const ui_files_load_failed = 'ui.files_load_failed';
+  static const ui_filter_by_label = 'ui.filter_by_label';
+  static const ui_filter_zuruecksetzen = 'ui.filter_zuruecksetzen';
+  static const ui_fixed_fields_list = 'ui.fixed_fields_list';
+  static const ui_folders_load_failed = 'ui.folders_load_failed';
+  static const ui_for_each_hint = 'ui.for_each_hint';
+  static const ui_formulareingabe = 'ui.formulareingabe';
+  static const ui_formulareingabe_hinzufuegen =
+      'ui.formulareingabe_hinzufuegen';
+  static const ui_frage_zum_aktuellen_bereich_stellen =
+      'ui.frage_zum_aktuellen_bereich_stellen';
+  static const ui_freigabe = 'ui.freigabe';
+  static const ui_freigabe_hinzufuegen = 'ui.freigabe_hinzufuegen';
+  static const ui_freitext = 'ui.freitext';
+  static const ui_fuer_jedes_element = 'ui.fuer_jedes_element';
+  static const ui_fuer_jedes_element_hinzufuegen =
+      'ui.fuer_jedes_element_hinzufuegen';
+  static const ui_fuer_jedes_gefundene_element =
+      'ui.fuer_jedes_gefundene_element';
+  static const ui_gemini_quota_exceeded = 'ui.gemini_quota_exceeded';
+  static const ui_gespeicherter_ausdruck_nicht_in_der_auswahl =
+      'ui.gespeicherter_ausdruck_nicht_in_der_auswahl';
+  static const ui_gruppe_entfernen = 'ui.gruppe_entfernen';
+  static const ui_halte_fest_worauf_diese_aufgabe_hinarbeiten_soll =
+      'ui.halte_fest_worauf_diese_aufgabe_hinarbeiten_soll';
+  static const ui_hier_kommt_die_anweisung = 'ui.hier_kommt_die_anweisung';
+  static const ui_hint_output_name = 'ui.hint_output_name';
+  static const ui_hinweis_fuer_die_bildeingabe =
+      'ui.hinweis_fuer_die_bildeingabe';
+  static const ui_hinweis_fuer_die_eingabe = 'ui.hinweis_fuer_die_eingabe';
+  static const ui_http_anfrage = 'ui.http_anfrage';
+  static const ui_http_status_hint = 'ui.http_status_hint';
+  static const ui_inhalt = 'ui.inhalt';
+  static const ui_iterative_verfeinerung = 'ui.iterative_verfeinerung';
+  static const ui_kein_body = 'ui.kein_body';
+  static const ui_kein_mitarbeiter_zugewiesen =
+      'ui.kein_mitarbeiter_zugewiesen';
+  static const ui_kein_modell_gefunden = 'ui.kein_modell_gefunden';
+  static const ui_keine_datei_angehaengt = 'ui.keine_datei_angehaengt';
+  static const ui_keine_faehigkeit_angehaengt =
+      'ui.keine_faehigkeit_angehaengt';
+  static const ui_keine_notiz_angehaengt = 'ui.keine_notiz_angehaengt';
+  static const ui_keine_passenden_werte_verfuegbar =
+      'ui.keine_passenden_werte_verfuegbar';
+  static const ui_keine_sammlungen_vorhanden = 'ui.keine_sammlungen_vorhanden';
+  static const ui_ki_agent = 'ui.ki_agent';
+  static const ui_ki_agent_bedient_die_oberflaeche =
+      'ui.ki_agent_bedient_die_oberflaeche';
+  static const ui_ki_agent_oeffnen = 'ui.ki_agent_oeffnen';
+  static const ui_konfiguration_schliessen = 'ui.konfiguration_schliessen';
+  static const ui_kritik = 'ui.kritik';
+  static const ui_label_template = 'ui.label_template';
+  static const ui_language_models_load_failed =
+      'ui.language_models_load_failed';
+  static const ui_leer_fuer_die_gesamte_liste_z_b_regions =
+      'ui.leer_fuer_die_gesamte_liste_z_b_regions';
+  static const ui_liste = 'ui.liste';
+  static const ui_loeschen = 'ui.loeschen';
+  static const ui_matching_records_updated = 'ui.matching_records_updated';
+  static const ui_maximale_iterationen = 'ui.maximale_iterationen';
+  static const ui_methode = 'ui.methode';
+  static const ui_mitarbeiter = 'ui.mitarbeiter';
+  static const ui_mitarbeiter_entfernen = 'ui.mitarbeiter_entfernen';
+  static const ui_mitarbeiter_zuweisen = 'ui.mitarbeiter_zuweisen';
+  static const ui_modell = 'ui.modell';
+  static const ui_modell_aus_dem_katalog_auswaehlen =
+      'ui.modell_aus_dem_katalog_auswaehlen';
+  static const ui_modell_auswaehlen = 'ui.modell_auswaehlen';
+  static const ui_modell_id = 'ui.modell_id';
+  static const ui_modell_inferenz_hinzufuegen =
+      'ui.modell_inferenz_hinzufuegen';
+  static const ui_modellausgabe = 'ui.modellausgabe';
+  static const ui_modelleingaben = 'ui.modelleingaben';
+  static const ui_modelleinstellungen = 'ui.modelleinstellungen';
+  static const ui_moegliche_antworten = 'ui.moegliche_antworten';
+  static const ui_nach_name_beschreibung_oder_schlagwort_suchen =
+      'ui.nach_name_beschreibung_oder_schlagwort_suchen';
+  static const ui_nachricht = 'ui.nachricht';
+  static const ui_nachricht_senden = 'ui.nachricht_senden';
+  static const ui_nachricht_senden_hinzufuegen =
+      'ui.nachricht_senden_hinzufuegen';
+  static const ui_name = 'ui.name';
+  static const ui_name_des_ordners = 'ui.name_des_ordners';
+  static const ui_neu = 'ui.neu';
+  static const ui_neue_aufgabe = 'ui.neue_aufgabe';
+  static const ui_neuer_ordner = 'ui.neuer_ordner';
+  static const ui_new_file = 'ui.new_file';
+  static const ui_new_record_created = 'ui.new_record_created';
+  static const ui_no_condition_yet = 'ui.no_condition_yet';
+  static const ui_no_connection_no_auth = 'ui.no_connection_no_auth';
+  static const ui_no_employees_yet = 'ui.no_employees_yet';
+  static const ui_no_files_uploaded_yet = 'ui.no_files_uploaded_yet';
+  static const ui_no_knowledge_notes_imported =
+      'ui.no_knowledge_notes_imported';
+  static const ui_no_match_for_filters = 'ui.no_match_for_filters';
+  static const ui_no_model_for_block = 'ui.no_model_for_block';
+  static const ui_no_notes_in_knowledge_base = 'ui.no_notes_in_knowledge_base';
+  static const ui_node_variable = 'ui.node_variable';
+  static const ui_none_full_url = 'ui.none_full_url';
+  static const ui_not_available = 'ui.not_available';
+  static const ui_not_cached_yet = 'ui.not_cached_yet';
+  static const ui_notes_load_failed = 'ui.notes_load_failed';
+  static const ui_notiz_anhaengen = 'ui.notiz_anhaengen';
+  static const ui_notiz_bearbeiten = 'ui.notiz_bearbeiten';
+  static const ui_notiz_entfernen = 'ui.notiz_entfernen';
+  static const ui_oberste_ebene = 'ui.oberste_ebene';
+  static const ui_op_at_most = 'ui.op_at_most';
+  static const ui_op_contains = 'ui.op_contains';
+  static const ui_op_greater_than = 'ui.op_greater_than';
+  static const ui_op_not_equal = 'ui.op_not_equal';
+  static const ui_optimierer_prompt = 'ui.optimierer_prompt';
+  static const ui_option = 'ui.option';
+  static const ui_option_entfernen = 'ui.option_entfernen';
+  static const ui_option_hinzufuegen = 'ui.option_hinzufuegen';
+  static const ui_optionen = 'ui.optionen';
+  static const ui_pfad_entfernen = 'ui.pfad_entfernen';
+  static const ui_pfade_festlegen = 'ui.pfade_festlegen';
+  static const ui_pick_model_from_catalog = 'ui.pick_model_from_catalog';
+  static const ui_please_sign_in_again = 'ui.please_sign_in_again';
+  static const ui_previous_value = 'ui.previous_value';
+  static const ui_prompt = 'ui.prompt';
+  static const ui_prompt_hinzufuegen = 'ui.prompt_hinzufuegen';
+  static const ui_pruefe_werte_aus_vorherigen_bausteinen_der_erste =
+      'ui.pruefe_werte_aus_vorherigen_bausteinen_der_erste';
+  static const ui_push_benachrichtigung = 'ui.push_benachrichtigung';
+  static const ui_py_expected_indent = 'ui.py_expected_indent';
+  static const ui_py_indent_mismatch = 'ui.py_indent_mismatch';
+  static const ui_py_missing_colon = 'ui.py_missing_colon';
+  static const ui_py_mixed_tabs = 'ui.py_mixed_tabs';
+  static const ui_py_unexpected_indent = 'ui.py_unexpected_indent';
+  static const ui_quelle_konnte_nicht_geoeffnet_werden =
+      'ui.quelle_konnte_nicht_geoeffnet_werden';
+  static const ui_quellen = 'ui.quellen';
+  static const ui_query_parameter = 'ui.query_parameter';
+  static const ui_recipient = 'ui.recipient';
+  static const ui_relative_to_base_url = 'ui.relative_to_base_url';
+  static const ui_rueckgaengig = 'ui.rueckgaengig';
+  static const ui_running = 'ui.running';
+  static const ui_sammlung = 'ui.sammlung';
+  static const ui_sammlung_als_tabelle = 'ui.sammlung_als_tabelle';
+  static const ui_scan_hint = 'ui.scan_hint';
+  static const ui_schliessen = 'ui.schliessen';
+  static const ui_script = 'ui.script';
+  static const ui_script_bearbeiten = 'ui.script_bearbeiten';
+  static const ui_script_hinzufuegen = 'ui.script_hinzufuegen';
+  static const ui_script_outputs_hint = 'ui.script_outputs_hint';
+  static const ui_search_condition_number = 'ui.search_condition_number';
+  static const ui_senden = 'ui.senden';
+  static const ui_skills_load_failed = 'ui.skills_load_failed';
+  static const ui_sms_lesen_hinzufuegen = 'ui.sms_lesen_hinzufuegen';
+  static const ui_sms_senden = 'ui.sms_senden';
+  static const ui_sonst = 'ui.sonst';
+  static const ui_sonst_pfad_entfernen = 'ui.sonst_pfad_entfernen';
+  static const ui_sonst_pfad_verwenden = 'ui.sonst_pfad_verwenden';
+  static const ui_source_url = 'ui.source_url';
+  static const ui_speichere_in = 'ui.speichere_in';
+  static const ui_speichern = 'ui.speichern';
+  static const ui_sprachausgabe = 'ui.sprachausgabe';
+  static const ui_sprache = 'ui.sprache';
+  static const ui_sprache_zu_text = 'ui.sprache_zu_text';
+  static const ui_standardwert_verwenden = 'ui.standardwert_verwenden';
+  static const ui_strukturierte_ausgabe = 'ui.strukturierte_ausgabe';
+  static const ui_suchbedingung_entfernen = 'ui.suchbedingung_entfernen';
+  static const ui_suche_in = 'ui.suche_in';
+  static const ui_suggestion_failed = 'ui.suggestion_failed';
+  static const ui_tap_to_copy = 'ui.tap_to_copy';
+  static const ui_task_name = 'ui.task_name';
+  static const ui_team_load_failed = 'ui.team_load_failed';
+  static const ui_template_ausdruck_verwenden =
+      'ui.template_ausdruck_verwenden';
+  static const ui_text = 'ui.text';
+  static const ui_text_bauen = 'ui.text_bauen';
+  static const ui_text_eingeben = 'ui.text_eingeben';
+  static const ui_text_vorlesen = 'ui.text_vorlesen';
+  static const ui_text_vorlesen_hinzufuegen = 'ui.text_vorlesen_hinzufuegen';
+  static const ui_texteingabe = 'ui.texteingabe';
+  static const ui_titel_optional = 'ui.titel_optional';
+  static const ui_try_another_search_term = 'ui.try_another_search_term';
+  static const ui_typ = 'ui.typ';
+  static const ui_uebernehmen = 'ui.uebernehmen';
+  static const ui_umbenennen = 'ui.umbenennen';
+  static const ui_verfeinert_den_angegebenen_entwurf =
+      'ui.verfeinert_den_angegebenen_entwurf';
+  static const ui_verfeinerung_hinzufuegen = 'ui.verfeinerung_hinzufuegen';
+  static const ui_vergleich = 'ui.vergleich';
+  static const ui_vergleichswert = 'ui.vergleichswert';
+  static const ui_vergleichswert_auswaehlen = 'ui.vergleichswert_auswaehlen';
+  static const ui_verknuepfen = 'ui.verknuepfen';
+  static const ui_verzeichnis = 'ui.verzeichnis';
+  static const ui_verzweigung_hinzufuegen = 'ui.verzweigung_hinzufuegen';
+  static const ui_vollbild_bearbeiten = 'ui.vollbild_bearbeiten';
+  static const ui_vorschlag_anwenden = 'ui.vorschlag_anwenden';
+  static const ui_waehle_einen_anderen_mitarbeiter =
+      'ui.waehle_einen_anderen_mitarbeiter';
+  static const ui_was_soll_geprueft_werden = 'ui.was_soll_geprueft_werden';
+  static const ui_webhook_ereignis_lesen = 'ui.webhook_ereignis_lesen';
+  static const ui_webhook_hint = 'ui.webhook_hint';
+  static const ui_weitere_bedingung = 'ui.weitere_bedingung';
+  static const ui_weitere_bedingung_verknuepfen =
+      'ui.weitere_bedingung_verknuepfen';
+  static const ui_wert = 'ui.wert';
+  static const ui_wert_aus_einem_baustein = 'ui.wert_aus_einem_baustein';
+  static const ui_wert_eingeben = 'ui.wert_eingeben';
+  static const ui_wert_pruefen = 'ui.wert_pruefen';
+  static const ui_whatsapp_lesen_hinzufuegen = 'ui.whatsapp_lesen_hinzufuegen';
+  static const ui_whatsapp_senden = 'ui.whatsapp_senden';
+  static const ui_wird_ausgefuehrt_wenn_keine_bedingung_zutrifft =
+      'ui.wird_ausgefuehrt_wenn_keine_bedingung_zutrifft';
+  static const ui_wissensbasis = 'ui.wissensbasis';
+  static const ui_wo = 'ui.wo';
+  static const ui_workflow_mapping = 'ui.workflow_mapping';
+  static const ui_workflow_value_named = 'ui.workflow_value_named';
+  static const ui_workflow_wert_oder_variable_suchen =
+      'ui.workflow_wert_oder_variable_suchen';
+  static const ui_zeitlimit_sekunden = 'ui.zeitlimit_sekunden';
+  static const ui_zu_pruefender_wert = 'ui.zu_pruefender_wert';
+  static const ui_zuweisung = 'ui.zuweisung';
+  static const ui = 'ui';
 }

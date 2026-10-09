@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -47,8 +49,7 @@ class ConditionalWidget extends StatelessWidget {
 
   Widget _derivedNotice() {
     return Text(
-      'Die Verzweigungen werden aus dem vorherigen Prompt-Baustein '
-      'ermittelt.',
+      LocaleKeys.ui_branches_from_prompt.tr(),
       style: SyscatTheme.taskBody,
     );
   }

@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -59,10 +61,10 @@ class _KnowledgeStatusHint extends StatelessWidget {
         child: LinearProgressIndicator(minHeight: 2),
       ),
       NodeKnowledgeAttachmentsStatus.failure => _RetryHint(
-        message: state.message ?? 'Notizen konnten nicht geladen werden.',
+        message: state.message ?? LocaleKeys.ui_notes_load_failed.tr(),
       ),
       NodeKnowledgeAttachmentsStatus.ready when state.notes.isEmpty =>
-        const _TextHint('Noch keine Wissensnotizen importiert.'),
+        _TextHint(LocaleKeys.ui_no_knowledge_notes_imported.tr()),
       NodeKnowledgeAttachmentsStatus.ready => const SizedBox.shrink(),
     };
   }
@@ -82,7 +84,7 @@ class _RetryHint extends StatelessWidget {
           Expanded(child: _TextHint(message)),
           TextButton(
             onPressed: context.read<NodeKnowledgeAttachmentsCubit>().load,
-            child: const Text('Erneut versuchen'),
+            child: Text(LocaleKeys.ui_erneut_versuchen.tr()),
           ),
         ],
       ),

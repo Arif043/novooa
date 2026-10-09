@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -23,17 +25,25 @@ class DocumentLookupWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Datensatz suchen', style: SyscatTheme.taskBody),
+            Text(
+              LocaleKeys.ui_datensatz_suchen.tr(),
+              style: SyscatTheme.taskBody,
+            ),
             const SizedBox(height: AppSpacing.sm),
             TextFormField(
               initialValue: config.collectionName,
-              decoration: const InputDecoration(labelText: 'Suche in'),
+              decoration: InputDecoration(
+                labelText: LocaleKeys.ui_suche_in.tr(),
+              ),
               onChanged: (value) => context
                   .read<TaskBuilderCubit>()
                   .updateDocumentLookupCollection(node.id, value),
             ),
             const SizedBox(height: AppSpacing.md),
-            Text('Wo', style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              LocaleKeys.ui_wo.tr(),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
             const SizedBox(height: AppSpacing.sm),
             for (var index = 0; index < config.filters.length; index++) ...[
               DocumentLookupFilterEditor(
@@ -58,7 +68,7 @@ class DocumentLookupWidget extends StatelessWidget {
                   .read<TaskBuilderCubit>()
                   .addDocumentLookupFilter(node.id),
               icon: const Icon(Icons.add),
-              label: const Text('Bedingung hinzufügen'),
+              label: Text(LocaleKeys.ui_bedingung_hinzufuegen.tr()),
             ),
           ],
         ),

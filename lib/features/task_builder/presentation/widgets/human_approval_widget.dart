@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -26,15 +28,15 @@ class HumanApprovalWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Freigabe', style: SyscatTheme.taskBody),
+          Text(LocaleKeys.ui_freigabe.tr(), style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
           TemplateExpressionTextField(
             value: _config.instruction,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 2,
             maxLines: 4,
-            decoration: const InputDecoration(
-              hintText: 'Was soll geprüft werden?',
+            decoration: InputDecoration(
+              hintText: LocaleKeys.ui_was_soll_geprueft_werden.tr(),
             ),
             onChanged: (value) => _update(
               context,
@@ -47,8 +49,8 @@ class HumanApprovalWidget extends StatelessWidget {
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 2,
             maxLines: 4,
-            decoration: const InputDecoration(
-              labelText: 'Zu prüfender Wert',
+            decoration: InputDecoration(
+              labelText: LocaleKeys.ui_zu_pruefender_wert.tr(),
               hintText: '{{baustein.value}}',
             ),
             onChanged: (value) => _update(

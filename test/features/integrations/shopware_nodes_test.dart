@@ -164,7 +164,7 @@ void main() {
       final node =
           (builder.state as TaskBuilderLoaded).editingTask.nodes.single;
       expect(node.title, 'Bestellungen suchen');
-      expect(node.outputName, startsWith('bestellungen'));
+      expect(node.outputName, equals('Bestellungen'));
       expect(node.config, isA<ShopwareNodeConfig>());
       expect((node.config as ShopwareNodeConfig).params, {
         'sort': 'newest',

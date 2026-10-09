@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/node_field_key.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:syscat2/core/runtime/employees_availability.dart';
@@ -58,7 +60,7 @@ class _PromptWidgetState extends State<PromptWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Prompt', style: SyscatTheme.taskBody),
+          Text(LocaleKeys.ui_prompt.tr(), style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),
           TemplateExpressionTextField(
             value: config.instruction,
@@ -69,15 +71,15 @@ class _PromptWidgetState extends State<PromptWidget> {
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 3,
             maxLines: 8,
-            decoration: const InputDecoration(
-              hintText: 'Hier kommt die Anweisung',
+            decoration: InputDecoration(
+              hintText: LocaleKeys.ui_hier_kommt_die_anweisung.tr(),
             ),
             onChanged: _updateInstruction,
           ),
           const SizedBox(height: AppSpacing.md),
           _languageModelField(context, config),
           const SizedBox(height: AppSpacing.md),
-          Text('Ausgabe', style: SyscatTheme.taskBody),
+          Text(LocaleKeys.ui_ausgabe.tr(), style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),
           SizedBox(
             width: double.infinity,
@@ -88,19 +90,19 @@ class _PromptWidgetState extends State<PromptWidget> {
               children: {
                 PromptOutputType.text: _outputTypeIcon(
                   icon: Icons.notes_outlined,
-                  label: 'Freitext',
+                  label: LocaleKeys.ui_freitext.tr(),
                 ),
                 PromptOutputType.decision: _outputTypeIcon(
                   icon: Icons.call_split_outlined,
-                  label: 'Entscheidung',
+                  label: LocaleKeys.ui_entscheidung.tr(),
                 ),
                 PromptOutputType.structured: _outputTypeIcon(
                   icon: Icons.data_object_outlined,
-                  label: 'Strukturierte Ausgabe',
+                  label: LocaleKeys.ui_strukturierte_ausgabe.tr(),
                 ),
                 PromptOutputType.image: _outputTypeIcon(
                   icon: Icons.image_outlined,
-                  label: 'Bild',
+                  label: LocaleKeys.ui_bild.tr(),
                 ),
               },
               onValueChanged: (value) {

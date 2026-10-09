@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/cupertino.dart';
 
 class RenameTaskDialog extends StatefulWidget {
@@ -27,13 +29,13 @@ class _RenameTaskDialogState extends State<RenameTaskDialog> {
   @override
   Widget build(BuildContext context) {
     return CupertinoAlertDialog(
-      title: const Text('Aufgabe umbenennen'),
+      title: Text(LocaleKeys.ui_aufgabe_umbenennen.tr()),
       content: Padding(
         padding: const EdgeInsets.only(top: 12),
         child: CupertinoTextField(
           controller: _controller,
           autofocus: true,
-          placeholder: 'Name der Aufgabe',
+          placeholder: LocaleKeys.ui_task_name.tr(),
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => _submit(context),
         ),
@@ -41,12 +43,12 @@ class _RenameTaskDialogState extends State<RenameTaskDialog> {
       actions: [
         CupertinoDialogAction(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Abbrechen'),
+          child: Text(LocaleKeys.ui_abbrechen.tr()),
         ),
         CupertinoDialogAction(
           isDefaultAction: true,
           onPressed: () => _submit(context),
-          child: const Text('Umbenennen'),
+          child: Text(LocaleKeys.ui_umbenennen.tr()),
         ),
       ],
     );

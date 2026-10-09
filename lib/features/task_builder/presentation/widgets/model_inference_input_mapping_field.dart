@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -58,7 +60,7 @@ class ModelInferenceInputMappingField extends StatelessWidget {
   Widget _nameField() => TextFormField(
     initialValue: input.name,
     readOnly: true,
-    decoration: const InputDecoration(labelText: 'Name'),
+    decoration: InputDecoration(labelText: LocaleKeys.ui_name.tr()),
   );
 
   Widget _workflowMappingField(BuildContext context) =>
@@ -66,8 +68,8 @@ class ModelInferenceInputMappingField extends StatelessWidget {
         key: ValueKey('${nodeId.value}-${input.name}'),
         value: mapping.workflowMapping,
         suggestions: TemplateExpressionScope.suggestionsOf(context),
-        decoration: const InputDecoration(
-          labelText: 'Workflow-Mapping',
+        decoration: InputDecoration(
+          labelText: LocaleKeys.ui_workflow_mapping.tr(),
           hintText: '{{eingabe.value}} oder {{global.eingabe.value}}',
         ),
         onChanged: (workflowMapping) => context
@@ -81,6 +83,6 @@ class ModelInferenceInputMappingField extends StatelessWidget {
   Widget _dataTypeField() => TextFormField(
     initialValue: input.source.label,
     readOnly: true,
-    decoration: const InputDecoration(labelText: 'Datentyp'),
+    decoration: InputDecoration(labelText: LocaleKeys.ui_datentyp.tr()),
   );
 }

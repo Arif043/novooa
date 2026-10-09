@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -60,15 +62,17 @@ class _ModelSearchSheetState extends State<_ModelSearchSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Modell auswählen',
+              LocaleKeys.ui_modell_auswaehlen.tr(),
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.md),
             TextField(
               autofocus: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 prefixIcon: Icon(Icons.search),
-                hintText: 'Nach Name, Beschreibung oder Schlagwort suchen',
+                hintText: LocaleKeys
+                    .ui_nach_name_beschreibung_oder_schlagwort_suchen
+                    .tr(),
               ),
               onChanged: (value) => setState(() => _query = value),
             ),

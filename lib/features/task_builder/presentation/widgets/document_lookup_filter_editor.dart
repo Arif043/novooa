@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
@@ -28,19 +30,23 @@ class DocumentLookupFilterEditor extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       container: true,
-      label: 'Suchbedingung ${index + 1}',
+      label: LocaleKeys.ui_search_condition_number.tr(
+        namedArgs: {'number': '${index + 1}'},
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TextFormField(
             initialValue: filter.field,
-            decoration: const InputDecoration(labelText: 'Feld'),
+            decoration: InputDecoration(labelText: LocaleKeys.ui_feld.tr()),
             onChanged: (value) => _update(field: value),
           ),
           const SizedBox(height: AppSpacing.sm),
           DropdownButtonFormField<DocumentFilterOperator>(
             initialValue: filter.operator,
-            decoration: const InputDecoration(labelText: 'Vergleich'),
+            decoration: InputDecoration(
+              labelText: LocaleKeys.ui_vergleich.tr(),
+            ),
             items: DocumentFilterOperator.values.map(_operatorItem).toList(),
             onChanged: (value) => _update(operator: value),
           ),
@@ -48,14 +54,14 @@ class DocumentLookupFilterEditor extends StatelessWidget {
           TemplateExpressionTextField(
             value: filter.value,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
-            decoration: const InputDecoration(labelText: 'Wert'),
+            decoration: InputDecoration(labelText: LocaleKeys.ui_wert.tr()),
             onChanged: (value) => _update(value: value),
           ),
           if (canRemove)
             Align(
               alignment: Alignment.centerRight,
               child: IconButton(
-                tooltip: 'Suchbedingung entfernen',
+                tooltip: LocaleKeys.ui_suchbedingung_entfernen.tr(),
                 onPressed: onRemove,
                 icon: const Icon(Icons.remove_circle_outline),
               ),
@@ -84,12 +90,12 @@ extension on DocumentFilterOperator {
   String get label {
     return switch (this) {
       .equals => 'ist gleich',
-      .notEquals => 'ist nicht gleich',
-      .contains => 'enthält',
-      .greaterThan => 'ist größer als',
+      .notEquals => LocaleKeys.ui_op_not_equal.tr(),
+      .contains => LocaleKeys.ui_op_contains.tr(),
+      .greaterThan => LocaleKeys.ui_op_greater_than.tr(),
       .greaterThanOrEqual => 'ist mindestens',
       .lessThan => 'ist kleiner als',
-      .lessThanOrEqual => 'ist höchstens',
+      .lessThanOrEqual => LocaleKeys.ui_op_at_most.tr(),
     };
   }
 }

@@ -29,6 +29,16 @@ void main() {
     expect(german.keys.toSet(), english.keys.toSet());
   });
 
+  test('Platzhalter {name} stimmen in beiden Sprachen überein', () {
+    final placeholder = RegExp(r'(?<!\{)\{(\w+)\}(?!\})');
+    Set<String> namesIn(String text) =>
+        placeholder.allMatches(text).map((m) => m.group(1)!).toSet();
+
+    for (final key in english.keys) {
+      expect(namesIn(german[key]!), namesIn(english[key]!), reason: key);
+    }
+  });
+
   test('Texte sind nicht leer (außer dem Plugin-Platzhalter)', () {
     for (final translations in [english, german]) {
       final empty = translations.entries
@@ -38,24 +48,28 @@ void main() {
     }
   });
 
-  test('Standardnamen sind ASCII und als {{name}} referenzierbar', () {
-    final identifier = RegExp(r'^[A-Za-z][A-Za-z0-9_]*$');
-    for (final translations in [english, german]) {
-      final names = translations.entries
-          .where(
-            (entry) =>
-                entry.key.startsWith('task_builder.output_names.') ||
-                entry.key.startsWith('task_builder.send_output_names.'),
-          )
-          .map((entry) => entry.value);
-      expect(names, isNotEmpty);
-      expect(names.where((name) => !identifier.hasMatch(name)), isEmpty);
-    }
-  });
+  test(
+    'Standardnamen beginnen groß, sind ASCII und als {{name}} referenzierbar',
+    () {
+      final identifier = RegExp(r'^[A-Z][A-Za-z0-9_]*$');
+      for (final translations in [english, german]) {
+        final names = translations.entries
+            .where(
+              (entry) =>
+                  entry.key.startsWith('task_builder.output_names.') ||
+                  entry.key.startsWith('task_builder.send_output_names.'),
+            )
+            .map((entry) => entry.value);
+        expect(names, isNotEmpty);
+        expect(names.where((name) => !identifier.hasMatch(name)), isEmpty);
+      }
+    },
+  );
 
-  test('Englisch bleibt bei den bisherigen Standardnamen', () {
-    expect(english['task_builder.output_names.string_input'], 'input');
-    expect(english['task_builder.output_names.prompt'], 'prompt');
-    expect(english['task_builder.send_output_names.email'], 'sendemail');
+  test('Standardnamen sind beispielhaft wie erwartet', () {
+    expect(english['task_builder.output_names.string_input'], 'Input');
+    expect(english['task_builder.send_output_names.email'], 'SendEmail');
+    expect(german['task_builder.output_names.prompt'], 'Anweisung');
+    expect(german['task_builder.send_output_names.email'], 'SendenEmail');
   });
 }

@@ -129,13 +129,15 @@ class _TemplateField extends StatelessWidget {
           value: value,
           suggestions: TemplateExpressionScope.suggestionsOf(context),
           decoration: InputDecoration(
-            labelText: '${parameter.label} (Template)',
+            labelText: LocaleKeys.ui_label_template.tr(
+              namedArgs: {'label': parameter.label},
+            ),
           ),
           onChanged: onChanged,
         ),
       ),
       IconButton(
-        tooltip: 'Standardwert verwenden',
+        tooltip: LocaleKeys.ui_standardwert_verwenden.tr(),
         onPressed: onReset,
         icon: const Icon(Icons.restart_alt),
       ),
@@ -148,7 +150,7 @@ class _TemplateButton extends StatelessWidget {
   final VoidCallback onPressed;
   @override
   Widget build(BuildContext context) => IconButton(
-    tooltip: 'Template-Ausdruck verwenden',
+    tooltip: LocaleKeys.ui_template_ausdruck_verwenden.tr(),
     onPressed: onPressed,
     icon: const Icon(Icons.code),
   );

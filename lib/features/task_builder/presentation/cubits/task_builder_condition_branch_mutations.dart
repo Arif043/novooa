@@ -15,7 +15,9 @@ extension TaskBuilderConditionBranchMutations on TaskBuilderCubit {
             .length;
         final newBranch = ConditionalBranch(
           id: _nextBranchId(config.branches),
-          label: 'Bedingung ${conditionedCount + 1}',
+          label: LocaleKeys.ui_condition_number.tr(
+            namedArgs: {'number': '${conditionedCount + 1}'},
+          ),
           graph: const WorkflowGraph(nodes: [], edges: []),
           condition: const ComparisonCondition(
             left: '',
@@ -33,7 +35,7 @@ extension TaskBuilderConditionBranchMutations on TaskBuilderCubit {
                 if (conditionedCount == 0)
                   ConditionalBranch(
                     id: _nextBranchId([...config.branches, newBranch]),
-                    label: 'Sonst',
+                    label: LocaleKeys.ui_sonst.tr(),
                     graph: const WorkflowGraph(nodes: [], edges: []),
                   ),
               ]
@@ -91,7 +93,7 @@ extension TaskBuilderConditionBranchMutations on TaskBuilderCubit {
                 ...config.branches,
                 ConditionalBranch(
                   id: _nextBranchId(config.branches),
-                  label: 'Sonst',
+                  label: LocaleKeys.ui_sonst.tr(),
                   graph: const WorkflowGraph(nodes: [], edges: []),
                 ),
               ]

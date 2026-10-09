@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,7 +34,9 @@ class NodeOutputNameField extends StatelessWidget {
     if (outputName.isEmpty) return const SizedBox.shrink();
     final style = NodeOutputTypeStyle.of(primaryOutputTypeOf(node.config));
     return Tooltip(
-      message: '${style.label} · Ausgabename bearbeiten',
+      message: LocaleKeys.ui_edit_output_name_typed.tr(
+        namedArgs: {'type': style.label},
+      ),
       child: InputChip(
         avatar: Icon(style.icon, size: AppSpacing.md, color: Colors.white),
         label: Text(outputName),
@@ -86,25 +90,27 @@ class _OutputNameDialogState extends State<_OutputNameDialog> {
   @override
   Widget build(BuildContext context) {
     return CupertinoAlertDialog(
-      title: const Text('Ausgabename'),
+      title: Text(LocaleKeys.ui_ausgabename.tr()),
       content: TextField(
         controller: _controller,
         autofocus: true,
         inputFormatters: [
           FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
         ],
-        decoration: const InputDecoration(hintText: 'zum_beispiel_bericht'),
+        decoration: InputDecoration(
+          hintText: LocaleKeys.ui_hint_output_name.tr(),
+        ),
         onSubmitted: (value) => Navigator.pop(context, value),
       ),
       actions: [
         CupertinoDialogAction(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Abbrechen'),
+          child: Text(LocaleKeys.ui_abbrechen.tr()),
         ),
         CupertinoDialogAction(
           isDefaultAction: true,
           onPressed: () => Navigator.pop(context, _controller.text),
-          child: const Text('Speichern'),
+          child: Text(LocaleKeys.ui_speichern.tr()),
         ),
       ],
     );

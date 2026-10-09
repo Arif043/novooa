@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -28,7 +30,7 @@ class ModelCacheStatusRow extends StatelessWidget {
         icon: Icon(Icons.check_circle_outline, color: colors.primary),
         text: local.origin == ModelOrigin.import
             ? 'Eigenes Modell'
-            : 'Gecacht und bereit',
+            : LocaleKeys.ui_cached_and_ready.tr(),
       );
     }
     if (status?.state == ModelCacheState.downloading) {
@@ -46,7 +48,7 @@ class ModelCacheStatusRow extends StatelessWidget {
         color: status == null ? colors.onSurfaceVariant : colors.error,
       ),
       text: status == null
-          ? 'Noch nicht gecacht – wird spätestens beim ersten Lauf geladen.'
+          ? LocaleKeys.ui_not_cached_yet.tr()
           : status.message ?? 'Download fehlgeschlagen.',
       action: TextButton(
         onPressed: () => context.read<ModelCatalogCubit>().cacheModel(modelId),

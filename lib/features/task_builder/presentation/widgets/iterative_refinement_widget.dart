@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/core/runtime/employees_availability.dart';
 import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/cupertino.dart';
@@ -36,15 +38,18 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Iterative Verfeinerung', style: SyscatTheme.taskBody),
+          Text(
+            LocaleKeys.ui_iterative_verfeinerung.tr(),
+            style: SyscatTheme.taskBody,
+          ),
           const SizedBox(height: AppSpacing.md),
           TemplateExpressionTextField(
             value: _config.draftTemplate,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 3,
             maxLines: 8,
-            decoration: const InputDecoration(
-              labelText: 'Entwurf',
+            decoration: InputDecoration(
+              labelText: LocaleKeys.ui_entwurf.tr(),
               hintText: '{{baustein.value}}',
             ),
             onChanged: _updateDraft,
@@ -55,7 +60,9 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 2,
             maxLines: 4,
-            decoration: const InputDecoration(hintText: 'Optimierer-Prompt'),
+            decoration: InputDecoration(
+              hintText: LocaleKeys.ui_optimierer_prompt.tr(),
+            ),
             onChanged: _updateOptimizer,
           ),
           const SizedBox(height: AppSpacing.md),
@@ -64,11 +71,14 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 2,
             maxLines: 4,
-            decoration: const InputDecoration(hintText: 'Kritik'),
+            decoration: InputDecoration(hintText: LocaleKeys.ui_kritik.tr()),
             onChanged: _updateCritique,
           ),
           const SizedBox(height: AppSpacing.md),
-          Text('Maximale Iterationen', style: SyscatTheme.taskBodySmall),
+          Text(
+            LocaleKeys.ui_maximale_iterationen.tr(),
+            style: SyscatTheme.taskBodySmall,
+          ),
           const SizedBox(height: AppSpacing.xs),
           CupertinoSlidingSegmentedControl<int>(
             groupValue: _config.maxIterations,
@@ -81,7 +91,7 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Verfeinert den angegebenen Entwurf.',
+            LocaleKeys.ui_verfeinert_den_angegebenen_entwurf.tr(),
             style: SyscatTheme.taskBodySmall,
           ),
           if (skillsAvailable() || employeesAvailable()) ...[

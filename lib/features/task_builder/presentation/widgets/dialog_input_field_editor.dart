@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
@@ -60,7 +62,7 @@ class _NameField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       initialValue: field.name,
-      decoration: const InputDecoration(labelText: 'Feldname'),
+      decoration: InputDecoration(labelText: LocaleKeys.ui_feldname.tr()),
       onChanged: (name) => onChanged(field.copyWith(name: name)),
     );
   }
@@ -76,7 +78,7 @@ class _TypeField extends StatelessWidget {
   Widget build(BuildContext context) {
     return DropdownButtonFormField<DialogInputFieldType>(
       initialValue: field.type,
-      decoration: const InputDecoration(labelText: 'Datentyp'),
+      decoration: InputDecoration(labelText: LocaleKeys.ui_datentyp.tr()),
       items: [
         for (final type in DialogInputFieldType.values)
           DropdownMenuItem(value: type, child: Text(type.label)),
@@ -103,7 +105,10 @@ class _OptionsEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Optionen', style: Theme.of(context).textTheme.labelLarge),
+        Text(
+          LocaleKeys.ui_optionen.tr(),
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
         for (var index = 0; index < field.options.length; index++)
           _OptionField(
             value: field.options[index],
@@ -112,7 +117,7 @@ class _OptionsEditor extends StatelessWidget {
             onRemove: () => onChanged(field.removeOption(index)),
           ),
         IconButton(
-          tooltip: 'Option hinzufügen',
+          tooltip: LocaleKeys.ui_option_hinzufuegen.tr(),
           onPressed: () => onChanged(field.addOption()),
           icon: const Icon(Icons.add_circle_outline),
         ),
@@ -141,12 +146,12 @@ class _OptionField extends StatelessWidget {
         Expanded(
           child: TextFormField(
             initialValue: value,
-            decoration: const InputDecoration(labelText: 'Option'),
+            decoration: InputDecoration(labelText: LocaleKeys.ui_option.tr()),
             onChanged: onChanged,
           ),
         ),
         IconButton(
-          tooltip: 'Option entfernen',
+          tooltip: LocaleKeys.ui_option_entfernen.tr(),
           onPressed: canRemove ? onRemove : null,
           icon: const Icon(Icons.remove_circle_outline),
         ),
@@ -164,7 +169,7 @@ class _RemoveFieldButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      tooltip: 'Feld entfernen',
+      tooltip: LocaleKeys.ui_feld_entfernen.tr(),
       onPressed: enabled ? onRemove : null,
       icon: const Icon(Icons.delete_outline),
     );

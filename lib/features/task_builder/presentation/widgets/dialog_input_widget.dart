@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -27,15 +29,15 @@ class DialogInputWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Formulareingabe', style: SyscatTheme.taskBody),
+          Text(LocaleKeys.ui_formulareingabe.tr(), style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
           TemplateExpressionTextField(
             value: _config.instruction,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 2,
             maxLines: 4,
-            decoration: const InputDecoration(
-              hintText: 'Hinweis für die Eingabe',
+            decoration: InputDecoration(
+              hintText: LocaleKeys.ui_hinweis_fuer_die_eingabe.tr(),
             ),
             onChanged: (value) => _update(
               context,
@@ -61,7 +63,7 @@ class DialogInputWidget extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
-              tooltip: 'Feld hinzufügen',
+              tooltip: LocaleKeys.ui_feld_hinzufuegen.tr(),
               onPressed: () => _update(context, (config) => config.addField()),
               icon: const Icon(Icons.add_circle_outline),
             ),

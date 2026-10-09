@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/node_field_key.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +51,9 @@ class _SendMessageWidgetState extends State<SendMessageWidget> {
             TemplateExpressionTextField(
               value: _config.subject,
               suggestions: TemplateExpressionScope.suggestionsOf(context),
-              decoration: const InputDecoration(labelText: 'Betreff'),
+              decoration: InputDecoration(
+                labelText: LocaleKeys.ui_betreff.tr(),
+              ),
               onChanged: _updateSubject,
             ),
           ],
@@ -63,7 +67,9 @@ class _SendMessageWidgetState extends State<SendMessageWidget> {
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 3,
             maxLines: 6,
-            decoration: const InputDecoration(labelText: 'Nachricht'),
+            decoration: InputDecoration(
+              labelText: LocaleKeys.ui_nachricht.tr(),
+            ),
             onChanged: _updateMessage,
           ),
         ],
@@ -81,7 +87,7 @@ class _SendMessageWidgetState extends State<SendMessageWidget> {
 
   String get _recipientLabel {
     return _config.kind == ChannelEventKind.email
-        ? 'Empfänger'
+        ? LocaleKeys.ui_recipient.tr()
         : 'Telefonnummer';
   }
 

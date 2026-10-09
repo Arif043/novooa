@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -92,9 +94,14 @@ class _AssistantHeader extends StatelessWidget {
       children: [
         Icon(Icons.auto_awesome, color: theme.colorScheme.primary),
         const SizedBox(width: AppSpacing.sm),
-        Expanded(child: Text('KI-Agent', style: theme.textTheme.titleLarge)),
+        Expanded(
+          child: Text(
+            LocaleKeys.ui_ki_agent.tr(),
+            style: theme.textTheme.titleLarge,
+          ),
+        ),
         IconButton(
-          tooltip: 'Schließen',
+          tooltip: LocaleKeys.ui_schliessen.tr(),
           onPressed: onClose,
           icon: const Icon(Icons.close),
         ),
@@ -147,7 +154,9 @@ class _AssistantEmptyState extends StatelessWidget {
     final theme = Theme.of(context);
     return Center(
       child: Text(
-        'Frag mich etwas zu "$contextLabel".',
+        LocaleKeys.ui_ask_about_context.tr(
+          namedArgs: {'context': contextLabel},
+        ),
         textAlign: TextAlign.center,
         style: theme.textTheme.bodyMedium?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,

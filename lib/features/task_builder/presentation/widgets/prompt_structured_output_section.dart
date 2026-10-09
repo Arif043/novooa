@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
@@ -24,7 +26,10 @@ class PromptStructuredOutputSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: AppSpacing.lg),
-        Text('Ausgabeformat', style: SyscatTheme.taskBodySmall),
+        Text(
+          LocaleKeys.ui_ausgabeformat.tr(),
+          style: SyscatTheme.taskBodySmall,
+        ),
         const SizedBox(height: AppSpacing.xs),
         for (var index = 0; index < fields.length; index++)
           _StructuredOutputFieldRow(
@@ -38,7 +43,7 @@ class PromptStructuredOutputSection extends StatelessWidget {
           onPressed: onAdd,
           icon: const Icon(Icons.add, color: SyscatTheme.primaryOrange),
           label: Text(
-            'Feld hinzufügen',
+            LocaleKeys.ui_feld_hinzufuegen.tr(),
             style: TextStyle(color: SyscatTheme.primaryOrange),
           ),
         ),
@@ -104,7 +109,9 @@ class _StructuredOutputFieldRowState extends State<_StructuredOutputFieldRow> {
               Expanded(
                 child: TextField(
                   controller: _nameController,
-                  decoration: const InputDecoration(hintText: 'Feldname'),
+                  decoration: InputDecoration(
+                    hintText: LocaleKeys.ui_feldname.tr(),
+                  ),
                   onChanged: _emit,
                 ),
               ),
@@ -112,12 +119,14 @@ class _StructuredOutputFieldRowState extends State<_StructuredOutputFieldRow> {
               Expanded(
                 child: TextField(
                   controller: _descriptionController,
-                  decoration: const InputDecoration(hintText: 'Beschreibung'),
+                  decoration: InputDecoration(
+                    hintText: LocaleKeys.ui_beschreibung.tr(),
+                  ),
                   onChanged: _emit,
                 ),
               ),
               IconButton(
-                tooltip: 'Feld entfernen',
+                tooltip: LocaleKeys.ui_feld_entfernen.tr(),
                 onPressed: widget.canRemove ? widget.onRemove : null,
                 icon: const Icon(Icons.remove_circle_outline),
               ),
@@ -126,7 +135,7 @@ class _StructuredOutputFieldRowState extends State<_StructuredOutputFieldRow> {
           const SizedBox(height: AppSpacing.xs),
           DropdownButtonFormField<StructuredFieldType>(
             initialValue: widget.field.type,
-            decoration: const InputDecoration(labelText: 'Typ'),
+            decoration: InputDecoration(labelText: LocaleKeys.ui_typ.tr()),
             items: [
               for (final type in StructuredFieldType.values)
                 DropdownMenuItem(value: type, child: Text(type.label)),

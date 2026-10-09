@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
@@ -38,7 +40,7 @@ class _WriteFileNewFolderRowState extends State<WriteFileNewFolderRow> {
       return TextButton.icon(
         onPressed: () => setState(() => _expanded = true),
         icon: const Icon(Icons.create_new_folder_outlined),
-        label: const Text('Neuer Ordner'),
+        label: Text(LocaleKeys.ui_neuer_ordner.tr()),
       );
     }
     return Column(
@@ -51,7 +53,7 @@ class _WriteFileNewFolderRowState extends State<WriteFileNewFolderRow> {
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => _submit(),
           decoration: InputDecoration(
-            labelText: 'Name des Ordners',
+            labelText: LocaleKeys.ui_name_des_ordners.tr(),
             helperText:
                 'Wird angelegt in: ${widget.parentLabel ?? 'Oberste Ebene'}',
             errorText: widget.errorMessage,
@@ -63,12 +65,12 @@ class _WriteFileNewFolderRowState extends State<WriteFileNewFolderRow> {
           children: [
             TextButton(
               onPressed: widget.isCreating ? null : _collapse,
-              child: const Text('Abbrechen'),
+              child: Text(LocaleKeys.ui_abbrechen.tr()),
             ),
             const SizedBox(width: AppSpacing.sm),
             FilledButton(
               onPressed: widget.isCreating ? null : _submit,
-              child: const Text('Anlegen'),
+              child: Text(LocaleKeys.ui_anlegen.tr()),
             ),
           ],
         ),

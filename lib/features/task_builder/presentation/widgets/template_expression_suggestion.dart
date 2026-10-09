@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
@@ -41,7 +43,9 @@ List<TemplateExpressionSuggestion> templateExpressionSuggestions({
         suggestions.add(
           TemplateExpressionSuggestion(
             expression: '{{$variable}}',
-            label: '${node.title} · Variable $variable',
+            label: LocaleKeys.ui_node_variable.tr(
+              namedArgs: {'node': node.title, 'name': variable},
+            ),
             kind: TemplateExpressionSuggestionKind.variable,
           ),
         );

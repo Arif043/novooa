@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
@@ -62,7 +64,7 @@ class _CursorMark extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Semantics(
-      label: 'KI-Agent bedient die Oberfläche',
+      label: LocaleKeys.ui_ki_agent_bedient_die_oberflaeche.tr(),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -139,7 +141,7 @@ class _Badge extends StatelessWidget {
           vertical: 2,
         ),
         child: Text(
-          'KI-Agent',
+          LocaleKeys.ui_ki_agent.tr(),
           style: Theme.of(
             context,
           ).textTheme.labelSmall?.copyWith(color: colors.onPrimary),

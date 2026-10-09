@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -108,7 +110,10 @@ class _DecisionConfiguration extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: AppSpacing.lg),
-        Text('Mögliche Antworten', style: SyscatTheme.taskBodySmall),
+        Text(
+          LocaleKeys.ui_moegliche_antworten.tr(),
+          style: SyscatTheme.taskBodySmall,
+        ),
         const SizedBox(height: AppSpacing.xs),
         for (var index = 0; index < choices.length; index++)
           PromptChoiceField(
@@ -123,7 +128,7 @@ class _DecisionConfiguration extends StatelessWidget {
           onPressed: onAdd,
           icon: const Icon(Icons.add, color: SyscatTheme.primaryOrange),
           label: Text(
-            'Antwort hinzufügen',
+            LocaleKeys.ui_antwort_hinzufuegen.tr(),
             style: TextStyle(color: SyscatTheme.primaryOrange),
           ),
         ),

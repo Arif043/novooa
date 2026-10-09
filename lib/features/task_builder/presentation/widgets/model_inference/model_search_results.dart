@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -71,14 +73,13 @@ class _CatalogUnavailable extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
-                'Der Modellkatalog ist gerade nicht erreichbar. Angezeigt '
-                'werden nur Modelle, die diese Runtime bereits hat.',
+                LocaleKeys.ui_catalog_unreachable.tr(),
                 style: TextStyle(color: colors.onErrorContainer),
               ),
             ),
             TextButton(
               onPressed: context.read<ModelCatalogCubit>().loadGlobal,
-              child: const Text('Erneut versuchen'),
+              child: Text(LocaleKeys.ui_erneut_versuchen.tr()),
             ),
           ],
         ),
@@ -108,16 +109,17 @@ class _NoResults extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text('Kein Modell gefunden', style: theme.textTheme.titleMedium),
+            Text(
+              LocaleKeys.ui_kein_modell_gefunden.tr(),
+              style: theme.textTheme.titleMedium,
+            ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               onResetFilters != null
-                  ? 'Mit den gewählten Filtern gibt es keinen Treffer.'
+                  ? LocaleKeys.ui_no_match_for_filters.tr()
                   : hasQuery
-                  ? 'Versuche einen anderen Suchbegriff.'
-                  : 'Für diesen Baustein steht noch kein passendes Modell '
-                        'bereit. Eigene Modelle importierst du in den '
-                        'Einstellungen unter Machine Learning.',
+                  ? LocaleKeys.ui_try_another_search_term.tr()
+                  : LocaleKeys.ui_no_model_for_block.tr(),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
@@ -128,7 +130,7 @@ class _NoResults extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: reset,
                 icon: const Icon(Icons.filter_alt_off_outlined),
-                label: const Text('Filter zurücksetzen'),
+                label: Text(LocaleKeys.ui_filter_zuruecksetzen.tr()),
               ),
             ],
           ],

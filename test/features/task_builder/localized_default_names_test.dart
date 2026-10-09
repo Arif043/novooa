@@ -68,7 +68,7 @@ void main() {
       (cubit) => cubit.addNodeToMainGraph(WorkflowPrimitive.prompt),
     );
 
-    expect(node.outputName, 'anweisung1');
+    expect(node.outputName, 'Anweisung');
     expect(node.title, 'Prompt');
   });
 
@@ -79,7 +79,7 @@ void main() {
       (cubit) => cubit.addNodeToMainGraph(WorkflowPrimitive.stringInput),
     );
 
-    expect(node.outputName, 'input1');
+    expect(node.outputName, 'Input');
     expect(node.title, 'Text input');
   });
 
@@ -92,9 +92,27 @@ void main() {
       (cubit) => cubit.addSendMessageNodeToMainGraph(ChannelEventKind.email),
     );
 
-    expect(german.outputName, 'sendenemail1');
+    expect(german.outputName, 'SendenEmail');
     expect(german.title, 'E-Mail senden');
-    expect(english.outputName, 'sendemail1');
+    expect(english.outputName, 'SendEmail');
     expect(english.title, 'Send Email');
   });
+
+  test(
+    'der zweite und dritte Baustein einer Art werden ab 2 nummeriert',
+    () async {
+      final cubit = TaskBuilderCubit(repository: _Repository());
+      await cubit.load(_task);
+
+      await cubit.addNodeToMainGraph(WorkflowPrimitive.prompt);
+      await cubit.addNodeToMainGraph(WorkflowPrimitive.prompt);
+      await cubit.addNodeToMainGraph(WorkflowPrimitive.prompt);
+
+      final names = (cubit.state as TaskBuilderLoaded).editingTask.nodes
+          .map((node) => node.outputName)
+          .where((name) => name.startsWith('Anweisung'));
+      expect(names, ['Anweisung', 'Anweisung2', 'Anweisung3']);
+      await cubit.close();
+    },
+  );
 }

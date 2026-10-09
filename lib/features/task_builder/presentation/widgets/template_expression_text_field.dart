@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -289,7 +291,7 @@ class _TemplateExpressionLabel extends StatelessWidget {
     final theme = Theme.of(context);
     final name = expression.substring(2, expression.length - 2).trim();
     return Semantics(
-      label: 'Workflow-Wert $name',
+      label: LocaleKeys.ui_workflow_value_named.tr(namedArgs: {'name': name}),
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.sm,
@@ -346,9 +348,10 @@ class _TemplateExpressionPickerState extends State<_TemplateExpressionPicker> {
             children: [
               TextField(
                 autofocus: true,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   prefixIcon: Icon(Icons.search),
-                  hintText: 'Workflow-Wert oder Variable suchen',
+                  hintText: LocaleKeys.ui_workflow_wert_oder_variable_suchen
+                      .tr(),
                 ),
                 onChanged: (value) => setState(() => _query = value),
               ),
@@ -356,7 +359,7 @@ class _TemplateExpressionPickerState extends State<_TemplateExpressionPicker> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: FilterChip(
-                  label: const Text('Feste Felder'),
+                  label: Text(LocaleKeys.ui_feste_felder.tr()),
                   avatar: const Icon(Icons.tune, size: 16),
                   selected: _showSecondary,
                   onSelected: (value) => setState(() => _showSecondary = value),
@@ -365,8 +368,10 @@ class _TemplateExpressionPickerState extends State<_TemplateExpressionPicker> {
               const SizedBox(height: 8),
               Expanded(
                 child: candidates.isEmpty
-                    ? const Center(
-                        child: Text('Keine passenden Werte verfügbar.'),
+                    ? Center(
+                        child: Text(
+                          LocaleKeys.ui_keine_passenden_werte_verfuegbar.tr(),
+                        ),
                       )
                     : ListView.builder(
                         itemCount: candidates.length,

@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
@@ -40,8 +42,8 @@ class FileAttachmentSection extends StatelessWidget {
   Future<void> _showFilePicker(BuildContext context) async {
     final pickedId = await AttachmentPickerSheet.show(
       context,
-      title: 'Datei anhängen',
-      emptyMessage: 'Noch keine Dateien hochgeladen.',
+      title: LocaleKeys.ui_datei_anhaengen.tr(),
+      emptyMessage: LocaleKeys.ui_no_files_uploaded_yet.tr(),
       selectedIds: attachments.map((file) => file.id).toSet(),
       items: [
         for (final file in availableFiles)
@@ -67,9 +69,11 @@ class _AttachmentHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: Text('Dateien', style: SyscatTheme.taskBody)),
+        Expanded(
+          child: Text(LocaleKeys.ui_dateien.tr(), style: SyscatTheme.taskBody),
+        ),
         IconButton(
-          tooltip: 'Datei anhängen',
+          tooltip: LocaleKeys.ui_datei_anhaengen.tr(),
           onPressed: onPressed,
           icon: const Icon(Icons.attach_file),
         ),
@@ -84,7 +88,7 @@ class _AttachmentEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Keine Datei angehängt.',
+      LocaleKeys.ui_keine_datei_angehaengt.tr(),
       style: Theme.of(context).textTheme.bodyMedium,
     );
   }
@@ -131,7 +135,7 @@ class _AttachmentTile extends StatelessWidget {
       title: Text(attachment.displayName, overflow: TextOverflow.ellipsis),
       subtitle: Text(_metadataFor(context, attachment)),
       trailing: IconButton(
-        tooltip: 'Datei entfernen',
+        tooltip: LocaleKeys.ui_datei_entfernen.tr(),
         onPressed: () => onDetach(attachment.id),
         icon: const Icon(Icons.close),
       ),

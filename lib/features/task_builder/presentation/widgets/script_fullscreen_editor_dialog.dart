@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 
@@ -67,12 +69,12 @@ class _FullscreenEditorHeader extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            'Script bearbeiten',
+            LocaleKeys.ui_script_bearbeiten.tr(),
             style: Theme.of(context).textTheme.titleLarge,
           ),
         ),
         IconButton(
-          tooltip: 'Schließen',
+          tooltip: LocaleKeys.ui_schliessen.tr(),
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.close),
         ),

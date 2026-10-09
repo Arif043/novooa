@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
@@ -22,7 +24,7 @@ class AssistantActionPlanHeader extends StatelessWidget {
         _leading(context),
         if (onUndo != null)
           IconButton(
-            tooltip: 'Rückgängig',
+            tooltip: LocaleKeys.ui_rueckgaengig.tr(),
             onPressed: onUndo,
             icon: const Icon(Icons.undo_rounded),
           ),
@@ -43,7 +45,7 @@ class AssistantActionPlanHeader extends StatelessWidget {
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(
-              'Vorschlag anwenden',
+              LocaleKeys.ui_vorschlag_anwenden.tr(),
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelLarge,
             ),
@@ -61,7 +63,7 @@ class AssistantActionPlanHeader extends StatelessWidget {
         isDone
             ? 'Erledigt'
             : isRunning
-            ? 'Läuft'
+            ? LocaleKeys.ui_running.tr()
             : 'Ausführen',
       ),
     );

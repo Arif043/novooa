@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -97,10 +99,10 @@ class _DialogContent extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text('Notiz bearbeiten', style: titleStyle),
+          Text(LocaleKeys.ui_notiz_bearbeiten.tr(), style: titleStyle),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Halte fest, worauf diese Aufgabe hinarbeiten soll.',
+            LocaleKeys.ui_halte_fest_worauf_diese_aufgabe_hinarbeiten_soll.tr(),
             textAlign: TextAlign.center,
             style: TextStyle(
               color: CupertinoColors.secondaryLabel.resolveFrom(context),
@@ -151,7 +153,7 @@ class _DialogActions extends StatelessWidget {
         children: [
           Expanded(
             child: _DialogAction(
-              label: 'Abbrechen',
+              label: LocaleKeys.ui_abbrechen.tr(),
               isDestructive: true,
               onPressed: onCancel,
             ),
@@ -162,7 +164,7 @@ class _DialogActions extends StatelessWidget {
           ),
           Expanded(
             child: _DialogAction(
-              label: 'Speichern',
+              label: LocaleKeys.ui_speichern.tr(),
               onPressed: onSave,
               isDefault: true,
             ),

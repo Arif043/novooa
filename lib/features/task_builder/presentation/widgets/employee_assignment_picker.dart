@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
@@ -56,8 +58,8 @@ class EmployeeAssignmentPicker extends StatelessWidget {
   Future<void> _showPicker(BuildContext context) async {
     final pickedId = await AttachmentPickerSheet.show(
       context,
-      title: 'Mitarbeiter zuweisen',
-      emptyMessage: 'Noch keine Mitarbeiter angelegt.',
+      title: LocaleKeys.ui_mitarbeiter_zuweisen.tr(),
+      emptyMessage: LocaleKeys.ui_no_employees_yet.tr(),
       selectedIds: {?assignedId},
       items: [
         for (final employee in employees)
@@ -75,9 +77,11 @@ class EmployeeAssignmentPicker extends StatelessWidget {
   String _subtitleFor(Employee employee) {
     final count = employee.skillNames.length;
     return switch (count) {
-      0 => 'Rahmenbedingung · keine Fähigkeiten',
-      1 => 'Rahmenbedingung · 1 Fähigkeit',
-      _ => 'Rahmenbedingung · $count Fähigkeiten',
+      0 => LocaleKeys.ui_constraint_no_skills.tr(),
+      1 => LocaleKeys.ui_constraint_one_skill.tr(),
+      _ => LocaleKeys.ui_constraint_skill_count.tr(
+        namedArgs: {'count': '$count'},
+      ),
     };
   }
 }
@@ -91,9 +95,14 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: Text('Mitarbeiter', style: SyscatTheme.taskBody)),
+        Expanded(
+          child: Text(
+            LocaleKeys.ui_mitarbeiter.tr(),
+            style: SyscatTheme.taskBody,
+          ),
+        ),
         IconButton(
-          tooltip: 'Mitarbeiter zuweisen',
+          tooltip: LocaleKeys.ui_mitarbeiter_zuweisen.tr(),
           onPressed: onPressed,
           icon: const Icon(Icons.person_outline),
         ),
@@ -108,7 +117,7 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Kein Mitarbeiter zugewiesen.',
+      LocaleKeys.ui_kein_mitarbeiter_zugewiesen.tr(),
       style: Theme.of(context).textTheme.bodyMedium,
     );
   }
@@ -148,14 +157,16 @@ class _AssignedTile extends StatelessWidget {
         color: missing ? Theme.of(context).colorScheme.error : null,
       ),
       title: Text(
-        employee?.name ?? (missing ? 'Mitarbeiter nicht mehr vorhanden' : '…'),
+        employee?.name ?? (missing ? LocaleKeys.ui_employee_gone.tr() : '…'),
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: employee == null
-          ? (missing ? const Text('Wähle einen anderen Mitarbeiter.') : null)
+          ? (missing
+                ? Text(LocaleKeys.ui_waehle_einen_anderen_mitarbeiter.tr())
+                : null)
           : Text(_skillDescription(employee.skillNames.length)),
       trailing: IconButton(
-        tooltip: 'Mitarbeiter entfernen',
+        tooltip: LocaleKeys.ui_mitarbeiter_entfernen.tr(),
         onPressed: onUnassign,
         icon: const Icon(Icons.close),
       ),
@@ -164,9 +175,11 @@ class _AssignedTile extends StatelessWidget {
 
   String _skillDescription(int skillCount) {
     return switch (skillCount) {
-      0 => 'Rahmenbedingung · keine Fähigkeiten',
-      1 => 'Rahmenbedingung · 1 Fähigkeit',
-      _ => 'Rahmenbedingung · $skillCount Fähigkeiten',
+      0 => LocaleKeys.ui_constraint_no_skills.tr(),
+      1 => LocaleKeys.ui_constraint_one_skill.tr(),
+      _ => LocaleKeys.ui_constraint_skill_count.tr(
+        namedArgs: {'count': '$skillCount'},
+      ),
     };
   }
 }

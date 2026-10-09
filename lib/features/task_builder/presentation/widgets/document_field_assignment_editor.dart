@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -26,27 +28,29 @@ class DocumentFieldAssignmentEditor extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       container: true,
-      label: 'Feldzuordnung ${index + 1}',
+      label: LocaleKeys.ui_field_mapping_number.tr(
+        namedArgs: {'number': '${index + 1}'},
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TextFormField(
             initialValue: assignment.field,
-            decoration: const InputDecoration(labelText: 'Feld'),
+            decoration: InputDecoration(labelText: LocaleKeys.ui_feld.tr()),
             onChanged: (value) => _update(context, field: value),
           ),
           const SizedBox(height: AppSpacing.sm),
           TemplateExpressionTextField(
             value: assignment.value,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
-            decoration: const InputDecoration(labelText: 'Wert'),
+            decoration: InputDecoration(labelText: LocaleKeys.ui_wert.tr()),
             onChanged: (value) => _update(context, value: value),
           ),
           if (canRemove)
             Align(
               alignment: Alignment.centerRight,
               child: IconButton(
-                tooltip: 'Feld entfernen',
+                tooltip: LocaleKeys.ui_feld_entfernen.tr(),
                 onPressed: () => context
                     .read<TaskBuilderCubit>()
                     .removeSaveDocumentField(nodeId, index),

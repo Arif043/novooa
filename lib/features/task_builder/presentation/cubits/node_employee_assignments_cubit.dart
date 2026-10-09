@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
@@ -36,7 +38,7 @@ class NodeEmployeeAssignmentsCubit extends Cubit<NodeEmployeeAssignmentsState> {
       _emitEmployees,
       onError: (Object error, StackTrace stackTrace) {
         _logAndEmitFailure(
-          'Mitarbeiter konnten nicht geladen werden.',
+          LocaleKeys.ui_employees_load_failed.tr(),
           error,
           stackTrace,
         );
@@ -49,7 +51,7 @@ class NodeEmployeeAssignmentsCubit extends Cubit<NodeEmployeeAssignmentsState> {
       return await _getCurrentTeamId();
     } catch (error, stackTrace) {
       _logAndEmitFailure(
-        'Team konnte nicht geladen werden.',
+        LocaleKeys.ui_team_load_failed.tr(),
         error,
         stackTrace,
       );

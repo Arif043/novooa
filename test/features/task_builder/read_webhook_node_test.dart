@@ -52,7 +52,7 @@ void main() {
   );
 
   test(
-    'ein neuer Baustein heißt „ereignis“ und hat die passende Konfiguration',
+    'ein neuer Baustein heißt „Ereignis“ und hat die passende Konfiguration',
     () async {
       final builder = TaskBuilderCubit(repository: _TaskRepository());
       addTearDown(builder.close);
@@ -62,7 +62,7 @@ void main() {
       final node =
           (builder.state as TaskBuilderLoaded).editingTask.nodes.single;
       expect(node.config, const ReadWebhookNodeConfig());
-      expect(node.outputName, startsWith('ereignis'));
+      expect(node.outputName, equals('Ereignis'));
     },
   );
 

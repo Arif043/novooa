@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
 
 import 'python_syntax_parser.dart';
@@ -53,15 +55,11 @@ class _PythonIndentationState {
   void _validateLevel(int indentation, int lineIndex, List<Issue> issues) {
     final currentLevel = _levels.last;
     if (_expectsIndentedBlock && indentation <= currentLevel) {
-      _addIssue(
-        issues,
-        lineIndex,
-        'Nach einem Blockkopf wird eine Einrückung erwartet.',
-      );
+      _addIssue(issues, lineIndex, LocaleKeys.ui_py_expected_indent.tr());
       return;
     }
     if (!_expectsIndentedBlock && indentation > currentLevel) {
-      _addIssue(issues, lineIndex, 'Unerwartete Einrückung.');
+      _addIssue(issues, lineIndex, LocaleKeys.ui_py_unexpected_indent.tr());
       return;
     }
     _alignLevel(indentation, lineIndex, issues);
@@ -76,29 +74,21 @@ class _PythonIndentationState {
       _levels.removeLast();
     }
     if (indentation != _levels.last) {
-      _addIssue(
-        issues,
-        lineIndex,
-        'Einrückung passt zu keinem geöffneten Block.',
-      );
+      _addIssue(issues, lineIndex, LocaleKeys.ui_py_indent_mismatch.tr());
     }
   }
 
   void _reportMixedIndentation(String line, int lineIndex, List<Issue> issues) {
     final indentation = line.substring(0, line.length - line.trimLeft().length);
     if (indentation.contains(' ') && indentation.contains('\t')) {
-      _addIssue(issues, lineIndex, 'Tabs und Leerzeichen nicht mischen.');
+      _addIssue(issues, lineIndex, LocaleKeys.ui_py_mixed_tabs.tr());
     }
   }
 
   void _reportMissingColon(String code, int lineIndex, List<Issue> issues) {
     final trimmedCode = code.trimRight();
     if (_isBlockHeaderWithoutColon(trimmedCode)) {
-      _addIssue(
-        issues,
-        lineIndex,
-        'Python-Blockkopf benötigt einen Doppelpunkt.',
-      );
+      _addIssue(issues, lineIndex, LocaleKeys.ui_py_missing_colon.tr());
     }
   }
 }

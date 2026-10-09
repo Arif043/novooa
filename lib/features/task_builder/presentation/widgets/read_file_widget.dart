@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -25,7 +27,7 @@ class ReadFileWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Datei lesen', style: SyscatTheme.taskBody),
+          Text(LocaleKeys.ui_datei_lesen.tr(), style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
           NodeFileAttachmentSection(
             attachments: _attachments,

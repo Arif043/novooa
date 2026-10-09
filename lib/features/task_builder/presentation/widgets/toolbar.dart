@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -51,124 +53,124 @@ class Toolbar extends StatelessWidget {
       _ToolbarAction(
         primitive: .stringInput,
         icon: Icons.text_fields,
-        tooltip: 'Text bauen',
+        tooltip: LocaleKeys.ui_text_bauen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.stringInput),
       ),
       _ToolbarAction(
         primitive: .script,
         icon: Icons.code,
-        tooltip: 'Script hinzufügen',
+        tooltip: LocaleKeys.ui_script_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.script),
       ),
       _ToolbarAction(
         primitive: .prompt,
         icon: Icons.format_align_left,
-        tooltip: 'Prompt hinzufügen',
+        tooltip: LocaleKeys.ui_prompt_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.prompt),
       ),
       _ToolbarAction(
         primitive: .conditional,
         icon: Icons.call_split,
-        tooltip: 'Verzweigung hinzufügen',
+        tooltip: LocaleKeys.ui_verzweigung_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.conditional),
       ),
       _ToolbarAction(
         primitive: .iterativeRefinement,
         icon: Icons.auto_awesome,
-        tooltip: 'Verfeinerung hinzufügen',
+        tooltip: LocaleKeys.ui_verfeinerung_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.iterativeRefinement),
       ),
       _ToolbarAction(
         primitive: .writeFile,
         icon: Icons.note_add_outlined,
-        tooltip: 'Datei schreiben hinzufügen',
+        tooltip: LocaleKeys.ui_datei_schreiben_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.writeFile),
       ),
       _ToolbarAction(
         primitive: .readFile,
         icon: Icons.file_open_outlined,
-        tooltip: 'Datei lesen hinzufügen',
+        tooltip: LocaleKeys.ui_datei_lesen_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.readFile),
       ),
       _ToolbarAction(
         primitive: .readChannelEvent,
         icon: Icons.mark_email_read_outlined,
-        tooltip: 'E-Mail lesen hinzufügen',
+        tooltip: LocaleKeys.ui_e_mail_lesen_hinzufuegen.tr(),
         onPressed: () =>
             cubit.addChannelEventNodeToMainGraph(ChannelEventKind.email),
       ),
       _ToolbarAction(
         primitive: .readChannelEvent,
         icon: Icons.chat_outlined,
-        tooltip: 'WhatsApp lesen hinzufügen',
+        tooltip: LocaleKeys.ui_whatsapp_lesen_hinzufuegen.tr(),
         onPressed: () =>
             cubit.addChannelEventNodeToMainGraph(ChannelEventKind.whatsapp),
       ),
       _ToolbarAction(
         primitive: .readChannelEvent,
         icon: Icons.sms_outlined,
-        tooltip: 'SMS lesen hinzufügen',
+        tooltip: LocaleKeys.ui_sms_lesen_hinzufuegen.tr(),
         onPressed: () =>
             cubit.addChannelEventNodeToMainGraph(ChannelEventKind.sms),
       ),
       _ToolbarAction(
         primitive: .sendChannelMessage,
         icon: Icons.send_outlined,
-        tooltip: 'Nachricht senden hinzufügen',
+        tooltip: LocaleKeys.ui_nachricht_senden_hinzufuegen.tr(),
         onPressed: () => _showSendMessageActions(context),
       ),
       _ToolbarAction(
         primitive: .humanApproval,
         icon: Icons.face,
-        tooltip: 'Freigabe hinzufügen',
+        tooltip: LocaleKeys.ui_freigabe_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.humanApproval),
       ),
       _ToolbarAction(
         primitive: .dialogInput,
         icon: Icons.dynamic_form_outlined,
-        tooltip: 'Formulareingabe hinzufügen',
+        tooltip: LocaleKeys.ui_formulareingabe_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.dialogInput),
       ),
       _ToolbarAction(
         primitive: .mediaInput,
         icon: Icons.add_a_photo_outlined,
-        tooltip: 'Bild-Eingabe hinzufügen',
+        tooltip: LocaleKeys.ui_bild_eingabe_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.mediaInput),
       ),
       _ToolbarAction(
         primitive: .modelInference,
         icon: Icons.model_training_outlined,
-        tooltip: 'Modell-Inferenz hinzufügen',
+        tooltip: LocaleKeys.ui_modell_inferenz_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.modelInference),
       ),
       _ToolbarAction(
         primitive: .textToSpeech,
         icon: Icons.volume_up_outlined,
-        tooltip: 'Text vorlesen hinzufügen',
+        tooltip: LocaleKeys.ui_text_vorlesen_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.textToSpeech),
       ),
       _ToolbarAction(
         primitive: .speechToText,
         icon: Icons.graphic_eq_outlined,
-        tooltip: 'Audio transkribieren hinzufügen',
+        tooltip: LocaleKeys.ui_audio_transkribieren_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.speechToText),
       ),
       _ToolbarAction(
         primitive: .forEach,
         icon: Icons.repeat_outlined,
-        tooltip: 'Für jedes Element hinzufügen',
+        tooltip: LocaleKeys.ui_fuer_jedes_element_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.forEach),
       ),
       _ToolbarAction(
         primitive: .documentLookup,
         icon: Icons.manage_search_outlined,
-        tooltip: 'Datensatz suchen hinzufügen',
+        tooltip: LocaleKeys.ui_datensatz_suchen_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.documentLookup),
       ),
       _ToolbarAction(
         primitive: .saveDocument,
         icon: Icons.save_outlined,
-        tooltip: 'Datensatz speichern hinzufügen',
+        tooltip: LocaleKeys.ui_datensatz_speichern_hinzufuegen.tr(),
         onPressed: () => cubit.addNodeToMainGraph(.saveDocument),
       ),
     ];
@@ -177,11 +179,20 @@ class Toolbar extends StatelessWidget {
   Future<void> _showSendMessageActions(BuildContext context) async {
     final kind = await showIosActionSheet<ChannelEventKind>(
       context: context,
-      title: 'Nachricht senden',
-      actions: const [
-        IosAction(label: 'WhatsApp senden', value: ChannelEventKind.whatsapp),
-        IosAction(label: 'SMS senden', value: ChannelEventKind.sms),
-        IosAction(label: 'E-Mail senden', value: ChannelEventKind.email),
+      title: LocaleKeys.ui_nachricht_senden.tr(),
+      actions: [
+        IosAction(
+          label: LocaleKeys.ui_whatsapp_senden.tr(),
+          value: ChannelEventKind.whatsapp,
+        ),
+        IosAction(
+          label: LocaleKeys.ui_sms_senden.tr(),
+          value: ChannelEventKind.sms,
+        ),
+        IosAction(
+          label: LocaleKeys.ui_e_mail_senden.tr(),
+          value: ChannelEventKind.email,
+        ),
       ],
     );
     if (kind == null || !context.mounted) return;

@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
@@ -62,9 +64,14 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: Text('Fähigkeiten', style: SyscatTheme.taskBody)),
+        Expanded(
+          child: Text(
+            LocaleKeys.ui_faehigkeiten.tr(),
+            style: SyscatTheme.taskBody,
+          ),
+        ),
         IconButton(
-          tooltip: 'Fähigkeit anhängen',
+          tooltip: LocaleKeys.ui_faehigkeit_anhaengen.tr(),
           onPressed: onPressed,
           icon: const Icon(Icons.auto_awesome_outlined),
         ),
@@ -79,7 +86,7 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Keine Fähigkeit angehängt.',
+      LocaleKeys.ui_keine_faehigkeit_angehaengt.tr(),
       style: Theme.of(context).textTheme.bodyMedium,
     );
   }
@@ -132,7 +139,7 @@ class _AttachmentTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
       trailing: IconButton(
-        tooltip: 'Fähigkeit entfernen',
+        tooltip: LocaleKeys.ui_faehigkeit_entfernen.tr(),
         onPressed: () => onDetach(attachment.id),
         icon: const Icon(Icons.close),
       ),

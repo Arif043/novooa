@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -26,15 +28,15 @@ class WriteFileWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Datei schreiben', style: SyscatTheme.taskBody),
+          Text(LocaleKeys.ui_datei_schreiben.tr(), style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
           TemplateExpressionTextField(
             value: _config.contentTemplate,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 3,
             maxLines: 8,
-            decoration: const InputDecoration(
-              labelText: 'Inhalt',
+            decoration: InputDecoration(
+              labelText: LocaleKeys.ui_inhalt.tr(),
               hintText: '{{baustein.value}}',
             ),
             onChanged: (value) => context
@@ -64,13 +66,13 @@ class _WriteFileTargetTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppSpacing.md),
       onTap: onTap,
       child: InputDecorator(
-        decoration: const InputDecoration(
-          labelText: 'Ausgabedatei',
+        decoration: InputDecoration(
+          labelText: LocaleKeys.ui_ausgabedatei.tr(),
           border: OutlineInputBorder(),
         ),
         child: Row(
           children: [
-            Icon(_icon, semanticLabel: 'Ausgabedatei'),
+            Icon(_icon, semanticLabel: LocaleKeys.ui_ausgabedatei.tr()),
             const SizedBox(width: AppSpacing.sm),
             Expanded(child: _TargetText(config: config)),
             const Icon(Icons.chevron_right),
@@ -104,18 +106,22 @@ class _TargetText extends StatelessWidget {
   Widget build(BuildContext context) {
     if (config.fileName.trim().isEmpty) {
       return Text(
-        'Datei auswählen oder neu anlegen',
+        LocaleKeys.ui_datei_auswaehlen_oder_neu_anlegen.tr(),
         style: Theme.of(context).textTheme.bodyMedium,
       );
     }
-    final prefix = config.fileId == null ? 'Neue Datei' : 'Bestehende Datei';
+    final prefix = config.fileId == null
+        ? LocaleKeys.ui_new_file.tr()
+        : LocaleKeys.ui_existing_file.tr();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('$prefix: ${config.fileName}', overflow: TextOverflow.ellipsis),
         if (_folderLabel(context) case final String folderLabel)
           Text(
-            'Verzeichnis: $folderLabel',
+            LocaleKeys.ui_directory_colon.tr(
+              namedArgs: {'folder': folderLabel},
+            ),
             style: Theme.of(context).textTheme.bodySmall,
             overflow: TextOverflow.ellipsis,
           ),

@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -36,10 +38,13 @@ class ConditionalBranchesEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Pfade festlegen', style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          LocaleKeys.ui_pfade_festlegen.tr(),
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const SizedBox(height: 8),
         Text(
-          'Prüfe Werte aus vorherigen Bausteinen. Der erste passende Pfad wird ausgeführt.',
+          LocaleKeys.ui_pruefe_werte_aus_vorherigen_bausteinen_der_erste.tr(),
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -65,7 +70,7 @@ class ConditionalBranchesEditor extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: () => cubit.addConditionBranch(node.id),
             icon: const Icon(Icons.add),
-            label: const Text('Bedingung hinzufügen'),
+            label: Text(LocaleKeys.ui_bedingung_hinzufuegen.tr()),
           ),
           const SizedBox(height: AppSpacing.md),
           Material(
@@ -74,9 +79,10 @@ class ConditionalBranchesEditor extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
               value: sonst.isNotEmpty,
-              title: const Text('Sonst-Pfad verwenden'),
-              subtitle: const Text(
-                'Wird ausgeführt, wenn keine Bedingung zutrifft.',
+              title: Text(LocaleKeys.ui_sonst_pfad_verwenden.tr()),
+              subtitle: Text(
+                LocaleKeys.ui_wird_ausgefuehrt_wenn_keine_bedingung_zutrifft
+                    .tr(),
               ),
               onChanged: (enabled) async {
                 if (enabled == null) return;
@@ -85,18 +91,20 @@ class ConditionalBranchesEditor extends StatelessWidget {
                   final confirmed = await showDialog<bool>(
                     context: context,
                     builder: (dialogContext) => AlertDialog(
-                      title: const Text('Sonst-Pfad entfernen?'),
-                      content: const Text(
-                        'Der Sonst-Pfad und alle darin enthaltenen Bausteine werden entfernt.',
+                      title: Text(LocaleKeys.ui_sonst_pfad_entfernen.tr()),
+                      content: Text(
+                        LocaleKeys
+                            .ui_der_sonst_pfad_und_alle_darin_enthaltenen_bauste
+                            .tr(),
                       ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(dialogContext, false),
-                          child: const Text('Abbrechen'),
+                          child: Text(LocaleKeys.ui_abbrechen.tr()),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(dialogContext, true),
-                          child: const Text('Pfad entfernen'),
+                          child: Text(LocaleKeys.ui_pfad_entfernen.tr()),
                         ),
                       ],
                     ),
@@ -124,15 +132,14 @@ class _EmptyBranchesNotice extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Noch keine Bedingung — ohne Bedingung läuft dieser Baustein '
-          'direkt weiter.',
+          LocaleKeys.ui_no_condition_yet.tr(),
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: AppSpacing.sm),
         OutlinedButton.icon(
           onPressed: onAdd,
           icon: const Icon(Icons.add),
-          label: const Text('Bedingung hinzufügen'),
+          label: Text(LocaleKeys.ui_bedingung_hinzufuegen.tr()),
         ),
       ],
     );
@@ -177,7 +184,7 @@ class _ConditionBranchCard extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Bedingung entfernen',
+                  tooltip: LocaleKeys.ui_bedingung_entfernen.tr(),
                   onPressed: onRemove,
                   icon: const Icon(Icons.delete_outline),
                 ),

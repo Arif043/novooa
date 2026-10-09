@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -38,7 +40,10 @@ class ModelInferenceInputSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Modelleingaben', style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          LocaleKeys.ui_modelleingaben.tr(),
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: AppSpacing.sm),
         for (final input in model.inputs.where(
           (input) => input.requiresWorkflowMapping,

@@ -104,7 +104,7 @@ Ausgabename (`outputName`), Titel und Beschreibung eines neuen Bausteins kommen 
 folgen der App-Sprache **zum Zeitpunkt des Anlegens**. Sie werden im Task gespeichert; ein
 späterer Sprachwechsel benennt nichts um, `{{…}}`-Referenzen bleiben stabil. Ausgabenamen sind
 ASCII (`pruefung`, nicht `prüfung`), weil `_normalizedOutputName` Nicht-`\w`-Zeichen entfernt.
-Beispiele: `input1` (en) / `eingabe1` (de), `prompt2` / `anweisung2`, `sendemail3` / `sendenemail3`.
+Namen beginnen mit Großbuchstaben. Der erste Baustein einer Art trägt keine Nummer, ab dem zweiten zählt es ab 2 (nächster freier Name im Graphen): `Input`, `Input2` (en) / `Eingabe`, `Eingabe2` (de), `SendEmail` / `SendenEmail`.
 Die festen Ausgabefelder der Bausteine (z. B. `recipient`, `sender`) sind Datenvertrag und bleiben englisch.
 
 ## UI-Prinzipien

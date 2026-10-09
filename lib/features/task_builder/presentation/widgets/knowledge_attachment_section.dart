@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
@@ -39,8 +41,8 @@ class KnowledgeAttachmentSection extends StatelessWidget {
   Future<void> _showPicker(BuildContext context) async {
     final pickedId = await AttachmentPickerSheet.show(
       context,
-      title: 'Notiz anhängen',
-      emptyMessage: 'Noch keine Notizen in der Wissensbasis.',
+      title: LocaleKeys.ui_notiz_anhaengen.tr(),
+      emptyMessage: LocaleKeys.ui_no_notes_in_knowledge_base.tr(),
       selectedIds: attachments.map((note) => note.id).toSet(),
       items: [
         for (final note in availableNotes)
@@ -66,9 +68,14 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: Text('Wissensbasis', style: SyscatTheme.taskBody)),
+        Expanded(
+          child: Text(
+            LocaleKeys.ui_wissensbasis.tr(),
+            style: SyscatTheme.taskBody,
+          ),
+        ),
         IconButton(
-          tooltip: 'Notiz anhängen',
+          tooltip: LocaleKeys.ui_notiz_anhaengen.tr(),
           onPressed: onPressed,
           icon: const Icon(Icons.library_books_outlined),
         ),
@@ -83,7 +90,7 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Keine Notiz angehängt.',
+      LocaleKeys.ui_keine_notiz_angehaengt.tr(),
       style: Theme.of(context).textTheme.bodyMedium,
     );
   }
@@ -130,7 +137,7 @@ class _AttachmentTile extends StatelessWidget {
       title: Text(attachment.title, overflow: TextOverflow.ellipsis),
       subtitle: Text(_metadataFor(attachment)),
       trailing: IconButton(
-        tooltip: 'Notiz entfernen',
+        tooltip: LocaleKeys.ui_notiz_entfernen.tr(),
         onPressed: () => onDetach(attachment.id),
         icon: const Icon(Icons.close),
       ),

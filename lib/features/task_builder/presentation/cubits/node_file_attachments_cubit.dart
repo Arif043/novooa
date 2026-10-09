@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
@@ -34,7 +36,7 @@ class NodeFileAttachmentsCubit extends Cubit<NodeFileAttachmentsState> {
       _emitFiles,
       onError: (Object error, StackTrace stackTrace) {
         _logAndEmitFailure(
-          'Dateien konnten nicht geladen werden.',
+          LocaleKeys.ui_files_load_failed.tr(),
           error,
           stackTrace,
         );
@@ -47,7 +49,7 @@ class NodeFileAttachmentsCubit extends Cubit<NodeFileAttachmentsState> {
       return await _getCurrentTeamId();
     } catch (error, stackTrace) {
       _logAndEmitFailure(
-        'Team konnte nicht geladen werden.',
+        LocaleKeys.ui_team_load_failed.tr(),
         error,
         stackTrace,
       );

@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../../../../core/theme/output_type_colors.dart';
@@ -19,10 +21,10 @@ class NodeOutputTypeStyle {
         CupertinoIcons.textformat,
         'Text',
       ),
-      NodeOutputType.datetime => const NodeOutputTypeStyle._(
+      NodeOutputType.datetime => NodeOutputTypeStyle._(
         OutputTypeColors.datetime,
         CupertinoIcons.calendar,
-        'Datum und Uhrzeit',
+        LocaleKeys.ui_date_and_time.tr(),
       ),
       NodeOutputType.number => const NodeOutputTypeStyle._(
         OutputTypeColors.number,

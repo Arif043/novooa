@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/theme/app_spacing.dart';
@@ -39,7 +41,7 @@ class ModelFilterChips extends StatelessWidget {
       children: [
         if (showAreas)
           _ChipRow(
-            label: 'Bereich',
+            label: LocaleKeys.ui_bereich.tr(),
             chips: [
               for (final area in areas)
                 _CountChip(
@@ -53,7 +55,7 @@ class ModelFilterChips extends StatelessWidget {
           ),
         if (showTasks && (tasks.length > 1 || selection.area != null))
           _ChipRow(
-            label: 'Aufgabe',
+            label: LocaleKeys.ui_aufgabe.tr(),
             chips: [
               for (final task in tasks)
                 _CountChip(
@@ -67,7 +69,7 @@ class ModelFilterChips extends StatelessWidget {
           ),
         if (languages.length > 1)
           _ChipRow(
-            label: 'Sprache',
+            label: LocaleKeys.ui_sprache.tr(),
             chips: [
               for (final language in languages)
                 _CountChip(
@@ -128,7 +130,7 @@ class _ChipRow extends StatelessWidget {
     final theme = Theme.of(context);
     return Semantics(
       container: true,
-      label: '$label filtern',
+      label: LocaleKeys.ui_filter_by_label.tr(namedArgs: {'label': label}),
       child: Padding(
         padding: const EdgeInsets.only(top: AppSpacing.sm),
         child: SingleChildScrollView(

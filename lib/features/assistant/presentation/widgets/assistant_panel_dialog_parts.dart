@@ -100,9 +100,9 @@ class _AssistantInput extends StatelessWidget {
             textInputAction: TextInputAction.send,
             onSubmitted: (_) => _submit(context),
             decoration: InputDecoration(
-              hintText: 'Frage zum aktuellen Bereich stellen',
+              hintText: LocaleKeys.ui_frage_zum_aktuellen_bereich_stellen.tr(),
               suffixIcon: IconButton(
-                tooltip: 'Senden',
+                tooltip: LocaleKeys.ui_senden.tr(),
                 onPressed: state.isLoading ? null : () => _submit(context),
                 icon: const Icon(Icons.send_outlined),
               ),

@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../domain/entities/node_config.dart';
@@ -230,7 +232,7 @@ class WorkflowCanvasLayout {
               graph,
               BausteinInsertion(owner: node.id),
               parent: node.id.value,
-              label: 'Für jedes Element',
+              label: LocaleKeys.ui_fuer_jedes_element.tr(),
             ),
           );
         default:
@@ -244,8 +246,8 @@ class WorkflowCanvasLayout {
           entries[node.id.value]!.insertion,
           peers,
           continuationLabel: node.config is ConditionalNodeConfig
-              ? 'Nach der Bedingung'
-              : 'Nach der Schleife',
+              ? LocaleKeys.ui_after_condition.tr()
+              : LocaleKeys.ui_after_loop.tr(),
           canInsert: !graph.edges.any(
             (edge) => edge.from == node.id && peers.contains(edge.to),
           ),

@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -59,7 +61,7 @@ class _TaskHomepageHeader extends StatelessWidget {
         FilledButton.icon(
           onPressed: () => context.go('/tasks/builder'),
           icon: const Icon(Icons.add),
-          label: const Text('Neue Aufgabe'),
+          label: Text(LocaleKeys.ui_neue_aufgabe.tr()),
         ),
         const SizedBox(width: AppSpacing.md),
         FilledButton(
@@ -68,7 +70,7 @@ class _TaskHomepageHeader extends StatelessWidget {
             backgroundColor: ColorScheme.of(context).secondary,
           ),
           onPressed: () => context.go('/tasks/builder'),
-          child: const Text('Aus Vorlage'),
+          child: Text(LocaleKeys.ui_aus_vorlage.tr()),
         ),
       ],
     );
@@ -118,7 +120,7 @@ class _TaskEmptyState extends StatelessWidget {
       child: FilledButton.icon(
         onPressed: () => context.go('/tasks/builder'),
         icon: const Icon(Icons.add),
-        label: const Text('Erste Aufgabe erstellen'),
+        label: Text(LocaleKeys.ui_erste_aufgabe_erstellen.tr()),
       ),
     );
   }
@@ -139,7 +141,7 @@ class _TaskFailureState extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           OutlinedButton(
             onPressed: context.read<TaskHomepageCubit>().load,
-            child: const Text('Erneut versuchen'),
+            child: Text(LocaleKeys.ui_erneut_versuchen.tr()),
           ),
         ],
       ),

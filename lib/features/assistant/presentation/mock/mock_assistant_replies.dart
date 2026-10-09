@@ -23,25 +23,27 @@ class MockAssistantReplies {
         _command('addNode', 'Texteingabe anlegen', {
           'primitive': 'stringInput',
           'ref': 'text',
+          'outputName': 'Text',
           'value': 'Bitte fasse die Anfrage freundlich zusammen.',
         }),
         _command('addNode', 'Prompt anlegen', {
           'primitive': 'prompt',
           'ref': 'prompt',
+          'outputName': 'Antwort',
         }),
         _command('configureNode', 'Prompt-Anweisung eintragen', {
           'nodeRef': 'prompt',
           'fields': {
             'instruction':
                 'Antworte kurz und höflich auf Deutsch auf '
-                '{{text}}. Nenne am Ende einen nächsten Schritt.',
+                '{{Text}}. Nenne am Ende einen nächsten Schritt.',
           },
         }),
         _command('addNode', 'Nachricht senden', {
           'primitive': 'sendChannelMessage',
           'kind': 'email',
           'recipient': 'kunde@example.com',
-          'message': 'Hallo, hier ist unsere Antwort: {{prompt}}',
+          'message': 'Hallo, hier ist unsere Antwort: {{Antwort}}',
         }),
       ],
     );

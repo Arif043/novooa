@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -17,7 +19,10 @@ class AssistantMessageSources extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Quellen', style: Theme.of(context).textTheme.labelSmall),
+          Text(
+            LocaleKeys.ui_quellen.tr(),
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
           const SizedBox(height: AppSpacing.xs),
           for (final source in sources) _AssistantUrlSourceTile(source: source),
         ],
@@ -38,7 +43,9 @@ class _AssistantUrlSourceTile extends StatelessWidget {
         ? Theme.of(context).colorScheme.primary
         : Theme.of(context).colorScheme.onSurfaceVariant;
     return Semantics(
-      label: 'Quelle ${source.url}',
+      label: LocaleKeys.ui_source_url.tr(
+        namedArgs: {'url': source.url.toString()},
+      ),
       child: TextButton.icon(
         onPressed: isRetrieved ? () => _openSource(context) : null,
         icon: Icon(isRetrieved ? Icons.open_in_new : Icons.link_off),
@@ -54,7 +61,7 @@ class _AssistantUrlSourceTile extends StatelessWidget {
     AssistantUrlSourceStatus.retrieved => 'Abgerufen',
     AssistantUrlSourceStatus.unavailable => 'Nicht abrufbar',
     AssistantUrlSourceStatus.paywalled => 'Bezahlschranke',
-    AssistantUrlSourceStatus.unsafe => 'Nicht verfügbar',
+    AssistantUrlSourceStatus.unsafe => LocaleKeys.ui_not_available.tr(),
   };
 
   Future<void> _openSource(BuildContext context) async {
@@ -64,7 +71,11 @@ class _AssistantUrlSourceTile extends StatelessWidget {
     );
     if (!opened && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Quelle konnte nicht geöffnet werden.')),
+        SnackBar(
+          content: Text(
+            LocaleKeys.ui_quelle_konnte_nicht_geoeffnet_werden.tr(),
+          ),
+        ),
       );
     }
   }

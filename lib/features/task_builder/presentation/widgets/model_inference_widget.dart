@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -178,7 +180,7 @@ class _ModelSelection extends StatelessWidget {
     // Ohne Modellkatalog (z. B. Cloud) bleibt nur die Eingabe der Modell-ID.
     return TextFormField(
       initialValue: config.modelId,
-      decoration: const InputDecoration(hintText: 'Modell-ID'),
+      decoration: InputDecoration(hintText: LocaleKeys.ui_modell_id.tr()),
       onChanged: (modelId) => context
           .read<TaskBuilderCubit>()
           .updateModelInference(node.id, modelId),

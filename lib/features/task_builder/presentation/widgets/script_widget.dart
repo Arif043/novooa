@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/node_field_key.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:flutter/material.dart';
@@ -72,8 +74,8 @@ class _ScriptWidgetState extends State<ScriptWidget> {
               NodeFieldKey.inputTemplate,
             ),
             suggestions: TemplateExpressionScope.suggestionsOf(context),
-            decoration: const InputDecoration(
-              labelText: 'Eingabe',
+            decoration: InputDecoration(
+              labelText: LocaleKeys.ui_eingabe.tr(),
               hintText: '{{baustein.value}}',
             ),
             onChanged: _updateInput,
@@ -101,9 +103,11 @@ class _ScriptWidgetState extends State<ScriptWidget> {
   Widget _header(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: Text('Script', style: SyscatTheme.taskBody)),
+        Expanded(
+          child: Text(LocaleKeys.ui_script.tr(), style: SyscatTheme.taskBody),
+        ),
         IconButton(
-          tooltip: 'Vollbild bearbeiten',
+          tooltip: LocaleKeys.ui_vollbild_bearbeiten.tr(),
           onPressed: () => showScriptFullscreenEditor(
             context,
             controller: _controller,
@@ -157,9 +161,7 @@ class _WorkflowOutputHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Fachliche Ausgaben: workflow_output("summe", "number", wert) — '
-      'Typen: string, number, boolean, datetime, json. '
-      'Nachfolgende Bausteine nutzen sie als {{summe}}.',
+      LocaleKeys.ui_script_outputs_hint.tr(),
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
         color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),

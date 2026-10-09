@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
@@ -24,8 +26,8 @@ class SpeechTextMappingField extends StatelessWidget {
         key: ValueKey('$nodeId-speech-text'),
         value: value,
         suggestions: TemplateExpressionScope.suggestionsOf(context),
-        decoration: const InputDecoration(
-          labelText: 'Text',
+        decoration: InputDecoration(
+          labelText: LocaleKeys.ui_text.tr(),
           hintText: '{{eingabe.value}} oder {{global.eingabe.value}}',
         ),
         onChanged: onChanged,

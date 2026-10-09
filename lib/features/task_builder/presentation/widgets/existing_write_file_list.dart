@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -19,10 +21,10 @@ class ExistingWriteFileList extends StatelessWidget {
       builder: (context, state) => switch (state.status) {
         NodeFileAttachmentsStatus.loading => const LinearProgressIndicator(),
         NodeFileAttachmentsStatus.failure => _FileListError(
-          message: state.message ?? 'Dateien konnten nicht geladen werden.',
+          message: state.message ?? LocaleKeys.ui_files_load_failed.tr(),
         ),
-        NodeFileAttachmentsStatus.ready when state.files.isEmpty => const _Hint(
-          'Noch keine Dateien hochgeladen.',
+        NodeFileAttachmentsStatus.ready when state.files.isEmpty => _Hint(
+          LocaleKeys.ui_no_files_uploaded_yet.tr(),
         ),
         NodeFileAttachmentsStatus.ready => _FilterableFileList(
           node: node,
@@ -120,7 +122,7 @@ class _FileListError extends StatelessWidget {
         TextButton.icon(
           onPressed: context.read<NodeFileAttachmentsCubit>().load,
           icon: const Icon(Icons.refresh),
-          label: const Text('Erneut versuchen'),
+          label: Text(LocaleKeys.ui_erneut_versuchen.tr()),
         ),
       ],
     );

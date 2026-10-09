@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
@@ -15,7 +17,7 @@ class AssistantBellButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      tooltip: 'KI-Agent öffnen',
+      tooltip: LocaleKeys.ui_ki_agent_oeffnen.tr(),
       icon: const Icon(Icons.auto_awesome_outlined),
       onPressed: () => _openAssistant(context),
     );

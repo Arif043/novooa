@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
 
@@ -68,17 +70,19 @@ class AssistantCubit extends Cubit<AssistantState> {
   }
 
   String _errorMessageFor(Object error) {
-    if (kReleaseMode) return 'Der KI-Agent konnte gerade nicht antworten.';
+    if (kReleaseMode) return LocaleKeys.ui_agent_unavailable.tr();
     final details = error.toString();
     if (details.toLowerCase().contains('quota')) {
-      return 'Das Gemini-Kontingent ist ausgeschöpft.';
+      return LocaleKeys.ui_gemini_quota_exceeded.tr();
     }
     if (details.toLowerCase().contains('deadline')) {
-      return 'Die Anfrage an den KI-Agenten hat zu lange gedauert.';
+      return LocaleKeys.ui_agent_timeout.tr();
     }
     if (details.toLowerCase().contains('unauthenticated')) {
-      return 'Bitte melde dich erneut an.';
+      return LocaleKeys.ui_please_sign_in_again.tr();
     }
-    return 'Der KI-Agent konnte nicht antworten: $details';
+    return LocaleKeys.ui_agent_failed_details.tr(
+      namedArgs: {'details': details},
+    );
   }
 }

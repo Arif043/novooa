@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/node_config.dart';
@@ -75,7 +77,7 @@ class GroupMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<BooleanCombinator>(
-      tooltip: 'Weitere Bedingung verknüpfen',
+      tooltip: LocaleKeys.ui_weitere_bedingung_verknuepfen.tr(),
       onSelected: onSelected,
       itemBuilder: (context) => [
         for (final combinator in BooleanCombinator.values)
@@ -91,7 +93,10 @@ class GroupMenuButton extends StatelessWidget {
           children: [
             const Icon(Icons.playlist_add, size: 20),
             const SizedBox(width: 8),
-            Text('Verknüpfen', style: Theme.of(context).textTheme.labelLarge),
+            Text(
+              LocaleKeys.ui_verknuepfen.tr(),
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
           ],
         ),
       ),
@@ -101,7 +106,7 @@ class GroupMenuButton extends StatelessWidget {
 
 String conditionGroupLabel(BooleanCombinator combinator) =>
     switch (combinator) {
-      BooleanCombinator.and => 'Alle Bedingungen müssen zutreffen',
-      BooleanCombinator.or => 'Mindestens eine Bedingung muss zutreffen',
-      BooleanCombinator.xor => 'Genau eine Bedingung muss zutreffen',
+      BooleanCombinator.and => LocaleKeys.ui_all_conditions_match.tr(),
+      BooleanCombinator.or => LocaleKeys.ui_any_condition_matches.tr(),
+      BooleanCombinator.xor => LocaleKeys.ui_exactly_one_condition_matches.tr(),
     };

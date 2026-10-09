@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
@@ -67,7 +69,7 @@ class GroupBox extends StatelessWidget {
                 ),
               ),
               icon: const Icon(Icons.add),
-              label: const Text('Weitere Bedingung'),
+              label: Text(LocaleKeys.ui_weitere_bedingung.tr()),
             ),
           ],
         ),
@@ -108,8 +110,8 @@ class _GroupHeader extends StatelessWidget {
           key: ValueKey(group.combinator),
           isExpanded: true,
           initialValue: group.combinator,
-          decoration: const InputDecoration(
-            labelText: 'Diese Gruppe trifft zu, wenn …',
+          decoration: InputDecoration(
+            labelText: LocaleKeys.ui_diese_gruppe_trifft_zu_wenn.tr(),
           ),
           items: [
             for (final combinator in BooleanCombinator.values)
@@ -134,7 +136,7 @@ class _GroupHeader extends StatelessWidget {
             GroupMenuButton(onSelected: onGroup),
             if (onRemove != null)
               IconButton(
-                tooltip: 'Gruppe entfernen',
+                tooltip: LocaleKeys.ui_gruppe_entfernen.tr(),
                 onPressed: onRemove,
                 icon: const Icon(Icons.remove_circle_outline),
               ),

@@ -136,7 +136,7 @@ void main() {
         'Hallo-Baustein',
       ]);
       expect(nodes.first.config, const _HelloConfig(name: 'Welt'));
-      expect(nodes.first.outputName, startsWith('gruss'));
+      expect(nodes.first.outputName, equals('Gruss'));
       expect(nodes.map((node) => node.outputName).toSet().length, 2);
     },
   );

@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
@@ -27,7 +29,7 @@ class TaskHomepageCubit extends Cubit<TaskHomepageState> {
       _emitTasks,
       onError: (Object error, StackTrace stackTrace) {
         logException(
-          message: 'Aufgaben konnten nicht geladen werden.',
+          message: LocaleKeys.ui_aufgaben_konnten_nicht_geladen_werden.tr(),
           error: error,
           stackTrace: stackTrace,
           name: 'task_homepage',
@@ -97,7 +99,7 @@ class TaskHomepageCubit extends Cubit<TaskHomepageState> {
       if (!isClosed) emit(TaskHomepageReady(nextTasks));
     } catch (error, stackTrace) {
       logException(
-        message: 'Aufgabe konnte nicht geändert werden.',
+        message: LocaleKeys.ui_aufgabe_konnte_nicht_geaendert_werden.tr(),
         error: error,
         stackTrace: stackTrace,
         name: 'task_homepage',

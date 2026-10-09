@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/widgets/ios_overlays.dart';
@@ -19,7 +21,7 @@ class TaskContextMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return Builder(
       builder: (buttonContext) => IconButton(
-        tooltip: 'Aufgabenmenü öffnen',
+        tooltip: LocaleKeys.ui_aufgabenmenue_oeffnen.tr(),
         icon: const Icon(Icons.more_horiz),
         onPressed: () => _showContextMenu(buttonContext),
       ),
@@ -36,31 +38,37 @@ class TaskContextMenu extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
-      items: const [
+      items: [
         PopupMenuItem(
           value: TaskMenuAction.execute,
           height: 36,
           child: _TaskMenuRow(
             icon: Icons.play_arrow_rounded,
-            label: 'Ausführen',
+            label: LocaleKeys.ui_ausfuehren.tr(),
           ),
         ),
         PopupMenuItem(
           value: TaskMenuAction.rename,
           height: 36,
-          child: _TaskMenuRow(icon: Icons.edit_outlined, label: 'Umbenennen'),
+          child: _TaskMenuRow(
+            icon: Icons.edit_outlined,
+            label: LocaleKeys.ui_umbenennen.tr(),
+          ),
         ),
         PopupMenuItem(
           value: TaskMenuAction.duplicate,
           height: 36,
-          child: _TaskMenuRow(icon: Icons.copy_outlined, label: 'Duplizieren'),
+          child: _TaskMenuRow(
+            icon: Icons.copy_outlined,
+            label: LocaleKeys.ui_duplizieren.tr(),
+          ),
         ),
         PopupMenuItem(
           value: TaskMenuAction.editObjective,
           height: 36,
           child: _TaskMenuRow(
             icon: Icons.note_alt_outlined,
-            label: 'Notiz bearbeiten',
+            label: LocaleKeys.ui_notiz_bearbeiten.tr(),
           ),
         ),
         PopupMenuDivider(height: 8),
@@ -69,7 +77,7 @@ class TaskContextMenu extends StatelessWidget {
           height: 36,
           child: _TaskMenuRow(
             icon: Icons.delete_outline,
-            label: 'Löschen',
+            label: LocaleKeys.ui_loeschen.tr(),
             isDestructive: true,
           ),
         ),

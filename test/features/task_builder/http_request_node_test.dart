@@ -131,7 +131,7 @@ void main() {
           'HTTP-Anfrage',
         ]);
         expect(nodes.map((node) => node.outputName).toSet().length, 2);
-        expect(nodes.first.outputName, startsWith('antwort'));
+        expect(nodes.first.outputName, equals('Antwort'));
         expect(nodes.first.config, const HttpRequestNodeConfig());
 
         await cubit.updateHttpRequest(

@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -34,7 +36,9 @@ class NodeOutputChips extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.sm),
       child: Semantics(
-        label: 'Feste Felder: ${fields.map(_semanticLabel).join(', ')}',
+        label: LocaleKeys.ui_fixed_fields_list.tr(
+          namedArgs: {'fields': fields.map(_semanticLabel).join(', ')},
+        ),
         child: Wrap(
           spacing: AppSpacing.xs,
           runSpacing: AppSpacing.xs,
@@ -58,7 +62,9 @@ class NodeOutputChips extends StatelessWidget {
     final expression = _expressionFor(field.name);
     final style = NodeOutputTypeStyle.of(field.type);
     return Tooltip(
-      message: '${style.label} · Antippen, um $expression zu kopieren',
+      message: LocaleKeys.ui_tap_to_copy.tr(
+        namedArgs: {'type': style.label, 'expression': expression},
+      ),
       child: ActionChip(
         avatar: Icon(style.icon, size: AppSpacing.md, color: style.color),
         label: Text(field.name),
@@ -77,9 +83,15 @@ class NodeOutputChips extends StatelessWidget {
   Future<void> _copyExpression(BuildContext context, String expression) async {
     await Clipboard.setData(ClipboardData(text: expression));
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('$expression kopiert.')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          LocaleKeys.ui_expression_copied.tr(
+            namedArgs: {'expression': expression},
+          ),
+        ),
+      ),
+    );
   }
 
   /// Flache Felder (strukturierte Prompt-Ausgabe, Dialogeingabe) sind schon

@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -26,14 +28,17 @@ class NotificationSendWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Push-Benachrichtigung', style: SyscatTheme.taskBody),
+          Text(
+            LocaleKeys.ui_push_benachrichtigung.tr(),
+            style: SyscatTheme.taskBody,
+          ),
           const SizedBox(height: AppSpacing.sm),
           TemplateExpressionTextField(
             value: _config.title,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
-            decoration: const InputDecoration(
-              labelText: 'Titel (optional)',
-              hintText: 'Benachrichtigung von novooa',
+            decoration: InputDecoration(
+              labelText: LocaleKeys.ui_titel_optional.tr(),
+              hintText: LocaleKeys.ui_benachrichtigung_von_novooa.tr(),
             ),
             onChanged: (value) =>
                 _update(context, (config) => config.copyWith(title: value)),
@@ -44,8 +49,8 @@ class NotificationSendWidget extends StatelessWidget {
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 2,
             maxLines: 4,
-            decoration: const InputDecoration(
-              labelText: 'Text',
+            decoration: InputDecoration(
+              labelText: LocaleKeys.ui_text.tr(),
               hintText: '{{baustein.value}}',
             ),
             onChanged: (value) =>

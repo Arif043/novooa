@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
@@ -29,7 +31,7 @@ class TextToSpeechWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SpeechNodePanel(
-          title: 'Text vorlesen',
+          title: LocaleKeys.ui_text_vorlesen.tr(),
           child: SpeechLanguageModelChoice(
             selectedModelId: _config.languageModelId,
             onChanged: (modelId) => context
@@ -40,7 +42,7 @@ class TextToSpeechWidget extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         if (_config.usesLanguageModel)
           SpeechNodePanel(
-            title: 'Sprachausgabe',
+            title: LocaleKeys.ui_sprachausgabe.tr(),
             child: _LanguageModelSpeech(node: node, config: _config),
           )
         else

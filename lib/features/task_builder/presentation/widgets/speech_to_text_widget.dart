@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -28,7 +30,7 @@ class SpeechToTextWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SpeechNodePanel(
-          title: 'Sprache zu Text',
+          title: LocaleKeys.ui_sprache_zu_text.tr(),
           child: SpeechLanguageModelChoice(
             selectedModelId: _config.languageModelId,
             onChanged: (modelId) =>
@@ -38,13 +40,13 @@ class SpeechToTextWidget extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         if (_config.usesLanguageModel)
           SpeechNodePanel(
-            title: 'Audioaufnahme',
+            title: LocaleKeys.ui_audioaufnahme.tr(),
             child: TemplateExpressionTextField(
               key: ValueKey('${node.id.value}-speech-audio'),
               value: _config.audioTemplate,
               suggestions: TemplateExpressionScope.suggestionsOf(context),
-              decoration: const InputDecoration(
-                labelText: 'Audiodatei',
+              decoration: InputDecoration(
+                labelText: LocaleKeys.ui_audiodatei.tr(),
                 hintText: '{{aufnahme.value}}',
               ),
               onChanged: (value) =>

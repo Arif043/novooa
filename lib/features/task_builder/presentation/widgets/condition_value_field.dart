@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import '../../domain/entities/workflow_graph.dart';
 import 'branch_condition_operand_type.dart';
@@ -72,7 +74,7 @@ class _ConditionValueFieldState extends State<ConditionValueField> {
               // Der lokale Navigator liegt im horizontalen Seitenmenü.
               // Dessen Scrollposition darf ensureVisible nicht mitverschieben.
               useRootNavigator: true,
-              tooltip: 'Art des Werts wählen',
+              tooltip: LocaleKeys.ui_art_des_werts_waehlen.tr(),
               initialValue: _source,
               onSelected: (source) {
                 if (source == _source) return;
@@ -82,12 +84,15 @@ class _ConditionValueFieldState extends State<ConditionValueField> {
                 });
                 widget.onChanged('');
               },
-              itemBuilder: (_) => const [
+              itemBuilder: (_) => [
                 PopupMenuItem(
                   value: true,
-                  child: Text('Wert aus einem Baustein'),
+                  child: Text(LocaleKeys.ui_wert_aus_einem_baustein.tr()),
                 ),
-                PopupMenuItem(value: false, child: Text('Fester Wert')),
+                PopupMenuItem(
+                  value: false,
+                  child: Text(LocaleKeys.ui_fester_wert.tr()),
+                ),
               ],
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -114,9 +119,9 @@ class _ConditionValueFieldState extends State<ConditionValueField> {
             isExpanded: true,
             initialValue: widget.value.isEmpty ? null : widget.value,
             decoration: InputDecoration(
-              labelText: 'Baustein und Wert',
+              labelText: LocaleKeys.ui_baustein_und_wert.tr(),
               helperText: sources.isEmpty
-                  ? 'Verbinde zuerst einen Baustein mit einer Ausgabe.'
+                  ? LocaleKeys.ui_connect_block_with_output_first.tr()
                   : null,
               helperMaxLines: 3,
             ),
@@ -133,8 +138,9 @@ class _ConditionValueFieldState extends State<ConditionValueField> {
               if (hasStored)
                 DropdownMenuItem(
                   value: widget.value,
-                  child: const Text(
-                    'Gespeicherter Ausdruck (nicht in der Auswahl)',
+                  child: Text(
+                    LocaleKeys.ui_gespeicherter_ausdruck_nicht_in_der_auswahl
+                        .tr(),
                     maxLines: 2,
                   ),
                 ),
@@ -148,8 +154,8 @@ class _ConditionValueFieldState extends State<ConditionValueField> {
             key: ValueKey('fixed-${widget.value}-${options.keys.join()}'),
             isExpanded: true,
             initialValue: widget.value.isEmpty ? null : widget.value,
-            decoration: const InputDecoration(
-              labelText: 'Vergleichswert auswählen',
+            decoration: InputDecoration(
+              labelText: LocaleKeys.ui_vergleichswert_auswaehlen.tr(),
             ),
             items: [
               for (final entry in options.entries)
@@ -157,7 +163,11 @@ class _ConditionValueFieldState extends State<ConditionValueField> {
               if (widget.value.isNotEmpty && !options.containsKey(widget.value))
                 DropdownMenuItem(
                   value: widget.value,
-                  child: Text('${widget.value} (bisheriger Wert)'),
+                  child: Text(
+                    LocaleKeys.ui_previous_value.tr(
+                      namedArgs: {'value': widget.value},
+                    ),
+                  ),
                 ),
             ],
             onChanged: (value) {
@@ -173,9 +183,9 @@ class _ConditionValueFieldState extends State<ConditionValueField> {
                     signed: true,
                   )
                 : TextInputType.text,
-            decoration: const InputDecoration(
-              labelText: 'Fester Wert',
-              hintText: 'Wert eingeben',
+            decoration: InputDecoration(
+              labelText: LocaleKeys.ui_fester_wert.tr(),
+              hintText: LocaleKeys.ui_wert_eingeben.tr(),
             ),
             onChanged: widget.onChanged,
           ),

@@ -447,7 +447,7 @@ class CompactWorkflowNode extends StatelessWidget {
                 // separaten "+ Baustein hier verbinden"-Platzhalter möglich.
                 // if (onAdd != null)
                 // IconButton(
-                //   tooltip: 'Baustein verbinden',
+                //   tooltip: LocaleKeys.ui_baustein_verbinden.tr(),
                 //   onPressed: onAdd,
                 //   icon: const Icon(Icons.add, size: 20),
                 // ),

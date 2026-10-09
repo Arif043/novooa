@@ -1,3 +1,4 @@
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,14 +40,14 @@ class TaskBuilderSideRail extends StatelessWidget {
           // Registrierungsfehler mitten im Seitenpanel-Aufbau.
           if (serviceLocator<WorkspaceCapabilities>().assistant)
             _RailIconButton(
-              tooltip: 'KI-Agent',
+              tooltip: LocaleKeys.ui_ki_agent.tr(),
               icon: Icons.auto_awesome_outlined,
               selected: selectedPanel == TaskBuilderSidePanelKind.assistant,
               onPressed: () =>
                   onPanelSelected(TaskBuilderSidePanelKind.assistant),
             ),
           _RailIconButton(
-            tooltip: 'Benachrichtigungen',
+            tooltip: LocaleKeys.ui_benachrichtigungen.tr(),
             selected: selectedPanel == TaskBuilderSidePanelKind.notifications,
             onPressed: () =>
                 onPanelSelected(TaskBuilderSidePanelKind.notifications),

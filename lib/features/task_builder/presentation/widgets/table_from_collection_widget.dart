@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -33,7 +35,10 @@ class TableFromCollectionWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Sammlung als Tabelle', style: SyscatTheme.taskBody),
+          Text(
+            LocaleKeys.ui_sammlung_als_tabelle.tr(),
+            style: SyscatTheme.taskBody,
+          ),
           const SizedBox(height: AppSpacing.sm),
           _CollectionField(
             value: _config.collectionName,
@@ -63,7 +68,7 @@ class _CollectionField extends StatelessWidget {
       return TemplateExpressionTextField(
         value: value,
         suggestions: TemplateExpressionScope.suggestionsOf(context),
-        decoration: const InputDecoration(labelText: 'Sammlung'),
+        decoration: InputDecoration(labelText: LocaleKeys.ui_sammlung.tr()),
         onChanged: onChanged,
       );
     }
@@ -97,7 +102,7 @@ class _CollectionDropdownState extends State<_CollectionDropdown> {
           return TemplateExpressionTextField(
             value: widget.value,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
-            decoration: const InputDecoration(labelText: 'Sammlung'),
+            decoration: InputDecoration(labelText: LocaleKeys.ui_sammlung.tr()),
             onChanged: widget.onChanged,
           );
         }
@@ -108,15 +113,15 @@ class _CollectionDropdownState extends State<_CollectionDropdown> {
 
   Widget _buildDropdown(List<DataCollection> collections) {
     if (collections.isEmpty) {
-      return const InputDecorator(
-        decoration: InputDecoration(labelText: 'Sammlung'),
-        child: Text('Keine Sammlungen vorhanden'),
+      return InputDecorator(
+        decoration: InputDecoration(labelText: LocaleKeys.ui_sammlung.tr()),
+        child: Text(LocaleKeys.ui_keine_sammlungen_vorhanden.tr()),
       );
     }
     final names = collections.map((collection) => collection.name).toSet();
     return DropdownButtonFormField<String>(
       initialValue: names.contains(widget.value) ? widget.value : null,
-      decoration: const InputDecoration(labelText: 'Sammlung'),
+      decoration: InputDecoration(labelText: LocaleKeys.ui_sammlung.tr()),
       items: [
         for (final name in names)
           DropdownMenuItem(value: name, child: Text(name)),
@@ -133,8 +138,8 @@ class _CollectionFieldLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const InputDecorator(
-      decoration: InputDecoration(labelText: 'Sammlung'),
+    return InputDecorator(
+      decoration: InputDecoration(labelText: LocaleKeys.ui_sammlung.tr()),
       child: SizedBox(
         height: 20,
         width: 20,

@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import '../../domain/entities/task_save_notice.dart';
 import 'dart:async';
 import 'package:bloc/bloc.dart';
@@ -75,7 +77,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       emit(TaskBuilderLoaded(editingTask));
     } catch (error, stackTrace) {
       logException(
-        message: 'Aufgabe konnte nicht geladen werden.',
+        message: LocaleKeys.ui_aufgabe_konnte_nicht_geladen_werden.tr(),
         error: error,
         stackTrace: stackTrace,
         name: 'task_builder',
@@ -146,10 +148,9 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     final configuredNode = node.copyWith(
       title: nodeTextDefaults.sendChannelTitle(kind),
       description: nodeTextDefaults.sendChannelDescription(kind),
-      outputName: _uniqueOutputName(
+      outputName: _defaultOutputName(
         task.graph,
-        '',
-        '${nodeTextDefaults.sendOutputBase(kind)}$nodeNumber',
+        nodeTextDefaults.sendOutputBase(kind),
       ),
       config: SendChannelMessageNodeConfig.initial().copyWith(kind: kind),
     );
@@ -331,7 +332,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       await repository.saveTask(task);
     } catch (error, stackTrace) {
       logException(
-        message: 'Aufgabe konnte nicht gespeichert werden.',
+        message: LocaleKeys.ui_aufgabe_konnte_nicht_gespeichert_werden.tr(),
         name: 'TaskBuilderCubit',
         error: error,
         stackTrace: stackTrace,
@@ -351,7 +352,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
         config: plugin.initial(),
         title: plugin.title,
         description: plugin.description,
-        outputName: _uniqueOutputName(graph, '', '${plugin.outputBase}$number'),
+        outputName: _defaultOutputName(graph, _capitalized(plugin.outputBase)),
       );
     }
     // Dialogeingabe und „Nachricht lesen“ haben immer mehrere, eigenständig
@@ -359,11 +360,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     // eigenen Ausgabenamen. Reine Seiteneffekt-Bausteine ohne fachlichen
     // Rückgabewert (siehe WorkflowPrimitive.hasNoOutput) haben gar keinen.
     final outputName = _hasOwnOutputName(primitive)
-        ? _uniqueOutputName(
-            graph,
-            '',
-            '${nodeTextDefaults.outputBase(primitive)}$number',
-          )
+        ? _defaultOutputName(graph, nodeTextDefaults.outputBase(primitive))
         : '';
     return WorkflowNode(
       id: NodeId('node.$number'),
@@ -481,6 +478,22 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   /// Liefert [candidate] unverändert, wenn er (abgesehen von [previousName],
   /// dem bisherigen Namen derselben Stelle) noch frei ist — sonst mit einem
   /// `_2`/`_3`-Suffix, bis er eindeutig ist.
+  /// Erster Baustein einer Art heißt `Anweisung`, der zweite `Anweisung2`, der
+  /// dritte `Anweisung3` …
+  String _defaultOutputName(WorkflowGraph graph, String base) {
+    final taken = _allOutputNames(graph);
+    var candidate = base;
+    var number = 2;
+    while (taken.contains(candidate)) {
+      candidate = '$base$number';
+      number += 1;
+    }
+    return candidate;
+  }
+
+  String _capitalized(String text) =>
+      text.isEmpty ? text : text[0].toUpperCase() + text.substring(1);
+
   String _uniqueOutputName(
     WorkflowGraph graph,
     String previousName,

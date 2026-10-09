@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_graph.dart';
@@ -30,7 +32,7 @@ class ComparisonRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ConditionValueField(
-            label: 'Wert prüfen',
+            label: LocaleKeys.ui_wert_pruefen.tr(),
             value: comparison.left,
             graph: graph,
             preferSource: true,
@@ -51,7 +53,9 @@ class ComparisonRow extends StatelessWidget {
             key: ValueKey(comparison.operator),
             isExpanded: true,
             initialValue: comparison.operator,
-            decoration: const InputDecoration(labelText: 'Vergleich'),
+            decoration: InputDecoration(
+              labelText: LocaleKeys.ui_vergleich.tr(),
+            ),
             items: [
               for (final operator in operators)
                 DropdownMenuItem(value: operator, child: Text(operator.label)),
@@ -64,7 +68,7 @@ class ComparisonRow extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           ConditionValueField(
-            label: 'Vergleichswert',
+            label: LocaleKeys.ui_vergleichswert.tr(),
             value: comparison.right,
             graph: graph,
             hint: hint,
@@ -77,7 +81,7 @@ class ComparisonRow extends StatelessWidget {
               GroupMenuButton(onSelected: onGroup),
               if (onRemove != null)
                 IconButton(
-                  tooltip: 'Bedingung entfernen',
+                  tooltip: LocaleKeys.ui_bedingung_entfernen.tr(),
                   onPressed: onRemove,
                   icon: const Icon(Icons.remove_circle_outline),
                 ),

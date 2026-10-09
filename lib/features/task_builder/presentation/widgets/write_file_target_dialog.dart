@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -54,7 +56,7 @@ class _WriteFileTargetDialogState extends State<WriteFileTargetDialog> {
   @override
   Widget build(BuildContext context) {
     return CupertinoAlertDialog(
-      title: const Text('Ausgabedatei wählen'),
+      title: Text(LocaleKeys.ui_ausgabedatei_waehlen.tr()),
       content: Padding(
         padding: const EdgeInsets.only(top: AppSpacing.md),
         child: SizedBox(
@@ -75,13 +77,13 @@ class _WriteFileTargetDialogState extends State<WriteFileTargetDialog> {
       actions: [
         CupertinoDialogAction(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Abbrechen'),
+          child: Text(LocaleKeys.ui_abbrechen.tr()),
         ),
         if (_mode == WriteTargetMode.fresh)
           CupertinoDialogAction(
             isDefaultAction: true,
             onPressed: _canSubmit ? _submitNew : null,
-            child: const Text('Übernehmen'),
+            child: Text(LocaleKeys.ui_uebernehmen.tr()),
           ),
       ],
     );

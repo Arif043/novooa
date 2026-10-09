@@ -37,9 +37,10 @@ Adapter sind austauschbare Implementierungen. Details stehen in
   in `CLAUDE.md` § 4). `translations_test.dart` erzwingt gleiche Schlüsselmengen.
 - `domain/` bleibt frei von `easy_localization`. Sprachabhängige Standardtexte kommen
   über Ports (z. B. `NodeTextDefaults`), deren `tr()`-Implementierung in `presentation/` liegt.
-- Stand der Migration: Aufgabenstudio-Rahmen (Header, Baustein-Menü, Canvas-Steuerung,
-  Namensfeld), Baustein-Labels und Standardnamen, Einstellungen → Sprache. Übrige
-  Features zeigen noch deutsche Texte und folgen feature-weise.
+- Stand der Migration: gesamte Aufgabenstudio- und Agent-Panel-Oberfläche (`task_builder/presentation`,
+  `assistant/presentation`; Texte unter `ui.*` in den JSON-Dateien, Platzhalter `{name}` per `namedArgs`),
+  Baustein-Labels und Standardnamen, Einstellungen → Sprache. Übrige Features sowie Texte in Domain und
+  Infrastructure sind noch deutsch und folgen feature-weise.
 - KI-Agent: Der Client sendet `locale`; das Backend hängt die Antwortsprache an den Prompt
   (siehe [`features/ki-agent.md`](./features/ki-agent.md)).
 

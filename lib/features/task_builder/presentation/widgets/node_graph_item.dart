@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -69,7 +71,7 @@ class NodeGraphItem extends StatelessWidget {
           _templateAwareNodeWidget(context),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            'Ergebnis für nächste Bausteine',
+            LocaleKeys.ui_ergebnis_fuer_naechste_bausteine.tr(),
             style: Theme.of(context).textTheme.titleSmall,
           ),
           NodeOutputChips(node: node),
@@ -147,7 +149,7 @@ class NodeGraphItem extends StatelessWidget {
         top: AppSpacing.xs,
         right: AppSpacing.xs,
         child: IconButton(
-          tooltip: 'Baustein löschen',
+          tooltip: LocaleKeys.ui_baustein_loeschen.tr(),
           onPressed: () => context.read<TaskBuilderCubit>().removeNode(node.id),
           icon: const Icon(Icons.delete_outline),
         ),
@@ -179,7 +181,7 @@ class NodeGraphItem extends StatelessWidget {
 
   Widget _strip(ColorScheme colors) {
     return Semantics(
-      label: 'Baustein tauschen',
+      label: LocaleKeys.ui_baustein_tauschen.tr(),
       button: true,
       child: DecoratedBox(
         key: ValueKey('node-drag-strip-${node.id.value}'),
@@ -216,7 +218,7 @@ class NodeGraphItem extends StatelessWidget {
         ? PluginNodeModules.byTypeId(config.typeId)
         : null;
     return module?.builder(node) ??
-        const Text('Dieser Baustein ist nicht verfügbar.');
+        Text(LocaleKeys.ui_dieser_baustein_ist_nicht_verfuegbar.tr());
   }
 
   Widget _nodeWidget() {

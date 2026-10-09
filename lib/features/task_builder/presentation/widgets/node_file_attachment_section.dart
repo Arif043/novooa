@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -56,10 +58,11 @@ class _AttachmentStatusHint extends StatelessWidget {
         child: LinearProgressIndicator(minHeight: 2),
       ),
       NodeFileAttachmentsStatus.failure => _RetryHint(
-        message: state.message ?? 'Dateien konnten nicht geladen werden.',
+        message: state.message ?? LocaleKeys.ui_files_load_failed.tr(),
       ),
-      NodeFileAttachmentsStatus.ready when state.files.isEmpty =>
-        const _TextHint('Noch keine Dateien hochgeladen.'),
+      NodeFileAttachmentsStatus.ready when state.files.isEmpty => _TextHint(
+        LocaleKeys.ui_no_files_uploaded_yet.tr(),
+      ),
       NodeFileAttachmentsStatus.ready => const SizedBox.shrink(),
     };
   }
@@ -79,7 +82,7 @@ class _RetryHint extends StatelessWidget {
           Expanded(child: _TextHint(message)),
           TextButton(
             onPressed: context.read<NodeFileAttachmentsCubit>().load,
-            child: const Text('Erneut versuchen'),
+            child: Text(LocaleKeys.ui_erneut_versuchen.tr()),
           ),
         ],
       ),

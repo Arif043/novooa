@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/workflow_node.dart';
@@ -50,7 +52,7 @@ class NodeConfigurationPanel extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Konfiguration schließen',
+                  tooltip: LocaleKeys.ui_konfiguration_schliessen.tr(),
                   onPressed: onClose,
                   icon: const Icon(Icons.close),
                 ),
@@ -91,12 +93,13 @@ class NodeConfigurationPanel extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Änderungen werden automatisch gespeichert.',
+                    LocaleKeys.ui_aenderungen_werden_automatisch_gespeichert
+                        .tr(),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Baustein löschen',
+                  tooltip: LocaleKeys.ui_baustein_loeschen.tr(),
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () {
                     context.read<TaskBuilderCubit>().removeNode(node.id);

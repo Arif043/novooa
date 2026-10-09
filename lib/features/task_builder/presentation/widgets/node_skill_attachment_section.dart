@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -56,7 +58,7 @@ class _SkillStatusHint extends StatelessWidget {
         child: LinearProgressIndicator(minHeight: 2),
       ),
       NodeSkillAttachmentsStatus.failure => _RetryHint(
-        message: state.message ?? 'Fähigkeiten konnten nicht geladen werden.',
+        message: state.message ?? LocaleKeys.ui_skills_load_failed.tr(),
       ),
       NodeSkillAttachmentsStatus.ready when state.skills.isEmpty =>
         const _TextHint('Noch keine Fähigkeiten angelegt.'),
@@ -79,7 +81,7 @@ class _RetryHint extends StatelessWidget {
           Expanded(child: _TextHint(message)),
           TextButton(
             onPressed: context.read<NodeSkillAttachmentsCubit>().load,
-            child: const Text('Erneut versuchen'),
+            child: Text(LocaleKeys.ui_erneut_versuchen.tr()),
           ),
         ],
       ),

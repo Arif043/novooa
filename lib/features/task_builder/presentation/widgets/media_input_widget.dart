@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -25,15 +27,15 @@ class MediaInputWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Bild anfordern', style: SyscatTheme.taskBody),
+          Text(LocaleKeys.ui_bild_anfordern.tr(), style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
           TemplateExpressionTextField(
             value: _config.instruction,
             suggestions: TemplateExpressionScope.suggestionsOf(context),
             minLines: 2,
             maxLines: 4,
-            decoration: const InputDecoration(
-              hintText: 'Hinweis für die Bildeingabe',
+            decoration: InputDecoration(
+              hintText: LocaleKeys.ui_hinweis_fuer_die_bildeingabe.tr(),
             ),
             onChanged: (value) => _update(
               context,
@@ -44,12 +46,8 @@ class MediaInputWidget extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Als Dokument scannen'),
-              subtitle: const Text(
-                'Erkennt beim Fotografieren automatisch die Kanten des '
-                'Dokuments, entzerrt es perspektivisch und schneidet den '
-                'Hintergrund aus.',
-              ),
+              title: Text(LocaleKeys.ui_als_dokument_scannen.tr()),
+              subtitle: Text(LocaleKeys.ui_scan_hint.tr()),
               value: _config.documentScanEnabled,
               onChanged: (value) => _update(
                 context,

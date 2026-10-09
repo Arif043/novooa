@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/assistant/presentation/agent/assistant_plan_action.dart';
@@ -125,7 +127,7 @@ class _AssistantActionPlanState extends State<AssistantActionPlan> {
     setState(() {
       _isRunning = false;
       _activeIndex = null;
-      _errorMessage = 'Der Vorschlag konnte nicht angewendet werden.';
+      _errorMessage = LocaleKeys.ui_suggestion_failed.tr();
     });
   }
 

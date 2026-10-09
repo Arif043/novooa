@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
@@ -25,7 +27,7 @@ class WriteFileFolderPicker extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('Verzeichnis', style: textTheme.titleSmall),
+        Text(LocaleKeys.ui_verzeichnis.tr(), style: textTheme.titleSmall),
         const SizedBox(height: AppSpacing.sm),
         BlocBuilder<WriteFileFoldersCubit, WriteFileFoldersState>(
           builder: (context, state) => _content(context, state),
@@ -38,7 +40,7 @@ class WriteFileFolderPicker extends StatelessWidget {
     return switch (state.status) {
       WriteFileFoldersStatus.loading => const LinearProgressIndicator(),
       WriteFileFoldersStatus.failure => _FolderError(
-        message: state.message ?? 'Verzeichnisse konnten nicht geladen werden.',
+        message: state.message ?? LocaleKeys.ui_folders_load_failed.tr(),
       ),
       WriteFileFoldersStatus.ready => _FolderChoices(
         state: state,
@@ -76,7 +78,7 @@ class _FolderChoices extends StatelessWidget {
             child: Column(
               children: [
                 _FolderTile(
-                  label: 'Oberste Ebene',
+                  label: LocaleKeys.ui_oberste_ebene.tr(),
                   depth: 0,
                   selected: selectedFolderId == null,
                   onTap: () => onSelected(null),
@@ -133,7 +135,7 @@ class _FolderTile extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: 'Verzeichnis $label',
+      label: LocaleKeys.ui_directory_named.tr(namedArgs: {'name': label}),
       child: ListTile(
         dense: true,
         minTileHeight: 48,
@@ -163,7 +165,7 @@ class _FolderError extends StatelessWidget {
         Expanded(child: Text(message)),
         TextButton(
           onPressed: context.read<WriteFileFoldersCubit>().load,
-          child: const Text('Erneut versuchen'),
+          child: Text(LocaleKeys.ui_erneut_versuchen.tr()),
         ),
       ],
     );

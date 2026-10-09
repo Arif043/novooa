@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -24,11 +26,16 @@ class SaveDocumentWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Datensatz speichern', style: SyscatTheme.taskBody),
+            Text(
+              LocaleKeys.ui_datensatz_speichern.tr(),
+              style: SyscatTheme.taskBody,
+            ),
             const SizedBox(height: AppSpacing.sm),
             TextFormField(
               initialValue: config.collectionName,
-              decoration: const InputDecoration(labelText: 'Speichere in'),
+              decoration: InputDecoration(
+                labelText: LocaleKeys.ui_speichere_in.tr(),
+              ),
               onChanged: (value) => context
                   .read<TaskBuilderCubit>()
                   .updateSaveDocumentCollection(node.id, value),
@@ -43,8 +50,8 @@ class SaveDocumentWidget extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               config.filters.isEmpty
-                  ? 'Ein neuer Datensatz wird angelegt.'
-                  : 'Passende Datensätze werden aktualisiert. Ohne Treffer wird ein neuer angelegt.',
+                  ? LocaleKeys.ui_new_record_created.tr()
+                  : LocaleKeys.ui_matching_records_updated.tr(),
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -71,10 +78,13 @@ class SaveDocumentWidget extends StatelessWidget {
                   .read<TaskBuilderCubit>()
                   .addSaveDocumentFilter(node.id),
               icon: const Icon(Icons.add),
-              label: const Text('Bedingung hinzufügen'),
+              label: Text(LocaleKeys.ui_bedingung_hinzufuegen.tr()),
             ),
             const SizedBox(height: AppSpacing.md),
-            Text('Felder', style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              LocaleKeys.ui_felder.tr(),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
             const SizedBox(height: AppSpacing.sm),
             for (var index = 0; index < config.fields.length; index++) ...[
               DocumentFieldAssignmentEditor(
@@ -93,7 +103,7 @@ class SaveDocumentWidget extends StatelessWidget {
                   .read<TaskBuilderCubit>()
                   .addSaveDocumentField(node.id),
               icon: const Icon(Icons.add),
-              label: const Text('Feld hinzufügen'),
+              label: Text(LocaleKeys.ui_feld_hinzufuegen.tr()),
             ),
           ],
         ),

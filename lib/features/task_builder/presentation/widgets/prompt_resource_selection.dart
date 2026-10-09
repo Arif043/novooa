@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:syscat2/core/runtime/employees_availability.dart';
 import 'package:syscat2/core/runtime/skills_availability.dart';
@@ -56,7 +58,7 @@ class _PromptResourceSelectionState extends State<PromptResourceSelection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Zuweisung', style: SyscatTheme.taskBody),
+        Text(LocaleKeys.ui_zuweisung.tr(), style: SyscatTheme.taskBody),
         const SizedBox(height: AppSpacing.xs),
         if (types.length > 1) ...[
           SizedBox(
@@ -67,16 +69,16 @@ class _PromptResourceSelectionState extends State<PromptResourceSelection> {
               thumbColor: SyscatTheme.glassSurface,
               children: {
                 if (types.contains(_ResourceType.skills))
-                  _ResourceType.skills: const Text('Fähigkeiten'),
+                  _ResourceType.skills: Text(LocaleKeys.ui_faehigkeiten.tr()),
                 if (types.contains(_ResourceType.employee))
-                  _ResourceType.employee: const Text('Mitarbeiter'),
+                  _ResourceType.employee: Text(LocaleKeys.ui_mitarbeiter.tr()),
               },
               onValueChanged: _selectType,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Entweder ein Mitarbeiter oder eigene Fähigkeiten.',
+            LocaleKeys.ui_entweder_ein_mitarbeiter_oder_eigene_faehigkeite.tr(),
             style: SyscatTheme.taskBodySmall,
           ),
           const SizedBox(height: AppSpacing.md),

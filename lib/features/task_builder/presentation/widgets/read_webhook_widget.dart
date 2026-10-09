@@ -1,3 +1,5 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
@@ -16,15 +18,16 @@ class ReadWebhookWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Webhook-Ereignis lesen', style: SyscatTheme.taskBody),
-          const SizedBox(height: AppSpacing.sm),
-          const Text(
-            'Gilt für Aufgaben, die ein Webhook-Auslöser startet. '
-            'Der Inhalt steht unter dem Ausgabenamen, z. B. '
-            '{{ereignis.bestellung}}.',
+          Text(
+            LocaleKeys.ui_webhook_ereignis_lesen.tr(),
+            style: SyscatTheme.taskBody,
           ),
           const SizedBox(height: AppSpacing.sm),
-          const Text('Ausgaben: Inhalt, Methode, Query, Kopfzeilen, Zeitpunkt'),
+          Text(LocaleKeys.ui_webhook_hint.tr()),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            LocaleKeys.ui_ausgaben_inhalt_methode_query_kopfzeilen_zeitpun.tr(),
+          ),
         ],
       ),
     );
