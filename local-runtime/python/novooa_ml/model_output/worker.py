@@ -3,7 +3,7 @@ from novooa_ml.transformations.default_registry import default_transformation_re
 from novooa_ml.transformations.pipeline_check import check_output_pipeline
 
 
-def transform_outputs(outputs, definitions, output_parameters, numpy, resource_reader=None):
+def transform_outputs(outputs, definitions, numpy, resource_reader=None):
     by_name = {definition["name"]: definition for definition in definitions}
     registry = default_transformation_registry()
     # `outputs` kann ein einmal lesbarer Iterator sein (zip im ONNX-Worker).
@@ -16,10 +16,7 @@ def transform_outputs(outputs, definitions, output_parameters, numpy, resource_r
             "tensor": tensor,
             "transformationValues": transformation_values(
                 registry, tensor, by_name[name].get("transformations", []),
-                TransformationContext(
-                    numpy, resource_reader=resource_reader,
-                    output_name=name, output_parameters=output_parameters,
-                ),
+                TransformationContext(numpy, resource_reader=resource_reader),
             ),
         }
         for name, tensor in outputs

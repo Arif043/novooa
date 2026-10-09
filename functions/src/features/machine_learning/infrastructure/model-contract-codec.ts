@@ -15,6 +15,7 @@ import {
   modelInputSourceTypes,
   validateModelContract,
 } from "../domain/entities/model-contract.js";
+import {withLegacyOutputParametersAsSettings} from "./legacy-output-parameter-settings.js";
 
 export function modelContractFromUnknown(value: unknown): ModelContract {
   const data = recordFrom(value, "Der Modellvertrag ist ungültig.");
@@ -25,8 +26,9 @@ export function modelContractFromUnknown(value: unknown): ModelContract {
       ? []
       : listFrom(data.settings, settingFrom),
   };
-  validateModelContract(contract);
-  return contract;
+  const normalized = withLegacyOutputParametersAsSettings(contract);
+  validateModelContract(normalized);
+  return normalized;
 }
 
 function inputFrom(value: unknown): ModelInput {

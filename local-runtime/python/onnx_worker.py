@@ -87,9 +87,7 @@ def transformed_output_tensors(payload, values, numpy, resource_reader=None):
         values,
         strict=True,
     )
-    transformed = transform_outputs(
-        named, payload["outputs"], payload.get("outputParameters", []), numpy, resource_reader,
-    )
+    transformed = transform_outputs(named, payload["outputs"], numpy, resource_reader)
     return [
         {
             **tensor_for_output(output["name"], output["tensor"], numpy),

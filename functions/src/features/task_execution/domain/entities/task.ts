@@ -176,13 +176,11 @@ export type ModelInferenceNodeConfig = {
   primitive: "modelInference";
   modelId: string;
   inputMappings: ModelInferenceInputMapping[];
-  outputParameters: ModelInferenceOutputParameter[];
   settings?: ModelInferenceSetting[];
 };
 type SpeechModelNodeConfig = {
   modelId: string;
   inputMappings: ModelInferenceInputMapping[];
-  outputParameters: ModelInferenceOutputParameter[];
   settings?: ModelInferenceSetting[];
 };
 export type TextToSpeechNodeConfig = SpeechModelNodeConfig & {
@@ -206,11 +204,6 @@ export type ModelInferenceInputMapping = {
 export type ModelInferenceSetting = {
   name: string;
   valueTemplate: string;
-};
-export type ModelInferenceOutputParameter = {
-  outputName: string;
-  name: string;
-  value: number;
 };
 export type ForEachNodeConfig = {
   primitive: "forEach";

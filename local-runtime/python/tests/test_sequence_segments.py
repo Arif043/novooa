@@ -15,7 +15,7 @@ def segments(scores, **parameters):
     return transformation_values(default_transformation_registry(), 
         numpy.asarray(scores),
         [{"type": "sequence.segments", "parameters": {"frameDuration": 0.5, **parameters}, "result": "segments"}],
-        TransformationContext(numpy, output_name="output", output_parameters=[]),
+        TransformationContext(numpy),
     )["segments"]
 
 
@@ -38,7 +38,7 @@ class ScoreSegmentsTest(unittest.TestCase):
         result = transformation_values(default_transformation_registry(), 
             numpy.array([0.0, 1.0]),
             [{"type": "sequence.segments", "parameters": {"hopLength": 160, "sampleRate": 16000}, "result": "s"}],
-            TransformationContext(numpy, output_name="output", output_parameters=[]),
+            TransformationContext(numpy),
         )["s"]
 
         self.assertEqual(result, [{"start": 0.01, "end": 0.02, "score": 1.0}])

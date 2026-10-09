@@ -17,7 +17,6 @@ void selectInferenceModel(
     node.id,
     model.id,
     _mappingsFor(model),
-    _outputParametersFor(model),
     _settingsFor(model),
   );
   context.read<ModelCatalogCubit>().cacheModel(model.id);
@@ -33,20 +32,6 @@ List<ModelInferenceInputMapping> _mappingsFor(ModelCatalogEntry model) => model
         sourceType: input.source.name,
         dataType: input.dataType,
         shape: input.shape,
-      ),
-    )
-    .toList(growable: false);
-
-List<ModelInferenceOutputParameter> _outputParametersFor(
-  ModelCatalogEntry model,
-) => model.outputs
-    .expand(
-      (output) => output.parameters.map(
-        (parameter) => ModelInferenceOutputParameter(
-          outputName: output.tensorName,
-          name: parameter.name,
-          value: parameter.defaultValue,
-        ),
       ),
     )
     .toList(growable: false);

@@ -12,7 +12,6 @@ export class LocalOnnxInferenceRuntime implements ModelInferenceRuntime {
       artifact: request.artifact,
       inputs: request.inputs,
       outputs: request.model.contract.outputs,
-      outputParameters: request.outputParameters,
     });
   }
 }

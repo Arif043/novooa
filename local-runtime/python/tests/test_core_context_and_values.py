@@ -40,37 +40,10 @@ class ResourceAccessTest(unittest.TestCase):
         self.assertEqual(second.metadata, {})
 
 
-class OutputParameterValueTest(unittest.TestCase):
-    descriptor = {"name": "k", "default": 3, "minimum": 1, "maximum": 5}
-
-    def test_uses_the_default_without_a_selection(self):
-        self.assertEqual(context(output_name="logits").parameter_value(self.descriptor), 3)
-
-    def test_uses_the_value_selected_for_this_output_only(self):
-        selections = [
-            {"outputName": "andere", "name": "k", "value": 5},
-            {"outputName": "logits", "name": "k", "value": 2},
-        ]
-
-        value = context(output_name="logits", output_parameters=selections).parameter_value(self.descriptor)
-
-        self.assertEqual(value, 2)
-
-    def test_rejects_values_outside_the_range(self):
-        selections = [{"outputName": "logits", "name": "k", "value": 9}]
-        ctx = context(output_name="logits", output_parameters=selections)
-
-        with self.assertRaisesRegex(ValueError, "Parameter k liegt außerhalb"):
-            ctx.parameter_value(self.descriptor)
-
-    def test_rejects_an_incomplete_descriptor(self):
-        for descriptor, message in [
-            ({"default": 1, "minimum": 0, "maximum": 2}, "Name des Ausgangsparameters fehlt"),
-            ({"name": "k", "default": 1, "maximum": 2}, "Minimalwert ist ungültig"),
-            ({"name": "k", "default": 1, "minimum": 0}, "Maximalwert ist ungültig"),
-        ]:
-            with self.subTest(descriptor=descriptor), self.assertRaisesRegex(ValueError, message):
-                context().parameter_value(descriptor)
+class ContextScopeTest(unittest.TestCase):
+    def test_carries_no_user_values(self):
+        # Einstellbare Werte bindet TypeScript als Settings vorab in die Parameter ein.
+        self.assertFalse(hasattr(context(), "parameter_value"))
 
 
 class AsTensorTest(unittest.TestCase):

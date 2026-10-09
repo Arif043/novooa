@@ -51,22 +51,25 @@ class ThresholdTest(unittest.TestCase):
 
 
 class TopKTest(unittest.TestCase):
-    def parameter(self, default=2):
-        return {"parameter": {"name": "k", "default": default, "minimum": 1, "maximum": 5}}
-
     def test_returns_the_largest_values_in_descending_order(self):
-        result = run(numpy.array([[0.1, 0.6, 0.3]]), ("tensor.topK", self.parameter()))
+        result = run(numpy.array([[0.1, 0.6, 0.3]]), ("tensor.topK", {"k": 2}))
 
         self.assertEqual(result, [{"index": 1, "value": 0.6}, {"index": 2, "value": 0.3}])
 
     def test_returns_all_values_when_k_exceeds_the_vector(self):
-        self.assertEqual(len(run(numpy.array([0.4, 0.6]), ("tensor.topK", self.parameter(5)))), 2)
+        self.assertEqual(len(run(numpy.array([0.4, 0.6]), ("tensor.topK", {"k": 5}))), 2)
 
-    def test_rejects_batches_and_missing_descriptions(self):
+    def test_old_parameter_descriptions_fall_back_to_their_default(self):
+        legacy = {"parameter": {"name": "k", "default": 1, "minimum": 1, "maximum": 5}}
+
+        self.assertEqual(len(run(numpy.array([0.4, 0.6, 0.1]), ("tensor.topK", legacy))), 1)
+
+    def test_rejects_batches_and_invalid_counts(self):
         with self.assertRaisesRegex(ValueError, "nur einzelne Vektoren"):
-            run(numpy.zeros((2, 3)), ("tensor.topK", self.parameter()))
-        with self.assertRaisesRegex(ValueError, "Parameterbeschreibung"):
-            run(numpy.zeros(3), ("tensor.topK", {}))
+            run(numpy.zeros((2, 3)), ("tensor.topK", {"k": 1}))
+        for count in [None, 0, 1.5, True, "3"]:
+            with self.subTest(count=count), self.assertRaisesRegex(ValueError, "tensor.topK benötigt k als positive ganze Zahl"):
+                run(numpy.zeros(3), ("tensor.topK", {} if count is None else {"k": count}))
 
 
 class LayoutAndNormalizeTest(unittest.TestCase):

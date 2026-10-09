@@ -7,7 +7,7 @@ type SpeechCall = {teamId: string; languageModelId: string; text: string; voiceI
 function nodeWith(config: Record<string, unknown>) {
   return {
     id: "tts", primitive: "textToSpeech",
-    config: {primitive: "textToSpeech", modelId: "", inputMappings: [], outputParameters: [], ...config},
+    config: {primitive: "textToSpeech", modelId: "", inputMappings: [], ...config},
   } as never;
 }
 
@@ -84,7 +84,7 @@ test("without a language model the ONNX inference path is used", async () => {
 function sttNode(config: Record<string, unknown>) {
   return {
     id: "stt", primitive: "speechToText",
-    config: {primitive: "speechToText", modelId: "", inputMappings: [], outputParameters: [], ...config},
+    config: {primitive: "speechToText", modelId: "", inputMappings: [], ...config},
   } as never;
 }
 

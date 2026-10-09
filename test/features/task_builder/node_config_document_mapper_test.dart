@@ -230,13 +230,7 @@ void main() {
           shape: [1, 3, 224, 224],
         ),
       ],
-      outputParameters: [
-        ModelInferenceOutputParameter(
-          outputName: 'scores',
-          name: 'k',
-          value: 3,
-        ),
-      ],
+      settings: [ModelInferenceSetting(name: 'scores_k', valueTemplate: '3')],
     );
 
     final document = _mapper().toDocument(config);
@@ -255,11 +249,36 @@ void main() {
           'shape': [1, 3, 224, 224],
         },
       ],
-      'outputParameters': [
-        {'outputName': 'scores', 'name': 'k', 'value': 3},
+      'settings': [
+        {'name': 'scores_k', 'valueTemplate': '3'},
       ],
     });
     expect(restored, config);
+  });
+
+  test('liest gespeicherte Ausgangsparameter als Settings', () {
+    final restored =
+        _mapper().fromDocument({
+              'primitive': 'modelInference',
+              'modelId': 'squeezenet',
+              'outputParameters': [
+                {'outputName': 'scores', 'name': 'k', 'value': 5},
+                {'outputName': 'logits-out', 'name': 'k', 'value': 2},
+              ],
+              'settings': [
+                {'name': 'scores_k', 'valueTemplate': '7'},
+              ],
+            })
+            as ModelInferenceNodeConfig;
+
+    expect(restored.settings, const [
+      ModelInferenceSetting(name: 'scores_k', valueTemplate: '7'),
+      ModelInferenceSetting(name: 'logits_out_k', valueTemplate: '2'),
+    ]);
+    expect(
+      _mapper().toDocument(restored).containsKey('outputParameters'),
+      isFalse,
+    );
   });
 
   test('serialisiert und deserialisiert SpeechToTextNodeConfig', () {

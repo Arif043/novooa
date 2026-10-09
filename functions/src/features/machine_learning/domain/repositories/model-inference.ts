@@ -4,17 +4,10 @@ import {
 import {type ModelTensorDataType} from "../entities/model-contract.js";
 import {type ModelWorkflowOutput} from "../entities/model-workflow-output.js";
 import {type ModelOutputValue} from "../entities/model-output-value.js";
-export type ModelOutputParameterValue = {
-  readonly outputName: string;
-  readonly name: string;
-  readonly value: number;
-};
-
 export type ModelInferenceRequest = {
   teamId: string;
   modelId: string;
   inputs: readonly ModelInputSource[];
-  outputParameters?: readonly ModelOutputParameterValue[];
   settings?: Readonly<Record<string, unknown>>;
   transformationBindings?: Readonly<Record<string, unknown>>;
 };

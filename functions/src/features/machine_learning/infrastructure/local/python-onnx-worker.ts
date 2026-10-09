@@ -1,5 +1,4 @@
 import {type ModelOutput} from "../../domain/entities/model-contract.js";
-import {type ModelOutputParameterValue} from "../../domain/repositories/model-inference.js";
 import {
   type ModelRuntimeOutput,
 } from "../../domain/repositories/model-inference-runtime.js";
@@ -9,7 +8,6 @@ export type PythonOnnxWorkerRequest = {
   readonly artifact: Uint8Array;
   readonly inputs: readonly ModelTensor[];
   readonly outputs: readonly ModelOutput[];
-  readonly outputParameters?: readonly ModelOutputParameterValue[];
 };
 
 export interface PythonOnnxWorker {

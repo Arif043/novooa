@@ -123,8 +123,8 @@ class FitLengthTest(unittest.TestCase):
 
 class UnsupportedSourceTest(unittest.TestCase):
     def test_names_the_source_type_that_is_not_supported(self):
-        with self.assertRaisesRegex(ValueError, "datetime"):
-            tensor_of("datetime", "2026-10-08T10:00:00Z", [])
+        with self.assertRaisesRegex(ValueError, "file"):
+            tensor_of("file", "irrelevant", [])
 
 
 if __name__ == "__main__":

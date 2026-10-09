@@ -75,7 +75,6 @@ class ModelCatalogEntryMapper {
       tensorName: jsonText(output, 'name'),
       workflowName: workflowOutput['name'] as String,
       workflowType: workflowOutput['type'] as String,
-      parameters: _outputParametersFrom(output['transformations']),
     );
   }
 
@@ -95,41 +94,6 @@ class ModelCatalogEntryMapper {
       throw const FormatException('Die Workflow-Ausgabe ist ungültig.');
     }
     return {'name': name, 'type': type};
-  }
-
-  List<ModelManifestOutputParameter> _outputParametersFrom(Object? value) {
-    return jsonItems(value)
-        .map(jsonObject)
-        .map((item) => _parameterFrom(item['parameters']))
-        .whereType<ModelManifestOutputParameter>()
-        .toList(growable: false);
-  }
-
-  ModelManifestOutputParameter? _parameterFrom(Object? value) {
-    if (value is! Map) return null;
-    final parameters = jsonObject(value);
-    final descriptor = parameters['parameter'];
-    if (descriptor is! Map) return null;
-    final parameter = jsonObject(descriptor);
-    final name = parameter['name'];
-    final defaultValue = parameter['default'];
-    final minimum = parameter['minimum'];
-    final maximum = parameter['maximum'];
-    if (name is! String ||
-        defaultValue is! int ||
-        minimum is! int ||
-        maximum is! int ||
-        minimum > defaultValue ||
-        defaultValue > maximum) {
-      throw const FormatException('Der Ausgangsparameter ist ungültig.');
-    }
-    return ModelManifestOutputParameter(
-      name: name,
-      label: parameter['label'] as String? ?? name,
-      defaultValue: defaultValue,
-      minimum: minimum,
-      maximum: maximum,
-    );
   }
 
   ModelManifestInput _manifestInputFrom(Object? value) {

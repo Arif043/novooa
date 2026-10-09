@@ -41,8 +41,8 @@ class InputPipelineTest(unittest.TestCase):
     def test_rejects_unknown_types_and_unsupported_sources(self):
         with self.assertRaisesRegex(ValueError, "Nicht unterstützte Transformation: image.blur"):
             check_input_pipeline("bild", "image", steps("image.blur"), REGISTRY)
-        with self.assertRaisesRegex(ValueError, "Quelle datetime wird nicht unterstützt"):
-            check_input_pipeline("zeit", "datetime", [], REGISTRY)
+        with self.assertRaisesRegex(ValueError, "Quelle file wird nicht unterstützt"):
+            check_input_pipeline("datei", "file", [], REGISTRY)
 
     def test_allows_constants_from_any_source(self):
         check_input_pipeline("hilfe", "text", steps("tensor.constant"), REGISTRY)

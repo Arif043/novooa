@@ -36,7 +36,6 @@ void main() {
     expect(entries.single.inputs.single.name, 'image');
     expect(entries.single.outputs.single.workflowName, 'classifications');
     expect(entries.single.outputs.single.workflowType, 'json');
-    expect(entries.single.outputs.single.parameters.single.defaultValue, 3);
     expect(entries.single.isManagedLocally, isTrue);
     // Ohne `origin` (ältere Runtime) gilt ein Teameintrag als eigener Import.
     expect(entries.single.origin, ModelOrigin.import);

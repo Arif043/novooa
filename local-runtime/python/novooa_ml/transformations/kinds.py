@@ -7,6 +7,7 @@ Jede Strategie deklariert, welche Arten sie annimmt (`accepts`) und welche sie l
 IMAGE = "image"
 AUDIO = "audio"
 TEXT = "text"
+DATETIME = "datetime"
 NUMBER = "number"
 JSON = "json"
 TENSOR = "tensor"
@@ -15,7 +16,7 @@ JSON_RESULT = "json-result"
 AUDIO_FILE = "audioFile"
 ANY = "*"
 
-KINDS = (IMAGE, AUDIO, TEXT, NUMBER, JSON, TENSOR, REGIONS, JSON_RESULT, AUDIO_FILE)
+KINDS = (IMAGE, AUDIO, TEXT, DATETIME, NUMBER, JSON, TENSOR, REGIONS, JSON_RESULT, AUDIO_FILE)
 
 # Bilder und Audiosignale lassen sich ohne eigenen Schritt als Tensor lesen (`as_tensor`).
 CONVERTIBLE_TO_TENSOR = (IMAGE, AUDIO)
@@ -24,6 +25,7 @@ SOURCE_KINDS = {
     "image": IMAGE,
     "audio": AUDIO,
     "text": TEXT,
+    "datetime": DATETIME,
     "number": NUMBER,
     "json": JSON,
     "boolean": JSON,

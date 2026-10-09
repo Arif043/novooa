@@ -5,14 +5,12 @@ import {
   type ModelInputPreparationRuntime,
   type ModelRuntimeOutput,
 } from "../repositories/model-inference-runtime.js";
-import {type ModelOutputParameterValue} from "../repositories/model-inference.js";
 import {type ModelCatalogEntry} from "../entities/model-catalog-entry.js";
 import {type ModelRuntimeResource} from "../entities/model-runtime-resource.js";
 
 export type RunModelInferenceRequest = {
   readonly model: ModelCatalogEntry;
   readonly inputs: readonly ModelTensor[];
-  readonly outputParameters?: readonly ModelOutputParameterValue[];
 };
 
 export class RunModelInference {

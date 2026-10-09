@@ -108,20 +108,18 @@ class OutputWorkerTest(unittest.TestCase):
             {"type": "tensor.argmax", "parameters": {}},
         ]}]
 
-        [output] = transform_outputs(iter([("logits", numpy.array([[1.0, 3.0]]))]), definitions, [], numpy)
+        [output] = transform_outputs(iter([("logits", numpy.array([[1.0, 3.0]]))]), definitions, numpy)
 
         values = output["transformationValues"]
         self.assertEqual(values["tensor"], [1])
         self.assertAlmostEqual(sum(values["wahrscheinlichkeiten"][0]), 1.0)
         self.assertEqual(output["tensor"].tolist(), [[1.0, 3.0]])
 
-    def test_uses_the_selected_output_parameter(self):
-        definitions = [{"name": "logits", "transformations": [{"type": "tensor.topK", "parameters": {
-            "parameter": {"name": "k", "default": 1, "minimum": 1, "maximum": 3},
-        }}]}]
-        selections = [{"outputName": "logits", "name": "k", "value": 2}]
+    def test_uses_the_count_bound_from_a_setting(self):
+        # TypeScript hat `$anzahl` vor dem Aufruf bereits durch den Setting-Wert ersetzt.
+        definitions = [{"name": "logits", "transformations": [{"type": "tensor.topK", "parameters": {"k": 2}}]}]
 
-        [output] = transform_outputs([("logits", numpy.array([0.1, 0.7, 0.2]))], definitions, selections, numpy)
+        [output] = transform_outputs([("logits", numpy.array([0.1, 0.7, 0.2]))], definitions, numpy)
 
         self.assertEqual([item["index"] for item in output["transformationValues"]["tensor"]], [1, 2])
 
@@ -129,7 +127,7 @@ class OutputWorkerTest(unittest.TestCase):
         definitions = [{"name": "maske", "transformations": [{"type": "geometry.mergeRows", "parameters": {}}]}]
 
         with self.assertRaisesRegex(ValueError, "Ausgang maske: geometry.mergeRows erwartet regions, erhält tensor"):
-            transform_outputs([("maske", numpy.zeros((2, 2)))], definitions, [], numpy)
+            transform_outputs([("maske", numpy.zeros((2, 2)))], definitions, numpy)
 
 
 if __name__ == "__main__":

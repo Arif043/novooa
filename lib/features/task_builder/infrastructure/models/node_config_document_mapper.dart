@@ -7,6 +7,7 @@ import '../../domain/entities/skill_attachment.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
 import 'channel_event_output_names_mapper.dart';
+import 'legacy_model_output_parameters.dart';
 
 typedef GraphToDocument = Map<String, Object?> Function(WorkflowGraph graph);
 typedef GraphFromDocument = WorkflowGraph Function(Object? data);
@@ -190,23 +191,10 @@ class NodeConfigDocumentMapper {
       'inputMappings': config.inputMappings
           .map(_modelInferenceInputMappingToDocument)
           .toList(),
-      'outputParameters': config.outputParameters
-          .map(_modelInferenceOutputParameterToDocument)
-          .toList(),
       if (config.settings.isNotEmpty)
         'settings': config.settings
             .map(_modelInferenceSettingToDocument)
             .toList(),
-    };
-  }
-
-  Map<String, Object?> _modelInferenceOutputParameterToDocument(
-    ModelInferenceOutputParameter parameter,
-  ) {
-    return {
-      'outputName': parameter.outputName,
-      'name': parameter.name,
-      'value': parameter.value,
     };
   }
 
@@ -478,10 +466,10 @@ class NodeConfigDocumentMapper {
     return ModelInferenceNodeConfig(
       modelId: data['modelId'] as String? ?? '',
       inputMappings: _modelInferenceInputMappingsFrom(data['inputMappings']),
-      outputParameters: _modelInferenceOutputParametersFrom(
+      settings: settingsWithLegacyOutputParameters(
+        _modelInferenceSettingsFrom(data['settings']),
         data['outputParameters'],
       ),
-      settings: _modelInferenceSettingsFrom(data['settings']),
     );
   }
 
@@ -490,7 +478,6 @@ class NodeConfigDocumentMapper {
     return TextToSpeechNodeConfig(
       modelId: config.modelId,
       inputMappings: config.inputMappings,
-      outputParameters: config.outputParameters,
       settings: config.settings,
       languageModelId: data['languageModelId'] as String? ?? '',
       speechText: data['speechText'] as String? ?? '',
@@ -512,7 +499,6 @@ class NodeConfigDocumentMapper {
     return SpeechToTextNodeConfig(
       modelId: config.modelId,
       inputMappings: config.inputMappings,
-      outputParameters: config.outputParameters,
       settings: config.settings,
       languageModelId: data['languageModelId'] as String? ?? '',
       audioTemplate: data['audioTemplate'] as String? ?? '',
@@ -525,23 +511,6 @@ class NodeConfigDocumentMapper {
       'languageModelId': config.languageModelId,
       'audioTemplate': config.audioTemplate,
     };
-  }
-
-  List<ModelInferenceOutputParameter> _modelInferenceOutputParametersFrom(
-    Object? value,
-  ) {
-    if (value is! List) return const [];
-    return value
-        .whereType<Map>()
-        .map((entry) {
-          final data = _objectMapFrom(entry);
-          return ModelInferenceOutputParameter(
-            outputName: data['outputName'] as String? ?? '',
-            name: data['name'] as String? ?? '',
-            value: data['value'] as int? ?? 0,
-          );
-        })
-        .toList(growable: false);
   }
 
   List<ModelInferenceInputMapping> _modelInferenceInputMappingsFrom(

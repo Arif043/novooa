@@ -117,11 +117,7 @@ class _ModelInferenceContent extends StatelessWidget {
                 values: _config.settings,
               ),
             ],
-            ModelInferenceOutputConfiguration(
-              nodeId: node.id,
-              outputs: model.outputs,
-              parameters: _config.outputParameters,
-            ),
+            ModelInferenceOutputConfiguration(outputs: model.outputs),
           ],
         ],
       ),

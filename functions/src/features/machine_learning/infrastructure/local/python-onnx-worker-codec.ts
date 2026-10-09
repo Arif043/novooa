@@ -8,7 +8,6 @@ export function pythonOnnxWorkerInputJson(request: PythonOnnxWorkerRequest): str
     modelBase64: Buffer.from(request.artifact).toString("base64"),
     inputs: request.inputs.map(modelTensorToJson),
     outputs: request.outputs,
-    outputParameters: request.outputParameters ?? [],
   });
 }
 

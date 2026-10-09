@@ -93,11 +93,12 @@ class OutputTransformationRegistryTest(unittest.TestCase):
 
         self.assertEqual(values["lines"][0]["text"], "AA")
 
-    def test_uses_the_declared_top_k_parameter(self):
-        values = transformation_values(self.registry, 
+    def test_uses_the_declared_top_k_count(self):
+        values = transformation_values(
+            self.registry,
             self.numpy.array([[1, 2, 3]]),
-            [{"type": "tensor.topK", "result": "top", "parameters": {"parameter": {"name": "k", "default": 1, "minimum": 1, "maximum": 3}}}],
-            self.context([{"outputName": "scores", "name": "k", "value": 2}]),
+            [{"type": "tensor.topK", "result": "top", "parameters": {"k": 2}}],
+            self.context(),
         )
 
         self.assertEqual(values["top"][0]["index"], 2)
@@ -119,8 +120,8 @@ class OutputTransformationRegistryTest(unittest.TestCase):
         self.assertEqual(outputs[0]["name"], "scores")
         self.assertEqual(outputs[0]["transformationValues"]["tensor"], [[1.0, 2.0, 3.0]])
 
-    def context(self, parameters=None):
-        return TransformationContext(self.numpy, output_name="scores", output_parameters=parameters or [])
+    def context(self):
+        return TransformationContext(self.numpy)
 
 
 if __name__ == "__main__":

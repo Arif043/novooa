@@ -9,6 +9,7 @@ import {
   modelInputSourceTypes,
   modelTensorDataTypes,
 } from "../../../../machine_learning/domain/entities/model-contract.js";
+import {withLegacyOutputParametersAsSettings} from "./legacy-model-output-parameters.js";
 
 export const workflowPrimitiveSchema = z.enum(workflowPrimitives);
 
@@ -205,11 +206,6 @@ export const modelInferenceNodeConfigSchema = z.object({
     dataType: z.enum(modelTensorDataTypes).default("float32"),
     shape: z.array(z.union([z.number().int().positive(), z.literal("dynamic")])).default([1]),
   })).default([]),
-  outputParameters: z.array(z.object({
-    outputName: z.string().min(1),
-    name: z.string().min(1),
-    value: z.number().int(),
-  })).default([]),
   settings: z.array(z.object({
     name: z.string().min(1),
     valueTemplate: z.string(),
@@ -373,7 +369,8 @@ export const workflowNodeSchema = z.object({
   title: z.string().min(1),
   description: z.string().default(""),
   outputName: z.string().default(""),
-  config: nodeConfigSchema,
+  // Ältere Modell-Bausteine speicherten Ausgangsparameter separat; heute sind es Settings.
+  config: z.preprocess(withLegacyOutputParametersAsSettings, nodeConfigSchema),
 });
 
 export const taskDefinitionSchema = z.object({

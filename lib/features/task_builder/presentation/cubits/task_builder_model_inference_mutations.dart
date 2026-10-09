@@ -14,7 +14,6 @@ extension TaskBuilderModelInferenceMutations on TaskBuilderCubit {
     NodeId nodeId,
     String modelId,
     List<ModelInferenceInputMapping> inputMappings, [
-    List<ModelInferenceOutputParameter> outputParameters = const [],
     List<ModelInferenceSetting> settings = const [],
   ]) {
     return _updateNode(nodeId, (node) {
@@ -23,7 +22,6 @@ extension TaskBuilderModelInferenceMutations on TaskBuilderCubit {
           config: config.copyWith(
             modelId: modelId,
             inputMappings: inputMappings,
-            outputParameters: outputParameters,
             settings: settings,
           ),
         );
@@ -48,31 +46,6 @@ extension TaskBuilderModelInferenceMutations on TaskBuilderCubit {
           parameters[index] = parameter;
         }
         return node.copyWith(config: config.copyWith(settings: parameters));
-      }
-      return node;
-    });
-  }
-
-  Future<void> updateModelInferenceOutputParameter(
-    NodeId nodeId,
-    ModelInferenceOutputParameter parameter,
-  ) {
-    return _updateNode(nodeId, (node) {
-      if (node.config case ModelInferenceNodeConfig config) {
-        final parameters = [...config.outputParameters];
-        final index = parameters.indexWhere(
-          (candidate) =>
-              candidate.outputName == parameter.outputName &&
-              candidate.name == parameter.name,
-        );
-        if (index < 0) {
-          parameters.add(parameter);
-        } else {
-          parameters[index] = parameter;
-        }
-        return node.copyWith(
-          config: config.copyWith(outputParameters: parameters),
-        );
       }
       return node;
     });

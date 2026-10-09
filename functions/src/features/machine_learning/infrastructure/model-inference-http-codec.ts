@@ -13,7 +13,6 @@ export function modelInferenceRequestJson(request: ModelInferenceRequest) {
     teamId: request.teamId,
     modelId: request.modelId,
     inputs: request.inputs.map(inputJson),
-    outputParameters: request.outputParameters ?? [],
   };
 }
 
@@ -23,21 +22,7 @@ export function modelInferenceRequestFromJson(value: unknown): ModelInferenceReq
     teamId: requiredString(data.teamId, "Die Team-ID fehlt."),
     modelId: requiredString(data.modelId, "Die Modell-ID fehlt."),
     inputs: inputsFrom(data.inputs),
-    outputParameters: outputParametersFrom(data.outputParameters),
   };
-}
-
-function outputParametersFrom(value: unknown) {
-  if (value === undefined) return [];
-  if (!Array.isArray(value)) throw new Error("Die Ausgangsparameter sind ungültig.");
-  return value.map((item) => {
-    const data = objectFrom(item, "Ein Ausgangsparameter ist ungültig.");
-    return {
-      outputName: requiredString(data.outputName, "Der Modellausgang fehlt."),
-      name: requiredString(data.name, "Der Name des Ausgangsparameters fehlt."),
-      value: integer(data.value, "Der Ausgangsparameter ist ungültig."),
-    };
-  });
 }
 
 export function modelInferenceResultJson(result: ModelInferenceResult) {
@@ -172,11 +157,6 @@ function finiteNumber(value: unknown): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     throw new Error("Die Zahl der Modelleingabe ist ungültig.");
   }
-  return value;
-}
-
-function integer(value: unknown, message: string): number {
-  if (typeof value !== "number" || !Number.isSafeInteger(value)) throw new Error(message);
   return value;
 }
 

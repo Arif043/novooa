@@ -15,7 +15,7 @@ def process(tensor, *transformations):
     return transformation_values(default_transformation_registry(), 
         numpy.asarray(tensor),
         [{"type": kind, "parameters": parameters, "result": "value"} for kind, parameters in transformations],
-        TransformationContext(numpy, output_name="output", output_parameters=[]),
+        TransformationContext(numpy),
     )["value"]
 
 

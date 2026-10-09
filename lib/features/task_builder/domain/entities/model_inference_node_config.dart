@@ -4,13 +4,11 @@ class ModelInferenceNodeConfig extends NodeConfig {
   const ModelInferenceNodeConfig({
     required this.modelId,
     this.inputMappings = const [],
-    this.outputParameters = const [],
     this.settings = const [],
   });
 
   final String modelId;
   final List<ModelInferenceInputMapping> inputMappings;
-  final List<ModelInferenceOutputParameter> outputParameters;
   final List<ModelInferenceSetting> settings;
 
   factory ModelInferenceNodeConfig.initial() {
@@ -21,23 +19,16 @@ class ModelInferenceNodeConfig extends NodeConfig {
   WorkflowPrimitive get primitive => WorkflowPrimitive.modelInference;
 
   @override
-  List<Object?> get props => [
-    modelId,
-    inputMappings,
-    outputParameters,
-    settings,
-  ];
+  List<Object?> get props => [modelId, inputMappings, settings];
 
   ModelInferenceNodeConfig copyWith({
     String? modelId,
     List<ModelInferenceInputMapping>? inputMappings,
-    List<ModelInferenceOutputParameter>? outputParameters,
     List<ModelInferenceSetting>? settings,
   }) {
     return ModelInferenceNodeConfig(
       modelId: modelId ?? this.modelId,
       inputMappings: inputMappings ?? this.inputMappings,
-      outputParameters: outputParameters ?? this.outputParameters,
       settings: settings ?? this.settings,
     );
   }
@@ -61,29 +52,6 @@ class ModelInferenceSetting extends Equatable {
 
   @override
   List<Object?> get props => [name, valueTemplate];
-}
-
-class ModelInferenceOutputParameter extends Equatable {
-  const ModelInferenceOutputParameter({
-    required this.outputName,
-    required this.name,
-    required this.value,
-  });
-
-  final String outputName;
-  final String name;
-  final int value;
-
-  ModelInferenceOutputParameter copyWith({int? value}) {
-    return ModelInferenceOutputParameter(
-      outputName: outputName,
-      name: name,
-      value: value ?? this.value,
-    );
-  }
-
-  @override
-  List<Object?> get props => [outputName, name, value];
 }
 
 class ModelInferenceInputMapping extends Equatable {

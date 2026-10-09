@@ -121,7 +121,7 @@ Fehlt eine Sprache, zeigt der Client den englischen Text. Die App ist deutsch un
 zuerst den exakten Code, dann die reine Sprache (`pt-BR` → `pt`). Die
 Übersetzungen werden mit dem Katalogeintrag in Firestore, SQLite
 (`model_catalog.translations_json`) und den lokalen Dateien persistiert. Labels
-von Einstellungen und Ausgangsparametern sind noch nicht übersetzbar.
+von Einstellungen sind noch nicht übersetzbar.
 
 ## Manifest
 
@@ -217,12 +217,7 @@ inputs: [{
       {
         type: "tensor.topK",
         result: "topClasses",
-        parameters: {
-          parameter: {
-            name: "k", label: "Anzahl der Ergebnisse",
-            default: 3, minimum: 1, maximum: 20,
-          },
-        },
+        parameters: {k: "$anzahl"},
       },
     ],
     workflowOutput: {
@@ -266,12 +261,32 @@ Die Eingabetransformationen `text.piperPhonemes` und `text.piperPhonemeLength`
 bereiten Text für Piper vor, `tensor.constant` erhält die im Baustein konfigurierten Inferenzparameter
 und `audio.wav` serialisiert die Wellenform als fachlichen Audio-Ausgabewert.
 
-`tensor.topK` besitzt keinen fest kodierten Wert. Die Beschreibung
-unter `parameter` definiert Name, sichtbares Label, Standardwert und erlaubten
-Bereich. Der Arbeitsplan speichert ausschließlich den gewählten Wert, etwa
-`{outputName: "scores", name: "k", value: 5}`. Damit bleibt ein Plan beim
-Update eines Modells validierbar, während der Modellautor die zulässigen Grenzen
-kontrolliert.
+**Einstellbare Werte sind Settings.** Im Beispiel ist `k` nicht fest kodiert, sondern
+an das Setting `anzahl` gebunden. Dazu deklariert der Vertrag:
+
+```ts
+settings: [{
+  name: "anzahl", label: "Anzahl der Ergebnisse",
+  control: {type: "slider", initial: 3, minimum: 1, maximum: 20, step: 1},
+}],
+```
+
+- Der Baustein zeigt das Setting unter den Modelleinstellungen und speichert nur den
+  gewählten Wert (`settings: [{name: "anzahl", valueTemplate: "5"}]`).
+- Vor dem Lauf ersetzt die Runtime jedes `"$anzahl"` in Ein- und Ausgangsparametern
+  durch diesen Wert (`resolveModelContractBindings`). Transformationen wissen von
+  Settings nichts.
+- Der Modellautor kontrolliert Grenzen und Standardwert, und ein Plan bleibt beim
+  Update eines Modells validierbar.
+
+**Ältere Manifeste und Aufgaben** nutzten dafür eine Parameterbeschreibung
+(`parameters: {parameter: {name, label, default, minimum, maximum}}`) und speicherten
+Werte als `outputParameters`. Beides wird beim Lesen automatisch umgewandelt:
+- Die Beschreibung wird zu einem Slider-Setting `<ausgang>_<name>`
+  (`legacy-output-parameter-settings.ts`).
+- Gespeicherte Werte werden zu Settings gleichen Namens (`legacy-model-output-parameters.ts`
+  in der Runtime, `legacy_model_output_parameters.dart` in der App).
+- Ohne Bindung nutzt `tensor.topK` den Standardwert der alten Beschreibung.
 
 `workflowOutput` ist kein weiterer Transformationsschritt. Es beschreibt den
 fachlichen Workflow-Wert nach der Pipeline. Das Mapping akzeptiert Literale,
@@ -473,7 +488,8 @@ Umwandlung wird erst durch die jeweils passende zusätzliche Strategie aktiviert
 | `geometry.scaleBounds` | `scaleX`, `scaleY`, optional `offsetX`, `offsetY` | Rechnet eine Regionsliste vom Maskenraster in Bildkoordinaten zurück. |
 | `tensor.nonMaximumSuppression` | `box`-Spalten, `scoreIndex`, optional `scoreThreshold`, `iouThreshold` | Unterdrückt überlappende Erkennungen und liefert `{index, score, box}`. |
 | `sequence.ctcGreedyDecode` | `labels`, `blankIndex`, optional `applySoftmax`, `collapseRepeated`, `allowedCharacters` | Dekodiert CTC-Logits in `{text, confidence}`; `allowedCharacters` begrenzt die Auswahl auf ein fachlich zulässiges Alphabet. |
-| `tensor.topK` | Parameterbeschreibung für `k`, optional `result` | Liefert allgemeine Paare aus Index und Wert. |
+| `tensor.topK` | `k` (Zahl oder Setting-Bindung wie `"$anzahl"`), optional `result` | Liefert die `k` größten Werte als Paare aus Index und Wert. |
+| `datetime.features` | `features` (Liste aus `year`, `month`, `day`, `weekday`, `hour`, `minute`, `second`, `dayOfYear`, `epochSeconds`), optional `cyclic`, `timeZone` | Eingang (Datum/Uhrzeit). Zerlegt einen Zeitpunkt in Zahlenmerkmale; `weekday` zählt ab Montag = 0. Mit `cyclic: true` werden Monat, Wochentag, Stunde, Minute und Jahrestag als sin/cos-Paar kodiert, sodass z. B. 23 Uhr und 0 Uhr nah beieinander liegen. `timeZone` (IANA, z. B. `Europe/Berlin`) wählt die Zählzeitzone, Standard UTC. |
 | `image.exifTranspose` | keine | Eingang. Dreht Fotos gemäß EXIF-Ausrichtung (z. B. Handyaufnahmen); vor anderen Bildtransformationen einsetzen. |
 | `image.resizeShorterSide` | `size` | Eingang. Skaliert die kürzere Seite auf `size`, das Seitenverhältnis bleibt. |
 | `image.centerCrop` | `width`, `height` | Eingang. Schneidet einen Ausschnitt aus der Bildmitte; größer als das Bild ist ein Fehler. Mit `image.resizeShorterSide` die übliche Vorverarbeitung vieler Bildmodelle. |
@@ -509,11 +525,11 @@ nur ohne Transformation durchgereicht; weitere Tensorstrategien ergänzen wir
 **Eingangsquellen im Python-Worker:** `image` (beim Empfang mit Pillow
 geöffnet), `audio` (WAV beim Empfang dekodiert: PCM 8/16/24/32 Bit, Float 32/64
 Bit, WAVE_EXTENSIBLE; andere Formate wie MP3 werden mit Meldung abgelehnt), `text`,
-`number`, `json` und `boolean`. Audio liegt intern als Samples
+`number`, `json`, `boolean` und `datetime`. Audio liegt intern als Samples
 `(Frames, Kanäle)` vor; Audio-Transformationen stehen vor Tensoroperationen.
 Ohne Spektrogramm wird daraus bei Mono ein Tensor `[Samples]`, sonst
-`[Kanäle, Samples]`. `datetime` und `file` lehnt der Worker mit Nennung des
-Quelltyps ab.
+`[Kanäle, Samples]`. `datetime` wird als ISO-8601-Zeitpunkt gelesen (ohne Versatz
+als UTC). `file` lehnt die Runtime schon beim Import mit Nennung des Quelltyps ab.
 
 **Aufbau des Python-Dienstes.** Alle Transformationen bilden **einen Katalog**, geordnet
 nach Fachbereich statt nach Richtung. Die Richtung ergibt sich allein aus der Position in
@@ -524,7 +540,7 @@ novooa_ml/transformations/        Katalog und Kern
   strategy.py  registry.py  context.py  values.py  parameters.py  discovery.py
   kinds.py          Wertarten
   pipeline_check.py Prüfung der Wertarten-Kette
-  image/ audio/ text/ data/ tensor/ vision/ sequence/   eine Strategie je Datei
+  image/ audio/ text/ data/ temporal/ tensor/ vision/ sequence/   eine Strategie je Datei
 novooa_ml/model_input/    Grenze zum Modell: Quelle → Pipeline → Tensor (worker, sources, wav_decoder)
 novooa_ml/model_output/   Grenze zum Modell: Modellausgang → Pipeline → Ergebnisse (worker)
 ```
@@ -537,6 +553,7 @@ sie liefert (`produces`):
 | `image` | Quelle `image`, `image.*` | `image.*`, Tensorschritte (implizit) |
 | `audio` | Quelle `audio`, `audio.mono` … | `audio.*`, Tensorschritte (implizit) |
 | `text` | Quelle `text` | `text.piper*`, `text.kokoro*` |
+| `datetime` | Quelle `datetime` (ISO 8601, ohne Versatz als UTC) | `datetime.features` |
 | `number` / `json` | Quellen `number` bzw. `json`/`boolean` | `number.toTensor` bzw. `json.toTensor`, `json.features` |
 | `tensor` | Modellausgang, `audio.melSpectrogram`, `text.*`, `json.*`, `tensor.*` | alle `tensor.*`, `mask.*`, `sequence.*`, `audio.wav` |
 | `regions` | `mask.connectedComponents`, `mask.textRegions` | `geometry.mergeRows`, `geometry.scaleBounds` |
@@ -570,8 +587,6 @@ Einsatz.
 - `tests/test_transformation_architecture.py` sichert die Regeln „eine Strategie je
   Datei“ und „Ordner nach Bereich“, die Wertarten und den Typ-Snapshot ab.
   `tests/test_pipeline_check.py` prüft u. a. die mitgelieferten Systemmodell-Manifeste.
-- `parameter_value` im Kontext bedient vorerst noch die `outputParameters` von
-  `tensor.topK`.
 - Die Cloud-Runtime pflegt ihre Bildtransformationen weiterhin als feste Liste in
   `model-contract-capabilities.ts` und kennt die neueren Typen noch nicht.
 

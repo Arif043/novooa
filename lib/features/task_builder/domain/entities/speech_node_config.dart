@@ -4,7 +4,6 @@ abstract class SpeechNodeConfig extends ModelInferenceNodeConfig {
   const SpeechNodeConfig({
     required super.modelId,
     super.inputMappings,
-    super.outputParameters,
     super.settings,
   });
 }
@@ -13,7 +12,6 @@ class TextToSpeechNodeConfig extends SpeechNodeConfig {
   const TextToSpeechNodeConfig({
     required super.modelId,
     super.inputMappings,
-    super.outputParameters,
     super.settings,
     this.languageModelId = '',
     this.speechText = '',
@@ -42,7 +40,6 @@ class TextToSpeechNodeConfig extends SpeechNodeConfig {
   TextToSpeechNodeConfig copyWith({
     String? modelId,
     List<ModelInferenceInputMapping>? inputMappings,
-    List<ModelInferenceOutputParameter>? outputParameters,
     List<ModelInferenceSetting>? settings,
     String? languageModelId,
     String? speechText,
@@ -51,7 +48,6 @@ class TextToSpeechNodeConfig extends SpeechNodeConfig {
     return TextToSpeechNodeConfig(
       modelId: modelId ?? this.modelId,
       inputMappings: inputMappings ?? this.inputMappings,
-      outputParameters: outputParameters ?? this.outputParameters,
       settings: settings ?? this.settings,
       languageModelId: languageModelId ?? this.languageModelId,
       speechText: speechText ?? this.speechText,
@@ -72,7 +68,6 @@ class SpeechToTextNodeConfig extends SpeechNodeConfig {
   const SpeechToTextNodeConfig({
     required super.modelId,
     super.inputMappings,
-    super.outputParameters,
     super.settings,
     this.languageModelId = '',
     this.audioTemplate = '',
@@ -97,7 +92,6 @@ class SpeechToTextNodeConfig extends SpeechNodeConfig {
   SpeechToTextNodeConfig copyWith({
     String? modelId,
     List<ModelInferenceInputMapping>? inputMappings,
-    List<ModelInferenceOutputParameter>? outputParameters,
     List<ModelInferenceSetting>? settings,
     String? languageModelId,
     String? audioTemplate,
@@ -105,7 +99,6 @@ class SpeechToTextNodeConfig extends SpeechNodeConfig {
     return SpeechToTextNodeConfig(
       modelId: modelId ?? this.modelId,
       inputMappings: inputMappings ?? this.inputMappings,
-      outputParameters: outputParameters ?? this.outputParameters,
       settings: settings ?? this.settings,
       languageModelId: languageModelId ?? this.languageModelId,
       audioTemplate: audioTemplate ?? this.audioTemplate,

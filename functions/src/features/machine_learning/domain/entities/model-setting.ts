@@ -16,6 +16,15 @@ export type ModelSettingOption = {
   label: string;
 };
 
+/**
+ * Name des Settings, das einen früheren Ausgangsparameter (`outputParameters`) ersetzt.
+ * Deterministisch, damit Manifest und gespeicherte Bausteinwerte denselben Namen finden.
+ */
+export function legacyOutputParameterSettingName(outputName: string, parameterName: string): string {
+  const name = `${outputName}_${parameterName}`.replace(/\W/g, "_");
+  return /^\d/.test(name) ? `_${name}` : name;
+}
+
 export function validateModelSettings(settings: readonly ModelSetting[]): void {
   const names = new Set<string>();
   for (const setting of settings) {

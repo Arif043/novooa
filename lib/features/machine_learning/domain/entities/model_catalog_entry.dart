@@ -117,21 +117,14 @@ class ModelManifestOutput extends Equatable {
     required this.tensorName,
     required this.workflowName,
     required this.workflowType,
-    required this.parameters,
   });
 
   final String tensorName;
   final String workflowName;
   final String workflowType;
-  final List<ModelManifestOutputParameter> parameters;
 
   @override
-  List<Object?> get props => [
-    tensorName,
-    workflowName,
-    workflowType,
-    parameters,
-  ];
+  List<Object?> get props => [tensorName, workflowName, workflowType];
 
   String get workflowTypeLabel => switch (workflowType) {
     'string' => 'Text',
@@ -140,25 +133,6 @@ class ModelManifestOutput extends Equatable {
     'audio' => 'Audio',
     _ => 'Strukturierte Daten',
   };
-}
-
-class ModelManifestOutputParameter extends Equatable {
-  const ModelManifestOutputParameter({
-    required this.name,
-    required this.label,
-    required this.defaultValue,
-    required this.minimum,
-    required this.maximum,
-  });
-
-  final String name;
-  final String label;
-  final int defaultValue;
-  final int minimum;
-  final int maximum;
-
-  @override
-  List<Object?> get props => [name, label, defaultValue, minimum, maximum];
 }
 
 class ModelManifestInput extends Equatable {

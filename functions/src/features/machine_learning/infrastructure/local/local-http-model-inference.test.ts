@@ -13,7 +13,7 @@ test("calls the local inference service without an ID token", async () => {
 
   assert.equal(httpClient.request?.url, "http://127.0.0.1:8080/v1/inferences");
   assert.deepEqual(httpClient.request?.body, {
-    teamId: "team-1", modelId: "classifier", inputs: [], outputParameters: [],
+    teamId: "team-1", modelId: "classifier", inputs: [],
   });
   assert.equal(result.modelId, "classifier");
 });

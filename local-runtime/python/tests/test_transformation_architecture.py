@@ -11,7 +11,7 @@ from novooa_ml.transformations.kinds import ANY, KINDS
 PACKAGE = Path(__file__).resolve().parents[1] / "novooa_ml"
 
 INPUT_TYPES = [
-    "audio.fitDuration", "audio.melSpectrogram", "audio.mono", "audio.normalize", "audio.resample",
+    "audio.fitDuration", "audio.melSpectrogram", "datetime.features", "audio.mono", "audio.normalize", "audio.resample",
     "image.centerCrop", "image.crop", "image.decode", "image.exifTranspose", "image.padToMultiple",
     "image.perspectiveCrop", "image.resize", "image.resizeHeightPad", "image.resizePad",
     "image.resizeShorterSide", "json.features", "json.toTensor", "number.toTensor",
@@ -30,7 +30,7 @@ OUTPUT_TYPES = [
 
 
 ALL_TYPES = sorted(set(INPUT_TYPES) | set(OUTPUT_TYPES))
-DOMAINS = {"image", "audio", "text", "data", "tensor", "vision", "sequence"}
+DOMAINS = {"image", "audio", "text", "data", "temporal", "tensor", "vision", "sequence"}
 
 
 class CapabilitySnapshotTest(unittest.TestCase):

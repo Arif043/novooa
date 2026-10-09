@@ -22,7 +22,6 @@ export async function executeModelInferenceNode(
     teamId: runContext.teamId,
     modelId: modelIdFor(node),
     inputs,
-    outputParameters: outputParametersFor(node),
     settings: settingsFor(node, runContext),
     transformationBindings: runContext.scope,
   });
@@ -81,20 +80,6 @@ function mappingsFor(node: Parameters<NodeExecutor["execute"]>[0]) {
     names.add(mapping.modelInputName);
   }
   return config.inputMappings;
-}
-
-function outputParametersFor(node: Parameters<NodeExecutor["execute"]>[0]) {
-  const config = modelConfigFor(node);
-  const identities = new Set<string>();
-  for (const parameter of config.outputParameters ?? []) {
-    if (!parameter.outputName.trim() || !parameter.name.trim() || !Number.isSafeInteger(parameter.value)) {
-      throw new Error("Ein Ausgangsparameter der Modell-Inferenz ist ungültig.");
-    }
-    const identity = `${parameter.outputName}:${parameter.name}`;
-    if (identities.has(identity)) throw new Error(`Der Ausgangsparameter ${parameter.name} ist mehrfach gesetzt.`);
-    identities.add(identity);
-  }
-  return config.outputParameters ?? [];
 }
 
 function settingsFor(

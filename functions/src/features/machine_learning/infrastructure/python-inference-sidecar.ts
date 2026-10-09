@@ -11,7 +11,6 @@ import {
   type ModelRuntimeOutput,
   type ModelRuntimeRequest,
 } from "../domain/repositories/model-inference-runtime.js";
-import {type ModelOutputParameterValue} from "../domain/repositories/model-inference.js";
 import {modelTensorFromJson, modelTensorToJson} from "./local/model-tensor-json-codec.js";
 import {type ModelOutputValue} from "../domain/entities/model-output-value.js";
 
@@ -30,7 +29,6 @@ export type SidecarInferenceRequest = {
   readonly modelKey: string;
   readonly inputs: readonly ModelTensor[];
   readonly outputs: readonly ModelOutput[];
-  readonly outputParameters?: readonly ModelOutputParameterValue[];
 };
 
 export class SidecarOnnxInferenceRuntime implements ModelInferenceRuntime, ModelInputPreparationRuntime {
@@ -101,7 +99,6 @@ export class SidecarOnnxInferenceRuntime implements ModelInferenceRuntime, Model
       modelKey: modelKey(reference, resources),
       inputs: request.inputs,
       outputs: request.model.contract.outputs,
-      outputParameters: request.outputParameters ?? [],
     });
   }
 }
@@ -122,7 +119,6 @@ export class HttpPythonInferenceSidecar implements PythonInferenceSidecar {
       modelKey: request.modelKey,
       inputs: request.inputs.map(modelTensorToJson),
       outputs: request.outputs,
-      outputParameters: request.outputParameters,
     });
     return runtimeOutputs(body);
   }

@@ -13,11 +13,6 @@ export type ModelRuntimeRequest = {
   readonly artifact: Uint8Array;
   readonly resources?: readonly ModelRuntimeResource[];
   readonly inputs: readonly ModelTensor[];
-  readonly outputParameters?: readonly {
-    readonly outputName: string;
-    readonly name: string;
-    readonly value: number;
-  }[];
 };
 
 export type ModelRuntimePreparationRequest = Pick<ModelRuntimeRequest, "model" | "artifact" | "resources">;

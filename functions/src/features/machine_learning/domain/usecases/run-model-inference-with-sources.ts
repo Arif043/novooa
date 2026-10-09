@@ -38,7 +38,6 @@ export class RunModelInferenceWithSources implements ModelInference {
     const outputs = await this.runModelInference.execute({
       model,
       inputs,
-      outputParameters: request.outputParameters ?? [],
     });
     return resultFor(model, outputs);
   }
