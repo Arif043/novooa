@@ -17,9 +17,9 @@ export type TemplateExpressionContext = {
   variables: TaskVariables;
   scope: WorkflowExecutionScope;
   /**
-   * Der einzige, graph-weite Namensraum aller Ausgabewerte: der Hauptwert
-   * jedes Bausteins (`outputName`), jeder weitere Wert unter seinem Namen aus
-   * `outputFieldNames` (z.B. `{{Gefunden}}`) und jedes Feld eines flachen
+   * Der einzige, graph-weite Namensraum aller Ausgabewerte: jeder Wert eines
+   * Bausteins unter seinem Namen aus `outputs` (`value` → `{{Datensatz}}`,
+   * `found` → `{{Gefunden}}`) und jedes Feld eines flachen
    * Bausteins (strukturierte Prompt-Ausgabe, Dialogeingabe, Script mit
    * `workflow_output`). Eine Adressierung über den Knotennamen
    * (`{{Datensatz.found}}`) gibt es nicht.
@@ -91,8 +91,8 @@ function flatOutputAt(
  * Baut den flachen Namensraum aus den Ausführungsergebnissen. Flache
  * Bausteine (strukturierte Prompt-Ausgabe, Dialogeingabe, Script mit
  * `workflow_output`) haben keinen eigenen Knotennamen; ihre Feldnamen fließen
- * direkt ein. Alle anderen liefern `value` unter ihrem `outputName` und ihre
- * weiteren Werte unter den Namen aus `outputFieldNames`.
+ * direkt ein. Bei allen anderen bestimmt `outputs`, unter welchem Namen
+ * welcher Wert steht.
  */
 export function flatOutputsFor(
   nodes: WorkflowNode[],
@@ -116,11 +116,9 @@ function mergeNamedOutputs(
   node: WorkflowNode,
   outputs: Record<string, NodeOutputValue>,
 ): void {
-  const primaryName = node.outputName.trim() || node.id.replace(/[^\w]/g, "");
-  if (primaryName.length > 0 && outputs.value !== undefined) flatOutputs[primaryName] = outputs.value;
-  for (const [key, output] of Object.entries(outputs)) {
-    const name = node.outputFieldNames?.[key]?.trim();
-    if (key !== "value" && name) flatOutputs[name] = output;
+  for (const {key, name} of node.outputs ?? []) {
+    const output = outputs[key];
+    if (output !== undefined && name.trim()) flatOutputs[name.trim()] = output;
   }
 }
 

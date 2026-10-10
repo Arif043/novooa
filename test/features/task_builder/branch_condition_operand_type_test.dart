@@ -119,7 +119,7 @@ void main() {
           id: NodeId('text.1'),
           title: 'Text',
           description: '',
-          outputName: 'freitext',
+          outputs: [WorkflowOutput.primary('freitext')],
           config: StringInputNodeConfig(value: ''),
         ),
       );
@@ -157,7 +157,7 @@ WorkflowNode _structuredPromptNode() {
     id: NodeId('prompt.1'),
     title: 'Prompt',
     description: '',
-    outputName: 'prompt',
+    outputs: [WorkflowOutput.primary('prompt')],
     config: PromptNodeConfig(
       instruction: '',
       outputType: PromptOutputType.structured,
@@ -184,7 +184,7 @@ WorkflowNode _decisionPromptNode() {
     id: NodeId('prompt.2'),
     title: 'Prompt',
     description: '',
-    outputName: 'entscheidung',
+    outputs: [WorkflowOutput.primary('entscheidung')],
     config: PromptNodeConfig(
       instruction: '',
       outputType: PromptOutputType.decision,

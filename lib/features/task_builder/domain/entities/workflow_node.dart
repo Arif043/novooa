@@ -1,6 +1,9 @@
 import 'package:equatable/equatable.dart';
 
 import 'node_config.dart';
+import 'workflow_output.dart';
+
+export 'workflow_output.dart';
 
 /// Stabile Bausteintypen, aus denen ein Workflow zusammengesetzt wird.
 ///
@@ -40,14 +43,8 @@ enum WorkflowPrimitive {
   plugin,
 }
 
-/// Ob eine Primitive einen fachlichen Rückgabewert hat.
-///
-/// Domain-Regel statt Presentation-Detail, weil sie an zwei unabhängigen
-/// Stellen dieselbe Antwort braucht: `TaskBuilderCubit` beim Anlegen eines
-/// Knotens und `TaskDocumentMapper` beim Laden gespeicherter Aufgaben (siehe
-/// dort — Bausteine, die vor dieser Regel angelegt wurden, können noch einen
-/// veralteten `outputName` tragen; der Mapper korrigiert das beim Laden statt
-/// dass jede Aufgabe einzeln nachgepflegt werden müsste).
+/// Ob eine Primitive einen fachlichen Rückgabewert hat — Grundlage von
+/// `outputKeysOf`, das festlegt, welche Werte ein Baustein benennt.
 extension WorkflowPrimitiveOutput on WorkflowPrimitive {
   /// Reine Seiteneffekt-Bausteine ohne fachlichen Rückgabewert — aktuell nur
   /// `notificationSend` (siehe `docs/node-executor-outputs.md`).
@@ -87,58 +84,54 @@ class WorkflowNode extends Equatable {
     required this.title,
     required this.description,
     required this.config,
-    this.outputName = '',
-    this.outputFieldNames = const {},
+    this.outputs = const [],
   });
 
   final NodeId id;
   final String title;
   final String description;
 
-  /// Eindeutiger Name des primären fachlichen Outputs dieses Bausteins
-  /// (`{{outputName}}` in Templates). Bleibt leer bei Bausteinen mit
-  /// mehreren fachlichen Outputs (z.B. strukturierte Prompt-Ausgabe,
-  /// Dialogeingabe) — dort trägt jedes Feld seinen eigenen Namen (siehe
-  /// `StructuredOutputField.name`/`DialogInputField.name`).
-  final String outputName;
-
-  /// Namen der weiteren Werte dieses Bausteins: technischer Schlüssel des
-  /// Executors (z.B. `found`, siehe `outputFieldsOf`) → graph-weit
-  /// eindeutiger Name (`{{Gefunden}}`). Sie stehen nur im Panel, nicht auf
-  /// der Leinwand.
-  final Map<String, String> outputFieldNames;
+  /// Die benannten Werte dieses Bausteins (siehe [WorkflowOutput]). Leer bei
+  /// Bausteinen ohne Rückgabewert und bei flachen Bausteinen (strukturierte
+  /// Prompt-Ausgabe, Dialogeingabe) — deren Felder tragen ihre Namen in der
+  /// Konfiguration.
+  final List<WorkflowOutput> outputs;
   final NodeConfig config;
 
-  /// Der Name eines weiteren Werts; leer, wenn (noch) keiner vergeben ist.
-  String outputFieldNameOf(String fieldKey) =>
-      outputFieldNames[fieldKey]?.trim() ?? '';
+  /// Der Name des Werts mit [key]; leer, wenn (noch) keiner vergeben ist.
+  String outputNameOf(String key) {
+    for (final output in outputs) {
+      if (output.key == key) return output.name.trim();
+    }
+    return '';
+  }
+
+  /// Der Name des Hauptwerts (`value`), z.B. für `{{Anweisung}}`.
+  String get primaryOutputName => outputNameOf(WorkflowOutput.primaryOutputKey);
+
+  /// Die Werte, die als Chip auf der Leinwand stehen.
+  List<WorkflowOutput> get canvasOutputs => [
+    for (final output in outputs)
+      if (output.showOnCanvas && output.name.trim().isNotEmpty) output,
+  ];
 
   WorkflowNode copyWith({
     String? title,
     String? description,
-    String? outputName,
-    Map<String, String>? outputFieldNames,
+    List<WorkflowOutput>? outputs,
     NodeConfig? config,
   }) {
     return WorkflowNode(
       id: id,
       title: title ?? this.title,
       description: description ?? this.description,
-      outputName: outputName ?? this.outputName,
-      outputFieldNames: outputFieldNames ?? this.outputFieldNames,
+      outputs: outputs ?? this.outputs,
       config: config ?? this.config,
     );
   }
 
   @override
-  List<Object?> get props => [
-    id,
-    title,
-    description,
-    outputName,
-    outputFieldNames,
-    config,
-  ];
+  List<Object?> get props => [id, title, description, outputs, config];
 
   @override
   bool? get stringify => true;

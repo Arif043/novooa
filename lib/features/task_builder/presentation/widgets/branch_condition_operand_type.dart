@@ -153,11 +153,11 @@ OperandTypeHint _dialogFieldHint(DialogInputField field) {
 }
 
 /// Ein Entscheidungs-Prompt hat keinen Feldnamen, sondern adressiert sich
-/// über seinen eigenen `outputName` — fachlich ein Enum aus den vom Nutzer
+/// über den Namen seines Hauptwerts — fachlich ein Enum aus den vom Nutzer
 /// definierten `choices`, kein Wahrheitswert (auch bei genau zwei Choices).
-OperandTypeHint? _decisionTypeHintFor(String outputName, WorkflowGraph graph) {
+OperandTypeHint? _decisionTypeHintFor(String valueName, WorkflowGraph graph) {
   for (final node in _allNodesIn(graph)) {
-    if (node.outputName.trim() != outputName) continue;
+    if (node.primaryOutputName != valueName) continue;
     if (node.config case PromptNodeConfig(
       outputType: PromptOutputType.decision,
       :final choices,

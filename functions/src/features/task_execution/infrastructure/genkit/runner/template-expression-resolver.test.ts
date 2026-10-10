@@ -40,7 +40,7 @@ test("resolves media references without converting them to text", () => {
   assert.equal(resolver.resolveTextWithoutMediaReferences("Prüfe {{beleg.value}}."), "Prüfe .");
 });
 
-test("resolves a node's primary output flat under its outputName", () => {
+test("resolves a node's main value flat under its name from outputs", () => {
   const resolver = graphResolverFor(
     [stringInputNode("n1", "eingang")],
     [result("n1", "stringInput", {value: {type: "string", value: "Hallo"}})],
@@ -50,8 +50,7 @@ test("resolves a node's primary output flat under its outputName", () => {
 });
 
 test(
-  "löst die alte {{outputName.value}}-Form nicht mehr auf — nur noch die "
-  + "flache Kurzform {{outputName}}",
+  "löst {{name.value}} nicht auf — nur die flache Form {{name}}",
   () => {
     const resolver = graphResolverFor(
       [stringInputNode("n1", "eingang")],
@@ -63,11 +62,14 @@ test(
   },
 );
 
-test("resolves further outputs flat under their names from outputFieldNames, not under the node name", () => {
+test("resolves further outputs flat under their names from outputs, not under the node name", () => {
   const resolver = graphResolverFor(
     [{
       ...stringInputNode("n1", "eingang"), primitive: "readEmail", config: {primitive: "readEmail"},
-      outputFieldNames: {sender: "Absender"},
+      outputs: [
+        {key: "value", name: "eingang", showOnCanvas: true},
+        {key: "sender", name: "Absender", showOnCanvas: false},
+      ],
     }],
     [result("n1", "readEmail", {
       value: {type: "string", value: "Hallo"},
@@ -89,7 +91,7 @@ test("flattens structured prompt fields directly without a node name", () => {
       primitive: "prompt",
       title: "",
       description: "",
-      outputName: "",
+      outputs: [],
       config: {
         primitive: "prompt",
         instruction: "",
@@ -125,7 +127,7 @@ test("flattens dialog input fields directly without a node name", () => {
       primitive: "dialogInput",
       title: "",
       description: "",
-      outputName: "",
+      outputs: [],
       config: {primitive: "dialogInput", instruction: "", fields: [
         {name: "Kundennummer", type: "string", options: []},
       ]},
@@ -140,8 +142,8 @@ test("flattens dialog input fields directly without a node name", () => {
 });
 
 test("flattens script workflow outputs, but keeps a script without them under its output name", () => {
-  const scriptNode = (id: string, outputName: string): WorkflowNode => ({
-    id, primitive: "script", title: "", description: "", outputName,
+  const scriptNode = (id: string, mainName: string): WorkflowNode => ({
+    id, primitive: "script", title: "", description: "", outputs: namedMain(mainName),
     config: {primitive: "script", script: "", inputTemplate: "", attachments: []},
   });
   const resolver = graphResolverFor(
@@ -174,16 +176,29 @@ function graphResolverFor(
   ));
 }
 
-function stringInputNode(id: string, outputName: string): WorkflowNode {
+function stringInputNode(id: string, mainName: string): WorkflowNode {
   return {
     id,
     primitive: "stringInput",
     title: "",
     description: "",
-    outputName,
+    outputs: namedMain(mainName),
     config: {primitive: "stringInput", value: ""},
   };
 }
+
+function namedMain(name: string): WorkflowNode["outputs"] {
+  return name ? [{key: "value", name, showOnCanvas: true}] : [];
+}
+
+test("a node without a name for its main value is not reachable, not even by its id", () => {
+  const resolver = graphResolverFor(
+    [stringInputNode("n1", "")],
+    [result("n1", "stringInput", {value: {type: "string", value: "Hallo"}})],
+  );
+
+  assert.equal(resolver.resolveValue("{{n1}}"), undefined);
+});
 
 function result(
   nodeId: string,

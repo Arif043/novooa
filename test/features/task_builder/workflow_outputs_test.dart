@@ -48,7 +48,7 @@ const _start = WorkflowNode(
   id: NodeId('node.start'),
   title: 'Start',
   description: '',
-  outputName: 'Eingabe',
+  outputs: [WorkflowOutput.primary('Eingabe')],
   config: StringInputNodeConfig(value: ''),
 );
 
@@ -61,23 +61,28 @@ Future<TaskBuilderCubit> _loadedCubit(Task task) async {
 List<WorkflowNode> _nodes(TaskBuilderCubit cubit) =>
     (cubit.state as TaskBuilderLoaded).editingTask.nodes;
 
+Map<String, String> _namesOf(WorkflowNode node) => {
+  for (final output in node.outputs) output.key: output.name,
+};
+
 void main() {
-  test('weitere Werte bekommen beim Anlegen eindeutige, lokalisierte Namen '
-      'wie ein Hauptwert', () async {
+  test('beim Anlegen ist der Hauptwert auf der Leinwand, die übrigen nicht; '
+      'alle Namen sind eindeutig und lokalisiert', () async {
     final cubit = await _loadedCubit(_taskWith(_start));
 
     await cubit.addNodeToMainGraph(WorkflowPrimitive.documentLookup);
     await cubit.addNodeToMainGraph(WorkflowPrimitive.documentLookup);
 
     final [_, first, second] = _nodes(cubit);
-    expect(first.outputName, 'Datensatz');
-    expect(first.outputFieldNames, {
+    expect(_namesOf(first), {
+      'value': 'Datensatz',
       'found': 'Gefunden',
       'record': 'Eintrag',
       'message': 'Nachricht',
     });
-    expect(second.outputName, 'Datensatz2');
-    expect(second.outputFieldNameOf('found'), 'Gefunden2');
+    expect(first.canvasOutputs.map((output) => output.key), ['value']);
+    expect(second.primaryOutputName, 'Datensatz2');
+    expect(second.outputNameOf('found'), 'Gefunden2');
     await cubit.close();
   });
 
@@ -90,9 +95,15 @@ void main() {
       await cubit.addChannelEventNodeToMainGraph(ChannelEventKind.sms);
 
       final [_, email, sms] = _nodes(cubit);
-      expect(email.outputName, 'Nachricht');
-      expect(email.outputFieldNames.keys, ['sender', 'subject', 'receivedAt']);
-      expect(sms.outputFieldNames, {
+      expect(_namesOf(email).keys, [
+        'value',
+        'sender',
+        'subject',
+        'receivedAt',
+      ]);
+      expect(email.primaryOutputName, 'Nachricht');
+      expect(_namesOf(sms), {
+        'value': 'Nachricht2',
         'sender': 'Absender2',
         'receivedAt': 'Empfangen2',
       });
@@ -100,25 +111,54 @@ void main() {
     },
   );
 
-  test('Umbenennen auf einen belegten Namen hängt eine Nummer an', () async {
+  test('das Flag lässt sich für jeden Wert umschalten', () async {
     final cubit = await _loadedCubit(_taskWith(_start));
     await cubit.addNodeToMainGraph(WorkflowPrimitive.documentLookup);
     final nodeId = _nodes(cubit).last.id;
 
-    await cubit.renameOutputField(
+    await cubit.setOutputOnCanvas(
       nodeId: nodeId,
-      fieldKey: 'found',
-      name: 'Treffer',
+      key: 'found',
+      showOnCanvas: true,
     );
-    await cubit.renameOutputField(
+    await cubit.setOutputOnCanvas(
       nodeId: nodeId,
-      fieldKey: 'record',
-      name: 'Eingabe',
+      key: 'value',
+      showOnCanvas: false,
     );
 
     final node = _nodes(cubit).last;
-    expect(node.outputFieldNameOf('found'), 'Treffer');
-    expect(node.outputFieldNameOf('record'), 'Eingabe_2');
+    expect(node.canvasOutputs.map((output) => output.key), ['found']);
+    await cubit.close();
+  });
+
+  test('Umbenennen gilt für Haupt- und weitere Werte; belegte Namen bekommen '
+      'eine Nummer', () async {
+    final cubit = await _loadedCubit(_taskWith(_start));
+    await cubit.addNodeToMainGraph(WorkflowPrimitive.documentLookup);
+    final nodeId = _nodes(cubit).last.id;
+
+    await cubit.renameOutput(nodeId: nodeId, key: 'value', name: 'Kunde');
+    await cubit.renameOutput(nodeId: nodeId, key: 'found', name: 'Treffer');
+    await cubit.renameOutput(nodeId: nodeId, key: 'record', name: 'Eingabe');
+
+    final node = _nodes(cubit).last;
+    expect(node.primaryOutputName, 'Kunde');
+    expect(node.outputNameOf('found'), 'Treffer');
+    expect(node.outputNameOf('record'), 'Eingabe_2');
+    await cubit.close();
+  });
+
+  test('ein Script mit workflow_output wird flach und verliert seinen '
+      'Hauptwert', () async {
+    final cubit = await _loadedCubit(_taskWith(_start));
+    await cubit.addNodeToMainGraph(WorkflowPrimitive.script);
+    final nodeId = _nodes(cubit).last.id;
+    expect(_nodes(cubit).last.primaryOutputName, 'Skript');
+
+    await cubit.updateScript(nodeId, 'workflow_output("summe", "number", 1)');
+
+    expect(_nodes(cubit).last.outputs, isEmpty);
     await cubit.close();
   });
 
@@ -129,12 +169,12 @@ void main() {
         id: const NodeId('node.shop'),
         title: 'Shopware',
         description: '',
-        outputName: 'Bestellungen',
-        outputFieldNames: const {
-          'count': 'Anzahl',
-          'total': 'Gesamt',
-          'found': 'Gefunden',
-        },
+        outputs: const [
+          WorkflowOutput.primary('Bestellungen'),
+          WorkflowOutput(key: 'count', name: 'Anzahl'),
+          WorkflowOutput(key: 'total', name: 'Gesamt'),
+          WorkflowOutput(key: 'found', name: 'Gefunden'),
+        ],
         config: ShopwareNodeConfig.initial('searchOrders'),
       );
       final cubit = await _loadedCubit(_taskWith(shopware));
@@ -144,7 +184,8 @@ void main() {
         (_) => ShopwareNodeConfig.initial('changeOrderStatus'),
       );
 
-      expect(_nodes(cubit).single.outputFieldNames, {
+      expect(_namesOf(_nodes(cubit).single), {
+        'value': 'Bestellungen',
         'previousStatus': 'VorherigerStatus',
         'newStatus': 'NeuerStatus',
         'changed': 'Geaendert',

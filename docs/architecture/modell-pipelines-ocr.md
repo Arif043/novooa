@@ -26,8 +26,8 @@ Kanten enthalten keine Datenauswahl. Nachfolger binden benötigte Werte über
 ihren eigenen Vertrag, damit der Datenfluss an einer Stelle konfiguriert bleibt.
 
 Die Ausgabe des Bausteins ist eine Liste. Jedes Listenelement enthält die
-Ausgaben der im eingebetteten Graphen ausgeführten Bausteine unter ihrem Ausgabenamen,
-beispielsweise `{{regionen.value.0.erkenner.text}}`. Damit gehen bei
+benannten Werte der im eingebetteten Graphen ausgeführten Bausteine flach unter
+ihrem Namen, beispielsweise `{{Regionen.0.Erkenner.text}}`. Damit gehen bei
 eingebetteten Graphen mit mehreren Ausgaben keine Werte verloren.
 
 ## Inferenzdienst

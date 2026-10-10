@@ -38,7 +38,7 @@ test("loads data nodes whose primitive is stored in node configuration", async (
 function graphDocument() {
   return {
     nodes: [{
-      id: "node-1", title: "Prompt", description: "", outputName: "prompt1",
+      id: "node-1", title: "Prompt", description: "", outputs: [{key: "value", name: "prompt1", showOnCanvas: true}],
       config: {
         primitive: "prompt", instruction: "Hallo", languageModelId: "model-1",
         outputType: "text", choices: ["", ""], structuredFields: [],
@@ -53,11 +53,11 @@ function dataGraphDocument() {
   return {
     nodes: [
       {
-        id: "lookup", title: "Datensatz suchen", description: "", outputName: "lookup",
+        id: "lookup", title: "Datensatz suchen", description: "", outputs: [{key: "value", name: "lookup", showOnCanvas: true}],
         config: {primitive: "documentLookup", collectionName: "Kunden", filters: []},
       },
       {
-        id: "save", title: "Datensatz speichern", description: "", outputName: "save",
+        id: "save", title: "Datensatz speichern", description: "", outputs: [{key: "value", name: "save", showOnCanvas: true}],
         config: {
           primitive: "saveDocument", collectionName: "Kunden", mode: "create", documentId: "",
           fields: [{field: "name", value: "Max"}],

@@ -183,7 +183,7 @@ Task _task() {
           id: NodeId('input'),
           title: 'Texteingabe',
           description: '',
-          outputName: 'eingabe',
+          outputs: [WorkflowOutput.primary('eingabe')],
           config: StringInputNodeConfig(value: ''),
         ),
         WorkflowNode(

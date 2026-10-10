@@ -6,7 +6,7 @@ import {handleTaskRunDispatch} from "./task-run-task.js";
 const silentLogger = {info() {}, error() {}, exception() {}, readableInfo() {}, readableError() {}};
 const run = {runId: "run-1", taskId: "task-1", taskTitle: "Aufgabe", context: ""};
 const task = {id: "task-1", title: "Aufgabe", objective: "", edges: [], nodes: [{
-  id: "kaputt", primitive: "script", title: "kaputt", description: "", outputName: "kaputt",
+  id: "kaputt", primitive: "script", title: "kaputt", description: "", outputs: [{key: "value", name: "kaputt", showOnCanvas: true}],
   config: {primitive: "script", script: "x", attachments: []},
 }]};
 

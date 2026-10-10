@@ -7,11 +7,10 @@ import {executeTaskGraph} from "./task-graph-runner.js";
 const silentLogger = {info() {}, error() {}, exception() {}, readableInfo() {}, readableError() {}};
 
 const read = {
-  id: "lesen", primitive: "readWebhook", title: "Webhook", description: "", outputName: "ereignis",
-  outputFieldNames: {method: "Methode"}, config: {primitive: "readWebhook"},
+  id: "lesen", primitive: "readWebhook", title: "Webhook", description: "", outputs: [{key: "value", name: "ereignis", showOnCanvas: true}, {key: "method", name: "Methode", showOnCanvas: false}], config: {primitive: "readWebhook"},
 };
 const follow = {
-  id: "danach", primitive: "stringInput", title: "Danach", description: "", outputName: "danach",
+  id: "danach", primitive: "stringInput", title: "Danach", description: "", outputs: [{key: "value", name: "danach", showOnCanvas: true}],
   config: {primitive: "stringInput", value: "Bestellung {{ereignis.bestellung}} per {{Methode}}"},
 };
 

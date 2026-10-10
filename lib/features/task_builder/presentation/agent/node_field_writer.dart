@@ -12,7 +12,12 @@ class NodeFieldWriter {
     return switch (key) {
       NodeFieldKey.title => _cubit.updateNodeTitle(nodeId, text),
       NodeFieldKey.description => _cubit.updateNodeDescription(nodeId, text),
-      NodeFieldKey.outputName => _cubit.updateNodeOutputName(nodeId, text),
+      // Im Agenten-Protokoll heißt der Name des Hauptwerts `outputName`.
+      NodeFieldKey.outputName => _cubit.renameOutput(
+        nodeId: nodeId,
+        key: WorkflowOutput.primaryOutputKey,
+        name: text,
+      ),
       NodeFieldKey.value => _cubit.updateStringInputValue(nodeId, text),
       NodeFieldKey.instruction => _cubit.updatePromptInstruction(nodeId, text),
       NodeFieldKey.modelId => _cubit.updateModelInference(nodeId, text),

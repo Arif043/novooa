@@ -18,7 +18,6 @@ import 'package:syscat2/features/task_builder/presentation/widgets/for_each_widg
 import 'package:syscat2/features/task_builder/presentation/widgets/http_request_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/node_output_name_field.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_output_chips.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/prompt_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/read_email_widget.dart';
@@ -58,7 +57,7 @@ class NodeGraphItem extends StatelessWidget {
   final VoidCallback onDragEnded;
   final bool configurationOnly;
 
-  /// Abstand der Abschnitte „Ausgabename“ und „Ergebnis“ im Konfigurationsmodus.
+  /// Abstand des Abschnitts „Ergebnis“ im Konfigurationsmodus.
   /// Das Panel gibt ihn mobil weiter, weil dort der Bereich selbst randlos ist.
   final EdgeInsets sectionPadding;
 
@@ -68,14 +67,6 @@ class NodeGraphItem extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: sectionPadding,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: NodeOutputNameField(node: node),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
           _templateAwareNodeWidget(context),
           const SizedBox(height: AppSpacing.lg),
           Padding(
@@ -155,12 +146,6 @@ class NodeGraphItem extends StatelessWidget {
 
   List<Widget> _nodeActions(BuildContext context) {
     return [
-      if (node.config.primitive != .conditional)
-        Positioned(
-          top: AppSpacing.sm,
-          right: AppSpacing.xxl + AppSpacing.sm,
-          child: NodeOutputNameField(node: node),
-        ),
       Positioned(
         top: AppSpacing.xs,
         right: AppSpacing.xs,

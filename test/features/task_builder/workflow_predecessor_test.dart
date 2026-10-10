@@ -111,7 +111,7 @@ WorkflowNode _promptNode(NodeId id) {
     id: id,
     title: 'Prompt',
     description: '',
-    outputName: 'entscheidung',
+    outputs: [WorkflowOutput.primary('entscheidung')],
     config: const PromptNodeConfig(
       instruction: '',
       outputType: PromptOutputType.decision,

@@ -9,7 +9,7 @@ WorkflowNode node(String id) => WorkflowNode(
   id: NodeId(id),
   title: id,
   description: '',
-  outputName: id,
+  outputs: [WorkflowOutput.primary(id)],
   config: const StringInputNodeConfig(value: ''),
 );
 WorkflowEdge edge(String from, String to) =>

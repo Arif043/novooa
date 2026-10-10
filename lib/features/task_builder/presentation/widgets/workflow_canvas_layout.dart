@@ -23,11 +23,12 @@ sealed class CanvasLabelEditTarget {
   const CanvasLabelEditTarget();
 }
 
-/// Der primäre Ausgabename eines Bausteins mit genau einem fachlichen
-/// Output (die meisten Primitives).
-class OutputNameEditTarget extends CanvasLabelEditTarget {
-  const OutputNameEditTarget(this.nodeId);
+/// Ein benannter Wert eines Bausteins ([WorkflowOutput]), der auf der
+/// Leinwand steht; [key] ist sein technischer Schlüssel (z.B. `value`).
+class OutputEditTarget extends CanvasLabelEditTarget {
+  const OutputEditTarget(this.nodeId, this.key);
   final NodeId nodeId;
+  final String key;
 }
 
 /// Ein einzelnes Feld einer strukturierten Prompt-Ausgabe — [fieldIndex]
@@ -318,11 +319,15 @@ class WorkflowCanvasLayout {
         (index) => DialogFieldEditTarget(node.id, index),
       );
     }
-    return _labelList(
-      node.outputName.isEmpty ? null : node.outputName,
-      OutputNameEditTarget(node.id),
-      primaryOutputTypeOf(node.config),
-    );
+    // Alle übrigen: die Werte, deren Flag „auf der Leinwand“ gesetzt ist.
+    return [
+      for (final output in node.canvasOutputs)
+        CanvasLabel(
+          output.name,
+          OutputEditTarget(node.id, output.key),
+          outputTypeOf(node.config, output.key),
+        ),
+    ];
   }
 
   /// Wie [_labelList], aber für mehrere, unabhängig benannte Felder — leere

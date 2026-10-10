@@ -159,7 +159,7 @@ void main() {
         id: NodeId('branching'),
         title: '',
         description: '',
-        outputName: 'branching',
+        outputs: [WorkflowOutput.primary('branching')],
         config: StringInputNodeConfig(value: ''),
       );
       final overriddenLayout = WorkflowCanvasLayout(
@@ -192,7 +192,7 @@ void main() {
       id: NodeId('prompt2'),
       title: '',
       description: '',
-      outputName: 'prompt2',
+      outputs: [WorkflowOutput.primary('prompt2')],
       config: PromptNodeConfig(
         instruction: '',
         outputType: PromptOutputType.structured,
@@ -231,7 +231,7 @@ void main() {
         id: const NodeId('prompt'),
         title: '',
         description: '',
-        outputName: 'prompt',
+        outputs: [WorkflowOutput.primary('prompt')],
         config: PromptNodeConfig(
           instruction: '',
           outputType: PromptOutputType.structured,
@@ -637,7 +637,7 @@ const _task = Task(
         id: NodeId('text'),
         title: 'Text',
         description: '',
-        outputName: 'text',
+        outputs: [WorkflowOutput.primary('text')],
         config: StringInputNodeConfig(value: 'Beispiel'),
       ),
       WorkflowNode(

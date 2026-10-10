@@ -499,6 +499,8 @@
     "suggestion_failed": "Der Vorschlag konnte nicht angewendet werden.",
     "tap_to_copy": "{type} · Antippen, um {expression} zu kopieren",
     "copy_expression": "{expression} kopieren",
+    "show_on_canvas": "Auf der Leinwand zeigen",
+    "hide_from_canvas": "Von der Leinwand nehmen",
     "task_name": "Name der Aufgabe",
     "team_load_failed": "Team konnte nicht geladen werden.",
     "template_ausdruck_verwenden": "Template-Ausdruck verwenden",

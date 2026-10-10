@@ -185,6 +185,8 @@ Agent beim bisherigen Deutsch. Die System-Prompts selbst sind noch deutsch.
 Plan. Erlaubte Feldschlüssel (`NodeFieldKey`): `title`, `description`,
 `outputName`, `value`, `instruction`, `modelId`, `recipient`, `message`,
 `script`, `inputTemplate`; andere Schlüssel verwirft das Backend.
+`outputName` ist im Agenten-Protokoll der Name des Hauptwerts; der Client
+schreibt ihn in den `WorkflowOutput` mit dem Schlüssel `value`.
 `configureNode` auf bereits bestehende Bausteine setzt voraus, dass der Client
 deren IDs und Werte an den Agenten übermittelt – das ist noch offen.
 

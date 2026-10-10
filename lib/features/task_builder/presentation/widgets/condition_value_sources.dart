@@ -45,11 +45,11 @@ Map<String, String> conditionValueSources(WorkflowGraph graph) {
   final result = <String, String>{};
   for (final node in graph.nodes) {
     // Flache Bausteine (strukturierter Prompt, Dialogeingabe, Script mit
-    // workflow_output) bieten ihre Felder an, alle anderen ihren Hauptwert
-    // und ihre weiteren Werte — alle unter eigenem, flachem Namen.
+    // workflow_output) bieten ihre Felder an, alle anderen ihre benannten
+    // Werte — alle unter eigenem, flachem Namen.
     final names = hasFlatOutputFields(node.config)
         ? flatOutputFieldsOf(node.config)
-        : [node.outputName, ...node.outputFieldNames.values];
+        : [for (final output in node.outputs) output.name];
     for (final name in names.map((n) => n.trim()).where((n) => n.isNotEmpty)) {
       result['{{$name}}'] = '${node.title} · $name';
     }

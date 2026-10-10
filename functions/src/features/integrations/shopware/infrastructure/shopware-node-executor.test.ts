@@ -13,7 +13,7 @@ import {createShopwareNodeExecutor} from "./shopware-node-executor.js";
 const silentLogger = {info() {}, error() {}, exception() {}, readableInfo() {}, readableError() {}};
 
 const node = (config: Record<string, unknown>) =>
-  ({id: "n1", primitive: "shopware", title: "Shopware", description: "", outputName: "bestellungen", config: {primitive: "shopware", ...config}}) as never;
+  ({id: "n1", primitive: "shopware", title: "Shopware", description: "", outputs: [{key: "value", name: "bestellungen", showOnCanvas: true}], config: {primitive: "shopware", ...config}}) as never;
 
 function contextWith(client: OutboundHttpClient | undefined): TaskRunContext {
   return {
@@ -74,7 +74,7 @@ test("die Plugin-Executoren werden über die Registry im echten Runner ausgefüh
   assert.equal(registry.resolve("stringInput", {} as never)?.primitive, "stringInput");
 
   const taskDefinition = taskDefinitionSchema.parse({
-    id: "t", title: "T", nodes: [{id: "n", primitive: "shopware", title: "S", outputName: "s", config: {primitive: "shopware", action: "gibtEsNicht", connectionId: "c1"}}],
+    id: "t", title: "T", nodes: [{id: "n", primitive: "shopware", title: "S", outputs: [{key: "value", name: "s", showOnCanvas: true}], config: {primitive: "shopware", action: "gibtEsNicht", connectionId: "c1"}}],
   });
   const output = await executeTaskGraph(genkit({}), {taskDefinition, context: "", teamId: "team-1"}, {
     logger: silentLogger, outboundHttpClient: versionClient(), executorRegistry: registry,
@@ -86,7 +86,7 @@ test("die Plugin-Executoren werden über die Registry im echten Runner ausgefüh
 
 test("ohne Plugin-Registry (Cloud) wird der Shopware-Baustein übersprungen statt auszuführen", async () => {
   const taskDefinition = taskDefinitionSchema.parse({
-    id: "t", title: "T", nodes: [{id: "n", primitive: "shopware", title: "S", outputName: "s", config: {primitive: "shopware", action: "x", connectionId: "c1"}}],
+    id: "t", title: "T", nodes: [{id: "n", primitive: "shopware", title: "S", outputs: [{key: "value", name: "s", showOnCanvas: true}], config: {primitive: "shopware", action: "x", connectionId: "c1"}}],
   });
   const output = await executeTaskGraph(genkit({}), {taskDefinition, context: "", teamId: "team-1"}, {logger: silentLogger} as never);
 

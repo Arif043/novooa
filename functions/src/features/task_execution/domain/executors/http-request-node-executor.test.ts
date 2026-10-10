@@ -11,7 +11,7 @@ const config = (overrides: Partial<HttpRequestNodeConfig> = {}): HttpRequestNode
 });
 
 const nodeOf = (nodeConfig: HttpRequestNodeConfig) =>
-  ({id: "n1", primitive: "httpRequest", title: "Anfrage", description: "", outputName: "antwort", config: nodeConfig}) as never;
+  ({id: "n1", primitive: "httpRequest", title: "Anfrage", description: "", outputs: [{key: "value", name: "antwort", showOnCanvas: true}], config: nodeConfig}) as never;
 
 function contextWith(client: OutboundHttpClient | undefined): TaskRunContext {
   return {

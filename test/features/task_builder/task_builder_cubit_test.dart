@@ -96,10 +96,14 @@ void main() {
     final cubit = TaskBuilderCubit(repository: repository);
 
     await cubit.load(repository.savedTask);
-    await cubit.updateNodeOutputName(const NodeId('node.1'), '1 email!');
+    await cubit.renameOutput(
+      nodeId: const NodeId('node.1'),
+      key: 'value',
+      name: '1 email!',
+    );
 
     final state = cubit.state as TaskBuilderLoaded;
-    expect(state.editingTask.nodes.first.outputName, 'n1email');
+    expect(state.editingTask.nodes.first.primaryOutputName, 'n1email');
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
@@ -108,10 +112,14 @@ void main() {
     final cubit = TaskBuilderCubit(repository: repository);
 
     await cubit.load(repository.savedTask);
-    await cubit.updateNodeOutputName(const NodeId('node.2'), 'prompt1');
+    await cubit.renameOutput(
+      nodeId: const NodeId('node.2'),
+      key: 'value',
+      name: 'prompt1',
+    );
 
     final state = cubit.state as TaskBuilderLoaded;
-    expect(state.editingTask.nodes.last.outputName, 'prompt1_2');
+    expect(state.editingTask.nodes.last.primaryOutputName, 'prompt1_2');
 
     await cubit.close();
   });
@@ -159,7 +167,7 @@ void main() {
     await cubit.addNodeToMainGraph(WorkflowPrimitive.notificationSend);
 
     final state = cubit.state as TaskBuilderLoaded;
-    expect(state.editingTask.nodes.last.outputName, isEmpty);
+    expect(state.editingTask.nodes.last.primaryOutputName, isEmpty);
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
@@ -424,7 +432,7 @@ void main() {
                 id: NodeId('node.text'),
                 title: 'Text',
                 description: '',
-                outputName: 'kundennummer',
+                outputs: [WorkflowOutput.primary('kundennummer')],
                 config: StringInputNodeConfig(value: ''),
               ),
             ],
@@ -469,7 +477,7 @@ void main() {
                 id: NodeId('node.text'),
                 title: 'Text',
                 description: '',
-                outputName: 'name',
+                outputs: [WorkflowOutput.primary('name')],
                 config: StringInputNodeConfig(value: ''),
               ),
               WorkflowNode(
@@ -851,7 +859,7 @@ Task _taskWithTwoPromptNodes() {
           id: NodeId('node.1'),
           title: 'Prompt',
           description: 'Beschreibung',
-          outputName: 'prompt1',
+          outputs: [WorkflowOutput.primary('prompt1')],
           config: PromptNodeConfig(
             instruction: '',
             outputType: PromptOutputType.text,
@@ -862,7 +870,7 @@ Task _taskWithTwoPromptNodes() {
           id: NodeId('node.2'),
           title: 'Prompt',
           description: 'Beschreibung',
-          outputName: 'prompt2',
+          outputs: [WorkflowOutput.primary('prompt2')],
           config: PromptNodeConfig(
             instruction: '',
             outputType: PromptOutputType.text,
@@ -885,7 +893,7 @@ Task _taskWithThreePromptNodes() {
           id: NodeId('node.3'),
           title: 'Prompt',
           description: 'Beschreibung',
-          outputName: 'prompt3',
+          outputs: [WorkflowOutput.primary('prompt3')],
           config: PromptNodeConfig(
             instruction: '',
             outputType: PromptOutputType.text,

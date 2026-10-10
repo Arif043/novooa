@@ -14,7 +14,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/workflow_canv
 // `workflow_canvas_layout.dart`).
 void main() {
   test(
-    'der Ausgabename eines einfachen Bausteins trägt ein OutputNameEditTarget',
+    'der Hauptwert eines einfachen Bausteins trägt ein OutputEditTarget',
     () {
       const successor = WorkflowNode(
         id: NodeId('next'),
@@ -26,7 +26,7 @@ void main() {
         id: NodeId('quelle'),
         title: '',
         description: '',
-        outputName: 'ergebnis',
+        outputs: [WorkflowOutput.primary('ergebnis')],
         config: StringInputNodeConfig(value: ''),
       );
       final layout = WorkflowCanvasLayout(
@@ -42,14 +42,41 @@ void main() {
       expect(link.labels.single.text, 'ergebnis');
       expect(
         link.labels.single.editTarget,
-        isA<OutputNameEditTarget>().having(
-          (target) => target.nodeId,
-          'nodeId',
-          const NodeId('quelle'),
-        ),
+        isA<OutputEditTarget>()
+            .having((target) => target.nodeId, 'nodeId', const NodeId('quelle'))
+            .having((target) => target.key, 'key', 'value'),
       );
     },
   );
+
+  test('zeigt nur die Werte mit gesetztem Flag auf der Leinwand', () {
+    const successor = WorkflowNode(
+      id: NodeId('next'),
+      title: '',
+      description: '',
+      config: StringInputNodeConfig(value: ''),
+    );
+    final source = WorkflowNode(
+      id: const NodeId('suche'),
+      title: '',
+      description: '',
+      outputs: const [
+        WorkflowOutput.primary('Datensatz'),
+        WorkflowOutput(key: 'found', name: 'Gefunden', showOnCanvas: true),
+        WorkflowOutput(key: 'record', name: 'Eintrag'),
+      ],
+      config: DocumentLookupNodeConfig.initial(),
+    );
+    final layout = WorkflowCanvasLayout(
+      WorkflowGraph(
+        nodes: [source, successor],
+        edges: const [WorkflowEdge(from: NodeId('suche'), to: NodeId('next'))],
+      ),
+    );
+
+    final link = layout.links.firstWhere((link) => link.from == 'suche');
+    expect(link.labels.map((label) => label.text), ['Datensatz', 'Gefunden']);
+  });
 
   test('strukturierte Prompt-Felder tragen den echten Original-Index, auch '
       'wenn ein davorliegendes Feld einen leeren Namen hat und deshalb aus '
@@ -58,7 +85,7 @@ void main() {
       id: NodeId('prompt'),
       title: '',
       description: '',
-      outputName: 'prompt',
+      outputs: [WorkflowOutput.primary('prompt')],
       config: PromptNodeConfig(
         instruction: '',
         outputType: PromptOutputType.structured,
@@ -205,7 +232,7 @@ void main() {
       id: NodeId('branching'),
       title: '',
       description: '',
-      outputName: 'branching',
+      outputs: [WorkflowOutput.primary('branching')],
       config: StringInputNodeConfig(value: ''),
     );
     const successor = WorkflowNode(

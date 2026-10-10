@@ -1,12 +1,25 @@
 import '../services/script_workflow_output_parser.dart';
 import 'node_config.dart';
 import 'plugin_node_config.dart';
+import 'workflow_node.dart';
 import 'workflow_output_types.dart';
+
+/// Alle Schlüssel, die ein Baustein als benannte [WorkflowOutput]s führt:
+/// der Hauptwert `value` (außer bei Bausteinen ohne Rückgabewert und flachen
+/// Bausteinen) und die weiteren Werte aus [outputFieldsOf].
+List<String> outputKeysOf(NodeConfig config) {
+  final hasPrimary =
+      !config.primitive.hasNoOutput && !hasFlatOutputFields(config);
+  return [
+    if (hasPrimary) WorkflowOutput.primaryOutputKey,
+    ...outputFieldsOf(config),
+  ];
+}
 
 /// Ob ein Baustein seine fachlichen Ausgabewerte flach, ohne umschließenden
 /// Ausgabenamen anbietet (strukturierte Prompt-Ausgabe, Dialogeingabe) —
 /// jedes Feld hat dort direkt einen eigenen, graph-weit eindeutigen Namen
-/// statt eines gemeinsamen `outputName` (siehe `docs/node-executor-outputs.md`).
+/// statt benannter `outputs` (siehe `docs/node-executor-outputs.md`).
 bool hasFlatOutputFields(NodeConfig config) {
   if (config is DialogInputNodeConfig) return true;
   if (config is ScriptNodeConfig) {
@@ -41,10 +54,10 @@ List<String> flatOutputFieldsOf(NodeConfig config) {
 }
 
 /// Technische Schlüssel der **weiteren** Werte eines Bausteins (neben dem
-/// Hauptwert `value` unter `outputName`) — der Vertrag mit dem Executor im
+/// Hauptwert `value`) — der Vertrag mit dem Executor im
 /// Backend (`docs/node-executor-outputs.md`). Die Namen, unter denen
 /// Nutzer:innen die Werte verwenden (`{{Gefunden}}`), stehen nicht hier,
-/// sondern je Baustein in `WorkflowNode.outputFieldNames`. Einzige Quelle für
+/// sondern je Baustein in `WorkflowNode.outputs`. Einzige Quelle für
 /// Panel (`NodeOutputChips`), #-Suche und die Namensvergabe im Cubit.
 /// Bausteine mit [hasFlatOutputFields] haben keine weiteren Werte.
 List<String> outputFieldsOf(NodeConfig config) {

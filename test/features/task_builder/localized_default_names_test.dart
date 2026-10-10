@@ -68,7 +68,7 @@ void main() {
       (cubit) => cubit.addNodeToMainGraph(WorkflowPrimitive.prompt),
     );
 
-    expect(node.outputName, 'Anweisung');
+    expect(node.primaryOutputName, 'Anweisung');
     expect(node.title, 'Prompt');
   });
 
@@ -79,7 +79,7 @@ void main() {
       (cubit) => cubit.addNodeToMainGraph(WorkflowPrimitive.stringInput),
     );
 
-    expect(node.outputName, 'Input');
+    expect(node.primaryOutputName, 'Input');
     expect(node.title, 'Text input');
   });
 
@@ -92,9 +92,9 @@ void main() {
       (cubit) => cubit.addSendMessageNodeToMainGraph(ChannelEventKind.email),
     );
 
-    expect(german.outputName, 'SendenEmail');
+    expect(german.primaryOutputName, 'SendenEmail');
     expect(german.title, 'E-Mail senden');
-    expect(english.outputName, 'SendEmail');
+    expect(english.primaryOutputName, 'SendEmail');
     expect(english.title, 'Send Email');
   });
 
@@ -109,7 +109,7 @@ void main() {
       await cubit.addNodeToMainGraph(WorkflowPrimitive.prompt);
 
       final names = (cubit.state as TaskBuilderLoaded).editingTask.nodes
-          .map((node) => node.outputName)
+          .map((node) => node.primaryOutputName)
           .where((name) => name.startsWith('Anweisung'));
       expect(names, ['Anweisung', 'Anweisung2', 'Anweisung3']);
       await cubit.close();
@@ -125,7 +125,7 @@ void main() {
         (cubit) => cubit.addNodeToMainGraph(WorkflowPrimitive.prompt),
       );
 
-      expect(node.outputName, 'Komut');
+      expect(node.primaryOutputName, 'Komut');
       expect(node.title, 'Komut istemi');
     },
   );

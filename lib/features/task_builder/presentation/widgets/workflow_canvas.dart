@@ -653,8 +653,8 @@ class _CanvasLabelChipState extends State<_CanvasLabelChip> {
   ) {
     final cubit = context.read<TaskBuilderCubit>();
     switch (target) {
-      case OutputNameEditTarget(:final nodeId):
-        cubit.updateNodeOutputName(nodeId, value);
+      case OutputEditTarget(:final nodeId, :final key):
+        cubit.renameOutput(nodeId: nodeId, key: key, name: value);
       case ConditionalBranchEditTarget(
         :final conditionalNodeId,
         :final branchId,
@@ -676,7 +676,6 @@ class _CanvasLabelChipState extends State<_CanvasLabelChip> {
           fieldIndex: fieldIndex,
           name: value,
         );
-
     }
   }
 

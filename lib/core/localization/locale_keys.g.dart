@@ -459,6 +459,8 @@ abstract class  LocaleKeys {
   static const ui_suggestion_failed = 'ui.suggestion_failed';
   static const ui_tap_to_copy = 'ui.tap_to_copy';
   static const ui_copy_expression = 'ui.copy_expression';
+  static const ui_show_on_canvas = 'ui.show_on_canvas';
+  static const ui_hide_from_canvas = 'ui.hide_from_canvas';
   static const ui_task_name = 'ui.task_name';
   static const ui_team_load_failed = 'ui.team_load_failed';
   static const ui_template_ausdruck_verwenden = 'ui.template_ausdruck_verwenden';

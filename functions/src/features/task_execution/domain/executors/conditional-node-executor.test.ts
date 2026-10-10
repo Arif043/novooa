@@ -78,7 +78,7 @@ function conditionalNode(branches: ConditionalBranch[], valueTemplate = "") {
     primitive: "conditionalFlow" as const,
     title: "Bedingter Ablauf",
     description: "",
-    outputName: "",
+    outputs: [],
     config: {
       primitive: "conditionalFlow" as const,
       valueTemplate,

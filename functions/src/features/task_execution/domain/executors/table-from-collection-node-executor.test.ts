@@ -49,7 +49,7 @@ test("liefert eine leere Tabelle für eine unbekannte Sammlung", async () => {
 function node() {
   return {
     id: "table", primitive: "tableFromCollection" as const,
-    title: "Sammlung als Tabelle", description: "", outputName: "sammlungAlsTabelle",
+    title: "Sammlung als Tabelle", description: "", outputs: [{key: "value", name: "sammlungAlsTabelle", showOnCanvas: true}],
     config: {primitive: "tableFromCollection" as const, collectionName: "kunden"},
   };
 }

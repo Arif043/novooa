@@ -41,7 +41,6 @@ function nodeFromStorage(value: unknown): Record<string, unknown> {
   return {
     ...node,
     primitive: stringFrom(config.primitive),
-    outputName: stringFrom(node.outputName),
     config,
   };
 }

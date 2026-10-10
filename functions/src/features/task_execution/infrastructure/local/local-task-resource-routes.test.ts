@@ -92,7 +92,7 @@ function taskBody() {
         primitive: "stringInput",
         title: "Text",
         description: "",
-        outputName: "text",
+        outputs: [{key: "value", name: "text", showOnCanvas: true}],
         config: {primitive: "stringInput", value: "Hallo"},
       }],
       edges: [],

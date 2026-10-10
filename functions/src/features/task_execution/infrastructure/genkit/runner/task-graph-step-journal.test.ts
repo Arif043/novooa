@@ -39,11 +39,11 @@ function runtimeWith(journal: TaskRunStepJournal, calls: string[]) {
 }
 
 const textNode = (id: string, value: string) => ({
-  id, primitive: "stringInput", title: id, description: "", outputName: id,
+  id, primitive: "stringInput", title: id, description: "", outputs: [{key: "value", name: id, showOnCanvas: true}],
   config: {primitive: "stringInput", value},
 });
 const loopNode = (id: string, body: unknown[]) => ({
-  id, primitive: "forEach", title: id, description: "", outputName: id,
+  id, primitive: "forEach", title: id, description: "", outputs: [{key: "value", name: id, showOnCanvas: true}],
   config: {primitive: "forEach", itemsTemplate: "{{liste}}", itemsPointer: "", graph: {nodes: body, edges: []}},
 });
 
@@ -98,7 +98,7 @@ test("a step waiting for approval is not journaled", async () => {
     async execute(node) { return {nodeId: node.id, primitive: node.primitive, status: "waitingForApproval", outputs: {}}; },
   };
   const runtime = {logger: silentLogger, stepJournal: journal, executorRegistry: new NodeExecutorRegistry().register(waitingExecutor)} as never;
-  const approvalNode = {id: "freigabe", primitive: "humanApproval", title: "freigabe", description: "", outputName: "freigabe", config: {primitive: "humanApproval"}};
+  const approvalNode = {id: "freigabe", primitive: "humanApproval", title: "freigabe", description: "", outputs: [{key: "value", name: "freigabe", showOnCanvas: true}], config: {primitive: "humanApproval"}};
 
   const output = (await executeTaskGraph(genkit({}), taskWith([approvalNode], []), runtime))._unsafeUnwrap();
 

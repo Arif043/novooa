@@ -11,18 +11,22 @@ import '../../domain/entities/workflow_node_outputs.dart';
 import '../../domain/entities/workflow_output_types.dart';
 import '../cubits/task_builder_cubit.dart';
 import 'node_output_type_style.dart';
+import 'output_canvas_toggle.dart';
 import 'output_field_chip.dart';
 import 'output_name_dialog.dart';
 
-/// Ein Wert im Panel; [fieldKey] ist bei umbenennbaren weiteren Werten der
-/// technische Schlüssel (z.B. `found`), bei flachen Feldern `null`.
-typedef _PanelOutput = ({String name, NodeOutputType type, String? fieldKey});
+/// Ein Wert im Panel. Benannte Werte ([output] gesetzt) lassen sich
+/// umbenennen und auf die Leinwand holen; flache Felder werden in ihrem
+/// eigenen Editor benannt und hier nur kopiert.
+typedef _PanelOutput = ({
+  String name,
+  NodeOutputType type,
+  WorkflowOutput? output,
+});
 
-/// Zeigt im Panel die Werte eines Bausteins neben seinem Hauptwert —
-/// nur hier, nicht auf der Leinwand. Weitere Werte (z.B. `Gefunden`) sind
-/// wie der Hauptwert flach erreichbar (`{{Gefunden}}`) und hier
-/// umbenennbar; flache Felder (strukturierte Prompt-Ausgabe, Dialogeingabe)
-/// werden in ihrem eigenen Editor benannt und hier nur kopiert.
+/// Zeigt im Panel alle Werte eines Bausteins. Welche davon zusätzlich als
+/// Chip auf der Leinwand stehen, entscheidet das Pin-Symbol
+/// ([WorkflowOutput.showOnCanvas]).
 class NodeOutputChips extends StatelessWidget {
   const NodeOutputChips({super.key, required this.node});
 
@@ -41,20 +45,35 @@ class NodeOutputChips extends StatelessWidget {
         child: Wrap(
           spacing: AppSpacing.xs,
           runSpacing: AppSpacing.xs,
-          children: [for (final output in outputs) _chip(context, output)],
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [for (final output in outputs) _entry(context, output)],
         ),
       ),
     );
   }
 
-  Widget _chip(BuildContext context, _PanelOutput output) {
-    final fieldKey = output.fieldKey;
-    return OutputFieldChip(
-      name: output.name,
-      type: output.type,
-      onRename: fieldKey == null
-          ? null
-          : () => _rename(context, fieldKey, output.name),
+  Widget _entry(BuildContext context, _PanelOutput entry) {
+    final output = entry.output;
+    final chip = OutputFieldChip(
+      name: entry.name,
+      type: entry.type,
+      onRename: output == null ? null : () => _rename(context, output),
+    );
+    if (output == null) return chip;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        chip,
+        OutputCanvasToggle(
+          showOnCanvas: output.showOnCanvas,
+          onChanged: (show) =>
+              context.read<TaskBuilderCubit>().setOutputOnCanvas(
+                nodeId: node.id,
+                key: output.key,
+                showOnCanvas: show,
+              ),
+        ),
+      ],
     );
   }
 
@@ -62,42 +81,32 @@ class NodeOutputChips extends StatelessWidget {
     return '${output.name} (${NodeOutputTypeStyle.of(output.type).label})';
   }
 
-  /// Werte ohne Namen (Bausteine aus der Zeit vor benannten Werten) fehlen,
-  /// weil sie per Template nicht erreichbar sind.
   List<_PanelOutput> _outputs() {
     final config = node.config;
     if (hasFlatOutputFields(config)) {
       return [
         for (final field in typedFlatOutputFieldsOf(config))
-          (name: field.name, type: field.type, fieldKey: null),
+          (name: field.name, type: field.type, output: null),
       ];
     }
     return [
-      for (final fieldKey in outputFieldsOf(config))
-        if (node.outputFieldNameOf(fieldKey).isNotEmpty)
+      for (final output in node.outputs)
+        if (output.name.trim().isNotEmpty)
           (
-            name: node.outputFieldNameOf(fieldKey),
-            type: outputFieldTypeFor(config, fieldKey),
-            fieldKey: fieldKey,
+            name: output.name.trim(),
+            type: outputTypeOf(config, output.key),
+            output: output,
           ),
     ];
   }
 
-  Future<void> _rename(
-    BuildContext context,
-    String fieldKey,
-    String currentName,
-  ) async {
+  Future<void> _rename(BuildContext context, WorkflowOutput output) async {
     final cubit = context.read<TaskBuilderCubit>();
     final name = await showIosDialog<String>(
       context: context,
-      builder: (_) => OutputNameDialog(initialValue: currentName),
+      builder: (_) => OutputNameDialog(initialValue: output.name),
     );
     if (name == null) return;
-    await cubit.renameOutputField(
-      nodeId: node.id,
-      fieldKey: fieldKey,
-      name: name,
-    );
+    await cubit.renameOutput(nodeId: node.id, key: output.key, name: name);
   }
 }

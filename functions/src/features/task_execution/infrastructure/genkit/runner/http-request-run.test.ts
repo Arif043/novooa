@@ -7,14 +7,13 @@ import {executeTaskGraph} from "./task-graph-runner.js";
 
 const silentLogger = {info() {}, error() {}, exception() {}, readableInfo() {}, readableError() {}};
 
-const input = {id: "kunde", primitive: "stringInput", title: "Kunde", description: "", outputName: "kunde", config: {primitive: "stringInput", value: "Anna"}};
+const input = {id: "kunde", primitive: "stringInput", title: "Kunde", description: "", outputs: [{key: "value", name: "kunde", showOnCanvas: true}], config: {primitive: "stringInput", value: "Anna"}};
 const request = {
-  id: "abruf", primitive: "httpRequest", title: "Abruf", description: "", outputName: "antwort",
-  outputFieldNames: {status: "Status", ok: "Erfolgreich"},
+  id: "abruf", primitive: "httpRequest", title: "Abruf", description: "", outputs: [{key: "value", name: "antwort", showOnCanvas: true}, {key: "status", name: "Status", showOnCanvas: false}, {key: "ok", name: "Erfolgreich", showOnCanvas: false}],
   config: {primitive: "httpRequest", connectionId: "c1", url: "/customers/{{kunde}}", headers: [{name: "X-Kunde", value: "{{kunde}}"}]},
 };
 const follow = {
-  id: "danach", primitive: "stringInput", title: "Danach", description: "", outputName: "danach",
+  id: "danach", primitive: "stringInput", title: "Danach", description: "", outputs: [{key: "value", name: "danach", showOnCanvas: true}],
   config: {primitive: "stringInput", value: "{{antwort.name}} ({{Status}}, ok={{Erfolgreich}})"},
 };
 

@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
 
-/// Fragt einen neuen Namen für einen Ausgabewert ab — für den Hauptwert
-/// ([NodeOutputNameField]) wie für die weiteren Werte im Panel
+/// Fragt einen neuen Namen für einen Ausgabewert im Panel ab
 /// ([NodeOutputChips]). Gibt `null` zurück, wenn abgebrochen wurde.
 ///
 /// Besitzt seinen [TextEditingController] selbst (statt ihn von außen zu

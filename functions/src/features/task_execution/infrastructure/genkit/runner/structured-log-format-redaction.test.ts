@@ -19,7 +19,7 @@ test("HTTP-Anfragen: Header-Werte, Body und Zugangs-Parameter erscheinen nie im 
   assert.deepEqual(redacted.headers, [{name: "Authorization", value: "•••"}, {name: "X-Anything", value: "•••"}]);
   assert.equal(redacted.body, "••• (21 Zeichen)");
   assert.equal(redacted.connectionId, "c1");
-  for (const rendered of [formatConfig(http), JSON.stringify(nodeAttributes({id: "n", primitive: "httpRequest", title: "t", description: "", outputName: "", config: http} as never))]) {
+  for (const rendered of [formatConfig(http), JSON.stringify(nodeAttributes({id: "n", primitive: "httpRequest", title: "t", description: "", outputs: [], config: http} as never))]) {
     assert.equal(rendered.includes("GEHEIM"), false);
     assert.equal(rendered.includes("T0K3N"), false);
   }

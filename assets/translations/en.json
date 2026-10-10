@@ -499,6 +499,8 @@
     "suggestion_failed": "The suggestion could not be applied.",
     "tap_to_copy": "{type} · Tap to copy {expression}",
     "copy_expression": "Copy {expression}",
+    "show_on_canvas": "Show on canvas",
+    "hide_from_canvas": "Remove from canvas",
     "task_name": "Task name",
     "team_load_failed": "The team could not be loaded.",
     "template_ausdruck_verwenden": "Use template expression",

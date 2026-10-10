@@ -99,13 +99,13 @@ ohne Modul der Hinweis „Dieser Baustein ist nicht verfügbar“. Ein Beispiel 
 
 ## Standardnamen neuer Bausteine
 
-Ausgabename (`outputName`), Titel und Beschreibung eines neuen Bausteins kommen aus
+Die Namen der Werte (`outputs`), Titel und Beschreibung eines neuen Bausteins kommen aus
 `NodeTextDefaults` (Port in `domain/services`, Umsetzung `LocalizedNodeTextDefaults`) und
 folgen der App-Sprache **zum Zeitpunkt des Anlegens**. Sie werden im Task gespeichert; ein
-späterer Sprachwechsel benennt nichts um, `{{…}}`-Referenzen bleiben stabil. Ausgabenamen sind
+späterer Sprachwechsel benennt nichts um, `{{…}}`-Referenzen bleiben stabil. Namen sind
 ASCII (`pruefung`, nicht `prüfung`), weil `_normalizedOutputName` Nicht-`\w`-Zeichen entfernt.
 Namen beginnen mit Großbuchstaben. Der erste Baustein einer Art trägt keine Nummer, ab dem zweiten zählt es ab 2 (nächster freier Name im Graphen): `Input`, `Input2` (en) / `Eingabe`, `Eingabe2` (de), `SendEmail` / `SendenEmail`.
-Die festen Ausgabefelder der Bausteine (z. B. `recipient`, `sender`) sind Datenvertrag und bleiben englisch.
+Die technischen Schlüssel der Werte (z. B. `recipient`, `sender`) sind Datenvertrag und bleiben englisch; ihre Standardnamen stehen unter `task_builder.output_field_names`.
 
 ## UI-Prinzipien
 
@@ -115,7 +115,7 @@ Die festen Ausgabefelder der Bausteine (z. B. `recipient`, `sender`) sind Datenv
   Die gemeinsame Kopfzeile richtet Navigation über der Palette, den
   editierbaren Aufgabentitel über der Arbeitsfläche und KI-Agent sowie
   Benachrichtigungen rechts nebeneinander aus.
-- Ausgabe-Labels (Ausgabename und feste Felder) zeigen Farbe und Icon ihres
+- Ausgabe-Labels zeigen Farbe und Icon ihres
   `NodeOutputType` (`NodeOutputTypeStyle`, Farben in `OutputTypeColors`).
   Welcher Typ zu welchem Baustein bzw. Feld gehört, steht ausschließlich in
   `workflow_output_types.dart` und spiegelt `docs/node-executor-outputs.md`.
@@ -158,13 +158,15 @@ Die festen Ausgabefelder der Bausteine (z. B. `recipient`, `sender`) sind Datenv
   Persistiert bleibt der unveränderte Ausdruck `{{name}}`; die Label-
   Darstellung ist reine UI. Die Suche bietet alle benannten Werte gleich an:
   Hauptwerte, weitere Werte (z. B. `{{Gefunden}}`) und Script-Variablen.
-- Die **weiteren Werte** eines Bausteins (alles neben dem Hauptwert, z. B.
-  „Gefunden“ bei „Datensatz suchen“) werden wie Hauptwerte benannt:
-  lokalisiert, großgeschrieben, graph-weit eindeutig, ab 2 nummeriert
-  (`WorkflowNode.outputFieldNames`). Sie erscheinen nie auf der
-  Arbeitsfläche, nur im rechten Panel (`NodeOutputChips`). Antippen benennt
-  sie um (belegte Namen bekommen eine Nummer), das Kopier-Symbol kopiert
-  `{{Name}}`. Einzige Quelle dafür, welche Werte ein Baustein-Typ hat:
+- Alle Werte eines Bausteins (Hauptwert und z. B. „Gefunden“ bei „Datensatz
+  suchen“) sind `WorkflowOutput`s: lokalisiert, großgeschrieben, graph-weit
+  eindeutig, ab 2 nummeriert. Das rechte Panel (`NodeOutputChips`) zeigt alle;
+  Antippen benennt um (belegte Namen bekommen eine Nummer), das
+  Kopier-Symbol kopiert `{{Name}}`, das Pin-Symbol (`OutputCanvasToggle`)
+  legt fest, ob der Wert auch als Chip auf der Arbeitsfläche steht
+  (`showOnCanvas`, Standard: nur der Hauptwert). Auf der Arbeitsfläche lassen
+  sich sichtbare Werte per Doppelklick umbenennen. Einzige Quelle dafür,
+  welche Werte ein Baustein-Typ hat:
   `domain/entities/workflow_node_outputs.dart` — genutzt von diesem Overlay
   und von der `#`-Suche gleichermaßen.
 - Anlass statt technischer Konfiguration.

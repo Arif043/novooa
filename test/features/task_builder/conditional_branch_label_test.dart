@@ -182,7 +182,7 @@ Task _taskWithDecisionPromptAndConditional() {
           id: promptId,
           title: 'Prompt',
           description: '',
-          outputName: 'entscheidung',
+          outputs: [WorkflowOutput.primary('entscheidung')],
           config: PromptNodeConfig(
             instruction: '',
             outputType: PromptOutputType.decision,
@@ -214,7 +214,7 @@ Task _taskWithTextPromptAndConditional() {
           id: promptId,
           title: 'Prompt',
           description: '',
-          outputName: 'freitext',
+          outputs: [WorkflowOutput.primary('freitext')],
           config: PromptNodeConfig(
             instruction: 'Alte Anweisung',
             outputType: PromptOutputType.text,

@@ -76,42 +76,41 @@ class TaskDocumentMapper {
       'id': node.id.value,
       'title': node.title,
       'description': node.description,
-      'outputName': node.outputName,
-      if (node.outputFieldNames.isNotEmpty)
-        'outputFieldNames': node.outputFieldNames,
+      'outputs': [
+        for (final output in node.outputs)
+          {
+            'key': output.key,
+            'name': output.name,
+            'showOnCanvas': output.showOnCanvas,
+          },
+      ],
       'config': _configMapper.toDocument(node.config),
     };
   }
 
-  /// Erzwingt [WorkflowPrimitive.hasNoOutput] auch für Bestandsdaten: Wurde
-  /// ein Knoten angelegt, bevor diese Regel für seine Primitive galt (oder
-  /// per „Aufgabe duplizieren" aus einem solchen Knoten kopiert), trägt er
-  /// sonst dauerhaft einen veralteten Ausgabenamen — ohne dass ihn je
-  /// jemand explizit vergeben hätte. Selbstheilend beim nächsten Laden,
-  /// statt eine einmalige Migration über den gesamten Datenbestand zu
-  /// brauchen.
   WorkflowNode _nodeFromDocument(Map<String, Object?> data) {
-    final config = _configFrom(data['config']);
-    final outputName = config.primitive.hasNoOutput
-        ? ''
-        : data['outputName'] as String? ?? '';
     return WorkflowNode(
       id: NodeId(data['id'] as String? ?? ''),
       title: data['title'] as String? ?? '',
       description: data['description'] as String? ?? '',
-      outputName: outputName,
-      outputFieldNames: _outputFieldNamesFrom(data['outputFieldNames']),
-      config: config,
+      outputs: _outputsFrom(data['outputs']),
+      config: _configFrom(data['config']),
     );
   }
 
-  Map<String, String> _outputFieldNamesFrom(Object? value) {
-    if (value is! Map) return const {};
-    return {
-      for (final MapEntry(:key, :value) in value.entries)
-        if (key is String && value is String && value.trim().isNotEmpty)
-          key: value.trim(),
-    };
+  /// Nur vollständige Einträge; ein kaputter Eintrag soll die Aufgabe nicht
+  /// unladbar machen.
+  List<WorkflowOutput> _outputsFrom(Object? value) {
+    if (value is! List) return const [];
+    return [
+      for (final entry in value)
+        if (entry case {'key': final String key, 'name': final String name})
+          WorkflowOutput(
+            key: key,
+            name: name,
+            showOnCanvas: entry['showOnCanvas'] == true,
+          ),
+    ];
   }
 
   Map<String, Object?> _edgeToDocument(WorkflowEdge edge) {

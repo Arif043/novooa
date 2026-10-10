@@ -10,11 +10,9 @@ Ein Output hat einen der Typen `string`, `datetime`, `number`, `boolean`,
 `json`, `file`, `media`, `audio` oder `table`. Ein ausgefuehrter Baustein mit einem
 fachlichen Rückgabewert stellt ihn unter `value` bereit. Reine
 Seiteneffekt-Bausteine ohne fachlichen Rückgabewert (aktuell:
-`notificationSend`) liefern ein leeres `outputs`-Objekt — der Baustein
-bekommt dafür clientseitig auch keinen Ausgabenamen (siehe
-`WorkflowPrimitive.hasNoOutput` in `workflow_node.dart`, angewendet sowohl
-beim Anlegen in `task_builder_cubit.dart` als auch selbstheilend beim Laden
-in `task_document_mapper.dart`). Kanten bestimmen weiterhin nur Reihenfolge
+`notificationSend`) liefern ein leeres `outputs`-Objekt und haben im Builder
+keine benannten Werte (`WorkflowPrimitive.hasNoOutput`, ausgewertet von
+`outputKeysOf` in `workflow_node_outputs.dart`). Kanten bestimmen weiterhin nur Reihenfolge
 und Verzweigung; ein Executor erhaelt die `value`-Outputs seiner direkten
 Vorgaenger, nicht mehr den letzten Textwert eines Runs.
 
@@ -26,26 +24,30 @@ referenzierte Version.
 **Alle Werte sind flach benannt.** Es gibt einen einzigen, graph-weiten
 Namensraum (`flatOutputsFor` in `template-expression-resolver.ts`):
 
-- Der Hauptwert `value` steht unter dem `outputName` des Bausteins
-  (`{{Datensatz}}`). Er ist der einzige Wert, der als Chip auf der Leinwand
-  erscheint.
-- Jeder **weitere Wert** (die Schlüssel in der Tabelle unten neben `value`,
-  z. B. `found`) steht unter dem Namen, den der Baustein in
-  `WorkflowNode.outputFieldNames` für diesen Schlüssel speichert
-  (`{"found": "Gefunden"}` → `{{Gefunden}}`). Der Builder vergibt die Namen
-  beim Anlegen lokalisiert und großgeschrieben, ab 2 nummeriert
-  („Gefunden“, „Gefunden2“), hält sie eindeutig und zeigt sie nur im Panel,
-  wo sie sich umbenennen lassen. Ein Wert ohne Namen ist per Template nicht
-  erreichbar.
+- Jeder Baustein speichert seine benannten Werte als Liste
+  `outputs: [{key, name, showOnCanvas}]` (`WorkflowOutput`). `key` ist der
+  Schlüssel aus der Tabelle unten (`value` für den Hauptwert, sonst z. B.
+  `found`), `name` der Name in Vorlagen (`{{Datensatz}}`, `{{Gefunden}}`).
+  Einen separaten `outputName` gibt es nicht mehr.
+- `showOnCanvas` entscheidet nur, ob der Wert als Chip auf der Leinwand
+  steht. Im Panel stehen immer alle Werte; dort lassen sie sich umbenennen
+  und per Pin-Symbol auf die Leinwand holen. Standard: Hauptwert an, übrige
+  aus.
+- Der Builder vergibt die Namen beim Anlegen lokalisiert und großgeschrieben,
+  ab 2 nummeriert („Gefunden“, „Gefunden2“), und hält sie eindeutig. Ein
+  Wert ohne Eintrag in `outputs` ist per Template nicht erreichbar; auch die
+  Knoten-ID dient nicht als Ersatzname.
 - Die Schlüssel der Tabelle sind nur der technische Vertrag zwischen
   Executor und Builder, keine Namen für Nutzer:innen. Eine Adressierung über
   den Knotennamen (`{{Datensatz.found}}`, `{{Datensatz.value}}`) gibt es
   nicht. Ein Punkt-Pfad führt nur in den JSON-Inhalt eines Werts
   (`{{antwort.name}}`).
 - Bausteine mit mehreren fachlichen Ausgabewerten (strukturierte
-  Prompt-Ausgabe, Dialogeingabe, Script mit `workflow_output`) haben keinen
-  eigenen Ausgabenamen; jedes Feld steht unter seinem eigenen Namen
-  (`{{Name}}`).
+  Prompt-Ausgabe, Dialogeingabe, Script mit `workflow_output`) haben keine
+  `outputs`; jedes Feld steht unter seinem in der Konfiguration vergebenen
+  Namen (`{{Name}}`) und erscheint auf der Leinwand.
+- „Für jedes Element“ liefert je Runde ein flaches Objekt aus den benannten
+  Werten des Unterplans (`[{Erkenner: …, Gefunden: …}, …]`).
 - In Zweigen und „Für jedes Element“ sind die Werte der äußeren Ebene unter
   denselben Namen erreichbar, auch als `{{global.Name}}`.
 
@@ -119,7 +121,7 @@ Tabellen MIME-Type und Endung von XLSX. Sein primaerer Output ist ein
 | `folderId` | `json` | Ordner-ID oder `null` |
 | `isNewFile` | `boolean` | `true` bei einer neu angelegten Datei |
 
-Hat der Knoten den Ausgabenamen `Bericht`, verwenden Templates `{{Bericht}}`
+Heißt der Hauptwert `Bericht`, verwenden Templates `{{Bericht}}`
 (primaerer Datei-/Bildwert) und die weiteren Werte unter ihren Namen, etwa
 `{{DateiId}}` oder `{{Dateiname}}`.
 

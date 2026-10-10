@@ -164,7 +164,7 @@ void main() {
       final node =
           (builder.state as TaskBuilderLoaded).editingTask.nodes.single;
       expect(node.title, 'Bestellungen suchen');
-      expect(node.outputName, equals('Bestellungen'));
+      expect(node.primaryOutputName, equals('Bestellungen'));
       expect(node.config, isA<ShopwareNodeConfig>());
       expect((node.config as ShopwareNodeConfig).params, {
         'sort': 'newest',
@@ -268,9 +268,7 @@ void main() {
 
     test('Ausgaben je Aktion mit Typen', () {
       Map<String, NodeOutputType> outputs(String id) => {
-        for (final name in outputFieldsOf(
-          ShopwareNodeConfig.initial(id),
-        ))
+        for (final name in outputFieldsOf(ShopwareNodeConfig.initial(id)))
           name: outputFieldTypeFor(ShopwareNodeConfig.initial(id), name),
       };
       const list = {
@@ -704,7 +702,7 @@ void main() {
                   id: const NodeId('n1'),
                   title: 'Shopware',
                   description: '',
-                  outputName: 'x',
+                  outputs: [WorkflowOutput.primary('x')],
                   config: const ShopwareNodeConfig(action: 'kommtSpaeter'),
                 ),
               ),

@@ -52,7 +52,7 @@ test("übersetzt einen Suchfehler in ein verständliches Ergebnis", async () => 
 function lookupNode(value: string) {
   return {
     id: "lookup", primitive: "documentLookup" as const, title: "Datensatz suchen",
-    description: "", outputName: "kunde",
+    description: "", outputs: [{key: "value", name: "kunde", showOnCanvas: true}],
     config: {
       primitive: "documentLookup" as const, collectionName: "kunden",
       filters: [{field: "email", operator: "equals" as const, value}],

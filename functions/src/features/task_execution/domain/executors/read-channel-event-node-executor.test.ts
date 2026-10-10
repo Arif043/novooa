@@ -4,7 +4,7 @@ import {type TaskRunContext} from "./node-executor.js";
 import {readChannelEventNodeExecutor} from "./read-email-node-executor.js";
 
 const nodeWith = (kind: string) =>
-  ({id: "n1", primitive: "readChannelEvent", title: "", description: "", outputName: "Nachricht",
+  ({id: "n1", primitive: "readChannelEvent", title: "", description: "", outputs: [{key: "value", name: "Nachricht", showOnCanvas: true}],
     config: {primitive: "readChannelEvent", kind}}) as never;
 
 const contextWith = (event: Record<string, unknown>) => ({input: {event}}) as unknown as TaskRunContext;

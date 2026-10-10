@@ -27,7 +27,7 @@ async function setup(t: TestContext) {
 
 function taskBody(id: string, writesTo: string | null) {
   const nodes = writesTo === null ? [] : [{
-    id: "w", primitive: "writeFile", title: "Schreiben", description: "", outputName: "datei",
+    id: "w", primitive: "writeFile", title: "Schreiben", description: "", outputs: [{key: "value", name: "datei", showOnCanvas: true}],
     config: {primitive: "writeFile", fileName: "bericht.txt", contentType: "text/plain", contentTemplate: "x", folderId: writesTo},
   }];
   return {id, title: `Aufgabe ${id}`, objective: "", selectedNodeId: "", graph: {nodes, edges: []}};

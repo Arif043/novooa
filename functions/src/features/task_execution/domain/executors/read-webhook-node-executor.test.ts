@@ -3,7 +3,7 @@ import test from "node:test";
 import {type TaskRunContext} from "./node-executor.js";
 import {readWebhookNodeExecutor} from "./read-webhook-node-executor.js";
 
-const node = {id: "n1", primitive: "readWebhook", title: "Webhook", description: "", outputName: "ereignis", config: {primitive: "readWebhook"}} as never;
+const node = {id: "n1", primitive: "readWebhook", title: "Webhook", description: "", outputs: [{key: "value", name: "ereignis", showOnCanvas: true}], config: {primitive: "readWebhook"}} as never;
 
 const event = {
   type: "webhookReceived", method: "POST", query: {a: "1"}, headers: {"x-test": "ja"},

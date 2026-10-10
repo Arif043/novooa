@@ -47,8 +47,8 @@ benannte `outputs`. Der primäre Output heisst `value` und ist typisiert.
 Kanten bestimmen ausschliesslich Reihenfolge und Verzweigungen. Ein Knoten
 erhält keine Werte seiner direkten Vorgänger. Benannte Werte werden
 ausschliesslich über einen expliziten Template-Ausdruck eingebunden — entweder
-flach über den Ausgabenamen eines Bausteins (Hauptwert) oder über den
-eigenen Namen jedes weiteren Werts (`outputFieldNames`), zum Beispiel:
+flach über den Namen eines Werts aus den `outputs` des Bausteins (Hauptwert
+oder weiterer Wert), zum Beispiel:
 
 ```text
 {{Kunde}}

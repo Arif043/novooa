@@ -136,8 +136,8 @@ void main() {
         'Hallo-Baustein',
       ]);
       expect(nodes.first.config, const _HelloConfig(name: 'Welt'));
-      expect(nodes.first.outputName, equals('Gruss'));
-      expect(nodes.map((node) => node.outputName).toSet().length, 2);
+      expect(nodes.first.primaryOutputName, equals('Gruss'));
+      expect(nodes.map((node) => node.primaryOutputName).toSet().length, 2);
     },
   );
 
@@ -211,7 +211,7 @@ void main() {
                   id: const NodeId('n1'),
                   title: 'Hallo-Baustein',
                   description: '',
-                  outputName: 'gruss1',
+                  outputs: [WorkflowOutput.primary('gruss1')],
                   config: config,
                 ),
                 dragSourceNodeIds: const {},

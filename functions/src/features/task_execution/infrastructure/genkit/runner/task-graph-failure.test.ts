@@ -7,11 +7,11 @@ import {executeTaskGraph} from "./task-graph-runner.js";
 const silentLogger = {info() {}, error() {}, exception() {}, readableInfo() {}, readableError() {}};
 
 const textNode = (id: string, value: string) => ({
-  id, primitive: "stringInput", title: id, description: "", outputName: id,
+  id, primitive: "stringInput", title: id, description: "", outputs: [{key: "value", name: id, showOnCanvas: true}],
   config: {primitive: "stringInput", value},
 });
 const scriptNode = (id: string) => ({
-  id, primitive: "script", title: id, description: "", outputName: id,
+  id, primitive: "script", title: id, description: "", outputs: [{key: "value", name: id, showOnCanvas: true}],
   config: {primitive: "script", script: "x", attachments: []},
 });
 

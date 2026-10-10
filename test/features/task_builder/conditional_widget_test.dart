@@ -24,7 +24,7 @@ void main() {
         id: NodeId('prompt.1'),
         title: 'Prompt',
         description: '',
-        outputName: 'entscheidung',
+        outputs: [WorkflowOutput.primary('entscheidung')],
         config: PromptNodeConfig(
           instruction: '',
           outputType: PromptOutputType.decision,

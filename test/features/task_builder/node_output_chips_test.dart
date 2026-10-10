@@ -31,7 +31,7 @@ void main() {
     'zeigt Werte ohne Namen nicht an, weil sie nicht erreichbar sind',
     (tester) async {
       await tester.pumpWidget(
-        _host(_writeFileNode().copyWith(outputFieldNames: const {})),
+        _host(_writeFileNode().copyWith(outputs: const [])),
       );
 
       expect(find.byType(InputChip), findsNothing);
@@ -90,9 +90,7 @@ void main() {
         );
       });
 
-      await tester.pumpWidget(
-        _host(_saveDocumentNode(outputName: 'Speichern')),
-      );
+      await tester.pumpWidget(_host(_saveDocumentNode(mainName: 'Speichern')));
       await tester.tap(
         find.descendant(
           of: find.widgetWithText(InputChip, 'Angelegt'),
@@ -159,7 +157,10 @@ WorkflowNode _writeFileNode() {
     id: const NodeId('file'),
     title: 'Datei schreiben',
     description: '',
-    outputFieldNames: const {'fileId': 'DateiId', 'isNewFile': 'NeueDatei'},
+    outputs: [
+      WorkflowOutput(key: 'fileId', name: 'DateiId'),
+      WorkflowOutput(key: 'isNewFile', name: 'NeueDatei'),
+    ],
     config: const WriteFileNodeConfig(fileName: '', contentType: ''),
   );
 }
@@ -195,18 +196,20 @@ WorkflowNode _modelInferenceNode() {
     id: const NodeId('model'),
     title: 'Modell ausführen',
     description: '',
-    outputFieldNames: const {'modelId': 'ModellId'},
+    outputs: [WorkflowOutput(key: 'modelId', name: 'ModellId')],
     config: const ModelInferenceNodeConfig(modelId: 'mobilenet-v3'),
   );
 }
 
-WorkflowNode _saveDocumentNode({required String outputName}) {
+WorkflowNode _saveDocumentNode({required String mainName}) {
   return WorkflowNode(
     id: const NodeId('save'),
     title: 'Datensatz speichern',
     description: '',
-    outputName: outputName,
-    outputFieldNames: const {'created': 'Angelegt'},
+    outputs: [
+      WorkflowOutput.primary(mainName),
+      const WorkflowOutput(key: 'created', name: 'Angelegt'),
+    ],
     config: const SaveDocumentNodeConfig(
       collectionName: 'kunden',
       filters: [],

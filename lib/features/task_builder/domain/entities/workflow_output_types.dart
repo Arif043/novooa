@@ -27,6 +27,13 @@ NodeOutputType primaryOutputTypeOf(NodeConfig config) {
   };
 }
 
+/// Typ des Werts mit [key] eines Bausteins — `value` ist der Hauptwert.
+NodeOutputType outputTypeOf(NodeConfig config, String key) {
+  return key == 'value'
+      ? primaryOutputTypeOf(config)
+      : outputFieldTypeFor(config, key);
+}
+
 /// Typ eines weiteren Werts von [config]; Plugins legen ihn selbst fest,
 /// alle anderen Bausteine folgen [outputFieldTypeOf].
 NodeOutputType outputFieldTypeFor(NodeConfig config, String field) {

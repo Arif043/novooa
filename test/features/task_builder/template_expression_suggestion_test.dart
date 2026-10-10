@@ -83,7 +83,7 @@ void main() {
           id: NodeId('script'),
           title: 'Berechnung',
           description: '',
-          outputName: 'script',
+          outputs: [WorkflowOutput.primary('script')],
           config: ScriptNodeConfig(
             script: 'workflow_output("summe", "number", 42)',
           ),
@@ -107,7 +107,7 @@ WorkflowNode _node(String id) => WorkflowNode(
   id: NodeId(id),
   title: id,
   description: '',
-  outputName: id,
+  outputs: [WorkflowOutput.primary(id)],
   config: const StringInputNodeConfig(value: ''),
 );
 
@@ -115,7 +115,7 @@ WorkflowNode _scriptNode() => const WorkflowNode(
   id: NodeId('script'),
   title: 'Berechnung',
   description: '',
-  outputName: 'script',
+  outputs: [WorkflowOutput.primary('script')],
   config: ScriptNodeConfig(script: 'kunde = input\nanzahl = 2\noutput = kunde'),
 );
 
@@ -126,8 +126,11 @@ WorkflowNode _saveDocumentNode() => const WorkflowNode(
   id: NodeId('speichern'),
   title: 'Datensatz speichern',
   description: '',
-  outputName: 'speichern',
-  outputFieldNames: {'created': 'Angelegt', 'count': 'Anzahl'},
+  outputs: [
+    WorkflowOutput.primary('speichern'),
+    WorkflowOutput(key: 'created', name: 'Angelegt'),
+    WorkflowOutput(key: 'count', name: 'Anzahl'),
+  ],
   config: SaveDocumentNodeConfig(
     collectionName: 'kunden',
     filters: [],

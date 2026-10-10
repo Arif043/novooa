@@ -21,7 +21,7 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
     );
     if (channelKind != null) {
       node = switch (node.config) {
-        ReadChannelEventNodeConfig config => _withOutputFieldNames(
+        ReadChannelEventNodeConfig config => _withOutputs(
           node.copyWith(config: config.copyWith(kind: channelKind)),
           task.graph,
         ),
@@ -142,7 +142,7 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
     final result = _updateNodeInGraph(
       task.graph,
       nodeId,
-      (node) => _withOutputFieldNames(update(node), task.graph),
+      (node) => _withOutputs(update(node), task.graph),
     );
     if (!result.changed) return;
     await _saveAndEmit(task.copyWith(graph: result.graph));
@@ -293,7 +293,7 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
         : _nodeOrNullInGraph(task.graph, nodeId);
     final promptConfig = _decisionPromptConfig(task, nodeId);
     if (task == null || promptNode == null || promptConfig == null) return;
-    final valueTemplate = '{{${promptNode.outputName}}}';
+    final valueTemplate = '{{${promptNode.primaryOutputName}}}';
     for (final successor in _successorsOf(task, nodeId)) {
       await _syncConditionalChoices(
         successor.id,

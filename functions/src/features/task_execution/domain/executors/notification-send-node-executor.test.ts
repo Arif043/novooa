@@ -71,7 +71,7 @@ function notificationNode(config: {title?: string; message: string}) {
     primitive: "notificationSend" as const,
     title: "Push senden",
     description: "",
-    outputName: "notify",
+    outputs: [{key: "value", name: "notify", showOnCanvas: true}],
     config: {primitive: "notificationSend" as const, ...config},
   };
 }

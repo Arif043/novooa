@@ -25,7 +25,7 @@ part 'task_builder_graph_mutations.dart';
 part 'task_builder_iterative_refinement_mutations.dart';
 part 'task_builder_human_approval_mutations.dart';
 part 'task_builder_dialog_input_mutations.dart';
-part 'task_builder_output_field_mutations.dart';
+part 'task_builder_output_mutations.dart';
 part 'task_builder_media_input_mutations.dart';
 part 'task_builder_model_inference_mutations.dart';
 part 'task_builder_for_each_mutations.dart';
@@ -129,7 +129,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     );
     final config = node.config as ReadChannelEventNodeConfig;
     // Nur E-Mails haben einen Betreff — die Namen folgen dem Kanal.
-    final configuredNode = _withOutputFieldNames(
+    final configuredNode = _withOutputs(
       node.copyWith(
         title: nodeTextDefaults.readChannelTitle(kind),
         description: nodeTextDefaults.readChannelDescription(kind),
@@ -148,14 +148,11 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       WorkflowPrimitive.sendChannelMessage,
       nodeNumber,
       task.graph,
+      valueBase: nodeTextDefaults.sendOutputBase(kind),
     );
     final configuredNode = node.copyWith(
       title: nodeTextDefaults.sendChannelTitle(kind),
       description: nodeTextDefaults.sendChannelDescription(kind),
-      outputName: _defaultOutputName(
-        task.graph,
-        nodeTextDefaults.sendOutputBase(kind),
-      ),
       config: SendChannelMessageNodeConfig.initial().copyWith(kind: kind),
     );
     await _saveAndEmit(task.addNode(configuredNode));
@@ -188,22 +185,6 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     return _updateNode(nodeId, (node) {
       if (node.title == title) return node;
       return node.copyWith(title: title);
-    });
-  }
-
-  Future<void> updateNodeOutputName(NodeId nodeId, String value) {
-    final task = loadedTaskOrNull();
-    if (task == null) return Future.value();
-    final normalizedName = _normalizedOutputName(value);
-    if (normalizedName.isEmpty) return Future.value();
-    return _updateNode(nodeId, (node) {
-      final outputName = _uniqueOutputName(
-        task.graph,
-        node.outputName,
-        normalizedName,
-      );
-      if (node.outputName == outputName) return node;
-      return node.copyWith(outputName: outputName);
     });
   }
 
@@ -349,42 +330,31 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     int number,
     WorkflowGraph graph, {
     PluginNodeModule? plugin,
+    String? valueBase,
   }) {
     if (plugin != null) {
-      return _withOutputFieldNames(
-        WorkflowNode(
-          id: NodeId('node.$number'),
-          config: plugin.initial(),
-          title: plugin.title,
-          description: plugin.description,
-          outputName: _defaultOutputName(
-            graph,
-            _capitalized(plugin.outputBase),
-          ),
-        ),
+      final node = WorkflowNode(
+        id: NodeId('node.$number'),
+        config: plugin.initial(),
+        title: plugin.title,
+        description: plugin.description,
+      );
+      return _withOutputs(
+        node,
         graph,
+        valueBase: _capitalized(plugin.outputBase),
       );
     }
-    // Dialogeingabe-Bausteine haben immer mehrere, eigenständig benannte
-    // Outputs (siehe _collectOutputNames) und deshalb nie einen eigenen
-    // Ausgabenamen. Reine Seiteneffekt-Bausteine ohne fachlichen
-    // Rückgabewert (siehe WorkflowPrimitive.hasNoOutput) haben gar keinen.
-    final outputName = _hasOwnOutputName(primitive)
-        ? _defaultOutputName(graph, nodeTextDefaults.outputBase(primitive))
-        : '';
+    // Welche Werte ein Baustein benennt, legt outputKeysOf fest: flache
+    // Bausteine (Dialogeingabe) und solche ohne Rückgabewert haben keinen
+    // Hauptwert.
     final node = WorkflowNode(
       id: NodeId('node.$number'),
       config: _initialConfig(primitive, graph),
       title: nodeTextDefaults.title(primitive),
       description: nodeTextDefaults.description(primitive),
-      outputName: outputName,
     );
-    return _withOutputFieldNames(node, graph);
-  }
-
-  bool _hasOwnOutputName(WorkflowPrimitive primitive) {
-    return primitive != WorkflowPrimitive.dialogInput &&
-        !primitive.hasNoOutput;
+    return _withOutputs(node, graph, valueBase: valueBase);
   }
 
   /// [NodeConfig.initial] liefert für Dialogeingabe-Bausteine ein Feld mit
@@ -440,12 +410,10 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     return sanitized;
   }
 
-  /// Alle bereits vergebenen fachlichen Ausgabenamen im gesamten Graphen —
-  /// sowohl der `outputName` eines Bausteins mit genau einem Output als auch
-  /// jeder Feldname eines Bausteins mit mehreren fachlichen Outputs
-  /// (strukturierte Prompt-Ausgabe, Dialogeingabe). Da referenceName als
-  /// Konzept entfällt, ist das ein einziger, flacher, graph-weiter
-  /// Namensraum statt einer Prüfung pro Knoten.
+  /// Alle bereits vergebenen Namen im gesamten Graphen — die benannten Werte
+  /// (`outputs`) und die Feldnamen flacher Bausteine (strukturierte
+  /// Prompt-Ausgabe, Dialogeingabe). Ein einziger, flacher, graph-weiter
+  /// Namensraum.
   Set<String> _allOutputNames(WorkflowGraph graph) {
     final names = <String>{};
     _collectOutputNames(graph, names);
@@ -457,9 +425,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       if (hasFlatOutputFields(node.config)) {
         names.addAll(flatOutputFieldsOf(node.config));
       } else {
-        final name = node.outputName.trim();
-        if (name.isNotEmpty) names.add(name);
-        names.addAll(node.outputFieldNames.values.map((name) => name.trim()));
+        names.addAll(node.outputs.map((output) => output.name.trim()));
       }
       if (node.config case ConditionalNodeConfig(:final branches)) {
         for (final branch in branches) {

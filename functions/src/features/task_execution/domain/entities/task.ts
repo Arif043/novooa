@@ -109,12 +109,22 @@ export type WorkflowEdge = {
   to: string;
   conditionLabel?: string;
 };
+/**
+ * Ein benannter Ausgabewert eines Bausteins: technischer Schlüssel des
+ * Executors (`value` für den Hauptwert, sonst z. B. `found`) → graph-weit
+ * eindeutiger Name (`{{Gefunden}}`). `showOnCanvas` betrifft nur den Builder.
+ */
+export type WorkflowOutput = {
+  key: string;
+  name: string;
+  showOnCanvas: boolean;
+};
 export type BranchWorkflowNode = {
   id: string;
   primitive: WorkflowPrimitive;
   title: string;
   description: string;
-  outputName: string;
+  outputs?: WorkflowOutput[];
   config?: unknown;
 };
 export type BranchWorkflowGraph = {
@@ -325,14 +335,8 @@ export type WorkflowNode = {
   primitive: WorkflowPrimitive;
   title: string;
   description: string;
-  outputName: string;
-  /**
-   * Graph-weit eindeutige Namen der weiteren Ausgabewerte eines Bausteins:
-   * technischer Schlüssel des Executors (z. B. `found`) → Name, unter dem
-   * der Wert flach erreichbar ist (z. B. `{{Gefunden}}`). Fehlt ein Name,
-   * ist der Wert nicht per Template erreichbar.
-   */
-  outputFieldNames?: Record<string, string>;
+  /** Benannte Ausgabewerte; ein Wert ohne Eintrag ist per Template nicht erreichbar. */
+  outputs?: WorkflowOutput[];
   config: NodeConfig;
 };
 export type WorkflowGraph = {

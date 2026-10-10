@@ -4,7 +4,7 @@ import {taskDefinitionSchema} from "./task-definition.js";
 
 const taskWith = (config: unknown) => ({
   id: "t", title: "T", objective: "",
-  nodes: [{id: "n", primitive: "httpRequest", title: "Anfrage", description: "", outputName: "antwort", config}],
+  nodes: [{id: "n", primitive: "httpRequest", title: "Anfrage", description: "", outputs: [{key: "value", name: "antwort", showOnCanvas: true}], config}],
   edges: [],
 });
 

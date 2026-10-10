@@ -62,7 +62,7 @@ void main() {
       final node =
           (builder.state as TaskBuilderLoaded).editingTask.nodes.single;
       expect(node.config, const ReadWebhookNodeConfig());
-      expect(node.outputName, equals('Ereignis'));
+      expect(node.primaryOutputName, equals('Ereignis'));
     },
   );
 
@@ -104,7 +104,7 @@ void main() {
       id: const NodeId('n1'),
       title: 'Webhook-Ereignis',
       description: '',
-      outputName: 'ereignis',
+      outputs: [WorkflowOutput.primary('ereignis')],
       config: const ReadWebhookNodeConfig(),
     );
     await tester.pumpWidget(

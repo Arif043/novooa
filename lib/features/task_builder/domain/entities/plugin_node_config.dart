@@ -25,7 +25,7 @@ abstract class PluginNodeConfig extends NodeConfig {
   NodeOutputType get primaryOutputType => NodeOutputType.string;
 
   /// Technische Schlüssel der weiteren Werte samt Typ; ihre Namen
-  /// (`{{Anzahl}}`) stehen in `WorkflowNode.outputFieldNames`.
+  /// (`{{Anzahl}}`) stehen in `WorkflowNode.outputs`.
   Map<String, NodeOutputType> get outputFields => const {};
 }
 

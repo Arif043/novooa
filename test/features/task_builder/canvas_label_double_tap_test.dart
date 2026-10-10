@@ -79,7 +79,7 @@ void main() {
 
     final updated = (cubit.state as TaskBuilderLoaded).editingTask.nodes
         .firstWhere((node) => node.id == const NodeId('quelle'));
-    expect(updated.outputName, 'umbenannt');
+    expect(updated.primaryOutputName, 'umbenannt');
     expect(find.byType(TextField), findsNothing);
     expect(find.text('umbenannt'), findsOneWidget);
     await cubit.close();
@@ -117,7 +117,7 @@ Task _taskWithOutputNameEdge() {
     id: NodeId('quelle'),
     title: '',
     description: '',
-    outputName: 'ausgabe',
+    outputs: [WorkflowOutput.primary('ausgabe')],
     config: StringInputNodeConfig(value: ''),
   );
   const successor = WorkflowNode(

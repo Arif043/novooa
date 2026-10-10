@@ -16,9 +16,10 @@ test("executes every item serially and preserves its result order", async () => 
   });
 
   assert.deepEqual(values, ["first", "second"]);
+  // Je Runde ein flaches Objekt aus den benannten Werten, wie in Vorlagen.
   assert.deepEqual(result, [
-    {unterplan: {value: "first-done"}},
-    {unterplan: {value: "second-done"}},
+    {unterplan: "first-done"},
+    {unterplan: "second-done"},
   ]);
 });
 
@@ -77,7 +78,7 @@ function config(node?: {primitive: string}): ForEachNodeConfig {
         primitive: (node?.primitive ?? "stringInput") as "humanApproval",
         title: "Unterplan",
         description: "",
-        outputName: "unterplan",
+        outputs: [{key: "value", name: "unterplan", showOnCanvas: true}],
       }],
       edges: [],
     },

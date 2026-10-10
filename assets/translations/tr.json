@@ -499,6 +499,8 @@
     "suggestion_failed": "Öneri uygulanamadı.",
     "tap_to_copy": "{type} · {expression} ifadesini kopyalamak için dokunun",
     "copy_expression": "{expression} kopyala",
+    "show_on_canvas": "Tuvalde göster",
+    "hide_from_canvas": "Tuvalden kaldır",
     "task_name": "Görev adı",
     "team_load_failed": "Ekip yüklenemedi.",
     "template_ausdruck_verwenden": "Şablon ifadesi kullan",

@@ -32,7 +32,10 @@ WorkflowNode _lookupNode() {
     id: const NodeId('lookup'),
     title: 'Datensatz suchen',
     description: '',
-    outputFieldNames: const {'found': 'Gefunden', 'record': 'Eintrag'},
+    outputs: [
+      WorkflowOutput(key: 'found', name: 'Gefunden'),
+      WorkflowOutput(key: 'record', name: 'Eintrag'),
+    ],
     config: DocumentLookupNodeConfig.initial(),
   );
 }
@@ -42,7 +45,10 @@ WorkflowNode _saveNode() {
     id: const NodeId('save'),
     title: 'Datensatz speichern',
     description: '',
-    outputFieldNames: const {'created': 'Angelegt', 'count': 'Anzahl'},
+    outputs: [
+      WorkflowOutput(key: 'created', name: 'Angelegt'),
+      WorkflowOutput(key: 'count', name: 'Anzahl'),
+    ],
     config: SaveDocumentNodeConfig.initial(),
   );
 }

@@ -22,7 +22,7 @@ export const readEmailNodeExecutor: NodeExecutor = {
 
 /**
  * Der Nachrichtentext ist der Hauptwert (`value`); Absender, Betreff und
- * Ankunftszeit sind weitere Werte, die der Builder per `outputFieldNames`
+ * Ankunftszeit sind weitere Werte, die der Builder per `outputs`
  * benennt.
  */
 export const readChannelEventNodeExecutor: NodeExecutor = {

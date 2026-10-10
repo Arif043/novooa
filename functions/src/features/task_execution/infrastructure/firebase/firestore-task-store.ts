@@ -53,8 +53,7 @@ function nodeFromDocument(data: TaskDocument): TaskDocument {
     primitive: stringFrom(config["primitive"], "stringInput"),
     title: stringFrom(data["title"], "Baustein"),
     description: stringFrom(data["description"], ""),
-    outputName: stringFrom(data["outputName"], ""),
-    outputFieldNames: stringRecordFrom(data["outputFieldNames"]),
+    outputs: outputsFrom(data["outputs"]),
     config,
   };
 }
@@ -99,12 +98,15 @@ function stringFrom(value: unknown, fallback: string): string {
   return typeof value === "string" ? value : fallback;
 }
 
-function stringRecordFrom(value: unknown): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(objectFrom(value)).filter(
-      (entry): entry is [string, string] => typeof entry[1] === "string",
-    ),
-  );
+/** Nur vollständige Einträge; ein kaputter Eintrag soll den Lauf nicht abbrechen. */
+function outputsFrom(value: unknown): TaskDocument[] {
+  return objectListFrom(value)
+    .filter((output) => typeof output["key"] === "string" && typeof output["name"] === "string")
+    .map((output) => ({
+      key: output["key"],
+      name: output["name"],
+      showOnCanvas: output["showOnCanvas"] === true,
+    }));
 }
 
 function stringListFrom(value: unknown): string[] {

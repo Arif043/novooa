@@ -86,13 +86,18 @@ export const workflowEdgeSchema = z.object({
   conditionLabel: z.string().optional(),
 });
 
+const workflowOutputListSchema = z.array(z.object({
+  key: z.string().min(1),
+  name: z.string().trim().min(1),
+  showOnCanvas: z.boolean().default(false),
+})).default([]);
+
 const branchWorkflowNodeSchema = z.object({
   id: z.string().min(1),
   primitive: workflowPrimitiveSchema,
   title: z.string().min(1),
   description: z.string().default(""),
-  outputName: z.string().default(""),
-  outputFieldNames: z.record(z.string(), z.string()).default({}),
+  outputs: workflowOutputListSchema,
   config: z.unknown().optional(),
 });
 
@@ -363,8 +368,7 @@ export const workflowNodeSchema = z.object({
   primitive: workflowPrimitiveSchema,
   title: z.string().min(1),
   description: z.string().default(""),
-  outputName: z.string().default(""),
-  outputFieldNames: z.record(z.string(), z.string()).default({}),
+  outputs: workflowOutputListSchema,
   // Ältere Modell-Bausteine speicherten Ausgangsparameter separat; heute sind es Settings.
   config: z.preprocess(withLegacyOutputParametersAsSettings, nodeConfigSchema),
 });

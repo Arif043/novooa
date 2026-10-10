@@ -88,7 +88,7 @@ function executorInput() {
       primitive: "prompt" as const,
       title: "Bild prüfen",
       description: "",
-      outputName: "bildPruefen",
+      outputs: [{key: "value", name: "bildPruefen", showOnCanvas: true}],
       config: promptConfig(),
     },
   };

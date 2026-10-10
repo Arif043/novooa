@@ -18,7 +18,7 @@ test("resolves workflow values and delegates execution through the script port",
       primitive: "script",
       title: "Script",
       description: "",
-      outputName: "script",
+      outputs: [{key: "value", name: "script", showOnCanvas: true}],
       config: {
         primitive: "script",
         script: "output = '{{name}}'",
@@ -50,7 +50,7 @@ test("logs what a failing script printed before the error is rethrown", async ()
     async execute() { throw new ScriptExecutionError("Zeile 2: ValueError: kaputt", "Schritt 1\n", "Warnung\n"); },
   }, (value) => printed.push(value));
   const node = {
-    id: "s", primitive: "script", title: "Script", description: "", outputName: "script",
+    id: "s", primitive: "script", title: "Script", description: "", outputs: [{key: "value", name: "script", showOnCanvas: true}],
     config: {primitive: "script", script: "x", attachments: []},
   } as never;
   const context = {variables: {}, context: "", templateExpressionResolver: {resolveText: (value: string) => value}} as never;
@@ -69,7 +69,7 @@ test("workflow outputs replace the text output and are reachable flat", async ()
     },
   });
   const node = {
-    id: "s", primitive: "script", title: "Script", description: "", outputName: "",
+    id: "s", primitive: "script", title: "Script", description: "", outputs: [],
     config: {primitive: "script", script: "workflow_output('summe', 'number', 42.5)", attachments: []},
   } as never;
   const context = {variables: {}, context: "", templateExpressionResolver: {resolveText: (value: string) => value}} as never;
@@ -92,7 +92,7 @@ test("an invalid workflow output fails the node with the script's console output
     },
   });
   const node = {
-    id: "s", primitive: "script", title: "Script", description: "", outputName: "",
+    id: "s", primitive: "script", title: "Script", description: "", outputs: [],
     config: {primitive: "script", script: "x", attachments: []},
   } as never;
   const context = {variables: {}, context: "", templateExpressionResolver: {resolveText: (value: string) => value}} as never;
