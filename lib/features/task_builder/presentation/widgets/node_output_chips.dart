@@ -7,7 +7,6 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/ios_overlays.dart';
 import '../../domain/entities/task_execution_result.dart';
 import '../../domain/entities/workflow_node.dart';
-import '../../domain/entities/workflow_node_outputs.dart';
 import '../../domain/entities/workflow_output_types.dart';
 import '../cubits/task_builder_cubit.dart';
 import 'node_output_type_style.dart';
@@ -15,18 +14,17 @@ import 'output_canvas_toggle.dart';
 import 'output_field_chip.dart';
 import 'output_name_dialog.dart';
 
-/// Ein Wert im Panel. Benannte Werte ([output] gesetzt) lassen sich
-/// umbenennen und auf die Leinwand holen; flache Felder werden in ihrem
-/// eigenen Editor benannt und hier nur kopiert.
+/// Ein Wert im Panel samt Typ.
 typedef _PanelOutput = ({
   String name,
   NodeOutputType type,
-  WorkflowOutput? output,
+  WorkflowOutput output,
 });
 
-/// Zeigt im Panel alle Werte eines Bausteins. Welche davon zusätzlich als
-/// Chip auf der Leinwand stehen, entscheidet das Pin-Symbol
-/// ([WorkflowOutput.showOnCanvas]).
+/// Zeigt im Panel alle Werte eines Bausteins ([WorkflowNode.outputs]),
+/// auch Felder einer strukturierten Prompt-Ausgabe oder Dialogeingabe.
+/// Welche davon zusätzlich als Chip auf der Leinwand stehen, entscheidet
+/// das Pin-Symbol ([WorkflowOutput.showOnCanvas]).
 class NodeOutputChips extends StatelessWidget {
   const NodeOutputChips({super.key, required this.node});
 
@@ -54,16 +52,14 @@ class NodeOutputChips extends StatelessWidget {
 
   Widget _entry(BuildContext context, _PanelOutput entry) {
     final output = entry.output;
-    final chip = OutputFieldChip(
-      name: entry.name,
-      type: entry.type,
-      onRename: output == null ? null : () => _rename(context, output),
-    );
-    if (output == null) return chip;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        chip,
+        OutputFieldChip(
+          name: entry.name,
+          type: entry.type,
+          onRename: () => _rename(context, output),
+        ),
         OutputCanvasToggle(
           showOnCanvas: output.showOnCanvas,
           onChanged: (show) =>
@@ -83,12 +79,6 @@ class NodeOutputChips extends StatelessWidget {
 
   List<_PanelOutput> _outputs() {
     final config = node.config;
-    if (hasFlatOutputFields(config)) {
-      return [
-        for (final field in typedFlatOutputFieldsOf(config))
-          (name: field.name, type: field.type, output: null),
-      ];
-    }
     return [
       for (final output in node.outputs)
         if (output.name.trim().isNotEmpty)

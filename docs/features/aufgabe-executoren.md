@@ -103,10 +103,12 @@ workflow_output("rechnung", "json", {"nr": "R-1", "positionen": positionen})
 - **Flach statt Text:** Ruft ein Script `workflow_output` auf, liefert es keinen
   `value` mehr, und `output` wird ignoriert; ohne Aufruf bleibt alles wie bisher.
 - **Builder:** erkennt die Ausgaben aus Aufrufen, deren Name und Typ feste Texte
-  sind (`ScriptWorkflowOutputParser`), zeigt sie als Chips auf dem Pfeil und
-  bietet sie als `{{name}}` an. Graph-weit eindeutig hält der Builder nur die
-  Namen, die er selbst vergibt; ein im Code gewählter Name, den schon ein
-  anderer Baustein trägt, überdeckt diesen.
+  sind (`ScriptWorkflowOutputParser`), und führt jede als Wert in `outputs`
+  (Schlüssel = Name im Code). Der Vorlagen-Name startet gleich, ist im Panel
+  umbenennbar und graph-weit eindeutig (`summe`, `summe2`); auf der Leinwand
+  stehen die Werte standardmäßig. Aufrufe mit nicht festem Namen
+  (`workflow_output(name, …)`) erkennt der Builder nicht; ihre Werte sind
+  per Vorlage nicht erreichbar.
 - **Nur im Container:** Der eingebettete Python-Pfad (`scriptPythonSource`,
   Cloud) kennt die Funktion nicht; dort endet ein Aufruf mit `NameError`.
 

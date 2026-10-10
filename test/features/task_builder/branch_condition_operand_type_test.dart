@@ -157,7 +157,11 @@ WorkflowNode _structuredPromptNode() {
     id: NodeId('prompt.1'),
     title: 'Prompt',
     description: '',
-    outputs: [WorkflowOutput.primary('prompt')],
+    outputs: [
+      WorkflowOutput(key: 'titel', name: 'titel', showOnCanvas: true),
+      WorkflowOutput(key: 'summe', name: 'summe', showOnCanvas: true),
+      WorkflowOutput(key: 'bezahlt', name: 'bezahlt', showOnCanvas: true),
+    ],
     config: PromptNodeConfig(
       instruction: '',
       outputType: PromptOutputType.structured,
@@ -198,6 +202,10 @@ WorkflowNode _dialogInputNode() {
     id: NodeId('dialog.1'),
     title: 'Dialogeingabe',
     description: '',
+    outputs: [
+      WorkflowOutput(key: 'alter', name: 'alter', showOnCanvas: true),
+      WorkflowOutput(key: 'kanal', name: 'kanal', showOnCanvas: true),
+    ],
     config: DialogInputNodeConfig(
       instruction: '',
       fields: [

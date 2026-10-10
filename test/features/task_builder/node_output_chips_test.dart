@@ -102,8 +102,8 @@ void main() {
     },
   );
 
-  testWidgets('kopiert die flache Referenz eines strukturierten Feldes ohne '
-      'Knotennamen beim Antippen', (tester) async {
+  testWidgets('kopiert die Referenz eines strukturierten Feldes über das '
+      'Kopier-Symbol', (tester) async {
     final copied = <String>[];
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
       SystemChannels.platform,
@@ -122,7 +122,12 @@ void main() {
     });
 
     await tester.pumpWidget(_host(_structuredPromptNode()));
-    await tester.tap(find.text('titel'));
+    await tester.tap(
+      find.descendant(
+        of: find.widgetWithText(InputChip, 'titel'),
+        matching: find.byIcon(Icons.copy),
+      ),
+    );
 
     expect(copied, ['{{titel}}']);
   });
@@ -139,6 +144,14 @@ WorkflowNode _structuredPromptNode() {
     id: const NodeId('prompt'),
     title: 'Prompt',
     description: '',
+    outputs: [
+      WorkflowOutput(key: 'titel', name: 'titel', showOnCanvas: true),
+      WorkflowOutput(
+        key: 'zusammenfassung',
+        name: 'zusammenfassung',
+        showOnCanvas: true,
+      ),
+    ],
     config: const PromptNodeConfig(
       instruction: '',
       outputType: PromptOutputType.structured,

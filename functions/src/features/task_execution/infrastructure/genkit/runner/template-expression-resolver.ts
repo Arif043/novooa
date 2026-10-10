@@ -19,9 +19,8 @@ export type TemplateExpressionContext = {
   /**
    * Der einzige, graph-weite Namensraum aller Ausgabewerte: jeder Wert eines
    * Bausteins unter seinem Namen aus `outputs` (`value` → `{{Datensatz}}`,
-   * `found` → `{{Gefunden}}`) und jedes Feld eines flachen
-   * Bausteins (strukturierte Prompt-Ausgabe, Dialogeingabe, Script mit
-   * `workflow_output`). Eine Adressierung über den Knotennamen
+   * `found` → `{{Gefunden}}`, Prompt-Feld `summe` → `{{Summe}}`). Eine
+   * Adressierung über den Knotennamen
    * (`{{Datensatz.found}}`) gibt es nicht.
    */
   flatOutputs: Record<string, NodeOutputValue>;
@@ -88,11 +87,10 @@ function flatOutputAt(
 }
 
 /**
- * Baut den flachen Namensraum aus den Ausführungsergebnissen. Flache
- * Bausteine (strukturierte Prompt-Ausgabe, Dialogeingabe, Script mit
- * `workflow_output`) haben keinen eigenen Knotennamen; ihre Feldnamen fließen
- * direkt ein. Bei allen anderen bestimmt `outputs`, unter welchem Namen
- * welcher Wert steht.
+ * Baut den flachen Namensraum aus den Ausführungsergebnissen: Bei jedem
+ * Baustein bestimmt `outputs`, unter welchem Namen welcher Wert steht —
+ * auch bei strukturierter Prompt-Ausgabe, Dialogeingabe und Script mit
+ * `workflow_output`, deren Schlüssel der Feldname ist.
  */
 export function flatOutputsFor(
   nodes: WorkflowNode[],
@@ -101,12 +99,7 @@ export function flatOutputsFor(
   const flatOutputs: Record<string, NodeOutputValue> = {};
   for (const node of nodes) {
     const result = results.get(node.id);
-    if (!result) continue;
-    if (hasFlatOutputs(node, result)) {
-      mergeFlatFieldOutputs(flatOutputs, result.outputs);
-      continue;
-    }
-    mergeNamedOutputs(flatOutputs, node, result.outputs);
+    if (result) mergeNamedOutputs(flatOutputs, node, result.outputs);
   }
   return flatOutputs;
 }
@@ -119,27 +112,6 @@ function mergeNamedOutputs(
   for (const {key, name} of node.outputs ?? []) {
     const output = outputs[key];
     if (output !== undefined && name.trim()) flatOutputs[name.trim()] = output;
-  }
-}
-
-function hasFlatOutputs(node: WorkflowNode, result: NodeExecutionResult): boolean {
-  if (node.config.primitive === "dialogInput") return true;
-  // Ein Script ist flach, sobald es per `workflow_output` eigene Ausgaben statt eines `value` liefert.
-  if (node.config.primitive === "script") return isScriptWithWorkflowOutputs(result);
-  return node.config.primitive === "prompt" && node.config.outputType === "structured";
-}
-
-function isScriptWithWorkflowOutputs(result: NodeExecutionResult): boolean {
-  return result.outputs.value === undefined && Object.keys(result.outputs).length > 0;
-}
-
-function mergeFlatFieldOutputs(
-  flatOutputs: TemplateExpressionContext["flatOutputs"],
-  outputs: Record<string, NodeOutputValue>,
-): void {
-  for (const [key, value] of Object.entries(outputs)) {
-    if (key === "value") continue;
-    flatOutputs[key] = value;
   }
 }
 

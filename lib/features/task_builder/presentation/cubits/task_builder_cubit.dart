@@ -350,28 +350,11 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     // Hauptwert.
     final node = WorkflowNode(
       id: NodeId('node.$number'),
-      config: _initialConfig(primitive, graph),
+      config: NodeConfig.initial(primitive),
       title: nodeTextDefaults.title(primitive),
       description: nodeTextDefaults.description(primitive),
     );
     return _withOutputs(node, graph, valueBase: valueBase);
-  }
-
-  /// [NodeConfig.initial] liefert für Dialogeingabe-Bausteine ein Feld mit
-  /// dem festen Namen "Antwort" — ohne Korrektur würde ein zweiter
-  /// Dialogeingabe-Baustein denselben, nicht mehr eindeutigen Namen tragen.
-  NodeConfig _initialConfig(WorkflowPrimitive primitive, WorkflowGraph graph) {
-    final config = NodeConfig.initial(primitive);
-    if (config is DialogInputNodeConfig && config.fields.isNotEmpty) {
-      final uniqueName = _uniqueOutputName(graph, '', config.fields.first.name);
-      return config.copyWith(
-        fields: [
-          config.fields.first.copyWith(name: uniqueName),
-          ...config.fields.skip(1),
-        ],
-      );
-    }
-    return config;
   }
 
   int _nextNodeNumber(WorkflowGraph graph) {
@@ -410,10 +393,8 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     return sanitized;
   }
 
-  /// Alle bereits vergebenen Namen im gesamten Graphen — die benannten Werte
-  /// (`outputs`) und die Feldnamen flacher Bausteine (strukturierte
-  /// Prompt-Ausgabe, Dialogeingabe). Ein einziger, flacher, graph-weiter
-  /// Namensraum.
+  /// Alle bereits vergebenen Namen im gesamten Graphen (`outputs` aller
+  /// Bausteine) — ein einziger, flacher, graph-weiter Namensraum.
   Set<String> _allOutputNames(WorkflowGraph graph) {
     final names = <String>{};
     _collectOutputNames(graph, names);
@@ -422,11 +403,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
 
   void _collectOutputNames(WorkflowGraph graph, Set<String> names) {
     for (final node in graph.nodes) {
-      if (hasFlatOutputFields(node.config)) {
-        names.addAll(flatOutputFieldsOf(node.config));
-      } else {
-        names.addAll(node.outputs.map((output) => output.name.trim()));
-      }
+      names.addAll(node.outputs.map((output) => output.name.trim()));
       if (node.config case ConditionalNodeConfig(:final branches)) {
         for (final branch in branches) {
           _collectOutputNames(branch.graph, names);

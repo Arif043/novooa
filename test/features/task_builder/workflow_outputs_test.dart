@@ -149,8 +149,8 @@ void main() {
     await cubit.close();
   });
 
-  test('ein Script mit workflow_output wird flach und verliert seinen '
-      'Hauptwert', () async {
+  test('ein Script mit workflow_output tauscht seinen Hauptwert gegen je '
+      'einen Wert pro Ausgabe, mit dem Namen aus dem Code', () async {
     final cubit = await _loadedCubit(_taskWith(_start));
     await cubit.addNodeToMainGraph(WorkflowPrimitive.script);
     final nodeId = _nodes(cubit).last.id;
@@ -158,7 +158,9 @@ void main() {
 
     await cubit.updateScript(nodeId, 'workflow_output("summe", "number", 1)');
 
-    expect(_nodes(cubit).last.outputs, isEmpty);
+    expect(_nodes(cubit).last.outputs, const [
+      WorkflowOutput(key: 'summe', name: 'summe', showOnCanvas: true),
+    ]);
     await cubit.close();
   });
 
@@ -193,4 +195,45 @@ void main() {
       await cubit.close();
     },
   );
+
+  test('ein zweiter Dialog behält sein Feld „Antwort“, der Wert heißt '
+      '„Antwort2“ und steht auf der Leinwand', () async {
+    final cubit = await _loadedCubit(_taskWith(_start));
+
+    await cubit.addNodeToMainGraph(WorkflowPrimitive.dialogInput);
+    await cubit.addNodeToMainGraph(WorkflowPrimitive.dialogInput);
+
+    final [_, first, second] = _nodes(cubit);
+    final fieldName =
+        (second.config as DialogInputNodeConfig).fields.first.name;
+    expect(
+      (first.config as DialogInputNodeConfig).fields.first.name,
+      fieldName,
+    );
+    expect(first.outputNameOf(fieldName), fieldName);
+    expect(second.outputNameOf(fieldName), '${fieldName}2');
+    expect(second.canvasOutputs.single.key, fieldName);
+    await cubit.close();
+  });
+
+  test('Feld umbenennen im Editor erzeugt einen neuen Schlüssel', () async {
+    final cubit = await _loadedCubit(_taskWith(_start));
+    await cubit.addNodeToMainGraph(WorkflowPrimitive.prompt);
+    final nodeId = _nodes(cubit).last.id;
+    await cubit.updatePromptOutputType(nodeId, PromptOutputType.structured);
+    await cubit.updatePromptStructuredField(
+      nodeId: nodeId,
+      fieldIndex: 0,
+      field: const StructuredOutputField(name: 'summe', description: ''),
+    );
+
+    await cubit.updatePromptStructuredField(
+      nodeId: nodeId,
+      fieldIndex: 0,
+      field: const StructuredOutputField(name: 'betrag', description: ''),
+    );
+
+    expect(_namesOf(_nodes(cubit).last), {'betrag': 'betrag'});
+    await cubit.close();
+  });
 }

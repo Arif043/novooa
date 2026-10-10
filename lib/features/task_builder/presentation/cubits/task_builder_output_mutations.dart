@@ -85,16 +85,26 @@ extension TaskBuilderOutputMutations on TaskBuilderCubit {
     List<WorkflowOutput> reserved,
     String? valueBase,
   ) {
-    final isPrimary = key == WorkflowOutput.primaryOutputKey;
-    final base = isPrimary
-        ? valueBase ?? nodeTextDefaults.outputBase(node.config.primitive)
-        : nodeTextDefaults.outputFieldBase(key);
     final name = _defaultOutputName(
       graph,
-      base,
+      _defaultOutputBase(node.config, key, valueBase),
       alsoTaken: {for (final output in reserved) output.name},
     );
-    return WorkflowOutput(key: key, name: name, showOnCanvas: isPrimary);
+    return WorkflowOutput(
+      key: key,
+      name: name,
+      showOnCanvas: defaultShowOnCanvas(node.config, key),
+    );
+  }
+
+  /// Felder (Prompt, Dialog, Script) heißen wie im Editor bzw. im Code; der
+  /// Hauptwert nach dem Baustein, weitere Werte nach ihrem Schlüssel.
+  String _defaultOutputBase(NodeConfig config, String key, String? valueBase) {
+    if (hasFlatOutputFields(config)) return _normalizedOutputName(key);
+    if (key == WorkflowOutput.primaryOutputKey) {
+      return valueBase ?? nodeTextDefaults.outputBase(config.primitive);
+    }
+    return nodeTextDefaults.outputFieldBase(key);
   }
 }
 
@@ -104,4 +114,17 @@ bool _sameOutputs(List<WorkflowOutput> left, List<WorkflowOutput> right) {
     if (left[index] != right[index]) return false;
   }
   return true;
+}
+
+/// [candidate] oder mit `_2`/`_3`-Suffix, bis er sich von [siblings]
+/// unterscheidet; leer bleibt leer.
+String _uniqueFieldName(Iterable<String> siblings, String candidate) {
+  if (candidate.isEmpty) return candidate;
+  final taken = {for (final name in siblings) name.trim()};
+  if (!taken.contains(candidate)) return candidate;
+  var suffix = 2;
+  while (taken.contains('${candidate}_$suffix')) {
+    suffix += 1;
+  }
+  return '${candidate}_$suffix';
 }

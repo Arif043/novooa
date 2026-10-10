@@ -56,10 +56,9 @@ oder weiterer Wert), zum Beispiel:
 {{Dateiname}}
 ```
 
-Bausteine mit mehreren fachlichen Ausgabewerten (strukturierte Prompt-Ausgabe,
-Dialogeingabe) haben keinen eigenen Ausgabenamen — jedes ihrer Felder ist
-stattdessen direkt und flach unter seinem eigenen, graph-weit eindeutigen
-Namen erreichbar, ohne umschliessenden Knotennamen.
+Bei Bausteinen mit Feldern (strukturierte Prompt-Ausgabe, Dialogeingabe,
+Script mit `workflow_output`) ist jedes Feld ein eigener Wert in `outputs`
+(Schlüssel = Feldname), erreichbar unter seinem graph-weit eindeutigen Namen.
 
 Kanten regeln ausschließlich Reihenfolge und Abhängigkeiten. Der Baustein
 `forEach` löst zuerst sein `itemsTemplate` auf und wendet anschließend seinen
@@ -114,10 +113,10 @@ output: { runId: string; status: "queued" | "rejected" }
 speichert Feldname, Datentyp und Optionen in `resumeState`, sendet eine
 Benachrichtigung und erwartet beim Bestätigen `formValues`. Das Backend prüft
 alle Werte gegen die gespeicherte Definition. Danach erhält der wartende Knoten
-einen flachen, typisierten Output pro Feld — ohne umschliessenden Knotennamen
-und ohne primären JSON-`value`-Output. Feldnamen müssen graph-weit eindeutige
-Template-Identifier sein, zum Beispiel `kundennummer`; der Wert ist dann
-direkt über `{{kundennummer}}` verfügbar.
+einen typisierten Output pro Feld unter dem Feldnamen. Feldnamen sind
+Formular-Beschriftung und Schlüssel und müssen nur innerhalb des Bausteins
+eindeutig sein, zum Beispiel `kundennummer`. In Vorlagen gilt der Name des
+Werts aus `outputs` (Standard: der Feldname, bei Kollision `kundennummer2`).
 
 `mediaInput` verwendet denselben Interaktionsvertrag. Während der Ausführung
 entscheidet der Nutzer zwischen Bildergalerie und Kamera. Der Client speichert das Bild zuerst

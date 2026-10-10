@@ -8,10 +8,8 @@ import 'package:syscat2/features/task_builder/presentation/widgets/workflow_canv
 // Deckt zu, wohin `CanvasLink.labels[i].editTarget` fachlich zeigt — das ist
 // die Grundlage dafür, dass ein Doppelklick auf einen Leinwand-Chip
 // (`_CanvasLabelChip`) den richtigen Cubit-Aufruf mit dem richtigen Ziel
-// auslöst. Besonderes Augenmerk auf den Fall, dass leere Feldnamen aus der
-// Anzeige gefiltert werden, das Edit-Ziel aber trotzdem den echten
-// Original-Index tragen muss (siehe `_fieldLabels` in
-// `workflow_canvas_layout.dart`).
+// auslöst. Alle Werte — auch Felder flacher Bausteine — tragen ein
+// OutputEditTarget mit ihrem Schlüssel.
 void main() {
   test(
     'der Hauptwert eines einfachen Bausteins trägt ein OutputEditTarget',
@@ -78,94 +76,44 @@ void main() {
     expect(link.labels.map((label) => label.text), ['Datensatz', 'Gefunden']);
   });
 
-  test('strukturierte Prompt-Felder tragen den echten Original-Index, auch '
-      'wenn ein davorliegendes Feld einen leeren Namen hat und deshalb aus '
-      'der Anzeige gefiltert wird', () {
-    const promptNode = WorkflowNode(
+  test('ein Feld einer strukturierten Prompt-Ausgabe trägt ein '
+      'OutputEditTarget mit dem Feldnamen als Schlüssel', () {
+    const successor = WorkflowNode(
+      id: NodeId('next'),
+      title: '',
+      description: '',
+      config: StringInputNodeConfig(value: ''),
+    );
+    const source = WorkflowNode(
       id: NodeId('prompt'),
       title: '',
       description: '',
-      outputs: [WorkflowOutput.primary('prompt')],
+      outputs: [
+        WorkflowOutput(key: 'summe', name: 'Summe', showOnCanvas: true),
+        WorkflowOutput(key: 'notiz', name: 'Notiz'),
+      ],
       config: PromptNodeConfig(
         instruction: '',
         outputType: PromptOutputType.structured,
         choices: [],
         structuredFields: [
-          StructuredOutputField(name: '', description: ''),
-          StructuredOutputField(name: 'Alter', description: ''),
+          StructuredOutputField(name: 'summe', description: ''),
+          StructuredOutputField(name: 'notiz', description: ''),
         ],
       ),
     );
-    const successor = WorkflowNode(
-      id: NodeId('next'),
-      title: '',
-      description: '',
-      config: StringInputNodeConfig(value: ''),
-    );
     final layout = WorkflowCanvasLayout(
       const WorkflowGraph(
-        nodes: [promptNode, successor],
+        nodes: [source, successor],
         edges: [WorkflowEdge(from: NodeId('prompt'), to: NodeId('next'))],
       ),
     );
-    final link = layout.links.firstWhere(
-      (link) => link.from == 'prompt' && link.to == 'next',
-    );
-    // Nur "Alter" wird angezeigt (leerer Name gefiltert), aber sein
-    // fieldIndex bleibt 1 — der echte Index in `structuredFields`, nicht 0
-    // (der Index in der gefilterten Anzeigeliste).
-    expect(link.labels, hasLength(1));
-    expect(link.labels.single.text, 'Alter');
+
+    final link = layout.links.firstWhere((link) => link.from == 'prompt');
+    expect(link.labels.map((label) => label.text), ['Summe']);
     expect(
       link.labels.single.editTarget,
-      isA<StructuredFieldEditTarget>()
-          .having((target) => target.nodeId, 'nodeId', const NodeId('prompt'))
-          .having((target) => target.fieldIndex, 'fieldIndex', 1),
-    );
-  });
-
-  test('Dialogeingabe-Felder tragen ebenfalls den echten Original-Index bei '
-      'gefilterten leeren Feldnamen', () {
-    const dialogNode = WorkflowNode(
-      id: NodeId('dialog'),
-      title: '',
-      description: '',
-      config: DialogInputNodeConfig(
-        instruction: '',
-        fields: [
-          DialogInputField(name: 'Name', type: DialogInputFieldType.string),
-          DialogInputField(name: '', type: DialogInputFieldType.string),
-          DialogInputField(name: 'Alter', type: DialogInputFieldType.string),
-        ],
-      ),
-    );
-    const successor = WorkflowNode(
-      id: NodeId('next'),
-      title: '',
-      description: '',
-      config: StringInputNodeConfig(value: ''),
-    );
-    final layout = WorkflowCanvasLayout(
-      const WorkflowGraph(
-        nodes: [dialogNode, successor],
-        edges: [WorkflowEdge(from: NodeId('dialog'), to: NodeId('next'))],
-      ),
-    );
-    final link = layout.links.firstWhere(
-      (link) => link.from == 'dialog' && link.to == 'next',
-    );
-    expect(link.labels.map((label) => label.text), ['Name', 'Alter']);
-    expect(
-      link.labels[0].editTarget,
-      isA<DialogFieldEditTarget>()
-          .having((target) => target.nodeId, 'nodeId', const NodeId('dialog'))
-          .having((target) => target.fieldIndex, 'fieldIndex', 0),
-    );
-    expect(
-      link.labels[1].editTarget,
-      isA<DialogFieldEditTarget>()
-          .having((target) => target.nodeId, 'nodeId', const NodeId('dialog'))
-          .having((target) => target.fieldIndex, 'fieldIndex', 2),
+      isA<OutputEditTarget>().having((target) => target.key, 'key', 'summe'),
     );
   });
 

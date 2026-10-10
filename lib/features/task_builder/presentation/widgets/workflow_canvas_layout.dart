@@ -6,7 +6,6 @@ import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/task_execution_result.dart';
 import '../../domain/entities/workflow_node.dart';
-import '../../domain/entities/workflow_node_outputs.dart';
 import '../../domain/entities/workflow_output_types.dart';
 
 class BausteinInsertion {
@@ -29,24 +28,6 @@ class OutputEditTarget extends CanvasLabelEditTarget {
   const OutputEditTarget(this.nodeId, this.key);
   final NodeId nodeId;
   final String key;
-}
-
-/// Ein einzelnes Feld einer strukturierten Prompt-Ausgabe — [fieldIndex]
-/// ist der Original-Index in `PromptNodeConfig.structuredFields`, nicht der
-/// Index in der (leere Namen herausfilternden) Chip-Liste.
-class StructuredFieldEditTarget extends CanvasLabelEditTarget {
-  const StructuredFieldEditTarget(this.nodeId, this.fieldIndex);
-  final NodeId nodeId;
-  final int fieldIndex;
-}
-
-/// Ein einzelnes Feld einer Dialogeingabe — [fieldIndex] wie bei
-/// [StructuredFieldEditTarget] der Original-Index in
-/// `DialogInputNodeConfig.fields`.
-class DialogFieldEditTarget extends CanvasLabelEditTarget {
-  const DialogFieldEditTarget(this.nodeId, this.fieldIndex);
-  final NodeId nodeId;
-  final int fieldIndex;
 }
 
 /// Das Label eines Zweigs eines Bedingter-Ablauf-Bausteins (z.B. "Ja").
@@ -281,45 +262,11 @@ class WorkflowCanvasLayout {
     _ => node.id.value,
   };
 
-  /// Fachliche Workflow-Ausgabewerte eines Bausteins als Chips auf seinem
-  /// Ausgangspfeil — analog zu den "Ja"/"Nein"-Chips verzweigender
-  /// Primitives. Die meisten Bausteine haben genau einen fachlichen
-  /// Ausgabewert (Chip = eigener Ausgabename); ein Prompt-Baustein mit
-  /// strukturierter Ausgabe oder eine Dialogeingabe haben dagegen mehrere,
-  /// eigenständig benannte Ausgabewerte — jeweils ein Chip pro Feld, ohne
-  /// umschließenden Knotennamen.
+  /// Die Werte eines Bausteins, deren Flag „auf der Leinwand“ gesetzt ist,
+  /// als Chips auf seinem Ausgangspfeil — analog zu den „Ja“/„Nein“-Chips
+  /// verzweigender Primitives. Gilt für alle Bausteine gleich, auch für
+  /// Felder einer strukturierten Prompt-Ausgabe oder einer Dialogeingabe.
   List<CanvasLabel> _outputLabels(WorkflowNode node) {
-    if (node.config case PromptNodeConfig(
-      outputType: PromptOutputType.structured,
-      :final structuredFields,
-    )) {
-      return _fieldLabels(
-        structuredFields.map(
-          (field) =>
-              (name: field.name, type: structuredFieldOutputType(field.type)),
-        ),
-        (index) => StructuredFieldEditTarget(node.id, index),
-      );
-    }
-    if (node.config case final ScriptNodeConfig config
-        when hasFlatOutputFields(config)) {
-      // Die Namen stehen im Code (`workflow_output(…)`) — auf der Leinwand
-      // nur anzeigen, nicht umbenennen.
-      return [
-        for (final output in scriptWorkflowOutputsOf(config))
-          CanvasLabel(output.name, null, output.type),
-      ];
-    }
-    if (node.config case DialogInputNodeConfig(:final fields)) {
-      return _fieldLabels(
-        fields.map(
-          (field) =>
-              (name: field.name, type: dialogFieldOutputType(field.type)),
-        ),
-        (index) => DialogFieldEditTarget(node.id, index),
-      );
-    }
-    // Alle übrigen: die Werte, deren Flag „auf der Leinwand“ gesetzt ist.
     return [
       for (final output in node.canvasOutputs)
         CanvasLabel(
@@ -328,26 +275,6 @@ class WorkflowCanvasLayout {
           outputTypeOf(node.config, output.key),
         ),
     ];
-  }
-
-  /// Wie [_labelList], aber für mehrere, unabhängig benannte Felder — leere
-  /// Namen werden für die Anzeige herausgefiltert, das Edit-Ziel trägt aber
-  /// weiterhin den echten Original-Index in `names` (nicht den Index in der
-  /// gefilterten Ergebnisliste).
-  List<CanvasLabel> _fieldLabels(
-    Iterable<TypedOutputField> fields,
-    CanvasLabelEditTarget Function(int fieldIndex) editTargetFor,
-  ) {
-    final labels = <CanvasLabel>[];
-    var index = 0;
-    for (final field in fields) {
-      final trimmed = field.name.trim();
-      if (trimmed.isNotEmpty) {
-        labels.add(CanvasLabel(trimmed, editTargetFor(index), field.type));
-      }
-      index++;
-    }
-    return labels;
   }
 
   List<CanvasLabel> _labelList(

@@ -27,8 +27,14 @@ NodeOutputType primaryOutputTypeOf(NodeConfig config) {
   };
 }
 
-/// Typ des Werts mit [key] eines Bausteins — `value` ist der Hauptwert.
+/// Typ des Werts mit [key] eines Bausteins — `value` ist der Hauptwert,
+/// bei Bausteinen mit Feldern ist [key] der Feldname.
 NodeOutputType outputTypeOf(NodeConfig config, String key) {
+  if (hasFlatOutputFields(config)) {
+    for (final field in typedFlatOutputFieldsOf(config)) {
+      if (field.name == key) return field.type;
+    }
+  }
   return key == 'value'
       ? primaryOutputTypeOf(config)
       : outputFieldTypeFor(config, key);
@@ -59,8 +65,8 @@ NodeOutputType outputFieldTypeOf(String field) {
   };
 }
 
-/// Wie `flatOutputFieldsOf`, aber mit dem Werttyp je Feld. Leere Namen
-/// werden ausgelassen.
+/// Die Felder eines Bausteins mit Feldern samt Werttyp. Leere Namen werden
+/// ausgelassen.
 List<TypedOutputField> typedFlatOutputFieldsOf(NodeConfig config) {
   final fields = switch (config) {
     DialogInputNodeConfig() => [

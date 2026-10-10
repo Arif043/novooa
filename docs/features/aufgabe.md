@@ -158,13 +158,16 @@ Die technischen Schlüssel der Werte (z. B. `recipient`, `sender`) sind Datenver
   Persistiert bleibt der unveränderte Ausdruck `{{name}}`; die Label-
   Darstellung ist reine UI. Die Suche bietet alle benannten Werte gleich an:
   Hauptwerte, weitere Werte (z. B. `{{Gefunden}}`) und Script-Variablen.
-- Alle Werte eines Bausteins (Hauptwert und z. B. „Gefunden“ bei „Datensatz
-  suchen“) sind `WorkflowOutput`s: lokalisiert, großgeschrieben, graph-weit
-  eindeutig, ab 2 nummeriert. Das rechte Panel (`NodeOutputChips`) zeigt alle;
+- Alle Werte eines Bausteins (Hauptwert, z. B. „Gefunden“ bei „Datensatz
+  suchen“, und die Felder von strukturierter Prompt-Ausgabe, Dialogeingabe
+  und Script mit `workflow_output`) sind `WorkflowOutput`s: graph-weit
+  eindeutig, ab 2 nummeriert; Haupt- und weitere Werte heißen lokalisiert
+  und großgeschrieben, Felder wie ihr Feldname. Das rechte Panel
+  (`NodeOutputChips`) zeigt alle;
   Antippen benennt um (belegte Namen bekommen eine Nummer), das
   Kopier-Symbol kopiert `{{Name}}`, das Pin-Symbol (`OutputCanvasToggle`)
   legt fest, ob der Wert auch als Chip auf der Arbeitsfläche steht
-  (`showOnCanvas`, Standard: nur der Hauptwert). Auf der Arbeitsfläche lassen
+  (`showOnCanvas`, Standard: Hauptwert und Felder). Auf der Arbeitsfläche lassen
   sich sichtbare Werte per Doppelklick umbenennen. Einzige Quelle dafür,
   welche Werte ein Baustein-Typ hat:
   `domain/entities/workflow_node_outputs.dart` — genutzt von diesem Overlay

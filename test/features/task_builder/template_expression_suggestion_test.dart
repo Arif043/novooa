@@ -83,7 +83,9 @@ void main() {
           id: NodeId('script'),
           title: 'Berechnung',
           description: '',
-          outputs: [WorkflowOutput.primary('script')],
+          outputs: [
+            WorkflowOutput(key: 'summe', name: 'summe', showOnCanvas: true),
+          ],
           config: ScriptNodeConfig(
             script: 'workflow_output("summe", "number", 42)',
           ),
@@ -142,6 +144,7 @@ WorkflowNode _structuredPromptNode() => const WorkflowNode(
   id: NodeId('prompt'),
   title: 'Prompt',
   description: '',
+  outputs: [WorkflowOutput(key: 'titel', name: 'titel', showOnCanvas: true)],
   config: PromptNodeConfig(
     instruction: '',
     outputType: PromptOutputType.structured,

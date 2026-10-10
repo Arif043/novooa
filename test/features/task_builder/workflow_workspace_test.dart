@@ -192,7 +192,10 @@ void main() {
       id: NodeId('prompt2'),
       title: '',
       description: '',
-      outputs: [WorkflowOutput.primary('prompt2')],
+      outputs: [
+        WorkflowOutput(key: 'Name', name: 'Name', showOnCanvas: true),
+        WorkflowOutput(key: 'Alter', name: 'Alter', showOnCanvas: true),
+      ],
       config: PromptNodeConfig(
         instruction: '',
         outputType: PromptOutputType.structured,
@@ -231,7 +234,10 @@ void main() {
         id: const NodeId('prompt'),
         title: '',
         description: '',
-        outputs: [WorkflowOutput.primary('prompt')],
+        outputs: [
+          for (final name in fieldNames)
+            WorkflowOutput(key: name, name: name, showOnCanvas: true),
+        ],
         config: PromptNodeConfig(
           instruction: '',
           outputType: PromptOutputType.structured,

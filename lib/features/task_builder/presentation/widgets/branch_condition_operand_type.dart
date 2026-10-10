@@ -93,32 +93,39 @@ OperandTypeHint _literalTypeHint(String literal) {
   return const StringTypeHint();
 }
 
-/// Strukturierte Prompt-/Dialogeingabe-Felder leben in einem flachen,
-/// knotennamenlosen Namensraum (siehe `template-expression-resolver.ts`
-/// `hasFlatOutputs`) — adressiert also über den bloßen Feldnamen, nicht
-/// `{{knoten.feld}}`.
+/// Felder einer strukturierten Prompt-Ausgabe, Dialogeingabe oder eines
+/// Scripts werden über den Namen ihres Werts adressiert (`outputs`); der
+/// Schlüssel dieses Werts ist der Feldname, über den sich der Typ findet.
 OperandTypeHint? _fieldTypeHintFor(String name, WorkflowGraph graph) {
   for (final node in _allNodesIn(graph)) {
+    final key = _keyOfOutputNamed(node, name);
+    if (key == null) continue;
     switch (node.config) {
       case PromptNodeConfig(
         outputType: PromptOutputType.structured,
         :final structuredFields,
       ):
         for (final field in structuredFields) {
-          if (field.name.trim() == name)
-            return _structuredFieldHint(field.type);
+          if (field.name.trim() == key) return _structuredFieldHint(field.type);
         }
       case DialogInputNodeConfig(:final fields):
         for (final field in fields) {
-          if (field.name.trim() == name) return _dialogFieldHint(field);
+          if (field.name.trim() == key) return _dialogFieldHint(field);
         }
       case final ScriptNodeConfig config:
         for (final output in scriptWorkflowOutputsOf(config)) {
-          if (output.name == name) return _scriptOutputHint(output.type);
+          if (output.name == key) return _scriptOutputHint(output.type);
         }
       default:
         break;
     }
+  }
+  return null;
+}
+
+String? _keyOfOutputNamed(WorkflowNode node, String name) {
+  for (final output in node.outputs) {
+    if (output.name.trim() == name) return output.key;
   }
   return null;
 }

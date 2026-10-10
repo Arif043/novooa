@@ -84,14 +84,17 @@ test("resolves further outputs flat under their names from outputs, not under th
   assert.equal(resolver.resolveValue("{{subject}}"), undefined);
 });
 
-test("flattens structured prompt fields directly without a node name", () => {
+test("resolves structured prompt fields by the names in outputs, keyed by field name", () => {
   const resolver = graphResolverFor(
     [{
       id: "n1",
       primitive: "prompt",
       title: "",
       description: "",
-      outputs: [],
+      outputs: [
+        {key: "Name", name: "Name", showOnCanvas: true},
+        {key: "Alter", name: "Lebensalter", showOnCanvas: false},
+      ],
       config: {
         primitive: "prompt",
         instruction: "",
@@ -116,18 +119,19 @@ test("flattens structured prompt fields directly without a node name", () => {
   );
 
   assert.equal(resolver.resolveValue("{{Name}}"), "Anna");
-  assert.equal(resolver.resolveValue("{{Alter}}"), 30);
+  assert.equal(resolver.resolveValue("{{Lebensalter}}"), 30);
+  assert.equal(resolver.resolveValue("{{Alter}}"), undefined);
   assert.equal(resolver.resolveValue("{{value}}"), undefined);
 });
 
-test("flattens dialog input fields directly without a node name", () => {
+test("resolves dialog input fields by the names in outputs", () => {
   const resolver = graphResolverFor(
     [{
       id: "n1",
       primitive: "dialogInput",
       title: "",
       description: "",
-      outputs: [],
+      outputs: [{key: "Kundennummer", name: "Kundennummer2", showOnCanvas: true}],
       config: {primitive: "dialogInput", instruction: "", fields: [
         {name: "Kundennummer", type: "string", options: []},
       ]},
@@ -138,16 +142,23 @@ test("flattens dialog input fields directly without a node name", () => {
     })],
   );
 
-  assert.equal(resolver.resolveValue("{{Kundennummer}}"), "K-1");
+  assert.equal(resolver.resolveValue("{{Kundennummer2}}"), "K-1");
+  assert.equal(resolver.resolveValue("{{Kundennummer}}"), undefined);
 });
 
-test("flattens script workflow outputs, but keeps a script without them under its output name", () => {
-  const scriptNode = (id: string, mainName: string): WorkflowNode => ({
-    id, primitive: "script", title: "", description: "", outputs: namedMain(mainName),
+test("resolves script workflow outputs and a plain script text the same way, via outputs", () => {
+  const scriptNode = (id: string, outputs: WorkflowNode["outputs"]): WorkflowNode => ({
+    id, primitive: "script", title: "", description: "", outputs,
     config: {primitive: "script", script: "", inputTemplate: "", attachments: []},
   });
   const resolver = graphResolverFor(
-    [scriptNode("n1", ""), scriptNode("n2", "text")],
+    [
+      scriptNode("n1", [
+        {key: "summe", name: "summe", showOnCanvas: true},
+        {key: "faellig", name: "faellig", showOnCanvas: true},
+      ]),
+      scriptNode("n2", namedMain("text")),
+    ],
     [
       result("n1", "script", {summe: {type: "number", value: 42.5}, faellig: {type: "datetime", value: "2026-10-01"}}),
       result("n2", "script", {value: {type: "string", value: "Hallo"}}),

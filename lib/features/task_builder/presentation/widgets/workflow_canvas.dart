@@ -664,18 +664,6 @@ class _CanvasLabelChipState extends State<_CanvasLabelChip> {
           branchId: branchId,
           label: value,
         );
-      case StructuredFieldEditTarget(:final nodeId, :final fieldIndex):
-        cubit.renamePromptStructuredFieldName(
-          nodeId: nodeId,
-          fieldIndex: fieldIndex,
-          name: value,
-        );
-      case DialogFieldEditTarget(:final nodeId, :final fieldIndex):
-        cubit.renameDialogInputFieldName(
-          nodeId: nodeId,
-          fieldIndex: fieldIndex,
-          name: value,
-        );
     }
   }
 

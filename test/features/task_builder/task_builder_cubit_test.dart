@@ -420,103 +420,99 @@ void main() {
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 
-  test(
-    'updateDialogInputField macht einen Feldnamen graph-weit eindeutig',
-    () async {
-      final repository = _InMemoryTaskRepository(
-        _taskWithDialogInputNode().copyWith(
-          graph: _taskWithDialogInputNode().graph.copyWith(
-            nodes: [
-              ..._taskWithDialogInputNode().nodes,
-              const WorkflowNode(
-                id: NodeId('node.text'),
-                title: 'Text',
-                description: '',
-                outputs: [WorkflowOutput.primary('kundennummer')],
-                config: StringInputNodeConfig(value: ''),
-              ),
-            ],
-          ),
+  test('updateDialogInputField: der Feldname bleibt, nur der Name des Werts '
+      'wird graph-weit eindeutig', () async {
+    final repository = _InMemoryTaskRepository(
+      _taskWithDialogInputNode().copyWith(
+        graph: _taskWithDialogInputNode().graph.copyWith(
+          nodes: [
+            ..._taskWithDialogInputNode().nodes,
+            const WorkflowNode(
+              id: NodeId('node.text'),
+              title: 'Text',
+              description: '',
+              outputs: [WorkflowOutput.primary('kundennummer')],
+              config: StringInputNodeConfig(value: ''),
+            ),
+          ],
         ),
-      );
-      final cubit = TaskBuilderCubit(repository: repository);
+      ),
+    );
+    final cubit = TaskBuilderCubit(repository: repository);
 
-      await cubit.load(repository.savedTask);
-      await cubit.updateDialogInputField(
-        nodeId: const NodeId('node.dialog'),
-        fieldIndex: 0,
-        field: const DialogInputField(
-          name: 'kundennummer',
-          type: DialogInputFieldType.string,
-        ),
-      );
+    await cubit.load(repository.savedTask);
+    await cubit.updateDialogInputField(
+      nodeId: const NodeId('node.dialog'),
+      fieldIndex: 0,
+      field: const DialogInputField(
+        name: 'kundennummer',
+        type: DialogInputFieldType.string,
+      ),
+    );
 
-      final state = cubit.state as TaskBuilderLoaded;
-      final config =
-          state.editingTask.nodes
-                  .firstWhere((node) => node.id == const NodeId('node.dialog'))
-                  .config
-              as DialogInputNodeConfig;
-      expect(config.fields.single.name, 'kundennummer_2');
-      await cubit.close();
-    },
-  );
+    final state = cubit.state as TaskBuilderLoaded;
+    final node = state.editingTask.nodes.firstWhere(
+      (node) => node.id == const NodeId('node.dialog'),
+    );
+    final config = node.config as DialogInputNodeConfig;
+    expect(config.fields.single.name, 'kundennummer');
+    expect(node.outputNameOf('kundennummer'), 'kundennummer2');
+    await cubit.close();
+  });
 
-  test(
-    'updatePromptStructuredField macht einen Feldnamen graph-weit eindeutig',
-    () async {
-      final repository = _InMemoryTaskRepository(
-        const Task(
-          id: 'task.structured',
-          title: 'Aufgabe',
-          objective: '',
-          selectedNodeId: NodeId('node.prompt'),
-          graph: WorkflowGraph(
-            nodes: [
-              WorkflowNode(
-                id: NodeId('node.text'),
-                title: 'Text',
-                description: '',
-                outputs: [WorkflowOutput.primary('name')],
-                config: StringInputNodeConfig(value: ''),
+  test('updatePromptStructuredField: der Feldname bleibt, nur der Name des '
+      'Werts wird graph-weit eindeutig', () async {
+    final repository = _InMemoryTaskRepository(
+      const Task(
+        id: 'task.structured',
+        title: 'Aufgabe',
+        objective: '',
+        selectedNodeId: NodeId('node.prompt'),
+        graph: WorkflowGraph(
+          nodes: [
+            WorkflowNode(
+              id: NodeId('node.text'),
+              title: 'Text',
+              description: '',
+              outputs: [WorkflowOutput.primary('name')],
+              config: StringInputNodeConfig(value: ''),
+            ),
+            WorkflowNode(
+              id: NodeId('node.prompt'),
+              title: 'Prompt',
+              description: '',
+              config: PromptNodeConfig(
+                instruction: '',
+                outputType: PromptOutputType.structured,
+                choices: [],
+                structuredFields: [
+                  StructuredOutputField(name: '', description: ''),
+                ],
               ),
-              WorkflowNode(
-                id: NodeId('node.prompt'),
-                title: 'Prompt',
-                description: '',
-                config: PromptNodeConfig(
-                  instruction: '',
-                  outputType: PromptOutputType.structured,
-                  choices: [],
-                  structuredFields: [
-                    StructuredOutputField(name: '', description: ''),
-                  ],
-                ),
-              ),
-            ],
-            edges: [],
-          ),
+            ),
+          ],
+          edges: [],
         ),
-      );
-      final cubit = TaskBuilderCubit(repository: repository);
+      ),
+    );
+    final cubit = TaskBuilderCubit(repository: repository);
 
-      await cubit.load(repository.savedTask);
-      await cubit.updatePromptStructuredField(
-        nodeId: const NodeId('node.prompt'),
-        fieldIndex: 0,
-        field: const StructuredOutputField(name: 'name', description: ''),
-      );
+    await cubit.load(repository.savedTask);
+    await cubit.updatePromptStructuredField(
+      nodeId: const NodeId('node.prompt'),
+      fieldIndex: 0,
+      field: const StructuredOutputField(name: 'name', description: ''),
+    );
 
-      final state = cubit.state as TaskBuilderLoaded;
-      final config =
-          state.editingTask.nodes
-                  .firstWhere((node) => node.id == const NodeId('node.prompt'))
-                  .config
-              as PromptNodeConfig;
-      expect(config.structuredFields.single.name, 'name_2');
-      await cubit.close();
-    },
-  );
+    final state = cubit.state as TaskBuilderLoaded;
+    final node = state.editingTask.nodes.firstWhere(
+      (node) => node.id == const NodeId('node.prompt'),
+    );
+    final config = node.config as PromptNodeConfig;
+    expect(config.structuredFields.single.name, 'name');
+    expect(node.outputNameOf('name'), 'name2');
+    await cubit.close();
+  });
 
   test('updateMediaInput speichert Anweisung', () async {
     final repository = _InMemoryTaskRepository(_taskWithMediaInputNode());

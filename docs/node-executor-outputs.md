@@ -42,10 +42,15 @@ Namensraum (`flatOutputsFor` in `template-expression-resolver.ts`):
   den Knotennamen (`{{Datensatz.found}}`, `{{Datensatz.value}}`) gibt es
   nicht. Ein Punkt-Pfad führt nur in den JSON-Inhalt eines Werts
   (`{{antwort.name}}`).
-- Bausteine mit mehreren fachlichen Ausgabewerten (strukturierte
-  Prompt-Ausgabe, Dialogeingabe, Script mit `workflow_output`) haben keine
-  `outputs`; jedes Feld steht unter seinem in der Konfiguration vergebenen
-  Namen (`{{Name}}`) und erscheint auf der Leinwand.
+- Bausteine mit Feldern (strukturierte Prompt-Ausgabe, Dialogeingabe,
+  Script mit `workflow_output`) nutzen denselben Mechanismus: Schlüssel ist
+  der Feldname (bzw. der Name im Code), unter dem der Executor den Wert
+  ablegt. Der Name in `outputs` startet gleich dem Feldnamen, ist umbenennbar
+  und graph-weit eindeutig („Antwort“, „Antwort2“); Feldnamen selbst müssen
+  nur innerhalb des Bausteins eindeutig sein. Felder stehen standardmäßig auf
+  der Leinwand. Der Gesamtwert (`value`) dieser Bausteine ist nicht
+  erreichbar. Ändert man einen Feldnamen, entsteht ein neuer Schlüssel; Name
+  und Flag beginnen neu.
 - „Für jedes Element“ liefert je Runde ein flaches Objekt aus den benannten
   Werten des Unterplans (`[{Erkenner: …, Gefunden: …}, …]`).
 - In Zweigen und „Für jedes Element“ sind die Werte der äußeren Ebene unter
