@@ -23,7 +23,7 @@ export function pythonScriptSubagentSpec(
 ): SubagentSpec<typeof pythonScriptInputSchema, typeof scriptDraftSchema> {
   return {
     name: "python_entwicklung",
-    description: "Schreibt Python-Code für einen Script-Baustein (input, output, workflow_output). " +
+    description: "Schreibt Python-Code für einen Script-Baustein (input, workflow_output). " +
       "Führt den Code nicht aus; liefert Script, inputTemplate, Ausgabewerte und Hinweise.",
     model,
     systemPrompt,
@@ -45,11 +45,13 @@ const systemPrompt = `Du bist Python-Entwickler:in für Script-Bausteine in novo
 Vertrag des Script-Bausteins:
 - Die Variable input enthält den aus inputTemplate aufgelösten Wert (Text oder
   JSON-Text; parse JSON bei Bedarf mit json.loads).
-- Setzt das Script eine String-Variable output, ist das die Baustein-Ausgabe.
-- workflow_output(name, type, value) legt typisierte Workflow-Ausgabewerte an;
-  Typen: ${scriptWorkflowOutputTypes.join(", ")}. Namen sind Python-Bezeichner,
-  nicht „value“, je Script nur einmal. Nur im Script-Container der lokalen
-  Runtime verfügbar; erwähne das in hinweise, wenn du es nutzt.
+- Werte für nachfolgende Bausteine entstehen ausschließlich über
+  workflow_output("name", "typ", wert); ohne solche Aufrufe hat der Baustein
+  keine Werte. Name und Typ sind immer String-Literale (keine Variablen,
+  keine f-Strings), damit der Builder sie kennt. Typen:
+  ${scriptWorkflowOutputTypes.join(", ")}. Namen sind Python-Bezeichner, nicht
+  „value“, je Script nur einmal. Nur im Script-Container der lokalen Runtime
+  verfügbar; erwähne das in hinweise.
 - Limits: 5 Sekunden Laufzeit, 10 KB Ausgabe, keine Netzwerkzugriffe.
 Schreibe kurzen, robusten Code nur mit der Standardbibliothek und kommentiere
 das Warum. Trage jeden workflow_output-Aufruf in workflowOutputs ein. Setze

@@ -149,12 +149,12 @@ void main() {
     await cubit.close();
   });
 
-  test('ein Script mit workflow_output tauscht seinen Hauptwert gegen je '
-      'einen Wert pro Ausgabe, mit dem Namen aus dem Code', () async {
+  test('ein Script hat nur die Werte aus workflow_output — ohne solche '
+      'Aufrufe gar keine, auch keinen Hauptwert', () async {
     final cubit = await _loadedCubit(_taskWith(_start));
     await cubit.addNodeToMainGraph(WorkflowPrimitive.script);
     final nodeId = _nodes(cubit).last.id;
-    expect(_nodes(cubit).last.primaryOutputName, 'Skript');
+    expect(_nodes(cubit).last.outputs, isEmpty);
 
     await cubit.updateScript(nodeId, 'workflow_output("summe", "number", 1)');
 

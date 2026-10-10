@@ -29,7 +29,6 @@ void main() {
 
     expect(expressions.map((suggestion) => suggestion.expression), [
       '{{eingabe}}',
-      '{{script}}',
       '{{kunde}}',
       '{{anzahl}}',
     ]);
@@ -117,8 +116,7 @@ WorkflowNode _scriptNode() => const WorkflowNode(
   id: NodeId('script'),
   title: 'Berechnung',
   description: '',
-  outputs: [WorkflowOutput.primary('script')],
-  config: ScriptNodeConfig(script: 'kunde = input\nanzahl = 2\noutput = kunde'),
+  config: ScriptNodeConfig(script: 'kunde = input\nanzahl = 2'),
 );
 
 WorkflowEdge _edge(String from, String to) =>

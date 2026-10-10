@@ -46,7 +46,8 @@ workflow_output("gültig", "boolean", True)
     expect(fields, [(name: 'a', type: NodeOutputType.number)]);
   });
 
-  test('ein Script mit workflow_output ist flach, eines ohne nicht', () {
+  test('ein Script hat genau die Werte aus workflow_output, ohne diese '
+      'Aufrufe keine', () {
     const flat = ScriptNodeConfig(
       script: 'workflow_output("summe", "number", 42)',
     );
@@ -57,7 +58,6 @@ workflow_output("gültig", "boolean", True)
     expect(typedFlatOutputFieldsOf(flat), [
       (name: 'summe', type: NodeOutputType.number),
     ]);
-    expect(hasFlatOutputFields(plain), isFalse);
-    expect(outputKeysOf(plain), ['value']);
+    expect(outputKeysOf(plain), isEmpty);
   });
 }

@@ -63,12 +63,11 @@ exponentiellem Backoff wiederholt.
 ## Script
 
 Der Script-Executor fuehrt isoliertes Python aus. Sein `input` wird aus dem
-expliziten Feld `inputTemplate` aufgeloest. Setzt das Script eine String-
-Variable `output`, wird sie als Baustein-Ausgabe verwendet.
-
-```python
-output = input.upper()
-```
+expliziten Feld `inputTemplate` aufgeloest. Werte fuer nachfolgende Bausteine
+entstehen **ausschliesslich** ueber `workflow_output` (siehe unten); ein
+Script ohne solche Aufrufe hat im Builder keine Werte. Eine gesetzte Variable
+`output` liefert der Executor zwar weiterhin als `value`, sie ist aber per
+Vorlage nicht erreichbar.
 
 Das Limit betraegt fuenf Sekunden und 10 KB Output. Script-Variablen bleiben
 innerhalb desselben Runs erhalten und stehen spaeteren Scripts wieder zur
@@ -100,15 +99,14 @@ workflow_output("rechnung", "json", {"nr": "R-1", "positionen": positionen})
   erwartet number, erhalten str.`). Der Executor prüft die gelieferten Werte
   erneut (`script-workflow-outputs.ts`) und lässt den Baustein bei Fehlern
   scheitern, samt Konsolenausgabe.
-- **Flach statt Text:** Ruft ein Script `workflow_output` auf, liefert es keinen
-  `value` mehr, und `output` wird ignoriert; ohne Aufruf bleibt alles wie bisher.
-- **Builder:** erkennt die Ausgaben aus Aufrufen, deren Name und Typ feste Texte
-  sind (`ScriptWorkflowOutputParser`), und führt jede als Wert in `outputs`
-  (Schlüssel = Name im Code). Der Vorlagen-Name startet gleich, ist im Panel
-  umbenennbar und graph-weit eindeutig (`summe`, `summe2`); auf der Leinwand
-  stehen die Werte standardmäßig. Aufrufe mit nicht festem Namen
-  (`workflow_output(name, …)`) erkennt der Builder nicht; ihre Werte sind
-  per Vorlage nicht erreichbar.
+- **Nur String-Literale:** Name und Typ eines Aufrufs sind immer feste Texte
+  (`workflow_output("summe", "number", x)`), keine Variablen oder f-Strings.
+  Nur so kennt der Builder die Werte vor dem Lauf.
+- **Builder:** liest die Aufrufe aus dem Code (`ScriptWorkflowOutputParser`)
+  und führt jede Ausgabe als Wert in `outputs` (Schlüssel = Name im Code).
+  Der Vorlagen-Name startet gleich, ist im Panel umbenennbar und graph-weit
+  eindeutig (`summe`, `summe2`); auf der Leinwand stehen die Werte
+  standardmäßig.
 - **Nur im Container:** Der eingebettete Python-Pfad (`scriptPythonSource`,
   Cloud) kennt die Funktion nicht; dort endet ein Aufruf mit `NameError`.
 

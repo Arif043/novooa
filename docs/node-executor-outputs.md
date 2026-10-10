@@ -69,7 +69,7 @@ einen identischen `text`-Output — ungenutzte Redundanz, inzwischen entfernt.
 | Primitive | Status | Outputs |
 | --- | --- | --- |
 | `stringInput` | ausgefuehrt | `value` (`string`) |
-| `script` | ausgefuehrt | `value` (`string`); interne Laufzeitvariablen stehen nachfolgenden Templates zur Verfuegung. Mit `workflow_output(name, type, value)` (nur Script-Container) stattdessen ein flacher Output je Aufruf (`string`, `number`, `boolean`, `datetime`, `json`), ohne `value` |
+| `script` | ausgefuehrt | Ein Output je `workflow_output("name", "typ", wert)`-Aufruf (nur Script-Container; Name und Typ als String-Literale; `string`, `number`, `boolean`, `datetime`, `json`). Ohne solche Aufrufe liefert der Executor die Variable `output` als `value`; der Builder führt dafür keinen Wert, sie ist also nicht erreichbar. Laufzeitvariablen stehen nachfolgenden Templates zur Verfuegung |
 | `prompt` mit Text oder Entscheidung | ausgefuehrt | `value` (`string`) |
 | `prompt` strukturiert | ausgefuehrt | ein flacher `string`-Output je konfiguriertem Feld, ohne umschliessenden Knotennamen (kein `value`-Gesamtwert mehr adressierbar) |
 | `prompt` mit Bild | ausgefuehrt | `value` (`media`); das generierte Bild wird als Team-Datei referenziert |

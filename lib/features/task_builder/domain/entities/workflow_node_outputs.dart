@@ -7,10 +7,11 @@ import 'workflow_output_types.dart';
 /// Alle Schlüssel, die ein Baustein als benannte [WorkflowOutput]s führt.
 ///
 /// Bausteine mit Feldern (strukturierte Prompt-Ausgabe, Dialogeingabe,
-/// Script mit `workflow_output`) führen je Feld einen Schlüssel — den
-/// Feldnamen, unter dem der Executor den Wert ablegt; ihr Gesamtwert ist
-/// nicht erreichbar. Alle anderen führen den Hauptwert `value` (außer
-/// Bausteinen ohne Rückgabewert) und die weiteren Werte aus [outputFieldsOf].
+/// Script) führen je Feld einen Schlüssel — den Feldnamen, unter dem der
+/// Executor den Wert ablegt; ihr Gesamtwert ist nicht erreichbar. Ein Script
+/// ohne `workflow_output` hat damit keine Werte. Alle anderen führen den
+/// Hauptwert `value` (außer Bausteinen ohne Rückgabewert) und die weiteren
+/// Werte aus [outputFieldsOf].
 List<String> outputKeysOf(NodeConfig config) {
   if (hasFlatOutputFields(config)) return _fieldKeysOf(config);
   return [
@@ -36,20 +37,19 @@ List<String> _fieldKeysOf(NodeConfig config) {
 }
 
 /// Ob ein Baustein statt eines Hauptwerts einzelne Felder liefert
-/// (strukturierte Prompt-Ausgabe, Dialogeingabe, Script mit
-/// `workflow_output`); siehe [outputKeysOf].
+/// (strukturierte Prompt-Ausgabe, Dialogeingabe, Script); siehe
+/// [outputKeysOf].
 bool hasFlatOutputFields(NodeConfig config) {
-  if (config is DialogInputNodeConfig) return true;
-  if (config is ScriptNodeConfig) {
-    return scriptWorkflowOutputsOf(config).isNotEmpty;
+  if (config is DialogInputNodeConfig || config is ScriptNodeConfig) {
+    return true;
   }
   return config is PromptNodeConfig &&
       config.outputType == PromptOutputType.structured;
 }
 
-/// Die per `workflow_output(…)` im Code definierten Ausgaben eines Scripts.
-/// Ein Script mit solchen Ausgaben liefert Felder statt eines Hauptwerts;
-/// sein Text-`output` ist dann nicht mehr adressierbar.
+/// Die per `workflow_output("name", "typ", …)` im Code definierten Ausgaben
+/// eines Scripts — die einzigen Werte, die ein Script bereitstellt. Namen
+/// und Typen sind String-Literale; nur so kennt der Builder sie vor dem Lauf.
 List<TypedOutputField> scriptWorkflowOutputsOf(ScriptNodeConfig config) {
   return const ScriptWorkflowOutputParser()(config.script);
 }
