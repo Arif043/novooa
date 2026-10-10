@@ -28,7 +28,7 @@ Genkit darunter.
 ### Produkt-Sprache (UI)
 
 - Die App ist **mehrsprachig** (`easy_localization`): **Englisch ist Standard
-  und Rückfall, Deutsch ist ergänzt.** Beim ersten Start gilt die Gerätesprache,
+  und Rückfall, Deutsch und Türkisch sind ergänzt (`en`, `de`, `tr`).** Beim ersten Start gilt die Gerätesprache,
   sofern unterstützt; Nutzer:innen wechseln sie unter Einstellungen. UI-Strings,
   Toasts, Tooltips, leere Zustände und Validierungsmeldungen stehen in
   `assets/translations/{en,de}.json` und werden über `LocaleKeys` (generiert)
@@ -121,7 +121,7 @@ npm run deploy         # firebase deploy --only functions
 - Entitäten: `const` Konstruktoren, `copyWith`, Immutability.
 - States: `sealed class` mit exhaustivem `switch` in der UI.
 - UI-Strings nie inline: neuer Text → Schlüssel in `assets/translations/en.json`
-  **und** `de.json`, dann `dart run easy_localization:generate -S assets/translations -O lib/core/localization -o locale_keys.g.dart -f keys`
+  **und** `de.json` und `tr.json`, dann `dart run easy_localization:generate -S assets/translations -O lib/core/localization -o locale_keys.g.dart -f keys`
   und `LocaleKeys.…tr()` verwenden. `domain/` kennt kein `easy_localization`:
   dort Enums/Schlüssel liefern, übersetzt wird in `presentation/`.
 - Standardnamen neuer Bausteine (Ausgabenamen, Titel) kommen über den Port
@@ -186,7 +186,7 @@ Wie du eine neue Feature-Doc anlegst → [`docs/README.md`](./docs/README.md).
 - **Respektiere die Schichten.** Domain kennt kein Flutter, Presentation
   kennt keine Genkit-SDKs, Infrastructure implementiert nur Domain-Interfaces.
 - **Immutability ernst nehmen.** Keine „Quick-Fix"-Setter auf Entitäten.
-- **Strings sind sichtbar.** Alle neuen sichtbaren Strings in `en.json` und `de.json` pflegen.
+- **Strings sind sichtbar.** Alle neuen sichtbaren Strings in `en.json`, `de.json` und `tr.json` pflegen.
 - **Tests mitdenken.** Mindestens ein Cubit-Test pro neuer Mutation.
 - **Keine Geheimnisse im Repo.** Auch nicht in `firebase_options.dart` — wird
   zur Laufzeit von FlutterFire generiert.

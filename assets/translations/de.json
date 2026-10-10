@@ -198,7 +198,8 @@
       "title": "Sprache",
       "description": "Sprache der Oberfläche und neuer Standardnamen.",
       "de": "Deutsch",
-      "en": "English"
+      "en": "English",
+      "tr": "Türkçe"
     }
   },
   "ui": {

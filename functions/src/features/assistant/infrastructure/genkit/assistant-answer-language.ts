@@ -1,6 +1,6 @@
 import {type AssistantLocale} from "../../domain/entities/assistant-locale.js";
 
-const languageNames: Record<AssistantLocale, string> = {en: "English", de: "Deutsch"};
+const languageNames: Record<AssistantLocale, string> = {en: "English", de: "Deutsch", tr: "Türkçe"};
 
 /**
  * Hängt die Antwortsprache an den Nutzerprompt. Ohne Angabe (ältere Clients)

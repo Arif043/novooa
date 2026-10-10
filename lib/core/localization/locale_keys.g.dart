@@ -293,6 +293,7 @@ abstract class LocaleKeys {
   static const settings_language_description = 'settings.language.description';
   static const settings_language_de = 'settings.language.de';
   static const settings_language_en = 'settings.language.en';
+  static const settings_language_tr = 'settings.language.tr';
   static const settings_language = 'settings.language';
   static const settings = 'settings';
   static const ui_1_bis_120 = 'ui.1_bis_120';

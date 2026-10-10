@@ -167,7 +167,7 @@ Konkrete Commands sind je Aktion getrennt gekapselt:
 
 ### Antwortsprache
 
-Der Client sendet `locale` (`en`/`de`, aus `AssistantContext.languageCode`) im Anfragekörper
+Der Client sendet `locale` (`en`/`de`/`tr`, aus `AssistantContext.languageCode`) im Anfragekörper
 (Callable, Runtime-Route und Relay). `promptWithAnswerLanguage` hängt die Antwortsprache an den
 Nutzerprompt; `answer` und Command-Labels folgen ihr. Fehlt `locale` (ältere Clients), bleibt der
 Agent beim bisherigen Deutsch. Die System-Prompts selbst sind noch deutsch.

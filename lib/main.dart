@@ -112,11 +112,11 @@ Future<void> _bootRuntimeKind(RuntimeKind kind) async {
   );
 }
 
-/// Englisch ist Standard und Rückfall; Deutsch kommt hinzu. Ohne gespeicherte
+/// Englisch ist Standard und Rückfall; Deutsch und Türkisch kommen hinzu. Ohne gespeicherte
 /// Wahl gilt die Gerätesprache, sofern unterstützt.
 Widget _localized(Widget app) {
   return EasyLocalization(
-    supportedLocales: const [Locale('en'), Locale('de')],
+    supportedLocales: const [Locale('en'), Locale('de'), Locale('tr')],
     fallbackLocale: const Locale('en'),
     path: 'assets/translations',
     useOnlyLangCode: true,

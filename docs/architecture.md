@@ -29,7 +29,7 @@ Adapter sind austauschbare Implementierungen. Details stehen in
 
 ## Lokalisierung
 
-- Paket `easy_localization` (^3.0.8); Sprachen `en` (Standard, Rückfall) und `de`.
+- Paket `easy_localization` (^3.0.8); Sprachen `en` (Standard, Rückfall), `de` und `tr`.
   Ohne gespeicherte Wahl gilt die Gerätesprache, sofern unterstützt; Wechsel unter
   Einstellungen (`LanguageSettingsSection`), gespeichert von easy_localization.
 - Texte: `assets/translations/{en,de}.json`; typisierte Schlüssel in

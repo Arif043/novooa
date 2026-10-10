@@ -15,7 +15,7 @@ export type AssistantRoutesOptions = {
 const AssistantText = Type.String({minLength: 1, maxLength: 12000, pattern: "\\S"});
 const AssistantQuestion = Type.Object({
   question: AssistantText,
-  locale: Type.Optional(Type.Union([Type.Literal("en"), Type.Literal("de")])),
+  locale: Type.Optional(Type.Union([Type.Literal("en"), Type.Literal("de"), Type.Literal("tr")])),
   history: Type.Array(Type.Object({
     role: Type.Union([Type.Literal("user"), Type.Literal("agent")]), text: AssistantText,
   }), {maxItems: 8}),

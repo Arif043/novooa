@@ -204,7 +204,7 @@ class _BausteinPaletteState extends State<BausteinPalette> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 24, 8, 8),
                         child: Text(
-                          _groupTitle(group.key).toUpperCase(),
+                          _upperCase(context, _groupTitle(group.key)),
                           style: Theme.of(context).textTheme.labelSmall,
                         ),
                       ),
@@ -271,3 +271,12 @@ class _BausteinPaletteState extends State<BausteinPalette> {
 /// Eingebaute Gruppen sind Übersetzungsschlüssel, Plugin-Gruppen Klartext.
 String _groupTitle(String key) =>
     key.startsWith('task_builder.') ? key.tr() : key;
+
+/// Dart-`toUpperCase` kennt kein türkisches i/İ; dort würde „iletişim“ zu „ILETIŞIM“.
+String _upperCase(BuildContext context, String text) {
+  final isTurkish = Localizations.localeOf(context).languageCode == 'tr';
+  final prepared = isTurkish
+      ? text.replaceAll('i', 'İ').replaceAll('ı', 'I')
+      : text;
+  return prepared.toUpperCase();
+}

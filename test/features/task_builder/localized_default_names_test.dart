@@ -115,4 +115,18 @@ void main() {
       await cubit.close();
     },
   );
+
+  test(
+    'neue Bausteine bekommen türkische Standardnamen ohne Sonderzeichen',
+    () async {
+      loadTestTranslations(const Locale('tr'));
+
+      final node = await _addedNode(
+        (cubit) => cubit.addNodeToMainGraph(WorkflowPrimitive.prompt),
+      );
+
+      expect(node.outputName, 'Komut');
+      expect(node.title, 'Komut istemi');
+    },
+  );
 }

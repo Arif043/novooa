@@ -198,7 +198,8 @@
       "title": "Language",
       "description": "Language of the interface and of new default names.",
       "de": "Deutsch",
-      "en": "English"
+      "en": "English",
+      "tr": "Türkçe"
     }
   },
   "ui": {

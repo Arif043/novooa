@@ -1,5 +1,5 @@
 /** Sprachen, in denen die App und damit der Agent antworten kann. */
-export const assistantLocales = ["en", "de"] as const;
+export const assistantLocales = ["en", "de", "tr"] as const;
 
 export type AssistantLocale = typeof assistantLocales[number];
 

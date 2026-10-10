@@ -10,6 +10,7 @@ class LanguageSettingsSection extends StatelessWidget {
 
   static const _german = Locale('de');
   static const _english = Locale('en');
+  static const _turkish = Locale('tr');
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +27,10 @@ class LanguageSettingsSection extends StatelessWidget {
           ButtonSegment(
             value: _english,
             label: Text(LocaleKeys.settings_language_en.tr()),
+          ),
+          ButtonSegment(
+            value: _turkish,
+            label: Text(LocaleKeys.settings_language_tr.tr()),
           ),
         ],
         selected: {Locale(context.locale.languageCode)},

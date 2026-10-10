@@ -24,9 +24,11 @@ Map<String, String> _load(String language) {
 void main() {
   final english = _load('en');
   final german = _load('de');
+  final turkish = _load('tr');
 
   test('Englisch und Deutsch haben dieselben Schlüssel', () {
     expect(german.keys.toSet(), english.keys.toSet());
+    expect(turkish.keys.toSet(), english.keys.toSet());
   });
 
   test('Platzhalter {name} stimmen in beiden Sprachen überein', () {
@@ -36,11 +38,12 @@ void main() {
 
     for (final key in english.keys) {
       expect(namesIn(german[key]!), namesIn(english[key]!), reason: key);
+      expect(namesIn(turkish[key]!), namesIn(english[key]!), reason: 'tr $key');
     }
   });
 
   test('Texte sind nicht leer (außer dem Plugin-Platzhalter)', () {
-    for (final translations in [english, german]) {
+    for (final translations in [english, german, turkish]) {
       final empty = translations.entries
           .where((entry) => entry.value.trim().isEmpty)
           .map((entry) => entry.key);
@@ -52,7 +55,7 @@ void main() {
     'Standardnamen beginnen groß, sind ASCII und als {{name}} referenzierbar',
     () {
       final identifier = RegExp(r'^[A-Z][A-Za-z0-9_]*$');
-      for (final translations in [english, german]) {
+      for (final translations in [english, german, turkish]) {
         final names = translations.entries
             .where(
               (entry) =>
