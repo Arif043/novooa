@@ -109,7 +109,8 @@
     "output_names": {
       "string_input": "Girdi",
       "script": "Betik",
-      "prompt": "Komut",
+      "prompt": "Metin",
+      "prompt_decision": "Cevap",
       "conditional": "Kosul",
       "iterative_refinement": "Iyilestirme",
       "write_file": "DosyaYaz",

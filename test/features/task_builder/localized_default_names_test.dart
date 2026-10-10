@@ -68,7 +68,7 @@ void main() {
       (cubit) => cubit.addNodeToMainGraph(WorkflowPrimitive.prompt),
     );
 
-    expect(node.primaryOutputName, 'Anweisung');
+    expect(node.primaryOutputName, 'Text');
     expect(node.title, 'Prompt');
   });
 
@@ -110,8 +110,8 @@ void main() {
 
       final names = (cubit.state as TaskBuilderLoaded).editingTask.nodes
           .map((node) => node.primaryOutputName)
-          .where((name) => name.startsWith('Anweisung'));
-      expect(names, ['Anweisung', 'Anweisung2', 'Anweisung3']);
+          .where((name) => name.startsWith('Text'));
+      expect(names, ['Text', 'Text2', 'Text3']);
       await cubit.close();
     },
   );
@@ -125,7 +125,7 @@ void main() {
         (cubit) => cubit.addNodeToMainGraph(WorkflowPrimitive.prompt),
       );
 
-      expect(node.primaryOutputName, 'Komut');
+      expect(node.primaryOutputName, 'Metin');
       expect(node.title, 'Komut istemi');
     },
   );

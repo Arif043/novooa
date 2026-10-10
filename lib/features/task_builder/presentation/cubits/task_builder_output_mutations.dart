@@ -7,12 +7,12 @@ extension TaskBuilderOutputMutations on TaskBuilderCubit {
     required NodeId nodeId,
     required String key,
     required String name,
-  }) {
+  }) async {
     final task = loadedTaskOrNull();
-    if (task == null) return Future.value();
+    if (task == null) return;
     final normalizedName = _normalizedOutputName(name);
-    if (normalizedName.isEmpty) return Future.value();
-    return _updateOutput(nodeId, key, (output) {
+    if (normalizedName.isEmpty) return;
+    await _updateOutput(nodeId, key, (output) {
       final uniqueName = _uniqueOutputName(
         task.graph,
         output.name,
@@ -20,6 +20,9 @@ extension TaskBuilderOutputMutations on TaskBuilderCubit {
       );
       return output.copyWith(name: uniqueName);
     });
+    // Ein nachfolgender Bedingter Ablauf hält den Namen eines
+    // Entscheidungs-Prompts als Kopie (`{{Antwort}}`) und muss mitziehen.
+    await _syncConditionalSuccessors(nodeId);
   }
 
   /// Ob der Wert als Chip auf der Leinwand steht; im Panel steht er immer.
@@ -71,6 +74,25 @@ extension TaskBuilderOutputMutations on TaskBuilderCubit {
     return node.copyWith(outputs: outputs);
   }
 
+  /// Setzt den Hauptwert auf den Standardnamen des aktuellen Typs zurück;
+  /// der bisherige Name des Bausteins gilt dabei als frei.
+  WorkflowNode _withResetPrimaryName(WorkflowNode node, WorkflowGraph graph) {
+    final synced = _withOutputs(node, graph);
+    const key = WorkflowOutput.primaryOutputKey;
+    final current = synced.outputNameOf(key);
+    if (!synced.outputs.any((output) => output.key == key)) return synced;
+    final base = _defaultOutputBase(synced.config, key, null);
+    final taken = _allOutputNames(graph)..remove(current);
+    return synced.copyWith(
+      outputs: [
+        for (final output in synced.outputs)
+          output.key == key
+              ? output.copyWith(name: _numberedName(base, taken))
+              : output,
+      ],
+    );
+  }
+
   WorkflowOutput? _existingOutput(WorkflowNode node, String key) {
     for (final output in node.outputs) {
       if (output.key == key && output.name.trim().isNotEmpty) return output;
@@ -102,6 +124,8 @@ extension TaskBuilderOutputMutations on TaskBuilderCubit {
   String _defaultOutputBase(NodeConfig config, String key, String? valueBase) {
     if (hasFlatOutputFields(config)) return _normalizedOutputName(key);
     if (key == WorkflowOutput.primaryOutputKey) {
+      if (_isDecisionPrompt(config))
+        return nodeTextDefaults.decisionOutputBase();
       return valueBase ?? nodeTextDefaults.outputBase(config.primitive);
     }
     return nodeTextDefaults.outputFieldBase(key);
@@ -128,3 +152,7 @@ String _uniqueFieldName(Iterable<String> siblings, String candidate) {
   }
   return '${candidate}_$suffix';
 }
+
+bool _isDecisionPrompt(NodeConfig config) =>
+    config is PromptNodeConfig &&
+    config.outputType == PromptOutputType.decision;

@@ -109,7 +109,8 @@
     "output_names": {
       "string_input": "Input",
       "script": "Script",
-      "prompt": "Prompt",
+      "prompt": "Text",
+      "prompt_decision": "Answer",
       "conditional": "Condition",
       "iterative_refinement": "Refine",
       "write_file": "WriteFile",

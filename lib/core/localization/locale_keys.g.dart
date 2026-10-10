@@ -85,6 +85,7 @@ abstract class  LocaleKeys {
   static const task_builder_output_names_string_input = 'task_builder.output_names.string_input';
   static const task_builder_output_names_script = 'task_builder.output_names.script';
   static const task_builder_output_names_prompt = 'task_builder.output_names.prompt';
+  static const task_builder_output_names_prompt_decision = 'task_builder.output_names.prompt_decision';
   static const task_builder_output_names_conditional = 'task_builder.output_names.conditional';
   static const task_builder_output_names_iterative_refinement = 'task_builder.output_names.iterative_refinement';
   static const task_builder_output_names_write_file = 'task_builder.output_names.write_file';

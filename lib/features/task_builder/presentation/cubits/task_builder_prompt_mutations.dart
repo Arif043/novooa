@@ -18,14 +18,30 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
     );
   }
 
+  /// Beim Wechsel auf oder weg von „Entscheidung“ bekommt der Hauptwert
+  /// immer den Standardnamen des neuen Typs („Antwort“ bzw. „Text“, bei
+  /// Kollision nummeriert) — auch wenn er vorher umbenannt war. Ein
+  /// nachfolgender Bedingter Ablauf übernimmt Namen und Antwortmöglichkeiten.
   Future<void> updatePromptOutputType(
     NodeId nodeId,
     PromptOutputType outputType,
-  ) {
-    return _updatePromptConfig(
-      nodeId,
-      (config) => config.copyWith(outputType: outputType),
-    );
+  ) async {
+    final task = loadedTaskOrNull();
+    if (task == null) return;
+    await _updateNode(nodeId, (node) {
+      if (node.config case final PromptNodeConfig config) {
+        final updated = node.copyWith(
+          config: config.copyWith(outputType: outputType),
+        );
+        final decisionChanged =
+            _isDecisionPrompt(config) != _isDecisionPrompt(updated.config);
+        return decisionChanged
+            ? _withResetPrimaryName(updated, task.graph)
+            : updated;
+      }
+      return node;
+    });
+    await _syncConditionalSuccessors(nodeId);
   }
 
   Future<void> updatePromptChoice({

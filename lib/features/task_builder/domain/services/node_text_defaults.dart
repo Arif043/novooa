@@ -10,6 +10,10 @@ abstract interface class NodeTextDefaults {
   /// Ausgabename ohne laufende Nummer, z. B. `input` oder `eingabe`.
   String outputBase(WorkflowPrimitive primitive);
 
+  /// Name des Werts eines Prompts mit Ausgabetyp „Entscheidung“, z. B.
+  /// `Antwort`.
+  String decisionOutputBase();
+
   /// Ausgabename eines Sendebausteins, z. B. `sendemail` oder `sendenemail`.
   String sendOutputBase(ChannelEventKind kind);
 

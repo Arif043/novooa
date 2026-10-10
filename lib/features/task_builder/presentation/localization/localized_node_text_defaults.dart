@@ -80,6 +80,10 @@ class LocalizedNodeTextDefaults implements NodeTextDefaults {
   }
 
   @override
+  String decisionOutputBase() =>
+      LocaleKeys.task_builder_output_names_prompt_decision.tr();
+
+  @override
   String sendOutputBase(ChannelEventKind kind) {
     return switch (kind) {
       ChannelEventKind.email =>

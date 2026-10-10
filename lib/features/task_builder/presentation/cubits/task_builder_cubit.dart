@@ -425,7 +425,11 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     String base, {
     Set<String> alsoTaken = const {},
   }) {
-    final taken = _allOutputNames(graph)..addAll(alsoTaken);
+    return _numberedName(base, _allOutputNames(graph)..addAll(alsoTaken));
+  }
+
+  /// [base] selbst, sonst `base2`, `base3` … — der erste freie Name.
+  String _numberedName(String base, Set<String> taken) {
     var candidate = base;
     var number = 2;
     while (taken.contains(candidate)) {
