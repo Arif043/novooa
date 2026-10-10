@@ -105,6 +105,12 @@ folgen der App-Sprache **zum Zeitpunkt des Anlegens**. Sie werden im Task gespei
 späterer Sprachwechsel benennt nichts um, `{{…}}`-Referenzen bleiben stabil. Namen sind
 ASCII (`pruefung`, nicht `prüfung`), weil `_normalizedOutputName` Nicht-`\w`-Zeichen entfernt.
 Namen beginnen mit Großbuchstaben. Der erste Baustein einer Art trägt keine Nummer, ab dem zweiten zählt es ab 2 (nächster freier Name im Graphen): `Input`, `Input2` (en) / `Eingabe`, `Eingabe2` (de), `SendEmail` / `SendenEmail`.
+Prompt-Bausteine heißen nach ihrem Ausgabetyp: Freitext „Text“, Entscheidung „Antwort“
+(`decisionOutputBase`; en „Text“/„Answer“, tr „Metin“/„Cevap“). Beim Wechsel auf oder weg von
+„Entscheidung“ wird der Hauptwert immer auf den Standardnamen des neuen Typs gesetzt (bei
+Kollision nummeriert), auch wenn er vorher umbenannt war. Ein direkt folgender Bedingter Ablauf
+übernimmt den Namen (`{{Antwort}}`) und die Antwortmöglichkeiten — beim Typwechsel und beim
+Umbenennen (`_syncConditionalSuccessors`).
 Die technischen Schlüssel der Werte (z. B. `recipient`, `sender`) sind Datenvertrag und bleiben englisch; ihre Standardnamen stehen unter `task_builder.output_field_names`.
 
 ## UI-Prinzipien

@@ -72,7 +72,8 @@ void main() {
   test('Standardnamen sind beispielhaft wie erwartet', () {
     expect(english['task_builder.output_names.string_input'], 'Input');
     expect(english['task_builder.send_output_names.email'], 'SendEmail');
-    expect(german['task_builder.output_names.prompt'], 'Anweisung');
+    expect(german['task_builder.output_names.prompt'], 'Text');
+    expect(german['task_builder.output_names.prompt_decision'], 'Antwort');
     expect(german['task_builder.send_output_names.email'], 'SendenEmail');
   });
 }
