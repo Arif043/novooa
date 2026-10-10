@@ -52,9 +52,37 @@ ConditionalNodeConfig withRenamedOperand(
       for (final branch in config.branches)
         branch.condition == null
             ? branch
-            : branch.copyWith(
-                condition: _renamed(branch.condition!, from, to),
-              ),
+            : branch.copyWith(condition: _renamed(branch.condition!, from, to)),
+    ],
+  );
+}
+
+/// Zieht eine umbenannte Antwort nach — nur in Zweigen, deren Bedingung
+/// noch genau `{{valueName}}` *ist gleich* `<from>` lautet. Wer die Bedingung
+/// verändert hat, hat den Zweig vom Prompt gelöst; er bleibt unberührt. Die
+/// Beschriftung folgt nur, solange sie der alten Antwort entspricht.
+ConditionalNodeConfig withRenamedAnswer(
+  ConditionalNodeConfig config,
+  String valueName,
+  String from,
+  String to,
+) {
+  final oldAnswer = from.trim();
+  final newAnswer = to.trim();
+  if (oldAnswer == newAnswer) return config;
+  return config.copyWith(
+    branches: [
+      for (final branch in config.branches)
+        _answerOf(branch.condition, valueName) == oldAnswer
+            ? branch.copyWith(
+                label: branch.label.trim() == oldAnswer
+                    ? newAnswer
+                    : branch.label,
+                condition: (branch.condition! as ComparisonCondition).copyWith(
+                  right: newAnswer,
+                ),
+              )
+            : branch,
     ],
   );
 }

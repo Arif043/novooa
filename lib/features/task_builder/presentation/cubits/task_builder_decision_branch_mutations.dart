@@ -58,6 +58,37 @@ extension TaskBuilderDecisionBranchMutations on TaskBuilderCubit {
     }
   }
 
+  /// Benennt eine Antwort in direkt folgenden Bedingten Abläufen um, solange
+  /// deren Zweig noch unverändert `{{Antwort}}` *ist gleich* `<alt>` prüft.
+  Future<void> _renameDecisionAnswer(
+    NodeId promptId,
+    String from,
+    String to,
+  ) async {
+    final task = loadedTaskOrNull();
+    final prompt = task == null
+        ? null
+        : _nodeOrNullInGraph(task.graph, promptId);
+    if (task == null || prompt == null || _decisionChoicesOf(prompt) == null) {
+      return;
+    }
+    for (final successor in _successorsOf(task, promptId)) {
+      await _updateNode(successor.id, (node) {
+        if (node.config case final ConditionalNodeConfig config) {
+          return node.copyWith(
+            config: withRenamedAnswer(
+              config,
+              prompt.primaryOutputName,
+              from,
+              to,
+            ),
+          );
+        }
+        return node;
+      });
+    }
+  }
+
   ConditionalNodeConfig _withDecisionBranches(
     ConditionalNodeConfig config,
     String valueName,

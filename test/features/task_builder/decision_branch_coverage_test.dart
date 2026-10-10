@@ -95,4 +95,42 @@ void main() {
     );
     expect(renamed.branches.last, _sonst);
   });
+
+  test('eine umbenannte Antwort zieht nur in unveränderten Zweigen nach', () {
+    final config = _config([
+      decisionBranchFor(id: 'b1', answer: 'Ja', valueName: 'Antwort'),
+      decisionBranchFor(
+        id: 'b2',
+        answer: 'Ja',
+        valueName: 'Antwort',
+      ).copyWith(label: 'Eigene Beschriftung'),
+      decisionBranchFor(id: 'b3', answer: 'Ja', valueName: 'Antwort').copyWith(
+        condition: const ComparisonCondition(
+          left: '{{Antwort}}',
+          operator: ComparisonOperator.contains,
+          right: 'Ja',
+        ),
+      ),
+      decisionBranchFor(id: 'b4', answer: 'Ja', valueName: 'Anderer'),
+    ]);
+
+    final renamed = withRenamedAnswer(config, 'Antwort', 'Ja', 'Zustimmung');
+
+    expect(renamed.branches[0].label, 'Zustimmung');
+    expect(
+      renamed.branches[0].condition,
+      const ComparisonCondition(
+        left: '{{Antwort}}',
+        operator: ComparisonOperator.equals,
+        right: 'Zustimmung',
+      ),
+    );
+    expect(renamed.branches[1].label, 'Eigene Beschriftung');
+    expect(
+      (renamed.branches[1].condition! as ComparisonCondition).right,
+      'Zustimmung',
+    );
+    expect(renamed.branches[2], config.branches[2]);
+    expect(renamed.branches[3], config.branches[3]);
+  });
 }

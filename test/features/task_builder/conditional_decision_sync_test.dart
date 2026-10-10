@@ -31,6 +31,48 @@ void main() {
     await cubit.close();
   });
 
+  test('eine umbenannte Antwort zieht Tastendruck für Tastendruck nach; ein '
+      'Zweig mit veränderter Bedingung bleibt gelöst', () async {
+    final cubit = await _cubitFor(_taskWithSelectedDecisionPrompt());
+    await cubit.addConnectedNode(
+      primitive: WorkflowPrimitive.conditional,
+      afterId: const NodeId('prompt.1'),
+    );
+    final conditionalId = _conditionalIdOf(cubit);
+    await cubit.updateBranchCondition(
+      conditionalNodeId: conditionalId,
+      branchId: _conditionalConfigOf(cubit).branches[1].id,
+      condition: const ComparisonCondition(
+        left: '{{entscheidung}}',
+        operator: ComparisonOperator.contains,
+        right: 'Nein',
+      ),
+    );
+
+    for (final typed in ['J', '', 'Z', 'Zu']) {
+      await cubit.updatePromptChoice(
+        nodeId: const NodeId('prompt.1'),
+        choiceIndex: 0,
+        value: typed,
+      );
+    }
+    await cubit.updatePromptChoice(
+      nodeId: const NodeId('prompt.1'),
+      choiceIndex: 1,
+      value: 'Niemals',
+    );
+
+    final config = _conditionalConfigOf(cubit);
+    expect(config.branches[0].label, 'Zu');
+    expect(config.branches[0].condition, _equals('Zu'));
+    expect(config.branches[1].label, 'Nein');
+    expect(
+      (config.branches[1].condition! as ComparisonCondition).right,
+      'Nein',
+    );
+    await cubit.close();
+  });
+
   test('„Fehlende Zweige ergänzen“ fügt nur fehlende Antworten vor „Sonst“ '
       'ein', () async {
     final cubit = await _cubitFor(_taskWithDecisionPromptAndSonst());
@@ -175,6 +217,13 @@ Future<TaskBuilderCubit> _cubitFor(Task task) async {
   final cubit = TaskBuilderCubit(repository: _FakeTaskRepository(task));
   await cubit.load(task);
   return cubit;
+}
+
+NodeId _conditionalIdOf(TaskBuilderCubit cubit) {
+  final state = cubit.state as TaskBuilderLoaded;
+  return state.editingTask.nodes
+      .firstWhere((node) => node.config is ConditionalNodeConfig)
+      .id;
 }
 
 ConditionalNodeConfig _conditionalConfigOf(TaskBuilderCubit cubit) {

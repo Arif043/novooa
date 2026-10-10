@@ -45,15 +45,32 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
     await _renameDecisionOperands(nodeId, previousName, _primaryNameOf(nodeId));
   }
 
+  /// Eine umbenannte Antwort zieht in Zweigen nach, deren Bedingung noch
+  /// unverändert auf sie prüft (siehe `withRenamedAnswer`).
   Future<void> updatePromptChoice({
     required NodeId nodeId,
     required int choiceIndex,
     required String value,
   }) async {
+    final previous = _promptChoiceOrNull(nodeId, choiceIndex);
     await _updatePromptConfig(
       nodeId,
       (config) => config.updateChoice(choiceIndex, value),
     );
+    if (previous != null) {
+      await _renameDecisionAnswer(nodeId, previous, value);
+    }
+  }
+
+  String? _promptChoiceOrNull(NodeId nodeId, int choiceIndex) {
+    final task = loadedTaskOrNull();
+    final node = task == null ? null : _nodeOrNullInGraph(task.graph, nodeId);
+    if (node?.config case PromptNodeConfig(
+      :final choices,
+    ) when choiceIndex >= 0 && choiceIndex < choices.length) {
+      return choices[choiceIndex];
+    }
+    return null;
   }
 
   Future<void> addPromptChoice(NodeId nodeId) async {

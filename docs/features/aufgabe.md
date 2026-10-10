@@ -114,11 +114,16 @@ Ein direkt folgender Bedingter Ablauf ist nur lose an den Entscheidungs-Prompt g
 (`task_builder_decision_branch_mutations.dart`):
 - Wird er leer hinter einem Entscheidungs-Prompt angehängt, bekommt er einmalig je Antwort einen
   Zweig mit sichtbarer Bedingung `{{Antwort}}` *ist gleich* `<Antwort>`.
-- Danach wird er nie still verändert: Geänderte Antworten, eigene Bedingungen und „Sonst“ bleiben.
-  Das Panel nennt Antworten ohne passenden Zweig (`missingDecisionAnswers`); „Fehlende Zweige
-  ergänzen“ fügt sie vor „Sonst“ ein.
-- Benennt man den Hauptwert des Prompts um (auch automatisch beim Typwechsel), ziehen die
-  Bedingungen den Namen nach (`{{Antwort}}` → `{{Text}}`), damit sie gültig bleiben.
+- Regel: **Umbenennen zieht nach, alles andere ist sichtbar und manuell.**
+  - Benennt man eine Antwort um, folgen Zweige, deren Bedingung noch genau
+    `{{Antwort}}` *ist gleich* `<alte Antwort>` lautet (`withRenamedAnswer`); die Beschriftung
+    folgt, solange sie der alten Antwort entspricht. Wer die Bedingung eines Zweigs ändert, löst
+    ihn damit vom Prompt; er wird danach nicht mehr aktualisiert.
+  - Benennt man den Hauptwert des Prompts um (auch automatisch beim Typwechsel), ziehen alle
+    Bedingungen den Namen nach (`{{Antwort}}` → `{{Text}}`), damit sie gültig bleiben.
+  - Neue oder gelöschte Antworten ändern den Ablauf nicht. Das Panel nennt Antworten ohne
+    passenden Zweig (`missingDecisionAnswers`); „Fehlende Zweige ergänzen“ fügt sie vor
+    „Sonst“ ein. Eigene Bedingungen und „Sonst“ bleiben immer.
 Die technischen Schlüssel der Werte (z. B. `recipient`, `sender`) sind Datenvertrag und bleiben englisch; ihre Standardnamen stehen unter `task_builder.output_field_names`.
 
 ## UI-Prinzipien
