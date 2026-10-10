@@ -23,7 +23,8 @@ function taskNotFound(): UserFacingError {
   return new UserFacingError("NOT_FOUND", "Aufgabe wurde nicht gefunden.");
 }
 
-function taskDefinitionFromDocument(
+/** Exportiert für Tests; liest ein Firestore-Dokument als ausführbare Aufgabe. */
+export function taskDefinitionFromDocument(
   documentId: string,
   data: TaskDocument,
 ): TaskDefinition {
@@ -53,6 +54,7 @@ function nodeFromDocument(data: TaskDocument): TaskDocument {
     title: stringFrom(data["title"], "Baustein"),
     description: stringFrom(data["description"], ""),
     outputName: stringFrom(data["outputName"], ""),
+    outputFieldNames: stringRecordFrom(data["outputFieldNames"]),
     config,
   };
 }
@@ -95,6 +97,14 @@ function primitiveFromDocument(value: unknown): string {
 
 function stringFrom(value: unknown, fallback: string): string {
   return typeof value === "string" ? value : fallback;
+}
+
+function stringRecordFrom(value: unknown): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(objectFrom(value)).filter(
+      (entry): entry is [string, string] => typeof entry[1] === "string",
+    ),
+  );
 }
 
 function stringListFrom(value: unknown): string[] {
