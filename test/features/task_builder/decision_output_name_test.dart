@@ -105,26 +105,55 @@ void main() {
     await cubit.close();
   });
 
-  test('ein nachfolgender Bedingter Ablauf übernimmt den Namen beim '
-      'Typwechsel und beim Umbenennen', () async {
+  test('die Bedingungen eines nachfolgenden Bedingten Ablaufs ziehen den '
+      'Namen beim Typwechsel und beim Umbenennen nach; geänderte bleiben '
+      'erhalten', () async {
     final cubit = await _loadedCubit(_taskWith(_start));
     await cubit.addNodeToMainGraph(WorkflowPrimitive.prompt);
     final promptId = _nodes(cubit).last.id;
+    await _switchType(cubit, promptId, PromptOutputType.decision);
+    await cubit.updatePromptChoice(
+      nodeId: promptId,
+      choiceIndex: 0,
+      value: 'Ja',
+    );
+    await cubit.updatePromptChoice(
+      nodeId: promptId,
+      choiceIndex: 1,
+      value: 'Nein',
+    );
     await cubit.addNodeToMainGraph(WorkflowPrimitive.conditional);
     final conditionalId = _nodes(cubit).last.id;
-    String valueTemplate() =>
-        (_nodeById(cubit, conditionalId).config as ConditionalNodeConfig)
-            .valueTemplate;
+    ConditionalNodeConfig conditional() =>
+        _nodeById(cubit, conditionalId).config as ConditionalNodeConfig;
+    List<String> lefts() => [
+      for (final branch in conditional().branches)
+        (branch.condition! as ComparisonCondition).left,
+    ];
+    expect(lefts(), ['{{Antwort}}', '{{Antwort}}']);
+    await cubit.updateBranchCondition(
+      conditionalNodeId: conditionalId,
+      branchId: conditional().branches.first.id,
+      condition: const ComparisonCondition(
+        left: '{{Antwort}}',
+        operator: ComparisonOperator.contains,
+        right: 'ja',
+      ),
+    );
 
-    await _switchType(cubit, promptId, PromptOutputType.decision);
-    expect(valueTemplate(), '{{Antwort}}');
+    await _switchType(cubit, promptId, PromptOutputType.text);
+    expect(lefts(), ['{{Text}}', '{{Text}}']);
+    expect(
+      (conditional().branches.first.condition! as ComparisonCondition).operator,
+      ComparisonOperator.contains,
+    );
 
     await cubit.renameOutput(
       nodeId: promptId,
       key: WorkflowOutput.primaryOutputKey,
       name: 'Ergebnis',
     );
-    expect(valueTemplate(), '{{Ergebnis}}');
+    expect(lefts(), ['{{Ergebnis}}', '{{Ergebnis}}']);
     await cubit.close();
   });
 }

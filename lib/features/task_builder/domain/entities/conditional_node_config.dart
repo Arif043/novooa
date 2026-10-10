@@ -12,11 +12,9 @@ class ConditionalBranch extends Equatable {
   final String label;
   final WorkflowGraph graph;
 
-  /// `null` bedeutet: kein eigener Ausdruck — entweder der "Sonst"-Branch
-  /// (greift immer, wenn kein anderer Branch dieses Knotens zutrifft) oder
-  /// ein Alt-/Entscheidungs-Prompt-getriebener Branch aus dem bisherigen
-  /// Label-Matching-Pfad (`conditional-executor.ts`), der unverändert
-  /// weiterläuft, solange kein Branch dieses Knotens ein `condition` trägt.
+  /// `null` bedeutet: der "Sonst"-Branch (greift, wenn kein anderer Branch
+  /// dieses Knotens zutrifft). Nur Altdaten ohne jede Bedingung laufen im
+  /// Backend noch über das Label-Matching (`conditional-executor.ts`).
   final BranchCondition? condition;
 
   @override
@@ -50,12 +48,10 @@ class ConditionalNodeConfig extends NodeConfig {
     return branches.map((branch) => branch.label).toList(growable: false);
   }
 
-  /// Ohne explizite [choices] bleibt der Baustein bewusst branchfrei (eine
-  /// leere Liste bei [fromChoices] erzeugt bereits `branches: []` — kein
-  /// Sonderfall nötig): nur ein direkt vorgeschalteter Entscheidungs-Prompt
-  /// (siehe `TaskBuilderGraphMutations._syncConditionalSuccessors`) füllt
-  /// die Branches automatisch — ein frei eingefügter
-  /// Bedingter-Ablauf-Baustein soll nicht ungefragt "Ja"/"Nein" erfinden.
+  /// Ohne explizite [choices] bleibt der Baustein bewusst branchfrei: Nur
+  /// ein direkt vorgeschalteter Entscheidungs-Prompt füllt die Zweige
+  /// (sichtbare Bedingungen, siehe `addMissingDecisionBranches`) — ein frei
+  /// eingefügter Bedingter Ablauf soll nicht ungefragt "Ja"/"Nein" erfinden.
   factory ConditionalNodeConfig.initial([List<String> choices = const []]) {
     return ConditionalNodeConfig.fromChoices(choices);
   }

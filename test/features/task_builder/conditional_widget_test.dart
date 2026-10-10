@@ -15,8 +15,10 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_s
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_widget.dart';
 
 void main() {
-  testWidgets('zeigt einen Hinweis statt der Wenn-Eingabe, wenn der direkte '
-      'Vorgänger ein Entscheidungs-Prompt ist', (tester) async {
+  testWidgets('hinter einem Entscheidungs-Prompt bleibt der Editor '
+      'bearbeitbar; fehlende Antworten werden genannt und per Klick ergänzt', (
+    tester,
+  ) async {
     final node = _conditionalNode();
     final task = _taskFor(
       node,
@@ -32,16 +34,36 @@ void main() {
         ),
       ),
     );
-    await tester.pumpWidget(await _app(task, node));
-
-    expect(find.text('Wenn'), findsNothing);
-    expect(
-      find.text(
-        'Die Verzweigungen werden aus dem vorherigen Prompt-Baustein '
-        'ermittelt.',
+    final cubit = TaskBuilderCubit(repository: _FakeTaskRepository(task));
+    await cubit.load(task);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlocProvider.value(
+          value: cubit,
+          child: Scaffold(
+            body: BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
+              builder: (context, state) => SingleChildScrollView(
+                child: ConditionalWidget(
+                  node: (state as TaskBuilderLoaded).editingTask.nodes.last,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
+    );
+
+    expect(find.text('Pfade festlegen'), findsOneWidget);
+    expect(
+      find.text('Für diese Antworten gibt es keinen Zweig: Ja'),
       findsOneWidget,
     );
+
+    await tester.tap(find.text('Fehlende Zweige ergänzen'));
+    await tester.pump();
+
+    expect(find.text('Fehlende Zweige ergänzen'), findsNothing);
+    await cubit.close();
   });
 
   testWidgets('zeigt den Baukasten-Editor mit leerem Zustand, wenn kein '

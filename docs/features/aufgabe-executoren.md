@@ -126,15 +126,14 @@ read_file(display_name)
 Die Branch-Auswahl kennt zwei unabhängige Pfade — welcher greift, entscheidet
 sich pro Knoten daran, ob irgendein Branch ein `condition` trägt:
 
-**Label-Matching** (Entscheidungs-Prompt-Vorgänger oder Altdaten): Der
+**Label-Matching** (nur noch Altdaten ohne jede Bedingung): Der
 Conditional-Executor löst sein explizites `valueTemplate` als Ziellabel auf
 und waehlt den Branch mit dem exakt passenden Label, ansonsten den ersten
-Branch (`executeConditionalFlow`, Domain-Funktion). Trägt ein direkt
-vorgeschalteter Entscheidungs-Prompt eine Entscheidung bei, hält
-`_syncConditionalSuccessors` `valueTemplate`/Branch-Labels automatisch mit
-dessen `choices` synchron.
+Branch (`executeConditionalFlow`, Domain-Funktion). Der Builder erzeugt
+solche Zweige nicht mehr; auch hinter einem Entscheidungs-Prompt entstehen
+sichtbare Bedingungen.
 
-**Baukasten-Bedingungen** (kein Entscheidungs-Prompt-Vorgänger): Jeder Branch
+**Baukasten-Bedingungen** (Standard, auch hinter Entscheidungs-Prompts): Jeder Branch
 trägt stattdessen einen eigenen booleschen Ausdrucksbaum (`BranchCondition`:
 Vergleich `left`/`operator`/`right` oder Gruppe mit AND/OR/XOR-verknüpften
 Kindern, beliebig verschachtelt — Verschachtelung ersetzt Klammern).
@@ -146,8 +145,8 @@ ersten Branch wie beim Label-Matching. Operanden werden über
 `resolveValue` (nicht `resolveText`) als Rohwert aufgelöst, damit echte
 Zahlen-/Boolean-Vergleiche möglich sind; nicht-typisierte Werte werden beim
 Vergleich ad-hoc koerziert. Der Baukasten-Editor
-(`ConditionalBranchesEditor`) ersetzt für diesen Fall die frühere einzelne
-"Wenn"-Freitexteingabe.
+(`ConditionalBranchesEditor`) ist immer bearbeitbar; hinter einem
+Entscheidungs-Prompt ergänzt `DecisionCoverageHint` fehlende Antworten.
 
 In beiden Faellen wird der Branch-Graph durch denselben Graph-Runner
 ausgefuehrt; dessen finale Ausgabe wird `value` des Conditional-Knotens.

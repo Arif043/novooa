@@ -255,7 +255,8 @@ abstract class  LocaleKeys {
   static const ui_bild = 'ui.bild';
   static const ui_bild_anfordern = 'ui.bild_anfordern';
   static const ui_bild_eingabe_hinzufuegen = 'ui.bild_eingabe_hinzufuegen';
-  static const ui_branches_from_prompt = 'ui.branches_from_prompt';
+  static const ui_decision_answers_without_branch = 'ui.decision_answers_without_branch';
+  static const ui_add_missing_branches = 'ui.add_missing_branches';
   static const ui_cached_and_ready = 'ui.cached_and_ready';
   static const ui_catalog_unreachable = 'ui.catalog_unreachable';
   static const ui_condition_number = 'ui.condition_number';

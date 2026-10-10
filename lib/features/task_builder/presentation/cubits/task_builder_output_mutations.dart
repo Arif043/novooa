@@ -12,6 +12,7 @@ extension TaskBuilderOutputMutations on TaskBuilderCubit {
     if (task == null) return;
     final normalizedName = _normalizedOutputName(name);
     if (normalizedName.isEmpty) return;
+    final previousName = _primaryNameOf(nodeId);
     await _updateOutput(nodeId, key, (output) {
       final uniqueName = _uniqueOutputName(
         task.graph,
@@ -20,9 +21,19 @@ extension TaskBuilderOutputMutations on TaskBuilderCubit {
       );
       return output.copyWith(name: uniqueName);
     });
-    // Ein nachfolgender Bedingter Ablauf hält den Namen eines
-    // Entscheidungs-Prompts als Kopie (`{{Antwort}}`) und muss mitziehen.
-    await _syncConditionalSuccessors(nodeId);
+    if (key == WorkflowOutput.primaryOutputKey) {
+      await _renameDecisionOperands(
+        nodeId,
+        previousName,
+        _primaryNameOf(nodeId),
+      );
+    }
+  }
+
+  String _primaryNameOf(NodeId nodeId) {
+    final task = loadedTaskOrNull();
+    final node = task == null ? null : _nodeOrNullInGraph(task.graph, nodeId);
+    return node?.primaryOutputName ?? '';
   }
 
   /// Ob der Wert als Chip auf der Leinwand steht; im Panel steht er immer.

@@ -80,10 +80,8 @@ void main() {
     },
   );
 
-  test('synchronisiert die Antwort (Choice) des vorgeschalteten '
-      'Entscheidungs-Prompts, wenn ein Branch-Label direkt auf der Leinwand '
-      'umbenannt wird — sonst generiert der Prompt weiterhin die alte, nicht '
-      'mehr passende Option', () async {
+  test('das Label eines Zweigs ist nur seine Beschriftung — die Antworten '
+      'des Entscheidungs-Prompts bleiben unverändert', () async {
     final cubit = await _cubitFor(_taskWithDecisionPromptAndConditional());
 
     await cubit.updateConditionalBranchLabel(
@@ -98,11 +96,10 @@ void main() {
                 .firstWhere((node) => node.id == const NodeId('prompt.1'))
                 .config
             as PromptNodeConfig;
-    expect(promptConfig.choices, ['Doch', 'Nein']);
+    expect(promptConfig.choices, ['Ja', 'Nein']);
     final config = _conditionalConfigOf(cubit);
     expect(config.branches[0].label, 'Doch');
     expect(config.branches[1].label, 'Nein');
-    expect(config.valueTemplate, '{{entscheidung}}');
     await cubit.close();
   });
 

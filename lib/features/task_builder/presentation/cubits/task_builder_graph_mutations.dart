@@ -73,11 +73,10 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
     await _syncNewSuccessorIfNeeded(insertedAfter);
   }
 
-  /// Deckt den Fall ab, dass ein `conditionalFlow` neu direkt nach einem
-  /// Entscheidungs-Prompt eingefügt wird — ohne diesen Aufruf bliebe er erst
-  /// synchronisiert, sobald jemand danach eine Prompt-Choice bearbeitet.
+  /// Ein neu direkt nach einem Entscheidungs-Prompt eingefügter, leerer
+  /// Bedingter Ablauf bekommt dessen Antworten als Zweige.
   Future<void> _syncNewSuccessorIfNeeded(NodeId? source) async {
-    if (source != null) await _syncConditionalSuccessors(source);
+    if (source != null) await _addDecisionBranchesToNewSuccessors(source);
   }
 
   Future<void> swapNodes(NodeId sourceId, NodeId targetId) async {
@@ -271,53 +270,5 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
       if (graph != null) return graph;
     }
     return null;
-  }
-
-  /// Nur für Entscheidungs-Prompts — ihre Choices sind die einzig fachlich
-  /// bedeutungsvollen Verzweigungsoptionen. Für andere Ausgabetypen bliebe
-  /// ein direkt nachgeschalteter `conditionalFlow` weiterhin frei
-  /// konfigurierbar (kein automatischer Eingriff in dessen `valueTemplate`).
-  PromptNodeConfig? _decisionPromptConfig(Task? task, NodeId nodeId) {
-    final node = task == null ? null : _nodeOrNullInGraph(task.graph, nodeId);
-    if (node?.config case PromptNodeConfig config
-        when config.outputType == PromptOutputType.decision) {
-      return config;
-    }
-    return null;
-  }
-
-  Future<void> _syncConditionalSuccessors(NodeId nodeId) async {
-    final task = loadedTaskOrNull();
-    final promptNode = task == null
-        ? null
-        : _nodeOrNullInGraph(task.graph, nodeId);
-    final promptConfig = _decisionPromptConfig(task, nodeId);
-    if (task == null || promptNode == null || promptConfig == null) return;
-    final valueTemplate = '{{${promptNode.primaryOutputName}}}';
-    for (final successor in _successorsOf(task, nodeId)) {
-      await _syncConditionalChoices(
-        successor.id,
-        promptConfig.choices,
-        valueTemplate,
-      );
-    }
-  }
-
-  Future<void> _syncConditionalChoices(
-    NodeId nodeId,
-    List<String> choices,
-    String valueTemplate,
-  ) {
-    return _updateNode(
-      nodeId,
-      (node) => switch (node.config) {
-        ConditionalNodeConfig config => node.copyWith(
-          config: config
-              .copyWith(choices: choices)
-              .copyWith(valueTemplate: valueTemplate),
-        ),
-        _ => node,
-      },
-    );
   }
 }

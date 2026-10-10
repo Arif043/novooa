@@ -49,7 +49,7 @@ referenzieren.
 | `stringInput` | Texteingabe | Gibt festen Text weiter | Implementiert |
 | `script` | Script | Fuehrt Python mit einer explizit konfigurierten Eingabe aus; in der lokalen Runtime im abgeschotteten Container `novooa-script` mit vollem Python (siehe [`../local-runtime.md`](../local-runtime.md) § Script-Dienst). Dort definiert `workflow_output(name, type, value)` flache, typisierte Workflow-Ausgabewerte (siehe [`aufgabe-executoren.md`](./aufgabe-executoren.md) § Script) | Implementiert |
 | `prompt` | Prompt | LLM-Aufruf mit Vorlage und Variablen; optional ein [Mitarbeiter](./mitarbeiter.md) (System-Prompt + Fähigkeiten) **oder** eigene [Fähigkeiten](./skills.md), nie beides | Implementiert |
-| `conditionalFlow` | Bedingter Ablauf | Verzweigt anhand eines Labels (Entscheidungs-Prompt-Vorgänger) oder anhand eigener boolescher Branch-Bedingungen (geführte Wertauswahl, Vergleiche, alle/mindestens eine/genau eine Bedingung, verschachtelt). Bei eigenen Bedingungen lässt sich der Sonst-Pfad im rechten Panel per Checkbox hinzufügen/entfernen; gefüllte Pfade werden nur nach Bestätigung entfernt. Weitere Bedingungen aktivieren einen ausgeschalteten Sonst-Pfad nicht erneut. | Implementiert |
+| `conditionalFlow` | Bedingter Ablauf | Verzweigt anhand sichtbarer boolescher Branch-Bedingungen (geführte Wertauswahl, Vergleiche, alle/mindestens eine/genau eine Bedingung, verschachtelt), immer bearbeitbar. Hinter einem Entscheidungs-Prompt entstehen Zweige `{{Antwort}}` *ist gleich* `<Antwort>`; ein Hinweis nennt Antworten ohne Zweig und ergänzt sie per „Fehlende Zweige ergänzen“. Bei eigenen Bedingungen lässt sich der Sonst-Pfad im rechten Panel per Checkbox hinzufügen/entfernen; gefüllte Pfade werden nur nach Bestätigung entfernt. Weitere Bedingungen aktivieren einen ausgeschalteten Sonst-Pfad nicht erneut. | Implementiert |
 | `iterativeRefinement` | Iterative Verfeinerung | Bewertet und verbessert einen Entwurf; Mitarbeiter oder Fähigkeiten wie beim Prompt | Implementiert |
 | `writeFile` | Datei schreiben | Schreibt einen explizit konfigurierten Wert als Datei | Implementiert |
 | `readFile` | Datei lesen | Liest eine konkrete Datei-Version | Implementiert |
@@ -108,9 +108,17 @@ Namen beginnen mit Großbuchstaben. Der erste Baustein einer Art trägt keine Nu
 Prompt-Bausteine heißen nach ihrem Ausgabetyp: Freitext „Text“, Entscheidung „Antwort“
 (`decisionOutputBase`; en „Text“/„Answer“, tr „Metin“/„Cevap“). Beim Wechsel auf oder weg von
 „Entscheidung“ wird der Hauptwert immer auf den Standardnamen des neuen Typs gesetzt (bei
-Kollision nummeriert), auch wenn er vorher umbenannt war. Ein direkt folgender Bedingter Ablauf
-übernimmt den Namen (`{{Antwort}}`) und die Antwortmöglichkeiten — beim Typwechsel und beim
-Umbenennen (`_syncConditionalSuccessors`).
+Kollision nummeriert), auch wenn er vorher umbenannt war.
+
+Ein direkt folgender Bedingter Ablauf ist nur lose an den Entscheidungs-Prompt gekoppelt
+(`task_builder_decision_branch_mutations.dart`):
+- Wird er leer hinter einem Entscheidungs-Prompt angehängt, bekommt er einmalig je Antwort einen
+  Zweig mit sichtbarer Bedingung `{{Antwort}}` *ist gleich* `<Antwort>`.
+- Danach wird er nie still verändert: Geänderte Antworten, eigene Bedingungen und „Sonst“ bleiben.
+  Das Panel nennt Antworten ohne passenden Zweig (`missingDecisionAnswers`); „Fehlende Zweige
+  ergänzen“ fügt sie vor „Sonst“ ein.
+- Benennt man den Hauptwert des Prompts um (auch automatisch beim Typwechsel), ziehen die
+  Bedingungen den Namen nach (`{{Antwort}}` → `{{Text}}`), damit sie gültig bleiben.
 Die technischen Schlüssel der Werte (z. B. `recipient`, `sender`) sind Datenvertrag und bleiben englisch; ihre Standardnamen stehen unter `task_builder.output_field_names`.
 
 ## UI-Prinzipien

@@ -20,14 +20,15 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
 
   /// Beim Wechsel auf oder weg von „Entscheidung“ bekommt der Hauptwert
   /// immer den Standardnamen des neuen Typs („Antwort“ bzw. „Text“, bei
-  /// Kollision nummeriert) — auch wenn er vorher umbenannt war. Ein
-  /// nachfolgender Bedingter Ablauf übernimmt Namen und Antwortmöglichkeiten.
+  /// Kollision nummeriert) — auch wenn er vorher umbenannt war. Bedingungen
+  /// eines nachfolgenden Bedingten Ablaufs ziehen den Namen nach.
   Future<void> updatePromptOutputType(
     NodeId nodeId,
     PromptOutputType outputType,
   ) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
+    final previousName = _primaryNameOf(nodeId);
     await _updateNode(nodeId, (node) {
       if (node.config case final PromptNodeConfig config) {
         final updated = node.copyWith(
@@ -41,7 +42,7 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
       }
       return node;
     });
-    await _syncConditionalSuccessors(nodeId);
+    await _renameDecisionOperands(nodeId, previousName, _primaryNameOf(nodeId));
   }
 
   Future<void> updatePromptChoice({
@@ -53,12 +54,10 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
       nodeId,
       (config) => config.updateChoice(choiceIndex, value),
     );
-    await _syncConditionalSuccessors(nodeId);
   }
 
   Future<void> addPromptChoice(NodeId nodeId) async {
     await _updatePromptConfig(nodeId, (config) => config.addChoice());
-    await _syncConditionalSuccessors(nodeId);
   }
 
   Future<void> removePromptChoice({
@@ -69,7 +68,6 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
       nodeId,
       (config) => config.removeChoice(choiceIndex),
     );
-    await _syncConditionalSuccessors(nodeId);
   }
 
   /// Der Feldname ist der Schlüssel des Werts (JSON-Feld für das Modell) und
