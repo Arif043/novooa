@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/sliding_palette_overlay.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/task.dart';
@@ -211,21 +212,13 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
                       ),
                     ),
                   ),
-                if (!desktop && _showPalette) ...[
-                  Positioned.fill(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _showPalette = false),
-                      child: ColoredBox(color: Colors.black26),
-                    ),
-                  ),
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
+                if (!desktop)
+                  SlidingPaletteOverlay(
+                    visible: _showPalette,
                     width: paletteWidth,
+                    onDismiss: () => setState(() => _showPalette = false),
                     child: palette,
                   ),
-                ],
                 if (panelNode case final WorkflowNode node)
                   _configurationPanel(
                     node: node,
