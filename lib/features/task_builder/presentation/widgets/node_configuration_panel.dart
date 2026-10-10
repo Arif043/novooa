@@ -13,17 +13,21 @@ class NodeConfigurationPanel extends StatelessWidget {
     super.key,
     required this.node,
     required this.onClose,
+    this.fullBleed = false,
   });
   final WorkflowNode node;
   final VoidCallback onClose;
+
+  /// Mobil: füllt den Bereich ohne Rand, Rundung und Innenabstand der Inhalte.
+  final bool fullBleed;
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Material(
-      elevation: 8,
+      elevation: fullBleed ? 0 : 8,
       shadowColor: colors.shadow.withValues(alpha: .12),
       color: colors.surface,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: fullBleed ? BorderRadius.zero : BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -71,11 +75,14 @@ class NodeConfigurationPanel extends StatelessWidget {
           Expanded(
             child: SingleChildScrollView(
               key: ValueKey('configuration-scroll-${node.id.value}'),
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(fullBleed ? 0 : 24),
               child: NodeGraphItem(
                 key: ValueKey(node.id),
                 node: node,
                 configurationOnly: true,
+                sectionPadding: fullBleed
+                    ? const EdgeInsets.symmetric(horizontal: 24)
+                    : EdgeInsets.zero,
                 dragSourceNodeIds: const {},
                 isSource: false,
                 isDragActive: false,

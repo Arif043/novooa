@@ -9,12 +9,14 @@ class AnimatedNodeConfigurationPanel extends StatelessWidget {
     required this.isVisible,
     required this.onClose,
     required this.onDismissed,
+    this.fullBleed = false,
   });
 
   final WorkflowNode node;
   final bool isVisible;
   final VoidCallback onClose;
   final VoidCallback onDismissed;
+  final bool fullBleed;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +38,7 @@ class AnimatedNodeConfigurationPanel extends StatelessWidget {
             key: ValueKey(node.id),
             node: node,
             onClose: onClose,
+            fullBleed: fullBleed,
           ),
         ),
       ),

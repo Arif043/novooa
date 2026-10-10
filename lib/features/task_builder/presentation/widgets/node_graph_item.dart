@@ -45,6 +45,7 @@ class NodeGraphItem extends StatelessWidget {
     required this.onDragStarted,
     required this.onDragEnded,
     this.configurationOnly = false,
+    this.sectionPadding = EdgeInsets.zero,
   });
 
   static const animationDuration = Duration(milliseconds: 500);
@@ -57,24 +58,39 @@ class NodeGraphItem extends StatelessWidget {
   final VoidCallback onDragEnded;
   final bool configurationOnly;
 
+  /// Abstand der Abschnitte „Ausgabename“ und „Ergebnis“ im Konfigurationsmodus.
+  /// Das Panel gibt ihn mobil weiter, weil dort der Bereich selbst randlos ist.
+  final EdgeInsets sectionPadding;
+
   @override
   Widget build(BuildContext context) {
     if (configurationOnly) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: NodeOutputNameField(node: node),
+          Padding(
+            padding: sectionPadding,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: NodeOutputNameField(node: node),
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           _templateAwareNodeWidget(context),
           const SizedBox(height: AppSpacing.lg),
-          Text(
-            LocaleKeys.ui_ergebnis_fuer_naechste_bausteine.tr(),
-            style: Theme.of(context).textTheme.titleSmall,
+          Padding(
+            padding: sectionPadding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  LocaleKeys.ui_ergebnis_fuer_naechste_bausteine.tr(),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                NodeOutputChips(node: node),
+              ],
+            ),
           ),
-          NodeOutputChips(node: node),
         ],
       );
     }

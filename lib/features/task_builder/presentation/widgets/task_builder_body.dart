@@ -78,6 +78,31 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
     });
   }
 
+  /// Desktop: schwebendes Panel mit Abstand. Mobil: randlos über die ganze
+  /// Fläche, ohne Margin und ohne Rundung.
+  Widget _configurationPanel({
+    required WorkflowNode node,
+    required bool desktop,
+    required double paletteWidth,
+    required double maxWidth,
+  }) {
+    final panel = AnimatedNodeConfigurationPanel(
+      node: node,
+      isVisible: _panelVisible,
+      fullBleed: !desktop,
+      onClose: _close,
+      onDismissed: _removeClosedPanel,
+    );
+    if (!desktop) return Positioned.fill(child: panel);
+    return Positioned(
+      top: 24,
+      bottom: 24,
+      right: 20,
+      width: math.min(540, maxWidth - (paletteWidth + 48)),
+      child: panel,
+    );
+  }
+
   @override
   Widget build(BuildContext context) => switch (widget.state) {
     TaskBuilderLoading() => const Center(child: CircularProgressIndicator()),
@@ -200,20 +225,11 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
                   ),
                 ],
                 if (panelNode case final WorkflowNode node)
-                  Positioned(
-                    top: 24,
-                    bottom: 24,
-                    right: 20,
-                    width: math.min(
-                      540,
-                      constraints.maxWidth - (desktop ? paletteWidth + 48 : 40),
-                    ),
-                    child: AnimatedNodeConfigurationPanel(
-                      node: node,
-                      isVisible: _panelVisible,
-                      onClose: _close,
-                      onDismissed: _removeClosedPanel,
-                    ),
+                  _configurationPanel(
+                    node: node,
+                    desktop: desktop,
+                    paletteWidth: paletteWidth,
+                    maxWidth: constraints.maxWidth,
                   ),
               ],
             );
