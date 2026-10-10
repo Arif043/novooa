@@ -21,8 +21,9 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
     );
     if (channelKind != null) {
       node = switch (node.config) {
-        ReadChannelEventNodeConfig config => node.copyWith(
-          config: config.copyWith(kind: channelKind),
+        ReadChannelEventNodeConfig config => _withOutputFieldNames(
+          node.copyWith(config: config.copyWith(kind: channelKind)),
+          task.graph,
         ),
         SendChannelMessageNodeConfig config => node.copyWith(
           config: config.copyWith(kind: channelKind),
@@ -136,7 +137,13 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
   ) async {
     final task = loadedTaskOrNull();
     if (task == null) return;
-    final result = _updateNodeInGraph(task.graph, nodeId, update);
+    // Ändert sich die Konfiguration (z.B. eine andere Shopware-Aktion),
+    // ändern sich auch die weiteren Werte — ihre Namen ziehen mit.
+    final result = _updateNodeInGraph(
+      task.graph,
+      nodeId,
+      (node) => _withOutputFieldNames(update(node), task.graph),
+    );
     if (!result.changed) return;
     await _saveAndEmit(task.copyWith(graph: result.graph));
   }

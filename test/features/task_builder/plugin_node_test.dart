@@ -36,7 +36,7 @@ class _HelloConfig extends PluginNodeConfig {
   NodeOutputType get primaryOutputType => NodeOutputType.json;
 
   @override
-  Map<String, NodeOutputType> get secondaryOutputs => const {
+  Map<String, NodeOutputType> get outputFields => const {
     'count': NodeOutputType.number,
     'found': NodeOutputType.boolean,
   };
@@ -103,12 +103,12 @@ void main() {
 
     expect(config.primitive, WorkflowPrimitive.plugin);
     expect(primaryOutputTypeOf(config), NodeOutputType.json);
-    expect(secondaryOutputFieldsOf(config), ['count', 'found']);
-    expect(secondaryOutputTypeFor(config, 'count'), NodeOutputType.number);
-    expect(secondaryOutputTypeFor(config, 'found'), NodeOutputType.boolean);
-    expect(secondaryOutputTypeFor(config, 'unbekannt'), NodeOutputType.string);
+    expect(outputFieldsOf(config), ['count', 'found']);
+    expect(outputFieldTypeFor(config, 'count'), NodeOutputType.number);
+    expect(outputFieldTypeFor(config, 'found'), NodeOutputType.boolean);
+    expect(outputFieldTypeFor(config, 'unbekannt'), NodeOutputType.string);
     expect(
-      secondaryOutputTypeFor(StringInputNodeConfig.initial(), 'status'),
+      outputFieldTypeFor(StringInputNodeConfig.initial(), 'status'),
       NodeOutputType.number,
     );
   });

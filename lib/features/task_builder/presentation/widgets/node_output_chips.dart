@@ -1,28 +1,28 @@
 import 'package:easy_localization/easy_localization.dart';
-import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/ios_overlays.dart';
+import '../../domain/entities/task_execution_result.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../../domain/entities/workflow_node_outputs.dart';
 import '../../domain/entities/workflow_output_types.dart';
+import '../cubits/task_builder_cubit.dart';
 import 'node_output_type_style.dart';
+import 'output_field_chip.dart';
+import 'output_name_dialog.dart';
 
-/// Zeigt die **festen Nebenoutputs** eines Bausteins (z.B. `sender`,
-/// `created`) — bewusst anders gestaltet als der editierbare Ausgabename
-/// ([NodeOutputNameField]): outlined statt gefüllt, gedämpfte statt
-/// Akzentfarbe, kein Stift-Icon. Diese Felder beschreiben feste Argumente
-/// des Baustein-Typs, keine vom Nutzer gewählten Namen — Tippen kopiert
-/// deshalb nur die fertige Template-Referenz, statt eine Umbenennung
-/// anzubieten.
-///
-/// `value` wird hier nie angezeigt: Der primäre Wert ist bereits über den
-/// Ausgabenamen-Chip darüber sichtbar (`{{ausgabename}}`); ihn hier erneut
-/// als Nebenoutput zu listen wäre reine Redundanz. Die fachliche Frage
-/// „welche Felder hat dieser Baustein-Typ" beantwortet ausschließlich
-/// `workflow_node_outputs.dart` (Domain) — dieselbe Quelle, die auch die
-/// #-Suche (`templateExpressionSuggestions`) nutzt.
+/// Ein Wert im Panel; [fieldKey] ist bei umbenennbaren weiteren Werten der
+/// technische Schlüssel (z.B. `found`), bei flachen Feldern `null`.
+typedef _PanelOutput = ({String name, NodeOutputType type, String? fieldKey});
+
+/// Zeigt im Panel die Werte eines Bausteins neben seinem Hauptwert —
+/// nur hier, nicht auf der Leinwand. Weitere Werte (z.B. `Gefunden`) sind
+/// wie der Hauptwert flach erreichbar (`{{Gefunden}}`) und hier
+/// umbenennbar; flache Felder (strukturierte Prompt-Ausgabe, Dialogeingabe)
+/// werden in ihrem eigenen Editor benannt und hier nur kopiert.
 class NodeOutputChips extends StatelessWidget {
   const NodeOutputChips({super.key, required this.node});
 
@@ -30,89 +30,74 @@ class NodeOutputChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fields = _displayFields();
-    if (fields.isEmpty) return const SizedBox.shrink();
-    final colors = Theme.of(context).colorScheme;
+    final outputs = _outputs();
+    if (outputs.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.sm),
       child: Semantics(
         label: LocaleKeys.ui_fixed_fields_list.tr(
-          namedArgs: {'fields': fields.map(_semanticLabel).join(', ')},
+          namedArgs: {'fields': outputs.map(_semanticLabel).join(', ')},
         ),
         child: Wrap(
           spacing: AppSpacing.xs,
           runSpacing: AppSpacing.xs,
-          children: [
-            for (final field in fields) _fieldChip(context, colors, field),
-          ],
+          children: [for (final output in outputs) _chip(context, output)],
         ),
       ),
     );
   }
 
-  String _semanticLabel(TypedOutputField field) {
-    return '${field.name} (${NodeOutputTypeStyle.of(field.type).label})';
-  }
-
-  Widget _fieldChip(
-    BuildContext context,
-    ColorScheme colors,
-    TypedOutputField field,
-  ) {
-    final expression = _expressionFor(field.name);
-    final style = NodeOutputTypeStyle.of(field.type);
-    return Tooltip(
-      message: LocaleKeys.ui_tap_to_copy.tr(
-        namedArgs: {'type': style.label, 'expression': expression},
-      ),
-      child: ActionChip(
-        avatar: Icon(style.icon, size: AppSpacing.md, color: style.color),
-        label: Text(field.name),
-        labelStyle: Theme.of(
-          context,
-        ).textTheme.bodySmall?.copyWith(color: colors.onSurface),
-        backgroundColor: style.color.withValues(alpha: 0.12),
-        side: BorderSide(color: style.color.withValues(alpha: 0.4)),
-        shape: const StadiumBorder(),
-        visualDensity: VisualDensity.compact,
-        onPressed: () => _copyExpression(context, expression),
-      ),
+  Widget _chip(BuildContext context, _PanelOutput output) {
+    final fieldKey = output.fieldKey;
+    return OutputFieldChip(
+      name: output.name,
+      type: output.type,
+      onRename: fieldKey == null
+          ? null
+          : () => _rename(context, fieldKey, output.name),
     );
   }
 
-  Future<void> _copyExpression(BuildContext context, String expression) async {
-    await Clipboard.setData(ClipboardData(text: expression));
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          LocaleKeys.ui_expression_copied.tr(
-            namedArgs: {'expression': expression},
-          ),
-        ),
-      ),
-    );
+  String _semanticLabel(_PanelOutput output) {
+    return '${output.name} (${NodeOutputTypeStyle.of(output.type).label})';
   }
 
-  /// Flache Felder (strukturierte Prompt-Ausgabe, Dialogeingabe) sind schon
-  /// primäre Outputs; alle anderen Bausteine zeigen ihre festen
-  /// Nebenoutputs (ohne `value`, siehe Klassendoku).
-  List<TypedOutputField> _displayFields() {
+  /// Werte ohne Namen (Bausteine aus der Zeit vor benannten Werten) fehlen,
+  /// weil sie per Template nicht erreichbar sind.
+  List<_PanelOutput> _outputs() {
     final config = node.config;
-    if (hasFlatOutputFields(config)) return typedFlatOutputFieldsOf(config);
+    if (hasFlatOutputFields(config)) {
+      return [
+        for (final field in typedFlatOutputFieldsOf(config))
+          (name: field.name, type: field.type, fieldKey: null),
+      ];
+    }
     return [
-      for (final name in secondaryOutputFieldsOf(config))
-        (name: name, type: secondaryOutputTypeFor(config, name)),
+      for (final fieldKey in outputFieldsOf(config))
+        if (node.outputFieldNameOf(fieldKey).isNotEmpty)
+          (
+            name: node.outputFieldNameOf(fieldKey),
+            type: outputFieldTypeFor(config, fieldKey),
+            fieldKey: fieldKey,
+          ),
     ];
   }
 
-  /// Flache Felder sind direkt ohne Knotennamen erreichbar (`{{feld}}`);
-  /// alle anderen Bausteine hängen ihre Nebenoutputs unter ihrem
-  /// Ausgabenamen ein (`{{ausgabename.feld}}`, siehe
-  /// `template-expression-resolver.ts`).
-  String _expressionFor(String field) {
-    if (hasFlatOutputFields(node.config)) return '{{$field}}';
-    final outputName = node.outputName.trim();
-    return outputName.isEmpty ? '{{$field}}' : '{{$outputName.$field}}';
+  Future<void> _rename(
+    BuildContext context,
+    String fieldKey,
+    String currentName,
+  ) async {
+    final cubit = context.read<TaskBuilderCubit>();
+    final name = await showIosDialog<String>(
+      context: context,
+      builder: (_) => OutputNameDialog(initialValue: currentName),
+    );
+    if (name == null) return;
+    await cubit.renameOutputField(
+      nodeId: node.id,
+      fieldKey: fieldKey,
+      name: name,
+    );
   }
 }

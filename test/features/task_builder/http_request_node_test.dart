@@ -99,14 +99,14 @@ void main() {
 
   group('Ausgaben', () {
     test('status, ok und headers sind feste Felder mit passendem Typ', () {
-      expect(secondaryOutputFieldsOf(const HttpRequestNodeConfig()), [
+      expect(outputFieldsOf(const HttpRequestNodeConfig()), [
         'status',
         'ok',
         'headers',
       ]);
-      expect(secondaryOutputTypeOf('status'), NodeOutputType.number);
-      expect(secondaryOutputTypeOf('ok'), NodeOutputType.boolean);
-      expect(secondaryOutputTypeOf('headers'), NodeOutputType.json);
+      expect(outputFieldTypeOf('status'), NodeOutputType.number);
+      expect(outputFieldTypeOf('ok'), NodeOutputType.boolean);
+      expect(outputFieldTypeOf('headers'), NodeOutputType.json);
       expect(
         primaryOutputTypeOf(const HttpRequestNodeConfig()),
         NodeOutputType.json,

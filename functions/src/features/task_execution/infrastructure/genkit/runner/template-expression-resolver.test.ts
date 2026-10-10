@@ -63,16 +63,23 @@ test(
   },
 );
 
-test("resolves a node's fixed secondary output via dot-path under its outputName", () => {
+test("resolves further outputs flat under their names from outputFieldNames, not under the node name", () => {
   const resolver = graphResolverFor(
-    [{...stringInputNode("n1", "eingang"), primitive: "readEmail", config: {primitive: "readEmail"}}],
+    [{
+      ...stringInputNode("n1", "eingang"), primitive: "readEmail", config: {primitive: "readEmail"},
+      outputFieldNames: {sender: "Absender"},
+    }],
     [result("n1", "readEmail", {
       value: {type: "string", value: "Hallo"},
       sender: {type: "string", value: "a@b.de"},
+      subject: {type: "string", value: "ohne Namen"},
     })],
   );
 
-  assert.equal(resolver.resolveValue("{{eingang.sender}}"), "a@b.de");
+  assert.equal(resolver.resolveValue("{{eingang}}"), "Hallo");
+  assert.equal(resolver.resolveValue("{{Absender}}"), "a@b.de");
+  assert.equal(resolver.resolveValue("{{eingang.sender}}"), undefined);
+  assert.equal(resolver.resolveValue("{{subject}}"), undefined);
 });
 
 test("flattens structured prompt fields directly without a node name", () => {
@@ -130,30 +137,6 @@ test("flattens dialog input fields directly without a node name", () => {
   );
 
   assert.equal(resolver.resolveValue("{{Kundennummer}}"), "K-1");
-});
-
-test("flattens read channel event outputs under their configured names", () => {
-  const resolver = graphResolverFor(
-    [{
-      id: "n1",
-      primitive: "readChannelEvent",
-      title: "",
-      description: "",
-      outputName: "",
-      config: {
-        primitive: "readChannelEvent",
-        kind: "email",
-        outputNames: {sender: "absender", subject: "betreff", message: "text", receivedAt: "eingang"},
-      },
-    }],
-    [result("n1", "readChannelEvent", {
-      absender: {type: "string", value: "kunde@example.com"},
-      betreff: {type: "string", value: "Rechnung"},
-    })],
-  );
-
-  assert.equal(resolver.resolveValue("{{absender}}"), "kunde@example.com");
-  assert.equal(resolver.resolveValue("{{betreff}}"), "Rechnung");
 });
 
 test("flattens script workflow outputs, but keeps a script without them under its output name", () => {

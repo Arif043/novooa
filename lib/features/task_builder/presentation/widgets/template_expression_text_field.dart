@@ -326,19 +326,9 @@ class _TemplateExpressionPicker extends StatefulWidget {
 class _TemplateExpressionPickerState extends State<_TemplateExpressionPicker> {
   String _query = '';
 
-  /// Feste Nebenoutputs (z.B. `speichern4.created`) bleiben standardmäßig
-  /// aus der Liste draußen — die Suche soll für den Normalfall (primäre
-  /// Ausgabenamen, Variablen) einfach bleiben. Wer sie braucht, blendet sie
-  /// hier gezielt ein, statt dass sie jede Suche mit Baustein-internen
-  /// Detailfeldern zumüllen.
-  bool _showSecondary = false;
-
   @override
   Widget build(BuildContext context) {
-    final candidates = widget.suggestions
-        .where(_isVisible)
-        .where(_matchesQuery)
-        .toList();
+    final candidates = widget.suggestions.where(_matchesQuery).toList();
     return Dialog(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560, maxHeight: 480),
@@ -354,16 +344,6 @@ class _TemplateExpressionPickerState extends State<_TemplateExpressionPicker> {
                       .tr(),
                 ),
                 onChanged: (value) => setState(() => _query = value),
-              ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: FilterChip(
-                  label: Text(LocaleKeys.ui_feste_felder.tr()),
-                  avatar: const Icon(Icons.tune, size: 16),
-                  selected: _showSecondary,
-                  onSelected: (value) => setState(() => _showSecondary = value),
-                ),
               ),
               const SizedBox(height: 8),
               Expanded(
@@ -390,11 +370,6 @@ class _TemplateExpressionPickerState extends State<_TemplateExpressionPicker> {
         ),
       ),
     );
-  }
-
-  bool _isVisible(TemplateExpressionSuggestion suggestion) {
-    return _showSecondary ||
-        suggestion.kind != TemplateExpressionSuggestionKind.secondary;
   }
 
   bool _matchesQuery(TemplateExpressionSuggestion suggestion) {

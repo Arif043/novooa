@@ -6,7 +6,6 @@ import '../../domain/entities/node_delegation.dart';
 import '../../domain/entities/skill_attachment.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
-import 'channel_event_output_names_mapper.dart';
 import 'legacy_model_output_parameters.dart';
 
 typedef GraphToDocument = Map<String, Object?> Function(WorkflowGraph graph);
@@ -44,7 +43,6 @@ class NodeConfigDocumentMapper {
       ReadChannelEventNodeConfig() => {
         'primitive': config.primitive.name,
         'kind': config.kind.name,
-        'outputNames': channelEventOutputNamesToDocument(config.outputNames),
       },
       SendChannelMessageNodeConfig() => _sendMessageToDocument(config),
       NotificationSendNodeConfig() => _notificationSendToDocument(config),
@@ -80,7 +78,6 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.readEmail => const ReadEmailNodeConfig(),
       WorkflowPrimitive.readChannelEvent => ReadChannelEventNodeConfig(
         kind: _channelEventKindFrom(data['kind']),
-        outputNames: channelEventOutputNamesFrom(data['outputNames']),
       ),
       WorkflowPrimitive.sendChannelMessage => _sendMessageFrom(data),
       WorkflowPrimitive.notificationSend => _notificationSendFrom(data),

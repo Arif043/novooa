@@ -283,7 +283,7 @@ void main() {
       expect(spec.usesConnection, isFalse);
       expect(spec.fields, isEmpty);
       expect(config.primaryOutputType, NodeOutputType.json);
-      expect(config.secondaryOutputs, {
+      expect(config.outputFields, {
         'event': NodeOutputType.string,
         'id': NodeOutputType.string,
         'receivedAt': NodeOutputType.datetime,

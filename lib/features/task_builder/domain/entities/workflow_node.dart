@@ -88,6 +88,7 @@ class WorkflowNode extends Equatable {
     required this.description,
     required this.config,
     this.outputName = '',
+    this.outputFieldNames = const {},
   });
 
   final NodeId id;
@@ -100,12 +101,23 @@ class WorkflowNode extends Equatable {
   /// Dialogeingabe) — dort trägt jedes Feld seinen eigenen Namen (siehe
   /// `StructuredOutputField.name`/`DialogInputField.name`).
   final String outputName;
+
+  /// Namen der weiteren Werte dieses Bausteins: technischer Schlüssel des
+  /// Executors (z.B. `found`, siehe `outputFieldsOf`) → graph-weit
+  /// eindeutiger Name (`{{Gefunden}}`). Sie stehen nur im Panel, nicht auf
+  /// der Leinwand.
+  final Map<String, String> outputFieldNames;
   final NodeConfig config;
+
+  /// Der Name eines weiteren Werts; leer, wenn (noch) keiner vergeben ist.
+  String outputFieldNameOf(String fieldKey) =>
+      outputFieldNames[fieldKey]?.trim() ?? '';
 
   WorkflowNode copyWith({
     String? title,
     String? description,
     String? outputName,
+    Map<String, String>? outputFieldNames,
     NodeConfig? config,
   }) {
     return WorkflowNode(
@@ -113,12 +125,20 @@ class WorkflowNode extends Equatable {
       title: title ?? this.title,
       description: description ?? this.description,
       outputName: outputName ?? this.outputName,
+      outputFieldNames: outputFieldNames ?? this.outputFieldNames,
       config: config ?? this.config,
     );
   }
 
   @override
-  List<Object?> get props => [id, title, description, outputName, config];
+  List<Object?> get props => [
+    id,
+    title,
+    description,
+    outputName,
+    outputFieldNames,
+    config,
+  ];
 
   @override
   bool? get stringify => true;

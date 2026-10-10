@@ -71,8 +71,8 @@ ohne Änderung; der Tabellenname passt nur historisch nicht. Löschen entfernt V
 | Bei Fehlerstatus abbrechen | Standard an; ausgeschaltet liefert der Baustein `status`/`ok` für Verzweigungen |
 
 **Ausgaben:** `value` (`json`: der geparste JSON-Body, sonst Text, bei leerer Antwort `null`) als `{{antwort}}` bzw.
-`{{antwort.feld}}`, dazu die festen Felder `status` (`number`), `ok` (`boolean`, 2xx) und `headers` (`json`, Namen
-kleingeschrieben, ohne `set-cookie`), z. B. `{{antwort.status}}`.
+`{{antwort.feld}}`, dazu die weiteren Werte `status` (`number`), `ok` (`boolean`, 2xx) und `headers` (`json`, Namen
+kleingeschrieben, ohne `set-cookie`) unter eigenen Namen, z. B. `{{Status}}` oder `{{Erfolgreich}}`.
 
 **Grenzen:** Antworten höchstens 5 MB (darüber bricht der Baustein ab) und nur Text (UTF-8); Binärantworten sind nicht
 vorgesehen. Weiterleitungen werden nur innerhalb derselben Origin verfolgt (höchstens 5; 303 sowie 301/302 nach einem

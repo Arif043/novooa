@@ -256,17 +256,9 @@ export type ReadEmailNodeConfig = {
 export type ReadWebhookNodeConfig = {
   primitive: "readWebhook";
 };
-/** Graph-weit eindeutige, flache Namen der Ausgabewerte von „Nachricht lesen“. */
-export type ChannelEventOutputNames = {
-  sender: string;
-  subject: string;
-  message: string;
-  receivedAt: string;
-};
 export type ReadChannelEventNodeConfig = {
   primitive: "readChannelEvent";
   kind: ChannelMessageKind;
-  outputNames: ChannelEventOutputNames;
 };
 export type SendChannelMessageNodeConfig = {
   primitive: "sendChannelMessage";
@@ -334,6 +326,13 @@ export type WorkflowNode = {
   title: string;
   description: string;
   outputName: string;
+  /**
+   * Graph-weit eindeutige Namen der weiteren Ausgabewerte eines Bausteins:
+   * technischer Schlüssel des Executors (z. B. `found`) → Name, unter dem
+   * der Wert flach erreichbar ist (z. B. `{{Gefunden}}`). Fehlt ein Name,
+   * ist der Wert nicht per Template erreichbar.
+   */
+  outputFieldNames?: Record<string, string>;
   config: NodeConfig;
 };
 export type WorkflowGraph = {

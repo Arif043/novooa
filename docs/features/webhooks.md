@@ -77,10 +77,10 @@ Der Lauf bekommt `input.event`:
 | Ausgabe | Typ | Inhalt |
 | --- | --- | --- |
 | `{{ereignis}}` / `{{ereignis.feld}}` | `json` (bei Text: `string`) | Inhalt des Aufrufs; Felder eines JSON-Objekts direkt als `{{ereignis.bestellung}}` |
-| `{{ereignis.method}}` | `string` | `POST` oder `PUT` |
-| `{{ereignis.query}}` | `json` | Query-Parameter |
-| `{{ereignis.headers}}` | `json` | Kopfzeilen (siehe oben) |
-| `{{ereignis.receivedAt}}` | `datetime` | Zeitpunkt des Empfangs |
+| `{{Methode}}` (`method`) | `string` | `POST` oder `PUT` |
+| `{{Abfrage}}` (`query`) | `json` | Query-Parameter |
+| `{{Kopfzeilen}}` (`headers`) | `json` | Kopfzeilen (siehe oben) |
+| `{{Empfangen}}` (`receivedAt`) | `datetime` | Zeitpunkt des Empfangs |
 
 Ein Lauf, der nicht durch einen Webhook gestartet wurde (z. B. manuell), bricht mit „Dieser Lauf wurde nicht durch einen
 Webhook gestartet“ ab.

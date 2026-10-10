@@ -24,8 +24,9 @@ abstract class PluginNodeConfig extends NodeConfig {
   /// Typ von `{{ausgabe}}`.
   NodeOutputType get primaryOutputType => NodeOutputType.string;
 
-  /// Feste Nebenwerte (`{{ausgabe.feld}}`) samt Typ.
-  Map<String, NodeOutputType> get secondaryOutputs => const {};
+  /// Technische Schlüssel der weiteren Werte samt Typ; ihre Namen
+  /// (`{{Anzahl}}`) stehen in `WorkflowNode.outputFieldNames`.
+  Map<String, NodeOutputType> get outputFields => const {};
 }
 
 typedef PluginNodeConfigFromDocument =

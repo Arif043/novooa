@@ -43,6 +43,7 @@ Produktwissen: Aufgaben bestehen aus Bausteinen und Kanten. Bausteine behalten
 ihre ID. Ausgaben eines Bausteins liegen unter outputs. Nachfolgende Bausteine
 können direkt auf die Ausgaben des vorherigen Bausteins zugreifen. Für explizite
 Referenzen kann der Referenzname eines Bausteins genutzt werden, zum Beispiel
-{{Prompt2}}. „Nachricht lesen“ liefert flache Werte ohne Bausteinnamen, z. B.
-{{sender}}, {{subject}}, {{message}}. Globale Variablen haben keinen Prefix. Script-Bausteine
+{{Prompt2}}. Jeder weitere Wert eines Bausteins hat einen eigenen, graph-weit
+eindeutigen Namen, z. B. {{Absender}} oder {{Gefunden}}; {{Baustein.feld}} gibt
+es nicht. Globale Variablen haben keinen Prefix. Script-Bausteine
 führen Python isoliert aus und können Variablen für spätere Bausteine setzen.`;

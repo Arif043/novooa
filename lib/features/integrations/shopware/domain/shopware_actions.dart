@@ -14,7 +14,7 @@ class ShopwareActions {
         'Holt Bestellungen aus Shopware, z. B. alle neuen der letzten Stunde.',
     outputBase: 'bestellungen',
     primaryOutput: NodeOutputType.json,
-    secondaryOutputs: {
+    outputFields: {
       'count': NodeOutputType.number,
       'total': NodeOutputType.number,
       'found': NodeOutputType.boolean,
@@ -107,7 +107,7 @@ class ShopwareActions {
     description: 'Liest eine Bestellung über ihre Nummer oder Kennung.',
     outputBase: 'bestellung',
     primaryOutput: NodeOutputType.json,
-    secondaryOutputs: {
+    outputFields: {
       'orderNumber': NodeOutputType.string,
       'status': NodeOutputType.string,
       'paymentStatus': NodeOutputType.string,
@@ -125,7 +125,7 @@ class ShopwareActions {
         'Ändert den Status einer Bestellung, ihrer Zahlung oder ihrer Lieferung.',
     outputBase: 'statuswechsel',
     primaryOutput: NodeOutputType.json,
-    secondaryOutputs: {
+    outputFields: {
       'previousStatus': NodeOutputType.string,
       'newStatus': NodeOutputType.string,
       'changed': NodeOutputType.boolean,
@@ -193,7 +193,7 @@ class ShopwareActions {
     description: 'Holt Produkte aus Shopware, z. B. alle mit geringem Bestand.',
     outputBase: 'produkte',
     primaryOutput: NodeOutputType.json,
-    secondaryOutputs: _listOutputs,
+    outputFields: _listOutputs,
     initialParams: {'sort': 'name', 'limit': 50},
     fields: [
       ShopwareField.text('name', 'Name enthält'),
@@ -234,7 +234,7 @@ class ShopwareActions {
     description: 'Ändert Bestand, Preis oder Aktiv-Status eines Produkts.',
     outputBase: 'produkt',
     primaryOutput: NodeOutputType.json,
-    secondaryOutputs: {'changed': NodeOutputType.boolean},
+    outputFields: {'changed': NodeOutputType.boolean},
     fields: [
       ShopwareField.text('productNumber', 'Artikelnummer'),
       ShopwareField.text(
@@ -271,7 +271,7 @@ class ShopwareActions {
     description: 'Holt Kunden aus Shopware, z. B. über E-Mail oder Name.',
     outputBase: 'kunden',
     primaryOutput: NodeOutputType.json,
-    secondaryOutputs: _listOutputs,
+    outputFields: _listOutputs,
     initialParams: {'sort': 'newest', 'limit': 50},
     fields: [
       ShopwareField.text('email', 'E-Mail enthält'),
@@ -303,7 +303,7 @@ class ShopwareActions {
         'Fragt eine beliebige Shopware-Entität mit eigenen Kriterien ab (nur lesend).',
     outputBase: 'abfrage',
     primaryOutput: NodeOutputType.json,
-    secondaryOutputs: _listOutputs,
+    outputFields: _listOutputs,
     initialParams: {'limit': 50, 'page': 1},
     fields: [
       ShopwareField.text(
@@ -339,7 +339,7 @@ class ShopwareActions {
         'Macht Bestellung, Kunde, Produkt oder Anmeldung eines Shopware-Auslösers nutzbar.',
     outputBase: 'ereignis',
     primaryOutput: NodeOutputType.json,
-    secondaryOutputs: {
+    outputFields: {
       'event': NodeOutputType.string,
       'id': NodeOutputType.string,
       'receivedAt': NodeOutputType.datetime,

@@ -21,17 +21,33 @@ Vorgaenger, nicht mehr den letzten Textwert eines Runs.
 `media`, `audio` und `file` enthalten eine fachliche Referenz mit `fileId`, `versionId`,
 `displayName`, `contentType` und `sizeBytes`. Der konkrete Speicherort bleibt
 innerhalb der Dateiinfrastruktur; erst der konsumierende Executor liest die
-referenzierte Version. Der primäre Wert eines benannten Bausteins ist
-ausschließlich per `{{ausgabename}}` erreichbar — die ältere, zweistufige
-Form `{{ausgabename.value}}` aus der Zeit vor eindeutigen Einzelnamen löst
-seit `template-expression-resolver.ts` (`nodeOutputContextFor`/
-`secondaryOutputsOf`) nicht mehr auf. Benannte Nebenoutputs bleiben per
-Dot-Pfad erreichbar, etwa `{{email1.sender}}` (E-Mail lesen) oder `{{bericht.fileId}}`.
-Bausteine mit mehreren fachlichen Ausgabewerten (strukturierte
-Prompt-Ausgabe, Dialogeingabe, Script mit `workflow_output`, Nachricht
-lesen) haben keinen eigenen Ausgabenamen — hier ist
-jedes Feld direkt und flach unter seinem eigenen, graph-weit eindeutigen
-Namen erreichbar, z.B. `{{Name}}`.
+referenzierte Version.
+
+**Alle Werte sind flach benannt.** Es gibt einen einzigen, graph-weiten
+Namensraum (`flatOutputsFor` in `template-expression-resolver.ts`):
+
+- Der Hauptwert `value` steht unter dem `outputName` des Bausteins
+  (`{{Datensatz}}`). Er ist der einzige Wert, der als Chip auf der Leinwand
+  erscheint.
+- Jeder **weitere Wert** (die Schlüssel in der Tabelle unten neben `value`,
+  z. B. `found`) steht unter dem Namen, den der Baustein in
+  `WorkflowNode.outputFieldNames` für diesen Schlüssel speichert
+  (`{"found": "Gefunden"}` → `{{Gefunden}}`). Der Builder vergibt die Namen
+  beim Anlegen lokalisiert und großgeschrieben, ab 2 nummeriert
+  („Gefunden“, „Gefunden2“), hält sie eindeutig und zeigt sie nur im Panel,
+  wo sie sich umbenennen lassen. Ein Wert ohne Namen ist per Template nicht
+  erreichbar.
+- Die Schlüssel der Tabelle sind nur der technische Vertrag zwischen
+  Executor und Builder, keine Namen für Nutzer:innen. Eine Adressierung über
+  den Knotennamen (`{{Datensatz.found}}`, `{{Datensatz.value}}`) gibt es
+  nicht. Ein Punkt-Pfad führt nur in den JSON-Inhalt eines Werts
+  (`{{antwort.name}}`).
+- Bausteine mit mehreren fachlichen Ausgabewerten (strukturierte
+  Prompt-Ausgabe, Dialogeingabe, Script mit `workflow_output`) haben keinen
+  eigenen Ausgabenamen; jedes Feld steht unter seinem eigenen Namen
+  (`{{Name}}`).
+- In Zweigen und „Für jedes Element“ sind die Werte der äußeren Ebene unter
+  denselben Namen erreichbar, auch als `{{global.Name}}`.
 
 Ein leerer Text erzeugt keinen `value`-Output. `humanApproval`, `dialogInput`
 und `mediaInput` liefern den Status `waitingForApproval`; nicht registrierte
@@ -54,8 +70,8 @@ einen identischen `text`-Output — ungenutzte Redundanz, inzwischen entfernt.
 | `iterativeRefinement` | ausgefuehrt | `value` (`string`) |
 | `readFile` | ausgefuehrt | `value` (`string`, UTF-8-Dateiinhalt) |
 | `readEmail` | ausgefuehrt | `value`, `sender`, `subject`, `message` (je `string`), `receivedAt` (`datetime`) |
-| `readChannelEvent` mit E-Mail | ausgefuehrt | flach, ohne `value`: Absender, Betreff, Nachricht (je `string`) und Ankunftszeit (`datetime`) unter den Namen aus `config.outputNames` (Standard `sender`, `subject`, `message`, `receivedAt`; der Builder hält sie graph-weit eindeutig, z. B. `sender_2`) |
-| `readChannelEvent` mit WhatsApp/SMS | ausgefuehrt | wie bei E-Mail, aber ohne Betreff |
+| `readChannelEvent` mit E-Mail | ausgefuehrt | `value` (`string`, Nachrichtentext), `sender`, `subject` (je `string`), `receivedAt` (`datetime`) |
+| `readChannelEvent` mit WhatsApp/SMS | ausgefuehrt | `value` (`string`, Nachrichtentext), `sender` (`string`), `receivedAt` (`datetime`) |
 | `sendChannelMessage` | ausgefuehrt | `value`, `recipient`, `channelId`, `providerMessageId` (je `string`) |
 | `notificationSend` | ausgefuehrt | keine — reiner Seiteneffekt ohne fachlichen Rückgabewert |
 | `humanApproval` | wartet auf Freigabe | `value` (`string`) |
@@ -103,9 +119,9 @@ Tabellen MIME-Type und Endung von XLSX. Sein primaerer Output ist ein
 | `folderId` | `json` | Ordner-ID oder `null` |
 | `isNewFile` | `boolean` | `true` bei einer neu angelegten Datei |
 
-Hat der Knoten den Ausgabenamen `bericht`, koennen Templates beispielsweise
-`{{bericht}}` (primaerer Datei-/Bildwert), `{{bericht.fileId}}`,
-`{{bericht.versionId}}` oder `{{bericht.displayName}}` verwenden.
+Hat der Knoten den Ausgabenamen `Bericht`, verwenden Templates `{{Bericht}}`
+(primaerer Datei-/Bildwert) und die weiteren Werte unter ihren Namen, etwa
+`{{DateiId}}` oder `{{Dateiname}}`.
 
 ## Nicht implementierte Primitives
 
@@ -113,12 +129,13 @@ Hat der Knoten den Ausgabenamen `bericht`, koennen Templates beispielsweise
 aber nicht im Executor-Registry registriert. Sie werden deshalb derzeit
 uebersprungen und liefern keine Outputs.
 
-Der Flutter-Client kennt dieselben Nebenoutput-Namen clientseitig noch einmal
-— nicht dupliziert, sondern aus einer einzigen Quelle:
-`lib/features/task_builder/domain/entities/workflow_node_outputs.dart`.
-Sowohl die Anzeige im Konfigurations-Overlay (`NodeOutputChips`) als auch die
-`#`-Suche (`templateExpressionSuggestions`) fragen dort ab, welche Felder ein
-Baustein-Typ hat — ändert sich diese Tabelle hier, muss diese Datei
+Der Flutter-Client kennt dieselben Schlüssel aus einer einzigen Quelle:
+`outputFieldsOf` in
+`lib/features/task_builder/domain/entities/workflow_node_outputs.dart`
+(Plugins: `PluginNodeConfig.outputFields`). Panel (`NodeOutputChips`),
+`#`-Suche und die Namensvergabe im Cubit fragen dort ab. Ändert sich diese
+Tabelle, müssen diese Datei und die Standardnamen in
+`assets/translations/*.json` (`task_builder.output_field_names.<schlüssel>`)
 mitgezogen werden (siehe [`features/aufgabe.md`](./features/aufgabe.md)
 § UI-Prinzipien).
 

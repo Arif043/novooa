@@ -77,6 +77,8 @@ class TaskDocumentMapper {
       'title': node.title,
       'description': node.description,
       'outputName': node.outputName,
+      if (node.outputFieldNames.isNotEmpty)
+        'outputFieldNames': node.outputFieldNames,
       'config': _configMapper.toDocument(node.config),
     };
   }
@@ -98,8 +100,18 @@ class TaskDocumentMapper {
       title: data['title'] as String? ?? '',
       description: data['description'] as String? ?? '',
       outputName: outputName,
+      outputFieldNames: _outputFieldNamesFrom(data['outputFieldNames']),
       config: config,
     );
+  }
+
+  Map<String, String> _outputFieldNamesFrom(Object? value) {
+    if (value is! Map) return const {};
+    return {
+      for (final MapEntry(:key, :value) in value.entries)
+        if (key is String && value is String && value.trim().isNotEmpty)
+          key: value.trim(),
+    };
   }
 
   Map<String, Object?> _edgeToDocument(WorkflowEdge edge) {

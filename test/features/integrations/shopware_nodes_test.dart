@@ -116,10 +116,10 @@ void main() {
       final config = ShopwareNodeConfig.initial('searchOrders');
 
       expect(primaryOutputTypeOf(config), NodeOutputType.json);
-      expect(secondaryOutputFieldsOf(config), ['count', 'total', 'found']);
-      expect(secondaryOutputTypeFor(config, 'count'), NodeOutputType.number);
-      expect(secondaryOutputTypeFor(config, 'total'), NodeOutputType.number);
-      expect(secondaryOutputTypeFor(config, 'found'), NodeOutputType.boolean);
+      expect(outputFieldsOf(config), ['count', 'total', 'found']);
+      expect(outputFieldTypeFor(config, 'count'), NodeOutputType.number);
+      expect(outputFieldTypeFor(config, 'total'), NodeOutputType.number);
+      expect(outputFieldTypeFor(config, 'found'), NodeOutputType.boolean);
     },
   );
 
@@ -268,10 +268,10 @@ void main() {
 
     test('Ausgaben je Aktion mit Typen', () {
       Map<String, NodeOutputType> outputs(String id) => {
-        for (final name in secondaryOutputFieldsOf(
+        for (final name in outputFieldsOf(
           ShopwareNodeConfig.initial(id),
         ))
-          name: secondaryOutputTypeFor(ShopwareNodeConfig.initial(id), name),
+          name: outputFieldTypeFor(ShopwareNodeConfig.initial(id), name),
       };
       const list = {
         'count': NodeOutputType.number,

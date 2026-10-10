@@ -38,16 +38,16 @@ void main() {
       const config = ReadWebhookNodeConfig();
 
       expect(primaryOutputTypeOf(config), NodeOutputType.json);
-      expect(secondaryOutputFieldsOf(config), [
+      expect(outputFieldsOf(config), [
         'method',
         'query',
         'headers',
         'receivedAt',
       ]);
-      expect(secondaryOutputTypeOf('query'), NodeOutputType.json);
-      expect(secondaryOutputTypeOf('headers'), NodeOutputType.json);
-      expect(secondaryOutputTypeOf('receivedAt'), NodeOutputType.datetime);
-      expect(secondaryOutputTypeOf('method'), NodeOutputType.string);
+      expect(outputFieldTypeOf('query'), NodeOutputType.json);
+      expect(outputFieldTypeOf('headers'), NodeOutputType.json);
+      expect(outputFieldTypeOf('receivedAt'), NodeOutputType.datetime);
+      expect(outputFieldTypeOf('method'), NodeOutputType.string);
     },
   );
 

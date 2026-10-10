@@ -53,9 +53,12 @@ Modell statt der rohen Shopware-Objekte.
 | Ausgabe | Typ | Inhalt |
 | --- | --- | --- |
 | `{{bestellungen}}` | `json` | Liste von Bestellungen im Modell unten |
-| `{{bestellungen.count}}` | `number` | Anzahl der gelieferten Bestellungen |
-| `{{bestellungen.total}}` | `number` | Anzahl aller passenden Bestellungen in Shopware |
-| `{{bestellungen.found}}` | `boolean` | mindestens eine Bestellung |
+| `{{Anzahl}}` (`count`) | `number` | Anzahl der gelieferten Bestellungen |
+| `{{Gesamt}}` (`total`) | `number` | Anzahl aller passenden Bestellungen in Shopware |
+| `{{Gefunden}}` (`found`) | `boolean` | mindestens eine Bestellung |
+
+Die weiteren Werte tragen eigene, im Panel umbenennbare Namen (Standard in
+Klammern: technischer Schlüssel, deutsch z. B. „Anzahl“).
 
 Die Liste lässt sich mit „Für jedes Element“ durchlaufen. **Bestellmodell:**
 
@@ -173,8 +176,8 @@ Aktionen oder die [HTTP-Anfrage](./verbindungen.md).
 Der Gegenpart zu den Auslösern (nächster Abschnitt): gibt Datensatz und Art des Ereignisses aus, das den Lauf gestartet
 hat. Braucht **keine Verbindung** und funktioniert nur in Aufgaben mit einem Shopware-Auslöser (sonst Fehlermeldung).
 Ausgaben: `{{ereignis}}` (der Datensatz im einfachen Modell: Bestellung, Kunde, Produkt oder Newsletter-Anmeldung, je
-nach Auslöser), `.event` (`orderPlaced`, `orderStatus`, `customerRegistered`, `stockLow`, `newsletterSubscribed`), `.id`,
-`.receivedAt`. Felder des Datensatzes: `{{ereignis.orderNumber}}`, `{{ereignis.email}}` usw. (Modelle wie bei den Aktionen).
+nach Auslöser) und als weitere Werte `event` (`orderPlaced`, `orderStatus`, `customerRegistered`, `stockLow`,
+`newsletterSubscribed`; Standardname „Ereignisart“), `id` und `receivedAt` („Empfangen“). Felder des Datensatzes: `{{ereignis.orderNumber}}`, `{{ereignis.email}}` usw. (Modelle wie bei den Aktionen).
 
 ## Auslöser (App-Webhooks)
 

@@ -35,8 +35,8 @@ void main() {
     ]);
   });
 
-  test('bietet feste Nebenoutputs als eigene, als "secondary" markierte '
-      'Vorschläge unter dem Ausgabenamen an', () {
+  test('bietet die weiteren Werte unter ihrem eigenen Namen wie den '
+      'Hauptwert an', () {
     final graph = WorkflowGraph(
       nodes: [_saveDocumentNode(), _node('nachfolger')],
       edges: [_edge('speichern', 'nachfolger')],
@@ -47,22 +47,21 @@ void main() {
       targetNodeId: const NodeId('nachfolger'),
     );
 
-    final secondary = suggestions.where(
-      (s) => s.kind == TemplateExpressionSuggestionKind.secondary,
-    );
-    expect(secondary.map((s) => s.expression), [
-      '{{speichern.created}}',
-      '{{speichern.count}}',
-      '{{speichern.records}}',
-    ]);
+    final expressions = suggestions.map((s) => s.expression);
     expect(
-      suggestions.firstWhere((s) => s.expression == '{{speichern}}').kind,
-      TemplateExpressionSuggestionKind.primary,
+      expressions,
+      containsAll(['{{speichern}}', '{{Angelegt}}', '{{Anzahl}}']),
+    );
+    expect(expressions.where((e) => e.contains('.')), isEmpty);
+    expect(
+      suggestions.every(
+        (s) => s.kind == TemplateExpressionSuggestionKind.primary,
+      ),
+      isTrue,
     );
   });
 
-  test('strukturierte Prompt-Felder erzeugen keine zusätzlichen '
-      'Nebenoutput-Vorschläge — sie sind schon primär', () {
+  test('strukturierte Prompt-Felder werden direkt angeboten', () {
     final graph = WorkflowGraph(
       nodes: [_structuredPromptNode(), _node('nachfolger')],
       edges: [_edge('prompt', 'nachfolger')],
@@ -73,12 +72,6 @@ void main() {
       targetNodeId: const NodeId('nachfolger'),
     );
 
-    expect(
-      suggestions.where(
-        (s) => s.kind == TemplateExpressionSuggestionKind.secondary,
-      ),
-      isEmpty,
-    );
     expect(suggestions.map((s) => s.expression), contains('{{titel}}'));
   });
 
@@ -134,6 +127,7 @@ WorkflowNode _saveDocumentNode() => const WorkflowNode(
   title: 'Datensatz speichern',
   description: '',
   outputName: 'speichern',
+  outputFieldNames: {'created': 'Angelegt', 'count': 'Anzahl'},
   config: SaveDocumentNodeConfig(
     collectionName: 'kunden',
     filters: [],

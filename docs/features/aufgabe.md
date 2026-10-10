@@ -54,7 +54,7 @@ referenzieren.
 | `writeFile` | Datei schreiben | Schreibt einen explizit konfigurierten Wert als Datei | Implementiert |
 | `readFile` | Datei lesen | Liest eine konkrete Datei-Version | Implementiert |
 | `readEmail` | E-Mail lesen | Liest Absender, Betreff und Inhalt eines Events | Microsoft Graph implementiert |
-| `readChannelEvent` | Nachricht lesen | Liest E-Mail-, WhatsApp- oder SMS-Events. Absender, Betreff (nur E-Mail), Nachricht und Ankunftszeit sind flache Hauptoutputs wie bei der strukturierten Prompt-Ausgabe: je ein Chip am Pfeil, per Doppelklick umbenennbar, graph-weit eindeutig (`config.outputNames`) | Implementiert |
+| `readChannelEvent` | Nachricht lesen | Liest E-Mail-, WhatsApp- oder SMS-Events; der Nachrichtentext ist der Hauptwert, Absender, Betreff (nur E-Mail) und Ankunftszeit sind weitere Werte | Implementiert |
 | `sendChannelMessage` | Nachricht senden | Sendet E-Mail, WhatsApp oder SMS | Microsoft-Graph-Antworten implementiert |
 | `notificationSend` | Push-Benachrichtigung senden | Sendet einen aufgelösten Text als Push-Benachrichtigung an alle Team-Mitglieder | Implementiert |
 | `humanApproval` | Freigabe | Haltet den Run bis zur menschlichen Entscheidung an | Implementiert |
@@ -156,18 +156,15 @@ Die festen Ausgabefelder der Bausteine (z. B. `recipient`, `sender`) sind Datenv
   Labels dar. Mit `#` öffnet sich eine Suche nach Workflow-Ausgabewerten und
   statisch erkennbaren Script-Variablen aus dem erreichbaren Vorgängerpfad.
   Persistiert bleibt der unveränderte Ausdruck `{{name}}`; die Label-
-  Darstellung ist reine UI. Feste Nebenoutputs eines Bausteins (z.B.
-  `speichern4.created`) sind dort standardmäßig ausgeblendet und erst über
-  den Filter „Feste Felder" einblendbar — die Suche bleibt für den
-  Normalfall (primäre Ausgabenamen, Variablen) einfach.
-- Feste Nebenoutputs sind auch im rechten Konfigurations-Overlay bewusst
-  anders gestaltet als der editierbare Ausgabename: outlined statt gefüllt,
-  gedämpfte statt Akzentfarbe, kein Stift-Icon — sie beschreiben feste
-  Argumente des Baustein-Typs, keine vom Nutzer gewählten Namen. Antippen
-  kopiert die fertige Referenz (`{{ausgabename.feld}}`) in die
-  Zwischenablage, statt eine Umbenennung anzubieten. Sie erscheinen nie auf
-  der Arbeitsfläche selbst, nur im Overlay (`NodeOutputChips`). Einzige
-  Quelle dafür, welche Felder ein Baustein-Typ hat:
+  Darstellung ist reine UI. Die Suche bietet alle benannten Werte gleich an:
+  Hauptwerte, weitere Werte (z. B. `{{Gefunden}}`) und Script-Variablen.
+- Die **weiteren Werte** eines Bausteins (alles neben dem Hauptwert, z. B.
+  „Gefunden“ bei „Datensatz suchen“) werden wie Hauptwerte benannt:
+  lokalisiert, großgeschrieben, graph-weit eindeutig, ab 2 nummeriert
+  (`WorkflowNode.outputFieldNames`). Sie erscheinen nie auf der
+  Arbeitsfläche, nur im rechten Panel (`NodeOutputChips`). Antippen benennt
+  sie um (belegte Namen bekommen eine Nummer), das Kopier-Symbol kopiert
+  `{{Name}}`. Einzige Quelle dafür, welche Werte ein Baustein-Typ hat:
   `domain/entities/workflow_node_outputs.dart` — genutzt von diesem Overlay
   und von der `#`-Suche gleichermaßen.
 - Anlass statt technischer Konfiguration.

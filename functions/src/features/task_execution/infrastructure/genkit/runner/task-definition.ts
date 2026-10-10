@@ -92,6 +92,7 @@ const branchWorkflowNodeSchema = z.object({
   title: z.string().min(1),
   description: z.string().default(""),
   outputName: z.string().default(""),
+  outputFieldNames: z.record(z.string(), z.string()).default({}),
   config: z.unknown().optional(),
 });
 
@@ -290,12 +291,6 @@ export const readWebhookNodeConfigSchema = z.object({
 export const readChannelEventNodeConfigSchema = z.object({
   primitive: z.literal("readChannelEvent").default("readChannelEvent"),
   kind: z.enum(["email", "whatsapp", "sms"]).default("whatsapp"),
-  outputNames: z.object({
-    sender: z.string().trim().min(1).default("sender"),
-    subject: z.string().trim().min(1).default("subject"),
-    message: z.string().trim().min(1).default("message"),
-    receivedAt: z.string().trim().min(1).default("receivedAt"),
-  }).default({}),
 });
 
 export const sendChannelMessageNodeConfigSchema = z.object({
@@ -369,6 +364,7 @@ export const workflowNodeSchema = z.object({
   title: z.string().min(1),
   description: z.string().default(""),
   outputName: z.string().default(""),
+  outputFieldNames: z.record(z.string(), z.string()).default({}),
   // Ältere Modell-Bausteine speicherten Ausgangsparameter separat; heute sind es Settings.
   config: z.preprocess(withLegacyOutputParametersAsSettings, nodeConfigSchema),
 });

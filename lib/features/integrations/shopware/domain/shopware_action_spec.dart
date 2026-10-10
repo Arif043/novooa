@@ -73,7 +73,7 @@ class ShopwareActionSpec {
     required this.description,
     required this.outputBase,
     required this.primaryOutput,
-    required this.secondaryOutputs,
+    required this.outputFields,
     required this.fields,
     this.initialParams = const {},
     this.usesConnection = true,
@@ -85,7 +85,7 @@ class ShopwareActionSpec {
   final String description;
   final String outputBase;
   final NodeOutputType primaryOutput;
-  final Map<String, NodeOutputType> secondaryOutputs;
+  final Map<String, NodeOutputType> outputFields;
   final List<ShopwareField> fields;
   final Map<String, Object?> initialParams;
 

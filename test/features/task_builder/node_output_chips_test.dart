@@ -17,14 +17,26 @@ void main() {
     expect(find.text(''), findsNothing);
   });
 
-  testWidgets('zeigt die strukturierten Datei-Outputs', (tester) async {
+  testWidgets('zeigt die weiteren Datei-Werte unter ihren Namen', (
+    tester,
+  ) async {
     await tester.pumpWidget(_host(_writeFileNode()));
 
-    expect(find.text('fileId'), findsOneWidget);
-    expect(find.text('versionId'), findsOneWidget);
-    expect(find.text('folderId'), findsOneWidget);
-    expect(find.text('isNewFile'), findsOneWidget);
+    expect(find.text('DateiId'), findsOneWidget);
+    expect(find.text('NeueDatei'), findsOneWidget);
+    expect(find.text('fileId'), findsNothing);
   });
+
+  testWidgets(
+    'zeigt Werte ohne Namen nicht an, weil sie nicht erreichbar sind',
+    (tester) async {
+      await tester.pumpWidget(
+        _host(_writeFileNode().copyWith(outputFieldNames: const {})),
+      );
+
+      expect(find.byType(InputChip), findsNothing);
+    },
+  );
 
   testWidgets(
     'zeigt für Entscheidungen keine Nebenoutputs — value ist bereits über '
@@ -33,7 +45,7 @@ void main() {
       await tester.pumpWidget(_host(_decisionPromptNode()));
 
       expect(find.text('value'), findsNothing);
-      expect(find.byType(ActionChip), findsNothing);
+      expect(find.byType(InputChip), findsNothing);
     },
   );
 
@@ -44,22 +56,22 @@ void main() {
       await tester.pumpWidget(_host(_imagePromptNode()));
 
       expect(find.text('value'), findsNothing);
-      expect(find.byType(ActionChip), findsNothing);
+      expect(find.byType(InputChip), findsNothing);
     },
   );
 
   testWidgets(
-    'zeigt bei der Modell-Inferenz nur den Nebenoutput modelId, nicht value',
+    'zeigt bei der Modell-Inferenz nur den weiteren Wert, nicht value',
     (tester) async {
       await tester.pumpWidget(_host(_modelInferenceNode()));
 
       expect(find.text('value'), findsNothing);
-      expect(find.text('modelId'), findsOneWidget);
+      expect(find.text('ModellId'), findsOneWidget);
     },
   );
 
   testWidgets(
-    'kopiert die Dot-Pfad-Referenz eines Nebenoutputs beim Antippen',
+    'kopiert die flache Referenz eines weiteren Werts über das Kopier-Symbol',
     (tester) async {
       final copied = <String>[];
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
@@ -79,11 +91,16 @@ void main() {
       });
 
       await tester.pumpWidget(
-        _host(_saveDocumentNode(outputName: 'speichern1')),
+        _host(_saveDocumentNode(outputName: 'Speichern')),
       );
-      await tester.tap(find.text('created'));
+      await tester.tap(
+        find.descendant(
+          of: find.widgetWithText(InputChip, 'Angelegt'),
+          matching: find.byIcon(Icons.copy),
+        ),
+      );
 
-      expect(copied, ['{{speichern1.created}}']);
+      expect(copied, ['{{Angelegt}}']);
     },
   );
 
@@ -142,6 +159,7 @@ WorkflowNode _writeFileNode() {
     id: const NodeId('file'),
     title: 'Datei schreiben',
     description: '',
+    outputFieldNames: const {'fileId': 'DateiId', 'isNewFile': 'NeueDatei'},
     config: const WriteFileNodeConfig(fileName: '', contentType: ''),
   );
 }
@@ -177,6 +195,7 @@ WorkflowNode _modelInferenceNode() {
     id: const NodeId('model'),
     title: 'Modell ausführen',
     description: '',
+    outputFieldNames: const {'modelId': 'ModellId'},
     config: const ModelInferenceNodeConfig(modelId: 'mobilenet-v3'),
   );
 }
@@ -187,6 +206,7 @@ WorkflowNode _saveDocumentNode({required String outputName}) {
     title: 'Datensatz speichern',
     description: '',
     outputName: outputName,
+    outputFieldNames: const {'created': 'Angelegt'},
     config: const SaveDocumentNodeConfig(
       collectionName: 'kunden',
       filters: [],

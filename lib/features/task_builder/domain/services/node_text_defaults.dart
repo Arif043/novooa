@@ -13,6 +13,10 @@ abstract interface class NodeTextDefaults {
   /// Ausgabename eines Sendebausteins, z. B. `sendemail` oder `sendenemail`.
   String sendOutputBase(ChannelEventKind kind);
 
+  /// Name eines weiteren Werts ohne laufende Nummer, z. B. `Gefunden` für den
+  /// Schlüssel `found` (siehe `outputFieldsOf`).
+  String outputFieldBase(String fieldKey);
+
   String title(WorkflowPrimitive primitive);
 
   String description(WorkflowPrimitive primitive);

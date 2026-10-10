@@ -27,18 +27,18 @@ NodeOutputType primaryOutputTypeOf(NodeConfig config) {
   };
 }
 
-/// Typ eines festen Nebenoutputs von [config]; Plugins legen ihn selbst fest,
-/// alle anderen Bausteine folgen [secondaryOutputTypeOf].
-NodeOutputType secondaryOutputTypeFor(NodeConfig config, String field) {
+/// Typ eines weiteren Werts von [config]; Plugins legen ihn selbst fest,
+/// alle anderen Bausteine folgen [outputFieldTypeOf].
+NodeOutputType outputFieldTypeFor(NodeConfig config, String field) {
   if (config is PluginNodeConfig) {
-    return config.secondaryOutputs[field] ?? secondaryOutputTypeOf(field);
+    return config.outputFields[field] ?? outputFieldTypeOf(field);
   }
-  return secondaryOutputTypeOf(field);
+  return outputFieldTypeOf(field);
 }
 
-/// Typ eines festen Nebenoutputs — unabhängig vom Baustein, weil gleich
-/// benannte Felder in allen Executoren denselben Typ haben.
-NodeOutputType secondaryOutputTypeOf(String field) {
+/// Typ eines weiteren Werts — unabhängig vom Baustein, weil gleich
+/// benannte Schlüssel in allen Executoren denselben Typ haben.
+NodeOutputType outputFieldTypeOf(String field) {
   return switch (field) {
     'receivedAt' => NodeOutputType.datetime,
     'found' || 'created' || 'isNewFile' || 'ok' => NodeOutputType.boolean,
@@ -65,26 +65,12 @@ List<TypedOutputField> typedFlatOutputFieldsOf(NodeConfig config) {
         (name: field.name.trim(), type: structuredFieldOutputType(field.type)),
     ],
     ScriptNodeConfig() => scriptWorkflowOutputsOf(config),
-    ReadChannelEventNodeConfig() => [
-      for (final field in config.outputFields)
-        (
-          name: config.outputNames.nameOf(field).trim(),
-          type: channelEventFieldOutputType(field),
-        ),
-    ],
     _ => const <TypedOutputField>[],
   };
   return [
     for (final field in fields)
       if (field.name.isNotEmpty) field,
   ];
-}
-
-/// Werttyp eines Werts von „Nachricht lesen“.
-NodeOutputType channelEventFieldOutputType(ChannelEventOutputField field) {
-  return field == ChannelEventOutputField.receivedAt
-      ? NodeOutputType.datetime
-      : NodeOutputType.string;
 }
 
 /// Werttyp, den ein Dialogfeld nach dem Absenden liefert.

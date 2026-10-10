@@ -20,7 +20,7 @@ ihre normalen Workflow-Mappings, etwa `{{iteration.value.bounds}}` oder
 `{{iteration.index}}`. Der synthetische `value`-Vorgänger bleibt für
 Bausteine ohne eigene Zuordnung erhalten; normale Kanten des eingebetteten Graphen haben
 weiterhin Vorrang. Damit bleiben Iterationen voneinander isoliert und die
-bestehende Topologieausführung unverändert. Der eingebettete Graph erhält außerdem den schreibgeschützten Kontext des äußeren Graphen: `{{global.eingabe.value}}`, `{{global.input.feld}}` und `{{global.variables.name}}`. Äußere Knotenausgaben dürfen auch kurz als `{{eingabe.value}}` referenziert werden, sofern der eingebettete Graph keinen gleichnamigen Baustein enthält.
+bestehende Topologieausführung unverändert. Der eingebettete Graph erhält außerdem den schreibgeschützten Kontext des äußeren Graphen: `{{global.Eingabe}}` (jeder benannte Wert der äußeren Ebene), `{{global.input.feld}}` und `{{global.variables.name}}`. Äußere Werte dürfen auch kurz als `{{Eingabe}}` referenziert werden, sofern der eingebettete Graph keinen gleichnamigen Wert enthält.
 
 Kanten enthalten keine Datenauswahl. Nachfolger binden benötigte Werte über
 ihren eigenen Vertrag, damit der Datenfluss an einer Stelle konfiguriert bleibt.

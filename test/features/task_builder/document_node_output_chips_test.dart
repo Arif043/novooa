@@ -21,11 +21,9 @@ void main() {
       ),
     );
 
-    expect(find.text('found'), findsOneWidget);
-    expect(find.text('record'), findsOneWidget);
-    expect(find.text('created'), findsOneWidget);
-    expect(find.text('count'), findsOneWidget);
-    expect(find.text('records'), findsOneWidget);
+    for (final name in ['Gefunden', 'Eintrag', 'Angelegt', 'Anzahl']) {
+      expect(find.text(name), findsOneWidget);
+    }
   });
 }
 
@@ -34,6 +32,7 @@ WorkflowNode _lookupNode() {
     id: const NodeId('lookup'),
     title: 'Datensatz suchen',
     description: '',
+    outputFieldNames: const {'found': 'Gefunden', 'record': 'Eintrag'},
     config: DocumentLookupNodeConfig.initial(),
   );
 }
@@ -43,6 +42,7 @@ WorkflowNode _saveNode() {
     id: const NodeId('save'),
     title: 'Datensatz speichern',
     description: '',
+    outputFieldNames: const {'created': 'Angelegt', 'count': 'Anzahl'},
     config: SaveDocumentNodeConfig.initial(),
   );
 }

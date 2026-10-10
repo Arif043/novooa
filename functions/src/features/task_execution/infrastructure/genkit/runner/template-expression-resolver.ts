@@ -17,21 +17,12 @@ export type TemplateExpressionContext = {
   variables: TaskVariables;
   scope: WorkflowExecutionScope;
   /**
-   * Zweitschlüssel fest vorgegebener **Neben**-Ausgaben (z.B. `sender`,
-   * `fileId`), genestet unter dem `outputName` des erzeugenden Bausteins —
-   * erreichbar per Dot-Pfad, z.B. `{{eingang.sender}}`. Enthält bewusst
-   * keinen `value`-Eintrag: Die alte, zweistufige Adressierung des
-   * Primärwerts (`{{eingang.value}}`, aus der Zeit vor eindeutigen
-   * Einzelnamen) ist abgeschafft — der Primärwert ist ausschließlich über
-   * [flatOutputs] als `{{eingang}}` erreichbar.
-   */
-  nodeOutputs: Record<string, Record<string, NodeOutputValue>>;
-  /**
-   * Flacher, graph-weiter Namensraum: der primäre Wert jedes benannten
-   * Bausteins (`outputName`) sowie jedes einzelne Feld eines Bausteins mit
-   * mehreren fachlichen Outputs (strukturierte Prompt-Ausgabe,
-   * Dialogeingabe-Felder, „Nachricht lesen“) — ohne umschließenden Knotennamen, z.B.
-   * `{{eingang}}`, `{{Name}}`.
+   * Der einzige, graph-weite Namensraum aller Ausgabewerte: der Hauptwert
+   * jedes Bausteins (`outputName`), jeder weitere Wert unter seinem Namen aus
+   * `outputFieldNames` (z.B. `{{Gefunden}}`) und jedes Feld eines flachen
+   * Bausteins (strukturierte Prompt-Ausgabe, Dialogeingabe, Script mit
+   * `workflow_output`). Eine Adressierung über den Knotennamen
+   * (`{{Datensatz.found}}`) gibt es nicht.
    */
   flatOutputs: Record<string, NodeOutputValue>;
 };
@@ -70,7 +61,6 @@ export class TemplateExpressionResolver {
     const segments = path.split(".");
     return valueAtPath(context.scope, segments) ??
       flatOutputAt(context.flatOutputs, segments) ??
-      nodeOutputAt(context.nodeOutputs, segments) ??
       valueAtPath(context.scope.global, segments) ??
       valueAtPath(context.variables, segments);
   }
@@ -82,13 +72,12 @@ export function variableTemplateContextFor(
   variables: TaskVariables,
   scope: WorkflowExecutionScope = {},
 ): TemplateExpressionContext {
-  return {variables, scope, ...nodeOutputContextFor(graph.nodes, results)};
+  return {variables, scope, flatOutputs: flatOutputsFor(graph.nodes, results)};
 }
 
 /** Ein einzelnes Segment (`{{eingang}}`) oder ein Dot-Pfad in den eigenen
- * JSON-Wert eines flachen Outputs (`{{bericht.summe}}`, wenn `bericht` ein
- * JSON-Objekt ist) — nicht zu verwechseln mit den festen Zweitschlüsseln in
- * [nodeOutputAt], die als eigene Einträge in `result.outputs` existieren. */
+ * JSON-Wert eines Outputs (`{{bericht.summe}}`, wenn `bericht` ein
+ * JSON-Objekt ist). */
 function flatOutputAt(
   flatOutputs: TemplateExpressionContext["flatOutputs"],
   path: string[],
@@ -98,31 +87,18 @@ function flatOutputAt(
   return output === undefined ? undefined : valueAtPath(output.value, valuePath);
 }
 
-function nodeOutputAt(
-  scopes: TemplateExpressionContext["nodeOutputs"],
-  path: string[],
-): unknown {
-  if (path.length < 2) return undefined;
-  const [outputName, secondaryKey, ...valuePath] = path;
-  const output = scopes[outputName]?.[secondaryKey];
-  return output === undefined ? undefined : valueAtPath(output.value, valuePath);
-}
-
 /**
- * Baut sowohl den geschachtelten Zweitschlüssel-Namensraum als auch den
- * flachen, graph-weiten Namensraum aus den Ausführungsergebnissen auf.
- * Bausteine mit mehreren fachlichen Outputs (strukturierte Prompt-Ausgabe,
- * Dialogeingabe) verzichten auf einen eigenen Knotennamen — ihre Feldnamen
- * fließen direkt in den flachen Namensraum ein, der generische `value`/
- * `text`-Platzhalter (das ganze Objekt) entfällt dabei bewusst, da er ohne
- * Knotennamen nicht mehr eindeutig adressierbar wäre.
+ * Baut den flachen Namensraum aus den Ausführungsergebnissen. Flache
+ * Bausteine (strukturierte Prompt-Ausgabe, Dialogeingabe, Script mit
+ * `workflow_output`) haben keinen eigenen Knotennamen; ihre Feldnamen fließen
+ * direkt ein. Alle anderen liefern `value` unter ihrem `outputName` und ihre
+ * weiteren Werte unter den Namen aus `outputFieldNames`.
  */
-function nodeOutputContextFor(
+export function flatOutputsFor(
   nodes: WorkflowNode[],
   results: Map<string, NodeExecutionResult>,
-): Pick<TemplateExpressionContext, "nodeOutputs" | "flatOutputs"> {
-  const nodeOutputs: TemplateExpressionContext["nodeOutputs"] = {};
-  const flatOutputs: TemplateExpressionContext["flatOutputs"] = {};
+): Record<string, NodeOutputValue> {
+  const flatOutputs: Record<string, NodeOutputValue> = {};
   for (const node of nodes) {
     const result = results.get(node.id);
     if (!result) continue;
@@ -130,16 +106,26 @@ function nodeOutputContextFor(
       mergeFlatFieldOutputs(flatOutputs, result.outputs);
       continue;
     }
-    const name = node.outputName.trim() || node.id.replace(/[^\w]/g, "");
-    if (name.length === 0) continue;
-    nodeOutputs[name] = secondaryOutputsOf(result.outputs);
-    if (result.outputs.value !== undefined) flatOutputs[name] = result.outputs.value;
+    mergeNamedOutputs(flatOutputs, node, result.outputs);
   }
-  return {nodeOutputs, flatOutputs};
+  return flatOutputs;
+}
+
+function mergeNamedOutputs(
+  flatOutputs: Record<string, NodeOutputValue>,
+  node: WorkflowNode,
+  outputs: Record<string, NodeOutputValue>,
+): void {
+  const primaryName = node.outputName.trim() || node.id.replace(/[^\w]/g, "");
+  if (primaryName.length > 0 && outputs.value !== undefined) flatOutputs[primaryName] = outputs.value;
+  for (const [key, output] of Object.entries(outputs)) {
+    const name = node.outputFieldNames?.[key]?.trim();
+    if (key !== "value" && name) flatOutputs[name] = output;
+  }
 }
 
 function hasFlatOutputs(node: WorkflowNode, result: NodeExecutionResult): boolean {
-  if (node.config.primitive === "dialogInput" || node.config.primitive === "readChannelEvent") return true;
+  if (node.config.primitive === "dialogInput") return true;
   // Ein Script ist flach, sobald es per `workflow_output` eigene Ausgaben statt eines `value` liefert.
   if (node.config.primitive === "script") return isScriptWithWorkflowOutputs(result);
   return node.config.primitive === "prompt" && node.config.outputType === "structured";
@@ -157,19 +143,6 @@ function mergeFlatFieldOutputs(
     if (key === "value") continue;
     flatOutputs[key] = value;
   }
-}
-
-/**
- * Nur die Nebenoutputs eines Bausteins (z.B. `sender`, `fileId`) für die
- * Dot-Pfad-Adressierung unter seinem `outputName` — ohne `value`. Die alte
- * `{{outputName.value}}`-Form ist damit nicht mehr auflösbar, nur noch die
- * flache Kurzform `{{outputName}}` (siehe [flatOutputs]).
- */
-function secondaryOutputsOf(
-  outputs: Record<string, NodeOutputValue>,
-): Record<string, NodeOutputValue> {
-  const {value: _primary, ...secondary} = outputs;
-  return secondary;
 }
 
 function valueAtPath(value: unknown, path: string[]): unknown {

@@ -48,13 +48,6 @@ class DialogFieldEditTarget extends CanvasLabelEditTarget {
   final int fieldIndex;
 }
 
-/// Ein einzelner Wert von „Nachricht lesen“ (z.B. `sender`).
-class ChannelEventFieldEditTarget extends CanvasLabelEditTarget {
-  const ChannelEventFieldEditTarget(this.nodeId, this.field);
-  final NodeId nodeId;
-  final ChannelEventOutputField field;
-}
-
 /// Das Label eines Zweigs eines Bedingter-Ablauf-Bausteins (z.B. "Ja").
 class ConditionalBranchEditTarget extends CanvasLabelEditTarget {
   const ConditionalBranchEditTarget(this.conditionalNodeId, this.branchId);
@@ -314,16 +307,6 @@ class WorkflowCanvasLayout {
       return [
         for (final output in scriptWorkflowOutputsOf(config))
           CanvasLabel(output.name, null, output.type),
-      ];
-    }
-    if (node.config case final ReadChannelEventNodeConfig config) {
-      return [
-        for (final field in config.outputFields)
-          CanvasLabel(
-            config.outputNames.nameOf(field),
-            ChannelEventFieldEditTarget(node.id, field),
-            channelEventFieldOutputType(field),
-          ),
       ];
     }
     if (node.config case DialogInputNodeConfig(:final fields)) {

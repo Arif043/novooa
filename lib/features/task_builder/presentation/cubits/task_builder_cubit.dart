@@ -25,7 +25,7 @@ part 'task_builder_graph_mutations.dart';
 part 'task_builder_iterative_refinement_mutations.dart';
 part 'task_builder_human_approval_mutations.dart';
 part 'task_builder_dialog_input_mutations.dart';
-part 'task_builder_channel_event_mutations.dart';
+part 'task_builder_output_field_mutations.dart';
 part 'task_builder_media_input_mutations.dart';
 part 'task_builder_model_inference_mutations.dart';
 part 'task_builder_for_each_mutations.dart';
@@ -128,10 +128,14 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       task.graph,
     );
     final config = node.config as ReadChannelEventNodeConfig;
-    final configuredNode = node.copyWith(
-      title: nodeTextDefaults.readChannelTitle(kind),
-      description: nodeTextDefaults.readChannelDescription(kind),
-      config: config.copyWith(kind: kind),
+    // Nur E-Mails haben einen Betreff — die Namen folgen dem Kanal.
+    final configuredNode = _withOutputFieldNames(
+      node.copyWith(
+        title: nodeTextDefaults.readChannelTitle(kind),
+        description: nodeTextDefaults.readChannelDescription(kind),
+        config: config.copyWith(kind: kind),
+      ),
+      task.graph,
     );
     await _saveAndEmit(task.addNode(configuredNode));
   }
@@ -347,33 +351,39 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     PluginNodeModule? plugin,
   }) {
     if (plugin != null) {
-      return WorkflowNode(
-        id: NodeId('node.$number'),
-        config: plugin.initial(),
-        title: plugin.title,
-        description: plugin.description,
-        outputName: _defaultOutputName(graph, _capitalized(plugin.outputBase)),
+      return _withOutputFieldNames(
+        WorkflowNode(
+          id: NodeId('node.$number'),
+          config: plugin.initial(),
+          title: plugin.title,
+          description: plugin.description,
+          outputName: _defaultOutputName(
+            graph,
+            _capitalized(plugin.outputBase),
+          ),
+        ),
+        graph,
       );
     }
-    // Dialogeingabe und „Nachricht lesen“ haben immer mehrere, eigenständig
-    // benannte Outputs (siehe _collectOutputNames) und deshalb nie einen
-    // eigenen Ausgabenamen. Reine Seiteneffekt-Bausteine ohne fachlichen
+    // Dialogeingabe-Bausteine haben immer mehrere, eigenständig benannte
+    // Outputs (siehe _collectOutputNames) und deshalb nie einen eigenen
+    // Ausgabenamen. Reine Seiteneffekt-Bausteine ohne fachlichen
     // Rückgabewert (siehe WorkflowPrimitive.hasNoOutput) haben gar keinen.
     final outputName = _hasOwnOutputName(primitive)
         ? _defaultOutputName(graph, nodeTextDefaults.outputBase(primitive))
         : '';
-    return WorkflowNode(
+    final node = WorkflowNode(
       id: NodeId('node.$number'),
       config: _initialConfig(primitive, graph),
       title: nodeTextDefaults.title(primitive),
       description: nodeTextDefaults.description(primitive),
       outputName: outputName,
     );
+    return _withOutputFieldNames(node, graph);
   }
 
   bool _hasOwnOutputName(WorkflowPrimitive primitive) {
     return primitive != WorkflowPrimitive.dialogInput &&
-        primitive != WorkflowPrimitive.readChannelEvent &&
         !primitive.hasNoOutput;
   }
 
@@ -382,9 +392,6 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   /// Dialogeingabe-Baustein denselben, nicht mehr eindeutigen Namen tragen.
   NodeConfig _initialConfig(WorkflowPrimitive primitive, WorkflowGraph graph) {
     final config = NodeConfig.initial(primitive);
-    if (config is ReadChannelEventNodeConfig) {
-      return config.copyWith(outputNames: _uniqueChannelEventNames(graph));
-    }
     if (config is DialogInputNodeConfig && config.fields.isNotEmpty) {
       final uniqueName = _uniqueOutputName(graph, '', config.fields.first.name);
       return config.copyWith(
@@ -395,17 +402,6 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       );
     }
     return config;
-  }
-
-  /// Wie beim Dialogfeld: Die Standardnamen (`sender`, …) erhalten bei
-  /// einem zweiten Lese-Baustein ein Suffix (`sender_2`).
-  ChannelEventOutputNames _uniqueChannelEventNames(WorkflowGraph graph) {
-    var names = const ChannelEventOutputNames();
-    for (final field in ChannelEventOutputField.values) {
-      final unique = _uniqueOutputName(graph, '', names.nameOf(field));
-      names = names.rename(field, unique);
-    }
-    return names;
   }
 
   int _nextNodeNumber(WorkflowGraph graph) {
@@ -463,6 +459,7 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
       } else {
         final name = node.outputName.trim();
         if (name.isNotEmpty) names.add(name);
+        names.addAll(node.outputFieldNames.values.map((name) => name.trim()));
       }
       if (node.config case ConditionalNodeConfig(:final branches)) {
         for (final branch in branches) {
@@ -480,8 +477,12 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
   /// `_2`/`_3`-Suffix, bis er eindeutig ist.
   /// Erster Baustein einer Art heißt `Anweisung`, der zweite `Anweisung2`, der
   /// dritte `Anweisung3` …
-  String _defaultOutputName(WorkflowGraph graph, String base) {
-    final taken = _allOutputNames(graph);
+  String _defaultOutputName(
+    WorkflowGraph graph,
+    String base, {
+    Set<String> alsoTaken = const {},
+  }) {
+    final taken = _allOutputNames(graph)..addAll(alsoTaken);
     var candidate = base;
     var number = 2;
     while (taken.contains(candidate)) {

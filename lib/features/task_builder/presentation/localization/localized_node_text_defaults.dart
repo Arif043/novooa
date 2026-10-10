@@ -67,6 +67,18 @@ class LocalizedNodeTextDefaults implements NodeTextDefaults {
     };
   }
 
+  /// Die Schlüssel kommen aus Daten (auch aus Plugins), deshalb dynamisch
+  /// statt über `LocaleKeys`; unbekannte Plugin-Schlüssel werden nur
+  /// großgeschrieben.
+  @override
+  String outputFieldBase(String fieldKey) {
+    final translationKey = 'task_builder.output_field_names.$fieldKey';
+    if (trExists(translationKey)) return translationKey.tr();
+    return fieldKey.isEmpty
+        ? fieldKey
+        : fieldKey[0].toUpperCase() + fieldKey.substring(1);
+  }
+
   @override
   String sendOutputBase(ChannelEventKind kind) {
     return switch (kind) {

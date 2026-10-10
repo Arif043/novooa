@@ -57,8 +57,8 @@ class ShopwareNodeConfig extends PluginNodeConfig {
       ShopwareActions.byId(action)?.primaryOutput ?? NodeOutputType.string;
 
   @override
-  Map<String, NodeOutputType> get secondaryOutputs =>
-      ShopwareActions.byId(action)?.secondaryOutputs ?? const {};
+  Map<String, NodeOutputType> get outputFields =>
+      ShopwareActions.byId(action)?.outputFields ?? const {};
 
   ShopwareNodeConfig copyWith({
     String? connectionId,

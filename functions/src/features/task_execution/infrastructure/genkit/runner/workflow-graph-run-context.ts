@@ -110,12 +110,11 @@ function globalContextFor(
   return {
     input: options.input.input ?? {},
     variables: options.variables,
-    ...Object.fromEntries(Object.entries(context.nodeOutputs).map(([name, outputs]) => [
+    // Zweige und „Für jedes Element“ sehen die Werte der äußeren Ebene unter
+    // denselben flachen Namen wie dort (`{{Gefunden}}`, `{{global.Gefunden}}`).
+    ...Object.fromEntries(Object.entries(context.flatOutputs).map(([name, output]) => [
       name,
-      Object.fromEntries(Object.entries(outputs).map(([output, value]) => [
-        output,
-        value.value,
-      ])),
+      output.value,
     ])),
   };
 }

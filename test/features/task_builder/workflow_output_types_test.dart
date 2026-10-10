@@ -27,11 +27,11 @@ void main() {
   });
 
   test('Nebenoutputs haben den Typ, den der Executor liefert', () {
-    expect(secondaryOutputTypeOf('receivedAt'), NodeOutputType.datetime);
-    expect(secondaryOutputTypeOf('found'), NodeOutputType.boolean);
-    expect(secondaryOutputTypeOf('sizeBytes'), NodeOutputType.number);
-    expect(secondaryOutputTypeOf('records'), NodeOutputType.json);
-    expect(secondaryOutputTypeOf('sender'), NodeOutputType.string);
+    expect(outputFieldTypeOf('receivedAt'), NodeOutputType.datetime);
+    expect(outputFieldTypeOf('found'), NodeOutputType.boolean);
+    expect(outputFieldTypeOf('sizeBytes'), NodeOutputType.number);
+    expect(outputFieldTypeOf('records'), NodeOutputType.json);
+    expect(outputFieldTypeOf('sender'), NodeOutputType.string);
   });
 
   test('strukturierte Felder übernehmen ihren konfigurierten Typ', () {

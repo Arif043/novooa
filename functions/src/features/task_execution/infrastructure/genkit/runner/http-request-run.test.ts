@@ -10,11 +10,12 @@ const silentLogger = {info() {}, error() {}, exception() {}, readableInfo() {}, 
 const input = {id: "kunde", primitive: "stringInput", title: "Kunde", description: "", outputName: "kunde", config: {primitive: "stringInput", value: "Anna"}};
 const request = {
   id: "abruf", primitive: "httpRequest", title: "Abruf", description: "", outputName: "antwort",
+  outputFieldNames: {status: "Status", ok: "Erfolgreich"},
   config: {primitive: "httpRequest", connectionId: "c1", url: "/customers/{{kunde}}", headers: [{name: "X-Kunde", value: "{{kunde}}"}]},
 };
 const follow = {
   id: "danach", primitive: "stringInput", title: "Danach", description: "", outputName: "danach",
-  config: {primitive: "stringInput", value: "{{antwort.name}} ({{antwort.status}}, ok={{antwort.ok}})"},
+  config: {primitive: "stringInput", value: "{{antwort.name}} ({{Status}}, ok={{Erfolgreich}})"},
 };
 
 function taskWith(nodes: unknown[]) {
@@ -24,7 +25,7 @@ function taskWith(nodes: unknown[]) {
   return {taskDefinition, context: "", teamId: "team-1"} as never;
 }
 
-test("der Dienst erreicht den Baustein im echten Runner; Antwortfelder sind in Folgebausteinen als {{antwort.feld}} nutzbar", async () => {
+test("der Dienst erreicht den Baustein im echten Runner; Antwortfelder sind als {{antwort.feld}}, Status und ok unter ihren Namen nutzbar", async () => {
   const sent: OutboundHttpRequest[] = [];
   const outboundHttpClient: OutboundHttpClient = {
     send: (call) => { sent.push(call); return Promise.resolve({status: 200, headers: {}, body: '{"name":"Anna Muster"}'}); },
