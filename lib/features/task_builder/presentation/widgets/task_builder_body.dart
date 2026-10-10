@@ -168,18 +168,20 @@ class _TaskBuilderBodyState extends State<TaskBuilderBody> {
                 ),
                 if (!desktop)
                   Positioned(
-                    left: 12,
-                    top: 12,
-                    child: FilledButton.tonalIcon(
+                    left: 0,
+                    top: 0,
+                    child: IconButton.filledTonal(
+                      tooltip: LocaleKeys.task_builder_body_blocks_button.tr(),
+                      style: IconButton.styleFrom(
+                        shape: const RoundedRectangleBorder(),
+                        minimumSize: const Size.square(48),
+                      ),
                       onPressed: () => setState(() {
                         _showPalette = !_showPalette;
                         _editing = null;
                         _panelVisible = false;
                       }),
                       icon: const Icon(Icons.widgets_outlined),
-                      label: Text(
-                        LocaleKeys.task_builder_body_blocks_button.tr(),
-                      ),
                     ),
                   ),
                 if (_insertion != null && desktop)

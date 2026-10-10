@@ -539,7 +539,7 @@ void main() {
       expect(tester.takeException(), isNull);
       tester.view.physicalSize = const Size(390, 844);
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilledButton, 'Bausteine'));
+      await tester.tap(find.byTooltip('Bausteine'));
       await tester.pumpAndSettle();
       expect(find.byType(TextField), findsNWidgets(2));
       expect(tester.takeException(), isNull);
