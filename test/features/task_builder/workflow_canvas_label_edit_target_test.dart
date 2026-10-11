@@ -117,8 +117,7 @@ void main() {
     );
   });
 
-  test('ein Bedingungs-Branch-Label trägt ein ConditionalBranchEditTarget mit '
-      'Knoten- und Branch-Id', () {
+  test('ein Zweig ohne Bedingung heißt „Sonst“ und ist nicht umbenennbar', () {
     const decision = WorkflowNode(
       id: NodeId('decision'),
       title: '',
@@ -140,18 +139,10 @@ void main() {
       (link) =>
           link.from == 'decision' && link.to == '@empty:decision:branch.1',
     );
+    // Ohne Bedingung ist der Zweig „Sonst“; der Chip ist nicht umbenennbar.
     expect(link.labels, hasLength(1));
-    expect(link.labels.single.text, 'Ja');
-    expect(
-      link.labels.single.editTarget,
-      isA<ConditionalBranchEditTarget>()
-          .having(
-            (target) => target.conditionalNodeId,
-            'conditionalNodeId',
-            const NodeId('decision'),
-          )
-          .having((target) => target.branchId, 'branchId', 'branch.1'),
-    );
+    expect(link.labels.single.text, 'Sonst');
+    expect(link.labels.single.editTarget, isNull);
   });
 
   test('strukturelle Labels ("Für jedes Element") bleiben ohne Edit-Ziel', () {

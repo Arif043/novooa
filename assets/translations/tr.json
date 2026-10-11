@@ -230,6 +230,20 @@
     },
     "title_field": {
       "hint": "Görev adı"
+    },
+    "operators": {
+      "equals": "eşittir",
+      "notEquals": "eşit değildir",
+      "greaterThan": "büyüktür",
+      "greaterThanOrEqual": "büyük veya eşittir",
+      "lessThan": "küçüktür",
+      "lessThanOrEqual": "küçük veya eşittir",
+      "contains": "içerir"
+    },
+    "combinators": {
+      "and": "ve",
+      "or": "veya",
+      "xor": "ya da"
     }
   },
   "settings": {

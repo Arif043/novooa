@@ -1,9 +1,7 @@
 part of 'task_builder_cubit.dart';
 
 /// Verwaltet bedingte Zweige (Baukasten-Bedingungen, siehe
-/// `ConditionalBranchesEditor`) eines Bedingter-Ablauf-Bausteins ohne
-/// Entscheidungs-Prompt-Vorgänger — für den anderen Fall bleibt
-/// `TaskBuilderBranchMutations.updateConditionalBranchLabel` zuständig.
+/// `ConditionalBranchesEditor`) eines Bedingter-Ablauf-Bausteins.
 extension TaskBuilderConditionBranchMutations on TaskBuilderCubit {
   /// Der erste bedingte Zweig erhält standardmäßig einen Sonst-Pfad.
   /// Ein später explizit entfernter Sonst-Pfad bleibt ausgeschaltet.

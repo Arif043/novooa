@@ -51,12 +51,17 @@ class ConditionalBranchesEditor extends StatelessWidget {
         if (conditioned.isEmpty)
           _EmptyBranchesNotice(onAdd: () => cubit.addConditionBranch(node.id))
         else ...[
-          for (final branch in conditioned)
+          for (final (index, branch) in conditioned.indexed)
             Padding(
               key: ValueKey(branch.id),
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: _ConditionBranchCard(
                 key: ValueKey(branch.id),
+                // Fester Titel nach Position; was der Zweig prüft, zeigt
+                // die Leinwand als Text der Bedingung.
+                title: LocaleKeys.ui_condition_number.tr(
+                  namedArgs: {'number': '${index + 1}'},
+                ),
                 branch: branch,
                 graph: graph,
                 onConditionChanged: (condition) => cubit.updateBranchCondition(
@@ -149,12 +154,14 @@ class _EmptyBranchesNotice extends StatelessWidget {
 class _ConditionBranchCard extends StatelessWidget {
   const _ConditionBranchCard({
     super.key,
+    required this.title,
     required this.branch,
     required this.graph,
     required this.onConditionChanged,
     required this.onRemove,
   });
 
+  final String title;
   final ConditionalBranch branch;
   final WorkflowGraph graph;
   final ValueChanged<BranchCondition> onConditionChanged;
@@ -179,7 +186,7 @@ class _ConditionBranchCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    branch.label,
+                    title,
                     style: Theme.of(context).textTheme.labelLarge,
                   ),
                 ),

@@ -230,6 +230,20 @@
     },
     "title_field": {
       "hint": "Task name"
+    },
+    "operators": {
+      "equals": "is",
+      "notEquals": "is not",
+      "greaterThan": "greater than",
+      "greaterThanOrEqual": "greater than or equal to",
+      "lessThan": "less than",
+      "lessThanOrEqual": "less than or equal to",
+      "contains": "contains"
+    },
+    "combinators": {
+      "and": "and",
+      "or": "or",
+      "xor": "either or"
     }
   },
   "settings": {

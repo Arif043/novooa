@@ -7,6 +7,7 @@ import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/task_execution_result.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../../domain/entities/workflow_output_types.dart';
+import 'branch_condition_summary.dart';
 
 class BausteinInsertion {
   const BausteinInsertion({this.owner, this.branchId, this.after});
@@ -28,13 +29,6 @@ class OutputEditTarget extends CanvasLabelEditTarget {
   const OutputEditTarget(this.nodeId, this.key);
   final NodeId nodeId;
   final String key;
-}
-
-/// Das Label eines Zweigs eines Bedingter-Ablauf-Bausteins (z.B. "Ja").
-class ConditionalBranchEditTarget extends CanvasLabelEditTarget {
-  const ConditionalBranchEditTarget(this.conditionalNodeId, this.branchId);
-  final NodeId conditionalNodeId;
-  final String branchId;
 }
 
 /// Ein einzelner Chip-Text auf einem Leinwand-Pfeil, optional editierbar
@@ -120,22 +114,13 @@ class WorkflowCanvasLayout {
     BausteinInsertion insertion, {
     String? parent,
     String? label,
-    CanvasLabelEditTarget? labelEditTarget,
   }) {
     final peers = graph.nodes.map((node) => node.id).toSet();
     if (graph.nodes.isEmpty) {
       final id = '@empty:${parent ?? 'main'}:${insertion.branchId ?? ''}';
       entries[id] = CanvasEntry(id, null, insertion, peers);
       if (parent != null) {
-        links.add(
-          CanvasLink(
-            parent,
-            id,
-            _labelList(label, labelEditTarget),
-            false,
-            true,
-          ),
-        );
+        links.add(CanvasLink(parent, id, _labelList(label), false, true));
       }
       return [id];
     }
@@ -173,13 +158,7 @@ class WorkflowCanvasLayout {
       );
       for (final root in roots) {
         links.add(
-          CanvasLink(
-            parent,
-            root.id.value,
-            _labelList(label, labelEditTarget),
-            false,
-            true,
-          ),
+          CanvasLink(parent, root.id.value, _labelList(label), false, true),
         );
       }
     }
@@ -193,11 +172,8 @@ class WorkflowCanvasLayout {
                 branch.graph,
                 BausteinInsertion(owner: node.id, branchId: branch.id),
                 parent: node.id.value,
-                label: branch.label,
-                labelEditTarget: ConditionalBranchEditTarget(
-                  node.id,
-                  branch.id,
-                ),
+                // Der Chip zeigt die Bedingung selbst, nicht umbenennbar.
+                label: branchConditionSummary(branch.condition),
               ),
             );
           }

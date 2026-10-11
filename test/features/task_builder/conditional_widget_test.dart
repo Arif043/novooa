@@ -126,6 +126,41 @@ void main() {
     expect(config.branches[1].condition, isNull);
     await cubit.close();
   });
+
+  testWidgets('Bedingungskarten heißen fest „Bedingung 1/2“, unabhängig vom '
+      'gespeicherten Label', (tester) async {
+    const condition = ComparisonCondition(
+      left: '{{Text}}',
+      operator: ComparisonOperator.equals,
+      right: 'x',
+    );
+    const node = WorkflowNode(
+      id: NodeId('node.1'),
+      title: 'Verzweigung',
+      description: '',
+      config: ConditionalNodeConfig(
+        branches: [
+          ConditionalBranch(
+            id: 'b1',
+            label: 'ffffffffff',
+            graph: WorkflowGraph(nodes: [], edges: []),
+            condition: condition,
+          ),
+          ConditionalBranch(
+            id: 'b2',
+            label: 'b',
+            graph: WorkflowGraph(nodes: [], edges: []),
+            condition: condition,
+          ),
+        ],
+      ),
+    );
+    await tester.pumpWidget(await _app(_taskFor(node), node));
+
+    expect(find.text('Bedingung 1'), findsOneWidget);
+    expect(find.text('Bedingung 2'), findsOneWidget);
+    expect(find.text('ffffffffff'), findsNothing);
+  });
 }
 
 Future<Widget> _app(Task task, WorkflowNode node) async {
@@ -134,7 +169,9 @@ Future<Widget> _app(Task task, WorkflowNode node) async {
   return MaterialApp(
     home: BlocProvider.value(
       value: cubit,
-      child: Scaffold(body: ConditionalWidget(node: node)),
+      child: Scaffold(
+        body: SingleChildScrollView(child: ConditionalWidget(node: node)),
+      ),
     ),
   );
 }

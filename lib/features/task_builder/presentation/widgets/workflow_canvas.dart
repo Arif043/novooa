@@ -655,15 +655,6 @@ class _CanvasLabelChipState extends State<_CanvasLabelChip> {
     switch (target) {
       case OutputEditTarget(:final nodeId, :final key):
         cubit.renameOutput(nodeId: nodeId, key: key, name: value);
-      case ConditionalBranchEditTarget(
-        :final conditionalNodeId,
-        :final branchId,
-      ):
-        cubit.updateConditionalBranchLabel(
-          conditionalNodeId: conditionalNodeId,
-          branchId: branchId,
-          label: value,
-        );
     }
   }
 
@@ -681,8 +672,10 @@ class _CanvasLabelChipState extends State<_CanvasLabelChip> {
     final typeStyle = labelType == null
         ? null
         : NodeOutputTypeStyle.of(labelType);
+    // Begrenzt, damit lange Bedingungstexte benachbarte Zweige nicht
+    // überdecken; der volle Text steht im Tooltip.
     final chip = Container(
-      constraints: const BoxConstraints(minWidth: 32),
+      constraints: const BoxConstraints(minWidth: 32, maxWidth: 240),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: typeStyle?.color ?? widget.background,
@@ -710,7 +703,15 @@ class _CanvasLabelChipState extends State<_CanvasLabelChip> {
                   onTapOutside: (_) => _submit(context),
                 ),
               )
-            : Text(widget.label.text, style: textStyle),
+            : Tooltip(
+                message: widget.label.text,
+                child: Text(
+                  widget.label.text,
+                  style: textStyle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
       ),
     );
     if (!editable) return _typeSemantics(typeStyle, chip);

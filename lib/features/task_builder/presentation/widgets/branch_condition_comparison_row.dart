@@ -6,6 +6,7 @@ import '../../domain/entities/workflow_graph.dart';
 import 'branch_condition_editor.dart';
 import 'branch_condition_operand_type.dart';
 import 'condition_value_field.dart';
+import 'branch_condition_summary.dart';
 
 class ComparisonRow extends StatelessWidget {
   const ComparisonRow({
@@ -58,7 +59,10 @@ class ComparisonRow extends StatelessWidget {
             ),
             items: [
               for (final operator in operators)
-                DropdownMenuItem(value: operator, child: Text(operator.label)),
+                DropdownMenuItem(
+                  value: operator,
+                  child: Text(operator.localizedLabel),
+                ),
             ],
             onChanged: (value) {
               if (value != null) {

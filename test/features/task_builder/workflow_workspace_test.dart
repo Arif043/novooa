@@ -82,19 +82,21 @@ void main() {
     );
     expect(
       layout.links.where(
-        (link) => link.labels.any((label) => label.text == 'Ja'),
+        (link) => link.labels.any((label) => label.text == 'Text ist Ja'),
       ),
       hasLength(1),
     );
     expect(
       layout.links.where(
-        (link) => link.labels.any((label) => label.text == 'Nein'),
+        (link) => link.labels.any((label) => label.text == 'Text ist Nein'),
       ),
       hasLength(1),
     );
     expect(
       layout.links
-          .where((link) => link.labels.any((label) => label.text == 'Ja'))
+          .where(
+            (link) => link.labels.any((label) => label.text == 'Text ist Ja'),
+          )
           .single
           .isCondition,
       isTrue,
@@ -656,11 +658,21 @@ const _task = Task(
               id: 'yes',
               label: 'Ja',
               graph: WorkflowGraph(nodes: [], edges: []),
+              condition: ComparisonCondition(
+                left: '{{Text}}',
+                operator: ComparisonOperator.equals,
+                right: 'Ja',
+              ),
             ),
             ConditionalBranch(
               id: 'no',
               label: 'Nein',
               graph: WorkflowGraph(nodes: [], edges: []),
+              condition: ComparisonCondition(
+                left: '{{Text}}',
+                operator: ComparisonOperator.equals,
+                right: 'Nein',
+              ),
             ),
           ],
         ),

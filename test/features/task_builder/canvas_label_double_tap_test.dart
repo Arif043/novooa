@@ -84,32 +84,6 @@ void main() {
     expect(find.text('umbenannt'), findsOneWidget);
     await cubit.close();
   });
-
-  testWidgets(
-    'Doppelklick auf ein Bedingungs-Branch-Label ("Ja") benennt genau '
-    'diesen Zweig via updateConditionalBranchLabel um',
-    (tester) async {
-      final cubit = await pumpCanvas(tester, _taskWithConditional());
-
-      expect(find.text('Ja'), findsOneWidget);
-
-      await doubleTap(tester, find.text('Ja'));
-
-      expect(find.byType(TextField), findsOneWidget);
-      await tester.enterText(find.byType(TextField), 'Vielleicht');
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
-
-      final config =
-          (cubit.state as TaskBuilderLoaded).editingTask.nodes
-                  .firstWhere((node) => node.id == const NodeId('decision'))
-                  .config
-              as ConditionalNodeConfig;
-      expect(config.branches[0].label, 'Vielleicht');
-      expect(config.branches[1].label, 'Nein');
-      await cubit.close();
-    },
-  );
 }
 
 Task _taskWithOutputNameEdge() {
@@ -135,35 +109,6 @@ Task _taskWithOutputNameEdge() {
       nodes: [source, successor],
       edges: [WorkflowEdge(from: NodeId('quelle'), to: NodeId('next'))],
     ),
-  );
-}
-
-Task _taskWithConditional() {
-  const decision = WorkflowNode(
-    id: NodeId('decision'),
-    title: '',
-    description: '',
-    config: ConditionalNodeConfig(
-      branches: [
-        ConditionalBranch(
-          id: 'branch.1',
-          label: 'Ja',
-          graph: WorkflowGraph(nodes: [], edges: []),
-        ),
-        ConditionalBranch(
-          id: 'branch.2',
-          label: 'Nein',
-          graph: WorkflowGraph(nodes: [], edges: []),
-        ),
-      ],
-    ),
-  );
-  return const Task(
-    id: 'task',
-    title: 'Aufgabe',
-    objective: '',
-    selectedNodeId: NodeId('decision'),
-    graph: WorkflowGraph(nodes: [decision], edges: []),
   );
 }
 
