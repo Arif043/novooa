@@ -1,4 +1,4 @@
-from novooa_ml.bundles.file_transfer import download_verified
+from novooa_bundles.file_transfer import download_verified
 
 
 class GlobalModelStore:

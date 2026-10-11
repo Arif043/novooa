@@ -5,9 +5,9 @@ import unittest
 from pathlib import Path
 
 from bundle_test_support import FakeGlobalStore, bundle_file
-from novooa_ml.bundles.bundle_file import BundleFile, BundleFilesMissing, bundle_files_from, bundle_key, validate_bundle_path
+from novooa_bundles.bundle_file import BundleFile, BundleFilesMissing, bundle_files_from, bundle_key, validate_bundle_path
 from novooa_ml.bundles.bundle_resolver import BundleResolver
-from novooa_ml.bundles.bundle_store import BundleStore
+from novooa_bundles.bundle_store import BundleStore
 
 MODEL = b"model"
 WEIGHTS = b"weights" * 10

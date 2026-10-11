@@ -1,26 +1,11 @@
 import os
 
+from novooa_bundles.bundle_store import BundleStore
+from novooa_bundles.environment import global_store_from_environment, optional_bytes
 from novooa_ml.bundles.bundle_resolver import BundleResolver
-from novooa_ml.bundles.bundle_store import BundleStore
 from novooa_ml.bundles.cache_client import SharedCacheClient
-from novooa_ml.bundles.global_store import GlobalModelStore, UnavailableGlobalModelStore
 
 DEFAULT_SESSION_CACHE_BYTES = 4 * 1024 * 1024 * 1024
-
-
-def optional_bytes(name, default=None):
-    value = os.environ.get(name, "").strip()
-    if not value:
-        return default
-    number = int(value)
-    if number <= 0:
-        raise ValueError(f"{name} muss größer als 0 sein.")
-    return number
-
-
-def global_store_from_environment():
-    url = os.environ.get("MODEL_STORE_URL", "").strip()
-    return GlobalModelStore(url) if url else UnavailableGlobalModelStore()
 
 
 def resolver_from_environment():

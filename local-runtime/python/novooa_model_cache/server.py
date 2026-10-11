@@ -1,10 +1,10 @@
 import os
 from http.server import ThreadingHTTPServer
 
-from novooa_ml.bundles.bundle_file import bundle_files_from, validated_key
-from novooa_ml.bundles.bundle_store import BundleStore
-from novooa_ml.json_http import JsonRequestHandler
-from novooa_ml.ml_service_config import global_store_from_environment, optional_bytes
+from novooa_bundles.bundle_file import bundle_files_from, validated_key
+from novooa_bundles.bundle_store import BundleStore
+from novooa_bundles.environment import global_store_from_environment, optional_bytes
+from novooa_bundles.json_http import JsonRequestHandler
 
 
 class SharedBundleCache:

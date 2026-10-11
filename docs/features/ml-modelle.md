@@ -418,6 +418,12 @@ unter ihrem Namen und `resources/<name>`. Sein Schlüssel ist der SHA-256 über 
 sortierten Zeilen `pfad:prüfsumme` — `modelBundleFor` in Node und `bundle_key` in
 Python rechnen ihn gleich (beide Testsuiten prüfen denselben Wert).
 
+Der Python-Code ist dreigeteilt (`local-runtime/python/`):
+`novooa_bundles` enthält den gemeinsamen Bündelcode (Schlüssel, Speicher mit
+Verdrängung, geprüfter Download; nur Standardbibliothek), `novooa_ml` den ML-Dienst
+und `novooa_model_cache` den Cache-Dienst. Der Cache-Dienst hat ein eigenes, schlankes
+Image (`functions/Dockerfile.model-cache`) ohne numpy, onnxruntime und espeak-ng.
+
 Die Runtime spricht den ML-Dienst (Python, `novooa_ml.inference_server`) nur über
 Referenzen an (`SidecarOnnxInferenceRuntime`, `HttpPythonInferenceSidecar`):
 
@@ -430,7 +436,7 @@ POST /v1/inferences {modelKey, inputs, outputs}
 
 - **Globale Modelle** (`origin = catalog` bzw. Systemmodelle) tragen ihren
   `storePath`. Der ML-Dienst fragt den gemeinsamen Cache des Servers
-  (`novooa_ml.bundle_cache_server`, `MODEL_CACHE_URL`) und liest das Bündel aus dessen
+  (`novooa-model-cache`, `MODEL_CACHE_URL`) und liest das Bündel aus dessen
   Verzeichnis (`MODEL_SHARED_CACHE_DIR`, nur lesend). Ohne Cache-Dienst lädt er selbst
   aus `MODEL_STORE_URL` in seinen eigenen Speicher.
 - **Eigene Modelle** (`origin = import`): Fehlen dem ML-Dienst Dateien, antwortet er

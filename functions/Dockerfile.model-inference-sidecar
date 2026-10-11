@@ -9,10 +9,8 @@ RUN python -m pip install --no-cache-dir -r /tmp/requirements.txt
 
 COPY local-runtime/python /app/python
 
-# Eigener Bündelspeicher des ML-Dienstes und Verzeichnis des gemeinsamen Caches (gleiches Image,
-# Einstieg `python -m novooa_ml.bundle_cache_server`); beide gehören dem unprivilegierten Nutzer.
-RUN mkdir -p /var/lib/novooa-ml/bundles /var/lib/novooa-model-cache \
-  && chown -R 65532:65532 /var/lib/novooa-ml /var/lib/novooa-model-cache
+# Eigener Bündelspeicher des ML-Dienstes; gehört dem unprivilegierten Nutzer.
+RUN mkdir -p /var/lib/novooa-ml/bundles && chown -R 65532:65532 /var/lib/novooa-ml
 
 ENV PORT=8081 \
   PYTHONPATH=/app/python \

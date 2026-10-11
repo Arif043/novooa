@@ -49,7 +49,7 @@ Flutter-Desktop-App
           lokale API, Scheduler, Task-Worker, SQLite-Adapter, Relay-Client
       -> novooa-ml (Python)
           Tensor-Transformationen und ONNX-Inferenz
-      -> novooa-model-cache (Python)
+      -> novooa-model-cache (Python, nur Standardbibliothek, eigenes Image)
           gemeinsamer Cache der Katalogmodelle des Servers
 ```
 

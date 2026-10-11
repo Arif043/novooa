@@ -12,7 +12,7 @@ import numpy
 
 from bundle_test_support import FakeGlobalStore, bundle_file, payload_for
 from novooa_ml.bundles.bundle_resolver import BundleResolver
-from novooa_ml.bundles.bundle_store import BundleStore
+from novooa_bundles.bundle_store import BundleStore
 from novooa_ml.inference_server import handler_for
 from novooa_ml.model_requests import ModelService
 from novooa_ml.session_cache import ModelNotLoadedError, SessionCache

@@ -6,10 +6,10 @@ from pathlib import Path
 import numpy
 
 from bundle_test_support import FakeGlobalStore, bundle_file, file_json, payload_for
-from novooa_ml.bundle_cache_server import SharedBundleCache
-from novooa_ml.bundles.bundle_file import bundle_key
+from novooa_model_cache.server import SharedBundleCache
+from novooa_bundles.bundle_file import bundle_key
 from novooa_ml.bundles.bundle_resolver import BundleResolver
-from novooa_ml.bundles.bundle_store import BundleStore
+from novooa_bundles.bundle_store import BundleStore
 from novooa_ml.model_requests import ModelService
 from novooa_ml.session_cache import SessionCache
 from novooa_ml.tensor_codec import decode_tensor, encode_tensor

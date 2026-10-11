@@ -2,8 +2,8 @@ import os
 import re
 from http.server import ThreadingHTTPServer
 
-from novooa_ml.bundles.bundle_file import BundleFilesMissing, bundle_file_from
-from novooa_ml.json_http import JsonRequestHandler
+from novooa_bundles.bundle_file import BundleFilesMissing, bundle_file_from
+from novooa_bundles.json_http import JsonRequestHandler
 from novooa_ml.ml_service_config import resolver_from_environment, session_cache_bytes
 from novooa_ml.model_execution import runtime_dependencies, session_factory
 from novooa_ml.model_requests import ModelService

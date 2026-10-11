@@ -1,1 +1,1 @@
-"""Modellbündel: ein Modell mit seinen Nebendateien, adressiert über ihre Prüfsummen."""
+"""Wie der ML-Dienst ein Modellbündel findet: eigener Speicher, gemeinsamer Cache oder globaler Modellspeicher."""

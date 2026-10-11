@@ -21,7 +21,7 @@ test("describes all files of a model version with their paths in the model store
 });
 
 test("derives the key like the ML service from sorted paths and checksums", () => {
-  // Derselbe Wert wie novooa_ml.bundles.bundle_file.bundle_key in Python — sonst finden sich die Bündel nicht.
+  // Derselbe Wert wie novooa_bundles.bundle_file.bundle_key in Python — sonst finden sich die Bündel nicht.
   const files = [{path: "model.onnx", sha256: "a".repeat(64)}, {path: "model.onnx.data", sha256: "b".repeat(64)}];
 
   assert.equal(modelBundleKey(files), modelBundleKey([...files].reverse()));

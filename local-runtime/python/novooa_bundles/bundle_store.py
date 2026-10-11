@@ -4,9 +4,9 @@ import uuid
 from pathlib import Path
 from threading import Lock
 
-from novooa_ml.bundles.bundle_file import BundleFilesMissing
-from novooa_ml.bundles.bundle_eviction import evict_least_recently_used
-from novooa_ml.bundles.file_transfer import write_verified
+from novooa_bundles.bundle_file import BundleFilesMissing
+from novooa_bundles.bundle_eviction import evict_least_recently_used
+from novooa_bundles.file_transfer import write_verified
 
 INCOMING = ".incoming"
 BUILDING = ".building"

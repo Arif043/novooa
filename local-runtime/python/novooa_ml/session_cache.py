@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from threading import RLock
 
-from novooa_ml.bundles.bundle_file import MODEL_FILE, RESOURCE_DIRECTORY
+from novooa_bundles.bundle_file import MODEL_FILE, RESOURCE_DIRECTORY
 
 
 class ModelNotLoadedError(Exception):

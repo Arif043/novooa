@@ -1,6 +1,6 @@
 from functools import partial
 
-from novooa_ml.bundles.bundle_file import bundle_files_from, validated_key
+from novooa_bundles.bundle_file import bundle_files_from, validated_key
 from novooa_ml.model_execution import run_model
 from novooa_ml.model_input.worker import transform_payload
 

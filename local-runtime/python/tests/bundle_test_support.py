@@ -4,7 +4,7 @@ import hashlib
 import io
 
 import ml_test_support  # noqa: F401  (setzt den Paketpfad)
-from novooa_ml.bundles.bundle_file import BundleFile, bundle_key
+from novooa_bundles.bundle_file import BundleFile, bundle_key
 
 
 def bundle_file(path, content, store_path=None):
@@ -24,7 +24,7 @@ class FakeGlobalStore:
         self.fetched = []
 
     def fetch(self, file, destination):
-        from novooa_ml.bundles.file_transfer import write_verified
+        from novooa_bundles.file_transfer import write_verified
 
         self.fetched.append(file.path)
         write_verified(io.BytesIO(self.contents[file.path]), destination, file)

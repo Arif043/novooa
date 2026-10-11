@@ -3,7 +3,7 @@ from http.server import BaseHTTPRequestHandler
 
 
 class JsonRequestHandler(BaseHTTPRequestHandler):
-    """Gemeinsame Grundlage der ML-Dienste: JSON lesen und antworten, ohne Zugriffsprotokoll."""
+    """Gemeinsame Grundlage von ML-Dienst und Cache-Dienst: JSON lesen und antworten, ohne Zugriffsprotokoll."""
 
     def read_json(self):
         length = int(self.headers.get("content-length", "0"))
