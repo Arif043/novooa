@@ -6,7 +6,6 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import '../cubits/settings_cubit.dart';
 import '../cubits/settings_state.dart';
 import '../widgets/settings_content.dart';
-import '../widgets/settings_filter_tabs.dart';
 import '../widgets/runtime_settings_content.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -66,38 +65,7 @@ class _ReadySettings extends StatelessWidget {
   final SettingsState state;
 
   @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 4,
-      child: _SettingsLayout(state: state),
-    );
-  }
-}
-
-class _SettingsLayout extends StatelessWidget {
-  const _SettingsLayout({required this.state});
-
-  final SettingsState state;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SettingsFilterTabs(),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              0,
-              AppSpacing.lg,
-              AppSpacing.lg,
-            ),
-            child: SettingsContent(state: state),
-          ),
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => SettingsContent(state: state);
 }
 
 class _LoadingState extends StatelessWidget {

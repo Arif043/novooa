@@ -268,6 +268,17 @@
       "de": "Deutsch",
       "en": "English",
       "tr": "Türkçe"
+    },
+    "tabs": {
+      "general": "Genel",
+      "language_models": "Dil modelleri",
+      "communication": "İletişim",
+      "connections": "Bağlantılar",
+      "machine_learning": "Makine Öğrenimi",
+      "import_export": "İçe/Dışa Aktarma",
+      "profile": "Profil",
+      "team": "Ekip",
+      "language_model": "Dil modeli"
     }
   },
   "ui": {

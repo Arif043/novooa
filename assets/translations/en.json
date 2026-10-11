@@ -268,6 +268,17 @@
       "de": "Deutsch",
       "en": "English",
       "tr": "Türkçe"
+    },
+    "tabs": {
+      "general": "General",
+      "language_models": "Language models",
+      "communication": "Communication",
+      "connections": "Connections",
+      "machine_learning": "Machine Learning",
+      "import_export": "Import/Export",
+      "profile": "Profile",
+      "team": "Team",
+      "language_model": "Language model"
     }
   },
   "ui": {

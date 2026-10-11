@@ -268,6 +268,17 @@
       "de": "Deutsch",
       "en": "English",
       "tr": "Türkçe"
+    },
+    "tabs": {
+      "general": "Allgemein",
+      "language_models": "Sprachmodelle",
+      "communication": "Kommunikation",
+      "connections": "Verbindungen",
+      "machine_learning": "Machine Learning",
+      "import_export": "Import/Export",
+      "profile": "Profil",
+      "team": "Team",
+      "language_model": "Sprachmodell"
     }
   },
   "ui": {

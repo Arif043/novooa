@@ -226,6 +226,16 @@ abstract class  LocaleKeys {
   static const settings_language_en = 'settings.language.en';
   static const settings_language_tr = 'settings.language.tr';
   static const settings_language = 'settings.language';
+  static const settings_tabs_general = 'settings.tabs.general';
+  static const settings_tabs_language_models = 'settings.tabs.language_models';
+  static const settings_tabs_communication = 'settings.tabs.communication';
+  static const settings_tabs_connections = 'settings.tabs.connections';
+  static const settings_tabs_machine_learning = 'settings.tabs.machine_learning';
+  static const settings_tabs_import_export = 'settings.tabs.import_export';
+  static const settings_tabs_profile = 'settings.tabs.profile';
+  static const settings_tabs_team = 'settings.tabs.team';
+  static const settings_tabs_language_model = 'settings.tabs.language_model';
+  static const settings_tabs = 'settings.tabs';
   static const settings = 'settings';
   static const ui_1_bis_120 = 'ui.1_bis_120';
   static const ui_abbrechen = 'ui.abbrechen';
