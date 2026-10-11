@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:simple_icons/simple_icons.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_anchor.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
@@ -27,7 +28,17 @@ class BausteinChoice {
   PluginNodeModule? get _module =>
       pluginTypeId == null ? null : PluginNodeModules.byTypeId(pluginTypeId!);
 
-  IconData get icon => _module?.icon ?? bausteinIcon(primitive);
+  IconData get icon {
+    final module = _module;
+    if (module != null) return module.icon;
+    final channelKind = kind;
+    return channelKind == null
+        ? bausteinIcon(primitive)
+        : _channelIcon(channelKind);
+  }
+
+  /// Anbieter, die noch nicht angebunden sind, erscheinen deaktiviert.
+  bool get isAvailable => kind?.isAvailable ?? true;
 
   String get label {
     final module = _module;
@@ -48,6 +59,14 @@ class BausteinChoice {
         isRead
             ? LocaleKeys.task_builder_channels_sms_read_title.tr()
             : LocaleKeys.task_builder_channels_sms_send_title.tr(),
+      ChannelEventKind.telegram =>
+        isRead
+            ? LocaleKeys.task_builder_channels_telegram_read_title.tr()
+            : LocaleKeys.task_builder_channels_telegram_send_title.tr(),
+      ChannelEventKind.instagram =>
+        isRead
+            ? LocaleKeys.task_builder_channels_instagram_read_title.tr()
+            : LocaleKeys.task_builder_channels_instagram_send_title.tr(),
     };
   }
 }
@@ -84,13 +103,25 @@ const bausteinGroups = <String, List<BausteinChoice>>{
   ],
   LocaleKeys.task_builder_palette_groups_communication: [
     BausteinChoice(.readChannelEvent, kind: ChannelEventKind.email),
-    BausteinChoice(.readChannelEvent, kind: ChannelEventKind.whatsapp),
-    BausteinChoice(.readChannelEvent, kind: ChannelEventKind.sms),
     BausteinChoice(.sendChannelMessage, kind: ChannelEventKind.email),
+    BausteinChoice(.readChannelEvent, kind: ChannelEventKind.whatsapp),
     BausteinChoice(.sendChannelMessage, kind: ChannelEventKind.whatsapp),
+    BausteinChoice(.readChannelEvent, kind: ChannelEventKind.sms),
     BausteinChoice(.sendChannelMessage, kind: ChannelEventKind.sms),
+    BausteinChoice(.readChannelEvent, kind: ChannelEventKind.telegram),
+    BausteinChoice(.sendChannelMessage, kind: ChannelEventKind.telegram),
+    BausteinChoice(.readChannelEvent, kind: ChannelEventKind.instagram),
+    BausteinChoice(.sendChannelMessage, kind: ChannelEventKind.instagram),
     BausteinChoice(.notificationSend),
   ],
+};
+
+IconData _channelIcon(ChannelEventKind kind) => switch (kind) {
+  ChannelEventKind.email => CupertinoIcons.mail,
+  ChannelEventKind.whatsapp => SimpleIcons.whatsapp,
+  ChannelEventKind.sms => CupertinoIcons.chat_bubble_text,
+  ChannelEventKind.telegram => SimpleIcons.telegram,
+  ChannelEventKind.instagram => SimpleIcons.instagram,
 };
 
 IconData bausteinIcon(WorkflowPrimitive primitive) => switch (primitive) {
@@ -102,7 +133,7 @@ IconData bausteinIcon(WorkflowPrimitive primitive) => switch (primitive) {
   .writeFile => CupertinoIcons.doc_plaintext,
   .readFile => CupertinoIcons.doc_text_search,
   .readEmail || .readChannelEvent => CupertinoIcons.mail,
-  .sendChannelMessage => Icons.send_outlined,
+  .sendChannelMessage => SimpleIcons.whatsapp,
   .notificationSend => CupertinoIcons.bell,
   .humanApproval => CupertinoIcons.person_alt,
   .dialogInput => CupertinoIcons.line_horizontal_3,
@@ -211,6 +242,7 @@ class _BausteinPaletteState extends State<BausteinPalette> {
                       for (final choice in group.value)
                         Draggable<BausteinChoice>(
                           data: choice,
+                          maxSimultaneousDrags: choice.isAvailable ? 1 : 0,
                           feedback: Material(
                             elevation: 6,
                             borderRadius: BorderRadius.circular(12),
@@ -225,8 +257,11 @@ class _BausteinPaletteState extends State<BausteinPalette> {
                               kind: choice.kind,
                               pluginTypeId: choice.pluginTypeId,
                             ),
-                            onActivate: () => widget.onAdd(choice),
+                            onActivate: choice.isAvailable
+                                ? () => widget.onAdd(choice)
+                                : null,
                             child: ListTile(
+                              enabled: choice.isAvailable,
                               minTileHeight: 52,
                               horizontalTitleGap: 12,
                               contentPadding: const EdgeInsets.symmetric(
@@ -245,15 +280,24 @@ class _BausteinPaletteState extends State<BausteinPalette> {
                                 child: Icon(
                                   choice.icon,
                                   size: 20,
-                                  color: colors.onSurfaceVariant,
+                                  color: choice.isAvailable
+                                      ? colors.onSurfaceVariant
+                                      : colors.outline,
                                 ),
                               ),
                               title: Text(
-                                choice.label,
+                                _displayLabel(choice),
                                 style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.w500),
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                      color: choice.isAvailable
+                                          ? null
+                                          : colors.outline,
+                                    ),
                               ),
-                              onTap: () => widget.onAdd(choice),
+                              onTap: choice.isAvailable
+                                  ? () => widget.onAdd(choice)
+                                  : null,
                             ),
                           ),
                         ),
@@ -267,6 +311,10 @@ class _BausteinPaletteState extends State<BausteinPalette> {
     );
   }
 }
+
+String _displayLabel(BausteinChoice choice) => choice.isAvailable
+    ? choice.label
+    : '${choice.label} ${LocaleKeys.task_builder_palette_coming_soon.tr()}';
 
 /// Eingebaute Gruppen sind Übersetzungsschlüssel, Plugin-Gruppen Klartext.
 String _groupTitle(String key) =>

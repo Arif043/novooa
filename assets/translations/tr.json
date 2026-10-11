@@ -138,7 +138,9 @@
     "send_output_names": {
       "email": "GonderEposta",
       "whatsapp": "GonderWhatsapp",
-      "sms": "GonderSms"
+      "sms": "GonderSms",
+      "telegram": "GonderTelegram",
+      "instagram": "GonderInstagram"
     },
     "output_field_names": {
       "sender": "Gonderen",
@@ -196,6 +198,18 @@
         "read_description": "Bir SMS tetikleyicisinden gönderen, mesaj ve geliş zamanını okur.",
         "send_title": "SMS gönder",
         "send_description": "novooa üzerinden bir SMS gönderir."
+      },
+      "telegram": {
+        "read_title": "Telegram oku",
+        "read_description": "Bir Telegram tetikleyicisinden gönderen, mesaj ve geliş zamanını okur.",
+        "send_title": "Telegram gönder",
+        "send_description": "novooa üzerinden bir Telegram mesajı gönderir."
+      },
+      "instagram": {
+        "read_title": "Instagram oku",
+        "read_description": "Bir Instagram tetikleyicisinden gönderen, mesaj ve geliş zamanını okur.",
+        "send_title": "Instagram gönder",
+        "send_description": "novooa üzerinden bir Instagram mesajı gönderir."
       }
     },
     "palette": {
@@ -209,7 +223,8 @@
         "interaction": "Etkileşim",
         "external": "Harici sistemler",
         "communication": "İletişim"
-      }
+      },
+      "coming_soon": "(Yakında)"
     },
     "header": {
       "menu_tooltip": "Menüyü aç",

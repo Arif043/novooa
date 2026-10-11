@@ -129,6 +129,8 @@ ChannelEventKind _kindFrom(String? value) {
   return switch (value) {
     'email' => ChannelEventKind.email,
     'sms' => ChannelEventKind.sms,
+    'telegram' => ChannelEventKind.telegram,
+    'instagram' => ChannelEventKind.instagram,
     _ => ChannelEventKind.whatsapp,
   };
 }

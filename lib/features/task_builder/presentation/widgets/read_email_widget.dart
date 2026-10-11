@@ -32,6 +32,8 @@ class ReadEventWidget extends StatelessWidget {
       ChannelEventKind.email => 'E-Mail lesen',
       ChannelEventKind.whatsapp => 'WhatsApp lesen',
       ChannelEventKind.sms => 'SMS lesen',
+      ChannelEventKind.telegram => 'Telegram lesen',
+      ChannelEventKind.instagram => 'Instagram lesen',
     };
   }
 

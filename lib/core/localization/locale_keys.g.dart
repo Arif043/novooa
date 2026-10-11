@@ -113,6 +113,8 @@ abstract class  LocaleKeys {
   static const task_builder_send_output_names_email = 'task_builder.send_output_names.email';
   static const task_builder_send_output_names_whatsapp = 'task_builder.send_output_names.whatsapp';
   static const task_builder_send_output_names_sms = 'task_builder.send_output_names.sms';
+  static const task_builder_send_output_names_telegram = 'task_builder.send_output_names.telegram';
+  static const task_builder_send_output_names_instagram = 'task_builder.send_output_names.instagram';
   static const task_builder_send_output_names = 'task_builder.send_output_names';
   static const task_builder_output_field_names_sender = 'task_builder.output_field_names.sender';
   static const task_builder_output_field_names_subject = 'task_builder.output_field_names.subject';
@@ -166,6 +168,16 @@ abstract class  LocaleKeys {
   static const task_builder_channels_sms_send_title = 'task_builder.channels.sms.send_title';
   static const task_builder_channels_sms_send_description = 'task_builder.channels.sms.send_description';
   static const task_builder_channels_sms = 'task_builder.channels.sms';
+  static const task_builder_channels_telegram_read_title = 'task_builder.channels.telegram.read_title';
+  static const task_builder_channels_telegram_read_description = 'task_builder.channels.telegram.read_description';
+  static const task_builder_channels_telegram_send_title = 'task_builder.channels.telegram.send_title';
+  static const task_builder_channels_telegram_send_description = 'task_builder.channels.telegram.send_description';
+  static const task_builder_channels_telegram = 'task_builder.channels.telegram';
+  static const task_builder_channels_instagram_read_title = 'task_builder.channels.instagram.read_title';
+  static const task_builder_channels_instagram_read_description = 'task_builder.channels.instagram.read_description';
+  static const task_builder_channels_instagram_send_title = 'task_builder.channels.instagram.send_title';
+  static const task_builder_channels_instagram_send_description = 'task_builder.channels.instagram.send_description';
+  static const task_builder_channels_instagram = 'task_builder.channels.instagram';
   static const task_builder_channels = 'task_builder.channels';
   static const task_builder_palette_title = 'task_builder.palette.title';
   static const task_builder_palette_search = 'task_builder.palette.search';
@@ -177,6 +189,7 @@ abstract class  LocaleKeys {
   static const task_builder_palette_groups_external = 'task_builder.palette.groups.external';
   static const task_builder_palette_groups_communication = 'task_builder.palette.groups.communication';
   static const task_builder_palette_groups = 'task_builder.palette.groups';
+  static const task_builder_palette_coming_soon = 'task_builder.palette.coming_soon';
   static const task_builder_palette = 'task_builder.palette';
   static const task_builder_header_menu_tooltip = 'task_builder.header.menu_tooltip';
   static const task_builder_header_title = 'task_builder.header.title';

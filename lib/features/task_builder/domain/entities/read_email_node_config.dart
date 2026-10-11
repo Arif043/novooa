@@ -14,7 +14,16 @@ class ReadEmailNodeConfig extends NodeConfig {
   List<Object?> get props => const [];
 }
 
-enum ChannelEventKind { email, whatsapp, sms }
+enum ChannelEventKind {
+  email,
+  whatsapp,
+  sms,
+  telegram,
+  instagram;
+
+  /// Nur E-Mail ist angebunden; die übrigen Anbieter sind Platzhalter.
+  bool get isAvailable => this == email;
+}
 
 class ReadChannelEventNodeConfig extends NodeConfig {
   const ReadChannelEventNodeConfig({required this.kind});

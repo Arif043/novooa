@@ -92,6 +92,10 @@ class LocalizedNodeTextDefaults implements NodeTextDefaults {
         LocaleKeys.task_builder_send_output_names_whatsapp.tr(),
       ChannelEventKind.sms =>
         LocaleKeys.task_builder_send_output_names_sms.tr(),
+      ChannelEventKind.telegram =>
+        LocaleKeys.task_builder_send_output_names_telegram.tr(),
+      ChannelEventKind.instagram =>
+        LocaleKeys.task_builder_send_output_names_instagram.tr(),
     };
   }
 
@@ -110,6 +114,10 @@ class LocalizedNodeTextDefaults implements NodeTextDefaults {
         LocaleKeys.task_builder_channels_whatsapp_read_title.tr(),
       ChannelEventKind.sms =>
         LocaleKeys.task_builder_channels_sms_read_title.tr(),
+      ChannelEventKind.telegram =>
+        LocaleKeys.task_builder_channels_telegram_read_title.tr(),
+      ChannelEventKind.instagram =>
+        LocaleKeys.task_builder_channels_instagram_read_title.tr(),
     };
   }
 
@@ -122,6 +130,10 @@ class LocalizedNodeTextDefaults implements NodeTextDefaults {
         LocaleKeys.task_builder_channels_whatsapp_read_description.tr(),
       ChannelEventKind.sms =>
         LocaleKeys.task_builder_channels_sms_read_description.tr(),
+      ChannelEventKind.telegram =>
+        LocaleKeys.task_builder_channels_telegram_read_description.tr(),
+      ChannelEventKind.instagram =>
+        LocaleKeys.task_builder_channels_instagram_read_description.tr(),
     };
   }
 
@@ -134,6 +146,10 @@ class LocalizedNodeTextDefaults implements NodeTextDefaults {
         LocaleKeys.task_builder_channels_whatsapp_send_title.tr(),
       ChannelEventKind.sms =>
         LocaleKeys.task_builder_channels_sms_send_title.tr(),
+      ChannelEventKind.telegram =>
+        LocaleKeys.task_builder_channels_telegram_send_title.tr(),
+      ChannelEventKind.instagram =>
+        LocaleKeys.task_builder_channels_instagram_send_title.tr(),
     };
   }
 
@@ -146,6 +162,10 @@ class LocalizedNodeTextDefaults implements NodeTextDefaults {
         LocaleKeys.task_builder_channels_whatsapp_send_description.tr(),
       ChannelEventKind.sms =>
         LocaleKeys.task_builder_channels_sms_send_description.tr(),
+      ChannelEventKind.telegram =>
+        LocaleKeys.task_builder_channels_telegram_send_description.tr(),
+      ChannelEventKind.instagram =>
+        LocaleKeys.task_builder_channels_instagram_send_description.tr(),
     };
   }
 }

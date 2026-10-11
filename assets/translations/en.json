@@ -138,7 +138,9 @@
     "send_output_names": {
       "email": "SendEmail",
       "whatsapp": "SendWhatsapp",
-      "sms": "SendSms"
+      "sms": "SendSms",
+      "telegram": "SendTelegram",
+      "instagram": "SendInstagram"
     },
     "output_field_names": {
       "sender": "Sender",
@@ -196,6 +198,18 @@
         "read_description": "Reads sender, message and arrival time from a SMS trigger.",
         "send_title": "Send SMS",
         "send_description": "Sends an SMS through novooa."
+      },
+      "telegram": {
+        "read_title": "Read Telegram",
+        "read_description": "Reads sender, message and arrival time from a Telegram trigger.",
+        "send_title": "Send Telegram",
+        "send_description": "Sends a Telegram message through novooa."
+      },
+      "instagram": {
+        "read_title": "Read Instagram",
+        "read_description": "Reads sender, message and arrival time from an Instagram trigger.",
+        "send_title": "Send Instagram",
+        "send_description": "Sends an Instagram message through novooa."
       }
     },
     "palette": {
@@ -209,7 +223,8 @@
         "interaction": "Interaction",
         "external": "External systems",
         "communication": "Communication"
-      }
+      },
+      "coming_soon": "(Coming soon)"
     },
     "header": {
       "menu_tooltip": "Open menu",

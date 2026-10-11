@@ -54,8 +54,8 @@ referenzieren.
 | `writeFile` | Datei schreiben | Schreibt einen explizit konfigurierten Wert als Datei | Implementiert |
 | `readFile` | Datei lesen | Liest eine konkrete Datei-Version | Implementiert |
 | `readEmail` | E-Mail lesen | Liest Absender, Betreff und Inhalt eines Events | Microsoft Graph implementiert |
-| `readChannelEvent` | Nachricht lesen | Liest E-Mail-, WhatsApp- oder SMS-Events; der Nachrichtentext ist der Hauptwert, Absender, Betreff (nur E-Mail) und Ankunftszeit sind weitere Werte | Implementiert |
-| `sendChannelMessage` | Nachricht senden | Sendet E-Mail, WhatsApp oder SMS | Microsoft-Graph-Antworten implementiert |
+| `readChannelEvent` | Nachricht lesen | Liest E-Mail-, WhatsApp-, SMS-, Telegram- oder Instagram-Events (außer E-Mail in der Palette deaktiviert, „Bald verfügbar“); der Nachrichtentext ist der Hauptwert, Absender, Betreff (nur E-Mail) und Ankunftszeit sind weitere Werte | Implementiert |
+| `sendChannelMessage` | Nachricht senden | Sendet E-Mail, WhatsApp, SMS, Telegram oder Instagram (außer E-Mail nur Platzhalter in der Palette, deaktiviert) | Microsoft-Graph-Antworten implementiert |
 | `notificationSend` | Push-Benachrichtigung senden | Sendet einen aufgelösten Text als Push-Benachrichtigung an alle Team-Mitglieder | Implementiert |
 | `humanApproval` | Freigabe | Haltet den Run bis zur menschlichen Entscheidung an | Implementiert |
 | `dialogInput` | Formulareingabe | Pausiert den Run und fragt typisierte Eingaben per Formular ab | Implementiert |

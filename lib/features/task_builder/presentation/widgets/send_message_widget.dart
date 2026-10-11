@@ -82,6 +82,8 @@ class _SendMessageWidgetState extends State<SendMessageWidget> {
       ChannelEventKind.email => 'E-Mail senden',
       ChannelEventKind.whatsapp => 'WhatsApp senden',
       ChannelEventKind.sms => 'SMS senden',
+      ChannelEventKind.telegram => 'Telegram senden',
+      ChannelEventKind.instagram => 'Instagram senden',
     };
   }
 

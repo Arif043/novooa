@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:simple_icons/simple_icons.dart';
 import 'package:syscat2/core/runtime/connections_availability.dart';
 import 'package:syscat2/core/runtime/webhooks_availability.dart';
 import 'package:syscat2/features/task_builder/presentation/plugin_node_module.dart';
@@ -18,7 +19,7 @@ void registerShopwarePlugin() {
         title: action.title,
         description: action.description,
         group: 'Shopware',
-        icon: Icons.storefront_outlined,
+        icon: SimpleIcons.shopware,
         outputBase: action.outputBase,
         initial: () => ShopwareNodeConfig.initial(action.id),
         fromDocument: ShopwareNodeConfig.fromDocument,
