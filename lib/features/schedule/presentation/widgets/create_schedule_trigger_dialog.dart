@@ -95,7 +95,7 @@ class _CreateScheduleTriggerDialogState
               ).colorScheme.surfaceContainerLowest,
               clipBehavior: Clip.antiAlias,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(AppSpacing.md),
               ),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 560),
