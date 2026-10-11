@@ -40,7 +40,41 @@ services:
     depends_on:
       key-init:
         condition: service_completed_successfully
-      # ML-Dienst dieses Stacks: Eingaben der Kunden bleiben im Stack. Modelle bekommt er nur als Referenz;
+      novooa-ml:
+        condition: service_healthy
+      novooa-script:
+        condition: service_healthy
+    ports:
+      # Reguläre API auf allen Host-Schnittstellen, damit Clients im LAN die
+      # private IPv4-Adresse des Hosts verwenden können. Der Verkehr ist dabei
+      # unverschlüsselt — diesen Port niemals aus dem Internet erreichbar
+      # machen; für externen Zugriff gehört ein eigener Reverse Proxy mit
+      # Domain und Zertifikat davor (siehe docs/local-runtime.md).
+      - "8090:8080"
+    volumes:
+      - novooa-data:/var/lib/novooa
+      - novooa-keys:/var/lib/novooa-keys
+      # Als Bind-Mount statt COPY ins Image: So lässt sich die Web-App mit
+      # `flutter build web` neu bauen, ohne das Image anzufassen. Vor dem
+      # ersten Start einmal ausführen — fehlt das Verzeichnis, liefert die
+      # Runtime nur die API aus und antwortet auf App-Pfade mit 404.
+      - ./build/web:/app/web:ro
+    secrets:
+      - novooa_runtime_license_public_key
+    networks:
+      - novooa-public
+      - novooa-private
+      - novooa-script
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "--input-type=module", "-e", "const response = await fetch('http://127.0.0.1:8080/healthz'); process.exit(response.ok ? 0 : 1)"]
+      interval: 5s
+      timeout: 2s
+      retries: 12
+
+  # ML-Dienst dieses Stacks: Eingaben der Kunden bleiben im Stack. Modelle bekommt er nur als Referenz;
   # Katalogmodelle liest er aus dem gemeinsamen Cache des Servers (nur lesend), eigene Modelle des Teams
   # streamt ihm die Runtime in seinen eigenen Speicher. Kein Zugang ins Internet.
   novooa-ml:
