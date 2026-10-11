@@ -185,7 +185,8 @@ Windows-Rechner:
 Docker Volumes: novooa-local_novooa-data (Daten), novooa-local_novooa-keys (aktueller Schlüsselbund)
   └─ SQLite: task_runs, activities, etc.
   └─ Dateien: files/{teamId}/{fileId}/...
-  └─ Modelle: model-artifacts/...
+  └─ Eigene Modelle: model-artifacts/...
+Docker Volumes: novooa-local_novooa-ml-bundles (Bündel des ML-Dienstes), novooa-model-cache (Katalogmodelle, je Host geteilt)
 ```
 
 ## 🛠️ Workflow

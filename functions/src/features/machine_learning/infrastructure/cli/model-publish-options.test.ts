@@ -20,3 +20,17 @@ test("rejects a missing required option", () => {
 function argumentsFor(): readonly string[] {
   return ["--project", "project-1", "--manifest", "model.json", "--artifact", "model.onnx"];
 }
+
+test("collects repeated weight files and named resources", () => {
+  const options = modelPublishOptionsFromArguments([
+    ...argumentsFor(), "--external-data", "a.bin", "--external-data", "b.bin", "--resource", "labels=labels.json",
+  ]);
+
+  assert.deepEqual(options.externalDataPaths, ["a.bin", "b.bin"]);
+  assert.deepEqual(options.resources, [{name: "labels", path: "labels.json"}]);
+});
+
+test("rejects a resource without name and a repeated single option", () => {
+  assert.throws(() => modelPublishOptionsFromArguments([...argumentsFor(), "--resource", "labels.json"]), /<name>=<datei>/);
+  assert.throws(() => modelPublishOptionsFromArguments([...argumentsFor(), "--manifest", "other.json"]), /doppelt/);
+});

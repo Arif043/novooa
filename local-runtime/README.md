@@ -72,7 +72,11 @@ curl http://127.0.0.1:8090/healthz
 ```
 
 Das Volume `novooa-data` enthält SQLite und lokale Dateien. `novooa-ml` erhält
-weder dieses Volume noch einen veröffentlichten Host-Port.
+weder dieses Volume noch einen veröffentlichten Host-Port. Er hat einen eigenen
+Bündelspeicher (`novooa-ml-bundles`) und liest den gemeinsamen Modell-Cache des
+Servers (`novooa-model-cache`) nur lesend. Diesen Cache befüllt allein
+`novooa-model-cache` aus dem globalen Modellspeicher (`NOVOOA_MODEL_STORE_URL`,
+öffentlich lesbar); mehrere Stacks auf einem Host teilen sich das Volume.
 
 Der erste Befehl erzeugt einmalig einen zufälligen 32-Byte-Master-Key. Compose
 mountet ihn ausschließlich für `runtime` als Datei unter `/run/secrets`. Der

@@ -1,12 +1,8 @@
-import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
-import {type ModelArtifactDistribution} from "../model-artifact-distribution.js";
+import {type SystemModel, type SystemModelSource} from "../../domain/repositories/system-model-source.js";
 
-export type RuntimeSystemModel = {
-  entry: ModelCatalogEntry;
-  distribution: ModelArtifactDistribution;
-};
+export type RuntimeSystemModel = SystemModel;
 
-export interface RuntimeSystemModelCatalog {
+/** Der globale Katalog, wie ihn eine Runtime liest; die Dateien liegen im globalen Modellspeicher. */
+export interface RuntimeSystemModelCatalog extends SystemModelSource {
   list(): Promise<readonly RuntimeSystemModel[]>;
-  find(modelId: string): Promise<RuntimeSystemModel | null>;
 }

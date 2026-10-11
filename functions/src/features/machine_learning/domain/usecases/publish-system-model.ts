@@ -4,6 +4,7 @@ import {
   type ModelArtifactPublisher,
 } from "../repositories/model-artifact-publisher.js";
 import {type ModelCatalog} from "../repositories/model-catalog.js";
+import {requirePublicationMatchesEntry} from "../services/artifact-publication-match.js";
 
 export type PublishSystemModelRequest = {
   entry: ModelCatalogEntry;
@@ -29,16 +30,5 @@ function validatePublication(request: PublishSystemModelRequest): void {
   if (request.entry.scope.type !== "system") {
     throw new Error("Der Betreiber-Publisher darf nur Systemmodelle veröffentlichen.");
   }
-  if (!sameReference(request.entry.artifactReference, request.artifact.reference)) {
-    throw new Error("Artefakt und Katalogeintrag referenzieren unterschiedliche Modellversionen.");
-  }
-  const expected = request.entry.artifactReference.resources ?? [];
-  const received = request.artifact.resources ?? [];
-  if (JSON.stringify(expected) !== JSON.stringify(received.map((resource) => resource.reference))) {
-    throw new Error("Die Modellressourcen stimmen nicht mit dem Katalogeintrag überein.");
-  }
-}
-
-function sameReference(left: Record<string, unknown>, right: Record<string, unknown>): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
+  requirePublicationMatchesEntry(request.entry, request.artifact);
 }

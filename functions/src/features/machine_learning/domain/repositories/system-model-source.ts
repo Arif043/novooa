@@ -1,14 +1,12 @@
 import {type ModelCatalogEntry} from "../entities/model-catalog-entry.js";
 import {type ModelContract} from "../entities/model-contract.js";
-import {type ModelArtifactPublication} from "./model-artifact-publisher.js";
 
-/** Ein Modell des globalen Katalogs, dessen Artefakt sich bei Bedarf laden lässt. */
+/** Ein Modell des globalen Katalogs; seine Dateien liegen im globalen Modellspeicher. */
 export type SystemModel = {
   entry: ModelCatalogEntry;
-  fetchArtifact(): Promise<ModelArtifactPublication>;
 };
 
-/** Der globale Modellkatalog als Quelle für den lokalen Modell-Cache. */
+/** Der globale Modellkatalog als Quelle für den Katalog eines Arbeitsbereichs. */
 export interface SystemModelSource {
   find(modelId: string): Promise<SystemModel | null>;
 }

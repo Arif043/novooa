@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from novooa_ml.transformations.default_registry import default_transformation_registry
 from novooa_ml.transformations.context import TransformationContext
 from novooa_ml.model_output.worker import transformation_values
-from onnx_worker import transformed_output_tensors
+from novooa_ml.model_execution import transformed_output_tensors
 
 
 class OutputTransformationRegistryTest(unittest.TestCase):

@@ -19,17 +19,23 @@ spec:
           env:
             - name: PYTHON_INFERENCE_SIDECAR_URL
               value: http://127.0.0.1:8081
-            - name: MODEL_ARTIFACT_CACHE_ENTRIES
-              value: "4"
           resources:
             limits:
               cpu: "1"
-              memory: 1Gi
+              memory: 512Mi
         - name: inference-sidecar
           image: SIDECAR_IMAGE
           env:
-            - name: MODEL_SESSION_CACHE_ENTRIES
-              value: "4"
+            # Globaler Modellspeicher (öffentlich lesbar). Der Sidecar lädt Modelle selbst und hält sie in /tmp,
+            # das in Cloud Run im Arbeitsspeicher liegt — daher die Grenzen unten.
+            - name: MODEL_STORE_URL
+              value: MODEL_STORE_URL
+            - name: MODEL_BUNDLE_DIR
+              value: /tmp/novooa-ml-bundles
+            - name: MODEL_BUNDLE_MAX_BYTES
+              value: "536870912"
+            - name: MODEL_SESSION_CACHE_BYTES
+              value: "1073741824"
           resources:
             limits:
               cpu: "1"

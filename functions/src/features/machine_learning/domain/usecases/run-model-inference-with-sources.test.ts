@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {type ModelCatalogEntry} from "../entities/model-catalog-entry.js";
 import {type ModelTensor} from "../entities/model-tensor.js";
-import {type ModelArtifactReader} from "../repositories/model-artifact-reader.js";
 import {type ModelCatalog} from "../repositories/model-catalog.js";
 import {type ModelInputTransformer} from "../repositories/model-input-transformer.js";
 import {type ModelInferenceRuntime, type ModelRuntimeOutput} from "../repositories/model-inference-runtime.js";
@@ -53,7 +52,7 @@ test("prepares a resource-aware runtime before transforming inputs", async () =>
   const useCase = new RunModelInferenceWithSources(
     new Catalog(contractEntry()),
     new PrepareModelInputs(transformer),
-    new RunModelInference(new ArtifactReader(), runtime),
+    new RunModelInference(runtime),
   );
 
   await useCase.execute({teamId: "team-1", modelId: "classifier", inputs: sources()});
@@ -69,7 +68,7 @@ function useCaseFor(
   return new RunModelInferenceWithSources(
     new Catalog(entry),
     new PrepareModelInputs(transformer),
-    new RunModelInference(new ArtifactReader(), new Runtime()),
+    new RunModelInference(new Runtime()),
   );
 }
 
@@ -78,10 +77,6 @@ class Catalog implements ModelCatalog {
   async save(): Promise<void> {}
   async listAvailableFor(): Promise<readonly ModelCatalogEntry[]> { return [this.model]; }
   async findAvailableFor(): Promise<ModelCatalogEntry> { return this.model; }
-}
-
-class ArtifactReader implements ModelArtifactReader {
-  async read(): Promise<Uint8Array> { return Uint8Array.from([1]); }
 }
 
 class Transformer implements ModelInputTransformer {

@@ -1,23 +1,22 @@
-import {type ModelArtifactReference} from "../../domain/entities/model-artifact-reference.js";
-import {type ModelArtifactPublication} from "../../domain/repositories/model-artifact-publisher.js";
 import {type systemModelManifestFromUnknown} from "../cli/system-model-manifest.js";
-import {type ModelArtifactDistribution} from "../model-artifact-distribution.js";
 import {type StagedModelArtifact} from "./local-model-artifact-upload-store.js";
+import {LocalModelCatalogRequestError} from "./local-model-catalog-errors.js";
 import {type ModelContractValidator} from "./python-model-contract-validator.js";
-
-export interface ModelArtifactDownloader {
-  download(reference: ModelArtifactReference, distribution: ModelArtifactDistribution): Promise<ModelArtifactPublication>;
-}
 
 export type SystemModelManifest = ReturnType<typeof systemModelManifestFromUnknown>;
 
-/** Fachlich ungültige Eingaben (Manifest, Vertrag, Uploadgröße) — werden als 400 gemeldet. */
-export class LocalModelCatalogRequestError extends Error {}
+export {LocalModelCatalogRequestError};
 
-export function artifactReferenceFor(manifest: SystemModelManifest, staged: StagedModelArtifact) {
+export function artifactReferenceFor(
+  manifest: SystemModelManifest,
+  staged: StagedModelArtifact,
+  externalData: ReadonlyMap<string, StagedModelArtifact> = new Map(),
+) {
+  const weights = [...externalData].map(([name, file]) => ({name, sizeBytes: file.sizeBytes, sha256: file.sha256}));
   return {
     artifactId: manifest.artifact.artifactId, versionId: manifest.artifact.versionId, format: "onnx" as const,
     contentType: "application/onnx", sizeBytes: staged.sizeBytes, sha256: staged.sha256,
+    ...(weights.length > 0 ? {externalData: weights} : {}),
   };
 }
 

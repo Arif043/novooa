@@ -9,6 +9,8 @@ import '../../domain/entities/model_catalog_import.dart';
 import '../../domain/repositories/model_catalog_repository.dart';
 import '../mappers/model_catalog_entry_mapper.dart';
 
+const _installTimeout = Duration(minutes: 30);
+
 class LocalModelCatalogRepository
     implements ModelCatalogRepository, GlobalModelCatalogRepository {
   const LocalModelCatalogRepository(
@@ -27,13 +29,31 @@ class LocalModelCatalogRepository
     final import = await _client.post('/v1/ml-models/imports', {
       'manifest': manifest,
     });
-    final importId = _importIdFrom(import);
-    await _client.putStream(
-      '/v1/ml-models/imports/${Uri.encodeComponent(importId)}/artifact',
-      body: value.openArtifact(),
-      contentLength: value.artifactLength,
+    final importPath =
+        '/v1/ml-models/imports/${Uri.encodeComponent(_importIdFrom(import))}';
+    // Gewichte zuerst: Der Modell-Upload schließt den Import ab und installiert alles zusammen.
+    for (final weight in value.weights) {
+      await _upload(
+        '$importPath/external-data/${Uri.encodeComponent(weight.name)}',
+        weight.open(),
+        weight.length,
+      );
+    }
+    await _upload(
+      '$importPath/artifact',
+      value.openArtifact(),
+      value.artifactLength,
+    );
+  }
+
+  Future<void> _upload(String path, Stream<List<int>> body, int length) {
+    return _client.putStream(
+      path,
+      body: body,
+      contentLength: length,
       contentType: 'application/onnx',
-      timeout: const Duration(minutes: 10),
+      // Die Frist beginnt nach dem Senden; danach schreibt die Runtime große Dateien noch um.
+      timeout: _installTimeout,
     );
   }
 

@@ -289,8 +289,11 @@ Storage:
 
 ```text
 teams/{teamId}/files/{fileId}/versions/{versionId}/{fileName}
-model-artifacts/{artifactId}/versions/{versionId}/model.onnx
 ```
+
+Modelldateien liegen nicht in Firebase Storage, sondern im globalen Modellspeicher
+(Hetzner Object Storage) unter `model-artifacts/{artifactId}/versions/{versionId}/`
+(siehe [ML-Modelle](./features/ml-modelle.md)).
 
 Der aktuelle Client erzeugt für angemeldete Nutzer:innen automatisch ein
 Team-Dokument mit generierter ID und speichert die Referenz im User-Dokument:

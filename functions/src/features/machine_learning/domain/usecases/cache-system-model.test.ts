@@ -1,39 +1,46 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {type ModelCatalogEntry} from "../entities/model-catalog-entry.js";
-import {type ModelArtifactPublication} from "../repositories/model-artifact-publisher.js";
 import {type ModelCatalog} from "../repositories/model-catalog.js";
 import {type SystemModel, type SystemModelSource} from "../repositories/system-model-source.js";
 import {CacheSystemModel, SystemModelNotFoundError} from "./cache-system-model.js";
-import {InstallTeamModel} from "./install-team-model.js";
 
-test("keeps an already cached model without downloading it again", async () => {
+test("keeps an already cached model without prefetching it again", async () => {
   const {cache, catalog, source} = setup();
   await catalog.save(teamEntry());
 
   const cached = await cache.execute("team-1", "classifier");
 
   assert.equal(cached.id, "classifier");
-  assert.equal(source.downloads, 0);
+  assert.equal(source.lookups, 0);
 });
 
-test("downloads a missing model and stores it as cached team entry", async () => {
-  const {cache, catalog, published} = setup();
+test("prefetches a missing model in the ML service and stores it as cached team entry", async () => {
+  const {cache, catalog, prefetched} = setup();
 
   const cached = await cache.execute("team-1", "classifier");
 
   assert.deepEqual(cached.scope, {type: "team", teamId: "team-1"});
   assert.equal(cached.origin, "catalog");
   assert.equal(catalog.entries.length, 1);
-  assert.equal(published.length, 1);
+  assert.deepEqual(prefetched.map((entry) => entry.id), ["classifier"]);
 });
 
-test("parallel requests for the same model share one download", async () => {
-  const {cache, source} = setup();
+test("a failed prefetch stores nothing", async () => {
+  const catalog = new Catalog();
+  const failing = {prefetch: () => Promise.reject(new Error("Speicher nicht erreichbar."))};
+  const cache = new CacheSystemModel(catalog, new Source(), {validate: async () => undefined}, failing);
+
+  await assert.rejects(cache.execute("team-1", "classifier"), /Speicher nicht erreichbar/);
+  assert.equal(catalog.entries.length, 0);
+});
+
+test("parallel requests for the same model share one prefetch", async () => {
+  const {cache, prefetched} = setup();
 
   await Promise.all([cache.execute("team-1", "classifier"), cache.execute("team-1", "classifier")]);
 
-  assert.equal(source.downloads, 1);
+  assert.equal(prefetched.length, 1);
 });
 
 test("an unknown model fails with a not-found error", async () => {
@@ -57,9 +64,12 @@ function setup() {
   const catalog = new Catalog();
   const source = new Source();
   const contract = {reject: false, async validate() { if (this.reject) throw new Error("Vertrag ungültig."); }};
-  const published: ModelArtifactPublication[] = [];
-  const installer = new InstallTeamModel({publish: async (value) => { published.push(value); }}, catalog);
-  return {cache: new CacheSystemModel(catalog, source, contract, installer), catalog, source, contract, published};
+  const prefetched: ModelCatalogEntry[] = [];
+  const prefetcher = {prefetch: async (entry: ModelCatalogEntry) => {
+    await new Promise((resolve) => setTimeout(resolve, 1));
+    prefetched.push(entry);
+  }};
+  return {cache: new CacheSystemModel(catalog, source, contract, prefetcher), catalog, source, contract, prefetched};
 }
 
 class Catalog implements ModelCatalog {
@@ -72,16 +82,11 @@ class Catalog implements ModelCatalog {
 }
 
 class Source implements SystemModelSource {
-  downloads = 0;
+  lookups = 0;
 
   async find(modelId: string): Promise<SystemModel | null> {
-    if (modelId !== "classifier") return null;
-    const entry = systemEntry();
-    return {entry, fetchArtifact: async () => {
-      this.downloads += 1;
-      await new Promise((resolve) => setTimeout(resolve, 1));
-      return {reference: entry.artifactReference, content: bytes()};
-    }};
+    this.lookups += 1;
+    return modelId === "classifier" ? {entry: systemEntry()} : null;
   }
 }
 
@@ -102,8 +107,4 @@ function systemEntry(): ModelCatalogEntry {
       outputs: [{name: "output", semantic: "classification.scores", dataType: "uint8", shape: [1], transformations: [], workflowOutput: {name: "value", type: "json" as const, mapping: "$tensor"}}],
     },
   };
-}
-
-async function* bytes(): AsyncGenerator<Uint8Array> {
-  yield Uint8Array.from([1]);
 }

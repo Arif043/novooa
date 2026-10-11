@@ -544,5 +544,10 @@ abstract class  LocaleKeys {
   static const ui_zu_pruefender_wert = 'ui.zu_pruefender_wert';
   static const ui_zuweisung = 'ui.zuweisung';
   static const ui = 'ui';
+  static const machine_learning_model_import_select_files_hint = 'machine_learning.model_import.select_files_hint';
+  static const machine_learning_model_import_exactly_one_model = 'machine_learning.model_import.exactly_one_model';
+  static const machine_learning_model_import_unreadable_file = 'machine_learning.model_import.unreadable_file';
+  static const machine_learning_model_import = 'machine_learning.model_import';
+  static const machine_learning = 'machine_learning';
 
 }

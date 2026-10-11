@@ -24,7 +24,7 @@ import {SQLiteLanguageModelCatalog} from "../../features/language_models/infrast
 import {SQLiteLanguageModelConfigurationStore} from "../../features/language_models/infrastructure/local/sqlite-language-model-configuration-store.js";
 import {SQLiteLanguageModelDefaultsStore} from "../../features/language_models/infrastructure/local/sqlite-language-model-defaults-store.js";
 import {LocalModelArtifactPublisher} from "../../features/machine_learning/infrastructure/local/local-model-artifact-publisher.js";
-import {LocalModelArtifactUploadStore} from "../../features/machine_learning/infrastructure/local/local-model-artifact-upload-store.js";
+import {LocalModelArtifactUploadStore, maximumArtifactBytesFromEnvironment} from "../../features/machine_learning/infrastructure/local/local-model-artifact-upload-store.js";
 import {type ModelCatalogRoutesOptions} from "../../features/machine_learning/infrastructure/local/local-model-catalog-routes.js";
 import {
   PythonModelContractValidator,
@@ -108,7 +108,7 @@ function modelCatalogOptions(
   return {
     catalog: new SQLiteModelCatalog(database),
     artifactPublisher: new LocalModelArtifactPublisher(runtimeRoot),
-    uploadStore: new LocalModelArtifactUploadStore(runtimeRoot),
+    uploadStore: new LocalModelArtifactUploadStore(runtimeRoot, maximumArtifactBytesFromEnvironment()),
     contractValidator: sidecarUrl ? new PythonModelContractValidator(sidecarUrl) : new UnavailablePythonModelContractValidator(),
     notifier,
   };

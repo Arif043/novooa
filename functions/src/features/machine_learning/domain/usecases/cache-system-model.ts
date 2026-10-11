@@ -1,7 +1,7 @@
-import {type ModelCatalogEntry} from "../entities/model-catalog-entry.js";
+import {type ModelCatalogEntry, validateModelCatalogEntry} from "../entities/model-catalog-entry.js";
+import {type ModelArtifactPrefetcher} from "../repositories/model-artifact-prefetcher.js";
 import {type ModelCatalog} from "../repositories/model-catalog.js";
 import {type ModelContractCheck, type SystemModelSource} from "../repositories/system-model-source.js";
-import {type InstallTeamModel} from "./install-team-model.js";
 
 /** Das Modell steht nicht im globalen Katalog (oder ist dort nicht mehr verfügbar). */
 export class SystemModelNotFoundError extends Error {
@@ -12,9 +12,9 @@ export class SystemModelNotFoundError extends Error {
 }
 
 /**
- * Hält ein Modell des globalen Katalogs lokal vor: Ist es schon im Teamkatalog, bleibt es dabei;
- * sonst wird es geladen, geprüft und als gecachter Teameintrag gespeichert. Gleichzeitige
- * Anfragen für dasselbe Modell teilen sich einen Download.
+ * Nimmt ein Modell des globalen Katalogs in den Teamkatalog auf: Ist es schon dort, bleibt es dabei;
+ * sonst wird der Vertrag geprüft, das Modell beim ML-Dienst vorgeladen und als Teameintrag gespeichert.
+ * Die Dateien bleiben im globalen Modellspeicher. Gleichzeitige Anfragen teilen sich einen Vorgang.
  */
 export class CacheSystemModel {
   private readonly downloads = new Map<string, Promise<ModelCatalogEntry>>();
@@ -23,7 +23,7 @@ export class CacheSystemModel {
     private readonly catalog: ModelCatalog,
     private readonly source: SystemModelSource,
     private readonly contractCheck: ModelContractCheck,
-    private readonly installer: InstallTeamModel,
+    private readonly prefetcher: ModelArtifactPrefetcher,
   ) {}
 
   async execute(teamId: string, modelId: string): Promise<ModelCatalogEntry> {
@@ -41,10 +41,10 @@ export class CacheSystemModel {
     const model = await this.source.find(modelId);
     if (model === null) throw new SystemModelNotFoundError(modelId);
     await this.contractCheck.validate(model.entry.contract);
-    const artifact = await model.fetchArtifact();
-    return this.installer.execute({
-      entry: {...model.entry, scope: {type: "team", teamId}, origin: "catalog"},
-      artifact,
-    });
+    const entry: ModelCatalogEntry = {...model.entry, scope: {type: "team", teamId}, origin: "catalog"};
+    validateModelCatalogEntry(entry);
+    await this.prefetcher.prefetch(entry);
+    await this.catalog.save(entry);
+    return entry;
   }
 }

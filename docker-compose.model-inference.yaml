@@ -9,7 +9,7 @@ services:
     environment:
       PORT: "8080"
       PYTHON_INFERENCE_SIDECAR_URL: http://inference-sidecar:8081
-      MODEL_ARTIFACT_CACHE_ENTRIES: "4"
+      # Lokal liegen alle Modelle unter NOVOOA_RUNTIME_ROOT; das Gateway streamt sie dem Sidecar zu.
       MODEL_INFERENCE_MODE: local
       LOCAL_RUNTIME_ROOT: /var/lib/novooa
     ports:
@@ -26,7 +26,6 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: "8081"
-      MODEL_SESSION_CACHE_ENTRIES: "4"
     expose:
       - "8081"
     networks:

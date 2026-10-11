@@ -49,6 +49,8 @@ Flutter-Desktop-App
           lokale API, Scheduler, Task-Worker, SQLite-Adapter, Relay-Client
       -> novooa-ml (Python)
           Tensor-Transformationen und ONNX-Inferenz
+      -> novooa-model-cache (Python)
+          gemeinsamer Cache der Katalogmodelle des Servers
 ```
 
 `novooa-runtime` ist der einzige Dienst mit einem veröffentlichten Host-Port:
@@ -66,10 +68,11 @@ ist nicht vom Host erreichbar und kommuniziert nur über das interne
 Compose-Netzwerk mit `novooa-runtime`.
 
 Das benannte Volume `novooa-data` enthält SQLite, Dateien, Wissensbasis und
-lokale Modellartefakte. Es ist nur in `novooa-runtime` schreibbar eingehängt.
-Der Python-Dienst erhält keine Datenbank und kein schreibbares Daten-Volume;
-er verarbeitet ausschließlich geprüfte Modellbytes und Tensoren über sein
-Protokoll. Container erhalten weder den Docker-Socket noch Docker-Credentials.
+eigene Modelle des Teams. Es ist nur in `novooa-runtime` schreibbar eingehängt.
+Der Python-Dienst erhält keine Datenbank und nicht dieses Volume; er hat nur
+seinen eigenen Bündelspeicher (`novooa-ml-bundles`) und liest den gemeinsamen
+Modell-Cache (`novooa-model-cache`) nur lesend. Jede Modelldatei wird vor der
+Nutzung gegen Größe und SHA-256 geprüft. Container erhalten weder den Docker-Socket noch Docker-Credentials.
 
 Das aktuelle Entwicklungs-Compose baut die Images aus dem Checkout. Die
 auslieferbare Desktop-App wird stattdessen Images auf konkrete novooa-Versionen
@@ -536,20 +539,21 @@ Dateien liegen im lokalen Dateisystem:
 ```text
 .novooa/
   files/{teamId}/{fileId}/versions/{versionId}/{fileName}
-  model-artifacts/{artifactId}/versions/{versionId}/model.onnx
+  model-artifacts/{artifactId}/versions/{versionId}/model.onnx   (nur eigene Modelle)
   knowledge/{teamId}/...
 ```
 
-ONNX-Inferenz läuft lokal im dedizierten Python-Sidecar. Dieser erhält keine
-Speicherpfade, sondern verifizierte Modellbytes und Tensoren über das
-standardisierte HTTP-Protokoll. Die Abhängigkeiten liegen in
+ONNX-Inferenz läuft lokal im dedizierten Python-Sidecar. Er bekommt Modelle nur als
+Referenz: Katalogmodelle liest er aus dem gemeinsamen Cache des Servers, eigene
+Modelle streamt ihm die Runtime in seinen eigenen Bündelspeicher (siehe
+[ML-Modelle](./features/ml-modelle.md#modellbündel-und-ml-dienst)). Die Abhängigkeiten liegen in
 [`local-runtime/python/requirements.txt`](../local-runtime/python/requirements.txt);
 die Compose-Definition startet daraus den `novooa-ml`-Container. Der
 Node-Container enthält **kein Python**; Script-Bausteine laufen im eigenen
 Container `novooa-script` (siehe „Script-Dienst“).
 
 Workflow-Werte werden vor der lokalen Inferenz gemäß Manifest in Tensoren
-transformiert. `input_transform_worker.py` verwendet für Bildquellen eine
+transformiert. Der ML-Dienst verwendet für Bildquellen eine
 erweiterbare Registry für Dekodierung, Skalierung, Layout und Normalisierung.
 Weitere Quelltypen erhalten eigene Strategien; weder die Pipeline noch der
 Modell-Baustein sind an Firebase Storage oder Bilder gekoppelt.
@@ -1058,12 +1062,13 @@ dessen Infrastructure-Bereich.
 - Die alten Migrationen und `schema_migrations` sind abgelöst. Diese neue
   Initialmigration ist für eine frisch aufgesetzte Runtime vorgesehen; eine
   bestehende Datenbank wird weder automatisch gelöscht noch zurückgesetzt.
-- `docker-compose.local.yaml` startet `runtime` und `novooa-ml`. Nur
+- `docker-compose.local.yaml` startet `runtime`, `novooa-ml` und `novooa-model-cache`. Nur
   `runtime` veröffentlicht einen Host-Port: `8090` für die API auf allen
   Schnittstellen — auch das erstmalige Setzen des Betreiber-Passworts läuft
   darüber (siehe [Erstmaliges Setzen des Passworts](#erstmaliges-setzen-des-passworts)).
   `novooa-ml` hat keinen Host-Port und hängt ausschließlich in
-  `novooa-private`.
+  `novooa-private`. `novooa-model-cache` braucht als einziger ML-Dienst Internet
+  (`novooa-public`) und lädt nur aus dem globalen Modellspeicher.
 - Beim Start stellt die Runtime ohne Lizenz nur `/healthz`, `GET /v1/license`
   und `POST /v1/license/activate` und `POST /v1/license/release` bereit. Nach erfolgreicher Aktivierung legt
   sie den durch die signierte Lizenz bestimmten Teamarbeitsbereich idempotent

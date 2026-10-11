@@ -588,5 +588,12 @@
     "zeitlimit_sekunden": "Zaman sınırı (saniye)",
     "zu_pruefender_wert": "Denetlenecek değer",
     "zuweisung": "Atama"
+  },
+  "machine_learning": {
+    "model_import": {
+      "select_files_hint": "Gerekirse ağırlık dosyalarıyla birlikte .onnx dosyasını seç.",
+      "exactly_one_model": "Tam olarak bir .onnx dosyası seç. Seçilen diğer dosyalar ağırlık dosyası sayılır.",
+      "unreadable_file": "{name} dosyası okunamadı."
+    }
   }
 }

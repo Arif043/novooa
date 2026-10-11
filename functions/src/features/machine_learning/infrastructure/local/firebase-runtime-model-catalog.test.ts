@@ -4,25 +4,24 @@ import {systemModelEntry, systemModelManifestFromUnknown} from "../cli/system-mo
 import {modelCatalogEntryData} from "../model-catalog-entry-codec.js";
 import {FirebaseRuntimeModelCatalog, type RuntimeCollectionReader} from "./firebase-runtime-model-catalog.js";
 
-test("loads only system models together with their internal distribution", async () => {
+test("loads only system models and keeps their weight files", async () => {
   const catalog = new FirebaseRuntimeModelCatalog(new Reader([
-    {id: "system-model", data: {...modelData(), distribution: distribution()}},
-    {id: "team-model", data: {...modelData(), scope: "team", teamId: "team-1", distribution: distribution()}},
+    {id: "system-model", data: modelData()},
+    {id: "team-model", data: {...modelData(), scope: "team", teamId: "team-1"}},
   ]));
 
   const models = await catalog.list();
 
   assert.equal(models.length, 1);
   assert.equal(models[0]?.entry.id, "system-model");
-  assert.deepEqual(models[0]?.distribution, distribution());
+  assert.deepEqual(models[0]?.entry.artifactReference.externalData, [{name: "model.onnx.data", sizeBytes: 8, sha256: "1".repeat(64)}]);
 });
 
-test("rejects a global model without a valid distribution", async () => {
-  const catalog = new FirebaseRuntimeModelCatalog(new Reader([
-    {id: "system-model", data: modelData()},
-  ]));
+test("finds a system model by its id", async () => {
+  const catalog = new FirebaseRuntimeModelCatalog(new Reader([{id: "system-model", data: modelData()}]));
 
-  await assert.rejects(catalog.list(), /Modell-Distribution/);
+  assert.equal((await catalog.find("system-model"))?.entry.id, "system-model");
+  assert.equal(await catalog.find("unknown"), null);
 });
 
 class Reader implements RuntimeCollectionReader {
@@ -57,15 +56,7 @@ function modelData(): Record<string, unknown> {
     contentType: "application/onnx",
     sizeBytes: 4,
     sha256: "0".repeat(64),
+    externalData: [{name: "model.onnx.data", sizeBytes: 8, sha256: "1".repeat(64)}],
   });
   return modelCatalogEntryData(entry);
-}
-
-function distribution() {
-  return {
-    type: "huggingFace",
-    repository: "novooa/system-model",
-    revision: "a".repeat(40),
-    path: "model.onnx",
-  };
 }

@@ -25,11 +25,14 @@ Provider-spezifische Download-URLs.
 - `team`: später ein teamweit bereitgestelltes Modell. Hochladen durch Nutzer
   ist in der ersten Ausbaustufe noch nicht vorgesehen.
 
-`artifactReference` ist eine logische Referenz. Die technische Distribution
-eines globalen Modells liegt separat in der Firestore-Infrastruktur. Die lokale
-Runtime lädt das Artefakt direkt mit `@huggingface/hub`, prüft Größe und
-SHA-256 und legt danach eine teamgebundene lokale Kopie an. Modellbytes werden
-weder über Firestore noch über novooa-Functions proxied.
+`artifactReference` ist eine logische Referenz. Die Dateien eines globalen Modells
+liegen im **globalen Modellspeicher** (Hetzner Object Storage, S3-kompatibel,
+öffentlich lesbar) unter `model-artifacts/{artifactId}/versions/{versionId}/`:
+`model.onnx`, ausgelagerte Gewichte (`externalData`) unter ihrem Namen daneben und
+Ressourcen unter `resources/`. Den Ort leitet jeder Beteiligte aus der Referenz ab;
+eine eigene Distribution gibt es nicht. Modellbytes laufen weder über Firestore noch
+über novooa-Functions oder die Runtime, sondern direkt in den ML-Dienst (siehe
+[Modellbündel](#modellbündel-und-ml-dienst)).
 
 ```ts
 {
@@ -48,12 +51,8 @@ weder über Firestore noch über novooa-Functions proxied.
     contentType: "application/onnx",
     sizeBytes: 10500000,
     sha256: "<sha-256>",
-  },
-  distribution: {
-    type: "huggingFace",
-    repository: "organisation/modell",
-    revision: "<40-stelliger-commit-hash>",
-    path: "model.onnx",
+    // optional: Gewichte > 2 GB liegen als ONNX External Data neben model.onnx
+    externalData: [{name: "model.onnx.data", sizeBytes: 4200000000, sha256: "<sha-256>"}],
   },
   contract: {inputs: [...], settings: [...], outputs: [...]},
 }
@@ -258,7 +257,7 @@ und [`piper-de-thorsten-medium.json`](../../local-runtime/system-models/piper-de
 sind deutsche Text-zu-Sprache-Beispiele. Thorsten in mittlerer Qualität ist für
 natürlichere Ausgabe vorgesehen, Eva `x_low` für kleine, schnelle Installationen.
 Ihre Manifeste enthalten die für Piper notwendige Phonemzuordnung; die ONNX-Artefakte
-werden direkt von Hugging Face geladen.
+werden per `models:publish` im globalen Modellspeicher veröffentlicht.
 Die Eingabetransformationen `text.piperPhonemes` und `text.piperPhonemeLength`
 bereiten Text für Piper vor, `tensor.constant` erhält die im Baustein konfigurierten Inferenzparameter
 und `audio.wav` serialisiert die Wellenform als fachlichen Audio-Ausgabewert.
@@ -317,7 +316,7 @@ lokale Runtime liest ihn nach der Firebase-Anmeldung über
 Katalogmodelle nicht vorab, sondern **cacht** sie, sobald sie gebraucht werden:
 
 - **Auswahl im Aufgabenstudio:** Wählt man in einem ML-Baustein ein Modell aus dem
-  Katalog, startet `POST /v1/ml-models/catalog/:modelId/cache` den Download im
+  Katalog, startet `POST /v1/ml-models/catalog/:modelId/cache` das Vorladen im
   Hintergrund (`202`; `200`, wenn es schon lokal ist). Der Fortschritt steht unter
   `GET /v1/ml-models/cache-status` (`downloading` oder `failed` mit Meldung);
   Änderungen meldet das Realtime-Thema `model-cache`, das fertige Modell
@@ -327,14 +326,13 @@ Katalogmodelle nicht vorab, sondern **cacht** sie, sobald sie gebraucht werden:
   (`SelfCachingModelCatalog`). Gleichzeitige Anfragen für dasselbe Modell teilen
   sich einen Download (`CacheSystemModel`).
 
-Beim Cachen werden die technische Distribution geladen, Größe und SHA-256 geprüft,
-der Modellvertrag gegen den Python-Sidecar validiert und der Eintrag als
-teamgebundener Eintrag mit `origin = catalog` gespeichert. Gecachte Modelle bleiben,
-bis sie manuell entfernt werden; es gibt keine automatische Bereinigung. Der
-Download-Status lebt nur im Speicher; nach einem Neustart zählt, was im Katalog
-steht. Öffentliche Hugging-Face-Modelle benötigen kein Betreiber-Token. Ein
-optionales `HF_TOKEN` dient ausschließlich lokalen, zugriffsbeschränkten Quellen
-und wird nicht ausgeliefert.
+Beim Cachen wird der Modellvertrag gegen den ML-Dienst validiert, der ML-Dienst lädt
+die Dateien vor (`POST /v1/bundles`, siehe unten) und der Eintrag wird als
+teamgebundener Eintrag mit `origin = catalog` gespeichert (`CacheSystemModel` mit dem
+Port `ModelArtifactPrefetcher`). Die Runtime selbst kopiert Katalogmodelle **nicht**;
+die Dateien liegen im gemeinsamen Cache des Servers. Katalogeinträge bleiben, bis sie
+manuell entfernt werden. Der Status lebt nur im Speicher; nach einem Neustart zählt,
+was im Katalog steht.
 
 ### Lokale Verwaltung
 
@@ -346,9 +344,11 @@ den Einstellungen. Die SQLite-Spalte `model_catalog.origin` (Migration
 `0020_model_catalog_origin.sql`) unterscheidet beide Herkünfte; ältere Einträge
 gelten als Import.
 
-Ein eigener Import besteht genau aus zwei Dateien: einer Manifest-JSON und der
-dazugehörigen ONNX-Datei. Die Runtime erzeugt daraus die Artefakt-Prüfsumme, legt
-das Artefakt unter ihrem lokalen Runtime-Root ab und speichert einen
+Ein eigener Import besteht aus einer Manifest-JSON, der ONNX-Datei und optional deren
+Gewichtsdateien (ONNX External Data). In der App wählt man ONNX-Datei und Gewichte in
+einem Schritt; genau eine Datei muss auf `.onnx` enden, die übrigen gelten als
+Gewichte unter ihrem Dateinamen. Die Runtime erzeugt daraus die Prüfsummen, legt die
+Dateien unter ihrem lokalen Runtime-Root ab und speichert einen
 teamgebundenen Katalogeintrag in SQLite. Eigene Modelle erscheinen auch in der
 Modellsuche des Aufgabenstudios. Der Tab und die Endpunkte existieren nicht in
 der Cloud-Variante.
@@ -359,11 +359,12 @@ GET    /v1/ml-models/catalog                 globaler Katalog (503 ohne Firebase
 POST   /v1/ml-models/catalog/:modelId/cache  Hintergrund-Download starten
 GET    /v1/ml-models/cache-status            laufende und gescheiterte Downloads
 POST   /v1/ml-models/imports                 { manifest }
-PUT    /v1/ml-models/imports/:id/artifact    application/onnx (Binärstream)
+PUT    /v1/ml-models/imports/:id/external-data/:name  application/onnx (Gewichte, optional, zuerst)
+PUT    /v1/ml-models/imports/:id/artifact    application/onnx (Binärstream, schließt den Import ab)
 DELETE /v1/ml-models/:id                     aus dem Cache entfernen / Import löschen
 ```
 
-Der Client sendet zuerst das kleine Manifest und erhält eine kurzlebige Import-ID. Anschließend überträgt er das ONNX-Artefakt als einzelnen Binärstream per `PUT`. Die Runtime schreibt den Stream direkt in eine temporäre Datei, begrenzt ihn auf 2 GiB und berechnet Größe sowie SHA-256 beim Empfang. Erst wenn der gesamte Stream vorliegt und Manifest und Modellvertrag validiert sind, wird das Artefakt in den Katalog übernommen; die temporäre Datei wird danach entfernt. JSON-Anfragen der Runtime bleiben auf 1 MiB begrenzt.
+Der Client sendet zuerst das kleine Manifest und erhält eine kurzlebige Import-ID. Danach überträgt er jede Gewichtsdatei und zuletzt das ONNX-Artefakt als Binärstream per `PUT`. Die Runtime schreibt jeden Stream direkt in den Ordner des Imports (`model-imports/<id>/`) und berechnet Größe sowie SHA-256 beim Empfang. Eine feste Größengrenze gibt es nicht: Vor dem Schreiben prüft die Runtime anhand von `content-length` den freien Platz (`statfs`); optional begrenzt `MODEL_ARTIFACT_MAX_BYTES` jede Datei. Erst mit dem Modell-Upload werden Manifest und Modellvertrag validiert und alle Dateien zusammen übernommen; der Import-Ordner wird danach entfernt. JSON-Anfragen der Runtime bleiben auf 1 MiB begrenzt.
 
 Lokale Importe gehören immer dem aktiven Team. Vor dem Speichern lässt das
 Node-Gateway den privaten Python-Sidecar den Modellvertrag prüfen
@@ -377,15 +378,22 @@ Artefaktversion nutzt. Aufgaben mit einem entfernten Katalogmodell laden es beim
 nächsten Lauf erneut; ein entferntes eigenes Modell steht nicht mehr zur
 Verfügung.
 
-Artefakte liegen ausschließlich in der Infrastructure unter dem technischen
-Pfad `model-artifacts/{artifactId}/versions/{versionId}/model.onnx`. Dieser
-Pfad ist kein Bestandteil eines Katalogeintrags oder Workflow-Werts.
+Eigene Modelle liegen ausschließlich in der Infrastructure unter dem technischen
+Pfad `model-artifacts/{artifactId}/versions/{versionId}/` (dasselbe Layout wie im
+globalen Modellspeicher). Dieser Pfad ist kein Bestandteil eines Katalogeintrags oder
+Workflow-Werts.
+
+**Grenzen:** `model.onnx` selbst darf höchstens 2 GB groß sein (Protobuf-Grenze von
+ONNX). Größere Modelle lagern ihre Gewichte als External Data aus; dafür gilt nur der
+Platz auf der Platte und der Arbeitsspeicher des Servers. Baum-Modelle über 2 GB
+lassen sich nur mit dem Operator `TreeEnsemble` (ONNX-ML Opset 5) auslagern, ältere
+Baum-Operatoren speichern die Bäume als nicht auslagerbare Attribute.
 
 ## Inferenz
 
 `RunModelInference` führt ein bereits aufgelöstes Modell aus: Es prüft die
-vorbereiteten Eingabe-Tensoren gegen das Manifest, liest das Artefakt genau
-einmal und validiert auch die Tensoren der Runtime-Ausgabe gegen die
+vorbereiteten Eingabe-Tensoren gegen das Manifest, übergibt der Runtime nur den
+Katalogeintrag und validiert auch die Tensoren der Runtime-Ausgabe gegen die
 Ausgangsdefinition im Manifest. `RunModelInferenceWithSources` löst davor die Verfügbarkeit
 für ein Team auf, validiert die benannten Workflow-Quellen gegen das Manifest, bereitet sie vor
 und delegiert anschließend an `RunModelInference`.
@@ -397,29 +405,52 @@ ModelCatalog → RunModelInferenceWithSources
                      ↓
              RunModelInference
                      ↓
-   ModelArtifactReader + ModelInferenceRuntime
+        ModelInferenceRuntime
 ```
 
-Die Runtime erhält ausschließlich verifizierte Modellbytes und typisierte
-Tensoren. Sie kennt weder Firestore noch Firebase Storage, Dateipfade oder
-Workflow-Werte.
+Die Runtime erhält den Katalogeintrag und typisierte Tensoren, nie Modellbytes.
+Wie die Dateien zum ML-Dienst kommen, entscheidet die Infrastructure.
 
-### Lokale ONNX-Runtime
+### Modellbündel und ML-Dienst
 
-`LocalOnnxInferenceRuntime` delegiert an `LocalPythonOnnxWorker`. Der Worker
-startet `local-runtime/python/onnx_worker.py` mit einem konfigurierten lokalen
-Python-Interpreter. Modell und Tensoren werden als Base64 über `stdin`
-übertragen; der Worker erstellt daraus eine ONNX-Runtime-Session mit dem CPU
-Execution Provider und liefert Tensoren über `stdout` zurück.
+Ein **Modellbündel** sind alle Dateien einer Modellversion: `model.onnx`, Gewichte
+unter ihrem Namen und `resources/<name>`. Sein Schlüssel ist der SHA-256 über die
+sortierten Zeilen `pfad:prüfsumme` — `modelBundleFor` in Node und `bundle_key` in
+Python rechnen ihn gleich (beide Testsuiten prüfen denselben Wert).
 
-```bash
-python3 -m venv .novooa/python
-.novooa/python/bin/python -m pip install -r local-runtime/python/requirements.txt
+Die Runtime spricht den ML-Dienst (Python, `novooa_ml.inference_server`) nur über
+Referenzen an (`SidecarOnnxInferenceRuntime`, `HttpPythonInferenceSidecar`):
+
+```text
+POST /v1/models    {modelKey, source: global|team, files: [{path, sha256, sizeBytes, storePath?}]}
+POST /v1/bundles   {modelKey, source: global, files}   nur vorladen (Katalog-Cache)
+PUT  /v1/bundles/:key/files/:path   Binärstream mit x-sha256 (nur Teammodelle)
+POST /v1/inferences {modelKey, inputs, outputs}
 ```
 
-Der lokale Composition Root injiziert den Interpreterpfad sowie den Pfad zum
-Worker. Dadurch ist die Python-Abhängigkeit weder Teil der Cloud Functions noch
-eine implizite globale Voraussetzung.
+- **Globale Modelle** (`origin = catalog` bzw. Systemmodelle) tragen ihren
+  `storePath`. Der ML-Dienst fragt den gemeinsamen Cache des Servers
+  (`novooa_ml.bundle_cache_server`, `MODEL_CACHE_URL`) und liest das Bündel aus dessen
+  Verzeichnis (`MODEL_SHARED_CACHE_DIR`, nur lesend). Ohne Cache-Dienst lädt er selbst
+  aus `MODEL_STORE_URL` in seinen eigenen Speicher.
+- **Eigene Modelle** (`origin = import`): Fehlen dem ML-Dienst Dateien, antwortet er
+  `409 bundle_files_missing` mit den Pfaden; die Runtime streamt genau diese Dateien
+  und lädt erneut. Sie landen im eigenen Speicher des Stacks (`MODEL_BUNDLE_DIR`).
+- Jede Datei wird beim Schreiben gegen Größe und SHA-256 geprüft; ein Bündel erscheint
+  erst vollständig (atomares Umbenennen). Danach lädt der Dienst
+  `InferenceSession(<bündel>/model.onnx)` über den Pfad, wodurch ONNX Runtime
+  ausgelagerte Gewichte findet.
+
+Der Sessioncache ist nach Bytes begrenzt (`MODEL_SESSION_CACHE_BYTES`, Standard
+4 GiB): Das am längsten ungenutzte Modell fliegt zuerst, das zuletzt geladene bleibt
+auch, wenn es allein größer ist. Bündelspeicher und gemeinsamer Cache verdrängen nach
+`MODEL_BUNDLE_MAX_BYTES` bzw. `MODEL_CACHE_MAX_BYTES` (ohne Wert unbegrenzt).
+
+**Aufteilung pro Server:** Jeder Kunden-Stack hat seinen eigenen ML-Dienst, damit
+Eingaben den Stack nicht verlassen. Der Cache-Dienst ist der einzige Schreiber des
+gemeinsamen Caches und enthält nur öffentliche Katalogmodelle. Ein späterer
+zentraler Inferenzdienst bedient dieselbe Schnittstelle; für die Runtime ändert sich
+nur `PYTHON_INFERENCE_SIDECAR_URL` (dazu käme eine Kunden-Kennung für Teammodelle).
 
 ## Transformationen
 
@@ -775,9 +806,9 @@ oder modellspezifische Logik.
 
 Die Cloud-Inferenz läuft in einem privaten Cloud-Run-Container. Der Container
 verwendet denselben Domain-Use-Case `RunModelInferenceWithSources` wie die
-lokale Variante, jedoch mit Firestore als `ModelCatalog` und Cloud Storage als
-`ModelArtifactReader`. ONNX Runtime und die Transformationsstrategien laufen
-im Container in Python. Dadurch bleiben Katalog, Manifest und Ausführungspfad
+lokale Variante, jedoch mit Firestore als `ModelCatalog` und dem globalen
+Modellspeicher als Quelle aller Modelle (`GlobalModelBundleSources`). ONNX Runtime
+und die Transformationsstrategien laufen im Python-Sidecar des Dienstes. Dadurch bleiben Katalog, Manifest und Ausführungspfad
 identisch; nur die technische Composition unterscheidet sich.
 
 Der HTTP-Adapter nimmt ausschließlich transportierbare Werte entgegen:
@@ -817,14 +848,14 @@ Vor dem Deploy der Function muss der Parameter in
 `functions/.env.<projectId>` auf die HTTPS-Service-URL gesetzt sein.
 
 Der Container hat einen eigenen Runtime-Service-Account. Er erhält nur
-`roles/datastore.user` sowie Lesezugriff auf den Artefakt-Bucket; die
+`roles/datastore.user`; der globale Modellspeicher ist öffentlich lesbar; die
 Task-Worker-Function ist der einzige heutige Aufrufer, weil nur sie
 `modelInference`-Bausteine innerhalb eines Task-Runs ausführt. Künftige
 Backend-Executoren benötigen dieselbe gezielte `roles/run.invoker`-Bindung.
 
-Der lokale Composition Root verdrahtet denselben Use Case mit einem
-Dateisystemkatalog, lokalen Modellartefakten, dem Python-Transformer und der
-ONNX-Runtime.
+Im lokalen Modus (`MODEL_INFERENCE_MODE=local`) verdrahtet derselbe Composition Root
+einen Dateisystemkatalog und lokale Modelldateien (`LocalDirectoryModelBundleSources`);
+das Gateway streamt sie dem Sidecar wie Teammodelle zu.
 
 ### Lokaler Docker-Stack
 
@@ -869,7 +900,8 @@ Der Runtime-Ordner hat die Struktur:
 
 Docker Compose bindet diesen Ordner nur lesend ein. Der Installer wird daher
 auf dem Host ausgeführt; der Gateway kann installierte Modellversionen niemals
-verändern.
+verändern. Gewichtsdateien und Ressourcen gibt man dem Installer wie beim
+Publishing mit (`--external-data`, `--resource`).
 
 Der Python-Sidecar liegt ausschließlich im internen `novooa-private`-Netzwerk und
 besitzt keinen ausgehenden Netzwerkzugang. Das Gateway ist zusätzlich am
@@ -880,60 +912,58 @@ ist aber selbst noch kein vollständig lokaler Aufgaben-Runner: Aufgaben,
 Dateien und Runs stammen dort weiterhin aus Firebase. Die vollständig lokale
 Ausführung benötigt als nächsten Schritt den geplanten SQLite-Task-Runner.
 
-#### Session-Cache
+#### Caches im Cloud-Run-Dienst
 
-Eine Cloud-Run-Instanz besteht aus einem Node-Gateway und einem Python-
-Sidecar. Das Gateway prüft Manifest und Modellverfügbarkeit, löst Artefakte aus
-Cloud Storage auf und hält die zuletzt verwendeten Artefakte im lokalen LRU-
-Cache. Der Sidecar hält unveränderliche Modell-Bundles aus ONNX-Session und
-benannten Zusatzressourcen in einem getrennten LRU-Cache. Sein Schlüssel enthält
-`artifactId`, `versionId`, die ONNX-Prüfsumme sowie Namen und Prüfsummen aller
-Zusatzressourcen. Dadurch wird eine Modellversion nur beim ersten Zugriff einer
-warmen Instanz aus Storage geladen und als ONNX-Session initialisiert.
+Eine Cloud-Run-Instanz besteht aus einem Node-Gateway und einem Python-Sidecar.
+Das Gateway prüft Manifest und Modellverfügbarkeit und schickt dem Sidecar nur
+Referenzen. Der Sidecar lädt Bündel selbst aus dem globalen Modellspeicher
+(`MODEL_STORE_URL`) nach `/tmp`, das in Cloud Run im Arbeitsspeicher liegt; daher
+begrenzen `MODEL_BUNDLE_MAX_BYTES` und `MODEL_SESSION_CACHE_BYTES` in der Vorlage
+beides. Eine Modellversion wird so nur beim ersten Zugriff einer warmen Instanz
+geladen und als ONNX-Session initialisiert.
 
-Zusatzressourcen werden vor dem Einfügen in den Cache vollständig dekodiert und
-gegen ihre SHA-256-Prüfsumme geprüft. Transformationen erhalten bei Bedarf nur
-einen lesenden Zugriff auf deren Bytes, nie einen Dateipfad oder einen
-beschreibbaren Cache-Eintrag. Damit können Modelle etwa Stimmen- oder
-Vokabular-Dateien verwenden, ohne Seiteneffekte zwischen Ausführungen zu
-verursachen.
+Ressourcen werden beim Laden einer Session aus dem geprüften Bündel gelesen.
+Transformationen erhalten nur einen lesenden Zugriff auf deren Bytes, nie einen
+Dateipfad oder einen beschreibbaren Cache-Eintrag. Eingabe- und
+Ausgabetransformationen laufen ebenfalls im Sidecar.
 
-Eingabe- und Ausgabetransformationen laufen im Python-Sidecar. Dadurch
-verwenden sie dieselben Strategieregistries und können dessen Prozesse zwischen
-Anfragen wiederverwenden.
-
-Der Sidecar meldet einen verworfenen Session-Cache-Eintrag explizit zurück.
-Das Gateway lädt dann dieselbe unveränderliche Artefaktversion erneut und
-wiederholt nur diese Inferenz. Cache-Inhalte sind flüchtig; Cloud Storage bleibt
-die geprüfte Quelle der Wahrheit.
+Der Sidecar meldet einen verworfenen Session-Cache-Eintrag explizit zurück
+(`404 model_not_loaded`). Das Gateway lädt dieselbe unveränderliche Modellversion
+erneut und wiederholt nur diese Inferenz. Cache-Inhalte sind flüchtig; der globale
+Modellspeicher bleibt die geprüfte Quelle der Wahrheit.
 
 Die Vorlage `functions/cloudrun/model-inference-service.yaml.template`
 konfiguriert zunächst eine Concurrency von `1`, höchstens zehn Instanzen und
-eine warme Instanz. Vor dem Deployment müssen `NODE_IMAGE` und `SIDECAR_IMAGE`
-durch die beiden Artifact-Registry-Images ersetzt werden. Die Cache-Größen
-werden über `MODEL_ARTIFACT_CACHE_ENTRIES` und
-`MODEL_SESSION_CACHE_ENTRIES` gesteuert.
+eine warme Instanz. Vor dem Deployment müssen `NODE_IMAGE`, `SIDECAR_IMAGE` und
+`MODEL_STORE_URL` ersetzt werden.
 
 ## Betreiber-Publishing
 
 In der ersten Ausbaustufe veröffentlicht ausschließlich novooa
 Systemmodelle. Dazu gibt es keine öffentliche Function und keine
-App-Oberfläche. Der Betreiber startet eine nicht-interaktive TypeScript-CLI,
-die ausschließlich Firestore des angegebenen GCP-Projekts verwendet.
+App-Oberfläche. Der Betreiber startet eine nicht-interaktive TypeScript-CLI. Sie
+lädt die Dateien in den globalen Modellspeicher (Hetzner Object Storage) und
+schreibt den Katalogeintrag in Firestore des angegebenen GCP-Projekts.
 
 ```bash
 gcloud auth application-default login
+export MODEL_STORE_S3_ENDPOINT=https://fsn1.your-objectstorage.com MODEL_STORE_S3_REGION=fsn1 \
+  MODEL_STORE_S3_BUCKET=<bucket> MODEL_STORE_S3_ACCESS_KEY_ID=<schlüssel> MODEL_STORE_S3_SECRET_ACCESS_KEY=<geheimnis>
 npm --prefix functions run models:publish -- \
   --project syscat-90bff \
   --manifest models/mobilenet-v3/model.json \
   --artifact models/mobilenet-v3/model.onnx \
+  [--external-data models/mobilenet-v3/model.onnx.data] [--resource labels=models/mobilenet-v3/labels.json] \
   --dry-run
 ```
 
-Ohne `--dry-run` registriert die CLI den Katalogeintrag und seine technische
-Distribution. Das lokale Artefakt wird dabei nur gegen das Manifest validiert
-und gehasht; es wird nicht in Firebase Storage hochgeladen. Die
-`distribution` im Manifest ist dafür Pflicht. `--python <pfad>` wählt den
+Ohne `--dry-run` lädt die CLI Modell, Gewichte und Ressourcen per Multipart-Upload
+in den globalen Modellspeicher (die Prüfsumme steht in den Objekt-Metadaten) und
+registriert danach den Katalogeintrag. Modellversionen sind unveränderlich: Eine
+vorhandene Datei mit gleicher Prüfsumme wird übersprungen, eine abweichende ist ein
+Fehler. Gewichtsdateien müssen im Ordner des Modells liegen; ihr Dateiname ist der
+Name, unter dem das Modell sie erwartet. Der S3-Schlüssel bleibt beim Betreiber und
+wird nie an Runtimes ausgeliefert. `--python <pfad>` wählt den
 Interpreter für die ONNX-Prüfung; ohne Angabe wird `PYTHON_EXECUTABLE` oder
 `python3` verwendet. Die Betreiberidentität benötigt Schreibzugriff auf
 `modelCatalog`.
@@ -956,12 +986,6 @@ models/mobilenet-v3/
   "artifact": {
     "artifactId": "mobilenet-v3",
     "versionId": "2026-08"
-  },
-  "distribution": {
-    "type": "huggingFace",
-    "repository": "organisation/mobilenet-v3-onnx",
-    "revision": "<40-stelliger-commit-hash>",
-    "path": "model.onnx"
   },
   "contract": {
     "inputs": [{
@@ -994,10 +1018,10 @@ Die CLI validiert Manifest und Modell, prüft das Modell durch das Öffnen einer
 ONNX-Runtime-Session und vergleicht Namen, Datentypen sowie statische
 Tensorformen mit dem Manifest. Gegenwärtig akzeptiert sie Bild- und
 Tensoreingänge, die registrierten Bildtransformationen sowie keine
-Ausgangsnachverarbeitung. Anschließend berechnet sie Größe und SHA-256 und
-speichert den Firestore-Katalogeintrag zusammen mit der technischen
-Distribution. Die Runtime lädt später die durch Commit und Pfad unveränderlich
-referenzierte Datei direkt von Hugging Face und verifiziert sie erneut.
+Ausgangsnachverarbeitung. Anschließend berechnet sie Größe und SHA-256 aller
+Dateien, veröffentlicht sie und speichert den Firestore-Katalogeintrag. Der
+Cache-Dienst eines Servers lädt die Dateien später aus dem öffentlichen
+Modellspeicher und verifiziert sie erneut.
 
 ## Nächste Schritte
 

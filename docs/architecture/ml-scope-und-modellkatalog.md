@@ -49,7 +49,8 @@ Variante.
 Firestore `modelCatalog` bleibt der Master. Die Betreiber-CLI `models:publish`
 bleibt unverändert; lokale Runtimes lesen die Metadaten nach ihrer Firebase-
 Anmeldung direkt aus Firestore. Die Artefakte werden nicht über novooa
-proxied, sondern anhand der katalogisierten Hugging-Face-Quelle direkt geladen.
+proxied, sondern vom Cache-Dienst jedes Servers direkt aus dem globalen
+Modellspeicher (Hetzner Object Storage, öffentlich lesbar) geladen.
 
 ```text
 GET /v1/ml-models/catalog
@@ -57,17 +58,11 @@ POST /v1/ml-models/catalog/:modelId/install
 ```
 
 Der Endpunkt liefert Katalogeinträge samt Manifest als kleine JSON-Nutzlast.
-Die Installation lädt anschließend die in den Infrastrukturmetadaten unter
-`distribution` deklarierte Datei direkt von Hugging Face. Firestore liefert nur
-Metadaten; ein unauthentifizierter Katalogzugriff ist nicht vorgesehen.
-
-Die Runtime schreibt Artefakt und Katalogeintrag über denselben lokalen Pfad:
-
-```text
-.novooa/
-  model-catalog/<base64url-modell-id>.json
-  model-artifacts/<artifact-id>/versions/<version-id>/model.onnx
-```
+Das Cachen lässt anschließend den ML-Dienst die Dateien unter
+`model-artifacts/<artifact-id>/versions/<version-id>/` vorladen; die Runtime speichert
+nur den Katalogeintrag. Firestore liefert nur Metadaten; ein unauthentifizierter
+Katalogzugriff ist nicht vorgesehen. Details:
+[ML-Modelle](../features/ml-modelle.md#modellbündel-und-ml-dienst).
 
 ### Auflagen
 
@@ -75,9 +70,9 @@ Diese vier Punkte sind Bestandteil der Entscheidung, nicht optionale
 Verbesserungen.
 
 **1. Integrität.** Ein Modellkanal in ein Kundennetz ist ein Code-Lieferkanal.
-Der Katalog enthält deshalb eine feste Hugging-Face-Revision sowie die
-SHA-256-Prüfsumme des Artefakts. Die Runtime prüft Größe und Prüfsumme vor der
-Installation.
+Der Katalog enthält deshalb Größe und SHA-256-Prüfsumme jeder Datei; Versionen
+im Modellspeicher sind unveränderlich. Der Cache-Dienst prüft Größe und Prüfsumme,
+bevor ein Bündel sichtbar wird.
 
 **2. Optionalität.** Offline-Aktivierung ist ein Enterprise-Merkmal; solche
 Installationen haben keinen Internetzugang. Der Katalog braucht daher einen
@@ -138,10 +133,9 @@ Katalogeintrag erhält eine `taskType`-Facette (`classification.image`,
 `ocr.text`, `regression.tabular`, `classification.tabular`), über die Suche und
 Filter laufen.
 
-Der Session-Cache wird **nach Bytes** begrenzt, nicht nach Einträgen. Zweihundert
-tabellarische Modelle belegen zusammen etwa ein Megabyte, drei OCR-Modelle über
-hundert. `MODEL_SESSION_CACHE_ENTRIES` behandelt beide Fälle gleich und ist
-deshalb in beide Richtungen falsch dimensioniert.
+Der Session-Cache wird **nach Bytes** begrenzt, nicht nach Einträgen
+(`MODEL_SESSION_CACHE_BYTES`): Zweihundert tabellarische Modelle belegen zusammen
+etwa ein Megabyte, drei OCR-Modelle über hundert.
 
 ## Modellklassen und ONNX-Domänen
 

@@ -51,6 +51,32 @@ void main() {
     expect(client.uploadedBytes, [1, 2, 3]);
   });
 
+  test('uploads weight files before the model completes the import', () async {
+    final client = _Client();
+    final repository = LocalModelCatalogRepository(client, _channel());
+
+    await repository.importEntry(
+      ModelCatalogImport(
+        manifestJson: '{"id":"model"}',
+        artifactLength: 3,
+        openArtifact: () => Stream.value([1, 2, 3]),
+        weights: [
+          ModelImportFile(
+            name: 'model.onnx.data',
+            length: 2,
+            open: () => Stream.value([4, 5]),
+          ),
+        ],
+      ),
+    );
+
+    expect(client.uploadPaths, [
+      '/v1/ml-models/imports/upload-1/external-data/model.onnx.data',
+      '/v1/ml-models/imports/upload-1/artifact',
+    ]);
+    expect(client.uploadedBytes, [1, 2, 3]);
+  });
+
   test('maps an image workflow output and labels it as Bild', () async {
     final repository = LocalModelCatalogRepository(_ImageClient(), _channel());
 
@@ -111,6 +137,7 @@ class _Client extends WorkspaceApiClient {
   int? uploadLength;
   String? uploadContentType;
   List<int> uploadedBytes = [];
+  final List<String> uploadPaths = [];
 
   @override
   Future<Map<String, Object?>> delete(String path) async => const {};
@@ -193,6 +220,7 @@ class _Client extends WorkspaceApiClient {
     Duration? timeout,
   }) async {
     uploadPath = path;
+    uploadPaths.add(path);
     uploadLength = contentLength;
     uploadContentType = contentType;
     uploadedBytes = await body.expand((chunk) => chunk).toList();

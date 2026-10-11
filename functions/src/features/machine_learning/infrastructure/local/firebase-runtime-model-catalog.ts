@@ -1,5 +1,4 @@
 import {modelCatalogEntryFromData} from "../model-catalog-entry-codec.js";
-import {modelArtifactDistributionFromUnknown} from "../model-artifact-distribution.js";
 import {type RuntimeSystemModel, type RuntimeSystemModelCatalog} from "./runtime-system-model-catalog.js";
 
 export interface RuntimeCollectionReader {
@@ -23,9 +22,6 @@ export class FirebaseRuntimeModelCatalog implements RuntimeSystemModelCatalog {
 
   private entryFrom(id: string, data: Record<string, unknown>): RuntimeSystemModel | null {
     if (data.scope !== "system") return null;
-    return {
-      entry: modelCatalogEntryFromData({...data, id} as Parameters<typeof modelCatalogEntryFromData>[0]),
-      distribution: modelArtifactDistributionFromUnknown(data.distribution),
-    };
+    return {entry: modelCatalogEntryFromData({...data, id} as Parameters<typeof modelCatalogEntryFromData>[0])};
   }
 }

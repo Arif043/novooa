@@ -9,12 +9,6 @@
     "artifactId": "piper-de-thorsten-medium",
     "versionId": "c10ece1aade47bb51c153c893d14e5bf8e5b7117"
   },
-  "distribution": {
-    "type": "huggingFace",
-    "repository": "rhasspy/piper-voices",
-    "revision": "c10ece1aade47bb51c153c893d14e5bf8e5b7117",
-    "path": "de/de_DE/thorsten/medium/de_DE-thorsten-medium.onnx"
-  },
   "contract": {
     "inputs": [
       {

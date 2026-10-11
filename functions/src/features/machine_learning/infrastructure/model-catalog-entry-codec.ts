@@ -129,6 +129,7 @@ function artifactFrom(value: unknown): ModelArtifactReference {
     sizeBytes: numberFrom(data.sizeBytes),
     sha256: text(data.sha256, "Die Modell-Prüfsumme fehlt."),
     resources: resourcesFrom(data.resources),
+    ...(data.externalData === undefined ? {} : {externalData: externalDataFrom(data.externalData)}),
   };
   validateModelArtifactReference(reference);
   return reference;
@@ -140,6 +141,14 @@ function resourcesFrom(value: unknown): readonly {name: string; contentType: str
   return value.map((item) => {
     const data = record(item, "Die Modellressource ist ungültig.");
     return {name: text(data.name, "Der Name einer Modellressource fehlt."), contentType: text(data.contentType, "Der Content-Type einer Modellressource fehlt."), sizeBytes: numberFrom(data.sizeBytes), sha256: text(data.sha256, "Die Prüfsumme einer Modellressource fehlt.")};
+  });
+}
+
+function externalDataFrom(value: unknown): readonly {name: string; sizeBytes: number; sha256: string}[] {
+  if (!Array.isArray(value)) throw new Error("Die Gewichtsdateien des Modells sind ungültig.");
+  return value.map((item) => {
+    const data = record(item, "Eine Gewichtsdatei des Modells ist ungültig.");
+    return {name: text(data.name, "Der Name einer Gewichtsdatei fehlt."), sizeBytes: numberFrom(data.sizeBytes), sha256: text(data.sha256, "Die Prüfsumme einer Gewichtsdatei fehlt.")};
   });
 }
 

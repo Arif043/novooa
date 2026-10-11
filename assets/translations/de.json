@@ -588,5 +588,12 @@
     "zeitlimit_sekunden": "Zeitlimit (Sekunden)",
     "zu_pruefender_wert": "Zu prüfender Wert",
     "zuweisung": "Zuweisung"
+  },
+  "machine_learning": {
+    "model_import": {
+      "select_files_hint": "Wähle die .onnx-Datei, bei Bedarf zusammen mit ihren Gewichtsdateien.",
+      "exactly_one_model": "Wähle genau eine .onnx-Datei. Weitere gewählte Dateien gelten als Gewichtsdateien.",
+      "unreadable_file": "Die Datei {name} konnte nicht gelesen werden."
+    }
   }
 }

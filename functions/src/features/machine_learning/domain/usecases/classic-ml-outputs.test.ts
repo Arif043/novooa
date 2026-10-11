@@ -52,7 +52,7 @@ test("combines label and probability of a scikit-learn classifier into one workf
   const useCase = new RunModelInferenceWithSources(
     new Catalog(classifier()),
     new PrepareModelInputs({transform: async ({input}) => floatTensor(input.name, [1, 2], [3, 3])}),
-    new RunModelInference({read: async () => Uint8Array.from([1])}, new Runtime()),
+    new RunModelInference(new Runtime()),
   );
 
   const result = await useCase.execute({teamId: "team-1", modelId: "klassifikator", inputs: [{name: "X", type: "json", value: [[3, 3]]}]});

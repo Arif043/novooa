@@ -5,7 +5,6 @@ import {type ModelArtifactPublication} from "../../domain/repositories/model-art
 import {
   publishSystemModelCommand,
   type OnnxModelValidator,
-  type SystemModelDistributionPublisher,
   type SystemModelPublisher,
 } from "./model-publish-command.js";
 import {type ModelPublishOptions} from "./model-publish-options.js";
@@ -28,18 +27,20 @@ test("publishes a verified system model", async () => {
   assert.equal(publisher.calls, 1);
 });
 
-test("persists a manifest distribution separately from the catalog entry", async () => {
-  const publisher = new Publisher();
-  const distributions = new DistributionPublisher();
-  await publishSystemModelCommand(options(false), {
-    ...dependencies(publisher, new Validator()),
-    distributionPublisher: distributions,
-    manifestFromFile: async () => ({
-      ...manifest(), distribution: distribution(),
-    }),
+test("passes weight files and resources of the options to the artifact", async () => {
+  const requested: Parameters<typeof dependencies>[0][] = [];
+  await publishSystemModelCommand({...options(false), externalDataPaths: ["dir/weights.bin"], resources: [{name: "labels", path: "labels.json"}]}, {
+    ...dependencies(new Publisher(), new Validator()),
+    artifactFromFile: async (file) => {
+      requested.push(file as never);
+      return dependencies(new Publisher(), new Validator()).artifactFromFile();
+    },
   });
 
-  assert.deepEqual(distributions.items, [{modelId: "model", distribution: distribution()}]);
+  assert.deepEqual(requested, [{
+    path: "model.onnx", artifactId: "model", versionId: "1",
+    externalDataPaths: ["dir/weights.bin"], resources: [{name: "labels", path: "labels.json"}],
+  }]);
 });
 
 class Publisher implements SystemModelPublisher {
@@ -56,14 +57,6 @@ class Validator implements OnnxModelValidator {
 
   async validate(): Promise<void> {
     this.calls += 1;
-  }
-}
-
-class DistributionPublisher implements SystemModelDistributionPublisher {
-  items: {modelId: string; distribution: ReturnType<typeof distribution>}[] = [];
-
-  async publish(modelId: string, value: ReturnType<typeof distribution>): Promise<void> {
-    this.items.push({modelId, distribution: value});
   }
 }
 
@@ -88,19 +81,10 @@ function manifest() {
   };
 }
 
-function distribution() {
-  return {
-    type: "huggingFace" as const,
-    repository: "novooa/model",
-    revision: "a".repeat(40),
-    path: "model.onnx",
-  };
-}
-
 function options(dryRun: boolean): ModelPublishOptions {
   return {
     projectId: "project", manifestPath: "model.json", artifactPath: "model.onnx",
-    pythonExecutable: "python3", dryRun,
+    externalDataPaths: [], resources: [], pythonExecutable: "python3", dryRun,
   };
 }
 

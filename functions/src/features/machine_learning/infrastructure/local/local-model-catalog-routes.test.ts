@@ -7,18 +7,13 @@ import test from "node:test";
 import {type ApplicationLogger} from "../../../../shared/logging/application-logger.js";
 import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runtime-realtime-notifier.js";
 import {type ModelCatalogEntry} from "../../domain/entities/model-catalog-entry.js";
-import {type ModelArtifactPublication} from "../../domain/repositories/model-artifact-publisher.js";
 import {type TeamModelCatalog} from "../../domain/repositories/model-catalog.js";
 import {systemModelEntry, systemModelManifestFromUnknown} from "../cli/system-model-manifest.js";
-import {type ModelArtifactDistribution} from "../model-artifact-distribution.js";
 import {LocalModelArtifactPublisher} from "./local-model-artifact-publisher.js";
 import {LocalModelArtifactUploadStore} from "./local-model-artifact-upload-store.js";
 import {modelCatalogRoutes} from "./local-model-catalog-routes.js";
 import {CacheSystemModel} from "../../domain/usecases/cache-system-model.js";
-import {InstallTeamModel} from "../../domain/usecases/install-team-model.js";
-import {CatalogSystemModelSource} from "./catalog-system-model-source.js";
 import {ModelCacheJobs} from "./model-cache-jobs.js";
-import {type ModelArtifactDownloader} from "./local-model-catalog-support.js";
 import {type ModelContractValidator} from "./python-model-contract-validator.js";
 import {type RuntimeSystemModel, type RuntimeSystemModelCatalog} from "./runtime-system-model-catalog.js";
 
@@ -50,16 +45,15 @@ test("installs a team-scoped ONNX model from a manifest and lists it", async () 
   }
 });
 
-test("lists global models without their distribution and caches one in the background", async () => {
+test("lists global models and prefetches one in the background without copying it", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "novooa-global-model-"));
   const catalog = new Catalog();
   const model = globalModel();
-  const downloader = new Downloader();
+  const prefetched: ModelCatalogEntry[] = [];
   const systemModelCatalog = new GlobalCatalog(model);
-  const cacheSystemModel = new CacheSystemModel(
-    catalog, new CatalogSystemModelSource(systemModelCatalog, downloader), new Validator(),
-    new InstallTeamModel(new LocalModelArtifactPublisher(directory), catalog),
-  );
+  const cacheSystemModel = new CacheSystemModel(catalog, systemModelCatalog, new Validator(), {
+    prefetch: async (entry) => { prefetched.push(entry); },
+  });
   const modelCache = {cacheSystemModel, jobs: new ModelCacheJobs("team-1", cacheSystemModel, new LocalRuntimeRealtimeNotifier(), new Logger())};
   const handler = testingRoutes(modelCatalogRoutes, {
     catalog: catalog,
@@ -79,7 +73,6 @@ test("lists global models without their distribution and caches one in the backg
     const local = await handler.handle({method: "GET", url: "/v1/ml-models", body: {}});
 
     assert.deepEqual(listed?.body, {items: [model.entry]});
-    assert.equal(JSON.stringify(listed?.body).includes("huggingFace"), false);
     assert.deepEqual(started, {statusCode: 202, body: {modelId: "example-model", state: "downloading"}});
     assert.equal(missing?.statusCode, 404);
     assert.deepEqual(again, {statusCode: 200, body: {modelId: "example-model", state: "cached"}});
@@ -87,7 +80,8 @@ test("lists global models without their distribution and caches one in the backg
     assert.deepEqual(catalog.entries[0]?.scope, {type: "team", teamId: "team-1"});
     assert.equal(catalog.entries[0]?.origin, "catalog");
     assert.equal((local?.body as {items: {origin?: string}[]}).items[0]?.origin, "catalog");
-    assert.equal(downloader.downloaded, true);
+    assert.deepEqual(prefetched.map((entry) => entry.id), ["example-model"]);
+    await assert.rejects(readFile(path.join(directory, "model-artifacts/example-model/versions/1/model.onnx")));
   } finally {
     await rm(directory, {recursive: true, force: true});
   }
@@ -275,15 +269,6 @@ class GlobalCatalog implements RuntimeSystemModelCatalog {
   }
 }
 
-class Downloader implements ModelArtifactDownloader {
-  downloaded = false;
-
-  async download(reference: ModelCatalogEntry["artifactReference"], distribution: ModelArtifactDistribution): Promise<ModelArtifactPublication> {
-    this.downloaded = distribution.type === "huggingFace";
-    return {reference, content: artifactContent()};
-  }
-}
-
 class Logger implements ApplicationLogger {
   error(): void {}
   exception(): void {}
@@ -322,11 +307,5 @@ function globalModel(): RuntimeSystemModel {
       sizeBytes: 4,
       sha256: "0".repeat(64),
     }),
-    distribution: {
-      type: "huggingFace",
-      repository: "novooa/example-model",
-      revision: "a".repeat(40),
-      path: "model.onnx",
-    },
   };
 }

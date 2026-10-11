@@ -1,11 +1,10 @@
-import path from "node:path";
 import {type RuntimeExecutor} from "../../../../db/database.js";
 import {type ApplicationLogger} from "../../../../shared/logging/application-logger.js";
+import {type ModelArtifactPrefetcher} from "../../domain/repositories/model-artifact-prefetcher.js";
 import {CacheSystemModel} from "../../domain/usecases/cache-system-model.js";
-import {InstallTeamModel} from "../../domain/usecases/install-team-model.js";
-import {CatalogSystemModelSource} from "./catalog-system-model-source.js";
-import {HuggingFaceModelArtifactDownloader} from "./hugging-face-model-artifact-downloader.js";
-import {LocalModelArtifactPublisher} from "./local-model-artifact-publisher.js";
+import {HttpPythonInferenceSidecar} from "../http-python-inference-sidecar.js";
+import {RuntimeModelBundleSources} from "../model-bundle-sources.js";
+import {SidecarOnnxInferenceRuntime} from "../python-inference-sidecar.js";
 import {ModelCacheJobs} from "./model-cache-jobs.js";
 import {PythonModelContractValidator, UnavailablePythonModelContractValidator} from "./python-model-contract-validator.js";
 import {type RuntimeSystemModelCatalog} from "./runtime-system-model-catalog.js";
@@ -25,21 +24,28 @@ export type LocalModelCacheOptions = {
   logger: ApplicationLogger;
 };
 
-/** Ein Cache je Arbeitsbereich, geteilt von Routen (Hintergrund-Download) und Inferenzpfad (Nachladen). */
+/**
+ * Ein Cache je Arbeitsbereich, geteilt von Routen (Hintergrund-Vorladen) und Inferenzpfad (Nachladen).
+ * Katalogmodelle werden nicht in die Runtime kopiert: Der ML-Dienst holt sie aus dem globalen Modellspeicher.
+ */
 export function createLocalModelCache(options: LocalModelCacheOptions): LocalModelCache {
   const sidecarUrl = process.env.PYTHON_INFERENCE_SIDECAR_URL?.trim();
-  const downloader = new HuggingFaceModelArtifactDownloader(
-    path.join(options.runtimeRoot, "model-cache"), process.env.HF_TOKEN?.trim() || undefined,
-  );
-  const catalog = new SQLiteModelCatalog(options.database);
   const cacheSystemModel = new CacheSystemModel(
-    catalog,
-    new CatalogSystemModelSource(options.systemModelCatalog, downloader),
+    new SQLiteModelCatalog(options.database),
+    options.systemModelCatalog,
     sidecarUrl ? new PythonModelContractValidator(sidecarUrl) : new UnavailablePythonModelContractValidator(),
-    new InstallTeamModel(new LocalModelArtifactPublisher(options.runtimeRoot), catalog),
+    sidecarUrl ? prefetcherFor(sidecarUrl, options.runtimeRoot) : unavailablePrefetcher,
   );
   return {
     cacheSystemModel,
     jobs: new ModelCacheJobs(options.teamId, cacheSystemModel, options.notifier, options.logger),
   };
 }
+
+function prefetcherFor(sidecarUrl: string, runtimeRoot: string): ModelArtifactPrefetcher {
+  return new SidecarOnnxInferenceRuntime(new HttpPythonInferenceSidecar(sidecarUrl), new RuntimeModelBundleSources(runtimeRoot));
+}
+
+const unavailablePrefetcher: ModelArtifactPrefetcher = {
+  prefetch: () => Promise.reject(new Error("Die lokale Python-Inferenz ist nicht verfügbar.")),
+};

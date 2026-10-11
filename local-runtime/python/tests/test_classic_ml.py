@@ -101,19 +101,16 @@ class StringInputTest(unittest.TestCase):
 
 @unittest.skipUnless(HAS_ONNXRUNTIME, "onnxruntime fehlt")
 class SklearnModelTest(unittest.TestCase):
-    """Echte scikit-learn-Modelle (siehe fixtures/sklearn/build_fixtures.py) durch den ONNX-Worker."""
+    """Echte scikit-learn-Modelle (siehe fixtures/sklearn/build_fixtures.py), geladen per Pfad wie im ML-Dienst."""
 
     def execute(self, fixture, inputs, outputs):
         import onnxruntime
 
-        from onnx_worker import execute
+        from novooa_ml.model_execution import run_model, session_factory
 
-        payload = {
-            "modelBase64": base64.b64encode((FIXTURES / f"{fixture}.onnx").read_bytes()).decode(),
-            "inputs": inputs,
-            "outputs": outputs,
-        }
-        return {output["name"]: output for output in execute(payload, numpy, onnxruntime)["outputs"]}
+        session = session_factory(onnxruntime)(str(FIXTURES / f"{fixture}.onnx"))
+        payload = {"inputs": inputs, "outputs": outputs}
+        return {output["name"]: output for output in run_model(session, payload, numpy)}
 
     def test_classifier_with_text_classes_and_zipmap(self):
         outputs = self.execute(

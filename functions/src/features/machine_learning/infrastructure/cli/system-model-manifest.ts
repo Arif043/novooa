@@ -5,10 +5,6 @@ import {type ModelContract} from "../../domain/entities/model-contract.js";
 import {isModelTask, modelTasks, type ModelTask} from "../../domain/entities/model-task.js";
 import {modelContractFromUnknown} from "../model-contract-codec.js";
 import {modelTranslationsFromUnknown} from "../model-catalog-entry-codec.js";
-import {
-  modelArtifactDistributionFromUnknown,
-  type ModelArtifactDistribution,
-} from "../model-artifact-distribution.js";
 
 export type SystemModelManifest = {
   id: string;
@@ -19,7 +15,6 @@ export type SystemModelManifest = {
   languages: readonly string[];
   tags: readonly string[];
   artifact: {artifactId: string; versionId: string};
-  distribution?: ModelArtifactDistribution;
   contract: ModelContract;
 };
 
@@ -37,15 +32,10 @@ export function systemModelManifestFromUnknown(value: unknown): SystemModelManif
     description: text(data.description, "Die Modellbeschreibung fehlt."),
     ...(translations === undefined ? {} : {translations}),
     task: task(data.task), languages: languages(data.languages),
-    tags: tags(data.tags), artifact: artifact(data.artifact), distribution: distribution(data.distribution),
+    tags: tags(data.tags), artifact: artifact(data.artifact),
     contract: modelContractFromUnknown(data.contract),
   };
   return manifest;
-}
-
-function distribution(value: unknown): ModelArtifactDistribution | undefined {
-  if (value === undefined) return undefined;
-  return modelArtifactDistributionFromUnknown(value);
 }
 
 export function systemModelEntry(
