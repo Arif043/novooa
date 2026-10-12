@@ -100,6 +100,7 @@ Detailtiefe zu Datenmodell, Auth, Persistenz und Trigger →
 # Client
 flutter pub get
 flutter run -d <device>
+flutter run -d chrome -t lib/main_preview.dart   # UI ohne Backend/Lizenz
 flutter analyze
 flutter test
 
@@ -151,6 +152,7 @@ npm run deploy         # firebase deploy --only functions
 | Bereich               | Datei                                                              | Inhalt                                                  |
 | --------------------- | ------------------------------------------------------------------ | ------------------------------------------------------- |
 | Cross-cutting         | [`docs/architecture.md`](./docs/architecture.md)                   | Datenmodell, Auth, Persistenz, Trigger, Telemetrie      |
+| UI-Vorschau           | [`docs/architecture/ui-vorschau.md`](./docs/architecture/ui-vorschau.md) | UI ohne Backend/Lizenz starten (`lib/main_preview.dart`, VS-Code-Profil) |
 | SQLite-Normalisierung | [`docs/architecture/sqlite-normalisierung.md`](./docs/architecture/sqlite-normalisierung.md) | Tabellenprüfung und offene Abhängigkeiten |
 | Betriebsvarianten     | [`docs/architecture/betriebsvarianten.md`](./docs/architecture/betriebsvarianten.md) | Clients × Cloud/Standalone: Blocker und Umsetzungsschritte |
 | Feature „Aufgabe"     | [`docs/features/aufgabe.md`](./docs/features/aufgabe.md)           | Task Builder — Domain, UI, Genkit-Flows, DoD            |

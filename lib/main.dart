@@ -16,6 +16,7 @@ import 'core/runtime/runtime_variant_switcher.dart';
 import 'core/runtime/workspace_capabilities.dart';
 import 'core/firebase/firebase_emulator_config.dart';
 import 'core/firebase/firestore_web_cache.dart';
+import 'core/localization/localized_app.dart';
 import 'core/logging/logger.dart';
 import 'core/logging/application_bloc_observer.dart';
 import 'core/logging/developer_client_logger.dart';
@@ -87,7 +88,7 @@ Future<void> _bootRuntimeKind(RuntimeKind kind) async {
           runtimeProfile: runtimeProfile,
           configureApplication: _configureApplication,
           createApplication: (profile) =>
-              _localized(MyApp(runtimeProfile: profile)),
+              localizedApp(MyApp(runtimeProfile: profile)),
           // Abmelden vergisst Sitzung, Adresse und Varianten-Wahl
           // vollständig und ruft diesen Callback. Ein erneutes Auflösen der
           // Startentscheidung landet danach nativ korrekt wieder beim
@@ -107,20 +108,8 @@ Future<void> _bootRuntimeKind(RuntimeKind kind) async {
   runApp(
     RuntimeVariantSwitcherScope(
       switcher: const _AppRuntimeVariantSwitcher(),
-      child: _localized(MyApp(runtimeProfile: runtimeProfile)),
+      child: localizedApp(MyApp(runtimeProfile: runtimeProfile)),
     ),
-  );
-}
-
-/// Englisch ist Standard und Rückfall; Deutsch und Türkisch kommen hinzu. Ohne gespeicherte
-/// Wahl gilt die Gerätesprache, sofern unterstützt.
-Widget _localized(Widget app) {
-  return EasyLocalization(
-    supportedLocales: const [Locale('en'), Locale('de'), Locale('tr')],
-    fallbackLocale: const Locale('en'),
-    path: 'assets/translations',
-    useOnlyLangCode: true,
-    child: app,
   );
 }
 

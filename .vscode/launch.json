@@ -26,6 +26,22 @@
             ]
         },
         {
+            // Oberfläche ohne Backend, Firebase und Lizenz; Daten nur im
+            // Speicher (docs/architecture/ui-vorschau.md).
+            "name": "novooa UI-Vorschau (Chrome)",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "chrome",
+            "program": "lib/main_preview.dart"
+        },
+        {
+            "name": "novooa UI-Vorschau (macOS)",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "macos",
+            "program": "lib/main_preview.dart"
+        },
+        {
             "name": "syscat2 (release mode)",
             "request": "launch",
             "type": "dart",

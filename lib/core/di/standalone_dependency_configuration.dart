@@ -132,52 +132,22 @@ import '../../features/notifications/infrastructure/repositories/local_app_notif
 import '../../features/notifications/infrastructure/repositories/local_relay_push_device_repository.dart';
 import '../../features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import '../../features/notifications/presentation/cubits/app_notifications_cubit.dart';
-import '../runtime/runtime_credential_store.dart';
-import '../runtime/runtime_endpoint.dart';
 import '../runtime/runtime_profile.dart';
 import '../network/workspace_api_client.dart';
+import 'standalone_transport_registration.dart';
 import '../network/workspace_binary_client.dart';
 import '../network/workspace_realtime_channel.dart';
-import '../network/session_aware_workspace_api_client.dart';
 import '../routing/app_router.dart';
-import '../runtime/runtime_session_events.dart';
 import 'standalone_workspace_dependency_configuration.dart';
 import 'standalone_workspace_transfer_dependency_configuration.dart';
 
 Future<void> configureStandaloneDependencies(
   GetIt locator,
-  RuntimeProfile profile,
-) async {
-  final credentials = SecureRuntimeCredentialStore();
-  final endpoint = RuntimeEndpoint.fromUri(profile.workspaceApiUri);
-  locator.registerLazySingleton<WorkspaceApiClient>(
-    () => SessionAwareWorkspaceApiClient(
-      HttpWorkspaceApiClient(
-        baseUri: profile.workspaceApiUri,
-        authHeaderProvider: () async {
-          final token = await credentials.sessionToken(endpoint.address);
-          return token == null ? null : 'Bearer $token';
-        },
-      ),
-      locator<RuntimeSessionEvents>(),
-    ),
-  );
-  locator.registerLazySingleton<WorkspaceBinaryClient>(
-    () => HttpWorkspaceBinaryClient(
-      baseUri: profile.workspaceApiUri,
-      authHeaderProvider: () async {
-        final token = await credentials.sessionToken(endpoint.address);
-        return token == null ? null : 'Bearer $token';
-      },
-    ),
-  );
-  locator.registerLazySingleton<WorkspaceRealtimeChannel>(
-    () => WorkspaceRealtimeChannel(
-      profile.workspaceApiUri,
-      locator<WorkspaceApiClient>(),
-    ),
-    dispose: (channel) => channel.close(),
-  );
+  RuntimeProfile profile, {
+  StandaloneTransportRegistration registerTransport =
+      registerHttpWorkspaceTransport,
+}) async {
+  registerTransport(locator, profile);
   locator
     ..registerLazySingleton<AuthRepository>(
       () => const LocalWorkspaceAuthRepository('local-user'),

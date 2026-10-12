@@ -14,6 +14,7 @@ import 'package:image_picker/image_picker.dart';
 import '../runtime/runtime_profile.dart';
 import '../runtime/workspace_capabilities.dart';
 import 'standalone_dependency_configuration.dart';
+import 'standalone_transport_registration.dart';
 import 'package:syscat2/features/language_models/domain/repositories/language_model_defaults_repository.dart';
 import 'package:syscat2/features/language_models/domain/usecases/watch_language_model_defaults.dart';
 import 'package:syscat2/features/language_models/domain/usecases/save_language_model_defaults.dart';
@@ -157,13 +158,20 @@ import 'password_settings_dependencies.dart';
 
 final serviceLocator = GetIt.instance;
 
-Future<void> configureDependencies({RuntimeProfile? runtimeProfile}) async {
+Future<void> configureDependencies({
+  RuntimeProfile? runtimeProfile,
+  StandaloneTransportRegistration? standaloneTransport,
+}) async {
   final profile = runtimeProfile ?? RuntimeProfile.fromEnvironment();
   serviceLocator.registerLazySingleton(
     () => WorkspaceCapabilities.forKind(profile.kind),
   );
   if (profile.isStandalone) {
-    await configureStandaloneDependencies(serviceLocator, profile);
+    await configureStandaloneDependencies(
+      serviceLocator,
+      profile,
+      registerTransport: standaloneTransport ?? registerHttpWorkspaceTransport,
+    );
   } else {
     _configureCloudDependencies();
   }
