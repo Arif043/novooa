@@ -457,7 +457,7 @@ Future<_Cubit> _openEventForm(WidgetTester tester) async {
   );
   await tester.pumpWidget(_app(cubit));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Auslöser hinzufügen'));
+  await tester.tap(find.text('Ersten Auslöser erstellen'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Ereignis'));
   await tester.pumpAndSettle();

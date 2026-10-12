@@ -1,11 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/routing/app_router.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/widgets/ios_overlays.dart';
 import '../cubits/schedule_cubit.dart';
 import '../cubits/schedule_state.dart';
 import '../widgets/create_schedule_trigger_dialog.dart';
+import '../widgets/schedule_empty_state.dart';
 import '../widgets/task_trigger_list.dart';
 import '../widgets/schedule_theme.dart';
 
@@ -28,47 +31,56 @@ class ScheduleView extends StatelessWidget {
         color: Theme.of(context).colorScheme.surfaceContainerLowest,
         child: SafeArea(
           child: BlocBuilder<ScheduleCubit, ScheduleState>(
-            builder: (context, state) => LayoutBuilder(
-              builder: (context, constraints) {
-                final gutter = constraints.maxWidth < 600 ? 20.0 : 40.0;
-                final inset = constraints.maxWidth > 1080
-                    ? (constraints.maxWidth - 1000) / 2
-                    : gutter;
-                return CustomScrollView(
-                  slivers: [
-                    SliverPadding(
-                      padding: EdgeInsets.fromLTRB(inset, 32, inset, 24),
-                      sliver: SliverToBoxAdapter(
-                        child: _ScheduleHeader(state: state),
-                      ),
-                    ),
-                    if (state.status == ScheduleStatus.ready &&
-                        state.triggers.isNotEmpty)
-                      SliverPadding(
-                        padding: EdgeInsets.fromLTRB(inset, 0, inset, 40),
-                        sliver: TaskTriggerList(
-                          triggers: state.triggers,
-                          cubit: context.read<ScheduleCubit>(),
-                        ),
-                      )
-                    else
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: Padding(
-                          padding: EdgeInsets.all(gutter),
-                          child: _SchedulePlaceholder(state: state),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
+            builder: (context, state) => _isEmpty(state)
+                ? ScheduleEmptyState(
+                    hasTasks: state.tasks.isNotEmpty,
+                    onCreateTrigger: () => _create(context),
+                    onCreateTask: () => context.go(AppRouter.home),
+                  )
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final gutter = constraints.maxWidth < 600 ? 20.0 : 40.0;
+                      final inset = constraints.maxWidth > 1080
+                          ? (constraints.maxWidth - 1000) / 2
+                          : gutter;
+                      return CustomScrollView(
+                        slivers: [
+                          SliverPadding(
+                            padding: EdgeInsets.fromLTRB(inset, 32, inset, 24),
+                            sliver: SliverToBoxAdapter(
+                              child: _ScheduleHeader(state: state),
+                            ),
+                          ),
+                          if (state.status == ScheduleStatus.ready &&
+                              state.triggers.isNotEmpty)
+                            SliverPadding(
+                              padding: EdgeInsets.fromLTRB(inset, 0, inset, 40),
+                              sliver: TaskTriggerList(
+                                triggers: state.triggers,
+                                cubit: context.read<ScheduleCubit>(),
+                              ),
+                            )
+                          else
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: Padding(
+                                padding: EdgeInsets.all(gutter),
+                                child: _SchedulePlaceholder(state: state),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
           ),
         ),
       ),
     ),
   );
 }
+
+bool _isEmpty(ScheduleState state) =>
+    state.status == ScheduleStatus.ready && state.triggers.isEmpty;
 
 void _create(BuildContext context) {
   final cubit = context.read<ScheduleCubit>();

@@ -587,7 +587,13 @@
     "workflow_wert_oder_variable_suchen": "Search workflow value or variable",
     "zeitlimit_sekunden": "Time limit (seconds)",
     "zu_pruefender_wert": "Value to check",
-    "zuweisung": "Assignment"
+    "zuweisung": "Assignment",
+    "schedule_empty_title": "Your tasks. At the right time.",
+    "schedule_empty_body": "Start tasks at a fixed time or as soon as an event occurs.",
+    "schedule_empty_create": "Create first trigger",
+    "schedule_empty_no_task_title": "Everything starts with a task",
+    "schedule_empty_no_task_body": "Create a task first. Then you decide here when it starts automatically.",
+    "schedule_empty_create_task": "Create task"
   },
   "machine_learning": {
     "model_import": {

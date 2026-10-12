@@ -543,6 +543,12 @@ abstract class  LocaleKeys {
   static const ui_zeitlimit_sekunden = 'ui.zeitlimit_sekunden';
   static const ui_zu_pruefender_wert = 'ui.zu_pruefender_wert';
   static const ui_zuweisung = 'ui.zuweisung';
+  static const ui_schedule_empty_title = 'ui.schedule_empty_title';
+  static const ui_schedule_empty_body = 'ui.schedule_empty_body';
+  static const ui_schedule_empty_create = 'ui.schedule_empty_create';
+  static const ui_schedule_empty_no_task_title = 'ui.schedule_empty_no_task_title';
+  static const ui_schedule_empty_no_task_body = 'ui.schedule_empty_no_task_body';
+  static const ui_schedule_empty_create_task = 'ui.schedule_empty_create_task';
   static const ui = 'ui';
   static const machine_learning_model_import_select_files_hint = 'machine_learning.model_import.select_files_hint';
   static const machine_learning_model_import_exactly_one_model = 'machine_learning.model_import.exactly_one_model';

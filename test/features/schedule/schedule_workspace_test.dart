@@ -17,6 +17,7 @@ import 'package:syscat2/features/schedule/presentation/cubits/schedule_cubit.dar
 import 'package:syscat2/features/schedule/presentation/cubits/schedule_state.dart';
 import 'package:syscat2/features/schedule/presentation/pages/schedule_page.dart';
 import 'package:syscat2/features/schedule/presentation/widgets/create_schedule_trigger_dialog.dart';
+import 'package:syscat2/features/schedule/presentation/widgets/schedule_empty_state.dart';
 import 'package:syscat2/features/schedule/presentation/widgets/schedule_choice_control.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 
@@ -104,7 +105,7 @@ void main() {
     );
     await tester.pumpWidget(_app(cubit));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Auslöser hinzufügen'));
+    await tester.tap(find.text('Ersten Auslöser erstellen'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Wöchentlich'));
     await tester.pumpAndSettle();
@@ -194,7 +195,7 @@ void main() {
       }
 
       await capture('novooa-schedule');
-      await tester.tap(find.text('Auslöser hinzufügen'));
+      await tester.tap(find.text('Ersten Auslöser erstellen'));
       await tester.pumpAndSettle();
       await capture('novooa-schedule-form');
     });
@@ -226,6 +227,37 @@ void main() {
       }
     },
   );
+
+  testWidgets('ohne Auslöser zeigt der Zeitplan nur die zentrale Einladung', (
+    tester,
+  ) async {
+    final cubit = _Cubit(
+      ScheduleState(status: ScheduleStatus.ready, tasks: [Task.empty()]),
+    );
+    await tester.pumpWidget(_app(cubit));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ScheduleEmptyState), findsOneWidget);
+    expect(find.text('Zeitplan'), findsNothing);
+    expect(find.text('Auslöser hinzufügen'), findsNothing);
+  });
+
+  testWidgets('mit Auslöser erscheint die bisherige Oberfläche', (
+    tester,
+  ) async {
+    final cubit = _Cubit(
+      ScheduleState(
+        status: ScheduleStatus.ready,
+        tasks: [Task.empty()],
+        triggers: const [_trigger],
+      ),
+    );
+    await tester.pumpWidget(_app(cubit));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ScheduleEmptyState), findsNothing);
+    expect(find.text('Auslöser hinzufügen'), findsOneWidget);
+  });
 
   testWidgets('toggle and confirmed deletion keep existing actions', (
     tester,
@@ -266,7 +298,7 @@ void main() {
     )..analysis = analysis;
     await tester.pumpWidget(_app(cubit));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Auslöser hinzufügen'));
+    await tester.tap(find.text('Ersten Auslöser erstellen'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ereignis'));
     await tester.pumpAndSettle();
@@ -328,7 +360,7 @@ void main() {
     cubit.fail = true;
     await tester.pumpWidget(_app(cubit));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Auslöser hinzufügen'));
+    await tester.tap(find.text('Ersten Auslöser erstellen'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Auslöser erstellen'));
     await tester.tap(find.text('Auslöser erstellen'));
@@ -369,7 +401,8 @@ void main() {
       );
       await tester.pumpWidget(_app(cubit, dark: true, scale: 2));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Auslöser hinzufügen'));
+      await tester.ensureVisible(find.text('Ersten Auslöser erstellen'));
+      await tester.tap(find.text('Ersten Auslöser erstellen'));
       await tester.pumpAndSettle();
       expect(find.byType(ScheduleChoiceControl<ScheduleKind>), findsOneWidget);
       await tester.ensureVisible(find.text('Auslöser erstellen'));

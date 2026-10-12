@@ -587,7 +587,13 @@
     "workflow_wert_oder_variable_suchen": "Workflow-Wert oder Variable suchen",
     "zeitlimit_sekunden": "Zeitlimit (Sekunden)",
     "zu_pruefender_wert": "Zu prüfender Wert",
-    "zuweisung": "Zuweisung"
+    "zuweisung": "Zuweisung",
+    "schedule_empty_title": "Deine Aufgaben. Zur richtigen Zeit.",
+    "schedule_empty_body": "Starte Aufgaben zu einer festen Zeit oder sobald ein Ereignis eintritt.",
+    "schedule_empty_create": "Ersten Auslöser erstellen",
+    "schedule_empty_no_task_title": "Alles beginnt mit einer Aufgabe",
+    "schedule_empty_no_task_body": "Erstelle zuerst eine Aufgabe. Hier legst du anschließend fest, wann sie automatisch startet.",
+    "schedule_empty_create_task": "Aufgabe erstellen"
   },
   "machine_learning": {
     "model_import": {

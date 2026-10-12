@@ -587,7 +587,13 @@
     "workflow_wert_oder_variable_suchen": "İş akışı değeri veya değişken ara",
     "zeitlimit_sekunden": "Zaman sınırı (saniye)",
     "zu_pruefender_wert": "Denetlenecek değer",
-    "zuweisung": "Atama"
+    "zuweisung": "Atama",
+    "schedule_empty_title": "Görevlerin. Tam zamanında.",
+    "schedule_empty_body": "Görevleri sabit bir saatte veya bir olay gerçekleştiğinde başlat.",
+    "schedule_empty_create": "İlk tetikleyiciyi oluştur",
+    "schedule_empty_no_task_title": "Her şey bir görevle başlar",
+    "schedule_empty_no_task_body": "Önce bir görev oluştur. Ardından burada otomatik olarak ne zaman başlayacağını belirlersin.",
+    "schedule_empty_create_task": "Görev oluştur"
   },
   "machine_learning": {
     "model_import": {
