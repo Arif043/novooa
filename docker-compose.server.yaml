@@ -1,7 +1,7 @@
 name: novooa-server
 
 # Einmal pro Server: der ML-Dienst, den sich alle Stacks (docker-compose.local.yaml) teilen.
-# Jede Runtime meldet sich mit der Arbeitsbereichs-ID ihrer Lizenz an und erhält ein eigenes Token;
+# Jede Runtime meldet sich mit ihrer Lizenz-ID an und erhält ein eigenes Token;
 # Teammodelle bleiben je Runtime getrennt, Katalogmodelle liegen einmal im Speicher.
 #
 #   docker compose -f docker-compose.server.yaml up --build --detach

@@ -72,6 +72,12 @@ docker compose -f docker-compose.local.yaml up --build --detach    # der Stack
 curl http://127.0.0.1:8090/healthz
 ```
 
+Dasselbe als npm-Skripte: `npm --prefix functions run local-runtime:docker:deploy`
+startet bzw. aktualisiert den ML-Dienst, baut den Stack neu und wartet, bis die
+Runtime antwortet. `ml:docker:tenants` listet die angemeldeten Runtimes,
+`ml:docker:logs` zeigt das Log des ML-Dienstes, `local-runtime:docker:down-all`
+stoppt beides (erst den Stack, sonst ist das Netz `novooa-ml` noch belegt).
+
 Das Volume `novooa-data` enthält SQLite und lokale Dateien. Der ML-Dienst
 (`docker-compose.server.yaml`) erhält weder dieses Volume noch einen
 veröffentlichten Host-Port; alle Stacks des Rechners teilen ihn. Katalogmodelle lädt
