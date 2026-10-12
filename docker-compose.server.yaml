@@ -1,0 +1,50 @@
+name: novooa-server
+
+# Einmal pro Server: der ML-Dienst, den sich alle Stacks (docker-compose.local.yaml) teilen.
+# Jede Runtime meldet sich mit der Arbeitsbereichs-ID ihrer Lizenz an und erhält ein eigenes Token;
+# Teammodelle bleiben je Runtime getrennt, Katalogmodelle liegen einmal im Speicher.
+#
+#   docker compose -f docker-compose.server.yaml up --build --detach
+#   docker compose -f docker-compose.server.yaml exec novooa-ml python -m novooa_ml.tenants list
+
+services:
+  novooa-ml:
+    build:
+      context: .
+      dockerfile: functions/Dockerfile.model-inference-sidecar
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8081"
+      # Globaler Modellspeicher (Hetzner Object Storage, öffentlich lesbar) für Katalogmodelle.
+      MODEL_STORE_URL: ${NOVOOA_MODEL_STORE_URL:-}
+      MODEL_BUNDLE_MAX_BYTES: ${NOVOOA_ML_BUNDLE_MAX_BYTES:-}
+      MODEL_TEAM_MAX_BYTES: ${NOVOOA_ML_TEAM_MAX_BYTES:-}
+      MODEL_TENANT_SESSION_BYTES: ${NOVOOA_ML_TENANT_SESSION_BYTES:-}
+      ML_MAX_TENANTS: ${NOVOOA_ML_MAX_TENANTS:-}
+    expose:
+      - "8081"
+    networks:
+      - novooa-ml
+      - novooa-ml-egress
+    volumes:
+      - novooa-ml-data:/var/lib/novooa-ml
+    # Rechenplätze und Speicherbudget leitet der Dienst aus diesen Grenzen ab; der Rest bleibt den Runtimes.
+    cpus: ${NOVOOA_ML_CPUS:-2}
+    mem_limit: ${NOVOOA_ML_MEMORY_LIMIT:-8g}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/healthz')"]
+      interval: 5s
+      timeout: 2s
+      retries: 12
+
+networks:
+  # Intern: nur die Runtimes der Stacks erreichen den ML-Dienst, er selbst kommt darüber nicht ins Internet.
+  novooa-ml:
+    name: novooa-ml
+    internal: true
+  # Nur für den Download aus dem globalen Modellspeicher.
+  novooa-ml-egress:
+
+volumes:
+  novooa-ml-data:

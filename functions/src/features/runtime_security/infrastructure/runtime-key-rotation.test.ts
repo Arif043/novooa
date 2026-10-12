@@ -5,11 +5,13 @@ import {join} from "node:path";
 import test from "node:test";
 import {EncryptedSQLiteLanguageModelSecretStore} from "../../language_models/infrastructure/local/encrypted-sqlite-language-model-secret-store.js";
 import {FileRuntimeLicenseStore} from "../../licensing/infrastructure/local/file-local-runtime-license-store.js";
+import {FileMlTenantTokenStore} from "../../machine_learning/infrastructure/local/file-ml-tenant-token-store.js";
 import {RotateRuntimeMasterKey} from "../domain/usecases/rotate-runtime-master-key.js";
 import {EnvelopeRuntimeFieldCipher} from "./envelope-runtime-field-cipher.js";
 import {FileRuntimeKeyRepository} from "./file-runtime-key-repository.js";
 import {LocalRuntimeSecretRotationStore} from "./local-runtime-secret-rotation-store.js";
 import {parseRuntimeKeyring} from "./runtime-keyring.js";
+import {RuntimeSecretFileAccess} from "./runtime-secret-file-access.js";
 import {rotationFixture} from "./runtime-rotation-test-fixture.js";
 
 test("rotates SQLite secrets and license data without changing their payload ciphertext", async () => {
@@ -102,3 +104,19 @@ async function verifyFixture(fixture: Fixture): Promise<void> {
   assert.equal(await store.read("model/b"), "key-b");
   assert.equal((await new FileRuntimeLicenseStore(fixture.root, cipher).load())?.activationSecret, "activation-secret");
 }
+
+test("rotates the stored ML service token along with the other secrets", async () => {
+  const fixture = await rotationFixture();
+  try {
+    const before = new EnvelopeRuntimeFieldCipher(await readFile(fixture.keyFile, "utf8"));
+    await new FileMlTenantTokenStore(fixture.root, before, new RuntimeSecretFileAccess()).save({tenantId: "workspace-a", token: "nml_secret"});
+
+    assert.equal(await rotationWorkflow(fixture).execute(), 4);
+
+    const after = new EnvelopeRuntimeFieldCipher(await readFile(fixture.keyFile, "utf8"));
+    const stored = await new FileMlTenantTokenStore(fixture.root, after, new RuntimeSecretFileAccess()).load();
+    assert.deepEqual(stored, {tenantId: "workspace-a", token: "nml_secret"});
+  } finally {
+    await fixture.cleanup();
+  }
+});

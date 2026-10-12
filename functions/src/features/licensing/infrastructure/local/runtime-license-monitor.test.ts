@@ -83,3 +83,24 @@ test("stop cancels the pending check and schedules nothing more", async () => {
   assert.equal(checks, 0);
   assert.equal(scheduler.delays.length, 1);
 });
+
+test("cleans up after a definite loss of the license but not when the gateway is unreachable", async () => {
+  const results: (RuntimeLicenseCheck | Error)[] = ["active", "revoked", new Error("offline"), "notActivated"];
+  let losses = 0;
+  const scheduler = new ManualScheduler();
+  const monitor = new RuntimeLicenseMonitor({
+    check: async () => {
+      const result = results.shift();
+      if (result instanceof Error) throw result;
+      return result ?? "active";
+    },
+    report: () => undefined, schedule: scheduler.schedule, random: () => 0,
+    onLicenseLost: async () => { losses += 1; },
+  });
+
+  monitor.start();
+  for (let check = 0; check < 4; check += 1) await scheduler.runNext();
+
+  assert.equal(losses, 2);
+  await monitor.stop();
+});

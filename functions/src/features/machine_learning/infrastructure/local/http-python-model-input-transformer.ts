@@ -1,3 +1,4 @@
+import {type MlServiceJsonClient} from "../ml-service-http.js";
 import {validateModelInputSource} from "../../domain/entities/model-input-source.js";
 import {type ModelTensor} from "../../domain/entities/model-tensor.js";
 import {
@@ -9,37 +10,16 @@ import {
   transformedModelTensorFromJson,
 } from "./python-image-input-transformer-codec.js";
 
-export interface PythonTransformHttpClient {
-  post(url: string, body: string): Promise<unknown>;
-}
-
 export class HttpPythonModelInputTransformer implements ModelInputTransformer {
-  constructor(
-    private readonly sidecarUrl: string,
-    private readonly httpClient: PythonTransformHttpClient = new FetchPythonTransformHttpClient(),
-  ) {}
+  constructor(private readonly client: MlServiceJsonClient) {}
 
   async transform(request: ModelInputTransformationRequest): Promise<ModelTensor> {
     validateModelInputSource(request.source, request.input);
     if (request.source.type === "tensor") return tensorFrom(request);
     // Welche Quellen unterstützt werden, entscheidet der Python-Sidecar (und schon beim Import
     // die Vertragsprüfung); eine zweite Liste hier würde nur auseinanderlaufen.
-    const payload = await this.httpClient.post(
-      new URL("/v1/input-transforms", this.sidecarUrl).toString(),
-      pythonModelInputTransformationJson(request),
-    );
+    const payload = await this.client.post("/v1/input-transforms", pythonModelInputTransformationJson(request));
     return transformedModelTensorFromJson(JSON.stringify(payload));
-  }
-}
-
-export class FetchPythonTransformHttpClient implements PythonTransformHttpClient {
-  async post(url: string, body: string): Promise<unknown> {
-    const response = await fetch(url, {
-      method: "POST", headers: {"content-type": "application/json"}, body,
-    });
-    const payload = await response.json() as unknown;
-    if (!response.ok) throw new Error(errorMessage(payload));
-    return payload;
   }
 }
 
@@ -52,13 +32,4 @@ function tensorFrom(request: ModelInputTransformationRequest): ModelTensor {
     throw new Error("Der Name der Tensorquelle stimmt nicht mit dem Modellvertrag überein.");
   }
   return request.source.tensor;
-}
-
-function errorMessage(value: unknown): string {
-  if (isRecord(value) && typeof value.error === "string") return value.error;
-  return "Der Python-Sidecar konnte die Modelleingabe nicht transformieren.";
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
 }

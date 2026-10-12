@@ -4,6 +4,7 @@ import {type AddressInfo} from "node:net";
 import {Readable} from "node:stream";
 import test from "node:test";
 import {HttpPythonInferenceSidecar} from "./http-python-inference-sidecar.js";
+import {MlServiceHttp} from "./ml-service-http.js";
 import {modelBundleFor} from "./model-artifact-bundle.js";
 import {BundleFilesMissingError} from "./python-inference-sidecar.js";
 
@@ -15,7 +16,7 @@ test("streams a team file with its length and checksum", async () => {
   await withServer({status: 201, body: {status: "received"}}, async (sidecar, requests) => {
     const bundle = modelBundleFor(reference);
 
-    await sidecar.upload(bundle, bundle.files[0], Readable.from([Buffer.from("onnx")]));
+    await sidecar.upload(bundle, bundle.files[0], () => Readable.from([Buffer.from("onnx")]));
 
     assert.equal(requests[0]?.url, `/v1/bundles/${bundle.key}/files/model.onnx`);
     assert.equal(requests[0]?.headers["content-length"], "4");
@@ -53,7 +54,8 @@ async function withServer(
   });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   try {
-    await action(new HttpPythonInferenceSidecar(`http://127.0.0.1:${(server.address() as AddressInfo).port}`), requests);
+    const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    await action(new HttpPythonInferenceSidecar(new MlServiceHttp(url)), requests);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

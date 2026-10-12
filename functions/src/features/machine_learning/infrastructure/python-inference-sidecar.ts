@@ -17,7 +17,8 @@ import {type ModelBundleSource, type ModelBundleSources} from "./model-bundle-so
 export interface PythonInferenceSidecar {
   load(bundle: ModelBundle, source: ModelBundleSource): Promise<void>;
   prefetch(bundle: ModelBundle): Promise<void>;
-  upload(bundle: ModelBundle, file: ModelBundleFile, content: Readable): Promise<void>;
+  /** `open` liefert den Inhalt je Versuch neu, damit ein Upload wiederholt werden kann. */
+  upload(bundle: ModelBundle, file: ModelBundleFile, open: () => Readable): Promise<void>;
   infer(request: SidecarInferenceRequest): Promise<readonly ModelRuntimeOutput[]>;
 }
 
@@ -92,7 +93,7 @@ export class SidecarOnnxInferenceRuntime implements ModelInferenceRuntime, Model
 
   private async uploadMissing(bundle: ModelBundle, missing: readonly string[]): Promise<void> {
     for (const file of bundle.files.filter((item) => missing.includes(item.path))) {
-      await this.sidecar.upload(bundle, file, this.sources.teamFileContent(file));
+      await this.sidecar.upload(bundle, file, () => this.sources.teamFileContent(file));
     }
   }
 

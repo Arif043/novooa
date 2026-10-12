@@ -3,6 +3,7 @@ import {type ApplicationLogger} from "../../../../shared/logging/application-log
 import {type ModelArtifactPrefetcher} from "../../domain/repositories/model-artifact-prefetcher.js";
 import {CacheSystemModel} from "../../domain/usecases/cache-system-model.js";
 import {HttpPythonInferenceSidecar} from "../http-python-inference-sidecar.js";
+import {type MlServiceHttp} from "../ml-service-http.js";
 import {RuntimeModelBundleSources} from "../model-bundle-sources.js";
 import {SidecarOnnxInferenceRuntime} from "../python-inference-sidecar.js";
 import {ModelCacheJobs} from "./model-cache-jobs.js";
@@ -22,6 +23,7 @@ export type LocalModelCacheOptions = {
   systemModelCatalog: RuntimeSystemModelCatalog;
   notifier: {publish(topic: string): void};
   logger: ApplicationLogger;
+  mlService?: MlServiceHttp;
 };
 
 /**
@@ -29,12 +31,12 @@ export type LocalModelCacheOptions = {
  * Katalogmodelle werden nicht in die Runtime kopiert: Der ML-Dienst holt sie aus dem globalen Modellspeicher.
  */
 export function createLocalModelCache(options: LocalModelCacheOptions): LocalModelCache {
-  const sidecarUrl = process.env.PYTHON_INFERENCE_SIDECAR_URL?.trim();
+  const {mlService} = options;
   const cacheSystemModel = new CacheSystemModel(
     new SQLiteModelCatalog(options.database),
     options.systemModelCatalog,
-    sidecarUrl ? new PythonModelContractValidator(sidecarUrl) : new UnavailablePythonModelContractValidator(),
-    sidecarUrl ? prefetcherFor(sidecarUrl, options.runtimeRoot) : unavailablePrefetcher,
+    mlService ? new PythonModelContractValidator(mlService) : new UnavailablePythonModelContractValidator(),
+    mlService ? prefetcherFor(mlService, options.runtimeRoot) : unavailablePrefetcher,
   );
   return {
     cacheSystemModel,
@@ -42,8 +44,8 @@ export function createLocalModelCache(options: LocalModelCacheOptions): LocalMod
   };
 }
 
-function prefetcherFor(sidecarUrl: string, runtimeRoot: string): ModelArtifactPrefetcher {
-  return new SidecarOnnxInferenceRuntime(new HttpPythonInferenceSidecar(sidecarUrl), new RuntimeModelBundleSources(runtimeRoot));
+function prefetcherFor(mlService: MlServiceHttp, runtimeRoot: string): ModelArtifactPrefetcher {
+  return new SidecarOnnxInferenceRuntime(new HttpPythonInferenceSidecar(mlService), new RuntimeModelBundleSources(runtimeRoot));
 }
 
 const unavailablePrefetcher: ModelArtifactPrefetcher = {

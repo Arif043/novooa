@@ -83,8 +83,9 @@ class Sidecar implements PythonInferenceSidecar {
     this.prefetches += 1;
   }
 
-  async upload(_bundle: ModelBundle, file: ModelBundleFile): Promise<void> {
+  async upload(_bundle: ModelBundle, file: ModelBundleFile, open: () => Readable): Promise<void> {
     this.uploads.push(file.path);
+    open().destroy();
     this.missing = this.missing.filter((path) => path !== file.path);
   }
 

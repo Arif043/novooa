@@ -1,1 +1,1 @@
-"""Wie der ML-Dienst ein Modellbündel findet: eigener Speicher, gemeinsamer Cache oder globaler Modellspeicher."""
+"""Wie der ML-Dienst ein Modellbündel findet: globaler Speicher des Servers oder Teamspeicher des Mandanten."""

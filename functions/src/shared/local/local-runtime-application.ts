@@ -1,3 +1,4 @@
+import {type LocalMlService} from "../../features/machine_learning/infrastructure/local/local-ml-service.js";
 import {type MailConnectorListCache} from "../../features/communication/infrastructure/local/mail-connector-list-cache.js";
 import {RuntimeWakeupHandler} from "../../features/communication/infrastructure/local/runtime-wakeup-handler.js";
 import {type RuntimeDatabase} from "../../db/database.js";
@@ -19,6 +20,7 @@ export type LocalRuntimeApplicationOptions = {
   isLicenseActive: () => boolean;
   signedLicense: () => SignedRuntimeLicense | null;
   activeLicenseActivation: () => RuntimeLicenseActivation | null;
+  mlService: LocalMlService | undefined;
 };
 
 /**

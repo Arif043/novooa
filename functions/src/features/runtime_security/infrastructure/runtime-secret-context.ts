@@ -9,3 +9,8 @@ export function licenseSecretContext(payload: Record<string, unknown>): readonly
   }
   return ["runtime-license", ...identifiers as string[], "activation-secret"];
 }
+
+export function mlServiceTokenContext(tenantId: string): readonly string[] {
+  if (!tenantId.length) throw new Error("Ungültiger Feldkontext für den ML-Dienst.");
+  return ["ml-service", tenantId, "token"];
+}

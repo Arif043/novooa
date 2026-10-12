@@ -5,6 +5,7 @@ import {PrepareModelInputs} from "../../domain/usecases/prepare-model-inputs.js"
 import {RunModelInferenceWithSources} from "../../domain/usecases/run-model-inference-with-sources.js";
 import {RunModelInference} from "../../domain/usecases/run-model-inference.js";
 import {HttpPythonInferenceSidecar} from "../http-python-inference-sidecar.js";
+import {type MlServiceHttp} from "../ml-service-http.js";
 import {RuntimeModelBundleSources} from "../model-bundle-sources.js";
 import {SidecarOnnxInferenceRuntime} from "../python-inference-sidecar.js";
 import {HttpPythonModelInputTransformer} from "./http-python-model-input-transformer.js";
@@ -13,11 +14,11 @@ import {SQLiteModelCatalog} from "./sqlite-model-catalog.js";
 export function createLocalSidecarModelInference(
   database: RuntimeExecutor,
   runtimeRoot: string,
-  sidecarUrl: string,
+  mlService: MlServiceHttp,
   cacheSystemModel?: CacheSystemModel,
 ): RunModelInferenceWithSources {
   const runtime = new SidecarOnnxInferenceRuntime(
-    new HttpPythonInferenceSidecar(sidecarUrl),
+    new HttpPythonInferenceSidecar(mlService),
     new RuntimeModelBundleSources(runtimeRoot),
   );
   return new RunModelInferenceWithSources(
@@ -25,7 +26,7 @@ export function createLocalSidecarModelInference(
     cacheSystemModel === undefined
       ? new SQLiteModelCatalog(database)
       : new SelfCachingModelCatalog(new SQLiteModelCatalog(database), cacheSystemModel),
-    new PrepareModelInputs(new HttpPythonModelInputTransformer(sidecarUrl)),
+    new PrepareModelInputs(new HttpPythonModelInputTransformer(mlService)),
     new RunModelInference(runtime),
   );
 }

@@ -5,29 +5,15 @@ from pathlib import Path
 
 import numpy
 
-from bundle_test_support import FakeGlobalStore, bundle_file, file_json, payload_for
-from novooa_model_cache.server import SharedBundleCache
-from novooa_bundles.bundle_file import bundle_key
-from novooa_ml.bundles.bundle_resolver import BundleResolver
+from bundle_test_support import TENANT_A, FakeGlobalStore, UnlimitedQueue, bundle_file, payload_for
 from novooa_bundles.bundle_store import BundleStore
+from novooa_ml.bundles.bundle_resolver import BundleResolver
+from novooa_ml.bundles.team_stores import TeamStores
 from novooa_ml.model_requests import ModelService
 from novooa_ml.session_cache import SessionCache
 from novooa_ml.tensor_codec import decode_tensor, encode_tensor
 
 HAS_ONNX = all(importlib.util.find_spec(name) is not None for name in ["onnx", "onnxruntime"])
-
-
-class SharedBundleCacheTest(unittest.TestCase):
-    def test_installs_global_bundles_and_rejects_files_without_store_path(self):
-        files = [bundle_file("model.onnx", b"model", "model-artifacts/a/versions/1/model.onnx")]
-        store = BundleStore(tempfile.mkdtemp())
-        cache = SharedBundleCache(store, FakeGlobalStore({"model.onnx": b"model"}))
-
-        self.assertEqual(cache.ensure(payload_for(files)), {"status": "ready"})
-        self.assertIsNotNone(store.path_for(bundle_key(files)))
-        team_files = [bundle_file("model.onnx", b"model")]
-        with self.assertRaises(ValueError):
-            cache.ensure({"modelKey": bundle_key(team_files), "files": [file_json(file) for file in team_files]})
 
 
 @unittest.skipUnless(HAS_ONNX, "onnx und onnxruntime fehlen")
@@ -42,12 +28,13 @@ class ExternalDataModelTest(unittest.TestCase):
             bundle_file("model.onnx", contents["model.onnx"], "model-artifacts/m/versions/1/model.onnx"),
             bundle_file("weights.bin", contents["weights.bin"], "model-artifacts/m/versions/1/weights.bin"),
         ]
-        resolver = BundleResolver(BundleStore(tempfile.mkdtemp()), FakeGlobalStore(contents))
-        service = ModelService(resolver, SessionCache(1024, session_factory(onnxruntime)), numpy)
+        root = Path(tempfile.mkdtemp())
+        resolver = BundleResolver(BundleStore(root / "global"), FakeGlobalStore(contents), TeamStores(root / "teams"))
+        service = ModelService(resolver, SessionCache(1024, session_factory(onnxruntime, 1)), numpy, UnlimitedQueue())
         payload = payload_for(files)
-        service.load(payload)
+        service.load(TENANT_A, payload)
 
-        response = service.execute({
+        response = service.execute(TENANT_A, {
             "modelKey": payload["modelKey"],
             "inputs": [encode_tensor("x", numpy.array([[1, 2, 3]], dtype=numpy.float32), numpy)],
             "outputs": [{"name": "y", "transformations": []}],

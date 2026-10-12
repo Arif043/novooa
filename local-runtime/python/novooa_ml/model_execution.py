@@ -14,9 +14,14 @@ def runtime_dependencies():
         ) from error
 
 
-def session_factory(onnxruntime):
-    # Laden über den Pfad: So findet ONNX Runtime ausgelagerte Gewichte (External Data) neben model.onnx.
-    return lambda model_path: onnxruntime.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+def session_factory(onnxruntime, intra_op_threads=None):
+    """Laden über den Pfad: So findet ONNX Runtime ausgelagerte Gewichte (External Data) neben model.onnx."""
+    options = onnxruntime.SessionOptions()
+    if intra_op_threads is not None:
+        # Jede Rechnung bekommt einen festen Anteil der Kerne; die Warteschlange begrenzt, wie viele parallel laufen.
+        options.intra_op_num_threads = intra_op_threads
+        options.inter_op_num_threads = 1
+    return lambda model_path: onnxruntime.InferenceSession(model_path, options, providers=["CPUExecutionProvider"])
 
 
 def input_arrays(payload, numpy):

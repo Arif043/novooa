@@ -418,45 +418,103 @@ unter ihrem Namen und `resources/<name>`. Sein Schlüssel ist der SHA-256 über 
 sortierten Zeilen `pfad:prüfsumme` — `modelBundleFor` in Node und `bundle_key` in
 Python rechnen ihn gleich (beide Testsuiten prüfen denselben Wert).
 
-Der Python-Code ist dreigeteilt (`local-runtime/python/`):
-`novooa_bundles` enthält den gemeinsamen Bündelcode (Schlüssel, Speicher mit
-Verdrängung, geprüfter Download; nur Standardbibliothek), `novooa_ml` den ML-Dienst
-und `novooa_model_cache` den Cache-Dienst. Der Cache-Dienst hat ein eigenes, schlankes
-Image (`functions/Dockerfile.model-cache`) ohne numpy, onnxruntime und espeak-ng.
+Der Python-Code liegt unter `local-runtime/python/`: `novooa_bundles` enthält den
+Bündelcode (Schlüssel, Speicher mit Verdrängung, geprüfter Download; nur
+Standardbibliothek), `novooa_ml` den ML-Dienst.
+
+**Ein ML-Dienst pro Server.** Alle Stacks eines Servers teilen sich einen ML-Dienst
+(`docker-compose.server.yaml`). Katalogmodelle liegen dadurch nur einmal auf der
+Platte und im Speicher; Teammodelle bleiben je Runtime getrennt.
 
 Die Runtime spricht den ML-Dienst (Python, `novooa_ml.inference_server`) nur über
-Referenzen an (`SidecarOnnxInferenceRuntime`, `HttpPythonInferenceSidecar`):
+Referenzen an (`SidecarOnnxInferenceRuntime`, `HttpPythonInferenceSidecar`, alle
+Anfragen über `MlServiceHttp`):
 
 ```text
-POST /v1/models    {modelKey, source: global|team, files: [{path, sha256, sizeBytes, storePath?}]}
-POST /v1/bundles   {modelKey, source: global, files}   nur vorladen (Katalog-Cache)
-PUT  /v1/bundles/:key/files/:path   Binärstream mit x-sha256 (nur Teammodelle)
-POST /v1/inferences {modelKey, inputs, outputs}
+POST   /v1/tenants        {tenantId}   → 201 {token}; 409 tenant_exists   (ohne Anmeldung)
+DELETE /v1/tenants/self                 Abmelden: Token ungültig, Teammodelle gelöscht
+POST   /v1/models         {modelKey, source: global|team, files: [{path, sha256, sizeBytes, storePath?}]}
+POST   /v1/bundles        {modelKey, source: global, files}   nur vorladen (Katalog-Cache)
+PUT    /v1/bundles/:key/files/:path   Binärstream mit x-sha256 (nur Teammodelle)
+POST   /v1/inferences     {modelKey, inputs, outputs}
 ```
 
+Alle Anfragen außer der Anmeldung tragen `Authorization: Bearer <token>`.
+
+#### Mandanten
+
+- **Kennung** ist die Arbeitsbereichs-ID der Lizenz (`teams.id`, ohne Angabe beim
+  Ausstellen gleich der Lizenz-ID, einer UUID). Sie ist kein Geheimnis und dient nie
+  als Token. Lizenzen deshalb ohne lesbare `workspace-id` ausstellen.
+- **Anmeldung:** Bei der ersten Anfrage meldet sich die Runtime mit ihrer Kennung an
+  (`MlTenantSession`). Der ML-Dienst erzeugt ein Token (`nml_…`, 32 Zufallsbytes),
+  speichert nur dessen SHA-256 (`tenants.sqlite3`) und gibt es einmal zurück. Die
+  Runtime legt es verschlüsselt unter `credentials/ml-service-token.json` ab; der
+  Schlüsselwechsel verschlüsselt es mit um. Wer eine Kennung zuerst anmeldet, erhält
+  sie; ist sie vergeben, meldet der Dienst `409`.
+- **Abmeldung:** Ergibt die Lizenzprüfung (`RuntimeLicenseMonitor`) eindeutig, dass
+  keine gültige Lizenz mehr besteht (widerrufen, abgelaufen, freigegeben), sendet die
+  Runtime `DELETE /v1/tenants/self`. Ist das Lizenz-Gateway nicht erreichbar, passiert
+  nichts. Der ML-Dienst hält nur Kopien: Teammodelle liegen im Original in der
+  Runtime, das Token lässt sich neu holen. Wird die Lizenz wieder gültig, meldet sich
+  die Runtime neu an und lädt Teammodelle bei Bedarf erneut hoch.
+- **`401`:** Ein ungültiges Token (z. B. vom Betreiber gelöscht) ersetzt die Runtime
+  einmal durch eine neue Anmeldung.
+- **Trennung:** Teammodelle und ihre Sitzungen hängen an der jeweiligen Registrierung,
+  nicht an der Kennung. Eine neu vergebene Kennung kommt so nie an Reste ihres
+  Vorgängers.
+- **Verwaltung** im Container (später über den Agenten des Dashboards):
+  `python -m novooa_ml.tenants list` und `python -m novooa_ml.tenants delete <kennung>`.
+- **Ohne Mandanten** (`ML_TENANCY=off`): Ein Dienst für genau einen Nutzer, ohne
+  Token, z. B. der Sidecar im Cloud-Run-Pod.
+
+**Grenze:** Vorab belegen kann eine Kennung nur, wer die UUID eines anderen Stacks
+kennt. Im ML-Netz sind nur Runtimes; Script-Bausteine haben keinen Zugang. Die
+Abmeldung ist Aufräumen, kein Schutz gegen eine manipulierte Runtime — dafür gibt es
+den Verwaltungsbefehl.
+
+#### Bündel
+
 - **Globale Modelle** (`origin = catalog` bzw. Systemmodelle) tragen ihren
-  `storePath`. Der ML-Dienst fragt den gemeinsamen Cache des Servers
-  (`novooa-model-cache`, `MODEL_CACHE_URL`) und liest das Bündel aus dessen
-  Verzeichnis (`MODEL_SHARED_CACHE_DIR`, nur lesend). Ohne Cache-Dienst lädt er selbst
-  aus `MODEL_STORE_URL` in seinen eigenen Speicher.
+  `storePath`. Der ML-Dienst lädt sie einmal aus `MODEL_STORE_URL` in seinen
+  Speicher (`<ML_DATA_DIR>/bundles/global`); alle Mandanten nutzen dasselbe Bündel
+  und dieselbe Sitzung.
 - **Eigene Modelle** (`origin = import`): Fehlen dem ML-Dienst Dateien, antwortet er
   `409 bundle_files_missing` mit den Pfaden; die Runtime streamt genau diese Dateien
-  und lädt erneut. Sie landen im eigenen Speicher des Stacks (`MODEL_BUNDLE_DIR`).
+  und lädt erneut. Sie landen im Teamspeicher des Mandanten
+  (`<ML_DATA_DIR>/bundles/teams/<registrierung>`).
 - Jede Datei wird beim Schreiben gegen Größe und SHA-256 geprüft; ein Bündel erscheint
   erst vollständig (atomares Umbenennen). Danach lädt der Dienst
   `InferenceSession(<bündel>/model.onnx)` über den Pfad, wodurch ONNX Runtime
   ausgelagerte Gewichte findet.
 
-Der Sessioncache ist nach Bytes begrenzt (`MODEL_SESSION_CACHE_BYTES`, Standard
-4 GiB): Das am längsten ungenutzte Modell fliegt zuerst, das zuletzt geladene bleibt
-auch, wenn es allein größer ist. Bündelspeicher und gemeinsamer Cache verdrängen nach
-`MODEL_BUNDLE_MAX_BYTES` bzw. `MODEL_CACHE_MAX_BYTES` (ohne Wert unbegrenzt).
+#### Ressourcen und Warteschlange
 
-**Aufteilung pro Server:** Jeder Kunden-Stack hat seinen eigenen ML-Dienst, damit
-Eingaben den Stack nicht verlassen. Der Cache-Dienst ist der einzige Schreiber des
-gemeinsamen Caches und enthält nur öffentliche Katalogmodelle. Ein späterer
-zentraler Inferenzdienst bedient dieselbe Schnittstelle; für die Runtime ändert sich
-nur `PYTHON_INFERENCE_SIDECAR_URL` (dazu käme eine Kunden-Kennung für Teammodelle).
+Der Dienst richtet sich nach dem, was seinem Container zusteht (cgroup `cpu.max`,
+`memory.max`), nicht nach der Größe des Servers:
+
+| Wert | Standard | Variable |
+|---|---|---|
+| Threads je Rechnung | min(4, CPUs) | `ML_INTRA_OP_THREADS` |
+| Gleichzeitige Rechnungen | CPUs ÷ Threads | `ML_COMPUTE_SLOTS` |
+| Speicher für geladene Modelle | 70 % des Container-Speichers | `MODEL_SESSION_CACHE_BYTES` |
+| Davon je Mandant (Teammodelle) | unbegrenzt | `MODEL_TENANT_SESSION_BYTES` |
+| Gleichzeitig je Mandant | Rechenplätze − 1 | `ML_TENANT_CONCURRENCY` |
+| Platte für globale Bündel / je Teamspeicher | unbegrenzt | `MODEL_BUNDLE_MAX_BYTES` / `MODEL_TEAM_MAX_BYTES` |
+| Mandanten | 50 | `ML_MAX_TENANTS` |
+
+- **Vor dem Laden** schafft der Sitzungscache Platz (am längsten ungenutzt zuerst,
+  bei Teammodellen zuerst aus dem eigenen Anteil). Passt ein Modell nie hinein,
+  antwortet der Dienst `507 model_too_large`.
+- **Warteschlange:** Laden, Vorverarbeitung und Inferenz laufen durch eine
+  Warteschlange (`FairInMemoryQueue` hinter `InferenceQueue`). Jeder Mandant hat eine
+  eigene, sie werden reihum bedient. Warten zu viele Anfragen eines Mandanten
+  (32) oder wartet eine zu lange (5 Minuten), antwortet der Dienst `429` mit
+  `Retry-After`; die Runtime versucht es mit wachsendem Abstand bis zu 2 Minuten
+  erneut.
+- **Ein Prozess:** onnxruntime gibt während der Rechnung die Python-Sperre frei.
+  Mehrere Prozesse (dann mit gemeinsamer Warteschlange, z. B. Redis) lohnen erst,
+  wenn ein Lasttest zeigt, dass die Vor- und Nachverarbeitung bremst.
 
 ## Transformationen
 
@@ -1026,7 +1084,7 @@ Tensorformen mit dem Manifest. Gegenwärtig akzeptiert sie Bild- und
 Tensoreingänge, die registrierten Bildtransformationen sowie keine
 Ausgangsnachverarbeitung. Anschließend berechnet sie Größe und SHA-256 aller
 Dateien, veröffentlicht sie und speichert den Firestore-Katalogeintrag. Der
-Cache-Dienst eines Servers lädt die Dateien später aus dem öffentlichen
+ML-Dienst eines Servers lädt die Dateien später aus dem öffentlichen
 Modellspeicher und verifiziert sie erneut.
 
 ## Nächste Schritte

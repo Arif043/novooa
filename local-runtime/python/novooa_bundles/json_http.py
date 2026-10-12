@@ -3,15 +3,17 @@ from http.server import BaseHTTPRequestHandler
 
 
 class JsonRequestHandler(BaseHTTPRequestHandler):
-    """Gemeinsame Grundlage von ML-Dienst und Cache-Dienst: JSON lesen und antworten, ohne Zugriffsprotokoll."""
+    """Grundlage der HTTP-Dienste: JSON lesen und antworten, ohne Zugriffsprotokoll."""
 
     def read_json(self):
         length = int(self.headers.get("content-length", "0"))
         return json.loads(self.rfile.read(length))
 
-    def respond(self, status, body):
+    def respond(self, status, body, headers=None):
         content = json.dumps(body).encode("utf-8")
         self.send_response(status)
+        for name, value in (headers or {}).items():
+            self.send_header(name, value)
         self.send_header("content-type", "application/json")
         self.send_header("content-length", str(len(content)))
         self.end_headers()

@@ -26,6 +26,8 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: "8081"
+      # Nur das Gateway nutzt diesen Dienst: keine Mandanten, keine Anmeldung.
+      ML_TENANCY: "off"
     expose:
       - "8081"
     networks:

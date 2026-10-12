@@ -9,6 +9,7 @@ import {type RuntimeLicenseContext} from "../../features/licensing/domain/entiti
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {CurrentRuntimeFieldCipher} from "../../features/runtime_security/infrastructure/current-runtime-field-cipher.js";
 import {createRuntimeKeyring} from "../../features/runtime_security/infrastructure/runtime-keyring.js";
+import {RuntimeSecretFileAccess} from "../../features/runtime_security/infrastructure/runtime-secret-file-access.js";
 import {LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
 import {openLocalRuntimeDatabase} from "./local-runtime-database.js";
 import {bootstrapLocalRuntime} from "./local-runtime-server-bootstrap.js";
@@ -51,7 +52,7 @@ async function activatedRuntimeFixture(t: TestContext) {
   const database = await openLocalRuntimeDatabase({databasePath: ":memory:",
     migrationsDirectory: resolve(__dirname, "../../../drizzle")});
   const runtime = await bootstrapLocalRuntime({database, runtimeRoot,
-    fieldCipher: new CurrentRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring())), licenses: activatableLicenses(),
+    fieldCipher: new CurrentRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring())), secretFileAccess: new RuntimeSecretFileAccess(), licenses: activatableLicenses(),
     cors: LocalRuntimeCorsPolicy.fromEnvironment(), webDirectory: undefined, port: 0});
   let closed = false;
   const closeHttp = async () => { if (!closed) { closed = true; await runtime.closeHttp(); } };
@@ -78,7 +79,7 @@ function postJson(base: string, path: string, body: unknown): Promise<Response> 
 test("starts the runtime HTTP server with the new keyring configuration", async () => {
   const database = connectRuntimeDatabase(":memory:");
   const {server, application, closeHttp} = await bootstrapLocalRuntime({
-    database, runtimeRoot: "/unused", fieldCipher: new CurrentRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring())),
+    database, runtimeRoot: "/unused", fieldCipher: new CurrentRuntimeFieldCipher(JSON.stringify(createRuntimeKeyring())), secretFileAccess: new RuntimeSecretFileAccess(),
     licenses: inactiveLicenses(), cors: LocalRuntimeCorsPolicy.fromEnvironment(), webDirectory: undefined, port: 0,
   });
   try {

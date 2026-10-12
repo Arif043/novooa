@@ -5,7 +5,9 @@ import {type RuntimeDatabase} from "../../db/database.js";
 import {ActivateRuntime} from "../../features/licensing/domain/usecases/activate-runtime.js";
 import {type RuntimeLicenseService} from "../../features/licensing/infrastructure/local/local-runtime-license-manager.js";
 import {RuntimeLicenseMonitor} from "../../features/licensing/infrastructure/local/runtime-license-monitor.js";
+import {localMlServiceFromEnvironment, type LocalMlService} from "../../features/machine_learning/infrastructure/local/local-ml-service.js";
 import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
+import {type RuntimeSecretFileAccess} from "../../features/runtime_security/infrastructure/runtime-secret-file-access.js";
 import {LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
 import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {type LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
@@ -23,6 +25,8 @@ type BootstrapOptions = {
   database: RuntimeDatabase;
   runtimeRoot: string;
   fieldCipher: SensitiveFieldCipher;
+  /** Sperre für die verschlüsselten Dateien unter `credentials/`, geteilt mit dem Schlüsselwechsel. */
+  secretFileAccess: RuntimeSecretFileAccess;
   licenses: RuntimeLicenseService;
   cors: LocalRuntimeCorsPolicy;
   webDirectory: string | undefined;
@@ -37,6 +41,7 @@ type RuntimeShared = {
   realtimeConnections: LocalRuntimeRealtimeConnections;
   mailConnectors: MailConnectorListCache;
   application: LocalRuntimeApplication;
+  mlService: LocalMlService | undefined;
 };
 
 export async function bootstrapLocalRuntime(options: BootstrapOptions): Promise<{
@@ -47,7 +52,7 @@ export async function bootstrapLocalRuntime(options: BootstrapOptions): Promise<
     const restored = await options.licenses.restore();
     if (restored !== null) await shared.application.activate(restored);
     const http = await listenForRequests(options, shared);
-    const licenseMonitor = licenseMonitorFor(options.licenses);
+    const licenseMonitor = licenseMonitorFor(options.licenses, shared.mlService);
     licenseMonitor.start();
     const realtimeGuard = realtimeGuardFor(options.licenses, shared);
     realtimeGuard.start();
@@ -68,14 +73,18 @@ function sharedFor(options: BootstrapOptions): RuntimeShared {
   const {database, runtimeRoot, fieldCipher, licenses} = options;
   const notifier = new LocalRuntimeRealtimeNotifier();
   const mailConnectors = new MailConnectorListCache();
+  const mlService = localMlServiceFromEnvironment({
+    runtimeRoot, cipher: fieldCipher, secretFileAccess: options.secretFileAccess,
+    tenantId: () => licenses.activeContext()?.workspaceId ?? null,
+  });
   const application = new LocalRuntimeApplication({
-    database, runtimeRoot, fieldCipher, realtimeNotifier: notifier, mailConnectors,
+    database, runtimeRoot, fieldCipher, realtimeNotifier: notifier, mailConnectors, mlService,
     isLicenseActive: () => licenses.activeContext() !== null,
     signedLicense: () => licenses.signedActiveLicense(),
     activeLicenseActivation: () => licenses.activeActivation(),
   });
   return {
-    sessions: new LocalRuntimeSessionStore(database), notifier, mailConnectors,
+    sessions: new LocalRuntimeSessionStore(database), notifier, mailConnectors, mlService,
     tickets: new LocalRuntimeRealtimeTicketStore(), realtimeConnections: new LocalRuntimeRealtimeConnections(), application,
   };
 }
@@ -102,7 +111,7 @@ function runtimeRoutes(options: BootstrapOptions, shared: RuntimeShared): Fastif
       database: options.database, runtimeRoot: options.runtimeRoot, fieldCipher: options.fieldCipher,
       licenses: options.licenses, sessions: shared.sessions, notifier: shared.notifier, tickets: shared.tickets,
       realtimeConnections: shared.realtimeConnections, mailConnectors: shared.mailConnectors,
-      workspaceContext: () => shared.application.workspaceContext(),
+      workspaceContext: () => shared.application.workspaceContext(), mlService: shared.mlService,
     }));
     // Neben der API, nicht darin: Externe Systeme haben keine Sitzung (siehe docs/features/webhooks.md).
     await routes.register(webhookRoutes, {
@@ -132,11 +141,15 @@ function attachRealtimeLifecycle(
   });
 }
 
-/** Vor der Aktivierung gibt es keinen team-gebundenen Logger — Lizenzereignisse gehen daher nach Stdout. */
-function licenseMonitorFor(licenses: RuntimeLicenseService): RuntimeLicenseMonitor {
+/**
+ * Vor der Aktivierung gibt es keinen team-gebundenen Logger — Lizenzereignisse gehen daher nach Stdout.
+ * Fällt die Lizenz weg, meldet sich die Runtime beim ML-Dienst ab: Er gibt ihre Teammodelle und ihren Speicher frei.
+ */
+function licenseMonitorFor(licenses: RuntimeLicenseService, mlService: LocalMlService | undefined): RuntimeLicenseMonitor {
   return new RuntimeLicenseMonitor({
     check: () => licenses.verifyActivation(),
     report: (event, details) => console.info(JSON.stringify({event, ...details})),
+    onLicenseLost: mlService === undefined ? undefined : () => mlService.session.unregister(),
   });
 }
 

@@ -26,12 +26,15 @@ spec:
         - name: inference-sidecar
           image: SIDECAR_IMAGE
           env:
+            # Ein Sidecar pro Pod, nur für das Gateway daneben: keine Mandanten, keine Anmeldung.
+            - name: ML_TENANCY
+              value: "off"
             # Globaler Modellspeicher (öffentlich lesbar). Der Sidecar lädt Modelle selbst und hält sie in /tmp,
             # das in Cloud Run im Arbeitsspeicher liegt — daher die Grenzen unten.
             - name: MODEL_STORE_URL
               value: MODEL_STORE_URL
-            - name: MODEL_BUNDLE_DIR
-              value: /tmp/novooa-ml-bundles
+            - name: ML_DATA_DIR
+              value: /tmp/novooa-ml
             - name: MODEL_BUNDLE_MAX_BYTES
               value: "536870912"
             - name: MODEL_SESSION_CACHE_BYTES

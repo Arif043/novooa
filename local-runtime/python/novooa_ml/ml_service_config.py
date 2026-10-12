@@ -1,28 +1,52 @@
 import os
+from pathlib import Path
 
 from novooa_bundles.bundle_store import BundleStore
-from novooa_bundles.environment import global_store_from_environment, optional_bytes
+from novooa_bundles.environment import global_store_from_environment, optional_bytes, optional_positive_int
 from novooa_ml.bundles.bundle_resolver import BundleResolver
-from novooa_ml.bundles.cache_client import SharedCacheClient
+from novooa_ml.bundles.team_stores import TeamStores
+from novooa_ml.inference_queue import FairInMemoryQueue
+from novooa_ml.model_execution import session_factory
+from novooa_ml.model_requests import ModelService
+from novooa_ml.resource_limits import resource_limits_from_environment
+from novooa_ml.session_cache import SessionCache
+from novooa_ml.tenants.tenancy import RegisteredTenants, SingleTenant
+from novooa_ml.tenants.tenant_registry import TenantRegistry
 
-DEFAULT_SESSION_CACHE_BYTES = 4 * 1024 * 1024 * 1024
+DEFAULT_MAXIMUM_TENANTS = 50
 
 
-def resolver_from_environment():
-    """Eigener Speicher (beschreibbar, auch Ziel der Uploads), optional der gemeinsame Cache des Servers (nur lesend)."""
-    own_store = BundleStore(
-        os.environ.get("MODEL_BUNDLE_DIR", "/var/lib/novooa-ml/bundles"),
-        optional_bytes("MODEL_BUNDLE_MAX_BYTES"),
+def data_directory():
+    return Path(os.environ.get("ML_DATA_DIR", "/var/lib/novooa-ml"))
+
+
+def team_stores_from_environment():
+    return TeamStores(data_directory() / "bundles" / "teams", optional_bytes("MODEL_TEAM_MAX_BYTES"))
+
+
+def registry_from_environment():
+    return TenantRegistry(
+        data_directory() / "tenants.sqlite3", optional_positive_int("ML_MAX_TENANTS", DEFAULT_MAXIMUM_TENANTS),
     )
-    cache_url = os.environ.get("MODEL_CACHE_URL", "").strip()
+
+
+def tenancy_from_environment():
+    """`ML_TENANCY=off`: ein einziger Nutzer ohne Token (Cloud-Run-Pod oder eigener Dienst im Stack)."""
+    if os.environ.get("ML_TENANCY", "on").strip() == "off":
+        return SingleTenant()
+    return RegisteredTenants(registry_from_environment())
+
+
+def service_from_environment(numpy, onnxruntime):
+    limits = resource_limits_from_environment()
     resolver = BundleResolver(
-        own_store,
+        BundleStore(data_directory() / "bundles" / "global", optional_bytes("MODEL_BUNDLE_MAX_BYTES")),
         global_store_from_environment(),
-        shared_cache_directory=os.environ.get("MODEL_SHARED_CACHE_DIR", "").strip() or None,
-        shared_cache=SharedCacheClient(cache_url) if cache_url else None,
+        team_stores_from_environment(),
     )
-    return resolver, own_store
-
-
-def session_cache_bytes():
-    return optional_bytes("MODEL_SESSION_CACHE_BYTES", DEFAULT_SESSION_CACHE_BYTES)
+    sessions = SessionCache(
+        limits.session_bytes, session_factory(onnxruntime, limits.intra_op_threads),
+        optional_bytes("MODEL_TENANT_SESSION_BYTES"),
+    )
+    queue = FairInMemoryQueue(limits.compute_slots, optional_positive_int("ML_TENANT_CONCURRENCY"))
+    return ModelService(resolver, sessions, numpy, queue), tenancy_from_environment()

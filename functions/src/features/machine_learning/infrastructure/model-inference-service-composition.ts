@@ -4,6 +4,7 @@ import {RunModelInferenceWithSources} from "../domain/usecases/run-model-inferen
 import {type ModelCatalog} from "../domain/repositories/model-catalog.js";
 import {FirestoreModelCatalog} from "./firebase/firestore-model-catalog.js";
 import {HttpPythonInferenceSidecar} from "./http-python-inference-sidecar.js";
+import {MlServiceHttp} from "./ml-service-http.js";
 import {LocalFileModelCatalog} from "./local/local-file-model-catalog.js";
 import {HttpPythonModelInputTransformer} from "./local/http-python-model-input-transformer.js";
 import {GlobalModelBundleSources, LocalDirectoryModelBundleSources, type ModelBundleSources} from "./model-bundle-sources.js";
@@ -22,11 +23,12 @@ export function createModelInferenceService(): RunModelInferenceWithSources {
 }
 
 function createInference(catalog: ModelCatalog, sources: ModelBundleSources): RunModelInferenceWithSources {
-  const sidecarUrl = requiredEnvironment("PYTHON_INFERENCE_SIDECAR_URL");
+  // Der ML-Dienst läuft im selben Pod für genau diesen Nutzer (ML_TENANCY=off): keine Anmeldung nötig.
+  const mlService = new MlServiceHttp(requiredEnvironment("PYTHON_INFERENCE_SIDECAR_URL"));
   return new RunModelInferenceWithSources(
     catalog,
-    new PrepareModelInputs(new HttpPythonModelInputTransformer(sidecarUrl)),
-    new RunModelInference(new SidecarOnnxInferenceRuntime(new HttpPythonInferenceSidecar(sidecarUrl), sources)),
+    new PrepareModelInputs(new HttpPythonModelInputTransformer(mlService)),
+    new RunModelInference(new SidecarOnnxInferenceRuntime(new HttpPythonInferenceSidecar(mlService), sources)),
   );
 }
 

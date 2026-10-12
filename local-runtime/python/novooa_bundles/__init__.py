@@ -1,1 +1,1 @@
-"""Modellbündel: ein Modell mit seinen Nebendateien, adressiert über ihre Prüfsummen. Gemeinsam für ML-Dienst und Cache-Dienst; nur Standardbibliothek."""
+"""Modellbündel: ein Modell mit seinen Nebendateien, adressiert über ihre Prüfsummen; nur Standardbibliothek."""

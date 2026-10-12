@@ -1,36 +1,28 @@
-from pathlib import Path
-
 GLOBAL_SOURCE = "global"
 TEAM_SOURCE = "team"
 
 
 class BundleResolver:
     """
-    Findet ein Bündel für den ML-Dienst: zuerst im eigenen Speicher, dann im gemeinsamen Cache des Servers.
-    Globale Bündel holt der Cache-Dienst (falls vorhanden) oder der Dienst selbst; Teambündel lädt die Runtime hoch.
+    Findet ein Bündel: globale Modelle liegen einmal pro Server und kommen aus dem globalen Modellspeicher;
+    Teammodelle liegen im Speicher des Mandanten, die Runtime lädt sie hoch.
     """
 
-    def __init__(self, own_store, global_store, shared_cache_directory=None, shared_cache=None):
-        self._own_store = own_store
+    def __init__(self, global_bundles, global_store, team_stores):
+        self._global_bundles = global_bundles
         self._global_store = global_store
-        self._shared_directory = None if shared_cache_directory is None else Path(shared_cache_directory)
-        self._shared_cache = shared_cache
+        self._team_stores = team_stores
 
-    def resolve(self, key, source, files):
+    def resolve(self, tenant, key, source, files):
         if source == TEAM_SOURCE:
-            return self._own_store.path_for(key) or self._own_store.complete_upload(key, files)
+            store = self._team_stores.store_for(tenant)
+            return store.path_for(key) or store.complete_upload(key, files)
         if source != GLOBAL_SOURCE:
             raise ValueError("Die Quelle des Modellbündels ist unbekannt.")
-        return self._resolve_global(key, files)
+        return self._global_bundles.install(key, files, self._global_store.fetch)
 
-    def _resolve_global(self, key, files):
-        if self._shared_cache is not None:
-            self._shared_cache.ensure(key, files)
-            return self._shared_path(key)
-        return self._own_store.install(key, files, self._global_store.fetch)
+    def receive(self, tenant, key, file, stream, length):
+        self._team_stores.store_for(tenant).receive(key, file, stream, length)
 
-    def _shared_path(self, key):
-        path = self._shared_directory / key if self._shared_directory is not None else None
-        if path is None or not path.is_dir():
-            raise ValueError("Der gemeinsame Modell-Cache meldet das Bündel, es ist aber nicht eingebunden.")
-        return path
+    def remove_tenant(self, tenant):
+        self._team_stores.remove(tenant)

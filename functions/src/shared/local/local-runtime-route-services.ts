@@ -1,3 +1,4 @@
+import {type LocalMlService} from "../../features/machine_learning/infrastructure/local/local-ml-service.js";
 import {ConnectionHttpClient} from "../../features/connections/infrastructure/local/connection-http-client.js";
 import {OAuthTokenProvider} from "../../features/connections/infrastructure/local/oauth-token-provider.js";
 import {StoredConnectionAuthorizer} from "../../features/connections/infrastructure/local/stored-connection-authorizer.js";
@@ -51,6 +52,7 @@ export function createLocalRuntimeRouteServices(options: {
   notifier: LocalRuntimeRealtimeNotifier;
   licenses: Pick<RuntimeLicenseService, "signedActiveLicense">;
   workspaceContext: () => LocalRuntimeWorkspaceContext;
+  mlService: LocalMlService | undefined;
 }) {
   const {database, runtimeRoot} = options;
   const languageModelSecrets = new EncryptedSQLiteLanguageModelSecretStore(database, options.fieldCipher);
@@ -78,7 +80,7 @@ export function createLocalRuntimeRouteServices(options: {
     skills: createSkillsModule(runtimeRoot, options.notifier, () => options.licenses.signedActiveLicense()),
     speechVoices: new LanguageModelSpeech(new SQLiteLanguageModelCatalog(database, languageModelSecrets), defaultSpeechProviders()),
     assistants: assistantFactories(database, languageModelSecrets, () => options.licenses.signedActiveLicense()),
-    modelCatalog: modelCatalogOptions(runtimeRoot, database, options.notifier),
+    modelCatalog: modelCatalogOptions(runtimeRoot, database, options.notifier, options.mlService),
   };
 }
 
@@ -103,13 +105,13 @@ function assistantFactories(
 
 function modelCatalogOptions(
   runtimeRoot: string, database: RuntimeDatabase, notifier: LocalRuntimeRealtimeNotifier,
+  mlService: LocalMlService | undefined,
 ): ModelCatalogRoutesOptions {
-  const sidecarUrl = process.env.PYTHON_INFERENCE_SIDECAR_URL?.trim();
   return {
     catalog: new SQLiteModelCatalog(database),
     artifactPublisher: new LocalModelArtifactPublisher(runtimeRoot),
     uploadStore: new LocalModelArtifactUploadStore(runtimeRoot, maximumArtifactBytesFromEnvironment()),
-    contractValidator: sidecarUrl ? new PythonModelContractValidator(sidecarUrl) : new UnavailablePythonModelContractValidator(),
+    contractValidator: mlService ? new PythonModelContractValidator(mlService.client) : new UnavailablePythonModelContractValidator(),
     notifier,
   };
 }

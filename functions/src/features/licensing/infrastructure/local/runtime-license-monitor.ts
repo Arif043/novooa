@@ -7,6 +7,8 @@ export type RuntimeLicenseMonitorOptions = {
   /** Prüft die Aktivierung beim Gateway; wirft, wenn es kein eindeutiges Urteil gibt. */
   check: () => Promise<RuntimeLicenseCheck>;
   report: (event: string, details?: Record<string, unknown>) => void;
+  /** Läuft, wenn die Prüfung eindeutig ergibt, dass keine gültige Lizenz mehr besteht (widerrufen, abgelaufen, freigegeben). */
+  onLicenseLost?: () => Promise<void>;
   intervalMs?: number;
   /** Zufällige Streuung je Prüfung, damit nicht alle Runtimes gleichzeitig anfragen. */
   jitterMs?: number;
@@ -69,6 +71,7 @@ export class RuntimeLicenseMonitor {
     try {
       const result = await this.options.check();
       if (result === "revoked") this.options.report("local_runtime.license_revoked");
+      if (result !== "active") await this.options.onLicenseLost?.();
     } catch (error) {
       this.options.report("local_runtime.license_check_failed", {
         message: error instanceof Error ? error.message : String(error),

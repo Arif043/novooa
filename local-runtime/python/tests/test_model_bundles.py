@@ -4,10 +4,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from bundle_test_support import FakeGlobalStore, bundle_file
+from bundle_test_support import TENANT_A, TENANT_B, FakeGlobalStore, bundle_file
 from novooa_bundles.bundle_file import BundleFile, BundleFilesMissing, bundle_files_from, bundle_key, validate_bundle_path
-from novooa_ml.bundles.bundle_resolver import BundleResolver
 from novooa_bundles.bundle_store import BundleStore
+from novooa_ml.bundles.bundle_resolver import BundleResolver
+from novooa_ml.bundles.team_stores import TeamStores
 
 MODEL = b"model"
 WEIGHTS = b"weights" * 10
@@ -77,7 +78,7 @@ class BundleStoreTest(unittest.TestCase):
     def test_keeps_the_bundle_another_process_published_first(self):
         source = FakeGlobalStore({"model.onnx": MODEL, "model.onnx.data": WEIGHTS})
         BundleStore(self.root).install(self.key, self.files, source.fetch)
-        # Ein zweiter Cache-Dienst auf demselben Server hat parallel dasselbe Bündel gebaut.
+        # Ein zweiter Prozess hat parallel dasselbe Bündel gebaut.
         late = _built(self.root, self.files, source)
 
         path = BundleStore(self.root)._publish(self.key, late)
@@ -102,30 +103,41 @@ class BundleResolverTest(unittest.TestCase):
         self.root = Path(tempfile.mkdtemp())
         self.files = [bundle_file("model.onnx", MODEL, "model-artifacts/a/versions/1/model.onnx")]
         self.key = bundle_key(self.files)
+        self.teams = TeamStores(self.root / "teams")
 
-    def test_downloads_global_bundles_into_its_own_store_without_a_shared_cache(self):
+    def resolver(self, source):
+        return BundleResolver(BundleStore(self.root / "global"), source, self.teams)
+
+    def test_downloads_global_bundles_once_for_all_tenants(self):
         source = FakeGlobalStore({"model.onnx": MODEL})
-        resolver = BundleResolver(BundleStore(self.root), source)
+        resolver = self.resolver(source)
 
-        path = resolver.resolve(self.key, "global", self.files)
+        first = resolver.resolve(TENANT_A, self.key, "global", self.files)
+        second = resolver.resolve(TENANT_B, self.key, "global", self.files)
 
-        self.assertEqual((path / "model.onnx").read_bytes(), MODEL)
-
-    def test_asks_the_shared_cache_and_reads_its_directory(self):
-        shared = Path(tempfile.mkdtemp())
-        cache = RecordingSharedCache(shared, MODEL)
-        resolver = BundleResolver(BundleStore(self.root), FakeGlobalStore({}), shared, cache)
-
-        path = resolver.resolve(self.key, "global", self.files)
-
-        self.assertEqual(path, shared / self.key)
-        self.assertEqual(cache.keys, [self.key])
+        self.assertEqual(first, second)
+        self.assertEqual(source.fetched, ["model.onnx"])
 
     def test_team_bundles_must_be_uploaded_by_the_runtime(self):
-        resolver = BundleResolver(BundleStore(self.root), FakeGlobalStore({}))
-
         with self.assertRaises(BundleFilesMissing):
-            resolver.resolve(self.key, "team", self.files)
+            self.resolver(FakeGlobalStore({})).resolve(TENANT_A, self.key, "team", self.files)
+
+    def test_team_bundles_of_one_tenant_are_invisible_to_another(self):
+        resolver = self.resolver(FakeGlobalStore({}))
+        resolver.receive(TENANT_A, self.key, self.files[0], io.BytesIO(MODEL), len(MODEL))
+
+        self.assertIsNotNone(resolver.resolve(TENANT_A, self.key, "team", self.files))
+        with self.assertRaises(BundleFilesMissing):
+            resolver.resolve(TENANT_B, self.key, "team", self.files)
+
+    def test_removing_a_tenant_deletes_its_team_bundles(self):
+        resolver = self.resolver(FakeGlobalStore({}))
+        resolver.receive(TENANT_A, self.key, self.files[0], io.BytesIO(MODEL), len(MODEL))
+        resolver.resolve(TENANT_A, self.key, "team", self.files)
+
+        resolver.remove_tenant(TENANT_A)
+
+        self.assertFalse((self.root / "teams" / TENANT_A.registration).exists())
 
 
 def _built(root, files, source):
@@ -135,16 +147,6 @@ def _built(root, files, source):
         destination.parent.mkdir(parents=True, exist_ok=True)
         source.fetch(file, destination)
     return building
-
-
-class RecordingSharedCache:
-    def __init__(self, directory, content):
-        self.directory, self.content, self.keys = directory, content, []
-
-    def ensure(self, key, files):
-        self.keys.append(key)
-        (self.directory / key).mkdir()
-        (self.directory / key / "model.onnx").write_bytes(self.content)
 
 
 if __name__ == "__main__":

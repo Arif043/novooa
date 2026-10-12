@@ -45,12 +45,13 @@ auslieferbaren Desktop-App und ist noch nicht implementiert.
 ```text
 Flutter-Desktop-App
   -> Docker Desktop / Docker Engine
-      -> novooa-runtime (Node)
-          lokale API, Scheduler, Task-Worker, SQLite-Adapter, Relay-Client
-      -> novooa-ml (Python)
-          Tensor-Transformationen und ONNX-Inferenz
-      -> novooa-model-cache (Python, nur Standardbibliothek, eigenes Image)
-          gemeinsamer Cache der Katalogmodelle des Servers
+      -> Stack (docker-compose.local.yaml), je Kunde einer
+          -> novooa-runtime (Node)
+              lokale API, Scheduler, Task-Worker, SQLite-Adapter, Relay-Client
+          -> novooa-script (Python, abgeschottet)
+      -> Server (docker-compose.server.yaml), einmal pro Rechner
+          -> novooa-ml (Python)
+              Tensor-Transformationen und ONNX-Inferenz für alle Stacks
 ```
 
 `novooa-runtime` ist der einzige Dienst mit einem veröffentlichten Host-Port:
@@ -65,14 +66,17 @@ verwendet dann HTTPS. Details dazu und zur zwingenden
 Passwort-Authentifizierung unter
 [Zugriff und Authentifizierung](#zugriff-und-authentifizierung). `novooa-ml`
 ist nicht vom Host erreichbar und kommuniziert nur über das interne
-Compose-Netzwerk mit `novooa-runtime`.
+Netz `novooa-ml` mit den Runtimes. Jede Runtime meldet sich dort mit der
+Arbeitsbereichs-ID ihrer Lizenz an und erhält ein eigenes Token (siehe
+[ML-Modelle](features/ml-modelle.md#mandanten)).
 
 Das benannte Volume `novooa-data` enthält SQLite, Dateien, Wissensbasis und
 eigene Modelle des Teams. Es ist nur in `novooa-runtime` schreibbar eingehängt.
-Der Python-Dienst erhält keine Datenbank und nicht dieses Volume; er hat nur
-seinen eigenen Bündelspeicher (`novooa-ml-bundles`) und liest den gemeinsamen
-Modell-Cache (`novooa-model-cache`) nur lesend. Jede Modelldatei wird vor der
-Nutzung gegen Größe und SHA-256 geprüft. Container erhalten weder den Docker-Socket noch Docker-Credentials.
+Der ML-Dienst erhält keine Datenbank und nicht dieses Volume; er hat nur sein
+eigenes Volume `novooa-ml-data` (Bündel und Mandantenliste). Teammodelle streamt
+ihm die Runtime, Katalogmodelle lädt er selbst aus dem globalen Modellspeicher
+(`NOVOOA_MODEL_STORE_URL`). Jede Modelldatei wird vor der Nutzung gegen Größe und
+SHA-256 geprüft. Container erhalten weder den Docker-Socket noch Docker-Credentials.
 
 Das aktuelle Entwicklungs-Compose baut die Images aus dem Checkout. Die
 auslieferbare Desktop-App wird stattdessen Images auf konkrete novooa-Versionen
@@ -1062,13 +1066,13 @@ dessen Infrastructure-Bereich.
 - Die alten Migrationen und `schema_migrations` sind abgelöst. Diese neue
   Initialmigration ist für eine frisch aufgesetzte Runtime vorgesehen; eine
   bestehende Datenbank wird weder automatisch gelöscht noch zurückgesetzt.
-- `docker-compose.local.yaml` startet `runtime`, `novooa-ml` und `novooa-model-cache`. Nur
-  `runtime` veröffentlicht einen Host-Port: `8090` für die API auf allen
-  Schnittstellen — auch das erstmalige Setzen des Betreiber-Passworts läuft
-  darüber (siehe [Erstmaliges Setzen des Passworts](#erstmaliges-setzen-des-passworts)).
-  `novooa-ml` hat keinen Host-Port und hängt ausschließlich in
-  `novooa-private`. `novooa-model-cache` braucht als einziger ML-Dienst Internet
-  (`novooa-public`) und lädt nur aus dem globalen Modellspeicher.
+- `docker-compose.server.yaml` startet einmal pro Rechner `novooa-ml`; er hängt im
+  internen Netz `novooa-ml` und für den Download aus dem globalen Modellspeicher
+  in `novooa-ml-egress`. `docker-compose.local.yaml` startet je Stack `runtime`
+  und `novooa-script`. Nur `runtime` veröffentlicht einen Host-Port: `8090`
+  (`NOVOOA_RUNTIME_PORT`) für die API auf allen Schnittstellen — auch das
+  erstmalige Setzen des Betreiber-Passworts läuft darüber (siehe
+  [Erstmaliges Setzen des Passworts](#erstmaliges-setzen-des-passworts)).
 - Beim Start stellt die Runtime ohne Lizenz nur `/healthz`, `GET /v1/license`
   und `POST /v1/license/activate` und `POST /v1/license/release` bereit. Nach erfolgreicher Aktivierung legt
   sie den durch die signierte Lizenz bestimmten Teamarbeitsbereich idempotent

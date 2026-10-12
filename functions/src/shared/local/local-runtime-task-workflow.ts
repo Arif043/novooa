@@ -1,4 +1,5 @@
 import {type LocalModelCache} from "../../features/machine_learning/infrastructure/local/local-model-cache.js";
+import {type MlServiceHttp} from "../../features/machine_learning/infrastructure/ml-service-http.js";
 import {type OutboundHttpClient} from "../../features/connections/domain/repositories/outbound-http-client.js";
 import {type NodeExecutorRegistry} from "../../features/task_execution/infrastructure/genkit/runner/node-executor-registry.js";
 import {scriptExecutorFactoryFromEnvironment} from "./local-runtime-relays.js";
@@ -48,6 +49,8 @@ export type LocalTaskWorkflowDependencies = {
   executorRegistry: NodeExecutorRegistry;
   /** Lädt fehlende Katalogmodelle beim Lauf nach; fehlt ohne Firebase-Sitzung. */
   modelCache?: LocalModelCache;
+  /** Der ML-Dienst des Servers; fehlt ohne `PYTHON_INFERENCE_SIDECAR_URL`. */
+  mlService?: MlServiceHttp;
 };
 
 /** Genkit-Task-Workflow der lokalen Runtime mit SQLite- und Dateisystem-Adaptern. */
@@ -69,7 +72,7 @@ export function createLocalTaskWorkflow(dependencies: LocalTaskWorkflowDependenc
       fileContentReader: teamFileStore,
       messageSender: new LocalTaskMessageSender(dependencies.signedLicense, dependencies.mailRelay),
       documentStore: dependencies.documentStore,
-      modelInference: modelInferenceFor(database, dependencies.runtimeRoot, dependencies.modelCache),
+      modelInference: modelInferenceFor(database, dependencies),
       teamNotificationSender: new LocalTeamNotificationSender(dependencies.signedLicense, dependencies.pushRelay, logger),
       languageModelResolver: new CatalogGenkitLanguageModelResolver(dependencies.languageModelCatalog),
       skillContentReader: createDirectorySkillStore(dependencies.runtimeRoot),
@@ -85,9 +88,9 @@ export function createLocalTaskWorkflow(dependencies: LocalTaskWorkflowDependenc
   });
 }
 
-function modelInferenceFor(database: RuntimeDatabase, runtimeRoot: string, modelCache: LocalModelCache | undefined) {
-  const sidecarUrl = process.env.PYTHON_INFERENCE_SIDECAR_URL?.trim();
-  return sidecarUrl
-    ? createLocalSidecarModelInference(database, runtimeRoot, sidecarUrl, modelCache?.cacheSystemModel)
+function modelInferenceFor(database: RuntimeDatabase, dependencies: LocalTaskWorkflowDependencies) {
+  const {mlService, runtimeRoot, modelCache} = dependencies;
+  return mlService
+    ? createLocalSidecarModelInference(database, runtimeRoot, mlService, modelCache?.cacheSystemModel)
     : new UnavailableLocalModelInference();
 }

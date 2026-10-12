@@ -67,16 +67,40 @@ des Kunden.
 ```bash
 npm --prefix functions run local-runtime:prepare -- \
   --secret-file ../.novooa/runtime-master-key
-docker compose -f docker-compose.local.yaml up --build --detach
+docker compose -f docker-compose.server.yaml up --build --detach   # einmal pro Rechner: ML-Dienst
+docker compose -f docker-compose.local.yaml up --build --detach    # der Stack
 curl http://127.0.0.1:8090/healthz
 ```
 
-Das Volume `novooa-data` enthält SQLite und lokale Dateien. `novooa-ml` erhält
-weder dieses Volume noch einen veröffentlichten Host-Port. Er hat einen eigenen
-Bündelspeicher (`novooa-ml-bundles`) und liest den gemeinsamen Modell-Cache des
-Servers (`novooa-model-cache`) nur lesend. Diesen Cache befüllt allein
-`novooa-model-cache` aus dem globalen Modellspeicher (`NOVOOA_MODEL_STORE_URL`,
-öffentlich lesbar); mehrere Stacks auf einem Host teilen sich das Volume.
+Das Volume `novooa-data` enthält SQLite und lokale Dateien. Der ML-Dienst
+(`docker-compose.server.yaml`) erhält weder dieses Volume noch einen
+veröffentlichten Host-Port; alle Stacks des Rechners teilen ihn. Katalogmodelle lädt
+er aus dem globalen Modellspeicher (`NOVOOA_MODEL_STORE_URL`, öffentlich lesbar),
+Teammodelle streamt ihm die Runtime. Jede Runtime meldet sich mit der
+Arbeitsbereichs-ID ihrer Lizenz an; `docker compose -f docker-compose.server.yaml exec
+novooa-ml python -m novooa_ml.tenants list` zeigt die angemeldeten Runtimes.
+
+### Mehrere Stacks auf einem Rechner
+
+Jeder Stack bekommt einen eigenen Projektnamen, Port und Secrets-Ordner:
+
+```bash
+# kunden/a.env
+NOVOOA_RUNTIME_PORT=8091
+NOVOOA_LOCAL_SECRETS_DIRECTORY=/srv/novooa/kunde-a
+
+docker compose -p kunde-a --env-file kunden/a.env -f docker-compose.local.yaml up --detach
+```
+
+Docker vergibt Netze aus einem begrenzten Adresspool (etwa 30 Netze); jeder Stack
+braucht drei. Für mehr als etwa zehn Stacks den Pool in `/etc/docker/daemon.json`
+vergrößern und Docker neu starten:
+
+```json
+{"default-address-pools": [{"base": "10.200.0.0/16", "size": 24}]}
+```
+
+Das Shopware-Testsystem startet nur mit `--profile dev`.
 
 Der erste Befehl erzeugt einmalig einen zufälligen 32-Byte-Master-Key. Compose
 mountet ihn ausschließlich für `runtime` als Datei unter `/run/secrets`. Der

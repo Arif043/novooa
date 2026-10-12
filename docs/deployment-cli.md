@@ -186,7 +186,7 @@ Docker Volumes: novooa-local_novooa-data (Daten), novooa-local_novooa-keys (aktu
   └─ SQLite: task_runs, activities, etc.
   └─ Dateien: files/{teamId}/{fileId}/...
   └─ Eigene Modelle: model-artifacts/...
-Docker Volumes: novooa-local_novooa-ml-bundles (Bündel des ML-Dienstes), novooa-model-cache (Katalogmodelle, je Host geteilt)
+Docker Volume: novooa-server_novooa-ml-data (ML-Dienst des Rechners: Bündel und Mandantenliste)
 ```
 
 ## 🛠️ Workflow

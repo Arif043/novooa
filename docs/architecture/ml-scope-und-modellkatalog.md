@@ -49,7 +49,7 @@ Variante.
 Firestore `modelCatalog` bleibt der Master. Die Betreiber-CLI `models:publish`
 bleibt unverändert; lokale Runtimes lesen die Metadaten nach ihrer Firebase-
 Anmeldung direkt aus Firestore. Die Artefakte werden nicht über novooa
-proxied, sondern vom Cache-Dienst jedes Servers direkt aus dem globalen
+proxied, sondern vom ML-Dienst jedes Servers direkt aus dem globalen
 Modellspeicher (Hetzner Object Storage, öffentlich lesbar) geladen.
 
 ```text
@@ -71,7 +71,7 @@ Verbesserungen.
 
 **1. Integrität.** Ein Modellkanal in ein Kundennetz ist ein Code-Lieferkanal.
 Der Katalog enthält deshalb Größe und SHA-256-Prüfsumme jeder Datei; Versionen
-im Modellspeicher sind unveränderlich. Der Cache-Dienst prüft Größe und Prüfsumme,
+im Modellspeicher sind unveränderlich. Der ML-Dienst prüft Größe und Prüfsumme,
 bevor ein Bündel sichtbar wird.
 
 **2. Optionalität.** Offline-Aktivierung ist ein Enterprise-Merkmal; solche

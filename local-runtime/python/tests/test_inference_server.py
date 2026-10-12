@@ -10,92 +10,60 @@ from unittest.mock import patch
 
 import numpy
 
-from bundle_test_support import FakeGlobalStore, bundle_file, payload_for
-from novooa_ml.bundles.bundle_resolver import BundleResolver
+from bundle_test_support import TENANT_A, FakeGlobalStore, RecordingFactory, UnlimitedQueue, bundle_file, payload_for
 from novooa_bundles.bundle_store import BundleStore
+from novooa_ml.bundles.bundle_resolver import BundleResolver
+from novooa_ml.bundles.team_stores import TeamStores
 from novooa_ml.inference_server import handler_for
 from novooa_ml.model_requests import ModelService
 from novooa_ml.session_cache import ModelNotLoadedError, SessionCache
+from novooa_ml.tenants.tenancy import RegisteredTenants
+from novooa_ml.tenants.tenant_registry import TenantRegistry
 from novooa_ml.transformation_capabilities import transformation_capabilities
 
 MODEL = b"model"
 
 
-class SessionCacheTest(unittest.TestCase):
-    def setUp(self):
-        self.bundle = Path(tempfile.mkdtemp())
-        (self.bundle / "model.onnx").write_bytes(MODEL)
-        (self.bundle / "resources").mkdir()
-        (self.bundle / "resources" / "voice").write_bytes(b"voice")
-
-    def test_reuses_a_loaded_session(self):
-        factory = RecordingFactory()
-        cache = SessionCache(100, factory)
-        files = [bundle_file("model.onnx", MODEL)]
-
-        first = cache.load("model:1", self.bundle, files)
-        second = cache.load("model:1", self.bundle, files)
-
-        self.assertIs(first, second)
-        self.assertEqual(factory.paths, [str(self.bundle / "model.onnx")])
-
-    def test_evicts_the_least_recently_used_session_beyond_the_byte_budget(self):
-        cache = SessionCache(len(MODEL), RecordingFactory())
-        cache.load("model:1", self.bundle, [bundle_file("model.onnx", MODEL)])
-        cache.load("model:2", self.bundle, [bundle_file("model.onnx", MODEL)])
-
-        with self.assertRaises(ModelNotLoadedError):
-            cache.model_for("model:1")
-        self.assertIsNotNone(cache.model_for("model:2"))
-
-    def test_keeps_a_model_larger_than_the_budget(self):
-        cache = SessionCache(1, RecordingFactory())
-
-        cache.load("model:1", self.bundle, [bundle_file("model.onnx", MODEL)])
-
-        self.assertIsNotNone(cache.model_for("model:1"))
-
-    def test_keeps_resources_with_the_loaded_model(self):
-        cache = SessionCache(100, RecordingFactory())
-
-        model = cache.load("model:1", self.bundle, [bundle_file("model.onnx", MODEL), bundle_file("resources/voice", b"voice")])
-
-        self.assertEqual(model.resource_bytes("voice"), b"voice")
-
-
 class ModelServiceTest(unittest.TestCase):
     def setUp(self):
         self.files = [bundle_file("model.onnx", MODEL, "model-artifacts/a/versions/1/model.onnx")]
-        resolver = BundleResolver(BundleStore(tempfile.mkdtemp()), FakeGlobalStore({"model.onnx": MODEL}))
+        root = Path(tempfile.mkdtemp())
+        resolver = BundleResolver(BundleStore(root / "global"), FakeGlobalStore({"model.onnx": MODEL}), TeamStores(root / "teams"))
         self.sessions = SessionCache(100, RecordingFactory())
-        self.service = ModelService(resolver, self.sessions, numpy)
+        self.service = ModelService(resolver, self.sessions, numpy, UnlimitedQueue())
 
-    def test_loads_a_global_bundle_by_reference(self):
+    def test_loads_a_global_bundle_once_for_every_tenant(self):
         payload = payload_for(self.files)
 
-        self.assertEqual(self.service.load(payload), {"status": "loaded"})
-        self.assertIsNotNone(self.sessions.model_for(payload["modelKey"]))
+        self.assertEqual(self.service.load(TENANT_A, payload), {"status": "loaded"})
+        self.assertIsNotNone(self.sessions.model_for("another-registration", payload["modelKey"]))
 
     def test_rejects_a_key_that_does_not_match_the_files(self):
         with self.assertRaises(ValueError):
-            self.service.load({**payload_for(self.files), "modelKey": "f" * 64})
+            self.service.load(TENANT_A, {**payload_for(self.files), "modelKey": "f" * 64})
 
     def test_delegates_input_transforms_without_a_model(self):
         with patch("novooa_ml.model_requests.transform_payload", return_value={"tensor": {"name": "image"}}) as transform:
-            response = self.service.transform({"input": {"name": "image"}})
+            response = self.service.transform(TENANT_A, {"input": {"name": "image"}})
 
         self.assertEqual(response, {"tensor": {"name": "image"}})
         transform.assert_called_once_with({"input": {"name": "image"}})
 
-    def test_provides_resources_of_the_loaded_model_to_transformations(self):
-        bundle = Path(tempfile.mkdtemp())
-        (bundle / "resources").mkdir()
-        (bundle / "resources" / "voice").write_bytes(b"voice")
-        self.sessions.load("model:1", bundle, [bundle_file("model.onnx", MODEL), bundle_file("resources/voice", b"voice")])
+    def test_provides_resources_of_the_tenants_model_to_transformations(self):
+        files = [bundle_file("model.onnx", MODEL), bundle_file("resources/voice", b"voice")]
+        self.sessions.load(TENANT_A.registration, "model:1", resource_bundle(), files)
         with patch("novooa_ml.model_requests.transform_payload", return_value={}) as transform:
-            self.service.transform({"modelKey": "model:1", "input": {"name": "tokens"}})
+            self.service.transform(TENANT_A, {"modelKey": "model:1", "input": {"name": "tokens"}})
 
         self.assertEqual(transform.call_args.args[1]("voice"), b"voice")
+
+    def test_removing_a_tenant_unloads_its_models(self):
+        self.sessions.load(TENANT_A.registration, "model:1", resource_bundle(), [bundle_file("model.onnx", MODEL)])
+
+        self.service.remove_tenant(TENANT_A)
+
+        with self.assertRaises(ModelNotLoadedError):
+            self.sessions.model_for(TENANT_A.registration, "model:1")
 
 
 class TransformationCapabilitiesTest(unittest.TestCase):
@@ -110,43 +78,78 @@ class TransformationCapabilitiesTest(unittest.TestCase):
 
 class InferenceEndpointTest(unittest.TestCase):
     def setUp(self):
-        self.store = BundleStore(tempfile.mkdtemp())
-        resolver = BundleResolver(self.store, FakeGlobalStore({}))
-        service = ModelService(resolver, SessionCache(100, RecordingFactory()), numpy)
-        server = ThreadingHTTPServer(("127.0.0.1", 0), handler_for(service, self.store))
+        root = Path(tempfile.mkdtemp())
+        resolver = BundleResolver(BundleStore(root / "global"), FakeGlobalStore({}), TeamStores(root / "teams"))
+        service = ModelService(resolver, SessionCache(100, RecordingFactory()), numpy, UnlimitedQueue())
+        tenancy = RegisteredTenants(TenantRegistry(root / "tenants.sqlite3"))
+        server = ThreadingHTTPServer(("127.0.0.1", 0), handler_for(service, tenancy))
         threading.Thread(target=server.serve_forever, daemon=True).start()
         self.addCleanup(server.server_close)
         self.addCleanup(server.shutdown)
         self.base = f"http://127.0.0.1:{server.server_address[1]}"
 
+    def test_registers_once_per_tenant_id(self):
+        status, body = self.post("/v1/tenants", {"tenantId": "workspace-a"})
+
+        self.assertEqual(status, 201)
+        self.assertTrue(body["token"].startswith("nml_"))
+        self.assertEqual(self.post("/v1/tenants", {"tenantId": "workspace-a"})[1]["code"], "tenant_exists")
+
+    def test_rejects_requests_without_a_valid_token(self):
+        self.assertEqual(self.post("/v1/contract-validations", {"contract": {}})[0], 401)
+        self.assertEqual(self.post("/v1/contract-validations", {"contract": {}}, token="nml_wrong")[0], 401)
+
     def test_reports_missing_team_files_and_loads_after_the_upload(self):
+        token = self.register("workspace-a")
         files = [bundle_file("model.onnx", MODEL)]
         payload = payload_for(files, source="team")
 
-        self.assertEqual(self.post("/v1/models", payload), (409, {"code": "bundle_files_missing", "missing": ["model.onnx"]}))
-        self.assertEqual(self.put(f"/v1/bundles/{payload['modelKey']}/files/model.onnx", MODEL, files[0].sha256)[0], 201)
-        self.assertEqual(self.post("/v1/models", payload), (200, {"status": "loaded"}))
+        self.assertEqual(self.post("/v1/models", payload, token), (409, {"code": "bundle_files_missing", "missing": ["model.onnx"]}))
+        self.assertEqual(self.put(f"/v1/bundles/{payload['modelKey']}/files/model.onnx", MODEL, files[0].sha256, token)[0], 201)
+        self.assertEqual(self.post("/v1/models", payload, token), (200, {"status": "loaded"}))
+
+    def test_a_team_upload_of_one_tenant_does_not_help_another(self):
+        first, second = self.register("workspace-a"), self.register("workspace-b")
+        files = [bundle_file("model.onnx", MODEL)]
+        payload = payload_for(files, source="team")
+        self.put(f"/v1/bundles/{payload['modelKey']}/files/model.onnx", MODEL, files[0].sha256, first)
+
+        self.assertEqual(self.post("/v1/models", payload, first)[0], 200)
+        self.assertEqual(self.post("/v1/models", payload, second)[0], 409)
+
+    def test_unregistering_invalidates_the_token_and_frees_the_id(self):
+        token = self.register("workspace-a")
+
+        self.assertEqual(self.send(self.request("/v1/tenants/self", None, "DELETE", token))[0], 200)
+        self.assertEqual(self.post("/v1/contract-validations", {"contract": {}}, token)[0], 401)
+        self.assertEqual(self.post("/v1/tenants", {"tenantId": "workspace-a"})[0], 201)
 
     def test_rejects_an_upload_with_a_wrong_checksum(self):
-        status, _ = self.put(f"/v1/bundles/{'a' * 64}/files/model.onnx", MODEL, "b" * 64)
+        token = self.register("workspace-a")
 
-        self.assertEqual(status, 422)
+        self.assertEqual(self.put(f"/v1/bundles/{'a' * 64}/files/model.onnx", MODEL, "b" * 64, token)[0], 422)
 
     def test_validates_contracts(self):
+        token = self.register("workspace-a")
         image_input = {"name": "bild", "source": "image", "transformations": [{"type": "image.resize", "parameters": {}}]}
+        contract = {"contract": {"inputs": [image_input], "outputs": []}}
 
-        self.assertEqual(
-            self.post("/v1/contract-validations", {"contract": {"inputs": [image_input], "outputs": []}}),
-            (422, {"error": "Eingang bild: image.resize: Der Parameter width fehlt."}),
-        )
+        self.assertEqual(self.post("/v1/contract-validations", contract, token), (422, {"error": "Eingang bild: image.resize: Der Parameter width fehlt."}))
         image_input["transformations"][0]["parameters"] = {"width": 8, "height": 8}
-        self.assertEqual(self.post("/v1/contract-validations", {"contract": {"inputs": [image_input], "outputs": []}}), (200, {"status": "ok"}))
+        self.assertEqual(self.post("/v1/contract-validations", contract, token), (200, {"status": "ok"}))
 
-    def post(self, path, body):
-        return self.send(urllib.request.Request(self.base + path, data=json.dumps(body).encode(), method="POST"))
+    def register(self, tenant_id):
+        return self.post("/v1/tenants", {"tenantId": tenant_id})[1]["token"]
 
-    def put(self, path, content, sha256):
-        return self.send(urllib.request.Request(self.base + path, data=content, method="PUT", headers={"x-sha256": sha256}))
+    def post(self, path, body, token=None):
+        return self.send(self.request(path, json.dumps(body).encode(), "POST", token))
+
+    def put(self, path, content, sha256, token):
+        return self.send(self.request(path, content, "PUT", token, {"x-sha256": sha256}))
+
+    def request(self, path, data, method, token, headers=None):
+        headers = {**(headers or {}), **({"authorization": f"Bearer {token}"} if token else {})}
+        return urllib.request.Request(self.base + path, data=data, method=method, headers=headers)
 
     def send(self, request):
         try:
@@ -156,13 +159,11 @@ class InferenceEndpointTest(unittest.TestCase):
             return error.code, json.loads(error.read())
 
 
-class RecordingFactory:
-    def __init__(self):
-        self.paths = []
-
-    def __call__(self, model_path):
-        self.paths.append(model_path)
-        return object()
+def resource_bundle():
+    bundle = Path(tempfile.mkdtemp())
+    (bundle / "resources").mkdir()
+    (bundle / "resources" / "voice").write_bytes(b"voice")
+    return bundle
 
 
 if __name__ == "__main__":

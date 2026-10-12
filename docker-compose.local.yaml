@@ -16,6 +16,7 @@ services:
       # Nur für lokale Entwicklung nötig (z.B. http://localhost:59193).
       LOCAL_RUNTIME_ALLOWED_ORIGINS: ${LOCAL_RUNTIME_ALLOWED_ORIGINS:-}
       NOVOOA_LOCAL_DEVELOPMENT: ${NOVOOA_LOCAL_DEVELOPMENT:-false}
+      # Der ML-Dienst des Servers; die Runtime meldet sich dort mit ihrer Arbeitsbereichs-ID an.
       PYTHON_INFERENCE_SIDECAR_URL: http://novooa-ml:8081
       # Optionale Obergrenze je hochgeladener Modelldatei in Bytes; leer = nur der freie Platz begrenzt.
       MODEL_ARTIFACT_MAX_BYTES: ${NOVOOA_MODEL_ARTIFACT_MAX_BYTES:-}
@@ -40,8 +41,6 @@ services:
     depends_on:
       key-init:
         condition: service_completed_successfully
-      novooa-ml:
-        condition: service_healthy
       novooa-script:
         condition: service_healthy
     ports:
@@ -50,7 +49,8 @@ services:
       # unverschlüsselt — diesen Port niemals aus dem Internet erreichbar
       # machen; für externen Zugriff gehört ein eigener Reverse Proxy mit
       # Domain und Zertifikat davor (siehe docs/local-runtime.md).
-      - "8090:8080"
+      # Mehrere Stacks auf einem Server brauchen je einen eigenen Port (NOVOOA_RUNTIME_PORT).
+      - "${NOVOOA_RUNTIME_PORT:-8090}:8080"
     volumes:
       - novooa-data:/var/lib/novooa
       - novooa-keys:/var/lib/novooa-keys
@@ -65,69 +65,12 @@ services:
       - novooa-public
       - novooa-private
       - novooa-script
+      - novooa-ml
     extra_hosts:
       - host.docker.internal:host-gateway
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "--input-type=module", "-e", "const response = await fetch('http://127.0.0.1:8080/healthz'); process.exit(response.ok ? 0 : 1)"]
-      interval: 5s
-      timeout: 2s
-      retries: 12
-
-  # ML-Dienst dieses Stacks: Eingaben der Kunden bleiben im Stack. Modelle bekommt er nur als Referenz;
-  # Katalogmodelle liest er aus dem gemeinsamen Cache des Servers (nur lesend), eigene Modelle des Teams
-  # streamt ihm die Runtime in seinen eigenen Speicher. Kein Zugang ins Internet.
-  novooa-ml:
-    build:
-      context: .
-      dockerfile: functions/Dockerfile.model-inference-sidecar
-    environment:
-      HOST: 0.0.0.0
-      PORT: "8081"
-      MODEL_CACHE_URL: http://novooa-model-cache:8082
-      MODEL_SHARED_CACHE_DIR: /var/lib/novooa-model-cache
-      MODEL_BUNDLE_MAX_BYTES: ${NOVOOA_ML_BUNDLE_MAX_BYTES:-}
-      MODEL_SESSION_CACHE_BYTES: ${NOVOOA_ML_SESSION_CACHE_BYTES:-4294967296}
-    expose:
-      - "8081"
-    networks:
-      - novooa-private
-    volumes:
-      - novooa-ml-bundles:/var/lib/novooa-ml/bundles
-      - novooa-model-cache:/var/lib/novooa-model-cache:ro
-    # Großzügig: Begrenzt wird vor allem über MODEL_SESSION_CACHE_BYTES; das Limit schützt den Host.
-    mem_limit: ${NOVOOA_ML_MEMORY_LIMIT:-16g}
-    depends_on:
-      novooa-model-cache:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/healthz')"]
-      interval: 5s
-      timeout: 2s
-      retries: 12
-
-  # Gemeinsamer Cache des Servers für Modelle aus dem globalen Modellspeicher (Hetzner Object Storage).
-  # Einziger Schreiber des Caches; enthält nur öffentliche Modelle, keine Kundendaten. Das Volume trägt einen
-  # festen Namen, damit sich mehrere Stacks auf einem Host denselben Cache teilen.
-  novooa-model-cache:
-    build:
-      context: .
-      dockerfile: functions/Dockerfile.model-cache
-    environment:
-      HOST: 0.0.0.0
-      MODEL_STORE_URL: ${NOVOOA_MODEL_STORE_URL:-}
-      MODEL_CACHE_MAX_BYTES: ${NOVOOA_MODEL_CACHE_MAX_BYTES:-}
-    expose:
-      - "8082"
-    networks:
-      - novooa-public
-      - novooa-private
-    volumes:
-      - novooa-model-cache:/var/lib/novooa-model-cache
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8082/healthz')"]
       interval: 5s
       timeout: 2s
       retries: 12
@@ -208,7 +151,9 @@ services:
       - novooa-data:/var/lib/novooa
       - novooa-keys:/var/lib/novooa-keys
 
+  # Testumgebung für das Shopware-Plugin; nur mit `--profile dev`.
   shopware:
+    profiles: [dev]
     image: dockware/play:latest
     container_name: shopware_app
     networks:
@@ -225,13 +170,13 @@ networks:
     internal: true
   novooa-script:
     internal: true
+  # Zum ML-Dienst des Servers (docker-compose.server.yaml), den sich alle Stacks teilen.
+  novooa-ml:
+    external: true
 
 volumes:
   novooa-data:
   novooa-keys:
-  novooa-ml-bundles:
-  novooa-model-cache:
-    name: novooa-model-cache
 
 secrets:
   novooa_runtime_master_key:

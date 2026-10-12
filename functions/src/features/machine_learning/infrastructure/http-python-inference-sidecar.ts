@@ -9,10 +9,11 @@ import {
   type PythonInferenceSidecar,
   type SidecarInferenceRequest,
 } from "./python-inference-sidecar.js";
+import {type MlServiceHttp, responseCode} from "./ml-service-http.js";
 import {isRecord, runtimeOutputsFrom, sidecarErrorMessage} from "./python-inference-sidecar-codec.js";
 
 export class HttpPythonInferenceSidecar implements PythonInferenceSidecar {
-  constructor(private readonly baseUrl: string) {}
+  constructor(private readonly http: MlServiceHttp) {}
 
   async load(bundle: ModelBundle, source: ModelBundleSource): Promise<void> {
     await this.post("/v1/models", bundleJson(bundle, source));
@@ -22,14 +23,14 @@ export class HttpPythonInferenceSidecar implements PythonInferenceSidecar {
     await this.post("/v1/bundles", bundleJson(bundle, "global"));
   }
 
-  async upload(bundle: ModelBundle, file: ModelBundleFile, content: Readable): Promise<void> {
-    const response = await fetch(new URL(`/v1/bundles/${bundle.key}/files/${file.path}`, this.baseUrl), {
+  async upload(bundle: ModelBundle, file: ModelBundleFile, open: () => Readable): Promise<void> {
+    const response = await this.http.send({
       method: "PUT",
+      path: `/v1/bundles/${bundle.key}/files/${file.path}`,
       headers: {"content-length": String(file.sizeBytes), "x-sha256": file.sha256},
-      body: Readable.toWeb(content) as ReadableStream<Uint8Array>,
-      duplex: "half",
-    } as RequestInit & {duplex: "half"});
-    if (!response.ok) throw new Error(sidecarErrorMessage(await response.json() as unknown));
+      body: () => Readable.toWeb(open()) as ReadableStream<Uint8Array>,
+    });
+    if (response.status >= 400) throw new Error(sidecarErrorMessage(response.payload));
   }
 
   async infer(request: SidecarInferenceRequest): Promise<readonly ModelRuntimeOutput[]> {
@@ -42,16 +43,16 @@ export class HttpPythonInferenceSidecar implements PythonInferenceSidecar {
   }
 
   private async post(path: string, body: object): Promise<unknown> {
-    const response = await fetch(new URL(path, this.baseUrl), {
-      method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(body),
+    const response = await this.http.send({
+      method: "POST", path, headers: {"content-type": "application/json"}, body: () => JSON.stringify(body),
     });
-    const payload = await response.json() as unknown;
-    if (response.status === 404 && isRecord(payload) && payload.code === "model_not_loaded") throw new ModelNotLoadedError();
-    if (response.status === 409 && isRecord(payload) && payload.code === "bundle_files_missing") {
-      throw new BundleFilesMissingError(missingFiles(payload.missing));
+    const code = responseCode(response);
+    if (response.status === 404 && code === "model_not_loaded") throw new ModelNotLoadedError();
+    if (response.status === 409 && code === "bundle_files_missing" && isRecord(response.payload)) {
+      throw new BundleFilesMissingError(missingFiles(response.payload.missing));
     }
-    if (!response.ok) throw new Error(sidecarErrorMessage(payload));
-    return payload;
+    if (response.status >= 400) throw new Error(sidecarErrorMessage(response.payload));
+    return response.payload;
   }
 }
 

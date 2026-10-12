@@ -6,11 +6,12 @@ import {languageModelSecrets, type LanguageModelSecrets} from "../../../db/schem
 import {type RuntimeFieldCipher} from "../domain/repositories/runtime-field-cipher.js";
 import {type RuntimeSecretRotationStore} from "../domain/repositories/runtime-secret-rotation-store.js";
 import {writeDurableSecretFile} from "./durable-secret-file.js";
-import {languageModelSecretContext, licenseSecretContext} from "./runtime-secret-context.js";
+import {languageModelSecretContext, licenseSecretContext, mlServiceTokenContext} from "./runtime-secret-context.js";
 import {RuntimeSecretFileAccess} from "./runtime-secret-file-access.js";
 
 type SecretRow = Pick<LanguageModelSecrets, "secret_ref" | "encrypted_value">;
 type LicenseDocument = {license: {payload: Record<string, unknown>}; encryptedActivationSecret: string};
+type MlTokenDocument = {tenantId: string; encryptedToken: string};
 
 export class LocalRuntimeSecretRotationStore implements RuntimeSecretRotationStore {
   constructor(
@@ -27,7 +28,7 @@ export class LocalRuntimeSecretRotationStore implements RuntimeSecretRotationSto
       await this.database.update(languageModelSecrets).set({encrypted_value: encrypted}).where(and(eq(languageModelSecrets.secret_ref, row.secret_ref), eq(languageModelSecrets.encrypted_value, row.encrypted_value)));
       count++;
     });
-    return count + await this.licenseAccess.run(() => this.rewrapLicense(cipher));
+    return count + await this.licenseAccess.run(async () => await this.rewrapLicense(cipher) + await this.rewrapMlToken(cipher));
   }
 
   async verifySecrets(cipher: RuntimeFieldCipher): Promise<void> {
@@ -37,6 +38,8 @@ export class LocalRuntimeSecretRotationStore implements RuntimeSecretRotationSto
     await this.licenseAccess.run(async () => {
       const document = await this.licenseDocument();
       if (document) verify(cipher, document.encryptedActivationSecret, licenseSecretContext(document.license.payload));
+      const token = await this.mlTokenDocument();
+      if (token) verify(cipher, token.encryptedToken, mlServiceTokenContext(token.tenantId));
     });
   }
 
@@ -49,6 +52,30 @@ export class LocalRuntimeSecretRotationStore implements RuntimeSecretRotationSto
       ...document, encryptedActivationSecret: encrypted,
     }));
     return 1;
+  }
+
+  /** Die Anmeldung beim ML-Dienst (siehe FileMlTenantTokenStore) liegt unter derselben Sperre wie der Lizenzstatus. */
+  private async rewrapMlToken(cipher: RuntimeFieldCipher): Promise<number> {
+    const document = await this.mlTokenDocument();
+    if (!document) return 0;
+    const encrypted = cipher.rewrap(document.encryptedToken, mlServiceTokenContext(document.tenantId));
+    if (encrypted === document.encryptedToken) return 0;
+    await writeDurableSecretFile(this.mlTokenPath(), JSON.stringify({...document, encryptedToken: encrypted}));
+    return 1;
+  }
+
+  private async mlTokenDocument(): Promise<MlTokenDocument | null> {
+    const text = await readOptional(this.mlTokenPath());
+    if (text === null) return null;
+    const document = JSON.parse(text) as MlTokenDocument;
+    if (typeof document.tenantId !== "string" || typeof document.encryptedToken !== "string") {
+      throw new Error("Ungültige Anmeldung beim ML-Dienst.");
+    }
+    return document;
+  }
+
+  private mlTokenPath(): string {
+    return join(this.runtimeRoot, "credentials", "ml-service-token.json");
   }
 
   private async forEachSecret(operation: (row: SecretRow) => Promise<void>): Promise<void> {
@@ -77,6 +104,15 @@ export class LocalRuntimeSecretRotationStore implements RuntimeSecretRotationSto
 
   private licensePath(): string {
     return join(this.runtimeRoot, "credentials", "license-state.json");
+  }
+}
+
+async function readOptional(path: string): Promise<string | null> {
+  try {
+    return await readFile(path, "utf8");
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") return null;
+    throw error;
   }
 }
 

@@ -1,24 +1,22 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {type ModelContract} from "../../domain/entities/model-contract.js";
-import {
-  PythonModelContractValidator,
-  type PythonContractValidationClient,
-} from "./python-model-contract-validator.js";
+import {type MlServiceJsonClient} from "../ml-service-http.js";
+import {PythonModelContractValidator} from "./python-model-contract-validator.js";
 
 test("sends the whole contract to the Python sidecar for validation", async () => {
   const client = new Client();
-  const validator = new PythonModelContractValidator("http://novooa-ml:8081", client);
+  const validator = new PythonModelContractValidator(client);
 
   await validator.validate(contract("image.resize", "tensor.topK"));
 
-  assert.equal(client.url, "http://novooa-ml:8081/v1/contract-validations");
+  assert.equal(client.path, "/v1/contract-validations");
   assert.deepEqual(client.body, {contract: contract("image.resize", "tensor.topK")});
 });
 
 test("rejects a contract with the sidecar's explanation before installation", async () => {
   const client = new Client("Eingang image: audio.melSpectrogram erwartet audio, erhält image.");
-  const validator = new PythonModelContractValidator("http://novooa-ml:8081", client);
+  const validator = new PythonModelContractValidator(client);
 
   await assert.rejects(
     validator.validate(contract("audio.melSpectrogram", "tensor.topK")),
@@ -26,15 +24,15 @@ test("rejects a contract with the sidecar's explanation before installation", as
   );
 });
 
-class Client implements PythonContractValidationClient {
-  url?: string;
+class Client implements MlServiceJsonClient {
+  path?: string;
   body?: unknown;
 
   constructor(private readonly rejection?: string) {}
 
-  async post(url: string, body: unknown): Promise<unknown> {
-    this.url = url;
-    this.body = body;
+  async post(path: string, body: string): Promise<unknown> {
+    this.path = path;
+    this.body = JSON.parse(body);
     if (this.rejection !== undefined) throw new Error(this.rejection);
     return {status: "ok"};
   }

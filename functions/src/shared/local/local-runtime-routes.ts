@@ -34,6 +34,7 @@ import {type LocalRuntimeRealtimeConnections} from "./local-runtime-realtime-con
 import {realtimeTicketRoutes} from "./local-runtime-realtime-ticket-routes.js";
 import {type LocalRuntimeRealtimeTicketStore} from "./local-runtime-realtime-ticket-store.js";
 import {mailRelayFromEnvironment, pushRelayFromEnvironment} from "./local-runtime-relays.js";
+import {type LocalMlService} from "../../features/machine_learning/infrastructure/local/local-ml-service.js";
 import {createLocalRuntimeRouteServices} from "./local-runtime-route-services.js";
 import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 import {sessionRoutes} from "./local-runtime-session-routes.js";
@@ -51,6 +52,7 @@ export type LocalRuntimeApiDependencies = {
   realtimeConnections: LocalRuntimeRealtimeConnections;
   mailConnectors: MailConnectorListCache;
   workspaceContext: () => LocalRuntimeWorkspaceContext;
+  mlService: LocalMlService | undefined;
 };
 
 /**

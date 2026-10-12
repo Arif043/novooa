@@ -1,21 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {type ModelInputTransformationRequest} from "../../domain/repositories/model-input-transformer.js";
-import {
-  HttpPythonModelInputTransformer,
-  type PythonTransformHttpClient,
-} from "./http-python-model-input-transformer.js";
+import {type MlServiceJsonClient} from "../ml-service-http.js";
+import {HttpPythonModelInputTransformer} from "./http-python-model-input-transformer.js";
 
 test("sends image transformations to the private Python sidecar", async () => {
   const client = new RecordingClient();
-  const transformer = new HttpPythonModelInputTransformer(
-    "http://novooa-ml:8081",
-    client,
-  );
+  const transformer = new HttpPythonModelInputTransformer(client);
 
   const tensor = await transformer.transform(imageRequest());
 
-  assert.equal(client.url, "http://novooa-ml:8081/v1/input-transforms");
+  assert.equal(client.path, "/v1/input-transforms");
   assert.equal(client.payload?.source.type, "image");
   assert.equal(client.payload?.source.dataBase64, "AQ==");
   assert.equal(tensor.name, "image");
@@ -23,17 +18,17 @@ test("sends image transformations to the private Python sidecar", async () => {
 
 test("returns a valid tensor source without calling the sidecar", async () => {
   const client = new RecordingClient();
-  const transformer = new HttpPythonModelInputTransformer("http://novooa-ml:8081", client);
+  const transformer = new HttpPythonModelInputTransformer(client);
 
   const tensor = await transformer.transform(tensorRequest());
 
   assert.equal(tensor.name, "tensor");
-  assert.equal(client.url, undefined);
+  assert.equal(client.path, undefined);
 });
 
 test("sends number transformations to the private Python sidecar", async () => {
   const client = new RecordingClient();
-  const transformer = new HttpPythonModelInputTransformer("http://novooa-ml:8081", client);
+  const transformer = new HttpPythonModelInputTransformer(client);
 
   await transformer.transform({
     input: {
@@ -55,7 +50,7 @@ test("sends audio, json, boolean and datetime sources to the sidecar as well", a
   ];
   for (const source of sources) {
     const client = new RecordingClient();
-    const transformer = new HttpPythonModelInputTransformer("http://novooa-ml:8081", client);
+    const transformer = new HttpPythonModelInputTransformer(client);
 
     await transformer.transform({
       input: {name: "eingabe", source: source.type, dataType: "float32", shape: [1], transformations: []},
@@ -66,12 +61,12 @@ test("sends audio, json, boolean and datetime sources to the sidecar as well", a
   }
 });
 
-class RecordingClient implements PythonTransformHttpClient {
-  url: string | undefined;
+class RecordingClient implements MlServiceJsonClient {
+  path: string | undefined;
   payload: {source: {type: string; dataBase64?: string}} | undefined;
 
-  async post(url: string, body: string): Promise<unknown> {
-    this.url = url;
+  async post(path: string, body: string): Promise<unknown> {
+    this.path = path;
     this.payload = JSON.parse(body) as typeof this.payload;
     return {tensor: {name: "image", dataType: "uint8", shape: [1], dataBase64: "AQ=="}};
   }

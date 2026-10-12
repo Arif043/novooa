@@ -38,7 +38,8 @@ async function startLockedRuntime(runtimeRoot: string, release: () => Promise<vo
   const security = new LocalRuntimeSecurity(requiredEnvironment("LOCAL_RUNTIME_MASTER_KEY_FILE"), localKeyring, database, runtimeRoot);
   try {
     const {closeHttp, application} = await bootstrapLocalRuntime({
-      database, runtimeRoot, fieldCipher: security.cipher, licenses: licenseServiceFor(runtimeRoot, security),
+      database, runtimeRoot, fieldCipher: security.cipher, secretFileAccess: security.licenseAccess,
+      licenses: licenseServiceFor(runtimeRoot, security),
       cors: LocalRuntimeCorsPolicy.fromEnvironment(), webDirectory: webApplicationDirectory(), port: configuredPort(),
     });
     security.start();
