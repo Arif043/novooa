@@ -124,14 +124,12 @@ services:
       dockerfile: functions/Dockerfile.local-runtime
     user: "0:0"
     network_mode: none
-    command: [node, lib/shared/local/local-runtime-keyring-seed-cli.js]
+    # Erzeugt beim ersten Start den Schlüsselbund im Volume novooa-keys; danach rotiert ihn die Runtime selbst.
+    command: [node, lib/shared/local/local-runtime-keyring-init-cli.js]
     environment:
       LOCAL_RUNTIME_MASTER_KEY_FILE: /var/lib/novooa-keys/runtime-master-key
-      LOCAL_RUNTIME_MASTER_KEY_SEED_FILE: /run/secrets/novooa_runtime_master_key
     volumes:
       - novooa-keys:/var/lib/novooa-keys
-    secrets:
-      - novooa_runtime_master_key
 
   key-rotation:
     profiles: [maintenance]
@@ -179,7 +177,5 @@ volumes:
   novooa-keys:
 
 secrets:
-  novooa_runtime_master_key:
-    file: ${NOVOOA_LOCAL_SECRETS_DIRECTORY:-.novooa}/runtime-master-key
   novooa_runtime_license_public_key:
     file: ${NOVOOA_LOCAL_SECRETS_DIRECTORY:-.novooa}/runtime-license-public-key

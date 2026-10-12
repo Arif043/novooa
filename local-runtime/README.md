@@ -65,8 +65,6 @@ des Kunden.
 ## Lokaler Stack
 
 ```bash
-npm --prefix functions run local-runtime:prepare -- \
-  --secret-file ../.novooa/runtime-master-key
 docker compose -f docker-compose.server.yaml up --build --detach   # einmal pro Rechner: ML-Dienst
 docker compose -f docker-compose.local.yaml up --build --detach    # der Stack
 curl http://127.0.0.1:8090/healthz
@@ -88,14 +86,16 @@ novooa-ml python -m novooa_ml.tenants list` zeigt die angemeldeten Runtimes.
 
 ### Mehrere Stacks auf einem Rechner
 
-Jeder Stack bekommt einen eigenen Projektnamen, Port und Secrets-Ordner:
+Jeder Stack bekommt einen eigenen Projektnamen und Port; über den Projektnamen
+erhält er eigene Volumes, also eigene Daten und einen eigenen Master-Key. Den
+öffentlichen Lizenzschlüssel im Secrets-Ordner teilen sich alle Stacks. Jeder
+Stack braucht eine eigene Lizenz.
 
 ```bash
-# kunden/a.env
+# kunden/a.env (ersetzt die .env im Projektordner)
 NOVOOA_RUNTIME_PORT=8091
-NOVOOA_LOCAL_SECRETS_DIRECTORY=/srv/novooa/kunde-a
 
-docker compose -p kunde-a --env-file kunden/a.env -f docker-compose.local.yaml up --detach
+docker compose -p kunde-a --env-file kunden/a.env -f docker-compose.local.yaml up --build --detach
 ```
 
 Docker vergibt Netze aus einem begrenzten Adresspool (etwa 30 Netze); jeder Stack
@@ -108,11 +108,12 @@ vergrößern und Docker neu starten:
 
 Das Shopware-Testsystem startet nur mit `--profile dev`.
 
-Der erste Befehl erzeugt einmalig einen zufälligen 32-Byte-Master-Key. Compose
-mountet ihn ausschließlich für `runtime` als Datei unter `/run/secrets`. Der
-Key ist absichtlich nicht Teil des Daten-Volumes und darf weder eingecheckt noch
-gelöscht werden, solange verschlüsselte Provider-Zugänge wiederherstellbar sein
-sollen.
+Den Master-Key erzeugt beim ersten Start der Init-Dienst `key-init` im Volume
+`novooa-keys`; danach rotiert ihn die Runtime selbst. Er ist absichtlich nicht
+Teil des Daten-Volumes. Ein Backup braucht `novooa-data` **und** `novooa-keys`,
+sonst sind die verschlüsselten Provider-Zugänge verloren. Im Secrets-Ordner
+(`NOVOOA_LOCAL_SECRETS_DIRECTORY`, Standard `.novooa`) liegt nur der öffentliche
+Lizenzschlüssel `runtime-license-public-key`.
 
 ## Images für einen Ziel-Rechner bauen
 

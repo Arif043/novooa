@@ -103,10 +103,7 @@ cd cli && npm install && npm run build && node dist/index.js
    ```powershell
    mkdir C:\Development\.novooa
 
-   # Versionierten Runtime-Schlüsselbund mit zufälligem Master-Key erstellen
-   # Im Projektverzeichnis (Node.js 24 erforderlich):
-   npm --prefix functions run local-runtime:prepare -- --secret-file C:\Development\.novooa\runtime-master-key
-
+   # Den Master-Key erzeugt der Stack beim ersten Start selbst (Volume novooa-keys).
    # runtime-license-public-key: von Produktion kopieren
    # (wird vom Lizenz-Gateway bereitgestellt)
    ```
@@ -303,7 +300,7 @@ Das CLI wird später auch ein Option zum direkten Node/Python-Start haben, falls
 | SSH-Verbindung fehlgeschlagen | Firewall prüfen, OpenSSH läuft?, IP korrekt? |
 | Docker nicht gefunden | Docker Desktop installieren oder CLI konfigurieren |
 | Flutter SDK nicht gefunden | Flutter SDK auf Windows installieren, PATH setzen |
-| Secrets fehlen | `.novooa/runtime-master-key` und `runtime-license-public-key` anlegen |
+| Secrets fehlen | `.novooa/runtime-license-public-key` anlegen |
 | Build schlägt fehl | Flutter Logs prüfen: `flutter build windows -v` |
 
 ## 📝 Struktur des CLI

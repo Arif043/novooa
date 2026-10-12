@@ -1104,8 +1104,6 @@ dessen Infrastructure-Bereich.
 ## Lokaler Start
 
 ```bash
-npm --prefix functions run local-runtime:prepare -- \
-  --secret-file ../.novooa/runtime-master-key
 flutter build web            # die Runtime liefert dieses Build selbst aus
 docker compose -f docker-compose.local.yaml up --build --detach
 curl http://127.0.0.1:8090/healthz
@@ -1124,20 +1122,21 @@ gesetzt werden (siehe
 
 Der Stack legt die benannten Volumes `novooa-local_novooa-data` und
 `novooa-local_novooa-keys` an. Ein `docker compose down` entfernt weder diese
-Volumes noch SQLite, Dateien, Modellartefakte oder Schlüssel. Beim ersten Befehl entsteht ein versionierter JSON-Schlüsselbund
-mit einem zufälligen 32-Byte-Master-Key in `.novooa/runtime-master-key`;
-das Verzeichnis ist ignoriert. Der netzwerklose Init-Dienst übernimmt ihn einmalig
-in das separate Schlüssel-Volume. Dort liegt der maßgebliche, automatisch rotierende
-Schlüsselbund unter `/var/lib/novooa-keys/runtime-master-key`, mit Datei-Rechten
-`0600`, Verzeichnis-Rechten `0700` und Eigentümer `node` (UID/GID 1000).
-Spätere Starts übernehmen die Setup-Datei nicht erneut. Sie ist nach Rotationen
-kein aktuelles Backup des Schlüsselbunds. Beim vollständigen Neuaufsetzen müssen
-beide Volumes und die Setup-Datei gemeinsam berücksichtigt werden.
-Eine auslieferbare Desktop-App erzeugt dieselbe Datei bei der Installation im
-betriebssystemspezifischen Novooa-Datenverzeichnis und setzt
-`NOVOOA_LOCAL_SECRETS_DIRECTORY` darauf. Der Master-Key darf weder im Docker-
-Image noch im SQLite-Volume liegen. Bei dessen Verlust müssen gespeicherte
-Provider-Keys erneut hinterlegt werden.
+Volumes noch SQLite, Dateien, Modellartefakte oder Schlüssel. Beim ersten Start
+erzeugt der netzwerklose Init-Dienst `key-init` einen versionierten
+JSON-Schlüsselbund mit einem zufälligen 32-Byte-Master-Key im separaten
+Schlüssel-Volume; spätere Starts lassen ihn unberührt. Dort liegt der
+automatisch rotierende Schlüsselbund unter
+`/var/lib/novooa-keys/runtime-master-key`, mit Datei-Rechten `0600`,
+Verzeichnis-Rechten `0700` und Eigentümer `node` (UID/GID 1000). Auf dem Host
+liegt kein Schlüssel; ein Backup umfasst deshalb **beide** Volumes. Der
+Master-Key darf weder im Docker-Image noch im SQLite-Volume liegen. Bei seinem
+Verlust müssen gespeicherte Provider-Keys erneut hinterlegt werden.
+
+Ohne Docker (Desktop-App, `local-runtime:serve`) gibt es kein Schlüssel-Volume:
+`npm --prefix functions run local-runtime:prepare -- --secret-file <pfad>`
+legt den Schlüsselbund als Datei an, die Runtime nutzt und rotiert ihn dort
+direkt (`LOCAL_RUNTIME_MASTER_KEY_FILE`).
 
 ## Feldverschlüsselung und Master-Key-Rotation
 
@@ -1161,8 +1160,7 @@ Die Envelope enthält Version, Master-Key-ID, Salt, verschlüsselten Datenschlü
 und verschlüsselten Feldwert mit ihren jeweiligen IVs und Tags. Datenschlüssel
 werden nicht im Klartext persistiert. Die Kryptografie verwendet `node:crypto`.
 Cloud-Credentials behalten ihre separate bestehende Verschlüsselung.
-Der Init-Dienst kann eine bestehende 32-Byte-Base64-Setup-Datei übernehmen und
-behält dabei das vorhandene Schlüsselmaterial. Beim Start übernimmt die Runtime
+Beim Start übernimmt die Runtime
 vorhandene Geheimnisse im bisherigen AES-GCM-Feldformat einmalig in Envelopes.
 Sie authentifiziert dafür die alten Werte mit den verfügbaren Master-Keys und
 speichert ausschließlich erfolgreich entschlüsselte Werte im neuen Format.
