@@ -17,8 +17,9 @@ export class MlTenantIdTakenError extends Error {
 }
 
 /**
- * Die Anmeldung der Runtime beim zentralen ML-Dienst ihres Servers. Die Kennung ist die Arbeitsbereichs-ID
- * der Lizenz; das Token vergibt der ML-Dienst bei der ersten Anfrage, die Runtime speichert es verschlüsselt.
+ * Die Anmeldung der Runtime beim zentralen ML-Dienst ihres Servers. Die Kennung ist die Lizenz-ID: Eine Lizenz
+ * lässt sich nur einmal aktivieren, also hat jeder Stack seine eigene, auch wenn mehrere Lizenzen zum selben Team
+ * gehören. Das Token vergibt der ML-Dienst bei der ersten Anfrage, die Runtime speichert es verschlüsselt.
  * Ohne aktive Lizenz gibt es keine Anmeldung; fällt die Lizenz weg, meldet sich die Runtime ab.
  */
 export class MlTenantSession implements MlServiceCredentials {
@@ -66,7 +67,7 @@ export class MlTenantSession implements MlServiceCredentials {
   private async loadOrRegister(tenantId: string): Promise<StoredMlTenantToken> {
     const stored = await this.store.load();
     if (stored?.tenantId === tenantId) return stored;
-    // Lizenz mit anderem Arbeitsbereich: die alte Anmeldung freigeben, bevor die neue entsteht.
+    // Andere Lizenz: die alte Anmeldung freigeben, bevor die neue entsteht.
     if (stored !== null) await this.release(stored);
     const token = {tenantId, token: await this.register(tenantId)};
     await this.store.save(token);

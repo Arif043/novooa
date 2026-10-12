@@ -66,8 +66,8 @@ verwendet dann HTTPS. Details dazu und zur zwingenden
 Passwort-Authentifizierung unter
 [Zugriff und Authentifizierung](#zugriff-und-authentifizierung). `novooa-ml`
 ist nicht vom Host erreichbar und kommuniziert nur über das interne
-Netz `novooa-ml` mit den Runtimes. Jede Runtime meldet sich dort mit der
-Arbeitsbereichs-ID ihrer Lizenz an und erhält ein eigenes Token (siehe
+Netz `novooa-ml` mit den Runtimes. Jede Runtime meldet sich dort mit ihrer
+Lizenz-ID an und erhält ein eigenes Token (siehe
 [ML-Modelle](features/ml-modelle.md#mandanten)).
 
 Das benannte Volume `novooa-data` enthält SQLite, Dateien, Wissensbasis und

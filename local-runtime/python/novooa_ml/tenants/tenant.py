@@ -6,7 +6,7 @@ MAX_TENANT_ID_LENGTH = 200
 @dataclass(frozen=True)
 class Tenant:
     """
-    Ein registrierter Mandant. `id` ist die Kennung der Runtime (ihre Arbeitsbereichs-ID) und kein Geheimnis.
+    Ein registrierter Mandant. `id` ist die Kennung der Runtime (ihre Lizenz-ID) und kein Geheimnis.
     `registration` wechselt mit jeder Registrierung; Teammodelle und Sitzungen hängen daran, damit eine neu
     vergebene Kennung nie an Reste ihres Vorgängers kommt.
     """

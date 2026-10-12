@@ -16,7 +16,7 @@ services:
       # Nur für lokale Entwicklung nötig (z.B. http://localhost:59193).
       LOCAL_RUNTIME_ALLOWED_ORIGINS: ${LOCAL_RUNTIME_ALLOWED_ORIGINS:-}
       NOVOOA_LOCAL_DEVELOPMENT: ${NOVOOA_LOCAL_DEVELOPMENT:-false}
-      # Der ML-Dienst des Servers; die Runtime meldet sich dort mit ihrer Arbeitsbereichs-ID an.
+      # Der ML-Dienst des Servers; die Runtime meldet sich dort mit ihrer Lizenz-ID an.
       PYTHON_INFERENCE_SIDECAR_URL: http://novooa-ml:8081
       # Optionale Obergrenze je hochgeladener Modelldatei in Bytes; leer = nur der freie Platz begrenzt.
       MODEL_ARTIFACT_MAX_BYTES: ${NOVOOA_MODEL_ARTIFACT_MAX_BYTES:-}

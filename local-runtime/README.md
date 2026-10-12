@@ -76,8 +76,8 @@ Das Volume `novooa-data` enthält SQLite und lokale Dateien. Der ML-Dienst
 (`docker-compose.server.yaml`) erhält weder dieses Volume noch einen
 veröffentlichten Host-Port; alle Stacks des Rechners teilen ihn. Katalogmodelle lädt
 er aus dem globalen Modellspeicher (`NOVOOA_MODEL_STORE_URL`, öffentlich lesbar),
-Teammodelle streamt ihm die Runtime. Jede Runtime meldet sich mit der
-Arbeitsbereichs-ID ihrer Lizenz an; `docker compose -f docker-compose.server.yaml exec
+Teammodelle streamt ihm die Runtime. Jede Runtime meldet sich mit ihrer
+Lizenz-ID an; `docker compose -f docker-compose.server.yaml exec
 novooa-ml python -m novooa_ml.tenants list` zeigt die angemeldeten Runtimes.
 
 ### Mehrere Stacks auf einem Rechner

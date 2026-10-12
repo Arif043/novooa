@@ -75,7 +75,7 @@ function sharedFor(options: BootstrapOptions): RuntimeShared {
   const mailConnectors = new MailConnectorListCache();
   const mlService = localMlServiceFromEnvironment({
     runtimeRoot, cipher: fieldCipher, secretFileAccess: options.secretFileAccess,
-    tenantId: () => licenses.activeContext()?.workspaceId ?? null,
+    tenantId: () => licenses.activeContext()?.licenseId ?? null,
   });
   const application = new LocalRuntimeApplication({
     database, runtimeRoot, fieldCipher, realtimeNotifier: notifier, mailConnectors, mlService,

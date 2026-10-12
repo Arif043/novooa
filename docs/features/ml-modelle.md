@@ -443,9 +443,12 @@ Alle Anfragen außer der Anmeldung tragen `Authorization: Bearer <token>`.
 
 #### Mandanten
 
-- **Kennung** ist die Arbeitsbereichs-ID der Lizenz (`teams.id`, ohne Angabe beim
-  Ausstellen gleich der Lizenz-ID, einer UUID). Sie ist kein Geheimnis und dient nie
-  als Token. Lizenzen deshalb ohne lesbare `workspace-id` ausstellen.
+- **Kennung** ist die Lizenz-ID (`licenseId`). Eine Lizenz lässt sich nur einmal
+  aktivieren, also hat jeder Stack seine eigene — auch wenn mehrere Lizenzen
+  desselben Teams (`workspaceId`) auf einem Server laufen. Ohne Angabe beim
+  Ausstellen ist sie eine zufällige UUID; Lizenzen deshalb ohne lesbare
+  `--license-id` ausstellen, sonst könnte ein anderer Stack sie vorab belegen. Die
+  Kennung ist kein Geheimnis und dient nie als Token.
 - **Anmeldung:** Bei der ersten Anfrage meldet sich die Runtime mit ihrer Kennung an
   (`MlTenantSession`). Der ML-Dienst erzeugt ein Token (`nml_…`, 32 Zufallsbytes),
   speichert nur dessen SHA-256 (`tenants.sqlite3`) und gibt es einmal zurück. Die

@@ -11,7 +11,7 @@ export type LocalMlServiceOptions = {
   runtimeRoot: string;
   cipher: SensitiveFieldCipher;
   secretFileAccess: RuntimeSecretFileAccess;
-  /** Die Arbeitsbereichs-ID der aktiven Lizenz, sonst `null`. */
+  /** Die Lizenz-ID der aktiven Lizenz, sonst `null`. */
   tenantId: () => string | null;
 };
 
