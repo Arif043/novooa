@@ -23,7 +23,6 @@ services:
       # Script-Bausteine laufen in einem eigenen, abgeschotteten Container (siehe novooa-script).
       SCRIPT_RUNNER_URL: http://novooa-script:8091
       LOCAL_RUNTIME_MASTER_KEY_FILE: /var/lib/novooa-keys/runtime-master-key
-      LOCAL_RUNTIME_LICENSE_PUBLIC_KEY_FILE: /run/secrets/novooa_runtime_license_public_key
       LOCAL_RUNTIME_LICENSE_GATEWAY_URL: ${LOCAL_RUNTIME_LICENSE_GATEWAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/issueLocalRuntimeLicense}
       LOCAL_RUNTIME_PUSH_RELAY_URL: ${LOCAL_RUNTIME_PUSH_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimePushRelay}
       LOCAL_RUNTIME_TASK_BUILDER_RELAY_URL: ${LOCAL_RUNTIME_TASK_BUILDER_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeTaskBuilderRelay}
@@ -59,8 +58,6 @@ services:
       # ersten Start einmal ausführen — fehlt das Verzeichnis, liefert die
       # Runtime nur die API aus und antwortet auf App-Pfade mit 404.
       - ./build/web:/app/web:ro
-    secrets:
-      - novooa_runtime_license_public_key
     networks:
       - novooa-public
       - novooa-private
@@ -175,7 +172,3 @@ networks:
 volumes:
   novooa-data:
   novooa-keys:
-
-secrets:
-  novooa_runtime_license_public_key:
-    file: ${NOVOOA_LOCAL_SECRETS_DIRECTORY:-.novooa}/runtime-license-public-key

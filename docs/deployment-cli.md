@@ -99,14 +99,9 @@ cd cli && npm install && npm run build && node dist/index.js
    flutter --version
    ```
 
-5. **Secrets vorbereiten**
-   ```powershell
-   mkdir C:\Development\.novooa
-
-   # Den Master-Key erzeugt der Stack beim ersten Start selbst (Volume novooa-keys).
-   # runtime-license-public-key: von Produktion kopieren
-   # (wird vom Lizenz-Gateway bereitgestellt)
-   ```
+5. **Schlüssel:** nichts vorzubereiten. Den Master-Key erzeugt der Stack beim
+   ersten Start (Volume `novooa-keys`), den öffentlichen Lizenzschlüssel bringt
+   das Image mit.
 
 ### Entwicklungs-Rechner (Mac/Linux)
 
@@ -300,7 +295,6 @@ Das CLI wird später auch ein Option zum direkten Node/Python-Start haben, falls
 | SSH-Verbindung fehlgeschlagen | Firewall prüfen, OpenSSH läuft?, IP korrekt? |
 | Docker nicht gefunden | Docker Desktop installieren oder CLI konfigurieren |
 | Flutter SDK nicht gefunden | Flutter SDK auf Windows installieren, PATH setzen |
-| Secrets fehlen | `.novooa/runtime-license-public-key` anlegen |
 | Build schlägt fehl | Flutter Logs prüfen: `flutter build windows -v` |
 
 ## 📝 Struktur des CLI

@@ -18,6 +18,7 @@ RUN npm ci --omit=dev
 
 COPY --from=build /app/functions/lib ./lib
 COPY functions/drizzle /app/functions/drizzle
+COPY functions/keys /app/functions/keys
 
 RUN mkdir -p /var/lib/novooa && chown -R node:node /var/lib/novooa
 

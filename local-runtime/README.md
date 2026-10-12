@@ -87,8 +87,7 @@ novooa-ml python -m novooa_ml.tenants list` zeigt die angemeldeten Runtimes.
 ### Mehrere Stacks auf einem Rechner
 
 Jeder Stack bekommt einen eigenen Projektnamen und Port; über den Projektnamen
-erhält er eigene Volumes, also eigene Daten und einen eigenen Master-Key. Den
-öffentlichen Lizenzschlüssel im Secrets-Ordner teilen sich alle Stacks. Jeder
+erhält er eigene Volumes, also eigene Daten und einen eigenen Master-Key. Jeder
 Stack braucht eine eigene Lizenz.
 
 ```bash
@@ -111,9 +110,9 @@ Das Shopware-Testsystem startet nur mit `--profile dev`.
 Den Master-Key erzeugt beim ersten Start der Init-Dienst `key-init` im Volume
 `novooa-keys`; danach rotiert ihn die Runtime selbst. Er ist absichtlich nicht
 Teil des Daten-Volumes. Ein Backup braucht `novooa-data` **und** `novooa-keys`,
-sonst sind die verschlüsselten Provider-Zugänge verloren. Im Secrets-Ordner
-(`NOVOOA_LOCAL_SECRETS_DIRECTORY`, Standard `.novooa`) liegt nur der öffentliche
-Lizenzschlüssel `runtime-license-public-key`.
+sonst sind die verschlüsselten Provider-Zugänge verloren. Den öffentlichen
+Lizenzschlüssel bringt das Image mit (`functions/keys`); auf dem Server liegen
+keine Schlüsseldateien.
 
 ## Images für einen Ziel-Rechner bauen
 

@@ -123,10 +123,9 @@ function developmentLicenseService(): RuntimeLicenseService {
   });
 }
 
+/** Öffentlich und für alle Runtimes gleich, deshalb Teil des Builds (`functions/keys`) statt Konfiguration. */
 function licensePublicKey(): string {
-  const file = optionalEnvironment("LOCAL_RUNTIME_LICENSE_PUBLIC_KEY_FILE");
-  if (file) return readFileSync(file, "utf8").trim();
-  return requiredEnvironment("LOCAL_RUNTIME_LICENSE_PUBLIC_KEY");
+  return readFileSync(resolve(__dirname, "../../../keys/runtime-license-public-key.pem"), "utf8").trim();
 }
 
 function optionalEnvironment(name: string): string | undefined {

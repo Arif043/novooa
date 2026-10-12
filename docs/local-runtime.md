@@ -772,7 +772,6 @@ Der Produktiv-Container benötigt diese Variablen:
 
 ```text
 LOCAL_RUNTIME_LICENSE_GATEWAY_URL=https://<region>-<projekt>.cloudfunctions.net/issueLocalRuntimeLicense
-LOCAL_RUNTIME_LICENSE_PUBLIC_KEY_FILE=/run/secrets/novooa_runtime_license_public_key
 LOCAL_RUNTIME_PUSH_RELAY_URL=https://<region>-<projekt>.cloudfunctions.net/localRuntimePushRelay
 LOCAL_RUNTIME_MAIL_RELAY_URL=https://<region>-<projekt>.cloudfunctions.net/localRuntimeMailRelay
 LOCAL_RUNTIME_FIREBASE_API_KEY=<Firebase-Web-API-Key>
@@ -781,9 +780,11 @@ LOCAL_RUNTIME_FIREBASE_TOKEN_URL=https://<region>-<projekt>.cloudfunctions.net/i
 ```
 
 Der Verifikationsschlüssel ist kein Kundengeheimnis und dient ausschließlich dazu,
-die Server-Signatur offline zu prüfen. Im Compose-Betrieb wird er bevorzugt über
-`LOCAL_RUNTIME_LICENSE_PUBLIC_KEY_FILE` aus dem Docker-Secret
-`novooa_runtime_license_public_key` gelesen. Der zugehörige private
+die Server-Signatur offline zu prüfen. Er ist für alle Runtimes gleich und
+liegt deshalb im Repository (`functions/keys/runtime-license-public-key.pem`);
+das Runtime-Image bringt ihn mit, ein Server braucht keine Schlüsseldatei.
+Ein neues Schlüsselpaar würde alle aktivierten Lizenzen ungültig machen
+und ist nicht vorgesehen. Der zugehörige private
 Ed25519-Schlüssel ist als Firebase-Secret `LOCAL_RUNTIME_LICENSE_SIGNING_KEY`
 ausschließlich im Lizenz-Gateway verfügbar. Er gehört weder in ein Image,
 Compose-File noch in die Desktop-App.

@@ -41,7 +41,6 @@ Konfiguration wird gespeichert in: `~/.novooa-cli/config.json`
 - Zeigt Status und Logs
 - Benötigt:
   - Docker Desktop auf Windows
-  - `.novooa/runtime-license-public-key`
 
 ### 4. Runtime bauen
 Placeholder für zukünftige Implementierung.
