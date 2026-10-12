@@ -1,14 +1,11 @@
-import 'dart:typed_data';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_spacing.dart';
-import '../../domain/entities/upload_file_input.dart';
 import '../cubits/files_cubit.dart';
 import '../cubits/files_state.dart';
 import 'create_folder_dialog.dart';
+import 'file_upload_picker.dart';
 
 class FilesActionBar extends StatelessWidget {
   const FilesActionBar({super.key, required this.state});
@@ -51,36 +48,9 @@ class FilesActionBar extends StatelessWidget {
   }
 
   Future<void> _pickAndUpload(BuildContext context) async {
-    final input = await _pickFile();
+    final input = await pickUploadFile();
     if (!context.mounted || input == null) return;
     await context.read<FilesCubit>().upload(input);
-  }
-
-  Future<UploadFileInput?> _pickFile() async {
-    final pickedFileOrFailure = await FilePicker.pickFiles(withData: true);
-    final file = pickedFileOrFailure?.files.firstOrNull;
-    final bytes = file?.bytes;
-    if (file == null || bytes == null) return null;
-    return UploadFileInput(
-      name: file.name,
-      bytes: Uint8List.fromList(bytes),
-      sizeBytes: file.size,
-      contentType: _contentTypeFor(file.extension),
-    );
-  }
-
-  String _contentTypeFor(String? extension) {
-    return switch (extension?.toLowerCase()) {
-      'pdf' => 'application/pdf',
-      'txt' => 'text/plain',
-      'json' => 'application/json',
-      'jpg' || 'jpeg' => 'image/jpeg',
-      'png' => 'image/png',
-      'webp' => 'image/webp',
-      'xlsx' =>
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      _ => 'application/octet-stream',
-    };
   }
 }
 

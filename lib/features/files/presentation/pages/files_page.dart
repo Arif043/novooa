@@ -6,6 +6,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../cubits/files_cubit.dart';
 import '../cubits/files_state.dart';
 import '../widgets/files_header.dart';
+import '../widgets/files_initial_state.dart';
 import '../widgets/files_content.dart';
 
 class FilesPage extends StatelessWidget {
@@ -48,6 +49,9 @@ class _FilesBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (state.isInitial) {
+      return FilesInitialState(isUploading: state.isUploading);
+    }
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.pageMobile),
       child: NestedScrollView(

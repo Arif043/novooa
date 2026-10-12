@@ -593,7 +593,11 @@
     "schedule_empty_create": "Create first trigger",
     "schedule_empty_no_task_title": "Everything starts with a task",
     "schedule_empty_no_task_body": "Create a task first. Then you decide here when it starts automatically.",
-    "schedule_empty_create_task": "Create task"
+    "schedule_empty_create_task": "Create task",
+    "files_initial_title": "A home for your files",
+    "files_initial_body": "Upload documents, organize them in folders and make them available to your tasks.",
+    "files_initial_upload": "Upload first file",
+    "files_initial_folder": "New folder"
   },
   "machine_learning": {
     "model_import": {

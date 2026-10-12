@@ -593,7 +593,11 @@
     "schedule_empty_create": "Ersten Auslöser erstellen",
     "schedule_empty_no_task_title": "Alles beginnt mit einer Aufgabe",
     "schedule_empty_no_task_body": "Erstelle zuerst eine Aufgabe. Hier legst du anschließend fest, wann sie automatisch startet.",
-    "schedule_empty_create_task": "Aufgabe erstellen"
+    "schedule_empty_create_task": "Aufgabe erstellen",
+    "files_initial_title": "Ein Zuhause für deine Dateien",
+    "files_initial_body": "Lade Dokumente hoch, ordne sie in Ordnern und stelle sie deinen Aufgaben bereit.",
+    "files_initial_upload": "Erste Datei hochladen",
+    "files_initial_folder": "Neuer Ordner"
   },
   "machine_learning": {
     "model_import": {

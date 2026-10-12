@@ -22,6 +22,10 @@ class FilesState {
   final bool isCreatingFolder;
   final String? message;
 
+  /// Es gibt noch gar keine Dateien oder Ordner — der erste Eindruck.
+  bool get isInitial =>
+      status == FilesLoadStatus.ready && files.isEmpty && folders.isEmpty;
+
   List<TeamFile> get visibleFiles {
     return files.where((file) => file.folderId == currentFolderId).toList();
   }
