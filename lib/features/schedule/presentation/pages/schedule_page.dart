@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/layout/page_insets.dart';
 import '../../../../core/widgets/ios_overlays.dart';
 import '../cubits/schedule_cubit.dart';
 import '../cubits/schedule_state.dart';
@@ -39,10 +40,9 @@ class ScheduleView extends StatelessWidget {
                   )
                 : LayoutBuilder(
                     builder: (context, constraints) {
-                      final gutter = constraints.maxWidth < 600 ? 20.0 : 40.0;
-                      final inset = constraints.maxWidth > 1080
-                          ? (constraints.maxWidth - 1000) / 2
-                          : gutter;
+                      final insets = PageInsets.forWidth(constraints.maxWidth);
+                      final gutter = insets.gutter;
+                      final inset = insets.inset;
                       return CustomScrollView(
                         slivers: [
                           SliverPadding(

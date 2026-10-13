@@ -1,83 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/layout/page_insets.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../domain/entities/team_file.dart';
 import '../cubits/files_cubit.dart';
 import '../cubits/files_state.dart';
-import '../../domain/entities/team_file.dart';
+import '../pages/file_detail_page.dart';
 import 'delete_file_dialog.dart';
 import 'file_tile.dart';
-import '../pages/file_detail_page.dart';
-import 'files_breadcrumbs.dart';
-import 'folder_tile.dart';
 import 'files_empty_state.dart';
+import 'files_item_card.dart';
+import 'folder_tile.dart';
 
-class FilesContent extends StatelessWidget {
-  const FilesContent({super.key, required this.state});
+/// Inhalt unterhalb der Kopfzeile als Slivers: Laden, Fehler, leerer Ordner
+/// oder die Liste der Ordner und Dateien.
+class FilesContent {
+  const FilesContent({required this.state, required this.insets});
 
   final FilesState state;
+  final PageInsets insets;
 
-  @override
-  Widget build(BuildContext context) {
+  List<Widget> slivers() {
     return switch (state.status) {
-      FilesLoadStatus.loading => const Center(
-        child: CircularProgressIndicator(),
-      ),
-      FilesLoadStatus.failure => _FailureState(message: state.message),
-      FilesLoadStatus.ready => _ReadyFilesContent(state: state),
+      FilesLoadStatus.loading => [
+        _fill(const Center(child: CircularProgressIndicator())),
+      ],
+      FilesLoadStatus.failure => [_fill(_FailureState(message: state.message))],
+      FilesLoadStatus.ready => _ready(),
     };
   }
-}
 
-class _ReadyFilesContent extends StatelessWidget {
-  const _ReadyFilesContent({required this.state});
-
-  final FilesState state;
-
-  @override
-  Widget build(BuildContext context) {
+  List<Widget> _ready() {
     final itemCount = state.visibleFolders.length + state.visibleFiles.length;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        FilesBreadcrumbs(state: state),
-        const SizedBox(height: AppSpacing.md),
-        Expanded(
-          child: itemCount == 0
-              ? const FilesEmptyState()
-              : Card(
-                  margin: EdgeInsets.zero,
-                  clipBehavior: Clip.antiAlias,
-                  child: _FileList(state: state, itemCount: itemCount),
-                ),
+    if (itemCount == 0) return [_fill(const FilesEmptyState())];
+    return [
+      SliverPadding(
+        padding: EdgeInsets.fromLTRB(insets.inset, 0, insets.inset, 40),
+        sliver: SliverList.separated(
+          itemCount: itemCount,
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          itemBuilder: (context, index) =>
+              FilesItemCard(child: _itemFor(context, index)),
         ),
-      ],
-    );
-  }
-}
-
-class _FileList extends StatelessWidget {
-  const _FileList({required this.state, required this.itemCount});
-
-  final FilesState state;
-  final int itemCount;
-
-  @override
-  Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: () async => context.read<FilesCubit>().load(),
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: itemCount,
-        separatorBuilder: (_, _) => const Divider(
-          height: AppSpacing.xs,
-          indent: AppSpacing.md,
-          endIndent: AppSpacing.md,
-        ),
-        itemBuilder: (context, index) => _itemFor(context, index),
       ),
-    );
+    ];
   }
+
+  Widget _fill(Widget child) => SliverFillRemaining(
+    hasScrollBody: false,
+    child: Padding(padding: EdgeInsets.all(insets.gutter), child: child),
+  );
 
   Widget _itemFor(BuildContext context, int index) {
     final folders = state.visibleFolders;
