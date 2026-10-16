@@ -101,7 +101,7 @@ Webhook gestartet“ ab.
 - **Auslöser anderer Quellen** (`WebhookInterpreter`, `webhooks/domain/entities/webhook-interpreter.ts`): Eine Quelle mit
   `usesWebhook` bekommt Token und Adresse wie `webhookReceived`; nach Token- und Signaturprüfung wertet ihr Interpreter den
   Aufruf aus und liefert null bis zehn Läufe (Kontexttext, Ereignis). Plugins bringen Quelle und Interpreter mit
-  (`IntegrationPlugin.eventTriggers`; Beispiel: [Shopware](./shopware.md)). Quellspezifische Einstellungen stehen in
+  (`IntegrationPlugin.eventTriggers`; Beispiel: [Shopware](../notes/shopware-plugin.md)). Quellspezifische Einstellungen stehen in
   `EventTriggerConfig.params`, die das Plugin selbst prüft (`problem`).
 - **Geheimnis** der Signaturprüfung: verschlüsselt in `language_model_secrets` mit `secret_ref = webhook/<team>/<trigger>`
   (derselbe Speicher und dieselbe Schlüsselrotation wie bei Verbindungen). Es steht nie in der Konfiguration und wird nie

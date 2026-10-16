@@ -1,0 +1,44 @@
+# Integrations-Plugins
+
+> Ein Plugin schließt ein externes System an und bringt dafür Bausteine mit; Plugins sind fest eingebaute Module, keine nachladbaren Pakete.
+
+Gehört zu: [Integrationen](../index/integrationen.md)
+
+- Plugins nutzen die allgemeine Schicht: [Verbindungen](../features/verbindungen.md)
+  für Zugang und Anmeldung, `OutboundHttpClient` für Aufrufe,
+  [Webhooks](../features/webhooks.md) für eingehende Ereignisse — und ergänzen
+  nur, was dem System eigen ist.
+- **Verfügbarkeit:** nur Standalone. In der Cloud sind ihre Executoren nicht
+  angemeldet; solche Bausteine werden dort übersprungen.
+
+Ablage:
+
+```
+functions/src/features/integrations/
+  integration-plugin.ts       Vertrag (id, executors, eventTriggers?)
+  index.ts                    integrationPlugins, registerIntegrationPlugins
+  <system>/                   ein Ordner je Plugin, z. B. shopware/
+    <system>-plugin.ts        meldet die Teile an
+    domain/, infrastructure/  wie jedes Feature
+lib/features/integrations/<system>/   Client: Konfiguration, Widget, Einstellungen
+```
+
+Regeln:
+
+- **Der Kern importiert nichts aus `features/integrations`** — ESLint
+  (`no-restricted-imports`) erzwingt das. Verdrahtet wird nur in
+  `src/shared/local`: `registerIntegrationPlugins(createDefaultNodeExecutorRegistry())`,
+  weitergereicht über `TaskGraphRuntime.executorRegistry`.
+- Ein neues Plugin wird nur in `integrationPlugins` eingetragen.
+- Der Vertrag wächst mit dem nächsten Bedarf (Routen, Worker).
+  `eventTriggers` bringen eine Ereignisquelle samt Interpreter; die Komposition
+  reicht sie an den Webhook-Empfänger (`integrationWebhookInterpreters`). Im
+  Client ist `EventTriggerSource` noch ein geschlossenes Enum (`shopware` fest,
+  das Formular liegt im Plugin).
+- Client: `registerIntegrationNodes` (`lib/features/integrations/integration_nodes.dart`).
+
+## Siehe auch
+
+- [Bausteine von Plugins](./plugin-bausteine.md)
+- [Ereignisquellen-Registry](./ereignisquellen-registry.md)
+- [Shopware-Plugin](./shopware-plugin.md)

@@ -25,6 +25,12 @@ Primitive eine Zeile.
   `PluginNodeModules.register` meldet es beim Start an. Mapper, Palette,
   Canvas und Ausgaben-Anzeige bleiben unverändert.
 
+**Aktionen:** Ein Primitive kann mehrere Aktionen tragen (`config.action`).
+Für Nutzer:innen ist jede Aktion ein eigener Baustein (Titel, Beschreibung,
+Formular, Ausgaben, Palette-Eintrag); im Backend reicht ein Executor an die
+Aktion weiter. Eine neue Aktion kostet so eine Datei im Plugin, keine
+Änderung am Kern.
+
 Der Kern kennt Plugin-Bausteine nur als `WorkflowPrimitive.plugin`. Ein
 gespeicherter Baustein ohne angemeldetes Plugin wird beim Laden zur
 Texteingabe; die Leinwand zeigt „Dieser Baustein ist nicht verfügbar“.
@@ -32,5 +38,5 @@ Beispiel: `test/features/task_builder/plugin_node_test.dart`.
 
 ## Siehe auch
 
-- [Integrationen](../features/integrationen.md)
+- [Integrations-Plugins](./integrations-plugins.md)
 - [Bausteinkatalog](./bausteinkatalog.md)

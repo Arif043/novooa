@@ -170,8 +170,7 @@ weiter als Deep-Dive unter `docs/features/`.
 | Feature „Daten"       | [`docs/features/daten.md`](./docs/features/daten.md)               | Dokumentorientierte Daten und lokale Speicherung         |
 | Feature „Wissensbasis" | [`docs/index/wissensbasis.md`](./docs/index/wissensbasis.md) | Inhaltsverzeichnis: Notizen, Links, Graph, Anhänge |
 | Feature „Fähigkeiten" | [`docs/features/skills.md`](./docs/features/skills.md)             | SKILL.md-Fähigkeiten: Skills-Ordner, Import, skills.sh      |
-| Feature „Integrationen" | [`docs/features/integrationen.md`](./docs/features/integrationen.md) | Plugins für externe Systeme: Ablage, Vertrag, Importregel, Bausteine |
-| Feature „Shopware" | [`docs/features/shopware.md`](./docs/features/shopware.md) | Shopware-6-Plugin: Einrichtung, Aktionen, Ausgabemodell |
+| Feature „Integrationen" | [`docs/index/integrationen.md`](./docs/index/integrationen.md) | Inhaltsverzeichnis: Plugin-Mechanik und Shopware |
 | Feature „Webhooks"   | [`docs/features/webhooks.md`](./docs/features/webhooks.md)         | Eingehende Aufrufe externer Systeme: Auslöser, Adresse, Signatur, Baustein „Webhook-Ereignis“ |
 | Feature „Verbindungen" | [`docs/features/verbindungen.md`](./docs/features/verbindungen.md) | Zugänge zu externen HTTP-APIs und der Baustein „HTTP-Anfrage“ |
 | Feature „Mitarbeiter" | [`docs/features/mitarbeiter.md`](./docs/features/mitarbeiter.md)   | Subagents: Rahmenbedingung (System-Prompt) + Skills     |
