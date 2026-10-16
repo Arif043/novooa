@@ -164,7 +164,7 @@ weiter als Deep-Dive unter `docs/features/`.
 | Betriebsvarianten     | [`docs/architecture/betriebsvarianten.md`](./docs/architecture/betriebsvarianten.md) | Clients × Cloud/Standalone: Blocker und Umsetzungsschritte |
 | Feature „Aufgabe"     | [`docs/index/aufgabe.md`](./docs/index/aufgabe.md)                 | Inhaltsverzeichnis: Modell, Aufgabenstudio, Ausführung, Bausteine, Arbeitspläne |
 | Feature „Zeitplan"    | [`docs/index/zeitplan.md`](./docs/index/zeitplan.md)               | Inhaltsverzeichnis: Auslöser, Worker, Schleifenschutz, UI |
-| Feature „Kommunikation" | [`docs/features/kommunikation.md`](./docs/features/kommunikation.md) | System-E-Mail und Kundenpostfach-Connectoren          |
+| Feature „Kommunikation" | [`docs/index/kommunikation.md`](./docs/index/kommunikation.md) | Inhaltsverzeichnis: SendGrid, Mail-Connectoren, Twilio, Kanäle |
 | Feature „Aktivitäten" | [`docs/features/aktivitaeten.md`](./docs/features/aktivitaeten.md) | Stub: Runs, Traces, Freigaben                           |
 | Feature „Dateien"     | [`docs/index/dateien.md`](./docs/index/dateien.md)                 | Inhaltsverzeichnis: Ablage, Versionen, Oberfläche, Nutzung in Aufgaben |
 | Feature „Daten"       | [`docs/features/daten.md`](./docs/features/daten.md)               | Dokumentorientierte Daten und lokale Speicherung         |

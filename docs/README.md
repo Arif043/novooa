@@ -71,7 +71,7 @@ anlegen, alte Datei löschen, alle Verweise (auch in `AGENTS.md`) umbiegen.
 | Feature         | Doc                                                       | Status         |
 | --------------- | --------------------------------------------------------- | -------------- |
 | Aufgabe         | [`index/aufgabe.md`](./index/aufgabe.md)                  | Zettelkasten       |
-| Kommunikation   | [`features/kommunikation.md`](./features/kommunikation.md)   | System-E-Mail und Kundenpostfach-Connectoren |
+| Kommunikation   | [`index/kommunikation.md`](./index/kommunikation.md)   | System-E-Mail und Kundenpostfach-Connectoren |
 | Zeitplan        | [`index/zeitplan.md`](./index/zeitplan.md)                | Zettelkasten       |
 | Aktivitäten     | [`features/aktivitaeten.md`](./features/aktivitaeten.md)  | Stub           |
 | Dateien         | [`index/dateien.md`](./index/dateien.md)                | Zettelkasten       |

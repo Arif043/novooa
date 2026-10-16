@@ -40,4 +40,4 @@ verbunden.
 
 - [Eingehende Nachrichten (Inbox)](./eingangs-nachrichten-inbox.md)
 - [Twilio-Webhook](./twilio-webhook.md)
-- [Kommunikation](../features/kommunikation.md)
+- [Kommunikation](../index/kommunikation.md)

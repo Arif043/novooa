@@ -19,4 +19,4 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
 ## Siehe auch
 
 - [E-Mail-Auslöser über Mail-Connector](./email-ausloeser-mail-connector.md)
-- [Kommunikation](../features/kommunikation.md)
+- [Kommunikation](../index/kommunikation.md)

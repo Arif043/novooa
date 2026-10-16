@@ -21,4 +21,4 @@ Cloud die Runtime direkt erreichen muss.
 
 - [Firebase-Wake-up der Runtime](./runtime-firebase-wakeup.md)
 - [Postfächer in der Runtime](./runtime-postfaecher.md)
-- [Kommunikation](../features/kommunikation.md)
+- [Kommunikation](../index/kommunikation.md)

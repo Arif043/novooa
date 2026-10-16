@@ -17,4 +17,4 @@ folgt später. Mail-Connectoren bekommen je einen eigenen Provider-Adapter.
 
 - [Ereignisziel eines Auslösers](./ausloeser-ereignisziel.md)
 - [Normalisierte Kanal-Ereignistypen](./kanal-ereignistypen.md)
-- [Kommunikation](../features/kommunikation.md) — System-E-Mail und Connectoren
+- [Kommunikation](../index/kommunikation.md) — System-E-Mail und Connectoren
