@@ -87,7 +87,7 @@ class RuntimeProfile {
 
   /// Im Web-Standalone-Fall liefert die Runtime die App selbst aus — ihre
   /// API liegt damit auf derselben Herkunft. Das umgeht CORS und Mixed
-  /// Content vollständig (siehe `docs/architecture/betriebsvarianten.md`).
+  /// Content vollständig (siehe `docs/notes/mixed-content-im-lan.md`).
   static Uri _workspaceApiUriFor(RuntimeKind kind) {
     if (kIsWeb && kind == RuntimeKind.standalone) {
       return Uri.parse(Uri.base.origin);

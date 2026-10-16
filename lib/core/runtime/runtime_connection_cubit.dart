@@ -60,7 +60,7 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
       // überschreiben. Sonst spricht am Ende die gesamte App dauerhaft
       // gegen die falsche Adresse, weil `RuntimeConnectionGate` sie 1:1 als
       // `WORKSPACE_API_URL` übernimmt. Siehe
-      // `docs/architecture/betriebsvarianten.md`, Schritt 3.
+      // `docs/notes/web-herkunftsregel.md`.
       await connect(defaultEndpoint.displayAddress, isAutomaticProbe: true);
       return;
     }

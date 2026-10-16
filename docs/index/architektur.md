@@ -48,6 +48,6 @@
 
 ## Verwandt
 
-- [Betriebsvarianten](../architecture/betriebsvarianten.md)
+- [Betriebsvarianten](./betriebsvarianten.md)
 - [Lokale Runtime](./lokale-runtime.md)
 - [Aufgabe](./aufgabe.md)

@@ -161,7 +161,7 @@ weiter als Deep-Dive unter `docs/features/`.
 | UI-Vorschau           | [`docs/notes/ui-vorschau.md`](./docs/notes/ui-vorschau.md) | UI ohne Backend/Lizenz starten (`lib/main_preview.dart`, VS-Code-Profil) |
 | Lokale Runtime        | [`docs/index/lokale-runtime.md`](./docs/index/lokale-runtime.md)   | Inhaltsverzeichnis: Stack, Zugriff, Datenhaltung, Ausführung, Lizenz, Relays, Schlüssel |
 | SQLite-Normalisierung | [`docs/notes/sqlite-3nf-pruefstand.md`](./docs/notes/sqlite-3nf-pruefstand.md) | Tabellenprüfung und offene Abhängigkeiten |
-| Betriebsvarianten     | [`docs/architecture/betriebsvarianten.md`](./docs/architecture/betriebsvarianten.md) | Clients × Cloud/Standalone: Blocker und Umsetzungsschritte |
+| Betriebsvarianten     | [`docs/index/betriebsvarianten.md`](./docs/index/betriebsvarianten.md) | Inhaltsverzeichnis: Matrix, Variantenwahl, Herkunft, Fähigkeiten |
 | Feature „Aufgabe"     | [`docs/index/aufgabe.md`](./docs/index/aufgabe.md)                 | Inhaltsverzeichnis: Modell, Aufgabenstudio, Ausführung, Bausteine, Arbeitspläne |
 | Feature „Zeitplan"    | [`docs/index/zeitplan.md`](./docs/index/zeitplan.md)               | Inhaltsverzeichnis: Auslöser, Worker, Schleifenschutz, UI |
 | Feature „Kommunikation" | [`docs/index/kommunikation.md`](./docs/index/kommunikation.md) | Inhaltsverzeichnis: SendGrid, Mail-Connectoren, Twilio, Kanäle |

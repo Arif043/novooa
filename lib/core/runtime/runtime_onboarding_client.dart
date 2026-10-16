@@ -33,7 +33,7 @@ const _activationTimeout = Duration(seconds: 30);
 /// lässt sich auch eine headless installierte Runtime (VPS, NAS, Raspberry
 /// Pi) von jedem Client aus einrichten; das Betreiber-Passwort ist dabei
 /// über den Lizenz-Token abgesichert, mit dem die Runtime aktiviert wurde
-/// (siehe `docs/architecture/betriebsvarianten.md`).
+/// (siehe `docs/notes/runtime-ersteinrichtung.md`).
 class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
   const HttpRuntimeOnboardingClient();
 

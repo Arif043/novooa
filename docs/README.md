@@ -33,7 +33,7 @@ Notizen in [`notes/`](./notes/), geordnet über Inhaltsverzeichnisse in
 | Bereich | Datei |
 | --- | --- |
 | Architektur | [`index/architektur.md`](./index/architektur.md) |
-| Betriebsvarianten | [`architecture/betriebsvarianten.md`](./architecture/betriebsvarianten.md) |
+| Betriebsvarianten | [`index/betriebsvarianten.md`](./index/betriebsvarianten.md) |
 | SQLite-Normalisierung | [`notes/sqlite-3nf-pruefstand.md`](./notes/sqlite-3nf-pruefstand.md) |
 | UI-Vorschau | [`notes/ui-vorschau.md`](./notes/ui-vorschau.md) |
 | Backend-Struktur | [`notes/backend-feature-first.md`](./notes/backend-feature-first.md) |

@@ -6,7 +6,7 @@ import 'runtime_profile.dart';
 ///
 /// Ersetzt das bisherige Ad-hoc-Muster, per
 /// `serviceLocator.isRegistered<T>()` zu erraten, ob eine Variante ein
-/// Feature unterstützt (siehe `docs/architecture/betriebsvarianten.md`,
+/// Feature unterstützt (siehe `docs/notes/workspace-capabilities.md`,
 /// Blocker 6) — ob eine Klasse zufällig in der DI registriert ist, ist kein
 /// fachliches Feature-Flag, auch wenn beides bisher zusammenfiel. Einmal pro
 /// Prozess aus der [RuntimeKind] abgeleitet und als Singleton registriert

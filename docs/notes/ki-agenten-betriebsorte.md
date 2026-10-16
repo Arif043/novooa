@@ -26,4 +26,4 @@ Gehört zu: [KI-Agent](../index/ki-agent.md) · [Lokale Runtime](../index/lokale
 
 - [Agentenmodell über Remote Config](./agent-modell-remote-config.md)
 - [Relay des Aufgabenstudio-Agenten](./aufgabenstudio-agent-relay.md)
-- [Betriebsvarianten](../architecture/betriebsvarianten.md) — Blocker 6
+- [Fähigkeiten je Variante](./workspace-capabilities.md)

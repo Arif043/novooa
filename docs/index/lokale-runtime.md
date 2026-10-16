@@ -104,7 +104,7 @@
 
 ## Verwandt
 
-- [Betriebsvarianten](../architecture/betriebsvarianten.md)
+- [Betriebsvarianten](./betriebsvarianten.md)
 - [Backend-Struktur](../notes/backend-feature-first.md)
 - [SQLite-Normalisierung](../notes/sqlite-3nf-pruefstand.md)
 - [Import/Export](./import-export.md)
