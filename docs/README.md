@@ -15,6 +15,7 @@ in [`architecture.md`](./architecture.md).
 | ML-Modelle | [`index/ml-modelle.md`](./index/ml-modelle.md) |
 | Aufgabe | [`index/aufgabe.md`](./index/aufgabe.md) |
 | Dateien | [`index/dateien.md`](./index/dateien.md) |
+| KI-Agent | [`index/ki-agent.md`](./index/ki-agent.md) |
 
 ## Zettelkasten-Regeln
 
@@ -76,7 +77,7 @@ anlegen, alte Datei löschen, alle Verweise (auch in `AGENTS.md`) umbiegen.
 | Dateien         | [`index/dateien.md`](./index/dateien.md)                | Zettelkasten       |
 | Daten           | [`features/daten.md`](./features/daten.md)                | Fachlogik und lokaler Store |
 | Wissensbasis    | [`features/wissensbasis.md`](./features/wissensbasis.md)  | In Entwicklung |
-| KI-Agent        | [`features/ki-agent.md`](./features/ki-agent.md)          | In Entwicklung |
+| KI-Agent        | [`index/ki-agent.md`](./index/ki-agent.md)               | Zettelkasten       |
 | ML-Modelle      | [`index/ml-modelle.md`](./index/ml-modelle.md)            | Zettelkasten       |
 | Sprachausgabe   | [`features/sprachausgabe.md`](./features/sprachausgabe.md) | Text vorlesen über Sprachmodelle, Stimmen |
 | Import/Export   | [`features/import-export.md`](./features/import-export.md) | Standalone: Sicherung und Übertragung |

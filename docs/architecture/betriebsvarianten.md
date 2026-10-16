@@ -123,7 +123,7 @@ Kein reines Plumbing-Problem, sondern der größte Arbeitsanteil:
   Team-Verwaltung, Kommunikations-Connectoren. Die lokale Runtime hat für
   diese Features keine Endpunkte. Der KI-Agent ist keine Lücke mehr —
   `assistantRoutes` (`local-assistant-routes.ts`) bedient beide Bereiche über die lokale
-  Runtime (siehe [`../features/ki-agent.md`](../features/ki-agent.md)).
+  Runtime (siehe [`../index/ki-agent.md`](../index/ki-agent.md)).
 - **Nur Standalone**: Datensammlungen (`DataRepository`), Anwendungsprotokoll,
   ML-Modellkatalog, Lizenz, [Verbindungen und HTTP-Anfrage](../features/verbindungen.md)
   (`WorkspaceCapabilities.connections`), [Webhooks](../features/webhooks.md)
@@ -155,7 +155,7 @@ Zwei getrennte Fragen stecken hier drin:
 
 `assistant` steht inzwischen für beide Varianten auf `true` — der lokale
 Assistant-Endpunkt existiert (siehe Paritätslücken, Punkt 5, und
-[`../features/ki-agent.md`](../features/ki-agent.md)).
+[`../index/ki-agent.md`](../index/ki-agent.md)).
 
 `push` lag zunächst als `RuntimeProfile.pushNotificationsEnabled` an einer
 zweiten Stelle mit derselben Frage — inzwischen dieselbe

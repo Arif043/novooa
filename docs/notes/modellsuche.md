@@ -13,7 +13,7 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 - Sortierung nach Zahl passender Begriffe in ID, Titel, Beschreibung,
   Aufgabe, Tags und Übersetzungen.
 - Nutzer: das Tool `sucheModelle` des
-  [KI-Agenten](../features/ki-agent.md#multiagenten-architektur-aufgabenstudio).
+  [KI-Agenten](./multiagenten-aufgabenstudio.md).
 
 ## Suchdialog im Aufgabenstudio
 

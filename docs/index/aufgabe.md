@@ -66,7 +66,7 @@
 - [Zeitplan](./zeitplan.md)
 - [ML-Modelle](./ml-modelle.md)
 - [Lokale Runtime](./lokale-runtime.md)
-- [KI-Agent](../features/ki-agent.md)
+- [KI-Agent](./ki-agent.md)
 - [Aktivitäten](../features/aktivitaeten.md)
 - [Dateien](./dateien.md)
 - [Daten](../features/daten.md)

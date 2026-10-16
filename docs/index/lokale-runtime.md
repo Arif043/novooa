@@ -67,7 +67,7 @@
 - [Script-Dienst: Abschottung](../notes/script-dienst-abschottung.md)
 - [Script-Dienst: Ressourcengrenzen abstimmen](../notes/script-dienst-ressourcen.md)
 - [ONNX-Inferenz über den ML-Dienst](../notes/onnx-inferenz-ml-dienst.md)
-- [KI-Agenten in der Runtime](../notes/runtime-ki-agenten.md)
+- [Wo die KI-Agenten laufen](../notes/ki-agenten-betriebsorte.md)
 
 ## Lizenz
 

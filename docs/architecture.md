@@ -42,7 +42,7 @@ Adapter sind austauschbare Implementierungen. Details stehen in
   Baustein-Labels und Standardnamen, Einstellungen → Sprache. Übrige Features sowie Texte in Domain und
   Infrastructure sind noch deutsch und folgen feature-weise.
 - KI-Agent: Der Client sendet `locale`; das Backend hängt die Antwortsprache an den Prompt
-  (siehe [`features/ki-agent.md`](./features/ki-agent.md)).
+  (siehe [`index/ki-agent.md`](./index/ki-agent.md)).
 
 ## Datenmodell (Überblick)
 
