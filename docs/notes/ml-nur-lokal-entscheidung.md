@@ -25,7 +25,7 @@ blendet ihn dort aus und verweist auf die lokale Variante.
   normal.
 - **Verkauf:** Eigene Modelle sind ein Datenhoheits-Merkmal; der gepflegte
   Katalog begründet die Jahreslizenz
-  ([Kosten und Preise](../kosten-und-abo-preise.md)).
+  ([Lokales Lizenzmodell](./lokales-lizenzmodell.md)).
 - **Geringer Schnitt:** Gateway und Sidecar bleiben; entfallen würde nur der
   Cloud-Run-Zustellweg.
 

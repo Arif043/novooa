@@ -149,38 +149,38 @@ npm run deploy         # firebase deploy --only functions
 
 ## 5. Doc-Index
 
-Die Docs werden featureweise auf die **Zettelkasten-Methode** umgestellt:
-atomare Notizen in [`docs/notes/`](./docs/notes/) (flach, sprechende Namen),
-geordnet über Inhaltsverzeichnisse in [`docs/index/`](./docs/index/). Regeln →
-[`docs/README.md`](./docs/README.md). Noch nicht umgestellte Features stehen
-weiter als Deep-Dive unter `docs/features/`.
+Die Docs folgen der **Zettelkasten-Methode**: atomare Notizen in
+[`docs/notes/`](./docs/notes/) (flach, sprechende Namen), geordnet über
+Inhaltsverzeichnisse in [`docs/index/`](./docs/index/). Regeln und Vorlage →
+[`docs/README.md`](./docs/README.md). Lies erst das passende
+Inhaltsverzeichnis, dann nur die Notizen, die du brauchst.
 
-| Bereich               | Datei                                                              | Inhalt                                                  |
-| --------------------- | ------------------------------------------------------------------ | ------------------------------------------------------- |
-| Cross-cutting         | [`docs/index/architektur.md`](./docs/index/architektur.md)                   | Datenmodell, Auth, Persistenz, Trigger, Telemetrie      |
-| UI-Vorschau           | [`docs/notes/ui-vorschau.md`](./docs/notes/ui-vorschau.md) | UI ohne Backend/Lizenz starten (`lib/main_preview.dart`, VS-Code-Profil) |
-| Lokale Runtime        | [`docs/index/lokale-runtime.md`](./docs/index/lokale-runtime.md)   | Inhaltsverzeichnis: Stack, Zugriff, Datenhaltung, Ausführung, Lizenz, Relays, Schlüssel |
-| SQLite-Normalisierung | [`docs/notes/sqlite-3nf-pruefstand.md`](./docs/notes/sqlite-3nf-pruefstand.md) | Tabellenprüfung und offene Abhängigkeiten |
-| Betriebsvarianten     | [`docs/index/betriebsvarianten.md`](./docs/index/betriebsvarianten.md) | Inhaltsverzeichnis: Matrix, Variantenwahl, Herkunft, Fähigkeiten |
-| Feature „Aufgabe"     | [`docs/index/aufgabe.md`](./docs/index/aufgabe.md)                 | Inhaltsverzeichnis: Modell, Aufgabenstudio, Ausführung, Bausteine, Arbeitspläne |
-| Feature „Zeitplan"    | [`docs/index/zeitplan.md`](./docs/index/zeitplan.md)               | Inhaltsverzeichnis: Auslöser, Worker, Schleifenschutz, UI |
-| Feature „Kommunikation" | [`docs/index/kommunikation.md`](./docs/index/kommunikation.md) | Inhaltsverzeichnis: SendGrid, Mail-Connectoren, Twilio, Kanäle |
-| Feature „Aktivitäten" | [`docs/index/aktivitaeten.md`](./docs/index/aktivitaeten.md) | Inhaltsverzeichnis: Run-Aktivitäten, Seite, Protokoll |
-| Feature „Dateien"     | [`docs/index/dateien.md`](./docs/index/dateien.md)                 | Inhaltsverzeichnis: Ablage, Versionen, Oberfläche, Nutzung in Aufgaben |
-| Feature „Daten"       | [`docs/index/daten.md`](./docs/index/daten.md)               | Inhaltsverzeichnis: Sammlungen, Bausteine, Datenbank-Seite |
-| Feature „Wissensbasis" | [`docs/index/wissensbasis.md`](./docs/index/wissensbasis.md) | Inhaltsverzeichnis: Notizen, Links, Graph, Anhänge |
-| Feature „Fähigkeiten" | [`docs/index/faehigkeiten.md`](./docs/index/faehigkeiten.md)             | Inhaltsverzeichnis: Skills-Ordner, Import, skills.sh, Bausteine |
-| Feature „Integrationen" | [`docs/index/integrationen.md`](./docs/index/integrationen.md) | Inhaltsverzeichnis: Plugin-Mechanik und Shopware |
-| Feature „Webhooks"   | [`docs/index/webhooks.md`](./docs/index/webhooks.md)         | Inhaltsverzeichnis: Auslöser, Aufruf, Ereignis, Sicherheit |
-| Feature „Verbindungen" | [`docs/index/verbindungen.md`](./docs/index/verbindungen.md) | Inhaltsverzeichnis: Verbindung, Anmeldung, HTTP-Anfrage |
-| Feature „Mitarbeiter" | [`docs/index/mitarbeiter.md`](./docs/index/mitarbeiter.md)   | Inhaltsverzeichnis: Subagenten aus Rahmenbedingung und Skills |
-| Feature „KI-Agent"    | [`docs/index/ki-agent.md`](./docs/index/ki-agent.md)         | Inhaltsverzeichnis: Betrieb, Multiagenten, Pläne, Cursor |
-| Feature „ML-Modelle"  | [`docs/index/ml-modelle.md`](./docs/index/ml-modelle.md)           | Inhaltsverzeichnis: Katalog, Verträge, Transformationen, ML-Dienst |
-| Feature „Dokumentenscanner" | [`docs/index/dokumentscanner.md`](./docs/index/dokumentscanner.md) | Inhaltsverzeichnis: Plattformen, Browser-Scanner, Grenzen |
-| Feature „Sprachausgabe" | [`docs/index/sprachausgabe.md`](./docs/index/sprachausgabe.md) | Inhaltsverzeichnis: Vorlesen, Stimmen, Transkription |
-| Feature „Import/Export" | [`docs/index/import-export.md`](./docs/index/import-export.md) | Inhaltsverzeichnis: Bereiche, Archivformat, Ablauf |
+| Thema | Inhaltsverzeichnis | Inhalt |
+| --- | --- | --- |
+| Architektur | [`docs/index/architektur.md`](./docs/index/architektur.md) | Schichten, Backend-Struktur, Persistenz, Lokalisierung, Sicherheit, UI-Vorschau |
+| Betriebsvarianten | [`docs/index/betriebsvarianten.md`](./docs/index/betriebsvarianten.md) | Nativ/Web × Cloud/Standalone, Herkunftsregel, Fähigkeiten je Variante |
+| Lokale Runtime | [`docs/index/lokale-runtime.md`](./docs/index/lokale-runtime.md) | Stack, Zugriff, Transport, Datenhaltung, Ausführung, Lizenz, Relays, Schlüssel |
+| Betrieb und Deployment | [`docs/index/betrieb-und-deployment.md`](./docs/index/betrieb-und-deployment.md) | Umgebungen, Microsoft-Graph-App, Deployment-CLI, Windows-Einrichtung |
+| Produkt | [`docs/index/produkt.md`](./docs/index/produkt.md) | Positionierung, Kosten, Preise, Lizenzmodell |
+| Aufgabe | [`docs/index/aufgabe.md`](./docs/index/aufgabe.md) | Modell, Bausteinkatalog, Aufgabenstudio, Ausführung, Executor-Outputs |
+| Zeitplan | [`docs/index/zeitplan.md`](./docs/index/zeitplan.md) | Auslöser, Worker, Schleifenschutz, Kanäle, UI |
+| Aktivitäten | [`docs/index/aktivitaeten.md`](./docs/index/aktivitaeten.md) | Run-Aktivitäten, Seite, Protokoll |
+| Dateien | [`docs/index/dateien.md`](./docs/index/dateien.md) | Ablage, Versionen, Oberfläche, Nutzung in Aufgaben |
+| Daten | [`docs/index/daten.md`](./docs/index/daten.md) | Sammlungen, Bausteine, Datenbank-Seite |
+| Wissensbasis | [`docs/index/wissensbasis.md`](./docs/index/wissensbasis.md) | Notizen, Links, Graph, Anhänge |
+| KI-Agent | [`docs/index/ki-agent.md`](./docs/index/ki-agent.md) | Betrieb, Multiagenten, Pläne, Cursor |
+| Fähigkeiten | [`docs/index/faehigkeiten.md`](./docs/index/faehigkeiten.md) | Skills-Ordner, Import, skills.sh, Bausteine |
+| Mitarbeiter | [`docs/index/mitarbeiter.md`](./docs/index/mitarbeiter.md) | Subagenten aus Rahmenbedingung und Skills |
+| ML-Modelle | [`docs/index/ml-modelle.md`](./docs/index/ml-modelle.md) | Katalog, Verträge, Transformationen, ML-Dienst |
+| Sprachausgabe | [`docs/index/sprachausgabe.md`](./docs/index/sprachausgabe.md) | Vorlesen, Stimmen, Transkription |
+| Dokumentenscanner | [`docs/index/dokumentscanner.md`](./docs/index/dokumentscanner.md) | Plattformen, Browser-Scanner, Grenzen |
+| Kommunikation | [`docs/index/kommunikation.md`](./docs/index/kommunikation.md) | SendGrid, Mail-Connectoren, Twilio, Kanäle |
+| Integrationen | [`docs/index/integrationen.md`](./docs/index/integrationen.md) | Plugin-Mechanik und Shopware |
+| Webhooks | [`docs/index/webhooks.md`](./docs/index/webhooks.md) | Auslöser, Aufruf, Ereignis, Sicherheit |
+| Verbindungen | [`docs/index/verbindungen.md`](./docs/index/verbindungen.md) | Verbindung, Anmeldung, HTTP-Anfrage |
+| Import/Export | [`docs/index/import-export.md`](./docs/index/import-export.md) | Bereiche, Archivformat, Ablauf |
 
-Wie du eine neue Feature-Doc anlegst → [`docs/README.md`](./docs/README.md).
+Designsystem (Farben, Typografie, Abstände): [`docs/DESIGN.md`](./docs/DESIGN.md).
 
 ---
 
@@ -199,8 +199,8 @@ Wie du eine neue Feature-Doc anlegst → [`docs/README.md`](./docs/README.md).
   denselben Commit. Insbesondere: neuer `WorkflowPrimitive` →
   Zeile in [`docs/notes/bausteinkatalog.md`](./docs/notes/bausteinkatalog.md)
   und Outputs in [`docs/notes/executor-outputs.md`](./docs/notes/executor-outputs.md).
-- **Notizen statt Abschnitte.** In umgestellten Features (mit Eintrag in
-  `docs/index/`) neues Wissen als atomare Notiz in `docs/notes/` anlegen und im
-  passenden Inhaltsverzeichnis verlinken; bestehende Notizen ändern statt
-  Wissen zu wiederholen. Lies erst das Inhaltsverzeichnis, dann nur die
-  benötigten Notizen. `test/docs/doc_links_test.dart` prüft Links und Waisen.
+- **Notizen statt Abschnitte.** Neues Wissen als atomare Notiz in
+  `docs/notes/` anlegen und im passenden Inhaltsverzeichnis verlinken;
+  bestehende Notizen ändern statt Wissen zu wiederholen. Nicht Umgesetztes als
+  „geplant“ markieren. `test/docs/doc_links_test.dart` prüft Links, Aufbau und
+  Waisen.

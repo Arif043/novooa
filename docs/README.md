@@ -9,6 +9,11 @@ Notizen in [`notes/`](./notes/), geordnet über Inhaltsverzeichnisse in
 
 | Thema | Verzeichnis |
 | --- | --- |
+| Architektur | [`index/architektur.md`](./index/architektur.md) |
+| Betriebsvarianten | [`index/betriebsvarianten.md`](./index/betriebsvarianten.md) |
+| Lokale Runtime | [`index/lokale-runtime.md`](./index/lokale-runtime.md) |
+| Betrieb und Deployment | [`index/betrieb-und-deployment.md`](./index/betrieb-und-deployment.md) |
+| Produkt | [`index/produkt.md`](./index/produkt.md) |
 | Aufgabe | [`index/aufgabe.md`](./index/aufgabe.md) |
 | Zeitplan | [`index/zeitplan.md`](./index/zeitplan.md) |
 | Aktivitäten | [`index/aktivitaeten.md`](./index/aktivitaeten.md) |
@@ -26,19 +31,8 @@ Notizen in [`notes/`](./notes/), geordnet über Inhaltsverzeichnisse in
 | Webhooks | [`index/webhooks.md`](./index/webhooks.md) |
 | Verbindungen | [`index/verbindungen.md`](./index/verbindungen.md) |
 | Import/Export | [`index/import-export.md`](./index/import-export.md) |
-| Lokale Runtime | [`index/lokale-runtime.md`](./index/lokale-runtime.md) |
 
-Übergreifend (noch als Einzeldokumente):
-
-| Bereich | Datei |
-| --- | --- |
-| Architektur | [`index/architektur.md`](./index/architektur.md) |
-| Betriebsvarianten | [`index/betriebsvarianten.md`](./index/betriebsvarianten.md) |
-| SQLite-Normalisierung | [`notes/sqlite-3nf-pruefstand.md`](./notes/sqlite-3nf-pruefstand.md) |
-| UI-Vorschau | [`notes/ui-vorschau.md`](./notes/ui-vorschau.md) |
-| Backend-Struktur | [`notes/backend-feature-first.md`](./notes/backend-feature-first.md) |
-| Deployment | [`notes/deployment-umgebungen.md`](./notes/deployment-umgebungen.md), [`notes/deployment-cli.md`](./notes/deployment-cli.md) |
-| Designsystem | [`DESIGN.md`](./DESIGN.md) |
+Das Designsystem bleibt als eigenes Dokument: [`DESIGN.md`](./DESIGN.md).
 
 ## Zettelkasten-Regeln
 
