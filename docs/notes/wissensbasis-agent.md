@@ -10,6 +10,9 @@ Gehört zu: [KI-Agent](../index/ki-agent.md)
 - Tool-Definitionen und HTTP/HTML-Adapter liegen unter
   `knowledge_base/infrastructure/genkit`; Cloud verdrahtet Firestore und
   Firebase Auth, die Runtime SQLite und lokale Identität.
+- Der fachliche Vertrag `KnowledgeBaseAssistant` ist laufzeitneutral; der
+  Firebase-Callable verdrahtet nur Auth, Eingabeprüfung, Fehlerprotokoll und
+  Firestore.
 - Notizinhalte sind untrusted Kontext und können die Systemanweisungen nicht
   überschreiben; deshalb hat er keine schreibenden Tools.
 - Vorschläge erscheinen als Plan; nach **Ausführen** liefert jede Änderung
@@ -22,4 +25,4 @@ Gehört zu: [KI-Agent](../index/ki-agent.md)
 
 - [URL Context und Seitenlinks](./url-context-und-seitenlinks.md)
 - [Wo die KI-Agenten laufen](./ki-agenten-betriebsorte.md)
-- [Wissensbasis](../features/wissensbasis.md)
+- [Wissensbasis-Seite](./wissensbasis-seite.md)

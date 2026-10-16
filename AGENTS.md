@@ -168,7 +168,7 @@ weiter als Deep-Dive unter `docs/features/`.
 | Feature „Aktivitäten" | [`docs/features/aktivitaeten.md`](./docs/features/aktivitaeten.md) | Stub: Runs, Traces, Freigaben                           |
 | Feature „Dateien"     | [`docs/index/dateien.md`](./docs/index/dateien.md)                 | Inhaltsverzeichnis: Ablage, Versionen, Oberfläche, Nutzung in Aufgaben |
 | Feature „Daten"       | [`docs/features/daten.md`](./docs/features/daten.md)               | Dokumentorientierte Daten und lokale Speicherung         |
-| Feature „Wissensbasis" | [`docs/features/wissensbasis.md`](./docs/features/wissensbasis.md) | Markdown-Zettelkasten für Node-Anhänge                  |
+| Feature „Wissensbasis" | [`docs/index/wissensbasis.md`](./docs/index/wissensbasis.md) | Inhaltsverzeichnis: Notizen, Links, Graph, Anhänge |
 | Feature „Fähigkeiten" | [`docs/features/skills.md`](./docs/features/skills.md)             | SKILL.md-Fähigkeiten: Skills-Ordner, Import, skills.sh      |
 | Feature „Integrationen" | [`docs/features/integrationen.md`](./docs/features/integrationen.md) | Plugins für externe Systeme: Ablage, Vertrag, Importregel, Bausteine |
 | Feature „Shopware" | [`docs/features/shopware.md`](./docs/features/shopware.md) | Shopware-6-Plugin: Einrichtung, Aktionen, Ausgabemodell |

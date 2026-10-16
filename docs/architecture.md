@@ -332,7 +332,7 @@ immer sich selbst plus rekursiv verlinkte
 Notizen bereit. Anhänge werden an unterstützten Bausteinen gespeichert; aktuell
 ist nur der Prompt-Baustein angebunden.
 
-Detailtiefe in [`features/wissensbasis.md`](./features/wissensbasis.md).
+Detailtiefe in [`index/wissensbasis.md`](./index/wissensbasis.md).
 
 ## Auth & AppCheck
 

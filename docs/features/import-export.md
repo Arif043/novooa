@@ -115,6 +115,6 @@ eine Verbindung gewählt ist (wie bei Sprachmodellen und Kanälen gibt es keine 
 ## Verwandt
 
 - [`dateien`](../index/dateien.md), [`daten.md`](./daten.md),
-  [`wissensbasis.md`](./wissensbasis.md), [`aufgabe`](../index/aufgabe.md)
+  [`../index/wissensbasis.md`](../index/wissensbasis.md), [`aufgabe`](../index/aufgabe.md)
 - [`lokale-runtime`](../index/lokale-runtime.md)
 - [`../architecture.md`](../architecture.md)

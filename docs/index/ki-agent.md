@@ -34,5 +34,5 @@
 
 - [Aufgabe](./aufgabe.md)
 - [ML-Modelle](./ml-modelle.md) — Modellsuche des Agenten
-- [Wissensbasis](../features/wissensbasis.md)
+- [Wissensbasis](./wissensbasis.md)
 - [Lokale Runtime](./lokale-runtime.md)

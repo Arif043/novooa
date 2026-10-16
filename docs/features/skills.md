@@ -1,6 +1,6 @@
 # Feature: Fähigkeiten (Skills)
 
-Verwandt: [`aufgabe`](../index/aufgabe.md) · [`mitarbeiter.md`](./mitarbeiter.md) · [`wissensbasis.md`](./wissensbasis.md)
+Verwandt: [`aufgabe`](../index/aufgabe.md) · [`mitarbeiter.md`](./mitarbeiter.md) · [`../index/wissensbasis.md`](../index/wissensbasis.md)
 
 ## Zweck
 
