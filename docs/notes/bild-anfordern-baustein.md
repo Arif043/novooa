@@ -17,5 +17,5 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
 
 ## Siehe auch
 
-- [Dokumentenscanner](../features/dokumentscanner.md)
+- [Dokumentenscanner](../index/dokumentscanner.md)
 - [Freigaben und Pausen](./freigaben-und-pausen.md)

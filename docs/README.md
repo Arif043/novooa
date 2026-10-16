@@ -1,21 +1,44 @@
 # Docs
 
-Projektdokumentation für novooa. Die Docs werden **featureweise** auf die
-Zettelkasten-Methode umgestellt: atomare Notizen in [`notes/`](./notes/),
-geordnet über Inhaltsverzeichnisse in [`index/`](./index/). Noch nicht
-umgestellte Features liegen als Deep-Dive in `features/`, cross-cutting-Themen
-in [`architecture.md`](./architecture.md).
+Projektdokumentation für novooa nach der **Zettelkasten-Methode**: atomare
+Notizen in [`notes/`](./notes/), geordnet über Inhaltsverzeichnisse in
+[`index/`](./index/). Einstieg für Agenten und Contributors ist
+[`../AGENTS.md`](../AGENTS.md).
 
 ## Inhaltsverzeichnisse
 
-| Thema    | Verzeichnis                              |
-| -------- | ---------------------------------------- |
-| Zeitplan | [`index/zeitplan.md`](./index/zeitplan.md) |
-| Lokale Runtime | [`index/lokale-runtime.md`](./index/lokale-runtime.md) |
-| ML-Modelle | [`index/ml-modelle.md`](./index/ml-modelle.md) |
+| Thema | Verzeichnis |
+| --- | --- |
 | Aufgabe | [`index/aufgabe.md`](./index/aufgabe.md) |
+| Zeitplan | [`index/zeitplan.md`](./index/zeitplan.md) |
+| Aktivitäten | [`index/aktivitaeten.md`](./index/aktivitaeten.md) |
 | Dateien | [`index/dateien.md`](./index/dateien.md) |
+| Daten | [`index/daten.md`](./index/daten.md) |
+| Wissensbasis | [`index/wissensbasis.md`](./index/wissensbasis.md) |
 | KI-Agent | [`index/ki-agent.md`](./index/ki-agent.md) |
+| Fähigkeiten | [`index/faehigkeiten.md`](./index/faehigkeiten.md) |
+| Mitarbeiter | [`index/mitarbeiter.md`](./index/mitarbeiter.md) |
+| ML-Modelle | [`index/ml-modelle.md`](./index/ml-modelle.md) |
+| Sprachausgabe | [`index/sprachausgabe.md`](./index/sprachausgabe.md) |
+| Dokumentenscanner | [`index/dokumentscanner.md`](./index/dokumentscanner.md) |
+| Kommunikation | [`index/kommunikation.md`](./index/kommunikation.md) |
+| Integrationen | [`index/integrationen.md`](./index/integrationen.md) |
+| Webhooks | [`index/webhooks.md`](./index/webhooks.md) |
+| Verbindungen | [`index/verbindungen.md`](./index/verbindungen.md) |
+| Import/Export | [`index/import-export.md`](./index/import-export.md) |
+| Lokale Runtime | [`index/lokale-runtime.md`](./index/lokale-runtime.md) |
+
+Übergreifend (noch als Einzeldokumente):
+
+| Bereich | Datei |
+| --- | --- |
+| Architektur | [`architecture.md`](./architecture.md) |
+| Betriebsvarianten | [`architecture/betriebsvarianten.md`](./architecture/betriebsvarianten.md) |
+| SQLite-Normalisierung | [`architecture/sqlite-normalisierung.md`](./architecture/sqlite-normalisierung.md) |
+| UI-Vorschau | [`architecture/ui-vorschau.md`](./architecture/ui-vorschau.md) |
+| Backend-Struktur | [`backend-struktur.md`](./backend-struktur.md) |
+| Deployment | [`deployment.md`](./deployment.md), [`deployment-cli.md`](./deployment-cli.md) |
+| Designsystem | [`DESIGN.md`](./DESIGN.md) |
 
 ## Zettelkasten-Regeln
 
@@ -42,63 +65,23 @@ in [`architecture.md`](./architecture.md).
   ```
 
 - Wissen steht nur an einer Stelle; andere Notizen verlinken darauf.
-- Eine Notiz darf zu mehreren Inhaltsverzeichnissen gehören.
+- Eine Notiz darf zu mehreren Inhaltsverzeichnissen gehören
+  (`Gehört zu: [A](…) · [B](…)`).
+- Nicht umgesetzte Teile werden ausdrücklich als „geplant“ markiert.
 
 **Inhaltsverzeichnis** (`index/<thema>.md`): Kernaussage des Themas, danach
 gruppierte Links auf Notizen, „Offene Punkte“ und „Verwandt“. Kaum eigener
 Inhalt.
 
-**Feature umstellen:** Deep-Dive in Notizen zerlegen, Inhaltsverzeichnis
-anlegen, alte Datei löschen, alle Verweise (auch in `AGENTS.md`) umbiegen.
+**Neues Thema oder Feature:** Notizen anlegen, ein Inhaltsverzeichnis anlegen
+oder ergänzen, in dieser README und in `AGENTS.md` § Doc-Index eintragen.
+
 `flutter test test/docs` prüft, dass jeder relative Link existiert, jede Notiz
-„Gehört zu“ hat und in mindestens einem Inhaltsverzeichnis steht.
-
-## Struktur
-
-| Bereich        | Datei                              | Inhalt                                                  |
-| -------------- | ---------------------------------- | ------------------------------------------------------- |
-| Überblick      | [`../AGENTS.md`](../AGENTS.md)     | Projekt-Definition, Stack, Conventions, Agent-Regeln    |
-| Cross-cutting  | [`architecture.md`](./architecture.md) | Datenmodell, Auth, Persistenz, Trigger, Telemetrie   |
-| SQLite-Normalisierung | [`architecture/sqlite-normalisierung.md`](./architecture/sqlite-normalisierung.md) | Prüfung aller Tabellen, Migrationen und verbleibende Abhängigkeiten |
-| Deployment | [`deployment.md`](./deployment.md) | Staging/Produktion, Firebase-Projekte und CI/CD |
-| Backend        | [`backend-struktur.md`](./backend-struktur.md) | Functions-Struktur, Ports, Cloud-/Local-Trennung |
-| Lokale Runtime | [`index/lokale-runtime.md`](./index/lokale-runtime.md) | Zettelkasten: Stack, Zugriff, Datenhaltung, Lizenz, Relays |
-| Betriebsvarianten | [`architecture/betriebsvarianten.md`](./architecture/betriebsvarianten.md) | Clients × Cloud/Standalone: Ist-Zustand, Blocker, Umsetzung |
-| Features       | [`features/`](./features/)         | Ein Deep-Dive pro Feature                               |
-
-## Aktuelle Features
-
-| Feature         | Doc                                                       | Status         |
-| --------------- | --------------------------------------------------------- | -------------- |
-| Aufgabe         | [`index/aufgabe.md`](./index/aufgabe.md)                  | Zettelkasten       |
-| Kommunikation   | [`index/kommunikation.md`](./index/kommunikation.md)   | System-E-Mail und Kundenpostfach-Connectoren |
-| Zeitplan        | [`index/zeitplan.md`](./index/zeitplan.md)                | Zettelkasten       |
-| Aktivitäten     | [`features/aktivitaeten.md`](./features/aktivitaeten.md)  | Stub           |
-| Dateien         | [`index/dateien.md`](./index/dateien.md)                | Zettelkasten       |
-| Daten           | [`index/daten.md`](./index/daten.md)                | Fachlogik und lokaler Store |
-| Wissensbasis    | [`index/wissensbasis.md`](./index/wissensbasis.md)  | In Entwicklung |
-| KI-Agent        | [`index/ki-agent.md`](./index/ki-agent.md)               | Zettelkasten       |
-| ML-Modelle      | [`index/ml-modelle.md`](./index/ml-modelle.md)            | Zettelkasten       |
-| Sprachausgabe   | [`features/sprachausgabe.md`](./features/sprachausgabe.md) | Text vorlesen über Sprachmodelle, Stimmen |
-| Import/Export   | [`index/import-export.md`](./index/import-export.md) | Standalone: Sicherung und Übertragung |
-
-## Konvention: Neue Feature-Doc anlegen
-
-Neue Features bekommen direkt Notizen und ein Inhaltsverzeichnis (siehe oben).
-Das alte Schema gilt nur noch für Ergänzungen nicht umgestellter Deep-Dives:
-
-1. Datei `docs/features/<slug>.md` anlegen.
-2. Top-Sektion: `## Zweck` (1 Absatz).
-3. Sektion `## Verantwortlichkeiten` mit Aufzählungspunkten.
-4. Sektion `## Offene Fragen` für ungeklärte Design-Punkte.
-5. Sektion `## Verwandt` mit relativen Links zu Nachbar-Features und
-   `architecture.md`.
-6. In [`../AGENTS.md`](../AGENTS.md) § Doc-Index und in dieser README
-   eintragen.
+Titel, Kernaussage und „Gehört zu“ hat und in mindestens einem
+Inhaltsverzeichnis steht.
 
 ## Konvention: Doc-Update im Commit
 
-- API- oder Modell-Änderungen → zugehörige Doc im **selben** Commit.
+- API- oder Modell-Änderungen → zugehörige Notiz im **selben** Commit.
 - Reine Doku-Fixes → Commit-Prefix `docs:`.
-- Neue Datei unter `docs/features/` → Eintrag in dieser README **und** in
-  `AGENTS.md` § Doc-Index im selben Commit.
+- Neue Notiz → Eintrag im passenden Inhaltsverzeichnis im selben Commit.

@@ -67,6 +67,6 @@
 - [ML-Modelle](./ml-modelle.md)
 - [Lokale Runtime](./lokale-runtime.md)
 - [KI-Agent](./ki-agent.md)
-- [Aktivitäten](../features/aktivitaeten.md)
+- [Aktivitäten](./aktivitaeten.md)
 - [Dateien](./dateien.md)
 - [Daten](./daten.md)

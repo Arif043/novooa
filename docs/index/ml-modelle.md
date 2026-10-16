@@ -86,6 +86,6 @@
 
 ## Verwandt
 
-- [Sprachausgabe](../features/sprachausgabe.md)
+- [Sprachausgabe](./sprachausgabe.md)
 - [Aufgabe](../index/aufgabe.md)
 - [Lokale Runtime](./lokale-runtime.md)

@@ -17,4 +17,4 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 ## Siehe auch
 
 - [Modell-Settings](./modell-settings.md)
-- [Sprachausgabe](../features/sprachausgabe.md)
+- [Sprachausgabe](../index/sprachausgabe.md)

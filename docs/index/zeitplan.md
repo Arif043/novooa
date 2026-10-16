@@ -51,7 +51,7 @@ Webhooks (lokale Runtime) sowie der Twilio-Eingang für SMS und WhatsApp.
 ## Verwandt
 
 - [Aufgabe](./aufgabe.md)
-- [Aktivitäten](../features/aktivitaeten.md)
+- [Aktivitäten](./aktivitaeten.md)
 - [Webhooks](./webhooks.md)
 - [Kommunikation](./kommunikation.md)
 - [Architektur](../architecture.md)

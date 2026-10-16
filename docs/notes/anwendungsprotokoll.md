@@ -17,4 +17,4 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 ## Siehe auch
 
 - [Script-Ausgabe im Protokoll](./script-ausgabe-protokoll.md)
-- [Aktivitäten](../features/aktivitaeten.md)
+- [Aktivitäten](../index/aktivitaeten.md)

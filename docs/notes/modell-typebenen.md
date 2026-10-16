@@ -26,7 +26,7 @@ optionale Pipeline.
 - `textToSpeech` und `speechToText` nutzen denselben Vertrag wie
   `modelInference` und filtern den Katalog auf Audio-Aus- bzw. -Eingänge.
   `textToSpeech` kann stattdessen ein Sprachmodell nutzen
-  ([Sprachausgabe](../features/sprachausgabe.md)).
+  ([Sprachausgabe](../index/sprachausgabe.md)).
 
 ## Siehe auch
 

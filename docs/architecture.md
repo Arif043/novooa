@@ -1,7 +1,7 @@
 # Architecture
 
-Cross-cutting Themen für novooa. Feature-spezifische Inhalte liegen in
-[`features/`](./features/).
+Cross-cutting Themen für novooa. Feature-spezifische Inhalte stehen als
+Notizen in den Inhaltsverzeichnissen unter [`index/`](./index/).
 
 ## Schichten
 
