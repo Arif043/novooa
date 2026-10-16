@@ -31,4 +31,4 @@ transformations: [
 ## Siehe auch
 
 - [Bildgeometrie und Originalkoordinaten](./bildgeometrie-originalkoordinaten.md)
-- [Modell-Pipelines für OCR](../architecture/modell-pipelines-ocr.md)
+- [Baustein „Für jedes Element“](./foreach-baustein.md)

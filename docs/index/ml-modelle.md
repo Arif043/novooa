@@ -2,6 +2,13 @@
 
 > novooa verwaltet einen plattformunabhängigen Katalog klassischer ML-Modelle (ONNX) mit deklarativen Verträgen für Ein- und Ausgaben; ausgeführt wird im Python-ML-Dienst, in der Cloud wie in Standalone.
 
+## Entscheidungen
+
+- [Entscheidung: ML-Inferenz nur lokal](../notes/ml-nur-lokal-entscheidung.md)
+- [Auflagen an den Modellkatalog](../notes/modellkatalog-auflagen.md)
+- [Modellversionierung](../notes/modellversionierung.md) (geplant)
+- [ONNX-Domänen und Modellklassen](../notes/onnx-domaenen-und-modellklassen.md)
+
 ## Katalog
 
 - [ML-Katalogeintrag](../notes/ml-katalogeintrag.md)
@@ -35,6 +42,7 @@
 - [Objekterkennung und Segmentierung](../notes/objekterkennung-und-segmentierung.md)
 - [Klassisches ML über ONNX](../notes/klassisches-ml-onnx.md)
 - [OCR-Pipeline](../notes/ocr-pipeline.md)
+- [Baustein „Für jedes Element“](../notes/foreach-baustein.md)
 - [Piper-Systemmodelle](../notes/piper-systemmodelle.md)
 
 ## Inferenz
@@ -66,11 +74,18 @@
 - Die Cloud-Vertragsprüfung (`model-contract-capabilities.ts`) kennt die
   neueren Transformationstypen noch nicht.
 - Labels von Settings sind noch nicht übersetzbar.
+- Entscheidung „nur lokal“ umsetzen (Cloud-Run-Zustellweg entfernen,
+  `modelInference` in der Cloud ausblenden).
+- Format des Offline-Bundles; Katalogdienst als Function oder im Relay.
+- Tokenisierung für Textmodelle.
+- OCR-Nachweis: kuratierte PaddleOCR-Detektor- und Erkenner-Modelle,
+  Manifeste mit Zeichenliste, datenschutzgeprüfte Beleg-Fixture, lokale und
+  Cloud-End-to-End-Tests.
+- Preisfrage: Sprung von 39 EUR/Monat auf 1.990 EUR/Jahr für Cloud-Kundschaft,
+  die nur OCR braucht, beobachten.
 
 ## Verwandt
 
-- [ML-Scope und Modellkatalog](../architecture/ml-scope-und-modellkatalog.md)
-- [Modell-Pipelines für OCR](../architecture/modell-pipelines-ocr.md)
 - [Sprachausgabe](../features/sprachausgabe.md)
 - [Aufgabe: Ausführung](../features/aufgabe-ausfuehrung.md)
 - [Lokale Runtime](./lokale-runtime.md)

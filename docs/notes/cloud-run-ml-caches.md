@@ -9,6 +9,8 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
   begrenzen `MODEL_BUNDLE_MAX_BYTES` und `MODEL_SESSION_CACHE_BYTES` beides.
 - Verworfene Session: `404 model_not_loaded` → das Gateway lädt dieselbe
   unveränderliche Version erneut und wiederholt nur diese Inferenz.
+- Cloud Run kann keine Instanz nach vorhandenem Cache wählen; ein Treffer
+  ist Optimierung, keine Routing-Garantie.
 - Caches sind flüchtig; der globale Modellspeicher ist die geprüfte Quelle.
 
 Vorlage `functions/cloudrun/model-inference-service.yaml.template`:
