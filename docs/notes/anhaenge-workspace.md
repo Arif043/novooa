@@ -15,4 +15,4 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
 
 - [Prompt-Executor](./prompt-executor.md)
 - [Script-Executor](./script-executor.md)
-- [Dateien](../features/dateien.md)
+- [Dateien](../index/dateien.md)

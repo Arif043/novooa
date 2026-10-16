@@ -188,4 +188,4 @@ bei Bedarf über `knowledge/manifest.json`.
 
 [`../architecture.md`](../architecture.md) ·
 [`aufgabe`](../index/aufgabe.md) ·
-[`dateien.md`](./dateien.md)
+[`dateien`](../index/dateien.md)

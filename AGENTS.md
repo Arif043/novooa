@@ -166,7 +166,7 @@ weiter als Deep-Dive unter `docs/features/`.
 | Feature „Zeitplan"    | [`docs/index/zeitplan.md`](./docs/index/zeitplan.md)               | Inhaltsverzeichnis: Auslöser, Worker, Schleifenschutz, UI |
 | Feature „Kommunikation" | [`docs/features/kommunikation.md`](./docs/features/kommunikation.md) | System-E-Mail und Kundenpostfach-Connectoren          |
 | Feature „Aktivitäten" | [`docs/features/aktivitaeten.md`](./docs/features/aktivitaeten.md) | Stub: Runs, Traces, Freigaben                           |
-| Feature „Dateien"     | [`docs/features/dateien.md`](./docs/features/dateien.md)           | Dateiablage, Storage, Versionierung                     |
+| Feature „Dateien"     | [`docs/index/dateien.md`](./docs/index/dateien.md)                 | Inhaltsverzeichnis: Ablage, Versionen, Oberfläche, Nutzung in Aufgaben |
 | Feature „Daten"       | [`docs/features/daten.md`](./docs/features/daten.md)               | Dokumentorientierte Daten und lokale Speicherung         |
 | Feature „Wissensbasis" | [`docs/features/wissensbasis.md`](./docs/features/wissensbasis.md) | Markdown-Zettelkasten für Node-Anhänge                  |
 | Feature „Fähigkeiten" | [`docs/features/skills.md`](./docs/features/skills.md)             | SKILL.md-Fähigkeiten: Skills-Ordner, Import, skills.sh      |

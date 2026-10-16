@@ -312,7 +312,7 @@ Copy-on-Write wird über `versions/{versionId}` vorbereitet. Eine neue
 Dateiversion schreibt ein neues Storage-Objekt und aktualisiert am
 Datei-Dokument `currentVersionId`.
 
-Detailtiefe in [`features/dateien.md`](./features/dateien.md).
+Detailtiefe in [`features/dateien.md`](./index/dateien.md).
 
 ### Teams und Wissensbasis
 

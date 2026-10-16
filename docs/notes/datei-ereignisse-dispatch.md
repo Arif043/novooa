@@ -20,4 +20,4 @@ Verdrahtet ist das bisher nur in der lokalen Runtime: Upload, Baustein
 
 - [Ereignisziel eines Auslösers](./ausloeser-ereignisziel.md)
 - [Schleifenschutz zur Laufzeit](./schleifenschutz-laufzeit.md)
-- [Dateien](../features/dateien.md)
+- [Dateien](../index/dateien.md)

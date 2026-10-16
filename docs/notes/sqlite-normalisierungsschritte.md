@@ -19,7 +19,7 @@ strenge 3NF wird nicht behauptet.
 | `0017`/`0018` Dateien, Ordner | genau eine Ablage, Team über Elternkette. [Notiz](./sqlite-dateiablage-normalisiert.md) |
 | `0019` Wissenslinks | Links werden beim Lesen berechnet. [Notiz](./sqlite-wissenslinks-berechnet.md) |
 
-Dateiversionen: [Dateien § Standalone](../features/dateien.md#standalone-normalisierte-versionsmetadaten).
+Dateiversionen: [Dateiversionen in SQLite (0009)](./sqlite-dateiversionen-normalisiert.md).
 
 ## Siehe auch
 

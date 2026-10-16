@@ -68,5 +68,5 @@
 - [Lokale Runtime](./lokale-runtime.md)
 - [KI-Agent](../features/ki-agent.md)
 - [Aktivitäten](../features/aktivitaeten.md)
-- [Dateien](../features/dateien.md)
+- [Dateien](./dateien.md)
 - [Daten](../features/daten.md)

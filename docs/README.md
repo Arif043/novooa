@@ -14,6 +14,7 @@ in [`architecture.md`](./architecture.md).
 | Lokale Runtime | [`index/lokale-runtime.md`](./index/lokale-runtime.md) |
 | ML-Modelle | [`index/ml-modelle.md`](./index/ml-modelle.md) |
 | Aufgabe | [`index/aufgabe.md`](./index/aufgabe.md) |
+| Dateien | [`index/dateien.md`](./index/dateien.md) |
 
 ## Zettelkasten-Regeln
 
@@ -72,7 +73,7 @@ anlegen, alte Datei löschen, alle Verweise (auch in `AGENTS.md`) umbiegen.
 | Kommunikation   | [`features/kommunikation.md`](./features/kommunikation.md)   | System-E-Mail und Kundenpostfach-Connectoren |
 | Zeitplan        | [`index/zeitplan.md`](./index/zeitplan.md)                | Zettelkasten       |
 | Aktivitäten     | [`features/aktivitaeten.md`](./features/aktivitaeten.md)  | Stub           |
-| Dateien         | [`features/dateien.md`](./features/dateien.md)            | In Entwicklung |
+| Dateien         | [`index/dateien.md`](./index/dateien.md)                | Zettelkasten       |
 | Daten           | [`features/daten.md`](./features/daten.md)                | Fachlogik und lokaler Store |
 | Wissensbasis    | [`features/wissensbasis.md`](./features/wissensbasis.md)  | In Entwicklung |
 | KI-Agent        | [`features/ki-agent.md`](./features/ki-agent.md)          | In Entwicklung |

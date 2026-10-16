@@ -29,7 +29,7 @@ Heißt der Hauptwert `Bericht`, verwenden Templates `{{Bericht}}` und die
 weiteren Werte unter ihren Namen, etwa `{{DateiId}}` oder `{{Dateiname}}`.
 
 Schreiben löst [Datei-Ereignisse](./datei-ereignisse-dispatch.md) aus;
-Zielordner und Versionierung stehen in [Dateien](../features/dateien.md).
+Zielordner und Versionierung stehen in [Dateien](../index/dateien.md).
 
 ## Siehe auch
 
