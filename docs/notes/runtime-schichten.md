@@ -17,11 +17,11 @@ Feature Infrastructure
 
 Die fünf verbindlichen Regeln (gemeinsame Modelle, getrennte Speicheradapter,
 maßgebliche Datenquelle, Konsistenz, Vertragstests) stehen in
-[`architecture.md`](../architecture.md#architekturentscheidung-sqlite-und-firebase-unterstützen).
+[SQLite und Firebase: fünf Regeln](./sqlite-und-firebase-regeln.md).
 
 Ports und Use Cases liegen im Domain-Bereich ihres Features, Cloud- und
 Local-Adapter austauschbar in dessen Infrastructure-Bereich
-([`backend-struktur.md`](../backend-struktur.md)).
+([Backend: Feature-First-Struktur](./backend-feature-first.md)).
 
 ## Siehe auch
 

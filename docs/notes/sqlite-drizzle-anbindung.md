@@ -25,4 +25,4 @@ Modellkataloge.
 ## Siehe auch
 
 - [SQLite-Migrationen](./sqlite-migrationen.md)
-- [SQLite-Normalisierung](../architecture/sqlite-normalisierung.md) — Prüfstand aller Tabellen
+- [SQLite-Prüfstand (3NF)](./sqlite-3nf-pruefstand.md) — Prüfstand aller Tabellen

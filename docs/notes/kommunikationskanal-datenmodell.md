@@ -32,6 +32,9 @@ Team einen Twilio-Subaccount und speichert ihn am Team:
 teams/{teamId} { twilioSubaccountSid: string, twilioStatus: "active" | "suspended" }
 ```
 
+Die Oberfläche zeigt keine Provider-Begriffe wie Twilio, Subaccount oder
+Account SID.
+
 WhatsApp-Kanäle sind WhatsApp-Business-Nummern. Eine bestehende
 Business-App-Nummer wird über das offizielle Business-Platform-Onboarding
 verbunden.

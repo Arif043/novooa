@@ -13,7 +13,7 @@ import 'main.dart' show MyApp;
 
 /// Startet die Oberfläche **ohne Backend, Firebase, Lizenz und Anmeldung**.
 ///
-/// Alle Daten liegen flüchtig im Speicher (siehe `docs/architecture/ui-vorschau.md`).
+/// Alle Daten liegen flüchtig im Speicher (siehe `docs/notes/ui-vorschau.md`).
 /// Aufruf: `flutter run -t lib/main_preview.dart` oder das VS-Code-Profil
 /// „novooa UI-Vorschau“.
 Future<void> main() async {

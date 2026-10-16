@@ -23,5 +23,5 @@ Dateiversionen: [Dateiversionen in SQLite (0009)](./sqlite-dateiversionen-normal
 
 ## Siehe auch
 
-- [SQLite-Normalisierung](../architecture/sqlite-normalisierung.md) — Prüfstand aller 28 Tabellen
+- [SQLite-Prüfstand (3NF)](./sqlite-3nf-pruefstand.md) — Prüfstand aller 28 Tabellen
 - [SQLite-Migrationen](./sqlite-migrationen.md)

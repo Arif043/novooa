@@ -22,7 +22,7 @@ Vor dem ersten fachlichen Zugriff folgt die
 Ohne Docker (Desktop-App, `local-runtime:serve`) gibt es kein
 Schlüssel-Volume; siehe [Master-Key-Schlüsselbund](./master-key-schluesselbund.md).
 
-Nur für die UI ohne Runtime: [UI-Vorschau](../architecture/ui-vorschau.md).
+Nur für die UI ohne Runtime: [UI-Vorschau](./ui-vorschau.md).
 
 ## Siehe auch
 

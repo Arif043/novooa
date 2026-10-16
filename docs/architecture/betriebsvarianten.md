@@ -1,8 +1,8 @@
 # Betriebsvarianten: Clients × Cloud/Standalone
 
-> Cross-cutting. Verwandt: [`../architecture.md`](../architecture.md) ·
+> Cross-cutting. Verwandt: [`../index/architektur.md`](../index/architektur.md) ·
 > [`lokale-runtime`](../index/lokale-runtime.md) ·
-> [`../backend-struktur.md`](../backend-struktur.md)
+> [`../notes/backend-feature-first.md`](../notes/backend-feature-first.md)
 
 ## Zweck
 

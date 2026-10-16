@@ -74,7 +74,7 @@ Ein Template-Ausdruck beschreibt ausschließlich die Referenz auf einen Wert. We
 ```
 
 Detailtiefe zu Datenmodell, Auth, Persistenz und Trigger →
-[`docs/architecture.md`](./docs/architecture.md).
+[`docs/index/architektur.md`](./docs/index/architektur.md).
 
 ---
 
@@ -157,10 +157,10 @@ weiter als Deep-Dive unter `docs/features/`.
 
 | Bereich               | Datei                                                              | Inhalt                                                  |
 | --------------------- | ------------------------------------------------------------------ | ------------------------------------------------------- |
-| Cross-cutting         | [`docs/architecture.md`](./docs/architecture.md)                   | Datenmodell, Auth, Persistenz, Trigger, Telemetrie      |
-| UI-Vorschau           | [`docs/architecture/ui-vorschau.md`](./docs/architecture/ui-vorschau.md) | UI ohne Backend/Lizenz starten (`lib/main_preview.dart`, VS-Code-Profil) |
+| Cross-cutting         | [`docs/index/architektur.md`](./docs/index/architektur.md)                   | Datenmodell, Auth, Persistenz, Trigger, Telemetrie      |
+| UI-Vorschau           | [`docs/notes/ui-vorschau.md`](./docs/notes/ui-vorschau.md) | UI ohne Backend/Lizenz starten (`lib/main_preview.dart`, VS-Code-Profil) |
 | Lokale Runtime        | [`docs/index/lokale-runtime.md`](./docs/index/lokale-runtime.md)   | Inhaltsverzeichnis: Stack, Zugriff, Datenhaltung, Ausführung, Lizenz, Relays, Schlüssel |
-| SQLite-Normalisierung | [`docs/architecture/sqlite-normalisierung.md`](./docs/architecture/sqlite-normalisierung.md) | Tabellenprüfung und offene Abhängigkeiten |
+| SQLite-Normalisierung | [`docs/notes/sqlite-3nf-pruefstand.md`](./docs/notes/sqlite-3nf-pruefstand.md) | Tabellenprüfung und offene Abhängigkeiten |
 | Betriebsvarianten     | [`docs/architecture/betriebsvarianten.md`](./docs/architecture/betriebsvarianten.md) | Clients × Cloud/Standalone: Blocker und Umsetzungsschritte |
 | Feature „Aufgabe"     | [`docs/index/aufgabe.md`](./docs/index/aufgabe.md)                 | Inhaltsverzeichnis: Modell, Aufgabenstudio, Ausführung, Bausteine, Arbeitspläne |
 | Feature „Zeitplan"    | [`docs/index/zeitplan.md`](./docs/index/zeitplan.md)               | Inhaltsverzeichnis: Auslöser, Worker, Schleifenschutz, UI |

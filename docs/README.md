@@ -32,11 +32,11 @@ Notizen in [`notes/`](./notes/), geordnet über Inhaltsverzeichnisse in
 
 | Bereich | Datei |
 | --- | --- |
-| Architektur | [`architecture.md`](./architecture.md) |
+| Architektur | [`index/architektur.md`](./index/architektur.md) |
 | Betriebsvarianten | [`architecture/betriebsvarianten.md`](./architecture/betriebsvarianten.md) |
-| SQLite-Normalisierung | [`architecture/sqlite-normalisierung.md`](./architecture/sqlite-normalisierung.md) |
-| UI-Vorschau | [`architecture/ui-vorschau.md`](./architecture/ui-vorschau.md) |
-| Backend-Struktur | [`backend-struktur.md`](./backend-struktur.md) |
+| SQLite-Normalisierung | [`notes/sqlite-3nf-pruefstand.md`](./notes/sqlite-3nf-pruefstand.md) |
+| UI-Vorschau | [`notes/ui-vorschau.md`](./notes/ui-vorschau.md) |
+| Backend-Struktur | [`notes/backend-feature-first.md`](./notes/backend-feature-first.md) |
 | Deployment | [`deployment.md`](./deployment.md), [`deployment-cli.md`](./deployment-cli.md) |
 | Designsystem | [`DESIGN.md`](./DESIGN.md) |
 

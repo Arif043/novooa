@@ -105,8 +105,8 @@
 ## Verwandt
 
 - [Betriebsvarianten](../architecture/betriebsvarianten.md)
-- [Backend-Struktur](../backend-struktur.md)
-- [SQLite-Normalisierung](../architecture/sqlite-normalisierung.md)
+- [Backend-Struktur](../notes/backend-feature-first.md)
+- [SQLite-Normalisierung](../notes/sqlite-3nf-pruefstand.md)
 - [Import/Export](./import-export.md)
-- [UI-Vorschau](../architecture/ui-vorschau.md)
+- [UI-Vorschau](../notes/ui-vorschau.md)
 - [Zeitplan](./zeitplan.md)

@@ -21,7 +21,7 @@ Dateien gehen als Base64-kodierte JSON-Payloads an die Runtime und werden im
 Volume abgelegt.
 
 Die UI-Vorschau ersetzt genau diese Schnittstelle durch In-Memory-Transporte
-([UI-Vorschau](../architecture/ui-vorschau.md)).
+([UI-Vorschau](./ui-vorschau.md)).
 
 ## Siehe auch
 

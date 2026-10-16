@@ -25,4 +25,4 @@ Speichermodell.
 ## Siehe auch
 
 - [Auslöser-Datenmodell](./ausloeser-datenmodell.md)
-- [SQLite-Normalisierung](../architecture/sqlite-normalisierung.md)
+- [SQLite-Prüfstand (3NF)](./sqlite-3nf-pruefstand.md)
