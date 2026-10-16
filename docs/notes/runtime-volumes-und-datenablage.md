@@ -32,4 +32,4 @@ und SHA-256 geprüft.
 
 - [Master-Key-Schlüsselbund](./master-key-schluesselbund.md)
 - [ONNX-Inferenz über den ML-Dienst](./onnx-inferenz-ml-dienst.md)
-- [Import/Export](../features/import-export.md) — Sicherung als ZIP
+- [Import/Export](../index/import-export.md) — Sicherung als ZIP

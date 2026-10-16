@@ -16,4 +16,4 @@
 
 - [Fähigkeiten](./faehigkeiten.md)
 - [Aufgabe](./aufgabe.md)
-- [Import/Export](../features/import-export.md)
+- [Import/Export](./import-export.md)

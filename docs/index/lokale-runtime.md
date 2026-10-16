@@ -107,6 +107,6 @@
 - [Betriebsvarianten](../architecture/betriebsvarianten.md)
 - [Backend-Struktur](../backend-struktur.md)
 - [SQLite-Normalisierung](../architecture/sqlite-normalisierung.md)
-- [Import/Export](../features/import-export.md)
+- [Import/Export](./import-export.md)
 - [UI-Vorschau](../architecture/ui-vorschau.md)
 - [Zeitplan](./zeitplan.md)

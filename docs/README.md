@@ -75,12 +75,12 @@ anlegen, alte Datei löschen, alle Verweise (auch in `AGENTS.md`) umbiegen.
 | Zeitplan        | [`index/zeitplan.md`](./index/zeitplan.md)                | Zettelkasten       |
 | Aktivitäten     | [`features/aktivitaeten.md`](./features/aktivitaeten.md)  | Stub           |
 | Dateien         | [`index/dateien.md`](./index/dateien.md)                | Zettelkasten       |
-| Daten           | [`features/daten.md`](./features/daten.md)                | Fachlogik und lokaler Store |
+| Daten           | [`index/daten.md`](./index/daten.md)                | Fachlogik und lokaler Store |
 | Wissensbasis    | [`index/wissensbasis.md`](./index/wissensbasis.md)  | In Entwicklung |
 | KI-Agent        | [`index/ki-agent.md`](./index/ki-agent.md)               | Zettelkasten       |
 | ML-Modelle      | [`index/ml-modelle.md`](./index/ml-modelle.md)            | Zettelkasten       |
 | Sprachausgabe   | [`features/sprachausgabe.md`](./features/sprachausgabe.md) | Text vorlesen über Sprachmodelle, Stimmen |
-| Import/Export   | [`features/import-export.md`](./features/import-export.md) | Standalone: Sicherung und Übertragung |
+| Import/Export   | [`index/import-export.md`](./index/import-export.md) | Standalone: Sicherung und Übertragung |
 
 ## Konvention: Neue Feature-Doc anlegen
 

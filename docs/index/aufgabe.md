@@ -69,4 +69,4 @@
 - [KI-Agent](./ki-agent.md)
 - [Aktivitäten](../features/aktivitaeten.md)
 - [Dateien](./dateien.md)
-- [Daten](../features/daten.md)
+- [Daten](./daten.md)

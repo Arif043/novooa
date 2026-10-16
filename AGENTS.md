@@ -167,7 +167,7 @@ weiter als Deep-Dive unter `docs/features/`.
 | Feature „Kommunikation" | [`docs/index/kommunikation.md`](./docs/index/kommunikation.md) | Inhaltsverzeichnis: SendGrid, Mail-Connectoren, Twilio, Kanäle |
 | Feature „Aktivitäten" | [`docs/features/aktivitaeten.md`](./docs/features/aktivitaeten.md) | Stub: Runs, Traces, Freigaben                           |
 | Feature „Dateien"     | [`docs/index/dateien.md`](./docs/index/dateien.md)                 | Inhaltsverzeichnis: Ablage, Versionen, Oberfläche, Nutzung in Aufgaben |
-| Feature „Daten"       | [`docs/features/daten.md`](./docs/features/daten.md)               | Dokumentorientierte Daten und lokale Speicherung         |
+| Feature „Daten"       | [`docs/index/daten.md`](./docs/index/daten.md)               | Inhaltsverzeichnis: Sammlungen, Bausteine, Datenbank-Seite |
 | Feature „Wissensbasis" | [`docs/index/wissensbasis.md`](./docs/index/wissensbasis.md) | Inhaltsverzeichnis: Notizen, Links, Graph, Anhänge |
 | Feature „Fähigkeiten" | [`docs/index/faehigkeiten.md`](./docs/index/faehigkeiten.md)             | Inhaltsverzeichnis: Skills-Ordner, Import, skills.sh, Bausteine |
 | Feature „Integrationen" | [`docs/index/integrationen.md`](./docs/index/integrationen.md) | Inhaltsverzeichnis: Plugin-Mechanik und Shopware |
@@ -178,7 +178,7 @@ weiter als Deep-Dive unter `docs/features/`.
 | Feature „ML-Modelle"  | [`docs/index/ml-modelle.md`](./docs/index/ml-modelle.md)           | Inhaltsverzeichnis: Katalog, Verträge, Transformationen, ML-Dienst |
 | Feature „Dokumentenscanner" | [`docs/features/dokumentscanner.md`](./docs/features/dokumentscanner.md) | Bild anfordern als Scan: Android/iOS nativ, Web mit eigener Erkennung |
 | Feature „Sprachausgabe" | [`docs/features/sprachausgabe.md`](./docs/features/sprachausgabe.md) | Text vorlesen über Sprachmodelle, Stimmenliste        |
-| Feature „Import/Export" | [`docs/features/import-export.md`](./docs/features/import-export.md) | Standalone: Export/Import von Dateien, Daten, Wissensbasis, Aufgaben |
+| Feature „Import/Export" | [`docs/index/import-export.md`](./docs/index/import-export.md) | Inhaltsverzeichnis: Bereiche, Archivformat, Ablauf |
 
 Wie du eine neue Feature-Doc anlegst → [`docs/README.md`](./docs/README.md).
 

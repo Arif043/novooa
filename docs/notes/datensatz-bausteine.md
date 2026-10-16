@@ -31,4 +31,4 @@ SQLite-Adapter in den Graph-Runner.
 ## Siehe auch
 
 - [Sammlung als Tabelle](./sammlung-als-tabelle.md)
-- [Daten](../features/daten.md)
+- [Daten](../index/daten.md)

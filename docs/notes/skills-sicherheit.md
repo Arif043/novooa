@@ -17,4 +17,4 @@ Gehört zu: [Fähigkeiten](../index/faehigkeiten.md)
 ## Siehe auch
 
 - [Skills importieren](./skills-import.md)
-- [Import/Export](../features/import-export.md)
+- [Import/Export](../index/import-export.md)
