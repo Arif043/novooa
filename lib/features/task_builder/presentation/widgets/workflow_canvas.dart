@@ -15,6 +15,8 @@ import 'node_output_type_style.dart';
 import 'workflow_canvas_layout.dart';
 import 'workflow_canvas_options.dart';
 
+const _entryMoveDuration = Duration(milliseconds: 350);
+
 class WorkflowCanvas extends StatefulWidget {
   const WorkflowCanvas({
     super.key,
@@ -147,8 +149,13 @@ class _WorkflowCanvasState extends State<WorkflowCanvas>
                                 child: _CanvasLabelStack(link: link),
                               ),
                             ),
+                      // Per ID geschlüsselt, damit getauschte Bausteine zu
+                      // ihrem neuen Platz gleiten statt dorthin zu springen.
                       for (final entry in layout.entries.values)
-                        Positioned.fromRect(
+                        AnimatedPositioned.fromRect(
+                          key: ValueKey('canvas-entry-${entry.id}'),
+                          duration: _entryMoveDuration,
+                          curve: Curves.easeInOutCubic,
                           rect: layout.rectangles[entry.id]!,
                           child: DragTarget<BausteinChoice>(
                             onWillAcceptWithDetails: (_) => entry.canInsert,

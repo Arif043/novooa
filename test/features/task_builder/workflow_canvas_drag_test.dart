@@ -56,7 +56,32 @@ void main() {
       await cubit.close();
     },
   );
+
+  testWidgets('lässt getauschte Bausteine zu ihrem neuen Platz gleiten', (
+    tester,
+  ) async {
+    final cubit = TaskBuilderCubit(repository: _FakeTaskRepository(_task));
+    await cubit.load(_task);
+    await tester.pumpWidget(_app(cubit));
+    final before = tester.getRect(_sourceCard('node.1'));
+    final after = tester.getRect(_sourceCard('node.2'));
+
+    await tester.pumpWidget(_app(cubit, graph: _swappedGraph));
+    await tester.pump(const Duration(milliseconds: 175));
+    final midway = tester.getRect(_sourceCard('node.1'));
+    await tester.pumpAndSettle();
+
+    expect(midway.top, greaterThan(before.top));
+    expect(midway.top, lessThan(after.top));
+    expect(tester.getRect(_sourceCard('node.1')).top, closeTo(after.top, .01));
+    await cubit.close();
+  });
 }
+
+final _swappedGraph = _task.graph.swapNodes(
+  const NodeId('node.1'),
+  const NodeId('node.2'),
+);
 
 Finder _sourceCard(String nodeId) => find.ancestor(
   of: find.byKey(ValueKey('compact-node-drag-$nodeId')),
@@ -76,13 +101,13 @@ Matcher _closeToOffset(Offset expected) => isA<Offset>()
     .having((offset) => offset.dx, 'dx', closeTo(expected.dx, .01))
     .having((offset) => offset.dy, 'dy', closeTo(expected.dy, .01));
 
-Widget _app(TaskBuilderCubit cubit) {
+Widget _app(TaskBuilderCubit cubit, {WorkflowGraph? graph}) {
   return MaterialApp(
     home: BlocProvider.value(
       value: cubit,
       child: Scaffold(
         body: WorkflowCanvas(
-          graph: _task.graph,
+          graph: graph ?? _task.graph,
           selected: null,
           onSelect: (_) {},
           onChoose: (_) {},
