@@ -44,7 +44,7 @@ export function registerRuntimeLicenseRoutes(
  * darf nur ein angemeldeter Betreiber. Solange noch kein Passwort gesetzt ist,
  * kann sich niemand anmelden; dann bleibt die Freigabe offen, weil Lizenzen
  * ohne gespeicherten Token-Nachweis nur über Freigeben und erneutes Aktivieren
- * eingerichtet werden können (siehe docs/local-runtime.md).
+ * eingerichtet werden können (siehe docs/notes/runtime-ersteinrichtung.md).
  */
 async function mayRelease(request: FastifyRequest, {credentials, sessions}: ReleaseAuthorization): Promise<boolean> {
   if (!await credentials.hasCredential()) return true;

@@ -1,7 +1,7 @@
 # Feature: Webhooks (eingehende Aufrufe)
 
 Verwandt: [`verbindungen.md`](./verbindungen.md) · [`zeitplan`](../index/zeitplan.md) · [`aufgabe.md`](./aufgabe.md) ·
-[`../node-executor-outputs.md`](../node-executor-outputs.md) · [`../local-runtime.md`](../local-runtime.md)
+[`../node-executor-outputs.md`](../node-executor-outputs.md) · [`lokale-runtime`](../index/lokale-runtime.md)
 
 ## Zweck
 
@@ -90,7 +90,7 @@ Webhook gestartet“ ab.
 - **Eigenes Routen-Plugin neben der API** (`webhookRoutes`, registriert in `runtimeRoutes` neben `localRuntimeApi`): Die
   API-Hooks verlangen Sitzung und Lizenz auf allen Routen; ein externes System hat keine Sitzung. Das Plugin hat eine
   **eigene Lizenzprüfung**, eigenen Rohbody-Parser (alle Inhaltstypen als `Buffer`, auch JSON) und eigenen Fehler-Handler.
-  Es ist im Zugriffs-Katalog von [`../local-runtime.md`](../local-runtime.md) als Ausnahme von der Sitzungspflicht
+  Es ist in [Webhooks: Ausnahme von der Sitzungspflicht](../notes/webhook-sitzungsausnahme.md) als Ausnahme von der Sitzungspflicht
   geführt. Der verschlüsselte Tunnel (`/v1/secure/…`) leitet `/hooks/…` nicht weiter.
 - **Domäne** (`features/webhooks/domain`): `ReceiveWebhook` (Ablauf), `verify-webhook-signature` (reine Funktion),
   `webhook-event` (Ereignis, Kopfzeilenfilter, Body-Auswertung). Der Zugang zum Arbeitsbereich läuft über

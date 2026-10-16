@@ -17,7 +17,7 @@ im Functions-Paket:
 Die Runtime führt beim Start den Drizzle-Migrator aus
 (`openLocalRuntimeDatabase`). Die Feature-Adapter (z. B. `SQLiteTaskStore`,
 `LocalTeamFileStore`, `SQLiteModelCatalog`) arbeiten über `RuntimeDatabase`
-(Drizzle auf libsql). Details: [`../docs/local-runtime.md`](../docs/local-runtime.md).
+(Drizzle auf libsql). Details: [`docs/index/lokale-runtime.md`](../docs/index/lokale-runtime.md).
 
 ## Python-ONNX-Runtime
 
@@ -36,7 +36,7 @@ python3 -m venv .novooa/python
 Die Node-Runtime verbindet sich mit diesem Sidecar über `novooa-private`. Sie
 enthält kein Python. Script-Bausteine laufen im eigenen, abgeschotteten Container `novooa-script`
 (internes Netz `novooa-script`, siehe
-[`../docs/local-runtime.md`](../docs/local-runtime.md) § Script-Dienst).
+[Script-Dienst: Schnittstelle](../docs/notes/script-dienst-schnittstelle.md)).
 Seine Tests: `docker run --rm -v "$PWD/local-runtime/python:/app/python" -w /app/python python:3.12-slim python -m unittest tests.test_script_service`.
 
 
@@ -54,7 +54,7 @@ Zertifikat davor — der Client erkennt eine Domain und verwendet dann HTTPS.
 Port `8090` darf dabei nicht direkt öffentlich erreichbar sein, sonst gehen
 Passwort und Session-Token im Klartext übers Internet. Jede Verbindung
 verlangt zusätzlich ein selbst gewähltes Betreiber-Passwort — siehe
-[`docs/local-runtime.md`](../docs/local-runtime.md#zugriff-und-authentifizierung)
+[Betreiber-Passwort-Pflicht](../docs/notes/betreiber-passwort-pflicht.md)
 für das einmalige Setzen des Passworts, den Login-Ablauf und ein
 nginx-Beispiel.
 

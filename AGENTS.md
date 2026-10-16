@@ -159,6 +159,7 @@ weiter als Deep-Dive unter `docs/features/`.
 | --------------------- | ------------------------------------------------------------------ | ------------------------------------------------------- |
 | Cross-cutting         | [`docs/architecture.md`](./docs/architecture.md)                   | Datenmodell, Auth, Persistenz, Trigger, Telemetrie      |
 | UI-Vorschau           | [`docs/architecture/ui-vorschau.md`](./docs/architecture/ui-vorschau.md) | UI ohne Backend/Lizenz starten (`lib/main_preview.dart`, VS-Code-Profil) |
+| Lokale Runtime        | [`docs/index/lokale-runtime.md`](./docs/index/lokale-runtime.md)   | Inhaltsverzeichnis: Stack, Zugriff, Datenhaltung, Ausführung, Lizenz, Relays, Schlüssel |
 | SQLite-Normalisierung | [`docs/architecture/sqlite-normalisierung.md`](./docs/architecture/sqlite-normalisierung.md) | Tabellenprüfung und offene Abhängigkeiten |
 | Betriebsvarianten     | [`docs/architecture/betriebsvarianten.md`](./docs/architecture/betriebsvarianten.md) | Clients × Cloud/Standalone: Blocker und Umsetzungsschritte |
 | Feature „Aufgabe"     | [`docs/features/aufgabe.md`](./docs/features/aufgabe.md)           | Task Builder — Domain, UI, Genkit-Flows, DoD            |

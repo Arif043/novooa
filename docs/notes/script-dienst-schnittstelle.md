@@ -1,0 +1,26 @@
+# Script-Dienst: Schnittstelle
+
+> In Standalone läuft Python eines Script-Bausteins nie in der Runtime, sondern im Container `novooa-script` über `POST /run`.
+
+Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
+
+- Code: `functions/Dockerfile.script-runner`,
+  `local-runtime/python/novooa_script/`.
+- Adresse: `SCRIPT_RUNNER_URL` (Compose: `http://novooa-script:8091`). Ohne
+  sie läuft **kein** Script; es gibt keinen Rückfall auf Python in der
+  Runtime. Der Node-Container enthält kein Python.
+- `POST /run` als `multipart/form-data`: Teil `request` (JSON: Script,
+  Eingabe, Variablen, Datei-Metadaten), danach je Datei ein Teil `file-<n>`
+  mit rohen Bytes (kein Base64). Anhänge zusammen höchstens 25 MB
+  (`maximumAttachmentBytes`).
+- Antwort `200` mit `output`, `printed`, `stderr`, `variables` oder `422` mit
+  lesbarer Meldung samt Script-Zeile.
+
+**Cloud:** Die Functions führen Scripts weiter mit `python3` im eigenen
+Prozess und eingeschränkten Builtins aus (`createPythonScriptExecutor`).
+
+## Siehe auch
+
+- [Script-Dienst: Ausführung und Grenzen](./script-dienst-ausfuehrung.md)
+- [Script-Dienst: Abschottung](./script-dienst-abschottung.md)
+- [Aufgabe: Executoren](../features/aufgabe-executoren.md) — `workflow_output`

@@ -25,7 +25,7 @@ Infrastructure implementiert ausschließlich Domain-Interfaces.
 Die lokale Runtime folgt demselben Prinzip auf Backend-Seite: Task Runner,
 NodeExecutors und Worker hängen an Store-Ports; Firestore und SQLite-
 Adapter sind austauschbare Implementierungen. Details stehen in
-[`local-runtime.md`](./local-runtime.md).
+[`index/lokale-runtime.md`](./index/lokale-runtime.md).
 
 ## Lokalisierung
 
@@ -340,7 +340,7 @@ Die Section **Passwort neu setzen** in den allgemeinen Einstellungen verwendet
 `SetNewPassword` und einen separaten `PasswordRepository`-Port. Der Cloud-Adapter
 ändert das Passwort des angemeldeten Firebase-Nutzers über `User.updatePassword`;
 der Standalone-HTTP-Adapter nutzt die authentifizierte Runtime-Route
-`PUT /v1/auth/password` (siehe [Runtime-Dokumentation](local-runtime.md#passwort-ändern)).
+`PUT /v1/auth/password` (siehe [Runtime-Dokumentation](notes/passwort-aendern.md)).
 Das Formular enthält ein neues Passwortfeld mit Klartext-Umschaltung, ohne
 aktuelles Passwort oder Wiederholung. Firebase kann `requires-recent-login`
 melden; dann zeigt die App einen Hinweis auf erneute Anmeldung. Der Cubit hält

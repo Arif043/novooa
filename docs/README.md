@@ -11,6 +11,7 @@ in [`architecture.md`](./architecture.md).
 | Thema    | Verzeichnis                              |
 | -------- | ---------------------------------------- |
 | Zeitplan | [`index/zeitplan.md`](./index/zeitplan.md) |
+| Lokale Runtime | [`index/lokale-runtime.md`](./index/lokale-runtime.md) |
 
 ## Zettelkasten-Regeln
 
@@ -58,7 +59,7 @@ anlegen, alte Datei löschen, alle Verweise (auch in `AGENTS.md`) umbiegen.
 | Deployment | [`deployment.md`](./deployment.md) | Staging/Produktion, Firebase-Projekte und CI/CD |
 | Backend        | [`backend-struktur.md`](./backend-struktur.md) | Functions-Struktur, Ports, Cloud-/Local-Trennung |
 | Executor-Outputs | [`node-executor-outputs.md`](./node-executor-outputs.md) | Output-Vertraege der Workflow-Executoren |
-| Lokale Runtime | [`local-runtime.md`](./local-runtime.md) | Docker-Deployment, Datenhaltung, Ports und Relay |
+| Lokale Runtime | [`index/lokale-runtime.md`](./index/lokale-runtime.md) | Zettelkasten: Stack, Zugriff, Datenhaltung, Lizenz, Relays |
 | Betriebsvarianten | [`architecture/betriebsvarianten.md`](./architecture/betriebsvarianten.md) | Clients × Cloud/Standalone: Ist-Zustand, Blocker, Umsetzung |
 | Features       | [`features/`](./features/)         | Ein Deep-Dive pro Feature                               |
 

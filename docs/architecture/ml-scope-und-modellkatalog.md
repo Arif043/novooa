@@ -240,6 +240,6 @@ wieder einzuhängen, falls die Entscheidung revidiert wird.
 ## Verwandt
 
 - [ML-Modelle](../features/ml-modelle.md)
-- [Lokale Runtime](../local-runtime.md)
+- [Lokale Runtime](../index/lokale-runtime.md)
 - [Kosten- und Preismodell](../kosten-und-abo-preise.md)
 - [Aufgabe-Executoren](../features/aufgabe-executoren.md)

@@ -113,7 +113,7 @@ anzeigen und gezielt erneut zustellen lassen kann.
 Cloud: Der Tab **Kommunikation** unter Einstellungen verwaltet E-Mail, WhatsApp
 und SMS. Lokale Runtime: Derselbe Tab zeigt nur die Outlook-Postfächer dieser
 Runtime („Postfach verbinden"); siehe
-[`../local-runtime.md`](../local-runtime.md) § Mail-Relay.
+[Mail-Relay und Dead-Letter-Queue](../notes/mail-relay-dead-letter.md).
 
 Aufbau des Tabs (anbieterneutral):
 
@@ -128,7 +128,7 @@ Aufbau des Tabs (anbieterneutral):
   versuchen“), Fehler mit Daten (Hinweis über den Karten) und Erfolg.
 - Die Liste kommt ereignisgesteuert: `watchWorkspaceChannel('mail-connectors')`
   lädt beim Öffnen und danach nur nach einem Signal der Runtime (siehe
-  [`../local-runtime.md`](../local-runtime.md) § Mail-Relay). Die Cloud erhöht
+  [Mail-Relay und Dead-Letter-Queue](../notes/mail-relay-dead-letter.md)). Die Cloud erhöht
   dafür beim Verbinden oder bei einem Statuswechsel `connectorsRevision` im
   Wake-up-Dokument der Lizenz.
 - „Postfach verbinden“ öffnet lokal einen Dialog (`CommunicationMailboxesSheet`,

@@ -47,7 +47,7 @@ services:
       # private IPv4-Adresse des Hosts verwenden können. Der Verkehr ist dabei
       # unverschlüsselt — diesen Port niemals aus dem Internet erreichbar
       # machen; für externen Zugriff gehört ein eigener Reverse Proxy mit
-      # Domain und Zertifikat davor (siehe docs/local-runtime.md).
+      # Domain und Zertifikat davor (siehe docs/notes/reverse-proxy-externer-zugriff.md).
       # Mehrere Stacks auf einem Server brauchen je einen eigenen Port (NOVOOA_RUNTIME_PORT).
       - "${NOVOOA_RUNTIME_PORT:-8090}:8080"
     volumes:

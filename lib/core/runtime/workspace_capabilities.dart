@@ -88,7 +88,7 @@ class WorkspaceCapabilities {
 
   /// Firebase-Push (FCM/APNs). Für Standalone bewusst standardmäßig aus,
   /// damit sich der macOS-Client ohne Apple-Entwicklungszertifikat bauen
-  /// lässt (siehe `docs/local-runtime.md` § Push-Benachrichtigungen). Zur
+  /// lässt (siehe `docs/notes/push-standalone.md`). Zur
   /// Auslieferung mit `--dart-define=NOVOOA_PUSH_ENABLED=true` aktivierbar —
   /// dort allerdings nur auf Plattformen, die `firebase_options.dart`
   /// überhaupt konfiguriert (siehe [_pushSupportedOnThisPlatform]).

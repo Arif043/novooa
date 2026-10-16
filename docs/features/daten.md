@@ -119,6 +119,6 @@ Rückgaben und konkurrierende Updates mit derselben erwarteten Version ab.
 ## Verwandt
 
 [`../architecture.md`](../architecture.md) ·
-[`../local-runtime.md`](../local-runtime.md) ·
+[`lokale-runtime`](../index/lokale-runtime.md) ·
 [`aufgabe.md`](./aufgabe.md) ·
 [`dateien.md`](./dateien.md)

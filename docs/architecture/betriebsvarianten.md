@@ -1,7 +1,7 @@
 # Betriebsvarianten: Clients × Cloud/Standalone
 
 > Cross-cutting. Verwandt: [`../architecture.md`](../architecture.md) ·
-> [`../local-runtime.md`](../local-runtime.md) ·
+> [`lokale-runtime`](../index/lokale-runtime.md) ·
 > [`../backend-struktur.md`](../backend-struktur.md)
 
 ## Zweck
@@ -102,7 +102,7 @@ unverschlüsselte Herkunft an — kein Mischbetrieb. Relevant bleibt es nur,
 wenn eine über HTTPS ausgelieferte App eine HTTP-Runtime ansprechen soll.
 
 Die lokale Runtime terminiert bewusst kein TLS (siehe
-[`../local-runtime.md`](../local-runtime.md)). Für diesen Fall gälte:
+[`lokale-runtime`](../index/lokale-runtime.md)). Für diesen Fall gälte:
 
 | Ziel | Verhalten im Browser |
 | --- | --- |
@@ -171,7 +171,7 @@ werden. `main.dart` liest `forKind(kind)` vor der Firebase-Initialisierung
 als reine Funktion, weil der DI-Container dafür noch nicht steht; alles
 danach (`FcmBootstrapper`, `FcmForegroundNotificationListener`) liest
 denselben Wert über den registrierten Singleton (siehe
-[`../local-runtime.md`](../local-runtime.md) § Push-Benachrichtigungen).
+[Push-Benachrichtigungen in Standalone](../notes/push-standalone.md)).
 
 ### 7. Zwei unterschiedliche Identitätsmodelle
 
