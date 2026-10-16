@@ -36,6 +36,14 @@ void main() {
       final gesture = await tester.startGesture(source);
       await gesture.moveTo(target);
       await tester.pump();
+      final feedback = find.byKey(
+        const ValueKey('compact-node-drag-feedback-node.1'),
+      );
+      expect(feedback, findsOneWidget);
+      expect(
+        find.descendant(of: feedback, matching: find.byType(Icon)),
+        findsOneWidget,
+      );
       await gesture.up();
       await tester.pumpAndSettle();
 

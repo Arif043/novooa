@@ -11,6 +11,7 @@ import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 import '../cubits/workflow_primitive_labels.dart';
 import 'baustein_palette.dart';
+import 'baustein_swap_handle.dart';
 import 'node_output_type_style.dart';
 import 'workflow_canvas_layout.dart';
 import 'workflow_canvas_options.dart';
@@ -388,30 +389,7 @@ class CompactWorkflowNode extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Draggable<NodeId>(
-                  key: ValueKey('compact-node-drag-${node.id.value}'),
-                  data: node.id,
-                  feedback: Material(
-                    elevation: 4,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(node.config.primitive.label),
-                    ),
-                  ),
-                  child: Tooltip(
-                    message: LocaleKeys.task_builder_canvas_swap_block.tr(),
-                    child: CircleAvatar(
-                      radius: 23,
-                      backgroundColor: colors.primaryContainer.withValues(
-                        alpha: .12,
-                      ),
-                      child: Icon(
-                        bausteinIcon(node.config.primitive),
-                        color: colors.primary,
-                      ),
-                    ),
-                  ),
-                ),
+                BausteinSwapHandle(node: node),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
