@@ -9,7 +9,7 @@ services:
       PORT: "8080"
       # Liefert die Web-App unter derselben Herkunft aus wie die API — damit
       # entfallen CORS und Mixed Content (siehe
-      # docs/architecture/betriebsvarianten.md). Ohne Verzeichnis bleibt die
+      # docs/notes/runtime-liefert-web-app.md). Ohne Verzeichnis bleibt die
       # Runtime eine reine API.
       LOCAL_RUNTIME_WEB_DIRECTORY: /app/web
       # Erlaubte Browser-Herkünfte für CORS. Leer = keine fremde Herkunft.
@@ -30,7 +30,7 @@ services:
       # Skill-Katalog (skills.sh) über das Relay in Firebase: Die Runtime weist sich mit ihrer Lizenz aus, das Relay
       # prüft sie und ruft den Vercel-Proxy (relay/skills-sh-proxy) auf. Leer setzen (SKILLS_SH_RELAY_URL=) schaltet
       # den Katalog ab; Import per GitHub/ZIP/Ordner geht immer. SKILLS_SH_BASE_URL / SKILLS_SH_TOKEN sind nur für
-      # den direkten Zugang in der Entwicklung (siehe docs/features/skills.md).
+      # den direkten Zugang in der Entwicklung (siehe docs/notes/skills-sh-katalog.md).
       SKILLS_SH_RELAY_URL: ${SKILLS_SH_RELAY_URL-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimeSkillsRelay}
       SKILLS_SH_BASE_URL: ${SKILLS_SH_BASE_URL:-}
       SKILLS_SH_TOKEN: ${SKILLS_SH_TOKEN:-}

@@ -4,7 +4,7 @@ import 'package:syscat2/core/runtime/workspace_capabilities.dart';
 
 // Deckt ab, dass `WorkspaceCapabilities` die einzige Quelle für „ist ein
 // Feature in dieser Betriebsvariante verfügbar?“ ist (siehe
-// `docs/architecture/betriebsvarianten.md`, Blocker 6) — insbesondere für
+// `docs/notes/workspace-capabilities.md`) — insbesondere für
 // `push`, das zuvor als `RuntimeProfile.pushNotificationsEnabled` an einer
 // zweiten Stelle dieselbe Frage beantwortet hat und in `main.dart` zusätzlich
 // vom Erfolg des `Firebase.initializeApp()`-Aufrufs zur Laufzeit abhing. Die

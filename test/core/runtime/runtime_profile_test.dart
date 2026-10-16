@@ -5,7 +5,7 @@ import 'package:syscat2/core/runtime/runtime_profile.dart';
 // Deckt ab, dass die Betriebsvariante keine Compile-Zeit-Festlegung mehr ist:
 // `NOVOOA_RUNTIME` liefert nur noch den Vorgabewert, `forKind` erlaubt jede
 // unterstützte Variante zur Laufzeit (siehe
-// `docs/architecture/betriebsvarianten.md`).
+// `docs/notes/web-herkunftsregel.md`).
 void main() {
   test('runtimeKindOrNull erkennt die persistierbaren Namen', () {
     expect(runtimeKindOrNull('cloud'), RuntimeKind.cloud);
