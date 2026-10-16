@@ -3,55 +3,90 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
 
 import '../../domain/entities/workflow_node.dart';
-import 'baustein_palette.dart';
+import 'baustein_icon_avatar.dart';
 
 /// Baustein-Icon, über das ein Baustein auf einen anderen gezogen und mit ihm
-/// getauscht wird. Beim Ziehen folgt das Icon selbst dem Zeiger.
+/// getauscht wird. Gegriffen wird nur das Icon, damit Tippen auf die Node und
+/// Verschieben der Leinwand frei bleiben; dem Zeiger folgt aber [feedback] in
+/// Größe und Zoomstufe der Node hinter [sourceKey].
 class BausteinSwapHandle extends StatelessWidget {
-  const BausteinSwapHandle({super.key, required this.node});
+  const BausteinSwapHandle({
+    super.key,
+    required this.node,
+    required this.sourceKey,
+    required this.feedback,
+    this.onDragStarted,
+    this.onDragEnded,
+  });
 
   final WorkflowNode node;
+  final GlobalKey sourceKey;
+  final Widget feedback;
+  final VoidCallback? onDragStarted;
+  final VoidCallback? onDragEnded;
 
   @override
   Widget build(BuildContext context) {
+    final icon = BausteinIconAvatar(primitive: node.config.primitive);
     return Draggable<NodeId>(
       key: ValueKey('compact-node-drag-${node.id.value}'),
       data: node.id,
-      feedback: Material(
+      dragAnchorStrategy: _anchorOnSource,
+      feedback: _MeasuredFeedback(
         key: ValueKey('compact-node-drag-feedback-${node.id.value}'),
-        type: MaterialType.circle,
-        // Deckend, weil der Avatar-Hintergrund halbtransparent ist und die
-        // Leinwand sonst durch das gezogene Icon scheint.
-        color: Theme.of(context).colorScheme.surface,
-        elevation: 6,
-        child: _BausteinIconAvatar(node: node),
+        sourceKey: sourceKey,
+        child: feedback,
       ),
-      childWhenDragging: Opacity(
-        opacity: .38,
-        child: _BausteinIconAvatar(node: node),
-      ),
+      onDragStarted: onDragStarted,
+      onDragEnd: (_) => onDragEnded?.call(),
       child: Tooltip(
         message: LocaleKeys.task_builder_canvas_swap_block.tr(),
-        child: _BausteinIconAvatar(node: node),
+        child: icon,
       ),
     );
   }
+
+  /// Hält den Griffpunkt fest: Die Node hängt dort am Zeiger, wo sie
+  /// gegriffen wurde, statt mit der oberen linken Ecke am Icon.
+  Offset _anchorOnSource(
+    Draggable<Object> draggable,
+    BuildContext context,
+    Offset position,
+  ) {
+    final source = _sourceBox(sourceKey);
+    if (source == null) {
+      return childDragAnchorStrategy(draggable, context, position);
+    }
+    return source.globalToLocal(position) * _scaleOf(source);
+  }
 }
 
-class _BausteinIconAvatar extends StatelessWidget {
-  const _BausteinIconAvatar({required this.node});
+class _MeasuredFeedback extends StatelessWidget {
+  const _MeasuredFeedback({
+    super.key,
+    required this.sourceKey,
+    required this.child,
+  });
 
-  static const _radius = 23.0;
-
-  final WorkflowNode node;
+  final GlobalKey sourceKey;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return CircleAvatar(
-      radius: _radius,
-      backgroundColor: colors.primaryContainer.withValues(alpha: .12),
-      child: Icon(bausteinIcon(node.config.primitive), color: colors.primary),
+    final source = _sourceBox(sourceKey);
+    if (source == null) return const SizedBox.shrink();
+    return Transform.scale(
+      scale: _scaleOf(source),
+      alignment: Alignment.topLeft,
+      child: SizedBox.fromSize(size: source.size, child: child),
     );
   }
 }
+
+RenderBox? _sourceBox(GlobalKey key) {
+  final box = key.currentContext?.findRenderObject();
+  return box is RenderBox && box.hasSize ? box : null;
+}
+
+/// Zoomstufe der Leinwand, damit das Feedback so groß wie die Node erscheint.
+double _scaleOf(RenderBox box) => box.getTransformTo(null).getMaxScaleOnAxis();

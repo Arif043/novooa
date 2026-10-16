@@ -9,9 +9,8 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
-import '../cubits/workflow_primitive_labels.dart';
 import 'baustein_palette.dart';
-import 'baustein_swap_handle.dart';
+import 'compact_workflow_node.dart';
 import 'node_output_type_style.dart';
 import 'workflow_canvas_layout.dart';
 import 'workflow_canvas_options.dart';
@@ -176,8 +175,6 @@ class _WorkflowCanvasState extends State<WorkflowCanvas>
                                       targeted: candidates.isNotEmpty,
                                       peers: entry.peers,
                                       onTap: () => widget.onSelect(entry.node!),
-                                      onAdd: () =>
-                                          widget.onChoose(entry.insertion),
                                     ),
                                   ),
                           ),
@@ -340,100 +337,6 @@ class _PathInsertion extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class CompactWorkflowNode extends StatelessWidget {
-  const CompactWorkflowNode({
-    super.key,
-    required this.node,
-    required this.selected,
-    required this.onTap,
-    this.onAdd,
-    this.targeted = false,
-    this.peers = const {},
-  });
-  final WorkflowNode node;
-  final bool selected;
-  final bool targeted;
-  final VoidCallback onTap;
-  final VoidCallback? onAdd;
-  final Set<NodeId> peers;
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return DragTarget<NodeId>(
-      onWillAcceptWithDetails: (details) =>
-          details.data != node.id && peers.contains(details.data),
-      onAcceptWithDetails: (details) =>
-          context.read<TaskBuilderCubit>().swapNodes(details.data, node.id),
-      builder: (context, candidates, _) => Material(
-        elevation: selected ? 4 : 1,
-        shadowColor: colors.shadow.withValues(alpha: .12),
-        color: colors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: selected || targeted || candidates.isNotEmpty
-                ? colors.primaryContainer
-                : colors.outlineVariant,
-            width: selected ? 2 : 1,
-          ),
-        ),
-        child: InkWell(
-          key: ValueKey('compact-node-${node.id.value}'),
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                BausteinSwapHandle(node: node),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        node.config.primitive.label,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Tooltip(
-                        message: node.id.value,
-                        child: Text(
-                          'ID: ${node.id.value}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: colors.onSurfaceVariant),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Deaktiviert: Dieser Button hängte bedingungslos einen
-                // weiteren Nachfolger an jeden Baustein an, auch an
-                // nicht-verzweigende Primitives — der Runner führt einen so
-                // entstandenen zweiten Zweig einfach sequenziell mit aus,
-                // ohne Zusammenführung (kein Guard in WorkflowGraph.addNode).
-                // Das Anhängen des ersten Nachfolgers bleibt über den
-                // separaten "+ Baustein hier verbinden"-Platzhalter möglich.
-                // if (onAdd != null)
-                // IconButton(
-                //   tooltip: LocaleKeys.ui_baustein_verbinden.tr(),
-                //   onPressed: onAdd,
-                //   icon: const Icon(Icons.add, size: 20),
-                // ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

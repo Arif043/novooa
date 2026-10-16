@@ -12,13 +12,14 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/compact_node_card.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/workflow_canvas.dart';
 
 // Ersetzt den alten `node_drag_test.dart`-Test (der auf der inzwischen
 // entfernten `NodeGraph` — altes UI-Panel — basierte). Deckt denselben
 // Ablauf über den tatsächlich verwendeten Drag-Mechanismus der
-// Haupt-Leinwand ab: `CompactWorkflowNode`s `Draggable`/`DragTarget<NodeId>`
-// in `workflow_canvas.dart`.
+// Haupt-Leinwand ab: `BausteinSwapHandle` und `DragTarget<NodeId>` in
+// `compact_workflow_node.dart`.
 void main() {
   testWidgets(
     'tauscht zwei Bausteine, wenn einer auf den anderen gezogen wird',
@@ -33,16 +34,16 @@ void main() {
       final target = tester.getCenter(
         find.byKey(const ValueKey('compact-node-node.2')),
       );
+      final sourceCard = tester.getRect(_sourceCard('node.1'));
       final gesture = await tester.startGesture(source);
       await gesture.moveTo(target);
       await tester.pump();
-      final feedback = find.byKey(
-        const ValueKey('compact-node-drag-feedback-node.1'),
-      );
-      expect(feedback, findsOneWidget);
+
+      final feedbackCard = tester.getRect(_feedbackCard('node.1'));
+      expect(feedbackCard.size, _closeToSize(sourceCard.size));
       expect(
-        find.descendant(of: feedback, matching: find.byType(Icon)),
-        findsOneWidget,
+        feedbackCard.topLeft,
+        _closeToOffset(sourceCard.topLeft + (target - source)),
       );
       await gesture.up();
       await tester.pumpAndSettle();
@@ -56,6 +57,24 @@ void main() {
     },
   );
 }
+
+Finder _sourceCard(String nodeId) => find.ancestor(
+  of: find.byKey(ValueKey('compact-node-drag-$nodeId')),
+  matching: find.byType(CompactNodeCard),
+);
+
+Finder _feedbackCard(String nodeId) => find.descendant(
+  of: find.byKey(ValueKey('compact-node-drag-feedback-$nodeId')),
+  matching: find.byType(CompactNodeCard),
+);
+
+Matcher _closeToSize(Size expected) => isA<Size>()
+    .having((size) => size.width, 'width', closeTo(expected.width, .01))
+    .having((size) => size.height, 'height', closeTo(expected.height, .01));
+
+Matcher _closeToOffset(Offset expected) => isA<Offset>()
+    .having((offset) => offset.dx, 'dx', closeTo(expected.dx, .01))
+    .having((offset) => offset.dy, 'dy', closeTo(expected.dy, .01));
 
 Widget _app(TaskBuilderCubit cubit) {
   return MaterialApp(
