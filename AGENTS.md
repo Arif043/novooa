@@ -149,6 +149,12 @@ npm run deploy         # firebase deploy --only functions
 
 ## 5. Doc-Index
 
+Die Docs werden featureweise auf die **Zettelkasten-Methode** umgestellt:
+atomare Notizen in [`docs/notes/`](./docs/notes/) (flach, sprechende Namen),
+geordnet über Inhaltsverzeichnisse in [`docs/index/`](./docs/index/). Regeln →
+[`docs/README.md`](./docs/README.md). Noch nicht umgestellte Features stehen
+weiter als Deep-Dive unter `docs/features/`.
+
 | Bereich               | Datei                                                              | Inhalt                                                  |
 | --------------------- | ------------------------------------------------------------------ | ------------------------------------------------------- |
 | Cross-cutting         | [`docs/architecture.md`](./docs/architecture.md)                   | Datenmodell, Auth, Persistenz, Trigger, Telemetrie      |
@@ -159,7 +165,7 @@ npm run deploy         # firebase deploy --only functions
 | Aufgabe-Ausfuehrung    | [`docs/features/aufgabe-ausfuehrung.md`](./docs/features/aufgabe-ausfuehrung.md) | Runner, Freigaben, lokale Ausfuehrung |
 | Aufgabe-Executoren     | [`docs/features/aufgabe-executoren.md`](./docs/features/aufgabe-executoren.md) | Modellprovider und Executor-Verhalten |
 | Feature „Arbeitspläne" | [`docs/features/arbeitsplaene.md`](./docs/features/arbeitsplaene.md) | Stub: gespeicherte Aufgaben                          |
-| Feature „Zeitplan"    | [`docs/features/zeitplan.md`](./docs/features/zeitplan.md)         | Stub: Trigger und Scheduler                             |
+| Feature „Zeitplan"    | [`docs/index/zeitplan.md`](./docs/index/zeitplan.md)               | Inhaltsverzeichnis: Auslöser, Worker, Schleifenschutz, UI |
 | Feature „Kommunikation" | [`docs/features/kommunikation.md`](./docs/features/kommunikation.md) | System-E-Mail und Kundenpostfach-Connectoren          |
 | Feature „Aktivitäten" | [`docs/features/aktivitaeten.md`](./docs/features/aktivitaeten.md) | Stub: Runs, Traces, Freigaben                           |
 | Feature „Dateien"     | [`docs/features/dateien.md`](./docs/features/dateien.md)           | Dateiablage, Storage, Versionierung                     |
@@ -196,3 +202,8 @@ Wie du eine neue Feature-Doc anlegst → [`docs/README.md`](./docs/README.md).
   denselben Commit. Insbesondere: neuer `WorkflowPrimitive` →
   Tabelleneintrag in [`docs/features/aufgabe.md`](./docs/features/aufgabe.md)
   § Primitives.
+- **Notizen statt Abschnitte.** In umgestellten Features (mit Eintrag in
+  `docs/index/`) neues Wissen als atomare Notiz in `docs/notes/` anlegen und im
+  passenden Inhaltsverzeichnis verlinken; bestehende Notizen ändern statt
+  Wissen zu wiederholen. Lies erst das Inhaltsverzeichnis, dann nur die
+  benötigten Notizen. `test/docs/doc_links_test.dart` prüft Links und Waisen.

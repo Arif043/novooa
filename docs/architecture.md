@@ -361,8 +361,7 @@ keine Passwörter im State und schützt vor parallelem Speichern.
 | Event           | Geräte- / Webhook-Event   | Firestore-Trigger oder HTTPS-Webhook       |
 | Freigabe        | Mensch bestätigt          | Genkit-Interrupt + Task-Rückkanal          |
 
-Detailtiefe in [`features/zeitplan.md`](./features/zeitplan.md), sobald das
-Feature startet.
+Detailtiefe im Inhaltsverzeichnis [`index/zeitplan.md`](./index/zeitplan.md).
 
 ## Telemetrie
 

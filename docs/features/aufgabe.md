@@ -5,7 +5,7 @@
 
 Verwandt: [`../architecture.md`](../architecture.md) ·
 [`arbeitsplaene.md`](./arbeitsplaene.md) ·
-[`zeitplan.md`](./zeitplan.md) ·
+[`zeitplan`](../index/zeitplan.md) ·
 [`aktivitaeten.md`](./aktivitaeten.md)
 
 ## Zweck

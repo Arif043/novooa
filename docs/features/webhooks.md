@@ -1,6 +1,6 @@
 # Feature: Webhooks (eingehende Aufrufe)
 
-Verwandt: [`verbindungen.md`](./verbindungen.md) · [`zeitplan.md`](./zeitplan.md) · [`aufgabe.md`](./aufgabe.md) ·
+Verwandt: [`verbindungen.md`](./verbindungen.md) · [`zeitplan`](../index/zeitplan.md) · [`aufgabe.md`](./aufgabe.md) ·
 [`../node-executor-outputs.md`](../node-executor-outputs.md) · [`../local-runtime.md`](../local-runtime.md)
 
 ## Zweck

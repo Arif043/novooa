@@ -176,7 +176,7 @@ Dateien lassen sich über `DELETE /v1/files/:fileId` löschen (lokale Runtime):
 Metadaten, alle Versionen und Dateiinhalte werden entfernt. Im Client gibt es
 dafür die Aktion „Löschen" mit Bestätigung am Dateieintrag. Schreiben, neue
 Versionen und Löschen lösen Datei-Ereignisse für Event-Trigger aus
-(siehe [`zeitplan.md`](./zeitplan.md) § Datei-Ereignisse).
+(siehe [Datei-Ereignisse lösen Aufgaben aus](../notes/datei-ereignisse-dispatch.md)).
 
 Der Baustein **Datei schreiben** ist kein Attachment-Input, sondern ein
 Persistenz-Output. Er schreibt den String-Output des Vorgänger-Nodes als neue

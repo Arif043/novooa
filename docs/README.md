@@ -1,8 +1,52 @@
 # Docs
 
-Projektdokumentation für novooa. Diese Docs sind **feature-first** organisiert:
-pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
-[`architecture.md`](./architecture.md).
+Projektdokumentation für novooa. Die Docs werden **featureweise** auf die
+Zettelkasten-Methode umgestellt: atomare Notizen in [`notes/`](./notes/),
+geordnet über Inhaltsverzeichnisse in [`index/`](./index/). Noch nicht
+umgestellte Features liegen als Deep-Dive in `features/`, cross-cutting-Themen
+in [`architecture.md`](./architecture.md).
+
+## Inhaltsverzeichnisse
+
+| Thema    | Verzeichnis                              |
+| -------- | ---------------------------------------- |
+| Zeitplan | [`index/zeitplan.md`](./index/zeitplan.md) |
+
+## Zettelkasten-Regeln
+
+**Atomare Notiz** (`notes/<sprechender-name>.md`):
+
+- Ein Gedanke pro Notiz, für sich verständlich, höchstens 200 Zeilen
+  (Richtwert 20–80).
+- Dateiname = Titel in `kebab-case`, deutsch, ohne Umlaute
+  (`ausloeser-dialog.md`). Ordner bleibt flach, keine Unterordner.
+- Aufbau:
+
+  ```markdown
+  # Titel
+
+  > Kernaussage in einem Satz.
+
+  Gehört zu: [Thema](../index/<thema>.md)
+
+  Inhalt …
+
+  ## Siehe auch
+
+  - [Andere Notiz](./andere-notiz.md) — warum sie relevant ist
+  ```
+
+- Wissen steht nur an einer Stelle; andere Notizen verlinken darauf.
+- Eine Notiz darf zu mehreren Inhaltsverzeichnissen gehören.
+
+**Inhaltsverzeichnis** (`index/<thema>.md`): Kernaussage des Themas, danach
+gruppierte Links auf Notizen, „Offene Punkte“ und „Verwandt“. Kaum eigener
+Inhalt.
+
+**Feature umstellen:** Deep-Dive in Notizen zerlegen, Inhaltsverzeichnis
+anlegen, alte Datei löschen, alle Verweise (auch in `AGENTS.md`) umbiegen.
+`flutter test test/docs` prüft, dass jeder relative Link existiert, jede Notiz
+„Gehört zu“ hat und in mindestens einem Inhaltsverzeichnis steht.
 
 ## Struktur
 
@@ -27,7 +71,7 @@ pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
 | Aufgabe: Executor | [`features/aufgabe-executoren.md`](./features/aufgabe-executoren.md) | Modellprovider und Executor-Verhalten |
 | Kommunikation   | [`features/kommunikation.md`](./features/kommunikation.md)   | System-E-Mail und Kundenpostfach-Connectoren |
 | Arbeitspläne    | [`features/arbeitsplaene.md`](./features/arbeitsplaene.md) | Stub           |
-| Zeitplan        | [`features/zeitplan.md`](./features/zeitplan.md)          | Zeitbasierte Trigger |
+| Zeitplan        | [`index/zeitplan.md`](./index/zeitplan.md)                | Zettelkasten       |
 | Aktivitäten     | [`features/aktivitaeten.md`](./features/aktivitaeten.md)  | Stub           |
 | Dateien         | [`features/dateien.md`](./features/dateien.md)            | In Entwicklung |
 | Daten           | [`features/daten.md`](./features/daten.md)                | Fachlogik und lokaler Store |
@@ -38,6 +82,9 @@ pro Feature ein Deep-Dive in `features/`, cross-cutting-Themen in
 | Import/Export   | [`features/import-export.md`](./features/import-export.md) | Standalone: Sicherung und Übertragung |
 
 ## Konvention: Neue Feature-Doc anlegen
+
+Neue Features bekommen direkt Notizen und ein Inhaltsverzeichnis (siehe oben).
+Das alte Schema gilt nur noch für Ergänzungen nicht umgestellter Deep-Dives:
 
 1. Datei `docs/features/<slug>.md` anlegen.
 2. Top-Sektion: `## Zweck` (1 Absatz).
