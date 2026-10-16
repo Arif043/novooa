@@ -4,9 +4,9 @@
 
 Gehört zu: [Integrationen](../index/integrationen.md)
 
-- Plugins nutzen die allgemeine Schicht: [Verbindungen](../features/verbindungen.md)
+- Plugins nutzen die allgemeine Schicht: [Verbindungen](../index/verbindungen.md)
   für Zugang und Anmeldung, `OutboundHttpClient` für Aufrufe,
-  [Webhooks](../features/webhooks.md) für eingehende Ereignisse — und ergänzen
+  [Webhooks](../index/webhooks.md) für eingehende Ereignisse — und ergänzen
   nur, was dem System eigen ist.
 - **Verfügbarkeit:** nur Standalone. In der Cloud sind ihre Executoren nicht
   angemeldet; solche Bausteine werden dort übersprungen.

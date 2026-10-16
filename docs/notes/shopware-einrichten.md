@@ -20,4 +20,4 @@ Auslöser brauchen zusätzlich eine kleine Shopware-App, siehe
 ## Siehe auch
 
 - [Shopware-Plugin](./shopware-plugin.md)
-- [Verbindungen](../features/verbindungen.md)
+- [Verbindungen](../index/verbindungen.md)

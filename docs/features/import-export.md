@@ -90,7 +90,7 @@ keine Übersetzung älterer Dateiformate.
 
 ## Verbindungen
 
-[Verbindungen](./verbindungen.md) und ihre Geheimnisse werden nie exportiert. Aufgaben mit einem Baustein „HTTP-Anfrage“
+[Verbindungen](../index/verbindungen.md) und ihre Geheimnisse werden nie exportiert. Aufgaben mit einem Baustein „HTTP-Anfrage“
 verweisen per `connectionId` auf eine Verbindung; auf dem Zielgerät zeigt der Baustein „Verbindung nicht gefunden“, bis dort
 eine Verbindung gewählt ist (wie bei Sprachmodellen und Kanälen gibt es keine Prüfung beim Import).
 

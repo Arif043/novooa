@@ -36,4 +36,4 @@ abrufbar. Im Lauf liest der Baustein
 
 - [Verhalten der Shopware-Auslöser](./shopware-ausloeser-verhalten.md)
 - [Ereignisquellen-Registry](./ereignisquellen-registry.md)
-- [Webhooks](../features/webhooks.md)
+- [Webhooks](../index/webhooks.md)

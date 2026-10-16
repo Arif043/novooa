@@ -9,7 +9,7 @@ const headerNamePattern = /^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/;
 /**
  * Sendet Anfragen an externe Systeme, auf Wunsch angemeldet über eine Verbindung.
  *
- * Es gibt bewusst keine Sperre für interne Adressen (siehe docs/features/verbindungen.md). Dafür gilt:
+ * Es gibt bewusst keine Sperre für interne Adressen (siehe docs/notes/http-anfrage-sicherheit.md). Dafür gilt:
  * Zugangsdaten gehen nur an die Origin der Verbindung — weder eine fremde Adresse im `url`-Feld noch eine
  * Weiterleitung zu einem anderen Host bekommt sie.
  */

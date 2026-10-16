@@ -29,9 +29,9 @@ Executoren: `functions/src/features/task_execution/infrastructure/genkit/executo
 | `documentLookup` | ausgefuehrt | `value` (`string`: verständliches Suchergebnis), `found` (`boolean`), `record` (`json` mit Fachfeldern oder `null`), `message` (`string`) |
 | `saveDocument` | ausgefuehrt | `value` (`string`: „Datensätze gespeichert“), `created` (`boolean`), `count` (`number`), `records` (`json`: gespeicherte Fachfelder) |
 | `tableFromCollection` | ausgefuehrt | siehe „Sammlung als Tabelle" |
-| `readWebhook` | ausgefuehrt; Lauf ohne Webhook-Ereignis bricht mit einer Meldung ab | `value` (`json`: Inhalt; bei Text `string`), `method` (`string`), `query` (`json`), `headers` (`json`, ohne Zugangsdaten), `receivedAt` (`datetime`); siehe [Webhooks](../features/webhooks.md) |
+| `readWebhook` | ausgefuehrt; Lauf ohne Webhook-Ereignis bricht mit einer Meldung ab | `value` (`json`: Inhalt; bei Text `string`), `method` (`string`), `query` (`json`), `headers` (`json`, ohne Zugangsdaten), `receivedAt` (`datetime`); siehe [Webhooks](../index/webhooks.md) |
 | `shopware` | ausgefuehrt (lokale Runtime); je nach `config.action` | Listen-Aktionen (`searchOrders`, `searchProducts`, `searchCustomers`, `query`): `value` (`json`: Liste), `count`, `total` (`number`), `found` (`boolean`); `getOrder`: `value` (`json`), `orderNumber`, `status`, `paymentStatus`, `deliveryStatus`, `customerEmail` (`string`), `total` (`number`); `changeOrderStatus`: `value` (`json`), `previousStatus`, `newStatus` (`string`), `changed` (`boolean`); `updateProduct`: `value` (`json`), `changed` (`boolean`); siehe [Shopware](./shopware-plugin.md) |
-| `httpRequest` | ausgefuehrt (lokale Runtime); ohne Dienst (Cloud) bricht er mit einer Meldung ab | `value` (`json`: geparster JSON-Body, sonst Text, leer `null`), `status` (`number`), `ok` (`boolean`), `headers` (`json`, ohne `set-cookie`); siehe [Verbindungen](../features/verbindungen.md) |
+| `httpRequest` | ausgefuehrt (lokale Runtime); ohne Dienst (Cloud) bricht er mit einer Meldung ab | `value` (`json`: geparster JSON-Body, sonst Text, leer `null`), `status` (`number`), `ok` (`boolean`), `headers` (`json`, ohne `set-cookie`); siehe [Verbindungen](../index/verbindungen.md) |
 
 Zusätzlich: `textToSpeech` liefert `value` (`audio`, die Aufnahme als
 Team-Datei, mit Sprachmodell wie mit ONNX-Modell; Lautsprecher-Symbol und

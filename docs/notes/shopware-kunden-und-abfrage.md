@@ -27,7 +27,7 @@ Ausgaben `{{kunden}}`, `count`, `total`, `found`.
   `total-count-mode` gehören **nicht** in die Kriterien.
 - Ausgaben: `{{abfrage}}` (rohe Datensätze), `count`, `total`, `found`.
 - Schreiben geht nur über die eigenen Aktionen oder die
-  [HTTP-Anfrage](../features/verbindungen.md).
+  [HTTP-Anfrage](../index/verbindungen.md).
 
 ## Siehe auch
 

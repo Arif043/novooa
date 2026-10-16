@@ -125,8 +125,8 @@ Kein reines Plumbing-Problem, sondern der größte Arbeitsanteil:
   `assistantRoutes` (`local-assistant-routes.ts`) bedient beide Bereiche über die lokale
   Runtime (siehe [`../index/ki-agent.md`](../index/ki-agent.md)).
 - **Nur Standalone**: Datensammlungen (`DataRepository`), Anwendungsprotokoll,
-  ML-Modellkatalog, Lizenz, [Verbindungen und HTTP-Anfrage](../features/verbindungen.md)
-  (`WorkspaceCapabilities.connections`), [Webhooks](../features/webhooks.md)
+  ML-Modellkatalog, Lizenz, [Verbindungen und HTTP-Anfrage](../index/verbindungen.md)
+  (`WorkspaceCapabilities.connections`), [Webhooks](../index/webhooks.md)
   (`WorkspaceCapabilities.webhooks`). Der Cloud-Task-Runner injiziert bewusst einen
   `UnavailableDocumentStore`.
 - `lib/features/user/infrastructure/repositories/local_workspace_user_repository.dart`

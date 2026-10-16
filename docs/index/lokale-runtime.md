@@ -52,7 +52,7 @@
   - [Wissenslinks werden beim Lesen berechnet (0019)](../notes/sqlite-wissenslinks-berechnet.md)
 - [Anwendungsprotokoll](../notes/anwendungsprotokoll.md)
 - [Sprachmodell-Anbieter](../notes/sprachmodell-anbieter.md)
-- [Geheimnisse von HTTP-Verbindungen](../notes/verbindungs-geheimnisse.md)
+- [Verbindung](../notes/verbindung.md) (Geheimnisse in `language_model_secrets`)
 - [Mitarbeiter in der Runtime](../notes/runtime-mitarbeiter.md)
 - [Skills-Ordner der Runtime](../notes/runtime-skills-ordner.md)
 

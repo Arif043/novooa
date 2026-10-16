@@ -18,5 +18,5 @@ Quellen mit Sonderform (beide nur lokale Runtime):
 ## Siehe auch
 
 - [Ereignisziel eines Auslösers](./ausloeser-ereignisziel.md)
-- [Webhooks](../features/webhooks.md) — Geheimnis, Aufruf, Grenzen
+- [Webhooks](../index/webhooks.md) — Geheimnis, Aufruf, Grenzen
 - [Shopware: Auslöser über App-Webhooks](./shopware-ausloeser.md)

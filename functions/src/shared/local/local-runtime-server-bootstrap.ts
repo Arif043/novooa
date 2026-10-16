@@ -113,7 +113,7 @@ function runtimeRoutes(options: BootstrapOptions, shared: RuntimeShared): Fastif
       realtimeConnections: shared.realtimeConnections, mailConnectors: shared.mailConnectors,
       workspaceContext: () => shared.application.workspaceContext(), mlService: shared.mlService,
     }));
-    // Neben der API, nicht darin: Externe Systeme haben keine Sitzung (siehe docs/features/webhooks.md).
+    // Neben der API, nicht darin: Externe Systeme haben keine Sitzung (siehe docs/notes/webhook-architektur.md).
     await routes.register(webhookRoutes, {
       licenses: options.licenses, workspaceContext: () => shared.application.workspaceContext(),
     });

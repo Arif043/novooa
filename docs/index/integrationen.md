@@ -32,7 +32,7 @@
 
 ## Verwandt
 
-- [Verbindungen](../features/verbindungen.md)
-- [Webhooks](../features/webhooks.md)
+- [Verbindungen](./verbindungen.md)
+- [Webhooks](./webhooks.md)
 - [Aufgabe](./aufgabe.md)
 - [Zeitplan](./zeitplan.md)

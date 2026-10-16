@@ -14,5 +14,5 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
 ## Siehe auch
 
-- [Webhooks](../features/webhooks.md)
+- [Webhooks](../index/webhooks.md)
 - [Betreiber-Passwort-Pflicht](./betreiber-passwort-pflicht.md)
