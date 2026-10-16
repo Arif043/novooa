@@ -37,7 +37,7 @@ Notizen in [`notes/`](./notes/), geordnet über Inhaltsverzeichnisse in
 | SQLite-Normalisierung | [`notes/sqlite-3nf-pruefstand.md`](./notes/sqlite-3nf-pruefstand.md) |
 | UI-Vorschau | [`notes/ui-vorschau.md`](./notes/ui-vorschau.md) |
 | Backend-Struktur | [`notes/backend-feature-first.md`](./notes/backend-feature-first.md) |
-| Deployment | [`deployment.md`](./deployment.md), [`deployment-cli.md`](./deployment-cli.md) |
+| Deployment | [`notes/deployment-umgebungen.md`](./notes/deployment-umgebungen.md), [`notes/deployment-cli.md`](./notes/deployment-cli.md) |
 | Designsystem | [`DESIGN.md`](./DESIGN.md) |
 
 ## Zettelkasten-Regeln

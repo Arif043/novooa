@@ -144,7 +144,7 @@ Anschließend referenziert eine Compose-Datei die geladenen Images per
 `image: novooa-runtime:0.1.0` / `image: novooa-ml:0.1.0` /
 `image: novooa-script:0.1.0` statt sie per
 `build:` aus dem Quellcode zu bauen — genau das, was
-[`deployment.md`](../docs/deployment.md) für auslieferbare, versionierte
+[Images, Updates und Neustarts](../docs/notes/runtime-images-und-updates.md) für auslieferbare, versionierte
 Images fordert ("niemals `latest`, immer eine konkrete Version").
 
 Voraussetzung ist ein Buildx-Builder mit `linux/amd64`-Unterstützung
