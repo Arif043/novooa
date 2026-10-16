@@ -169,11 +169,11 @@ weiter als Deep-Dive unter `docs/features/`.
 | Feature „Dateien"     | [`docs/index/dateien.md`](./docs/index/dateien.md)                 | Inhaltsverzeichnis: Ablage, Versionen, Oberfläche, Nutzung in Aufgaben |
 | Feature „Daten"       | [`docs/features/daten.md`](./docs/features/daten.md)               | Dokumentorientierte Daten und lokale Speicherung         |
 | Feature „Wissensbasis" | [`docs/index/wissensbasis.md`](./docs/index/wissensbasis.md) | Inhaltsverzeichnis: Notizen, Links, Graph, Anhänge |
-| Feature „Fähigkeiten" | [`docs/features/skills.md`](./docs/features/skills.md)             | SKILL.md-Fähigkeiten: Skills-Ordner, Import, skills.sh      |
+| Feature „Fähigkeiten" | [`docs/index/faehigkeiten.md`](./docs/index/faehigkeiten.md)             | Inhaltsverzeichnis: Skills-Ordner, Import, skills.sh, Bausteine |
 | Feature „Integrationen" | [`docs/index/integrationen.md`](./docs/index/integrationen.md) | Inhaltsverzeichnis: Plugin-Mechanik und Shopware |
 | Feature „Webhooks"   | [`docs/index/webhooks.md`](./docs/index/webhooks.md)         | Inhaltsverzeichnis: Auslöser, Aufruf, Ereignis, Sicherheit |
 | Feature „Verbindungen" | [`docs/index/verbindungen.md`](./docs/index/verbindungen.md) | Inhaltsverzeichnis: Verbindung, Anmeldung, HTTP-Anfrage |
-| Feature „Mitarbeiter" | [`docs/features/mitarbeiter.md`](./docs/features/mitarbeiter.md)   | Subagents: Rahmenbedingung (System-Prompt) + Skills     |
+| Feature „Mitarbeiter" | [`docs/index/mitarbeiter.md`](./docs/index/mitarbeiter.md)   | Inhaltsverzeichnis: Subagenten aus Rahmenbedingung und Skills |
 | Feature „KI-Agent"    | [`docs/index/ki-agent.md`](./docs/index/ki-agent.md)         | Inhaltsverzeichnis: Betrieb, Multiagenten, Pläne, Cursor |
 | Feature „ML-Modelle"  | [`docs/index/ml-modelle.md`](./docs/index/ml-modelle.md)           | Inhaltsverzeichnis: Katalog, Verträge, Transformationen, ML-Dienst |
 | Feature „Dokumentenscanner" | [`docs/features/dokumentscanner.md`](./docs/features/dokumentscanner.md) | Bild anfordern als Scan: Android/iOS nativ, Web mit eigener Erkennung |

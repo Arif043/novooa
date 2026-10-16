@@ -53,8 +53,8 @@
 - [Anwendungsprotokoll](../notes/anwendungsprotokoll.md)
 - [Sprachmodell-Anbieter](../notes/sprachmodell-anbieter.md)
 - [Verbindung](../notes/verbindung.md) (Geheimnisse in `language_model_secrets`)
-- [Mitarbeiter in der Runtime](../notes/runtime-mitarbeiter.md)
-- [Skills-Ordner der Runtime](../notes/runtime-skills-ordner.md)
+- [Mitarbeiter](../notes/mitarbeiter.md)
+- [Skills-Ordner](../notes/skills-ordner.md)
 
 ## Ausführung
 

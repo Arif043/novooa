@@ -21,8 +21,8 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   Genkit-Kontrollfluss.
 - Anweisungen nutzen `{{name}}` und Dot-Pfade (`{{kunde.name}}`); Anhänge im
   read-only Workspace. Transiente Modellfehler: exponentieller Backoff.
-- Optional ein [Mitarbeiter](../features/mitarbeiter.md) **oder** eigene
-  [Fähigkeiten](../features/skills.md), nie beides.
+- Optional ein [Mitarbeiter](../index/mitarbeiter.md) **oder** eigene
+  [Fähigkeiten](../index/faehigkeiten.md), nie beides.
 
 Port: `PromptExecutor` (`PromptExecutionRequest`/`PromptExecutionResult`),
 Adapter `createGenkitPromptExecutor`. Der Node-Executor bereitet nur

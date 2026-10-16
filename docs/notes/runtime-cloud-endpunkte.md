@@ -18,7 +18,7 @@ Weitere Relays:
 - `LOCAL_RUNTIME_TASK_BUILDER_RELAY_URL` → `localRuntimeTaskBuilderRelay`
   ([KI-Agenten in der Runtime](./ki-agenten-betriebsorte.md))
 - `SKILLS_SH_RELAY_URL` → `localRuntimeSkillsRelay`, in Compose voreingestellt
-  ([Skills-Ordner](./runtime-skills-ordner.md))
+  ([Skills-Ordner](./skills-ordner.md), [Katalog](./skills-sh-katalog.md))
 
 `LOCAL_RUNTIME_FIREBASE_API_KEY` ist der öffentliche Web-API-Key, kein Admin-
 oder Kundengeheimnis.

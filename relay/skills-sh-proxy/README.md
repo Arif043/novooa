@@ -13,7 +13,7 @@ Runtime ──(signierte Lizenz)──▶ Firebase-Funktion localRuntimeSkillsRe
 - Die **Runtime** kennt weder den Proxy noch ein Geheimnis. Sie schickt ihre signierte Lizenz an die Firebase-Funktion.
 - Die **Firebase-Funktion** prüft Lizenz (Signatur, aktiv, Registry) und Anfrage (nur lesende `/skills…`-Pfade und
   bekannte Parameter), begrenzt je Lizenz per Token Bucket (Werte aus Remote Config, siehe
-  `docs/features/skills.md`) und signiert den Aufruf des Proxys.
+  `docs/notes/skills-sh-katalog.md`) und signiert den Aufruf des Proxys.
 - Dieser **Proxy** akzeptiert nur Aufrufe mit gültiger HMAC-Signatur. Die Signatur gilt über
   `{zeitstempel}\n{METHODE}\n{pfad+query}` (HMAC-SHA256, hex) — genau die Anfrage-URL, wie Vercel sie sieht, also
   `/api/relay?p=%2Fskills%2Fsearch&q=react` — in den Headern `x-novooa-timestamp` (Unix-ms) und
