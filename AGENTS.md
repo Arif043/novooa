@@ -179,7 +179,7 @@ weiter als Deep-Dive unter `docs/features/`.
 | Feature „Verbindungen" | [`docs/features/verbindungen.md`](./docs/features/verbindungen.md) | Zugänge zu externen HTTP-APIs und der Baustein „HTTP-Anfrage“ |
 | Feature „Mitarbeiter" | [`docs/features/mitarbeiter.md`](./docs/features/mitarbeiter.md)   | Subagents: Rahmenbedingung (System-Prompt) + Skills     |
 | Feature „KI-Agent"    | [`docs/features/ki-agent.md`](./docs/features/ki-agent.md)         | In-App Assistenz für Aufgabenbau und Wissensbasis       |
-| Feature „ML-Modelle"  | [`docs/features/ml-modelle.md`](./docs/features/ml-modelle.md)     | ONNX-Modellkatalog und Modellverträge                   |
+| Feature „ML-Modelle"  | [`docs/index/ml-modelle.md`](./docs/index/ml-modelle.md)           | Inhaltsverzeichnis: Katalog, Verträge, Transformationen, ML-Dienst |
 | Feature „Dokumentenscanner" | [`docs/features/dokumentscanner.md`](./docs/features/dokumentscanner.md) | Bild anfordern als Scan: Android/iOS nativ, Web mit eigener Erkennung |
 | Feature „Sprachausgabe" | [`docs/features/sprachausgabe.md`](./docs/features/sprachausgabe.md) | Text vorlesen über Sprachmodelle, Stimmenliste        |
 | Feature „Import/Export" | [`docs/features/import-export.md`](./docs/features/import-export.md) | Standalone: Export/Import von Dateien, Daten, Wissensbasis, Aufgaben |

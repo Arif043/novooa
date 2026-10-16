@@ -15,7 +15,7 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
   Pipeline noch Modell-Baustein hängen an Firebase Storage oder Bildern.
 - Katalogmodelle liest der Dienst aus dem gemeinsamen Cache des Servers;
   eigene Modelle streamt ihm die Runtime in seinen Bündelspeicher
-  ([ML-Modelle § Modellbündel](../features/ml-modelle.md#modellbündel-und-ml-dienst)).
+  ([Modellbündel](./modellbuendel.md)).
 - Abhängigkeiten:
   [`local-runtime/python/requirements.txt`](../../local-runtime/python/requirements.txt).
 

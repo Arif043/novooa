@@ -108,7 +108,7 @@ class DocumentationTest(unittest.TestCase):
 
 
 def documentation_rows():
-    text = (PACKAGE.parents[2] / "docs" / "features" / "ml-modelle.md").read_text(encoding="utf-8")
+    text = (PACKAGE.parents[2] / "docs" / "notes" / "transformationskatalog.md").read_text(encoding="utf-8")
     rows = {}
     for line in text.splitlines():
         cells = [cell.strip() for cell in line.split("|")]

@@ -10,7 +10,7 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 - **`novooa-ml`** hängt im internen Netz `novooa-ml` und zum Herunterladen von
   Katalogmodellen zusätzlich in `novooa-ml-egress`. Jede Runtime meldet sich
   dort mit ihrer Lizenz-ID an und erhält ein eigenes Token
-  ([ML-Modelle § Mandanten](../features/ml-modelle.md#mandanten)).
+  ([ML-Mandanten](./ml-mandanten.md)).
 - **`novooa-script`** liegt in einem internen Netz ohne Außenzugang; nur die
   Runtime erreicht ihn.
 

@@ -1,7 +1,7 @@
 # Feature „Sprachausgabe und Transkription“ (Sprachbausteine über Sprachmodelle)
 
 Der Baustein **Text vorlesen** (`textToSpeech`) spricht Text entweder mit einem
-lokalen ONNX-Modell (siehe [`ml-modelle.md`](./ml-modelle.md)) oder mit einem
+lokalen ONNX-Modell (siehe [`ml-modelle`](../index/ml-modelle.md)) oder mit einem
 **verbundenen Sprachmodell**. Die Auswahl der Sprachmodelle ist bewusst nicht
 gefiltert: Welches Modell sprechen kann, entscheidet der Anbieter; Fehler
 erscheinen als lesbare Meldung im Lauf.

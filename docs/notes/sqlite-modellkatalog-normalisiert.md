@@ -14,4 +14,4 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 ## Siehe auch
 
 - [SQLite-Normalisierungsschritte](./sqlite-normalisierungsschritte.md)
-- [ML-Modelle](../features/ml-modelle.md)
+- [ML-Modelle](../index/ml-modelle.md)

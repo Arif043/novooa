@@ -12,6 +12,7 @@ in [`architecture.md`](./architecture.md).
 | -------- | ---------------------------------------- |
 | Zeitplan | [`index/zeitplan.md`](./index/zeitplan.md) |
 | Lokale Runtime | [`index/lokale-runtime.md`](./index/lokale-runtime.md) |
+| ML-Modelle | [`index/ml-modelle.md`](./index/ml-modelle.md) |
 
 ## Zettelkasten-Regeln
 
@@ -78,7 +79,7 @@ anlegen, alte Datei löschen, alle Verweise (auch in `AGENTS.md`) umbiegen.
 | Daten           | [`features/daten.md`](./features/daten.md)                | Fachlogik und lokaler Store |
 | Wissensbasis    | [`features/wissensbasis.md`](./features/wissensbasis.md)  | In Entwicklung |
 | KI-Agent        | [`features/ki-agent.md`](./features/ki-agent.md)          | In Entwicklung |
-| ML-Modelle      | [`features/ml-modelle.md`](./features/ml-modelle.md)      | Katalog und Vertrag |
+| ML-Modelle      | [`index/ml-modelle.md`](./index/ml-modelle.md)            | Zettelkasten       |
 | Sprachausgabe   | [`features/sprachausgabe.md`](./features/sprachausgabe.md) | Text vorlesen über Sprachmodelle, Stimmen |
 | Import/Export   | [`features/import-export.md`](./features/import-export.md) | Standalone: Sicherung und Übertragung |
 

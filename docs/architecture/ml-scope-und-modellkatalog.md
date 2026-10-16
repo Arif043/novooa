@@ -62,7 +62,7 @@ Das Cachen lässt anschließend den ML-Dienst die Dateien unter
 `model-artifacts/<artifact-id>/versions/<version-id>/` vorladen; die Runtime speichert
 nur den Katalogeintrag. Firestore liefert nur Metadaten; ein unauthentifizierter
 Katalogzugriff ist nicht vorgesehen. Details:
-[ML-Modelle](../features/ml-modelle.md#modellbündel-und-ml-dienst).
+[Modellbündel](../notes/modellbuendel.md).
 
 ### Auflagen
 
@@ -239,7 +239,7 @@ wieder einzuhängen, falls die Entscheidung revidiert wird.
 
 ## Verwandt
 
-- [ML-Modelle](../features/ml-modelle.md)
+- [ML-Modelle](../index/ml-modelle.md)
 - [Lokale Runtime](../index/lokale-runtime.md)
 - [Kosten- und Preismodell](../kosten-und-abo-preise.md)
 - [Aufgabe-Executoren](../features/aufgabe-executoren.md)
