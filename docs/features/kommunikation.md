@@ -1,7 +1,7 @@
 # Feature: Kommunikation
 
 Verwandt: [`../architecture.md`](../architecture.md) ·
-[`aufgabe.md`](./aufgabe.md) · [`zeitplan`](../index/zeitplan.md)
+[`aufgabe`](../index/aufgabe.md) · [`zeitplan`](../index/zeitplan.md)
 
 ## Zweck
 

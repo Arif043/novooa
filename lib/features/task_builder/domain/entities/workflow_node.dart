@@ -7,7 +7,7 @@ export 'workflow_output.dart';
 
 /// Stabile Bausteintypen, aus denen ein Workflow zusammengesetzt wird.
 ///
-/// Synchron zur Tabelle in `docs/features/aufgabe.md` § Primitives halten:
+/// Synchron zur Tabelle in `docs/notes/bausteinkatalog.md` halten:
 /// Jeder neue Enum-Wert braucht einen Eintrag dort, einen UI-Label in der
 /// `WorkflowPrimitiveLabels`-Extension und ein Genkit-Mapping im Inspector.
 enum WorkflowPrimitive {
@@ -47,7 +47,7 @@ enum WorkflowPrimitive {
 /// `outputKeysOf`, das festlegt, welche Werte ein Baustein benennt.
 extension WorkflowPrimitiveOutput on WorkflowPrimitive {
   /// Reine Seiteneffekt-Bausteine ohne fachlichen Rückgabewert — aktuell nur
-  /// `notificationSend` (siehe `docs/node-executor-outputs.md`).
+  /// `notificationSend` (siehe `docs/notes/executor-outputs.md`).
   bool get hasNoOutput => this == WorkflowPrimitive.notificationSend;
 }
 

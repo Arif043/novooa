@@ -13,6 +13,7 @@ in [`architecture.md`](./architecture.md).
 | Zeitplan | [`index/zeitplan.md`](./index/zeitplan.md) |
 | Lokale Runtime | [`index/lokale-runtime.md`](./index/lokale-runtime.md) |
 | ML-Modelle | [`index/ml-modelle.md`](./index/ml-modelle.md) |
+| Aufgabe | [`index/aufgabe.md`](./index/aufgabe.md) |
 
 ## Zettelkasten-Regeln
 
@@ -59,7 +60,6 @@ anlegen, alte Datei löschen, alle Verweise (auch in `AGENTS.md`) umbiegen.
 | SQLite-Normalisierung | [`architecture/sqlite-normalisierung.md`](./architecture/sqlite-normalisierung.md) | Prüfung aller Tabellen, Migrationen und verbleibende Abhängigkeiten |
 | Deployment | [`deployment.md`](./deployment.md) | Staging/Produktion, Firebase-Projekte und CI/CD |
 | Backend        | [`backend-struktur.md`](./backend-struktur.md) | Functions-Struktur, Ports, Cloud-/Local-Trennung |
-| Executor-Outputs | [`node-executor-outputs.md`](./node-executor-outputs.md) | Output-Vertraege der Workflow-Executoren |
 | Lokale Runtime | [`index/lokale-runtime.md`](./index/lokale-runtime.md) | Zettelkasten: Stack, Zugriff, Datenhaltung, Lizenz, Relays |
 | Betriebsvarianten | [`architecture/betriebsvarianten.md`](./architecture/betriebsvarianten.md) | Clients × Cloud/Standalone: Ist-Zustand, Blocker, Umsetzung |
 | Features       | [`features/`](./features/)         | Ein Deep-Dive pro Feature                               |
@@ -68,11 +68,8 @@ anlegen, alte Datei löschen, alle Verweise (auch in `AGENTS.md`) umbiegen.
 
 | Feature         | Doc                                                       | Status         |
 | --------------- | --------------------------------------------------------- | -------------- |
-| Aufgabe         | [`features/aufgabe.md`](./features/aufgabe.md)            | In Entwicklung |
-| Aufgabe: Ausfuehrung | [`features/aufgabe-ausfuehrung.md`](./features/aufgabe-ausfuehrung.md) | Runner, Freigaben, lokale Ausfuehrung |
-| Aufgabe: Executor | [`features/aufgabe-executoren.md`](./features/aufgabe-executoren.md) | Modellprovider und Executor-Verhalten |
+| Aufgabe         | [`index/aufgabe.md`](./index/aufgabe.md)                  | Zettelkasten       |
 | Kommunikation   | [`features/kommunikation.md`](./features/kommunikation.md)   | System-E-Mail und Kundenpostfach-Connectoren |
-| Arbeitspläne    | [`features/arbeitsplaene.md`](./features/arbeitsplaene.md) | Stub           |
 | Zeitplan        | [`index/zeitplan.md`](./index/zeitplan.md)                | Zettelkasten       |
 | Aktivitäten     | [`features/aktivitaeten.md`](./features/aktivitaeten.md)  | Stub           |
 | Dateien         | [`features/dateien.md`](./features/dateien.md)            | In Entwicklung |

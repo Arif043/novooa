@@ -55,7 +55,7 @@ Adapter sind austauschbare Implementierungen. Details stehen in
 | `WorkflowPrimitive` | `lib/features/task_builder/domain/entities/workflow_node.dart`         | Enum der Bausteintypen           |
 | `DocumentStore`     | `functions/src/features/data/domain/repositories/document-store.ts`    | Port für team-scoped Datensätze  |
 
-Detailtiefe pro Feature in [`features/aufgabe.md`](./features/aufgabe.md).
+Detailtiefe pro Feature in [`index/aufgabe.md`](./index/aufgabe.md).
 
 ## Persistenz
 
@@ -399,7 +399,7 @@ Detailtiefe im Inhaltsverzeichnis [`index/zeitplan.md`](./index/zeitplan.md).
 | `menuSuggestionFlow`          | `functions/src/genkit-sample.ts` | Vorlage — nicht produktiv       |
 
 Feature-spezifische Detailtiefe (Inputs, Outputs, Executor-Registry) in
-[`features/aufgabe-ausfuehrung.md`](./features/aufgabe-ausfuehrung.md).
+[`index/aufgabe.md`](./index/aufgabe.md).
 
 ### Neue Genkit-Tools
 

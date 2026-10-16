@@ -120,5 +120,5 @@ Rückgaben und konkurrierende Updates mit derselben erwarteten Version ab.
 
 [`../architecture.md`](../architecture.md) ·
 [`lokale-runtime`](../index/lokale-runtime.md) ·
-[`aufgabe.md`](./aufgabe.md) ·
+[`aufgabe`](../index/aufgabe.md) ·
 [`dateien.md`](./dateien.md)

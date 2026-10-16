@@ -5,7 +5,7 @@ import 'workflow_node.dart';
 
 /// Aggregate Root eines Workflows.
 ///
-/// Invarianten (siehe `docs/features/aufgabe.md` § Domänen-Invarianten):
+/// Invarianten (siehe `docs/notes/aufgabe-aggregat.md`):
 /// 1. Immutable: jede Mutation liefert eine neue Instanz über [copyWith].
 /// 2. Knoten-IDs sind stabil (über [NodeId]).
 /// 3. Höchstens ein Knoten ist via [selectedNodeId] markiert.

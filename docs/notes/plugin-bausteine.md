@@ -1,0 +1,36 @@
+# Bausteine von Plugins
+
+> Ein Plugin bringt Bausteine mit, ohne den Kern zu ändern: im Backend ein registrierter `NodeExecutor`, im Client eine `PluginNodeConfig` plus `PluginNodeModule`.
+
+Gehört zu: [Aufgabe](../index/aufgabe.md)
+
+**Backend:** `NodeExecutor`, angemeldet an der `NodeExecutorRegistry`
+(`createDefaultNodeExecutorRegistry`). Die Konfiguration steht noch in
+`workflowPrimitives` und `nodeConfigSchema` (`task-definition.ts`), je
+Primitive eine Zeile.
+
+**Client:**
+
+- Konfiguration erbt von `PluginNodeConfig`
+  (`task_builder/domain/entities/plugin_node_config.dart`) und liegt im
+  Plugin-Ordner (`NodeConfig` ist bewusst nicht `sealed`). Sie liefert
+  `typeId` (Kennung in Palette und Registry), `documentPrimitive` (Name im
+  Backend und Dokument; Vorgabe `typeId`, mehrere Aktionen dürfen sich einen
+  teilen), `toDocument()`, `primaryOutputType`, `secondaryOutputs`
+  (Name → Typ).
+- `TaskBuilderCubit.updatePluginNode` ändert sie ohne eigene Mutation.
+- `PluginNodeModule` (`task_builder/presentation/plugin_node_module.dart`)
+  bündelt Titel, Beschreibung, Gruppe und Icon der Palette,
+  Anfangskonfiguration, `fromDocument`, Widget und optional `isAvailable`;
+  `PluginNodeModules.register` meldet es beim Start an. Mapper, Palette,
+  Canvas und Ausgaben-Anzeige bleiben unverändert.
+
+Der Kern kennt Plugin-Bausteine nur als `WorkflowPrimitive.plugin`. Ein
+gespeicherter Baustein ohne angemeldetes Plugin wird beim Laden zur
+Texteingabe; die Leinwand zeigt „Dieser Baustein ist nicht verfügbar“.
+Beispiel: `test/features/task_builder/plugin_node_test.dart`.
+
+## Siehe auch
+
+- [Integrationen](../features/integrationen.md)
+- [Bausteinkatalog](./bausteinkatalog.md)

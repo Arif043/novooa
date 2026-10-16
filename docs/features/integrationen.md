@@ -1,6 +1,6 @@
 # Feature: Integrationen (Plugins)
 
-Verwandt: [`verbindungen.md`](./verbindungen.md) · [`webhooks.md`](./webhooks.md) · [`aufgabe.md`](./aufgabe.md) ·
+Verwandt: [`verbindungen.md`](./verbindungen.md) · [`webhooks.md`](./webhooks.md) · [`aufgabe`](../index/aufgabe.md) ·
 [`../architecture/betriebsvarianten.md`](../architecture/betriebsvarianten.md)
 
 ## Zweck
@@ -39,7 +39,7 @@ lib/features/integrations/<system>/   Client: Konfiguration, Widget, Einstellung
 
 - **Backend:** ein `NodeExecutor`. Das Primitive steht in `workflowPrimitives` (`task.ts`) und sein Konfigurationsschema
   in `nodeConfigSchema` (`task-definition.ts`); das ist je Primitive eine Zeile (siehe
-  [`aufgabe.md`](./aufgabe.md) § Bausteine von Plugins).
+  [Bausteine von Plugins](../notes/plugin-bausteine.md)).
 - **Client:** `PluginNodeConfig` und `PluginNodeModule` im Ordner des Plugins; `registerIntegrationNodes`
   (`lib/features/integrations/integration_nodes.dart`) meldet sie beim Start an.
 - Ein Primitive kann mehrere **Aktionen** tragen (`config.action`). Für Nutzer:innen ist jede Aktion ein eigener Baustein

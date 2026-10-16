@@ -8,7 +8,7 @@ import 'workflow_node_outputs.dart';
 typedef TypedOutputField = ({String name, NodeOutputType type});
 
 /// Typ des primären `value`-Outputs eines Bausteins. Spiegelt die Tabelle
-/// „Registrierte Executor" in `docs/node-executor-outputs.md`; Bausteine
+/// „Registrierte Executor" in `docs/notes/executor-outputs.md`; Bausteine
 /// ohne eigenen Eintrag liefern Text.
 NodeOutputType primaryOutputTypeOf(NodeConfig config) {
   return switch (config) {

@@ -1,6 +1,6 @@
 # Feature: Mitarbeiter (Subagenten)
 
-Verwandt: [`aufgabe.md`](./aufgabe.md) · [`skills.md`](./skills.md) · [`import-export.md`](./import-export.md)
+Verwandt: [`aufgabe`](../index/aufgabe.md) · [`skills.md`](./skills.md) · [`import-export.md`](./import-export.md)
 
 ## Zweck
 

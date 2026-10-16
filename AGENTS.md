@@ -162,10 +162,7 @@ weiter als Deep-Dive unter `docs/features/`.
 | Lokale Runtime        | [`docs/index/lokale-runtime.md`](./docs/index/lokale-runtime.md)   | Inhaltsverzeichnis: Stack, Zugriff, Datenhaltung, Ausführung, Lizenz, Relays, Schlüssel |
 | SQLite-Normalisierung | [`docs/architecture/sqlite-normalisierung.md`](./docs/architecture/sqlite-normalisierung.md) | Tabellenprüfung und offene Abhängigkeiten |
 | Betriebsvarianten     | [`docs/architecture/betriebsvarianten.md`](./docs/architecture/betriebsvarianten.md) | Clients × Cloud/Standalone: Blocker und Umsetzungsschritte |
-| Feature „Aufgabe"     | [`docs/features/aufgabe.md`](./docs/features/aufgabe.md)           | Task Builder — Domain, UI, Genkit-Flows, DoD            |
-| Aufgabe-Ausfuehrung    | [`docs/features/aufgabe-ausfuehrung.md`](./docs/features/aufgabe-ausfuehrung.md) | Runner, Freigaben, lokale Ausfuehrung |
-| Aufgabe-Executoren     | [`docs/features/aufgabe-executoren.md`](./docs/features/aufgabe-executoren.md) | Modellprovider und Executor-Verhalten |
-| Feature „Arbeitspläne" | [`docs/features/arbeitsplaene.md`](./docs/features/arbeitsplaene.md) | Stub: gespeicherte Aufgaben                          |
+| Feature „Aufgabe"     | [`docs/index/aufgabe.md`](./docs/index/aufgabe.md)                 | Inhaltsverzeichnis: Modell, Aufgabenstudio, Ausführung, Bausteine, Arbeitspläne |
 | Feature „Zeitplan"    | [`docs/index/zeitplan.md`](./docs/index/zeitplan.md)               | Inhaltsverzeichnis: Auslöser, Worker, Schleifenschutz, UI |
 | Feature „Kommunikation" | [`docs/features/kommunikation.md`](./docs/features/kommunikation.md) | System-E-Mail und Kundenpostfach-Connectoren          |
 | Feature „Aktivitäten" | [`docs/features/aktivitaeten.md`](./docs/features/aktivitaeten.md) | Stub: Runs, Traces, Freigaben                           |
@@ -201,8 +198,8 @@ Wie du eine neue Feature-Doc anlegst → [`docs/README.md`](./docs/README.md).
   zur Laufzeit von FlutterFire generiert.
 - **Docs mitziehen.** Wenn du eine API änderst, gehört die zugehörige Doc in
   denselben Commit. Insbesondere: neuer `WorkflowPrimitive` →
-  Tabelleneintrag in [`docs/features/aufgabe.md`](./docs/features/aufgabe.md)
-  § Primitives.
+  Zeile in [`docs/notes/bausteinkatalog.md`](./docs/notes/bausteinkatalog.md)
+  und Outputs in [`docs/notes/executor-outputs.md`](./docs/notes/executor-outputs.md).
 - **Notizen statt Abschnitte.** In umgestellten Features (mit Eintrag in
   `docs/index/`) neues Wissen als atomare Notiz in `docs/notes/` anlegen und im
   passenden Inhaltsverzeichnis verlinken; bestehende Notizen ändern statt

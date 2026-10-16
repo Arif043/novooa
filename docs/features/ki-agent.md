@@ -240,7 +240,7 @@ Die Wissensbasis wird als verbindliche Produktinformation in den jeweiligen
 Systemprompt eingefügt. Dadurch bleibt der Agent einfach, schnell änderbar und
 ohne zusätzliche Persistenz. Das Baustein-Wissen der Anforderungsanalyse steht
 in `novooa-product-knowledge.ts` und muss mit
-[`aufgabe.md`](./aufgabe.md#primitives) § Primitives übereinstimmen.
+[Bausteinkatalog](../notes/bausteinkatalog.md) übereinstimmen.
 
 ## URL Context
 
@@ -264,6 +264,6 @@ Agenten nicht ändern.
 
 ## Verwandt
 
-- [`aufgabe.md`](./aufgabe.md)
+- [`aufgabe`](../index/aufgabe.md)
 - [`wissensbasis.md`](./wissensbasis.md)
 - [`../architecture.md`](../architecture.md)

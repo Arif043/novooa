@@ -4,7 +4,7 @@
 > später an unterstützende Nodes wie Prompt-Bausteine angehängt werden können.
 
 Verwandt: [`../architecture.md`](../architecture.md) ·
-[`aufgabe.md`](./aufgabe.md)
+[`aufgabe`](../index/aufgabe.md)
 
 ## Zweck
 
@@ -225,7 +225,7 @@ Bausteins weiter.
 ## Verwandt
 
 - [`../architecture.md`](../architecture.md)
-- [`aufgabe.md`](./aufgabe.md)
+- [`aufgabe`](../index/aufgabe.md)
 
 ## Standalone: Ordnerbeziehungen
 

@@ -31,4 +31,4 @@ Abacus.AI (RouteLLM), Hugging Face, ElevenLabs (nur Sprachausgabe), Ollama
 
 - [Feldverschlüsselung mit Envelopes](./feldverschluesselung-envelope.md)
 - [Sprachmodelle ohne eigene Team-ID (0010)](./sqlite-sprachmodelle-normalisiert.md)
-- [Aufgabe: Executoren](../features/aufgabe-executoren.md)
+- [Modellprovider für Prompt-Bausteine](./modellprovider-prompt.md)

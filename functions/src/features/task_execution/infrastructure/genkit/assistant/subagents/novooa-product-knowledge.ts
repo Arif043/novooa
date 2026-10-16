@@ -1,7 +1,7 @@
 import {taskBuilderAssistantPrimitives} from "../../../../domain/entities/task-builder-assistant-response.js";
 
 /**
- * Produktwissen für die Anforderungsanalyse. Quelle: docs/features/aufgabe.md
+ * Produktwissen für die Anforderungsanalyse. Quelle: docs/notes/bausteinkatalog.md
  * § Primitives — bei neuen oder geänderten Bausteinen hier mitpflegen.
  */
 const buildingBlocks: ReadonlyArray<readonly [primitive: string, description: string]> = [

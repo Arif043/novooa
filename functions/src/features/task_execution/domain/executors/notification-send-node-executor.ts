@@ -46,7 +46,7 @@ export function createNotificationSendNodeExecutor(
       // Reiner Seiteneffekt ohne fachlichen Rückgabewert: Der gesendete Text
       // ist dem Graphen durch die eigene Konfiguration bereits bekannt —
       // ihn als Output zu echoen suggeriert einen neuen, referenzierbaren
-      // Wert, den es nicht gibt (siehe docs/node-executor-outputs.md).
+      // Wert, den es nicht gibt (siehe docs/notes/executor-outputs.md).
       return executedNode(node, {});
     },
   };

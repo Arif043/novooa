@@ -56,7 +56,7 @@ List<TypedOutputField> scriptWorkflowOutputsOf(ScriptNodeConfig config) {
 
 /// Technische Schlüssel der **weiteren** Werte eines Bausteins (neben dem
 /// Hauptwert `value`) — der Vertrag mit dem Executor im
-/// Backend (`docs/node-executor-outputs.md`). Die Namen, unter denen
+/// Backend (`docs/notes/executor-outputs.md`). Die Namen, unter denen
 /// Nutzer:innen die Werte verwenden (`{{Gefunden}}`), stehen nicht hier,
 /// sondern je Baustein in `WorkflowNode.outputs`. Einzige Quelle für
 /// Panel (`NodeOutputChips`), #-Suche und die Namensvergabe im Cubit.

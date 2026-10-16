@@ -187,5 +187,5 @@ bei Bedarf über `knowledge/manifest.json`.
 ## Verwandt
 
 [`../architecture.md`](../architecture.md) ·
-[`aufgabe.md`](./aufgabe.md) ·
+[`aufgabe`](../index/aufgabe.md) ·
 [`dateien.md`](./dateien.md)

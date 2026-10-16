@@ -2,14 +2,15 @@
 
 > `forEach` führt einen eingebetteten Graphen seriell für jedes Element eines JSON-Arrays aus und liefert eine Liste der benannten Ergebnisse.
 
-Gehört zu: [ML-Modelle](../index/ml-modelle.md)
+Gehört zu: [Aufgabe](../index/aufgabe.md) · [ML-Modelle](../index/ml-modelle.md)
 
 ```text
 JSON value -> RFC-6901 pointer -> serielle Graph-Ausführungen -> strukturierte JSON-Liste
 ```
 
-- Konfiguration: `itemsPointer` und eingebetteter Graph. Der Pointer wird gegen
-  den JSON-`value` des direkten Vorgängers aufgelöst; leer = ganzer Wert (z. B.
+- Konfiguration: `itemsTemplate`, `itemsPointer` und eingebetteter Graph.
+  Zuerst wird `itemsTemplate` aufgelöst, dann der Pointer auf den
+  JSON-Wert angewandt (sonst auf den `value` des direkten Vorgängers); leer = ganzer Wert (z. B.
   wenn ein Modell direkt eine Liste liefert), `/regions` bei einem Objekt mit
   diesem Feld.
 - Jede Iteration bekommt `iteration` mit `index` und `value`
@@ -25,6 +26,9 @@ JSON value -> RFC-6901 pointer -> serielle Graph-Ausführungen -> strukturierte 
   Elementindex ab. Pausierende und verschachtelte `forEach` sind im Unterplan
   nicht zulässig.
 
+Ausführung: `executeForEach` (Domain) validiert den Unterplan, läuft seriell
+und fail-fast; RFC-6901-Auswertung und Regeln liegen in der Domain.
+
 Kanten enthalten keine Datenauswahl (`fromOutput` wurde entfernt):
 Nachfolger binden Werte über ihren eigenen Vertrag, damit der Datenfluss an
 einer Stelle konfiguriert bleibt.
@@ -37,4 +41,4 @@ Runner-End-to-End-Tests, JSON-Pointer-Bindungen für Modelleingänge.
 
 - [OCR-Pipeline](./ocr-pipeline.md)
 - [Modelleingaben im Baustein](./modelleingaben-im-baustein.md)
-- [Aufgabe](../features/aufgabe.md)
+- [Aufgabe](../index/aufgabe.md)

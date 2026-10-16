@@ -23,4 +23,4 @@ Prozess und eingeschränkten Builtins aus (`createPythonScriptExecutor`).
 
 - [Script-Dienst: Ausführung und Grenzen](./script-dienst-ausfuehrung.md)
 - [Script-Dienst: Abschottung](./script-dienst-abschottung.md)
-- [Aufgabe: Executoren](../features/aufgabe-executoren.md) — `workflow_output`
+- [Script: Workflow-Ausgabewerte](./script-workflow-output.md)

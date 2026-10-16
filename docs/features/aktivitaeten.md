@@ -4,7 +4,7 @@
 > Root-Tab „Aktivitäten" angezeigt.
 
 Verwandt: [`../architecture.md`](../architecture.md) ·
-[`aufgabe.md`](./aufgabe.md) ·
+[`aufgabe`](../index/aufgabe.md) ·
 [`zeitplan`](../index/zeitplan.md)
 
 ## Zweck

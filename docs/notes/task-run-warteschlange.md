@@ -8,8 +8,13 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
   benachrichtigt, arbeitet verfügbare Jobs seriell ab und bestätigt
   erfolgreiche Ausführungen.
 - Beim Start werden persistierte Jobs einmal abgearbeitet.
-- Nach einem Prozessabsturz werden abgelaufene Leases erneut beansprucht,
-  insgesamt höchstens drei Versuche.
+- Runs laufen seriell: Ein einzelner Worker holt Jobs aus `task_run_jobs` und
+  startet den nächsten erst nach Ende des aktuellen.
+- Beim Abholen bekommt ein Job einen Lease von 60 Sekunden. Stirbt der
+  Prozess, läuft der Lease ab und der Job wird erneut abgeholt; der Run setzt
+  über das [Schritt-Journal](./schritt-journal.md) fort. Nach drei Versuchen
+  wird der Job aufgegeben und der Run als `failed` markiert
+  (`failAbandonedTaskRun`).
 - Für spätere Fälligkeiten setzt der Worker nur einen einmaligen Timer auf den
   gespeicherten Zeitpunkt, kein Intervall-Polling.
 - Ein gescheiterter Baustein lässt den Job **nicht** scheitern (der Lauf ist

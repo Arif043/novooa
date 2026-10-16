@@ -1,6 +1,6 @@
 # Feature: Verbindungen und HTTP-Anfrage
 
-Verwandt: [`aufgabe.md`](./aufgabe.md) · [`../node-executor-outputs.md`](../node-executor-outputs.md) ·
+Verwandt: [`aufgabe`](../index/aufgabe.md) · [`executor-outputs`](../notes/executor-outputs.md) ·
 [`import-export.md`](./import-export.md) · [`../architecture/betriebsvarianten.md`](../architecture/betriebsvarianten.md)
 
 ## Zweck
