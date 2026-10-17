@@ -18,11 +18,15 @@ Gehört zu: [Architektur](../index/architektur.md)
    HTTP-Status der Anbieter-SDKs, Zeitüberschreitung und Netzfehler werden zu
    unseren Exceptions; Unbekanntes bleibt unverändert.
    Vorher wiederholt `languageModelRetry` (Genkit-Middleware in
-   `aiTurnMiddleware`) nur vorübergehende Fehler: nicht erreichbarer Anbieter
-   und `GenkitError` mit `UNAVAILABLE`/`RESOURCE_EXHAUSTED`/`ABORTED`/
-   `INTERNAL`. Genkits eigenes `retry` wiederholte jeden anderen Fehler, auch
-   abgeschnittene Antworten und Zeitüberschreitungen; ein langsames lokales
-   Modell lief so viermal. Ollama-Aufrufe haben 10 Minuten Zeit.
+   `aiTurnMiddleware`) nur vorübergehende Fehler. Bei entfernten Anbietern
+   sind das `GenkitError` mit `UNAVAILABLE`/`DEADLINE_EXCEEDED`/
+   `RESOURCE_EXHAUSTED`/`ABORTED`/`INTERNAL` und rohe SDK-Fehler, auch
+   Zeitüberschreitungen. Unsere Exceptions kommen aus eigenen Adaptern für
+   selbst betriebene Modelle (Ollama). Davon wird nur „nicht erreichbar“
+   wiederholt, denn eine lokale Zeitüberschreitung, eine abgeschnittene
+   Antwort oder ein Schemafehler kämen beim nächsten Versuch genauso.
+   Genkits eigenes `retry` wiederholte jeden Fehler außer `GenkitError`.
+   Ollama-Aufrufe haben 10 Minuten Zeit.
 4. **Abbilden:** `GenkitPromptExecutor` implementiert den Domain-Port
    `PromptExecutor` und wandelt an seiner Grenze per
    `languageModelFailureFrom` in `err(LanguageModelFailure)` um; alles

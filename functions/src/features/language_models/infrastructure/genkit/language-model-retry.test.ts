@@ -9,10 +9,12 @@ import {isRetryableModelError, languageModelRetry} from "./language-model-retry.
 const noWait = {maxRetries: 3, initialDelayMs: 1, backoffFactor: 2, wait: async () => {}};
 const request = {messages: []};
 
-test("nur vorübergehende Fehler werden wiederholt", () => {
+test("entfernte Zeitüberschreitungen werden wiederholt, lokale nicht", () => {
   assert.equal(isRetryableModelError(new ModelProviderUnavailableError("weg")), true);
   assert.equal(isRetryableModelError(new GenkitError({status: "UNAVAILABLE", message: "weg"})), true);
-  assert.equal(isRetryableModelError(new ModelTimeoutError("langsam")), false);
+  assert.equal(isRetryableModelError(new ModelTimeoutError("lokales Modell langsam")), false);
+  assert.equal(isRetryableModelError(new GenkitError({status: "DEADLINE_EXCEEDED", message: "Anbieter langsam"})), true);
+  assert.equal(isRetryableModelError(Object.assign(new Error("SDK"), {name: "TimeoutError"})), true);
   assert.equal(isRetryableModelError(new ModelResponseTruncatedError("voll")), false);
   assert.equal(isRetryableModelError(new GenkitError({status: "INVALID_ARGUMENT", message: "nein"})), false);
 });

@@ -20,9 +20,11 @@ export const defaultLanguageModelRetryPolicy: LanguageModelRetryPolicy = {
   wait: (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs)),
 };
 
-// Zeitüberschreitungen fehlen absichtlich: Ein langsames lokales Modell ist
-// beim nächsten Versuch genauso langsam und blockiert den Lauf nur länger.
-const retryableGenkitStatuses = new Set<string>(["UNAVAILABLE", "RESOURCE_EXHAUSTED", "ABORTED", "INTERNAL"]);
+// Fehler entfernter Anbieter kommen als `GenkitError` oder roher SDK-Fehler an;
+// dort sind auch Zeitüberschreitungen vorübergehend (Netz, Überlast).
+const retryableGenkitStatuses = new Set<string>([
+  "UNAVAILABLE", "DEADLINE_EXCEEDED", "RESOURCE_EXHAUSTED", "ABORTED", "INTERNAL",
+]);
 
 /**
  * Wiederholt einen Modellaufruf nur bei vorübergehenden Fehlern. Genkits
@@ -42,6 +44,11 @@ export function languageModelRetry(policy = defaultLanguageModelRetryPolicy): La
   };
 }
 
+/**
+ * Unsere Exceptions stammen aus eigenen Adaptern für selbst betriebene Modelle
+ * (Ollama). Dort ist eine Zeitüberschreitung deterministisch: Das Modell ist
+ * beim nächsten Versuch genauso langsam. Wiederholt wird nur „nicht erreichbar“.
+ */
 export function isRetryableModelError(error: unknown): boolean {
   if (error instanceof LanguageModelError) return error instanceof ModelProviderUnavailableError;
   if (error instanceof GenkitError) return retryableGenkitStatuses.has(error.status);
