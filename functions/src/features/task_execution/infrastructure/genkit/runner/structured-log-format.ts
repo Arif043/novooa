@@ -154,11 +154,16 @@ export function formatModelCallStarted(input: {
   model: unknown;
   prompt: string;
   outputSchema?: string;
+  /** Angehängte Bilder; sie stehen nicht im Text, sondern gehen als eigene Teile an das Modell. */
+  mediaCount?: number;
+  options?: Record<string, unknown>;
 }): string {
   return [
     `[Modelcall startet] ${input.label}`,
     `Modell: ${formatInline(input.model)}`,
+    input.options && Object.keys(input.options).length > 0 ? `Optionen: ${formatInline(input.options)}` : "",
     input.outputSchema ? `Schema: ${input.outputSchema}` : "",
+    input.mediaCount ? `Bilder: ${input.mediaCount}` : "",
     "Eingabe:",
     `:${indent(input.prompt)}:`,
   ].filter(Boolean).join("\n");

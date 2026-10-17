@@ -5,6 +5,8 @@ export type FailedNode = {
   nodeId: string;
   primitive: WorkflowPrimitive;
   message: string;
+  /** Stabiler Fehlercode, den der Client übersetzt; fehlt, wenn nur der Text bekannt ist. */
+  failureCode?: string;
   console?: ConsoleOutput;
 };
 
@@ -22,5 +24,19 @@ export class NodeExecutionFailure {
 
   get message(): string {
     return this.failedNode.message;
+  }
+}
+
+/** Die Ursache eines gescheiterten Bausteins als stabiler Code samt Rückfalltext, z. B. aus einer `LanguageModelFailure`. */
+export type NodeFailureReason = {code: string; message: string};
+
+/**
+ * Executoren melden Fehler als Exception (Vertrag von `NodeExecutor`). Hat ein Executor bereits
+ * eine Failure, verpackt er sie hierin; der Runner übernimmt dann ihren Code in den `FailedNode`.
+ */
+export class NodeFailedError extends Error {
+  constructor(readonly reason: NodeFailureReason) {
+    super(reason.message);
+    this.name = "NodeFailedError";
   }
 }

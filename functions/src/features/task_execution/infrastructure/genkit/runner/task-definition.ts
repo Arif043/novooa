@@ -10,6 +10,7 @@ import {
   modelTensorDataTypes,
 } from "../../../../machine_learning/domain/entities/model-contract.js";
 import {withLegacyOutputParametersAsSettings} from "./legacy-model-output-parameters.js";
+import {generationOptionsSchema} from "./generation-options-schema.js";
 
 export const workflowPrimitiveSchema = z.enum(workflowPrimitives);
 
@@ -65,6 +66,7 @@ export const promptNodeConfigSchema = z.object({
   primitive: z.literal("prompt").default("prompt"),
   instruction: z.string().default(""),
   languageModelId: z.string().optional(),
+  generationOptions: generationOptionsSchema.optional(),
   outputType: promptOutputTypeSchema.default("text"),
   choices: z.array(z.string()).default([]),
   structuredFields: z.array(z.object({

@@ -259,6 +259,27 @@
       "and": "and",
       "or": "or",
       "xor": "either or"
+    },
+    "generation_options": {
+      "title": "Advanced",
+      "summary_defaults": "Model defaults",
+      "summary_custom": "Custom settings",
+      "temperature": "Temperature",
+      "temperature_default": "Model default",
+      "use_model_default": "Use model default",
+      "set_temperature": "Set temperature",
+      "max_output_tokens": "Max. response length (tokens)",
+      "context_window": "Context window (tokens)",
+      "context_window_helper": "Ollama only. Images and thinking need room, e.g. 16384.",
+      "empty_means_default": "Empty = model default",
+      "thinking": "Thinking",
+      "thinking_modes": {
+        "modelDefault": "Model default",
+        "off": "Off",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      }
     }
   },
   "settings": {
@@ -605,6 +626,19 @@
       "select_files_hint": "Select the .onnx file, plus its weight files if the model has any.",
       "exactly_one_model": "Select exactly one .onnx file. Other selected files are treated as weight files.",
       "unreadable_file": "The file {name} could not be read."
+    }
+  },
+  "activity_failures": {
+    "error": "Error",
+    "technical_details": "Technical details",
+    "codes": {
+      "outputSchemaViolated": "The model's answer does not match the required output structure. Phrase the instruction to fit the fields or choose a stronger model.",
+      "responseTruncated": "The answer was cut off because the context window or the maximum response length ran out. Increase them in the block under “Advanced” or turn thinking off.",
+      "emptyResponse": "The model did not write an answer, for example because it only thought. Try again or change the settings under “Advanced”.",
+      "providerUnavailable": "The model provider cannot be reached. Check the connection and try again.",
+      "requestRejected": "The model provider rejected the request. The technical details give the reason.",
+      "timedOut": "The model did not answer in time. Try again or choose a faster model.",
+      "capabilityMissing": "The selected language model cannot handle this input or output. Choose a suitable model."
     }
   }
 }

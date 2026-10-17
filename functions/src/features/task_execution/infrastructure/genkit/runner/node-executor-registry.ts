@@ -10,7 +10,7 @@ import {
 } from "../../../domain/executors/speech-node-executor.js";
 import {forEachNodeExecutor} from "../../../domain/executors/for-each-node-executor.js";
 import {createGenkitIterativeRefinementNodeExecutor} from "../executors/genkit-iterative-refinement-executor.js";
-import {createGenkitPromptNodeExecutor} from "../executors/genkit-prompt-executor.js";
+import {createGenkitPromptNodeExecutor} from "../executors/genkit-prompt-node-executor.js";
 import {readWebhookNodeExecutor} from "../../../domain/executors/read-webhook-node-executor.js";
 import {readFileNodeExecutor} from "../../../domain/executors/read-file-node-executor.js";
 import {

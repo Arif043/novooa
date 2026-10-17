@@ -2,6 +2,9 @@ import {openAICompatible} from "@genkit-ai/compat-oai";
 import {googleAI} from "@genkit-ai/google-genai";
 import {modelRef, type ModelArgument} from "genkit";
 import {type GenkitPluginV2} from "genkit/plugin";
+import {type GenkitGenerationConfig} from "../../../../language_models/infrastructure/genkit/generation-config/genkit-generation-config.js";
+import {googleAiGenerationConfig} from "../../../../language_models/infrastructure/genkit/generation-config/google-ai-generation-config.js";
+import {openAiCompatibleGenerationConfig} from "../../../../language_models/infrastructure/genkit/generation-config/open-ai-compatible-generation-config.js";
 
 type AiProviderKind = "google" | "minimax" | "openai-compatible" | "local";
 
@@ -43,6 +46,13 @@ export function aiProviderPlugins(): GenkitPluginV2[] {
 
 export function textModel(): ModelArgument {
   return modelFor(aiProviderConfig(), "textModel");
+}
+
+/** Wie Optionen an das Standardmodell aus der Umgebung gehen (ohne gewähltes Sprachmodell). */
+export function textModelGenerationConfig(): GenkitGenerationConfig {
+  const config = aiProviderConfig();
+  if (config.kind === "google") return googleAiGenerationConfig(config.textModel);
+  return openAiCompatibleGenerationConfig;
 }
 
 export function reasoningModel(): ModelArgument {

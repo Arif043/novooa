@@ -259,6 +259,27 @@
       "and": "ve",
       "or": "veya",
       "xor": "ya da"
+    },
+    "generation_options": {
+      "title": "Gelişmiş",
+      "summary_defaults": "Model varsayılanları",
+      "summary_custom": "Özel ayarlar",
+      "temperature": "Sıcaklık",
+      "temperature_default": "Model varsayılanı",
+      "use_model_default": "Model varsayılanını kullan",
+      "set_temperature": "Sıcaklığı ayarla",
+      "max_output_tokens": "Maks. yanıt uzunluğu (token)",
+      "context_window": "Bağlam penceresi (token)",
+      "context_window_helper": "Yalnızca Ollama. Görseller ve düşünme yer kaplar, ör. 16384.",
+      "empty_means_default": "Boş = model varsayılanı",
+      "thinking": "Düşünme",
+      "thinking_modes": {
+        "modelDefault": "Model varsayılanı",
+        "off": "Kapalı",
+        "low": "Düşük",
+        "medium": "Orta",
+        "high": "Yüksek"
+      }
     }
   },
   "settings": {
@@ -605,6 +626,19 @@
       "select_files_hint": "Gerekirse ağırlık dosyalarıyla birlikte .onnx dosyasını seç.",
       "exactly_one_model": "Tam olarak bir .onnx dosyası seç. Seçilen diğer dosyalar ağırlık dosyası sayılır.",
       "unreadable_file": "{name} dosyası okunamadı."
+    }
+  },
+  "activity_failures": {
+    "error": "Hata",
+    "technical_details": "Teknik ayrıntılar",
+    "codes": {
+      "outputSchemaViolated": "Modelin yanıtı istenen çıktı yapısına uymuyor. Talimatı alanlara uygun yazın veya daha güçlü bir model seçin.",
+      "responseTruncated": "Bağlam penceresi veya maksimum yanıt uzunluğu dolduğu için yanıt kesildi. Bunları bloktaki “Gelişmiş” bölümünden artırın veya düşünmeyi kapatın.",
+      "emptyResponse": "Model bir yanıt yazmadı, örneğin yalnızca düşündüğü için. Tekrar deneyin veya “Gelişmiş” altındaki ayarları değiştirin.",
+      "providerUnavailable": "Model sağlayıcısına ulaşılamıyor. Bağlantıyı kontrol edip tekrar deneyin.",
+      "requestRejected": "Model sağlayıcısı isteği reddetti. Nedeni teknik ayrıntılarda yer alıyor.",
+      "timedOut": "Model zamanında yanıt vermedi. Tekrar deneyin veya daha hızlı bir model seçin.",
+      "capabilityMissing": "Seçilen dil modeli bu girişi veya çıkışı işleyemiyor. Uygun bir model seçin."
     }
   }
 }

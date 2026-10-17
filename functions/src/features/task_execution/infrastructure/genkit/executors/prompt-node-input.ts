@@ -4,6 +4,7 @@ import {attachmentInstructions} from "../runner/node-attachment-genkit.js";
 import {mediaDataUrlFor} from "../runner/media-value-loader.js";
 import {type ResolvedEmployee, type WorkflowNode} from "../runner/task-definition.js";
 import {type PromptContent, type PromptNodeInput, type StructuredOutputField} from "./prompt-node-types.js";
+import {generationOptionsFrom} from "../../../../language_models/domain/entities/generation-options.js";
 
 export async function promptInputFor(
   node: WorkflowNode,
@@ -13,9 +14,11 @@ export async function promptInputFor(
   const config = promptConfigFor(node);
   const instruction = await resolvedInstructionFor(node, runContext);
   return {
+    teamId: runContext.teamId,
     instruction: instruction.text,
     context: runContext.context,
     languageModelId: config.languageModelId,
+    generationOptions: generationOptionsFrom(config.generationOptions),
     outputType: config.outputType,
     choices: config.choices.map((choice) => runContext.templateExpressionResolver.resolveText(choice)),
     structuredFields: config.structuredFields,

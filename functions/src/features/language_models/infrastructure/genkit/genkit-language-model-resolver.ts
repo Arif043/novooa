@@ -7,12 +7,18 @@ import {type LanguageModelCatalog} from "../../domain/repositories/language-mode
 import {OllamaLanguageModelCapabilityInspector} from "../ollama/ollama-language-model-capability-inspector.js";
 import {nativeOllamaPlugin} from "../ollama/native-ollama-genkit-plugin.js";
 import {namedLanguageModelProviderFor} from "../openai-compatible/named-language-model-provider-registry.js";
+import {type GenkitGenerationConfig} from "./generation-config/genkit-generation-config.js";
+import {googleAiGenerationConfig} from "./generation-config/google-ai-generation-config.js";
+import {ollamaGenerationConfig} from "./generation-config/ollama-generation-config.js";
+import {openAiCompatibleGenerationConfig} from "./generation-config/open-ai-compatible-generation-config.js";
 
 export type ResolvedGenkitLanguageModel = {
   ai: GenkitBeta;
   model: ModelArgument;
   capabilities: LanguageModelCapabilities;
   logContext: Record<string, string>;
+  /** Übersetzt die Generierungsoptionen für genau diesen Anbieter. */
+  generationConfig: GenkitGenerationConfig;
 };
 
 export interface GenkitLanguageModelResolver {
@@ -49,6 +55,7 @@ export class CatalogGenkitLanguageModelResolver
         model: googleAI.model(model.modelId),
         capabilities: model.capabilities,
         logContext: {provider: "googleAi", model: model.modelId},
+        generationConfig: googleAiGenerationConfig(model.modelId),
       };
     }
     const namedProvider = namedLanguageModelProviderFor(connection.provider);
@@ -68,6 +75,7 @@ export class CatalogGenkitLanguageModelResolver
         model: modelRef({name: providerName + "/" + model.modelId}),
         capabilities,
         logContext: {provider: "ollama", endpoint: connection.name, model: model.modelId},
+        generationConfig: ollamaGenerationConfig,
       };
     }
     const providerName = `language-model-${connection.id}`;
@@ -85,6 +93,7 @@ export class CatalogGenkitLanguageModelResolver
         endpoint: connection.name,
         model: model.modelId,
       },
+      generationConfig: openAiCompatibleGenerationConfig,
     };
   }
   private capabilitiesFor(

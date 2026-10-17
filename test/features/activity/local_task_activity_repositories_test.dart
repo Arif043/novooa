@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/core/network/workspace_api_client.dart';
 import 'package:syscat2/core/network/workspace_realtime_channel.dart';
+import 'package:syscat2/features/activity/domain/entities/activity_failure_code.dart';
 import 'package:syscat2/features/activity/domain/entities/task_run.dart';
 import 'package:syscat2/features/activity/domain/entities/task_run_interaction.dart';
 import 'package:syscat2/features/activity/infrastructure/repositories/local_task_activity_repository.dart';
@@ -35,6 +36,7 @@ void main() {
     expect(activity.taskTitle, 'Lokale Aufgabe');
     expect(activity.stdout, 'hallo\n');
     expect(activity.stderr, 'Warnung\n');
+    expect(activity.failureCode, ActivityFailureCode.responseTruncated);
     expect(client.reviewedRunId, 'run-1');
   });
 
@@ -137,4 +139,5 @@ Map<String, Object?> activityJson() => {
   'occurredAt': '2026-09-08T10:01:00Z',
   'outputs': <String, Object?>{},
   'console': {'stdout': 'hallo\n', 'stderr': 'Warnung\n'},
+  'failureCode': 'responseTruncated',
 };

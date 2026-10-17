@@ -259,6 +259,27 @@
       "and": "und",
       "or": "oder",
       "xor": "entweder oder"
+    },
+    "generation_options": {
+      "title": "Erweitert",
+      "summary_defaults": "Modellstandard",
+      "summary_custom": "Eigene Einstellungen",
+      "temperature": "Temperatur",
+      "temperature_default": "Standard des Modells",
+      "use_model_default": "Modellstandard verwenden",
+      "set_temperature": "Temperatur festlegen",
+      "max_output_tokens": "Max. Antwortlänge (Tokens)",
+      "context_window": "Kontextfenster (Tokens)",
+      "context_window_helper": "Nur bei Ollama. Bilder und Nachdenken brauchen Platz, z. B. 16384.",
+      "empty_means_default": "Leer = Modellstandard",
+      "thinking": "Nachdenken",
+      "thinking_modes": {
+        "modelDefault": "Modellstandard",
+        "off": "Aus",
+        "low": "Niedrig",
+        "medium": "Mittel",
+        "high": "Hoch"
+      }
     }
   },
   "settings": {
@@ -605,6 +626,19 @@
       "select_files_hint": "Wähle die .onnx-Datei, bei Bedarf zusammen mit ihren Gewichtsdateien.",
       "exactly_one_model": "Wähle genau eine .onnx-Datei. Weitere gewählte Dateien gelten als Gewichtsdateien.",
       "unreadable_file": "Die Datei {name} konnte nicht gelesen werden."
+    }
+  },
+  "activity_failures": {
+    "error": "Fehler",
+    "technical_details": "Technische Details",
+    "codes": {
+      "outputSchemaViolated": "Die Antwort des Modells passt nicht zur verlangten Ausgabestruktur. Formuliere die Anweisung passend zu den Feldern oder wähle ein stärkeres Modell.",
+      "responseTruncated": "Die Antwort wurde abgeschnitten: Kontextfenster oder maximale Antwortlänge waren erschöpft. Erhöhe sie im Baustein unter „Erweitert“ oder schalte das Nachdenken ab.",
+      "emptyResponse": "Das Modell hat keine Antwort geschrieben, zum Beispiel weil es nur nachgedacht hat. Versuche es erneut oder ändere die Einstellungen unter „Erweitert“.",
+      "providerUnavailable": "Der Modellanbieter ist nicht erreichbar. Prüfe die Verbindung und versuche es erneut.",
+      "requestRejected": "Der Modellanbieter hat die Anfrage abgelehnt. Die technischen Details nennen den Grund.",
+      "timedOut": "Das Modell hat nicht rechtzeitig geantwortet. Versuche es erneut oder wähle ein schnelleres Modell.",
+      "capabilityMissing": "Das gewählte Sprachmodell kann diese Ein- oder Ausgabe nicht verarbeiten. Wähle ein passendes Modell."
     }
   }
 }

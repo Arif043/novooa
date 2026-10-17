@@ -5,6 +5,7 @@ import {
   languageModelFor,
   type PromptNodeInput,
 } from "./genkit-prompt-executor.js";
+
 import {
   type GenkitLanguageModelResolver,
   type ResolvedGenkitLanguageModel,
@@ -14,12 +15,15 @@ import {
   type LanguageModelDefaults,
 } from "../../../../language_models/domain/entities/language-model-defaults.js";
 import {type LanguageModelDefaultsStore} from "../../../../language_models/domain/repositories/language-model-defaults-store.js";
+import {defaultGenerationOptions} from "../../../../language_models/domain/entities/generation-options.js";
+import {ModelEmptyResponseError} from "../../../../language_models/infrastructure/errors/language-model-errors.js";
+import {type PromptModelCall} from "./prompt-model-call.js";
 
 test("returns only a data URL for an image prompt", async () => {
   const generatedImage = "data:image/png;base64,aW1hZ2U=";
   const calls: Array<{config?: unknown}> = [];
 
-  const output = await executePromptNode(fakeAi(generatedImage, calls), imageInput());
+  const output = await executePromptNode(imageCall(fakeAi(generatedImage, calls)), imageInput());
 
   assert.equal(output.answer, generatedImage);
   assert.deepEqual(output.outputs, {
@@ -30,8 +34,8 @@ test("returns only a data URL for an image prompt", async () => {
 
 test("rejects an image response without a data URL", async () => {
   await assert.rejects(
-    executePromptNode(fakeAi("https://example.com/image.png", []), imageInput()),
-    /keine Bild-Data-URL/,
+    executePromptNode(imageCall(fakeAi("https://example.com/image.png", [])), imageInput()),
+    ModelEmptyResponseError,
   );
 });
 
@@ -109,6 +113,7 @@ function fakeResolver(options: {throwsForModelId?: string} = {}) {
           imageGeneration: false,
         },
         logContext: {},
+        generationConfig: {configFor: () => ({})},
       };
     },
   } as GenkitLanguageModelResolver & {calls: Array<{teamId: string; modelId: string}>};
@@ -125,6 +130,8 @@ function fakeDefaultsStore(defaults: LanguageModelDefaults): LanguageModelDefaul
 
 function imageInput(): PromptNodeInput {
   return {
+    teamId: "team-1",
+    generationOptions: defaultGenerationOptions,
     instruction: "Erstelle ein Logo.",
     context: "",
     outputType: "image",
@@ -144,4 +151,12 @@ function fakeAi(
       return {media: {url: imageUrl}};
     },
   } as never;
+}
+
+function imageCall(ai: PromptModelCall["ai"]): PromptModelCall {
+  return {ai, model: "image-model" as never, config: {}, logContext: {}, logger: silentLogger()};
+}
+
+function silentLogger(): PromptModelCall["logger"] {
+  return {readableInfo() {}, readableError() {}, info() {}, error() {}, exception() {}};
 }

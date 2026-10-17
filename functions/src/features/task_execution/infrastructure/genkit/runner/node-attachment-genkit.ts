@@ -1,14 +1,10 @@
-import {filesystem, retry, skills} from "@genkit-ai/middleware";
+import {filesystem, skills} from "@genkit-ai/middleware";
+import {type GenerateOptions} from "genkit";
+import {languageModelRetry} from "../../../../language_models/infrastructure/genkit/language-model-retry.js";
 import {type NodeAttachmentWorkspace} from "./node-attachment-workspace.js";
 
 export function aiTurnMiddleware(workspace?: NodeAttachmentWorkspace) {
-  const middleware = [
-    retry({
-      maxRetries: 3,
-      initialDelayMs: 1000,
-      backoffFactor: 2,
-    }),
-  ];
+  const middleware: NonNullable<GenerateOptions["use"]> = [languageModelRetry()];
   if (workspace) {
     middleware.push(filesystem({rootDirectory: workspace.rootDirectory}));
     if (workspace.skillsDirectory) {

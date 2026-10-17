@@ -30,6 +30,7 @@ export class FirestoreActivityStore implements ActivityStore {
       primitive: failedNode.primitive,
       outputs: {},
       message: failedNode.message,
+      ...(failedNode.failureCode ? {failureCode: failedNode.failureCode} : {}),
     });
   }
 

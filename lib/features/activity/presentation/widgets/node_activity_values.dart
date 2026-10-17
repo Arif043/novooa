@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/console_output_block.dart';
 import '../../domain/entities/task_activity.dart';
+import 'node_activity_failure.dart';
 import 'node_output_formatter.dart';
 
 class NodeActivityValues extends StatelessWidget {
@@ -23,10 +24,9 @@ class NodeActivityValues extends StatelessWidget {
         children: [
           for (final output in outputs) _NodeActivityValue(output: output),
           if (_hasFailureMessage)
-            _ConsoleValue(
-              label: 'Fehler',
-              text: activity.message!,
-              isError: true,
+            NodeActivityFailure(
+              message: activity.message!,
+              failureCode: activity.failureCode,
             ),
           if (activity.stdout.isNotEmpty)
             _ConsoleValue(

@@ -18,6 +18,16 @@ extension TaskBuilderPromptMutations on TaskBuilderCubit {
     );
   }
 
+  Future<void> updatePromptGenerationOptions(
+    NodeId nodeId,
+    PromptGenerationOptions generationOptions,
+  ) {
+    return _updatePromptConfig(
+      nodeId,
+      (config) => config.copyWith(generationOptions: generationOptions),
+    );
+  }
+
   /// Beim Wechsel auf oder weg von „Entscheidung“ bekommt der Hauptwert
   /// immer den Standardnamen des neuen Typs („Antwort“ bzw. „Text“, bei
   /// Kollision nummeriert) — auch wenn er vorher umbenannt war. Bedingungen

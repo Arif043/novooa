@@ -1,0 +1,1 @@
+ALTER TABLE `activities` ADD `failure_code` text;

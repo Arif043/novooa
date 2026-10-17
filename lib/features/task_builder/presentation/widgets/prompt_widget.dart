@@ -20,6 +20,7 @@ import '../cubits/node_language_models_state.dart';
 import '../cubits/task_builder_cubit.dart';
 import 'node_file_attachment_section.dart';
 import 'node_knowledge_attachment_section.dart';
+import 'prompt_generation_options_for_model.dart';
 import 'prompt_resource_selection.dart';
 import 'prompt_output_configuration.dart';
 import 'template_expression_scope.dart';
@@ -78,6 +79,13 @@ class _PromptWidgetState extends State<PromptWidget> {
           ),
           const SizedBox(height: AppSpacing.md),
           _languageModelField(context, config),
+          PromptGenerationOptionsForModel(
+            options: config.generationOptions,
+            languageModelId: config.languageModelId,
+            onChanged: (options) => context
+                .read<TaskBuilderCubit>()
+                .updatePromptGenerationOptions(widget.node.id, options),
+          ),
           const SizedBox(height: AppSpacing.md),
           Text(LocaleKeys.ui_ausgabe.tr(), style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.xs),

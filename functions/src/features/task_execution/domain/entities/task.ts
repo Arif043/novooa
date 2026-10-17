@@ -18,6 +18,7 @@ import {
   type TensorDimension,
 } from "../../../machine_learning/domain/entities/model-contract.js";
 import {type NodeOutputValue} from "./workflow-value.js";
+import {type GenerationOptionsRecord} from "../../../language_models/domain/entities/generation-options.js";
 export type {
   DialogInputDefinition,
   DialogInputField,
@@ -93,6 +94,8 @@ export type PromptNodeConfig = {
   primitive: "prompt";
   instruction: string;
   languageModelId?: string;
+  /** Gespeicherte Rohwerte; geprüft werden sie mit `generationOptionsFrom`. */
+  generationOptions?: GenerationOptionsRecord;
   outputType: PromptOutputType;
   choices: string[];
   structuredFields: StructuredOutputField[];

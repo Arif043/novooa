@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {fieldOutputsFor, structuredSchemaFor} from "./prompt-text-executor.js";
+import {definedFieldsOf} from "./structured-output-schema.js";
 import {type StructuredOutputField} from "./prompt-node-types.js";
 
 // Deckt die neue Typisierung strukturierter Prompt-Ausgabefelder ab: vorher
@@ -58,4 +59,12 @@ test("fieldOutputsFor markiert jeden Ausgabewert mit seinem Laufzeittyp", () => 
     alter: {type: "number", value: 36},
     aktiv: {type: "boolean", value: true},
   });
+});
+
+test("zusätzliche Felder des Modells fallen weg", () => {
+  const fields = [fieldFor("string", {name: "summe"}), fieldFor("string", {name: "datum"})];
+
+  const defined = definedFieldsOf({summe: "3,24", kasse: "1", datum: "29.09."}, fields);
+
+  assert.deepEqual(defined, {summe: "3,24", datum: "29.09."});
 });

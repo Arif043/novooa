@@ -1,9 +1,11 @@
-import {type PromptExecutor} from "../../../domain/executors/prompt-executor.js";
 import {type GenkitBeta} from "genkit/beta";
-import {type NodeExecutor, executedNode} from "../../../domain/executors/node-executor.js";
+import {ResultAsync} from "neverthrow";
+import {type PromptExecutor} from "../../../domain/executors/prompt-executor.js";
 import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
-import {executeImagePrompt, persistedImageOutputsFor} from "./prompt-image-executor.js";
-import {promptInputFor} from "./prompt-node-input.js";
+import {imageModel, imageModelLogContext, modelLogContext, textModel, textModelGenerationConfig} from "../runner/ai-models.js";
+import {executeImagePrompt} from "./prompt-image-executor.js";
+import {languageModelFor, validateCapabilities} from "./prompt-language-model.js";
+import {type PromptModelCall} from "./prompt-model-call.js";
 import {type PromptNodeInput, type PromptNodeOutput} from "./prompt-node-types.js";
 import {executeDecisionPrompt, executeStructuredPrompt, executeTextPrompt} from "./prompt-text-executor.js";
 import {
@@ -11,126 +13,66 @@ import {
   type ResolvedGenkitLanguageModel,
 } from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
 import {type LanguageModelDefaultsStore} from "../../../../language_models/domain/repositories/language-model-defaults-store.js";
+import {type LanguageModelFailure} from "../../../../language_models/domain/entities/language-model-failure.js";
+import {languageModelFailureFrom} from "../../../../language_models/infrastructure/errors/language-model-failure-mapper.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 import {FirebaseApplicationLogger} from "../../../../../shared/logging/firebase-application-logger.js";
 
 export type {PromptNodeInput, PromptNodeOutput, PromptNodeOutputType} from "./prompt-node-types.js";
+export {languageModelFor} from "./prompt-language-model.js";
 
-export function createGenkitPromptExecutor(
-  ai: GenkitBeta,
-  workspace?: NodeAttachmentWorkspace,
-  logger: ApplicationLogger = new FirebaseApplicationLogger(),
-): PromptExecutor {
-  return {execute: (request) => executePromptNode(ai, request, workspace, undefined, logger)};
-}
-
-export function createGenkitPromptNodeExecutor(
-  ai: GenkitBeta,
-  workspace?: NodeAttachmentWorkspace,
-  languageModelResolver?: GenkitLanguageModelResolver,
-  logger: ApplicationLogger = new FirebaseApplicationLogger(),
-  defaultsStore?: LanguageModelDefaultsStore,
-): NodeExecutor {
-  return {
-    primitive: "prompt",
-    async execute(node, runContext) {
-      const promptInput = await promptInputFor(node, runContext, workspace?.employee);
-      const languageModel = await languageModelFor(
-        promptInput.languageModelId,
-        runContext.teamId,
-        languageModelResolver,
-        defaultsStore,
-      );
-      validateCapabilities(promptInput, languageModel);
-      const output = await executePromptNode(
-        languageModel?.ai ?? ai,
-        promptInput,
-        workspace,
-        languageModel,
-        logger,
-      );
-      const outputs = promptInput.outputType === "image"
-        ? await persistedImageOutputsFor(output, node, runContext)
-        : output.outputs;
-      return executedNode(node, outputs);
-    },
-  };
-}
-
-export function executePromptNode(
-  ai: GenkitBeta,
-  input: PromptNodeInput,
-  workspace?: NodeAttachmentWorkspace,
-  languageModel?: ResolvedGenkitLanguageModel,
-  logger: ApplicationLogger = new FirebaseApplicationLogger(),
-): Promise<PromptNodeOutput> {
-  if (input.outputType === "image") {
-    return executeImagePrompt(ai, input, workspace, languageModel, logger);
-  }
-  if (input.outputType === "decision") {
-    return executeDecisionPrompt(ai, input, workspace, languageModel, logger);
-  }
-  if (input.outputType === "structured") {
-    return executeStructuredPrompt(ai, input, workspace, languageModel, logger);
-  }
-  return executeTextPrompt(ai, input, workspace, languageModel, logger);
-}
-
-// Exportiert für gezielte Tests der Vorgabe-Fallback-Kette — kein Teil des
-// öffentlichen Vertrags von `createGenkitPromptNodeExecutor`.
-export async function languageModelFor(
-  languageModelId: string | undefined,
-  teamId: string,
-  resolver: GenkitLanguageModelResolver | undefined,
-  defaultsStore: LanguageModelDefaultsStore | undefined,
-): Promise<ResolvedGenkitLanguageModel | undefined> {
-  const explicitId = languageModelId?.trim();
-  if (explicitId) {
-    if (!resolver) throw new Error("Die Sprachmodell-Auswahl ist nicht konfiguriert.");
-    return resolver.resolve(teamId, explicitId);
-  }
-  return defaultLanguageModelFor(teamId, resolver, defaultsStore);
-}
+export type GenkitPromptExecutorDependencies = {
+  ai: GenkitBeta;
+  workspace?: NodeAttachmentWorkspace;
+  languageModelResolver?: GenkitLanguageModelResolver;
+  defaultsStore?: LanguageModelDefaultsStore;
+  logger?: ApplicationLogger;
+};
 
 /**
- * "Standardmodell verwenden" (leere languageModelId): erst die in den
- * Einstellungen gewählte Vorgabe versuchen, sonst bleibt der bisherige
- * umgebungsvariablen-gesteuerte Pfad (`ai-models.ts`, über die äußere `ai`-
- * Instanz) unverändert aktiv — auch wenn die Vorgabe auf ein inzwischen
- * gelöschtes Modell zeigt, statt die Ausführung deswegen fehlschlagen zu
- * lassen.
+ * Führt Prompts über Genkit aus. An dieser Grenze werden unsere Exceptions (Framework-Fehler sind
+ * vorher übersetzt) zu einer `LanguageModelFailure`.
  */
-async function defaultLanguageModelFor(
-  teamId: string,
-  resolver: GenkitLanguageModelResolver | undefined,
-  defaultsStore: LanguageModelDefaultsStore | undefined,
-): Promise<ResolvedGenkitLanguageModel | undefined> {
-  if (!resolver || !defaultsStore) return undefined;
-  const defaults = await defaultsStore.loadDefaults(teamId);
-  if (!defaults.blockModelId) return undefined;
-  try {
-    return await resolver.resolve(teamId, defaults.blockModelId);
-  } catch {
-    return undefined;
+export class GenkitPromptExecutor implements PromptExecutor {
+  private readonly logger: ApplicationLogger;
+
+  constructor(private readonly dependencies: GenkitPromptExecutorDependencies) {
+    this.logger = dependencies.logger ?? new FirebaseApplicationLogger();
+  }
+
+  execute(request: PromptNodeInput): ResultAsync<PromptNodeOutput, LanguageModelFailure> {
+    return ResultAsync.fromPromise(this.run(request), languageModelFailureFrom);
+  }
+
+  private async run(request: PromptNodeInput): Promise<PromptNodeOutput> {
+    const {languageModelResolver, defaultsStore} = this.dependencies;
+    const languageModel = await languageModelFor(
+      request.languageModelId, request.teamId, languageModelResolver, defaultsStore,
+    );
+    validateCapabilities(request, languageModel);
+    return executePromptNode(this.callFor(request, languageModel), request);
+  }
+
+  private callFor(request: PromptNodeInput, languageModel: ResolvedGenkitLanguageModel | undefined): PromptModelCall {
+    const {ai, workspace} = this.dependencies;
+    const base = {ai: languageModel?.ai ?? ai, workspace, logger: this.logger};
+    if (languageModel) {
+      const config = languageModel.generationConfig.configFor(request.generationOptions);
+      return {...base, model: languageModel.model, config, logContext: languageModel.logContext};
+    }
+    if (request.outputType === "image") {
+      return {...base, model: imageModel(), config: {}, logContext: imageModelLogContext()};
+    }
+    const config = textModelGenerationConfig().configFor(request.generationOptions);
+    return {...base, model: textModel(), config, logContext: modelLogContext()};
   }
 }
 
-function validateCapabilities(
-  input: PromptNodeInput,
-  languageModel: ResolvedGenkitLanguageModel | undefined,
-): void {
-  if (!languageModel) return;
-  const capabilities = languageModel.capabilities;
-  if (!capabilities.textGeneration) {
-    throw new Error("Das gewählte Sprachmodell unterstützt keine Textgenerierung.");
-  }
-  if (input.mediaUrls.length > 0 && !capabilities.imageInput) {
-    throw new Error("Das gewählte Sprachmodell unterstützt keine Bildeingaben.");
-  }
-  if (input.outputType === "structured" && !capabilities.structuredOutput) {
-    throw new Error("Das gewählte Sprachmodell unterstützt keine strukturierte Ausgabe.");
-  }
-  if (input.outputType === "image" && !capabilities.imageGeneration) {
-    throw new Error("Das gewählte Sprachmodell unterstützt keine Bildgenerierung.");
+export function executePromptNode(call: PromptModelCall, input: PromptNodeInput): Promise<PromptNodeOutput> {
+  switch (input.outputType) {
+    case "image": return executeImagePrompt(call, input);
+    case "decision": return executeDecisionPrompt(call, input);
+    case "structured": return executeStructuredPrompt(call, input);
+    default: return executeTextPrompt(call, input);
   }
 }

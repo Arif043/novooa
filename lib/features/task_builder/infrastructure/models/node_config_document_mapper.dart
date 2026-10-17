@@ -7,6 +7,7 @@ import '../../domain/entities/skill_attachment.dart';
 import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
 import 'legacy_model_output_parameters.dart';
+import 'prompt_generation_options_mapper.dart';
 
 typedef GraphToDocument = Map<String, Object?> Function(WorkflowGraph graph);
 typedef GraphFromDocument = WorkflowGraph Function(Object? data);
@@ -19,6 +20,8 @@ class NodeConfigDocumentMapper {
 
   final GraphToDocument graphToDocument;
   final GraphFromDocument graphFromDocument;
+
+  static const _generationOptionsMapper = PromptGenerationOptionsMapper();
 
   Map<String, Object?> toDocument(NodeConfig config) {
     return switch (config) {
@@ -107,6 +110,10 @@ class NodeConfigDocumentMapper {
       'primitive': config.primitive.name,
       'instruction': config.instruction,
       'languageModelId': config.languageModelId,
+      if (!config.generationOptions.usesModelDefaults)
+        'generationOptions': _generationOptionsMapper.toDocument(
+          config.generationOptions,
+        ),
       'outputType': config.outputType.name,
       'choices': config.choices,
       'structuredFields': config.structuredFields
@@ -371,6 +378,9 @@ class NodeConfigDocumentMapper {
     return PromptNodeConfig(
       instruction: data['instruction'] as String? ?? '',
       languageModelId: data['languageModelId'] as String? ?? '',
+      generationOptions: _generationOptionsMapper.fromDocument(
+        data['generationOptions'],
+      ),
       outputType: _promptOutputTypeFrom(data['outputType']),
       choices: _stringListFrom(data['choices'], fallback: const ['', '']),
       structuredFields: _structuredFieldsFrom(data['structuredFields']),

@@ -1,4 +1,7 @@
 import '../../../../core/entities/unique_id.dart';
+import 'activity_failure_code.dart';
+
+export 'activity_failure_code.dart';
 
 enum TaskActivityTarget { task, node }
 
@@ -18,6 +21,7 @@ class TaskActivity {
     this.input,
     this.output,
     this.message,
+    this.failureCode,
     this.outputs = const {},
     this.stdout = '',
     this.stderr = '',
@@ -35,6 +39,9 @@ class TaskActivity {
   final String? input;
   final String? output;
   final String? message;
+
+  /// Ursache eines gescheiterten Bausteins, falls die Runtime sie kennt.
+  final ActivityFailureCode? failureCode;
   final Map<String, Object?> outputs;
 
   /// Was der Baustein auf stdout und stderr ausgegeben hat (Script-Baustein); leer, wenn nichts.

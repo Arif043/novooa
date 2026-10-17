@@ -37,6 +37,7 @@
 
 - [Modellprovider für Prompt-Bausteine](../notes/modellprovider-prompt.md)
 - [Prompt-Executor](../notes/prompt-executor.md)
+- [Generierungsoptionen](../notes/generierungsoptionen.md)
 - [Iterative Verfeinerung](../notes/iterative-verfeinerung.md)
 - [Script-Executor](../notes/script-executor.md)
 - [Script: Workflow-Ausgabewerte](../notes/script-workflow-output.md)

@@ -4,8 +4,10 @@ import {
   type ResolvedEmployee,
   type StructuredOutputField,
 } from "./task.js";
+import {type GenerationOptions} from "../../../language_models/domain/entities/generation-options.js";
 
 export type PromptExecutionRequest = {
+  teamId: string;
   instruction: string;
   context: string;
   languageModelId?: string;
@@ -13,6 +15,7 @@ export type PromptExecutionRequest = {
   choices: string[];
   structuredFields: StructuredOutputField[];
   mediaUrls: string[];
+  generationOptions: GenerationOptions;
   employee?: ResolvedEmployee;
 };
 

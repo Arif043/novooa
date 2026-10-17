@@ -62,6 +62,7 @@ class LocalTaskActivityRepository implements TaskActivityRepository {
       input: _nullableString(data['input']),
       output: _nullableString(data['output']),
       message: _nullableString(data['message']),
+      failureCode: ActivityFailureCode.fromName(data['failureCode']),
       outputs: _outputsFrom(data['outputs']),
       stdout: _consoleText(data['console'], 'stdout'),
       stderr: _consoleText(data['console'], 'stderr'),

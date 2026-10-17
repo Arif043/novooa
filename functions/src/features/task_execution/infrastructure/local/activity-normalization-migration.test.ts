@@ -30,7 +30,11 @@ async function previousDatabase(t: TestContext) {
 }
 
 async function migrateActivities(database: RuntimeDatabase) {
-  const migration = await readFile(resolve(__dirname, "../../../../../drizzle/0014_normalize_activities.sql"), "utf8");
+  await runMigration(database, "0014_normalize_activities.sql");
+}
+
+async function runMigration(database: RuntimeDatabase, fileName: string) {
+  const migration = await readFile(resolve(__dirname, "../../../../../drizzle", fileName), "utf8");
   await database.transaction(async (tx) => {
     for (const statement of migration.split("--> statement-breakpoint")) await tx.run(sql.raw(statement.trim()));
   });
@@ -39,7 +43,9 @@ async function migrateActivities(database: RuntimeDatabase) {
 test("migration preserves complete activity history and establishes run deletion cascade", async (t) => {
   const database = await previousDatabase(t);
   await migrateActivities(database);
-  assert.deepEqual(await database.select().from(activities), [originalActivity]);
+  // Spätere Spalten, damit das aktuelle Schema die Zeile lesen kann.
+  await runMigration(database, "0022_activity_failure_code.sql");
+  assert.deepEqual(await database.select().from(activities), [{...originalActivity, failure_code: null}]);
   assert.deepEqual(await database.all(sql`PRAGMA foreign_key_check`), []);
   await database.run(sql`DELETE FROM task_runs WHERE id = 'run-1'`);
   assert.deepEqual(await database.select().from(activities), []);

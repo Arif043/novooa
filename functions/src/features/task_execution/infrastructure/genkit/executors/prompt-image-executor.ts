@@ -1,7 +1,4 @@
-import {type GenkitBeta} from "genkit/beta";
-import {imageModel, imageModelLogContext} from "../runner/ai-models.js";
 import {type TaskRunContext} from "../../../domain/executors/node-executor.js";
-import {type NodeAttachmentWorkspace} from "../runner/node-attachment-workspace.js";
 import {aiTurnMiddleware} from "../runner/node-attachment-genkit.js";
 import {fileOutputFor} from "../../../domain/services/file-output-values.js";
 import {type NodeOutputValue, type WorkflowNode} from "../runner/task-definition.js";
@@ -9,31 +6,26 @@ import {formatModelCallFinished, formatModelCallStarted} from "../runner/structu
 import {imageDataFromDataUrl, imageExtensionFor} from "./image-data-url.js";
 import {promptContentFor} from "./prompt-node-input.js";
 import {type PromptNodeInput, type PromptNodeOutput} from "./prompt-node-types.js";
-import {type ResolvedGenkitLanguageModel} from "../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
-import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
-import {FirebaseApplicationLogger} from "../../../../../shared/logging/firebase-application-logger.js";
+import {type PromptModelCall} from "./prompt-model-call.js";
+import {withTranslatedGenkitErrors} from "../../../../language_models/infrastructure/errors/genkit-error-translator.js";
+import {ModelEmptyResponseError} from "../../../../language_models/infrastructure/errors/language-model-errors.js";
 
-export async function executeImagePrompt(
-  ai: GenkitBeta,
-  input: PromptNodeInput,
-  workspace?: NodeAttachmentWorkspace,
-  languageModel?: ResolvedGenkitLanguageModel,
-  logger: ApplicationLogger = new FirebaseApplicationLogger(),
-): Promise<PromptNodeOutput> {
-  const prompt = promptContentFor(input, workspace);
+/** Bildmodelle verlangen die Bild-Modalität; Generierungsoptionen gelten hier nicht. */
+export async function executeImagePrompt(call: PromptModelCall, input: PromptNodeInput): Promise<PromptNodeOutput> {
+  const prompt = promptContentFor(input, call.workspace);
   const label = input.employee ? `Prompt / Bild (Mitarbeiter: ${input.employee.name})` : "Prompt / Bild";
   const startedAt = Date.now();
-  logger.readableInfo(formatModelCallStarted({
-    label, model: languageModel?.logContext ?? imageModelLogContext(), prompt: prompt.text,
-    outputSchema: "dataUrl: Bild-Data-URL",
+  call.logger.readableInfo(formatModelCallStarted({
+    label, model: call.logContext, prompt: prompt.text, outputSchema: "dataUrl: Bild-Data-URL",
+    mediaCount: input.mediaUrls.length,
   }));
-  const response = await ai.generate({
-    model: languageModel?.model ?? imageModel(), prompt: prompt.content,
-    config: {responseModalities: ["IMAGE"]}, use: aiTurnMiddleware(workspace),
-  });
+  const response = await withTranslatedGenkitErrors(() => call.ai.generate({
+    model: call.model, prompt: prompt.content,
+    config: {responseModalities: ["IMAGE"]}, use: aiTurnMiddleware(call.workspace),
+  }));
   const dataUrl = response.media?.url;
-  if (!isImageDataUrl(dataUrl)) throw new Error("Der Bild-Prompt lieferte keine Bild-Data-URL.");
-  logger.readableInfo(formatModelCallFinished({
+  if (!isImageDataUrl(dataUrl)) throw new ModelEmptyResponseError("Der Bild-Prompt lieferte keine Bild-Data-URL.");
+  call.logger.readableInfo(formatModelCallFinished({
     label, durationMs: Date.now() - startedAt,
     text: `Bild generiert (${dataUrl.length} Zeichen)`,
   }));

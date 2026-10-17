@@ -14,6 +14,11 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 - `markRunFailed` schreibt die Bausteine über `recordNodeExecutionFailure`,
   bevor es den Lauf als gescheitert festhält.
 - `TaskRunFailure` bleibt Eingabefehlern der HTTP-Routen vorbehalten.
+- Wirft ein Executor `NodeFailedError`, übernimmt der Runner dessen Code als
+  `FailedNode.failureCode`; gespeichert in `activities.failure_code` bzw.
+  `failureCode` (Firestore). Der Client übersetzt bekannte Codes und zeigt den
+  Text der Runtime als technische Details
+  ([Fehlerschichtung](./fehlerschichtung-modellaufruf.md)).
 - Streng steigende Zeitstempel (ms) im SQLite-Aktivitäts-Store sichern die
   Reihenfolge.
 - Die Lauf-Meldung erscheint nur dann als eigener Eintrag oben, wenn kein
@@ -25,3 +30,4 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 - [Task-Run-Warteschlange](./task-run-warteschlange.md)
 - [Script-Ausgabe im Protokoll](./script-ausgabe-protokoll.md)
 - [Run starten](./run-start.md)
+- [Fehlerschichtung eines Modellaufrufs](./fehlerschichtung-modellaufruf.md)

@@ -80,6 +80,7 @@ class FirestoreTaskActivityRepository implements TaskActivityRepository {
       input: data['input'] as String?,
       output: data['output'] as String?,
       message: data['message'] as String?,
+      failureCode: ActivityFailureCode.fromName(data['failureCode']),
       outputs: _outputsFrom(data['outputs']),
     );
   }

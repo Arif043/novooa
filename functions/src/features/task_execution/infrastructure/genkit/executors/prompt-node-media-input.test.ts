@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {createGenkitPromptNodeExecutor} from "./genkit-prompt-executor.js";
+import {createGenkitPromptNodeExecutor} from "./genkit-prompt-node-executor.js";
 
 test("provides a media template value as a Genkit media part", async () => {
   const prompts: unknown[] = [];
@@ -48,6 +48,7 @@ test("uses the selected team language model for a text prompt", async () => {
           model: "team-model" as never,
           capabilities: capabilities(),
           logContext: {provider: "test", model: "team-model"},
+          generationConfig: {configFor: () => ({})},
         } as never;
       },
     },
@@ -70,6 +71,7 @@ test("rejects a selected model that cannot receive the supplied image", async ()
           ai: fakeAi([]), model: "team-model" as never,
           capabilities: {...capabilities(), imageInput: false},
           logContext: {provider: "test", model: "team-model"},
+          generationConfig: {configFor: () => ({})},
         };
       }},
     ).execute({

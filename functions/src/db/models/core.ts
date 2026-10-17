@@ -16,6 +16,8 @@ export const activities = sqliteTable("activities", {
   duration_ms: integer("duration_ms"),
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   console_json: text("console_json").notNull().default("{}"),
+  /** Stabiler Fehlercode eines gescheiterten Bausteins (z. B. `responseTruncated`), übersetzt im Client. */
+  failure_code: text("failure_code"),
 }, (table) => [
   index("idx_activities_run_created").on(table.run_id, table.created_at),
 ]);

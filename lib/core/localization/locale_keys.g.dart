@@ -408,6 +408,44 @@ abstract class LocaleKeys {
   static const task_builder_combinators_or = 'task_builder.combinators.or';
   static const task_builder_combinators_xor = 'task_builder.combinators.xor';
   static const task_builder_combinators = 'task_builder.combinators';
+  static const task_builder_generation_options_title =
+      'task_builder.generation_options.title';
+  static const task_builder_generation_options_summary_defaults =
+      'task_builder.generation_options.summary_defaults';
+  static const task_builder_generation_options_summary_custom =
+      'task_builder.generation_options.summary_custom';
+  static const task_builder_generation_options_temperature =
+      'task_builder.generation_options.temperature';
+  static const task_builder_generation_options_temperature_default =
+      'task_builder.generation_options.temperature_default';
+  static const task_builder_generation_options_use_model_default =
+      'task_builder.generation_options.use_model_default';
+  static const task_builder_generation_options_set_temperature =
+      'task_builder.generation_options.set_temperature';
+  static const task_builder_generation_options_max_output_tokens =
+      'task_builder.generation_options.max_output_tokens';
+  static const task_builder_generation_options_context_window =
+      'task_builder.generation_options.context_window';
+  static const task_builder_generation_options_context_window_helper =
+      'task_builder.generation_options.context_window_helper';
+  static const task_builder_generation_options_empty_means_default =
+      'task_builder.generation_options.empty_means_default';
+  static const task_builder_generation_options_thinking =
+      'task_builder.generation_options.thinking';
+  static const task_builder_generation_options_thinking_modes_modelDefault =
+      'task_builder.generation_options.thinking_modes.modelDefault';
+  static const task_builder_generation_options_thinking_modes_off =
+      'task_builder.generation_options.thinking_modes.off';
+  static const task_builder_generation_options_thinking_modes_low =
+      'task_builder.generation_options.thinking_modes.low';
+  static const task_builder_generation_options_thinking_modes_medium =
+      'task_builder.generation_options.thinking_modes.medium';
+  static const task_builder_generation_options_thinking_modes_high =
+      'task_builder.generation_options.thinking_modes.high';
+  static const task_builder_generation_options_thinking_modes =
+      'task_builder.generation_options.thinking_modes';
+  static const task_builder_generation_options =
+      'task_builder.generation_options';
   static const task_builder = 'task_builder';
   static const settings_language_title = 'settings.language.title';
   static const settings_language_description = 'settings.language.description';
@@ -803,4 +841,23 @@ abstract class LocaleKeys {
       'machine_learning.model_import.unreadable_file';
   static const machine_learning_model_import = 'machine_learning.model_import';
   static const machine_learning = 'machine_learning';
+  static const activity_failures_error = 'activity_failures.error';
+  static const activity_failures_technical_details =
+      'activity_failures.technical_details';
+  static const activity_failures_codes_outputSchemaViolated =
+      'activity_failures.codes.outputSchemaViolated';
+  static const activity_failures_codes_responseTruncated =
+      'activity_failures.codes.responseTruncated';
+  static const activity_failures_codes_emptyResponse =
+      'activity_failures.codes.emptyResponse';
+  static const activity_failures_codes_providerUnavailable =
+      'activity_failures.codes.providerUnavailable';
+  static const activity_failures_codes_requestRejected =
+      'activity_failures.codes.requestRejected';
+  static const activity_failures_codes_timedOut =
+      'activity_failures.codes.timedOut';
+  static const activity_failures_codes_capabilityMissing =
+      'activity_failures.codes.capabilityMissing';
+  static const activity_failures_codes = 'activity_failures.codes';
+  static const activity_failures = 'activity_failures';
 }

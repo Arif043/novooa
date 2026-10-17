@@ -1,4 +1,5 @@
 import 'node_delegation.dart';
+import 'prompt_generation_options.dart';
 import 'package:equatable/equatable.dart';
 import 'package:syscat2/features/task_builder/domain/entities/knowledge_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
@@ -6,7 +7,10 @@ import 'package:syscat2/features/task_builder/domain/entities/skill_attachment.d
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 
+export 'prompt_generation_options.dart';
+
 part 'prompt_node_config.dart';
+part 'structured_output_field.dart';
 part 'file_attachment_support.dart';
 part 'knowledge_attachment_support.dart';
 part 'skill_attachment_support.dart';
