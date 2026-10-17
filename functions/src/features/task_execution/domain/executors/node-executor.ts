@@ -151,12 +151,15 @@ export function textOutputFromResult(result: NodeExecutionResult): string {
   return value === undefined ? "" : textForOutputValue(value);
 }
 
+// Bausteine mit Feldern (strukturierter Prompt, Dialog, Script) haben keinen
+// Hauptwert `value`; dann stehen alle Felder zusammen für den Baustein.
 function primaryOutputFromResult(
   result: NodeExecutionResult,
 ): NodeOutputValue | undefined {
   if (result.outputs.value !== undefined) return result.outputs.value;
-  const outputs = Object.values(result.outputs);
-  return outputs.length === 1 ? outputs[0] : undefined;
+  const entries = Object.entries(result.outputs);
+  if (entries.length <= 1) return entries[0]?.[1];
+  return {type: "json", value: Object.fromEntries(entries.map(([key, output]) => [key, output.value]))};
 }
 
 function textForOutputValue(value: NodeOutputValue): string {

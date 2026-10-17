@@ -9,8 +9,8 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   ein Enum, kein Wahrheitswert) als `value`.
 - **Strukturiert:** validiert ein Zod-Object; jedes Feld wird ein eigener
   Output mit eigenem Typ (`string`/`number`/`boolean`, inklusive Koerzion).
-  Felder, die das Modell zusätzlich liefert, fallen weg. Die Gesamtstruktur steht zusätzlich als `json`-`value` bereit, ist aber
-  per Template nicht erreichbar.
+  Felder, die das Modell zusätzlich liefert, fallen weg. Einen `value`
+  gibt es nicht.
 - **Bild:** Google GenAI mit `gemini-2.5-flash-image` (`GOOGLE_IMAGE_MODEL`).
   Ein vorangehender `media`-Wert geht als Genkit-Medienteil an Gemini; das
   Ergebnis wird Team-Datei und `media`-`value`. Data-URLs verlassen den

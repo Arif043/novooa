@@ -11,7 +11,7 @@ Executoren: `functions/src/features/task_execution/infrastructure/genkit/executo
 | `stringInput` | ausgefuehrt | `value` (`string`) |
 | `script` | ausgefuehrt | Ein Output je `workflow_output("name", "typ", wert)`-Aufruf (nur Script-Container; Name und Typ als String-Literale; `string`, `number`, `boolean`, `datetime`, `json`). Ohne solche Aufrufe liefert der Executor die Variable `output` als `value`; der Builder führt dafür keinen Wert, sie ist also nicht erreichbar. Laufzeitvariablen stehen nachfolgenden Templates zur Verfuegung |
 | `prompt` mit Text oder Entscheidung | ausgefuehrt | `value` (`string`) |
-| `prompt` strukturiert | ausgefuehrt | ein flacher `string`-Output je konfiguriertem Feld, ohne umschliessenden Knotennamen (kein `value`-Gesamtwert mehr adressierbar) |
+| `prompt` strukturiert | ausgefuehrt | ein flacher, typisierter Output je konfiguriertem Feld (`string`, `number`, `boolean`), ohne umschliessenden Knotennamen und ohne `value`; zusätzliche Felder des Modells fallen weg |
 | `prompt` mit Bild | ausgefuehrt | `value` (`media`); das generierte Bild wird als Team-Datei referenziert |
 | `conditionalFlow` | ausgefuehrt | `value` (`string`, Ergebnis des gewaehlten Zweigs oder Begruendung); Resultat-Metadaten: `selectedNodeId`, `selectedBranchId`, `selectedBranchLabel` |
 | `iterativeRefinement` | ausgefuehrt | `value` (`string`) |
@@ -22,7 +22,7 @@ Executoren: `functions/src/features/task_execution/infrastructure/genkit/executo
 | `sendChannelMessage` | ausgefuehrt | `value`, `recipient`, `channelId`, `providerMessageId` (je `string`) |
 | `notificationSend` | ausgefuehrt | keine — reiner Seiteneffekt ohne fachlichen Rückgabewert |
 | `humanApproval` | wartet auf Freigabe | `value` (`string`) |
-| `dialogInput` | wartet auf Formulareingabe | nach dem Absenden: ein flacher, typisierter Output pro Feld, ohne umschliessenden Knotennamen (kein `value`-Gesamtwert mehr adressierbar) |
+| `dialogInput` | wartet auf Formulareingabe | nach dem Absenden: ein flacher, typisierter Output pro Feld, ohne umschliessenden Knotennamen und ohne `value` |
 | `mediaInput` | wartet auf ein Bild; Nutzer wählt Kamera (optional als Dokumentenscan) oder Galerie | nach dem Absenden: `value` (`media`) |
 | `modelInference` | ausgefuehrt | `value` (`json`: Modell-ID und Tensoren mit Semantik, Form, Typ und Base64-Daten), `modelId` (`string`) |
 | `writeFile` | ausgefuehrt | siehe nächster Abschnitt |

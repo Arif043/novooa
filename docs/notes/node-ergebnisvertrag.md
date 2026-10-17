@@ -18,7 +18,11 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   `waitingForApproval`; nicht registrierte Primitives `skipped` ohne Outputs.
 - `value` ist der einzige primäre Schlüssel; der frühere redundante
   `text`-Output ist entfernt.
-- Die letzte lesbare `value`-Ausgabe ist das `finalOutput` des Runs.
+- Bausteine mit Feldern (strukturierter Prompt, Dialogeingabe, Script mit
+  `workflow_output`) haben keinen `value`. Für Lauf-Ergebnis, Freigabe und
+  Protokoll gilt dann ein einzelnes Feld selbst, mehrere Felder zusammen als
+  JSON (`textOutputFromResult`).
+- Die letzte lesbare Hauptausgabe ist das `finalOutput` des Runs.
 
 ## Siehe auch
 

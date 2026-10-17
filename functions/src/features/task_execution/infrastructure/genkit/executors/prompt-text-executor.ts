@@ -41,7 +41,7 @@ export async function executeStructuredPrompt(call: PromptModelCall, input: Prom
   const rawOutput: Record<string, StructuredFieldValue> | undefined = response.output;
   if (rawOutput === undefined) throw new ModelOutputSchemaError(`Das Modell lieferte keine strukturierte Ausgabe: ${response.text}`);
   const output = definedFieldsOf(rawOutput, fields);
-  return {answer: JSON.stringify(output), outputs: {value: {type: "json", value: output}, ...fieldOutputsFor(output)}};
+  return {answer: JSON.stringify(output), outputs: fieldOutputsFor(output)};
 }
 
 async function logged<T>(

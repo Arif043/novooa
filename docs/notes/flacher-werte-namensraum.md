@@ -16,7 +16,7 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
 - Felder (strukturierte Prompt-Ausgabe, Dialogeingabe, Script mit
   `workflow_output`): Schlüssel = Feldname, Name startet gleich, ist
   umbenennbar und graph-weit eindeutig („Antwort“, „Antwort2“); Feldnamen
-  müssen nur im Baustein eindeutig sein. Der Gesamtwert ist nicht erreichbar.
+  müssen nur im Baustein eindeutig sein. Einen Gesamtwert gibt es nicht.
   Ein geänderter Feldname ergibt einen neuen Schlüssel.
 - Namen vergibt der Builder lokalisiert, großgeschrieben, ab 2 nummeriert.
   `showOnCanvas`: Hauptwert und Felder an, übrige aus.
