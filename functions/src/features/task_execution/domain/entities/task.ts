@@ -141,7 +141,18 @@ export type ComparisonOperator =
   | "greaterThanOrEqual"
   | "lessThan"
   | "lessThanOrEqual"
-  | "contains";
+  | "contains"
+  | "notContains"
+  | "startsWith"
+  | "endsWith"
+  | "isEmpty"
+  | "isNotEmpty"
+  | "isTrue"
+  | "isFalse"
+  | "sameDay"
+  | "before"
+  | "after"
+  | "contentTypeIs";
 export type BooleanCombinator = "and" | "or" | "xor";
 export type BranchCondition =
   | {kind: "comparison"; left: string; operator: ComparisonOperator; right: string}

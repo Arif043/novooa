@@ -3,20 +3,33 @@ part of 'node_config.dart';
 /// Vergleichsoperator einer [ComparisonCondition] — bewusst eine flache,
 /// uneingeschränkte Liste im Domänenmodell: welche Operatoren für einen
 /// konkreten Operanden sinnvoll sind, entscheidet die Präsentation
-/// (`operandTypeHintFor`/`operatorsFor` in
-/// `branch_condition_operand_type.dart`), nicht die Domäne selbst.
+/// (`operatorsFor` in `branch_condition_operators.dart`), nicht die Domäne.
+/// Bei Tabellen vergleichen die Zahl-Operatoren die Zeilenanzahl.
 enum ComparisonOperator {
-  equals('ist'),
-  notEquals('ist nicht'),
-  greaterThan('größer als'),
-  greaterThanOrEqual('größer oder gleich'),
-  lessThan('kleiner als'),
-  lessThanOrEqual('kleiner oder gleich'),
-  contains('enthält');
+  equals,
+  notEquals,
+  greaterThan,
+  greaterThanOrEqual,
+  lessThan,
+  lessThanOrEqual,
+  contains,
+  notContains,
+  startsWith,
+  endsWith,
+  isEmpty,
+  isNotEmpty,
+  isTrue,
+  isFalse,
+  sameDay,
+  before,
+  after,
+  contentTypeIs;
 
-  const ComparisonOperator(this.label);
-
-  final String label;
+  /// Einstellige Operatoren prüfen nur den linken Wert, ohne Vergleichswert.
+  bool get isUnary => switch (this) {
+    isEmpty || isNotEmpty || isTrue || isFalse => true,
+    _ => false,
+  };
 }
 
 /// Verknüpfung mehrerer Kind-Ausdrücke in einer [GroupCondition].
@@ -53,6 +66,16 @@ class ComparisonCondition extends BranchCondition {
   final String left;
   final ComparisonOperator operator;
   final String right;
+
+  /// Wechselt den Operator; ein einstelliger Operator braucht keinen
+  /// Vergleichswert, ein alter bliebe sonst unsichtbar gespeichert.
+  ComparisonCondition withOperator(ComparisonOperator operator) {
+    return ComparisonCondition(
+      left: left,
+      operator: operator,
+      right: operator.isUnary ? '' : right,
+    );
+  }
 
   ComparisonCondition copyWith({
     String? left,

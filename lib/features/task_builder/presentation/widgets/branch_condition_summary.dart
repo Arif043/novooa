@@ -1,32 +1,21 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
+
+import 'branch_condition_operand_type.dart';
+import 'branch_condition_operator_labels.dart';
+
+export 'branch_condition_operator_labels.dart' show ComparisonOperatorText;
 
 /// Lesbarer Text einer Zweig-Bedingung für die Leinwand, z.B.
-/// „Antwort ist Ja“; ein Zweig ohne Bedingung ist „Sonst“.
-String branchConditionSummary(BranchCondition? condition) {
+/// „Antwort ist Ja“ oder „Kunden hat mehr als 3 Zeilen“; ein Zweig ohne
+/// Bedingung ist „Sonst“. [graph] bestimmt die Typen der Werte.
+String branchConditionSummary(BranchCondition? condition, WorkflowGraph graph) {
   return switch (condition) {
     null => LocaleKeys.ui_sonst.tr(),
-    final ComparisonCondition comparison => _comparisonText(comparison),
-    final GroupCondition group => _groupText(group),
-  };
-}
-
-extension ComparisonOperatorText on ComparisonOperator {
-  String get localizedLabel => switch (this) {
-    ComparisonOperator.equals => LocaleKeys.task_builder_operators_equals.tr(),
-    ComparisonOperator.notEquals =>
-      LocaleKeys.task_builder_operators_notEquals.tr(),
-    ComparisonOperator.greaterThan =>
-      LocaleKeys.task_builder_operators_greaterThan.tr(),
-    ComparisonOperator.greaterThanOrEqual =>
-      LocaleKeys.task_builder_operators_greaterThanOrEqual.tr(),
-    ComparisonOperator.lessThan =>
-      LocaleKeys.task_builder_operators_lessThan.tr(),
-    ComparisonOperator.lessThanOrEqual =>
-      LocaleKeys.task_builder_operators_lessThanOrEqual.tr(),
-    ComparisonOperator.contains =>
-      LocaleKeys.task_builder_operators_contains.tr(),
+    final ComparisonCondition comparison => _comparisonText(comparison, graph),
+    final GroupCondition group => _groupText(group, graph),
   };
 }
 
@@ -39,20 +28,25 @@ extension BooleanCombinatorText on BooleanCombinator {
   };
 }
 
-String _comparisonText(ComparisonCondition condition) {
-  return [
-    _operandText(condition.left),
-    condition.operator.localizedLabel,
+String _comparisonText(ComparisonCondition condition, WorkflowGraph graph) {
+  final hint = operandTypeHintFor(condition.left, graph);
+  final phrase = comparisonPhraseFor(
+    condition.operator,
+    hint,
     _operandText(condition.right),
-  ].join(' ');
+  );
+  return '${_operandText(condition.left)} $phrase';
 }
 
-String _groupText(GroupCondition group) {
+String _groupText(GroupCondition group, WorkflowGraph graph) {
   return group.children
       .map(
         (child) => switch (child) {
-          final GroupCondition nested => '(${_groupText(nested)})',
-          final ComparisonCondition comparison => _comparisonText(comparison),
+          final GroupCondition nested => '(${_groupText(nested, graph)})',
+          final ComparisonCondition comparison => _comparisonText(
+            comparison,
+            graph,
+          ),
         },
       )
       .join(' ${group.combinator.conjunction} ');

@@ -3,6 +3,7 @@ import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/branch_condition_operand_type.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/branch_condition_operators.dart';
 
 // Deckt `operandTypeHintFor` ab — die reine, unit-testbare
 // Typ-Erkennung für Operanden im Branch-Bedingungs-Baukasten. Jeder in der
@@ -36,8 +37,8 @@ void main() {
 
       expect(hint, isA<BooleanTypeHint>());
       expect(operatorsFor(hint), [
-        ComparisonOperator.equals,
-        ComparisonOperator.notEquals,
+        ComparisonOperator.isTrue,
+        ComparisonOperator.isFalse,
       ]);
     },
   );
@@ -54,13 +55,18 @@ void main() {
         ComparisonOperator.equals,
         ComparisonOperator.notEquals,
         ComparisonOperator.contains,
+        ComparisonOperator.notContains,
+        ComparisonOperator.startsWith,
+        ComparisonOperator.endsWith,
+        ComparisonOperator.isEmpty,
+        ComparisonOperator.isNotEmpty,
       ]);
     },
   );
 
   test(
     'isolierter Verweis auf einen Entscheidungs-Prompt liefert EnumTypeHint mit '
-    'seinen choices und nur den Operator "ist"',
+    'seinen choices und den Operatoren "ist" und "ist nicht"',
     () {
       final graph = _graphWith(_decisionPromptNode());
 
@@ -68,7 +74,10 @@ void main() {
 
       expect(hint, isA<EnumTypeHint>());
       expect((hint as EnumTypeHint).values, ['Ja', 'Nein', 'Vielleicht']);
-      expect(operatorsFor(hint), [ComparisonOperator.equals]);
+      expect(operatorsFor(hint), [
+        ComparisonOperator.equals,
+        ComparisonOperator.notEquals,
+      ]);
     },
   );
 
@@ -110,26 +119,31 @@ void main() {
     expect(hint, isA<StringTypeHint>());
   });
 
-  test(
-    'Verweis auf einen untypisierten Baustein-Output liefert UnknownTypeHint '
-    'mit der vollen Operatorliste',
-    () {
-      final graph = _graphWith(
-        const WorkflowNode(
-          id: NodeId('text.1'),
-          title: 'Text',
-          description: '',
-          outputs: [WorkflowOutput.primary('freitext')],
-          config: StringInputNodeConfig(value: ''),
-        ),
-      );
+  test('ein Pfad in den JSON-Inhalt eines Werts liefert UnknownTypeHint '
+      'mit den allgemeinen Operatoren', () {
+    final graph = _graphWith(
+      const WorkflowNode(
+        id: NodeId('text.1'),
+        title: 'Text',
+        description: '',
+        outputs: [WorkflowOutput.primary('freitext')],
+        config: StringInputNodeConfig(value: ''),
+      ),
+    );
 
-      final hint = operandTypeHintFor('{{freitext}}', graph);
+    final hint = operandTypeHintFor('{{freitext.name}}', graph);
 
-      expect(hint, isA<UnknownTypeHint>());
-      expect(operatorsFor(hint), ComparisonOperator.values);
-    },
-  );
+    expect(hint, isA<UnknownTypeHint>());
+    expect(operatorsFor(hint), [
+      ComparisonOperator.equals,
+      ComparisonOperator.notEquals,
+      ComparisonOperator.greaterThan,
+      ComparisonOperator.greaterThanOrEqual,
+      ComparisonOperator.lessThan,
+      ComparisonOperator.lessThanOrEqual,
+      ComparisonOperator.contains,
+    ]);
+  });
 
   test('gemischter Text mit eingebettetem Ausdruck (nicht isoliert) wird wie '
       'ein Literal behandelt (StringTypeHint), da der Rohwert des '

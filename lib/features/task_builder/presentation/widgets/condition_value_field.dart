@@ -14,6 +14,7 @@ class ConditionValueField extends StatefulWidget {
     required this.onChanged,
     this.preferSource = false,
     this.hint = const UnknownTypeHint(),
+    this.helperText,
   });
   final String value;
   final WorkflowGraph graph;
@@ -21,6 +22,7 @@ class ConditionValueField extends StatefulWidget {
   final ValueChanged<String> onChanged;
   final bool preferSource;
   final OperandTypeHint hint;
+  final String? helperText;
   @override
   State<ConditionValueField> createState() => _ConditionValueFieldState();
 }
@@ -186,6 +188,7 @@ class _ConditionValueFieldState extends State<ConditionValueField> {
             decoration: InputDecoration(
               labelText: LocaleKeys.ui_fester_wert.tr(),
               hintText: LocaleKeys.ui_wert_eingeben.tr(),
+              helperText: widget.helperText,
             ),
             onChanged: widget.onChanged,
           ),

@@ -7,6 +7,8 @@ services:
       dockerfile: functions/Dockerfile.local-runtime
     environment:
       PORT: "8080"
+      # Kalendertage in Bedingungen („ist am“) gelten in dieser Zeitzone.
+      TZ: ${TZ:-Europe/Berlin}
       # Liefert die Web-App unter derselben Herkunft aus wie die API — damit
       # entfallen CORS und Mixed Content (siehe
       # docs/notes/runtime-liefert-web-app.md). Ohne Verzeichnis bleibt die

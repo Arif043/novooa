@@ -403,6 +403,25 @@ abstract class LocaleKeys {
       'task_builder.operators.lessThanOrEqual';
   static const task_builder_operators_contains =
       'task_builder.operators.contains';
+  static const task_builder_operators_notContains =
+      'task_builder.operators.notContains';
+  static const task_builder_operators_startsWith =
+      'task_builder.operators.startsWith';
+  static const task_builder_operators_endsWith =
+      'task_builder.operators.endsWith';
+  static const task_builder_operators_isEmpty =
+      'task_builder.operators.isEmpty';
+  static const task_builder_operators_isNotEmpty =
+      'task_builder.operators.isNotEmpty';
+  static const task_builder_operators_isTrue = 'task_builder.operators.isTrue';
+  static const task_builder_operators_isFalse =
+      'task_builder.operators.isFalse';
+  static const task_builder_operators_sameDay =
+      'task_builder.operators.sameDay';
+  static const task_builder_operators_before = 'task_builder.operators.before';
+  static const task_builder_operators_after = 'task_builder.operators.after';
+  static const task_builder_operators_contentTypeIs =
+      'task_builder.operators.contentTypeIs';
   static const task_builder_operators = 'task_builder.operators';
   static const task_builder_combinators_and = 'task_builder.combinators.and';
   static const task_builder_combinators_or = 'task_builder.combinators.or';
@@ -446,6 +465,32 @@ abstract class LocaleKeys {
       'task_builder.generation_options.thinking_modes';
   static const task_builder_generation_options =
       'task_builder.generation_options';
+  static const task_builder_file_operators_isNotEmpty =
+      'task_builder.file_operators.isNotEmpty';
+  static const task_builder_file_operators_isEmpty =
+      'task_builder.file_operators.isEmpty';
+  static const task_builder_file_operators = 'task_builder.file_operators';
+  static const task_builder_table_operators_equals =
+      'task_builder.table_operators.equals';
+  static const task_builder_table_operators_notEquals =
+      'task_builder.table_operators.notEquals';
+  static const task_builder_table_operators_greaterThan =
+      'task_builder.table_operators.greaterThan';
+  static const task_builder_table_operators_greaterThanOrEqual =
+      'task_builder.table_operators.greaterThanOrEqual';
+  static const task_builder_table_operators_lessThan =
+      'task_builder.table_operators.lessThan';
+  static const task_builder_table_operators_lessThanOrEqual =
+      'task_builder.table_operators.lessThanOrEqual';
+  static const task_builder_table_operators = 'task_builder.table_operators';
+  static const task_builder_condition_value_hints_date =
+      'task_builder.condition_value_hints.date';
+  static const task_builder_condition_value_hints_content_type =
+      'task_builder.condition_value_hints.content_type';
+  static const task_builder_condition_value_hints_row_count =
+      'task_builder.condition_value_hints.row_count';
+  static const task_builder_condition_value_hints =
+      'task_builder.condition_value_hints';
   static const task_builder = 'task_builder';
   static const settings_language_title = 'settings.language.title';
   static const settings_language_description = 'settings.language.description';

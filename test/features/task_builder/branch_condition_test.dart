@@ -127,4 +127,18 @@ void main() {
       expect(relabeled.label, 'Neu');
     },
   );
+
+  test('ein einstelliger Operator leert den Vergleichswert', () {
+    const condition = ComparisonCondition(
+      left: '{{Bezahlt}}',
+      operator: ComparisonOperator.equals,
+      right: 'true',
+    );
+
+    final changed = condition.withOperator(ComparisonOperator.isTrue);
+
+    expect(changed.operator, ComparisonOperator.isTrue);
+    expect(changed.right, '');
+    expect(condition.withOperator(ComparisonOperator.notEquals).right, 'true');
+  });
 }

@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/branch_condition_summary.dart';
 
 const _antwortIstJa = ComparisonCondition(
@@ -8,9 +10,11 @@ const _antwortIstJa = ComparisonCondition(
   right: 'Ja',
 );
 
+final _graph = WorkflowGraph.empty();
+
 void main() {
   test('ein Vergleich zeigt Wertname, Operator und festen Wert', () {
-    expect(branchConditionSummary(_antwortIstJa), 'Antwort ist Ja');
+    expect(branchConditionSummary(_antwortIstJa, _graph), 'Antwort ist Ja');
   });
 
   test('ein Verweis rechts wird wie links ohne Klammern gezeigt', () {
@@ -20,7 +24,10 @@ void main() {
       right: '{{Grenze}}',
     );
 
-    expect(branchConditionSummary(condition), 'Summe größer als Grenze');
+    expect(
+      branchConditionSummary(condition, _graph),
+      'Summe größer als Grenze',
+    );
   });
 
   test('leere Operanden erscheinen als Auslassung', () {
@@ -30,7 +37,7 @@ void main() {
       right: ' ',
     );
 
-    expect(branchConditionSummary(condition), '… ist …');
+    expect(branchConditionSummary(condition, _graph), '… ist …');
   });
 
   test(
@@ -59,13 +66,59 @@ void main() {
       );
 
       expect(
-        branchConditionSummary(condition),
+        branchConditionSummary(condition, _graph),
         'Antwort ist Ja und (Land enthält DE oder Land ist nicht AT)',
       );
     },
   );
 
   test('ein Zweig ohne Bedingung heißt „Sonst“', () {
-    expect(branchConditionSummary(null), 'Sonst');
+    expect(branchConditionSummary(null, _graph), 'Sonst');
+  });
+
+  test('einstellige Operatoren zeigen keinen Vergleichswert', () {
+    const condition = ComparisonCondition(
+      left: '{{Bezahlt}}',
+      operator: ComparisonOperator.isTrue,
+      right: '',
+    );
+
+    expect(branchConditionSummary(condition, _graph), 'Bezahlt ist wahr');
+  });
+
+  test('Bilder und Tabellen haben eigene Formulierungen', () {
+    final graph = WorkflowGraph(
+      nodes: [
+        WorkflowNode(
+          id: const NodeId('bild'),
+          title: 'Bild',
+          description: '',
+          outputs: const [WorkflowOutput.primary('Scan')],
+          config: MediaInputNodeConfig.initial(),
+        ),
+        const WorkflowNode(
+          id: NodeId('tabelle'),
+          title: 'Tabelle',
+          description: '',
+          outputs: [WorkflowOutput.primary('Kunden')],
+          config: TableFromCollectionNodeConfig(collectionName: 'Kunden'),
+        ),
+      ],
+      edges: const [],
+    );
+    String summary(String left, ComparisonOperator operator, String right) {
+      final condition = ComparisonCondition(
+        left: left,
+        operator: operator,
+        right: right,
+      );
+      return branchConditionSummary(condition, graph);
+    }
+
+    expect(summary('{{Scan}}', ComparisonOperator.isEmpty, ''), 'Scan fehlt');
+    expect(
+      summary('{{Kunden}}', ComparisonOperator.greaterThan, '3'),
+      'Kunden hat mehr als 3 Zeilen',
+    );
   });
 }

@@ -89,10 +89,14 @@ class CanvasLink {
 /// Containment links additionally make conditional and loop subplans visible.
 class WorkflowCanvasLayout {
   WorkflowCanvasLayout(WorkflowGraph graph, {double textScale = 1})
-    : nodeHeight = cardHeight * textScale.clamp(1.0, 3.0) {
+    : nodeHeight = cardHeight * textScale.clamp(1.0, 3.0),
+      _rootGraph = graph {
     _collect(graph, const BausteinInsertion());
     _arrange();
   }
+
+  /// Bedingungen auf den Zweig-Chips brauchen die Typen aller Werte.
+  final WorkflowGraph _rootGraph;
 
   static const cardWidth = 340.0;
   static const cardHeight = 120.0;
@@ -173,7 +177,7 @@ class WorkflowCanvasLayout {
                 BausteinInsertion(owner: node.id, branchId: branch.id),
                 parent: node.id.value,
                 // Der Chip zeigt die Bedingung selbst, nicht umbenennbar.
-                label: branchConditionSummary(branch.condition),
+                label: branchConditionSummary(branch.condition, _rootGraph),
               ),
             );
           }

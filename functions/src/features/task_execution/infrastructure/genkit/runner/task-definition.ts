@@ -116,6 +116,17 @@ export const comparisonOperatorSchema = z.enum([
   "lessThan",
   "lessThanOrEqual",
   "contains",
+  "notContains",
+  "startsWith",
+  "endsWith",
+  "isEmpty",
+  "isNotEmpty",
+  "isTrue",
+  "isFalse",
+  "sameDay",
+  "before",
+  "after",
+  "contentTypeIs",
 ]);
 
 export const booleanCombinatorSchema = z.enum(["and", "or", "xor"]);

@@ -253,7 +253,18 @@
       "greaterThanOrEqual": "greater than or equal to",
       "lessThan": "less than",
       "lessThanOrEqual": "less than or equal to",
-      "contains": "contains"
+      "contains": "contains",
+      "notContains": "does not contain",
+      "startsWith": "starts with",
+      "endsWith": "ends with",
+      "isEmpty": "is empty",
+      "isNotEmpty": "is not empty",
+      "isTrue": "is true",
+      "isFalse": "is false",
+      "sameDay": "is on",
+      "before": "is before",
+      "after": "is after",
+      "contentTypeIs": "file type is"
     },
     "combinators": {
       "and": "and",
@@ -280,6 +291,23 @@
         "medium": "Medium",
         "high": "High"
       }
+    },
+    "file_operators": {
+      "isNotEmpty": "exists",
+      "isEmpty": "is missing"
+    },
+    "table_operators": {
+      "equals": "has exactly {} rows",
+      "notEquals": "does not have exactly {} rows",
+      "greaterThan": "has more than {} rows",
+      "greaterThanOrEqual": "has at least {} rows",
+      "lessThan": "has fewer than {} rows",
+      "lessThanOrEqual": "has at most {} rows"
+    },
+    "condition_value_hints": {
+      "date": "YYYY-MM-DD, e.g. 2026-10-18",
+      "content_type": "e.g. image/png or image/*",
+      "row_count": "Number of rows"
     }
   },
   "settings": {

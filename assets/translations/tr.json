@@ -253,7 +253,18 @@
       "greaterThanOrEqual": "büyük veya eşittir",
       "lessThan": "küçüktür",
       "lessThanOrEqual": "küçük veya eşittir",
-      "contains": "içerir"
+      "contains": "içerir",
+      "notContains": "içermez",
+      "startsWith": "ile başlar",
+      "endsWith": "ile biter",
+      "isEmpty": "boştur",
+      "isNotEmpty": "boş değildir",
+      "isTrue": "doğrudur",
+      "isFalse": "yanlıştır",
+      "sameDay": "tarihindedir",
+      "before": "öncesindedir",
+      "after": "sonrasındadır",
+      "contentTypeIs": "dosya türü"
     },
     "combinators": {
       "and": "ve",
@@ -280,6 +291,23 @@
         "medium": "Orta",
         "high": "Yüksek"
       }
+    },
+    "file_operators": {
+      "isNotEmpty": "mevcuttur",
+      "isEmpty": "eksiktir"
+    },
+    "table_operators": {
+      "equals": "tam olarak {} satır içerir",
+      "notEquals": "tam olarak {} satır içermez",
+      "greaterThan": "{} satırdan fazla içerir",
+      "greaterThanOrEqual": "en az {} satır içerir",
+      "lessThan": "{} satırdan az içerir",
+      "lessThanOrEqual": "en fazla {} satır içerir"
+    },
+    "condition_value_hints": {
+      "date": "YYYY-AA-GG, örn. 2026-10-18",
+      "content_type": "örn. image/png veya image/*",
+      "row_count": "Satır sayısı"
     }
   },
   "settings": {

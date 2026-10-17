@@ -465,8 +465,18 @@ void main() {
               ),
               ComparisonCondition(
                 left: '{{z}}',
-                operator: ComparisonOperator.contains,
+                operator: ComparisonOperator.startsWith,
                 right: 'immer',
+              ),
+              ComparisonCondition(
+                left: '{{Eingang}}',
+                operator: ComparisonOperator.before,
+                right: '2026-01-01',
+              ),
+              ComparisonCondition(
+                left: '{{Bezahlt}}',
+                operator: ComparisonOperator.isTrue,
+                right: '',
               ),
             ],
           ),

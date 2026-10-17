@@ -163,6 +163,29 @@ void main() {
     await cubit.close();
   });
 
+  test('ein Wechsel auf einen einstelligen Operator speichert keinen '
+      'Vergleichswert', () async {
+    final cubit = await _cubitFor(_branchFreeTask());
+    await cubit.addConditionBranch(conditionalId);
+    final branch = _configOf(cubit).branches[0];
+    const comparison = ComparisonCondition(
+      left: '{{Gefunden}}',
+      operator: ComparisonOperator.equals,
+      right: 'true',
+    );
+
+    await cubit.updateBranchCondition(
+      conditionalNodeId: conditionalId,
+      branchId: branch.id,
+      condition: comparison.withOperator(ComparisonOperator.isTrue),
+    );
+
+    final saved = _configOf(cubit).branches[0].condition as ComparisonCondition;
+    expect(saved.operator, ComparisonOperator.isTrue);
+    expect(saved.right, isEmpty);
+    await cubit.close();
+  });
+
   test(
     'updateBranchCondition lässt den Sonst-Branch unangetastet (er hat '
     'per Definition kein condition-Feld, das ersetzt werden könnte)',

@@ -6,7 +6,9 @@ import '../../domain/entities/workflow_graph.dart';
 import 'branch_condition_editor.dart';
 import 'branch_condition_operand_type.dart';
 import 'condition_value_field.dart';
-import 'branch_condition_summary.dart';
+import 'branch_condition_operator_labels.dart';
+import 'branch_condition_operators.dart';
+import 'condition_value_helper.dart';
 
 class ComparisonRow extends StatelessWidget {
   const ComparisonRow({
@@ -39,13 +41,11 @@ class ComparisonRow extends StatelessWidget {
             preferSource: true,
             onChanged: (value) {
               final allowed = operatorsFor(operandTypeHintFor(value, graph));
+              final operator = allowed.contains(comparison.operator)
+                  ? comparison.operator
+                  : allowed.first;
               onChanged(
-                comparison.copyWith(
-                  left: value,
-                  operator: allowed.contains(comparison.operator)
-                      ? comparison.operator
-                      : ComparisonOperator.equals,
-                ),
+                comparison.copyWith(left: value).withOperator(operator),
               );
             },
           ),
@@ -61,23 +61,27 @@ class ComparisonRow extends StatelessWidget {
               for (final operator in operators)
                 DropdownMenuItem(
                   value: operator,
-                  child: Text(operator.localizedLabel),
+                  child: Text(operatorLabelFor(operator, hint)),
                 ),
             ],
             onChanged: (value) {
               if (value != null) {
-                onChanged(comparison.copyWith(operator: value));
+                onChanged(comparison.withOperator(value));
               }
             },
           ),
-          const SizedBox(height: 8),
-          ConditionValueField(
-            label: LocaleKeys.ui_vergleichswert.tr(),
-            value: comparison.right,
-            graph: graph,
-            hint: hint,
-            onChanged: (value) => onChanged(comparison.copyWith(right: value)),
-          ),
+          if (!comparison.operator.isUnary) ...[
+            const SizedBox(height: 8),
+            ConditionValueField(
+              label: LocaleKeys.ui_vergleichswert.tr(),
+              value: comparison.right,
+              graph: graph,
+              hint: comparedValueHintFor(hint, comparison.operator),
+              helperText: conditionValueHelperFor(hint, comparison.operator),
+              onChanged: (value) =>
+                  onChanged(comparison.copyWith(right: value)),
+            ),
+          ],
           const SizedBox(height: 8),
           Wrap(
             alignment: WrapAlignment.end,

@@ -1,8 +1,8 @@
 import '../../domain/entities/node_config.dart';
-import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/task_execution_result.dart';
+import '../../domain/entities/workflow_graph.dart';
 import '../../domain/entities/workflow_node.dart';
-import '../../domain/entities/workflow_node_outputs.dart';
+import '../../domain/entities/workflow_output_types.dart';
 
 /// Grobe, rein UI-seitige Typ-Einschätzung eines Operanden (Template-
 /// Ausdruck oder Literal) innerhalb einer [ComparisonCondition] — steuert
@@ -13,8 +13,8 @@ sealed class OperandTypeHint {
   const OperandTypeHint();
 }
 
-/// Kein Rückschluss möglich (z.B. Referenz auf einen untypisierten
-/// Baustein-Output oder gemischter Text) — volle Operatorliste, Freitext.
+/// Kein Rückschluss möglich (z.B. gemischter Text oder ein Pfad in JSON) —
+/// die allgemeinen Operatoren, Freitext.
 class UnknownTypeHint extends OperandTypeHint {
   const UnknownTypeHint();
 }
@@ -31,18 +31,34 @@ class BooleanTypeHint extends OperandTypeHint {
   const BooleanTypeHint();
 }
 
+class DateTimeTypeHint extends OperandTypeHint {
+  const DateTimeTypeHint();
+}
+
+class JsonTypeHint extends OperandTypeHint {
+  const JsonTypeHint();
+}
+
+/// Datei, Bild oder Audio — alle sind Verweise auf eine Team-Datei.
+class FileTypeHint extends OperandTypeHint {
+  const FileTypeHint();
+}
+
+class TableTypeHint extends OperandTypeHint {
+  const TableTypeHint();
+}
+
 /// Ein fest umrissener Wertevorrat (Entscheidungs-Prompt-`choices` oder
-/// Dialogeingabe-`options` bei Auswahl/Radio) — Operator ist immer "ist",
-/// der Gegenoperand wird auf [values] beschränkt statt Freitext zu sein.
+/// Dialogeingabe-`options` bei Auswahl/Radio) — der Gegenoperand wird auf
+/// [values] beschränkt statt Freitext zu sein.
 class EnumTypeHint extends OperandTypeHint {
   const EnumTypeHint(this.values);
   final List<String> values;
 }
 
-/// Nur ein isolierter `{{knoten(.feld)}}`-Ausdruck (die gesamte Eingabe,
-/// keine Umgebungszeichen) lässt sich einer bekannten Feld-/Choice-Quelle
-/// zuordnen — exakt dieselbe Regel wie beim `resolveValue` des
-/// Backend-Resolvers (`isolatedExpressionPattern`), da nur dort der rohe
+/// Nur ein isolierter `{{Name}}`-Ausdruck (die gesamte Eingabe, keine
+/// Umgebungszeichen) lässt sich einem Wert zuordnen — exakt dieselbe Regel
+/// wie beim `resolveValue` des Backend-Resolvers, da nur dort der rohe
 /// typisierte Wert statt eines gerenderten Strings erhalten bleibt.
 final _isolatedExpressionPattern = RegExp(
   r'^\{\{\s*([a-zA-Z_][\w]*(?:\.[a-zA-Z_][\w]*|\.\d+)*)\s*\}\}$',
@@ -52,35 +68,9 @@ OperandTypeHint operandTypeHintFor(String expression, WorkflowGraph graph) {
   final match = _isolatedExpressionPattern.firstMatch(expression.trim());
   if (match == null) return _literalTypeHint(expression.trim());
   final segments = match.group(1)!.split('.');
-  return _fieldTypeHintFor(segments.first, graph) ??
-      (segments.length == 1
-          ? _decisionTypeHintFor(segments.first, graph)
-          : null) ??
-      const UnknownTypeHint();
-}
-
-List<ComparisonOperator> operatorsFor(OperandTypeHint hint) {
-  return switch (hint) {
-    EnumTypeHint() => const [ComparisonOperator.equals],
-    NumberTypeHint() => const [
-      ComparisonOperator.equals,
-      ComparisonOperator.notEquals,
-      ComparisonOperator.greaterThan,
-      ComparisonOperator.greaterThanOrEqual,
-      ComparisonOperator.lessThan,
-      ComparisonOperator.lessThanOrEqual,
-    ],
-    BooleanTypeHint() => const [
-      ComparisonOperator.equals,
-      ComparisonOperator.notEquals,
-    ],
-    StringTypeHint() => const [
-      ComparisonOperator.equals,
-      ComparisonOperator.notEquals,
-      ComparisonOperator.contains,
-    ],
-    UnknownTypeHint() => ComparisonOperator.values,
-  };
+  // Ein Pfad führt in den JSON-Inhalt eines Werts; dessen Typ ist unbekannt.
+  if (segments.length > 1) return const UnknownTypeHint();
+  return _valueTypeHintFor(segments.single, graph) ?? const UnknownTypeHint();
 }
 
 /// Reines Literal ohne `{{}}` — Zahl/Boolean werden ad-hoc aus der
@@ -93,84 +83,56 @@ OperandTypeHint _literalTypeHint(String literal) {
   return const StringTypeHint();
 }
 
-/// Felder einer strukturierten Prompt-Ausgabe, Dialogeingabe oder eines
-/// Scripts werden über den Namen ihres Werts adressiert (`outputs`); der
-/// Schlüssel dieses Werts ist der Feldname, über den sich der Typ findet.
-OperandTypeHint? _fieldTypeHintFor(String name, WorkflowGraph graph) {
+/// Sucht den Wert mit diesem Namen im ganzen Graphen; sein Schlüssel und die
+/// Konfiguration des Bausteins bestimmen den Typ ([outputTypeOf]).
+OperandTypeHint? _valueTypeHintFor(String name, WorkflowGraph graph) {
   for (final node in _allNodesIn(graph)) {
     final key = _keyOfOutputNamed(node, name);
     if (key == null) continue;
-    switch (node.config) {
-      case PromptNodeConfig(
-        outputType: PromptOutputType.structured,
-        :final structuredFields,
-      ):
-        for (final field in structuredFields) {
-          if (field.name.trim() == key) return _structuredFieldHint(field.type);
-        }
-      case DialogInputNodeConfig(:final fields):
-        for (final field in fields) {
-          if (field.name.trim() == key) return _dialogFieldHint(field);
-        }
-      case final ScriptNodeConfig config:
-        for (final output in scriptWorkflowOutputsOf(config)) {
-          if (output.name == key) return _scriptOutputHint(output.type);
-        }
-      default:
-        break;
-    }
+    return _choiceHintFor(node.config, key) ??
+        _hintForType(outputTypeOf(node.config, key));
   }
   return null;
+}
+
+/// Entscheidungs-Prompt (Hauptwert) und Dialog-Auswahlfelder sind fachlich
+/// ein Enum, kein Text und kein Wahrheitswert (auch bei genau zwei Werten).
+EnumTypeHint? _choiceHintFor(NodeConfig config, String key) {
+  switch (config) {
+    case PromptNodeConfig(outputType: PromptOutputType.decision, :final choices)
+        when key == WorkflowOutput.primaryOutputKey:
+      return EnumTypeHint(choices);
+    case DialogInputNodeConfig(:final fields):
+      for (final field in fields) {
+        if (field.name.trim() != key) continue;
+        if (field.type == DialogInputFieldType.selection ||
+            field.type == DialogInputFieldType.radio) {
+          return EnumTypeHint(field.options);
+        }
+      }
+    default:
+      break;
+  }
+  return null;
+}
+
+OperandTypeHint _hintForType(NodeOutputType type) {
+  return switch (type) {
+    NodeOutputType.string => const StringTypeHint(),
+    NodeOutputType.number => const NumberTypeHint(),
+    NodeOutputType.boolean => const BooleanTypeHint(),
+    NodeOutputType.datetime => const DateTimeTypeHint(),
+    NodeOutputType.json => const JsonTypeHint(),
+    NodeOutputType.file ||
+    NodeOutputType.media ||
+    NodeOutputType.audio => const FileTypeHint(),
+    NodeOutputType.table => const TableTypeHint(),
+  };
 }
 
 String? _keyOfOutputNamed(WorkflowNode node, String name) {
   for (final output in node.outputs) {
     if (output.name.trim() == name) return output.key;
-  }
-  return null;
-}
-
-OperandTypeHint _scriptOutputHint(NodeOutputType type) {
-  return switch (type) {
-    NodeOutputType.string => const StringTypeHint(),
-    NodeOutputType.number => const NumberTypeHint(),
-    NodeOutputType.boolean => const BooleanTypeHint(),
-    _ => const UnknownTypeHint(),
-  };
-}
-
-OperandTypeHint _structuredFieldHint(StructuredFieldType type) {
-  return switch (type) {
-    StructuredFieldType.number => const NumberTypeHint(),
-    StructuredFieldType.boolean => const BooleanTypeHint(),
-    StructuredFieldType.string => const StringTypeHint(),
-  };
-}
-
-OperandTypeHint _dialogFieldHint(DialogInputField field) {
-  return switch (field.type) {
-    DialogInputFieldType.number ||
-    DialogInputFieldType.integer ||
-    DialogInputFieldType.decimal => const NumberTypeHint(),
-    DialogInputFieldType.boolean => const BooleanTypeHint(),
-    DialogInputFieldType.selection ||
-    DialogInputFieldType.radio => EnumTypeHint(field.options),
-    DialogInputFieldType.string => const StringTypeHint(),
-  };
-}
-
-/// Ein Entscheidungs-Prompt hat keinen Feldnamen, sondern adressiert sich
-/// über den Namen seines Hauptwerts — fachlich ein Enum aus den vom Nutzer
-/// definierten `choices`, kein Wahrheitswert (auch bei genau zwei Choices).
-OperandTypeHint? _decisionTypeHintFor(String valueName, WorkflowGraph graph) {
-  for (final node in _allNodesIn(graph)) {
-    if (node.primaryOutputName != valueName) continue;
-    if (node.config case PromptNodeConfig(
-      outputType: PromptOutputType.decision,
-      :final choices,
-    )) {
-      return EnumTypeHint(choices);
-    }
   }
   return null;
 }
