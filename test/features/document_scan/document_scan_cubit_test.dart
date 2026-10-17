@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/features/document_scan/domain/entities/document_scan_failure.dart';
+import 'package:syscat2/features/document_scan/domain/entities/scan_quad.dart';
+import 'package:syscat2/features/document_scan/domain/services/scan_quad_stabilizer.dart';
 import 'package:syscat2/features/document_scan/domain/usecases/open_document_scan_session.dart';
 import 'package:syscat2/features/document_scan/presentation/cubits/document_scan_cubit.dart';
 import 'package:syscat2/features/document_scan/presentation/cubits/document_scan_state.dart';
@@ -13,6 +15,7 @@ const _interval = Duration(milliseconds: 5);
 
 DocumentScanCubit _cubit(FakeDocumentScanner scanner) => DocumentScanCubit(
   OpenDocumentScanSession(scanner),
+  ScanQuadStabilizer(),
   detectionInterval: _interval,
 );
 
@@ -39,22 +42,33 @@ void main() {
   });
 
   test(
-    'zeigt die erkannte Kontur und lässt sie bei kurzen Aussetzern stehen',
+    'zeigt die Kontur erst bestätigt und blendet sie nach Aussetzern aus',
     () async {
       final session = FakeDocumentScanSession(
-        detections: [documentQuad, null, null],
+        detections: [documentQuad, documentQuad, null, null],
       );
       final cubit = _cubit(FakeDocumentScanner(Success(session)));
       addTearDown(cubit.close);
+      final shownQuads = <ScanQuad?>[];
+      final subscription = cubit.stream.listen((s) {
+        if (s is DocumentScanScanning) shownQuads.add(s.quad);
+      });
+      addTearDown(subscription.cancel);
       await cubit.start();
 
       await _until(cubit, (s) => s is DocumentScanScanning && s.quad != null);
-      await Future<void>.delayed(_interval * 6);
+      await Future<void>.delayed(_interval * 12);
 
+      expect(shownQuads.skip(1).take(4), [
+        null,
+        documentQuad,
+        documentQuad,
+        documentQuad,
+      ]);
       expect(
         (cubit.state as DocumentScanScanning).quad,
         isNull,
-        reason: 'nach drei Bildern ohne Treffer verschwindet die Kontur',
+        reason: 'nach fünf Bildern ohne Treffer verschwindet die Kontur',
       );
     },
   );
@@ -89,7 +103,9 @@ void main() {
   test(
     'die Aufnahme nutzt die zuletzt erkannte Kontur und zeigt die Vorschau',
     () async {
-      final session = FakeDocumentScanSession(detections: [documentQuad]);
+      final session = FakeDocumentScanSession(
+        detections: [documentQuad, documentQuad],
+      );
       final cubit = _cubit(FakeDocumentScanner(Success(session)));
       addTearDown(cubit.close);
       await cubit.start();
@@ -97,7 +113,7 @@ void main() {
 
       await cubit.capture();
 
-      expect(session.capturedWith, same(documentQuad));
+      expect(session.capturedWith, documentQuad);
       final review = cubit.state as DocumentScanReview;
       expect(review.document.bytes, Uint8List.fromList([1, 2, 3]));
     },

@@ -9,13 +9,15 @@ Gehört zu: [Dokumentenscanner](../index/dokumentscanner.md)
 - Eine Seite, Datei heißt immer `scan.jpg`.
 - Weißes Papier auf weißem Tisch wird oft nicht erkannt (dann ganzes Bild);
   Ecken lassen sich nicht von Hand nachziehen.
-- Gesucht wird die größte Kante; ohne klaren Rand oder teilweise außerhalb
-  kann die Kontur danebenliegen.
-- Nicht automatisiert getestet: echte Kamera. Einmal von Hand in Chrome mit
+- Das Blatt muss ganz im Bild liegen; ragt es über den Bildrand, gibt es keine
+  Kontur. Eine umgeknickte Ecke ragt etwas aus der Kontur heraus.
+- Nicht automatisiert getestet: echte Kamera. Von Hand in Chrome mit
   Testkamera (`--use-fake-device-for-media-stream`, Video eines schrägen
   Blatts) geprüft: Erkennung auf ~0,6 % genau, Aufnahme, Vorschau, Übernehmen,
-  verweigerte Berechtigung, keine Kamera, unsichere Seite. Nicht geprüft: echte
-  Handys, Safari, Firefox.
+  verweigerte Berechtigung, keine Kamera, unsichere Seite. Die Erkennung lief
+  außerdem auf zwei Bildern eines iPhones (Kassenbon auf dunklem Holz).
+  Ein vollständiger Durchlauf auf echten Handys, in Safari und Firefox steht
+  aus.
 
 ## Siehe auch
 

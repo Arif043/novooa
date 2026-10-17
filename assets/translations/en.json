@@ -597,7 +597,8 @@
     "files_initial_title": "A home for your files",
     "files_initial_body": "Upload documents, organize them in folders and make them available to your tasks.",
     "files_initial_upload": "Upload first file",
-    "files_initial_folder": "New folder"
+    "files_initial_folder": "New folder",
+    "anmeldung_fehlgeschlagen_mit_grund": "Sign-in failed: {}"
   },
   "machine_learning": {
     "model_import": {

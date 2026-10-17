@@ -4,7 +4,7 @@ import '../network/session_aware_workspace_api_client.dart';
 import '../network/workspace_api_client.dart';
 import '../network/workspace_binary_client.dart';
 import '../network/workspace_realtime_channel.dart';
-import '../runtime/runtime_credential_store.dart';
+import '../runtime/runtime_credential_store_factory.dart';
 import '../runtime/runtime_endpoint.dart';
 import '../runtime/runtime_profile.dart';
 import '../runtime/runtime_session_events.dart';
@@ -18,7 +18,7 @@ typedef StandaloneTransportRegistration =
     void Function(GetIt locator, RuntimeProfile profile);
 
 void registerHttpWorkspaceTransport(GetIt locator, RuntimeProfile profile) {
-  final credentials = SecureRuntimeCredentialStore();
+  final credentials = createRuntimeCredentialStore();
   final endpoint = RuntimeEndpoint.fromUri(profile.workspaceApiUri);
   Future<String?> authHeader() async {
     final token = await credentials.sessionToken(endpoint.address);

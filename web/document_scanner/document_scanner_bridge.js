@@ -1,9 +1,13 @@
-// Brücke zwischen dem Flutter-Client und jscanify/OpenCV.js. Die schweren Bibliotheken (ca. 9 MB)
+// Brücke zwischen dem Flutter-Client und OpenCV.js; jscanify begradigt nur noch. Die schweren Bibliotheken (ca. 9 MB)
 // werden erst beim ersten Scan nachgeladen, nicht beim Start der App.
-const DETECTION_WIDTH = 480;
+import {findDocumentQuad} from './document_quad_detector.js';
+
+const DETECTION_WIDTH = 640;
+// Bei der Aufnahme wird auf dem aufgenommenen Bild selbst noch einmal genauer gesucht.
+const CAPTURE_DETECTION_WIDTH = 1280;
+// Weicht die neue Erkennung weiter von der angezeigten Kontur ab, gilt die angezeigte.
+const MAX_CAPTURE_DEVIATION = 0.04;
 const MAX_RESULT_SIDE = 2400;
-const MIN_AREA_RATIO = 0.15;
-const MAX_AREA_RATIO = 0.97;
 const JPEG_QUALITY = 0.92;
 // Die erkannte Kontur liegt auf dem Papierrand; ein kleiner Einzug verhindert einen Streifen vom Tisch im Ergebnis.
 const EDGE_INSET = 0.006;
@@ -62,39 +66,40 @@ function openCvReady() {
 }
 
 function detectQuad(video) {
-  const frame = drawFrame(video, DETECTION_WIDTH);
-  if (!frame) return null;
-  const image = cv.imread(frame.canvas);
+  const frame = drawFrame(video, DETECTION_WIDTH, detectionCanvas);
+  const quad = frame ? quadIn(frame.canvas) : null;
+  return quad ? JSON.stringify(quad) : null;
+}
+
+// Ecken als Anteil der Bildgröße (0..1), Reihenfolge: links oben, rechts oben, rechts unten, links unten.
+function quadIn(canvas) {
+  const image = cv.imread(canvas);
   try {
-    const contour = scanner.findPaperContour(image);
-    if (!contour) return null;
-    try {
-      return quadJsonFrom(scanner.getCornerPoints(contour), frame.canvas);
-    } finally {
-      contour.delete();
-    }
+    const corners = findDocumentQuad(cv, image);
+    return corners ? corners.flatMap((p) => [p.x / canvas.width, p.y / canvas.height]) : null;
   } finally {
     image.delete();
   }
 }
 
-// Ecken als Anteil der Bildgröße (0..1), Reihenfolge: links oben, rechts oben, rechts unten, links unten.
-function quadJsonFrom(corners, canvas) {
-  const {topLeftCorner: a, topRightCorner: b, bottomRightCorner: c, bottomLeftCorner: d} = corners;
-  if (!a || !b || !c || !d) return null;
-  const area = polygonArea([a, b, c, d]) / (canvas.width * canvas.height);
-  if (area < MIN_AREA_RATIO || area > MAX_AREA_RATIO) return null;
-  const share = (p) => [p.x / canvas.width, p.y / canvas.height];
-  return JSON.stringify([...share(a), ...share(b), ...share(c), ...share(d)]);
-}
-
 async function captureJpeg(video, quadJson) {
-  const frame = drawFrame(video, Infinity);
+  const frame = drawFrame(video, Infinity, document.createElement('canvas'));
   if (!frame) throw new Error('Kein Kamerabild verfügbar.');
-  const source = quadJson ? flattened(frame.canvas, JSON.parse(quadJson)) : frame.canvas;
+  const quad = quadJson ? quadForCapture(frame.canvas, JSON.parse(quadJson)) : null;
+  const source = quad ? flattened(frame.canvas, quad) : frame.canvas;
   const blob = await new Promise((resolve) => source.toBlob(resolve, 'image/jpeg', JPEG_QUALITY));
   if (!blob) throw new Error('Das Bild konnte nicht erzeugt werden.');
   return blob.arrayBuffer();
+}
+
+// Die angezeigte Kontur ist geglättet und hinkt ein Bild hinterher; die Erkennung auf dem aufgenommenen
+// Bild ist genauer, solange sie dasselbe Blatt meint.
+function quadForCapture(canvas, shownQuad) {
+  const sample = drawFrame(canvas, CAPTURE_DETECTION_WIDTH, document.createElement('canvas'));
+  const fresh = sample ? quadIn(sample.canvas) : null;
+  if (!fresh) return shownQuad;
+  const deviation = Math.max(...fresh.map((value, i) => Math.abs(value - shownQuad[i])));
+  return deviation <= MAX_CAPTURE_DEVIATION ? fresh : shownQuad;
 }
 
 function flattened(canvas, quad) {
@@ -122,25 +127,17 @@ function resultSize(a, b, c, d) {
   return {width: Math.round(width * scale), height: Math.round(height * scale)};
 }
 
-function drawFrame(video, maxWidth) {
-  const {videoWidth: width, videoHeight: height} = video;
+function drawFrame(source, maxWidth, canvas) {
+  const width = source.videoWidth ?? source.width;
+  const height = source.videoHeight ?? source.height;
   if (!width || !height) return null;
   const scale = Math.min(1, maxWidth / width);
-  const canvas = maxWidth === Infinity ? document.createElement('canvas') : detectionCanvas;
   canvas.width = Math.round(width * scale);
   canvas.height = Math.round(height * scale);
-  canvas.getContext('2d', {willReadFrequently: true}).drawImage(video, 0, 0, canvas.width, canvas.height);
+  canvas.getContext('2d', {willReadFrequently: true}).drawImage(source, 0, 0, canvas.width, canvas.height);
   return {canvas};
 }
 
 function distance(p, q) {
   return Math.hypot(p.x - q.x, p.y - q.y);
-}
-
-function polygonArea(points) {
-  const twice = points.reduce((sum, p, i) => {
-    const next = points[(i + 1) % points.length];
-    return sum + (p.x * next.y - next.x * p.y);
-  }, 0);
-  return Math.abs(twice) / 2;
 }

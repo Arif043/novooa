@@ -12,7 +12,7 @@ import 'http_runtime_availability.dart';
 import 'runtime_connection_cubit.dart';
 import 'runtime_connection_page.dart';
 import 'runtime_connection_state.dart';
-import 'runtime_credential_store.dart';
+import 'runtime_credential_store_factory.dart';
 import 'runtime_endpoint.dart';
 import 'runtime_endpoint_preferences.dart';
 import 'runtime_kind_preferences.dart';
@@ -60,7 +60,7 @@ class _RuntimeConnectionGateState extends State<RuntimeConnectionGate> {
     super.initState();
     _cubit = RuntimeConnectionCubit(
       RuntimeEndpointPreferences(SharedPreferencesAsync()),
-      SecureRuntimeCredentialStore(),
+      createRuntimeCredentialStore(),
       const HttpRuntimeLoginClient(),
       const HttpRuntimeAvailability(),
       onboarding: const HttpRuntimeOnboardingClient(),

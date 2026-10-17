@@ -11,4 +11,5 @@ Diese Dateien werden unverändert mitgeliefert und erst beim ersten Scan geladen
 Die Version des enthaltenen OpenCV-Builds ist in der Datei selbst nicht
 vermerkt; sie stammt aus dem npm-Paket `jscanify@1.4.3`.
 
-`document_scanner_bridge.js` ist eigener Code von novooa.
+`document_scanner_bridge.js` und `document_quad_detector.js` sind eigener Code von
+novooa. jscanify wird nur noch zum Begradigen genutzt (`extractPaper`).

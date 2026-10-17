@@ -4,25 +4,25 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/scan_quad.dart';
 import '../../domain/repositories/document_scanner.dart';
+import '../../domain/services/scan_quad_stabilizer.dart';
 import '../../domain/usecases/open_document_scan_session.dart';
 import 'document_scan_state.dart';
 
 class DocumentScanCubit extends Cubit<DocumentScanState> {
   DocumentScanCubit(
-    this._openSession, {
-    this.detectionInterval = const Duration(milliseconds: 200),
+    this._openSession,
+    this._stabilizer, {
+    this.detectionInterval = const Duration(milliseconds: 150),
   }) : super(const DocumentScanOpening());
 
-  /// Nach so vielen Bildern ohne Treffer verschwindet die Kontur; kurze
-  /// Aussetzer lassen sie stehen, damit sie nicht flackert.
-  static const int _missedFramesBeforeHiding = 3;
-
   final OpenDocumentScanSession _openSession;
+
+  /// Glättet die Erkennungen, damit die Kontur ruhig steht und nicht flackert.
+  final ScanQuadStabilizer _stabilizer;
   final Duration detectionInterval;
 
   DocumentScanSession? _session;
   Timer? _detectionTimer;
-  int _missedFrames = 0;
 
   Future<void> start() async {
     emit(const DocumentScanOpening());
@@ -66,7 +66,7 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
   }
 
   void _resumeScanning(DocumentScanSession session) {
-    _missedFrames = 0;
+    _stabilizer.reset();
     emit(
       DocumentScanScanning(
         previewId: session.previewId,
@@ -91,14 +91,11 @@ class DocumentScanCubit extends Cubit<DocumentScanState> {
   }
 
   void _showQuad(DocumentScanSession session, ScanQuad? detected) {
-    final current = state as DocumentScanScanning;
-    _missedFrames = detected == null ? _missedFrames + 1 : 0;
-    final keep = detected == null && _missedFrames < _missedFramesBeforeHiding;
     emit(
       DocumentScanScanning(
         previewId: session.previewId,
         aspectRatio: session.aspectRatio,
-        quad: keep ? current.quad : detected,
+        quad: _stabilizer.next(detected),
       ),
     );
   }

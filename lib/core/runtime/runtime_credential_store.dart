@@ -17,18 +17,19 @@ class SecureRuntimeCredentialStore implements RuntimeCredentialStore {
 
   @override
   Future<String?> sessionToken(String address) {
-    return _storage.read(key: _sessionKey(address));
+    return _storage.read(key: runtimeSessionStorageKey(address));
   }
 
   @override
   Future<void> saveSessionToken(String address, String token) {
-    return _storage.write(key: _sessionKey(address), value: token);
+    return _storage.write(key: runtimeSessionStorageKey(address), value: token);
   }
 
   @override
   Future<void> clearSessionToken(String address) {
-    return _storage.delete(key: _sessionKey(address));
+    return _storage.delete(key: runtimeSessionStorageKey(address));
   }
-
-  String _sessionKey(String address) => 'novooa.runtime.session.$address';
 }
+
+String runtimeSessionStorageKey(String address) =>
+    'novooa.runtime.session.$address';

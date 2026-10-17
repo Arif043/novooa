@@ -792,6 +792,8 @@ abstract class LocaleKeys {
   static const ui_files_initial_body = 'ui.files_initial_body';
   static const ui_files_initial_upload = 'ui.files_initial_upload';
   static const ui_files_initial_folder = 'ui.files_initial_folder';
+  static const ui_anmeldung_fehlgeschlagen_mit_grund =
+      'ui.anmeldung_fehlgeschlagen_mit_grund';
   static const ui = 'ui';
   static const machine_learning_model_import_select_files_hint =
       'machine_learning.model_import.select_files_hint';

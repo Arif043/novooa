@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/features/document_scan/domain/entities/document_scan_failure.dart';
 import 'package:syscat2/features/document_scan/domain/entities/scanned_document.dart';
+import 'package:syscat2/features/document_scan/domain/services/scan_quad_stabilizer.dart';
 import 'package:syscat2/features/document_scan/domain/usecases/open_document_scan_session.dart';
 import 'package:syscat2/features/document_scan/presentation/cubits/document_scan_cubit.dart';
 import 'package:syscat2/features/document_scan/presentation/pages/document_scan_page.dart';
@@ -93,6 +94,7 @@ const _tick = Duration(milliseconds: 5);
 DocumentScanCubit _cubitFor(FakeDocumentScanner scanner) {
   return DocumentScanCubit(
     OpenDocumentScanSession(scanner),
+    ScanQuadStabilizer(),
     detectionInterval: _tick,
   );
 }
@@ -143,9 +145,12 @@ void main() {
   testWidgets('eine erkannte Kontur wird gezeichnet und angesagt', (
     tester,
   ) async {
-    final session = FakeDocumentScanSession(detections: [documentQuad]);
+    final session = FakeDocumentScanSession(
+      detections: [documentQuad, documentQuad],
+    );
     final cubit = await _scanning(tester, session);
 
+    await tester.pump(_tick * 3);
     await tester.pump(_tick * 3);
 
     expect(

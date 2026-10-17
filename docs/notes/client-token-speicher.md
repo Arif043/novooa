@@ -1,6 +1,6 @@
 # Sicherer Token-Speicher im Client
 
-> Das Session-Token liegt im plattformeigenen Credential-Speicher (`flutter_secure_storage`); auf macOS braucht das ein Development-Signing pro Rechner.
+> Das Session-Token liegt im plattformeigenen Credential-Speicher (`flutter_secure_storage`), in der Web-App über http im Tab; auf macOS braucht das ein Development-Signing pro Rechner.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
@@ -35,6 +35,18 @@ flutter run -d macos
 Das gilt **pro Entwicklungsrechner**: Nur die `.entitlements` sind
 versioniert, das Xcode-Projekt nicht (`.gitignore`: `macos/*`). Entitlements
 nicht entfernen, Signierung nicht abschalten.
+
+## Web über http im LAN
+
+Lädt der Browser die Web-App von `http://<LAN-IP>:8090`, ist die Seite kein
+sicherer Kontext: `crypto.subtle` fehlt, und `flutter_secure_storage` wirft bei
+jedem Zugriff. Die Anmeldung schlüge dann erst nach der erfolgreichen
+Passwortprüfung fehl. `createRuntimeCredentialStore()` wählt deshalb im Web
+ohne sicheren Kontext `TabSessionCredentialStore` (`sessionStorage`): Das Token
+gilt nur, solange der Tab offen ist. Auf https, `localhost` und nativ bleibt
+`flutter_secure_storage`. Viel Schutz geht dabei nicht verloren, weil
+`flutter_secure_storage` im Browser seinen Schlüssel ebenfalls im
+`localStorage` ablegt.
 
 ## Windows
 

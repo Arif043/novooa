@@ -597,7 +597,8 @@
     "files_initial_title": "Ein Zuhause für deine Dateien",
     "files_initial_body": "Lade Dokumente hoch, ordne sie in Ordnern und stelle sie deinen Aufgaben bereit.",
     "files_initial_upload": "Erste Datei hochladen",
-    "files_initial_folder": "Neuer Ordner"
+    "files_initial_folder": "Neuer Ordner",
+    "anmeldung_fehlgeschlagen_mit_grund": "Anmeldung fehlgeschlagen: {}"
   },
   "machine_learning": {
     "model_import": {

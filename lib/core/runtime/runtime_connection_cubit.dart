@@ -1,6 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../localization/locale_keys.g.dart';
 import 'runtime_availability.dart';
 import 'runtime_connection_failure.dart';
 import 'runtime_connection_state.dart';
@@ -172,7 +174,11 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
       emit(
         RuntimeConnectionNeedsPassword(
           endpoint,
-          errorMessage: 'Anmeldung fehlgeschlagen.',
+          // Mit Grund: Sonst sieht ein Fehler nach der Passwortprüfung (etwa
+          // beim Speichern des Tokens) wie ein falsches Passwort aus.
+          errorMessage: LocaleKeys.ui_anmeldung_fehlgeschlagen_mit_grund.tr(
+            args: ['$error'],
+          ),
         ),
       );
     }

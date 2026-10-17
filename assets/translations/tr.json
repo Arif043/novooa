@@ -597,7 +597,8 @@
     "files_initial_title": "Dosyaların için bir yuva",
     "files_initial_body": "Belgeleri yükle, klasörlerde düzenle ve görevlerinin kullanımına sun.",
     "files_initial_upload": "İlk dosyayı yükle",
-    "files_initial_folder": "Yeni klasör"
+    "files_initial_folder": "Yeni klasör",
+    "anmeldung_fehlgeschlagen_mit_grund": "Oturum açılamadı: {}"
   },
   "machine_learning": {
     "model_import": {

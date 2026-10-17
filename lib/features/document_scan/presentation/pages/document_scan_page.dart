@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../domain/entities/scanned_document.dart';
+import '../../domain/services/scan_quad_stabilizer.dart';
 import '../../domain/usecases/open_document_scan_session.dart';
 import '../cubits/document_scan_cubit.dart';
 import '../cubits/document_scan_state.dart';
@@ -27,8 +28,10 @@ class DocumentScanPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          DocumentScanCubit(serviceLocator<OpenDocumentScanSession>())..start(),
+      create: (_) => DocumentScanCubit(
+        serviceLocator<OpenDocumentScanSession>(),
+        ScanQuadStabilizer(),
+      )..start(),
       child: const DocumentScanView(),
     );
   }
