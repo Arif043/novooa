@@ -7,8 +7,9 @@ import 'baustein_icon_avatar.dart';
 import 'baustein_swap_handle.dart';
 import 'compact_node_card.dart';
 
-/// Baustein auf der Leinwand. Über sein Icon lässt er sich auf einen
-/// Geschwister-Baustein ([peers]) ziehen und mit ihm tauschen.
+/// Baustein auf der Leinwand. Über sein Icon lässt er sich auf einen anderen
+/// Baustein ziehen und mit ihm tauschen, auch über Zweige und Schleifen
+/// hinweg; die Regeln stehen in `WorkflowNodeSwap`.
 class CompactWorkflowNode extends StatefulWidget {
   const CompactWorkflowNode({
     super.key,
@@ -16,14 +17,12 @@ class CompactWorkflowNode extends StatefulWidget {
     required this.selected,
     required this.onTap,
     this.targeted = false,
-    this.peers = const {},
   });
 
   final WorkflowNode node;
   final bool selected;
   final bool targeted;
   final VoidCallback onTap;
-  final Set<NodeId> peers;
 
   @override
   State<CompactWorkflowNode> createState() => _CompactWorkflowNodeState();
@@ -38,8 +37,9 @@ class _CompactWorkflowNodeState extends State<CompactWorkflowNode> {
   @override
   Widget build(BuildContext context) {
     return DragTarget<NodeId>(
-      onWillAcceptWithDetails: (details) =>
-          details.data != widget.node.id && widget.peers.contains(details.data),
+      onWillAcceptWithDetails: (details) => context
+          .read<TaskBuilderCubit>()
+          .canSwapNodes(details.data, widget.node.id),
       onAcceptWithDetails: (details) => context
           .read<TaskBuilderCubit>()
           .swapNodes(details.data, widget.node.id),

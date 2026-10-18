@@ -20,6 +20,7 @@ import 'task_builder_state.dart';
 import '../plugin_node_module.dart';
 import 'package:syscat2/features/task_builder/domain/services/node_text_defaults.dart';
 import 'package:syscat2/features/task_builder/presentation/localization/localized_node_text_defaults.dart';
+import '../../domain/services/workflow_node_swap.dart';
 part 'task_builder_branch_mutations.dart';
 part 'task_builder_condition_branch_mutations.dart';
 part 'task_builder_attachment_mutations.dart';

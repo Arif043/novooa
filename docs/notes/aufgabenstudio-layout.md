@@ -16,6 +16,11 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
 - **Leinwand:** verschieb- und zoombar, kompakte Karten mit Typ und ID; Kanten
   mit Richtungspfeilen und Bedingungslabels; Unterpläne mit beschrifteten
   Verbindungen zum übergeordneten Baustein.
+- **Tauschen:** Am Icon einer Karte lässt sich ein Baustein auf einen anderen
+  ziehen; beide tauschen Platz und Kanten. Das geht im selben Plan, zwischen
+  Hauptplan und Zweig, zwischen zwei Zweigen und mit dem Unterplan einer
+  Schleife (`WorkflowNodeSwap`). Eine Bedingung oder Schleife kann nicht in
+  ihren eigenen Unterplan wandern.
 - **Overlay:** Klick auf eine Karte öffnet rechts die Konfiguration im selben
   Provider-Kontext (Editoren, Anhänge, Ausgabenamen, Werte); Änderungen wirken
   sofort; Schließen per Schaltfläche oder Escape.

@@ -14,6 +14,7 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_c
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/compact_node_card.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/workflow_canvas.dart';
+import 'package:syscat2/features/task_builder/domain/services/workflow_node_swap.dart';
 
 // Ersetzt den alten `node_drag_test.dart`-Test (der auf der inzwischen
 // entfernten `NodeGraph` — altes UI-Panel — basierte). Deckt denselben
@@ -78,10 +79,9 @@ void main() {
   });
 }
 
-final _swappedGraph = _task.graph.swapNodes(
-  const NodeId('node.1'),
-  const NodeId('node.2'),
-);
+final _swappedGraph = WorkflowNodeSwap(
+  _task.graph,
+).swap(const NodeId('node.1'), const NodeId('node.2'));
 
 Finder _sourceCard(String nodeId) => find.ancestor(
   of: find.byKey(ValueKey('compact-node-drag-$nodeId')),

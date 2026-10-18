@@ -180,7 +180,6 @@ class _WorkflowCanvasState extends State<WorkflowCanvas>
                                       selected:
                                           widget.selected == entry.node!.id,
                                       targeted: candidates.isNotEmpty,
-                                      peers: entry.peers,
                                       onTap: () => widget.onSelect(entry.node!),
                                     ),
                                   ),

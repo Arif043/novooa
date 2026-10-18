@@ -79,55 +79,21 @@ extension TaskBuilderGraphMutations on TaskBuilderCubit {
     if (source != null) await _addDecisionBranchesToNewSuccessors(source);
   }
 
+  /// Tauscht zwei Bausteine an beliebiger Stelle des Plans, auch zwischen
+  /// Hauptplan, Zweigen und Schleifen ([WorkflowNodeSwap]).
   Future<void> swapNodes(NodeId sourceId, NodeId targetId) async {
     final task = loadedTaskOrNull();
-    if (task == null || sourceId == targetId) return;
-    final result = _swapNodesInGraph(task.graph, sourceId, targetId);
-    if (!result.changed) return;
-    await _saveAndEmit(task.copyWith(graph: result.graph));
+    if (task == null) return;
+    final swap = WorkflowNodeSwap(task.graph);
+    if (!swap.canSwap(sourceId, targetId)) return;
+    await _saveAndEmit(task.copyWith(graph: swap.swap(sourceId, targetId)));
   }
 
-  ({WorkflowGraph graph, bool changed}) _swapNodesInGraph(
-    WorkflowGraph graph,
-    NodeId sourceId,
-    NodeId targetId,
-  ) {
-    final swapped = graph.swapNodes(sourceId, targetId);
-    if (swapped != graph) return (graph: swapped, changed: true);
-    for (var index = 0; index < graph.nodes.length; index++) {
-      final result = _swapNodesInNode(graph.nodes[index], sourceId, targetId);
-      if (!result.changed) continue;
-      final nodes = [...graph.nodes]..[index] = result.node;
-      return (graph: graph.copyWith(nodes: nodes), changed: true);
-    }
-    return (graph: graph, changed: false);
-  }
-
-  ({WorkflowNode node, bool changed}) _swapNodesInNode(
-    WorkflowNode node,
-    NodeId sourceId,
-    NodeId targetId,
-  ) {
-    if (node.config case final ConditionalNodeConfig config) {
-      for (var index = 0; index < config.branches.length; index++) {
-        final branch = config.branches[index];
-        final result = _swapNodesInGraph(branch.graph, sourceId, targetId);
-        if (!result.changed) continue;
-        final branches = [...config.branches]
-          ..[index] = branch.copyWith(graph: result.graph);
-        return (node: _withBranches(node, config, branches), changed: true);
-      }
-    }
-    if (node.config case final ForEachNodeConfig config) {
-      final result = _swapNodesInGraph(config.graph, sourceId, targetId);
-      if (result.changed) {
-        return (
-          node: node.copyWith(config: config.copyWith(graph: result.graph)),
-          changed: true,
-        );
-      }
-    }
-    return (node: node, changed: false);
+  /// Ob [sourceId] auf [targetId] gezogen werden darf.
+  bool canSwapNodes(NodeId sourceId, NodeId targetId) {
+    final task = loadedTaskOrNull();
+    return task != null &&
+        WorkflowNodeSwap(task.graph).canSwap(sourceId, targetId);
   }
 
   Future<void> _updateNode(
