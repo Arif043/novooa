@@ -5,6 +5,7 @@ import {type ScriptExecutionRequest, type ScriptExecutionResult, type ScriptWork
 import {type NodeFailure} from "../../domain/entities/node-failure.js";
 import {nodeFailures} from "../../domain/entities/node-failures.js";
 import {type ScriptExecutorFactory} from "../../domain/executors/script-executor.js";
+import {scriptPackageEnvironmentId} from "./script-package-environment-id.js";
 import {scriptResultFrom} from "./script-result.js";
 
 /** Obergrenze für alle angehängten Dateien eines Laufs; größere gehören nicht in ein Script. */
@@ -43,12 +44,13 @@ async function executeInContainer(
     const bytes = await readFile(path.join(workspace!.rootDirectory, file.filename));
     body.append(`file-${index}`, new Blob([bytes], {type: file.contentType}), `file-${index}`);
   }
-  return (await post(url, body)).map((parsed) => scriptResultFrom(parsed));
+  return (await post(url, body, request.packages)).map((parsed) => scriptResultFrom(parsed));
 }
 
 function requestBody(request: ScriptExecutionRequest, files: ScriptWorkspace["files"]) {
   return {
     script: request.script, inputs: request.inputs,
+    environment: request.packages.length === 0 ? undefined : scriptPackageEnvironmentId(request.packages),
     files: files.map(({displayName, contentType, sizeBytes, versionCreatedAt}) => ({
       displayName, contentType, sizeBytes, versionCreatedAt,
     })),
@@ -62,8 +64,11 @@ function assertWithinLimit(files: ScriptWorkspace["files"]): void {
   }
 }
 
-/** Meldet der Dienst einen Fehler des Scripts (`error`), ist das eine Failure; alles andere wirft. */
-async function post(url: URL, body: FormData): Promise<Result<Record<string, unknown>, NodeFailure>> {
+/**
+ * Meldet der Dienst einen Fehler des Scripts (`error`) oder fehlende Pakete (`409`), ist das eine
+ * Failure; alles andere wirft.
+ */
+async function post(url: URL, body: FormData, packages: readonly string[]): Promise<Result<Record<string, unknown>, NodeFailure>> {
   let response: Response;
   try {
     response = await fetch(url, {method: "POST", body, signal: AbortSignal.timeout(requestTimeoutMs)});
@@ -72,6 +77,9 @@ async function post(url: URL, body: FormData): Promise<Result<Record<string, unk
   }
   const parsed = await response.json().catch(() => ({})) as Record<string, unknown>;
   if (response.ok) return ok(parsed);
+  if (response.status === 409 && parsed.code === "packagesMissing") {
+    return err(nodeFailures.scriptPackagesUnavailable("notInstalled", packages));
+  }
   if (typeof parsed.error !== "string") throw new Error("Der Script-Dienst hat die Anfrage abgelehnt.");
   return err(nodeFailures.scriptFailed(parsed.error, {
     stdout: typeof parsed.printed === "string" ? parsed.printed : "",

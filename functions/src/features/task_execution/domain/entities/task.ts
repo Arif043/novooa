@@ -87,6 +87,8 @@ export type StringInputNodeConfig = {
 export type ScriptNodeConfig = {
   primitive: "script";
   script: string;
+  /** Python-Pakete von PyPI (`pandas`, `pandas==2.2.3`); leer = nur Standardbibliothek. */
+  packages?: string[];
   attachments: NodeAttachment[];
 };
 export type PromptNodeConfig = {

@@ -657,7 +657,27 @@
     "files_initial_upload": "Erste Datei hochladen",
     "files_initial_folder": "Neuer Ordner",
     "anmeldung_fehlgeschlagen_mit_grund": "Anmeldung fehlgeschlagen: {}",
-    "workflow_wert_suchen": "Workflow-Wert suchen"
+    "workflow_wert_suchen": "Workflow-Wert suchen",
+    "script_packages_title": "Python-Pakete",
+    "script_packages_empty": "Ohne Pakete steht nur die Standardbibliothek zur Verfügung.",
+    "script_package_input": "Paket hinzufügen",
+    "script_package_input_hint": "pandas oder pandas==2.2.3",
+    "script_package_invalid": "Ungültige Angabe. Erlaubt ist ein Paketname von PyPI, optional mit Version, z. B. pandas==2.2.3.",
+    "script_package_add": "Hinzufügen",
+    "script_package_remove": "{name} entfernen",
+    "script_packages_detected": "Im Code importiert, aber nicht eingetragen:",
+    "script_packages_adopt_all": "Alle übernehmen",
+    "script_packages_reuse": "Vorhandene Umgebung übernehmen: {packages}",
+    "script_packages_not_installed": "Nicht installiert",
+    "script_packages_install": "Pakete installieren",
+    "script_packages_installing": "Wird installiert …",
+    "script_packages_ready": "Installiert ({size})",
+    "script_packages_retry": "Erneut versuchen",
+    "script_packages_failed_notFound": "Ein Paket wurde auf PyPI nicht gefunden.",
+    "script_packages_failed_noWheel": "Für ein Paket gibt es kein fertiges Paket (Wheel) für Linux.",
+    "script_packages_failed_tooLarge": "Die Pakete sind zusammen zu groß.",
+    "script_packages_failed_failed": "Die Installation ist gescheitert.",
+    "script_packages_status_unavailable": "Der Paketstatus ist nicht verfügbar."
   },
   "machine_learning": {
     "model_import": {
@@ -690,7 +710,8 @@
       "httpStatusFailed": "Die HTTP-Anfrage ist mit Status {status} fehlgeschlagen.",
       "forEachUnsupported": "„Für jedes Element“ unterstützt keine {reason}.",
       "scriptFailed": "Das Script ist mit einem Fehler beendet worden. Meldung und Ausgabe stehen darunter.",
-      "scriptOutputInvalid": "Eine workflow_output-Ausgabe ist ungültig: {reason}{name}."
+      "scriptOutputInvalid": "Eine workflow_output-Ausgabe ist ungültig: {reason}{name}.",
+      "scriptPackagesUnavailable": "Python-Pakete ({packages}): {reason}"
     },
     "operand_kinds": {
       "number": "eine Zahl",
@@ -763,6 +784,10 @@
       "invalidName": "ungültiger Name",
       "unknownType": "unbekannter Typ",
       "wrongValueType": "Wert passt nicht zum Typ"
+    },
+    "script_packages_reasons": {
+      "notInstalled": "nicht installiert. Installiere sie im Script-Baustein mit „Pakete installieren“.",
+      "unsupported": "gibt es nur in der lokalen Runtime."
     }
   },
   "knowledge_graph": {

@@ -16,6 +16,7 @@ test("liest typisierte Werte per workflow_input und sammelt workflow_output", as
       faellig: {type: "datetime", value: "2026-10-18T09:30:00"},
       betreff: {type: "string", value: "Er sagte \"Hallo\""},
     },
+    packages: [],
   }))._unsafeUnwrap();
 
   assert.deepEqual(result.workflowOutputs, [
@@ -28,9 +29,18 @@ test("liest typisierte Werte per workflow_input und sammelt workflow_output", as
 
 test("ein unbekannter Wert bricht mit verständlicher Meldung ab", async () => {
   const failure = (await createPythonScriptExecutor().execute({
-    script: "x = workflow_input(\"fehlt\")", inputs: {},
+    script: "x = workflow_input(\"fehlt\")", inputs: {}, packages: [],
   }))._unsafeUnwrapErr();
 
   assert.equal(failure.code, "scriptFailed");
   assert.match(failure.message, /workflow_input\("fehlt"\): Es gibt keinen Wert/);
+});
+
+test("Pakete gibt es im eingebetteten Pfad nicht", async () => {
+  const failure = (await createPythonScriptExecutor().execute({
+    script: "import six", inputs: {}, packages: ["six"],
+  }))._unsafeUnwrapErr();
+
+  assert.equal(failure.code, "scriptPackagesUnavailable");
+  assert.deepEqual(failure.details, {reason: "unsupported", packages: "six"});
 });

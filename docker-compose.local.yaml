@@ -24,6 +24,8 @@ services:
       MODEL_ARTIFACT_MAX_BYTES: ${NOVOOA_MODEL_ARTIFACT_MAX_BYTES:-}
       # Script-Bausteine laufen in einem eigenen, abgeschotteten Container (siehe novooa-script).
       SCRIPT_RUNNER_URL: http://novooa-script:8091
+      # Installiert auf Klick Python-Pakete für Script-Bausteine (siehe novooa-packages).
+      SCRIPT_PACKAGES_URL: http://novooa-packages:8092
       LOCAL_RUNTIME_MASTER_KEY_FILE: /var/lib/novooa-keys/runtime-master-key
       LOCAL_RUNTIME_LICENSE_GATEWAY_URL: ${LOCAL_RUNTIME_LICENSE_GATEWAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/issueLocalRuntimeLicense}
       LOCAL_RUNTIME_PUSH_RELAY_URL: ${LOCAL_RUNTIME_PUSH_RELAY_URL:-https://europe-west3-syscat-90bff.cloudfunctions.net/localRuntimePushRelay}
@@ -43,6 +45,8 @@ services:
       key-init:
         condition: service_completed_successfully
       novooa-script:
+        condition: service_healthy
+      novooa-packages:
         condition: service_healthy
     ports:
       # Reguläre API auf allen Host-Schnittstellen, damit Clients im LAN die
@@ -64,6 +68,7 @@ services:
       - novooa-public
       - novooa-private
       - novooa-script
+      - novooa-packages
       - novooa-ml
     extra_hosts:
       - host.docker.internal:host-gateway
@@ -98,6 +103,14 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=256m,mode=1777,noexec,nosuid
+    # Paketumgebungen der Bausteine, nur lesend; schreiben darf allein novooa-packages.
+    volumes:
+      - novooa-script-packages:/packages:ro
+    # Der Paketdienst bindet das Volume zuerst ein; so übernimmt ein neues Volume
+    # Besitzer und Rechte von /packages aus seinem Image.
+    depends_on:
+      novooa-packages:
+        condition: service_healthy
     cap_drop:
       - ALL
     security_opt:
@@ -113,6 +126,41 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8091/healthz')"]
+      interval: 5s
+      timeout: 2s
+      retries: 12
+
+  # Installiert Python-Pakete von PyPI in Umgebungen pro Paketliste (Volume
+  # novooa-script-packages). Als einziger Python-Dienst mit Zugang nach außen;
+  # nur fertige Pakete (Wheels), damit beim Installieren kein fremder Code läuft.
+  # Der Script-Container selbst bleibt ohne Netz.
+  novooa-packages:
+    build:
+      context: .
+      dockerfile: functions/Dockerfile.script-packages
+    environment:
+      HOST: 0.0.0.0
+      PORT: "8092"
+      SCRIPT_PACKAGES_MAX_ENVIRONMENT_BYTES: ${NOVOOA_SCRIPT_PACKAGES_MAX_ENVIRONMENT_BYTES:-2147483648}
+    expose:
+      - "8092"
+    networks:
+      - novooa-packages
+      - novooa-packages-egress
+    user: "65532:65532"
+    read_only: true
+    tmpfs:
+      - /tmp:size=512m,mode=1777,noexec,nosuid
+    volumes:
+      - novooa-script-packages:/packages
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 1g
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8092/healthz')"]
       interval: 5s
       timeout: 2s
       retries: 12
@@ -167,6 +215,10 @@ networks:
     internal: true
   novooa-script:
     internal: true
+  novooa-packages:
+    internal: true
+  # Nur für novooa-packages: Download von PyPI.
+  novooa-packages-egress:
   # Zum ML-Dienst des Servers (docker-compose.server.yaml), den sich alle Stacks teilen.
   novooa-ml:
     external: true
@@ -174,3 +226,4 @@ networks:
 volumes:
   novooa-data:
   novooa-keys:
+  novooa-script-packages:

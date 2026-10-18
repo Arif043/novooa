@@ -9,6 +9,7 @@ import {
   maximumAttachmentBytes,
   unavailableScriptExecutorFactory,
 } from "./container-script-executor.js";
+import {scriptPackageEnvironmentId} from "./script-package-environment-id.js";
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
@@ -16,6 +17,7 @@ afterEach(() => { globalThis.fetch = originalFetch; });
 const request = {
   script: "workflow_output(\"summe\", \"number\", workflow_input(\"zahl\"))",
   inputs: {zahl: {type: "number" as const, value: 42.5}},
+  packages: [] as string[],
 };
 
 function respondWith(status: number, body: unknown) {
@@ -56,6 +58,17 @@ test("schickt Script und gelesene Werte an /run und liefert die Antwort des Dien
   assert.equal(sent[0].url, "http://script:8091/run");
   const body = JSON.parse(await (sent[0].form.get("request") as Blob).text());
   assert.deepEqual(body, {script: request.script, inputs: request.inputs, files: []});
+});
+
+test("mit Paketen geht die Umgebung mit; fehlt sie, ist das eine Failure", async () => {
+  const sent = respondWith(409, {code: "packagesMissing", error: "fehlt"});
+
+  const failure = (await executor().execute({...request, packages: ["six==1.16.0"]}))._unsafeUnwrapErr();
+
+  const body = JSON.parse(await (sent[0].form.get("request") as Blob).text()) as {environment: string};
+  assert.equal(body.environment, scriptPackageEnvironmentId(["six==1.16.0"]));
+  assert.equal(failure.code, "scriptPackagesUnavailable");
+  assert.deepEqual(failure.details, {reason: "notInstalled", packages: "six==1.16.0"});
 });
 
 test("angehängte Dateien gehen als rohe Bytes mit, ohne Kodierung", async () => {

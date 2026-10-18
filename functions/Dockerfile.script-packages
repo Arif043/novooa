@@ -1,0 +1,23 @@
+# Muss dieselbe Python-Basis haben wie functions/Dockerfile.script-runner: Die hier
+# installierten Binärpakete laufen dort. Beide Dateien nur gemeinsam anheben.
+FROM python:3.12-slim
+
+RUN pip install --no-cache-dir uv==0.13.1
+
+WORKDIR /app
+
+COPY local-runtime/python/novooa_packages /app/python/novooa_packages
+
+# Ein neues Volume übernimmt beim ersten Einbinden Besitzer und Rechte dieses Verzeichnisses.
+RUN mkdir /packages && chown 65532:65532 /packages
+
+# Installiert Pakete von PyPI in das Volume /packages; der Script-Container bindet
+# es schreibgeschützt ein. Nur fertige Pakete (Wheels), kein Code beim Installieren.
+ENV PORT=8092 \
+  PYTHONPATH=/app/python \
+  PYTHONDONTWRITEBYTECODE=1 \
+  SCRIPT_PACKAGES_ROOT=/packages
+
+USER 65532
+
+CMD ["python", "-m", "novooa_packages.server"]

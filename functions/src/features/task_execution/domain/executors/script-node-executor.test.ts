@@ -48,10 +48,29 @@ test("sends the script unchanged with the typed values it reads via workflow_inp
       "kunde.name": {type: "json", value: "Mila"},
       "faellig": {type: "datetime", value: "2026-10-18T09:30:00"},
     },
+    packages: [],
   }]);
   assert.deepEqual(printed, [{printed: "ausgabe", errorOutput: "warnung"}]);
   assert.deepEqual(result.console, {stdout: "ausgabe", stderr: "warnung"});
   assert.deepEqual(result.outputs, {gruss: {type: "string", value: "Hallo Mila"}});
+});
+
+test("sends the normalized package list of the block", async () => {
+  const requests: Array<{packages: string[]}> = [];
+  const executor = createScriptNodeExecutor({
+    async execute(request) {
+      requests.push(request);
+      return ok({printed: "", errorOutput: ""});
+    },
+  });
+  const node = {
+    id: "s", primitive: "script", title: "Script", description: "", outputs: [],
+    config: {primitive: "script", script: "import six", packages: ["Six", "pandas == 2.2.3"], attachments: []},
+  } as never;
+
+  await executor.execute(node, contextWith());
+
+  assert.deepEqual(requests[0].packages, ["pandas==2.2.3", "six"]);
 });
 
 test("logs what a failing script printed and returns its failure", async () => {

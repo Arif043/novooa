@@ -11,7 +11,10 @@ Aus `docker-compose.local.yaml`:
 - schreibgeschütztes Dateisystem, `tmpfs` für `/tmp` (`noexec`, `nosuid`);
 - UID 65532, `cap_drop: ALL`, `no-new-privileges`;
 - 768 MB Speicher, 1 CPU, 96 Prozesse;
-- keine Schlüssel, keine Modelle; das Script sieht nur `PATH`.
+- keine Schlüssel, keine Modelle; das Script sieht nur `PATH`;
+- Python-Pakete nur aus dem Volume `novooa-script-packages`, schreibgeschützt
+  unter `/packages` eingebunden; installiert werden sie außerhalb, im
+  [Script-Paketdienst](./script-paketdienst.md).
 
 **Läufe sind nicht voreinander versteckt (gewollt).** Alle Läufe laufen unter
 derselben Benutzer-ID im selben Container; ein gleichzeitiger Lauf kann

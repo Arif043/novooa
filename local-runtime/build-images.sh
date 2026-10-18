@@ -31,6 +31,7 @@ PLATFORM="linux/amd64"
 RUNTIME_IMAGE="novooa-runtime:${VERSION}"
 ML_IMAGE="novooa-ml:${VERSION}"
 SCRIPT_IMAGE="novooa-script:${VERSION}"
+PACKAGES_IMAGE="novooa-packages:${VERSION}"
 OUTPUT_TAR="$OUTPUT_DIR/novooa-images-${VERSION}.tar"
 
 mkdir -p "$OUTPUT_DIR"
@@ -59,12 +60,20 @@ docker buildx build \
   --load \
   "$REPO_ROOT"
 
+echo "==> Baue ${PACKAGES_IMAGE} (${PLATFORM})"
+docker buildx build \
+  --platform "$PLATFORM" \
+  -f "$REPO_ROOT/functions/Dockerfile.script-packages" \
+  -t "$PACKAGES_IMAGE" \
+  --load \
+  "$REPO_ROOT"
+
 echo "==> Exportiere Images nach ${OUTPUT_TAR}"
-docker save "$RUNTIME_IMAGE" "$ML_IMAGE" "$SCRIPT_IMAGE" -o "$OUTPUT_TAR"
+docker save "$RUNTIME_IMAGE" "$ML_IMAGE" "$SCRIPT_IMAGE" "$PACKAGES_IMAGE" -o "$OUTPUT_TAR"
 
 echo ""
 echo "Fertig."
-echo "  Images:  $RUNTIME_IMAGE, $ML_IMAGE, $SCRIPT_IMAGE (linux/${PLATFORM#linux/})"
+echo "  Images:  $RUNTIME_IMAGE, $ML_IMAGE, $SCRIPT_IMAGE, $PACKAGES_IMAGE (linux/${PLATFORM#linux/})"
 echo "  Archiv:  $OUTPUT_TAR"
 echo ""
 echo "Auf dem Ziel-Windows-Rechner einspielen:"

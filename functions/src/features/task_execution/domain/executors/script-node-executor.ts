@@ -3,6 +3,7 @@ import {type NodeFailure} from "../entities/node-failure.js";
 import {type ScriptExecutionResult} from "../entities/script-execution.js";
 import {type ConsoleOutput} from "../entities/task.js";
 import {type NodeOutputValue, type WorkflowInputValue} from "../entities/workflow-value.js";
+import {normalizedScriptPackages} from "../services/script-packages.js";
 import {scriptWorkflowInputPaths} from "../services/script-workflow-inputs.js";
 import {workflowOutputsFrom} from "../services/script-workflow-outputs.js";
 import {type ScriptExecutor} from "./script-executor.js";
@@ -29,6 +30,7 @@ export function createScriptNodeExecutor(
       const outputOrFailure = await scriptExecutor.execute({
         script,
         inputs: inputsFor(script, runContext.templateExpressionResolver),
+        packages: normalizedScriptPackages(packagesFor(node)),
       });
       // Auch ein gescheitertes Script hat Ausgabe geliefert; sie gehört ins Protokoll.
       if (outputOrFailure.isErr()) {
@@ -75,6 +77,10 @@ function hasOutput(output: ConsoleOutput): boolean {
 
 function observeFailure(failure: NodeFailure, observeOutput: ScriptOutputObserver): void {
   if (failure.console) observeOutput({printed: failure.console.stdout, errorOutput: failure.console.stderr});
+}
+
+function packagesFor(node: Parameters<NodeExecutor["execute"]>[0]): string[] {
+  return node.config.primitive === "script" ? node.config.packages ?? [] : [];
 }
 
 function scriptFor(node: Parameters<NodeExecutor["execute"]>[0]): string {

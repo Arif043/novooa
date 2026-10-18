@@ -1,4 +1,5 @@
 import json
+import shutil
 import sys
 import tempfile
 import threading
@@ -206,6 +207,33 @@ class ExecutionTest(unittest.TestCase):
         run("ergebnis = 'x'", files=[("a.txt", b"x")])
 
         self.assertEqual(set(Path(execution.WORK_ROOT).glob("run-*")), before)
+
+
+class PackageEnvironmentTest(unittest.TestCase):
+    def setUp(self):
+        self.root = Path(tempfile.mkdtemp())
+        self.original = execution.PACKAGES_ROOT
+        execution.PACKAGES_ROOT = str(self.root)
+
+    def tearDown(self):
+        execution.PACKAGES_ROOT = self.original
+        shutil.rmtree(self.root, ignore_errors=True)
+
+    def test_the_environment_comes_first_on_the_import_path(self):
+        site = self.root / "envs" / ("b" * 64) / "site"
+        site.mkdir(parents=True)
+        (site / "paketchen.py").write_text("WERT = 42\n")
+
+        result = execution.execute({
+            "script": "import paketchen\nworkflow_output('ergebnis', 'number', paketchen.WERT)",
+            "inputs": {}, "files": [], "environment": "b" * 64,
+        }, [])
+
+        self.assertEqual(value_of(result), 42)
+
+    def test_a_missing_environment_stops_before_the_run(self):
+        with self.assertRaises(execution.PackagesMissing):
+            execution.execute({"script": "x = 1", "inputs": {}, "files": [], "environment": "c" * 64}, [])
 
 
 class ServerTest(unittest.TestCase):

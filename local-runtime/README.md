@@ -38,6 +38,10 @@ enthält kein Python. Script-Bausteine laufen im eigenen, abgeschotteten Contain
 (internes Netz `novooa-script`, siehe
 [Script-Dienst: Schnittstelle](../docs/notes/script-dienst-schnittstelle.md)).
 Seine Tests: `docker run --rm -v "$PWD/local-runtime/python:/app/python" -w /app/python python:3.12-slim python -m unittest tests.test_script_service`.
+Python-Pakete für Scripts installiert `novooa-packages` (siehe
+[Script-Paketdienst](../docs/notes/script-paketdienst.md)); seine Tests samt
+echter Installation laufen im eigenen Image:
+`docker build -f functions/Dockerfile.script-packages -t novooa-packages:test . && docker run --rm -u 0 -v "$PWD/local-runtime/python:/src" -w /src novooa-packages:test python -m unittest tests.test_script_packages`.
 
 
 ## Clients im LAN und öffentlich
@@ -116,8 +120,8 @@ keine Schlüsseldateien.
 
 ## Images für einen Ziel-Rechner bauen
 
-`build-images.sh` baut die drei Runtime-Images (`novooa-runtime`,
-`novooa-ml`, `novooa-script`) eigenständig auf diesem Rechner für `linux/amd64` — unabhängig
+`build-images.sh` baut die vier Runtime-Images (`novooa-runtime`,
+`novooa-ml`, `novooa-script`, `novooa-packages`) eigenständig auf diesem Rechner für `linux/amd64` — unabhängig
 von der eigenen Host-Architektur (Cross-Compile via Docker Buildx/QEMU) und
 ohne SSH oder eine Deployment-CLI. Das Ergebnis ist eine einzelne `.tar`-Datei
 mit allen Images, die auf jedem Docker-Host ohne Registry-Zugriff eingespielt
@@ -142,7 +146,7 @@ docker load -i novooa-images-0.1.0.tar
 
 Anschließend referenziert eine Compose-Datei die geladenen Images per
 `image: novooa-runtime:0.1.0` / `image: novooa-ml:0.1.0` /
-`image: novooa-script:0.1.0` statt sie per
+`image: novooa-script:0.1.0` / `image: novooa-packages:0.1.0` statt sie per
 `build:` aus dem Quellcode zu bauen — genau das, was
 [Images, Updates und Neustarts](../docs/notes/runtime-images-und-updates.md) für auslieferbare, versionierte
 Images fordert ("niemals `latest`, immer eine konkrete Version").

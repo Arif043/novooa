@@ -13,6 +13,9 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
   gelesene Werte `inputs`, Datei-Metadaten), danach je Datei ein Teil `file-<n>`
   mit rohen Bytes (kein Base64). Anhänge zusammen höchstens 25 MB
   (`maximumAttachmentBytes`).
+- Optional `environment`: ID der [Paketumgebung](./script-pakete.md); fehlt
+  sie unter `/packages/envs/<id>`, antwortet der Dienst `409
+  {code: "packagesMissing"}`.
 - Antwort `200` mit `printed`, `stderr`, `workflowOutputs` oder `422` mit
   lesbarer Meldung samt Script-Zeile.
 

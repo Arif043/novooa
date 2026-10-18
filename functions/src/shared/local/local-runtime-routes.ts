@@ -21,6 +21,7 @@ import {taskTriggerRoutes} from "../../features/scheduling/infrastructure/local/
 import {taskActivityRoutes} from "../../features/task_execution/infrastructure/local/local-task-activity-routes.js";
 import {taskDefinitionRoutes} from "../../features/task_execution/infrastructure/local/local-task-definition-routes.js";
 import {taskRunRoutes} from "../../features/task_execution/infrastructure/local/local-task-run-routes.js";
+import {scriptPackageRoutes} from "../../features/task_execution/infrastructure/local/local-script-package-routes.js";
 import {workspaceTransferRoutesOptions} from "../../features/workspace_transfer/infrastructure/local/workspace-transfer-composition.js";
 import {workspaceTransferRoutes} from "../../features/workspace_transfer/infrastructure/local/local-workspace-transfer-routes.js";
 import {applicationLogRoutes} from "../logging/local-application-log-routes.js";
@@ -103,6 +104,7 @@ async function registerFeatureRoutes(api: FastifyInstance, dependencies: LocalRu
   await api.register(fileSettingsRoutes, {store: services.fileSettings, notifier});
   await api.register(dataRoutes, {store: services.documents});
   await api.register(modelCatalogRoutes, services.modelCatalog);
+  await api.register(scriptPackageRoutes, {jobs: services.scriptPackages});
   await api.register(applicationLogRoutes, {store: services.applicationLogs, notifier});
   await api.register(knowledgeNoteRoutes, {database, notifier});
   await api.register(fileResourceRoutes, {database, fileStore: services.teamFiles, notifier});

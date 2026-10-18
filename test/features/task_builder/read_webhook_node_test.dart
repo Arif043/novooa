@@ -128,6 +128,7 @@ WorkspaceCapabilities _capabilities() => const WorkspaceCapabilities(
   employees: false,
   connections: false,
   webhooks: true,
+  scriptPackages: false,
 );
 
 const _task = Task(

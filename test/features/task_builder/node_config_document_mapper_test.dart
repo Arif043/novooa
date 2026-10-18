@@ -4,6 +4,7 @@ import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_attachment.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/infrastructure/models/node_config_document_mapper.dart';
+import 'package:syscat2/features/script_packages/domain/entities/python_package.dart';
 
 void main() {
   test('serialisiert WriteFileNodeConfig', () {
@@ -557,6 +558,23 @@ void main() {
 
     expect(restored, config);
     expect(restored.usesLanguageModel, isTrue);
+  });
+
+  test('speichert Python-Pakete wie eingegeben und verwirft ungültige', () {
+    final mapper = _mapper();
+    final config = ScriptNodeConfig(
+      script: 'import pandas',
+      packages: [PythonPackage.parse('pandas==2.2.3')!],
+    );
+
+    final document = mapper.toDocument(config);
+    expect(document['packages'], ['pandas==2.2.3']);
+    expect(mapper.fromDocument(document), config);
+    final withInvalid = mapper.fromDocument({
+      ...document,
+      'packages': ['pandas==2.2.3', 'https://evil.example/x.whl'],
+    });
+    expect((withInvalid as ScriptNodeConfig).packages, config.packages);
   });
 }
 

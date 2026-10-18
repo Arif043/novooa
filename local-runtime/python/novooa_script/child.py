@@ -32,6 +32,9 @@ def main():
 
 
 def run(payload):
+    if payload.get("site"):
+        # Vor allem anderen, damit ein Paket der Umgebung ein gleichnamiges Modul verdeckt.
+        sys.path.insert(0, payload["site"])
     attachments = payload.get("files", [])
     outputs = WorkflowOutputs()
     namespace = namespace_for(payload, attachments, outputs)

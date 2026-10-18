@@ -19,6 +19,8 @@ async function executePythonScript(
   request: ScriptExecutionRequest,
   workspace?: ScriptWorkspace,
 ): Promise<Result<ScriptExecutionResult, NodeFailure>> {
+  // Der eingebettete Pfad kennt keine Imports und damit keine Pakete.
+  if (request.packages.length > 0) return err(nodeFailures.scriptPackagesUnavailable("unsupported", request.packages));
   const process = await runPython(request, workspace);
   if (process.code !== 0) {
     return err(nodeFailures.scriptFailed(process.stderr || "Script failed.", {stdout: "", stderr: process.stderr}));

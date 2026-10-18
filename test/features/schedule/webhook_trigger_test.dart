@@ -502,6 +502,7 @@ WorkspaceCapabilities _capabilities({required bool webhooks}) =>
       employees: false,
       connections: false,
       webhooks: webhooks,
+      scriptPackages: false,
     );
 
 Map<String, Object?> _webhookItem(String id, String token) => {

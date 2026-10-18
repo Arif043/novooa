@@ -657,7 +657,27 @@
     "files_initial_upload": "Upload first file",
     "files_initial_folder": "New folder",
     "anmeldung_fehlgeschlagen_mit_grund": "Sign-in failed: {}",
-    "workflow_wert_suchen": "Search workflow value"
+    "workflow_wert_suchen": "Search workflow value",
+    "script_packages_title": "Python packages",
+    "script_packages_empty": "Without packages only the standard library is available.",
+    "script_package_input": "Add package",
+    "script_package_input_hint": "pandas or pandas==2.2.3",
+    "script_package_invalid": "Invalid entry. Allowed is a package name from PyPI, optionally with a version, e.g. pandas==2.2.3.",
+    "script_package_add": "Add",
+    "script_package_remove": "Remove {name}",
+    "script_packages_detected": "Imported in the code but not listed:",
+    "script_packages_adopt_all": "Add all",
+    "script_packages_reuse": "Use existing environment: {packages}",
+    "script_packages_not_installed": "Not installed",
+    "script_packages_install": "Install packages",
+    "script_packages_installing": "Installing …",
+    "script_packages_ready": "Installed ({size})",
+    "script_packages_retry": "Try again",
+    "script_packages_failed_notFound": "A package was not found on PyPI.",
+    "script_packages_failed_noWheel": "A package has no prebuilt package (wheel) for Linux.",
+    "script_packages_failed_tooLarge": "The packages are too large together.",
+    "script_packages_failed_failed": "The installation failed.",
+    "script_packages_status_unavailable": "The package status is not available."
   },
   "machine_learning": {
     "model_import": {
@@ -690,7 +710,8 @@
       "httpStatusFailed": "The HTTP request failed with status {status}.",
       "forEachUnsupported": "“For each item” does not support {reason}.",
       "scriptFailed": "The script ended with an error. The message and output are shown below.",
-      "scriptOutputInvalid": "A workflow_output is invalid: {reason}{name}."
+      "scriptOutputInvalid": "A workflow_output is invalid: {reason}{name}.",
+      "scriptPackagesUnavailable": "Python packages ({packages}): {reason}"
     },
     "operand_kinds": {
       "number": "a number",
@@ -763,6 +784,10 @@
       "invalidName": "invalid name",
       "unknownType": "unknown type",
       "wrongValueType": "value does not match the type"
+    },
+    "script_packages_reasons": {
+      "notInstalled": "not installed. Install them in the script block with “Install packages”.",
+      "unsupported": "are only available in the local runtime."
     }
   },
   "knowledge_graph": {

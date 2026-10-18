@@ -92,4 +92,10 @@ const _labels = <String, Map<String, String>>{
     'wrongValueType':
         LocaleKeys.activity_failures_script_output_reasons_wrongValueType,
   },
+  'script_packages_reasons': {
+    'notInstalled':
+        LocaleKeys.activity_failures_script_packages_reasons_notInstalled,
+    'unsupported':
+        LocaleKeys.activity_failures_script_packages_reasons_unsupported,
+  },
 };

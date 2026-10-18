@@ -97,6 +97,10 @@ const activityFailureExplanations =
         LocaleKeys.activity_failures_codes_scriptOutputInvalid,
         _scriptOutputArguments,
       ),
+      ActivityFailureCode.scriptPackagesUnavailable: ActivityFailureExplanation(
+        LocaleKeys.activity_failures_codes_scriptPackagesUnavailable,
+        _scriptPackagesArguments,
+      ),
     };
 
 Map<String, String> _operandArguments(Map<String, String> details) => {
@@ -147,6 +151,11 @@ Map<String, String> _forEachArguments(Map<String, String> details) => {
 Map<String, String> _scriptOutputArguments(Map<String, String> details) => {
   'reason': failureDetailLabel('script_output_reasons', details['reason']),
   'name': _nameSuffix(details['name']),
+};
+
+Map<String, String> _scriptPackagesArguments(Map<String, String> details) => {
+  'reason': failureDetailLabel('script_packages_reasons', details['reason']),
+  'packages': details['packages'] ?? '',
 };
 
 String _nameSuffix(String? name) {

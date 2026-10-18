@@ -11,6 +11,7 @@ Flutter-Desktop-App
           -> novooa-runtime (Node)
               lokale API, Scheduler, Task-Worker, SQLite-Adapter, Relay-Client
           -> novooa-script (Python, abgeschottet)
+          -> novooa-packages (Python, installiert PyPI-Pakete für Scripts)
       -> Server (docker-compose.server.yaml), einmal pro Rechner
           -> novooa-ml (Python)
               Tensor-Transformationen und ONNX-Inferenz für alle Stacks

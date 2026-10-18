@@ -1,3 +1,4 @@
+import 'package:syscat2/features/script_packages/domain/entities/python_package.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/plugin_node_config.dart';
 import '../../domain/entities/knowledge_attachment.dart';
@@ -100,6 +101,7 @@ class NodeConfigDocumentMapper {
     return {
       'primitive': config.primitive.name,
       'script': config.script,
+      'packages': [for (final package in config.packages) package.spec],
       'attachments': config.attachments.map(_attachmentToDocument).toList(),
     };
   }
@@ -367,6 +369,7 @@ class NodeConfigDocumentMapper {
   ScriptNodeConfig _scriptFrom(Map<String, Object?> data) {
     return ScriptNodeConfig(
       script: data['script'] as String? ?? '',
+      packages: _pythonPackagesFrom(data['packages']),
       attachments: _attachmentsFrom(data['attachments']),
     );
   }
@@ -757,6 +760,15 @@ class NodeConfigDocumentMapper {
       if (attachment.versionCreatedAt != null)
         'versionCreatedAt': attachment.versionCreatedAt!.millisecondsSinceEpoch,
     };
+  }
+
+  /// Ungültige Angaben fallen weg; gespeichert werden nur geprüfte Pakete.
+  List<PythonPackage> _pythonPackagesFrom(Object? value) {
+    if (value is! List) return const [];
+    return [
+      for (final item in value)
+        if (item is String) ?PythonPackage.parse(item),
+    ];
   }
 
   List<NodeAttachment> _attachmentsFrom(Object? value) {

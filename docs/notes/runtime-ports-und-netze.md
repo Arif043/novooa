@@ -13,6 +13,9 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
   ([ML-Mandanten](./ml-mandanten.md)).
 - **`novooa-script`** liegt in einem internen Netz ohne Außenzugang; nur die
   Runtime erreicht ihn.
+- **`novooa-packages`** hängt im internen Netz `novooa-packages` (zur
+  Runtime) und in `novooa-packages-egress` (zu PyPI); siehe
+  [Script-Paketdienst](./script-paketdienst.md).
 
 Port `8090` darf nie aus dem Internet erreichbar sein. Für externen Zugriff
 siehe [Reverse Proxy für externen Zugriff](./reverse-proxy-externer-zugriff.md).

@@ -15,6 +15,13 @@ MAX_RESULT_BYTES = 2 * 1024 * 1024
 MAX_PRINTED_BYTES = 256 * 1024
 MAX_SCRIPT_PROCESSES = int(os.environ.get("SCRIPT_MAX_PROCESSES", "64"))
 WORK_ROOT = os.environ.get("SCRIPT_WORK_DIRECTORY", tempfile.gettempdir())
+# Vom Paketdienst gebaute Umgebungen, schreibgeschützt eingebunden (siehe novooa_packages).
+PACKAGES_ROOT = os.environ.get("SCRIPT_PACKAGES_ROOT", "/packages")
+_ENVIRONMENT_ID = re.compile(r"^[0-9a-f]{64}$")
+
+
+class PackagesMissing(Exception):
+    """Die Paketumgebung des Bausteins ist nicht installiert."""
 
 
 class ScriptFailed(Exception):
@@ -28,9 +35,10 @@ class ScriptFailed(Exception):
 
 def execute(request, file_bytes):
     """Führt ein Script in einem frischen Prozess aus und liefert das Ergebnis."""
+    site = site_directory_for(request.get("environment"))
     run_directory = tempfile.mkdtemp(prefix="run-", dir=WORK_ROOT)
     try:
-        payload = payload_for(request, file_bytes, run_directory)
+        payload = {**payload_for(request, file_bytes, run_directory), "site": site}
         try:
             result = result_of(run_child(payload, run_directory))
         except ScriptFailed as failure:
@@ -41,6 +49,16 @@ def execute(request, file_bytes):
         return {**result, "printed": printed_of(run_directory), "stderr": error_output_of(run_directory)}
     finally:
         shutil.rmtree(run_directory, ignore_errors=True)
+
+
+def site_directory_for(environment_id):
+    """Das Paketverzeichnis der Umgebung; `None` ohne Umgebung. Fehlt sie, läuft das Script nicht."""
+    if environment_id is None:
+        return None
+    site = os.path.join(PACKAGES_ROOT, "envs", str(environment_id), "site")
+    if not _ENVIRONMENT_ID.match(str(environment_id)) or not os.path.isdir(site):
+        raise PackagesMissing()
+    return site
 
 
 def payload_for(request, file_bytes, run_directory):

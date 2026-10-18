@@ -28,7 +28,8 @@ enum ActivityFailureCode {
   httpStatusFailed,
   forEachUnsupported,
   scriptFailed,
-  scriptOutputInvalid;
+  scriptOutputInvalid,
+  scriptPackagesUnavailable;
 
   /// Unbekannte Codes (auch `unknown`) ergeben `null`: dann zählt nur der
   /// gespeicherte Text.

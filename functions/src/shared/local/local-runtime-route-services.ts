@@ -35,10 +35,12 @@ import {SQLiteModelCatalog} from "../../features/machine_learning/infrastructure
 import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 import {createLocalTaskBuilderAssistant} from "../../features/task_execution/infrastructure/local/local-task-builder-assistant.js";
 import {SQLiteTaskDefinitionStore} from "../../features/task_execution/infrastructure/local/sqlite-task-definition-store.js";
+import {scriptPackageJobsFromEnvironment} from "../../features/task_execution/infrastructure/local/script-package-composition.js";
 import {type AssistantRoutesOptions} from "./local-assistant-routes.js";
 import {SQLiteLocalApplicationLogStore} from "../logging/sqlite-local-application-log-store.js";
 import {LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
 import {type LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
+import {type ApplicationLogger} from "../logging/application-logger.js";
 
 /**
  * Stabile Dienste der HTTP-Schicht — einmal beim Start gebaut, da sie nur
@@ -81,6 +83,18 @@ export function createLocalRuntimeRouteServices(options: {
     speechVoices: new LanguageModelSpeech(new SQLiteLanguageModelCatalog(database, languageModelSecrets), defaultSpeechProviders()),
     assistants: assistantFactories(database, languageModelSecrets, () => options.licenses.signedActiveLicense()),
     modelCatalog: modelCatalogOptions(runtimeRoot, database, options.notifier, options.mlService),
+    scriptPackages: scriptPackageJobsFromEnvironment(database, options.notifier, workspaceLogger(options.workspaceContext)),
+  };
+}
+
+/** Die Paketumgebungen gehören der Runtime; protokolliert wird in den gerade aktiven Arbeitsbereich. */
+function workspaceLogger(workspaceContext: () => LocalRuntimeWorkspaceContext): ApplicationLogger {
+  return {
+    info: (event, data) => workspaceContext().logger.info(event, data),
+    error: (event, data) => workspaceContext().logger.error(event, data),
+    exception: (event, error, data) => workspaceContext().logger.exception(event, error, data),
+    readableInfo: (message, event) => workspaceContext().logger.readableInfo(message, event),
+    readableError: (message, event) => workspaceContext().logger.readableError(message, event),
   };
 }
 

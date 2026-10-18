@@ -52,6 +52,7 @@ void main() {
         employees: true,
         connections: false,
         webhooks: false,
+        scriptPackages: false,
       ),
     );
   });

@@ -16,6 +16,8 @@ export type ExpectedValue = "image" | "audio" | "file" | "number" | "boolean" | 
 export type RunTrigger = "email" | "whatsapp" | "sms" | "telegram" | "instagram" | "webhook";
 export type Capability = "speechSynthesis" | "speechTranscription" | "httpRequests" | "float16Tensors";
 export type ScriptOutputProblem = "duplicateName" | "invalidEntry" | "invalidName" | "unknownType" | "wrongValueType";
+/** `notInstalled`: Die Pakete wurden noch nicht installiert; `unsupported`: Die Umgebung kennt keine Pakete (Cloud). */
+export type ScriptPackagesProblem = "notInstalled" | "unsupported";
 
 export const nodeFailures = {
   configurationMissing: (primitive: string) => coded("configurationMissing", {primitive}),
@@ -32,6 +34,8 @@ export const nodeFailures = {
   forEachUnsupported: (reason: "nestedForEach" | "pausingBlock") => coded("forEachUnsupported", {reason}),
   scriptOutputInvalid: (reason: ScriptOutputProblem, name?: string, type?: string) =>
     coded("scriptOutputInvalid", withName(type === undefined ? {reason} : {reason, type}, name)),
+  scriptPackagesUnavailable: (reason: ScriptPackagesProblem, packages: readonly string[]) =>
+    coded("scriptPackagesUnavailable", {reason, packages: packages.join(", ")}),
   /** Die Meldung des Scripts selbst (z. B. die Python-Ausnahme) ist der technische Text. */
   scriptFailed: (message: string, console: ConsoleOutput) => NodeFailure.of({code: "scriptFailed", message, console}),
   /** Ein unerwarteter Fehler ohne fachlichen Code, z. B. aus der Infrastruktur eines inneren Plans. */

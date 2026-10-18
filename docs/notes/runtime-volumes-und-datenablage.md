@@ -9,6 +9,7 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 | `novooa-data` | SQLite, Dateien, Wissensbasis, eigene Modelle, Skills | nur `novooa-runtime` (schreibbar) |
 | `novooa-keys` | Master-Key-Schlüsselbund | Runtime, `key-init`, `key-rotation` |
 | `novooa-ml-data` | Modellbündel, Mandantenliste | nur `novooa-ml` |
+| `novooa-script-packages` | Paketumgebungen und uv-Cache der Script-Bausteine | `novooa-packages` (schreibbar), `novooa-script` (nur lesend) |
 
 Compose legt sie als `novooa-local_novooa-data` und
 `novooa-local_novooa-keys` an; `docker compose down` entfernt sie nicht.

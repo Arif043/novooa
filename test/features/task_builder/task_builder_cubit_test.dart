@@ -1,3 +1,4 @@
+import 'package:syscat2/features/script_packages/domain/entities/python_package.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/features/task_builder/domain/entities/knowledge_attachment.dart';
@@ -374,6 +375,21 @@ void main() {
     final config = state.editingTask.nodes.first.config as ScriptNodeConfig;
 
     expect(config.script, 'ergebnis = 1');
+    await _closeAndExpectSaved(cubit, repository, state.editingTask);
+  });
+
+  test('updateScriptPackages speichert die Pakete am Script-Node', () async {
+    final repository = _InMemoryTaskRepository(_taskWithScriptNode());
+    final cubit = TaskBuilderCubit(repository: repository);
+    final packages = [PythonPackage.parse('six')!];
+
+    await cubit.load(repository.savedTask);
+    await cubit.updateScriptPackages(const NodeId('node.script'), packages);
+
+    final state = cubit.state as TaskBuilderLoaded;
+    final config = state.editingTask.nodes.first.config as ScriptNodeConfig;
+
+    expect(config.packages, packages);
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 

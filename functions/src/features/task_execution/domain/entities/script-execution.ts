@@ -4,6 +4,8 @@ export type ScriptExecutionRequest = {
   script: string;
   /** Die per `workflow_input("pfad")` gelesenen Werte, unter ihrem Pfad. */
   inputs: Record<string, WorkflowInputValue>;
+  /** Normalisierte Paketliste des Bausteins (`normalizedScriptPackages`); leer = nur Standardbibliothek. */
+  packages: string[];
 };
 
 export type ScriptExecutionResult = {

@@ -3,7 +3,7 @@ import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import BoundedSemaphore
 
-from novooa_script.execution import ScriptFailed, execute
+from novooa_script.execution import PackagesMissing, ScriptFailed, execute
 from novooa_script.multipart import MultipartError, parse_multipart
 
 MAX_BODY_BYTES = 64 * 1024 * 1024
@@ -38,6 +38,8 @@ class ScriptHandler(BaseHTTPRequestHandler):
             return self.reply(503, {"error": "Der Script-Dienst ist ausgelastet."})
         try:
             self.reply(200, execute(request, files))
+        except PackagesMissing:
+            self.reply(409, {"code": "packagesMissing", "error": "Die Pakete des Bausteins sind nicht installiert."})
         except ScriptFailed as error:
             self.reply(422, {"error": str(error), "printed": error.printed, "stderr": error.error_output})
         except Exception:  # noqa: BLE001 - nie die Verbindung kappen, sondern sauber antworten

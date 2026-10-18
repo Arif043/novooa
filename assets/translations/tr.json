@@ -657,7 +657,27 @@
     "files_initial_upload": "İlk dosyayı yükle",
     "files_initial_folder": "Yeni klasör",
     "anmeldung_fehlgeschlagen_mit_grund": "Oturum açılamadı: {}",
-    "workflow_wert_suchen": "İş akışı değeri ara"
+    "workflow_wert_suchen": "İş akışı değeri ara",
+    "script_packages_title": "Python paketleri",
+    "script_packages_empty": "Paket olmadan yalnızca standart kütüphane kullanılabilir.",
+    "script_package_input": "Paket ekle",
+    "script_package_input_hint": "pandas veya pandas==2.2.3",
+    "script_package_invalid": "Geçersiz giriş. PyPI paket adı, isteğe bağlı sürümle izin verilir, ör. pandas==2.2.3.",
+    "script_package_add": "Ekle",
+    "script_package_remove": "{name} kaldır",
+    "script_packages_detected": "Kodda içe aktarılmış ama listede yok:",
+    "script_packages_adopt_all": "Tümünü ekle",
+    "script_packages_reuse": "Mevcut ortamı kullan: {packages}",
+    "script_packages_not_installed": "Yüklü değil",
+    "script_packages_install": "Paketleri yükle",
+    "script_packages_installing": "Yükleniyor …",
+    "script_packages_ready": "Yüklü ({size})",
+    "script_packages_retry": "Tekrar dene",
+    "script_packages_failed_notFound": "Bir paket PyPI üzerinde bulunamadı.",
+    "script_packages_failed_noWheel": "Bir paket için Linux’a uygun hazır paket (wheel) yok.",
+    "script_packages_failed_tooLarge": "Paketler birlikte çok büyük.",
+    "script_packages_failed_failed": "Yükleme başarısız oldu.",
+    "script_packages_status_unavailable": "Paket durumu kullanılamıyor."
   },
   "machine_learning": {
     "model_import": {
@@ -690,7 +710,8 @@
       "httpStatusFailed": "HTTP isteği {status} durum koduyla başarısız oldu.",
       "forEachUnsupported": "“Her öğe için” {reason} desteklemez.",
       "scriptFailed": "Betik bir hatayla sona erdi. Mesaj ve çıktı aşağıda.",
-      "scriptOutputInvalid": "Bir workflow_output geçersiz: {reason}{name}."
+      "scriptOutputInvalid": "Bir workflow_output geçersiz: {reason}{name}.",
+      "scriptPackagesUnavailable": "Python paketleri ({packages}): {reason}"
     },
     "operand_kinds": {
       "number": "bir sayı",
@@ -763,6 +784,10 @@
       "invalidName": "geçersiz ad",
       "unknownType": "bilinmeyen tür",
       "wrongValueType": "değer türe uymuyor"
+    },
+    "script_packages_reasons": {
+      "notInstalled": "yüklü değil. Script bloğunda „Paketleri yükle“ ile yükleyin.",
+      "unsupported": "yalnızca yerel çalışma ortamında kullanılabilir."
     }
   },
   "knowledge_graph": {

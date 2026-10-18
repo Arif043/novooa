@@ -8,6 +8,15 @@ extension TaskBuilderScriptMutations on TaskBuilderCubit {
     });
   }
 
+  Future<void> updateScriptPackages(
+    NodeId nodeId,
+    List<PythonPackage> packages,
+  ) {
+    return _updateScriptConfig(nodeId, (config) {
+      return config.copyWith(packages: packages);
+    });
+  }
+
   Future<void> _updateScriptConfig(
     NodeId nodeId,
     ScriptNodeConfig Function(ScriptNodeConfig config) update,

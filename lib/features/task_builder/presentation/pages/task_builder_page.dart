@@ -17,6 +17,7 @@ import 'package:syscat2/features/task_builder/presentation/cubits/node_skill_att
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/machine_learning/presentation/cubits/model_catalog_cubit.dart';
+import 'package:syscat2/features/script_packages/presentation/cubits/script_packages_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/task_save_notice_listener.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/task_builder_body.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/task_title_field.dart';
@@ -52,6 +53,10 @@ class TaskBuilderPage extends StatelessWidget {
             create: (_) => serviceLocator<ModelCatalogCubit>()
               ..load()
               ..loadGlobal(),
+          ),
+        if (serviceLocator<WorkspaceCapabilities>().scriptPackages)
+          BlocProvider(
+            create: (_) => serviceLocator<ScriptPackagesCubit>()..load(),
           ),
         if (connectionsAvailable())
           BlocProvider(

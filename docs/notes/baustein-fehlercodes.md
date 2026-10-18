@@ -23,6 +23,7 @@ Katalog: `nodeFailures` in `functions/src/features/task_execution/domain/entitie
 | `forEachUnsupported` | `reason` (`nestedForEach`, `pausingBlock`) | Für jedes Element |
 | `scriptFailed` | – (Konsole an der Failure) | Fehler im Script |
 | `scriptOutputInvalid` | `reason`, `name`, `type` | `workflow_output` |
+| `scriptPackagesUnavailable` | `reason` (`notInstalled`, `unsupported`), `packages` | Script mit Paketen |
 | `conditionOperandMismatch` | `operator`, `expected`, `received` | [Bedingungen](./bedingter-ablauf-auswertung.md) |
 | `unexpected` | – | Exception in einem verschachtelten Plan; nicht übersetzt |
 

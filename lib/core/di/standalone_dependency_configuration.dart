@@ -139,6 +139,7 @@ import '../network/workspace_binary_client.dart';
 import '../network/workspace_realtime_channel.dart';
 import '../routing/app_router.dart';
 import 'standalone_workspace_dependency_configuration.dart';
+import 'standalone_script_packages_dependency_configuration.dart';
 import 'standalone_workspace_transfer_dependency_configuration.dart';
 
 Future<void> configureStandaloneDependencies(
@@ -190,6 +191,7 @@ Future<void> configureStandaloneDependencies(
     runtimeUri: profile.workspaceApiUri,
   );
   configureStandaloneWorkspaceTransferDependencies(locator);
+  configureStandaloneScriptPackagesDependencies(locator);
   locator
     ..registerLazySingleton<RuntimeLicenseRepository>(
       () => HttpRuntimeLicenseRepository(locator<WorkspaceApiClient>()),

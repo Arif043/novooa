@@ -75,6 +75,7 @@ WorkspaceCapabilities _capabilities({required bool messaging}) {
     employees: false,
     connections: false,
     webhooks: false,
+    scriptPackages: false,
   );
 }
 
