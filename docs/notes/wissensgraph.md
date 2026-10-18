@@ -23,8 +23,14 @@ Gehört zu: [Wissensbasis](../index/wissensbasis.md)
 - **Darstellung:** radialer Verlauf aus den Flächenfarben mit zartem
   Akzent-Schimmer in der Mitte und leichter Vignette
   (`KnowledgeGraphBackground`, Farben aus dem Theme). Knotengröße nach Zahl
-  der Links. Die gewählte Notiz und ihre Nachbarn leuchten in der
-  Akzentfarbe, ihre Links mit weichem Glimmen; alles andere tritt zurück.
+  der Links.
+- **Prompt-Kontext:** Ist eine Notiz gewählt, leuchten genau die Notizen, die
+  ein Prompt mit dieser Notiz als Anhang sieht: sie selbst, ihre ausgehenden
+  Links direkt (kräftig) und indirekt (schwächer), samt der Links zwischen
+  ihnen. Backlinks und alles jenseits von 5 Ebenen bzw. 50 Notizen treten
+  zurück. Die Leiste nennt die Zahl („n Notizen im Prompt-Kontext“).
+  Berechnet von `KnowledgeNoteReach` mit denselben Regeln wie beim Run
+  ([Wissensnotizen als Anhang](./wissensnotizen-als-anhang.md)).
 - Reduzierte Bewegung: Die Simulation rechnet sofort bis zur Ruhe, ohne
   Animation.
 

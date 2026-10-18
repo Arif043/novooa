@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/knowledge_base/domain/entities/knowledge_note.dart';
 import 'package:syscat2/features/knowledge_base/presentation/widgets/knowledge_base_graph_view.dart';
 import 'package:syscat2/features/knowledge_base/presentation/widgets/knowledge_graph_canvas.dart';
+import 'package:syscat2/features/knowledge_base/presentation/widgets/knowledge_graph_node.dart';
 import 'package:syscat2/features/knowledge_base/presentation/widgets/knowledge_graph_simulation.dart';
 
 KnowledgeNote note(String id, [List<String> links = const []]) => KnowledgeNote(
@@ -146,7 +147,45 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('hervorgehoben ist nur, was ein Prompt mit der Notiz sieht', (
+    tester,
+  ) async {
+    await _pumpGraph(tester, [
+      note('a', ['b']),
+      note('b', ['c']),
+      note('c'),
+      note('rueck', ['a']),
+      note('fremd'),
+    ]);
+    await tester.pumpAndSettle();
+
+    expect(_emphasisOf(tester, 'a'), KnowledgeGraphEmphasis.selected);
+    expect(_emphasisOf(tester, 'b'), KnowledgeGraphEmphasis.directlyLinked);
+    expect(_emphasisOf(tester, 'c'), KnowledgeGraphEmphasis.indirectlyLinked);
+    expect(_emphasisOf(tester, 'rueck'), KnowledgeGraphEmphasis.dimmed);
+    expect(_emphasisOf(tester, 'fremd'), KnowledgeGraphEmphasis.dimmed);
+    expect(find.text('3 Notizen im Prompt-Kontext'), findsOneWidget);
+  });
 }
+
+Future<void> _pumpGraph(WidgetTester tester, List<KnowledgeNote> notes) async {
+  await tester.binding.setSurfaceSize(const Size(1200, 800));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Scaffold(
+        body: KnowledgeBaseGraphView(notes: notes, selectedNoteId: 'a'),
+      ),
+    ),
+  );
+}
+
+KnowledgeGraphEmphasis _emphasisOf(WidgetTester tester, String id) => tester
+    .widget<KnowledgeGraphNode>(
+      find.byKey(ValueKey('knowledge-graph-node-$id')),
+    )
+    .emphasis;
 
 /// Einzelne 16-ms-Frames, wie im echten Betrieb; ein langer Frame würde der
 /// Simulation nur einen Schritt geben.

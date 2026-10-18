@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 
-/// Zeichnet die Links des Wissensgraphen. Links an der gewählten Notiz
-/// leuchten in der Akzentfarbe; ist eine Notiz gewählt, treten alle übrigen
-/// zurück.
+/// Zeichnet die Links des Wissensgraphen. Die Links, über die ein Prompt
+/// von der gewählten Notiz aus weitere Notizen erreicht ([highlightedLinks],
+/// gerichtet), leuchten in der Akzentfarbe; alle übrigen treten zurück.
 class KnowledgeGraphPainter extends CustomPainter {
   const KnowledgeGraphPainter({
     required this.links,
     required this.positions,
     required this.colorScheme,
     required this.selectedNoteId,
+    this.highlightedLinks = const {},
   });
 
   final Iterable<(String, String)> links;
   final Map<String, Offset> positions;
   final ColorScheme colorScheme;
   final String? selectedNoteId;
+  final Set<(String, String)> highlightedLinks;
 
   /// Knotenmitte liegt über dem Label; die Linien treffen den Punkt.
   static const _dotOffset = Offset(0, -10);
@@ -26,7 +28,8 @@ class KnowledgeGraphPainter extends CustomPainter {
       final from = positions[source];
       final to = positions[target];
       if (from == null || to == null) continue;
-      if (source == selectedNoteId || target == selectedNoteId) {
+      if (highlightedLinks.contains((source, target)) ||
+          highlightedLinks.contains((target, source))) {
         highlighted.add((from + _dotOffset, to + _dotOffset));
         continue;
       }

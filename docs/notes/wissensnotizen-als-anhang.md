@@ -15,6 +15,9 @@ Unterstützte Node-Configs speichern `knowledgeAttachments` neben
   unter `knowledge/` im Genkit-Workspace.
 - Breitensuche: erst die Anhänge, dann deren Links, dann deren Links. Ende nach
   5 Ebenen bzw. 50 Notizen; am Limit fallen die entferntesten weg.
+  Der Client bildet dieselben Regeln in `KnowledgeNoteReach` nach, um im
+  [Wissensgraph](./wissensgraph.md) den Prompt-Kontext einer Notiz zu zeigen;
+  Grenzen bitte an beiden Stellen ändern.
 - Der Prompt nennt nur die direkt angehängte Notiz; verlinkte entdeckt das
   Modell über die Links im Markdown und `knowledge/manifest.json`.
 - Prompt-Bausteine sind angebunden, Script-Bausteine bewusst noch nicht.

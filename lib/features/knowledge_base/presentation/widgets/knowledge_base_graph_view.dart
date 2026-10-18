@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
 import '../../domain/entities/knowledge_note.dart';
+import '../../domain/services/knowledge_note_reach.dart';
 import 'knowledge_graph_background.dart';
 import 'knowledge_graph_canvas.dart';
 import 'knowledge_graph_simulation.dart';
@@ -57,6 +58,10 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
     if (widget.notes.isEmpty) {
       return const Center(child: Text('Keine Notizen.'));
     }
+    final selected = widget.selectedNoteId;
+    final reach = selected == null
+        ? const <String, int>{}
+        : const KnowledgeNoteReach()(selected, widget.notes);
     return LayoutBuilder(
       builder: (context, constraints) {
         _simulation.canvasSize = _canvasSizeFor(constraints.biggest);
@@ -81,6 +86,7 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
                     notes: widget.notes,
                     selectedNoteId: widget.selectedNoteId,
                     simulation: _simulation,
+                    reach: reach,
                     onNodeDragStart: _startNodeDrag,
                     onNodeDrag: _moveNode,
                     onNodeDragEnd: _endNodeDrag,
@@ -89,7 +95,10 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
                 Positioned(
                   left: AppSpacing.md,
                   top: AppSpacing.md,
-                  child: KnowledgeGraphToolbar(onResetView: _resetView),
+                  child: KnowledgeGraphToolbar(
+                    onResetView: _resetView,
+                    contextNoteCount: reach.isEmpty ? null : reach.length,
+                  ),
                 ),
               ],
             ),

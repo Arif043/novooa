@@ -5,9 +5,16 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import '../../domain/entities/knowledge_note.dart';
 import '../cubits/knowledge_base_cubit.dart';
 
-/// Wie stark eine Notiz im Graphen hervortritt: gewählt, Nachbar der
-/// gewählten, normal oder zurückgenommen (nicht verbunden mit der gewählten).
-enum KnowledgeGraphEmphasis { selected, neighbour, normal, dimmed }
+/// Wie stark eine Notiz im Graphen hervortritt: gewählt, direkt oder
+/// indirekt von ihr verlinkt (im Kontext eines Prompts, der sie anhängt),
+/// normal oder zurückgenommen (außerhalb dieses Kontexts).
+enum KnowledgeGraphEmphasis {
+  selected,
+  directlyLinked,
+  indirectlyLinked,
+  normal,
+  dimmed,
+}
 
 class KnowledgeGraphNode extends StatelessWidget {
   const KnowledgeGraphNode({
@@ -98,8 +105,12 @@ class _NodeDot extends StatelessWidget {
         shape: BoxShape.circle,
         color: switch (emphasis) {
           KnowledgeGraphEmphasis.selected => colors.primary,
-          KnowledgeGraphEmphasis.neighbour => Color.alphaBlend(
-            colors.primary.withValues(alpha: .55),
+          KnowledgeGraphEmphasis.directlyLinked => Color.alphaBlend(
+            colors.primary.withValues(alpha: .7),
+            colors.onSurfaceVariant,
+          ),
+          KnowledgeGraphEmphasis.indirectlyLinked => Color.alphaBlend(
+            colors.primary.withValues(alpha: .4),
             colors.onSurfaceVariant,
           ),
           _ => colors.onSurfaceVariant.withValues(alpha: .62),
@@ -107,7 +118,7 @@ class _NodeDot extends StatelessWidget {
         boxShadow: [
           if (_glows)
             BoxShadow(
-              color: colors.primary.withValues(alpha: _selected ? .6 : .3),
+              color: colors.primary.withValues(alpha: _glowAlpha),
               blurRadius: _selected ? AppSpacing.lg : AppSpacing.md,
               spreadRadius: _selected ? 2 : 0,
             ),
@@ -118,7 +129,14 @@ class _NodeDot extends StatelessWidget {
 
   bool get _selected => emphasis == KnowledgeGraphEmphasis.selected;
 
-  bool get _glows => _selected || emphasis == KnowledgeGraphEmphasis.neighbour;
+  bool get _glows => _glowAlpha > 0;
+
+  double get _glowAlpha => switch (emphasis) {
+    KnowledgeGraphEmphasis.selected => .6,
+    KnowledgeGraphEmphasis.directlyLinked => .32,
+    KnowledgeGraphEmphasis.indirectlyLinked => .16,
+    _ => 0,
+  };
 }
 
 class _NodeLabel extends StatelessWidget {

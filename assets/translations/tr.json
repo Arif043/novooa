@@ -760,5 +760,11 @@
       "unknownType": "bilinmeyen tür",
       "wrongValueType": "değer türe uymuyor"
     }
+  },
+  "knowledge_graph": {
+    "title": "Grafik",
+    "reset_view": "Görünümü sıfırla",
+    "context_notes": "Prompt bağlamında {count} not",
+    "context_hint": "Seçili notun eklendiği bir prompt bu notları görür: notun kendisi ve 5 seviyeye kadar giden bağlantıları, en fazla 50."
   }
 }

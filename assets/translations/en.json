@@ -760,5 +760,11 @@
       "unknownType": "unknown type",
       "wrongValueType": "value does not match the type"
     }
+  },
+  "knowledge_graph": {
+    "title": "Graph",
+    "reset_view": "Reset view",
+    "context_notes": "{count} notes in prompt context",
+    "context_hint": "A prompt that has the selected note attached sees these notes: the note itself and its outgoing links up to 5 levels, at most 50."
   }
 }

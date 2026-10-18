@@ -1063,4 +1063,9 @@ abstract class LocaleKeys {
   static const activity_failures_script_output_reasons =
       'activity_failures.script_output_reasons';
   static const activity_failures = 'activity_failures';
+  static const knowledge_graph_title = 'knowledge_graph.title';
+  static const knowledge_graph_reset_view = 'knowledge_graph.reset_view';
+  static const knowledge_graph_context_notes = 'knowledge_graph.context_notes';
+  static const knowledge_graph_context_hint = 'knowledge_graph.context_hint';
+  static const knowledge_graph = 'knowledge_graph';
 }

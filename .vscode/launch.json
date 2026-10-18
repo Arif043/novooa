@@ -21,9 +21,9 @@
             "request": "launch",
             "type": "dart",
             "deviceId": "chrome",
-            "toolArgs": [
-                "--dart-define=NOVOOA_RUNTIME=cloud"
-            ]
+            // "toolArgs": [
+            //     "--dart-define=NOVOOA_RUNTIME=cloud"
+            // ]
         },
         {
             // Oberfläche ohne Backend, Firebase und Lizenz; Daten nur im

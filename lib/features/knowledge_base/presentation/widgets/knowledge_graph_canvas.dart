@@ -11,6 +11,7 @@ class KnowledgeGraphCanvas extends StatelessWidget {
     required this.notes,
     required this.selectedNoteId,
     required this.simulation,
+    this.reach = const {},
     required this.onNodeDragStart,
     required this.onNodeDrag,
     required this.onNodeDragEnd,
@@ -19,6 +20,10 @@ class KnowledgeGraphCanvas extends StatelessWidget {
   final List<KnowledgeNote> notes;
   final String? selectedNoteId;
   final KnowledgeGraphSimulation simulation;
+
+  /// Was ein Prompt mit der gewählten Notiz sieht: Notiz-ID → Ebene
+  /// (`KnowledgeNoteReach`).
+  final Map<String, int> reach;
   final ValueChanged<String> onNodeDragStart;
   final void Function(String noteId, Offset position, Offset delta) onNodeDrag;
   final VoidCallback onNodeDragEnd;
@@ -28,9 +33,6 @@ class KnowledgeGraphCanvas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selected = selectedNoteId;
-    final neighbours = selected == null
-        ? const <String>{}
-        : simulation.neighboursOf(selected);
     return SizedBox.fromSize(
       size: simulation.canvasSize,
       child: Stack(
@@ -42,6 +44,7 @@ class KnowledgeGraphCanvas extends StatelessWidget {
                 positions: positions,
                 colorScheme: Theme.of(context).colorScheme,
                 selectedNoteId: selected,
+                highlightedLinks: _reachedLinks(),
               ),
             ),
           ),
@@ -49,7 +52,7 @@ class KnowledgeGraphCanvas extends StatelessWidget {
             KnowledgeGraphNode(
               key: ValueKey('knowledge-graph-node-${note.id}'),
               note: note,
-              emphasis: _emphasisOf(note.id, neighbours),
+              emphasis: _emphasisOf(note.id),
               degree: simulation.degrees[note.id] ?? 0,
               position: positions[note.id] ?? Offset.zero,
               onDragStart: () => onNodeDragStart(note.id),
@@ -63,11 +66,21 @@ class KnowledgeGraphCanvas extends StatelessWidget {
     );
   }
 
-  KnowledgeGraphEmphasis _emphasisOf(String id, Set<String> neighbours) {
+  KnowledgeGraphEmphasis _emphasisOf(String id) {
     if (selectedNoteId == null) return KnowledgeGraphEmphasis.normal;
-    if (id == selectedNoteId) return KnowledgeGraphEmphasis.selected;
-    return neighbours.contains(id)
-        ? KnowledgeGraphEmphasis.neighbour
-        : KnowledgeGraphEmphasis.dimmed;
+    return switch (reach[id]) {
+      0 => KnowledgeGraphEmphasis.selected,
+      1 => KnowledgeGraphEmphasis.directlyLinked,
+      null => KnowledgeGraphEmphasis.dimmed,
+      _ => KnowledgeGraphEmphasis.indirectlyLinked,
+    };
   }
+
+  /// Ausgehende Links zwischen Notizen im Kontext.
+  Set<(String, String)> _reachedLinks() => {
+    for (final note in notes)
+      if (reach.containsKey(note.id))
+        for (final target in note.outgoingLinks)
+          if (target != note.id && reach.containsKey(target)) (note.id, target),
+  };
 }

@@ -760,5 +760,11 @@
       "unknownType": "unbekannter Typ",
       "wrongValueType": "Wert passt nicht zum Typ"
     }
+  },
+  "knowledge_graph": {
+    "title": "Graph",
+    "reset_view": "Ansicht zurücksetzen",
+    "context_notes": "{count} Notizen im Prompt-Kontext",
+    "context_hint": "Diese Notizen sieht ein Prompt, an dem die gewählte Notiz hängt: sie selbst und ihre ausgehenden Links bis 5 Ebenen, höchstens 50."
   }
 }
