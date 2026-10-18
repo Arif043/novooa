@@ -149,7 +149,7 @@ test("resolves dialog input fields by the names in outputs", () => {
 test("resolves script workflow outputs and a plain script text the same way, via outputs", () => {
   const scriptNode = (id: string, outputs: WorkflowNode["outputs"]): WorkflowNode => ({
     id, primitive: "script", title: "", description: "", outputs,
-    config: {primitive: "script", script: "", inputTemplate: "", attachments: []},
+    config: {primitive: "script", script: "", attachments: []},
   });
   const resolver = graphResolverFor(
     [

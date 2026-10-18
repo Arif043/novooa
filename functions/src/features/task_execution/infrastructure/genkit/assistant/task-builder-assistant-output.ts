@@ -22,7 +22,6 @@ const rawCommandSchema = z.object({
   recipient: z.string().optional(),
   message: z.string().optional(),
   script: z.string().max(20000).optional(),
-  inputTemplate: z.string().max(2000).optional(),
   ref: z.string().max(40).optional(),
   nodeRef: z.string().max(80).optional(),
   fields: z.record(z.string(), z.string().max(20000)).optional(),

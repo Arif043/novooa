@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from workflow_outputs import WorkflowOutputs  # noqa: E402
 sys.path.pop(0)
 
-RESERVED = {"input", "output", "files", "list_files", "read_file", "workflow_output"}
+RESERVED = {"files", "list_files", "read_file", "workflow_output"}
 
 
 def main():
@@ -56,7 +56,6 @@ def namespace_for(payload, attachments, outputs):
     return {
         # Wie beim Start einer Datei: Scripts mit `if __name__ == "__main__":` sollen diesen Block ausführen.
         "__name__": "__main__",
-        "input": payload["input"],
         "files": files,
         "list_files": list_files,
         "read_file": read_file,
@@ -80,13 +79,7 @@ def path_of(attachments, display_name):
 
 
 def success(namespace, outputs):
-    output_defined = "output" in namespace
-    output = namespace.get("output")
-    if output_defined and not isinstance(output, str):
-        raise TypeError("Script muss eine String-Variable output setzen.")
     return {
-        "outputDefined": output_defined,
-        "output": output,
         "variables": serializable_variables(namespace),
         "workflowOutputs": outputs.as_list(),
     }

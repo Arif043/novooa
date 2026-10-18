@@ -100,7 +100,6 @@ class NodeConfigDocumentMapper {
     return {
       'primitive': config.primitive.name,
       'script': config.script,
-      'inputTemplate': config.inputTemplate,
       'attachments': config.attachments.map(_attachmentToDocument).toList(),
     };
   }
@@ -368,7 +367,6 @@ class NodeConfigDocumentMapper {
   ScriptNodeConfig _scriptFrom(Map<String, Object?> data) {
     return ScriptNodeConfig(
       script: data['script'] as String? ?? '',
-      inputTemplate: data['inputTemplate'] as String? ?? '',
       attachments: _attachmentsFrom(data['attachments']),
     );
   }

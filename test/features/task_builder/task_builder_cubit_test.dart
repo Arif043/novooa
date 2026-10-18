@@ -368,12 +368,12 @@ void main() {
     final cubit = TaskBuilderCubit(repository: repository);
 
     await cubit.load(repository.savedTask);
-    await cubit.updateScript(const NodeId('node.script'), 'output = input');
+    await cubit.updateScript(const NodeId('node.script'), 'ergebnis = 1');
 
     final state = cubit.state as TaskBuilderLoaded;
     final config = state.editingTask.nodes.first.config as ScriptNodeConfig;
 
-    expect(config.script, 'output = input');
+    expect(config.script, 'ergebnis = 1');
     await _closeAndExpectSaved(cubit, repository, state.editingTask);
   });
 

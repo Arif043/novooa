@@ -1,6 +1,6 @@
 # Script: Workflow-Ausgabewerte
 
-> `workflow_output(name, type, value)` legt im Script-Container einen typisierten Wert an, den Nachfolger flach als `{{name}}` lesen.
+> `workflow_output(name, type, value)` legt einen typisierten Wert an, den Nachfolger flach als `{{name}}` lesen — der einzige Weg zu Werten eines Scripts.
 
 Gehört zu: [Aufgabe](../index/aufgabe.md)
 
@@ -24,8 +24,9 @@ workflow_output("rechnung", "json", {"nr": "R-1", "positionen": positionen})
 - **Builder:** `ScriptWorkflowOutputParser` liest die Aufrufe; jede Ausgabe
   wird ein Wert in `outputs` (Schlüssel = Name im Code), umbenennbar und
   graph-weit eindeutig (`summe`, `summe2`), standardmäßig auf der Leinwand.
-- **Nur im Container:** Der Cloud-Pfad (`scriptPythonSource`) kennt die
-  Funktion nicht; dort endet ein Aufruf mit `NameError`.
+- **Cloud:** Der eingebettete Pfad (`scriptPythonSource`) sammelt die
+  Aufrufe ohne eigene Prüfung (nur `datetime`/`date` → ISO-Text); dort prüft
+  allein der Executor.
 
 ## Siehe auch
 

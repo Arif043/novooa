@@ -1,13 +1,6 @@
 part of 'task_builder_cubit.dart';
 
 extension TaskBuilderScriptMutations on TaskBuilderCubit {
-  Future<void> updateScriptInput(NodeId nodeId, String inputTemplate) {
-    return _updateScriptConfig(nodeId, (config) {
-      if (config.inputTemplate == inputTemplate) return config;
-      return config.copyWith(inputTemplate: inputTemplate);
-    });
-  }
-
   Future<void> updateScript(NodeId nodeId, String script) {
     return _updateScriptConfig(nodeId, (config) {
       if (config.script == script) return config;

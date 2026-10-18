@@ -24,7 +24,6 @@ class NodeFieldWriter {
       NodeFieldKey.recipient => _cubit.updateSendMessageRecipient(nodeId, text),
       NodeFieldKey.message => _cubit.updateSendMessageBody(nodeId, text),
       NodeFieldKey.script => _cubit.updateScript(nodeId, text),
-      NodeFieldKey.inputTemplate => _cubit.updateScriptInput(nodeId, text),
     };
   }
 }

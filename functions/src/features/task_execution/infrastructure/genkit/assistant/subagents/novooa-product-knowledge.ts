@@ -7,7 +7,7 @@ import {taskBuilderAssistantPrimitives} from "../../../../domain/entities/task-b
 const buildingBlocks: ReadonlyArray<readonly [primitive: string, description: string]> = [
   ["stringInput", "Texteingabe: gibt festen Text weiter."],
   ["prompt", "Prompt: LLM-Aufruf mit Vorlage und Variablen; Ausgabe Text, Entscheidung, strukturierte Felder oder Bild."],
-  ["script", "Script: führt Python isoliert aus (5 s, 10 KB Ausgabe); Eingabe über inputTemplate."],
+  ["script", "Script: führt Python isoliert aus (5 s, 10 KB Ausgabe); Werte nur über workflow_output, Eingaben als {{name}} im Code."],
   ["conditionalFlow", "Bedingter Ablauf: verzweigt anhand einer Entscheidung oder boolescher Bedingungen."],
   ["iterativeRefinement", "Iterative Verfeinerung: bewertet und verbessert einen Entwurf."],
   ["writeFile", "Datei schreiben: speichert einen Wert als Datei (Tabellen als .xlsx)."],

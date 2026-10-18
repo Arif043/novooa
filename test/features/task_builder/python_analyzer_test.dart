@@ -45,7 +45,7 @@ void main() {
       ),
     );
 
-    final result = await analyzer.analyze(_pythonCode('output = input'));
+    final result = await analyzer.analyze(_pythonCode('ergebnis = 1'));
 
     expect(result.issues.single.line, 2);
     expect(result.issues.single.message, 'Ungültige Python-Syntax.');

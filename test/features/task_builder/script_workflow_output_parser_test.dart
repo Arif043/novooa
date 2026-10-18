@@ -51,7 +51,7 @@ workflow_output("gültig", "boolean", True)
     const flat = ScriptNodeConfig(
       script: 'workflow_output("summe", "number", 42)',
     );
-    const plain = ScriptNodeConfig(script: 'output = input');
+    const plain = ScriptNodeConfig(script: 'ergebnis = 1');
 
     expect(hasFlatOutputFields(flat), isTrue);
     expect(outputKeysOf(flat), ['summe']);

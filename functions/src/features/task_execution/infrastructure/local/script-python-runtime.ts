@@ -1,9 +1,9 @@
 export const scriptPythonSource = `
+import datetime
 import json
 import sys
 
 payload = json.loads(sys.stdin.read())
-input = payload["input"]
 variables = payload["variables"]
 attachment_files = payload.get("files", [])
 files = [
@@ -16,6 +16,7 @@ files = [
     for file in attachment_files
 ]
 printed = []
+workflow_outputs = []
 
 def _resolve_file(display_name):
     matching_files = [
@@ -34,6 +35,12 @@ def list_files():
 def read_file(display_name, encoding="utf-8"):
     with open(_resolve_file(display_name), "r", encoding=encoding) as file:
         return file.read()
+
+def workflow_output(name, type, value):
+    # Geprueft wird im Executor (script-workflow-outputs.ts); hier nur JSON-faehig machen.
+    if isinstance(value, (datetime.datetime, datetime.date)):
+        value = value.isoformat()
+    workflow_outputs.append({"name": name, "type": type, "value": value})
 
 def safe_print(*values, sep=" ", end="\\n"):
     printed.append(sep.join(str(value) for value in values) + end)
@@ -59,22 +66,18 @@ safe_builtins = {
 }
 
 namespace = {
-    "input": input,
     "files": files,
     "list_files": list_files,
     "read_file": read_file,
     **variables,
+    # Nach den Variablen, damit eine gleichnamige Variable die Funktion nicht verdeckt.
+    "workflow_output": workflow_output,
 }
 exec(payload["script"], {"__builtins__": safe_builtins}, namespace)
-output_defined = "output" in namespace
-output = namespace.get("output")
-
-if output_defined and not isinstance(output, str):
-    raise TypeError("Script muss eine String-Variable output setzen.")
 
 next_variables = {}
 for key, value in namespace.items():
-    if key in ["input", "output", "files", "list_files", "read_file"]:
+    if key in ["files", "list_files", "read_file", "workflow_output"]:
         continue
     if key.startswith("__"):
         continue
@@ -85,9 +88,8 @@ for key, value in namespace.items():
         pass
 
 sys.stdout.write(json.dumps({
-    "outputDefined": output_defined,
-    "output": output,
     "printed": "".join(printed),
     "variables": next_variables,
+    "workflowOutputs": workflow_outputs,
 }))
 `;

@@ -21,6 +21,10 @@ abstract interface class NodeTextDefaults {
   /// Schlüssel `found` (siehe `outputFieldsOf`).
   String outputFieldBase(String fieldKey);
 
+  /// Startcode eines neuen Script-Bausteins: ein auskommentiertes Beispiel
+  /// für `workflow_output`, das noch keinen Wert anlegt.
+  String scriptStarter();
+
   String title(WorkflowPrimitive primitive);
 
   String description(WorkflowPrimitive primitive);

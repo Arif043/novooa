@@ -354,11 +354,18 @@ class TaskBuilderCubit extends Cubit<TaskBuilderState> {
     // Hauptwert.
     final node = WorkflowNode(
       id: NodeId('node.$number'),
-      config: NodeConfig.initial(primitive),
+      config: _initialConfig(primitive),
       title: nodeTextDefaults.title(primitive),
       description: nodeTextDefaults.description(primitive),
     );
     return _withOutputs(node, graph, valueBase: valueBase);
+  }
+
+  NodeConfig _initialConfig(WorkflowPrimitive primitive) {
+    if (primitive != WorkflowPrimitive.script) {
+      return NodeConfig.initial(primitive);
+    }
+    return ScriptNodeConfig(script: nodeTextDefaults.scriptStarter());
   }
 
   int _nextNodeNumber(WorkflowGraph graph) {

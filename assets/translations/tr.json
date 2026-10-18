@@ -135,6 +135,7 @@
       "http_request": "Yanit",
       "plugin": "Eklenti"
     },
+    "script_starter": "# workflow_output(\"name\", \"string\", deger)",
     "send_output_names": {
       "email": "GonderEposta",
       "whatsapp": "GonderWhatsapp",
@@ -425,7 +426,6 @@
     "e_mail_lesen_hinzufuegen": "E-posta oku ekle",
     "e_mail_senden": "E-posta gönder",
     "edit_output_name_typed": "{type} · Çıktı adını düzenle",
-    "eingabe": "Girdi",
     "elemente_aus": "Öğeler şuradan",
     "employee_gone": "Çalışan artık mevcut değil",
     "employees_load_failed": "Çalışanlar yüklenemedi.",

@@ -154,6 +154,9 @@ class LocalizedNodeTextDefaults implements NodeTextDefaults {
   }
 
   @override
+  String scriptStarter() => LocaleKeys.task_builder_script_starter.tr();
+
+  @override
   String sendChannelDescription(ChannelEventKind kind) {
     return switch (kind) {
       ChannelEventKind.email =>

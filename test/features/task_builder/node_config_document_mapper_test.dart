@@ -46,10 +46,6 @@ void main() {
     () {
       final mapper = _mapper();
       final configs = <NodeConfig>[
-        const ScriptNodeConfig(
-          script: 'output = input',
-          inputTemplate: '{{text.value}}',
-        ),
         ConditionalNodeConfig.fromChoices([
           'Ja',
         ]).copyWith(valueTemplate: '{{entscheidung.value}}'),

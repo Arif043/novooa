@@ -8,7 +8,7 @@ Gehört zu: [KI-Agent](../index/ki-agent.md)
 | --- | --- | --- | --- |
 | `anforderungsanalyse` | Zerlegt einen Wunsch in Bausteine (Produktwissen `novooa-product-knowledge.ts`) | keine | Ziel, Auslöser, Schritte (mit `umsetzbar`), offene Fragen, `benoetigtModell`, `benoetigtScript` |
 | `modellkatalog_suche` | Findet ONNX-Modelle für `modelInference` | `sucheModelle` (lesend, `SearchModelCatalog`) | bis zu drei Vorschläge mit `modelId`, Begründung, Ein- und Ausgaben |
-| `python_entwicklung` | Schreibt Code für den Script-Baustein | keine | `script`, `inputTemplate`, `workflowOutputs`, `hinweise` |
+| `python_entwicklung` | Schreibt Code für den Script-Baustein | keine | `script`, `workflowOutputs`, `hinweise` |
 
 - **Ablauf:** zuerst Anforderungsanalyse, je nach Profil Modellsuche und
   Python-Entwicklung (unabhängige Aufrufe parallel). Offene Fragen stellt er in

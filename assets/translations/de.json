@@ -135,6 +135,7 @@
       "http_request": "Antwort",
       "plugin": "Plugin"
     },
+    "script_starter": "# workflow_output(\"name\", \"string\", wert)",
     "send_output_names": {
       "email": "SendenEmail",
       "whatsapp": "SendenWhatsapp",
@@ -425,7 +426,6 @@
     "e_mail_lesen_hinzufuegen": "E-Mail lesen hinzufügen",
     "e_mail_senden": "E-Mail senden",
     "edit_output_name_typed": "{type} · Ausgabename bearbeiten",
-    "eingabe": "Eingabe",
     "elemente_aus": "Elemente aus",
     "employee_gone": "Mitarbeiter nicht mehr vorhanden",
     "employees_load_failed": "Mitarbeiter konnten nicht geladen werden.",

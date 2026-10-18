@@ -103,8 +103,7 @@ Map<NodeFieldKey, String> _fieldsFrom(
 }
 
 bool _isScriptField(NodeFieldKey key, WorkflowPrimitive primitive) {
-  final isScriptOnly =
-      key == NodeFieldKey.script || key == NodeFieldKey.inputTemplate;
+  final isScriptOnly = key == NodeFieldKey.script;
   return !isScriptOnly || primitive == WorkflowPrimitive.script;
 }
 

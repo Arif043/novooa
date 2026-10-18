@@ -1,11 +1,9 @@
 export type ScriptExecutionRequest = {
-  input: string;
   script: string;
   variables: Record<string, unknown>;
 };
 
 export type ScriptExecutionResult = {
-  output: string;
   variables: Record<string, unknown>;
   printed: string;
   /** Alles, was das Script auf stderr geschrieben hat (Warnungen, Unterprozesse); leer oder fehlend, wenn nichts. */

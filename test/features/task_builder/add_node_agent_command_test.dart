@@ -61,7 +61,7 @@ WorkflowNode _selectedNode(TaskBuilderCubit cubit) {
 }
 
 void main() {
-  test('Script-Vorschlag des Agenten setzt Code und Eingabe', () async {
+  test('Script-Vorschlag des Agenten setzt den Code', () async {
     final repository = _InMemoryTaskRepository(_emptyTask);
     final cubit = TaskBuilderCubit(repository: repository);
     await cubit.load(repository.savedTask);
@@ -71,14 +71,12 @@ void main() {
       primitive: WorkflowPrimitive.script,
       channelKind: ChannelEventKind.email,
       fields: {
-        NodeFieldKey.script: 'output = input.upper()',
-        NodeFieldKey.inputTemplate: '{{kundenmail.betreff}}',
+        NodeFieldKey.script: "workflow_output('summe', 'number', 1)",
       },
     ).perform(cubit);
 
     final config = _selectedNode(cubit).config as ScriptNodeConfig;
-    expect(config.script, 'output = input.upper()');
-    expect(config.inputTemplate, '{{kundenmail.betreff}}');
+    expect(config.script, "workflow_output('summe', 'number', 1)");
     await cubit.close();
   });
 

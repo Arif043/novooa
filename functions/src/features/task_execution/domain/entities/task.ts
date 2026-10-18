@@ -87,7 +87,6 @@ export type StringInputNodeConfig = {
 export type ScriptNodeConfig = {
   primitive: "script";
   script: string;
-  inputTemplate?: string;
   attachments: NodeAttachment[];
 };
 export type PromptNodeConfig = {

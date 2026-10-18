@@ -9,7 +9,7 @@ Executoren: `functions/src/features/task_execution/infrastructure/genkit/executo
 | Primitive | Status | Outputs |
 | --- | --- | --- |
 | `stringInput` | ausgefuehrt | `value` (`string`) |
-| `script` | ausgefuehrt | Ein Output je `workflow_output("name", "typ", wert)`-Aufruf (nur Script-Container; Name und Typ als String-Literale; `string`, `number`, `boolean`, `datetime`, `json`). Ohne solche Aufrufe liefert der Executor die Variable `output` als `value`; der Builder führt dafür keinen Wert, sie ist also nicht erreichbar. Laufzeitvariablen stehen nachfolgenden Templates zur Verfuegung |
+| `script` | ausgefuehrt | Ein Output je `workflow_output("name", "typ", wert)`-Aufruf (Name und Typ als String-Literale; `string`, `number`, `boolean`, `datetime`, `json`); ohne Aufrufe keine Outputs. Laufzeitvariablen stehen nachfolgenden Templates zur Verfuegung |
 | `prompt` mit Text oder Entscheidung | ausgefuehrt | `value` (`string`) |
 | `prompt` strukturiert | ausgefuehrt | ein flacher, typisierter Output je konfiguriertem Feld (`string`, `number`, `boolean`), ohne umschliessenden Knotennamen und ohne `value`; zusätzliche Felder des Modells fallen weg |
 | `prompt` mit Bild | ausgefuehrt | `value` (`media`); das generierte Bild wird als Team-Datei referenziert |

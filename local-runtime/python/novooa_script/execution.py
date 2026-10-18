@@ -52,7 +52,6 @@ def payload_for(request, file_bytes, run_directory):
         files.append({**metadata, "path": path})
     return {
         "script": request["script"],
-        "input": request["input"],
         "variables": request["variables"],
         "files": files,
     }

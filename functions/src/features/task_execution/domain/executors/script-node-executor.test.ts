@@ -11,7 +11,10 @@ test("resolves workflow values and delegates execution through the script port",
   const executor = createScriptNodeExecutor({
     async execute(request) {
       requests.push(request);
-      return ok({output: "fertig", variables: {count: 2}, printed: "ausgabe", errorOutput: "warnung"});
+      return ok({
+        variables: {count: 2}, printed: "ausgabe", errorOutput: "warnung",
+        workflowOutputs: [{name: "gruss", type: "string", value: "Hallo Mila"}],
+      });
     },
   }, (value) => printed.push(value));
 
@@ -23,8 +26,7 @@ test("resolves workflow values and delegates execution through the script port",
       outputs: [{key: "value", name: "script", showOnCanvas: true}],
       config: {
         primitive: "script",
-        script: "output = '{{name}}'",
-        inputTemplate: "Hallo {{name}}",
+        script: "workflow_output('gruss', 'string', 'Hallo {{name}}')",
         attachments: [],
       },
   } as never, {
@@ -36,13 +38,12 @@ test("resolves workflow values and delegates execution through the script port",
   } as never));
 
   assert.deepEqual(requests, [{
-    input: "Hallo Mila",
-    script: "output = 'Mila'",
+    script: "workflow_output('gruss', 'string', 'Hallo Mila')",
     variables: {},
   }]);
   assert.deepEqual(printed, [{printed: "ausgabe", errorOutput: "warnung"}]);
   assert.deepEqual(result.console, {stdout: "ausgabe", stderr: "warnung"});
-  assert.deepEqual(result.outputs.value, {type: "string", value: "fertig"});
+  assert.deepEqual(result.outputs, {gruss: {type: "string", value: "Hallo Mila"}});
   assert.deepEqual(result.variables, {count: 2});
 });
 
@@ -66,11 +67,29 @@ test("logs what a failing script printed and returns its failure", async () => {
   assert.deepEqual(printed, [{printed: "Schritt 1\n", errorOutput: "Warnung\n"}]);
 });
 
-test("workflow outputs replace the text output and are reachable flat", async () => {
+test("a script without workflow_output has no values", async () => {
+  const executor = createScriptNodeExecutor({
+    async execute() {
+      return ok({variables: {gesetzt: 1}, printed: "", errorOutput: ""});
+    },
+  });
+  const node = {
+    id: "s", primitive: "script", title: "Script", description: "", outputs: [],
+    config: {primitive: "script", script: "gesetzt = 1", attachments: []},
+  } as never;
+  const context = {variables: {}, context: "", templateExpressionResolver: {resolveText: (value: string) => value}} as never;
+
+  const result = succeeded(await executor.execute(node, context));
+
+  assert.deepEqual(result.outputs, {});
+  assert.deepEqual(result.variables, {gesetzt: 1});
+});
+
+test("workflow outputs are reachable flat under their name", async () => {
   const executor = createScriptNodeExecutor({
     async execute() {
       return ok({
-        output: "ignoriert", variables: {}, printed: "", errorOutput: "",
+        variables: {}, printed: "", errorOutput: "",
         workflowOutputs: [{name: "summe", type: "number", value: 42.5}, {name: "kunde", type: "string", value: "Mila"}],
       });
     },
@@ -93,7 +112,7 @@ test("an invalid workflow output fails the node with the script's console output
   const executor = createScriptNodeExecutor({
     async execute() {
       return ok({
-        output: "", variables: {}, printed: "berechnet\n", errorOutput: "",
+        variables: {}, printed: "berechnet\n", errorOutput: "",
         workflowOutputs: [{name: "summe", type: "number", value: "42"}],
       });
     },

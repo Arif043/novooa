@@ -1,7 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
-import 'package:syscat2/features/task_builder/presentation/agent/node_field_key.dart';
-import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
@@ -16,8 +14,6 @@ import 'package:syscat2/features/task_builder/presentation/widgets/node_file_att
 import 'package:syscat2/features/task_builder/presentation/widgets/python_analyzer.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_code_editor.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_fullscreen_editor_dialog.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_scope.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_text_field.dart';
 
 class ScriptWidget extends StatefulWidget {
   const ScriptWidget({super.key, required this.node});
@@ -67,20 +63,6 @@ class _ScriptWidgetState extends State<ScriptWidget> {
         children: [
           _header(context),
           const SizedBox(height: AppSpacing.xs),
-          TemplateExpressionTextField(
-            value: _config.inputTemplate,
-            cursorTarget: TaskBuilderCursorTargets.field(
-              widget.node.id,
-              NodeFieldKey.inputTemplate,
-            ),
-            suggestions: TemplateExpressionScope.suggestionsOf(context),
-            decoration: InputDecoration(
-              labelText: LocaleKeys.ui_eingabe.tr(),
-              hintText: '{{baustein.value}}',
-            ),
-            onChanged: _updateInput,
-          ),
-          const SizedBox(height: AppSpacing.md),
           ScriptCodeEditor(
             controller: _controller,
             onChanged: _updateScript,
@@ -129,13 +111,6 @@ class _ScriptWidgetState extends State<ScriptWidget> {
 
   void _updateScript(String script) {
     context.read<TaskBuilderCubit>().updateScript(widget.node.id, script);
-  }
-
-  void _updateInput(String inputTemplate) {
-    context.read<TaskBuilderCubit>().updateScriptInput(
-      widget.node.id,
-      inputTemplate,
-    );
   }
 
   void _attachFile(NodeAttachment attachment) {

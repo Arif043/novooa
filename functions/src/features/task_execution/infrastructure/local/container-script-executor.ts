@@ -43,12 +43,12 @@ async function executeInContainer(
     const bytes = await readFile(path.join(workspace!.rootDirectory, file.filename));
     body.append(`file-${index}`, new Blob([bytes], {type: file.contentType}), `file-${index}`);
   }
-  return (await post(url, body)).map((parsed) => scriptResultFrom(parsed, request.input));
+  return (await post(url, body)).map((parsed) => scriptResultFrom(parsed));
 }
 
 function requestBody(request: ScriptExecutionRequest, files: ScriptWorkspace["files"]) {
   return {
-    script: request.script, input: request.input, variables: request.variables,
+    script: request.script, variables: request.variables,
     files: files.map(({displayName, contentType, sizeBytes, versionCreatedAt}) => ({
       displayName, contentType, sizeBytes, versionCreatedAt,
     })),

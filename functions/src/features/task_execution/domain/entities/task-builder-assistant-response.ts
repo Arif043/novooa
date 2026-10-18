@@ -24,7 +24,6 @@ export const taskBuilderAssistantFieldKeys = [
   "recipient",
   "message",
   "script",
-  "inputTemplate",
 ] as const;
 
 export type TaskBuilderAssistantPrimitive = typeof taskBuilderAssistantPrimitives[number];
@@ -46,7 +45,6 @@ export type TaskBuilderAssistantCommand = AssistantCommand & {
   recipient?: string;
   message?: string;
   script?: string;
-  inputTemplate?: string;
 };
 
 export type TaskBuilderAssistantResponse = {

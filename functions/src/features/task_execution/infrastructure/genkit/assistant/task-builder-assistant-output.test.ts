@@ -41,20 +41,18 @@ test("falls back to the raw text when structured output validation failed", () =
   });
 });
 
-test("keeps the python script and input template of a script node", () => {
+test("keeps the python script of a script node", () => {
   const output = taskBuilderOutputFromModelOutput({
     answer: "Ich habe ein Script vorbereitet.",
     commands: [{
       type: "addNode",
       primitive: "script",
-      script: "output = input.upper()",
-      inputTemplate: "{{kundenmail.betreff}}",
+      script: 'workflow_output("betreff", "string", "{{kundenmail.betreff}}".upper())',
     }],
     knowledgeCommands: [],
   }, "irrelevant");
 
-  assert.equal(output.commands[0]?.script, "output = input.upper()");
-  assert.equal(output.commands[0]?.inputTemplate, "{{kundenmail.betreff}}");
+  assert.equal(output.commands[0]?.script, 'workflow_output("betreff", "string", "{{kundenmail.betreff}}".upper())');
 });
 
 test("keeps configureNode with allowed fields only", () => {

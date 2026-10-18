@@ -57,7 +57,6 @@ class ScriptHandler(BaseHTTPRequestHandler):
             raise RequestInvalid(f"Die Anfrage ist ungültig: {error}")
         if not isinstance(request.get("script"), str):
             raise RequestInvalid("Die Anfrage enthält kein Script.")
-        request.setdefault("input", "")
         request.setdefault("variables", {})
         return request, files
 

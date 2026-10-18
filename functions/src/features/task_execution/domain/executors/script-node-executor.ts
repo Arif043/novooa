@@ -1,15 +1,11 @@
-import {err, ok, type Result} from "neverthrow";
+import {err, type Result} from "neverthrow";
 import {type NodeFailure} from "../entities/node-failure.js";
 import {type ScriptExecutionResult} from "../entities/script-execution.js";
 import {type ConsoleOutput} from "../entities/task.js";
 import {type NodeOutputValue} from "../entities/workflow-value.js";
 import {workflowOutputsFrom} from "../services/script-workflow-outputs.js";
 import {type ScriptExecutor} from "./script-executor.js";
-import {
-  type NodeExecutor,
-  executedNode,
-  textOutputs,
-} from "./node-executor.js";
+import {type NodeExecutor, executedNode} from "./node-executor.js";
 
 /** Die Ausgabe eines Script-Laufs, getrennt nach stdout und stderr. */
 export type ScriptOutput = {printed: string; errorOutput: string};
@@ -24,7 +20,6 @@ export function createScriptNodeExecutor(
     primitive: "script",
     async execute(node, runContext) {
       const outputOrFailure = await scriptExecutor.execute({
-        input: runContext.templateExpressionResolver.resolveText(inputTemplateFor(node)),
         script: runContext.templateExpressionResolver.resolveText(scriptFor(node)),
         variables: runContext.variables,
       });
@@ -44,16 +39,14 @@ export function createScriptNodeExecutor(
 }
 
 /**
- * Definiert das Script Workflow-Ausgaben, sind sie seine fachlichen Werte — flach unter ihrem Namen, ohne
- * `value`; `output` gilt dann nicht. Sonst bleibt es beim Text-Output wie bisher. Eine ungültige Ausgabe
- * trägt die Konsole des Scripts, damit sie in den Aktivitäten steht.
+ * Die Werte eines Scripts sind allein seine `workflow_output`-Aufrufe — flach unter ihrem Namen; ohne
+ * Aufrufe hat der Baustein keine Werte. Eine ungültige Ausgabe trägt die Konsole des Scripts, damit sie
+ * in den Aktivitäten steht.
  */
 function nodeOutputsOf(
   output: ScriptExecutionResult, consoleOutput: ConsoleOutput,
 ): Result<Record<string, NodeOutputValue>, NodeFailure> {
-  const workflowOutputs = output.workflowOutputs ?? [];
-  if (workflowOutputs.length === 0) return ok(textOutputs(output.output));
-  return workflowOutputsFrom(workflowOutputs).mapErr((failure) => failure.withConsole(consoleOutput));
+  return workflowOutputsFrom(output.workflowOutputs ?? []).mapErr((failure) => failure.withConsole(consoleOutput));
 }
 
 function hasOutput(output: ConsoleOutput): boolean {
@@ -66,8 +59,4 @@ function observeFailure(failure: NodeFailure, observeOutput: ScriptOutputObserve
 
 function scriptFor(node: Parameters<NodeExecutor["execute"]>[0]): string {
   return node.config.primitive === "script" ? node.config.script : "";
-}
-
-function inputTemplateFor(node: Parameters<NodeExecutor["execute"]>[0]): string {
-  return node.config.primitive === "script" ? node.config.inputTemplate ?? "" : "";
 }

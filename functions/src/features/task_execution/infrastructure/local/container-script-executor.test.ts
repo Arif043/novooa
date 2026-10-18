@@ -13,7 +13,7 @@ import {
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
 
-const request = {input: "eingabe", script: "output = input", variables: {zaehler: 1}};
+const request = {script: "workflow_output(\"summe\", \"number\", 42.5)", variables: {zaehler: 1}};
 
 function respondWith(status: number, body: unknown) {
   const sent: {url: string; form: FormData}[] = [];
@@ -39,26 +39,26 @@ async function workspaceWith(files: {displayName: string; bytes: Buffer; content
 
 const executor = (workspace?: ScriptWorkspace) => createContainerScriptExecutorFactory("http://script:8091")(workspace);
 
-test("schickt Script, Eingabe und Variablen an /run und liefert die Antwort des Dienstes", async () => {
+test("schickt Script und Variablen an /run und liefert die Antwort des Dienstes", async () => {
   const workflowOutputs = [{name: "summe", type: "number", value: 42.5}];
   const sent = respondWith(200, {
-    outputDefined: true, output: "ERGEBNIS", printed: "hallo\n", stderr: "warnung\n", variables: {zaehler: 2}, workflowOutputs,
+    printed: "hallo\n", stderr: "warnung\n", variables: {zaehler: 2}, workflowOutputs,
   });
 
   const result = (await executor().execute(request))._unsafeUnwrap();
 
   assert.deepEqual(result, {
-    output: "ERGEBNIS", printed: "hallo\n", errorOutput: "warnung\n", variables: {zaehler: 2}, workflowOutputs,
+    printed: "hallo\n", errorOutput: "warnung\n", variables: {zaehler: 2}, workflowOutputs,
   });
   assert.equal(sent[0].url, "http://script:8091/run");
   const body = JSON.parse(await (sent[0].form.get("request") as Blob).text());
-  assert.deepEqual(body, {script: "output = input", input: "eingabe", variables: {zaehler: 1}, files: []});
+  assert.deepEqual(body, {script: request.script, variables: {zaehler: 1}, files: []});
 });
 
 test("angehängte Dateien gehen als rohe Bytes mit, ohne Kodierung", async () => {
   const bytes = Buffer.from([0x00, 0xff, 0x0d, 0x0a, 0x89, 0x50, 0x4e, 0x47]);
   const {workspace, cleanup} = await workspaceWith([{displayName: "bild.png", bytes, contentType: "image/png"}]);
-  const sent = respondWith(200, {outputDefined: true, output: "", printed: "", variables: {}});
+  const sent = respondWith(200, {printed: "", variables: {}});
 
   await executor(workspace).execute(request);
   await cleanup();
@@ -68,12 +68,6 @@ test("angehängte Dateien gehen als rohe Bytes mit, ohne Kodierung", async () =>
   assert.equal(file.type, "image/png");
   const body = JSON.parse(await (sent[0].form.get("request") as Blob).text());
   assert.deepEqual(body.files, [{displayName: "bild.png", contentType: "image/png", sizeBytes: bytes.length}]);
-});
-
-test("setzt das Script keinen output, bleibt die Eingabe", async () => {
-  respondWith(200, {outputDefined: false, output: null, printed: "", variables: {}});
-
-  assert.equal((await executor().execute(request))._unsafeUnwrap().output, "eingabe");
 });
 
 test("ein gescheitertes Script liefert die lesbare Meldung des Dienstes samt Ausgabe", async () => {

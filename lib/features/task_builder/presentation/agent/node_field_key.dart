@@ -8,12 +8,11 @@ enum NodeFieldKey {
   modelId,
   recipient,
   message,
-  script,
-  inputTemplate;
+  script;
 
   /// Felder mit sichtbarem Eingabefeld, in das der Cursor tippt.
   bool get isTypedByCursor => switch (this) {
-    value || instruction || recipient || message || inputTemplate => true,
+    value || instruction || recipient || message => true,
     _ => false,
   };
 

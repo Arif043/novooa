@@ -57,8 +57,7 @@ export const stringInputNodeConfigSchema = z.object({
 
 export const scriptNodeConfigSchema = z.object({
   primitive: z.literal("script").default("script"),
-  script: z.string().default("output = input"),
-  inputTemplate: z.string().default(""),
+  script: z.string().default(""),
   attachments: z.array(nodeAttachmentSchema).default([]),
 });
 

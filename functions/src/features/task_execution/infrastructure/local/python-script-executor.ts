@@ -24,7 +24,7 @@ async function executePythonScript(
     return err(nodeFailures.scriptFailed(process.stderr || "Script failed.", {stdout: "", stderr: process.stderr}));
   }
   if (Buffer.byteLength(process.stdout, "utf8") > maxOutputBytes) throw new Error("Script-Output ist zu groß.");
-  return ok(scriptResultFrom(parseResponse(process.stdout), request.input));
+  return ok(scriptResultFrom(parseResponse(process.stdout)));
 }
 
 type PythonProcess = {code: number | null; stdout: string; stderr: string};

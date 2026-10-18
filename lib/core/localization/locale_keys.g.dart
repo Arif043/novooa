@@ -110,6 +110,7 @@ abstract class  LocaleKeys {
   static const task_builder_output_names_http_request = 'task_builder.output_names.http_request';
   static const task_builder_output_names_plugin = 'task_builder.output_names.plugin';
   static const task_builder_output_names = 'task_builder.output_names';
+  static const task_builder_script_starter = 'task_builder.script_starter';
   static const task_builder_send_output_names_email = 'task_builder.send_output_names.email';
   static const task_builder_send_output_names_whatsapp = 'task_builder.send_output_names.whatsapp';
   static const task_builder_send_output_names_sms = 'task_builder.send_output_names.sms';
@@ -374,7 +375,6 @@ abstract class  LocaleKeys {
   static const ui_e_mail_lesen_hinzufuegen = 'ui.e_mail_lesen_hinzufuegen';
   static const ui_e_mail_senden = 'ui.e_mail_senden';
   static const ui_edit_output_name_typed = 'ui.edit_output_name_typed';
-  static const ui_eingabe = 'ui.eingabe';
   static const ui_elemente_aus = 'ui.elemente_aus';
   static const ui_employee_gone = 'ui.employee_gone';
   static const ui_employees_load_failed = 'ui.employees_load_failed';

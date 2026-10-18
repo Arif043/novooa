@@ -8,7 +8,7 @@ from novooa_script import execution
 
 
 def run(script, variables=None):
-    request = {"script": script, "input": "", "variables": variables or {}, "files": []}
+    request = {"script": script, "variables": variables or {}, "files": []}
     return execution.execute(request, [])
 
 

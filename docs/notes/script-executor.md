@@ -1,12 +1,16 @@
 # Script-Executor
 
-> Der Script-Baustein führt Python mit der Eingabe aus `inputTemplate` aus; Werte für Nachfolger entstehen nur über `workflow_output`.
+> Der Script-Baustein führt Python aus; Werte für Nachfolger entstehen ausschließlich über `workflow_output`.
 
 Gehört zu: [Aufgabe](../index/aufgabe.md)
 
-- `input` kommt aus dem expliziten Feld `inputTemplate`.
-- Eine gesetzte Variable `output` liefert der Executor weiter als `value`;
-  der Builder führt dafür keinen Wert, sie ist per Template nicht erreichbar.
+- Es gibt weder `input` noch `output`. Werte vorheriger Bausteine stehen als
+  `{{name}}` im Code; vor dem Lauf wird Text roh, alles andere als JSON
+  eingesetzt (`"""{{betreff}}"""`, `json.loads('''{{rechnung}}''')`).
+- Ohne `workflow_output`-Aufruf hat der Baustein keine Werte.
+- Ein neuer Baustein startet mit einem auskommentierten Beispiel
+  (`# workflow_output("name", "string", wert)`, sprachabhängig über
+  `NodeTextDefaults.scriptStarter`).
 - Script-Variablen bleiben im selben Run erhalten und stehen späteren
   Scripts zur Verfügung.
 - Cloud (eingebetteter Python-Pfad): 5 Sekunden, 10 KB Output. Standalone:

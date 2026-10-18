@@ -14,9 +14,9 @@ Gehört zu: [KI-Agent](../index/ki-agent.md)
   `configureNode.nodeRef` auf das `ref` eines `addNode` im selben Plan.
 - Erlaubte Feldschlüssel (`NodeFieldKey`): `title`, `description`,
   `outputName`, `value`, `instruction`, `modelId`, `recipient`, `message`,
-  `script`, `inputTemplate`; andere verwirft das Backend. `outputName` ist der
+  `script`; andere verwirft das Backend. `outputName` ist der
   Name des Hauptwerts (Client: `WorkflowOutput` mit Schlüssel `value`).
-- `addNode` mit `primitive: script` trägt `script` und `inputTemplate`.
+- `addNode` mit `primitive: script` trägt `script`.
 - Für Anbieter wählt `kind` den Kanal; deaktivierte Anbieter erzeugen keinen
   Baustein.
 

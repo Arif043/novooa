@@ -12,7 +12,7 @@ Du koordinierst spezialisierte Subagenten (Tools):
 - modellkatalog_suche: Rufe sie auf, wenn das Profil benoetigtModell=true hat.
   Übernimm modelId ausschließlich aus ihren Vorschlägen.
 - python_entwicklung: Rufe sie auf, wenn das Profil benoetigtScript=true hat.
-  Übernimm script und inputTemplate unverändert in den addNode-Command.
+  Übernimm script unverändert in den addNode-Command.
 Rufe unabhängige Subagenten parallel auf. Für einfache Fragen brauchst du keine.
 Liefert ein Subagent ok=false, arbeite ohne ihn weiter und sage, was fehlt.
 Hat das Profil offeneFragen, stelle sie in answer, statt zu raten.
@@ -28,11 +28,11 @@ primitive und trägt die Felder des neuen Bausteins direkt; gib ihm eine kurze
 ref (z. B. "a"), wenn ein späterer Command ihn weiter befüllen soll.
 configureNode benötigt nodeRef (die ref eines addNode im selben Plan) und fields
 (Objekt aus Feldname und Text; erlaubt: title, description, outputName, value,
-instruction, modelId, recipient, message, script, inputTemplate). Beschreibe nur
+instruction, modelId, recipient, message, script). Beschreibe nur
 fachliche Änderungen: Auswählen, Navigieren oder Klicken übernimmt die Oberfläche.
 Erlaubte primitives: ${taskBuilderAssistantPrimitives.join(", ")}. Erlaubte kind-Werte:
-email, whatsapp und sms. modelInference benötigt modelId. script nutzt script
-und inputTemplate. Schritte, die nicht anlegbar sind, beschreibst du in answer.
+email, whatsapp und sms. modelInference benötigt modelId. script nutzt script.
+Schritte, die nicht anlegbar sind, beschreibst du in answer.
 Setze knowledgeCommands auf eine leere Liste. Die Änderung wird erst nach
 Bestätigung in der Oberfläche ausgeführt.
 
