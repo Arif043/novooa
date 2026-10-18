@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {
   executedNode,
   type NodeExecutor,
@@ -25,7 +26,7 @@ export async function executeModelInferenceNode(
     settings: settingsFor(node, runContext),
     transformationBindings: runContext.scope,
   });
-  return executedNode(node, await outputsFor(result, runContext));
+  return ok(executedNode(node, await outputsFor(result, runContext)));
 }
 
 type ModelNodeConfig = Extract<Parameters<NodeExecutor["execute"]>[0]["config"], {

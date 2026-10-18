@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {executedNode, type NodeExecutor} from "../../../task_execution/domain/executors/node-executor.js";
 import {type ShopwareActionRegistry} from "../domain/shopware-action.js";
 import {ShopwareError} from "../domain/shopware-error.js";
@@ -21,7 +22,7 @@ export function createShopwareNodeExecutor(actions: ShopwareActionRegistry): Nod
       const event: unknown = runContext.input.event;
       if (action.usesConnection === false) {
         const outputs = await action.execute({client: unusableClient, params: config.params, resolveText, event});
-        return executedNode(node, outputs);
+        return ok(executedNode(node, outputs));
       }
       const http = runContext.outboundHttpClient;
       if (http === undefined) throw new ShopwareError("Shopware-Aktionen sind in dieser Betriebsvariante nicht verfügbar.");
@@ -31,7 +32,7 @@ export function createShopwareNodeExecutor(actions: ShopwareActionRegistry): Nod
       const outputs = await action.execute({
         client: new ShopwareClient(http, runContext.teamId, config.connectionId), params: config.params, resolveText, event,
       });
-      return executedNode(node, outputs);
+      return ok(executedNode(node, outputs));
     },
   };
 }

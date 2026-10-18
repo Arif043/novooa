@@ -13,6 +13,7 @@ import {
   completedOutput,
   type InitialNodeRunState,
   newResults,
+  failedNodeExecution,
   nodeExecutionFailure,
   type NodeRunState,
   orderedResults,
@@ -29,6 +30,7 @@ import {
   validateGraph,
 } from "../../../domain/services/task-graph-utils.js";
 import {type NodeExecutionFailure} from "../../../domain/entities/node-execution-failure.js";
+import {nestedFailureCause} from "./nested-node-failed-exception.js";
 import {err, ok, type Result, ResultAsync} from "neverthrow";
 import {formatTaskFinished, formatTaskStarted} from "./structured-logger.js";
 import {
@@ -119,7 +121,8 @@ async function runNodes(
     const startedAt = Date.now();
     logNodeHeaderLine(runtime.logger, node, input.taskDefinition.id, graph, context, skipNode, results);
     const step = journaledStep(runtime.stepJournal, options.stepScope, node.id);
-    // Die Executoren melden Fehler als Exception; hier, an der Grenze, wird daraus ein Failure-Wert.
+    // Bausteine liefern Failures als Wert; was dennoch geworfen wird (Infrastruktur, noch nicht
+    // umgestellte Executoren), wird hier, an der Grenze, ebenfalls zur Failure.
     const resultOrFailure = await ResultAsync.fromPromise(runJournaledNode(step, () => runNodeWithTrail(ai, {
       node,
       context,
@@ -144,7 +147,10 @@ async function runNodes(
       scriptExecutorFactory: runtime.scriptExecutorFactory,
       executorRegistry: runtime.executorRegistry,
       logger: runtime.logger,
-    }), runtime.logger), (error) => nodeExecutionFailure(node, error, newResults(graph, results, initialState)));
+    }), runtime.logger), (error) => nodeExecutionFailure(node, error, newResults(graph, results, initialState)))
+      .andThen((nodeResultOrFailure) => nodeResultOrFailure.mapErr(
+        (failure) => failedNodeExecution(node, failure, newResults(graph, results, initialState)),
+      ));
     if (resultOrFailure.isErr()) return err(resultOrFailure.error);
     const result = resultOrFailure.value;
     updateTaskVariables(variables, result);
@@ -182,10 +188,11 @@ function embeddedGraphRunner(
     const stepScope = containerStep?.key.nested(callIndex++);
     const initialState = {nodeResults: [], variables, remainingNodeIds: embeddedGraph.nodes.map((item) => item.id), skippedNodeIds: []};
     const stateOrFailure = await runNodes(ai, input, runtime, {initialState, scope: embeddedScope, graph: embeddedGraph, stepScope});
-    // Die Executoren erwarten für einen verschachtelten Plan eine Exception; der äußere Baustein scheitert dann.
+    // Der Port `runGraph` meldet einen gescheiterten verschachtelten Plan noch per Exception; der
+    // äußere Baustein scheitert dann. Eine Failure reist in `NestedNodeFailedException` mit.
     return stateOrFailure.match(
       (state) => state.nodeResults,
-      (failure) => { throw failure.cause; },
+      (failure) => { throw nestedFailureCause(failure.cause); },
     );
   };
 }

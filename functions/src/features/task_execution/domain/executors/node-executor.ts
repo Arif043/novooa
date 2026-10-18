@@ -1,3 +1,5 @@
+import {type Result} from "neverthrow";
+import {type NodeFailure} from "../entities/node-failure.js";
 import {type SpeechTranscriber} from "../../../speech_transcription/domain/repositories/speech-transcriber.js";
 import {type SpeechSynthesizer} from "../../../speech_synthesis/domain/repositories/speech-synthesizer.js";
 import {
@@ -74,12 +76,15 @@ export type TaskRunContext = TaskRunServices & {
   teamFileStore: TeamFileStore;
 };
 
+/** Ergebnis eines Bausteins oder, als Wert, warum er gescheitert ist. */
+export type NodeResultOrFailure = Result<NodeExecutionResult, NodeFailure>;
+
 export type NodeExecutor = {
   primitive: WorkflowNode["primitive"];
   execute(
     node: WorkflowNode,
     runContext: TaskRunContext,
-  ): Promise<NodeExecutionResult>;
+  ): Promise<NodeResultOrFailure>;
 };
 
 export function executedNode(

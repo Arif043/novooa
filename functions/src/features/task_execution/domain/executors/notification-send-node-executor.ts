@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {
   executedNode,
   type NodeExecutor,
@@ -47,7 +48,7 @@ export function createNotificationSendNodeExecutor(
       // ist dem Graphen durch die eigene Konfiguration bereits bekannt —
       // ihn als Output zu echoen suggeriert einen neuen, referenzierbaren
       // Wert, den es nicht gibt (siehe docs/notes/executor-outputs.md).
-      return executedNode(node, {});
+      return ok(executedNode(node, {}));
     },
   };
 }

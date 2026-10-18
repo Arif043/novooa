@@ -1,6 +1,8 @@
 import {type TaskRunStepKey, TaskRunStepScope} from "../../../domain/entities/task-run-step-key.js";
 import {type TaskRunStepJournal} from "../../../domain/repositories/task-run-step-journal.js";
-import {type NodeExecutionResult, type TaskGraphInput} from "./task-definition.js";
+import {ok} from "neverthrow";
+import {type NodeResultOrFailure} from "../../../domain/executors/node-executor.js";
+import {type TaskGraphInput} from "./task-definition.js";
 import {type ApplicationLogger} from "../../../../../shared/logging/application-logger.js";
 
 export type JournaledStep = {
@@ -33,16 +35,18 @@ export function journaledStep(
  */
 export async function runJournaledNode(
   step: JournaledStep | undefined,
-  execute: () => Promise<NodeExecutionResult>,
+  execute: () => Promise<NodeResultOrFailure>,
   logger: ApplicationLogger,
-): Promise<NodeExecutionResult> {
+): Promise<NodeResultOrFailure> {
   if (step === undefined) return execute();
   const recorded = await step.journal.find(step.key);
   if (recorded !== null) {
     logger.readableInfo(`Baustein ${recorded.nodeId}: Ergebnis aus vorherigem Versuch übernommen.`, "task_run_step.reused");
-    return recorded;
+    return ok(recorded);
   }
-  const result = await execute();
-  if (result.status === "executed") await step.journal.record(step.key, result);
-  return result;
+  const resultOrFailure = await execute();
+  if (resultOrFailure.isOk() && resultOrFailure.value.status === "executed") {
+    await step.journal.record(step.key, resultOrFailure.value);
+  }
+  return resultOrFailure;
 }

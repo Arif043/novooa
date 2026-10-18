@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {type DocumentRecord} from "../../../data/domain/entities/document.js";
 import {type WorkflowTable} from "../entities/workflow-value.js";
 import {
@@ -17,10 +18,10 @@ export const tableFromCollectionNodeExecutor: NodeExecutor = {
       .trim();
     const records = await recordsFor(collectionName, runContext);
     const table = tableFrom(records);
-    return executedNode(node, {
+    return ok(executedNode(node, {
       value: tableOutput(table),
       rowCount: {type: "number", value: table.rows.length},
-    });
+    }));
   },
 };
 

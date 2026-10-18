@@ -1,3 +1,4 @@
+import {NodeFailure} from "../../../domain/entities/node-failure.js";
 import {type NodeExecutionResult} from "./task-definition.js";
 
 export function preview(text: string): string {
@@ -67,7 +68,7 @@ export function selectedTargetFor(result: NodeExecutionResult): string {
 }
 
 export function errorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
+  if (error instanceof Error || error instanceof NodeFailure) return error.message;
   return String(error);
 }
 

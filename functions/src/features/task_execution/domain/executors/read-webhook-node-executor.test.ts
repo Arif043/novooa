@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {type TaskRunContext} from "./node-executor.js";
 import {readWebhookNodeExecutor} from "./read-webhook-node-executor.js";
+import {succeeded} from "./node-executor-test-support.js";
 
 const node = {id: "n1", primitive: "readWebhook", title: "Webhook", description: "", outputs: [{key: "value", name: "ereignis", showOnCanvas: true}], config: {primitive: "readWebhook"}} as never;
 
@@ -13,7 +14,7 @@ const event = {
 const contextWith = (input: Record<string, unknown>) => ({input}) as unknown as TaskRunContext;
 
 test("liefert Inhalt, Methode, Query, Kopfzeilen und Zeitpunkt als typisierte Werte", async () => {
-  const result = await readWebhookNodeExecutor.execute(node, contextWith({event}));
+  const result = succeeded(await readWebhookNodeExecutor.execute(node, contextWith({event})));
   assert.deepEqual(result.outputs, {
     value: {type: "json", value: {bestellung: 42}},
     method: {type: "string", value: "POST"},
@@ -24,7 +25,7 @@ test("liefert Inhalt, Methode, Query, Kopfzeilen und Zeitpunkt als typisierte We
 });
 
 test("ein Textinhalt bleibt Text und wird nicht als JSON in Anführungszeichen ausgegeben", async () => {
-  const result = await readWebhookNodeExecutor.execute(node, contextWith({event: {...event, body: "Hallo"}}));
+  const result = succeeded(await readWebhookNodeExecutor.execute(node, contextWith({event: {...event, body: "Hallo"}})));
   assert.deepEqual(result.outputs.value, {type: "string", value: "Hallo"});
 });
 

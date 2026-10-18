@@ -3,7 +3,7 @@ import test from "node:test";
 import {createConditionalFlowNodeExecutor} from "./conditional-node-executor.js";
 import {type TaskRunContext} from "./node-executor.js";
 import {type ConditionalBranch} from "../entities/task.js";
-import {NodeFailedError} from "../entities/node-execution-failure.js";
+import {succeeded} from "./node-executor-test-support.js";
 
 // Deckt die neue Weiche in `conditional-node-executor.ts` ab: Trägt
 // irgendein Branch ein `condition`, wird ausschließlich über
@@ -25,10 +25,10 @@ test("wählt den ersten bedingten Zweig, dessen Ausdruck zutrifft", async () => 
   ];
   const executor = createConditionalFlowNodeExecutor();
 
-  const result = await executor.execute(
+  const result = succeeded(await executor.execute(
     conditionalNode(branches),
     runContext({"{{x}}": 15}),
-  );
+  ));
 
   assert.equal(result.selectedBranchId, "gross");
 });
@@ -46,10 +46,10 @@ test("fällt auf den Sonst-Zweig zurück, wenn keine Bedingung zutrifft", async 
   ];
   const executor = createConditionalFlowNodeExecutor();
 
-  const result = await executor.execute(
+  const result = succeeded(await executor.execute(
     conditionalNode(branches),
     runContext({"{{x}}": 5}),
-  );
+  ));
 
   assert.equal(result.selectedBranchId, "sonst");
 });
@@ -64,10 +64,10 @@ test(
     ];
     const executor = createConditionalFlowNodeExecutor();
 
-    const result = await executor.execute(
+    const result = succeeded(await executor.execute(
       conditionalNode(branches, "{{entscheidung}}"),
       runContext({"{{entscheidung}}": "Nein"}),
-    );
+    ));
 
     assert.equal(result.selectedBranchId, "nein");
   },
@@ -82,28 +82,26 @@ test("ein Zweig ohne Bausteine liefert seinen Namen als Wert", async () => {
     },
   ];
 
-  const result = await createConditionalFlowNodeExecutor().execute(
+  const result = succeeded(await createConditionalFlowNodeExecutor().execute(
     conditionalNode(branches), runContext({"{{x}}": 15}),
-  );
+  ));
 
   assert.deepEqual(result.outputs, {value: {type: "string", value: "Groß"}});
 });
 
-test("ein unpassender Wert lässt den Baustein mit Code und Feldern scheitern", async () => {
+test("ein unpassender Wert ist eine Failure mit Code und Feldern", async () => {
   const branches: ConditionalBranch[] = [{
     id: "alt", label: "Alt", nodeIds: [], graph: {nodes: [], edges: []},
     condition: {kind: "comparison", left: "{{datum}}", operator: "before", right: "2026-01-01"},
   }];
 
-  await assert.rejects(
-    createConditionalFlowNodeExecutor().execute(conditionalNode(branches), runContext({"{{datum}}": "29.09.2026"})),
-    (error: unknown) => {
-      assert.ok(error instanceof NodeFailedError);
-      assert.equal(error.reason.code, "conditionOperandMismatch");
-      assert.deepEqual(error.reason.details, {operator: "before", expected: "date", received: "29.09.2026"});
-      return true;
-    },
+  const resultOrFailure = await createConditionalFlowNodeExecutor().execute(
+    conditionalNode(branches), runContext({"{{datum}}": "29.09.2026"}),
   );
+
+  const failure = resultOrFailure._unsafeUnwrapErr();
+  assert.equal(failure.code, "conditionOperandMismatch");
+  assert.deepEqual(failure.details, {operator: "before", expected: "date", received: "29.09.2026"});
 });
 
 function conditionalNode(branches: ConditionalBranch[], valueTemplate = "") {

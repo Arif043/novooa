@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {ScriptExecutionError} from "../entities/script-execution.js";
 import {createScriptNodeExecutor} from "./script-node-executor.js";
+import {succeeded} from "./node-executor-test-support.js";
 
 test("resolves workflow values and delegates execution through the script port", async () => {
   const requests: unknown[] = [];
@@ -13,7 +14,7 @@ test("resolves workflow values and delegates execution through the script port",
     },
   }, (value) => printed.push(value));
 
-  const result = await executor.execute({
+  const result = succeeded(await executor.execute({
       id: "script-1",
       primitive: "script",
       title: "Script",
@@ -31,7 +32,7 @@ test("resolves workflow values and delegates execution through the script port",
     templateExpressionResolver: {
       resolveText: (value: string) => value.replace(/\{\{name\}\}/g, "Mila"),
     },
-  } as never);
+  } as never));
 
   assert.deepEqual(requests, [{
     input: "Hallo Mila",
@@ -74,7 +75,7 @@ test("workflow outputs replace the text output and are reachable flat", async ()
   } as never;
   const context = {variables: {}, context: "", templateExpressionResolver: {resolveText: (value: string) => value}} as never;
 
-  const result = await executor.execute(node, context);
+  const result = succeeded(await executor.execute(node, context));
 
   assert.deepEqual(result.outputs, {
     summe: {type: "number", value: 42.5},

@@ -9,6 +9,7 @@ import {executeTaskGraph} from "../../../task_execution/infrastructure/genkit/ru
 import {registerIntegrationPlugins} from "../../index.js";
 import {ShopwareActionRegistry} from "../domain/shopware-action.js";
 import {createShopwareNodeExecutor} from "./shopware-node-executor.js";
+import {succeeded} from "../../../task_execution/domain/executors/node-executor-test-support.js";
 
 const silentLogger = {info() {}, error() {}, exception() {}, readableInfo() {}, readableError() {}};
 
@@ -41,7 +42,7 @@ test("führt die gewählte Aktion mit Client, Parametern und Template-Auflösung
   const sent: OutboundHttpRequest[] = [];
   const executor = createShopwareNodeExecutor(echoActions());
 
-  const result = await executor.execute(node({action: "echo", connectionId: "c1", params: {text: "Hallo {{kunde}}"}}), contextWith(versionClient(sent)));
+  const result = succeeded(await executor.execute(node({action: "echo", connectionId: "c1", params: {text: "Hallo {{kunde}}"}}), contextWith(versionClient(sent))));
 
   assert.deepEqual(result.outputs, {value: {type: "string", value: "Hallo Anna (6.6.10.2)"}, count: {type: "number", value: 1}});
   assert.equal(sent[0].connectionId, "c1");

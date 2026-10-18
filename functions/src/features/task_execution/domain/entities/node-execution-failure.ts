@@ -28,20 +28,3 @@ export class NodeExecutionFailure {
     return this.failedNode.message;
   }
 }
-
-/**
- * Die Ursache eines gescheiterten Bausteins als stabiler Code samt Rückfalltext, z. B. aus einer
- * `LanguageModelFailure`. `details` trägt die Felder, die der Client in die Übersetzung einsetzt.
- */
-export type NodeFailureReason = {code: string; message: string; details?: Record<string, string>};
-
-/**
- * Executoren melden Fehler als Exception (Vertrag von `NodeExecutor`). Hat ein Executor bereits
- * eine Failure, verpackt er sie hierin; der Runner übernimmt dann ihren Code in den `FailedNode`.
- */
-export class NodeFailedError extends Error {
-  constructor(readonly reason: NodeFailureReason) {
-    super(reason.message);
-    this.name = "NodeFailedError";
-  }
-}

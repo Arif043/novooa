@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {
   validateMediaInputDefinition,
 } from "../entities/media-input.js";
@@ -13,14 +14,14 @@ export const mediaInputNodeExecutor: NodeExecutor = {
   async execute(node, runContext) {
     const definition = mediaInputDefinitionFor(node.config);
     validateMediaInputDefinition(definition);
-    return waitingForInteractionNode(
+    return ok(waitingForInteractionNode(
       node,
       {},
       mediaInputInteraction({
         ...definition,
         instruction: runContext.templateExpressionResolver.resolveText(definition.instruction),
       }),
-    );
+    ));
   },
 };
 

@@ -31,9 +31,9 @@ Gehört zu: [Architektur](../index/architektur.md)
    `PromptExecutor` und wandelt an seiner Grenze per
    `languageModelFailureFrom` in `err(LanguageModelFailure)` um; alles
    Unbekannte wird `unknown`.
-5. **Weitergeben:** Der Node-Executor verpackt die Failure in
-   `NodeFailedError`; der Runner übernimmt den Code in
-   `FailedNode.failureCode` ([Fehlgeschlagene Bausteine](./baustein-fehler-aktivitaeten.md)).
+5. **Weitergeben:** Der Node-Executor gibt sie als `err(NodeFailure)` zurück;
+   der Runner übernimmt den Code in `FailedNode.failureCode`
+   ([Fehlgeschlagene Bausteine](./baustein-fehler-aktivitaeten.md)).
 6. **Anzeigen:** Der Client (`ActivityFailureCode`) übersetzt bekannte Codes
    (en/de/tr); der deutsche Text der Runtime bleibt als technisches Detail.
 

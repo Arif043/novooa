@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {
   validateDialogInputDefinition,
 } from "../entities/dialog-input.js";
@@ -13,14 +14,14 @@ export const dialogInputNodeExecutor: NodeExecutor = {
   async execute(node, runContext) {
     const definition = dialogInputDefinitionFor(node.config);
     validateDialogInputDefinition(definition);
-    return waitingForInteractionNode(
+    return ok(waitingForInteractionNode(
       node,
       {},
       dialogInputInteraction({
         ...definition,
         instruction: runContext.templateExpressionResolver.resolveText(definition.instruction),
       }),
-    );
+    ));
   },
 };
 

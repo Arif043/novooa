@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {ScriptExecutionError, type ScriptExecutionResult} from "../entities/script-execution.js";
 import {type ConsoleOutput} from "../entities/task.js";
 import {type NodeOutputValue} from "../entities/workflow-value.js";
@@ -28,9 +29,9 @@ export function createScriptNodeExecutor(
       });
       const consoleOutput = {stdout: output.printed, stderr: output.errorOutput ?? ""};
       observeOutput({printed: consoleOutput.stdout, errorOutput: consoleOutput.stderr});
-      return executedNode(node, nodeOutputsOf(output, consoleOutput), {
+      return ok(executedNode(node, nodeOutputsOf(output, consoleOutput), {
         variables: output.variables, console: hasOutput(consoleOutput) ? consoleOutput : undefined,
-      });
+      }));
     },
   };
 }

@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {type GenkitBeta} from "genkit/beta";
 import {type IterativeRefinementExecutor} from "../../../domain/executors/iterative-refinement-executor.js";
 import {
@@ -70,7 +71,7 @@ export function createGenkitIterativeRefinementNodeExecutor(
         maxIterations: config?.maxIterations ?? 2,
         employee,
       });
-      return executedNode(node, textOutputs(output.answer));
+      return ok(executedNode(node, textOutputs(output.answer)));
     },
   };
 }

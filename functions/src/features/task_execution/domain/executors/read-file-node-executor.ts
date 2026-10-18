@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {
   type NodeExecutor,
   executedNode,
@@ -14,7 +15,7 @@ export const readFileNodeExecutor: NodeExecutor = {
       runContext.teamId,
       node,
     );
-    return executedNode(node, textOutputs(output));
+    return ok(executedNode(node, textOutputs(output)));
   },
 };
 

@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {executedNode, type NodeExecutor} from "./node-executor.js";
 import {executeModelInferenceNode} from "./model-inference-node-executor.js";
 import {fileReferenceFor} from "../services/file-output-values.js";
@@ -30,7 +31,7 @@ export const textToSpeechNodeExecutor: NodeExecutor = {
       contentType: speech.contentType,
       targetFileId: null,
     });
-    return executedNode(node, {value: {type: "audio", value: fileReferenceFor(file)}});
+    return ok(executedNode(node, {value: {type: "audio", value: fileReferenceFor(file)}}));
   },
 };
 
@@ -58,7 +59,7 @@ export const speechToTextNodeExecutor: NodeExecutor = {
       languageModelId: config.languageModelId.trim(),
       audio: {bytes: file.content, contentType: file.contentType, displayName: file.displayName},
     });
-    return executedNode(node, {value: {type: "string", value: text}});
+    return ok(executedNode(node, {value: {type: "string", value: text}}));
   },
 };
 

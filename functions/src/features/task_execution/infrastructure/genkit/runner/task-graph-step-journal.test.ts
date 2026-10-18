@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {genkit} from "genkit/beta";
@@ -26,9 +27,9 @@ function countingExecutor(calls: string[]): NodeExecutor {
     primitive: "stringInput",
     async execute(node, runContext) {
       calls.push(node.id);
-      if (node.id === "liste") return executedNode(node, {value: {type: "json", value: [1, 2, 3]}});
+      if (node.id === "liste") return ok(executedNode(node, {value: {type: "json", value: [1, 2, 3]}}));
       const template = node.config.primitive === "stringInput" ? node.config.value : "";
-      return executedNode(node, {value: {type: "string", value: runContext.templateExpressionResolver.resolveText(template)}});
+      return ok(executedNode(node, {value: {type: "string", value: runContext.templateExpressionResolver.resolveText(template)}}));
     },
   };
 }
@@ -95,7 +96,7 @@ test("a step waiting for approval is not journaled", async () => {
   const journal = new InMemoryStepJournal();
   const waitingExecutor: NodeExecutor = {
     primitive: "humanApproval",
-    async execute(node) { return {nodeId: node.id, primitive: node.primitive, status: "waitingForApproval", outputs: {}}; },
+    async execute(node) { return ok({nodeId: node.id, primitive: node.primitive, status: "waitingForApproval", outputs: {}}); },
   };
   const runtime = {logger: silentLogger, stepJournal: journal, executorRegistry: new NodeExecutorRegistry().register(waitingExecutor)} as never;
   const approvalNode = {id: "freigabe", primitive: "humanApproval", title: "freigabe", description: "", outputs: [{key: "value", name: "freigabe", showOnCanvas: true}], config: {primitive: "humanApproval"}};

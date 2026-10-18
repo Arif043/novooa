@@ -4,15 +4,16 @@ import {createNotificationSendNodeExecutor} from "./notification-send-node-execu
 import {type TaskRunContext} from "./node-executor.js";
 import {type PushNotification} from "../../../notifications/domain/entities/push-notification.js";
 import {type TeamNotificationSender} from "../../../notifications/domain/repositories/team-notification-sender.js";
+import {succeeded} from "./node-executor-test-support.js";
 
 test("sendet den aufgelösten Text als Push-Benachrichtigung an das Team", async () => {
   const sender = new RecordingTeamNotificationSender();
   const executor = createNotificationSendNodeExecutor();
 
-  const result = await executor.execute(
+  const result = succeeded(await executor.execute(
     notificationNode({title: "Status", message: "{{ergebnis}}"}),
     runContext(sender, {"{{ergebnis}}": "Fertig!"}),
-  );
+  ));
 
   assert.equal(sender.calls.length, 1);
   assert.equal(sender.calls[0]?.teamId, "team_1");
@@ -32,10 +33,10 @@ test("verwendet einen Standardtitel, wenn keiner konfiguriert ist", async () => 
   const sender = new RecordingTeamNotificationSender();
   const executor = createNotificationSendNodeExecutor();
 
-  await executor.execute(
+  succeeded(await executor.execute(
     notificationNode({message: "Hallo Team"}),
     runContext(sender),
-  );
+  ));
 
   assert.equal(sender.calls[0]?.notification.title, "Benachrichtigung von novooa");
 });

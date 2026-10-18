@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {type TaskRunContext} from "./node-executor.js";
 import {readChannelEventNodeExecutor} from "./read-email-node-executor.js";
+import {succeeded} from "./node-executor-test-support.js";
 
 const nodeWith = (kind: string) =>
   ({id: "n1", primitive: "readChannelEvent", title: "", description: "", outputs: [{key: "value", name: "Nachricht", showOnCanvas: true}],
@@ -15,7 +16,7 @@ test("liefert den Nachrichtentext als Hauptwert und Absender, Betreff, Ankunftsz
     message: "Anbei die Rechnung.", receivedAt: "2026-10-09T08:00:00.000Z",
   };
 
-  const result = await readChannelEventNodeExecutor.execute(nodeWith("email"), contextWith(email));
+  const result = succeeded(await readChannelEventNodeExecutor.execute(nodeWith("email"), contextWith(email)));
 
   assert.deepEqual(result.outputs, {
     value: {type: "string", value: "Anbei die Rechnung."},
@@ -28,7 +29,7 @@ test("liefert den Nachrichtentext als Hauptwert und Absender, Betreff, Ankunftsz
 test("WhatsApp und SMS haben keinen Betreff", async () => {
   const sms = {type: "smsMessageReceived", senderPhoneNumber: "+491701234567", message: "Hallo", receivedAt: "2026-10-09T08:00:00.000Z"};
 
-  const result = await readChannelEventNodeExecutor.execute(nodeWith("sms"), contextWith(sms));
+  const result = succeeded(await readChannelEventNodeExecutor.execute(nodeWith("sms"), contextWith(sms)));
 
   assert.deepEqual(Object.keys(result.outputs).sort(), ["receivedAt", "sender", "value"]);
 });

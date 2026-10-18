@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {
   datetimeOutput,
   executedNode,
@@ -10,13 +11,13 @@ export const readEmailNodeExecutor: NodeExecutor = {
   primitive: "readEmail",
   async execute(node, runContext) {
     const event = emailEventFrom(runContext.input);
-    return executedNode(node, {
+    return ok(executedNode(node, {
       ...textOutputs(event.message),
       sender: stringOutput(event.senderEmail),
       subject: stringOutput(event.subject),
       message: stringOutput(event.message),
       receivedAt: datetimeOutput(event.receivedAt),
-    });
+    }));
   },
 };
 
@@ -31,10 +32,10 @@ export const readChannelEventNodeExecutor: NodeExecutor = {
     const kind = channelEventKindFrom(node.config);
     if (kind === "email") {
       const event = emailEventFrom(runContext.input);
-      return executedNode(node, emailOutputs(event));
+      return ok(executedNode(node, emailOutputs(event)));
     }
     const event = messageEventFrom(runContext.input, eventTypeFor(kind));
-    return executedNode(node, messageOutputs(event));
+    return ok(executedNode(node, messageOutputs(event)));
   },
 };
 

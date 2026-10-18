@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {
   type DocumentData,
   type DocumentRecord,
@@ -28,7 +29,7 @@ export const saveDocumentNodeExecutor: NodeExecutor = {
     const saved = filters.length === 0
       ? await createDocument(collection.id, data, runContext)
       : await saveMatchingDocuments(collection.id, filters, data, runContext);
-    return executedNode(node, outputsFor(saved));
+    return ok(executedNode(node, outputsFor(saved)));
   },
 };
 

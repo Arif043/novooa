@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {
   executedNode,
   stringOutput,
@@ -71,12 +72,12 @@ export function createSendChannelMessageNodeExecutor(
         body,
       }, observer);
       observer.sent({...started, ...sent});
-      return executedNode(node, {
+      return ok(executedNode(node, {
         value: stringOutput(body),
         recipient: stringOutput(recipient),
         channelId: stringOutput(sent.channelId),
         providerMessageId: stringOutput(sent.providerMessageId),
-      });
+      }));
     },
   };
 }

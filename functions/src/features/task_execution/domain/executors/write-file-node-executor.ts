@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {
   type NodeExecutor,
   executedNode,
@@ -42,7 +43,7 @@ export const writeFileNodeExecutor: NodeExecutor = {
       runContext.teamFileStore,
       writeInputFor(writeInput, source.sourceContentType),
     );
-    return executedNode(node, fileOutputs(file));
+    return ok(executedNode(node, fileOutputs(file)));
   },
 };
 

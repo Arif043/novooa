@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {
   type NodeExecutor,
   textOutputs,
@@ -12,11 +13,11 @@ export const humanApprovalNodeExecutor: NodeExecutor = {
     const reviewOutput = runContext.templateExpressionResolver.resolveText(
       reviewTemplateFor(node.config),
     );
-    return waitingForInteractionNode(
+    return ok(waitingForInteractionNode(
       node,
       textOutputs(reviewOutput),
       approvalInteraction(runContext.templateExpressionResolver.resolveText(messageFor(node.config))),
-    );
+    ));
   },
 };
 

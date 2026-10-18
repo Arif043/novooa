@@ -4,20 +4,33 @@
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
-- Der Runner fängt die Exception an der Infrastrukturgrenze und liefert eine
-  `NodeExecutionFailure` (`domain/entities/node-execution-failure.ts`:
-  gescheiterter Baustein, abgeschlossene Ergebnisse, `cause`) als `Result`
-  von `neverthrow`.
+- Der Port `NodeExecutor.execute` liefert
+  `Result<NodeExecutionResult, NodeFailure>`. `NodeFailure`
+  (`domain/entities/node-failure.ts`) ist ein Value Object: stabiler Code,
+  sprachneutraler technischer Text, Felder für die Übersetzung. Die Domain
+  wirft keine eigenen Exceptions für Geschäftsfehler.
+- Der Runner (`task-graph-runner.ts`) macht an der Infrastrukturgrenze daraus
+  eine `NodeExecutionFailure` (`domain/entities/node-execution-failure.ts`:
+  gescheiterter Baustein, abgeschlossene Ergebnisse, `cause`): aus einer
+  `NodeFailure` mit Code und Feldern, aus einer geworfenen Exception nur mit
+  Text.
+- Verschachtelte Pläne (Zweige, Schleifen) laufen über den Port `runGraph`,
+  der Fehler noch per Exception meldet: Die Infrastructure wirft
+  `NestedNodeFailedException` mit der inneren Failure, der Runner gibt Code
+  und Felder an den äußeren Baustein weiter.
+- Geplant: Die übrigen Domain-Executoren werfen an einzelnen Stellen noch
+  `Error`s (z. B. fehlende Konfiguration, nicht verfügbare Dienste); sie
+  sollen ebenfalls `NodeFailure`s mit eigenem Code liefern. Ebenso soll
+  `runGraph` ein `Result` liefern.
 - `executeTaskGraph`/`resumeTaskGraph` geben
   `ResultAsync<TaskGraphOutput, NodeExecutionFailure>` zurück und werden mit
   `map`/`match` weiterverarbeitet.
 - `markRunFailed` schreibt die Bausteine über `recordNodeExecutionFailure`,
   bevor es den Lauf als gescheitert festhält.
 - `TaskRunFailure` bleibt Eingabefehlern der HTTP-Routen vorbehalten.
-- Wirft ein Executor `NodeFailedError`, übernimmt der Runner dessen Code als
-  `FailedNode.failureCode`; gespeichert in `activities.failure_code` bzw.
-  `failureCode` (Firestore). Felder für die Übersetzung (`reason.details`)
-  landen in `FailedNode.failureDetails`, gespeichert in
+- Der Code einer `NodeFailure` wird `FailedNode.failureCode`; gespeichert in
+  `activities.failure_code` bzw. `failureCode` (Firestore). Ihre Felder
+  (`details`) landen in `FailedNode.failureDetails`, gespeichert in
   `activities.failure_details_json` bzw. `failureDetails`. Der Client
   übersetzt bekannte Codes mit diesen Feldern und zeigt den Text der Runtime
   als technische Details

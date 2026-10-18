@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {dialogInputNodeExecutor} from "./dialog-input-node-executor.js";
+import {succeeded} from "./node-executor-test-support.js";
 
 test("pauses a run and preserves the dialog definition", async () => {
-  const result = await dialogInputNodeExecutor.execute({
+  const result = succeeded(await dialogInputNodeExecutor.execute({
       id: "dialog", primitive: "dialogInput", config: {
         primitive: "dialogInput", instruction: "Hallo {{name}}", fields: [
           {name: "age", type: "integer", options: []},
@@ -13,7 +14,7 @@ test("pauses a run and preserves the dialog definition", async () => {
     templateExpressionResolver: {
       resolveText: (value: string) => value.replace("{{name}}", "Mila"),
     },
-  } as never);
+  } as never));
 
   assert.equal(result.status, "waitingForApproval");
   assert.equal(result.message, "Hallo Mila");

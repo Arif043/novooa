@@ -3,6 +3,7 @@ import test from "node:test";
 import {InMemoryDocumentStore} from "../../../data/infrastructure/in-memory/in-memory-document-store.js";
 import {saveDocumentNodeExecutor} from "./save-document-node-executor.js";
 import {type TaskRunContext} from "./node-executor.js";
+import {succeeded} from "./node-executor-test-support.js";
 
 test("legt ohne passende Datensätze einen neuen Datensatz an", async () => {
   const store = await storeWithCollection();
@@ -73,7 +74,7 @@ async function executeSave(
     {field: "email", operator: "equals", value: email},
   ],
 ) {
-  return saveDocumentNodeExecutor.execute({
+  return succeeded(await saveDocumentNodeExecutor.execute({
       id: "save", primitive: "saveDocument", title: "Datensatz speichern",
       description: "", outputs: [{key: "value", name: "speichern", showOnCanvas: true}],
       config: {
@@ -84,7 +85,7 @@ async function executeSave(
     teamId: "team_1",
     documentStore: store,
     templateExpressionResolver: {resolveValue: (value: string) => value},
-  } as unknown as TaskRunContext);
+  } as unknown as TaskRunContext));
 }
 
 async function storeWithCollection(): Promise<InMemoryDocumentStore> {

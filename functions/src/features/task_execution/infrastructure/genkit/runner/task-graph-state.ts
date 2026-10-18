@@ -10,7 +10,9 @@ import {
 import {finalOutputOf} from "../../../domain/services/task-graph-utils.js";
 import {type TaskVariables} from "../../../domain/executors/node-executor.js";
 import {consoleOutputOf} from "../../../domain/entities/script-execution.js";
-import {type FailedNode, NodeExecutionFailure, NodeFailedError} from "../../../domain/entities/node-execution-failure.js";
+import {type FailedNode, NodeExecutionFailure} from "../../../domain/entities/node-execution-failure.js";
+import {NodeFailure} from "../../../domain/entities/node-failure.js";
+import {NestedNodeFailedException} from "./nested-node-failed-exception.js";
 
 export type InitialNodeRunState = {
   nodeResults: NodeExecutionResult[];
@@ -117,14 +119,22 @@ export function newResults(
   return orderedResults(graph, results).filter((result) => !alreadyRecorded.has(result.nodeId));
 }
 
-export function nodeExecutionFailure(node: WorkflowNode, error: unknown, completed: NodeExecutionResult[]): NodeExecutionFailure {
-  const message = error instanceof Error ? error.message : String(error);
-  const failureCode = error instanceof NodeFailedError ? failureFieldsOf(error) : {};
-  const failedNode = {nodeId: node.id, primitive: node.primitive, message, ...failureCode, console: consoleOutputOf(error)};
-  return new NodeExecutionFailure(failedNode, completed, error);
+/** Ein Baustein hat eine Failure als Wert geliefert. */
+export function failedNodeExecution(node: WorkflowNode, failure: NodeFailure, completed: NodeExecutionResult[]): NodeExecutionFailure {
+  return new NodeExecutionFailure(failedNodeFor(node, failure.message, failure), completed, failure);
 }
 
-function failureFieldsOf(error: NodeFailedError): Pick<FailedNode, "failureCode" | "failureDetails"> {
-  const {code, details} = error.reason;
-  return details ? {failureCode: code, failureDetails: details} : {failureCode: code};
+/** Ein Baustein hat geworfen; eine Failure aus einem verschachtelten Plan behält Code und Felder. */
+export function nodeExecutionFailure(node: WorkflowNode, error: unknown, completed: NodeExecutionResult[]): NodeExecutionFailure {
+  if (error instanceof NestedNodeFailedException) return failedNodeExecution(node, error.failure, completed);
+  const message = error instanceof Error ? error.message : String(error);
+  return new NodeExecutionFailure(failedNodeFor(node, message, undefined, consoleOutputOf(error)), completed, error);
+}
+
+function failedNodeFor(node: WorkflowNode, message: string, failure?: NodeFailure, console?: FailedNode["console"]): FailedNode {
+  return {
+    nodeId: node.id, primitive: node.primitive, message, console,
+    ...(failure ? {failureCode: failure.code} : {}),
+    ...(failure && Object.keys(failure.details).length > 0 ? {failureDetails: {...failure.details}} : {}),
+  };
 }

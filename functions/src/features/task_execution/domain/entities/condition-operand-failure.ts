@@ -1,3 +1,4 @@
+import {NodeFailure} from "./node-failure.js";
 import {type ComparisonOperator} from "./task.js";
 
 /** Welche Art Wert ein Vergleich braucht. */
@@ -21,6 +22,11 @@ export class ConditionOperandFailure {
     receivedValue: unknown,
   ) {
     this.received = shortened(receivedValue);
+  }
+
+  /** Als Ursache eines gescheiterten Bausteins. */
+  toNodeFailure(): NodeFailure {
+    return NodeFailure.of({code: this.code, message: this.technicalMessage, details: this.details});
   }
 
   /** Die Felder für die Übersetzung im Client. */

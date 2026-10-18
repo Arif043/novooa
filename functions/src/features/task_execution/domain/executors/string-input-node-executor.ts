@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {
   type NodeExecutor,
   executedNode,
@@ -10,9 +11,9 @@ export const stringInputNodeExecutor: NodeExecutor = {
     const value = node.config.primitive === "stringInput"
       ? node.config.value
       : "";
-    return executedNode(
+    return ok(executedNode(
       node,
       textOutputs(runContext.templateExpressionResolver.resolveText(value)),
-    );
+    ));
   },
 };

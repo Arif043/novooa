@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {executeForEach} from "./for-each-executor.js";
 import {
   type NodeExecutor,
@@ -19,7 +20,7 @@ export const forEachNodeExecutor: NodeExecutor = {
         scope,
       ),
     });
-    return executedNode(node, {value: {type: "json", value: results}});
+    return ok(executedNode(node, {value: {type: "json", value: results}}));
   },
 };
 

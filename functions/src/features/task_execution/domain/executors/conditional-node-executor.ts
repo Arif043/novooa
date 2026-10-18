@@ -1,3 +1,4 @@
+import {err, ok, type Result} from "neverthrow";
 import {
   executeConditionalFlow,
   type ConditionalExecutionResult,
@@ -9,8 +10,7 @@ import {
   textOutputs,
 } from "./node-executor.js";
 import {type WorkflowNode} from "../entities/task.js";
-import {type ConditionOperandFailure} from "../entities/condition-operand-failure.js";
-import {NodeFailedError} from "../entities/node-execution-failure.js";
+import {type NodeFailure} from "../entities/node-failure.js";
 import {finalOutputOf} from "../services/task-graph-utils.js";
 
 export type ConditionalBranchObserver = {
@@ -42,22 +42,19 @@ export function createConditionalFlowNodeExecutor(
   return {
     primitive: "conditionalFlow",
     async execute(node, runContext) {
-      const output = hasExpressionBranches(node)
+      const outputOrFailure = hasExpressionBranches(node)
         ? conditionedOutputFor(node, runContext)
-        : labelMatchedOutputFor(node, runContext);
-      const branchOutput = await executeSelectedBranch(
-        node,
-        runContext,
-        output,
-        observer,
-      );
-      return executedNode(node, textOutputs(branchOutput), {
+        : ok(labelMatchedOutputFor(node, runContext));
+      if (outputOrFailure.isErr()) return err(outputOrFailure.error);
+      const output = outputOrFailure.value;
+      const branchOutput = await executeSelectedBranch(node, runContext, output, observer);
+      return ok(executedNode(node, textOutputs(branchOutput), {
         selectedNodeId: output.selectedNodeId,
         selection: {
           selectedBranchId: output.selectedBranchId,
           selectedBranchLabel: output.selectedBranchLabel,
         },
-      });
+      }));
     },
   };
 }
@@ -81,30 +78,15 @@ function hasExpressionBranches(node: WorkflowNode): boolean {
 function conditionedOutputFor(
   node: WorkflowNode,
   runContext: Parameters<NodeExecutor["execute"]>[1],
-): ConditionalExecutionResult {
-  if (node.config.primitive !== "conditionalFlow") return {selectedNodeId: null};
-  const matchOrFailure = selectConditionedBranch(
+): Result<ConditionalExecutionResult, NodeFailure> {
+  if (node.config.primitive !== "conditionalFlow") return ok({selectedNodeId: null});
+  return selectConditionedBranch(
     node.config.branches,
     (template) => runContext.templateExpressionResolver.resolveValue(template),
-  );
-  if (matchOrFailure.isErr()) throw nodeFailedFor(matchOrFailure.error);
-  const match = matchOrFailure.value;
-  if (!match) return {selectedNodeId: null};
-  return {
-    selectedNodeId: null,
-    selectedBranchId: match.branch.id,
-    selectedBranchLabel: match.branch.label,
-  };
-}
-
-// Executoren melden Fehler laut Vertrag per Exception; Code und Felder der
-// Failure reisen darin bis zur Aktivität, wo der Client sie übersetzt.
-function nodeFailedFor(failure: ConditionOperandFailure): NodeFailedError {
-  return new NodeFailedError({
-    code: failure.code,
-    message: failure.technicalMessage,
-    details: failure.details,
-  });
+  ).map((match): ConditionalExecutionResult => match
+    ? {selectedNodeId: null, selectedBranchId: match.branch.id, selectedBranchLabel: match.branch.label}
+    : {selectedNodeId: null},
+  ).mapErr((failure) => failure.toNodeFailure());
 }
 
 function labelMatchedOutputFor(

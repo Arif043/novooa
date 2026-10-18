@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {OutboundHttpError} from "../../../connections/domain/repositories/outbound-http-client.js";
 import {type NodeOutputValue} from "../entities/workflow-value.js";
 import {type NodeExecutor, executedNode} from "./node-executor.js";
@@ -36,17 +37,17 @@ export const httpRequestNodeExecutor: NodeExecutor = {
       timeoutMs: config.timeoutSeconds * 1000,
     });
 
-    const ok = response.status >= 200 && response.status < 300;
-    if (!ok && config.failOnHttpError) {
+    const succeeded = response.status >= 200 && response.status < 300;
+    if (!succeeded && config.failOnHttpError) {
       const excerpt = response.body.trim().slice(0, errorExcerptLength);
       throw new OutboundHttpError(`Die Anfrage ist mit Status ${response.status} fehlgeschlagen${excerpt === "" ? "." : `: ${excerpt}`}`);
     }
-    return executedNode(node, {
+    return ok(executedNode(node, {
       value: {type: "json", value: parsed(response.body)},
       status: {type: "number", value: response.status},
-      ok: {type: "boolean", value: ok},
+      ok: {type: "boolean", value: succeeded},
       headers: {type: "json", value: response.headers},
-    } satisfies Record<string, NodeOutputValue>);
+    } satisfies Record<string, NodeOutputValue>));
   },
 };
 

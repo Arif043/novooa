@@ -31,7 +31,7 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
 Port: `PromptExecutor` (`PromptExecutionRequest` → `ResultAsync<PromptExecutionResult,
 LanguageModelFailure>`), Adapter `GenkitPromptExecutor`. Der Node-Executor
 (`genkit-prompt-node-executor.ts`) bereitet nur Workflow-Werte auf, speichert
-Bildausgaben und reicht eine Failure als `NodeFailedError` an den Runner
+Bildausgaben und gibt eine Failure als `err(NodeFailure)` an den Runner
 ([Fehlerschichtung](./fehlerschichtung-modellaufruf.md)).
 
 ## Siehe auch

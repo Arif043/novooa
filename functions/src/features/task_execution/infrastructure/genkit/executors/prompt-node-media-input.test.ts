@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {createGenkitPromptNodeExecutor} from "./genkit-prompt-node-executor.js";
+import {succeeded} from "../../../domain/executors/node-executor-test-support.js";
 
 test("provides a media template value as a Genkit media part", async () => {
   const prompts: unknown[] = [];
@@ -15,10 +16,10 @@ test("provides a media template value as a Genkit media part", async () => {
 });
 
 test("persists a generated image as a media value", async () => {
-  const output = await createGenkitPromptNodeExecutor(imageAi()).execute(
+  const output = succeeded(await createGenkitPromptNodeExecutor(imageAi()).execute(
     imageExecutorInput().node,
     imageRunContext() as never,
-  );
+  ));
   assert.deepEqual(output.outputs.value, {
     type: "media",
     value: {
@@ -33,7 +34,7 @@ test("persists a generated image as a media value", async () => {
 
 test("uses the selected team language model for a text prompt", async () => {
   const models: unknown[] = [];
-  const output = await createGenkitPromptNodeExecutor(
+  const output = succeeded(await createGenkitPromptNodeExecutor(
     fakeAi([]),
     undefined,
     {
@@ -55,15 +56,14 @@ test("uses the selected team language model for a text prompt", async () => {
   ).execute({
       ...executorInput().node,
       config: {...promptConfig(), languageModelId: "model-1"},
-  }, runContext() as never);
+  }, runContext() as never));
 
   assert.equal(output.outputs.value?.value, "Aus dem Teammodell.");
   assert.deepEqual(models, ["team-model"]);
 });
 
-test("rejects a selected model that cannot receive the supplied image", async () => {
-  await assert.rejects(
-    createGenkitPromptNodeExecutor(
+test("a selected model that cannot receive the supplied image is a failure value", async () => {
+  const resultOrFailure = await createGenkitPromptNodeExecutor(
       fakeAi([]),
       undefined,
       {async resolve() {
@@ -77,9 +77,11 @@ test("rejects a selected model that cannot receive the supplied image", async ()
     ).execute({
         ...executorInput().node,
         config: {...promptConfig(), languageModelId: "model-1"},
-    }, runContext() as never),
-    /keine Bildeingaben/,
-  );
+    }, runContext() as never);
+
+  const failure = resultOrFailure._unsafeUnwrapErr();
+  assert.equal(failure.code, "capabilityMissing");
+  assert.match(failure.message, /keine Bildeingaben/);
 });
 
 function executorInput() {

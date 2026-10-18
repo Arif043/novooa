@@ -17,8 +17,8 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   liefert. Passt ein Wert nicht zum Operator (z. B. „vor“ auf Text ohne
   Datum), ist das Ergebnis die Domain-Failure `ConditionOperandFailure`
   (Code `conditionOperandMismatch`, Felder `operator`, `expected`,
-  `received`). Der Executor verpackt sie in `NodeFailedError`; der Client
-  übersetzt Code und Felder (en/de/tr). Der technische Text ist sprachneutral.
+  `received`). Der Executor gibt sie als `err(NodeFailure)` zurück; der
+  Client übersetzt Code und Felder (en/de/tr). Der technische Text ist sprachneutral.
 - Der Client bietet je Datentyp passende Vergleiche an (`operatorsFor`; Typ
   aus `outputTypeOf`, also für alle Werte, nicht nur Felder):
 

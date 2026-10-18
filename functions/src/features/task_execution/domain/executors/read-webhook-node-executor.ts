@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {type NodeOutputValue} from "../entities/workflow-value.js";
 import {datetimeOutput, executedNode, stringOutput, type NodeExecutor} from "./node-executor.js";
 
@@ -14,7 +15,7 @@ export const readWebhookNodeExecutor: NodeExecutor = {
       headers: {type: "json", value: objectField(event, "headers")},
       receivedAt: datetimeOutput(stringField(event, "receivedAt")),
     };
-    return executedNode(node, outputs);
+    return ok(executedNode(node, outputs));
   },
 };
 

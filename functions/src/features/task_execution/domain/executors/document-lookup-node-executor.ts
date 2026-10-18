@@ -1,3 +1,4 @@
+import {ok} from "neverthrow";
 import {
   type DocumentRecord,
 } from "../../../data/domain/entities/document.js";
@@ -23,9 +24,9 @@ export const documentLookupNodeExecutor: NodeExecutor = {
   async execute(node, runContext) {
     try {
       const document = await findDocument(node, runContext);
-      return executedNode(node, outputsFor(document));
+      return ok(executedNode(node, outputsFor(document)));
     } catch {
-      return executedNode(node, failureOutputs());
+      return ok(executedNode(node, failureOutputs()));
     }
   },
 };

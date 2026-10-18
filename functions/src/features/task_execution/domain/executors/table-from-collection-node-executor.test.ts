@@ -4,6 +4,7 @@ import {InMemoryDocumentStore} from "../../../data/infrastructure/in-memory/in-m
 import {type DocumentStore} from "../../../data/domain/repositories/document-store.js";
 import {tableFromCollectionNodeExecutor} from "./table-from-collection-node-executor.js";
 import {type TaskRunContext} from "./node-executor.js";
+import {succeeded} from "./node-executor-test-support.js";
 
 test("liest alle Datensätze einer Sammlung als ausgerichtete Tabelle", async () => {
   const store = new InMemoryDocumentStore();
@@ -17,7 +18,7 @@ test("liest alle Datensätze einer Sammlung als ausgerichtete Tabelle", async ()
     data: {name: "Tom"},
   });
 
-  const result = await tableFromCollectionNodeExecutor.execute(node(), runContext(store));
+  const result = succeeded(await tableFromCollectionNodeExecutor.execute(node(), runContext(store)));
 
   // InMemoryDocumentStore.findMany's row order isn't stable across runs
   // (updatedAt-based, sub-millisecond ties break arbitrarily) — the
@@ -38,7 +39,7 @@ test("liest alle Datensätze einer Sammlung als ausgerichtete Tabelle", async ()
 test("liefert eine leere Tabelle für eine unbekannte Sammlung", async () => {
   const store = new InMemoryDocumentStore();
 
-  const result = await tableFromCollectionNodeExecutor.execute(node(), runContext(store));
+  const result = succeeded(await tableFromCollectionNodeExecutor.execute(node(), runContext(store)));
 
   assert.deepEqual(result.outputs.value, {
     type: "table", value: {columns: [], rows: []},

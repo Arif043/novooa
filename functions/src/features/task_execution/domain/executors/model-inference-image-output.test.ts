@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {modelInferenceNodeExecutor} from "./model-inference-node-executor.js";
+import {succeeded} from "./node-executor-test-support.js";
 
 const png = {dataBase64: "iVBORw0KGgo=", contentType: "image/png", fileName: "maske.png"};
 
 test("stores an image output as a team file and returns it as media", async () => {
   const written: {fileName: string; contentType: string; content: Uint8Array}[] = [];
 
-  const result = await modelInferenceNodeExecutor.execute(node(), runContext(png, written) as never);
+  const result = succeeded(await modelInferenceNodeExecutor.execute(node(), runContext(png, written) as never));
 
   assert.equal(written[0]?.fileName, "maske.png");
   assert.equal(written[0]?.contentType, "image/png");

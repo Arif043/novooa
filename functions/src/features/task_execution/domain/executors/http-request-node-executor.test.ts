@@ -4,6 +4,7 @@ import {OutboundHttpError, type OutboundHttpClient, type OutboundHttpRequest, ty
 import {type HttpRequestNodeConfig} from "../entities/task.js";
 import {type TaskRunContext} from "./node-executor.js";
 import {httpRequestNodeExecutor} from "./http-request-node-executor.js";
+import {succeeded} from "./node-executor-test-support.js";
 
 const config = (overrides: Partial<HttpRequestNodeConfig> = {}): HttpRequestNodeConfig => ({
   primitive: "httpRequest", method: "GET", url: "/orders", query: [], headers: [], bodyType: "none", body: "",
@@ -30,12 +31,12 @@ function clientReturning(response: Partial<OutboundHttpResponse> = {}) {
 
 test("löst Templates in URL, Query, Headern und Body auf und liefert typisierte Ausgaben", async () => {
   const {client, sent} = clientReturning();
-  const result = await httpRequestNodeExecutor.execute(nodeOf(config({
+  const result = succeeded(await httpRequestNodeExecutor.execute(nodeOf(config({
     connectionId: "c1", method: "POST", url: "/customers/{{kunde}}",
     query: [{name: "filter", value: "{{kunde}}"}, {name: "  ", value: "weg"}],
     headers: [{name: "X-Kunde", value: "{{kunde}}"}, {name: "", value: "weg"}],
     bodyType: "json", body: '{"name":"{{kunde}}"}',
-  })), contextWith(client));
+  })), contextWith(client)));
 
   assert.deepEqual(sent[0], {
     teamId: "team-1", connectionId: "c1", method: "POST", url: "/customers/Anna",
@@ -52,12 +53,12 @@ test("löst Templates in URL, Query, Headern und Body auf und liefert typisierte
 
 test("Textantworten bleiben Text, leere Antworten sind null; GET sendet nie einen Body", async () => {
   const text = clientReturning({body: "einfach Text"});
-  assert.deepEqual((await httpRequestNodeExecutor.execute(nodeOf(config({bodyType: "text", body: "ignoriert"})), contextWith(text.client))).outputs.value,
+  assert.deepEqual((succeeded(await httpRequestNodeExecutor.execute(nodeOf(config({bodyType: "text", body: "ignoriert"})), contextWith(text.client)))).outputs.value,
     {type: "json", value: "einfach Text"});
   assert.equal("body" in text.sent[0], false);
 
   const empty = clientReturning({status: 204, body: ""});
-  assert.deepEqual((await httpRequestNodeExecutor.execute(nodeOf(config({method: "DELETE"})), contextWith(empty.client))).outputs.value, {type: "json", value: null});
+  assert.deepEqual((succeeded(await httpRequestNodeExecutor.execute(nodeOf(config({method: "DELETE"})), contextWith(empty.client)))).outputs.value, {type: "json", value: null});
 });
 
 test("ein Fehlerstatus bricht standardmäßig ab, mit Statuscode und Auszug der Antwort", async () => {
@@ -70,7 +71,7 @@ test("ein Fehlerstatus bricht standardmäßig ab, mit Statuscode und Auszug der 
 test("ohne Abbruch bei Fehlerstatus liefert der Baustein Status und ok=false für Verzweigungen", async () => {
   const {client} = clientReturning({status: 404, body: '{"message":"nicht gefunden"}'});
 
-  const result = await httpRequestNodeExecutor.execute(nodeOf(config({failOnHttpError: false})), contextWith(client));
+  const result = succeeded(await httpRequestNodeExecutor.execute(nodeOf(config({failOnHttpError: false})), contextWith(client)));
 
   assert.deepEqual(result.outputs.status, {type: "number", value: 404});
   assert.deepEqual(result.outputs.ok, {type: "boolean", value: false});
@@ -84,6 +85,6 @@ test("ungültiges JSON nach dem Einsetzen, fehlender Dienst und leere Verbindung
 
   await assert.rejects(() => httpRequestNodeExecutor.execute(nodeOf(config()), contextWith(undefined)), /nicht verfügbar/);
 
-  await httpRequestNodeExecutor.execute(nodeOf(config({connectionId: ""})), contextWith(client));
+  succeeded(await httpRequestNodeExecutor.execute(nodeOf(config({connectionId: ""})), contextWith(client)));
   assert.equal(sent[0].connectionId, undefined);
 });

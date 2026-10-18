@@ -1,3 +1,5 @@
+import {ok} from "neverthrow";
+import {type NodeResultOrFailure} from "../../../domain/executors/node-executor.js";
 import {type EmployeeStore} from "../../../../employees/domain/repositories/employee-store.js";
 import {type SkillContentReader} from "../../../../skills/domain/repositories/skill-content-reader.js";
 import {type GenkitBeta} from "genkit/beta";
@@ -47,13 +49,16 @@ type NodeRunInput = {
 export async function runNodeWithTrail(
   ai: GenkitBeta,
   input: NodeRunInput,
-): Promise<NodeExecutionResult> {
+): Promise<NodeResultOrFailure> {
   try {
-    const result = input.skipNode
-      ? skippedNode(input.node)
+    const resultOrFailure = input.skipNode
+      ? ok(skippedNode(input.node))
       : await executeNode(ai, input);
-    logNodeTrail(input.logger, result, input.startedAt);
-    return result;
+    resultOrFailure.match(
+      (result) => logNodeTrail(input.logger, result, input.startedAt),
+      (failure) => logNodeErrorTrail(input, failure),
+    );
+    return resultOrFailure;
   } catch (error) {
     logNodeErrorTrail(input, error);
     throw error;
@@ -99,7 +104,7 @@ export function logSkippedBranches(
 async function executeNode(
   ai: GenkitBeta,
   input: NodeRunInput,
-): Promise<NodeExecutionResult> {
+): Promise<NodeResultOrFailure> {
   const attachmentWorkspace = await prepareNodeAttachmentWorkspace(
     input.node,
     input.runContext.teamId,
@@ -121,7 +126,7 @@ async function executeNode(
       input.scriptExecutorFactory,
       input.executorRegistry,
     );
-    if (!executor) return skippedNode(input.node);
+    if (!executor) return ok(skippedNode(input.node));
     return await executor.execute(input.node, input.runContext);
   } finally {
     await attachmentWorkspace?.cleanup();
