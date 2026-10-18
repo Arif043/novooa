@@ -6,8 +6,8 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
 - Volles Python (Imports, `open`, Standardbibliothek); das Script läuft als
   `__main__`, ein `if __name__ == "__main__":`-Block wird ausgeführt.
-- Bereit stehen Variablen früherer Bausteine, `files`, `list_files()`,
-  `read_file()` und `workflow_output()`.
+- Bereit stehen `files`, `list_files()`, `read_file()`, `workflow_input()`
+  und `workflow_output()`.
 - Grenzen je Lauf: 10 s (`SCRIPT_TIMEOUT_SECONDS`), 64 MB Dateigröße,
   128 offene Dateien, 64 Prozesse/Threads (`SCRIPT_MAX_PROCESSES`).
   Höchstens vier Läufe gleichzeitig.

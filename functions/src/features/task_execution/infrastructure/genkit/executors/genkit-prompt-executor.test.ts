@@ -133,7 +133,6 @@ function imageInput(): PromptNodeInput {
     teamId: "team-1",
     generationOptions: defaultGenerationOptions,
     instruction: "Erstelle ein Logo.",
-    context: "",
     outputType: "image",
     choices: [],
     structuredFields: [],

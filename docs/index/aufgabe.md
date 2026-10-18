@@ -41,6 +41,7 @@
 - [Iterative Verfeinerung](../notes/iterative-verfeinerung.md)
 - [Script-Executor](../notes/script-executor.md)
 - [Script: Workflow-Ausgabewerte](../notes/script-workflow-output.md)
+- [Script: Workflow-Eingabewerte](../notes/script-workflow-input.md)
 - [Bedingter Ablauf: Auswertung](../notes/bedingter-ablauf-auswertung.md)
 - [Baustein „Für jedes Element“](../notes/foreach-baustein.md)
 - [Formulareingabe](../notes/formulareingabe-baustein.md)

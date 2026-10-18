@@ -11,7 +11,14 @@ export type ScriptDraft = {
  */
 export function scriptDraftProblems(draft: ScriptDraft): string[] {
   if (draft.script.trim().length === 0) return ["Das Script ist leer."];
-  return [...nameProblems(draft), ...typeProblems(draft), ...declarationProblems(draft)];
+  return [...nameProblems(draft), ...typeProblems(draft), ...declarationProblems(draft), ...templateProblems(draft)];
+}
+
+/** `{{…}}` im Code wird nicht ersetzt; gemeint ist fast immer `workflow_input`. */
+function templateProblems(draft: ScriptDraft): string[] {
+  return /\{\{\s*[\p{L}_][\p{L}\p{N}_.]*\s*\}\}/u.test(draft.script)
+    ? ["Das Script enthält {{…}}; Werte liest ein Script nur mit workflow_input(\"name\")."]
+    : [];
 }
 
 function nameProblems(draft: ScriptDraft): string[] {

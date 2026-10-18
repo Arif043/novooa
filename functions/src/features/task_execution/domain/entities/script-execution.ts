@@ -1,10 +1,12 @@
+import {type WorkflowInputValue} from "./workflow-value.js";
+
 export type ScriptExecutionRequest = {
   script: string;
-  variables: Record<string, unknown>;
+  /** Die per `workflow_input("pfad")` gelesenen Werte, unter ihrem Pfad. */
+  inputs: Record<string, WorkflowInputValue>;
 };
 
 export type ScriptExecutionResult = {
-  variables: Record<string, unknown>;
   printed: string;
   /** Alles, was das Script auf stderr geschrieben hat (Warnungen, Unterprozesse); leer oder fehlend, wenn nichts. */
   errorOutput?: string;

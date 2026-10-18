@@ -31,4 +31,5 @@ workflow_output("rechnung", "json", {"nr": "R-1", "positionen": positionen})
 ## Siehe auch
 
 - [Script-Executor](./script-executor.md)
+- [Script: Workflow-Eingabewerte](./script-workflow-input.md)
 - [Flacher Namensraum der Werte](./flacher-werte-namensraum.md)

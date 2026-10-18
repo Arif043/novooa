@@ -42,15 +42,14 @@ Genkit darunter.
   - **Zeitplan** = zeit- oder event-gesteuerte Auslöser.
   - **Aktivitäten** = Runs, Traces, Freigaben.
   - **Workflow-Ausgabewert** = fachlicher, typisierter Wert, den ein Baustein nach seiner Ausführung bereitstellt.
-  - **Variable** = benannter Wert, den ein Script-Baustein definiert und der für nachfolgende Bausteine verfügbar ist.
 
 ### Workflow-Werte und Templates
 
-Workflow-Ausgabewerte und Variablen sind unterschiedliche Domänenkonzepte:
+Es gibt genau einen Weg, Werte zwischen Bausteinen weiterzugeben:
 
-- Ein Baustein erzeugt fachliche, typisierte **Workflow-Ausgabewerte**.
-- Ein Script-Baustein kann benannte **Variablen** definieren.
-- Beide können über Template-Ausdrücke referenziert und in Konfigurationen eingebunden werden, zum Beispiel `{{rechnung.summe}}` oder `{{kunde}}`.
+- Ein Baustein erzeugt fachliche, typisierte **Workflow-Ausgabewerte**; ein Script-Baustein ausschließlich über `workflow_output("name", "typ", wert)`.
+- Konfigurationen anderer Bausteine referenzieren sie über Template-Ausdrücke, zum Beispiel `{{rechnung.summe}}` oder `{{kunde}}`.
+- Ein Script liest sie ausschließlich über `workflow_input("rechnung.summe")`; `{{…}}` im Script-Code wird nicht ersetzt. Variablen eines Scripts bleiben im Script.
 
 Ein Template-Ausdruck beschreibt ausschließlich die Referenz auf einen Wert. Welche Eingabe eines Bausteins ihn verwendet, wird in dessen expliziter Konfiguration festgelegt.
 

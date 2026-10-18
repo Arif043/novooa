@@ -30,3 +30,12 @@ test("reports invalid, duplicate, untyped and undeclared outputs", () => {
   assert.equal(problems.some((problem) => problem.includes("„text“")), true);
   assert.equal(problems.some((problem) => problem.includes("„value“ ist angekündigt")), true);
 });
+
+test("reports {{…}} templates in the code, which are not replaced", () => {
+  const problems = scriptDraftProblems({
+    script: "betreff = \"{{mail.betreff}}\"\nworkflow_output(\"b\", \"string\", betreff)",
+    workflowOutputs: [{name: "b", typ: "string"}],
+  });
+
+  assert.deepEqual(problems, ["Das Script enthält {{…}}; Werte liest ein Script nur mit workflow_input(\"name\")."]);
+});

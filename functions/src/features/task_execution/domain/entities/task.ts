@@ -367,7 +367,6 @@ export type NodeExecutionResult = {
   primitive: WorkflowPrimitive;
   status: "executed" | "skipped" | "waitingForApproval";
   outputs: Record<string, NodeOutputValue>;
-  variables?: Record<string, unknown>;
   selectedNodeId?: string | null;
   selectedBranchId?: string | null;
   selectedBranchLabel?: string | null;
@@ -380,7 +379,6 @@ export type NodeExecutionResult = {
 export type ConsoleOutput = {stdout: string; stderr: string};
 export type TaskResumeState = {
   nodeResults: NodeExecutionResult[];
-  variables: Record<string, unknown>;
   remainingNodeIds: string[];
   skippedNodeIds: string[];
   waitingNodeId?: string;

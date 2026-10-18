@@ -70,9 +70,7 @@ void main() {
       label: 'Summe berechnen',
       primitive: WorkflowPrimitive.script,
       channelKind: ChannelEventKind.email,
-      fields: {
-        NodeFieldKey.script: "workflow_output('summe', 'number', 1)",
-      },
+      fields: {NodeFieldKey.script: "workflow_output('summe', 'number', 1)"},
     ).perform(cubit);
 
     final config = _selectedNode(cubit).config as ScriptNodeConfig;

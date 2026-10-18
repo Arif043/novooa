@@ -14,6 +14,10 @@ import 'package:syscat2/features/task_builder/presentation/widgets/node_file_att
 import 'package:syscat2/features/task_builder/presentation/widgets/python_analyzer.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_code_editor.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_fullscreen_editor_dialog.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/script_input_warning.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/script_workflow_input_insertion.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_picker.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_scope.dart';
 
 class ScriptWidget extends StatefulWidget {
   const ScriptWidget({super.key, required this.node});
@@ -55,6 +59,7 @@ class _ScriptWidgetState extends State<ScriptWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final suggestions = TemplateExpressionScope.suggestionsOf(context);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: SyscatTheme.nodePanelDecoration(context),
@@ -68,6 +73,9 @@ class _ScriptWidgetState extends State<ScriptWidget> {
             onChanged: _updateScript,
             minLines: 6,
             maxLines: 20,
+          ),
+          ScriptInputWarning(
+            unknownPaths: unknownScriptInputs(_config.script, suggestions),
           ),
           const SizedBox(height: AppSpacing.xs),
           const _WorkflowOutputHint(),
@@ -89,6 +97,11 @@ class _ScriptWidgetState extends State<ScriptWidget> {
           child: Text(LocaleKeys.ui_script.tr(), style: SyscatTheme.taskBody),
         ),
         IconButton(
+          tooltip: LocaleKeys.ui_insert_workflow_input.tr(),
+          onPressed: () => _insertInput(context),
+          icon: const Icon(Icons.data_object),
+        ),
+        IconButton(
           tooltip: LocaleKeys.ui_vollbild_bearbeiten.tr(),
           onPressed: () => showScriptFullscreenEditor(
             context,
@@ -107,6 +120,17 @@ class _ScriptWidgetState extends State<ScriptWidget> {
       text: script,
       selection: TextSelection.collapsed(offset: script.length),
     );
+  }
+
+  Future<void> _insertInput(BuildContext context) async {
+    final suggestion = await pickTemplateExpression(
+      context,
+      TemplateExpressionScope.suggestionsOf(context),
+    );
+    if (!mounted || suggestion == null) return;
+    final call = workflowInputCallFor(suggestion.expression);
+    _controller.value = insertAtSelection(_controller.value, call);
+    _updateScript(_controller.text);
   }
 
   void _updateScript(String script) {

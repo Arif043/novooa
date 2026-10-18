@@ -473,6 +473,7 @@
     "hinweis_fuer_die_bildeingabe": "Hint for the image input",
     "hinweis_fuer_die_eingabe": "Hint for the input",
     "http_anfrage": "HTTP request",
+    "insert_workflow_input": "Insert value",
     "http_path": "Path",
     "http_target_url": "Target address",
     "http_url": "URL",
@@ -531,7 +532,6 @@
     "no_match_for_filters": "No match for the selected filters.",
     "no_model_for_block": "No suitable model is available for this block yet. Import your own models in Settings under Machine Learning.",
     "no_notes_in_knowledge_base": "No notes in the knowledge base yet.",
-    "node_variable": "{node} · Variable {name}",
     "none_full_url": "None (enter a full URL)",
     "not_available": "Not available",
     "not_cached_yet": "Not cached yet – loaded at the latest on the first run.",
@@ -577,7 +577,8 @@
     "script": "Script",
     "script_bearbeiten": "Edit script",
     "script_hinzufuegen": "Add script",
-    "script_outputs_hint": "Business outputs: workflow_output(\"total\", \"number\", value) — types: string, number, boolean, datetime, json. Following blocks use them as {{total}}.",
+    "script_outputs_hint": "Read values: workflow_input(\"invoice.total\") · provide values: workflow_output(\"total\", \"number\", value) — types: string, number, boolean, datetime, json. Following blocks use them as {{total}}.",
+    "script_inputs_unknown": "Not available before this block: {names}",
     "search_condition_number": "Search condition {number}",
     "senden": "Send",
     "skills_load_failed": "The skills could not be loaded.",
@@ -642,7 +643,6 @@
     "wo": "Where",
     "workflow_mapping": "Workflow mapping",
     "workflow_value_named": "Workflow value {name}",
-    "workflow_wert_oder_variable_suchen": "Search workflow value or variable",
     "zeitlimit_sekunden": "Time limit (seconds)",
     "zu_pruefender_wert": "Value to check",
     "zuweisung": "Assignment",
@@ -656,7 +656,8 @@
     "files_initial_body": "Upload documents, organize them in folders and make them available to your tasks.",
     "files_initial_upload": "Upload first file",
     "files_initial_folder": "New folder",
-    "anmeldung_fehlgeschlagen_mit_grund": "Sign-in failed: {}"
+    "anmeldung_fehlgeschlagen_mit_grund": "Sign-in failed: {}",
+    "workflow_wert_suchen": "Search workflow value"
   },
   "machine_learning": {
     "model_import": {

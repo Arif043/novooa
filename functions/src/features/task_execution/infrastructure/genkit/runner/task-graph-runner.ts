@@ -1,5 +1,5 @@
 import { type GenkitBeta } from "genkit/beta";
-import {type TaskVariables, type WorkflowExecutionScope} from "../../../domain/executors/node-executor.js";
+import {type WorkflowExecutionScope} from "../../../domain/executors/node-executor.js";
 import {type TaskRunStepScope} from "../../../domain/entities/task-run-step-key.js";
 import {type JournaledStep, journaledStep, rootStepScope, runJournaledNode} from "./journaled-node-run.js";
 import {
@@ -23,7 +23,6 @@ import {
   resultsMapFrom,
 } from "./task-graph-state.js";
 import {
-  contextFor,
   nextRunnableIndex,
   shouldSkipNode,
   skipInactiveBranches,
@@ -39,7 +38,6 @@ import {
   runNodeWithTrail,
 } from "./task-node-runner.js";
 import {type TaskGraphRuntime} from "./task-graph-runtime.js";
-import {updateTaskVariables} from "./task-run-variables.js";
 import {createTaskRunContext, type ExecuteWorkflowGraph} from "./workflow-graph-run-context.js";
 export function executeTaskGraph(
   ai: GenkitBeta,
@@ -101,7 +99,6 @@ async function runNodes(
   const remaining = remainingNodes(graph, initialState);
   const results = resultsMapFrom(initialState?.nodeResults ?? []);
   const skippedNodeIds = new Set(initialState?.skippedNodeIds ?? []);
-  const variables = {...initialState?.variables};
 
   while (remaining.length > 0) {
     const index = nextRunnableIndex(
@@ -111,7 +108,6 @@ async function runNodes(
     );
     if (index === -1) throw new Error("Task graph contains a cycle.");
     const node = remaining.splice(index, 1)[0];
-    const context = contextFor(variables);
     const skipNode = shouldSkipNode(
       node,
       graph,
@@ -119,22 +115,19 @@ async function runNodes(
       skippedNodeIds,
     );
     const startedAt = Date.now();
-    logNodeHeaderLine(runtime.logger, node, input.taskDefinition.id, graph, context, skipNode, results);
+    logNodeHeaderLine(runtime.logger, node, input.taskDefinition.id, graph, skipNode, results);
     const step = journaledStep(runtime.stepJournal, options.stepScope, node.id);
     // Bausteine liefern Failures als Wert; was dennoch geworfen wird (Infrastruktur, noch nicht
     // umgestellte Executoren), wird hier, an der Grenze, ebenfalls zur Failure.
     const resultOrFailure = await ResultAsync.fromPromise(runJournaledNode(step, () => runNodeWithTrail(ai, {
       node,
-      context,
       runContext: createTaskRunContext({
         input,
-        context,
         runtime,
         currentGraph: graph,
         results,
-        variables,
         scope,
-        executeGraph: embeddedGraphRunner(ai, input, runtime, variables, step),
+        executeGraph: embeddedGraphRunner(ai, input, runtime, step),
       }),
       skipNode,
       startedAt,
@@ -153,7 +146,6 @@ async function runNodes(
       ));
     if (resultOrFailure.isErr()) return err(resultOrFailure.error);
     const result = resultOrFailure.value;
-    updateTaskVariables(variables, result);
     results.set(node.id, result);
     skipInactiveBranches(node, graph, result, skippedNodeIds);
     logSkippedBranches(runtime.logger, node, input.taskDefinition.id, result, skippedNodeIds);
@@ -161,7 +153,6 @@ async function runNodes(
       return ok({
         status: "waitingForApproval",
         nodeResults: orderedResults(graph, results),
-        variables: {...variables},
         remainingNodeIds: remaining.map((item) => item.id),
         skippedNodeIds: Array.from(skippedNodeIds),
         waitingNodeId: node.id,
@@ -180,13 +171,12 @@ function embeddedGraphRunner(
   ai: GenkitBeta,
   input: TaskGraphInput,
   runtime: TaskGraphRuntime,
-  variables: TaskVariables,
   containerStep: JournaledStep | undefined,
 ): ExecuteWorkflowGraph {
   let callIndex = 0;
-  return async (embeddedGraph, _embeddedContext, embeddedScope) => {
+  return async (embeddedGraph, embeddedScope) => {
     const stepScope = containerStep?.key.nested(callIndex++);
-    const initialState = {nodeResults: [], variables, remainingNodeIds: embeddedGraph.nodes.map((item) => item.id), skippedNodeIds: []};
+    const initialState = {nodeResults: [], remainingNodeIds: embeddedGraph.nodes.map((item) => item.id), skippedNodeIds: []};
     const stateOrFailure = await runNodes(ai, input, runtime, {initialState, scope: embeddedScope, graph: embeddedGraph, stepScope});
     // Der äußere Baustein bekommt die Failure des inneren; eine innere Exception wird zu `unexpected`.
     return stateOrFailure.map((state) => state.nodeResults).mapErr(nestedNodeFailureOf);

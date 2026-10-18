@@ -28,6 +28,9 @@ export type NodeOutputValue =
   | {type: "audio"; value: AudioReference}
   | {type: "table"; value: WorkflowTable};
 
+/** Ein Wert für `workflow_input` im Script: der Wert mit dem Typ, den er im Workflow hat. */
+export type WorkflowInputValue = {type: NodeOutputValue["type"]; value: unknown};
+
 export function mediaReferenceFor(file: FileReference): MediaReference {
   if (!file.contentType.startsWith("image/")) {
     throw new Error("Die Medienreferenz muss auf ein Bild verweisen.");

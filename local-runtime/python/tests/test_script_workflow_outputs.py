@@ -7,8 +7,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from novooa_script import execution
 
 
-def run(script, variables=None):
-    request = {"script": script, "variables": variables or {}, "files": []}
+def run(script, inputs=None):
+    request = {"script": script, "inputs": inputs or {}, "files": []}
     return execution.execute(request, [])
 
 
@@ -39,10 +39,11 @@ class WorkflowOutputTest(unittest.TestCase):
     def test_a_script_without_outputs_reports_an_empty_list(self):
         self.assertEqual(run("output = 'x'")["workflowOutputs"], [])
 
-    def test_the_function_is_not_passed_on_as_a_variable(self):
+    def test_returns_nothing_but_the_workflow_outputs(self):
         result = run("workflow_output('a', 'number', 1)\nzahl = 2")
 
-        self.assertEqual(result["variables"], {"zahl": 2})
+        self.assertEqual(result["workflowOutputs"], [{"name": "a", "type": "number", "value": 1}])
+        self.assertNotIn("variables", result)
 
     def test_a_wrong_type_fails_with_the_line_of_the_call(self):
         with self.assertRaisesRegex(execution.ScriptFailed, r'Zeile 2: TypeError: workflow_output\("summe"\): erwartet number, erhalten str'):
@@ -72,10 +73,26 @@ class WorkflowOutputTest(unittest.TestCase):
         with self.assertRaisesRegex(execution.ScriptFailed, r'Zeile 2: .*"summe"\): Der Name ist bereits vergeben'):
             run("workflow_output('summe', 'number', 1)\nworkflow_output('summe', 'number', 2)")
 
-    def test_a_variable_with_the_same_name_does_not_hide_the_function(self):
-        result = run("workflow_output('a', 'number', 1)", variables={"workflow_output": "alt"})
+    def test_reads_typed_workflow_inputs(self):
+        inputs = {
+            "rechnung": {"type": "json", "value": {"summe": 42.5}},
+            "faellig": {"type": "datetime", "value": "2026-10-18T09:30:00"},
+            "betreff": {"type": "string", "value": 'Er sagte "Hallo"'},
+        }
+        script = (
+            "summe = workflow_input('rechnung')['summe']\n"
+            "workflow_output('jahr', 'number', workflow_input('faellig').year)\n"
+            "workflow_output('laenge', 'number', len(workflow_input('betreff')))\n"
+            "workflow_output('brutto', 'number', summe * 2)"
+        )
 
-        self.assertEqual(result["workflowOutputs"][0]["name"], "a")
+        values = {o["name"]: o["value"] for o in run(script, inputs)["workflowOutputs"]}
+
+        self.assertEqual(values, {"jahr": 2026, "laenge": 16, "brutto": 85.0})
+
+    def test_an_unknown_workflow_input_names_the_line(self):
+        with self.assertRaisesRegex(execution.ScriptFailed, r'Zeile 2: LookupError: workflow_input\("fehlt"\)'):
+            run("x = 1\ny = workflow_input('fehlt')")
 
 
 if __name__ == "__main__":

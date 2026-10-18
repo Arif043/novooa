@@ -6,7 +6,7 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
 
 - Tabelle `task_run_steps`; Port `TaskRunStepJournal`, Adapter
   `SQLiteTaskRunStepJournal`.
-- Der Graph läuft normal; Variablen, Verzweigungen und übersprungene Zweige
+- Der Graph läuft normal; Werte, Verzweigungen und übersprungene Zweige
   ergeben sich neu.
 - **Schritt-Key = Idempotency-Key:** `runId` + Schritt-Pfad
   (`TaskRunStepKey`). Top-level die Node-ID, in Teilgraphen mit

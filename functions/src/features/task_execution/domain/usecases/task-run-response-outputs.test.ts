@@ -70,7 +70,7 @@ function dialogResumeState(): TaskResumeState {
         ],
       },
     }],
-    variables: {}, remainingNodeIds: [], skippedNodeIds: [], waitingNodeId: "dialog",
+    remainingNodeIds: [], skippedNodeIds: [], waitingNodeId: "dialog",
   };
 }
 
@@ -87,6 +87,6 @@ function mediaResumeState(): TaskResumeState {
         documentScanEnabled: false,
       },
     }],
-    variables: {}, remainingNodeIds: [], skippedNodeIds: [], waitingNodeId: "media",
+    remainingNodeIds: [], skippedNodeIds: [], waitingNodeId: "media",
   };
 }

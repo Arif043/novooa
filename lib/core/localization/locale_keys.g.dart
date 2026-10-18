@@ -422,6 +422,7 @@ abstract class  LocaleKeys {
   static const ui_hinweis_fuer_die_bildeingabe = 'ui.hinweis_fuer_die_bildeingabe';
   static const ui_hinweis_fuer_die_eingabe = 'ui.hinweis_fuer_die_eingabe';
   static const ui_http_anfrage = 'ui.http_anfrage';
+  static const ui_insert_workflow_input = 'ui.insert_workflow_input';
   static const ui_http_path = 'ui.http_path';
   static const ui_http_target_url = 'ui.http_target_url';
   static const ui_http_url = 'ui.http_url';
@@ -480,7 +481,6 @@ abstract class  LocaleKeys {
   static const ui_no_match_for_filters = 'ui.no_match_for_filters';
   static const ui_no_model_for_block = 'ui.no_model_for_block';
   static const ui_no_notes_in_knowledge_base = 'ui.no_notes_in_knowledge_base';
-  static const ui_node_variable = 'ui.node_variable';
   static const ui_none_full_url = 'ui.none_full_url';
   static const ui_not_available = 'ui.not_available';
   static const ui_not_cached_yet = 'ui.not_cached_yet';
@@ -527,6 +527,7 @@ abstract class  LocaleKeys {
   static const ui_script_bearbeiten = 'ui.script_bearbeiten';
   static const ui_script_hinzufuegen = 'ui.script_hinzufuegen';
   static const ui_script_outputs_hint = 'ui.script_outputs_hint';
+  static const ui_script_inputs_unknown = 'ui.script_inputs_unknown';
   static const ui_search_condition_number = 'ui.search_condition_number';
   static const ui_senden = 'ui.senden';
   static const ui_skills_load_failed = 'ui.skills_load_failed';
@@ -591,7 +592,6 @@ abstract class  LocaleKeys {
   static const ui_wo = 'ui.wo';
   static const ui_workflow_mapping = 'ui.workflow_mapping';
   static const ui_workflow_value_named = 'ui.workflow_value_named';
-  static const ui_workflow_wert_oder_variable_suchen = 'ui.workflow_wert_oder_variable_suchen';
   static const ui_zeitlimit_sekunden = 'ui.zeitlimit_sekunden';
   static const ui_zu_pruefender_wert = 'ui.zu_pruefender_wert';
   static const ui_zuweisung = 'ui.zuweisung';
@@ -606,6 +606,7 @@ abstract class  LocaleKeys {
   static const ui_files_initial_upload = 'ui.files_initial_upload';
   static const ui_files_initial_folder = 'ui.files_initial_folder';
   static const ui_anmeldung_fehlgeschlagen_mit_grund = 'ui.anmeldung_fehlgeschlagen_mit_grund';
+  static const ui_workflow_wert_suchen = 'ui.workflow_wert_suchen';
   static const ui = 'ui';
   static const machine_learning_model_import_select_files_hint = 'machine_learning.model_import.select_files_hint';
   static const machine_learning_model_import_exactly_one_model = 'machine_learning.model_import.exactly_one_model';

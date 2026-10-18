@@ -440,7 +440,6 @@ export const nodeExecutionResultSchema = z.object({
   primitive: workflowPrimitiveSchema,
   status: z.enum(["executed", "skipped", "waitingForApproval"]),
   outputs: z.record(z.string(), nodeOutputValueSchema).default({}),
-  variables: z.record(z.string(), z.unknown()).optional(),
   selectedNodeId: z.string().nullable().optional(),
   selectedBranchId: z.string().nullable().optional(),
   selectedBranchLabel: z.string().nullable().optional(),
@@ -459,7 +458,6 @@ export const nodeExecutionResultSchema = z.object({
 
 export const taskResumeStateSchema = z.object({
   nodeResults: z.array(nodeExecutionResultSchema),
-  variables: z.record(z.string(), z.unknown()).default({}),
   remainingNodeIds: z.array(z.string()),
   skippedNodeIds: z.array(z.string()),
   waitingNodeId: z.string().optional(),

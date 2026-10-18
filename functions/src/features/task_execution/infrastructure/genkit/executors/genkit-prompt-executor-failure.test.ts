@@ -59,7 +59,7 @@ test("a missing capability becomes the capabilityMissing failure", async () => {
 function imageInput(): PromptNodeInput {
   return {
     teamId: "team-1", generationOptions: defaultGenerationOptions, instruction: "Erstelle ein Logo.",
-    context: "", outputType: "image", choices: [], structuredFields: [], mediaUrls: [],
+    outputType: "image", choices: [], structuredFields: [], mediaUrls: [],
   };
 }
 

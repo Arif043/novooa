@@ -6,33 +6,34 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart
 import 'package:syscat2/features/task_builder/presentation/widgets/template_expression_suggestion.dart';
 
 void main() {
-  test('bietet nur Outputs und Script-Variablen aus Vorgängerpfad an', () {
-    final graph = WorkflowGraph(
-      nodes: [
-        _node('eingabe'),
-        _scriptNode(),
-        _node('ziel'),
-        _node('nachfolger'),
-        _node('isoliert'),
-      ],
-      edges: [
-        _edge('eingabe', 'script'),
-        _edge('script', 'ziel'),
-        _edge('ziel', 'nachfolger'),
-      ],
-    );
+  test(
+    'bietet nur Outputs aus dem Vorgängerpfad an, keine Script-Variablen',
+    () {
+      final graph = WorkflowGraph(
+        nodes: [
+          _node('eingabe'),
+          _scriptNode(),
+          _node('ziel'),
+          _node('nachfolger'),
+          _node('isoliert'),
+        ],
+        edges: [
+          _edge('eingabe', 'script'),
+          _edge('script', 'ziel'),
+          _edge('ziel', 'nachfolger'),
+        ],
+      );
 
-    final expressions = templateExpressionSuggestions(
-      graph: graph,
-      targetNodeId: const NodeId('ziel'),
-    );
+      final expressions = templateExpressionSuggestions(
+        graph: graph,
+        targetNodeId: const NodeId('ziel'),
+      );
 
-    expect(expressions.map((suggestion) => suggestion.expression), [
-      '{{eingabe}}',
-      '{{kunde}}',
-      '{{anzahl}}',
-    ]);
-  });
+      expect(expressions.map((suggestion) => suggestion.expression), [
+        '{{eingabe}}',
+      ]);
+    },
+  );
 
   test('bietet die weiteren Werte unter ihrem eigenen Namen wie den '
       'Hauptwert an', () {
@@ -52,12 +53,6 @@ void main() {
       containsAll(['{{speichern}}', '{{Angelegt}}', '{{Anzahl}}']),
     );
     expect(expressions.where((e) => e.contains('.')), isEmpty);
-    expect(
-      suggestions.every(
-        (s) => s.kind == TemplateExpressionSuggestionKind.primary,
-      ),
-      isTrue,
-    );
   });
 
   test('strukturierte Prompt-Felder werden direkt angeboten', () {

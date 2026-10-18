@@ -12,6 +12,7 @@ import {
   type WorkflowNode,
 } from "../entities/task.js";
 import {type TaskRunInteraction} from "../entities/task-run-interaction.js";
+import {type WorkflowInputValue} from "../entities/workflow-value.js";
 import {type TeamFileContentReader} from "../../../files/domain/repositories/team-file-content-reader.js";
 import {type TeamFileStore} from "../../../files/domain/repositories/team-file-store.js";
 import {type ModelInference} from "../../../machine_learning/domain/repositories/model-inference.js";
@@ -20,9 +21,9 @@ import {type DocumentStore} from "../../../data/domain/repositories/document-sto
 import {type OutboundHttpClient} from "../../../connections/domain/repositories/outbound-http-client.js";
 import {type TeamNotificationSender} from "../../../notifications/domain/repositories/team-notification-sender.js";
 
-export type TaskVariables = Record<string, unknown>;
-
 export type TemplateExpressionResolver = {
+  /** Der Wert hinter einem Pfad (`rechnung`, `rechnung.summe`) samt Typ; `undefined`, wenn es ihn nicht gibt. */
+  typedValueAt(path: string): WorkflowInputValue | undefined;
   resolveText(template: string): string;
   resolveTextWithoutMediaReferences(template: string): string;
   resolveValue(template: string): unknown;
@@ -39,7 +40,6 @@ export type WorkflowExecutionScope = {
 
 export type WorkflowGraphRunner = (
   graph: WorkflowGraph,
-  context: string,
   /** Zusätzlicher Geltungsbereich des Teilgraphen, z. B. das aktuelle Element einer Schleife. */
   scope?: WorkflowExecutionScope,
 ) => Promise<Result<NodeExecutionResult[], NodeFailure>>;
@@ -63,8 +63,6 @@ export type TaskRunServices = {
 };
 
 export type TaskRunContext = TaskRunServices & {
-  context: string;
-  variables: TaskVariables;
   rootTask: TaskDefinition;
   currentGraph: WorkflowGraph;
   teamId: string;
@@ -96,7 +94,6 @@ export function executedNode(
       selectedBranchId?: string | null;
       selectedBranchLabel?: string | null;
     };
-    variables?: TaskVariables;
     console?: ConsoleOutput;
   } = {},
 ): NodeExecutionResult {
@@ -105,7 +102,6 @@ export function executedNode(
     primitive: node.primitive,
     status: "executed",
     outputs,
-    variables: options.variables,
     console: options.console,
     selectedNodeId: options.selectedNodeId,
     selectedBranchId: options.selection?.selectedBranchId,

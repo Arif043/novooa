@@ -9,6 +9,7 @@ import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_anch
 import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_target.dart';
 
 import 'field_helper_text.dart';
+import 'template_expression_picker.dart';
 import 'template_expression_suggestion.dart';
 
 /// Editiert Template-Ausdrücke als hervorgehobene Inline-Labels.
@@ -171,10 +172,9 @@ class _TemplateExpressionTextFieldState
 
   Future<void> _pickExpression(int insertionOffset) async {
     _pickerOpen = true;
-    final suggestion = await showDialog<TemplateExpressionSuggestion>(
-      context: context,
-      builder: (_) =>
-          _TemplateExpressionPicker(suggestions: widget.suggestions),
+    final suggestion = await pickTemplateExpression(
+      context,
+      widget.suggestions,
     );
     _pickerOpen = false;
     if (!mounted || suggestion == null) {
@@ -330,72 +330,5 @@ class _TemplateExpressionLabel extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _TemplateExpressionPicker extends StatefulWidget {
-  const _TemplateExpressionPicker({required this.suggestions});
-
-  final List<TemplateExpressionSuggestion> suggestions;
-
-  @override
-  State<_TemplateExpressionPicker> createState() =>
-      _TemplateExpressionPickerState();
-}
-
-class _TemplateExpressionPickerState extends State<_TemplateExpressionPicker> {
-  String _query = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final candidates = widget.suggestions.where(_matchesQuery).toList();
-    return Dialog(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560, maxHeight: 480),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              TextField(
-                autofocus: true,
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.search),
-                  hintText: LocaleKeys.ui_workflow_wert_oder_variable_suchen
-                      .tr(),
-                ),
-                onChanged: (value) => setState(() => _query = value),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: candidates.isEmpty
-                    ? Center(
-                        child: Text(
-                          LocaleKeys.ui_keine_passenden_werte_verfuegbar.tr(),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: candidates.length,
-                        itemBuilder: (context, index) {
-                          final suggestion = candidates[index];
-                          return ListTile(
-                            leading: Chip(label: Text(suggestion.expression)),
-                            title: Text(suggestion.label),
-                            onTap: () => Navigator.of(context).pop(suggestion),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  bool _matchesQuery(TemplateExpressionSuggestion suggestion) {
-    final query = _query.trim().toLowerCase();
-    return query.isEmpty ||
-        suggestion.expression.toLowerCase().contains(query) ||
-        suggestion.label.toLowerCase().contains(query);
   }
 }

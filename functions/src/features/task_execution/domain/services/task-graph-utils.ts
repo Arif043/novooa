@@ -4,7 +4,7 @@ import {
   type WorkflowEdge,
   type WorkflowNode,
 } from "../entities/task.js";
-import {type TaskVariables, textOutputFromResult} from "../executors/node-executor.js";
+import {textOutputFromResult} from "../executors/node-executor.js";
 
 export function nextRunnableIndex(
   nodes: WorkflowNode[],
@@ -15,25 +15,6 @@ export function nextRunnableIndex(
     const parents = edges.filter((edge) => edge.to === node.id);
     return parents.every((edge) => results.has(edge.from));
   });
-}
-
-export function contextFor(
-  variables: TaskVariables,
-): string {
-  return variablesContext(variables);
-}
-
-function variablesContext(variables: TaskVariables): string {
-  const entries = Object.entries(variables);
-  if (entries.length === 0) return "";
-  return [
-    "Variablen:",
-    ...entries.map(([key, value]) => `${key}: ${formatVariable(value)}`),
-  ].join("\n");
-}
-
-function formatVariable(value: unknown): string {
-  return typeof value === "string" ? value : JSON.stringify(value);
 }
 
 export function validateGraph(graph: WorkflowGraph): void {

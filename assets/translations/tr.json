@@ -473,6 +473,7 @@
     "hinweis_fuer_die_bildeingabe": "Görsel girişi için ipucu",
     "hinweis_fuer_die_eingabe": "Giriş için ipucu",
     "http_anfrage": "HTTP isteği",
+    "insert_workflow_input": "Değer ekle",
     "http_path": "Yol",
     "http_target_url": "Hedef adres",
     "http_url": "URL",
@@ -531,7 +532,6 @@
     "no_match_for_filters": "Seçilen filtrelerle eşleşme yok.",
     "no_model_for_block": "Bu blok için henüz uygun bir model yok. Kendi modellerinizi Ayarlar altında Makine Öğrenmesi bölümünden içe aktarın.",
     "no_notes_in_knowledge_base": "Bilgi tabanında henüz not yok.",
-    "node_variable": "{node} · Değişken {name}",
     "none_full_url": "Yok (tam URL girin)",
     "not_available": "Kullanılamıyor",
     "not_cached_yet": "Henüz önbelleğe alınmadı – en geç ilk çalıştırmada yüklenir.",
@@ -577,7 +577,8 @@
     "script": "Betik",
     "script_bearbeiten": "Betiği düzenle",
     "script_hinzufuegen": "Betik ekle",
-    "script_outputs_hint": "İş çıktıları: workflow_output(\"toplam\", \"number\", değer) — türler: string, number, boolean, datetime, json. Sonraki bloklar bunları {{toplam}} olarak kullanır.",
+    "script_outputs_hint": "Değer okuma: workflow_input(\"fatura.toplam\") · değer sağlama: workflow_output(\"toplam\", \"number\", değer) — türler: string, number, boolean, datetime, json. Sonraki bloklar bunları {{toplam}} olarak kullanır.",
+    "script_inputs_unknown": "Bu bloktan önce mevcut değil: {names}",
     "search_condition_number": "Arama koşulu {number}",
     "senden": "Gönder",
     "skills_load_failed": "Yetenekler yüklenemedi.",
@@ -642,7 +643,6 @@
     "wo": "Nerede",
     "workflow_mapping": "İş akışı eşlemesi",
     "workflow_value_named": "İş akışı değeri {name}",
-    "workflow_wert_oder_variable_suchen": "İş akışı değeri veya değişken ara",
     "zeitlimit_sekunden": "Zaman sınırı (saniye)",
     "zu_pruefender_wert": "Denetlenecek değer",
     "zuweisung": "Atama",
@@ -656,7 +656,8 @@
     "files_initial_body": "Belgeleri yükle, klasörlerde düzenle ve görevlerinin kullanımına sun.",
     "files_initial_upload": "İlk dosyayı yükle",
     "files_initial_folder": "Yeni klasör",
-    "anmeldung_fehlgeschlagen_mit_grund": "Oturum açılamadı: {}"
+    "anmeldung_fehlgeschlagen_mit_grund": "Oturum açılamadı: {}",
+    "workflow_wert_suchen": "İş akışı değeri ara"
   },
   "machine_learning": {
     "model_import": {

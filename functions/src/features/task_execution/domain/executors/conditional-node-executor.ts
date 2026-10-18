@@ -121,7 +121,7 @@ async function executeSelectedBranch(
     nodeCount: branch.graph.nodes.length,
     edgeCount: branch.graph.edges.length,
   });
-  const resultsOrFailure = await runContext.runGraph(graphFor(branch.graph), runContext.context);
+  const resultsOrFailure = await runContext.runGraph(graphFor(branch.graph));
   if (resultsOrFailure.isErr()) return err(resultsOrFailure.error);
   const results = resultsOrFailure.value;
   const finalOutput = finalOutputOf(results);

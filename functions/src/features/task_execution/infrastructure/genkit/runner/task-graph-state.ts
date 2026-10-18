@@ -8,13 +8,11 @@ import {
   type WorkflowNode,
 } from "./task-definition.js";
 import {finalOutputOf} from "../../../domain/services/task-graph-utils.js";
-import {type TaskVariables} from "../../../domain/executors/node-executor.js";
 import {type FailedNode, NodeExecutionFailure} from "../../../domain/entities/node-execution-failure.js";
 import {NodeFailure} from "../../../domain/entities/node-failure.js";
 
 export type InitialNodeRunState = {
   nodeResults: NodeExecutionResult[];
-  variables: TaskVariables;
   remainingNodeIds: string[];
   skippedNodeIds: string[];
 };
@@ -76,7 +74,6 @@ export function resumedState(
         }
         : result,
     ),
-    variables: state.variables,
     remainingNodeIds: state.remainingNodeIds,
     skippedNodeIds: state.skippedNodeIds,
   };
@@ -100,7 +97,6 @@ function resumeStateFrom(
 ): TaskResumeState {
   return {
     nodeResults: state.nodeResults,
-    variables: state.variables,
     remainingNodeIds: state.remainingNodeIds,
     skippedNodeIds: state.skippedNodeIds,
     waitingNodeId: state.waitingNodeId,

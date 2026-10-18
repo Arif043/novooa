@@ -10,10 +10,10 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
   sie läuft **kein** Script; es gibt keinen Rückfall auf Python in der
   Runtime. Der Node-Container enthält kein Python.
 - `POST /run` als `multipart/form-data`: Teil `request` (JSON: Script,
-  Variablen, Datei-Metadaten), danach je Datei ein Teil `file-<n>`
+  gelesene Werte `inputs`, Datei-Metadaten), danach je Datei ein Teil `file-<n>`
   mit rohen Bytes (kein Base64). Anhänge zusammen höchstens 25 MB
   (`maximumAttachmentBytes`).
-- Antwort `200` mit `printed`, `stderr`, `variables`, `workflowOutputs` oder `422` mit
+- Antwort `200` mit `printed`, `stderr`, `workflowOutputs` oder `422` mit
   lesbarer Meldung samt Script-Zeile.
 
 **Cloud:** Die Functions führen Scripts weiter mit `python3` im eigenen

@@ -2,49 +2,56 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {ok, err} from "neverthrow";
 import {nodeFailures} from "../entities/node-failures.js";
+import {type WorkflowInputValue} from "../entities/workflow-value.js";
 import {createScriptNodeExecutor} from "./script-node-executor.js";
 import {succeeded} from "./node-executor-test-support.js";
 
-test("resolves workflow values and delegates execution through the script port", async () => {
+function scriptNode(script: string) {
+  return {
+    id: "s", primitive: "script", title: "Script", description: "", outputs: [],
+    config: {primitive: "script", script, attachments: []},
+  } as never;
+}
+
+function contextWith(values: Record<string, WorkflowInputValue> = {}) {
+  return {templateExpressionResolver: {typedValueAt: (path: string) => values[path]}} as never;
+}
+
+test("sends the script unchanged with the typed values it reads via workflow_input", async () => {
   const requests: unknown[] = [];
   const printed: unknown[] = [];
   const executor = createScriptNodeExecutor({
     async execute(request) {
       requests.push(request);
       return ok({
-        variables: {count: 2}, printed: "ausgabe", errorOutput: "warnung",
+        printed: "ausgabe", errorOutput: "warnung",
         workflowOutputs: [{name: "gruss", type: "string", value: "Hallo Mila"}],
       });
     },
   }, (value) => printed.push(value));
+  const script = [
+    "name = workflow_input(\"kunde.name\")",
+    "faellig = workflow_input('faellig')",
+    "fehlt = workflow_input(\"gibt_es_nicht\")",
+    "text = f\"{{wörtlich}}\"",
+    "workflow_output('gruss', 'string', 'Hallo ' + name)",
+  ].join("\n");
 
-  const result = succeeded(await executor.execute({
-      id: "script-1",
-      primitive: "script",
-      title: "Script",
-      description: "",
-      outputs: [{key: "value", name: "script", showOnCanvas: true}],
-      config: {
-        primitive: "script",
-        script: "workflow_output('gruss', 'string', 'Hallo {{name}}')",
-        attachments: [],
-      },
-  } as never, {
-    variables: {},
-    context: "",
-    templateExpressionResolver: {
-      resolveText: (value: string) => value.replace(/\{\{name\}\}/g, "Mila"),
-    },
-  } as never));
+  const result = succeeded(await executor.execute(scriptNode(script), contextWith({
+    "kunde.name": {type: "json", value: "Mila"},
+    "faellig": {type: "datetime", value: "2026-10-18T09:30:00"},
+  })));
 
   assert.deepEqual(requests, [{
-    script: "workflow_output('gruss', 'string', 'Hallo Mila')",
-    variables: {},
+    script,
+    inputs: {
+      "kunde.name": {type: "json", value: "Mila"},
+      "faellig": {type: "datetime", value: "2026-10-18T09:30:00"},
+    },
   }]);
   assert.deepEqual(printed, [{printed: "ausgabe", errorOutput: "warnung"}]);
   assert.deepEqual(result.console, {stdout: "ausgabe", stderr: "warnung"});
   assert.deepEqual(result.outputs, {gruss: {type: "string", value: "Hallo Mila"}});
-  assert.deepEqual(result.variables, {count: 2});
 });
 
 test("logs what a failing script printed and returns its failure", async () => {
@@ -54,13 +61,8 @@ test("logs what a failing script printed and returns its failure", async () => {
       return err(nodeFailures.scriptFailed("Zeile 2: ValueError: kaputt", {stdout: "Schritt 1\n", stderr: "Warnung\n"}));
     },
   }, (value) => printed.push(value));
-  const node = {
-    id: "s", primitive: "script", title: "Script", description: "", outputs: [{key: "value", name: "script", showOnCanvas: true}],
-    config: {primitive: "script", script: "x", attachments: []},
-  } as never;
-  const context = {variables: {}, context: "", templateExpressionResolver: {resolveText: (value: string) => value}} as never;
 
-  const failure = (await executor.execute(node, context))._unsafeUnwrapErr();
+  const failure = (await executor.execute(scriptNode("x"), contextWith()))._unsafeUnwrapErr();
 
   assert.equal(failure.code, "scriptFailed");
   assert.match(failure.message, /Zeile 2: ValueError/);
@@ -70,37 +72,26 @@ test("logs what a failing script printed and returns its failure", async () => {
 test("a script without workflow_output has no values", async () => {
   const executor = createScriptNodeExecutor({
     async execute() {
-      return ok({variables: {gesetzt: 1}, printed: "", errorOutput: ""});
+      return ok({printed: "", errorOutput: ""});
     },
   });
-  const node = {
-    id: "s", primitive: "script", title: "Script", description: "", outputs: [],
-    config: {primitive: "script", script: "gesetzt = 1", attachments: []},
-  } as never;
-  const context = {variables: {}, context: "", templateExpressionResolver: {resolveText: (value: string) => value}} as never;
 
-  const result = succeeded(await executor.execute(node, context));
+  const result = succeeded(await executor.execute(scriptNode("gesetzt = 1"), contextWith()));
 
   assert.deepEqual(result.outputs, {});
-  assert.deepEqual(result.variables, {gesetzt: 1});
 });
 
 test("workflow outputs are reachable flat under their name", async () => {
   const executor = createScriptNodeExecutor({
     async execute() {
       return ok({
-        variables: {}, printed: "", errorOutput: "",
+        printed: "", errorOutput: "",
         workflowOutputs: [{name: "summe", type: "number", value: 42.5}, {name: "kunde", type: "string", value: "Mila"}],
       });
     },
   });
-  const node = {
-    id: "s", primitive: "script", title: "Script", description: "", outputs: [],
-    config: {primitive: "script", script: "workflow_output('summe', 'number', 42.5)", attachments: []},
-  } as never;
-  const context = {variables: {}, context: "", templateExpressionResolver: {resolveText: (value: string) => value}} as never;
 
-  const result = succeeded(await executor.execute(node, context));
+  const result = succeeded(await executor.execute(scriptNode("workflow_output('summe', 'number', 42.5)"), contextWith()));
 
   assert.deepEqual(result.outputs, {
     summe: {type: "number", value: 42.5},
@@ -112,18 +103,13 @@ test("an invalid workflow output fails the node with the script's console output
   const executor = createScriptNodeExecutor({
     async execute() {
       return ok({
-        variables: {}, printed: "berechnet\n", errorOutput: "",
+        printed: "berechnet\n", errorOutput: "",
         workflowOutputs: [{name: "summe", type: "number", value: "42"}],
       });
     },
   });
-  const node = {
-    id: "s", primitive: "script", title: "Script", description: "", outputs: [],
-    config: {primitive: "script", script: "x", attachments: []},
-  } as never;
-  const context = {variables: {}, context: "", templateExpressionResolver: {resolveText: (value: string) => value}} as never;
 
-  const failure = (await executor.execute(node, context))._unsafeUnwrapErr();
+  const failure = (await executor.execute(scriptNode("x"), contextWith()))._unsafeUnwrapErr();
 
   assert.deepEqual(failure.details, {reason: "wrongValueType", type: "number", name: "summe"});
   assert.deepEqual(failure.console, {stdout: "berechnet\n", stderr: ""});

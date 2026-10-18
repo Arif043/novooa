@@ -31,7 +31,6 @@ import {type ApplicationLogger} from "../../../../../shared/logging/application-
 
 type NodeRunInput = {
   node: WorkflowNode;
-  context: string;
   runContext: TaskRunContext;
   skipNode: boolean;
   startedAt: number;
@@ -70,14 +69,12 @@ export function logNodeHeaderLine(
   node: WorkflowNode,
   taskId: string,
   graph: WorkflowGraph,
-  context: string,
   skipNode: boolean,
   results: Map<string, NodeExecutionResult>,
 ): void {
   logger.readableInfo(formatNodeHeader({
     taskId,
     node,
-    context,
     parentNodeIds: parentResultsFor(node, graph, results).map(
       (parent) => parent.result.nodeId,
     ),

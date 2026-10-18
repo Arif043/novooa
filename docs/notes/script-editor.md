@@ -13,9 +13,12 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   Python-Wasm-Grammatik markiert Fehler im Gutter. Läuft nur im Browser,
   führt keinen Code aus und ersetzt keine Laufzeitprüfung.
 - Der Builder liest `workflow_output`-Aufrufe aus dem Code
-  (`ScriptWorkflowOutputParser`).
+  (`ScriptWorkflowOutputParser`) und prüft `workflow_input`-Aufrufe
+  (`ScriptWorkflowInputParser`); „Wert einfügen“ setzt einen Aufruf an die
+  Cursorposition.
 
 ## Siehe auch
 
 - [Script: Workflow-Ausgabewerte](./script-workflow-output.md)
+- [Script: Workflow-Eingabewerte](./script-workflow-input.md)
 - [Script-Executor](./script-executor.md)

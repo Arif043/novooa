@@ -16,10 +16,15 @@ from novooa_script.multipart import MultipartError, parse_multipart
 from novooa_script.server import ScriptHandler
 
 
-def run(script, variables=None, files=()):
+def run(script, files=()):
     metadata = [{"displayName": name, "contentType": "application/octet-stream", "sizeBytes": len(data)} for name, data in files]
-    request = {"script": script, "variables": variables or {}, "files": metadata}
+    request = {"script": script, "inputs": {}, "files": metadata}
     return execution.execute(request, [data for _, data in files])
+
+
+def value_of(result):
+    """Der Wert, den ein Test-Script per workflow_output("ergebnis", …) liefert."""
+    return {o["name"]: o["value"] for o in result["workflowOutputs"]}["ergebnis"]
 
 
 def multipart(parts):
@@ -52,27 +57,28 @@ class ExecutionTest(unittest.TestCase):
         self.assertNotIn("output", result)
 
     def test_has_full_python_including_imports(self):
-        result = run("import json, re, math\nergebnis = json.dumps({'n': math.floor(2.7)}) + str(bool(re.match('a', 'abc')))")
+        result = run("import json, re, math\nergebnis = json.dumps({'n': math.floor(2.7)}) + str(bool(re.match('a', 'abc')))\nworkflow_output('ergebnis', 'json', ergebnis)")
 
-        self.assertEqual(result["variables"]["ergebnis"], '{"n": 2}True')
+        self.assertEqual(value_of(result), '{"n": 2}True')
 
-    def test_hands_variables_to_the_next_script_and_skips_unserializable_ones(self):
-        result = run("import json\ncount = count + 1\nhelper = lambda: 1", variables={"count": 1})
+    def test_variables_of_the_script_are_not_passed_on(self):
+        result = run("count = 1\nhelper = lambda: 1")
 
-        self.assertEqual(result["variables"], {"count": 2})
         self.assertEqual(result["workflowOutputs"], [])
+        self.assertNotIn("variables", result)
 
     def test_reads_attached_files_as_text_and_bytes(self):
         data = b"Zeile 1\nZeile 2\xff"
         script = (
             "names = [f['displayName'] for f in list_files()]\n"
             "raw = open(files[0]['path'], 'rb').read()\n"
-            "ergebnis = f'{names}:{len(raw)}:{read_file('a.txt', encoding='latin-1')[:7]}'"
+            "ergebnis = f'{names}:{len(raw)}:{read_file('a.txt', encoding='latin-1')[:7]}'\n"
+            "workflow_output('ergebnis', 'json', ergebnis)"
         )
 
         result = run(script, files=[("a.txt", data)])
 
-        self.assertEqual(result["variables"]["ergebnis"], f"['a.txt']:{len(data)}:Zeile 1")
+        self.assertEqual(value_of(result), f"['a.txt']:{len(data)}:Zeile 1")
 
     def test_reports_the_failing_line(self):
         with self.assertRaisesRegex(execution.ScriptFailed, r"Zeile 2: ZeroDivisionError"):
@@ -82,12 +88,8 @@ class ExecutionTest(unittest.TestCase):
         with self.assertRaisesRegex(execution.ScriptFailed, r"Zeile 1: SyntaxError"):
             run("def (:")
 
-    def test_input_and_output_are_ordinary_names(self):
-        result = run("output = 5")
-
-        self.assertEqual(result["variables"], {"output": 5})
-        # `input` ist wieder die eingebaute Python-Funktion, keine Eingabe des Bausteins.
-        self.assertEqual(run("ergebnis = callable(input)")["variables"], {"ergebnis": True})
+    def test_input_is_the_builtin_function_again(self):
+        self.assertIs(value_of(run("ergebnis = callable(input)\nworkflow_output('ergebnis', 'json', ergebnis)")), True)
 
     def test_stops_scripts_that_run_too_long(self):
         original = execution.TIMEOUT_SECONDS
@@ -107,20 +109,20 @@ class ExecutionTest(unittest.TestCase):
         self.assertEqual(survivors, [])
 
     def test_allows_many_threads_within_the_process_limit(self):
-        result = run("import concurrent.futures as f\nwith f.ThreadPoolExecutor(max_workers=100) as ex:\n    total = sum(ex.map(lambda i: i, range(1000)))\nergebnis = str(total)")
+        result = run("import concurrent.futures as f\nwith f.ThreadPoolExecutor(max_workers=100) as ex:\n    total = sum(ex.map(lambda i: i, range(1000)))\nergebnis = str(total)\nworkflow_output('ergebnis', 'json', ergebnis)")
 
-        self.assertEqual(result["variables"]["ergebnis"], "499500")
+        self.assertEqual(value_of(result), "499500")
 
     def test_scripts_are_the_first_victims_when_memory_runs_out(self):
-        result = run("ergebnis = open('/proc/self/oom_score_adj').read().strip()")
+        result = run("ergebnis = open('/proc/self/oom_score_adj').read().strip()\nworkflow_output('ergebnis', 'json', ergebnis)")
 
-        self.assertEqual(result["variables"]["ergebnis"], "1000")
+        self.assertEqual(value_of(result), "1000")
 
     def test_forked_copies_do_not_corrupt_the_result(self):
-        script = "import os\nfor _ in range(6):\n    os.fork()\nergebnis = 'fertig'"
+        script = "import os\nfor _ in range(6):\n    os.fork()\nergebnis = 'fertig'\nworkflow_output('ergebnis', 'json', ergebnis)"
 
         for _ in range(5):
-            self.assertEqual(run(script)["variables"]["ergebnis"], "fertig")
+            self.assertEqual(value_of(run(script)), "fertig")
 
     def test_an_unreadable_result_is_a_script_failure(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -228,12 +230,12 @@ class ServerTest(unittest.TestCase):
 
     def test_runs_a_script_with_a_binary_file(self):
         data = bytes(range(256)) * 4
-        request = {"script": "ergebnis = str(len(open(files[0]['path'], 'rb').read()))", "variables": {},
+        request = {"script": "ergebnis = str(len(open(files[0]['path'], 'rb').read()))\nworkflow_output('ergebnis', 'json', ergebnis)", "inputs": {},
                    "files": [{"displayName": "b.bin", "contentType": "application/octet-stream", "sizeBytes": len(data)}]}
 
         status, body = self.post([("request", json.dumps(request).encode()), ("file-0", data)])
 
-        self.assertEqual((status, body["variables"]["ergebnis"]), (200, "1024"))
+        self.assertEqual((status, {o["name"]: o["value"] for o in body["workflowOutputs"]}["ergebnis"]), (200, "1024"))
 
     def test_script_errors_are_422_with_a_readable_message(self):
         status, body = self.post([("request", json.dumps({"script": "raise ValueError('kaputt')"}).encode())])

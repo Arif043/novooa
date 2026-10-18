@@ -4,7 +4,7 @@ import json
 import sys
 
 payload = json.loads(sys.stdin.read())
-variables = payload["variables"]
+inputs = payload["inputs"]
 attachment_files = payload.get("files", [])
 files = [
     {
@@ -35,6 +35,14 @@ def list_files():
 def read_file(display_name, encoding="utf-8"):
     with open(_resolve_file(display_name), "r", encoding=encoding) as file:
         return file.read()
+
+def workflow_input(name):
+    if name not in inputs:
+        raise LookupError(f'workflow_input("{name}"): Es gibt keinen Wert "{name}".')
+    entry = inputs[name]
+    if entry["type"] == "datetime":
+        return datetime.datetime.fromisoformat(entry["value"])
+    return entry["value"]
 
 def workflow_output(name, type, value):
     # Geprueft wird im Executor (script-workflow-outputs.ts); hier nur JSON-faehig machen.
@@ -69,27 +77,13 @@ namespace = {
     "files": files,
     "list_files": list_files,
     "read_file": read_file,
-    **variables,
-    # Nach den Variablen, damit eine gleichnamige Variable die Funktion nicht verdeckt.
+    "workflow_input": workflow_input,
     "workflow_output": workflow_output,
 }
 exec(payload["script"], {"__builtins__": safe_builtins}, namespace)
 
-next_variables = {}
-for key, value in namespace.items():
-    if key in ["files", "list_files", "read_file", "workflow_output"]:
-        continue
-    if key.startswith("__"):
-        continue
-    try:
-        json.dumps(value)
-        next_variables[key] = value
-    except TypeError:
-        pass
-
 sys.stdout.write(json.dumps({
     "printed": "".join(printed),
-    "variables": next_variables,
     "workflowOutputs": workflow_outputs,
 }))
 `;

@@ -22,7 +22,7 @@ export function pythonScriptSubagentSpec(
 ): SubagentSpec<typeof pythonScriptInputSchema, typeof scriptDraftSchema> {
   return {
     name: "python_entwicklung",
-    description: "Schreibt Python-Code für einen Script-Baustein (workflow_output). " +
+    description: "Schreibt Python-Code für einen Script-Baustein (workflow_input, workflow_output). " +
       "Führt den Code nicht aus; liefert Script, Ausgabewerte und Hinweise.",
     model,
     systemPrompt,
@@ -42,11 +42,11 @@ function withStaticProblems(draft: ScriptDraftOutput): ScriptDraftOutput {
 
 const systemPrompt = `Du bist Python-Entwickler:in für Script-Bausteine in novooa.
 Vertrag des Script-Bausteins:
-- Es gibt keine Variable input und keine Variable output. Werte vorheriger
-  Bausteine stehen als Template {{name}} direkt im Code und werden vor dem Lauf
-  als Text eingesetzt: Text in dreifache Anführungszeichen ("""{{betreff}}"""),
-  JSON-Werte mit json.loads('''{{rechnung}}'''). Variablen früherer Scripts
-  stehen direkt unter ihrem Namen bereit.
+- Werte vorheriger Bausteine liest das Script ausschließlich mit
+  workflow_input("name") oder workflow_input("name.feld"); der Pfad ist immer ein
+  String-Literal. Der Wert kommt typisiert an (str, int/float, bool, dict/list,
+  datetime). Es gibt keine Variablen input oder output, keine Variablen früherer
+  Scripts und keine {{…}}-Templates im Code.
 - Werte für nachfolgende Bausteine entstehen ausschließlich über
   workflow_output("name", "typ", wert); ohne solche Aufrufe hat der Baustein
   keine Werte. Name und Typ sind immer String-Literale (keine Variablen,

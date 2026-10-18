@@ -18,7 +18,7 @@ JSON value -> RFC-6901 pointer -> serielle Graph-Ausführungen -> strukturierte 
   `value`-Vorgänger bleibt für Bausteine ohne eigene Zuordnung; echte Kanten
   haben Vorrang.
 - Schreibgeschützter äußerer Kontext: `{{global.Eingabe}}`,
-  `{{global.input.feld}}`, `{{global.variables.name}}`; kurz `{{Eingabe}}`,
+  `{{global.input.feld}}`; kurz `{{Eingabe}}`,
   sofern im Unterplan kein gleichnamiger Wert existiert.
 - Ausgabe: je Element die benannten Werte aller ausgeführten Bausteine flach
   unter ihrem Namen, z. B. `{{Regionen.0.Erkenner.text}}`.

@@ -2,10 +2,7 @@ part of 'node_config.dart';
 
 class ScriptNodeConfig extends NodeConfig
     with FileAttachmentSupport<ScriptNodeConfig> {
-  const ScriptNodeConfig({
-    required this.script,
-    this.attachments = const [],
-  });
+  const ScriptNodeConfig({required this.script, this.attachments = const []});
 
   final String script;
   @override

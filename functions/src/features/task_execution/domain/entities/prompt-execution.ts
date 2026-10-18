@@ -9,7 +9,6 @@ import {type GenerationOptions} from "../../../language_models/domain/entities/g
 export type PromptExecutionRequest = {
   teamId: string;
   instruction: string;
-  context: string;
   languageModelId?: string;
   outputType: PromptOutputType;
   choices: string[];

@@ -1,20 +1,16 @@
-import {type FileReference} from "../../../domain/entities/workflow-value.js";
+import {type FileReference, type WorkflowInputValue} from "../../../domain/entities/workflow-value.js";
 import {
   type NodeExecutionResult,
   type NodeOutputValue,
   type WorkflowGraph,
   type WorkflowNode,
 } from "./task-definition.js";
-import {
-  type TaskVariables,
-  type WorkflowExecutionScope,
-} from "../../../domain/executors/node-executor.js";
+import {type WorkflowExecutionScope} from "../../../domain/executors/node-executor.js";
 
 const expressionPattern = /\{\{\s*([a-zA-Z_][\w]*(?:\.[a-zA-Z_][\w]*|\.\d+)*)\s*\}\}/g;
 const isolatedExpressionPattern = /^\{\{\s*([a-zA-Z_][\w]*(?:\.[a-zA-Z_][\w]*|\.\d+)*)\s*\}\}$/;
 
 export type TemplateExpressionContext = {
-  variables: TaskVariables;
   scope: WorkflowExecutionScope;
   /**
    * Der einzige, graph-weite Namensraum aller Ausgabewerte: jeder Wert eines
@@ -55,23 +51,37 @@ export class TemplateExpressionResolver {
       .filter(isMediaReference);
   }
 
+  /**
+   * Der Wert hinter einem Pfad samt Typ, für `workflow_input` im Script. Nur ein ganzer Ausgabewert kennt
+   * seinen Typ; Pfade hinein, das Schleifenelement und Werte der äußeren Ebene gelten als `json`.
+   */
+  typedValueAt(path: string): WorkflowInputValue | undefined {
+    const [name, ...valuePath] = path.split(".");
+    const output = valuePath.length === 0 ? this.contextFor().flatOutputs[name] : undefined;
+    if (output !== undefined && !this.isShadowedByScope(name)) return {type: output.type, value: output.value};
+    const value = this.valueAt(path);
+    return value === undefined ? undefined : {type: "json", value};
+  }
+
+  private isShadowedByScope(name: string): boolean {
+    return valueAtPath(this.contextFor().scope, [name]) !== undefined;
+  }
+
   private valueAt(path: string): unknown {
     const context = this.contextFor();
     const segments = path.split(".");
     return valueAtPath(context.scope, segments) ??
       flatOutputAt(context.flatOutputs, segments) ??
-      valueAtPath(context.scope.global, segments) ??
-      valueAtPath(context.variables, segments);
+      valueAtPath(context.scope.global, segments);
   }
 }
 
-export function variableTemplateContextFor(
+export function templateExpressionContextFor(
   graph: WorkflowGraph,
   results: Map<string, NodeExecutionResult>,
-  variables: TaskVariables,
   scope: WorkflowExecutionScope = {},
 ): TemplateExpressionContext {
-  return {variables, scope, flatOutputs: flatOutputsFor(graph.nodes, results)};
+  return {scope, flatOutputs: flatOutputsFor(graph.nodes, results)};
 }
 
 /** Ein einzelnes Segment (`{{eingang}}`) oder ein Dot-Pfad in den eigenen

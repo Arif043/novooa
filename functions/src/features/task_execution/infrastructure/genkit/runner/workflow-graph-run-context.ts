@@ -2,13 +2,12 @@ import {type NodeFailure} from "../../../domain/entities/node-failure.js";
 import {type Result} from "neverthrow";
 import {
   type TaskRunContext,
-  type TaskVariables,
   type WorkflowExecutionScope,
   type WorkflowGraphRunner,
 } from "../../../domain/executors/node-executor.js";
 import {
   TemplateExpressionResolver,
-  variableTemplateContextFor,
+  templateExpressionContextFor,
 } from "./template-expression-resolver.js";
 import {
   type NodeExecutionResult,
@@ -22,17 +21,14 @@ import {validateGraph} from "../../../domain/services/task-graph-utils.js";
 
 export type ExecuteWorkflowGraph = (
   graph: WorkflowGraph,
-  context: string,
   scope: WorkflowExecutionScope,
 ) => Promise<Result<NodeExecutionResult[], NodeFailure>>;
 
 type TaskRunContextOptions = {
   input: TaskGraphInput;
-  context: string;
   runtime: TaskGraphRuntime;
   currentGraph: WorkflowGraph;
   results: Map<string, NodeExecutionResult>;
-  variables: TaskVariables;
   scope: WorkflowExecutionScope;
   executeGraph: ExecuteWorkflowGraph;
 };
@@ -44,14 +40,12 @@ export function createTaskRunContext(
   const {teamFileStore, ...services} = passedThroughServices(options.runtime);
   return {
     ...services,
-    context: options.context,
     rootTask: options.input.taskDefinition,
     currentGraph: options.currentGraph,
     teamId: options.input.teamId,
     input: options.input.input ?? {},
     scope: options.scope,
     results: options.results,
-    variables: options.variables,
     teamFileStore: new TriggerChainTeamFileStore(
       teamFileStore,
       triggerChainFrom(options.input.input),
@@ -73,18 +67,17 @@ function passedThroughServices(runtime: TaskGraphRuntime) {
 }
 
 function templateContextFor(options: TaskRunContextOptions) {
-  return variableTemplateContextFor(
+  return templateExpressionContextFor(
     options.currentGraph,
     options.results,
-    options.variables,
     options.scope,
   );
 }
 
 function graphRunnerFor(options: TaskRunContextOptions): WorkflowGraphRunner {
-  return async (graph, context, scope = {}) => {
+  return async (graph, scope = {}) => {
     validateGraph(graph);
-    return options.executeGraph(graph, context, scopeFor(options, scope));
+    return options.executeGraph(graph, scopeFor(options, scope));
   };
 }
 
@@ -104,14 +97,12 @@ function scopeFor(
 function globalContextFor(
   options: TaskRunContextOptions,
 ): Record<string, unknown> {
-  const context = variableTemplateContextFor(
+  const context = templateExpressionContextFor(
     options.currentGraph,
     options.results,
-    options.variables,
   );
   return {
     input: options.input.input ?? {},
-    variables: options.variables,
     // Zweige und „Für jedes Element“ sehen die Werte der äußeren Ebene unter
     // denselben flachen Namen wie dort (`{{Gefunden}}`, `{{global.Gefunden}}`).
     ...Object.fromEntries(Object.entries(context.flatOutputs).map(([name, output]) => [

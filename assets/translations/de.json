@@ -473,6 +473,7 @@
     "hinweis_fuer_die_bildeingabe": "Hinweis für die Bildeingabe",
     "hinweis_fuer_die_eingabe": "Hinweis für die Eingabe",
     "http_anfrage": "HTTP-Anfrage",
+    "insert_workflow_input": "Wert einfügen",
     "http_path": "Pfad",
     "http_target_url": "Zieladresse",
     "http_url": "URL",
@@ -531,7 +532,6 @@
     "no_match_for_filters": "Mit den gewählten Filtern gibt es keinen Treffer.",
     "no_model_for_block": "Für diesen Baustein steht noch kein passendes Modell bereit. Eigene Modelle importierst du in den Einstellungen unter Machine Learning.",
     "no_notes_in_knowledge_base": "Noch keine Notizen in der Wissensbasis.",
-    "node_variable": "{node} · Variable {name}",
     "none_full_url": "Keine (vollständige URL angeben)",
     "not_available": "Nicht verfügbar",
     "not_cached_yet": "Noch nicht gecacht – wird spätestens beim ersten Lauf geladen.",
@@ -577,7 +577,8 @@
     "script": "Script",
     "script_bearbeiten": "Script bearbeiten",
     "script_hinzufuegen": "Script hinzufügen",
-    "script_outputs_hint": "Fachliche Ausgaben: workflow_output(\"summe\", \"number\", wert) — Typen: string, number, boolean, datetime, json. Nachfolgende Bausteine nutzen sie als {{summe}}.",
+    "script_outputs_hint": "Werte lesen: workflow_input(\"rechnung.summe\") · Werte bereitstellen: workflow_output(\"summe\", \"number\", wert) — Typen: string, number, boolean, datetime, json. Nachfolgende Bausteine nutzen sie als {{summe}}.",
+    "script_inputs_unknown": "Vor diesem Baustein nicht verfügbar: {names}",
     "search_condition_number": "Suchbedingung {number}",
     "senden": "Senden",
     "skills_load_failed": "Fähigkeiten konnten nicht geladen werden.",
@@ -642,7 +643,6 @@
     "wo": "Wo",
     "workflow_mapping": "Workflow-Mapping",
     "workflow_value_named": "Workflow-Wert {name}",
-    "workflow_wert_oder_variable_suchen": "Workflow-Wert oder Variable suchen",
     "zeitlimit_sekunden": "Zeitlimit (Sekunden)",
     "zu_pruefender_wert": "Zu prüfender Wert",
     "zuweisung": "Zuweisung",
@@ -656,7 +656,8 @@
     "files_initial_body": "Lade Dokumente hoch, ordne sie in Ordnern und stelle sie deinen Aufgaben bereit.",
     "files_initial_upload": "Erste Datei hochladen",
     "files_initial_folder": "Neuer Ordner",
-    "anmeldung_fehlgeschlagen_mit_grund": "Anmeldung fehlgeschlagen: {}"
+    "anmeldung_fehlgeschlagen_mit_grund": "Anmeldung fehlgeschlagen: {}",
+    "workflow_wert_suchen": "Workflow-Wert suchen"
   },
   "machine_learning": {
     "model_import": {

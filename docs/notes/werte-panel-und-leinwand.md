@@ -13,8 +13,8 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
 - Auf der Leinwand lassen sich sichtbare Werte per Doppelklick umbenennen.
 
 **Template-Eingaben:** Template-fähige Texteingaben zeigen Ausdrücke als
-Labels. `#` öffnet eine Suche nach Werten und statisch erkennbaren
-Script-Variablen aus dem erreichbaren Vorgängerpfad. Gespeichert bleibt der
+Labels. `#` öffnet eine Suche nach Werten aus dem erreichbaren
+Vorgängerpfad. Gespeichert bleibt der
 Ausdruck `{{name}}`; die Label-Darstellung ist reine UI.
 
 Einzige Quelle, welche Werte ein Baustein-Typ hat:

@@ -48,7 +48,7 @@ async function executeInContainer(
 
 function requestBody(request: ScriptExecutionRequest, files: ScriptWorkspace["files"]) {
   return {
-    script: request.script, variables: request.variables,
+    script: request.script, inputs: request.inputs,
     files: files.map(({displayName, contentType, sizeBytes, versionCreatedAt}) => ({
       displayName, contentType, sizeBytes, versionCreatedAt,
     })),

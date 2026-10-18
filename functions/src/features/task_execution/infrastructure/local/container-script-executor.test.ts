@@ -13,7 +13,10 @@ import {
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
 
-const request = {script: "workflow_output(\"summe\", \"number\", 42.5)", variables: {zaehler: 1}};
+const request = {
+  script: "workflow_output(\"summe\", \"number\", workflow_input(\"zahl\"))",
+  inputs: {zahl: {type: "number" as const, value: 42.5}},
+};
 
 function respondWith(status: number, body: unknown) {
   const sent: {url: string; form: FormData}[] = [];
@@ -39,26 +42,26 @@ async function workspaceWith(files: {displayName: string; bytes: Buffer; content
 
 const executor = (workspace?: ScriptWorkspace) => createContainerScriptExecutorFactory("http://script:8091")(workspace);
 
-test("schickt Script und Variablen an /run und liefert die Antwort des Dienstes", async () => {
+test("schickt Script und gelesene Werte an /run und liefert die Antwort des Dienstes", async () => {
   const workflowOutputs = [{name: "summe", type: "number", value: 42.5}];
   const sent = respondWith(200, {
-    printed: "hallo\n", stderr: "warnung\n", variables: {zaehler: 2}, workflowOutputs,
+    printed: "hallo\n", stderr: "warnung\n", workflowOutputs,
   });
 
   const result = (await executor().execute(request))._unsafeUnwrap();
 
   assert.deepEqual(result, {
-    printed: "hallo\n", errorOutput: "warnung\n", variables: {zaehler: 2}, workflowOutputs,
+    printed: "hallo\n", errorOutput: "warnung\n", workflowOutputs,
   });
   assert.equal(sent[0].url, "http://script:8091/run");
   const body = JSON.parse(await (sent[0].form.get("request") as Blob).text());
-  assert.deepEqual(body, {script: request.script, variables: {zaehler: 1}, files: []});
+  assert.deepEqual(body, {script: request.script, inputs: request.inputs, files: []});
 });
 
 test("angehängte Dateien gehen als rohe Bytes mit, ohne Kodierung", async () => {
   const bytes = Buffer.from([0x00, 0xff, 0x0d, 0x0a, 0x89, 0x50, 0x4e, 0x47]);
   const {workspace, cleanup} = await workspaceWith([{displayName: "bild.png", bytes, contentType: "image/png"}]);
-  const sent = respondWith(200, {printed: "", variables: {}});
+  const sent = respondWith(200, {printed: ""});
 
   await executor(workspace).execute(request);
   await cleanup();

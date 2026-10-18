@@ -2,10 +2,15 @@ import {err, type Result} from "neverthrow";
 import {type NodeFailure} from "../entities/node-failure.js";
 import {type ScriptExecutionResult} from "../entities/script-execution.js";
 import {type ConsoleOutput} from "../entities/task.js";
-import {type NodeOutputValue} from "../entities/workflow-value.js";
+import {type NodeOutputValue, type WorkflowInputValue} from "../entities/workflow-value.js";
+import {scriptWorkflowInputPaths} from "../services/script-workflow-inputs.js";
 import {workflowOutputsFrom} from "../services/script-workflow-outputs.js";
 import {type ScriptExecutor} from "./script-executor.js";
-import {type NodeExecutor, executedNode} from "./node-executor.js";
+import {
+  type NodeExecutor,
+  type TemplateExpressionResolver,
+  executedNode,
+} from "./node-executor.js";
 
 /** Die Ausgabe eines Script-Laufs, getrennt nach stdout und stderr. */
 export type ScriptOutput = {printed: string; errorOutput: string};
@@ -19,9 +24,11 @@ export function createScriptNodeExecutor(
   return {
     primitive: "script",
     async execute(node, runContext) {
+      // Der Code geht unverändert hinaus; Werte kommen allein über `workflow_input` herein.
+      const script = scriptFor(node);
       const outputOrFailure = await scriptExecutor.execute({
-        script: runContext.templateExpressionResolver.resolveText(scriptFor(node)),
-        variables: runContext.variables,
+        script,
+        inputs: inputsFor(script, runContext.templateExpressionResolver),
       });
       // Auch ein gescheitertes Script hat Ausgabe geliefert; sie gehört ins Protokoll.
       if (outputOrFailure.isErr()) {
@@ -32,7 +39,7 @@ export function createScriptNodeExecutor(
       const consoleOutput = {stdout: output.printed, stderr: output.errorOutput ?? ""};
       observeOutput({printed: consoleOutput.stdout, errorOutput: consoleOutput.stderr});
       return nodeOutputsOf(output, consoleOutput).map((outputs) => executedNode(node, outputs, {
-        variables: output.variables, console: hasOutput(consoleOutput) ? consoleOutput : undefined,
+        console: hasOutput(consoleOutput) ? consoleOutput : undefined,
       }));
     },
   };
@@ -47,6 +54,19 @@ function nodeOutputsOf(
   output: ScriptExecutionResult, consoleOutput: ConsoleOutput,
 ): Result<Record<string, NodeOutputValue>, NodeFailure> {
   return workflowOutputsFrom(output.workflowOutputs ?? []).mapErr((failure) => failure.withConsole(consoleOutput));
+}
+
+/**
+ * Die Werte, die das Script per `workflow_input` liest. Was es nicht gibt, fehlt hier; erst der Aufruf im
+ * Script scheitert dann — so bleibt ein Aufruf in einem nicht genommenen `if`-Zweig unschädlich.
+ */
+function inputsFor(script: string, resolver: TemplateExpressionResolver): Record<string, WorkflowInputValue> {
+  const inputs: Record<string, WorkflowInputValue> = {};
+  for (const path of scriptWorkflowInputPaths(script)) {
+    const value = resolver.typedValueAt(path);
+    if (value !== undefined) inputs[path] = value;
+  }
+  return inputs;
 }
 
 function hasOutput(output: ConsoleOutput): boolean {

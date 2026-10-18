@@ -87,7 +87,6 @@ export function formatTaskFinished(
 export function formatNodeHeader(input: {
   node: WorkflowNode;
   taskId: string;
-  context: string;
   parentNodeIds: string[];
   skipNode: boolean;
 }): string {
@@ -99,7 +98,6 @@ export function formatNodeHeader(input: {
     `Aufgabe: ${input.taskId}`,
     `Beschreibung: ${valueOrDash(input.node.description)}`,
     `Eltern: ${valueOrDash(input.parentNodeIds.join(", "))}`,
-    `Kontext: ${valueOrDash(preview(input.context))}`,
     `Überspringen: ${input.skipNode ? "ja" : "nein"}`,
     "Konfiguration:",
     indent(formatConfig(input.node.config)),

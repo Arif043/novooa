@@ -7,7 +7,7 @@ import {
 } from "./task-definition.js";
 import {
   TemplateExpressionResolver,
-  variableTemplateContextFor,
+  templateExpressionContextFor,
 } from "./template-expression-resolver.js";
 
 test("resolves the current iteration value without serializing it", () => {
@@ -146,7 +146,7 @@ test("resolves dialog input fields by the names in outputs", () => {
   assert.equal(resolver.resolveValue("{{Kundennummer}}"), undefined);
 });
 
-test("resolves script workflow outputs and a plain script text the same way, via outputs", () => {
+test("resolves script workflow outputs via outputs", () => {
   const scriptNode = (id: string, outputs: WorkflowNode["outputs"]): WorkflowNode => ({
     id, primitive: "script", title: "", description: "", outputs,
     config: {primitive: "script", script: "", attachments: []},
@@ -157,22 +157,41 @@ test("resolves script workflow outputs and a plain script text the same way, via
         {key: "summe", name: "summe", showOnCanvas: true},
         {key: "faellig", name: "faellig", showOnCanvas: true},
       ]),
-      scriptNode("n2", namedMain("text")),
     ],
     [
       result("n1", "script", {summe: {type: "number", value: 42.5}, faellig: {type: "datetime", value: "2026-10-01"}}),
-      result("n2", "script", {value: {type: "string", value: "Hallo"}}),
     ],
   );
 
   assert.equal(resolver.resolveValue("{{summe}}"), 42.5);
   assert.equal(resolver.resolveValue("{{faellig}}"), "2026-10-01");
-  assert.equal(resolver.resolveValue("{{text}}"), "Hallo");
+});
+
+test("typedValueAt keeps the type of a whole value; paths, loop items and outer values are json", () => {
+  const scriptNode: WorkflowNode = {
+    id: "n1", primitive: "script", title: "", description: "",
+    outputs: [{key: "faellig", name: "faellig", showOnCanvas: true}, {key: "rechnung", name: "rechnung", showOnCanvas: true}],
+    config: {primitive: "script", script: "", attachments: []},
+  };
+  const resolver = new TemplateExpressionResolver(() => templateExpressionContextFor(
+    {nodes: [scriptNode], edges: []},
+    new Map([["n1", result("n1", "script", {
+      faellig: {type: "datetime", value: "2026-10-01T08:00:00"},
+      rechnung: {type: "json", value: {summe: 42.5}},
+    })]]),
+    {iteration: {index: 0, value: {nr: 1}}, global: {aussen: "A"}},
+  ));
+
+  assert.deepEqual(resolver.typedValueAt("faellig"), {type: "datetime", value: "2026-10-01T08:00:00"});
+  assert.deepEqual(resolver.typedValueAt("rechnung.summe"), {type: "json", value: 42.5});
+  assert.deepEqual(resolver.typedValueAt("iteration.value"), {type: "json", value: {nr: 1}});
+  assert.deepEqual(resolver.typedValueAt("aussen"), {type: "json", value: "A"});
+  assert.equal(resolver.typedValueAt("fehlt"), undefined);
 });
 
 function resolverFor(scope: WorkflowExecutionScope): TemplateExpressionResolver {
-  return new TemplateExpressionResolver(() => variableTemplateContextFor(
-    {nodes: [], edges: []}, new Map(), {}, scope,
+  return new TemplateExpressionResolver(() => templateExpressionContextFor(
+    {nodes: [], edges: []}, new Map(), scope,
   ));
 }
 
@@ -180,10 +199,9 @@ function graphResolverFor(
   nodes: WorkflowNode[],
   results: NodeExecutionResult[],
 ): TemplateExpressionResolver {
-  return new TemplateExpressionResolver(() => variableTemplateContextFor(
+  return new TemplateExpressionResolver(() => templateExpressionContextFor(
     {nodes, edges: []},
     new Map(results.map((nodeResult) => [nodeResult.nodeId, nodeResult])),
-    {},
   ));
 }
 

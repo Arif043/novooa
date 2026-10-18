@@ -16,7 +16,6 @@ export async function promptInputFor(
   return {
     teamId: runContext.teamId,
     instruction: instruction.text,
-    context: runContext.context,
     languageModelId: config.languageModelId,
     generationOptions: generationOptionsFrom(config.generationOptions),
     outputType: config.outputType,
@@ -83,7 +82,6 @@ function promptTextFor(
   workspace?: NodeAttachmentWorkspace,
 ): string {
   const parts = [input.instruction];
-  if (input.context.trim().length > 0) parts.push(`Kontext:\n${input.context}`);
   const instructions = attachmentInstructions(workspace);
   if (instructions) parts.push(instructions);
   if (input.outputType === "decision") {
