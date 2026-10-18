@@ -5,11 +5,16 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import '../../domain/entities/knowledge_note.dart';
 import '../cubits/knowledge_base_cubit.dart';
 
+/// Wie stark eine Notiz im Graphen hervortritt: gewählt, Nachbar der
+/// gewählten, normal oder zurückgenommen (nicht verbunden mit der gewählten).
+enum KnowledgeGraphEmphasis { selected, neighbour, normal, dimmed }
+
 class KnowledgeGraphNode extends StatelessWidget {
   const KnowledgeGraphNode({
     super.key,
     required this.note,
-    required this.selected,
+    required this.emphasis,
+    required this.degree,
     required this.position,
     required this.onDragStart,
     required this.onDragUpdate,
@@ -19,7 +24,10 @@ class KnowledgeGraphNode extends StatelessWidget {
   static const double hitSize = 112;
 
   final KnowledgeNote note;
-  final bool selected;
+  final KnowledgeGraphEmphasis emphasis;
+
+  /// Zahl der Links; vernetzte Notizen erscheinen größer.
+  final int degree;
   final Offset position;
   final VoidCallback onDragStart;
   final ValueChanged<Offset> onDragUpdate;
@@ -44,13 +52,20 @@ class KnowledgeGraphNode extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(AppSpacing.md),
             onTap: () => context.read<KnowledgeBaseCubit>().selectNote(note.id),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _NodeDot(note: note, selected: selected),
-                const SizedBox(height: AppSpacing.xs),
-                _NodeLabel(title: note.title, selected: selected),
-              ],
+            child: AnimatedOpacity(
+              opacity: emphasis == KnowledgeGraphEmphasis.dimmed ? .45 : 1,
+              duration: _transitionOf(context),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _NodeDot(emphasis: emphasis, degree: degree),
+                  const SizedBox(height: AppSpacing.xs),
+                  _NodeLabel(
+                    title: note.title,
+                    selected: emphasis == KnowledgeGraphEmphasis.selected,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -59,38 +74,51 @@ class KnowledgeGraphNode extends StatelessWidget {
   }
 }
 
-class _NodeDot extends StatelessWidget {
-  const _NodeDot({required this.note, required this.selected});
+Duration _transitionOf(BuildContext context) =>
+    MediaQuery.disableAnimationsOf(context)
+    ? Duration.zero
+    : const Duration(milliseconds: 220);
 
-  final KnowledgeNote note;
-  final bool selected;
+class _NodeDot extends StatelessWidget {
+  const _NodeDot({required this.emphasis, required this.degree});
+
+  final KnowledgeGraphEmphasis emphasis;
+  final int degree;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    const size = 14.0;
+    final colors = Theme.of(context).colorScheme;
+    final size = 12.0 + 2 * degree.clamp(0, 5) + (_selected ? 4 : 0);
     return AnimatedContainer(
-      duration: MediaQuery.disableAnimationsOf(context)
-          ? Duration.zero
-          : const Duration(milliseconds: 160),
-      width: selected ? 18.0 : size,
-      height: selected ? 18.0 : size,
+      duration: _transitionOf(context),
+      curve: Curves.easeOutBack,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: selected
-            ? colorScheme.primary
-            : colorScheme.onSurfaceVariant.withValues(alpha: 0.58),
-        boxShadow: selected
-            ? [
-                BoxShadow(
-                  color: colorScheme.primary.withValues(alpha: 0.62),
-                  blurRadius: AppSpacing.lg,
-                ),
-              ]
-            : const [],
+        color: switch (emphasis) {
+          KnowledgeGraphEmphasis.selected => colors.primary,
+          KnowledgeGraphEmphasis.neighbour => Color.alphaBlend(
+            colors.primary.withValues(alpha: .55),
+            colors.onSurfaceVariant,
+          ),
+          _ => colors.onSurfaceVariant.withValues(alpha: .62),
+        },
+        boxShadow: [
+          if (_glows)
+            BoxShadow(
+              color: colors.primary.withValues(alpha: _selected ? .6 : .3),
+              blurRadius: _selected ? AppSpacing.lg : AppSpacing.md,
+              spreadRadius: _selected ? 2 : 0,
+            ),
+        ],
       ),
     );
   }
+
+  bool get _selected => emphasis == KnowledgeGraphEmphasis.selected;
+
+  bool get _glows => _selected || emphasis == KnowledgeGraphEmphasis.neighbour;
 }
 
 class _NodeLabel extends StatelessWidget {

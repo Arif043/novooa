@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
 import '../../domain/entities/knowledge_note.dart';
+import 'knowledge_graph_background.dart';
 import 'knowledge_graph_canvas.dart';
-import 'knowledge_graph_painter.dart';
-import 'knowledge_graph_physics.dart';
+import 'knowledge_graph_simulation.dart';
+import 'knowledge_graph_simulation_ticker.dart';
 import 'knowledge_graph_toolbar.dart';
 
+/// Der Wissensgraph als Live-Kraftsimulation ([KnowledgeGraphSimulation]):
+/// Er entfaltet sich beim Öffnen, reagiert beim Ziehen als Ganzes und
+/// schwingt danach aus.
 class KnowledgeBaseGraphView extends StatefulWidget {
   const KnowledgeBaseGraphView({
     super.key,
@@ -24,37 +28,26 @@ class KnowledgeBaseGraphView extends StatefulWidget {
 class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
     with SingleTickerProviderStateMixin {
   final _transformationController = TransformationController();
-  final Map<String, Offset> _positions = {};
-  final Map<String, Offset> _velocities = {};
-  final Map<String, Offset> _restPositions = {};
-  Duration _previousTick = Duration.zero;
-  double _pendingSeconds = 0;
-  late final AnimationController _physicsController;
+  final _simulation = KnowledgeGraphSimulation(
+    canvasSize: const Size(1200, 760),
+  );
+  late final _ticker = KnowledgeGraphSimulationTicker(
+    vsync: this,
+    simulation: _simulation,
+    onFrame: () => setState(() {}),
+  );
   String? _draggingNoteId;
-  String? _settlingNoteId;
-  Size _lastCanvasSize = Size.zero;
-
-  @override
-  void initState() {
-    super.initState();
-    _physicsController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 16),
-    )..addListener(_tickPhysics);
-  }
+  bool _notesPending = true;
 
   @override
   void didUpdateWidget(KnowledgeBaseGraphView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final noteIds = widget.notes.map((note) => note.id).toSet();
-    _positions.removeWhere((noteId, _) => !noteIds.contains(noteId));
-    _velocities.removeWhere((noteId, _) => !noteIds.contains(noteId));
-    _restPositions.removeWhere((noteId, _) => !noteIds.contains(noteId));
+    if (oldWidget.notes != widget.notes) _notesPending = true;
   }
 
   @override
   void dispose() {
-    _physicsController.dispose();
+    _ticker.dispose();
     _transformationController.dispose();
     super.dispose();
   }
@@ -66,16 +59,15 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
     }
     return LayoutBuilder(
       builder: (context, constraints) {
-        final canvasSize = _canvasSizeFor(constraints.biggest);
-        if (widget.notes.any((note) => !_positions.containsKey(note.id))) {
-          final layout = KnowledgeGraphLayout(widget.notes, canvasSize);
-          _syncPositions(layout.positions);
+        _simulation.canvasSize = _canvasSizeFor(constraints.biggest);
+        if (_notesPending) {
+          _notesPending = false;
+          _simulation.setNotes(widget.notes);
+          _run();
         }
-        _lastCanvasSize = canvasSize;
         return ClipRRect(
           borderRadius: BorderRadius.circular(AppSpacing.md),
-          child: ColoredBox(
-            color: Theme.of(context).colorScheme.surfaceContainerLow,
+          child: KnowledgeGraphBackground(
             child: Stack(
               children: [
                 InteractiveViewer(
@@ -88,12 +80,9 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
                   child: KnowledgeGraphCanvas(
                     notes: widget.notes,
                     selectedNoteId: widget.selectedNoteId,
-                    canvasSize: canvasSize,
-                    positions: _positions,
+                    simulation: _simulation,
                     onNodeDragStart: _startNodeDrag,
-                    onNodeDrag: (noteId, position, delta) {
-                      _moveNode(noteId, position, delta, canvasSize);
-                    },
+                    onNodeDrag: _moveNode,
                     onNodeDragEnd: _endNodeDrag,
                   ),
                 ),
@@ -112,107 +101,47 @@ class _KnowledgeBaseGraphViewState extends State<KnowledgeBaseGraphView>
 
   void _resetView() {
     _transformationController.value = Matrix4.identity();
-    _physicsController.stop();
     setState(() {
-      _positions.clear();
-      _velocities.clear();
-      _restPositions.clear();
       _draggingNoteId = null;
-      _settlingNoteId = null;
+      _simulation
+        ..endDrag()
+        ..restart();
     });
+    _run();
   }
 
   void _startNodeDrag(String noteId) {
-    _physicsController.stop();
-    _velocities.clear();
     setState(() {
       _draggingNoteId = noteId;
-      _settlingNoteId = null;
-      _velocities[noteId] = Offset.zero;
+      _simulation.startDrag(noteId);
     });
-    _startPhysics();
+    _run();
   }
 
-  void _moveNode(
-    String noteId,
-    Offset currentPosition,
-    Offset screenDelta,
-    Size canvasSize,
-  ) {
+  void _moveNode(String noteId, Offset currentPosition, Offset screenDelta) {
     final scale = _transformationController.value.getMaxScaleOnAxis();
-    final canvasDelta = screenDelta / scale;
-    setState(() {
-      _positions[noteId] = _clamp(currentPosition + canvasDelta, canvasSize);
-      _velocities[noteId] = Offset.zero;
-    });
+    setState(
+      () => _simulation.dragTo(noteId, currentPosition + screenDelta / scale),
+    );
+    _run();
   }
 
   void _endNodeDrag() {
-    final noteId = _draggingNoteId;
     setState(() {
       _draggingNoteId = null;
-      _settlingNoteId = noteId;
+      _simulation.endDrag();
     });
-    if (noteId != null) {
-      // A deliberate drop becomes the new resting position, without a fling.
-      _restPositions[noteId] = _positions[noteId]!;
-      _velocities[noteId] = Offset.zero;
-    }
-    _startPhysics();
+    _run();
   }
 
-  void _syncPositions(Map<String, Offset> layoutPositions) {
-    for (final entry in layoutPositions.entries) {
-      _positions.putIfAbsent(entry.key, () => entry.value);
-      _restPositions.putIfAbsent(entry.key, () => entry.value);
-    }
-  }
-
-  void _startPhysics() {
-    if (MediaQuery.disableAnimationsOf(context)) return;
-    if (!_physicsController.isAnimating) {
-      _previousTick = Duration.zero;
-      _pendingSeconds = 0;
-      _physicsController.repeat(period: const Duration(milliseconds: 16));
-    }
-  }
-
-  void _tickPhysics() {
-    if (_lastCanvasSize == Size.zero || widget.notes.isEmpty) return;
+  /// Bei reduzierter Bewegung rechnet die Simulation sofort bis zur Ruhe.
+  void _run() {
     if (MediaQuery.disableAnimationsOf(context)) {
-      _physicsController.stop();
-      _velocities.clear();
+      _ticker.stop();
+      _simulation.settle();
       return;
     }
-    final elapsed = _physicsController.lastElapsedDuration ?? Duration.zero;
-    final seconds = (elapsed - _previousTick).inMicroseconds / 1000000;
-    _previousTick = elapsed;
-    _pendingSeconds += seconds.clamp(0, 1 / 15);
-    const stepSeconds = 1 / 60;
-    if (_pendingSeconds < stepSeconds) return;
-    final physics = KnowledgeGraphPhysics(
-      notes: widget.notes,
-      canvasSize: _lastCanvasSize,
-      pinnedNoteId: _draggingNoteId ?? _settlingNoteId,
-      restPositions: _restPositions,
-    );
-    var moving = false;
-    while (_pendingSeconds >= stepSeconds) {
-      moving = physics.step(_positions, _velocities);
-      _pendingSeconds -= stepSeconds;
-    }
-    if (!moving && _draggingNoteId == null) _physicsController.stop();
-    setState(() {});
-  }
-
-  Offset _clamp(Offset value, Size canvasSize) {
-    return Offset(
-      value.dx.clamp(AppSpacing.section, canvasSize.width - AppSpacing.section),
-      value.dy.clamp(
-        AppSpacing.section,
-        canvasSize.height - AppSpacing.section,
-      ),
-    );
+    _ticker.ensureRunning();
   }
 
   Size _canvasSizeFor(Size viewport) {
