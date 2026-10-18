@@ -1,4 +1,5 @@
-import {ok} from "neverthrow";
+import {nodeFailures} from "../entities/node-failures.js";
+import {err, ok} from "neverthrow";
 import {type NodeOutputValue} from "../entities/workflow-value.js";
 import {datetimeOutput, executedNode, stringOutput, type NodeExecutor} from "./node-executor.js";
 
@@ -7,6 +8,7 @@ export const readWebhookNodeExecutor: NodeExecutor = {
   primitive: "readWebhook",
   async execute(node, runContext) {
     const event = webhookEventFrom(runContext.input);
+    if (event === undefined) return err(nodeFailures.triggerMismatch("webhook"));
     const body = event.body;
     const outputs: Record<string, NodeOutputValue> = {
       value: typeof body === "string" ? stringOutput(body) : {type: "json", value: body},
@@ -19,12 +21,9 @@ export const readWebhookNodeExecutor: NodeExecutor = {
   },
 };
 
-function webhookEventFrom(input: Record<string, unknown>): Record<string, unknown> {
+function webhookEventFrom(input: Record<string, unknown>): Record<string, unknown> | undefined {
   const event = input.event;
-  if (!isRecord(event) || event.type !== "webhookReceived") {
-    throw new Error("Webhook-Ereignis lesen: Dieser Lauf wurde nicht durch einen Webhook gestartet.");
-  }
-  return event;
+  return isRecord(event) && event.type === "webhookReceived" ? event : undefined;
 }
 
 function stringField(data: Record<string, unknown>, key: string): string {

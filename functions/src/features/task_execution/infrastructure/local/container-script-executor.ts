@@ -1,6 +1,9 @@
 import {readFile} from "node:fs/promises";
 import path from "node:path";
-import {ScriptExecutionError, type ScriptExecutionRequest, type ScriptExecutionResult, type ScriptWorkspace} from "../../domain/entities/script-execution.js";
+import {err, ok, type Result} from "neverthrow";
+import {type ScriptExecutionRequest, type ScriptExecutionResult, type ScriptWorkspace} from "../../domain/entities/script-execution.js";
+import {type NodeFailure} from "../../domain/entities/node-failure.js";
+import {nodeFailures} from "../../domain/entities/node-failures.js";
 import {type ScriptExecutorFactory} from "../../domain/executors/script-executor.js";
 import {scriptResultFrom} from "./script-result.js";
 
@@ -31,7 +34,7 @@ async function executeInContainer(
   url: URL,
   request: ScriptExecutionRequest,
   workspace?: ScriptWorkspace,
-): Promise<ScriptExecutionResult> {
+): Promise<Result<ScriptExecutionResult, NodeFailure>> {
   const files = workspace?.files ?? [];
   assertWithinLimit(files);
   const body = new FormData();
@@ -40,7 +43,7 @@ async function executeInContainer(
     const bytes = await readFile(path.join(workspace!.rootDirectory, file.filename));
     body.append(`file-${index}`, new Blob([bytes], {type: file.contentType}), `file-${index}`);
   }
-  return scriptResultFrom(await post(url, body), request.input);
+  return (await post(url, body)).map((parsed) => scriptResultFrom(parsed, request.input));
 }
 
 function requestBody(request: ScriptExecutionRequest, files: ScriptWorkspace["files"]) {
@@ -59,7 +62,8 @@ function assertWithinLimit(files: ScriptWorkspace["files"]): void {
   }
 }
 
-async function post(url: URL, body: FormData): Promise<Record<string, unknown>> {
+/** Meldet der Dienst einen Fehler des Scripts (`error`), ist das eine Failure; alles andere wirft. */
+async function post(url: URL, body: FormData): Promise<Result<Record<string, unknown>, NodeFailure>> {
   let response: Response;
   try {
     response = await fetch(url, {method: "POST", body, signal: AbortSignal.timeout(requestTimeoutMs)});
@@ -67,12 +71,10 @@ async function post(url: URL, body: FormData): Promise<Record<string, unknown>> 
     throw new Error("Der Script-Dienst ist nicht erreichbar.");
   }
   const parsed = await response.json().catch(() => ({})) as Record<string, unknown>;
-  if (!response.ok) {
-    throw new ScriptExecutionError(
-      typeof parsed.error === "string" ? parsed.error : "Der Script-Dienst hat die Anfrage abgelehnt.",
-      typeof parsed.printed === "string" ? parsed.printed : "",
-      typeof parsed.stderr === "string" ? parsed.stderr : "",
-    );
-  }
-  return parsed;
+  if (response.ok) return ok(parsed);
+  if (typeof parsed.error !== "string") throw new Error("Der Script-Dienst hat die Anfrage abgelehnt.");
+  return err(nodeFailures.scriptFailed(parsed.error, {
+    stdout: typeof parsed.printed === "string" ? parsed.printed : "",
+    stderr: typeof parsed.stderr === "string" ? parsed.stderr : "",
+  }));
 }

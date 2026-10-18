@@ -16,11 +16,10 @@ test("stores an image output as a team file and returns it as media", async () =
   assert.equal(result.outputs.maske?.type, "media");
 });
 
-test("rejects an image output without an image content type", async () => {
-  await assert.rejects(
-    modelInferenceNodeExecutor.execute(node(), runContext({...png, contentType: "audio/wav"}, []) as never),
-    /Bildausgabe des Modells hat keinen Bild-Content-Type/,
-  );
+test("an image output without an image content type is a failure", async () => {
+  const resultOrFailure = await modelInferenceNodeExecutor.execute(node(), runContext({...png, contentType: "audio/wav"}, []) as never);
+
+  assert.deepEqual(resultOrFailure._unsafeUnwrapErr().details, {output: "image"});
 });
 
 function node() {

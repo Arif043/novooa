@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {genkit} from "genkit/beta";
-import {ScriptExecutionError} from "../../../domain/entities/script-execution.js";
+import {err} from "neverthrow";
+import {nodeFailures} from "../../../domain/entities/node-failures.js";
 import {executeTaskGraph} from "./task-graph-runner.js";
 
 const silentLogger = {info() {}, error() {}, exception() {}, readableInfo() {}, readableError() {}};
@@ -15,7 +16,7 @@ const scriptNode = (id: string) => ({
   config: {primitive: "script", script: "x", attachments: []},
 });
 
-function runtimeWithScript(execute: () => Promise<never>) {
+function runtimeWithScript(execute: () => Promise<unknown>) {
   return {
     logger: silentLogger,
     scriptExecutorFactory: () => ({execute}),
@@ -32,17 +33,17 @@ test("a failing node returns a failure with the results of the nodes before it",
     [textNode("eins", "Hallo"), textNode("zwei", "Welt"), scriptNode("drei")],
     [{from: "eins", to: "zwei"}, {from: "zwei", to: "drei"}],
   );
-  const scriptError = new ScriptExecutionError("Zeile 2: ValueError: kaputt", "vorher\n");
+  const scriptFailure = nodeFailures.scriptFailed("Zeile 2: ValueError: kaputt", {stdout: "vorher\n", stderr: ""});
 
-  const failure = (await executeTaskGraph(ai, task, runtimeWithScript(async () => { throw scriptError; })))
+  const failure = (await executeTaskGraph(ai, task, runtimeWithScript(async () => err(scriptFailure))))
     ._unsafeUnwrapErr();
 
-  assert.equal(failure.cause, scriptError, "der ursprüngliche Fehler bleibt als Ursache erhalten");
+  assert.equal(failure.cause, scriptFailure, "die ursprüngliche Failure bleibt als Ursache erhalten");
   assert.deepEqual(failure.completedNodeResults.map((result) => [result.nodeId, result.status]), [
     ["eins", "executed"], ["zwei", "executed"],
   ]);
   assert.deepEqual(failure.failedNode, {
-    nodeId: "drei", primitive: "script", message: "Zeile 2: ValueError: kaputt",
+    nodeId: "drei", primitive: "script", message: "Zeile 2: ValueError: kaputt", failureCode: "scriptFailed",
     console: {stdout: "vorher\n", stderr: ""},
   });
 });

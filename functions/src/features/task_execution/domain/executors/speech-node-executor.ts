@@ -1,4 +1,5 @@
-import {ok} from "neverthrow";
+import {err, ok} from "neverthrow";
+import {nodeFailures} from "../entities/node-failures.js";
 import {executedNode, type NodeExecutor} from "./node-executor.js";
 import {executeModelInferenceNode} from "./model-inference-node-executor.js";
 import {fileReferenceFor} from "../services/file-output-values.js";
@@ -14,9 +15,7 @@ export const textToSpeechNodeExecutor: NodeExecutor = {
     if (config.primitive !== "textToSpeech" || !config.languageModelId?.trim()) {
       return executeModelInferenceNode(node, runContext);
     }
-    if (!runContext.speechSynthesizer) {
-      throw new Error("Sprachausgabe über Sprachmodelle ist in dieser Umgebung nicht verfügbar.");
-    }
+    if (!runContext.speechSynthesizer) return err(nodeFailures.capabilityUnavailable("speechSynthesis"));
     const text = runContext.templateExpressionResolver.resolveText(config.speechText ?? "");
     const speech = await runContext.speechSynthesizer.synthesize({
       teamId: runContext.teamId,
@@ -46,13 +45,9 @@ export const speechToTextNodeExecutor: NodeExecutor = {
     if (config.primitive !== "speechToText" || !config.languageModelId?.trim()) {
       return executeModelInferenceNode(node, runContext);
     }
-    if (!runContext.speechTranscriber) {
-      throw new Error("Transkription über Sprachmodelle ist in dieser Umgebung nicht verfügbar.");
-    }
+    if (!runContext.speechTranscriber) return err(nodeFailures.capabilityUnavailable("speechTranscription"));
     const reference = runContext.templateExpressionResolver.resolveValue(config.audioTemplate ?? "");
-    if (!isFileReference(reference)) {
-      throw new Error("Für die Transkription wurde keine Audiodatei zugeordnet.");
-    }
+    if (!isFileReference(reference)) return err(nodeFailures.settingMissing("audioInput"));
     const file = await runContext.fileContentReader.readTeamFileContent(runContext.teamId, reference.fileId, reference.versionId);
     const text = await runContext.speechTranscriber.transcribe({
       teamId: runContext.teamId,

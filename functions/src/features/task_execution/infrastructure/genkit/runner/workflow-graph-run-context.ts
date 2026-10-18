@@ -1,3 +1,5 @@
+import {type NodeFailure} from "../../../domain/entities/node-failure.js";
+import {type Result} from "neverthrow";
 import {
   type TaskRunContext,
   type TaskVariables,
@@ -22,7 +24,7 @@ export type ExecuteWorkflowGraph = (
   graph: WorkflowGraph,
   context: string,
   scope: WorkflowExecutionScope,
-) => Promise<NodeExecutionResult[]>;
+) => Promise<Result<NodeExecutionResult[], NodeFailure>>;
 
 type TaskRunContextOptions = {
   input: TaskGraphInput;

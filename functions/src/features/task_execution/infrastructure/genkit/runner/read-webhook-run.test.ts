@@ -30,5 +30,5 @@ test("im echten Runner sind die Felder des Webhook-Inhalts in Folgebausteinen al
 test("ohne Webhook-Ereignis scheitert der Lauf mit verständlicher Meldung", async () => {
   const output = await run(undefined);
   assert.equal(output.isErr(), true);
-  assert.match(output._unsafeUnwrapErr().failedNode.message, /nicht durch einen Webhook gestartet/);
+  assert.deepEqual(output._unsafeUnwrapErr().failedNode.failureDetails, {trigger: "webhook"});
 });

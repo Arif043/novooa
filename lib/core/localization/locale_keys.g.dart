@@ -915,6 +915,32 @@ abstract class LocaleKeys {
       'activity_failures.codes.capabilityMissing';
   static const activity_failures_codes_conditionOperandMismatch =
       'activity_failures.codes.conditionOperandMismatch';
+  static const activity_failures_codes_configurationMissing =
+      'activity_failures.codes.configurationMissing';
+  static const activity_failures_codes_settingMissing =
+      'activity_failures.codes.settingMissing';
+  static const activity_failures_codes_settingInvalid =
+      'activity_failures.codes.settingInvalid';
+  static const activity_failures_codes_valueTypeMismatch =
+      'activity_failures.codes.valueTypeMismatch';
+  static const activity_failures_codes_tensorShapeMismatch =
+      'activity_failures.codes.tensorShapeMismatch';
+  static const activity_failures_codes_modelOutputInvalid =
+      'activity_failures.codes.modelOutputInvalid';
+  static const activity_failures_codes_triggerMismatch =
+      'activity_failures.codes.triggerMismatch';
+  static const activity_failures_codes_capabilityUnavailable =
+      'activity_failures.codes.capabilityUnavailable';
+  static const activity_failures_codes_httpBodyInvalidJson =
+      'activity_failures.codes.httpBodyInvalidJson';
+  static const activity_failures_codes_httpStatusFailed =
+      'activity_failures.codes.httpStatusFailed';
+  static const activity_failures_codes_forEachUnsupported =
+      'activity_failures.codes.forEachUnsupported';
+  static const activity_failures_codes_scriptFailed =
+      'activity_failures.codes.scriptFailed';
+  static const activity_failures_codes_scriptOutputInvalid =
+      'activity_failures.codes.scriptOutputInvalid';
   static const activity_failures_codes = 'activity_failures.codes';
   static const activity_failures_operand_kinds_number =
       'activity_failures.operand_kinds.number';
@@ -928,5 +954,113 @@ abstract class LocaleKeys {
       'activity_failures.operand_kinds.file';
   static const activity_failures_operand_kinds =
       'activity_failures.operand_kinds';
+  static const activity_failures_name_suffix = 'activity_failures.name_suffix';
+  static const activity_failures_iteration_suffix =
+      'activity_failures.iteration_suffix';
+  static const activity_failures_settings_model =
+      'activity_failures.settings.model';
+  static const activity_failures_settings_modelInputMapping =
+      'activity_failures.settings.modelInputMapping';
+  static const activity_failures_settings_inputFile =
+      'activity_failures.settings.inputFile';
+  static const activity_failures_settings_outputFile =
+      'activity_failures.settings.outputFile';
+  static const activity_failures_settings_audioInput =
+      'activity_failures.settings.audioInput';
+  static const activity_failures_settings_recipient =
+      'activity_failures.settings.recipient';
+  static const activity_failures_settings_messageBody =
+      'activity_failures.settings.messageBody';
+  static const activity_failures_settings_notificationText =
+      'activity_failures.settings.notificationText';
+  static const activity_failures_settings_mailbox =
+      'activity_failures.settings.mailbox';
+  static const activity_failures_settings_modelInputDuplicate =
+      'activity_failures.settings.modelInputDuplicate';
+  static const activity_failures_settings_modelParameter =
+      'activity_failures.settings.modelParameter';
+  static const activity_failures_settings_documentFilterValue =
+      'activity_failures.settings.documentFilterValue';
+  static const activity_failures_settings_documentFieldValue =
+      'activity_failures.settings.documentFieldValue';
+  static const activity_failures_settings_documentFieldDuplicate =
+      'activity_failures.settings.documentFieldDuplicate';
+  static const activity_failures_settings_jsonPointer =
+      'activity_failures.settings.jsonPointer';
+  static const activity_failures_settings = 'activity_failures.settings';
+  static const activity_failures_targets_modelInput =
+      'activity_failures.targets.modelInput';
+  static const activity_failures_targets_documentFilter =
+      'activity_failures.targets.documentFilter';
+  static const activity_failures_targets_forEachItems =
+      'activity_failures.targets.forEachItems';
+  static const activity_failures_targets = 'activity_failures.targets';
+  static const activity_failures_expected_image =
+      'activity_failures.expected.image';
+  static const activity_failures_expected_audio =
+      'activity_failures.expected.audio';
+  static const activity_failures_expected_file =
+      'activity_failures.expected.file';
+  static const activity_failures_expected_number =
+      'activity_failures.expected.number';
+  static const activity_failures_expected_boolean =
+      'activity_failures.expected.boolean';
+  static const activity_failures_expected_json =
+      'activity_failures.expected.json';
+  static const activity_failures_expected_textList =
+      'activity_failures.expected.textList';
+  static const activity_failures_expected_numberList =
+      'activity_failures.expected.numberList';
+  static const activity_failures_expected_list =
+      'activity_failures.expected.list';
+  static const activity_failures_expected_tensor =
+      'activity_failures.expected.tensor';
+  static const activity_failures_expected = 'activity_failures.expected';
+  static const activity_failures_outputs_image =
+      'activity_failures.outputs.image';
+  static const activity_failures_outputs_audio =
+      'activity_failures.outputs.audio';
+  static const activity_failures_outputs = 'activity_failures.outputs';
+  static const activity_failures_triggers_email =
+      'activity_failures.triggers.email';
+  static const activity_failures_triggers_whatsapp =
+      'activity_failures.triggers.whatsapp';
+  static const activity_failures_triggers_sms =
+      'activity_failures.triggers.sms';
+  static const activity_failures_triggers_telegram =
+      'activity_failures.triggers.telegram';
+  static const activity_failures_triggers_instagram =
+      'activity_failures.triggers.instagram';
+  static const activity_failures_triggers_webhook =
+      'activity_failures.triggers.webhook';
+  static const activity_failures_triggers = 'activity_failures.triggers';
+  static const activity_failures_capabilities_speechSynthesis =
+      'activity_failures.capabilities.speechSynthesis';
+  static const activity_failures_capabilities_speechTranscription =
+      'activity_failures.capabilities.speechTranscription';
+  static const activity_failures_capabilities_httpRequests =
+      'activity_failures.capabilities.httpRequests';
+  static const activity_failures_capabilities_float16Tensors =
+      'activity_failures.capabilities.float16Tensors';
+  static const activity_failures_capabilities =
+      'activity_failures.capabilities';
+  static const activity_failures_for_each_reasons_nestedForEach =
+      'activity_failures.for_each_reasons.nestedForEach';
+  static const activity_failures_for_each_reasons_pausingBlock =
+      'activity_failures.for_each_reasons.pausingBlock';
+  static const activity_failures_for_each_reasons =
+      'activity_failures.for_each_reasons';
+  static const activity_failures_script_output_reasons_duplicateName =
+      'activity_failures.script_output_reasons.duplicateName';
+  static const activity_failures_script_output_reasons_invalidEntry =
+      'activity_failures.script_output_reasons.invalidEntry';
+  static const activity_failures_script_output_reasons_invalidName =
+      'activity_failures.script_output_reasons.invalidName';
+  static const activity_failures_script_output_reasons_unknownType =
+      'activity_failures.script_output_reasons.unknownType';
+  static const activity_failures_script_output_reasons_wrongValueType =
+      'activity_failures.script_output_reasons.wrongValueType';
+  static const activity_failures_script_output_reasons =
+      'activity_failures.script_output_reasons';
   static const activity_failures = 'activity_failures';
 }

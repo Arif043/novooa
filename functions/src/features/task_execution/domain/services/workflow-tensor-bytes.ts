@@ -1,3 +1,6 @@
+import {err, ok, type Result} from "neverthrow";
+import {type NodeFailure} from "../entities/node-failure.js";
+import {nodeFailures} from "../entities/node-failures.js";
 import {type ModelInferenceInputMapping} from "../entities/task.js";
 
 type NumericDataType = Exclude<ModelInferenceInputMapping["dataType"], "string">;
@@ -6,11 +9,12 @@ type NumericDataType = Exclude<ModelInferenceInputMapping["dataType"], "string">
 export function bytesFor(
   dataType: NumericDataType,
   values: readonly number[],
-): Uint8Array {
+): Result<Uint8Array, NodeFailure> {
+  if (dataType === "float16" && !supportsFloat16()) return err(nodeFailures.capabilityUnavailable("float16Tensors"));
   const bytes = new Uint8Array(values.length * bytesPerElement[dataType]);
   const view = new DataView(bytes.buffer);
   values.forEach((value, index) => writeValue(view, dataType, index, value));
-  return bytes;
+  return ok(bytes);
 }
 
 export const bytesPerElement = {
@@ -38,10 +42,13 @@ function writeValue(
   }
 }
 
+type Float16View = DataView & {setFloat16?: (offset: number, value: number, littleEndian: boolean) => void};
+
+/** Node kennt `DataView.setFloat16` erst ab Version 24. */
+function supportsFloat16(): boolean {
+  return typeof (DataView.prototype as Float16View).setFloat16 === "function";
+}
+
 function writeFloat16(view: DataView, offset: number, value: number): void {
-  const withFloat16 = view as DataView & {setFloat16?: (offset: number, value: number, littleEndian: boolean) => void};
-  if (typeof withFloat16.setFloat16 !== "function") {
-    throw new Error("Diese Runtime kann keine float16-Tensoren erzeugen.");
-  }
-  withFloat16.setFloat16(offset, value, true);
+  (view as Float16View).setFloat16?.(offset, value, true);
 }

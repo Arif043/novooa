@@ -42,7 +42,7 @@ export type WorkflowGraphRunner = (
   context: string,
   /** Zusätzlicher Geltungsbereich des Teilgraphen, z. B. das aktuelle Element einer Schleife. */
   scope?: WorkflowExecutionScope,
-) => Promise<NodeExecutionResult[]>;
+) => Promise<Result<NodeExecutionResult[], NodeFailure>>;
 
 /**
  * Dienste, die ein Lauf unverändert an jeden Baustein durchreicht. Wer einen neuen

@@ -45,5 +45,7 @@ test("ohne Dienst (Cloud) scheitert der Baustein mit einer verständlichen Meldu
   const outputOrFailure = await executeTaskGraph(genkit({}), taskWith([request]), {logger: silentLogger} as never);
 
   assert.equal(outputOrFailure.isErr(), true);
-  assert.match(outputOrFailure._unsafeUnwrapErr().failedNode.message, /nicht verfügbar/);
+  const failedNode = outputOrFailure._unsafeUnwrapErr().failedNode;
+  assert.equal(failedNode.failureCode, "capabilityUnavailable");
+  assert.deepEqual(failedNode.failureDetails, {capability: "httpRequests"});
 });

@@ -47,8 +47,9 @@ export function createConditionalFlowNodeExecutor(
         : ok(labelMatchedOutputFor(node, runContext));
       if (outputOrFailure.isErr()) return err(outputOrFailure.error);
       const output = outputOrFailure.value;
-      const branchOutput = await executeSelectedBranch(node, runContext, output, observer);
-      return ok(executedNode(node, textOutputs(branchOutput), {
+      const branchOutputOrFailure = await executeSelectedBranch(node, runContext, output, observer);
+      if (branchOutputOrFailure.isErr()) return err(branchOutputOrFailure.error);
+      return ok(executedNode(node, textOutputs(branchOutputOrFailure.value), {
         selectedNodeId: output.selectedNodeId,
         selection: {
           selectedBranchId: output.selectedBranchId,
@@ -110,27 +111,26 @@ async function executeSelectedBranch(
   runContext: Parameters<NodeExecutor["execute"]>[1],
   output: ConditionalExecutionResult,
   observer: ConditionalBranchObserver,
-): Promise<string> {
+): Promise<Result<string, NodeFailure>> {
   const branch = selectedBranchFor(node, output.selectedBranchId);
-  if (!branch) return "";
-  if (branch.graph.nodes.length === 0) return branch.label;
+  if (!branch) return ok("");
+  if (branch.graph.nodes.length === 0) return ok(branch.label);
   observer.started({
     node,
     branchLabel: branch.label,
     nodeCount: branch.graph.nodes.length,
     edgeCount: branch.graph.edges.length,
   });
-  const results = await runContext.runGraph(
-    graphFor(branch.graph),
-    runContext.context,
-  );
+  const resultsOrFailure = await runContext.runGraph(graphFor(branch.graph), runContext.context);
+  if (resultsOrFailure.isErr()) return err(resultsOrFailure.error);
+  const results = resultsOrFailure.value;
   const finalOutput = finalOutputOf(results);
   observer.finished({
     branchLabel: branch.label,
     resultCount: results.length,
     outputLength: finalOutput.length,
   });
-  return finalOutput || branch.label;
+  return ok(finalOutput || branch.label);
 }
 
 function selectedBranchFor(node: WorkflowNode, branchId?: string | null) {

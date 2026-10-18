@@ -1,4 +1,5 @@
-import {ok} from "neverthrow";
+import {err, ok} from "neverthrow";
+import {nodeFailures, type MissingSetting} from "../entities/node-failures.js";
 import {
   executedNode,
   stringOutput,
@@ -60,8 +61,8 @@ export function createSendChannelMessageNodeExecutor(
       const body = runContext.templateExpressionResolver.resolveText(config.message).trim();
       const subject = subjectFrom(config.subject, runContext);
       const connectorId = connectorIdFrom(config.connectorId, runContext.input);
-      if (!recipient) throw new Error(`${labelFor(config.kind)} senden: Empfänger fehlt.`);
-      if (!body) throw new Error(`${labelFor(config.kind)} senden: Nachricht fehlt.`);
+      const missing = missingSettingFor(config.kind, {recipient, body, connectorId});
+      if (missing !== undefined) return err(nodeFailures.settingMissing(missing));
       const started = {teamId: runContext.teamId, node, kind: config.kind, recipient, body};
       observer.started(started);
       const sent = await sendMessage(runContext, {
@@ -118,12 +119,7 @@ function messageInputFor(
   teamId: string,
   input: MessageRequest,
 ): SendTaskMessageInput {
-  if (input.kind === "email") {
-    if (!input.connectorId) {
-      throw new Error("E-Mail senden: Verbundenes Postfach fehlt.");
-    }
-    return {teamId, ...input};
-  }
+  if (input.kind === "email") return {teamId, ...input};
   return {
     teamId,
     kind: input.kind,
@@ -164,9 +160,13 @@ function kindFrom(value: unknown): TaskMessageKind {
   return "whatsapp";
 }
 
-function labelFor(kind: TaskMessageKind): string {
-  if (kind === "email") return "E-Mail";
-  return kind === "whatsapp" ? "WhatsApp" : "SMS";
+function missingSettingFor(
+  kind: TaskMessageKind,
+  values: {recipient: string; body: string; connectorId: string},
+): MissingSetting | undefined {
+  if (!values.recipient) return "recipient";
+  if (!values.body) return "messageBody";
+  return kind === "email" && !values.connectorId ? "mailbox" : undefined;
 }
 
 function stringFrom(value: unknown): string {

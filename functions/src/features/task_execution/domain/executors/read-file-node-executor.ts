@@ -1,35 +1,22 @@
-import {ok} from "neverthrow";
+import {nodeFailures} from "../entities/node-failures.js";
+import {err, ok} from "neverthrow";
 import {
   type NodeExecutor,
   executedNode,
   textOutputs,
 } from "./node-executor.js";
-import {type TeamFileStore} from "../../../files/domain/repositories/team-file-store.js";
 import {type NodeAttachment, type WorkflowNode} from "../entities/task.js";
 
 export const readFileNodeExecutor: NodeExecutor = {
   primitive: "readFile",
   async execute(node, runContext) {
-    const output = await readNodeFile(
-      runContext.teamFileStore,
-      runContext.teamId,
-      node,
-    );
+    const file = selectedFileFor(node);
+    if (file === undefined) return err(nodeFailures.settingMissing("inputFile"));
+    const output = await runContext.teamFileStore.readTextFile(runContext.teamId, file);
     return ok(executedNode(node, textOutputs(output)));
   },
 };
 
-async function readNodeFile(
-  fileStore: TeamFileStore,
-  teamId: string,
-  node: WorkflowNode,
-): Promise<string> {
-  return fileStore.readTextFile(teamId, selectedFileFor(node));
-}
-
-function selectedFileFor(node: WorkflowNode): NodeAttachment {
-  if (node.config.primitive !== "readFile" || node.config.file === undefined) {
-    throw new Error("Datei lesen: Es wurde keine Datei ausgewählt.");
-  }
-  return node.config.file;
+function selectedFileFor(node: WorkflowNode): NodeAttachment | undefined {
+  return node.config.primitive === "readFile" ? node.config.file : undefined;
 }

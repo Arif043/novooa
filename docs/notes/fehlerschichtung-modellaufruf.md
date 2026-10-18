@@ -39,7 +39,8 @@ Gehört zu: [Architektur](../index/architektur.md)
 
 Codes: `outputSchemaViolated`, `responseTruncated`, `emptyResponse`,
 `providerUnavailable`, `requestRejected`, `timedOut`, `capabilityMissing`,
-`unknown`.
+`unknown`. Die übrigen Geschäftsfehler der Bausteine stehen unter
+[Fehlercodes der Bausteine](./baustein-fehlercodes.md).
 
 ## Siehe auch
 

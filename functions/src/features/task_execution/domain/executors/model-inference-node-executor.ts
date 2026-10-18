@@ -1,176 +1,84 @@
-import {ok} from "neverthrow";
+import {err, ok, Result} from "neverthrow";
 import {
   executedNode,
   type NodeExecutor,
+  type NodeResultOrFailure,
 } from "./node-executor.js";
-import {type ModelInferenceResult} from
-  "../../../machine_learning/domain/repositories/model-inference.js";
-import {mediaReferenceFor, type NodeOutputValue} from "../entities/workflow-value.js";
+import {type NodeFailure} from "../entities/node-failure.js";
+import {nodeFailures} from "../entities/node-failures.js";
+import {type ModelInferenceInputMapping} from "../entities/task.js";
 import {modelInputFromWorkflowMapping} from "../services/model-input-from-workflow-mapping.js";
-import {workflowValueForModelOutput} from "../services/tensor-workflow-value.js";
+import {modelOutputValuesFor} from "./model-output-values.js";
+
+type Node = Parameters<NodeExecutor["execute"]>[0];
+type RunContext = Parameters<NodeExecutor["execute"]>[1];
+type ModelNodeConfig = Extract<Node["config"], {primitive: "modelInference" | "textToSpeech" | "speechToText"}>;
 
 export const modelInferenceNodeExecutor: NodeExecutor = {
   primitive: "modelInference",
   execute: executeModelInferenceNode,
 };
 
-export async function executeModelInferenceNode(
-  node: Parameters<NodeExecutor["execute"]>[0],
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-) {
-  const inputs = await inputsFor(node, runContext);
+export async function executeModelInferenceNode(node: Node, runContext: RunContext): Promise<NodeResultOrFailure> {
+  const config = modelConfigFor(node);
+  if (config === undefined) return err(nodeFailures.configurationMissing(node.primitive));
+  const requestOrFailure = modelIdFor(config)
+    .andThen((modelId) => settingsFor(config, runContext).map((settings) => ({modelId, settings})));
+  if (requestOrFailure.isErr()) return err(requestOrFailure.error);
+  const inputsOrFailure = await inputsFor(config, runContext);
+  if (inputsOrFailure.isErr()) return err(inputsOrFailure.error);
   const result = await runContext.modelInference.execute({
     teamId: runContext.teamId,
-    modelId: modelIdFor(node),
-    inputs,
-    settings: settingsFor(node, runContext),
+    ...requestOrFailure.value,
+    inputs: inputsOrFailure.value,
     transformationBindings: runContext.scope,
   });
-  return ok(executedNode(node, await outputsFor(result, runContext)));
+  return (await modelOutputValuesFor(result, runContext)).map((outputs) => executedNode(node, outputs));
 }
 
-type ModelNodeConfig = Extract<Parameters<NodeExecutor["execute"]>[0]["config"], {
-  primitive: "modelInference" | "textToSpeech" | "speechToText";
-}>;
-
-function modelConfigFor(node: Parameters<NodeExecutor["execute"]>[0]): ModelNodeConfig {
-  if (
-    node.config.primitive !== "modelInference" &&
-    node.config.primitive !== "textToSpeech" &&
-    node.config.primitive !== "speechToText"
-  ) {
-    throw new Error("Modell-Inferenz-Konfiguration fehlt.");
-  }
-  return node.config;
+function modelConfigFor(node: Node): ModelNodeConfig | undefined {
+  const config = node.config;
+  const isModelNode = config.primitive === "modelInference" ||
+    config.primitive === "textToSpeech" || config.primitive === "speechToText";
+  return isModelNode ? config : undefined;
 }
 
-function modelIdFor(node: Parameters<NodeExecutor["execute"]>[0]): string {
-  const config = modelConfigFor(node);
-  if (config.modelId.trim().length === 0) {
-    throw new Error("Für die Modell-Inferenz wurde kein Modell ausgewählt.");
-  }
-  return config.modelId.trim();
+function modelIdFor(config: ModelNodeConfig): Result<string, NodeFailure> {
+  const modelId = config.modelId.trim();
+  return modelId.length === 0 ? err(nodeFailures.settingMissing("model")) : ok(modelId);
 }
 
-async function inputsFor(
-  node: Parameters<NodeExecutor["execute"]>[0],
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-) {
-  const mappings = mappingsFor(node);
-  return Promise.all(mappings.map(async (mapping) => ({
-    name: mapping.modelInputName,
-    ...await modelInputFromWorkflowMapping(
-      mapping,
-      runContext.templateExpressionResolver.resolveValue(mapping.workflowMapping),
-      runContext.teamId,
-      runContext.fileContentReader,
-    ),
-  })));
+async function inputsFor(config: ModelNodeConfig, runContext: RunContext) {
+  const mappingsOrFailure = validMappings(config.inputMappings);
+  if (mappingsOrFailure.isErr()) return err(mappingsOrFailure.error);
+  const inputs = await Promise.all(mappingsOrFailure.value.map(async (mapping) => (await modelInputFromWorkflowMapping(
+    mapping,
+    runContext.templateExpressionResolver.resolveValue(mapping.workflowMapping),
+    runContext.teamId,
+    runContext.fileContentReader,
+  )).map((input) => ({name: mapping.modelInputName, ...input}))));
+  return Result.combine(inputs);
 }
 
-function mappingsFor(node: Parameters<NodeExecutor["execute"]>[0]) {
-  const config = modelConfigFor(node);
+function validMappings(mappings: ModelInferenceInputMapping[]): Result<ModelInferenceInputMapping[], NodeFailure> {
   const names = new Set<string>();
-  for (const mapping of config.inputMappings) {
+  for (const mapping of mappings) {
     if (!mapping.modelInputName.trim() || !mapping.workflowMapping.trim()) {
-      throw new Error("Eine Modelleingabe ist nicht vollständig zugeordnet.");
+      return err(nodeFailures.settingMissing("modelInputMapping"));
     }
-    if (names.has(mapping.modelInputName)) {
-      throw new Error(`Die Modelleingabe ${mapping.modelInputName} ist mehrfach zugeordnet.`);
-    }
+    if (names.has(mapping.modelInputName)) return err(nodeFailures.settingInvalid("modelInputDuplicate", mapping.modelInputName));
     names.add(mapping.modelInputName);
   }
-  return config.inputMappings;
+  return ok(mappings);
 }
 
-function settingsFor(
-  node: Parameters<NodeExecutor["execute"]>[0],
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): Record<string, unknown> {
-  const values = modelConfigFor(node).settings ?? [];
-  const names = new Set<string>();
-  return Object.fromEntries(values.map((parameter) => {
-    if (!parameter.name.trim() || !parameter.valueTemplate.trim() || names.has(parameter.name)) {
-      throw new Error("Ein Modellparameter ist ungültig.");
-    }
-    names.add(parameter.name);
-    return [parameter.name, runContext.templateExpressionResolver.resolveValue(parameter.valueTemplate)];
-  }));
-}
-
-async function outputsFor(
-  result: ModelInferenceResult,
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-) {
-  const outputs = await Promise.all(result.outputs.map(async (output) => [
-    output.workflowOutput.name,
-    await workflowOutputValueFor(output, runContext),
-  ] as const));
-  return Object.fromEntries(outputs);
-}
-
-async function workflowOutputValueFor(
-  output: ModelInferenceResult["outputs"][number],
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): Promise<NodeOutputValue> {
-  if (output.workflowOutput.type === "audio") {
-    return audioOutputValue(output, runContext);
-  }
-  if (output.workflowOutput.type === "image") {
-    return imageOutputValue(output, runContext);
-  }
-  return {type: output.workflowOutput.type, value: workflowValueForModelOutput(output.value)} as NodeOutputValue;
-}
-
-async function audioOutputValue(
-  output: ModelInferenceResult["outputs"][number],
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): Promise<NodeOutputValue> {
-  const audio = audioPayload(output.value);
-  const file = await runContext.teamFileStore.writeTeamFile({
-    teamId: runContext.teamId,
-    content: Uint8Array.from(Buffer.from(audio.dataBase64, "base64")),
-    fileName: audio.fileName ?? "sprach-ausgabe.wav",
-    contentType: audio.contentType,
-    targetFileId: null,
-  });
-  return {type: "audio", value: file};
-}
-
-async function imageOutputValue(
-  output: ModelInferenceResult["outputs"][number],
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): Promise<NodeOutputValue> {
-  const image = filePayload(output.value, "image/", "Bildausgabe des Modells", "Bild-Content-Type");
-  const file = await runContext.teamFileStore.writeTeamFile({
-    teamId: runContext.teamId,
-    content: Uint8Array.from(Buffer.from(image.dataBase64, "base64")),
-    fileName: image.fileName ?? "modell-ausgabe.png",
-    contentType: image.contentType,
-    targetFileId: null,
-  });
-  return {type: "media", value: mediaReferenceFor(file)};
-}
-
-function audioPayload(value: unknown): {dataBase64: string; contentType: string; fileName?: string} {
-  return filePayload(value, "audio/", "Audioausgabe des Modells", "Audio-Content-Type");
-}
-
-/** Datei aus einer Ausgangstransformation (`audio.wav`, `image.encode`): Base64, Typ, Name. */
-function filePayload(
-  value: unknown, contentTypePrefix: string, subject: string, contentTypeLabel: string,
-): {dataBase64: string; contentType: string; fileName?: string} {
-  if (!isRecord(value) || typeof value.dataBase64 !== "string" || typeof value.contentType !== "string") {
-    throw new Error(`Die ${subject} ist ungültig.`);
-  }
-  if (!value.contentType.startsWith(contentTypePrefix)) {
-    throw new Error(`Die ${subject} hat keinen ${contentTypeLabel}.`);
-  }
-  return typeof value.fileName === "string"
-    ? {dataBase64: value.dataBase64, contentType: value.contentType, fileName: value.fileName}
-    : {dataBase64: value.dataBase64, contentType: value.contentType};
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
+function settingsFor(config: ModelNodeConfig, runContext: RunContext): Result<Record<string, unknown>, NodeFailure> {
+  const parameters = config.settings ?? [];
+  const names = parameters.map((parameter) => parameter.name);
+  const invalid = parameters.find((parameter, index) =>
+    !parameter.name.trim() || !parameter.valueTemplate.trim() || names.indexOf(parameter.name) !== index);
+  if (invalid !== undefined) return err(nodeFailures.settingInvalid("modelParameter", invalid.name));
+  return ok(Object.fromEntries(parameters.map((parameter) => [
+    parameter.name, runContext.templateExpressionResolver.resolveValue(parameter.valueTemplate),
+  ])));
 }

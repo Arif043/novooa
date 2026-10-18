@@ -1,4 +1,5 @@
-import {ok} from "neverthrow";
+import {nodeFailures} from "../entities/node-failures.js";
+import {err, ok} from "neverthrow";
 import {
   validateMediaInputDefinition,
 } from "../entities/media-input.js";
@@ -12,7 +13,11 @@ import {
 export const mediaInputNodeExecutor: NodeExecutor = {
   primitive: "mediaInput",
   async execute(node, runContext) {
-    const definition = mediaInputDefinitionFor(node.config);
+    if (node.config.primitive !== "mediaInput") return err(nodeFailures.configurationMissing(node.primitive));
+    const definition = {
+      instruction: node.config.instruction,
+      documentScanEnabled: node.config.documentScanEnabled ?? false,
+    };
     validateMediaInputDefinition(definition);
     return ok(waitingForInteractionNode(
       node,
@@ -24,15 +29,3 @@ export const mediaInputNodeExecutor: NodeExecutor = {
     ));
   },
 };
-
-function mediaInputDefinitionFor(
-  config: Parameters<NodeExecutor["execute"]>[0]["config"],
-) {
-  if (config.primitive !== "mediaInput") {
-    throw new Error("MediaInput-Konfiguration fehlt.");
-  }
-  return {
-    instruction: config.instruction,
-    documentScanEnabled: config.documentScanEnabled ?? false,
-  };
-}

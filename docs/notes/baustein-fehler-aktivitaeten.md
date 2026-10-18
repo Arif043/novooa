@@ -15,13 +15,12 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
   `NodeFailure` mit Code und Feldern, aus einer geworfenen Exception nur mit
   Text.
 - Verschachtelte Pläne (Zweige, Schleifen) laufen über den Port `runGraph`,
-  der Fehler noch per Exception meldet: Die Infrastructure wirft
-  `NestedNodeFailedException` mit der inneren Failure, der Runner gibt Code
-  und Felder an den äußeren Baustein weiter.
-- Geplant: Die übrigen Domain-Executoren werfen an einzelnen Stellen noch
-  `Error`s (z. B. fehlende Konfiguration, nicht verfügbare Dienste); sie
-  sollen ebenfalls `NodeFailure`s mit eigenem Code liefern. Ebenso soll
-  `runGraph` ein `Result` liefern.
+  der `Result<NodeExecutionResult[], NodeFailure>` liefert. Die Failure des
+  inneren Bausteins geht unverändert an den äußeren; eine innere Exception
+  wird zu `unexpected` mit ihrem Text.
+- Der Port `ScriptExecutor` liefert einen Fehler im Script als Failure
+  `scriptFailed` samt Konsole; sie füllt `FailedNode.console`.
+- Alle Codes und Felder: [Fehlercodes der Bausteine](./baustein-fehlercodes.md).
 - `executeTaskGraph`/`resumeTaskGraph` geben
   `ResultAsync<TaskGraphOutput, NodeExecutionFailure>` zurück und werden mit
   `map`/`match` weiterverarbeitet.
@@ -47,3 +46,4 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 - [Script-Ausgabe im Protokoll](./script-ausgabe-protokoll.md)
 - [Run starten](./run-start.md)
 - [Fehlerschichtung eines Modellaufrufs](./fehlerschichtung-modellaufruf.md)
+- [Fehlercodes der Bausteine](./baustein-fehlercodes.md)

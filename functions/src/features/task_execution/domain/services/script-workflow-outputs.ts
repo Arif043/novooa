@@ -1,3 +1,6 @@
+import {err, ok, type Result} from "neverthrow";
+import {type NodeFailure} from "../entities/node-failure.js";
+import {nodeFailures} from "../entities/node-failures.js";
 import {type NodeOutputValue} from "../entities/workflow-value.js";
 
 /** Typen, die ein Script per `workflow_output(name, type, value)` liefern darf. */
@@ -12,46 +15,41 @@ export function isValidScriptWorkflowOutputName(name: unknown): name is string {
   return typeof name === "string" && namePattern.test(name) && name !== "value";
 }
 
-/** Eine Ausgabe ist ungültig; die Meldung ist für den Nutzer bestimmt. */
-export class ScriptWorkflowOutputError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "ScriptWorkflowOutputError";
-  }
-}
-
 /**
  * Prüft die Ausgaben eines Scripts und macht daraus flache Workflow-Ausgabewerte.
  *
  * Der Script-Dienst prüft schon beim Aufruf (mit Zeilenangabe); diese Prüfung ist die
  * maßgebliche, weil die Runtime der Antwort des Dienstes nicht blind vertraut.
  */
-export function workflowOutputsFrom(raw: readonly unknown[]): Record<string, NodeOutputValue> {
+export function workflowOutputsFrom(raw: readonly unknown[]): Result<Record<string, NodeOutputValue>, NodeFailure> {
   const outputs: Record<string, NodeOutputValue> = {};
   for (const entry of raw) {
-    const {name, type, value} = entryFrom(entry);
-    if (name in outputs) throw new ScriptWorkflowOutputError(`workflow_output("${name}"): Der Name ist doppelt vergeben.`);
-    outputs[name] = outputValue(name, type, value);
+    const outputOrFailure = entryFrom(entry).andThen(({name, type, value}) => name in outputs
+      ? err(nodeFailures.scriptOutputInvalid("duplicateName", name))
+      : outputValue(name, type, value).map((output) => ({name, output})));
+    if (outputOrFailure.isErr()) return err(outputOrFailure.error);
+    outputs[outputOrFailure.value.name] = outputOrFailure.value.output;
   }
-  return outputs;
+  return ok(outputs);
 }
 
-function entryFrom(entry: unknown): {name: string; type: ScriptWorkflowOutputType; value: unknown} {
-  if (entry === null || typeof entry !== "object") throw new ScriptWorkflowOutputError("workflow_output: Ungültige Ausgabe.");
+type ScriptWorkflowOutputEntry = {name: string; type: ScriptWorkflowOutputType; value: unknown};
+
+function entryFrom(entry: unknown): Result<ScriptWorkflowOutputEntry, NodeFailure> {
+  if (entry === null || typeof entry !== "object") return err(nodeFailures.scriptOutputInvalid("invalidEntry"));
   const {name, type, value} = entry as Record<string, unknown>;
   if (!isValidScriptWorkflowOutputName(name)) {
-    throw new ScriptWorkflowOutputError(`workflow_output: Der Name ${JSON.stringify(name)} ist ungültig.`);
+    return err(nodeFailures.scriptOutputInvalid("invalidName", JSON.stringify(name) ?? "undefined"));
   }
   if (!scriptWorkflowOutputTypes.includes(type as ScriptWorkflowOutputType)) {
-    throw new ScriptWorkflowOutputError(`workflow_output("${name}"): Unbekannter Typ ${JSON.stringify(type)}.`);
+    return err(nodeFailures.scriptOutputInvalid("unknownType", name, JSON.stringify(type) ?? "undefined"));
   }
-  return {name, type: type as ScriptWorkflowOutputType, value};
+  return ok({name, type: type as ScriptWorkflowOutputType, value});
 }
 
-function outputValue(name: string, type: ScriptWorkflowOutputType, value: unknown): NodeOutputValue {
+function outputValue(name: string, type: ScriptWorkflowOutputType, value: unknown): Result<NodeOutputValue, NodeFailure> {
   const output = typedValue(type, value);
-  if (output === null) throw new ScriptWorkflowOutputError(`workflow_output("${name}"): Der Wert ist kein ${type}.`);
-  return output;
+  return output === null ? err(nodeFailures.scriptOutputInvalid("wrongValueType", name, type)) : ok(output);
 }
 
 function typedValue(type: ScriptWorkflowOutputType, value: unknown): NodeOutputValue | null {

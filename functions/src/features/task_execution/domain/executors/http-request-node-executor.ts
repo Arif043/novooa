@@ -1,5 +1,5 @@
-import {ok} from "neverthrow";
-import {OutboundHttpError} from "../../../connections/domain/repositories/outbound-http-client.js";
+import {err, ok} from "neverthrow";
+import {nodeFailures} from "../entities/node-failures.js";
 import {type NodeOutputValue} from "../entities/workflow-value.js";
 import {type NodeExecutor, executedNode} from "./node-executor.js";
 
@@ -8,16 +8,16 @@ const errorExcerptLength = 300;
 export const httpRequestNodeExecutor: NodeExecutor = {
   primitive: "httpRequest",
   async execute(node, runContext) {
-    if (node.config.primitive !== "httpRequest") throw new Error("Der Baustein ist keine HTTP-Anfrage.");
+    if (node.config.primitive !== "httpRequest") return err(nodeFailures.configurationMissing(node.primitive));
     const config = node.config;
     const client = runContext.outboundHttpClient;
-    if (client === undefined) throw new OutboundHttpError("HTTP-Anfragen sind in dieser Betriebsvariante nicht verfügbar.");
+    if (client === undefined) return err(nodeFailures.capabilityUnavailable("httpRequests"));
     const resolve = (text: string) => runContext.templateExpressionResolver.resolveText(text);
 
     const sendsBody = config.bodyType !== "none" && config.method !== "GET";
     const body = sendsBody ? resolve(config.body) : undefined;
     if (body !== undefined && config.bodyType === "json" && body.trim() !== "" && !isJson(body)) {
-      throw new OutboundHttpError("Der Body ist nach dem Einsetzen der Werte kein gültiges JSON. Prüfe Anführungszeichen in eingesetzten Werten.");
+      return err(nodeFailures.httpBodyInvalidJson());
     }
     const headers = Object.fromEntries(config.headers
       .filter((header) => header.name.trim() !== "")
@@ -39,8 +39,7 @@ export const httpRequestNodeExecutor: NodeExecutor = {
 
     const succeeded = response.status >= 200 && response.status < 300;
     if (!succeeded && config.failOnHttpError) {
-      const excerpt = response.body.trim().slice(0, errorExcerptLength);
-      throw new OutboundHttpError(`Die Anfrage ist mit Status ${response.status} fehlgeschlagen${excerpt === "" ? "." : `: ${excerpt}`}`);
+      return err(nodeFailures.httpStatusFailed(response.status, response.body.trim().slice(0, errorExcerptLength)));
     }
     return ok(executedNode(node, {
       value: {type: "json", value: parsed(response.body)},

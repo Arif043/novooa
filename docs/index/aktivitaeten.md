@@ -5,6 +5,7 @@
 - [Aktivitäten eines Runs](../notes/aktivitaeten-schreiben.md)
 - [Aktivitäten-Seite](../notes/aktivitaeten-seite.md)
 - [Fehlgeschlagene Bausteine in den Aktivitäten](../notes/baustein-fehler-aktivitaeten.md)
+- [Fehlercodes der Bausteine](../notes/baustein-fehlercodes.md)
 - [Script-Ausgabe im Protokoll](../notes/script-ausgabe-protokoll.md)
 - [Anwendungsprotokoll](../notes/anwendungsprotokoll.md)
 - [Aktivitäten über den Run (0014)](../notes/sqlite-aktivitaeten-normalisiert.md)

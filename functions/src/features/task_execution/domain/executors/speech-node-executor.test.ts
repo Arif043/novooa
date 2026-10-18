@@ -62,10 +62,10 @@ test("an empty voice falls back to the provider default", async () => {
 test("fails readably when speech synthesis is not available in the environment", async () => {
   const {context} = runContext([], false);
 
-  await assert.rejects(
-    textToSpeechNodeExecutor.execute(nodeWith({languageModelId: "lm-1", speechText: "Hallo"}), context),
-    /nicht verfügbar/,
-  );
+  const failure = (await textToSpeechNodeExecutor.execute(nodeWith({languageModelId: "lm-1", speechText: "Hallo"}), context))
+    ._unsafeUnwrapErr();
+
+  assert.deepEqual(failure.details, {capability: "speechSynthesis"});
 });
 
 test("without a language model the ONNX inference path is used", async () => {
@@ -113,10 +113,10 @@ test("transcribes the referenced audio file with the chosen language model", asy
 });
 
 test("transcription without an audio reference fails readably", async () => {
-  await assert.rejects(
-    speechToTextNodeExecutor.execute(sttNode({languageModelId: "lm-1"}), sttContext([], "")),
-    /keine Audiodatei zugeordnet/,
-  );
+  const failure = (await speechToTextNodeExecutor.execute(sttNode({languageModelId: "lm-1"}), sttContext([], "")))
+    ._unsafeUnwrapErr();
+
+  assert.deepEqual(failure.details, {setting: "audioInput"});
 });
 
 test("speech to text without a language model keeps the ONNX path", async () => {

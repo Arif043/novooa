@@ -4,7 +4,8 @@ import {type AddressInfo} from "node:net";
 import test from "node:test";
 import {ConnectionNotFoundError} from "../../domain/entities/connection.js";
 import {type ConnectionAuthorizer} from "../../domain/repositories/connection-authorizer.js";
-import {OutboundHttpError, type OutboundHttpRequest} from "../../domain/repositories/outbound-http-client.js";
+import {type OutboundHttpRequest} from "../../domain/repositories/outbound-http-client.js";
+import {OutboundHttpError} from "../outbound-http-error.js";
 import {ConnectionHttpClient} from "./connection-http-client.js";
 
 type Seen = {method: string; url: string; headers: IncomingMessage["headers"]; body: string};

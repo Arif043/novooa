@@ -18,17 +18,16 @@ test("sends an email reply through the connector from its input event", async ()
   }]);
 });
 
-test("rejects an email without an active connector", async () => {
+test("an email without an active connector is a missing mailbox", async () => {
   const sentMessages: SendTaskMessageInput[] = [];
 
-  await assert.rejects(
-    execute({
-      config: {kind: "email", recipient: "kunde@example.com", subject: "Antwort", message: "Danke."},
-      input: {},
-      sentMessages,
-    }),
-    /Verbundenes Postfach fehlt/,
-  );
+  const resultOrFailure = await execute({
+    config: {kind: "email", recipient: "kunde@example.com", subject: "Antwort", message: "Danke."},
+    input: {},
+    sentMessages,
+  });
+
+  assert.deepEqual(resultOrFailure._unsafeUnwrapErr().details, {setting: "mailbox"});
 
   assert.deepEqual(sentMessages, []);
 });

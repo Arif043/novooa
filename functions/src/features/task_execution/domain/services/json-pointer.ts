@@ -1,9 +1,11 @@
-export function valueAtJsonPointer(value: unknown, pointer: string): unknown {
-  if (pointer === "") return value;
-  if (!pointer.startsWith("/")) {
-    throw new Error("Der JSON-Pointer muss mit / beginnen.");
-  }
-  return pointer.slice(1).split("/").reduce(pointerSegment, value);
+import {err, ok, type Result} from "neverthrow";
+import {type NodeFailure} from "../entities/node-failure.js";
+import {nodeFailures} from "../entities/node-failures.js";
+
+export function valueAtJsonPointer(value: unknown, pointer: string): Result<unknown, NodeFailure> {
+  if (pointer === "") return ok(value);
+  if (!pointer.startsWith("/")) return err(nodeFailures.settingInvalid("jsonPointer", pointer));
+  return ok(pointer.slice(1).split("/").reduce(pointerSegment, value));
 }
 
 function pointerSegment(value: unknown, encodedSegment: string): unknown {

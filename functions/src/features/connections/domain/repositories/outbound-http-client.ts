@@ -17,15 +17,7 @@ export type OutboundHttpResponse = {
   body: string;
 };
 
-/** Die Anfrage kam nicht zustande (Netzwerk, Zeitlimit, zu große Antwort, ungültige Eingabe); die Meldung ist deutsch und ohne Geheimnisse. */
-export class OutboundHttpError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "OutboundHttpError";
-  }
-}
-
 export interface OutboundHttpClient {
-  /** Wirft `OutboundHttpError`, `ConnectionNotFoundError` oder `ConnectionAuthError`. HTTP-Fehlerstatus sind keine Fehler, sondern Antworten. */
+  /** Kommt die Anfrage nicht zustande, wirft die Infrastruktur ihre Exception. HTTP-Fehlerstatus sind keine Fehler, sondern Antworten. */
   send(request: OutboundHttpRequest): Promise<OutboundHttpResponse>;
 }

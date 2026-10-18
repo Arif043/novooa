@@ -30,7 +30,7 @@ import {
   validateGraph,
 } from "../../../domain/services/task-graph-utils.js";
 import {type NodeExecutionFailure} from "../../../domain/entities/node-execution-failure.js";
-import {nestedFailureCause} from "./nested-node-failed-exception.js";
+import {nestedNodeFailureOf} from "./nested-node-failure.js";
 import {err, ok, type Result, ResultAsync} from "neverthrow";
 import {formatTaskFinished, formatTaskStarted} from "./structured-logger.js";
 import {
@@ -188,11 +188,7 @@ function embeddedGraphRunner(
     const stepScope = containerStep?.key.nested(callIndex++);
     const initialState = {nodeResults: [], variables, remainingNodeIds: embeddedGraph.nodes.map((item) => item.id), skippedNodeIds: []};
     const stateOrFailure = await runNodes(ai, input, runtime, {initialState, scope: embeddedScope, graph: embeddedGraph, stepScope});
-    // Der Port `runGraph` meldet einen gescheiterten verschachtelten Plan noch per Exception; der
-    // äußere Baustein scheitert dann. Eine Failure reist in `NestedNodeFailedException` mit.
-    return stateOrFailure.match(
-      (state) => state.nodeResults,
-      (failure) => { throw nestedFailureCause(failure.cause); },
-    );
+    // Der äußere Baustein bekommt die Failure des inneren; eine innere Exception wird zu `unexpected`.
+    return stateOrFailure.map((state) => state.nodeResults).mapErr(nestedNodeFailureOf);
   };
 }

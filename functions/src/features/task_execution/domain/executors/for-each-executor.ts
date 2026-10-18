@@ -1,3 +1,6 @@
+import {err, ok, type Result} from "neverthrow";
+import {type NodeFailure} from "../entities/node-failure.js";
+import {nodeFailures} from "../entities/node-failures.js";
 import {
   type ForEachNodeConfig,
   type NodeExecutionResult,
@@ -13,45 +16,34 @@ export type ForEachExecutionRequest = {
   runGraph: (
     graph: WorkflowGraph,
     scope: WorkflowExecutionScope,
-  ) => Promise<NodeExecutionResult[]>;
+  ) => Promise<Result<NodeExecutionResult[], NodeFailure>>;
 };
 
 export async function executeForEach(
   request: ForEachExecutionRequest,
-): Promise<unknown[]> {
-  const items = itemsFor(request.items, request.config.itemsPointer);
-  validateGraph(request.config.graph.nodes);
+): Promise<Result<unknown[], NodeFailure>> {
+  const itemsOrFailure = itemsFor(request.items, request.config.itemsPointer)
+    .andThen((items) => supportedGraph(request.config.graph.nodes).map(() => items));
+  if (itemsOrFailure.isErr()) return err(itemsOrFailure.error);
   const results: unknown[] = [];
-  for (const [index, item] of items.entries()) {
-    try {
-      const graphResults = await request.runGraph(
-        graphFor(request.config.graph),
-        {iteration: {index, value: item}},
-      );
-      results.push(outputsOf(graphResults, request.config.graph.nodes));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unbekannter Fehler";
-      throw new Error(`Iteration ${index} ist fehlgeschlagen: ${message}`);
-    }
+  for (const [index, item] of itemsOrFailure.value.entries()) {
+    const graphResults = await request.runGraph(graphFor(request.config.graph), {iteration: {index, value: item}});
+    if (graphResults.isErr()) return err(graphResults.error.withDetail("iteration", String(index)));
+    results.push(outputsOf(graphResults.value, request.config.graph.nodes));
   }
-  return results;
+  return ok(results);
 }
 
-function itemsFor(value: unknown, pointer: string): unknown[] {
-  const items = valueAtJsonPointer(value, pointer);
-  if (!Array.isArray(items)) {
-    throw new Error("Der JSON-Pointer verweist nicht auf ein Array.");
-  }
-  return items;
+function itemsFor(value: unknown, pointer: string): Result<unknown[], NodeFailure> {
+  return valueAtJsonPointer(value, pointer).andThen((items) => Array.isArray(items)
+    ? ok(items)
+    : err(nodeFailures.valueTypeMismatch("forEachItems", "list")));
 }
 
-function validateGraph(nodes: readonly {primitive: string}[]): void {
-  if (nodes.some((node) => node.primitive === "forEach")) {
-    throw new Error("Verschachtelte Für-jedes-Element-Bausteine werden noch nicht unterstützt.");
-  }
-  if (nodes.some(isPausingNode)) {
-    throw new Error("Pausierende Bausteine sind im Unterplan nicht erlaubt.");
-  }
+function supportedGraph(nodes: readonly {primitive: string}[]): Result<void, NodeFailure> {
+  if (nodes.some((node) => node.primitive === "forEach")) return err(nodeFailures.forEachUnsupported("nestedForEach"));
+  if (nodes.some(isPausingNode)) return err(nodeFailures.forEachUnsupported("pausingBlock"));
+  return ok(undefined);
 }
 
 function isPausingNode(node: {primitive: string}): boolean {

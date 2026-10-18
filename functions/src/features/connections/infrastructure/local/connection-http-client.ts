@@ -1,6 +1,7 @@
 import {ConnectionAuthError, ConnectionNotFoundError} from "../../domain/entities/connection.js";
 import {type ConnectionAuthorizer} from "../../domain/repositories/connection-authorizer.js";
-import {OutboundHttpError, type OutboundHttpClient, type OutboundHttpRequest, type OutboundHttpResponse} from "../../domain/repositories/outbound-http-client.js";
+import {type OutboundHttpClient, type OutboundHttpRequest, type OutboundHttpResponse} from "../../domain/repositories/outbound-http-client.js";
+import {OutboundHttpError} from "../outbound-http-error.js";
 
 export const maximumResponseBytes = 5 * 1024 * 1024;
 const maximumRedirects = 5;

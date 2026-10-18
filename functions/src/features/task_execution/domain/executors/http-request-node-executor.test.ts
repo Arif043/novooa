@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {OutboundHttpError, type OutboundHttpClient, type OutboundHttpRequest, type OutboundHttpResponse} from "../../../connections/domain/repositories/outbound-http-client.js";
+import {type OutboundHttpClient, type OutboundHttpRequest, type OutboundHttpResponse} from "../../../connections/domain/repositories/outbound-http-client.js";
 import {type HttpRequestNodeConfig} from "../entities/task.js";
 import {type TaskRunContext} from "./node-executor.js";
 import {httpRequestNodeExecutor} from "./http-request-node-executor.js";
@@ -64,8 +64,11 @@ test("Textantworten bleiben Text, leere Antworten sind null; GET sendet nie eine
 test("ein Fehlerstatus bricht standardmäßig ab, mit Statuscode und Auszug der Antwort", async () => {
   const {client} = clientReturning({status: 422, body: `{"errors":"${"x".repeat(500)}"}`});
 
-  await assert.rejects(() => httpRequestNodeExecutor.execute(nodeOf(config()), contextWith(client)),
-    (error: unknown) => error instanceof OutboundHttpError && /Status 422/.test(error.message) && error.message.length < 400);
+  const failure = (await httpRequestNodeExecutor.execute(nodeOf(config()), contextWith(client)))._unsafeUnwrapErr();
+
+  assert.equal(failure.code, "httpStatusFailed");
+  assert.equal(failure.details.status, "422");
+  assert.ok(failure.details.excerpt.length <= 300);
 });
 
 test("ohne Abbruch bei Fehlerstatus liefert der Baustein Status und ok=false für Verzweigungen", async () => {
@@ -80,10 +83,12 @@ test("ohne Abbruch bei Fehlerstatus liefert der Baustein Status und ok=false fü
 
 test("ungültiges JSON nach dem Einsetzen, fehlender Dienst und leere Verbindungs-ID", async () => {
   const {client, sent} = clientReturning();
-  await assert.rejects(() => httpRequestNodeExecutor.execute(nodeOf(config({method: "POST", bodyType: "json", body: '{"a": {{kunde}}}'})), contextWith(client)), /kein gültiges JSON/);
+  const invalidJson = await httpRequestNodeExecutor.execute(nodeOf(config({method: "POST", bodyType: "json", body: '{"a": {{kunde}}}'})), contextWith(client));
+  assert.equal(invalidJson._unsafeUnwrapErr().code, "httpBodyInvalidJson");
   assert.equal(sent.length, 0, "es wird nichts gesendet");
 
-  await assert.rejects(() => httpRequestNodeExecutor.execute(nodeOf(config()), contextWith(undefined)), /nicht verfügbar/);
+  const unavailable = await httpRequestNodeExecutor.execute(nodeOf(config()), contextWith(undefined));
+  assert.deepEqual(unavailable._unsafeUnwrapErr().details, {capability: "httpRequests"});
 
   succeeded(await httpRequestNodeExecutor.execute(nodeOf(config({connectionId: ""})), contextWith(client)));
   assert.equal(sent[0].connectionId, undefined);

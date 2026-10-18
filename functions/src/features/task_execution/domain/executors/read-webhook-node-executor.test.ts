@@ -30,9 +30,8 @@ test("ein Textinhalt bleibt Text und wird nicht als JSON in Anführungszeichen a
 });
 
 test("ein Lauf ohne Webhook meldet das verständlich", async () => {
-  await assert.rejects(readWebhookNodeExecutor.execute(node, contextWith({})), /nicht durch einen Webhook gestartet/);
-  await assert.rejects(
-    readWebhookNodeExecutor.execute(node, contextWith({event: {type: "emailReceived"}})),
-    /nicht durch einen Webhook gestartet/,
-  );
+  for (const input of [{}, {event: {type: "emailReceived"}}]) {
+    const failure = (await readWebhookNodeExecutor.execute(node, contextWith(input)))._unsafeUnwrapErr();
+    assert.deepEqual(failure.details, {trigger: "webhook"});
+  }
 });

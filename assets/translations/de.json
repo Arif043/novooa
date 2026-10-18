@@ -673,7 +673,20 @@
       "requestRejected": "Der Modellanbieter hat die Anfrage abgelehnt. Die technischen Details nennen den Grund.",
       "timedOut": "Das Modell hat nicht rechtzeitig geantwortet. Versuche es erneut oder wähle ein schnelleres Modell.",
       "capabilityMissing": "Das gewählte Sprachmodell kann diese Ein- oder Ausgabe nicht verarbeiten. Wähle ein passendes Modell.",
-      "conditionOperandMismatch": "Der Vergleich „{operator}“ braucht {expected}, erhalten: „{received}“. Prüfe den Wert oder wähle einen passenden Vergleich."
+      "conditionOperandMismatch": "Der Vergleich „{operator}“ braucht {expected}, erhalten: „{received}“. Prüfe den Wert oder wähle einen passenden Vergleich.",
+      "configurationMissing": "Die Konfiguration des Bausteins passt nicht zu seinem Typ ({primitive}). Lege den Baustein neu an.",
+      "settingMissing": "Im Baustein fehlt eine Angabe: {setting}.",
+      "settingInvalid": "Eine Angabe im Baustein ist ungültig: {setting}{name}.",
+      "valueTypeMismatch": "Ein Wert für {target} hat den falschen Typ: erwartet wird {expected}{name}.",
+      "tensorShapeMismatch": "Die Werte für die Modelleingabe „{name}“ passen nicht zur Tensor-Form.",
+      "modelOutputInvalid": "Das Modell hat eine ungültige {output} geliefert.",
+      "triggerMismatch": "Dieser Lauf wurde nicht durch {trigger} gestartet; der Baustein braucht diesen Auslöser.",
+      "capabilityUnavailable": "{capability} ist in dieser Umgebung nicht verfügbar.",
+      "httpBodyInvalidJson": "Der Body ist nach dem Einsetzen der Werte kein gültiges JSON. Prüfe Anführungszeichen in eingesetzten Werten.",
+      "httpStatusFailed": "Die HTTP-Anfrage ist mit Status {status} fehlgeschlagen.",
+      "forEachUnsupported": "„Für jedes Element“ unterstützt keine {reason}.",
+      "scriptFailed": "Das Script ist mit einem Fehler beendet worden. Meldung und Ausgabe stehen darunter.",
+      "scriptOutputInvalid": "Eine workflow_output-Ausgabe ist ungültig: {reason}{name}."
     },
     "operand_kinds": {
       "number": "eine Zahl",
@@ -681,6 +694,71 @@
       "boolean": "einen Wahrheitswert",
       "text": "einen Text",
       "file": "eine Datei"
+    },
+    "name_suffix": " („{name}“)",
+    "iteration_suffix": " (Durchlauf {number})",
+    "settings": {
+      "model": "Modell",
+      "modelInputMapping": "Zuordnung der Modelleingaben",
+      "inputFile": "Eingabedatei",
+      "outputFile": "Ausgabedatei",
+      "audioInput": "Audiodatei",
+      "recipient": "Empfänger",
+      "messageBody": "Nachricht",
+      "notificationText": "Text der Benachrichtigung",
+      "mailbox": "verbundenes Postfach",
+      "modelInputDuplicate": "Modelleingabe mehrfach zugeordnet",
+      "modelParameter": "Modellparameter",
+      "documentFilterValue": "Filterwert",
+      "documentFieldValue": "Feldwert",
+      "documentFieldDuplicate": "Feld fehlt oder ist mehrfach gesetzt",
+      "jsonPointer": "JSON-Pointer"
+    },
+    "targets": {
+      "modelInput": "eine Modelleingabe",
+      "documentFilter": "eine Feldbedingung",
+      "forEachItems": "die Elemente"
+    },
+    "expected": {
+      "image": "ein Bild",
+      "audio": "eine Audiodatei",
+      "file": "eine Datei",
+      "number": "eine Zahl",
+      "boolean": "ein Wahrheitswert",
+      "json": "gültiges JSON",
+      "textList": "Text oder eine Liste von Texten",
+      "numberList": "eine Zahl oder eine Liste von Zahlen",
+      "list": "eine Liste",
+      "tensor": "ein Tensor"
+    },
+    "outputs": {
+      "image": "Bildausgabe",
+      "audio": "Audioausgabe"
+    },
+    "triggers": {
+      "email": "eine E-Mail",
+      "whatsapp": "eine WhatsApp-Nachricht",
+      "sms": "eine SMS",
+      "telegram": "eine Telegram-Nachricht",
+      "instagram": "eine Instagram-Nachricht",
+      "webhook": "einen Webhook"
+    },
+    "capabilities": {
+      "speechSynthesis": "Sprachausgabe über Sprachmodelle",
+      "speechTranscription": "Transkription über Sprachmodelle",
+      "httpRequests": "HTTP-Anfragen",
+      "float16Tensors": "Rechnen mit float16-Tensoren"
+    },
+    "for_each_reasons": {
+      "nestedForEach": "verschachtelten „Für jedes Element“-Bausteine",
+      "pausingBlock": "pausierenden Bausteine (Freigabe, Formular, Bild)"
+    },
+    "script_output_reasons": {
+      "duplicateName": "Name doppelt vergeben",
+      "invalidEntry": "keine gültige Ausgabe",
+      "invalidName": "ungültiger Name",
+      "unknownType": "unbekannter Typ",
+      "wrongValueType": "Wert passt nicht zum Typ"
     }
   }
 }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {OutboundHttpError, type OutboundHttpClient, type OutboundHttpRequest, type OutboundHttpResponse} from "../../../connections/domain/repositories/outbound-http-client.js";
+import {type OutboundHttpClient, type OutboundHttpRequest, type OutboundHttpResponse} from "../../../connections/domain/repositories/outbound-http-client.js";
+import {OutboundHttpError} from "../../../connections/infrastructure/outbound-http-error.js";
 import {ShopwareError} from "../domain/shopware-error.js";
 import {ShopwareClient} from "./shopware-client.js";
 

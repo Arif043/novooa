@@ -1,4 +1,5 @@
-import {ok} from "neverthrow";
+import {err} from "neverthrow";
+import {nodeFailures} from "../entities/node-failures.js";
 import {executeForEach} from "./for-each-executor.js";
 import {
   type NodeExecutor,
@@ -8,8 +9,9 @@ import {
 export const forEachNodeExecutor: NodeExecutor = {
   primitive: "forEach",
   async execute(node, runContext) {
-    const config = configFor(node);
-    const results = await executeForEach({
+    if (node.config.primitive !== "forEach") return err(nodeFailures.configurationMissing(node.primitive));
+    const config = node.config;
+    const resultsOrFailure = await executeForEach({
       config,
       items: runContext.templateExpressionResolver.resolveValue(
         config.itemsTemplate ?? "",
@@ -20,13 +22,7 @@ export const forEachNodeExecutor: NodeExecutor = {
         scope,
       ),
     });
-    return ok(executedNode(node, {value: {type: "json", value: results}}));
+    return resultsOrFailure.map((results) => executedNode(node, {value: {type: "json", value: results}}));
   },
 };
 
-function configFor(node: Parameters<NodeExecutor["execute"]>[0]) {
-  if (node.config.primitive !== "forEach") {
-    throw new Error("Für-jedes-Element-Konfiguration fehlt.");
-  }
-  return node.config;
-}

@@ -1,4 +1,5 @@
-import {ok} from "neverthrow";
+import {err, ok} from "neverthrow";
+import {nodeFailures} from "../entities/node-failures.js";
 import {
   executedNode,
   type NodeExecutor,
@@ -41,7 +42,7 @@ export function createNotificationSendNodeExecutor(
     async execute(node, runContext) {
       const config = configFrom(node.config);
       const body = runContext.templateExpressionResolver.resolveText(config.message).trim();
-      if (!body) throw new Error("Push-Benachrichtigung senden: Text fehlt.");
+      if (!body) return err(nodeFailures.settingMissing("notificationText"));
       const title = titleFrom(config.title, runContext);
       await sendNotification(runContext, title, body, observer);
       // Reiner Seiteneffekt ohne fachlichen Rückgabewert: Der gesendete Text

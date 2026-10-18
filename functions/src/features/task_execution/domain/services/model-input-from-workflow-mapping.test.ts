@@ -9,7 +9,7 @@ function mapping(dataType: string, shape: (number | "dynamic")[]) {
 }
 
 test("builds a string tensor from a nested list of texts", async () => {
-  const input = await modelInputFromWorkflowMapping(mapping("string", ["dynamic", 1]), [["DE"], ["AT"]], "team-1", reader);
+  const input = (await modelInputFromWorkflowMapping(mapping("string", ["dynamic", 1]), [["DE"], ["AT"]], "team-1", reader))._unsafeUnwrap();
 
   assert.equal(input.type, "tensor");
   if (input.type !== "tensor") return;
@@ -17,13 +17,16 @@ test("builds a string tensor from a nested list of texts", async () => {
   assert.deepEqual(JSON.parse(new TextDecoder().decode(input.tensor.bytes)), ["DE", "AT"]);
 });
 
-test("rejects numbers for a string tensor and texts for a number tensor", async () => {
-  await assert.rejects(modelInputFromWorkflowMapping(mapping("string", [1]), [1], "team-1", reader), /erwartet Texte/);
-  await assert.rejects(modelInputFromWorkflowMapping(mapping("float32", [1]), ["a"], "team-1", reader), /erwartet Zahlen/);
+test("numbers for a string tensor and texts for a number tensor are failures", async () => {
+  const texts = await modelInputFromWorkflowMapping(mapping("string", [1]), [1], "team-1", reader);
+  const numbers = await modelInputFromWorkflowMapping(mapping("float32", [1]), ["a"], "team-1", reader);
+
+  assert.deepEqual(texts._unsafeUnwrapErr().details, {target: "modelInput", expected: "textList", name: "eingabe"});
+  assert.deepEqual(numbers._unsafeUnwrapErr().details, {target: "modelInput", expected: "numberList", name: "eingabe"});
 });
 
 test("builds a float16 tensor with two bytes per value", async () => {
-  const input = await modelInputFromWorkflowMapping(mapping("float16", [2]), [0.5, -2], "team-1", reader);
+  const input = (await modelInputFromWorkflowMapping(mapping("float16", [2]), [0.5, -2], "team-1", reader))._unsafeUnwrap();
 
   assert.equal(input.type, "tensor");
   if (input.type !== "tensor") return;

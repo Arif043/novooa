@@ -673,7 +673,20 @@
       "requestRejected": "The model provider rejected the request. The technical details give the reason.",
       "timedOut": "The model did not answer in time. Try again or choose a faster model.",
       "capabilityMissing": "The selected language model cannot handle this input or output. Choose a suitable model.",
-      "conditionOperandMismatch": "The comparison “{operator}” needs {expected} but received “{received}”. Check the value or choose a matching comparison."
+      "conditionOperandMismatch": "The comparison “{operator}” needs {expected} but received “{received}”. Check the value or choose a matching comparison.",
+      "configurationMissing": "The block's configuration does not match its type ({primitive}). Create the block again.",
+      "settingMissing": "The block is missing a setting: {setting}.",
+      "settingInvalid": "A setting of the block is invalid: {setting}{name}.",
+      "valueTypeMismatch": "A value for {target} has the wrong type: expected {expected}{name}.",
+      "tensorShapeMismatch": "The values for the model input “{name}” do not fit the tensor shape.",
+      "modelOutputInvalid": "The model returned an invalid {output}.",
+      "triggerMismatch": "This run was not started by {trigger}; the block needs that trigger.",
+      "capabilityUnavailable": "{capability} is not available in this environment.",
+      "httpBodyInvalidJson": "After inserting the values, the body is not valid JSON. Check quotes in inserted values.",
+      "httpStatusFailed": "The HTTP request failed with status {status}.",
+      "forEachUnsupported": "“For each item” does not support {reason}.",
+      "scriptFailed": "The script ended with an error. The message and output are shown below.",
+      "scriptOutputInvalid": "A workflow_output is invalid: {reason}{name}."
     },
     "operand_kinds": {
       "number": "a number",
@@ -681,6 +694,71 @@
       "boolean": "a true/false value",
       "text": "text",
       "file": "a file"
+    },
+    "name_suffix": " (“{name}”)",
+    "iteration_suffix": " (iteration {number})",
+    "settings": {
+      "model": "model",
+      "modelInputMapping": "model input mapping",
+      "inputFile": "input file",
+      "outputFile": "output file",
+      "audioInput": "audio file",
+      "recipient": "recipient",
+      "messageBody": "message",
+      "notificationText": "notification text",
+      "mailbox": "connected mailbox",
+      "modelInputDuplicate": "model input mapped more than once",
+      "modelParameter": "model parameter",
+      "documentFilterValue": "filter value",
+      "documentFieldValue": "field value",
+      "documentFieldDuplicate": "field missing or set more than once",
+      "jsonPointer": "JSON pointer"
+    },
+    "targets": {
+      "modelInput": "a model input",
+      "documentFilter": "a field condition",
+      "forEachItems": "the items"
+    },
+    "expected": {
+      "image": "an image",
+      "audio": "an audio file",
+      "file": "a file",
+      "number": "a number",
+      "boolean": "a true/false value",
+      "json": "valid JSON",
+      "textList": "text or a list of texts",
+      "numberList": "a number or a list of numbers",
+      "list": "a list",
+      "tensor": "a tensor"
+    },
+    "outputs": {
+      "image": "image output",
+      "audio": "audio output"
+    },
+    "triggers": {
+      "email": "an email",
+      "whatsapp": "a WhatsApp message",
+      "sms": "an SMS",
+      "telegram": "a Telegram message",
+      "instagram": "an Instagram message",
+      "webhook": "a webhook"
+    },
+    "capabilities": {
+      "speechSynthesis": "Speech output via language models",
+      "speechTranscription": "Transcription via language models",
+      "httpRequests": "HTTP requests",
+      "float16Tensors": "Computing with float16 tensors"
+    },
+    "for_each_reasons": {
+      "nestedForEach": "nested “For each item” blocks",
+      "pausingBlock": "pausing blocks (approval, form, image)"
+    },
+    "script_output_reasons": {
+      "duplicateName": "name used twice",
+      "invalidEntry": "not a valid output",
+      "invalidName": "invalid name",
+      "unknownType": "unknown type",
+      "wrongValueType": "value does not match the type"
     }
   }
 }

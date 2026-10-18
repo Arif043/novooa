@@ -45,10 +45,9 @@ test("schlägt fehl, wenn der aufgelöste Text leer ist", async () => {
   const sender = new RecordingTeamNotificationSender();
   const executor = createNotificationSendNodeExecutor();
 
-  await assert.rejects(
-    () => executor.execute(notificationNode({message: "   "}), runContext(sender)),
-    /Text fehlt/,
-  );
+  const resultOrFailure = await executor.execute(notificationNode({message: "   "}), runContext(sender));
+
+  assert.deepEqual(resultOrFailure._unsafeUnwrapErr().details, {setting: "notificationText"});
   assert.equal(sender.calls.length, 0);
 });
 

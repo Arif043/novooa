@@ -673,7 +673,20 @@
       "requestRejected": "Model sağlayıcısı isteği reddetti. Nedeni teknik ayrıntılarda yer alıyor.",
       "timedOut": "Model zamanında yanıt vermedi. Tekrar deneyin veya daha hızlı bir model seçin.",
       "capabilityMissing": "Seçilen dil modeli bu girişi veya çıkışı işleyemiyor. Uygun bir model seçin.",
-      "conditionOperandMismatch": "“{operator}” karşılaştırması {expected} gerektirir, alınan: “{received}”. Değeri kontrol edin veya uygun bir karşılaştırma seçin."
+      "conditionOperandMismatch": "“{operator}” karşılaştırması {expected} gerektirir, alınan: “{received}”. Değeri kontrol edin veya uygun bir karşılaştırma seçin.",
+      "configurationMissing": "Bloğun yapılandırması türüyle eşleşmiyor ({primitive}). Bloğu yeniden oluşturun.",
+      "settingMissing": "Blokta bir ayar eksik: {setting}.",
+      "settingInvalid": "Bloğun bir ayarı geçersiz: {setting}{name}.",
+      "valueTypeMismatch": "{target} için bir değerin türü yanlış: beklenen {expected}{name}.",
+      "tensorShapeMismatch": "“{name}” model girdisinin değerleri tensör biçimine uymuyor.",
+      "modelOutputInvalid": "Model geçersiz bir {output} döndürdü.",
+      "triggerMismatch": "Bu çalıştırma {trigger} ile başlatılmadı; blok bu tetikleyiciye ihtiyaç duyar.",
+      "capabilityUnavailable": "{capability} bu ortamda kullanılamıyor.",
+      "httpBodyInvalidJson": "Değerler eklendikten sonra gövde geçerli bir JSON değil. Eklenen değerlerdeki tırnak işaretlerini kontrol edin.",
+      "httpStatusFailed": "HTTP isteği {status} durum koduyla başarısız oldu.",
+      "forEachUnsupported": "“Her öğe için” {reason} desteklemez.",
+      "scriptFailed": "Betik bir hatayla sona erdi. Mesaj ve çıktı aşağıda.",
+      "scriptOutputInvalid": "Bir workflow_output geçersiz: {reason}{name}."
     },
     "operand_kinds": {
       "number": "bir sayı",
@@ -681,6 +694,71 @@
       "boolean": "doğru/yanlış değeri",
       "text": "bir metin",
       "file": "bir dosya"
+    },
+    "name_suffix": " (“{name}”)",
+    "iteration_suffix": " ({number}. tur)",
+    "settings": {
+      "model": "model",
+      "modelInputMapping": "model girdisi eşlemesi",
+      "inputFile": "girdi dosyası",
+      "outputFile": "çıktı dosyası",
+      "audioInput": "ses dosyası",
+      "recipient": "alıcı",
+      "messageBody": "mesaj",
+      "notificationText": "bildirim metni",
+      "mailbox": "bağlı posta kutusu",
+      "modelInputDuplicate": "model girdisi birden fazla eşlendi",
+      "modelParameter": "model parametresi",
+      "documentFilterValue": "filtre değeri",
+      "documentFieldValue": "alan değeri",
+      "documentFieldDuplicate": "alan eksik veya birden fazla ayarlandı",
+      "jsonPointer": "JSON işaretçisi"
+    },
+    "targets": {
+      "modelInput": "bir model girdisi",
+      "documentFilter": "bir alan koşulu",
+      "forEachItems": "öğeler"
+    },
+    "expected": {
+      "image": "bir görsel",
+      "audio": "bir ses dosyası",
+      "file": "bir dosya",
+      "number": "bir sayı",
+      "boolean": "doğru/yanlış değeri",
+      "json": "geçerli JSON",
+      "textList": "metin veya metin listesi",
+      "numberList": "sayı veya sayı listesi",
+      "list": "bir liste",
+      "tensor": "bir tensör"
+    },
+    "outputs": {
+      "image": "görsel çıktısı",
+      "audio": "ses çıktısı"
+    },
+    "triggers": {
+      "email": "bir e-posta",
+      "whatsapp": "bir WhatsApp mesajı",
+      "sms": "bir SMS",
+      "telegram": "bir Telegram mesajı",
+      "instagram": "bir Instagram mesajı",
+      "webhook": "bir webhook"
+    },
+    "capabilities": {
+      "speechSynthesis": "Dil modelleriyle sesli çıktı",
+      "speechTranscription": "Dil modelleriyle transkripsiyon",
+      "httpRequests": "HTTP istekleri",
+      "float16Tensors": "float16 tensörleriyle hesaplama"
+    },
+    "for_each_reasons": {
+      "nestedForEach": "iç içe “Her öğe için” bloklarını",
+      "pausingBlock": "duraklayan blokları (onay, form, görsel)"
+    },
+    "script_output_reasons": {
+      "duplicateName": "ad iki kez kullanıldı",
+      "invalidEntry": "geçerli bir çıktı değil",
+      "invalidName": "geçersiz ad",
+      "unknownType": "bilinmeyen tür",
+      "wrongValueType": "değer türe uymuyor"
     }
   }
 }

@@ -12,7 +12,23 @@ enum ActivityFailureCode {
 
   /// Ein Wert passt nicht zum Vergleich einer Bedingung; die Felder
   /// `operator`, `expected` und `received` stehen in den Details.
-  conditionOperandMismatch;
+  conditionOperandMismatch,
+
+  // Geschäftsfehler der Bausteine (`node-failures.ts` im Backend); ihre
+  // Felder stehen in den Details.
+  configurationMissing,
+  settingMissing,
+  settingInvalid,
+  valueTypeMismatch,
+  tensorShapeMismatch,
+  modelOutputInvalid,
+  triggerMismatch,
+  capabilityUnavailable,
+  httpBodyInvalidJson,
+  httpStatusFailed,
+  forEachUnsupported,
+  scriptFailed,
+  scriptOutputInvalid;
 
   /// Unbekannte Codes (auch `unknown`) ergeben `null`: dann zählt nur der
   /// gespeicherte Text.

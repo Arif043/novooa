@@ -1,4 +1,5 @@
-import {ok} from "neverthrow";
+import {nodeFailures} from "../entities/node-failures.js";
+import {err, ok} from "neverthrow";
 import {type DocumentRecord} from "../../../data/domain/entities/document.js";
 import {type WorkflowTable} from "../entities/workflow-value.js";
 import {
@@ -12,7 +13,8 @@ const maxRecords = 500;
 export const tableFromCollectionNodeExecutor: NodeExecutor = {
   primitive: "tableFromCollection",
   async execute(node, runContext) {
-    const config = configFor(node);
+    if (node.config.primitive !== "tableFromCollection") return err(nodeFailures.configurationMissing(node.primitive));
+    const config = node.config;
     const collectionName = runContext.templateExpressionResolver
       .resolveText(config.collectionName)
       .trim();
@@ -24,13 +26,6 @@ export const tableFromCollectionNodeExecutor: NodeExecutor = {
     }));
   },
 };
-
-function configFor(node: Parameters<NodeExecutor["execute"]>[0]) {
-  if (node.config.primitive !== "tableFromCollection") {
-    throw new Error("Sammlung als Tabelle: Die Konfiguration fehlt.");
-  }
-  return node.config;
-}
 
 async function recordsFor(
   collectionName: string,

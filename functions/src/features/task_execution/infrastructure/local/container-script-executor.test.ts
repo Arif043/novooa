@@ -3,7 +3,7 @@ import {mkdtemp, rm, writeFile} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test, {afterEach} from "node:test";
-import {ScriptExecutionError, type ScriptWorkspace} from "../../domain/entities/script-execution.js";
+import {type ScriptWorkspace} from "../../domain/entities/script-execution.js";
 import {
   createContainerScriptExecutorFactory,
   maximumAttachmentBytes,
@@ -45,7 +45,7 @@ test("schickt Script, Eingabe und Variablen an /run und liefert die Antwort des 
     outputDefined: true, output: "ERGEBNIS", printed: "hallo\n", stderr: "warnung\n", variables: {zaehler: 2}, workflowOutputs,
   });
 
-  const result = await executor().execute(request);
+  const result = (await executor().execute(request))._unsafeUnwrap();
 
   assert.deepEqual(result, {
     output: "ERGEBNIS", printed: "hallo\n", errorOutput: "warnung\n", variables: {zaehler: 2}, workflowOutputs,
@@ -73,19 +73,17 @@ test("angehängte Dateien gehen als rohe Bytes mit, ohne Kodierung", async () =>
 test("setzt das Script keinen output, bleibt die Eingabe", async () => {
   respondWith(200, {outputDefined: false, output: null, printed: "", variables: {}});
 
-  assert.equal((await executor().execute(request)).output, "eingabe");
+  assert.equal((await executor().execute(request))._unsafeUnwrap().output, "eingabe");
 });
 
 test("ein gescheitertes Script liefert die lesbare Meldung des Dienstes samt Ausgabe", async () => {
   respondWith(422, {error: "Zeile 2: ZeroDivisionError: division by zero", printed: "vorher\n", stderr: "warnung\n"});
 
-  await assert.rejects(executor().execute(request), (error: unknown) => {
-    assert.ok(error instanceof ScriptExecutionError);
-    assert.match(error.message, /Zeile 2: ZeroDivisionError/);
-    assert.equal(error.printed, "vorher\n");
-    assert.equal(error.errorOutput, "warnung\n");
-    return true;
-  });
+  const failure = (await executor().execute(request))._unsafeUnwrapErr();
+
+  assert.equal(failure.code, "scriptFailed");
+  assert.match(failure.message, /Zeile 2: ZeroDivisionError/);
+  assert.deepEqual(failure.console, {stdout: "vorher\n", stderr: "warnung\n"});
 });
 
 test("ein nicht erreichbarer Dienst wird verständlich gemeldet", async () => {

@@ -1,4 +1,5 @@
-import {ok} from "neverthrow";
+import {nodeFailures} from "../entities/node-failures.js";
+import {err, ok} from "neverthrow";
 import {
   validateDialogInputDefinition,
 } from "../entities/dialog-input.js";
@@ -12,7 +13,8 @@ import {dialogInputInteraction} from
 export const dialogInputNodeExecutor: NodeExecutor = {
   primitive: "dialogInput",
   async execute(node, runContext) {
-    const definition = dialogInputDefinitionFor(node.config);
+    if (node.config.primitive !== "dialogInput") return err(nodeFailures.configurationMissing(node.primitive));
+    const definition = {instruction: node.config.instruction, fields: node.config.fields};
     validateDialogInputDefinition(definition);
     return ok(waitingForInteractionNode(
       node,
@@ -24,12 +26,3 @@ export const dialogInputNodeExecutor: NodeExecutor = {
     ));
   },
 };
-
-function dialogInputDefinitionFor(
-  config: Parameters<NodeExecutor["execute"]>[0]["config"],
-) {
-  if (config.primitive !== "dialogInput") {
-    throw new Error("DialogInput-Konfiguration fehlt.");
-  }
-  return {instruction: config.instruction, fields: config.fields};
-}

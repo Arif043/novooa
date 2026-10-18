@@ -9,10 +9,8 @@ import {
 } from "./task-definition.js";
 import {finalOutputOf} from "../../../domain/services/task-graph-utils.js";
 import {type TaskVariables} from "../../../domain/executors/node-executor.js";
-import {consoleOutputOf} from "../../../domain/entities/script-execution.js";
 import {type FailedNode, NodeExecutionFailure} from "../../../domain/entities/node-execution-failure.js";
 import {NodeFailure} from "../../../domain/entities/node-failure.js";
-import {NestedNodeFailedException} from "./nested-node-failed-exception.js";
 
 export type InitialNodeRunState = {
   nodeResults: NodeExecutionResult[];
@@ -121,14 +119,13 @@ export function newResults(
 
 /** Ein Baustein hat eine Failure als Wert geliefert. */
 export function failedNodeExecution(node: WorkflowNode, failure: NodeFailure, completed: NodeExecutionResult[]): NodeExecutionFailure {
-  return new NodeExecutionFailure(failedNodeFor(node, failure.message, failure), completed, failure);
+  return new NodeExecutionFailure(failedNodeFor(node, failure.message, failure, failure.console), completed, failure);
 }
 
-/** Ein Baustein hat geworfen; eine Failure aus einem verschachtelten Plan behält Code und Felder. */
+/** Ein Baustein oder die Infrastruktur hat geworfen: ein gescheiterter Baustein ohne Code. */
 export function nodeExecutionFailure(node: WorkflowNode, error: unknown, completed: NodeExecutionResult[]): NodeExecutionFailure {
-  if (error instanceof NestedNodeFailedException) return failedNodeExecution(node, error.failure, completed);
   const message = error instanceof Error ? error.message : String(error);
-  return new NodeExecutionFailure(failedNodeFor(node, message, undefined, consoleOutputOf(error)), completed, error);
+  return new NodeExecutionFailure(failedNodeFor(node, message), completed, error);
 }
 
 function failedNodeFor(node: WorkflowNode, message: string, failure?: NodeFailure, console?: FailedNode["console"]): FailedNode {

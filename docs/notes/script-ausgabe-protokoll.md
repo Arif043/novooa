@@ -7,8 +7,9 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 Der Dienst fängt die echten Dateideskriptoren 1 und 2 in Dateien ab, nicht
 nur `sys.stdout`. Damit sind `subprocess`, `os.write(1, …)` und Warnungen
 dabei; `python -u` verhindert Pufferreste. Bei Fehlern stehen `printed` und
-`stderr` in der `422`-Antwort; der Baustein protokolliert sie vor der
-Fehlermeldung (`ScriptExecutionError`).
+`stderr` in der `422`-Antwort; der Adapter macht daraus die Failure
+`scriptFailed` samt Konsole, und der Baustein protokolliert die Ausgabe, bevor
+er sie zurückgibt.
 
 **Aktivitäten → Protokoll:**
 

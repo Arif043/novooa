@@ -3,7 +3,8 @@ import {type FastifyReply} from "fastify";
 import {ErrorResponse, IdParams, ItemsOf} from "../../../../shared/local/local-runtime-http-schemas.js";
 import {connectionInputFrom, connectionSecretFrom} from "../../domain/entities/connection-request.js";
 import {ConnectionAuthError, ConnectionNotFoundError, ConnectionRequestError} from "../../domain/entities/connection.js";
-import {OutboundHttpError, type OutboundHttpClient} from "../../domain/repositories/outbound-http-client.js";
+import {type OutboundHttpClient} from "../../domain/repositories/outbound-http-client.js";
+import {OutboundHttpError} from "../outbound-http-error.js";
 import {type ConnectionStore} from "../../domain/repositories/connection-store.js";
 
 export type ConnectionRoutesOptions = {

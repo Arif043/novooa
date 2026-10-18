@@ -1,13 +1,14 @@
-import {ok} from "neverthrow";
+import {err, ok, Result} from "neverthrow";
+import {type NodeFailure} from "../entities/node-failure.js";
+import {nodeFailures} from "../entities/node-failures.js";
 import {
   type DocumentRecord,
 } from "../../../data/domain/entities/document.js";
 import {
   type DocumentFilter,
-  type DocumentFilterValue,
-  isNumericOperator,
   validateDocumentFilter,
 } from "../../../data/domain/entities/document-filter.js";
+import {documentFilterValueFor} from "../services/document-filter-values.js";
 import {
   type NodeExecutor,
   executedNode,
@@ -22,74 +23,47 @@ const failureMessage = "Suche fehlgeschlagen";
 export const documentLookupNodeExecutor: NodeExecutor = {
   primitive: "documentLookup",
   async execute(node, runContext) {
+    if (node.config.primitive !== "documentLookup") return err(nodeFailures.configurationMissing(node.primitive));
+    const config = node.config;
+    // Eine gescheiterte Suche ist hier ein Ergebnis („nicht gefunden, weil …“), kein Abbruch des Laufs.
     try {
-      const document = await findDocument(node, runContext);
-      return ok(executedNode(node, outputsFor(document)));
+      const documentOrFailure = await findDocument(config, runContext);
+      return ok(executedNode(node, documentOrFailure.isOk() ? outputsFor(documentOrFailure.value) : failureOutputs()));
     } catch {
       return ok(executedNode(node, failureOutputs()));
     }
   },
 };
 
+type LookupConfig = Extract<Parameters<NodeExecutor["execute"]>[0]["config"], {primitive: "documentLookup"}>;
+
 async function findDocument(
-  node: Parameters<NodeExecutor["execute"]>[0],
+  config: LookupConfig,
   runContext: Parameters<NodeExecutor["execute"]>[1],
-): Promise<DocumentRecord | null> {
-  const config = configFor(node);
+): Promise<Result<DocumentRecord | null, NodeFailure>> {
+  const filtersOrFailure = Result.combine(config.filters.map((filter) => filterFor(filter, runContext)));
+  if (filtersOrFailure.isErr()) return err(filtersOrFailure.error);
   const collection = await runContext.documentStore.findCollectionByName({
     teamId: runContext.teamId, displayName: config.collectionName.trim(),
   });
-  if (collection === null) return null;
-  return runContext.documentStore.findOne({
-    teamId: runContext.teamId,
-    collectionId: collection.id,
-    filters: config.filters.map((filter) => filterFor(filter, runContext)),
-  });
-}
-
-function configFor(node: Parameters<NodeExecutor["execute"]>[0]) {
-  if (node.config.primitive !== "documentLookup") {
-    throw new Error("Datensatz suchen: Die Konfiguration fehlt.");
-  }
-  return node.config;
+  if (collection === null) return ok(null);
+  return ok(await runContext.documentStore.findOne({
+    teamId: runContext.teamId, collectionId: collection.id, filters: filtersOrFailure.value,
+  }));
 }
 
 function filterFor(
-  filter: ReturnType<typeof configFor>["filters"][number],
+  filter: LookupConfig["filters"][number],
   runContext: Parameters<NodeExecutor["execute"]>[1],
-): DocumentFilter {
-  const resolved: DocumentFilter = {
-    field: filter.field.trim(),
-    operator: filter.operator,
-    value: filterValueFor(filter, runContext),
-  };
-  validateDocumentFilter(resolved);
-  return resolved;
-}
-
-function filterValueFor(
-  filter: ReturnType<typeof configFor>["filters"][number],
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): DocumentFilterValue {
+): Result<DocumentFilter, NodeFailure> {
   const resolved = runContext.templateExpressionResolver.resolveValue(filter.value);
-  if (isNumericOperator(filter.operator)) return numberValueFor(resolved);
-  if (isDocumentFilterValue(resolved)) return resolved;
-  throw new Error("Datensatz suchen: Der Filterwert ist ungültig.");
+  return documentFilterValueFor(filter.operator, resolved).map((value) => {
+    const documentFilter: DocumentFilter = {field: filter.field.trim(), operator: filter.operator, value};
+    validateDocumentFilter(documentFilter);
+    return documentFilter;
+  });
 }
 
-function numberValueFor(value: unknown): number {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && value.trim().length > 0) {
-    const number = Number(value);
-    if (Number.isFinite(number)) return number;
-  }
-  throw new Error("Datensatz suchen: Für den Vergleich wird eine Zahl benötigt.");
-}
-
-function isDocumentFilterValue(value: unknown): value is DocumentFilterValue {
-  return typeof value === "string" || typeof value === "boolean" ||
-    (typeof value === "number" && Number.isFinite(value));
-}
 
 function outputsFor(document: DocumentRecord | null) {
   if (document === null) return absentOutputs();

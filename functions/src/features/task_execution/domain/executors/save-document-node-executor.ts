@@ -1,14 +1,14 @@
-import {ok} from "neverthrow";
+import {err, ok, Result} from "neverthrow";
+import {type NodeFailure} from "../entities/node-failure.js";
+import {nodeFailures} from "../entities/node-failures.js";
+import {documentFilterValueFor} from "../services/document-filter-values.js";
 import {
   type DocumentData,
   type DocumentRecord,
-  type DocumentValue,
   validateDocumentData,
 } from "../../../data/domain/entities/document.js";
 import {
   type DocumentFilter,
-  type DocumentFilterValue,
-  isNumericOperator,
   validateDocumentFilter,
 } from "../../../data/domain/entities/document-filter.js";
 import {
@@ -20,12 +20,15 @@ import {
 export const saveDocumentNodeExecutor: NodeExecutor = {
   primitive: "saveDocument",
   async execute(node, runContext) {
-    const config = configFor(node);
+    if (node.config.primitive !== "saveDocument") return err(nodeFailures.configurationMissing(node.primitive));
+    const config = node.config;
+    const inputsOrFailure = dataFor(config, runContext)
+      .andThen((data) => filtersFor(config, runContext).map((filters) => ({data, filters})));
+    if (inputsOrFailure.isErr()) return err(inputsOrFailure.error);
+    const {data, filters} = inputsOrFailure.value;
     const collection = await runContext.documentStore.ensureCollection({
       teamId: runContext.teamId, displayName: config.collectionName.trim(),
     });
-    const data = dataFor(config, runContext);
-    const filters = filtersFor(config, runContext);
     const saved = filters.length === 0
       ? await createDocument(collection.id, data, runContext)
       : await saveMatchingDocuments(collection.id, filters, data, runContext);
@@ -33,67 +36,36 @@ export const saveDocumentNodeExecutor: NodeExecutor = {
   },
 };
 
-function configFor(node: Parameters<NodeExecutor["execute"]>[0]) {
-  if (node.config.primitive !== "saveDocument") {
-    throw new Error("Datensatz speichern: Die Konfiguration fehlt.");
-  }
-  return node.config;
-}
+type SaveConfig = Extract<Parameters<NodeExecutor["execute"]>[0]["config"], {primitive: "saveDocument"}>;
 
 function dataFor(
-  config: ReturnType<typeof configFor>,
+  config: SaveConfig,
   runContext: Parameters<NodeExecutor["execute"]>[1],
-): DocumentData {
-  const data = Object.fromEntries(config.fields.map((field) => [
-    field.field.trim(), valueFor(field.value, runContext),
-  ])) as DocumentData;
-  requireUniqueFields(config);
+): Result<DocumentData, NodeFailure> {
+  const names = config.fields.map((field) => field.field.trim());
+  if (names.length === 0 || new Set(names).size !== names.length) {
+    return err(nodeFailures.settingInvalid("documentFieldDuplicate"));
+  }
+  const values = config.fields.map((field) => runContext.templateExpressionResolver.resolveValue(field.value));
+  const missing = values.findIndex((value) => value === undefined);
+  if (missing >= 0) return err(nodeFailures.settingInvalid("documentFieldValue", names[missing]));
+  const data = Object.fromEntries(names.map((name, index) => [name, values[index]])) as DocumentData;
   validateDocumentData(data);
-  return data;
+  return ok(data);
 }
 
 function filtersFor(
-  config: ReturnType<typeof configFor>,
+  config: SaveConfig,
   runContext: Parameters<NodeExecutor["execute"]>[1],
-): DocumentFilter[] {
-  return config.filters.map((filter) => filterFor(filter, runContext));
-}
-
-function filterFor(
-  filter: ReturnType<typeof configFor>["filters"][number],
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): DocumentFilter {
-  const resolved: DocumentFilter = {
-    field: filter.field.trim(),
-    operator: filter.operator,
-    value: filterValueFor(filter, runContext),
-  };
-  validateDocumentFilter(resolved);
-  return resolved;
-}
-
-function filterValueFor(
-  filter: ReturnType<typeof configFor>["filters"][number],
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): DocumentFilterValue {
-  const value = runContext.templateExpressionResolver.resolveValue(filter.value);
-  if (isNumericOperator(filter.operator)) return numberValueFor(value);
-  if (isDocumentFilterValue(value)) return value;
-  throw new Error("Datensatz speichern: Der Filterwert ist ungültig.");
-}
-
-function numberValueFor(value: unknown): number {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && value.trim().length > 0) {
-    const number = Number(value);
-    if (Number.isFinite(number)) return number;
-  }
-  throw new Error("Datensatz speichern: Für den Vergleich wird eine Zahl benötigt.");
-}
-
-function isDocumentFilterValue(value: unknown): value is DocumentFilterValue {
-  return typeof value === "string" || typeof value === "boolean" ||
-    (typeof value === "number" && Number.isFinite(value));
+): Result<DocumentFilter[], NodeFailure> {
+  return Result.combine(config.filters.map((filter) => {
+    const resolved = runContext.templateExpressionResolver.resolveValue(filter.value);
+    return documentFilterValueFor(filter.operator, resolved).map((value) => {
+      const documentFilter: DocumentFilter = {field: filter.field.trim(), operator: filter.operator, value};
+      validateDocumentFilter(documentFilter);
+      return documentFilter;
+    });
+  }));
 }
 
 async function saveMatchingDocuments(
@@ -144,22 +116,6 @@ function updateDocument(
     data: {...current.data, ...data},
     expectedVersion: current.version,
   });
-}
-
-function valueFor(
-  template: string,
-  runContext: Parameters<NodeExecutor["execute"]>[1],
-): DocumentValue {
-  const value = runContext.templateExpressionResolver.resolveValue(template);
-  if (value !== undefined) return value as DocumentValue;
-  throw new Error("Datensatz speichern: Ein Feldwert konnte nicht aufgelöst werden.");
-}
-
-function requireUniqueFields(config: ReturnType<typeof configFor>): void {
-  const fields = config.fields.map((field) => field.field.trim());
-  if (fields.length === 0 || new Set(fields).size !== fields.length) {
-    throw new Error("Datensatz speichern: Jedes Feld muss genau einmal gesetzt sein.");
-  }
 }
 
 function outputsFor(saved: SavedDocuments) {

@@ -1,11 +1,11 @@
-import {ok} from "neverthrow";
+import {err, ok} from "neverthrow";
+import {nodeFailures} from "../entities/node-failures.js";
 import {
   type NodeExecutor,
   executedNode,
 } from "./node-executor.js";
 import {
   type FileContent,
-  type TeamFileStore,
   type WrittenFile,
 } from "../../../files/domain/repositories/team-file-store.js";
 import {
@@ -39,10 +39,8 @@ export const writeFileNodeExecutor: NodeExecutor = {
       targetFileId: targetFileIdFor(node),
       folderId: targetFolderIdFor(node),
     };
-    const file = await writeNodeFile(
-      runContext.teamFileStore,
-      writeInputFor(writeInput, source.sourceContentType),
-    );
+    if (writeInput.fileName.trim().length === 0) return err(nodeFailures.settingMissing("outputFile"));
+    const file = await runContext.teamFileStore.writeTeamFile(writeInputFor(writeInput, source.sourceContentType));
     return ok(executedNode(node, fileOutputs(file)));
   },
 };
@@ -125,23 +123,10 @@ type SourceContent = {
   sourceContentType?: string;
 };
 
-async function writeNodeFile(
-  fileStore: TeamFileStore,
-  input: WriteNodeFileInput,
-) {
-  ensureConfigured(input.fileName);
-  return fileStore.writeTeamFile(input);
-}
-
 function imageFileNameFor(fileName: string, contentType: string): string {
   const extension = imageExtensionFor(contentType);
   const baseName = fileName.replace(/\.[^.]+$/, "");
   return `${baseName || "bild"}.${extension}`;
-}
-
-function ensureConfigured(fileName: string): void {
-  if (fileName.trim().length > 0) return;
-  throw new Error("Datei schreiben: Es wurde keine Ausgabedatei ausgewählt.");
 }
 
 function fileOutputs(file: WrittenFile) {

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {ScriptExecutionError} from "../../../domain/entities/script-execution.js";
+import {err} from "neverthrow";
+import {nodeFailures} from "../../../domain/entities/node-failures.js";
 import {handleTaskRunDispatch} from "./task-run-task.js";
 
 const silentLogger = {info() {}, error() {}, exception() {}, readableInfo() {}, readableError() {}};
@@ -10,7 +11,7 @@ const task = {id: "task-1", title: "Aufgabe", objective: "", edges: [], nodes: [
   config: {primitive: "script", script: "x", attachments: []},
 }]};
 
-function storesWith(failures: unknown[], executeScript: () => Promise<never>) {
+function storesWith(failures: unknown[], executeScript: () => Promise<unknown>) {
   return {
     taskStore: {loadTask: async () => task},
     taskRunStore: {
@@ -24,12 +25,12 @@ function storesWith(failures: unknown[], executeScript: () => Promise<never>) {
 
 test("a failing node is recorded exactly once and does not make the job fail, so it is not retried", async () => {
   const failures: unknown[] = [];
-  const stores = storesWith(failures, async () => { throw new ScriptExecutionError("Zeile 1: NameError", ""); });
+  const stores = storesWith(failures, async () => err(nodeFailures.scriptFailed("Zeile 1: NameError", {stdout: "", stderr: ""})));
 
   await handleTaskRunDispatch({} as never, {teamId: "team-1", runId: "run-1", mode: "start"}, stores, silentLogger);
 
   assert.equal(failures.length, 1, "ein Eintrag je Lauf, nicht zwei");
-  assert.match((failures[0] as Error).message, /NameError/);
+  assert.match((failures[0] as {message: string}).message, /NameError/);
 });
 
 test("an unexpected error is recorded once and still fails the job so it may be retried", async () => {

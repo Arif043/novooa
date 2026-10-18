@@ -1,4 +1,6 @@
-import {ok} from "neverthrow";
+import {err, ok, type Result} from "neverthrow";
+import {type NodeFailure} from "../entities/node-failure.js";
+import {nodeFailures} from "../entities/node-failures.js";
 import {
   datetimeOutput,
   executedNode,
@@ -10,8 +12,7 @@ import {
 export const readEmailNodeExecutor: NodeExecutor = {
   primitive: "readEmail",
   async execute(node, runContext) {
-    const event = emailEventFrom(runContext.input);
-    return ok(executedNode(node, {
+    return emailEventFrom(runContext.input).map((event) => executedNode(node, {
       ...textOutputs(event.message),
       sender: stringOutput(event.senderEmail),
       subject: stringOutput(event.subject),
@@ -31,11 +32,9 @@ export const readChannelEventNodeExecutor: NodeExecutor = {
   async execute(node, runContext) {
     const kind = channelEventKindFrom(node.config);
     if (kind === "email") {
-      const event = emailEventFrom(runContext.input);
-      return ok(executedNode(node, emailOutputs(event)));
+      return emailEventFrom(runContext.input).map((event) => executedNode(node, emailOutputs(event)));
     }
-    const event = messageEventFrom(runContext.input, eventTypeFor(kind));
-    return ok(executedNode(node, messageOutputs(event)));
+    return messageEventFrom(runContext.input, kind).map((event) => executedNode(node, messageOutputs(event)));
   },
 };
 
@@ -82,43 +81,34 @@ function eventTypeFor(kind: Exclude<ChannelEventKind, "email">): MessageEvent["t
   return kind === "whatsapp" ? "whatsappMessageReceived" : "smsMessageReceived";
 }
 
-function emailEventFrom(input: Record<string, unknown>): EmailEvent {
+function emailEventFrom(input: Record<string, unknown>): Result<EmailEvent, NodeFailure> {
   const event = input.event;
-  if (!isRecord(event) || event.type !== "emailReceived") {
-    throw new Error("E-Mail lesen: Dieser TaskRun wurde nicht durch eine E-Mail gestartet.");
-  }
-  return {
+  if (!isRecord(event) || event.type !== "emailReceived") return err(nodeFailures.triggerMismatch("email"));
+  return ok({
     type: "emailReceived",
     senderEmail: stringField(event, "senderEmail"),
     subject: stringField(event, "subject"),
     message: stringField(event, "message"),
     receivedAt: stringField(event, "receivedAt"),
-  };
+  });
 }
 
 function messageEventFrom(
   input: Record<string, unknown>,
-  type: MessageEvent["type"],
-): MessageEvent {
+  kind: Exclude<ChannelEventKind, "email">,
+): Result<MessageEvent, NodeFailure> {
+  const type = eventTypeFor(kind);
   const event = input.event;
-  if (!isRecord(event) || event.type !== type) {
-    throw new Error(`${labelFor(type)} lesen: Dieser TaskRun wurde nicht durch ${sourceFor(type)} gestartet.`);
-  }
-  return {
+  if (!isRecord(event) || event.type !== type) return err(nodeFailures.triggerMismatch(kind));
+  return ok({
     type,
     senderPhoneNumber: stringField(event, "senderPhoneNumber"),
     message: stringField(event, "message"),
     receivedAt: stringField(event, "receivedAt"),
-  };
+  });
 }
 
-function labelFor(type: MessageEvent["type"]): string {
-  return type === "whatsappMessageReceived" ? "WhatsApp" : "SMS";
-}
 
-function sourceFor(type: MessageEvent["type"]): string {
-  return type === "whatsappMessageReceived" ? "WhatsApp" : "eine SMS";
-}
 
 function stringField(data: Record<string, unknown>, key: string): string {
   const value = data[key];

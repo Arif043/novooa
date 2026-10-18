@@ -1,19 +1,22 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {type ForEachNodeConfig} from "../entities/task.js";
+import {err, ok} from "neverthrow";
+import {nodeFailures} from "../entities/node-failures.js";
 import {executeForEach} from "./for-each-executor.js";
 
 test("executes every item serially and preserves its result order", async () => {
   const values: unknown[] = [];
-  const result = await executeForEach({
+  const resultOrFailure = await executeForEach({
     config: config(),
     items: {items: ["first", "second"]},
     async runGraph(_task, scope) {
       const value = scope?.iteration?.value;
       values.push(value);
-      return [resultFor(`${value}-done`)];
+      return ok([resultFor(`${value}-done`)]);
     },
   });
+  const result = resultOrFailure._unsafeUnwrap();
 
   assert.deepEqual(values, ["first", "second"]);
   // Je Runde ein flaches Objekt aus den benannten Werten, wie in Vorlagen.
@@ -30,42 +33,47 @@ test("uses the complete predecessor value for an empty pointer", async () => {
     items: ["first", "second"],
     async runGraph(_task, scope) {
       values.push(scope?.iteration?.value);
-      return [resultFor(scope?.iteration?.value)];
+      return ok([resultFor(scope?.iteration?.value)]);
     },
   });
   assert.deepEqual(values, ["first", "second"]);
 });
 
-test("fails fast and includes the failing item index", async () => {
+test("fails fast and adds the failing item index to the inner failure", async () => {
   const calls: unknown[] = [];
-  await assert.rejects(
-    executeForEach({
-        config: config(),
-      items: {items: ["first", "second", "third"]},
-      async runGraph(_task, scope) {
-        const value = scope?.iteration?.value;
-        calls.push(value);
-        if (value === "second") throw new Error("ungültiger Wert");
-        return [resultFor(value)];
-      },
-    }),
-    /Iteration 1 ist fehlgeschlagen: ungültiger Wert/,
-  );
+  const resultOrFailure = await executeForEach({
+    config: config(),
+    items: {items: ["first", "second", "third"]},
+    async runGraph(_task, scope) {
+      const value = scope?.iteration?.value;
+      calls.push(value);
+      if (value === "second") return err(nodeFailures.settingMissing("recipient"));
+      return ok([resultFor(value)]);
+    },
+  });
+
+  assert.deepEqual(resultOrFailure._unsafeUnwrapErr().details, {setting: "recipient", iteration: "1"});
   assert.deepEqual(calls, ["first", "second"]);
 });
 
 test("rejects pausing primitives in the embedded graph", async () => {
-  const invalidConfig = config({primitive: "humanApproval"});
-  await assert.rejects(
-    executeForEach({
-        config: invalidConfig,
-      items: {items: ["first"]},
-      async runGraph() {
-        return [];
-      },
-    }),
-    /Pausierende Bausteine/,
-  );
+  const resultOrFailure = await executeForEach({
+    config: config({primitive: "humanApproval"}),
+    items: {items: ["first"]},
+    async runGraph() {
+      return ok([]);
+    },
+  });
+
+  assert.deepEqual(resultOrFailure._unsafeUnwrapErr().details, {reason: "pausingBlock"});
+});
+
+test("a pointer to something other than a list is a failure", async () => {
+  const resultOrFailure = await executeForEach({
+    config: config(), items: {items: "kein Array"}, async runGraph() { return ok([]); },
+  });
+
+  assert.equal(resultOrFailure._unsafeUnwrapErr().code, "valueTypeMismatch");
 });
 
 function config(node?: {primitive: string}): ForEachNodeConfig {

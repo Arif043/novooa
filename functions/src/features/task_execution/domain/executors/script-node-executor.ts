@@ -1,8 +1,9 @@
-import {ok} from "neverthrow";
-import {ScriptExecutionError, type ScriptExecutionResult} from "../entities/script-execution.js";
+import {err, ok, type Result} from "neverthrow";
+import {type NodeFailure} from "../entities/node-failure.js";
+import {type ScriptExecutionResult} from "../entities/script-execution.js";
 import {type ConsoleOutput} from "../entities/task.js";
 import {type NodeOutputValue} from "../entities/workflow-value.js";
-import {ScriptWorkflowOutputError, workflowOutputsFrom} from "../services/script-workflow-outputs.js";
+import {workflowOutputsFrom} from "../services/script-workflow-outputs.js";
 import {type ScriptExecutor} from "./script-executor.js";
 import {
   type NodeExecutor,
@@ -22,14 +23,20 @@ export function createScriptNodeExecutor(
   return {
     primitive: "script",
     async execute(node, runContext) {
-      const output = await executeObserved(scriptExecutor, observeOutput, {
+      const outputOrFailure = await scriptExecutor.execute({
         input: runContext.templateExpressionResolver.resolveText(inputTemplateFor(node)),
         script: runContext.templateExpressionResolver.resolveText(scriptFor(node)),
         variables: runContext.variables,
       });
+      // Auch ein gescheitertes Script hat Ausgabe geliefert; sie gehört ins Protokoll.
+      if (outputOrFailure.isErr()) {
+        observeFailure(outputOrFailure.error, observeOutput);
+        return err(outputOrFailure.error);
+      }
+      const output = outputOrFailure.value;
       const consoleOutput = {stdout: output.printed, stderr: output.errorOutput ?? ""};
       observeOutput({printed: consoleOutput.stdout, errorOutput: consoleOutput.stderr});
-      return ok(executedNode(node, nodeOutputsOf(output, consoleOutput), {
+      return nodeOutputsOf(output, consoleOutput).map((outputs) => executedNode(node, outputs, {
         variables: output.variables, console: hasOutput(consoleOutput) ? consoleOutput : undefined,
       }));
     },
@@ -38,38 +45,23 @@ export function createScriptNodeExecutor(
 
 /**
  * Definiert das Script Workflow-Ausgaben, sind sie seine fachlichen Werte — flach unter ihrem Namen, ohne
- * `value`; `output` gilt dann nicht. Sonst bleibt es beim Text-Output wie bisher.
+ * `value`; `output` gilt dann nicht. Sonst bleibt es beim Text-Output wie bisher. Eine ungültige Ausgabe
+ * trägt die Konsole des Scripts, damit sie in den Aktivitäten steht.
  */
-function nodeOutputsOf(output: ScriptExecutionResult, consoleOutput: ConsoleOutput): Record<string, NodeOutputValue> {
+function nodeOutputsOf(
+  output: ScriptExecutionResult, consoleOutput: ConsoleOutput,
+): Result<Record<string, NodeOutputValue>, NodeFailure> {
   const workflowOutputs = output.workflowOutputs ?? [];
-  if (workflowOutputs.length === 0) return textOutputs(output.output);
-  try {
-    return workflowOutputsFrom(workflowOutputs);
-  } catch (error) {
-    if (!(error instanceof ScriptWorkflowOutputError)) throw error;
-    // Wie ein Fehler im Script selbst: mit dessen Ausgabe, damit sie in den Aktivitäten steht.
-    throw new ScriptExecutionError(error.message, consoleOutput.stdout, consoleOutput.stderr);
-  }
+  if (workflowOutputs.length === 0) return ok(textOutputs(output.output));
+  return workflowOutputsFrom(workflowOutputs).mapErr((failure) => failure.withConsole(consoleOutput));
 }
 
 function hasOutput(output: ConsoleOutput): boolean {
   return output.stdout.length > 0 || output.stderr.length > 0;
 }
 
-/** Auch ein gescheitertes Script hat Ausgabe geliefert; sie gehört ins Protokoll, bevor der Fehler weitergereicht wird. */
-async function executeObserved(
-  scriptExecutor: ScriptExecutor,
-  observeOutput: ScriptOutputObserver,
-  request: Parameters<ScriptExecutor["execute"]>[0],
-) {
-  try {
-    return await scriptExecutor.execute(request);
-  } catch (error) {
-    if (error instanceof ScriptExecutionError) {
-      observeOutput({printed: error.printed, errorOutput: error.errorOutput});
-    }
-    throw error;
-  }
+function observeFailure(failure: NodeFailure, observeOutput: ScriptOutputObserver): void {
+  if (failure.console) observeOutput({printed: failure.console.stdout, errorOutput: failure.console.stderr});
 }
 
 function scriptFor(node: Parameters<NodeExecutor["execute"]>[0]): string {
