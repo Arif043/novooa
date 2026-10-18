@@ -44,19 +44,18 @@ class WorkflowCanvasScene extends StatelessWidget {
             ),
           ),
           for (final link in frame.links)
-            if (_showsLabels(link))
-              if (canvasLabelAnchor(frame, link) case final Offset anchor)
-                Positioned(
-                  left: anchor.dx,
-                  top: anchor.dy,
-                  child: Opacity(
-                    opacity: frame.linkOpacityOf(link),
-                    child: FractionalTranslation(
-                      translation: const Offset(-0.5, -0.5),
-                      child: CanvasLabelStack(link: link),
-                    ),
+            if (_showsLabels(link.link))
+              Positioned(
+                left: canvasLabelAnchor(link).dx,
+                top: canvasLabelAnchor(link).dy,
+                child: Opacity(
+                  opacity: link.opacity,
+                  child: FractionalTranslation(
+                    translation: const Offset(-0.5, -0.5),
+                    child: CanvasLabelStack(link: link.link),
                   ),
                 ),
+              ),
           // Per ID geschlüsselt, damit eine Karte während des Übergangs
           // ihren Zustand behält, während sie gleitet oder ausblendet.
           for (final entry in frame.entries)

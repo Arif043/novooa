@@ -18,7 +18,9 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   Verbindungen zum übergeordneten Baustein. Ändert sich der Plan, gleiten
   Karten und Kanten gemeinsam an ihren neuen Platz; entfernte Bausteine und
   Pfade blenden an ihrem alten Platz aus, neue blenden ein
-  (`CanvasFrame`, 350 ms).
+  (`CanvasFrame`, 350 ms). Kanten gehören zu ihrem Platz, nicht zur Karte:
+  Beim Tauschen bleiben sie stehen, nur die Karten wechseln
+  (`linksBetween`).
 - **Tauschen:** Am Icon einer Karte lässt sich ein Baustein auf einen anderen
   ziehen; beide tauschen Platz und Kanten. Das geht im selben Plan, zwischen
   Hauptplan und Zweig, zwischen zwei Zweigen und mit dem Unterplan einer

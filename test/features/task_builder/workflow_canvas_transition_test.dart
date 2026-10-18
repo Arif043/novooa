@@ -6,9 +6,11 @@ import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_run_failure.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_run_start.dart';
+import 'package:syscat2/features/task_builder/domain/entities/workflow_edge.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_graph.dart';
 import 'package:syscat2/features/task_builder/domain/entities/workflow_node.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
+import 'package:syscat2/features/task_builder/domain/services/workflow_node_swap.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/workflow_canvas.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/workflow_canvas_frame.dart';
@@ -28,10 +30,30 @@ void main() {
       before.rectangles['nein-baustein'],
     );
     final departingLink = frame.links.firstWhere(
-      (link) => link.to == 'nein-baustein',
+      (link) => link.link.to == 'nein-baustein',
     );
-    expect(frame.linkOpacityOf(departingLink), .75);
+    expect(departingLink.opacity, .75);
     expect(frame.opacityOf('ja-baustein'), 1);
+  });
+
+  test('beim Tausch zwischen Hauptplan und Pfad bleiben die Kanten an ihrem '
+      'Platz, nur die Karten tauschen', () {
+    final graph = _graphWithFollower();
+    final swapped = WorkflowNodeSwap(
+      graph,
+    ).swap(const NodeId('danach'), const NodeId('ja-baustein'));
+    final before = WorkflowCanvasLayout(graph);
+    final after = WorkflowCanvasLayout(swapped);
+
+    final midway = CanvasFrame.between(before, after, .5);
+    final done = CanvasFrame.of(after);
+
+    for (final link in midway.links) {
+      final final_ = done.links.firstWhere((other) => other.link == link.link);
+      expect(link.opacity, 1, reason: '${link.link.from}>${link.link.to}');
+      expect(link.from, final_.from);
+      expect(link.to, final_.to);
+    }
   });
 
   testWidgets(
@@ -69,6 +91,24 @@ WorkflowGraph _graph({required bool withSecondBranch}) => WorkflowGraph(
   ],
   edges: const [],
 );
+
+WorkflowGraph _graphWithFollower() {
+  final base = _graph(withSecondBranch: false);
+  return WorkflowGraph(
+    nodes: [
+      ...base.nodes,
+      const WorkflowNode(
+        id: NodeId('danach'),
+        title: 'Danach',
+        description: '',
+        config: StringInputNodeConfig(value: ''),
+      ),
+    ],
+    edges: const [
+      WorkflowEdge(from: NodeId('bedingung'), to: NodeId('danach')),
+    ],
+  );
+}
 
 ConditionalBranch _branch(String id) => ConditionalBranch(
   id: id,

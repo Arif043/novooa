@@ -1,12 +1,15 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'canvas_link_transition.dart';
 import 'workflow_canvas_layout.dart';
+
+export 'canvas_link_transition.dart' show FrameLink;
 
 /// Ein Bild der Leinwand während des Übergangs von einem Layout zum nächsten:
 /// Bleibende Bausteine gleiten, neue blenden ein, entfernte (z. B. ein
 /// gelöschter Zweig samt Bausteinen) blenden an ihrem alten Platz aus. Kanten
-/// folgen denselben Positionen und blenden mit ihren Bausteinen.
+/// bleiben an ihrem Platz ([linksBetween]).
 class CanvasFrame {
   CanvasFrame._(
     this.entries,
@@ -14,7 +17,6 @@ class CanvasFrame {
     this.rectangles,
     this.size,
     this._entryOpacities,
-    this._linkOpacities,
     this.departing,
   );
 
@@ -44,50 +46,29 @@ class CanvasFrame {
       rectangles[id] = from.rectangles[id]!;
       opacities[id] = 1 - progress;
     }
-    final links = _linksBetween(from, to, progress);
+    final links = linksBetween(from, to, progress);
     return CanvasFrame._(
       [...to.entries.values, for (final id in departing) from.entries[id]!],
-      links.keys.toList(),
+      links,
       rectangles,
       Size(
         math.max(from.size.width, to.size.width),
         math.max(from.size.height, to.size.height),
       ),
       opacities,
-      links,
       departing,
     );
   }
 
   final List<CanvasEntry> entries;
-  final List<CanvasLink> links;
+  final List<FrameLink> links;
   final Map<String, Rect> rectangles;
   final Size size;
   final Map<String, double> _entryOpacities;
-  final Map<CanvasLink, double> _linkOpacities;
 
   /// Bausteine, die es im neuen Layout nicht mehr gibt; sie nehmen keine
   /// Eingaben mehr an.
   final Set<String> departing;
 
   double opacityOf(String entryId) => _entryOpacities[entryId] ?? 1;
-
-  double linkOpacityOf(CanvasLink link) => _linkOpacities[link] ?? 1;
-}
-
-/// Kanten beider Layouts: gleich gebliebene voll, neue blenden ein, alte aus.
-Map<CanvasLink, double> _linksBetween(
-  WorkflowCanvasLayout from,
-  WorkflowCanvasLayout to,
-  double progress,
-) {
-  String key(CanvasLink link) => '${link.from}>${link.to}';
-  final before = {for (final link in from.links) key(link)};
-  final after = {for (final link in to.links) key(link)};
-  return {
-    for (final link in to.links)
-      link: before.contains(key(link)) ? 1 : progress,
-    for (final link in from.links)
-      if (!after.contains(key(link))) link: 1 - progress,
-  };
 }

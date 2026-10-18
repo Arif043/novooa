@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'workflow_canvas_frame.dart';
-import 'workflow_canvas_layout.dart';
 import 'workflow_canvas_options.dart';
 
 /// Zeichnet die Kanten eines [CanvasFrame]; während eines Übergangs blenden
@@ -14,17 +13,17 @@ class WorkflowEdgesPainter extends CustomPainter {
   final ColorScheme colors;
   @override
   void paint(Canvas canvas, Size size) {
-    for (final edge in frame.links) {
+    for (final frameLink in frame.links) {
+      final edge = frameLink.link;
       if (edge.isReturn && !WorkflowCanvasOptions.showReturnEdges) continue;
-      final from = frame.rectangles[edge.from];
-      final to = frame.rectangles[edge.to];
-      if (from == null || to == null) continue;
+      final from = frameLink.from;
+      final to = frameLink.to;
       final start = from.bottomCenter;
       final end = to.topCenter;
       final base = edge.labels.isEmpty
           ? colors.onSurfaceVariant.withValues(alpha: .6)
           : colors.secondary;
-      final color = base.withValues(alpha: base.a * frame.linkOpacityOf(edge));
+      final color = base.withValues(alpha: base.a * frameLink.opacity);
       final paint = Paint()
         ..color = color
         ..strokeWidth = 1.8
@@ -80,11 +79,8 @@ class WorkflowEdgesPainter extends CustomPainter {
 /// Mittelpunkt, den der Pfeil selbst in [WorkflowEdgesPainter] anpeilt
 /// (`start`/`end`/`middle`), damit Pfeil und Chip-Stapel optisch
 /// zusammenpassen.
-Offset? canvasLabelAnchor(CanvasFrame frame, CanvasLink link) {
-  final from = frame.rectangles[link.from];
-  final to = frame.rectangles[link.to];
-  if (from == null || to == null) return null;
-  final start = from.bottomCenter;
-  final end = to.topCenter;
+Offset canvasLabelAnchor(FrameLink link) {
+  final start = link.from.bottomCenter;
+  final end = link.to.topCenter;
   return Offset((start.dx + end.dx) / 2, (start.dy + end.dy) / 2);
 }
