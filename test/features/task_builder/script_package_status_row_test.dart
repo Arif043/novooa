@@ -78,4 +78,25 @@ void main() {
     expect(find.text('gibtsnicht was not found'), findsOneWidget);
     expect(find.text('Erneut versuchen'), findsOneWidget);
   });
+
+  testWidgets('names the module that could not be loaded', (tester) async {
+    await pump(
+      tester,
+      const ScriptPackageEnvironment(
+        packages: ['weasyprint'],
+        state: ScriptPackageEnvironmentState.failed,
+        problem: ScriptPackageInstallProblem.notLoadable,
+        detail: 'weasyprint: OSError: cannot load library libpango',
+      ),
+    );
+
+    expect(
+      find.textContaining('ließ sich im Script-Container aber nicht laden'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('weasyprint: OSError: cannot load library libpango'),
+      findsOneWidget,
+    );
+  });
 }

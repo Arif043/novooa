@@ -18,6 +18,10 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
   {code: "packagesMissing"}`.
 - Antwort `200` mit `printed`, `stderr`, `workflowOutputs` oder `422` mit
   lesbarer Meldung samt Script-Zeile.
+- `POST /probe` als JSON `{environment, packages}`: lädt die Pakete einer
+  Umgebung unter den Grenzen eines Laufs und antwortet `200 {loadable, module?,
+  error?}`; fehlt die Umgebung, `409` wie bei `/run`
+  ([Paketprobe](./script-paketprobe.md)).
 
 **Cloud:** Die Functions führen Scripts weiter mit `python3` im eigenen
 Prozess und eingeschränkten Builtins aus (`createPythonScriptExecutor`).

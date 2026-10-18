@@ -61,6 +61,7 @@ class ScriptPackageStatusRow extends StatelessWidget {
       .notFound => LocaleKeys.ui_script_packages_failed_notFound.tr(),
       .noWheel => LocaleKeys.ui_script_packages_failed_noWheel.tr(),
       .tooLarge => LocaleKeys.ui_script_packages_failed_tooLarge.tr(),
+      .notLoadable => LocaleKeys.ui_script_packages_failed_notLoadable.tr(),
       .failed => LocaleKeys.ui_script_packages_failed_failed.tr(),
     };
   }

@@ -67,6 +67,7 @@
 - [Script-Dienst: Abschottung](../notes/script-dienst-abschottung.md)
 - [Script-Dienst: Ressourcengrenzen abstimmen](../notes/script-dienst-ressourcen.md)
 - [Script-Paketdienst](../notes/script-paketdienst.md)
+- [Script: Paketprobe nach der Installation](../notes/script-paketprobe.md)
 - [ONNX-Inferenz über den ML-Dienst](../notes/onnx-inferenz-ml-dienst.md)
 - [Wo die KI-Agenten laufen](../notes/ki-agenten-betriebsorte.md)
 

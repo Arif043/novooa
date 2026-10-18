@@ -625,6 +625,7 @@ abstract class  LocaleKeys {
   static const ui_script_packages_failed_notFound = 'ui.script_packages_failed_notFound';
   static const ui_script_packages_failed_noWheel = 'ui.script_packages_failed_noWheel';
   static const ui_script_packages_failed_tooLarge = 'ui.script_packages_failed_tooLarge';
+  static const ui_script_packages_failed_notLoadable = 'ui.script_packages_failed_notLoadable';
   static const ui_script_packages_failed_failed = 'ui.script_packages_failed_failed';
   static const ui_script_packages_status_unavailable = 'ui.script_packages_status_unavailable';
   static const ui = 'ui';

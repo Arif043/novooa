@@ -33,6 +33,14 @@ class ScriptFailed(Exception):
         self.error_output = error_output
 
 
+class TimedOut(ScriptFailed):
+    """Das Script lief länger als erlaubt."""
+
+    def __init__(self, seconds):
+        super().__init__(f"Das Script wurde nach {seconds:g} Sekunden abgebrochen.")
+        self.seconds = seconds
+
+
 def execute(request, file_bytes):
     """Führt ein Script in einem frischen Prozess aus und liefert das Ergebnis."""
     site = site_directory_for(request.get("environment"))
@@ -125,7 +133,7 @@ def wait_for(process, payload):
     except subprocess.TimeoutExpired:
         kill_group(process)
         process.communicate()
-        raise ScriptFailed(f"Das Script wurde nach {TIMEOUT_SECONDS:g} Sekunden abgebrochen.")
+        raise TimedOut(TIMEOUT_SECONDS)
     finally:
         # Auch nach einem normalen Ende: Was das Script gestartet hat (fork, subprocess),
         # darf den Lauf nicht überleben und keine Prozessplätze des Containers belegen.

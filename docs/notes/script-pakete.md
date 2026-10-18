@@ -26,9 +26,12 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
 - **Installieren nur per Klick:** `POST /v1/script-packages` startet die
   Installation im [Paketdienst](./script-paketdienst.md); der Stand
   (`installing`, `ready` mit Größe, `failed` mit `notFound`, `noWheel`,
-  `tooLarge` oder `failed`) kommt über `GET /v1/script-packages` und das
+  `tooLarge`, `notLoadable` oder `failed`) kommt über `GET /v1/script-packages` und das
   Realtime-Thema `script-packages`. Ändert sich die Liste, gilt sie wieder als
   „nicht installiert“.
+- **Erst geprüft, dann fertig:** Nach der Installation lädt die
+  [Paketprobe](./script-paketprobe.md) die Pakete im Script-Container; was dort
+  nicht lädt, wird wieder entfernt (`notLoadable`).
 - **Lauf:** Der Executor schickt die ID als `environment` mit; der
   Script-Container setzt `envs/<id>/site` an den Anfang des Suchpfads. Fehlt
   die Umgebung, scheitert der Baustein mit `scriptPackagesUnavailable`
@@ -41,5 +44,6 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
 ## Siehe auch
 
 - [Script-Paketdienst](./script-paketdienst.md)
+- [Script: Paketprobe nach der Installation](./script-paketprobe.md)
 - [Script-Executor](./script-executor.md)
 - [Script-Dienst: Abschottung](./script-dienst-abschottung.md)

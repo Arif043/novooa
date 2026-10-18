@@ -676,6 +676,7 @@
     "script_packages_failed_notFound": "Bir paket PyPI üzerinde bulunamadı.",
     "script_packages_failed_noWheel": "Bir paket için Linux’a uygun hazır paket (wheel) yok.",
     "script_packages_failed_tooLarge": "Paketler birlikte çok büyük.",
+    "script_packages_failed_notLoadable": "Yüklendi, ancak betik konteynerinde yüklenemedi – genellikle bir işletim sistemi kitaplığı eksik ya da içe aktarma çok uzun sürüyor. Ortam yeniden kaldırıldı.",
     "script_packages_failed_failed": "Yükleme başarısız oldu.",
     "script_packages_status_unavailable": "Paket durumu kullanılamıyor."
   },

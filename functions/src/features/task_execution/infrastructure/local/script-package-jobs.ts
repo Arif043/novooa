@@ -1,8 +1,11 @@
+import {err} from "neverthrow";
 import {normalizedScriptPackages} from "../../domain/services/script-packages.js";
 import {
   type ScriptPackageInstaller,
+  type ScriptPackageInstallFailure,
   type ScriptPackageInstallProblem,
 } from "../../domain/repositories/script-package-installer.js";
+import {type ScriptPackageProbe} from "../../domain/repositories/script-package-probe.js";
 import {type ApplicationLogger} from "../../../../shared/logging/application-logger.js";
 import {scriptPackageEnvironmentId} from "./script-package-environment-id.js";
 
@@ -20,8 +23,9 @@ export type ScriptPackageEnvironmentStatus = {
 export type ScriptPackageUsage = () => Promise<string[][]>;
 
 /**
- * Installiert Paketumgebungen im Hintergrund. Laufende und gescheiterte Installationen
- * stehen im Speicher; fertige kennt der Paketdienst. Änderungen gehen über das
+ * Installiert Paketumgebungen im Hintergrund und prüft danach, ob sie sich im Script-Container
+ * laden lassen; eine nicht ladbare Umgebung wird wieder entfernt. Laufende und gescheiterte
+ * Installationen stehen im Speicher; fertige kennt der Paketdienst. Änderungen gehen über das
  * Realtime-Thema `script-packages`. Was kein Baustein mehr verwendet, wird entfernt.
  */
 export class ScriptPackageJobs {
@@ -29,6 +33,7 @@ export class ScriptPackageJobs {
 
   constructor(
     private readonly installer: ScriptPackageInstaller,
+    private readonly probe: ScriptPackageProbe,
     private readonly usage: ScriptPackageUsage,
     private readonly notifier: {publish(topic: string): void},
     private readonly logger: ApplicationLogger,
@@ -45,9 +50,10 @@ export class ScriptPackageJobs {
   }
 
   async list(): Promise<ScriptPackageEnvironmentStatus[]> {
-    const installed = (await this.installer.list()).map((environment) => ({
-      packages: environment.packages, state: "ready" as const, sizeBytes: environment.sizeBytes,
-    }));
+    // Während der Probe liegt die Umgebung schon im Volume, gilt aber noch nicht als fertig.
+    const installed = (await this.installer.list())
+      .filter((environment) => !this.statuses.has(environment.id))
+      .map((environment) => ({packages: environment.packages, state: "ready" as const, sizeBytes: environment.sizeBytes}));
     return [...installed, ...this.statuses.values()];
   }
 
@@ -64,9 +70,9 @@ export class ScriptPackageJobs {
 
   private async install(id: string, packages: string[]): Promise<void> {
     try {
-      const result = await this.installer.install(id, packages);
-      if (result.isErr()) {
-        this.update(id, {packages, state: "failed", ...result.error});
+      const failure = await this.failureOf(id, packages);
+      if (failure !== undefined) {
+        this.update(id, {packages, state: "failed", ...failure});
         return;
       }
       this.statuses.delete(id);
@@ -75,6 +81,26 @@ export class ScriptPackageJobs {
     } catch (error: unknown) {
       this.logger.exception("script_packages.install_failed", error, {id});
       this.update(id, {packages, state: "failed", reason: "failed", detail: ""});
+    }
+  }
+
+  private async failureOf(id: string, packages: string[]): Promise<ScriptPackageInstallFailure | undefined> {
+    const installed = await this.installer.install(id, packages);
+    if (installed.isErr()) return installed.error;
+    const loadable = await this.loadabilityOf(id, packages);
+    if (loadable.isOk()) return undefined;
+    await this.installer.remove(id);
+    this.logger.info("script_packages.not_loadable", {id, detail: loadable.error.detail});
+    return loadable.error;
+  }
+
+  /** Ohne Antwort des Script-Dienstes gilt die Umgebung als nicht geprüft und damit nicht als fertig. */
+  private async loadabilityOf(id: string, packages: string[]) {
+    try {
+      return await this.probe.check(id, packages);
+    } catch (error: unknown) {
+      this.logger.exception("script_packages.probe_failed", error, {id});
+      return err({reason: "failed" as const, detail: error instanceof Error ? error.message : ""});
     }
   }
 

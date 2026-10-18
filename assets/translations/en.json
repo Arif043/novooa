@@ -676,6 +676,7 @@
     "script_packages_failed_notFound": "A package was not found on PyPI.",
     "script_packages_failed_noWheel": "A package has no prebuilt package (wheel) for Linux.",
     "script_packages_failed_tooLarge": "The packages are too large together.",
+    "script_packages_failed_notLoadable": "Installed, but it could not be loaded in the script container – usually an operating system library is missing or the import takes too long. The environment was removed again.",
     "script_packages_failed_failed": "The installation failed.",
     "script_packages_status_unavailable": "The package status is not available."
   },
