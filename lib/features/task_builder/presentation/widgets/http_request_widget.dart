@@ -13,7 +13,8 @@ import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
 import 'template_expression_scope.dart';
-import 'template_expression_suggestion.dart';
+import 'http_name_value_list.dart';
+import 'http_request_line.dart';
 import 'template_expression_text_field.dart';
 
 /// Konfiguration der HTTP-Anfrage: Verbindung, Methode, Adresse, Parameter,
@@ -33,7 +34,6 @@ class HttpRequestWidget extends StatelessWidget {
         : const <Connection>[];
     final suggestions = TemplateExpressionScope.suggestionsOf(context);
     final config = _config;
-    final hasConnection = config.connectionId.isNotEmpty;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: SyscatTheme.nodePanelDecoration(context),
@@ -50,51 +50,20 @@ class HttpRequestWidget extends StatelessWidget {
                 _update(context, (c) => c.copyWith(connectionId: id)),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 140,
-                child: DropdownButtonFormField<HttpRequestMethod>(
-                  key: ValueKey('${node.id.value}.method'),
-                  isExpanded: true,
-                  initialValue: config.method,
-                  decoration: InputDecoration(
-                    labelText: LocaleKeys.ui_methode.tr(),
-                  ),
-                  items: [
-                    for (final method in HttpRequestMethod.values)
-                      DropdownMenuItem(value: method, child: Text(method.wire)),
-                  ],
-                  onChanged: (method) {
-                    if (method != null) {
-                      _update(context, (c) => c.copyWith(method: method));
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: TemplateExpressionTextField(
-                  value: config.url,
-                  suggestions: suggestions,
-                  decoration: InputDecoration(
-                    labelText: hasConnection ? 'Pfad' : 'URL',
-                    hintText: hasConnection
-                        ? '/search/order'
-                        : 'https://api.example.com/orders',
-                    helperText: hasConnection
-                        ? LocaleKeys.ui_relative_to_base_url.tr()
-                        : LocaleKeys.ui_no_connection_no_auth.tr(),
-                  ),
-                  onChanged: (value) =>
-                      _update(context, (c) => c.copyWith(url: value)),
-                ),
-              ),
-            ],
+          HttpRequestLine(
+            fieldKey: node.id.value,
+            method: config.method,
+            url: config.url,
+            hasConnection: config.connectionId.isNotEmpty,
+            baseUrl: _baseUrlOf(connections, config.connectionId),
+            suggestions: suggestions,
+            onMethodChanged: (method) =>
+                _update(context, (c) => c.copyWith(method: method)),
+            onUrlChanged: (value) =>
+                _update(context, (c) => c.copyWith(url: value)),
           ),
           const SizedBox(height: AppSpacing.md),
-          _NameValueList(
+          HttpNameValueList(
             title: LocaleKeys.ui_query_parameter.tr(),
             addLabel: LocaleKeys.ui_add_parameter.tr(),
             items: config.query,
@@ -103,7 +72,7 @@ class HttpRequestWidget extends StatelessWidget {
                 _update(context, (c) => c.copyWith(query: items)),
           ),
           const SizedBox(height: AppSpacing.md),
-          _NameValueList(
+          HttpNameValueList(
             title: 'Header',
             addLabel: LocaleKeys.ui_add_header.tr(),
             items: config.headers,
@@ -191,93 +160,17 @@ class HttpRequestWidget extends StatelessWidget {
     );
   }
 
+  String? _baseUrlOf(List<Connection> connections, String connectionId) {
+    for (final connection in connections) {
+      if (connection.id == connectionId) return connection.baseUrl;
+    }
+    return null;
+  }
+
   void _update(
     BuildContext context,
     HttpRequestNodeConfig Function(HttpRequestNodeConfig config) update,
   ) {
     context.read<TaskBuilderCubit>().updateHttpRequest(node.id, update);
-  }
-}
-
-class _NameValueList extends StatelessWidget {
-  const _NameValueList({
-    required this.title,
-    required this.addLabel,
-    required this.items,
-    required this.suggestions,
-    required this.onChanged,
-  });
-
-  final String title;
-  final String addLabel;
-  final List<HttpNameValue> items;
-  final List<TemplateExpressionSuggestion> suggestions;
-  final ValueChanged<List<HttpNameValue>> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.titleSmall),
-        for (var index = 0; index < items.length; index++)
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.sm),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: TemplateExpressionTextField(
-                    value: items[index].name,
-                    suggestions: suggestions,
-                    decoration: InputDecoration(
-                      labelText: LocaleKeys.ui_name.tr(),
-                    ),
-                    onChanged: (name) =>
-                        _replace(index, items[index].copyWith(name: name)),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  flex: 3,
-                  child: TemplateExpressionTextField(
-                    value: items[index].value,
-                    suggestions: suggestions,
-                    decoration: InputDecoration(
-                      labelText: LocaleKeys.ui_wert.tr(),
-                    ),
-                    onChanged: (value) =>
-                        _replace(index, items[index].copyWith(value: value)),
-                  ),
-                ),
-                IconButton(
-                  tooltip: LocaleKeys.ui_entfernen.tr(),
-                  icon: const Icon(Icons.close),
-                  onPressed: () => onChanged([
-                    for (var other = 0; other < items.length; other++)
-                      if (other != index) items[other],
-                  ]),
-                ),
-              ],
-            ),
-          ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            icon: const Icon(Icons.add),
-            label: Text(addLabel),
-            onPressed: () => onChanged([...items, const HttpNameValue()]),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _replace(int index, HttpNameValue item) {
-    onChanged([
-      for (var other = 0; other < items.length; other++)
-        if (other == index) item else items[other],
-    ]);
   }
 }

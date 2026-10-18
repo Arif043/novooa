@@ -111,11 +111,10 @@ class _FieldInput extends StatelessWidget {
         suggestions: TemplateExpressionScope.suggestionsOf(context),
         minLines: field.lines,
         maxLines: field.lines > 1 ? field.lines + 6 : 1,
+        helperText: field.helper,
         decoration: InputDecoration(
           labelText: field.label,
           hintText: field.hint,
-          helperText: field.helper,
-          helperMaxLines: 2,
         ),
         onChanged: onChanged,
       ),

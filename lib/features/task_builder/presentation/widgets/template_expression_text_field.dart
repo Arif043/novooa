@@ -8,6 +8,7 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_anchor.dart';
 import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_target.dart';
 
+import 'field_helper_text.dart';
 import 'template_expression_suggestion.dart';
 
 /// Editiert Template-Ausdrücke als hervorgehobene Inline-Labels.
@@ -25,6 +26,7 @@ class TemplateExpressionTextField extends StatefulWidget {
     this.minLines = 1,
     this.maxLines = 1,
     this.cursorTarget,
+    this.helperText,
   });
 
   final String value;
@@ -36,6 +38,10 @@ class TemplateExpressionTextField extends StatefulWidget {
 
   /// Macht das Feld für den KI-Agent-Cursor auffindbar.
   final AgentCursorTarget? cursorTarget;
+
+  /// Steht unter dem Feld statt in [decoration], weil die mitwachsende Höhe
+  /// nur den Eingabetext misst und ein Hilfetext darin das Feld staucht.
+  final String? helperText;
 
   @override
   State<TemplateExpressionTextField> createState() =>
@@ -75,6 +81,20 @@ class _TemplateExpressionTextFieldState
   }
 
   Widget _layout() {
+    assert(
+      widget.decoration.helperText == null,
+      'helperText statt decoration.helperText verwenden',
+    );
+    final helper = widget.helperText;
+    if (helper == null) return _sizedField();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [_sizedField(), FieldHelperText(helper)],
+    );
+  }
+
+  Widget _sizedField() {
     return LayoutBuilder(
       builder: (context, constraints) {
         if (!constraints.hasBoundedWidth) return _textField();

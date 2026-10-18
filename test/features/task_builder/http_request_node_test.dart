@@ -243,6 +243,35 @@ void main() {
       expect(find.widgetWithText(TextField, 'URL'), findsOneWidget);
     });
 
+    widgetTest('zeigt die Zieladresse aus Basis-URL und Pfad', (tester) async {
+      await pumpNode(tester, _post);
+      expect(
+        find.text(
+          'https://shop.example.com/api/search/order',
+          findRichText: true,
+        ),
+        findsOneWidget,
+      );
+
+      await tester.enterText(find.widgetWithText(TextField, 'Pfad'), 'kunden');
+      await tester.pump();
+      expect(
+        find.text('https://shop.example.com/api/kunden', findRichText: true),
+        findsOneWidget,
+      );
+    });
+
+    widgetTest('ohne Verbindung steht der Hinweis zur Anmeldung darunter', (
+      tester,
+    ) async {
+      await pumpNode(tester, const HttpRequestNodeConfig());
+
+      expect(
+        find.text('Ohne Verbindung wird ohne Anmeldung gesendet.'),
+        findsOneWidget,
+      );
+    });
+
     widgetTest(
       'eine gelöschte Verbindung bleibt sichtbar statt zu verschwinden',
       (tester) async {
@@ -252,6 +281,11 @@ void main() {
         );
 
         expect(find.text('Verbindung nicht gefunden'), findsOneWidget);
+        expect(find.widgetWithText(TextField, 'Pfad'), findsOneWidget);
+        expect(
+          find.text('Relativ zur Basis-URL der Verbindung.'),
+          findsOneWidget,
+        );
         expect(current().connectionId, 'weg');
       },
     );

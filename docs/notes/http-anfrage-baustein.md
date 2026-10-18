@@ -8,7 +8,7 @@ Gehört zu: [Verbindungen](../index/verbindungen.md)
 | --- | --- |
 | Verbindung | optional; mit Verbindung ist die Adresse ein **Pfad** unter der Basis-URL |
 | Methode | GET, POST, PUT, PATCH, DELETE; Body nur außer GET |
-| Pfad / URL | Template; mit Verbindung relativ (oder dieselbe Origin) |
+| Pfad / URL | Template; mit Verbindung relativ (oder dieselbe Origin). Steht neben der Methode; darunter zeigt der Editor die vollständige Zieladresse aus Basis-URL und Pfad |
 | Query, Header | Name-Wert-Listen, Werte als Templates; Query-Werte URL-kodiert |
 | Body | `kein`, `JSON`, `Text`; JSON muss nach dem Einsetzen gültig sein, sonst Abbruch vor dem Senden; bei JSON `Content-Type: application/json` voreingestellt |
 | Zeitlimit | 1–120 s, Standard 30 |
