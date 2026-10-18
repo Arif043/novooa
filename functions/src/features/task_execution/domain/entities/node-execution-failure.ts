@@ -7,6 +7,8 @@ export type FailedNode = {
   message: string;
   /** Stabiler Fehlercode, den der Client übersetzt; fehlt, wenn nur der Text bekannt ist. */
   failureCode?: string;
+  /** Felder für die Übersetzung des Codes, z. B. Operator und erhaltener Wert. */
+  failureDetails?: Record<string, string>;
   console?: ConsoleOutput;
 };
 
@@ -27,8 +29,11 @@ export class NodeExecutionFailure {
   }
 }
 
-/** Die Ursache eines gescheiterten Bausteins als stabiler Code samt Rückfalltext, z. B. aus einer `LanguageModelFailure`. */
-export type NodeFailureReason = {code: string; message: string};
+/**
+ * Die Ursache eines gescheiterten Bausteins als stabiler Code samt Rückfalltext, z. B. aus einer
+ * `LanguageModelFailure`. `details` trägt die Felder, die der Client in die Übersetzung einsetzt.
+ */
+export type NodeFailureReason = {code: string; message: string; details?: Record<string, string>};
 
 /**
  * Executoren melden Fehler als Exception (Vertrag von `NodeExecutor`). Hat ein Executor bereits

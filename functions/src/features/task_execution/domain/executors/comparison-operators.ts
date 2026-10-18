@@ -1,54 +1,49 @@
+import {ok, Result} from "neverthrow";
+import {type ConditionOperandFailure} from "../entities/condition-operand-failure.js";
 import {type ComparisonOperator} from "../entities/task.js";
 import {
-  calendarDayOf, isEmptyValue, isRecord, looseEquals, requireBoolean, requireDate, requireFile,
-  requireNumber, requireText, stringFor,
+  booleanOperand, calendarDayOf, dateOperand, fileOperand, isEmptyValue, isRecord, looseEquals,
+  numberOperand, textOperand, stringFor, type OperandOrFailure,
 } from "./comparison-operands.js";
 
-type Comparison = (left: unknown, right: unknown) => boolean;
-
-/** Deutsche Namen für Laufzeitmeldungen; übersetzt wird im Client. */
-const operatorLabels: Record<ComparisonOperator, string> = {
-  equals: "ist", notEquals: "ist nicht",
-  greaterThan: "größer als", greaterThanOrEqual: "größer oder gleich",
-  lessThan: "kleiner als", lessThanOrEqual: "kleiner oder gleich",
-  contains: "enthält", notContains: "enthält nicht",
-  startsWith: "beginnt mit", endsWith: "endet mit",
-  isEmpty: "ist leer", isNotEmpty: "ist nicht leer",
-  isTrue: "ist wahr", isFalse: "ist falsch",
-  sameDay: "ist am", before: "vor", after: "nach",
-  contentTypeIs: "Dateityp ist",
-};
+export type ComparisonOrFailure = Result<boolean, ConditionOperandFailure>;
+type Comparison = (left: unknown, right: unknown) => ComparisonOrFailure;
+type Operand<T> = (value: unknown, operator: ComparisonOperator) => OperandOrFailure<T>;
 
 /** Eine Strategie je Operator. Einstellige Operatoren ignorieren `right`. */
 export const comparisonOperators: Record<ComparisonOperator, Comparison> = {
-  equals: looseEquals,
-  notEquals: (left, right) => !looseEquals(left, right),
-  greaterThan: numeric("greaterThan", (left, right) => left > right),
-  greaterThanOrEqual: numeric("greaterThanOrEqual", (left, right) => left >= right),
-  lessThan: numeric("lessThan", (left, right) => left < right),
-  lessThanOrEqual: numeric("lessThanOrEqual", (left, right) => left <= right),
-  contains,
-  notContains: (left, right) => !requireText(left, operatorLabels.notContains).includes(stringFor(right)),
-  startsWith: (left, right) => requireText(left, operatorLabels.startsWith).startsWith(stringFor(right)),
-  endsWith: (left, right) => requireText(left, operatorLabels.endsWith).endsWith(stringFor(right)),
-  isEmpty: (left) => isEmptyValue(left),
-  isNotEmpty: (left) => !isEmptyValue(left),
-  isTrue: (left) => requireBoolean(left, operatorLabels.isTrue),
-  isFalse: (left) => !requireBoolean(left, operatorLabels.isFalse),
-  sameDay: dated("sameDay", (left, right) => calendarDayOf(left) === calendarDayOf(right)),
-  before: dated("before", (left, right) => left.getTime() < right.getTime()),
-  after: dated("after", (left, right) => left.getTime() > right.getTime()),
-  contentTypeIs: (left, right) => contentTypeMatches(requireFile(left, operatorLabels.contentTypeIs).contentType, right),
+  equals: (left, right) => ok(looseEquals(left, right)),
+  notEquals: (left, right) => ok(!looseEquals(left, right)),
+  greaterThan: binary("greaterThan", numberOperand, (left, right) => left > right),
+  greaterThanOrEqual: binary("greaterThanOrEqual", numberOperand, (left, right) => left >= right),
+  lessThan: binary("lessThan", numberOperand, (left, right) => left < right),
+  lessThanOrEqual: binary("lessThanOrEqual", numberOperand, (left, right) => left <= right),
+  contains: (left, right) => ok(contains(left, right)),
+  notContains: textual("notContains", (left, right) => !left.includes(right)),
+  startsWith: textual("startsWith", (left, right) => left.startsWith(right)),
+  endsWith: textual("endsWith", (left, right) => left.endsWith(right)),
+  isEmpty: (left) => ok(isEmptyValue(left)),
+  isNotEmpty: (left) => ok(!isEmptyValue(left)),
+  isTrue: (left) => booleanOperand(left, "isTrue"),
+  isFalse: (left) => booleanOperand(left, "isFalse").map((value) => !value),
+  sameDay: binary("sameDay", dateOperand, (left, right) => calendarDayOf(left) === calendarDayOf(right)),
+  before: binary("before", dateOperand, (left, right) => left.getTime() < right.getTime()),
+  after: binary("after", dateOperand, (left, right) => left.getTime() > right.getTime()),
+  contentTypeIs: (left, right) =>
+    fileOperand(left, "contentTypeIs").map((file) => contentTypeMatches(file.contentType, right)),
 };
 
-function numeric(operator: ComparisonOperator, compare: (left: number, right: number) => boolean): Comparison {
-  const label = operatorLabels[operator];
-  return (left, right) => compare(requireNumber(left, label), requireNumber(right, label));
+/** Beide Seiten müssen die gleiche Art Wert sein (Zahl, Datum). */
+function binary<T>(
+  operator: ComparisonOperator, operand: Operand<T>, compare: (left: T, right: T) => boolean,
+): Comparison {
+  return (left, right) => Result.combine([operand(left, operator), operand(right, operator)])
+    .map(([leftValue, rightValue]) => compare(leftValue, rightValue));
 }
 
-function dated(operator: ComparisonOperator, compare: (left: Date, right: Date) => boolean): Comparison {
-  const label = operatorLabels[operator];
-  return (left, right) => compare(requireDate(left, label), requireDate(right, label));
+/** Der geprüfte Wert muss Text sein; der Vergleichswert wird als Text gelesen. */
+function textual(operator: ComparisonOperator, compare: (left: string, right: string) => boolean): Comparison {
+  return (left, right) => textOperand(left, operator).map((text) => compare(text, stringFor(right)));
 }
 
 /** Liste: enthält ein gleiches Element; Objekt: hat den Schlüssel; sonst Teiltext. */

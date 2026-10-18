@@ -9,6 +9,8 @@ import {
   textOutputs,
 } from "./node-executor.js";
 import {type WorkflowNode} from "../entities/task.js";
+import {type ConditionOperandFailure} from "../entities/condition-operand-failure.js";
+import {NodeFailedError} from "../entities/node-execution-failure.js";
 import {finalOutputOf} from "../services/task-graph-utils.js";
 
 export type ConditionalBranchObserver = {
@@ -80,27 +82,29 @@ function conditionedOutputFor(
   node: WorkflowNode,
   runContext: Parameters<NodeExecutor["execute"]>[1],
 ): ConditionalExecutionResult {
-  if (node.config.primitive !== "conditionalFlow") {
-    return {selectedNodeId: null, reason: "Kein Bedingter-Ablauf-Baustein."};
-  }
-  const match = selectConditionedBranch(
+  if (node.config.primitive !== "conditionalFlow") return {selectedNodeId: null};
+  const matchOrFailure = selectConditionedBranch(
     node.config.branches,
     (template) => runContext.templateExpressionResolver.resolveValue(template),
   );
-  if (!match) {
-    return {
-      selectedNodeId: null,
-      reason: "Keine Bedingung trifft zu und kein Sonst-Zweig vorhanden.",
-    };
-  }
+  if (matchOrFailure.isErr()) throw nodeFailedFor(matchOrFailure.error);
+  const match = matchOrFailure.value;
+  if (!match) return {selectedNodeId: null};
   return {
     selectedNodeId: null,
     selectedBranchId: match.branch.id,
     selectedBranchLabel: match.branch.label,
-    reason: match.matched
-      ? `Bedingung erfüllt: ${match.branch.label}`
-      : `Keine Bedingung trifft zu. Sonst-Zweig verwendet: ${match.branch.label}`,
   };
+}
+
+// Executoren melden Fehler laut Vertrag per Exception; Code und Felder der
+// Failure reisen darin bis zur Aktivität, wo der Client sie übersetzt.
+function nodeFailedFor(failure: ConditionOperandFailure): NodeFailedError {
+  return new NodeFailedError({
+    code: failure.code,
+    message: failure.technicalMessage,
+    details: failure.details,
+  });
 }
 
 function labelMatchedOutputFor(
@@ -126,8 +130,8 @@ async function executeSelectedBranch(
   observer: ConditionalBranchObserver,
 ): Promise<string> {
   const branch = selectedBranchFor(node, output.selectedBranchId);
-  if (!branch) return output.reason;
-  if (branch.graph.nodes.length === 0) return emptyBranchOutput(output);
+  if (!branch) return "";
+  if (branch.graph.nodes.length === 0) return branch.label;
   observer.started({
     node,
     branchLabel: branch.label,
@@ -144,16 +148,12 @@ async function executeSelectedBranch(
     resultCount: results.length,
     outputLength: finalOutput.length,
   });
-  return finalOutput || output.reason;
+  return finalOutput || branch.label;
 }
 
 function selectedBranchFor(node: WorkflowNode, branchId?: string | null) {
   if (node.config.primitive !== "conditionalFlow") return undefined;
   return node.config.branches.find((branch) => branch.id === branchId);
-}
-
-function emptyBranchOutput(output: ConditionalExecutionResult): string {
-  return `Branch ${output.selectedBranchLabel ?? ""} has no nodes.`;
 }
 
 function graphFor(branch: Branch["graph"]): import("../entities/task.js").WorkflowGraph {

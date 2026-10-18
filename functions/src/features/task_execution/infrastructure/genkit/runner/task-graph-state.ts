@@ -10,7 +10,7 @@ import {
 import {finalOutputOf} from "../../../domain/services/task-graph-utils.js";
 import {type TaskVariables} from "../../../domain/executors/node-executor.js";
 import {consoleOutputOf} from "../../../domain/entities/script-execution.js";
-import {NodeExecutionFailure, NodeFailedError} from "../../../domain/entities/node-execution-failure.js";
+import {type FailedNode, NodeExecutionFailure, NodeFailedError} from "../../../domain/entities/node-execution-failure.js";
 
 export type InitialNodeRunState = {
   nodeResults: NodeExecutionResult[];
@@ -119,7 +119,12 @@ export function newResults(
 
 export function nodeExecutionFailure(node: WorkflowNode, error: unknown, completed: NodeExecutionResult[]): NodeExecutionFailure {
   const message = error instanceof Error ? error.message : String(error);
-  const failureCode = error instanceof NodeFailedError ? {failureCode: error.reason.code} : {};
+  const failureCode = error instanceof NodeFailedError ? failureFieldsOf(error) : {};
   const failedNode = {nodeId: node.id, primitive: node.primitive, message, ...failureCode, console: consoleOutputOf(error)};
   return new NodeExecutionFailure(failedNode, completed, error);
+}
+
+function failureFieldsOf(error: NodeFailedError): Pick<FailedNode, "failureCode" | "failureDetails"> {
+  const {code, details} = error.reason;
+  return details ? {failureCode: code, failureDetails: details} : {failureCode: code};
 }

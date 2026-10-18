@@ -16,8 +16,11 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 - `TaskRunFailure` bleibt Eingabefehlern der HTTP-Routen vorbehalten.
 - Wirft ein Executor `NodeFailedError`, übernimmt der Runner dessen Code als
   `FailedNode.failureCode`; gespeichert in `activities.failure_code` bzw.
-  `failureCode` (Firestore). Der Client übersetzt bekannte Codes und zeigt den
-  Text der Runtime als technische Details
+  `failureCode` (Firestore). Felder für die Übersetzung (`reason.details`)
+  landen in `FailedNode.failureDetails`, gespeichert in
+  `activities.failure_details_json` bzw. `failureDetails`. Der Client
+  übersetzt bekannte Codes mit diesen Feldern und zeigt den Text der Runtime
+  als technische Details
   ([Fehlerschichtung](./fehlerschichtung-modellaufruf.md)).
 - Streng steigende Zeitstempel (ms) im SQLite-Aktivitäts-Store sichern die
   Reihenfolge.

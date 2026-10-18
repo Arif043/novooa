@@ -27,6 +27,7 @@ class NodeActivityValues extends StatelessWidget {
             NodeActivityFailure(
               message: activity.message!,
               failureCode: activity.failureCode,
+              failureDetails: activity.failureDetails,
             ),
           if (activity.stdout.isNotEmpty)
             _ConsoleValue(

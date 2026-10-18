@@ -1,4 +1,6 @@
-import {ConditionOperandError} from "../entities/condition-operand-error.js";
+import {err, ok, type Result} from "neverthrow";
+import {ConditionOperandFailure} from "../entities/condition-operand-failure.js";
+import {type ComparisonOperator} from "../entities/task.js";
 
 /** Rohwert eines Tabellen-Werts, wie ihn `resolveValue` liefert. */
 type TableValue = {columns: unknown[]; rows: unknown[]};
@@ -27,42 +29,36 @@ export function stringFor(value: unknown): string {
   return value === undefined || value === null ? "" : JSON.stringify(value);
 }
 
+export type OperandOrFailure<T> = Result<T, ConditionOperandFailure>;
+
 /** Eine Tabelle zählt als Zahl ihrer Zeilen („Zeilenanzahl > 3“). */
-export function requireNumber(value: unknown, label: string): number {
-  if (isTable(value)) return value.rows.length;
+export function numberOperand(value: unknown, operator: ComparisonOperator): OperandOrFailure<number> {
+  if (isTable(value)) return ok(value.rows.length);
   const number = numberOrNaN(value);
-  if (Number.isNaN(number)) throw new ConditionOperandError(label, "eine Zahl", value);
-  return number;
+  return Number.isNaN(number) ? err(new ConditionOperandFailure(operator, "number", value)) : ok(number);
 }
 
-export function requireBoolean(value: unknown, label: string): boolean {
+export function booleanOperand(value: unknown, operator: ComparisonOperator): OperandOrFailure<boolean> {
   const boolean = booleanOrUndefined(value);
-  if (boolean === undefined) throw new ConditionOperandError(label, "einen Wahrheitswert", value);
-  return boolean;
+  return boolean === undefined ? err(new ConditionOperandFailure(operator, "boolean", value)) : ok(boolean);
 }
 
-export function requireText(value: unknown, label: string): string {
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
-  throw new ConditionOperandError(label, "einen Text", value);
+export function textOperand(value: unknown, operator: ComparisonOperator): OperandOrFailure<string> {
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return ok(String(value));
+  return err(new ConditionOperandFailure(operator, "text", value));
 }
 
 /** Ein reines Datum (`2026-10-18`) ist Mitternacht in der Zeitzone der Runtime. */
-export function requireDate(value: unknown, label: string): Date {
-  if (typeof value === "string") {
-    const dateOnly = dateOnlyPattern.exec(value.trim());
-    const date = dateOnly
-      ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
-      : new Date(value);
-    if (!Number.isNaN(date.getTime())) return date;
-  }
-  throw new ConditionOperandError(label, "ein Datum", value);
+export function dateOperand(value: unknown, operator: ComparisonOperator): OperandOrFailure<Date> {
+  const date = typeof value === "string" ? dateFrom(value.trim()) : undefined;
+  return date ? ok(date) : err(new ConditionOperandFailure(operator, "date", value));
 }
 
-export function requireFile(value: unknown, label: string): FileValue {
+export function fileOperand(value: unknown, operator: ComparisonOperator): OperandOrFailure<FileValue> {
   if (isRecord(value) && typeof value.fileId === "string" && typeof value.contentType === "string") {
-    return {fileId: value.fileId, contentType: value.contentType};
+    return ok({fileId: value.fileId, contentType: value.contentType});
   }
-  throw new ConditionOperandError(label, "eine Datei", value);
+  return err(new ConditionOperandFailure(operator, "file", value));
 }
 
 /** Leer: kein Wert, leerer Text, leere Liste, leeres Objekt, Tabelle ohne Zeilen. */
@@ -85,6 +81,14 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isTable(value: unknown): value is TableValue {
   return isRecord(value) && Array.isArray(value.columns) && Array.isArray(value.rows);
+}
+
+function dateFrom(text: string): Date | undefined {
+  const dateOnly = dateOnlyPattern.exec(text);
+  const date = dateOnly
+    ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+    : new Date(text);
+  return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
 function numberOrNaN(value: unknown): number {

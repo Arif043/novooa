@@ -5,6 +5,7 @@ import '../../../../core/entities/unique_id.dart';
 import '../../../teams/domain/repositories/team_repository.dart';
 import '../../domain/entities/task_activity.dart';
 import '../../domain/repositories/task_activity_repository.dart';
+import '../models/failure_details_mapper.dart';
 
 class FirestoreTaskActivityRepository implements TaskActivityRepository {
   const FirestoreTaskActivityRepository(
@@ -81,6 +82,7 @@ class FirestoreTaskActivityRepository implements TaskActivityRepository {
       output: data['output'] as String?,
       message: data['message'] as String?,
       failureCode: ActivityFailureCode.fromName(data['failureCode']),
+      failureDetails: failureDetailsFrom(data['failureDetails']),
       outputs: _outputsFrom(data['outputs']),
     );
   }

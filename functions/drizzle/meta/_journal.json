@@ -162,6 +162,13 @@
       "when": 1792255576767,
       "tag": "0022_activity_failure_code",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1792281189042,
+      "tag": "0023_activity_failure_details",
+      "breakpoints": true
     }
   ]
 }

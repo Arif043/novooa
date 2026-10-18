@@ -22,3 +22,12 @@ test("an ordinary exception keeps only its message", () => {
   assert.equal(failure.failedNode.failureCode, undefined);
   assert.equal(failure.message, "kaputt");
 });
+
+test("the details of a reason reach the failed node for translation", () => {
+  const details = {operator: "before", expected: "date", received: "29.09.2026"};
+  const error = new NodeFailedError({code: "conditionOperandMismatch", message: "mismatch", details});
+
+  const failure = nodeExecutionFailure(node, error, []);
+
+  assert.deepEqual(failure.failedNode.failureDetails, details);
+});

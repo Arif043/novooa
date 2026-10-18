@@ -491,6 +491,16 @@ abstract class LocaleKeys {
       'task_builder.condition_value_hints.row_count';
   static const task_builder_condition_value_hints =
       'task_builder.condition_value_hints';
+  static const task_builder_condition_value_kinds_source =
+      'task_builder.condition_value_kinds.source';
+  static const task_builder_condition_value_kinds_fixed =
+      'task_builder.condition_value_kinds.fixed';
+  static const task_builder_condition_value_kinds_true =
+      'task_builder.condition_value_kinds.true';
+  static const task_builder_condition_value_kinds_false =
+      'task_builder.condition_value_kinds.false';
+  static const task_builder_condition_value_kinds =
+      'task_builder.condition_value_kinds';
   static const task_builder = 'task_builder';
   static const settings_language_title = 'settings.language.title';
   static const settings_language_description = 'settings.language.description';
@@ -903,6 +913,20 @@ abstract class LocaleKeys {
       'activity_failures.codes.timedOut';
   static const activity_failures_codes_capabilityMissing =
       'activity_failures.codes.capabilityMissing';
+  static const activity_failures_codes_conditionOperandMismatch =
+      'activity_failures.codes.conditionOperandMismatch';
   static const activity_failures_codes = 'activity_failures.codes';
+  static const activity_failures_operand_kinds_number =
+      'activity_failures.operand_kinds.number';
+  static const activity_failures_operand_kinds_date =
+      'activity_failures.operand_kinds.date';
+  static const activity_failures_operand_kinds_boolean =
+      'activity_failures.operand_kinds.boolean';
+  static const activity_failures_operand_kinds_text =
+      'activity_failures.operand_kinds.text';
+  static const activity_failures_operand_kinds_file =
+      'activity_failures.operand_kinds.file';
+  static const activity_failures_operand_kinds =
+      'activity_failures.operand_kinds';
   static const activity_failures = 'activity_failures';
 }

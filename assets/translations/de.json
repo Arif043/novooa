@@ -308,6 +308,12 @@
       "date": "JJJJ-MM-TT, z. B. 2026-10-18",
       "content_type": "z. B. image/png oder image/*",
       "row_count": "Anzahl der Zeilen"
+    },
+    "condition_value_kinds": {
+      "source": "Baustein",
+      "fixed": "Fester Wert",
+      "true": "Ja",
+      "false": "Nein"
     }
   },
   "settings": {
@@ -666,7 +672,15 @@
       "providerUnavailable": "Der Modellanbieter ist nicht erreichbar. Prüfe die Verbindung und versuche es erneut.",
       "requestRejected": "Der Modellanbieter hat die Anfrage abgelehnt. Die technischen Details nennen den Grund.",
       "timedOut": "Das Modell hat nicht rechtzeitig geantwortet. Versuche es erneut oder wähle ein schnelleres Modell.",
-      "capabilityMissing": "Das gewählte Sprachmodell kann diese Ein- oder Ausgabe nicht verarbeiten. Wähle ein passendes Modell."
+      "capabilityMissing": "Das gewählte Sprachmodell kann diese Ein- oder Ausgabe nicht verarbeiten. Wähle ein passendes Modell.",
+      "conditionOperandMismatch": "Der Vergleich „{operator}“ braucht {expected}, erhalten: „{received}“. Prüfe den Wert oder wähle einen passenden Vergleich."
+    },
+    "operand_kinds": {
+      "number": "eine Zahl",
+      "date": "ein Datum (JJJJ-MM-TT)",
+      "boolean": "einen Wahrheitswert",
+      "text": "einen Text",
+      "file": "eine Datei"
     }
   }
 }

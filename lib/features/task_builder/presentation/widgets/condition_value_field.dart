@@ -3,6 +3,7 @@ import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import '../../domain/entities/workflow_graph.dart';
 import 'branch_condition_operand_type.dart';
+import 'condition_value_options.dart';
 import 'condition_value_sources.dart';
 
 class ConditionValueField extends StatefulWidget {
@@ -56,11 +57,7 @@ class _ConditionValueFieldState extends State<ConditionValueField> {
     final sources = conditionValueSources(widget.graph);
     final hasStored =
         widget.value.isNotEmpty && !sources.containsKey(widget.value);
-    final options = switch (widget.hint) {
-      EnumTypeHint(:final values) => {for (final value in values) value: value},
-      BooleanTypeHint() => {'true': 'Ja', 'false': 'Nein'},
-      _ => <String, String>{},
-    };
+    final options = fixedConditionValuesFor(widget.hint);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -105,7 +102,11 @@ class _ConditionValueFieldState extends State<ConditionValueField> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      _source ? 'Baustein' : 'Fester Wert',
+                      _source
+                          ? LocaleKeys.task_builder_condition_value_kinds_source
+                                .tr()
+                          : LocaleKeys.task_builder_condition_value_kinds_fixed
+                                .tr(),
                       style: Theme.of(context).textTheme.labelMedium,
                     ),
                     const Icon(Icons.expand_more, size: 18),

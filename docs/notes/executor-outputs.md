@@ -13,7 +13,7 @@ Executoren: `functions/src/features/task_execution/infrastructure/genkit/executo
 | `prompt` mit Text oder Entscheidung | ausgefuehrt | `value` (`string`) |
 | `prompt` strukturiert | ausgefuehrt | ein flacher, typisierter Output je konfiguriertem Feld (`string`, `number`, `boolean`), ohne umschliessenden Knotennamen und ohne `value`; zusätzliche Felder des Modells fallen weg |
 | `prompt` mit Bild | ausgefuehrt | `value` (`media`); das generierte Bild wird als Team-Datei referenziert |
-| `conditionalFlow` | ausgefuehrt | `value` (`string`, Ergebnis des gewaehlten Zweigs oder Begruendung); Resultat-Metadaten: `selectedNodeId`, `selectedBranchId`, `selectedBranchLabel` |
+| `conditionalFlow` | ausgefuehrt | `value` (`string`, Ergebnis des gewählten Zweigs, sonst dessen Name; ohne gewählten Zweig kein `value`); Resultat-Metadaten: `selectedNodeId`, `selectedBranchId`, `selectedBranchLabel` |
 | `iterativeRefinement` | ausgefuehrt | `value` (`string`) |
 | `readFile` | ausgefuehrt | `value` (`string`, UTF-8-Dateiinhalt) |
 | `readEmail` | ausgefuehrt | `value`, `sender`, `subject`, `message` (je `string`), `receivedAt` (`datetime`) |

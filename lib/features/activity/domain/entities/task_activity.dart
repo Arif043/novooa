@@ -22,6 +22,7 @@ class TaskActivity {
     this.output,
     this.message,
     this.failureCode,
+    this.failureDetails = const {},
     this.outputs = const {},
     this.stdout = '',
     this.stderr = '',
@@ -42,6 +43,10 @@ class TaskActivity {
 
   /// Ursache eines gescheiterten Bausteins, falls die Runtime sie kennt.
   final ActivityFailureCode? failureCode;
+
+  /// Felder zum [failureCode] (z. B. Operator und erhaltener Wert), die die
+  /// Übersetzung einsetzt.
+  final Map<String, String> failureDetails;
   final Map<String, Object?> outputs;
 
   /// Was der Baustein auf stdout und stderr ausgegeben hat (Script-Baustein); leer, wenn nichts.

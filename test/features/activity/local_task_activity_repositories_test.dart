@@ -37,6 +37,7 @@ void main() {
     expect(activity.stdout, 'hallo\n');
     expect(activity.stderr, 'Warnung\n');
     expect(activity.failureCode, ActivityFailureCode.responseTruncated);
+    expect(activity.failureDetails, {'received': 'abc'});
     expect(client.reviewedRunId, 'run-1');
   });
 
@@ -140,4 +141,5 @@ Map<String, Object?> activityJson() => {
   'outputs': <String, Object?>{},
   'console': {'stdout': 'hallo\n', 'stderr': 'Warnung\n'},
   'failureCode': 'responseTruncated',
+  'failureDetails': {'received': 'abc', 'ignored': 3},
 };

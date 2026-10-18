@@ -18,6 +18,8 @@ export const activities = sqliteTable("activities", {
   console_json: text("console_json").notNull().default("{}"),
   /** Stabiler Fehlercode eines gescheiterten Bausteins (z. B. `responseTruncated`), übersetzt im Client. */
   failure_code: text("failure_code"),
+  /** Felder zum Fehlercode als JSON-Objekt (z. B. Operator, erhaltener Wert), für die Übersetzung. */
+  failure_details_json: text("failure_details_json"),
 }, (table) => [
   index("idx_activities_run_created").on(table.run_id, table.created_at),
 ]);

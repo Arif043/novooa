@@ -3,6 +3,10 @@ import test from "node:test";
 import {evaluateBranchCondition, selectConditionedBranch} from "./branch-condition-evaluator.js";
 import {type BranchCondition, type ConditionalBranch} from "../entities/task.js";
 
+function unwrapped<T>(valueOrFailure: {_unsafeUnwrap(): T}): T {
+  return valueOrFailure._unsafeUnwrap();
+}
+
 function resolverFor(values: Record<string, unknown>) {
   return (template: string): unknown => values[template] ?? template;
 }
@@ -12,8 +16,8 @@ test("equals koerziert einen numerischen String gegen eine Zahl", () => {
     kind: "comparison", left: "{{x}}", operator: "equals", right: "42",
   };
 
-  assert.equal(evaluateBranchCondition(condition, resolverFor({"{{x}}": 42})), true);
-  assert.equal(evaluateBranchCondition(condition, resolverFor({"{{x}}": 43})), false);
+  assert.equal(unwrapped(evaluateBranchCondition(condition, resolverFor({"{{x}}": 42}))), true);
+  assert.equal(unwrapped(evaluateBranchCondition(condition, resolverFor({"{{x}}": 43}))), false);
 });
 
 test("equals koerziert einen Boolean-String gegen einen echten Boolean", () => {
@@ -21,8 +25,8 @@ test("equals koerziert einen Boolean-String gegen einen echten Boolean", () => {
     kind: "comparison", left: "{{x}}", operator: "equals", right: "true",
   };
 
-  assert.equal(evaluateBranchCondition(condition, resolverFor({"{{x}}": true})), true);
-  assert.equal(evaluateBranchCondition(condition, resolverFor({"{{x}}": false})), false);
+  assert.equal(unwrapped(evaluateBranchCondition(condition, resolverFor({"{{x}}": true}))), true);
+  assert.equal(unwrapped(evaluateBranchCondition(condition, resolverFor({"{{x}}": false}))), false);
 });
 
 test("notEquals ist die Negation von equals", () => {
@@ -30,8 +34,8 @@ test("notEquals ist die Negation von equals", () => {
     kind: "comparison", left: "{{x}}", operator: "notEquals", right: "42",
   };
 
-  assert.equal(evaluateBranchCondition(condition, resolverFor({"{{x}}": 42})), false);
-  assert.equal(evaluateBranchCondition(condition, resolverFor({"{{x}}": 43})), true);
+  assert.equal(unwrapped(evaluateBranchCondition(condition, resolverFor({"{{x}}": 42}))), false);
+  assert.equal(unwrapped(evaluateBranchCondition(condition, resolverFor({"{{x}}": 43}))), true);
 });
 
 test("contains prüft eine Teilzeichenkette", () => {
@@ -40,11 +44,11 @@ test("contains prüft eine Teilzeichenkette", () => {
   };
 
   assert.equal(
-    evaluateBranchCondition(condition, resolverFor({"{{text}}": "Hallo Welt"})),
+    unwrapped(evaluateBranchCondition(condition, resolverFor({"{{text}}": "Hallo Welt"}))),
     true,
   );
   assert.equal(
-    evaluateBranchCondition(condition, resolverFor({"{{text}}": "Hallo"})),
+    unwrapped(evaluateBranchCondition(condition, resolverFor({"{{text}}": "Hallo"}))),
     false,
   );
 });
@@ -57,9 +61,9 @@ test("greaterThan/lessThan koerzieren String-Zahlen für den Vergleich", () => {
     kind: "comparison", left: "{{x}}", operator: "lessThanOrEqual", right: "10",
   };
 
-  assert.equal(evaluateBranchCondition(greaterThan, resolverFor({"{{x}}": "10"})), true);
-  assert.equal(evaluateBranchCondition(greaterThan, resolverFor({"{{x}}": "5"})), false);
-  assert.equal(evaluateBranchCondition(lessThanOrEqual, resolverFor({"{{x}}": 10})), true);
+  assert.equal(unwrapped(evaluateBranchCondition(greaterThan, resolverFor({"{{x}}": "10"}))), true);
+  assert.equal(unwrapped(evaluateBranchCondition(greaterThan, resolverFor({"{{x}}": "5"}))), false);
+  assert.equal(unwrapped(evaluateBranchCondition(lessThanOrEqual, resolverFor({"{{x}}": 10}))), true);
 });
 
 test("AND-Gruppe trifft nur zu, wenn alle Kinder zutreffen", () => {
@@ -73,11 +77,11 @@ test("AND-Gruppe trifft nur zu, wenn alle Kinder zutreffen", () => {
   };
 
   assert.equal(
-    evaluateBranchCondition(group, resolverFor({"{{x}}": 5, "{{y}}": "ja"})),
+    unwrapped(evaluateBranchCondition(group, resolverFor({"{{x}}": 5, "{{y}}": "ja"}))),
     true,
   );
   assert.equal(
-    evaluateBranchCondition(group, resolverFor({"{{x}}": 5, "{{y}}": "nein"})),
+    unwrapped(evaluateBranchCondition(group, resolverFor({"{{x}}": 5, "{{y}}": "nein"}))),
     false,
   );
 });
@@ -92,8 +96,8 @@ test("OR-Gruppe trifft zu, sobald ein Kind zutrifft", () => {
     ],
   };
 
-  assert.equal(evaluateBranchCondition(group, resolverFor({"{{x}}": 2})), true);
-  assert.equal(evaluateBranchCondition(group, resolverFor({"{{x}}": 3})), false);
+  assert.equal(unwrapped(evaluateBranchCondition(group, resolverFor({"{{x}}": 2}))), true);
+  assert.equal(unwrapped(evaluateBranchCondition(group, resolverFor({"{{x}}": 3}))), false);
 });
 
 test("XOR-Gruppe trifft nur zu, wenn genau ein Kind zutrifft", () => {
@@ -107,15 +111,15 @@ test("XOR-Gruppe trifft nur zu, wenn genau ein Kind zutrifft", () => {
   };
 
   assert.equal(
-    evaluateBranchCondition(group, resolverFor({"{{a}}": true, "{{b}}": false})),
+    unwrapped(evaluateBranchCondition(group, resolverFor({"{{a}}": true, "{{b}}": false}))),
     true,
   );
   assert.equal(
-    evaluateBranchCondition(group, resolverFor({"{{a}}": true, "{{b}}": true})),
+    unwrapped(evaluateBranchCondition(group, resolverFor({"{{a}}": true, "{{b}}": true}))),
     false,
   );
   assert.equal(
-    evaluateBranchCondition(group, resolverFor({"{{a}}": false, "{{b}}": false})),
+    unwrapped(evaluateBranchCondition(group, resolverFor({"{{a}}": false, "{{b}}": false}))),
     false,
   );
 });
@@ -139,15 +143,15 @@ test("verschachtelte Gruppen werten rekursiv aus (Klammerung)", () => {
   };
 
   assert.equal(
-    evaluateBranchCondition(nested, resolverFor({"{{x}}": -1, "{{y}}": "ja", "{{z}}": "immer"})),
+    unwrapped(evaluateBranchCondition(nested, resolverFor({"{{x}}": -1, "{{y}}": "ja", "{{z}}": "immer"}))),
     true,
   );
   assert.equal(
-    evaluateBranchCondition(nested, resolverFor({"{{x}}": -1, "{{y}}": "ja", "{{z}}": "nie"})),
+    unwrapped(evaluateBranchCondition(nested, resolverFor({"{{x}}": -1, "{{y}}": "ja", "{{z}}": "nie"}))),
     false,
   );
   assert.equal(
-    evaluateBranchCondition(nested, resolverFor({"{{x}}": 1, "{{y}}": "ja", "{{z}}": "nie"})),
+    unwrapped(evaluateBranchCondition(nested, resolverFor({"{{x}}": 1, "{{y}}": "ja", "{{z}}": "nie"}))),
     true,
   );
 });
@@ -165,7 +169,7 @@ test("selectConditionedBranch wählt den ersten zutreffenden Zweig in Listenreih
     {id: "sonst", label: "Sonst", nodeIds: [], graph: {nodes: [], edges: []}},
   ];
 
-  const match = selectConditionedBranch(branches, resolverFor({"{{x}}": 2}));
+  const match = unwrapped(selectConditionedBranch(branches, resolverFor({"{{x}}": 2})));
 
   assert.equal(match?.branch.id, "b");
   assert.equal(match?.matched, true);
@@ -180,7 +184,7 @@ test("selectConditionedBranch fällt auf den Sonst-Zweig zurück, wenn nichts zu
     {id: "sonst", label: "Sonst", nodeIds: [], graph: {nodes: [], edges: []}},
   ];
 
-  const match = selectConditionedBranch(branches, resolverFor({"{{x}}": 99}));
+  const match = unwrapped(selectConditionedBranch(branches, resolverFor({"{{x}}": 99})));
 
   assert.equal(match?.branch.id, "sonst");
   assert.equal(match?.matched, false);
@@ -194,7 +198,7 @@ test("selectConditionedBranch liefert undefined, wenn nichts zutrifft und kein S
     },
   ];
 
-  const match = selectConditionedBranch(branches, resolverFor({"{{x}}": 99}));
+  const match = unwrapped(selectConditionedBranch(branches, resolverFor({"{{x}}": 99})));
 
   assert.equal(match, undefined);
 });

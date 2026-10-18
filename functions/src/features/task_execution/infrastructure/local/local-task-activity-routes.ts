@@ -18,6 +18,7 @@ const Activity = Type.Object({
   id: Type.String(), runId: Type.String(), taskId: Type.String(), taskTitle: Type.String(), target: Type.String(),
   status: Type.String(), occurredAt: Type.String(), nodeId: NullableString, primitive: NullableString,
   input: Type.String(), output: Type.String(), outputs: JsonObject, message: Type.String(), failureCode: NullableString,
+  failureDetails: Type.Union([Type.Record(Type.String(), Type.String()), Type.Null()]),
   console: Type.Object({stdout: Type.String(), stderr: Type.String()}),
 });
 const NewActivity = Type.Object({
@@ -42,7 +43,8 @@ export const taskActivityRoutes: FastifyPluginAsyncTypebox<TaskActivityRoutesOpt
     const rows = await database.select({id: activities.id, run_id: activities.run_id, task_id: taskRuns.task_id,
       node_id: activities.node_id, target: activities.target, primitive: activities.primitive, title: activities.title,
       status: activities.status, input: activities.input, output: activities.output, outputs_json: activities.outputs_json,
-      message: activities.message, failure_code: activities.failure_code, console_json: activities.console_json,
+      message: activities.message, failure_code: activities.failure_code, failure_details_json: activities.failure_details_json,
+      console_json: activities.console_json,
       created_at: activities.created_at}).from(activities)
       .innerJoin(taskRuns, eq(taskRuns.id, activities.run_id))
       .where(eq(taskRuns.team_id, request.workspace.teamId)).orderBy(desc(activities.created_at)).limit(100);
@@ -52,7 +54,7 @@ export const taskActivityRoutes: FastifyPluginAsyncTypebox<TaskActivityRoutesOpt
   app.post("/v1/activities", {schema: {body: NewActivity, response: {201: Activity, 400: ErrorResponse}}}, async (request, reply) => {
     const activity = {...request.body, nodeId: request.body.nodeId ?? null, primitive: request.body.primitive ?? null,
       input: request.body.input ?? "", output: request.body.output ?? "", outputs: request.body.outputs ?? {},
-      message: request.body.message ?? "", failureCode: null, console: {stdout: "", stderr: ""}};
+      message: request.body.message ?? "", failureCode: null, failureDetails: null, console: {stdout: "", stderr: ""}};
     try {
       await writeActivity(database, request.workspace.teamId, activity.taskId, {
         id: activity.id, run_id: activity.runId, node_id: activity.nodeId, target: activity.target,

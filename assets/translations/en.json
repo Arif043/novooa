@@ -308,6 +308,12 @@
       "date": "YYYY-MM-DD, e.g. 2026-10-18",
       "content_type": "e.g. image/png or image/*",
       "row_count": "Number of rows"
+    },
+    "condition_value_kinds": {
+      "source": "Block",
+      "fixed": "Fixed value",
+      "true": "Yes",
+      "false": "No"
     }
   },
   "settings": {
@@ -666,7 +672,15 @@
       "providerUnavailable": "The model provider cannot be reached. Check the connection and try again.",
       "requestRejected": "The model provider rejected the request. The technical details give the reason.",
       "timedOut": "The model did not answer in time. Try again or choose a faster model.",
-      "capabilityMissing": "The selected language model cannot handle this input or output. Choose a suitable model."
+      "capabilityMissing": "The selected language model cannot handle this input or output. Choose a suitable model.",
+      "conditionOperandMismatch": "The comparison “{operator}” needs {expected} but received “{received}”. Check the value or choose a matching comparison."
+    },
+    "operand_kinds": {
+      "number": "a number",
+      "date": "a date (YYYY-MM-DD)",
+      "boolean": "a true/false value",
+      "text": "text",
+      "file": "a file"
     }
   }
 }

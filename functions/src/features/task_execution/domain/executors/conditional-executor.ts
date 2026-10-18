@@ -10,7 +10,6 @@ export type ConditionalExecutionResult = {
   selectedNodeId: string | null;
   selectedBranchId?: string | null;
   selectedBranchLabel?: string | null;
-  reason: string;
 };
 
 export function executeConditionalFlow(
@@ -32,16 +31,10 @@ function conditionalOutputFor(
       selectedNodeId: null,
       selectedBranchId: branchMatch.branch.id,
       selectedBranchLabel: branchMatch.branch.label,
-      reason: branchMatch.matched
-        ? `Matched branch label: ${branchMatch.branch.label}`
-        : `No target label matched: ${input.targetLabel}. Used first branch.`,
     };
   }
   return {
     selectedNodeId: edgeMatch?.edge.to ?? input.outgoingEdges[0]?.to ?? null,
-    reason: edgeMatch
-      ? `Matched target label: ${edgeMatch.label}`
-      : `No target label matched: ${input.targetLabel}. Used first branch.`,
   };
 }
 

@@ -13,10 +13,12 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   (`branch-condition-evaluator.ts`) prüfen der Reihe nach.
 - Operanden über `resolveValue` (nicht `resolveText`) als Rohwert, damit echte
   Zahlen- und Boolean-Vergleiche gehen. „ist“/„ist nicht“ koerzieren ad hoc.
-- Je Operator eine Strategie (`comparison-operators.ts`). Passt ein Wert nicht
-  zum Operator (z. B. „vor“ auf Text ohne Datum), wirft er
-  `ConditionOperandError`, und der Baustein scheitert mit verständlicher
-  Meldung.
+- Je Operator eine Strategie (`comparison-operators.ts`), die ein `Result`
+  liefert. Passt ein Wert nicht zum Operator (z. B. „vor“ auf Text ohne
+  Datum), ist das Ergebnis die Domain-Failure `ConditionOperandFailure`
+  (Code `conditionOperandMismatch`, Felder `operator`, `expected`,
+  `received`). Der Executor verpackt sie in `NodeFailedError`; der Client
+  übersetzt Code und Felder (en/de/tr). Der technische Text ist sprachneutral.
 - Der Client bietet je Datentyp passende Vergleiche an (`operatorsFor`; Typ
   aus `outputTypeOf`, also für alle Werte, nicht nur Felder):
 
@@ -44,7 +46,8 @@ Ziellabel, exakt passender Zweig, sonst der erste
 (`executeConditionalFlow`). Der Builder erzeugt das nicht mehr.
 
 In beiden Fällen läuft der Zweig über denselben Graph-Runner; dessen finale
-Ausgabe wird `value` des Knotens (Metadaten `selectedNodeId`,
+Ausgabe wird `value` des Knotens, ohne Ausgabe der Name des Zweigs, ohne
+gewählten Zweig gibt es keinen `value` (Metadaten `selectedNodeId`,
 `selectedBranchId`, `selectedBranchLabel`). Ausgehende Top-Level-Kanten sind
 nur Legacy-Fallback.
 

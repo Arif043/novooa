@@ -8,7 +8,11 @@ enum ActivityFailureCode {
   providerUnavailable,
   requestRejected,
   timedOut,
-  capabilityMissing;
+  capabilityMissing,
+
+  /// Ein Wert passt nicht zum Vergleich einer Bedingung; die Felder
+  /// `operator`, `expected` und `received` stehen in den Details.
+  conditionOperandMismatch;
 
   /// Unbekannte Codes (auch `unknown`) ergeben `null`: dann zählt nur der
   /// gespeicherte Text.

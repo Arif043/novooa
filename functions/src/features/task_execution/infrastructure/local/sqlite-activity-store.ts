@@ -40,7 +40,7 @@ export class SQLiteActivityStore implements ActivityStore {
   }
 
   async writeFailedNodeActivity(teamId: string, run: TaskRunDocument, failedNode: FailedNode) {
-    await writeActivity(this.database, teamId, run.taskId, {id: randomUUID(), run_id: run.runId, node_id: failedNode.nodeId, target: "node", primitive: failedNode.primitive, title: failedNode.nodeId, status: "failed", input: "", output: "", outputs_json: "{}", message: failedNode.message, failure_code: failedNode.failureCode ?? null, console_json: JSON.stringify(failedNode.console ?? {}), duration_ms: null, created_at: this.nextTimestamp()});
+    await writeActivity(this.database, teamId, run.taskId, {id: randomUUID(), run_id: run.runId, node_id: failedNode.nodeId, target: "node", primitive: failedNode.primitive, title: failedNode.nodeId, status: "failed", input: "", output: "", outputs_json: "{}", message: failedNode.message, failure_code: failedNode.failureCode ?? null, failure_details_json: failedNode.failureDetails ? JSON.stringify(failedNode.failureDetails) : null, console_json: JSON.stringify(failedNode.console ?? {}), duration_ms: null, created_at: this.nextTimestamp()});
   }
 
   private async writeNodeActivity(

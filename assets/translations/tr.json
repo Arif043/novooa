@@ -308,6 +308,12 @@
       "date": "YYYY-AA-GG, örn. 2026-10-18",
       "content_type": "örn. image/png veya image/*",
       "row_count": "Satır sayısı"
+    },
+    "condition_value_kinds": {
+      "source": "Blok",
+      "fixed": "Sabit değer",
+      "true": "Evet",
+      "false": "Hayır"
     }
   },
   "settings": {
@@ -666,7 +672,15 @@
       "providerUnavailable": "Model sağlayıcısına ulaşılamıyor. Bağlantıyı kontrol edip tekrar deneyin.",
       "requestRejected": "Model sağlayıcısı isteği reddetti. Nedeni teknik ayrıntılarda yer alıyor.",
       "timedOut": "Model zamanında yanıt vermedi. Tekrar deneyin veya daha hızlı bir model seçin.",
-      "capabilityMissing": "Seçilen dil modeli bu girişi veya çıkışı işleyemiyor. Uygun bir model seçin."
+      "capabilityMissing": "Seçilen dil modeli bu girişi veya çıkışı işleyemiyor. Uygun bir model seçin.",
+      "conditionOperandMismatch": "“{operator}” karşılaştırması {expected} gerektirir, alınan: “{received}”. Değeri kontrol edin veya uygun bir karşılaştırma seçin."
+    },
+    "operand_kinds": {
+      "number": "bir sayı",
+      "date": "bir tarih (YYYY-AA-GG)",
+      "boolean": "doğru/yanlış değeri",
+      "text": "bir metin",
+      "file": "bir dosya"
     }
   }
 }

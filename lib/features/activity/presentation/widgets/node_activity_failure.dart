@@ -14,10 +14,12 @@ class NodeActivityFailure extends StatelessWidget {
     super.key,
     required this.message,
     required this.failureCode,
+    this.failureDetails = const {},
   });
 
   final String message;
   final ActivityFailureCode? failureCode;
+  final Map<String, String> failureDetails;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +37,7 @@ class NodeActivityFailure extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           if (code != null) ...[
             SelectableText(
-              code.localizedExplanation,
+              code.localizedExplanation(failureDetails),
               style: textTheme.bodySmall,
             ),
             const SizedBox(height: AppSpacing.sm),

@@ -33,15 +33,7 @@ enum ComparisonOperator {
 }
 
 /// Verknüpfung mehrerer Kind-Ausdrücke in einer [GroupCondition].
-enum BooleanCombinator {
-  and('UND'),
-  or('ODER'),
-  xor('ENTWEDER-ODER');
-
-  const BooleanCombinator(this.label);
-
-  final String label;
-}
+enum BooleanCombinator { and, or, xor }
 
 /// Ein boolescher Ausdrucksbaum für eine Branch-Bedingung eines
 /// Bedingter-Ablauf-Bausteins ohne Entscheidungs-Prompt-Vorgänger.
