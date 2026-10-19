@@ -4,7 +4,7 @@ import {sharedDirectoryName} from "../../runner/teamwork-workspace.js";
 /** Höchstens so viele Aufträge vergibt der Orchestrator in einem Lauf. */
 export const maximumDelegations = 10;
 
-export type TeamMemberTool = {toolName: string; employeeName: string; responsibility: string};
+export type TeamMemberTool = {toolName: string; employeeId: string; employeeName: string; responsibility: string};
 
 /** Ein Auftrag des Orchestrators an einen Mitarbeiter. */
 export type TeamworkTask = {task: string; expectedResult: string; boundaries?: string};

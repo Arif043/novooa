@@ -8,9 +8,11 @@ test("every event becomes a log line and a full conversation entry", () => {
   const transcript = new TeamworkTranscript(log, () => new Date("2026-10-19T08:00:00.000Z"));
   const longAnswer = "x".repeat(3000);
 
-  transcript.task("Elektriker", {task: " Prüfe den Plan. ", expectedResult: "Ja/Nein", boundaries: " "});
-  transcript.answer("Elektriker", longAnswer, 1500);
-  transcript.failure("Ökonom", "Modell lehnt ab");
+  const elektriker = {id: "e-1", name: "Elektriker"};
+
+  transcript.task(elektriker, {task: " Prüfe den Plan. ", expectedResult: "Ja/Nein", boundaries: " "});
+  transcript.answer(elektriker, longAnswer, 1500);
+  transcript.failure({id: "e-2", name: "Ökonom"}, "Modell lehnt ab");
   transcript.review(1, {approved: false, findings: "Kosten fehlen."}, false);
   transcript.result({korrekt: true});
 
@@ -19,7 +21,7 @@ test("every event becomes a log line and a full conversation entry", () => {
     ["reviewRejected", undefined, 1], ["result", undefined, undefined],
   ]);
   assert.deepEqual(transcript.entries()[0], {
-    kind: "task", memberName: "Elektriker", text: "Prüfe den Plan.", expectedResult: "Ja/Nein", occurredAt: "2026-10-19T08:00:00.000Z",
+    kind: "task", memberId: "e-1", memberName: "Elektriker", text: "Prüfe den Plan.", expectedResult: "Ja/Nein", occurredAt: "2026-10-19T08:00:00.000Z",
   });
   assert.equal(transcript.entries()[1].text.length, 3000, "the conversation keeps what the log shortens");
   assert.equal(transcript.entries()[1].durationMs, 1500);

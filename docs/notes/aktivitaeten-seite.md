@@ -11,7 +11,8 @@ Gehört zu: [Aktivitäten](../index/aktivitaeten.md)
 - **Gespräch der Mitarbeiter:** Hat eine Node-Aktivität ein Gespräch (Teamarbeit,
   auch bei Fehlern), zeigt sie den TextButton „Gespräch der Mitarbeiter
   anzeigen“. Er öffnet per `Navigator.push` die `TeamworkConversationPage`. Dort
-  steht je Eintrag eine Karte: wer zu wem spricht, Art, Uhrzeit, ggf. Dauer und
+  steht je Eintrag eine Karte mit dem Sprecher als Noovi-Avatar (Pose nach Art,
+  Ring in seiner Farbe, siehe [Noovi](./noovi-maskottchen.md)): wer zu wem spricht, Art, Uhrzeit, ggf. Dauer und
   der ungekürzte Text, bei Aufträgen zusätzlich „Erwartetes Ergebnis“ und
   „Grenzen“. Farben nach Rolle: Orchestrator, Mitarbeiter, Prüfung, Fehler.
 - **Protokoll** (Standalone): die letzten strukturierten Runtime-Ereignisse

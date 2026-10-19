@@ -422,6 +422,7 @@ export const nodeOutputValueSchema: z.ZodType<NodeOutputValue> =
 const teamworkConversationEntrySchema = z.object({
   kind: z.enum(["task", "answer", "failure", "reviewPassed", "reviewRejected", "result"]),
   occurredAt: z.string(),
+  memberId: z.string().optional(),
   memberName: z.string().optional(),
   text: z.string(),
   expectedResult: z.string().optional(),

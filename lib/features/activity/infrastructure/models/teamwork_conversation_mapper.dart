@@ -25,6 +25,7 @@ TeamworkConversationEntry? _entryFrom(Map<dynamic, dynamic> data) {
     kind: kind,
     occurredAt: occurredAt,
     text: text,
+    memberId: _optionalString(data['memberId']),
     memberName: _optionalString(data['memberName']),
     expectedResult: _optionalString(data['expectedResult']),
     boundaries: _optionalString(data['boundaries']),

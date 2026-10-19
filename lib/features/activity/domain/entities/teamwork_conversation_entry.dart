@@ -25,6 +25,7 @@ class TeamworkConversationEntry {
     required this.kind,
     required this.occurredAt,
     required this.text,
+    this.memberId,
     this.memberName,
     this.expectedResult,
     this.boundaries,
@@ -38,7 +39,9 @@ class TeamworkConversationEntry {
   /// Auftrag, Antwort, Fehlermeldung, Befund der Prüfung oder das Ergebnis als JSON.
   final String text;
 
-  /// Der Mitarbeiter bei Auftrag, Antwort und Fehler.
+  /// Der Mitarbeiter bei Auftrag, Antwort und Fehler: seine ID bestimmt seine
+  /// Farbe, der Name steht im Kopf.
+  final String? memberId;
   final String? memberName;
   final String? expectedResult;
   final String? boundaries;

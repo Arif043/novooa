@@ -5,6 +5,8 @@ import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_skill_attachments_cubit.dart';
+import 'package:syscat2/core/widgets/noovi/noovi_image.dart';
+import 'package:syscat2/core/widgets/noovi/noovi_pose.dart';
 
 import '../../domain/entities/employee.dart';
 import '../cubits/employees_cubit.dart';
@@ -128,12 +130,22 @@ class _Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text(
-        'Noch keine Mitarbeiter. Lege einen an und weise ihn einem '
-        'Prompt-Baustein zu: Seine Rahmenbedingung wird zum System-Prompt, '
-        'seine Fähigkeiten bekommt der Baustein automatisch.',
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.bodyMedium,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const NooviImage(pose: NooviPose.wave, size: 112),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Noch keine Mitarbeiter. Lege einen an und weise ihn einem '
+              'Prompt-Baustein zu: Seine Rahmenbedingung wird zum System-Prompt, '
+              'seine Fähigkeiten bekommt der Baustein automatisch.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/widgets/ios_overlays.dart';
 
 import '../../domain/entities/employee.dart';
+import 'employee_avatar.dart';
 
 class EmployeeListTile extends StatelessWidget {
   const EmployeeListTile({
@@ -101,10 +102,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          Icons.badge_outlined,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        EmployeeAvatar(employeeId: employee.id, size: 40),
         const Spacer(),
         IconButton(
           tooltip: 'Mitarbeiter „${employee.name}“ löschen',

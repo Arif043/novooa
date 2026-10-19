@@ -8,13 +8,17 @@ class AttachmentPickerItem {
     required this.id,
     required this.title,
     required this.subtitle,
-    required this.icon,
-  });
+    this.icon,
+    this.leading,
+  }) : assert(icon != null || leading != null);
 
   final String id;
   final String title;
   final String subtitle;
-  final IconData icon;
+  final IconData? icon;
+
+  /// Statt [icon], etwa ein Mitarbeiter als Noovi.
+  final Widget? leading;
 }
 
 /// Auswahl eines Anhangs: Bottom Sheet auf dem Handy, macOS-Sheet am Desktop
@@ -102,7 +106,9 @@ class AttachmentPickerSheet extends StatelessWidget {
     final selected = selectedIds.contains(item.id);
     return ListTile(
       enabled: !selected,
-      leading: Icon(selected ? Icons.check_circle : item.icon),
+      leading: selected
+          ? const Icon(Icons.check_circle)
+          : item.leading ?? Icon(item.icon),
       title: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         item.subtitle,

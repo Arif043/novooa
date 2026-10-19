@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/employees/domain/entities/employee.dart';
+import 'package:syscat2/features/employees/presentation/widgets/employee_avatar.dart';
 import 'attachment_picker_sheet.dart';
 
 /// Zuweisung eines Mitarbeiters an einen Baustein (0..1). Der Baustein kennt
@@ -47,6 +48,7 @@ class EmployeeAssignmentPicker extends StatelessWidget {
           const _EmptyState()
         else
           _AssignedTile(
+            employeeId: assignedId!,
             employee: _assigned,
             lookupReady: enabled,
             onUnassign: onUnassign,
@@ -67,7 +69,7 @@ class EmployeeAssignmentPicker extends StatelessWidget {
             id: employee.id,
             title: employee.name,
             subtitle: _subtitleFor(employee),
-            icon: Icons.person_outline,
+            leading: EmployeeAvatar(employeeId: employee.id),
           ),
       ],
     );
@@ -125,11 +127,13 @@ class _EmptyState extends StatelessWidget {
 
 class _AssignedTile extends StatelessWidget {
   const _AssignedTile({
+    required this.employeeId,
     required this.employee,
     required this.lookupReady,
     required this.onUnassign,
   });
 
+  final String employeeId;
   final Employee? employee;
 
   /// Die Liste ist geladen; vorher wäre „nicht mehr vorhanden" voreilig.
@@ -152,10 +156,12 @@ class _AssignedTile extends StatelessWidget {
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
-      leading: Icon(
-        missing ? Icons.warning_amber_rounded : Icons.person_outline,
-        color: missing ? Theme.of(context).colorScheme.error : null,
-      ),
+      leading: missing
+          ? Icon(
+              Icons.warning_amber_rounded,
+              color: Theme.of(context).colorScheme.error,
+            )
+          : EmployeeAvatar(employeeId: employeeId),
       title: Text(
         employee?.name ?? (missing ? LocaleKeys.ui_employee_gone.tr() : '…'),
         overflow: TextOverflow.ellipsis,

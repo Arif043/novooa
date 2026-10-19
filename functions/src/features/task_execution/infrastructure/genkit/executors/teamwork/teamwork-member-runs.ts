@@ -29,6 +29,7 @@ async function memberRunFor(
   const use = teamworkMiddleware(rootDirectory, member.skillsDirectory);
   return {
     toolName,
+    employeeId: member.employee.id,
     employeeName: member.employee.name,
     responsibility: member.responsibility,
     conversation: new EmployeeConversation({ai: model.ai, employee: member.employee, model: model.model, use, config: model.config}),

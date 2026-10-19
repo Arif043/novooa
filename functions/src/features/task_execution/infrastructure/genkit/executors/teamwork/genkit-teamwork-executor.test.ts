@@ -103,9 +103,9 @@ test("the transcript holds the conversation: task, answer and result", async (t)
 
   (await executor.execute(request))._unsafeUnwrap();
 
-  assert.deepEqual(logging.transcript.entries().map(({kind, memberName, text}) => [kind, memberName, text]), [
-    ["task", "Recherche", "Finde X."],
-    ["answer", "Recherche", "X ist 42."],
-    ["result", undefined, JSON.stringify({antwort: "X ist 42 groß", groesse: 42}, null, 2)],
+  assert.deepEqual(logging.transcript.entries().map(({kind, memberId, memberName, text}) => [kind, memberId, memberName, text]), [
+    ["task", "e1", "Recherche", "Finde X."],
+    ["answer", "e1", "Recherche", "X ist 42."],
+    ["result", undefined, undefined, JSON.stringify({antwort: "X ist 42 groß", groesse: 42}, null, 2)],
   ]);
 });

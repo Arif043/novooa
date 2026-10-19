@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../core/localization/locale_keys.g.dart';
 import '../../../../../core/theme/app_spacing.dart';
+import '../../../../../core/widgets/noovi/noovi_avatar.dart';
 import '../../../domain/entities/teamwork_conversation_entry.dart';
 import 'teamwork_conversation_labels.dart';
 
@@ -23,7 +24,12 @@ class TeamworkConversationHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(entry.icon, color: foreground, semanticLabel: entry.kindLabel),
+        NooviAvatar(
+          pose: entry.pose,
+          size: 40,
+          ringColor: entry.ringIn(Theme.of(context).colorScheme),
+          semanticLabel: entry.kindLabel,
+        ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Column(

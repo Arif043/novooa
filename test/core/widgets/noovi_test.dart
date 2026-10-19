@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:syscat2/core/widgets/noovi/noovi_avatar.dart';
 import 'package:syscat2/core/widgets/noovi/noovi_image.dart';
 import 'package:syscat2/core/widgets/noovi/noovi_pose.dart';
 import 'package:syscat2/core/widgets/noovi/noovi_thinking.dart';
@@ -60,5 +61,28 @@ void main() {
     await tester.pump(const Duration(milliseconds: 800));
 
     expect(_top(tester), start);
+  });
+
+  testWidgets('the avatar shows Noovi inside a ring in the agent colour', (
+    tester,
+  ) async {
+    const ring = Color(0xFF00897B);
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Center(
+          child: NooviAvatar(
+            pose: NooviPose.present,
+            size: 40,
+            ringColor: ring,
+          ),
+        ),
+      ),
+    );
+
+    final decoration =
+        tester.widget<Container>(find.byType(Container)).decoration!
+            as BoxDecoration;
+    expect((decoration.border! as Border).top.color, ring);
+    expect(tester.getSize(find.byType(NooviImage)), const Size(32, 32));
   });
 }

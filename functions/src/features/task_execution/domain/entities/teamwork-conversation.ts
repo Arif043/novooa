@@ -9,7 +9,8 @@ export type TeamworkConversationEntry = {
   kind: TeamworkConversationKind;
   /** ISO-Zeitpunkt. */
   occurredAt: string;
-  /** Der Mitarbeiter bei Auftrag, Antwort und Fehler. */
+  /** Der Mitarbeiter bei Auftrag, Antwort und Fehler: ID (für seine Farbe in der App) und Name. */
+  memberId?: string;
   memberName?: string;
   /** Auftrag, Antwort, Fehlermeldung, Befund der Prüfung oder das Ergebnis als JSON. */
   text: string;

@@ -20,12 +20,31 @@ Gehört zu: [KI-Agent](../index/ki-agent.md)
 - **Widgets:**
   - `NooviImage(pose, size)` ist ohne `semanticLabel` dekorativ, weil Noovi meist neben einem Text steht, der schon alles sagt.
   - `NooviThinking(size)` schwebt sanft auf und ab, steht bei reduzierten Animationen still und meldet sich Screenreadern als „Noovi denkt nach …“.
+  - `NooviAvatar(pose, size, ringColor)` zeigt Noovi in einem Kreis mit farbigem Ring. Die Ringfarbe sagt, welcher Agent spricht.
+- **Farbring** (`AgentColors`, `lib/core/theme/agent_colors.dart`):
+  - Jeder Mitarbeiter hat eine feste Farbe aus einer Palette von acht. Sie wird per FNV-1a aus seiner ID abgeleitet (nicht `String.hashCode`, der je nach Plattform abweicht) und ist überall gleich.
+  - Der Orchestrator nimmt die Primärfarbe, die Prüfung `tertiary` aus dem Theme.
+  - Ein Mitarbeiter erscheint als `EmployeeAvatar` (`features/employees/presentation/widgets/`).
 - **Beim KI-Agenten:**
   - Der Öffnen-Knopf in Kopfleiste, Aufgabenstudio und Wissensbasis zeigt `wave`.
   - Im Panel zeigt der Kopf `wave`, der leere Zustand begrüßt groß mit `wave`, und jede Agent-Antwort trägt `present` als Avatar.
   - Während der Agent arbeitet, steht `NooviThinking` statt eines Ladekreises.
   - Der Agent-Cursor im Aufgabenstudio ist `fly` mit weichem Schatten; die ausgestreckte Faust liegt auf dem Klickpunkt.
-- Geplant: Noovi im Gespräch der Mitarbeiter der Teamarbeit.
+- **Bei den Mitarbeitern:**
+  - Die Karten der Mitarbeiter-Seite zeigen den Avatar in der Pose `present`; der leere Zustand begrüßt mit `wave`.
+  - Die Mitgliedskarten im Teamarbeit-Baustein, die Mitarbeiter-Zuweisung im Prompt-Baustein und die Auswahllisten zeigen ebenfalls den Avatar (`AttachmentPickerItem.leading`). Ein gelöschter Mitarbeiter zeigt weiter das Warnsymbol.
+  - Im Gespräch der Mitarbeiter trägt jede Karte den Sprecher als Avatar:
+
+    | Art | Sprecher | Pose | Ring |
+    | --- | --- | --- | --- |
+    | Auftrag | Orchestrator | `fly` | Orchestrator |
+    | Antwort | Mitarbeiter | `present` | Mitarbeiter |
+    | Auftrag gescheitert | Mitarbeiter | `thinking` | Fehlerfarbe |
+    | Prüfung bestanden | Prüfung | `thumbsUp` | Prüfung |
+    | Prüfung beanstandet | Prüfung | `thinking` | Prüfung |
+    | Ergebnis | Orchestrator | `cheer` | Orchestrator |
+
+- Navigationseinträge und Aktionsknöpfe („zuweisen“, „hinzufügen“) bleiben Symbole.
 
 ## Siehe auch
 

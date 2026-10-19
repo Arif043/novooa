@@ -41,15 +41,16 @@ export function delegationToolsFor(ai: GenkitBeta, runs: TeamMemberRun[], transc
 }
 
 async function delegate(run: TeamMemberRun, task: TeamworkTask, transcript: TeamworkTranscript): Promise<{response: string}> {
-  transcript.task(run.employeeName, task);
+  const member = {id: run.employeeId, name: run.employeeName};
+  transcript.task(member, task);
   const startedAt = Date.now();
   try {
     const answer = await run.conversation.send(memberTaskPrompt(task));
-    transcript.answer(run.employeeName, answer, Date.now() - startedAt);
+    transcript.answer(member, answer, Date.now() - startedAt);
     return {response: answer.trim() || "(keine Antwort)"};
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    transcript.failure(run.employeeName, message);
+    transcript.failure(member, message);
     return {response: `Der Auftrag an ${run.employeeName} ist gescheitert: ${message}`};
   }
 }

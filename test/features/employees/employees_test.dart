@@ -16,6 +16,7 @@ import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/employee_assignment_picker.dart';
 import 'package:syscat2/features/teams/domain/repositories/team_repository.dart';
 import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
+import 'package:syscat2/features/employees/presentation/widgets/employee_avatar.dart';
 
 const _rezeption = Employee(
   id: 'e1',
@@ -199,6 +200,10 @@ void main() {
 
       expect(find.text('Rezeption'), findsWidgets);
       expect(find.text('Rahmenbedingung · 2 Fähigkeiten'), findsOneWidget);
+      expect(
+        tester.widget<EmployeeAvatar>(find.byType(EmployeeAvatar)).employeeId,
+        'e1',
+      );
     });
 
     testWidgets(
@@ -208,6 +213,7 @@ void main() {
 
         expect(find.text('Mitarbeiter nicht mehr vorhanden'), findsOneWidget);
         expect(find.text('Wähle einen anderen Mitarbeiter.'), findsOneWidget);
+        expect(find.byType(EmployeeAvatar), findsNothing);
       },
     );
 

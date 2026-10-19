@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/employees/domain/entities/employee.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/teamwork/team_member_card.dart';
+import 'package:syscat2/features/employees/presentation/widgets/employee_avatar.dart';
 
 void main() {
   Future<List<TeamMember>> pump(
@@ -43,6 +44,8 @@ void main() {
     final changes = await pump(tester, employee: recherche);
 
     expect(find.text('Recherche'), findsOneWidget);
+    final avatar = tester.widget<EmployeeAvatar>(find.byType(EmployeeAvatar));
+    expect(avatar.employeeId, 'e1');
     expect(
       find.textContaining('danach vergibt der Orchestrator'),
       findsOneWidget,
@@ -63,6 +66,7 @@ void main() {
 
     await pump(tester, member: member);
     expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+    expect(find.byType(EmployeeAvatar), findsNothing);
     expect(
       find.textContaining('danach vergibt der Orchestrator'),
       findsNothing,

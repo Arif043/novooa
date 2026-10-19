@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/core/entities/unique_id.dart';
+import 'package:syscat2/core/theme/agent_colors.dart';
+import 'package:syscat2/core/widgets/noovi/noovi_avatar.dart';
+import 'package:syscat2/core/widgets/noovi/noovi_pose.dart';
 import 'package:syscat2/features/activity/domain/entities/task_activity.dart';
 import 'package:syscat2/features/activity/presentation/pages/teamwork_conversation_page.dart';
 import 'package:syscat2/features/activity/presentation/widgets/activity_tile.dart';
@@ -17,6 +20,7 @@ final _conversation = [
   TeamworkConversationEntry(
     kind: TeamworkConversationKind.answer,
     occurredAt: DateTime.utc(2026, 10, 19, 8, 1),
+    memberId: 'e1',
     memberName: 'Elektriker',
     text: 'Der Plan ist korrekt.',
     duration: const Duration(milliseconds: 27900),
@@ -75,6 +79,15 @@ void main() {
     expect(find.text('Keine Kosten.'), findsOneWidget);
     expect(find.textContaining('nach 27.9 s'), findsOneWidget);
     expect(find.textContaining('Prüfung 1 beanstandet'), findsOneWidget);
+    final avatars = tester
+        .widgetList<NooviAvatar>(find.byType(NooviAvatar))
+        .toList();
+    expect(avatars.map((avatar) => avatar.pose), [
+      NooviPose.fly,
+      NooviPose.present,
+      NooviPose.thinking,
+    ]);
+    expect(avatars[1].ringColor, AgentColors.memberColor('e1'));
   });
 
   testWidgets('without a conversation there is no button', (tester) async {

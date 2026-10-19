@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/features/employees/domain/entities/employee.dart';
+import 'package:syscat2/features/employees/presentation/widgets/employee_avatar.dart';
 
 import '../../../domain/entities/node_config.dart';
 import '../node_language_model_field.dart';
@@ -61,6 +62,7 @@ class _TeamMemberCardState extends State<TeamMemberCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _MemberHeader(
+              employeeId: widget.member.employeeId,
               employee: widget.employee,
               missing: widget.employee == null && widget.lookupReady,
               onRemove: widget.onRemove,
@@ -97,11 +99,13 @@ class _TeamMemberCardState extends State<TeamMemberCard> {
 
 class _MemberHeader extends StatelessWidget {
   const _MemberHeader({
+    required this.employeeId,
     required this.employee,
     required this.missing,
     required this.onRemove,
   });
 
+  final String employeeId;
   final Employee? employee;
   final bool missing;
   final VoidCallback onRemove;
@@ -113,11 +117,14 @@ class _MemberHeader extends StatelessWidget {
         employee?.name ?? (missing ? LocaleKeys.ui_employee_gone.tr() : '…');
     return Row(
       children: [
-        Icon(
-          missing ? Icons.warning_amber_rounded : Icons.person_outline,
-          color: missing ? colors.error : colors.onSurfaceVariant,
-          semanticLabel: missing ? LocaleKeys.ui_employee_gone.tr() : null,
-        ),
+        if (missing)
+          Icon(
+            Icons.warning_amber_rounded,
+            color: colors.error,
+            semanticLabel: LocaleKeys.ui_employee_gone.tr(),
+          )
+        else
+          EmployeeAvatar(employeeId: employeeId),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(

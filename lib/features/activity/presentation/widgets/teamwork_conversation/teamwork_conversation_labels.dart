@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/localization/locale_keys.g.dart';
+import '../../../../../core/theme/agent_colors.dart';
+import '../../../../../core/widgets/noovi/noovi_pose.dart';
 import '../../../domain/entities/teamwork_conversation_entry.dart';
 
 /// Übersetzte Beschriftungen, Symbole und Farben eines Gesprächseintrags.
@@ -49,13 +51,26 @@ extension TeamworkConversationLabels on TeamworkConversationEntry {
     };
   }
 
-  IconData get icon => switch (kind) {
-    TeamworkConversationKind.task => Icons.assignment_outlined,
-    TeamworkConversationKind.answer => Icons.chat_bubble_outline,
-    TeamworkConversationKind.failure => Icons.error_outline,
-    TeamworkConversationKind.reviewPassed => Icons.verified_outlined,
-    TeamworkConversationKind.reviewRejected => Icons.report_outlined,
-    TeamworkConversationKind.result => Icons.flag_outlined,
+  /// Der Sprecher als Noovi: Pose nach Art des Eintrags.
+  NooviPose get pose => switch (kind) {
+    TeamworkConversationKind.task => NooviPose.fly,
+    TeamworkConversationKind.answer => NooviPose.present,
+    TeamworkConversationKind.failure => NooviPose.thinking,
+    TeamworkConversationKind.reviewPassed => NooviPose.thumbsUp,
+    TeamworkConversationKind.reviewRejected => NooviPose.thinking,
+    TeamworkConversationKind.result => NooviPose.cheer,
+  };
+
+  /// Ringfarbe des Sprechers: Orchestrator, Prüfung oder der Mitarbeiter selbst.
+  Color ringIn(ColorScheme colors) => switch (kind) {
+    TeamworkConversationKind.task ||
+    TeamworkConversationKind.result => AgentColors.orchestratorOf(colors),
+    TeamworkConversationKind.answer => AgentColors.memberColor(
+      memberId ?? memberName ?? '',
+    ),
+    TeamworkConversationKind.failure => colors.error,
+    TeamworkConversationKind.reviewPassed ||
+    TeamworkConversationKind.reviewRejected => AgentColors.reviewerOf(colors),
   };
 
   /// Hintergrund und Schrift der Karte: Orchestrator, Mitarbeiter, Prüfung und Fehler unterscheiden sich.

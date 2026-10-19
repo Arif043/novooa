@@ -5,6 +5,7 @@ import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/employees/domain/entities/employee.dart';
+import 'package:syscat2/features/employees/presentation/widgets/employee_avatar.dart';
 
 import '../../../domain/entities/node_config.dart';
 import '../../cubits/node_employee_assignments_cubit.dart';
@@ -90,7 +91,7 @@ class TeamMemberSection extends StatelessWidget {
               id: employee.id,
               title: employee.name,
               subtitle: employee.constraint.split('\n').first,
-              icon: Icons.person_outline,
+              leading: EmployeeAvatar(employeeId: employee.id),
             ),
       ],
     );
