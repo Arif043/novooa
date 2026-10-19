@@ -3,7 +3,7 @@ import {access, mkdir, mkdtemp, readdir, rm, writeFile} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test, {type TestContext} from "node:test";
-import {genkit} from "genkit/beta";
+import {genkit, z} from "genkit/beta";
 import {runtimeTestDatabase} from "../../../../../db/runtime-database-test-support.js";
 import {SQLiteEmployeeStore} from "../../../../employees/infrastructure/local/sqlite-employee-store.js";
 import {DirectorySkillStore} from "../../../../skills/infrastructure/local/directory-skill-store.js";
@@ -156,7 +156,7 @@ test("the agent runs with the constraint as system prompt, the employee's skills
   assert.doesNotMatch(sent.messages, /mails - Beschreibung/, "only the employee's skills are offered");
 });
 
-test("an empty constraint sends no system prompt", async (t) => {
+test("an empty constraint sends no system prompt", async () => {
   const ai = genkit({});
   let sent = "";
   const model = ai.defineModel({name: "fake-agent-model"}, async (request) => {
@@ -169,17 +169,18 @@ test("an empty constraint sends no system prompt", async (t) => {
   assert.doesNotMatch(sent, /"role":"system"/);
 });
 
-test("agents live in a child registry: the runtime registry does not grow with every turn", async () => {
+test("an employee turn delivers structured output", async () => {
   const ai = genkit({});
-  const model = ai.defineModel({name: "fake-agent-model"}, async () => ({message: {role: "model", content: [{text: "ok"}]}, finishReason: "stop"}));
-  const count = async () => Object.keys(await ai.registry.listActions()).length;
-  const before = await count();
+  const model = ai.defineModel({name: "fake-agent-model", supports: {output: ["json"], constrained: "all"}}, async () => ({
+    message: {role: "model", content: [{text: JSON.stringify({summe: 3})}]}, finishReason: "stop",
+  }));
 
-  for (let turn = 0; turn < 5; turn++) {
-    await runEmployeeAgentTurn(ai, {employee: {id: "e", name: "Rezeption", constraint: "Regel"}, model, prompt: "Hallo"});
-  }
+  const response = await runEmployeeAgentTurn(ai, {
+    employee: {id: "e", name: "Buchhaltung", constraint: "Rechne genau."}, model, prompt: "1 + 2?",
+    output: {schema: z.object({summe: z.number()})},
+  });
 
-  assert.equal(await count(), before);
+  assert.deepEqual(response.data, {summe: 3});
 });
 
 test("the workspace of an employee exists as a directory that cleanup removes", async (t) => {

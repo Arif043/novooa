@@ -1,6 +1,6 @@
 # Ausführung eines Mitarbeiters
 
-> Ein Mitarbeiter läuft als Genkit-Agent (`ai.defineAgent`, Beta) in einer Kind-Registry, ein frischer Chat je Turn, mit der Rahmenbedingung als System-Prompt.
+> Ein Mitarbeiter läuft als einzelner `ai.generate`-Turn ohne gespeicherten Verlauf, mit der Rahmenbedingung als System-Prompt.
 
 Gehört zu: [Mitarbeiter](../index/mitarbeiter.md)
 
@@ -11,16 +11,15 @@ Gehört zu: [Mitarbeiter](../index/mitarbeiter.md)
    `<workspace>/skills/<name>/` kopiert. Auch ohne Fähigkeiten entsteht ein
    Workspace, damit die Rahmenbedingung ankommt.
 2. [`employee-agent.ts`](../../functions/src/features/task_execution/infrastructure/genkit/runner/employee-agent.ts)
-   definiert `defineAgent({name, system: constraint, model, use, output,
-   config})` und führt einen Turn mit `chat().send(anweisung)` aus. `use`
-   reicht Retry-, Dateisystem- und Skill-Middleware durch. Leere
-   Rahmenbedingung → kein System-Prompt.
-3. **Kind-Registry:** `defineAgent` registriert fünf Actions je Agent; auf der
-   langlebigen Registry würden sie nie verschwinden (gemessen 2 → 17 nach drei
-   Agenten). Deshalb `Registry.withParent(ai.registry)`, mit dem Turn geräumt;
-   ein Test belegt gleichbleibende Größe nach fünf Turns. Der Name bleibt per
-   UUID eindeutig.
-4. Kein Session-Store: kein gespeicherter Verlauf.
+   ruft `ai.generate({model, system: constraint, prompt: anweisung, use,
+   output, config})` auf. `use` reicht Retry-, Dateisystem- und
+   Skill-Middleware durch. Leere Rahmenbedingung → kein System-Prompt.
+3. **Kein `defineAgent`:** Genkits Agent (Beta, 1.42) legt die Modellantwort
+   samt Parser-Funktion in seinen Session-Zustand und kopiert ihn mit
+   `structuredClone`. Mit Ausgabeschema (strukturierte Ausgabe, Entscheidung)
+   scheitert das immer mit „… could not be cloned“. Für einen Turn ohne
+   Verlauf bringt der Agent nichts darüber hinaus; ein Test belegt die
+   strukturierte Ausgabe.
 
 Bausteine mit Bildern im Prompt gehen unverändert über den `generate`-Pfad,
 ohne Agent.

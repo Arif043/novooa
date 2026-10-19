@@ -1,9 +1,5 @@
-import {randomUUID} from "node:crypto";
-import {defineAgent} from "@genkit-ai/ai";
-import {Registry} from "@genkit-ai/core/registry";
 import {type GenkitBeta} from "genkit/beta";
 import type {
-  AgentResponse,
   GenerateMiddleware,
   MiddlewareRef,
   ModelArgument,
@@ -14,14 +10,12 @@ import type {
 import type {ResolvedEmployee} from "./task-definition.js";
 
 /**
- * Führt einen Turn als Genkit-Agent aus: Die Rahmenbedingung des Mitarbeiters ist der System-Prompt, seine
- * Fähigkeiten reichen die Middleware in `use` (Skill- und Dateisystem-Middleware) durch. Ohne Mitarbeiter bleibt der
- * Executor bei `ai.generate(...)`.
+ * Führt einen Turn eines Mitarbeiters aus: Seine Rahmenbedingung ist der System-Prompt, seine Fähigkeiten reichen
+ * die Middleware in `use` (Skill- und Dateisystem-Middleware) durch. Pro Turn gibt es keinen gespeicherten Verlauf.
  *
- * Der Agent wird in einer **Kind-Registry** angelegt, nicht in der der Runtime: `defineAgent` registriert fünf
- * Actions je Agent, die auf der langlebigen Registry nie wieder verschwänden. Das Kind löst Modelle und Plugins über
- * seine Eltern auf und wird mit dem Turn vom Speicher geräumt. Der Name bleibt mit einer UUID eindeutig. Es gibt
- * bewusst keinen Session-Store: pro Turn ein frischer Chat ohne gespeicherten Verlauf.
+ * Bewusst `generate` statt Genkits `defineAgent`: Der Agent legt die Modellantwort samt Parser-Funktion in seinen
+ * Session-Zustand und kopiert ihn per `structuredClone`; mit Ausgabeschema scheitert das immer („could not be
+ * cloned“, Genkit 1.42). Für einen einzelnen Turn ohne Verlauf bringt der Agent nichts darüber hinaus.
  */
 export type EmployeeAgentTurnOptions<O extends z.ZodTypeAny = z.ZodTypeAny> = {
   employee: ResolvedEmployee;
@@ -33,25 +27,21 @@ export type EmployeeAgentTurnOptions<O extends z.ZodTypeAny = z.ZodTypeAny> = {
   config?: Record<string, unknown>;
 };
 
+export type EmployeeAgentTurnResponse<T> = {text: string; data: T | null};
+
 export async function runEmployeeAgentTurn<O extends z.ZodTypeAny = z.ZodTypeAny>(
   ai: GenkitBeta,
   options: EmployeeAgentTurnOptions<O>,
-): Promise<AgentResponse<unknown, z.infer<O>>> {
-  const {employee, model, use, output, config} = options;
+): Promise<EmployeeAgentTurnResponse<z.infer<O>>> {
+  const {employee, model, prompt, use, output, config} = options;
   const constraint = employee.constraint.trim();
-  const agent = defineAgent(Registry.withParent(ai.registry), {
-    name: agentNameFor(employee),
-    description: constraint.length > 0 ? constraint.split("\n")[0] : `Mitarbeiter ${employee.name}`,
-    system: constraint.length > 0 ? constraint : undefined,
+  const response = await ai.generate({
     model,
+    system: constraint.length > 0 ? constraint : undefined,
+    prompt,
     use,
     output,
     config,
   });
-  return agent.chat().send(options.prompt);
-}
-
-function agentNameFor(employee: ResolvedEmployee): string {
-  const slug = employee.name.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
-  return `employee-${slug || "mitarbeiter"}-${randomUUID().slice(0, 8)}`;
+  return {text: response.text, data: response.output ?? null};
 }
