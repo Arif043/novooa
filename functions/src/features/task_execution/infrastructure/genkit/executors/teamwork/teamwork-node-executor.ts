@@ -19,6 +19,7 @@ import {resolvedInstruction} from "../prompt-node-input.js";
 import {fieldOutputsFor} from "../structured-output-schema.js";
 import {GenkitTeamworkExecutor} from "./genkit-teamwork-executor.js";
 import {persistedResultFile} from "./teamwork-file-outputs.js";
+import {teamworkImageInstructions, writeTeamworkImages} from "./teamwork-images.js";
 import {namedOutputFields} from "./teamwork-output-schema.js";
 
 export type TeamworkNodeExecutorDependencies = {
@@ -54,10 +55,12 @@ async function requestFor(
   config: TeamworkNodeConfig, node: WorkflowNode, runContext: TaskRunContext, workspace: NodeAttachmentWorkspace,
 ): Promise<TeamworkExecutionRequest> {
   const instruction = await resolvedInstruction(config.instruction.trim() || node.title, runContext);
+  const imagePaths = await writeTeamworkImages(workspace.rootDirectory, instruction.mediaUrls);
   return {
     teamId: runContext.teamId,
     languageModelId: config.languageModelId,
-    instruction: [instruction.text, attachmentInstructions(workspace)].filter(Boolean).join("\n\n"),
+    instruction: [instruction.text, attachmentInstructions(workspace), teamworkImageInstructions(imagePaths)]
+      .filter(Boolean).join("\n\n"),
     generationOptions: generationOptionsFrom(config.generationOptions),
     outputFields: config.outputFields,
     review: config.review,

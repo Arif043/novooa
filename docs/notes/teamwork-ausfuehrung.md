@@ -8,6 +8,7 @@ Gehört zu: [Mitarbeiter](../index/mitarbeiter.md) · [Aufgabe](../index/aufgabe
 - **Arbeitsordner** (`runner/teamwork-workspace.ts`, `novooa-teamwork-*`):
   - Anhänge und `knowledge/` liegen in der Wurzel, wie beim Prompt-Baustein.
   - `shared/` ist die gemeinsame Ablage für Zwischenergebnisse und Ergebnisdateien.
+  - `images/bild-<n>.<ext>` enthält die Bilder der Anweisung (`teamwork-images.ts`). Der Orchestrator bekommt sie mit der Anweisung und dazu den Hinweis, Mitarbeitern den Pfad zu nennen. Mitarbeiter sehen Bilder nur so: `read_file` gibt Bilddateien als Bild an ihr Modell.
   - `employees/<id>/skills/` enthält die Fähigkeiten je Mitarbeiter; nur dieser Mitarbeiter bekommt den Pfad in `skills({skillPaths})`.
   - Alle Agenten haben `filesystem({rootDirectory, allowWriteAccess: true})`. Pfade außerhalb der Wurzel lehnt die Middleware ab, und der Ordner wird nach dem Lauf gelöscht.
 - **Modelle** (`teamworkModelFor`):
