@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import '../../domain/entities/knowledge_note.dart';
 import 'knowledge_graph_forces.dart';
+import 'knowledge_graph_layers.dart';
 
 /// Live-Kraftsimulation des Wissensgraphen: Notizen stoßen sich ab, Links
 /// ziehen wie Federn, eine leichte Schwerkraft hält den Graph in der Mitte.
@@ -25,6 +26,7 @@ class KnowledgeGraphSimulation {
   final positions = <String, Offset>{};
   final _velocities = <String, Offset>{};
   final _links = <(String, String)>{};
+  List<KnowledgeNote> _notes = const [];
   final degrees = <String, int>{};
   double alpha = 1;
   double alphaTarget = 0;
@@ -43,30 +45,39 @@ class KnowledgeGraphSimulation {
   };
 
   /// Übernimmt den Notizbestand. Beim ersten Mal entfaltet sich der Graph aus
-  /// einer Spirale; spätere neue Notizen starten neben einem Nachbarn.
+  /// der Anordnung nach Höhe ([KnowledgeGraphLayers]); spätere neue Notizen
+  /// starten neben einem Nachbarn.
   void setNotes(List<KnowledgeNote> notes) {
+    _notes = notes;
     final ids = {for (final note in notes) note.id};
     positions.removeWhere((id, _) => !ids.contains(id));
     _velocities.removeWhere((id, _) => !ids.contains(id));
     _rebuildLinks(notes, ids);
-    final initial = positions.isEmpty;
+    if (positions.isEmpty) {
+      restart();
+      return;
+    }
     final added = [
       for (final note in notes)
         if (!positions.containsKey(note.id)) note.id,
     ];
     for (final (index, id) in added.indexed) {
-      positions[id] = initial ? _spiral(index) : _besideNeighbour(id, index);
+      positions[id] = _besideNeighbour(id, index);
       _velocities[id] = Offset.zero;
     }
-    if (added.isNotEmpty) alpha = math.max(alpha, initial ? 1 : _draggingAlpha);
+    if (added.isNotEmpty) alpha = math.max(alpha, _draggingAlpha);
   }
 
-  /// Startet die Simulation neu aus der Spirale.
+  /// Startet die Simulation neu aus der Anordnung nach Höhe.
   void restart() {
-    final ids = positions.keys.toList();
-    for (final (index, id) in ids.indexed) {
-      positions[id] = _spiral(index);
-      _velocities[id] = Offset.zero;
+    final layers = KnowledgeGraphLayers(
+      spacing: forces.linkDistance,
+      margin: _margin,
+    );
+    for (final MapEntry(:key, :value)
+        in layers.positionsOf(_notes, canvasSize).entries) {
+      positions[key] = _clamp(value);
+      _velocities[key] = Offset.zero;
     }
     alpha = 1;
   }
@@ -137,14 +148,6 @@ class KnowledgeGraphSimulation {
       degrees[source] = degrees[source]! + 1;
       degrees[target] = degrees[target]! + 1;
     }
-  }
-
-  /// Phyllotaxis-Spirale: gleichmäßig verteilt, ohne Überlappung am Start.
-  Offset _spiral(int index) {
-    final radius = 18 * math.sqrt(index + .5);
-    final angle = index * math.pi * (3 - math.sqrt(5));
-    return canvasSize.center(Offset.zero) +
-        Offset(math.cos(angle), math.sin(angle)) * radius;
   }
 
   Offset _besideNeighbour(String id, int index) {

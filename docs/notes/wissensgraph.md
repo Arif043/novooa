@@ -14,12 +14,18 @@ Gehört zu: [Wissensbasis](../index/wissensbasis.md)
   - Temperatur `alpha` startet bei 1 und kühlt in rund 300 Schritten ab; feste
     Zeitschritte von 1/60 s (`KnowledgeGraphSimulationTicker`), danach hält
     der Ticker an.
-  - Beim Öffnen entfaltet sich der Graph aus einer Phyllotaxis-Spirale; neue
-    Notizen starten neben einem verlinkten Nachbarn und heizen kurz auf.
+  - Beim Öffnen startet der Graph nach Höhe angeordnet
+    (`KnowledgeGraphLayers`): Je mehr Notizen eine Notiz über ihre
+    ausgehenden Links direkt und indirekt erreicht (ohne Ebenen- und
+    Mengengrenze), desto weiter oben steht sie. Gleich viele bilden eine
+    Reihe, zu breite Reihen brechen um. Danach bewegt die Simulation die
+    Knoten frei. Neue Notizen starten neben einem verlinkten Nachbarn und
+    heizen kurz auf.
   - Ziehen fixiert den Knoten und hält die Simulation warm (`alphaTarget`
     0.3): Nachbarn folgen, der Rest weicht aus. Losgelassen ist der Knoten
     wieder frei und findet seinen Platz selbst.
-  - „Zurücksetzen“ setzt die Ansicht zurück und entfaltet den Graph neu.
+  - „Zurücksetzen“ setzt die Ansicht zurück und startet wieder aus der
+    Anordnung nach Höhe.
 - **Darstellung:** radialer Verlauf aus den Flächenfarben mit zartem
   Akzent-Schimmer in der Mitte und leichter Vignette
   (`KnowledgeGraphBackground`, Farben aus dem Theme). Knotengröße nach Zahl

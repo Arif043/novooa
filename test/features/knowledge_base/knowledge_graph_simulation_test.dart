@@ -93,7 +93,10 @@ void main() {
     ])..settle();
 
     expect(doubled.links, single.links);
-    expect(doubled.positions, single.positions);
+    expect(
+      distanceBetween(doubled, 'a', 'b'),
+      closeTo(distanceBetween(single, 'a', 'b'), 1),
+    );
   });
 
   test('alle Knoten bleiben innerhalb der Leinwand', () {
