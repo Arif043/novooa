@@ -647,6 +647,11 @@ abstract class  LocaleKeys {
   static const ui_teamwork_remove_member = 'ui.teamwork_remove_member';
   static const ui_teamwork_result = 'ui.teamwork_result';
   static const ui_teamwork_result_hint = 'ui.teamwork_result_hint';
+  static const ui_teamwork_review = 'ui.teamwork_review';
+  static const ui_teamwork_review_enabled = 'ui.teamwork_review_enabled';
+  static const ui_teamwork_review_hint = 'ui.teamwork_review_hint';
+  static const ui_teamwork_review_model = 'ui.teamwork_review_model';
+  static const ui_teamwork_review_model_hint = 'ui.teamwork_review_model_hint';
   static const ui_field_type_string = 'ui.field_type_string';
   static const ui_field_type_number = 'ui.field_type_number';
   static const ui_field_type_boolean = 'ui.field_type_boolean';

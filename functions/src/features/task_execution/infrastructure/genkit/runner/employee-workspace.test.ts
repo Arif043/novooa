@@ -183,6 +183,24 @@ test("an employee turn delivers structured output", async () => {
   assert.deepEqual(response.data, {summe: 3});
 });
 
+test("an employee turn with an image keeps the constraint as system prompt", async () => {
+  const ai = genkit({});
+  let sent = "";
+  const model = ai.defineModel({name: "fake-agent-model", supports: {media: true}}, async (request) => {
+    sent = JSON.stringify(request.messages);
+    return {message: {role: "model", content: [{text: "ok"}]}, finishReason: "stop"};
+  });
+
+  await runEmployeeAgentTurn(ai, {
+    employee: {id: "e", name: "Prüfung", constraint: "Prüfe Belege."}, model,
+    prompt: [{text: "Was steht hier?"}, {media: {url: "data:image/png;base64,AAAA"}}],
+  });
+
+  assert.match(sent, /"role":"system".*Prüfe Belege\./);
+  assert.match(sent, /Was steht hier\?/);
+  assert.match(sent, /data:image\/png;base64,AAAA/);
+});
+
 test("the workspace of an employee exists as a directory that cleanup removes", async (t) => {
   const {employees, sources} = await setup(t);
   const employee = await employees.create("team-1", {name: "Rezeption", constraint: "", skills: ["pdf"]});

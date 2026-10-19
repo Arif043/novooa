@@ -1,5 +1,5 @@
 import {type GenerationOptions} from "../../../language_models/domain/entities/generation-options.js";
-import {type TeamworkOutputField} from "./teamwork-config.js";
+import {type TeamworkOutputField, type TeamworkReview} from "./teamwork-config.js";
 
 /** Was der Orchestrator für einen Lauf braucht; Mitarbeiter und Arbeitsordner kommen aus dem Workspace. */
 export type TeamworkExecutionRequest = {
@@ -8,6 +8,7 @@ export type TeamworkExecutionRequest = {
   languageModelId?: string;
   generationOptions: GenerationOptions;
   outputFields: TeamworkOutputField[];
+  review: TeamworkReview;
   mediaUrls: string[];
 };
 

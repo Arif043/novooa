@@ -21,8 +21,12 @@ Gehört zu: [Mitarbeiter](../index/mitarbeiter.md)
    Verlauf bringt der Agent nichts darüber hinaus; ein Test belegt die
    strukturierte Ausgabe.
 
-Bausteine mit Bildern im Prompt gehen unverändert über den `generate`-Pfad,
-ohne Agent.
+In der [Teamarbeit](./teamwork-ausfuehrung.md) führt jeder Mitarbeiter dagegen
+ein Gespräch über den ganzen Lauf (`EmployeeConversation`, `defineAgent` ohne
+Ausgabeschema).
+
+Bilder im Prompt gehen als Teil der Anweisung mit; die Rahmenbedingung bleibt
+auch dann der System-Prompt.
 
 ## Siehe auch
 

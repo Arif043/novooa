@@ -1,30 +1,38 @@
 import {type TeamworkExecutionRequest} from "../../../../domain/entities/teamwork-execution.js";
 import {defaultGenerationOptions} from "../../../../../language_models/domain/entities/generation-options.js";
+import {EmployeeConversation} from "../../runner/employee-conversation.js";
 import {type NodeAttachmentWorkspace} from "../../runner/node-attachment-workspace.js";
-import {type TeamWorkspace} from "../../runner/teamwork-workspace.js";
+import {type ResolvedTeamMember, type TeamWorkspace} from "../../runner/teamwork-workspace.js";
 import {type TeamMemberRun} from "./teamwork-delegation-tools.js";
 import {teamworkMiddleware} from "./teamwork-middleware.js";
 import {teamworkModelFor, type TeamworkModelSources} from "./teamwork-model.js";
 
-/** Bereitet jeden Mitarbeiter vor: eigenes Modell, eindeutiger Werkzeugname, eigene Fähigkeiten. */
+/** Bereitet jeden Mitarbeiter vor: eigenes Modell, eindeutiger Werkzeugname, eigene Fähigkeiten, ein Gespräch für den Lauf. */
 export async function teamMemberRuns(
   request: TeamworkExecutionRequest,
   workspace: NodeAttachmentWorkspace & {team: TeamWorkspace},
   sources: TeamworkModelSources,
 ): Promise<TeamMemberRun[]> {
   const toolNames = uniqueToolNames(workspace.team.members.map((member) => member.employee.name));
-  return Promise.all(workspace.team.members.map(async (member, index) => ({
-    toolName: toolNames[index],
+  return Promise.all(workspace.team.members.map((member, index) =>
+    memberRunFor(member, toolNames[index], request.teamId, workspace.rootDirectory, sources)));
+}
+
+async function memberRunFor(
+  member: ResolvedTeamMember, toolName: string, teamId: string, rootDirectory: string, sources: TeamworkModelSources,
+): Promise<TeamMemberRun> {
+  const model = await teamworkModelFor(
+    {languageModelId: member.languageModelId, teamId, generationOptions: defaultGenerationOptions},
+    sources,
+    {label: `den Mitarbeiter „${member.employee.name}“`, needsStructuredOutput: false},
+  );
+  const use = teamworkMiddleware(rootDirectory, member.skillsDirectory);
+  return {
+    toolName,
     employeeName: member.employee.name,
     responsibility: member.responsibility,
-    member,
-    model: await teamworkModelFor(
-      {languageModelId: member.languageModelId, teamId: request.teamId, generationOptions: defaultGenerationOptions},
-      sources,
-      {label: `den Mitarbeiter „${member.employee.name}“`, needsStructuredOutput: false},
-    ),
-    use: teamworkMiddleware(workspace.rootDirectory, member.skillsDirectory),
-  })));
+    conversation: new EmployeeConversation({ai: model.ai, employee: member.employee, model: model.model, use, config: model.config}),
+  };
 }
 
 /** `delegate_to_<name>` aus ASCII-Zeichen; gleiche Namen bekommen eine Nummer. */

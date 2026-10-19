@@ -1,9 +1,9 @@
 import {type GenkitBeta} from "genkit/beta";
 import type {
-  GenerateMiddleware,
-  MiddlewareRef,
+  GenerateOptions,
   ModelArgument,
   OutputOptions,
+  Part,
   z,
 } from "genkit/beta";
 
@@ -20,9 +20,9 @@ import type {ResolvedEmployee} from "./task-definition.js";
 export type EmployeeAgentTurnOptions<O extends z.ZodTypeAny = z.ZodTypeAny> = {
   employee: ResolvedEmployee;
   model: ModelArgument;
-  /** Nutzer-Nachricht dieses Turns — die Anweisung des Bausteins, unverändert. */
-  prompt: string;
-  use?: (GenerateMiddleware | MiddlewareRef)[];
+  /** Nutzer-Nachricht dieses Turns — die Anweisung des Bausteins, unverändert, ggf. mit Bildern. */
+  prompt: string | Part[];
+  use?: GenerateOptions["use"];
   output?: OutputOptions<O>;
   config?: Record<string, unknown>;
 };

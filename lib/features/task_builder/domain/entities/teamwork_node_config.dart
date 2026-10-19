@@ -14,6 +14,7 @@ class TeamworkNodeConfig extends NodeConfig
     this.outputFields = const [
       StructuredOutputField(name: '', description: ''),
     ],
+    this.review = const TeamworkReview(),
     this.attachments = const [],
     this.knowledgeAttachments = const [],
   });
@@ -29,6 +30,7 @@ class TeamworkNodeConfig extends NodeConfig
   final PromptGenerationOptions generationOptions;
   final List<TeamMember> members;
   final List<StructuredOutputField> outputFields;
+  final TeamworkReview review;
   @override
   final List<NodeAttachment> attachments;
   @override
@@ -45,6 +47,7 @@ class TeamworkNodeConfig extends NodeConfig
     PromptGenerationOptions? generationOptions,
     List<TeamMember>? members,
     List<StructuredOutputField>? outputFields,
+    TeamworkReview? review,
     List<NodeAttachment>? attachments,
     List<KnowledgeAttachment>? knowledgeAttachments,
   }) {
@@ -54,6 +57,7 @@ class TeamworkNodeConfig extends NodeConfig
       generationOptions: generationOptions ?? this.generationOptions,
       members: members ?? this.members,
       outputFields: outputFields ?? this.outputFields,
+      review: review ?? this.review,
       attachments: attachments ?? this.attachments,
       knowledgeAttachments: knowledgeAttachments ?? this.knowledgeAttachments,
     );
@@ -127,6 +131,7 @@ class TeamworkNodeConfig extends NodeConfig
     generationOptions,
     members,
     outputFields,
+    review,
     attachments,
     knowledgeAttachments,
   ];

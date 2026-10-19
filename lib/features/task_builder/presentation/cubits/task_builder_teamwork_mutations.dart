@@ -19,6 +19,14 @@ extension TaskBuilderTeamworkMutations on TaskBuilderCubit {
     );
   }
 
+  /// Prüfung an/aus und ihr Modell; leer = Standardmodell.
+  Future<void> updateTeamworkReview(NodeId nodeId, TeamworkReview review) {
+    return _updateTeamworkConfig(
+      nodeId,
+      (config) => config.copyWith(review: review),
+    );
+  }
+
   /// Schon im Team oder Team voll: keine Änderung.
   Future<void> addTeamMember(NodeId nodeId, String employeeId) {
     return _updateTeamworkConfig(

@@ -61,16 +61,16 @@ async function logged<T>(
   return response;
 }
 
-/** Mitarbeiter laufen als Agent; mit Bildern geht es direkt an das Modell, weil der Agent nur Text annimmt. */
+/** Mit Mitarbeiter ist seine Rahmenbedingung der System-Prompt, auch wenn Bilder dabei sind. */
 async function generate<S extends z.ZodTypeAny>(
   call: PromptModelCall, input: PromptNodeInput, prompt: PromptContent, schema?: S,
 ): Promise<ModelResponse<z.infer<S>>> {
   const output = schema ? {schema} : undefined;
   const use = aiTurnMiddleware(call.workspace);
   return withTranslatedGenkitErrors(async () => {
-    if (input.employee && input.mediaUrls.length === 0) {
+    if (input.employee) {
       const response = await runEmployeeAgentTurn(call.ai, {
-        employee: input.employee, model: call.model, prompt: prompt.text, use, output, config: call.config,
+        employee: input.employee, model: call.model, prompt: prompt.content, use, output, config: call.config,
       });
       return {output: response.data ?? undefined, text: response.text};
     }

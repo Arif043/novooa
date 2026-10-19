@@ -1,4 +1,4 @@
-import {type ToolAction} from "genkit";
+import {type MessageData, type ToolAction} from "genkit";
 import {ResultAsync} from "neverthrow";
 import {type TeamworkOutputField} from "../../../../domain/entities/teamwork-config.js";
 import {type TeamworkExecutionRequest, type TeamworkExecutionResult} from "../../../../domain/entities/teamwork-execution.js";
@@ -16,9 +16,12 @@ import {teamworkMiddleware} from "./teamwork-middleware.js";
 import {teamMemberRuns} from "./teamwork-member-runs.js";
 import {teamworkModelFor, type TeamworkModel, type TeamworkModelSources} from "./teamwork-model.js";
 import {teamworkSchemaFor} from "./teamwork-output-schema.js";
-import {orchestratorSystemPrompt, type TeamMemberTool} from "./teamwork-prompts.js";
+import {orchestratorSystemPrompt} from "./teamwork-prompts.js";
+import {reviewedResult} from "./teamwork-review.js";
+import {reviewedFields, type OrchestrationRound} from "./teamwork-review-loop.js";
+import {revisionPrompt} from "./teamwork-review-prompts.js";
 
-/** Der Orchestrator darf so viele Runden drehen: Aufträge, Antworten lesen, Dateien prüfen, Ergebnis. */
+/** Der Orchestrator darf je Runde so viele Schritte machen: Aufträge, Antworten lesen, Dateien prüfen, Ergebnis. */
 const orchestratorMaxTurns = 12;
 
 export type GenkitTeamworkExecutorDependencies = TeamworkModelSources & {
@@ -26,10 +29,17 @@ export type GenkitTeamworkExecutorDependencies = TeamworkModelSources & {
   logger: ApplicationLogger;
 };
 
+type Orchestration = {orchestrator: TeamworkModel; request: TeamworkExecutionRequest; tools: ToolAction[]};
+
+/** Der erste Turn bekommt Rolle und Aufgabe; eine Überarbeitung setzt das bisherige Gespräch fort. */
+type OrchestratorTurn =
+  | {system: string; prompt: ReturnType<typeof promptFor>}
+  | {messages: MessageData[]; prompt: string};
+
 /**
- * Ein Orchestrator mit eigenem Modell vergibt Aufträge an die Mitarbeiter (je eigenes Modell und eigene
- * Fähigkeiten) und liefert das strukturierte Endergebnis. An dieser Grenze werden Exceptions zur
- * `LanguageModelFailure`.
+ * Ein Orchestrator mit eigenem Modell vergibt Aufträge an die Mitarbeiter (je eigenes Modell, eigene
+ * Fähigkeiten, ein Gespräch je Lauf) und liefert das strukturierte Endergebnis; ist die Prüfung an, prüft ein
+ * eigenes Modell es vor der Abgabe. An dieser Grenze werden Exceptions zur `LanguageModelFailure`.
  */
 export class GenkitTeamworkExecutor implements TeamworkExecutor {
   constructor(private readonly dependencies: GenkitTeamworkExecutorDependencies) {}
@@ -41,25 +51,48 @@ export class GenkitTeamworkExecutor implements TeamworkExecutor {
   private async run(request: TeamworkExecutionRequest): Promise<TeamworkExecutionResult> {
     const {workspace, logger} = this.dependencies;
     const orchestrator = await teamworkModelFor(request, this.dependencies, {label: "den Orchestrator", needsStructuredOutput: true});
+    const reviewer = await this.reviewerFor(request);
     const runs = await teamMemberRuns(request, workspace, this.dependencies);
-    const tools = delegationToolsFor(orchestrator.ai, runs, logger);
-    const fields = await loggedOrchestration(logger, orchestrator, request, () => this.orchestrate(orchestrator, request, runs, tools));
+    const orchestration = {orchestrator, request, tools: delegationToolsFor(orchestrator.ai, runs, logger)};
+    const fields = await loggedOrchestration(logger, orchestrator, request, async () => {
+      const first = await this.orchestrate(orchestration, {
+        system: orchestratorSystemPrompt(runs, request.outputFields), prompt: promptFor(request),
+      });
+      return reviewer ? reviewedFields(first, (result, round) => this.review(reviewer, request, result, round), logger) : first.fields;
+    });
     return {answer: JSON.stringify(fields), fields};
   }
 
-  private async orchestrate(
-    orchestrator: TeamworkModel, request: TeamworkExecutionRequest, members: TeamMemberTool[], tools: ToolAction[],
-  ): Promise<Record<string, unknown>> {
+  private async reviewerFor(request: TeamworkExecutionRequest): Promise<TeamworkModel | undefined> {
+    if (!request.review.enabled) return undefined;
+    return teamworkModelFor(
+      {languageModelId: request.review.languageModelId, teamId: request.teamId, generationOptions: request.generationOptions},
+      this.dependencies,
+      {label: "die Prüfung", needsStructuredOutput: true},
+    );
+  }
+
+  private review(reviewer: TeamworkModel, request: TeamworkExecutionRequest, result: Record<string, unknown>, round: number) {
+    const {workspace, logger} = this.dependencies;
+    return reviewedResult(reviewer, request, result, {rootDirectory: workspace.rootDirectory, logger, round});
+  }
+
+  /** Eine Runde des Orchestrators; eine Überarbeitung setzt sein bisheriges Gespräch fort. */
+  private async orchestrate(orchestration: Orchestration, turn: OrchestratorTurn): Promise<OrchestrationRound> {
+    const {orchestrator, request, tools} = orchestration;
     const response = await withTranslatedGenkitErrors(() => orchestrator.ai.generate({
       model: orchestrator.model, config: orchestrator.config, maxTurns: orchestratorMaxTurns,
-      system: orchestratorSystemPrompt(members, request.outputFields),
-      prompt: promptFor(request), tools,
+      ...turn,
+      tools,
       use: teamworkMiddleware(this.dependencies.workspace.rootDirectory),
       output: {schema: teamworkSchemaFor(request.outputFields)},
     }));
     const output = response.output;
     if (!output) throw new ModelOutputSchemaError(`Das Team lieferte kein strukturiertes Ergebnis: ${response.text}`);
-    return definedOutputOf(output, request.outputFields);
+    return {
+      fields: definedOutputOf(output, request.outputFields),
+      revise: (findings) => this.orchestrate(orchestration, {messages: response.messages, prompt: revisionPrompt(findings)}),
+    };
   }
 }
 

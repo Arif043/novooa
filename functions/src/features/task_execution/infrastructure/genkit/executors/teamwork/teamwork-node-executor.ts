@@ -60,6 +60,7 @@ async function requestFor(
     instruction: [instruction.text, attachmentInstructions(workspace)].filter(Boolean).join("\n\n"),
     generationOptions: generationOptionsFrom(config.generationOptions),
     outputFields: config.outputFields,
+    review: config.review,
     mediaUrls: instruction.mediaUrls,
   };
 }

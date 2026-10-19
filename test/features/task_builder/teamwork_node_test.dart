@@ -43,6 +43,7 @@ const _team = TeamworkNodeConfig(
       fileFormat: OutputFileFormat.csv,
     ),
   ],
+  review: TeamworkReview(enabled: false, languageModelId: 'stark'),
 );
 
 void main() {
@@ -65,6 +66,10 @@ void main() {
         (document['outputFields'] as List).last,
         containsPair('fileFormat', 'csv'),
       );
+      expect(document['review'], {
+        'enabled': false,
+        'languageModelId': 'stark',
+      });
       expect(mapper.fromDocument(document), _team);
     });
 
@@ -114,6 +119,13 @@ void main() {
 
     test('ein neuer Baustein startet ohne Team mit einem leeren Feld', () {
       expect(config(), TeamworkNodeConfig.initial());
+      expect(config().review.enabled, isTrue);
+    });
+
+    test('updateTeamworkReview ändert Prüfung und Prüfmodell', () async {
+      const review = TeamworkReview(languageModelId: 'stark');
+      await cubit.updateTeamworkReview(nodeId, review);
+      expect(config().review, review);
     });
 
     test('updateTeamworkInstruction ändert die Anweisung', () async {

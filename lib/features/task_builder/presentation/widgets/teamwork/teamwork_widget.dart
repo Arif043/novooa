@@ -18,9 +18,10 @@ import '../structured_output_fields_editor.dart';
 import '../template_expression_scope.dart';
 import '../template_expression_text_field.dart';
 import 'team_member_section.dart';
+import 'teamwork_review_section.dart';
 
 /// Baustein „Teamarbeit“: Anweisung und Modell des Orchestrators, das Team,
-/// die Felder des Ergebnisses und die Anhänge.
+/// die Prüfung, die Felder des Ergebnisses und die Anhänge.
 class TeamworkWidget extends StatelessWidget {
   const TeamworkWidget({super.key, required this.node});
 
@@ -45,6 +46,11 @@ class TeamworkWidget extends StatelessWidget {
             onChanged: (member) => cubit.updateTeamMember(node.id, member),
             onRemove: (employeeId) =>
                 cubit.removeTeamMember(node.id, employeeId),
+          ),
+          gap,
+          TeamworkReviewSection(
+            review: config.review,
+            onChanged: (review) => cubit.updateTeamworkReview(node.id, review),
           ),
           gap,
           _Result(node: node, config: config),

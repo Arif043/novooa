@@ -39,6 +39,7 @@ part 'table_from_collection_node_config.dart';
 part 'http_request_node_config.dart';
 part 'team_member.dart';
 part 'teamwork_node_config.dart';
+part 'teamwork_review.dart';
 
 /// Bewusst nicht `sealed`: Konfigurationen von Plugins liegen in ihrem eigenen
 /// Ordner (`features/integrations/<plugin>/`) statt als `part` hier. Verdrahtet

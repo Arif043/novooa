@@ -13,6 +13,11 @@ extension _TeamworkConfigDocumentMapping on NodeConfigDocumentMapper {
       'outputFields': config.outputFields
           .map(_structuredFieldToDocument)
           .toList(),
+      'review': {
+        'enabled': config.review.enabled,
+        if (config.review.languageModelId.isNotEmpty)
+          'languageModelId': config.review.languageModelId,
+      },
       'attachments': config.attachments.map(_attachmentToDocument).toList(),
       'knowledgeAttachments': config.knowledgeAttachments
           .map(_knowledgeAttachmentToDocument)
@@ -30,6 +35,7 @@ extension _TeamworkConfigDocumentMapping on NodeConfigDocumentMapper {
         data['members'],
       ).map(_teamMemberFrom).whereType<TeamMember>().toList(),
       outputFields: _structuredFieldsFrom(data['outputFields']),
+      review: _teamworkReviewFrom(data['review']),
       attachments: _attachmentsFrom(data['attachments']),
       knowledgeAttachments: _knowledgeAttachmentsFrom(
         data['knowledgeAttachments'],
@@ -44,6 +50,14 @@ extension _TeamworkConfigDocumentMapping on NodeConfigDocumentMapper {
       if (member.languageModelId.isNotEmpty)
         'languageModelId': member.languageModelId,
     };
+  }
+
+  TeamworkReview _teamworkReviewFrom(Object? data) {
+    if (data is! Map) return const TeamworkReview();
+    return TeamworkReview(
+      enabled: data['enabled'] as bool? ?? true,
+      languageModelId: data['languageModelId'] as String? ?? '',
+    );
   }
 
   /// Ohne Mitarbeiter-ID ist ein Eintrag wertlos und fällt weg.

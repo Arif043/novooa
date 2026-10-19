@@ -31,7 +31,7 @@ export type {
   MediaInputFileReference,
 } from "./media-input.js";
 export type {TaskRunInteraction} from "./task-run-interaction.js";
-export type {OutputFileFormat, TeamMember, TeamworkNodeConfig, TeamworkOutputField} from "./teamwork-config.js";
+export type {OutputFileFormat, TeamMember, TeamworkNodeConfig, TeamworkOutputField, TeamworkReview} from "./teamwork-config.js";
 export type {
   KnowledgeAttachment,
   NodeAttachment,

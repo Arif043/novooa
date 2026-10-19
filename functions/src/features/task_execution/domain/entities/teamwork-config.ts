@@ -28,6 +28,12 @@ export type TeamworkOutputField =
   | StructuredOutputField
   | {name: string; description: string; type: "file"; fileFormat: OutputFileFormat};
 
+/** Prüfung des Endergebnisses vor der Abgabe, mit eigenem (oft leistungsstärkerem) Modell; leer = Standardmodell. */
+export type TeamworkReview = {
+  enabled: boolean;
+  languageModelId?: string;
+};
+
 export type TeamworkNodeConfig = {
   primitive: "teamwork";
   /** Anweisung an den Orchestrator. */
@@ -37,6 +43,7 @@ export type TeamworkNodeConfig = {
   generationOptions?: GenerationOptionsRecord;
   members: TeamMember[];
   outputFields: TeamworkOutputField[];
+  review: TeamworkReview;
   attachments: NodeAttachment[];
   knowledgeAttachments: KnowledgeAttachment[];
 };

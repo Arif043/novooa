@@ -6,16 +6,19 @@ import test, {type TestContext} from "node:test";
 import {nodeConfigSchema} from "../../runner/task-definition.js";
 import {persistedResultFile, resultFilePath} from "./teamwork-file-outputs.js";
 import {uniqueToolNames} from "./teamwork-member-runs.js";
+import {memberTaskPrompt} from "./teamwork-prompts.js";
 
 const member = (employeeId: string, responsibility = "Recherche") => ({employeeId, responsibility});
 
-test("the configuration needs a responsibility per member, unique members and at most five", () => {
-  const parse = (config: Record<string, unknown>) => nodeConfigSchema.safeParse({primitive: "teamwork", ...config});
+test("the configuration needs a responsibility per member, unique members, at most five and a review setting", () => {
+  const parse = (config: Record<string, unknown>) =>
+    nodeConfigSchema.safeParse({primitive: "teamwork", review: {enabled: true}, ...config});
 
   assert.ok(parse({members: [member("a"), member("b")], outputFields: [{name: "x", type: "file", fileFormat: "csv"}]}).success);
   assert.equal(parse({members: [member("a", "  ")]}).success, false);
   assert.equal(parse({members: [member("a"), member("a")]}).success, false);
   assert.equal(parse({members: ["a", "b", "c", "d", "e", "f"].map((id) => member(id))}).success, false);
+  assert.equal(parse({members: [member("a")], review: undefined}).success, false);
   assert.equal(nodeConfigSchema.safeParse({primitive: "prompt", structuredFields: [{name: "x", type: "file"}]}).success, false,
     "files are a teamwork-only field type");
 });
@@ -24,6 +27,13 @@ test("tool names are ASCII and unique", () => {
   assert.deepEqual(uniqueToolNames(["Recherche", "Jürgen Müller", "recherche", "???"]), [
     "delegate_to_recherche", "delegate_to_jurgen_muller", "delegate_to_recherche_2", "delegate_to_member_4",
   ]);
+});
+
+test("a task is split into what to do, the expected result and the boundaries", () => {
+  const prompt = memberTaskPrompt({task: "Finde X.", expectedResult: "Eine Zahl.", boundaries: "Nicht Y."});
+
+  assert.match(prompt, /^Auftrag:\nFinde X\.\n\nErwartetes Ergebnis:\nEine Zahl\.\n\nGrenzen:\nNicht Y\./);
+  assert.doesNotMatch(memberTaskPrompt({task: "A", expectedResult: "B", boundaries: " "}), /Grenzen/);
 });
 
 async function shared(t: TestContext) {

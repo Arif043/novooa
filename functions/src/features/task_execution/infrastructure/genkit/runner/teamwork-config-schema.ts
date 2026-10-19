@@ -34,6 +34,7 @@ export const teamworkNodeConfigSchema = z.object({
       "Ein Mitarbeiter kann nur einmal im Team sein.",
     ),
   outputFields: z.array(teamworkOutputFieldSchema).default([]),
+  review: z.object({enabled: z.boolean(), languageModelId: z.string().optional()}),
   attachments: z.array(nodeAttachmentSchema).default([]),
   knowledgeAttachments: z.array(knowledgeAttachmentSchema).default([]),
 });
