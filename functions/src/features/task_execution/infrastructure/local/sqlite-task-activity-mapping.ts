@@ -3,7 +3,7 @@ import {type Activities, type TaskRuns} from "../../../../db/schema.js";
 export type TaskRunRow = Pick<TaskRuns, "created_at" | "error_json" | "final_output" | "id" | "interaction_json" |
   "review_output" | "status" | "task_id" | "task_title" | "updated_at" | "waiting_node_id">;
 export type ActivityRow = Pick<Activities, "created_at" | "id" | "input" | "message" | "node_id" | "output" |
-  "outputs_json" | "console_json" | "failure_code" | "failure_details_json" | "primitive" | "run_id" | "status" | "target" | "title"> & {task_id: string};
+  "outputs_json" | "console_json" | "conversation_json" | "failure_code" | "failure_details_json" | "primitive" | "run_id" | "status" | "target" | "title"> & {task_id: string};
 
 export type TaskRunDto = {
   runId: string; taskId: string; taskTitle: string; status: string; waitingNodeId: string | null;
@@ -16,6 +16,8 @@ export type ActivityDto = {
   nodeId: string | null; primitive: string | null; input: string; output: string;
   outputs: Record<string, unknown>; message: string; failureCode: string | null;
   failureDetails: Record<string, string> | null; console: {stdout: string; stderr: string};
+  /** Gespräch der Mitarbeiter einer Teamarbeit, wie gespeichert. */
+  conversation: unknown[];
 };
 
 export function runFromRow(row: TaskRunRow): TaskRunDto {
@@ -34,6 +36,7 @@ export function activityFromRow(row: ActivityRow): ActivityDto {
     nodeId: row.node_id, primitive: row.primitive, input: row.input, output: row.output,
     outputs: jsonRecord(row.outputs_json), message: row.message, failureCode: row.failure_code,
     failureDetails: failureDetailsFrom(row.failure_details_json), console: consoleFrom(row.console_json),
+    conversation: jsonArray(row.conversation_json),
   };
 }
 
@@ -62,6 +65,11 @@ function jsonValue(value: string | null): unknown {
   } catch {
     return null;
   }
+}
+
+function jsonArray(value: string): unknown[] {
+  const parsed = jsonValue(value);
+  return Array.isArray(parsed) ? parsed : [];
 }
 
 function jsonRecord(value: string): Record<string, unknown> {

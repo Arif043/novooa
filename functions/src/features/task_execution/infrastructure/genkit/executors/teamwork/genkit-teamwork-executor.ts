@@ -20,6 +20,7 @@ import {orchestratorSystemPrompt} from "./teamwork-prompts.js";
 import {reviewedResult} from "./teamwork-review.js";
 import {reviewedFields, type OrchestrationRound} from "./teamwork-review-loop.js";
 import {revisionPrompt} from "./teamwork-review-prompts.js";
+import {type TeamworkTranscript} from "./teamwork-transcript.js";
 
 /** Der Orchestrator darf je Runde so viele Schritte machen: Aufträge, Antworten lesen, Dateien prüfen, Ergebnis. */
 const orchestratorMaxTurns = 12;
@@ -27,6 +28,8 @@ const orchestratorMaxTurns = 12;
 export type GenkitTeamworkExecutorDependencies = TeamworkModelSources & {
   workspace: NodeAttachmentWorkspace & {team: TeamWorkspace};
   logger: ApplicationLogger;
+  /** Sammelt das Gespräch; der Aufrufer liest es auch, wenn der Lauf scheitert. */
+  transcript: TeamworkTranscript;
 };
 
 type Orchestration = {orchestrator: TeamworkModel; request: TeamworkExecutionRequest; tools: ToolAction[]};
@@ -49,17 +52,18 @@ export class GenkitTeamworkExecutor implements TeamworkExecutor {
   }
 
   private async run(request: TeamworkExecutionRequest): Promise<TeamworkExecutionResult> {
-    const {workspace, logger} = this.dependencies;
+    const {workspace, logger, transcript} = this.dependencies;
     const orchestrator = await teamworkModelFor(request, this.dependencies, {label: "den Orchestrator", needsStructuredOutput: true});
     const reviewer = await this.reviewerFor(request);
     const runs = await teamMemberRuns(request, workspace, this.dependencies);
-    const orchestration = {orchestrator, request, tools: delegationToolsFor(orchestrator.ai, runs, logger)};
+    const orchestration = {orchestrator, request, tools: delegationToolsFor(orchestrator.ai, runs, transcript)};
     const fields = await loggedOrchestration(logger, orchestrator, request, async () => {
       const first = await this.orchestrate(orchestration, {
         system: orchestratorSystemPrompt(runs, request.outputFields), prompt: promptFor(request),
       });
-      return reviewer ? reviewedFields(first, (result, round) => this.review(reviewer, request, result, round), logger) : first.fields;
+      return reviewer ? reviewedFields(first, (result, round) => this.review(reviewer, request, result, round), transcript) : first.fields;
     });
+    transcript.result(fields);
     return {answer: JSON.stringify(fields), fields};
   }
 

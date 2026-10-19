@@ -46,7 +46,9 @@ test("migration preserves complete activity history and establishes run deletion
   // Spätere Spalten, damit das aktuelle Schema die Zeile lesen kann.
   await runMigration(database, "0022_activity_failure_code.sql");
   await runMigration(database, "0023_activity_failure_details.sql");
-  assert.deepEqual(await database.select().from(activities), [{...originalActivity, failure_code: null, failure_details_json: null}]);
+  await runMigration(database, "0024_activity_conversation.sql");
+  assert.deepEqual(await database.select().from(activities),
+    [{...originalActivity, failure_code: null, failure_details_json: null, conversation_json: "[]"}]);
   assert.deepEqual(await database.all(sql`PRAGMA foreign_key_check`), []);
   await database.run(sql`DELETE FROM task_runs WHERE id = 'run-1'`);
   assert.deepEqual(await database.select().from(activities), []);

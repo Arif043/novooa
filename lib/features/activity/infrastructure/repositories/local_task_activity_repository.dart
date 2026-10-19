@@ -4,6 +4,7 @@ import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../domain/entities/task_activity.dart';
 import '../../domain/repositories/task_activity_repository.dart';
 import '../models/failure_details_mapper.dart';
+import '../models/teamwork_conversation_mapper.dart';
 
 class LocalTaskActivityRepository implements TaskActivityRepository {
   const LocalTaskActivityRepository(this._client, this._channel);
@@ -68,6 +69,7 @@ class LocalTaskActivityRepository implements TaskActivityRepository {
       outputs: _outputsFrom(data['outputs']),
       stdout: _consoleText(data['console'], 'stdout'),
       stderr: _consoleText(data['console'], 'stderr'),
+      conversation: teamworkConversationFrom(data['conversation']),
     );
   }
 

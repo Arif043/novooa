@@ -1,7 +1,9 @@
 import '../../../../core/entities/unique_id.dart';
 import 'activity_failure_code.dart';
+import 'teamwork_conversation_entry.dart';
 
 export 'activity_failure_code.dart';
+export 'teamwork_conversation_entry.dart';
 
 enum TaskActivityTarget { task, node }
 
@@ -26,6 +28,7 @@ class TaskActivity {
     this.outputs = const {},
     this.stdout = '',
     this.stderr = '',
+    this.conversation = const [],
   });
 
   final UniqueId id;
@@ -54,4 +57,9 @@ class TaskActivity {
   final String stderr;
 
   bool get hasConsoleOutput => stdout.isNotEmpty || stderr.isNotEmpty;
+
+  /// Das Gespräch der Mitarbeiter einer Teamarbeit; leer bei anderen Bausteinen.
+  final List<TeamworkConversationEntry> conversation;
+
+  bool get hasConversation => conversation.isNotEmpty;
 }

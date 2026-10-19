@@ -1,0 +1,1 @@
+ALTER TABLE `activities` ADD `conversation_json` text DEFAULT '[]' NOT NULL;

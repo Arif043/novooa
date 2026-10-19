@@ -32,6 +32,7 @@ export class FirestoreActivityStore implements ActivityStore {
       message: failedNode.message,
       ...(failedNode.failureCode ? {failureCode: failedNode.failureCode} : {}),
       ...(failedNode.failureDetails ? {failureDetails: failedNode.failureDetails} : {}),
+      ...(failedNode.conversation?.length ? {conversation: failedNode.conversation} : {}),
     });
   }
 
@@ -57,6 +58,7 @@ export class FirestoreActivityStore implements ActivityStore {
       primitive: result.primitive,
       outputs: serializable(activityOutputsFor(result.outputs)),
       ...(result.message ? {message: result.message} : {}),
+      ...(result.conversation?.length ? {conversation: result.conversation} : {}),
     });
   }
 }

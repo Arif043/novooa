@@ -64,3 +64,17 @@ test("die Zeitstempel einer Reihe von Aktivitäten steigen streng, auch im selbe
   assert.equal(new Set(stamps).size, 25);
   assert.deepEqual([...stamps].sort(), stamps);
 });
+
+test("speichert das Gespräch einer Teamarbeit an ihrer Aktivität, auch wenn sie scheitert", async (t) => {
+  const {database, store} = await storeOverActivities(t);
+  const conversation = [
+    {kind: "task" as const, occurredAt: "2026-10-19T08:00:00.000Z", memberName: "Elektriker", text: "Prüfe.", expectedResult: "Ja/Nein"},
+    {kind: "answer" as const, occurredAt: "2026-10-19T08:00:05.000Z", memberName: "Elektriker", text: "Ja.", durationMs: 5000},
+  ];
+
+  await store.writeNodeActivities("team-1", run, [result({primitive: "teamwork", conversation})]);
+  await store.writeFailedNodeActivity("team-1", run, {nodeId: "zwei", primitive: "teamwork", message: "Schema", conversation});
+
+  const rows = await database.select().from(activities).orderBy(activities.created_at);
+  assert.deepEqual(rows.map((row) => JSON.parse(row.conversation_json) as unknown), [conversation, conversation]);
+});

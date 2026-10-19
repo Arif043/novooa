@@ -419,6 +419,17 @@ export const nodeOutputValueSchema: z.ZodType<NodeOutputValue> =
     z.object({type: z.literal("table"), value: workflowTableValueSchema}),
   ]);
 
+const teamworkConversationEntrySchema = z.object({
+  kind: z.enum(["task", "answer", "failure", "reviewPassed", "reviewRejected", "result"]),
+  occurredAt: z.string(),
+  memberName: z.string().optional(),
+  text: z.string(),
+  expectedResult: z.string().optional(),
+  boundaries: z.string().optional(),
+  durationMs: z.number().optional(),
+  round: z.number().optional(),
+});
+
 export const nodeExecutionResultSchema = z.object({
   nodeId: z.string(),
   primitive: workflowPrimitiveSchema,
@@ -429,6 +440,7 @@ export const nodeExecutionResultSchema = z.object({
   selectedBranchLabel: z.string().nullable().optional(),
   message: z.string().optional(),
   console: z.object({stdout: z.string(), stderr: z.string()}).optional(),
+  conversation: z.array(teamworkConversationEntrySchema).optional(),
   interaction: z.discriminatedUnion("kind", [
     z.object({
       kind: z.literal("approval"),

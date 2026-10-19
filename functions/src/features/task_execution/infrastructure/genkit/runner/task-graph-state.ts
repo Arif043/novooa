@@ -115,7 +115,7 @@ export function newResults(
 
 /** Ein Baustein hat eine Failure als Wert geliefert. */
 export function failedNodeExecution(node: WorkflowNode, failure: NodeFailure, completed: NodeExecutionResult[]): NodeExecutionFailure {
-  return new NodeExecutionFailure(failedNodeFor(node, failure.message, failure, failure.console), completed, failure);
+  return new NodeExecutionFailure(failedNodeFor(node, failure.message, failure), completed, failure);
 }
 
 /** Ein Baustein oder die Infrastruktur hat geworfen: ein gescheiterter Baustein ohne Code. */
@@ -124,9 +124,10 @@ export function nodeExecutionFailure(node: WorkflowNode, error: unknown, complet
   return new NodeExecutionFailure(failedNodeFor(node, message), completed, error);
 }
 
-function failedNodeFor(node: WorkflowNode, message: string, failure?: NodeFailure, console?: FailedNode["console"]): FailedNode {
+function failedNodeFor(node: WorkflowNode, message: string, failure?: NodeFailure): FailedNode {
   return {
-    nodeId: node.id, primitive: node.primitive, message, console,
+    nodeId: node.id, primitive: node.primitive, message, console: failure?.console,
+    ...(failure?.conversation ? {conversation: failure.conversation} : {}),
     ...(failure ? {failureCode: failure.code} : {}),
     ...(failure && Object.keys(failure.details).length > 0 ? {failureDetails: {...failure.details}} : {}),
   };

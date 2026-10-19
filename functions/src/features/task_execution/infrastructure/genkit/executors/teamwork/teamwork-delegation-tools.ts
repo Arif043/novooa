@@ -1,10 +1,9 @@
 import {z, type ToolAction} from "genkit";
 import {type GenkitBeta} from "genkit/beta";
-import {type ApplicationLogger} from "../../../../../../shared/logging/application-logger.js";
 import {DelegationBudget} from "../../../../../assistant/infrastructure/genkit/subagents/delegation-budget.js";
 import {type EmployeeConversation} from "../../runner/employee-conversation.js";
-import {formatDelegationAnswer, formatDelegationFailure, formatDelegationTask} from "./teamwork-log-format.js";
 import {maximumDelegations, memberTaskPrompt, type TeamMemberTool, type TeamworkTask} from "./teamwork-prompts.js";
+import {type TeamworkTranscript} from "./teamwork-transcript.js";
 
 /** Ein Mitarbeiter, bereit zur Arbeit: sein Gespräch für diesen Lauf (Modell, Arbeitsordner, Fähigkeiten). */
 export type TeamMemberRun = TeamMemberTool & {conversation: EmployeeConversation};
@@ -23,7 +22,7 @@ const delegationOutputSchema = z.object({response: z.string()});
  * Registry des Orchestrators findet. Das Budget gilt für den ganzen Lauf, auch für Nachbesserungen.
  * Fehler gehen als Antwort zurück, damit der Orchestrator weiterarbeitet.
  */
-export function delegationToolsFor(ai: GenkitBeta, runs: TeamMemberRun[], logger: ApplicationLogger): ToolAction[] {
+export function delegationToolsFor(ai: GenkitBeta, runs: TeamMemberRun[], transcript: TeamworkTranscript): ToolAction[] {
   const budget = new DelegationBudget(maximumDelegations);
   return runs.map((run) => ai.dynamicTool(
     {
@@ -36,21 +35,21 @@ export function delegationToolsFor(ai: GenkitBeta, runs: TeamMemberRun[], logger
       if (!budget.tryConsume()) {
         return {response: "Das Auftragsbudget ist aufgebraucht. Schließe die Aufgabe mit den vorhandenen Ergebnissen ab."};
       }
-      return delegate(run, task, logger);
+      return delegate(run, task, transcript);
     },
   ) as ToolAction);
 }
 
-async function delegate(run: TeamMemberRun, task: TeamworkTask, logger: ApplicationLogger): Promise<{response: string}> {
-  logger.readableInfo(formatDelegationTask(run.employeeName, task));
+async function delegate(run: TeamMemberRun, task: TeamworkTask, transcript: TeamworkTranscript): Promise<{response: string}> {
+  transcript.task(run.employeeName, task);
   const startedAt = Date.now();
   try {
     const answer = await run.conversation.send(memberTaskPrompt(task));
-    logger.readableInfo(formatDelegationAnswer(run.employeeName, answer, Date.now() - startedAt));
+    transcript.answer(run.employeeName, answer, Date.now() - startedAt);
     return {response: answer.trim() || "(keine Antwort)"};
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    logger.readableError(formatDelegationFailure(run.employeeName, message));
+    transcript.failure(run.employeeName, message);
     return {response: `Der Auftrag an ${run.employeeName} ist gescheitert: ${message}`};
   }
 }

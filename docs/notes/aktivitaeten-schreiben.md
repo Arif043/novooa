@@ -7,6 +7,8 @@ Gehört zu: [Aktivitäten](../index/aktivitaeten.md)
 - Task-Aktivität `started` mit Run-ID und Eingabekontext.
 - Je Baustein eine Node-Aktivität: `succeeded`, `skipped` oder `waiting`
   (bei Fehlern siehe [Fehlgeschlagene Bausteine](./baustein-fehler-aktivitaeten.md)).
+  Eine Teamarbeit trägt zusätzlich ihr Gespräch (`conversation`, siehe
+  [Ausführung der Teamarbeit](./teamwork-ausfuehrung.md)).
 - Abschluss `succeeded` oder `failed`, außer der Run wartet auf Freigabe.
 
 Cloud:

@@ -38,6 +38,8 @@ void main() {
     expect(activity.stderr, 'Warnung\n');
     expect(activity.failureCode, ActivityFailureCode.responseTruncated);
     expect(activity.failureDetails, {'received': 'abc'});
+    expect(activity.conversation.single.memberName, 'Elektriker');
+    expect(activity.conversation.single.duration, const Duration(seconds: 5));
     expect(client.reviewedRunId, 'run-1');
   });
 
@@ -140,6 +142,15 @@ Map<String, Object?> activityJson() => {
   'occurredAt': '2026-09-08T10:01:00Z',
   'outputs': <String, Object?>{},
   'console': {'stdout': 'hallo\n', 'stderr': 'Warnung\n'},
+  'conversation': [
+    {
+      'kind': 'answer',
+      'occurredAt': '2026-10-19T08:00:05.000Z',
+      'memberName': 'Elektriker',
+      'text': 'Ja.',
+      'durationMs': 5000,
+    },
+  ],
   'failureCode': 'responseTruncated',
   'failureDetails': {'received': 'abc', 'ignored': 3},
 };

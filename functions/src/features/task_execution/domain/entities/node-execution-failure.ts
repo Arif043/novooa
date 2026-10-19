@@ -1,4 +1,5 @@
 import {type ConsoleOutput, type NodeExecutionResult, type WorkflowPrimitive} from "./task.js";
+import {type TeamworkConversationEntry} from "./teamwork-conversation.js";
 
 /** Der Baustein, an dem der Lauf gescheitert ist: Position (ID), Art, Meldung und seine Ausgabe bis dahin. */
 export type FailedNode = {
@@ -10,6 +11,8 @@ export type FailedNode = {
   /** Felder für die Übersetzung des Codes, z. B. Operator und erhaltener Wert. */
   failureDetails?: Record<string, string>;
   console?: ConsoleOutput;
+  /** Das Gespräch einer Teamarbeit bis zum Fehler. */
+  conversation?: TeamworkConversationEntry[];
 };
 
 /**

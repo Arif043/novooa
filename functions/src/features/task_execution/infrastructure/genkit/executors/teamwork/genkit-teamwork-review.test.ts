@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {genkit} from "genkit/beta";
 import {GenkitTeamworkExecutor} from "./genkit-teamwork-executor.js";
-import {fakeModel, logger, request, resolverFor, result, workspaceFor, type FakeModel} from "./teamwork-test-support.js";
+import {fakeModel, logger, request, teamLogging, resolverFor, result, workspaceFor, type FakeModel} from "./teamwork-test-support.js";
 
 const reviewed = {...request, review: {enabled: true, languageModelId: "reviewer"}};
 const verdict = (approved: boolean, findings = "") => ({text: JSON.stringify({approved, findings})});
@@ -12,11 +12,12 @@ async function executorFor(
   capabilitiesById: Parameters<typeof resolverFor>[2] = {},
 ) {
   const log = logger();
+  const logging = teamLogging(log);
   const executor = new GenkitTeamworkExecutor({
-    ai: genkit({}), workspace: await workspaceFor(t), logger: log,
+    ai: genkit({}), workspace: await workspaceFor(t), ...logging,
     languageModelResolver: resolverFor({worker: fakeModel("worker", () => ({text: ""})), ...models}, {toolCalling: true}, capabilitiesById),
   });
-  return {executor, log};
+  return {executor, log, transcript: logging.transcript};
 }
 
 test("an approved result is delivered after one review on the reviewer's own model", async (t) => {
@@ -37,10 +38,13 @@ test("an approved result is delivered after one review on the reviewer's own mod
 test("a rejected result is revised in the same orchestrator conversation", async (t) => {
   const orchestrator = fakeModel("orchestrator", (call) => (call === 1 ? result("X", 0) : result("X ist 42 groß", 42)));
   const reviewer = fakeModel("reviewer", (call) => (call === 1 ? verdict(false, "Die Größe fehlt.") : verdict(true)));
-  const {executor, log} = await executorFor(t, {orchestrator, reviewer});
+  const {executor, log, transcript} = await executorFor(t, {orchestrator, reviewer});
 
   const outcome = (await executor.execute(reviewed))._unsafeUnwrap();
 
+  assert.deepEqual(transcript.entries().map(({kind, round, text}) => [kind, round, text]).slice(0, 2), [
+    ["reviewRejected", 1, "Die Größe fehlt."], ["reviewPassed", 2, ""],
+  ]);
   assert.deepEqual(outcome.fields, {antwort: "X ist 42 groß", groesse: 42});
   assert.match(orchestrator.requests[1].messages, /Du leitest ein Team.*Wie groß ist X\?.*Die Größe fehlt\./);
   assert.ok(log.lines.some((line) => line.startsWith("[Teamwork] Review 1 rejected\nDie Größe fehlt.")));

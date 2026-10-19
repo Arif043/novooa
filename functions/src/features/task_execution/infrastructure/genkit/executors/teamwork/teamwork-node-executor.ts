@@ -20,6 +20,7 @@ import {fieldOutputsFor} from "../structured-output-schema.js";
 import {GenkitTeamworkExecutor} from "./genkit-teamwork-executor.js";
 import {persistedResultFile} from "./teamwork-file-outputs.js";
 import {teamworkImageInstructions, writeTeamworkImages} from "./teamwork-images.js";
+import {TeamworkTranscript} from "./teamwork-transcript.js";
 import {namedOutputFields} from "./teamwork-output-schema.js";
 
 export type TeamworkNodeExecutorDependencies = {
@@ -40,13 +41,15 @@ export function createTeamworkNodeExecutor(dependencies: TeamworkNodeExecutorDep
       if (config.members.length === 0) return err(nodeFailures.settingMissing("teamMembers"));
       if (fields.length === 0) return err(nodeFailures.settingMissing("resultFields"));
       const workspace = teamWorkspaceOf(dependencies.workspace);
-      const executor = new GenkitTeamworkExecutor({...dependencies, workspace});
+      const transcript = new TeamworkTranscript(dependencies.logger);
+      const executor = new GenkitTeamworkExecutor({...dependencies, workspace, transcript});
       const request = await requestFor({...config, outputFields: fields}, node, runContext, workspace);
       const outputsOrFailure = await executor.execute(request).andThen(({fields: values}) => ResultAsync.fromPromise(
         outputsFor(fields, values, workspace.team.sharedDirectory, runContext), languageModelFailureFrom,
       ));
-      if (outputsOrFailure.isErr()) return err(NodeFailure.of(outputsOrFailure.error));
-      return ok(executedNode(node, outputsOrFailure.value));
+      const conversation = transcript.entries();
+      if (outputsOrFailure.isErr()) return err(NodeFailure.of(outputsOrFailure.error).withConversation(conversation));
+      return ok(executedNode(node, outputsOrFailure.value, {conversation}));
     },
   };
 }

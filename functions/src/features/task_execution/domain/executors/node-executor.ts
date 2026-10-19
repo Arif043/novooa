@@ -12,6 +12,7 @@ import {
   type WorkflowNode,
 } from "../entities/task.js";
 import {type TaskRunInteraction} from "../entities/task-run-interaction.js";
+import {type TeamworkConversationEntry} from "../entities/teamwork-conversation.js";
 import {type WorkflowInputValue} from "../entities/workflow-value.js";
 import {type TeamFileContentReader} from "../../../files/domain/repositories/team-file-content-reader.js";
 import {type TeamFileStore} from "../../../files/domain/repositories/team-file-store.js";
@@ -95,6 +96,7 @@ export function executedNode(
       selectedBranchLabel?: string | null;
     };
     console?: ConsoleOutput;
+    conversation?: TeamworkConversationEntry[];
   } = {},
 ): NodeExecutionResult {
   return {
@@ -103,6 +105,7 @@ export function executedNode(
     status: "executed",
     outputs,
     console: options.console,
+    ...(options.conversation ? {conversation: options.conversation} : {}),
     selectedNodeId: options.selectedNodeId,
     selectedBranchId: options.selection?.selectedBranchId,
     selectedBranchLabel: options.selection?.selectedBranchLabel,

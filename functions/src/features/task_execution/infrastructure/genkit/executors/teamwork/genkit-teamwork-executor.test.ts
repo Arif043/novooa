@@ -5,7 +5,7 @@ import test from "node:test";
 import {genkit} from "genkit/beta";
 import {GenkitError} from "genkit";
 import {GenkitTeamworkExecutor} from "./genkit-teamwork-executor.js";
-import {delegation, fakeModel, logger, request, resolverFor, result, workspaceFor} from "./teamwork-test-support.js";
+import {delegation, fakeModel, logger, request, teamLogging, resolverFor, result, workspaceFor} from "./teamwork-test-support.js";
 
 test("the orchestrator delegates to a member on its own model and returns the structured result", async (t) => {
   const orchestrator = fakeModel("orchestrator", (call) => call === 1
@@ -14,7 +14,7 @@ test("the orchestrator delegates to a member on its own model and returns the st
   const worker = fakeModel("worker", () => ({text: "X ist 42."}));
   const log = logger();
   const executor = new GenkitTeamworkExecutor({
-    ai: genkit({}), workspace: await workspaceFor(t), logger: log,
+    ai: genkit({}), workspace: await workspaceFor(t), ...teamLogging(log),
     languageModelResolver: resolverFor({orchestrator, worker}),
   });
 
@@ -37,7 +37,7 @@ test("a failing member is reported to the orchestrator, which keeps working", as
     throw new GenkitError({status: "INVALID_ARGUMENT", message: "Modell lehnt ab"});
   });
   const executor = new GenkitTeamworkExecutor({
-    ai: genkit({}), workspace: await workspaceFor(t), logger: logger(),
+    ai: genkit({}), workspace: await workspaceFor(t), ...teamLogging(),
     languageModelResolver: resolverFor({orchestrator, worker}),
   });
 
@@ -51,7 +51,7 @@ test("an orchestrator model without tool calls fails readably before anything ru
   const orchestrator = fakeModel("orchestrator", () => ({text: "{}"}));
   const worker = fakeModel("worker", () => ({text: ""}));
   const executor = new GenkitTeamworkExecutor({
-    ai: genkit({}), workspace: await workspaceFor(t), logger: logger(),
+    ai: genkit({}), workspace: await workspaceFor(t), ...teamLogging(),
     languageModelResolver: resolverFor({orchestrator, worker}, {toolCalling: false}),
   });
 
@@ -66,7 +66,7 @@ test("result files written to the shared folder are reported by path", async (t)
   await writeFile(path.join(workspace.team.sharedDirectory, "bericht.md"), "# Bericht");
   const orchestrator = fakeModel("orchestrator", () => ({text: JSON.stringify({bericht: "shared/bericht.md"})}));
   const executor = new GenkitTeamworkExecutor({
-    ai: genkit({}), workspace, logger: logger(),
+    ai: genkit({}), workspace, ...teamLogging(),
     languageModelResolver: resolverFor({orchestrator, worker: fakeModel("worker", () => ({text: ""}))}),
   });
 
@@ -83,11 +83,29 @@ test("a member remembers earlier tasks of the run", async (t) => {
     : call === 2 ? delegation("2", "Und wie sicher ist das?") : result("X ist 42 groß", 42));
   const worker = fakeModel("worker", (call) => ({text: call === 1 ? "X ist 42." : "Sehr sicher."}));
   const executor = new GenkitTeamworkExecutor({
-    ai: genkit({}), workspace: await workspaceFor(t), logger: logger(),
+    ai: genkit({}), workspace: await workspaceFor(t), ...teamLogging(),
     languageModelResolver: resolverFor({orchestrator, worker}),
   });
 
   (await executor.execute(request))._unsafeUnwrap();
 
   assert.match(worker.requests[1].messages, /Finde X\..*X ist 42\..*Und wie sicher ist das\?/);
+});
+
+test("the transcript holds the conversation: task, answer and result", async (t) => {
+  const orchestrator = fakeModel("orchestrator", (call) => call === 1 ? delegation("1", "Finde X.") : result("X ist 42 groß", 42));
+  const worker = fakeModel("worker", () => ({text: "X ist 42."}));
+  const logging = teamLogging();
+  const executor = new GenkitTeamworkExecutor({
+    ai: genkit({}), workspace: await workspaceFor(t), ...logging,
+    languageModelResolver: resolverFor({orchestrator, worker}),
+  });
+
+  (await executor.execute(request))._unsafeUnwrap();
+
+  assert.deepEqual(logging.transcript.entries().map(({kind, memberName, text}) => [kind, memberName, text]), [
+    ["task", "Recherche", "Finde X."],
+    ["answer", "Recherche", "X ist 42."],
+    ["result", undefined, JSON.stringify({antwort: "X ist 42 groß", groesse: 42}, null, 2)],
+  ]);
 });

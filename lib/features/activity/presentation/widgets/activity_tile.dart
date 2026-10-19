@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/task_activity.dart';
 import 'node_activity_values.dart';
+import 'teamwork_conversation/teamwork_conversation_button.dart';
 
 class ActivityTile extends StatelessWidget {
   const ActivityTile({super.key, required this.activity, this.onTap});
@@ -62,6 +63,10 @@ class _ActivityText extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(_detail!, style: textTheme.bodySmall),
         ],
+        if (activity.hasConversation) ...[
+          const SizedBox(height: AppSpacing.sm),
+          TeamworkConversationButton(activity: activity),
+        ],
       ],
     );
   }
@@ -110,6 +115,7 @@ class _ActivityText extends StatelessWidget {
       'documentLookup' => 'Datensatz suchen',
       'saveDocument' => 'Datensatz speichern',
       'validation' => 'Validierung',
+      'teamwork' => 'Teamarbeit',
       _ => 'Baustein',
     };
   }

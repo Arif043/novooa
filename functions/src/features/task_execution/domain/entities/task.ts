@@ -1,3 +1,4 @@
+import {type TeamworkConversationEntry} from "./teamwork-conversation.js";
 import {
   type KnowledgeAttachment,
   type NodeAttachment,
@@ -379,6 +380,8 @@ export type NodeExecutionResult = {
   message?: string;
   /** Was der Baustein auf stdout und stderr ausgegeben hat (Script-Baustein); fehlt, wenn nichts. */
   console?: ConsoleOutput;
+  /** Das Gespräch der Mitarbeiter (Teamarbeit); fehlt bei anderen Bausteinen. */
+  conversation?: TeamworkConversationEntry[];
   interaction?: TaskRunInteraction;
   dialogInput?: DialogInputDefinition;
 };

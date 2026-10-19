@@ -20,6 +20,8 @@ export const activities = sqliteTable("activities", {
   failure_code: text("failure_code"),
   /** Felder zum Fehlercode als JSON-Objekt (z. B. Operator, erhaltener Wert), für die Übersetzung. */
   failure_details_json: text("failure_details_json"),
+  /** Gespräch der Mitarbeiter einer Teamarbeit als JSON-Array; leer bei anderen Bausteinen. */
+  conversation_json: text("conversation_json").notNull().default("[]"),
 }, (table) => [
   index("idx_activities_run_created").on(table.run_id, table.created_at),
 ]);

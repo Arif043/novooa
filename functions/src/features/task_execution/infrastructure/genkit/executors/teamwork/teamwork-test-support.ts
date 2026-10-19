@@ -8,6 +8,7 @@ import {type TeamworkExecutionRequest} from "../../../../domain/entities/teamwor
 import {defaultLanguageModelCapabilities, type LanguageModelCapabilities} from "../../../../../language_models/domain/entities/language-model.js";
 import {defaultGenerationOptions} from "../../../../../language_models/domain/entities/generation-options.js";
 import {type GenkitLanguageModelResolver} from "../../../../../language_models/infrastructure/genkit/genkit-language-model-resolver.js";
+import {TeamworkTranscript} from "./teamwork-transcript.js";
 
 /** Test-Hilfen der Teamarbeit: Fake-Modelle je eigener Genkit-Instanz, Arbeitsordner, Anfrage, Protokoll. */
 export type FakeModel = {ai: GenkitBeta; model: ModelArgument; requests: Array<{messages: string; tools: string[]}>};
@@ -69,3 +70,8 @@ export const logger = () => {
   const lines: string[] = [];
   return {lines, info() {}, error() {}, exception() {}, readableInfo: (line: string) => lines.push(line), readableError: (line: string) => lines.push(line)};
 };
+
+/** Logger und Gespräch, wie sie der Baustein dem Executor gibt. */
+export function teamLogging(log = logger()) {
+  return {logger: log, transcript: new TeamworkTranscript(log)};
+}

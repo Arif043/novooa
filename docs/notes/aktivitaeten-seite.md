@@ -8,6 +8,12 @@ Gehört zu: [Aktivitäten](../index/aktivitaeten.md)
   seinen Node-Aktivitäten chronologisch samt benannten Werten, formatiert nach
   Output-Typ (inklusive Script-Ausgabe, siehe
   [Script-Ausgabe im Protokoll](./script-ausgabe-protokoll.md)).
+- **Gespräch der Mitarbeiter:** Hat eine Node-Aktivität ein Gespräch (Teamarbeit,
+  auch bei Fehlern), zeigt sie den TextButton „Gespräch der Mitarbeiter
+  anzeigen“. Er öffnet per `Navigator.push` die `TeamworkConversationPage`. Dort
+  steht je Eintrag eine Karte: wer zu wem spricht, Art, Uhrzeit, ggf. Dauer und
+  der ungekürzte Text, bei Aufträgen zusätzlich „Erwartetes Ergebnis“ und
+  „Grenzen“. Farben nach Rolle: Orchestrator, Mitarbeiter, Prüfung, Fehler.
 - **Protokoll** (Standalone): die letzten strukturierten Runtime-Ereignisse
   aus dem [Anwendungsprotokoll](./anwendungsprotokoll.md), getrennt von
   Laufaktivitäten.
@@ -23,3 +29,4 @@ Gehört zu: [Aktivitäten](../index/aktivitaeten.md)
 
 - [Aktivitäten eines Runs](./aktivitaeten-schreiben.md)
 - [Freigaben und Pausen](./freigaben-und-pausen.md)
+- [Ausführung der Teamarbeit](./teamwork-ausfuehrung.md)
