@@ -18,8 +18,10 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   Executor nicht. Secret `GEMINI_API_KEY`.
 - **Ollama:** lokales Genkit-Modell; Genkit steuert den Aufruf, der native
   Adapter spricht `/api/chat`. Bilder als Ollama-Bilder, JSON-Schemas als
-  geschlossenes `format` (`additionalProperties: false`), Generierungsoptionen als `options`/`think`. Middleware, Tracing
-  und eine spätere Werkzeugschleife bleiben im Genkit-Kontrollfluss.
+  geschlossenes `format` (`additionalProperties: false`), Generierungsoptionen als `options`/`think`. Werkzeuge
+  gehen als Ollama-`tools`, Aufrufe kommen als `tool_calls` zurück; die Werkzeugschleife, Middleware und Tracing
+  bleiben im Genkit-Kontrollfluss. Mit Werkzeugen entfällt `format` (die Grammatik ließe keine Aufrufe zu), die
+  strukturierte Ausgabe verlangt Genkit dann über Anweisungen im Prompt.
 - **Generierungsoptionen** (Temperatur, Antwortlänge, Kontextfenster,
   Nachdenken) pro Baustein: [Generierungsoptionen](./generierungsoptionen.md).
 - Das Protokoll nennt pro Modellaufruf die Optionen und die Zahl der Bilder;

@@ -11,6 +11,7 @@ import {
   type NativeOllamaChatResponse,
   type OllamaRuntimeOptions,
 } from "./native-ollama-chat-client.js";
+import {contentFromOllama, messagesForOllama, toolsForOllama} from "./native-ollama-tool-messages.js";
 import {ollamaResponseProblem} from "./ollama-response-problem.js";
 
 /** Genkit-Konfiguration für Ollama: die gemeinsamen Felder plus Kontextfenster und Nachdenken. */
@@ -36,7 +37,7 @@ export function nativeOllamaPlugin(options: NativeOllamaPluginOptions): GenkitPl
   return genkitPlugin(options.name, async (ai) => {
     ai.defineModel(modelDefinitionFor(options), async (request) => {
       const response = await chatFor(request, options);
-      const message = {role: "model" as const, content: [{text: response.content}]};
+      const message = {role: "model" as const, content: contentFromOllama(response)};
       return {message, usage: getBasicUsageStats(request.messages, message), finishReason: finishReasonFor(response)};
     });
   });
@@ -47,7 +48,12 @@ function modelDefinitionFor(options: NativeOllamaPluginOptions) {
     name: `${options.name}/${options.modelId}`,
     label: `Ollama - ${options.modelId}`,
     configSchema: ollamaConfigSchema,
-    supports: {multiturn: true, media: true, systemRole: true, output: ["text", "json"], constrained: "all" as const},
+    // `no-tools`: Mit Werkzeugen simuliert Genkit die strukturierte Ausgabe über Prompt-Anweisungen, denn eine
+    // `format`-Grammatik ließe das Modell keine Werkzeuge mehr aufrufen.
+    supports: {
+      multiturn: true, media: true, systemRole: true, tools: true,
+      output: ["text", "json"], constrained: "no-tools" as const,
+    },
   };
 }
 
@@ -59,7 +65,8 @@ async function chatFor(
   const response = await (options.chatClient ?? new NativeOllamaChatClient()).chat({
     baseUrl: options.serverAddress,
     modelId: options.modelId,
-    messages: request.messages.map(messageForOllama),
+    messages: messagesForOllama(request.messages),
+    tools: toolsForOllama(request.tools),
     format,
     options: runtimeOptionsFor(request.config),
     think: request.config?.think,
@@ -83,19 +90,6 @@ function runtimeOptionsFor(config: OllamaGenkitConfig | undefined): OllamaRuntim
 
 function finishReasonFor(response: NativeOllamaChatResponse): "stop" | "length" {
   return response.doneReason === "length" ? "length" : "stop";
-}
-
-function messageForOllama(message: GenerateRequest["messages"][number]) {
-  const mediaUrls = message.content
-    .flatMap((part) => part.media ? [part.media.url] : []);
-  const text = message.content
-    .flatMap((part) => part.text ? [part.text] : [])
-    .join("");
-  return {role: roleForOllama(message.role), content: text, mediaUrls};
-}
-
-function roleForOllama(role: "system" | "user" | "model" | "tool"): "system" | "user" | "assistant" | "tool" {
-  return role === "model" ? "assistant" : role;
 }
 
 // Genkit erzeugt offene Objekte (`additionalProperties: true`). Ollama macht

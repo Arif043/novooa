@@ -13,7 +13,7 @@ export function ollamaResponseProblem(
   response: NativeOllamaChatResponse,
   expectsJson: boolean,
 ): LanguageModelError | undefined {
-  const empty = response.content.trim().length === 0;
+  const empty = response.content.trim().length === 0 && response.toolCalls.length === 0;
   if (response.doneReason === "length" && (empty || expectsJson)) return truncated(response, empty);
   if (empty) return emptyResponse(response);
   return undefined;

@@ -24,12 +24,25 @@ export type NativeOllamaChatRequest = {
   format?: Record<string, unknown>;
   options?: OllamaRuntimeOptions;
   think?: OllamaThinking;
+  tools?: NativeOllamaTool[];
 };
+
+/** Ein Werkzeug im Format von Ollamas `/api/chat`. */
+export type NativeOllamaTool = {
+  type: "function";
+  function: {name: string; description: string; parameters: Record<string, unknown>};
+};
+
+export type NativeOllamaToolCall = {name: string; arguments: Record<string, unknown>};
 
 export type NativeOllamaMessage = {
   role: "system" | "user" | "assistant" | "tool";
   content: string;
   mediaUrls: string[];
+  /** Werkzeugaufrufe einer früheren Antwort des Modells. */
+  toolCalls?: NativeOllamaToolCall[];
+  /** Name des Werkzeugs, dessen Ergebnis eine `tool`-Nachricht trägt. */
+  toolName?: string;
 };
 
 export type NativeOllamaChatResponse = {
@@ -37,6 +50,7 @@ export type NativeOllamaChatResponse = {
   thinking: string;
   /** `stop` = fertig, `length` = Kontextfenster oder `num_predict` erschöpft. */
   doneReason: string;
+  toolCalls: NativeOllamaToolCall[];
 };
 
 // Lokale Modelle mit Nachdenken brauchen für ein Bild schnell mehrere tausend
@@ -83,6 +97,7 @@ function requestFor(input: NativeOllamaChatRequest): RequestInit {
       ...(input.format ? {format: input.format} : {}),
       ...(hasOptions(input.options) ? {options: input.options} : {}),
       ...(input.think === undefined ? {} : {think: input.think}),
+      ...(input.tools && input.tools.length > 0 ? {tools: input.tools} : {}),
     }),
     signal: AbortSignal.timeout(requestTimeoutMs),
   };
@@ -98,6 +113,8 @@ function messageFor(message: NativeOllamaMessage) {
     role: message.role,
     content: message.content,
     ...(images.length > 0 ? {images} : {}),
+    ...(message.toolCalls ? {tool_calls: message.toolCalls.map((call) => ({function: call}))} : {}),
+    ...(message.toolName ? {tool_name: message.toolName} : {}),
   };
 }
 
@@ -123,7 +140,28 @@ function chatResponseFrom(value: unknown): NativeOllamaChatResponse {
     content: value.message.content,
     thinking: typeof value.message.thinking === "string" ? value.message.thinking : "",
     doneReason: typeof value.done_reason === "string" ? value.done_reason : "stop",
+    toolCalls: toolCallsFrom(value.message.tool_calls),
   };
+}
+
+function toolCallsFrom(value: unknown): NativeOllamaToolCall[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((call) => {
+    if (!isRecord(call) || !isRecord(call.function) || typeof call.function.name !== "string") return [];
+    return [{name: call.function.name, arguments: argumentsFrom(call.function.arguments)}];
+  });
+}
+
+// Ollama liefert Argumente als Objekt; manche Modellvorlagen liefern sie als JSON-Text.
+function argumentsFrom(value: unknown): Record<string, unknown> {
+  if (isRecord(value)) return value;
+  if (typeof value !== "string") return {};
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return isRecord(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
 }
 
 function isTimeout(error: unknown): boolean {

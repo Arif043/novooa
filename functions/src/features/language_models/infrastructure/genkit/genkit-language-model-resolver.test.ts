@@ -88,16 +88,16 @@ function modelFor(connectionId: string) {
   };
 }
 
-test("an Ollama model never claims tool calls, because the native plugin has no tool loop yet", async () => {
-  const capabilities = {textGeneration: true, imageInput: false, structuredOutput: true, toolCalling: true, imageGeneration: false};
+test("an Ollama model takes its tool calling from what Ollama reports", async () => {
+  const capabilities = {textGeneration: true, imageInput: false, structuredOutput: true, toolCalling: false, imageGeneration: false};
   const resolver = new CatalogGenkitLanguageModelResolver({
     loadModel: async () => ({id: "m", teamId: "t", connectionId: "c", name: "Qwen", modelId: "qwen3", capabilities}),
     loadConnection: async () => ({id: "c", teamId: "t", name: "Ollama", provider: "ollama" as const, baseUrl: "http://127.0.0.1:11434/v1"}),
     loadConnectionApiKey: async () => "",
-  }, {inspect: async (input: {fallback: typeof capabilities}) => input.fallback} as never);
+  }, {inspect: async (input: {fallback: typeof capabilities}) => ({...input.fallback, toolCalling: true})} as never);
 
   const model = await resolver.resolve("t", "m");
 
-  assert.equal(model.capabilities.toolCalling, false);
+  assert.equal(model.capabilities.toolCalling, true);
   assert.equal(model.capabilities.structuredOutput, true);
 });

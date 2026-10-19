@@ -62,11 +62,7 @@ export class CatalogGenkitLanguageModelResolver
     const baseUrl = namedProvider?.baseUrl ?? connection.baseUrl;
     if (!baseUrl) throw new Error("Der OpenAI-kompatiblen Verbindung fehlt die Base-URL.");
     if (connection.provider === "ollama") {
-      // Das native Plugin hat noch keine Werkzeugschleife: Werkzeuge erreichen Ollama nicht.
-      const capabilities = {
-        ...await this.capabilitiesFor(connection.provider, baseUrl, model.modelId, model.capabilities),
-        toolCalling: false,
-      };
+      const capabilities = await this.capabilitiesFor(connection.provider, baseUrl, model.modelId, model.capabilities);
       const providerName = "language-model-" + connection.id;
       return {
         ai: genkit({plugins: [nativeOllamaPlugin({

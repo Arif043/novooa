@@ -42,7 +42,7 @@ function capabilitiesFrom(
 ): LanguageModelCapabilities {
   if (!isRecord(value) || !Array.isArray(value.capabilities)) return fallback;
   const capabilities = new Set(value.capabilities.filter((value): value is string => typeof value === "string"));
-  return {...fallback, imageInput: capabilities.has("vision")};
+  return {...fallback, imageInput: capabilities.has("vision"), toolCalling: capabilities.has("tools")};
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

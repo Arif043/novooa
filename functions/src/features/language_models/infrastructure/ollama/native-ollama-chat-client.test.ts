@@ -26,7 +26,7 @@ test("uses Ollama's native chat API with images and a schema format", async () =
   });
 
   assert.equal(calledUrl, "http://host.docker.internal:11434/api/chat");
-  assert.deepEqual(response, {content: '{"name":"PENNY"}', thinking: "", doneReason: "stop"});
+  assert.deepEqual(response, {content: '{"name":"PENNY"}', thinking: "", doneReason: "stop", toolCalls: []});
   assert.deepEqual(requestBody, {
     model: "gemma4:12b",
     messages: [{role: "user", content: "Lies den Beleg.", images: ["aW1hZ2U="]}],
@@ -66,7 +66,7 @@ test("sends runtime options and thinking, and reports why Ollama stopped", async
 
   assert.deepEqual(requestBody?.options, {num_ctx: 16384, temperature: 0});
   assert.equal(requestBody?.think, false);
-  assert.deepEqual(response, {content: "", thinking: "Hmm …", doneReason: "length"});
+  assert.deepEqual(response, {content: "", thinking: "Hmm …", doneReason: "length", toolCalls: []});
 });
 
 test("omits options when every value is left to the model", async () => {
@@ -91,4 +91,31 @@ test("throws our errors for server errors, rejected requests, timeouts and unrea
   await assert.rejects(chat(async () => new Response("model not found", {status: 404})), ModelRequestRejectedError);
   await assert.rejects(chat(async () => { throw timeout; }), ModelTimeoutError);
   await assert.rejects(chat(async () => { throw new TypeError("fetch failed"); }), ModelProviderUnavailableError);
+});
+
+test("sends tools and earlier tool calls and reads the model's tool calls", async () => {
+  let requestBody: Record<string, unknown> | undefined;
+  const client = new NativeOllamaChatClient(async (_url, init) => {
+    requestBody = JSON.parse(init?.body as string) as Record<string, unknown>;
+    return new Response(JSON.stringify({message: {content: "", tool_calls: [
+      {function: {name: "delegate", arguments: {task: "A"}}},
+      {function: {name: "read_file", arguments: "{\"path\":\"a.md\"}"}},
+    ]}}));
+  });
+  const tool = {type: "function" as const, function: {name: "delegate", description: "Vergibt", parameters: {type: "object"}}};
+
+  const response = await client.chat({baseUrl: "http://localhost:11434", modelId: "gemma4:e4b", tools: [tool], messages: [
+    {role: "assistant", content: "", mediaUrls: [], toolCalls: [{name: "delegate", arguments: {task: "B"}}]},
+    {role: "tool", content: "\"erledigt\"", mediaUrls: [], toolName: "delegate"},
+  ]});
+
+  assert.deepEqual(requestBody?.tools, [tool]);
+  assert.deepEqual(requestBody?.messages, [
+    {role: "assistant", content: "", tool_calls: [{function: {name: "delegate", arguments: {task: "B"}}}]},
+    {role: "tool", content: "\"erledigt\"", tool_name: "delegate"},
+  ]);
+  assert.deepEqual(response.toolCalls, [
+    {name: "delegate", arguments: {task: "A"}},
+    {name: "read_file", arguments: {path: "a.md"}},
+  ]);
 });
