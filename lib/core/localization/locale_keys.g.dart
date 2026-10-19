@@ -442,6 +442,7 @@ abstract class  LocaleKeys {
   static const ui_keine_passenden_werte_verfuegbar = 'ui.keine_passenden_werte_verfuegbar';
   static const ui_keine_sammlungen_vorhanden = 'ui.keine_sammlungen_vorhanden';
   static const ui_ki_agent = 'ui.ki_agent';
+  static const ui_noovi_thinking = 'ui.noovi_thinking';
   static const ui_ki_agent_bedient_die_oberflaeche = 'ui.ki_agent_bedient_die_oberflaeche';
   static const ui_ki_agent_oeffnen = 'ui.ki_agent_oeffnen';
   static const ui_konfiguration_schliessen = 'ui.konfiguration_schliessen';

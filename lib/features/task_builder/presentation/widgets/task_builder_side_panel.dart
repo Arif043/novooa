@@ -13,6 +13,8 @@ import 'package:syscat2/features/notifications/presentation/cubits/app_notificat
 import 'package:syscat2/features/notifications/presentation/widgets/notification_panel.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_assistant_plan_action_resolver.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
+import 'package:syscat2/core/widgets/noovi/noovi_image.dart';
+import 'package:syscat2/core/widgets/noovi/noovi_pose.dart';
 
 enum TaskBuilderSidePanelKind { assistant, notifications }
 
@@ -41,10 +43,10 @@ class TaskBuilderSideRail extends StatelessWidget {
           if (serviceLocator<WorkspaceCapabilities>().assistant)
             _RailIconButton(
               tooltip: LocaleKeys.ui_ki_agent.tr(),
-              icon: Icons.auto_awesome_outlined,
               selected: selectedPanel == TaskBuilderSidePanelKind.assistant,
               onPressed: () =>
                   onPanelSelected(TaskBuilderSidePanelKind.assistant),
+              child: const NooviImage(pose: NooviPose.wave, size: 28),
             ),
           _RailIconButton(
             tooltip: LocaleKeys.ui_benachrichtigungen.tr(),
@@ -131,13 +133,11 @@ class _RailIconButton extends StatelessWidget {
     required this.tooltip,
     required this.selected,
     required this.onPressed,
-    this.icon,
-    this.child,
+    required this.child,
   });
 
   final String tooltip;
-  final IconData? icon;
-  final Widget? child;
+  final Widget child;
   final bool selected;
   final VoidCallback onPressed;
 
@@ -156,7 +156,7 @@ class _RailIconButton extends StatelessWidget {
             : Colors.transparent,
       ),
       onPressed: onPressed,
-      icon: child ?? Icon(icon),
+      icon: child,
     );
   }
 }

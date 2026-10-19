@@ -26,7 +26,8 @@ Gehört zu: [KI-Agent](../index/ki-agent.md)
 wählt den Baustein, fährt zum Feld (`AgentCursorAnchor`) und tippt
 schrittweise in den Cubit. Fehlt ein Anker oder sind Animationen reduziert,
 springt der Cursor bzw. entfällt — die Änderung hängt nie am Cursor. Der
-Cursor gehört zum Aufgabenstudio (`TaskBuilderShellFrame`).
+Cursor gehört zum Aufgabenstudio (`TaskBuilderShellFrame`). Der Cursor ist Noovi in der Pose `fly`
+(`AgentCursorNoovi`), siehe [Noovi, das Maskottchen](./noovi-maskottchen.md).
 
 Offen: `configureNode` für bestehende Bausteine (der Client müsste deren IDs
 und Werte mitsenden), `connectNodes`, `removeNode`, `updateTaskObjective`.

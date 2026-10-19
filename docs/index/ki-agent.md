@@ -13,6 +13,7 @@
 
 - [Architektur des Assistenten](../notes/assistent-architektur.md)
 - [Multiagenten-Architektur des Aufgabenstudios](../notes/multiagenten-aufgabenstudio.md)
+- [Noovi, das Maskottchen](../notes/noovi-maskottchen.md)
 - [Wissensbasis-Agent](../notes/wissensbasis-agent.md)
 - [URL Context und Seitenlinks](../notes/url-context-und-seitenlinks.md)
 

@@ -3,6 +3,8 @@ import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
+import 'package:syscat2/core/widgets/noovi/noovi_image.dart';
+import 'package:syscat2/core/widgets/noovi/noovi_pose.dart';
 import 'package:syscat2/core/widgets/ios_overlays.dart';
 
 import '../../domain/entities/assistant_context.dart';
@@ -18,7 +20,7 @@ class AssistantBellButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       tooltip: LocaleKeys.ui_ki_agent_oeffnen.tr(),
-      icon: const Icon(Icons.auto_awesome_outlined),
+      icon: const NooviImage(pose: NooviPose.wave, size: 28),
       onPressed: () => _openAssistant(context),
     );
   }

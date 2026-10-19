@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/runtime/workspace_capabilities.dart';
+import 'package:syscat2/core/widgets/noovi/noovi_image.dart';
+import 'package:syscat2/core/widgets/noovi/noovi_pose.dart';
 import 'package:syscat2/features/assistant/domain/entities/assistant_context.dart';
 import 'package:syscat2/features/assistant/presentation/cubits/assistant_cubit.dart';
 import 'package:syscat2/features/assistant/presentation/widgets/assistant_panel_dialog.dart';
@@ -42,10 +44,10 @@ class KnowledgeBaseSideRail extends StatelessWidget {
           if (serviceLocator<WorkspaceCapabilities>().assistant)
             _RailIconButton(
               tooltip: 'KI-Agent',
-              icon: Icons.auto_awesome_outlined,
               selected: selectedPanel == KnowledgeBaseSidePanelKind.assistant,
               onPressed: () =>
                   onPanelSelected(KnowledgeBaseSidePanelKind.assistant),
+              child: const NooviImage(pose: NooviPose.wave, size: 28),
             ),
           _RailIconButton(
             tooltip: 'Benachrichtigungen',

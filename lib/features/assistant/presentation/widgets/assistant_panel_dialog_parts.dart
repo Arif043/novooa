@@ -13,23 +13,29 @@ class _AssistantMessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isUser = message.role == AssistantMessageRole.user;
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: isUser
-              ? theme.colorScheme.primaryContainer
-              : theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(AppSpacing.md),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: _MessageContent(
-            message: message,
-            planActionResolver: planActionResolver,
-          ),
+    final bubble = DecoratedBox(
+      decoration: BoxDecoration(
+        color: isUser
+            ? theme.colorScheme.primaryContainer
+            : theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppSpacing.md),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: _MessageContent(
+          message: message,
+          planActionResolver: planActionResolver,
         ),
       ),
+    );
+    if (isUser) return Align(alignment: Alignment.centerRight, child: bubble);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const NooviImage(pose: NooviPose.present, size: 32),
+        const SizedBox(width: AppSpacing.sm),
+        Flexible(child: bubble),
+      ],
     );
   }
 }
@@ -68,14 +74,7 @@ class _AssistantLoadingBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Align(
       alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: EdgeInsets.all(AppSpacing.md),
-        child: SizedBox(
-          width: 22,
-          height: 22,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      ),
+      child: NooviThinking(size: 48),
     );
   }
 }

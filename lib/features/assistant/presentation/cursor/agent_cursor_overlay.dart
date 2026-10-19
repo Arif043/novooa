@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
 import 'agent_cursor_controller.dart';
+import 'agent_cursor_noovi.dart';
 import 'agent_viewport_glow.dart';
 
 /// Zeichnet den Agent-Cursor über die Oberfläche; nimmt keine Eingaben an.
@@ -58,6 +59,8 @@ class _AgentCursorOverlayState extends State<AgentCursorOverlay> {
 class _CursorMark extends StatelessWidget {
   const _CursorMark({required this.clickCount});
 
+  static const _nooviSize = 48.0;
+
   final int clickCount;
 
   @override
@@ -68,24 +71,23 @@ class _CursorMark extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Der Ring liegt außerhalb des Layouts, damit der Klick den Pfeil
-          // nicht verschiebt.
+          // Der Ring liegt außerhalb des Layouts, damit der Klick Noovi nicht
+          // verschiebt.
           Positioned(
             left: -_Ripple.size / 2,
             top: -_Ripple.size / 2,
             child: _Ripple(key: ValueKey(clickCount), color: colors.primary),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.navigation,
-                color: colors.primary,
-                size: AppSpacing.lg,
-              ),
-              _Badge(colors: colors),
-            ],
+          // Noovi fliegt mit ausgestreckter Faust voran; die Faust liegt auf
+          // dem Klickpunkt (ca. 89 % Breite, 48 % Höhe des Bildes).
+          const Positioned(
+            left: -_nooviSize * 0.89,
+            top: -_nooviSize * 0.48,
+            child: AgentCursorNoovi(size: _nooviSize),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: _nooviSize * 0.55),
+            child: _Badge(colors: colors),
           ),
         ],
       ),

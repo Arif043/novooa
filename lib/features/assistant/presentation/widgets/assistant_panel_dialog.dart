@@ -4,6 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
+import 'package:syscat2/core/widgets/noovi/noovi_image.dart';
+import 'package:syscat2/core/widgets/noovi/noovi_pose.dart';
+import 'package:syscat2/core/widgets/noovi/noovi_thinking.dart';
 
 import '../../domain/entities/assistant_message.dart';
 import '../agent/assistant_plan_action_resolver.dart';
@@ -92,7 +95,7 @@ class _AssistantHeader extends StatelessWidget {
     final theme = Theme.of(context);
     return Row(
       children: [
-        Icon(Icons.auto_awesome, color: theme.colorScheme.primary),
+        const NooviImage(pose: NooviPose.wave, size: 32),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(
@@ -153,13 +156,22 @@ class _AssistantEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Center(
-      child: Text(
-        LocaleKeys.ui_ask_about_context.tr(
-          namedArgs: {'context': contextLabel},
-        ),
-        textAlign: TextAlign.center,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const NooviImage(pose: NooviPose.wave, size: 112),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              LocaleKeys.ui_ask_about_context.tr(
+                namedArgs: {'context': contextLabel},
+              ),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       ),
     );

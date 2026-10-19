@@ -117,6 +117,8 @@ The design system is rooted in the principles of clarity, deference, and depth. 
 
 The aesthetic is a refined interpretation of modern digital craftsmanship—combining expansive whitespace, a restrained color palette, and high-precision typography. It utilizes a sophisticated "Layered Minimalism" style: light-weight containers, subtle depth through shadows, and high-contrast accents that guide the eye without overwhelming the senses.
 
+Every agent appears as Noovi, the mascot (a friendly ghost). Use `NooviImage`/`NooviThinking` from `lib/core/widgets/noovi/` instead of generic sparkle icons whenever an agent speaks, works or can be opened; poses and their meaning: [Noovi, das Maskottchen](./notes/noovi-maskottchen.md).
+
 ## Colors
 The palette is dominated by a clean "Off-White" (`#F5F5F7`) for primary backgrounds to reduce eye strain compared to pure white. Pure White (`#FFFFFF`) is reserved for elevated surface containers like cards and modals to create a natural hierarchy.
 
