@@ -55,6 +55,8 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         LocaleKeys.task_builder_primitives_validation_label.tr(),
       WorkflowPrimitive.httpRequest =>
         LocaleKeys.task_builder_primitives_http_request_label.tr(),
+      WorkflowPrimitive.teamwork =>
+        LocaleKeys.task_builder_primitives_teamwork_label.tr(),
       WorkflowPrimitive.plugin =>
         LocaleKeys.task_builder_primitives_plugin_label.tr(),
     };
@@ -115,6 +117,8 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         LocaleKeys.task_builder_primitives_validation_description.tr(),
       WorkflowPrimitive.httpRequest =>
         LocaleKeys.task_builder_primitives_http_request_description.tr(),
+      WorkflowPrimitive.teamwork =>
+        LocaleKeys.task_builder_primitives_teamwork_description.tr(),
       WorkflowPrimitive.plugin =>
         LocaleKeys.task_builder_primitives_plugin_description.tr(),
     };

@@ -37,6 +37,8 @@
 
 - [Modellprovider für Prompt-Bausteine](../notes/modellprovider-prompt.md)
 - [Prompt-Executor](../notes/prompt-executor.md)
+- [Baustein „Teamarbeit“](../notes/teamwork-baustein.md)
+- [Ausführung der Teamarbeit](../notes/teamwork-ausfuehrung.md)
 - [Generierungsoptionen](../notes/generierungsoptionen.md)
 - [Iterative Verfeinerung](../notes/iterative-verfeinerung.md)
 - [Script-Executor](../notes/script-executor.md)

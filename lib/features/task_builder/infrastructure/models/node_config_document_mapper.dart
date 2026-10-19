@@ -10,6 +10,8 @@ import '../../domain/entities/workflow_node.dart';
 import 'legacy_model_output_parameters.dart';
 import 'prompt_generation_options_mapper.dart';
 
+part 'teamwork_config_document_mapping.dart';
+
 typedef GraphToDocument = Map<String, Object?> Function(WorkflowGraph graph);
 typedef GraphFromDocument = WorkflowGraph Function(Object? data);
 
@@ -51,6 +53,7 @@ class NodeConfigDocumentMapper {
       SendChannelMessageNodeConfig() => _sendMessageToDocument(config),
       NotificationSendNodeConfig() => _notificationSendToDocument(config),
       HttpRequestNodeConfig() => _httpRequestToDocument(config),
+      TeamworkNodeConfig() => _teamworkToDocument(config),
       PluginNodeConfig() => {
         ...config.toDocument(),
         'primitive': config.documentPrimitive,
@@ -86,6 +89,7 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.sendChannelMessage => _sendMessageFrom(data),
       WorkflowPrimitive.notificationSend => _notificationSendFrom(data),
       WorkflowPrimitive.httpRequest => _httpRequestFrom(data),
+      WorkflowPrimitive.teamwork => _teamworkFrom(data),
       WorkflowPrimitive.plugin =>
         PluginNodeCodecs.fromDocument(data['primitive'], data) ??
             NodeConfig.initial(WorkflowPrimitive.stringInput),
@@ -677,6 +681,8 @@ class NodeConfigDocumentMapper {
       'name': field.name,
       'description': field.description,
       'type': field.type.name,
+      if (field.type == StructuredFieldType.file)
+        'fileFormat': field.fileFormat.name,
     };
   }
 
@@ -695,10 +701,15 @@ class NodeConfigDocumentMapper {
       (candidate) => candidate.name == typeName,
       orElse: () => StructuredFieldType.string,
     );
+    final formatName = data['fileFormat'] as String? ?? '';
     return StructuredOutputField(
       name: data['name'] as String? ?? '',
       description: data['description'] as String? ?? '',
       type: type,
+      fileFormat: OutputFileFormat.values.firstWhere(
+        (candidate) => candidate.name == formatName,
+        orElse: () => OutputFileFormat.markdown,
+      ),
     );
   }
 

@@ -7,7 +7,7 @@ import {type ConsoleOutput} from "./task.js";
  * `docs/notes/baustein-fehlercodes.md`).
  */
 export type MissingSetting = "model" | "modelInputMapping" | "inputFile" | "outputFile" | "audioInput" |
-  "recipient" | "messageBody" | "notificationText" | "mailbox";
+  "recipient" | "messageBody" | "notificationText" | "mailbox" | "teamMembers" | "resultFields";
 export type InvalidSetting = "modelInputDuplicate" | "modelParameter" | "documentFilterValue" |
   "documentFieldValue" | "documentFieldDuplicate" | "jsonPointer";
 export type ValueTarget = "modelInput" | "documentFilter" | "forEachItems";

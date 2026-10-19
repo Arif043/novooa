@@ -18,6 +18,7 @@ import {
   type TensorDimension,
 } from "../../../machine_learning/domain/entities/model-contract.js";
 import {type NodeOutputValue} from "./workflow-value.js";
+import {type TeamworkNodeConfig} from "./teamwork-config.js";
 import {type GenerationOptionsRecord} from "../../../language_models/domain/entities/generation-options.js";
 export type {
   DialogInputDefinition,
@@ -30,6 +31,7 @@ export type {
   MediaInputFileReference,
 } from "./media-input.js";
 export type {TaskRunInteraction} from "./task-run-interaction.js";
+export type {OutputFileFormat, TeamMember, TeamworkNodeConfig, TeamworkOutputField} from "./teamwork-config.js";
 export type {
   KnowledgeAttachment,
   NodeAttachment,
@@ -69,12 +71,13 @@ export const workflowPrimitives = [
   "validation",
   "httpRequest",
   "shopware",
+  "teamwork",
 ] as const;
 
 export type WorkflowPrimitive = (typeof workflowPrimitives)[number];
 export type PromptOutputType = "text" | "decision" | "structured" | "image";
 export type ChannelMessageKind = "email" | "whatsapp" | "sms";
-export type StructuredOutputFieldType = "string" | "number" | "boolean";
+export type StructuredOutputFieldType = "string" | "number" | "boolean" | "datetime" | "json";
 export type StructuredOutputField = {
   name: string;
   description: string;
@@ -344,7 +347,8 @@ export type NodeConfig =
   | SendChannelMessageNodeConfig
   | NotificationSendNodeConfig
   | HttpRequestNodeConfig
-  | ShopwareNodeConfig;
+  | ShopwareNodeConfig
+  | TeamworkNodeConfig;
 export type WorkflowNode = {
   id: string;
   primitive: WorkflowPrimitive;

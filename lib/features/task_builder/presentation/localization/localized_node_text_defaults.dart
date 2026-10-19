@@ -62,6 +62,8 @@ class LocalizedNodeTextDefaults implements NodeTextDefaults {
         LocaleKeys.task_builder_output_names_validation.tr(),
       WorkflowPrimitive.httpRequest =>
         LocaleKeys.task_builder_output_names_http_request.tr(),
+      WorkflowPrimitive.teamwork =>
+        LocaleKeys.task_builder_output_names_teamwork.tr(),
       WorkflowPrimitive.plugin =>
         LocaleKeys.task_builder_output_names_plugin.tr(),
     };

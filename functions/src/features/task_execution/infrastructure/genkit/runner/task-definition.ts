@@ -11,6 +11,21 @@ import {
 } from "../../../../machine_learning/domain/entities/model-contract.js";
 import {withLegacyOutputParametersAsSettings} from "./legacy-model-output-parameters.js";
 import {generationOptionsSchema} from "./generation-options-schema.js";
+import {teamworkNodeConfigSchema} from "./teamwork-config-schema.js";
+import {
+  knowledgeAttachmentSchema,
+  nodeAttachmentSchema,
+  skillAttachmentSchema,
+  structuredOutputFieldSchema,
+} from "./node-config-shared-schemas.js";
+
+export {
+  knowledgeAttachmentSchema,
+  nodeAttachmentSchema,
+  skillAttachmentSchema,
+  structuredOutputFieldSchema,
+  structuredOutputFieldTypeSchema,
+} from "./node-config-shared-schemas.js";
 
 export const workflowPrimitiveSchema = z.enum(workflowPrimitives);
 
@@ -20,35 +35,6 @@ export const promptOutputTypeSchema = z.enum([
   "structured",
   "image",
 ]);
-
-export const structuredOutputFieldTypeSchema = z.enum([
-  "string",
-  "number",
-  "boolean",
-]);
-
-export const nodeAttachmentSchema = z.object({
-  id: z.string().min(1),
-  storagePath: z.string().min(1),
-  generation: z.string().min(1),
-  displayName: z.string().min(1),
-  contentType: z.string().default("application/octet-stream"),
-  sizeBytes: z.number().int().nonnegative().default(0),
-  versionCreatedAt: z.number().int().nonnegative().optional(),
-});
-
-export const knowledgeAttachmentSchema = z.object({
-  knowledgeBaseId: z.string().min(1).default("default"),
-  noteId: z.string().min(1),
-  title: z.string().min(1),
-  path: z.string().default(""),
-});
-
-/** Verweis auf einen Skill im Skills-Ordner; `name` ist der Ordnername, `description` nur zur Anzeige. */
-export const skillAttachmentSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().default(""),
-});
 
 export const stringInputNodeConfigSchema = z.object({
   primitive: z.literal("stringInput").default("stringInput"),
@@ -69,11 +55,7 @@ export const promptNodeConfigSchema = z.object({
   generationOptions: generationOptionsSchema.optional(),
   outputType: promptOutputTypeSchema.default("text"),
   choices: z.array(z.string()).default([]),
-  structuredFields: z.array(z.object({
-    name: z.string().default(""),
-    description: z.string().default(""),
-    type: structuredOutputFieldTypeSchema.default("string"),
-  })).default([]),
+  structuredFields: z.array(structuredOutputFieldSchema).default([]),
   firstChoice: z.string().default(""),
   secondChoice: z.string().default(""),
   attachments: z.array(nodeAttachmentSchema).default([]),
@@ -374,6 +356,7 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   notificationSendNodeConfigSchema,
   httpRequestNodeConfigSchema,
   shopwareNodeConfigSchema,
+  teamworkNodeConfigSchema,
 ]);
 
 export const workflowNodeSchema = z.object({

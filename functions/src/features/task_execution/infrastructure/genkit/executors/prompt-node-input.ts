@@ -39,7 +39,14 @@ async function resolvedInstructionFor(
   node: WorkflowNode,
   runContext: TaskRunContext,
 ): Promise<ResolvedPromptInstruction> {
-  const instruction = rawInstructionFor(node);
+  return resolvedInstruction(rawInstructionFor(node), runContext);
+}
+
+/** Löst die Workflow-Werte einer Anweisung auf; Bilder gehen als eigene Medienteile mit, nicht als Text. */
+export async function resolvedInstruction(
+  instruction: string,
+  runContext: TaskRunContext,
+): Promise<ResolvedPromptInstruction> {
   return {
     text: runContext.templateExpressionResolver
       .resolveTextWithoutMediaReferences(instruction).trim(),
@@ -75,7 +82,7 @@ async function mediaUrlsFor(
     )));
 }
 
-type ResolvedPromptInstruction = {text: string; mediaUrls: string[]};
+export type ResolvedPromptInstruction = {text: string; mediaUrls: string[]};
 
 function promptTextFor(
   input: PromptNodeInput,

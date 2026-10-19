@@ -78,6 +78,10 @@ List<TypedOutputField> typedFlatOutputFieldsOf(NodeConfig config) {
         (name: field.name.trim(), type: structuredFieldOutputType(field.type)),
     ],
     ScriptNodeConfig() => scriptWorkflowOutputsOf(config),
+    TeamworkNodeConfig() => [
+      for (final field in config.outputFields)
+        (name: field.name.trim(), type: structuredFieldOutputType(field.type)),
+    ],
     _ => const <TypedOutputField>[],
   };
   return [
@@ -97,11 +101,14 @@ NodeOutputType dialogFieldOutputType(DialogInputFieldType type) {
   };
 }
 
-/// Werttyp, den ein strukturiertes Prompt-Feld liefert.
+/// Werttyp, den ein Ergebnisfeld (Prompt, Teamarbeit) liefert.
 NodeOutputType structuredFieldOutputType(StructuredFieldType type) {
   return switch (type) {
     StructuredFieldType.string => NodeOutputType.string,
     StructuredFieldType.number => NodeOutputType.number,
     StructuredFieldType.boolean => NodeOutputType.boolean,
+    StructuredFieldType.datetime => NodeOutputType.datetime,
+    StructuredFieldType.json => NodeOutputType.json,
+    StructuredFieldType.file => NodeOutputType.file,
   };
 }

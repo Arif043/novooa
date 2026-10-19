@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:syscat2/core/runtime/connections_availability.dart';
 import 'package:syscat2/core/runtime/webhooks_availability.dart';
+import 'package:syscat2/core/runtime/employees_availability.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/workflow_primitive_labels.dart';
@@ -87,6 +88,7 @@ const bausteinGroups = <String, List<BausteinChoice>>{
   ],
   LocaleKeys.task_builder_palette_groups_ai: [
     BausteinChoice(.prompt),
+    BausteinChoice(.teamwork),
     BausteinChoice(.iterativeRefinement),
     BausteinChoice(.modelInference),
     BausteinChoice(.textToSpeech),
@@ -148,6 +150,7 @@ IconData bausteinIcon(WorkflowPrimitive primitive) => switch (primitive) {
   .toolCall => Icons.build_outlined,
   .validation => Icons.fact_check_outlined,
   .httpRequest => Icons.http,
+  .teamwork => Icons.groups_outlined,
   .readWebhook => Icons.webhook,
   .plugin => Icons.extension_outlined,
 };
@@ -166,6 +169,7 @@ class _BausteinPaletteState extends State<BausteinPalette> {
     final colors = Theme.of(context).colorScheme;
     final httpAvailable = connectionsAvailable();
     final webhookAvailable = webhooksAvailable();
+    final teamworkAvailable = employeesAvailable();
     final groups = {
       for (final group in bausteinGroups.entries)
         group.key: group.value
@@ -180,6 +184,12 @@ class _BausteinPaletteState extends State<BausteinPalette> {
               (choice) =>
                   webhookAvailable ||
                   choice.primitive != WorkflowPrimitive.readWebhook,
+            )
+            // Teamarbeit braucht Mitarbeiter, die es nur in Standalone gibt.
+            .where(
+              (choice) =>
+                  teamworkAvailable ||
+                  choice.primitive != WorkflowPrimitive.teamwork,
             )
             .toList(),
     };

@@ -8,7 +8,8 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
 - **Entscheidung:** gewählte Option aus den `choices` des Nutzers (fachlich
   ein Enum, kein Wahrheitswert) als `value`.
 - **Strukturiert:** validiert ein Zod-Object; jedes Feld wird ein eigener
-  Output mit eigenem Typ (`string`/`number`/`boolean`, inklusive Koerzion).
+  Output mit eigenem Typ (`string`/`number`/`boolean` inklusive Koerzion,
+  `datetime` nach ISO 8601, `json` als Text, der geparst wird).
   Felder, die das Modell zusätzlich liefert, fallen weg. Einen `value`
   gibt es nicht.
 - **Bild:** Google GenAI mit `gemini-2.5-flash-image` (`GOOGLE_IMAGE_MODEL`).

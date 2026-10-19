@@ -1,6 +1,7 @@
 import {type FileWriteSite} from "../../../scheduling/domain/entities/file-write-site.js";
 import {fileContentKindOf} from "../../../files/domain/entities/file-content-kind.js";
 import {type TaskDefinition} from "../entities/task.js";
+import {outputFileContentTypes, outputFileFormats} from "../entities/teamwork-config.js";
 import {allNodesOf, type GraphNode, record} from "./task-graph-nodes.js";
 
 /**
@@ -15,6 +16,7 @@ export function fileWriteSitesOf(task: Pick<TaskDefinition, "nodes">): FileWrite
 function siteOf(node: GraphNode): FileWriteSite[] {
   const config = record(node.config);
   if (config.primitive === "writeFile") return [writeFileSite(config)];
+  if (config.primitive === "teamwork") return teamworkResultFileSites(config);
   if (config.primitive === "prompt" && config.outputType === "image") {
     return [{
       placement: {kind: "folder", folderId: null},
@@ -42,6 +44,18 @@ function writeFileSite(config: Record<string, unknown>): FileWriteSite {
     contentKind: fileContentKindOf(contentType, fileName ?? ""),
     contentKindIsCertain: false,
   };
+}
+
+/** Jedes Datei-Feld der Teamarbeit wird eine neue Textdatei im Wurzelordner. */
+function teamworkResultFileSites(config: Record<string, unknown>): FileWriteSite[] {
+  const fields = Array.isArray(config.outputFields) ? config.outputFields.map(record) : [];
+  return fields.filter((field) => field.type === "file").map((field) => {
+    const format = outputFileFormats.find((candidate) => candidate === field.fileFormat) ?? "markdown";
+    return {
+      placement: {kind: "folder", folderId: null},
+      fileName: null, contentKind: fileContentKindOf(outputFileContentTypes[format], ""), contentKindIsCertain: true,
+    };
+  });
 }
 
 function isSpeechNode(primitive: unknown): boolean {

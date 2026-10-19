@@ -52,7 +52,7 @@ test("fieldOutputsFor markiert jeden Ausgabewert mit seinem Laufzeittyp", () => 
     name: "Ada",
     alter: 36,
     aktiv: true,
-  });
+  }, [fieldFor("string", {name: "name"}), fieldFor("number", {name: "alter"}), fieldFor("boolean", {name: "aktiv"})]);
 
   assert.deepEqual(outputs, {
     name: {type: "string", value: "Ada"},
@@ -67,4 +67,22 @@ test("zusätzliche Felder des Modells fallen weg", () => {
   const defined = definedFieldsOf({summe: "3,24", kasse: "1", datum: "29.09."}, fields);
 
   assert.deepEqual(defined, {summe: "3,24", datum: "29.09."});
+});
+
+test("datetime-Feld verlangt ISO 8601 und wird ein datetime-Wert", () => {
+  const field = fieldFor("datetime", {name: "faellig"});
+  const schema = structuredSchemaFor([field]);
+
+  assert.deepEqual(schema.parse({faellig: "2026-10-18T09:30:00"}), {faellig: "2026-10-18T09:30:00"});
+  assert.throws(() => schema.parse({faellig: "morgen"}));
+  assert.deepEqual(fieldOutputsFor({faellig: "2026-10-18"}, [field]), {faellig: {type: "datetime", value: "2026-10-18"}});
+});
+
+test("json-Feld kommt als Text und wird geparst; ungültiges JSON ist ein Schemafehler", () => {
+  const field = fieldFor("json", {name: "kunde", description: "Der Kunde"});
+  const fieldSchema = (structuredSchemaFor([field]).shape as Record<string, {description?: string}>).kunde;
+
+  assert.equal(fieldSchema.description, "Der Kunde Gültiges JSON als Text.");
+  assert.deepEqual(fieldOutputsFor({kunde: "{\"name\":\"Ada\"}"}, [field]), {kunde: {type: "json", value: {name: "Ada"}}});
+  assert.throws(() => fieldOutputsFor({kunde: "{kaputt"}, [field]), /Das Feld „kunde“ enthält kein gültiges JSON/);
 });

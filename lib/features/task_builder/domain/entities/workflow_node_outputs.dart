@@ -37,10 +37,12 @@ List<String> _fieldKeysOf(NodeConfig config) {
 }
 
 /// Ob ein Baustein statt eines Hauptwerts einzelne Felder liefert
-/// (strukturierte Prompt-Ausgabe, Dialogeingabe, Script); siehe
+/// (strukturierte Prompt-Ausgabe, Dialogeingabe, Script, Teamarbeit); siehe
 /// [outputKeysOf].
 bool hasFlatOutputFields(NodeConfig config) {
-  if (config is DialogInputNodeConfig || config is ScriptNodeConfig) {
+  if (config is DialogInputNodeConfig ||
+      config is ScriptNodeConfig ||
+      config is TeamworkNodeConfig) {
     return true;
   }
   return config is PromptNodeConfig &&

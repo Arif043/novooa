@@ -106,7 +106,7 @@ extension TaskBuilderConditionBranchMutations on TaskBuilderCubit {
 
   /// Ersetzt den kompletten Ausdrucksbaum eines bedingten Zweigs atomar —
   /// die UI hält den Baum lokal und meldet ihn bei jeder Änderung als
-  /// Ganzes zurück (gleiches Muster wie `PromptStructuredOutputSection`).
+  /// Ganzes zurück (gleiches Muster wie `StructuredOutputFieldsEditor`).
   /// Der "Sonst"-Zweig (`condition == null`) bleibt geschützt: dieser Pfad
   /// wirkt nur auf bereits bedingte Zweige.
   Future<void> updateBranchCondition({

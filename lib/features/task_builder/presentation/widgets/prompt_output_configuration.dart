@@ -7,7 +7,8 @@ import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 
 import 'prompt_choice_field.dart';
-import 'prompt_structured_output_section.dart';
+import 'structured_field_labels.dart';
+import 'structured_output_fields_editor.dart';
 
 class PromptOutputConfiguration extends StatelessWidget {
   const PromptOutputConfiguration({
@@ -80,7 +81,8 @@ class PromptOutputConfiguration extends StatelessWidget {
         onAdd: onChoiceAdded,
         onRemove: onChoiceRemoved,
       ),
-      PromptOutputType.structured => PromptStructuredOutputSection(
+      PromptOutputType.structured => StructuredOutputFieldsEditor(
+        allowedTypes: promptFieldTypes,
         fields: structuredFields,
         onChanged: onStructuredFieldChanged,
         onAdd: onStructuredFieldAdded,

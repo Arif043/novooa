@@ -5,7 +5,7 @@ import {formatModelCallFinished, formatModelCallStarted} from "../runner/structu
 import {promptContentFor, validStructuredFields} from "./prompt-node-input.js";
 import {type PromptContent, type PromptNodeInput, type PromptNodeOutput} from "./prompt-node-types.js";
 import {type PromptModelCall} from "./prompt-model-call.js";
-import {definedFieldsOf, fieldOutputsFor, structuredSchemaFor, type StructuredFieldValue} from "./structured-output-schema.js";
+import {definedFieldsOf, fieldOutputsFor, structuredSchemaFor} from "./structured-output-schema.js";
 import {withTranslatedGenkitErrors} from "../../../../language_models/infrastructure/errors/genkit-error-translator.js";
 import {ModelOutputSchemaError} from "../../../../language_models/infrastructure/errors/language-model-errors.js";
 
@@ -38,10 +38,10 @@ export async function executeStructuredPrompt(call: PromptModelCall, input: Prom
   const fieldNames = fields.map((field) => field.name).join(", ");
   const response = await logged(call, input, prompt, "Strukturierte Ausgabe", fieldNames,
     () => generate(call, input, prompt, structuredSchemaFor(fields)));
-  const rawOutput: Record<string, StructuredFieldValue> | undefined = response.output;
+  const rawOutput: Record<string, unknown> | undefined = response.output;
   if (rawOutput === undefined) throw new ModelOutputSchemaError(`Das Modell lieferte keine strukturierte Ausgabe: ${response.text}`);
   const output = definedFieldsOf(rawOutput, fields);
-  return {answer: JSON.stringify(output), outputs: fieldOutputsFor(output)};
+  return {answer: JSON.stringify(output), outputs: fieldOutputsFor(output, fields)};
 }
 
 async function logged<T>(

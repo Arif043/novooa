@@ -45,6 +45,7 @@ part 'task_builder_document_lookup_mutations.dart';
 part 'task_builder_save_document_mutations.dart';
 part 'task_builder_table_from_collection_mutations.dart';
 part 'task_builder_http_request_mutations.dart';
+part 'task_builder_teamwork_mutations.dart';
 part 'task_builder_plugin_mutations.dart';
 
 /// Zustandsverwaltung für den Aufgaben-Builder.

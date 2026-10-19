@@ -27,6 +27,8 @@ const _labels = <String, Map<String, String>>{
     'messageBody': LocaleKeys.activity_failures_settings_messageBody,
     'notificationText': LocaleKeys.activity_failures_settings_notificationText,
     'mailbox': LocaleKeys.activity_failures_settings_mailbox,
+    'teamMembers': LocaleKeys.activity_failures_settings_teamMembers,
+    'resultFields': LocaleKeys.activity_failures_settings_resultFields,
     'modelInputDuplicate':
         LocaleKeys.activity_failures_settings_modelInputDuplicate,
     'modelParameter': LocaleKeys.activity_failures_settings_modelParameter,

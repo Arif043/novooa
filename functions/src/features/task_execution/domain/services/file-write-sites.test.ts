@@ -48,3 +48,17 @@ test("Bild-Prompts und Sprachausgabe schreiben sicher in die oberste Ebene", () 
   assert.deepEqual(sites.map((site) => site.contentKind), ["image", "audio"]);
   assert.ok(sites.every((site) => site.contentKindIsCertain));
 });
+
+test("jedes Datei-Feld der Teamarbeit ist eine Schreibstelle in der obersten Ebene", () => {
+  const sites = fileWriteSitesOf({nodes: [
+    node("t", {primitive: "teamwork", outputFields: [
+      {name: "bericht", type: "file", fileFormat: "markdown"},
+      {name: "summe", type: "number"},
+      {name: "liste", type: "file", fileFormat: "csv"},
+    ]}),
+  ] as never});
+
+  assert.equal(sites.length, 2);
+  assert.ok(sites.every((site) => site.placement.kind === "folder" && site.placement.folderId === null));
+  assert.ok(sites.every((site) => site.contentKindIsCertain));
+});

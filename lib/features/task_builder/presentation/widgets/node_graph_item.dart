@@ -16,6 +16,7 @@ import 'package:syscat2/features/task_builder/presentation/widgets/speech_to_tex
 import 'package:syscat2/features/task_builder/presentation/widgets/text_to_speech_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/for_each_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/http_request_widget.dart';
+import 'package:syscat2/features/task_builder/presentation/widgets/teamwork/teamwork_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/human_approval_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/iterative_refinement_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/node_output_chips.dart';
@@ -246,6 +247,7 @@ class NodeGraphItem extends StatelessWidget {
       .saveDocument => SaveDocumentWidget(node: node),
       .tableFromCollection => TableFromCollectionWidget(node: node),
       .httpRequest => HttpRequestWidget(node: node),
+      .teamwork => TeamworkWidget(node: node),
       .plugin => _pluginWidget(),
       _ => const SizedBox.shrink(),
     };

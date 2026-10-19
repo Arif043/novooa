@@ -104,6 +104,10 @@
       "plugin": {
         "label": "Blok",
         "description": ""
+      },
+      "teamwork": {
+        "label": "Ekip çalışması",
+        "description": "Bir orkestratör görevleri çalışanlara dağıtır ve yapılandırılmış bir sonuç döndürür."
       }
     },
     "output_names": {
@@ -133,7 +137,8 @@
       "table_from_collection": "Tablo",
       "validation": "Dogrulama",
       "http_request": "Yanit",
-      "plugin": "Eklenti"
+      "plugin": "Eklenti",
+      "teamwork": "Sonuc"
     },
     "script_starter": "# workflow_output(\"name\", \"string\", deger)",
     "send_output_names": {
@@ -678,7 +683,33 @@
     "script_packages_failed_tooLarge": "Paketler birlikte çok büyük.",
     "script_packages_failed_notLoadable": "Yüklendi, ancak betik konteynerinde yüklenemedi – genellikle bir işletim sistemi kitaplığı eksik ya da içe aktarma çok uzun sürüyor. Ortam yeniden kaldırıldı.",
     "script_packages_failed_failed": "Yükleme başarısız oldu.",
-    "script_packages_status_unavailable": "Paket durumu kullanılamıyor."
+    "script_packages_status_unavailable": "Paket durumu kullanılamıyor.",
+    "teamwork_instruction": "Orkestratör için talimat",
+    "teamwork_instruction_hint": "Ekip neyi başarmalı?",
+    "teamwork_orchestrator_model": "Orkestratör modeli",
+    "teamwork_tool_calls_hint": "Orkestratör ve çalışanlar araç çağrılarını destekleyen modellere ihtiyaç duyar.",
+    "teamwork_team": "Ekip",
+    "teamwork_add_member": "Çalışan ekle",
+    "teamwork_no_members": "Ekipte henüz çalışan yok. En az bir tane ekle.",
+    "teamwork_team_full": "Bir ekipte en fazla {max} çalışan olabilir.",
+    "teamwork_responsibility": "Sorumluluk",
+    "teamwork_responsibility_hint": "Bu çalışan bu görevde neden sorumlu?",
+    "teamwork_responsibility_required": "Bir sorumluluk gir – orkestratör görevleri buna göre dağıtır.",
+    "teamwork_member_model": "Çalışan modeli",
+    "teamwork_remove_member": "Ekipten çıkar",
+    "teamwork_result": "Sonuç",
+    "teamwork_result_hint": "Ekip bu alanları sonunda doldurur. Dosya alanı, ekibin yazdığı bir metin dosyasına işaret eder.",
+    "field_type_string": "Metin",
+    "field_type_number": "Sayı",
+    "field_type_boolean": "Doğru/yanlış",
+    "field_type_datetime": "Tarih ve saat",
+    "field_type_json": "JSON",
+    "field_type_file": "Dosya",
+    "file_format": "Dosya biçimi",
+    "file_format_markdown": "Markdown (.md)",
+    "file_format_csv": "Tablo (.csv)",
+    "file_format_json": "JSON (.json)",
+    "file_format_text": "Metin (.txt)"
   },
   "machine_learning": {
     "model_import": {
@@ -738,7 +769,9 @@
       "documentFilterValue": "filtre değeri",
       "documentFieldValue": "alan değeri",
       "documentFieldDuplicate": "alan eksik veya birden fazla ayarlandı",
-      "jsonPointer": "JSON işaretçisi"
+      "jsonPointer": "JSON işaretçisi",
+      "teamMembers": "Ekip çalışanları",
+      "resultFields": "Sonuç alanları"
     },
     "targets": {
       "modelInput": "bir model girdisi",

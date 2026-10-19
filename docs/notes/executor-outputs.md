@@ -11,8 +11,9 @@ Executoren: `functions/src/features/task_execution/infrastructure/genkit/executo
 | `stringInput` | ausgefuehrt | `value` (`string`) |
 | `script` | ausgefuehrt | Ein Output je `workflow_output("name", "typ", wert)`-Aufruf (Name und Typ als String-Literale; `string`, `number`, `boolean`, `datetime`, `json`); ohne Aufrufe keine Outputs. Laufzeitvariablen stehen nachfolgenden Templates zur Verfuegung |
 | `prompt` mit Text oder Entscheidung | ausgefuehrt | `value` (`string`) |
-| `prompt` strukturiert | ausgefuehrt | ein flacher, typisierter Output je konfiguriertem Feld (`string`, `number`, `boolean`), ohne umschliessenden Knotennamen und ohne `value`; zusätzliche Felder des Modells fallen weg |
+| `prompt` strukturiert | ausgefuehrt | ein flacher, typisierter Output je konfiguriertem Feld (`string`, `number`, `boolean`, `datetime`, `json`), ohne umschliessenden Knotennamen und ohne `value`; zusätzliche Felder des Modells fallen weg |
 | `prompt` mit Bild | ausgefuehrt | `value` (`media`); das generierte Bild wird als Team-Datei referenziert |
+| `teamwork` | ausgefuehrt | ein flacher, typisierter Output je Feld (`string`, `number`, `boolean`, `datetime`, `json`, `file`), ohne `value`; ein Datei-Feld ist eine neue Team-Datei (`file`) |
 | `conditionalFlow` | ausgefuehrt | `value` (`string`, Ergebnis des gewählten Zweigs, sonst dessen Name; ohne gewählten Zweig kein `value`); Resultat-Metadaten: `selectedNodeId`, `selectedBranchId`, `selectedBranchLabel` |
 | `iterativeRefinement` | ausgefuehrt | `value` (`string`) |
 | `readFile` | ausgefuehrt | `value` (`string`, UTF-8-Dateiinhalt) |

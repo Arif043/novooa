@@ -104,6 +104,10 @@
       "plugin": {
         "label": "Block",
         "description": ""
+      },
+      "teamwork": {
+        "label": "Teamwork",
+        "description": "An orchestrator delegates tasks to employees and returns a structured result."
       }
     },
     "output_names": {
@@ -133,7 +137,8 @@
       "table_from_collection": "Table",
       "validation": "Validation",
       "http_request": "Response",
-      "plugin": "Plugin"
+      "plugin": "Plugin",
+      "teamwork": "Result"
     },
     "script_starter": "# workflow_output(\"name\", \"string\", value)",
     "send_output_names": {
@@ -678,7 +683,33 @@
     "script_packages_failed_tooLarge": "The packages are too large together.",
     "script_packages_failed_notLoadable": "Installed, but it could not be loaded in the script container – usually an operating system library is missing or the import takes too long. The environment was removed again.",
     "script_packages_failed_failed": "The installation failed.",
-    "script_packages_status_unavailable": "The package status is not available."
+    "script_packages_status_unavailable": "The package status is not available.",
+    "teamwork_instruction": "Instruction for the orchestrator",
+    "teamwork_instruction_hint": "What should the team achieve?",
+    "teamwork_orchestrator_model": "Orchestrator model",
+    "teamwork_tool_calls_hint": "The orchestrator and the employees need models that support tool calls.",
+    "teamwork_team": "Team",
+    "teamwork_add_member": "Add employee",
+    "teamwork_no_members": "No employees in the team yet. Add at least one.",
+    "teamwork_team_full": "A team has at most {max} employees.",
+    "teamwork_responsibility": "Responsibility",
+    "teamwork_responsibility_hint": "What is this employee responsible for in this task?",
+    "teamwork_responsibility_required": "Enter a responsibility – the orchestrator assigns tasks based on it.",
+    "teamwork_member_model": "Employee model",
+    "teamwork_remove_member": "Remove from team",
+    "teamwork_result": "Result",
+    "teamwork_result_hint": "The team fills in these fields at the end. A file field refers to a text file the team writes.",
+    "field_type_string": "Text",
+    "field_type_number": "Number",
+    "field_type_boolean": "True/false",
+    "field_type_datetime": "Date and time",
+    "field_type_json": "JSON",
+    "field_type_file": "File",
+    "file_format": "File format",
+    "file_format_markdown": "Markdown (.md)",
+    "file_format_csv": "Table (.csv)",
+    "file_format_json": "JSON (.json)",
+    "file_format_text": "Text (.txt)"
   },
   "machine_learning": {
     "model_import": {
@@ -738,7 +769,9 @@
       "documentFilterValue": "filter value",
       "documentFieldValue": "field value",
       "documentFieldDuplicate": "field missing or set more than once",
-      "jsonPointer": "JSON pointer"
+      "jsonPointer": "JSON pointer",
+      "teamMembers": "Team employees",
+      "resultFields": "Result fields"
     },
     "targets": {
       "modelInput": "a model input",

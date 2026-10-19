@@ -5,7 +5,8 @@
 Gehört zu: [Mitarbeiter](../index/mitarbeiter.md) · [Lokale Runtime](../index/lokale-runtime.md)
 
 - Kein eigener Baustein, sondern 0..1 an `Prompt` oder `Iterative
-  Verfeinerung` zugewiesen.
+  Verfeinerung` zugewiesen, oder bis zu fünf im Baustein
+  [„Teamarbeit“](./teamwork-baustein.md).
 - **Verfügbarkeit:** Standalone (`WorkspaceCapabilities.employees`); in der
   Cloud aus, weil es dort keine Fähigkeiten gibt.
 - Keine Prompt-Vorlage: Die Anweisung des Bausteins geht unverändert als

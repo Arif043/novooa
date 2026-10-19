@@ -6,7 +6,7 @@ import {taskBuilderAssistantPrimitives} from "../../../../domain/entities/task-b
  */
 const buildingBlocks: ReadonlyArray<readonly [primitive: string, description: string]> = [
   ["stringInput", "Texteingabe: gibt festen Text weiter."],
-  ["prompt", "Prompt: LLM-Aufruf mit Vorlage und Variablen; Ausgabe Text, Entscheidung, strukturierte Felder oder Bild."],
+  ["prompt", "Prompt: LLM-Aufruf mit Vorlage und Workflow-Werten; Ausgabe Text, Entscheidung, strukturierte Felder oder Bild."],
   ["script", "Script: führt Python isoliert aus (5 s, 10 KB Ausgabe); liest Werte mit workflow_input, liefert sie mit workflow_output."],
   ["conditionalFlow", "Bedingter Ablauf: verzweigt anhand einer Entscheidung oder boolescher Bedingungen."],
   ["iterativeRefinement", "Iterative Verfeinerung: bewertet und verbessert einen Entwurf."],
@@ -28,6 +28,7 @@ const buildingBlocks: ReadonlyArray<readonly [primitive: string, description: st
   ["tableFromCollection", "Sammlung als Tabelle lesen (nur lokale Runtime)."],
   ["readWebhook", "Webhook-Ereignis lesen, das die Aufgabe gestartet hat (nur lokale Runtime)."],
   ["shopware", "Shopware-Aktion: Bestellungen, Produkte, Kunden (nur lokale Runtime, Verbindung nötig)."],
+  ["teamwork", "Teamarbeit: Ein Orchestrator verteilt Aufträge an gewählte Mitarbeiter (je mit Zuständigkeit und eigenem Modell) und liefert ein strukturiertes Ergebnis, auch Textdateien (nur lokale Runtime)."],
   ["httpRequest", "HTTP-Anfrage an eine externe API, optional über eine gespeicherte Verbindung (nur lokale Runtime)."],
 ];
 

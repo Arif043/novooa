@@ -11,6 +11,7 @@ import {
 import {forEachNodeExecutor} from "../../../domain/executors/for-each-node-executor.js";
 import {createGenkitIterativeRefinementNodeExecutor} from "../executors/genkit-iterative-refinement-executor.js";
 import {createGenkitPromptNodeExecutor} from "../executors/genkit-prompt-node-executor.js";
+import {createTeamworkNodeExecutor} from "../executors/teamwork/teamwork-node-executor.js";
 import {readWebhookNodeExecutor} from "../../../domain/executors/read-webhook-node-executor.js";
 import {readFileNodeExecutor} from "../../../domain/executors/read-file-node-executor.js";
 import {
@@ -81,6 +82,8 @@ export function createDefaultNodeExecutorRegistry(): NodeExecutorRegistry {
       createScriptNodeExecutor(scriptExecutorFactory(workspace), scriptOutputLogger(logger)))
     .registerFactory("prompt", ({ai, workspace, languageModelResolver, logger, languageModelDefaultsStore}) =>
       createGenkitPromptNodeExecutor(ai, workspace, languageModelResolver, logger, languageModelDefaultsStore))
+    .registerFactory("teamwork", ({ai, workspace, languageModelResolver, logger, languageModelDefaultsStore}) =>
+      createTeamworkNodeExecutor({ai, workspace, languageModelResolver, logger, defaultsStore: languageModelDefaultsStore}))
     .registerFactory("iterativeRefinement", ({ai, workspace, logger}) =>
       createGenkitIterativeRefinementNodeExecutor(ai, workspace, logger))
     .registerFactory("conditionalFlow", ({logger}) =>

@@ -4,7 +4,6 @@ import 'package:syscat2/features/task_builder/presentation/agent/node_field_key.
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:syscat2/core/runtime/employees_availability.dart';
 import 'package:syscat2/core/runtime/skills_availability.dart';
-import 'package:syscat2/features/language_models/presentation/widgets/language_model_picker_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,10 +14,9 @@ import '../../domain/entities/node_attachment.dart';
 import '../../domain/entities/knowledge_attachment.dart';
 import '../../domain/entities/skill_attachment.dart';
 import '../../domain/entities/workflow_node.dart';
-import '../cubits/node_language_models_cubit.dart';
-import '../cubits/node_language_models_state.dart';
 import '../cubits/task_builder_cubit.dart';
 import 'node_file_attachment_section.dart';
+import 'node_language_model_field.dart';
 import 'node_knowledge_attachment_section.dart';
 import 'prompt_generation_options_for_model.dart';
 import 'prompt_resource_selection.dart';
@@ -78,7 +76,12 @@ class _PromptWidgetState extends State<PromptWidget> {
             onChanged: _updateInstruction,
           ),
           const SizedBox(height: AppSpacing.md),
-          _languageModelField(context, config),
+          NodeLanguageModelField(
+            selectedModelId: config.languageModelId,
+            onChanged: (modelId) => context
+                .read<TaskBuilderCubit>()
+                .updatePromptLanguageModel(widget.node.id, modelId),
+          ),
           PromptGenerationOptionsForModel(
             options: config.generationOptions,
             languageModelId: config.languageModelId,
@@ -162,38 +165,6 @@ class _PromptWidgetState extends State<PromptWidget> {
       message: label,
       child: Semantics(label: label, child: Icon(icon)),
     );
-  }
-
-  Widget _languageModelField(BuildContext context, PromptNodeConfig config) {
-    if (!_hasLanguageModelsProvider(context)) {
-      return LanguageModelPickerField(
-        models: const [],
-        selectedModelId: '',
-        enabled: false,
-        onChanged: (_) {},
-      );
-    }
-    return BlocBuilder<NodeLanguageModelsCubit, NodeLanguageModelsState>(
-      builder: (context, state) => LanguageModelPickerField(
-        models: state.models
-            .where((model) => !model.isSpeechModel)
-            .toList(growable: false),
-        selectedModelId: config.languageModelId,
-        enabled: state.status == NodeLanguageModelsStatus.ready,
-        onChanged: (modelId) => context
-            .read<TaskBuilderCubit>()
-            .updatePromptLanguageModel(widget.node.id, modelId),
-      ),
-    );
-  }
-
-  bool _hasLanguageModelsProvider(BuildContext context) {
-    try {
-      BlocProvider.of<NodeLanguageModelsCubit>(context, listen: false);
-      return true;
-    } catch (_) {
-      return false;
-    }
   }
 
   void _updateInstruction(String value) {

@@ -1,76 +1,34 @@
 import 'package:easy_localization/easy_localization.dart';
-import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/syscat_theme.dart';
 import '../../domain/entities/node_config.dart';
+import 'structured_field_labels.dart';
 
-class PromptStructuredOutputSection extends StatelessWidget {
-  const PromptStructuredOutputSection({
+/// Ein Feld des Ergebnisses: Name, Beschreibung, Typ und bei Dateien das Format.
+class StructuredOutputFieldRow extends StatefulWidget {
+  const StructuredOutputFieldRow({
     super.key,
-    required this.fields,
-    required this.onChanged,
-    required this.onAdd,
-    required this.onRemove,
-  });
-
-  final List<StructuredOutputField> fields;
-  final void Function(int index, StructuredOutputField field) onChanged;
-  final VoidCallback onAdd;
-  final void Function(int index) onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          LocaleKeys.ui_ausgabeformat.tr(),
-          style: SyscatTheme.taskBodySmall,
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        for (var index = 0; index < fields.length; index++)
-          _StructuredOutputFieldRow(
-            field: fields[index],
-            canRemove: fields.length > 1,
-            onChanged: (field) => onChanged(index, field),
-            onRemove: () => onRemove(index),
-          ),
-        const SizedBox(height: AppSpacing.xs),
-        TextButton.icon(
-          onPressed: onAdd,
-          icon: const Icon(Icons.add, color: SyscatTheme.primaryOrange),
-          label: Text(
-            LocaleKeys.ui_feld_hinzufuegen.tr(),
-            style: TextStyle(color: SyscatTheme.primaryOrange),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StructuredOutputFieldRow extends StatefulWidget {
-  const _StructuredOutputFieldRow({
     required this.field,
+    required this.allowedTypes,
     required this.canRemove,
     required this.onChanged,
     required this.onRemove,
   });
 
   final StructuredOutputField field;
+  final List<StructuredFieldType> allowedTypes;
   final bool canRemove;
   final ValueChanged<StructuredOutputField> onChanged;
   final VoidCallback onRemove;
 
   @override
-  State<_StructuredOutputFieldRow> createState() =>
+  State<StructuredOutputFieldRow> createState() =>
       _StructuredOutputFieldRowState();
 }
 
-class _StructuredOutputFieldRowState extends State<_StructuredOutputFieldRow> {
+class _StructuredOutputFieldRowState extends State<StructuredOutputFieldRow> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
 
@@ -84,7 +42,7 @@ class _StructuredOutputFieldRowState extends State<_StructuredOutputFieldRow> {
   }
 
   @override
-  void didUpdateWidget(_StructuredOutputFieldRow oldWidget) {
+  void didUpdateWidget(StructuredOutputFieldRow oldWidget) {
     super.didUpdateWidget(oldWidget);
     _sync(_nameController, widget.field.name);
     _sync(_descriptionController, widget.field.description);
@@ -133,17 +91,10 @@ class _StructuredOutputFieldRowState extends State<_StructuredOutputFieldRow> {
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
-          DropdownButtonFormField<StructuredFieldType>(
-            initialValue: widget.field.type,
-            decoration: InputDecoration(labelText: LocaleKeys.ui_typ.tr()),
-            items: [
-              for (final type in StructuredFieldType.values)
-                DropdownMenuItem(value: type, child: Text(type.label)),
-            ],
-            onChanged: (type) {
-              if (type == null) return;
-              widget.onChanged(widget.field.copyWith(type: type));
-            },
+          _TypeAndFormat(
+            field: widget.field,
+            allowedTypes: widget.allowedTypes,
+            onChanged: widget.onChanged,
           ),
         ],
       ),
@@ -164,6 +115,62 @@ class _StructuredOutputFieldRowState extends State<_StructuredOutputFieldRow> {
     controller.value = controller.value.copyWith(
       text: text,
       selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+}
+
+class _TypeAndFormat extends StatelessWidget {
+  const _TypeAndFormat({
+    required this.field,
+    required this.allowedTypes,
+    required this.onChanged,
+  });
+
+  final StructuredOutputField field;
+  final List<StructuredFieldType> allowedTypes;
+  final ValueChanged<StructuredOutputField> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFile = field.type == StructuredFieldType.file;
+    return Row(
+      children: [
+        Expanded(
+          child: DropdownButtonFormField<StructuredFieldType>(
+            initialValue: field.type,
+            isExpanded: true,
+            decoration: InputDecoration(labelText: LocaleKeys.ui_typ.tr()),
+            items: [
+              for (final type in {...allowedTypes, field.type})
+                DropdownMenuItem(value: type, child: Text(type.label)),
+            ],
+            onChanged: (type) {
+              if (type != null) onChanged(field.copyWith(type: type));
+            },
+          ),
+        ),
+        if (isFile) ...[
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: DropdownButtonFormField<OutputFileFormat>(
+              initialValue: field.fileFormat,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: LocaleKeys.ui_file_format.tr(),
+              ),
+              items: [
+                for (final format in OutputFileFormat.values)
+                  DropdownMenuItem(value: format, child: Text(format.label)),
+              ],
+              onChanged: (format) {
+                if (format != null) {
+                  onChanged(field.copyWith(fileFormat: format));
+                }
+              },
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
