@@ -8,7 +8,7 @@ enum PasswordFailure {
 
   String get message => switch (this) {
     invalidPassword =>
-      'Nutze ein Passwort mit mindestens 6 und höchstens 1000 Zeichen. Beachte auch die Passwortregeln deines Kontos.',
+      'Nutze ein Passwort mit mindestens 12 und höchstens 1000 Zeichen. Beachte auch die Passwortregeln deines Kontos.',
     signInRequired => 'Bitte melde dich erneut an, um dein Passwort zu ändern.',
     recentLoginRequired =>
       'Deine Anmeldung liegt zu lange zurück. Melde dich erneut an und setze anschließend dein neues Passwort.',

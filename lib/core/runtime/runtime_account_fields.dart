@@ -39,6 +39,7 @@ class RuntimePasswordField extends StatefulWidget {
     required this.controller,
     required this.label,
     this.isNewPassword = false,
+    this.showsRule = false,
     this.errorText,
     this.onSubmitted,
   });
@@ -46,6 +47,9 @@ class RuntimePasswordField extends StatefulWidget {
   final TextEditingController controller;
   final String label;
   final bool isNewPassword;
+
+  /// Zeigt die Mindestlänge unter dem ersten Feld eines neuen Passworts.
+  final bool showsRule;
   final String? errorText;
   final VoidCallback? onSubmitted;
 
@@ -73,6 +77,9 @@ class _RuntimePasswordFieldState extends State<RuntimePasswordField> {
       decoration: runtimeFieldDecoration(
         context,
         label: widget.label,
+        helperText: widget.showsRule
+            ? LocaleKeys.runtime_access_password_hint.tr()
+            : null,
         errorText: widget.errorText,
         suffixIcon: IconButton(
           tooltip: _obscure

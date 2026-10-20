@@ -31,14 +31,14 @@ test("setup, sign-in and me run through one account", () => withRuntimeTestDatab
   assert.deepEqual((await account.handle({url: "/v1/setup", body: undefined}))?.body, {needsSetup: true, requiresLicenseToken: true});
 
   const setup = await account.handle({method: "POST", url: "/v1/setup",
-    body: {activationToken: "LIZENZ", loginName: "Anna", displayName: "Anna", password: "geheim1"}});
+    body: {activationToken: "LIZENZ", loginName: "Anna", displayName: "Anna", password: "geheim-passwort1"}});
   assert.equal(setup?.statusCode, 201);
   assert.equal((await account.handle({method: "POST", url: "/v1/setup",
-    body: {activationToken: "LIZENZ", loginName: "zweit", displayName: "Zweit", password: "geheim1"}}))?.statusCode, 409);
+    body: {activationToken: "LIZENZ", loginName: "zweit", displayName: "Zweit", password: "geheim-passwort1"}}))?.statusCode, 409);
 
   const wrong = await account.handle({method: "POST", url: "/v1/auth/login", body: {loginName: "anna", password: "falsch1"}});
   assert.deepEqual(wrong, {statusCode: 401, body: {error: "Anmeldename oder Passwort ist ungültig.", code: "invalid_credentials"}});
-  const login = await account.handle({method: "POST", url: "/v1/auth/login", body: {loginName: "anna", password: "geheim1"}});
+  const login = await account.handle({method: "POST", url: "/v1/auth/login", body: {loginName: "anna", password: "geheim-passwort1"}});
   const {token} = login?.body as {token: string};
   assert.deepEqual(await sessions.verifySession(token), owner);
 
@@ -49,7 +49,7 @@ test("setup, sign-in and me run through one account", () => withRuntimeTestDatab
 test("an admin invites a member who sets a password with the code", () => withRuntimeTestDatabase(async (database) => {
   const {account, users, sessions, topics} = routesFor(database, 2);
   await account.handle({method: "POST", url: "/v1/setup",
-    body: {activationToken: "LIZENZ", loginName: "anna", displayName: "Anna", password: "geheim1"}});
+    body: {activationToken: "LIZENZ", loginName: "anna", displayName: "Anna", password: "geheim-passwort1"}});
 
   const created = await users.handle({method: "POST", url: "/v1/users", body: {loginName: "ben", displayName: "Ben", role: "member"}});
   assert.equal(created?.statusCode, 201);
@@ -58,7 +58,7 @@ test("an admin invites a member who sets a password with the code", () => withRu
   assert.equal((await users.handle({method: "POST", url: "/v1/users", body: {loginName: "carla", displayName: "Carla", role: "member"}}))
     ?.statusCode, 409, "die Lizenz erlaubt zwei Benutzer");
 
-  const redeemed = await account.handle({method: "POST", url: "/v1/auth/invitations/redeem", body: {code: invitation.code, password: "eigenes1"}});
+  const redeemed = await account.handle({method: "POST", url: "/v1/auth/invitations/redeem", body: {code: invitation.code, password: "eigenes-passwort1"}});
   assert.deepEqual(await sessions.verifySession((redeemed?.body as {token: string}).token), {uid: user.uid, role: "member"});
 
   const list = await users.handle({url: "/v1/users", body: undefined});

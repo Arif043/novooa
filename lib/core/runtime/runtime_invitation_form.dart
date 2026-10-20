@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../localization/locale_keys.g.dart';
 import '../theme/app_spacing.dart';
 import 'runtime_account_fields.dart';
+import 'runtime_password_rule.dart';
 import 'runtime_connection_cubit.dart';
 import 'runtime_connection_state.dart';
 import 'runtime_endpoint.dart';
@@ -68,6 +69,7 @@ class _RuntimeInvitationFormState extends State<RuntimeInvitationForm> {
           controller: _passwordController,
           label: LocaleKeys.runtime_access_new_password.tr(),
           isNewPassword: true,
+          showsRule: true,
         ),
         const SizedBox(height: AppSpacing.md),
         RuntimePasswordField(
@@ -95,13 +97,12 @@ class _RuntimeInvitationFormState extends State<RuntimeInvitationForm> {
   }
 
   void _redeem() {
-    final mismatch = _passwordController.text != _confirmationController.text;
-    setState(
-      () => _validationMessage = mismatch
-          ? LocaleKeys.runtime_access_passwords_differ.tr()
-          : null,
+    final problem = runtimeNewPasswordProblem(
+      _passwordController.text,
+      confirmation: _confirmationController.text,
     );
-    if (mismatch) return;
+    setState(() => _validationMessage = problem);
+    if (problem != null) return;
     context.read<RuntimeConnectionCubit>().redeemInvitation(
       widget.endpoint,
       code: _codeController.text,

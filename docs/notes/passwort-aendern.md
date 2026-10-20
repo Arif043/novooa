@@ -10,7 +10,9 @@ geleert und verborgen.
 
 - Antwort `204`. Verlangt aktive Lizenz und gültige Sitzung (`423` bzw.
   `401 session_required`).
-- 6–1000 Zeichen; Leerzeichen bleiben erhalten.
+- 12–1000 Zeichen; Leerzeichen bleiben erhalten. Die Grenze gilt für jedes neue
+  Passwort der Runtime (Ersteinrichtung, Einladungscode, Notzugang, Ändern);
+  die Formulare prüfen sie schon vor dem Senden.
 - SQLite speichert einen neuen scrypt-Hash mit frischem Salt in
   `runtime_password_credentials`; das alte Passwort gilt sofort nicht mehr.
 - Bestehende Gerätesitzungen bleiben angemeldet; sie lassen sich über

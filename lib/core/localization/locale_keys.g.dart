@@ -799,6 +799,7 @@ abstract class  LocaleKeys {
   static const runtime_access_no_token = 'runtime.access.no_token';
   static const runtime_access_not_licensed = 'runtime.access.not_licensed';
   static const runtime_access_password = 'runtime.access.password';
+  static const runtime_access_password_hint = 'runtime.access.password_hint';
   static const runtime_access_passwords_differ = 'runtime.access.passwords_differ';
   static const runtime_access_repeat_password = 'runtime.access.repeat_password';
   static const runtime_access_session_ended = 'runtime.access.session_ended';

@@ -37,7 +37,7 @@ class NewPasswordField extends StatelessWidget {
 
   InputDecoration _decoration() => InputDecoration(
     labelText: 'Neues Passwort',
-    helperText: 'Mindestens 6 Zeichen',
+    helperText: 'Mindestens 12 Zeichen',
     suffixIconConstraints: const BoxConstraints(
       minWidth: AppSpacing.xxl,
       minHeight: AppSpacing.xxl,

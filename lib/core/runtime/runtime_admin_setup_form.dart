@@ -6,6 +6,7 @@ import '../localization/locale_keys.g.dart';
 import '../theme/app_spacing.dart';
 import 'license_token_field.dart';
 import 'runtime_account_fields.dart';
+import 'runtime_password_rule.dart';
 import 'runtime_connection_cubit.dart';
 import 'runtime_connection_state.dart';
 import 'runtime_form_header.dart';
@@ -76,6 +77,7 @@ class _RuntimeAdminSetupFormState extends State<RuntimeAdminSetupForm> {
           controller: _passwordController,
           label: LocaleKeys.runtime_access_password.tr(),
           isNewPassword: true,
+          showsRule: true,
         ),
         const SizedBox(height: AppSpacing.md),
         RuntimePasswordField(
@@ -114,10 +116,9 @@ class _RuntimeAdminSetupFormState extends State<RuntimeAdminSetupForm> {
         _token.length != LicenseTokenField.length) {
       return LocaleKeys.runtime_access_token_incomplete.tr();
     }
-    final password = _passwordController.text;
-    if (password.isEmpty || password != _confirmationController.text) {
-      return LocaleKeys.runtime_access_passwords_differ.tr();
-    }
-    return null;
+    return runtimeNewPasswordProblem(
+      _passwordController.text,
+      confirmation: _confirmationController.text,
+    );
   }
 }

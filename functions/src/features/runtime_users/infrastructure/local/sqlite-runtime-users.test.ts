@@ -25,7 +25,7 @@ test("accounts are created, found, changed and deleted with everything that hang
   const users = new SQLiteRuntimeUserRepository(database, workspace);
   const passwords = new SQLitePasswordCredentialRepository(database);
   const ben = await users.create({loginName: LoginName.from("ben"), displayName: "Ben", role: "member"});
-  await passwords.set(ben.uid, RuntimePassword.from("geheim1"));
+  await passwords.set(ben.uid, RuntimePassword.from("geheim-passwort1"));
   await database.insert(runtimeSessions).values({token_hash: "hash", uid: ben.uid, expires_at: "2099-01-01T00:00:00.000Z"});
 
   assert.equal((await users.findByLoginName(LoginName.from("BEN")))?.hasPassword, true);
@@ -40,14 +40,14 @@ test("accounts are created, found, changed and deleted with everything that hang
 
 test("passwords verify only for the right account and can be replaced or removed", () => withRuntimeTestDatabase(async (database) => {
   const passwords = new SQLitePasswordCredentialRepository(database);
-  await passwords.set("owner-1", RuntimePassword.from("erstes1"));
-  await passwords.set("owner-1", RuntimePassword.from("zweites2"));
+  await passwords.set("owner-1", RuntimePassword.from("erstes-passwort1"));
+  await passwords.set("owner-1", RuntimePassword.from("zweites-passwort2"));
 
-  assert.equal(await passwords.verify("owner-1", "erstes1"), false);
-  assert.equal(await passwords.verify("owner-1", "zweites2"), true);
-  assert.equal(await passwords.verify(null, "zweites2"), false);
+  assert.equal(await passwords.verify("owner-1", "erstes-passwort1"), false);
+  assert.equal(await passwords.verify("owner-1", "zweites-passwort2"), true);
+  assert.equal(await passwords.verify(null, "zweites-passwort2"), false);
   await passwords.remove("owner-1");
-  assert.equal(await passwords.verify("owner-1", "zweites2"), false);
+  assert.equal(await passwords.verify("owner-1", "zweites-passwort2"), false);
 }));
 
 test("an invitation code is redeemed once, forgivingly typed, and only before it expires", () => withRuntimeTestDatabase(async (database) => {

@@ -1,6 +1,6 @@
 import {RuntimeUserError} from "./runtime-user-error.js";
 
-export const runtimePasswordLimits = {minimumLength: 6, maximumLength: 1000};
+export const runtimePasswordLimits = {minimumLength: 12, maximumLength: 1000};
 
 /** Ein neues Passwort; Leerzeichen bleiben erhalten. */
 export class RuntimePassword {
