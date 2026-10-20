@@ -105,7 +105,7 @@ function runtimeRoutes(options: BootstrapOptions, shared: RuntimeShared): Fastif
   return async (routes) => {
     const activate = new ActivateRuntime(options.licenses, (context) => shared.application.activate(context));
     registerRuntimeLicenseRoutes(routes, options.licenses, activate, {
-      passwords: new SQLitePasswordCredentialRepository(options.database), sessions: shared.sessions,
+      passwords: new SQLitePasswordCredentialRepository(options.database, options.fieldCipher), sessions: shared.sessions,
     });
     await routes.register(localRuntimeApi({
       database: options.database, runtimeRoot: options.runtimeRoot, fieldCipher: options.fieldCipher,

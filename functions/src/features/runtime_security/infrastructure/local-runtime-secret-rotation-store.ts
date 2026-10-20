@@ -2,14 +2,22 @@ import {and, eq, gt} from "drizzle-orm";
 import {readFile} from "node:fs/promises";
 import {join} from "node:path";
 import {type RuntimeExecutor} from "../../../db/database.js";
-import {languageModelSecrets, type LanguageModelSecrets} from "../../../db/schema.js";
+import {languageModelSecrets, runtimePasswordCredentials} from "../../../db/schema.js";
 import {type RuntimeFieldCipher} from "../domain/repositories/runtime-field-cipher.js";
 import {type RuntimeSecretRotationStore} from "../domain/repositories/runtime-secret-rotation-store.js";
 import {writeDurableSecretFile} from "./durable-secret-file.js";
-import {languageModelSecretContext, licenseSecretContext, mlServiceTokenContext} from "./runtime-secret-context.js";
+import {languageModelSecretContext, licenseSecretContext, mlServiceTokenContext, passwordHashContext} from "./runtime-secret-context.js";
 import {RuntimeSecretFileAccess} from "./runtime-secret-file-access.js";
 
-type SecretRow = Pick<LanguageModelSecrets, "secret_ref" | "encrypted_value">;
+/** Eine Zeile mit verschlüsseltem Wert; `key` ist zugleich der Teil des Feldkontexts, der sie eindeutig macht. */
+type EncryptedRow = {key: string; encrypted: string};
+
+/** Tabellen, deren Werte mit dem Master-Key verschlüsselt sind. */
+const encryptedColumns = [
+  {table: languageModelSecrets, key: languageModelSecrets.secret_ref, value: languageModelSecrets.encrypted_value, context: languageModelSecretContext},
+  {table: runtimePasswordCredentials, key: runtimePasswordCredentials.uid, value: runtimePasswordCredentials.encrypted_hash, context: passwordHashContext},
+] as const;
+type EncryptedColumn = typeof encryptedColumns[number];
 type LicenseDocument = {license: {payload: Record<string, unknown>}; encryptedActivationSecret: string};
 type MlTokenDocument = {tenantId: string; encryptedToken: string};
 
@@ -22,19 +30,22 @@ export class LocalRuntimeSecretRotationStore implements RuntimeSecretRotationSto
 
   async rewrapSecrets(cipher: RuntimeFieldCipher): Promise<number> {
     let count = 0;
-    await this.forEachSecret(async (row) => {
-      const encrypted = cipher.rewrap(row.encrypted_value, languageModelSecretContext(row.secret_ref));
-      if (encrypted === row.encrypted_value) return;
-      await this.database.update(languageModelSecrets).set({encrypted_value: encrypted}).where(and(eq(languageModelSecrets.secret_ref, row.secret_ref), eq(languageModelSecrets.encrypted_value, row.encrypted_value)));
-      count++;
-    });
+    for (const column of encryptedColumns) {
+      await this.forEachRow(column, async (row) => {
+        const encrypted = cipher.rewrap(row.encrypted, column.context(row.key));
+        if (encrypted === row.encrypted) return;
+        await this.database.update(column.table).set({[column.value.name]: encrypted})
+          .where(and(eq(column.key, row.key), eq(column.value, row.encrypted)));
+        count++;
+      });
+    }
     return count + await this.licenseAccess.run(async () => await this.rewrapLicense(cipher) + await this.rewrapMlToken(cipher));
   }
 
   async verifySecrets(cipher: RuntimeFieldCipher): Promise<void> {
-    await this.forEachSecret(async (row) => {
-      verify(cipher, row.encrypted_value, languageModelSecretContext(row.secret_ref));
-    });
+    for (const column of encryptedColumns) {
+      await this.forEachRow(column, async (row) => verify(cipher, row.encrypted, column.context(row.key)));
+    }
     await this.licenseAccess.run(async () => {
       const document = await this.licenseDocument();
       if (document) verify(cipher, document.encryptedActivationSecret, licenseSecretContext(document.license.payload));
@@ -78,15 +89,15 @@ export class LocalRuntimeSecretRotationStore implements RuntimeSecretRotationSto
     return join(this.runtimeRoot, "credentials", "ml-service-token.json");
   }
 
-  private async forEachSecret(operation: (row: SecretRow) => Promise<void>): Promise<void> {
+  private async forEachRow(column: EncryptedColumn, operation: (row: EncryptedRow) => Promise<void>): Promise<void> {
     let cursor: string | null = null;
     while (true) {
-      const rows: SecretRow[] = await this.database.select({secret_ref: languageModelSecrets.secret_ref, encrypted_value: languageModelSecrets.encrypted_value})
-        .from(languageModelSecrets).where(cursor === null ? undefined : gt(languageModelSecrets.secret_ref, cursor))
-        .orderBy(languageModelSecrets.secret_ref).limit(100);
+      const rows: EncryptedRow[] = await this.database.select({key: column.key, encrypted: column.value})
+        .from(column.table).where(cursor === null ? undefined : gt(column.key, cursor))
+        .orderBy(column.key).limit(100);
       if (rows.length === 0) return;
       for (const row of rows) await operation(row);
-      cursor = rows[rows.length - 1].secret_ref;
+      cursor = rows[rows.length - 1].key;
     }
   }
 

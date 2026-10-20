@@ -2,6 +2,7 @@ import {type RuntimeExecutor} from "../../../../db/database.js";
 import {createLoginAttemptLimiter} from "../../../../shared/local/local-runtime-login-rate-limiter.js";
 import {type LocalRuntimeRealtimeConnections} from "../../../../shared/local/local-runtime-realtime-connections.js";
 import {type LocalRuntimeSessionStore} from "../../../../shared/local/local-runtime-session-store.js";
+import {type SensitiveFieldCipher} from "../../../runtime_security/domain/repositories/runtime-field-cipher.js";
 import {type RuntimeOwnershipProof} from "../../domain/repositories/runtime-ownership-proof.js";
 import {type RuntimeSessionAccess} from "../../domain/repositories/runtime-session-access.js";
 import {type RuntimeUserLimit} from "../../domain/repositories/runtime-user-limit.js";
@@ -22,6 +23,7 @@ import {SQLiteRuntimeUserRepository, type RuntimeUserWorkspace} from "./sqlite-r
 
 export type RuntimeUsersDependencies = {
   database: RuntimeExecutor;
+  fieldCipher: SensitiveFieldCipher;
   workspace: () => RuntimeUserWorkspace;
   sessions: Pick<LocalRuntimeSessionStore, "createSession" | "deleteSessionsOf" | "isActive">;
   connections: Pick<LocalRuntimeRealtimeConnections, "closeInactive">;
@@ -36,7 +38,7 @@ export function createRuntimeUsersModule(dependencies: RuntimeUsersDependencies)
 } {
   const {database, proof, limit} = dependencies;
   const users = new SQLiteRuntimeUserRepository(database, dependencies.workspace);
-  const passwords = new SQLitePasswordCredentialRepository(database);
+  const passwords = new SQLitePasswordCredentialRepository(database, dependencies.fieldCipher);
   const invitations = new SQLiteInvitationRepository(database);
   const sessions = sessionAccessFor(dependencies);
   return {

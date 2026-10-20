@@ -10,7 +10,8 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 - **Konto** = `user_profiles` mit `login_name` (eindeutig, klein geschrieben,
   3–64 Zeichen aus `a–z 0–9 . _ -`) plus Mitgliedschaft in `team_members` des
   aktiven Arbeitsbereichs. Das Passwort liegt getrennt in
-  `runtime_password_credentials` (scrypt, wie bisher), damit ein Konto später
+  `runtime_password_credentials` (scrypt-Hash, unter dem Master-Key
+  [verschlüsselt](./sqlite-passwort-hashes-0026.md)), damit ein Konto später
   auch ohne Passwort bestehen kann ([SSO, geplant](./runtime-sso-geplant.md)).
 - **Erstes Konto:** die [Ersteinrichtung](./runtime-ersteinrichtung.md) macht
   das Profil des Arbeitsbereichs (`license-<licenseId>`) zum ersten Admin; so

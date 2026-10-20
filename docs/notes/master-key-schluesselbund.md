@@ -12,7 +12,9 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
   Schlüsseldateien bleiben so im Container sichtbar.
 - Jede Runtime braucht ihren eigenen Schlüsselbund; nicht zwischen
   Datenverzeichnissen teilen.
-- Verlust des Master-Keys: Provider-Keys müssen neu hinterlegt werden.
+- Verlust des Master-Keys: Provider-Keys müssen neu hinterlegt werden, und
+  niemand kann sich mehr anmelden (Admin-Zugang per Lizenz-Token wiederherstellen,
+  Mitglieder per Einladungscode).
   Backups umfassen deshalb Daten- **und** Schlüssel-Volume.
 
 Ohne Docker (Desktop-App, `local-runtime:serve`):

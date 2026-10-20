@@ -15,6 +15,7 @@ export async function rotationFixture() {
   const cipher = new EnvelopeRuntimeFieldCipher(await readFile(keyFile, "utf8"));
   const database = connectRuntimeDatabase(join(root, "novooa.sqlite"));
   await database.run(sql`CREATE TABLE language_model_secrets (secret_ref TEXT PRIMARY KEY, encrypted_value TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`);
+  await database.run(sql`CREATE TABLE runtime_password_credentials (uid TEXT PRIMARY KEY, encrypted_hash TEXT NOT NULL, salt TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`);
   const secrets = new EncryptedSQLiteLanguageModelSecretStore(database, cipher);
   await secrets.write("model/a", "key-a");
   await secrets.write("model/b", "key-b");

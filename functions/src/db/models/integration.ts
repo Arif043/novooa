@@ -114,10 +114,10 @@ export const modelCatalog = sqliteTable("model_catalog", {
   index("idx_model_catalog_team").on(table.team_id),
 ]);
 
-/** Passwörter der Konten (scrypt), getrennt vom Profil: Ein Konto kann künftig per SSO auch ohne Passwort bestehen. */
+/** Passwörter der Konten: scrypt-Hash, mit dem Master-Key verschlüsselt (siehe `passwordHashContext`). Getrennt vom Profil, damit ein Konto künftig per SSO auch ohne Passwort bestehen kann. */
 export const runtimePasswordCredentials = sqliteTable("runtime_password_credentials", {
   uid: text("uid").primaryKey().references((): AnySQLiteColumn => userProfiles.uid, {onDelete: "cascade"}),
-  password_hash: text("password_hash").notNull(),
+  encrypted_hash: text("encrypted_hash").notNull(),
   salt: text("salt").notNull(),
   updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });

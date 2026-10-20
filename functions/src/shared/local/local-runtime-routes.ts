@@ -74,7 +74,7 @@ type RouteServices = ReturnType<typeof createLocalRuntimeRouteServices>;
 /** Einrichtung, Anmeldung, Konten (öffentlich nur, was die Access-Hooks freigeben), Realtime-Tickets, Abmelden. */
 async function registerAccessRoutes(api: FastifyInstance, dependencies: LocalRuntimeApiDependencies) {
   const runtimeUsers = createRuntimeUsersModule({
-    database: dependencies.database,
+    database: dependencies.database, fieldCipher: dependencies.fieldCipher,
     workspace: () => {
       const {teamId, ownerUid} = dependencies.workspaceContext();
       return {teamId, ownerUid};

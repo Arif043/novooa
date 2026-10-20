@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {testingRoutes} from "../../../../shared/local/local-runtime-http-test-support.js";
 import {LocalRuntimeSessionStore} from "../../../../shared/local/local-runtime-session-store.js";
-import {testRuntimeWorkspace, withRuntimeTestDatabase} from "../../../../shared/local/local-runtime-test-database.js";
+import {testRuntimeFieldCipher, testRuntimeWorkspace, withRuntimeTestDatabase} from "../../../../shared/local/local-runtime-test-database.js";
 import {accountRoutes} from "./local-runtime-account-routes.js";
 import {userRoutes} from "./local-runtime-user-routes.js";
 import {createRuntimeUsersModule} from "./runtime-users-composition.js";
@@ -14,7 +14,7 @@ function routesFor(database: RuntimeDatabase, maxUsers: number | null = null) {
   const sessions = new LocalRuntimeSessionStore(database, () => testRuntimeWorkspace.teamId);
   const topics: string[] = [];
   const module = createRuntimeUsersModule({
-    database, sessions, connections: {closeInactive: async () => undefined},
+    database, fieldCipher: testRuntimeFieldCipher(), sessions, connections: {closeInactive: async () => undefined},
     workspace: () => ({teamId: testRuntimeWorkspace.teamId, ownerUid: testRuntimeWorkspace.userId}),
     proof: {requiresActivationTokenForSetup: () => true, matchesActivationToken: (token) => token === "LIZENZ"},
     limit: {maxUsers: () => maxUsers}, notifier: {publish: (topic) => topics.push(topic)},

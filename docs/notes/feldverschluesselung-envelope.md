@@ -1,6 +1,6 @@
 # Feldverschlüsselung mit Envelopes
 
-> Standalone verschlüsselt nur sensible Feldwerte (Provider-API-Keys, Verbindungsgeheimnisse, Lizenz-Aktivierungsgeheimnis), jeden mit eigenem Datenschlüssel; der Master-Key verschlüsselt nie direkt.
+> Standalone verschlüsselt nur sensible Feldwerte (Provider-API-Keys, Verbindungs- und Webhook-Geheimnisse, Lizenz-Aktivierungsgeheimnis, ML-Token, Passwort-Hashes), jeden mit eigenem Datenschlüssel; der Master-Key verschlüsselt nie direkt.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
@@ -18,7 +18,8 @@ Aufbau je Wert (`node:crypto`):
    Formatversion, Zweck und Feldkontext.
 
 Feldkontext: bei Provider-Keys die Secret-Referenz (Workspace,
-Verbindungs-ID); bei der Lizenz Workspace-, Lizenz- und Aktivierungs-ID.
+Verbindungs-ID); bei der Lizenz Workspace-, Lizenz- und Aktivierungs-ID; bei
+Passwort-Hashes die Konto-ID ([0026](./sqlite-passwort-hashes-0026.md)).
 
 Die Envelope enthält Version, Master-Key-ID, Salt, verschlüsselten
 Datenschlüssel und verschlüsselten Wert samt IVs und Tags. Datenschlüssel

@@ -14,3 +14,9 @@ export function mlServiceTokenContext(tenantId: string): readonly string[] {
   if (!tenantId.length) throw new Error("Ungültiger Feldkontext für den ML-Dienst.");
   return ["ml-service", tenantId, "token"];
 }
+
+/** Bindet den verschlüsselten Passwort-Hash an genau ein Konto. */
+export function passwordHashContext(uid: string): readonly string[] {
+  if (!uid.length) throw new Error("Ungültiger Feldkontext für ein Passwort.");
+  return ["runtime-password", uid, "scrypt-hash"];
+}
