@@ -339,7 +339,8 @@
       "import_export": "Import/Export",
       "profile": "Profile",
       "team": "Team",
-      "language_model": "Language model"
+      "language_model": "Language model",
+      "users": "Users"
     }
   },
   "ui": {
@@ -851,5 +852,105 @@
     "reset_view": "Reset view",
     "context_notes": "{count} notes in prompt context",
     "context_hint": "A prompt that has the selected note attached sees these notes: the note itself and its outgoing links up to 5 levels, at most 50."
+  },
+  "runtime": {
+    "access": {
+      "admin_not_found": "There is no admin with this login name.",
+      "display_name": "Name",
+      "failed_with_status": "Sign-in failed (HTTP {}).",
+      "hide_password": "Hide password",
+      "invalid_credentials": "Login name or password is invalid.",
+      "invalid_invitation": "The invitation code is invalid or has expired.",
+      "invalid_password": "The password needs 6 to 1000 characters.",
+      "license_token_mismatch": "The license token does not match this runtime.",
+      "login_name": "Login name",
+      "new_password": "New password",
+      "no_token": "No session token received.",
+      "not_licensed": "The runtime is not licensed yet. Activate the license on the runtime machine first.",
+      "password": "Password",
+      "passwords_differ": "The passwords do not match.",
+      "repeat_password": "Repeat password",
+      "session_ended": "Your session has expired or was ended on another device. Please sign in again.",
+      "show_password": "Show password",
+      "token_incomplete": "Please enter all 16 characters of the license token.",
+      "too_many_attempts": "Too many sign-in attempts. Please wait a minute and try again."
+    },
+    "invitation": {
+      "action": "Set password and sign in",
+      "code": "Invitation code",
+      "description": "Enter the code you received from your admin and choose your own password.",
+      "link": "I have an invitation code",
+      "title": "Redeem invitation"
+    },
+    "recovery": {
+      "action": "Reset admin password",
+      "description": "If no admin can sign in anymore: with the license token of this runtime you can set a new password for an admin account.",
+      "link": "Recover admin access",
+      "title": "Recover admin access"
+    },
+    "setup": {
+      "action": "Create account",
+      "already_done": "This runtime is already set up.",
+      "description": "This first account becomes admin. Admins invite further users in the settings.",
+      "failed": "The account could not be created.",
+      "title": "Create admin account"
+    },
+    "sign_in": {
+      "action": "Sign in",
+      "back": "Back to sign-in",
+      "description": "Sign in with your account on the runtime at {}.",
+      "title": "Sign in"
+    }
+  },
+  "runtime_users": {
+    "actions": "Actions for {}",
+    "add_action": "Add user",
+    "add_title": "New user",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "delete_message": "{} can no longer sign in. Tasks, files and notes remain in the workspace.",
+    "delete_title": "Delete user?",
+    "deleted": "User deleted.",
+    "empty": "No users yet.",
+    "failure": {
+      "admin_required": "Only admins may do this.",
+      "last_admin": "There must always be at least one admin.",
+      "login_name_taken": "This login name is already taken.",
+      "not_found": "This user no longer exists.",
+      "own_account": "This is not possible for your own account here.",
+      "unavailable": "The runtime could not complete the action.",
+      "user_limit_reached": "The license does not allow more users.",
+      "workspace_owner": "The account from the setup cannot be deleted."
+    },
+    "invitation": {
+      "copy": "Copy code",
+      "description": "Give {} this code. With it they set their own password at sign-in under “I have an invitation code”. The code is shown only now.",
+      "done": "Done",
+      "expires": "Valid until {}",
+      "pending": "Invitation open",
+      "title": "Invitation code"
+    },
+    "limit_hint": "The license is fully used. Delete a user or extend the license.",
+    "load_failed": "Users could not be loaded.",
+    "login_name_hint": "3 to 64 characters: letters a–z, digits, dot, underscore or hyphen.",
+    "make_admin": "Make admin",
+    "make_member": "Make member",
+    "own_password_description": "Set a new password for your account. Your other devices stay signed in.",
+    "reset_password": "Reset password",
+    "retry": "Try again",
+    "role": {
+      "admin": "Admin",
+      "member": "Member"
+    },
+    "role_changed": "Role changed.",
+    "usage": "{} of {} users",
+    "usage_unlimited": "{} users",
+    "you": "You"
+  },
+  "activity_origin": {
+    "reviewed_by": "answered by {}",
+    "schedule": "Schedule",
+    "started_by": "started by {}",
+    "trigger": "Trigger"
   }
 }

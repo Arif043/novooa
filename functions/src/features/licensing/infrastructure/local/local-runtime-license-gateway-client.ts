@@ -1,6 +1,6 @@
 import {type RuntimeLicenseActivation} from "../../domain/entities/runtime-license-activation.js";
 import {LicenseActivationRejectedError, LicenseGatewayUnavailableError} from "../../domain/entities/runtime-license-errors.js";
-import {type SignedRuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
+import {type SignedRuntimeLicense, maxUsersFrom} from "../../domain/entities/runtime-license-lease.js";
 import {type RuntimeLicenseVerdict} from "../../domain/entities/runtime-license-verification.js";
 
 const verifyTimeoutMs = 15_000;
@@ -94,6 +94,7 @@ function signedLicenseFrom(value: unknown): SignedRuntimeLicense {
       workspaceId: requiredString(payload.workspaceId),
       issuedAt: requiredString(payload.issuedAt),
       expiresAt: requiredString(payload.expiresAt),
+      maxUsers: maxUsersFrom(payload.maxUsers),
     },
     signature: requiredString(signed.signature),
   };

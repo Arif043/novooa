@@ -174,8 +174,26 @@ void main() {
   });
 
   group('runtimeLoginFailureMessageFor', () {
-    test('meldet nur bei 401 ein ungültiges Passwort', () {
-      expect(runtimeLoginFailureMessageFor(401), 'Passwort ist ungültig.');
+    test('meldet nur bei 401 ungültige Anmeldedaten', () {
+      expect(
+        runtimeLoginFailureMessageFor(401),
+        'Anmeldename oder Passwort ist ungültig.',
+      );
+    });
+
+    test('unterscheidet Einladung, Lizenz-Token und Notzugang am Code', () {
+      expect(
+        runtimeLoginFailureMessageFor(401, 'invalid_invitation'),
+        contains('Einladungscode'),
+      );
+      expect(
+        runtimeLoginFailureMessageFor(403, 'license_token_mismatch'),
+        contains('Lizenz-Token'),
+      );
+      expect(
+        runtimeLoginFailureMessageFor(404, 'user_not_found'),
+        contains('keinen Admin'),
+      );
     });
 
     test('meldet die fehlende Lizenz bei 423 als eigenen Zustand', () {
@@ -285,7 +303,7 @@ void main() {
     );
 
     test(
-      'setPassword schickt den Lizenz-Token aus Schritt 1 mit dem Passwort',
+      'setUpAdmin schickt den Lizenz-Token aus Schritt 1 mit dem Konto und meldet es an',
       () async {
         final onboarding = _FakeOnboarding(hasLicense: false, needsSetup: true);
         final cubit = RuntimeConnectionCubit(
@@ -301,10 +319,12 @@ void main() {
             (cubit.state as RuntimeConnectionNeedsLicense).endpoint;
         await cubit.activateLicense(endpoint, 'A3K9N7P2Q4R6T8W5');
 
-        await cubit.setPassword(endpoint, 'geheim');
+        await cubit.setUpAdmin(endpoint, _admin);
 
         expect(onboarding.submittedToken, 'A3K9N7P2Q4R6T8W5');
         expect(onboarding.submittedEndpoint?.address, '192.168.1.20');
+        expect(onboarding.submittedAccount, _admin);
+        expect(cubit.state, isA<RuntimeConnectionReady>());
         await cubit.close();
       },
     );
@@ -325,9 +345,9 @@ void main() {
         final state = cubit.state as RuntimeConnectionNeedsPasswordSetup;
         expect(state.needsTokenInput, isTrue);
 
-        await cubit.setPassword(
+        await cubit.setUpAdmin(
           state.endpoint,
-          'geheim',
+          _admin,
           activationToken: 'A3K9N7P2Q4R6T8W5',
         );
 
@@ -351,7 +371,7 @@ void main() {
         final endpoint =
             (cubit.state as RuntimeConnectionNeedsPasswordSetup).endpoint;
 
-        await cubit.setPassword(endpoint, 'geheim', activationToken: 'falsch');
+        await cubit.setUpAdmin(endpoint, _admin, activationToken: 'falsch');
 
         final state = cubit.state as RuntimeConnectionNeedsPasswordSetup;
         expect(state.errorMessage, contains('Lizenz-Token'));
@@ -472,7 +492,11 @@ void main() {
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
 
-      await cubit.login(endpoint, 'correct-horse-battery-staple');
+      await cubit.login(
+        endpoint,
+        loginName: 'anna',
+        password: 'correct-horse-battery-staple',
+      );
 
       expect(cubit.state, isA<RuntimeConnectionReady>());
       expect(credentials.sessions['192.168.1.20'], 'fresh-token');
@@ -493,7 +517,11 @@ void main() {
         kindStore: kindStore,
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
-      await cubit.login(endpoint, 'correct-horse-battery-staple');
+      await cubit.login(
+        endpoint,
+        loginName: 'anna',
+        password: 'correct-horse-battery-staple',
+      );
       expect(credentials.sessions['192.168.1.20'], 'fresh-token');
 
       await cubit.signOut();
@@ -517,7 +545,11 @@ void main() {
         onSignedOut: () async => resetCallCount++,
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
-      await cubit.login(endpoint, 'correct-horse-battery-staple');
+      await cubit.login(
+        endpoint,
+        loginName: 'anna',
+        password: 'correct-horse-battery-staple',
+      );
 
       await cubit.signOut();
 
@@ -538,7 +570,8 @@ void main() {
       );
       await cubit.login(
         RuntimeEndpoint.fromAddress('192.168.1.20'),
-        'correct-horse-battery-staple',
+        loginName: 'anna',
+        password: 'correct-horse-battery-staple',
       );
 
       await cubit.signOut();
@@ -564,7 +597,8 @@ void main() {
         );
         await cubit.login(
           RuntimeEndpoint.fromAddress('192.168.1.20'),
-          'correct-horse-battery-staple',
+          loginName: 'anna',
+          password: 'correct-horse-battery-staple',
         );
 
         await cubit.signOut();
@@ -589,7 +623,11 @@ void main() {
           kindStore: _MemoryKindStore(),
         );
         final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
-        await cubit.login(endpoint, 'correct-horse-battery-staple');
+        await cubit.login(
+          endpoint,
+          loginName: 'anna',
+          password: 'correct-horse-battery-staple',
+        );
 
         await cubit.handleSessionEnded();
 
@@ -618,6 +656,56 @@ void main() {
       await cubit.close();
     });
 
+    test('Einladungscode und Notzugang melden an wie die Anmeldung', () async {
+      final loginClient = _FakeLoginClient(token: 'neu');
+      final credentials = _MemoryCredentialStore();
+      final cubit = RuntimeConnectionCubit(
+        _MemoryEndpointStore(null),
+        credentials,
+        loginClient,
+        const _FakeAvailability(),
+        onboarding: _FakeOnboarding(),
+        kindStore: _MemoryKindStore(),
+      );
+      final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
+
+      await cubit.redeemInvitation(endpoint, code: 'ABCD', password: 'neu123');
+      await cubit.recoverAccess(
+        endpoint,
+        activationToken: 'TOKEN',
+        loginName: 'anna',
+        password: 'neu123',
+      );
+
+      expect(loginClient.calls, ['redeem:ABCD', 'recover:TOKEN:anna']);
+      expect(credentials.sessions['192.168.1.20'], 'neu');
+      expect(cubit.state, isA<RuntimeConnectionReady>());
+      await cubit.close();
+    });
+
+    test(
+      'ein gescheiterter Einladungscode bleibt im Einladungs-Formular',
+      () async {
+        final cubit = RuntimeConnectionCubit(
+          _MemoryEndpointStore(null),
+          _MemoryCredentialStore(),
+          _FakeLoginClient(failure: const RuntimeLoginFailure('abgelaufen')),
+          const _FakeAvailability(),
+          onboarding: _FakeOnboarding(),
+          kindStore: _MemoryKindStore(),
+        );
+        final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
+        cubit.showSignIn(endpoint, RuntimeSignInMode.invitation);
+
+        await cubit.redeemInvitation(endpoint, code: 'X', password: 'neu123');
+
+        final state = cubit.state as RuntimeConnectionNeedsPassword;
+        expect(state.mode, RuntimeSignInMode.invitation);
+        expect(state.errorMessage, 'abgelaufen');
+        await cubit.close();
+      },
+    );
+
     test('bleibt bei falschem Passwort mit Fehlermeldung stehen', () async {
       final cubit = RuntimeConnectionCubit(
         _MemoryEndpointStore(null),
@@ -631,7 +719,11 @@ void main() {
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
 
-      await cubit.login(endpoint, 'wrong-password');
+      await cubit.login(
+        endpoint,
+        loginName: 'anna',
+        password: 'wrong-password',
+      );
 
       final state = cubit.state as RuntimeConnectionNeedsPassword;
       expect(state.errorMessage, 'Passwort ist ungültig.');
@@ -656,6 +748,12 @@ void main() {
     });
   });
 }
+
+const _admin = RuntimeAdminAccount(
+  displayName: 'Anna',
+  loginName: 'anna',
+  password: 'geheim1',
+);
 
 class _MemoryEndpointStore implements RuntimeEndpointStore {
   _MemoryEndpointStore(this._endpoint);
@@ -723,9 +821,32 @@ class _FakeLoginClient implements RuntimeLoginClient {
   final RuntimeLoginFailure? failure;
   final Object? logoutFailure;
   final List<String> loggedOutTokens = [];
+  final List<String> calls = [];
 
   @override
-  Future<String> login(RuntimeEndpoint endpoint, String password) async {
+  Future<String> login(
+    RuntimeEndpoint endpoint, {
+    required String loginName,
+    required String password,
+  }) => _token('login:$loginName');
+
+  @override
+  Future<String> redeemInvitation(
+    RuntimeEndpoint endpoint, {
+    required String code,
+    required String password,
+  }) => _token('redeem:$code');
+
+  @override
+  Future<String> recoverAccess(
+    RuntimeEndpoint endpoint, {
+    required String activationToken,
+    required String loginName,
+    required String password,
+  }) => _token('recover:$activationToken:$loginName');
+
+  Future<String> _token(String call) async {
+    calls.add(call);
     if (failure != null) throw failure!;
     return token;
   }
@@ -754,9 +875,10 @@ class _FakeOnboarding implements RuntimeOnboardingClient {
   final bool hasLicense;
   final bool needsSetup;
 
-  /// Was der letzte `setPassword`-Aufruf mitgeschickt hat.
+  /// Was der letzte `setUpAdmin`-Aufruf mitgeschickt hat.
   String? submittedToken;
   RuntimeEndpoint? submittedEndpoint;
+  RuntimeAdminAccount? submittedAccount;
 
   @override
   Future<void> activateLicense(RuntimeEndpoint endpoint, String token) async {}
@@ -770,13 +892,14 @@ class _FakeOnboarding implements RuntimeOnboardingClient {
   }
 
   @override
-  Future<void> setPassword(
+  Future<void> setUpAdmin(
     RuntimeEndpoint endpoint,
-    String password, {
+    RuntimeAdminAccount account, {
     String? activationToken,
   }) async {
     submittedEndpoint = endpoint;
     submittedToken = activationToken;
+    submittedAccount = account;
   }
 }
 
@@ -794,9 +917,9 @@ class _FailingSetupOnboarding implements RuntimeOnboardingClient {
   }
 
   @override
-  Future<void> setPassword(
+  Future<void> setUpAdmin(
     RuntimeEndpoint endpoint,
-    String password, {
+    RuntimeAdminAccount account, {
     String? activationToken,
   }) async {
     throw const RuntimeOnboardingFailure(

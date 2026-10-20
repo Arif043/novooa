@@ -8,7 +8,7 @@ import {HttpRuntimeMailRelayClient} from "./runtime-mail-relay-client.js";
 
 const license: SignedRuntimeLicense = {
   signature: "sig",
-  payload: {licenseId: "l", licenseName: "n", activationId: "a", workspaceId: "w", issuedAt: "2026-01-01", expiresAt: "2027-01-01"},
+  payload: {licenseId: "l", licenseName: "n", activationId: "a", workspaceId: "w", issuedAt: "2026-01-01", expiresAt: "2027-01-01", maxUsers: 5},
 };
 const originalFetch = globalThis.fetch;
 afterEach(() => {

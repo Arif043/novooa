@@ -1,137 +1,128 @@
 import {sql} from "drizzle-orm";
 import assert from "node:assert/strict";
 import test from "node:test";
-import {connectRuntimeDatabase, RuntimeDatabase} from "../../db/database.js";
+import {type RuntimeDatabase} from "../../db/database.js";
+import {teamMembers, userProfiles} from "../../db/schema.js";
 import {LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
-
-test("createSession returns a verifiable token and stores only its hash", async () => {
-  const database = connectRuntimeDatabase(":memory:");
-  await createSchema(database);
-  const store = new LocalRuntimeSessionStore(database);
-
-  const token = await store.createSession();
-  const row = await database.get <{token_hash: string}>(sql`SELECT token_hash FROM runtime_sessions`);
-
-  assert.equal(await store.verifySession(token), true);
-  assert.notEqual(row?.token_hash, token);
-  database.$client.close();
-});
-
-test("verifySession rejects an unknown token", async () => {
-  const store = await storeWithSchema();
-  assert.equal(await store.verifySession("never-issued"), false);
-});
-
-test("verifySession rejects an expired session", async () => {
-  const database = connectRuntimeDatabase(":memory:");
-  await createSchema(database);
-  const store = new LocalRuntimeSessionStore(database);
-  const token = await store.createSession();
-  await database.run(sql`UPDATE runtime_sessions SET expires_at = ${"2000-01-01T00:00:00.000Z"}`);
-
-  assert.equal(await store.verifySession(token), false);
-  database.$client.close();
-});
+import {testRuntimeWorkspace, withRuntimeTestDatabase} from "./local-runtime-test-database.js";
 
 const day = 24 * 60 * 60 * 1000;
+const owner = testRuntimeWorkspace.userId;
 
-async function clockedStore() {
-  const database = connectRuntimeDatabase(":memory:");
-  await createSchema(database);
-  const clock = {now: Date.parse("2026-10-01T00:00:00.000Z")};
-  const store = new LocalRuntimeSessionStore(database, () => clock.now);
-  const expiresAt = async () => (await database.get<{expires_at: string}>(sql`SELECT expires_at FROM runtime_sessions`))?.expires_at;
-  return {database, clock, store, expiresAt};
+type Fixture = {database: RuntimeDatabase; clock: {now: number}; store: LocalRuntimeSessionStore; expiresAt: () => Promise<string | undefined>};
+
+function withStore(operation: (fixture: Fixture) => Promise<void>, activeTeam: string | null = testRuntimeWorkspace.teamId) {
+  return withRuntimeTestDatabase(async (database) => {
+    const clock = {now: Date.parse("2026-10-01T00:00:00.000Z")};
+    const store = new LocalRuntimeSessionStore(database, () => activeTeam, () => clock.now);
+    const expiresAt = async () => (await database.get<{expires_at: string}>(sql`SELECT expires_at FROM runtime_sessions`))?.expires_at;
+    await operation({database, clock, store, expiresAt});
+  });
 }
 
-test("a session expires after seven days without use", async () => {
-  const {database, clock, store} = await clockedStore();
-  const token = await store.createSession();
+async function addMember(database: RuntimeDatabase, uid: string): Promise<void> {
+  await database.insert(userProfiles).values({uid, login_name: uid, display_name: uid});
+  await database.insert(teamMembers).values({team_id: testRuntimeWorkspace.teamId, uid, role: "member"});
+}
 
-  clock.now += 7 * day + 1;
+test("createSession returns a token that names the account and stores only its hash", () => withStore(async ({database, store}) => {
+  const token = await store.createSession(owner);
+  const row = await database.get<{token_hash: string; uid: string}>(sql`SELECT token_hash, uid FROM runtime_sessions`);
 
-  assert.equal(await store.verifySession(token), false);
-  database.$client.close();
+  assert.deepEqual(await store.verifySession(token), {uid: owner, role: "admin"});
+  assert.notEqual(row?.token_hash, token);
+  assert.equal(row?.uid, owner);
+}));
+
+test("verifySession reads the current role of the account", () => withStore(async ({database, store}) => {
+  await addMember(database, "mitglied");
+  const token = await store.createSession("mitglied");
+  assert.deepEqual(await store.verifySession(token), {uid: "mitglied", role: "member"});
+
+  await database.update(teamMembers).set({role: "admin"});
+
+  assert.deepEqual(await store.verifySession(token), {uid: "mitglied", role: "admin"});
+}));
+
+test("verifySession rejects unknown tokens and sessions outside the active team", async () => {
+  await withStore(async ({store}) => assert.equal(await store.verifySession("never-issued"), null));
+  await withStore(async ({store}) => {
+    const token = await store.createSession(owner);
+    assert.equal(await store.verifySession(token), null);
+  }, "anderes-team");
 });
 
-test("using a session extends it by seven days, at most once per hour", async () => {
-  const {database, clock, store, expiresAt} = await clockedStore();
-  const token = await store.createSession();
+test("a session expires after seven days without use", () => withStore(async ({clock, store}) => {
+  const token = await store.createSession(owner);
+  clock.now += 7 * day + 1;
+  assert.equal(await store.verifySession(token), null);
+}));
+
+test("using a session extends it by seven days, at most once per hour", () => withStore(async ({clock, store, expiresAt}) => {
+  const token = await store.createSession(owner);
   const created = await expiresAt();
 
   clock.now += 30 * 60 * 1000;
-  assert.equal(await store.verifySession(token), true);
+  assert.notEqual(await store.verifySession(token), null);
   assert.equal(await expiresAt(), created, "innerhalb der ersten Stunde wird nicht geschrieben");
 
   clock.now += 6 * day;
-  assert.equal(await store.verifySession(token), true);
+  assert.notEqual(await store.verifySession(token), null);
   assert.equal(await expiresAt(), new Date(clock.now + 7 * day).toISOString());
 
   clock.now += 6 * day;
-  assert.equal(await store.verifySession(token), true, "eine genutzte Sitzung überlebt die ursprünglichen sieben Tage");
-  database.$client.close();
-});
+  assert.notEqual(await store.verifySession(token), null, "eine genutzte Sitzung überlebt die ursprünglichen sieben Tage");
+}));
 
-test("isActive checks a session without extending it", async () => {
-  const {database, clock, store, expiresAt} = await clockedStore();
-  const token = await store.createSession();
+test("isActive checks a session without extending it", () => withStore(async ({clock, store, expiresAt}) => {
+  const token = await store.createSession(owner);
   const created = await expiresAt();
-
   clock.now += 3 * day;
 
   assert.equal(await store.isActive(token), true);
   assert.equal(await expiresAt(), created);
-  database.$client.close();
-});
+}));
 
-test("deleteSession ends only that session", async () => {
-  const {database, store} = await clockedStore();
-  const ended = await store.createSession();
-  const kept = await store.createSession();
+test("deleteSession ends only that session", () => withStore(async ({store}) => {
+  const ended = await store.createSession(owner);
+  const kept = await store.createSession(owner);
 
   await store.deleteSession(ended);
 
-  assert.equal(await store.verifySession(ended), false);
-  assert.equal(await store.verifySession(kept), true);
-  database.$client.close();
-});
+  assert.equal(await store.verifySession(ended), null);
+  assert.notEqual(await store.verifySession(kept), null);
+}));
 
-test("deleteOtherSessions keeps the current session and counts the others", async () => {
-  const {database, store} = await clockedStore();
-  const current = await store.createSession();
-  const others = [await store.createSession(), await store.createSession()];
+test("deleteOtherSessions ends only the other sessions of the same account", () => withStore(async ({database, store}) => {
+  await addMember(database, "kollegin");
+  const current = await store.createSession(owner);
+  const others = [await store.createSession(owner), await store.createSession(owner)];
+  const colleague = await store.createSession("kollegin");
 
-  assert.equal(await store.deleteOtherSessions(current), 2);
+  assert.equal(await store.deleteOtherSessions(current, owner), 2);
 
-  assert.equal(await store.verifySession(current), true);
-  for (const other of others) assert.equal(await store.verifySession(other), false);
-  database.$client.close();
-});
+  assert.notEqual(await store.verifySession(current), null);
+  for (const other of others) assert.equal(await store.verifySession(other), null);
+  assert.notEqual(await store.verifySession(colleague), null);
+}));
 
-test("creating a session removes expired ones", async () => {
-  const {database, clock, store} = await clockedStore();
-  await store.createSession();
+test("deleteSessionsOf ends every session of one account", () => withStore(async ({database, store}) => {
+  await addMember(database, "kollegin");
+  const ended = [await store.createSession("kollegin"), await store.createSession("kollegin")];
+  const kept = await store.createSession(owner);
+
+  await store.deleteSessionsOf("kollegin");
+
+  for (const token of ended) assert.equal(await store.verifySession(token), null);
+  assert.notEqual(await store.verifySession(kept), null);
+}));
+
+test("creating a session removes expired ones", () => withStore(async ({database, clock, store}) => {
+  await store.createSession(owner);
   clock.now += 8 * day;
 
-  await store.createSession();
+  await store.createSession(owner);
 
   const rows = await database.all<{token_hash: string}>(sql`SELECT token_hash FROM runtime_sessions`);
   assert.equal(rows.length, 1);
-  database.$client.close();
-});
-
-async function storeWithSchema(): Promise<LocalRuntimeSessionStore> {
-  const database = connectRuntimeDatabase(":memory:");
-  await createSchema(database);
-  return new LocalRuntimeSessionStore(database);
-}
-
-async function createSchema(database: RuntimeDatabase): Promise<void> {
-  await database.run(sql`
-    CREATE TABLE runtime_sessions (
-      token_hash TEXT PRIMARY KEY,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      expires_at TEXT NOT NULL
-    )
-  `);
-}
+}));

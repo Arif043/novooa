@@ -1,3 +1,4 @@
+import 'package:syscat2/features/runtime_users/presentation/cubits/current_runtime_user_cubit.dart';
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
@@ -77,7 +78,7 @@ class _ActivityViewState extends State<_ActivityView> {
           children: [
             _FilterTabs(
               filter: filter,
-              isStandalone: widget.isStandalone,
+              showProtocol: widget.isStandalone,
               onChanged: (value) => setState(() => filter = value),
             ),
             Expanded(
@@ -128,15 +129,25 @@ class _FilterTabs extends StatelessWidget {
   const _FilterTabs({
     required this.filter,
     required this.onChanged,
-    required this.isStandalone,
+    required this.showProtocol,
   });
 
   final TaskActivityFilter filter;
   final ValueChanged<TaskActivityFilter> onChanged;
-  final bool isStandalone;
+
+  /// Nur Standalone hat ein Protokoll, und lesen dürfen es nur Admins.
+  final bool showProtocol;
 
   @override
   Widget build(BuildContext context) {
+    if (!showProtocol) return _segments(includeProtocol: false);
+    return BlocSelector<CurrentRuntimeUserCubit, CurrentRuntimeUserState, bool>(
+      selector: (state) => state.isAdmin,
+      builder: (context, isAdmin) => _segments(includeProtocol: isAdmin),
+    );
+  }
+
+  Widget _segments({required bool includeProtocol}) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -150,7 +161,7 @@ class _FilterTabs extends StatelessWidget {
           TaskActivityFilter.denied: Text('Abgelehnt'),
           TaskActivityFilter.running: Text('Laufend'),
           TaskActivityFilter.history: Text('Verlauf'),
-          if (isStandalone)
+          if (includeProtocol)
             TaskActivityFilter.protocol: const Text('Protokoll'),
         },
       ),

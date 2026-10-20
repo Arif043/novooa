@@ -3,7 +3,7 @@ import test from "node:test";
 import {RuntimeAlreadyActivatedError} from "../entities/runtime-license-errors.js";
 import {ActivateRuntime} from "./activate-runtime.js";
 
-const context = {licenseId: "license", licenseName: "Standalone", workspaceId: "workspace", expiresAt: "2030-01-01"};
+const context = {licenseId: "license", licenseName: "Standalone", workspaceId: "workspace", expiresAt: "2030-01-01", maxUsers: 5};
 
 test("activation starts the licensed workspace only after license validation", async () => {
   const calls: string[] = [];

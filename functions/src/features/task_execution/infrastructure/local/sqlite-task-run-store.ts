@@ -116,8 +116,8 @@ export class SQLiteTaskRunStore implements TaskRunStore {
     return {run: runFromRow(row), resumeState: resumeStateFromRow(row)};
   }
 
-  async rejectTaskRun(teamId: string, runId: string) {
-    await this.database.update(taskRuns).set({status: "rejected", reviewed_at: sql`CURRENT_TIMESTAMP`, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRuns.team_id, teamId), eq(taskRuns.id, runId)));
+  async rejectTaskRun(teamId: string, runId: string, reviewedByUid: string) {
+    await this.database.update(taskRuns).set({status: "rejected", reviewed_by_uid: reviewedByUid, reviewed_at: sql`CURRENT_TIMESTAMP`, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRuns.team_id, teamId), eq(taskRuns.id, runId)));
     await this.approvalNotifications.markApprovalNotifications({teamId, runId, status: "rejected"});
   }
 
@@ -125,13 +125,14 @@ export class SQLiteTaskRunStore implements TaskRunStore {
     teamId: string,
     runId: string,
     outputs: Record<string, NodeOutputValue>,
+    reviewedByUid: string,
   ) {
-    await this.database.update(taskRuns).set({status: "queued", response_outputs_json: json(outputs), reviewed_at: sql`CURRENT_TIMESTAMP`, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRuns.team_id, teamId), eq(taskRuns.id, runId)));
+    await this.database.update(taskRuns).set({status: "queued", response_outputs_json: json(outputs), reviewed_by_uid: reviewedByUid, reviewed_at: sql`CURRENT_TIMESTAMP`, updated_at: sql`CURRENT_TIMESTAMP`}).where(and(eq(taskRuns.team_id, teamId), eq(taskRuns.id, runId)));
     await this.approvalNotifications.markApprovalNotifications({teamId, runId, status: "accepted"});
   }
 
   private async insertRun(teamId: string, run: TaskRunDocument) {
-    await this.database.insert(taskRuns).values({id: run.runId, team_id: teamId, task_id: run.taskId, task_title: run.taskTitle, status: "queued", context: run.context, input_json: json(run.input ?? {}), source: run.source ?? null, trigger_id: run.triggerId ?? null, trigger_type: run.triggerType ?? null});
+    await this.database.insert(taskRuns).values({id: run.runId, team_id: teamId, task_id: run.taskId, task_title: run.taskTitle, status: "queued", context: run.context, input_json: json(run.input ?? {}), source: run.source ?? null, trigger_id: run.triggerId ?? null, trigger_type: run.triggerType ?? null, started_by_uid: run.startedByUid ?? null});
   }
 
   private async updateStatus(teamId: string, runId: string, status: string) {

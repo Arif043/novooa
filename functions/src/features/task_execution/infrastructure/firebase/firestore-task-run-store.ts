@@ -156,8 +156,8 @@ export class FirestoreTaskRunStore implements TaskRunStore {
     };
   }
 
-  async rejectTaskRun(teamId: string, runId: string) {
-    await runReference(teamId, runId).set(rejectedDocument(), {merge: true});
+  async rejectTaskRun(teamId: string, runId: string, reviewedByUid: string) {
+    await runReference(teamId, runId).set({...rejectedDocument(), reviewedByUid}, {merge: true});
     await this.approvalNotifications.markApprovalNotifications({
       teamId,
       runId,
@@ -169,8 +169,9 @@ export class FirestoreTaskRunStore implements TaskRunStore {
     teamId: string,
     runId: string,
     outputs: Record<string, NodeOutputValue>,
+    reviewedByUid: string,
   ) {
-    await runReference(teamId, runId).set(approvedDocument(outputs), {merge: true});
+    await runReference(teamId, runId).set({...approvedDocument(outputs), reviewedByUid}, {merge: true});
     await this.approvalNotifications.markApprovalNotifications({
       teamId,
       runId,

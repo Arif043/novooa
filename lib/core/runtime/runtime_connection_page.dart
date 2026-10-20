@@ -7,10 +7,12 @@ import 'runtime_address_form.dart';
 import 'runtime_connection_cubit.dart';
 import 'runtime_connection_state.dart';
 import 'runtime_license_form.dart';
+import 'runtime_admin_setup_form.dart';
+import 'runtime_invitation_form.dart';
 import 'runtime_login_form.dart';
-import 'runtime_password_setup_form.dart';
+import 'runtime_recovery_form.dart';
 
-/// Verbindung, Lizenz, Passwort-Einrichtung und Anmeldung einer Runtime — im
+/// Verbindung, Lizenz, erstes Konto und Anmeldung einer Runtime — im
 /// selben Rahmen wie die Cloud-Anmeldung ([SyscatAuthLayout]).
 class RuntimeConnectionPage extends StatelessWidget {
   const RuntimeConnectionPage({super.key});
@@ -29,14 +31,10 @@ class RuntimeConnectionPage extends StatelessWidget {
           ),
           RuntimeConnectionNeedsAddress(:final address, :final errorMessage) =>
             RuntimeAddressForm(address: address, errorMessage: errorMessage),
-          RuntimeConnectionNeedsPassword(
-            :final endpoint,
-            :final errorMessage,
-          ) =>
-            RuntimeLoginForm(endpoint: endpoint, errorMessage: errorMessage),
+          RuntimeConnectionNeedsPassword() => _SignInForm(state: state),
           RuntimeConnectionNeedsLicense(:final endpoint, :final errorMessage) =>
             RuntimeLicenseForm(endpoint: endpoint, errorMessage: errorMessage),
-          RuntimeConnectionNeedsPasswordSetup() => RuntimePasswordSetupForm(
+          RuntimeConnectionNeedsPasswordSetup() => RuntimeAdminSetupForm(
             setup: state,
           ),
           RuntimeConnectionUnreachable(:final endpoint, :final errorMessage) =>
@@ -47,6 +45,32 @@ class RuntimeConnectionPage extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+/// Anmeldung mit Konto, Einladungscode oder Notzugang.
+class _SignInForm extends StatelessWidget {
+  const _SignInForm({required this.state});
+
+  final RuntimeConnectionNeedsPassword state;
+
+  @override
+  Widget build(BuildContext context) {
+    final RuntimeConnectionNeedsPassword(:endpoint, :errorMessage) = state;
+    return switch (state.mode) {
+      RuntimeSignInMode.password => RuntimeLoginForm(
+        endpoint: endpoint,
+        errorMessage: errorMessage,
+      ),
+      RuntimeSignInMode.invitation => RuntimeInvitationForm(
+        endpoint: endpoint,
+        errorMessage: errorMessage,
+      ),
+      RuntimeSignInMode.recovery => RuntimeRecoveryForm(
+        endpoint: endpoint,
+        errorMessage: errorMessage,
+      ),
+    };
   }
 }
 

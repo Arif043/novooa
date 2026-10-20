@@ -39,7 +39,7 @@ const license: SignedRuntimeLicense = {
     activationId: "activation-1",
     workspaceId: "workspace-1",
     issuedAt: "2026-09-13T10:00:00.000Z",
-    expiresAt: "2026-12-31T23:59:59.000Z",
+    expiresAt: "2026-12-31T23:59:59.000Z", maxUsers: 5,
   },
   signature: "signature",
 };

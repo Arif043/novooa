@@ -1,6 +1,6 @@
 import {onRequest} from "firebase-functions/v2/https";
 import {runtimeActivationTokenFrom} from "../../domain/entities/activation-token.js";
-import {type SignedRuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
+import {type SignedRuntimeLicense, maxUsersFrom} from "../../domain/entities/runtime-license-lease.js";
 import {signRuntimeLicense} from "../license-lease-crypto.js";
 import {FirestoreRuntimeLicenseRegistry} from "./firestore-runtime-license-registry.js";
 import {localRuntimeLicenseSigningKey} from "./local-runtime-license-signing-key.js";
@@ -65,6 +65,7 @@ function signedLicenseFrom(value: unknown): SignedRuntimeLicense {
       workspaceId: requiredString(payload.workspaceId),
       issuedAt: requiredString(payload.issuedAt),
       expiresAt: requiredString(payload.expiresAt),
+      maxUsers: maxUsersFrom(payload.maxUsers),
     },
   };
 }

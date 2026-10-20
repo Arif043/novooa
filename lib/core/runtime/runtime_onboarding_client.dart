@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
+
+import '../localization/locale_keys.g.dart';
 import '../network/workspace_api_client.dart';
 import 'runtime_endpoint.dart';
 
@@ -16,13 +19,28 @@ class RuntimeSetupStatus {
   final bool requiresLicenseToken;
 }
 
+/// Das erste Konto einer Runtime; es wird Admin.
+class RuntimeAdminAccount {
+  const RuntimeAdminAccount({
+    required this.displayName,
+    required this.loginName,
+    required this.password,
+  });
+
+  final String displayName;
+  final String loginName;
+  final String password;
+}
+
 abstract interface class RuntimeOnboardingClient {
   Future<bool> hasActiveLicense(RuntimeEndpoint endpoint);
   Future<void> activateLicense(RuntimeEndpoint endpoint, String token);
   Future<RuntimeSetupStatus> setupStatus(RuntimeEndpoint endpoint);
-  Future<void> setPassword(
+
+  /// Ersteinrichtung: legt das erste Admin-Konto an.
+  Future<void> setUpAdmin(
     RuntimeEndpoint endpoint,
-    String password, {
+    RuntimeAdminAccount account, {
     String? activationToken,
   });
 }
@@ -31,7 +49,7 @@ const _activationTimeout = Duration(seconds: 30);
 
 /// Spricht die Einrichtung über den regulären Runtime-Endpunkt an. Dadurch
 /// lässt sich auch eine headless installierte Runtime (VPS, NAS, Raspberry
-/// Pi) von jedem Client aus einrichten; das Betreiber-Passwort ist dabei
+/// Pi) von jedem Client aus einrichten; das erste Admin-Konto ist dabei
 /// über den Lizenz-Token abgesichert, mit dem die Runtime aktiviert wurde
 /// (siehe `docs/notes/runtime-ersteinrichtung.md`).
 class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
@@ -83,29 +101,34 @@ class HttpRuntimeOnboardingClient implements RuntimeOnboardingClient {
   }
 
   @override
-  Future<void> setPassword(
+  Future<void> setUpAdmin(
     RuntimeEndpoint endpoint,
-    String password, {
+    RuntimeAdminAccount account, {
     String? activationToken,
   }) async {
     try {
       await _clientFor(endpoint.apiUri).post('/v1/setup', {
-        'password': password,
+        'displayName': account.displayName.trim(),
+        'loginName': account.loginName.trim(),
+        'password': account.password,
         'activationToken': ?activationToken?.trim().toUpperCase(),
       });
     } on WorkspaceHttpException catch (error) {
-      throw RuntimeOnboardingFailure(_setupFailureFor(error.statusCode));
+      throw RuntimeOnboardingFailure(_setupFailureFor(error));
     } on WorkspaceConnectionException {
       throw const RuntimeOnboardingFailure('Die Runtime ist nicht erreichbar.');
     }
   }
 
-  String _setupFailureFor(int statusCode) {
-    return switch (statusCode) {
-      403 => 'Der Lizenz-Token passt nicht zu dieser Runtime.',
-      409 => 'Für diese Runtime ist bereits ein Passwort gesetzt.',
-      _ => 'Das Passwort konnte nicht gesetzt werden.',
+  /// Eingabefehler (Anmeldename, Passwortlänge) erklärt die Runtime selbst.
+  String _setupFailureFor(WorkspaceHttpException error) {
+    final key = switch (error.statusCode) {
+      400 => null,
+      403 => LocaleKeys.runtime_access_license_token_mismatch,
+      409 => LocaleKeys.runtime_setup_already_done,
+      _ => LocaleKeys.runtime_setup_failed,
     };
+    return key == null ? error.message : key.tr();
   }
 
   HttpWorkspaceApiClient _clientFor(

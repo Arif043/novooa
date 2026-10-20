@@ -44,7 +44,11 @@ void main() {
           kindStore: _NoKindStore(),
         );
 
-        await cubit.login(RuntimeEndpoint.fromAddress('192.168.0.134'), 'pw');
+        await cubit.login(
+          RuntimeEndpoint.fromAddress('192.168.0.134'),
+          loginName: 'anna',
+          password: 'pw',
+        );
 
         final state = cubit.state as RuntimeConnectionNeedsPassword;
         expect(
@@ -90,9 +94,26 @@ class _FailingCredentialStore implements RuntimeCredentialStore {
 
 class _AcceptingLoginClient implements RuntimeLoginClient {
   @override
-  Future<String> login(RuntimeEndpoint endpoint, String password) async {
-    return 'token';
-  }
+  Future<String> login(
+    RuntimeEndpoint endpoint, {
+    required String loginName,
+    required String password,
+  }) async => 'token';
+
+  @override
+  Future<String> redeemInvitation(
+    RuntimeEndpoint endpoint, {
+    required String code,
+    required String password,
+  }) async => 'token';
+
+  @override
+  Future<String> recoverAccess(
+    RuntimeEndpoint endpoint, {
+    required String activationToken,
+    required String loginName,
+    required String password,
+  }) async => 'token';
 
   @override
   Future<void> logout(RuntimeEndpoint endpoint, String sessionToken) async {}
@@ -138,9 +159,9 @@ class _UnusedOnboarding implements RuntimeOnboardingClient {
   }
 
   @override
-  Future<void> setPassword(
+  Future<void> setUpAdmin(
     RuntimeEndpoint endpoint,
-    String password, {
+    RuntimeAdminAccount account, {
     String? activationToken,
   }) async {}
 }

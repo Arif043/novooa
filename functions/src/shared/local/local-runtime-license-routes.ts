@@ -1,6 +1,6 @@
 import {type FastifyInstance, type FastifyReply, type FastifyRequest} from "fastify";
-import {type LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
-import {hasValidSession, sendSessionRequired} from "./local-runtime-access-hooks.js";
+import {type PasswordCredentialRepository} from "../../features/runtime_users/domain/repositories/password-credential-repository.js";
+import {sendAdminRequired, sendSessionRequired, sessionActor} from "./local-runtime-access-hooks.js";
 import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 import {
   InvalidActivationTokenError,
@@ -13,9 +13,9 @@ import {type RuntimeLicenseService} from "../../features/licensing/infrastructur
 
 type ActivationFailure = {status: number; code: string; error: string};
 
-/** Wer die Lizenz freigeben darf: angemeldete Betreiber, vor der Ersteinrichtung jeder. */
+/** Wer die Lizenz freigeben darf: angemeldete Admins, vor der Ersteinrichtung jeder. */
 export type ReleaseAuthorization = {
-  credentials: Pick<LocalRuntimeAccessCredentialStore, "hasCredential">;
+  passwords: Pick<PasswordCredentialRepository, "hasAny">;
   sessions: Pick<LocalRuntimeSessionStore, "verifySession">;
 };
 
@@ -27,8 +27,9 @@ export function registerRuntimeLicenseRoutes(
   registerActivationRoute(http, activateRuntime);
   http.post("/v1/license/release", {
     preHandler: async (request, reply) => {
-      if (await mayRelease(request, releaseAuthorization)) return;
-      return sendSessionRequired(reply);
+      const permission = await releasePermission(request, releaseAuthorization);
+      if (permission === "allowed") return;
+      return permission === "adminRequired" ? sendAdminRequired(reply) : sendSessionRequired(reply);
     },
   }, async (_request, reply) => {
     try { await licenses.release(); return {status: "notActivated"}; }
@@ -41,14 +42,18 @@ export function registerRuntimeLicenseRoutes(
 
 /**
  * Das Freigeben sperrt die Runtime und gibt die Lizenz beim Gateway frei — das
- * darf nur ein angemeldeter Betreiber. Solange noch kein Passwort gesetzt ist,
+ * darf nur ein angemeldeter Admin. Solange noch kein Konto eingerichtet ist,
  * kann sich niemand anmelden; dann bleibt die Freigabe offen, weil Lizenzen
  * ohne gespeicherten Token-Nachweis nur über Freigeben und erneutes Aktivieren
  * eingerichtet werden können (siehe docs/notes/runtime-ersteinrichtung.md).
  */
-async function mayRelease(request: FastifyRequest, {credentials, sessions}: ReleaseAuthorization): Promise<boolean> {
-  if (!await credentials.hasCredential()) return true;
-  return hasValidSession(request, sessions);
+async function releasePermission(
+  request: FastifyRequest, {passwords, sessions}: ReleaseAuthorization,
+): Promise<"allowed" | "sessionRequired" | "adminRequired"> {
+  if (!await passwords.hasAny()) return "allowed";
+  const actor = await sessionActor(request, sessions);
+  if (actor === null) return "sessionRequired";
+  return actor.role === "admin" ? "allowed" : "adminRequired";
 }
 
 function registerActivationRoute(http: FastifyInstance, activateRuntime: ActivateRuntime): void {

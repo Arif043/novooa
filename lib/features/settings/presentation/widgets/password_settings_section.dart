@@ -1,5 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/localization/locale_keys.g.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../cubits/password_settings_cubit.dart';
@@ -16,7 +19,7 @@ class PasswordSettingsSection extends StatelessWidget {
     icon: Icons.lock_outline,
     title: 'Passwort neu setzen',
     description: isStandalone
-        ? 'Lege ein neues Zugriffs-Passwort für diese Installation fest. Alle Geräte verwenden es bei der nächsten Anmeldung.'
+        ? LocaleKeys.runtime_users_own_password_description.tr()
         : 'Lege ein neues Passwort für dein Konto fest.',
     child: BlocProvider(
       create: (_) => serviceLocator<PasswordSettingsCubit>(),

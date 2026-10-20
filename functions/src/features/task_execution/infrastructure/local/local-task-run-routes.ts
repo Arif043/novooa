@@ -1,7 +1,6 @@
 import {type FastifyPluginAsyncTypebox, Type} from "@fastify/type-provider-typebox";
-import {type FastifyReply, type FastifySchemaValidationError} from "fastify";
+import {type FastifyReply, type FastifyRequest, type FastifySchemaValidationError} from "fastify";
 import {ErrorResponse, JsonObject} from "../../../../shared/local/local-runtime-http-schemas.js";
-import {type LocalRuntimeWorkspaceContext} from "../../../../shared/local/local-runtime-workspace-context.js";
 import {TaskRunFailure} from "../../domain/entities/task-run-failure.js";
 
 export type TaskRunRoutesOptions = {notifier: {publish(topic: string): void}};
@@ -31,9 +30,10 @@ export const taskRunRoutes: FastifyPluginAsyncTypebox<TaskRunRoutesOptions> = as
       202: Type.Object({runId: Type.String(), taskId: Type.String(), status: Type.Literal("queued")})}},
   }, async (request, reply) => {
     if (request.validationError) return rejectStart(request.validationError.validation, reply);
-    const {taskWorkflow, userId} = request.workspace;
-    return runSafely(request.workspace, "start_failed", reply, async () => {
-      const output = await taskWorkflow.start({taskId: request.body.taskId, context: request.body.context ?? ""}, {uid: userId});
+    const {taskWorkflow} = request.workspace;
+    const {uid} = request.actor;
+    return runSafely(request, "start_failed", reply, async () => {
+      const output = await taskWorkflow.start({taskId: request.body.taskId, context: request.body.context ?? ""}, {uid});
       publishRunChanges();
       return reply.code(202).send(output);
     });
@@ -45,10 +45,11 @@ export const taskRunRoutes: FastifyPluginAsyncTypebox<TaskRunRoutesOptions> = as
       200: Type.Object({runId: Type.String(), status: Type.Union([Type.Literal("queued"), Type.Literal("rejected")])})}},
   }, async (request, reply) => {
     if (request.validationError) return rejectReview(request.validationError.validation, reply);
-    const {taskWorkflow, userId} = request.workspace;
+    const {taskWorkflow} = request.workspace;
+    const {uid} = request.actor;
     const {runId, decision, output, formValues} = request.body;
-    return runSafely(request.workspace, "review_failed", reply, async () => {
-      const result = await taskWorkflow.review({runId, decision, output: output ?? "", formValues: formValues ?? {}}, {uid: userId});
+    return runSafely(request, "review_failed", reply, async () => {
+      const result = await taskWorkflow.review({runId, decision, output: output ?? "", formValues: formValues ?? {}}, {uid});
       publishRunChanges();
       return reply.code(200).send(result);
     });
@@ -56,12 +57,12 @@ export const taskRunRoutes: FastifyPluginAsyncTypebox<TaskRunRoutesOptions> = as
 };
 
 async function runSafely(
-  workspace: LocalRuntimeWorkspaceContext, event: string, reply: FastifyReply, action: () => Promise<FastifyReply>,
+  request: FastifyRequest, event: string, reply: FastifyReply, action: () => Promise<FastifyReply>,
 ): Promise<FastifyReply> {
   try {
     return await action();
   } catch (error) {
-    workspace.logger.exception(`local_task_run_routes.${event}`, error, {userId: workspace.userId});
+    request.workspace.logger.exception(`local_task_run_routes.${event}`, error, {userId: request.actor.uid});
     return reply.code(500).send({error: "Die lokale Runtime konnte die Anfrage nicht verarbeiten."});
   }
 }

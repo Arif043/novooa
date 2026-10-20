@@ -1,8 +1,10 @@
 import '../../../../core/entities/unique_id.dart';
 import 'activity_failure_code.dart';
+import 'run_origin.dart';
 import 'teamwork_conversation_entry.dart';
 
 export 'activity_failure_code.dart';
+export 'run_origin.dart';
 export 'teamwork_conversation_entry.dart';
 
 enum TaskActivityTarget { task, node }
@@ -29,6 +31,7 @@ class TaskActivity {
     this.stdout = '',
     this.stderr = '',
     this.conversation = const [],
+    this.origin = RunOrigin.unknown,
   });
 
   final UniqueId id;
@@ -62,4 +65,7 @@ class TaskActivity {
   final List<TeamworkConversationEntry> conversation;
 
   bool get hasConversation => conversation.isNotEmpty;
+
+  /// Woher der Lauf kommt; nur die Standalone-Runtime liefert sie.
+  final RunOrigin origin;
 }

@@ -9,7 +9,7 @@ import {LocalRuntimeRealtimeNotifier} from "../../../../shared/local/local-runti
 
 test("starts a task run for the local workspace user", async () => {
   const calls: Array<{taskId: string; context: string; uid: string}> = [];
-  const handler = testingRoutes(taskRunRoutes, {notifier: new LocalRuntimeRealtimeNotifier()}, testWorkspace({taskWorkflow: taskWorkflow(calls), userId: "local-user", logger: new TestLogger()}));
+  const handler = testingRoutes(taskRunRoutes, {notifier: new LocalRuntimeRealtimeNotifier()}, testWorkspace({taskWorkflow: taskWorkflow(calls), logger: new TestLogger()}));
 
   const response = await handler.handle({
     body: {taskId: "task-1", context: "Morgen"},
@@ -21,11 +21,11 @@ test("starts a task run for the local workspace user", async () => {
     body: {runId: "run-1", taskId: "task-1", status: "queued"},
     statusCode: 202,
   });
-  assert.deepEqual(calls, [{taskId: "task-1", context: "Morgen", uid: "local-user"}]);
+  assert.deepEqual(calls, [{taskId: "task-1", context: "Morgen", uid: "user-1"}]);
 });
 
 test("rejects an invalid local task run request", async () => {
-  const handler = testingRoutes(taskRunRoutes, {notifier: new LocalRuntimeRealtimeNotifier()}, testWorkspace({taskWorkflow: taskWorkflow([]), userId: "local-user", logger: new TestLogger()}));
+  const handler = testingRoutes(taskRunRoutes, {notifier: new LocalRuntimeRealtimeNotifier()}, testWorkspace({taskWorkflow: taskWorkflow([]), logger: new TestLogger()}));
 
   const response = await handler.handle({
     body: {context: "Morgen"}, method: "POST", url: "/v1/task-runs",
@@ -43,7 +43,7 @@ test("rejects an invalid local task run request", async () => {
 });
 
 test("reviews a local task run", async () => {
-  const handler = testingRoutes(taskRunRoutes, {notifier: new LocalRuntimeRealtimeNotifier()}, testWorkspace({taskWorkflow: taskWorkflow([]), userId: "local-user", logger: new TestLogger()}));
+  const handler = testingRoutes(taskRunRoutes, {notifier: new LocalRuntimeRealtimeNotifier()}, testWorkspace({taskWorkflow: taskWorkflow([]), logger: new TestLogger()}));
 
   const response = await handler.handle({
     body: {decision: "approve", formValues: {}, runId: "run-1"},
@@ -62,7 +62,7 @@ test("logs unexpected task run errors and hides their details", async () => {
   workflow.start = async () => {
     throw new Error("database unavailable");
   };
-  const handler = testingRoutes(taskRunRoutes, {notifier: new LocalRuntimeRealtimeNotifier()}, testWorkspace({taskWorkflow: workflow, userId: "local-user", logger: logger}));
+  const handler = testingRoutes(taskRunRoutes, {notifier: new LocalRuntimeRealtimeNotifier()}, testWorkspace({taskWorkflow: workflow, logger: logger}));
 
   const response = await handler.handle({
     body: {taskId: "task-1"}, method: "POST", url: "/v1/task-runs",
@@ -73,7 +73,7 @@ test("logs unexpected task run errors and hides their details", async () => {
     statusCode: 500,
   });
   assert.deepEqual(logger.exceptions, [{
-    data: {userId: "local-user"},
+    data: {userId: "user-1"},
     error: new Error("database unavailable"),
     event: "local_task_run_routes.start_failed",
   }]);

@@ -1,6 +1,6 @@
 import {randomBytes, randomUUID} from "node:crypto";
 import {Timestamp} from "firebase-admin/firestore";
-import {type RuntimeLicense, type SignedRuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
+import {type RuntimeLicense, type SignedRuntimeLicense, maxUsersFrom} from "../../domain/entities/runtime-license-lease.js";
 import {type RuntimeLicenseActivationGrant, type RuntimeLicenseRegistry} from "../../domain/repositories/runtime-license-registry.js";
 import {localRuntimeActivationTokenHash, runtimeActivationSecretHash} from "../license-activation-token-hash.js";
 import {getDatabase} from "../../../../shared/firebase/firestore-db.js";
@@ -83,6 +83,7 @@ function activeLicenseFromSnapshot(
   return {
     licenseId: requiredString(data?.licenseId), licenseName: requiredString(data?.name), activationId,
     workspaceId: requiredString(data?.workspaceId), issuedAt: now.toISOString(), expiresAt,
+    maxUsers: maxUsersFrom(data?.maxUsers),
   };
 }
 

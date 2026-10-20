@@ -12,8 +12,10 @@ import 'runtime_endpoint_store.dart';
 import 'runtime_kind_store.dart';
 import 'runtime_login_client.dart';
 import 'runtime_onboarding_client.dart';
+import 'runtime_sign_in_flows.dart';
 
-class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
+class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState>
+    with RuntimeSignInFlows {
   RuntimeConnectionCubit(
     this._endpoints,
     this._credentials,
@@ -30,6 +32,15 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
   final RuntimeEndpointStore _endpoints;
   final RuntimeCredentialStore _credentials;
   final RuntimeLoginClient _loginClient;
+
+  @override
+  RuntimeEndpointStore get signInEndpoints => _endpoints;
+
+  @override
+  RuntimeCredentialStore get signInCredentials => _credentials;
+
+  @override
+  RuntimeLoginClient get signInClient => _loginClient;
   final RuntimeAvailability _availability;
   final RuntimeOnboardingClient onboarding;
 
@@ -158,32 +169,6 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     );
   }
 
-  Future<void> login(RuntimeEndpoint endpoint, String password) async {
-    emit(RuntimeConnectionConnecting(endpoint.displayAddress));
-    try {
-      final token = await _loginClient.login(endpoint, password);
-      await _credentials.saveSessionToken(endpoint.address, token);
-      await _endpoints.save(endpoint);
-      emit(RuntimeConnectionReady(endpoint));
-    } on RuntimeLoginFailure catch (error) {
-      emit(
-        RuntimeConnectionNeedsPassword(endpoint, errorMessage: error.message),
-      );
-    } on Object catch (error, stackTrace) {
-      _reportFailure('login', error, stackTrace);
-      emit(
-        RuntimeConnectionNeedsPassword(
-          endpoint,
-          // Mit Grund: Sonst sieht ein Fehler nach der Passwortprüfung (etwa
-          // beim Speichern des Tokens) wie ein falsches Passwort aus.
-          errorMessage: LocaleKeys.ui_anmeldung_fehlgeschlagen_mit_grund.tr(
-            args: ['$error'],
-          ),
-        ),
-      );
-    }
-  }
-
   Future<void> activateLicense(RuntimeEndpoint endpoint, String token) async {
     emit(RuntimeConnectionConnecting(endpoint.displayAddress));
     try {
@@ -204,28 +189,32 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     }
   }
 
-  /// Zweiter Einrichtungsschritt: setzt das Betreiber-Passwort. Als Nachweis
-  /// dient der Lizenz-Token aus Schritt 1 — oder, falls die App ihn nicht
-  /// mehr kennt, der im Formular eingegebene.
-  Future<void> setPassword(
+  /// Zweiter Einrichtungsschritt: legt das erste Admin-Konto an und meldet
+  /// es gleich an. Als Nachweis dient der Lizenz-Token aus Schritt 1 — oder,
+  /// falls die App ihn nicht mehr kennt, der im Formular eingegebene.
+  Future<void> setUpAdmin(
     RuntimeEndpoint endpoint,
-    String password, {
+    RuntimeAdminAccount account, {
     String? activationToken,
   }) async {
     final setup = _passwordSetupState(endpoint);
     emit(RuntimeConnectionConnecting(endpoint.displayAddress));
     try {
-      await onboarding.setPassword(
+      await onboarding.setUpAdmin(
         endpoint,
-        password,
+        account,
         activationToken: activationToken ?? setup.activationToken,
       );
-      await login(endpoint, password);
+      await login(
+        endpoint,
+        loginName: account.loginName,
+        password: account.password,
+      );
     } on RuntimeOnboardingFailure catch (error) {
       emit(setup.withError(error.message));
     } on Object catch (error, stackTrace) {
-      _reportFailure('setup-password', error, stackTrace);
-      emit(setup.withError('Das Passwort konnte nicht gesetzt werden.'));
+      _reportFailure('setup-admin', error, stackTrace);
+      emit(setup.withError(LocaleKeys.runtime_setup_failed.tr()));
     }
   }
 
@@ -265,8 +254,8 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
   }
 
   /// Die Runtime erkennt die Sitzung nicht mehr an (abgelaufen, von einem
-  /// anderen Gerät abgemeldet). Adresse und Varianten-Wahl bleiben — nur das
-  /// Passwort ist neu einzugeben.
+  /// anderen Gerät abgemeldet, Konto gelöscht). Adresse und Varianten-Wahl
+  /// bleiben — nur die Anmeldung ist zu wiederholen.
   Future<void> handleSessionEnded() async {
     final current = state;
     if (current is! RuntimeConnectionReady) return;
@@ -274,9 +263,7 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
     emit(
       RuntimeConnectionNeedsPassword(
         current.endpoint,
-        errorMessage:
-            'Deine Sitzung ist abgelaufen oder wurde auf einem anderen Gerät '
-            'beendet. Bitte melde dich erneut an.',
+        errorMessage: LocaleKeys.runtime_access_session_ended.tr(),
       ),
     );
   }
@@ -326,6 +313,10 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState> {
   /// technische Ursache (Netzwerk, Keychain, HTTP-Status) gehört aber ins
   /// Log, sonst ist ein fehlgeschlagener Verbindungsaufbau nicht
   /// diagnostizierbar.
+  @override
+  void reportSignInFailure(String step, Object error, StackTrace stackTrace) =>
+      _reportFailure(step, error, stackTrace);
+
   void _reportFailure(String step, Object error, StackTrace stackTrace) {
     debugPrint('[runtime-connection] $step fehlgeschlagen: $error');
     debugPrintStack(stackTrace: stackTrace, maxFrames: 8);

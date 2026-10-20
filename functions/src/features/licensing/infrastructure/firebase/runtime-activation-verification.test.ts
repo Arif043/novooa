@@ -4,7 +4,7 @@ import {RuntimeLicenseError} from "./firestore-runtime-license-registry.js";
 import {runtimeActivationVerdict} from "./runtime-activation-verification.js";
 
 const license = {signature: "sig", payload: {licenseId: "l", licenseName: "n", activationId: "a",
-  workspaceId: "w", issuedAt: "2026-01-01T00:00:00.000Z", expiresAt: "2027-01-01T00:00:00.000Z"}};
+  workspaceId: "w", issuedAt: "2026-01-01T00:00:00.000Z", expiresAt: "2027-01-01T00:00:00.000Z", maxUsers: 5}};
 const registryThatThrows = (error?: Error) => ({
   async verifyActiveActivation() { if (error) throw error; return {}; },
 });

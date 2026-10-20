@@ -83,8 +83,8 @@ export class GatewayRuntimeLicenseService implements RuntimeLicenseService {
 
   activeContext(): RuntimeLicenseContext | null {
     if (this.state === undefined || !this.isValid(this.state)) return null;
-    const {licenseId, licenseName, workspaceId, expiresAt} = this.state.license.payload;
-    return {licenseId, licenseName, workspaceId, expiresAt};
+    const {licenseId, licenseName, workspaceId, expiresAt, maxUsers} = this.state.license.payload;
+    return {licenseId, licenseName, workspaceId, expiresAt, maxUsers};
   }
 
   signedActiveLicense(): SignedRuntimeLicense | null {

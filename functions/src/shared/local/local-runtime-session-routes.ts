@@ -5,8 +5,8 @@ import {type LocalRuntimeRealtimeConnections} from "./local-runtime-realtime-con
 import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 
 export type SessionRoutesOptions = {
-  sessions: Pick<LocalRuntimeSessionStore, "deleteSession" | "deleteOtherSessions">;
-  connections: Pick<LocalRuntimeRealtimeConnections, "closeSession" | "closeOtherSessions">;
+  sessions: Pick<LocalRuntimeSessionStore, "deleteSession" | "deleteOtherSessions" | "isActive">;
+  connections: Pick<LocalRuntimeRealtimeConnections, "closeSession" | "closeInactive">;
 };
 
 /**
@@ -30,8 +30,8 @@ export const sessionRoutes: FastifyPluginAsyncTypebox<SessionRoutesOptions> = as
   }, async (request, reply) => {
     const token = bearerTokenOf(request);
     if (token === null) return sendSessionRequired(reply);
-    const revoked = await sessions.deleteOtherSessions(token);
-    connections.closeOtherSessions(token);
+    const revoked = await sessions.deleteOtherSessions(token, request.actor.uid);
+    await connections.closeInactive((sessionToken) => sessions.isActive(sessionToken));
     return {revoked};
   });
 };

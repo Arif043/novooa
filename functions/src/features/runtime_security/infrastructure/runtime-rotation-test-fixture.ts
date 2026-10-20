@@ -31,6 +31,7 @@ function licenseActivation() {
     license: {signature: "signature", payload: {
       licenseId: "license-1", licenseName: "Example", activationId: "activation-1",
       workspaceId: "workspace-1", issuedAt: "2026-09-30T00:00:00Z", expiresAt: "2027-09-30T00:00:00Z",
+      maxUsers: 5,
     }},
   };
 }

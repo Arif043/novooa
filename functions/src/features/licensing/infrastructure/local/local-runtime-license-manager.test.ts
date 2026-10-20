@@ -122,6 +122,7 @@ function signedLicense(privateKey: string, expiresAt: string): SignedRuntimeLice
     workspaceId: "workspace-1",
     issuedAt: "2026-09-09T09:00:00.000Z",
     expiresAt,
+    maxUsers: 5,
   }, privateKey);
 }
 

@@ -5,7 +5,7 @@
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
 UI: Runtime-Einstellungen → Lizenz entfernen. Braucht nach der
-Ersteinrichtung eine Betreiber-Sitzung.
+Ersteinrichtung die Sitzung eines Admins.
 
 1. Die Runtime übergibt die signierte `activationId` und ihr
    Aktivierungsgeheimnis.
@@ -18,4 +18,4 @@ aktive `activationId` ab.
 ## Siehe auch
 
 - [Lizenz-Token und Aktivierung](./lizenz-aktivierung.md)
-- [Betreiber-Passwort-Pflicht](./betreiber-passwort-pflicht.md)
+- [Anmeldepflicht der Runtime](./runtime-anmeldepflicht.md)

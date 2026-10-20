@@ -36,11 +36,11 @@ const schema = {body: AssistantQuestion, response: {200: AssistantAnswer, 400: E
  */
 export const assistantRoutes: FastifyPluginAsyncTypebox<AssistantRoutesOptions> = async (app, options) => {
   app.post("/v1/assistant/task-builder", {schema}, async (request, reply) =>
-    answer(() => options.taskBuilderAssistant(request.workspace.teamId), request.body, request.workspace.userId)
+    answer(() => options.taskBuilderAssistant(request.workspace.teamId), request.body, request.actor.uid)
       .catch((error: unknown) => reply.code(400).send({error: messageFor(error)})));
 
   app.post("/v1/assistant/knowledge-base", {schema}, async (request, reply) =>
-    answer(() => options.knowledgeBaseAssistant(request.workspace.teamId), request.body, request.workspace.userId)
+    answer(() => options.knowledgeBaseAssistant(request.workspace.teamId), request.body, request.actor.uid)
       .catch((error: unknown) => reply.code(400).send({error: messageFor(error)})));
 };
 

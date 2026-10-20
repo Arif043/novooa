@@ -20,17 +20,16 @@ test("native routes support activation, setup, login and protected workspace acc
   assert.equal((await postJson(base, "/v1/license/activate", {activationToken: "test-license"})).status, 200);
   assert.equal((await fetch(`${base}/v1/tasks`)).status, 401);
   assert.equal((await fetch(`${base}/v1/setup`)).status, 200);
-  assert.equal((await postJson(base, "/v1/setup", {activationToken: "foreign", password: "x"})).status, 403);
-  const setup = await postJson(base, "/v1/setup", {activationToken: "test-license", password: "test-password"});
-  assert.equal(setup.status, 204);
-  assert.equal(await setup.text(), "");
-  const login = await postJson(base, "/v1/auth/login", {password: "test-password"});
+  assert.equal((await postJson(base, "/v1/setup", {...admin, activationToken: "foreign"})).status, 403);
+  const setup = await postJson(base, "/v1/setup", admin);
+  assert.equal(setup.status, 201);
+  const login = await postJson(base, "/v1/auth/login", adminLogin);
   assert.equal(login.status, 200);
   const {token} = await login.json() as {token: string};
   const response = await fetch(`${base}/v1/tasks`, {headers: {authorization: `Bearer ${token}`}});
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), {items: []});
-  const secondLogin = await postJson(base, "/v1/auth/login", {password: "test-password"});
+  const secondLogin = await postJson(base, "/v1/auth/login", adminLogin);
   const {token: otherToken} = await secondLogin.json() as {token: string};
   const revoke = await fetch(`${base}/v1/auth/sessions/revoke-others`, {
     method: "POST", headers: {"content-type": "application/json", authorization: `Bearer ${token}`}, body: "{}",
@@ -45,6 +44,28 @@ test("native routes support activation, setup, login and protected workspace acc
   assert.equal(release.status, 200);
   assert.equal((await fetch(`${base}/v1/tasks`, {headers: {authorization: `Bearer ${token}`}})).status, 423);
 });
+
+test("an invited member signs in and is kept out of admin routes", async (t) => {
+  const {base} = await activatedRuntimeFixture(t);
+  await postJson(base, "/v1/license/activate", {activationToken: "test-license"});
+  await postJson(base, "/v1/setup", admin);
+  const {token} = await (await postJson(base, "/v1/auth/login", adminLogin)).json() as {token: string};
+  const created = await postJson(base, "/v1/users", {loginName: "ben", displayName: "Ben", role: "member"}, token);
+  const {user, invitation} = await created.json() as {user: {uid: string}; invitation: {code: string}};
+  const redeemed = await postJson(base, "/v1/auth/invitations/redeem", {code: invitation.code, password: "ben-passwort"});
+  const {token: memberToken} = await redeemed.json() as {token: string};
+  const asMember = {headers: {authorization: `Bearer ${memberToken}`}};
+
+  assert.equal((await fetch(`${base}/v1/tasks`, asMember)).status, 200);
+  assert.equal(((await (await fetch(`${base}/v1/auth/me`, asMember)).json()) as {role: string}).role, "member");
+  assert.equal((await fetch(`${base}/v1/users`, asMember)).status, 403);
+  const removed = await fetch(`${base}/v1/users/${user.uid}`, {method: "DELETE", headers: {authorization: `Bearer ${token}`}});
+  assert.equal(removed.status, 204);
+  assert.equal((await fetch(`${base}/v1/tasks`, asMember)).status, 401);
+});
+
+const admin = {activationToken: "test-license", loginName: "anna", displayName: "Anna", password: "test-password"};
+const adminLogin = {loginName: "anna", password: "test-password"};
 
 async function activatedRuntimeFixture(t: TestContext) {
   const runtimeRoot = await mkdtemp(join(tmpdir(), "novooa-fastify-runtime-"));
@@ -67,13 +88,14 @@ function activatableLicenses(): RuntimeLicenseService {
   return {...inactiveLicenses(), activeContext: () => active,
     matchesActivationToken: (token) => active !== null && token === "test-license",
     activate: async () => {
-      active = {licenseId: "test-license", licenseName: "Standalone", workspaceId: "test-workspace", expiresAt: "2030-01-01"};
+      active = {licenseId: "test-license", licenseName: "Standalone", workspaceId: "test-workspace", expiresAt: "2030-01-01", maxUsers: 5};
       return active;
     }, release: async () => {active = null;}};
 }
 
-function postJson(base: string, path: string, body: unknown): Promise<Response> {
-  return fetch(`${base}${path}`, {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(body)});
+function postJson(base: string, path: string, body: unknown, token?: string): Promise<Response> {
+  const authorization: Record<string, string> = token === undefined ? {} : {authorization: `Bearer ${token}`};
+  return fetch(`${base}${path}`, {method: "POST", headers: {"content-type": "application/json", ...authorization}, body: JSON.stringify(body)});
 }
 
 test("starts the runtime HTTP server with the new keyring configuration", async () => {
@@ -97,8 +119,8 @@ test("starts the runtime HTTP server with the new keyring configuration", async 
 test("Fastify shutdown terminates active realtime connections", async (t) => {
   const {base, port, closeHttp} = await activatedRuntimeFixture(t);
   await postJson(base, "/v1/license/activate", {activationToken: "test-license"});
-  await postJson(base, "/v1/setup", {activationToken: "test-license", password: "test-password"});
-  const {token} = await (await postJson(base, "/v1/auth/login", {password: "test-password"})).json() as {token: string};
+  await postJson(base, "/v1/setup", admin);
+  const {token} = await (await postJson(base, "/v1/auth/login", adminLogin)).json() as {token: string};
   const ticketResponse = await fetch(`${base}/v1/realtime/ticket`, {method: "POST", headers: {authorization: `Bearer ${token}`}});
   const {ticket} = await ticketResponse.json() as {ticket: string};
   const socket = new WebSocket(`ws://127.0.0.1:${port}/v1/realtime?ticket=${ticket}`);

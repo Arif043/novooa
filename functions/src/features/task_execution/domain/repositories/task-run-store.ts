@@ -17,6 +17,8 @@ export type TaskRunDocument = {
   source?: string;
   triggerId?: string;
   triggerType?: string;
+  /** Wer den Lauf von Hand gestartet hat; automatische Läufe tragen nur ihren Auslöser. */
+  startedByUid?: string;
 };
 
 export type ReviewableTaskRun = {
@@ -37,6 +39,8 @@ export type EnqueueTaskRunInput = {
     id: string;
     type: string;
   };
+  /** Nur bei manuellem Start: die angemeldete Person. */
+  startedByUid?: string;
 };
 
 export interface TaskRunStore {
@@ -65,11 +69,13 @@ export interface TaskRunStore {
     failure?: NodeExecutionFailure,
   ): Promise<void>;
   loadReviewableRun(teamId: string, runId: string): Promise<ReviewableTaskRun>;
-  rejectTaskRun(teamId: string, runId: string): Promise<void>;
+  /** [reviewedByUid]: wer die Freigabe oder das Formular beantwortet hat. */
+  rejectTaskRun(teamId: string, runId: string, reviewedByUid: string): Promise<void>;
   approveTaskRun(
     teamId: string,
     runId: string,
     outputs: Record<string, NodeOutputValue>,
+    reviewedByUid: string,
   ): Promise<void>;
 }
 
@@ -87,6 +93,7 @@ export function newTaskRunDocument(
       triggerId: input.trigger.id,
       triggerType: input.trigger.type,
     } : {}),
+    ...(input.startedByUid === undefined ? {} : {startedByUid: input.startedByUid}),
   };
 }
 

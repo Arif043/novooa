@@ -1,5 +1,5 @@
 import {onRequest} from "firebase-functions/v2/https";
-import {type SignedRuntimeLicense} from
+import {type SignedRuntimeLicense, maxUsersFrom} from
   "../../../licensing/domain/entities/runtime-license-lease.js";
 import {FirebaseRuntimeRelayLicenseVerifier} from
   "../../../licensing/infrastructure/firebase/firebase-runtime-relay-license-verifier.js";
@@ -142,6 +142,7 @@ function licenseFrom(value: unknown): SignedRuntimeLicense {
     licenseId: text(payload.licenseId, "licenseId", 200), licenseName: text(payload.licenseName, "licenseName", 200),
     activationId: text(payload.activationId, "activationId", 200), workspaceId: text(payload.workspaceId, "workspaceId", 200),
     issuedAt: text(payload.issuedAt, "issuedAt", 80), expiresAt: text(payload.expiresAt, "expiresAt", 80),
+    maxUsers: maxUsersFrom(payload.maxUsers),
   }};
 }
 

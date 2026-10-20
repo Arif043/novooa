@@ -27,6 +27,7 @@ class RuntimeConnectionGate extends StatefulWidget {
     required this.configureApplication,
     required this.createApplication,
     required this.onFullReset,
+    this.onSignedInAgain,
   });
 
   final RuntimeProfile runtimeProfile;
@@ -37,6 +38,10 @@ class RuntimeConnectionGate extends StatefulWidget {
   /// (siehe `RuntimeConnectionCubit.signOut`) — dieser Callback baut die
   /// Anwendung danach neu auf (DI-Reset + erneuter Boot-Versuch).
   final Future<void> Function() onFullReset;
+
+  /// Nach einem Sitzungsende meldet sich womöglich eine andere Person an;
+  /// die App bleibt bestehen, lädt aber ihr Konto neu.
+  final Future<void> Function()? onSignedInAgain;
 
   @override
   State<RuntimeConnectionGate> createState() => _RuntimeConnectionGateState();
@@ -138,7 +143,8 @@ class _RuntimeConnectionGateState extends State<RuntimeConnectionGate> {
   Future<void> _startApplication(RuntimeEndpoint endpoint) async {
     _isStartingApplication = true;
     if (_application != null) {
-      setState(() {});
+      await widget.onSignedInAgain?.call();
+      if (mounted) setState(() {});
       return;
     }
     final profile = widget.runtimeProfile.withWorkspaceApiUri(endpoint.apiUri);

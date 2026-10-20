@@ -44,7 +44,8 @@ export const taskTriggerRoutes: FastifyPluginAsyncTypebox<TaskTriggerRoutesOptio
 
   app.post("/v1/task-triggers", {schema: {body: CreateTrigger, response: {...TriggerResponses, 201: TaskTrigger}}},
     async (request, reply) => {
-      const {teamId, userId} = request.workspace;
+      const {teamId} = request.workspace;
+      const userId = request.actor.uid;
       try {
         const input = triggerFromRequest(request.body);
         await ensureTask(database, teamId, input.taskId);

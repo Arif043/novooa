@@ -33,7 +33,7 @@ test("a network failure means the gateway is unavailable", async (t) => {
 const activation = {
   activationSecret: "secret",
   license: {signature: "sig", payload: {licenseId: "l", licenseName: "n", activationId: "a",
-    workspaceId: "w", issuedAt: "2026-01-01T00:00:00.000Z", expiresAt: "2027-01-01T00:00:00.000Z"}},
+    workspaceId: "w", issuedAt: "2026-01-01T00:00:00.000Z", expiresAt: "2027-01-01T00:00:00.000Z", maxUsers: 5}},
 };
 
 test("verify returns the verdict of the gateway", async (t) => {

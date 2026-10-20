@@ -38,7 +38,6 @@ import {SQLiteTaskDefinitionStore} from "../../features/task_execution/infrastru
 import {scriptPackageJobsFromEnvironment} from "../../features/task_execution/infrastructure/local/script-package-composition.js";
 import {type AssistantRoutesOptions} from "./local-assistant-routes.js";
 import {SQLiteLocalApplicationLogStore} from "../logging/sqlite-local-application-log-store.js";
-import {LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
 import {type LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
 import {type ApplicationLogger} from "../logging/application-logger.js";
 
@@ -62,7 +61,6 @@ export function createLocalRuntimeRouteServices(options: {
   const taskDefinitions = new SQLiteTaskDefinitionStore(database);
   const connectionStore = new SQLiteConnectionStore(database, languageModelSecrets);
   return {
-    credentials: new LocalRuntimeAccessCredentialStore(database),
     documents: new SQLiteDocumentStore(database),
     fileSettings,
     teamFiles: new SQLiteTeamFileStore(database, runtimeRoot, fileSettings, {

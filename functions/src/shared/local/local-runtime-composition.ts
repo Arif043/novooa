@@ -178,7 +178,7 @@ export function createLocalRuntimeComposition(
   });
   const workspaceContext: LocalRuntimeWorkspaceContext = {
     teamId: options.workspace.teamId,
-    userId: options.workspace.userId,
+    ownerUid: options.workspace.userId,
     logger: applicationLogger,
     taskWorkflow,
     fileEvents,

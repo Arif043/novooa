@@ -21,7 +21,7 @@ test("one profile serves multiple memberships with independent team roles", asyn
     name: userProfiles.display_name, email: userProfiles.email}).from(teamMembers)
     .innerJoin(userProfiles, eq(teamMembers.uid, userProfiles.uid)).orderBy(teamMembers.team_id);
   assert.deepEqual(rows, [
-    {team: "team-1", role: "owner", name: "Ada", email: "ada@example.org"},
+    {team: "team-1", role: "admin", name: "Ada", email: "ada@example.org"},
     {team: "team-2", role: "member", name: "Ada", email: "ada@example.org"},
   ]);
   assert.equal((await database.select().from(userProfiles)).length, 1);

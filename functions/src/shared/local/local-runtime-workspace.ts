@@ -17,6 +17,6 @@ export async function ensureLocalRuntimeWorkspace(
     await tx.insert(teams).values({id: workspace.teamId, name: workspace.teamName, owner_uid: workspace.userId})
       .onConflictDoNothing();
     await tx.insert(teamMembers).values({team_id: workspace.teamId, uid: workspace.userId,
-      role: "owner"}).onConflictDoNothing();
+      role: "admin"}).onConflictDoNothing();
   });
 }

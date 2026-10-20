@@ -10,6 +10,7 @@
 - [Anwendungsprotokoll](../notes/anwendungsprotokoll.md)
 - [Aktivitäten über den Run (0014)](../notes/sqlite-aktivitaeten-normalisiert.md)
 - [Freigaben und Pausen](../notes/freigaben-und-pausen.md)
+- [Herkunft eines Laufs](../notes/lauf-herkunft.md)
 
 ## Offene Punkte
 

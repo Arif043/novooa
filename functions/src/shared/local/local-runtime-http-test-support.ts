@@ -5,6 +5,10 @@ import {unavailableWebhookReceiver} from "../../features/webhooks/domain/usecase
 import {configureErrors} from "./local-runtime-http-server.js";
 import {configureValidation} from "./local-runtime-validation.js";
 import {registerWorkspaceContext, type LocalRuntimeWorkspaceContext} from "./local-runtime-workspace-context.js";
+import {type RuntimeActor} from "../../features/runtime_users/domain/entities/runtime-user.js";
+
+/** Wer in Routentests anfragt, wenn der Test nichts anderes angibt. */
+export const testActor: RuntimeActor = {uid: "user-1", role: "admin"};
 
 export type TestRequest = {
   method?: string; url?: string; body: unknown;
@@ -20,7 +24,7 @@ export const silentLogger: ApplicationLogger = {
 
 export function testWorkspace(overrides: Partial<LocalRuntimeWorkspaceContext> = {}): LocalRuntimeWorkspaceContext {
   return {
-    teamId: "team-1", userId: "user-1", logger: silentLogger, systemModelCatalog: undefined, modelCache: undefined,
+    teamId: "team-1", ownerUid: "user-1", logger: silentLogger, systemModelCatalog: undefined, modelCache: undefined,
     taskWorkflow: new Proxy({}, {get: () => () => {throw new Error("Kein Task-Workflow im Test.");}}) as never,
     fileEvents: noFileEventPublisher, webhooks: unavailableWebhookReceiver,
     ...overrides,
@@ -29,7 +33,7 @@ export function testWorkspace(overrides: Partial<LocalRuntimeWorkspaceContext> =
 
 /**
  * Nur Tests: registriert ein Routen-Plugin wie im Betrieb (Fehler-Handler,
- * Validierung, Stream-Parser, Workspace-Kontext) einmal und führt Anfragen per
+ * Validierung, Stream-Parser, Workspace-Kontext, anfragende Person) einmal und führt Anfragen per
  * Fastify-Injection aus — Plugin-Zustand bleibt so zwischen Anfragen erhalten.
  * Liefert `null`, wenn keine Route passt.
  */
@@ -37,9 +41,10 @@ export function testingRoutes<Options extends object>(
   plugin: FastifyPluginAsync<Options>,
   options: Options,
   workspace: Partial<LocalRuntimeWorkspaceContext> = {},
+  actor: RuntimeActor = testActor,
 ) {
   let instance: Promise<FastifyInstance> | undefined;
-  const server = () => instance ??= buildServer(plugin, options, workspace);
+  const server = () => instance ??= buildServer(plugin, options, workspace, actor);
   async function handle(request: TestRequest, payload?: Buffer): Promise<TestResponse | null> {
     const body = payload ?? jsonPayload(request);
     const response = await (await server()).inject({
@@ -60,6 +65,7 @@ export function testingRoutes<Options extends object>(
 
 async function buildServer<Options extends object>(
   plugin: FastifyPluginAsync<Options>, options: Options, workspace: Partial<LocalRuntimeWorkspaceContext>,
+  actor: RuntimeActor,
 ): Promise<FastifyInstance> {
   const http = Fastify({exposeHeadRoutes: false, routerOptions: {ignoreTrailingSlash: true}});
   configureErrors(http);
@@ -67,6 +73,7 @@ async function buildServer<Options extends object>(
   http.addContentTypeParser("application/onnx", (_request, stream, done) => done(null, stream));
   http.addContentTypeParser("application/zip", (_request, stream, done) => done(null, stream));
   registerWorkspaceContext(http, () => testWorkspace(workspace));
+  http.decorateRequest("actor", {getter: () => actor});
   await http.register(plugin, options);
   http.setNotFoundHandler((_request, reply) => reply.code(404).send({testRouteMissing: true}));
   await http.ready();

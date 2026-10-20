@@ -20,4 +20,4 @@ Gehört zu: [Architektur](../index/architektur.md)
 ## Siehe auch
 
 - [Genkit-Flow-Konventionen](./genkit-flow-konventionen.md)
-- [Betreiber-Passwort-Pflicht](./betreiber-passwort-pflicht.md)
+- [Anmeldepflicht der Runtime](./runtime-anmeldepflicht.md)

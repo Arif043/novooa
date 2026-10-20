@@ -2,6 +2,7 @@ import {readFile, rm} from "node:fs/promises";
 import {join} from "node:path";
 import {writeDurableSecretFile} from "../../../runtime_security/infrastructure/durable-secret-file.js";
 import {type RuntimeLicenseActivation} from "../../domain/entities/runtime-license-activation.js";
+import {maxUsersFrom} from "../../domain/entities/runtime-license-lease.js";
 import {type SensitiveFieldCipher} from "../../../runtime_security/domain/repositories/runtime-field-cipher.js";
 import {licenseSecretContext} from "../../../runtime_security/infrastructure/runtime-secret-context.js";
 import {RuntimeSecretFileAccess} from "../../../runtime_security/infrastructure/runtime-secret-file-access.js";
@@ -97,6 +98,7 @@ function licensePayload(payload: Record<string, unknown>): RuntimeLicenseActivat
     licenseId: requiredString(payload.licenseId), licenseName: requiredString(payload.licenseName),
     activationId: requiredString(payload.activationId), workspaceId: requiredString(payload.workspaceId),
     issuedAt: requiredString(payload.issuedAt), expiresAt: requiredString(payload.expiresAt),
+    maxUsers: maxUsersFrom(payload.maxUsers),
   };
 }
 

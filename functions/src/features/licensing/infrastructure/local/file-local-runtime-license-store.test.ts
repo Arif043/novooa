@@ -19,7 +19,7 @@ test("encrypts the activation secret in the runtime license state", async () => 
         activationId: "activation-1",
         workspaceId: "workspace-1",
         issuedAt: "2026-09-15T10:00:00.000Z",
-        expiresAt: "2026-12-31T23:59:59.000Z",
+        expiresAt: "2026-12-31T23:59:59.000Z", maxUsers: 5,
       },
     },
     activationSecret: "activation-secret",
@@ -74,7 +74,7 @@ test("keeps the activation token proof for the first-time setup", async () => {
       signature: "signature",
       payload: {
         licenseId: "license-1", licenseName: "Beispiel GmbH", activationId: "activation-1",
-        workspaceId: "workspace-1", issuedAt: "2026-09-15T10:00:00.000Z", expiresAt: "2026-12-31T23:59:59.000Z",
+        workspaceId: "workspace-1", issuedAt: "2026-09-15T10:00:00.000Z", expiresAt: "2026-12-31T23:59:59.000Z", maxUsers: 5,
       },
     },
     activationSecret: "activation-secret",

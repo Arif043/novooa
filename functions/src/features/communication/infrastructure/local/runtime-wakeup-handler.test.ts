@@ -6,7 +6,7 @@ import {MAIL_CONNECTORS_TOPIC, RuntimeWakeupHandler} from "./runtime-wakeup-hand
 
 const license: SignedRuntimeLicense = {
   signature: "sig",
-  payload: {licenseId: "l", licenseName: "n", activationId: "a", workspaceId: "w", issuedAt: "2026-01-01", expiresAt: "2027-01-01"},
+  payload: {licenseId: "l", licenseName: "n", activationId: "a", workspaceId: "w", issuedAt: "2026-01-01", expiresAt: "2027-01-01", maxUsers: 5},
 };
 
 function setup() {

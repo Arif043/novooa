@@ -45,7 +45,8 @@ export const fileResourceRoutes: FastifyPluginAsyncTypebox<FileResourceRoutesOpt
   app.post("/v1/folders", {
     schema: {body: NewFolder, response: {201: FolderDto, 400: ErrorResponse, 404: ErrorResponse}},
   }, async (request, reply) => {
-    const {teamId, userId} = request.workspace;
+    const {teamId} = request.workspace;
+    const userId = request.actor.uid;
     const parentFolderId = request.body.parentFolderId || null;
     const id = randomUUID();
     const created = await database.transaction(async (tx) => {

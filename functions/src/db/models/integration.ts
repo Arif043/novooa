@@ -1,6 +1,6 @@
 import {desc, sql} from "drizzle-orm";
-import {check, index, integer, sqliteTable, text, unique, type AnySQLiteColumn} from "drizzle-orm/sqlite-core";
-import {teams} from "./core.js";
+import {check, index, sqliteTable, text, unique, type AnySQLiteColumn} from "drizzle-orm/sqlite-core";
+import {teams, userProfiles} from "./core.js";
 
 export const applicationLogs = sqliteTable("application_logs", {
   id: text("id").primaryKey(),
@@ -114,18 +114,28 @@ export const modelCatalog = sqliteTable("model_catalog", {
   index("idx_model_catalog_team").on(table.team_id),
 ]);
 
-export const runtimeAccessCredential = sqliteTable("runtime_access_credential", {
-  id: integer("id").primaryKey(),
+/** Passwörter der Konten (scrypt), getrennt vom Profil: Ein Konto kann künftig per SSO auch ohne Passwort bestehen. */
+export const runtimePasswordCredentials = sqliteTable("runtime_password_credentials", {
+  uid: text("uid").primaryKey().references((): AnySQLiteColumn => userProfiles.uid, {onDelete: "cascade"}),
   password_hash: text("password_hash").notNull(),
   salt: text("salt").notNull(),
+  updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+/** Einmalcodes zum Setzen des Passworts (Einladung oder Zurücksetzen); gespeichert nur als SHA-256-Hash. */
+export const runtimeInvitations = sqliteTable("runtime_invitations", {
+  code_hash: text("code_hash").primaryKey(),
+  uid: text("uid").notNull().references((): AnySQLiteColumn => userProfiles.uid, {onDelete: "cascade"}),
+  expires_at: text("expires_at").notNull(),
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-}, (table) => [check("runtime_access_credential_singleton", sql`${table.id} = 1`)]);
+}, (table) => [index("idx_runtime_invitations_uid").on(table.uid)]);
 
 export const runtimeSessions = sqliteTable("runtime_sessions", {
   token_hash: text("token_hash").primaryKey(),
+  uid: text("uid").notNull().references((): AnySQLiteColumn => userProfiles.uid, {onDelete: "cascade"}),
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   expires_at: text("expires_at").notNull(),
-});
+}, (table) => [index("idx_runtime_sessions_uid").on(table.uid)]);
 
 export type ApplicationLogs = typeof applicationLogs.$inferSelect;
 export type NewApplicationLogs = typeof applicationLogs.$inferInsert;
@@ -144,7 +154,5 @@ export type LanguageModels = typeof languageModels.$inferSelect;
 export type NewLanguageModels = typeof languageModels.$inferInsert;
 export type ModelCatalog = typeof modelCatalog.$inferSelect;
 export type NewModelCatalog = typeof modelCatalog.$inferInsert;
-export type RuntimeAccessCredential = typeof runtimeAccessCredential.$inferSelect;
-export type NewRuntimeAccessCredential = typeof runtimeAccessCredential.$inferInsert;
 export type RuntimeSessions = typeof runtimeSessions.$inferSelect;
 export type NewRuntimeSessions = typeof runtimeSessions.$inferInsert;

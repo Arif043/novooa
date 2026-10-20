@@ -25,10 +25,6 @@ export class LocalRuntimeRealtimeConnections {
     this.closeWhere((token) => token === sessionToken);
   }
 
-  closeOtherSessions(currentToken: string): void {
-    this.closeWhere((token) => token !== currentToken);
-  }
-
   /** Schließt alle Verbindungen, deren Sitzung [isAllowed] nicht mehr zulässt. */
   async closeInactive(isAllowed: (sessionToken: string) => Promise<boolean>): Promise<void> {
     const tokens = new Set(this.sessionByConnection.values());

@@ -119,7 +119,7 @@ function developmentLicenseService(): RuntimeLicenseService {
   return new DevelopmentRuntimeLicenseService({
     licenseId: "development-license", licenseName: "Entwicklungsumgebung",
     workspaceId: optionalEnvironment("LOCAL_RUNTIME_TEAM_ID") ?? "local-team",
-    expiresAt: "2099-01-01T00:00:00.000Z",
+    expiresAt: "2099-01-01T00:00:00.000Z", maxUsers: null,
   });
 }
 

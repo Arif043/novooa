@@ -55,7 +55,7 @@ function signedLicense(): SignedRuntimeLicense {
     signature: "signature",
     payload: {
       licenseId: "license-1", licenseName: "Kunde GmbH", activationId: "activation-1", workspaceId: "team-1",
-      issuedAt: "2026-09-20T00:00:00.000Z", expiresAt: "2027-09-20T00:00:00.000Z",
+      issuedAt: "2026-09-20T00:00:00.000Z", expiresAt: "2027-09-20T00:00:00.000Z", maxUsers: 5,
     },
   };
 }

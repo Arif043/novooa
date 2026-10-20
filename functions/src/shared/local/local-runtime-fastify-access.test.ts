@@ -33,7 +33,7 @@ test("login and setup bypass only session authentication, including query string
   t.after(() => fixture.http.close());
   assert.equal((await fixture.http.inject({method: "POST", url: "/v1/auth/login"})).statusCode, 423);
   await fixture.licenses.activate({activationToken: "valid"});
-  for (const url of ["/v1/auth/login?next=1", "/v1/setup", "/v1/setup?next=1"]) {
+  for (const url of ["/v1/auth/login?next=1", "/v1/setup", "/v1/setup?next=1", "/v1/auth/invitations/redeem", "/v1/auth/recover"]) {
     assert.equal((await fixture.http.inject({method: "POST", url})).statusCode, 200);
   }
   assert.deepEqual(fixture.verifiedTokens, []);
@@ -53,7 +53,27 @@ test("a missing or invalid session is reported as session_required", async (t) =
   assert.equal(release.json<{code: string}>().code, "session_required");
 });
 
-test("release requires an operator session once a password is set", async (t) => {
+test("members use content routes and read connections, admins also manage", async (t) => {
+  const fixture = accessFixture();
+  t.after(() => fixture.http.close());
+  await fixture.licenses.activate({activationToken: "valid"});
+  const as = (token: string, method: "GET" | "POST", url: string) =>
+    fixture.http.inject({method, url, headers: {authorization: `Bearer ${token}`}});
+
+  assert.equal((await as("mitglied", "GET", "/v1/tasks")).statusCode, 200);
+  assert.equal((await as("mitglied", "GET", "/v1/connections")).statusCode, 200);
+  for (const [method, url] of [["POST", "/v1/connections"], ["GET", "/v1/users"]] as const) {
+    const refused = await as("mitglied", method, url);
+    assert.equal(refused.statusCode, 403);
+    assert.equal(refused.json<{code: string}>().code, "admin_required");
+    assert.equal((await as("valid", method, url)).statusCode, 200);
+  }
+  const release = await as("mitglied", "POST", "/v1/license/release");
+  assert.equal(release.statusCode, 403);
+  assert.notEqual(fixture.licenses.activeContext(), null);
+});
+
+test("release requires an admin session once an account is set up", async (t) => {
   const fixture = accessFixture();
   t.after(() => fixture.http.close());
   await fixture.licenses.activate({activationToken: "valid"});
@@ -68,7 +88,7 @@ test("release requires an operator session once a password is set", async (t) =>
   assert.equal((await fixture.http.inject({url: "/v1/tasks", headers: {authorization: "Bearer valid"}})).statusCode, 423);
 });
 
-test("release stays open before the first password is set", async (t) => {
+test("release stays open before the first account is set up", async (t) => {
   const fixture = accessFixture({hasPassword: false});
   t.after(() => fixture.http.close());
   await fixture.licenses.activate({activationToken: "valid"});
@@ -144,20 +164,28 @@ function accessFixture({hasPassword = true}: {hasPassword?: boolean} = {}) {
 function accessHttp(
   licenses: RuntimeLicenseService, verifiedTokens: string[], activate: () => Promise<void>, hasPassword: boolean,
 ) {
+  const roles: Record<string, "admin" | "member"> = {valid: "admin", mitglied: "member"};
   const sessions = {verifySession: async (token: string) => {
-    verifiedTokens.push(token); return token === "valid";
+    verifiedTokens.push(token);
+    const role = roles[token];
+    return role === undefined ? null : {uid: `uid-${token}`, role};
   }};
   return createLocalRuntimeHttpServer(async (routes) => {
     registerRuntimeLicenseRoutes(routes, licenses, new ActivateRuntime(licenses, activate), {
-      credentials: {hasCredential: async () => hasPassword}, sessions,
+      passwords: {hasAny: async () => hasPassword}, sessions,
     });
     routes.register(async (api) => {
       registerLocalRuntimeAccessHooks(api, licenses, sessions);
       api.get("/v1/tasks", async () => ({ok: true}));
       api.post("/v1/auth/login", async () => ({token: "valid"}));
       api.post("/v1/setup", async () => ({ok: true}));
+      api.post("/v1/auth/invitations/redeem", async () => ({token: "valid"}));
+      api.post("/v1/auth/recover", async () => ({token: "valid"}));
+      api.get("/v1/users", async () => ({items: []}));
+      api.get("/v1/connections", async () => ({items: []}));
+      api.post("/v1/connections", async () => ({ok: true}));
     });
   });
 }
 
-const context = {licenseId: "test", licenseName: "Test", workspaceId: "workspace", expiresAt: "2099-01-01T00:00:00.000Z"};
+const context = {licenseId: "test", licenseName: "Test", workspaceId: "workspace", expiresAt: "2099-01-01T00:00:00.000Z", maxUsers: 5};

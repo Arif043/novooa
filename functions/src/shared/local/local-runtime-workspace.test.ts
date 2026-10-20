@@ -15,7 +15,7 @@ test("creates the initial local workspace, user profile and membership only once
   assert.equal(team?.name, workspace.teamName);
   assert.equal(team?.owner_uid, workspace.userId);
   const [member] = await database.select().from(teamMembers);
-  assert.equal(member.role, "owner");
+  assert.equal(member.role, "admin");
   assert.equal(member.uid, workspace.userId);
   const [profile] = await database.select().from(userProfiles);
   assert.equal(profile.display_name, "Lokaler Benutzer");

@@ -339,7 +339,8 @@
       "import_export": "İçe/Dışa Aktarma",
       "profile": "Profil",
       "team": "Ekip",
-      "language_model": "Dil modeli"
+      "language_model": "Dil modeli",
+      "users": "Kullanıcılar"
     }
   },
   "ui": {
@@ -851,5 +852,105 @@
     "reset_view": "Görünümü sıfırla",
     "context_notes": "Prompt bağlamında {count} not",
     "context_hint": "Seçili notun eklendiği bir prompt bu notları görür: notun kendisi ve 5 seviyeye kadar giden bağlantıları, en fazla 50."
+  },
+  "runtime": {
+    "access": {
+      "admin_not_found": "Bu kullanıcı adına sahip bir yönetici yok.",
+      "display_name": "Ad",
+      "failed_with_status": "Giriş başarısız (HTTP {}).",
+      "hide_password": "Parolayı gizle",
+      "invalid_credentials": "Kullanıcı adı veya parola geçersiz.",
+      "invalid_invitation": "Davet kodu geçersiz veya süresi dolmuş.",
+      "invalid_password": "Parola 6 ile 1000 karakter arasında olmalıdır.",
+      "license_token_mismatch": "Lisans anahtarı bu runtime ile eşleşmiyor.",
+      "login_name": "Kullanıcı adı",
+      "new_password": "Yeni parola",
+      "no_token": "Oturum anahtarı alınamadı.",
+      "not_licensed": "Runtime henüz lisanslı değil. Önce runtime bilgisayarında lisansı etkinleştir.",
+      "password": "Parola",
+      "passwords_differ": "Parolalar eşleşmiyor.",
+      "repeat_password": "Parolayı tekrarla",
+      "session_ended": "Oturumunun süresi doldu veya başka bir cihazda sonlandırıldı. Lütfen yeniden giriş yap.",
+      "show_password": "Parolayı göster",
+      "token_incomplete": "Lütfen lisans anahtarının 16 karakterinin tamamını gir.",
+      "too_many_attempts": "Çok fazla giriş denemesi. Lütfen bir dakika bekleyip tekrar dene."
+    },
+    "invitation": {
+      "action": "Parolayı belirle ve giriş yap",
+      "code": "Davet kodu",
+      "description": "Yöneticinden aldığın kodu gir ve kendi parolanı seç.",
+      "link": "Davet kodum var",
+      "title": "Daveti kullan"
+    },
+    "recovery": {
+      "action": "Yönetici parolasını sıfırla",
+      "description": "Hiçbir yönetici artık giriş yapamıyorsa: Bu runtime'ın lisans anahtarıyla bir yönetici hesabının parolasını yeniden belirleyebilirsin.",
+      "link": "Yönetici erişimini geri yükle",
+      "title": "Yönetici erişimini geri yükle"
+    },
+    "setup": {
+      "action": "Hesap oluştur",
+      "already_done": "Bu runtime zaten kurulmuş.",
+      "description": "Bu ilk hesap yönetici olur. Yöneticiler diğer kullanıcıları ayarlardan davet eder.",
+      "failed": "Hesap oluşturulamadı.",
+      "title": "Yönetici hesabı oluştur"
+    },
+    "sign_in": {
+      "action": "Giriş yap",
+      "back": "Girişe dön",
+      "description": "{} adresindeki runtime'a hesabınla giriş yap.",
+      "title": "Giriş yap"
+    }
+  },
+  "runtime_users": {
+    "actions": "{} için işlemler",
+    "add_action": "Kullanıcı ekle",
+    "add_title": "Yeni kullanıcı",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "delete_message": "{} artık giriş yapamaz. Görevler, dosyalar ve notlar çalışma alanında kalır.",
+    "delete_title": "Kullanıcı silinsin mi?",
+    "deleted": "Kullanıcı silindi.",
+    "empty": "Henüz kullanıcı yok.",
+    "failure": {
+      "admin_required": "Bunu yalnızca yöneticiler yapabilir.",
+      "last_admin": "Her zaman en az bir yönetici olmalıdır.",
+      "login_name_taken": "Bu kullanıcı adı zaten kullanılıyor.",
+      "not_found": "Bu kullanıcı artık mevcut değil.",
+      "own_account": "Bu işlem kendi hesabın için burada yapılamaz.",
+      "unavailable": "Runtime işlemi tamamlayamadı.",
+      "user_limit_reached": "Lisans daha fazla kullanıcıya izin vermiyor.",
+      "workspace_owner": "Kurulumda oluşturulan hesap silinemez."
+    },
+    "invitation": {
+      "copy": "Kodu kopyala",
+      "description": "{} kişisine bu kodu ver. Kişi bununla girişte “Davet kodum var” altında kendi parolasını belirler. Kod yalnızca şimdi gösterilir.",
+      "done": "Tamam",
+      "expires": "{} tarihine kadar geçerli",
+      "pending": "Davet bekliyor",
+      "title": "Davet kodu"
+    },
+    "limit_hint": "Lisans tamamen dolu. Bir kullanıcıyı sil veya lisansı genişlet.",
+    "load_failed": "Kullanıcılar yüklenemedi.",
+    "login_name_hint": "3 ile 64 karakter: a–z harfleri, rakamlar, nokta, alt çizgi veya tire.",
+    "make_admin": "Yönetici yap",
+    "make_member": "Üye yap",
+    "own_password_description": "Hesabın için yeni bir parola belirle. Diğer cihazların oturumu açık kalır.",
+    "reset_password": "Parolayı sıfırla",
+    "retry": "Tekrar dene",
+    "role": {
+      "admin": "Yönetici",
+      "member": "Üye"
+    },
+    "role_changed": "Rol değiştirildi.",
+    "usage": "{} / {} kullanıcı",
+    "usage_unlimited": "{} kullanıcı",
+    "you": "Sen"
+  },
+  "activity_origin": {
+    "reviewed_by": "{} tarafından yanıtlandı",
+    "schedule": "Zamanlama",
+    "started_by": "{} tarafından başlatıldı",
+    "trigger": "Tetikleyici"
   }
 }

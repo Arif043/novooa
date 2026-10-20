@@ -8,7 +8,7 @@ import {RuntimeLicenseMonitor} from "../../features/licensing/infrastructure/loc
 import {localMlServiceFromEnvironment, type LocalMlService} from "../../features/machine_learning/infrastructure/local/local-ml-service.js";
 import {type SensitiveFieldCipher} from "../../features/runtime_security/domain/repositories/runtime-field-cipher.js";
 import {type RuntimeSecretFileAccess} from "../../features/runtime_security/infrastructure/runtime-secret-file-access.js";
-import {LocalRuntimeAccessCredentialStore} from "./local-runtime-access-credential-store.js";
+import {SQLitePasswordCredentialRepository} from "../../features/runtime_users/infrastructure/local/sqlite-password-credential-repository.js";
 import {LocalRuntimeApplication} from "./local-runtime-application.js";
 import {type LocalRuntimeCorsPolicy} from "./local-runtime-cors-policy.js";
 import {createLocalRuntimeHttpServer} from "./local-runtime-http-server.js";
@@ -84,7 +84,7 @@ function sharedFor(options: BootstrapOptions): RuntimeShared {
     activeLicenseActivation: () => licenses.activeActivation(),
   });
   return {
-    sessions: new LocalRuntimeSessionStore(database), notifier, mailConnectors, mlService,
+    sessions: new LocalRuntimeSessionStore(database, () => licenses.activeContext()?.workspaceId ?? null), notifier, mailConnectors, mlService,
     tickets: new LocalRuntimeRealtimeTicketStore(), realtimeConnections: new LocalRuntimeRealtimeConnections(), application,
   };
 }
@@ -105,7 +105,7 @@ function runtimeRoutes(options: BootstrapOptions, shared: RuntimeShared): Fastif
   return async (routes) => {
     const activate = new ActivateRuntime(options.licenses, (context) => shared.application.activate(context));
     registerRuntimeLicenseRoutes(routes, options.licenses, activate, {
-      credentials: new LocalRuntimeAccessCredentialStore(options.database), sessions: shared.sessions,
+      passwords: new SQLitePasswordCredentialRepository(options.database), sessions: shared.sessions,
     });
     await routes.register(localRuntimeApi({
       database: options.database, runtimeRoot: options.runtimeRoot, fieldCipher: options.fieldCipher,

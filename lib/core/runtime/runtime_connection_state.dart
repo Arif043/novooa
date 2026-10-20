@@ -15,10 +15,19 @@ final class RuntimeConnectionNeedsAddress extends RuntimeConnectionState {
   final String? errorMessage;
 }
 
+/// Wie man sich anmeldet: mit Konto, mit einem Einladungscode (eigenes
+/// Passwort setzen) oder über den Notzugang mit dem Lizenz-Token.
+enum RuntimeSignInMode { password, invitation, recovery }
+
 final class RuntimeConnectionNeedsPassword extends RuntimeConnectionState {
-  const RuntimeConnectionNeedsPassword(this.endpoint, {this.errorMessage});
+  const RuntimeConnectionNeedsPassword(
+    this.endpoint, {
+    this.mode = RuntimeSignInMode.password,
+    this.errorMessage,
+  });
 
   final RuntimeEndpoint endpoint;
+  final RuntimeSignInMode mode;
   final String? errorMessage;
 }
 
@@ -29,7 +38,7 @@ final class RuntimeConnectionNeedsLicense extends RuntimeConnectionState {
   final String? errorMessage;
 }
 
-/// Zweiter Einrichtungsschritt nach der Lizenz: das Betreiber-Passwort.
+/// Zweiter Einrichtungsschritt nach der Lizenz: das erste Admin-Konto.
 /// Die Runtime verlangt als Nachweis den Lizenz-Token, mit dem sie
 /// aktiviert wurde.
 final class RuntimeConnectionNeedsPasswordSetup extends RuntimeConnectionState {

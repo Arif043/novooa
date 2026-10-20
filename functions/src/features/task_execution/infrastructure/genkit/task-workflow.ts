@@ -70,6 +70,7 @@ async function startTaskWorkflow(
       teamId,
       task,
       context: input.context,
+      startedByUid: context.uid,
     });
     await dependencies.taskRunDispatcher.dispatchTaskRun({
       teamId,
@@ -98,7 +99,7 @@ async function reviewTaskWorkflow(
       input.runId,
     );
     if (input.decision === "reject") {
-      await dependencies.taskRunStore.rejectTaskRun(teamId, reviewableRun.run.runId);
+      await dependencies.taskRunStore.rejectTaskRun(teamId, reviewableRun.run.runId, context.uid);
       // Ein abgelehnter Run ist beendet und wird nie fortgesetzt; seine Schritte braucht niemand mehr.
       await dependencies.workerStores.stepJournal?.clear(teamId, reviewableRun.run.runId);
       return {runId: input.runId, status: "rejected"};
@@ -114,6 +115,7 @@ async function reviewTaskWorkflow(
       teamId,
       reviewableRun.run.runId,
       responseOutputs,
+      context.uid,
     );
     await dependencies.taskRunDispatcher.dispatchTaskRun({
       teamId,

@@ -1,7 +1,8 @@
 import {type FastifyPluginAsyncTypebox, Type} from "@fastify/type-provider-typebox";
 import {desc, eq} from "drizzle-orm";
+import {alias} from "drizzle-orm/sqlite-core";
 import {type RuntimeExecutor} from "../../../../db/database.js";
-import {activities, taskRuns} from "../../../../db/schema.js";
+import {activities, taskRuns, userProfiles} from "../../../../db/schema.js";
 import {ErrorResponse, ItemsOf, JsonObject, NonEmptyString} from "../../../../shared/local/local-runtime-http-schemas.js";
 import {ActivityRunMismatchError, writeActivity} from "./sqlite-activity-write.js";
 import {activityFromRow, runFromRow} from "./sqlite-task-activity-mapping.js";
@@ -14,7 +15,13 @@ const TaskRun = Type.Object({
   waitingNodeId: NullableString, finalOutput: Type.String(), reviewOutput: NullableString,
   interaction: Type.Unknown(), error: Type.Unknown(), createdAt: Type.String(), updatedAt: Type.String(),
 });
+const Person = Type.Union([Type.Object({uid: Type.String(), displayName: Type.String()}), Type.Null()]);
+/** Woher der Lauf kommt: von Hand gestartet (Person) oder durch einen Auslöser; wer die Freigabe beantwortet hat. */
+const RunOrigin = Type.Object({startedBy: Person, reviewedBy: Person, triggerType: NullableString});
+const starter = alias(userProfiles, "starter");
+const reviewer = alias(userProfiles, "reviewer");
 const Activity = Type.Object({
+  origin: RunOrigin,
   id: Type.String(), runId: Type.String(), taskId: Type.String(), taskTitle: Type.String(), target: Type.String(),
   status: Type.String(), occurredAt: Type.String(), nodeId: NullableString, primitive: NullableString,
   input: Type.String(), output: Type.String(), outputs: JsonObject, message: Type.String(), failureCode: NullableString,
@@ -46,8 +53,12 @@ export const taskActivityRoutes: FastifyPluginAsyncTypebox<TaskActivityRoutesOpt
       status: activities.status, input: activities.input, output: activities.output, outputs_json: activities.outputs_json,
       message: activities.message, failure_code: activities.failure_code, failure_details_json: activities.failure_details_json,
       console_json: activities.console_json, conversation_json: activities.conversation_json,
-      created_at: activities.created_at}).from(activities)
+      created_at: activities.created_at, trigger_type: taskRuns.trigger_type,
+      started_by_uid: taskRuns.started_by_uid, started_by_name: starter.display_name,
+      reviewed_by_uid: taskRuns.reviewed_by_uid, reviewed_by_name: reviewer.display_name}).from(activities)
       .innerJoin(taskRuns, eq(taskRuns.id, activities.run_id))
+      .leftJoin(starter, eq(starter.uid, taskRuns.started_by_uid))
+      .leftJoin(reviewer, eq(reviewer.uid, taskRuns.reviewed_by_uid))
       .where(eq(taskRuns.team_id, request.workspace.teamId)).orderBy(desc(activities.created_at)).limit(100);
     return {items: rows.map(activityFromRow)};
   });
@@ -55,7 +66,8 @@ export const taskActivityRoutes: FastifyPluginAsyncTypebox<TaskActivityRoutesOpt
   app.post("/v1/activities", {schema: {body: NewActivity, response: {201: Activity, 400: ErrorResponse}}}, async (request, reply) => {
     const activity = {...request.body, nodeId: request.body.nodeId ?? null, primitive: request.body.primitive ?? null,
       input: request.body.input ?? "", output: request.body.output ?? "", outputs: request.body.outputs ?? {},
-      message: request.body.message ?? "", failureCode: null, failureDetails: null, console: {stdout: "", stderr: ""}, conversation: []};
+      message: request.body.message ?? "", failureCode: null, failureDetails: null, console: {stdout: "", stderr: ""}, conversation: [],
+      origin: {startedBy: null, reviewedBy: null, triggerType: null}};
     try {
       await writeActivity(database, request.workspace.teamId, activity.taskId, {
         id: activity.id, run_id: activity.runId, node_id: activity.nodeId, target: activity.target,

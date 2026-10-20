@@ -41,13 +41,13 @@ export const taskDefinitionRoutes: FastifyPluginAsyncTypebox<TaskDefinitionRoute
   app.put("/v1/tasks/:taskId", {
     schema: {params: TaskParams, body: SaveTask, response: {200: TaskDocument, 400: ErrorResponse}},
   }, async (request, reply) => {
-    const {teamId, userId} = request.workspace;
+    const {teamId} = request.workspace;
     const {taskId} = request.params;
     if (request.body.id !== taskId) return reply.code(400).send({error: "taskId stimmt nicht mit dem Pfad überein."});
     const definition = definitionFrom(taskId, request.body);
     const verdict = await cycleGuard.checkTask(teamId, definition);
     if (verdict.blocked !== null) return reply.code(400).send({error: verdict.blocked});
-    await store.save(teamId, userId, definition, request.body.selectedNodeId ?? "");
+    await store.save(teamId, request.actor.uid, definition, request.body.selectedNodeId ?? "");
     notifier.publish("tasks");
     const document = await documentFrom(teamId, definition);
     return verdict.warnings.length === 0 ? document : {...document, warnings: verdict.warnings};

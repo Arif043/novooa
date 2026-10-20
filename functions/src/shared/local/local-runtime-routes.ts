@@ -27,9 +27,6 @@ import {workspaceTransferRoutes} from "../../features/workspace_transfer/infrast
 import {applicationLogRoutes} from "../logging/local-application-log-routes.js";
 import {assistantRoutes} from "./local-assistant-routes.js";
 import {registerLocalRuntimeAccessHooks} from "./local-runtime-access-hooks.js";
-import {createLoginAttemptLimiter} from "./local-runtime-login-rate-limiter.js";
-import {loginRoutes} from "./local-runtime-login-routes.js";
-import {passwordRoutes} from "./local-runtime-password-routes.js";
 import {type LocalRuntimeRealtimeNotifier} from "./local-runtime-realtime-notifier.js";
 import {type LocalRuntimeRealtimeConnections} from "./local-runtime-realtime-connections.js";
 import {realtimeTicketRoutes} from "./local-runtime-realtime-ticket-routes.js";
@@ -39,7 +36,9 @@ import {type LocalMlService} from "../../features/machine_learning/infrastructur
 import {createLocalRuntimeRouteServices} from "./local-runtime-route-services.js";
 import {type LocalRuntimeSessionStore} from "./local-runtime-session-store.js";
 import {sessionRoutes} from "./local-runtime-session-routes.js";
-import {setupRoutes} from "./local-runtime-setup-routes.js";
+import {accountRoutes} from "../../features/runtime_users/infrastructure/local/local-runtime-account-routes.js";
+import {userRoutes} from "../../features/runtime_users/infrastructure/local/local-runtime-user-routes.js";
+import {createRuntimeUsersModule} from "../../features/runtime_users/infrastructure/local/runtime-users-composition.js";
 import {registerWorkspaceContext, type LocalRuntimeWorkspaceContext} from "./local-runtime-workspace-context.js";
 
 export type LocalRuntimeApiDependencies = {
@@ -65,20 +64,26 @@ export function localRuntimeApi(dependencies: LocalRuntimeApiDependencies): Fast
     const services = createLocalRuntimeRouteServices({...dependencies});
     registerLocalRuntimeAccessHooks(api, dependencies.licenses, dependencies.sessions);
     registerWorkspaceContext(api, dependencies.workspaceContext);
-    await registerAccessRoutes(api, dependencies, services);
+    await registerAccessRoutes(api, dependencies);
     await registerFeatureRoutes(api, dependencies, services);
   };
 }
 
 type RouteServices = ReturnType<typeof createLocalRuntimeRouteServices>;
 
-/** Einrichtung und Anmeldung (ohne Session, siehe Access-Hooks), Realtime-Tickets, Abmelden und Widerrufen. */
-async function registerAccessRoutes(api: FastifyInstance, dependencies: LocalRuntimeApiDependencies, services: RouteServices) {
-  await api.register(setupRoutes, {credentials: services.credentials, authorization: dependencies.licenses});
-  await api.register(passwordRoutes, {credentials: services.credentials});
-  await api.register(loginRoutes, {
-    credentials: services.credentials, sessions: dependencies.sessions, limiter: createLoginAttemptLimiter(),
+/** Einrichtung, Anmeldung, Konten (öffentlich nur, was die Access-Hooks freigeben), Realtime-Tickets, Abmelden. */
+async function registerAccessRoutes(api: FastifyInstance, dependencies: LocalRuntimeApiDependencies) {
+  const runtimeUsers = createRuntimeUsersModule({
+    database: dependencies.database,
+    workspace: () => {
+      const {teamId, ownerUid} = dependencies.workspaceContext();
+      return {teamId, ownerUid};
+    },
+    sessions: dependencies.sessions, connections: dependencies.realtimeConnections, proof: dependencies.licenses,
+    limit: {maxUsers: () => dependencies.licenses.activeContext()?.maxUsers ?? null}, notifier: dependencies.notifier,
   });
+  await api.register(accountRoutes, runtimeUsers.account);
+  await api.register(userRoutes, runtimeUsers.users);
   await api.register(realtimeTicketRoutes, {tickets: dependencies.tickets});
   await api.register(sessionRoutes, {sessions: dependencies.sessions, connections: dependencies.realtimeConnections});
 }

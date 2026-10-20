@@ -339,7 +339,8 @@
       "import_export": "Import/Export",
       "profile": "Profil",
       "team": "Team",
-      "language_model": "Sprachmodell"
+      "language_model": "Sprachmodell",
+      "users": "Benutzer"
     }
   },
   "ui": {
@@ -851,5 +852,105 @@
     "reset_view": "Ansicht zurücksetzen",
     "context_notes": "{count} Notizen im Prompt-Kontext",
     "context_hint": "Diese Notizen sieht ein Prompt, an dem die gewählte Notiz hängt: sie selbst und ihre ausgehenden Links bis 5 Ebenen, höchstens 50."
+  },
+  "runtime": {
+    "access": {
+      "admin_not_found": "Es gibt keinen Admin mit diesem Anmeldenamen.",
+      "display_name": "Name",
+      "failed_with_status": "Anmeldung fehlgeschlagen (HTTP {}).",
+      "hide_password": "Passwort verbergen",
+      "invalid_credentials": "Anmeldename oder Passwort ist ungültig.",
+      "invalid_invitation": "Der Einladungscode ist ungültig oder abgelaufen.",
+      "invalid_password": "Das Passwort braucht 6 bis 1000 Zeichen.",
+      "license_token_mismatch": "Der Lizenz-Token passt nicht zu dieser Runtime.",
+      "login_name": "Anmeldename",
+      "new_password": "Neues Passwort",
+      "no_token": "Kein Session-Token erhalten.",
+      "not_licensed": "Die Runtime ist noch nicht lizenziert. Aktiviere zuerst die Lizenz auf dem Runtime-Rechner.",
+      "password": "Passwort",
+      "passwords_differ": "Die Passwörter stimmen nicht überein.",
+      "repeat_password": "Passwort wiederholen",
+      "session_ended": "Deine Sitzung ist abgelaufen oder wurde auf einem anderen Gerät beendet. Bitte melde dich erneut an.",
+      "show_password": "Passwort anzeigen",
+      "token_incomplete": "Bitte gib alle 16 Zeichen des Lizenz-Tokens ein.",
+      "too_many_attempts": "Zu viele Anmeldeversuche. Bitte warte eine Minute und versuche es dann erneut."
+    },
+    "invitation": {
+      "action": "Passwort setzen und anmelden",
+      "code": "Einladungscode",
+      "description": "Gib den Code ein, den du von deinem Admin bekommen hast, und wähle dein eigenes Passwort.",
+      "link": "Ich habe einen Einladungscode",
+      "title": "Einladung einlösen"
+    },
+    "recovery": {
+      "action": "Admin-Passwort neu setzen",
+      "description": "Wenn kein Admin mehr hineinkommt: Mit dem Lizenz-Token dieser Runtime setzt du das Passwort eines Admin-Kontos neu.",
+      "link": "Admin-Zugang wiederherstellen",
+      "title": "Admin-Zugang wiederherstellen"
+    },
+    "setup": {
+      "action": "Konto anlegen",
+      "already_done": "Diese Runtime ist bereits eingerichtet.",
+      "description": "Dieses erste Konto wird Admin. Weitere Benutzer laden Admins in den Einstellungen ein.",
+      "failed": "Das Konto konnte nicht angelegt werden.",
+      "title": "Admin-Konto anlegen"
+    },
+    "sign_in": {
+      "action": "Anmelden",
+      "back": "Zurück zur Anmeldung",
+      "description": "Melde dich mit deinem Konto bei der Runtime unter {} an.",
+      "title": "Anmelden"
+    }
+  },
+  "runtime_users": {
+    "actions": "Aktionen für {}",
+    "add_action": "Benutzer hinzufügen",
+    "add_title": "Neuer Benutzer",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "delete_message": "{} kann sich dann nicht mehr anmelden. Aufgaben, Dateien und Notizen bleiben im Arbeitsbereich.",
+    "delete_title": "Benutzer löschen?",
+    "deleted": "Benutzer gelöscht.",
+    "empty": "Noch keine Benutzer.",
+    "failure": {
+      "admin_required": "Das dürfen nur Admins.",
+      "last_admin": "Es muss immer mindestens einen Admin geben.",
+      "login_name_taken": "Dieser Anmeldename ist schon vergeben.",
+      "not_found": "Diesen Benutzer gibt es nicht mehr.",
+      "own_account": "Für das eigene Konto geht das hier nicht.",
+      "unavailable": "Die Runtime konnte die Aktion nicht ausführen.",
+      "user_limit_reached": "Die Lizenz erlaubt keine weiteren Benutzer.",
+      "workspace_owner": "Das Konto aus der Einrichtung lässt sich nicht löschen."
+    },
+    "invitation": {
+      "copy": "Code kopieren",
+      "description": "Gib {} diesen Code. Damit setzt die Person bei der Anmeldung unter „Ich habe einen Einladungscode“ ihr eigenes Passwort. Der Code wird nur jetzt angezeigt.",
+      "done": "Fertig",
+      "expires": "Gültig bis {}",
+      "pending": "Einladung offen",
+      "title": "Einladungscode"
+    },
+    "limit_hint": "Die Lizenz ist voll belegt. Lösche einen Benutzer oder erweitere die Lizenz.",
+    "load_failed": "Benutzer konnten nicht geladen werden.",
+    "login_name_hint": "3 bis 64 Zeichen: Buchstaben a–z, Ziffern, Punkt, Unterstrich oder Bindestrich.",
+    "make_admin": "Zum Admin machen",
+    "make_member": "Zum Mitglied machen",
+    "own_password_description": "Lege ein neues Passwort für dein Konto fest. Deine anderen Geräte bleiben angemeldet.",
+    "reset_password": "Passwort zurücksetzen",
+    "retry": "Erneut versuchen",
+    "role": {
+      "admin": "Admin",
+      "member": "Mitglied"
+    },
+    "role_changed": "Rolle geändert.",
+    "usage": "{} von {} Benutzern",
+    "usage_unlimited": "{} Benutzer",
+    "you": "Du"
+  },
+  "activity_origin": {
+    "reviewed_by": "beantwortet von {}",
+    "schedule": "Zeitplan",
+    "started_by": "gestartet von {}",
+    "trigger": "Auslöser"
   }
 }

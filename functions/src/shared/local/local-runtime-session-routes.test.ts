@@ -8,11 +8,14 @@ function routesWithLog() {
   const handler = testingRoutes(sessionRoutes, {
     sessions: {
       deleteSession: async (token: string) => { calls.push(`delete:${token}`); },
-      deleteOtherSessions: async (token: string) => { calls.push(`deleteOthers:${token}`); return 3; },
+      deleteOtherSessions: async (token: string, uid: string) => { calls.push(`deleteOthers:${token}:${uid}`); return 3; },
+      isActive: async (token: string) => token === "aktuell",
     },
     connections: {
       closeSession: (token: string) => { calls.push(`close:${token}`); },
-      closeOtherSessions: (token: string) => { calls.push(`closeOthers:${token}`); },
+      closeInactive: async (isAllowed: (token: string) => Promise<boolean>) => {
+        calls.push(`closeInactive:${await isAllowed("aktuell")}:${await isAllowed("alt")}`);
+      },
     },
   });
   return {handler, calls};
@@ -37,7 +40,7 @@ test("revoke-others ends every other session and reports how many", async () => 
   });
 
   assert.deepEqual(response, {statusCode: 200, body: {revoked: 3}});
-  assert.deepEqual(calls, ["deleteOthers:aktuell", "closeOthers:aktuell"]);
+  assert.deepEqual(calls, ["deleteOthers:aktuell:user-1", "closeInactive:true:false"]);
 });
 
 test("without a session token nothing is ended", async () => {

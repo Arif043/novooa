@@ -76,6 +76,24 @@ test("lists local task runs and activities", async (t) => {
   assert.equal((activities?.body as {items: Array<{id: string}>}).items[0]?.id, "activity-1");
 });
 
+test("activities name who started a run and who answered it, or the trigger", async (t) => {
+  const database = await databaseWithTaskTables(t);
+  await database.run(sql`INSERT INTO user_profiles(uid, display_name, login_name) VALUES ('anna', 'Anna', 'anna'), ('ben', 'Ben', 'ben')`);
+  await database.run(sql`INSERT INTO task_runs(id, team_id, task_id, task_title, status, started_by_uid, reviewed_by_uid)
+    VALUES ('manuell', 'team-1', 'task-1', 'Aufgabe', 'succeeded', 'anna', 'ben'),
+           ('geplant', 'team-1', 'task-1', 'Aufgabe', 'succeeded', NULL, 'geloescht')`);
+  await database.run(sql`UPDATE task_runs SET source = 'trigger', trigger_type = 'schedule' WHERE id = 'geplant'`);
+  await database.run(sql`INSERT INTO activities(id, run_id, target, title, status) VALUES ('a-manuell', 'manuell', 'task', 'Aufgabe', 'succeeded'),
+    ('a-geplant', 'geplant', 'task', 'Aufgabe', 'succeeded')`);
+  const handler = testingRoutes(taskActivityRoutes, {database});
+
+  const response = await handler.handle({body: {}, method: "GET", url: "/v1/activities"});
+
+  const origins = Object.fromEntries((response?.body as {items: Array<{id: string; origin: unknown}>}).items.map((item) => [item.id, item.origin]));
+  assert.deepEqual(origins["a-manuell"], {startedBy: {uid: "anna", displayName: "Anna"}, reviewedBy: {uid: "ben", displayName: "Ben"}, triggerType: null});
+  assert.deepEqual(origins["a-geplant"], {startedBy: null, reviewedBy: null, triggerType: "schedule"});
+});
+
 async function databaseWithTaskTables(t: TestContext) {
   return runtimeTestDatabase(t);
 }

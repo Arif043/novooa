@@ -8,10 +8,14 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
   `POST /v1/license/activate`; die Runtime löst ihn per HTTPS ein.
 - Firestore speichert den SHA-256-Hash des Tokens als Dokument-ID, nie den
   Roh-Token. Felder mindestens `licenseId`, `name`, `workspaceId`,
-  `expiresAt`, `inUse`.
+  `expiresAt`, `maxUsers`, `inUse`.
 - Atomar: Ist `inUse` false und die Lizenz gültig, erzeugt das Gateway eine
   neue `activationId` und ein zufälliges Geheimnis, speichert nur dessen Hash,
   setzt `inUse` auf true und liefert signierte Lizenz plus Geheimnis.
+- Die signierte Lizenz trägt `maxUsers` (Zahl oder `null` = unbegrenzt) für
+  die [Benutzerkonten](./runtime-benutzerkonten.md). Ohne das Feld ist eine
+  Lizenz ungültig; auch ein gespeicherter Stand ohne `maxUsers` wird verworfen,
+  die Runtime muss dann neu aktiviert werden.
 - Die Runtime prüft die Signatur offline und speichert beides unter
   `credentials/license-state.json` (restriktive Rechte). Nur das Geheimnis
   wird per [Envelope](./feldverschluesselung-envelope.md) verschlüsselt. Die

@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto";
 import {getAuth} from "firebase-admin/auth";
 import {onRequest} from "firebase-functions/v2/https";
-import {type SignedRuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
+import {type SignedRuntimeLicense, maxUsersFrom} from "../../domain/entities/runtime-license-lease.js";
 import {FirebaseRuntimeRelayLicenseVerifier} from "./firebase-runtime-relay-license-verifier.js";
 import {FirestoreRuntimeLicenseRegistry} from "./firestore-runtime-license-registry.js";
 import {localRuntimeLicenseSigningKey} from "./local-runtime-license-signing-key.js";
@@ -56,6 +56,7 @@ function licenseFrom(value: unknown): SignedRuntimeLicense {
     workspaceId: text(payload.workspaceId, "workspaceId", 200),
     issuedAt: text(payload.issuedAt, "issuedAt", 80),
     expiresAt: text(payload.expiresAt, "expiresAt", 80),
+    maxUsers: maxUsersFrom(payload.maxUsers),
   }};
 }
 

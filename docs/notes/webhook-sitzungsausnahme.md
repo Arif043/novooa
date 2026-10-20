@@ -15,4 +15,4 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 ## Siehe auch
 
 - [Webhooks](../index/webhooks.md)
-- [Betreiber-Passwort-Pflicht](./betreiber-passwort-pflicht.md)
+- [Anmeldepflicht der Runtime](./runtime-anmeldepflicht.md)

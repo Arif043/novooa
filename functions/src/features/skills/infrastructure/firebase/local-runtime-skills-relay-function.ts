@@ -1,7 +1,7 @@
 import {defineSecret, defineString} from "firebase-functions/params";
 import {onRequest} from "firebase-functions/v2/https";
 import {type Response} from "express";
-import {type SignedRuntimeLicense} from "../../../licensing/domain/entities/runtime-license-lease.js";
+import {type SignedRuntimeLicense, maxUsersFrom} from "../../../licensing/domain/entities/runtime-license-lease.js";
 import {FirebaseRuntimeRelayLicenseVerifier} from "../../../licensing/infrastructure/firebase/firebase-runtime-relay-license-verifier.js";
 import {localRuntimeLicenseSigningKey} from "../../../licensing/infrastructure/firebase/local-runtime-license-signing-key.js";
 import {logException} from "../../../../shared/logging/logger.js";
@@ -76,6 +76,7 @@ function licenseFrom(value: unknown): SignedRuntimeLicense {
       workspaceId: text(payload.workspaceId, "workspaceId", 200),
       issuedAt: text(payload.issuedAt, "issuedAt", 80),
       expiresAt: text(payload.expiresAt, "expiresAt", 80),
+      maxUsers: maxUsersFrom(payload.maxUsers),
     },
   };
 }

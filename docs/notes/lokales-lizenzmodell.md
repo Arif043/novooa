@@ -10,6 +10,11 @@ Gehört zu: [Produkt](../index/produkt.md)
 | Local Business | 1 Runtime, bis 15 Nutzer | 4.900 EUR/Jahr |
 | Local Enterprise | je Standort, unbegrenzte Nutzer, SSO/LDAP, Offline-Aktivierung | ab 9.900 EUR/Jahr |
 
+- **Nutzerstaffel in der Lizenz:** Die signierte Lizenz trägt `maxUsers`
+  (Zahl oder `null` = unbegrenzt); die Runtime lehnt weitere Konten ab
+  ([Benutzerkonten](./runtime-benutzerkonten.md)). SSO ist
+  [geplant](./runtime-sso-geplant.md), LDAP nicht.
+
 - Dazu: Einrichtung einmalig 990–2.500 EUR; Relay für externe Auslöser und
   Benachrichtigungen als Add-on ca. 29 EUR/Monat je Runtime (Infrastruktur,
   nicht Teil der Lizenz); Modellkosten über eigene Keys oder Ollama.

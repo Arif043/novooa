@@ -15,7 +15,11 @@
 
 ## Zugriff und Authentifizierung
 
-- [Betreiber-Passwort-Pflicht](../notes/betreiber-passwort-pflicht.md)
+- [Anmeldepflicht der Runtime](../notes/runtime-anmeldepflicht.md)
+- [Benutzerkonten der Runtime](../notes/runtime-benutzerkonten.md)
+- [Einladungscodes der Runtime](../notes/runtime-einladungscodes.md)
+- [SSO für die Runtime (geplant)](../notes/runtime-sso-geplant.md)
+- [Herkunft eines Laufs](../notes/lauf-herkunft.md)
 - [Ersteinrichtung der Runtime](../notes/runtime-ersteinrichtung.md)
 - [Runtime-Sitzungen](../notes/runtime-sitzungen.md)
 - [Passwort ändern](../notes/passwort-aendern.md)
@@ -50,6 +54,7 @@
   - [Modellkatalog ohne `scope` und `runtime` (0015)](../notes/sqlite-modellkatalog-normalisiert.md)
   - [Datei- und Ordnerablage (0017/0018)](../notes/sqlite-dateiablage-normalisiert.md)
   - [Wissenslinks werden beim Lesen berechnet (0019)](../notes/sqlite-wissenslinks-berechnet.md)
+- [Benutzerkonten in SQLite (0025)](../notes/sqlite-benutzerkonten-0025.md)
 - [Anwendungsprotokoll](../notes/anwendungsprotokoll.md)
 - [Sprachmodell-Anbieter](../notes/sprachmodell-anbieter.md)
 - [Verbindung](../notes/verbindung.md) (Geheimnisse in `language_model_secrets`)

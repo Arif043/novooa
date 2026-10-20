@@ -1,5 +1,5 @@
 import {sql} from "drizzle-orm";
-import {check, index, integer, primaryKey, sqliteTable, text, unique, type AnySQLiteColumn} from "drizzle-orm/sqlite-core";
+import {check, index, integer, primaryKey, sqliteTable, text, unique, uniqueIndex, type AnySQLiteColumn} from "drizzle-orm/sqlite-core";
 
 export const activities = sqliteTable("activities", {
   id: text("id").primaryKey(),
@@ -57,6 +57,10 @@ export const taskRuns = sqliteTable("task_runs", {
   source: text("source"),
   trigger_id: text("trigger_id"),
   trigger_type: text("trigger_type"),
+  /** Wer den Lauf von Hand gestartet hat; automatische Läufe tragen nur ihren Auslöser. */
+  started_by_uid: text("started_by_uid"),
+  /** Wer die Freigabe oder das Formular beantwortet hat. */
+  reviewed_by_uid: text("reviewed_by_uid"),
   waiting_node_id: text("waiting_node_id"),
   review_instruction: text("review_instruction"),
   review_output: text("review_output"),
@@ -121,9 +125,11 @@ export const userProfiles = sqliteTable("user_profiles", {
   uid: text("uid").primaryKey(),
   email: text("email").notNull().default(""),
   display_name: text("display_name").notNull().default(""),
+  /** Anmeldename des Kontos, klein geschrieben; `null` beim Profil des Arbeitsbereichs vor der Einrichtung. */
+  login_name: text("login_name"),
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updated_at: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+}, (table) => [uniqueIndex("idx_user_profiles_login_name").on(table.login_name)]);
 
 export const teamMembers = sqliteTable("team_members", {
   team_id: text("team_id").notNull().references((): AnySQLiteColumn => teams.id, {onDelete: "cascade"}),

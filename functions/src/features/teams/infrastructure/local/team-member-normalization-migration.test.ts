@@ -45,7 +45,10 @@ test("normalization consolidates whole profiles deterministically and preserves 
   await database.run(sql`PRAGMA foreign_keys = ON`);
   for (const statement of previousTables) await database.run(sql.raw(statement));
   await migrateMembers(database);
-  const profiles = await database.select().from(userProfiles).orderBy(userProfiles.uid);
+  const profiles = await database.select({
+    uid: userProfiles.uid, email: userProfiles.email, display_name: userProfiles.display_name,
+    created_at: userProfiles.created_at, updated_at: userProfiles.updated_at,
+  }).from(userProfiles).orderBy(userProfiles.uid);
   assert.deepEqual(profiles, expectedProfiles);
   const members = await database.select().from(teamMembers).orderBy(teamMembers.uid, teamMembers.team_id);
   assert.deepEqual(members.map((row) => [row.team_id, row.uid, row.role, row.created_at, row.updated_at]), expectedMemberships);

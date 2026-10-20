@@ -1,4 +1,4 @@
-import {type SignedRuntimeLicense} from "../../domain/entities/runtime-license-lease.js";
+import {type SignedRuntimeLicense, maxUsersFrom} from "../../domain/entities/runtime-license-lease.js";
 
 /** Liest eine signierte Lizenz aus einem Relay-Aufruf; Fremdeingabe wird streng geprüft. */
 export function signedRuntimeLicenseFrom(value: unknown): SignedRuntimeLicense {
@@ -13,6 +13,7 @@ export function signedRuntimeLicenseFrom(value: unknown): SignedRuntimeLicense {
       workspaceId: text(payload.workspaceId, "workspaceId", 200),
       issuedAt: text(payload.issuedAt, "issuedAt", 80),
       expiresAt: text(payload.expiresAt, "expiresAt", 80),
+      maxUsers: maxUsersFrom(payload.maxUsers),
     },
   };
 }

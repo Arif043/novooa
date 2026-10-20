@@ -20,6 +20,9 @@ teams/{teamId}/members/{uid}
   an.
 - Standalone: Ein Team entspricht einem Arbeitsbereich, abgeleitet aus der
   signierten Lizenz ([Benutzerprofile und Teammitglieder](./sqlite-teammitglieder-normalisiert.md)).
+  Seine Mitglieder sind die [Benutzerkonten der Runtime](./runtime-benutzerkonten.md)
+  mit den Rollen `admin` oder `member`; Einladungen laufen dort über
+  Einladungscodes statt Notifications.
 
 ## Siehe auch
 

@@ -1,12 +1,17 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../localization/locale_keys.g.dart';
 import '../theme/app_spacing.dart';
+import 'runtime_account_fields.dart';
 import 'runtime_connection_cubit.dart';
+import 'runtime_connection_state.dart';
 import 'runtime_endpoint.dart';
 import 'runtime_form_header.dart';
 
-/// Anmeldung mit dem Zugriffs-Passwort einer eingerichteten Runtime.
+/// Anmeldung mit dem eigenen Konto einer eingerichteten Runtime; darunter die
+/// Wege für eingeladene Personen und den Notzugang.
 class RuntimeLoginForm extends StatefulWidget {
   const RuntimeLoginForm({
     super.key,
@@ -22,60 +27,67 @@ class RuntimeLoginForm extends StatefulWidget {
 }
 
 class _RuntimeLoginFormState extends State<RuntimeLoginForm> {
+  final _loginNameController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscure = true;
 
   @override
   void dispose() {
+    _loginNameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        RuntimeFormHeader(
-          title: 'Anmelden',
-          description:
-              'Gib das Zugriffs-Passwort der Runtime unter '
-              '${widget.endpoint.displayAddress} ein.',
-        ),
-        TextField(
-          controller: _passwordController,
-          obscureText: _obscure,
-          autofocus: true,
-          autocorrect: false,
-          autofillHints: const [AutofillHints.password],
-          textInputAction: TextInputAction.done,
-          decoration: runtimeFieldDecoration(
-            context,
-            label: 'Passwort',
-            errorText: widget.errorMessage,
-            suffixIcon: IconButton(
-              tooltip: _obscure ? 'Passwort anzeigen' : 'Passwort verbergen',
-              icon: Icon(
-                _obscure
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-              ),
-              onPressed: () => setState(() => _obscure = !_obscure),
+    return AutofillGroup(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          RuntimeFormHeader(
+            title: LocaleKeys.runtime_sign_in_title.tr(),
+            description: LocaleKeys.runtime_sign_in_description.tr(
+              args: [widget.endpoint.displayAddress],
             ),
           ),
-          onSubmitted: (_) => _login(),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        RuntimeFormButton(label: 'Anmelden', onPressed: _login),
-      ],
+          RuntimeLoginNameField(
+            controller: _loginNameController,
+            autofocus: true,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          RuntimePasswordField(
+            controller: _passwordController,
+            label: LocaleKeys.runtime_access_password.tr(),
+            errorText: widget.errorMessage,
+            onSubmitted: _login,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          RuntimeFormButton(
+            label: LocaleKeys.runtime_sign_in_action.tr(),
+            onPressed: _login,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          RuntimeSignInLink(
+            label: LocaleKeys.runtime_invitation_link.tr(),
+            onPressed: () => _show(RuntimeSignInMode.invitation),
+          ),
+          RuntimeSignInLink(
+            label: LocaleKeys.runtime_recovery_link.tr(),
+            onPressed: () => _show(RuntimeSignInMode.recovery),
+          ),
+        ],
+      ),
     );
   }
+
+  void _show(RuntimeSignInMode mode) =>
+      context.read<RuntimeConnectionCubit>().showSignIn(widget.endpoint, mode);
 
   void _login() {
     context.read<RuntimeConnectionCubit>().login(
       widget.endpoint,
-      _passwordController.text,
+      loginName: _loginNameController.text,
+      password: _passwordController.text,
     );
   }
 }

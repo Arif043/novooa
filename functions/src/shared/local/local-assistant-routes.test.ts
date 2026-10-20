@@ -43,7 +43,7 @@ function handlerFor(
   return testingRoutes(assistantRoutes, {
     taskBuilderAssistant: async () => taskBuilderAssistant,
     knowledgeBaseAssistant: async () => knowledgeBaseAssistant,
-  }, {userId: "local-user"});
+  }, {}, {uid: "local-user", role: "member"});
 }
 
 function postRequest(url: string, body: unknown): LocalRuntimeRequest {

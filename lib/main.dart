@@ -26,6 +26,7 @@ import 'core/network/network_status.dart';
 import 'core/routing/app_router.dart';
 import 'core/theme/syscat_theme.dart';
 import 'core/widgets/offline_status_snackbar.dart';
+import 'features/runtime_users/presentation/cubits/current_runtime_user_cubit.dart';
 import 'features/auth/presentation/cubits/auth_session_cubit.dart';
 import 'features/notifications/infrastructure/datasources/fcm_push_click_bridge.dart';
 import 'features/notifications/infrastructure/datasources/push_click_navigation_policy.dart';
@@ -99,6 +100,8 @@ Future<void> _bootRuntimeKind(RuntimeKind kind) async {
             await resetDependencies();
             await _startApplication();
           },
+          onSignedInAgain: () =>
+              serviceLocator<CurrentRuntimeUserCubit>().load(),
         ),
       ),
     );
@@ -240,8 +243,10 @@ class _MyAppState extends State<MyApp> {
       providers: [
         if (widget.runtimeProfile.isCloud)
           BlocProvider.value(value: serviceLocator<AuthSessionCubit>()),
-        if (widget.runtimeProfile.isStandalone)
+        if (widget.runtimeProfile.isStandalone) ...[
           BlocProvider.value(value: serviceLocator<RuntimeLicenseCubit>()),
+          BlocProvider.value(value: serviceLocator<CurrentRuntimeUserCubit>()),
+        ],
       ],
       child: app,
     );

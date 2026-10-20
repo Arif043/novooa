@@ -7,7 +7,7 @@ import {MailConnectorListCache} from "./mail-connector-list-cache.js";
 function licenseOf(licenseId: string): SignedRuntimeLicense {
   return {
     signature: "sig",
-    payload: {licenseId, licenseName: "n", activationId: "a", workspaceId: "w", issuedAt: "2026-01-01", expiresAt: "2027-01-01"},
+    payload: {licenseId, licenseName: "n", activationId: "a", workspaceId: "w", issuedAt: "2026-01-01", expiresAt: "2027-01-01", maxUsers: 5},
   };
 }
 

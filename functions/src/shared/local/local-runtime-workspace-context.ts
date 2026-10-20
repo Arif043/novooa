@@ -14,7 +14,8 @@ import {type ApplicationLogger} from "../logging/application-logger.js";
  */
 export type LocalRuntimeWorkspaceContext = {
   teamId: string;
-  userId: string;
+  /** Das Profil, dem der Arbeitsbereich gehört; wird bei der Einrichtung das erste Admin-Konto. */
+  ownerUid: string;
   logger: ApplicationLogger;
   taskWorkflow: TaskWorkflow;
   /** Meldet Datei-Ereignisse an die Event-Trigger des Arbeitsbereichs. */

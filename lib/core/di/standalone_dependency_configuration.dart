@@ -134,6 +134,7 @@ import '../../features/notifications/infrastructure/services/fcm_bootstrapper.da
 import '../../features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import '../runtime/runtime_profile.dart';
 import '../network/workspace_api_client.dart';
+import 'standalone_runtime_users_dependency_configuration.dart';
 import 'standalone_transport_registration.dart';
 import '../network/workspace_binary_client.dart';
 import '../network/workspace_realtime_channel.dart';
@@ -192,6 +193,7 @@ Future<void> configureStandaloneDependencies(
   );
   configureStandaloneWorkspaceTransferDependencies(locator);
   configureStandaloneScriptPackagesDependencies(locator);
+  configureStandaloneRuntimeUsersDependencies(locator);
   locator
     ..registerLazySingleton<RuntimeLicenseRepository>(
       () => HttpRuntimeLicenseRepository(locator<WorkspaceApiClient>()),

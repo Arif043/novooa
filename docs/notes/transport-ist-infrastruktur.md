@@ -29,4 +29,4 @@ Folgen:
 ## Siehe auch
 
 - [Adresse und Schema der Runtime](./runtime-adresse-schema.md)
-- [Betreiber-Passwort-Pflicht](./betreiber-passwort-pflicht.md)
+- [Anmeldepflicht der Runtime](./runtime-anmeldepflicht.md)

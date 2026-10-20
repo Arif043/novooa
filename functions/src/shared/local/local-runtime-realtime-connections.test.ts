@@ -10,14 +10,14 @@ function connection(name: string, closedBy: string[]) {
   return {close: (code: number) => { closedBy.push(`${name}:${code}`); }};
 }
 
-test("closeOtherSessions keeps only the connections of the current session", () => {
+test("closeInactive closes only connections whose session is no longer allowed", async () => {
   const closed: string[] = [];
   const connections = new LocalRuntimeRealtimeConnections();
   connections.add(connection("eigene", closed), "aktuell");
   connections.add(connection("fremd-1", closed), "alt");
   connections.add(connection("fremd-2", closed), "anderes-geraet");
 
-  connections.closeOtherSessions("aktuell");
+  await connections.closeInactive(async (token) => token === "aktuell");
 
   assert.deepEqual(closed.sort(), [`fremd-1:${realtimeSessionEndedCode}`, `fremd-2:${realtimeSessionEndedCode}`]);
   assert.equal(connections.size, 1);

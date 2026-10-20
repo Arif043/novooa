@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/task_activity.dart';
 import 'node_activity_values.dart';
+import 'run_origin_label.dart';
 import 'teamwork_conversation/teamwork_conversation_button.dart';
 
 class ActivityTile extends StatelessWidget {
@@ -82,7 +83,10 @@ class _ActivityText extends StatelessWidget {
 
   String get _subtitle {
     final status = _statusLabel(activity.status);
-    if (activity.target == TaskActivityTarget.task) return status;
+    if (activity.target == TaskActivityTarget.task) {
+      final origin = runOriginLabel(activity.origin);
+      return origin == null ? status : '$status · $origin';
+    }
     return '$status · ${activity.nodeId ?? 'Baustein'}';
   }
 
