@@ -85,23 +85,25 @@ Future<void> _bootRuntimeKind(RuntimeKind kind) async {
     runApp(
       RuntimeVariantSwitcherScope(
         switcher: const _AppRuntimeVariantSwitcher(),
-        child: RuntimeConnectionGate(
-          runtimeProfile: runtimeProfile,
-          configureApplication: _configureApplication,
-          createApplication: (profile) =>
-              localizedApp(MyApp(runtimeProfile: profile)),
-          // Abmelden vergisst Sitzung, Adresse und Varianten-Wahl
-          // vollständig und ruft diesen Callback. Ein erneutes Auflösen der
-          // Startentscheidung landet danach nativ korrekt wieder beim
-          // Cloud-Login (mit Wechsel-Hinweis zurück zur eigenen Runtime)
-          // oder im Web direkt wieder im Standalone-Fluss — dort gibt die
-          // Herkunft die Variante ohnehin fix vor.
-          onFullReset: () async {
-            await resetDependencies();
-            await _startApplication();
-          },
-          onSignedInAgain: () =>
-              serviceLocator<CurrentRuntimeUserCubit>().load(),
+        // Anmeldung und Einrichtung brauchen die Übersetzungen schon vor der App.
+        child: localizedApp(
+          RuntimeConnectionGate(
+            runtimeProfile: runtimeProfile,
+            configureApplication: _configureApplication,
+            createApplication: (profile) => MyApp(runtimeProfile: profile),
+            // Abmelden vergisst Sitzung, Adresse und Varianten-Wahl
+            // vollständig und ruft diesen Callback. Ein erneutes Auflösen der
+            // Startentscheidung landet danach nativ korrekt wieder beim
+            // Cloud-Login (mit Wechsel-Hinweis zurück zur eigenen Runtime)
+            // oder im Web direkt wieder im Standalone-Fluss — dort gibt die
+            // Herkunft die Variante ohnehin fix vor.
+            onFullReset: () async {
+              await resetDependencies();
+              await _startApplication();
+            },
+            onSignedInAgain: () =>
+                serviceLocator<CurrentRuntimeUserCubit>().load(),
+          ),
         ),
       ),
     );
