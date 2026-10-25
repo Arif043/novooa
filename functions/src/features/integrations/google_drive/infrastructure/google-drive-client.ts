@@ -90,12 +90,16 @@ function driveFileFrom(data: Record<string, unknown>): GoogleDriveFile {
   };
 }
 
+/** 404 heißt bei `drive.file` meist „nicht freigegeben“; bei allem anderen zählt Googles eigener Grund. */
 async function failureFrom(response: Response): Promise<GoogleDriveError> {
-  if (response.status === 403 || response.status === 404) {
+  const body = await response.json().catch(() => ({})) as {error?: {message?: unknown; errors?: {reason?: unknown}[]}};
+  if (response.status === 404) {
     return new GoogleDriveError("Die Datei oder der Ordner wurde nicht gefunden oder ist für novooa nicht freigegeben. " +
       "Gib sie in den Einstellungen unter „Verbindungen“ über „Weitere Dateien freigeben“ frei.");
   }
-  const body = await response.json().catch(() => ({})) as {error?: {message?: unknown}};
-  const reason = typeof body.error?.message === "string" ? `: ${body.error.message.slice(0, 200)}` : "";
-  return new GoogleDriveError(`Google Drive hat die Anfrage abgelehnt (Status ${response.status})${reason}.`);
+  if (body.error?.errors?.some((error) => error.reason === "storageQuotaExceeded")) {
+    return new GoogleDriveError("Der Google-Drive-Speicher dieses Kontos ist voll. Gib Speicher frei oder erweitere ihn.");
+  }
+  const reason = typeof body.error?.message === "string" ? body.error.message.slice(0, 300).replace(/\.+$/, "") : "";
+  return new GoogleDriveError(`Google Drive hat die Anfrage abgelehnt (Status ${response.status})${reason ? `: ${reason}` : ""}.`);
 }

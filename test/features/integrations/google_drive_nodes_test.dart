@@ -83,6 +83,24 @@ void main() {
     },
   );
 
+  test('ein anderes Konto verwirft Ordner und gewählte Datei', () {
+    final upload = const GoogleDriveNodeConfig(action: 'upload')
+        .copyWith(accountId: 'alt')
+        .withParam('folderId', 'ordner-alt')
+        .withParam('fileName', 'a.txt');
+    final picked = const GoogleDriveNodeConfig(
+      action: 'read',
+    ).copyWith(accountId: 'alt').withParam('fileId', 'datei-alt');
+    final byExpression = picked
+        .withParam('fileSource', 'expression')
+        .withParam('fileId', '{{driveFileId}}');
+
+    expect(upload.withAccount('neu').params, {'fileName': 'a.txt'});
+    expect(picked.withAccount('neu').params, isEmpty);
+    expect(byExpression.withAccount('neu').params, byExpression.params);
+    expect(upload.withAccount('alt'), upload);
+  });
+
   test('Ausgaben passen zu den Werten des Backends', () {
     const upload = GoogleDriveNodeConfig(action: 'upload');
     const read = GoogleDriveNodeConfig(action: 'read');

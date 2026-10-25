@@ -71,7 +71,7 @@ class _ActionFields extends StatelessWidget {
         GoogleAccountPickerField(
           selectedId: config.accountId,
           accounts: accounts,
-          onChanged: (id) => update((c) => c.copyWith(accountId: id)),
+          onChanged: (id) => update((c) => c.withAccount(id)),
         ),
         const SizedBox(height: AppSpacing.sm),
         if (spec == GoogleDriveActions.upload)

@@ -77,3 +77,19 @@ test("nicht freigegebene Dateien melden, wie man sie freigibt", async () => {
   await assert.rejects(client.download("fremd"), (error: unknown) =>
     error instanceof GoogleDriveError && /Weitere Dateien freigeben/.test(error.message));
 });
+
+test("verweigerter Zugriff nennt Googles Grund", async () => {
+  const reason = {error: {message: "The user does not have sufficient permissions for this file."}};
+  const {client} = clientAnswering([() => Response.json(reason, {status: 403})]);
+
+  await assert.rejects(client.download("nur-lesen"), (error: unknown) =>
+    error instanceof GoogleDriveError && /Status 403\): The user does not have sufficient permissions/.test(error.message));
+});
+
+test("ein voller Drive-Speicher wird verständlich gemeldet", async () => {
+  const quota = {error: {message: "The user's Drive storage quota has been exceeded.", errors: [{reason: "storageQuotaExceeded"}]}};
+  const {client} = clientAnswering([() => Response.json(quota, {status: 403})]);
+
+  await assert.rejects(client.download("voll"), (error: unknown) =>
+    error instanceof GoogleDriveError && /Speicher dieses Kontos ist voll/.test(error.message));
+});

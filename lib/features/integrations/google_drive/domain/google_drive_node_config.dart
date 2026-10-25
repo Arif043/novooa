@@ -69,6 +69,14 @@ class GoogleDriveNodeConfig extends PluginNodeConfig {
     );
   }
 
+  /// Ordner und ausgewählte Dateien gehören zum Konto; ein ID-Template bleibt.
+  GoogleDriveNodeConfig withAccount(String id) {
+    if (id == accountId) return this;
+    final next = Map<String, Object?>.of(params)..remove('folderId');
+    if (params['fileSource'] != 'expression') next.remove('fileId');
+    return copyWith(accountId: id, params: next);
+  }
+
   /// Setzt eine Eingabe; leere Texte entfallen, damit das Dokument schlank bleibt.
   GoogleDriveNodeConfig withParam(String key, Object? value) {
     final next = Map<String, Object?>.of(params);
