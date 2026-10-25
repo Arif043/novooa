@@ -74,3 +74,15 @@ test("recovery with the license token resets an admin and ends the old sessions"
   assert.equal(passwords.byUid.get("owner"), "neues-passwort1");
   assert.deepEqual(sessions.revoked, ["owner"]);
 });
+
+test("sign-in keeps what the client reports about its device", async () => {
+  const {setUp, signIn, sessions} = fixture();
+  await setUp.execute(admin);
+
+  await signIn.execute({loginName: "anna", password: "geheim-passwort1", device: {app: " novooa ", os: "macos", browser: "Chrome"}});
+  await signIn.execute({loginName: "anna", password: "geheim-passwort1", device: {app: "x".repeat(80), os: "beos", browser: ""}});
+  await signIn.execute({loginName: "anna", password: "geheim-passwort1"});
+
+  assert.deepEqual(sessions.devices.map(({app, os, browser}) => [app.length, os, browser]),
+    [[6, "macos", "Chrome"], [60, "unknown", null], [0, "unknown", null]]);
+});

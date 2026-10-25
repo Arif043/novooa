@@ -56,7 +56,7 @@ class _RuntimeConnectionGateState extends State<RuntimeConnectionGate> {
     _cubit = RuntimeConnectionCubit(
       RuntimeEndpointPreferences(SharedPreferencesAsync()),
       createRuntimeCredentialStore(),
-      const HttpRuntimeLoginClient(),
+      HttpRuntimeLoginClient(device: RuntimeDevice.current(app: 'novooa')),
       const HttpRuntimeAvailability(),
       onboarding: const HttpRuntimeOnboardingClient(),
       // Erst ab der ersten erfolgreichen Verbindung registriert (siehe

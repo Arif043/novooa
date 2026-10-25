@@ -1194,5 +1194,39 @@
     "selected": "Ausgewähltes Bild",
     "required": "Bitte füge ein Bild hinzu.",
     "pick_failed": "Das Bild konnte nicht übernommen werden."
+  },
+  "runtime_sessions": {
+    "title": "Angemeldete Geräte",
+    "description": "Geräte bleiben angemeldet, solange sie mindestens einmal pro Woche genutzt werden.",
+    "load_failed": "Die angemeldeten Geräte konnten nicht geladen werden.",
+    "retry": "Erneut versuchen",
+    "loading": "Angemeldete Geräte werden geladen",
+    "this_device": "Dieses Gerät",
+    "unknown_device": "Unbekanntes Gerät",
+    "browser_on_os": "{} auf {}",
+    "native_app": "{}-App",
+    "signed_in_on": "Angemeldet am {}",
+    "active_recently": "In der letzten Stunde aktiv",
+    "active_hours_ago": "Zuletzt aktiv vor {} Std.",
+    "active_one_day_ago": "Zuletzt aktiv vor 1 Tag",
+    "active_days_ago": "Zuletzt aktiv vor {} Tagen",
+    "revoke": "{} abmelden",
+    "revoke_title": "Dieses Gerät abmelden?",
+    "revoke_message": "{} muss sich danach mit dem Passwort neu anmelden.",
+    "revoke_confirm": "Abmelden",
+    "cancel": "Abbrechen",
+    "revoked": "Das Gerät wurde abgemeldet.",
+    "revoke_others": "Andere Geräte abmelden",
+    "revoke_others_title": "Andere Geräte abmelden?",
+    "revoke_others_message": "Alle anderen Geräte müssen sich danach mit dem Passwort neu anmelden. Dieses Gerät bleibt angemeldet.",
+    "others_revoked_none": "Es waren keine anderen Geräte angemeldet.",
+    "others_revoked_one": "1 anderes Gerät wurde abgemeldet.",
+    "others_revoked_many": "{} andere Geräte wurden abgemeldet.",
+    "only_this_device": "Kein anderes Gerät ist angemeldet.",
+    "failure": {
+      "runtime_unavailable": "Die Runtime ist nicht erreichbar. Bitte versuche es erneut.",
+      "not_found": "Dieses Gerät war bereits abgemeldet.",
+      "unexpected": "Das Gerät konnte nicht abgemeldet werden."
+    }
   }
 }

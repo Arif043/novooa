@@ -2,10 +2,10 @@
 name: novooa-dashboard
 description: Entwickelt individuelle Kunden-Dashboards (Flutter, Web/Desktop/Mobil) für novooa, die parallel zum offiziellen Frontend laufen und nur Aufgaben starten, Läufe und Ergebnisse zeigen und Freigaben beantworten – ohne Aufgabenstudio, Agenten und Einstellungen. Nutzen, wenn ein Kunden-Dashboard angelegt, erweitert oder an eine neue Runtime-Version angepasst wird, oder wenn nach Anmeldung, Runtime-API, Echtzeit oder dem Paket novooa_runtime_client für ein Dashboard gefragt wird.
 license: Proprietary
-compatibility: Flutter mit Dart ^3.12, Lesezugriff auf das private syscat2-Repo, eine novooa-Runtime ab novooa_runtime_client 0.1.0.
+compatibility: Flutter mit Dart ^3.12, Lesezugriff auf das private syscat2-Repo, eine novooa-Runtime ab novooa_runtime_client 0.2.0.
 metadata:
-  version: "0.2.0"
-  runtime-client: "0.1.0"
+  version: "0.3.0"
+  runtime-client: "0.2.0"
   owner: novooa
 ---
 

@@ -1194,5 +1194,39 @@
     "selected": "Seçilen görsel",
     "required": "Lütfen bir görsel ekle.",
     "pick_failed": "Görsel eklenemedi."
+  },
+  "runtime_sessions": {
+    "title": "Oturum açmış cihazlar",
+    "description": "Cihazlar haftada en az bir kez kullanıldıkları sürece oturum açık kalır.",
+    "load_failed": "Oturum açmış cihazlar yüklenemedi.",
+    "retry": "Tekrar dene",
+    "loading": "Oturum açmış cihazlar yükleniyor",
+    "this_device": "Bu cihaz",
+    "unknown_device": "Bilinmeyen cihaz",
+    "browser_on_os": "{} – {}",
+    "native_app": "{} uygulaması",
+    "signed_in_on": "{} tarihinde oturum açıldı",
+    "active_recently": "Son bir saat içinde etkin",
+    "active_hours_ago": "En son {} sa önce etkin",
+    "active_one_day_ago": "En son 1 gün önce etkin",
+    "active_days_ago": "En son {} gün önce etkin",
+    "revoke": "{} oturumunu kapat",
+    "revoke_title": "Bu cihazın oturumu kapatılsın mı?",
+    "revoke_message": "{} daha sonra parolayla yeniden oturum açmalıdır.",
+    "revoke_confirm": "Oturumu kapat",
+    "cancel": "İptal",
+    "revoked": "Cihazın oturumu kapatıldı.",
+    "revoke_others": "Diğer cihazların oturumunu kapat",
+    "revoke_others_title": "Diğer cihazların oturumu kapatılsın mı?",
+    "revoke_others_message": "Diğer tüm cihazlar daha sonra parolayla yeniden oturum açmalıdır. Bu cihazın oturumu açık kalır.",
+    "others_revoked_none": "Başka oturum açmış cihaz yoktu.",
+    "others_revoked_one": "1 cihazın oturumu kapatıldı.",
+    "others_revoked_many": "{} cihazın oturumu kapatıldı.",
+    "only_this_device": "Başka oturum açmış cihaz yok.",
+    "failure": {
+      "runtime_unavailable": "Runtime'a ulaşılamıyor. Lütfen tekrar deneyin.",
+      "not_found": "Bu cihazın oturumu zaten kapatılmıştı.",
+      "unexpected": "Cihazın oturumu kapatılamadı."
+    }
   }
 }

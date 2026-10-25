@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../app/dashboard_config.dart';
 import '../app/dashboard_dependencies.dart';
 import '../app/dashboard_shell.dart';
 import 'connection_page.dart';
@@ -24,7 +25,9 @@ class _ConnectionGateState extends State<ConnectionGate> {
   late final RuntimeConnectionCubit _connection = RuntimeConnectionCubit(
     RuntimeEndpointPreferences(SharedPreferencesAsync()),
     _credentials,
-    const HttpRuntimeLoginClient(),
+    HttpRuntimeLoginClient(
+      device: RuntimeDevice.current(app: DashboardConfig.title),
+    ),
     const HttpRuntimeAvailability(),
     onboarding: const HttpRuntimeOnboardingClient(),
     onSignedOut: _restartAfterSignOut,

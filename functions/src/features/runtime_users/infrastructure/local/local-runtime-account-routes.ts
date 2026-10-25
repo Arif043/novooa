@@ -12,6 +12,7 @@ import {
 } from "../../domain/usecases/runtime-access.js";
 import {sendRuntimeUserFailure} from "./runtime-user-http-errors.js";
 import {
+  DeviceField,
   DisplayNameField,
   LicenseTokenField,
   LoginNameField,
@@ -55,16 +56,16 @@ export const accountRoutes: FastifyPluginAsyncTypebox<AccountRoutesOptions> = as
     }
   });
 
-  app.post("/v1/auth/login", {schema: {body: Type.Object({loginName: LoginNameField, password: PasswordField}),
+  app.post("/v1/auth/login", {schema: {body: Type.Object({loginName: LoginNameField, password: PasswordField, device: DeviceField}),
     response: {...failures, 200: SessionTokenDto}}}, async (request, reply) =>
     limited(request, reply, options.limiter, request.body.loginName, async () => ({token: await options.signIn.execute(request.body)})));
 
-  app.post("/v1/auth/invitations/redeem", {schema: {body: Type.Object({code: Type.String({maxLength: 100}), password: PasswordField}),
+  app.post("/v1/auth/invitations/redeem", {schema: {body: Type.Object({code: Type.String({maxLength: 100}), password: PasswordField, device: DeviceField}),
     response: {...failures, 200: SessionTokenDto}}}, async (request, reply) =>
     limited(request, reply, options.limiter, undefined, async () => ({token: await options.redeem.execute(request.body)})));
 
   app.post("/v1/auth/recover", {schema: {body: Type.Object({
-    activationToken: LicenseTokenField, loginName: LoginNameField, password: PasswordField,
+    activationToken: LicenseTokenField, loginName: LoginNameField, password: PasswordField, device: DeviceField,
   }), response: {...failures, 200: SessionTokenDto}}}, async (request, reply) =>
     limited(request, reply, options.limiter, request.body.loginName, async () => ({token: await options.recover.execute(request.body)})));
 

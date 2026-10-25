@@ -117,7 +117,9 @@ import '../../features/licensing/domain/usecases/release_runtime_license.dart';
 import '../../features/licensing/infrastructure/repositories/http_runtime_license_repository.dart';
 import '../../features/licensing/presentation/cubits/runtime_license_cubit.dart';
 import '../../features/runtime_sessions/domain/repositories/runtime_session_repository.dart';
+import '../../features/runtime_sessions/domain/usecases/load_runtime_sessions.dart';
 import '../../features/runtime_sessions/domain/usecases/revoke_other_runtime_sessions.dart';
+import '../../features/runtime_sessions/domain/usecases/revoke_runtime_session.dart';
 import '../../features/runtime_sessions/infrastructure/repositories/http_runtime_session_repository.dart';
 import '../../features/runtime_sessions/presentation/cubits/runtime_sessions_cubit.dart';
 import '../../features/notifications/domain/repositories/app_notification_repository.dart';
@@ -475,8 +477,18 @@ Future<void> configureStandaloneDependencies(
     ..registerLazySingleton(
       () => RevokeOtherRuntimeSessions(locator<RuntimeSessionRepository>()),
     )
+    ..registerLazySingleton(
+      () => LoadRuntimeSessions(locator<RuntimeSessionRepository>()),
+    )
+    ..registerLazySingleton(
+      () => RevokeRuntimeSession(locator<RuntimeSessionRepository>()),
+    )
     ..registerFactory(
-      () => RuntimeSessionsCubit(locator<RevokeOtherRuntimeSessions>()),
+      () => RuntimeSessionsCubit(
+        locator<LoadRuntimeSessions>(),
+        locator<RevokeRuntimeSession>(),
+        locator<RevokeOtherRuntimeSessions>(),
+      ),
     )
     ..registerLazySingleton(
       () => RuntimeLicenseCubit(

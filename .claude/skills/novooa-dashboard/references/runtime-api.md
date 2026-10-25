@@ -14,6 +14,7 @@ oder `WorkspaceConnectionException`.
 - [Freigaben und Formulare](#freigaben-und-formulare)
 - [Aktivitäten](#aktivitäten)
 - [Dateien](#dateien)
+- [Angemeldete Geräte](#angemeldete-geräte)
 - [Fehlercodes](#fehlercodes)
 
 ## Konventionen
@@ -129,6 +130,25 @@ Future<Uint8List> download(String fileId, String versionId) async {
 Speichern bzw. Öffnen ist plattformabhängig (Web: Download über einen
 `Blob`-Link, Desktop/Mobil: z. B. `file_selector` oder `share_plus`); dafür
 ein eigenes Interface in `domain/` und je Plattform eine Implementierung.
+
+## Angemeldete Geräte
+
+Nur das eigene Konto; Verwaltung gehört ins offizielle Frontend, die Vorlage
+nutzt diese Endpunkte nicht.
+
+`GET /v1/auth/sessions` →
+`{items: [{id, current, createdAt, lastUsedAt, device: {app, os, browser}}]}`,
+zuletzt aktive zuerst. `lastUsedAt` ist höchstens auf eine Stunde genau.
+`os` ist `android | ios | macos | windows | linux | unknown`, `browser` nur
+im Web gesetzt.
+
+`DELETE /v1/auth/sessions/:id` → `204`; eine fremde, unbekannte oder die
+eigene Sitzung → `404 {code: "session_not_found"}` (die eigene endet über
+`POST /v1/auth/logout`). `POST /v1/auth/sessions/revoke-others` →
+`{revoked: <Anzahl>}`.
+
+Was unter `device` steht, meldet der Client beim Login selbst
+(`HttpRuntimeLoginClient(device: …)`, siehe [Authentifizierung](authentifizierung.md)).
 
 ## Fehlercodes
 

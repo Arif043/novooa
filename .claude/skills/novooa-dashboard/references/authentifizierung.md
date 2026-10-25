@@ -22,7 +22,7 @@ dependencies:
     git:
       url: https://github.com/Arif043/syscat2.git   # privat, Lesezugriff nötig
       path: packages/novooa_runtime_client
-      ref: novooa-runtime-client-v0.1.0
+      ref: novooa-runtime-client-v0.2.0
 ```
 
 Ein Import genügt: `import 'package:novooa_runtime_client/novooa_runtime_client.dart';`.
@@ -53,7 +53,8 @@ final sessionEvents = RuntimeSessionEvents();
 final connection = RuntimeConnectionCubit(
   RuntimeEndpointPreferences(SharedPreferencesAsync()),
   credentials,
-  const HttpRuntimeLoginClient(),
+  // Name des Dashboards: erscheint in der Geräteliste des offiziellen Frontends.
+  HttpRuntimeLoginClient(device: RuntimeDevice.current(app: DashboardConfig.title)),
   const HttpRuntimeAvailability(),
   onboarding: const HttpRuntimeOnboardingClient(),
   onSignedOut: restartAfterSignOut, // Abhängigkeiten verwerfen, neu verbinden
@@ -164,7 +165,8 @@ fertiger Text. Das Dashboard formuliert sie selbst (Vorlage:
 
 ## Endpunkte
 
-Ohne Sitzung: `GET /healthz`, `POST /v1/auth/login {loginName, password}`,
-`POST /v1/auth/invitations/redeem {code, password}` (beide → `{token}`).
+Ohne Sitzung: `GET /healthz`, `POST /v1/auth/login {loginName, password, device?}`,
+`POST /v1/auth/invitations/redeem {code, password, device?}` (beide → `{token}`;
+`device` = `{app, os, browser}`, setzt `HttpRuntimeLoginClient`).
 Mit Sitzung: `GET /v1/auth/me`, `POST /v1/auth/logout` (`204`),
 `POST /v1/realtime/ticket`. Alles Weitere: [Runtime-API](runtime-api.md).

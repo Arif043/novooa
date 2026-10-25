@@ -1093,5 +1093,37 @@ abstract class  LocaleKeys {
   static const image_field_required = 'image_field.required';
   static const image_field_pick_failed = 'image_field.pick_failed';
   static const image_field = 'image_field';
+  static const runtime_sessions_title = 'runtime_sessions.title';
+  static const runtime_sessions_description = 'runtime_sessions.description';
+  static const runtime_sessions_load_failed = 'runtime_sessions.load_failed';
+  static const runtime_sessions_retry = 'runtime_sessions.retry';
+  static const runtime_sessions_loading = 'runtime_sessions.loading';
+  static const runtime_sessions_this_device = 'runtime_sessions.this_device';
+  static const runtime_sessions_unknown_device = 'runtime_sessions.unknown_device';
+  static const runtime_sessions_browser_on_os = 'runtime_sessions.browser_on_os';
+  static const runtime_sessions_native_app = 'runtime_sessions.native_app';
+  static const runtime_sessions_signed_in_on = 'runtime_sessions.signed_in_on';
+  static const runtime_sessions_active_recently = 'runtime_sessions.active_recently';
+  static const runtime_sessions_active_hours_ago = 'runtime_sessions.active_hours_ago';
+  static const runtime_sessions_active_one_day_ago = 'runtime_sessions.active_one_day_ago';
+  static const runtime_sessions_active_days_ago = 'runtime_sessions.active_days_ago';
+  static const runtime_sessions_revoke = 'runtime_sessions.revoke';
+  static const runtime_sessions_revoke_title = 'runtime_sessions.revoke_title';
+  static const runtime_sessions_revoke_message = 'runtime_sessions.revoke_message';
+  static const runtime_sessions_revoke_confirm = 'runtime_sessions.revoke_confirm';
+  static const runtime_sessions_cancel = 'runtime_sessions.cancel';
+  static const runtime_sessions_revoked = 'runtime_sessions.revoked';
+  static const runtime_sessions_revoke_others = 'runtime_sessions.revoke_others';
+  static const runtime_sessions_revoke_others_title = 'runtime_sessions.revoke_others_title';
+  static const runtime_sessions_revoke_others_message = 'runtime_sessions.revoke_others_message';
+  static const runtime_sessions_others_revoked_none = 'runtime_sessions.others_revoked_none';
+  static const runtime_sessions_others_revoked_one = 'runtime_sessions.others_revoked_one';
+  static const runtime_sessions_others_revoked_many = 'runtime_sessions.others_revoked_many';
+  static const runtime_sessions_only_this_device = 'runtime_sessions.only_this_device';
+  static const runtime_sessions_failure_runtime_unavailable = 'runtime_sessions.failure.runtime_unavailable';
+  static const runtime_sessions_failure_not_found = 'runtime_sessions.failure.not_found';
+  static const runtime_sessions_failure_unexpected = 'runtime_sessions.failure.unexpected';
+  static const runtime_sessions_failure = 'runtime_sessions.failure';
+  static const runtime_sessions = 'runtime_sessions';
 
 }

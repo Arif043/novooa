@@ -1194,5 +1194,39 @@
     "selected": "Selected image",
     "required": "Please add an image.",
     "pick_failed": "The image could not be added."
+  },
+  "runtime_sessions": {
+    "title": "Signed-in devices",
+    "description": "Devices stay signed in as long as they are used at least once a week.",
+    "load_failed": "The signed-in devices could not be loaded.",
+    "retry": "Try again",
+    "loading": "Loading signed-in devices",
+    "this_device": "This device",
+    "unknown_device": "Unknown device",
+    "browser_on_os": "{} on {}",
+    "native_app": "{} app",
+    "signed_in_on": "Signed in on {}",
+    "active_recently": "Active within the last hour",
+    "active_hours_ago": "Last active {} h ago",
+    "active_one_day_ago": "Last active 1 day ago",
+    "active_days_ago": "Last active {} days ago",
+    "revoke": "Sign out {}",
+    "revoke_title": "Sign out this device?",
+    "revoke_message": "{} must then sign in again with the password.",
+    "revoke_confirm": "Sign out",
+    "cancel": "Cancel",
+    "revoked": "The device was signed out.",
+    "revoke_others": "Sign out other devices",
+    "revoke_others_title": "Sign out other devices?",
+    "revoke_others_message": "All other devices must then sign in again with the password. This device stays signed in.",
+    "others_revoked_none": "No other devices were signed in.",
+    "others_revoked_one": "1 other device was signed out.",
+    "others_revoked_many": "{} other devices were signed out.",
+    "only_this_device": "No other device is signed in.",
+    "failure": {
+      "runtime_unavailable": "The runtime is not reachable. Please try again.",
+      "not_found": "This device was already signed out.",
+      "unexpected": "The device could not be signed out."
+    }
   }
 }

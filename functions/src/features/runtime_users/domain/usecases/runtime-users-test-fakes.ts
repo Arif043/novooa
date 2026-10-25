@@ -1,6 +1,7 @@
 import {type LoginName} from "../entities/login-name.js";
 import {type RuntimePassword} from "../entities/runtime-password.js";
 import {type NewRuntimeUser, type RuntimeUser, type RuntimeUserChanges} from "../entities/runtime-user.js";
+import {type SessionDevice} from "../entities/session-device.js";
 import {type InvitationRepository, type IssuedInvitation} from "../repositories/invitation-repository.js";
 import {type PasswordCredentialRepository} from "../repositories/password-credential-repository.js";
 import {type RuntimeSessionAccess} from "../repositories/runtime-session-access.js";
@@ -94,8 +95,11 @@ export class MemorySessions implements RuntimeSessionAccess {
   readonly created: string[] = [];
   readonly revoked: string[] = [];
 
-  async createSession(uid: string): Promise<string> {
+  readonly devices: SessionDevice[] = [];
+
+  async createSession(uid: string, device: SessionDevice): Promise<string> {
     this.created.push(uid);
+    this.devices.push(device);
     return `token-${uid}`;
   }
 

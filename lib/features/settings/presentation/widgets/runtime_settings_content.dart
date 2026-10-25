@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -147,11 +148,10 @@ class _SessionsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return SettingsSection(
       icon: Icons.devices_outlined,
-      title: 'Angemeldete Geräte',
-      description:
-          'Geräte bleiben angemeldet, solange sie mindestens einmal pro Woche genutzt werden.',
+      title: LocaleKeys.runtime_sessions_title.tr(),
+      description: LocaleKeys.runtime_sessions_description.tr(),
       child: BlocProvider(
-        create: (_) => serviceLocator<RuntimeSessionsCubit>(),
+        create: (_) => serviceLocator<RuntimeSessionsCubit>()..load(),
         child: const RuntimeSessionsSection(),
       ),
     );

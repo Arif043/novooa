@@ -1,15 +1,9 @@
-enum RuntimeSessionFailureKind { runtimeUnavailable, unexpected }
+enum RuntimeSessionFailureKind { runtimeUnavailable, notFound, unexpected }
 
-/// Fehler beim Verwalten der Sitzungen einer Runtime.
+/// Fehler beim Verwalten der Sitzungen einer Runtime; Texte entstehen in der
+/// Oberfläche.
 class RuntimeSessionFailure {
   const RuntimeSessionFailure(this.kind);
 
   final RuntimeSessionFailureKind kind;
-
-  String get message => switch (kind) {
-    RuntimeSessionFailureKind.runtimeUnavailable =>
-      'Die Runtime ist nicht erreichbar. Bitte versuche es erneut.',
-    RuntimeSessionFailureKind.unexpected =>
-      'Die anderen Sitzungen konnten nicht abgemeldet werden.',
-  };
 }

@@ -5,6 +5,17 @@ Versionen nach SemVer. Bei jeder Änderung an `SKILL.md`, `references/`,
 (`metadata.version`) und in `scripts/create_dashboard.sh` (`skill_version`)
 heben und hier eintragen.
 
+## 0.3.0
+
+- Für `novooa_runtime_client` 0.2.0: `HttpRuntimeLoginClient` verlangt
+  `device:`. Die Vorlage meldet `RuntimeDevice.current(app:
+  DashboardConfig.title)`, damit Anmeldungen über das Dashboard in der
+  Geräteliste des offiziellen Frontends erkennbar sind. Bestehende
+  Dashboards: `connection_gate.dart` übernehmen und `ref` auf
+  `novooa-runtime-client-v0.2.0` heben.
+- Runtime-API: angemeldete Geräte (`GET /v1/auth/sessions`,
+  `DELETE /v1/auth/sessions/:id`).
+
 ## 0.2.0
 
 - Die Runtime kennt den Baustein „Bild anfordern“ (`mediaInput`) nicht mehr;

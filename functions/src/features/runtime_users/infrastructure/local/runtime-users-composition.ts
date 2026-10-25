@@ -67,7 +67,7 @@ export function createRuntimeUsersModule(dependencies: RuntimeUsersDependencies)
 /** Beendete Sitzungen schließen auch ihre offenen Realtime-Verbindungen sofort. */
 function sessionAccessFor({sessions, connections}: RuntimeUsersDependencies): RuntimeSessionAccess {
   return {
-    createSession: (uid) => sessions.createSession(uid),
+    createSession: (uid, device) => sessions.createSession(uid, device),
     revokeSessionsOf: async (uid) => {
       await sessions.deleteSessionsOf(uid);
       await connections.closeInactive((token) => sessions.isActive(token));

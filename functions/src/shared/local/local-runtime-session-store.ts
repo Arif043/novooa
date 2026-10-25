@@ -1,8 +1,10 @@
-import {and, eq, lte, ne} from "drizzle-orm";
+import {and, desc, eq, gt, lte, ne} from "drizzle-orm";
 import {createHash, randomBytes} from "node:crypto";
 import {type RuntimeExecutor} from "../../db/database.js";
 import {runtimeSessions, teamMembers} from "../../db/schema.js";
+import {type RuntimeSessionSummary} from "../../features/runtime_users/domain/entities/runtime-session.js";
 import {isRuntimeRole, type RuntimeActor} from "../../features/runtime_users/domain/entities/runtime-user.js";
+import {SessionDevice} from "../../features/runtime_users/domain/entities/session-device.js";
 
 const tokenBytes = 32;
 /** Eine Sitzung läuft ab, wenn sie so lange nicht genutzt wurde; jede Nutzung startet die Frist neu. */
@@ -25,10 +27,15 @@ export class LocalRuntimeSessionStore {
   ) {}
 
   /** Erzeugt eine neue Session für das Konto und liefert das Klartext-Token einmalig zurück. */
-  async createSession(uid: string): Promise<string> {
+  async createSession(uid: string, device: SessionDevice = SessionDevice.unknown): Promise<string> {
     await this.database.delete(runtimeSessions).where(lte(runtimeSessions.expires_at, this.isoIn(0)));
     const token = randomBytes(tokenBytes).toString("hex");
-    await this.database.insert(runtimeSessions).values({token_hash: hashOf(token), uid, expires_at: this.isoIn(idleLifetimeMs)});
+    const now = this.isoIn(0);
+    await this.database.insert(runtimeSessions).values({
+      token_hash: hashOf(token), id: randomBytes(16).toString("hex"), uid,
+      device_app: device.app, device_os: device.os, device_browser: device.browser,
+      created_at: now, last_used_at: now, expires_at: this.isoIn(idleLifetimeMs),
+    });
     return token;
   }
 
@@ -40,7 +47,7 @@ export class LocalRuntimeSessionStore {
     const session = await this.sessionOf(token);
     if (session === null || session.expiresAtMs <= this.now()) return null;
     if (session.expiresAtMs - this.now() < idleLifetimeMs - extensionIntervalMs) {
-      await this.database.update(runtimeSessions).set({expires_at: this.isoIn(idleLifetimeMs)})
+      await this.database.update(runtimeSessions).set({last_used_at: this.isoIn(0), expires_at: this.isoIn(idleLifetimeMs)})
         .where(eq(runtimeSessions.token_hash, hashOf(token)));
     }
     return session.actor;
@@ -62,6 +69,26 @@ export class LocalRuntimeSessionStore {
       .where(and(eq(runtimeSessions.uid, uid), ne(runtimeSessions.token_hash, hashOf(currentToken))))
       .returning({token_hash: runtimeSessions.token_hash});
     return deleted.length;
+  }
+
+  /** Die gültigen Sitzungen eines Kontos, zuletzt genutzte zuerst. */
+  async listSessionsOf(uid: string, currentToken: string): Promise<RuntimeSessionSummary[]> {
+    const rows = await this.database.select().from(runtimeSessions)
+      .where(and(eq(runtimeSessions.uid, uid), gt(runtimeSessions.expires_at, this.isoIn(0))))
+      .orderBy(desc(runtimeSessions.last_used_at));
+    const currentHash = hashOf(currentToken);
+    return rows.map((row) => ({
+      id: row.id, current: row.token_hash === currentHash, createdAt: row.created_at, lastUsedAt: row.last_used_at,
+      device: SessionDevice.from({app: row.device_app, os: row.device_os, browser: row.device_browser}),
+    }));
+  }
+
+  /** Beendet eine andere Sitzung desselben Kontos; die eigene endet nur über das Abmelden. */
+  async deleteOwnSession(uid: string, id: string, currentToken: string): Promise<boolean> {
+    const deleted = await this.database.delete(runtimeSessions)
+      .where(and(eq(runtimeSessions.uid, uid), eq(runtimeSessions.id, id), ne(runtimeSessions.token_hash, hashOf(currentToken))))
+      .returning({id: runtimeSessions.id});
+    return deleted.length > 0;
   }
 
   /** Beendet alle Sessions eines Kontos (gelöscht, zurückgesetzt, Notzugang). */

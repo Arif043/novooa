@@ -1,3 +1,4 @@
+import '../device/runtime_device.dart';
 import '../endpoint/runtime_endpoint.dart';
 import '../transport/workspace_api_client.dart';
 import 'runtime_access_failure.dart';
@@ -31,8 +32,12 @@ abstract interface class RuntimeLoginClient {
   Future<void> logout(RuntimeEndpoint endpoint, String sessionToken);
 }
 
+/// Meldet bei jeder neuen Sitzung [device] mit, damit sie in der Liste der
+/// angemeldeten Geräte erkennbar ist.
 class HttpRuntimeLoginClient implements RuntimeLoginClient {
-  const HttpRuntimeLoginClient();
+  const HttpRuntimeLoginClient({required this.device});
+
+  final RuntimeDevice device;
 
   @override
   Future<String> login(
@@ -42,6 +47,7 @@ class HttpRuntimeLoginClient implements RuntimeLoginClient {
   }) => _tokenFrom(endpoint, '/v1/auth/login', {
     'loginName': loginName.trim(),
     'password': password,
+    'device': device.toJson(),
   });
 
   @override
@@ -52,6 +58,7 @@ class HttpRuntimeLoginClient implements RuntimeLoginClient {
   }) => _tokenFrom(endpoint, '/v1/auth/invitations/redeem', {
     'code': code.trim(),
     'password': password,
+    'device': device.toJson(),
   });
 
   @override
@@ -64,6 +71,7 @@ class HttpRuntimeLoginClient implements RuntimeLoginClient {
     'activationToken': activationToken.trim().toUpperCase(),
     'loginName': loginName.trim(),
     'password': password,
+    'device': device.toJson(),
   });
 
   @override

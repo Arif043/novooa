@@ -64,6 +64,7 @@
   - [Wissenslinks werden beim Lesen berechnet (0019)](../notes/sqlite-wissenslinks-berechnet.md)
 - [Benutzerkonten in SQLite (0025)](../notes/sqlite-benutzerkonten-0025.md)
 - [Verschlüsselte Passwort-Hashes (0026)](../notes/sqlite-passwort-hashes-0026.md)
+- [Geräte der Sitzungen (0027)](../notes/sqlite-sitzungsgeraete-0027.md)
 - [Anwendungsprotokoll](../notes/anwendungsprotokoll.md)
 - [Sprachmodell-Anbieter](../notes/sprachmodell-anbieter.md)
 - [Verbindung](../notes/verbindung.md) (Geheimnisse in `language_model_secrets`)

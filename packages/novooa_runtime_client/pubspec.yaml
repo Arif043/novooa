@@ -1,6 +1,6 @@
 name: novooa_runtime_client
 description: Verbindung, Anmeldung, HTTP- und Echtzeit-Zugriff auf eine novooa-Runtime. Privat; Einbindung per Git-Tag.
-version: 0.1.0
+version: 0.2.0
 publish_to: none
 
 environment:

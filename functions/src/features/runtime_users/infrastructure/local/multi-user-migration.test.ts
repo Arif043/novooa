@@ -60,3 +60,23 @@ test("0026 replaces plain password hashes and ends every session", async (t) => 
   assert.deepEqual(columns.map((column) => column.name), ["uid", "encrypted_hash", "salt", "updated_at"]);
   assert.deepEqual(await after.all(sql`SELECT login_name FROM user_profiles`), [{login_name: "anna"}]);
 });
+
+test("0027 keeps existing sessions and gives each a public id", async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), "novooa-0027-"));
+  t.after(() => rm(directory, {recursive: true, force: true}));
+  const databasePath = join(directory, "novooa.sqlite");
+  const before = await openLocalRuntimeDatabase({databasePath, migrationsDirectory: await migrationsUpTo(directory, 26)});
+  await before.run(sql`INSERT INTO user_profiles (uid, display_name, login_name) VALUES ('license-1', 'Anna', 'anna')`);
+  await before.run(sql`INSERT INTO runtime_sessions (token_hash, uid, expires_at) VALUES ('alt', 'license-1', '2099-01-08T00:00:00.000Z')`);
+  before.$client.close();
+
+  const after = await openLocalRuntimeDatabase({databasePath, migrationsDirectory});
+  t.after(() => after.$client.close());
+
+  const [session] = await after.all<Record<string, unknown>>(sql`SELECT * FROM runtime_sessions`);
+  assert.equal(session.token_hash, "alt");
+  assert.match(String(session.id), /^[0-9a-f]{32}$/);
+  assert.equal(session.device_os, "unknown");
+  assert.equal(session.device_app, "");
+  assert.equal(session.last_used_at, "2099-01-01T00:00:00.000Z");
+});

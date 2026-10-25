@@ -12,9 +12,26 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 - **Konto:** `runtime_sessions.uid` (Fremdschlüssel, wird mit dem Konto
   gelöscht). Die Prüfung liefert `{uid, role}`; ohne Mitgliedschaft im aktiven
   Team gilt die Sitzung nicht.
+- **Geräteangaben:** Login, Einladung und Notzugang nehmen optional
+  `device: {app, os, browser}` an (Selbstauskunft des Clients, nur Anzeige;
+  gekürzt in `SessionDevice`). Der Client sendet sie über
+  `HttpRuntimeLoginClient(device: RuntimeDevice.current(app: …))`; die App
+  meldet `novooa`, Kunden-Dashboards ihren Namen. Rechnername und IP werden
+  nicht erfasst.
+- **Angemeldete Geräte:** `GET /v1/auth/sessions` →
+  `{items: [{id, current, createdAt, lastUsedAt, device}]}`, nur das eigene
+  Konto, zuletzt aktive zuerst. `lastUsedAt` wird mit der Verlängerung
+  geschrieben, also höchstens stündlich genau.
+- **Ein Gerät abmelden:** `DELETE /v1/auth/sessions/:id` (`204`); fremde,
+  unbekannte oder die eigene Sitzung → `404 session_not_found`. Die eigene
+  endet über `logout`.
 - **Andere Geräte abmelden:** `POST /v1/auth/sessions/revoke-others` →
-  `{revoked: <Anzahl>}`, nur Sitzungen des eigenen Kontos. UI: Einstellungen →
-  Allgemein → „Angemeldete Geräte“.
+  `{revoked: <Anzahl>}`, nur Sitzungen des eigenen Kontos.
+- **UI:** Einstellungen → Allgemein → „Angemeldete Geräte“: Liste mit Gerät
+  (z. B. „Chrome auf macOS“), „Angemeldet am“, „Zuletzt aktiv“, Markierung
+  „Dieses Gerät“ und je anderem Gerät „Abmelden“ mit Rückfrage; darunter
+  „Andere Geräte abmelden“. Beendete Sitzungen schließen ihre
+  Realtime-Verbindungen sofort.
 - **Konto gelöscht oder zurückgesetzt:** alle Sitzungen des Kontos enden sofort,
   offene Realtime-Verbindungen werden geschlossen
   ([Benutzerkonten](./runtime-benutzerkonten.md)).
@@ -33,3 +50,4 @@ Das Token liegt im Client im [sicheren Speicher](./client-token-speicher.md).
 
 - [Anmeldepflicht der Runtime](./runtime-anmeldepflicht.md)
 - [Passwort ändern](./passwort-aendern.md)
+- [Geräte der Sitzungen (0027)](./sqlite-sitzungsgeraete-0027.md)

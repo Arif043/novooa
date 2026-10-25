@@ -14,6 +14,8 @@ export 'src/access/tab_session_credential_store.dart';
 export 'src/connection/runtime_connection_cubit.dart';
 export 'src/connection/runtime_connection_failure.dart';
 export 'src/connection/runtime_connection_state.dart';
+export 'src/device/browser_name_from_user_agent.dart';
+export 'src/device/runtime_device.dart';
 export 'src/endpoint/http_runtime_availability.dart';
 export 'src/endpoint/runtime_availability.dart';
 export 'src/endpoint/runtime_endpoint.dart';

@@ -12,7 +12,7 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md) · [Architektur](../ind
     git:
       url: git@github.com:<org>/syscat2.git
       path: packages/novooa_runtime_client
-      ref: novooa-runtime-client-v0.1.0
+      ref: novooa-runtime-client-v0.2.0
   ```
 
 - **Inhalt (headless, ohne UI und Texte):**
@@ -21,6 +21,8 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md) · [Architektur](../ind
   - Binär- und Echtzeit-Zugriff: `WorkspaceBinaryClient` und `WorkspaceRealtimeChannel`.
   - Token-Speicher: `createRuntimeCredentialStore()`.
   - Anmeldung, Einladung, Notzugang und Ersteinrichtung.
+  - Geräteangaben beim Anmelden: `RuntimeDevice.current(app:)` (Betriebssystem
+    über `defaultTargetPlatform`, im Web der Browser aus dem User-Agent).
   - Der Ablauf dazu als `RuntimeConnectionCubit`.
 - **Fehler** kommen als `RuntimeAccessFailure` (Art, Status, Detail). Die App
   formuliert sie an einer Stelle (`lib/core/runtime/runtime_access_failure_text.dart`),

@@ -1,6 +1,7 @@
 import {LoginName} from "../entities/login-name.js";
 import {RuntimePassword} from "../entities/runtime-password.js";
 import {displayNameFrom, type RuntimeUser} from "../entities/runtime-user.js";
+import {SessionDevice, type SessionDeviceInput} from "../entities/session-device.js";
 import {RuntimeUserError} from "../entities/runtime-user-error.js";
 import {type InvitationRepository} from "../repositories/invitation-repository.js";
 import {type PasswordCredentialRepository} from "../repositories/password-credential-repository.js";
@@ -9,9 +10,9 @@ import {type RuntimeSessionAccess} from "../repositories/runtime-session-access.
 import {type RuntimeUserRepository} from "../repositories/runtime-user-repository.js";
 
 export type FirstAdminInput = {activationToken?: string; loginName: string; displayName: string; password: string};
-export type SignInInput = {loginName: string; password: string};
-export type RedeemInput = {code: string; password: string};
-export type RecoverInput = {activationToken?: string; loginName: string; password: string};
+export type SignInInput = {loginName: string; password: string; device?: SessionDeviceInput};
+export type RedeemInput = {code: string; password: string; device?: SessionDeviceInput};
+export type RecoverInput = {activationToken?: string; loginName: string; password: string; device?: SessionDeviceInput};
 
 /** Die Runtime ist eingerichtet, sobald ein Konto ein Passwort hat. */
 export class LoadSetupState {
@@ -51,13 +52,13 @@ export class SignIn {
     private readonly sessions: RuntimeSessionAccess,
   ) {}
 
-  async execute({loginName, password}: SignInInput): Promise<string> {
+  async execute({loginName, password, device}: SignInInput): Promise<string> {
     const name = LoginName.tryFrom(loginName);
     const user = name === null ? null : await this.users.findByLoginName(name);
     if (!await this.passwords.verify(user?.uid ?? null, password) || user === null) {
       throw new RuntimeUserError("invalid_credentials", "Anmeldename oder Passwort ist ungültig.");
     }
-    return this.sessions.createSession(user.uid);
+    return this.sessions.createSession(user.uid, SessionDevice.from(device));
   }
 }
 
@@ -76,7 +77,7 @@ export class RedeemInvitation {
       throw new RuntimeUserError("invalid_invitation", "Der Einladungscode ist ungültig oder abgelaufen.");
     }
     await this.passwords.set(uid, password);
-    return this.sessions.createSession(uid);
+    return this.sessions.createSession(uid, SessionDevice.from(input.device));
   }
 }
 
@@ -99,7 +100,7 @@ export class RecoverAdminAccess {
     }
     await this.passwords.set(user.uid, password);
     await this.sessions.revokeSessionsOf(user.uid);
-    return this.sessions.createSession(user.uid);
+    return this.sessions.createSession(user.uid, SessionDevice.from(input.device));
   }
 }
 

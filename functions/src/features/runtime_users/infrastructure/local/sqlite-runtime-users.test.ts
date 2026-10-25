@@ -26,7 +26,7 @@ test("accounts are created, found, changed and deleted with everything that hang
   const passwords = new SQLitePasswordCredentialRepository(database, testRuntimeFieldCipher());
   const ben = await users.create({loginName: LoginName.from("ben"), displayName: "Ben", role: "member"});
   await passwords.set(ben.uid, RuntimePassword.from("geheim-passwort1"));
-  await database.insert(runtimeSessions).values({token_hash: "hash", uid: ben.uid, expires_at: "2099-01-01T00:00:00.000Z"});
+  await database.insert(runtimeSessions).values({token_hash: "hash", id: "sitzung", uid: ben.uid, last_used_at: "2026-01-01T00:00:00.000Z", expires_at: "2099-01-01T00:00:00.000Z"});
 
   assert.equal((await users.findByLoginName(LoginName.from("BEN")))?.hasPassword, true);
   assert.equal((await users.update(ben.uid, {role: "admin", displayName: "Ben B."}))?.role, "admin");

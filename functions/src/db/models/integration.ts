@@ -1,5 +1,5 @@
 import {desc, sql} from "drizzle-orm";
-import {check, index, sqliteTable, text, unique, type AnySQLiteColumn} from "drizzle-orm/sqlite-core";
+import {check, index, sqliteTable, text, unique, uniqueIndex, type AnySQLiteColumn} from "drizzle-orm/sqlite-core";
 import {teams, userProfiles} from "./core.js";
 
 export const applicationLogs = sqliteTable("application_logs", {
@@ -130,12 +130,21 @@ export const runtimeInvitations = sqliteTable("runtime_invitations", {
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [index("idx_runtime_invitations_uid").on(table.uid)]);
 
+/** `id` ist die öffentliche Kennung zum einzelnen Abmelden; das Token selbst wird nur als Hash gespeichert. */
 export const runtimeSessions = sqliteTable("runtime_sessions", {
   token_hash: text("token_hash").primaryKey(),
+  id: text("id").notNull(),
   uid: text("uid").notNull().references((): AnySQLiteColumn => userProfiles.uid, {onDelete: "cascade"}),
+  device_app: text("device_app").notNull().default(""),
+  device_os: text("device_os").notNull().default("unknown"),
+  device_browser: text("device_browser"),
   created_at: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  last_used_at: text("last_used_at").notNull(),
   expires_at: text("expires_at").notNull(),
-}, (table) => [index("idx_runtime_sessions_uid").on(table.uid)]);
+}, (table) => [
+  index("idx_runtime_sessions_uid").on(table.uid),
+  uniqueIndex("idx_runtime_sessions_id").on(table.id),
+]);
 
 export type ApplicationLogs = typeof applicationLogs.$inferSelect;
 export type NewApplicationLogs = typeof applicationLogs.$inferInsert;

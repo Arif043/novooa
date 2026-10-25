@@ -5,7 +5,7 @@
 #
 # Optionen:
 #   --client-ref <tag>    Git-Tag von novooa_runtime_client
-#                         (Standard: novooa-runtime-client-v0.1.0)
+#                         (Standard: novooa-runtime-client-v0.2.0)
 #   --client-repo <url>   Repo mit dem Paket
 #                         (Standard: https://github.com/Arif043/syscat2.git)
 #   --client-path <pfad>  Lokales Paket statt Git (Entwicklung); schreibt
@@ -13,8 +13,8 @@
 #   --platforms <liste>   Standard: web,macos,windows,linux,ios,android
 set -euo pipefail
 
-skill_version="0.2.0"
-client_ref="novooa-runtime-client-v0.1.0"
+skill_version="0.3.0"
+client_ref="novooa-runtime-client-v0.2.0"
 client_repo="https://github.com/Arif043/syscat2.git"
 client_path=""
 platforms="web,macos,windows,linux,ios,android"
