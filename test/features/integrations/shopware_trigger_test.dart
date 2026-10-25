@@ -198,9 +198,12 @@ void main() {
           token: 'tok_en-1',
           address: 'http://novooa:8090',
           params: params,
+          label: 'Lieferung: Versandt',
+          description: 'Meldet „Lieferung: Versandt“ an novooa.',
         );
 
         expect(xml, contains('<name>NovooaAusloeserid1</name>'));
+        expect(xml, contains('<label>novooa: Lieferung: Versandt</label>'));
         expect(
           xml,
           contains(
@@ -221,12 +224,15 @@ void main() {
         token: 't',
         address: 'http://novooa/x?a=1&b="2"',
         params: params,
+        label: 'A & B',
+        description: 'D',
       );
 
       expect(
         xml,
         contains('url="http://novooa/x?a=1&amp;b=&quot;2&quot;/hooks/id1/t"'),
       );
+      expect(xml, contains('<label>novooa: A &amp; B</label>'));
     });
   });
 

@@ -1,5 +1,7 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/connections/domain/entities/connection.dart';
@@ -38,27 +40,23 @@ class ShopwareActionWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(spec?.title ?? 'Shopware', style: SyscatTheme.taskBody),
+          Text(spec?.titleKey.tr() ?? 'Shopware', style: SyscatTheme.taskBody),
           const SizedBox(height: AppSpacing.sm),
           if (spec == null)
             Text(
-              'Die Aktion „${config.action}“ kennt diese Version von novooa '
-              'nicht.',
+              LocaleKeys.shopware_ui_unknown_action.tr(
+                namedArgs: {'action': config.action},
+              ),
             )
           else ...[
             if (!spec.usesConnection)
-              const Text(
-                'Liefert Bestellung, Kunde, Produkt oder Anmeldung des '
-                'Auslösers „Shopware-Ereignis“. Der Baustein funktioniert nur '
-                'in Aufgaben mit diesem Auslöser.',
-              )
+              Text(LocaleKeys.shopware_ui_read_event_hint.tr())
             else
               ConnectionPickerField(
                 selectedId: config.connectionId,
                 connections: connections,
                 helperText: connections.isEmpty
-                    ? 'Lege unter Einstellungen → Verbindungen mit der Vorlage '
-                          '„Shopware“ eine Verbindung an.'
+                    ? LocaleKeys.shopware_ui_create_connection_hint.tr()
                     : null,
                 onChanged: (id) =>
                     _update(context, (c) => c.copyWith(connectionId: id)),
@@ -110,10 +108,10 @@ class _FieldInput extends StatelessWidget {
         suggestions: TemplateExpressionScope.suggestionsOf(context),
         minLines: field.lines,
         maxLines: field.lines > 1 ? field.lines + 6 : 1,
-        helperText: field.helper,
+        helperText: field.helperKey?.tr(),
         decoration: InputDecoration(
-          labelText: field.label,
-          hintText: field.hint,
+          labelText: field.labelKey.tr(),
+          hintText: field.hintKey?.tr(),
         ),
         onChanged: onChanged,
       ),
@@ -122,12 +120,15 @@ class _FieldInput extends StatelessWidget {
         isExpanded: true,
         initialValue: _selected(),
         decoration: InputDecoration(
-          labelText: field.label,
-          helperText: field.helper,
+          labelText: field.labelKey.tr(),
+          helperText: field.helperKey?.tr(),
         ),
         items: [
           for (final option in field.options)
-            DropdownMenuItem(value: option.value, child: Text(option.label)),
+            DropdownMenuItem(
+              value: option.value,
+              child: Text(option.labelKey.tr()),
+            ),
         ],
         onChanged: (selection) {
           if (selection != null) onChanged(selection);
@@ -142,8 +143,8 @@ class _FieldInput extends StatelessWidget {
             initialValue: value == null ? '' : '$value',
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              labelText: field.label,
-              helperText: field.helper,
+              labelText: field.labelKey.tr(),
+              helperText: field.helperKey?.tr(),
             ),
             onChanged: (text) {
               if (text.trim().isEmpty) return onChanged(null);
@@ -161,8 +162,10 @@ class _FieldInput extends StatelessWidget {
         child: SwitchListTile(
           key: ValueKey('${nodeId.value}.${field.key}'),
           contentPadding: EdgeInsets.zero,
-          title: Text(field.label),
-          subtitle: field.helper == null ? null : Text(field.helper!),
+          title: Text(field.labelKey.tr()),
+          subtitle: field.helperKey?.tr() == null
+              ? null
+              : Text(field.helperKey!.tr()),
           value: value == true,
           onChanged: (on) => onChanged(on ? true : null),
         ),

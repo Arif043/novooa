@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -448,12 +449,16 @@ void main() {
       for (final action in ShopwareActions.all) {
         await pumpNode(tester, action: action.id);
 
-        expect(find.text(action.title), findsOneWidget, reason: action.id);
+        expect(
+          find.text(action.titleKey.tr()),
+          findsOneWidget,
+          reason: action.id,
+        );
         for (final field in action.fields) {
           expect(
-            find.text(field.label),
+            find.text(field.labelKey.tr()),
             findsWidgets,
-            reason: '${action.id}: ${field.label}',
+            reason: '${action.id}: ${field.labelKey}',
           );
         }
       }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/workflow_node.dart';
-import '../cubits/workflow_primitive_labels.dart';
+import '../cubits/node_config_labels.dart';
 
 /// Darstellung eines Bausteins auf der Leinwand: Icon, Titel und ID.
 /// Wird für die Node selbst und für ihr Drag-Feedback genutzt.
@@ -78,7 +78,7 @@ class _NodeHeadline extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          node.config.primitive.label,
+          node.config.label,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: textTheme.titleMedium,

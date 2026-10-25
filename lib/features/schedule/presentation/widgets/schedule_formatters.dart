@@ -1,4 +1,5 @@
 import '../../domain/entities/event_trigger_config.dart';
+import 'package:syscat2/features/integrations/shopware/presentation/shopware_trigger_texts.dart';
 import 'event_target_labels.dart';
 import '../../domain/entities/schedule_config.dart';
 import '../../domain/entities/task_trigger.dart';

@@ -230,7 +230,9 @@ void main() {
       expect(find.text('Datei-ID'), findsOneWidget);
     });
 
-    widgetTest('Suchen setzt Ordner und begrenzt die Höchstanzahl', (tester) async {
+    widgetTest('Suchen setzt Ordner und begrenzt die Höchstanzahl', (
+      tester,
+    ) async {
       await pumpNode(tester, 'search');
 
       await tester.tap(find.text('Überall'));

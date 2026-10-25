@@ -16,12 +16,15 @@ String shopwareWebhookUrl(String address, String triggerId, String token) {
 
 /// Die `manifest.xml` einer kleinen Shopware-App, die genau das Ereignis des
 /// Auslösers an novooa meldet. Sie enthält keine Zugangsdaten außer dem Token
-/// in der Adresse, das ohnehin zum Auslöser gehört.
+/// in der Adresse, das ohnehin zum Auslöser gehört. [label] und
+/// [description] sind die übersetzten Texte, die Shopware zur App anzeigt.
 String shopwareAppManifest({
   required String triggerId,
   required String token,
   required String address,
   required ShopwareTriggerParams params,
+  required String label,
+  required String description,
 }) {
   final name = shopwareAppName(triggerId);
   final url = shopwareWebhookUrl(address, triggerId, token);
@@ -32,9 +35,8 @@ String shopwareAppManifest({
 <manifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/shopware/trunk/src/Core/Framework/App/Manifest/Schema/manifest-2.0.xsd">
   <meta>
     <name>$name</name>
-    <label>novooa: ${_escape(params.summary)}</label>
-    <label lang="de-DE">novooa: ${_escape(params.summary)}</label>
-    <description>Meldet „${_escape(params.summary)}“ an novooa.</description>
+    <label>novooa: ${_escape(label)}</label>
+    <description>${_escape(description)}</description>
     <author>novooa</author>
     <copyright>novooa</copyright>
     <version>1.0.0</version>

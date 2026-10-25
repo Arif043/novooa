@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/workflow_node.dart';
+import '../cubits/node_config_labels.dart';
 import '../cubits/task_builder_cubit.dart';
 import 'baustein_icon_avatar.dart';
 import 'baustein_swap_handle.dart';
@@ -65,7 +66,7 @@ class _CompactWorkflowNodeState extends State<CompactWorkflowNode> {
         node: widget.node,
         selected: true,
         elevation: 8,
-        leading: BausteinIconAvatar(primitive: widget.node.config.primitive),
+        leading: BausteinIconAvatar(icon: widget.node.config.icon),
       ),
       onDragStarted: () => setState(() => _isDragged = true),
       onDragEnded: () {

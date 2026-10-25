@@ -1,7 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
-import 'package:syscat2/features/connections/domain/entities/connection.dart';
 import 'package:syscat2/features/connections/presentation/cubits/connections_cubit.dart';
 import 'package:syscat2/features/connections/presentation/widgets/connection_picker_field.dart';
 
@@ -30,9 +31,8 @@ class ShopwareTriggerControls extends StatelessWidget {
           selectedId: value.connectionId,
           connections: connections,
           helperText: connections.isEmpty
-              ? 'Lege unter Einstellungen → Verbindungen mit der Vorlage '
-                    '„Shopware“ eine Verbindung an.'
-              : 'Über sie lädt novooa die Daten zum Ereignis nach.',
+              ? LocaleKeys.shopware_ui_create_connection_hint.tr()
+              : LocaleKeys.shopware_ui_trigger_connection_helper.tr(),
           onChanged: (id) => onChanged(value.copyWith(connectionId: id)),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -41,13 +41,13 @@ class ShopwareTriggerControls extends StatelessWidget {
           isExpanded: true,
           initialValue: value.event,
           decoration: InputDecoration(
-            labelText: 'Wann soll es starten?',
-            helperText: value.event.description,
+            labelText: LocaleKeys.shopware_ui_trigger_when.tr(),
+            helperText: value.event.descriptionKey.tr(),
             helperMaxLines: 2,
           ),
           items: [
             for (final event in ShopwareTriggerEvent.values)
-              DropdownMenuItem(value: event, child: Text(event.label)),
+              DropdownMenuItem(value: event, child: Text(event.labelKey.tr())),
           ],
           onChanged: (event) {
             if (event != null) onChanged(value.copyWith(event: event));
@@ -56,8 +56,7 @@ class ShopwareTriggerControls extends StatelessWidget {
         ..._details(),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Shopware meldet das Ereignis über eine kleine App, die du nach dem '
-          'Erstellen auf der Karte des Auslösers findest.',
+          LocaleKeys.shopware_ui_trigger_app_hint.tr(),
           style: const TextStyle(fontSize: 12),
         ),
       ],
@@ -73,10 +72,15 @@ class ShopwareTriggerControls extends StatelessWidget {
             key: const Key('shopware-trigger-scope'),
             isExpanded: true,
             initialValue: value.scope,
-            decoration: const InputDecoration(labelText: 'Status von'),
+            decoration: InputDecoration(
+              labelText: LocaleKeys.shopware_ui_trigger_scope.tr(),
+            ),
             items: [
               for (final scope in ShopwareStateScope.values)
-                DropdownMenuItem(value: scope, child: Text(scope.label)),
+                DropdownMenuItem(
+                  value: scope,
+                  child: Text(scope.labelKey.tr()),
+                ),
             ],
             onChanged: (scope) {
               if (scope != null) onChanged(value.copyWith(scope: scope));
@@ -87,12 +91,14 @@ class ShopwareTriggerControls extends StatelessWidget {
             key: ValueKey('shopware-trigger-state-${value.scope.name}'),
             isExpanded: true,
             initialValue: value.state,
-            decoration: const InputDecoration(labelText: 'Zielstatus'),
+            decoration: InputDecoration(
+              labelText: LocaleKeys.shopware_ui_trigger_state.tr(),
+            ),
             items: [
               for (final option in value.scope.states)
                 DropdownMenuItem(
                   value: option.value,
-                  child: Text(option.label),
+                  child: Text(option.labelKey.tr()),
                 ),
             ],
             onChanged: (state) {
@@ -107,11 +113,9 @@ class ShopwareTriggerControls extends StatelessWidget {
             key: const Key('shopware-trigger-threshold'),
             initialValue: '${value.threshold}',
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Bestand höchstens',
-              helperText:
-                  'Gemeldet wird bei jeder Änderung des Bestands, solange er '
-                  'diese Grenze nicht überschreitet.',
+            decoration: InputDecoration(
+              labelText: LocaleKeys.shopware_ui_trigger_threshold.tr(),
+              helperText: LocaleKeys.shopware_ui_trigger_threshold_helper.tr(),
               helperMaxLines: 3,
             ),
             onChanged: (text) {
@@ -128,9 +132,9 @@ class ShopwareTriggerControls extends StatelessWidget {
           SwitchListTile(
             key: const Key('shopware-trigger-confirmed'),
             contentPadding: EdgeInsets.zero,
-            title: const Text('Erst nach Bestätigung'),
-            subtitle: const Text(
-              'Aus: sofort bei der Anmeldung, auch ohne Bestätigung per E-Mail.',
+            title: Text(LocaleKeys.shopware_ui_trigger_confirmed_only.tr()),
+            subtitle: Text(
+              LocaleKeys.shopware_ui_trigger_confirmed_only_helper.tr(),
             ),
             value: value.confirmedOnly,
             onChanged: (on) => onChanged(value.copyWith(confirmedOnly: on)),

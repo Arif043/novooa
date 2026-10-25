@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/entities/workflow_node.dart';
-import 'baustein_palette.dart';
-
 /// Rundes Icon eines Bausteins auf der Leinwand.
 class BausteinIconAvatar extends StatelessWidget {
-  const BausteinIconAvatar({super.key, required this.primitive});
+  const BausteinIconAvatar({super.key, required this.icon});
 
   static const _radius = 23.0;
 
-  final WorkflowPrimitive primitive;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +14,7 @@ class BausteinIconAvatar extends StatelessWidget {
     return CircleAvatar(
       radius: _radius,
       backgroundColor: colors.primaryContainer.withValues(alpha: .12),
-      child: Icon(bausteinIcon(primitive), color: colors.primary),
+      child: Icon(icon, color: colors.primary),
     );
   }
 }

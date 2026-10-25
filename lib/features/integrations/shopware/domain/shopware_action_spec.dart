@@ -3,48 +3,55 @@ import 'package:syscat2/features/task_builder/domain/entities/task_execution_res
 enum ShopwareFieldKind { text, select, number, toggle }
 
 class ShopwareFieldOption {
-  const ShopwareFieldOption(this.value, this.label);
+  const ShopwareFieldOption(this.value, this.labelKey);
 
   final String value;
-  final String label;
+
+  /// Übersetzungsschlüssel; übersetzt wird in `presentation/`.
+  final String labelKey;
 }
 
 /// Ein Eingabefeld einer Shopware-Aktion. Die Oberfläche rendert die Felder
-/// einer Aktion allein aus dieser Beschreibung.
+/// einer Aktion allein aus dieser Beschreibung; Texte sind
+/// Übersetzungsschlüssel (`…Key`).
 class ShopwareField {
   const ShopwareField.text(
     this.key,
-    this.label, {
-    this.hint,
-    this.helper,
+    this.labelKey, {
+    this.hintKey,
+    this.helperKey,
     this.lines = 1,
   }) : kind = ShopwareFieldKind.text,
        options = const [],
        min = 0,
        max = 0;
 
-  const ShopwareField.select(this.key, this.label, this.options, {this.helper})
-    : kind = ShopwareFieldKind.select,
-      hint = null,
-      lines = 1,
-      min = 0,
-      max = 0;
+  const ShopwareField.select(
+    this.key,
+    this.labelKey,
+    this.options, {
+    this.helperKey,
+  }) : kind = ShopwareFieldKind.select,
+       hintKey = null,
+       lines = 1,
+       min = 0,
+       max = 0;
 
   const ShopwareField.number(
     this.key,
-    this.label, {
+    this.labelKey, {
     required this.min,
     required this.max,
-    this.helper,
+    this.helperKey,
   }) : kind = ShopwareFieldKind.number,
-       hint = null,
+       hintKey = null,
        lines = 1,
        options = const [];
 
   /// Ein/Aus; ausgeschaltet entfällt der Eintrag in `params`.
-  const ShopwareField.toggle(this.key, this.label, {this.helper})
+  const ShopwareField.toggle(this.key, this.labelKey, {this.helperKey})
     : kind = ShopwareFieldKind.toggle,
-      hint = null,
+      hintKey = null,
       lines = 1,
       options = const [],
       min = 0,
@@ -52,10 +59,10 @@ class ShopwareField {
 
   /// Schlüssel in `params`; muss zur gleichnamigen Eingabe der Aktion im Backend passen.
   final String key;
-  final String label;
+  final String labelKey;
   final ShopwareFieldKind kind;
-  final String? hint;
-  final String? helper;
+  final String? hintKey;
+  final String? helperKey;
 
   /// Sichtbare Zeilen eines Textfelds; mehr als eine ergibt ein mehrzeiliges Feld.
   final int lines;
@@ -69,8 +76,8 @@ class ShopwareField {
 class ShopwareActionSpec {
   const ShopwareActionSpec({
     required this.id,
-    required this.title,
-    required this.description,
+    required this.titleKey,
+    required this.descriptionKey,
     required this.outputBase,
     required this.primaryOutput,
     required this.outputFields,
@@ -81,8 +88,8 @@ class ShopwareActionSpec {
 
   /// Entspricht `action` im Backend (`integrations/shopware/actions`).
   final String id;
-  final String title;
-  final String description;
+  final String titleKey;
+  final String descriptionKey;
   final String outputBase;
   final NodeOutputType primaryOutput;
   final Map<String, NodeOutputType> outputFields;

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:simple_icons/simple_icons.dart';
 import 'package:syscat2/features/task_builder/presentation/plugin_node_module.dart';
 
@@ -14,8 +14,8 @@ void registerShopwarePlugin() {
       PluginNodeModule(
         typeId: 'shopware.${action.id}',
         documentPrimitive: 'shopware',
-        title: () => action.title,
-        description: () => action.description,
+        title: action.titleKey.tr,
+        description: action.descriptionKey.tr,
         group: 'Shopware',
         icon: SimpleIcons.shopware,
         outputBase: action.outputBase,

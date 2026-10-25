@@ -993,5 +993,200 @@
     "search_limit_helper": "1 to 100, default 25",
     "search_helper": "Only files that novooa created or that you shared are found. novooa cannot see files that others add to a shared folder.",
     "unknown_action": "This version of novooa does not know this Google Drive action."
+  },
+  "shopware": {
+    "actions": {
+      "search_orders": {
+        "title": "Search orders",
+        "description": "Fetches orders from Shopware, e.g. all new ones from the last hour."
+      },
+      "get_order": {
+        "title": "Read order",
+        "description": "Reads an order by its number or ID."
+      },
+      "change_order_status": {
+        "title": "Change order status",
+        "description": "Changes the status of an order, its payment or its delivery."
+      },
+      "search_products": {
+        "title": "Search products",
+        "description": "Fetches products from Shopware, e.g. all with low stock."
+      },
+      "update_product": {
+        "title": "Update product",
+        "description": "Changes a product's stock, price or active status."
+      },
+      "search_customers": {
+        "title": "Search customers",
+        "description": "Fetches customers from Shopware, e.g. by email or name."
+      },
+      "query": {
+        "title": "Shopware query",
+        "description": "Queries any Shopware entity with your own criteria (read-only)."
+      },
+      "read_event": {
+        "title": "Read Shopware event",
+        "description": "Makes the order, customer, product or sign-up of a Shopware trigger available."
+      }
+    },
+    "fields": {
+      "created_from": "Ordered from",
+      "created_from_hint": "2026-10-01 or {{start}}",
+      "created_from_helper": "Date or time (ISO 8601). Empty: no lower limit.",
+      "created_to": "Ordered until",
+      "created_to_hint": "2026-10-31T23:59:59",
+      "no_lower_limit": "Empty: no lower limit.",
+      "no_upper_limit": "Empty: no upper limit.",
+      "order_status": "Order status",
+      "payment_status": "Payment status",
+      "delivery_status": "Delivery status",
+      "customer_email": "Customer email",
+      "order_number": "Order number",
+      "order_number_hint": "10001",
+      "order_id": "Order ID (optional)",
+      "order_id_helper": "The 32-character ID. It takes precedence over the number.",
+      "sort": "Sort order",
+      "limit": "Maximum results",
+      "limit_helper": "1 to 500",
+      "transition": "Status change",
+      "transition_helper": "Payment and delivery refer to the most recent payment and the first delivery.",
+      "send_mail": "Send email to the customer",
+      "send_mail_helper": "Shopware sends the email template for this status change. Off by default.",
+      "name_contains": "Name contains",
+      "customer_name_helper": "Searches first name, last name and company.",
+      "product_number": "Product number",
+      "active": "Active",
+      "stock_min": "Stock from",
+      "stock_max": "Stock up to",
+      "product_id": "Product ID (optional)",
+      "product_id_helper": "The 32-character ID. It takes precedence over the product number.",
+      "new_stock": "New stock",
+      "unchanged_if_empty": "Empty: leave unchanged.",
+      "new_price": "New price (gross)",
+      "new_price_hint": "19.99",
+      "new_price_helper": "Empty: leave unchanged. novooa calculates the net price from the product's tax rate.",
+      "email_contains": "Email contains",
+      "customer_number": "Customer number",
+      "entity": "Entity",
+      "entity_hint": "order",
+      "entity_helper": "Name in Shopware, e.g. order, product, customer or tax.",
+      "criteria": "Criteria (JSON)",
+      "criteria_hint": "{\"filter\": [{\"type\": \"equals\", \"field\": \"active\", \"value\": true}]}",
+      "criteria_helper": "Shopware search criteria without limit and page. Empty: no filters.",
+      "page": "Page"
+    },
+    "options": {
+      "any": "Any",
+      "yes": "Yes",
+      "no": "No",
+      "newest_first": "Newest first",
+      "oldest_first": "Oldest first",
+      "name_ascending": "Name (A–Z)",
+      "lowest_stock_first": "Lowest stock first",
+      "last_name_ascending": "Last name (A–Z)",
+      "please_choose": "Please choose",
+      "unchanged": "Leave unchanged",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "states": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "order_cancelled": "Cancelled",
+      "cancelled": "Cancelled",
+      "paid": "Paid",
+      "paid_partially": "Partially paid",
+      "refunded": "Refunded",
+      "refunded_partially": "Partially refunded",
+      "reminded": "Reminded",
+      "failed": "Failed",
+      "authorized": "Authorized",
+      "chargeback": "Chargeback",
+      "unconfirmed": "Unconfirmed",
+      "shipped": "Shipped",
+      "shipped_partially": "Partially shipped",
+      "returned": "Returned",
+      "returned_partially": "Partially returned"
+    },
+    "transitions": {
+      "order_process": "Order: set to in progress",
+      "order_complete": "Order: complete",
+      "order_cancel": "Order: cancel",
+      "order_reopen": "Order: reopen",
+      "payment_paid": "Payment: mark as paid",
+      "payment_paid_partially": "Payment: partially paid",
+      "payment_refund": "Payment: refund",
+      "payment_refund_partially": "Payment: refund partially",
+      "payment_cancel": "Payment: cancel",
+      "payment_reopen": "Payment: reopen",
+      "payment_remind": "Payment: remind",
+      "payment_fail": "Payment: mark as failed",
+      "payment_authorize": "Payment: authorize",
+      "payment_chargeback": "Payment: chargeback",
+      "delivery_ship": "Delivery: mark as shipped",
+      "delivery_ship_partially": "Delivery: partially shipped",
+      "delivery_retour": "Delivery: return",
+      "delivery_cancel": "Delivery: cancel",
+      "delivery_reopen": "Delivery: reopen"
+    },
+    "triggers": {
+      "order_placed": {
+        "label": "New order",
+        "description": "An order was placed."
+      },
+      "order_status": {
+        "label": "Order status reached",
+        "description": "An order, payment or delivery reaches a status."
+      },
+      "customer_registered": {
+        "label": "New customer",
+        "description": "A customer registered."
+      },
+      "stock_low": {
+        "label": "Stock below limit",
+        "description": "A product's stock reaches the limit or falls below it."
+      },
+      "newsletter_subscribed": {
+        "label": "Newsletter sign-up",
+        "description": "Someone signed up for the newsletter."
+      }
+    },
+    "scopes": {
+      "order": "Order",
+      "payment": "Payment",
+      "delivery": "Delivery"
+    },
+    "ui": {
+      "summary_stock_at_most": "Stock at most {threshold}",
+      "summary_newsletter_confirmed": "Newsletter sign-up confirmed",
+      "create_connection_hint": "Create a connection with the “Shopware” template under Settings → Connections.",
+      "trigger_connection_helper": "novooa uses it to load the event's data.",
+      "trigger_when": "When should it start?",
+      "trigger_app_hint": "Shopware reports the event through a small app that you find on the trigger's card after creating it.",
+      "trigger_scope": "Status of",
+      "trigger_state": "Target status",
+      "trigger_threshold": "Stock at most",
+      "trigger_threshold_helper": "Reported on every stock change as long as the stock does not exceed this limit.",
+      "trigger_confirmed_only": "Only after confirmation",
+      "trigger_confirmed_only_helper": "Off: immediately on sign-up, even without email confirmation.",
+      "unknown_action": "This version of novooa does not know the action “{action}”.",
+      "read_event_hint": "Provides the order, customer, product or sign-up of the “Shopware event” trigger. The block only works in tasks with this trigger.",
+      "app_title": "Set up the Shopware app",
+      "app_intro": "Shopware reports “{summary}” to novooa through a small app. You set it up once.",
+      "app_address": "novooa's address as seen from Shopware",
+      "app_address_helper": "If both run in Docker, this is the container name, e.g. http://novooa:8090.",
+      "app_address_localhost": "From inside the Shopware container, localhost is not novooa.",
+      "app_step_folder": "1. Create the folder",
+      "app_step_folder_text": "In the Shopware installation, create the folder custom/apps/{name} and save the file manifest.xml in it with this content:",
+      "app_manifest_copied": "manifest.xml copied.",
+      "app_step_install": "2. Install the app",
+      "app_step_install_text": "Run in Shopware:",
+      "app_command_copied": "Command copied.",
+      "app_permissions": "The connection needs read access to {entities} because novooa loads the event's data through it.",
+      "app_copy": "Copy",
+      "app_close": "Close",
+      "app_manifest_description": "Reports “{summary}” to novooa."
+    }
   }
 }

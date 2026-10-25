@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/task_builder_cubit.dart';
-import '../cubits/workflow_primitive_labels.dart';
-import 'baustein_palette.dart';
+import '../cubits/node_config_labels.dart';
 import 'node_graph_item.dart';
 
 class NodeConfigurationPanel extends StatelessWidget {
@@ -43,15 +42,12 @@ class NodeConfigurationPanel extends StatelessWidget {
                     color: colors.primaryContainer.withValues(alpha: .12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    bausteinIcon(node.config.primitive),
-                    color: colors.primary,
-                  ),
+                  child: Icon(node.config.icon, color: colors.primary),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    node.config.primitive.label,
+                    node.config.label,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),

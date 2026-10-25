@@ -993,5 +993,200 @@
     "search_limit_helper": "1 ile 100 arası, varsayılan 25",
     "search_helper": "Yalnızca novooa'nın oluşturduğu veya senin paylaştığın dosyalar bulunur. Başkalarının paylaşılan bir klasöre eklediği dosyaları novooa göremez.",
     "unknown_action": "novooa'nın bu sürümü bu Google Drive işlemini tanımıyor."
+  },
+  "shopware": {
+    "actions": {
+      "search_orders": {
+        "title": "Siparişleri ara",
+        "description": "Shopware'den siparişleri getirir, ör. son bir saatteki tüm yeni siparişleri."
+      },
+      "get_order": {
+        "title": "Siparişi oku",
+        "description": "Bir siparişi numarası veya kimliğiyle okur."
+      },
+      "change_order_status": {
+        "title": "Sipariş durumunu değiştir",
+        "description": "Bir siparişin, ödemesinin veya teslimatının durumunu değiştirir."
+      },
+      "search_products": {
+        "title": "Ürünleri ara",
+        "description": "Shopware'den ürünleri getirir, ör. stoğu az olanların tümünü."
+      },
+      "update_product": {
+        "title": "Ürünü değiştir",
+        "description": "Bir ürünün stoğunu, fiyatını veya etkinlik durumunu değiştirir."
+      },
+      "search_customers": {
+        "title": "Müşterileri ara",
+        "description": "Shopware'den müşterileri getirir, ör. e-posta veya ada göre."
+      },
+      "query": {
+        "title": "Shopware sorgusu",
+        "description": "Herhangi bir Shopware varlığını kendi ölçütlerinle sorgular (salt okunur)."
+      },
+      "read_event": {
+        "title": "Shopware olayını oku",
+        "description": "Bir Shopware tetikleyicisinin siparişini, müşterisini, ürününü veya kaydını kullanılabilir kılar."
+      }
+    },
+    "fields": {
+      "created_from": "Sipariş tarihi en erken",
+      "created_from_hint": "2026-10-01 veya {{start}}",
+      "created_from_helper": "Tarih veya zaman (ISO 8601). Boş: alt sınır yok.",
+      "created_to": "Sipariş tarihi en geç",
+      "created_to_hint": "2026-10-31T23:59:59",
+      "no_lower_limit": "Boş: alt sınır yok.",
+      "no_upper_limit": "Boş: üst sınır yok.",
+      "order_status": "Sipariş durumu",
+      "payment_status": "Ödeme durumu",
+      "delivery_status": "Teslimat durumu",
+      "customer_email": "Müşteri e-postası",
+      "order_number": "Sipariş numarası",
+      "order_number_hint": "10001",
+      "order_id": "Sipariş kimliği (isteğe bağlı)",
+      "order_id_helper": "32 karakterli kimlik. Numaradan önce gelir.",
+      "sort": "Sıralama",
+      "limit": "En fazla sonuç",
+      "limit_helper": "1 ile 500 arası",
+      "transition": "Durum değişikliği",
+      "transition_helper": "Ödeme en son ödemeyi, teslimat ilk teslimatı ifade eder.",
+      "send_mail": "Müşteriye e-posta gönder",
+      "send_mail_helper": "Shopware bu durum değişikliği için şablondaki e-postayı gönderir. Varsayılan olarak kapalı.",
+      "name_contains": "Ad şunu içerir",
+      "customer_name_helper": "Ad, soyad ve şirket içinde arar.",
+      "product_number": "Ürün numarası",
+      "active": "Etkin",
+      "stock_min": "Stok en az",
+      "stock_max": "Stok en fazla",
+      "product_id": "Ürün kimliği (isteğe bağlı)",
+      "product_id_helper": "32 karakterli kimlik. Ürün numarasından önce gelir.",
+      "new_stock": "Yeni stok",
+      "unchanged_if_empty": "Boş: değiştirme.",
+      "new_price": "Yeni fiyat (brüt)",
+      "new_price_hint": "19,99",
+      "new_price_helper": "Boş: değiştirme. Net fiyatı novooa ürünün vergi oranından hesaplar.",
+      "email_contains": "E-posta şunu içerir",
+      "customer_number": "Müşteri numarası",
+      "entity": "Varlık",
+      "entity_hint": "order",
+      "entity_helper": "Shopware'deki adı, ör. order, product, customer veya tax.",
+      "criteria": "Ölçütler (JSON)",
+      "criteria_hint": "{\"filter\": [{\"type\": \"equals\", \"field\": \"active\", \"value\": true}]}",
+      "criteria_helper": "limit ve page olmadan Shopware arama ölçütleri. Boş: filtre yok.",
+      "page": "Sayfa"
+    },
+    "options": {
+      "any": "Herhangi biri",
+      "yes": "Evet",
+      "no": "Hayır",
+      "newest_first": "Önce en yeni",
+      "oldest_first": "Önce en eski",
+      "name_ascending": "Ad (A–Z)",
+      "lowest_stock_first": "Önce en düşük stok",
+      "last_name_ascending": "Soyad (A–Z)",
+      "please_choose": "Lütfen seç",
+      "unchanged": "Değiştirme",
+      "active": "Etkin",
+      "inactive": "Etkin değil"
+    },
+    "states": {
+      "open": "Açık",
+      "in_progress": "İşleniyor",
+      "completed": "Tamamlandı",
+      "order_cancelled": "İptal edildi",
+      "cancelled": "İptal edildi",
+      "paid": "Ödendi",
+      "paid_partially": "Kısmen ödendi",
+      "refunded": "İade edildi",
+      "refunded_partially": "Kısmen iade edildi",
+      "reminded": "Hatırlatıldı",
+      "failed": "Başarısız",
+      "authorized": "Yetkilendirildi",
+      "chargeback": "Ters ibraz",
+      "unconfirmed": "Onaylanmadı",
+      "shipped": "Gönderildi",
+      "shipped_partially": "Kısmen gönderildi",
+      "returned": "Geri gönderildi",
+      "returned_partially": "Kısmen geri gönderildi"
+    },
+    "transitions": {
+      "order_process": "Sipariş: işleniyor olarak ayarla",
+      "order_complete": "Sipariş: tamamla",
+      "order_cancel": "Sipariş: iptal et",
+      "order_reopen": "Sipariş: yeniden aç",
+      "payment_paid": "Ödeme: ödendi olarak işaretle",
+      "payment_paid_partially": "Ödeme: kısmen ödendi",
+      "payment_refund": "Ödeme: iade et",
+      "payment_refund_partially": "Ödeme: kısmen iade et",
+      "payment_cancel": "Ödeme: iptal et",
+      "payment_reopen": "Ödeme: yeniden aç",
+      "payment_remind": "Ödeme: hatırlat",
+      "payment_fail": "Ödeme: başarısız olarak işaretle",
+      "payment_authorize": "Ödeme: yetkilendir",
+      "payment_chargeback": "Ödeme: ters ibraz",
+      "delivery_ship": "Teslimat: gönderildi olarak işaretle",
+      "delivery_ship_partially": "Teslimat: kısmen gönderildi",
+      "delivery_retour": "Teslimat: geri gönderim",
+      "delivery_cancel": "Teslimat: iptal et",
+      "delivery_reopen": "Teslimat: yeniden aç"
+    },
+    "triggers": {
+      "order_placed": {
+        "label": "Yeni sipariş",
+        "description": "Bir sipariş verildi."
+      },
+      "order_status": {
+        "label": "Sipariş durumuna ulaşıldı",
+        "description": "Sipariş, ödeme veya teslimat bir duruma ulaşır."
+      },
+      "customer_registered": {
+        "label": "Yeni müşteri",
+        "description": "Bir müşteri kaydoldu."
+      },
+      "stock_low": {
+        "label": "Stok sınırın altında",
+        "description": "Bir ürünün stoğu sınıra ulaşır veya altına düşer."
+      },
+      "newsletter_subscribed": {
+        "label": "Bülten kaydı",
+        "description": "Birisi bültene kaydoldu."
+      }
+    },
+    "scopes": {
+      "order": "Sipariş",
+      "payment": "Ödeme",
+      "delivery": "Teslimat"
+    },
+    "ui": {
+      "summary_stock_at_most": "Stok en fazla {threshold}",
+      "summary_newsletter_confirmed": "Bülten kaydı onaylandı",
+      "create_connection_hint": "Ayarlar → Bağlantılar altında “Shopware” şablonuyla bir bağlantı oluştur.",
+      "trigger_connection_helper": "novooa olayın verilerini bu bağlantı üzerinden yükler.",
+      "trigger_when": "Ne zaman başlasın?",
+      "trigger_app_hint": "Shopware olayı, oluşturduktan sonra tetikleyici kartında bulacağın küçük bir uygulama üzerinden bildirir.",
+      "trigger_scope": "Durumu izlenen",
+      "trigger_state": "Hedef durum",
+      "trigger_threshold": "Stok en fazla",
+      "trigger_threshold_helper": "Stok bu sınırı aşmadığı sürece her stok değişikliğinde bildirilir.",
+      "trigger_confirmed_only": "Yalnızca onaydan sonra",
+      "trigger_confirmed_only_helper": "Kapalı: kayıt anında, e-posta onayı olmadan da.",
+      "unknown_action": "novooa'nın bu sürümü “{action}” eylemini tanımıyor.",
+      "read_event_hint": "“Shopware olayı” tetikleyicisinin siparişini, müşterisini, ürününü veya kaydını sağlar. Blok yalnızca bu tetikleyiciye sahip görevlerde çalışır.",
+      "app_title": "Shopware uygulamasını kur",
+      "app_intro": "Shopware “{summary}” olayını küçük bir uygulama üzerinden novooa'ya bildirir. Bunu bir kez kurarsın.",
+      "app_address": "Shopware açısından novooa adresi",
+      "app_address_helper": "İkisi de Docker'da çalışıyorsa bu, konteyner adıdır, ör. http://novooa:8090.",
+      "app_address_localhost": "Shopware konteynerinin içinden localhost, novooa değildir.",
+      "app_step_folder": "1. Klasörü oluştur",
+      "app_step_folder_text": "Shopware kurulumunda custom/apps/{name} klasörünü oluştur ve içine şu içerikle manifest.xml dosyasını kaydet:",
+      "app_manifest_copied": "manifest.xml kopyalandı.",
+      "app_step_install": "2. Uygulamayı yükle",
+      "app_step_install_text": "Shopware'de çalıştır:",
+      "app_command_copied": "Komut kopyalandı.",
+      "app_permissions": "novooa olayın verilerini bu bağlantı üzerinden yüklediği için bağlantının {entities} için okuma iznine ihtiyacı var.",
+      "app_copy": "Kopyala",
+      "app_close": "Kapat",
+      "app_manifest_description": "“{summary}” olayını novooa'ya bildirir."
+    }
   }
 }

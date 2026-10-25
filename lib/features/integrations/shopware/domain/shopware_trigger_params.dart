@@ -1,85 +1,109 @@
 import 'package:equatable/equatable.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 
 /// Die Ereignisse, die Shopware an novooa melden kann. Die Namen entsprechen
-/// `event` im Backend (`integrations/shopware/triggers`).
+/// `event` im Backend (`integrations/shopware/triggers`); Texte sind
+/// Übersetzungsschlüssel.
 enum ShopwareTriggerEvent {
-  orderPlaced('Neue Bestellung', 'Eine Bestellung wurde aufgegeben.'),
-  orderStatus(
-    'Bestellstatus erreicht',
-    'Bestellung, Zahlung oder Lieferung erreicht einen Status.',
+  orderPlaced(
+    LocaleKeys.shopware_triggers_order_placed_label,
+    LocaleKeys.shopware_triggers_order_placed_description,
   ),
-  customerRegistered('Neuer Kunde', 'Ein Kunde hat sich registriert.'),
+  orderStatus(
+    LocaleKeys.shopware_triggers_order_status_label,
+    LocaleKeys.shopware_triggers_order_status_description,
+  ),
+  customerRegistered(
+    LocaleKeys.shopware_triggers_customer_registered_label,
+    LocaleKeys.shopware_triggers_customer_registered_description,
+  ),
   stockLow(
-    'Bestand unterschritten',
-    'Der Bestand eines Produkts erreicht die Grenze oder liegt darunter.',
+    LocaleKeys.shopware_triggers_stock_low_label,
+    LocaleKeys.shopware_triggers_stock_low_description,
   ),
   newsletterSubscribed(
-    'Newsletter-Anmeldung',
-    'Jemand hat sich für den Newsletter angemeldet.',
+    LocaleKeys.shopware_triggers_newsletter_subscribed_label,
+    LocaleKeys.shopware_triggers_newsletter_subscribed_description,
   );
 
-  const ShopwareTriggerEvent(this.label, this.description);
+  const ShopwareTriggerEvent(this.labelKey, this.descriptionKey);
 
-  final String label;
-  final String description;
+  final String labelKey;
+  final String descriptionKey;
 }
 
 class ShopwareStateOption {
-  const ShopwareStateOption(this.value, this.label);
+  const ShopwareStateOption(this.value, this.labelKey);
 
   final String value;
-  final String label;
+  final String labelKey;
 }
 
 /// Die drei Statusabläufe einer Bestellung. [value] ist der Name der Entität
 /// in Shopware.
 enum ShopwareStateScope {
-  order('order', 'Bestellung', 'completed', [
-    ShopwareStateOption('open', 'Offen'),
-    ShopwareStateOption('in_progress', 'In Bearbeitung'),
-    ShopwareStateOption('completed', 'Abgeschlossen'),
-    ShopwareStateOption('cancelled', 'Storniert'),
+  order('order', LocaleKeys.shopware_scopes_order, 'completed', [
+    ShopwareStateOption('open', LocaleKeys.shopware_states_open),
+    ShopwareStateOption('in_progress', LocaleKeys.shopware_states_in_progress),
+    ShopwareStateOption('completed', LocaleKeys.shopware_states_completed),
+    ShopwareStateOption(
+      'cancelled',
+      LocaleKeys.shopware_states_order_cancelled,
+    ),
   ]),
-  payment('order_transaction', 'Zahlung', 'paid', [
-    ShopwareStateOption('open', 'Offen'),
-    ShopwareStateOption('authorized', 'Autorisiert'),
-    ShopwareStateOption('paid', 'Bezahlt'),
-    ShopwareStateOption('paid_partially', 'Teilweise bezahlt'),
-    ShopwareStateOption('refunded', 'Erstattet'),
-    ShopwareStateOption('refunded_partially', 'Teilweise erstattet'),
-    ShopwareStateOption('cancelled', 'Abgebrochen'),
-    ShopwareStateOption('failed', 'Fehlgeschlagen'),
-    ShopwareStateOption('reminded', 'Erinnert'),
-    ShopwareStateOption('unconfirmed', 'Unbestätigt'),
-    ShopwareStateOption('chargeback', 'Rückbuchung'),
-    ShopwareStateOption('in_progress', 'In Bearbeitung'),
+  payment('order_transaction', LocaleKeys.shopware_scopes_payment, 'paid', [
+    ShopwareStateOption('open', LocaleKeys.shopware_states_open),
+    ShopwareStateOption('authorized', LocaleKeys.shopware_states_authorized),
+    ShopwareStateOption('paid', LocaleKeys.shopware_states_paid),
+    ShopwareStateOption(
+      'paid_partially',
+      LocaleKeys.shopware_states_paid_partially,
+    ),
+    ShopwareStateOption('refunded', LocaleKeys.shopware_states_refunded),
+    ShopwareStateOption(
+      'refunded_partially',
+      LocaleKeys.shopware_states_refunded_partially,
+    ),
+    ShopwareStateOption('cancelled', LocaleKeys.shopware_states_cancelled),
+    ShopwareStateOption('failed', LocaleKeys.shopware_states_failed),
+    ShopwareStateOption('reminded', LocaleKeys.shopware_states_reminded),
+    ShopwareStateOption('unconfirmed', LocaleKeys.shopware_states_unconfirmed),
+    ShopwareStateOption('chargeback', LocaleKeys.shopware_states_chargeback),
+    ShopwareStateOption('in_progress', LocaleKeys.shopware_states_in_progress),
   ]),
-  delivery('order_delivery', 'Lieferung', 'shipped', [
-    ShopwareStateOption('open', 'Offen'),
-    ShopwareStateOption('shipped', 'Versandt'),
-    ShopwareStateOption('shipped_partially', 'Teilweise versandt'),
-    ShopwareStateOption('returned', 'Retourniert'),
-    ShopwareStateOption('returned_partially', 'Teilweise retourniert'),
-    ShopwareStateOption('cancelled', 'Abgebrochen'),
+  delivery('order_delivery', LocaleKeys.shopware_scopes_delivery, 'shipped', [
+    ShopwareStateOption('open', LocaleKeys.shopware_states_open),
+    ShopwareStateOption('shipped', LocaleKeys.shopware_states_shipped),
+    ShopwareStateOption(
+      'shipped_partially',
+      LocaleKeys.shopware_states_shipped_partially,
+    ),
+    ShopwareStateOption('returned', LocaleKeys.shopware_states_returned),
+    ShopwareStateOption(
+      'returned_partially',
+      LocaleKeys.shopware_states_returned_partially,
+    ),
+    ShopwareStateOption('cancelled', LocaleKeys.shopware_states_cancelled),
   ]);
 
   const ShopwareStateScope(
     this.value,
-    this.label,
+    this.labelKey,
     this.defaultState,
     this.states,
   );
 
   final String value;
-  final String label;
+  final String labelKey;
   final String defaultState;
   final List<ShopwareStateOption> states;
 
-  String stateLabel(String state) {
+  /// Schlüssel des Status; `null`, wenn der Ablauf ihn nicht kennt.
+  String? stateLabelKey(String state) {
     for (final option in states) {
-      if (option.value == state) return option.label;
+      if (option.value == state) return option.labelKey;
     }
-    return state;
+    return null;
   }
 }
 
@@ -160,16 +184,6 @@ class ShopwareTriggerParams extends Equatable {
     if (event == ShopwareTriggerEvent.stockLow) 'threshold': threshold,
     if (event == ShopwareTriggerEvent.newsletterSubscribed)
       'confirmedOnly': confirmedOnly,
-  };
-
-  /// Kurzbeschreibung für die Auslöser-Karte.
-  String get summary => switch (event) {
-    ShopwareTriggerEvent.orderStatus =>
-      '${scope.label}: ${scope.stateLabel(state)}',
-    ShopwareTriggerEvent.stockLow => 'Bestand höchstens $threshold',
-    ShopwareTriggerEvent.newsletterSubscribed =>
-      confirmedOnly ? 'Newsletter-Anmeldung bestätigt' : 'Newsletter-Anmeldung',
-    _ => event.label,
   };
 
   /// Name des Ereignisses, auf das die Shopware-App lauscht.

@@ -14,6 +14,7 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_node_outp
 import 'package:syscat2/features/task_builder/domain/entities/workflow_output_types.dart';
 import 'package:syscat2/features/task_builder/domain/repositories/task_repository.dart';
 import 'package:syscat2/features/task_builder/infrastructure/models/node_config_document_mapper.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/node_config_labels.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/plugin_node_module.dart';
@@ -95,6 +96,13 @@ void main() {
         );
       },
     );
+  });
+
+  test('Name und Icon der Bausteinart kommen vom Plugin statt „Baustein“', () {
+    PluginNodeModules.register(_module());
+
+    expect(const _HelloConfig().label, 'Hallo-Baustein');
+    expect(const _HelloConfig().icon, Icons.waving_hand);
   });
 
   test('Ausgaben und Typen kommen aus der Konfiguration des Plugins', () {

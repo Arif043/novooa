@@ -993,5 +993,200 @@
     "search_limit_helper": "1 bis 100, ohne Angabe 25",
     "search_helper": "Gefunden werden nur Dateien, die novooa angelegt hat oder die du freigegeben hast. Dateien, die andere in einen freigegebenen Ordner legen, sieht novooa nicht.",
     "unknown_action": "Diese Google-Drive-Aktion kennt diese Version von novooa nicht."
+  },
+  "shopware": {
+    "actions": {
+      "search_orders": {
+        "title": "Bestellungen suchen",
+        "description": "Holt Bestellungen aus Shopware, z. B. alle neuen der letzten Stunde."
+      },
+      "get_order": {
+        "title": "Bestellung lesen",
+        "description": "Liest eine Bestellung über ihre Nummer oder Kennung."
+      },
+      "change_order_status": {
+        "title": "Bestellstatus ändern",
+        "description": "Ändert den Status einer Bestellung, ihrer Zahlung oder ihrer Lieferung."
+      },
+      "search_products": {
+        "title": "Produkte suchen",
+        "description": "Holt Produkte aus Shopware, z. B. alle mit geringem Bestand."
+      },
+      "update_product": {
+        "title": "Produkt ändern",
+        "description": "Ändert Bestand, Preis oder Aktiv-Status eines Produkts."
+      },
+      "search_customers": {
+        "title": "Kunden suchen",
+        "description": "Holt Kunden aus Shopware, z. B. über E-Mail oder Name."
+      },
+      "query": {
+        "title": "Shopware-Abfrage",
+        "description": "Fragt eine beliebige Shopware-Entität mit eigenen Kriterien ab (nur lesend)."
+      },
+      "read_event": {
+        "title": "Shopware-Ereignis lesen",
+        "description": "Macht Bestellung, Kunde, Produkt oder Anmeldung eines Shopware-Auslösers nutzbar."
+      }
+    },
+    "fields": {
+      "created_from": "Bestellt ab",
+      "created_from_hint": "2026-10-01 oder {{start}}",
+      "created_from_helper": "Datum oder Zeitpunkt (ISO 8601). Leer: keine Untergrenze.",
+      "created_to": "Bestellt bis",
+      "created_to_hint": "2026-10-31T23:59:59",
+      "no_lower_limit": "Leer: keine Untergrenze.",
+      "no_upper_limit": "Leer: keine Obergrenze.",
+      "order_status": "Bestellstatus",
+      "payment_status": "Zahlungsstatus",
+      "delivery_status": "Lieferstatus",
+      "customer_email": "E-Mail des Kunden",
+      "order_number": "Bestellnummer",
+      "order_number_hint": "10001",
+      "order_id": "Bestell-ID (optional)",
+      "order_id_helper": "Die 32-stellige Kennung. Sie hat Vorrang vor der Nummer.",
+      "sort": "Reihenfolge",
+      "limit": "Höchstanzahl",
+      "limit_helper": "1 bis 500",
+      "transition": "Statuswechsel",
+      "transition_helper": "Zahlung und Lieferung betreffen die jüngste Zahlung bzw. die erste Lieferung.",
+      "send_mail": "Mail an den Kunden senden",
+      "send_mail_helper": "Shopware verschickt dabei die Mail der Vorlage für diesen Statuswechsel. Standardmäßig aus.",
+      "name_contains": "Name enthält",
+      "customer_name_helper": "Sucht in Vorname, Nachname und Firma.",
+      "product_number": "Artikelnummer",
+      "active": "Aktiv",
+      "stock_min": "Bestand ab",
+      "stock_max": "Bestand bis",
+      "product_id": "Produkt-ID (optional)",
+      "product_id_helper": "Die 32-stellige Kennung. Sie hat Vorrang vor der Artikelnummer.",
+      "new_stock": "Neuer Bestand",
+      "unchanged_if_empty": "Leer: nicht ändern.",
+      "new_price": "Neuer Preis (brutto)",
+      "new_price_hint": "19,99",
+      "new_price_helper": "Leer: nicht ändern. Den Nettopreis berechnet novooa aus dem Steuersatz des Produkts.",
+      "email_contains": "E-Mail enthält",
+      "customer_number": "Kundennummer",
+      "entity": "Entität",
+      "entity_hint": "order",
+      "entity_helper": "Name in Shopware, z. B. order, product, customer oder tax.",
+      "criteria": "Kriterien (JSON)",
+      "criteria_hint": "{\"filter\": [{\"type\": \"equals\", \"field\": \"active\", \"value\": true}]}",
+      "criteria_helper": "Shopware-Suchkriterien ohne limit und page. Leer: keine Filter.",
+      "page": "Seite"
+    },
+    "options": {
+      "any": "Beliebig",
+      "yes": "Ja",
+      "no": "Nein",
+      "newest_first": "Neueste zuerst",
+      "oldest_first": "Älteste zuerst",
+      "name_ascending": "Name (A–Z)",
+      "lowest_stock_first": "Geringster Bestand zuerst",
+      "last_name_ascending": "Nachname (A–Z)",
+      "please_choose": "Bitte wählen",
+      "unchanged": "Nicht ändern",
+      "active": "Aktiv",
+      "inactive": "Inaktiv"
+    },
+    "states": {
+      "open": "Offen",
+      "in_progress": "In Bearbeitung",
+      "completed": "Abgeschlossen",
+      "order_cancelled": "Storniert",
+      "cancelled": "Abgebrochen",
+      "paid": "Bezahlt",
+      "paid_partially": "Teilweise bezahlt",
+      "refunded": "Erstattet",
+      "refunded_partially": "Teilweise erstattet",
+      "reminded": "Erinnert",
+      "failed": "Fehlgeschlagen",
+      "authorized": "Autorisiert",
+      "chargeback": "Rückbuchung",
+      "unconfirmed": "Unbestätigt",
+      "shipped": "Versandt",
+      "shipped_partially": "Teilweise versandt",
+      "returned": "Retourniert",
+      "returned_partially": "Teilweise retourniert"
+    },
+    "transitions": {
+      "order_process": "Bestellung: In Bearbeitung setzen",
+      "order_complete": "Bestellung: Abschließen",
+      "order_cancel": "Bestellung: Stornieren",
+      "order_reopen": "Bestellung: Wieder öffnen",
+      "payment_paid": "Zahlung: Als bezahlt markieren",
+      "payment_paid_partially": "Zahlung: Teilweise bezahlt",
+      "payment_refund": "Zahlung: Erstatten",
+      "payment_refund_partially": "Zahlung: Teilweise erstatten",
+      "payment_cancel": "Zahlung: Abbrechen",
+      "payment_reopen": "Zahlung: Wieder öffnen",
+      "payment_remind": "Zahlung: Erinnern",
+      "payment_fail": "Zahlung: Als fehlgeschlagen markieren",
+      "payment_authorize": "Zahlung: Autorisieren",
+      "payment_chargeback": "Zahlung: Rückbuchung",
+      "delivery_ship": "Lieferung: Als versandt markieren",
+      "delivery_ship_partially": "Lieferung: Teilweise versandt",
+      "delivery_retour": "Lieferung: Retoure",
+      "delivery_cancel": "Lieferung: Abbrechen",
+      "delivery_reopen": "Lieferung: Wieder öffnen"
+    },
+    "triggers": {
+      "order_placed": {
+        "label": "Neue Bestellung",
+        "description": "Eine Bestellung wurde aufgegeben."
+      },
+      "order_status": {
+        "label": "Bestellstatus erreicht",
+        "description": "Bestellung, Zahlung oder Lieferung erreicht einen Status."
+      },
+      "customer_registered": {
+        "label": "Neuer Kunde",
+        "description": "Ein Kunde hat sich registriert."
+      },
+      "stock_low": {
+        "label": "Bestand unterschritten",
+        "description": "Der Bestand eines Produkts erreicht die Grenze oder liegt darunter."
+      },
+      "newsletter_subscribed": {
+        "label": "Newsletter-Anmeldung",
+        "description": "Jemand hat sich für den Newsletter angemeldet."
+      }
+    },
+    "scopes": {
+      "order": "Bestellung",
+      "payment": "Zahlung",
+      "delivery": "Lieferung"
+    },
+    "ui": {
+      "summary_stock_at_most": "Bestand höchstens {threshold}",
+      "summary_newsletter_confirmed": "Newsletter-Anmeldung bestätigt",
+      "create_connection_hint": "Lege unter Einstellungen → Verbindungen mit der Vorlage „Shopware“ eine Verbindung an.",
+      "trigger_connection_helper": "Über sie lädt novooa die Daten zum Ereignis nach.",
+      "trigger_when": "Wann soll es starten?",
+      "trigger_app_hint": "Shopware meldet das Ereignis über eine kleine App, die du nach dem Erstellen auf der Karte des Auslösers findest.",
+      "trigger_scope": "Status von",
+      "trigger_state": "Zielstatus",
+      "trigger_threshold": "Bestand höchstens",
+      "trigger_threshold_helper": "Gemeldet wird bei jeder Änderung des Bestands, solange er diese Grenze nicht überschreitet.",
+      "trigger_confirmed_only": "Erst nach Bestätigung",
+      "trigger_confirmed_only_helper": "Aus: sofort bei der Anmeldung, auch ohne Bestätigung per E-Mail.",
+      "unknown_action": "Die Aktion „{action}“ kennt diese Version von novooa nicht.",
+      "read_event_hint": "Liefert Bestellung, Kunde, Produkt oder Anmeldung des Auslösers „Shopware-Ereignis“. Der Baustein funktioniert nur in Aufgaben mit diesem Auslöser.",
+      "app_title": "Shopware-App einrichten",
+      "app_intro": "Shopware meldet „{summary}“ über eine kleine App an novooa. Du richtest sie einmal ein.",
+      "app_address": "Adresse von novooa aus Sicht von Shopware",
+      "app_address_helper": "Laufen beide in Docker, ist das der Containername, z. B. http://novooa:8090.",
+      "app_address_localhost": "Aus dem Shopware-Container ist localhost nicht novooa.",
+      "app_step_folder": "1. Ordner anlegen",
+      "app_step_folder_text": "Lege in der Shopware-Installation den Ordner custom/apps/{name} an und speichere darin die Datei manifest.xml mit diesem Inhalt:",
+      "app_manifest_copied": "manifest.xml kopiert.",
+      "app_step_install": "2. App installieren",
+      "app_step_install_text": "Führe in Shopware aus:",
+      "app_command_copied": "Befehl kopiert.",
+      "app_permissions": "Die Verbindung braucht Leserechte auf {entities}, weil novooa die Daten zum Ereignis darüber nachlädt.",
+      "app_copy": "Kopieren",
+      "app_close": "Schließen",
+      "app_manifest_description": "Meldet „{summary}“ an novooa."
+    }
   }
 }

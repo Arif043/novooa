@@ -1,9 +1,12 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
 import '../../domain/shopware_app_manifest.dart';
 import '../../domain/shopware_trigger_params.dart';
+import '../shopware_trigger_texts.dart';
 
 /// Zeigt die Shopware-App, die ein Auslöser braucht: `manifest.xml` zum
 /// Kopieren und die Schritte zum Installieren. Die App enthält keine
@@ -64,6 +67,10 @@ class _ShopwareAppDialogState extends State<ShopwareAppDialog> {
     token: widget.token,
     address: _address.text,
     params: widget.params,
+    label: widget.params.summary,
+    description: LocaleKeys.shopware_ui_app_manifest_description.tr(
+      namedArgs: {'summary': widget.params.summary},
+    ),
   );
 
   bool get _looksLocal {
@@ -84,7 +91,7 @@ class _ShopwareAppDialogState extends State<ShopwareAppDialog> {
     final theme = Theme.of(context);
     final name = shopwareAppName(widget.triggerId);
     return AlertDialog(
-      title: const Text('Shopware-App einrichten'),
+      title: Text(LocaleKeys.shopware_ui_app_title.tr()),
       content: SizedBox(
         width: 560,
         child: SingleChildScrollView(
@@ -93,8 +100,9 @@ class _ShopwareAppDialogState extends State<ShopwareAppDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Shopware meldet „${widget.params.summary}“ über eine kleine '
-                'App an novooa. Du richtest sie einmal ein.',
+                LocaleKeys.shopware_ui_app_intro.tr(
+                  namedArgs: {'summary': widget.params.summary},
+                ),
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: AppSpacing.md),
@@ -102,49 +110,58 @@ class _ShopwareAppDialogState extends State<ShopwareAppDialog> {
                 key: const Key('shopware-app-address'),
                 controller: _address,
                 decoration: InputDecoration(
-                  labelText: 'Adresse von novooa aus Sicht von Shopware',
-                  helperText:
-                      'Laufen beide in Docker, ist das der Containername, z. B. '
-                      'http://novooa:8090.',
+                  labelText: LocaleKeys.shopware_ui_app_address.tr(),
+                  helperText: LocaleKeys.shopware_ui_app_address_helper.tr(),
                   helperMaxLines: 3,
                   errorText: _looksLocal
-                      ? 'Aus dem Shopware-Container ist localhost nicht novooa.'
+                      ? LocaleKeys.shopware_ui_app_address_localhost.tr()
                       : null,
                   errorMaxLines: 2,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
-              Text('1. Ordner anlegen', style: theme.textTheme.titleSmall),
+              Text(
+                LocaleKeys.shopware_ui_app_step_folder.tr(),
+                style: theme.textTheme.titleSmall,
+              ),
               const SizedBox(height: 4),
               Text(
-                'Lege in der Shopware-Installation den Ordner '
-                'custom/apps/$name an und speichere darin die Datei '
-                'manifest.xml mit diesem Inhalt:',
+                LocaleKeys.shopware_ui_app_step_folder_text.tr(
+                  namedArgs: {'name': name},
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
               _CodeBox(
                 text: _manifest,
                 fieldKey: const Key('shopware-app-manifest'),
-                onCopy: () => _copy(_manifest, 'manifest.xml kopiert.'),
+                onCopy: () => _copy(
+                  _manifest,
+                  LocaleKeys.shopware_ui_app_manifest_copied.tr(),
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
-              Text('2. App installieren', style: theme.textTheme.titleSmall),
+              Text(
+                LocaleKeys.shopware_ui_app_step_install.tr(),
+                style: theme.textTheme.titleSmall,
+              ),
               const SizedBox(height: 4),
-              const Text('Führe in Shopware aus:'),
+              Text(LocaleKeys.shopware_ui_app_step_install_text.tr()),
               const SizedBox(height: AppSpacing.sm),
               _CodeBox(
                 text: 'bin/console app:install --activate $name',
                 fieldKey: const Key('shopware-app-command'),
                 onCopy: () => _copy(
                   'bin/console app:install --activate $name',
-                  'Befehl kopiert.',
+                  LocaleKeys.shopware_ui_app_command_copied.tr(),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
               Text(
-                'Die Verbindung braucht Leserechte auf '
-                '${widget.params.readPermissions.join(', ')}, weil novooa die '
-                'Daten zum Ereignis darüber nachlädt.',
+                LocaleKeys.shopware_ui_app_permissions.tr(
+                  namedArgs: {
+                    'entities': widget.params.readPermissions.join(', '),
+                  },
+                ),
                 style: theme.textTheme.bodySmall,
               ),
             ],
@@ -154,7 +171,7 @@ class _ShopwareAppDialogState extends State<ShopwareAppDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Schließen'),
+          child: Text(LocaleKeys.shopware_ui_app_close.tr()),
         ),
       ],
     );
@@ -196,7 +213,7 @@ class _CodeBox extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Kopieren',
+            tooltip: LocaleKeys.shopware_ui_app_copy.tr(),
             onPressed: onCopy,
             icon: const Icon(Icons.copy_outlined, size: 20),
           ),

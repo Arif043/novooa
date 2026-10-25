@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
 
 import '../../domain/entities/workflow_node.dart';
+import '../cubits/node_config_labels.dart';
 import 'baustein_icon_avatar.dart';
 
 /// Baustein-Icon, über das ein Baustein auf einen anderen gezogen und mit ihm
@@ -27,7 +28,7 @@ class BausteinSwapHandle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = BausteinIconAvatar(primitive: node.config.primitive);
+    final icon = BausteinIconAvatar(icon: node.config.icon);
     return Draggable<NodeId>(
       key: ValueKey('compact-node-drag-${node.id.value}'),
       data: node.id,

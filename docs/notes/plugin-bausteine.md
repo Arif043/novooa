@@ -26,6 +26,12 @@ Primitive eine Zeile.
   der Übersetzungen anmelden;
   `PluginNodeModules.register` meldet es beim Start an. Mapper, Palette,
   Canvas und Ausgaben-Anzeige bleiben unverändert.
+- Karte und Konfigurationsfenster zeigen Namen und Icon des Moduls statt
+  des allgemeinen „Baustein“ (`NodeConfigLabels` in
+  `task_builder/presentation/cubits/node_config_labels.dart`).
+- Texte eines Plugins stehen wie alle UI-Texte in `en`, `de` und `tr`; die
+  Beschreibungen seiner Aktionen tragen nur Schlüssel (`titleKey`,
+  `labelKey`, …), übersetzt wird im Widget.
 
 **Aktionen:** Ein Primitive kann mehrere Aktionen tragen (`config.action`).
 Für Nutzer:innen ist jede Aktion ein eigener Baustein (Titel, Beschreibung,
