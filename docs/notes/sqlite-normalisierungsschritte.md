@@ -5,7 +5,7 @@
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
 Gemeinsames Muster: JSON-Konfigurationen und historische Snapshots bleiben,
-Domain-Verträge und Firestore-Adapter ändern sich nicht. Eine vollständige
+Domain-Verträge ändern sich nicht. Eine vollständige
 strenge 3NF wird nicht behauptet.
 
 | Migration | Kern |

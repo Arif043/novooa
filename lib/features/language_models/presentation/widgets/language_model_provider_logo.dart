@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:simple_icons/simple_icons.dart';
-import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
+import 'package:syscat2/features/language_models/domain/entities/language_model_provider.dart';
 
 /// Markenlogo je Anbieter — einheitlich einfarbig (`onSurfaceVariant`),
 /// passend zum zurückhaltenden Icon-Stil des restlichen Studios.

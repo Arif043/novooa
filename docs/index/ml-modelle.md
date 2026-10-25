@@ -1,6 +1,6 @@
 # ML-Modelle
 
-> novooa verwaltet einen plattformunabhängigen Katalog klassischer ML-Modelle (ONNX) mit deklarativen Verträgen für Ein- und Ausgaben; ausgeführt wird im Python-ML-Dienst, in der Cloud wie in Standalone.
+> novooa verwaltet einen plattformunabhängigen Katalog klassischer ML-Modelle (ONNX) mit deklarativen Verträgen für Ein- und Ausgaben; ausgeführt wird im Python-ML-Dienst der Runtime.
 
 ## Entscheidungen
 
@@ -55,34 +55,25 @@
 - [Ressourcen und Warteschlange des ML-Dienstes](../notes/ml-ressourcen-und-warteschlange.md)
 - [ONNX-Größengrenzen](../notes/onnx-groessengrenzen.md)
 
-## Standalone-Verwaltung
+## Verwaltung in der Runtime
 
 - [Katalogmodelle cachen](../notes/katalogmodelle-cachen.md)
 - [Machine-Learning-Einstellungen](../notes/ml-einstellungen.md)
 - [Eigenes Modell importieren](../notes/eigenes-modell-importieren.md)
 
-## Cloud und Betrieb
+## Katalogbetrieb
 
-- [Cloud-Inferenzdienst](../notes/cloud-inferenzdienst.md)
-- [Caches im Cloud-Run-Dienst](../notes/cloud-run-ml-caches.md)
-- [Lokaler Inferenz-Stack](../notes/lokaler-inferenz-stack.md)
 - [Modelle veröffentlichen](../notes/modelle-veroeffentlichen.md)
 
 ## Offene Punkte
 
 - Weitere Eingabe- und Ausgangstransformationen als Strategien ergänzen.
-- Die Cloud-Vertragsprüfung (`model-contract-capabilities.ts`) kennt die
-  neueren Transformationstypen noch nicht.
 - Labels von Settings sind noch nicht übersetzbar.
-- Entscheidung „nur lokal“ umsetzen (Cloud-Run-Zustellweg entfernen,
-  `modelInference` in der Cloud ausblenden).
 - Format des Offline-Bundles; Katalogdienst als Function oder im Relay.
 - Tokenisierung für Textmodelle.
 - OCR-Nachweis: kuratierte PaddleOCR-Detektor- und Erkenner-Modelle,
-  Manifeste mit Zeichenliste, datenschutzgeprüfte Beleg-Fixture, lokale und
-  Cloud-End-to-End-Tests.
-- Preisfrage: Sprung von 39 EUR/Monat auf 1.990 EUR/Jahr für Cloud-Kundschaft,
-  die nur OCR braucht, beobachten.
+  Manifeste mit Zeichenliste, datenschutzgeprüfte Beleg-Fixture,
+  End-to-End-Tests.
 
 ## Verwandt
 

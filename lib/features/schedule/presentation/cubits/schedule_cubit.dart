@@ -24,8 +24,8 @@ class ScheduleCubit extends Cubit<ScheduleState> {
     required SetTaskTriggerEnabled setTaskTriggerEnabled,
     required DeleteTaskTrigger deleteTaskTrigger,
     required TaskRepository taskRepository,
-    AnalyzeTaskTrigger? analyzeTaskTrigger,
-    RotateWebhookToken? rotateWebhookToken,
+    required AnalyzeTaskTrigger analyzeTaskTrigger,
+    required RotateWebhookToken rotateWebhookToken,
   }) : this._(
          watchTaskTriggers,
          createTaskTrigger,
@@ -51,8 +51,8 @@ class ScheduleCubit extends Cubit<ScheduleState> {
   final SetTaskTriggerEnabled _setTaskTriggerEnabled;
   final DeleteTaskTrigger _deleteTaskTrigger;
   final TaskRepository _taskRepository;
-  final AnalyzeTaskTrigger? _analyzeTaskTrigger;
-  final RotateWebhookToken? _rotateWebhookToken;
+  final AnalyzeTaskTrigger _analyzeTaskTrigger;
+  final RotateWebhookToken _rotateWebhookToken;
   StreamSubscription<List<TaskTrigger>>? _triggersSubscription;
   StreamSubscription<List<Task>>? _tasksSubscription;
   List<Task> _tasks = const [];
@@ -83,15 +83,12 @@ class ScheduleCubit extends Cubit<ScheduleState> {
     );
   }
 
-  /// Prüft vorab auf Schleifen. Ohne Analyse (z. B. in der Cloud-Variante)
-  /// gibt es nichts zu melden.
+  /// Prüft vorab auf Schleifen.
   Future<TriggerCycleAnalysis> analyzeEventTrigger(
     Task task,
     EventTriggerConfig event,
-  ) async {
-    final analyze = _analyzeTaskTrigger;
-    if (analyze == null) return TriggerCycleAnalysis.none;
-    return analyze(
+  ) {
+    return _analyzeTaskTrigger(
       CreateTaskTriggerInput(
         taskId: task.id,
         taskTitle: task.title,
@@ -121,9 +118,9 @@ class ScheduleCubit extends Cubit<ScheduleState> {
   }
 
   /// Vergibt dem Webhook-Auslöser eine neue Adresse; die bisherige wird
-  /// ungültig. Ohne Unterstützung (Cloud) passiert nichts.
-  Future<void> rotateWebhookToken(TaskTrigger trigger) async {
-    await _rotateWebhookToken?.call(trigger.id);
+  /// ungültig.
+  Future<void> rotateWebhookToken(TaskTrigger trigger) {
+    return _rotateWebhookToken(trigger.id);
   }
 
   void _onTasks(List<Task> tasks) {

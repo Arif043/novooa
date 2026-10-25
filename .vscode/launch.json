@@ -6,27 +6,26 @@
     "configurations": [
 
         {
-            "name": "novooa standalone",
+            "name": "novooa (macOS)",
             "request": "launch",
             "type": "dart",
-            "deviceId": "macos",
-            // "toolArgs": [
-            //     "--dart-define=NOVOOA_RUNTIME=standalone"
-            // ]
+            "deviceId": "macos"
         },
         {
-            // Ohne diesen Define wäre das Standalone: im Web entscheidet die
-            // Herkunft, und "localhost" ist keine Cloud-Domain.
-            "name": "novooa cloud",
+            // Der Dev-Server ist nicht die Runtime: Die Adresse kommt per
+            // Define, und die Runtime muss http://localhost:5050 per
+            // LOCAL_RUNTIME_ALLOWED_ORIGINS zulassen.
+            "name": "novooa (Chrome)",
             "request": "launch",
             "type": "dart",
             "deviceId": "chrome",
-            // "toolArgs": [
-            //     "--dart-define=NOVOOA_RUNTIME=cloud"
-            // ]
+            "toolArgs": [
+                "--web-port=5050",
+                "--dart-define=WORKSPACE_API_URL=http://127.0.0.1:8090"
+            ]
         },
         {
-            // Oberfläche ohne Backend, Firebase und Lizenz; Daten nur im
+            // Oberfläche ohne Runtime und Lizenz; Daten nur im
             // Speicher (docs/notes/ui-vorschau.md).
             "name": "novooa UI-Vorschau (Chrome)",
             "request": "launch",

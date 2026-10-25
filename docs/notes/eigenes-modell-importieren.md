@@ -21,7 +21,6 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 - Importe gehören immer dem aktiven Team und erscheinen auch in der
   Modellsuche. Ablage unter
   `model-artifacts/{artifactId}/versions/{versionId}/` im Runtime-Root.
-- Tab und Endpunkte gibt es nicht in der Cloud.
 
 ## Siehe auch
 

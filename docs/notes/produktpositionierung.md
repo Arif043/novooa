@@ -5,8 +5,8 @@
 Gehört zu: [Produkt](../index/produkt.md)
 
 - **Routine statt Engineering-Workflow:** Nutzer bauen Aufgaben wie „Wenn eine
-  WhatsApp-Nachricht kommt, fasse sie zusammen, prüfe sie und schreibe eine
-  Antwort vor.“
+  E-Mail kommt, fasse sie zusammen, prüfe sie und schreibe eine Antwort
+  vor.“
 - **KI-first statt API-first:** Ausgangspunkt sind Denk- und
   Arbeitsprozesse — lesen, verstehen, prüfen, schreiben, entscheiden,
   freigeben —, nicht Integrationen.
@@ -14,15 +14,17 @@ Gehört zu: [Produkt](../index/produkt.md)
   sind Arbeitsmaterial für Bausteine, nicht nur Ablage.
 - **Human-in-the-loop als Kern:** Freigaben sind Teil des Workflows — wichtig
   für Angebote, E-Mails, Kundenkommunikation und Entscheidungen.
-- **Kommunikation als Auslöser und Aktion:** E-Mail, WhatsApp, SMS machen
+- **Kommunikation als Auslöser und Aktion:** Postfächer der Kundschaft machen
   novooa eher zum AI-Operations-Assistant als zum reinen Automations-Tool.
-- **Team-orientiert:** Aufgaben, Dateien, Kanäle, Freigaben und Aktivitäten
-  hängen am Team.
+- **Team-orientiert:** Aufgaben, Dateien, Postfächer, Freigaben und
+  Aktivitäten hängen am Arbeitsbereich der Runtime.
+- **Datenhoheit:** Alles läuft in der Runtime beim Kunden; Firebase trägt nur
+  Lizenz und Relays.
 
 Design-Inspiration (Scratch, n8n, Samsung Routines/Modi) steht in
 [`AGENTS.md`](../../AGENTS.md) § 1.
 
 ## Siehe auch
 
-- [Cloud-Preismodell](./cloud-preismodell.md)
-- [Abgrenzung Cloud und lokal](./cloud-lokal-abgrenzung.md)
+- [Lokales Lizenzmodell](./lokales-lizenzmodell.md)
+- [Betriebskosten](./betriebskosten.md)

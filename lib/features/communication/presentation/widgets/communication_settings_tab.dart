@@ -69,7 +69,7 @@ class _CommunicationBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _CommunicationHeader(
-            isBusy: channelState.isCreating || channelState.isConnecting,
+            isBusy: channelState.isConnecting,
             showAction: _showHeaderAction,
           ),
           const SizedBox(height: AppSpacing.lg),

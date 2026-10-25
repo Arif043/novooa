@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../../../files/domain/entities/team_id.dart';
 import '../../domain/entities/communication_channel.dart';
 
@@ -20,16 +18,7 @@ class MailConnectorModel {
   final String displayName;
   final String status;
 
-  factory MailConnectorModel.fromDocument(
-    DocumentSnapshot<Map<String, dynamic>> document,
-  ) {
-    return MailConnectorModel.fromData(
-      document.id,
-      document.data() ?? const {},
-    );
-  }
-
-  /// Aus einer JSON-Antwort der lokalen Runtime oder einem Firestore-Dokument.
+  /// Aus einer JSON-Antwort der Runtime.
   factory MailConnectorModel.fromData(String id, Map<String, Object?> data) {
     return MailConnectorModel(
       id: id,

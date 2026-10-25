@@ -32,9 +32,6 @@ Widget _host(
     home: Scaffold(
       body: CommunicationChannelGrid(
         channels: channels,
-        onFakeMessage: (_) {},
-        onSendMessage: (_) {},
-        onDelete: (_) {},
         onReconnect: onReconnect,
       ),
     ),

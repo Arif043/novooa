@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:simple_icons/simple_icons.dart';
-import 'package:syscat2/core/runtime/connections_availability.dart';
-import 'package:syscat2/core/runtime/webhooks_availability.dart';
 import 'package:syscat2/features/task_builder/presentation/plugin_node_module.dart';
 
 import 'domain/shopware_actions.dart';
@@ -24,11 +22,6 @@ void registerShopwarePlugin() {
         initial: () => ShopwareNodeConfig.initial(action.id),
         fromDocument: ShopwareNodeConfig.fromDocument,
         builder: (node) => ShopwareActionWidget(node: node),
-        // Die Aktionen brauchen Verbindungen, das Ereignis den Webhook-Empfänger
-        // der lokalen Runtime.
-        isAvailable: action.usesConnection
-            ? connectionsAvailable
-            : webhooksAvailable,
       ),
     );
   }

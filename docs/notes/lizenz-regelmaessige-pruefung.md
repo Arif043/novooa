@@ -1,6 +1,6 @@
 # Regelmäßige Lizenzprüfung
 
-> `RuntimeLicenseMonitor` fragt das Gateway etwa stündlich; nur ein ausdrückliches `revoked` sperrt die Runtime, eine Cloud-Störung nie.
+> `RuntimeLicenseMonitor` fragt das Gateway etwa stündlich; nur ein ausdrückliches `revoked` sperrt die Runtime, eine Störung des Gateways nie.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 

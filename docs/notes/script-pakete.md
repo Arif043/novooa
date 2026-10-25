@@ -4,9 +4,6 @@
 
 Gehört zu: [Aufgabe](../index/aufgabe.md)
 
-- **Nur lokale Runtime** (Fähigkeit `scriptPackages`). Der eingebettete
-  Python-Pfad der Cloud kennt keine Imports; ein Baustein mit Paketen scheitert
-  dort mit `scriptPackagesUnavailable` (`unsupported`).
 - **Liste am Baustein:** `ScriptNodeConfig.packages`, gespeichert wie
   eingegeben (`pandas`, `pandas==2.2.3`, `requests[socks]>=2.31,<3`). Erlaubt
   sind nur Name, Extras und Versionsangabe (`PythonPackage`), keine URLs,

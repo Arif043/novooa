@@ -1,4 +1,4 @@
-import 'language_model_draft.dart';
+import 'language_model_provider.dart';
 
 class LanguageModelConnectionDraft {
   const LanguageModelConnectionDraft({

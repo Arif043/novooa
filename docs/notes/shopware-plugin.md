@@ -8,8 +8,8 @@ Gehört zu: [Integrationen](../index/integrationen.md)
 > Erfahrung; getestet wird gegen einen Fake. Vor dem ersten Einsatz die
 > OpenAPI-Spezifikation des Shops (`/api/_info/openapi3.json`) abgleichen.
 
-- **Verfügbarkeit:** Standalone (braucht Verbindungen); die Palette zeigt die
-  Gruppe „Shopware“ nur dort. Icon: `Icons.storefront_outlined`.
+- **Palette:** Gruppe „Shopware“, Icon `Icons.storefront_outlined`; die
+  Aktionen brauchen eine [Verbindung](./verbindung.md).
 - **Backend** (`functions/src/features/integrations/shopware/`): ein Executor
   für das Primitive `shopware` (`config: {action, connectionId, params}`); jede
   Aktion liegt in `actions/` und meldet sich in `shopware-plugin.ts` an.

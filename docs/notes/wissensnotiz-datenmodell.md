@@ -4,12 +4,7 @@
 
 Gehört zu: [Wissensbasis](../index/wissensbasis.md)
 
-Firestore:
-
-```text
-teams/{teamId}/knowledgeBases/{knowledgeBaseId}
-teams/{teamId}/knowledgeBases/{knowledgeBaseId}/notes/{noteId}
-```
+Gespeichert in SQLite (`knowledge_notes`).
 
 | Feld | Typ | Bedeutung |
 | --- | --- | --- |

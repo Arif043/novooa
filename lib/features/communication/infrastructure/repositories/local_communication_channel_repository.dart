@@ -1,16 +1,12 @@
 import '../../../../core/network/workspace_api_client.dart';
 import '../../../../core/network/workspace_realtime_channel.dart';
 import '../../domain/entities/communication_channel.dart';
-import '../../domain/entities/create_communication_channel_input.dart';
-import '../../domain/entities/send_channel_message_input.dart';
 import '../../domain/repositories/communication_channel_repository.dart';
 import '../models/mail_connector_model.dart';
 
-/// Kommunikationskanäle der lokalen Runtime. Hier gibt es ausschließlich
-/// E-Mail-Postfächer (Microsoft Outlook): Die Runtime kennt sie über das Cloud
-/// Relay und liefert sie unter `GET /v1/mail-connectors`. WhatsApp und SMS
-/// laufen über Team-Konten in der Cloud und sind in dieser Variante nicht
-/// verfügbar.
+/// Kommunikationskanäle der Runtime: ausschließlich E-Mail-Postfächer
+/// (Microsoft Outlook). Die Runtime kennt sie über das Mail-Relay und
+/// liefert sie unter `GET /v1/mail-connectors`.
 class LocalCommunicationChannelRepository
     implements CommunicationChannelRepository {
   const LocalCommunicationChannelRepository(this._client, this._channel);
@@ -18,8 +14,8 @@ class LocalCommunicationChannelRepository
   final WorkspaceApiClient _client;
   final WorkspaceRealtimeChannel _channel;
 
-  /// Die Postfächer liegen in der Cloud, die Runtime hält sie nur zwischen.
-  /// Ändert die Cloud etwas, leert die Runtime ihren Cache und meldet das auf
+  /// Die Postfächer liegen beim Mail-Relay, die Runtime hält sie nur
+  /// zwischen. Ändert das Relay etwas, leert die Runtime ihren Cache und meldet das auf
   /// diesem Kanal; erst dann wird neu geladen — es gibt kein Nachfragen im
   /// Takt.
   @override
@@ -52,23 +48,4 @@ class LocalCommunicationChannelRepository
         }).toChannel(),
     ];
   }
-
-  @override
-  Future<void> createChannel(CreateCommunicationChannelInput input) =>
-      _unsupported();
-
-  @override
-  Future<void> deleteChannel(String channelId) => _unsupported();
-
-  @override
-  Future<void> dispatchFakeMessage(String channelId) => _unsupported();
-
-  @override
-  Future<void> sendMessage(SendChannelMessageInput input) => _unsupported();
-
-  Future<Never> _unsupported() => Future.error(
-    UnsupportedError(
-      'Dieser Kanaltyp ist in der lokalen Runtime nicht verfügbar.',
-    ),
-  );
 }

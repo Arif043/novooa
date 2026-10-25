@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import 'language_model_draft.dart';
+import 'language_model_provider.dart';
 
 class LanguageModel extends Equatable {
   const LanguageModel({
@@ -33,9 +33,8 @@ class LanguageModel extends Equatable {
     caseSensitive: false,
   );
 
-  /// Nur in Standalone gesetzt — verweist auf die [LanguageModelConnection],
-  /// über die dieses Modell verbunden wurde. Cloud kennt kein Connection-
-  /// Konzept, daher optional statt eines erfundenen Platzhalterwerts.
+  /// Verweist auf die [LanguageModelConnection], über die dieses Modell
+  /// verbunden wurde; fehlt, wenn die Runtime keine Verbindung nennt.
   final String? connectionId;
 
   /// Anbieter des Modells, soweit bekannt — Grundlage der Anbieter-Auswahl.

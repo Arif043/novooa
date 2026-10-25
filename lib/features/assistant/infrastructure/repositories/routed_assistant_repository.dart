@@ -5,9 +5,7 @@ import '../datasources/assistant_datasource.dart';
 import '../models/assistant_action_suggestion_parser.dart';
 import '../models/assistant_generated_response.dart';
 
-/// Wählt nur noch zwischen den zwei bereichsspezifischen Datasources — ob
-/// dahinter Firebase Callable Functions oder die lokale Runtime steckt, ist
-/// für das Routing irrelevant (siehe `AssistantDatasource`).
+/// Wählt zwischen den zwei bereichsspezifischen Datasources.
 class RoutedAssistantRepository implements AssistantRepository {
   const RoutedAssistantRepository(
     this._taskBuilderDatasource,

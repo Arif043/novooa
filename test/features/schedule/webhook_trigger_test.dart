@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/core/di/service_locator.dart';
 import 'package:syscat2/core/network/workspace_api_client.dart';
 import 'package:syscat2/core/network/workspace_realtime_channel.dart';
-import 'package:syscat2/core/runtime/workspace_capabilities.dart';
 import 'package:syscat2/features/schedule/domain/entities/create_task_trigger_input.dart';
 import 'package:syscat2/features/schedule/domain/entities/event_trigger_config.dart';
 import 'package:syscat2/features/schedule/domain/entities/schedule_config.dart';
@@ -216,10 +215,7 @@ void main() {
   });
 
   group('ScheduleCubit', () {
-    ScheduleCubit cubitFor(
-      _TriggerRepository repository, {
-      bool rotate = true,
-    }) {
+    ScheduleCubit cubitFor(_TriggerRepository repository) {
       return ScheduleCubit(
         watchTaskTriggers: WatchTaskTriggers(repository),
         createTaskTrigger: CreateTaskTrigger(repository),
@@ -227,7 +223,7 @@ void main() {
         deleteTaskTrigger: DeleteTaskTrigger(repository),
         taskRepository: _TaskRepository(),
         analyzeTaskTrigger: AnalyzeTaskTrigger(repository),
-        rotateWebhookToken: rotate ? RotateWebhookToken(repository) : null,
+        rotateWebhookToken: RotateWebhookToken(repository),
       );
     }
 
@@ -240,39 +236,10 @@ void main() {
 
       expect(repository.rotated, ['t1']);
     });
-
-    test('ohne Unterstützung (Cloud) passiert nichts', () async {
-      final repository = _TriggerRepository();
-      final cubit = cubitFor(repository, rotate: false);
-      addTearDown(cubit.close);
-
-      await cubit.rotateWebhookToken(_webhookTrigger());
-
-      expect(repository.rotated, isEmpty);
-    });
   });
 
   group('Auslöser-Dialog und Karte', () {
-    setUp(() {
-      serviceLocator.registerSingleton(_capabilities(webhooks: true));
-    });
     tearDown(() async => serviceLocator.reset());
-
-    testWidgets('ohne Webhook-Fähigkeit (Cloud) fehlt die Quelle', (
-      tester,
-    ) async {
-      await serviceLocator.reset();
-      final cubit = await _openEventForm(tester);
-
-      await tester.tap(
-        find.byType(DropdownButtonFormField<EventTriggerSource>),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Datei erstellt'), findsWidgets);
-      expect(find.text('Webhook empfangen'), findsNothing);
-      expect(cubit.creates, 0);
-    });
 
     testWidgets('ein Webhook ohne Signaturprüfung wird direkt erstellt', (
       tester,
@@ -490,20 +457,6 @@ TaskTrigger _webhookTrigger({
   ),
   webhookUrl: url,
 );
-
-WorkspaceCapabilities _capabilities({required bool webhooks}) =>
-    WorkspaceCapabilities(
-      assistant: false,
-      dataCollections: false,
-      modelCatalog: false,
-      push: false,
-      messagingChannels: false,
-      skills: false,
-      employees: false,
-      connections: false,
-      webhooks: webhooks,
-      scriptPackages: false,
-    );
 
 Map<String, Object?> _webhookItem(String id, String token) => {
   'id': id,

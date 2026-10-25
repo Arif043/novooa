@@ -17,8 +17,7 @@
 - Geplant: Tokens und Kosten je Run, Trace-Ansicht mit Modell-Aufruf je
   Knoten, Filter (Aufgabe, Status, Zeitraum, Auslöser), Re-Run mit gleichem
   Input.
-- Quelle: Genkit-Telemetrie (Cloud Trace/Logging), eigene Sammlung oder
-  hybrid?
+- Quelle: Genkit-Telemetrie, eigene Sammlung oder hybrid?
 - Live-Aktualisierung laufender Runs.
 - PII: sensible Ausgaben vor der Anzeige filtern oder maskieren.
 

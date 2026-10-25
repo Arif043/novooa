@@ -1,6 +1,6 @@
 # Feldverschlüsselung mit Envelopes
 
-> Standalone verschlüsselt nur sensible Feldwerte (Provider-API-Keys, Verbindungs- und Webhook-Geheimnisse, Lizenz-Aktivierungsgeheimnis, ML-Token, Passwort-Hashes), jeden mit eigenem Datenschlüssel; der Master-Key verschlüsselt nie direkt.
+> Die Runtime verschlüsselt nur sensible Feldwerte (Provider-API-Keys, Verbindungs- und Webhook-Geheimnisse, Lizenz-Aktivierungsgeheimnis, ML-Token, Passwort-Hashes), jeden mit eigenem Datenschlüssel; der Master-Key verschlüsselt nie direkt.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
@@ -28,7 +28,8 @@ werden nie im Klartext gespeichert; `secret_ref` verweist auf den Eintrag.
 Migration: Beim Start übernimmt die Runtime Werte im alten AES-GCM-Format
 einmalig in Envelopes, nur nach erfolgreicher Authentifizierung. Fehlender
 oder falscher Schlüssel führt zu einem Startfehler, nie zu einer Löschung.
-Cloud-Credentials haben eine eigene Verschlüsselung.
+Die Zugangsdaten der Postfächer im Mail-Relay haben eine eigene
+Verschlüsselung.
 
 ## Siehe auch
 

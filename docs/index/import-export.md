@@ -1,6 +1,6 @@
 # Import/Export
 
-> Standalone sichert ausgewählte Bereiche eines Arbeitsbereichs als ZIP und spielt sie zusammenführend wieder ein — als Backup oder für den Umzug auf eine andere Installation.
+> Die Runtime sichert ausgewählte Bereiche eines Arbeitsbereichs als ZIP und spielt sie zusammenführend wieder ein — als Backup oder für den Umzug auf eine andere Installation.
 
 - [Bereiche von Import/Export](../notes/transfer-bereiche.md)
 - [Archivformat von Import/Export](../notes/transfer-archivformat.md)

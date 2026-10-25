@@ -14,32 +14,20 @@ import 'language_model_defaults_sections.dart';
 import 'settings_section.dart';
 
 class AiModelSettingsTab extends StatelessWidget {
-  const AiModelSettingsTab({
-    super.key,
-    this.scrollable = true,
-    this.isStandalone = false,
-  });
+  const AiModelSettingsTab({super.key, this.scrollable = true});
 
   final bool scrollable;
-  final bool isStandalone;
 
   @override
   Widget build(BuildContext context) {
-    return _LanguageModelsSettingsContent(
-      scrollable: scrollable,
-      isStandalone: isStandalone,
-    );
+    return _LanguageModelsSettingsContent(scrollable: scrollable);
   }
 }
 
 class _LanguageModelsSettingsContent extends StatefulWidget {
-  const _LanguageModelsSettingsContent({
-    required this.scrollable,
-    required this.isStandalone,
-  });
+  const _LanguageModelsSettingsContent({required this.scrollable});
 
   final bool scrollable;
-  final bool isStandalone;
 
   @override
   State<_LanguageModelsSettingsContent> createState() =>
@@ -50,11 +38,8 @@ class _LanguageModelsSettingsContentState
     extends State<_LanguageModelsSettingsContent> {
   late final LanguageModelsSettingsCubit _cubit;
   late final LanguageModelDefaultsCubit _defaultsCubit;
-  late final LanguageModelConnectionsCubit? _connectionsCubit;
-  final _connectionName = TextEditingController();
+  late final LanguageModelConnectionsCubit _connectionsCubit;
   final _baseUrl = TextEditingController();
-  final _name = TextEditingController();
-  final _modelId = TextEditingController();
   final _apiKey = TextEditingController();
 
   @override
@@ -62,21 +47,16 @@ class _LanguageModelsSettingsContentState
     super.initState();
     _cubit = serviceLocator<LanguageModelsSettingsCubit>()..load();
     _defaultsCubit = serviceLocator<LanguageModelDefaultsCubit>()..load();
-    _connectionsCubit = widget.isStandalone
-        ? (serviceLocator<LanguageModelConnectionsCubit>()..load())
-        : null;
+    _connectionsCubit = serviceLocator<LanguageModelConnectionsCubit>()..load();
   }
 
   @override
   void dispose() {
-    _connectionName.dispose();
     _baseUrl.dispose();
-    _name.dispose();
-    _modelId.dispose();
     _apiKey.dispose();
     _cubit.close();
     _defaultsCubit.close();
-    _connectionsCubit?.close();
+    _connectionsCubit.close();
     super.dispose();
   }
 
@@ -95,8 +75,7 @@ class _LanguageModelsSettingsContentState
             listenWhen: (previous, current) =>
                 previous.message != current.message && current.message != null,
             listener: (context, state) {
-              if (state.message == 'Sprachmodell verbunden.' ||
-                  state.message == 'Modelle wurden verbunden.') {
+              if (state.message == 'Modelle wurden verbunden.') {
                 _clearInputs();
               }
               _showMessage(context, state.message!);
@@ -109,12 +88,10 @@ class _LanguageModelsSettingsContentState
   }
 
   Widget _withConnectionsState(
-    Widget Function(LanguageModelConnectionsState?) builder,
+    Widget Function(LanguageModelConnectionsState) builder,
   ) {
-    final connectionsCubit = _connectionsCubit;
-    if (connectionsCubit == null) return builder(null);
     return BlocProvider.value(
-      value: connectionsCubit,
+      value: _connectionsCubit,
       child:
           BlocConsumer<
             LanguageModelConnectionsCubit,
@@ -137,9 +114,9 @@ class _LanguageModelsSettingsContentState
   Widget _content(
     BuildContext context,
     LanguageModelsSettingsState state,
-    LanguageModelConnectionsState? connectionsState,
+    LanguageModelConnectionsState connectionsState,
   ) {
-    final connections = connectionsState?.connections ?? const [];
+    final connections = connectionsState.connections;
     final content = SettingsSection(
       icon: Icons.auto_awesome,
       title: 'Sprachmodelle',
@@ -152,18 +129,13 @@ class _LanguageModelsSettingsContentState
             state: state,
             connectionsState: connectionsState,
             connectionsCubit: _connectionsCubit,
-            isStandalone: widget.isStandalone,
           ),
           const Divider(height: AppSpacing.xl),
           LanguageModelConnectForm(
             cubit: _cubit,
             state: state,
-            isStandalone: widget.isStandalone,
             connections: connections,
-            connectionName: _connectionName,
             baseUrl: _baseUrl,
-            name: _name,
-            modelId: _modelId,
             apiKey: _apiKey,
           ),
         ],
@@ -171,21 +143,13 @@ class _LanguageModelsSettingsContentState
     );
     final body = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        content,
-        LanguageModelDefaultsSections(
-          usedByKnowledgeAssistant: widget.isStandalone,
-        ),
-      ],
+      children: [content, const LanguageModelDefaultsSections()],
     );
     return widget.scrollable ? SingleChildScrollView(child: body) : body;
   }
 
   void _clearInputs() {
-    _connectionName.clear();
     _baseUrl.clear();
-    _name.clear();
-    _modelId.clear();
     _apiKey.clear();
   }
 }

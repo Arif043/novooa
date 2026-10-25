@@ -12,8 +12,7 @@ import '../../../teams/domain/usecases/get_current_team_id.dart';
 import 'event_target_options_state.dart';
 
 /// Liefert die Dateien, Verzeichnisse und Kanäle, aus denen die Zielwahl eines
-/// Event-Triggers besteht. Kanäle sind optional: Nicht jede Betriebsvariante
-/// kennt Kommunikationskanäle.
+/// Event-Triggers besteht.
 class EventTargetOptionsCubit extends Cubit<EventTargetOptionsState> {
   EventTargetOptionsCubit(
     this._watchTeamFiles,
@@ -24,7 +23,7 @@ class EventTargetOptionsCubit extends Cubit<EventTargetOptionsState> {
 
   final WatchTeamFiles _watchTeamFiles;
   final WatchTeamFolders _watchTeamFolders;
-  final WatchCommunicationChannels? _watchChannels;
+  final WatchCommunicationChannels _watchChannels;
   final GetCurrentTeamId _getCurrentTeamId;
   final List<StreamSubscription<Object?>> _subscriptions = [];
 
@@ -35,10 +34,7 @@ class EventTargetOptionsCubit extends Cubit<EventTargetOptionsState> {
       final teamId = await _getCurrentTeamId();
       _listen<List<TeamFile>>(_watchTeamFiles(teamId), _onFiles);
       _listen<List<TeamFolder>>(_watchTeamFolders(teamId), _onFolders);
-      final channels = _watchChannels;
-      if (channels != null) {
-        _listen<List<CommunicationChannel>>(channels(), _onChannels);
-      }
+      _listen<List<CommunicationChannel>>(_watchChannels(), _onChannels);
     } catch (_) {
       _emitFailure();
     }

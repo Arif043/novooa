@@ -1,14 +1,14 @@
 # Agentenmodell über Remote Config
 
-> Das Modell der Cloud-Agenten steht im Remote-Config-Parameter `assistant_model`; eine Änderung wirkt spätestens nach fünf Minuten, ohne Deploy.
+> Das Modell des Aufgabenstudio-Agenten im Relay steht im Remote-Config-Parameter `assistant_model`; eine Änderung wirkt spätestens nach fünf Minuten, ohne Deploy.
 
 Gehört zu: [KI-Agent](../index/ki-agent.md)
 
 - Wert: Google-Modellname (Gemini API), z. B. `gemini-3.1-flash-lite`
   (Standard im Code). Keine Auswahl durch Nutzer:innen, keine pro Team.
 - Gelesen über `RemoteConfigAssistantModel`, gecacht fünf Minuten
-  (`CachedAssistantModelSettings`) von `runTaskBuilderAssistant` und
-  `askKnowledgeBaseAssistant`. Gilt auch für alle Subagenten.
+  (`CachedAssistantModelSettings`) von `runTaskBuilderAssistant`. Gilt auch
+  für alle Subagenten.
 - Leer, fehlend oder ungültig geschrieben (erlaubt: Kleinbuchstaben, Ziffern,
   `.`, `-`, `_`) → Standardmodell aus `ai-models.ts` (`GOOGLE_TEXT_MODEL`).
 - Ein gültig geschriebener, aber unbekannter Name wird nicht vorab geprüft.

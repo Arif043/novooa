@@ -9,7 +9,9 @@
 
 **novooa** ist ein AI-Automation-System. Nutzer:innen kombinieren Bausteine
 (Prompts, Bedingungen, Tool-Aufrufe, Validierungen, Freigaben) zu **Aufgaben**
-(Workflows), die über **Genkit**-Flows in der Cloud ausgeführt werden.
+(Workflows), die in der **Runtime** beim Kunden über **Genkit** ausgeführt
+werden. Firebase trägt nur noch Hintergrunddienste: Lizenz, Relays und
+Postfächer.
 
 ### Design-Philosophie
 
@@ -58,19 +60,26 @@ Ein Template-Ausdruck beschreibt ausschließlich die Referenz auf einen Wert. We
 ## 2. Architektur (Überblick)
 
 ```
-┌──────────────────────────┐         ┌──────────────────────────────┐
-│  Flutter-Client (lib/)   │  HTTPS  │  Firebase Functions           │
-│  • Root + Drawer + Stage │ ──────▶ │  (functions/src)             │
-│  • features/*            │  Genkit │  • task-workflows.ts          │
-│  • Clean Architecture    │  Flows  │  • genkit-sample.ts           │
-└──────────────────────────┘         │  • @genkit-ai/google-genai    │
-                                     └──────────────┬───────────────┘
-                                                    ▼
-                                          ┌──────────────────────┐
-                                          │  Google Gemini       │
-                                          │  (gemini-2.5-flash)  │
-                                          └──────────────────────┘
+┌──────────────────────────┐  HTTP/WS  ┌──────────────────────────────┐
+│  Flutter-Client (lib/)   │ ────────▶ │  Runtime (Docker beim Kunden) │
+│  • nativ oder Web        │           │  functions/src/shared/local   │
+│  • features/*            │           │  • Fastify, SQLite (Drizzle)  │
+│  • Clean Architecture    │           │  • Genkit-Runner, Worker      │
+└──────────────────────────┘           │  • ML-, Script-Dienst         │
+                                       └──────────────┬───────────────┘
+                                                      │ Lizenz, Relays
+                                                      ▼
+                                       ┌──────────────────────────────┐
+                                       │  Firebase (Hintergrund)       │
+                                       │  functions/src/index.ts       │
+                                       │  Lizenz-Gateway, Wake-ups,    │
+                                       │  Push-, Mail-, Agent-, Skills-│
+                                       │  Relay, Microsoft-Postfächer  │
+                                       └──────────────────────────────┘
 ```
+
+Die Runtime liefert die Web-App selbst aus; die native App fragt nach ihrer
+Adresse ([`docs/index/lokale-runtime.md`](./docs/index/lokale-runtime.md)).
 
 Detailtiefe zu Datenmodell, Auth, Persistenz und Trigger →
 [`docs/index/architektur.md`](./docs/index/architektur.md).
@@ -82,16 +91,16 @@ Detailtiefe zu Datenmodell, Auth, Persistenz und Trigger →
 ### Client (Flutter)
 - Flutter / Dart SDK `^3.11.5`
 - `flutter_lints: ^6.0.0`
-- `firebase_core: ^4.11.0`
+- `firebase_core`, `firebase_messaging` — nur für optionales Push über das Relay
 - Material 3, Theme siehe `lib/core/theme/syscat_theme.dart`
 
-### Backend (Firebase Functions)
+### Backend (`functions/`: Runtime und Firebase-Hintergrunddienste)
 - Node 24, TypeScript 6
+- Runtime: Fastify, SQLite über Drizzle ORM
 - `genkit: ^1.37.0`, `@genkit-ai/google-genai: ^1.37.0`
-- `@genkit-ai/firebase: ^1.37.0`
-- `firebase-functions: ^7.0.0`, `firebase-admin: ^13.6.0`
+- Hintergrunddienste: `firebase-functions: ^7.0.0`, `firebase-admin: ^13.6.0`
 - `neverthrow: ^8.2.0` — Rückgabetypen als `Result`/`ResultAsync` (`…OrFailure`), Gegenstück zu `multiple_result` im Client
-- Modell: `gemini-2.5-flash`
+- Modelle: Sprachmodelle der Kundschaft; der Aufgabenstudio-Agent im Relay nutzt Gemini
 
 ### Kommandos
 
@@ -108,8 +117,10 @@ cd functions
 npm install
 npm run build          # tsc → functions/lib
 npm run lint           # ESLint (typbasiert, Konfiguration: functions/eslint.config.mjs)
-npm run serve          # lokal mit Emulator
-npm run deploy         # firebase deploy --only functions
+npm run local-runtime:serve         # Runtime ohne Docker
+npm run local-runtime:docker:up     # Runtime-Stack per Docker Compose
+npm run serve                       # Hintergrunddienste im Emulator
+npm run deploy                      # firebase deploy --only functions
 ```
 
 ---
@@ -157,8 +168,7 @@ Inhaltsverzeichnis, dann nur die Notizen, die du brauchst.
 | Thema | Inhaltsverzeichnis | Inhalt |
 | --- | --- | --- |
 | Architektur | [`docs/index/architektur.md`](./docs/index/architektur.md) | Schichten, Backend-Struktur, Persistenz, Lokalisierung, Sicherheit, UI-Vorschau |
-| Betriebsvarianten | [`docs/index/betriebsvarianten.md`](./docs/index/betriebsvarianten.md) | Nativ/Web × Cloud/Standalone, Herkunftsregel, Fähigkeiten je Variante |
-| Lokale Runtime | [`docs/index/lokale-runtime.md`](./docs/index/lokale-runtime.md) | Stack, Zugriff, Transport, Datenhaltung, Ausführung, Lizenz, Relays, Schlüssel |
+| Lokale Runtime | [`docs/index/lokale-runtime.md`](./docs/index/lokale-runtime.md) | Stack, Web-App, Zugriff, Transport, Datenhaltung, Ausführung, Lizenz, Relays, Schlüssel |
 | Betrieb und Deployment | [`docs/index/betrieb-und-deployment.md`](./docs/index/betrieb-und-deployment.md) | Umgebungen, Microsoft-Graph-App, Deployment-CLI, Windows-Einrichtung |
 | Produkt | [`docs/index/produkt.md`](./docs/index/produkt.md) | Positionierung, Kosten, Preise, Lizenzmodell |
 | Aufgabe | [`docs/index/aufgabe.md`](./docs/index/aufgabe.md) | Modell, Bausteinkatalog, Aufgabenstudio, Ausführung, Executor-Outputs |

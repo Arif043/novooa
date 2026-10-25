@@ -1,46 +1,29 @@
 # Betriebskosten
 
-> Firebase ist bei kleiner Nutzung nahezu kostenlos; der einzige mit der Nutzung skalierende Kostenblock sind KI-Tokens.
+> novooa trägt nur die Kosten der Firebase-Hintergrunddienste; Rechenleistung und die meisten KI-Tokens zahlt die Kundschaft über ihre Runtime und eigene Anbieterschlüssel.
 
 Gehört zu: [Produkt](../index/produkt.md)
 
-Basispreise (Stand der Kalkulation):
+Was bei novooa anfällt:
 
-- Firestore Free Tier: 50k Reads, 20k Writes, 20k Deletes pro Tag, 1 GiB;
-  danach ca. 0,30 USD je 1 Mio Reads, 0,90 USD je 1 Mio Writes.
-- Cloud Functions: 2 Mio Aufrufe/Monat frei, danach ca. 0,40 USD je 1 Mio
-  plus Rechenzeit.
-- Gemini 2.5 Flash: ca. 0,30 USD je 1 Mio Input-, 2,50 USD je 1 Mio
-  Output-Tokens.
+- **Cloud Functions und Firestore** für Lizenz-Gateway, Wake-ups und die
+  Relays (Push, Mail, Aufgabenstudio-Agent, Skills). Das Volumen hängt an der
+  Zahl der Runtimes, nicht an der Zahl der Läufe; im Free Tier (2 Mio
+  Aufrufe/Monat, 50k Reads und 20k Writes pro Tag) ist das lange kostenlos.
+- **Aufgabenstudio-Agent:** Er läuft über `localRuntimeTaskBuilderRelay` mit
+  dem Gemini-Schlüssel des Betreibers
+  ([Wo die KI-Agenten laufen](./ki-agenten-betriebsorte.md)). Gemini 2.5
+  Flash kostet ca. 0,30 USD je 1 Mio Input- und 2,50 USD je 1 Mio
+  Output-Tokens; das ist der einzige mit der Nutzung skalierende Block.
+- **Microsoft Graph und FCM** sind kostenlos; ihre Last trägt das Relay.
 
-| Szenario | Annahme | Kosten |
-| --- | --- | --- |
-| MVP | 10 Nutzer × 10 Runs/Tag × 2 Prompts (1k in, 500 out) | ca. 10 USD/Monat (6.000 Aufrufe × 0,00155 USD) |
-| Mittel | 100 Nutzer × 20 Runs/Tag × 3 Prompts | ca. 300–350 USD/Monat (279 USD Gemini + 10–30 USD Firebase) |
-
-Bei 100 Pro-Nutzern (39 EUR) stehen ca. 3.900 EUR Umsatz gegenüber — rund
-90 % Bruttomarge, solange die KI-Nutzung je Nutzer begrenzt bleibt.
-
-**Auto-Save-Debounce:** 500 getippte Zeichen sind meist 1 statt bis zu 500
-Writes (100 Nutzer: 1.000–3.000 statt 500.000 Writes/Tag). Preislich nur ca.
-13 USD/Monat, aber weniger Quota-Druck, Listener-Updates und Latenz.
-
-Fazit: Tokens sind der einzige relevante variable Block (besonders große
-Dateien, RAG, viele Prompt-Bausteine); detaillierte Live-Aktivitäten werden
-relevant; alles andere ist im MVP Rundungsfehler. Daraus folgt: Sitzplatzpreis
-für Zugang, KI-Credits als Mengenbegrenzung.
-
-Hinweis: Die Kalkulation nimmt Twilio nur als interne Marketing-Kosten an;
-SMS- und WhatsApp-Kanäle laufen technisch aber über Twilio
-([Kommunikationskanal-Datenmodell](./kommunikationskanal-datenmodell.md)) —
-ihre Kosten sind noch nicht eingepreist.
+Was die Kundschaft trägt: Hardware der Runtime, Sprachmodelle über eigene
+Schlüssel oder Ollama, ML-Inferenz im eigenen ML-Dienst.
 
 Quellen: [Firebase](https://firebase.google.com/pricing),
-[Firestore](https://cloud.google.com/firestore/pricing),
-[Cloud Functions](https://cloud.google.com/functions/pricing-1stgen),
 [Gemini](https://ai.google.dev/gemini-api/docs/pricing).
 
 ## Siehe auch
 
-- [Cloud-Preismodell](./cloud-preismodell.md)
-- [Grenzen von Cloud Functions](./cloud-functions-grenzen.md)
+- [Lokales Lizenzmodell](./lokales-lizenzmodell.md)
+- [Cloud-Endpunkte der Runtime](./runtime-cloud-endpunkte.md)

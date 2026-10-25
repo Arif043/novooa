@@ -1,21 +1,13 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'core/di/service_locator.dart';
-import 'core/runtime/runtime_kind_preferences.dart';
+import 'core/runtime/push_availability.dart';
 import 'core/runtime/runtime_profile.dart';
-import 'core/runtime/runtime_startup_decision.dart';
-import 'core/runtime/runtime_variant_switcher.dart';
-import 'core/runtime/workspace_capabilities.dart';
-import 'core/firebase/firebase_emulator_config.dart';
-import 'core/firebase/firestore_web_cache.dart';
 import 'core/localization/localized_app.dart';
 import 'core/logging/logger.dart';
 import 'core/logging/application_bloc_observer.dart';
@@ -27,8 +19,6 @@ import 'core/routing/app_router.dart';
 import 'core/theme/syscat_theme.dart';
 import 'core/widgets/offline_status_snackbar.dart';
 import 'features/runtime_users/presentation/cubits/current_runtime_user_cubit.dart';
-import 'features/auth/presentation/cubits/auth_session_cubit.dart';
-import 'features/notifications/infrastructure/datasources/fcm_push_click_bridge.dart';
 import 'features/notifications/infrastructure/datasources/push_click_navigation_policy.dart';
 import 'features/notifications/infrastructure/services/fcm_bootstrapper.dart';
 import 'features/notifications/presentation/widgets/fcm_foreground_notification_listener.dart';
@@ -49,131 +39,52 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 Future<void> main() =>
     runZonedGuarded(_startApplication, _logUncaughtZoneError) ?? Future.value();
 
-/// Auch der Wiedereinstiegspunkt nach einem vollständigen Reset (siehe
-/// `_bootRuntimeKind`s `onFullReset`) — löst die Startentscheidung dann
-/// einfach neu auf. `WidgetsFlutterBinding.ensureInitialized()` ist dafür
-/// mehrfach aufrufbar gemacht.
+/// Auch der Wiedereinstiegspunkt nach dem Abmelden (siehe `onFullReset`).
+/// `WidgetsFlutterBinding.ensureInitialized()` ist dafür mehrfach aufrufbar.
 Future<void> _startApplication() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
-  final kind = await resolveStartupRuntimeKind();
-  await _bootRuntimeKind(kind);
-}
-
-Future<void> _bootRuntimeKind(RuntimeKind kind) async {
-  final runtimeProfile = RuntimeProfile.forKind(kind);
-  // Einzige Quelle dafür, ob Push aktiv wird: `WorkspaceCapabilities`. Muss
-  // hier als reine Funktion gelesen werden (statt aus dem DI-Container),
-  // weil `configureDependencies()` — das `WorkspaceCapabilities` erst
-  // registriert — von dieser Entscheidung selbst abhängt (Firebase muss vor
-  // der Cloud-DI stehen).
-  final capabilities = WorkspaceCapabilities.forKind(kind);
-  if (capabilities.push) {
-    await _initializeFirebase();
-  }
+  if (isPushEnabled()) await _initializeFirebase();
   configureClientLogger(const DeveloperClientLogger());
   Bloc.observer = ApplicationBlocObserver();
   _configureErrorLogging();
   registerMediaInputPickerPlatform();
-  if (runtimeProfile.isCloud) {
-    await _configureCloudPlatform();
-  }
-  if (capabilities.push) {
+  if (isPushEnabled()) {
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   }
-  if (runtimeProfile.isStandalone) {
-    runApp(
-      RuntimeVariantSwitcherScope(
-        switcher: const _AppRuntimeVariantSwitcher(),
-        // Anmeldung und Einrichtung brauchen die Übersetzungen schon vor der App.
-        child: localizedApp(
-          RuntimeConnectionGate(
-            runtimeProfile: runtimeProfile,
-            configureApplication: _configureApplication,
-            createApplication: (profile) => MyApp(runtimeProfile: profile),
-            // Abmelden vergisst Sitzung, Adresse und Varianten-Wahl
-            // vollständig und ruft diesen Callback. Ein erneutes Auflösen der
-            // Startentscheidung landet danach nativ korrekt wieder beim
-            // Cloud-Login (mit Wechsel-Hinweis zurück zur eigenen Runtime)
-            // oder im Web direkt wieder im Standalone-Fluss — dort gibt die
-            // Herkunft die Variante ohnehin fix vor.
-            onFullReset: () async {
-              await resetDependencies();
-              await _startApplication();
-            },
-            onSignedInAgain: () =>
-                serviceLocator<CurrentRuntimeUserCubit>().load(),
-          ),
-        ),
-      ),
-    );
-    return;
-  }
-  await _configureApplication(runtimeProfile);
   runApp(
-    RuntimeVariantSwitcherScope(
-      switcher: const _AppRuntimeVariantSwitcher(),
-      child: localizedApp(MyApp(runtimeProfile: runtimeProfile)),
+    // Anmeldung und Einrichtung brauchen die Übersetzungen schon vor der App.
+    localizedApp(
+      RuntimeConnectionGate(
+        runtimeProfile: RuntimeProfile.fromEnvironment(),
+        configureApplication: _configureApplication,
+        createApplication: (_) => const MyApp(),
+        // Abmelden vergisst Sitzung und Adresse; danach beginnt alles neu.
+        onFullReset: () async {
+          await resetDependencies();
+          await _startApplication();
+        },
+        onSignedInAgain: () => serviceLocator<CurrentRuntimeUserCubit>().load(),
+      ),
     ),
   );
-}
-
-/// Speichert die neue Wahl, baut die DI zurück und bootet die Anwendung
-/// für die neue Variante — alles im selben Prozess. Kein Neustart nötig,
-/// weil `configureDependencies` genau für diesen Zweck ein frisches
-/// `GetIt` verträgt (`resetDependencies()`) und Firebase nur einmal pro
-/// Prozess initialisiert wird (siehe Schutz in `_initializeFirebase`).
-class _AppRuntimeVariantSwitcher implements RuntimeVariantSwitcher {
-  const _AppRuntimeVariantSwitcher();
-
-  @override
-  Future<void> switchTo(RuntimeKind kind) async {
-    try {
-      await RuntimeKindPreferences(SharedPreferencesAsync()).save(kind);
-    } catch (error, stackTrace) {
-      logException(
-        message: 'Betriebsvariante konnte nicht gespeichert werden.',
-        error: error,
-        stackTrace: stackTrace,
-        name: 'runtime',
-      );
-    }
-    await resetDependencies();
-    await _startApplication();
-  }
-}
-
-Future<void> _configureCloudPlatform() async {
-  await FirebaseAppCheck.instance.activate(providerWeb: _webAppCheckProvider());
-  configureFirestoreWebCache(FirebaseFirestore.instance);
-  if (FirebaseEmulatorConfig.enabled) {
-    await const FirebaseEmulatorConfig().connect();
-  }
 }
 
 Future<void> _configureApplication(RuntimeProfile runtimeProfile) async {
   await configureDependencies(runtimeProfile: runtimeProfile);
   configureClientLogger(
-    runtimeProfile.isStandalone
-        ? WorkspaceClientLogger(serviceLocator<WorkspaceApiClient>())
-        : const DeveloperClientLogger(),
+    WorkspaceClientLogger(serviceLocator<WorkspaceApiClient>()),
   );
-  if (!runtimeProfile.isStandalone && shouldNavigateFromPushClick()) {
-    const FcmPushClickBridge().start(_openNotificationData);
-  }
-  if (serviceLocator<WorkspaceCapabilities>().push) {
+  if (isPushEnabled()) {
     unawaited(serviceLocator<FcmBootstrapper>().start());
   }
 }
 
-/// Wird nur aufgerufen, wenn `WorkspaceCapabilities.push` bereits true ist —
-/// die Fähigkeit hat die Zielplattform schon berücksichtigt (siehe dort),
-/// ein `UnsupportedError` an dieser Stelle wäre also ein echter Bug und darf
-/// durchschlagen statt Push still zur Laufzeit zu deaktivieren.
+/// Wird nur aufgerufen, wenn [isPushEnabled] true ist — die Plattform ist
+/// dann schon berücksichtigt; ein `UnsupportedError` wäre ein echter Bug.
 Future<void> _initializeFirebase() async {
-  // Nach einem vollständigen Reset (siehe `onFullReset`) kann derselbe
-  // Prozess `_bootRuntimeKind` ein zweites Mal durchlaufen — Firebase lässt
-  // sich aber nicht zweimal initialisieren.
+  // Nach dem Abmelden durchläuft derselbe Prozess `_startApplication` ein
+  // zweites Mal — Firebase lässt sich aber nicht zweimal initialisieren.
   if (Firebase.apps.isNotEmpty) return;
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 }
@@ -207,15 +118,8 @@ void _configureErrorLogging() {
   };
 }
 
-WebProvider _webAppCheckProvider() {
-  if (kDebugMode) return WebDebugProvider();
-  return ReCaptchaV3Provider('6LeIpVotAAAAAJKgujQhyiUZNrNkDxChOSKqXcCz');
-}
-
 class MyApp extends StatefulWidget {
-  const MyApp({super.key, required this.runtimeProfile});
-
-  final RuntimeProfile runtimeProfile;
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -243,12 +147,8 @@ class _MyAppState extends State<MyApp> {
     );
     return MultiBlocProvider(
       providers: [
-        if (widget.runtimeProfile.isCloud)
-          BlocProvider.value(value: serviceLocator<AuthSessionCubit>()),
-        if (widget.runtimeProfile.isStandalone) ...[
-          BlocProvider.value(value: serviceLocator<RuntimeLicenseCubit>()),
-          BlocProvider.value(value: serviceLocator<CurrentRuntimeUserCubit>()),
-        ],
+        BlocProvider.value(value: serviceLocator<RuntimeLicenseCubit>()),
+        BlocProvider.value(value: serviceLocator<CurrentRuntimeUserCubit>()),
       ],
       child: app,
     );
@@ -256,7 +156,7 @@ class _MyAppState extends State<MyApp> {
 
   Widget _wrapApplication(BuildContext context, Widget? child) {
     final content = child ?? const SizedBox.shrink();
-    final app = serviceLocator<WorkspaceCapabilities>().push
+    final app = isPushEnabled()
         ? FcmForegroundNotificationListener(
             onNotificationOpened: _openNotificationFromPushClick,
             onForegroundNotificationAction: _openNotification,

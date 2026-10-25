@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/widgets/adaptive_sheet.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model.dart';
-import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
+import 'package:syscat2/features/language_models/domain/entities/language_model_provider.dart';
 import 'package:syscat2/features/language_models/presentation/widgets/language_model_provider_logo.dart';
 
 import 'language_model_provider_groups.dart';

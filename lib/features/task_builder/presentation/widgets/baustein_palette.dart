@@ -5,9 +5,6 @@ import 'package:syscat2/features/assistant/presentation/cursor/agent_cursor_anch
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:syscat2/core/runtime/connections_availability.dart';
-import 'package:syscat2/core/runtime/webhooks_availability.dart';
-import 'package:syscat2/core/runtime/employees_availability.dart';
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/workflow_node.dart';
 import '../cubits/workflow_primitive_labels.dart';
@@ -167,35 +164,14 @@ class _BausteinPaletteState extends State<BausteinPalette> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final httpAvailable = connectionsAvailable();
-    final webhookAvailable = webhooksAvailable();
-    final teamworkAvailable = employeesAvailable();
     final groups = {
       for (final group in bausteinGroups.entries)
         group.key: group.value
             .where((choice) => choice.label.toLowerCase().contains(_query))
-            // Ohne Verbindungs-Dienst (Cloud) gäbe es den Baustein, aber keine Ausführung.
-            .where(
-              (choice) =>
-                  httpAvailable ||
-                  choice.primitive != WorkflowPrimitive.httpRequest,
-            )
-            .where(
-              (choice) =>
-                  webhookAvailable ||
-                  choice.primitive != WorkflowPrimitive.readWebhook,
-            )
-            // Teamarbeit braucht Mitarbeiter, die es nur in Standalone gibt.
-            .where(
-              (choice) =>
-                  teamworkAvailable ||
-                  choice.primitive != WorkflowPrimitive.teamwork,
-            )
             .toList(),
     };
     for (final module in PluginNodeModules.all) {
-      if (!module.isAvailable() ||
-          !module.title.toLowerCase().contains(_query)) {
+      if (!module.title.toLowerCase().contains(_query)) {
         continue;
       }
       (groups[module.group] ??= []).add(BausteinChoice.plugin(module));

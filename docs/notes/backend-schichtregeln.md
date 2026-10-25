@@ -4,11 +4,11 @@
 
 Gehört zu: [Architektur](../index/architektur.md)
 
-- `domain/` importiert weder Firebase, Genkit, Twilio noch Node-/HTTP-SDKs.
+- `domain/` importiert weder Firebase, Genkit noch Node-/HTTP-SDKs.
   `entities/` reine Typen, Value Objects, Regeln; `repositories/` nur Ports;
   `usecases/` nur Domain-Typen und Ports.
-- `infrastructure/` implementiert Ports (Firestore, Storage, Cloud Tasks,
-  Functions, Genkit, SQLite, Provider).
+- `infrastructure/` implementiert Ports (SQLite, Genkit, Provider, Relays;
+  Firestore und Functions nur für die Hintergrunddienste).
 - Callable-, Scheduler- und Webhook-Handler liegen in
   `infrastructure/functions/`: Eingaben validieren, Use Cases rufen, Fehler
   übersetzen.

@@ -56,4 +56,4 @@ Build Tools.
 ## Siehe auch
 
 - [Runtime-Sitzungen](./runtime-sitzungen.md)
-- [Push-Benachrichtigungen in Standalone](./push-standalone.md) — Build ohne Apple-Zertifikat
+- [Push-Benachrichtigungen über das Relay](./push-standalone.md) — Build ohne Apple-Zertifikat

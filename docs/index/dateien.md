@@ -4,11 +4,9 @@
 
 ## Ablage und Versionen
 
-- [Dateiablage in der Cloud](../notes/dateiablage-cloud-pfade.md)
 - [Ordner der Dateiablage](../notes/datei-ordner.md)
 - [Copy-on-Write-Versionen](../notes/datei-copy-on-write.md)
 - [Versionsrotation](../notes/datei-versionsrotation.md)
-- [Sicherheitsregeln der Dateiablage](../notes/datei-sicherheitsregeln.md)
 - [Dateiversionen in SQLite (0009)](../notes/sqlite-dateiversionen-normalisiert.md)
 - [Datei- und Ordnerablage (0017/0018)](../notes/sqlite-dateiablage-normalisiert.md)
 

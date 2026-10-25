@@ -1,6 +1,6 @@
 # Daten
 
-> Arbeitspläne speichern und finden dokumentorientierte Datensätze in benannten Sammlungen, ohne Tabellen oder SQL zu sehen; umgesetzt in Standalone.
+> Arbeitspläne speichern und finden dokumentorientierte Datensätze in benannten Sammlungen, ohne Tabellen oder SQL zu sehen.
 
 - [Datensammlungen: Fachmodell](../notes/datensammlungen-fachmodell.md)
 - [Datensammlungen in SQLite](../notes/datensammlungen-sqlite.md)
@@ -10,9 +10,8 @@
 
 ## Offene Punkte
 
-- Freie SQL-Abfragen, Aggregationen, manuelle Sammlungsverwaltung und
-  Cloud-Synchronisierung sind nicht enthalten; Cloud braucht einen
-  Firestore-Adapter.
+- Freie SQL-Abfragen, Aggregationen und manuelle Sammlungsverwaltung sind
+  nicht enthalten.
 - Ausdrucksindizes bei wachsendem Datenvolumen.
 - Schema-Hinweise für Einsteiger:innen, ohne flexible Dokumente einzuschränken.
 

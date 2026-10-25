@@ -1,11 +1,11 @@
 # Mail-Relay und Dead-Letter-Queue
 
-> Microsoft-Graph-Postfächer laufen in Standalone vollständig im Cloud-Relay; die Runtime holt normalisierte `emailReceived`-Ereignisse ab und bestätigt sie.
+> Microsoft-Graph-Postfächer laufen vollständig im Mail-Relay in Firebase; die Runtime holt normalisierte `emailReceived`-Ereignisse ab und bestätigt sie.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
-- OAuth, Refresh-Tokens, Graph-Aufrufe, Versand und Webhooks bleiben in der
-  Cloud. Die Runtime hält nur eine ausgehende HTTPS-Verbindung und
+- OAuth, Refresh-Tokens, Graph-Aufrufe, Versand und Webhooks bleiben im
+  Relay. Die Runtime hält nur eine ausgehende HTTPS-Verbindung und
   authentifiziert sich mit ihrer signierten Lizenz.
 - Nach idempotenter lokaler Verarbeitung bestätigt sie jedes Ereignis;
   fehlgeschlagene Zustellungen kommen mit begrenzten Wiederholungen erneut.
@@ -14,8 +14,8 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
   - `GET /v1/mail-relay/dead-letters`
   - `POST /v1/mail-relay/dead-letters/{eventId}/replay`
 
-Warum: E-Mails gehen bei längerer Offline-Phase nicht verloren, ohne dass die
-Cloud die Runtime direkt erreichen muss.
+Warum: E-Mails gehen bei längerer Offline-Phase nicht verloren, ohne dass das
+Relay die Runtime direkt erreichen muss.
 
 ## Siehe auch
 

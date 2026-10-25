@@ -1,6 +1,6 @@
-# Push-Benachrichtigungen in Standalone
+# Push-Benachrichtigungen über das Relay
 
-> Die Runtime leitet Geräte-Registrierungen und Push-Nachrichten mit ihrer Lizenz an `localRuntimePushRelay` weiter; Push ist in Standalone optional und standardmäßig aus.
+> Die Runtime leitet Geräte-Registrierungen und Push-Nachrichten mit ihrer Lizenz an `localRuntimePushRelay` weiter; Push ist optional und standardmäßig aus.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
@@ -17,7 +17,8 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 - Signierte macOS-Auslieferung: `--dart-define=NOVOOA_PUSH_ENABLED=true` plus
   APNs-Credentials und `aps-environment`-Berechtigung.
 
-Noch offen: Freigabe-Ereignisse über den Gateway in Firestore/FCM spiegeln.
+Noch offen: Freigabe-Ereignisse zusätzlich als eigene Benachrichtigungsart
+über das Relay zustellen.
 
 ## Siehe auch
 

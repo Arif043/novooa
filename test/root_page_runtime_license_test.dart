@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-import 'package:syscat2/core/widgets/root_side_menu_sections.dart';
 import 'package:syscat2/features/licensing/domain/entities/runtime_license.dart';
 import 'package:syscat2/features/licensing/domain/repositories/runtime_license_repository.dart';
 import 'package:syscat2/features/licensing/domain/usecases/activate_runtime_license.dart';
@@ -20,11 +19,7 @@ void main() {
       BlocProvider.value(
         value: cubit,
         child: const MaterialApp(
-          home: RootPage(
-            location: '/tasks',
-            isStandalone: true,
-            child: SizedBox.shrink(),
-          ),
+          home: RootPage(location: '/tasks', child: SizedBox.shrink()),
         ),
       ),
     );
@@ -32,18 +27,6 @@ void main() {
     expect(find.text('Lizenz aktivieren'), findsWidgets);
     expect(tester.takeException(), isNull);
     await cubit.close();
-  });
-
-  testWidgets('verzichtet im Runtime-Seitenmenü auf das Cloud-Profil', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(body: SideMenuHeader(showCurrentUserProfile: false)),
-      ),
-    );
-
-    expect(tester.takeException(), isNull);
   });
 }
 

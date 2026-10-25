@@ -11,7 +11,7 @@ function fakes(existing: MailConnector | null) {
     async consumeAuthorization() {
       return {
         id: "auth-1", teamId: "team-1", uid: "user-2", provider: "microsoftGraph", codeVerifier: "verifier",
-        deliveryTarget: "cloud", runtimeLicenseId: null, expiresAt: new Date(Date.now() + 60_000),
+        runtimeLicenseId: "lizenz-1", expiresAt: new Date(Date.now() + 60_000),
       };
     },
     async findConnectorByEmailAddress() {
@@ -54,8 +54,8 @@ test("ein neues Postfach bekommt einen neuen Connector", async () => {
 
 test("erneutes Verbinden behält ID und Erstellungsdaten und aktiviert den Connector wieder", async () => {
   const existing: MailConnector = {
-    id: "alte-id", teamId: "team-1", createdByUid: "user-1", provider: "microsoftGraph", deliveryTarget: "cloud",
-    runtimeLicenseId: null, emailAddress: "team@example.com", displayName: "Alt", status: "reauthorizationRequired",
+    id: "alte-id", teamId: "team-1", createdByUid: "user-1", provider: "microsoftGraph",
+    runtimeLicenseId: "lizenz-1", emailAddress: "team@example.com", displayName: "Alt", status: "reauthorizationRequired",
     subscriptionId: "alte-subscription", subscriptionExpiresAt: new Date(0),
     createdAt: new Date("2026-01-01T00:00:00Z"), updatedAt: new Date("2026-01-01T00:00:00Z"),
   };

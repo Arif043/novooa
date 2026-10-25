@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/core/network/workspace_api_client.dart';
 import 'package:syscat2/core/network/workspace_realtime_channel.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
-import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
+import 'package:syscat2/features/language_models/domain/entities/language_model_provider.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_connection_draft.dart';
 import 'package:syscat2/features/language_models/infrastructure/repositories/local_language_model_repository.dart';
 
@@ -16,33 +16,18 @@ WorkspaceRealtimeChannel _fakeChannel() =>
     WorkspaceRealtimeChannel(Uri.parse('http://127.0.0.1:0'), _NoopClient());
 
 void main() {
-  test(
-    'saves and maps local language models through the runtime API',
-    () async {
-      final client = _RecordingClient();
-      final repository = LocalLanguageModelRepository(client, _fakeChannel());
+  test('maps local language models from the runtime API', () async {
+    final client = _RecordingClient();
+    final repository = LocalLanguageModelRepository(client, _fakeChannel());
 
-      await repository.saveLanguageModel(
-        const LanguageModelDraft(
-          connectionName: 'OpenAI',
-          provider: LanguageModelProvider.openAiCompatible,
-          baseUrl: 'https://api.openai.com/v1',
-          name: 'Schnelles Modell',
-          modelId: 'gpt-4.1-mini',
-          apiKey: 'provider-api-key',
-        ),
-      );
-      final models = await repository
-          .watchLanguageModels(const TeamId('team-1'))
-          .first;
+    final models = await repository
+        .watchLanguageModels(const TeamId('team-1'))
+        .first;
 
-      expect(client.postPath, '/v1/language-models');
-      expect(client.postBody?['apiKey'], 'provider-api-key');
-      expect(models.single.modelId, 'gpt-4.1-mini');
-      expect(models.single.supportsStructuredOutput, isTrue);
-      expect(models.single.connectionId, 'connection-1');
-    },
-  );
+    expect(models.single.modelId, 'gpt-4.1-mini');
+    expect(models.single.supportsStructuredOutput, isTrue);
+    expect(models.single.connectionId, 'connection-1');
+  });
 
   test('lists connected providers through the runtime API', () async {
     final client = _RecordingClient();

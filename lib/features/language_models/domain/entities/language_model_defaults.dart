@@ -5,9 +5,8 @@ import 'package:equatable/equatable.dart';
 ///
 /// - [blockModelId]: für Sprachmodell-Bausteine ("Standardmodell verwenden");
 ///   ohne Wahl bleibt die systemseitige Vorgabe aktiv.
-/// - [knowledgeAssistantModelId]: für den KI-Agenten der Wissensbasis in der
-///   lokalen Runtime; ohne Wahl gilt [blockModelId]. Die Agenten der Cloud
-///   nutzen das Modell, das die Cloud festlegt.
+/// - [knowledgeAssistantModelId]: für den KI-Agenten der Wissensbasis; ohne
+///   Wahl gilt [blockModelId].
 class LanguageModelDefaults extends Equatable {
   const LanguageModelDefaults({
     this.blockModelId,

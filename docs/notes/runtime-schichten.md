@@ -1,6 +1,6 @@
 # Runtime-Schichten
 
-> Standalone nutzt SQLite, Cloud nutzt Firestore; beide teilen Domain und Use Cases und unterscheiden sich nur in den Adaptern.
+> Die Runtime speichert in SQLite; Domain und Use Cases sind datenbank- und frameworkfrei, die Speicher- und Relay-Adapter liegen in der Infrastructure.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
@@ -10,17 +10,17 @@ Feature Domain
 
 Feature Infrastructure
   Task Runner und Node Executors
-  Firebase-, Genkit- und Twilio-Adapter
+  Genkit-Adapter
   Lokale SQLite- und Dateisystem-Adapter
-  Callable-, Scheduler- und Webhook-Handler
+  Relay-Clients zu den Firebase-Hintergrunddiensten
+  HTTP-, Scheduler- und Webhook-Handler
 ```
 
-Die fünf verbindlichen Regeln (gemeinsame Modelle, getrennte Speicheradapter,
-maßgebliche Datenquelle, Konsistenz, Vertragstests) stehen in
-[SQLite und Firebase: fünf Regeln](./sqlite-und-firebase-regeln.md).
+Entitäten, Use Cases und Ports kennen weder SQL noch Firebase; SQL-Zeilen und
+Firestore-Dokumente der Relays gehören in die Infrastructure.
 
-Ports und Use Cases liegen im Domain-Bereich ihres Features, Cloud- und
-Local-Adapter austauschbar in dessen Infrastructure-Bereich
+Ports und Use Cases liegen im Domain-Bereich ihres Features, die Adapter in
+dessen Infrastructure-Bereich
 ([Backend: Feature-First-Struktur](./backend-feature-first.md)).
 
 ## Siehe auch

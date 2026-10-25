@@ -3,9 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/entities/unique_id.dart';
-import 'package:syscat2/features/auth/domain/entities/auth_failure.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
-import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/files/domain/entities/file_failure.dart';
 import 'package:syscat2/features/files/domain/entities/file_version.dart';
@@ -88,17 +86,4 @@ class _AuthRepository implements AuthRepository {
   );
   @override
   Stream<AuthUser?> authStateChanges() => const Stream.empty();
-  @override
-  Future<Result<AuthUser, AuthFailure>> signIn({
-    required EmailAddress email,
-    required String password,
-  }) => throw UnimplementedError();
-  @override
-  Future<Result<Unit, AuthFailure>> signOut() => throw UnimplementedError();
-  @override
-  Future<Result<AuthUser, AuthFailure>> signUp({
-    required String name,
-    required EmailAddress email,
-    required String password,
-  }) => throw UnimplementedError();
 }

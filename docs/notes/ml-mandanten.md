@@ -24,8 +24,8 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
   an der Kennung; eine neu vergebene Kennung sieht keine Reste.
 - **Verwaltung im Container:** `python -m novooa_ml.tenants list`,
   `python -m novooa_ml.tenants delete <kennung>`.
-- **Ohne Mandanten** (`ML_TENANCY=off`): ein Nutzer, kein Token, z. B. der
-  Sidecar im Cloud-Run-Pod.
+- **Ohne Mandanten** (`ML_TENANCY=off`): ein Nutzer, kein Token, z. B. für
+  die Entwicklung.
 
 **Grenze:** Vorab belegen kann nur, wer die UUID eines anderen Stacks kennt.
 Im ML-Netz sind nur Runtimes, Script-Bausteine haben keinen Zugang. Die

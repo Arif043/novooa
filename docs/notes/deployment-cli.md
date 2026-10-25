@@ -30,7 +30,6 @@ Manuell mit anderem Endpunkt:
 
 ```powershell
 flutter build windows `
-  --dart-define=NOVOOA_RUNTIME=standalone `
   --dart-define=WORKSPACE_API_URL=http://192.168.1.100:8090 `
   --release
 ```

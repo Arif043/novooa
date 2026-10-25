@@ -1,6 +1,6 @@
 # Aufgabe
 
-> Im Aufgabenstudio bauen Nutzer:innen Automatisierungen (Aufgaben) aus Bausteinen; ein Graph-Runner führt sie in der Cloud oder in der lokalen Runtime aus.
+> Im Aufgabenstudio bauen Nutzer:innen Automatisierungen (Aufgaben) aus Bausteinen; ein Graph-Runner führt sie in der Runtime aus.
 
 ## Modell
 

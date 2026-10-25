@@ -7,8 +7,7 @@ import '../entities/task_run_start.dart';
 /// Vertrag für die Persistenz von [Task]-Entwürfen.
 ///
 /// Wird in der Domain-Schicht deklariert und in `infrastructure/` durch
-/// konkrete Implementierungen (aktuell `InMemory`, später Firestore)
-/// erfüllt. Die Cubit-Schicht hängt ausschließlich von diesem Interface.
+/// konkrete Implementierungen erfüllt. Die Cubit-Schicht hängt ausschließlich von diesem Interface.
 abstract interface class TaskRepository {
   Stream<List<Task>> watchTasks();
   Future<void> saveTask(Task task);

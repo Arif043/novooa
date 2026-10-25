@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-import 'package:syscat2/core/di/service_locator.dart';
-import 'package:syscat2/core/runtime/workspace_capabilities.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_execution_result.dart';
@@ -66,38 +64,25 @@ void main() {
     },
   );
 
-  testWidgets(
-    'die Palette zeigt den Baustein nur, wenn Webhooks verfügbar sind',
-    (tester) async {
-      Future<void> pump() async {
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: SizedBox(
-                height: 700,
-                child: BausteinPalette(onAdd: (_) {}),
-              ),
-            ),
+  testWidgets('die Palette zeigt den Baustein unter Externe Systeme', (
+    tester,
+  ) async {
+    Future<void> pump() async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(height: 700, child: BausteinPalette(onAdd: (_) {})),
           ),
-        );
-        await tester.enterText(find.byType(TextField), 'webhook');
-        await tester.pumpAndSettle();
-      }
-
-      await pump();
-      expect(
-        find.text('Webhook-Ereignis'),
-        findsNothing,
-        reason: 'ohne Fähigkeit (Cloud) ausgeblendet',
+        ),
       );
+      await tester.enterText(find.byType(TextField), 'webhook');
+      await tester.pumpAndSettle();
+    }
 
-      serviceLocator.registerSingleton(_capabilities());
-      addTearDown(serviceLocator.reset);
-      await pump();
-      expect(find.text('EXTERNE SYSTEME'), findsOneWidget);
-      expect(find.text('Webhook-Ereignis'), findsOneWidget);
-    },
-  );
+    await pump();
+    expect(find.text('EXTERNE SYSTEME'), findsOneWidget);
+    expect(find.text('Webhook-Ereignis'), findsOneWidget);
+  });
 
   testWidgets('die Karte erklärt Verwendung und Ausgaben', (tester) async {
     final node = WorkflowNode(
@@ -117,19 +102,6 @@ void main() {
     expect(find.textContaining('Ausgaben: Inhalt, Methode'), findsOneWidget);
   });
 }
-
-WorkspaceCapabilities _capabilities() => const WorkspaceCapabilities(
-  assistant: false,
-  dataCollections: false,
-  modelCatalog: false,
-  push: false,
-  messagingChannels: false,
-  skills: false,
-  employees: false,
-  connections: false,
-  webhooks: true,
-  scriptPackages: false,
-);
 
 const _task = Task(
   id: 'task.webhook',

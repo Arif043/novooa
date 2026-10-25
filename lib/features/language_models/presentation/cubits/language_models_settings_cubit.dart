@@ -6,8 +6,7 @@ import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_connection_draft.dart';
 import 'package:syscat2/features/language_models/domain/usecases/connect_language_models.dart';
-import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
-import 'package:syscat2/features/language_models/domain/usecases/save_language_model.dart';
+import 'package:syscat2/features/language_models/domain/entities/language_model_provider.dart';
 import 'package:syscat2/features/language_models/domain/usecases/watch_language_models.dart';
 import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
 
@@ -17,18 +16,14 @@ class LanguageModelsSettingsCubit extends Cubit<LanguageModelsSettingsState> {
   LanguageModelsSettingsCubit(
     this._authRepository,
     this._watchLanguageModels,
-    this._saveLanguageModel,
-    this._getCurrentTeamId, {
-    this.allowsKeylessLocalEndpoint = false,
-    this.connectLanguageModels,
-  }) : super(const LanguageModelsSettingsState());
+    this._getCurrentTeamId,
+    this._connectLanguageModels,
+  ) : super(const LanguageModelsSettingsState());
 
   final AuthRepository _authRepository;
   final WatchLanguageModels _watchLanguageModels;
-  final SaveLanguageModel _saveLanguageModel;
   final GetCurrentTeamId _getCurrentTeamId;
-  final bool allowsKeylessLocalEndpoint;
-  final ConnectLanguageModels? connectLanguageModels;
+  final ConnectLanguageModels _connectLanguageModels;
   StreamSubscription<List<LanguageModel>>? _subscription;
 
   Future<void> load() async {
@@ -62,49 +57,17 @@ class LanguageModelsSettingsCubit extends Cubit<LanguageModelsSettingsState> {
     );
   }
 
-  void updateConnectionName(String value) =>
-      emit(state.copyWith(connectionName: value));
   void updateBaseUrl(String value) => emit(state.copyWith(baseUrl: value));
-  void updateName(String value) => emit(state.copyWith(name: value));
-  void updateModelId(String value) => emit(state.copyWith(modelId: value));
   void updateApiKey(String value) => emit(state.copyWith(apiKey: value));
 
-  Future<void> save() async {
-    final draft = _draftOrNull();
-    if (draft == null) {
-      return _emitMessage('Bitte fülle alle erforderlichen Felder aus.');
-    }
-    emit(state.copyWith(isSaving: true));
-    try {
-      await _saveLanguageModel(draft);
-      if (isClosed) {
-        return;
-      }
-      emit(
-        state.copyWith(
-          connectionName: '',
-          baseUrl: '',
-          name: '',
-          modelId: '',
-          apiKey: '',
-          isSaving: false,
-          message: 'Sprachmodell verbunden.',
-        ),
-      );
-    } catch (_) {
-      _emitMessage('Sprachmodell konnte nicht gespeichert werden.');
-    }
-  }
-
   Future<void> connect() async {
-    final useCase = connectLanguageModels;
     final draft = _connectionDraftOrNull();
-    if (useCase == null || draft == null) {
+    if (draft == null) {
       return _emitMessage('Bitte gib einen gültigen Anbieterzugang ein.');
     }
     emit(state.copyWith(isConnecting: true));
     try {
-      await useCase(draft);
+      await _connectLanguageModels(draft);
       if (!isClosed) {
         emit(
           state.copyWith(
@@ -133,28 +96,10 @@ class LanguageModelsSettingsCubit extends Cubit<LanguageModelsSettingsState> {
     );
   }
 
-  LanguageModelDraft? _draftOrNull() {
-    final requiresBaseUrl = state.provider.requiresCustomBaseUrl;
-    if (state.connectionName.trim().isEmpty ||
-        state.name.trim().isEmpty ||
-        state.modelId.trim().isEmpty ||
-        (_requiresApiKey() && state.apiKey.trim().length < 8) ||
-        (requiresBaseUrl && state.baseUrl.trim().isEmpty)) {
-      return null;
-    }
-    return LanguageModelDraft(
-      connectionName: state.connectionName.trim(),
-      provider: state.provider,
-      baseUrl: state.baseUrl.trim(),
-      name: state.name.trim(),
-      modelId: state.modelId.trim(),
-      apiKey: state.apiKey.trim(),
-    );
-  }
-
+  /// Lokale Endpunkte wie Ollama über `host.docker.internal` brauchen
+  /// keinen Schlüssel.
   bool _requiresApiKey() {
     if (state.provider == LanguageModelProvider.ollama) return false;
-    if (!allowsKeylessLocalEndpoint) return true;
     return Uri.tryParse(state.baseUrl)?.host != 'host.docker.internal';
   }
 
@@ -181,9 +126,7 @@ class LanguageModelsSettingsCubit extends Cubit<LanguageModelsSettingsState> {
 
   void _emitMessage(String message) {
     if (isClosed) return;
-    emit(
-      state.copyWith(isSaving: false, isConnecting: false, message: message),
-    );
+    emit(state.copyWith(isConnecting: false, message: message));
   }
 
   @override

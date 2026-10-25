@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {genkit} from "genkit/beta";
 import {type NodeExecutor} from "../../../domain/executors/node-executor.js";
-import {createPythonScriptExecutor} from "../../local/python-script-executor.js";
+import {unavailableScriptExecutorFactory} from "../../local/container-script-executor.js";
 import {createDefaultNodeExecutorRegistry, executorFor, NodeExecutorRegistry} from "./node-executor-registry.js";
 
 const silentLogger = {info() {}, error() {}, exception() {}, readableInfo() {}, readableError() {}};
@@ -10,7 +10,7 @@ const silentLogger = {info() {}, error() {}, exception() {}, readableInfo() {}, 
 const dependencies = {
   ai: genkit({}),
   logger: silentLogger,
-  scriptExecutorFactory: createPythonScriptExecutor,
+  scriptExecutorFactory: unavailableScriptExecutorFactory(),
 };
 
 test("die Standard-Registry kennt jeden eingebauten Executor", () => {

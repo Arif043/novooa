@@ -1,6 +1,6 @@
 # Modellquellen im Worker
 
-> Der Python-Worker nimmt `image`, `audio`, `text`, `number`, `json`, `boolean` und `datetime` an, in Cloud und Standalone gleichermaßen.
+> Der Python-Worker nimmt `image`, `audio`, `text`, `number`, `json`, `boolean` und `datetime` an.
 
 Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 

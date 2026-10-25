@@ -1,6 +1,6 @@
 # Mitarbeiter-Seite
 
-> Route `/employees` (nur Standalone) listet Mitarbeiter mit Name, Rahmenbedingung und Anzahl der Fähigkeiten; bearbeitet wird in einem adaptiven Sheet.
+> Route `/employees` listet Mitarbeiter mit Name, Rahmenbedingung und Anzahl der Fähigkeiten; bearbeitet wird in einem adaptiven Sheet.
 
 Gehört zu: [Mitarbeiter](../index/mitarbeiter.md)
 

@@ -5,7 +5,7 @@ import '../../../files/domain/entities/team_id.dart';
 import '../../domain/entities/language_model.dart';
 import '../../domain/entities/language_model_connection.dart';
 import '../../domain/entities/language_model_connection_draft.dart';
-import '../../domain/entities/language_model_draft.dart';
+import '../../domain/entities/language_model_provider.dart';
 import '../../domain/repositories/language_model_connection_repository.dart';
 import '../../domain/repositories/language_model_repository.dart';
 
@@ -21,18 +21,6 @@ class LocalLanguageModelRepository
     await _client.post('/v1/language-model-connections', {
       'provider': draft.provider.id,
       if (draft.provider.hasEndpoint) 'baseUrl': draft.baseUrl,
-      'apiKey': draft.apiKey,
-    });
-  }
-
-  @override
-  Future<void> saveLanguageModel(LanguageModelDraft draft) async {
-    await _client.post('/v1/language-models', {
-      'connectionName': draft.connectionName,
-      'provider': draft.provider.id,
-      if (draft.provider.hasEndpoint) 'baseUrl': draft.baseUrl,
-      'name': draft.name,
-      'languageModelId': draft.modelId,
       'apiKey': draft.apiKey,
     });
   }

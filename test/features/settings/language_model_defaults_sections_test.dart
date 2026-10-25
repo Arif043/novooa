@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_defaults.dart';
-import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
+import 'package:syscat2/features/language_models/domain/entities/language_model_provider.dart';
 import 'package:syscat2/features/language_models/presentation/cubits/language_model_defaults_cubit.dart';
 import 'package:syscat2/features/language_models/presentation/cubits/language_model_defaults_state.dart';
 import 'package:syscat2/features/settings/presentation/widgets/language_model_defaults_sections.dart';
@@ -39,15 +39,13 @@ LanguageModel _model(String id, String name, LanguageModelProvider provider) {
   );
 }
 
-Widget _host(_FakeCubit cubit, {bool standalone = false}) {
+Widget _host(_FakeCubit cubit) {
   return MaterialApp(
     home: Scaffold(
       body: SingleChildScrollView(
         child: BlocProvider<LanguageModelDefaultsCubit>.value(
           value: cubit,
-          child: LanguageModelDefaultsSections(
-            usedByKnowledgeAssistant: standalone,
-          ),
+          child: const LanguageModelDefaultsSections(),
         ),
       ),
     ),
@@ -77,7 +75,6 @@ void main() {
     await tester.pumpWidget(_host(cubitWith(block: 'g1')));
 
     expect(find.text('Gemini Flash · Google AI'), findsOneWidget);
-    expect(find.text('Sprachmodell des Wissensbasis-Agenten'), findsNothing);
     expect(find.byType(DropdownButtonFormField<String?>), findsNothing);
   });
 
@@ -110,24 +107,20 @@ void main() {
     expect(cubit.savedBlock, [null]);
   });
 
-  testWidgets(
-    'in der Runtime gibt es zusätzlich das Modell des Wissensbasis-Agenten',
-    (tester) async {
-      await tester.pumpWidget(_host(cubitWith(block: 'g1'), standalone: true));
+  testWidgets('zusätzlich gibt es das Modell des Wissensbasis-Agenten', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_host(cubitWith(block: 'g1')));
 
-      expect(
-        find.text('Sprachmodell des Wissensbasis-Agenten'),
-        findsOneWidget,
-      );
-      expect(find.byType(InputDecorator), findsNWidgets(2));
-    },
-  );
+    expect(find.text('Sprachmodell des Wissensbasis-Agenten'), findsOneWidget);
+    expect(find.byType(InputDecorator), findsNWidgets(2));
+  });
 
   testWidgets('das Modell des Wissensbasis-Agenten wird getrennt gespeichert', (
     tester,
   ) async {
     final cubit = cubitWith(block: 'g1');
-    await tester.pumpWidget(_host(cubit, standalone: true));
+    await tester.pumpWidget(_host(cubit));
 
     await tester.tap(find.byType(InputDecorator).last);
     await tester.pumpAndSettle();

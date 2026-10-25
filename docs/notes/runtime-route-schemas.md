@@ -13,7 +13,7 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 - Schema-Verletzung: `400 {error: "Ungültige Anfrage.", code:
   "invalid_request", field}`. Fachliche Prüfungen (gültiger Zeitplan,
   Anbieter-URL) liefern eigene Meldungen.
-- Task-Runs behalten den mit der Cloud geteilten Vertrag
+- Task-Runs behalten ihren eigenen Fehlervertrag
   `{failure: {code, message}}` (`attachValidation`).
 
 ## Siehe auch

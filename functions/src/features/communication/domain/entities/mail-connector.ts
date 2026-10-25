@@ -1,7 +1,5 @@
 export type MailConnectorProvider = "microsoftGraph";
 
-export type MailConnectorDeliveryTarget = "cloud" | "localRuntime";
-
 export type MailConnectorStatus =
   | "active"
   | "reauthorizationRequired"
@@ -12,8 +10,8 @@ export type MailConnector = {
   teamId: string;
   createdByUid: string;
   provider: MailConnectorProvider;
-  deliveryTarget: MailConnectorDeliveryTarget;
-  runtimeLicenseId: string | null;
+  /** Die Runtime, der das Postfach über das Mail-Relay zugestellt wird. */
+  runtimeLicenseId: string;
   emailAddress: string;
   displayName: string;
   status: MailConnectorStatus;

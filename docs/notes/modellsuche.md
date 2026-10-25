@@ -25,7 +25,7 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
   blenden die Aufgaben-Chips aus.
 - Die Textsuche findet auch die deutschen Bezeichnungen von Aufgabe und
   Sprache.
-- Eigene Modelle (Standalone) erscheinen ebenfalls.
+- Eigene Modelle erscheinen ebenfalls.
 
 ## Siehe auch
 

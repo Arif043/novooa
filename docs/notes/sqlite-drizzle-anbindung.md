@@ -1,6 +1,6 @@
 # SQLite-Anbindung mit Drizzle
 
-> SQLite ist der Standard für strukturierte Standalone-Daten; Repositories nutzen Drizzle ORM direkt, ohne eigenen Treiber oder Wrapper.
+> SQLite ist der Standard für strukturierte Daten der Runtime; Repositories nutzen Drizzle ORM direkt, ohne eigenen Treiber oder Wrapper.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 

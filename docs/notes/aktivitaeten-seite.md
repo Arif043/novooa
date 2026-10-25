@@ -1,6 +1,6 @@
 # Aktivitäten-Seite
 
-> `ActivityPage` zeigt laufende Runs, Freigaben, abgelehnte Runs und die Historie; Standalone ergänzt den Tab „Protokoll“.
+> `ActivityPage` zeigt laufende Runs, Freigaben, abgelehnte Runs und die Historie; Admins sehen zusätzlich den Tab „Protokoll“.
 
 Gehört zu: [Aktivitäten](../index/aktivitaeten.md)
 
@@ -15,16 +15,16 @@ Gehört zu: [Aktivitäten](../index/aktivitaeten.md)
   Ring in seiner Farbe, siehe [Noovi](./noovi-maskottchen.md)): wer zu wem spricht, Art, Uhrzeit, ggf. Dauer und
   der ungekürzte Text, bei Aufträgen zusätzlich „Erwartetes Ergebnis“ und
   „Grenzen“. Farben nach Rolle: Orchestrator, Mitarbeiter, Prüfung, Fehler.
-- **Protokoll** (Standalone): die letzten strukturierten Runtime-Ereignisse
+- **Protokoll** (nur Admins): die letzten strukturierten Runtime-Ereignisse
   aus dem [Anwendungsprotokoll](./anwendungsprotokoll.md), getrennt von
   Laufaktivitäten.
 - **Interaktionen** als Kacheln; ein Klick öffnet einen iOS-artigen Dialog:
   Freigabe mit editierbarem Output, `dialogInput` mit den Feldtypen,
   `mediaInput` mit Galerie oder Kamera (optional
   [Dokumentenscanner](../index/dokumentscanner.md)).
-- Bestätigen ruft `reviewTaskRunFlow` mit `decision: "approve"`, setzt den Run
-  auf `queued` und setzt per Cloud Task fort; Ablehnen mit `"reject"` verwirft
-  den Zwischenzustand.
+- Bestätigen ruft `POST /v1/task-runs/review` mit `decision: "approve"`,
+  setzt den Run auf `queued` und reiht ihn wieder ein; Ablehnen mit `"reject"`
+  verwirft den Zwischenzustand.
 
 ## Siehe auch
 

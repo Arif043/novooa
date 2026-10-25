@@ -177,7 +177,7 @@ class _ModelSelection extends StatelessWidget {
         speechDirection: speechDirection,
       );
     }
-    // Ohne Modellkatalog (z. B. Cloud) bleibt nur die Eingabe der Modell-ID.
+    // Ohne geladenen Modellkatalog bleibt nur die Eingabe der Modell-ID.
     return TextFormField(
       initialValue: config.modelId,
       decoration: InputDecoration(hintText: LocaleKeys.ui_modell_id.tr()),

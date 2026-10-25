@@ -9,7 +9,7 @@ Gehört zu: [Verbindungen](../index/verbindungen.md)
 | Verbindung, Eingabeprüfung, Ports | `functions/src/features/connections/domain/` |
 | SQLite-Store, Token-Anbieter, Anmeldung, HTTP-Client, Routen | `…/connections/infrastructure/local/` |
 | Executor | `task_execution/domain/executors/http-request-node-executor.ts` |
-| Dienst für Executoren | `TaskRunServices.outboundHttpClient` (optional, Cloud ohne) |
+| Dienst für Executoren | `TaskRunServices.outboundHttpClient` |
 | Log-Maskierung | `structured-log-format-utils.ts` (`redactedConfig`) |
 | Client: Feature | `lib/features/connections/` (Einstellungen-Tab „Verbindungen“) |
 | Client: Baustein | `http_request_node_config.dart`, `http_request_widget.dart` |

@@ -14,7 +14,6 @@ import 'package:syscat2/features/task_builder/presentation/widgets/node_file_att
 import 'package:syscat2/features/task_builder/presentation/widgets/python_analyzer.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_code_editor.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_fullscreen_editor_dialog.dart';
-import 'package:syscat2/core/runtime/script_packages_availability.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_input_warning.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_packages/script_packages_section.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/script_workflow_input_insertion.dart';
@@ -81,16 +80,14 @@ class _ScriptWidgetState extends State<ScriptWidget> {
           ),
           const SizedBox(height: AppSpacing.xs),
           const _WorkflowOutputHint(),
-          if (scriptPackagesAvailable()) ...[
-            const SizedBox(height: AppSpacing.md),
-            ScriptPackagesSection(
-              script: _config.script,
-              packages: _config.packages,
-              onChanged: (packages) => context
-                  .read<TaskBuilderCubit>()
-                  .updateScriptPackages(widget.node.id, packages),
-            ),
-          ],
+          const SizedBox(height: AppSpacing.md),
+          ScriptPackagesSection(
+            script: _config.script,
+            packages: _config.packages,
+            onChanged: (packages) => context
+                .read<TaskBuilderCubit>()
+                .updateScriptPackages(widget.node.id, packages),
+          ),
           const SizedBox(height: AppSpacing.md),
           NodeFileAttachmentSection(
             attachments: _config.attachments,

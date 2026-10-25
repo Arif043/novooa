@@ -1,7 +1,7 @@
 import '../../domain/entities/event_trigger_config.dart';
 
-/// Einzige Stelle, die [EventTriggerConfig] in das Dokumentformat von
-/// Runtime und Firestore überführt und zurückliest.
+/// Einzige Stelle, die [EventTriggerConfig] in das Dokumentformat der
+/// Runtime überführt und zurückliest.
 class EventTriggerConfigMapper {
   const EventTriggerConfigMapper._();
 

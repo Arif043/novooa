@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
+import 'package:syscat2/features/language_models/domain/entities/language_model_provider.dart';
 import 'package:syscat2/features/task_builder/domain/entities/prompt_generation_options.dart';
 import '../cubits/node_language_models_cubit.dart';
 import '../cubits/node_language_models_state.dart';

@@ -12,12 +12,11 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   `NodeTextDefaults.scriptStarter`).
 - Variablen eines Scripts bleiben in diesem Script; der Lauf sammelt keine
   Variablen und gibt keinen automatischen Kontext an Prompts.
-- Cloud (eingebetteter Python-Pfad): 5 Sekunden, 10 KB Output. Standalone:
-  siehe [Script-Dienst: Ausführung und Grenzen](./script-dienst-ausfuehrung.md).
+- Grenzen: siehe [Script-Dienst: Ausführung und Grenzen](./script-dienst-ausfuehrung.md).
 - Port `ScriptExecutor`; `createScriptNodeExecutor` (Domain) gibt nur
-  aufgelöste Werte weiter. `createPythonScriptExecutor` ist die
-  Subprocess-Runtime der Cloud; die Registry bindet Runtime, temporären
-  Workspace und das Protokollieren der Ausgabe.
+  aufgelöste Werte weiter. Die Registry bindet den Script-Dienst, den
+  temporären Workspace und das Protokollieren der Ausgabe; ohne Script-Dienst
+  scheitert ein Script verständlich.
 
 ## Siehe auch
 

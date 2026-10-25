@@ -1,9 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/entities/unique_id.dart';
-import 'package:syscat2/features/auth/domain/entities/auth_failure.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
-import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/knowledge_base/domain/entities/knowledge_failure.dart';
@@ -16,8 +14,6 @@ import 'package:syscat2/features/knowledge_base/domain/usecases/restore_knowledg
 import 'package:syscat2/features/knowledge_base/domain/usecases/update_knowledge_note.dart';
 import 'package:syscat2/features/knowledge_base/domain/usecases/watch_knowledge_notes.dart';
 import 'package:syscat2/features/knowledge_base/presentation/cubits/knowledge_base_cubit.dart';
-import 'package:syscat2/features/teams/domain/entities/team_member.dart';
-import 'package:syscat2/features/teams/domain/entities/team_workspace.dart';
 import 'package:syscat2/features/teams/domain/repositories/team_repository.dart';
 import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
 
@@ -150,47 +146,9 @@ class _AuthenticatedUserRepository implements AuthRepository {
 
   @override
   Stream<AuthUser?> authStateChanges() => Stream.value(currentUser());
-
-  @override
-  Future<Result<AuthUser, AuthFailure>> signIn({
-    required EmailAddress email,
-    required String password,
-  }) async {
-    return Success(currentUser()!);
-  }
-
-  @override
-  Future<Result<Unit, AuthFailure>> signOut() async => const Success(unit);
-
-  @override
-  Future<Result<AuthUser, AuthFailure>> signUp({
-    required String name,
-    required EmailAddress email,
-    required String password,
-  }) async {
-    return Success(currentUser()!);
-  }
 }
 
 class _CurrentTeamRepository implements TeamRepository {
   @override
   Future<TeamId> currentTeamId() async => const TeamId('team.1');
-
-  @override
-  Future<void> addCurrentTeamMember(String identifier) async {}
-
-  @override
-  Future<void> removeCurrentTeamMember(String uid) async {}
-
-  @override
-  Future<void> updateCurrentTeamName(String name) async {}
-
-  @override
-  Stream<TeamId> watchCurrentTeamId() => Stream.value(const TeamId('team.1'));
-
-  @override
-  Stream<TeamWorkspace> watchCurrentTeam() => const Stream.empty();
-
-  @override
-  Stream<List<TeamMember>> watchCurrentTeamMembers() => const Stream.empty();
 }

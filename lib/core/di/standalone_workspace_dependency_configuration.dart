@@ -24,10 +24,6 @@ import '../../features/knowledge_base/presentation/cubits/knowledge_base_cubit.d
 import '../../features/schedule/presentation/cubits/event_target_options_cubit.dart';
 import '../../features/communication/domain/repositories/communication_channel_repository.dart';
 import '../../features/communication/domain/usecases/begin_microsoft_connection.dart';
-import '../../features/communication/domain/usecases/create_communication_channel.dart';
-import '../../features/communication/domain/usecases/delete_communication_channel.dart';
-import '../../features/communication/domain/usecases/dispatch_fake_channel_message.dart';
-import '../../features/communication/domain/usecases/send_channel_message.dart';
 import '../../features/communication/domain/usecases/watch_communication_channels.dart';
 import '../../features/communication/infrastructure/repositories/local_communication_channel_repository.dart';
 import '../../features/communication/presentation/cubits/communication_cubit.dart';
@@ -53,10 +49,7 @@ void configureStandaloneWorkspaceDependencies(
 }) {
   locator
     ..registerLazySingleton<TeamRepository>(
-      () => const LocalWorkspaceTeamRepository(
-        teamId: 'local-team',
-        userId: 'local-user',
-      ),
+      () => const LocalWorkspaceTeamRepository(teamId: 'local-team'),
     )
     ..registerLazySingleton<TeamFileRepository>(
       () => LocalTeamFileRepository(
@@ -93,28 +86,9 @@ void configureStandaloneWorkspaceDependencies(
     ..registerLazySingleton(
       () => BeginMicrosoftConnection(locator<CommunicationChannelRepository>()),
     )
-    ..registerLazySingleton(
-      () =>
-          CreateCommunicationChannel(locator<CommunicationChannelRepository>()),
-    )
-    ..registerLazySingleton(
-      () =>
-          DeleteCommunicationChannel(locator<CommunicationChannelRepository>()),
-    )
-    ..registerLazySingleton(
-      () =>
-          DispatchFakeChannelMessage(locator<CommunicationChannelRepository>()),
-    )
-    ..registerLazySingleton(
-      () => SendChannelMessage(locator<CommunicationChannelRepository>()),
-    )
     ..registerFactory(
       () => CommunicationCubit(
         locator<WatchCommunicationChannels>(),
-        locator<CreateCommunicationChannel>(),
-        locator<DeleteCommunicationChannel>(),
-        locator<DispatchFakeChannelMessage>(),
-        locator<SendChannelMessage>(),
         locator<BeginMicrosoftConnection>(),
       ),
     )

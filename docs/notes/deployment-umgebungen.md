@@ -1,37 +1,33 @@
 # Deployment-Umgebungen
 
-> Staging und Produktion bekommen getrennte Firebase-Projekte; eine Hosting-Preview im Produktionsprojekt ist kein Staging, weil sie dieselben Functions, Nutzer, Daten und Push-Tokens nutzt.
+> Staging und Produktion bekommen getrennte Firebase-Projekte für die Hintergrunddienste (Lizenz, Relays, Postfächer); eine Runtime zeigt über ihre Cloud-Endpunkte auf genau eines davon.
 
 Gehört zu: [Betrieb und Deployment](../index/betrieb-und-deployment.md)
 
-| Umgebung | GitHub-Environment | Firebase-Projekt | Ziel |
-| --- | --- | --- | --- |
-| Staging | `staging` | noch anzulegen | `develop` und PR-Previews |
-| Produktion | `production` | `syscat-90bff` | `main` und Hosting `live` |
+| Umgebung | Firebase-Projekt | Nutzung |
+| --- | --- | --- |
+| Staging | noch anzulegen | Test-Runtimes, Entwicklung der Relays |
+| Produktion | `syscat-90bff` | Runtimes der Kundschaft |
 
-- Beide Environments existieren; der Hosting-Deploy auf `main` nutzt
-  `production`. Der PR-Workflow läuft bis zum Staging-Projekt im
-  Produktionsprojekt.
-- Secrets je Environment, gleiche Namen: `FCM_WEB_VAPID_KEY` (öffentlicher
-  Web-Push-Schlüssel, aus Einheitlichkeit als Secret),
-  `FIREBASE_SERVICE_ACCOUNT` (gehört zum Projekt der Umgebung).
-- Jeder Hosting-Build bekommt den VAPID-Key als Dart-Define:
+- Functions werden mit `npm --prefix functions run deploy` je Projekt
+  ausgerollt; eine Hosting-Web-App gibt es nicht mehr, die Runtime liefert
+  sie selbst aus ([Die Runtime liefert die Web-App aus](./runtime-liefert-web-app.md)).
+- Welche Umgebung eine Runtime nutzt, legen ihre
+  [Cloud-Endpunkte](./runtime-cloud-endpunkte.md) fest.
+- Web-Push braucht den öffentlichen VAPID-Schlüssel des Projekts als
+  Dart-Define beim Bauen der Web-App:
 
-  ```yaml
-  - run: flutter build web --dart-define=FCM_WEB_VAPID_KEY=${{ secrets.FCM_WEB_VAPID_KEY }}
+  ```bash
+  flutter build web --dart-define=FCM_WEB_VAPID_KEY=<öffentlicher Schlüssel>
   ```
 
-  Jobs deklarieren `environment: staging` bzw. `environment: production`.
 - Nach Anlage des Staging-Projekts in `.firebaserc`:
 
   ```json
   {"projects": {"production": "syscat-90bff", "staging": "<staging-project-id>"}}
   ```
 
-Vor dem ersten Staging-Deploy: Firebase-Projekt, Flutter-Konfiguration,
-Aliase und Workflows umstellen.
-
 ## Siehe auch
 
 - [Microsoft-Graph-App je Umgebung](./microsoft-graph-entra-app.md)
-- [Cloud-Inferenzdienst](./cloud-inferenzdienst.md)
+- [Lizenz ausstellen](./lizenz-ausstellen.md)

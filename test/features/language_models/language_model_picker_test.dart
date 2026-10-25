@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:simple_icons/simple_icons.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model.dart';
-import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
+import 'package:syscat2/features/language_models/domain/entities/language_model_provider.dart';
 import 'package:syscat2/features/language_models/presentation/widgets/language_model_picker_field.dart';
 import 'package:syscat2/features/language_models/presentation/widgets/language_model_provider_groups.dart';
 

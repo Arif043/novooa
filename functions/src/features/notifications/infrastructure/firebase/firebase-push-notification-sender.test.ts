@@ -44,9 +44,6 @@ test("sendToRecipient sends a notification to every registered device", async ()
     tokens: ["phone", "tablet"],
     notification: {title: "Freigabe erforderlich", body: "Bitte pruefen."},
     data: {runId: "run-1"},
-    webpush: {
-      fcmOptions: {link: "https://app.novooa.de"},
-    },
   }]);
 });
 

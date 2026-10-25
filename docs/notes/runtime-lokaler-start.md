@@ -1,6 +1,6 @@
 # Lokaler Start der Runtime
 
-> Web-Build erzeugen, Stack starten, Health prüfen, Client mit `NOVOOA_RUNTIME=standalone` starten.
+> Web-Build erzeugen, Stack starten, Health prüfen, Client starten.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
@@ -9,7 +9,7 @@ flutter build web            # die Runtime liefert dieses Build selbst aus
 docker compose -f docker-compose.local.yaml up --build --detach
 curl http://127.0.0.1:8090/healthz
 docker compose -f docker-compose.local.yaml ps
-flutter run -d macos --dart-define=NOVOOA_RUNTIME=standalone
+flutter run -d macos
 ```
 
 `flutter build web` ist optional. Ohne Build ist die Runtime reine API und

@@ -1,6 +1,6 @@
 # Cloud-Endpunkte der Runtime
 
-> Die Runtime erreicht die Cloud nur über konfigurierte Relay- und Gateway-URLs; der Produktiv-Container braucht diese Variablen.
+> Die Runtime erreicht die Firebase-Hintergrunddienste nur über konfigurierte Relay- und Gateway-URLs; der Produktiv-Container braucht diese Variablen.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 

@@ -7,7 +7,7 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 `scope` trennt Verfügbarkeit von Ablage:
 
 - `system`: novooa stellt das Modell allen Teams bereit.
-- `team`: teamweit bereitgestellt (eigene Importe in Standalone).
+- `team`: teamweit bereitgestellt (eigene Importe in der Runtime).
 
 ```ts
 {
@@ -34,7 +34,8 @@ Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 ```
 
 Vor der Inferenz werden alle Artefakte gegen Größe und SHA-256 geprüft. Das
-Manifest wird in Firestore und SQLite identisch gespeichert.
+Manifest wird im globalen Katalog (Firestore) und in SQLite identisch
+gespeichert.
 
 ## Siehe auch
 

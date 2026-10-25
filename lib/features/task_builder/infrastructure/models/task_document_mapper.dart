@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../../domain/entities/node_config.dart';
 import '../../domain/entities/task.dart';
 import '../../domain/entities/workflow_edge.dart';
@@ -24,11 +22,6 @@ class TaskDocumentMapper {
       'selectedNodeId': task.selectedNodeId.value,
       'graph': _graphToDocument(task.graph),
     };
-  }
-
-  Task fromDocument(DocumentSnapshot<Map<String, dynamic>> snapshot) {
-    final data = snapshot.data() ?? {};
-    return fromMap(data, fallbackId: snapshot.id);
   }
 
   Task fromMap(Map<String, Object?> data, {required String fallbackId}) {

@@ -58,7 +58,6 @@ function connectorFrom(
   return {
     id: existing?.id ?? input.connectorId, teamId: authorization.teamId,
     createdByUid: existing?.createdByUid ?? authorization.uid, provider: input.provider.provider,
-    deliveryTarget: authorization.deliveryTarget,
     runtimeLicenseId: authorization.runtimeLicenseId,
     emailAddress: profile.emailAddress, displayName: profile.displayName, status: "active",
     subscriptionId: subscription.id, subscriptionExpiresAt: subscription.expiresAt,

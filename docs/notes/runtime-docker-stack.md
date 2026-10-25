@@ -1,6 +1,6 @@
 # Docker-Stack der Runtime
 
-> Standalone läuft als Docker-Compose-Stack je Kunde plus ein ML-Server je Rechner; Docker selbst bringt novooa nicht mit.
+> Die Runtime läuft als Docker-Compose-Stack je Kunde plus ein ML-Server je Rechner; Docker selbst bringt novooa nicht mit.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 

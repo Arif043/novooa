@@ -14,7 +14,7 @@ void main() {
     await resetDependencies();
     registerPreviewSessionEvents(serviceLocator);
     await configureDependencies(
-      runtimeProfile: RuntimeProfile.forKind(RuntimeKind.standalone),
+      runtimeProfile: RuntimeProfile.fromEnvironment(),
       standaloneTransport: previewTransport,
     );
   });

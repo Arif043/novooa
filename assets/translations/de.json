@@ -1,4 +1,9 @@
 {
+  "navigation": {
+    "greeting": "Hallo!",
+    "greeting_named": "Hallo, {name}!",
+    "sign_out": "Abmelden"
+  },
   "task_builder": {
     "primitives": {
       "string_input": {
@@ -337,9 +342,6 @@
       "connections": "Verbindungen",
       "machine_learning": "Machine Learning",
       "import_export": "Import/Export",
-      "profile": "Profil",
-      "team": "Team",
-      "language_model": "Sprachmodell",
       "users": "Benutzer"
     }
   },
@@ -497,7 +499,6 @@
     "ki_agent": "noovi",
     "noovi_thinking": "Noovi denkt nach …",
     "ki_agent_bedient_die_oberflaeche": "noovi bedient die Oberfläche",
-    "ki_agent_oeffnen": "noovi öffnen",
     "konfiguration_schliessen": "Konfiguration schließen",
     "kritik": "Kritik",
     "label_template": "{label} (Template)",

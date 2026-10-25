@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-import 'package:syscat2/core/di/service_locator.dart';
-import 'package:syscat2/core/runtime/workspace_capabilities.dart';
 import 'package:syscat2/core/entities/unique_id.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
@@ -22,6 +20,8 @@ import 'package:syscat2/features/task_builder/presentation/cubits/node_employee_
 import 'package:syscat2/features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_file_attachments_state.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_knowledge_attachments_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/node_skill_attachments_cubit.dart';
+import 'package:syscat2/features/task_builder/presentation/cubits/node_skill_attachments_state.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_knowledge_attachments_state.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
@@ -40,24 +40,6 @@ const _rezeption = Employee(
 );
 
 void main() {
-  setUp(() {
-    serviceLocator.registerSingleton(
-      const WorkspaceCapabilities(
-        assistant: true,
-        dataCollections: true,
-        modelCatalog: false,
-        push: false,
-        messagingChannels: false,
-        skills: false,
-        employees: true,
-        connections: false,
-        webhooks: false,
-        scriptPackages: false,
-      ),
-    );
-  });
-  tearDown(() => serviceLocator.unregister<WorkspaceCapabilities>());
-
   testWidgets('einen Mitarbeiter im Sheet wählen weist ihn dem Prompt zu', (
     tester,
   ) async {
@@ -75,6 +57,7 @@ void main() {
 
     await tester.pumpWidget(_host(builder, employees));
     await tester.pump(const Duration(seconds: 1));
+    await _chooseEmployeeTab(tester);
     await tester.ensureVisible(find.byTooltip('Mitarbeiter zuweisen'));
     await tester.tap(find.byTooltip('Mitarbeiter zuweisen'));
     await tester.pump();
@@ -114,6 +97,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
       expect(find.byType(NodeConfigurationPanel), findsOneWidget);
+      await _chooseEmployeeTab(tester);
       final assignButton = find.descendant(
         of: find.byType(NodeConfigurationPanel),
         matching: find.byTooltip('Mitarbeiter zuweisen'),
@@ -152,6 +136,7 @@ Widget _panelHost(
           BlocProvider.value(value: employees),
           BlocProvider<NodeFileAttachmentsCubit>.value(value: _NoFiles()),
           BlocProvider<NodeKnowledgeAttachmentsCubit>.value(value: _NoNotes()),
+          BlocProvider<NodeSkillAttachmentsCubit>.value(value: _NoSkills()),
         ],
         child: BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
           builder: (_, state) => TaskBuilderBody(state: state),
@@ -170,6 +155,7 @@ Widget _host(TaskBuilderCubit builder, NodeEmployeeAssignmentsCubit employees) {
           BlocProvider.value(value: employees),
           BlocProvider<NodeFileAttachmentsCubit>.value(value: _NoFiles()),
           BlocProvider<NodeKnowledgeAttachmentsCubit>.value(value: _NoNotes()),
+          BlocProvider<NodeSkillAttachmentsCubit>.value(value: _NoSkills()),
         ],
         child: BlocBuilder<TaskBuilderCubit, TaskBuilderState>(
           builder: (context, state) {
@@ -243,13 +229,26 @@ class _Employees implements EmployeeRepository {
 class _Teams implements TeamRepository {
   @override
   Future<TeamId> currentTeamId() async => const TeamId('team-1');
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
 class _NoFiles extends Cubit<NodeFileAttachmentsState>
     implements NodeFileAttachmentsCubit {
   _NoFiles() : super(const NodeFileAttachmentsState());
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Ohne Zuweisung beginnt die Auswahl bei den Fähigkeiten.
+Future<void> _chooseEmployeeTab(WidgetTester tester) async {
+  final tab = find.text('Mitarbeiter').last;
+  await tester.ensureVisible(tab);
+  await tester.tap(tab);
+  await tester.pump(const Duration(seconds: 1));
+}
+
+class _NoSkills extends Cubit<NodeSkillAttachmentsState>
+    implements NodeSkillAttachmentsCubit {
+  _NoSkills() : super(const NodeSkillAttachmentsState());
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

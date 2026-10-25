@@ -9,7 +9,6 @@ import 'runtime_connection_state.dart';
 import 'runtime_credential_store.dart';
 import 'runtime_endpoint.dart';
 import 'runtime_endpoint_store.dart';
-import 'runtime_kind_store.dart';
 import 'runtime_login_client.dart';
 import 'runtime_onboarding_client.dart';
 import 'runtime_sign_in_flows.dart';
@@ -22,7 +21,6 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState>
     this._loginClient,
     this._availability, {
     required this.onboarding,
-    required this.kindStore,
     bool isWeb = kIsWeb,
     Future<void> Function()? onSignedOut,
   }) : _isWeb = isWeb,
@@ -44,9 +42,6 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState>
   final RuntimeAvailability _availability;
   final RuntimeOnboardingClient onboarding;
 
-  /// Für den vollständigen Reset beim Abmelden (siehe [signOut]).
-  final RuntimeKindStore kindStore;
-
   /// Entscheidet, ob ein nicht erreichbarer Endpunkt als
   /// [RuntimeConnectionUnreachable] (Web — kein Adressfeld, die Origin
   /// steht fest) oder als [RuntimeConnectionNeedsAddress] (nativ — hier
@@ -56,8 +51,7 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState>
 
   /// Schließt die offene Realtime-Verbindung (siehe
   /// `WorkspaceRealtimeChannel`) und baut anschließend die gesamte
-  /// Anwendung neu auf (DI-Reset + erneuter `runApp`-Aufruf zurück zur
-  /// Cloud/Standalone-Auswahl) — optional, weil diese vor dem allerersten
+  /// Anwendung neu auf (DI-Reset + erneuter `runApp`-Aufruf) — optional, weil diese vor dem allerersten
   /// Verbindungsaufbau (und damit vor der DI-Konfiguration) noch nicht
   /// existiert und `RuntimeConnectionGate` sie erst dann bereitstellen kann.
   final Future<void> Function() _onSignedOut;
@@ -67,13 +61,12 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState>
   Future<void> initialize(RuntimeEndpoint defaultEndpoint) async {
     if (_isWeb) {
       // Im Web bestimmt die Herkunft die Adresse eindeutig (Same Origin,
-      // siehe `RuntimeProfile.webRuntimeKindForOrigin`) — eine gespeicherte
+      // siehe `RuntimeProfile`) — eine gespeicherte
       // Adresse aus einem früheren, möglicherweise fehlgeschlagenen Versuch
       // (z. B. der loopback-gebundene Setup-Port `:8091`) darf sie nicht
       // überschreiben. Sonst spricht am Ende die gesamte App dauerhaft
       // gegen die falsche Adresse, weil `RuntimeConnectionGate` sie 1:1 als
-      // `WORKSPACE_API_URL` übernimmt. Siehe
-      // `docs/notes/web-herkunftsregel.md`.
+      // `WORKSPACE_API_URL` übernimmt.
       await connect(defaultEndpoint.displayAddress, isAutomaticProbe: true);
       return;
     }
@@ -227,11 +220,11 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState>
         : RuntimeConnectionNeedsPasswordSetup(endpoint);
   }
 
-  /// Vollständiger Reset — Sitzung, gespeicherte Adresse und Varianten-Wahl
-  /// werden vergessen, wie bei einer frischen Installation. `_onSignedOut`
-  /// übernimmt anschließend den Wiederaufbau (DI-Reset + `runApp` zurück
-  /// zur Cloud/Standalone-Auswahl); ein eigener Zielzustand ist hier nicht
-  /// mehr nötig, weil dieser Cubit dabei ohnehin geschlossen wird.
+  /// Vollständiger Reset — Sitzung und gespeicherte Adresse werden
+  /// vergessen, wie bei einer frischen Installation. `_onSignedOut`
+  /// übernimmt anschließend den Wiederaufbau (DI-Reset + `runApp`); ein
+  /// eigener Zielzustand ist hier nicht nötig, weil dieser Cubit dabei
+  /// ohnehin geschlossen wird.
   Future<void> signOut() async {
     final current = state;
     if (current is! RuntimeConnectionReady) return;
@@ -239,7 +232,6 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState>
       await _endSessionOnRuntime(current.endpoint);
       await _credentials.clearSessionToken(current.endpoint.address);
       await _endpoints.clear();
-      await kindStore.clear();
       emit(const RuntimeConnectionLoading());
       await _onSignedOut();
     } on Object catch (error, stackTrace) {
@@ -254,8 +246,8 @@ class RuntimeConnectionCubit extends Cubit<RuntimeConnectionState>
   }
 
   /// Die Runtime erkennt die Sitzung nicht mehr an (abgelaufen, von einem
-  /// anderen Gerät abgemeldet, Konto gelöscht). Adresse und Varianten-Wahl
-  /// bleiben — nur die Anmeldung ist zu wiederholen.
+  /// anderen Gerät abgemeldet, Konto gelöscht). Die Adresse
+  /// bleibt — nur die Anmeldung ist zu wiederholen.
   Future<void> handleSessionEnded() async {
     final current = state;
     if (current is! RuntimeConnectionReady) return;

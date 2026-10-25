@@ -8,7 +8,6 @@ import 'package:syscat2/core/runtime/runtime_connection_state.dart';
 import 'package:syscat2/core/runtime/runtime_credential_store.dart';
 import 'package:syscat2/core/runtime/runtime_endpoint.dart';
 import 'package:syscat2/core/runtime/runtime_endpoint_store.dart';
-import 'package:syscat2/core/runtime/runtime_kind_store.dart';
 import 'package:syscat2/core/runtime/runtime_login_client.dart';
 import 'package:syscat2/core/runtime/runtime_onboarding_client.dart';
 
@@ -82,7 +81,6 @@ Future<RuntimeConnectionCubit> _pumpPage(
     login ?? _RecordingLogin(),
     _Reachable(),
     onboarding: _NoOnboarding(),
-    kindStore: _NoKind(),
   );
   addTearDown(cubit.close);
   cubit.showSignIn(_endpoint, RuntimeSignInMode.password);
@@ -143,11 +141,6 @@ class _Reachable implements RuntimeAvailability {
 }
 
 class _NoOnboarding implements RuntimeOnboardingClient {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
-
-class _NoKind implements RuntimeKindStore {
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }

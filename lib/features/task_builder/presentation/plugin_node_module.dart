@@ -18,7 +18,6 @@ class PluginNodeModule {
     required this.initial,
     required this.fromDocument,
     required this.builder,
-    this.isAvailable = _always,
   }) : documentPrimitive = documentPrimitive ?? typeId;
 
   /// Kennung in der Palette und in der Registry, z. B. `shopware.searchOrders`.
@@ -39,11 +38,6 @@ class PluginNodeModule {
   final PluginNodeConfig Function() initial;
   final PluginNodeConfigFromDocument fromDocument;
   final Widget Function(WorkflowNode node) builder;
-
-  /// Ob der Baustein in der Palette erscheint, z. B. je nach Betriebsvariante.
-  final bool Function() isAvailable;
-
-  static bool _always() => true;
 }
 
 /// Die Plugin-Bausteine der Anwendung. Plugins melden sich beim Start an.

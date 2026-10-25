@@ -13,14 +13,14 @@ Gehört zu: [Architektur](../index/architektur.md)
 │   Entities / Repository-Interfaces / UseCases          │
 ├────────────────────────────────────────────────────────┤
 │ Infrastructure  (lib/features/*/infrastructure/)       │
-│   Repository-Implementierungen (Runtime, Firestore)    │
+│   Repository-Implementierungen (Runtime-API)           │
 └────────────────────────────────────────────────────────┘
 ```
 
 - `domain/` ist reines Dart: kein Flutter, kein HTTP-Client, keine Datenbank,
   kein `easy_localization`.
 - Dasselbe Prinzip gilt im Backend: Runner, Executoren und Worker hängen an
-  Ports; Firestore- und SQLite-Adapter sind austauschbar.
+  Ports; die SQLite-Adapter sind austauschbar.
 
 ## Siehe auch
 

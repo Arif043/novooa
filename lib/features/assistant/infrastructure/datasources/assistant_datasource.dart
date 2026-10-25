@@ -1,10 +1,8 @@
 import '../../domain/entities/assistant_message.dart';
 import '../models/assistant_generated_response.dart';
 
-/// Ein Transport, der eine Assistenten-Frage beantwortet — Cloud
-/// (`FirebaseFunctionsAssistantDatasource`) und Standalone
-/// (`HttpRuntimeAssistantDatasource`) implementieren dieselbe Schnittstelle,
-/// damit `RoutedAssistantRepository` transport-unabhängig bleibt.
+/// Ein Transport, der eine Assistenten-Frage beantwortet, damit
+/// `RoutedAssistantRepository` transport-unabhängig bleibt.
 abstract interface class AssistantDatasource {
   Future<AssistantGeneratedResponse> ask({
     required List<AssistantMessage> history,

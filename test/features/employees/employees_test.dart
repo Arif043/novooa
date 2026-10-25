@@ -246,9 +246,6 @@ Map<String, Object?> _json(Employee employee) => {
 class _Teams implements TeamRepository {
   @override
   Future<TeamId> currentTeamId() async => const TeamId('team-1');
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
 class _Repository implements EmployeeRepository {

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../features/assistant/domain/entities/assistant_context.dart';
-import '../../features/assistant/presentation/widgets/assistant_bell_button.dart';
 import '../../features/knowledge_base/presentation/widgets/knowledge_base_shell_frame.dart';
 import '../../features/notifications/presentation/widgets/notification_bell_button.dart';
 import '../../features/task_builder/presentation/widgets/task_builder_shell_frame.dart';
@@ -11,7 +9,6 @@ class RootCenterPage extends StatelessWidget {
   const RootCenterPage({
     super.key,
     required this.title,
-    required this.assistantContext,
     required this.usesTaskBuilderSideRail,
     required this.usesKnowledgeBaseSideRail,
     required this.content,
@@ -21,7 +18,6 @@ class RootCenterPage extends StatelessWidget {
   });
 
   final Widget title;
-  final AssistantContext? assistantContext;
   final bool usesTaskBuilderSideRail;
   final bool usesKnowledgeBaseSideRail;
   final Widget content;
@@ -60,11 +56,7 @@ class RootCenterPage extends StatelessWidget {
       appBar: RootAppBar(
         title: title,
         onMenuPressed: onMenuPressed,
-        actions: [
-          if (assistantContext != null)
-            AssistantBellButton(contextInfo: assistantContext!),
-          NotificationBellButton(onPressed: onNotificationPressed),
-        ],
+        actions: [NotificationBellButton(onPressed: onNotificationPressed)],
       ),
       body: SafeArea(child: content),
     );

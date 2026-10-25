@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syscat2/core/runtime/connections_availability.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/connections/domain/entities/connection.dart';
@@ -30,7 +29,7 @@ class ShopwareActionWidget extends StatelessWidget {
     final spec = ShopwareActions.byId(config.action);
     // Eine unbekannte Aktion braucht keine Verbindungen und damit keinen Cubit.
     final needsConnection = spec != null && spec.usesConnection;
-    final connections = needsConnection && connectionsAvailable()
+    final connections = needsConnection
         ? context.watch<ConnectionsCubit>().state.connections
         : const <Connection>[];
     return Container(

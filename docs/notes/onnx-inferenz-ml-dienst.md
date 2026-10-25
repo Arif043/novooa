@@ -1,6 +1,6 @@
 # ONNX-Inferenz über den ML-Dienst
 
-> Tensor-Vorverarbeitung und ONNX-Inferenz laufen im Python-Dienst `novooa-ml`; die Runtime gibt nur Referenzen weiter und fällt nie auf die Cloud zurück.
+> Tensor-Vorverarbeitung und ONNX-Inferenz laufen im Python-Dienst `novooa-ml`; die Runtime gibt nur Referenzen weiter und rechnet nie selbst.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
@@ -8,7 +8,7 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
   `SidecarOnnxInferenceRuntime`. Ohne Dienst meldet die Runtime einen klaren
   lokalen ML-Fehler.
 - Ports: `ModelInferenceRuntime` und `ModelInputTransformer`
-  (`PrepareModelInputs`); die Cloud bekommt später eigene Adapter.
+  (`PrepareModelInputs`).
 - Workflow-Werte werden gemäß Manifest in Tensoren umgewandelt. Für
   Bildquellen gibt es eine erweiterbare Registry (Dekodierung, Skalierung,
   Layout, Normalisierung); weitere Quelltypen kommen als Strategien. Weder

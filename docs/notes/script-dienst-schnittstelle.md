@@ -1,6 +1,6 @@
 # Script-Dienst: Schnittstelle
 
-> In Standalone läuft Python eines Script-Bausteins nie in der Runtime, sondern im Container `novooa-script` über `POST /run`.
+> Python eines Script-Bausteins läuft nie in der Runtime, sondern im Container `novooa-script` über `POST /run`.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
@@ -22,9 +22,6 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
   Umgebung unter den Grenzen eines Laufs und antwortet `200 {loadable, module?,
   error?}`; fehlt die Umgebung, `409` wie bei `/run`
   ([Paketprobe](./script-paketprobe.md)).
-
-**Cloud:** Die Functions führen Scripts weiter mit `python3` im eigenen
-Prozess und eingeschränkten Builtins aus (`createPythonScriptExecutor`).
 
 ## Siehe auch
 

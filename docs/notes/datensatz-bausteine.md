@@ -4,8 +4,8 @@
 
 Gehört zu: [Aufgabe](../index/aufgabe.md)
 
-Beide hängen nur am fachlichen `DocumentStore`-Port; Standalone injiziert den
-SQLite-Adapter in den Graph-Runner.
+Beide hängen nur am fachlichen `DocumentStore`-Port; die Runtime injiziert
+den SQLite-Adapter in den Graph-Runner.
 
 **`documentLookup`**
 

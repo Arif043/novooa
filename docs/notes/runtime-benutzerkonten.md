@@ -1,6 +1,6 @@
 # Benutzerkonten der Runtime
 
-> Eine Standalone-Runtime hat mehrere Konten mit Anmeldename und Passwort; alle sehen den ganzen Arbeitsbereich, Admins verwalten zusätzlich Benutzer, Lizenz und Anbindungen.
+> Eine Runtime hat mehrere Konten mit Anmeldename und Passwort; alle sehen den ganzen Arbeitsbereich, Admins verwalten zusätzlich Benutzer, Lizenz und Anbindungen.
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 

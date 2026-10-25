@@ -1,7 +1,7 @@
 class NewPassword {
   const NewPassword._(this.value);
 
-  /// Gilt für Cloud und Runtime; die Runtime lehnt kürzere Passwörter ab.
+  /// Wie in der Runtime, die kürzere Passwörter ablehnt.
   static const minimumLength = 12;
 
   final String value;

@@ -1,6 +1,6 @@
 # Lokale Runtime
 
-> novooa läuft vollständig lokal (Standalone): Aufgaben, Läufe, Aktivitäten, Dateien, Wissensbasis und Auslöser liegen in einem Docker-Stack beim Kunden; Cloud-Dienste sind nur über dünne Relays angebunden.
+> novooa läuft vollständig in der Runtime beim Kunden: Aufgaben, Läufe, Aktivitäten, Dateien, Wissensbasis und Auslöser liegen in einem Docker-Stack; Firebase dient nur noch als Hintergrund für Lizenz und Relays.
 
 ## Aufbau und Betrieb
 
@@ -12,6 +12,13 @@
 - [Images, Updates und Neustarts](../notes/runtime-images-und-updates.md)
 - [Lokaler Start der Runtime](../notes/runtime-lokaler-start.md)
 - [Entwicklungsmodus ohne Lizenz](../notes/runtime-entwicklungsmodus.md)
+
+## Web-App und Clients
+
+- [Die Runtime liefert die Web-App aus](../notes/runtime-liefert-web-app.md)
+- [Mixed Content im LAN](../notes/mixed-content-im-lan.md)
+- [`dart:io` im Web-Build ist kein Blocker](../notes/web-build-dart-io.md)
+- [Identität in der App](../notes/app-identitaet.md)
 
 ## Zugriff und Authentifizierung
 
@@ -49,7 +56,7 @@
   - [Sprachmodelle ohne eigene Team-ID (0010)](../notes/sqlite-sprachmodelle-normalisiert.md)
   - [Benutzerprofile und Teammitglieder (0011)](../notes/sqlite-teammitglieder-normalisiert.md)
   - [Jobs und Schritte über den Run (0012)](../notes/sqlite-run-abhaengige-normalisiert.md)
-  - [Auslöser in der Standalone-Datenbank (0013)](../notes/ausloeser-standalone-aufgabenbezug.md)
+  - [Auslöser in der Datenbank der Runtime (0013)](../notes/ausloeser-standalone-aufgabenbezug.md)
   - [Aktivitäten über den Run (0014)](../notes/sqlite-aktivitaeten-normalisiert.md)
   - [Modellkatalog ohne `scope` und `runtime` (0015)](../notes/sqlite-modellkatalog-normalisiert.md)
   - [Datei- und Ordnerablage (0017/0018)](../notes/sqlite-dateiablage-normalisiert.md)
@@ -85,14 +92,14 @@
 - [Lizenz-Signaturschlüssel](../notes/lizenz-signaturschluessel.md)
 - [Lizenz ausstellen](../notes/lizenz-ausstellen.md)
 
-## Cloud-Anbindung über Relays
+## Firebase im Hintergrund: Lizenz und Relays
 
 - [Cloud-Endpunkte der Runtime](../notes/runtime-cloud-endpunkte.md)
 - [Firebase-Wake-up der Runtime](../notes/runtime-firebase-wakeup.md)
 - [Mail-Relay und Dead-Letter-Queue](../notes/mail-relay-dead-letter.md)
 - [Postfächer in der Runtime](../notes/runtime-postfaecher.md)
-- [Twilio über den Cloud-Relay](../notes/twilio-relay.md)
-- [Push-Benachrichtigungen in Standalone](../notes/push-standalone.md)
+- [Push-Benachrichtigungen über das Relay](../notes/push-standalone.md)
+- [Push unter Windows und Linux](../notes/push-windows-linux.md)
 
 ## Verschlüsselung von Geheimnissen
 
@@ -107,12 +114,16 @@
 1. Docker-Engine- und Stack-Status in der Desktop-App anzeigen, Stack
    kontrolliert starten und stoppen.
 2. Lizenz-Gateway mit Firebase-Secret und Produktions-Compose ausrollen.
-3. Freigabe-Ereignisse über den Cloud-Gateway in Firestore/FCM spiegeln.
+3. Freigabe-Ereignisse über das Push-Relay als Push zustellen.
 4. SQLite-Backups und versionierte Images für die Desktop-App umsetzen.
+5. Token-Ablage im Browser entscheiden und dokumentieren.
+6. Widget-Test: Start im Web lädt ohne Adresseingabe.
+7. `Origin`-Prüfung beim WebSocket-Upgrade für Web-Clients.
+8. Web-App aus dem Runtime-Image oder aus einem gemounteten Volume ausliefern?
+9. PWA-Politur für Windows/Linux.
 
 ## Verwandt
 
-- [Betriebsvarianten](./betriebsvarianten.md)
 - [Backend-Struktur](../notes/backend-feature-first.md)
 - [SQLite-Normalisierung](../notes/sqlite-3nf-pruefstand.md)
 - [Import/Export](./import-export.md)

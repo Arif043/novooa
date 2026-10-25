@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/di/service_locator.dart';
-import 'package:syscat2/core/runtime/workspace_capabilities.dart';
 import 'package:syscat2/features/connections/domain/entities/connection.dart';
 import 'package:syscat2/features/connections/domain/entities/connection_draft.dart';
 import 'package:syscat2/features/connections/domain/entities/connection_failure.dart';
@@ -163,7 +162,6 @@ void main() {
       connections = _ConnectionRepository(const [_shop]);
       tasks = _TaskRepository();
       builder = TaskBuilderCubit(repository: tasks);
-      serviceLocator.registerSingleton(_capabilities(connections: true));
     });
 
     tearDown(() async {
@@ -353,9 +351,7 @@ void main() {
   });
 
   group('Palette', () {
-    testWidgets('der Baustein erscheint nur, wo es Verbindungen gibt', (
-      tester,
-    ) async {
+    testWidgets('der Baustein erscheint unter Externe Systeme', (tester) async {
       Future<void> pump() async {
         await tester.pumpWidget(
           MaterialApp(
@@ -372,41 +368,15 @@ void main() {
       }
 
       await pump();
-      expect(
-        find.text('HTTP-Anfrage'),
-        findsNothing,
-        reason: 'ohne Capability (z. B. Cloud) ausgeblendet',
-      );
-
-      serviceLocator.registerSingleton(_capabilities(connections: true));
-      addTearDown(serviceLocator.reset);
-      await pump();
       expect(find.text('EXTERNE SYSTEME'), findsOneWidget);
       expect(find.text('HTTP-Anfrage'), findsOneWidget);
     });
   });
 }
 
-WorkspaceCapabilities _capabilities({required bool connections}) =>
-    WorkspaceCapabilities(
-      assistant: false,
-      dataCollections: false,
-      modelCatalog: false,
-      push: false,
-      messagingChannels: false,
-      skills: false,
-      employees: false,
-      connections: connections,
-      webhooks: false,
-      scriptPackages: false,
-    );
-
 class _Teams implements TeamRepository {
   @override
   Future<TeamId> currentTeamId() async => const TeamId('team-1');
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
 class _ConnectionRepository implements ConnectionRepository {

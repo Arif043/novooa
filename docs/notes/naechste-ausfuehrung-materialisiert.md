@@ -13,6 +13,5 @@ Ereignisse und tauchen in der Worker-Query nie auf.
 
 ## Siehe auch
 
-- [Worker für fällige Auslöser](./faellige-ausloeser-worker.md)
-- [Firestore-Regeln und Index für Auslöser](./ausloeser-firestore-regeln.md) — der passende Composite Index
+- [Zeitplan-Worker der Runtime](./runtime-zeitplan-worker.md)
 - [Zeitplan-Wiederholungsarten](./zeitplan-wiederholungsarten.md)

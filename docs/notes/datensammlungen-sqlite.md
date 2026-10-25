@@ -11,8 +11,6 @@ Gehört zu: [Daten](../index/daten.md)
   sichtbaren Namen. Namen sind je Team exakt eindeutig, Groß- und
   Kleinschreibung zählen („Kunden“ ≠ „kunden“).
 - Die Runtime injiziert den Store in den lokalen Task-Worker.
-- Die Cloud meldet für Datenbausteine eindeutig, dass die Datenablage dort
-  noch nicht verfügbar ist (bis zu einem Firestore-Adapter).
 - HTTP-API:
   - `GET /v1/data/collections`
   - `POST /v1/data/collections/{name}/query`

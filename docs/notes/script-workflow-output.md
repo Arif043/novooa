@@ -24,9 +24,6 @@ workflow_output("rechnung", "json", {"nr": "R-1", "positionen": positionen})
 - **Builder:** `ScriptWorkflowOutputParser` liest die Aufrufe; jede Ausgabe
   wird ein Wert in `outputs` (Schlüssel = Name im Code), umbenennbar und
   graph-weit eindeutig (`summe`, `summe2`), standardmäßig auf der Leinwand.
-- **Cloud:** Der eingebettete Pfad (`scriptPythonSource`) sammelt die
-  Aufrufe ohne eigene Prüfung (nur `datetime`/`date` → ISO-Text); dort prüft
-  allein der Executor.
 
 ## Siehe auch
 

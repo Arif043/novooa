@@ -45,7 +45,7 @@ class _HelloConfig extends PluginNodeConfig {
   List<Object?> get props => [name];
 }
 
-PluginNodeModule _module({bool Function()? available}) => PluginNodeModule(
+PluginNodeModule _module() => PluginNodeModule(
   typeId: 'helloPlugin',
   title: 'Hallo-Baustein',
   description: 'Sagt Hallo.',
@@ -55,7 +55,6 @@ PluginNodeModule _module({bool Function()? available}) => PluginNodeModule(
   initial: () => const _HelloConfig(name: 'Welt'),
   fromDocument: (data) => _HelloConfig(name: data['name'] as String? ?? ''),
   builder: (node) => Text('Hallo ${(node.config as _HelloConfig).name}'),
-  isAvailable: available ?? () => true,
 );
 
 const _task = Task(
@@ -177,24 +176,17 @@ void main() {
       },
     );
 
-    testWidgets(
-      'blendet nicht verfügbare Bausteine aus und findet sie über die Suche',
-      (tester) async {
-        PluginNodeModules.register(_module(available: () => false));
-        await pumpPalette(tester);
-        expect(find.text('Hallo-Baustein'), findsNothing);
+    testWidgets('findet Plugin-Bausteine über die Suche', (tester) async {
+      PluginNodeModules.register(_module());
+      await pumpPalette(tester);
+      await tester.enterText(find.byType(TextField), 'hallo');
+      await tester.pumpAndSettle();
+      expect(find.text('Hallo-Baustein'), findsOneWidget);
 
-        PluginNodeModules.register(_module());
-        await pumpPalette(tester);
-        await tester.enterText(find.byType(TextField), 'hallo');
-        await tester.pumpAndSettle();
-        expect(find.text('Hallo-Baustein'), findsOneWidget);
-
-        await tester.enterText(find.byType(TextField), 'xyz');
-        await tester.pumpAndSettle();
-        expect(find.text('Hallo-Baustein'), findsNothing);
-      },
-    );
+      await tester.enterText(find.byType(TextField), 'xyz');
+      await tester.pumpAndSettle();
+      expect(find.text('Hallo-Baustein'), findsNothing);
+    });
   });
 
   group('Leinwand', () {

@@ -85,8 +85,7 @@ async function assertLocalRuntimeConnector(
   connectorId: string,
 ): Promise<void> {
   const connection = await repository.loadConnector({teamId: license.workspaceId, connectorId});
-  if (!connection || connection.connector.deliveryTarget !== "localRuntime" ||
-    connection.connector.runtimeLicenseId !== license.licenseId) {
+  if (!connection || connection.connector.runtimeLicenseId !== license.licenseId) {
     throw new Error("Der Mail-Connector gehört nicht zu dieser lokalen Runtime.");
   }
 }
@@ -106,7 +105,7 @@ async function beginAuthorization(license: SignedRuntimeLicense) {
   return beginMailConnectorAuthorization({
     authorization: {
       id: authorizationId(), teamId: active.workspaceId, uid: `license-${active.licenseId}`,
-      provider: "microsoftGraph", deliveryTarget: "localRuntime", runtimeLicenseId: active.licenseId,
+      provider: "microsoftGraph", runtimeLicenseId: active.licenseId,
       codeVerifier, expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     },
     codeChallenge: codeChallenge(codeVerifier),

@@ -8,7 +8,7 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   dazu `sender`, `subject` (nur E-Mail), `receivedAt`. Microsoft-Graph-
   Connectoren liefern neue E-Mails per Webhook als Run-Event; Gmail fehlt.
 - **Senden** (`sendChannelMessage`): liefert `recipient`, `channelId`,
-  `providerMessageId`. WhatsApp und SMS über Twilio. SendGrid ist nur der
+  `providerMessageId`. Gesendet wird über das Postfach im Mail-Relay. SendGrid ist nur der
   globale System-E-Mail-Dienst und für Arbeitspläne nicht nutzbar.
 - Bei einem Graph-E-Mail-Event nutzt „Nachricht senden“ ohne `connectorId`
   automatisch das auslösende Postfach und setzt `Re: <Betreff>`. Unabhängig

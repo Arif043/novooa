@@ -1,18 +1,16 @@
 # Laufzeitgrenzen der Ausführung
 
-> `TaskWorkflow` und `NodeExecutor` sind frameworkfreie Domain-Verträge; Genkit, Firebase und Workspaces hängen nur in der Infrastructure.
+> `TaskWorkflow` und `NodeExecutor` sind frameworkfreie Domain-Verträge; Genkit, SQLite und Workspaces hängen nur in der Infrastructure.
 
 Gehört zu: [Aufgabe](../index/aufgabe.md)
 
 - **`TaskWorkflow`:** Vertrag für Start, Review und Queue-Ausführung.
   `createGenkitTaskWorkflow` implementiert ihn mit dem Genkit-Runner.
-- **Firebase-Host** `task-workflow-functions.ts`: validiert Callable-Payloads,
-  überträgt Firebase-Auth in den Workflow-Kontext, adaptiert Cloud-Tasks.
-  `CloudTaskRuntimeFactory` verdrahtet Firestore, Storage,
-  Benachrichtigungen und Modellinferenz.
+- **Runtime-Host** `local-runtime-task-workflow.ts`: verdrahtet SQLite,
+  Dateien, Benachrichtigungen, Script-Dienst und Modellinferenz.
 - **Assistent** nach demselben Muster: `TaskBuilderAssistant` (Vertrag),
-  `createGenkitTaskBuilderAssistant`, `task-builder-assistant-functions.ts`
-  (Auth, Payload-Prüfung, Secret).
+  `createGenkitTaskBuilderAssistant`; in Firebase läuft er nur im
+  [Relay](./aufgabenstudio-agent-relay.md).
 - **`NodeExecutor`**, seine Eingabe und der Laufzeitkontext liegen in der
   Domain und kennen weder Genkit noch einen Anhangs-Workspace. Die Registry
   bindet Genkit nur für `prompt` und `iterativeRefinement`; auch `script`

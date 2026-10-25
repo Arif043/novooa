@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_spacing.dart';
 
-/// Kopf der Runtime-Einrichtungsschritte im Stil der Cloud-Anmeldung: Titel
-/// und erklärender Text, linksbündig unter dem Logo der Karte.
+/// Kopf der Runtime-Einrichtungsschritte: Titel und erklärender Text, linksbündig unter dem Logo der Karte.
 class RuntimeFormHeader extends StatelessWidget {
   const RuntimeFormHeader({
     super.key,
@@ -32,8 +31,7 @@ class RuntimeFormHeader extends StatelessWidget {
   }
 }
 
-/// Primäre Aktion eines Einrichtungsschritts — wie der Button der Cloud-
-/// Anmeldung 48 px hoch, mit Ladeanzeige statt Beschriftung, solange
+/// Primäre Aktion eines Einrichtungsschritts — 48 px hoch, mit Ladeanzeige statt Beschriftung, solange
 /// [isBusy] gilt.
 class RuntimeFormButton extends StatelessWidget {
   const RuntimeFormButton({
@@ -64,8 +62,8 @@ class RuntimeFormButton extends StatelessWidget {
   }
 }
 
-/// Feldgestaltung wie `AuthTextField` der Cloud-Anmeldung, aber mit
-/// sichtbarem Label statt nur Platzhalter.
+/// Feldgestaltung der Einrichtungsschritte mit sichtbarem Label statt nur
+/// Platzhalter.
 InputDecoration runtimeFieldDecoration(
   BuildContext context, {
   required String label,

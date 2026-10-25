@@ -1,6 +1,6 @@
 # Verbindungen
 
-> Gespeicherte Zugänge zu externen HTTP-APIs und der Baustein „HTTP-Anfrage“ lassen Aufgaben beliebige Systeme nutzen, ohne neuen Code je System (Standalone).
+> Gespeicherte Zugänge zu externen HTTP-APIs und der Baustein „HTTP-Anfrage“ lassen Aufgaben beliebige Systeme nutzen, ohne neuen Code je System.
 
 - [Verbindung](../notes/verbindung.md)
 - [Anmeldearten einer Verbindung](../notes/verbindung-anmeldearten.md)

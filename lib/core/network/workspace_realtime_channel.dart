@@ -6,8 +6,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'workspace_api_client.dart';
 
 /// Hält genau eine WebSocket-Verbindung zu `/v1/realtime` und multiplext
-/// beliebig viele Topic-Abonnements darüber — analog zu mehreren
-/// Snapshot-Listenern über einen gemeinsamen Firestore-Kanal.
+/// beliebig viele Topic-Abonnements darüber.
 ///
 /// Authentifizierung läuft über ein kurzlebiges Einmal-Ticket
 /// (`POST /v1/realtime/ticket`, über den bereits authentifizierten

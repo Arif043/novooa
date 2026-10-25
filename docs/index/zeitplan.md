@@ -2,8 +2,8 @@
 
 > Zeit- und ereignisgesteuerte Auslöser legen fest, **wann** eine Aufgabe läuft, ohne den Workflow selbst zu ändern.
 
-Umgesetzt sind zeitbasierte Auslöser, Ereignis-Auslöser für Dateien und
-Webhooks (lokale Runtime) sowie der Twilio-Eingang für SMS und WhatsApp.
+Umgesetzt sind zeitbasierte Auslöser sowie Ereignis-Auslöser für Dateien,
+Webhooks und E-Mails.
 
 ## Datenmodell
 
@@ -12,12 +12,10 @@ Webhooks (lokale Runtime) sowie der Twilio-Eingang für SMS und WhatsApp.
 - [Ereignisziel eines Auslösers](../notes/ausloeser-ereignisziel.md)
 - [Ereignisquellen-Registry](../notes/ereignisquellen-registry.md)
 - [Materialisierte nächste Ausführung](../notes/naechste-ausfuehrung-materialisiert.md)
-- [Auslöser in der Standalone-Datenbank](../notes/ausloeser-standalone-aufgabenbezug.md)
-- [Firestore-Regeln und Index für Auslöser](../notes/ausloeser-firestore-regeln.md)
+- [Auslöser in der Datenbank der Runtime](../notes/ausloeser-standalone-aufgabenbezug.md)
 
 ## Ausführung
 
-- [Worker für fällige Auslöser](../notes/faellige-ausloeser-worker.md)
 - [Zeitplan-Worker der Runtime](../notes/runtime-zeitplan-worker.md)
 - [Datei-Ereignisse lösen Aufgaben aus](../notes/datei-ereignisse-dispatch.md)
 - [Schleifenschutz zur Laufzeit](../notes/schleifenschutz-laufzeit.md)
@@ -25,12 +23,8 @@ Webhooks (lokale Runtime) sowie der Twilio-Eingang für SMS und WhatsApp.
 
 ## Kanäle und Nachrichten
 
-- [Kommunikationskanal-Datenmodell](../notes/kommunikationskanal-datenmodell.md)
-- [Twilio-Webhook](../notes/twilio-webhook.md)
 - [Normalisierte Kanal-Ereignistypen](../notes/kanal-ereignistypen.md)
-- [Eingehende Nachrichten (Inbox)](../notes/eingangs-nachrichten-inbox.md)
 - [E-Mail-Auslöser über Mail-Connector](../notes/email-ausloeser-mail-connector.md)
-- [Fake-Kanalnachricht für Tests](../notes/fake-kanalnachricht.md)
 
 ## Oberfläche
 
@@ -43,9 +37,6 @@ Webhooks (lokale Runtime) sowie der Twilio-Eingang für SMS und WhatsApp.
 ## Offene Punkte
 
 - Bearbeiten-Dialog für bestehende Auslöser.
-- Ereignis `fileCreated` auf Storage-/Firestore-Dateiversionen (Cloud) ausführen.
-- Nummern-/WhatsApp-Provisionierung innerhalb des Team-Subaccounts.
-- E-Mail-Connectoren und ihre Provider-Ereignisse an `taskRuns` anbinden.
 - Team-Rollen auf die Auslöser-Verwaltung anwenden.
 
 ## Verwandt

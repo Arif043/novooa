@@ -1,6 +1,6 @@
 # Lokales Lizenzmodell
 
-> Standalone wird als Jahreslizenz pro Runtime mit Nutzerstaffel verkauft, nicht als Einmalkauf; KI-Kosten trägt die Kundschaft selbst.
+> novooa wird als Jahreslizenz pro Runtime mit Nutzerstaffel verkauft, nicht als Einmalkauf; KI-Kosten trägt die Kundschaft selbst.
 
 Gehört zu: [Produkt](../index/produkt.md)
 
@@ -21,9 +21,9 @@ Gehört zu: [Produkt](../index/produkt.md)
 - **Warum Jahreslizenz:** Image-Updates, Migrationen, Relay-Betrieb,
   Anpassung an Modellanbieter und höherer Support (Docker, LAN, Updates)
   verursachen laufende Arbeit.
-- **Warum pro Nutzer teurer als Cloud:** Die Zielgruppe (Kanzleien,
-  Steuerberatung, Praxen, Behörden, Industrie) kauft Datenhoheit; Inferenz
-  zahlt der Kunde, Support trägt novooa.
+- **Warum dieser Preis:** Die Zielgruppe (Kanzleien, Steuerberatung, Praxen,
+  Behörden, Industrie) kauft Datenhoheit; Inferenz zahlt der Kunde, Support
+  trägt novooa. Verkauft wird nach Gespräch, nicht per Self-Service.
 - **Dauerlizenz** nur auf Anfrage für CAPEX-Budgets: 3× Jahrespreis einmalig
   plus 20 % Wartung jährlich; nicht auf der Preisseite.
 - **Lizenzverhalten (vorgesehen):** nach Ablauf 30 Tage Kulanz, danach
@@ -34,6 +34,6 @@ Gehört zu: [Produkt](../index/produkt.md)
 
 ## Siehe auch
 
-- [Abgrenzung Cloud und lokal](./cloud-lokal-abgrenzung.md)
+- [Produktpositionierung](./produktpositionierung.md)
 - [Lizenz-Token und Aktivierung](./lizenz-aktivierung.md)
 - [Entscheidung: ML-Inferenz nur lokal](./ml-nur-lokal-entscheidung.md)

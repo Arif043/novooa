@@ -4,10 +4,6 @@
 
 Gehört zu: [Verbindungen](../index/verbindungen.md)
 
-**Verfügbarkeit:** Standalone (`WorkspaceCapabilities.connections`). In der
-Cloud fehlt der Baustein in der Palette; eine importierte Aufgabe bricht dort
-mit verständlicher Meldung ab.
-
 | Feld | Bedeutung |
 | --- | --- |
 | Name | 1–80 Zeichen |

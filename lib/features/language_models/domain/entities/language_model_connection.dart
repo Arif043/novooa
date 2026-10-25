@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import 'language_model_draft.dart';
+import 'language_model_provider.dart';
 
 /// Eine verbundene Anbieter-Verbindung (Standalone). Ein Anbieter kann
 /// mehrere [LanguageModel]s besitzen — siehe `LanguageModel.connectionId`.

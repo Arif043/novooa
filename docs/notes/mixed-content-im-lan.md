@@ -2,7 +2,7 @@
 
 > Eine über HTTPS ausgelieferte Web-App kann eine Runtime unter einer LAN-IP ohne TLS nicht erreichen; das ist eine Browsergrenze, keine Lücke.
 
-Gehört zu: [Betriebsvarianten](../index/betriebsvarianten.md)
+Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
 | Ziel aus einer HTTPS-App | Verhalten |
 | --- | --- |

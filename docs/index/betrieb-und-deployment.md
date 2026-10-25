@@ -1,16 +1,15 @@
 # Betrieb und Deployment
 
-> Wie novooa in Cloud-Umgebungen ausgerollt und wie eine Standalone-Installation auf einem Windows-Rechner eingerichtet wird.
+> Wie die Firebase-Hintergrunddienste ausgerollt und wie eine Runtime auf einem Windows-Rechner eingerichtet wird.
 
-## Cloud
+## Firebase-Hintergrunddienste
 
 - [Deployment-Umgebungen](../notes/deployment-umgebungen.md)
 - [Microsoft-Graph-App je Umgebung](../notes/microsoft-graph-entra-app.md)
-- [Cloud-Inferenzdienst](../notes/cloud-inferenzdienst.md)
 - [Lizenz ausstellen](../notes/lizenz-ausstellen.md)
 - [Modelle veröffentlichen](../notes/modelle-veroeffentlichen.md)
 
-## Standalone auf Windows
+## Runtime auf Windows
 
 - [Deployment-CLI](../notes/deployment-cli.md)
 - [Windows-Zielrechner vorbereiten](../notes/windows-zielrechner.md)
@@ -19,11 +18,10 @@
 
 ## Offene Punkte
 
-- Staging-Firebase-Projekt anlegen und Workflows trennen.
+- Staging-Firebase-Projekt anlegen.
 - Lizenz-Gateway mit Produktions-Compose ausrollen; versionierte Images und
   SQLite-Backup vor Updates.
 
 ## Verwandt
 
 - [Lokale Runtime](./lokale-runtime.md)
-- [Betriebsvarianten](./betriebsvarianten.md)

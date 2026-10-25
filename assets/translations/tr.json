@@ -1,4 +1,9 @@
 {
+  "navigation": {
+    "greeting": "Merhaba!",
+    "greeting_named": "Merhaba, {name}!",
+    "sign_out": "Çıkış yap"
+  },
   "task_builder": {
     "primitives": {
       "string_input": {
@@ -337,9 +342,6 @@
       "connections": "Bağlantılar",
       "machine_learning": "Makine Öğrenimi",
       "import_export": "İçe/Dışa Aktarma",
-      "profile": "Profil",
-      "team": "Ekip",
-      "language_model": "Dil modeli",
       "users": "Kullanıcılar"
     }
   },
@@ -497,7 +499,6 @@
     "ki_agent": "Yapay zekâ ajanı",
     "noovi_thinking": "Noovi düşünüyor …",
     "ki_agent_bedient_die_oberflaeche": "Yapay zekâ ajanı arayüzü kullanıyor",
-    "ki_agent_oeffnen": "Yapay zekâ ajanını aç",
     "konfiguration_schliessen": "Yapılandırmayı kapat",
     "kritik": "Eleştiri",
     "label_template": "{label} (şablon)",

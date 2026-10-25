@@ -1,6 +1,6 @@
 # Katalogmodelle cachen
 
-> Standalone installiert Katalogmodelle nicht vorab, sondern cacht sie bei der Auswahl im Aufgabenstudio oder spätestens beim Lauf.
+> Die Runtime installiert Katalogmodelle nicht vorab, sondern cacht sie bei der Auswahl im Aufgabenstudio oder spätestens beim Lauf.
 
 Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 

@@ -5,10 +5,8 @@ import 'package:syscat2/core/runtime/runtime_connection_state.dart';
 import 'package:syscat2/core/runtime/runtime_credential_store.dart';
 import 'package:syscat2/core/runtime/runtime_endpoint.dart';
 import 'package:syscat2/core/runtime/runtime_endpoint_store.dart';
-import 'package:syscat2/core/runtime/runtime_kind_store.dart';
 import 'package:syscat2/core/runtime/runtime_login_client.dart';
 import 'package:syscat2/core/runtime/runtime_onboarding_client.dart';
-import 'package:syscat2/core/runtime/runtime_profile.dart';
 import 'package:syscat2/core/runtime/tab_session_credential_store.dart';
 
 // Die Web-App über `http` im LAN kann `flutter_secure_storage` nicht nutzen
@@ -41,7 +39,6 @@ void main() {
           _AcceptingLoginClient(),
           _ReachableRuntime(),
           onboarding: _UnusedOnboarding(),
-          kindStore: _NoKindStore(),
         );
 
         await cubit.login(
@@ -130,17 +127,6 @@ class _NoEndpointStore implements RuntimeEndpointStore {
 
   @override
   Future<void> save(RuntimeEndpoint endpoint) async {}
-
-  @override
-  Future<void> clear() async {}
-}
-
-class _NoKindStore implements RuntimeKindStore {
-  @override
-  Future<RuntimeKind?> load() async => null;
-
-  @override
-  Future<void> save(RuntimeKind kind) async {}
 
   @override
   Future<void> clear() async {}

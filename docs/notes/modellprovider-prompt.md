@@ -22,5 +22,5 @@ auf den Rechner der Nutzer:innen.
 
 ## Siehe auch
 
-- [Sprachmodell-Anbieter](./sprachmodell-anbieter.md) — Verbindungen in Standalone
+- [Sprachmodell-Anbieter](./sprachmodell-anbieter.md) — Verbindungen der Runtime
 - [Prompt-Executor](./prompt-executor.md)

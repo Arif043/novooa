@@ -1,5 +1,5 @@
 import 'package:syscat2/features/language_models/domain/entities/language_model.dart';
-import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
+import 'package:syscat2/features/language_models/domain/entities/language_model_provider.dart';
 
 /// Die Modelle eines Anbieters. `provider` ist `null` für Modelle, deren
 /// Anbieter unbekannt ist.

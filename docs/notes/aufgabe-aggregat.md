@@ -7,7 +7,7 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
 ```
 lib/features/task_builder/
 ├── domain/          # TaskDefinition, WorkflowNode, WorkflowEdge, Repository
-├── infrastructure/  # Firestore-/Runtime-Mapping und Repositories
+├── infrastructure/  # Runtime-Mapping und Repositories
 └── presentation/    # Builder-Cubit, Seite, Palette, Canvas, Panel
 ```
 

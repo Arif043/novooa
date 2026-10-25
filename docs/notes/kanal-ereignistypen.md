@@ -4,8 +4,9 @@
 
 Gehört zu: [Zeitplan](../index/zeitplan.md)
 
-Auslöser und Aufgaben kennen nur diese Typen, nie Twilio- oder
-Graph-Formate:
+Auslöser und Aufgaben kennen nur diese Typen, nie Graph-Formate. Die
+Runtime bekommt heute nur `emailReceived` über das Mail-Relay; WhatsApp und
+SMS sind als Typen vorgesehen, aber ohne Anbindung.
 
 ```ts
 type EmailReceivedEvent = {
@@ -31,6 +32,5 @@ type SmsMessageReceivedEvent = {
 
 ## Siehe auch
 
-- [Twilio-Webhook](./twilio-webhook.md)
 - [E-Mail-Auslöser über Mail-Connector](./email-ausloeser-mail-connector.md)
 - [Ereignisziel eines Auslösers](./ausloeser-ereignisziel.md)

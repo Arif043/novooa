@@ -1,6 +1,6 @@
 # Baustein „Teamarbeit“
 
-> Ein Orchestrator mit eigener Anweisung und eigenem Modell verteilt Aufträge an gewählte Mitarbeiter und liefert ein Ergebnis mit benannten, typisierten Feldern; nur Standalone.
+> Ein Orchestrator mit eigener Anweisung und eigenem Modell verteilt Aufträge an gewählte Mitarbeiter und liefert ein Ergebnis mit benannten, typisierten Feldern.
 
 Gehört zu: [Aufgabe](../index/aufgabe.md) · [Mitarbeiter](../index/mitarbeiter.md)
 

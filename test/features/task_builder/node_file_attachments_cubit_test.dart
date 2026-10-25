@@ -3,9 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/entities/unique_id.dart';
-import 'package:syscat2/features/auth/domain/entities/auth_failure.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
-import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/files/domain/entities/file_failure.dart';
 import 'package:syscat2/features/files/domain/entities/team_file.dart';
@@ -16,8 +14,6 @@ import 'package:syscat2/features/files/domain/repositories/team_file_repository.
 import 'package:syscat2/features/files/domain/usecases/watch_team_files.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_file_attachments_cubit.dart';
 import 'package:syscat2/features/task_builder/presentation/cubits/node_file_attachments_state.dart';
-import 'package:syscat2/features/teams/domain/entities/team_member.dart';
-import 'package:syscat2/features/teams/domain/entities/team_workspace.dart';
 import 'package:syscat2/features/teams/domain/repositories/team_repository.dart';
 import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
 
@@ -117,24 +113,6 @@ class _FakeTeamFileRepository implements TeamFileRepository {
 class _FakeTeamRepository implements TeamRepository {
   @override
   Future<TeamId> currentTeamId() async => const TeamId('team.1');
-
-  @override
-  Stream<TeamId> watchCurrentTeamId() => Stream.value(const TeamId('team.1'));
-
-  @override
-  Stream<TeamWorkspace> watchCurrentTeam() => const Stream.empty();
-
-  @override
-  Stream<List<TeamMember>> watchCurrentTeamMembers() => const Stream.empty();
-
-  @override
-  Future<void> updateCurrentTeamName(String name) async {}
-
-  @override
-  Future<void> addCurrentTeamMember(String identifier) async {}
-
-  @override
-  Future<void> removeCurrentTeamMember(String uid) async {}
 }
 
 class _FakeAuthRepository implements AuthRepository {
@@ -149,26 +127,4 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Stream<AuthUser?> authStateChanges() => const Stream.empty();
-
-  @override
-  Future<Result<AuthUser, AuthFailure>> signIn({
-    required EmailAddress email,
-    required String password,
-  }) async {
-    return const Result.error(AuthFailure(AuthFailureKind.unknown));
-  }
-
-  @override
-  Future<Result<Unit, AuthFailure>> signOut() async {
-    return const Result.success(unit);
-  }
-
-  @override
-  Future<Result<AuthUser, AuthFailure>> signUp({
-    required String name,
-    required EmailAddress email,
-    required String password,
-  }) async {
-    return const Result.error(AuthFailure(AuthFailureKind.unknown));
-  }
 }

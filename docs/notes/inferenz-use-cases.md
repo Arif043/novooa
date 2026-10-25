@@ -21,11 +21,9 @@ ModelCatalog → RunModelInferenceWithSources
 - `RunModelInference`: prüft Eingabe-Tensoren gegen das Manifest, übergibt
   nur den Katalogeintrag und validiert auch die Ausgabe-Tensoren.
 
-Wie Dateien zum ML-Dienst kommen, entscheidet die Infrastructure. Cloud und
-Standalone nutzen dieselben Use Cases.
+Wie Dateien zum ML-Dienst kommen, entscheidet die Infrastructure.
 
 ## Siehe auch
 
 - [ONNX-Inferenz über den ML-Dienst](./onnx-inferenz-ml-dienst.md)
-- [Cloud-Inferenzdienst](./cloud-inferenzdienst.md)
 - [Modelleingaben im Baustein](./modelleingaben-im-baustein.md)

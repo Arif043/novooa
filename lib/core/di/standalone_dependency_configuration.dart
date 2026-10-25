@@ -80,7 +80,6 @@ import '../../features/language_models/domain/usecases/connect_language_models.d
 import '../../features/language_models/domain/usecases/remove_language_model_connection.dart';
 import '../../features/language_models/domain/usecases/watch_language_model_connections.dart';
 import '../../features/language_models/domain/usecases/watch_language_models.dart';
-import '../../features/language_models/domain/usecases/save_language_model.dart';
 import '../../features/language_models/domain/usecases/watch_language_model_defaults.dart';
 import '../../features/language_models/domain/usecases/save_language_model_defaults.dart';
 import '../../features/language_models/infrastructure/repositories/local_language_model_repository.dart';
@@ -422,9 +421,6 @@ Future<void> configureStandaloneDependencies(
       () => WatchLanguageModels(locator<LanguageModelRepository>()),
     )
     ..registerLazySingleton(
-      () => SaveLanguageModel(locator<LanguageModelRepository>()),
-    )
-    ..registerLazySingleton(
       () => WatchFileVersionLimit(locator<FileSettingsRepository>()),
     )
     ..registerLazySingleton(
@@ -566,10 +562,8 @@ Future<void> configureStandaloneDependencies(
       () => LanguageModelsSettingsCubit(
         locator<AuthRepository>(),
         locator<WatchLanguageModels>(),
-        locator<SaveLanguageModel>(),
         locator<GetCurrentTeamId>(),
-        allowsKeylessLocalEndpoint: true,
-        connectLanguageModels: locator<ConnectLanguageModels>(),
+        locator<ConnectLanguageModels>(),
       ),
     )
     ..registerFactory(
@@ -618,7 +612,7 @@ Future<void> configureStandaloneDependencies(
       () => ApplicationLogsCubit(locator<WatchApplicationLogs>()),
     )
     ..registerLazySingleton<AppRouter>(
-      AppRouter.standalone,
+      AppRouter.new,
       dispose: (router) => router.dispose(),
     );
 }

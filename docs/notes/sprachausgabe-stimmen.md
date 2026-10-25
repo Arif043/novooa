@@ -12,8 +12,7 @@ Gehört zu: [Sprachausgabe](../index/sprachausgabe.md)
 - **OpenAI-kompatibel:** feste Liste der OpenAI-Stimmen (Standard `alloy`);
   der Suchtext lässt sich als eigene Stimmen-ID übernehmen.
 
-Endpunkte: Standalone `GET /v1/language-models/:languageModelId/voices`,
-Cloud Callable `listSpeechVoices` (`{languageModelId}`). Antwort:
+Endpunkt: `GET /v1/language-models/:languageModelId/voices`. Antwort:
 `{voices: [{id, name, description?, language?}], defaultVoiceId,
 allowsCustomVoice}`. API-Keys verlassen den Server nie.
 

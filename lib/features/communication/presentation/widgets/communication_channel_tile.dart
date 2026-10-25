@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 
 import '../../domain/entities/communication_channel.dart';
-import 'communication_channel_menu.dart';
 import 'communication_labels.dart';
 import 'communication_provider_logo.dart';
 import 'communication_reconnect_notice.dart';
@@ -12,16 +11,10 @@ class CommunicationChannelTile extends StatelessWidget {
   const CommunicationChannelTile({
     super.key,
     required this.channel,
-    this.onFakeMessage,
-    this.onSendMessage,
-    this.onDelete,
     this.onReconnect,
   });
 
   final CommunicationChannel channel;
-  final VoidCallback? onFakeMessage;
-  final VoidCallback? onSendMessage;
-  final VoidCallback? onDelete;
 
   /// Nur gesetzt, wenn die Anmeldung des Postfachs abgelaufen ist.
   final VoidCallback? onReconnect;
@@ -35,7 +28,7 @@ class CommunicationChannelTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _Header(channel: channel, menu: _menu),
+            _Header(channel: channel),
             const SizedBox(height: AppSpacing.md),
             _Details(channel: channel),
             if (onReconnect != null) ...[
@@ -47,19 +40,12 @@ class CommunicationChannelTile extends StatelessWidget {
       ),
     );
   }
-
-  Widget get _menu => CommunicationChannelMenu(
-    onFakeMessage: onFakeMessage,
-    onSendMessage: onSendMessage,
-    onDelete: onDelete,
-  );
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.channel, required this.menu});
+  const _Header({required this.channel});
 
   final CommunicationChannel channel;
-  final Widget menu;
 
   @override
   Widget build(BuildContext context) {
@@ -79,8 +65,6 @@ class _Header extends StatelessWidget {
             ),
           ),
         ),
-        const Spacer(),
-        menu,
       ],
     );
   }

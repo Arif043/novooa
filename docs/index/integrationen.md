@@ -1,6 +1,6 @@
 # Integrationen
 
-> Plugins schließen externe Systeme wie Shopware an und bringen eigene Bausteine und Auslöser mit, ohne den Kern zu ändern; verfügbar in Standalone.
+> Plugins schließen externe Systeme wie Shopware an und bringen eigene Bausteine und Auslöser mit, ohne den Kern zu ändern.
 
 ## Plugin-Mechanik
 

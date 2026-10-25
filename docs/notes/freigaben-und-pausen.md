@@ -9,16 +9,15 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   markiert den Run als `rejected`.
 
 ```ts
-reviewTaskRunFlow:
+POST /v1/task-runs/review
 input:  { runId: string; decision: "approve" | "reject"; output?: string; formValues?: Record<string, unknown> }
 output: { runId: string; status: "queued" | "rejected" }
 ```
 
-Standalone: `POST /v1/task-runs/review`. Wartet eine Aufgabe, geht eine
-Push-Benachrichtigung raus.
+Wartet eine Aufgabe, geht eine Push-Benachrichtigung raus.
 
 ## Siehe auch
 
 - [Formulareingabe](./formulareingabe-baustein.md)
 - [Bild anfordern](./bild-anfordern-baustein.md)
-- [Push-Benachrichtigungen in Standalone](./push-standalone.md)
+- [Push-Benachrichtigungen über das Relay](./push-standalone.md)

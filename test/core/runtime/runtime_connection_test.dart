@@ -6,10 +6,8 @@ import 'package:syscat2/core/runtime/runtime_connection_state.dart';
 import 'package:syscat2/core/runtime/runtime_credential_store.dart';
 import 'package:syscat2/core/runtime/runtime_endpoint.dart';
 import 'package:syscat2/core/runtime/runtime_endpoint_store.dart';
-import 'package:syscat2/core/runtime/runtime_kind_store.dart';
 import 'package:syscat2/core/runtime/runtime_login_client.dart';
 import 'package:syscat2/core/runtime/runtime_onboarding_client.dart';
-import 'package:syscat2/core/runtime/runtime_profile.dart';
 
 void main() {
   group('RuntimeEndpoint', () {
@@ -226,7 +224,6 @@ void main() {
           _FakeLoginClient(),
           const _FakeAvailability(),
           onboarding: _FakeOnboarding(),
-          kindStore: _MemoryKindStore(),
         );
 
         await cubit.initialize(RuntimeEndpoint.fromAddress('127.0.0.1'));
@@ -252,7 +249,6 @@ void main() {
         _FakeLoginClient(),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
-        kindStore: _MemoryKindStore(),
       );
 
       await cubit.initialize(RuntimeEndpoint.fromAddress('127.0.0.1'));
@@ -269,7 +265,6 @@ void main() {
         _FakeLoginClient(),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(hasLicense: false),
-        kindStore: _MemoryKindStore(),
       );
 
       await cubit.connect('192.168.1.20');
@@ -287,7 +282,6 @@ void main() {
           _FakeLoginClient(),
           const _FakeAvailability(),
           onboarding: _FakeOnboarding(hasLicense: false, needsSetup: true),
-          kindStore: _MemoryKindStore(),
         );
         await cubit.connect('192.168.1.20');
         final endpoint =
@@ -312,7 +306,6 @@ void main() {
           _FakeLoginClient(),
           const _FakeAvailability(),
           onboarding: onboarding,
-          kindStore: _MemoryKindStore(),
         );
         await cubit.connect('192.168.1.20');
         final endpoint =
@@ -339,7 +332,6 @@ void main() {
           _FakeLoginClient(),
           const _FakeAvailability(),
           onboarding: onboarding,
-          kindStore: _MemoryKindStore(),
         );
         await cubit.connect('192.168.1.20');
         final state = cubit.state as RuntimeConnectionNeedsPasswordSetup;
@@ -365,7 +357,6 @@ void main() {
           _FakeLoginClient(),
           const _FakeAvailability(),
           onboarding: _FailingSetupOnboarding(),
-          kindStore: _MemoryKindStore(),
         );
         await cubit.connect('192.168.1.20');
         final endpoint =
@@ -389,7 +380,6 @@ void main() {
           _FakeLoginClient(),
           const _FakeAvailability(isReachable: false),
           onboarding: _FakeOnboarding(),
-          kindStore: _MemoryKindStore(),
         );
 
         await cubit.connect('192.168.1.20');
@@ -409,7 +399,6 @@ void main() {
           _FakeLoginClient(),
           const _FakeAvailability(isReachable: false),
           onboarding: _FakeOnboarding(),
-          kindStore: _MemoryKindStore(),
           isWeb: true,
         );
 
@@ -432,7 +421,6 @@ void main() {
         _FakeLoginClient(),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
-        kindStore: _MemoryKindStore(),
         isWeb: true,
       );
 
@@ -451,7 +439,6 @@ void main() {
         _FakeLoginClient(),
         const _FakeAvailability(isReachable: false),
         onboarding: _FakeOnboarding(),
-        kindStore: _MemoryKindStore(),
       );
 
       await cubit.initialize(RuntimeEndpoint.fromAddress('127.0.0.1'));
@@ -469,7 +456,6 @@ void main() {
         _FakeLoginClient(),
         const _FakeAvailability(isReachable: false),
         onboarding: _FakeOnboarding(),
-        kindStore: _MemoryKindStore(),
       );
 
       await cubit.connect('192.168.1.20');
@@ -488,7 +474,6 @@ void main() {
         _FakeLoginClient(token: 'fresh-token'),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
-        kindStore: _MemoryKindStore(),
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
 
@@ -503,18 +488,15 @@ void main() {
       await cubit.close();
     });
 
-    test('signOut vergisst Sitzung, gespeicherte Adresse und Varianten-Wahl '
-        'vollständig', () async {
+    test('signOut vergisst Sitzung und gespeicherte Adresse', () async {
       final endpoints = _MemoryEndpointStore(null);
       final credentials = _MemoryCredentialStore();
-      final kindStore = _MemoryKindStore(RuntimeKind.standalone);
       final cubit = RuntimeConnectionCubit(
         endpoints,
         credentials,
         _FakeLoginClient(token: 'fresh-token'),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
-        kindStore: kindStore,
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
       await cubit.login(
@@ -528,7 +510,6 @@ void main() {
 
       expect(credentials.sessions.containsKey('192.168.1.20'), isFalse);
       expect(endpoints.wasCleared, isTrue);
-      expect(kindStore.wasCleared, isTrue);
       expect(cubit.state, isA<RuntimeConnectionLoading>());
       await cubit.close();
     });
@@ -541,7 +522,6 @@ void main() {
         _FakeLoginClient(token: 'fresh-token'),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
-        kindStore: _MemoryKindStore(),
         onSignedOut: () async => resetCallCount++,
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
@@ -566,7 +546,6 @@ void main() {
         loginClient,
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
-        kindStore: _MemoryKindStore(),
       );
       await cubit.login(
         RuntimeEndpoint.fromAddress('192.168.1.20'),
@@ -593,7 +572,6 @@ void main() {
           ),
           const _FakeAvailability(),
           onboarding: _FakeOnboarding(),
-          kindStore: _MemoryKindStore(),
         );
         await cubit.login(
           RuntimeEndpoint.fromAddress('192.168.1.20'),
@@ -620,7 +598,6 @@ void main() {
           _FakeLoginClient(token: 'fresh-token'),
           const _FakeAvailability(),
           onboarding: _FakeOnboarding(),
-          kindStore: _MemoryKindStore(),
         );
         final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
         await cubit.login(
@@ -647,7 +624,6 @@ void main() {
         _FakeLoginClient(),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
-        kindStore: _MemoryKindStore(),
       );
 
       await cubit.signOut();
@@ -665,7 +641,6 @@ void main() {
         loginClient,
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
-        kindStore: _MemoryKindStore(),
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
 
@@ -692,7 +667,6 @@ void main() {
           _FakeLoginClient(failure: const RuntimeLoginFailure('abgelaufen')),
           const _FakeAvailability(),
           onboarding: _FakeOnboarding(),
-          kindStore: _MemoryKindStore(),
         );
         final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
         cubit.showSignIn(endpoint, RuntimeSignInMode.invitation);
@@ -715,7 +689,6 @@ void main() {
         ),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
-        kindStore: _MemoryKindStore(),
       );
       final endpoint = RuntimeEndpoint.fromAddress('192.168.1.20');
 
@@ -737,7 +710,6 @@ void main() {
         _FakeLoginClient(),
         const _FakeAvailability(),
         onboarding: _FakeOnboarding(),
-        kindStore: _MemoryKindStore(),
       );
 
       await cubit.connect('not-an-address-!!');
@@ -774,25 +746,6 @@ class _MemoryEndpointStore implements RuntimeEndpointStore {
   @override
   Future<void> clear() async {
     _endpoint = null;
-    wasCleared = true;
-  }
-}
-
-class _MemoryKindStore implements RuntimeKindStore {
-  _MemoryKindStore([this._kind]);
-
-  RuntimeKind? _kind;
-  bool wasCleared = false;
-
-  @override
-  Future<RuntimeKind?> load() async => _kind;
-
-  @override
-  Future<void> save(RuntimeKind kind) async => _kind = kind;
-
-  @override
-  Future<void> clear() async {
-    _kind = null;
     wasCleared = true;
   }
 }

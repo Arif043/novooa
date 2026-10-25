@@ -4,9 +4,7 @@
 
 Gehört zu: [Webhooks](../index/webhooks.md)
 
-**Verfügbarkeit:** Standalone (`WorkspaceCapabilities.webhooks`); die Cloud hat
-keinen Empfänger, dort fehlen Quelle und Baustein. Die Runtime muss für das
-System erreichbar sein (z. B. VPS hinter Reverse Proxy mit `https`).
+Die Runtime muss für das aufrufende System erreichbar sein (z. B. VPS hinter Reverse Proxy mit `https`).
 
 *Zeitplan → Auslöser hinzufügen → Ereignis → Webhook empfangen:*
 

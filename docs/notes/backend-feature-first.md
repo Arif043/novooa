@@ -26,10 +26,10 @@ functions/src/
 | Feature | Verantwortung |
 | --- | --- |
 | `assistant` | Agentenanfrage, Ausführungskontext, Responder-Ports, Genkit-/Callable-Adapter |
-| `task_execution` | Task-Definitionen, Runs, Graph Runner, Node Executors, Cloud Tasks |
-| `teams` | Arbeitsbereich, Mitgliedschaft, Einladungen |
+| `task_execution` | Task-Definitionen, Runs, Graph Runner, Node Executors, Relay des Aufgabenstudio-Agenten |
+| `teams` | Arbeitsbereich |
 | `scheduling` | Zeit- und Ereignis-Auslöser, Fälligkeiten |
-| `communication` | Nachrichten, Kanäle, Inbox, Mail-Connectoren, Provider-Sender |
+| `communication` | Postfächer, Mail-Connectoren, Mail-Relay |
 | `files` | Datei-Metadaten, Versionen, Objektzugriff |
 | `knowledge_base` | Notizen, Links, Workspace-Auflösung |
 | `machine_learning` | Modellkatalog, ONNX-Verträge, Inferenzports |

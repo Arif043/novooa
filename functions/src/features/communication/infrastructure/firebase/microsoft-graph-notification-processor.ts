@@ -1,12 +1,6 @@
 import {type ChannelMessageEvent} from
   "../../domain/entities/channel-message-event.js";
 import {createHash} from "node:crypto";
-import {
-  storeInboundChannelMessage,
-  type CommunicationChannel,
-} from "../firebase/channel-message-store.js";
-import {dispatchChannelMessageTriggers} from
-  "./channel-trigger-dispatcher.js";
 import {logInfo} from "../../../../shared/logging/logger.js";
 import {FirestoreMailConnectorRepository} from
   "../firebase/firestore-mail-connector-repository.js";
@@ -84,36 +78,21 @@ async function processNewMessage(
 
 async function storeMessage(
   message: {id: string; senderEmail: string; recipientEmail: string; subject: string; body: string; receivedAt: Date},
-  connector: {
-    id: string;
-    teamId: string;
-    emailAddress: string;
-    deliveryTarget: "cloud" | "localRuntime";
-    runtimeLicenseId: string | null;
-  },
+  connector: {id: string; teamId: string; runtimeLicenseId: string},
   messageId: string,
 ): Promise<void> {
   const event = eventFrom(message, connector.id);
-  if (connector.deliveryTarget === "localRuntime") {
-    await queueForLocalRuntime(connector, event);
-    logInfo("microsoft_graph.message_queued_for_local_runtime", {
-      teamId: connector.teamId, connectorId: connector.id, messageId,
-    });
-    return;
-  }
-  const channel = channelFrom(connector);
-  const created = await storeInboundChannelMessage({channel, event});
-  if (created) await dispatchChannelMessageTriggers({teamId: channel.teamId, channelId: channel.id, event});
-  logInfo("microsoft_graph.message_received", {teamId: channel.teamId, connectorId: channel.id, messageId, created});
+  await queueForLocalRuntime(connector, event);
+  logInfo("microsoft_graph.message_queued_for_local_runtime", {
+    teamId: connector.teamId, connectorId: connector.id, messageId,
+  });
 }
 
 async function queueForLocalRuntime(
-  connector: {id: string; teamId: string; runtimeLicenseId: string | null},
+  connector: {id: string; teamId: string; runtimeLicenseId: string},
   event: ChannelMessageEvent,
 ): Promise<void> {
-  if (!connector.runtimeLicenseId || event.type !== "emailReceived") {
-    throw new Error("Der lokale Mail-Connector hat keine Runtime-Lizenz.");
-  }
+  if (event.type !== "emailReceived") throw new Error("Nur E-Mails gehen an die Runtime.");
   await new FirestoreRuntimeMailRelayEventStore().enqueue({
     licenseId: connector.runtimeLicenseId, workspaceId: connector.teamId,
     event: {
@@ -133,10 +112,6 @@ function eventFrom(
     subject: message.subject, message: message.body, receivedAt: message.receivedAt.toISOString(),
     raw: {source: "microsoft_graph"},
   };
-}
-
-function channelFrom(connector: {id: string; teamId: string; emailAddress: string}): CommunicationChannel {
-  return {id: connector.id, teamId: connector.teamId, kind: "email", address: connector.emailAddress};
 }
 
 function relayEventId(licenseId: string, providerMessageId: string): string {

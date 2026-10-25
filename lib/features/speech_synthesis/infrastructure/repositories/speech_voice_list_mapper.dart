@@ -1,6 +1,6 @@
 import '../../domain/entities/speech_voice.dart';
 
-/// Wire-Format von lokaler Runtime und Cloud-Funktion `listSpeechVoices`.
+/// Wire-Format der Runtime für die Stimmenliste.
 SpeechVoiceList speechVoiceListFromJson(Map<Object?, Object?> json) {
   final voices = json['voices'];
   final defaultVoiceId = json['defaultVoiceId'];

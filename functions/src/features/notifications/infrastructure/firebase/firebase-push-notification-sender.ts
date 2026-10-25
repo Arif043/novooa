@@ -5,17 +5,13 @@ import {
   type SendResponse,
 } from "firebase-admin/messaging";
 import {errorDetails, logError, logInfo} from "../../../../shared/logging/logger.js";
-import {
-  getDatabase,
-  initializeAdminApp,
-} from "../../../../shared/firebase/firestore-db.js";
+import {initializeAdminApp} from "../../../../shared/firebase/firestore-db.js";
 import {type PushNotification} from
   "../../domain/entities/push-notification.js";
 import {type PushNotificationSender} from
   "../../domain/repositories/push-notification-sender.js";
 
 const maximumTokensPerRequest = 500;
-const webAppUrl = "https://app.novooa.de";
 
 export type FcmTokenDocument = {
   token: string;
@@ -32,7 +28,7 @@ export interface FcmMessagingClient {
 
 export class FirebasePushNotificationSender implements PushNotificationSender {
   constructor(
-    private readonly tokenStore: FcmTokenStore = new FirestoreFcmTokenStore(),
+    private readonly tokenStore: FcmTokenStore,
     private readonly messagingClient: FcmMessagingClient = new FirebaseMessagingClient(),
   ) {}
 
@@ -71,22 +67,6 @@ export class FirebasePushNotificationSender implements PushNotificationSender {
   }
 }
 
-class FirestoreFcmTokenStore implements FcmTokenStore {
-  async tokensForRecipient(recipientId: string): Promise<FcmTokenDocument[]> {
-    const snapshots = await getDatabase().collection("users").doc(recipientId)
-      .collection("fcmTokens").get();
-    return snapshots.docs.flatMap((snapshot) => {
-      const token = snapshot.data().token;
-      return typeof token === "string" && token ? [{
-        token,
-        delete: async () => {
-          await snapshot.ref.delete();
-        },
-      }] : [];
-    });
-  }
-}
-
 class FirebaseMessagingClient implements FcmMessagingClient {
   async send(message: MulticastMessage): Promise<BatchResponse> {
     initializeAdminApp();
@@ -109,8 +89,9 @@ function multicastMessage(
   return {
     tokens: tokens.map((document) => document.token),
     notification: {title: notification.title, body: notification.body},
+    // Kein `fcmOptions.link`: Das Relay kennt die Adresse der Runtime nicht;
+    // den Klick behandelt der Service Worker der Web-App selbst.
     data: notification.data,
-    webpush: {fcmOptions: {link: webAppUrl}},
   };
 }
 

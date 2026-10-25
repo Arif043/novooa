@@ -1,30 +1,22 @@
 # Kommunikation
 
-> Kommunikation trennt novooa-eigene System-E-Mails strikt von den Postfächern und Kanälen der Kundschaft; Kanäle sind eine gemeinsame Abstraktion für E-Mail, WhatsApp, SMS und Künftiges.
+> Kommunikation trennt novooa-eigene System-E-Mails strikt von den Postfächern der Kundschaft; die Runtime erreicht ihre Postfächer über das Mail-Relay.
 
 ## Grundlagen
 
 - [System-E-Mail über SendGrid](../notes/system-email-sendgrid.md)
 - [Mail-Connectoren](../notes/mail-connectoren.md)
-- [Kommunikationskanal-Datenmodell](../notes/kommunikationskanal-datenmodell.md)
 - [Sicherheit der Kommunikation](../notes/kommunikation-sicherheit.md)
 
 ## Microsoft Graph
 
 - [Token- und Subscription-Pflege (Microsoft Graph)](../notes/graph-token-und-subscriptions.md)
-- [Mail-Relay und Dead-Letter-Queue](../notes/mail-relay-dead-letter.md) (Standalone)
+- [Mail-Relay und Dead-Letter-Queue](../notes/mail-relay-dead-letter.md)
 - [Postfächer in der Runtime](../notes/runtime-postfaecher.md)
-
-## Twilio (SMS, WhatsApp)
-
-- [Twilio-Webhook](../notes/twilio-webhook.md)
-- [Twilio über den Cloud-Relay](../notes/twilio-relay.md)
-- [Fake-Kanalnachricht für Tests](../notes/fake-kanalnachricht.md)
 
 ## Ereignisse und Bausteine
 
 - [Normalisierte Kanal-Ereignistypen](../notes/kanal-ereignistypen.md)
-- [Eingehende Nachrichten (Inbox)](../notes/eingangs-nachrichten-inbox.md)
 - [E-Mail-Auslöser über Mail-Connector](../notes/email-ausloeser-mail-connector.md)
 - [Kanal-Bausteine](../notes/kanal-bausteine.md)
 

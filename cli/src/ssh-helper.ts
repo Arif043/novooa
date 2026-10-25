@@ -208,7 +208,7 @@ export async function buildFlutterWindows(
 ): Promise<void> {
   const script = `
 Set-Location "${repoPath}"
-flutter build windows --dart-define=NOVOOA_RUNTIME=standalone --dart-define=WORKSPACE_API_URL=http://${apiUrl}:8090 --release
+flutter build windows --dart-define=WORKSPACE_API_URL=http://${apiUrl}:8090 --release
 `;
 
   await executeSshCommand(options, script);

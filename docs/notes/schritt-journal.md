@@ -1,6 +1,6 @@
 # Schritt-Journal (Checkpointing)
 
-> Standalone speichert das Ergebnis jedes ausgeführten Bausteins; ein nach Absturz wiederholter Run übernimmt diese Ergebnisse, statt Bausteine erneut auszuführen.
+> Die Runtime speichert das Ergebnis jedes ausgeführten Bausteins; ein nach Absturz wiederholter Run übernimmt diese Ergebnisse, statt Bausteine erneut auszuführen.
 
 Gehört zu: [Aufgabe](../index/aufgabe.md)
 
@@ -18,7 +18,6 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   des Runs per Kaskade.
 - **Restfenster:** Stürzt der Prozess nach dem Effekt eines Bausteins, aber vor
   dem Speichern ab, läuft genau dieser Baustein erneut.
-- Die Cloud hat kein Journal.
 
 ## Siehe auch
 

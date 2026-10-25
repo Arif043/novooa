@@ -1,6 +1,6 @@
 # Datenbank-Seite
 
-> Die Seite „Datenbank“ (nur Standalone) zeigt die von Arbeitsplänen angelegten Sammlungen als Excel-artige Arbeitsblätter; Datensätze lassen sich anlegen, bearbeiten und löschen.
+> Die Seite „Datenbank“ zeigt die von Arbeitsplänen angelegten Sammlungen als Excel-artige Arbeitsblätter; Datensätze lassen sich anlegen, bearbeiten und löschen.
 
 Gehört zu: [Daten](../index/daten.md)
 

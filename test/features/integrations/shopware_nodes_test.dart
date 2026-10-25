@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/di/service_locator.dart';
-import 'package:syscat2/core/runtime/workspace_capabilities.dart';
 import 'package:syscat2/features/connections/domain/entities/connection.dart';
 import 'package:syscat2/features/connections/domain/entities/connection_draft.dart';
 import 'package:syscat2/features/connections/domain/entities/connection_failure.dart';
@@ -340,24 +339,13 @@ void main() {
       return added;
     }
 
-    testWidgets(
-      'zeigt die Aktion in der Gruppe Shopware, wo es Verbindungen gibt',
-      (tester) async {
-        serviceLocator.registerSingleton(_capabilities(connections: true));
-        final added = await pump(tester);
+    testWidgets('zeigt die Aktion in der Gruppe Shopware', (tester) async {
+      final added = await pump(tester);
 
-        expect(find.text('SHOPWARE'), findsOneWidget);
-        expect(find.text('Bestellungen suchen'), findsOneWidget);
-        await tester.tap(find.text('Bestellungen suchen'));
-        expect(added.single.pluginTypeId, _searchOrders);
-      },
-    );
-
-    testWidgets('fehlt ohne Verbindungen, z. B. in der Cloud', (tester) async {
-      serviceLocator.registerSingleton(_capabilities(connections: false));
-      await pump(tester);
-
-      expect(find.text('Bestellungen suchen'), findsNothing);
+      expect(find.text('SHOPWARE'), findsOneWidget);
+      expect(find.text('Bestellungen suchen'), findsOneWidget);
+      await tester.tap(find.text('Bestellungen suchen'));
+      expect(added.single.pluginTypeId, _searchOrders);
     });
   });
 
@@ -368,7 +356,6 @@ void main() {
     setUp(() {
       tasks = _TaskRepository();
       builder = TaskBuilderCubit(repository: tasks);
-      serviceLocator.registerSingleton(_capabilities(connections: true));
     });
 
     Future<void> pumpNode(
@@ -720,20 +707,6 @@ void main() {
   });
 }
 
-WorkspaceCapabilities _capabilities({required bool connections}) =>
-    WorkspaceCapabilities(
-      assistant: false,
-      dataCollections: false,
-      modelCatalog: false,
-      push: false,
-      messagingChannels: false,
-      skills: false,
-      employees: false,
-      connections: connections,
-      webhooks: false,
-      scriptPackages: false,
-    );
-
 const _task = Task(
   id: 'task.shopware',
   title: 'Aufgabe',
@@ -745,9 +718,6 @@ const _task = Task(
 class _Teams implements TeamRepository {
   @override
   Future<TeamId> currentTeamId() async => const TeamId('team-1');
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
 class _ConnectionRepository implements ConnectionRepository {

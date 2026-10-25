@@ -14,8 +14,7 @@ Code: `lib/features/files/presentation/pages/files_page.dart`.
   Brotkrumen nur innerhalb eines Ordners (`FilesHeader`). Einträge sind Karten
   (`FilesItemCard`) mit 12 px Abstand; Herunterziehen aktualisiert.
 - Ein leerer Unterordner zeigt nur einen Hinweis in der Liste.
-- Löschen mit Bestätigung am Eintrag; in Standalone
-  `DELETE /v1/files/:fileId` entfernt Metadaten, alle Versionen und Inhalte
+- Löschen mit Bestätigung am Eintrag; `DELETE /v1/files/:fileId` entfernt Metadaten, alle Versionen und Inhalte
   und löst ein [Datei-Ereignis](./datei-ereignisse-dispatch.md) aus.
 
 ## Siehe auch

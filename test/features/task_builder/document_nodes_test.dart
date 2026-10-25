@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:multiple_result/multiple_result.dart';
-import 'package:syscat2/core/di/service_locator.dart';
-import 'package:syscat2/core/runtime/workspace_capabilities.dart';
 import 'package:syscat2/features/task_builder/domain/entities/node_config.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task.dart';
 import 'package:syscat2/features/task_builder/domain/entities/task_run_failure.dart';
@@ -15,7 +13,6 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_c
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/document_lookup_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/save_document_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/table_from_collection_widget.dart';
 
 void main() {
   test('aktualisiert alle Konfigurationswerte für Datensatz suchen', () async {
@@ -87,46 +84,6 @@ void main() {
     final config =
         _taskOf(cubit).nodes.single.config as TableFromCollectionNodeConfig;
     expect(config.collectionName, 'kunden');
-    await cubit.close();
-  });
-
-  testWidgets('zeigt ein Freitextfeld für die Sammlung ohne registriertes '
-      'DataRepository (Cloud-Profil)', (tester) async {
-    // `TableFromCollectionWidget` liest `WorkspaceCapabilities` aus dem
-    // globalen serviceLocator — ohne eigene Registrierung hier würde ein
-    // Wert aus einem anderen Test leaken oder das Auflösen schlicht
-    // fehlschlagen.
-    serviceLocator.registerSingleton(
-      const WorkspaceCapabilities(
-        assistant: true,
-        dataCollections: false,
-        modelCatalog: false,
-        push: false,
-        messagingChannels: false,
-        skills: false,
-        employees: false,
-        connections: false,
-        webhooks: false,
-        scriptPackages: false,
-      ),
-    );
-    addTearDown(() => serviceLocator.unregister<WorkspaceCapabilities>());
-    final cubit = await _cubitFor(_tableTask());
-    await tester.pumpWidget(
-      _host(
-        cubit,
-        (task) => TableFromCollectionWidget(node: task.nodes.single),
-      ),
-    );
-
-    expect(find.text('Sammlung als Tabelle'), findsOneWidget);
-    expect(find.byType(TextField), findsOneWidget);
-    await tester.enterText(find.byType(TextField), 'bestellungen');
-    await tester.pump();
-
-    final config =
-        _taskOf(cubit).nodes.single.config as TableFromCollectionNodeConfig;
-    expect(config.collectionName, 'bestellungen');
     await cubit.close();
   });
 

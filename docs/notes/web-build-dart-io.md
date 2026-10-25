@@ -2,7 +2,7 @@
 
 > `image_picker_media_input_picker.dart` importiert `dart:io`, bricht den Web-Build aber nicht, weil der einzige `File()`-Aufruf im Web nie erreicht wird.
 
-Gehört zu: [Betriebsvarianten](../index/betriebsvarianten.md)
+Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
 - `flutter build web` läuft durch (verifiziert).
 - Der `File()`-Aufruf liegt in `_pickWithDocumentScanner()`, erreichbar nur

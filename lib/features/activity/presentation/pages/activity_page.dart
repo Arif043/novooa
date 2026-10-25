@@ -16,16 +16,10 @@ import '../widgets/task_activity_history.dart';
 import '../../../application_logs/presentation/widgets/runtime_application_logs_view.dart';
 
 class ActivityPage extends StatelessWidget {
-  const ActivityPage({
-    super.key,
-    this.initialRunId,
-    this.notificationOpenId,
-    this.isStandalone = false,
-  });
+  const ActivityPage({super.key, this.initialRunId, this.notificationOpenId});
 
   final String? initialRunId;
   final String? notificationOpenId;
-  final bool isStandalone;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +28,6 @@ class ActivityPage extends StatelessWidget {
       child: _ActivityView(
         initialRunId: initialRunId,
         notificationOpenId: notificationOpenId,
-        isStandalone: isStandalone,
       ),
     );
   }
@@ -43,15 +36,10 @@ class ActivityPage extends StatelessWidget {
 enum TaskActivityFilter { approvalRequired, denied, running, history, protocol }
 
 class _ActivityView extends StatefulWidget {
-  const _ActivityView({
-    this.initialRunId,
-    this.notificationOpenId,
-    required this.isStandalone,
-  });
+  const _ActivityView({this.initialRunId, this.notificationOpenId});
 
   final String? initialRunId;
   final String? notificationOpenId;
-  final bool isStandalone;
 
   @override
   State<_ActivityView> createState() => _ActivityViewState();
@@ -78,7 +66,6 @@ class _ActivityViewState extends State<_ActivityView> {
           children: [
             _FilterTabs(
               filter: filter,
-              showProtocol: widget.isStandalone,
               onChanged: (value) => setState(() => filter = value),
             ),
             Expanded(
@@ -92,7 +79,6 @@ class _ActivityViewState extends State<_ActivityView> {
                 ActivityLoadStatus.ready => _TabBody(
                   filter: filter,
                   state: state,
-                  isStandalone: widget.isStandalone,
                 ),
               },
             ),
@@ -126,21 +112,14 @@ class _ActivityViewState extends State<_ActivityView> {
 }
 
 class _FilterTabs extends StatelessWidget {
-  const _FilterTabs({
-    required this.filter,
-    required this.onChanged,
-    required this.showProtocol,
-  });
+  const _FilterTabs({required this.filter, required this.onChanged});
 
   final TaskActivityFilter filter;
   final ValueChanged<TaskActivityFilter> onChanged;
 
   /// Nur Standalone hat ein Protokoll, und lesen dürfen es nur Admins.
-  final bool showProtocol;
-
   @override
   Widget build(BuildContext context) {
-    if (!showProtocol) return _segments(includeProtocol: false);
     return BlocSelector<CurrentRuntimeUserCubit, CurrentRuntimeUserState, bool>(
       selector: (state) => state.isAdmin,
       builder: (context, isAdmin) => _segments(includeProtocol: isAdmin),
@@ -170,15 +149,10 @@ class _FilterTabs extends StatelessWidget {
 }
 
 class _TabBody extends StatelessWidget {
-  const _TabBody({
-    required this.filter,
-    required this.state,
-    required this.isStandalone,
-  });
+  const _TabBody({required this.filter, required this.state});
 
   final TaskActivityFilter filter;
   final ActivityState state;
-  final bool isStandalone;
 
   @override
   Widget build(BuildContext context) {
@@ -199,9 +173,7 @@ class _TabBody extends StatelessWidget {
         activities: state.activities,
         onRefresh: context.read<ActivityCubit>().load,
       ),
-      TaskActivityFilter.protocol when isStandalone =>
-        const RuntimeApplicationLogsView(),
-      TaskActivityFilter.protocol => const SizedBox.shrink(),
+      TaskActivityFilter.protocol => const RuntimeApplicationLogsView(),
     };
   }
 

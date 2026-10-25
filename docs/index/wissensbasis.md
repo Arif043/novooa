@@ -22,8 +22,6 @@
 ## Offene Punkte
 
 - Import einer Legacy-Wissensbasis mit stabilen Notiz-IDs.
-- Soll Firestore Links ebenfalls serverseitig aus dem aktuellen Bestand
-  auflösen?
 - Limits pro Run (Anzahl Notizen, Tiefe, Bytes) festlegen.
 - Script-Bausteine an die Wissensbasis anbinden.
 - `[[Ziel#Abschnitt]]` auf den Abschnitt springen lassen.

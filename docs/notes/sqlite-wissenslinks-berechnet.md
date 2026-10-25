@@ -11,7 +11,6 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md) · [Wissensbasis](../in
   berechnetes Antwortfeld.
 - Anlage, Umbenennung, Pfadänderung oder Löschung einer Zielnotiz wirkt beim
   nächsten Lesen auf alle Quellen, ohne deren Inhalt neu zu speichern.
-- Firestore speichert weiterhin die vom Client erzeugte Linkprojektion.
 - Exporte enthalten nur maßgebliche Notizfelder; nach dem Import werden Links
   gegen den vollständigen Zielbestand aufgelöst.
 

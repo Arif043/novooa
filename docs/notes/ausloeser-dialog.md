@@ -17,8 +17,7 @@ Postfach?“, Standard „Überall“), das ein Auswahl-Sheet öffnet:
 - **Datei-Ereignisse:** Verzeichnisbaum mit Schalter „Unterordner
   einbeziehen“ oder einzelne Datei mit Suche. Darunter Chips für Dateitypen;
   bei einer einzelnen Datei entfallen sie.
-- **SMS/WhatsApp:** aktive Kanäle des Typs. **E-Mail:** verbundene Postfächer.
-  Ohne Kommunikationskanäle in der Betriebsvariante bleibt „Überall“.
+- **E-Mail:** verbundene Postfächer; ohne Postfach bleibt „Überall“.
 - Der Textfilter liegt eingeklappt unter „Weitere Optionen“.
 
 ## Verhalten

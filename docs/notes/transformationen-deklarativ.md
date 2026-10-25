@@ -26,9 +26,10 @@ inputs: [{
   Transformation ergänzt nur ihr eigenes Modul; Worker, Registry und andere
   Strategien bleiben unverändert (OCP).
 - TypeScript validiert Verträge über injizierte Fähigkeiten; das Deployment
-  entscheidet als Composition Root, welche es freigibt. Die Cloud-Runtime pflegt
-  ihre Bildtransformationen noch als feste Liste in
-  `model-contract-capabilities.ts` und kennt neuere Typen nicht.
+  entscheidet als Composition Root, welche es freigibt. Die Prüfung beim
+  Veröffentlichen (`models:publish`) pflegt ihre Bildtransformationen noch als
+  feste Liste in `model-contract-capabilities.ts` und kennt neuere Typen
+  nicht.
 - Parameter dürfen Kontext referenzieren (`$iteration.value.bounds`,
   `$global.detektor.value.bounds`); die Runtime löst sie direkt vor der
   Inferenz auf, Python sieht nur konkrete Werte.

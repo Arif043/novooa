@@ -1,23 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:multiple_result/multiple_result.dart';
 import 'package:syscat2/core/entities/unique_id.dart';
-import 'package:syscat2/features/auth/domain/entities/auth_failure.dart';
 import 'package:syscat2/features/auth/domain/entities/auth_user.dart';
-import 'package:syscat2/features/auth/domain/entities/email_address.dart';
 import 'package:syscat2/features/auth/domain/repositories/auth_repository.dart';
 import 'package:syscat2/features/files/domain/entities/team_id.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_connection.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model_connection_draft.dart';
 import 'package:syscat2/features/language_models/domain/entities/language_model.dart';
-import 'package:syscat2/features/language_models/domain/entities/language_model_draft.dart';
+import 'package:syscat2/features/language_models/domain/entities/language_model_provider.dart';
 import 'package:syscat2/features/language_models/domain/repositories/language_model_connection_repository.dart';
 import 'package:syscat2/features/language_models/domain/repositories/language_model_repository.dart';
 import 'package:syscat2/features/language_models/domain/usecases/connect_language_models.dart';
-import 'package:syscat2/features/language_models/domain/usecases/save_language_model.dart';
 import 'package:syscat2/features/language_models/domain/usecases/watch_language_models.dart';
 import 'package:syscat2/features/language_models/presentation/cubits/language_models_settings_cubit.dart';
-import 'package:syscat2/features/teams/domain/entities/team_member.dart';
-import 'package:syscat2/features/teams/domain/entities/team_workspace.dart';
 import 'package:syscat2/features/teams/domain/repositories/team_repository.dart';
 import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
 
@@ -27,10 +21,8 @@ void main() {
     final cubit = LanguageModelsSettingsCubit(
       _Auth(),
       WatchLanguageModels(_Models()),
-      SaveLanguageModel(_Models()),
       GetCurrentTeamId(_Teams()),
-      allowsKeylessLocalEndpoint: true,
-      connectLanguageModels: ConnectLanguageModels(connections),
+      ConnectLanguageModels(connections),
     );
 
     cubit.updateProvider(LanguageModelProvider.googleAi);
@@ -81,10 +73,8 @@ LanguageModelsSettingsCubit _cubit(_Connections connections) {
   return LanguageModelsSettingsCubit(
     _Auth(),
     WatchLanguageModels(_Models()),
-    SaveLanguageModel(_Models()),
     GetCurrentTeamId(_Teams()),
-    allowsKeylessLocalEndpoint: true,
-    connectLanguageModels: ConnectLanguageModels(connections),
+    ConnectLanguageModels(connections),
   );
 }
 
@@ -103,8 +93,6 @@ class _Connections implements LanguageModelConnectionRepository {
 
 class _Models implements LanguageModelRepository {
   @override
-  Future<void> saveLanguageModel(LanguageModelDraft draft) async {}
-  @override
   Stream<List<LanguageModel>> watchLanguageModels(TeamId teamId) =>
       const Stream.empty();
 }
@@ -118,34 +106,9 @@ class _Auth implements AuthRepository {
   );
   @override
   Stream<AuthUser?> authStateChanges() => const Stream.empty();
-  @override
-  Future<Result<AuthUser, AuthFailure>> signIn({
-    required EmailAddress email,
-    required String password,
-  }) => throw UnimplementedError();
-  @override
-  Future<Result<Unit, AuthFailure>> signOut() => throw UnimplementedError();
-  @override
-  Future<Result<AuthUser, AuthFailure>> signUp({
-    required String name,
-    required EmailAddress email,
-    required String password,
-  }) => throw UnimplementedError();
 }
 
 class _Teams implements TeamRepository {
   @override
   Future<TeamId> currentTeamId() async => const TeamId('team');
-  @override
-  Future<void> addCurrentTeamMember(String identifier) async {}
-  @override
-  Future<void> removeCurrentTeamMember(String uid) async {}
-  @override
-  Future<void> updateCurrentTeamName(String name) async {}
-  @override
-  Stream<TeamId> watchCurrentTeamId() => const Stream.empty();
-  @override
-  Stream<TeamWorkspace> watchCurrentTeam() => const Stream.empty();
-  @override
-  Stream<List<TeamMember>> watchCurrentTeamMembers() => const Stream.empty();
 }

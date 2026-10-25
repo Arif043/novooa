@@ -36,4 +36,4 @@ solange noch ein Lauf derselben Aufgabe aktiv ist.
 - [Zeitplan-Wiederholungsarten](./zeitplan-wiederholungsarten.md) — Aufbau von `config`
 - [Ereignisziel eines Auslösers](./ausloeser-ereignisziel.md) — Aufbau von `eventConfig`
 - [Materialisierte nächste Ausführung](./naechste-ausfuehrung-materialisiert.md) — warum `nextRunAt` gespeichert wird
-- [Auslöser in der Standalone-Datenbank](./ausloeser-standalone-aufgabenbezug.md)
+- [Auslöser in der Datenbank der Runtime](./ausloeser-standalone-aufgabenbezug.md)

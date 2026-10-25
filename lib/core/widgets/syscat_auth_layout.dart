@@ -6,9 +6,8 @@ import '../theme/syscat_theme.dart';
 import 'syscat_background.dart';
 
 /// Gemeinsamer Rahmen der Anmelde- und Einrichtungsseiten: orange/weißer
-/// Blur-Hintergrund, darauf eine zentrierte Karte mit Logo. Die Cloud-
-/// Anmeldung und die Runtime-Einrichtung (Adresse, Lizenz, Passwort) teilen
-/// ihn, damit beide Wege gleich aussehen.
+/// Blur-Hintergrund, darauf eine zentrierte Karte mit Logo. Alle Schritte
+/// der Runtime-Einrichtung (Adresse, Lizenz, Konto, Anmeldung) teilen ihn.
 class SyscatAuthLayout extends StatelessWidget {
   const SyscatAuthLayout({
     super.key,
@@ -18,7 +17,7 @@ class SyscatAuthLayout extends StatelessWidget {
 
   final Widget child;
 
-  /// Breite der Cloud-Anmeldung.
+  /// Breite der Anmeldekarte.
   static const double defaultCardWidth = 416;
 
   /// Breite der Runtime-Einrichtung: Die 16 quadratischen Felder des
@@ -77,7 +76,7 @@ class _AuthCard extends StatelessWidget {
                 label: 'novooa',
                 image: true,
                 child: ExcludeSemantics(
-                  // Auf breiteren Karten so groß wie in der Cloud-Anmeldung.
+                  // Auf breiteren Karten so groß wie auf der Standardkarte.
                   child: Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(

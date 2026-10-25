@@ -11,16 +11,8 @@ Gehört zu: [Aktivitäten](../index/aktivitaeten.md)
   [Ausführung der Teamarbeit](./teamwork-ausfuehrung.md)).
 - Abschluss `succeeded` oder `failed`, außer der Run wartet auf Freigabe.
 
-Cloud:
-
-```text
-teams/{teamId}/taskRuns/{runId}
-teams/{teamId}/activities/{activityId}
-```
-
-Der Client liest über `FirestoreTaskActivityRepository` und
-`FirestoreTaskRunRepository`; `teamId` über `users/{uid}.teamId`, damit die
-Tabs ohne aktive Backend-Wartezeit rendern. Domain-Modell: `TaskActivity`.
+Domain-Modell: `TaskActivity`; gespeichert in SQLite, siehe
+[Aktivitäten über den Run (0014)](./sqlite-aktivitaeten-normalisiert.md).
 
 Wartende Runs (`waitingForApproval`) tragen für die Interaktions-UI:
 
@@ -29,8 +21,6 @@ interaction        # Art und Definition: Freigabe, Formular oder Medienaufnahme
 reviewOutput       # editierbarer Output des vorherigen Bausteins
 resumeState        # serialisierter Zwischenzustand
 ```
-
-Standalone: siehe [Aktivitäten über den Run (0014)](./sqlite-aktivitaeten-normalisiert.md).
 
 ## Siehe auch
 

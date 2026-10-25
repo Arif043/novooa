@@ -46,7 +46,7 @@ export class MemoryMailConnectorRepository {
     return {
       connector: {
         id: "connector-1", teamId: "team-1", createdByUid: "user-1", provider: "microsoftGraph",
-        deliveryTarget: "cloud", runtimeLicenseId: null, emailAddress: "team@example.com",
+        runtimeLicenseId: "lizenz-1", emailAddress: "team@example.com",
         displayName: "Team", status: this.status, subscriptionId: this.subscription.id,
         subscriptionExpiresAt: this.subscription.expiresAt, createdAt: new Date(), updatedAt: new Date(),
       },

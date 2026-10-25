@@ -2,8 +2,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/node_field_key.dart';
 import 'package:syscat2/features/task_builder/presentation/agent/task_builder_cursor_targets.dart';
-import 'package:syscat2/core/runtime/employees_availability.dart';
-import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -144,17 +142,15 @@ class _PromptWidgetState extends State<PromptWidget> {
             onAttach: _attachKnowledge,
             onDetach: _detachKnowledge,
           ),
-          if ((skillsAvailable() || employeesAvailable())) ...[
-            const Divider(height: AppSpacing.lg * 2),
-            PromptResourceSelection(
-              employeeId: config.employeeId,
-              skillAttachments: config.skillAttachments,
-              onAttachSkill: _attachSkill,
-              onDetachSkill: _detachSkill,
-              onAssignEmployee: _assignEmployee,
-              onUnassignEmployee: _unassignEmployee,
-            ),
-          ],
+          const Divider(height: AppSpacing.lg * 2),
+          PromptResourceSelection(
+            employeeId: config.employeeId,
+            skillAttachments: config.skillAttachments,
+            onAttachSkill: _attachSkill,
+            onDetachSkill: _detachSkill,
+            onAssignEmployee: _assignEmployee,
+            onUnassignEmployee: _unassignEmployee,
+          ),
         ],
       ),
     );

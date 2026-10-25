@@ -1,6 +1,6 @@
 # Fähigkeiten
 
-> Fähigkeiten (Skills nach agentskills.io) sind wiederverwendbare Anweisungen mit Progressive Disclosure, die an Prompt-Bausteine gehängt werden; verfügbar in Standalone.
+> Fähigkeiten (Skills nach agentskills.io) sind wiederverwendbare Anweisungen mit Progressive Disclosure, die an Prompt-Bausteine gehängt werden.
 
 - [Skills-Ordner](../notes/skills-ordner.md)
 - [Skill-Format (agentskills.io)](../notes/skill-format.md)
@@ -14,8 +14,6 @@
 
 ## Offene Punkte
 
-- Cloud-Variante (Firebase Storage statt Ordner) und Migration vorhandener
-  Cloud-Skills.
 - Updates importierter Skills (Vergleich mit dem `hash` von skills.sh) und
   Herkunftsangabe je Skill.
 

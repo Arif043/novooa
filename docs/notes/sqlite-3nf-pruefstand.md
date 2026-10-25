@@ -61,4 +61,4 @@ von der Normalform prüfen.
 ## Siehe auch
 
 - [SQLite-Normalisierungsschritte](./sqlite-normalisierungsschritte.md)
-- [SQLite und Firebase: fünf Regeln](./sqlite-und-firebase-regeln.md)
+- [Runtime-Schichten](./runtime-schichten.md)

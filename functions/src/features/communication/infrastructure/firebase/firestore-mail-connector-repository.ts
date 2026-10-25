@@ -60,9 +60,7 @@ export class FirestoreMailConnectorRepository implements MailConnectorRepository
     const snapshot = await getDatabase().collection("teams").doc(input.teamId)
       .collection("mailConnectors")
       .where("runtimeLicenseId", "==", input.runtimeLicenseId).get();
-    return snapshot.docs
-      .map((document) => connectorFrom(document.data(), document.id))
-      .filter((connector) => connector.deliveryTarget === "localRuntime");
+    return snapshot.docs.map((document) => connectorFrom(document.data(), document.id));
   }
 
   async findConnectorByEmailAddress(input: {teamId: string; emailAddress: string}) {
@@ -147,9 +145,7 @@ export class FirestoreMailConnectorRepository implements MailConnectorRepository
   }
 }
 
-/** Nur Postfächer einer lokalen Runtime haben jemanden, der die Änderung wissen muss. */
 async function signalLocalRuntime(connector: MailConnector): Promise<void> {
-  if (connector.deliveryTarget !== "localRuntime" || connector.runtimeLicenseId === null) return;
   await signalRuntimeConnectorsChanged(connector.runtimeLicenseId);
 }
 

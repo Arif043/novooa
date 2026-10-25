@@ -2,7 +2,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syscat2/core/runtime/connections_availability.dart';
 import 'package:syscat2/core/theme/app_spacing.dart';
 import 'package:syscat2/core/theme/syscat_theme.dart';
 import 'package:syscat2/features/connections/domain/entities/connection.dart';
@@ -29,9 +28,7 @@ class HttpRequestWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final connections = connectionsAvailable()
-        ? context.watch<ConnectionsCubit>().state.connections
-        : const <Connection>[];
+    final connections = context.watch<ConnectionsCubit>().state.connections;
     final suggestions = TemplateExpressionScope.suggestionsOf(context);
     final config = _config;
     return Container(

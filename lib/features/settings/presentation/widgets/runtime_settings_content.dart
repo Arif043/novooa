@@ -45,7 +45,7 @@ List<SettingsTabContribution> runtimeSettingsTabs({required bool isAdmin}) => [
       labelKey: LocaleKeys.settings_tabs_language_models,
       builder: (_) => const SingleChildScrollView(
         padding: EdgeInsets.all(AppSpacing.lg),
-        child: AiModelSettingsTab(scrollable: false, isStandalone: true),
+        child: AiModelSettingsTab(scrollable: false),
       ),
     ),
     SettingsTabContribution(
@@ -90,7 +90,7 @@ class _GeneralTab extends StatelessWidget {
         const SizedBox(height: AppSpacing.lg),
         const _SessionsSection(),
         const SizedBox(height: AppSpacing.lg),
-        const PasswordSettingsSection(isStandalone: true),
+        const PasswordSettingsSection(),
         if (isAdmin) ...[
           const SizedBox(height: AppSpacing.lg),
           const FileVersionLimitSection(),

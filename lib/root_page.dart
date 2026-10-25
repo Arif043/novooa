@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cupertino_sidemenu/cupertino_sidemenu.dart';
@@ -6,13 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'core/di/service_locator.dart';
 import 'core/runtime/runtime_connection_cubit.dart';
 import 'root_tab.dart';
+import 'features/runtime_users/presentation/cubits/current_runtime_user_cubit.dart';
 import 'core/widgets/root_center_page.dart';
 import 'core/widgets/root_navigation.dart';
 import 'core/widgets/root_shell_scope.dart';
 import 'core/widgets/root_side_menu.dart';
 import 'core/widgets/syscat_background.dart';
-import 'features/auth/presentation/cubits/auth_session_cubit.dart';
-import 'features/auth/presentation/cubits/auth_session_state.dart';
 import 'features/notifications/presentation/cubits/app_notifications_cubit.dart';
 import 'features/notifications/presentation/widgets/notification_side_drawer.dart';
 import 'features/licensing/presentation/cubits/runtime_license_cubit.dart';
@@ -20,16 +18,10 @@ import 'features/licensing/presentation/cubits/runtime_license_state.dart';
 import 'features/licensing/presentation/pages/runtime_activation_page.dart';
 
 class RootPage extends StatefulWidget {
-  const RootPage({
-    super.key,
-    required this.location,
-    required this.child,
-    this.isStandalone = false,
-  });
+  const RootPage({super.key, required this.location, required this.child});
 
   final String location;
   final Widget child;
-  final bool isStandalone;
 
   @override
   State<RootPage> createState() => _RootPageState();
@@ -51,36 +43,23 @@ class _RootPageState extends State<RootPage> {
     List<RootTab> tabs,
     int selectedTabIndex,
   ) {
-    final menu = RootSideMenu(
-      tabs: tabs,
-      selectedIndex: selectedTabIndex,
-      onSelected: (index) => _selectTab(tabs, index),
-      showCurrentUserProfile: !widget.isStandalone,
-      onSignOut: widget.isStandalone
-          ? () => context.read<RuntimeConnectionCubit>().signOut()
-          : () => context.read<AuthSessionCubit>().signOut(),
-    );
-    if (widget.isStandalone) return menu;
-    return BlocListener<AuthSessionCubit, AuthSessionState>(
-      listenWhen: _isNewSignOutFailure,
-      listener: _showSignOutFailure,
-      child: menu,
+    return BlocBuilder<CurrentRuntimeUserCubit, CurrentRuntimeUserState>(
+      builder: (context, state) => RootSideMenu(
+        tabs: tabs,
+        selectedIndex: selectedTabIndex,
+        onSelected: (index) => _selectTab(tabs, index),
+        currentUserName: _greetingName(state),
+        onSignOut: () => context.read<RuntimeConnectionCubit>().signOut(),
+      ),
     );
   }
 
-  bool _isNewSignOutFailure(
-    AuthSessionState previous,
-    AuthSessionState current,
-  ) {
-    return current.status == AuthSessionStatus.failure &&
-        previous.message != current.message;
-  }
-
-  void _showSignOutFailure(BuildContext context, AuthSessionState state) {
-    final message = state.message ?? 'Abmelden fehlgeschlagen.';
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+  String? _greetingName(CurrentRuntimeUserState state) {
+    return switch (state) {
+      CurrentRuntimeUserLoaded(:final user) =>
+        user.displayName.trim().isEmpty ? user.loginName : user.displayName,
+      CurrentRuntimeUserLoading() || CurrentRuntimeUserUnavailable() => null,
+    };
   }
 
   @override
@@ -92,11 +71,6 @@ class _RootPageState extends State<RootPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isStandalone) return _activationGatedContent();
-    return _shell(widget.child);
-  }
-
-  Widget _activationGatedContent() {
     return BlocBuilder<RuntimeLicenseCubit, RuntimeLicenseCubitState>(
       builder: (context, state) {
         if (state is RuntimeLicenseActive) return _shell(widget.child);
@@ -106,15 +80,9 @@ class _RootPageState extends State<RootPage> {
   }
 
   Widget _shell(Widget content) {
-    final tabs = rootTabs(isStandalone: widget.isStandalone);
+    final tabs = rootTabs();
     final selectedTabIndex = _selectedTabIndex(tabs);
     final selectedTab = tabs[selectedTabIndex];
-    final assistantContext = assistantContextForRootTab(
-      selectedTab: selectedTab,
-      location: widget.location,
-      isStandalone: widget.isStandalone,
-      languageCode: context.locale.languageCode,
-    );
     final usesTaskBuilderSideRail = widget.location.startsWith(
       '/tasks/builder',
     );
@@ -134,7 +102,6 @@ class _RootPageState extends State<RootPage> {
               ? NotificationSideDrawer(onClose: _closeNotificationDrawer)
               : null,
           centerPage: RootCenterPage(
-            assistantContext: assistantContext,
             usesTaskBuilderSideRail: usesTaskBuilderSideRail,
             usesKnowledgeBaseSideRail: usesKnowledgeBaseSideRail,
             content: content,

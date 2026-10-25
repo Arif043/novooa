@@ -1,6 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../root_tab.dart';
+import '../localization/locale_keys.g.dart';
 import '../theme/app_spacing.dart';
 import 'root_side_menu_sections.dart';
 
@@ -10,20 +12,17 @@ class RootSideMenu extends StatelessWidget {
     required this.tabs,
     required this.selectedIndex,
     required this.onSelected,
-    this.showCurrentUserProfile = true,
+    this.currentUserName,
     this.onSignOut,
   });
 
   final List<RootTab> tabs;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
-  final bool showCurrentUserProfile;
+  final String? currentUserName;
 
-  /// `null` blendet den Menüpunkt „Abmelden“ aus. Was Abmelden konkret
-  /// bedeutet, entscheidet der Aufrufer — z.B. `AuthSessionCubit.signOut()`
-  /// in der Cloud-Variante oder `RuntimeConnectionCubit.signOut()` im
-  /// Standalone-Betrieb (siehe `RootPage`). `RootSideMenu` kennt bewusst
-  /// keine dieser Fachlichkeiten.
+  /// `null` blendet den Menüpunkt „Abmelden“ aus. Was Abmelden bedeutet,
+  /// entscheidet der Aufrufer (siehe `RootPage`).
   final VoidCallback? onSignOut;
 
   @override
@@ -43,7 +42,7 @@ class RootSideMenu extends StatelessWidget {
             tabs: tabs,
             selectedIndex: selectedIndex,
             onSelected: onSelected,
-            showCurrentUserProfile: showCurrentUserProfile,
+            currentUserName: currentUserName,
             onSignOut: onSignOut,
           ),
         ),
@@ -57,14 +56,14 @@ class _SideMenuContent extends StatelessWidget {
     required this.tabs,
     required this.selectedIndex,
     required this.onSelected,
-    required this.showCurrentUserProfile,
+    required this.currentUserName,
     required this.onSignOut,
   });
 
   final List<RootTab> tabs;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
-  final bool showCurrentUserProfile;
+  final String? currentUserName;
   final VoidCallback? onSignOut;
 
   @override
@@ -73,7 +72,7 @@ class _SideMenuContent extends StatelessWidget {
     final onSignOut = this.onSignOut;
     return ListView(
       children: [
-        SideMenuHeader(showCurrentUserProfile: showCurrentUserProfile),
+        SideMenuHeader(currentUserName: currentUserName),
         const SizedBox(height: AppSpacing.md),
         SideMenuTabList(
           tabs: tabs,
@@ -90,7 +89,7 @@ class _SideMenuContent extends StatelessWidget {
               backgroundColor: colorScheme.error,
               foregroundColor: colorScheme.onError,
             ),
-            title: const Text('Abmelden'),
+            title: Text(LocaleKeys.navigation_sign_out.tr()),
             onTap: onSignOut,
           ),
       ],

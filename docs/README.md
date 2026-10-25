@@ -10,7 +10,6 @@ Notizen in [`notes/`](./notes/), geordnet über Inhaltsverzeichnisse in
 | Thema | Verzeichnis |
 | --- | --- |
 | Architektur | [`index/architektur.md`](./index/architektur.md) |
-| Betriebsvarianten | [`index/betriebsvarianten.md`](./index/betriebsvarianten.md) |
 | Lokale Runtime | [`index/lokale-runtime.md`](./index/lokale-runtime.md) |
 | Betrieb und Deployment | [`index/betrieb-und-deployment.md`](./index/betrieb-und-deployment.md) |
 | Produkt | [`index/produkt.md`](./index/produkt.md) |

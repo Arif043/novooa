@@ -42,7 +42,7 @@ Gehört zu: [Mitarbeiter](../index/mitarbeiter.md) · [Aufgabe](../index/aufgabe
 - **Gespräch** (`teamwork-transcript.ts`):
   - `TeamworkTranscript` schreibt jede Protokollzeile und sammelt dazu einen ungekürzten Eintrag (`TeamworkConversationEntry`, Domain): `task` mit erwartetem Ergebnis und Grenzen, `answer` mit Dauer, `failure` (diese drei mit `memberId` und `memberName`; die ID bestimmt die Farbe des Mitarbeiters in der App), `reviewPassed`/`reviewRejected` mit Runde und Befund, `result` mit dem Ergebnis als JSON.
   - Der Baustein legt das Transkript an und hängt das Gespräch an sein Ergebnis (`NodeExecutionResult.conversation`) oder, wenn er scheitert, an die Failure (`NodeFailure.withConversation` → `FailedNode.conversation`).
-  - Gespeichert wird es an der Aktivität: Standalone in `activities.conversation_json` (Migration 0024, geliefert als `conversation` in `GET /v1/activities`), Cloud als Feld `conversation`. Angezeigt wird es über die [Aktivitäten-Seite](./aktivitaeten-seite.md).
+  - Gespeichert wird es an der Aktivität in `activities.conversation_json` (Migration 0024, geliefert als `conversation` in `GET /v1/activities`). Angezeigt wird es über die [Aktivitäten-Seite](./aktivitaeten-seite.md).
 
 ## Siehe auch
 

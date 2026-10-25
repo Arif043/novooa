@@ -28,9 +28,9 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
   bevor es den Lauf als gescheitert festhält.
 - `TaskRunFailure` bleibt Eingabefehlern der HTTP-Routen vorbehalten.
 - Der Code einer `NodeFailure` wird `FailedNode.failureCode`; gespeichert in
-  `activities.failure_code` bzw. `failureCode` (Firestore). Ihre Felder
-  (`details`) landen in `FailedNode.failureDetails`, gespeichert in
-  `activities.failure_details_json` bzw. `failureDetails`. Der Client
+  `activities.failure_code`. Ihre Felder (`details`) landen in
+  `FailedNode.failureDetails`, gespeichert in
+  `activities.failure_details_json`. Der Client
   übersetzt bekannte Codes mit diesen Feldern und zeigt den Text der Runtime
   als technische Details
   ([Fehlerschichtung](./fehlerschichtung-modellaufruf.md)).

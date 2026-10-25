@@ -1,6 +1,6 @@
 # Machine-Learning-Einstellungen
 
-> Der Tab „Machine Learning“ (nur Standalone) zeigt gecachte und eigene Modelle; den Katalog selbst durchsucht man im Aufgabenstudio.
+> Der Tab „Machine Learning“ zeigt gecachte und eigene Modelle; den Katalog selbst durchsucht man im Aufgabenstudio.
 
 Gehört zu: [ML-Modelle](../index/ml-modelle.md)
 

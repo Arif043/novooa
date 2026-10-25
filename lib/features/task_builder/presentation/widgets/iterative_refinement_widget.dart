@@ -1,7 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:syscat2/core/localization/locale_keys.g.dart';
-import 'package:syscat2/core/runtime/employees_availability.dart';
-import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -94,17 +92,15 @@ class _IterativeRefinementWidgetState extends State<IterativeRefinementWidget> {
             LocaleKeys.ui_verfeinert_den_angegebenen_entwurf.tr(),
             style: SyscatTheme.taskBodySmall,
           ),
-          if (skillsAvailable() || employeesAvailable()) ...[
-            const SizedBox(height: AppSpacing.md),
-            PromptResourceSelection(
-              employeeId: _config.employeeId,
-              skillAttachments: _config.skillAttachments,
-              onAttachSkill: _attachSkill,
-              onDetachSkill: _detachSkill,
-              onAssignEmployee: _assignEmployee,
-              onUnassignEmployee: _unassignEmployee,
-            ),
-          ],
+          const SizedBox(height: AppSpacing.md),
+          PromptResourceSelection(
+            employeeId: _config.employeeId,
+            skillAttachments: _config.skillAttachments,
+            onAttachSkill: _attachSkill,
+            onDetachSkill: _detachSkill,
+            onAssignEmployee: _assignEmployee,
+            onUnassignEmployee: _unassignEmployee,
+          ),
         ],
       ),
     );

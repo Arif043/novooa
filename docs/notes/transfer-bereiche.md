@@ -1,11 +1,10 @@
 # Bereiche von Import/Export
 
-> Standalone sichert und überträgt Dateien, Daten, Wissensbasis, Fähigkeiten, Mitarbeiter und Aufgaben als ZIP; Auslöser, Läufe und Zugangsdaten sind nie dabei.
+> Die Runtime sichert und überträgt Dateien, Daten, Wissensbasis, Fähigkeiten, Mitarbeiter und Aufgaben als ZIP; Auslöser, Läufe und Zugangsdaten sind nie dabei.
 
 Gehört zu: [Import/Export](../index/import-export.md)
 
-Tab **„Import/Export“** in den Runtime-Einstellungen; die Cloud hat das
-Feature nicht.
+Tab **„Import/Export“** in den Runtime-Einstellungen.
 
 | Bereich | Inhalt | Anzahl im Manifest |
 | --- | --- | --- |

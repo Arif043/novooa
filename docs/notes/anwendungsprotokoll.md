@@ -4,7 +4,7 @@
 
 Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
-- Standalone: `ApplicationLogger` speichert strukturierte Info- und
+- `ApplicationLogger` speichert strukturierte Info- und
   Fehlerereignisse in `application_logs` und gibt sie zusätzlich als JSON auf
   Docker-Stdout aus.
 - Der native Client sendet eigene Ereignisse per
@@ -12,7 +12,8 @@ Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
   markiert die Quelle als `client`.
 - `GET /v1/application-logs` liefert die jüngsten Einträge für
   **Aktivitäten → Protokoll**.
-- Cloud: derselbe Port über `FirebaseApplicationLogger` auf Cloud Logging.
+- Die Firebase-Relays nutzen denselben Port über `FirebaseApplicationLogger`
+  auf Cloud Logging.
 
 ## Siehe auch
 

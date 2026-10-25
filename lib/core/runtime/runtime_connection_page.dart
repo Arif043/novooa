@@ -12,8 +12,8 @@ import 'runtime_invitation_form.dart';
 import 'runtime_login_form.dart';
 import 'runtime_recovery_form.dart';
 
-/// Verbindung, Lizenz, erstes Konto und Anmeldung einer Runtime — im
-/// selben Rahmen wie die Cloud-Anmeldung ([SyscatAuthLayout]).
+/// Verbindung, Lizenz, erstes Konto und Anmeldung einer Runtime im Rahmen
+/// von [SyscatAuthLayout].
 class RuntimeConnectionPage extends StatelessWidget {
   const RuntimeConnectionPage({super.key});
 

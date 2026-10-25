@@ -10,17 +10,13 @@ import 'password_settings_form.dart';
 import 'settings_section.dart';
 
 class PasswordSettingsSection extends StatelessWidget {
-  const PasswordSettingsSection({super.key, this.isStandalone = false});
-
-  final bool isStandalone;
+  const PasswordSettingsSection({super.key});
 
   @override
   Widget build(BuildContext context) => SettingsSection(
     icon: Icons.lock_outline,
     title: 'Passwort neu setzen',
-    description: isStandalone
-        ? LocaleKeys.runtime_users_own_password_description.tr()
-        : 'Lege ein neues Passwort für dein Konto fest.',
+    description: LocaleKeys.runtime_users_own_password_description.tr(),
     child: BlocProvider(
       create: (_) => serviceLocator<PasswordSettingsCubit>(),
       child: const PasswordSettingsForm(),

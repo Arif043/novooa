@@ -8,18 +8,14 @@ Gehört zu: [KI-Agent](../index/ki-agent.md)
   plus URL Context. Der Team-Scope kommt serverseitig aus dem Laufzeitkontext
   (`GetCurrentTeamId`); teamfremde IDs werden nicht angenommen.
 - Tool-Definitionen und HTTP/HTML-Adapter liegen unter
-  `knowledge_base/infrastructure/genkit`; Cloud verdrahtet Firestore und
-  Firebase Auth, die Runtime SQLite und lokale Identität.
-- Der fachliche Vertrag `KnowledgeBaseAssistant` ist laufzeitneutral; der
-  Firebase-Callable verdrahtet nur Auth, Eingabeprüfung, Fehlerprotokoll und
-  Firestore.
+  `knowledge_base/infrastructure/genkit`; die Runtime verdrahtet SQLite und
+  ihre Sitzungsidentität.
+- Der fachliche Vertrag `KnowledgeBaseAssistant` ist laufzeitneutral.
 - Notizinhalte sind untrusted Kontext und können die Systemanweisungen nicht
   überschreiben; deshalb hat er keine schreibenden Tools.
 - Vorschläge erscheinen als Plan; nach **Ausführen** liefert jede Änderung
   eine Rückgängig-Aktion: Erstellen → löschen, Bearbeiten → vorherigen Stand
   wiederherstellen, Löschen → mit derselben ID wiederherstellen.
-- Cloud Logging protokolliert vorgeschlagene Commands (UID, Aktionstyp,
-  Label, Titel, ggf. Notiz-ID), nie Chattext oder Notizinhalte.
 
 ## Siehe auch
 

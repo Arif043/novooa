@@ -1,17 +1,17 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:multiple_result/multiple_result.dart';
-import 'package:syscat2/core/di/service_locator.dart';
-import 'package:syscat2/features/user/domain/usecases/get_current_user_profile.dart';
 
+import '../../generated/assets.dart';
 import '../../root_tab.dart';
+import '../localization/locale_keys.g.dart';
 import '../theme/app_spacing.dart';
 import '../theme/syscat_theme.dart';
 
 class SideMenuHeader extends StatelessWidget {
-  const SideMenuHeader({super.key, this.showCurrentUserProfile = true});
+  const SideMenuHeader({super.key, this.currentUserName});
 
-  final bool showCurrentUserProfile;
+  final String? currentUserName;
 
   @override
   Widget build(BuildContext context) {
@@ -22,41 +22,18 @@ class SideMenuHeader extends StatelessWidget {
         AppSpacing.sm,
         AppSpacing.xs,
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _BrandMark(),
-          const SizedBox(width: AppSpacing.md),
-          if (showCurrentUserProfile) const _CurrentUserGreeting(),
+          Image.asset(
+            Assets.iconsFullv2Transparent,
+            width: 180,
+            semanticLabel: 'novooa',
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _UserGreeting(displayName: currentUserName),
         ],
       ),
-    );
-  }
-}
-
-class _CurrentUserGreeting extends StatefulWidget {
-  const _CurrentUserGreeting();
-
-  @override
-  State<_CurrentUserGreeting> createState() => _CurrentUserGreetingState();
-}
-
-class _CurrentUserGreetingState extends State<_CurrentUserGreeting> {
-  late final Future _profileFuture = serviceLocator<GetCurrentUserProfile>()
-      .call();
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _profileFuture,
-      builder: (context, snapshot) {
-        if (snapshot.data case Success(success: final user)) {
-          return Text(
-            'Hey ${user.displayName}',
-            style: Theme.of(context).textTheme.titleLarge,
-          );
-        }
-        return const SizedBox.shrink();
-      },
     );
   }
 }
@@ -90,32 +67,19 @@ class SideMenuTabList extends StatelessWidget {
   }
 }
 
-class _BrandMark extends StatelessWidget {
-  const _BrandMark();
+class _UserGreeting extends StatelessWidget {
+  const _UserGreeting({this.displayName});
+
+  final String? displayName;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: SyscatTheme.activeNavigationGradient,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: SyscatTheme.primaryOrange.withValues(alpha: 0.35),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: const SizedBox(
-        width: 42,
-        height: 42,
-        child: Icon(
-          CupertinoIcons.arrow_left,
-          color: SyscatTheme.iconActive,
-          size: 30,
-        ),
-      ),
+    final name = displayName?.trim() ?? '';
+    return Text(
+      name.isEmpty
+          ? LocaleKeys.navigation_greeting.tr()
+          : LocaleKeys.navigation_greeting_named.tr(namedArgs: {'name': name}),
+      style: Theme.of(context).textTheme.titleMedium,
     );
   }
 }

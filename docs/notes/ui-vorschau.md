@@ -1,6 +1,6 @@
 # UI-Vorschau
 
-> `lib/main_preview.dart` startet die Standalone-Oberfläche ohne Runtime, Firebase, Lizenz oder Anmeldung, mit denselben Repositories über einen In-Memory-Transport.
+> `lib/main_preview.dart` startet die Oberfläche ohne Runtime, Firebase, Lizenz oder Anmeldung, mit denselben Repositories über einen In-Memory-Transport.
 
 Gehört zu: [Architektur](../index/architektur.md)
 
@@ -9,7 +9,7 @@ Gehört zu: [Architektur](../index/architektur.md)
 | Terminal | `flutter run -d chrome -t lib/main_preview.dart` |
 | VS Code | **novooa UI-Vorschau (Chrome)** oder **(macOS)** in `.vscode/launch.json` |
 
-Alle Standalone-Repositories sprechen nur `WorkspaceApiClient` (JSON),
+Alle Repositories sprechen nur `WorkspaceApiClient` (JSON),
 `WorkspaceBinaryClient` und `WorkspaceRealtimeChannel`. Die Vorschau nutzt
 **denselben DI-Container** und tauscht nur diese Transportwege:
 

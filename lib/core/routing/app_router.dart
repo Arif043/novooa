@@ -1,12 +1,6 @@
-import 'package:syscat2/core/runtime/employees_availability.dart';
-import 'package:syscat2/core/runtime/skills_availability.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:syscat2/features/auth/presentation/cubits/auth_session_cubit.dart';
-import 'package:syscat2/features/auth/presentation/cubits/auth_session_state.dart';
-import 'package:syscat2/features/auth/presentation/pages/auth_page.dart';
 import 'package:syscat2/features/activity/presentation/pages/activity_page.dart';
-import 'package:syscat2/features/notifications/infrastructure/datasources/push_click_navigation_policy.dart';
 import 'package:syscat2/features/files/presentation/pages/files_page.dart';
 import 'package:syscat2/features/data/presentation/pages/database_page.dart';
 import 'package:syscat2/features/employees/presentation/pages/employees_page.dart';
@@ -21,7 +15,6 @@ import 'package:syscat2/root_page.dart';
 
 class AppRouter {
   static const String home = '/tasks';
-  static const String auth = '/auth';
   static const String plans = '/plans';
   static const String schedule = '/schedule';
   static const String activity = '/activity';
@@ -32,26 +25,13 @@ class AppRouter {
   static const String employees = '/employees';
   static const String settings = '/settings';
 
-  AppRouter({required this.sessionCubit, this.isStandalone = false});
-
-  AppRouter.standalone() : sessionCubit = null, isStandalone = true;
-
-  final AuthSessionCubit? sessionCubit;
-  final bool isStandalone;
-
   late final GoRouter router = GoRouter(
     initialLocation: home,
-    refreshListenable: sessionCubit,
-    redirect: _redirect,
     routes: [
       GoRoute(path: '/', redirect: (_, _) => home),
       ShellRoute(
         builder: (context, state, child) {
-          return RootPage(
-            location: state.uri.path,
-            isStandalone: isStandalone,
-            child: child,
-          );
+          return RootPage(location: state.uri.path, child: child);
         },
         routes: [
           GoRoute(
@@ -94,7 +74,6 @@ class AppRouter {
               ActivityPage(
                 initialRunId: state.uri.queryParameters['runId'],
                 notificationOpenId: state.uri.queryParameters['open'],
-                isStandalone: isStandalone,
               ),
             ),
           ),
@@ -105,7 +84,6 @@ class AppRouter {
           ),
           GoRoute(
             path: database,
-            redirect: (context, state) => isStandalone ? null : home,
             pageBuilder: (context, state) =>
                 _shellPage(state, const DatabasePage()),
           ),
@@ -116,28 +94,20 @@ class AppRouter {
           ),
           GoRoute(
             path: skills,
-            redirect: (context, state) => skillsAvailable() ? null : home,
             pageBuilder: (context, state) =>
                 _shellPage(state, const SkillsPage()),
           ),
           GoRoute(
             path: employees,
-            redirect: (context, state) => employeesAvailable() ? null : home,
             pageBuilder: (context, state) =>
                 _shellPage(state, const EmployeesPage()),
           ),
           GoRoute(
             path: settings,
             pageBuilder: (context, state) =>
-                _shellPage(state, SettingsPage(isStandalone: isStandalone)),
+                _shellPage(state, const SettingsPage()),
           ),
         ],
-      ),
-      GoRoute(
-        path: auth,
-        builder: (context, state) {
-          return const AuthPage();
-        },
       ),
     ],
   );
@@ -146,30 +116,5 @@ class AppRouter {
 
   NoTransitionPage<void> _shellPage(GoRouterState state, Widget child) {
     return NoTransitionPage<void>(key: state.pageKey, child: child);
-  }
-
-  String? _redirect(BuildContext context, GoRouterState state) {
-    if (sessionCubit == null) {
-      return state.matchedLocation == auth ? home : null;
-    }
-    final sessionState = sessionCubit!.state;
-    final isAuthRoute = state.matchedLocation == auth;
-    // Während der Firestore-Profil-Verify läuft, ist `currentUser` bewusst
-    // noch nicht sichtbar. Wir halten den Nutzer auf der aktuellen Route
-    // fest — wechselt der Verify auf Erfolg, feuert der Listener und wir
-    // routen dann zu `home`.
-    if (sessionState.status == AuthSessionStatus.verifying) return null;
-    final isSignedIn = sessionState.isSignedIn;
-    if (!isSignedIn) return isAuthRoute ? null : auth;
-    if (isAuthRoute) return home;
-    if (_isLegacyDesktopPushLink(state)) return home;
-    return null;
-  }
-
-  bool _isLegacyDesktopPushLink(GoRouterState state) {
-    return !shouldNavigateFromPushClick() &&
-        state.matchedLocation == activity &&
-        state.uri.queryParameters.containsKey('runId') &&
-        !state.uri.queryParameters.containsKey('open');
   }
 }

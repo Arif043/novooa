@@ -1,4 +1,4 @@
-# Auslöser in der Standalone-Datenbank
+# Auslöser in der Datenbank der Runtime
 
 > In SQLite gehört ein Auslöser über den Fremdschlüssel `task_id` zu seiner Aufgabe und damit zum Team.
 
@@ -19,8 +19,7 @@ per Kaskade weg. Die API meldet danach beide Ressourcen (`tasks` und
 gelöscht. Historische Läufe mit Titelsnapshots bleiben erhalten.
 
 Die Migration bricht bei verwaisten Aufgabenbezügen oder widersprüchlichen
-Teamzuordnungen vollständig ab. Der Firestore-Adapter behält sein eigenes
-Speichermodell.
+Teamzuordnungen vollständig ab.
 
 ## Siehe auch
 

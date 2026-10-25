@@ -2,7 +2,7 @@
 
 > Weil FCM keine Windows/Linux-SDKs hat, ist dort die installierte PWA mit Web Push der vorgesehene Weg, nicht eine native App mit eigenem WNS-Backend.
 
-Gehört zu: [Betriebsvarianten](../index/betriebsvarianten.md)
+Gehört zu: [Lokale Runtime](../index/lokale-runtime.md)
 
 - Push im Hintergrund, auch bei geschlossenem Client, ist für Freigaben
   zentral.
@@ -17,5 +17,4 @@ Gehört zu: [Betriebsvarianten](../index/betriebsvarianten.md)
 
 ## Siehe auch
 
-- [Fähigkeiten je Variante](./workspace-capabilities.md)
-- [Push-Benachrichtigungen in Standalone](./push-standalone.md)
+- [Push-Benachrichtigungen über das Relay](./push-standalone.md)

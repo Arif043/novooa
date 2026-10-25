@@ -31,9 +31,8 @@ Konfiguration wird gespeichert in: `~/.novooa-cli/config.json`
 ### 2. Flutter Client auf Windows bauen
 - Erfordert vorherige Konfiguration
 - Klont oder aktualisiert das Repository
-- Baut die Flutter Windows-App mit Dart-Defines:
-  - `NOVOOA_RUNTIME=standalone`
-  - `WORKSPACE_API_URL=http://<ip>:8090`
+- Baut die Flutter Windows-App mit dem Dart-Define
+  `WORKSPACE_API_URL=http://<ip>:8090`
 - Zeigt Pfad zur gebauten `.exe`
 
 ### 3. Lokale Runtime deployen

@@ -15,7 +15,7 @@ noch über novooa-Functions noch über die Runtime, sondern direkt in den
 ML-Dienst (`MODEL_STORE_URL` bzw. `NOVOOA_MODEL_STORE_URL`). Modellversionen
 sind unveränderlich.
 
-Eigene Modelle in Standalone nutzen dasselbe Layout unter dem Runtime-Root;
+Eigene Modelle der Runtime nutzen dasselbe Layout unter dem Runtime-Root;
 der Pfad ist nie Teil eines Katalogeintrags oder Workflow-Werts.
 
 ## Siehe auch

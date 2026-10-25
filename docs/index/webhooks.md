@@ -1,6 +1,6 @@
 # Webhooks
 
-> Externe Systeme starten Aufgaben, indem sie eine Adresse der Runtime aufrufen; das ist die eingehende Hälfte der Schicht für externe Systeme (Standalone).
+> Externe Systeme starten Aufgaben, indem sie eine Adresse der Runtime aufrufen; das ist die eingehende Hälfte der Schicht für externe Systeme.
 
 - [Webhook-Auslöser](../notes/webhook-ausloeser.md)
 - [Ablauf eines Webhook-Aufrufs](../notes/webhook-aufruf.md)

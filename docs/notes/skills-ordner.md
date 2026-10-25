@@ -24,8 +24,6 @@ Gehört zu: [Fähigkeiten](../index/faehigkeiten.md) · [Lokale Runtime](../inde
   keine Bearbeitung von außen.
 - Die Seite **Fähigkeiten** zeigt den Pfad (kopierbar) und „Neu einlesen“.
 - Realtime-Thema `skills`.
-- **Verfügbarkeit:** Standalone (`WorkspaceCapabilities.skills`); in der Cloud
-  aus, bis es dort einen Speicher gibt.
 
 ## Siehe auch
 

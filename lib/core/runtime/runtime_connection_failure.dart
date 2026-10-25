@@ -5,8 +5,8 @@
 /// das eigentliche Problem hat.
 ///
 /// Die Erkennung läuft bewusst über den Fehlertext statt über einen
-/// `dart:io`-Import: Diese Datei wird auch für die Cloud-Variante im Web
-/// kompiliert, wo `dart:io` nicht verfügbar ist. `toString()` erfasst dabei
+/// `dart:io`-Import: Diese Datei wird auch für das Web kompiliert, wo
+/// `dart:io` nicht verfügbar ist. `toString()` erfasst dabei
 /// zugleich in `WorkspaceConnectionException` eingepackte Ursachen.
 bool isCertificateFailure(Object error) {
   final text = error.toString();

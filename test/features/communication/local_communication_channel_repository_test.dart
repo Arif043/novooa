@@ -175,17 +175,4 @@ void main() {
 
     await expectLater(repository.beginMicrosoftConnection(), throwsStateError);
   });
-
-  test('WhatsApp, SMS und Testnachrichten gibt es lokal nicht', () async {
-    final repository = LocalCommunicationChannelRepository(
-      _FakeClient([]),
-      _FakeChannel(),
-    );
-
-    await expectLater(repository.deleteChannel('x'), throwsUnsupportedError);
-    await expectLater(
-      repository.dispatchFakeMessage('x'),
-      throwsUnsupportedError,
-    );
-  });
 }

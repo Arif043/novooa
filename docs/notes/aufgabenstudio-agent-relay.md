@@ -1,6 +1,6 @@
 # Relay des Aufgabenstudio-Agenten
 
-> `localRuntimeTaskBuilderRelay` lässt lokale Runtimes denselben Cloud-Agenten nutzen wie die App, nach Prüfung ihrer Lizenz.
+> `localRuntimeTaskBuilderRelay` führt den Aufgabenstudio-Agenten für Runtimes in Firebase aus, nach Prüfung ihrer Lizenz.
 
 Gehört zu: [KI-Agent](../index/ki-agent.md)
 

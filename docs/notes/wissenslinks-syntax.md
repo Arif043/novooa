@@ -14,7 +14,7 @@ Gehört zu: [Wissensbasis](../index/wissensbasis.md)
   aktuellen Aliase auf. Unbekannte Ziele ergeben keine ID, Mehrfachlinks
   werden zusammengefasst. Gleiche Titel sind erlaubt und können mehrere
   Notizen adressieren.
-- `outgoingLinks` entstehen im Client (Firestore, Bearbeitungsvorschau) und in
+- `outgoingLinks` entstehen in der Bearbeitungsvorschau des Clients und in
   SQLite beim Lesen (`knowledgeLinksFrom`, für API und Runs).
 
 ## Siehe auch

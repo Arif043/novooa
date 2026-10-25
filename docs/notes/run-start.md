@@ -4,17 +4,13 @@
 
 Gehört zu: [Aufgabe](../index/aufgabe.md)
 
-Cloud: `runTaskDefinitionFlow` authentifiziert, lädt
-`teams/{teamId}/tasks/{taskId}`, erzeugt den Run und stellt eine Cloud-Task
-ein.
+`POST /v1/task-runs` erzeugt den Run und reiht ihn in die
+[Task-Run-Warteschlange](./task-run-warteschlange.md) ein.
 
 ```ts
 input:  { taskId: string; context?: string }
 output: { runId: string; taskId: string; status: "queued" }
 ```
-
-Standalone: `POST /v1/task-runs`, eingereiht in die
-[Task-Run-Warteschlange](./task-run-warteschlange.md).
 
 Der Worker führt den Graphen topologisch aus; Hauptgraph, Bedingungszweige
 und eingebettete Graphen nutzen dieselbe Topologie. Die

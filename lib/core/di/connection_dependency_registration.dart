@@ -4,8 +4,8 @@ import 'package:syscat2/features/connections/domain/usecases/connection_use_case
 import 'package:syscat2/features/connections/presentation/cubits/connections_cubit.dart';
 import 'package:syscat2/features/teams/domain/usecases/get_current_team_id.dart';
 
-/// Use Cases und Cubit der Verbindungen — in beiden Betriebsvarianten gleich;
-/// nur das Repository unterscheidet sich und wird vorher registriert.
+/// Use Cases und Cubit der Verbindungen; das Repository wird vorher
+/// registriert.
 void registerConnectionDependencies(GetIt locator) {
   locator
     ..registerLazySingleton(
