@@ -20,7 +20,6 @@ class TaskRunMapper {
     return switch (value['kind']) {
       'approval' => ApprovalRequest(instruction),
       'dialogInput' => FormRequest(instruction, _fieldsFrom(value['fields'])),
-      'mediaInput' => UnsupportedRequest(instruction),
       _ => null,
     };
   }

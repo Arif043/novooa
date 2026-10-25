@@ -35,9 +35,9 @@ Katalog: `nodeFailures` in `functions/src/features/task_execution/domain/entitie
 - **Bleiben Exceptions:** Fehler der Infrastruktur-Ports (Dateiablage,
   Datensätze, Postfach, Modell, HTTP-Client, Script-Dienst nicht erreichbar).
   Der Runner macht daraus einen gescheiterten Baustein ohne Code. Ebenso
-  Invarianten (`mediaReferenceFor`) und die Prüfung von Formular- und
-  Bilddefinitionen (`validateDialogInputDefinition`,
-  `validateMediaInputDefinition`), die auch der Builder nutzt.
+  Invarianten (`mediaReferenceFor`) und die Prüfung von
+  Formulardefinitionen (`validateDialogInputDefinition`), die auch der
+  Builder nutzt.
 
 ## Siehe auch
 

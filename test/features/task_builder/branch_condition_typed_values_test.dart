@@ -19,7 +19,16 @@ void main() {
         'ok': 'Erfolgreich',
         'status': 'Status',
       }),
-      _node('bild', MediaInputNodeConfig.initial(), {'value': 'Bild'}),
+      _node(
+        'bild',
+        const DialogInputNodeConfig(
+          instruction: '',
+          fields: [
+            DialogInputField(name: 'beleg', type: DialogInputFieldType.image),
+          ],
+        ),
+        {'beleg': 'Bild'},
+      ),
       _node(
         'tabelle',
         const TableFromCollectionNodeConfig(collectionName: 'Kunden'),

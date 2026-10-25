@@ -47,9 +47,7 @@ function supportedGraph(nodes: readonly {primitive: string}[]): Result<void, Nod
 }
 
 function isPausingNode(node: {primitive: string}): boolean {
-  return node.primitive === "humanApproval" ||
-    node.primitive === "dialogInput" ||
-    node.primitive === "mediaInput";
+  return node.primitive === "humanApproval" || node.primitive === "dialogInput";
 }
 
 function graphFor(config: ForEachNodeConfig["graph"]): WorkflowGraph {

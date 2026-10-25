@@ -14,7 +14,6 @@ NodeOutputType primaryOutputTypeOf(NodeConfig config) {
   return switch (config) {
     PromptNodeConfig(outputType: PromptOutputType.image) =>
       NodeOutputType.media,
-    MediaInputNodeConfig() => NodeOutputType.media,
     TextToSpeechNodeConfig() => NodeOutputType.audio,
     SpeechToTextNodeConfig() => NodeOutputType.string,
     ModelInferenceNodeConfig() => NodeOutputType.json,
@@ -97,6 +96,7 @@ NodeOutputType dialogFieldOutputType(DialogInputFieldType type) {
     DialogInputFieldType.integer ||
     DialogInputFieldType.decimal => NodeOutputType.number,
     DialogInputFieldType.boolean => NodeOutputType.boolean,
+    DialogInputFieldType.image => NodeOutputType.media,
     _ => NodeOutputType.string,
   };
 }

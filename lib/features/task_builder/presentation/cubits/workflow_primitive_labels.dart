@@ -35,8 +35,6 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         LocaleKeys.task_builder_primitives_human_approval_label.tr(),
       WorkflowPrimitive.dialogInput =>
         LocaleKeys.task_builder_primitives_dialog_input_label.tr(),
-      WorkflowPrimitive.mediaInput =>
-        LocaleKeys.task_builder_primitives_media_input_label.tr(),
       WorkflowPrimitive.modelInference =>
         LocaleKeys.task_builder_primitives_model_inference_label.tr(),
       WorkflowPrimitive.textToSpeech =>
@@ -96,8 +94,6 @@ extension WorkflowPrimitiveLabels on WorkflowPrimitive {
         LocaleKeys.task_builder_primitives_human_approval_description.tr(),
       WorkflowPrimitive.dialogInput =>
         LocaleKeys.task_builder_primitives_dialog_input_description.tr(),
-      WorkflowPrimitive.mediaInput =>
-        LocaleKeys.task_builder_primitives_media_input_description.tr(),
       WorkflowPrimitive.modelInference =>
         LocaleKeys.task_builder_primitives_model_inference_description.tr(),
       WorkflowPrimitive.textToSpeech =>

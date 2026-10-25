@@ -2,7 +2,6 @@ import {createConditionalFlowNodeExecutor} from "../../../domain/executors/condi
 import {httpRequestNodeExecutor} from "../../../domain/executors/http-request-node-executor.js";
 import {humanApprovalNodeExecutor} from "../../../domain/executors/human-approval-node-executor.js";
 import {dialogInputNodeExecutor} from "../../../domain/executors/dialog-input-node-executor.js";
-import {mediaInputNodeExecutor} from "../../../domain/executors/media-input-node-executor.js";
 import {modelInferenceNodeExecutor} from "../../../domain/executors/model-inference-node-executor.js";
 import {
   speechToTextNodeExecutor,
@@ -101,7 +100,6 @@ export function createDefaultNodeExecutorRegistry(): NodeExecutorRegistry {
     .register(readWebhookNodeExecutor)
     .register(humanApprovalNodeExecutor)
     .register(dialogInputNodeExecutor)
-    .register(mediaInputNodeExecutor)
     .register(modelInferenceNodeExecutor)
     .register(textToSpeechNodeExecutor)
     .register(speechToTextNodeExecutor)

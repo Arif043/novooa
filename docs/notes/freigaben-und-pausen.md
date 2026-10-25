@@ -1,6 +1,6 @@
 # Freigaben und Pausen
 
-> `humanApproval`, `dialogInput` und `mediaInput` halten den Run mit `waitingForApproval` an; eine Entscheidung setzt den Graphen fort oder lehnt ab.
+> `humanApproval` und `dialogInput` halten den Run mit `waitingForApproval` an; eine Entscheidung setzt den Graphen fort oder lehnt ab.
 
 Gehört zu: [Aufgabe](../index/aufgabe.md)
 
@@ -19,5 +19,4 @@ Wartet eine Aufgabe, geht eine Push-Benachrichtigung raus.
 ## Siehe auch
 
 - [Formulareingabe](./formulareingabe-baustein.md)
-- [Bild anfordern](./bild-anfordern-baustein.md)
 - [Push-Benachrichtigungen über das Relay](./push-standalone.md)

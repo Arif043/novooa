@@ -23,7 +23,6 @@ part 'branch_condition.dart';
 part 'iterative_refinement_node_config.dart';
 part 'human_approval_node_config.dart';
 part 'dialog_input_node_config.dart';
-part 'media_input_node_config.dart';
 part 'model_inference_node_config.dart';
 part 'speech_node_config.dart';
 part 'for_each_node_config.dart';
@@ -59,7 +58,6 @@ abstract class NodeConfig extends Equatable {
       .iterativeRefinement => IterativeRefinementNodeConfig.initial(),
       .humanApproval => HumanApprovalNodeConfig.initial(),
       .dialogInput => DialogInputNodeConfig.initial(),
-      .mediaInput => MediaInputNodeConfig.initial(),
       .modelInference => ModelInferenceNodeConfig.initial(),
       .textToSpeech => TextToSpeechNodeConfig.initial(),
       .speechToText => SpeechToTextNodeConfig.initial(),

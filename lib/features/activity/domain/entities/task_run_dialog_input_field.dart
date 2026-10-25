@@ -5,7 +5,10 @@ enum TaskRunDialogInputFieldType {
   decimal,
   selection,
   boolean,
-  radio;
+  radio,
+
+  /// Wert ist beim Absenden die `fileId` des hochgeladenen Bilds.
+  image;
 
   static TaskRunDialogInputFieldType fromName(String value) {
     return values.firstWhere(

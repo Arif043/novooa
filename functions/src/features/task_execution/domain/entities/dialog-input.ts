@@ -5,7 +5,9 @@ export type DialogInputFieldType =
   | "decimal"
   | "selection"
   | "boolean"
-  | "radio";
+  | "radio"
+  /** Ein Bild; der Wert ist die `fileId` einer hochgeladenen Team-Datei. */
+  | "image";
 
 export type DialogInputField = {
   name: string;

@@ -8,9 +8,6 @@ import {
   type DialogInputDefinition,
 } from "./dialog-input.js";
 import {
-  type MediaInputDefinition,
-} from "./media-input.js";
-import {
   type TaskRunInteraction,
 } from "./task-run-interaction.js";
 import {
@@ -27,10 +24,6 @@ export type {
   DialogInputFieldType,
   DialogInputValue,
 } from "./dialog-input.js";
-export type {
-  MediaInputDefinition,
-  MediaInputFileReference,
-} from "./media-input.js";
 export type {TaskRunInteraction} from "./task-run-interaction.js";
 export type {OutputFileFormat, TeamMember, TeamworkNodeConfig, TeamworkOutputField, TeamworkReview} from "./teamwork-config.js";
 export type {
@@ -61,7 +54,6 @@ export const workflowPrimitives = [
   "toolCall",
   "humanApproval",
   "dialogInput",
-  "mediaInput",
   "modelInference",
   "textToSpeech",
   "speechToText",
@@ -198,9 +190,6 @@ export type HumanApprovalNodeConfig = {
 };
 export type DialogInputNodeConfig = DialogInputDefinition & {
   primitive: "dialogInput";
-};
-export type MediaInputNodeConfig = MediaInputDefinition & {
-  primitive: "mediaInput";
 };
 export type ModelInferenceNodeConfig = {
   primitive: "modelInference";
@@ -341,7 +330,6 @@ export type NodeConfig =
   | IterativeRefinementNodeConfig
   | HumanApprovalNodeConfig
   | DialogInputNodeConfig
-  | MediaInputNodeConfig
   | ModelInferenceNodeConfig
   | TextToSpeechNodeConfig
   | SpeechToTextNodeConfig

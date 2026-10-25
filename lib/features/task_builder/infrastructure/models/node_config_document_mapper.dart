@@ -35,7 +35,6 @@ class NodeConfigDocumentMapper {
       IterativeRefinementNodeConfig() => _refinementToDocument(config),
       HumanApprovalNodeConfig() => _approvalToDocument(config),
       DialogInputNodeConfig() => _dialogInputToDocument(config),
-      MediaInputNodeConfig() => _mediaInputToDocument(config),
       TextToSpeechNodeConfig() => _textToSpeechToDocument(config),
       SpeechToTextNodeConfig() => _speechToTextToDocument(config),
       ModelInferenceNodeConfig() => _modelInferenceToDocument(config),
@@ -72,7 +71,6 @@ class NodeConfigDocumentMapper {
       WorkflowPrimitive.iterativeRefinement => _refinementFrom(data),
       WorkflowPrimitive.humanApproval => _approvalFrom(data),
       WorkflowPrimitive.dialogInput => _dialogInputFrom(data),
-      WorkflowPrimitive.mediaInput => _mediaInputFrom(data),
       WorkflowPrimitive.modelInference => _modelInferenceFrom(data),
       WorkflowPrimitive.textToSpeech => _textToSpeechFrom(data),
       WorkflowPrimitive.speechToText => _speechToTextFrom(data),
@@ -180,14 +178,6 @@ class NodeConfigDocumentMapper {
       'name': field.name,
       'type': field.type.name,
       'options': field.options,
-    };
-  }
-
-  Map<String, Object?> _mediaInputToDocument(MediaInputNodeConfig config) {
-    return {
-      'primitive': config.primitive.name,
-      'instruction': config.instruction,
-      'documentScanEnabled': config.documentScanEnabled,
     };
   }
 
@@ -456,13 +446,6 @@ class NodeConfigDocumentMapper {
       name: data['name'] as String? ?? '',
       type: type,
       options: _stringListFrom(data['options'], fallback: const []),
-    );
-  }
-
-  MediaInputNodeConfig _mediaInputFrom(Map<String, Object?> data) {
-    return MediaInputNodeConfig(
-      instruction: data['instruction'] as String? ?? '',
-      documentScanEnabled: data['documentScanEnabled'] as bool? ?? false,
     );
   }
 

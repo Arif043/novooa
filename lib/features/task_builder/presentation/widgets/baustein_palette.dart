@@ -94,7 +94,6 @@ const bausteinGroups = <String, List<BausteinChoice>>{
   LocaleKeys.task_builder_palette_groups_interaction: [
     BausteinChoice(.humanApproval),
     BausteinChoice(.dialogInput),
-    BausteinChoice(.mediaInput),
   ],
   LocaleKeys.task_builder_palette_groups_external: [
     BausteinChoice(.httpRequest),
@@ -136,7 +135,6 @@ IconData bausteinIcon(WorkflowPrimitive primitive) => switch (primitive) {
   .notificationSend => CupertinoIcons.bell,
   .humanApproval => CupertinoIcons.person_alt,
   .dialogInput => CupertinoIcons.line_horizontal_3,
-  .mediaInput => CupertinoIcons.camera,
   .modelInference => CupertinoIcons.rectangle,
   .textToSpeech => CupertinoIcons.speaker_2,
   .speechToText => CupertinoIcons.waveform,

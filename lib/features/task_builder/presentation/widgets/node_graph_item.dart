@@ -10,7 +10,6 @@ import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_c
 import 'package:syscat2/features/task_builder/presentation/cubits/task_builder_state.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/conditional_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/dialog_input_widget.dart';
-import 'package:syscat2/features/task_builder/presentation/widgets/media_input_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/model_inference_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/speech_to_text_widget.dart';
 import 'package:syscat2/features/task_builder/presentation/widgets/text_to_speech_widget.dart';
@@ -238,7 +237,6 @@ class NodeGraphItem extends StatelessWidget {
       .notificationSend => NotificationSendWidget(node: node),
       .humanApproval => HumanApprovalWidget(node: node),
       .dialogInput => DialogInputWidget(node: node),
-      .mediaInput => MediaInputWidget(node: node),
       .modelInference => ModelInferenceWidget(node: node),
       .textToSpeech => TextToSpeechWidget(node: node),
       .speechToText => SpeechToTextWidget(node: node),

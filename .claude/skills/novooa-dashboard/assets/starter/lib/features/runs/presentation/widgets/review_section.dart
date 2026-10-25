@@ -33,9 +33,6 @@ class ReviewSection extends StatelessWidget {
             run: run,
             fields: fields,
           ),
-          UnsupportedRequest() => Text(
-            DashboardKeys.runsOpenInOfficialApp.tr(),
-          ),
         },
         if (review is RunReviewFailed) ...[
           const SizedBox(height: Spacing.sm),

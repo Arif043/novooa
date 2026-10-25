@@ -48,7 +48,6 @@
 - [Bedingter Ablauf: Auswertung](../notes/bedingter-ablauf-auswertung.md)
 - [Baustein „Für jedes Element“](../notes/foreach-baustein.md)
 - [Formulareingabe](../notes/formulareingabe-baustein.md)
-- [Bild anfordern](../notes/bild-anfordern-baustein.md)
 - [Datensatz-Bausteine](../notes/datensatz-bausteine.md)
 - [Sammlung als Tabelle](../notes/sammlung-als-tabelle.md)
 - [Datei-Bausteine](../notes/datei-bausteine.md)

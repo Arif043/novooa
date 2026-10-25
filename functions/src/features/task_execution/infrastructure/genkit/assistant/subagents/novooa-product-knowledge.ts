@@ -18,7 +18,6 @@ const buildingBlocks: ReadonlyArray<readonly [primitive: string, description: st
   ["notificationSend", "Push-Benachrichtigung an alle Team-Mitglieder senden."],
   ["humanApproval", "Freigabe: hält den Lauf bis zur menschlichen Entscheidung an."],
   ["dialogInput", "Formulareingabe: fragt typisierte Eingaben per Formular ab."],
-  ["mediaInput", "Bild anfordern: fordert ein Bild oder einen Dokumentenscan an."],
   ["modelInference", "Modell ausführen: ONNX-Modell aus dem Modellkatalog (z. B. Bild-/Textklassifikation, OCR)."],
   ["textToSpeech", "Text vorlesen über ein verbundenes Sprachmodell."],
   ["speechToText", "Audio transkribieren über ein verbundenes Sprachmodell."],

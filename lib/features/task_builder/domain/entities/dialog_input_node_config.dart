@@ -7,7 +7,8 @@ enum DialogInputFieldType {
   decimal('Fließkommazahl'),
   selection('Auswahl'),
   boolean('Schalter'),
-  radio('Radio-Buttons');
+  radio('Radio-Buttons'),
+  image('Bild');
 
   const DialogInputFieldType(this.label);
 

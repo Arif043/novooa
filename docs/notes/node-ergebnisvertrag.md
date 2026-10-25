@@ -14,7 +14,7 @@ Gehört zu: [Aufgabe](../index/aufgabe.md)
   `outputs` und haben im Builder keine Werte (`WorkflowPrimitive.hasNoOutput`,
   `outputKeysOf`).
 - Ein leerer Text erzeugt keinen `value`.
-- `humanApproval`, `dialogInput`, `mediaInput` liefern den Status
+- `humanApproval` und `dialogInput` liefern den Status
   `waitingForApproval`; nicht registrierte Primitives `skipped` ohne Outputs.
 - `value` ist der einzige primäre Schlüssel; der frühere redundante
   `text`-Output ist entfernt.

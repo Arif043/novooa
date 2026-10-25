@@ -31,7 +31,6 @@ part 'task_builder_human_approval_mutations.dart';
 part 'task_builder_dialog_input_mutations.dart';
 part 'task_builder_output_mutations.dart';
 part 'task_builder_decision_branch_mutations.dart';
-part 'task_builder_media_input_mutations.dart';
 part 'task_builder_model_inference_mutations.dart';
 part 'task_builder_for_each_mutations.dart';
 part 'task_builder_prompt_mutations.dart';

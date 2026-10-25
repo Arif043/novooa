@@ -66,10 +66,6 @@
         "label": "Formulareingabe",
         "description": "Pausiert die Aufgabe, bis ein Formular ausgefüllt wurde."
       },
-      "media_input": {
-        "label": "Bild anfordern",
-        "description": "Pausiert die Aufgabe, bis ein Bild aufgenommen oder ausgewählt wurde."
-      },
       "model_inference": {
         "label": "Modell ausführen",
         "description": "Bereitet ein Bild nach Modellvertrag vor und führt ein Modell aus."
@@ -132,7 +128,6 @@
       "tool_call": "Werkzeug",
       "human_approval": "Freigabe",
       "dialog_input": "Dialog",
-      "media_input": "Medien",
       "model_inference": "Modell",
       "text_to_speech": "Audio",
       "speech_to_text": "Transkript",
@@ -357,7 +352,6 @@
     "agent_timeout": "Die Anfrage an den KI-Agenten hat zu lange gedauert.",
     "agent_unavailable": "Der KI-Agent konnte gerade nicht antworten.",
     "all_conditions_match": "Alle Bedingungen müssen zutreffen",
-    "als_dokument_scannen": "Als Dokument scannen",
     "anlegen": "Anlegen",
     "answer_number": "Antwort {number}",
     "antwort_hinzufuegen": "Antwort hinzufügen",
@@ -397,8 +391,6 @@
     "bestehend": "Bestehend",
     "betreff": "Betreff",
     "bild": "Bild",
-    "bild_anfordern": "Bild anfordern",
-    "bild_eingabe_hinzufuegen": "Bild-Eingabe hinzufügen",
     "decision_answers_without_branch": "Für diese Antworten gibt es keinen Zweig: {answers}",
     "add_missing_branches": "Fehlende Zweige ergänzen",
     "cached_and_ready": "Gecacht und bereit",
@@ -478,7 +470,6 @@
     "halte_fest_worauf_diese_aufgabe_hinarbeiten_soll": "Halte fest, worauf diese Aufgabe hinarbeiten soll.",
     "hier_kommt_die_anweisung": "Hier kommt die Anweisung",
     "hint_output_name": "zum_beispiel_bericht",
-    "hinweis_fuer_die_bildeingabe": "Hinweis für die Bildeingabe",
     "hinweis_fuer_die_eingabe": "Hinweis für die Eingabe",
     "http_anfrage": "HTTP-Anfrage",
     "insert_workflow_input": "Wert einfügen",
@@ -580,7 +571,6 @@
     "running": "Läuft",
     "sammlung": "Sammlung",
     "sammlung_als_tabelle": "Sammlung als Tabelle",
-    "scan_hint": "Erkennt beim Fotografieren automatisch die Kanten des Dokuments, entzerrt es perspektivisch und schneidet den Hintergrund aus.",
     "schliessen": "Schließen",
     "script": "Script",
     "script_bearbeiten": "Script bearbeiten",
@@ -1195,5 +1185,14 @@
       "app_close": "Schließen",
       "app_manifest_description": "Meldet „{summary}“ an novooa."
     }
+  },
+  "image_field": {
+    "camera": "Kamera",
+    "gallery": "Bild auswählen",
+    "scan": "Dokument scannen",
+    "remove": "Bild entfernen",
+    "selected": "Ausgewähltes Bild",
+    "required": "Bitte füge ein Bild hinzu.",
+    "pick_failed": "Das Bild konnte nicht übernommen werden."
   }
 }

@@ -22,6 +22,9 @@ class FormRequestFields extends StatefulWidget {
 class _FormRequestFieldsState extends State<FormRequestFields> {
   final Map<String, Object> _values = {};
 
+  /// Bildfelder kann das Dashboard noch nicht ausfüllen (kein Upload).
+  bool get _isAnswerable => widget.fields.every((field) => field.isSupported);
+
   bool get _isComplete =>
       widget.fields.every((field) => _values.containsKey(field.name));
 
@@ -36,13 +39,16 @@ class _FormRequestFieldsState extends State<FormRequestFields> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final field in widget.fields) ...[
-          FormValueInput(field: field, onChanged: (v) => _set(field.name, v)),
-          const SizedBox(height: Spacing.sm),
-        ],
+        if (!_isAnswerable)
+          Text(DashboardKeys.runsOpenInOfficialApp.tr())
+        else
+          for (final field in widget.fields) ...[
+            FormValueInput(field: field, onChanged: (v) => _set(field.name, v)),
+            const SizedBox(height: Spacing.sm),
+          ],
         const SizedBox(height: Spacing.sm),
         FilledButton(
-          onPressed: sending || !_isComplete
+          onPressed: sending || !_isAnswerable || !_isComplete
               ? null
               : () => review.review(
                   widget.run,

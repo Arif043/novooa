@@ -1,10 +1,10 @@
 # Dokumentenscanner im Browser
 
-> Im Browser öffnet „Als Dokument scannen“ eine Vollbild-Seite, die das Blatt live erkennt, beim Aufnehmen begradigt und ein JPEG zurückgibt.
+> Im Browser öffnet „Dokument scannen“ eine Vollbild-Seite, die das Blatt live erkennt, beim Aufnehmen begradigt und ein JPEG zurückgibt.
 
 Gehört zu: [Dokumentenscanner](../index/dokumentscanner.md)
 
-1. `pickMediaSubmission`: Option an, Quelle Kamera, Plattform Browser →
+1. `pickImageSubmission`: Quelle `documentScan` im Browser →
    `DocumentScanPage` (sonst `ActivityCubit` und natives Plugin).
 2. Rückkamera per `getUserMedia`; die Erkennung wird beim ersten Mal
    nachgeladen.

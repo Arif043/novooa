@@ -21,6 +21,7 @@ void main() {
             'type': 'selection',
             'options': ['rot', 'blau'],
           },
+          {'name': 'beleg', 'type': 'image', 'options': <String>[]},
         ],
       },
     });
@@ -30,8 +31,10 @@ void main() {
     expect(form.fields.map((field) => field.type), [
       FormFieldType.integer,
       FormFieldType.selection,
+      FormFieldType.image,
     ]);
-    expect(form.fields.last.options, ['rot', 'blau']);
+    expect(form.fields[1].options, ['rot', 'blau']);
+    expect(form.fields.last.isSupported, isFalse);
   });
 
   test('unbekannte Status und fehlende Felder brechen nichts', () {

@@ -26,7 +26,6 @@ enum WorkflowPrimitive {
   toolCall,
   humanApproval,
   dialogInput,
-  mediaInput,
   modelInference,
   textToSpeech,
   speechToText,

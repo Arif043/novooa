@@ -4,13 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/widgets/ios_overlays.dart';
 import '../../domain/entities/task_run.dart';
-import '../../domain/entities/media_input_submission.dart';
-import '../../domain/entities/task_run_media_input.dart';
 import '../cubits/activity_cubit.dart';
 import 'task_run_dialog_input_submission.dart';
 import 'task_run_interaction_content.dart';
 import 'task_run_interaction_form_state.dart';
-import 'task_run_media_picking.dart';
 import 'task_run_submitting_indicator.dart';
 
 class TaskRunInteractionDialog extends StatefulWidget {
@@ -35,12 +32,9 @@ class TaskRunInteractionDialog extends StatefulWidget {
 
 class _TaskRunInteractionDialogState extends State<TaskRunInteractionDialog> {
   late final TaskRunInteractionFormState _form;
-  MediaInputSubmission? _mediaSubmission;
   var _isSubmitting = false;
-  var _isPicking = false;
 
   bool get _requiresDialogInput => widget.run.requiresDialogInput;
-  bool get _requiresMediaInput => widget.run.requiresMediaInput;
 
   @override
   void initState() {
@@ -71,13 +65,9 @@ class _TaskRunInteractionDialogState extends State<TaskRunInteractionDialog> {
                 formValues: _form.values,
                 controllers: _form.controllers,
                 outputController: _form.outputController,
-                mediaSubmission: _mediaSubmission,
-                isPicking: _isPicking,
                 onFormValueChanged: (name, value) => setState(() {
                   _form.values[name] = value;
                 }),
-                onPickMedia: _pickMedia,
-                onClearMedia: () => setState(() => _mediaSubmission = null),
               ),
             ),
           ),
@@ -94,11 +84,7 @@ class _TaskRunInteractionDialogState extends State<TaskRunInteractionDialog> {
           onPressed: _isSubmitting ? null : () => _submit(context),
           child: _isSubmitting
               ? const TaskRunSubmittingIndicator()
-              : Text(
-                  _requiresDialogInput || _requiresMediaInput
-                      ? 'Absenden'
-                      : 'Bestätigen',
-                ),
+              : Text(_requiresDialogInput ? 'Absenden' : 'Bestätigen'),
         ),
       ],
     );
@@ -108,15 +94,7 @@ class _TaskRunInteractionDialogState extends State<TaskRunInteractionDialog> {
     if (_requiresDialogInput && !_form.formKey.currentState!.validate()) {
       return;
     }
-    if (_requiresMediaInput && _mediaSubmission == null) {
-      _showMessage(context, 'Bitte wähle ein Bild aus.');
-      return;
-    }
-    final action = _requiresDialogInput
-        ? _submitDialogInput
-        : _requiresMediaInput
-        ? _submitMediaInput
-        : _approve;
+    final action = _requiresDialogInput ? _submitDialogInput : _approve;
     await _runAction(context, action);
   }
 
@@ -134,29 +112,6 @@ class _TaskRunInteractionDialogState extends State<TaskRunInteractionDialog> {
         _form.values,
       ),
     );
-  }
-
-  Future<void> _submitMediaInput() {
-    return context.read<ActivityCubit>().submitMediaInput(
-      widget.run,
-      _mediaSubmission!,
-    );
-  }
-
-  Future<void> _pickMedia(TaskRunMediaInputSource source) async {
-    setState(() => _isPicking = true);
-    try {
-      final submission = await pickMediaSubmission(context, widget.run, source);
-      if (mounted && submission != null) {
-        setState(() => _mediaSubmission = submission);
-      }
-    } catch (_) {
-      if (mounted) {
-        _showMessage(context, 'Bild konnte nicht ausgewählt werden.');
-      }
-    } finally {
-      if (mounted) setState(() => _isPicking = false);
-    }
   }
 
   Future<void> _reject(BuildContext context) {

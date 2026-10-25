@@ -5,6 +5,7 @@ import 'package:syscat2/core/entities/unique_id.dart';
 import 'package:syscat2/features/activity/domain/entities/task_activity.dart';
 import 'package:syscat2/features/activity/domain/entities/media_input_submission.dart';
 import 'package:syscat2/features/activity/domain/entities/task_run.dart';
+import 'package:syscat2/features/activity/domain/entities/task_run_dialog_input_field.dart';
 import 'package:syscat2/features/activity/domain/entities/task_run_interaction.dart';
 import 'package:syscat2/features/activity/domain/entities/task_run_media_input.dart';
 import 'package:syscat2/features/activity/domain/repositories/media_input_picker.dart';
@@ -71,10 +72,7 @@ class _RecordingRunRepository extends _RunRepository {
 
 class _MediaInputPicker implements MediaInputPicker {
   @override
-  Future<MediaInputSubmission?> pick(
-    TaskRunMediaInputSource source, {
-    bool documentScanEnabled = false,
-  }) async {
+  Future<MediaInputSubmission?> pick(TaskRunMediaInputSource source) async {
     return null;
   }
 }
@@ -85,17 +83,23 @@ class _FixedMediaInputPicker implements MediaInputPicker {
   final MediaInputSubmission submission;
 
   @override
-  Future<MediaInputSubmission?> pick(
-    TaskRunMediaInputSource source, {
-    bool documentScanEnabled = false,
-  }) async {
+  Future<MediaInputSubmission?> pick(TaskRunMediaInputSource source) async {
     return submission;
   }
 }
 
 class _MediaInputRepository implements TaskRunMediaInputRepository {
+  _MediaInputRepository({this.fails = false});
+
+  final bool fails;
+  final uploaded = <String>[];
+
   @override
-  Future<String> upload(MediaInputSubmission submission) async => 'file.1';
+  Future<String> upload(MediaInputSubmission submission) async {
+    if (fails) throw StateError('Upload fehlgeschlagen');
+    uploaded.add(submission.name);
+    return 'file.${uploaded.length}';
+  }
 }
 
 void main() {
@@ -119,30 +123,56 @@ void main() {
     await cubit.close();
   });
 
-  test('ActivityCubit lädt ein Bild hoch und reicht dessen ID ein', () async {
-    final runRepository = _RecordingRunRepository([_mediaRun()]);
-    final submission = MediaInputSubmission(
-      name: 'beleg.jpg',
-      bytes: Uint8List.fromList([1, 2, 3]),
-      contentType: 'image/jpeg',
-    );
-    final cubit = ActivityCubit(
-      watchTaskActivities: WatchTaskActivities(_ActivityRepository([])),
-      watchTaskRuns: WatchTaskRuns(runRepository),
-      reviewTaskRun: ReviewTaskRun(runRepository),
-      mediaInputPicker: _FixedMediaInputPicker(submission),
-      uploadTaskRunMediaInput: UploadTaskRunMediaInput(_MediaInputRepository()),
-    );
+  test('ein Formular mit Bild lädt es hoch und sendet dessen fileId', () async {
+    final runRepository = _RecordingRunRepository([_formRun()]);
+    final uploads = _MediaInputRepository();
+    final cubit = _cubitWith(runRepository, uploads);
 
-    final picked = await cubit.pickMediaInput(
-      _mediaRun(),
-      TaskRunMediaInputSource.camera,
-    );
-    await cubit.submitMediaInput(_mediaRun(), picked!);
+    final picked = await cubit.pickImage(TaskRunMediaInputSource.documentScan);
+    await cubit.submitDialogInput(_formRun(), {
+      'betrag': 12.5,
+      'beleg': picked,
+    });
 
-    expect(runRepository.submittedFormValues, {'fileId': 'file.1'});
+    expect(uploads.uploaded, ['beleg.jpg']);
+    expect(runRepository.submittedFormValues, {
+      'betrag': 12.5,
+      'beleg': 'file.1',
+    });
     await cubit.close();
   });
+
+  test('scheitert der Upload, geht keine Antwort an die Runtime', () async {
+    final runRepository = _RecordingRunRepository([_formRun()]);
+    final cubit = _cubitWith(runRepository, _MediaInputRepository(fails: true));
+
+    await expectLater(
+      cubit.submitDialogInput(_formRun(), {'beleg': _receipt}),
+      throwsStateError,
+    );
+
+    expect(runRepository.submittedFormValues, isNull);
+    await cubit.close();
+  });
+}
+
+final _receipt = MediaInputSubmission(
+  name: 'beleg.jpg',
+  bytes: Uint8List.fromList([1, 2, 3]),
+  contentType: 'image/jpeg',
+);
+
+ActivityCubit _cubitWith(
+  _RecordingRunRepository runs,
+  _MediaInputRepository uploads,
+) {
+  return ActivityCubit(
+    watchTaskActivities: WatchTaskActivities(_ActivityRepository([])),
+    watchTaskRuns: WatchTaskRuns(runs),
+    reviewTaskRun: ReviewTaskRun(runs),
+    mediaInputPicker: _FixedMediaInputPicker(_receipt),
+    uploadTaskRunMediaInput: UploadTaskRunMediaInput(uploads),
+  );
 }
 
 TaskActivity _activity() {
@@ -167,17 +197,28 @@ TaskRun _run() {
   );
 }
 
-TaskRun _mediaRun() {
+TaskRun _formRun() {
   return TaskRun(
-    id: const UniqueId('run.media'),
+    id: const UniqueId('run.form'),
     taskId: 'task.1',
     taskTitle: 'Beleg erfassen',
     status: TaskRunStatus.waitingForApproval,
     updatedAt: DateTime.utc(2026),
     interaction: const TaskRunInteraction(
-      type: TaskRunInteractionType.mediaInput,
+      type: TaskRunInteractionType.dialogInput,
       instruction: 'Fotografiere den Beleg.',
-      mediaInput: TaskRunMediaInput(),
+      dialogInputFields: [
+        TaskRunDialogInputField(
+          name: 'betrag',
+          type: TaskRunDialogInputFieldType.decimal,
+          options: [],
+        ),
+        TaskRunDialogInputField(
+          name: 'beleg',
+          type: TaskRunDialogInputFieldType.image,
+          options: [],
+        ),
+      ],
     ),
   );
 }

@@ -25,11 +25,6 @@ final class FormRequest extends RunInteraction {
   List<Object?> get props => [instruction, fields];
 }
 
-/// Etwa ein Bild aufnehmen; das kann nur das offizielle Frontend.
-final class UnsupportedRequest extends RunInteraction {
-  const UnsupportedRequest(super.instruction);
-}
-
 enum FormFieldType {
   string,
   number,
@@ -38,6 +33,9 @@ enum FormFieldType {
   selection,
   boolean,
   radio,
+
+  /// Ein Bild als hochgeladene Team-Datei; die Vorlage kann es noch nicht.
+  image,
 }
 
 class FormFieldSpec extends Equatable {
@@ -55,6 +53,8 @@ class FormFieldSpec extends Equatable {
       type == FormFieldType.number ||
       type == FormFieldType.integer ||
       type == FormFieldType.decimal;
+
+  bool get isSupported => type != FormFieldType.image;
 
   @override
   List<Object?> get props => [name, type, options];

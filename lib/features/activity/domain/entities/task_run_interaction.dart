@@ -1,10 +1,8 @@
 import 'task_run_dialog_input_field.dart';
-import 'task_run_media_input.dart';
 
 enum TaskRunInteractionType {
   approval,
-  dialogInput,
-  mediaInput;
+  dialogInput;
 
   static TaskRunInteractionType fromName(String value) {
     return values.firstWhere(
@@ -19,11 +17,9 @@ class TaskRunInteraction {
     required this.type,
     required this.instruction,
     this.dialogInputFields = const [],
-    this.mediaInput,
   });
 
   final TaskRunInteractionType type;
   final String instruction;
   final List<TaskRunDialogInputField> dialogInputFields;
-  final TaskRunMediaInput? mediaInput;
 }

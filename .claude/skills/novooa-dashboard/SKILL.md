@@ -4,7 +4,7 @@ description: Entwickelt individuelle Kunden-Dashboards (Flutter, Web/Desktop/Mob
 license: Proprietary
 compatibility: Flutter mit Dart ^3.12, Lesezugriff auf das private syscat2-Repo, eine novooa-Runtime ab novooa_runtime_client 0.1.0.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
   runtime-client: "0.1.0"
   owner: novooa
 ---
@@ -93,8 +93,8 @@ lib/
 - **Aufgaben:** `GET /v1/tasks`, gefiltert über `DashboardConfig.allowedTaskIds`;
   „Starten“ fragt eine optionale Eingabe ab (`context`).
 - **Läufe:** `GET /v1/task-runs`, Status-Chip, Detail mit `finalOutput`;
-  wartende Läufe beantworten (Freigabe, Formular); Bild-Anfragen verweisen
-  aufs offizielle Frontend. Die Zahl wartender Läufe steht an der Navigation.
+  wartende Läufe beantworten (Freigabe, Formular); Formulare mit Bildfeld
+  verweisen aufs offizielle Frontend. Die Zahl wartender Läufe steht an der Navigation.
 - **Responsiv:** Navigation unten auf dem Handy, seitlich ab 840 px.
 
 ## Modul-Katalog

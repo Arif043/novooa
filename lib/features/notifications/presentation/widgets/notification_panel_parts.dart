@@ -30,7 +30,6 @@ class _ApprovalAction extends StatelessWidget {
   String get _label {
     final run = item.taskRun;
     if (run?.requiresDialogInput == true) return 'Formular öffnen';
-    if (run?.requiresMediaInput == true) return 'Bild hinzufügen';
     return 'Prüfen';
   }
 }

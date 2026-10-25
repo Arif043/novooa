@@ -1,8 +1,8 @@
 # Dokumentenscanner
 
-> „Bild anfordern“ kann ein Dokument scannen statt fotografieren: Ränder erkennen, perspektivisch begradigen, ein sauberes JPEG liefern — nativ auf Android/iOS, mit eigener Erkennung im Browser.
+> Ein Bildfeld der Formulareingabe kann ein Dokument scannen statt fotografieren; ob, entscheidet die Person beim Ausfüllen: Ränder erkennen, perspektivisch begradigen, ein sauberes JPEG liefern — nativ auf Android/iOS, mit eigener Erkennung im Browser.
 
-- [Bild anfordern](../notes/bild-anfordern-baustein.md) — Option `documentScanEnabled`
+- [Formulareingabe, Feld „Bild“](../notes/formulareingabe-baustein.md#feld-bild)
 - [Dokumentenscanner: Plattformen](../notes/dokumentscanner-plattformen.md)
 - [Dokumentenscanner im Browser](../notes/dokumentscanner-web.md)
 - [Aufbau des Dokumentenscanners](../notes/dokumentscanner-aufbau.md)

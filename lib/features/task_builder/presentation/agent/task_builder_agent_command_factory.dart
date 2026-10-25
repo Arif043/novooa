@@ -115,7 +115,6 @@ WorkflowPrimitive? _primitiveFrom(String? value) {
     'sendChannelMessage' => WorkflowPrimitive.sendChannelMessage,
     'humanApproval' => WorkflowPrimitive.humanApproval,
     'dialogInput' => WorkflowPrimitive.dialogInput,
-    'mediaInput' => WorkflowPrimitive.mediaInput,
     'modelInference' => WorkflowPrimitive.modelInference,
     'textToSpeech' => WorkflowPrimitive.textToSpeech,
     'speechToText' => WorkflowPrimitive.speechToText,

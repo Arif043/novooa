@@ -66,10 +66,6 @@
         "label": "Form input",
         "description": "Pauses the task until a form has been filled in."
       },
-      "media_input": {
-        "label": "Request image",
-        "description": "Pauses the task until an image has been taken or selected."
-      },
       "model_inference": {
         "label": "Run model",
         "description": "Prepares an image according to the model contract and runs a model."
@@ -132,7 +128,6 @@
       "tool_call": "Tool",
       "human_approval": "Approval",
       "dialog_input": "Dialog",
-      "media_input": "Media",
       "model_inference": "Model",
       "text_to_speech": "Audio",
       "speech_to_text": "Transcript",
@@ -357,7 +352,6 @@
     "agent_timeout": "The request to the AI agent took too long.",
     "agent_unavailable": "The AI agent could not answer right now.",
     "all_conditions_match": "All conditions must apply",
-    "als_dokument_scannen": "Scan as document",
     "anlegen": "Create",
     "answer_number": "Answer {number}",
     "antwort_hinzufuegen": "Add answer",
@@ -397,8 +391,6 @@
     "bestehend": "Existing",
     "betreff": "Subject",
     "bild": "Image",
-    "bild_anfordern": "Request image",
-    "bild_eingabe_hinzufuegen": "Add image input",
     "decision_answers_without_branch": "These answers have no branch: {answers}",
     "add_missing_branches": "Add missing branches",
     "cached_and_ready": "Cached and ready",
@@ -478,7 +470,6 @@
     "halte_fest_worauf_diese_aufgabe_hinarbeiten_soll": "Describe what this task should work towards.",
     "hier_kommt_die_anweisung": "Enter the instruction here",
     "hint_output_name": "for_example_report",
-    "hinweis_fuer_die_bildeingabe": "Hint for the image input",
     "hinweis_fuer_die_eingabe": "Hint for the input",
     "http_anfrage": "HTTP request",
     "insert_workflow_input": "Insert value",
@@ -580,7 +571,6 @@
     "running": "Running",
     "sammlung": "Collection",
     "sammlung_als_tabelle": "Collection as table",
-    "scan_hint": "Automatically detects the edges of the document while taking the photo, corrects its perspective and cuts out the background.",
     "schliessen": "Close",
     "script": "Script",
     "script_bearbeiten": "Edit script",
@@ -1195,5 +1185,14 @@
       "app_close": "Close",
       "app_manifest_description": "Reports “{summary}” to novooa."
     }
+  },
+  "image_field": {
+    "camera": "Camera",
+    "gallery": "Choose image",
+    "scan": "Scan document",
+    "remove": "Remove image",
+    "selected": "Selected image",
+    "required": "Please add an image.",
+    "pick_failed": "The image could not be added."
   }
 }

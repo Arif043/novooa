@@ -86,7 +86,7 @@ class _ApprovalRunTile extends StatelessWidget {
   String get _subtitle {
     final nodeId = run.waitingNodeId;
     if (nodeId == null || nodeId.trim().isEmpty) {
-      return run.requiresDialogInput || run.requiresMediaInput
+      return run.requiresDialogInput
           ? 'Wartet auf Eingabe'
           : 'Wartet auf Freigabe';
     }

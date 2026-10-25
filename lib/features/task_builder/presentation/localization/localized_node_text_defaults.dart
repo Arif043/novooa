@@ -42,8 +42,6 @@ class LocalizedNodeTextDefaults implements NodeTextDefaults {
         LocaleKeys.task_builder_output_names_human_approval.tr(),
       WorkflowPrimitive.dialogInput =>
         LocaleKeys.task_builder_output_names_dialog_input.tr(),
-      WorkflowPrimitive.mediaInput =>
-        LocaleKeys.task_builder_output_names_media_input.tr(),
       WorkflowPrimitive.modelInference =>
         LocaleKeys.task_builder_output_names_model_inference.tr(),
       WorkflowPrimitive.textToSpeech =>

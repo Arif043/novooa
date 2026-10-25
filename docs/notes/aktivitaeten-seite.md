@@ -19,9 +19,9 @@ Gehört zu: [Aktivitäten](../index/aktivitaeten.md)
   aus dem [Anwendungsprotokoll](./anwendungsprotokoll.md), getrennt von
   Laufaktivitäten.
 - **Interaktionen** als Kacheln; ein Klick öffnet einen iOS-artigen Dialog:
-  Freigabe mit editierbarem Output, `dialogInput` mit den Feldtypen,
-  `mediaInput` mit Galerie oder Kamera (optional
-  [Dokumentenscanner](../index/dokumentscanner.md)).
+  Freigabe mit editierbarem Output, `dialogInput` mit den Feldtypen; ein
+  Bildfeld bietet Kamera, Galerie und, wo möglich,
+  [Dokument scannen](../index/dokumentscanner.md).
 - Bestätigen ruft `POST /v1/task-runs/review` mit `decision: "approve"`,
   setzt den Run auf `queued` und reiht ihn wieder ein; Ablehnen mit `"reject"`
   verwirft den Zwischenzustand.

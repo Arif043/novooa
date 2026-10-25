@@ -132,12 +132,6 @@ class Toolbar extends StatelessWidget {
         onPressed: () => cubit.addNodeToMainGraph(.dialogInput),
       ),
       _ToolbarAction(
-        primitive: .mediaInput,
-        icon: Icons.add_a_photo_outlined,
-        tooltip: LocaleKeys.ui_bild_eingabe_hinzufuegen.tr(),
-        onPressed: () => cubit.addNodeToMainGraph(.mediaInput),
-      ),
-      _ToolbarAction(
         primitive: .modelInference,
         icon: Icons.model_training_outlined,
         tooltip: LocaleKeys.ui_modell_inferenz_hinzufuegen.tr(),

@@ -68,9 +68,7 @@ final runId = response['runId'] as String;
 - `interaction` nur bei `waitingForApproval`:
   - `{kind: "approval", instruction}`
   - `{kind: "dialogInput", instruction, fields: [{name, type, options}]}` mit
-    `type` aus `string | number | integer | decimal | selection | boolean | radio`
-  - `{kind: "mediaInput", …}`: Bild anfordern; im Dashboard nur Hinweis aufs
-    offizielle Frontend.
+    `type` aus `string | number | integer | decimal | selection | boolean | radio | image`
 
 Unbekannte Status als `queued` behandeln (die Vorlage tut das), damit eine
 neuere Runtime nichts bricht.
@@ -84,6 +82,10 @@ neuere Runtime nichts bricht.
 - Bei `dialogInput` gehören alle Felder in `formValues`, typgerecht
   (`integer` als ganze Zahl, `boolean` als `true/false`, `selection`/`radio`
   als eine der `options`). Die Runtime prüft gegen die Definition.
+- `image`: Wert ist die `fileId` eines vorher als Team-Datei hochgeladenen
+  Bilds (`image/*`); das Feld liefert danach einen `media`-Wert. Quelle und
+  Dokumentenscan wählt der Client. Die Vorlage hat noch keinen Upload und
+  zeigt für Bildfelder einen Hinweis aufs offizielle Frontend.
 - `output` ersetzt optional die Ausgabe des wartenden Bausteins; die Vorlage
   nutzt es nicht.
 - `400 {failure: {code: "invalidReviewDecision" | "invalidFormValues" | "invalidRequest"}}`.

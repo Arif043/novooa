@@ -15,12 +15,8 @@ class ImagePickerMediaInputPicker implements MediaInputPicker {
   final ImagePicker _picker;
 
   @override
-  Future<MediaInputSubmission?> pick(
-    TaskRunMediaInputSource source, {
-    bool documentScanEnabled = false,
-  }) {
-    if (source == TaskRunMediaInputSource.camera &&
-        documentScanEnabled &&
+  Future<MediaInputSubmission?> pick(TaskRunMediaInputSource source) {
+    if (source == TaskRunMediaInputSource.documentScan &&
         nativeDocumentScanSupportedOnThisPlatform()) {
       return _pickWithDocumentScanner();
     }
@@ -60,16 +56,16 @@ class ImagePickerMediaInputPicker implements MediaInputPicker {
   }
 
   ImageSource _sourceFor(TaskRunMediaInputSource source) {
-    return source == TaskRunMediaInputSource.camera
-        ? ImageSource.camera
-        : ImageSource.gallery;
+    return source == TaskRunMediaInputSource.gallery
+        ? ImageSource.gallery
+        : ImageSource.camera;
   }
 
   String _nameFor(XFile image, TaskRunMediaInputSource source) {
     if (image.name.trim().isNotEmpty) return image.name;
-    final prefix = source == TaskRunMediaInputSource.camera
-        ? 'aufnahme'
-        : 'bild';
+    final prefix = source == TaskRunMediaInputSource.gallery
+        ? 'bild'
+        : 'aufnahme';
     return '$prefix.jpg';
   }
 

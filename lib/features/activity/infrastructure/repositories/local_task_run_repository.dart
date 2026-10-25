@@ -4,7 +4,6 @@ import '../../../../core/entities/unique_id.dart';
 import '../../domain/entities/task_run.dart';
 import '../../domain/entities/task_run_dialog_input_field.dart';
 import '../../domain/entities/task_run_interaction.dart';
-import '../../domain/entities/task_run_media_input.dart';
 import '../../domain/repositories/task_run_repository.dart';
 
 class LocalTaskRunRepository implements TaskRunRepository {
@@ -78,13 +77,6 @@ class LocalTaskRunRepository implements TaskRunRepository {
         type: type,
         instruction: instruction,
         dialogInputFields: _fieldsFrom(value['fields']),
-      ),
-      TaskRunInteractionType.mediaInput => TaskRunInteraction(
-        type: type,
-        instruction: instruction,
-        mediaInput: TaskRunMediaInput(
-          documentScanEnabled: value['documentScanEnabled'] as bool? ?? false,
-        ),
       ),
     };
   }

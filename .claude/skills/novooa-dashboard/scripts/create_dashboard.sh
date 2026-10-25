@@ -13,7 +13,7 @@
 #   --platforms <liste>   Standard: web,macos,windows,linux,ios,android
 set -euo pipefail
 
-skill_version="0.1.0"
+skill_version="0.2.0"
 client_ref="novooa-runtime-client-v0.1.0"
 client_repo="https://github.com/Arif043/syscat2.git"
 client_path=""

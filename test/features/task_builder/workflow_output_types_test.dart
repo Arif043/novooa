@@ -7,10 +7,6 @@ import 'package:syscat2/features/task_builder/domain/entities/workflow_output_ty
 void main() {
   test('primärer Output-Typ folgt dem Baustein', () {
     expect(
-      primaryOutputTypeOf(NodeConfig.initial(WorkflowPrimitive.mediaInput)),
-      NodeOutputType.media,
-    );
-    expect(
       primaryOutputTypeOf(NodeConfig.initial(WorkflowPrimitive.writeFile)),
       NodeOutputType.file,
     );

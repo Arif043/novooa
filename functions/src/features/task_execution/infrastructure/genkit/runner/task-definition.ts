@@ -171,6 +171,7 @@ export const dialogInputFieldTypeSchema = z.enum([
   "selection",
   "boolean",
   "radio",
+  "image",
 ]);
 
 export const dialogInputFieldSchema = z.object({
@@ -186,15 +187,6 @@ export const dialogInputDefinitionSchema = z.object({
 
 export const dialogInputNodeConfigSchema = dialogInputDefinitionSchema.extend({
   primitive: z.literal("dialogInput").default("dialogInput"),
-});
-
-export const mediaInputDefinitionSchema = z.object({
-  instruction: z.string().default("Bitte füge ein Bild hinzu."),
-  documentScanEnabled: z.boolean().default(false),
-});
-
-export const mediaInputNodeConfigSchema = mediaInputDefinitionSchema.extend({
-  primitive: z.literal("mediaInput").default("mediaInput"),
 });
 
 export const modelInferenceNodeConfigSchema = z.object({
@@ -347,7 +339,6 @@ export const nodeConfigSchema = z.discriminatedUnion("primitive", [
   iterativeRefinementNodeConfigSchema,
   humanApprovalNodeConfigSchema,
   dialogInputNodeConfigSchema,
-  mediaInputNodeConfigSchema,
   modelInferenceNodeConfigSchema,
   textToSpeechNodeConfigSchema,
   speechToTextNodeConfigSchema,
@@ -457,7 +448,6 @@ export const nodeExecutionResultSchema = z.object({
       instruction: z.string(),
     }),
     dialogInputDefinitionSchema.extend({kind: z.literal("dialogInput")}),
-    mediaInputDefinitionSchema.extend({kind: z.literal("mediaInput")}),
   ]).optional(),
   dialogInput: dialogInputDefinitionSchema.optional(),
 });

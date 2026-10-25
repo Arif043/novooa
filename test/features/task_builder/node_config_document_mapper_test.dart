@@ -180,39 +180,19 @@ void main() {
     expect(restored, config);
   });
 
-  test('serialisiert und deserialisiert MediaInputNodeConfig', () {
-    const config = MediaInputNodeConfig(instruction: 'Fotografiere den Beleg.');
-
-    final document = _mapper().toDocument(config);
-    final restored = _mapper().fromDocument(document) as MediaInputNodeConfig;
-
-    expect(document['primitive'], 'mediaInput');
-    expect(document.containsKey('source'), isFalse);
-    expect(restored, config);
-  });
-
-  test('serialisiert und deserialisiert documentScanEnabled', () {
-    const config = MediaInputNodeConfig(
+  test('ein Bildfeld der Formulareingabe übersteht den Rundweg', () {
+    const config = DialogInputNodeConfig(
       instruction: 'Fotografiere den Beleg.',
-      documentScanEnabled: true,
+      fields: [
+        DialogInputField(name: 'beleg', type: DialogInputFieldType.image),
+      ],
     );
 
     final document = _mapper().toDocument(config);
-    final restored = _mapper().fromDocument(document) as MediaInputNodeConfig;
+    final restored = _mapper().fromDocument(document) as DialogInputNodeConfig;
 
-    expect(document['documentScanEnabled'], isTrue);
-    expect(restored.documentScanEnabled, isTrue);
-  });
-
-  test('liest documentScanEnabled als false, wenn das Feld fehlt', () {
-    final restored =
-        _mapper().fromDocument(const {
-              'primitive': 'mediaInput',
-              'instruction': 'Fotografiere den Beleg.',
-            })
-            as MediaInputNodeConfig;
-
-    expect(restored.documentScanEnabled, isFalse);
+    expect((document['fields'] as List).single, containsPair('type', 'image'));
+    expect(restored, config);
   });
 
   test('serialisiert und deserialisiert ModelInferenceNodeConfig', () {

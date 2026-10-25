@@ -89,12 +89,17 @@ void main() {
   test('Bilder und Tabellen haben eigene Formulierungen', () {
     final graph = WorkflowGraph(
       nodes: [
-        WorkflowNode(
-          id: const NodeId('bild'),
+        const WorkflowNode(
+          id: NodeId('bild'),
           title: 'Bild',
           description: '',
-          outputs: const [WorkflowOutput.primary('Scan')],
-          config: MediaInputNodeConfig.initial(),
+          outputs: [WorkflowOutput(key: 'Scan', name: 'Scan')],
+          config: DialogInputNodeConfig(
+            instruction: '',
+            fields: [
+              DialogInputField(name: 'Scan', type: DialogInputFieldType.image),
+            ],
+          ),
         ),
         const WorkflowNode(
           id: NodeId('tabelle'),

@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:novooa_runtime_client/novooa_runtime_client.dart';
 import 'package:syscat2/features/activity/domain/entities/activity_failure_code.dart';
 import 'package:syscat2/features/activity/domain/entities/task_run.dart';
-import 'package:syscat2/features/activity/domain/entities/task_run_interaction.dart';
+import 'package:syscat2/features/activity/domain/entities/task_run_dialog_input_field.dart';
 import 'package:syscat2/features/activity/infrastructure/repositories/local_task_activity_repository.dart';
 import 'package:syscat2/features/activity/infrastructure/repositories/local_task_run_repository.dart';
 
@@ -42,12 +42,14 @@ void main() {
     expect(client.reviewedRunId, 'run-1');
   });
 
-  test('liest documentScanEnabled aus einer mediaInput-Interaction', () async {
+  test('liest Bildfelder einer Formular-Interaction', () async {
     final client = RecordingWorkspaceApiClient(
       interaction: {
-        'kind': 'mediaInput',
+        'kind': 'dialogInput',
         'instruction': 'Beleg fotografieren.',
-        'documentScanEnabled': true,
+        'fields': [
+          {'name': 'beleg', 'type': 'image', 'options': <String>[]},
+        ],
       },
     );
     final run = (await LocalTaskRunRepository(
@@ -55,23 +57,10 @@ void main() {
       _fakeChannel(client),
     ).watchRecent().first).single;
 
-    expect(run.interaction?.type, TaskRunInteractionType.mediaInput);
-    expect(run.mediaInput?.documentScanEnabled, isTrue);
-  });
-
-  test('liest documentScanEnabled als false, wenn das Feld fehlt', () async {
-    final client = RecordingWorkspaceApiClient(
-      interaction: {
-        'kind': 'mediaInput',
-        'instruction': 'Beleg fotografieren.',
-      },
+    expect(
+      run.dialogInputFields.single.type,
+      TaskRunDialogInputFieldType.image,
     );
-    final run = (await LocalTaskRunRepository(
-      client,
-      _fakeChannel(client),
-    ).watchRecent().first).single;
-
-    expect(run.mediaInput?.documentScanEnabled, isFalse);
   });
 }
 

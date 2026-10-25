@@ -76,37 +76,32 @@ class ActivityCubit extends Cubit<ActivityState> {
     );
   }
 
-  Future<void> submitDialogInput(TaskRun run, Map<String, Object?> values) {
-    return _reviewTaskRun(
-      run: run,
-      decision: TaskRunReviewDecision.approve,
-      output: '',
-      formValues: values,
-    );
-  }
-
-  Future<MediaInputSubmission?> pickMediaInput(
+  /// Lädt jedes Bild des Formulars zuerst hoch und sendet dann dessen
+  /// `fileId`; scheitert ein Upload, geht keine Antwort an die Runtime.
+  Future<void> submitDialogInput(
     TaskRun run,
-    TaskRunMediaInputSource source,
-  ) {
-    if (!run.requiresMediaInput) return Future.value(null);
-    return _mediaInputPicker.pick(
-      source,
-      documentScanEnabled: run.mediaInput?.documentScanEnabled ?? false,
-    );
-  }
-
-  Future<void> submitMediaInput(
-    TaskRun run,
-    MediaInputSubmission submission,
+    Map<String, Object?> values,
   ) async {
-    final fileId = await _uploadTaskRunMediaInput(submission);
     return _reviewTaskRun(
       run: run,
       decision: TaskRunReviewDecision.approve,
       output: '',
-      formValues: {'fileId': fileId},
+      formValues: await _withUploadedImages(values),
     );
+  }
+
+  Future<MediaInputSubmission?> pickImage(TaskRunMediaInputSource source) =>
+      _mediaInputPicker.pick(source);
+
+  Future<Map<String, Object?>> _withUploadedImages(
+    Map<String, Object?> values,
+  ) async {
+    return {
+      for (final MapEntry(:key, :value) in values.entries)
+        key: value is MediaInputSubmission
+            ? await _uploadTaskRunMediaInput(value)
+            : value,
+    };
   }
 
   void _onActivities(List<TaskActivity> activities) {

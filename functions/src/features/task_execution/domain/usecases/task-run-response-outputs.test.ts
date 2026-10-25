@@ -29,30 +29,51 @@ test("rejects a dialog submission with an invalid data type", async () => {
   );
 });
 
-test("maps a media submission to trusted file outputs", async () => {
-  const outputs = await responseOutputsForTaskRun(mediaResumeState(), "", {
-    fileId: "image-1",
-  }, "team-1", {
-    loadTeamFile: async () => ({
-      fileId: "image-1",
-      versionId: "version-1",
-      storagePath: "teams/team-1/files/image-1/versions/version-1/beleg.jpg",
-      displayName: "beleg.jpg",
-      contentType: "image/jpeg",
-      sizeBytes: 42,
-    }),
-  } as never);
+const storedImage = {
+  fileId: "image-1",
+  versionId: "version-1",
+  storagePath: "teams/team-1/files/image-1/versions/version-1/beleg.jpg",
+  displayName: "beleg.jpg",
+  contentType: "image/jpeg",
+  sizeBytes: 42,
+};
+const imageReference = {
+  fileId: "image-1", versionId: "version-1", displayName: "beleg.jpg", contentType: "image/jpeg", sizeBytes: 42,
+};
 
-  assert.deepEqual(outputs.value, {
-    type: "media",
-    value: {
-      fileId: "image-1",
-      versionId: "version-1",
-      displayName: "beleg.jpg",
-      contentType: "image/jpeg",
-      sizeBytes: 42,
-    },
-  });
+function filesReturning(file: Record<string, unknown>) {
+  const requested: string[] = [];
+  return {requested, store: {loadTeamFile: async (_teamId: string, fileId: string) => {
+    requested.push(fileId);
+    return file;
+  }} as never};
+}
+
+test("ein Bildfeld wird zur Referenz auf die Team-Datei, neben den übrigen Feldern", async () => {
+  const files = filesReturning(storedImage);
+
+  const outputs = await responseOutputsForTaskRun(imageResumeState(), "", {betrag: 12.5, beleg: "image-1"}, "team-1", files.store);
+
+  assert.deepEqual(files.requested, ["image-1"]);
+  assert.deepEqual(outputs.beleg, {type: "media", value: imageReference});
+  assert.deepEqual(outputs.betrag, {type: "number", value: 12.5});
+  assert.deepEqual(outputs.value, {type: "json", value: {betrag: 12.5, beleg: imageReference}});
+});
+
+test("ein Bildfeld ohne Datei wird abgelehnt", async () => {
+  await assert.rejects(
+    () => responseOutputsForTaskRun(imageResumeState(), "", {betrag: 1}, "team-1", filesReturning(storedImage).store),
+    /Ungültige Eingabe für "beleg"/,
+  );
+});
+
+test("eine Datei, die kein Bild ist, wird abgelehnt", async () => {
+  const pdf = {...storedImage, contentType: "application/pdf"};
+
+  await assert.rejects(
+    () => responseOutputsForTaskRun(imageResumeState(), "", {betrag: 1, beleg: "image-1"}, "team-1", filesReturning(pdf).store),
+    /kein Bild/,
+  );
 });
 
 function dialogResumeState(): TaskResumeState {
@@ -74,19 +95,19 @@ function dialogResumeState(): TaskResumeState {
   };
 }
 
-function mediaResumeState(): TaskResumeState {
+function imageResumeState(): TaskResumeState {
   return {
     nodeResults: [{
-      nodeId: "media",
-      primitive: "mediaInput",
-      status: "waitingForApproval",
-      outputs: {},
+      nodeId: "beleg-formular", primitive: "dialogInput", status: "waitingForApproval", outputs: {},
       interaction: {
-        kind: "mediaInput",
-        instruction: "Bitte Bild hinzufügen.",
-        documentScanEnabled: false,
+        kind: "dialogInput",
+        instruction: "Beleg fotografieren und Betrag angeben.",
+        fields: [
+          {name: "betrag", type: "decimal", options: []},
+          {name: "beleg", type: "image", options: []},
+        ],
       },
     }],
-    remainingNodeIds: [], skippedNodeIds: [], waitingNodeId: "media",
+    remainingNodeIds: [], skippedNodeIds: [], waitingNodeId: "beleg-formular",
   };
 }

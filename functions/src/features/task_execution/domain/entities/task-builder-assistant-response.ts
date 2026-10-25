@@ -8,7 +8,6 @@ export const taskBuilderAssistantPrimitives = [
   "sendChannelMessage",
   "humanApproval",
   "dialogInput",
-  "mediaInput",
   "modelInference",
   "script",
 ] as const;

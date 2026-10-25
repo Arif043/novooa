@@ -4,23 +4,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/platform/document_scan_support.dart';
 import '../../../document_scan/presentation/pages/document_scan_page.dart';
 import '../../domain/entities/media_input_submission.dart';
-import '../../domain/entities/task_run.dart';
 import '../../domain/entities/task_run_media_input.dart';
 import '../cubits/activity_cubit.dart';
 
 /// Im Browser scannt eine eigene Seite mit Kamerabild und Randerkennung; auf
-/// Android und iOS übernimmt das native Plugin im [ActivityCubit].
-Future<MediaInputSubmission?> pickMediaSubmission(
+/// Android und iOS übernimmt das native Plugin hinter dem [ActivityCubit].
+Future<MediaInputSubmission?> pickImageSubmission(
   BuildContext context,
-  TaskRun run,
   TaskRunMediaInputSource source,
 ) {
   final scansInBrowser =
-      source == TaskRunMediaInputSource.camera &&
-      (run.mediaInput?.documentScanEnabled ?? false) &&
+      source == TaskRunMediaInputSource.documentScan &&
       webDocumentScanSupportedOnThisPlatform();
   if (scansInBrowser) return _scanInBrowser(context);
-  return context.read<ActivityCubit>().pickMediaInput(run, source);
+  return context.read<ActivityCubit>().pickImage(source);
 }
 
 Future<MediaInputSubmission?> _scanInBrowser(BuildContext context) async {

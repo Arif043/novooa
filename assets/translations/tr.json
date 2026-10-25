@@ -66,10 +66,6 @@
         "label": "Form girişi",
         "description": "Bir form doldurulana kadar görevi duraklatır."
       },
-      "media_input": {
-        "label": "Görsel iste",
-        "description": "Bir görsel çekilene veya seçilene kadar görevi duraklatır."
-      },
       "model_inference": {
         "label": "Modeli çalıştır",
         "description": "Bir görseli model sözleşmesine göre hazırlar ve bir model çalıştırır."
@@ -132,7 +128,6 @@
       "tool_call": "Arac",
       "human_approval": "Onay",
       "dialog_input": "Form",
-      "media_input": "Medya",
       "model_inference": "Model",
       "text_to_speech": "Ses",
       "speech_to_text": "Transkript",
@@ -357,7 +352,6 @@
     "agent_timeout": "Yapay zekâ ajanına yapılan istek çok uzun sürdü.",
     "agent_unavailable": "Yapay zekâ ajanı şu anda yanıt veremedi.",
     "all_conditions_match": "Tüm koşullar sağlanmalı",
-    "als_dokument_scannen": "Belge olarak tara",
     "anlegen": "Oluştur",
     "answer_number": "Yanıt {number}",
     "antwort_hinzufuegen": "Yanıt ekle",
@@ -397,8 +391,6 @@
     "bestehend": "Mevcut",
     "betreff": "Konu",
     "bild": "Görsel",
-    "bild_anfordern": "Görsel iste",
-    "bild_eingabe_hinzufuegen": "Görsel girişi ekle",
     "decision_answers_without_branch": "Bu cevaplar için dal yok: {answers}",
     "add_missing_branches": "Eksik dalları ekle",
     "cached_and_ready": "Önbelleğe alındı ve hazır",
@@ -478,7 +470,6 @@
     "halte_fest_worauf_diese_aufgabe_hinarbeiten_soll": "Bu görevin neyi hedeflemesi gerektiğini yazın.",
     "hier_kommt_die_anweisung": "Talimatı buraya yazın",
     "hint_output_name": "ornek_rapor",
-    "hinweis_fuer_die_bildeingabe": "Görsel girişi için ipucu",
     "hinweis_fuer_die_eingabe": "Giriş için ipucu",
     "http_anfrage": "HTTP isteği",
     "insert_workflow_input": "Değer ekle",
@@ -580,7 +571,6 @@
     "running": "Çalışıyor",
     "sammlung": "Koleksiyon",
     "sammlung_als_tabelle": "Koleksiyonu tablo yap",
-    "scan_hint": "Fotoğraf çekerken belgenin kenarlarını otomatik algılar, perspektifini düzeltir ve arka planı keser.",
     "schliessen": "Kapat",
     "script": "Betik",
     "script_bearbeiten": "Betiği düzenle",
@@ -1195,5 +1185,14 @@
       "app_close": "Kapat",
       "app_manifest_description": "“{summary}” olayını novooa'ya bildirir."
     }
+  },
+  "image_field": {
+    "camera": "Kamera",
+    "gallery": "Görsel seç",
+    "scan": "Belge tara",
+    "remove": "Görseli kaldır",
+    "selected": "Seçilen görsel",
+    "required": "Lütfen bir görsel ekle.",
+    "pick_failed": "Görsel eklenemedi."
   }
 }
